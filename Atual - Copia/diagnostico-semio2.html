@@ -1,0 +1,46 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnóstico · imagens Semiología II</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#10243D;color:#FBF6E9;margin:0;padding:20px;}
+h1{font-size:1.2rem;margin:0 0 4px}
+.sub{opacity:.75;font-size:.85rem;margin-bottom:18px}
+.box{background:#0b1c30;border:1px solid #24405f;border-radius:10px;padding:14px;margin-bottom:16px}
+.res{font-family:ui-monospace,monospace;font-size:.78rem;line-height:1.7}
+.ok{color:#12C2B0}.bad{color:#FF4D5E}
+.big{font-size:1.05rem;font-weight:700;margin:10px 0}
+code{background:#1b3350;padding:2px 5px;border-radius:4px;font-size:.75rem}
+</style></head><body>
+<h1>Diagnóstico de imagens · Semiología II</h1>
+<div class="sub">Testa cada URL diretamente no servidor. Nada é alterado.</div>
+<div class="box"><b>Base testada:</b> <code id="base"></code></div>
+<div class="box"><div class="big">1 · Nomes NOVOS (os que o HTML usa)</div><div id="r1" class="res">testando…</div></div>
+<div class="box"><div class="big">2 · Nomes ANTIGOS (só para comparar)</div><div id="r2" class="res">testando…</div></div>
+<div class="box"><div class="big">Conclusão</div><div id="concl" class="res">…</div></div>
+<script>
+const NOVOS=["01-tos-expectoracion-mecanismo-detallado.webp", "02-disnea-posicion-mmrc-mapa-clinico.webp", "03-hemoptisis-pleura-cianosis-diferenciales.webp", "04-bronquitis-aguda-mecanismo-detallado.webp", "05-bronquitis-aguda-cronica-neumonia-diferencias.webp", "06-tos-infecciosa-ruta-clinica.webp", "07-asma-epoc-mecanismos-obstructivos.webp", "09-obstruccion-confirmacion-gravedad.webp", "08-asma-versus-epoc-diferencias-clave.webp", "rx-enfisema-silueta-diafragma.webp", "rx-hiperinsuflacion-enfisema.webp", "10-condensacion-alveolar-mecanismo-v2.webp", "11-neumonia-contexto-adquisicion-v2.webp", "rx-signo-silueta-broncograma.webp", "rx-broncograma-aereo.webp", "rx-patron-reticular-micronodulos.webp", "12-neumonia-ippa-radiografia-curb65-v2.webp", "13-pleura-liquido-aire-colapso-v2.webp", "14-ippa-condensacion-derrame-neumotorax-v2.webp", "rx-derrame-curva-damoiseau.webp", "15-light-neumotorax-tension-v2.webp", "rx-neumotorax.webp", "16-dolor-toracico-cuatro-mecanismos-v3.webp", "17-sincope-reflejo-ortostatico-cardiaco-v3.webp", "18-yugular-pulso-edema-godet-v3.webp", "rx-indice-cardiotoracico.webp", "19-ic-circuitos-congestion-bajo-gasto-v3.webp", "20-ic-estadios-nyha-fraccion-eyeccion-v3.webp", "ic-examenes-complementarios.webp", "21-ic-framingham-eco-bnp-v3.webp", "22-hta-hemodinamica-organos-blanco-v4.webp", "24-hta-primaria-secundaria-emergencia-v4.webp", "23-pa-tecnica-korotkoff-fenotipos-v4.webp", "25-ecg-conduccion-ondas-intervalos-v4.webp", "27-ecg-lectura-sistematica-calculos-v4.webp", "ecg-derivaciones-esquema.webp", "26-ecg-derivaciones-paredes-posicion-v4.webp", "28-mucosa-gastrica-defensa-agresion-v5.webp", "29-gastritis-tipos-ulcera-gastrica-duodenal-v5.webp", "30-dispepsia-hpylori-alarmas-pruebas-v5.webp"], ANTIGOS=["01-motivos-consulta-respiratoria.webp", "02-sindrome-infeccioso-bronquitis.webp", "03-asma-versus-epoc.webp", "04-condensacion-neumonia.webp", "05-derrame-versus-neumotorax.webp", "06-motivos-consulta-cardiaca.webp", "07-insuficiencia-cardiaca.webp", "08-hipertension-arterial.webp", "09-electrocardiograma.webp", "10-gastritis-ulcera-peptica.webp"];
+const BASE=location.origin+'/assets/img/semio2/';
+document.getElementById('base').textContent=BASE;
+async function testa(lista,alvo){
+  let ok=0,bad=0,out=[];
+  for(const n of lista){
+    let st;
+    try{const r=await fetch(BASE+encodeURIComponent(n),{method:'HEAD',cache:'no-store'});st=r.status;}
+    catch(e){st='ERRO';}
+    const good=(st===200);
+    good?ok++:bad++;
+    out.push(`<span class="${good?'ok':'bad'}">${good?'✔':'✘'} ${st}</span>  ${n}`);
+  }
+  document.getElementById(alvo).innerHTML=out.join('<br>');
+  return {ok,bad};
+}
+(async()=>{
+  const a=await testa(NOVOS,'r1');
+  const b=await testa(ANTIGOS,'r2');
+  let msg='';
+  if(a.bad===0) msg='<span class="ok">Todas as imagens novas existem. Se ainda não aparecem, é cache: Ctrl+Shift+R.</span>';
+  else if(b.ok>0) msg='<span class="bad">A pasta no servidor tem os nomes ANTIGOS.</span><br>Novos encontrados: '+a.ok+'/'+NOVOS.length+' · Antigos encontrados: '+b.ok+'/'+ANTIGOS.length+'<br><br>Solução: apague o conteúdo de assets/img/semio2/ e coloque os 40 arquivos do zip que o Claude enviou.';
+  else msg='<span class="bad">Nenhum dos dois conjuntos foi encontrado ('+a.ok+' novos, '+b.ok+' antigos).</span><br>A pasta <code>assets/img/semio2/</code> provavelmente não existe nesse caminho no site publicado, ou o deploy não a incluiu.';
+  document.getElementById('concl').innerHTML=msg+'<br><br>Novos OK: '+a.ok+' · falha: '+a.bad;
+})();
+</script></body></html>

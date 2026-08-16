@@ -1,0 +1,90 @@
+# =====================================================================
+# REPASSO MED · netlify.toml
+# Coloque este arquivo na RAIZ do repositório (mesmo nível do index.html).
+#
+# v2 · 14/08/2026 — duas mudanças, ambas aditivas:
+#   1. bloqueio do acesso público direto a materias-privadas/ (ver §SEGURANÇA)
+#   2. cache correto para /assets/img/** (as infografias das matérias)
+# O resto está idêntico ao arquivo anterior.
+# =====================================================================
+
+[build]
+  # pasta publicada (o site é estático; "." = a raiz do repositório)
+  publish = "."
+  # pasta onde ficam as Netlify Functions
+  functions = "netlify/functions"
+
+[functions]
+  # runtime moderno do Node (fetch nativo, usado pelas duas functions)
+  node_bundler = "esbuild"
+
+# a função get-materia precisa carregar os arquivos privados das matérias
+# de dentro do seu próprio bundle (eles NÃO ficam no site publicado)
+[functions."get-materia"]
+  included_files = ["netlify/functions/materias-privadas/**"]
+
+# ---------------------------------------------------------------------
+# SEGURANÇA · o buraco do publish = "."
+# ---------------------------------------------------------------------
+# Como a pasta publicada é a raiz do repositório, TUDO o que está no
+# repositório vira URL — inclusive netlify/functions/materias-privadas/.
+# Sem a regra abaixo, qualquer pessoa baixaria o conteúdo pago em
+#     https://SEUSITE/netlify/functions/materias-privadas/medicina-legal.html
+# sem passar pela função e sem pagar.
+#
+# ⚠️ Atenção ao ponto: as functions são servidas em «/.netlify/functions/…»
+# (COM ponto inicial) e esta regra bloqueia «/netlify/…» (SEM ponto).
+# São caminhos diferentes: a função continua funcionando normalmente.
+[[redirects]]
+  from = "/netlify/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+# ---------------------------------------------------------------------
+# Cabeçalhos de cache
+# ---------------------------------------------------------------------
+
+# HTML principal: nunca cachear, para que uma atualização sua chegue
+# aos usuários no primeiro refresh (evita "subi o arquivo e não mudou").
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+# Arquivos das matérias: podem ser cacheados por pouco tempo, mas sempre
+# revalidados — assim o conteúdo novo aparece rápido sem baixar tudo de novo.
+[[headers]]
+  for = "/materias/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Motor e estilos compartilhados
+[[headers]]
+  for = "/app-core.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/styles.css"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Imagens/vídeos da identidade visual: podem cachear por muito tempo
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# Infografias das matérias: são imutáveis (o nome do arquivo vem do Drive
+# e não muda), então podem cachear por um ano. É isto que faz a segunda
+# visita à aba abrir instantânea.
+[[headers]]
+  for = "/assets/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

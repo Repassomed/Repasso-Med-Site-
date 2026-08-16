@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Administrativo · Plataforma de Estudos</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    /* tema claro — mesmas cores da logo REPASSO MED:
+       marinho #13314f · vermelho #c0392b · dourado #d8a32a · creme #f5ecd8 */
+    --bg:#f3ece0; --panel:#ffffff; --panel2:#faf6ee; --line:#e4d9bf;
+    --ink:#13314f; --ink-soft:#6a7889; --accent:#13314f; --accent-lt:#1d456b;
+    --gold:#d8a32a; --red:#c0392b; --green:#1d7a4f; --blue:#3a78c2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:radial-gradient(1200px 500px at 50% -8%, #fbf7ee 0%, var(--bg) 60%);
+    color:var(--ink);font-size:15px;line-height:1.5;min-height:100vh;}
+  a{color:var(--accent-lt);}
+  .wrap{max-width:1000px;margin:0 auto;padding:24px 18px 60px;}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:16px 0;border-bottom:1px solid var(--line);margin-bottom:24px;}
+  header.top h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px;}
+  header.top .brand small{display:block;color:var(--ink-soft);font-size:12px;font-weight:400;}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:8px;font-size:14px;
+    padding:9px 14px;font-weight:600;transition:.15s;}
+  button:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{background:var(--accent-lt);}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+  .btn-ghost:hover{color:var(--ink);border-color:var(--ink-soft);}
+  .btn-danger{background:transparent;color:var(--red);border:1px solid var(--red);}
+  .btn-danger:hover{background:var(--red);color:#fff;}
+  .btn-gold{background:var(--gold);color:#2c1810;}
+  input,select{font-family:inherit;font-size:14px;padding:10px 12px;border-radius:8px;
+    border:1px solid var(--line);background:var(--panel2);color:var(--ink);width:100%;}
+  input:focus,select:focus{outline:none;border-color:var(--accent-lt);}
+  label{font-size:12px;color:var(--ink-soft);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;
+    margin-bottom:18px;box-shadow:0 6px 20px rgba(19,49,79,.06);}
+  .muted{color:var(--ink-soft);font-size:13px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+  .grow{flex:1;min-width:180px;}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;}
+  .pill.on{background:rgba(29,122,79,.14);color:#1d7a4f;}
+  .pill.off{background:rgba(192,57,43,.12);color:#c0392b;}
+  .pill.admin{background:rgba(216,163,42,.20);color:#8a6d16;}
+  /* login */
+  #login{max-width:380px;margin:8vh auto;}
+  #login .card{padding:28px;}
+  #login h2{margin:0 0 4px;font-size:20px;}
+  .field{margin-bottom:14px;}
+  .err{color:#c0392b;font-size:13px;margin-top:8px;min-height:18px;}
+  .ok{color:#1d7a4f;font-size:13px;margin-top:8px;min-height:18px;}
+  /* user list */
+  .ulist{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+  .urow{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;cursor:pointer;}
+  .urow:hover{border-color:var(--accent-lt);}
+  .urow .who{font-weight:600;}
+  .urow .who small{display:block;color:var(--ink-soft);font-weight:400;font-size:12px;}
+  /* subjects grid */
+  .subjects{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0;}
+  @media(max-width:620px){.subjects{grid-template-columns:1fr;}}
+  .subj{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;
+    background:var(--panel2);border:1px solid var(--line);}
+  .subj.granted{border-color:var(--green);background:rgba(29,122,79,.07);}
+  .subj input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent-lt);flex:0 0 auto;cursor:pointer;}
+  .subj .sname{font-weight:600;flex:1;}
+  .subj .sexp{font-size:11px;color:var(--ink-soft);}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .back{background:none;border:none;color:var(--ink-soft);padding:0;margin-bottom:14px;font-size:13px;}
+  .back:hover{color:var(--ink);}
+  .kv{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px;}
+  .kv div small{display:block;color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.5px;}
+  .kv div b{font-size:15px;}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);
+    border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .hidden{display:none !important;}
+  .config-note{background:rgba(58,120,194,.08);border:1px solid rgba(58,120,194,.5);border-radius:10px;
+    padding:12px 14px;font-size:13px;color:#2c5a8f;margin-bottom:18px;}
+  /* dashboard de monitoramento (Fase 2) */
+  .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px;}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
+  .stat .n{font-size:26px;font-weight:800;letter-spacing:.5px;line-height:1.1;}
+  .stat .l{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;}
+  .stat.live{border-color:var(--green);}
+  .stat.live .n{color:var(--green);}
+  .stat .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);
+    margin-right:7px;vertical-align:middle;animation:dashpulse 1.6s ease-in-out infinite;}
+  @keyframes dashpulse{0%,100%{opacity:.35;}50%{opacity:1;}}
+  /* mapeamento de blocos por parcial */
+  .blk-head,.blk-row{display:grid;grid-template-columns:1fr 60px 60px 60px 60px;align-items:center;gap:6px;}
+  .blk-head{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;
+    padding:0 12px 8px;border-bottom:1px solid var(--line);}
+  .blk-head span:not(:first-child),.blk-opt{text-align:center;}
+  .blk-row{padding:10px 12px;border-bottom:1px solid var(--line);}
+  .blk-row:hover{background:var(--panel2);}
+  .blk-name{font-weight:600;font-size:14px;}
+  .blk-name small{display:block;color:var(--ink-soft);font-weight:400;font-size:11px;}
+  .blk-opt{margin:0;cursor:pointer;}
+  .blk-opt input{width:auto;margin:0;cursor:pointer;transform:scale(1.25);}
+  @media(max-width:640px){
+    .blk-head,.blk-row{grid-template-columns:1fr 42px 42px 42px 42px;}
+    .blk-head{font-size:10px;}
+  }
+  /* tags de acesso na lista de usuários */
+  .utags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+  .utag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;
+    background:rgba(19,49,79,.08);color:var(--accent);white-space:nowrap;}
+  .utag.exp{background:rgba(192,57,43,.10);color:var(--red);text-decoration:line-through;}
+  .utag.p1{background:rgba(216,163,42,.20);color:#8a6d16;}
+  .utag.p2{background:rgba(58,120,194,.12);color:#2c5a8f;}
+  .utag.none{background:transparent;color:var(--ink-soft);font-weight:400;font-style:italic;}
+  /* formulários em duas colunas (aba Ventas) */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  /* navegação do painel (Usuarios / Acceso por materia) */
+  .adm-nav{display:flex;gap:6px;margin-bottom:18px;background:var(--panel2);
+    border:1px solid var(--line);border-radius:11px;padding:4px;}
+  .adm-tab{flex:0 0 auto;background:transparent;color:var(--ink-soft);font-weight:700;
+    padding:9px 16px;border-radius:8px;}
+  .adm-tab.active{background:var(--accent);color:#fff;}
+  .adm-tab:hover:not(.active){color:var(--ink);background:rgba(19,49,79,.05);}
+  /* acesso por matéria (Fase 3) */
+  .subj-acc{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .subj-head{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:14px 16px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:10px;cursor:pointer;}
+  .subj-head:hover{border-color:var(--accent-lt);}
+  .subj-head .sh-name{font-weight:700;}
+  .subj-head .sh-cnt{font-size:13px;color:var(--ink-soft);white-space:nowrap;}
+  .subj-head .sh-cnt b{color:var(--accent);font-size:16px;}
+  .subj-head .chev{color:var(--ink-soft);transition:transform .15s;margin-left:4px;}
+  .subj-head.open .chev{transform:rotate(90deg);}
+  .subj-body{padding:2px 2px 6px;}
+  .subj-body .filter{margin:4px 0 10px;}
+  .acc-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:11px 14px;background:var(--panel);border:1px solid var(--line);border-radius:9px;}
+  .acc-row .who{font-weight:600;}
+  .acc-row .who small{display:block;color:var(--ink-soft);font-weight:400;font-size:12px;}
+  .acc-row .meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+  .acc-row .dates{font-size:11px;color:var(--ink-soft);text-align:right;line-height:1.4;}
+  /* seleção múltipla + data da última liberação (lista de usuários) */
+  .urow .pick{width:19px;height:19px;flex:0 0 auto;cursor:pointer;accent-color:var(--accent-lt);margin:0;}
+  .urow .who{flex:1;min-width:0;}
+  .urow.sel{border-color:var(--accent-lt);background:rgba(19,49,79,.05);}
+  .uwhen{font-size:11px;color:var(--ink-soft);margin-top:5px;letter-spacing:.2px;}
+  .uwhen b{color:var(--accent);font-weight:700;}
+  .uwhen.never{font-style:italic;}
+  .selbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .selbar label{margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink);
+    display:flex;align-items:center;gap:7px;cursor:pointer;}
+  .selbar label input{width:18px;height:18px;margin:0;accent-color:var(--accent-lt);cursor:pointer;}
+  .bulk{position:sticky;top:8px;z-index:5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    margin-top:10px;padding:11px 13px;border-radius:11px;background:#fff;
+    border:1px solid var(--accent);box-shadow:0 8px 22px rgba(19,49,79,.14);}
+  .bulk .n{font-weight:800;font-size:14px;}
+  .bulk .n b{color:var(--red);font-size:17px;}
+  .bulkpick{margin-top:10px;padding:14px;border:1px dashed var(--accent-lt);border-radius:11px;background:var(--panel2);}
+  .bulkpick .opts{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0 12px;}
+  @media(max-width:640px){.bulkpick .opts{grid-template-columns:1fr;}}
+  .bulkpick .opt{display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--panel);
+    border:1px solid var(--line);border-radius:8px;font-size:13.5px;cursor:pointer;}
+  .bulkpick .opt:hover{border-color:var(--accent-lt);}
+  .bulkpick .opt input{width:17px;height:17px;margin:0;accent-color:var(--red);cursor:pointer;}
+  .bulkpick .opt .c{margin-left:auto;font-size:11px;color:var(--ink-soft);white-space:nowrap;}
+</style>
+</head>
+<body>
+
+<!-- ============ TELA DE LOGIN ============ -->
+<div id="login" class="wrap">
+  <div class="card" style="border-top:4px solid var(--gold);">
+    <div style="text-align:center;margin-bottom:14px;">
+      <img src="assets/repasso-med-logo.png" alt="REPASSO MED" style="width:96px;height:auto;">
+    </div>
+    <h2 style="text-align:center;">Painel Administrativo</h2>
+    <p class="muted" style="margin-top:0;text-align:center;">Entre com sua conta de administrador.</p>
+    <div class="field">
+      <label>E-mail</label>
+      <input id="loginEmail" type="email" placeholder="admin@exemplo.com" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" style="width:100%;" onclick="doLogin()">Entrar</button>
+    <div id="loginMsg" class="err"></div>
+  </div>
+  <p class="muted" style="text-align:center;">Apenas contas com <code>is_admin = true</code> conseguem usar este painel.</p>
+</div>
+
+<!-- ============ APP (após login) ============ -->
+<div id="app" class="wrap hidden">
+  <header class="top">
+    <div class="brand" style="display:flex;align-items:center;gap:12px;">
+      <img src="assets/repasso-med-logo.png" alt="REPASSO MED" style="height:40px;width:auto;">
+      <div>
+        <h1>Painel Administrativo</h1>
+        <small id="adminWho"></small>
+      </div>
+    </div>
+    <button class="btn-ghost" onclick="doLogout()">Sair</button>
+  </header>
+
+  <!-- NAVEGAÇÃO: usuários/panel  vs  acesso por matéria (Fase 3) -->
+  <div class="adm-nav">
+    <button class="adm-tab active" id="navUsers" onclick="showView('users')">Usuarios y panel</button>
+    <button class="adm-tab" id="navSubjects" onclick="showView('subjects')">Acceso por materia</button>
+    <button class="adm-tab" id="navSales" onclick="showView('sales')">Ventas</button>
+    <button class="adm-tab" id="navAds" onclick="showView('ads')">Anuncios</button>
+  </div>
+
+  <!-- BUSCA -->
+  <div id="searchView">
+    <!-- DASHBOARD DE MONITORAMENTO (Fase 2) -->
+    <div class="card" id="dashCard">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <label style="margin:0;">Panel de monitoreo</label>
+        <button class="btn-ghost" onclick="loadDashboard()">Actualizar</button>
+      </div>
+      <div id="dashGrid" class="dash-grid"><p class="muted">Cargando indicadores...</p></div>
+      <div id="dashRecent" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- PENDENTES DE APROVAÇÃO -->
+    <div class="card" id="pendingCard">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <label style="margin:0;">Cuentas pendientes de aprobación</label>
+        <button class="btn-ghost" onclick="loadPending()">Actualizar</button>
+      </div>
+      <div id="pendingList" class="ulist"></div>
+    </div>
+
+    <div class="card">
+      <label>Buscar usuário (nome ou e-mail)</label>
+      <div class="row">
+        <div class="grow"><input id="q" placeholder="Digite e tecle Enter..." onkeydown="if(event.key==='Enter')searchUsers()"></div>
+        <button class="btn-primary" onclick="searchUsers()">Buscar</button>
+        <button class="btn-ghost" onclick="loadAllUsers()">Listar todos</button>
+      </div>
+
+      <div class="selbar">
+        <label><input type="checkbox" id="selAll" onchange="toggleSelectAll(this.checked)">
+          Seleccionar todos los listados</label>
+        <span class="muted" id="listInfo"></span>
+      </div>
+
+      <!-- barra de ações em lote (aparece com 1+ seleccionados) -->
+      <div id="bulkBar" class="bulk hidden">
+        <span class="n"><b id="bulkCount">0</b> usuario(s) seleccionado(s)</span>
+        <button class="btn-primary" onclick="openBulkPick()">Quitar materias elegidas…</button>
+        <button class="btn-danger"  onclick="bulkRevokeAll()">Quitar TODAS las materias</button>
+        <button class="btn-ghost"   onclick="clearSelection()">Limpiar selección</button>
+        <span class="ok" id="bulkMsg" style="margin:0;"></span>
+      </div>
+      <div id="bulkPick" class="bulkpick hidden"></div>
+
+      <div id="userList" class="ulist"></div>
+    </div>
+  </div>
+
+  <!-- ACESSO POR MATÉRIA (Fase 3) -->
+  <div id="subjectsView" class="hidden">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <label style="margin:0;">Acceso por materia</label>
+        <button class="btn-ghost" onclick="loadSubjectAccess()">Actualizar</button>
+      </div>
+      <p class="muted" style="margin:6px 0 0;">Toque una materia para ver quiénes tienen acceso, desde cuándo, hasta cuándo, y quitar acceso.</p>
+      <div id="subjAccList" class="subj-acc"><p class="muted">Cargando materias...</p></div>
+    </div>
+  </div>
+
+  <!-- VENTAS: produtos, mapeamento de parciais e pedidos (Fase 4) -->
+  <div id="salesView" class="hidden">
+
+    <!-- PRODUTOS -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <label style="margin:0;">Productos a la venta</label>
+        <button class="btn-ghost" onclick="loadProducts()">Actualizar</button>
+      </div>
+      <p class="muted" style="margin:6px 0 12px;">Precio en <b>guaraníes/reales según tu cuenta InfinitePay</b>, cargado en <b>centavos</b> (ej.: 49,90 → 4990).</p>
+
+      <div class="grid2">
+        <div><label>Materia</label><select id="pSubject"></select></div>
+        <div><label>Tipo de plan</label>
+          <select id="pPlan" onchange="onPlanChange()">
+            <option value="parcial1">Parcial 1</option>
+            <option value="parcial2">Parcial 2</option>
+            <option value="final">Final</option>
+            <option value="completa">Materia completa (P1 + P2 + Final)</option>
+            <option value="semestre">Combo semestre completo</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div><label>Semestre</label>
+          <select id="pSemester">
+            <option value="1">1.º semestre</option><option value="2">2.º semestre</option>
+            <option value="3">3.º semestre</option><option value="4">4.º semestre</option>
+            <option value="5" selected>5.º semestre</option><option value="6">6.º semestre</option>
+          </select>
+        </div>
+        <div><label>Nombre visible</label><input id="pName" placeholder="Ej.: Semiología II · Parcial 1"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Precio (centavos)</label><input id="pPrice" type="number" min="1" placeholder="4990"></div>
+        <div><label>Duración en días (vacío = sin vencimiento)</label><input id="pDays" type="number" min="1" placeholder="180"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Descripción corta (opcional)</label><input id="pDesc" placeholder="Ej.: Todo lo que cae en la primera parcial"></div>
+        <div style="display:flex;align-items:flex-end;gap:8px;">
+          <button id="pSaveBtn" onclick="saveProduct()">Crear producto</button>
+          <button id="pCancelBtn" class="btn-ghost hidden" onclick="cancelEditProduct()">Cancelar</button>
+        </div>
+      </div>
+      <p id="pMsg" class="ok"></p>
+      <div id="prodList" class="ulist" style="margin-top:12px;"><p class="muted">Cargando productos...</p></div>
+    </div>
+
+    <!-- SEMESTRE DE CADA MATÉRIA -->
+    <div class="card">
+      <label>Semestre de cada materia</label>
+      <p class="muted" style="margin:6px 0 12px;">Definí a qué semestre pertenece cada materia. La tienda usa esto para separar los productos por semestre, y el combo de semestre libera exactamente las materias de ese semestre.</p>
+      <div id="semList"></div>
+      <p id="semMsg" class="ok"></p>
+    </div>
+
+    <!-- MAPEAMENTO DE PARCIAIS -->
+    <div class="card">
+      <label>Contenido por parcial</label>
+      <p class="muted" style="margin:6px 0 12px;">Elegí la materia: el sistema lee automáticamente los bloques que ella tiene hoy. Marcá cada bloque como <b>P1</b>, <b>P2</b> o <b>Final</b>. Los que dejes en <b>Libre</b> quedan visibles para cualquier comprador de esa materia. Quien compra la materia completa o el combo del semestre ve todo, siempre.</p>
+      <div class="grid2">
+        <div><label>Materia</label><select id="secSubject" onchange="loadBlocks()"></select></div>
+        <div style="display:flex;align-items:flex-end;gap:8px;">
+          <button onclick="saveAllSections()">Guardar mapeo</button>
+          <button class="btn-ghost" onclick="loadBlocks()">Recargar bloques</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <button class="btn-ghost" onclick="setAllBlocks('p1')">Todo → P1</button>
+        <button class="btn-ghost" onclick="setAllBlocks('p2')">Todo → P2</button>
+        <button class="btn-ghost" onclick="setAllBlocks('final')">Todo → Final</button>
+        <button class="btn-ghost" onclick="setAllBlocks('')">Todo → Libre</button>
+      </div>
+      <p id="secMsg" class="ok"></p>
+      <div id="blockList" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- CUPONS DE DESCONTO -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <label style="margin:0;">Cupones de descuento</label>
+        <button class="btn-ghost" onclick="loadCoupons()">Actualizar</button>
+      </div>
+      <div class="grid2">
+        <div><label>Código</label><input id="cpCode" placeholder="Ej.: REPASSO15" style="text-transform:uppercase;"></div>
+        <div><label>Tipo</label>
+          <select id="cpKind">
+            <option value="percent">Porcentaje (%)</option>
+            <option value="fixed">Valor fijo (centavos)</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div><label>Valor (15 = 15% · o centavos si es fijo)</label><input id="cpValue" type="number" min="1" placeholder="15"></div>
+        <div><label>Usos máximos (vacío = ilimitado)</label><input id="cpMax" type="number" min="1" placeholder="100"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Válido desde (opcional)</label><input id="cpStart" type="date"></div>
+        <div><label>Válido hasta (opcional)</label><input id="cpEnd" type="date"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Pedido mínimo en centavos (opcional)</label><input id="cpMin" type="number" min="1" placeholder="5000"></div>
+        <div style="display:flex;align-items:flex-end;gap:8px;">
+          <button id="cpSaveBtn" onclick="saveCoupon()">Crear cupón</button>
+          <button id="cpCancelBtn" class="btn-ghost hidden" onclick="cancelEditCoupon()">Cancelar</button>
+        </div>
+      </div>
+      <p id="cpMsg" class="ok"></p>
+      <div id="couponList" class="ulist" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- PEDIDOS -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <label style="margin:0;">Últimos pedidos</label>
+        <button class="btn-ghost" onclick="loadOrders()">Actualizar</button>
+      </div>
+      <div id="orderList" class="ulist" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- ANÚNCIOS / FLYERS (Fase 9) -->
+  <div id="adsView" class="hidden">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <label style="margin:0;" id="adFormTitle">Nuevo anuncio</label>
+        <button class="btn-ghost" onclick="loadAds()">Actualizar</button>
+      </div>
+      <p class="muted" style="margin:6px 0 12px;">El anuncio aparece cuando el alumno entra al sitio. Subí una imagen o video, definí el período y la frecuencia.</p>
+
+      <div class="grid2">
+        <div><label>Título (opcional)</label><input id="adTitle" placeholder="Ej.: ¡Nuevo material de Farmaco!"></div>
+        <div><label>Frecuencia</label>
+          <select id="adFreq">
+            <option value="daily">1 vez por día</option>
+            <option value="once">Solo 1 vez</option>
+            <option value="always">Siempre que entra</option>
+          </select>
+        </div>
+      </div>
+      <div><label>Texto (opcional)</label><input id="adBody" placeholder="Descripción corta del anuncio"></div>
+      <div class="grid2">
+        <div><label>Enlace del botón (opcional)</label><input id="adLink" placeholder="https://..."></div>
+      </div>
+      <div class="grid2">
+        <div><label>Botón extra 1 · texto</label><input id="adBtn1Label" placeholder="Ej.: Seguinos en Instagram"></div>
+        <div><label>Botón extra 1 · link</label><input id="adBtn1Url" placeholder="https://instagram.com/..."></div>
+      </div>
+      <div class="grid2">
+        <div><label>Botón extra 2 · texto</label><input id="adBtn2Label" placeholder="Ej.: Hablar por WhatsApp"></div>
+        <div><label>Botón extra 2 · link</label><input id="adBtn2Url" placeholder="https://wa.me/..."></div>
+        <div><label>Prioridad</label><input id="adPriority" type="number" value="0" title="Mayor = aparece primero"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Aparece desde (opcional)</label><input id="adStart" type="datetime-local"></div>
+        <div><label>Hasta (opcional)</label><input id="adEnd" type="datetime-local"></div>
+      </div>
+      <div><label>Imagen o video</label>
+        <input id="adFile" type="file" accept="image/*,video/*">
+        <p class="muted" style="margin:6px 0 0;">Recomendado: imagen hasta ~1 MB o video corto hasta ~10 MB.</p>
+      </div>
+      <div id="adPreview" style="margin-top:10px;"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button id="adSaveBtn" onclick="saveAd()">Crear anuncio</button>
+        <button class="btn-ghost hidden" id="adCancelBtn" onclick="cancelEditAd()">Cancelar</button>
+      </div>
+      <p id="adMsg" class="ok"></p>
+    </div>
+
+    <div class="card">
+      <label>Anuncios creados</label>
+      <div id="adList" class="ulist" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- DETALHE DO USUÁRIO -->
+  <div id="detailView" class="hidden">
+    <button class="back" onclick="closeDetail()">← Voltar para a busca</button>
+    <div class="card">
+      <div class="kv">
+        <div><small>Nome</small><b id="dName">—</b></div>
+        <div><small>E-mail</small><b id="dEmail">—</b></div>
+        <div><small>Status</small><b id="dStatus">—</b></div>
+      </div>
+      <p class="muted">Marcado = acesso liberado · Desmarcado = acesso bloqueado</p>
+
+      <div id="subjectsGrid" class="subjects"></div>
+
+      <div class="row" style="margin-bottom:14px;">
+        <div class="grow">
+          <label>Data de expiração (aplicada ao liberar / renovar)</label>
+          <input id="expiry" type="date">
+          <p class="muted" style="margin:6px 0 0;">Deixe em branco para acesso vitalício (sem expiração).</p>
+          <label style="margin-top:14px;">Plano ao liberar</label>
+          <select id="grantPlan">
+            <option value="completa">Materia completa (todo el contenido)</option>
+            <option value="parcial1">Solo Parcial 1</option>
+            <option value="parcial2">Solo Parcial 2</option>
+            <option value="final">Solo Final</option>
+          </select>
+          <p class="muted" style="margin:6px 0 0;">Vale para as matérias que você liberar a partir de agora. Os acessos já existentes não mudam.</p>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn-primary"  onclick="grantAll()">Liberar todas</button>
+        <button class="btn-danger"   onclick="revokeAll()">Remover todas</button>
+        <button class="btn-gold"     onclick="renewAll()">Renovar acesso</button>
+        <button class="btn-ghost"    onclick="toggleAccount()" id="btnToggle">Bloquear conta</button>
+      </div>
+      <div id="detailMsg" class="ok"></div>
+    </div>
+
+    <!-- ANTI-COMPARTILHAMENTO: dispositivos e sessão -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <label style="margin:0;">Dispositivos vinculados <span class="muted" id="devCount"></span></label>
+        <button class="btn-ghost" onclick="loadDevices()">Actualizar</button>
+      </div>
+      <p class="muted">Máximo 2 dispositivos · 1 sesión activa a la vez.</p>
+      <div id="devList" class="ulist"></div>
+      <div class="toolbar" style="margin-top:12px;">
+        <button class="btn-danger" onclick="disconnectAll()">Desconectar todos los dispositivos</button>
+        <button class="btn-gold"   onclick="resetDevices()">Liberar dispositivos (resetear límite)</button>
+      </div>
+      <div id="devMsg" class="ok"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   1) CONFIGURAÇÃO — cole aqui os dados do seu projeto Supabase.
+      (Settings → API)  A chave ANON é segura para o navegador,
+      porque o RLS protege os dados.
+   ===================================================================== */
+const SUPABASE_URL  = "https://ltizbamvskcgigmqobfo.supabase.co";   // <-- TROQUE
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0aXpiYW12c2tjZ2lnbXFvYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMjEyMzQsImV4cCI6MjA5NTg5NzIzNH0.pCVNq9tSibknAm6hKuTeAd8ItozQrXiBTiwaEn9xX0U";             // <-- TROQUE
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let SUBJECTS = [];          // catálogo carregado do banco
+let CURRENT = null;         // usuário aberto no detalhe { id, email, full_name, is_active }
+
+/* =====================================================================
+   2) LOGIN / LOGOUT
+   ===================================================================== */
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const msg   = document.getElementById('loginMsg');
+  msg.textContent = '';
+  if(!email || !pass){ msg.textContent='Preencha e-mail e senha.'; return; }
+
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if(error){ msg.textContent = 'Falha no login: ' + error.message; return; }
+
+  // confere se é admin
+  const ok = await checkAdmin();
+  if(!ok){
+    msg.textContent = 'Esta conta não é administradora.';
+    await sb.auth.signOut();
+    return;
+  }
+  enterApp();
+}
+
+async function checkAdmin(){
+  const { data:{ user } } = await sb.auth.getUser();
+  if(!user) return false;
+  const msg = document.getElementById('loginMsg');
+  // 1) intento normal: leer la propia fila de profiles
+  const { data, error } = await sb.from('profiles').select('is_admin,email,full_name').eq('id', user.id).maybeSingle();
+  if(!error && data){
+    if(data.is_admin){
+      document.getElementById('adminWho').textContent = (data.full_name||data.email) + ' · administrador';
+      return true;
+    }
+    // la fila existe pero is_admin = false → realmente no es admin
+    if(msg) msg.textContent = 'Esta cuenta no es administradora.';
+    return false;
+  }
+  // 2) fallback: si el SELECT falló o vino vacío (RLS), preguntar a la función is_admin()
+  const { data: rpcAdmin, error: rpcErr } = await sb.rpc('is_admin');
+  if(!rpcErr && rpcAdmin === true){
+    document.getElementById('adminWho').textContent = (user.email||'admin') + ' · administrador';
+    return true;
+  }
+  if(error){
+    if(msg) msg.textContent = 'No se pudo leer el perfil (revise las políticas RLS de profiles). Detalle: ' + error.message;
+  } else if(!data){
+    if(msg) msg.textContent = 'No existe un perfil para esta cuenta o el RLS lo oculta. Ejecute SUPABASE-fix-admin-rls.sql.';
+  }
+  return false;
+}
+
+async function doLogout(){
+  if(DASH_TIMER){ clearInterval(DASH_TIMER); DASH_TIMER = null; }
+  await sb.auth.signOut();
+  location.reload();
+}
+
+let DASH_TIMER = null;   // auto-refresh do dashboard
+
+async function enterApp(){
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  await loadSubjects();
+  loadDashboard();                       // Fase 2: indicadores
+  if(DASH_TIMER) clearInterval(DASH_TIMER);
+  DASH_TIMER = setInterval(loadDashboard, 30000);  // "em tempo real" (janela de 5 min)
+  loadPending();
+  loadAllUsers();
+}
+
+/* escapa texto vindo do banco antes de injetar no HTML (anti-XSS) */
+function escapeHtml(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* =====================================================================
+   FASE 2 — DASHBOARD DE MONITORAMENTO
+   Uma única RPC (admin_dashboard_stats) traz todos os indicadores.
+   ===================================================================== */
+async function loadDashboard(){
+  const grid = document.getElementById('dashGrid');
+  const rec  = document.getElementById('dashRecent');
+  if(!grid) return;
+  const { data, error } = await sb.rpc('admin_dashboard_stats');
+  if(error){
+    grid.innerHTML = '<p class="err">Error: ' + escapeHtml(error.message) + '</p>';
+    return;
+  }
+  const d = data || {};
+  const tiles = [
+    { n: d.online_now ?? 0,    l: 'En línea ahora', live:true },
+    { n: d.total_users ?? 0,   l: 'Usuarios registrados' },
+    { n: d.active_users ?? 0,  l: 'Usuarios activos' },
+    { n: d.accesses_today ?? 0,l: 'Accesos hoy' },
+    { n: d.accesses_week ?? 0, l: 'Accesos esta semana' },
+    { n: d.accesses_month ?? 0,l: 'Accesos este mes' },
+    { n: (d.avg_minutes ?? 0) + ' min', l: 'Permanencia media (aprox.)' },
+  ];
+  grid.innerHTML = tiles.map(t => `
+    <div class="stat ${t.live ? 'live' : ''}">
+      <div class="n">${t.live ? '<span class="dot"></span>' : ''}${t.n}</div>
+      <div class="l">${t.l}</div>
+    </div>`).join('');
+
+  const list = Array.isArray(d.recent) ? d.recent : [];
+  if(list.length){
+    rec.innerHTML =
+      '<label style="margin-bottom:8px;">Últimos usuarios conectados</label>' +
+      '<div class="ulist">' + list.map(u => {
+        const when = u.created_at ? new Date(u.created_at).toLocaleString('es') : '';
+        return `<div class="urow" style="cursor:default;">
+          <div class="who">${escapeHtml(u.full_name || '(sin nombre)')}
+            <small>${escapeHtml(u.email || '')}</small></div>
+          <small class="muted">${escapeHtml(when)}</small></div>`;
+      }).join('') + '</div>';
+  } else {
+    rec.innerHTML = '<p class="muted" style="margin-top:8px;">Aún no hay accesos registrados. El conteo comienza a partir de ahora.</p>';
+  }
+}
+
+/* =====================================================================
+   NAVEGAÇÃO ENTRE VIEWS (usuarios/panel  ↔  acceso por materia)
+   ===================================================================== */
+function showView(which){
+  const views = { users:'searchView', subjects:'subjectsView', sales:'salesView', ads:'adsView' };
+  const navs  = { users:'navUsers',   subjects:'navSubjects',  sales:'navSales',  ads:'navAds'  };
+  Object.keys(views).forEach(k=>{
+    const v = document.getElementById(views[k]);
+    if(v) v.classList.toggle('hidden', k !== which);
+    const n = document.getElementById(navs[k]);
+    if(n) n.classList.toggle('active', k === which);
+  });
+  document.getElementById('detailView').classList.add('hidden');
+  if(which === 'subjects') loadSubjectAccess();
+  if(which === 'sales')    loadSales();
+  if(which === 'ads')      loadAds();
+}
+
+/* =====================================================================
+   FASE 9 — ANÚNCIOS / FLYERS
+   ===================================================================== */
+let EDITING_AD = null;
+const FREQ_LABEL = { daily:'1x por día', once:'Solo 1 vez', always:'Siempre' };
+
+function loadAds(){ renderAdPreview(); loadAdList(); }
+
+/* pré-visualização do arquivo escolhido */
+function renderAdPreview(){
+  const inp = document.getElementById('adFile');
+  const box = document.getElementById('adPreview');
+  if(!inp || !box) return;
+  inp.onchange = ()=>{
+    const f = inp.files && inp.files[0];
+    if(!f){ box.innerHTML=''; return; }
+    const url = URL.createObjectURL(f);
+    box.innerHTML = f.type.startsWith('video')
+      ? `<video src="${url}" controls muted style="max-width:260px;border-radius:10px;"></video>`
+      : `<img src="${url}" style="max-width:260px;border-radius:10px;">`;
+  };
+}
+
+async function saveAd(){
+  const msg = document.getElementById('adMsg');
+  const title = document.getElementById('adTitle').value.trim();
+  const body  = document.getElementById('adBody').value.trim();
+  const link  = document.getElementById('adLink').value.trim();
+  function buildAdLinks(){
+    const out = [];
+    [['adBtn1Label','adBtn1Url'],['adBtn2Label','adBtn2Url']].forEach(([l,u])=>{
+      const url = (document.getElementById(u).value||'').trim();
+      if(!url) return;
+      out.push({ label: (document.getElementById(l).value||'').trim() || 'Abrir', url });
+    });
+    return out.length ? out : null;
+  }
+  const freq  = document.getElementById('adFreq').value;
+  const prio  = parseInt(document.getElementById('adPriority').value, 10) || 0;
+  const start = document.getElementById('adStart').value;
+  const end   = document.getElementById('adEnd').value;
+  const file  = document.getElementById('adFile').files[0];
+
+  msg.className='ok'; msg.textContent='Procesando...';
+
+  let media_url = EDITING_AD ? EDITING_AD.media_url : null;
+  let media_type = EDITING_AD ? EDITING_AD.media_type : null;
+
+  // upload da mídia, se houver arquivo novo
+  if(file){
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    const path = 'ad-' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
+    const { error: upErr } = await sb.storage.from('flyers').upload(path, file, {
+      cacheControl: '3600', upsert: false, contentType: file.type
+    });
+    if(upErr){ msg.className='err'; msg.textContent='Error al subir el archivo: ' + upErr.message; return; }
+    const { data: pub } = sb.storage.from('flyers').getPublicUrl(path);
+    media_url = pub.publicUrl;
+    media_type = file.type.startsWith('video') ? 'video' : 'image';
+  }
+
+  const row = {
+    title: title || null, body: body || null, link_url: link || null,
+    links: buildAdLinks(),
+    media_url, media_type, frequency: freq, priority: prio,
+    starts_at: start ? new Date(start).toISOString() : null,
+    ends_at:   end   ? new Date(end).toISOString()   : null
+  };
+
+  const q = EDITING_AD
+    ? sb.from('announcements').update(row).eq('id', EDITING_AD.id).select()
+    : sb.from('announcements').insert({ ...row, active:true }).select();
+  const { data, error } = await q;
+  if(error){ msg.className='err'; msg.textContent='Error: ' + error.message; return; }
+  if(!data || !data.length){ msg.className='err'; msg.textContent='No se confirmó (revisá las policies).'; return; }
+
+  msg.className='ok'; msg.textContent = EDITING_AD ? 'Anuncio actualizado ✓' : 'Anuncio creado ✓';
+  cancelEditAd();
+  loadAdList();
+}
+
+function editAd(json){
+  let a; try{ a = JSON.parse(json); }catch(e){ return; }
+  EDITING_AD = a;
+  document.getElementById('adTitle').value = a.title || '';
+  document.getElementById('adBody').value = a.body || '';
+  document.getElementById('adLink').value = a.link_url || '';
+  const L = Array.isArray(a.links) ? a.links : [];
+  document.getElementById('adBtn1Label').value = L[0] ? (L[0].label||'') : '';
+  document.getElementById('adBtn1Url').value   = L[0] ? (L[0].url||'')   : '';
+  document.getElementById('adBtn2Label').value = L[1] ? (L[1].label||'') : '';
+  document.getElementById('adBtn2Url').value   = L[1] ? (L[1].url||'')   : '';
+  document.getElementById('adFreq').value = a.frequency || 'daily';
+  document.getElementById('adPriority').value = a.priority || 0;
+  document.getElementById('adStart').value = a.starts_at ? a.starts_at.slice(0,16) : '';
+  document.getElementById('adEnd').value = a.ends_at ? a.ends_at.slice(0,16) : '';
+  document.getElementById('adPreview').innerHTML = a.media_url
+    ? (a.media_type === 'video'
+        ? `<video src="${escapeHtml(a.media_url)}" controls muted style="max-width:260px;border-radius:10px;"></video>`
+        : `<img src="${escapeHtml(a.media_url)}" style="max-width:260px;border-radius:10px;">`)
+    : '';
+  document.getElementById('adFormTitle').textContent = 'Editando anuncio';
+  document.getElementById('adSaveBtn').textContent = 'Guardar cambios';
+  document.getElementById('adCancelBtn').classList.remove('hidden');
+  document.getElementById('adTitle').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function cancelEditAd(){
+  EDITING_AD = null;
+  ['adTitle','adBody','adLink','adStart','adEnd','adBtn1Label','adBtn1Url','adBtn2Label','adBtn2Url']
+    .forEach(id=>document.getElementById(id).value='');
+  document.getElementById('adPriority').value = 0;
+  document.getElementById('adFreq').value = 'daily';
+  document.getElementById('adFile').value = '';
+  document.getElementById('adPreview').innerHTML = '';
+  document.getElementById('adFormTitle').textContent = 'Nuevo anuncio';
+  document.getElementById('adSaveBtn').textContent = 'Crear anuncio';
+  document.getElementById('adCancelBtn').classList.add('hidden');
+}
+
+async function loadAdList(){
+  const box = document.getElementById('adList');
+  if(!box) return;
+  box.innerHTML = '<p class="muted">Cargando...</p>';
+  const { data, error } = await sb.from('announcements').select('*').order('priority',{ascending:false}).order('created_at',{ascending:false});
+  if(error){ box.innerHTML = '<p class="err">Error: ' + escapeHtml(error.message) + '</p>'; return; }
+  const list = data || [];
+  if(!list.length){ box.innerHTML = '<p class="muted">Todavía no hay anuncios.</p>'; return; }
+  box.innerHTML = list.map(a => {
+    const thumb = a.media_url
+      ? (a.media_type === 'video'
+          ? '🎬'
+          : `<img src="${escapeHtml(a.media_url)}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;">`)
+      : '📄';
+    const period = (a.starts_at || a.ends_at)
+      ? ((a.starts_at ? new Date(a.starts_at).toLocaleDateString('es') : '…') + ' → ' + (a.ends_at ? new Date(a.ends_at).toLocaleDateString('es') : '…'))
+      : 'sin límite';
+    const st = a.active ? '<span class="pill on">Activo</span>' : '<span class="pill off">Inactivo</span>';
+    return `<div class="acc-row">
+      <div class="who" style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:22px;">${typeof thumb==='string'&&thumb.length<=3?thumb:''}</span>${typeof thumb==='string'&&thumb.length>3?thumb:''}
+        <span>${escapeHtml(a.title || '(sin título)')}
+          <small>${FREQ_LABEL[a.frequency]||a.frequency} · prioridad ${a.priority} · ${period}</small></span>
+      </div>
+      <div class="meta">
+        ${st}
+        <button class="btn-ghost" onclick='editAd(${JSON.stringify(JSON.stringify(a))})'>Editar</button>
+        <button class="btn-ghost" onclick="toggleAd('${a.id}', ${a.active?'false':'true'})">${a.active?'Desactivar':'Activar'}</button>
+        <button class="btn-danger" onclick="deleteAd('${a.id}')">Borrar</button>
+      </div></div>`;
+  }).join('');
+}
+
+async function toggleAd(id, activate){
+  const { data, error } = await sb.from('announcements').update({ active: activate }).eq('id', id).select();
+  if(error){ alert('Error: ' + error.message); return; }
+  if(!data || !data.length){ alert('No se confirmó (revisá las policies).'); return; }
+  loadAdList();
+}
+
+async function deleteAd(id){
+  if(!confirm('¿Borrar este anuncio definitivamente?')) return;
+  const { data, error } = await sb.from('announcements').delete().eq('id', id).select();
+  if(error){ alert('Error: ' + error.message); return; }
+  if(!data || !data.length){ alert('No se confirmó (revisá las policies).'); return; }
+  if(EDITING_AD && EDITING_AD.id === id) cancelEditAd();
+  loadAdList();
+}
+
+/* =====================================================================
+   FASE 4 — VENTAS: productos, contenido por parcial y pedidos
+   ===================================================================== */
+const PLAN_LABEL = { parcial1:'Parcial 1', parcial2:'Parcial 2', final:'Final',
+                     parcial2final:'Parcial 2 + Final', completa:'Materia completa',
+                     semestre:'Combo semestre' };
+
+/* pacote de semestre não pertence a uma matéria */
+function onPlanChange(){
+  const isSem = document.getElementById('pPlan').value === 'semestre';
+  const sel = document.getElementById('pSubject');
+  if(sel) sel.disabled = isSem;
+}
+
+/* =====================================================================
+   SEMESTRES SEM TETO
+   A lista de semestres não é mais fixa em 1..6: sai do que existe no
+   banco (subjects.semester) mais uma margem para frente, então dá para
+   cadastrar 7.º, 8.º, 9.º… sem voltar a mexer no código.
+   ===================================================================== */
+const SEM_BASE = 8;                 // mínimo sempre oferecido
+function semList(){
+  const set = new Set();
+  for(let n = 1; n <= SEM_BASE; n++) set.add(n);
+  (SUBJECTS || []).forEach(s => { if(s.semester) set.add(Number(s.semester)); });
+  const max = Math.max.apply(null, Array.from(set));
+  set.add(max + 1);                 // sempre sobra um a mais para criar
+  return Array.from(set).filter(n => n >= 1).sort((a, b) => a - b);
+}
+function fillSemesterSelect(){
+  const el = document.getElementById('pSemester');
+  if(!el) return;
+  const atual = el.value || '5';
+  el.innerHTML = semList().map(function(n){
+    return '<option value="' + n + '">' + n + '.º semestre</option>'; }).join('');
+  el.value = atual;
+}
+function loadSales(){
+  fillSubjectSelects();
+  fillSemesterSelect();
+  onPlanChange();
+  loadProducts();
+  loadSemesters();
+  loadBlocks();
+  loadCoupons();
+  loadOrders();
+}
+
+/* preenche os dois <select> de matéria a partir do catálogo já carregado */
+function fillSubjectSelects(){
+  const opts = SUBJECTS.map(s => `<option value="${escapeHtml(s.slug)}">${escapeHtml(s.name)}</option>`).join('');
+  const a = document.getElementById('pSubject');
+  const b = document.getElementById('secSubject');
+  if(a && !a.options.length) a.innerHTML = opts;
+  if(b && !b.options.length) b.innerHTML = opts;
+}
+
+async function loadProducts(){
+  const box = document.getElementById('prodList');
+  if(!box) return;
+  box.innerHTML = '<p class="muted">Cargando productos...</p>';
+  const { data, error } = await sb.from('products')
+    .select('*').order('sort_order').order('name');
+  if(error){ box.innerHTML = '<p class="err">Error: ' + escapeHtml(error.message) + '</p>'; return; }
+  const list = data || [];
+  if(!list.length){ box.innerHTML = '<p class="muted">Todavía no hay productos cargados.</p>'; return; }
+  box.innerHTML = list.map(p => {
+    const price = (p.price_cents/100).toFixed(2);
+    const dur = p.duration_days ? p.duration_days + ' días' : 'sin vencimiento';
+    const st = p.active ? '<span class="pill on">Activo</span>' : '<span class="pill off">Inactivo</span>';
+    return `<div class="acc-row">
+      <div class="who">${escapeHtml(p.name)}
+        <small>${escapeHtml(PLAN_LABEL[p.plan_type] || p.plan_type)}${p.semester ? ' · ' + p.semester + '.º sem' : ''}${p.subject_slug ? ' · ' + escapeHtml(p.subject_slug) : ''} · ${dur}</small>
+        <small style="user-select:all;">id: ${escapeHtml(p.id)}</small></div>
+      <div class="meta">
+        <div class="dates"><b>${price}</b><br><small>${p.price_cents} ctv.</small></div>
+        ${st}
+        <button class="btn-ghost" onclick='editProduct(${JSON.stringify(JSON.stringify(p))})'>Editar</button>
+        <button class="btn-ghost" onclick="toggleProduct('${p.id}', ${p.active ? 'false' : 'true'})">${p.active ? 'Desactivar' : 'Activar'}</button>
+        <button class="btn-danger" onclick="deleteProduct('${p.id}','${escapeHtml(p.name).replace(/'/g,'&#39;')}')">Borrar</button>
+      </div></div>`;
+  }).join('');
+}
+
+let EDITING_PRODUCT = null;   // id do produto em edição (null = criando)
+
+/* preenche o formulário para editar um produto existente */
+function editProduct(json){
+  let p; try{ p = JSON.parse(json); }catch(e){ return; }
+  EDITING_PRODUCT = p.id;
+  document.getElementById('pPlan').value  = p.plan_type;
+  onPlanChange();
+  if(p.subject_slug) document.getElementById('pSubject').value = p.subject_slug;
+  if(p.semester) document.getElementById('pSemester').value = p.semester;
+  document.getElementById('pName').value  = p.name || '';
+  document.getElementById('pDesc').value  = p.description || '';
+  document.getElementById('pPrice').value = p.price_cents || '';
+  document.getElementById('pDays').value  = p.duration_days || '';
+  document.getElementById('pSaveBtn').textContent = 'Guardar cambios';
+  document.getElementById('pCancelBtn').classList.remove('hidden');
+  const msg = document.getElementById('pMsg');
+  msg.className = 'ok'; msg.textContent = 'Editando: ' + (p.name || '');
+  document.getElementById('pName').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function cancelEditProduct(){
+  EDITING_PRODUCT = null;
+  ['pName','pPrice','pDays','pDesc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pSaveBtn').textContent = 'Crear producto';
+  document.getElementById('pCancelBtn').classList.add('hidden');
+  document.getElementById('pMsg').textContent = '';
+}
+
+/* cria OU atualiza, conforme EDITING_PRODUCT */
+async function saveProduct(){
+  const msg = document.getElementById('pMsg');
+  const plan = document.getElementById('pPlan').value;
+  const name = document.getElementById('pName').value.trim();
+  const desc = document.getElementById('pDesc').value.trim();
+  const price = parseInt(document.getElementById('pPrice').value, 10);
+  const daysRaw = document.getElementById('pDays').value.trim();
+  const days = daysRaw ? parseInt(daysRaw, 10) : null;
+  const semester = parseInt(document.getElementById('pSemester').value, 10);
+  const slug = (plan === 'semestre') ? null : document.getElementById('pSubject').value;
+
+  if(!name){ msg.className='err'; msg.textContent='Poné un nombre visible.'; return; }
+  if(!price || price < 1){ msg.className='err'; msg.textContent='Precio inválido (en centavos).'; return; }
+  if(days !== null && (isNaN(days) || days < 1)){ msg.className='err'; msg.textContent='Duración inválida.'; return; }
+
+  const row = { subject_slug: slug, plan_type: plan, name, description: desc || null,
+                price_cents: price, duration_days: days, semester };
+  msg.className='ok'; msg.textContent = EDITING_PRODUCT ? 'Guardando...' : 'Creando...';
+
+  const q = EDITING_PRODUCT
+    ? sb.from('products').update(row).eq('id', EDITING_PRODUCT).select()
+    : sb.from('products').insert(row).select();
+  const { data, error } = await q;
+
+  if(error){ msg.className='err'; msg.textContent='Error: ' + error.message; return; }
+  if(!data || !data.length){ msg.className='err'; msg.textContent='No se confirmó la operación (revisá las policies).'; return; }
+  const wasEdit = !!EDITING_PRODUCT;
+  cancelEditProduct();
+  msg.className='ok'; msg.textContent = wasEdit ? 'Cambios guardados ✓' : 'Producto creado ✓';
+  loadProducts();
+}
+
+async function deleteProduct(id, name){
+  if(!confirm('¿Borrar definitivamente el producto "' + name + '"?\n\nSi ya tuvo ventas, mejor usá "Desactivar": borrarlo puede fallar por los pedidos vinculados.')) return;
+  const { data, error } = await sb.from('products').delete().eq('id', id).select();
+  if(error){
+    alert('No se pudo borrar: ' + error.message +
+          '\n\nProbablemente este producto ya tiene pedidos. Usá "Desactivar" para sacarlo de la tienda sin perder el historial.');
+    return;
+  }
+  if(!data || !data.length){ alert('No se confirmó la remoción (revisá las policies).'); return; }
+  if(EDITING_PRODUCT === id) cancelEditProduct();
+  loadProducts();
+}
+
+async function toggleProduct(id, activate){
+  const { data, error } = await sb.from('products')
+    .update({ active: activate }).eq('id', id).select();
+  if(error){ alert('Error: ' + error.message); return; }
+  if(!data || !data.length){ alert('No se confirmó el cambio (revisá las policies).'); return; }
+  loadProducts();
+}
+
+/* ---------- semestre de cada matéria ---------- */
+async function loadSemesters(){
+  const box = document.getElementById('semList');
+  if(!box) return;
+  box.innerHTML = SUBJECTS.map(s => {
+    const opts = semList().map(n =>
+      `<option value="${n}" ${s.semester === n ? 'selected' : ''}>${n}.º</option>`).join('');
+    return `<div class="acc-row" style="margin-bottom:8px;">
+      <div class="who">${escapeHtml(s.name)}<small>${escapeHtml(s.slug)}</small></div>
+      <div class="meta">
+        <select style="width:auto;margin:0;" onchange="saveSemester('${escapeHtml(s.slug)}', this.value)">
+          <option value="">— sin definir —</option>${opts}
+        </select>
+      </div></div>`;
+  }).join('');
+}
+
+async function saveSemester(slug, value){
+  const msg = document.getElementById('semMsg');
+  const sem = value ? parseInt(value, 10) : null;
+  msg.className='ok'; msg.textContent='Guardando...';
+  const { data, error } = await sb.from('subjects')
+    .update({ semester: sem }).eq('slug', slug).select();
+  if(error){ msg.className='err'; msg.textContent='Error: ' + error.message; return; }
+  if(!data || !data.length){ msg.className='err'; msg.textContent='No se confirmó (revisá las policies de UPDATE en subjects).'; return; }
+  const s = SUBJECTS.find(x => x.slug === slug); if(s) s.semester = sem;
+  msg.className='ok'; msg.textContent='Semestre guardado ✓';
+}
+
+/* ---------- contenido por parcial: detecção automática de blocos ---------- */
+let BLOCKS = [];   // [{id, title}]
+
+async function loadBlocks(){
+  const box = document.getElementById('blockList');
+  const msg = document.getElementById('secMsg');
+  const sel = document.getElementById('secSubject');
+  if(!box || !sel || !sel.value) return;
+  msg.textContent = '';
+  box.innerHTML = '<p class="muted">Leyendo los bloques de la materia...</p>';
+  const slug = sel.value;
+
+  // 1) blocos reais do arquivo da matéria
+  //    As matérias novas ficam PRIVADAS (servidas só pela função get-materia).
+  //    Lemos pela função, com o token do admin; a função tem um bypass que
+  //    libera qualquer matéria para quem é administrador. Se a função ainda
+  //    não estiver publicada, caímos no arquivo público antigo (transição).
+  BLOCKS = [];
+  try{
+    let htmlText = null;
+    try{
+      const { data:{ session } } = await sb.auth.getSession();
+      if(session){
+        const r = await fetch('/.netlify/functions/get-materia?slug=' + encodeURIComponent(slug), {
+          headers: { 'Authorization': 'Bearer ' + session.access_token }, cache: 'no-store'
+        });
+        if(r.ok) htmlText = await r.text();
+      }
+    }catch(e){ /* cai no fallback público */ }
+    if(htmlText === null){
+      const resp = await fetch('materias/' + slug + '.html', { cache: 'no-store' });
+      if(!resp.ok) throw new Error('HTTP ' + resp.status);
+      htmlText = await resp.text();
+    }
+    const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+    const root = doc.querySelector('[id^="tab-"]') || doc.body;
+    root.querySelectorAll('section[id]').forEach(sec => {
+      const h = sec.querySelector('h1,h2,h3');
+      let title = h ? h.textContent.trim().replace(/\s+/g,' ') : sec.id;
+      if(title.length > 90) title = title.slice(0,90) + '…';
+      BLOCKS.push({ id: sec.id, title });
+    });
+  }catch(e){
+    box.innerHTML = '<p class="err">No se pudieron leer los bloques de <b>' + escapeHtml(slug) +
+      '</b> (' + escapeHtml(e.message) + ').<br><small>Revisá que la materia esté en la lista <code>FILES</code> de <code>get-materia.js</code> ' +
+      'y que el archivo <code>' + escapeHtml(slug) + '.html</code> esté subido en <code>materias-privadas/</code>.</small></p>';
+    return;
+  }
+  if(!BLOCKS.length){
+    box.innerHTML = '<p class="muted">Esta materia no tiene bloques con <code>id</code> para mapear.</p>';
+    return;
+  }
+
+  // 2) mapeamento já salvo
+  let saved = {};
+  const { data, error } = await sb.from('subject_sections')
+    .select('section_id,parcial').eq('subject_slug', slug);
+  if(error){ box.innerHTML = '<p class="err">Error: ' + escapeHtml(error.message) + '</p>'; return; }
+  (data || []).forEach(r => saved[r.section_id] = r.parcial);
+
+  // 3) desenha a lista com os 4 estados
+  box.innerHTML = '<div class="blk-head"><span>Bloque</span><span>P1</span><span>P2</span><span>Final</span><span>Libre</span></div>'
+    + BLOCKS.map((b,i) => {
+      const v = saved[b.id] || '';
+      const radio = (val) => `<label class="blk-opt"><input type="radio" name="blk${i}" value="${val}" ${v===val?'checked':''}></label>`;
+      return `<div class="blk-row">
+        <div class="blk-name">${escapeHtml(b.title)}<small>${escapeHtml(b.id)}</small></div>
+        ${radio('p1')}${radio('p2')}${radio('final')}${radio('')}
+      </div>`;
+    }).join('');
+}
+
+function setAllBlocks(val){
+  BLOCKS.forEach((b,i)=>{
+    const r = document.querySelector(`input[name="blk${i}"][value="${val}"]`);
+    if(r) r.checked = true;
+  });
+}
+
+/* salva o mapeamento inteiro de uma vez (guarda também o título, para a loja) */
+async function saveAllSections(){
+  const msg = document.getElementById('secMsg');
+  const slug = document.getElementById('secSubject').value;
+  if(!slug || !BLOCKS.length){ msg.className='err'; msg.textContent='Cargá primero los bloques de una materia.'; return; }
+  msg.className='ok'; msg.textContent='Guardando...';
+
+  const rows = [], toDelete = [];
+  BLOCKS.forEach((b,i)=>{
+    const sel = document.querySelector(`input[name="blk${i}"]:checked`);
+    const v = sel ? sel.value : '';
+    if(v) rows.push({ subject_slug: slug, section_id: b.id, parcial: v, title: b.title, sort_order: i });
+    else   toDelete.push(b.id);
+  });
+
+  if(rows.length){
+    const { error } = await sb.from('subject_sections')
+      .upsert(rows, { onConflict: 'subject_slug,section_id' });
+    if(error){ msg.className='err'; msg.textContent='Error al guardar: ' + error.message; return; }
+  }
+  if(toDelete.length){
+    const { error } = await sb.from('subject_sections')
+      .delete().eq('subject_slug', slug).in('section_id', toDelete);
+    if(error){ msg.className='err'; msg.textContent='Error al limpiar: ' + error.message; return; }
+  }
+  msg.className='ok';
+  msg.textContent = 'Mapeo guardado ✓ (' + rows.length + ' bloque(s) asignado(s), ' + toDelete.length + ' libre(s))';
+}
+
+
+/* ---------- cupones de descuento ---------- */
+let EDITING_COUPON = null;
+
+async function loadCoupons(){
+  const box = document.getElementById('couponList');
+  if(!box) return;
+  box.innerHTML = '<p class="muted">Cargando cupones...</p>';
+  const { data, error } = await sb.from('coupons').select('*').order('created_at', { ascending:false });
+  if(error){ box.innerHTML = '<p class="err">Error: ' + escapeHtml(error.message) + '</p>'; return; }
+  const list = data || [];
+  if(!list.length){ box.innerHTML = '<p class="muted">Todavía no hay cupones.</p>'; return; }
+  box.innerHTML = list.map(cp => {
+    const val = cp.kind === 'percent' ? cp.value + '%' : (cp.value/100).toFixed(2);
+    const uses = (cp.used_count||0) + (cp.max_uses ? ' / ' + cp.max_uses : '');
+    const per = [cp.starts_at ? new Date(cp.starts_at).toLocaleDateString('es') : null,
+                 cp.ends_at ? new Date(cp.ends_at).toLocaleDateString('es') : null]
+                .filter(Boolean).join(' → ');
+    const st = cp.active ? '<span class="pill on">Activo</span>' : '<span class="pill off">Inactivo</span>';
+    return `<div class="acc-row">
+      <div class="who">${escapeHtml(cp.code)}
+        <small>${cp.kind === 'percent' ? 'Descuento' : 'Valor fijo'}: <b>${val}</b> · usos: ${uses}${per ? ' · ' + per : ''}${cp.min_total ? ' · mín ' + (cp.min_total/100).toFixed(2) : ''}</small></div>
+      <div class="meta">
+        ${st}
+        <button class="btn-ghost" onclick='editCoupon(${JSON.stringify(JSON.stringify(cp))})'>Editar</button>
+        <button class="btn-ghost" onclick="toggleCoupon('${cp.id}', ${cp.active ? 'false' : 'true'})">${cp.active ? 'Desactivar' : 'Activar'}</button>
+        <button class="btn-danger" onclick="deleteCoupon('${cp.id}','${escapeHtml(cp.code)}')">Borrar</button>
+      </div></div>`;
+  }).join('');
+}
+
+function editCoupon(json){
+  let cp; try{ cp = JSON.parse(json); }catch(e){ return; }
+  EDITING_COUPON = cp.id;
+  document.getElementById('cpCode').value  = cp.code || '';
+  document.getElementById('cpKind').value  = cp.kind || 'percent';
+  document.getElementById('cpValue').value = cp.value || '';
+  document.getElementById('cpMax').value   = cp.max_uses || '';
+  document.getElementById('cpMin').value   = cp.min_total || '';
+  document.getElementById('cpStart').value = cp.starts_at ? cp.starts_at.slice(0,10) : '';
+  document.getElementById('cpEnd').value   = cp.ends_at ? cp.ends_at.slice(0,10) : '';
+  document.getElementById('cpSaveBtn').textContent = 'Guardar cambios';
+  document.getElementById('cpCancelBtn').classList.remove('hidden');
+  const m = document.getElementById('cpMsg'); m.className='ok'; m.textContent='Editando: ' + cp.code;
+}
+
+function cancelEditCoupon(){
+  EDITING_COUPON = null;
+  ['cpCode','cpValue','cpMax','cpMin','cpStart','cpEnd'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cpKind').value = 'percent';
+  document.getElementById('cpSaveBtn').textContent = 'Crear cupón';
+  document.getElementById('cpCancelBtn').classList.add('hidden');
+  document.getElementById('cpMsg').textContent = '';
+}
+
+async function saveCoupon(){
+  const msg = document.getElementById('cpMsg');
+  const code = document.getElementById('cpCode').value.trim().toUpperCase();
+  const kind = document.getElementById('cpKind').value;
+  const value = parseInt(document.getElementById('cpValue').value, 10);
+  const maxRaw = document.getElementById('cpMax').value.trim();
+  const minRaw = document.getElementById('cpMin').value.trim();
+  const start = document.getElementById('cpStart').value;
+  const end   = document.getElementById('cpEnd').value;
+
+  if(!code){ msg.className='err'; msg.textContent='Poné un código.'; return; }
+  if(!value || value < 1){ msg.className='err'; msg.textContent='Valor inválido.'; return; }
+  if(kind === 'percent' && value > 90){ msg.className='err'; msg.textContent='Máximo 90% (nunca 100%).'; return; }
+
+  const row = {
+    code, kind, value,
+    max_uses: maxRaw ? parseInt(maxRaw,10) : null,
+    min_total: minRaw ? parseInt(minRaw,10) : null,
+    starts_at: start ? new Date(start + 'T00:00:00').toISOString() : null,
+    ends_at:   end   ? new Date(end   + 'T23:59:59').toISOString() : null
+  };
+  msg.className='ok'; msg.textContent = EDITING_COUPON ? 'Guardando...' : 'Creando...';
+  const q = EDITING_COUPON
+    ? sb.from('coupons').update(row).eq('id', EDITING_COUPON).select()
+    : sb.from('coupons').insert(row).select();
+  const { data, error } = await q;
+  if(error){
+    msg.className='err';
+    msg.textContent = /duplicate|unique/i.test(error.message) ? 'Ya existe un cupón con ese código.' : 'Error: ' + error.message;
+    return;
+  }
+  if(!data || !data.length){ msg.className='err'; msg.textContent='No se confirmó (revisá las policies).'; return; }
+  cancelEditCoupon();
+  msg.className='ok'; msg.textContent='Listo ✓';
+  loadCoupons();
+}
+
+async function toggleCoupon(id, act){
+  const { data, error } = await sb.from('coupons').update({ active: act }).eq('id', id).select();
+  if(error){ alert('Error: ' + error.message); return; }
+  if(!data || !data.length){ alert('No se confirmó el cambio.'); return; }
+  loadCoupons();
+}
+
+async function deleteCoupon(id, code){
+  if(!confirm('¿Borrar el cupón "' + code + '"?')) return;
+  const { data, error } = await sb.from('coupons').delete().eq('id', id).select();
+  if(error){ alert('Error: ' + error.message); return; }
+  if(!data || !data.length){ alert('No se confirmó la remoción.'); return; }
+  loadCoupons();
+}
+
+/* ---------- pedidos ---------- */
+async function loadOrders(){
+  const box = document.getElementById('orderList');
+  if(!box) return;
+  box.innerHTML = '<p class="muted">Cargando pedidos...</p>';
+  const { data, error } = await sb.from('orders')
+    .select('id,status,amount_cents,coupon_code,discount_cents,created_at,paid_at,capture_method,receipt_url,profiles(email,full_name),products(name)')
+    .order('created_at', { ascending: false }).limit(30);
+  if(error){ box.innerHTML = '<p class="err">Error: ' + escapeHtml(error.message) + '</p>'; return; }
+  const list = data || [];
+  if(!list.length){ box.innerHTML = '<p class="muted">Todavía no hay pedidos.</p>'; return; }
+  box.innerHTML = list.map(o => {
+    const who = (o.profiles && (o.profiles.full_name || o.profiles.email)) || '(usuario)';
+    const mail = (o.profiles && o.profiles.email) || '';
+    const prod = (o.products && o.products.name) || '(producto)';
+    const when = o.created_at ? new Date(o.created_at).toLocaleString('es') : '';
+    const st = o.status === 'paid' ? '<span class="pill on">Pagado</span>'
+             : o.status === 'canceled' ? '<span class="pill off">Cancelado</span>'
+             : '<span class="pill admin">Pendiente</span>';
+    const rec = o.receipt_url ? ` · <a href="${escapeHtml(o.receipt_url)}" target="_blank" rel="noopener">comprobante</a>` : '';
+    const cup = o.coupon_code ? ` · cupón ${escapeHtml(o.coupon_code)} (−${((o.discount_cents||0)/100).toFixed(2)})` : '';
+    return `<div class="acc-row">
+      <div class="who">${escapeHtml(who)} <small>${escapeHtml(mail)}</small>
+        <small>${escapeHtml(prod)}${o.capture_method ? ' · ' + escapeHtml(o.capture_method) : ''}${cup}${rec}</small></div>
+      <div class="meta">
+        <div class="dates">${escapeHtml(when)}<br><b>${(o.amount_cents/100).toFixed(2)}</b></div>
+        ${st}
+      </div></div>`;
+  }).join('');
+}
+
+/* =====================================================================
+   FASE 3 — ACESSO POR MATÉRIA
+   ===================================================================== */
+let SUBJ_USERS = {};   // cache dos usuários já carregados por matéria (slug -> array)
+
+async function loadSubjectAccess(){
+  const box = document.getElementById('subjAccList');
+  box.innerHTML = '<p class="muted">Cargando materias...</p>';
+  SUBJ_USERS = {};
+  const { data, error } = await sb.rpc('admin_subject_access_counts');
+  if(error){ box.innerHTML = '<p class="err">Error: ' + escapeHtml(error.message) + '</p>'; return; }
+  const list = Array.isArray(data) ? data : [];
+  if(!list.length){ box.innerHTML = '<p class="muted">No hay materias activas.</p>'; return; }
+  box.innerHTML = list.map(s => `
+    <div>
+      <div class="subj-head" id="head-${s.slug}" onclick="toggleSubjPanel('${s.slug}')">
+        <span class="sh-name">${escapeHtml(s.name)} <span class="chev">▸</span></span>
+        <span class="sh-cnt"><b>${s.total}</b> con acceso${s.total != s.active ? ` · ${s.active} activos` : ''}</span>
+      </div>
+      <div class="subj-body hidden" id="body-${s.slug}"></div>
+    </div>`).join('');
+}
+
+async function toggleSubjPanel(slug){
+  const head = document.getElementById('head-' + slug);
+  const body = document.getElementById('body-' + slug);
+  if(!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  if(isOpen){ body.classList.add('hidden'); if(head) head.classList.remove('open'); return; }
+  if(head) head.classList.add('open');
+  body.classList.remove('hidden');
+  // se ainda não carregou os usuários desta matéria, busca sob demanda (lazy)
+  if(!SUBJ_USERS[slug]){
+    body.innerHTML = '<p class="muted" style="padding:8px 2px;">Cargando usuarios...</p>';
+    const { data, error } = await sb.rpc('admin_subject_users', { p_slug: slug });
+    if(error){ body.innerHTML = '<p class="err">Error: ' + escapeHtml(error.message) + '</p>'; return; }
+    SUBJ_USERS[slug] = Array.isArray(data) ? data : [];
+  }
+  // monta o esqueleto (filtro fixo + container que será re-renderizado)
+  body.innerHTML = `
+    <div class="filter"><input id="f-${slug}" placeholder="Buscar usuario en esta materia..."
+         oninput="renderSubjUsers('${slug}')"></div>
+    <div class="ulist" id="ul-${slug}"></div>`;
+  renderSubjUsers(slug);
+}
+
+function renderSubjUsers(slug){
+  const ul = document.getElementById('ul-' + slug);
+  if(!ul) return;
+  const all = SUBJ_USERS[slug] || [];
+  const inp = document.getElementById('f-' + slug);
+  const q = (inp && inp.value ? inp.value : '').toLowerCase().trim();
+  const list = q
+    ? all.filter(u => (u.full_name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q))
+    : all;
+  if(!all.length){ ul.innerHTML = '<p class="muted" style="padding:6px 2px;">Ningún usuario tiene acceso a esta materia.</p>'; return; }
+  if(!list.length){ ul.innerHTML = '<p class="muted" style="padding:6px 2px;">Sin coincidencias.</p>'; return; }
+  ul.innerHTML = list.map(u => {
+    const granted = u.granted_at ? new Date(u.granted_at).toLocaleDateString('es') : '—';
+    const exp = u.expires_at ? new Date(u.expires_at).toLocaleDateString('es') : 'vitalicio';
+    const status = u.active
+      ? '<span class="pill on">Activo</span>'
+      : '<span class="pill off">Expirado</span>';
+    return `<div class="acc-row">
+      <div class="who">${escapeHtml(u.full_name || '(sin nombre)')} <small>${escapeHtml(u.email || '')}</small></div>
+      <div class="meta">
+        <div class="dates">Alta: ${granted}<br>Vence: ${exp}</div>
+        ${status}
+        <button class="btn-danger" onclick="removeAccessFromSubject('${u.id}','${slug}', this)">Quitar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateSubjHeadCount(slug){
+  const all = SUBJ_USERS[slug] || [];
+  const total = all.length;
+  const active = all.filter(u => u.active).length;
+  const head = document.getElementById('head-' + slug);
+  if(head){
+    const cnt = head.querySelector('.sh-cnt');
+    if(cnt) cnt.innerHTML = `<b>${total}</b> con acceso${total != active ? ` · ${active} activos` : ''}`;
+  }
+}
+
+async function removeAccessFromSubject(uid, slug, btn){
+  if(!confirm('¿Quitar el acceso de este usuario a la materia?')) return;
+  if(btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
+  const { data, error } = await sb.from('user_subjects')
+    .delete().eq('user_id', uid).eq('subject_slug', slug).select();
+  if(error){ alert('Error: ' + error.message); if(btn){ btn.disabled=false; btn.textContent='Quitar'; } return; }
+  if(!data || !data.length){
+    alert('No se confirmó la remoción (verifique las policies de DELETE en user_subjects).');
+    if(btn){ btn.disabled=false; btn.textContent='Quitar'; }
+    return;
+  }
+  // remove do cache local e atualiza lista + contador, sem recolher o painel
+  SUBJ_USERS[slug] = (SUBJ_USERS[slug] || []).filter(u => u.id !== uid);
+  renderSubjUsers(slug);
+  updateSubjHeadCount(slug);
+}
+
+/* =====================================================================
+   3b) CUENTAS PENDIENTES DE APROBACIÓN (is_active = false)
+   ===================================================================== */
+async function loadPending(){
+  const box = document.getElementById('pendingList');
+  box.innerHTML = '<p class="muted">Cargando...</p>';
+  // intenta filtrar los ya rechazados (si existe la columna rejected_at)
+  let resp = await sb.from('profiles')
+      .select('id,email,full_name,created_at')
+      .eq('is_active', false).is('rejected_at', null)
+      .order('created_at', { ascending:false }).limit(100);
+  if(resp.error && /rejected_at/.test(resp.error.message||'')){
+    resp = await sb.from('profiles')
+      .select('id,email,full_name,created_at')
+      .eq('is_active', false)
+      .order('created_at', { ascending:false }).limit(100);
+  }
+  const { data, error } = resp;
+  if(error){ box.innerHTML = '<p class="err">Error: '+error.message+'</p>'; return; }
+  const list = data || [];
+  document.getElementById('pendingCard').style.display = list.length ? '' : 'none';
+  if(!list.length){ box.innerHTML=''; return; }
+  box.innerHTML = '';
+  list.forEach(u=>{
+    const when = u.created_at ? new Date(u.created_at).toLocaleDateString('es') : '';
+    const div = document.createElement('div');
+    div.className = 'urow';
+    div.innerHTML = `
+      <div class="who">${u.full_name||'(sin nombre)'} <small>${u.email||''} · ${when}</small></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-primary" onclick="event.stopPropagation();approveUser('${u.id}', this)">Aprobar</button>
+        <button class="btn-danger"  onclick="event.stopPropagation();rejectUser('${u.id}', this)">Rechazar</button>
+      </div>`;
+    div.onclick = ()=>openUser({ id:u.id, email:u.email, full_name:u.full_name, is_active:false });
+    box.appendChild(div);
+  });
+}
+
+/* aprovar = ativa a conta (is_active = true). As disciplinas se liberam no detalhe. */
+async function approveUser(id, btn){
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span>'; }
+  const { error } = await sb.from('profiles').update({ is_active:true }).eq('id', id);
+  if(error){ alert('Error al aprobar: '+error.message); if(btn){btn.disabled=false;btn.textContent='Aprobar';} return; }
+  await loadPending();
+  loadAllUsers();
+}
+
+/* rejeitar = mantém inativo; remove do quadro de pendentes desativando o flag de pendência.
+   Aquí simplemente lo dejamos bloqueado y lo quitamos de la lista marcando is_active=false
+   y, para que no reaparezca, lo marcamos como revisado vía rejected_at si la columna existe. */
+async function rejectUser(id, btn){
+  if(!confirm('¿Rechazar esta cuenta? El usuario quedará sin acceso.')) return;
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span>'; }
+  // intenta marcar rejected_at (si la columna existe); si no, solo asegura is_active=false
+  let { error } = await sb.from('profiles').update({ is_active:false, rejected_at: new Date().toISOString() }).eq('id', id);
+  if(error && /rejected_at/.test(error.message)){
+    ({ error } = await sb.from('profiles').update({ is_active:false }).eq('id', id));
+  }
+  if(error){ alert('Error al rechazar: '+error.message); if(btn){btn.disabled=false;btn.textContent='Rechazar';} return; }
+  await loadPending();
+}
+
+/* =====================================================================
+   3) CATÁLOGO DE DISCIPLINAS
+   ===================================================================== */
+async function loadSubjects(){
+  const { data, error } = await sb.from('subjects').select('*').order('sort_order');
+  if(error){ alert('Erro ao carregar disciplinas: '+error.message); return; }
+  SUBJECTS = data || [];
+}
+
+/* =====================================================================
+   4) BUSCA DE USUÁRIOS
+   ===================================================================== */
+let GRANTS_BY_USER = {};    // user_id -> [{subject_slug, expires_at, plan, granted_at, updated_at}]
+let LAST_CHANGE   = {};     // user_id -> timestamp (ms) da última liberação/alteração
+let USERS_CACHE   = [];     // usuários atualmente listados na tela
+let SELECTED      = new Set();  // ids marcados para ação em lote
+let LAST_QUERY    = null;   // última busca (para recarregar depois de uma ação)
+
+/* carrega, de uma vez, os acessos de todos os usuários listados.
+   Tenta ler updated_at (criada pelo admin-upgrade.sql). Se a coluna ainda
+   não existir, cai para granted_at e o painel segue funcionando igual. */
+async function loadGrantsIndex(ids){
+  GRANTS_BY_USER = {}; LAST_CHANGE = {};
+  if(!ids || !ids.length) return;
+  let resp = await sb.from('user_subjects')
+    .select('user_id,subject_slug,expires_at,plan,granted_at,updated_at').in('user_id', ids);
+  if(resp.error){
+    resp = await sb.from('user_subjects')
+      .select('user_id,subject_slug,expires_at,plan,granted_at').in('user_id', ids);
+  }
+  if(resp.error){
+    resp = await sb.from('user_subjects')
+      .select('user_id,subject_slug,expires_at,plan').in('user_id', ids);
+  }
+  const data = resp.data;
+  if(resp.error || !data) return;   // falha → lista segue sem tags
+  data.forEach(r => {
+    (GRANTS_BY_USER[r.user_id] = GRANTS_BY_USER[r.user_id] || []).push(r);
+    const raw = r.updated_at || r.granted_at;
+    if(!raw) return;
+    const t = new Date(raw).getTime();
+    if(!isNaN(t) && t > (LAST_CHANGE[r.user_id] || 0)) LAST_CHANGE[r.user_id] = t;
+  });
+}
+
+/* data da última liberação/alteração de matéria, formatada */
+function lastChangeHtml(uid){
+  const t = LAST_CHANGE[uid];
+  if(!t) return '<div class="uwhen never">Sin liberaciones registradas</div>';
+  const d = new Date(t);
+  const dias = Math.floor((Date.now() - t) / 86400000);
+  const rel = dias <= 0 ? 'hoy' : (dias === 1 ? 'hace 1 día' : 'hace ' + dias + ' días');
+  return '<div class="uwhen">Última liberación: <b>' + escapeHtml(d.toLocaleString('es')) +
+         '</b> · ' + rel + '</div>';
+}
+
+/* etiquetas de acesso de um usuário (nome curto + plano + expirado) */
+function accessTags(uid){
+  const rows = GRANTS_BY_USER[uid];
+  if(!rows || !rows.length) return '<div class="utags"><span class="utag none">sin materias</span></div>';
+  const now = new Date();
+  return '<div class="utags">' + rows.map(r => {
+    const subj = SUBJECTS.find(s => s.slug === r.subject_slug);
+    let name = subj ? subj.name : r.subject_slug;
+    if(name.length > 22) name = name.slice(0,22) + '…';
+    const expired = r.expires_at && new Date(r.expires_at) < now;
+    let cls = 'utag', suffix = '';
+    if(expired){ cls += ' exp'; }
+    else if(r.plan === 'parcial1'){ cls += ' p1'; suffix = ' · P1'; }
+    else if(r.plan === 'parcial2'){ cls += ' p2'; suffix = ' · P2'; }
+    else if(r.plan === 'final'){ cls += ' p2'; suffix = ' · Final'; }
+    else if(r.plan === 'parcial2final'){ cls += ' p2'; suffix = ' · P2+F'; }
+    return `<span class="${cls}">${escapeHtml(name)}${suffix}</span>`;
+  }).join('') + '</div>';
+}
+
+async function loadAllUsers(){
+  LAST_QUERY = null;
+  renderUsers(await fetchUsers(null));
+}
+async function searchUsers(){
+  const q = document.getElementById('q').value.trim();
+  LAST_QUERY = q || null;
+  renderUsers(await fetchUsers(q));
+}
+/* recarrega a lista atual (usado depois das ações em lote) */
+async function refreshUserList(){
+  renderUsers(await fetchUsers(LAST_QUERY));
+}
+async function fetchUsers(q){
+  let query = sb.from('profiles').select('id,email,full_name,is_admin,is_active,created_at').order('created_at',{ascending:false}).limit(200);
+  if(q){ query = query.or(`email.ilike.%${q}%,full_name.ilike.%${q}%`); }
+  const { data, error } = await query;
+  if(error){ alert('Erro na busca: '+error.message); return []; }
+  const list = data || [];
+  await loadGrantsIndex(list.map(u => u.id));   // tags de acesso sem precisar clicar
+  return sortByLastChange(list);
+}
+
+/* ordem fixa: quem teve matéria liberada/alterada mais recentemente vem primeiro.
+   Quem nunca teve nenhuma cai para o fim, ordenado pela data de cadastro. */
+function sortByLastChange(list){
+  return list.slice().sort((a, b) => {
+    const ta = LAST_CHANGE[a.id] || 0, tb = LAST_CHANGE[b.id] || 0;
+    if(tb !== ta) return tb - ta;
+    const ca = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const cb = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return cb - ca;
+  });
+}
+function renderUsers(list){
+  const box = document.getElementById('userList');
+  USERS_CACHE = list || [];
+  // descarta seleções de usuários que não estão mais na tela
+  const visible = new Set(USERS_CACHE.map(u => u.id));
+  Array.from(SELECTED).forEach(id => { if(!visible.has(id)) SELECTED.delete(id); });
+
+  const info = document.getElementById('listInfo');
+  if(info) info.textContent = USERS_CACHE.length
+    ? USERS_CACHE.length + ' usuario(s) · ordenados por última liberación'
+    : '';
+
+  if(!USERS_CACHE.length){
+    box.innerHTML = '<p class="muted">Nenhum usuário encontrado.</p>';
+    updateBulkBar();
+    return;
+  }
+  box.innerHTML = '';
+  USERS_CACHE.forEach(u=>{
+    const div = document.createElement('div');
+    div.className = 'urow' + (SELECTED.has(u.id) ? ' sel' : '');
+    const status = u.is_active
+      ? '<span class="pill on">Ativo</span>'
+      : '<span class="pill off">Bloqueado</span>';
+    const adm = u.is_admin ? ' <span class="pill admin">admin</span>' : '';
+    div.innerHTML = `<input type="checkbox" class="pick" ${SELECTED.has(u.id)?'checked':''}
+                       title="Seleccionar para acciones en lote">
+                     <div class="who">${escapeHtml(u.full_name||'(sem nome)')} <small>${escapeHtml(u.email||'')}</small>
+                       ${accessTags(u.id)}
+                       ${lastChangeHtml(u.id)}</div>
+                     <div>${status}${adm}</div>`;
+    const cb = div.querySelector('.pick');
+    cb.onclick  = (e)=> e.stopPropagation();          // marcar não abre o detalhe
+    cb.onchange = ()=>{
+      if(cb.checked) SELECTED.add(u.id); else SELECTED.delete(u.id);
+      div.classList.toggle('sel', cb.checked);
+      updateBulkBar();
+    };
+    div.onclick = ()=>openUser(u);
+    box.appendChild(div);
+  });
+  updateBulkBar();
+}
+
+/* ===================== AÇÕES EM LOTE (vários usuários) ===================== */
+function toggleSelectAll(on){
+  USERS_CACHE.forEach(u => { if(on) SELECTED.add(u.id); else SELECTED.delete(u.id); });
+  document.querySelectorAll('#userList .urow').forEach((row,i)=>{
+    const cb = row.querySelector('.pick');
+    if(cb){ cb.checked = on; }
+    row.classList.toggle('sel', on);
+  });
+  updateBulkBar();
+}
+
+function clearSelection(){
+  SELECTED.clear();
+  const sa = document.getElementById('selAll'); if(sa) sa.checked = false;
+  document.querySelectorAll('#userList .urow').forEach(row=>{
+    const cb = row.querySelector('.pick'); if(cb) cb.checked = false;
+    row.classList.remove('sel');
+  });
+  document.getElementById('bulkPick').classList.add('hidden');
+  updateBulkBar();
+}
+
+function updateBulkBar(){
+  const bar = document.getElementById('bulkBar');
+  if(!bar) return;
+  const q = SELECTED.size;
+  document.getElementById('bulkCount').textContent = q;
+  bar.classList.toggle('hidden', q === 0);
+  if(q === 0){
+    const bp = document.getElementById('bulkPick'); if(bp) bp.classList.add('hidden');
+    const bm = document.getElementById('bulkMsg');  if(bm) bm.textContent = '';
+  }
+  const sa = document.getElementById('selAll');
+  if(sa) sa.checked = USERS_CACHE.length > 0 && USERS_CACHE.every(u => SELECTED.has(u.id));
+}
+
+/* painel para escolher QUAIS matérias remover dos selecionados */
+function openBulkPick(){
+  const box = document.getElementById('bulkPick');
+  if(!box.classList.contains('hidden')){ box.classList.add('hidden'); return; }
+  const ids = Array.from(SELECTED);
+  const counts = {};
+  ids.forEach(id => (GRANTS_BY_USER[id] || []).forEach(g => {
+    counts[g.subject_slug] = (counts[g.subject_slug] || 0) + 1;
+  }));
+  const rows = SUBJECTS.filter(s => counts[s.slug]).map(s => `
+    <label class="opt">
+      <input type="checkbox" value="${escapeHtml(s.slug)}">
+      <span>${escapeHtml(s.name)}</span>
+      <span class="c">${counts[s.slug]} de ${ids.length}</span>
+    </label>`).join('');
+  box.innerHTML = rows
+    ? `<label style="margin:0;">Quitar estas materias de los ${ids.length} usuario(s) seleccionados</label>
+       <p class="muted" style="margin:6px 0 0;">Solo aparecen las materias que alguno de ellos tiene hoy.</p>
+       <div class="opts">${rows}</div>
+       <div style="display:flex;gap:8px;flex-wrap:wrap;">
+         <button class="btn-danger" onclick="bulkRevokeSelected()">Quitar las materias marcadas</button>
+         <button class="btn-ghost" onclick="bulkPickAll(true)">Marcar todas</button>
+         <button class="btn-ghost" onclick="bulkPickAll(false)">Desmarcar todas</button>
+       </div>`
+    : `<p class="muted" style="margin:0;">Ninguno de los usuarios seleccionados tiene materias liberadas.</p>`;
+  box.classList.remove('hidden');
+}
+
+function bulkPickAll(on){
+  document.querySelectorAll('#bulkPick .opt input').forEach(i => { i.checked = on; });
+}
+
+async function bulkRevokeSelected(){
+  const ids = Array.from(SELECTED);
+  const slugs = Array.from(document.querySelectorAll('#bulkPick .opt input:checked')).map(i => i.value);
+  if(!ids.length) return;
+  if(!slugs.length){ alert('Marcá al menos una materia.'); return; }
+  if(!confirm('¿Quitar ' + slugs.length + ' materia(s) de ' + ids.length + ' usuario(s)?')) return;
+  await runBulkDelete(ids, slugs);
+}
+
+async function bulkRevokeAll(){
+  const ids = Array.from(SELECTED);
+  if(!ids.length) return;
+  if(!confirm('¿Quitar TODAS las materias de ' + ids.length + ' usuario(s)?\n\nEsta acción no se puede deshacer.')) return;
+  await runBulkDelete(ids, null);
+}
+
+async function runBulkDelete(ids, slugs){
+  const msg = document.getElementById('bulkMsg');
+  msg.className = 'ok'; msg.textContent = 'Procesando...';
+  let q = sb.from('user_subjects').delete().in('user_id', ids);
+  if(slugs && slugs.length) q = q.in('subject_slug', slugs);
+  const { data, error } = await q.select();
+  if(error){ msg.className = 'err'; msg.textContent = 'Error: ' + error.message; return; }
+  if(!data || !data.length){
+    msg.className = 'err';
+    msg.textContent = 'No se borró nada (¿ya estaban sin esas materias? revisá también la policy de DELETE en user_subjects).';
+  } else {
+    msg.className = 'ok';
+    msg.textContent = data.length + ' acceso(s) removido(s) ✓';
+  }
+  SUBJ_USERS = {};                 // invalida o cache da aba «Acceso por materia»
+  document.getElementById('bulkPick').classList.add('hidden');
+  SELECTED.clear();
+  await refreshUserList();
+  const again = document.getElementById('bulkMsg');
+  if(again){ again.className = msg.className; again.textContent = msg.textContent; }
+}
+
+/* =====================================================================
+   5) DETALHE DO USUÁRIO + PERMISSÕES
+   ===================================================================== */
+async function openUser(u){
+  CURRENT = u;
+  document.getElementById('searchView').classList.add('hidden');
+  document.getElementById('subjectsView').classList.add('hidden');
+  document.getElementById('detailView').classList.remove('hidden');
+  document.getElementById('dName').textContent  = u.full_name || '(sem nome)';
+  document.getElementById('dEmail').textContent = u.email || '—';
+  document.getElementById('dStatus').innerHTML  = u.is_active
+      ? '<span class="pill on">Ativo</span>' : '<span class="pill off">Bloqueado</span>';
+  document.getElementById('btnToggle').textContent = u.is_active ? 'Bloquear conta' : 'Reativar conta';
+  document.getElementById('detailMsg').textContent = '';
+  await renderSubjects();
+  loadDevices();
+}
+
+/* =====================================================================
+   ANTI-COMPARTILHAMENTO: dispositivos e sessão do usuário
+   ===================================================================== */
+async function loadDevices(){
+  const box = document.getElementById('devList');
+  const msg = document.getElementById('devMsg');
+  const cnt = document.getElementById('devCount');
+  if(msg) msg.textContent = '';
+  if(!CURRENT || !CURRENT.email){ box.innerHTML = ''; return; }
+  box.innerHTML = '<p class="muted">Cargando...</p>';
+  const { data, error } = await sb.rpc('admin_list_devices', { p_email: CURRENT.email });
+  if(error){ box.innerHTML = '<p class="err">Error: '+error.message+'</p>'; return; }
+  const list = data || [];
+  cnt.textContent = '(' + list.length + '/2)';
+  if(!list.length){ box.innerHTML = '<p class="muted">Sin dispositivos registrados.</p>'; return; }
+  box.innerHTML = '';
+  list.forEach(d=>{
+    const seen = d.last_seen ? new Date(d.last_seen).toLocaleString('es') : '';
+    const created = d.created_at ? new Date(d.created_at).toLocaleDateString('es') : '';
+    const div = document.createElement('div');
+    div.className = 'urow';
+    div.innerHTML = `
+      <div class="who">${d.label || 'Dispositivo'}
+        <small>IP: ${d.last_ip || '—'} · último acceso: ${seen} · alta: ${created}</small>
+      </div>`;
+    box.appendChild(div);
+  });
+}
+
+async function disconnectAll(){
+  if(!CURRENT) return;
+  if(!confirm('¿Desconectar TODOS los dispositivos de '+CURRENT.email+'? La sesión activa se cerrará al instante.')) return;
+  const { error } = await sb.rpc('admin_disconnect_all', { p_email: CURRENT.email });
+  const msg = document.getElementById('devMsg');
+  if(error){ msg.className='err'; msg.textContent='Error: '+error.message; return; }
+  msg.className='ok'; msg.textContent='Sesión cerrada en todos los dispositivos.';
+  loadDevices();
+}
+
+async function resetDevices(){
+  if(!CURRENT) return;
+  if(!confirm('¿Liberar (borrar) los dispositivos de '+CURRENT.email+'? Podrá registrar 2 dispositivos nuevos. También se cerrará la sesión activa.')) return;
+  const { error } = await sb.rpc('admin_reset_devices', { p_email: CURRENT.email });
+  const msg = document.getElementById('devMsg');
+  if(error){ msg.className='err'; msg.textContent='Error: '+error.message; return; }
+  msg.className='ok'; msg.textContent='Dispositivos liberados.';
+  loadDevices();
+}
+
+function closeDetail(){
+  document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('subjectsView').classList.add('hidden');
+  document.getElementById('searchView').classList.remove('hidden');
+  document.getElementById('navUsers').classList.add('active');
+  document.getElementById('navSubjects').classList.remove('active');
+  CURRENT = null;
+  refreshUserList();
+}
+
+async function getGrants(){
+  const { data, error } = await sb.from('user_subjects')
+      .select('subject_slug,expires_at,plan').eq('user_id', CURRENT.id);
+  if(error){ alert('Erro ao ler permissões: '+error.message); return []; }
+  return data || [];
+}
+
+async function renderSubjects(){
+  const grants = await getGrants();
+  const map = {}, planMap = {};
+  grants.forEach(g=>{ map[g.subject_slug] = g.expires_at; planMap[g.subject_slug] = g.plan; });
+  const grid = document.getElementById('subjectsGrid');
+  grid.innerHTML = '';
+  SUBJECTS.forEach(s=>{
+    const granted = Object.prototype.hasOwnProperty.call(map, s.slug);
+    const exp = map[s.slug];
+    let expTxt = '';
+    if(granted){
+      expTxt = exp ? ('expira ' + new Date(exp).toLocaleDateString('pt-BR')) : 'vitalício';
+      if(exp && new Date(exp) < new Date()) expTxt = 'EXPIRADO em ' + new Date(exp).toLocaleDateString('pt-BR');
+      const pl = planMap[s.slug];
+      if(pl && PLAN_LABEL[pl]) expTxt = PLAN_LABEL[pl] + ' · ' + expTxt;
+    }
+    const div = document.createElement('div');
+    div.className = 'subj' + (granted?' granted':'');
+    div.innerHTML = `
+      <input type="checkbox" ${granted?'checked':''} onchange="toggleSubject('${s.slug}', this.checked)">
+      <span class="sname">${escapeHtml(s.name)}</span>
+      <span class="sexp">${escapeHtml(expTxt)}</span>`;
+    grid.appendChild(div);
+  });
+}
+
+/* liberar / bloquear UMA disciplina (o checkbox) */
+async function toggleSubject(slug, checked){
+  const msg = document.getElementById('detailMsg');
+  msg.textContent = 'Salvando...';
+  if(checked){
+    const expiry = readExpiry();
+    const { data:{ user } } = await sb.auth.getUser();
+    /* FIX (expiração/revogação): .select() no final confirma se a linha foi
+       realmente gravada (upsert em conflito exige UPDATE, que depende de
+       policy de RLS). Sem isso, uma falha de permissão fica invisível. */
+    const { data, error } = await sb.from('user_subjects')
+      .upsert({ user_id: CURRENT.id, subject_slug: slug, expires_at: expiry,
+                granted_by: user.id, plan: readPlan() },
+              { onConflict: 'user_id,subject_slug' })
+      .select();
+    if(error){ msg.className='err'; msg.textContent='Erro: '+error.message; return; }
+    if(!data || !data.length){
+      msg.className='err';
+      msg.textContent='A gravação não foi confirmada pelo banco (verifique as policies de UPDATE em user_subjects).';
+      await renderSubjects();
+      return;
+    }
+  } else {
+    /* FIX (expiração/revogação): idem, confirma se o DELETE realmente removeu algo */
+    const { data, error } = await sb.from('user_subjects')
+      .delete().eq('user_id', CURRENT.id).eq('subject_slug', slug)
+      .select();
+    if(error){ msg.className='err'; msg.textContent='Erro: '+error.message; return; }
+    if(!data || !data.length){
+      msg.className='err';
+      msg.textContent='A remoção não foi confirmada pelo banco (verifique as policies de DELETE em user_subjects).';
+      await renderSubjects();
+      return;
+    }
+  }
+  msg.className='ok'; msg.textContent='Salvo ✓';
+  await renderSubjects();
+}
+
+/* plano escolhido para novas liberações */
+function readPlan(){
+  const el = document.getElementById('grantPlan');
+  return el ? el.value : 'completa';
+}
+
+/* lê a data do campo e devolve ISO (ou null) */
+function readExpiry(){
+  const v = document.getElementById('expiry').value;
+  if(!v) return null;
+  // expira no fim do dia escolhido
+  return new Date(v + 'T23:59:59').toISOString();
+}
+
+/* liberar TODAS */
+async function grantAll(){
+  if(!confirm('Liberar TODAS as disciplinas para este usuário?')) return;
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Processando...';
+  const { data, error } = await sb.rpc('admin_grant_all', { target: CURRENT.id, expires: readExpiry(), p_plan: readPlan() });
+  if(error){ msg.className='err'; msg.textContent='Erro: '+error.message; return; }
+  msg.textContent = (data ?? 0) + ' disciplina(s) liberada(s) ✓';
+  await renderSubjects();
+}
+
+/* remover TODAS */
+async function revokeAll(){
+  if(!confirm('REMOVER todas as disciplinas deste usuário?')) return;
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Processando...';
+  const { data, error } = await sb.rpc('admin_revoke_all', { target: CURRENT.id });
+  if(error){ msg.className='err'; msg.textContent='Erro: '+error.message; return; }
+  msg.textContent = (data ?? 0) + ' disciplina(s) removida(s) ✓';
+  await renderSubjects();
+}
+
+/* renovar (estende a expiração de todas as liberadas) */
+async function renewAll(){
+  const iso = readExpiry();
+  if(!iso){ alert('Escolha uma nova data de expiração antes de renovar.'); return; }
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Processando...';
+  const { data, error } = await sb.rpc('admin_renew_all', { target: CURRENT.id, new_expires: iso });
+  if(error){ msg.className='err'; msg.textContent='Erro: '+error.message; return; }
+  msg.textContent = (data ?? 0) + ' disciplina(s) renovada(s) ✓';
+  await renderSubjects();
+}
+
+/* bloquear / reativar a conta inteira */
+async function toggleAccount(){
+  const novo = !CURRENT.is_active;
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Processando...';
+  const { error } = await sb.from('profiles').update({ is_active: novo }).eq('id', CURRENT.id);
+  if(error){ msg.className='err'; msg.textContent='Erro: '+error.message; return; }
+  CURRENT.is_active = novo;
+  document.getElementById('dStatus').innerHTML = novo
+      ? '<span class="pill on">Ativo</span>' : '<span class="pill off">Bloqueado</span>';
+  document.getElementById('btnToggle').textContent = novo ? 'Bloquear conta' : 'Reativar conta';
+  msg.textContent = novo ? 'Conta reativada ✓' : 'Conta bloqueada ✓';
+}
+
+/* =====================================================================
+   6) AO ABRIR: se já houver sessão de admin, entra direto
+   ===================================================================== */
+(async function init(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session){
+    const ok = await checkAdmin();
+    if(ok){ enterApp(); }
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REPASSO MED · Guía de Estudio</title>
+<link rel="icon" type="image/png" href="assets/repasso-med-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Spectral:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<!-- CSS compartilhado por todas as matérias -->
+<link rel="stylesheet" href="assets/styles.css">
+
+<!-- SDK do Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  /* ====== login / cadeado / carregamento — estética da logo REPASSO MED ====== */
+  /* paleta da logo: azul-marinho #13314f, vermelho #c0392b, dourado #d8a32a, creme #f5ecd8 */
+  #auth-overlay{position:fixed;inset:0;z-index:99999;
+    background:radial-gradient(1200px 600px at 50% -10%, #1d456b 0%, #13314f 45%, #0e2640 100%);
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:max(20px,4vh) 16px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+  #auth-overlay .box{width:390px;max-width:92vw;background:#fbf9f4;
+    border:1px solid #e4d9bf;border-top:5px solid #d8a32a;
+    border-radius:18px;padding:30px 30px 28px;color:#1a2f44;margin:auto;
+    box-shadow:0 24px 60px rgba(8,20,36,.45);}
+  #auth-overlay .brand{display:flex;flex-direction:column;align-items:center;margin-bottom:18px;}
+  #auth-overlay .brand img{width:120px;height:auto;margin-bottom:6px;
+    filter:drop-shadow(0 4px 10px rgba(8,20,36,.18));}
+  #auth-overlay .brand .tagline{font-family:'Fraunces',serif;font-size:13px;color:#7a6a52;
+    letter-spacing:.4px;}
+  #auth-overlay h2{margin:0 0 4px;font-size:22px;color:#13314f;}
+  #auth-overlay p.sub{margin:0 0 18px;color:#6a7889;font-size:14px;line-height:1.45;}
+  #auth-overlay label{font-size:12px;color:#5a6b7d;display:block;margin-bottom:5px;font-weight:600;}
+  #auth-overlay input{width:100%;margin-bottom:13px;padding:11px;border-radius:9px;
+    border:1px solid #d7cbb0;background:#fff;color:#1a2f44;font-size:14px;}
+  #auth-overlay input:focus{outline:none;border-color:#d8a32a;box-shadow:0 0 0 3px rgba(216,163,42,.18);}
+  #auth-overlay button{width:100%;padding:12px;border:none;border-radius:9px;background:#13314f;
+    color:#fff;font-weight:700;font-size:15px;cursor:pointer;transition:.15s;letter-spacing:.3px;}
+  #auth-overlay button:hover{background:#c0392b;}
+  #au-msg{color:#c0392b;font-size:13px;margin-top:10px;min-height:18px;line-height:1.4;}
+  #au-msg.ok{color:#1d7a4f;}
+  .au-link{background:transparent !important;border:none !important;color:#6a7889 !important;
+    font-size:13px !important;font-weight:600 !important;padding:8px 0 0 !important;
+    box-shadow:none !important;width:auto !important;cursor:pointer;text-decoration:underline;}
+  .au-link:hover{color:#13314f !important;}
+  .auth-tabs{display:flex;gap:6px;margin-bottom:18px;background:#efe7d3;border:1px solid #e4d9bf;
+    border-radius:11px;padding:4px;}
+  .auth-tab{flex:1;background:transparent;color:#7a6a52;font-weight:700;font-size:14px;
+    padding:9px;border-radius:8px;cursor:pointer;border:none;transition:.15s;}
+  .auth-tab.active{background:#13314f;color:#fff;}
+  .auth-tab:hover:not(.active){color:#13314f;}
+
+  #loading-screen{position:fixed;inset:0;z-index:99998;background:#fbf9f4;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
+  #loading-screen img{width:88px;height:auto;margin-bottom:4px;opacity:.95;
+    animation:logopulse 1.6s ease-in-out infinite;}
+  @keyframes logopulse{0%,100%{transform:scale(1);opacity:.85;}50%{transform:scale(1.05);opacity:1;}}
+  #loading-screen .spin{width:34px;height:34px;border:3px solid #e4d9bf;border-top-color:#d8a32a;
+    border-radius:50%;animation:sp 0.7s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  #loading-screen p{color:#7a6a52;font-family:'Spectral',serif;}
+
+  .lock-badge{font-size:0.85em;}
+  #logout-fab{position:fixed;bottom:18px;right:18px;z-index:9000;background:#1d6e63;color:#fff;
+    border:none;border-radius:999px;padding:10px 18px;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.22);font-family:-apple-system,sans-serif;}
+  #logout-fab:hover{background:#2a9d8f;}
+
+  /* aviso de acesso atualizado (expiração/revogação durante a sessão aberta) */
+  #access-banner{position:fixed;top:0;left:0;right:0;z-index:99997;display:flex;flex-wrap:wrap;
+    align-items:center;justify-content:center;gap:14px;background:#d8a32a;color:#13314f;
+    font-weight:700;font-size:14px;padding:12px 16px;box-shadow:0 4px 14px rgba(0,0,0,.18);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+  #access-banner button{width:auto;padding:8px 16px;border:none;border-radius:8px;
+    background:#13314f;color:#fff;font-weight:700;font-size:13px;cursor:pointer;}
+  #access-banner button:hover{background:#c0392b;}
+  /* carregamento sob demanda de abas */
+  .rm-tabload{text-align:center;padding:70px 20px;color:#6a7889;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+  .rm-tabload .rm-spin{width:34px;height:34px;margin:0 auto 16px;border-radius:50%;
+    border:3px solid #e4d9bf;border-top-color:#13314f;animation:rmspin .8s linear infinite;}
+  @keyframes rmspin{to{transform:rotate(360deg);}}
+  .rm-tabload button{margin-top:16px;padding:10px 20px;border:none;border-radius:9px;
+    background:#13314f;color:#fff;font-weight:700;cursor:pointer;}
+  .rm-tabload button:hover{background:#c0392b;}
+  /* linha de telefone (cadastro e modal) */
+  .rm-phone-row{display:flex;gap:8px;align-items:stretch;margin-bottom:13px;}
+  .rm-phone-row select{width:118px;flex:0 0 118px;margin-bottom:0;}
+  .rm-phone-row input{flex:1;min-width:0;margin-bottom:0;}
+
+  /* modal: pedir telefone uma única vez */
+  #rm-phone-ask{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;
+    justify-content:center;background:rgba(9,20,33,.72);padding:20px;backdrop-filter:blur(3px);}
+  #rm-phone-ask .box{width:400px;max-width:94vw;background:#fff;border-radius:20px;
+    border-top:6px solid #d8a32a;padding:30px 26px 24px;text-align:center;
+    box-shadow:0 26px 70px rgba(0,0,0,.35);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+  #rm-phone-ask .ico{font-size:40px;line-height:1;margin-bottom:8px;}
+  #rm-phone-ask h3{margin:0 0 8px;font-family:'Fraunces',Georgia,serif;font-size:22px;color:#13314f;}
+  #rm-phone-ask p{margin:0 0 16px;font-size:14px;line-height:1.55;color:#5a6b7d;}
+  #rm-phone-ask select,#rm-phone-ask input{padding:11px;border-radius:9px;border:1px solid #ddd3bd;
+    font-size:15px;background:#fff;color:#13314f;font-family:inherit;}
+  #rm-phone-ask input:focus,#rm-phone-ask select:focus{outline:none;border-color:#d8a32a;
+    box-shadow:0 0 0 3px rgba(216,163,42,.18);}
+  #rm-phone-ask .err{color:#c0392b;font-size:13px;min-height:18px;margin:6px 0 2px;}
+  #rm-phone-ask button{width:100%;padding:13px;border:none;border-radius:11px;background:#13314f;
+    color:#fff;font-weight:800;font-size:15px;cursor:pointer;margin-top:4px;}
+  #rm-phone-ask button:hover{background:#c0392b;}
+  #rm-phone-ask button.ghost{background:transparent;color:#8a93a0;font-weight:600;font-size:13px;
+    margin-top:8px;padding:8px;}
+  #rm-phone-ask button.ghost:hover{background:transparent;color:#13314f;text-decoration:underline;}
+
+  /* ==================== ANÚNCIO / FLYER ==================== */
+  #rm-ad{position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;
+    padding:22px;background:rgba(9,20,33,.72);backdrop-filter:blur(3px);opacity:0;transition:opacity .2s;}
+  #rm-ad.show{opacity:1;}
+  /* o box abraça a mídia: largura conforme a proporção do arquivo, centrado,
+     limitado à tela — a imagem/vídeo NUNCA é cortado (object-fit:contain) */
+  .rm-ad-box{position:relative;display:flex;flex-direction:column;background:#fff;
+    width:auto;max-width:min(680px,94vw);max-height:90vh;overflow:hidden;
+    border-radius:18px;border-top:6px solid #d8a32a;box-shadow:0 26px 70px rgba(0,0,0,.4);
+    transform:scale(.96);transition:transform .2s;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+  #rm-ad.show .rm-ad-box{transform:scale(1);}
+  .rm-ad-x{position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:none;
+    border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:15px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;}
+  .rm-ad-x:hover{background:#c0392b;}
+  /* mídia inteira, na proporção original */
+  .rm-ad-media{display:block;width:100%;height:auto;max-width:100%;
+    max-height:min(62vh,560px);object-fit:contain;background:#0d2138;flex:0 1 auto;}
+  .rm-ad-box.no-media .rm-ad-media{display:none;}
+  .rm-ad-txt{padding:18px 22px 20px;text-align:center;overflow-y:auto;}
+  .rm-ad-txt h3{margin:0 0 8px;font-family:'Fraunces',Georgia,serif;font-size:22px;color:#13314f;}
+  .rm-ad-txt p{margin:0 0 14px;font-size:14.5px;line-height:1.6;color:#4a5a6b;}
+  /* botões de link (Instagram, WhatsApp, ou qualquer URL) */
+  .rm-ad-links{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin:0 0 14px;}
+  .rm-ad-btn{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;border-radius:11px;
+    font-weight:800;font-size:13.5px;text-decoration:none;color:#fff;background:#13314f;transition:.15s;}
+  .rm-ad-btn:hover{transform:translateY(-1px);filter:brightness(1.1);}
+  .rm-ad-btn.ig{background:linear-gradient(45deg,#f09433,#dc2743 45%,#bc1888);}
+  .rm-ad-btn.wa{background:#1d7a4f;}
+  .rm-ad-btn.gold{background:linear-gradient(100deg,#d8a32a,#f0c85a);color:#13314f;}
+  .rm-ad-close{width:100%;padding:13px;border:none;border-radius:11px;background:#13314f;color:#fff;
+    font-weight:800;font-size:15px;cursor:pointer;}
+  .rm-ad-close:hover{background:#c0392b;}
+
+  /* ==================== PÁGINA INICIAL (CADERNO) ==================== */
+  #rm-home{--pa:#fffdf7;--cr:#f5ecd8;--ink:#13314f;--gold:#d8a32a;--red:#c0392b;
+    --rule:#e2ecf4;--mark:#ffe9a8;--soft:#6a7889;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--ink);}
+  .rh-page{position:relative;background:var(--pa);
+    background-image:repeating-linear-gradient(180deg,transparent,transparent 33px,var(--rule) 33px,var(--rule) 34px);
+    background-position:0 6px;overflow:hidden;}
+  .rh-page::before{content:'';position:absolute;top:0;bottom:0;left:44px;width:2px;
+    background:rgba(192,57,43,.30);z-index:0;}
+  @media(max-width:760px){.rh-page::before{left:20px;}}
+  .rh-in{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 26px 0 74px;}
+  @media(max-width:760px){.rh-in{padding:0 18px 0 38px;}}
+
+  /* fita adesiva */
+  .rh-tape{position:absolute;width:104px;height:26px;background:rgba(216,163,42,.42);
+    border-left:1px dashed rgba(255,255,255,.5);border-right:1px dashed rgba(255,255,255,.5);
+    box-shadow:0 1px 4px rgba(0,0,0,.10);z-index:3;}
+  .rh-tape.t1{top:-13px;left:14%;transform:rotate(-5deg);}
+  .rh-tape.t2{top:-13px;right:12%;transform:rotate(4deg);}
+
+  /* manuscrito */
+  .rh-hand{font-family:'Caveat',cursive;color:var(--red);}
+
+  /* ---------- HERO ---------- */
+  .rh-hero{position:relative;padding:52px 0 40px;display:grid;grid-template-columns:1fr 300px;
+    gap:44px;align-items:center;}
+  @media(max-width:880px){.rh-hero{grid-template-columns:1fr;gap:28px;padding:34px 0 26px;}}
+  .rh-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2.6px;
+    text-transform:uppercase;color:var(--soft);margin-bottom:14px;}
+  .rh-h1{color:var(--ink);font-family:'Fraunces',Georgia,serif;font-weight:900;line-height:.92;margin:0 0 8px;
+    font-size:clamp(46px,8.5vw,92px);letter-spacing:-2px;}
+  .rh-h1 em{font-style:normal;color:var(--gold);}
+  .rh-sub{font-family:'Caveat',cursive;font-size:clamp(23px,3.6vw,32px);color:var(--red);
+    transform:rotate(-1.2deg);margin:0 0 18px;line-height:1.25;}
+  .rh-lead{font-family:'Spectral',Georgia,serif;font-size:17px;line-height:1.68;color:#3d4d5e;
+    max-width:52ch;margin:0 0 26px;}
+  .rh-mark{background:linear-gradient(180deg,transparent 58%,var(--mark) 58%);padding:0 3px;}
+
+  .rh-cta{display:inline-flex;align-items:center;gap:11px;background:var(--ink);color:#fff;
+    border:none;border-radius:14px;padding:17px 32px;font-size:16.5px;font-weight:800;cursor:pointer;
+    box-shadow:0 10px 26px rgba(19,49,79,.28);transition:.18s;text-decoration:none;}
+  .rh-cta:hover{background:var(--red);transform:translateY(-2px);box-shadow:0 15px 34px rgba(192,57,43,.32);}
+  .rh-cta.gold{background:linear-gradient(100deg,var(--gold),#f0c85a);color:var(--ink);
+    box-shadow:0 10px 26px rgba(216,163,42,.36);}
+  .rh-cta.gold:hover{background:var(--ink);color:#fff;}
+  .rh-cta-note{font-family:'Caveat',cursive;font-size:19px;color:var(--soft);margin-top:11px;}
+
+  /* vídeo da logo */
+  .rh-vid{position:relative;justify-self:center;}
+  .rh-vid-frame{position:relative;background:#fff;padding:11px 11px 42px;border-radius:4px;
+    box-shadow:0 16px 40px rgba(19,49,79,.22);transform:rotate(2.2deg);}
+  .rh-vid-frame video,.rh-vid-frame img.ph{display:block;width:264px;height:auto;border-radius:2px;
+    background:var(--ink);}
+  .rh-vid-cap{position:absolute;bottom:11px;left:0;right:0;text-align:center;
+    font-family:'Caveat',cursive;font-size:19px;color:var(--ink);}
+  @media(max-width:880px){.rh-vid-frame{transform:rotate(-1.6deg);}
+    .rh-vid-frame video,.rh-vid-frame img.ph{width:min(240px,62vw);}}
+
+  /* ---------- SEÇÕES ---------- */
+  .rh-sec{padding:54px 0;position:relative;}
+  .rh-sec + .rh-sec{border-top:2px dashed rgba(19,49,79,.12);}
+  .rh-kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2.4px;
+    text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+  .rh-h2{color:var(--ink);font-family:'Fraunces',Georgia,serif;font-weight:800;font-size:clamp(28px,4.6vw,42px);
+    line-height:1.08;margin:0 0 10px;letter-spacing:-.8px;}
+  .rh-h3{color:var(--ink);font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:20px;margin:0 0 6px;}
+  .rh-p{font-family:'Spectral',Georgia,serif;font-size:16.5px;line-height:1.7;color:#3d4d5e;max-width:60ch;}
+
+  /* recursos como post-its */
+  .rh-notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:18px;margin-top:30px;}
+  .rh-note{position:relative;background:#fff;border:1px solid rgba(19,49,79,.10);border-radius:3px;
+    padding:22px 20px 20px;box-shadow:0 8px 22px rgba(19,49,79,.10);transition:.2s;}
+  .rh-note:nth-child(odd){transform:rotate(-.9deg);}
+  .rh-note:nth-child(even){transform:rotate(1deg);}
+  .rh-note:hover{transform:rotate(0) translateY(-4px);box-shadow:0 16px 34px rgba(19,49,79,.16);}
+  .rh-note::before{content:'';position:absolute;top:-9px;left:50%;margin-left:-34px;width:68px;height:19px;
+    background:rgba(216,163,42,.40);box-shadow:0 1px 3px rgba(0,0,0,.10);}
+  .rh-note .ic{font-size:29px;line-height:1;margin-bottom:9px;}
+  .rh-note p{font-size:13.5px;line-height:1.55;color:var(--soft);margin:0;}
+
+  /* preço */
+  .rh-price{margin-top:34px;background:var(--ink);border-radius:18px;padding:26px 30px;color:#fff;
+    display:flex;align-items:center;gap:22px;flex-wrap:wrap;box-shadow:0 14px 34px rgba(19,49,79,.26);}
+  .rh-price-l{flex:1;min-width:220px;}
+  .rh-price-l b{display:block;font-family:'Fraunces',Georgia,serif;font-size:22px;margin-bottom:4px;}
+  .rh-price-l span{font-size:13.5px;color:#cfdbe8;}
+  .rh-price-v{text-align:right;}
+  .rh-price-v small{display:block;font-size:12px;color:#cfdbe8;letter-spacing:1px;text-transform:uppercase;}
+  .rh-price-v b{font-family:'Fraunces',Georgia,serif;font-size:40px;line-height:1;color:var(--gold);}
+
+  /* ---------- DEPOIMENTOS (adesivos) ---------- */
+  .rh-wall{position:relative;margin-top:34px;columns:3;column-gap:18px;}
+  @media(max-width:900px){.rh-wall{columns:2;}}
+  @media(max-width:560px){.rh-wall{columns:1;}}
+  .rh-dep{position:relative;break-inside:avoid;margin:0 0 18px;background:#fff;padding:9px 9px 11px;
+    border-radius:3px;box-shadow:0 10px 26px rgba(19,49,79,.16);border:1px solid rgba(19,49,79,.06);
+    animation:rhfloat 7s ease-in-out infinite;}
+  .rh-dep img{display:block;width:100%;height:auto;border-radius:2px;}
+  .rh-dep::before{content:'';position:absolute;top:-10px;left:50%;margin-left:-30px;width:60px;height:20px;
+    background:rgba(216,163,42,.38);box-shadow:0 1px 3px rgba(0,0,0,.10);z-index:2;}
+  .rh-dep:nth-child(3n+1){transform:rotate(-1.5deg);animation-delay:0s;}
+  .rh-dep:nth-child(3n+2){transform:rotate(1.2deg);animation-delay:1.4s;}
+  .rh-dep:nth-child(3n+3){transform:rotate(-.6deg);animation-delay:2.6s;}
+  @keyframes rhfloat{0%,100%{translate:0 0;}50%{translate:0 -7px;}}
+
+  /* ---------- QUEM SOU EU (colagem) ---------- */
+  .rh-me{display:grid;grid-template-columns:500px 1fr;gap:48px;align-items:start;margin-top:30px;}
+  @media(max-width:960px){.rh-me{grid-template-columns:1fr;gap:30px;}}
+
+  /* base polaroide */
+  .rh-pola{position:relative;background:#fff;border-radius:3px;
+    border:1px solid rgba(19,49,79,.05);box-shadow:0 12px 30px rgba(19,49,79,.20);
+    transition:transform .22s,box-shadow .22s;}
+  .rh-pola img{display:block;width:100%;height:auto;border-radius:2px;background:var(--cr);}
+  .rh-pola figcaption{position:absolute;left:8px;right:8px;text-align:center;
+    font-family:'Caveat',cursive;color:var(--ink);}
+  .rh-pola::before{content:'';position:absolute;top:-11px;left:50%;margin-left:-28px;width:56px;height:20px;
+    background:rgba(216,163,42,.40);box-shadow:0 1px 3px rgba(0,0,0,.10);z-index:2;}
+  .rh-pola:hover{transform:rotate(0) scale(1.03);box-shadow:0 22px 46px rgba(19,49,79,.30);z-index:6;}
+
+  /* ---- polaroide GRANDE (jaleco), com etiqueta por cima ---- */
+  .rh-star{position:relative;padding:16px 16px 30px;transform:rotate(-2deg);
+    box-shadow:0 24px 54px rgba(19,49,79,.30);animation:rhfloat 9s ease-in-out infinite;}
+  .rh-star img{border-radius:2px;}
+  .rh-star .rh-badge{position:absolute;left:-16px;bottom:44px;z-index:5;
+    background:linear-gradient(100deg,var(--gold),#f7dd8e);color:var(--ink);
+    font-family:'Caveat',cursive;font-size:23px;font-weight:700;line-height:1.1;
+    padding:9px 17px;border-radius:12px;transform:rotate(-5deg);
+    box-shadow:0 9px 22px rgba(0,0,0,.22);white-space:nowrap;}
+  .rh-star figcaption{bottom:9px;font-size:21px;}
+  @media(max-width:900px){
+    .rh-star{max-width:330px;margin:0 auto;}
+    .rh-star .rh-badge{left:-8px;}
+  }
+
+  /* ---- pequenas coladas ---- */
+  .rh-pola.sm{padding:8px 8px 30px;box-shadow:0 10px 24px rgba(19,49,79,.20);}
+  .rh-pola.sm figcaption{bottom:8px;font-size:14.5px;}
+
+  /* cluster que flutua à direita do texto */
+  .rh-clip{float:right;width:290px;margin:4px 0 22px 28px;display:flex;flex-direction:column;gap:22px;}
+  .rh-clip .rh-pola:nth-child(1){transform:rotate(2.4deg);animation:rhfloat 8s ease-in-out infinite;}
+  .rh-clip .rh-pola:nth-child(2){transform:rotate(-2deg);animation:rhfloat 8s ease-in-out .9s infinite;}
+  @media(max-width:900px){.rh-clip{float:none;width:auto;margin:20px 0;flex-direction:row;
+    justify-content:center;} .rh-clip .rh-pola{width:calc(50% - 8px);max-width:270px;}}
+
+  /* faixa inferior: turma + a que sobrou, na diagonal */
+  .rh-strip{display:flex;align-items:flex-start;gap:26px;margin-top:34px;flex-wrap:wrap;}
+  .rh-strip .turma{flex:0 1 250px;min-width:200px;max-width:250px;padding:7px 7px 9px;
+    transform:rotate(-1.2deg) scale(.9);animation:rhfloat 10s ease-in-out infinite;opacity:.82;
+    filter:saturate(.88);}
+  .rh-strip .solo{flex:0 0 250px;padding:10px 10px 34px;transform:rotate(3.2deg);
+    animation:rhfloat 8.5s ease-in-out 1.4s infinite;align-self:center;}
+  .rh-strip .solo figcaption{bottom:8px;font-size:14.5px;}
+  @media(max-width:640px){.rh-strip{gap:18px;justify-content:center;}
+    .rh-strip .solo{flex:0 0 150px;}}
+
+  .rh-facts{list-style:none;margin:26px 0 0;padding:0;display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:11px;clear:both;}
+  .rh-facts li{position:relative;padding-left:32px;font-size:15px;line-height:1.5;color:#3d4d5e;}
+  .rh-facts li::before{content:'✓';position:absolute;left:0;top:-1px;width:21px;height:21px;
+    border-radius:50%;background:var(--gold);color:var(--ink);font-size:12px;font-weight:900;
+    display:flex;align-items:center;justify-content:center;}
+  .rh-quote{margin-top:26px;padding:20px 24px;background:var(--cr);border-left:5px solid var(--gold);
+    border-radius:0 14px 14px 0;font-family:'Caveat',cursive;font-size:25px;line-height:1.35;
+    color:var(--ink);clear:both;}
+
+  /* ---------- FINAL ---------- */
+  .rh-end{background:linear-gradient(140deg,#0d2138,#13314f 45%,#1d456b);color:#fff;
+    border-radius:24px;padding:44px 34px;text-align:center;position:relative;overflow:hidden;
+    margin:10px 0 40px;box-shadow:0 20px 50px rgba(19,49,79,.30);}
+  .rh-end::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(560px 220px at 50% -20%,rgba(216,163,42,.30),transparent 70%);}
+  .rh-end > *{position:relative;z-index:1;}
+  .rh-end h2{color:#fff;font-family:'Fraunces',Georgia,serif;font-size:clamp(26px,4.4vw,38px);
+    margin:0 0 10px;line-height:1.14;}
+  .rh-end h2 em{font-style:normal;color:var(--gold);}
+  .rh-end p{color:#cfdbe8;font-size:15.5px;max-width:50ch;margin:0 auto 24px;line-height:1.6;}
+  .rh-social{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px;}
+  .rh-soc{display:inline-flex;align-items:center;gap:9px;text-decoration:none;font-weight:700;
+    font-size:14px;padding:12px 22px;border-radius:12px;transition:.16s;}
+  .rh-soc.ig{background:linear-gradient(45deg,#f09433,#dc2743 45%,#bc1888);color:#fff;}
+  .rh-soc.wa{background:#1d7a4f;color:#fff;}
+  .rh-soc:hover{transform:translateY(-2px);filter:brightness(1.08);}
+
+  /* o styles.css compartilhado desenha uma barra sob todo h2 — aqui não queremos */
+  #rm-home h2::after,#rm-store h2::after,#rm-home h1::after,#rm-store h1::after{display:none;}
+  #rm-home h1,#rm-home h2,#rm-home h3{padding:0;}
+
+  /* revelação no scroll */
+  .rh-rev{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease;}
+  .rh-rev.on{opacity:1;transform:none;}
+
+  @media(prefers-reduced-motion:reduce){
+    .rh-dep,.rh-me-ph img{animation:none;}
+    .rh-rev{opacity:1;transform:none;transition:none;}
+    .rh-cta:hover,.rh-note:hover,.rh-soc:hover{transform:none;}
+  }
+
+  /* ===================== LOJA DE MATÉRIAS (caderno) ===================== */
+  #rm-store{--pa:#fffdf7;--cr:#f5ecd8;--ink:#13314f;--gold:#d8a32a;--red:#c0392b;
+    --rule:#e2ecf4;--mark:#ffe9a8;--soft:#6a7889;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--ink);}
+  .rm-store-wrap{position:relative;padding:0 0 80px;background:var(--pa);
+    background-image:repeating-linear-gradient(180deg,transparent,transparent 33px,var(--rule) 33px,var(--rule) 34px);
+    background-position:0 6px;overflow:hidden;}
+  .rm-store-wrap::before{content:'';position:absolute;top:0;bottom:0;left:44px;width:2px;
+    background:rgba(192,57,43,.30);z-index:0;}
+  @media(max-width:760px){.rm-store-wrap::before{left:20px;}}
+  .rm-shell{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 26px 0 74px;}
+  @media(max-width:760px){.rm-shell{padding:0 18px 0 38px;}}
+
+  /* cabeçalho da loja */
+  .rm-hero{position:relative;padding:44px 0 26px;text-align:center;}
+  .rm-hero-logo{width:92px;height:auto;display:block;margin:0 auto 10px;
+    filter:drop-shadow(0 8px 18px rgba(19,49,79,.22));}
+  .rm-hero-word{font-family:'Fraunces',Georgia,serif;font-size:18px;font-weight:800;
+    letter-spacing:3px;color:var(--ink);margin-bottom:12px;}
+  .rm-hero-word span{color:var(--gold);}
+  .rm-hero-kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2.4px;
+    text-transform:uppercase;color:var(--soft);margin-bottom:12px;}
+  .rm-hero h1{font-family:'Fraunces',Georgia,serif;font-weight:900;margin:0 0 8px;
+    font-size:clamp(32px,5.6vw,54px);line-height:1.02;letter-spacing:-1.4px;}
+  .rm-hero h1 span{color:var(--gold);}
+  .rm-hero p{font-family:'Caveat',cursive;font-size:clamp(21px,3.2vw,27px);color:var(--red);
+    margin:0 auto;max-width:34ch;transform:rotate(-.8deg);line-height:1.25;}
+  .rm-hero-cta{display:inline-block;margin-top:14px;font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink);
+    background:var(--mark);padding:6px 15px;border-radius:20px;}
+
+  /* pagamento — bilhete colado */
+  .rm-pay{margin:0 0 24px;}
+  .rm-pay-in{position:relative;background:#fff;border:1px solid rgba(19,49,79,.10);
+    border-left:5px solid #1d7a4f;border-radius:3px;padding:17px 22px;display:flex;
+    align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 9px 24px rgba(19,49,79,.11);
+    transform:rotate(-.5deg);}
+  .rm-pay-in::before{content:'';position:absolute;top:-10px;left:44px;width:62px;height:20px;
+    background:rgba(216,163,42,.40);box-shadow:0 1px 3px rgba(0,0,0,.10);}
+  .rm-pay-t{font-weight:800;font-size:15px;}
+  .rm-pay-t small{display:block;font-weight:400;color:var(--soft);font-size:12.5px;margin-top:2px;}
+  .rm-pay-tags{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto;}
+  .rm-pay-tag{background:var(--cr);border:1px solid rgba(19,49,79,.10);border-radius:8px;
+    padding:6px 13px;font-size:12.5px;font-weight:700;}
+  .rm-pay-tag.pix{background:rgba(29,122,79,.10);border-color:rgba(29,122,79,.32);color:#1d7a4f;}
+
+  /* seletor de semestre — abas de caderno */
+  .rm-sems{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 22px;}
+  .rm-sems b{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:1.6px;color:var(--soft);margin-right:4px;}
+  .rm-sem{background:#fff;border:1px solid rgba(19,49,79,.12);border-bottom:3px solid rgba(19,49,79,.12);
+    border-radius:9px 9px 3px 3px;padding:9px 18px;font-size:13.5px;font-weight:700;color:var(--ink);
+    cursor:pointer;transition:.15s;font-family:inherit;}
+  .rm-sem:hover{border-bottom-color:var(--gold);}
+  .rm-sem.on{background:var(--ink);color:#fff;border-color:var(--ink);border-bottom-color:var(--gold);}
+  .rm-sem.empty{opacity:.42;}
+
+  /* ---------- COMBO PREMIUM CENTRAL ---------- */
+  .rm-combo-wrap{margin:0 0 30px;}
+  .rm-combo{position:relative;overflow:hidden;cursor:pointer;border-radius:18px;padding:24px 28px;
+    display:flex;align-items:center;gap:24px;flex-wrap:wrap;
+    background:linear-gradient(135deg,#0d2138 0%,#13314f 38%,#1d456b 68%,#13314f 100%);
+    border:2px solid var(--gold);box-shadow:0 16px 44px rgba(19,49,79,.30);transition:.2s;
+    transform:rotate(-.4deg);}
+  .rm-combo:hover{transform:rotate(0) translateY(-3px);box-shadow:0 22px 56px rgba(19,49,79,.40);}
+  .rm-combo::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(520px 200px at 78% -20%, rgba(216,163,42,.34), transparent 70%);}
+  .rm-combo.sel{border-color:#f0c85a;box-shadow:0 0 0 4px rgba(216,163,42,.35),0 20px 50px rgba(19,49,79,.40);}
+  .rm-combo-ico{position:relative;z-index:1;font-size:44px;line-height:1;}
+  .rm-combo-mid{position:relative;z-index:1;flex:1;min-width:230px;}
+  .rm-combo-kick{display:inline-block;font-size:10px;font-weight:900;letter-spacing:1.6px;
+    text-transform:uppercase;color:var(--ink);background:linear-gradient(100deg,var(--gold),#f7dd8e);
+    border-radius:20px;padding:4px 13px;margin-bottom:9px;}
+  .rm-combo h3{margin:0 0 6px;font-family:'Fraunces',Georgia,serif;font-size:24px;color:#fff;line-height:1.2;}
+  .rm-combo p{margin:0;font-size:13.5px;color:#cfdbe8;line-height:1.55;}
+  .rm-combo-mats{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+  .rm-combo-mats span{font-size:11px;font-weight:600;background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.18);color:var(--cr);border-radius:7px;padding:3px 9px;}
+  .rm-combo-right{position:relative;z-index:1;text-align:right;min-width:150px;}
+  .rm-combo-price{font-size:34px;font-weight:800;color:#fff;line-height:1;
+    font-family:'Fraunces',Georgia,serif;}
+  .rm-combo-price small{display:block;font-size:11.5px;font-weight:500;color:#cfdbe8;margin-top:5px;
+    font-family:inherit;}
+  .rm-combo-btn{margin-top:12px;padding:12px 26px;border:none;border-radius:11px;font-weight:800;
+    font-size:14px;cursor:pointer;background:linear-gradient(100deg,var(--gold),#f0c85a);color:var(--ink);
+    white-space:nowrap;font-family:inherit;}
+  .rm-combo.sel .rm-combo-btn{background:#fff;}
+  @media(max-width:700px){.rm-combo{padding:20px;}.rm-combo-right{text-align:left;}}
+
+  /* ---------- MATRIZ ---------- */
+  .rm-matrix{margin:0;}
+  .rm-mx-title{font-family:'Fraunces',Georgia,serif;font-size:clamp(22px,3.4vw,30px);margin:0 0 4px;
+    letter-spacing:-.5px;}
+  .rm-mx-hint{font-family:'Caveat',cursive;font-size:21px;color:var(--red);margin:0 0 20px;
+    transform:rotate(-.6deg);}
+  .rm-mx-head,.rm-mx-row{display:grid;grid-template-columns:180px repeat(4,1fr);gap:12px;align-items:stretch;}
+  .rm-mx-head{padding:0 0 8px;margin-bottom:6px;}
+  .rm-mx-head span{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;
+    text-transform:uppercase;letter-spacing:1.2px;color:var(--soft);text-align:center;
+    padding-bottom:7px;border-bottom:2px solid rgba(19,49,79,.14);}
+  .rm-mx-head span.c1{border-color:#3a78c2;color:#2c5a8f;}
+  .rm-mx-head span.c2{border-color:#7d3a52;color:#7d3a52;}
+  .rm-mx-head span.c3{border-color:var(--red);color:var(--red);}
+  .rm-mx-head span.c4{border-color:var(--gold);color:#8a6d16;}
+  .rm-mx-head span:first-child{text-align:left;border-color:transparent;}
+  .rm-mx-row{padding:12px 0;border-bottom:2px dashed rgba(19,49,79,.11);}
+  .rm-mx-row:last-child{border-bottom:none;}
+  .rm-mx-name{display:flex;align-items:center;gap:10px;font-family:'Fraunces',Georgia,serif;
+    font-weight:700;font-size:16px;line-height:1.2;padding-right:8px;}
+  .rm-mx-name .ic{font-size:25px;}
+
+  /* célula = ficha de fichário */
+  .rm-cell{position:relative;background:#fff;border:1px solid rgba(19,49,79,.11);border-radius:3px;
+    padding:15px 14px;display:flex;flex-direction:column;gap:9px;cursor:pointer;transition:.18s;
+    overflow:hidden;box-shadow:0 6px 18px rgba(19,49,79,.09);}
+  .rm-cell:hover{transform:translateY(-3px) rotate(-.4deg);box-shadow:0 14px 30px rgba(19,49,79,.16);}
+  .rm-cell.sel{border-color:#1d7a4f;background:linear-gradient(180deg,rgba(29,122,79,.06),#fff 60%);
+    box-shadow:0 0 0 3px rgba(29,122,79,.18),0 12px 26px rgba(19,49,79,.12);}
+  .rm-cell::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:#3a78c2;}
+  .rm-cell.k-parcial2::before{background:linear-gradient(90deg,#7d3a52,#a85474);}
+  .rm-cell.k-final::before{background:linear-gradient(90deg,#c0392b,#e05a4a);}
+  .rm-cell.k-parcial1::before{background:linear-gradient(90deg,#3a78c2,#5b9bd8);}
+
+  /* coluna MATERIA COMPLETA: destaque premium */
+  .rm-cell.gold{border:2px solid var(--gold);background:linear-gradient(172deg,#fffdf6,#fff 55%);
+    box-shadow:0 10px 30px rgba(216,163,42,.20);}
+  .rm-cell.gold::before{height:5px;background:linear-gradient(90deg,var(--gold),#f7dd8e,var(--gold));}
+  .rm-cell.gold::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(300px 130px at 88% -12%, rgba(216,163,42,.20), transparent 70%);}
+  .rm-cell.gold:hover{box-shadow:0 16px 38px rgba(216,163,42,.32);}
+  .rm-cell.gold.sel{border-color:#1d7a4f;}
+  .rm-cell-crown{position:absolute;top:0;right:0;z-index:2;
+    background:linear-gradient(100deg,var(--gold),#f7dd8e);color:var(--ink);font-size:9px;font-weight:900;
+    letter-spacing:1px;text-transform:uppercase;padding:4px 11px;border-radius:0 0 0 11px;}
+
+  .rm-cell-top{position:relative;z-index:1;display:flex;align-items:flex-start;
+    justify-content:space-between;gap:8px;}
+  .rm-cell-price{font-family:'Fraunces',Georgia,serif;font-size:23px;font-weight:800;line-height:1;}
+  .rm-cell-price small{display:block;font-family:inherit;font-size:10px;font-weight:500;
+    color:#8a93a0;margin-top:4px;}
+  .rm-cell.gold .rm-cell-price{font-size:26px;}
+  .rm-cell-chk{width:21px;height:21px;flex:0 0 21px;border-radius:50%;border:2px solid #d6cdb6;
+    display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:900;
+    transition:.15s;}
+  .rm-cell.sel .rm-cell-chk{background:#1d7a4f;border-color:#1d7a4f;}
+  .rm-cell.sel .rm-cell-chk::after{content:'✓';}
+  .rm-cell-n{position:relative;z-index:1;font-size:12px;color:#5a6b7d;line-height:1.45;}
+
+  .rm-cell-feats{position:relative;z-index:1;display:flex;flex-direction:column;gap:3px;
+    padding:9px 0;border-top:1px solid rgba(19,49,79,.08);border-bottom:1px solid rgba(19,49,79,.08);}
+  .rm-cell-feats i{font-style:normal;font-size:11.5px;color:#4a5a6b;display:flex;align-items:center;
+    gap:6px;line-height:1.35;}
+  .rm-cell.gold .rm-cell-feats i{color:#3d4a58;font-weight:600;}
+
+  .rm-cell-blocks{position:relative;z-index:1;}
+  .rm-cell-blocks b{display:block;font-family:'JetBrains Mono',monospace;font-size:9.5px;
+    text-transform:uppercase;letter-spacing:.9px;color:#8a6d16;margin-bottom:6px;}
+  .rm-cell-blocks ul{list-style:none;margin:0;padding:0 4px 0 0;display:flex;flex-direction:column;
+    gap:4px;max-height:132px;overflow-y:auto;}
+  .rm-cell-blocks ul::-webkit-scrollbar{width:4px;}
+  .rm-cell-blocks ul::-webkit-scrollbar-thumb{background:#e0d5ba;border-radius:4px;}
+  .rm-cell-blocks li{font-size:11.5px;color:#5a6b7d;line-height:1.35;padding-left:13px;position:relative;}
+  .rm-cell-blocks li::before{content:'•';position:absolute;left:2px;color:var(--gold);font-weight:900;}
+  .rm-cell-pick{position:relative;z-index:1;margin-top:auto;text-align:center;padding:9px;
+    border-radius:8px;font-size:12.5px;font-weight:800;background:var(--cr);color:var(--ink);transition:.15s;}
+  .rm-cell:hover .rm-cell-pick{background:var(--ink);color:#fff;}
+  .rm-cell.gold .rm-cell-pick{background:linear-gradient(100deg,var(--gold),#f0c85a);}
+  .rm-cell.sel .rm-cell-pick{background:#1d7a4f;color:#fff;}
+
+  .rm-cell-empty{border-style:dashed;background:transparent;cursor:default;align-items:center;
+    justify-content:center;color:#b4aa93;font-size:12px;box-shadow:none;min-height:120px;}
+  .rm-cell-empty::before{display:none;}
+  .rm-cell-empty:hover{transform:none;box-shadow:none;}
+
+  @media(max-width:820px){
+    .rm-mx-head{display:none;}
+    .rm-mx-row{grid-template-columns:1fr 1fr;gap:10px;padding:16px 0;}
+    .rm-mx-name{grid-column:1/-1;margin-bottom:2px;}
+  }
+
+  /* ---------- BARRA DO CARRINHO ---------- */
+  #rm-cart{position:fixed;left:0;right:0;bottom:0;z-index:99996;transform:translateY(110%);
+    transition:transform .25s cubic-bezier(.2,.8,.3,1);
+    background:linear-gradient(105deg,#0d2138,#13314f 55%,#1d456b);
+    border-top:3px solid #d8a32a;box-shadow:0 -10px 34px rgba(0,0,0,.28);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+  #rm-cart.show{transform:translateY(0);}
+  .rm-cart-in{max-width:1080px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;
+    gap:18px;flex-wrap:wrap;}
+  .rm-cart-list{flex:1;min-width:210px;color:#cfdbe8;font-size:12.5px;line-height:1.5;
+    max-height:56px;overflow:auto;}
+  .rm-cart-list b{color:#fff;display:block;font-size:13px;margin-bottom:2px;}
+  .rm-cart-tot{text-align:right;color:#fff;}
+  .rm-cart-tot small{display:block;font-size:11px;color:#cfdbe8;text-transform:uppercase;letter-spacing:1px;}
+  .rm-cart-tot span{font-family:'Fraunces',Georgia,serif;font-size:27px;font-weight:800;line-height:1.1;}
+  .rm-cart-go{padding:14px 30px;border:none;border-radius:12px;font-weight:800;font-size:15px;
+    cursor:pointer;background:linear-gradient(100deg,#d8a32a,#f0c85a);color:#13314f;white-space:nowrap;
+    font-family:inherit;}
+  .rm-cart-go:hover{background:#fff;}
+  .rm-cart-go:disabled{opacity:.6;cursor:wait;}
+  .rm-cart-note{flex:1 0 100%;margin:8px 0 0;font-size:11.5px;line-height:1.45;
+    color:#cfdbe8;text-align:right;}
+  .rm-cart-note b{color:#fff;}
+  #rm-phone-ask .hint{font-size:12.5px;line-height:1.5;color:#5a6878;margin:-4px 0 12px;}
+  #rm-phone-ask .hint b{color:#13314f;}
+  .rm-cart-clear{background:transparent;border:1px solid rgba(255,255,255,.28);color:#cfdbe8;
+    border-radius:10px;padding:9px 15px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .rm-cart-cup{display:flex;gap:7px;align-items:center;}
+  .rm-cart-cup input{width:130px;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.08);color:#fff;font-size:13px;text-transform:uppercase;
+    letter-spacing:1px;font-family:inherit;}
+  .rm-cart-cup input::placeholder{color:#8fa3b8;text-transform:none;letter-spacing:0;}
+  .rm-cart-cup button{padding:10px 14px;border:none;border-radius:9px;background:rgba(255,255,255,.14);
+    color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;}
+  .rm-cart-cup button:hover{background:rgba(255,255,255,.25);}
+  .rm-cart-cup .ok{color:#7de3ae;font-size:12px;font-weight:700;white-space:nowrap;}
+  .rm-cart-cup .bad{color:#ffb3a8;font-size:12px;white-space:nowrap;}
+  .rm-cart-tot .old{display:block;font-size:13px;color:#8fa3b8;text-decoration:line-through;font-weight:600;}
+  .rm-cart-clear:hover{border-color:#fff;color:#fff;}
+  @media(max-width:700px){
+    .rm-cart-in{padding:12px 14px;gap:10px;}
+    .rm-cart-list{max-height:44px;font-size:12px;}
+    .rm-cart-go{flex:1;padding:13px 18px;}
+    .rm-cart-tot span{font-size:22px;}
+  }
+  body.rm-cart-open{padding-bottom:96px;}
+
+  /* whatsapp */
+  .rm-wa{margin:34px 0 0;}
+  .rm-wa-in{background:linear-gradient(120deg,#0f5132,#1d7a4f);color:#fff;border-radius:16px;
+    padding:22px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    box-shadow:0 10px 28px rgba(29,122,79,.25);}
+  .rm-wa-ico{font-size:34px;}
+  .rm-wa-t{font-weight:800;font-size:17px;}
+  .rm-wa-t small{display:block;font-weight:400;font-size:13px;color:#d4ecdd;margin-top:3px;}
+  .rm-wa a{margin-left:auto;background:#fff;color:#0f5132;text-decoration:none;font-weight:800;
+    font-size:14px;padding:12px 24px;border-radius:11px;white-space:nowrap;}
+  .rm-wa a:hover{background:var(--gold);color:var(--ink);}
+
+  .rm-store-empty{padding:40px 20px;text-align:center;color:var(--soft);}
+  .rm-store-empty h3{font-family:'Fraunces',Georgia,serif;color:var(--ink);}
+
+  /* modal de agradecimento */
+  #rm-thanks{position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;
+    background:rgba(9,20,33,.72);padding:20px;backdrop-filter:blur(3px);}
+  #rm-thanks .box{position:relative;overflow:hidden;width:460px;max-width:94vw;text-align:center;
+    background:linear-gradient(165deg,#fffdf7,#fff);border-radius:22px;padding:38px 30px 30px;
+    border-top:6px solid #d8a32a;box-shadow:0 26px 70px rgba(0,0,0,.35);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+  #rm-thanks .box::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(320px 150px at 50% -10%, rgba(216,163,42,.20), transparent 70%);}
+  #rm-thanks .ico{position:relative;z-index:1;font-size:52px;line-height:1;margin-bottom:10px;}
+  #rm-thanks h2{position:relative;z-index:1;margin:0 0 6px;font-family:'Fraunces',Georgia,serif;
+    font-size:26px;color:#13314f;}
+  #rm-thanks .who{position:relative;z-index:1;font-size:17px;font-weight:800;color:#c0392b;margin-bottom:14px;}
+  #rm-thanks p{position:relative;z-index:1;margin:0 0 12px;font-size:14.5px;line-height:1.65;color:#4a5a6b;}
+  #rm-thanks .share{position:relative;z-index:1;background:#f7f2e6;border:1px dashed #d8a32a;
+    border-radius:13px;padding:14px 16px;font-size:13.5px;color:#6a5a3a;line-height:1.55;margin-bottom:18px;}
+  #rm-thanks button{position:relative;z-index:1;width:100%;padding:13px;border:none;border-radius:11px;
+    background:#13314f;color:#fff;font-weight:800;font-size:15px;cursor:pointer;}
+  #rm-thanks button:hover{background:#c0392b;}
+
+  .rm-store-btn{background:#d8a32a;color:#13314f;border:none;border-radius:8px;padding:7px 14px;
+    font-weight:700;font-size:13px;cursor:pointer;margin-right:10px;}
+  .rm-store-btn:hover{background:#c0392b;color:#fff;}
+  .locked-content{text-align:center;padding:80px 20px;}
+  .locked-card{max-width:520px;margin:0 auto;background:var(--bg-soft);border:1px solid var(--bg-warm);
+    border-radius:16px;padding:48px 32px;}
+  .locked-card .ico{font-size:54px;line-height:1;margin-bottom:18px;}
+  .locked-card h2{margin:0 0 12px;}
+  .locked-card p{font-size:16px;color:#6a5a4a;margin:0 0 8px;}
+  .hidden{display:none !important;}
+
+  /* ============ MENU POR SEMESTRE (catálogo do aluno) ============ */
+  .rm-semtab .rm-semcaret{font-size:.7em;opacity:.65;margin-left:.35rem;display:inline-block;transition:transform .18s ease;}
+  .rm-semtab.open .rm-semcaret{transform:rotate(180deg);}
+  .rm-semtab.open{color:var(--brand);background:var(--brand-tint);}
+  #rm-sem-panel{position:absolute;top:100%;left:0;right:0;background:#fff;
+    border-bottom:1px solid var(--rule);box-shadow:0 22px 46px rgba(19,49,79,.18);
+    max-height:min(64vh,540px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  #rm-sem-panel.open{animation:rmSemIn .18s ease;}
+  @keyframes rmSemIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
+  .rm-sem-inner{max-width:1320px;margin:0 auto;padding:.85rem 1rem 1.1rem;}
+  .rm-sem-head{display:flex;align-items:center;gap:.7rem;margin-bottom:.7rem;
+    font-family:var(--font-mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#8a99ab;}
+  .rm-sem-head .ln{flex:1;height:1px;background:var(--rule);}
+  .rm-sem-head button{background:none;border:none;color:#8a99ab;cursor:pointer;font-size:.95rem;line-height:1;padding:2px 4px;}
+  .rm-sem-head button:hover{color:#c0392b;}
+  .rm-sem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.6rem;}
+  /* ícone vetorial inline: sempre renderiza, em qualquer aparelho */
+  .rm-ico{width:1em;height:1em;display:block;flex:0 0 auto;fill:none;stroke:currentColor;
+    stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .rm-sem-item{position:relative;display:flex;align-items:center;gap:.8rem;text-align:left;cursor:pointer;
+    background:#fff;border:1px solid var(--rule);border-radius:14px;
+    padding:.8rem .95rem;overflow:hidden;transition:all .18s ease;font-family:var(--font-ui);}
+  .rm-sem-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--ac,#d8a32a);transition:width .18s ease;}
+  .rm-sem-item:hover{border-color:var(--ac,var(--brand));transform:translateY(-2px);
+    box-shadow:0 12px 26px rgba(19,49,79,.13);}
+  .rm-sem-item:hover::before{width:6px;}
+  .rm-sem-item .ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;
+    justify-content:center;flex:0 0 auto;margin-left:.15rem;
+    background:var(--acbg,rgba(19,49,79,.09));color:var(--ac,var(--brand));font-size:22px;
+    transition:transform .18s ease;}
+  .rm-sem-item:hover .ic{transform:scale(1.07) rotate(-3deg);}
+  .rm-sem-item .tx{min-width:0;flex:1;}
+  .rm-sem-item b{display:block;font-family:var(--font-display,'Fraunces',Georgia,serif);
+    font-size:1rem;font-weight:800;color:var(--ink);line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rm-sem-item small{display:block;font-family:var(--font-mono);font-size:.61rem;letter-spacing:.07em;
+    text-transform:uppercase;color:#8a99ab;margin-top:.28rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rm-sem-item .plan{flex:0 0 auto;font-family:var(--font-mono);font-size:.58rem;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;padding:.2rem .45rem;border-radius:6px;
+    background:var(--acbg,rgba(19,49,79,.09));color:var(--ac,var(--brand));}
+  .rm-sem-item .go{flex:0 0 auto;color:var(--ac,var(--brand));opacity:0;transform:translateX(-5px);
+    transition:all .18s ease;font-size:1.05rem;line-height:1;}
+  .rm-sem-item:hover .go{opacity:1;transform:none;}
+  .rm-sem-item.on{background:var(--brand);border-color:var(--brand);}
+  .rm-sem-item.on::before{background:#d8a32a;width:6px;}
+  .rm-sem-item.on b{color:#fff;}
+  .rm-sem-item.on small{color:#c8d8ea;}
+  .rm-sem-item.on .ic{background:rgba(255,255,255,.16);color:#fff;}
+  .rm-sem-item.on .plan{background:rgba(255,255,255,.18);color:#fff;}
+  .rm-sem-item.on .go{opacity:1;transform:none;color:#d8a32a;}
+  .rm-sem-empty{font-size:.9rem;color:#8a99ab;padding:.4rem 0;}
+  @media (max-width:700px){
+    .rm-sem-grid{grid-template-columns:1fr;}
+    .rm-sem-inner{padding:.7rem .8rem 1rem;}
+    #rm-sem-panel{max-height:70vh;}
+  }
+</style>
+</head>
+
+<body data-tab="">
+
+<!-- ===================== TOPBAR DE MARCA (app) ===================== -->
+<div class="rm-topbar hidden" id="rm-topbar">
+  <img src="assets/repasso-med-logo.png" alt="REPASSO MED">
+  <div class="rm-brand-word">
+    <b>REPASSO <span>MED</span></b>
+    <small>Guía de Estudio</small>
+  </div>
+  <div class="rm-spacer"></div>
+  <button type="button" class="rm-store-btn hidden" id="rm-store-btn" onclick="openStore()">Loja de Matérias</button>
+  <span class="rm-user" id="rm-user"></span>
+</div>
+
+<!-- aviso de acesso atualizado (expiração/revogação em sessão aberta) -->
+<div id="access-banner" class="hidden">
+  <span>Su acceso a alguna asignatura fue actualizado por el administrador.</span>
+  <button onclick="location.reload()">Actualizar ahora</button>
+</div>
+
+<!-- ===================== TELA DE LOGIN / CADASTRO ===================== -->
+<div id="auth-overlay">
+  <div class="box">
+    <div class="brand">
+      <img src="assets/repasso-med-logo.png" alt="REPASSO MED">
+      <span class="tagline">desde cero, hasta el examen</span>
+    </div>
+    <!-- alternador de abas -->
+    <div class="auth-tabs">
+      <button id="tab-login" class="auth-tab active" type="button" onclick="authSwitch('login')">Entrar</button>
+      <button id="tab-signup" class="auth-tab" type="button" onclick="authSwitch('signup')">Criar conta</button>
+    </div>
+
+    <!-- ENTRAR -->
+    <div id="pane-login">
+      <p class="sub">Acceda con su cuenta para ver sus asignaturas.</p>
+      <label>E-mail</label>
+      <input id="au-email" type="email" autocomplete="username" placeholder="su@email.com">
+      <label>Contraseña</label>
+      <input id="au-pass" type="password" autocomplete="current-password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')authLogin()">
+      <button onclick="authLogin()">Entrar</button>
+      <button type="button" class="au-link" onclick="authSwitch('reset')">¿Olvidaste tu contraseña?</button>
+    </div>
+
+    <!-- RECUPERAR SENHA -->
+    <div id="pane-reset" class="hidden">
+      <p class="sub">Poné tu e-mail y te enviamos un enlace para crear una contraseña nueva.</p>
+      <label>E-mail</label>
+      <input id="rs-email" type="email" autocomplete="username" placeholder="su@email.com"
+             onkeydown="if(event.key==='Enter')authReset()">
+      <button onclick="authReset()">Enviar enlace</button>
+      <button type="button" class="au-link" onclick="authSwitch('login')">← Volver a entrar</button>
+    </div>
+
+    <!-- CRIAR CONTA -->
+    <div id="pane-signup" class="hidden">
+      <p class="sub">Cree su cuenta. El acceso será habilitado tras la aprobación del administrador.</p>
+      <label>Nombre completo</label>
+      <input id="su-name" type="text" autocomplete="name" placeholder="Nombre y apellido">
+      <label>E-mail</label>
+      <input id="su-email" type="email" autocomplete="username" placeholder="su@email.com">
+      <label>Teléfono <span style="color:#7f968f;">(contacto y soporte)</span></label>
+      <div class="rm-phone-row">
+        <select id="su-ddi">
+          <option value="595">🇵🇾 +595</option>
+          <option value="55">🇧🇷 +55</option>
+        </select>
+        <input id="su-phone" type="tel" autocomplete="tel" inputmode="numeric" placeholder="981 234 567">
+      </div>
+      <label>Contraseña <span style="color:#7f968f;">(mín. 6 caracteres)</span></label>
+      <input id="su-pass" type="password" autocomplete="new-password" placeholder="••••••••">
+      <label>Repetir contraseña</label>
+      <input id="su-pass2" type="password" autocomplete="new-password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')authSignup()">
+      <button onclick="authSignup()">Crear cuenta</button>
+    </div>
+
+    <div id="au-msg"></div>
+  </div>
+</div>
+
+<!-- ===================== TELA DE CARREGAMENTO ===================== -->
+<div id="loading-screen" class="hidden">
+  <img src="assets/repasso-med-logo.png" alt="REPASSO MED">
+  <div class="spin"></div>
+  <p>Cargando sus asignaturas...</p>
+</div>
+
+<!-- ===================== MENU DE ABAS (montado via JS) ===================== -->
+<div class="main-tabs hidden" id="main-tabs">
+  <div class="main-tabs-inner" id="main-tabs-inner">
+    <!-- botões inseridos dinamicamente conforme acesso -->
+  </div>
+  <!-- painel longitudinal: matérias liberadas do semestre escolhido -->
+  <div id="rm-sem-panel" class="hidden"></div>
+</div>
+
+<!-- ===================== CONTÊINER DAS MATÉRIAS ===================== -->
+<div id="materias-container">
+  <!-- HTML de cada matéria liberada é injetado aqui -->
+</div>
+
+<!-- Template do cadeado (usado para abas bloqueadas, se exibidas) -->
+<template id="locked-template">
+  <section class="container locked-content">
+    <div class="locked-card">
+      <div class="ico">🔒</div>
+      <h2>Acesso bloqueado</h2>
+      <p>Você não possui acesso a esta disciplina.</p>
+      <p style="color:#998a7a;">Entre em contato para adquirir acesso.</p>
+    </div>
+  </section>
+</template>
+
+
+<!-- Funções de interação das matérias (switchTab, checkAnswer, checkTF, toggleAnswer, RepassoMed) -->
+<script src="assets/app-core.js"></script>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO — chaves do seu projeto Supabase (já preenchidas)
+   A chave ANON é segura no navegador: o RLS protege os dados.
+   ===================================================================== */
+const SUPABASE_URL  = "https://ltizbamvskcgigmqobfo.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0aXpiYW12c2tjZ2lnbXFvYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMjEyMzQsImV4cCI6MjA5NTg5NzIzNH0.pCVNq9tSibknAm6hKuTeAd8ItozQrXiBTiwaEn9xX0U";
+
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+/* =====================================================================
+   CATÁLOGO LOCAL — liga cada matéria ao seu arquivo, aba e rótulo do menu.
+   A ordem aqui é a ordem dos botões no topo.
+   (precisa bater com os "slug" e "tab_id" da tabela subjects no banco)
+   ===================================================================== */
+const CATALOGO = [
+  { slug:'anatomia-patologica', tab:'anato',   file:'materias/anatomia-patologica.html', title:'Anatopatologia I', sub:'Dra. Chamorro' },
+  { slug:'anatomia-patologica-practica', tab:'anatoprat', file:'materias/anatomia-patologica-practica.html', title:'Anatopatologia Práctica', sub:'Láminas · Flashcards · Resumen' },
+  { slug:'fisiopatologia',      tab:'fisio',   file:'materias/fisiopatologia.html',      title:'Fisiopatologia I',      sub:'Flashcards · Resumen . Cuestiones ' },
+  { slug:'imagenologia',        tab:'imagen',  file:'materias/imagenologia.html',        title:'Imagenología',          sub:'Tórax · Abdome · Craneo' },
+  { slug:'semiologia',          tab:'semio',   file:'materias/semiologia.html',          title:'Semiología I',          sub:'Tórax · Abdome · Manobras' },
+  { slug:'farmacologia',        tab:'farmaco', file:'materias/farmacologia.html',        title:'Farmacología I',        sub:'Flashcards · Resumen . Cuestiones' },
+  { slug:'medicina-familiar',   tab:'medfam',  file:'materias/medicina-familiar.html',   title:'Medicina Familiar',     sub:'Flashcards · Resumen . Cuestiones' },
+  { slug:'semiologia-ii', tab:'semio2', file:'materias/semiologia-ii.html', title:'Semiología II', sub:'Respiratorio · Cardio · Digestivo' },
+  { slug:'farmacologia-ii', tab:'farmaco2', file:'materias/farmacologia-ii.html', title:'Farmacología II', sub:'Cardiovascular · AINE · Endócrino' },
+  { slug:'embriologia', tab:'embrio', file:'materias/embriologia.html', title:'Embriología', sub:'Del gameto al nacimiento' },
+  { slug:'biologia', tab:'bio', file:'materias/biologia.html', title:'Biología', sub:'Biomoléculas · Célula · Organelos' },
+  { slug:'histologia-i', tab:'histo1', file:'materias/histologia-i.html', title:'Histología I', sub:'Tejidos fundamentales' },
+  { slug:'histologia-i-practica', tab:'histo1p', file:'materias/histologia-i-practica.html', title:'Histología I Práctica', sub:'Laminarios y Tejidos' },
+  { slug:'anatomia-i', tab:'anato1', file:'materias/anatomia-i.html', title:'Anatomía I', sub:'Tórax · Miembro superior · Cuello' },
+  { slug:'anatomia-patologica-ii', tab:'anato2', file:'materias/anatomia-patologica-ii.html', title:'Anatopatologia II', sub:'Digestivo · Hígado · Tiroides' },
+  { slug:'medicina-legal', tab:'medlegal', file:'materias/medicina-legal.html', title:'Medicina Legal', sub:'Tanatología · Lesiones · Deontología' },
+  { slug:'fisiopatologia-ii', tab:'fisio2', file:'materias/fisiopatologia-ii.html', title:'Fisiopatologia II', sub:'Digestivo · Hígado · Páncreas · Riñón' },
+  { slug:'toxicologia', tab:'toxico', file:'materias/toxicologia.html', title:'Toxicología', sub:'Intoxicaciones · Toxidromes · Antídotos' },
+];
+
+/* Semestre de cada matéria. A VERDADE vem do banco (subjects.semester,
+   editável no painel admin em «Semestre de cada materia»). Este mapa só é
+   usado se o banco não responder ou a matéria estiver sem semestre. */
+const SEMESTRE_FALLBACK = {
+  'biologia':1, 'anatomia-i':1, 'histologia-i':1, 'histologia-i-practica':1, 'embriologia':2,
+  'anatomia-patologica':5, 'anatomia-patologica-practica':5, 'fisiopatologia':5,
+  'imagenologia':5, 'semiologia':5, 'farmacologia':5, 'medicina-familiar':5,
+  'semiologia-ii':6, 'farmacologia-ii':6, 'anatomia-patologica-ii':6, 'medicina-legal':6,
+  'fisiopatologia-ii':6, 'toxicologia':7
+};
+let SEMESTER_BY_SLUG = new Map();   // slug -> semestre (vindo do banco)
+let MENU_GROUPS = new Map();        // semestre -> [itens do CATALOGO liberados]
+let OPEN_SEM = null;                // semestre com o painel aberto
+
+let ALLOWED = new Set();      // slugs liberados
+let ACCOUNT_ACTIVE = true;
+let LOADED_TABS = [];         // (legado) abas efetivamente carregadas
+let AVAILABLE_TABS = [];      // abas liberadas, na ordem do CATALOGO
+const LOADED = new Set();     // abas já baixadas e injetadas (carregamento sob demanda)
+let PLANS = new Map();        // slug → plano comprado (null/'completa' = tudo; 'parcial1'/'parcial2final' = parte)
+const SECTION_MAP = new Map();// slug → mapeamento de seções por parcial (cache)
+
+/* =====================================================================
+   CONTROLE DE DISPOSITIVOS E SESSÃO ÚNICA (anti-compartilhamento)
+   ===================================================================== */
+let SESSION_TOKEN = null;     // token desta sessão (devolvido por register_login)
+let SESSION_CHANNEL = null;   // canal Realtime
+let HEARTBEAT = null;         // intervalo de "latido"
+let KICKED = false;           // já foi deslogado por outra sessão?
+
+/* device_id estável por navegador (persistido no localStorage) */
+function getDeviceId(){
+  try{
+    let id = localStorage.getItem('rm_device_id');
+    if(!id){
+      id = (crypto.randomUUID ? crypto.randomUUID()
+           : 'dev-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+      localStorage.setItem('rm_device_id', id);
+    }
+    return id;
+  }catch(e){
+    // localStorage indisponível → id efêmero (sessão única ainda funciona)
+    return 'nostorage-' + Math.random().toString(16).slice(2);
+  }
+}
+
+/* rótulo legível do dispositivo a partir do user-agent */
+function deviceLabel(){
+  const ua = navigator.userAgent || '';
+  let os = 'Dispositivo';
+  if(/Windows/i.test(ua)) os = 'Windows';
+  else if(/Android/i.test(ua)) os = 'Android';
+  else if(/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+  else if(/Mac OS X/i.test(ua)) os = 'macOS';
+  else if(/Linux/i.test(ua)) os = 'Linux';
+  let br = 'Navegador';
+  if(/Edg\//i.test(ua)) br = 'Edge';
+  else if(/Chrome\//i.test(ua)) br = 'Chrome';
+  else if(/Firefox\//i.test(ua)) br = 'Firefox';
+  else if(/Safari\//i.test(ua) && !/Chrome/i.test(ua)) br = 'Safari';
+  return br + ' · ' + os;
+}
+
+/* IP público (best-effort; se falhar, segue sem IP) */
+async function getClientIP(){
+  try{
+    const r = await fetch('https://api.ipify.org?format=json', {cache:'no-store'});
+    if(r.ok){ const j = await r.json(); return j.ip || null; }
+  }catch(e){}
+  return null;
+}
+
+/* registra o login: grava dispositivo + cria sessão única; devolve o token */
+async function registerDeviceAndSession(){
+  const ip = await getClientIP();
+  const { data, error } = await _sb.rpc('register_login', {
+    p_device_id:  getDeviceId(),
+    p_label:      deviceLabel(),
+    p_user_agent: (navigator.userAgent || '').slice(0, 400),
+    p_ip:         ip
+  });
+  if(error){ console.error('register_login', error); return null; }
+  SESSION_TOKEN = data;
+  return data;
+}
+
+/* assina Realtime: se o token no banco mudar (outro login) ou a linha
+   for removida (admin desconectou), desloga este dispositivo na hora */
+async function watchSession(){
+  const { data:{ user } } = await _sb.auth.getUser();
+  if(!user) return;
+  if(SESSION_CHANNEL){ try{ _sb.removeChannel(SESSION_CHANNEL); }catch(e){} }
+
+  SESSION_CHANNEL = _sb.channel('rm-session-' + user.id)
+    .on('postgres_changes',
+      { event:'*', schema:'public', table:'user_sessions', filter:'user_id=eq.' + user.id },
+      (payload)=>{
+        if(payload.eventType === 'DELETE'){ forceLogout('Su sesión fue cerrada por el administrador.'); return; }
+        const row = payload.new;
+        if(row && SESSION_TOKEN && row.session_token !== SESSION_TOKEN){
+          forceLogout('Se inició sesión en otro dispositivo. Esta sesión fue cerrada.');
+        }
+      })
+    .subscribe();
+
+  // latido a cada 60s (refresca last_seen e, como rede de segurança, confere o token)
+  if(HEARTBEAT) clearInterval(HEARTBEAT);
+  HEARTBEAT = setInterval(async ()=>{
+    if(KICKED || !SESSION_TOKEN) return;
+    try{
+      const { data } = await _sb.from('user_sessions').select('session_token').eq('user_id', user.id).maybeSingle();
+      if(!data){ forceLogout('Su sesión fue cerrada.'); return; }
+      if(data.session_token !== SESSION_TOKEN){ forceLogout('Se inició sesión en otro dispositivo. Esta sesión fue cerrada.'); return; }
+      await _sb.rpc('touch_session', { p_token: SESSION_TOKEN });
+      await checkSubjectsStillAllowed();   // revalida acesso durante a sessão aberta
+    }catch(e){}
+  }, 60000);
+}
+
+/* Revalida periodicamente se alguma disciplina liberada expirou ou foi removida
+   pelo admin durante a sessão aberta. NÃO desloga nem interrompe nada em
+   andamento (ex.: um simulado) — só mostra um aviso e deixa o usuário recarregar
+   quando quiser. Se a matéria não estava liberada, nada muda. */
+async function checkSubjectsStillAllowed(){
+  try{
+    const { data, error } = await _sb.from('my_active_subjects').select('subject_slug');
+    if(error || !data) return;
+    const current = new Set(data.map(r => r.subject_slug));
+    let changed = false;
+    ALLOWED.forEach(slug => { if(!current.has(slug)) changed = true; });
+    if(changed){
+      const b = document.getElementById('access-banner');
+      if(b) b.classList.remove('hidden');
+    }
+  }catch(e){}
+}
+
+/* encerra esta sessão (kick) e mostra aviso */
+async function forceLogout(msg){
+  if(KICKED) return;
+  KICKED = true;
+  try{ if(HEARTBEAT) clearInterval(HEARTBEAT); }catch(e){}
+  try{ if(SESSION_CHANNEL) _sb.removeChannel(SESSION_CHANNEL); }catch(e){}
+  try{ await _sb.auth.signOut(); }catch(e){}
+  showKicked(msg || 'Esta sesión fue cerrada.');
+}
+
+/* tela de aviso de sessão encerrada */
+function showKicked(msg){
+  try{ document.getElementById('main-tabs').classList.add('hidden'); }catch(e){}
+  try{ document.getElementById('rm-topbar').classList.add('hidden'); }catch(e){}
+  const fab = document.getElementById('logout-fab'); if(fab) fab.remove();
+  const ov = document.getElementById('auth-overlay');
+  ov.classList.remove('hidden');
+  ov.innerHTML = `
+    <div class="box">
+      <div class="brand">
+        <img src="assets/repasso-med-logo.png" alt="REPASSO MED">
+        <span class="tagline">desde cero, hasta el examen</span>
+      </div>
+      <h2 style="color:#c0392b;">Sesión cerrada</h2>
+      <p class="sub">${msg}</p>
+      <button onclick="location.reload()">Volver a iniciar sesión</button>
+    </div>`;
+}
+
+/* =====================================================================
+   LOGIN
+   ===================================================================== */
+async function authLogin(){
+  const email = document.getElementById('au-email').value.trim();
+  const pass  = document.getElementById('au-pass').value;
+  const msg   = document.getElementById('au-msg');
+  msg.className=''; msg.textContent = '';
+  if(!email || !pass){ msg.textContent = 'Complete e-mail y contraseña.'; return; }
+  const { error } = await _sb.auth.signInWithPassword({ email, password: pass });
+  if(error){
+    let m = error.message || 'Error al iniciar sesión.';
+    if(/Email not confirmed/i.test(m)) m = 'Debe confirmar su e-mail antes de entrar. Revise su correo.';
+    else if(/Invalid login credentials/i.test(m)) m = 'E-mail o contraseña incorrectos.';
+    msg.className=''; msg.textContent = m; return;
+  }
+  await afterLogin();
+}
+
+/* alterna entre as abas Entrar / Criar conta / Recuperar */
+function authSwitch(which){
+  const msg = document.getElementById('au-msg'); msg.className=''; msg.textContent='';
+  const isLogin  = which === 'login';
+  const isSignup = which === 'signup';
+  const isReset  = which === 'reset';
+  document.getElementById('tab-login').classList.toggle('active', isLogin || isReset);
+  document.getElementById('tab-signup').classList.toggle('active', isSignup);
+  document.getElementById('pane-login').classList.toggle('hidden', !isLogin);
+  document.getElementById('pane-signup').classList.toggle('hidden', !isSignup);
+  document.getElementById('pane-reset').classList.toggle('hidden', !isReset);
+}
+
+/* envia o e-mail de recuperação de senha (fluxo nativo do Supabase) */
+async function authReset(){
+  const email = document.getElementById('rs-email').value.trim();
+  const msg = document.getElementById('au-msg');
+  msg.className=''; msg.textContent='';
+  if(!email){ msg.textContent = 'Poné tu e-mail.'; return; }
+  msg.className='ok'; msg.textContent = 'Enviando…';
+  try{
+    const { error } = await _sb.auth.resetPasswordForEmail(email, {
+      redirectTo: location.origin + location.pathname + '?recovery=1'
+    });
+    if(error){ msg.className=''; msg.textContent = error.message || 'No se pudo enviar.'; return; }
+  }catch(e){ msg.className=''; msg.textContent = 'Error de conexión.'; return; }
+  // resposta sempre positiva (não revela se o e-mail existe — boa prática)
+  msg.className='ok';
+  msg.textContent = 'Si el e-mail está registrado, te enviamos un enlace. Revisá tu bandeja y el spam.';
+}
+
+/* junta DDI + número no formato internacional (+595981234567) */
+function joinPhone(ddi, raw){
+  const d = String(raw || '').replace(/\D+/g, '').replace(/^0+/, '');
+  if(!d) return '';
+  return '+' + ddi + d;
+}
+
+/* cadastro de novo usuário (fica pendente de aprovação do admin) */
+async function authSignup(){
+  const name  = document.getElementById('su-name').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const ddi   = document.getElementById('su-ddi').value;
+  const phone = joinPhone(ddi, document.getElementById('su-phone').value);
+  const pass  = document.getElementById('su-pass').value;
+  const pass2 = document.getElementById('su-pass2').value;
+  const msg   = document.getElementById('au-msg');
+  msg.className=''; msg.textContent='';
+  if(!name || !email || !pass){ msg.textContent='Complete todos los campos.'; return; }
+  if(pass.length < 6){ msg.textContent='La contraseña debe tener al menos 6 caracteres.'; return; }
+  if(pass !== pass2){ msg.textContent='Las contraseñas no coinciden.'; return; }
+  if(phone && phone.replace(/\D/g,'').length < 10){ msg.textContent='Revisá el número de teléfono.'; return; }
+
+  const { data, error } = await _sb.auth.signUp({
+    email, password: pass,
+    options:{ data:{ full_name: name, phone: phone || null } }
+  });
+  if(error){
+    let m = error.message || 'Error al crear la cuenta.';
+    if(/already registered|already been registered/i.test(m)) m = 'Ya existe una cuenta con ese e-mail.';
+    msg.className=''; msg.textContent = m; return;
+  }
+  // grava o telefone no perfil (se a sessão já existir neste instante)
+  try{
+    if(phone && data && data.user){
+      await _sb.from('profiles').update({ phone }).eq('id', data.user.id);
+    }
+  }catch(e){}
+  // sucesso: limpa sessão (no caso de auto-login) para forçar fluxo de aprovação
+  await _sb.auth.signOut();
+  document.getElementById('su-name').value='';
+  document.getElementById('su-email').value='';
+  document.getElementById('su-phone').value='';
+  document.getElementById('su-pass').value='';
+  document.getElementById('su-pass2').value='';
+  authSwitch('login');
+  msg.className='ok';
+  msg.textContent = '¡Cuenta creada! Su acceso quedará disponible cuando el administrador la apruebe.';
+}
+
+async function doLogout(){
+  try{
+    KICKED = true;
+    if(HEARTBEAT) clearInterval(HEARTBEAT);
+    if(SESSION_CHANNEL) _sb.removeChannel(SESSION_CHANNEL);
+    // remove a própria sessão ativa (só apaga se o token for o desta sessão)
+    const { data:{ user } } = await _sb.auth.getUser();
+    if(user && SESSION_TOKEN){
+      await _sb.from('user_sessions').delete().eq('user_id', user.id).eq('session_token', SESSION_TOKEN);
+    }
+  }catch(e){}
+  await _sb.auth.signOut();
+  location.reload();
+}
+
+/* =====================================================================
+   APÓS LOGIN — descobre acesso e monta a plataforma
+   ===================================================================== */
+async function afterLogin(){
+  document.getElementById('auth-overlay').classList.add('hidden');
+  document.getElementById('loading-screen').classList.remove('hidden');
+
+  // 1) status da conta
+  const { data:{ user } } = await _sb.auth.getUser();
+  const { data: prof } = await _sb.from('profiles').select('is_active,full_name').eq('id', user.id).single();
+  ACCOUNT_ACTIVE = prof ? prof.is_active : false;
+
+  // conta pendente de aprovação / bloqueada → mostra aviso e não carrega nada
+  if(!ACCOUNT_ACTIVE){
+    document.getElementById('loading-screen').classList.add('hidden');
+    showPending();
+    addLogoutButton();
+    return;
+  }
+
+  // 1b) ANTI-COMPARTILHAMENTO: registra dispositivo + cria sessão única
+  KICKED = false;
+  await registerDeviceAndSession();   // grava device/IP/hora e gera token desta sessão
+  await watchSession();               // Realtime: desloga se outro dispositivo logar
+
+  // 2) disciplinas ativas (a view já filtra expiração; RLS já filtra o dono)
+  ALLOWED = new Set();
+  const { data, error } = await _sb.from('my_active_subjects').select('subject_slug');
+  if(!error && data){ data.forEach(r => ALLOWED.add(r.subject_slug)); }
+
+  // 2b) plano de cada matéria (ventas por parcial). Se a view ainda não
+  // existir ou der erro, PLANS fica vazio → todo mundo vê tudo (igual hoje).
+  PLANS = new Map();
+  try{
+    const { data: pl, error: ple } = await _sb.from('my_subject_plans').select('subject_slug, plan');
+    if(!ple && pl){ pl.forEach(r => PLANS.set(r.subject_slug, r.plan)); }
+  }catch(e){}
+
+  // 2c) semestre de cada matéria (para agrupar o menu). Se falhar, usa o fallback local.
+  SEMESTER_BY_SLUG = new Map();
+  try{
+    const { data: sj, error: sje } = await _sb.from('subjects').select('slug,semester');
+    if(!sje && sj){ sj.forEach(r => { if(r.semester) SEMESTER_BY_SLUG.set(r.slug, Number(r.semester)); }); }
+  }catch(e){}
+
+  // 3) montar a lista de matérias liberadas — SEM baixar tudo (carregamento sob demanda)
+  AVAILABLE_TABS = CATALOGO.filter(it => ALLOWED.has(it.slug)).map(it => it.tab);
+  document.getElementById('materias-container').innerHTML = '';
+  LOADED.clear();
+
+  // 4) montar o menu + abrir a PRIMEIRA matéria (só ela é baixada agora)
+  buildMenu();
+  document.getElementById('loading-screen').classList.add('hidden');
+  document.getElementById('rm-topbar').classList.remove('hidden');
+  document.getElementById('main-tabs').classList.remove('hidden');
+  // mostra o e-mail do usuário na topbar
+  try{
+    const { data:{ user } } = await _sb.auth.getUser();
+    if(user) document.getElementById('rm-user').textContent = user.email || '';
+  }catch(e){}
+
+  try{ document.getElementById('rm-store-btn').classList.remove('hidden'); }catch(e){}
+
+  // voltando do checkout: avisa e limpa a URL (o acesso já foi liberado pelo webhook)
+  try{
+    const qs = new URLSearchParams(location.search);
+    if(qs.get('compra') === 'ok'){
+      history.replaceState({}, '', location.pathname);
+      try{ CART.clear(); COUPON = null; renderCart(); }catch(e){}
+      setTimeout(showThanks, 400);
+    }
+  }catch(e){}
+
+  // abre a apresentação; as matérias ficam a um clique nas abas
+  openHome();
+  showAnnouncement();   // anúncio/flyer, se houver
+  addLogoutButton();
+}
+
+/* ============ CARREGAMENTO SOB DEMANDA (lazy) DAS MATÉRIAS ============
+   Só baixa o HTML de uma matéria quando o usuário abre a aba dela pela
+   primeira vez. Isso resolve o estouro de memória no iOS (antes o site
+   injetava TODAS as matérias — ~27 MB e 270+ imagens — de uma vez só).
+   Matéria bloqueada nunca é baixada (segurança real, igual antes). */
+
+/* Busca o HTML de uma matéria pela função protegida (com o token do aluno).
+   Se a função ainda não estiver publicada, cai no arquivo público antigo —
+   assim a migração pode ser feita sem downtime, em qualquer ordem. */
+async function fetchMateria(item){
+  try{
+    const { data:{ session } } = await _sb.auth.getSession();
+    if(session){
+      const r = await fetch('/.netlify/functions/get-materia?slug=' + encodeURIComponent(item.slug), {
+        headers: { 'Authorization': 'Bearer ' + session.access_token }
+      });
+      if(r.ok) return await r.text();
+      // 401/403/404 → tenta o caminho público (se ainda existir durante a transição)
+      if(r.status !== 401 && r.status !== 403){ console.warn('get-materia', r.status); }
+    }
+  }catch(e){ console.warn('get-materia indisponível, tentando arquivo público', e); }
+  // fallback: arquivo público (só funciona enquanto a pasta materias/ existir)
+  const resp = await fetch(item.file);
+  if(!resp.ok) throw new Error('HTTP ' + resp.status);
+  return await resp.text();
+}
+
+async function openTab(tab){
+  const container = document.getElementById('materias-container');
+  // feedback imediato no botão do topo (aba do semestre correspondente)
+  markActiveTab(tab);
+
+  if(!LOADED.has(tab)){
+    const item = CATALOGO.find(it => it.tab === tab);
+    if(!item) return;
+    showTabTransient('<div class="rm-spin"></div>Cargando ' + item.title + '…');
+    try{
+      const htmlText = await fetchMateria(item);
+      const node = extractTab(htmlText, tab);
+      if(!node) throw new Error('conteúdo da aba (#tab-' + tab + ') não encontrado');
+      // imagens sob demanda: decodificam só quando entram na tela (crucial no iOS)
+      node.querySelectorAll('img').forEach(img => { img.loading = 'lazy'; img.decoding = 'async'; });
+      await applyPlanGating(node, item.slug);   // ventas por parcial: filtra seções do plano
+      removeTabTransient();
+      container.appendChild(node);
+      LOADED.add(tab);
+      // padroniza quizzes + monta flashcards/atlas — idempotente, processa só a aba nova
+      if(window.RepassoMed && RepassoMed.enhanceAll){ RepassoMed.enhanceAll(); }
+    }catch(e){
+      console.error('Falha ao carregar', item.slug, e);
+      showTabTransient('No se pudo cargar la asignatura.<br><small>Verificá tu conexión e intentá de nuevo.</small><br>'
+        + '<button type="button" onclick="openTab(\'' + tab + '\')">Reintentar</button>');
+      return;   // não marca como carregada: o botão continua tentável
+    }
+  }
+  switchTab(tab);
+}
+
+/* Extrai o fragmento #tab-<tab> do HTML baixado, aceitando tanto
+   fragmentos quanto documentos completos (ex.: imagenología). Traz junto
+   os <style> que estiverem fora do fragmento, para não perder o estilo. */
+function extractTab(htmlText, tab){
+  try{
+    const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+    const el = doc.getElementById('tab-' + tab);
+    if(el){
+      Array.prototype.slice.call(doc.querySelectorAll('style'))
+        .filter(s => !el.contains(s))
+        .forEach(s => el.insertBefore(s.cloneNode(true), el.firstChild));
+      return document.importNode(el, true);
+    }
+  }catch(e){ console.error('parse', e); }
+  // fallback defensivo
+  try{
+    const tmp = document.createElement('div');
+    tmp.innerHTML = htmlText;
+    const found = tmp.querySelector('#tab-' + tab);
+    return found || null;
+  }catch(e){ return null; }
+}
+
+/* ============ VENTAS POR PARCIAL: filtro de conteúdo por plano ============
+   Regra (definida no admin, tabela subject_sections):
+     plano 'parcial1'      → oculta seções mapeadas como 'p2'
+     plano 'parcial2final' → oculta seções mapeadas como 'p1'
+     seção não mapeada     → visível para qualquer comprador da matéria
+     'completa' / acesso antigo (sem plano) → vê tudo (zero mudança p/ atuais)
+   Falha na consulta → não filtra nada (fail-open: nunca some conteúdo
+   por erro de rede). */
+async function applyPlanGating(node, slug){
+  try{
+    const plan = PLANS.get(slug);
+    // sem plano (acesso antigo/manual) ou completa → vê tudo
+    const VISIBLE = { parcial1:['p1'], parcial2:['p2'], final:['final'], parcial2final:['p2','final'] };
+    const allowed = VISIBLE[plan];
+    if(!allowed) return;
+    if(!SECTION_MAP.has(slug)){
+      const { data, error } = await _sb.from('subject_sections')
+        .select('section_id, parcial').eq('subject_slug', slug);
+      if(error || !data) return;                        // fail-open
+      SECTION_MAP.set(slug, data);
+    }
+    (SECTION_MAP.get(slug) || []).forEach(row => {
+      if(allowed.indexOf(row.parcial) >= 0) return;     // bloco do plano: mantém
+      const el = node.querySelector('#' + CSS.escape(row.section_id));
+      if(el) el.remove();
+    });
+  }catch(e){}
+}
+
+/* ============ COMPRA: gera o link de pagamento e redireciona ============
+   Uso: comprarProducto('<uuid do produto>') — ex.: botão da loja/landing. */
+async function comprarProducto(productId){
+  try{
+    const { data:{ session } } = await _sb.auth.getSession();
+    if(!session){ alert('Iniciá sesión para comprar.'); return; }
+    const r = await fetch('/.netlify/functions/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ product_id: productId })
+    });
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok || !j.url){ alert(j.error || 'No se pudo generar el link de pago. Intentá de nuevo.'); return; }
+    location.href = j.url;   // vai ao checkout da InfinitePay (PIX / tarjeta)
+  }catch(e){
+    alert('Error de conexión. Intentá de nuevo.');
+  }
+}
+
+/* aviso transitório (carregando / erro) mostrado como aba ativa temporária */
+function showTabTransient(html){
+  removeTabTransient();
+  const container = document.getElementById('materias-container');
+  container.querySelectorAll(':scope > .tab-content').forEach(c => c.classList.remove('active'));
+  const d = document.createElement('div');
+  d.id = 'rm-tabload';
+  d.className = 'tab-content active';
+  d.innerHTML = '<section class="container rm-tabload">' + html + '</section>';
+  container.appendChild(d);
+}
+function removeTabTransient(){
+  const d = document.getElementById('rm-tabload');
+  if(d) d.remove();
+}
+
+/* Monta os botões do topo. Por padrão mostra SÓ as matérias liberadas.
+   (Se quiser exibir as bloqueadas com cadeado, veja MOSTRAR_BLOQUEADAS) */
+const MOSTRAR_BLOQUEADAS = false;
+
+/* =====================================================================
+   ÍCONES VETORIAIS DAS MATÉRIAS
+   Emoji não é confiável: os de raio-X e coração anatômico são de Unicode
+   recente e viram quadrado vazio em Android/Windows antigos. Estes ícones
+   são SVG inline — sem fonte externa, sem requisição, herdam a cor do card
+   e nunca falham.
+   ===================================================================== */
+const RM_ICON_PATHS = {
+  frasco: '<path d="M9 3h6M10 3v6.2L4.9 18.3A2 2 0 0 0 6.6 21h10.8a2 2 0 0 0 1.7-2.7L14 9.2V3"/><path d="M7.4 14.6h9.2"/>',
+  micro:  '<circle cx="10.5" cy="10" r="5.6"/><path d="M14.6 14.1 20 19.5"/><circle cx="9" cy="8.6" r="1.25"/><circle cx="12.4" cy="11.6" r="1"/>',
+  celula: '<circle cx="12" cy="12" r="8.4"/><circle cx="11" cy="11" r="3"/><circle cx="16.6" cy="15.2" r="1.05"/><circle cx="7.2" cy="15.6" r="0.85"/>',
+  esteto: '<path d="M5 3v5.5a5 5 0 0 0 10 0V3"/><circle cx="5" cy="2.9" r=".95"/><circle cx="15" cy="2.9" r=".95"/><path d="M10 13.5v2a3.5 3.5 0 0 0 7 0v-1.2"/><circle cx="17" cy="12.1" r="2.2"/>',
+  pill:   '<rect x="3.5" y="9" width="17" height="6" rx="3" transform="rotate(-45 12 12)"/><path d="M9.9 9.9 14.1 14.1"/>',
+  rayosx: '<path d="M3.6 8.6V6.2a2.6 2.6 0 0 1 2.6-2.6h2.4M15.4 3.6h2.4a2.6 2.6 0 0 1 2.6 2.6v2.4M20.4 15.4v2.4a2.6 2.6 0 0 1-2.6 2.6h-2.4M8.6 20.4H6.2a2.6 2.6 0 0 1-2.6-2.6v-2.4"/><circle cx="12" cy="12" r="4.3"/><path d="M12 7.7v8.6"/>',
+  ecg:    '<rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M5.6 12h2.9l1.8-4.2 2.6 8.4 1.8-4.2h3.7"/>',
+  tejido: '<rect x="3" y="4.4" width="18" height="15.2" rx="2.6"/><path d="M3 9.5h18M3 14.5h18"/><circle cx="8" cy="7" r=".95"/><circle cx="14.5" cy="12" r=".95"/><circle cx="10" cy="17.1" r=".95"/>',
+  lamina: '<rect x="6.2" y="2.8" width="11.6" height="18.4" rx="1.8"/><circle cx="12" cy="8.4" r="2.7"/><path d="M8.8 14.2h6.4M8.8 17.2h4"/>',
+  hueso:  '<path d="M7.6 16.4 16.4 7.6"/><circle cx="5.6" cy="16.1" r="2.15"/><circle cx="7.9" cy="18.4" r="2.15"/><circle cx="16.1" cy="5.6" r="2.15"/><circle cx="18.4" cy="7.9" r="2.15"/>',
+  embrio: '<circle cx="12" cy="12" r="8.6"/><circle cx="9.8" cy="10.3" r="2.55"/><circle cx="14.2" cy="10.3" r="2.55"/><circle cx="12" cy="14.4" r="2.55"/>',
+  casa:   '<path d="M3.6 10.6 12 3.8l8.4 6.8V20a1 1 0 0 1-1 1H4.6a1 1 0 0 1-1-1z"/><path d="M9.4 21v-5.2h5.2V21"/>',
+  balanza:'<path d="M12 3.6v16.8"/><path d="M6.5 20.4h11"/><path d="M4.5 7.4h15"/><path d="M4.5 7.4 2 13h5z"/><path d="M19.5 7.4 22 13h-5z"/>',
+  libro:  '<path d="M3.6 4.4h5.9a3 3 0 0 1 2.5 1.3 3 3 0 0 1 2.5-1.3h5.9v14.1h-5.9a3 3 0 0 0-2.5 1.3 3 3 0 0 0-2.5-1.3H3.6z"/><path d="M12 5.7v14.1"/>',
+  trofeo: '<path d="M7 4h10v4.5a5 5 0 0 1-10 0z"/><path d="M7 5.5H4.6v1.6A3.4 3.4 0 0 0 8 10.5M17 5.5h2.4v1.6a3.4 3.4 0 0 1-3.4 3.4"/><path d="M12 13.5V17M8.5 20.4h7"/>'
+};
+
+/* matéria → ícone + cor. A cor entra como variável CSS no card. */
+const RM_SUBJ_STYLE = {
+  'biologia':                     { ic:'celula',  c:'#1d7a4f' },
+  'anatomia-i':                   { ic:'hueso',   c:'#13314f' },
+  'histologia-i':                 { ic:'tejido',  c:'#d8a32a' },
+  'histologia-i-practica':        { ic:'lamina',  c:'#d8a32a' },
+  'embriologia':                  { ic:'embrio',  c:'#d4568a' },
+  'anatomia-patologica':          { ic:'micro',   c:'#c0392b' },
+  'anatomia-patologica-practica': { ic:'lamina',  c:'#c0392b' },
+  'anatomia-patologica-ii':       { ic:'micro',   c:'#c0392b' },
+  'fisiopatologia':               { ic:'ecg',     c:'#3a78c2' },
+  'imagenologia':                 { ic:'rayosx',  c:'#13314f' },
+  'semiologia':                   { ic:'esteto',  c:'#12988a' },
+  'semiologia-ii':                { ic:'esteto',  c:'#12988a' },
+  'farmacologia':                 { ic:'pill',    c:'#7c5cff' },
+  'farmacologia-ii':              { ic:'pill',    c:'#7c5cff' },
+  'medicina-familiar':            { ic:'casa',    c:'#1d7a4f' },
+  'medicina-legal':               { ic:'balanza', c:'#13314f' },
+  'fisiopatologia-ii':            { ic:'ecg',     c:'#3a78c2' },
+  'toxicologia':                  { ic:'frasco',  c:'#7c5cff' },
+};
+
+/* hex → rgba com alfa, para o fundo suave do ícone */
+function rmTint(hex, a){
+  const h = String(hex || '#13314f').replace('#','');
+  const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+}
+
+/* estilo (ícone + cor) de uma matéria: pelo slug, senão pelo nome */
+function rmSubjStyle(slug, name){
+  const s = RM_SUBJ_STYLE[slug];
+  if(s) return s;
+  const t = ((slug || '') + ' ' + (name || '')).toLowerCase();
+  if(/pr[áa]ctic|practica|l[áa]mina/.test(t)) return { ic:'lamina',  c:'#c0392b' };
+  if(/anatom[íi]a\s*patol|anatopat/.test(t))  return { ic:'micro',   c:'#c0392b' };
+  if(/histolog/.test(t))                      return { ic:'tejido',  c:'#d8a32a' };
+  if(/embriolog/.test(t))                     return { ic:'embrio',  c:'#d4568a' };
+  if(/biolog/.test(t))                        return { ic:'celula',  c:'#1d7a4f' };
+  if(/anatom/.test(t))                        return { ic:'hueso',   c:'#13314f' };
+  if(/semiolog/.test(t))                      return { ic:'esteto',  c:'#12988a' };
+  if(/farmac/.test(t))                        return { ic:'pill',    c:'#7c5cff' };
+  if(/imagenolog|imagen|radiolog/.test(t))    return { ic:'rayosx',  c:'#13314f' };
+  if(/fisiopat/.test(t))                      return { ic:'ecg',     c:'#3a78c2' };
+  if(/familiar/.test(t))                      return { ic:'casa',    c:'#1d7a4f' };
+  if(/pediat/.test(t))                        return { ic:'esteto',  c:'#d4568a' };
+  if(/legal|forense/.test(t))                 return { ic:'balanza', c:'#13314f' };
+  return { ic:'libro', c:'#13314f' };
+}
+
+/* devolve o <svg> pronto para injetar */
+function rmIconSvg(key){
+  const d = RM_ICON_PATHS[key] || RM_ICON_PATHS.libro;
+  return '<svg class="rm-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + d + '</svg>';
+}
+
+/* semestre de uma matéria: banco → fallback local → 0 (“otras”) */
+function semOf(item){
+  const db = SEMESTER_BY_SLUG.get(item.slug);
+  if(db) return Number(db);
+  return Number(SEMESTRE_FALLBACK[item.slug] || 0);
+}
+function semLabel(n){ return n ? (n + '.º Semestre') : 'Otras materias'; }
+
+/* Menu do topo: «Início» + uma aba por semestre em que o aluno tem matéria.
+   Clicar no semestre estende o painel longitudinal com as matérias dele.
+   Semestre sem matéria comprada não aparece. */
+function buildMenu(){
+  const inner = document.getElementById('main-tabs-inner');
+  inner.innerHTML = '';
+  closeSemPanel();
+
+  // aba fixa de apresentação
+  const home = document.createElement('button');
+  home.className = 'main-tab';
+  home.dataset.tab = '__home';
+  home.innerHTML = 'Início<small>Apresentação · planos</small>';
+  home.onclick = ()=> { closeSemPanel(); openHome(); };
+  inner.appendChild(home);
+
+  // agrupa as matérias liberadas por semestre, mantendo a ordem do CATALOGO
+  MENU_GROUPS = new Map();
+  CATALOGO.forEach(item=>{
+    const allowed = ALLOWED.has(item.slug);
+    if(!allowed && !MOSTRAR_BLOQUEADAS) return;
+    const n = semOf(item);
+    if(!MENU_GROUPS.has(n)) MENU_GROUPS.set(n, []);
+    MENU_GROUPS.get(n).push({ item, allowed });
+  });
+
+  Array.from(MENU_GROUPS.keys()).sort((a,b)=>a-b).forEach(n=>{
+    const list  = MENU_GROUPS.get(n);
+    const count = list.length + (list.length === 1 ? ' materia' : ' materias');
+    const btn = document.createElement('button');
+    btn.className = 'main-tab rm-semtab';
+    btn.dataset.sem   = String(n);
+    btn.dataset.count = count;
+    btn.innerHTML = `${semLabel(n)}<span class="rm-semcaret">▾</span><small>${count}</small>`;
+    btn.onclick = (ev)=>{ ev.stopPropagation(); toggleSemPanel(n); };
+    inner.appendChild(btn);
+  });
+}
+
+/* abre/fecha o painel longitudinal de um semestre */
+function toggleSemPanel(n){
+  if(OPEN_SEM === n){ closeSemPanel(); return; }
+  OPEN_SEM = n;
+  renderSemPanel();
+}
+
+function closeSemPanel(){
+  OPEN_SEM = null;
+  const p = document.getElementById('rm-sem-panel');
+  if(p){ p.classList.add('hidden'); p.classList.remove('open'); p.innerHTML = ''; }
+  document.querySelectorAll('.rm-semtab').forEach(t => t.classList.remove('open'));
+}
+
+function renderSemPanel(){
+  const p = document.getElementById('rm-sem-panel');
+  if(!p) return;
+  const list = MENU_GROUPS.get(OPEN_SEM) || [];
+  const activo = document.querySelector('#materias-container > .tab-content.active');
+  const curTab = activo && activo.id && activo.id.indexOf('tab-') === 0 ? activo.id.slice(4) : null;
+
+  const PLAN_MINI = { parcial1:'P1', parcial2:'P2', final:'Final', parcial2final:'P2 + Final' };
+
+  const cards = list.map(({ item, allowed })=>{
+    const st   = rmSubjStyle(item.slug, item.title);
+    const vars = '--ac:' + st.c + ';--acbg:' + rmTint(st.c, .13) + (allowed ? '' : ';opacity:.5');
+    const lock = allowed ? '' : ' <span class="lock-badge">🔒</span>';
+    const plan = PLAN_MINI[PLANS.get(item.slug)];
+    return `<button type="button" class="rm-sem-item${curTab === item.tab ? ' on' : ''}"
+              data-tab="${item.tab}" style="${vars}">
+              <span class="ic">${rmIconSvg(st.ic)}</span>
+              <span class="tx"><b>${item.title}${lock}</b><small>${item.sub || ''}</small></span>
+              ${plan ? '<span class="plan">' + plan + '</span>' : ''}
+              <span class="go" aria-hidden="true">→</span>
+            </button>`;
+  }).join('');
+
+  p.innerHTML = `
+    <div class="rm-sem-inner">
+      <div class="rm-sem-head">
+        <span>${semLabel(OPEN_SEM)} · ${list.length} ${list.length === 1 ? 'materia liberada' : 'materias liberadas'}</span>
+        <span class="ln"></span>
+        <button type="button" title="Cerrar" onclick="closeSemPanel()">✕</button>
+      </div>
+      ${cards ? '<div class="rm-sem-grid">' + cards + '</div>'
+              : '<p class="rm-sem-empty">Todavía no tenés materias de este semestre.</p>'}
+    </div>`;
+
+  p.querySelectorAll('.rm-sem-item').forEach(b=>{
+    b.onclick = (ev)=>{ ev.stopPropagation(); const t = b.dataset.tab; closeSemPanel(); openTab(t); };
+  });
+
+  p.classList.remove('hidden');
+  p.classList.add('open');
+  document.querySelectorAll('.rm-semtab').forEach(t =>
+    t.classList.toggle('open', t.dataset.sem === String(OPEN_SEM)));
+}
+
+/* marca a aba ativa: «Início», o semestre da matéria aberta, ou nenhuma (loja) */
+function markActiveTab(tab){
+  const item = (tab && tab !== '__home') ? CATALOGO.find(it => it.tab === tab) : null;
+  const sem  = item ? String(semOf(item)) : null;
+  document.querySelectorAll('.main-tab').forEach(t=>{
+    if(t.dataset.tab === '__home'){ t.classList.toggle('active', tab === '__home'); return; }
+    if(t.dataset.sem !== undefined){
+      const on = (sem !== null && t.dataset.sem === sem);
+      t.classList.toggle('active', on);
+      const s = t.querySelector('small');
+      if(s) s.textContent = on ? item.title : (t.dataset.count || '');
+    }
+  });
+  document.querySelectorAll('.rm-sem-item').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+}
+
+/* clicar fora fecha o painel */
+document.addEventListener('click', function(ev){
+  if(OPEN_SEM === null) return;
+  const p = document.getElementById('rm-sem-panel');
+  if(p && !p.contains(ev.target)) closeSemPanel();
+});
+document.addEventListener('keydown', function(ev){
+  if(ev.key === 'Escape' && OPEN_SEM !== null) closeSemPanel();
+});
+
+function showNoAccess(){
+  // sem matérias liberadas → mostra direto a tienda (em vez de uma tela morta)
+  openStore('Todavía no tenés asignaturas activas. Elegí abajo tu plan y empezá hoy mismo.');
+}
+
+/* ===================== PÁGINA INICIAL (apresentação) =====================
+   Caderno de estudos: pauta, margem vermelha, adesivos colados com fita.
+   Aparece logo após o login e leva à Loja de Matérias. */
+
+const IG_URL = 'https://www.instagram.com/repasso_med?igsh=Nmh6cHl1bmZ1dGpo';
+const WA_URL = 'https://wa.me/message/44N65XQZFMOID1';
+
+function openHome(){
+  const container = document.getElementById('materias-container');
+  markActiveTab('__home');
+  container.querySelectorAll(':scope > .tab-content').forEach(c => c.classList.remove('active'));
+  removeTabTransient();
+  const st = document.getElementById('rm-store'); if(st) st.remove();
+
+  let box = document.getElementById('rm-home');
+  if(box){ box.classList.add('active'); revealHome(); window.scrollTo({top:0,behavior:'smooth'}); return; }
+
+  box = document.createElement('div');
+  box.id = 'rm-home';
+  box.className = 'tab-content active';
+  box.innerHTML = homeHtml();
+  container.appendChild(box);
+  revealHome();
+  window.scrollTo({top:0,behavior:'auto'});
+}
+
+function homeHtml(){
+  const deps = [1,2,3,4,5,6,7].map(n =>
+    `<figure class="rh-dep"><img src="assets/dep${n}.jpg" alt="Mensagem de aluno do Repasso Med"
+       loading="lazy" decoding="async"></figure>`).join('');
+
+  return `
+<div class="rh-page">
+
+  <!-- HERO -->
+  <header class="rh-in rh-hero">
+    <div>
+      <div class="rh-eyebrow">Guia de estudo · 5.º e 6.º semestre</div>
+      <h1 class="rh-h1">Estude o que<br>realmente <em>cai</em>.</h1>
+      <p class="rh-sub">nada de resumo genérico — aqui é feito por quem senta na mesma prova que você</p>
+      <p class="rh-lead">O Repasso Med nasceu dentro da faculdade, entre uma monitoria e outra.
+        Cada matéria é destrinchada bloco por bloco, do jeito que a cátedra cobra:
+        <span class="rh-mark">resumo direto ao ponto, mapa mental pra fixar, tabela pra comparar
+        o que sempre confunde, questão de prova em quizz e flashcard pra revisar na véspera.</span>
+        Você abre, estuda e vai pra prova sabendo onde pisa.</p>
+      <button type="button" class="rh-cta gold" onclick="openStore()">Ver matérias e planos →</button>
+      <div class="rh-cta-note">a partir de R$ 19,90 · libera na hora</div>
+    </div>
+    <div class="rh-vid">
+      <div class="rh-vid-frame">
+        <span class="rh-tape t1"></span>
+        <video src="assets/logo-video.mp4" poster="assets/logo-poster.jpg"
+               autoplay muted loop playsinline preload="metadata"
+               disablepictureinpicture aria-label="Vídeo da marca Repasso Med"></video>
+        <div class="rh-vid-cap">desde cero, hasta el examen</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- O QUE TEM -->
+  <section class="rh-in rh-sec rh-rev">
+    <div class="rh-kicker">o que tem aqui dentro</div>
+    <h2 class="rh-h2">Quatro formas de estudar<br>a mesma coisa até grudar.</h2>
+    <p class="rh-p">Porque ler uma vez não fixa nada. A ideia é você entender, comparar,
+      testar e revisar — sem trocar de aba, sem caçar PDF perdido no grupo.</p>
+
+    <div class="rh-notes">
+      <article class="rh-note"><div class="ic">📝</div>
+        <h3 class="rh-h3">Resumos</h3>
+        <p>O conteúdo da cátedra filtrado: o que cai, do jeito que cai. Sem encher linguiça.</p></article>
+      <article class="rh-note"><div class="ic">🧠</div>
+        <h3 class="rh-h3">Mapas mentais</h3>
+        <p>Pra enxergar a matéria inteira numa olhada e amarrar o que estava solto na cabeça.</p></article>
+      <article class="rh-note"><div class="ic">✍️</div>
+        <h3 class="rh-h3">Questões em quizz</h3>
+        <p>Questões de provas anteriores, clicáveis, com explicação. Você erra aqui, não na prova.</p></article>
+      <article class="rh-note"><div class="ic">⚡</div>
+        <h3 class="rh-h3">Flashcards</h3>
+        <p>Pra véspera, pro ônibus, pros 10 minutos antes de entrar. Revisão que cabe no bolso.</p></article>
+    </div>
+
+    <div class="rh-price">
+      <div class="rh-price-l">
+        <b>Compre só o que você precisa</b>
+        <span>Parcial 1, Parcial 2, Final, a matéria completa ou o semestre inteiro — você escolhe.
+          Pix, débito, crédito ou parcelado.</span>
+      </div>
+      <div class="rh-price-v"><small>a partir de</small><b>R$ 19,90</b></div>
+    </div>
+  </section>
+
+  <!-- DEPOIMENTOS -->
+  <section class="rh-in rh-sec rh-rev">
+    <div class="rh-kicker">quem já usou</div>
+    <h2 class="rh-h2">Depoimentos dos alunos</h2>
+    <p class="rh-p">Print puro, sem edição. São mensagens que chegaram no WhatsApp
+      depois das provas — o melhor termômetro que a gente tem.</p>
+    <div class="rh-wall">${deps}</div>
+  </section>
+
+  <!-- QUEM SOU EU -->
+  <section class="rh-in rh-sec rh-rev">
+    <div class="rh-kicker">quem tá por trás</div>
+    <h2 class="rh-h2">Oi, eu sou o José Gabriel.</h2>
+    <div class="rh-me">
+      <figure class="rh-pola rh-star">
+        <img src="assets/foto-jaleco.jpg" alt="José Gabriel de jaleco" loading="lazy" decoding="async">
+        <span class="rh-badge">idealizador ✦ Repasso Med</span>
+        <figcaption>José Gabriel</figcaption>
+      </figure>
+
+      <div>
+        <div class="rh-clip">
+          <figure class="rh-pola sm"><img src="assets/foto-medalha.jpg" alt="1.º lugar nas Atividades Integradoras"
+            loading="lazy" decoding="async"><figcaption>1.º lugar ✦ Integradoras</figcaption></figure>
+          <figure class="rh-pola sm"><img src="assets/foto-microscopio.jpg" alt="Monitoria de Histologia"
+            loading="lazy" decoding="async"><figcaption>monitoria de histo</figcaption></figure>
+        </div>
+
+        <p class="rh-p">Sou estudante de medicina, igual você. Passei os últimos semestres
+          fazendo as mesmas provas, sentindo o mesmo desespero na véspera e percebendo uma coisa:
+          o problema quase nunca é falta de estudo — é estudar do jeito errado, no material errado.</p>
+
+        <p class="rh-p" style="margin-top:14px;">Comecei dando repassos pra ajudar os colegas e
+          complementar a renda. A cada semestre eu ia testando um jeito novo de organizar o conteúdo
+          pra render mais na prova. O que funcionava, eu guardava. O que não funcionava, eu jogava fora.
+          O Repasso Med é esse acúmulo — não é um resumo qualquer, é o método que me fez ir bem,
+          organizado pra você usar.</p>
+
+        <ul class="rh-facts">
+          <li>Delegado de turma por 2 anos</li>
+          <li>Monitor de Histologia e auxiliar dos laboratórios</li>
+          <li>2× 1.º lugar na competição das Atividades Integradoras</li>
+          <li>Professor de repasso desde os primeiros semestres</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="rh-strip">
+      <figure class="rh-pola turma"><img src="assets/foto-turma.jpg"
+        alt="Turma inteira em um repasso presencial" loading="lazy" decoding="async"></figure>
+      <figure class="rh-pola solo"><img src="assets/foto-selfie.jpg" alt="José Gabriel"
+        loading="lazy" decoding="async"><figcaption>entre uma aula e outra</figcaption></figure>
+    </div>
+
+    <div class="rh-quote">“Ninguém precisa passar por isso sozinho.<br>
+      Vamos juntos realizar o sonho da medicina.”</div>
+  </section>
+
+  <!-- FINAL -->
+  <section class="rh-in">
+    <div class="rh-end rh-rev">
+      <h2>Sua próxima prova<br>começa <em>agora</em>.</h2>
+      <p>Escolhe a matéria, escolhe a etapa, paga e já entra estudando.
+        A liberação é automática — sem esperar ninguém aprovar nada.</p>
+      <button type="button" class="rh-cta gold" onclick="openStore()">Ir para a Loja de Matérias →</button>
+      <div class="rh-social">
+        <a class="rh-soc ig" href="${IG_URL}" target="_blank" rel="noopener">📸 Seguir no Instagram</a>
+        <a class="rh-soc wa" href="${WA_URL}" target="_blank" rel="noopener">💬 Falar no WhatsApp</a>
+      </div>
+    </div>
+  </section>
+
+</div>`;
+}
+
+/* revelação suave ao rolar */
+function revealHome(){
+  const els = document.querySelectorAll('#rm-home .rh-rev');
+  if(!els.length) return;
+  if(!('IntersectionObserver' in window)){ els.forEach(e=>e.classList.add('on')); return; }
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('on'); io.unobserve(en.target); } });
+  }, { rootMargin:'0px 0px -60px 0px', threshold:.08 });
+  els.forEach(e=>io.observe(e));
+}
+
+/* ===================== LOJA DE MATÉRIAS =====================
+   Vitrine com filtro por semestre, blocos incluídos em cada plano,
+   destaque premium para matéria completa e combo do semestre. */
+let STORE_PRODUCTS = null;   // cache dos produtos
+let STORE_SECTIONS = null;   // cache dos blocos mapeados
+let STORE_SUBJECTS = null;   // cache das matérias (nome + semestre)
+let STORE_SEM = null;        // semestre selecionado
+
+const PLAN_TAG = { parcial1:'Parcial 1', parcial2:'Parcial 2', final:'Final',
+                   parcial2final:'Parcial 2 + Final', completa:'Materia completa',
+                   semestre:'Combo semestre' };
+
+/* ícone temático conforme a matéria — SVG inline (ver RM_ICON_PATHS).
+   Substitui os emojis antigos (raio-X, coração anatômico), que não existem
+   em Android/Windows antigos e apareciam como quadrado vazio. */
+function storeIcon(p){
+  if(p && p.plan_type === 'semestre') return rmIconSvg('trofeo');
+  const st = rmSubjStyle((p && p.subject_slug) || '', (p && p.name) || '');
+  return '<span style="color:' + st.c + ';display:inline-flex;">' + rmIconSvg(st.ic) + '</span>';
+}
+
+async function openStore(intro){
+  const container = document.getElementById('materias-container');
+  markActiveTab(null); closeSemPanel();
+  container.querySelectorAll(':scope > .tab-content').forEach(c => c.classList.remove('active'));
+  removeTabTransient();
+
+  let box = document.getElementById('rm-store');
+  if(box) box.remove();
+  box = document.createElement('div');
+  box.id = 'rm-store';
+  box.className = 'tab-content active';
+  box.innerHTML = '<section class="container rm-tabload"><div class="rm-spin"></div>Cargando la tienda…</section>';
+  container.appendChild(box);
+
+  // carrega uma única vez
+  if(STORE_PRODUCTS === null){
+    try{
+      const [pr, se, su] = await Promise.all([
+        _sb.from('products').select('id,name,description,price_cents,plan_type,subject_slug,duration_days,semester')
+           .eq('active', true).order('semester').order('sort_order').order('name'),
+        _sb.from('subject_sections').select('subject_slug,section_id,parcial,title,sort_order'),
+        _sb.from('subjects').select('slug,name,semester,is_active')
+      ]);
+      STORE_PRODUCTS = (pr && pr.data) || [];
+      STORE_SECTIONS = (se && se.data) || [];
+      STORE_SUBJECTS = (su && su.data) || [];
+    }catch(e){ STORE_PRODUCTS = STORE_PRODUCTS || []; STORE_SECTIONS = STORE_SECTIONS || []; STORE_SUBJECTS = STORE_SUBJECTS || []; }
+  }
+
+  if(!STORE_PRODUCTS.length){
+    box.innerHTML = '<section class="rm-store-wrap">' + storeHero(intro)
+      + '<div class="rm-shell rm-store-empty"><h3>Ainda não há planos publicados</h3>'
+      + '<p>Chama no WhatsApp que a gente libera seu acesso.</p></div>'
+      + storeWhats() + '</section>';
+    return;
+  }
+
+  // semestre inicial: o primeiro com produtos
+  const sems = [1,2,3,4,5,6,7];
+  if(STORE_SEM === null){
+    const withProd = sems.filter(n => STORE_PRODUCTS.some(p => p.semester === n));
+    STORE_SEM = withProd.length ? withProd[0] : 5;
+  }
+  renderStore(intro);
+}
+
+function storeHero(intro){
+  return '<div class="rm-shell rm-hero">'
+    + '<img class="rm-hero-logo" src="assets/repasso-med-logo.png" alt="REPASSO MED">'
+    + '<div class="rm-hero-word">REPASSO <span>MED</span></div>'
+    + '<div class="rm-hero-kicker">Loja de Matérias</div>'
+    + '<h1>Escolha o que você<br>vai <span>dominar</span>.</h1>'
+    + '<p>' + escapeStore(intro || 'monte seu combo: por parcial, matéria inteira ou o semestre completo') + '</p>'
+    + '<div class="rm-hero-cta">liberação automática ✦ a partir de R$ 19,90</div>'
+    + '</div>'
+    + '<div class="rm-shell rm-pay"><div class="rm-pay-in">'
+    + '<div class="rm-pay-t">Pague como quiser'
+    + '<small>O acesso libera sozinho assim que o pagamento é confirmado.</small></div>'
+    + '<div class="rm-pay-tags">'
+    + '<span class="rm-pay-tag pix">PIX</span>'
+    + '<span class="rm-pay-tag">Crédito</span>'
+    + '<span class="rm-pay-tag">Débito</span>'
+    + '<span class="rm-pay-tag">Parcelado (com juros)</span>'
+    + '</div></div></div>';
+}
+
+function storeWhats(){
+  return '<div class="rm-shell rm-wa"><div class="rm-wa-in">'
+    + '<div class="rm-wa-ico">💬</div>'
+    + '<div class="rm-wa-t">Dúvidas ou feedback?'
+    + '<small>Fala comigo no WhatsApp — respondo rápido e leio cada sugestão.</small></div>'
+    + '<a href="' + WA_URL + '" target="_blank" rel="noopener">Falar no WhatsApp</a>'
+    + '</div></div>';
+}
+
+/* ---------- carrinho ---------- */
+const CART = new Set();
+let COUPON = null;          // { code, discount_cents } quando validado
+
+function money(cents){
+  return (cents/100).toLocaleString('es', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function findProduct(id){ return (STORE_PRODUCTS||[]).find(p => p.id === id); }
+
+/* blocos que o plano inclui (títulos, para listar no card) */
+function blockList(p){
+  if(p.plan_type === 'semestre') return [];
+  const all = (STORE_SECTIONS||[]).filter(s => s.subject_slug === p.subject_slug);
+  let rows;
+  if(p.plan_type === 'completa'){ rows = all.slice(); }
+  else{
+    const want = p.plan_type === 'parcial1' ? ['p1']
+               : p.plan_type === 'parcial2' ? ['p2']
+               : p.plan_type === 'final'    ? ['final']
+               : ['p2','final'];
+    rows = all.filter(s => want.indexOf(s.parcial) >= 0);
+  }
+  rows.sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  return rows.map(s => s.title || s.section_id);
+}
+
+/* seleção inteligente: evita pagar duas vezes pelo mesmo conteúdo */
+function toggleCart(id){
+  const p = findProduct(id);
+  if(!p) return;
+  if(CART.has(id)){ CART.delete(id); }
+  else{
+    if(p.plan_type === 'semestre'){
+      CART.clear();                                   // combo cobre tudo
+    } else {
+      // tira o combo e qualquer plano da mesma matéria
+      (STORE_PRODUCTS||[]).forEach(o => {
+        if(o.plan_type === 'semestre') CART.delete(o.id);
+        else if(o.subject_slug === p.subject_slug){
+          if(p.plan_type === 'completa' || o.plan_type === 'completa') CART.delete(o.id);
+        }
+      });
+    }
+    CART.add(id);
+  }
+  renderStore();
+  renderCart();
+}
+function clearCart(){ CART.clear(); renderStore(); renderCart(); }
+
+function renderCart(){
+  let bar = document.getElementById('rm-cart');
+  if(!bar){
+    bar = document.createElement('div');
+    bar.id = 'rm-cart';
+    document.body.appendChild(bar);
+  }
+  const items = [...CART].map(findProduct).filter(Boolean);
+  if(!items.length){
+    COUPON = null;
+    bar.classList.remove('show');
+    document.body.classList.remove('rm-cart-open');
+    return;
+  }
+  const subtotal = items.reduce((s,p) => s + Number(p.price_cents), 0);
+  const disc = COUPON ? Math.min(COUPON.discount_cents, subtotal - 100) : 0;
+  const total = subtotal - (disc > 0 ? disc : 0);
+  const lines = items.map(p => escapeStore(p.name) + ' · ' + money(p.price_cents)).join('<br>');
+  const cupMsg = COUPON
+    ? `<span class="ok">✓ ${escapeStore(COUPON.code)} (−${money(disc)})</span>`
+    : (COUPON === false ? '<span class="bad">cupom inválido</span>' : '');
+  bar.innerHTML = `<div class="rm-cart-in">
+      <div class="rm-cart-list"><b>${items.length} ${items.length===1?'item selecionado':'itens selecionados'}</b>${lines}</div>
+      <div class="rm-cart-cup">
+        <input id="rm-cup-in" placeholder="Cupom" value="${COUPON ? escapeStore(COUPON.code) : ''}"
+               onkeydown="if(event.key==='Enter')applyCoupon()">
+        <button type="button" onclick="applyCoupon()">Aplicar</button>
+        ${cupMsg}
+      </div>
+      <button type="button" class="rm-cart-clear" onclick="clearCart()">Limpar</button>
+      <div class="rm-cart-tot"><small>Total</small>
+        ${disc > 0 ? '<span class="old">'+money(subtotal)+'</span>' : ''}
+        <span>${money(total)}</span></div>
+      <button type="button" class="rm-cart-go" id="rm-cart-go" onclick="checkoutCart()">Finalizar compra</button>
+      <p class="rm-cart-note">Pago procesado por InfinitePay (Brasil): en la pantalla
+        te van a pedir <b>CPF del titular de la tarjeta</b> y un <b>celular brasileño</b>.</p>
+    </div>`;
+  bar.classList.add('show');
+  document.body.classList.add('rm-cart-open');
+}
+
+/* valida o cupom no banco e atualiza a barra */
+async function applyCoupon(){
+  const inp = document.getElementById('rm-cup-in');
+  const code = (inp && inp.value ? inp.value : '').trim();
+  if(!code){ COUPON = null; renderCart(); return; }
+  const items = [...CART].map(findProduct).filter(Boolean);
+  const subtotal = items.reduce((s,p) => s + Number(p.price_cents), 0);
+  try{
+    const { data, error } = await _sb.rpc('validate_coupon', { p_code: code, p_total: subtotal });
+    if(error || !data || data.ok !== true){ COUPON = false; renderCart();
+      const i2 = document.getElementById('rm-cup-in'); if(i2) i2.value = code; return; }
+    COUPON = { code: data.code, discount_cents: Number(data.discount_cents) || 0 };
+  }catch(e){ COUPON = false; }
+  renderCart();
+}
+
+async function checkoutCart(){
+  const ids = [...CART];
+  if(!ids.length) return;
+  // se ainda não temos o telefone salvo, pede UMA vez (fica guardado para sempre)
+  const ok = await ensurePhone();
+  if(!ok) return;
+  const btn = document.getElementById('rm-cart-go');
+  if(btn){ btn.disabled = true; btn.textContent = 'Gerando pagamento…'; }
+  try{
+    const { data:{ session } } = await _sb.auth.getSession();
+    if(!session){ alert('Iniciá sesión para comprar.'); return; }
+    const r = await fetch('/.netlify/functions/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + session.access_token },
+      body: JSON.stringify({ product_ids: ids, coupon: COUPON ? COUPON.code : undefined })
+    });
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok || !j.url){
+      // `detail` traz a mensagem real do provedor (ou do banco). Sem isso,
+      // todo problema virava o mesmo aviso genérico e não dava para saber
+      // o que consertar.
+      const msg = j.error || 'No se pudo generar el link de pago. Intentá de nuevo.';
+      console.error('create-checkout falhou:', r.status, j);
+      alert(j.detail ? msg + '\n\n(' + j.detail + ')' : msg);
+      if(btn){ btn.disabled = false; btn.textContent = 'Finalizar compra'; }
+      return;
+    }
+    location.href = j.url;
+  }catch(e){
+    alert('Error de conexión. Intentá de nuevo.');
+    if(btn){ btn.disabled = false; btn.textContent = 'Finalizar compra'; }
+  }
+}
+
+/* Garante que o perfil tenha telefone, para o checkout já ir preenchido.
+   Pergunta no máximo uma vez por conta. Se o usuário pular, segue mesmo
+   assim (ele digita na tela da InfinitePay) — nunca bloqueia a venda. */
+async function ensurePhone(){
+  let uid = null;
+  try{
+    const { data:{ user } } = await _sb.auth.getUser();
+    if(!user) return true;
+    uid = user.id;
+    const { data, error } = await _sb.from('profiles').select('phone').eq('id', uid).maybeSingle();
+    if(error) return true;                       // falhou a leitura: não atrapalha
+    if(data && data.phone) return true;          // já temos
+  }catch(e){ return true; }
+
+  return new Promise(resolve => {
+    const d = document.createElement('div');
+    d.id = 'rm-phone-ask';
+    d.innerHTML = `<div class="box">
+      <div class="ico">📱</div>
+      <h3>Un dato y listo</h3>
+      <p>Guardamos tu teléfono una sola vez, para contacto y soporte.</p>
+      <p class="hint">La pantalla de pago es de InfinitePay (Brasil) y sólo acepta
+        celular brasileño. Si tenés uno <b>+55</b>, lo dejamos precargado y no lo
+        escribís más. Con un número paraguayo lo guardamos igual, pero el teléfono
+        del pago lo vas a escribir ahí.</p>
+      <div class="rm-phone-row">
+        <select id="ph-ddi"><option value="55">🇧🇷 +55</option><option value="595">🇵🇾 +595</option></select>
+        <input id="ph-num" type="tel" inputmode="numeric" placeholder="981 234 567">
+      </div>
+      <p class="err" id="ph-err"></p>
+      <button type="button" id="ph-ok">Guardar y continuar</button>
+      <button type="button" class="ghost" id="ph-skip">Prefiero escribirlo en el pago</button>
+    </div>`;
+    document.body.appendChild(d);
+    const close = (v)=>{ d.remove(); resolve(v); };
+    d.querySelector('#ph-skip').onclick = ()=> close(true);
+    d.querySelector('#ph-ok').onclick = async ()=>{
+      const ddi = d.querySelector('#ph-ddi').value;
+      const phone = joinPhone(ddi, d.querySelector('#ph-num').value);
+      const err = d.querySelector('#ph-err');
+      if(!phone || phone.replace(/\D/g,'').length < 10){ err.textContent = 'Revisá el número.'; return; }
+      try{ await _sb.from('profiles').update({ phone }).eq('id', uid); }catch(e){}
+      close(true);
+    };
+    setTimeout(()=>{ try{ d.querySelector('#ph-num').focus(); }catch(e){} }, 80);
+  });
+}
+
+/* ---------- render principal: combo + matriz ---------- */
+function renderStore(intro){
+  const box = document.getElementById('rm-store');
+  if(!box) return;
+  const sems = [1,2,3,4,5,6,7];
+
+  const tabs = '<div class="rm-shell rm-sems"><b>Semestre</b>' + sems.map(n => {
+    const has = STORE_PRODUCTS.some(p => p.semester === n);
+    return `<button type="button" class="rm-sem ${STORE_SEM===n?'on':''} ${has?'':'empty'}"
+            onclick="pickSemester(${n})">${n}.º</button>`;
+  }).join('') + '</div>';
+
+  const list = STORE_PRODUCTS.filter(p => p.semester === STORE_SEM);
+  const combo = list.find(p => p.plan_type === 'semestre');
+
+  // ---- combo premium central ----
+  let comboHtml = '';
+  if(combo){
+    const mats = (STORE_SUBJECTS||[]).filter(s => s.is_active && s.semester === STORE_SEM);
+    const sel = CART.has(combo.id);
+    comboHtml = `<div class="rm-shell rm-combo-wrap">
+      <div class="rm-combo ${sel?'sel':''}" onclick="toggleCart('${combo.id}')">
+        <div class="rm-combo-ico">🏆</div>
+        <div class="rm-combo-mid">
+          <div class="rm-combo-kick">★ Acceso total · el mejor precio</div>
+          <h3>${escapeStore(combo.name)}</h3>
+          <p>${escapeStore(combo.description || 'Todas as matérias do ' + STORE_SEM + '.º semestre, completas: P1, P2 e Final, com tudo incluído.')}</p>
+          ${mats.length ? '<div class="rm-combo-mats">' + mats.map(m => '<span>'+escapeStore(m.name)+'</span>').join('') + '</div>' : ''}
+        </div>
+        <div class="rm-combo-right">
+          <div class="rm-combo-price">${money(combo.price_cents)}
+            <small>${combo.duration_days ? combo.duration_days + ' dias de acesso' : 'Acesso sem vencimento'}</small></div>
+          <button type="button" class="rm-combo-btn">${sel ? '✓ Selecionado' : 'Selecionar'}</button>
+        </div>
+      </div></div>`;
+  }
+
+  // ---- matriz: linhas = matérias, colunas = planos ----
+  const COLS = [
+    { key:'parcial1', label:'Parcial 1', cls:'c1' },
+    { key:'parcial2', label:'Parcial 2', cls:'c2' },
+    { key:'final',    label:'Final',     cls:'c3' },
+    { key:'completa', label:'Matéria completa', cls:'c4' }
+  ];
+  const bySubject = {};
+  list.forEach(p => {
+    if(p.plan_type === 'semestre' || !p.subject_slug) return;
+    (bySubject[p.subject_slug] = bySubject[p.subject_slug] || []).push(p);
+  });
+  const slugs = Object.keys(bySubject);
+
+  let matrixHtml = '';
+  if(slugs.length){
+    const head = '<div class="rm-mx-head"><span>Matéria</span>'
+      + COLS.map(c => `<span class="${c.cls}">${c.label}</span>`).join('') + '</div>';
+
+    const rows = slugs.map(slug => {
+      const subj = (STORE_SUBJECTS||[]).find(s => s.slug === slug);
+      const name = subj ? subj.name : slug;
+      const icon = storeIcon({ subject_slug: slug, name });
+      const cells = COLS.map(col => {
+        // 'parcial2final' (legado) entra na coluna Final
+        const p = bySubject[slug].find(x => x.plan_type === col.key
+                   || (col.key === 'final' && x.plan_type === 'parcial2final'));
+        if(!p) return '<div class="rm-cell rm-cell-empty">—</div>';
+        const sel  = CART.has(p.id);
+        const gold = (col.key === 'completa');
+        const blocks = blockList(p);
+        const dur = p.duration_days ? p.duration_days + ' dias de acesso' : 'Acesso sem vencimento';
+        const desc = p.description || (gold
+          ? 'Todo o conteúdo da matéria: P1, P2 e Final, sem limite.'
+          : 'Tudo que cai em ' + col.label + ' — direto ao ponto.');
+        const feats = ['📝 Resumos','🧠 Mapas mentais','📊 Tabelas comparativas',
+                       '✍️ Questões em quizz','⚡ Flashcards']
+                      .map(f => '<i>' + f + '</i>').join('');
+        const blocksHtml = blocks.length
+          ? '<div class="rm-cell-blocks"><b>' + blocks.length + ' bloco' + (blocks.length>1?'s':'') + ' incluído' + (blocks.length>1?'s':'') + '</b><ul>'
+            + blocks.map(t => '<li>' + escapeStore(t) + '</li>').join('') + '</ul></div>'
+          : '';
+        return `<div class="rm-cell k-${col.key} ${gold?'gold':''} ${sel?'sel':''}"
+                     onclick="toggleCart('${p.id}')">
+          ${gold ? '<div class="rm-cell-crown">★ Todo incluido</div>' : ''}
+          <div class="rm-cell-top">
+            <div class="rm-cell-price">${money(p.price_cents)}<small>${escapeStore(dur)}</small></div>
+            <div class="rm-cell-chk"></div>
+          </div>
+          <div class="rm-cell-n">${escapeStore(desc)}</div>
+          <div class="rm-cell-feats">${feats}</div>
+          ${blocksHtml}
+          <div class="rm-cell-pick">${sel ? '✓ Selecionado' : 'Selecionar'}</div>
+        </div>`;
+      }).join('');
+      return `<div class="rm-mx-row"><div class="rm-mx-name"><span class="ic">${icon}</span>${escapeStore(name)}</div>${cells}</div>`;
+    }).join('');
+
+    matrixHtml = `<div class="rm-shell rm-matrix">
+      <h3 class="rm-mx-title">Monte o seu combo</h3>
+      <p class="rm-mx-hint">toque nos planos que quiser — dá pra misturar matérias e etapas, o total vai somando embaixo</p>
+      ${head}${rows}</div>`;
+  } else if(!combo){
+    matrixHtml = '<div class="rm-shell rm-store-empty"><h3>Ainda não há planos para o ' + STORE_SEM + '.º semestre</h3>'
+      + '<p>Estamos preparando o conteúdo. Veja os outros semestres ou fale com a gente.</p></div>';
+  }
+
+  box.innerHTML = '<section class="rm-store-wrap">' + storeHero(intro) + tabs + comboHtml + matrixHtml + storeWhats() + '</section>';
+}
+
+function pickSemester(n){
+  STORE_SEM = n;
+  renderStore();
+  const el = document.querySelector('.rm-sems');
+  if(el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+/* ---------- agradecimento pós-compra ---------- */
+async function showThanks(){
+  let nombre = '';
+  try{
+    const { data:{ user } } = await _sb.auth.getUser();
+    if(user){
+      const { data } = await _sb.from('profiles').select('full_name').eq('id', user.id).maybeSingle();
+      nombre = (data && data.full_name) ? data.full_name.split(' ')[0] : '';
+    }
+  }catch(e){}
+
+  const old = document.getElementById('rm-thanks');
+  if(old) old.remove();
+  const d = document.createElement('div');
+  d.id = 'rm-thanks';
+  d.innerHTML = `<div class="box">
+    <div class="ico">🎉</div>
+    <h2>¡Muchas gracias!</h2>
+    <div class="who">${nombre ? escapeStore(nombre) : '¡Bienvenido!'}</div>
+    <p>Gracias por formar parte de <b>Repasso Med</b>. Tu acceso ya está activo — aprovechá el sitio y que tengas excelentes estudios.</p>
+    <div class="share">Si te gusta la plataforma, nos ayudaría muchísimo que la compartas con tus amigos y colegas.<br><b>Tu apoyo hace toda la diferencia para nosotros. 💛</b></div>
+    <button type="button" onclick="closeThanks()">Empezar a estudiar</button>
+  </div>`;
+  document.body.appendChild(d);
+}
+function closeThanks(){
+  const d = document.getElementById('rm-thanks');
+  if(d) d.remove();
+}
+
+function escapeStore(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* conta criada mas ainda não aprovada (is_active = false) */
+function showPending(){
+  document.getElementById('rm-topbar').classList.remove('hidden');
+  document.getElementById('main-tabs').classList.add('hidden');
+  const container = document.getElementById('materias-container');
+  container.innerHTML = `
+    <section class="container locked-content">
+      <div class="locked-card">
+        <div class="ico">⏳</div>
+        <h2>Cuenta pendiente de aprobación</h2>
+        <p>Su cuenta fue creada correctamente.</p>
+        <p style="color:#998a7a;">El administrador debe habilitar su acceso. Vuelva a intentar más tarde.</p>
+      </div>
+    </section>`;
+}
+
+function addLogoutButton(){
+  if(document.getElementById('logout-fab')) return;
+  const b = document.createElement('button');
+  b.id = 'logout-fab';
+  b.textContent = 'Sair';
+  b.onclick = doLogout;
+  document.body.appendChild(b);
+}
+
+/* =====================================================================
+   INÍCIO: se já houver sessão, entra direto; senão, mostra login
+   ===================================================================== */
+(async function init(){
+  // retorno do link de recuperação de senha
+  const isRecovery = /(?:[?&#])recovery=1/.test(location.href) ||
+                     /type=recovery/.test(location.hash);
+  if(isRecovery){
+    document.getElementById('auth-overlay').classList.remove('hidden');
+    showResetPassword();
+    return;
+  }
+  const { data:{ session } } = await _sb.auth.getSession();
+  if(session){ await afterLogin(); }
+  else { document.getElementById('auth-overlay').classList.remove('hidden'); }
+})();
+
+/* ===================== ANÚNCIO / FLYER =====================
+   Aparece ao entrar, se houver um anúncio ativo que o usuário ainda não
+   viu (conforme a frequência). Fecha ao clicar fora, no X ou no botão. */
+async function showAnnouncement(){
+  let ad;
+  try{
+    const { data, error } = await _sb.rpc('my_active_announcement');
+    if(error || !data) return;
+    ad = data;
+  }catch(e){ return; }
+  if(!ad || !ad.id) return;
+
+  const media = ad.media_type === 'video'
+    ? `<video src="${escAd(ad.media_url)}" autoplay muted loop playsinline
+         controls preload="metadata" class="rm-ad-media"></video>`
+    : (ad.media_url
+        ? `<img src="${escAd(ad.media_url)}" alt="${escAd(ad.title||'Anuncio')}"
+             class="rm-ad-media" decoding="async">`
+        : '');
+
+  // botões: usa ad.links (lista) se existir; senão o link_url antigo
+  let btns = '';
+  try{
+    const list = Array.isArray(ad.links) ? ad.links : [];
+    if(list.length){
+      btns = '<div class="rm-ad-links">' + list.map(l => {
+        if(!l || !l.url) return '';
+        const label = l.label || 'Abrir';
+        const cls = /instagram\.com/i.test(l.url) ? 'ig'
+                  : /wa\.me|whatsapp/i.test(l.url) ? 'wa'
+                  : (l.style === 'gold' ? 'gold' : '');
+        const icon = cls === 'ig' ? '📸 ' : cls === 'wa' ? '💬 ' : '';
+        return `<a class="rm-ad-btn ${cls}" href="${escAd(l.url)}" target="_blank" rel="noopener">${icon}${escAd(label)}</a>`;
+      }).join('') + '</div>';
+    } else if(ad.link_url){
+      btns = `<div class="rm-ad-links"><a class="rm-ad-btn gold" href="${escAd(ad.link_url)}"
+        target="_blank" rel="noopener">Saber más →</a></div>`;
+    }
+  }catch(e){}
+
+  const d = document.createElement('div');
+  d.id = 'rm-ad';
+  d.innerHTML = `<div class="rm-ad-box ${media?'':'no-media'}" role="dialog" aria-modal="true">
+      <button class="rm-ad-x" type="button" aria-label="Cerrar" onclick="closeAnnouncement('${ad.id}')">✕</button>
+      ${media}
+      <div class="rm-ad-txt">
+        ${ad.title ? '<h3>'+escAd(ad.title)+'</h3>' : ''}
+        ${ad.body ? '<p>'+escAd(ad.body).replace(/\n/g,'<br>')+'</p>' : ''}
+        ${btns}
+        <button class="rm-ad-close" type="button" onclick="closeAnnouncement('${ad.id}')">Continuar</button>
+      </div>
+    </div>`;
+  d.addEventListener('click', (e)=>{ if(e.target === d) closeAnnouncement(ad.id); });
+  document.body.appendChild(d);
+  requestAnimationFrame(()=> d.classList.add('show'));
+}
+
+async function closeAnnouncement(id){
+  const d = document.getElementById('rm-ad');
+  if(d){ d.classList.remove('show'); setTimeout(()=>d.remove(), 200); }
+  try{ await _sb.rpc('mark_announcement_seen', { p_id: id }); }catch(e){}
+}
+
+function escAd(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* tela para definir a nova senha (após clicar no link do e-mail) */
+function showResetPassword(){
+  ['pane-login','pane-signup','pane-reset'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.classList.add('hidden');
+  });
+  const host = document.getElementById('pane-login');
+  const box = document.createElement('div');
+  box.id = 'pane-newpass';
+  box.innerHTML = `
+    <p class="sub">Creá tu nueva contraseña.</p>
+    <label>Nueva contraseña <span style="color:#7f968f;">(mín. 6)</span></label>
+    <input id="np-pass" type="password" autocomplete="new-password" placeholder="••••••••">
+    <label>Repetir contraseña</label>
+    <input id="np-pass2" type="password" autocomplete="new-password" placeholder="••••••••"
+           onkeydown="if(event.key==='Enter')doNewPassword()">
+    <button onclick="doNewPassword()">Guardar y entrar</button>`;
+  host.parentNode.insertBefore(box, host);
+}
+
+async function doNewPassword(){
+  const p1 = document.getElementById('np-pass').value;
+  const p2 = document.getElementById('np-pass2').value;
+  const msg = document.getElementById('au-msg');
+  msg.className=''; msg.textContent='';
+  if(p1.length < 6){ msg.textContent='La contraseña debe tener al menos 6 caracteres.'; return; }
+  if(p1 !== p2){ msg.textContent='Las contraseñas no coinciden.'; return; }
+  msg.className='ok'; msg.textContent='Guardando…';
+  try{
+    const { error } = await _sb.auth.updateUser({ password: p1 });
+    if(error){ msg.className=''; msg.textContent = error.message || 'No se pudo actualizar.'; return; }
+  }catch(e){ msg.className=''; msg.textContent='Error de conexión.'; return; }
+  // limpa o parâmetro e entra
+  history.replaceState({}, '', location.pathname);
+  location.reload();
+}
+</script>
+
+</body>
+</html>
