@@ -8,66 +8,34 @@
      ===================================================================== -->
 <style id="tab-toxico-fix">
 /* =====================================================================
-   TOXICOLOGÍA · ÚNICO <style> del fragmento — dos correcciones de
-   comportamiento. NO copia el design system (ese vive en styles.css).
+   TOXICOLOGÍA · ÚNICO <style> del fragmento.
+   NO copia el design system: ese vive en styles.css.
 
-   1 · EL GLOSARIO SE RECORTABA / QUEDABA TAPADO
-       El `.container` del cuaderno usa `overflow:hidden` (por el papel
-       milimetrado y la lomada perforada). El post-it del glosario es
-       `position:absolute`, así que quedaba cortado en el borde de la
-       tarjeta; y como cada hijo del container tiene `z-index:1`, el
-       párrafo siguiente lo tapaba. Acá el post-it deja de flotar y se
-       abre EN EL FLUJO, justo debajo del término: no hay nada que lo
-       pueda recortar ni pisar, y en el celular funciona igual.
+   ⚠️ ALINEADO CON EL styles.css DEL REPOSITORIO.
+   Ahí ya se corrigió, de forma global y mejor, el contraste de los
+   rótulos: el bloque «NOMENCLATURA ESTÁNDAR» define `.quiz-tag.oficial`
+   (#D62839), `.vf` (#5D3AE0) y `.variante` (#EFEAFF sobre #3F2AA8) con
+   `!important`, bajo `#materias-container .tab-content`.
+   Por eso las reglas de rótulo que este fragmento traía FUERON
+   ELIMINADAS: eran redundantes y, en el caso de `.oficial`, reponían el
+   coral #FF4D5E que justamente se descartó por dar 3,2:1 de contraste.
 
-   2 · LA ETIQUETA «Pregunta complementaria» QUEDABA ILEGIBLE
-       styles.css tiene una regla antigua con !important
-       (`/* .quiz-tag.variante: cor vem do padrão global em styles.css */`,
-       azul oscuro) y otra más nueva que fija `color:#3F2AA8` (violeta
-       oscuro). El !important gana en el fondo y la otra en el texto:
-       oscuro sobre oscuro. Acá se fuerzan los dos juntos.
+   ⚠️ EL GLOSARIO TAMPOCO SE CORRIGE ACÁ (17/08).
+   La causa real estaba en `app-core.js`, no en el CSS: el motor ya tiene
+   una nota flotante (`#rm-gl-note`) que se cuelga de <body> y por lo
+   tanto es inmune al `overflow:hidden` del `.container` — pero su
+   selector listaba sólo cinco prefijos legados
+   (`em-gl, f2-gl, s2-gl, sm-gl, hi-gl`) y NO incluía `rmc-gl`, la clase
+   canónica v4. Las materias fuera de esa lista caían al `<i>` en flujo,
+   que sí se recorta. Con `rmc-gl` agregado al motor, el problema se
+   arregla de una vez para todas las materias y este fragmento no tiene
+   que pisar nada. Cualquier override de `.rmc-gl` acá volvería a mostrar
+   el post-it duplicado (el flotante + el de flujo).
+
+   Queda sólo lo que no existe en el design system:
+   la faja de color de los `.pattern-card` (§3) y el componente de las
+   láminas verticales `tx-lam` (§4).
    ===================================================================== */
-
-/* ---- 1 · glosario en el flujo, imposible de recortar ---- */
-#tab-toxico .rmc-gl > i{
-  position:static !important; left:auto !important; right:auto !important;
-  top:auto !important; bottom:auto !important; transform:none !important;
-  display:none; width:auto !important; max-width:none !important;
-  margin:.7rem 0 .3rem; box-shadow:0 10px 24px -14px rgba(16,36,61,.55);
-}
-#tab-toxico .rmc-gl.on > i{ display:block !important; }
-#tab-toxico .rmc-gl > i::before{ display:none !important; }
-
-/* styles.css pone `display:block` a TODO <b> dentro del post-it: el cuerpo
-   quedaba partido en renglones sueltos. Acá sólo el primero es título. */
-#tab-toxico .rmc-gl > i{
-  max-width:640px !important; font-weight:400 !important; line-height:1.68;
-  font-size:.95rem; padding:1rem 1.15rem !important;
-}
-#tab-toxico .rmc-gl > i b{
-  display:inline !important; color:#FFD98A !important; font-weight:800 !important;
-  margin:0 !important;
-}
-#tab-toxico .rmc-gl > i > b:first-child{
-  display:block !important; margin:0 0 .5rem !important; color:#FFC233 !important;
-  font-family:'Fraunces',Georgia,serif; font-size:1.02rem; font-weight:600 !important;
-  letter-spacing:-.01em;
-}
-#tab-toxico .rmc-gl-close{
-  display:block !important; margin:.75rem 0 0 !important; padding-top:.55rem;
-  border-top:1px solid rgba(255,255,255,.16); font-family:'JetBrains Mono',monospace;
-  font-size:.68rem; letter-spacing:.06em; text-transform:uppercase;
-  color:rgba(234,242,250,.62) !important; font-weight:600;
-}
-
-/* ---- 2 · etiqueta de pregunta legible ---- */
-#tab-toxico .quiz-tag.variante{
-  background:#EFEAFF !important; color:#3F2AA8 !important;
-  border:1px solid rgba(124,92,255,.42) !important;
-}
-#tab-toxico .quiz-tag.oficial{
-  background:#FF4D5E !important; color:#fff !important; border:0 !important;
-}
 
 /* ---- 3 · tarjetas de conceptos: que respiren dentro del cuaderno ----
        La capa de compatibilidad del cuaderno reescribe `border` entero
@@ -95,6 +63,43 @@
   font-weight:600; color:#10243D; line-height:1.25; margin-bottom:.35rem;
 }
 #tab-toxico .pattern-card p{ font-size:.92rem; line-height:1.62; color:#28425F; }
+
+/* ---- 4 · LÁMINAS (infografías verticales de la cátedra) ----------------
+       Las imágenes son verticales (864×1821, casi 1:2,1). El `.rmc-photo`
+       del design system usa `aspect-ratio:3/2` + `background-size:cover`,
+       que recortaría la infografía por la mitad. Por eso estas láminas
+       usan una imagen con su proporción natural, con tope de ancho en el
+       escritorio para que el texto de la lámina siga siendo legible, y
+       ancho completo en el celular. Abrir en pestaña nueva es un <a>,
+       sin JavaScript.                                                   */
+#tab-toxico .tx-lam{ clear:both; margin:1.9rem 0; }
+#tab-toxico .tx-lam-box{
+  display:block; max-width:560px; margin:0 auto; border-radius:16px;
+  overflow:hidden; border:1.5px solid #DFD3B8; background:#FBF6E9;
+  box-shadow:0 18px 40px -28px rgba(16,36,61,.55); position:relative;
+}
+#tab-toxico .tx-lam-box img{ display:block; width:100%; height:auto; }
+#tab-toxico .tx-lam-box::after{
+  content:'⤢  ver en grande'; position:absolute; right:10px; bottom:10px;
+  font-family:'JetBrains Mono',monospace; font-size:.64rem; letter-spacing:.06em;
+  text-transform:uppercase; background:rgba(16,36,61,.86); color:#FFC233;
+  padding:.32rem .6rem; border-radius:8px; pointer-events:none;
+}
+#tab-toxico .tx-lam figcaption{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif; font-size:.88rem;
+  color:#6B7C93; line-height:1.68; margin:.85rem auto 0; max-width:640px;
+  padding-left:.85rem; border-left:3px solid #FFC233; font-style:normal;
+}
+#tab-toxico .tx-lam figcaption b{ color:#10243D; }
+#tab-toxico .tx-lam figcaption .tx-lam-fix{
+  display:block; margin-top:.5rem; padding:.5rem .7rem; border-radius:8px;
+  background:rgba(255,77,94,.09); border:1px solid rgba(255,77,94,.28);
+  color:#8C1F2C; font-size:.83rem;
+}
+@media(max-width:680px){
+  #tab-toxico .tx-lam-box{ max-width:100%; }
+  #tab-toxico .tx-lam-box::after{ content:'⤢  tocá para ampliar'; }
+}
 </style>
 <section class="container" id="toxportada">
 <div class="section-marker"><span class="section-marker-num">PORTADA · CÓMO ESTUDIAR ESTA MATERIA</span></div>
@@ -112,9 +117,9 @@
 <div class="rmc-flow">
   <div class="rmc-pill"><span class="e">📚</span><b>3 bloques</b><small>publicados</small></div>
   <span class="rmc-arrow">·</span>
-  <div class="rmc-pill"><span class="e">✍️</span><b>48 preguntas</b><small>con explicación</small></div>
+  <div class="rmc-pill"><span class="e">✍️</span><b>57 preguntas</b><small>con explicación</small></div>
   <span class="rmc-arrow">·</span>
-  <div class="rmc-pill"><span class="e">🎴</span><b>79 flashcards</b><small>en modo juego</small></div>
+  <div class="rmc-pill"><span class="e">🎴</span><b>96 flashcards</b><small>en modo juego</small></div>
   <span class="rmc-arrow">·</span>
   <div class="rmc-pill"><span class="e">🖼️</span><b>14 esquemas</b><small>propios</small></div>
   <span class="rmc-arrow">·</span>
@@ -445,6 +450,49 @@ de las preguntas.</p>
 </tr>
 </tbody></table></div>
 <div class="rmc-detalle">
+<h4>Dónde vive la DL50: la curva dosis-respuesta</h4>
+<p>La DL50 no es un número suelto: es <b>un punto de una curva</b>. Si se grafica la dosis en el eje horizontal —en escala <b>logarítmica</b>— contra el porcentaje de individuos que responden en el vertical, aparece una <b>sigmoide</b>, una S alargada. Esa curva tiene tres marcas que conviene saber nombrar, porque el examen las pide en orden.</p>
+<p>La primera es la <b>dosis mínima efectiva</b>: la menor cantidad capaz de producir un efecto medible. Por debajo de ella no pasa nada detectable. La segunda es la <b>dosis tóxica</b>: aquella a partir de la cual el efecto deja de ser el buscado y empieza el daño. La tercera es la <b>DL50</b>, ya en la parte alta de la curva, donde la mitad de los animales muere. Entre la primera y la segunda vive el <b>margen de seguridad</b> de un medicamento — y es exactamente ese margen el que Paracelso estaba describiendo: la misma molécula, tres posiciones distintas en la misma recta.</p>
+<p>La forma de la curva importa tanto como el número. Una sigmoide <b>empinada</b> significa que un pequeño aumento de dosis multiplica el efecto: son las sustancias donde no hay margen para equivocarse, como los digitálicos. Una curva <b>tendida</b> tolera variaciones grandes sin cambio clínico. Dos sustancias pueden tener la misma DL50 y comportarse de manera completamente distinta en la práctica según la pendiente.</p>
+</div>
+<div class="rmc-scroll"><table><thead><tr>
+<th>Punto de la curva</th>
+<th>Qué significa</th>
+<th>Cómo se pregunta</th>
+</tr></thead><tbody>
+<tr>
+<th><b>Dosis mínima efectiva</b></th>
+<td>La menor dosis que produce un efecto <b>medible</b></td>
+<td>Es el piso: por debajo no hay efecto observable</td>
+</tr>
+<tr>
+<th><b>Dosis terapéutica</b></th>
+<td>El efecto buscado, sin daño</td>
+<td>Vive entre la mínima efectiva y la tóxica</td>
+</tr>
+<tr>
+<th><b>Dosis tóxica</b></th>
+<td>La dosis a partir de la cual aparecen efectos <b>tóxicos</b></td>
+<td>Es donde Paracelso deja de ser una frase y se vuelve clínica</td>
+</tr>
+<tr>
+<th><b>DL50</b></th>
+<td>Mata al <b>50 %</b> de los animales de experimentación</td>
+<td>Compara toxicidad <b>aguda</b>; no predice por sí sola el riesgo humano</td>
+</tr>
+<tr>
+<th><b>Pendiente</b> de la curva</th>
+<td>Cuánto cambia el efecto por cada aumento de dosis</td>
+<td>Curva empinada = <b>sin margen</b>; curva tendida = tolerante</td>
+</tr>
+</tbody></table></div>
+<figure class="tx-lam">
+<a class="tx-lam-box" href="/assets/img/toxico/bloco-01-02-fundamentos-toxicologia.webp" target="_blank" rel="noopener">
+<img src="/assets/img/toxico/bloco-01-02-fundamentos-toxicologia.webp" alt="Infografía de fundamentos de toxicología: Paracelso, los cuatro términos, toxicidad como agente más exposición más huésped, toxicocinética frente a toxicodinámica y la curva dosis-respuesta con la DL50." loading="lazy" decoding="async">
+</a>
+<figcaption><b>Cómo leer la lámina:</b> bajá por ella en tres tramos. Arriba, el vocabulario: cuatro tarjetas que se distinguen por <b>una sola palabra cada una</b> — procedencia, efecto, origen biológico, potencia. En el medio, la ecuación que organiza todo el bloque: <b>agente + exposición + huésped</b>; fijate que la dosis aparece del lado del agente pero la vía y el tiempo del lado de la exposición, que es justo la distinción que suelen pedir. Abajo, la curva: seguí con el dedo de izquierda a derecha y nombrá los tres puntos —mínima efectiva, tóxica, DL50— en ese orden. El eje horizontal es <b>logarítmico</b>: por eso la curva es una S y no una recta.
+</figcaption></figure>
+<div class="rmc-detalle">
 <h3>5 · Toxicocinética y toxicodinámica: las dos preguntas</h3>
 <p>Son los mismos dos conceptos de la farmacología, con otro nombre. La <b><span class="rmc-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-toxico .rmc-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">toxicocinética<b>?</b><i onclick="event.stopPropagation()"><b>Toxicocinética</b>Absorción, distribución, metabolismo y excreción del tóxico. Es la que define la <b>ventana terapéutica</b>: hasta cuándo sirve un lavado gástrico, si el carbón lo alcanza, si la diálisis puede sacarlo.<span class="rmc-gl-close">tocá la palabra para cerrar</span></i></span></b> —el equivalente de la farmacocinética— estudia los procesos que determinan la concentración del tóxico en su sitio de acción: absorción, distribución, metabolismo y excreción. Responde a la pregunta <b>«¿qué le hace el cuerpo a la sustancia?»</b>. La <b><span class="rmc-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-toxico .rmc-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">toxicodinámica<b>?</b><i onclick="event.stopPropagation()"><b>Toxicodinámica</b>Mecanismo de acción y relación concentración–efecto. Es la que explica <b>por qué</b> aparece cada signo y, por lo tanto, la que da origen a los toxidromes.<span class="rmc-gl-close">tocá la palabra para cerrar</span></i></span></b> estudia los procesos bioquímicos y fisiológicos que la sustancia desencadena, su mecanismo de acción y la relación entre concentración y efecto. Responde a <b>«¿qué le hace la sustancia al cuerpo?»</b>.</p>
 <p>La distinción no es académica: <b>cada una gobierna una parte distinta del tratamiento</b>. La dinámica explica los signos que vemos y fundamenta los toxidromes y los antídotos que compiten por el receptor. La cinética decide qué maniobra todavía sirve —si el tóxico sigue en el estómago, si tiene circulación enterohepática, si es lo bastante pequeño e hidrosoluble como para dializarse—. Los bloques 02 y 03 de esta materia son, en el fondo, cinética aplicada.</p>
@@ -515,6 +563,53 @@ de las preguntas.</p>
 <td><b>Alergias</b></td>
 </tr>
 </tbody></table></div>
+<div class="rmc-detalle">
+<h4>Y mientras se pregunta, se evalúa: el ABCDE del intoxicado</h4>
+<p>El interrogatorio no se hace <b>antes</b> del examen: se hace <b>encima</b> de él. Mientras alguien pregunta por la sustancia y la hora, otro recorre el <b>ABCDE</b>, que es el mismo del politraumatizado con una letra reinterpretada en clave toxicológica. Es la forma práctica del principio I —soporte vital primero— y explica por qué la identificación del tóxico nunca puede retrasar la estabilización.</p>
+</div>
+<div class="rmc-scroll"><table><thead><tr>
+<th></th>
+<th>Qué se asegura</th>
+<th>Qué se busca en el intoxicado</th>
+</tr></thead><tbody>
+<tr>
+<th><b>A</b></th>
+<td>Vía aérea y protección cervical</td>
+<td>Sensorio deprimido que ya no protege la vía aérea; secreciones; edema por cáustico</td>
+</tr>
+<tr>
+<th><b>B</b></th>
+<td>Ventilación y oxígeno</td>
+<td><b>Bradipnea</b> (opiáceos, sedantes), broncorrea (colinérgico), edema pulmonar (fosfina)</td>
+</tr>
+<tr>
+<th><b>C</b></th>
+<td>Pulso, presión, perfusión y <b>ECG</b></td>
+<td>Taqui o bradicardia, hipotensión, <b>QRS ancho</b> o <b>QT largo</b></td>
+</tr>
+<tr>
+<th><b>D</b></th>
+<td>Glasgow, glucemia y <b>pupilas</b></td>
+<td>La hipoglucemia imita cualquier intoxicación: se mide siempre. Pupila = la primera P</td>
+</tr>
+<tr>
+<th><b>E</b></th>
+<td>Temperatura, <b>piel</b>, olores y evidencia de exposición</td>
+<td>Piel húmeda o seca (la P que decide), olor a almendras o a ajo, restos del producto, marcas de venopunción, parches</td>
+</tr>
+</tbody></table></div>
+<aside class="rmc-margin"><b class="t">Anotación al margen</b>
+<p>La <em>D</em> incluye la glucemia por un motivo práctico.</p>
+<p>Un hipoglucémico llega confuso, sudoroso y taquicárdico: es un toxidrome adrenérgico perfecto que se corrige con una ampolla de glucosa.</p>
+<p>Medirla cuesta segundos y evita tratar un veneno que no existe.</p>
+</aside>
+<figure class="tx-lam">
+<a class="tx-lam-box" href="/assets/img/toxico/bloco-01-03-paciente-intoxicado-manejo-inicial.webp" target="_blank" rel="noopener">
+<img src="/assets/img/toxico/bloco-01-03-paciente-intoxicado-manejo-inicial.webp" alt="Infografía del manejo inicial del paciente intoxicado: cuándo sospechar, los siete datos del interrogatorio, la evaluación ABCDE, el reconocimiento del toxidroma y los cuatro principios del tratamiento." loading="lazy" decoding="async">
+</a>
+<figcaption><b>Cómo leer la lámina:</b> está numerada 1→5 y ése es el orden real de la guardia, no una lista de temas. Los recuadros 2 y 3 van <b>en paralelo</b>, no en secuencia: la flecha entre ellos significa «mientras preguntás, alguien evalúa». El recuadro 4 es la planilla del toxidroma —los mismos elementos de la figura anterior— y el 5 son los cuatro principios, que se leen de izquierda a derecha y <b>nunca</b> se reordenan. La franja roja del pie es la regla que resume el bloque entero.
+<span class="tx-lam-fix"><b>Nota sobre la lámina:</b> en el recuadro 5, el bloque 3 tiene una errata de impresión —dice «ELIMIIACIÓN»— y debe leerse <b>«aumentar la eliminación del tóxico absorbido»</b>. El contenido es correcto; sólo falta una N.</span>
+</figcaption></figure>
 <div class="illustration"><svg id="txs0102" viewBox="0 0 900 470" role="img" aria-label="Esquema del examen del paciente intoxicado: cuatro signos vitales, las tres P (pupila, peristaltismo, piel), estado mental y electrocardiograma" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><style>#txs0102 .bg{fill:#FFFDF7}#txs0102 .cd{fill:#FBF6E9}</style><rect class="bg" x="0" y="0" width="900" height="470" rx="18"/>
 <text x="30" y="40" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="11" fill="#B3801A" font-weight="700" letter-spacing="2.4">LA HOJA DE RUTA</text>
 <text x="30" y="68" font-family="'Fraunces',Georgia,serif" font-size="20" fill="#10243D" font-weight="600">Qué se consigna en TODO paciente intoxicado</text>
@@ -734,6 +829,19 @@ de las preguntas.</p>
 <text x="422" y="675" font-family="'Plus Jakarta Sans',system-ui,-apple-system,sans-serif" font-size="12.5" fill="#28425F" font-weight="700">• peristaltismo ↓</text>
 <text x="422" y="698" font-family="'Plus Jakarta Sans',system-ui,-apple-system,sans-serif" font-size="11.5" fill="#6B7C93" font-weight="400">Benzodiacepinas · barbitúricos · etanol</text>
 </svg></div><p class="illustration-caption"><b>Cómo leer la figura:</b> compare de a pares en diagonal. Adrenérgico y anticolinérgico tienen los cuatro signos vitales casi idénticos: los separa la <b>piel</b> y el <b>peristaltismo</b>. Colinérgico y opiáceo comparten miosis y depresión: los separa el <b>exceso de secreciones</b>. Ése es todo el examen.</p>
+<figure class="tx-lam">
+<a class="tx-lam-box" href="/assets/img/toxico/bloco-01-01-toxidromas-identificacao-rapida.webp" target="_blank" rel="noopener">
+<img src="/assets/img/toxico/bloco-01-01-toxidromas-identificacao-rapida.webp" alt="Infografía de identificación rápida de los seis toxidromes, con la cara del paciente, la pupila y la piel de cada uno, el mnemónico DUMBELS del colinérgico y el cuadro de las tres P." loading="lazy" decoding="async">
+</a>
+<figcaption><b>Cómo leer la lámina:</b> no la leas de arriba abajo, leela <b>por columnas de la misma fila</b>. La fila de las pupilas primero: midriasis en 1, 2 y 5; miosis en 3; miosis <b>puntiforme</b> en 4; variables en 6. Después la fila de la piel, que es la que resuelve el caso: húmeda en 1, 3 y 5; <b>seca y roja</b> sólo en 2; fría en 4 y 6. El cuadro azul del pie —«las 3 P»— es la misma información leída al revés: entrás por el hallazgo y salís con la lista de toxidromes compatibles. Ésa es la dirección en la que la vas a usar en la guardia.
+</figcaption></figure>
+<div class="rmc-detalle">
+<h4>DUMBELS: el mnemónico del colinérgico</h4>
+<p>El toxidrome colinérgico tiene tantos signos que conviene una regla nemotécnica, y la que usa la cátedra —la que aparece en la lámina— es <b>DUMBELS</b>. Cada letra es una manifestación <b>muscarínica</b>, es decir, del exceso de acetilcolina en los receptores muscarínicos: <b>D</b>iarrea, <b>U</b>rinación (incontinencia urinaria), <b>M</b>iosis, <b>B</b>roncorrea y broncoespasmo, <b>E</b>mesis (vómitos), <b>L</b>agrimeo y <b>S</b>alivación.</p>
+<p>Lo que hay que entender —y no memorizar— es que todas esas letras son <b>una sola idea</b>: secreción y vaciamiento. Todo lo que el cuerpo puede expulsar por un orificio, lo expulsa. Por eso el paciente colinérgico está literalmente <b>mojado</b>, y por eso el hallazgo que más mata no es ninguno de los siete: es la <b>broncorrea</b> con broncoespasmo, que ahoga al paciente en sus propias secreciones. La atropina se dosifica, justamente, contra ese signo y no contra la frecuencia cardíaca.</p>
+<p>Dos advertencias. Primera: DUMBELS cubre lo muscarínico, pero el colinérgico también tiene componente <b>nicotínico</b> —fasciculaciones, debilidad, parálisis— y <b>central</b> —confusión, convulsiones, coma—; esos no entran en el mnemónico y son los que definen la gravedad. Segunda: la miosis del DUMBELS es la misma que la del opiáceo, y ahí el mnemónico no ayuda; lo que separa a los dos es que el opiáceo está <b>seco</b> y el colinérgico está <b>empapado</b>.</p>
+</div>
+<div class="key-box exam"><h4>🔑 El colinérgico se dosifica por la piel y el pulmón, no por el pulso</h4><p>Un error clásico es titular la atropina buscando taquicardia. El objetivo real es <b>secar las secreciones bronquiales</b>: se atropiniza hasta que el tórax se ausculta limpio. Un paciente con frecuencia cardíaca «normal» y campos pulmonares llenos de secreciones está <b>subatropinizado</b>.</p></div>
 <div class="rmc-detalle">
 <h3>10 · Los seis toxidromes, uno por uno</h3>
 <h4>Adrenérgico (simpaticomimético)</h4>
@@ -1124,6 +1232,51 @@ de las preguntas.</p>
 <p>Xenobiótico viene de <i>xenos</i> (extraño) y <i>bios</i> (vida): es todo compuesto ajeno al cuerpo que se incorpora a él. Las tres grandes clases de importancia médica son los <b>fármacos</b>, los <b>carcinógenos químicos</b> y los <b>compuestos que llegaron al ambiente</b> por actividad humana.</p>
 <p>Muchos xenobióticos son problemáticos justamente por su virtud industrial: <b>no se biodegradan</b>. Esa estabilidad los vuelve contaminantes persistentes.</p>
 </div></div>
+<div class="quiz-item" id="q-b01q17">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> En la evaluación inicial de un paciente con sospecha de intoxicación y alteración del sensorio, ¿cuál de las siguientes determinaciones debe realizarse de manera sistemática antes de atribuir el cuadro a un tóxico?</p>
+<ul class="options">
+<li>a) Dosaje sérico del tóxico sospechado.</li>
+<li>b) Glucemia capilar.</li>
+<li>c) Tomografía de cráneo sin contraste.</li>
+<li>d) Nivel de colinesterasa plasmática.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>b) Glucemia capilar.</strong></p>
+<p>La <b>hipoglucemia</b> reproduce un toxidrome adrenérgico completo —confusión o coma, sudoración profusa, taquicardia, temblor— y es <b>inmediatamente reversible</b>. Por eso ocupa la letra <b>D</b> del ABCDE junto con Glasgow y pupilas: se mide en segundos, al pie de la cama, y evita tratar un veneno inexistente.</p>
+<p>a) el dosaje llega tarde y sólo está disponible para pocos tóxicos: el manejo no lo espera. c) la tomografía se pide si hay foco neurológico o traumatismo, no de rutina. d) la colinesterasa confirma exposición a organofosforados, pero es una prueba dirigida y diferida, no un tamizaje inicial.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> El principio I no dice «buscar el tóxico»: dice <b>soporte vital</b>. Todo lo corregible y barato —glucosa, oxígeno, temperatura— se corrige antes de razonar sobre moléculas.</p>
+</div></div>
+<div class="quiz-item" id="q-b01q18">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> Respecto de la curva dosis-respuesta, señale la afirmación correcta:</p>
+<ul class="options">
+<li>a) La dosis mínima efectiva es aquella que produce la muerte en el 50 % de los animales.</li>
+<li>b) La DL50 se ubica antes de la dosis tóxica en el eje de dosis.</li>
+<li>c) Dos sustancias con la misma DL50 pueden comportarse de forma clínicamente distinta según la pendiente de su curva.</li>
+<li>d) El eje de dosis se representa en escala lineal, por lo que la relación es una recta.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>c) Dos sustancias con la misma DL50 pueden comportarse de forma clínicamente distinta según la pendiente de su curva.</strong></p>
+<p>La DL50 es <b>un solo punto</b> de la curva. La <b>pendiente</b> informa cuánto cambia el efecto por cada incremento de dosis: una curva <b>empinada</b> significa que un pequeño exceso multiplica el daño —no hay margen— mientras que una <b>tendida</b> tolera variaciones amplias. Dos moléculas pueden coincidir en el punto medio y diferir por completo en el resto del recorrido.</p>
+<p>a) confunde la mínima efectiva con la DL50: la primera es el <b>primer efecto medible</b>, no la muerte. b) invierte el orden real, que es <b>mínima efectiva → tóxica → DL50</b>. d) el eje de dosis es <b>logarítmico</b>, y por eso la gráfica es una sigmoide y no una recta.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> El orden de los tres puntos es materia de pregunta directa. Mínima efectiva, tóxica, DL50 — siempre en esa dirección.</p>
+</div></div>
+<div class="quiz-item" id="q-b01q19">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> El mnemónico DUMBELS resume las manifestaciones del toxidrome colinérgico. ¿A qué componente corresponden todas sus letras?</p>
+<ul class="options">
+<li>a) Al componente nicotínico.</li>
+<li>b) Al componente muscarínico.</li>
+<li>c) A las manifestaciones del sistema nervioso central.</li>
+<li>d) A los efectos cardiovasculares.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>b) Al componente muscarínico.</strong></p>
+<p>Diarrea, urinación, miosis, broncorrea, emesis, lagrimeo y salivación son todas consecuencias del exceso de acetilcolina sobre receptores <b>muscarínicos</b>. Todas expresan una misma idea: <b>secreción y vaciamiento</b>. El paciente está literalmente mojado.</p>
+<p>a) lo <b>nicotínico</b> es otra cosa —fasciculaciones, debilidad muscular, parálisis— y no entra en el mnemónico. c) lo <b>central</b> —confusión, convulsiones, coma— tampoco, y es justamente lo que define la gravedad. d) la bradicardia es muscarínica, pero el mnemónico no la incluye entre sus letras.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> DUMBELS da una falsa sensación de completitud: deja afuera exactamente los dos componentes que matan —el nicotínico y el central.</p>
+</div></div>
 </div>
 <h3>🎴 Flashcards del bloque 01</h3>
 <div class="fc-grid">
@@ -1150,6 +1303,13 @@ de las preguntas.</p>
 <div class="flashcard"><div class="fc-front"><b>Síndrome opiáceo</b></div><div class="fc-back"><b>Miosis puntiforme</b> · <b>depresión respiratoria</b> · bradicardia · hipotermia · piel fría · íleo · coma. Morfina y congéneres.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Síndrome serotoninérgico</b></div><div class="fc-back">Midriasis · hipertermia · piel húmeda · <b>hiperreflexia y clonus</b> (predominio en miembros inferiores) · agitación. ISRS, IMAO, tramadol.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Síndrome sedante-hipnótico</b></div><div class="fc-back"><b>Todo abajo</b>: FC, PA, FR y T° descendidas · sensorio deprimido · pupila normal o miótica · piel sin cambios. Benzodiacepinas, barbitúricos, etanol.</div></div>
+<div class="flashcard"><div class="fc-front"><b>DUMBELS</b></div><div class="fc-back">Mnemónico <b>muscarínico</b> del colinérgico: <b>D</b>iarrea · <b>U</b>rinación · <b>M</b>iosis · <b>B</b>roncorrea · <b>E</b>mesis · <b>L</b>agrimeo · <b>S</b>alivación. Una sola idea: <b>todo se secreta y se vacía</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Lo que DUMBELS no cubre</b></div><div class="fc-back">Lo <b>nicotínico</b> (fasciculaciones, debilidad, parálisis) y lo <b>central</b> (confusión, convulsiones, coma). Son los que definen la <b>gravedad</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Contra qué se titula la atropina?</b></div><div class="fc-back">Contra las <b>secreciones bronquiales</b>, no contra el pulso. Objetivo: <b>tórax limpio</b>. Frecuencia normal + campos llenos = <b>subatropinizado</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>El ABCDE del intoxicado</b></div><div class="fc-back"><b>A</b> vía aérea · <b>B</b> ventilación y O₂ · <b>C</b> pulso, presión, perfusión y <b>ECG</b> · <b>D</b> Glasgow, <b>glucemia</b> y pupilas · <b>E</b> temperatura, <b>piel</b>, olores y evidencia.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Por qué la glucemia entra en la D?</b></div><div class="fc-back">La <b>hipoglucemia</b> imita un toxidrome adrenérgico completo (confusión, sudor, taquicardia) y se corrige con glucosa. Medirla cuesta segundos.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Curva dosis-respuesta: los tres puntos</b></div><div class="fc-back"><b>Dosis mínima efectiva</b> (primer efecto medible) → <b>dosis tóxica</b> (empieza el daño) → <b>DL50</b> (mata al 50 %). Eje horizontal en escala <b>logarítmica</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Qué dice la pendiente de la curva?</b></div><div class="fc-back">Curva <b>empinada</b> = poco margen, un pequeño aumento de dosis multiplica el efecto (digitálicos). Curva <b>tendida</b> = tolera variaciones. <b>Misma DL50, comportamiento distinto</b>.</div></div>
 <div class="flashcard"><div class="fc-front">⚠️ <b>Trampa de examen · Bloque 01</b></div><div class="fc-back">Adrenérgico y anticolinérgico comparten midriasis, taquicardia e hipertermia → los separa la <b>piel</b> (húmeda vs seca) y el <b>peristaltismo</b>. Colinérgico y opiáceo comparten miosis y depresión respiratoria → los separa el <b>exceso de secreciones</b>.</div></div>
 </div>
 </section>
@@ -1303,6 +1463,12 @@ de las preguntas.</p>
 <text x="50" y="539" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="10.5" fill="#FFC233" font-weight="800" letter-spacing="1.8">EL RELOJ MANDA</text>
 <text x="50" y="559" font-family="'Plus Jakarta Sans',system-ui,-apple-system,sans-serif" font-size="12" fill="#C6D5E6" font-weight="400">Emesis: 1–2 h  ·  lavado gástrico: sobre todo las 2 primeras horas (hasta 12 h si hay concreciones o íleo)  ·  carbón activado: la 1.ª hora</text>
 </svg></div><p class="illustration-caption"><b>Cómo leer la figura:</b> las cuatro columnas no son cuatro pasos sucesivos sino cuatro <b>escenarios excluyentes</b>. Preste atención a la franja roja de cada columna: en las cuatro vías, lo que se pregunta en el examen suele ser la <b>excepción</b>, no la regla.</p>
+<figure class="tx-lam">
+<a class="tx-lam-box" href="/assets/img/toxico/bloco-02-01-descontaminacao-por-via.webp" target="_blank" rel="noopener">
+<img src="/assets/img/toxico/bloco-02-01-descontaminacao-por-via.webp" alt="Infografía de descontaminación según la vía de entrada: inhalatoria, cutánea, ocular y digestiva, con las excepciones de cada una y el algoritmo proteger, retirar, descontaminar y reevaluar." loading="lazy" decoding="async">
+</a>
+<figcaption><b>Cómo leer la lámina:</b> las cuatro puertas están numeradas, pero el número <b>no</b> es un orden de pasos: es un índice. Entrás por la vía que corresponde al caso y hacés sólo esa columna. En cada una, la línea de flechas de arriba es la secuencia correcta y el recuadro amarillo o rojo del pie es la <b>excepción</b> —que es lo que se pregunta. La banda del pie, <b>proteger → retirar → descontaminar → reevaluar</b>, es lo único común a las cuatro; fijate que «proteger» viene antes que cualquier maniobra sobre el paciente.
+</figcaption></figure>
 <div class="rmc-detalle">
 <h3>1 · Vía inhalatoria: sacar al paciente del gas, y proteger al que lo saca</h3>
 <p>Si el tóxico fue inhalado, la secuencia es de tres pasos. <b>Primero</b>, retirar al individuo del sitio de exposición y trasladarlo a un lugar ventilado: mientras siga en la atmósfera contaminada, cualquier otra medida es inútil. <b>Segundo</b>, aplicar respiración artificial <b>si está indicada</b>, de acuerdo con la naturaleza del tóxico. <b>Tercero</b>, administrar oxígeno tan pronto como sea posible.</p>
@@ -1456,6 +1622,46 @@ de las preguntas.</p>
 <p>Su toxicidad no proviene del compuesto en sí, sino de la reacción con el agua: <b>fosfuro de aluminio + agua → fosfina + hidróxido de aluminio</b>. La <b>fosfina (PH₃)</b> es un gas incoloro, inflamable y altamente tóxico, con un olor desagradable característico a <b>ajo, cebolla o pescado podrido</b>, y es la responsable de todo el cuadro clínico. La reacción ocurre con la humedad del aire y también con el agua del contenido gástrico si el producto se ingirió, de modo que el paciente <b>sigue generando gas</b> y expone al personal que lo asiste.</p>
 <p>En la <b>exposición aguda</b> aparecen irritación de ojos, nariz y garganta; náuseas, vómitos y diarrea; dolor de cabeza, mareos y debilidad; dificultad para respirar y <b>edema pulmonar</b>; y, en los casos graves, <b>convulsiones, coma y muerte</b>. En la <b>exposición crónica</b> predominan el daño hepático y renal, los problemas neurológicos —pérdida de memoria, dificultad para concentrarse— y las alteraciones hematológicas, con anemia y daño de los glóbulos rojos. No hay antídoto específico: el manejo es de soporte, y por eso el uso de agroquímicos en camiones y depósitos está expresamente prohibido por la normativa fitosanitaria.</p>
 </div>
+<div class="rmc-detalle">
+<h4>Los tres gases, lado a lado: qué se hace con cada uno</h4>
+<p>Los tres tóxicos inhalatorios de este bloque comparten el primer movimiento —retirar de la fuente, ventilar, oxígeno, y <b>nunca</b> boca a boca— y se separan justo después, en el antídoto. Vale la pena verlos juntos, porque la pregunta casi siempre pide la diferencia y no el parecido.</p>
+<p>El <b>cianuro</b> es el único de los tres con antídoto verdaderamente específico y disponible: la <b>hidroxocobalamina</b>, una forma de vitamina B₁₂ que <b>secuestra el ion cianuro</b> y forma cianocobalamina, eliminada por orina. Es el antídoto de elección precisamente porque es seguro en el escenario más frecuente —el paciente rescatado de un <b>incendio</b>—, donde suele coexistir intoxicación por monóxido de carbono. El esquema clásico alternativo, con <b>nitritos</b> más <b>tiosulfato de sodio</b>, actúa por otra vía: los nitritos generan <b>metahemoglobina</b> a propósito, que atrapa el cianuro, y el tiosulfato aporta azufre para que la enzima rodanasa lo convierta en tiocianato. Su problema es evidente en el incendiado: la metahemoglobina que se crea deliberadamente reduce todavía más el transporte de oxígeno de una sangre que ya está cargada de carboxihemoglobina.</p>
+<p>El <b>organofosforado</b> no tiene un antídoto que neutralice al tóxico, sino dos fármacos que actúan en dos puntos distintos del problema. La <b>atropina</b> es un <b>antagonista muscarínico</b>: no toca la enzima ni la acetilcolina, simplemente bloquea el receptor donde el exceso hace daño. Por eso controla secreciones, broncoespasmo y bradicardia, y por eso <b>no corrige las fasciculaciones ni la debilidad</b>, que son nicotínicas. La <b>pralidoxima</b> —una <b>oxima</b>— sí va a la causa: <b>reactiva la acetilcolinesterasa</b> arrancándole el fosfato al que quedó unida. Su indicación es <b>precoz</b> por una razón química: una vez que la unión enzima-tóxico envejece, la oxima ya no puede despegarla.</p>
+<p>La <b>fosfina</b> cierra la lista por la negativa: <b>no tiene antídoto probado</b>. Todo el manejo es seguridad del equipo, retiro de la exposición, ventilación del área y soporte intensivo de las complicaciones. Es el tóxico donde la única intervención con impacto real es la <b>prevención</b>.</p>
+</div>
+<div class="rmc-scroll"><table><thead><tr>
+<th>Gas</th>
+<th>Mecanismo</th>
+<th>Pista clínica</th>
+<th>Qué se administra</th>
+</tr></thead><tbody>
+<tr>
+<th><b>Cianuro / cianhídrico</b></th>
+<td>Bloquea la <b>citocromo c oxidasa</b> (complejo IV)</td>
+<td>Inicio fulminante · <b>lactato alto</b> · saturación venosa elevada · olor a almendras</td>
+<td><b>Hidroxocobalamina</b> (de elección) · alternativa: nitritos + <b>tiosulfato</b></td>
+</tr>
+<tr>
+<th><b>Organofosforados</b></th>
+<td>Inhiben la <b>acetilcolinesterasa</b> → exceso de acetilcolina</td>
+<td>Paciente <b>empapado</b>: miosis, broncorrea, sialorrea, bradicardia, fasciculaciones</td>
+<td><b>Atropina</b> (bloquea el receptor muscarínico) + <b>pralidoxima</b> precoz (reactiva la enzima)</td>
+</tr>
+<tr>
+<th><b>Fosfina</b> (de fosfuro de aluminio)</th>
+<td>Toxicidad <b>mitocondrial</b> y estrés oxidativo</td>
+<td>Vómitos intensos · shock · arritmias · <b>acidosis metabólica</b> · edema pulmonar · olor a ajo</td>
+<td><b>Ninguno específico</b>. Soporte intensivo y protección del personal</td>
+</tr>
+</tbody></table></div>
+<div class="key-box exam"><h4>🔑 Atropina y pralidoxima no compiten: hacen cosas distintas</h4><p>La <b>atropina</b> tapa el receptor donde el exceso de acetilcolina hace daño — es <b>sintomática</b> y actúa sólo sobre lo <b>muscarínico</b>. La <b>pralidoxima</b> devuelve la enzima a funcionar — es <b>causal</b> y cubre también lo <b>nicotínico</b>. Por eso se dan <b>juntas</b>, y por eso la oxima pierde eficacia con las horas mientras la atropina sigue sirviendo siempre.</p></div>
+<figure class="tx-lam">
+<a class="tx-lam-box" href="/assets/img/toxico/bloco-02-02-toxicos-inalatorios.webp" target="_blank" rel="noopener">
+<img src="/assets/img/toxico/bloco-02-02-toxicos-inalatorios.webp" alt="Infografía comparativa de cianuro, organofosforados y fosfina: mecanismo, manifestaciones, pistas clínicas y manejo de cada uno, con el recordatorio de seguridad del rescatador." loading="lazy" decoding="async">
+</a>
+<figcaption><b>Cómo leer la lámina:</b> son tres columnas con la <b>misma estructura</b> —mecanismo, manifestaciones, pistas, manejo—, así que leela <b>en horizontal</b>, fila por fila, y no columna por columna. La fila de «mecanismo» ya contiene la respuesta de casi cualquier pregunta: complejo IV bloqueado, acetilcolinesterasa inhibida, mitocondria dañada por radicales. La franja roja del pie no es decorativa: en los tres casos, el primer movimiento es <b>la seguridad del rescatador</b>, y por eso la ventilación boca a boca está prohibida.
+<span class="tx-lam-fix"><b>Notas sobre la lámina:</b> en la columna del cianuro dice «hipoxia histotóxicaa» —sobra una <i>a</i>—. Y una aclaración de vocabulario que conviene fijar ahora: <b>hipoxia histotóxica</b> e <b>hipoxia citotóxica</b> son <b>el mismo concepto</b> con dos nombres; la cátedra usa ambos indistintamente y el examen también.</span>
+</figcaption></figure>
 <div class="rmc-detalle">
 <h3>2 · Vía cutánea: sacar la ropa y lavar, salvo tres excepciones</h3>
 <p>Ante un contacto cutáneo, las dos medidas son <b>eliminar las ropas contaminadas</b> —que actúan como reservorio y mantienen el contacto— y <b>realizar lavados de la piel con agua y jabón</b>. El jabón importa porque la mayoría de los tóxicos relevantes por esta vía son <b><span class="rmc-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-toxico .rmc-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">liposolubles<b>?</b><i onclick="event.stopPropagation()"><b>Liposoluble</b>Se disuelve en grasa, no en agua. Por eso <b>atraviesa la piel</b> —que es una barrera lipídica— y por eso el agua sola no lo arrastra: hace falta <b>jabón</b>, que lo emulsiona. La misma propiedad explica que se acumule en el tejido graso y en el sistema nervioso, y que después cueste sacarlo de ahí.<span class="rmc-gl-close">tocá la palabra para cerrar</span></i></span></b> e irritantes de la piel: plaguicidas organofosforados, organoclorados, arsenicales, mercuriales, derivados del ácido piridilo y del ácido fenoxiacético.</p>
@@ -1695,6 +1901,12 @@ de las preguntas.</p>
 </tr>
 </tbody></table></div>
 <div class="key-box exam"><b>La trampa clásica del bloque.</b> Casi todas las preguntas de descontaminación se responden con una <b>excepción</b>, no con la regla. Agua en la piel: sí, salvo <b>sodio elemental, fósforo y óxido de calcio</b>. Respiración artificial: sí, salvo <b>cianhídrico y fosfina</b>. Antídoto local en el ojo: <b>nunca</b>. Emesis: sí, salvo <b>cáusticos, hidrocarburos, menores de 6 meses y depresión neurológica</b>. Lavado gástrico: sí, salvo <b>vía aérea desprotegida, cáusticos, hidrocarburos, menores de 6 meses y embarazo avanzado</b>. Si en un enunciado aparece una de esas palabras, la respuesta casi siempre es «no hacerlo».</div>
+<figure class="tx-lam">
+<a class="tx-lam-box" href="/assets/img/toxico/bloco-02-03-ingesta-toxicologica-decisao.webp" target="_blank" rel="noopener">
+<img src="/assets/img/toxico/bloco-02-03-ingesta-toxicologica-decisao.webp" alt="Algoritmo de decisión ante una ingesta tóxica: estabilizar, identificar y después elegir entre cuatro escenarios —cáustico, hidrocarburo, tóxico adsorbible e ingesta potencialmente mortal—, con las contraindicaciones del lavado gástrico y el desuso de la ipecacuana." loading="lazy" decoding="async">
+</a>
+<figcaption><b>Cómo leer la lámina:</b> es un árbol, y los dos primeros nodos <b>no son opcionales</b>: se estabiliza y recién después se identifica. Las cuatro ramas A–D son <b>excluyentes</b>: el caso cae en una sola. Fijate que dos de las cuatro ramas —la del cáustico y la del hidrocarburo— terminan en <b>no hacer nada invasivo</b>, y que ésa es la respuesta correcta más frecuente del bloque. La balanza del pie es el criterio que gobierna todo el árbol: el beneficio tiene que superar <b>claramente</b> al riesgo; ante la duda, no se hace.
+</figcaption></figure>
 <div class="illustration"><svg id="txs0205" viewBox="0 0 920 976" role="img" aria-label="Mapa mental del bloque 02 de Toxicología: descontaminación según la vía de entrada, con las diferencias clave y la frase que cierra el tema" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><style>#txs0205 .bg{fill:#FFFDF7}#txs0205 .cd{fill:#FBF6E9}</style><rect class="bg" x="0" y="0" width="920" height="976" rx="18"/><rect x="0" y="0" width="920" height="66" rx="18" fill="#10243D"/>
 <rect x="0" y="48" width="920" height="18" fill="#10243D"/>
 <text x="26" y="27" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="11" fill="#FFC233" font-weight="700" letter-spacing="2.4">MAPA MENTAL</text>
@@ -2003,6 +2215,44 @@ de las preguntas.</p>
 <p>El ácido cianhídrico o ácido prúsico está entre los venenos más potentes y de efecto más rápido —una concentración de <b>300 partes por millón</b> en el aire basta para matar a una persona en cuestión de minutos—. Para quienes no trabajan en industrias que lo utilizan, una de las mayores fuentes de exposición es <b>fumar cigarrillo</b>.</p>
 <p>Otras fuentes: la combustión de plásticos que contienen nitrógeno —de ahí su papel en las muertes por incendio—, los gases de escape de motores y las semillas grandes de algunas frutas.</p>
 </div></div>
+<div class="quiz-item" id="q-b02q17">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> Rescatista traído desde el incendio de un depósito, con alteración del sensorio, hipotensión y lactato de 14 mmol/L. Se sospecha intoxicación combinada por monóxido de carbono y cianuro. ¿Cuál es el antídoto de elección para el componente cianhídrico?</p>
+<ul class="options">
+<li>a) Nitrito de sodio, por su capacidad de generar metahemoglobina.</li>
+<li>b) Hidroxocobalamina.</li>
+<li>c) Azul de metileno.</li>
+<li>d) N-acetilcisteína.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>b) Hidroxocobalamina.</strong></p>
+<p>La hidroxocobalamina —una forma de vitamina B₁₂— <b>secuestra directamente el ion cianuro</b> y forma cianocobalamina, que se elimina por orina. Es de elección en el contexto del incendio precisamente porque <b>no compromete el transporte de oxígeno</b>.</p>
+<p>a) es la trampa del enunciado: los nitritos generan <b>metahemoglobina a propósito</b> para atrapar el cianuro, pero este paciente ya tiene la hemoglobina ocupada por <b>monóxido de carbono</b>; sumarle metahemoglobina reduce todavía más el oxígeno disponible. En el incendiado, ese esquema puede matarlo. c) el azul de metileno <b>trata</b> la metahemoglobinemia, no la intoxicación por cianuro. d) la N-acetilcisteína es el antídoto del <b>paracetamol</b>.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> El esquema nitritos + tiosulfato no es «incorrecto» en abstracto: es incorrecto <b>en el incendiado</b>. El enunciado que menciona humo o incendio está pidiendo hidroxocobalamina.</p>
+</div></div>
+<div class="quiz-item" id="q-b02q18">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> Paciente con intoxicación por organofosforados que recibe atropina en dosis crecientes. Mejoran las secreciones bronquiales y la bradicardia, pero persisten fasciculaciones y debilidad muscular progresiva. ¿Cuál es la explicación correcta?</p>
+<ul class="options">
+<li>a) La dosis de atropina es insuficiente y debe duplicarse.</li>
+<li>b) La atropina bloquea receptores muscarínicos y no revierte las manifestaciones nicotínicas, que requieren un reactivador de la colinesterasa.</li>
+<li>c) Se trata de un efecto adverso conocido de la atropina.</li>
+<li>d) Las fasciculaciones indican que el diagnóstico es incorrecto.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>b) La atropina bloquea receptores muscarínicos y no revierte las manifestaciones nicotínicas, que requieren un reactivador de la colinesterasa.</strong></p>
+<p>La atropina es un <b>antagonista competitivo muscarínico</b>: ocupa el receptor donde el exceso de acetilcolina produce secreciones, broncoespasmo y bradicardia. La <b>unión neuromuscular</b>, en cambio, tiene receptores <b>nicotínicos</b>, sobre los que la atropina no actúa. Ahí hace falta la <b>pralidoxima</b>, que reactiva la enzima y por lo tanto corrige ambos componentes.</p>
+<p>a) más atropina no alcanza receptores que no son muscarínicos: sólo agrega toxicidad anticolinérgica. c) las fasciculaciones son del tóxico, no del antídoto. d) al contrario: la combinación de mejoría muscarínica con persistencia nicotínica <b>confirma</b> el diagnóstico y el mecanismo.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> La debilidad muscular progresiva bajo atropina correcta anuncia la <b>parálisis respiratoria</b>. Es indicación de oxima precoz y de vigilar la ventilación, no de subir la atropina.</p>
+</div></div>
+<div class="quiz-item" id="q-b02q19">
+<p class="quiz-question"><span class="quiz-tag variante vf">Pregunta complementaria · verdadero o falso</span> Verdadero o falso: la indicación de pralidoxima en la intoxicación por organofosforados debe ser precoz, porque con el paso de las horas la unión entre el tóxico y la enzima sufre un proceso que la vuelve irreversible.</p>
+<div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+<div class="answer">
+<p><strong>VERDADERO.</strong></p>
+<p>La oxima actúa <b>arrancándole el fosfato a la acetilcolinesterasa</b> para devolverla a funcionar. Ese rescate sólo es posible mientras la unión sigue siendo reversible: el proceso de <b>envejecimiento</b> estabiliza el complejo enzima-tóxico y, a partir de ahí, la oxima ya no puede despegarlo.</p>
+<p>Es la diferencia práctica entre los dos fármacos: la <b>atropina</b> sirve igual a cualquier hora, porque sólo tapa un receptor; la <b>pralidoxima</b> tiene ventana. Por eso se administra en cuanto se confirma la sospecha y no cuando fallan las demás medidas.</p>
+</div></div>
 </div>
 <h3>🎴 Flashcards del bloque 02</h3>
 <div class="fc-grid">
@@ -2029,6 +2279,11 @@ de las preguntas.</p>
 <div class="flashcard"><div class="fc-front"><b>Lavado gástrico: indicaciones</b></div><div class="fc-back">Beneficio > riesgo · primeras <b>2 horas</b> · hasta <b>12 h</b> si hay <b>concreciones</b> o peristaltismo disminuido · alta toxicidad · sustancias que el carbón no adsorbe · sin emesis espontánea.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Lavado gástrico: contraindicaciones</b></div><div class="fc-back">Vía aérea comprometida o depresión del SNC <b>sin intubar</b> · <b>cáusticos</b> y corrosivos · <b>hidrocarburos</b> · menores de 6 meses · <b>embarazo avanzado</b>.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Lavado gástrico: efectos adversos</b></div><div class="fc-back"><b>Neumonía por aspiración</b> · lesión de vía aérea, esófago y estómago · agitación · convulsiones · arritmias · reacción vagal en ancianos.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Antídoto del cianuro</b></div><div class="fc-back"><b>Hidroxocobalamina</b> (vitamina B₁₂): secuestra el CN⁻ y forma <b>cianocobalamina</b>, eliminada por orina. De elección en el rescatado de <b>incendio</b>. Alternativa: <b>nitritos + tiosulfato de sodio</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Por qué hidroxocobalamina y no nitritos en el incendiado?</b></div><div class="fc-back">Los nitritos generan <b>metahemoglobina</b> a propósito. En el incendiado ya hay <b>carboxihemoglobina</b>: sumarle metahemoglobina empeora todavía más el transporte de oxígeno.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Atropina en el organofosforado</b></div><div class="fc-back"><b>Antagonista muscarínico</b>: bloquea el receptor, no toca la enzima. Controla <b>secreciones, broncoespasmo y bradicardia</b>. <b>No</b> corrige fasciculaciones ni debilidad (nicotínicas).</div></div>
+<div class="flashcard"><div class="fc-front"><b>Pralidoxima</b></div><div class="fc-back">Una <b>oxima</b>: <b>reactiva la acetilcolinesterasa</b> arrancándole el fosfato. Va a la causa y cubre lo <b>nicotínico</b>. Indicación <b>precoz</b>: una vez que la unión <b>envejece</b>, ya no la despega.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Manejo de la fosfina</b></div><div class="fc-back"><b>No hay antídoto probado.</b> Seguridad del equipo (EPP) · retirar de la exposición y ventilar el área · soporte intensivo de las complicaciones.</div></div>
 <div class="flashcard"><div class="fc-front">⚠️ <b>Trampa de examen · Bloque 02</b></div><div class="fc-back">Agua en la piel: <b>sí</b> en plaguicidas; <b>no</b> en sodio, fósforo y óxido de calcio. Neutralizar un cáustico (ojo o esófago) <b>agrava</b> la lesión. Y ninguna descontaminación va antes del <b>soporte vital</b>.</div></div>
 </div>
 </section>
@@ -2142,6 +2397,13 @@ de las preguntas.</p>
 <text x="488" y="408" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="10.5" fill="#10243D" font-weight="800" letter-spacing="1.4">DOSIS REPETIDA</text>
 <text x="488" y="426" font-family="'Plus Jakarta Sans',system-ui,-apple-system,sans-serif" font-size="11.5" fill="#28425F" font-weight="400">0,2 a 0,3 g/kg cada 2 a 4 horas durante 48 a 72 horas</text>
 </svg></div><p class="illustration-caption"><b>Cómo leer la figura:</b> lo que hace útil al carbón no es su masa sino su <b>superficie</b>: los poros que la activación abre multiplican el área de contacto. Y fíjese en la segunda tarjeta: el complejo es reversible, y eso es lo que obliga a repetir la dosis y a acompañarla con un catártico.</p>
+<figure class="tx-lam">
+<a class="tx-lam-box" href="/assets/img/toxico/bloco-03-01-carvao-ativado.webp" target="_blank" rel="noopener">
+<img src="/assets/img/toxico/bloco-03-01-carvao-ativado.webp" alt="Infografía del carbón activado: mecanismo de adsorción en el lumen, cuándo considerarlo, dosis, gastroenterodiálisis por dosis múltiples, sustancias que no adsorbe y contraindicaciones." loading="lazy" decoding="async">
+</a>
+<figcaption><b>Cómo leer la lámina:</b> el recuadro 1 explica de dónde sale todo lo demás —el tóxico se <b>pega a la superficie</b> y el complejo se vuelve demasiado grande para cruzar la mucosa—. Saltá después al recuadro 4, porque es el que cambia de escenario: ahí el carbón ya no intercepta lo que no se absorbió, sino que <b>tira del tóxico que ya está en la sangre</b> hacia el intestino. Los recuadros 5 y 6 se leen juntos y en negativo: el 5 es «no sirve», el 6 es «además hace daño». La franja azul del pie son las tres condiciones que tienen que darse a la vez — si falta una, el carbón no es la respuesta.
+<span class="tx-lam-fix"><b>Nota sobre la lámina:</b> el encabezado del recuadro 6 tiene una errata —dice «CONTRAINIDICACIONES»— y debe leerse <b>«contraindicaciones»</b>.</span>
+</figcaption></figure>
 <div class="rmc-scroll"><table><thead><tr>
 <th>Carbón activado</th>
 <th>Sustancias</th>
@@ -2374,12 +2636,71 @@ de las preguntas.</p>
 <text x="50" y="436" font-family="'Plus Jakarta Sans',system-ui,-apple-system,sans-serif" font-size="12" fill="#C6D5E6" font-weight="400">Ácidos débiles: salicilatos · fenobarbital · ácido fenoxiacético (herbicida 2,4-D). Se mantiene el pH urinario entre 7,5 y 8.</text>
 <text x="50" y="454" font-family="'Plus Jakarta Sans',system-ui,-apple-system,sans-serif" font-size="12" fill="#C6D5E6" font-weight="400">Se suspende si aparece alcalosis metabólica. La diuresis ÁCIDA quedó en desuso: poco eficaz y peligrosa.</text>
 </svg></div><p class="illustration-caption"><b>Cómo leer la figura:</b> la molécula es la misma en los dos paneles; lo que cambia es el pH de la orina. A la izquierda la forma <b>no ionizada</b> atraviesa la membrana y vuelve a la sangre; a la derecha la forma <b>ionizada</b> no puede cruzar y se va con la orina.</p>
+<figure class="tx-lam">
+<a class="tx-lam-box" href="/assets/img/toxico/bloco-03-02-depuracao-renal.webp" target="_blank" rel="noopener">
+<img src="/assets/img/toxico/bloco-03-02-depuracao-renal.webp" alt="Infografía de depuración renal: las cinco características fisicoquímicas que favorecen la eliminación, el recorrido del tóxico por la nefrona, las tres estrategias de diuresis y las situaciones en las que no se debe forzar." loading="lazy" decoding="async">
+</a>
+<figcaption><b>Cómo leer la lámina:</b> arriba están las <b>cinco condiciones</b> numeradas — son las mismas cinco de la prosa y conviene recitarlas en ese orden. El esquema de la nefrona del medio se lee siguiendo el recorrido del tóxico: entra por el glomérulo, y lo que decide su destino es el <b>túbulo</b>. Abajo, las tres estrategias: fijate que la tercera está tachada con «NO SE USA», que es exactamente lo que se pregunta. La franja roja lista los seis escenarios donde forzar diuresis está contraindicado.
+<span class="tx-lam-fix"><b>Nota sobre la lámina:</b> el rótulo del túbulo dice «REABSORCIÓN (↑ pH ácido)», que es confuso: subir el pH es <b>alcalinizar</b>. Lo que quiere decir es que en <b>orina ácida</b> un ácido débil permanece <b>no ionizado</b> y por eso se reabsorbe. La regla que hay que llevarse es la del recuadro 2, que sí está bien: <b>ácido débil → orina alcalina</b> para que se ionice y no vuelva.</span>
+</figcaption></figure>
 <div class="rmc-detalle">
 <h3>7 · C · Depuración extrarrenal: la última carta</h3>
 <p>Las <b>técnicas de depuración extrarrenal (TDE)</b> o extracorpóreas (ECTR) en toxicología clínica engloban aquellos procedimientos médicos mediante los cuales se <b>extrae la sangre del paciente para purificarla a través de un circuito externo</b> antes de devolverla al organismo. Se emplean en <b>intoxicaciones agudas graves</b> cuando las medidas iniciales fallan o cuando el tóxico pone en riesgo la vida del paciente.</p>
 <p>La técnica de referencia es la <b>hemodiálisis</b>, un tratamiento específico para sustituir parcialmente la función renal. El recorrido de la sangre es: <b>paciente → circuito extracorpóreo → dializador → paciente</b>. En el <b>dializador</b> —el riñón artificial— la sangre entra en contacto <b>indirecto</b> con un líquido de diálisis a través de una <b>membrana semipermeable</b>. Se eliminan <b>urea y otros productos nitrogenados</b>, el <b>exceso de potasio</b>, el <b>exceso de agua</b> y otras sustancias.</p>
 <p>Las condiciones moleculares que la hacen posible son, esencialmente, las mismas que las de la depuración renal: la hemodiálisis rinde con tóxicos <b>pequeños, hidrosolubles, poco unidos a proteínas y con volumen de distribución bajo</b>. Es la misma lógica aplicada a otro filtro —y por eso conviene aprender las cinco condiciones una sola vez.</p>
 </div>
+<div class="rmc-detalle">
+<h4>Las cuatro técnicas: qué cambia entre ellas</h4>
+<p>La hemodiálisis es la más usada, pero no es la única, y el material gráfico de la cátedra presenta cuatro. La buena noticia es que no hay que memorizar cuatro cosas distintas: las cuatro comparten el <b>mismo circuito</b> —paciente, acceso vascular, bomba, filtro, retorno— y sólo cambian en <b>qué hace el filtro</b>. Entendido el filtro, se deduce el resto.</p>
+<p>La <b>hemodiálisis</b> separa por <b>difusión</b>: la sangre corre a un lado de una membrana semipermeable y el líquido de diálisis al otro, y el tóxico cruza a favor de su gradiente de concentración. Como la difusión depende del tamaño, rinde con moléculas <b>pequeñas, hidrosolubles y poco unidas a proteínas</b>: litio, metanol, etilenglicol, salicilatos, valproato en intoxicación grave.</p>
+<p>La <b>hemoperfusión</b> cambia la membrana por un <b>cartucho con adsorbente</b> —carbón activado o resina—. La sangre pasa por el cartucho y el tóxico <b>queda pegado</b> allí, exactamente como en el intestino. Al no depender de que la molécula sea pequeña ni hidrosoluble, sirve para tóxicos <b>liposolubles o unidos a proteínas</b> —carbamazepina, teofilina, fenobarbital, algunos organofosforados—. Su límite es práctico: los cartuchos son de disponibilidad limitada y la técnica consume plaquetas, calcio y glucosa.</p>
+<p>La <b>hemofiltración y la hemodiafiltración continuas</b> trabajan sobre todo por <b>convección</b>: en lugar de esperar la difusión, se arrastra plasma a través de la membrana y se reemplaza el volumen. Depuran <b>menos por hora</b> que la hemodiálisis intermitente, pero lo hacen <b>de forma continua</b> y con mucha mejor tolerancia hemodinámica. Por eso son la opción del paciente <b>inestable</b> o en shock, y también cuando se teme un <b>rebote</b> por redistribución del tóxico desde los tejidos.</p>
+<p>La <b>plasmaféresis</b> es la más distinta de las cuatro: no filtra el tóxico, <b>descarta el plasma entero</b> que lo contiene y lo reemplaza por albúmina o plasma fresco. Su indicación es excepcional y responde a una lógica única: sirve cuando el tóxico está <b>fuertemente unido a proteínas</b> —de modo que ninguna de las otras tres lo alcanza— o cuando el daño está mediado por <b>autoanticuerpos</b>. El ejemplo que se cita es el envenenamiento por <b>amatoxinas</b> de setas, en casos seleccionados.</p>
+</div>
+<div class="rmc-scroll"><table><thead><tr>
+<th>Técnica</th>
+<th>Cómo separa</th>
+<th>Le sirve a</th>
+<th>Ejemplos</th>
+</tr></thead><tbody>
+<tr>
+<th><b>Hemodiálisis</b></th>
+<td><b>Difusión</b> a través de membrana semipermeable</td>
+<td>Moléculas <b>pequeñas, hidrosolubles</b>, baja unión a proteínas, Vd bajo</td>
+<td>Litio · metanol · etilenglicol · salicilatos · valproato grave</td>
+</tr>
+<tr>
+<th><b>Hemoperfusión</b></th>
+<td><b>Adsorción</b> en un cartucho de carbón o resina</td>
+<td>Tóxicos <b>lipofílicos o unidos a proteínas</b></td>
+<td>Carbamazepina · teofilina · fenobarbital · organofosforados (casos)</td>
+</tr>
+<tr>
+<th><b>Hemofiltración / hemodiafiltración continua</b></th>
+<td><b>Convección</b> (y difusión) de forma continua</td>
+<td>Paciente <b>inestable</b>; riesgo de rebote por redistribución</td>
+<td>Aclaramiento menor por hora, pero sostenido y mejor tolerado</td>
+</tr>
+<tr>
+<th><b>Plasmaféresis</b></th>
+<td>Se <b>descarta el plasma</b> y se reemplaza</td>
+<td>Tóxicos con unión <b>muy alta</b> a proteínas o daño por autoanticuerpos</td>
+<td>Amatoxinas (casos seleccionados) · intoxicaciones muy específicas</td>
+</tr>
+</tbody></table></div>
+<aside class="rmc-margin"><b class="t">Anotación al margen</b>
+<p>Una sola pregunta separa las cuatro.</p>
+<p>¿El tóxico está <em>libre en el agua del plasma</em>? → hemodiálisis.</p>
+<p>¿Está <em>pegado a proteínas o es liposoluble</em>? → hemoperfusión.</p>
+<p>¿El paciente <em>no tolera</em> la sesión? → continua.</p>
+<p>¿Nada de lo anterior lo alcanza? → plasmaféresis.</p>
+</aside>
+<figure class="tx-lam">
+<a class="tx-lam-box" href="/assets/img/toxico/bloco-03-03-depuracao-extracorporea.webp" target="_blank" rel="noopener">
+<img src="/assets/img/toxico/bloco-03-03-depuracao-extracorporea.webp" alt="Infografía de depuración extracorpórea: cuándo considerarla, características moleculares favorables, las cuatro técnicas —hemodiálisis, hemoperfusión, hemofiltración continua y plasmaféresis— y el circuito común paso a paso." loading="lazy" decoding="async">
+</a>
+<figcaption><b>Cómo leer la lámina:</b> la banda superior es el <b>filtro clínico</b> —cuándo siquiera plantearse el tema— y la segunda banda es el <b>filtro molecular</b>. Sólo si pasan las dos se mira la fila de las cuatro técnicas. Compará esas cuatro columnas por una sola línea: la de «cómo separa». El esquema grande del pie es el <b>mismo circuito para las cuatro</b>: paciente → acceso → bomba → filtro → retorno; lo único que cambia entre técnicas es qué hay dentro del cilindro. Y la banda final —«no decidir sólo por la molécula»— es la frase que cierra el tema: la indicación es <b>clínica</b>, no fisicoquímica.
+</figcaption></figure>
 <div class="rmc-scroll"><table><thead><tr>
 <th>Método</th>
 <th>Dónde actúa</th>
@@ -2421,6 +2742,24 @@ de las preguntas.</p>
 <td>Circuito extracorpóreo</td>
 <td>Moléculas pequeñas, hidrosolubles, Vd bajo</td>
 <td>Complicaciones del acceso vascular</td>
+</tr>
+<tr>
+<th>Hemoperfusión</th>
+<td>Cartucho adsorbente</td>
+<td>Lipofílicos o unidos a proteínas</td>
+<td>Consumo de plaquetas, calcio y glucosa</td>
+</tr>
+<tr>
+<th>Hemofiltración continua</th>
+<td>Circuito continuo</td>
+<td>Paciente inestable · riesgo de rebote</td>
+<td>Aclaramiento menor por hora</td>
+</tr>
+<tr>
+<th>Plasmaféresis</th>
+<td>Recambio de plasma</td>
+<td>Unión muy alta a proteínas · autoanticuerpos</td>
+<td>Reacciones al plasma de reposición</td>
 </tr>
 </tbody></table></div>
 <div class="rmc-scroll"><table><thead><tr>
@@ -2813,6 +3152,44 @@ de las preguntas.</p>
 <p>La diuresis forzada o modificada osmótica se realiza con <b>soluciones isotónicas</b> —suero fisiológico al 0,9 % o Ringer lactato— que producen expansión de volumen y aumentan así la eliminación de algunas moléculas. Ese mismo mecanismo es el que crea el riesgo: <b>edema cerebral y pulmonar</b>.</p>
 <p>Por eso las <b>contraindicaciones</b> de la depuración renal son shock, hipotensión con oliguria, insuficiencia renal aguda o crónica, edema cerebral, edema pulmonar e insuficiencia hepática y cardíaca. Y por eso la furosemida, aunque resuelve el problema de la volemia, no se considera eficaz en la intoxicación aguda.</p>
 </div></div>
+<div class="quiz-item" id="q-b03q17">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> Intoxicación grave por <b>carbamazepina</b>, con niveles muy elevados, deterioro neurológico y falta de respuesta a las dosis repetidas de carbón activado. Sabiendo que el fármaco tiene alta unión a proteínas plasmáticas, ¿cuál es la técnica de depuración extracorpórea con mayor rendimiento teórico?</p>
+<ul class="options">
+<li>a) Hemodiálisis intermitente convencional.</li>
+<li>b) Hemoperfusión con cartucho de carbón activado.</li>
+<li>c) Diuresis modificada osmótica alcalina.</li>
+<li>d) Plasmaféresis.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>b) Hemoperfusión con cartucho de carbón activado.</strong></p>
+<p>La hemoperfusión no separa por tamaño ni por solubilidad en agua: hace pasar la sangre por un <b>adsorbente</b> que retiene el tóxico por las mismas fuerzas físicas que actúan en el intestino. Por eso es la técnica indicada cuando la molécula es <b>lipofílica o está unida a proteínas</b>, que es exactamente donde la hemodiálisis fracasa.</p>
+<p>a) la hemodiálisis depende de la <b>difusión</b> de la fracción libre: si el fármaco viaja unido a albúmina, casi no hay fracción libre que cruce la membrana. c) la diuresis alcalina sirve para <b>ácidos débiles</b> hidrosolubles con Vd bajo —salicilatos, fenobarbital, 2,4-D—, no para este perfil. d) la plasmaféresis se reserva para uniones <b>muy</b> altas o daño por autoanticuerpos; acá hay una opción más simple, más disponible y con mejor rendimiento.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> «Alta unión a proteínas» en el enunciado descarta la hemodiálisis y apunta al adsorbente. Es el mismo razonamiento del carbón activado, pero aplicado a la sangre en vez del intestino.</p>
+</div></div>
+<div class="quiz-item" id="q-b03q18">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> ¿Cuál es la ventaja principal de las técnicas continuas —hemofiltración y hemodiafiltración— frente a la hemodiálisis intermitente en el paciente intoxicado?</p>
+<ul class="options">
+<li>a) Depuran una mayor cantidad de tóxico por hora.</li>
+<li>b) Permiten eliminar tóxicos con unión a proteínas superior al 90 %.</li>
+<li>c) Se toleran mejor en el paciente hemodinámicamente inestable y reducen el rebote por redistribución.</li>
+<li>d) No requieren acceso vascular.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>c) Se toleran mejor en el paciente hemodinámicamente inestable y reducen el rebote por redistribución.</strong></p>
+<p>Las técnicas continuas trabajan sobre todo por <b>convección</b> y de forma sostenida en el tiempo. Al no concentrar toda la depuración en una sesión corta, producen menos cambios bruscos de volumen y osmolaridad: por eso son la opción del paciente en <b>shock</b>. Y al prolongarse, van captando el tóxico que vuelve al plasma desde los tejidos, que es lo que produce el <b>rebote</b>.</p>
+<p>a) es al revés: su aclaramiento <b>por hora</b> es <b>menor</b>; lo compensan con duración. b) el problema de la unión a proteínas no lo resuelve la convección, sino la <b>hemoperfusión</b> o, en casos extremos, la plasmaféresis. d) todas las técnicas extracorpóreas requieren acceso vascular; es una de sus complicaciones.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> «Continua» no significa «más potente». Significa <b>más lenta pero sostenida y mejor tolerada</b>. Confundir las dos cosas es el error que la pregunta busca.</p>
+</div></div>
+<div class="quiz-item" id="q-b03q19">
+<p class="quiz-question"><span class="quiz-tag variante vf">Pregunta complementaria · verdadero o falso</span> Verdadero o falso: la decisión de iniciar una técnica de depuración extracorpórea se toma exclusivamente a partir de las características fisicoquímicas del tóxico.</p>
+<div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button></div>
+<div class="answer">
+<p><strong>FALSO.</strong></p>
+<p>Las características moleculares —hidrosolubilidad, unión a proteínas, peso molecular, volumen de distribución— son una <b>condición necesaria pero no suficiente</b>. Que una molécula sea dializable no significa que ese paciente deba dializarse.</p>
+<p>La indicación es <b>clínica</b> e integra: gravedad de la intoxicación y deterioro del paciente, acidosis refractaria, shock o falla orgánica, concentración tóxica elevada o alto riesgo predicho, <b>fracaso de las medidas de soporte convencionales</b>, tiempo transcurrido desde la exposición, riesgo de rebote y —algo que no aparece en los libros pero decide en la práctica— la <b>experiencia y los recursos disponibles</b> del centro.</p>
+</div></div>
 </div>
 <h3>🎴 Flashcards del bloque 03</h3>
 <div class="fc-grid">
@@ -2846,6 +3223,11 @@ de las preguntas.</p>
 <div class="flashcard"><div class="fc-front"><b>Riesgo de la diuresis osmótica</b></div><div class="fc-back"><b>Edema cerebral y pulmonar.</b> La furosemida baja la volemia pero produce <b>alcalosis metabólica, hipocalcemia e hipopotasemia</b>: no es eficaz en la intoxicación aguda.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Depuración extrarrenal (TDE / ECTR)</b></div><div class="fc-back">Procedimientos en los que se <b>extrae la sangre</b> del paciente para purificarla en un <b>circuito externo</b> antes de devolverla. Se usan en intoxicaciones graves cuando fallan las medidas iniciales.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Hemodiálisis</b></div><div class="fc-back">Paciente → circuito extracorpóreo → <b>dializador</b> (riñón artificial) → paciente. Contacto indirecto con el líquido de diálisis a través de una <b>membrana semipermeable</b>. Elimina urea y productos nitrogenados, exceso de <b>potasio</b> y de <b>agua</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Las cuatro técnicas extracorpóreas</b></div><div class="fc-back"><b>Hemodiálisis</b> (difusión) · <b>Hemoperfusión</b> (adsorción en cartucho) · <b>Hemofiltración/hemodiafiltración continua</b> (convección) · <b>Plasmaféresis</b> (recambio de plasma). <b>Mismo circuito</b>; cambia lo que hay dentro del filtro.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Hemoperfusión: para qué sirve</b></div><div class="fc-back">La sangre pasa por un <b>cartucho de carbón o resina</b> y el tóxico queda pegado. Sirve para <b>lipofílicos o unidos a proteínas</b>: carbamazepina, teofilina, fenobarbital. Consume <b>plaquetas, calcio y glucosa</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Cuándo técnica continua?</b></div><div class="fc-back">Paciente <b>hemodinámicamente inestable</b> y riesgo de <b>rebote</b> por redistribución. Depura <b>menos por hora</b> que la hemodiálisis intermitente, pero de forma sostenida y mejor tolerada.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Plasmaféresis</b></div><div class="fc-back">No filtra: <b>descarta el plasma</b> con el tóxico y lo reemplaza. Indicación <b>excepcional</b>: unión <b>muy alta</b> a proteínas o daño por <b>autoanticuerpos</b>. Ejemplo: <b>amatoxinas</b> en casos seleccionados.</div></div>
+<div class="flashcard"><div class="fc-front"><b>La pregunta que separa las cuatro</b></div><div class="fc-back">¿Libre en el agua del plasma? → <b>hemodiálisis</b>. ¿Pegado a proteínas o liposoluble? → <b>hemoperfusión</b>. ¿Paciente inestable? → <b>continua</b>. ¿Nada lo alcanza? → <b>plasmaféresis</b>.</div></div>
 <div class="flashcard"><div class="fc-front">⚠️ <b>Trampa de examen · Bloque 03</b></div><div class="fc-back">Ácido débil → orina <b>alcalina</b>. Base débil → orina ácida (<b>en desuso</b>). <b>Vd &lt; 1 L/kg</b>, no mayor. Y el carbón activado está <b>contraindicado</b> justamente en cáusticos, donde la única medida es la <b>dilución</b>.</div></div>
 </div>
 </section>
@@ -2856,12 +3238,12 @@ de las preguntas.</p>
 <h3>Todas las preguntas de la materia, en el orden de los bloques</h3>
 <p>Banco de preguntas basadas en exámenes, construido sobre el contenido de la cátedra y la literatura de referencia. Cada pregunta explica por qué la correcta es correcta y por qué cae cada distractor.</p>
 <div class="rmc-bank-stats">
-<span>48 preguntas</span>
-<span>42 de múltiple opción</span>
-<span>6 de verdadero o falso</span>
+<span>57 preguntas</span>
+<span>49 de múltiple opción</span>
+<span>8 de verdadero o falso</span>
 <span>3 bloques</span>
 </div></div>
-<h3 class="rmc-bank-sub">Bloque 01 · Fundamentos y toxidromes <small>(16 preguntas)</small></h3>
+<h3 class="rmc-bank-sub">Bloque 01 · Fundamentos y toxidromes <small>(19 preguntas)</small></h3>
 <div class="quiz-section">
 <h3>Bloque 01 · Fundamentos y toxidromes</h3>
 <div class="quiz-item" id="q-b01q01-bk">
@@ -3091,8 +3473,53 @@ de las preguntas.</p>
 <p>Xenobiótico viene de <i>xenos</i> (extraño) y <i>bios</i> (vida): es todo compuesto ajeno al cuerpo que se incorpora a él. Las tres grandes clases de importancia médica son los <b>fármacos</b>, los <b>carcinógenos químicos</b> y los <b>compuestos que llegaron al ambiente</b> por actividad humana.</p>
 <p>Muchos xenobióticos son problemáticos justamente por su virtud industrial: <b>no se biodegradan</b>. Esa estabilidad los vuelve contaminantes persistentes.</p>
 </div></div>
+<div class="quiz-item" id="q-b01q17-bk">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> En la evaluación inicial de un paciente con sospecha de intoxicación y alteración del sensorio, ¿cuál de las siguientes determinaciones debe realizarse de manera sistemática antes de atribuir el cuadro a un tóxico?</p>
+<ul class="options">
+<li>a) Dosaje sérico del tóxico sospechado.</li>
+<li>b) Glucemia capilar.</li>
+<li>c) Tomografía de cráneo sin contraste.</li>
+<li>d) Nivel de colinesterasa plasmática.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>b) Glucemia capilar.</strong></p>
+<p>La <b>hipoglucemia</b> reproduce un toxidrome adrenérgico completo —confusión o coma, sudoración profusa, taquicardia, temblor— y es <b>inmediatamente reversible</b>. Por eso ocupa la letra <b>D</b> del ABCDE junto con Glasgow y pupilas: se mide en segundos, al pie de la cama, y evita tratar un veneno inexistente.</p>
+<p>a) el dosaje llega tarde y sólo está disponible para pocos tóxicos: el manejo no lo espera. c) la tomografía se pide si hay foco neurológico o traumatismo, no de rutina. d) la colinesterasa confirma exposición a organofosforados, pero es una prueba dirigida y diferida, no un tamizaje inicial.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> El principio I no dice «buscar el tóxico»: dice <b>soporte vital</b>. Todo lo corregible y barato —glucosa, oxígeno, temperatura— se corrige antes de razonar sobre moléculas.</p>
+</div></div>
+<div class="quiz-item" id="q-b01q18-bk">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> Respecto de la curva dosis-respuesta, señale la afirmación correcta:</p>
+<ul class="options">
+<li>a) La dosis mínima efectiva es aquella que produce la muerte en el 50 % de los animales.</li>
+<li>b) La DL50 se ubica antes de la dosis tóxica en el eje de dosis.</li>
+<li>c) Dos sustancias con la misma DL50 pueden comportarse de forma clínicamente distinta según la pendiente de su curva.</li>
+<li>d) El eje de dosis se representa en escala lineal, por lo que la relación es una recta.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>c) Dos sustancias con la misma DL50 pueden comportarse de forma clínicamente distinta según la pendiente de su curva.</strong></p>
+<p>La DL50 es <b>un solo punto</b> de la curva. La <b>pendiente</b> informa cuánto cambia el efecto por cada incremento de dosis: una curva <b>empinada</b> significa que un pequeño exceso multiplica el daño —no hay margen— mientras que una <b>tendida</b> tolera variaciones amplias. Dos moléculas pueden coincidir en el punto medio y diferir por completo en el resto del recorrido.</p>
+<p>a) confunde la mínima efectiva con la DL50: la primera es el <b>primer efecto medible</b>, no la muerte. b) invierte el orden real, que es <b>mínima efectiva → tóxica → DL50</b>. d) el eje de dosis es <b>logarítmico</b>, y por eso la gráfica es una sigmoide y no una recta.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> El orden de los tres puntos es materia de pregunta directa. Mínima efectiva, tóxica, DL50 — siempre en esa dirección.</p>
+</div></div>
+<div class="quiz-item" id="q-b01q19-bk">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> El mnemónico DUMBELS resume las manifestaciones del toxidrome colinérgico. ¿A qué componente corresponden todas sus letras?</p>
+<ul class="options">
+<li>a) Al componente nicotínico.</li>
+<li>b) Al componente muscarínico.</li>
+<li>c) A las manifestaciones del sistema nervioso central.</li>
+<li>d) A los efectos cardiovasculares.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>b) Al componente muscarínico.</strong></p>
+<p>Diarrea, urinación, miosis, broncorrea, emesis, lagrimeo y salivación son todas consecuencias del exceso de acetilcolina sobre receptores <b>muscarínicos</b>. Todas expresan una misma idea: <b>secreción y vaciamiento</b>. El paciente está literalmente mojado.</p>
+<p>a) lo <b>nicotínico</b> es otra cosa —fasciculaciones, debilidad muscular, parálisis— y no entra en el mnemónico. c) lo <b>central</b> —confusión, convulsiones, coma— tampoco, y es justamente lo que define la gravedad. d) la bradicardia es muscarínica, pero el mnemónico no la incluye entre sus letras.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> DUMBELS da una falsa sensación de completitud: deja afuera exactamente los dos componentes que matan —el nicotínico y el central.</p>
+</div></div>
 </div>
-<h3 class="rmc-bank-sub">Bloque 02 · Descontaminación según la vía <small>(16 preguntas)</small></h3>
+<h3 class="rmc-bank-sub">Bloque 02 · Descontaminación según la vía <small>(19 preguntas)</small></h3>
 <div class="quiz-section">
 <h3>Bloque 02 · Descontaminación según la vía</h3>
 <div class="quiz-item" id="q-b02q01-bk">
@@ -3321,8 +3748,46 @@ de las preguntas.</p>
 <p>El ácido cianhídrico o ácido prúsico está entre los venenos más potentes y de efecto más rápido —una concentración de <b>300 partes por millón</b> en el aire basta para matar a una persona en cuestión de minutos—. Para quienes no trabajan en industrias que lo utilizan, una de las mayores fuentes de exposición es <b>fumar cigarrillo</b>.</p>
 <p>Otras fuentes: la combustión de plásticos que contienen nitrógeno —de ahí su papel en las muertes por incendio—, los gases de escape de motores y las semillas grandes de algunas frutas.</p>
 </div></div>
+<div class="quiz-item" id="q-b02q17-bk">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> Rescatista traído desde el incendio de un depósito, con alteración del sensorio, hipotensión y lactato de 14 mmol/L. Se sospecha intoxicación combinada por monóxido de carbono y cianuro. ¿Cuál es el antídoto de elección para el componente cianhídrico?</p>
+<ul class="options">
+<li>a) Nitrito de sodio, por su capacidad de generar metahemoglobina.</li>
+<li>b) Hidroxocobalamina.</li>
+<li>c) Azul de metileno.</li>
+<li>d) N-acetilcisteína.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>b) Hidroxocobalamina.</strong></p>
+<p>La hidroxocobalamina —una forma de vitamina B₁₂— <b>secuestra directamente el ion cianuro</b> y forma cianocobalamina, que se elimina por orina. Es de elección en el contexto del incendio precisamente porque <b>no compromete el transporte de oxígeno</b>.</p>
+<p>a) es la trampa del enunciado: los nitritos generan <b>metahemoglobina a propósito</b> para atrapar el cianuro, pero este paciente ya tiene la hemoglobina ocupada por <b>monóxido de carbono</b>; sumarle metahemoglobina reduce todavía más el oxígeno disponible. En el incendiado, ese esquema puede matarlo. c) el azul de metileno <b>trata</b> la metahemoglobinemia, no la intoxicación por cianuro. d) la N-acetilcisteína es el antídoto del <b>paracetamol</b>.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> El esquema nitritos + tiosulfato no es «incorrecto» en abstracto: es incorrecto <b>en el incendiado</b>. El enunciado que menciona humo o incendio está pidiendo hidroxocobalamina.</p>
+</div></div>
+<div class="quiz-item" id="q-b02q18-bk">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> Paciente con intoxicación por organofosforados que recibe atropina en dosis crecientes. Mejoran las secreciones bronquiales y la bradicardia, pero persisten fasciculaciones y debilidad muscular progresiva. ¿Cuál es la explicación correcta?</p>
+<ul class="options">
+<li>a) La dosis de atropina es insuficiente y debe duplicarse.</li>
+<li>b) La atropina bloquea receptores muscarínicos y no revierte las manifestaciones nicotínicas, que requieren un reactivador de la colinesterasa.</li>
+<li>c) Se trata de un efecto adverso conocido de la atropina.</li>
+<li>d) Las fasciculaciones indican que el diagnóstico es incorrecto.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>b) La atropina bloquea receptores muscarínicos y no revierte las manifestaciones nicotínicas, que requieren un reactivador de la colinesterasa.</strong></p>
+<p>La atropina es un <b>antagonista competitivo muscarínico</b>: ocupa el receptor donde el exceso de acetilcolina produce secreciones, broncoespasmo y bradicardia. La <b>unión neuromuscular</b>, en cambio, tiene receptores <b>nicotínicos</b>, sobre los que la atropina no actúa. Ahí hace falta la <b>pralidoxima</b>, que reactiva la enzima y por lo tanto corrige ambos componentes.</p>
+<p>a) más atropina no alcanza receptores que no son muscarínicos: sólo agrega toxicidad anticolinérgica. c) las fasciculaciones son del tóxico, no del antídoto. d) al contrario: la combinación de mejoría muscarínica con persistencia nicotínica <b>confirma</b> el diagnóstico y el mecanismo.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> La debilidad muscular progresiva bajo atropina correcta anuncia la <b>parálisis respiratoria</b>. Es indicación de oxima precoz y de vigilar la ventilación, no de subir la atropina.</p>
+</div></div>
+<div class="quiz-item" id="q-b02q19-bk">
+<p class="quiz-question"><span class="quiz-tag variante vf">Pregunta complementaria · verdadero o falso</span> Verdadero o falso: la indicación de pralidoxima en la intoxicación por organofosforados debe ser precoz, porque con el paso de las horas la unión entre el tóxico y la enzima sufre un proceso que la vuelve irreversible.</p>
+<div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+<div class="answer">
+<p><strong>VERDADERO.</strong></p>
+<p>La oxima actúa <b>arrancándole el fosfato a la acetilcolinesterasa</b> para devolverla a funcionar. Ese rescate sólo es posible mientras la unión sigue siendo reversible: el proceso de <b>envejecimiento</b> estabiliza el complejo enzima-tóxico y, a partir de ahí, la oxima ya no puede despegarlo.</p>
+<p>Es la diferencia práctica entre los dos fármacos: la <b>atropina</b> sirve igual a cualquier hora, porque sólo tapa un receptor; la <b>pralidoxima</b> tiene ventana. Por eso se administra en cuanto se confirma la sospecha y no cuando fallan las demás medidas.</p>
+</div></div>
 </div>
-<h3 class="rmc-bank-sub">Bloque 03 · Adsorbentes y depuración <small>(16 preguntas)</small></h3>
+<h3 class="rmc-bank-sub">Bloque 03 · Adsorbentes y depuración <small>(19 preguntas)</small></h3>
 <div class="quiz-section">
 <h3>Bloque 03 · Adsorbentes y depuración</h3>
 <div class="quiz-item" id="q-b03q01-bk">
@@ -3551,12 +4016,50 @@ de las preguntas.</p>
 <p>La diuresis forzada o modificada osmótica se realiza con <b>soluciones isotónicas</b> —suero fisiológico al 0,9 % o Ringer lactato— que producen expansión de volumen y aumentan así la eliminación de algunas moléculas. Ese mismo mecanismo es el que crea el riesgo: <b>edema cerebral y pulmonar</b>.</p>
 <p>Por eso las <b>contraindicaciones</b> de la depuración renal son shock, hipotensión con oliguria, insuficiencia renal aguda o crónica, edema cerebral, edema pulmonar e insuficiencia hepática y cardíaca. Y por eso la furosemida, aunque resuelve el problema de la volemia, no se considera eficaz en la intoxicación aguda.</p>
 </div></div>
+<div class="quiz-item" id="q-b03q17-bk">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> Intoxicación grave por <b>carbamazepina</b>, con niveles muy elevados, deterioro neurológico y falta de respuesta a las dosis repetidas de carbón activado. Sabiendo que el fármaco tiene alta unión a proteínas plasmáticas, ¿cuál es la técnica de depuración extracorpórea con mayor rendimiento teórico?</p>
+<ul class="options">
+<li>a) Hemodiálisis intermitente convencional.</li>
+<li>b) Hemoperfusión con cartucho de carbón activado.</li>
+<li>c) Diuresis modificada osmótica alcalina.</li>
+<li>d) Plasmaféresis.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>b) Hemoperfusión con cartucho de carbón activado.</strong></p>
+<p>La hemoperfusión no separa por tamaño ni por solubilidad en agua: hace pasar la sangre por un <b>adsorbente</b> que retiene el tóxico por las mismas fuerzas físicas que actúan en el intestino. Por eso es la técnica indicada cuando la molécula es <b>lipofílica o está unida a proteínas</b>, que es exactamente donde la hemodiálisis fracasa.</p>
+<p>a) la hemodiálisis depende de la <b>difusión</b> de la fracción libre: si el fármaco viaja unido a albúmina, casi no hay fracción libre que cruce la membrana. c) la diuresis alcalina sirve para <b>ácidos débiles</b> hidrosolubles con Vd bajo —salicilatos, fenobarbital, 2,4-D—, no para este perfil. d) la plasmaféresis se reserva para uniones <b>muy</b> altas o daño por autoanticuerpos; acá hay una opción más simple, más disponible y con mejor rendimiento.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> «Alta unión a proteínas» en el enunciado descarta la hemodiálisis y apunta al adsorbente. Es el mismo razonamiento del carbón activado, pero aplicado a la sangre en vez del intestino.</p>
+</div></div>
+<div class="quiz-item" id="q-b03q18-bk">
+<p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span> ¿Cuál es la ventaja principal de las técnicas continuas —hemofiltración y hemodiafiltración— frente a la hemodiálisis intermitente en el paciente intoxicado?</p>
+<ul class="options">
+<li>a) Depuran una mayor cantidad de tóxico por hora.</li>
+<li>b) Permiten eliminar tóxicos con unión a proteínas superior al 90 %.</li>
+<li>c) Se toleran mejor en el paciente hemodinámicamente inestable y reducen el rebote por redistribución.</li>
+<li>d) No requieren acceso vascular.</li>
+</ul>
+<button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+<div class="answer">
+<p><strong>c) Se toleran mejor en el paciente hemodinámicamente inestable y reducen el rebote por redistribución.</strong></p>
+<p>Las técnicas continuas trabajan sobre todo por <b>convección</b> y de forma sostenida en el tiempo. Al no concentrar toda la depuración en una sesión corta, producen menos cambios bruscos de volumen y osmolaridad: por eso son la opción del paciente en <b>shock</b>. Y al prolongarse, van captando el tóxico que vuelve al plasma desde los tejidos, que es lo que produce el <b>rebote</b>.</p>
+<p>a) es al revés: su aclaramiento <b>por hora</b> es <b>menor</b>; lo compensan con duración. b) el problema de la unión a proteínas no lo resuelve la convección, sino la <b>hemoperfusión</b> o, en casos extremos, la plasmaféresis. d) todas las técnicas extracorpóreas requieren acceso vascular; es una de sus complicaciones.</p>
+<p class="rmc-trap">⚠️ <b>Trampa clásica:</b> «Continua» no significa «más potente». Significa <b>más lenta pero sostenida y mejor tolerada</b>. Confundir las dos cosas es el error que la pregunta busca.</p>
+</div></div>
+<div class="quiz-item" id="q-b03q19-bk">
+<p class="quiz-question"><span class="quiz-tag variante vf">Pregunta complementaria · verdadero o falso</span> Verdadero o falso: la decisión de iniciar una técnica de depuración extracorpórea se toma exclusivamente a partir de las características fisicoquímicas del tóxico.</p>
+<div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button></div>
+<div class="answer">
+<p><strong>FALSO.</strong></p>
+<p>Las características moleculares —hidrosolubilidad, unión a proteínas, peso molecular, volumen de distribución— son una <b>condición necesaria pero no suficiente</b>. Que una molécula sea dializable no significa que ese paciente deba dializarse.</p>
+<p>La indicación es <b>clínica</b> e integra: gravedad de la intoxicación y deterioro del paciente, acidosis refractaria, shock o falla orgánica, concentración tóxica elevada o alto riesgo predicho, <b>fracaso de las medidas de soporte convencionales</b>, tiempo transcurrido desde la exposición, riesgo de rebote y —algo que no aparece en los libros pero decide en la práctica— la <b>experiencia y los recursos disponibles</b> del centro.</p>
+</div></div>
 </div>
 </section>
 <section class="container" id="toxcierre">
 <div class="section-marker"><span class="section-marker-num">MAZO GENERAL · RULETA · BIBLIOGRAFÍA</span></div>
 <h2>🎲 Mazo general y ruleta de repaso</h2>
-<div class="rmc-postit green"><h4><span>🎴</span> Cómo funciona</h4><p>El <b>mazo general</b> reúne las 79 flashcards de los tres bloques en el orden en que se estudiaron: sirve para el repaso ordenado, tema por tema.</p><p>La <b>ruleta</b> es el mismo mazo <b>barajado</b>: la carta que sale no depende del bloque, igual que en el examen. Es la forma más honesta de comprobar si algo quedó realmente aprendido o sólo reconocido por el contexto.</p></div>
+<div class="rmc-postit green"><h4><span>🎴</span> Cómo funciona</h4><p>El <b>mazo general</b> reúne las 96 flashcards de los tres bloques en el orden en que se estudiaron: sirve para el repaso ordenado, tema por tema.</p><p>La <b>ruleta</b> es el mismo mazo <b>barajado</b>: la carta que sale no depende del bloque, igual que en el examen. Es la forma más honesta de comprobar si algo quedó realmente aprendido o sólo reconocido por el contexto.</p></div>
 <h3>🎴 Mazo general · orden de los bloques</h3>
 <div class="fc-grid">
 <div class="flashcard"><div class="fc-front"><b>Toxicología</b></div><div class="fc-back">Ciencia que estudia los <b>efectos nocivos</b> de las sustancias químicas sobre los organismos vivos: comportamiento, metabolismo, mecanismo, lesiones, acumulación, excreción y tratamiento.</div></div>
@@ -3582,6 +4085,13 @@ de las preguntas.</p>
 <div class="flashcard"><div class="fc-front"><b>Síndrome opiáceo</b></div><div class="fc-back"><b>Miosis puntiforme</b> · <b>depresión respiratoria</b> · bradicardia · hipotermia · piel fría · íleo · coma. Morfina y congéneres.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Síndrome serotoninérgico</b></div><div class="fc-back">Midriasis · hipertermia · piel húmeda · <b>hiperreflexia y clonus</b> (predominio en miembros inferiores) · agitación. ISRS, IMAO, tramadol.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Síndrome sedante-hipnótico</b></div><div class="fc-back"><b>Todo abajo</b>: FC, PA, FR y T° descendidas · sensorio deprimido · pupila normal o miótica · piel sin cambios. Benzodiacepinas, barbitúricos, etanol.</div></div>
+<div class="flashcard"><div class="fc-front"><b>DUMBELS</b></div><div class="fc-back">Mnemónico <b>muscarínico</b> del colinérgico: <b>D</b>iarrea · <b>U</b>rinación · <b>M</b>iosis · <b>B</b>roncorrea · <b>E</b>mesis · <b>L</b>agrimeo · <b>S</b>alivación. Una sola idea: <b>todo se secreta y se vacía</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Lo que DUMBELS no cubre</b></div><div class="fc-back">Lo <b>nicotínico</b> (fasciculaciones, debilidad, parálisis) y lo <b>central</b> (confusión, convulsiones, coma). Son los que definen la <b>gravedad</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Contra qué se titula la atropina?</b></div><div class="fc-back">Contra las <b>secreciones bronquiales</b>, no contra el pulso. Objetivo: <b>tórax limpio</b>. Frecuencia normal + campos llenos = <b>subatropinizado</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>El ABCDE del intoxicado</b></div><div class="fc-back"><b>A</b> vía aérea · <b>B</b> ventilación y O₂ · <b>C</b> pulso, presión, perfusión y <b>ECG</b> · <b>D</b> Glasgow, <b>glucemia</b> y pupilas · <b>E</b> temperatura, <b>piel</b>, olores y evidencia.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Por qué la glucemia entra en la D?</b></div><div class="fc-back">La <b>hipoglucemia</b> imita un toxidrome adrenérgico completo (confusión, sudor, taquicardia) y se corrige con glucosa. Medirla cuesta segundos.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Curva dosis-respuesta: los tres puntos</b></div><div class="fc-back"><b>Dosis mínima efectiva</b> (primer efecto medible) → <b>dosis tóxica</b> (empieza el daño) → <b>DL50</b> (mata al 50 %). Eje horizontal en escala <b>logarítmica</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Qué dice la pendiente de la curva?</b></div><div class="fc-back">Curva <b>empinada</b> = poco margen, un pequeño aumento de dosis multiplica el efecto (digitálicos). Curva <b>tendida</b> = tolera variaciones. <b>Misma DL50, comportamiento distinto</b>.</div></div>
 <div class="flashcard"><div class="fc-front">⚠️ <b>Trampa de examen · Bloque 01</b></div><div class="fc-back">Adrenérgico y anticolinérgico comparten midriasis, taquicardia e hipertermia → los separa la <b>piel</b> (húmeda vs seca) y el <b>peristaltismo</b>. Colinérgico y opiáceo comparten miosis y depresión respiratoria → los separa el <b>exceso de secreciones</b>.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Principio II del tratamiento</b></div><div class="fc-back">Eliminación del tóxico <b>según la vía de entrada</b> e impedir nuevas absorciones. Va siempre <b>después</b> del soporte vital.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Vía inhalatoria: 3 pasos</b></div><div class="fc-back">1) <b>Retirar</b> del sitio y llevar a lugar ventilado. 2) Respiración artificial <b>sólo si está indicada</b>. 3) <b>Oxígeno</b> cuanto antes.</div></div>
@@ -3606,6 +4116,11 @@ de las preguntas.</p>
 <div class="flashcard"><div class="fc-front"><b>Lavado gástrico: indicaciones</b></div><div class="fc-back">Beneficio > riesgo · primeras <b>2 horas</b> · hasta <b>12 h</b> si hay <b>concreciones</b> o peristaltismo disminuido · alta toxicidad · sustancias que el carbón no adsorbe · sin emesis espontánea.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Lavado gástrico: contraindicaciones</b></div><div class="fc-back">Vía aérea comprometida o depresión del SNC <b>sin intubar</b> · <b>cáusticos</b> y corrosivos · <b>hidrocarburos</b> · menores de 6 meses · <b>embarazo avanzado</b>.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Lavado gástrico: efectos adversos</b></div><div class="fc-back"><b>Neumonía por aspiración</b> · lesión de vía aérea, esófago y estómago · agitación · convulsiones · arritmias · reacción vagal en ancianos.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Antídoto del cianuro</b></div><div class="fc-back"><b>Hidroxocobalamina</b> (vitamina B₁₂): secuestra el CN⁻ y forma <b>cianocobalamina</b>, eliminada por orina. De elección en el rescatado de <b>incendio</b>. Alternativa: <b>nitritos + tiosulfato de sodio</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Por qué hidroxocobalamina y no nitritos en el incendiado?</b></div><div class="fc-back">Los nitritos generan <b>metahemoglobina</b> a propósito. En el incendiado ya hay <b>carboxihemoglobina</b>: sumarle metahemoglobina empeora todavía más el transporte de oxígeno.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Atropina en el organofosforado</b></div><div class="fc-back"><b>Antagonista muscarínico</b>: bloquea el receptor, no toca la enzima. Controla <b>secreciones, broncoespasmo y bradicardia</b>. <b>No</b> corrige fasciculaciones ni debilidad (nicotínicas).</div></div>
+<div class="flashcard"><div class="fc-front"><b>Pralidoxima</b></div><div class="fc-back">Una <b>oxima</b>: <b>reactiva la acetilcolinesterasa</b> arrancándole el fosfato. Va a la causa y cubre lo <b>nicotínico</b>. Indicación <b>precoz</b>: una vez que la unión <b>envejece</b>, ya no la despega.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Manejo de la fosfina</b></div><div class="fc-back"><b>No hay antídoto probado.</b> Seguridad del equipo (EPP) · retirar de la exposición y ventilar el área · soporte intensivo de las complicaciones.</div></div>
 <div class="flashcard"><div class="fc-front">⚠️ <b>Trampa de examen · Bloque 02</b></div><div class="fc-back">Agua en la piel: <b>sí</b> en plaguicidas; <b>no</b> en sodio, fósforo y óxido de calcio. Neutralizar un cáustico (ojo o esófago) <b>agrava</b> la lesión. Y ninguna descontaminación va antes del <b>soporte vital</b>.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Adsorbente</b></div><div class="fc-back">Sustancia con afinidad para <b>unirse al tóxico</b> a nivel gástrico y formar un complejo tóxico-adsorbente que <b>no se absorbe</b> y se elimina por las heces.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Adsorción ≠ absorción</b></div><div class="fc-back">Adsorber: el tóxico queda <b>pegado a la superficie</b>. Absorber: el tóxico <b>atraviesa</b> la mucosa y entra a la sangre.</div></div>
@@ -3637,6 +4152,11 @@ de las preguntas.</p>
 <div class="flashcard"><div class="fc-front"><b>Riesgo de la diuresis osmótica</b></div><div class="fc-back"><b>Edema cerebral y pulmonar.</b> La furosemida baja la volemia pero produce <b>alcalosis metabólica, hipocalcemia e hipopotasemia</b>: no es eficaz en la intoxicación aguda.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Depuración extrarrenal (TDE / ECTR)</b></div><div class="fc-back">Procedimientos en los que se <b>extrae la sangre</b> del paciente para purificarla en un <b>circuito externo</b> antes de devolverla. Se usan en intoxicaciones graves cuando fallan las medidas iniciales.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Hemodiálisis</b></div><div class="fc-back">Paciente → circuito extracorpóreo → <b>dializador</b> (riñón artificial) → paciente. Contacto indirecto con el líquido de diálisis a través de una <b>membrana semipermeable</b>. Elimina urea y productos nitrogenados, exceso de <b>potasio</b> y de <b>agua</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Las cuatro técnicas extracorpóreas</b></div><div class="fc-back"><b>Hemodiálisis</b> (difusión) · <b>Hemoperfusión</b> (adsorción en cartucho) · <b>Hemofiltración/hemodiafiltración continua</b> (convección) · <b>Plasmaféresis</b> (recambio de plasma). <b>Mismo circuito</b>; cambia lo que hay dentro del filtro.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Hemoperfusión: para qué sirve</b></div><div class="fc-back">La sangre pasa por un <b>cartucho de carbón o resina</b> y el tóxico queda pegado. Sirve para <b>lipofílicos o unidos a proteínas</b>: carbamazepina, teofilina, fenobarbital. Consume <b>plaquetas, calcio y glucosa</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Cuándo técnica continua?</b></div><div class="fc-back">Paciente <b>hemodinámicamente inestable</b> y riesgo de <b>rebote</b> por redistribución. Depura <b>menos por hora</b> que la hemodiálisis intermitente, pero de forma sostenida y mejor tolerada.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Plasmaféresis</b></div><div class="fc-back">No filtra: <b>descarta el plasma</b> con el tóxico y lo reemplaza. Indicación <b>excepcional</b>: unión <b>muy alta</b> a proteínas o daño por <b>autoanticuerpos</b>. Ejemplo: <b>amatoxinas</b> en casos seleccionados.</div></div>
+<div class="flashcard"><div class="fc-front"><b>La pregunta que separa las cuatro</b></div><div class="fc-back">¿Libre en el agua del plasma? → <b>hemodiálisis</b>. ¿Pegado a proteínas o liposoluble? → <b>hemoperfusión</b>. ¿Paciente inestable? → <b>continua</b>. ¿Nada lo alcanza? → <b>plasmaféresis</b>.</div></div>
 <div class="flashcard"><div class="fc-front">⚠️ <b>Trampa de examen · Bloque 03</b></div><div class="fc-back">Ácido débil → orina <b>alcalina</b>. Base débil → orina ácida (<b>en desuso</b>). <b>Vd &lt; 1 L/kg</b>, no mayor. Y el carbón activado está <b>contraindicado</b> justamente en cáusticos, donde la única medida es la <b>dilución</b>.</div></div>
 </div>
 <h3>🎲 Ruleta de repaso · orden aleatorio</h3>
@@ -3664,6 +4184,13 @@ de las preguntas.</p>
 <div class="flashcard"><div class="fc-front"><b>Síndrome opiáceo</b></div><div class="fc-back"><b>Miosis puntiforme</b> · <b>depresión respiratoria</b> · bradicardia · hipotermia · piel fría · íleo · coma. Morfina y congéneres.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Síndrome serotoninérgico</b></div><div class="fc-back">Midriasis · hipertermia · piel húmeda · <b>hiperreflexia y clonus</b> (predominio en miembros inferiores) · agitación. ISRS, IMAO, tramadol.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Síndrome sedante-hipnótico</b></div><div class="fc-back"><b>Todo abajo</b>: FC, PA, FR y T° descendidas · sensorio deprimido · pupila normal o miótica · piel sin cambios. Benzodiacepinas, barbitúricos, etanol.</div></div>
+<div class="flashcard"><div class="fc-front"><b>DUMBELS</b></div><div class="fc-back">Mnemónico <b>muscarínico</b> del colinérgico: <b>D</b>iarrea · <b>U</b>rinación · <b>M</b>iosis · <b>B</b>roncorrea · <b>E</b>mesis · <b>L</b>agrimeo · <b>S</b>alivación. Una sola idea: <b>todo se secreta y se vacía</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Lo que DUMBELS no cubre</b></div><div class="fc-back">Lo <b>nicotínico</b> (fasciculaciones, debilidad, parálisis) y lo <b>central</b> (confusión, convulsiones, coma). Son los que definen la <b>gravedad</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Contra qué se titula la atropina?</b></div><div class="fc-back">Contra las <b>secreciones bronquiales</b>, no contra el pulso. Objetivo: <b>tórax limpio</b>. Frecuencia normal + campos llenos = <b>subatropinizado</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>El ABCDE del intoxicado</b></div><div class="fc-back"><b>A</b> vía aérea · <b>B</b> ventilación y O₂ · <b>C</b> pulso, presión, perfusión y <b>ECG</b> · <b>D</b> Glasgow, <b>glucemia</b> y pupilas · <b>E</b> temperatura, <b>piel</b>, olores y evidencia.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Por qué la glucemia entra en la D?</b></div><div class="fc-back">La <b>hipoglucemia</b> imita un toxidrome adrenérgico completo (confusión, sudor, taquicardia) y se corrige con glucosa. Medirla cuesta segundos.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Curva dosis-respuesta: los tres puntos</b></div><div class="fc-back"><b>Dosis mínima efectiva</b> (primer efecto medible) → <b>dosis tóxica</b> (empieza el daño) → <b>DL50</b> (mata al 50 %). Eje horizontal en escala <b>logarítmica</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Qué dice la pendiente de la curva?</b></div><div class="fc-back">Curva <b>empinada</b> = poco margen, un pequeño aumento de dosis multiplica el efecto (digitálicos). Curva <b>tendida</b> = tolera variaciones. <b>Misma DL50, comportamiento distinto</b>.</div></div>
 <div class="flashcard"><div class="fc-front">⚠️ <b>Trampa de examen · Bloque 01</b></div><div class="fc-back">Adrenérgico y anticolinérgico comparten midriasis, taquicardia e hipertermia → los separa la <b>piel</b> (húmeda vs seca) y el <b>peristaltismo</b>. Colinérgico y opiáceo comparten miosis y depresión respiratoria → los separa el <b>exceso de secreciones</b>.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Principio II del tratamiento</b></div><div class="fc-back">Eliminación del tóxico <b>según la vía de entrada</b> e impedir nuevas absorciones. Va siempre <b>después</b> del soporte vital.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Vía inhalatoria: 3 pasos</b></div><div class="fc-back">1) <b>Retirar</b> del sitio y llevar a lugar ventilado. 2) Respiración artificial <b>sólo si está indicada</b>. 3) <b>Oxígeno</b> cuanto antes.</div></div>
@@ -3688,6 +4215,11 @@ de las preguntas.</p>
 <div class="flashcard"><div class="fc-front"><b>Lavado gástrico: indicaciones</b></div><div class="fc-back">Beneficio > riesgo · primeras <b>2 horas</b> · hasta <b>12 h</b> si hay <b>concreciones</b> o peristaltismo disminuido · alta toxicidad · sustancias que el carbón no adsorbe · sin emesis espontánea.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Lavado gástrico: contraindicaciones</b></div><div class="fc-back">Vía aérea comprometida o depresión del SNC <b>sin intubar</b> · <b>cáusticos</b> y corrosivos · <b>hidrocarburos</b> · menores de 6 meses · <b>embarazo avanzado</b>.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Lavado gástrico: efectos adversos</b></div><div class="fc-back"><b>Neumonía por aspiración</b> · lesión de vía aérea, esófago y estómago · agitación · convulsiones · arritmias · reacción vagal en ancianos.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Antídoto del cianuro</b></div><div class="fc-back"><b>Hidroxocobalamina</b> (vitamina B₁₂): secuestra el CN⁻ y forma <b>cianocobalamina</b>, eliminada por orina. De elección en el rescatado de <b>incendio</b>. Alternativa: <b>nitritos + tiosulfato de sodio</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Por qué hidroxocobalamina y no nitritos en el incendiado?</b></div><div class="fc-back">Los nitritos generan <b>metahemoglobina</b> a propósito. En el incendiado ya hay <b>carboxihemoglobina</b>: sumarle metahemoglobina empeora todavía más el transporte de oxígeno.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Atropina en el organofosforado</b></div><div class="fc-back"><b>Antagonista muscarínico</b>: bloquea el receptor, no toca la enzima. Controla <b>secreciones, broncoespasmo y bradicardia</b>. <b>No</b> corrige fasciculaciones ni debilidad (nicotínicas).</div></div>
+<div class="flashcard"><div class="fc-front"><b>Pralidoxima</b></div><div class="fc-back">Una <b>oxima</b>: <b>reactiva la acetilcolinesterasa</b> arrancándole el fosfato. Va a la causa y cubre lo <b>nicotínico</b>. Indicación <b>precoz</b>: una vez que la unión <b>envejece</b>, ya no la despega.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Manejo de la fosfina</b></div><div class="fc-back"><b>No hay antídoto probado.</b> Seguridad del equipo (EPP) · retirar de la exposición y ventilar el área · soporte intensivo de las complicaciones.</div></div>
 <div class="flashcard"><div class="fc-front">⚠️ <b>Trampa de examen · Bloque 02</b></div><div class="fc-back">Agua en la piel: <b>sí</b> en plaguicidas; <b>no</b> en sodio, fósforo y óxido de calcio. Neutralizar un cáustico (ojo o esófago) <b>agrava</b> la lesión. Y ninguna descontaminación va antes del <b>soporte vital</b>.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Adsorbente</b></div><div class="fc-back">Sustancia con afinidad para <b>unirse al tóxico</b> a nivel gástrico y formar un complejo tóxico-adsorbente que <b>no se absorbe</b> y se elimina por las heces.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Adsorción ≠ absorción</b></div><div class="fc-back">Adsorber: el tóxico queda <b>pegado a la superficie</b>. Absorber: el tóxico <b>atraviesa</b> la mucosa y entra a la sangre.</div></div>
@@ -3719,6 +4251,11 @@ de las preguntas.</p>
 <div class="flashcard"><div class="fc-front"><b>Riesgo de la diuresis osmótica</b></div><div class="fc-back"><b>Edema cerebral y pulmonar.</b> La furosemida baja la volemia pero produce <b>alcalosis metabólica, hipocalcemia e hipopotasemia</b>: no es eficaz en la intoxicación aguda.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Depuración extrarrenal (TDE / ECTR)</b></div><div class="fc-back">Procedimientos en los que se <b>extrae la sangre</b> del paciente para purificarla en un <b>circuito externo</b> antes de devolverla. Se usan en intoxicaciones graves cuando fallan las medidas iniciales.</div></div>
 <div class="flashcard"><div class="fc-front"><b>Hemodiálisis</b></div><div class="fc-back">Paciente → circuito extracorpóreo → <b>dializador</b> (riñón artificial) → paciente. Contacto indirecto con el líquido de diálisis a través de una <b>membrana semipermeable</b>. Elimina urea y productos nitrogenados, exceso de <b>potasio</b> y de <b>agua</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Las cuatro técnicas extracorpóreas</b></div><div class="fc-back"><b>Hemodiálisis</b> (difusión) · <b>Hemoperfusión</b> (adsorción en cartucho) · <b>Hemofiltración/hemodiafiltración continua</b> (convección) · <b>Plasmaféresis</b> (recambio de plasma). <b>Mismo circuito</b>; cambia lo que hay dentro del filtro.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Hemoperfusión: para qué sirve</b></div><div class="fc-back">La sangre pasa por un <b>cartucho de carbón o resina</b> y el tóxico queda pegado. Sirve para <b>lipofílicos o unidos a proteínas</b>: carbamazepina, teofilina, fenobarbital. Consume <b>plaquetas, calcio y glucosa</b>.</div></div>
+<div class="flashcard"><div class="fc-front"><b>¿Cuándo técnica continua?</b></div><div class="fc-back">Paciente <b>hemodinámicamente inestable</b> y riesgo de <b>rebote</b> por redistribución. Depura <b>menos por hora</b> que la hemodiálisis intermitente, pero de forma sostenida y mejor tolerada.</div></div>
+<div class="flashcard"><div class="fc-front"><b>Plasmaféresis</b></div><div class="fc-back">No filtra: <b>descarta el plasma</b> con el tóxico y lo reemplaza. Indicación <b>excepcional</b>: unión <b>muy alta</b> a proteínas o daño por <b>autoanticuerpos</b>. Ejemplo: <b>amatoxinas</b> en casos seleccionados.</div></div>
+<div class="flashcard"><div class="fc-front"><b>La pregunta que separa las cuatro</b></div><div class="fc-back">¿Libre en el agua del plasma? → <b>hemodiálisis</b>. ¿Pegado a proteínas o liposoluble? → <b>hemoperfusión</b>. ¿Paciente inestable? → <b>continua</b>. ¿Nada lo alcanza? → <b>plasmaféresis</b>.</div></div>
 <div class="flashcard"><div class="fc-front">⚠️ <b>Trampa de examen · Bloque 03</b></div><div class="fc-back">Ácido débil → orina <b>alcalina</b>. Base débil → orina ácida (<b>en desuso</b>). <b>Vd &lt; 1 L/kg</b>, no mayor. Y el carbón activado está <b>contraindicado</b> justamente en cáusticos, donde la única medida es la <b>dilución</b>.</div></div>
 </div>
 <div class="rmc-biblio">
