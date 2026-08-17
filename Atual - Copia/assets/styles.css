@@ -322,8 +322,12 @@ body[data-tab="fisio"] .key-box.robbins::before { content:"📘 PORTH/GUYTON"; }
 .quiz-tag.parear { background:#8a6b3e; }
 .quiz-tag.oficial{ background:var(--gold); color:var(--brand-deep); font-weight:800; }
 .quiz-tag.vf     { background:#6a3aa8; }
-.quiz-tag.prova-real { background:var(--gold) !important; color:var(--brand-deep) !important; font-weight:800; }
-.quiz-tag.variante   { background:var(--brand-light) !important; }
+/* ⚠️ As cores de .prova-real e .variante saíram daqui: agora são
+   definidas uma única vez no bloco «NOMENCLATURA ESTÁNDAR» mais abaixo.
+   Os !important que existiam nestas duas linhas venciam o padrão novo e
+   deixavam «Pregunta complementaria» ilegível (texto escuro sobre fundo
+   escuro). Mantidas só como fallback SEM !important. */
+.quiz-tag.prova-real { font-weight:800; }
 
 .options { list-style:none; padding:0; margin:.8rem 0; }
 .options li { padding:.45rem .85rem; margin:.3rem 0; background:var(--bg-soft); border-radius:7px; font-size:.94rem; }
@@ -664,22 +668,32 @@ footer strong { color:var(--gold-soft); }
    Un único código de color para todas las materias.
    ===================================================================== */
 .quiz-tag{ white-space:normal; line-height:1.3; max-width:100%; }
-#materias-container .quiz-tag.oficial,
-#materias-container .quiz-tag.basada,
-#materias-container .quiz-tag.prova-real{
-  background:#FF4D5E; color:#fff; font-weight:800; border:0;
+#materias-container .tab-content .quiz-tag.oficial,
+#materias-container .tab-content .quiz-tag.basada,
+#materias-container .tab-content .quiz-tag.prova-real{
+  /* #D62839 em vez do coral #FF4D5E da paleta: com texto branco, o coral
+     dava 3,2:1 — abaixo do mínimo legível para letra pequena. Este tom
+     dá 4,97:1 e continua sendo o mesmo vermelho da identidade. */
+  background:#D62839 !important; color:#fff !important;
+  font-weight:800 !important; border:0 !important;
 }
-#materias-container .quiz-tag.oficial.vf,
-#materias-container .quiz-tag.basada.vf,
-#materias-container .quiz-tag.vf{
-  background:#7C5CFF; color:#fff; font-weight:800;
+#materias-container .tab-content .quiz-tag.oficial.vf,
+#materias-container .tab-content .quiz-tag.basada.vf,
+#materias-container .tab-content .quiz-tag.vf{
+  /* violeta escurecido de #7C5CFF para #5D3AE0: 4,35:1 → 6,67:1 */
+  background:#5D3AE0 !important; color:#fff !important; font-weight:800 !important;
 }
-/* «Pregunta complementaria»: antes quedaba texto oscuro sobre fondo oscuro. */
-#materias-container .quiz-tag.variante,
-#materias-container .quiz-tag.complementaria{
-  background:#EFEAFF; color:#3F2AA8; font-weight:800;
-  border:1px solid rgba(124,92,255,.42);
+/* «Pregunta complementaria» — lavanda com violeta escuro: 8,9:1 de contraste. */
+#materias-container .tab-content .quiz-tag.variante,
+#materias-container .tab-content .quiz-tag.complementaria{
+  background:#EFEAFF !important; color:#3F2AA8 !important;
+  font-weight:800 !important; border:1px solid rgba(124,92,255,.42) !important;
 }
+/* Rótulos de FORMATO (MCQ, CASO, CITA, DEFINE…) não entram no padrão de
+   nomenclatura, mas precisavam de contraste garantido: em várias matérias
+   herdavam color:#fff sobre fundos claros. */
+#materias-container .tab-content .quiz-tag{ color:#fff; }
+#materias-container .tab-content .quiz-tag.def{ color:#081726; }   /* dourado + tinta: 7,1:1 */
 @media (max-width:640px){ .quiz-tag{ font-size:.6rem; letter-spacing:.05em; } }
 
 
@@ -1015,7 +1029,7 @@ footer strong { color:var(--gold-soft); }
   margin-right:.5rem;vertical-align:.1em;
 }
 #materias-container .rm-cuaderno .quiz-tag.oficial{background:var(--n-coral);color:#fff;}
-#materias-container .rm-cuaderno .quiz-tag.variante{background:rgba(124,92,255,.15);color:var(--n-violet-d);}
+/* .quiz-tag.variante: cor definida no bloco «NOMENCLATURA ESTÁNDAR» (uma fonte só) */
 #materias-container .rm-cuaderno .quiz-tag.oficial.vf{background:var(--n-violet);color:#fff;}
 #materias-container .rm-cuaderno .options{list-style:none;margin:.6rem 0 .9rem;padding:0;}
 #materias-container .rm-cuaderno .options li{

@@ -1988,28 +1988,10 @@ table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.9rem;
 </div>
 <!-- FIM TAB 3 -->
 </div>
-<script>
-// flashcard flip
-document.addEventListener('click',function(e){
-  var fc=e.target.closest('.flashcard');
-  if(fc){fc.classList.toggle('flipped');}
-});
-// quiz reveal
-function toggleAnswer(btn){
-  var a=btn.parentElement.querySelector('.answer');
-  if(!a)return;
-  var open=a.classList.toggle('show');
-  btn.textContent=open?'Ocultar respuesta':'Ver respuesta';
-}
-// active nav on scroll
-var navLinks=[].slice.call(document.querySelectorAll('.nav-links a'));
-var ids=navLinks.map(function(a){return a.getAttribute('href').slice(1);});
-function onScroll(){
-  var y=window.scrollY+120, cur=ids[0];
-  ids.forEach(function(id){var el=document.getElementById(id);if(el&&el.offsetTop<=y)cur=id;});
-  navLinks.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+cur);});
-}
-window.addEventListener('scroll',onScroll,{passive:true});onScroll();
-</script>
+<!-- Bloco de JS removido (padrao v4: zero JS dentro do fragmento).
+     Ele redefinia toggleAnswer() GLOBALMENTE, sobrescrevendo a versao do
+     app-core.js para TODAS as materias abertas depois desta, e adicionava
+     um segundo handler de clique nos flashcards, que brigava com o jogo
+     em overlay do motor. O app-core ja faz as tres coisas. -->
 </body>
 </html>
