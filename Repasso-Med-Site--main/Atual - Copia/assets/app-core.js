@@ -655,7 +655,12 @@ window.RepassoMed = RepassoMed;
    - Se cierra al tocar de nuevo el término, al tocar fuera o con Esc
    ===================================================================== */
 (function(){
-  var GL='[class~="em-gl"],[class~="f2-gl"],[class~="s2-gl"],[class~="sm-gl"],[class~="hi-gl"]';
+  /* «rmc-gl» é o nome CANÔNICO do v4: qualquer matéria nova só precisa usar
+     essa classe para ganhar o glossário, sem tocar aqui. Os prefixos antigos
+     seguem na lista porque as matérias já publicadas usam os deles — e
+     adoptCuaderno() de todo modo acrescenta rmc-gl a todos eles. */
+  var GL='[class~="rmc-gl"],[class~="em-gl"],[class~="f2-gl"],[class~="s2-gl"],'
+        +'[class~="sm-gl"],[class~="hi-gl"]';
   var note=null, anchor=null;
 
   function css(){
@@ -672,16 +677,19 @@ window.RepassoMed = RepassoMed;
       +'#rm-gl-note b:first-child{display:block;font-family:var(--font-display,inherit);'
       +'font-size:.97rem;font-weight:800;color:#6b5310;margin:0 0 .35rem}'
       +'#rm-gl-note b{color:#5c4a12}#rm-gl-note em{font-style:italic;color:#7a6420}'
-      +'#rm-gl-note .em-gl-close,#rm-gl-note .f2-gl-close,#rm-gl-note .s2-gl-close,'
+      +'#rm-gl-note .rmc-gl-close,#rm-gl-note .em-gl-close,#rm-gl-note .f2-gl-close,'
+      +'#rm-gl-note .s2-gl-close,'
       +'#rm-gl-note .sm-gl-close,#rm-gl-note .hi-gl-close{display:block;margin-top:.6rem;'
       +'font-family:var(--font-mono,monospace);font-size:.56rem;letter-spacing:.07em;'
       +'text-transform:uppercase;color:#8a7420;text-align:right}'
       +'@keyframes rmGlIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}'
-      +'[class~="em-gl"].on,[class~="f2-gl"].on,[class~="s2-gl"].on,[class~="sm-gl"].on,'
+      +'[class~="rmc-gl"].on,[class~="em-gl"].on,[class~="f2-gl"].on,[class~="s2-gl"].on,'
+      +'[class~="sm-gl"].on,'
       +'[class~="hi-gl"].on{background:#ffe9a8;border-radius:4px}';
     document.head.appendChild(s);
     var h=document.createElement('style'); h.id='rm-gl-hideinflow';
-    h.textContent='[class~="em-gl"]>i,[class~="f2-gl"]>i,[class~="s2-gl"]>i,'
+    h.textContent='[class~="rmc-gl"]>i,[class~="em-gl"]>i,[class~="f2-gl"]>i,'
+      +'[class~="s2-gl"]>i,'
       +'[class~="sm-gl"]>i,[class~="hi-gl"]>i{display:none!important}';
     document.head.appendChild(h);
   }
@@ -732,8 +740,13 @@ window.RepassoMed = RepassoMed;
     if(note && e.target.closest && e.target.closest('#rm-gl-note')) return;
     var gl=e.target.closest && e.target.closest(GL);
     if(!gl){ close(); return; }
+    // Las materias antiguas traen onclick="this.classList.toggle('on')" en el
+    // propio término. Las nuevas usan sólo <span class="rmc-gl"> — sin JS en
+    // el fragmento, como manda el padrão v4. Si no hay handler inline, la
+    // alternancia la hacemos acá; si lo hay, no tocamos nada para no
+    // alternar dos veces y anular el efecto.
+    if(!gl.getAttribute('onclick')) gl.classList.toggle('on');
     setTimeout(function(){
-      // el handler inline ya alternó la clase .on sobre el término
       if(gl.classList.contains('on')) open(gl); else close();
     },0);
   },false);
