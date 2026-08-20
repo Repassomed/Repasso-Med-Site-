@@ -59,6 +59,7 @@ const FILES = {
   'anatomia-patologica-ii':       'anatomia-patologica-ii.html',
   'fisiopatologia-ii':            'fisiopatologia-ii.html',
   'toxicologia':                  'toxicologia.html',
+  'dermatologia':                 'dermatologia.html',
 };
 
 /* ---------------------------------------------------------------------

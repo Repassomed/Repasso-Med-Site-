@@ -834,6 +834,7 @@ const CATALOGO = [
   { slug:'medicina-legal', tab:'medlegal', file:'materias/medicina-legal.html', title:'Medicina Legal', sub:'Tanatología · Lesiones · Deontología' },
   { slug:'fisiopatologia-ii', tab:'fisio2', file:'materias/fisiopatologia-ii.html', title:'Fisiopatologia II', sub:'Digestivo · Hígado · Páncreas · Riñón' },
   { slug:'toxicologia', tab:'toxico', file:'materias/toxicologia.html', title:'Toxicología', sub:'Intoxicaciones · Toxidromes · Antídotos' },
+  { slug:'dermatologia', tab:'derma', file:'materias/dermatologia.html', title:'Dermatología', sub:'Piel · Lesiones elementales · Terapéutica' },
 ];
 
 /* Semestre de cada matéria. A VERDADE vem do banco (subjects.semester,
@@ -844,7 +845,7 @@ const SEMESTRE_FALLBACK = {
   'anatomia-patologica':5, 'anatomia-patologica-practica':5, 'fisiopatologia':5,
   'imagenologia':5, 'semiologia':5, 'farmacologia':5, 'medicina-familiar':5,
   'semiologia-ii':6, 'farmacologia-ii':6, 'anatomia-patologica-ii':6, 'medicina-legal':6,
-  'fisiopatologia-ii':6, 'toxicologia':7
+  'fisiopatologia-ii':6, 'toxicologia':7, 'dermatologia':7
 };
 let SEMESTER_BY_SLUG = new Map();   // slug -> semestre (vindo do banco)
 let MENU_GROUPS = new Map();        // semestre -> [itens do CATALOGO liberados]
@@ -1389,6 +1390,7 @@ const RM_SUBJ_STYLE = {
   'medicina-legal':               { ic:'balanza', c:'#13314f' },
   'fisiopatologia-ii':            { ic:'ecg',     c:'#3a78c2' },
   'toxicologia':                  { ic:'frasco',  c:'#7c5cff' },
+  'dermatologia':                 { ic:'tejido',  c:'#e0663d' },
 };
 
 /* hex → rgba com alfa, para o fundo suave do ícone */
