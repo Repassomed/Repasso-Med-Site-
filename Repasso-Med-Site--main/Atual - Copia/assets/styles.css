@@ -735,9 +735,22 @@ footer strong { color:var(--gold-soft); }
 }
 
 /* ---- papel milimetrado de fondo, sólo dentro de la pestaña ---- */
+/* ⚠️ iOS: a lombada e os furos eram ::before/::after de ALTURA TOTAL.
+   Numa seção de dezenas de milhares de píxeis isso estoura o limite de
+   textura do WebKit e a seção não é pintada (aparece em branco no iPhone).
+   Agora são camadas de background do próprio container: o navegador as
+   pinta em blocos conforme a rolagem, sem textura única gigante.
+   Sem pseudo-elementos para recortar, `overflow:hidden` também sai — o
+   background já respeita o border-radius sozinho. */
 #materias-container .rm-cuaderno .container,
 #materias-container .rm-cuaderno .container-wide{
   background:
+    /* furos da lombada */
+    radial-gradient(circle at 17px 23px, rgba(251,246,233,.5) 4.2px, transparent 4.6px)
+      0 0/34px 46px repeat-y,
+    /* lombada azul-marinho */
+    linear-gradient(180deg, var(--n-ink), var(--n-ink2)) 0 0/34px 100% no-repeat,
+    /* papel milimetrado */
     linear-gradient(var(--n-grid) 1px, transparent 1px) 0 0/22px 22px,
     linear-gradient(90deg, var(--n-grid) 1px, transparent 1px) 0 0/22px 22px,
     var(--n-paper2);
@@ -745,29 +758,46 @@ footer strong { color:var(--gold-soft); }
   border-radius:var(--n-r);
   box-shadow:var(--n-shadow);
   position:relative;
-  overflow:hidden;
 }
 /* lomo del cuaderno: franja izquierda con perforaciones */
-#materias-container .rm-cuaderno .container::before,
-#materias-container .rm-cuaderno .container-wide::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:34px;
-  background:linear-gradient(180deg,var(--n-ink),var(--n-ink2));
-  box-shadow:inset -1px 0 0 rgba(255,255,255,.14);
+/* a lombada agora é camada de background (ver regra acima). Fica só o
+   filete de luz na borda direita dela, que é barato: uma sombra interna. */
+#materias-container .rm-cuaderno .container,
+#materias-container .rm-cuaderno .container-wide{
+  box-shadow:var(--n-shadow), inset 33px 0 0 -32px rgba(255,255,255,.14);
 }
-#materias-container .rm-cuaderno .container::after,
-#materias-container .rm-cuaderno .container-wide::after{
-  content:'';position:absolute;left:11px;top:26px;bottom:26px;width:12px;
-  background-image:radial-gradient(circle at 6px 6px, rgba(251,246,233,.9) 4.2px, transparent 4.6px);
-  background-size:12px 46px;background-repeat:repeat-y;opacity:.55;
-}
+/* furos: viraram a primeira camada de background do container */
 #materias-container .rm-cuaderno .container>*{position:relative;z-index:1;}
 #materias-container .rm-cuaderno .container,
 #materias-container .rm-cuaderno .container-wide{padding-left:clamp(46px,6vw,64px)!important;}
 @media(max-width:640px){
-  #materias-container .rm-cuaderno .container::before,
-#materias-container .rm-cuaderno .container-wide::before{width:22px}
-  #materias-container .rm-cuaderno .container::after,
-#materias-container .rm-cuaderno .container-wide::after{left:6px;width:10px;background-size:10px 40px}
+    /* ⚠️ 2.ª camada de proteção do iOS — «um problema ocorreu repetidamente»
+     é a mensagem do Safari quando a aba estoura a memória de renderização.
+     `content-visibility:auto` faz o navegador NÃO renderizar as seções que
+     estão fora da tela; ele só as monta quando você chega perto delas.
+     Numa matéria de 700 questões isso derruba o pico de memória para uma
+     fração. Só no celular — no desktop nada muda.
+     `contain-intrinsic-size` dá uma altura estimada para a barra de rolagem
+     não pular. Navegador antigo ignora as duas linhas, sem prejuízo.
+     Se algum dia atrapalhar o «buscar na página» do celular, basta apagar
+     este bloco. */
+  #materias-container .rm-cuaderno > section.container{
+    content-visibility:auto;
+    contain-intrinsic-size:1px 2200px;
+  }
+#materias-container .rm-cuaderno .container,
+  #materias-container .rm-cuaderno .container-wide{
+    /* No celular a lombada encolhe para 22px E o papel milimetrado sai:
+       são duas camadas repetidas a menos para pintar, justamente onde a
+       memória é mais escassa. Na tela pequena a grade quase não se vê. */
+    background:
+      radial-gradient(circle at 11px 20px, rgba(251,246,233,.5) 3.4px, transparent 3.8px)
+        0 0/22px 40px repeat-y,
+      linear-gradient(180deg, var(--n-ink), var(--n-ink2)) 0 0/22px 100% no-repeat,
+      var(--n-paper2);
+    box-shadow:var(--n-shadow), inset 21px 0 0 -20px rgba(255,255,255,.14);
+  }
+  /* furos no celular: já embutidos na regra acima */
   #materias-container .rm-cuaderno .container,
 #materias-container .rm-cuaderno .container-wide{padding-left:34px!important}
 }

@@ -667,13 +667,24 @@ window.RepassoMed = RepassoMed;
     if(document.getElementById('rm-gl-note-css')) return;
     var s=document.createElement('style'); s.id='rm-gl-note-css';
     s.textContent=
-      '#rm-gl-note{position:absolute;z-index:2147483000;display:none;'
+      /* ⚠️ position:FIXED, não absolute.
+         O «responsive pack» aplica html,body{overflow-x:hidden}, o que
+         transforma o body num contexto de recorte: um filho absoluto
+         era cortado ou ficava atrás do conteúdo. Fixo em coordenadas de
+         viewport, o post-it não depende mais disso.
+         E, quando o navegador suporta, ele vai para a TOP LAYER via
+         popover — aí nenhum z-index de card consegue passar na frente,
+         sem escurecer nada e continuando a ver a página por trás. */
+      '#rm-gl-note{position:fixed;z-index:2147483000;display:none;'
+      +'inset:auto;right:auto;bottom:auto;margin:0;'
       +'width:min(320px,calc(100vw - 24px));max-height:60vh;overflow:auto;'
       +'background:linear-gradient(175deg,#fff8c9,#ffeea0);color:#4a3c10;'
       +'border:1px solid #e8d77a;border-radius:13px;padding:.95rem 1rem .8rem;'
       +'font:400 .9rem/1.55 var(--font-body,-apple-system,system-ui,sans-serif);'
       +'box-shadow:0 12px 32px rgba(19,49,79,.22);animation:rmGlIn .14s ease-out}'
       +'#rm-gl-note.on{display:block}'
+      +'#rm-gl-note:popover-open{display:block}'
+      +'#rm-gl-note::backdrop{background:transparent}'
       +'#rm-gl-note b:first-child{display:block;font-family:var(--font-display,inherit);'
       +'font-size:.97rem;font-weight:800;color:#6b5310;margin:0 0 .35rem}'
       +'#rm-gl-note b{color:#5c4a12}#rm-gl-note em{font-style:italic;color:#7a6420}'
@@ -699,6 +710,11 @@ window.RepassoMed = RepassoMed;
     css();
     note=document.createElement('div'); note.id='rm-gl-note';
     note.setAttribute('role','note');
+    // popover «manual»: nós controlamos abrir/fechar; o navegador só
+    // garante que ele seja desenhado acima de tudo (top layer).
+    if(typeof note.showPopover==='function'){
+      try{ note.setAttribute('popover','manual'); }catch(_){}
+    }
     document.body.appendChild(note);
     note.addEventListener('click',function(e){ e.stopPropagation(); });
   }
@@ -706,18 +722,19 @@ window.RepassoMed = RepassoMed;
   function place(){
     if(!note||!anchor||!note.classList.contains('on')) return;
     var r=anchor.getBoundingClientRect();
-    var sx=window.pageXOffset, sy=window.pageYOffset;
     var vw=document.documentElement.clientWidth;
+    var vh=document.documentElement.clientHeight;
     var nw=note.offsetWidth, nh=note.offsetHeight, gap=10, m=12;
-    // preferimos a la DERECHA del término; si no entra, debajo
+    // coordenadas de VIEWPORT (position:fixed) — sem pageXOffset
     var left, top;
-    if(r.right+gap+nw <= vw-m){ left=r.right+gap+sx; top=r.top+sy-6; }
-    else if(r.left-gap-nw >= m){ left=r.left-gap-nw+sx; top=r.top+sy-6; }
-    else { left=Math.min(Math.max(m, r.left+sx), sx+vw-nw-m); top=r.bottom+sy+gap; }
-    // que no se salga por abajo del viewport visible
-    var maxTop=sy+document.documentElement.clientHeight-nh-m;
-    if(top>maxTop && maxTop>sy+m) top=Math.max(sy+m, maxTop);
+    if(r.right+gap+nw <= vw-m){ left=r.right+gap; top=r.top-6; }        // à direita
+    else if(r.left-gap-nw >= m){ left=r.left-gap-nw; top=r.top-6; }      // à esquerda
+    else { left=Math.min(Math.max(m, r.left), vw-nw-m); top=r.bottom+gap; }
+    if(top+nh > vh-m) top=Math.max(m, vh-nh-m);
+    if(top < m) top=m;
     note.style.left=left+'px'; note.style.top=top+'px';
+    // se o termo saiu da tela na rolagem, o post-it acompanha fechando
+    if(r.bottom < 0 || r.top > vh) close();
   }
 
   function open(gl){
@@ -726,10 +743,18 @@ window.RepassoMed = RepassoMed;
     note.innerHTML = i ? i.innerHTML : '';
     anchor=gl; note.classList.add('on');
     note.style.left='-9999px'; note.style.top='0';
+    if(note.hasAttribute('popover')){
+      try{ if(!note.matches(':popover-open')) note.showPopover(); }catch(_){}
+    }
     place();
   }
   function close(){
-    if(note) note.classList.remove('on');
+    if(note){
+      note.classList.remove('on');
+      if(note.hasAttribute('popover')){
+        try{ if(note.matches(':popover-open')) note.hidePopover(); }catch(_){}
+      }
+    }
     anchor=null;
     document.querySelectorAll(GL).forEach(function(g){ g.classList.remove('on'); });
   }
