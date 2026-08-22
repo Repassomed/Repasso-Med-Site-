@@ -338,9 +338,24 @@ function cents(v) {
 }
 
 /* Descrição do item: sem quebras de linha e curta. */
+/* Descrição do item: curta e em ASCII puro.
+   ⚠️ POR QUE TIRAR ACENTO:
+   O Pix é um BR Code no formato EMV, onde cada campo é precedido pelo seu
+   TAMANHO. Vários geradores contam CARACTERES, mas gravam BYTES — e em
+   UTF-8 «í» ou «·» ocupam 2 bytes. Quando isso acontece, o tamanho
+   declarado não bate com o conteúdo, o CRC final fica errado e o app do
+   banco recusa com «QR Code inválido».
+   Não temos como saber se a InfinitePay usa a descrição dentro do BR
+   Code, mas mandar ASCII simples não custa nada e elimina a hipótese.
+   Nomes como «Semiología II · Parcial 1» viram «Semiologia II - Parcial 1». */
 function desc(s) {
-  const t = String(s || '').replace(/\s+/g, ' ').trim();
-  return (t || 'Material de estudio').slice(0, 100);
+  let t = String(s || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // tira os acentos
+    .replace(/[·•–—]/g, '-')                            // separadores «bonitos» -> hífen
+    .replace(/[^\x20-\x7E]/g, '')                       // sobra só ASCII imprimível
+    .replace(/\s+/g, ' ')
+    .trim();
+  return (t || 'Material de estudio').slice(0, 60);
 }
 
 function corte(s) {

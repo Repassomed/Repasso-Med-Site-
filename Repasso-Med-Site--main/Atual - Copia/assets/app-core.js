@@ -236,7 +236,15 @@ var RepassoMed = (function(){
       if (!t || t.length > 160) return;            // sólo rótulos cortos
       var out = t;
       HEAD_FIXES.forEach(function(f){ out = out.replace(f[0], f[1]); });
-      out = out.replace(/\s{2,}/g, ' ').replace(/\s+([·,.])/g, '$1').trim();
+      /* ⚠️ o «·» é separador legítimo de título («Antihipertensivos I ·
+         Regulación…»): colar o texto nele comia o espaço e o título ficava
+         «I· Regulación». Só se cola em vírgula e ponto; o «·» é
+         normalizado para ficar sempre com um espaço de cada lado. */
+      out = out.replace(/\s{2,}/g, ' ')
+               .replace(/\s+([,.])/g, '$1')
+               .replace(/\s*·\s*/g, ' · ')
+               .replace(/^[\s·,.]+/, '')
+               .trim();
       if (out !== t && el.children.length === 0) el.textContent = out;
     });
   }
@@ -272,26 +280,71 @@ var RepassoMed = (function(){
     });
   }
 
+  /* Emoji em qualquer faixa — inclusive as recentes, que viram quadrado
+     vazio em aparelhos antigos. Some do índice; o <h2> do bloco fica como
+     está, para não mexer no conteúdo das matérias. */
+  var RE_EMOJI = /[\u203C-\u3299\uD83C\uD83D\uD83E][\uDC00-\uDFFF]?|[\u2190-\u21FF\u2300-\u27BF\uFE0F\u20E3]/g;
+
+  var TOC_ICONS = {
+    banco:  '<path d="M4 6h11M4 12h11M4 18h7"/><path d="M18.5 15.5 20 17l3-3.5"/>',
+    mazo:   '<rect x="3.2" y="6.5" width="12.5" height="14" rx="2"/><path d="M7 3.5h11a2 2 0 0 1 2 2v11"/><path d="M6.6 11h5.7M6.6 15h3.6"/>',
+    libro:  '<path d="M3.6 4.4h5.9a3 3 0 0 1 2.5 1.3 3 3 0 0 1 2.5-1.3h5.9v14.1h-5.9a3 3 0 0 0-2.5 1.3 3 3 0 0 0-2.5-1.3H3.6z"/><path d="M12 5.7v14.1"/>',
+    lamina: '<rect x="6.2" y="2.8" width="11.6" height="18.4" rx="1.8"/><circle cx="12" cy="8.4" r="2.7"/><path d="M8.8 14.2h6.4M8.8 17.2h4"/>',
+    diana:  '<circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1.2"/>',
+    brujula:'<circle cx="12" cy="12" r="8.6"/><path d="M15.2 8.8l-1.9 4.5-4.5 1.9 1.9-4.5z"/>',
+    video:  '<rect x="2.6" y="6" width="13" height="12" rx="2.4"/><path d="M15.6 11l5.8-3.2v8.4L15.6 13z"/>'
+  };
+  /* Qual seção é qual: pelo id (a regra do padrão) e, em segundo lugar,
+     por palavra do título. Bloco comum não entra aqui — leva o número. */
+  function tocIcon(id, label){
+    var s = (id + ' ' + label).toLowerCase();
+    if (/^(banco|prova|simulado|revisao|cuestionario|examen)/.test(id) ||
+        /banco de preguntas|banco general|simulacro/.test(s))      return TOC_ICONS.banco;
+    if (/flashcard|mazo|tarjeta|ruleta/.test(s))                   return TOC_ICONS.mazo;
+    if (/bibliograf|fuentes|nota sobre|imgnote/.test(s))           return TOC_ICONS.libro;
+    if (/atlas|l[áa]mina|pr[áa]ctic/.test(s))                      return TOC_ICONS.lamina;
+    if (/portada|c[óo]mo estudiar|presentaci[óo]n|bienvenid/.test(s)) return TOC_ICONS.brujula;
+    if (/video/.test(s))                                           return TOC_ICONS.video;
+    if (/repaso general|lo que m[áa]s cae/.test(s))                return TOC_ICONS.diana;
+    return null;
+  }
+  function svgIcon(d){
+    return '<svg class="rm-menu-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false" ' +
+           'fill="none" stroke="currentColor" stroke-width="1.8" ' +
+           'stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  }
+  function esc(t){
+    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
   function buildTOC(blocks){
     var nav = document.createElement('nav');
     nav.className = 'rm-menu';
-    var items = '';
+    var items = '', n = 0;
     blocks.forEach(function(b, i){
       var h2 = b.querySelector('h2');
       if (!h2 || !b.id) return;
-      var label = h2.textContent.replace(/^[⭐🎥🔥📚\s]+/, '').trim();
-      items += '<a href="#' + b.id + '" data-target="' + b.id + '">' +
-                 '<span class="rm-menu-num">' + pad(i + 1) + '</span>' +
-                 '<span class="rm-menu-label">' + label + '</span>' +
+      var label = h2.textContent.replace(RE_EMOJI, '').replace(/\s+/g, ' ').trim();
+      var ico   = tocIcon(b.id, label);
+      var chip  = ico ? svgIcon(ico) : pad(++n);
+      var sub   = kickerFromBlock(b).replace(RE_EMOJI, '').trim();
+      items += '<a href="#' + b.id + '" data-target="' + b.id + '"' +
+                 (ico ? ' class="is-especial"' : '') + '>' +
+                 '<span class="rm-menu-num">' + chip + '</span>' +
+                 '<span class="rm-menu-tx"><b>' + esc(label) + '</b>' +
+                   (sub && sub !== 'Tema' ? '<small>' + esc(sub) + '</small>' : '') +
+                 '</span>' +
+                 '<span class="rm-menu-go" aria-hidden="true">→</span>' +
                '</a>';
     });
     nav.innerHTML =
-      '<button class="rm-menu-btn" type="button" aria-label="Abrir índice" aria-expanded="false">' +
+      '<button class="rm-menu-btn" type="button" aria-label="Abrir el índice de la materia" aria-expanded="false">' +
         '<span class="rm-menu-bars"><i></i><i></i><i></i></span>' +
-        '<span class="rm-menu-btn-text">Índice</span>' +
+        '<span class="rm-menu-btn-text">Índice de la materia</span>' +
       '</button>' +
       '<div class="rm-menu-panel" role="menu">' +
-        '<div class="rm-menu-head">En esta asignatura</div>' +
+        '<div class="rm-menu-head"><b>Índice de la materia</b>' +
+          '<span>' + blocks.length + (blocks.length === 1 ? ' sección' : ' secciones') + '</span></div>' +
         '<div class="rm-menu-list">' + items + '</div>' +
       '</div>';
     return nav;
@@ -336,9 +389,48 @@ var RepassoMed = (function(){
     function close(){ nav.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
     function toggle(){ nav.classList.contains('open') ? close() : open(); }
     btn.addEventListener('click', function(e){ e.stopPropagation(); toggle(); });
-    // clicar num bloco: navega e fecha
+    /* Clicar num bloco: rolagem EXATA até o topo dele.
+       A âncora nativa encosta o bloco no topo da janela — mas a barra
+       superior e a barra de abas ficam por cima, escondendo o título. Era
+       isso que dava a impressão de "caiu no bloco seguinte".
+       Fazemos a conta à mão e corrigimos num segundo passo: em matérias
+       longas o layout ainda está se acomodando (imagens preguiçosas,
+       seções que só renderizam ao chegar perto) e a primeira medida pode
+       ficar desatualizada. */
+    function alturaFixa(){
+      var cs = getComputedStyle(document.documentElement);
+      function px(v){ var n = parseFloat(cs.getPropertyValue(v)); return isNaN(n) ? 0 : n; }
+      var h = px('--topbar-h') + px('--tabs-h');
+      if (!h){                                   // variáveis ausentes: mede na tela
+        var tb = document.querySelector('.topbar'), tt = document.querySelector('.main-tabs');
+        h = (tb ? tb.offsetHeight : 0) + (tt ? tt.offsetHeight : 0);
+      }
+      return h + 16;                             // respiro
+    }
+    function irPara(id){
+      var alvo = document.getElementById(id);
+      if (!alvo) return;
+      function passo(suave){
+        var y = alvo.getBoundingClientRect().top + window.pageYOffset - alturaFixa();
+        window.scrollTo({ top: Math.max(0, y), behavior: suave ? 'smooth' : 'auto' });
+      }
+      passo(true);
+      // 2.ª medida depois que tudo assentou (não é suave: é só um acerto fino)
+      setTimeout(function(){
+        var d = alvo.getBoundingClientRect().top - alturaFixa();
+        if (Math.abs(d) > 4) passo(false);
+      }, 420);
+      // atualiza a barra de endereço sem recarregar; em contexto sem
+      // origem (webview antiga, file://) replaceState pode lançar — e uma
+      // exceção aqui abortaria o resto do clique.
+      try{ if (history.replaceState) history.replaceState(null, '', '#' + id); }catch(_){}
+    }
     panel.querySelectorAll('a').forEach(function(a){
-      a.addEventListener('click', function(){ close(); });
+      a.addEventListener('click', function(e){
+        e.preventDefault();
+        close();
+        irPara(a.getAttribute('data-target'));
+      });
     });
     // clicar fora fecha
     document.addEventListener('click', function(e){
