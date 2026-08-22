@@ -76,6 +76,19 @@
     Cache-Control = "public, max-age=0, must-revalidate"
 
 # Imagens/vídeos da identidade visual: podem cachear por muito tempo
+# ⚠️ app-core.js e styles.css NÃO podem ficar 7 dias no cache do navegador:
+# quando você sobe uma correção, o aluno continua com a versão antiga até o
+# cache vencer. Estes dois revalidam sempre (são pequenos, o custo é zero).
+[[headers]]
+  for = "/assets/app-core.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/assets/styles.css"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
 [[headers]]
   for = "/assets/*"
   [headers.values]
