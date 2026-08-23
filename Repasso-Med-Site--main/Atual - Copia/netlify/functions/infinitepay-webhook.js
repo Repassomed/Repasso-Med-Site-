@@ -56,7 +56,7 @@ exports.handler = async (event) => {
 
     // 2) o pedido existe?
     const oRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(order_nsu)}&select=id,status,amount_cents`,
+      `${SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(order_nsu)}&select=id,status,amount_cents,user_id`,
       { headers: sr() }
     );
     const orders = await oRes.json().catch(() => []);
@@ -101,6 +101,50 @@ exports.handler = async (event) => {
       })
     });
     if (!g.ok) { console.error('grant_paid_order', await g.text()); return resp(400, { error: 'error al liberar acceso' }); }
+
+    /* -------------------------------------------------------------------
+       CONFERÊNCIA PÓS-LIBERAÇÃO
+       Uma aluna pagou duas matérias do 6.º semestre e recebeu uma do 5.º.
+       A liberação em si acontece dentro de grant_paid_order(), no banco —
+       daqui não dá para vigiar o que ela faz. Mas dá para conferir o
+       RESULTADO: o que o pedido tinha e o que o aluno passou a ter.
+       Se não bater, o log grita e o webhook devolve 409 para o pedido
+       ficar visível em vez de falhar em silêncio.
+       Isto é só leitura: não grava nem corrige nada sozinho.
+       ------------------------------------------------------------------- */
+    try {
+      const oiRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/order_items?order_id=eq.${encodeURIComponent(order.id)}` +
+        `&select=products(subject_slug,plan_type,name)`, { headers: sr() });
+      const itens = oiRes.ok ? await oiRes.json() : [];
+      const esperado = [...new Set(itens
+        .map(i => i.products && i.products.subject_slug)
+        .filter(Boolean))];
+      const combo = itens.some(i => i.products && i.products.plan_type === 'semestre');
+
+      if (esperado.length && !combo) {
+        const inList = esperado.map(encodeURIComponent).join(',');
+        const usRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/user_subjects?user_id=eq.${encodeURIComponent(order.user_id)}` +
+          `&subject_slug=in.(${inList})&select=subject_slug`, { headers: sr() });
+        const tem = usRes.ok ? (await usRes.json()).map(r => r.subject_slug) : [];
+        const faltando = esperado.filter(sl => tem.indexOf(sl) < 0);
+
+        if (faltando.length) {
+          console.error('⚠️ LIBERAÇÃO INCOMPLETA · pedido', order.id,
+                        '· usuário', order.user_id,
+                        '· pagou:', esperado.join(', '),
+                        '· recebeu:', tem.join(', ') || '(nada)',
+                        '· FALTANDO:', faltando.join(', '));
+          return resp(409, { ok: false, reason: 'liberacion incompleta',
+                             order: order.id, esperado, faltando });
+        }
+        console.log('liberación conferida · pedido', order.id, '·', esperado.join(', '));
+      }
+    } catch (e) {
+      // a conferência nunca pode derrubar um pagamento já aprovado
+      console.error('conferência pós-liberação falhou (pagamento segue válido):', e);
+    }
 
     return resp(200, { ok: true });
   } catch (e) {

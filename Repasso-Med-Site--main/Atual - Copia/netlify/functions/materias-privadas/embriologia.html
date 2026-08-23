@@ -4,7 +4,7 @@
      Base: material de cátedra · Langman · Moore · pruebas aplicadas
      Fragmento cargado por get-materia.js / openTab('embrio')
      ===================================================================== -->
-<div class="tab-content" id="tab-embrio">
+<div class="tab-content rm-cuaderno" id="tab-embrio">
 
 <style id="embrio-style">
 /* ---- acento propio de la disciplina (violeta embrionario) ---- */
@@ -318,94 +318,7 @@
 
   <h3>2 · ⚖️ Los dos tipos de célula</h3>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Célula somática diploide con cromosomas en pares frente a células sexuales haploides, y la restitución del número diploide en el cigoto">
-      <style>
-        .emT{font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;font-weight:800;fill:#15202e}
-        .emS{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;fill:#41506a}
-        .emW{font-family:'Plus Jakarta Sans',sans-serif;font-size:11.5px;font-weight:800;fill:#fff}
-        .emM{font-family:'JetBrains Mono',monospace;font-size:9.5px;fill:#7e8aa0;letter-spacing:.05em}
-      </style>
-      <defs>
-        <marker id="emAr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-          <path d="M0,0 L10,5 L0,10 Z" fill="#6b3e8a"/>
-        </marker>
-      </defs>
-
-      <!-- ===== SOMÁTICA ===== -->
-      <rect x="14" y="30" width="220" height="200" rx="14" fill="rgba(19,49,79,.05)" stroke="#13314f" stroke-width="2"/>
-      <text x="124" y="52" text-anchor="middle" class="emT">🧱 CÉLULA SOMÁTICA</text>
-      <text x="124" y="70" text-anchor="middle" class="emM">diploide · 2n = 46 (23 pares)</text>
-      <!-- pares de cromosomas -->
-      <g>
-        <rect x="46" y="88" width="9" height="40" rx="4" fill="#c0392b"/><rect x="59" y="88" width="9" height="40" rx="4" fill="#13314f"/>
-        <rect x="88" y="94" width="9" height="34" rx="4" fill="#c0392b"/><rect x="101" y="94" width="9" height="34" rx="4" fill="#13314f"/>
-        <rect x="130" y="100" width="9" height="28" rx="4" fill="#c0392b"/><rect x="143" y="100" width="9" height="28" rx="4" fill="#13314f"/>
-        <rect x="172" y="104" width="9" height="24" rx="4" fill="#c0392b"/><rect x="185" y="104" width="9" height="24" rx="4" fill="#13314f"/>
-      </g>
-      <text x="124" y="148" text-anchor="middle" class="emM">… 22 pares de AUTOSOMAS …</text>
-      <rect x="100" y="160" width="9" height="26" rx="4" fill="#d8a32a"/><rect x="113" y="160" width="9" height="18" rx="4" fill="#2f7d4f"/>
-      <text x="124" y="200" text-anchor="middle" class="emS" font-weight="800">+ 1 par SEXUAL (X e Y)</text>
-      <rect x="34" y="208" width="180" height="16" rx="8" fill="#c0392b"/>
-      <text x="72" y="220" class="emW" font-size="9">materno</text>
-      <text x="150" y="220" class="emW" font-size="9">paterno</text>
-
-      <!-- ===== flecha meiosis ===== -->
-      <line x1="238" y1="130" x2="290" y2="130" stroke="#6b3e8a" stroke-width="3" marker-end="url(#emAr)"/>
-      <text x="264" y="118" text-anchor="middle" class="emT" fill="#4a2a61">MEIOSIS</text>
-      <text x="264" y="152" text-anchor="middle" class="emM" fill="#6b3e8a">reduccional</text>
-
-      <!-- ===== SEXUALES ===== -->
-      <rect x="300" y="30" width="220" height="200" rx="14" fill="rgba(107,62,138,.07)" stroke="#6b3e8a" stroke-width="2"/>
-      <text x="410" y="52" text-anchor="middle" class="emT" fill="#4a2a61">🥚 CÉLULAS SEXUALES</text>
-      <text x="410" y="70" text-anchor="middle" class="emM">haploide · n = 23</text>
-      <!-- óvulo -->
-      <circle cx="358" cy="118" r="28" fill="#fdeef7" stroke="#6b3e8a" stroke-width="2"/>
-      <circle cx="358" cy="118" r="10" fill="rgba(107,62,138,.25)"/>
-      <rect x="352" y="110" width="6" height="16" rx="3" fill="#c0392b"/>
-      <text x="358" y="162" text-anchor="middle" class="emS">óvulo</text>
-      <!-- espermatozoide -->
-      <circle cx="450" cy="112" r="13" fill="#eaf1f8" stroke="#13314f" stroke-width="2"/>
-      <rect x="447" y="107" width="5" height="11" rx="2.5" fill="#13314f"/>
-      <path d="M462,116 q16,-10 30,2 q-16,12 -30,-2" fill="none" stroke="#13314f" stroke-width="2"/>
-      <text x="462" y="162" text-anchor="middle" class="emS">espermatozoide</text>
-      <text x="410" y="192" text-anchor="middle" class="emS">Un solo cromosoma de cada tipo:</text>
-      <text x="410" y="208" text-anchor="middle" class="emS" font-weight="800">sin pareja · la mitad del set</text>
-
-      <!-- ===== CIGOTO ===== -->
-      <line x1="530" y1="130" x2="576" y2="130" stroke="#6b3e8a" stroke-width="3" marker-end="url(#emAr)"/>
-      <text x="553" y="118" text-anchor="middle" class="emM" fill="#6b3e8a">n + n</text>
-      <rect x="586" y="66" width="120" height="128" rx="14" fill="rgba(216,163,42,.16)" stroke="#b3851a" stroke-width="2"/>
-      <circle cx="646" cy="112" r="30" fill="#fff6e0" stroke="#b3851a" stroke-width="2"/>
-      <rect x="638" y="102" width="7" height="20" rx="3" fill="#c0392b"/>
-      <rect x="649" y="102" width="7" height="20" rx="3" fill="#13314f"/>
-      <text x="646" y="164" text-anchor="middle" class="emT" fill="#8a6d16">CIGOTO</text>
-      <text x="646" y="182" text-anchor="middle" class="emM" fill="#8a6d16">2n = 46 · diploide</text>
-
-      <!-- ===== TABLA INFERIOR ===== -->
-      <line x1="14" y1="248" x2="706" y2="248" stroke="#dbe3ec" stroke-width="1.5"/>
-      <rect x="14" y="262" width="340" height="128" rx="12" fill="rgba(19,49,79,.05)" stroke="#13314f" stroke-width="1.4"/>
-      <text x="30" y="284" class="emT">🧱 SOMÁTICA</text>
-      <text x="30" y="306" class="emS">▸ Mayor parte del cuerpo</text>
-      <text x="30" y="324" class="emS">▸ Se divide por <tspan font-weight="800">MITOSIS</tspan> · división <tspan font-weight="800">ecuacional</tspan></text>
-      <text x="30" y="342" class="emS">▸ <tspan font-weight="800">Diploide (2n) = 46</tspan> cromosomas, 23 pares</text>
-      <text x="30" y="360" class="emS">▸ Forma <tspan font-weight="800">tejidos y órganos</tspan></text>
-      <text x="30" y="380" class="emM">Ej.: neurona · hepatocito · miocito</text>
-
-      <rect x="366" y="262" width="340" height="128" rx="12" fill="rgba(107,62,138,.07)" stroke="#6b3e8a" stroke-width="1.4"/>
-      <text x="382" y="284" class="emT" fill="#4a2a61">🥚 SEXUAL / GERMINAL</text>
-      <text x="382" y="306" class="emS">▸ Gametos: óvulo y espermatozoide</text>
-      <text x="382" y="324" class="emS">▸ Se forma por <tspan font-weight="800">MEIOSIS</tspan> · división <tspan font-weight="800">reduccional</tspan></text>
-      <text x="382" y="342" class="emS">▸ <tspan font-weight="800">Haploide (n) = 23</tspan> cromosomas</text>
-      <text x="382" y="360" class="emS">▸ Participa en la <tspan font-weight="800">reproducción</tspan></text>
-      <text x="382" y="380" class="emM">Ej.: ovocito 2.º · espermatozoide</text>
-    </svg>
-    <p class="illustration-caption"><b>Arriba, el circuito completo.</b> Los cromosomas de la célula somática
-    vienen <b>en pares</b>: uno de cada par es <span style="color:#c0392b;font-weight:700">materno</span> y el
-    otro <span style="color:#13314f;font-weight:700">paterno</span> — se llaman <b><span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">homólogos<b>?</b><i onclick="event.stopPropagation()"><b>Cromosomas homólogos</b>Los dos cromosomas de un mismo par: uno viene del <b>padre</b> y otro de la <b>madre</b>. Tienen el mismo tamaño, la misma forma y llevan <b>los mismos genes en el mismo orden</b> — pero no necesariamente las mismas versiones de esos genes. Por eso podés tener el gen del color de ojos «azul» en uno y «marrón» en el otro.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span></b>. La meiosis
-    los separa y deja <b>un solo cromosoma de cada tipo</b> en el gameto. Al unirse los dos gametos, el cigoto
-    recupera los pares y vuelve a ser 2n = 46. <b>Abajo</b>, las cinco diferencias que se preguntan.</p>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b01_01_somatica_gametos_cigoto.webp" alt="Comparación entre célula somática diploide con 46 cromosomas en 23 pares y células sexuales haploides con 23 cromosomas, el espermatozoide y el ovocito, que al unirse restauran los 46 del cigoto." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>46 → 23 + 23 → 46: el ciclo completo en una línea.</b> Seguí la figura de izquierda a derecha. La <b>célula somática</b> es diploide (<b>2n = 46</b>), con los cromosomas en 23 pares de <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">homólogos<b>?</b><i onclick="event.stopPropagation()"><b>Cromosomas homólogos</b>Los dos cromosomas de un mismo par: uno viene del <b>padre</b> y otro de la <b>madre</b>. Tienen el mismo tamaño, la misma forma y llevan <b>los mismos genes en el mismo orden</b> — pero no necesariamente las mismas versiones de esos genes. Por eso podés tener el gen del color de ojos «azul» en uno y «marrón» en el otro.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span> — uno materno y uno paterno de cada tipo. Los <b>gametos</b> son haploides (<b>n = 23</b>): tienen un solo juego, no un par. Y al fecundar, los 23 del espermatozoide más los 23 del ovocito <b>restauran los 46</b> del cigoto. Ése es el motivo de que exista la meiosis: sin la reducción a la mitad, cada generación duplicaría el número cromosómico. Retené también el vocabulario, porque se pregunta: <b>autosomas</b> son los 22 pares no sexuales; el par 23 son los <b>cromosomas sexuales</b>.</figcaption></figure>
 
   <div class="em-howto">
     <p><b>Los dos conceptos que hay que separar bien.</b></p>
@@ -448,61 +361,7 @@
 
   <h3>4 · ♀♂ Determinación del sexo</h3>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Determinación del sexo cromosómico según el espermatozoide que fecunda al óvulo">
-      <style>
-        .emdT{font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;font-weight:800;fill:#15202e}
-        .emdS{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;fill:#41506a}
-        .emdW{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:800;fill:#fff}
-        .emdM{font-family:'JetBrains Mono',monospace;font-size:9.5px;fill:#7e8aa0}
-      </style>
-      <defs><marker id="emdA" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#7e8aa0"/></marker></defs>
-
-      <!-- óvulo: siempre X -->
-      <circle cx="90" cy="124" r="42" fill="#fdeef7" stroke="#6b3e8a" stroke-width="2.4"/>
-      <rect x="84" y="112" width="9" height="24" rx="4" fill="#c0392b"/>
-      <text x="90" y="182" text-anchor="middle" class="emdT" fill="#4a2a61">ÓVULO</text>
-      <text x="90" y="200" text-anchor="middle" class="emdS" font-weight="800">siempre aporta X</text>
-      <text x="90" y="216" text-anchor="middle" class="emdM">no tiene alternativa</text>
-
-      <!-- dos caminos -->
-      <path d="M136,104 L232,64" stroke="#7e8aa0" stroke-width="2.4" marker-end="url(#emdA)"/>
-      <path d="M136,146 L232,188" stroke="#7e8aa0" stroke-width="2.4" marker-end="url(#emdA)"/>
-
-      <!-- espermatozoide X -->
-      <circle cx="262" cy="58" r="17" fill="#eaf1f8" stroke="#13314f" stroke-width="2"/>
-      <rect x="258" y="50" width="7" height="17" rx="3" fill="#c0392b"/>
-      <path d="M280,62 q18,-11 34,2 q-18,13 -34,-2" fill="none" stroke="#13314f" stroke-width="2"/>
-      <text x="300" y="34" text-anchor="middle" class="emdT" fill="#8e2a1f">espermatozoide X</text>
-
-      <!-- espermatozoide Y -->
-      <circle cx="262" cy="192" r="17" fill="#eaf1f8" stroke="#13314f" stroke-width="2"/>
-      <rect x="258" y="186" width="7" height="12" rx="3" fill="#2f7d4f"/>
-      <path d="M280,196 q18,-11 34,2 q-18,13 -34,-2" fill="none" stroke="#13314f" stroke-width="2"/>
-      <text x="300" y="230" text-anchor="middle" class="emdT" fill="#1f5938">espermatozoide Y</text>
-
-      <path d="M330,58 L400,58" stroke="#7e8aa0" stroke-width="2.4" marker-end="url(#emdA)"/>
-      <path d="M330,192 L400,192" stroke="#7e8aa0" stroke-width="2.4" marker-end="url(#emdA)"/>
-
-      <!-- resultados -->
-      <rect x="410" y="30" width="290" height="58" rx="13" fill="rgba(192,57,43,.12)" stroke="#c0392b" stroke-width="2.2"/>
-      <text x="430" y="56" class="emdT" fill="#8e2a1f">♀ Par sexual XX</text>
-      <text x="430" y="76" class="emdS">individuo genéticamente <tspan font-weight="800">FEMENINO</tspan></text>
-
-      <rect x="410" y="164" width="290" height="58" rx="13" fill="rgba(47,125,79,.12)" stroke="#2f7d4f" stroke-width="2.2"/>
-      <text x="430" y="190" class="emdT" fill="#1f5938">♂ Par sexual XY</text>
-      <text x="430" y="210" class="emdS">individuo genéticamente <tspan font-weight="800">MASCULINO</tspan></text>
-
-      <!-- conclusión -->
-      <rect x="410" y="102" width="290" height="46" rx="11" fill="#4a2a61"/>
-      <text x="555" y="122" text-anchor="middle" class="emdW">🔑 El factor determinante</text>
-      <text x="555" y="140" text-anchor="middle" class="emdW">del sexo es PATERNO</text>
-    </svg>
-    <p class="illustration-caption"><b>El sexo cromosómico se decide en la fecundación</b>, y lo decide el
-    espermatozoide. El óvulo <b>siempre</b> lleva un X — no puede llevar otra cosa, porque la mujer es XX. El
-    espermatozoide, en cambio, puede llevar X o Y, porque el hombre es XY. Por eso el padre es el
-    <b>factor determinante</b> del sexo del hijo.</p>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b01_02_determinacion_sexo_cromosomico.webp" alt="Determinación del sexo cromosómico: el ovocito aporta siempre un cromosoma X y el espermatozoide aporta X o Y, de modo que la combinación XX da sexo femenino y XY masculino, con la aclaración de que el sexo cromosómico no equivale a la diferenciación gonadal ni al fenotipo sexual." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Lo decide el espermatozoide, no el ovocito.</b> El ovocito <b>siempre</b> aporta un <b>X</b> — no tiene alternativa. El espermatozoide aporta <b>X o Y</b>, y por eso es el gameto masculino el que determina el sexo cromosómico: <b>X + X = XX</b> (femenino), <b>X + Y = XY</b> (masculino). Ésa es la respuesta corta. Pero leé también el recuadro del pie, que es lo que separa una respuesta buena de una simplista: el <b>Y</b> lleva normalmente el gen <b>SRY</b>, que dispara la diferenciación testicular, y aun así el <b>sexo cromosómico no equivale a la diferenciación gonadal ni al fenotipo sexual</b> — son tres niveles distintos que pueden disociarse.</figcaption></figure>
 
   <h3>5 · 📖 Terminología esencial</h3>
 
@@ -537,7 +396,7 @@
     <div><b>Semanas 3 a 8 · Organogénesis</b><p>Es el <strong>período embrionario</strong>: se forman todos los órganos.</p></div>
     <div><b>Semana 9 al nacimiento · Período fetal</b><p><strong>Maduración y crecimiento</strong> de lo que ya está formado.</p></div>
     <div><b>Semanas 38–40 · Nacimiento</b><p>38 semanas desde la fecundación · 40 desde la última menstruación.</p></div>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b01_03_linea_tiempo_desarrollo.webp" alt="Línea de tiempo del desarrollo humano desde la fecundación en el día 0, pasando por segmentación en días 1 a 3, blastocisto en días 4 a 7, disco bilaminar en la semana 2, gastrulación en la semana 3, organogénesis de las semanas 3 a 8 y período fetal desde la semana 9, con una barra de sensibilidad a teratógenos y la equivalencia de 38 semanas posfecundación con 40 gestacionales." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>La cronología que organiza toda la materia.</b> Esta figura es el índice de los trece bloques: si te la aprendés, sabés siempre dónde estás parado. Recorré las etiquetas de abajo en orden — <b>día 0</b> fecundación, <b>días 1–3</b> segmentación, <b>días 4–7</b> blastocisto, <b>semana 2</b> disco bilaminar, <b>semana 3</b> gastrulación, <b>semanas 3–8</b> organogénesis, <b>semana 9 en adelante</b> período fetal. La barra de colores agrega la lectura clínica: antes de la semana 3 rige el <b>«todo o nada»</b>; entre las <b>semanas 3 y 8</b> está el <b>mayor riesgo de malformación estructural</b> porque es cuando se forman los órganos; y en el período fetal el daño ya es de crecimiento y función. El pie trae la conversión que se pregunta: <b>38 semanas posfecundación ≈ 40 gestacionales</b>, porque la edad gestacional se cuenta desde la última menstruación.</figcaption></figure>
 
   <div class="key-box exam">
     <p>★ <strong>Importancia clínica que hay que saber explicar.</strong> El <strong>período embrionario
@@ -767,66 +626,7 @@
   preparación — aquí la célula crece, duplica sus <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">organelas<b>?</b><i onclick="event.stopPropagation()"><b>Organela (orgánulo)</b>Las «piezas de maquinaria» dentro de la célula, cada una con su función: mitocondrias (energía), retículo endoplásmico (síntesis), aparato de Golgi (empaquetado), lisosomas (digestión). Antes de dividirse, la célula debe <b>duplicarlas</b> para que cada hija reciba un juego completo — eso ocurre en <b>G1</b>.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span> y, sobre todo, <strong>copia todo su
   ADN</strong>.</p>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rueda del ciclo celular con la interfase G1, S y G2 y la fase M, y el detalle de qué ocurre en cada una">
-      <style>
-        .emcT{font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;font-weight:800;fill:#15202e}
-        .emcS{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;fill:#41506a}
-        .emcW{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:800;fill:#fff}
-        .emcM{font-family:'JetBrains Mono',monospace;font-size:9.5px;fill:#7e8aa0;letter-spacing:.05em}
-      </style>
-      <!-- rueda -->
-      <g transform="translate(160,190)">
-        <!-- sectores: G1 (der-abajo), S (izq-abajo), G2 (izq-arriba), M (der-arriba) -->
-        <path d="M0,0 L0,-118 A118,118 0 0 1 118,0 Z" fill="#6b3e8a"/>
-        <path d="M0,0 L118,0 A118,118 0 0 1 0,118 Z" fill="#2f7d4f"/>
-        <path d="M0,0 L0,118 A118,118 0 0 1 -118,0 Z" fill="#d8a32a"/>
-        <path d="M0,0 L-118,0 A118,118 0 0 1 0,-118 Z" fill="#13314f"/>
-        <circle cx="0" cy="0" r="62" fill="#fff"/>
-        <text x="0" y="-6" text-anchor="middle" class="emcT">CICLO</text>
-        <text x="0" y="12" text-anchor="middle" class="emcT">CELULAR</text>
-        <text x="64" y="-62" text-anchor="middle" class="emcW">M</text>
-        <text x="64" y="66" text-anchor="middle" class="emcW">G1</text>
-        <text x="-64" y="66" text-anchor="middle" class="emcW">S</text>
-        <text x="-64" y="-62" text-anchor="middle" class="emcW">G2</text>
-      </g>
-      <text x="160" y="336" text-anchor="middle" class="emcM">INTERFASE = G1 + S + G2  ·  luego la fase M</text>
-      <!-- llave interfase -->
-      <path d="M56,308 L56,318 L264,318 L264,308" fill="none" stroke="#7e8aa0" stroke-width="1.6"/>
-
-      <!-- fichas -->
-      <rect x="306" y="26" width="400" height="70" rx="12" fill="rgba(107,62,138,.10)" stroke="#6b3e8a" stroke-width="1.8"/>
-      <circle cx="336" cy="52" r="15" fill="#6b3e8a"/><text x="336" y="57" text-anchor="middle" class="emcW" font-size="11">M</text>
-      <text x="362" y="48" class="emcT" fill="#4a2a61">Fase M · MITOSIS</text>
-      <text x="362" y="68" class="emcS">La división propiamente dicha: reparto del</text>
-      <text x="362" y="86" class="emcS">material genético y <tspan font-weight="800">citocinesis</tspan>.</text>
-
-      <rect x="306" y="106" width="400" height="70" rx="12" fill="rgba(47,125,79,.10)" stroke="#2f7d4f" stroke-width="1.8"/>
-      <circle cx="336" cy="132" r="15" fill="#2f7d4f"/><text x="336" y="137" text-anchor="middle" class="emcW" font-size="10">G1</text>
-      <text x="362" y="128" class="emcT" fill="#1f5938">Fase G1 · CRECIMIENTO</text>
-      <text x="362" y="148" class="emcS">La célula <tspan font-weight="800">crece</tspan> y aumenta el número de</text>
-      <text x="362" y="166" class="emcS">organelas (se copian).</text>
-
-      <rect x="306" y="186" width="400" height="70" rx="12" fill="rgba(216,163,42,.14)" stroke="#b3851a" stroke-width="1.8"/>
-      <circle cx="336" cy="212" r="15" fill="#d8a32a"/><text x="336" y="217" text-anchor="middle" class="emcW" font-size="11" fill="#081726">S</text>
-      <text x="362" y="208" class="emcT" fill="#8a6d16">Fase S · SÍNTESIS</text>
-      <text x="362" y="228" class="emcS"><tspan font-weight="800">Se duplica el material genético (ADN)</tspan>. Cada</text>
-      <text x="362" y="246" class="emcS">cromosoma queda con <tspan font-weight="800">2 cromátidas hermanas</tspan>.</text>
-
-      <rect x="306" y="266" width="400" height="70" rx="12" fill="rgba(19,49,79,.08)" stroke="#13314f" stroke-width="1.8"/>
-      <circle cx="336" cy="292" r="15" fill="#13314f"/><text x="336" y="297" text-anchor="middle" class="emcW" font-size="10">G2</text>
-      <text x="362" y="288" class="emcT">Fase G2 · PREPARACIÓN</text>
-      <text x="362" y="308" class="emcS">Finaliza las copias y <tspan font-weight="800">verifica</tspan> que el ADN se</text>
-      <text x="362" y="326" class="emcS">replicó correctamente. Se prepara para dividirse.</text>
-
-      <text x="306" y="360" class="emcM">🚦 Entre G1→S, G2→M y en metafase hay CHECKPOINTS que pueden detener el ciclo</text>
-    </svg>
-    <p class="illustration-caption"><b>La rueda se lee en sentido horario empezando por G1.</b> Fijate en la
-    proporción: la <b>interfase</b> (G1 + S + G2) ocupa la mayor parte del círculo, y la <b>fase M</b> es solo
-    una porción. Eso refleja la realidad — una célula pasa horas o días en interfase y apenas un rato
-    dividiéndose. El dato de examen está en la <b>fase S</b>: es allí, <em>antes</em> de que empiece la
-    mitosis, donde se duplica el ADN.</p>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b02_01_ciclo_celular_checkpoints.webp" alt="Rueda del ciclo celular con la fase G1 de crecimiento, la fase S de replicación del ADN, la fase G2 de preparación y la fase M de mitosis, más la salida a quiescencia G0 y los tres puntos de control: G1/S, G2/M y el checkpoint del huso." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>La interfase no es reposo: es donde pasa casi todo.</b> Girá la rueda en sentido de las flechas: <b>G1</b> (crece) → <b>S</b> (duplica el ADN) → <b>G2</b> (prepara) → <b>M</b> (se divide). Las tres primeras juntas son la <b>interfase</b>, y ocupan la enorme mayoría del tiempo — de ahí el recuadro del pie: <b>interfase = G1 + S + G2, y no es «reposo»</b>. El verdadero reposo es <b>G0</b>, la salida lateral hacia la quiescencia, donde viven las células que ya no se dividen. Los tres checkpoints son la otra mitad de la figura y cada uno vigila algo distinto: <b>G1/S</b> mira tamaño, nutrientes y daño en el ADN antes de comprometerse a replicar; <b>G2/M</b> verifica que la replicación esté <b>completa e íntegra</b>; y el <b>checkpoint del huso</b> no deja empezar la anafase hasta que todos los cinetocoros estén unidos a ambos polos.</figcaption></figure>
 
   <div class="em-mnemo">
     <span class="em-mn-l">🧠 Macete de la interfase</span>
@@ -837,141 +637,11 @@
 
   <h3>3 · 📏 Jerarquía del material genético</h3>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Del ADN en doble hélice a la cromatina y al cromosoma condensado visible">
-      <style>
-        .emjT{font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;font-weight:800;fill:#15202e}
-        .emjS{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;fill:#41506a}
-        .emjM{font-family:'JetBrains Mono',monospace;font-size:9.5px;fill:#7e8aa0}
-      </style>
-      <defs><marker id="emjA" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#6b3e8a"/></marker></defs>
-      <!-- ADN -->
-      <path d="M30,60 q18,26 36,0 q18,-26 36,0 q18,26 36,0" fill="none" stroke="#13314f" stroke-width="2.6"/>
-      <path d="M30,100 q18,-26 36,0 q18,26 36,0 q18,-26 36,0" fill="none" stroke="#c0392b" stroke-width="2.6"/>
-      <g stroke="#7e8aa0" stroke-width="1.4">
-        <line x1="48" y1="72" x2="48" y2="88"/><line x1="84" y1="72" x2="84" y2="88"/>
-        <line x1="120" y1="72" x2="120" y2="88"/><line x1="156" y1="72" x2="156" y2="88"/>
-      </g>
-      <text x="93" y="132" text-anchor="middle" class="emjT">① ADN</text>
-      <text x="93" y="150" text-anchor="middle" class="emjS">doble hélice</text>
-      <text x="93" y="168" text-anchor="middle" class="emjM">el hilo desnudo</text>
-
-      <line x1="186" y1="80" x2="228" y2="80" stroke="#6b3e8a" stroke-width="2.6" marker-end="url(#emjA)"/>
-      <text x="207" y="68" text-anchor="middle" class="emjM">se enrolla</text>
-
-      <!-- cromatina: hilo con nucleosomas -->
-      <path d="M244,80 q14,-22 28,0 q14,22 28,0 q14,-22 28,0 q14,22 28,0" fill="none" stroke="#7e8aa0" stroke-width="2"/>
-      <circle cx="258" cy="70" r="10" fill="#b79fcd" stroke="#6b3e8a" stroke-width="1.6"/>
-      <circle cx="286" cy="90" r="10" fill="#b79fcd" stroke="#6b3e8a" stroke-width="1.6"/>
-      <circle cx="314" cy="70" r="10" fill="#b79fcd" stroke="#6b3e8a" stroke-width="1.6"/>
-      <circle cx="342" cy="90" r="10" fill="#b79fcd" stroke="#6b3e8a" stroke-width="1.6"/>
-      <text x="300" y="132" text-anchor="middle" class="emjT">② CROMATINA</text>
-      <text x="300" y="150" text-anchor="middle" class="emjS">ADN + histonas</text>
-      <text x="300" y="168" text-anchor="middle" class="emjM">el collar de perlas</text>
-
-      <line x1="386" y1="80" x2="428" y2="80" stroke="#6b3e8a" stroke-width="2.6" marker-end="url(#emjA)"/>
-      <text x="407" y="68" text-anchor="middle" class="emjM">se condensa</text>
-
-      <!-- cromosoma -->
-      <path d="M470,36 q-14,26 0,44 q-14,26 0,44" fill="none" stroke="#6b3e8a" stroke-width="12" stroke-linecap="round"/>
-      <path d="M498,36 q14,26 0,44 q14,26 0,44" fill="none" stroke="#4a2a61" stroke-width="12" stroke-linecap="round"/>
-      <circle cx="484" cy="80" r="9" fill="#d8a32a" stroke="#b3851a" stroke-width="1.6"/>
-      <text x="484" y="132" text-anchor="middle" class="emjT" fill="#4a2a61">③ CROMOSOMA</text>
-      <text x="484" y="150" text-anchor="middle" class="emjS">2 cromátidas hermanas</text>
-      <text x="484" y="168" text-anchor="middle" class="emjM">unidas por el centrómero ⬤</text>
-
-      <!-- nota -->
-      <rect x="546" y="30" width="160" height="140" rx="12" fill="rgba(107,62,138,.08)" stroke="#6b3e8a" stroke-width="1.4"/>
-      <text x="562" y="52" class="emjT" fill="#4a2a61">▣ ¿Por qué importa?</text>
-      <text x="562" y="74" class="emjS">Porque explica la frase</text>
-      <text x="562" y="90" class="emjS">de la <tspan font-weight="800">profase</tspan>:</text>
-      <text x="562" y="112" class="emjS" font-weight="800">«comienza la</text>
-      <text x="562" y="128" class="emjS" font-weight="800">condensación».</text>
-      <text x="562" y="152" class="emjM">El cromosoma visible es el</text>
-      <text x="562" y="166" class="emjM">último paso, no el primero.</text>
-    </svg>
-    <p class="illustration-caption"><b>La secuencia es siempre la misma:</b> ADN → cromatina → cromátide /
-    cromosoma visible. El material genético no cambia de identidad, cambia de <b>grado de
-    empaquetamiento</b>. Fijate que el «cromosoma» del dibujo tiene <b>dos brazos</b>: son las dos
-    <b><span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">cromátidas hermanas<b>?</b><i onclick="event.stopPropagation()"><b>Cromátidas hermanas</b>Las <b>dos copias idénticas</b> de un mismo cromosoma, generadas al duplicarse el ADN en la fase S y unidas por el <b>centrómero</b>. Son idénticas entre sí — por eso separarlas (anafase) no genera ninguna variabilidad. Distinto es el caso de las cromátidas <b>no hermanas</b>, que pertenecen a homólogos diferentes.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span></b> que se generaron en la fase S, unidas por el <b>centrómero</b> (el punto
-    dorado). Eso es lo que se va a separar en la anafase.</p>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b02_02_adn_cromatina_cromosoma.webp" alt="Niveles de empaquetamiento del ADN desde la doble hélice a los nucleosomas, la fibra de cromatina, los bucles sobre el andamio proteico y la cromátide, hasta el cromosoma duplicado con sus dos cromátides hermanas unidas por el centrómero y su cinetocoro." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>La misma molécula, cada vez más apretada.</b> Seguí la diagonal de izquierda a derecha: <b>doble hélice → nucleosomas → fibra → bucles sobre el andamio → cromátide → cromosoma duplicado</b>. Es una sola molécula de ADN plegándose, no seis cosas distintas. En <b>interfase</b> la cromatina está descondensada, y tiene que estarlo para que se pueda leer y replicar; sólo se condensa en cromosoma visible cuando llega la mitosis. Dos precisiones del pie que se preguntan siempre. Primera: <b>homólogos ≠ hermanas</b> — los homólogos son un par materno + paterno, las <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">cromátidas hermanas<b>?</b><i onclick="event.stopPropagation()"><b>Cromátidas hermanas</b>Las <b>dos copias idénticas</b> de un mismo cromosoma, generadas al duplicarse el ADN en la fase S y unidas por el <b>centrómero</b>. Son idénticas entre sí — por eso separarlas (anafase) no genera ninguna variabilidad. Distinto es el caso de las cromátidas <b>no hermanas</b>, que pertenecen a homólogos diferentes.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span> son las dos copias idénticas nacidas en la fase S. Segunda, y es la regla de oro: <b>un cromosoma duplicado sigue siendo UN cromosoma</b> con dos cromátides, porque <b>el número se cuenta por centrómeros</b>, nunca por cromátides.</figcaption></figure>
 
   <h3>4 · 5️⃣ Fases de la mitosis · P·P·M·A·T</h3>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las cinco fases de la mitosis: profase, prometafase, metafase, anafase y telofase">
-      <style>
-        .emfT{font-family:'Plus Jakarta Sans',sans-serif;font-size:11.5px;font-weight:800;fill:#15202e}
-        .emfS{font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;fill:#41506a}
-        .emfM{font-family:'JetBrains Mono',monospace;font-size:9px;fill:#7e8aa0}
-      </style>
-      <!-- PROFASE -->
-      <circle cx="76" cy="86" r="58" fill="#fbf7fd" stroke="#6b3e8a" stroke-width="2"/>
-      <circle cx="76" cy="86" r="40" fill="none" stroke="#b79fcd" stroke-width="2" stroke-dasharray="3 3"/>
-      <path d="M58,68 q10,10 -2,20" stroke="#6b3e8a" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M88,74 q12,10 0,22" stroke="#4a2a61" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M66,102 q14,6 22,-4" stroke="#6b3e8a" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <text x="76" y="162" text-anchor="middle" class="emfT" fill="#4a2a61">1 · PROFASE</text>
-      <text x="76" y="180" text-anchor="middle" class="emfS">Empieza la condensación</text>
-      <text x="76" y="194" text-anchor="middle" class="emfS">Desaparece el nucléolo</text>
-      <text x="76" y="208" text-anchor="middle" class="emfS">Se forma el huso</text>
-      <text x="76" y="228" text-anchor="middle" class="emfM">envoltura AÚN presente</text>
-
-      <!-- PROMETAFASE -->
-      <circle cx="216" cy="86" r="58" fill="#fbf7fd" stroke="#6b3e8a" stroke-width="2"/>
-      <circle cx="216" cy="86" r="40" fill="none" stroke="#b79fcd" stroke-width="2" stroke-dasharray="2 6"/>
-      <line x1="160" y1="86" x2="200" y2="76" stroke="#7e8aa0" stroke-width="1.4"/>
-      <line x1="272" y1="86" x2="232" y2="96" stroke="#7e8aa0" stroke-width="1.4"/>
-      <path d="M198,70 q10,10 -2,18" stroke="#6b3e8a" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M228,90 q12,10 0,20" stroke="#4a2a61" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <text x="216" y="162" text-anchor="middle" class="emfT" fill="#4a2a61">2 · PROMETAFASE</text>
-      <text x="216" y="180" text-anchor="middle" class="emfS" font-weight="800">Se ROMPE la envoltura</text>
-      <text x="216" y="194" text-anchor="middle" class="emfS">El huso se une a los</text>
-      <text x="216" y="208" text-anchor="middle" class="emfS" font-weight="800">cinetocoros</text>
-      <text x="216" y="228" text-anchor="middle" class="emfM">cromosomas libres</text>
-
-      <!-- METAFASE -->
-      <circle cx="356" cy="86" r="58" fill="#fbf7fd" stroke="#d8a32a" stroke-width="2.6"/>
-      <line x1="356" y1="34" x2="356" y2="138" stroke="#b3851a" stroke-width="1.8" stroke-dasharray="5 4"/>
-      <rect x="340" y="56" width="7" height="18" rx="3.5" fill="#6b3e8a"/><rect x="349" y="56" width="7" height="18" rx="3.5" fill="#4a2a61"/>
-      <rect x="360" y="78" width="7" height="18" rx="3.5" fill="#6b3e8a"/><rect x="369" y="78" width="7" height="18" rx="3.5" fill="#4a2a61"/>
-      <rect x="340" y="100" width="7" height="18" rx="3.5" fill="#6b3e8a"/><rect x="349" y="100" width="7" height="18" rx="3.5" fill="#4a2a61"/>
-      <text x="356" y="162" text-anchor="middle" class="emfT" fill="#8a6d16">3 · METAFASE</text>
-      <text x="356" y="180" text-anchor="middle" class="emfS">Alineados en el</text>
-      <text x="356" y="194" text-anchor="middle" class="emfS" font-weight="800">ECUADOR (placa)</text>
-      <text x="356" y="208" class="emfS" text-anchor="middle" font-weight="800">Máxima condensación</text>
-
-      <!-- ANAFASE -->
-      <circle cx="496" cy="86" r="58" fill="#fff3f1" stroke="#c0392b" stroke-width="2.6"/>
-      <rect x="452" y="56" width="7" height="18" rx="3.5" fill="#c0392b"/><rect x="452" y="98" width="7" height="18" rx="3.5" fill="#c0392b"/>
-      <rect x="534" y="56" width="7" height="18" rx="3.5" fill="#c0392b"/><rect x="534" y="98" width="7" height="18" rx="3.5" fill="#c0392b"/>
-      <path d="M474,86 L456,86 M518,86 L536,86" stroke="#8e2a1f" stroke-width="2" marker-end="url(#emjA)"/>
-      <text x="496" y="162" text-anchor="middle" class="emfT" fill="#8e2a1f">4 · ANAFASE</text>
-      <text x="496" y="180" text-anchor="middle" class="emfS" font-weight="800">SE SEPARAN LAS</text>
-      <text x="496" y="194" text-anchor="middle" class="emfS" font-weight="800">CROMÁTIDAS HERMANAS</text>
-      <text x="496" y="208" text-anchor="middle" class="emfS">Migran a polos opuestos</text>
-      <text x="496" y="228" text-anchor="middle" class="emfM">inicia la citocinesis</text>
-
-      <!-- TELOFASE -->
-      <circle cx="640" cy="66" r="34" fill="#f2f9f4" stroke="#2f7d4f" stroke-width="2"/>
-      <circle cx="640" cy="66" r="18" fill="none" stroke="#7fbf99" stroke-width="2"/>
-      <circle cx="640" cy="130" r="34" fill="#f2f9f4" stroke="#2f7d4f" stroke-width="2"/>
-      <circle cx="640" cy="130" r="18" fill="none" stroke="#7fbf99" stroke-width="2"/>
-      <text x="640" y="180" text-anchor="middle" class="emfT" fill="#1f5938">5 · TELOFASE</text>
-      <text x="640" y="198" text-anchor="middle" class="emfS">Reaparecen núcleos</text>
-      <text x="640" y="212" text-anchor="middle" class="emfS">y envolturas</text>
-      <text x="640" y="228" text-anchor="middle" class="emfM">termina la citocinesis</text>
-
-      <!-- resultado -->
-      <rect x="14" y="252" width="692" height="38" rx="10" fill="#4a2a61"/>
-      <text x="360" y="276" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif" font-size="12.5" font-weight="800" fill="#fff">🔑 RESULTADO: 2 células hijas DIPLOIDES y genéticamente IDÉNTICAS a la madre</text>
-    </svg>
-    <p class="illustration-caption"><b>Cinco viñetas, cinco eventos que no se repiten.</b> Cada fase tiene un
-    sello que solo le pertenece: la <b>profase</b> condensa, la <b>prometafase</b> rompe la envoltura, la
-    <b>metafase</b> alinea, la <b>anafase</b> separa las cromátidas y la <b>telofase</b> reconstruye los
-    núcleos. Si identificás el sello, identificás la fase — y eso es exactamente lo que preguntan.</p>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b02_03_mitosis_ppmat_citocinesis.webp" alt="Las cinco fases de la mitosis más la citocinesis: profase con condensación y formación del huso, prometafase con ruptura de la envoltura nuclear, metafase con alineación ecuatorial, anafase con separación de cromátides hermanas, telofase con reformación de dos núcleos y citocinesis con el anillo contráctil de actina y miosina." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Metafase alinea; anafase separa.</b> Ésa es la frase del pie y es la que resuelve la mitad de las preguntas del bloque. Recorré los seis paneles numerados y quedate con el verbo de cada uno: <b>profase</b> condensa y arma el huso, <b>prometafase</b> rompe la envoltura nuclear (por eso los microtúbulos recién ahí alcanzan los cromosomas), <b>metafase</b> los <b>alinea</b> en el ecuador, <b>anafase</b> <b>separa</b> las cromátides hermanas hacia los polos, <b>telofase</b> reforma los dos núcleos y la <b>citocinesis</b> parte el citoplasma. Los dos detalles ampliados son los que se piden con nombre propio: el <b>cinetocoro</b> es donde se enganchan los microtúbulos de polos opuestos, y el <b>anillo contráctil</b> de actina y miosina es lo que estrangula la membrana en la célula animal. Y el resultado no cambia nunca: <b>2 células hijas con el mismo número cromosómico</b>.</figcaption></figure>
 
   <div class="em-mnemo">
     <span class="em-mn-l">🧠 Macete de las fases</span>
@@ -1245,66 +915,7 @@
     la segunda separa las <b>cromátidas</b> dentro de cada una. Una sola división no alcanzaría.</p>
   </div>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Esquema general de la meiosis: de una célula diploide a cuatro células haploides en dos divisiones">
-      <style>
-        .emmT{font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;font-weight:800;fill:#15202e}
-        .emmS{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;fill:#41506a}
-        .emmM{font-family:'JetBrains Mono',monospace;font-size:9.5px;fill:#7e8aa0}
-      </style>
-      <defs><marker id="emmA" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#6b3e8a"/></marker></defs>
-      <!-- 2n -->
-      <circle cx="76" cy="86" r="44" fill="#eaf1f8" stroke="#13314f" stroke-width="2.4"/>
-      <rect x="60" y="70" width="7" height="24" rx="3.5" fill="#c0392b"/><rect x="70" y="70" width="7" height="24" rx="3.5" fill="#13314f"/>
-      <rect x="84" y="76" width="7" height="20" rx="3.5" fill="#c0392b"/><rect x="94" y="76" width="7" height="20" rx="3.5" fill="#13314f"/>
-      <text x="76" y="150" text-anchor="middle" class="emmT">CÉLULA 2n</text>
-      <text x="76" y="168" text-anchor="middle" class="emmS">46 cromosomas</text>
-      <text x="76" y="184" text-anchor="middle" class="emmM">duplica el ADN en S</text>
-
-      <line x1="126" y1="86" x2="182" y2="86" stroke="#6b3e8a" stroke-width="3" marker-end="url(#emmA)"/>
-      <text x="154" y="72" text-anchor="middle" class="emmT" fill="#4a2a61">MEIOSIS I</text>
-      <text x="154" y="106" text-anchor="middle" class="emmM" fill="#6b3e8a">reduccional</text>
-
-      <!-- 2 células n -->
-      <circle cx="240" cy="52" r="30" fill="#fbf7fd" stroke="#6b3e8a" stroke-width="2.2"/>
-      <rect x="234" y="42" width="6" height="20" rx="3" fill="#c0392b"/><rect x="242" y="42" width="6" height="20" rx="3" fill="#c0392b"/>
-      <circle cx="240" cy="122" r="30" fill="#fbf7fd" stroke="#6b3e8a" stroke-width="2.2"/>
-      <rect x="234" y="112" width="6" height="20" rx="3" fill="#13314f"/><rect x="242" y="112" width="6" height="20" rx="3" fill="#13314f"/>
-      <text x="240" y="172" text-anchor="middle" class="emmS" font-weight="800">Separa HOMÓLOGOS</text>
-      <text x="240" y="188" text-anchor="middle" class="emmM">2 células n · aún 2 cromátidas</text>
-
-      <line x1="278" y1="86" x2="334" y2="86" stroke="#6b3e8a" stroke-width="3" marker-end="url(#emmA)"/>
-      <text x="306" y="72" text-anchor="middle" class="emmT" fill="#4a2a61">MEIOSIS II</text>
-      <text x="306" y="106" text-anchor="middle" class="emmM" fill="#6b3e8a">ecuacional</text>
-
-      <!-- 4 células n -->
-      <g>
-        <circle cx="386" cy="36" r="23" fill="#f2f9f4" stroke="#2f7d4f" stroke-width="2"/><rect x="383" y="28" width="6" height="16" rx="3" fill="#c0392b"/>
-        <circle cx="386" cy="88" r="23" fill="#f2f9f4" stroke="#2f7d4f" stroke-width="2"/><rect x="383" y="80" width="6" height="16" rx="3" fill="#8e2a1f"/>
-        <circle cx="386" cy="140" r="23" fill="#f2f9f4" stroke="#2f7d4f" stroke-width="2"/><rect x="383" y="132" width="6" height="16" rx="3" fill="#13314f"/>
-        <circle cx="386" cy="186" r="14" fill="#f2f9f4" stroke="#2f7d4f" stroke-width="2"/><rect x="383" y="180" width="6" height="12" rx="3" fill="#2d5b86"/>
-      </g>
-      <text x="424" y="60" class="emmS">Separa <tspan font-weight="800">CROMÁTIDAS</tspan></text>
-      <text x="424" y="80" class="emmT" fill="#1f5938">4 células n</text>
-      <text x="424" y="100" class="emmS">genéticamente <tspan font-weight="800">DISTINTAS</tspan></text>
-
-      <!-- comparación -->
-      <rect x="530" y="20" width="176" height="76" rx="11" fill="rgba(107,62,138,.10)" stroke="#6b3e8a" stroke-width="1.6"/>
-      <text x="546" y="42" class="emmT" fill="#4a2a61">MEIOSIS I</text>
-      <text x="546" y="62" class="emmS">Separa <tspan font-weight="800">homólogos</tspan></text>
-      <text x="546" y="80" class="emmS">Reduccional · 2n → n</text>
-      <rect x="530" y="106" width="176" height="76" rx="11" fill="rgba(47,125,79,.10)" stroke="#2f7d4f" stroke-width="1.6"/>
-      <text x="546" y="128" class="emmT" fill="#1f5938">MEIOSIS II</text>
-      <text x="546" y="148" class="emmS">Separa <tspan font-weight="800">cromátidas</tspan></text>
-      <text x="546" y="166" class="emmS">Ecuacional · n → n</text>
-    </svg>
-    <p class="illustration-caption"><b>Dos divisiones, dos objetivos distintos.</b> Fijate en los colores de
-    los cromosomitas: en la célula 2n cada par tiene uno
-    <span style="color:#c0392b;font-weight:700">materno</span> y uno
-    <span style="color:#13314f;font-weight:700">paterno</span>. La <b>Meiosis I</b> los reparte —cada célula
-    hija se queda con uno de cada par—, y ahí es donde el número cae de 2n a n. La <b>Meiosis II</b> ya no
-    reduce nada: se limita a partir cada cromosoma en sus dos cromátidas, igual que haría una mitosis.</p>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b03_01_meiosis_i_ii_n_c.webp" alt="Esquema general de la meiosis desde una célula diploide con 2n y 4C tras la fase S, pasando por la meiosis I reduccional que separa homólogos y da dos células n con 2C, hasta la meiosis II ecuacional que separa cromátides hermanas y produce cuatro células haploides con n y 1C, sin replicación de ADN entre las dos divisiones." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Dos divisiones, una sola replicación.</b> Seguí la contabilidad de <b>n</b> y <b>C</b>, que es exactamente lo que se pregunta. Después de la fase S la célula es <b>2n, 4C</b>: sigue teniendo 46 cromosomas, pero cada uno con dos cromátides. La <b>meiosis I</b> separa <b>homólogos</b> y por eso es la <b>reduccional</b>: de ahí salen dos células <b>n, 2C</b> — ya haploides, pero con los cromosomas todavía duplicados. La <b>meiosis II</b> separa <b>cromátides hermanas</b> y es <b>ecuacional</b>: cuatro células <b>n, 1C</b>. El punto que más se cobra está en el medio de la figura: <b>entre la meiosis I y la II no hay fase S</b>, no se vuelve a replicar el ADN. Por eso una sola replicación alcanza para dos divisiones.</figcaption></figure>
 
   <div class="em-trap">
     <p>🪤 <b>El detalle que se cobra siempre.</b> <strong>Entre la Meiosis I y la Meiosis II NO hay
@@ -1319,88 +930,7 @@
   homólogos se aparean, intercambian material y se prepara la reducción a haploide. Se divide en
   <strong>cinco subetapas</strong>.</p>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las cinco subetapas de la profase I: leptonema, cigonema, paquinema, diplotena y diacinesis">
-      <style>
-        .empT{font-family:'Plus Jakarta Sans',sans-serif;font-size:11.5px;font-weight:800;fill:#15202e}
-        .empS{font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;fill:#41506a}
-        .empM{font-family:'JetBrains Mono',monospace;font-size:9px;fill:#7e8aa0}
-        .empW{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:800;fill:#fff}
-      </style>
-      <!-- 1 LEPTONEMA -->
-      <rect x="10" y="26" width="132" height="120" rx="12" fill="#fbf7fd" stroke="#6b3e8a" stroke-width="1.8"/>
-      <circle cx="28" cy="44" r="12" fill="#6b3e8a"/><text x="28" y="49" text-anchor="middle" class="empW" font-size="11">1</text>
-      <path d="M56,72 q16,-14 32,0 q16,14 32,0" fill="none" stroke="#c0392b" stroke-width="4" stroke-linecap="round"/>
-      <path d="M56,102 q16,-14 32,0 q16,14 32,0" fill="none" stroke="#13314f" stroke-width="4" stroke-linecap="round"/>
-      <text x="76" y="134" text-anchor="middle" class="empT" fill="#4a2a61">LEPTONEMA</text>
-      <text x="76" y="164" text-anchor="middle" class="empS">Los cromosomas</text>
-      <text x="76" y="178" text-anchor="middle" class="empS" font-weight="800">comienzan a</text>
-      <text x="76" y="192" text-anchor="middle" class="empS" font-weight="800">condensarse</text>
-      <text x="76" y="212" text-anchor="middle" class="empM">ya con 2 cromátidas</text>
-
-      <!-- 2 CIGONEMA -->
-      <rect x="152" y="26" width="132" height="120" rx="12" fill="#fbf7fd" stroke="#6b3e8a" stroke-width="1.8"/>
-      <circle cx="170" cy="44" r="12" fill="#6b3e8a"/><text x="170" y="49" text-anchor="middle" class="empW" font-size="11">2</text>
-      <rect x="196" y="70" width="8" height="46" rx="4" fill="#c0392b"/><rect x="208" y="70" width="8" height="46" rx="4" fill="#c0392b"/>
-      <rect x="224" y="70" width="8" height="46" rx="4" fill="#13314f"/><rect x="236" y="70" width="8" height="46" rx="4" fill="#13314f"/>
-      <path d="M216,74 L224,74 M216,86 L224,86 M216,98 L224,98 M216,110 L224,110" stroke="#d8a32a" stroke-width="2.4"/>
-      <text x="218" y="134" text-anchor="middle" class="empT" fill="#4a2a61">CIGONEMA</text>
-      <text x="218" y="164" text-anchor="middle" class="empS" font-weight="800">SINAPSIS: los homólogos</text>
-      <text x="218" y="178" text-anchor="middle" class="empS">se aparean punto por punto</text>
-      <text x="218" y="196" text-anchor="middle" class="empS" fill="#8a6d16" font-weight="800">→ se forma la TÉTRADA</text>
-      <text x="218" y="212" text-anchor="middle" class="empM">2 homólogos = 4 cromátidas</text>
-
-      <!-- 3 PAQUINEMA -->
-      <rect x="294" y="26" width="132" height="120" rx="12" fill="rgba(216,163,42,.16)" stroke="#b3851a" stroke-width="2.4"/>
-      <circle cx="312" cy="44" r="12" fill="#b3851a"/><text x="312" y="49" text-anchor="middle" class="empW" font-size="11">3</text>
-      <rect x="338" y="70" width="8" height="46" rx="4" fill="#c0392b"/>
-      <path d="M350,70 L350,88 L378,88 L378,116" stroke="#c0392b" stroke-width="8" fill="none" stroke-linecap="round"/>
-      <path d="M366,70 L366,88 L362,88 L362,116" stroke="#13314f" stroke-width="8" fill="none" stroke-linecap="round"/>
-      <rect x="378" y="70" width="8" height="18" rx="4" fill="#13314f"/>
-      <circle cx="364" cy="88" r="7" fill="none" stroke="#8a6d16" stroke-width="2.4"/>
-      <text x="360" y="134" text-anchor="middle" class="empT" fill="#8a6d16">PAQUINEMA</text>
-      <text x="360" y="164" text-anchor="middle" class="empS" font-weight="800">CROSSING-OVER</text>
-      <text x="360" y="178" text-anchor="middle" class="empS">(recombinación)</text>
-      <text x="360" y="196" text-anchor="middle" class="empS" fill="#8a6d16" font-weight="800">→ AQUÍ NACE LA</text>
-      <text x="360" y="210" text-anchor="middle" class="empS" fill="#8a6d16" font-weight="800">VARIABILIDAD GENÉTICA</text>
-
-      <!-- 4 DIPLOTENA -->
-      <rect x="436" y="26" width="132" height="120" rx="12" fill="#fbf7fd" stroke="#6b3e8a" stroke-width="1.8"/>
-      <circle cx="454" cy="44" r="12" fill="#6b3e8a"/><text x="454" y="49" text-anchor="middle" class="empW" font-size="11">4</text>
-      <path d="M486,70 q-8,22 0,46" stroke="#c0392b" stroke-width="7" fill="none" stroke-linecap="round"/>
-      <path d="M506,70 q8,22 0,46" stroke="#13314f" stroke-width="7" fill="none" stroke-linecap="round"/>
-      <circle cx="496" cy="93" r="9" fill="none" stroke="#d8a32a" stroke-width="3"/>
-      <text x="530" y="97" class="empM" fill="#8a6d16">quiasma</text>
-      <text x="502" y="134" text-anchor="middle" class="empT" fill="#4a2a61">DIPLOTENA</text>
-      <text x="502" y="164" text-anchor="middle" class="empS">Termina la recombinación;</text>
-      <text x="502" y="178" text-anchor="middle" class="empS">los homólogos empiezan a</text>
-      <text x="502" y="192" text-anchor="middle" class="empS">separarse pero quedan unidos</text>
-      <text x="502" y="206" text-anchor="middle" class="empS" font-weight="800">en los QUIASMAS</text>
-
-      <!-- 5 DIACINESIS -->
-      <rect x="578" y="26" width="132" height="120" rx="12" fill="#fbf7fd" stroke="#6b3e8a" stroke-width="1.8"/>
-      <circle cx="596" cy="44" r="12" fill="#6b3e8a"/><text x="596" y="49" text-anchor="middle" class="empW" font-size="11">5</text>
-      <rect x="626" y="76" width="10" height="34" rx="5" fill="#c0392b"/><rect x="640" y="76" width="10" height="34" rx="5" fill="#13314f"/>
-      <rect x="656" y="76" width="10" height="34" rx="5" fill="#c0392b"/><rect x="670" y="76" width="10" height="34" rx="5" fill="#13314f"/>
-      <text x="644" y="134" text-anchor="middle" class="empT" fill="#4a2a61">DIACINESIS</text>
-      <text x="644" y="164" text-anchor="middle" class="empS" font-weight="800">Máxima condensación</text>
-      <text x="644" y="178" text-anchor="middle" class="empS">Desaparece el nucléolo,</text>
-      <text x="644" y="192" text-anchor="middle" class="empS">se desintegra la membrana</text>
-      <text x="644" y="206" text-anchor="middle" class="empS">y se forma el huso</text>
-      <text x="644" y="224" text-anchor="middle" class="empM">→ entra en Metafase I</text>
-
-      <rect x="10" y="248" width="700" height="40" rx="10" fill="#4a2a61"/>
-      <text x="360" y="266" text-anchor="middle" class="empW">🧠 LE · CI · PA · DI · DI</text>
-      <text x="360" y="282" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif" font-size="10.5" fill="#e6d9f0">Leptonema · Cigonema · Paquinema · Diplotena · Diacinesis</text>
-    </svg>
-    <p class="illustration-caption"><b>Seguí los colores para no perderte.</b> Cada cromosoma
-    <span style="color:#c0392b;font-weight:700">rojo</span> tiene su homólogo
-    <span style="color:#13314f;font-weight:700">azul</span>. En el <b>cigonema</b> se juntan y forman la
-    <b><span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">tétrada<b>?</b><i onclick="event.stopPropagation()"><b>Tétrada (bivalente)</b>La estructura formada por <b>dos cromosomas homólogos apareados</b>. Como cada homólogo ya venía con 2 cromátidas, el conjunto reúne <b>4 cromátidas</b> — de ahí el nombre «tétrada». También se la llama <b>bivalente</b>, porque son dos cromosomas.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span></b> (cuatro barritas: dos cromátidas de cada homólogo). En el <b>paquinema</b> mirá el cambio
-    de color a media altura: eso es el <b>crossing-over</b> — un trozo rojo terminó en el azul y viceversa. En
-    la <b>diplotena</b> se separan, pero el <b>quiasma</b> dorado los mantiene enganchados justo donde
-    ocurrió el intercambio.</p>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b03_02_profase_i_sinapsis_crossing_over.webp" alt="Las cinco subetapas de la profase I —leptonema, cigonema, paquinema, diplonema y diacinesis— con el complejo sinaptonémico que alinea los homólogos formando un bivalente de cuatro cromátides, el crossing-over como intercambio recíproco entre cromátides no hermanas y los quiasmas visibles que mantienen unidos a los homólogos." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Cinco estados, y el intercambio ocurre en el tercero.</b> El mnemónico está en la propia figura: <b>LE·CI·PA·DI·DI</b>. Y el dato duro también: <b>el crossing-over ocurre en paquinema</b>, ni antes ni después. Antes hace falta que los homólogos estén apareados, y eso lo hace el <b>complejo sinaptonémico</b> en cigonema, alineándolos punto a punto y formando un <b>bivalente</b> (o <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">tétrada<b>?</b><i onclick="event.stopPropagation()"><b>Tétrada (bivalente)</b>La estructura formada por <b>dos cromosomas homólogos apareados</b>. Como cada homólogo ya venía con 2 cromátidas, el conjunto reúne <b>4 cromátidas</b> — de ahí el nombre «tétrada». También se la llama <b>bivalente</b>, porque son dos cromosomas.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span>) de <b>cuatro cromátides</b>. En <b>diplonema</b> la sinapsis se deshace pero los homólogos quedan enganchados en los <b>quiasmas</b>, que son la prueba visible de que hubo intercambio. La otra precisión del pie es la que más se falla: participan <b>cromátides NO hermanas de cromosomas homólogos</b> — si el intercambio fuera entre hermanas, sería intercambiar copias idénticas y no generaría ninguna diversidad.</figcaption></figure>
 
   <div class="em-trap">
     <p>🪤 <b>Dos datos que se preguntan juntos — y se confunden entre sí.</b></p>
@@ -1484,7 +1014,7 @@
       <tr><td>Naturaleza</td><td><b>Ecuacional</b></td><td><b>Reduccional</b></td></tr>
       <tr><td>Variabilidad genética</td><td><b>No</b> — hijas idénticas</td><td><b>Sí</b> — crossing-over + distribución al azar</td></tr>
     </table>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b03_03_mitosis_vs_meiosis.webp" alt="Comparación entre mitosis en células somáticas, con una sola división que separa cromátides hermanas y produce dos células diploides genéticamente equivalentes, y meiosis en células germinales, con dos divisiones sucesivas sin replicación intermedia que produce cuatro productos haploides genéticamente diferentes." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Mismo ADN de partida, resultados opuestos.</b> Leé las dos columnas en paralelo y comparalas por los cuadros de <b>resultado</b>, que es donde está la diferencia. La <b>mitosis</b> hace <b>una</b> división, separa <b>cromátides hermanas</b> y entrega <b>2 células diploides genéticamente equivalentes</b>: sirve para crecer y reparar, y por eso no le conviene generar variación. La <b>meiosis</b> hace <b>dos</b> divisiones — la I separa homólogos, la II separa hermanas — y entrega <b>4 productos haploides genéticamente distintos</b>: sirve para hacer gametos, y ahí la variación es el objetivo. El pie resume lo exclusivo de la meiosis y conviene poder recitarlo: <b>sólo ella tiene sinapsis, crossing-over y segregación independiente</b>. Ésos son los tres mecanismos que generan la diversidad.</figcaption></figure>
 
   <div class="em-postit green">
     <h5>✚ Resultado de las divisiones meióticas (formulación de Langman)</h5>
@@ -1735,79 +1265,9 @@
   <h3>2 · Espermatogénesis paso a paso</h3>
   <p>Ocurre en las paredes de los <b>túbulos seminíferos</b> del testículo, <b>desde la pubertad y de forma
   continua toda la vida</b>. Empieza pegada a la pared (afuera) y termina en el centro del túbulo (la luz),
-  desde donde el espermatozoide sale.</p>
+  desde donde el espermatozoide sale.</p><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b04_01_tubulo_seminifero_base_luz.webp" alt="Corte de túbulo seminífero con las espermatogonias diploides en la base, los espermatocitos primarios y secundarios, las espermátidas redondas y alargadas y los espermatozoides liberados hacia la luz, más la célula de Sertoli que forma la barrera hematotesticular y las células de Leydig en el intersticio." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>La maduración avanza de la base hacia la luz.</b> Ésa es la clave espacial y está escrita en el recuadro de la derecha: <b>basal = espermatogonias · adluminal = meiosis y maduración · luz = espermatozoides</b>. Si en una lámina ubicás la membrana basal, ya sabés leer todo el resto por posición. La <b>célula de Sertoli</b> atraviesa todo el epitelio de base a luz y sus uniones estrechas forman la <b>barrera hematotesticular</b>, que divide el túbulo en esos dos compartimentos y protege a las células meióticas del sistema inmune. Retené la otra dupla que siempre se pregunta: <b>Sertoli está DENTRO del túbulo, responde a FSH y secreta inhibina</b>; <b>Leydig está FUERA, en el intersticio, responde a LH y produce testosterona</b>.</figcaption></figure>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Linaje de la espermatogénesis: una espermatogonia da origen, tras mitosis y dos divisiones meióticas, a cuatro espermatozoides haploides">
-      <style>
-        .e4T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .e4S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-        .e4n{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#fff}
-      </style>
-      <rect x="0" y="0" width="720" height="430" fill="#f7fafc" rx="14"/>
-      <text x="360" y="30" text-anchor="middle" class="e4T" font-size="15">Espermatogénesis · 1 espermatogonia → 4 espermatozoides</text>
-
-      <!-- espermatogonia -->
-      <circle cx="120" cy="90" r="26" fill="#4c8bf5"/><text x="120" y="95" text-anchor="middle" class="e4n" font-size="13">2n</text>
-      <text x="120" y="140" text-anchor="middle" class="e4T" font-size="12">Espermatogonia</text>
-      <text x="120" y="156" text-anchor="middle" class="e4S" font-size="11">diploide · 46</text>
-
-      <!-- mitosis arrow -->
-      <line x1="150" y1="90" x2="230" y2="90" stroke="#94a3b8" stroke-width="2.5"/><polygon points="230,90 222,85 222,95" fill="#94a3b8"/>
-      <text x="190" y="80" text-anchor="middle" class="e4S" font-size="10.5">mitosis</text>
-
-      <!-- espermatocito primario -->
-      <circle cx="270" cy="90" r="28" fill="#3f7ae0"/><text x="270" y="95" text-anchor="middle" class="e4n" font-size="13">2n</text>
-      <text x="270" y="142" text-anchor="middle" class="e4T" font-size="12">Espermatocito 1º</text>
-      <text x="270" y="158" text-anchor="middle" class="e4S" font-size="11">46 · entra en meiosis I</text>
-
-      <!-- meiosis I -->
-      <line x1="300" y1="90" x2="380" y2="70" stroke="#e07a3f" stroke-width="2.5"/>
-      <line x1="300" y1="90" x2="380" y2="110" stroke="#e07a3f" stroke-width="2.5"/>
-      <text x="345" y="55" text-anchor="middle" class="e4S" font-size="10.5" fill="#c25e1f">meiosis I</text>
-
-      <!-- 2 espermatocitos secundarios -->
-      <circle cx="410" cy="70" r="20" fill="#f0952f"/><text x="410" y="75" text-anchor="middle" class="e4n" font-size="11">n</text>
-      <circle cx="410" cy="110" r="20" fill="#f0952f"/><text x="410" y="115" text-anchor="middle" class="e4n" font-size="11">n</text>
-      <text x="410" y="150" text-anchor="middle" class="e4T" font-size="11.5">2 Espermatocitos 2º</text>
-      <text x="410" y="165" text-anchor="middle" class="e4S" font-size="10.5">23 c/u (haploides)</text>
-
-      <!-- meiosis II -->
-      <line x1="432" y1="66" x2="500" y2="52" stroke="#7c3fe0" stroke-width="2"/>
-      <line x1="432" y1="74" x2="500" y2="88" stroke="#7c3fe0" stroke-width="2"/>
-      <line x1="432" y1="106" x2="500" y2="122" stroke="#7c3fe0" stroke-width="2"/>
-      <line x1="432" y1="114" x2="500" y2="158" stroke="#7c3fe0" stroke-width="2"/>
-      <text x="470" y="40" text-anchor="middle" class="e4S" font-size="10.5" fill="#6b2fc9">meiosis II</text>
-
-      <!-- 4 espermatidas -->
-      <circle cx="520" cy="52" r="15" fill="#a06bea"/><circle cx="520" cy="88" r="15" fill="#a06bea"/>
-      <circle cx="520" cy="122" r="15" fill="#a06bea"/><circle cx="520" cy="158" r="15" fill="#a06bea"/>
-      <text x="520" y="188" text-anchor="middle" class="e4T" font-size="11.5">4 Espermátidas</text>
-      <text x="520" y="203" text-anchor="middle" class="e4S" font-size="10.5">23 c/u</text>
-
-      <!-- espermiogenesis -->
-      <line x1="540" y1="105" x2="600" y2="105" stroke="#16a34a" stroke-width="2.5"/><polygon points="600,105 592,100 592,110" fill="#16a34a"/>
-      <text x="570" y="95" text-anchor="middle" class="e4S" font-size="10" fill="#15803d">espermio-</text>
-      <text x="570" y="118" text-anchor="middle" class="e4S" font-size="10" fill="#15803d">génesis</text>
-
-      <!-- 4 espermatozoides -->
-      <g transform="translate(640,52)"><ellipse cx="0" cy="0" rx="10" ry="6" fill="#16a34a"/><path d="M8 0 q14 -6 24 0 q-14 6 -24 0" fill="none" stroke="#16a34a" stroke-width="2"/></g>
-      <g transform="translate(640,88)"><ellipse cx="0" cy="0" rx="10" ry="6" fill="#16a34a"/><path d="M8 0 q14 -6 24 0 q-14 6 -24 0" fill="none" stroke="#16a34a" stroke-width="2"/></g>
-      <g transform="translate(640,122)"><ellipse cx="0" cy="0" rx="10" ry="6" fill="#16a34a"/><path d="M8 0 q14 -6 24 0 q-14 6 -24 0" fill="none" stroke="#16a34a" stroke-width="2"/></g>
-      <g transform="translate(640,158)"><ellipse cx="0" cy="0" rx="10" ry="6" fill="#16a34a"/><path d="M8 0 q14 -6 24 0 q-14 6 -24 0" fill="none" stroke="#16a34a" stroke-width="2"/></g>
-      <text x="655" y="188" text-anchor="middle" class="e4T" font-size="11.5">4 Espermatozoides</text>
-
-      <!-- resumen barra inferior -->
-      <rect x="40" y="250" width="640" height="150" rx="12" fill="#eef4ff" stroke="#c9dcff"/>
-      <text x="60" y="278" class="e4T" font-size="13" fill="#274b8a">La cuenta que cae en examen</text>
-      <text x="60" y="305" class="e4S" font-size="12">• 1 espermatogonia → <tspan font-weight="800" fill="#15202e">4 espermatozoides</tspan> viables (rendimiento 1 : 4).</text>
-      <text x="60" y="330" class="e4S" font-size="12">• Meiosis <tspan font-weight="800">I</tspan> = reduccional (46 → 23). Meiosis <tspan font-weight="800">II</tspan> = ecuacional (separa cromátidas).</text>
-      <text x="60" y="355" class="e4S" font-size="12">• El espermatocito <tspan font-weight="800">1º</tspan> es la última célula diploide de la serie.</text>
-      <text x="60" y="380" class="e4S" font-size="12">• Espermiogénesis = <tspan font-weight="800">maduración sin división</tspan>: la espermátida se transforma en espermatozoide.</text>
-    </svg>
-    <div class="illustration-caption">Linaje completo. Fijate que las <b>divisiones</b> (mitosis + 2 meiosis) terminan en las 4 espermátidas; después la
-    <b>espermiogénesis</b> solo remodela, no divide.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b04_02_linaje_espermatogenico_1_a_4.webp" alt="Linaje espermatogénico desde una espermatogonia diploide que se divide por mitosis, al espermatocito primario 2n 4C que entra en meiosis I, dos espermatocitos secundarios n 2C, cuatro espermátidas n 1C y cuatro espermatozoides funcionales tras la espermiogénesis." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Uno da cuatro, y todos sirven.</b> Recorré la fila de rótulos de arriba, que trae la contabilidad completa: <b>espermatogonia 2n</b> → <b>espermatocito 1.º (2n, 4C)</b> → <b>2 espermatocitos 2.º (n, 2C)</b> → <b>4 espermátidas (n, 1C)</b> → <b>4 espermatozoides</b>. Dos datos del pie que caen textualmente. Primero: la <b>última célula diploide del linaje es el espermatocito primario</b> — a partir de la meiosis I ya todo es haploide. Segundo: la <b>espermiogénesis no divide</b>, sólo remodela; por eso de cuatro espermátidas salen cuatro espermatozoides y no ocho. Compará esto con la ovogénesis del bloque 05 y vas a ver la diferencia entera de la materia: acá el reparto es <b>simétrico</b> y rinde cuatro gametos funcionales.</figcaption></figure>
 
   <h3>3 · Espermiogénesis: de célula redonda a «renacuajo»</h3>
   <p>La espermátida es una célula redonda y todavía no puede nadar. La <b>espermiogénesis</b> la convierte en un
@@ -1817,7 +1277,7 @@
     <div class="em-step"><b>② Flagelo (cola)</b><br><small>Se forma a partir del <b>centríolo</b>. Es el motor que impulsa al espermatozoide.</small></div>
     <div class="em-step"><b>③ Pieza intermedia</b><br><small>Anillo de <b>mitocondrias</b> en el cuello: la «batería» que da energía a la cola.</small></div>
     <div class="em-step"><b>④ Pierde citoplasma</b><br><small>Se descarta el exceso (cuerpo residual) para quedar ligero y veloz.</small></div>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b04_03_espermiogenesis_sertoli_leydig.webp" alt="Espermiogénesis paso a paso desde la espermátida redonda al espermatozoide, con la formación del acrosoma a partir del aparato de Golgi, la condensación del núcleo, la formación del flagelo desde el centríolo, la concentración de mitocondrias en la pieza intermedia y la pérdida del exceso de citoplasma, más la comparación entre células de Sertoli y de Leydig." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Cambio de forma, no división.</b> El recuadro rojo del pie lo dice sin rodeos: <b>la espermiogénesis NO es una división celular</b> — la célula ya es haploide y lo único que hace es remodelarse. Seguí la fila de arriba y asociá cada estructura con su origen, que es la tríada que se pregunta: <b>acrosoma ← aparato de Golgi</b> (es una gran vesícula con enzimas hidrolíticas), <b>flagelo ← centríolo</b>, y <b>pieza intermedia ← mitocondrias</b> concentradas en espiral, que son las que dan la energía para nadar. Al final se descarta el exceso de citoplasma como cuerpo residual. Los dos paneles de abajo cierran con la dupla hormonal: <b>Sertoli</b> dentro del túbulo, sostén y barrera, responde a <b>FSH</b>; <b>Leydig</b> en el intersticio junto a capilares, responde a <b>LH</b> y produce <b>testosterona</b>.</figcaption></figure>
 
   <div class="em-postit green">
     <h5>🏭 Las dos células de apoyo del testículo (¡clásico de examen!)</h5>
@@ -1972,57 +1432,7 @@
   <p>Todo arranca en la vida <b>fetal</b>: las ovogonias se multiplican y empiezan la meiosis, quedando como
   <b>ovocitos primarios</b>. Pero entonces la meiosis se <b>frena</b>. El óvulo esperará años, congelado a mitad de camino.</p>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cronología de la ovogénesis con las dos detenciones de la meiosis: profase I hasta la ovulación y metafase II hasta la fecundación">
-      <style>
-        .o5T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .o5S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-        .o5n{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#fff}
-      </style>
-      <rect x="0" y="0" width="720" height="400" fill="#fff7fb" rx="14"/>
-      <text x="360" y="30" text-anchor="middle" class="o5T" font-size="15">Ovogénesis · las dos detenciones de la meiosis</text>
-
-      <!-- linea de tiempo -->
-      <line x1="60" y1="330" x2="680" y2="330" stroke="#d6a0bf" stroke-width="3"/>
-      <text x="120" y="360" text-anchor="middle" class="o5S" font-size="11">Vida fetal</text>
-      <text x="330" y="360" text-anchor="middle" class="o5S" font-size="11">Nacimiento → pubertad</text>
-      <text x="500" y="360" text-anchor="middle" class="o5S" font-size="11">Cada ovulación</text>
-      <text x="640" y="360" text-anchor="middle" class="o5S" font-size="11">Fecundación</text>
-
-      <!-- ovogonia -->
-      <circle cx="120" cy="110" r="24" fill="#e05a9c"/><text x="120" y="115" text-anchor="middle" class="o5n" font-size="12">2n</text>
-      <text x="120" y="152" text-anchor="middle" class="o5T" font-size="11.5">Ovogonia</text>
-      <text x="120" y="168" text-anchor="middle" class="o5S" font-size="10.5">se multiplica (mitosis)</text>
-      <line x1="120" y1="134" x2="120" y2="315" stroke="#e0b0cd" stroke-width="1.5" stroke-dasharray="4 4"/>
-
-      <!-- ovocito 1º detenido -->
-      <circle cx="300" cy="110" r="27" fill="#c73f86"/><text x="300" y="115" text-anchor="middle" class="o5n" font-size="12">2n</text>
-      <text x="300" y="154" text-anchor="middle" class="o5T" font-size="11.5">Ovocito 1º</text>
-      <rect x="232" y="196" width="136" height="42" rx="8" fill="#ffe1ef" stroke="#e05a9c"/>
-      <text x="300" y="214" text-anchor="middle" class="o5S" font-size="10.5" fill="#a02468">DETENCIÓN 1</text>
-      <text x="300" y="230" text-anchor="middle" class="o5S" font-size="10">Profase I · hasta ovular</text>
-      <line x1="300" y1="137" x2="300" y2="315" stroke="#e0b0cd" stroke-width="1.5" stroke-dasharray="4 4"/>
-
-      <!-- ovulacion: meiosis I termina -->
-      <circle cx="500" cy="100" r="24" fill="#f0952f"/><text x="500" y="105" text-anchor="middle" class="o5n" font-size="11">n</text>
-      <circle cx="500" cy="150" r="9" fill="#f8c68a"/>
-      <text x="500" y="66" text-anchor="middle" class="o5T" font-size="10.5">Ovocito 2º (grande)</text>
-      <text x="500" y="182" text-anchor="middle" class="o5S" font-size="9.5">+ 1er cuerpo polar (chico)</text>
-      <rect x="432" y="196" width="150" height="42" rx="8" fill="#fff0dd" stroke="#f0952f"/>
-      <text x="507" y="214" text-anchor="middle" class="o5S" font-size="10.5" fill="#b46410">DETENCIÓN 2</text>
-      <text x="507" y="230" text-anchor="middle" class="o5S" font-size="10">Metafase II · hasta fecundar</text>
-      <line x1="500" y1="124" x2="500" y2="315" stroke="#e0b0cd" stroke-width="1.5" stroke-dasharray="4 4"/>
-
-      <!-- fecundacion: meiosis II termina -->
-      <circle cx="640" cy="100" r="22" fill="#16a34a"/><text x="640" y="105" text-anchor="middle" class="o5n" font-size="11">n</text>
-      <circle cx="640" cy="146" r="8" fill="#8fd6a8"/>
-      <text x="640" y="176" text-anchor="middle" class="o5T" font-size="11">Óvulo maduro</text>
-      <text x="640" y="192" text-anchor="middle" class="o5S" font-size="10">+ 2º cuerpo polar</text>
-      <line x1="640" y1="122" x2="640" y2="315" stroke="#e0b0cd" stroke-width="1.5" stroke-dasharray="4 4"/>
-    </svg>
-    <div class="illustration-caption">La meiosis femenina se detiene <b>dos veces</b>: en <b>profase I</b> (desde el feto hasta que ese óvulo ovula) y en
-    <b>metafase II</b> (hasta que un espermatozoide lo fecunda). Si no hay fecundación, <b>nunca</b> termina la meiosis II.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b05_01_cronologia_detenciones_meioticas.webp" alt="Cronología de la ovogénesis con sus dos detenciones meióticas: la ovogonia entra en meiosis durante la vida fetal y queda detenida en profase I, la detención puede durar décadas hasta la pubertad, en la ovulación se libera el ovocito secundario detenido en metafase II, y sólo completa la meiosis II si es fecundado." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Dos pausas, y una sola línea de tiempo.</b> Leé la franja de izquierda a derecha como una biografía. En la <b>vida fetal</b> la ovogonia entra en meiosis y se frena: <b>1.ª detención, en profase I</b>. Esa pausa <b>puede durar décadas</b> — desde antes de nacer hasta la ovulación de ese folículo. En la <b>pubertad</b>, cada ciclo, un ovocito reanuda la meiosis I y se frena otra vez: <b>2.ª detención, en metafase II</b>. Y ahí queda hasta que entre un espermatozoide. Los dos datos del pie son los que más se preguntan: <b>ovocito primario = profase I · ovocito secundario = metafase II</b>; y sobre todo, <b>lo que se ovula es el ovocito secundario, no el óvulo definitivo</b>. El «óvulo» sólo existe después de la fecundación, cuando se completa la meiosis II.</figcaption></figure>
 
   <div class="em-postit green">
     <h5>➗ ¿Por qué de la mujer sale UN solo óvulo y no cuatro?</h5>
@@ -2039,7 +1449,7 @@
     <div class="em-step"><b>&gt;400.000</b><br><small>en la <b>pubertad</b> (cifra de la cátedra)</small></div>
     <div class="em-step"><b>≈ 400</b><br><small>llegan a <b>ovular</b> en toda la vida</small></div>
   </div>
-  <p class="em-simple" style="margin-top:6px">La cifra baja siempre por <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">atresia<b>?</b><i onclick="event.stopPropagation()">Degeneración natural y programada de los folículos que no llegan a ovular. La gran mayoría se pierde por atresia, no por ovulación.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span>. Es un stock <b>fijo</b>: no se fabrican óvulos nuevos, por eso la reserva se agota y llega la menopausia.</p>
+  <p class="em-simple" style="margin-top:6px">La cifra baja siempre por <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">atresia<b>?</b><i onclick="event.stopPropagation()">Degeneración natural y programada de los folículos que no llegan a ovular. La gran mayoría se pierde por atresia, no por ovulación.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span>. Es un stock <b>fijo</b>: no se fabrican óvulos nuevos, por eso la reserva se agota y llega la menopausia.</p><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b05_02_division_desigual_reserva_ovarica.webp" alt="Divisiones asimétricas de la ovogénesis en las que el ovocito secundario recibe casi todo el citoplasma, los orgánulos y las reservas mientras los cuerpos polares descartan los cromosomas sobrantes y degeneran, más la reserva ovárica y la atresia folicular." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>El citoplasma se queda en una sola célula.</b> Ésa es toda la lógica del reparto desigual, y tiene una razón: el cigoto va a vivir de las reservas maternas durante los primeros días, así que no conviene repartirlas en cuatro. Por eso el <b>ovocito secundario</b> se queda con casi todo el citoplasma, los orgánulos y el ARN, y los <b>cuerpos polares</b> se llevan sólo los cromosomas sobrantes y normalmente degeneran. Resultado: <b>un único gameto funcional</b>. Dos precisiones honestas de la figura. El pie aclara que el <b>número final de cuerpos polares puede variar</b> según el primero se divida o no — por eso no siempre son tres. Y el panel de la derecha corrige la idea intuitiva sobre la reserva ovárica: <b>la mayoría de los folículos se pierde por atresia, no por ovulación</b>.</figcaption></figure>
 
   <h3>3 · Comparación directa (lo que más confunde)</h3>
   <div class="em-scroll">
@@ -2051,7 +1461,7 @@
       <tr><td style="padding:6px 8px"><b>Detenciones</b></td><td style="padding:6px 8px">Ninguna</td><td style="padding:6px 8px">Profase I y metafase II</td></tr>
       <tr><td style="padding:6px 8px"><b>Reparto de citoplasma</b></td><td style="padding:6px 8px">Igual</td><td style="padding:6px 8px">Desigual (guarda reservas en el óvulo)</td></tr>
     </table>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b05_03_espermatogenesis_vs_ovogenesis.webp" alt="Comparación entre espermatogénesis y ovogénesis en inicio y ritmo, reparto y resultado, y tiempo y reserva: la espermatogénesis empieza en la pubertad, es continua, simétrica y rinde cuatro gametos funcionales; la ovogénesis empieza en la vida fetal, es cíclica, asimétrica, tiene dos detenciones y rinde un gameto más cuerpos polares." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>La misma meiosis con dos economías distintas.</b> Compará las dos mitades por los tres recuadros del pie, que son los tres ejes que se preguntan. <b>Inicio y ritmo</b>: el varón arranca en la <b>pubertad</b> y produce de forma <b>continua</b>, sin detenciones prolongadas; la mujer arranca en la <b>vida fetal</b> y produce de forma <b>cíclica</b>. <b>Reparto y resultado</b>: <b>simétrico → 4 gametos funcionales</b> frente a <b>asimétrico → 1 gameto + cuerpos polares</b>. <b>Tiempo y reserva</b>: producción indefinida frente a <b>dos detenciones y reserva finita</b>. Y el pie sintetiza en una línea lo que hay que poder decir: <b>varón 1 → 4 · mujer 1 → 1 funcional, y la diferencia está en la citocinesis</b>, no en la meiosis, que es la misma.</figcaption></figure>
 
   <div class="key-box exam">
     <p>★ <strong>Dato estrella.</strong> El <strong>ovocito primario</strong> queda detenido en <strong>profase I</strong>
@@ -2223,54 +1633,9 @@
     <div class="em-step"><b>Estrógeno</b><br><small>Manda en la 1ª mitad. Hace <b>proliferar</b> (crecer) el endometrio.</small></div>
     <div class="em-step"><b>LH</b> · luteinizante<br><small>Su <b>pico</b> el día 14 dispara la <b>ovulación</b> y forma el <b>cuerpo lúteo</b>.</small></div>
     <div class="em-step"><b>Progesterona</b><br><small>Manda en la 2ª mitad. La hace el <b>cuerpo lúteo</b> y <b>prepara el endometrio</b> para la implantación.</small></div>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b06_01_eje_hormonal_feedback.webp" alt="Eje hormonal hipotálamo-hipófisis-ovario con GnRH pulsátil, FSH y LH de la adenohipófisis, y estrógeno y progesterona del ovario, mostrando la retroalimentación negativa habitual y la retroalimentación positiva del estrógeno alto sostenido que dispara el pico de LH." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>El mismo estrógeno frena y, en un momento, dispara.</b> El eje se lee de arriba abajo: el <b>hipotálamo</b> libera <b>GnRH</b> de forma pulsátil, la <b>adenohipófisis</b> responde con <b>FSH y LH</b>, y el <b>ovario</b> responde con <b>estrógeno y progesterona</b>. Lo interesante es la vuelta. Durante casi todo el ciclo funciona la <b>retroalimentación negativa</b>: el estrógeno y la progesterona frenan GnRH, FSH y LH, que es como se mantiene el sistema estable. Pero hay una excepción y es la que se pregunta: cuando el folículo dominante produce <b>estrógeno alto y sostenido</b>, la retroalimentación <b>se invierte a positiva</b> y dispara el <b>pico de LH</b> que provoca la ovulación. Una sola hormona, dos efectos opuestos según su nivel y su duración.</figcaption></figure>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ciclo sexual femenino de 28 días: fase folicular con estrógeno, pico de LH el día 14 con ovulación, y fase lútea con progesterona del cuerpo lúteo">
-      <style>
-        .c6T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .c6S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-        .c6w{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#fff}
-      </style>
-      <rect x="0" y="0" width="720" height="430" fill="#fff7fb" rx="14"/>
-      <text x="360" y="28" text-anchor="middle" class="c6T" font-size="15">Ciclo de 28 días · las dos fases</text>
-
-      <!-- eje temporal -->
-      <line x1="60" y1="360" x2="680" y2="360" stroke="#c9a8bd" stroke-width="2"/>
-      <text x="70" y="382" class="c6S" font-size="11">Día 1</text>
-      <line x1="370" y1="352" x2="370" y2="368" stroke="#c73f86" stroke-width="2"/>
-      <text x="370" y="384" text-anchor="middle" class="c6S" font-size="11" fill="#a02468">Día 14 · ovulación</text>
-      <text x="670" y="382" text-anchor="end" class="c6S" font-size="11">Día 28</text>
-
-      <!-- fases fondo -->
-      <rect x="60" y="60" width="310" height="290" fill="#eaf3ff" opacity="0.6" rx="8"/>
-      <rect x="370" y="60" width="310" height="290" fill="#fff0dd" opacity="0.6" rx="8"/>
-      <text x="215" y="80" text-anchor="middle" class="c6T" font-size="12.5" fill="#2b5aa5">FASE FOLICULAR</text>
-      <text x="215" y="96" text-anchor="middle" class="c6S" font-size="10.5">manda el ESTRÓGENO</text>
-      <text x="525" y="80" text-anchor="middle" class="c6T" font-size="12.5" fill="#b46410">FASE LÚTEA</text>
-      <text x="525" y="96" text-anchor="middle" class="c6S" font-size="10.5">manda la PROGESTERONA</text>
-
-      <!-- curva estrogeno -->
-      <path d="M60 320 Q220 300 330 150 Q350 130 370 200" fill="none" stroke="#2b7fff" stroke-width="3"/>
-      <text x="250" y="150" class="c6S" font-size="11" fill="#2b7fff">Estrógeno</text>
-      <!-- pico LH -->
-      <path d="M60 335 L330 330 Q368 328 370 120 Q372 328 410 332 L680 336" fill="none" stroke="#e0a02f" stroke-width="2.5" stroke-dasharray="1 0"/>
-      <text x="392" y="115" text-anchor="middle" class="c6T" font-size="12" fill="#c98510">PICO LH</text>
-      <!-- progesterona -->
-      <path d="M370 330 Q470 320 520 190 Q560 150 610 230 Q650 300 680 335" fill="none" stroke="#16a34a" stroke-width="3"/>
-      <text x="540" y="175" class="c6S" font-size="11" fill="#16a34a">Progesterona</text>
-
-      <!-- folículos -->
-      <circle cx="120" cy="250" r="10" fill="#f4b7d6"/><circle cx="200" cy="220" r="15" fill="#e57bb0"/>
-      <circle cx="300" cy="185" r="20" fill="#c73f86"/><text x="300" y="190" text-anchor="middle" class="c6w" font-size="10">óvulo</text>
-      <text x="210" y="285" text-anchor="middle" class="c6S" font-size="10">folículo madura (FSH)</text>
-      <!-- cuerpo luteo -->
-      <circle cx="470" cy="255" r="18" fill="#e0a02f"/><text x="470" y="259" text-anchor="middle" class="c6w" font-size="9">C. lúteo</text>
-      <circle cx="620" cy="270" r="11" fill="#d9c3a0"/><text x="620" y="298" text-anchor="middle" class="c6S" font-size="9.5">→ c. albicans</text>
-    </svg>
-    <div class="illustration-caption">Media cancha para cada hormona: <b>estrógeno</b> sube en la 1ª mitad (fase folicular), el <b>pico de LH</b> el día 14
-    rompe el folículo (ovulación) y la <b>progesterona</b> domina la 2ª mitad, fabricada por el <b>cuerpo lúteo</b>.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b06_02_ciclo_ovario_hormonas_endometrio.webp" alt="Ciclo sexual femenino integrado en tres pistas verticales: el ovario con el desarrollo folicular, la ovulación y el cuerpo lúteo; las curvas hormonales de estrógeno, LH, FSH y progesterona; y el endometrio pasando de proliferativo a secretor, dividido en fase folicular, ovulación y fase lútea." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Tres pistas, una sola línea de tiempo vertical.</b> El truco de esta figura está en el subtítulo: <b>leela en vertical, no en horizontal</b>. Elegí un momento del ciclo y bajá — arriba vas a ver qué está pasando en el ovario, en el medio qué hormona manda, y abajo cómo responde el endometrio. Con ese hábito, el ciclo deja de ser tres temas y pasa a ser uno. En la <b>fase folicular</b> el folículo dominante produce <b>estrógeno</b> y el endometrio <b>prolifera</b>. El <b>pico de LH</b> rompe el folículo maduro y libera el <b>ovocito secundario</b>. En la <b>fase lútea</b> el cuerpo lúteo produce <b>progesterona</b> y el endometrio se vuelve <b>secretor y receptivo</b>. El pie da la regla que resume todo: <b>estrógeno = proliferación · progesterona = secreción y mantenimiento</b>; y al caer ambas, el endometrio se desprende.</figcaption></figure>
 
   <h3>2 · El destino del folículo: cuerpo lúteo</h3>
   <p>Tras la ovulación, lo que queda del folículo roto se convierte en el <b>cuerpo lúteo</b>, una glándula temporal
@@ -2280,7 +1645,7 @@
     Cae la progesterona → llega la <b>menstruación</b>.</small></div>
     <div class="em-step"><b>CON embarazo</b><br><small>La <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">hCG<b>?</b><i onclick="event.stopPropagation()">Gonadotrofina coriónica humana, fabricada por el embrión (sincitiotrofoblasto). Es la hormona que detectan los tests de embarazo. Su función es «rescatar» el cuerpo lúteo para que siga dando progesterona.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span>
     mantiene vivo al cuerpo lúteo hasta que la <b>placenta</b> toma el relevo (~semana 10–12).</small></div>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b06_03_cuerpo_luteo_con_sin_embarazo.webp" alt="Los dos destinos del cuerpo lúteo: sin fecundación la LH disminuye y el cuerpo lúteo involuciona a cuerpo albicans con caída de progesterona y menstruación; con implantación el sincitiotrofoblasto secreta hCG que mantiene el cuerpo lúteo y la progesterona hasta el relevo de la placenta." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Una misma estructura, dos finales.</b> La figura se lee como una bifurcación desde la ovulación. A la <b>izquierda, sin fecundación</b>: la LH cae, el cuerpo lúteo <b>involuciona a cuerpo albicans</b>, la progesterona se desploma y el endometrio se descama — eso es la menstruación. A la <b>derecha, con implantación</b>: el <b>sincitiotrofoblasto</b> del embrión secreta <b>hCG</b>, que actúa como si fuera LH y <b>rescata</b> al cuerpo lúteo; la progesterona se mantiene y el endometrio no se descama. Ése es el mecanismo por el que un test de embarazo detecta hCG. Y el recuadro del centro marca la confusión que hay que evitar: <b>cuerpo lúteo ≠ placenta</b>. Son estructuras distintas; el cuerpo lúteo sostiene el embarazo al principio y la <b>placenta le toma el relevo</b> hormonal más adelante.</figcaption></figure>
 
   <div class="key-box exam">
     <p>★ <strong>La trampa favorita del parcial.</strong> El cuerpo lúteo <strong>NO se transforma en placenta</strong>.
@@ -2409,43 +1774,9 @@
   <h3>1 · ¿Dónde y cuándo?</h3><aside class="rmc-margin"><b class="t">Anotación al margen</b><p>La fecundación ocurre en la <b>ampolla de la trompa</b>, no en el útero.</p><p>Y termina recién cuando se completa la <em>segunda</em> división meiótica del ovocito: antes de eso todavía no hay cigoto.</p></aside>
   <p>La fecundación sucede en el <b>tercio externo (ampolla) de la trompa uterina</b>, en una ventana corta: el
   ovocito vive ~24 h y el espermatozoide ~48–72 h. Antes de poder fecundar, el espermatozoide debe pasar por la
-  <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">capacitación<b>?</b><i onclick="event.stopPropagation()">Cambios finales que sufre el espermatozoide dentro del aparato genital femenino, que lo «habilitan» para fecundar. Sin capacitación, no puede penetrar el óvulo.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span>.</p>
+  <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">capacitación<b>?</b><i onclick="event.stopPropagation()">Cambios finales que sufre el espermatozoide dentro del aparato genital femenino, que lo «habilitan» para fecundar. Sin capacitación, no puede penetrar el óvulo.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span>.</p><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b07_01_ampolla_transporte_ventana.webp" alt="Sitio y tiempo de la fecundación: ocurre en la ampolla, el tercio externo de la trompa uterina, no en la cavidad uterina; el ovocito secundario es viable cerca de veinticuatro horas después de la ovulación; y los espermatozoides deben capacitarse en la vía genital femenina." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Un lugar concreto y una ventana corta.</b> Tres respuestas en una figura, y las tres se preguntan. <b>Dónde</b>: en la <b>ampolla</b>, el <b>tercio externo</b> de la trompa uterina — <b>no</b> en la cavidad uterina, que es donde ocurre la implantación, no la fecundación. <b>Cuándo</b>: el ovocito es viable unas <b>24 horas</b> tras la ovulación, así que la ventana es breve y los dos gametos tienen que coincidir en ella. <b>Con qué requisito</b>: el espermatozoide no llega listo — necesita la <b>capacitación</b>, una serie de cambios de membrana que ocurren <b>en la vía genital femenina</b> y sin los cuales no puede hacer la reacción acrosómica. El pie agrega la precisión de vocabulario: <b>la célula fecundada es el ovocito secundario detenido en metafase II</b>.</figcaption></figure>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pasos de la fecundación: capacitación, reacción acrosómica, penetración de la zona pelúcida, fusión, bloqueo de la poliespermia y formación del cigoto diploide">
-      <style>
-        .f7T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .f7S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-      </style>
-      <rect x="0" y="0" width="720" height="300" fill="#f7fafc" rx="14"/>
-      <text x="360" y="28" text-anchor="middle" class="f7T" font-size="15">De espermatozoide + ovocito 2º → cigoto (46)</text>
-
-      <!-- ovocito grande -->
-      <circle cx="230" cy="160" r="80" fill="#ffe1ef" stroke="#e05a9c" stroke-width="2"/>
-      <circle cx="230" cy="160" r="55" fill="#fff" stroke="#f4b7d6" stroke-width="6"/>
-      <circle cx="230" cy="160" r="26" fill="#c73f86"/>
-      <text x="230" y="255" text-anchor="middle" class="f7S" font-size="11">Ovocito 2º · corona + zona pelúcida</text>
-
-      <!-- espermatozoides acercandose -->
-      <g transform="translate(70,120)"><ellipse cx="0" cy="0" rx="12" ry="7" fill="#4c8bf5"/><path d="M10 0 q16 -7 28 0 q-16 7 -28 0" fill="none" stroke="#4c8bf5" stroke-width="2"/></g>
-      <g transform="translate(75,175)"><ellipse cx="0" cy="0" rx="12" ry="7" fill="#4c8bf5"/><path d="M10 0 q16 -7 28 0 q-16 7 -28 0" fill="none" stroke="#4c8bf5" stroke-width="2"/></g>
-      <text x="90" y="100" text-anchor="middle" class="f7S" font-size="10.5">reacción acrosómica →</text>
-
-      <!-- flecha -->
-      <line x1="330" y1="160" x2="420" y2="160" stroke="#16a34a" stroke-width="3"/><polygon points="420,160 410,154 410,166" fill="#16a34a"/>
-      <text x="375" y="150" text-anchor="middle" class="f7S" font-size="10" fill="#15803d">fusión +</text>
-      <text x="375" y="178" text-anchor="middle" class="f7S" font-size="10" fill="#15803d">bloqueo poliespermia</text>
-
-      <!-- cigoto -->
-      <circle cx="540" cy="160" r="70" fill="#e8f7ee" stroke="#16a34a" stroke-width="2"/>
-      <circle cx="522" cy="150" r="20" fill="#4c8bf5" opacity="0.85"/>
-      <circle cx="560" cy="168" r="20" fill="#e05a9c" opacity="0.85"/>
-      <text x="540" y="250" text-anchor="middle" class="f7S" font-size="11">Cigoto · 2 pronúcleos → 46</text>
-    </svg>
-    <div class="illustration-caption">El espermatozoide se capacita, sufre la <b>reacción acrosómica</b> para atravesar la <b>zona pelúcida</b>, y al
-    fusionarse dispara la <b>reacción cortical</b> que <b>bloquea la entrada de otros</b> (poliespermia). Los dos pronúcleos se
-    unen: cigoto <b>diploide</b>.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b07_02_barreras_penetracion_fusion.webp" alt="Las barreras que atraviesa el espermatozoide hasta la ooolema: capacitación con motilidad hiperactiva, paso por la corona radiada, reacción acrosómica que libera enzimas para penetrar la zona pelúcida y fusión de la membrana espermática con la oolema del ovocito." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Tres barreras, una sola fusión.</b> Seguí los cuatro recuadros de abajo en orden, porque es una secuencia estricta. La <b>capacitación</b> le da al espermatozoide <b>motilidad hiperactiva</b> y lo habilita para lo que sigue. Después atraviesa la <b>corona radiada</b>, las células del cúmulo que rodean al ovocito. Llega a la <b>zona pelúcida</b>, y ahí se dispara la <b>reacción acrosómica</b>: el acrosoma libera sus enzimas y abre camino por la matriz. Recién entonces la membrana del espermatozoide <b>se fusiona con la oolema</b>. El pie contrapone las dos reacciones que se confunden en el examen, y la diferencia es de dirección: la <b>acrosómica permite entrar</b>; la <b>cortical</b>, que viene inmediatamente después, <b>impide que entre otro</b>.</figcaption></figure>
 
   <h3>2 · Los pasos, en orden</h3>
   <div class="em-flow">
@@ -2455,7 +1786,7 @@
     <div class="em-step"><b>④ Bloqueo de poliespermia</b><br><small>La <b>reacción cortical</b> endurece la zona: no entra ningún otro.</small></div>
     <div class="em-step"><b>⑤ Se completa la meiosis II</b><br><small>El ovocito 2º termina la meiosis y expulsa el <b>2º cuerpo polar</b>.</small></div>
     <div class="em-step"><b>⑥ Cariogamia</b><br><small>Se unen los dos <b>pronúcleos</b> → <b>cigoto diploide (46)</b>, que inicia la segmentación.</small></div>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b07_03_reaccion_cortical_cigoto.webp" alt="Después de la fusión: la reacción cortical en la que los gránulos corticales modifican la zona pelúcida bloqueando la poliespermia, la terminación de la meiosis II con expulsión del segundo cuerpo polar, y la formación de los pronúcleos masculino y femenino que constituyen el cigoto diploide." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Tres cosas ocurren de golpe al entrar el espermatozoide.</b> Leé los tres recuadros como <b>consecuencias simultáneas</b> de un mismo hecho. Uno: los <b>gránulos corticales</b> se vuelcan y modifican la zona pelúcida — es el <b>bloqueo de la poliespermia</b>, y sin él el cigoto sería poliploide e inviable. Dos: el ovocito, que estaba frenado en metafase II desde la ovulación, <b>termina la meiosis II</b> y expulsa el <b>segundo cuerpo polar</b>. Tres: los dos núcleos se descondensan como <b>pronúcleos</b> —uno materno y uno paterno— y al juntarse forman el <b>cigoto diploide</b>, que ya puede iniciar la segmentación. El pie resume las tres funciones de la fecundación que conviene poder listar: <b>restablece 2n, define el sexo cromosómico e inicia el desarrollo</b>.</figcaption></figure>
 
   <div class="key-box exam">
     <p>★ <strong>Tres cosas que decide la fecundación.</strong> (1) Restablece el número <strong>diploide (46)</strong>;
@@ -2559,7 +1890,7 @@
 
   <h3>1 · Segmentación: dividirse sin crecer</h3><aside class="rmc-margin"><b class="t">Anotación al margen</b><p>Semana 1 = <b>viaje y división</b>: cigoto → mórula → blastocisto, y la implantación empieza al final.</p><p>La zona pelúcida tiene que desaparecer <em>antes</em> de implantar: sin eclosión no hay contacto con el endometrio.</p></aside>
   <p>El cigoto sufre la <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">segmentación<b>?</b><i onclick="event.stopPropagation()">Serie de divisiones mitóticas rápidas del cigoto. Lo particular: las células (blastómeros) se dividen pero NO crecen entre división y división, así que el embrión total mide casi lo mismo — solo tiene cada vez más células, más pequeñas.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span>: 2 → 4 → 8 <b>blastómeros</b>. Al llegar a ~16 células (día 3–4) es una <b>mórula</b>
-  (por su parecido a una mora).</p>
+  (por su parecido a una mora).</p><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b08_01_viaje_trompa_implantacion.webp" alt="El viaje desde la ampolla al endometrio durante la primera semana: segmentación en días 0 a 2 con divisiones mitóticas sucesivas dentro de la zona pelúcida, mórula por compactación en el día 3, blastocisto con blastocele y hatching en días 4 y 5, y adhesión al endometrio receptivo en días 6 y 7." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Se divide sin crecer, y por eso cada célula es más chica.</b> La idea que ordena todo está en el subtítulo: la <b>segmentación aumenta el número de células sin aumentar el tamaño total</b>, porque el conjunto sigue encerrado en la <b>zona pelúcida</b>. Recorré las cuatro etapas de abajo mientras seguís el viaje por la trompa. <b>Días 0–2</b>: divisiones sucesivas, 2 → 4 → 8 blastómeros. <b>Día 3</b>: <b>compactación</b>, las células se adhieren y forman una esfera sólida — la mórula. <b>Días 4–5</b>: aparece el <b>blastocele</b> y el embrión sale de la zona pelúcida (<b>hatching</b>) — y ese paso es obligatorio, porque mientras esté envuelto no puede adherirse a nada. <b>Días 6–7</b>: el <b>polo embrionario</b> se adhiere al endometrio receptivo. El pie fija el contraste que cae: <b>mórula = esfera sólida · blastocisto = cavidad + dos poblaciones celulares</b>.</figcaption></figure>
 
   <h3>2 · El blastocisto y sus dos poblaciones</h3>
   <p>Hacia el día 4–5 aparece una cavidad llena de líquido (<b>blastocele</b>) y el embrión pasa a llamarse
@@ -2569,56 +1900,7 @@
     <div class="em-step"><b>Trofoblasto</b><br><small>(capa externa) → forma la <b>PLACENTA</b> y ayuda a implantar</small></div>
   </div>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Primera semana: cigoto, mórula, blastocisto con embrioblasto trofoblasto y blastocele, e implantación en el endometrio">
-      <style>
-        .w1T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .w1S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-      </style>
-      <rect x="0" y="0" width="720" height="300" fill="#f7fafc" rx="14"/>
-      <text x="360" y="26" text-anchor="middle" class="w1T" font-size="15">De cigoto a blastocisto que se implanta</text>
-
-      <!-- cigoto -->
-      <circle cx="90" cy="120" r="24" fill="#c73f86"/>
-      <text x="90" y="162" text-anchor="middle" class="w1T" font-size="11">Cigoto</text>
-      <text x="90" y="177" text-anchor="middle" class="w1S" font-size="10">día 0</text>
-      <line x1="118" y1="120" x2="168" y2="120" stroke="#94a3b8" stroke-width="2"/><polygon points="168,120 160,115 160,125" fill="#94a3b8"/>
-
-      <!-- morula -->
-      <g transform="translate(210,120)">
-        <circle cx="0" cy="0" r="26" fill="#f3d3e4" stroke="#c73f86"/>
-        <circle cx="-9" cy="-8" r="7" fill="#e57bb0"/><circle cx="8" cy="-9" r="7" fill="#e57bb0"/>
-        <circle cx="-10" cy="8" r="7" fill="#e57bb0"/><circle cx="9" cy="7" r="7" fill="#e57bb0"/><circle cx="0" cy="0" r="7" fill="#e57bb0"/>
-      </g>
-      <text x="210" y="162" text-anchor="middle" class="w1T" font-size="11">Mórula</text>
-      <text x="210" y="177" text-anchor="middle" class="w1S" font-size="10">día 3–4 · ~16 células</text>
-      <line x1="238" y1="120" x2="288" y2="120" stroke="#94a3b8" stroke-width="2"/><polygon points="288,120 280,115 280,125" fill="#94a3b8"/>
-
-      <!-- blastocisto -->
-      <g transform="translate(360,120)">
-        <circle cx="0" cy="0" r="34" fill="#fff" stroke="#c73f86" stroke-width="2.5"/>
-        <path d="M-34 0 A34 34 0 0 1 34 0 Z" fill="#eaf3ff" opacity="0"/>
-        <g><circle cx="-14" cy="-16" r="7" fill="#e57bb0"/><circle cx="-2" cy="-20" r="7" fill="#e57bb0"/><circle cx="-16" cy="-4" r="7" fill="#e57bb0"/></g>
-      </g>
-      <text x="360" y="70" text-anchor="middle" class="w1S" font-size="9.5" fill="#a02468">embrioblasto</text>
-      <text x="405" y="120" class="w1S" font-size="9.5">blastocele</text>
-      <text x="360" y="118" text-anchor="middle" class="w1S" font-size="9" fill="#a02468">trofoblasto ↻</text>
-      <text x="360" y="176" text-anchor="middle" class="w1T" font-size="11">Blastocisto (día 4–5)</text>
-      <line x1="398" y1="120" x2="448" y2="120" stroke="#16a34a" stroke-width="2"/><polygon points="448,120 440,115 440,125" fill="#16a34a"/>
-
-      <!-- implantacion -->
-      <rect x="470" y="150" width="230" height="60" fill="#f6d9b0" rx="6"/>
-      <text x="585" y="200" text-anchor="middle" class="w1S" font-size="10">endometrio</text>
-      <g transform="translate(560,150)">
-        <circle cx="0" cy="0" r="26" fill="#fff" stroke="#16a34a" stroke-width="2"/>
-        <circle cx="-8" cy="-8" r="6" fill="#e57bb0"/><circle cx="4" cy="-10" r="6" fill="#e57bb0"/>
-      </g>
-      <text x="560" y="70" text-anchor="middle" class="w1T" font-size="11">Implantación</text>
-      <text x="560" y="86" text-anchor="middle" class="w1S" font-size="10">día 6–7</text>
-    </svg>
-    <div class="illustration-caption">El embrión <b>se divide mientras viaja</b> por la trompa. En el blastocisto ya se separan el
-    <b>embrioblasto</b> (→ embrión) del <b>trofoblasto</b> (→ placenta). Hacia el <b>día 6–7</b> empieza a implantarse en el endometrio.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b08_02_anatomia_blastocisto.webp" alt="Anatomía del blastocisto con el trofoblasto como capa externa que contribuye al componente fetal de la placenta, el embrioblasto o masa celular interna ubicado en un polo que origina el embrión propiamente dicho, y el blastocele como cavidad llena de líquido." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Dos poblaciones y una cavidad: nada más.</b> El blastocisto se define por tres cosas y la figura las rotula con lupas. El <b>trofoblasto</b> es la capa externa de células aplanadas que rodea todo y va a contribuir al <b>componente fetal de la placenta</b>. El <b>embrioblasto</b> o masa celular interna es el cúmulo apretado en <b>un polo</b> — y ése es el que origina el <b>embrión propiamente dicho</b>; su posición define el <b>polo embrionario</b>, que es el que se adhiere primero al endometrio. El <b>blastocele</b> es la cavidad de líquido que expande la estructura. El recuadro del pie previene el error de escala más común: <b>trofoblasto ≠ placenta completa</b> — la placenta definitiva tiene un componente <b>fetal</b> (derivado del trofoblasto) y otro <b>materno</b> (la decidua).</figcaption></figure>
 
   <div class="key-box exam">
     <p>★ <strong>Lo que hay que fijar.</strong> <strong>Embrioblasto → embrión</strong> · <strong>trofoblasto → placenta</strong>.
@@ -2643,81 +1925,7 @@
     <div><b>Día 7 · Se invade el endometrio</b><p>El trofoblasto en contacto se diferencia en <b>citotrofoblasto</b> (interno) y <b>sincitiotrofoblasto</b> (externo, invasor), que empieza a erosionar el endometrio. El embrión queda a caballo entre la 1ª y la 2ª semana.</p></div>
   </div>
 
-  <div class="illustration">
-    <svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Línea de tiempo de la primera semana día por día: día 0 fecundación y cigoto, día 1 dos blastómeros, día 2 cuatro células, día 3 mórula, día 4 blastocisto con blastocele, día 5 hatching o salida de la zona pelúcida, día 6 inicio de la implantación en el endometrio y día 7 diferenciación del trofoblasto en cito y sincitiotrofoblasto">
-      <style>
-        .d8T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .d8N{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#a02468}
-        .d8S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-      </style>
-      <rect x="0" y="0" width="780" height="300" fill="#f7fafc" rx="14"/>
-      <text x="390" y="26" text-anchor="middle" class="d8T" font-size="15">La primera semana, día por día (mientras viaja por la trompa)</text>
-      <text x="40" y="58" class="d8S" font-size="9.5" fill="#a06a2a">trompa uterina  →→→  útero</text>
-      <rect x="30" y="66" width="720" height="40" rx="20" fill="#fbeef6" stroke="#e9b8d4"/>
-      <line x1="46" y1="86" x2="734" y2="86" stroke="#e57bb0" stroke-width="1.5" stroke-dasharray="3 4"/>
-      <polygon points="742,86 732,81 732,91" fill="#e57bb0"/>
-
-      <!-- DIA 0 cigoto -->
-      <circle cx="75" cy="86" r="11" fill="#c73f86"/>
-      <text x="75" y="130" text-anchor="middle" class="d8N" font-size="12">DÍA 0</text>
-      <text x="75" y="147" text-anchor="middle" class="d8S" font-size="8.6">Fecundación</text>
-      <text x="75" y="159" text-anchor="middle" class="d8S" font-size="8.6">→ cigoto (46)</text>
-
-      <!-- DIA 1 -->
-      <g transform="translate(165,86)"><circle cx="-6" cy="0" r="7" fill="#e57bb0"/><circle cx="6" cy="0" r="7" fill="#e57bb0"/></g>
-      <text x="165" y="130" text-anchor="middle" class="d8N" font-size="12">DÍA 1</text>
-      <text x="165" y="147" text-anchor="middle" class="d8S" font-size="8.6">1ª división</text>
-      <text x="165" y="159" text-anchor="middle" class="d8S" font-size="8.6">2 blastómeros</text>
-
-      <!-- DIA 2 -->
-      <g transform="translate(255,86)"><circle cx="-6" cy="-6" r="5.4" fill="#e57bb0"/><circle cx="6" cy="-6" r="5.4" fill="#e57bb0"/><circle cx="-6" cy="6" r="5.4" fill="#e57bb0"/><circle cx="6" cy="6" r="5.4" fill="#e57bb0"/></g>
-      <text x="255" y="130" text-anchor="middle" class="d8N" font-size="12">DÍA 2</text>
-      <text x="255" y="147" text-anchor="middle" class="d8S" font-size="8.6">Segmentación</text>
-      <text x="255" y="159" text-anchor="middle" class="d8S" font-size="8.6">2 → 4 células</text>
-
-      <!-- DIA 3 morula -->
-      <g transform="translate(345,86)"><circle cx="0" cy="0" r="12" fill="#f3d3e4" stroke="#c73f86" stroke-width="1.2"/><circle cx="-4" cy="-4" r="3.4" fill="#e57bb0"/><circle cx="4" cy="-4" r="3.4" fill="#e57bb0"/><circle cx="-4" cy="4" r="3.4" fill="#e57bb0"/><circle cx="4" cy="4" r="3.4" fill="#e57bb0"/><circle cx="0" cy="0" r="3.4" fill="#e57bb0"/></g>
-      <text x="345" y="130" text-anchor="middle" class="d8N" font-size="12">DÍA 3</text>
-      <text x="345" y="147" text-anchor="middle" class="d8S" font-size="8.6">Mórula</text>
-      <text x="345" y="159" text-anchor="middle" class="d8S" font-size="8.6">~16 células</text>
-
-      <!-- DIA 4 blastocisto -->
-      <g transform="translate(435,86)"><circle cx="0" cy="0" r="12" fill="#fff" stroke="#c73f86" stroke-width="2"/><circle cx="-5" cy="-5" r="3.4" fill="#e57bb0"/><circle cx="2" cy="-6" r="3.4" fill="#e57bb0"/></g>
-      <text x="435" y="130" text-anchor="middle" class="d8N" font-size="12">DÍA 4</text>
-      <text x="435" y="147" text-anchor="middle" class="d8S" font-size="8.6">Blastocisto</text>
-      <text x="435" y="159" text-anchor="middle" class="d8S" font-size="8.6">(blastocele)</text>
-
-      <!-- DIA 5 hatching -->
-      <g transform="translate(525,86)"><path d="M9 -8 A12 12 0 1 0 9 8" fill="none" stroke="#c73f86" stroke-width="2"/><circle cx="-3" cy="-2" r="3.4" fill="#e57bb0"/><circle cx="4" cy="0" r="3.4" fill="#e57bb0"/><circle cx="14" cy="0" r="2.6" fill="#e57bb0"/></g>
-      <text x="525" y="130" text-anchor="middle" class="d8N" font-size="12">DÍA 5</text>
-      <text x="525" y="147" text-anchor="middle" class="d8S" font-size="8.6">Hatching</text>
-      <text x="525" y="159" text-anchor="middle" class="d8S" font-size="8.6">sale de la z. pel.</text>
-
-      <!-- DIA 6 implantacion inicio -->
-      <rect x="588" y="96" width="54" height="12" rx="3" fill="#f0c793"/>
-      <g transform="translate(615,90)"><circle cx="0" cy="0" r="11" fill="#fff" stroke="#16a34a" stroke-width="2"/><circle cx="-4" cy="-4" r="3.2" fill="#e57bb0"/><circle cx="3" cy="-5" r="3.2" fill="#e57bb0"/></g>
-      <text x="615" y="130" text-anchor="middle" class="d8N" font-size="12">DÍA 6</text>
-      <text x="615" y="147" text-anchor="middle" class="d8S" font-size="8.6">Implantación</text>
-      <text x="615" y="159" text-anchor="middle" class="d8S" font-size="8.6">empieza</text>
-
-      <!-- DIA 7 trofoblasto -->
-      <rect x="678" y="90" width="54" height="16" rx="3" fill="#f0c793"/>
-      <g transform="translate(705,86)"><circle cx="0" cy="0" r="11" fill="#fff" stroke="#7a4a12" stroke-width="1.4"/><path d="M-11 0 A11 11 0 0 1 11 0 Z" fill="#e9c58f"/><circle cx="-4" cy="4" r="3.2" fill="#e57bb0"/><circle cx="3" cy="5" r="3.2" fill="#e57bb0"/></g>
-      <text x="705" y="130" text-anchor="middle" class="d8N" font-size="12">DÍA 7</text>
-      <text x="705" y="147" text-anchor="middle" class="d8S" font-size="8.6">Trofoblasto</text>
-      <text x="705" y="159" text-anchor="middle" class="d8S" font-size="8.6">cito + sincitio</text>
-
-      <!-- leyenda inferior -->
-      <rect x="150" y="196" width="480" height="78" rx="12" fill="#fff" stroke="#e3d0dd"/>
-      <text x="390" y="217" text-anchor="middle" class="d8T" font-size="10.5" fill="#a02468">Los cuatro hitos que se preguntan</text>
-      <text x="390" y="236" text-anchor="middle" class="d8S" font-size="9.6">Fecundación día 0 (ampolla)  ·  Mórula día 3 (~16 células)</text>
-      <text x="390" y="252" text-anchor="middle" class="d8S" font-size="9.6">Blastocisto + hatching día 4–5</text>
-      <text x="390" y="268" text-anchor="middle" class="d8S" font-size="9.6">Implantación día 6–7 (en el endometrio)</text>
-    </svg>
-    <div class="illustration-caption">Leé la figura de <b>izquierda a derecha</b>: cada parada es un día. La banda rosa es la <b>trompa</b> por donde
-    el embrión viaja mientras se divide. Fijate cómo en el <b>día 5</b> el anillo se abre (<b>hatching</b>) y desde el <b>día 6</b>
-    el embrión toca la barra ocre, que es el <b>endometrio</b>. El recuadro de abajo resume las <b>cuatro fechas</b> que más caen.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b08_03_cronologia_dias_0_7.webp" alt="Cronología día por día de la primera semana: día 0 fecundación, día 1 dos células, día 2 cuatro a ocho células, día 3 mórula, día 4 blastocisto, día 5 hatching y días 6 a 7 adhesión, mientras el concepto viaja desde la ampolla hasta el endometrio." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Un día, un hito.</b> Ésta es la tabla que conviene poder recitar de memoria, porque las preguntas de la primera semana suelen ser «¿qué hay en el día N?». La fila inferior la da resuelta: <b>día 0</b> fecundación · <b>día 1</b> 2 células · <b>día 2</b> 4–8 células · <b>día 3</b> mórula · <b>día 4</b> blastocisto · <b>día 5</b> hatching · <b>días 6–7</b> adhesión. Y notá cómo la posición acompaña al cronograma: las primeras divisiones ocurren <b>en la trompa</b> y sólo al final el embrión llega a la cavidad uterina. El pie deja marcada la frontera entre este bloque y el siguiente: <b>la implantación empieza al final de la primera semana y se completa en la segunda</b> — no es un evento de un día.</figcaption></figure>
 
   <div class="em-postit green">
     <h5>📌 Cómo no perderse con las fechas</h5>
@@ -2803,39 +2011,7 @@
     <div class="em-step"><b>2 cavidades</b><br><small><b>Cavidad amniótica</b> (sobre el epiblasto) + <b>saco vitelino</b> (bajo el hipoblasto)</small></div>
   </div>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Segunda semana: disco bilaminar con epiblasto e hipoblasto entre la cavidad amniótica y el saco vitelino, rodeado por cito y sincitiotrofoblasto">
-      <style>
-        .w2T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .w2S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-      </style>
-      <rect x="0" y="0" width="720" height="320" fill="#fbf7ff" rx="14"/>
-      <text x="360" y="26" text-anchor="middle" class="w2T" font-size="15">Disco bilaminar y las 2 cavidades</text>
-
-      <!-- trofoblasto exterior -->
-      <ellipse cx="330" cy="170" rx="170" ry="120" fill="#f0e0cf" stroke="#c99a63" stroke-width="2"/>
-      <ellipse cx="330" cy="170" rx="150" ry="102" fill="#f8efe2" stroke="#e0c49b" stroke-width="8"/>
-      <text x="330" y="60" text-anchor="middle" class="w2S" font-size="10" fill="#a06a2a">sincitiotrofoblasto (externo)</text>
-      <text x="330" y="292" text-anchor="middle" class="w2S" font-size="10" fill="#a06a2a">citotrofoblasto (interno)</text>
-
-      <!-- cavidad amniotica -->
-      <path d="M230 150 A100 70 0 0 1 430 150 Z" fill="#dbeeff" stroke="#7fb0e0"/>
-      <text x="330" y="120" text-anchor="middle" class="w2S" font-size="10.5" fill="#2b5aa5">cavidad amniótica</text>
-      <!-- saco vitelino -->
-      <path d="M230 190 A100 70 0 0 0 430 190 Z" fill="#fff3d6" stroke="#e0b34d"/>
-      <text x="330" y="228" text-anchor="middle" class="w2S" font-size="10.5" fill="#b4791a">saco vitelino</text>
-
-      <!-- disco bilaminar -->
-      <rect x="230" y="164" width="200" height="12" fill="#e57bb0"/>
-      <rect x="230" y="176" width="200" height="12" fill="#8a63c9"/>
-      <text x="470" y="172" class="w2T" font-size="10.5" fill="#a02468">epiblasto</text>
-      <text x="470" y="188" class="w2T" font-size="10.5" fill="#5b3a9e">hipoblasto</text>
-      <line x1="440" y1="170" x2="466" y2="170" stroke="#e57bb0" stroke-width="1.5"/>
-      <line x1="440" y1="182" x2="466" y2="184" stroke="#8a63c9" stroke-width="1.5"/>
-    </svg>
-    <div class="illustration-caption">El <b>disco bilaminar</b> (epiblasto rosa + hipoblasto violeta) queda entre las dos cavidades: la
-    <b>amniótica</b> arriba y el <b>saco vitelino</b> abajo. Todo rodeado por el trofoblasto en sus <b>dos capas</b>.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b09_01_semana_del_dos.webp" alt="La semana del dos: el trofoblasto se divide en citotrofoblasto interno y celular y sincitiotrofoblasto externo e invasor; la masa celular interna forma el disco bilaminar de epiblasto e hipoblasto; y aparecen dos cavidades, la amniótica sobre el epiblasto y el saco vitelino bajo el hipoblasto." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Todo se vuelve doble.</b> Ése es el truco mnemotécnico del bloque y funciona porque es literal: en la segunda semana <b>tres estructuras se desdoblan</b>. El <b>trofoblasto</b> pasa a <b>dos capas</b>: <b>citotrofoblasto</b> interno y celular, <b>sincitiotrofoblasto</b> externo, multinucleado e <b>invasor</b> (es el que erosiona el endometrio y el que secreta hCG). El <b>disco</b> pasa a <b>dos capas</b>: <b>epiblasto</b> e <b>hipoblasto</b> — y retené cuál importa, porque <b>el epiblasto es el que originará las tres capas germinativas</b> en la semana 3. Y aparecen <b>dos cavidades</b>: la <b>amniótica sobre el epiblasto</b> y el <b>saco vitelino bajo el hipoblasto</b>. El pie agrega la tercera cavidad, que no entra en el par: la <b>coriónica</b>, que rodea todo el conjunto, con el <b>pedículo de fijación</b> conectándolo al corion.</figcaption></figure>
 
   <div class="key-box exam">
     <p>★ <strong>Dato clínico estrella.</strong> El <strong>sincitiotrofoblasto</strong> fabrica la <strong>hCG</strong>, la
@@ -2857,85 +2033,14 @@
     <div><b>Día 14 · Fin de la semana</b><p>El embrión está <b>totalmente implantado</b>: disco bilaminar entre la <b>cavidad amniótica</b> (arriba) y el <b>saco vitelino</b> (abajo), rodeado por la cavidad coriónica y sujeto por el <b>pedículo de fijación</b>. En el hipoblasto craneal se engrosa la <b>placa precordal</b>, que marca dónde estará la <b>cabeza</b>.</p></div>
   </div>
 
-  <div class="illustration">
-    <svg viewBox="0 0 780 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Secuencia de la segunda semana mostrando el blastocisto que se hunde cada vez más en el endometrio: día 8 medio hundido con disco bilaminar, día 9 aparición de lagunas y membrana de Heuser, días 11 a 12 entrada de sangre materna a las lagunas iniciando la circulación úteroplacentaria, día 13 aparición de la cavidad coriónica, y día 14 embrión totalmente implantado">
-      <style>
-        .w2dT{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .w2dN{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#a06a2a}
-        .w2dS{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-      </style>
-      <rect x="0" y="0" width="780" height="320" fill="#fbf7ff" rx="14"/>
-      <text x="390" y="26" text-anchor="middle" class="w2dT" font-size="15">La 2ª semana: el embrión se hunde en el endometrio, día por día</text>
-
-      <!-- endometrio como banda inferior -->
-      <rect x="20" y="150" width="740" height="150" fill="#f0d9b8"/>
-      <rect x="20" y="150" width="740" height="10" fill="#e7c592"/>
-      <text x="748" y="292" text-anchor="end" class="w2dS" font-size="10" fill="#8a5a1e">endometrio (mucosa del útero)</text>
-
-      <!-- 5 estaciones -->
-      <!-- DIA 8 -->
-      <text x="110" y="52" text-anchor="middle" class="w2dN" font-size="12">DÍA 8</text>
-      <text x="110" y="68" text-anchor="middle" class="w2dS" font-size="8.8">medio hundido</text>
-      <text x="110" y="80" text-anchor="middle" class="w2dS" font-size="8.8">disco bilaminar</text>
-      <line x1="110" y1="88" x2="110" y2="140" stroke="#c99a63" stroke-width="1" stroke-dasharray="3 3"/>
-      <circle cx="110" cy="150" r="14" fill="#fff" stroke="#c99a63" stroke-width="1.6"/>
-      <rect x="100" y="147" width="20" height="3.2" fill="#e57bb0"/><rect x="100" y="150.5" width="20" height="3.2" fill="#8a63c9"/>
-
-      <!-- DIA 9 -->
-      <text x="270" y="52" text-anchor="middle" class="w2dN" font-size="12">DÍA 9</text>
-      <text x="270" y="68" text-anchor="middle" class="w2dS" font-size="8.8">lagunas +</text>
-      <text x="270" y="80" text-anchor="middle" class="w2dS" font-size="8.8">memb. de Heuser</text>
-      <line x1="270" y1="88" x2="270" y2="158" stroke="#c99a63" stroke-width="1" stroke-dasharray="3 3"/>
-      <circle cx="270" cy="168" r="15" fill="#fff" stroke="#c99a63" stroke-width="1.6"/>
-      <circle cx="258" cy="160" r="2.4" fill="#f3d9be"/><circle cx="282" cy="160" r="2.4" fill="#f3d9be"/><circle cx="270" cy="154" r="2.4" fill="#f3d9be"/>
-      <rect x="260" y="166" width="20" height="3" fill="#e57bb0"/><rect x="260" y="169" width="20" height="3" fill="#8a63c9"/>
-
-      <!-- DIA 11-12 -->
-      <text x="430" y="52" text-anchor="middle" class="w2dN" font-size="12">DÍAS 11–12</text>
-      <text x="430" y="68" text-anchor="middle" class="w2dS" font-size="8.8">sangre materna →</text>
-      <text x="430" y="80" text-anchor="middle" class="w2dS" font-size="8.8">circulación úteroplac.</text>
-      <line x1="430" y1="88" x2="430" y2="168" stroke="#c99a63" stroke-width="1" stroke-dasharray="3 3"/>
-      <circle cx="430" cy="182" r="16" fill="#fff" stroke="#c99a63" stroke-width="1.6"/>
-      <circle cx="416" cy="172" r="2.6" fill="#d8524f"/><circle cx="444" cy="172" r="2.6" fill="#d8524f"/><circle cx="430" cy="166" r="2.6" fill="#d8524f"/><circle cx="448" cy="186" r="2.6" fill="#d8524f"/><circle cx="412" cy="186" r="2.6" fill="#d8524f"/>
-      <rect x="418" y="180" width="24" height="3" fill="#e57bb0"/><rect x="418" y="183" width="24" height="3" fill="#8a63c9"/>
-
-      <!-- DIA 13 -->
-      <text x="590" y="52" text-anchor="middle" class="w2dN" font-size="12">DÍA 13</text>
-      <text x="590" y="68" text-anchor="middle" class="w2dS" font-size="8.8">cavidad coriónica +</text>
-      <text x="590" y="80" text-anchor="middle" class="w2dS" font-size="8.8">saco vitelino 2º</text>
-      <line x1="590" y1="88" x2="590" y2="174" stroke="#c99a63" stroke-width="1" stroke-dasharray="3 3"/>
-      <circle cx="590" cy="190" r="18" fill="#fff" stroke="#c99a63" stroke-width="1.6"/>
-      <circle cx="590" cy="190" r="12" fill="#eae2f6"/>
-      <rect x="576" y="188" width="28" height="3" fill="#e57bb0"/><rect x="576" y="191" width="28" height="3" fill="#8a63c9"/>
-
-      <!-- DIA 14 -->
-      <text x="710" y="120" text-anchor="middle" class="w2dN" font-size="12">DÍA 14</text>
-      <text x="710" y="136" text-anchor="middle" class="w2dS" font-size="8.6">totalmente</text>
-      <text x="710" y="148" text-anchor="middle" class="w2dS" font-size="8.6">implantado</text>
-      <circle cx="710" cy="200" r="19" fill="#fff" stroke="#c99a63" stroke-width="1.6"/>
-      <path d="M694 194 A20 14 0 0 1 726 194 Z" fill="#dbeeff"/>
-      <path d="M694 202 A20 14 0 0 0 726 202 Z" fill="#fff3d6"/>
-      <rect x="695" y="196" width="30" height="3" fill="#e57bb0"/><rect x="695" y="199" width="30" height="3" fill="#8a63c9"/>
-
-      <!-- leyenda -->
-      <rect x="30" y="252" width="330" height="52" rx="10" fill="#fff" stroke="#e0d0ee"/>
-      <rect x="44" y="266" width="14" height="8" fill="#e57bb0"/><text x="66" y="273" class="w2dS" font-size="9">epiblasto</text>
-      <rect x="140" y="266" width="14" height="8" fill="#8a63c9"/><text x="162" y="273" class="w2dS" font-size="9">hipoblasto</text>
-      <circle cx="256" cy="270" r="4" fill="#d8524f"/><text x="266" y="273" class="w2dS" font-size="9">sangre materna</text>
-      <text x="44" y="294" class="w2dS" font-size="8.6" fill="#8a5a1e">Los círculos son cortes del embrión; cuanto más abajo, más hundido en el endometrio.</text>
-    </svg>
-    <div class="illustration-caption">La <b>franja ocre</b> es el endometrio. De izquierda a derecha, el mismo embrión aparece <b>cada vez más abajo</b>: eso
-    representa cómo se <b>entierra</b> durante la semana. Fijate en los <b>días 11–12</b>, cuando aparecen los <b>puntos rojos</b> = la
-    <b>sangre materna</b> entrando en las lagunas (empieza la <b>circulación úteroplacentaria</b>), y en el <b>día 14</b>, con las dos
-    cavidades (amniótica azul y saco vitelino amarillo) ya formadas.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b09_02_implantacion_dias_8_14.webp" alt="Implantación día por día de la segunda semana en seis cortes: día 8 disco bilaminar, día 9 lagunas en el sincitiotrofoblasto, días 10 y 11 cierre superficial del sitio de implantación, días 11 y 12 entrada de sangre materna en las lagunas, día 13 vellosidades primarias y día 14 implantación completa." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Seis cortes, seis días: el embrión se hunde.</b> Recorré los paneles en orden y fijate en una sola cosa: <b>cuánto se ha hundido el embrión</b> en el endometrio. <b>Día 8</b>: apenas adherido, ya con disco bilaminar. <b>Día 9</b>: aparecen <b>lagunas</b> en el sincitiotrofoblasto. <b>Días 10–11</b>: el epitelio del endometrio <b>se cierra por encima</b> y el embrión queda completamente enterrado. <b>Días 11–12</b>: las lagunas conectan con los sinusoides maternos y entra <b>sangre materna</b> — ahí empieza la circulación uteroplacentaria. <b>Día 13</b>: <b>vellosidades primarias</b>. <b>Día 14</b>: implantación completa. El pie junta los tres hitos del día 13 que se preguntan como grupo: <b>saco vitelino secundario, cavidad coriónica y vellosidades primarias</b>.</figcaption></figure>
 
   <div class="key-box exam">
     <p>★ <strong>El dato de fecha que más cae.</strong> Alrededor de los <strong>días 11–12</strong> el sincitiotrofoblasto abre los
     <strong>sinusoides maternos</strong> y la <strong>sangre de la madre</strong> entra en las lagunas: ese es el momento en que se
     <strong>establece la circulación úteroplacentaria primitiva</strong>. Y la <strong>implantación</strong>, que había empezado el
     día 6, <strong>se completa</strong> hacia el <strong>día 10–12</strong>, con el embrión ya <strong>totalmente inmerso</strong> en el endometrio.</p>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b09_03_hcg_lagunas_vellosidades_primarias.webp" alt="Interfaz materno-embrionaria al final de la segunda semana: el sincitiotrofoblasto secreta hCG que mantiene el cuerpo lúteo y la progesterona, las lagunas se llenan de sangre materna al abrirse los sinusoides estableciendo la circulación uteroplacentaria, y se forman vellosidades primarias de citotrofoblasto cubiertas de sincitiotrofoblasto, todavía sin capilares fetales." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Ya hay sangre materna, todavía no hay vasos fetales.</b> Ésa es la distinción que la figura persigue y es la que más se cobra. Al final de la <b>semana 2</b> las lagunas del sincitiotrofoblasto se conectan con los sinusoides maternos y <b>entra sangre materna</b>: queda establecido el flujo <b>uteroplacentario</b>. Pero las <b>vellosidades primarias</b> son sólo un eje de <b>citotrofoblasto cubierto por sincitiotrofoblasto</b> — <b>no tienen capilares fetales adentro</b>. El pie fija la cronología completa para no confundirse: <b>semana 2 = flujo materno · semana 3 = vasos fetales en vellosidades terciarias</b>. Y el panel de arriba a la derecha recuerda quién produce la <b>hCG</b>: el <b>sincitiotrofoblasto</b>, que con ella mantiene el cuerpo lúteo y la progesterona.</figcaption></figure>
 
   <div class="em-exam">
     <h4>Bloque 09 · dónde concentrar el estudio</h4>
@@ -3025,40 +2130,7 @@
     Línea → las capas. Con eso ya no te confundís.</p>
   </div>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vista superior del disco embrionario con la línea primitiva, el surco primitivo, el nódulo de Hensen y la fosita primitiva, indicando los ejes craneal y caudal">
-      <style>
-        .p1T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .p1S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-      </style>
-      <rect x="0" y="0" width="720" height="330" fill="#faf7ff" rx="14"/>
-      <text x="360" y="28" text-anchor="middle" class="p1T" font-size="15">Vista desde arriba · la línea primitiva marca los ejes</text>
-      <!-- disco -->
-      <ellipse cx="300" cy="180" rx="115" ry="128" fill="#eef4ff" stroke="#9cc0ef" stroke-width="2.5"/>
-      <text x="300" y="66" text-anchor="middle" class="p1T" font-size="11" fill="#2b5aa5">CRANEAL (cabeza)</text>
-      <text x="300" y="316" text-anchor="middle" class="p1T" font-size="11" fill="#2b5aa5">CAUDAL (cola)</text>
-      <!-- linea primitiva -->
-      <rect x="291" y="170" width="18" height="112" rx="9" fill="#c98a3f"/>
-      <line x1="300" y1="176" x2="300" y2="276" stroke="#8a5a20" stroke-width="3.5"/>
-      <!-- nodulo -->
-      <circle cx="300" cy="158" r="17" fill="#a06a2a"/>
-      <circle cx="300" cy="158" r="6" fill="#5e3c12"/>
-      <!-- etiquetas derecha -->
-      <line x1="318" y1="158" x2="404" y2="132" stroke="#a06a2a" stroke-width="1.5"/>
-      <text x="410" y="126" class="p1T" font-size="10.5" fill="#8a5a20">nódulo de Hensen</text>
-      <text x="410" y="141" class="p1S" font-size="9.5">con la fosita primitiva</text>
-      <line x1="316" y1="230" x2="404" y2="212" stroke="#a06a2a" stroke-width="1.5"/>
-      <text x="410" y="208" class="p1T" font-size="10.5" fill="#8a5a20">línea primitiva</text>
-      <text x="410" y="223" class="p1S" font-size="9.5">con el surco primitivo (la hendidura)</text>
-      <!-- eje izq -->
-      <line x1="185" y1="180" x2="120" y2="180" stroke="#7a8a9c" stroke-width="1.5" stroke-dasharray="4 3"/>
-      <text x="112" y="176" text-anchor="end" class="p1S" font-size="9.5">izquierda</text>
-      <text x="112" y="190" text-anchor="end" class="p1S" font-size="9.5">↔ derecha</text>
-      <text x="300" y="196" text-anchor="middle" class="p1S" font-size="9">epiblasto</text>
-    </svg>
-    <div class="illustration-caption">El disco visto <b>desde arriba</b>. La <b>línea primitiva</b> aparece en el extremo <b>caudal</b> y en su punta craneal
-    está el <b>nódulo de Hensen</b>. Con ella quedan definidos los tres ejes del cuerpo.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b10_01_gastrulacion_dias_15_21.webp" alt="Gastrulación de los días 15 a 21: aparece la línea primitiva en el epiblasto y las células migran a través de ella en dos oleadas, la primera desplaza al hipoblasto y origina el endodermo definitivo, la segunda se ubica entre las capas y origina el mesodermo intraembrionario, y el epiblasto restante permanece en superficie como ectodermo." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Las tres capas salen todas del epiblasto.</b> Es la frase del subtítulo y es contraintuitiva, así que conviene fijarla: <b>ectodermo, mesodermo y endodermo derivan los tres del epiblasto</b> — el hipoblasto no aporta ninguna capa definitiva, es <b>desplazado</b>. Seguí las dos oleadas en los cortes del centro. La <b>primera ola</b> baja del todo y empuja al hipoblasto: origina el <b>endodermo definitivo</b>. La <b>segunda ola</b> se queda en el medio: origina el <b>mesodermo intraembrionario</b>. Y lo que <b>no</b> migró queda arriba como <b>ectodermo</b>. El pie da las dos coordenadas que se preguntan: la <b>línea primitiva</b> aparece en el extremo <b>caudal</b> del disco, y el <b>nódulo primitivo</b> está en su extremo <b>craneal</b>.</figcaption></figure>
 
   <h3>3 · Segundo paso: la migración celular (la gastrulación en sí)</h3>
   <p>Ahora viene el movimiento. Las células del <b>epiblasto</b> se desplazan hacia la línea, se meten hacia adentro por el
@@ -3087,64 +2159,7 @@
     <div class="em-step"><b>④ Notocorda definitiva</b><br><small>Queda un <b>cordón macizo</b> (ya no hueco) de células, en la línea media, entre ectodermo y endodermo</small></div>
   </div>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro cortes transversales mostrando la formación de la notocorda: proceso notocordal hueco, placa notocordal fusionada al endodermo, desprendimiento, y notocorda definitiva maciza">
-      <style>
-        .n4T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .n4S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-      </style>
-      <rect x="0" y="0" width="720" height="400" fill="#faf7ff" rx="14"/>
-      <text x="360" y="28" text-anchor="middle" class="n4T" font-size="15">Formación de la notocorda · cortes transversales</text>
-
-      <!-- ETAPA 1 -->
-      <text x="115" y="62" text-anchor="middle" class="n4T" font-size="11" fill="#6b3e8a">① Proceso notocordal</text>
-      <rect x="30" y="76" width="170" height="15" fill="#4c8bf5"/>
-      <rect x="30" y="136" width="170" height="15" fill="#16a34a"/>
-      <rect x="30" y="99" width="170" height="12" fill="#e0913f" opacity=".55"/>
-      <rect x="30" y="118" width="170" height="12" fill="#e0913f" opacity=".55"/>
-      <path d="M88 99 h54 v30 h-54 z" fill="#fff" stroke="#7c3fe0" stroke-width="3"/>
-      <text x="115" y="120" text-anchor="middle" class="n4S" font-size="8">canal</text>
-      <text x="115" y="172" text-anchor="middle" class="n4S" font-size="9">cordón <b>hueco</b> bajo el ectodermo</text>
-
-      <!-- ETAPA 2 -->
-      <text x="360" y="62" text-anchor="middle" class="n4T" font-size="11" fill="#6b3e8a">② Placa notocordal</text>
-      <rect x="275" y="76" width="170" height="15" fill="#4c8bf5"/>
-      <rect x="275" y="99" width="170" height="12" fill="#e0913f" opacity=".55"/>
-      <rect x="275" y="118" width="170" height="12" fill="#e0913f" opacity=".55"/>
-      <rect x="275" y="136" width="60" height="15" fill="#16a34a"/>
-      <rect x="385" y="136" width="60" height="15" fill="#16a34a"/>
-      <rect x="333" y="134" width="54" height="10" rx="3" fill="#7c3fe0"/>
-      <text x="360" y="172" text-anchor="middle" class="n4S" font-size="9">se <b>fusiona</b> con el endodermo y se aplana</text>
-
-      <!-- ETAPA 3 -->
-      <text x="115" y="238" text-anchor="middle" class="n4T" font-size="11" fill="#6b3e8a">③ Se desprende</text>
-      <rect x="30" y="252" width="170" height="15" fill="#4c8bf5"/>
-      <rect x="30" y="275" width="170" height="12" fill="#e0913f" opacity=".55"/>
-      <rect x="30" y="294" width="170" height="12" fill="#e0913f" opacity=".55"/>
-      <rect x="30" y="316" width="170" height="15" fill="#16a34a"/>
-      <ellipse cx="115" cy="300" rx="27" ry="11" fill="#7c3fe0"/>
-      <path d="M115 313 v-4" stroke="#5b2fb0" stroke-width="2"/>
-      <text x="115" y="352" text-anchor="middle" class="n4S" font-size="9">se separa · el endodermo se <b>cierra</b> debajo</text>
-
-      <!-- ETAPA 4 -->
-      <text x="360" y="238" text-anchor="middle" class="n4T" font-size="11" fill="#6b3e8a">④ Notocorda definitiva</text>
-      <rect x="275" y="252" width="170" height="15" fill="#4c8bf5"/>
-      <rect x="275" y="275" width="170" height="12" fill="#e0913f" opacity=".55"/>
-      <rect x="275" y="294" width="170" height="12" fill="#e0913f" opacity=".55"/>
-      <rect x="275" y="316" width="170" height="15" fill="#16a34a"/>
-      <circle cx="360" cy="291" r="15" fill="#7c3fe0"/>
-      <text x="360" y="352" text-anchor="middle" class="n4S" font-size="9">cordón <b>macizo</b> en la línea media</text>
-
-      <!-- leyenda -->
-      <rect x="500" y="250" width="185" height="98" rx="10" fill="#fff" stroke="#d9c9ea"/>
-      <rect x="512" y="264" width="16" height="9" fill="#4c8bf5"/><text x="536" y="273" class="n4S" font-size="9.5">ectodermo</text>
-      <rect x="512" y="285" width="16" height="9" fill="#e0913f" opacity=".55"/><text x="536" y="294" class="n4S" font-size="9.5">mesodermo</text>
-      <rect x="512" y="306" width="16" height="9" fill="#16a34a"/><text x="536" y="315" class="n4S" font-size="9.5">endodermo</text>
-      <circle cx="520" cy="331" r="6" fill="#7c3fe0"/><text x="536" y="335" class="n4S" font-size="9.5">notocorda</text>
-    </svg>
-    <div class="illustration-caption">La notocorda pasa de ser un <b>tubo hueco</b> (proceso notocordal) a una <b>lámina</b> fusionada al endodermo
-    (placa notocordal), luego se <b>desprende</b> y termina como un <b>cordón macizo</b> en la línea media: la <b>notocorda definitiva</b>.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b10_02_notocorda_cuatro_etapas.webp" alt="Las cuatro etapas de la formación de la notocorda: proceso notocordal como tubo hueco desde el nódulo, placa notocordal fusionada transitoriamente al endodermo, desprendimiento cuando la placa se pliega y separa, y notocorda definitiva como cordón macizo en la línea media, que induce la placa neural y persiste en el adulto como núcleo pulposo." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>De tubo hueco a cordón macizo, en cuatro tiempos.</b> Recorré los cuatro cortes de izquierda a derecha y mirá sólo la estructura violeta del centro: empieza como un <b>tubo hueco</b> que se invagina desde el nódulo, se aplana y <b>se fusiona transitoriamente al endodermo</b> (placa notocordal), después <b>se pliega y se separa</b>, y termina como un <b>cordón macizo</b> suspendido en la línea media. Ubicá bien su posición final, que es lo que se pregunta: <b>entre el ectodermo neural y el endodermo</b>. La notocorda hace dos cosas que hay que saber: <b>induce la placa neural</b> del ectodermo que tiene encima —o sea que es el organizador del eje— y <b>persiste en el adulto</b> como el <b>núcleo pulposo</b> del disco intervertebral, que es el panel de abajo.</figcaption></figure>
 
   <div class="em-postit">
     <h5>🎻 ¿Para qué sirve la notocorda?</h5>
@@ -3195,64 +2210,7 @@
   <p>El mesodermo no es una lámina uniforme: a cada lado de la notocorda se organiza en <b>tres columnas</b>, y cada una
   origina cosas distintas. Este detalle cae mucho.</p>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Corte transversal mostrando el mesodermo paraxial (somitas), intermedio y de la placa lateral con sus hojas somática y esplácnica y el celoma intraembrionario">
-      <style>
-        .m3T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .m3S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-      </style>
-      <rect x="0" y="0" width="720" height="330" fill="#faf7ff" rx="14"/>
-      <text x="360" y="28" text-anchor="middle" class="m3T" font-size="15">Las tres columnas del mesodermo (corte transversal)</text>
-      <!-- ectodermo -->
-      <rect x="60" y="70" width="600" height="14" fill="#4c8bf5"/>
-      <text x="674" y="81" text-anchor="end" class="m3S" font-size="9" fill="#fff">ectodermo</text>
-      <!-- tubo neural -->
-      <circle cx="360" cy="70" r="26" fill="#2b5aa5"/><text x="360" y="74" text-anchor="middle" font-size="8.5" fill="#fff" font-weight="800">t. neural</text>
-      <!-- notocorda -->
-      <circle cx="360" cy="120" r="13" fill="#7c3fe0"/>
-      <text x="360" y="147" text-anchor="middle" class="m3S" font-size="9" fill="#5b2fb0">notocorda</text>
-      <!-- paraxial (somitas) -->
-      <rect x="292" y="96" width="46" height="46" rx="7" fill="#e0913f"/>
-      <rect x="382" y="96" width="46" height="46" rx="7" fill="#e0913f"/>
-      <text x="315" y="124" text-anchor="middle" font-size="9" fill="#fff" font-weight="800">somita</text>
-      <text x="405" y="124" text-anchor="middle" font-size="9" fill="#fff" font-weight="800">somita</text>
-      <text x="315" y="86" text-anchor="middle" class="m3T" font-size="9.5" fill="#a35f10">PARAXIAL</text>
-      <!-- intermedio -->
-      <rect x="252" y="106" width="34" height="26" rx="6" fill="#c2410c"/>
-      <rect x="434" y="106" width="34" height="26" rx="6" fill="#c2410c"/>
-      <text x="269" y="94" text-anchor="middle" class="m3T" font-size="9" fill="#c2410c">INTERM.</text>
-      <!-- placa lateral -->
-      <rect x="90" y="100" width="156" height="11" fill="#f0b26a"/>
-      <rect x="90" y="128" width="156" height="11" fill="#f0b26a"/>
-      <rect x="474" y="100" width="156" height="11" fill="#f0b26a"/>
-      <rect x="474" y="128" width="156" height="11" fill="#f0b26a"/>
-      <text x="168" y="92" text-anchor="middle" class="m3T" font-size="9.5" fill="#a35f10">PLACA LATERAL</text>
-      <text x="168" y="122" text-anchor="middle" class="m3S" font-size="8.5">celoma</text>
-      <text x="552" y="122" text-anchor="middle" class="m3S" font-size="8.5">celoma</text>
-      <!-- endodermo -->
-      <rect x="60" y="160" width="600" height="14" fill="#16a34a"/>
-      <text x="674" y="171" text-anchor="end" class="m3S" font-size="9" fill="#fff">endodermo</text>
-      <!-- cuadros de derivados -->
-      <rect x="45" y="200" width="196" height="106" rx="10" fill="#fff5e8" stroke="#e0913f"/>
-      <text x="143" y="221" text-anchor="middle" class="m3T" font-size="10.5" fill="#a35f10">PARAXIAL → somitas</text>
-      <text x="143" y="242" text-anchor="middle" class="m3S" font-size="9.5">esclerotoma → vértebras y costillas</text>
-      <text x="143" y="260" text-anchor="middle" class="m3S" font-size="9.5">miotoma → músculo esquelético</text>
-      <text x="143" y="278" text-anchor="middle" class="m3S" font-size="9.5">dermatoma → dermis de la espalda</text>
-      <rect x="262" y="200" width="196" height="106" rx="10" fill="#fdeadf" stroke="#c2410c"/>
-      <text x="360" y="221" text-anchor="middle" class="m3T" font-size="10.5" fill="#c2410c">INTERMEDIO</text>
-      <text x="360" y="246" text-anchor="middle" class="m3S" font-size="9.5">aparato <b>urinario</b> (riñón, uréter)</text>
-      <text x="360" y="268" text-anchor="middle" class="m3S" font-size="9.5">aparato <b>genital</b> (gónadas)</text>
-      <rect x="479" y="200" width="196" height="106" rx="10" fill="#fff5e8" stroke="#e0913f"/>
-      <text x="577" y="221" text-anchor="middle" class="m3T" font-size="10.5" fill="#a35f10">PLACA LATERAL</text>
-      <text x="577" y="242" text-anchor="middle" class="m3S" font-size="9.5">hoja <b>somática</b> → pared del cuerpo,</text>
-      <text x="577" y="257" text-anchor="middle" class="m3S" font-size="9.5">peritoneo parietal, huesos del miembro</text>
-      <text x="577" y="277" text-anchor="middle" class="m3S" font-size="9.5">hoja <b>esplácnica</b> → <b>corazón</b>, vasos,</text>
-      <text x="577" y="292" text-anchor="middle" class="m3S" font-size="9.5">músculo liso del intestino, peritoneo visceral</text>
-    </svg>
-    <div class="illustration-caption">De la línea media hacia afuera: <b>paraxial</b> (se segmenta en <b>somitas</b>), <b>intermedio</b> (urogenital) y
-    <b>placa lateral</b>, que se parte en dos hojas — <b>somática</b> (pared) y <b>esplácnica</b> (vísceras y corazón) — dejando entre ellas el <b>celoma</b>,
-    la futura cavidad del cuerpo.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b10_03_capas_mesodermo_somitas.webp" alt="Las tres capas germinativas y sus derivados: ectodermo con sistema nervioso, epidermis, pelo, uñas y esmalte; mesodermo con somitas, corazón, vasos, riñón y gónadas; endodermo con epitelio digestivo y respiratorio, hígado y páncreas. Incluye la división del mesodermo en paraxial, intermedio y placa lateral y el destino del somita en esclerotoma, miotoma y dermatoma." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Un corte transversal y toda la tabla de derivados.</b> Empezá por el corte grande de arriba y ubicá las tres divisiones del mesodermo de la línea media hacia afuera: <b>paraxial</b> (los somitas, pegados al tubo neural), <b>intermedio</b> (el que da riñón y gónadas) y <b>placa lateral</b> (la que se desdobla y forma las cavidades). Con esa geometría, la tabla de derivados deja de ser memoria pura y pasa a ser posición. Después leé las tres tarjetas de colores, que son la respuesta corta: <b>ectodermo → sistema nervioso + epidermis</b> (tubo y cresta neural; piel, pelo, uñas y esmalte), <b>mesodermo → sostén + urogenital</b> (somitas, corazón, vasos, riñón, gónadas), <b>endodermo → revestimientos viscerales</b> (epitelio digestivo y respiratorio, hígado, páncreas). Y el pie da el desglose del somita, que se pregunta como tríada: <b>esclerotoma</b> (hueso y cartílago), <b>miotoma</b> (músculo) y <b>dermatoma</b> (dermis).</figcaption></figure>
 
   <h3>7 · Los somitas en detalle</h3>
   <p>Los <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">somitas<b>?</b><i onclick="event.stopPropagation()">Bloques pares y cúbicos de mesodermo paraxial que se disponen a los lados del tubo neural. Se forman en sentido craneal→caudal, a un ritmo de unos 3 pares por día. Como el ritmo es constante, contarlos permite estimar la edad del embrión.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span> son la parte <b>segmentada</b> del mesodermo paraxial y explican por qué el cuerpo está construido
@@ -3300,7 +2258,7 @@
 
   <div class="illustration">
     <svg viewBox="0 0 780 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Línea de tiempo de la tercera semana del día 15 al 21: día 15 línea primitiva, día 16 migración celular y proceso notocordal, día 17 mesodermo cardiogénico, día 18 placa neural inducida por la notocorda, día 19 surco neural, día 20 primer par de somitas y día 21 el corazón empieza a latir">
-      <style>
+      <style>#tab-embrio figure.rmc-fig img.rmc-photo{display:block;width:100%;height:auto;aspect-ratio:auto;object-fit:contain;background:#FFFDF7;border-radius:14px;border:1.5px solid #DFD3B8}#tab-embrio figure.rmc-fig .rmc-zoom{overflow:visible}@media(max-width:760px){#tab-embrio figure.rmc-fig .rmc-zoom img.rmc-photo{width:100%;max-width:100%;border-radius:14px;border:1.5px solid #DFD3B8}#tab-embrio figure.rmc-fig .rmc-zoom{overflow:visible;border:0}}
         .d10T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
         .d10N{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#6b3e8a}
         .d10S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
@@ -3510,49 +2468,7 @@
     <div class="em-step"><b>④ Cresta neural</b><br><small>células del borde se <b>desprenden</b> y migran por todo el cuerpo</small></div>
   </div>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro cortes de la neurulación: placa neural, surco con pliegues elevados, tubo neural cerrándose con la cresta neural desprendiéndose, y tubo neural cerrado bajo el ectodermo">
-      <style>
-        .u1T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .u1S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-      </style>
-      <rect x="0" y="0" width="720" height="340" fill="#f6fbff" rx="14"/>
-      <text x="360" y="28" text-anchor="middle" class="u1T" font-size="15">Neurulación paso a paso (corte transversal)</text>
-      <!-- 1 placa -->
-      <text x="120" y="66" text-anchor="middle" class="u1T" font-size="10.5" fill="#2b5aa5">① Placa neural</text>
-      <rect x="40" y="80" width="160" height="12" fill="#8fb8ee"/>
-      <rect x="88" y="76" width="64" height="20" fill="#2b5aa5"/>
-      <circle cx="120" cy="120" r="10" fill="#7c3fe0"/>
-      <text x="120" y="146" text-anchor="middle" class="u1S" font-size="8.5">notocorda induce ↑</text>
-      <!-- 2 surco -->
-      <text x="360" y="66" text-anchor="middle" class="u1T" font-size="10.5" fill="#2b5aa5">② Surco y pliegues</text>
-      <path d="M280 92 h34 l14 -14 v-4 M406 92 h34 M392 78 v-4" stroke="#8fb8ee" stroke-width="12" fill="none"/>
-      <path d="M314 92 q46 34 92 0" fill="none" stroke="#2b5aa5" stroke-width="12"/>
-      <path d="M320 80 l-8 -16 M400 80 l8 -16" stroke="#2b5aa5" stroke-width="11"/>
-      <circle cx="360" cy="126" r="10" fill="#7c3fe0"/>
-      <!-- 3 cierre + cresta -->
-      <text x="120" y="196" text-anchor="middle" class="u1T" font-size="10.5" fill="#2b5aa5">③ Se cierra · cresta neural</text>
-      <rect x="40" y="216" width="60" height="11" fill="#8fb8ee"/><rect x="140" y="216" width="60" height="11" fill="#8fb8ee"/>
-      <circle cx="120" cy="234" r="24" fill="none" stroke="#2b5aa5" stroke-width="11"/>
-      <circle cx="98" cy="212" r="7" fill="#e0913f"/><circle cx="142" cy="212" r="7" fill="#e0913f"/>
-      <text x="196" y="208" text-anchor="end" class="u1S" font-size="8.5" fill="#a35f10">cresta neural →</text>
-      <circle cx="120" cy="282" r="9" fill="#7c3fe0"/>
-      <!-- 4 cerrado -->
-      <text x="360" y="196" text-anchor="middle" class="u1T" font-size="10.5" fill="#2b5aa5">④ Tubo neural cerrado</text>
-      <rect x="280" y="212" width="160" height="11" fill="#8fb8ee"/>
-      <circle cx="360" cy="248" r="24" fill="#fff" stroke="#2b5aa5" stroke-width="11"/>
-      <text x="360" y="252" text-anchor="middle" class="u1S" font-size="8">SNC</text>
-      <circle cx="360" cy="292" r="9" fill="#7c3fe0"/>
-      <!-- leyenda -->
-      <rect x="500" y="200" width="182" height="104" rx="10" fill="#fff" stroke="#c7ddf5"/>
-      <rect x="512" y="216" width="16" height="9" fill="#8fb8ee"/><text x="536" y="225" class="u1S" font-size="9.5">ectodermo</text>
-      <rect x="512" y="238" width="16" height="9" fill="#2b5aa5"/><text x="536" y="247" class="u1S" font-size="9.5">ectodermo neural</text>
-      <circle cx="520" cy="264" r="6" fill="#e0913f"/><text x="536" y="268" class="u1S" font-size="9.5">cresta neural</text>
-      <circle cx="520" cy="288" r="6" fill="#7c3fe0"/><text x="536" y="292" class="u1S" font-size="9.5">notocorda</text>
-    </svg>
-    <div class="illustration-caption">El ectodermo dorsal se engrosa (<b>placa</b>), se hunde (<b>surco</b>), sus bordes se elevan (<b>pliegues</b>) y se
-    fusionan formando el <b>tubo neural</b>. Los bordes desprendidos son la <b>cresta neural</b>, que migrará por todo el cuerpo.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b11_01_neurulacion_neuroporos.webp" alt="Neurulación en cuatro cortes: la notocorda induce la placa neural en el ectodermo dorsal, se forma el surco con pliegues que se elevan y aproximan, los pliegues se fusionan y las células de la cresta neural migran, y el tubo neural se separa del ectodermo superficial, con cierre del neuroporo craneal en el día 25 y del caudal en el día 28." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>El cierre avanza como un cremallera desde el medio.</b> Seguí los cuatro cortes de arriba: <b>placa</b> → <b>surco con pliegues</b> → <b>fusión y migración de la cresta</b> → <b>tubo separado</b>. La fila de abajo muestra lo mismo en vista dorsal, y ahí se ve por qué quedan dos aberturas: el cierre <b>empieza en la región media y avanza hacia los dos extremos</b>, así que lo último en cerrarse son los <b>neuroporos</b>. Las dos fechas son de memoria obligatoria: <b>craneal día 25 · caudal día 28</b>. Y el pie da la clínica que las hace importantes: si <b>falla el craneal</b> → <b>anencefalia</b>; si <b>falla el caudal</b> → <b>espina bífida</b>. Notá además el detalle del último panel: el tubo neural <b>se separa</b> del ectodermo superficial, y las células que quedan entre ambos son la <b>cresta neural</b>.</figcaption></figure>
 
   <h3>2 · Los neuroporos: la clínica más preguntada</h3>
   <p>El tubo no se cierra de una vez: <b>empieza en el medio</b> (región cervical) y avanza hacia los dos extremos, como
@@ -3568,7 +2484,7 @@
     <strong>espina bífida</strong> (defecto del cierre vertebral, de gravedad variable). Prevención: <strong>ácido fólico</strong>
     desde <strong>antes</strong> de concebir — cuando la mujer se entera del embarazo, los neuroporos <em>ya se cerraron</em>.
     Marcador de laboratorio: <strong>alfafetoproteína elevada</strong>.</p>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b11_03_cresta_neural_ventana_teratogenica.webp" alt="Migración y destinos de la cresta neural: ganglios y células de Schwann, melanocitos, médula suprarrenal y estructuras craneofaciales. Incluye la ventana de sensibilidad del desarrollo con el patrón todo o nada antes de la semana 3, el mayor riesgo de malformación estructural entre las semanas 3 y 8 y el predominio de efectos de crecimiento y función desde la semana 9." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Una población que se va y termina en todas partes.</b> La <b>cresta neural</b> nace entre el tubo neural y el ectodermo, y su rasgo definitorio es que <b>migra</b>. De ahí que sus derivados parezcan no tener nada que ver entre sí — y por eso se preguntan como lista: <b>ganglios y células de Schwann</b> (sistema nervioso periférico), <b>melanocitos</b>, <b>médula suprarrenal</b> y buena parte del <b>esqueleto craneofacial</b>. Si una pregunta junta estructuras tan dispares, la respuesta suele ser cresta neural. La banda inferior es la otra mitad de la figura: <b>antes de la semana 3</b> rige el <b>«todo o nada»</b>; entre las <b>semanas 3 y 8</b> está el <b>mayor riesgo de malformación estructural</b>, porque es cuando se están formando los órganos; y <b>desde la semana 9</b> predominan efectos de crecimiento y función. El pie agrega el matiz honesto: el <b>SNC mantiene sensibilidad durante todo el embarazo</b>.</figcaption></figure>
 
   <div class="em-postit green">
     <h5>🌟 La cresta neural: «la cuarta capa germinativa»</h5>
@@ -3584,7 +2500,7 @@
     <div class="em-step"><b>Plegamiento cefalocaudal</b><br><small>los extremos se curvan hacia ventral → aparece la <b>forma de C</b> y el corazón queda en el tórax</small></div>
     <div class="em-step"><b>Plegamiento lateral</b><br><small>los bordes se cierran por delante → se forma la <b>pared abdominal</b></small></div>
     <div class="em-step"><b>Resultado</b><br><small>parte del saco vitelino queda incorporada como <b>intestino primitivo</b></small></div>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b11_02_plegamiento_semanas_3_8.webp" alt="Plegamiento del embrión de disco plano a cuerpo tubular por plegamiento cefalocaudal y lateral, con incorporación del intestino primitivo, y la cronología semana a semana de la 3 a la 8: disco y somitas, forma de C, cabeza y esbozo de mano, rayos digitales, muescas interdigitales y dedos separados." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>El disco se enrolla en dos direcciones a la vez.</b> Los tres cortes de arriba muestran el mecanismo: el disco plano se curva <b>lateralmente</b> hasta que los bordes se encuentran por debajo, y al mismo tiempo se curva <b>cefalocaudalmente</b>. La consecuencia está dibujada en amarillo: parte del saco vitelino queda <b>incorporada</b> dentro del cuerpo como <b>intestino primitivo</b>. Ése es el punto de la figura — el tubo digestivo no se «construye», se <b>encierra</b> al plegarse. La fila de abajo es la cronología externa y conviene tenerla como referencia rápida: <b>sem 3</b> disco y somitas · <b>sem 4</b> forma de C · <b>sem 5</b> cabeza y esbozo de mano · <b>sem 6</b> rayos digitales · <b>sem 7</b> muescas interdigitales · <b>sem 8</b> dedos separados y aspecto ya reconociblemente humano.</figcaption></figure>
 
   <h3>4 · Cronología · qué pasa en cada semana</h3>
   <div class="em-scroll">
@@ -3839,32 +2755,7 @@
   bajas y los miembros aún cortos. Los <b>genitales externos</b> todavía <b>no permiten distinguir el sexo</b> a simple
   vista (se ven parecidos hasta ~semana 12).</p>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Línea de tiempo del desarrollo con el período embrionario de la semana 3 a la 8 y el período fetal de la semana 9 al nacimiento">
-      <style>
-        .n9T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .n9S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-      </style>
-      <rect x="0" y="0" width="720" height="250" fill="#f7fafc" rx="14"/>
-      <text x="360" y="30" text-anchor="middle" class="n9T" font-size="15">Semana 9 · del embrión al feto</text>
-
-      <!-- barra de tiempo -->
-      <rect x="60" y="150" width="180" height="34" fill="#f0c9dd" rx="4"/><text x="150" y="172" text-anchor="middle" class="n9T" font-size="11" fill="#a02468">EMBRIONARIO</text>
-      <rect x="240" y="150" width="420" height="34" fill="#cfe6d6" rx="4"/><text x="450" y="172" text-anchor="middle" class="n9T" font-size="11" fill="#15803d">FETAL</text>
-      <text x="60" y="208" class="n9S" font-size="10.5">sem 3</text>
-      <line x1="240" y1="142" x2="240" y2="192" stroke="#c2410c" stroke-width="2.5"/>
-      <text x="240" y="208" text-anchor="middle" class="n9T" font-size="11" fill="#c2410c">sem 9 ← frontera</text>
-      <text x="660" y="208" text-anchor="end" class="n9S" font-size="10.5">nacimiento (~38)</text>
-
-      <!-- etiquetas arriba -->
-      <text x="150" y="100" text-anchor="middle" class="n9S" font-size="10.5">se FORMAN los órganos</text>
-      <text x="150" y="116" text-anchor="middle" class="n9S" font-size="10.5">(organogénesis)</text>
-      <text x="450" y="100" text-anchor="middle" class="n9S" font-size="10.5">los órganos CRECEN y maduran</text>
-      <text x="450" y="116" text-anchor="middle" class="n9S" font-size="10.5">cabeza ≈ ½ del cuerpo al inicio</text>
-    </svg>
-    <div class="illustration-caption">La <b>semana 9</b> es la frontera: termina la formación de órganos y empieza el <b>crecimiento fetal</b>. Al inicio
-    la <b>cabeza es ~la mitad</b> del cuerpo; con los meses el cuerpo se alarga y la proporción se equilibra.</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b12_01_embrionario_vs_fetal.webp" alt="Comparación entre el período embrionario de las semanas 3 a 8, en el que se establecen los esbozos de todos los sistemas por organogénesis, y el período fetal desde la semana 9 al nacimiento, en el que los órganos aumentan tamaño, complejidad y función, con la aclaración de que después de la semana 9 predominan los efectos de crecimiento pero el riesgo no es cero." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Embrionario forma; fetal crece.</b> Ésa es la frase del pie y basta para responder la pregunta directa. Pero mirá la fila de órganos del medio, que es lo que hace la figura útil: los mismos sistemas aparecen a un lado y al otro — la diferencia no es <b>cuáles</b> hay, sino en qué estado están. En el <b>período embrionario (semanas 3–8)</b> se establecen los <b>esbozos</b> de todos los sistemas; ahí es donde una agresión produce <b>malformación estructural</b>. En el <b>período fetal (semana 9 → nacimiento)</b> esos esbozos <b>crecen y maduran</b>, ganan complejidad y función. El tercer recuadro trae el matiz que conviene repetir en una respuesta larga: en el período fetal <b>predominan</b> los efectos de crecimiento y función, pero <b>no es riesgo cero</b>.</figcaption></figure><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b12_02_feto_semana_9_crl.webp" alt="El feto en la semana 9 con la cabeza representando cerca de la mitad del cuerpo, párpados fusionados, miembros cortos y postura flexionada, genitales externos aún no distinguibles con fiabilidad, y la medida de longitud céfalo-caudal o CRL desde la coronilla hasta las nalgas." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Cabeza enorme y una medida que no incluye las piernas.</b> Los tres recuadros dan el retrato de la semana 9 y cada uno es una pregunta posible. <b>Proporción</b>: la cabeza representa cerca de la <b>mitad</b> del cuerpo — es el rasgo más llamativo y el que más cambia después. <b>Aspecto externo</b>: <b>párpados fusionados</b>, miembros todavía cortos, postura flexionada. <b>Genitales externos</b>: presentes, pero <b>todavía no permiten distinguir el sexo con fiabilidad visual</b> — eso llega alrededor de la semana 12. Y el pie explica la medida que se usa en esta etapa: el <b>CRL</b> (longitud céfalo-caudal) se toma de <b>coronilla a rabadilla o nalgas</b> y <b>no incluye las piernas</b>, precisamente porque están flexionadas y su longitud sería poco reproducible.</figcaption></figure><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b12_03_proporciones_genitales_riesgo.webp" alt="Cambio de proporciones desde la semana 9 hacia el término: la cabeza pierde predominio relativo mientras el tronco y los miembros ganan longitud, los genitales externos se distinguen aproximadamente desde la semana 12, y el sistema nervioso central, el pulmón y el metabolismo continúan madurando." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>La cabeza no se achica: el resto la alcanza.</b> Recorré los cuatro fetos de izquierda a derecha y comparalos por proporción, no por tamaño: la cabeza sigue creciendo, pero el <b>tronco y los miembros crecen más rápido</b>, y por eso pierde predominio relativo. Ése es el sentido de «cambian las proporciones». Las tres tarjetas de abajo agregan lo que se pregunta: los <b>genitales externos se distinguen aproximadamente desde la semana 12</b> —dato que conviene tener junto al de la semana 9, donde todavía no— y la <b>maduración</b> de SNC, pulmón y metabolismo <b>continúa</b> hasta el final. El pie cierra con la idea del período fetal completo: <b>disminuye el riesgo estructural, pero persiste el funcional</b>.</figcaption></figure>
 
   <div class="key-box exam">
     <p>★ <strong>Lo que hay que responder sin dudar.</strong> <strong>Período embrionario = semanas 3–8</strong>
@@ -3948,38 +2839,7 @@
     </table>
   </div>
 
-  <div class="illustration">
-    <svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Curva de crecimiento fetal de la semana 9 al nacimiento con hitos: genitales diferenciados en la 12, movimientos percibidos en la 20, viabilidad y surfactante en la 24 y término en la 38">
-      <style>
-        .f1T{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;fill:#15202e}
-        .f1S{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;fill:#3d4a5c}
-      </style>
-      <rect x="0" y="0" width="720" height="260" fill="#fff7fb" rx="14"/>
-      <text x="360" y="26" text-anchor="middle" class="f1T" font-size="15">Crecimiento fetal e hitos · semana 9 → nacimiento</text>
-      <line x1="60" y1="200" x2="670" y2="200" stroke="#c9a8bd" stroke-width="2"/>
-      <path d="M60 196 Q260 190 420 140 Q560 96 660 72" fill="none" stroke="#c73f86" stroke-width="3.5"/>
-      <!-- hitos -->
-      <line x1="150" y1="192" x2="150" y2="208" stroke="#3d4a5c" stroke-width="1.5"/>
-      <text x="150" y="224" text-anchor="middle" class="f1S" font-size="9.5">sem 12</text>
-      <text x="150" y="168" text-anchor="middle" class="f1S" font-size="9">genitales</text>
-      <text x="150" y="180" text-anchor="middle" class="f1S" font-size="9">diferenciados</text>
-      <line x1="290" y1="192" x2="290" y2="208" stroke="#3d4a5c" stroke-width="1.5"/>
-      <text x="290" y="224" text-anchor="middle" class="f1S" font-size="9.5">sem 20</text>
-      <text x="290" y="150" text-anchor="middle" class="f1S" font-size="9">movimientos</text>
-      <text x="290" y="162" text-anchor="middle" class="f1S" font-size="9">percibidos</text>
-      <line x1="400" y1="188" x2="400" y2="212" stroke="#16a34a" stroke-width="2.5"/>
-      <text x="400" y="228" text-anchor="middle" class="f1T" font-size="10.5" fill="#15803d">sem 24</text>
-      <text x="400" y="112" text-anchor="middle" class="f1S" font-size="9.5" fill="#15803d">VIABILIDAD</text>
-      <text x="400" y="124" text-anchor="middle" class="f1S" font-size="9" fill="#15803d">+ surfactante</text>
-      <line x1="645" y1="188" x2="645" y2="212" stroke="#c2410c" stroke-width="2.5"/>
-      <text x="645" y="228" text-anchor="middle" class="f1T" font-size="10.5" fill="#c2410c">sem 38</text>
-      <text x="645" y="56" text-anchor="middle" class="f1S" font-size="9.5" fill="#c2410c">término</text>
-      <text x="645" y="44" text-anchor="middle" class="f1S" font-size="9">~3–3,5 kg · 50 cm</text>
-      <text x="70" y="224" class="f1S" font-size="9.5">sem 9</text>
-    </svg>
-    <div class="illustration-caption">El peso sube sobre todo en la <b>segunda mitad</b>. Hitos que caen: genitales diferenciados (~12), movimientos
-    percibidos (~20), <b>viabilidad + surfactante</b> (~24) y <b>término</b> (~38 desde la fecundación).</div>
-  </div>
+  <figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b13_01_hitos_periodo_fetal.webp" alt="Hitos del período fetal desde la semana 9 al nacimiento en seis momentos: semana 9, aproximadamente semana 12, aproximadamente semana 20, semanas 24 a 26, tercer trimestre y término, con crecimiento en longitud y peso, maduración del sistema nervioso central, el pulmón y el metabolismo, y viabilidad gradual dependiente de edad, peso y cuidados neonatales." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Seis paradas entre la semana 9 y el nacimiento.</b> Usá la fila de etiquetas como línea de tiempo y asociá cada parada con lo que la caracteriza: <b>semana 9</b> comienza el período fetal · <b>≈ semana 12</b> los genitales externos ya se distinguen · <b>≈ semana 20</b> se perciben los movimientos · <b>24–26 semanas</b> el pulmón alcanza el umbral en que la viabilidad se vuelve posible · <b>3.er trimestre</b> ganancia rápida de peso y grasa · <b>término</b>. Los tres recuadros separan los procesos: <b>crecimiento</b> (longitud y peso, cambian las proporciones), <b>maduración</b> (SNC, pulmón, metabolismo) y <b>viabilidad</b>. Y sobre esa última, leé el pie con atención porque es la trampa conceptual del bloque: la viabilidad es <b>gradual</b> y depende de edad, peso y cuidados neonatales — <b>viabilidad no equivale a madurez</b>, los sistemas siguen desarrollándose.</figcaption></figure>
 
   <h3>2 · El pulmón manda: el surfactante</h3>
   <p>El <span class="em-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-embrio .em-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">surfactante<b>?</b><i onclick="event.stopPropagation()">Sustancia tensioactiva (rica en fosfolípidos) producida por los neumocitos tipo II desde ~la semana 24. Reduce la tensión superficial dentro del alvéolo e impide que se colapse al espirar. Es el marcador de madurez pulmonar.<span class="em-gl-close">tocá la palabra para cerrar</span></i></span>
@@ -3992,7 +2852,7 @@
     = madurez pulmonar · <strong>término = 38 semanas</strong> desde la fecundación (<strong>40</strong> desde la FUM) ·
     peso ~<strong>3–3,5 kg</strong> y talla ~<strong>50 cm</strong>. <strong>Pretérmino</strong> = antes de 37 semanas;
     <strong>postérmino</strong>, después de 42.</p>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b13_02_pulmon_surfactante_viabilidad.webp" alt="Maduración pulmonar en las etapas canalicular, sacular y alveolar, con los neumocitos tipo I encargados del intercambio y los neumocitos tipo II que producen surfactante, que reduce la tensión superficial y evita el colapso alveolar, con la aclaración de que el inicio de la producción no equivale a cantidad suficiente ni a madurez pulmonar completa." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Producir surfactante no es lo mismo que tener pulmón maduro.</b> El pie es la frase que hay que llevarse: <b>inicio de producción ≠ cantidad suficiente ≠ madurez pulmonar completa</b>. Son tres momentos distintos y confundirlos es el error clásico. Seguí las tres etapas de la franja: <b>canalicular</b> (la luz bronquiolar se ensancha y los capilares se aproximan), <b>sacular</b> (aparecen los sáculos terminales y la barrera se afina) y <b>alveolar</b> (maduran alvéolos y tabiques — y esta etapa <b>continúa después del nacimiento</b>). El panel de la derecha reparte los papeles celulares: el <b>neumocito I</b> es plano y hace el <b>intercambio</b> gaseoso; el <b>neumocito II</b> es cúbico y produce el <b>surfactante</b>, que <b>reduce la tensión superficial</b> y evita que el alvéolo colapse al espirar. Sin él, cada respiración habría que empezarla de cero.</figcaption></figure>
 
   <h3>3 · Cálculo de la edad gestacional</h3>
   <div class="em-postit blue">
@@ -4005,7 +2865,7 @@
     <div class="em-step"><b>Edad gestacional (FUM)</b><br><small>Se cuenta desde el <b>1.er día de la última menstruación</b>. Es la que se usa en <b>clínica</b>. Total: <b>40 semanas</b></small></div>
     <div class="em-step"><b>Edad embrionaria (fecundación)</b><br><small>Se cuenta desde la <b>fecundación</b> (ovulación, ~día 14 del ciclo). Es la <b>real</b>. Total: <b>38 semanas</b></small></div>
     <div class="em-step"><b>La relación</b><br><small><b>FUM = fecundación + 2 semanas</b>. Siempre 14 días de diferencia</small></div>
-  </div>
+  </div><figure class="rmc-fig em-fig"><div class="rmc-zoom"><img class="rmc-photo" src="/assets/img/embrio/emb_b13_03_edad_gestacional_naegele.webp" alt="Los dos relojes obstétricos: la edad gestacional contada desde la fecha de última menstruación con 40 semanas y la edad posfecundación contada desde la fecundación con 38 semanas, más la clasificación en pretérmino menor a 37 semanas, término de 37 a 41 semanas y seis días y postérmino desde 42 semanas, y la regla de Naegele para calcular la fecha probable de parto." loading="lazy" decoding="async" width="1536" height="1024"></div><p class="rmc-hint">🔍 tocá la figura y ampliá con dos dedos para leer los rótulos</p><figcaption><b>Dos relojes que van desfasados catorce días.</b> Toda la confusión del tema se resuelve entendiendo que se cuentan <b>dos cosas distintas</b>. La <b>edad gestacional</b> arranca en la <b>FUM</b> (primer día de la última menstruación) y llega a <b>40 semanas</b>; la <b>edad posfecundación</b> arranca en la fecundación y llega a <b>38</b>. La diferencia son los <b>≈ 14 días</b> que pasan entre la menstruación y la ovulación — y por eso el pie aclara que ese ajuste <b>supone un ciclo regular de 28 días</b>: si el ciclo es irregular, el desfase cambia. La clasificación se cuenta siempre en <b>semanas gestacionales</b>: <b>pretérmino &lt; 37+0 · término 37+0 a 41+6 · postérmino ≥ 42+0</b>. Y la <b>regla de Naegele</b> para la fecha probable de parto: <b>FPP = FUM + 7 días − 3 meses (+ 1 año)</b>. El pie agrega el matiz clínico: la <b>ecografía temprana puede redatar</b> el embarazo si discrepa de la FUM.</figcaption></figure>
 
   <div class="em-postit green">
     <h5>📐 Regla de Naegele · fecha probable de parto (FPP)</h5>

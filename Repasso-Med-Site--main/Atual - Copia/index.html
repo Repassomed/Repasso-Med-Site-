@@ -334,6 +334,80 @@
   .rh-soc.wa{background:#1d7a4f;color:#fff;}
   .rh-soc:hover{transform:translateY(-2px);filter:brightness(1.08);}
 
+
+  /* ================= VITRINE DAS TELAS DO PRODUTO ================= */
+  .rh-bleed{width:100vw;margin-left:calc(50% - 50vw);}
+
+  /* --- faixa cheia: o ciclo completo --- */
+  .rh-cycle{margin:14px 0 0;background:linear-gradient(180deg,var(--cr),var(--pa));
+    border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+    padding:26px 0 30px;text-align:center;}
+  .rh-cycle img{display:block;width:min(1180px,94vw);height:auto;margin:0 auto;
+    border-radius:14px;box-shadow:0 22px 50px rgba(19,49,79,.20);background:#fff;}
+  .rh-cycle figcaption{margin-top:14px;font-family:'Caveat',cursive;
+    font-size:21px;color:var(--soft);}
+  @media(max-width:700px){
+    .rh-cycle{padding:18px 0 22px;}
+    .rh-cycle img{width:96vw;border-radius:10px;}
+    .rh-cycle figcaption{font-size:18px;}
+  }
+
+  /* --- linha com texto ao lado, imagem estourando uma borda --- */
+  .rh-show{margin-top:8px;}
+  .rh-row{display:grid;grid-template-columns:1.08fr .92fr;align-items:center;
+    gap:clamp(24px,4vw,58px);padding:38px 0;}
+  .rh-row .pic{margin:0;margin-left:calc(50% - 50vw);}
+  .rh-row .pic img{display:block;width:100%;height:auto;border-radius:14px;
+    border-top-left-radius:0;border-bottom-left-radius:0;
+    background:var(--cr);box-shadow:0 20px 46px rgba(19,49,79,.20);
+    transition:transform .3s ease;}
+  .rh-row .pic img:hover{transform:scale(1.015);}
+  .rh-row .tx{padding-right:clamp(16px,4vw,60px);}
+  .rh-row .tx .n{font-family:'JetBrains Mono',monospace;font-size:11px;
+    letter-spacing:2.2px;text-transform:uppercase;color:var(--gold-t);margin-bottom:9px;}
+  .rh-row .tx h3{font-family:'Fraunces',Georgia,serif;font-size:clamp(23px,3vw,31px);
+    font-weight:800;color:var(--ink);line-height:1.15;margin:0 0 12px;}
+  .rh-row .tx p{font-size:15.5px;line-height:1.65;color:var(--soft);margin:0;}
+  .rh-row .tx em{font-style:normal;color:var(--ink);font-weight:700;}
+  /* invertida: imagem à direita */
+  .rh-row.inv .pic{margin-left:0;margin-right:calc(50% - 50vw);order:2;}
+  .rh-row.inv .pic img{border-radius:14px;
+    border-top-right-radius:0;border-bottom-right-radius:0;}
+  .rh-row.inv .tx{order:1;padding-right:0;padding-left:clamp(16px,4vw,60px);}
+
+  /* --- imagem grande centralizada, sem texto --- */
+  .rh-solo{margin:0;padding:40px 0;text-align:center;}
+  .rh-solo img{display:block;width:min(1100px,92vw);height:auto;margin:0 auto;
+    border-radius:14px;background:var(--cr);
+    box-shadow:0 22px 50px rgba(19,49,79,.20);transition:transform .3s ease;}
+  .rh-solo img:hover{transform:scale(1.012);}
+
+  /* --- duas imagens grandes lado a lado --- */
+  .rh-pair{display:grid;grid-template-columns:1fr 1fr;gap:clamp(18px,3vw,34px);
+    padding:40px 0;align-items:start;}
+  .rh-pair figure{margin:0;}
+  .rh-pair img{display:block;width:100%;height:auto;border-radius:14px;
+    background:var(--cr);box-shadow:0 20px 46px rgba(19,49,79,.20);
+    transition:transform .3s ease;}
+  .rh-pair img:hover{transform:scale(1.015);}
+
+  /* separador entre blocos, seja qual for a combinação */
+  .rh-show > * + *{border-top:1px dashed var(--rule);}
+
+  @media(max-width:860px){
+    .rh-row,.rh-row.inv{grid-template-columns:1fr;gap:18px;padding:26px 0;}
+    .rh-row .pic,.rh-row.inv .pic{order:1;margin-left:calc(50% - 50vw);margin-right:0;width:100vw;}
+    .rh-row .pic img,.rh-row.inv .pic img{border-radius:0;box-shadow:0 14px 30px rgba(19,49,79,.16);}
+    .rh-row .tx,.rh-row.inv .tx{order:2;padding:0;}
+    .rh-solo{padding:26px 0;}
+    .rh-solo img{width:100vw;max-width:none;border-radius:0;
+      margin-left:calc(50% - 50vw);box-shadow:0 14px 30px rgba(19,49,79,.16);}
+    .rh-pair{grid-template-columns:1fr;gap:20px;padding:26px 0;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .rh-row .pic img,.rh-solo img,.rh-pair img{transition:none;}
+  }
+
   /* o styles.css compartilhado desenha uma barra sob todo h2 — aqui não queremos */
   #rm-home h2::after,#rm-store h2::after,#rm-home h1::after,#rm-store h1::after{display:none;}
   #rm-home h1,#rm-home h2,#rm-home h3{padding:0;}
@@ -1651,6 +1725,55 @@ function homeHtml(){
           Pix, débito, crédito ou parcelado.</span>
       </div>
       <div class="rh-price-v"><small>a partir de</small><b>R$ 19,90</b></div>
+    </div>
+  </section>
+
+  <!-- CICLO COMPLETO · faixa de largura total -->
+  <div class="rh-bleed rh-cycle">
+    <figure style="margin:0;">
+      <img src="assets/apresentacao/08-ciclo-completo-de-estudo.webp"
+           alt="O ciclo completo de estudo dentro de uma matéria do Repasso Med"
+           loading="lazy" decoding="async">
+      <figcaption>entender, comparar, testar e revisar — tudo na mesma aba</figcaption>
+    </figure>
+  </div>
+
+  <!-- CONHEÇA MAIS -->
+  <section class="rh-in rh-sec rh-rev" style="padding-bottom:0;">
+    <div class="rh-kicker">conheça um pouco mais do site</div>
+    <h2 class="rh-h2">Por dentro de<br>uma matéria.</h2>
+    <p class="rh-p">Telas reais, do jeito que você vai ver depois de entrar.</p>
+
+    <div class="rh-show">
+      <figure class="rh-solo">
+        <img src="assets/apresentacao/03-resumos-diretos-ao-ponto.webp"
+             alt="Resumo de um bloco de matéria, explicado desde o zero"
+             loading="lazy" decoding="async">
+      </figure>
+      <article class="rh-row inv">
+        <figure class="pic"><img src="assets/apresentacao/05-infograficos-mapas-e-tabelas.webp"
+             alt="Infográfico e tabela comparativa de uma matéria"
+             loading="lazy" decoding="async"></figure>
+        <div class="tx">
+          <div class="n">infográficos</div>
+          <h3>A matéria inteira<br>numa olhada.</h3>
+          <p>Onde a comparação decide a questão, tem tabela. Onde o raciocínio se
+             perde, tem esquema. <em>O que estava solto na cabeça amarra</em> —
+             e o que você entendeu, fica.</p>
+        </div>
+      </article>
+      <figure class="rh-solo">
+        <img src="assets/apresentacao/07-questoes-feedback-imediato.webp"
+             alt="Questão com a resposta explicada logo abaixo"
+             loading="lazy" decoding="async">
+      </figure>
+      <div class="rh-pair">
+        <figure><img src="assets/apresentacao/06-flashcards-revisao-ativa.webp"
+             alt="Flashcards da matéria" loading="lazy" decoding="async"></figure>
+        <figure><img src="assets/apresentacao/02-indice-da-materia.webp"
+             alt="Índice da matéria com os blocos listados"
+             loading="lazy" decoding="async"></figure>
+      </div>
     </div>
   </section>
 

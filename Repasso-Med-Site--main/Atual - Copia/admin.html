@@ -484,7 +484,14 @@
         <button class="btn-danger"   onclick="revokeAll()">Remover todas</button>
         <button class="btn-gold"     onclick="renewAll()">Renovar acesso</button>
         <button class="btn-ghost"    onclick="toggleAccount()" id="btnToggle">Bloquear conta</button>
+        <button class="btn-gold"     onclick="forceRefresh()">Forzar actualización del navegador</button>
       </div>
+      <p class="muted" style="margin:8px 0 0;">
+        «Forzar actualización» sirve cuando el alumno ya tiene el acceso liberado
+        pero el aparato sigue mostrando la versión vieja (típico en tablet).
+        La próxima vez que abra el sitio —o en menos de 2 minutos, si ya está
+        abierto— la página se recarga sola sin caché. No afecta a nadie más.
+      </p>
       <div id="detailMsg" class="ok"></div>
     </div>
 
@@ -1740,6 +1747,37 @@ async function loadDevices(){
       </div>`;
     box.appendChild(div);
   });
+}
+
+/* ---------------------------------------------------------------------
+   FORZAR ACTUALIZACIÓN
+   Carimba profiles.force_refresh_at com a hora atual. O site do aluno
+   compara esse carimbo com o que guardou no aparelho; se mudou, limpa o
+   cache e recarrega. É só um timestamp — não mexe em acesso nem em sessão.
+   --------------------------------------------------------------------- */
+async function forceRefresh(){
+  if(!CURRENT) return;
+  const msg = document.getElementById('detailMsg');
+  msg.className = 'ok'; msg.textContent = 'Marcando...';
+  const { data, error } = await sb.from('profiles')
+    .update({ force_refresh_at: new Date().toISOString() })
+    .eq('id', CURRENT.id)
+    .select('id, force_refresh_at');
+  if(error){
+    msg.className = 'err';
+    msg.textContent = error.message.indexOf('force_refresh_at') >= 0
+      ? 'Falta la columna force_refresh_at. Corré el archivo forzar-actualizacion.sql en Supabase.'
+      : 'Error: ' + error.message;
+    return;
+  }
+  if(!data || !data.length){
+    msg.className = 'err';
+    msg.textContent = 'El banco no confirmó la marca (revisá la policy de UPDATE en profiles).';
+    return;
+  }
+  msg.className = 'ok';
+  msg.textContent = 'Marcado ✓ — el aparato de ' + (CURRENT.email || 'el alumno') +
+                    ' se va a recargar solo al abrir el sitio (o en menos de 2 minutos si ya está abierto).';
 }
 
 async function disconnectAll(){
