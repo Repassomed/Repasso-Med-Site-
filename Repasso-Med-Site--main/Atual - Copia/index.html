@@ -890,7 +890,7 @@ const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
    (precisa bater com os "slug" e "tab_id" da tabela subjects no banco)
    ===================================================================== */
 const CATALOGO = [
-  { slug:'anatomia-patologica', tab:'anato',   file:'materias/anatomia-patologica.html', title:'Anatopatologia I', sub:'Dra. Chamorro' },
+  { slug:'anatomia-patologica', tab:'anato',   file:'materias/anatomia-patologica.html', title:'Anatopatologia I', sub:'Flashcards · Resumen · Cuestiones' },
   { slug:'anatomia-patologica-practica', tab:'anatoprat', file:'materias/anatomia-patologica-practica.html', title:'Anatopatologia Práctica', sub:'Láminas · Flashcards · Resumen' },
   { slug:'fisiopatologia',      tab:'fisio',   file:'materias/fisiopatologia.html',      title:'Fisiopatologia I',      sub:'Flashcards · Resumen . Cuestiones ' },
   { slug:'imagenologia',        tab:'imagen',  file:'materias/imagenologia.html',        title:'Imagenología',          sub:'Tórax · Abdome · Craneo' },
@@ -909,6 +909,7 @@ const CATALOGO = [
   { slug:'fisiopatologia-ii', tab:'fisio2', file:'materias/fisiopatologia-ii.html', title:'Fisiopatologia II', sub:'Digestivo · Hígado · Páncreas · Riñón' },
   { slug:'toxicologia', tab:'toxico', file:'materias/toxicologia.html', title:'Toxicología', sub:'Intoxicaciones · Toxidromes · Antídotos' },
   { slug:'dermatologia', tab:'derma', file:'materias/dermatologia.html', title:'Dermatología', sub:'Piel · Lesiones elementales · Terapéutica' },
+  { slug:'guarani', tab:'guarani', file:'materias/guarani.html', title:'Guaraní', sub:'Saludos · Cuerpo humano · Patologías · Diálogos clínicos' },
 ];
 
 /* Semestre de cada matéria. A VERDADE vem do banco (subjects.semester,
@@ -919,7 +920,8 @@ const SEMESTRE_FALLBACK = {
   'anatomia-patologica':5, 'anatomia-patologica-practica':5, 'fisiopatologia':5,
   'imagenologia':5, 'semiologia':5, 'farmacologia':5, 'medicina-familiar':5,
   'semiologia-ii':6, 'farmacologia-ii':6, 'anatomia-patologica-ii':6, 'medicina-legal':6,
-  'fisiopatologia-ii':6, 'toxicologia':7, 'dermatologia':7
+  'fisiopatologia-ii':6, 'toxicologia':7, 'dermatologia':7,
+  'guarani':2
 };
 let SEMESTER_BY_SLUG = new Map();   // slug -> semestre (vindo do banco)
 let MENU_GROUPS = new Map();        // semestre -> [itens do CATALOGO liberados]
@@ -1462,6 +1464,7 @@ const RM_SUBJ_STYLE = {
   'farmacologia-ii':              { ic:'pill',    c:'#7c5cff' },
   'medicina-familiar':            { ic:'casa',    c:'#1d7a4f' },
   'medicina-legal':               { ic:'balanza', c:'#13314f' },
+  'guarani':                      { ic:'libro',   c:'#0a7d72' },
   'fisiopatologia-ii':            { ic:'ecg',     c:'#3a78c2' },
   'toxicologia':                  { ic:'frasco',  c:'#7c5cff' },
   'dermatologia':                 { ic:'tejido',  c:'#e0663d' },

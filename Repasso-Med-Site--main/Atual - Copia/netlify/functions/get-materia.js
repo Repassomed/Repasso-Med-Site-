@@ -60,6 +60,7 @@ const FILES = {
   'fisiopatologia-ii':            'fisiopatologia-ii.html',
   'toxicologia':                  'toxicologia.html',
   'dermatologia':                 'dermatologia.html',
+  'guarani':                      'guarani.html',
 };
 
 /* ---------------------------------------------------------------------
