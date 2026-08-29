@@ -903,6 +903,7 @@ const CATALOGO = [
   { slug:'biologia', tab:'bio', file:'materias/biologia.html', title:'Biología', sub:'Biomoléculas · Célula · Organelos' },
   { slug:'histologia-i', tab:'histo1', file:'materias/histologia-i.html', title:'Histología I', sub:'Tejidos fundamentales' },
   { slug:'histologia-i-practica', tab:'histo1p', file:'materias/histologia-i-practica.html', title:'Histología I Práctica', sub:'Laminarios y Tejidos' },
+  { slug:'histologia-ii-practica', tab:'histo2p', file:'materias/histologia-ii-practica.html', title:'Histología II Práctica', sub:'Laminarios · Sistemas y Órganos' },
   { slug:'anatomia-i', tab:'anato1', file:'materias/anatomia-i.html', title:'Anatomía I', sub:'Tórax · Miembro superior · Cuello' },
   { slug:'anatomia-patologica-ii', tab:'anato2', file:'materias/anatomia-patologica-ii.html', title:'Anatopatologia II', sub:'Digestivo · Hígado · Tiroides' },
   { slug:'medicina-legal', tab:'medlegal', file:'materias/medicina-legal.html', title:'Medicina Legal', sub:'Tanatología · Lesiones · Deontología' },
@@ -917,6 +918,7 @@ const CATALOGO = [
    usado se o banco não responder ou a matéria estiver sem semestre. */
 const SEMESTRE_FALLBACK = {
   'biologia':1, 'anatomia-i':1, 'histologia-i':1, 'histologia-i-practica':1, 'embriologia':2,
+  'histologia-ii-practica':2,
   'anatomia-patologica':5, 'anatomia-patologica-practica':5, 'fisiopatologia':5,
   'imagenologia':5, 'semiologia':5, 'farmacologia':5, 'medicina-familiar':5,
   'semiologia-ii':6, 'farmacologia-ii':6, 'anatomia-patologica-ii':6, 'medicina-legal':6,
@@ -1452,6 +1454,7 @@ const RM_SUBJ_STYLE = {
   'anatomia-i':                   { ic:'hueso',   c:'#13314f' },
   'histologia-i':                 { ic:'tejido',  c:'#d8a32a' },
   'histologia-i-practica':        { ic:'lamina',  c:'#d8a32a' },
+  'histologia-ii-practica':       { ic:'lamina',  c:'#d8a32a' },
   'embriologia':                  { ic:'embrio',  c:'#d4568a' },
   'anatomia-patologica':          { ic:'micro',   c:'#c0392b' },
   'anatomia-patologica-practica': { ic:'lamina',  c:'#c0392b' },

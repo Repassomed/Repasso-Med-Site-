@@ -1,4 +1,4 @@
-<div id="tab-semio2" class="tab-content">
+<div class="tab-content rm-cuaderno" id="tab-semio2">
 <!-- ===================================================================
      REPASSO MED · Semiología Médica II · 6.º Sem.
      U1 Aparato Respiratorio · U2 Cardiovascular · U3 Digestivo
@@ -212,11 +212,164 @@
 #tab-semio2 .section-marker-num{font-size:.9rem;letter-spacing:.04em;}
 </style>
 
+<style id="s2-didactica-v2">
+/* =====================================================================
+   CAPA DIDÁCTICA v2 · Semiología II
+   Componentes del raciocinio clínico. Todos los selectores llevan el
+   prefijo #tab-semio2 .s2- para no tocar nada global.
+   ===================================================================== */
+
+/* --- 1 · «ANTES DE EMPEZAR» · el prerequisito mínimo --- */
+#tab-semio2 .s2-antes{
+  background:linear-gradient(180deg, rgba(216,163,42,.13), rgba(216,163,42,.03));
+  border:2px dashed #b3851a; border-radius:14px;
+  padding:1.5rem 1.5rem 1.2rem; margin:1.5rem 0; position:relative;
+}
+#tab-semio2 .s2-antes::before{
+  content:"📎 ANTES DE EMPEZAR"; position:absolute; top:-12px; left:18px;
+  background:#b3851a; color:#fff; padding:.24rem .9rem; border-radius:14px;
+  font-family:var(--font-mono); font-size:.66rem; font-weight:800; letter-spacing:.07em;
+}
+#tab-semio2 .s2-antes h4{ margin:.4rem 0 .6rem; color:#8a6d16; }
+#tab-semio2 .s2-antes p, #tab-semio2 .s2-antes li{ font-size:.93rem; line-height:1.6; color:#4a3c10; }
+#tab-semio2 .s2-antes ul{ margin:.4rem 0 0; padding-left:1.15rem; }
+
+/* --- 2 · MAPA DEL BLOQUE · «usted está aquí» --- */
+#tab-semio2 .s2-mapa{
+  background:linear-gradient(180deg, rgba(14,124,134,.09), rgba(14,124,134,.02));
+  border:2px dashed #7cc4ca; border-radius:14px;
+  padding:1.55rem 1.6rem 1.25rem; margin:1.6rem 0; position:relative;
+}
+#tab-semio2 .s2-mapa::before{
+  content:"🗺️ USTED ESTÁ AQUÍ"; position:absolute; top:-12px; left:18px;
+  background:#0e7c86; color:#fff; padding:.24rem .9rem; border-radius:14px;
+  font-family:var(--font-mono); font-size:.66rem; font-weight:800; letter-spacing:.07em;
+}
+#tab-semio2 .s2-mapa h4{ margin:.45rem 0 .8rem; color:#0a5b63; }
+#tab-semio2 .s2-mapa .s2-rama{ display:grid; grid-template-columns:190px 1fr; gap:.7rem;
+  padding:.55rem 0; border-top:1px solid rgba(14,124,134,.18); align-items:start; }
+#tab-semio2 .s2-mapa .s2-rama:first-of-type{ border-top:none; }
+#tab-semio2 .s2-mapa .s2-rama > b:first-child{ font-family:var(--font-display); color:#0a5b63; font-size:.95rem; }
+#tab-semio2 .s2-mapa .s2-rama span b{ font-family:inherit; font-size:inherit; color:var(--ink); font-weight:700; }
+#tab-semio2 .s2-mapa .s2-rama span{ font-size:.89rem; line-height:1.55; color:var(--ink-soft); }
+#tab-semio2 .s2-mapa .s2-rama span i{ font-style:normal; background:var(--paper);
+  border:1px solid var(--rule); border-radius:99px; padding:.12rem .55rem;
+  margin:.12rem .18rem .12rem 0; display:inline-block; font-size:.83rem; color:#0a5b63; }
+@media(max-width:620px){ #tab-semio2 .s2-mapa .s2-rama{ grid-template-columns:1fr; gap:.15rem; } }
+
+/* --- 3 · LA TÉCNICA DEL EXAMEN · IPPA en cuatro pasos --- */
+#tab-semio2 .s2-ippa{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));
+  gap:.7rem; margin:1.5rem 0; }
+#tab-semio2 .s2-ippa > div{ background:var(--paper); border:1px solid var(--rule);
+  border-top:5px solid #0e7c86; border-radius:12px; padding:.85rem 1rem; box-shadow:var(--shadow); }
+#tab-semio2 .s2-ippa > div > b:first-child{ display:block; font-family:var(--font-mono); font-size:.63rem;
+  letter-spacing:.09em; text-transform:uppercase; color:#0a5b63; margin-bottom:.35rem; }
+#tab-semio2 .s2-ippa > div p b, #tab-semio2 .s2-ippa > div span b{ display:inline;
+  font-family:inherit; font-size:inherit; letter-spacing:normal; text-transform:none;
+  color:inherit; font-weight:700; margin:0; }
+#tab-semio2 .s2-ippa > div h5{ margin:0 0 .35rem; font-family:var(--font-display); font-size:1rem; color:var(--ink); }
+#tab-semio2 .s2-ippa > div p{ margin:.15rem 0; font-size:.88rem; line-height:1.55; color:var(--ink-soft); }
+#tab-semio2 .s2-ippa .s2-norm{ display:block; margin-top:.45rem; padding:.42rem .6rem; border-radius:8px;
+  background:rgba(47,125,79,.10); border-left:3px solid #2f7d4f; font-size:.85rem; color:#1f5938; }
+#tab-semio2 .s2-ippa .s2-anor{ display:block; margin-top:.35rem; padding:.42rem .6rem; border-radius:8px;
+  background:rgba(192,57,43,.09); border-left:3px solid #c0392b; font-size:.85rem; color:#8e2a1f; }
+
+/* --- 4 · CADENA CAUSAL · «por qué aparece este hallazgo» --- */
+#tab-semio2 .s2-chain{ display:flex; flex-wrap:wrap; align-items:stretch; gap:.5rem; margin:1.4rem 0; }
+#tab-semio2 .s2-chain > div{ flex:1 1 180px; background:var(--paper); border:1px solid var(--rule);
+  border-top:4px solid #7cc4ca; border-radius:12px; padding:.72rem .9rem; box-shadow:var(--shadow); }
+#tab-semio2 .s2-chain > div > b:first-child{ display:block; font-family:var(--font-mono); font-size:.6rem;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:.28rem; }
+#tab-semio2 .s2-chain > div span b{ display:inline; font-family:inherit; font-size:inherit;
+  letter-spacing:normal; text-transform:none; color:var(--ink); font-weight:700; margin:0; }
+#tab-semio2 .s2-chain > div span{ display:block; font-size:.89rem; line-height:1.5; color:var(--ink-soft); }
+#tab-semio2 .s2-chain > div:first-child{ border-top-color:#0e7c86; }
+#tab-semio2 .s2-chain > div:last-child{ border-top-color:#c0392b; }
+#tab-semio2 .s2-chain-l{ font-family:var(--font-mono); font-size:.63rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-muted); margin:1.3rem 0 -.8rem; }
+
+/* --- 5 · PATRÓN DE RECONOCIMIENTO · hallazgo + hallazgo = síndrome --- */
+#tab-semio2 .s2-patron{
+  background:linear-gradient(180deg, rgba(107,62,138,.10), rgba(107,62,138,.02));
+  border:2px solid #6b3e8a; border-radius:14px; padding:1.6rem 1.6rem 1.25rem;
+  margin:1.7rem 0; position:relative;
+}
+#tab-semio2 .s2-patron::before{
+  content:"🧩 PATRÓN DE RECONOCIMIENTO"; position:absolute; top:-12px; left:18px;
+  background:#6b3e8a; color:#fff; padding:.24rem .9rem; border-radius:14px;
+  font-family:var(--font-mono); font-size:.66rem; font-weight:800; letter-spacing:.07em;
+}
+#tab-semio2 .s2-patron h4{ margin:.45rem 0 .8rem; color:#4e2d66; }
+#tab-semio2 .s2-eq{ display:flex; flex-wrap:wrap; align-items:center; gap:.45rem; margin:.7rem 0 .4rem; }
+#tab-semio2 .s2-eq span{ background:var(--paper); border:1.5px solid #b79ad0; border-radius:10px;
+  padding:.5rem .8rem; font-size:.9rem; line-height:1.35; color:#3d2a52; flex:0 1 auto; }
+#tab-semio2 .s2-eq i{ font-style:normal; font-family:var(--font-display); font-weight:800;
+  color:#6b3e8a; font-size:1.1rem; padding:0 .1rem; }
+#tab-semio2 .s2-eq .s2-res{ background:#6b3e8a; border-color:#4e2d66; color:#fff; font-weight:700; }
+#tab-semio2 .s2-patron p{ font-size:.92rem; line-height:1.6; }
+#tab-semio2 .s2-patron p:last-child{ margin-bottom:0; }
+
+/* --- 6 · CÓMO RAZONAR ANTE EL PACIENTE --- */
+#tab-semio2 .s2-razonar{
+  background:linear-gradient(180deg, rgba(14,124,134,.12), rgba(14,124,134,.03));
+  border:2px solid #0e7c86; border-radius:14px; padding:1.65rem 1.6rem 1.3rem;
+  margin:1.9rem 0; position:relative;
+}
+#tab-semio2 .s2-razonar::before{
+  content:"🩺 CÓMO RAZONAR ANTE EL PACIENTE"; position:absolute; top:-12px; left:18px;
+  background:#0a5b63; color:#fff; padding:.24rem .9rem; border-radius:14px;
+  font-family:var(--font-mono); font-size:.66rem; font-weight:800; letter-spacing:.07em;
+}
+#tab-semio2 .s2-razonar h4{ margin:.5rem 0 .75rem; color:#0a5b63; }
+#tab-semio2 .s2-razonar ol{ padding-left:1.3rem; margin:0; }
+#tab-semio2 .s2-razonar li{ margin:.45rem 0; font-size:.94rem; line-height:1.58; color:var(--ink-soft); }
+#tab-semio2 .s2-razonar li b{ color:#0a5b63; }
+
+/* --- 7 · CIERRE DEL BLOQUE · «5 cosas» --- */
+#tab-semio2 .s2-cierre{
+  background:linear-gradient(180deg, rgba(47,125,79,.12), rgba(47,125,79,.03));
+  border:2px solid #2f7d4f; border-radius:14px; padding:1.6rem 1.6rem 1.25rem;
+  margin:1.9rem 0; position:relative;
+}
+#tab-semio2 .s2-cierre::before{
+  content:"✅ SI SE ACUERDA DE 5 COSAS"; position:absolute; top:-12px; left:18px;
+  background:#1f5938; color:#fff; padding:.24rem .9rem; border-radius:14px;
+  font-family:var(--font-mono); font-size:.66rem; font-weight:800; letter-spacing:.07em;
+}
+#tab-semio2 .s2-cierre h4{ margin:.5rem 0 .75rem; color:#1f5938; }
+#tab-semio2 .s2-cierre ol{ padding-left:1.3rem; margin:0; }
+#tab-semio2 .s2-cierre li{ margin:.45rem 0; font-size:.94rem; line-height:1.58; color:var(--ink-soft); }
+#tab-semio2 .s2-cierre li b{ color:#1f5938; }
+
+/* --- 8 · COMPARACIÓN CARA A CARA --- */
+#tab-semio2 .s2-vs{ display:grid; grid-template-columns:1fr auto 1fr; gap:.7rem; align-items:stretch; margin:1.6rem 0; }
+#tab-semio2 .s2-vs > div{ background:var(--paper); border:1px solid var(--rule); border-radius:12px;
+  padding:.9rem 1.05rem; box-shadow:var(--shadow); }
+#tab-semio2 .s2-vs > div h5{ margin:0 0 .45rem; font-family:var(--font-display); font-size:1rem; color:#0a5b63; }
+#tab-semio2 .s2-vs > div ul{ margin:0; padding-left:1.05rem; }
+#tab-semio2 .s2-vs > div li{ font-size:.88rem; line-height:1.5; margin:.22rem 0; color:var(--ink-soft); }
+#tab-semio2 .s2-vs .s2-vs-mid{ display:flex; align-items:center; justify-content:center;
+  background:none; border:none; box-shadow:none; padding:0;
+  font-family:var(--font-display); font-weight:800; color:var(--ink-muted); font-size:1.05rem; }
+@media(max-width:640px){ #tab-semio2 .s2-vs{ grid-template-columns:1fr; } #tab-semio2 .s2-vs .s2-vs-mid{ padding:.2rem 0; } }
+
+/* --- 9 · TRANSICIÓN ENTRE BLOQUES --- */
+#tab-semio2 .s2-puente{ border-left:3px solid #b3851a; background:var(--bg-soft);
+  padding:.7rem 1rem; margin:1.5rem 0; border-radius:0 10px 10px 0;
+  font-size:.93rem; line-height:1.58; color:var(--ink-soft); font-style:italic; }
+#tab-semio2 .s2-puente b{ font-style:normal; color:#0a5b63; }
+
+/* --- 10 · los componentes nuevos nunca se ubican al lado del post-it lateral --- */
+#tab-semio2 .s2-mapa, #tab-semio2 .s2-antes, #tab-semio2 .s2-ippa,
+#tab-semio2 .s2-chain, #tab-semio2 .s2-chain-l, #tab-semio2 .s2-patron,
+#tab-semio2 .s2-razonar, #tab-semio2 .s2-cierre, #tab-semio2 .s2-vs,
+#tab-semio2 .s2-puente{ clear:both; }
+</style>
 
 <section class="s2-hero">
   <div class="ov">Guía de Estudio · 6.º Semestre · Hospital Universitario</div>
-  <h1>Semiología Médica II<br><em>desde cero, hasta el examen.</em></h1>
-  <p>Resumen completo de las diapositivas de la cátedra —incluyendo las anotaciones de clase—, explicado desde cero, ilustrado con esquemas animados, tablas comparativas, mapas mentales y flashcards, más un banco de preguntas en el estilo de evaluación de la cátedra.</p>
+  <h1>Semiología Médica II<br><em>del hallazgo al síndrome.</em></h1>
+  <p>Resumen completo de las diapositivas de la cátedra —incluyendo las anotaciones de clase—, explicado desde cero. Cada bloque enseña el <b>proceso del examen</b>, muestra <b>lo normal antes de lo anormal</b>, y termina en un <b>patrón de reconocimiento</b>: qué hallazgos juntos hacen un síndrome.</p>
   <div class="s2-flow">
     <span class="s2-pill"><b>3 UNIDADES</b> Aparato Respiratorio → Cardiovascular → Digestivo</span>
     <span class="s2-pill"><b>BANCO DE PREGUNTAS</b> Basadas en exámenes + preguntas complementarias, con resolución desde cero</span>
@@ -224,6 +377,99 @@
   </div>
 </section>
 
+<!-- ===================== GUÍA DE USO / CÓMO ESTUDIAR ===================== -->
+<section class="container" id="s2-guia">
+  <div class="section-marker"><span class="section-marker-num">— ANTES DE EMPEZAR · GUÍA DE USO</span></div>
+  <h2>📖 Cómo estudiar Semiología II</h2>
+
+  <div class="rm-detalle">
+    <p>La semiología no se aprueba memorizando listas de signos. Se aprueba entendiendo <strong>por qué
+    aparece cada hallazgo</strong> y <strong>con qué otros hallazgos viene siempre acompañado</strong>. Un
+    signo suelto no vale casi nada; tres signos juntos, en el paciente correcto, <em>son</em> el diagnóstico.</p>
+
+    <p>Por eso esta materia está escrita como se examina a un paciente, y no como un catálogo. Cada bloque
+    sigue el mismo camino: primero <strong>qué cuenta el paciente</strong>, después <strong>qué le está
+    pasando por dentro</strong>, después <strong>cómo se busca eso con las manos y el estetoscopio</strong>,
+    y al final <strong>qué combinación de hallazgos le pone nombre</strong>.</p>
+  </div>
+
+  <div class="s2-mapa">
+    <h4>El recorrido completo · tres aparatos, diez bloques</h4>
+    <div class="s2-rama"><b>Unidad I · Respiratorio</b><span><i>01 · Motivo de consulta</i><i>02 · Infeccioso</i><i>03 · Obstructivo</i><i>04 · Parenquimatoso</i><i>05 · Pleural</i></span></div>
+    <div class="s2-rama"><b>Unidad II · Cardiovascular</b><span><i>06 · Motivo de consulta</i><i>07 · Insuficiencia cardíaca</i><i>08 · Hipertensión</i><i>09 · Electrocardiograma</i></span></div>
+    <div class="s2-rama"><b>Unidad III · Digestivo</b><span><i>10 · Sistema gástrico</i></span></div>
+    <div class="s2-rama"><b>Al final</b><span><i>Compendio de tablas</i><i>Banco general de preguntas</i><i>Flashcards y ruleta</i></span></div>
+  </div>
+
+  <div class="s2-antes">
+    <h4>Una sola idea sostiene toda la materia</h4>
+    <p>La semiología es <b>física aplicada al cuerpo</b>. El sonido y las vibraciones viajan <b>mejor por lo
+    sólido y peor por el aire</b>, y todo lo que se interponga entre el órgano y la mano funciona como un
+    <b>aislante</b>. Con esa sola frase se deduce el examen físico de casi toda la Unidad I:</p>
+    <ul>
+      <li>Alvéolo lleno de líquido y bronquio abierto → el sonido llega <b>amplificado</b>: vibraciones <b>aumentadas</b>.</li>
+      <li>Líquido o aire entre el pulmón y la pared → el sonido llega <b>peor</b>: vibraciones <b>disminuidas</b>.</li>
+      <li>Y la percusión responde siempre a la misma pregunta: <b>¿cuánto aire hay debajo del dedo?</b></li>
+    </ul>
+    <p>Cuando algo no le cierre, vuelva a esta frase antes de volver a la tabla.</p>
+  </div>
+
+  <h3>🧭 Cómo está construido cada bloque</h3>
+
+  <p>La secuencia es siempre la misma. Esa repetición es a propósito: cuando ya sabe dónde está cada cosa,
+  deja de buscar y empieza a estudiar.</p>
+
+  <div class="s2-ippa">
+    <div>
+      <b>Al principio</b>
+      <h5>Orientarse</h5>
+      <p>Dos recuadros abren cada bloque: <b>«Usted está aquí»</b>, que ubica el bloque dentro de la materia y
+      dice adónde lleva, y <b>«Antes de empezar»</b>, con lo mínimo que hace falta traer del bloque anterior.</p>
+      <span class="s2-norm"><b>Para qué sirve:</b> si empieza un bloque perdido, léalos dos veces y no siga hasta que la idea central le cierre.</span>
+    </div>
+    <div>
+      <b>En el medio</b>
+      <h5>Entender el mecanismo</h5>
+      <p>La <b>cadena causal</b> muestra en cinco pasos por qué aparece cada hallazgo, y la <b>técnica del
+      examen</b> muestra los cuatro pasos —inspección, palpación, percusión, auscultación— con <b>lo normal
+      en verde</b> y <b>lo anormal en rojo</b>.</p>
+      <span class="s2-norm"><b>Para qué sirve:</b> nunca se aprende un hallazgo anormal sin haber visto antes cómo es el normal. Es la única forma de reconocerlo junto a la cama.</span>
+    </div>
+    <div>
+      <b>Al cerrar el síndrome</b>
+      <h5>Reconocer el patrón</h5>
+      <p>El <b>patrón de reconocimiento</b> arma la ecuación del síndrome: hallazgo + hallazgo + hallazgo =
+      diagnóstico. Es la forma en que el examen pregunta y la forma en que se piensa en la práctica.</p>
+      <span class="s2-norm"><b>Para qué sirve:</b> si puede recitar el patrón, puede resolver el caso clínico aunque haya olvidado la tabla.</span>
+    </div>
+    <div>
+      <b>Al final</b>
+      <h5>Fijar y practicar</h5>
+      <p><b>«Si se acuerda de 5 cosas»</b> deja lo mínimo indispensable del bloque; <b>«Cómo razonar ante el
+      paciente»</b> cierra cada aparato con el orden completo de las preguntas; y después vienen las
+      <b>preguntas</b> y las <b>flashcards</b>.</p>
+      <span class="s2-norm"><b>Para qué sirve:</b> el día anterior al examen, leer solo los cierres de los diez bloques ya es un repaso completo.</span>
+    </div>
+  </div>
+
+  <aside class="s2-margin">
+    <b class="t">Anotación al margen</b>
+    <p>Los términos <b>resaltados</b> se tocan y abren su definición ahí mismo, sin salir del texto.</p>
+    <p>No hace falta buscarlos aparte: son justamente los que un alumno que nunca vio la materia trabaría al leer.</p>
+  </aside>
+
+  <div class="key-box exam">
+    <strong>Cómo usar el banco de preguntas:</strong> resuelva primero las preguntas <strong>de cada
+    bloque</strong>, apenas termina de leerlo. Deje el <strong>banco general</strong> del final para la semana
+    previa al examen, cuando ya pasó por los diez bloques — ahí las preguntas se mezclan entre unidades, que
+    es exactamente lo que hace la cátedra.
+  </div>
+
+  <div class="s2-puente">
+    Todo empieza por lo mismo que en la vida real: <b>el paciente que entra y cuenta algo</b>. <b>Bloque 01 ·
+    Motivo de consulta respiratorio.</b>
+  </div>
+</section>
 <!-- ================= BLOQUE 01 · MOTIVO DE CONSULTA RESPIRATORIO ================= -->
 <section class="container" id="s2-b01">
   <div class="section-marker"><span class="section-marker-num">— BLOQUE 01 · UNIDAD I</span></div>
@@ -234,6 +480,25 @@
   </div>
 
 
+
+  <div class="s2-mapa">
+    <h4>Bloque 01 de 10 · Unidad I · Aparato respiratorio</h4>
+    <div class="s2-rama"><b>Dónde estamos</b><span>En el <b>primer escalón</b> de toda la semiología respiratoria: los <b>síntomas</b> con los que el paciente entra al consultorio. Todavía no hay síndrome, no hay diagnóstico y casi no hace falta el estetoscopio. Hay un relato, y hay que saber preguntarlo.</span></div>
+    <div class="s2-rama"><b>Qué viene antes</b><span>Nada dentro de esta materia: este es el punto de partida. Solo se retoman tres ideas de Semiología I, y están en el recuadro de abajo.</span></div>
+    <div class="s2-rama"><b>Qué se aprende acá</b><span><i>Tos</i><i>Expectoración</i><i>Disnea</i><i>Hemoptisis</i><i>Dolor torácico</i><i>Cianosis</i></span></div>
+    <div class="s2-rama"><b>Adónde lleva</b><span>Estos seis síntomas se combinan de a poco en los <b>cuatro síndromes</b> de los bloques 02 a 05 —infeccioso, obstructivo, parenquimatoso y pleural—. Un síndrome no es otra cosa que <b>una combinación distinta de estos mismos seis</b> más lo que encuentran la mano y el oído.</span></div>
+  </div>
+
+  <div class="s2-antes">
+    <h4>Lo mínimo que hay que traer de Semiología I</h4>
+    <p>Este bloque no pide saber neumología. Pide tres ideas simples, y con eso alcanza:</p>
+    <ul>
+      <li><b>El aire entra por un tubo que se divide.</b> Tráquea → bronquios → bronquiolos → alvéolo. Cuanto más arriba nace un ruido, más <b>grave</b> suena; cuanto más cerca del alvéolo, más <b>fino</b>.</li>
+      <li><b>El pulmón no duele.</b> Ni el parénquima ni la pleura visceral tienen receptores de dolor. Duele la <b>pleura parietal</b>. De esa sola frase sale todo el dolor torácico respiratorio.</li>
+      <li><b>La sangre se ve roja porque lleva oxígeno.</b> Cuando la hemoglobina lo suelta y no lo vuelve a tomar, la piel vira al azul. Eso es la cianosis, y nada más.</li>
+    </ul>
+    <p>Con esas tres frases claras, buena parte del bloque se puede <b>deducir</b> en lugar de memorizar.</p>
+  </div>
   <div class="s2-flow">
     <div class="s2-pill"><span class="e">💨</span><b>Tos</b><small>reflejo defensivo</small></div>
     <div class="s2-pill"><span class="e">🤧</span><b>Expectoración</b><small>esputo anormal</small></div>
@@ -268,6 +533,15 @@
     <p class="s2-trap">&#9888; <b>Ojo:</b> No hay receptores de la tos en el parénquima alveolar. Un proceso puramente alveolar puede cursar sin tos.</p></figcaption>
 </figure>
 
+
+  <p class="s2-chain-l">Del estímulo al ruido · por qué la tos suena así</p>
+  <div class="s2-chain">
+    <div><b>1 · Estímulo</b><span>Moco, humo, un cuerpo extraño o inflamación tocan la mucosa de laringe, tráquea o bronquios.</span></div>
+    <div><b>2 · Receptor</b><span>Se activan los receptores tusígenos. <b>No hay ninguno en el alvéolo</b>: por eso una enfermedad puramente alveolar puede cursar <b>sin tos</b>.</span></div>
+    <div><b>3 · Vía y centro</b><span>La señal sube por el <b>vago</b> hasta el centro de la tos, en el bulbo.</span></div>
+    <div><b>4 · Respuesta</b><span>Inspiración profunda, la <b>glotis se cierra</b> y los músculos espiratorios comprimen: la presión dentro del tórax sube muchísimo.</span></div>
+    <div><b>5 · Consecuencia</b><span>La glotis se abre de golpe: sale el aire a gran velocidad —y con él la secreción— y suena la tos. Esa misma presión alta explica las <b>complicaciones</b>: síncope, neumotórax, vómito, incontinencia y fractura costal.</span></div>
+  </div>
 <div class="key-box exam">
     <strong>Las 3 fases del reflejo de la tos (cae literal):</strong> <strong>1) Inspiratoria</strong> (inhalación del aire/alérgeno) → <strong>2) Compresiva</strong> (cierre de la glotis tras la inhalación) → <strong>3) Espiratoria forzada</strong> (contra la glotis cerrada, que al abrirse genera el sonido característico).
   </div>
@@ -412,6 +686,39 @@
     que aparecen cuando el pulmón se condensa.</p>
   </div>
 
+
+  <p class="s2-chain-l">La técnica · así se examina un tórax, y así suena cuando está sano</p>
+  <div class="s2-ippa">
+    <div>
+      <b>Paso 1 · Inspección</b>
+      <h5>Mirar antes de tocar</h5>
+      <p>Con el paciente sentado y el tórax descubierto: forma del tórax, cómo se mueven los dos lados, frecuencia respiratoria, uso de músculos accesorios, color de piel y mucosas.</p>
+      <span class="s2-norm"><b>Normal:</b> tórax simétrico, ambos lados suben igual, 12–20 respiraciones por minuto, sin tiraje y sin cianosis.</span>
+      <span class="s2-anor"><b>Anormal:</b> un lado que se queda atrás, tórax en tonel, tiraje, aleteo nasal, labios azules.</span>
+    </div>
+    <div>
+      <b>Paso 2 · Palpación</b>
+      <h5>La mano busca vibración</h5>
+      <p>Se apoyan las manos y se pide al paciente que diga <b>«treinta y tres»</b>. Se compara un lado con el otro, siempre a la misma altura. Eso son las <b>vibraciones vocales</b>: el sonido de la voz viajando por el pulmón hasta la mano.</p>
+      <span class="s2-norm"><b>Normal:</b> se sienten iguales de los dos lados, suaves.</span>
+      <span class="s2-anor"><b>Anormal:</b> <b>aumentadas</b> si el pulmón está lleno de líquido pero el bronquio abierto (condensación); <b>disminuidas o ausentes</b> si hay aire o líquido en la pleura separando el pulmón de la mano.</span>
+    </div>
+    <div>
+      <b>Paso 3 · Percusión</b>
+      <h5>Golpear para saber qué hay debajo</h5>
+      <p>El dedo golpea al dedo apoyado sobre el tórax. El sonido depende de una sola cosa: <b>cuánto aire hay debajo</b>.</p>
+      <span class="s2-norm"><b>Normal:</b> <b>sonoridad</b> pulmonar en todo el campo — el sonido del pulmón lleno de aire.</span>
+      <span class="s2-anor"><b>Anormal:</b> <b>matidez</b> cuando el aire fue reemplazado por líquido o por tejido macizo; <b>hipersonoridad o timpanismo</b> cuando hay aire de más (neumotórax, enfisema).</span>
+    </div>
+    <div>
+      <b>Paso 4 · Auscultación</b>
+      <h5>Escuchar el aire moviéndose</h5>
+      <p>Con el estetoscopio, comparando lado con lado. Primero se decide si el ruido de base está o no está; después se buscan los ruidos agregados.</p>
+      <span class="s2-norm"><b>Normal:</b> <b>murmullo vesicular</b> — una brisa suave, casi toda la inspiración y apenas el comienzo de la espiración. Sin ruidos agregados.</span>
+      <span class="s2-anor"><b>Anormal:</b> murmullo <b>disminuido o abolido</b>, o ruidos agregados: crepitantes, subcrepitantes, sibilancias, roncus, estridor, frote pleural, soplo tubario.</span>
+    </div>
+  </div>
+  <p class="s2-cap">El mismo orden —I·P·P·A— se repite en todos los bloques de la Unidad I. Lo único que cambia de un síndrome a otro es <b>qué se encuentra en cada paso</b>.</p>
   <div class="s2-detalle">
     <h4>Escuche la diferencia</h4>
     <p>Leer la descripción de un ruido y reconocerlo con el estetoscopio son dos habilidades
@@ -629,6 +936,15 @@
     </tbody>
   </table>
 
+
+  <p class="s2-chain-l">Por qué el paciente siente que le falta el aire</p>
+  <div class="s2-chain">
+    <div><b>1 · Desequilibrio</b><span>El cuerpo pide más aire del que el aparato respiratorio puede entregar —por obstrucción, por pulmón ocupado o por un corazón que no bombea—.</span></div>
+    <div><b>2 · Aviso</b><span>Receptores del pulmón, de la pared del tórax y de los músculos respiratorios avisan que el esfuerzo no alcanza.</span></div>
+    <div><b>3 · Corteza</b><span>Esa información llega a la corteza y se vuelve <b>consciente</b>. Por eso la disnea es un <b>síntoma</b> (lo cuenta el paciente), no un signo.</span></div>
+    <div><b>4 · La posición manda</b><span>Si al acostarse la sangre de las piernas vuelve al tórax y sobrecarga un ventrículo izquierdo débil, el paciente se ahoga acostado: <b>ortopnea</b>. Si el problema es un derrame de un solo lado, se ahoga sobre ese lado: <b>trepopnea</b>.</span></div>
+    <div><b>5 · Consecuencia</b><span>La disnea no mide oxígeno, mide <b>esfuerzo</b>. Por eso la <b>mMRC</b> gradúa lo que el paciente <b>deja de hacer</b> —y un mMRC 4 puede tener saturación normal.</span></div>
+  </div>
   <div class="s2-detalle">
     <h4>Las tres formas de clasificar la disnea</h4>
     <p>La cátedra usa tres ejes distintos, y conviene no mezclarlos:</p>
@@ -697,6 +1013,15 @@
       <tr><td>Ej.: neumopatías, cardiopatías con shunt</td><td>Ej.: IC derecha, frío, shock</td></tr>
     </tbody>
   </table>
+
+  <p class="s2-chain-l">Por qué la piel se pone azul</p>
+  <div class="s2-chain">
+    <div><b>1 · Origen</b><span>Dos caminos distintos: el pulmón o el corazón no oxigenan bien la sangre (<b>central</b>), o la sangre circula tan lenta que el tejido le saca casi todo el oxígeno (<b>periférica</b>).</span></div>
+    <div><b>2 · Química</b><span>Sube la <b>hemoglobina reducida</b> —la que ya soltó su oxígeno— dentro del capilar.</span></div>
+    <div><b>3 · Umbral</b><span>Recién con <b>más de 5 g/dL</b> de hemoglobina reducida el color se hace visible. Por eso el <b>anémico</b> puede estar muy hipóxico y no verse azul, y el <b>policitémico</b> se ve azul con menos hipoxia.</span></div>
+    <div><b>4 · Dónde se ve</b><span>Si el problema es la sangre que sale del corazón, el color aparece también en las <b>mucosas</b> (lengua, labios) y la zona está <b>caliente</b>. Si el problema es la circulación local, solo se tiñen las <b>partes acras</b> y están <b>frías</b>.</span></div>
+    <div><b>5 · La prueba</b><span><b>Calentar o masajear</b> la zona: la periférica mejora, la central no. Ese gesto simple separa las dos en la cama del paciente.</span></div>
+  </div>
   <div class="key-box danger"><strong>Trampa de la cátedra (V/F):</strong> "la cianosis periférica es <strong>fría</strong>, por menor y más lenta circulación cutánea, y es característica de la <strong>IC derecha</strong>". La <strong>central</strong> compromete mucosas; la <strong>periférica</strong> las respeta y afecta zonas frías.</div>
 
   <div class="mapa-mental">
@@ -707,6 +1032,17 @@
     <div class="mapa-flow"><span class="mapa-node">Sangre + tos, roja espumosa</span><span class="mapa-arrow">→</span><span class="mapa-node fam">Hemoptisis (no hematemesis)</span></div>
   </div>
 
+
+  <div class="s2-cierre">
+    <h4>Motivo de consulta respiratorio · lo que no se puede olvidar</h4>
+    <ol>
+      <li><b>La tos tiene tres fases, en este orden: inspiratoria → compresiva → espiratoria forzada.</b> Y no hay receptores de tos en el parénquima: una enfermedad solo alveolar puede no dar tos.</li>
+      <li><b>Toda expectoración es anormal.</b> Una persona sana produce y traga unos <b>100 mL por día</b> sin notarlo. Arriba de <b>300 mL</b> de golpe ya no es expectoración: es <b>vómica</b>.</li>
+      <li><b>La disnea mide esfuerzo, no oxígeno.</b> La <b>mMRC</b> gradúa lo que el paciente deja de hacer. Y la <b>posición</b> orienta la causa: ortopnea y disnea paroxística nocturna → corazón izquierdo; trepopnea → derrame de un lado; platipnea → shunt.</li>
+      <li><b>Hemoptisis sale con la tos y es roja, espumosa y alcalina; hematemesis sale con el vómito y es oscura, con restos y ácida.</b> Es la pregunta de verdadero o falso más repetida del bloque.</li>
+      <li><b>Cianosis central compromete mucosas y la zona está caliente; la periférica respeta mucosas y la zona está fría.</b> Calentar la zona mejora la periférica y no cambia la central.</li>
+    </ol>
+  </div>
   <details class="s2-quiz-card" open>
     <summary>📝 Preguntas — Motivo de consulta respiratorio <span class="s2-qbadge">tocar para ver</span><span class="s2-chev">▸</span></summary>
     <div class="s2-quiz-body">
@@ -810,7 +1146,7 @@
 
   <div class="s2-exam">
     <h4>Lo que más cae — Motivo de consulta respiratorio</h4>
-    <p>Frecuencia relativa según el banco oficial de la cátedra revisado para este bloque.</p>
+    <p>Frecuencia relativa según las preguntas basadas en exámenes de la cátedra revisadas para este bloque.</p>
     <div class="s2-freq"><b>Las 3 fases del reflejo de la tos, en orden</b><span class="s2-bar"><i style="width:100%"></i></span></div>
     <div class="s2-freq"><b>Escala mMRC: qué significa cada grado</b><span class="s2-bar"><i style="width:92%"></i></span></div>
     <div class="s2-freq"><b>Cianosis central × periférica</b><span class="s2-bar"><i style="width:80%"></i></span></div>
@@ -826,6 +1162,11 @@
       <div class="pattern-card gold"><h5>Disnea + clínica</h5><p>Asocia formas de disnea (ortopnea, DPN) con <strong>IC izquierda</strong>; suele venir dentro de casos cardiovasculares (Unidad II).</p></div>
     </div>
   </div>
+
+  <div class="s2-puente">
+    Hasta acá se aprendieron los <b>síntomas sueltos</b> y la <b>técnica</b> para buscarlos. De acá en adelante empiezan a aparecer <b>de a varios y siempre juntos</b>: eso es un síndrome. El primero es el más frecuente de todos —el que llega tosiendo con fiebre— y también el más simple, porque el pulmón todavía está sano por dentro. <b>Bloque 02 · Síndrome infeccioso.</b>
+  </div>
+
 </section>
 
 <!-- ================= BLOQUE 02 · SÍNDROME INFECCIOSO ================= -->
@@ -833,6 +1174,24 @@
   <div class="section-marker"><span class="section-marker-num">— BLOQUE 02 · UNIDAD I</span></div>
   <h2>Síndrome Infeccioso (traqueobronquitis y bronquitis)</h2>
 
+
+  <div class="s2-mapa">
+    <h4>Bloque 02 de 10 · Unidad I · el primero de los cuatro síndromes respiratorios</h4>
+    <div class="s2-rama"><b>Dónde estamos</b><span>En el síndrome <b>más frecuente y más benigno</b> de la unidad. El bronquio está inflamado por dentro, pero el <b>alvéolo sigue con aire</b> — y eso decide todo el examen físico.</span></div>
+    <div class="s2-rama"><b>Qué viene antes</b><span>Del bloque 01: la <b>tos</b> (sus tres fases y sus tipos), la <b>expectoración</b> y la técnica <b>I·P·P·A</b>.</span></div>
+    <div class="s2-rama"><b>Qué se aprende acá</b><span><i>Traqueobronquitis</i><i>Bronquitis aguda</i><i>Bronquitis crónica</i><i>Virus y bacterias</i><i>Roncus y sibilancias</i></span></div>
+    <div class="s2-rama"><b>Adónde lleva</b><span>Es el <b>punto de comparación</b> de toda la unidad: los bloques 03, 04 y 05 se entienden por lo que <b>cambia</b> respecto de acá. Bronquitis = bronquio inflamado con alvéolo aireado; asma y EPOC = bronquio estrechado; neumonía = alvéolo ocupado; pleura = pulmón separado de la pared.</span></div>
+  </div>
+
+  <div class="s2-antes">
+    <h4>La frase que hay que tener antes de empezar</h4>
+    <p>Todo este bloque cabe en una idea: <b>acá el problema está dentro del tubo, no dentro del alvéolo</b>.</p>
+    <ul>
+      <li>Si el alvéolo <b>sigue lleno de aire</b>, la percusión es <b>sonora</b> y las vibraciones vocales están <b>normales</b>. Por eso el examen físico de la bronquitis está casi entero conservado.</li>
+      <li>Lo único que se altera es lo que depende del <b>aire pasando por un tubo estrecho</b>: la auscultación. De ahí los <b><span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">roncus<b>?</b><i onclick="event.stopPropagation()"><b>Roncus</b>Ruido <b>continuo y grave</b>, como un ronquido, que nace en bronquios de <b>grueso calibre</b> con secreción suelta adentro. Se diferencia de la sibilancia, que es aguda y nace en la vía pequeña. Su rasgo propio: <b>cambia o desaparece al toser</b>, porque la secreción se moviliza.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span></b> y las <b>sibilancias</b>.</li>
+      <li>Si aparece <b>matidez</b>, vibraciones vocales <b>aumentadas</b> o <b>crepitantes en un solo sitio</b>, ya no es bronquitis: hay que pensar en <b>neumonía</b> (bloque 04).</li>
+    </ul>
+  </div>
   <div class="s2-flow">
     <div class="s2-pill"><span class="e">🦠</span><b>Agente</b><small>viral &gt; bacteriano</small></div>
     <div class="s2-pill"><span class="e">🔥</span><b>Inflamación</b><small>mucosa bronquial</small></div>
@@ -866,6 +1225,15 @@
 
 
   <div class="s2-detalle">
+
+  <p class="s2-chain-l">La cadena que explica cada hallazgo</p>
+  <div class="s2-chain">
+    <div><b>1 · Agente</b><span>Un <b>virus</b> (lo más frecuente) llega desde una infección de vías altas: primero rinitis y faringitis, después tos.</span></div>
+    <div><b>2 · Daño</b><span>El epitelio bronquial se irrita y se lesiona. La mucosa queda <b>hiperémica y edematosa</b>.</span></div>
+    <div><b>3 · Falla el ascensor</b><span>Se pierde la <b>función mucociliar</b>: el moco ya no sube solo hacia la faringe y se queda abajo.</span></div>
+    <div><b>4 · Secreción y luz estrecha</b><span>Aumenta el moco y el edema reduce la luz del bronquio. <b>La pared no se destruye</b> — solo se hincha.</span></div>
+    <div><b>5 · Lo que se oye</b><span>Aire pasando por una luz estrecha con secreción suelta: <b>roncus y sibilancias</b>. Y el estímulo constante sobre los receptores da el síntoma cardinal, la <b>tos</b>: seca al principio, húmeda después.</span></div>
+  </div>
     <h4>La cadena fisiopatológica, paso a paso</h4>
     <p>Todo el cuadro de la bronquitis aguda se deduce de una secuencia única. La cátedra la
     presenta como cadena porque cada eslabón explica un signo del examen físico:</p>
@@ -1035,6 +1403,39 @@
     <p>Pero recuerde el orden de magnitud: la causa más frecuente sigue siendo <em>viral</em>.</p>
   </aside>
 <h3>⭐ Examen físico de la bronquitis aguda (inspección · palpación · percusión · auscultación)</h3>
+  <p class="s2-chain-l">La técnica paso a paso · qué se busca y qué se encuentra</p>
+  <div class="s2-ippa">
+    <div>
+      <b>Paso 1 · Inspección</b>
+      <h5>Mirar el tórax</h5>
+      <p>Simetría, movimientos, frecuencia respiratoria, uso de músculos accesorios.</p>
+      <span class="s2-norm"><b>Lo normal:</b> tórax simétrico, ambos lados se mueven igual.</span>
+      <span class="s2-anor"><b>En la bronquitis: igual — conservada.</b> No hay nada que ver. Es la primera pista de que el pulmón por dentro está sano.</span>
+    </div>
+    <div>
+      <b>Paso 2 · Palpación</b>
+      <h5>Buscar vibraciones vocales</h5>
+      <p>Manos sobre el tórax, el paciente dice «treinta y tres», se compara lado con lado.</p>
+      <span class="s2-norm"><b>Lo normal:</b> vibraciones iguales de los dos lados.</span>
+      <span class="s2-anor"><b>En la bronquitis:</b> vibraciones <b>normales</b>. A veces se siente <b>frémito</b> —la vibración de los roncus— que es la secreción moviéndose, no líquido en el alvéolo.</span>
+    </div>
+    <div>
+      <b>Paso 3 · Percusión</b>
+      <h5>Golpear el tórax</h5>
+      <p>El sonido responde a una sola pregunta: ¿hay aire debajo?</p>
+      <span class="s2-norm"><b>Lo normal:</b> sonoridad pulmonar.</span>
+      <span class="s2-anor"><b>En la bronquitis: sonoridad normal.</b> El alvéolo nunca se ocupó. Si acá aparece <b>matidez</b>, el diagnóstico cambia.</span>
+    </div>
+    <div>
+      <b>Paso 4 · Auscultación</b>
+      <h5>Escuchar el aire</h5>
+      <p>El único paso que se altera. Primero el ruido de base, después los agregados.</p>
+      <span class="s2-norm"><b>Lo normal:</b> murmullo vesicular limpio, sin agregados.</span>
+      <span class="s2-anor"><b>En la bronquitis:</b> murmullo vesicular <b>conservado</b> + <b>estertores secos</b> (roncus y sibilancias), escasos al principio y abundantes después. <b>Cambian o desaparecen al toser</b>, porque son secreción suelta.</span>
+    </div>
+  </div>
+  <p class="s2-cap">Tres de los cuatro pasos están conservados. Ese patrón —<b>solo la auscultación alterada</b>— es la firma del síndrome infeccioso bronquial.</p>
+
 <figure class="s2-fig">
   <div class="s2-photo s2-i5" role="img" aria-label="Comparación entre bronquitis aguda, bronquitis crónica/EPOC y neumonía"></div>
   <figcaption><b>Aguda, crónica o neumonía</b> — La clave de separación en una línea: <b>bronquitis = bronquio inflamado</b>; <b>neumonía = alvéolo ocupado por exudado</b>. Todo lo demás se deduce de ahí.
@@ -1052,6 +1453,7 @@
   </table>
   <div class="key-box exam">🏆 <strong>Diagnóstico de la bronquitis aguda:</strong> es <strong>sobre todo clínico</strong>; la <strong>Rx de tórax (PA/perfil)</strong> sirve para confirmar o descartar diagnósticos diferenciales (la neumonía se relaciona con la bronquitis aguda, y el enfisema/EPOC con la bronquitis crónica).</div>
 
+
   <table>
     <thead><tr><th>Maniobra</th><th>Hallazgo (según el material)</th></tr></thead>
     <tbody>
@@ -1062,6 +1464,30 @@
     </tbody>
   </table>
 
+
+  <div class="s2-patron">
+    <h4>Bronquitis aguda · cómo se reconoce en tres segundos</h4>
+    <div class="s2-eq">
+      <span>Infección de vías altas <b>previa</b></span><i>+</i>
+      <span><b>Tos</b> seca que se vuelve húmeda</span><i>+</i>
+      <span>Percusión y vibraciones <b>normales</b></span><i>+</i>
+      <span><b>Roncus y sibilancias</b> que cambian al toser</span><i>=</i>
+      <span class="s2-res">SÍNDROME INFECCIOSO BRONQUIAL</span>
+    </div>
+    <p>Lo que confirma el patrón no es lo que aparece, sino <b>lo que falta</b>: sin matidez, sin vibraciones aumentadas y sin <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">crepitantes<b>?</b><i onclick="event.stopPropagation()"><b>Crepitantes</b>Ruidos <b>discontinuos y finos</b>, como estallidos, que se oyen <b>al final de la inspiración</b>: son alvéolos colapsados que se despegan de golpe. Aparecen en la <b>condensación</b> y en el edema. No se modifican con la tos — eso los separa de los roncus.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span> localizados, el alvéolo está aireado y no hay condensación.</p>
+    <p><b>Y si el patrón se rompe:</b> fiebre alta, taquipnea, hipoxemia, matidez, vibraciones aumentadas o crepitantes en un solo sitio → la pregunta ya no es qué tipo de bronquitis, sino <b>«¿hay neumonía?»</b>. Ahí sí entra la radiografía.</p>
+  </div>
+
+  <div class="s2-cierre">
+    <h4>Síndrome infeccioso · lo que no se puede olvidar</h4>
+    <ol>
+      <li><b>La causa más frecuente de la bronquitis aguda es viral</b> (virus del resfrío común). Cuando hay bacteria, las tres típicas de la bronquitis son <b>Bordetella pertussis, Mycoplasma pneumoniae y Chlamydia pneumoniae</b>.</li>
+      <li><b>Mycoplasma y Chlamydia son «típicas» en la bronquitis y «atípicas» en la neumonía.</b> Es la misma bacteria con dos etiquetas distintas según el cuadro: la cátedra lo pregunta así, a propósito.</li>
+      <li><b>Bronquitis crónica se define por tiempo, no por germen:</b> tos productiva <b>3 meses al año durante 2 años seguidos</b>, y su causa principal es el <b>tabaco</b>.</li>
+      <li><b>En el examen físico solo se altera la auscultación.</b> Inspección conservada, percusión sonora, vibraciones normales, murmullo conservado + roncus y sibilancias.</li>
+      <li><b>Puede quedar <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">hiperreactividad bronquial<b>?</b><i onclick="event.stopPropagation()"><b>Hiperreactividad bronquial</b>Tendencia del bronquio a <b>cerrarse de más</b> frente a estímulos que a una persona sana no le hacen nada: aire frío, humo, ejercicio, olores. Después de una bronquitis puede durar <b>6 a 8 semanas</b> y explica al paciente que «sigue tosiendo». Es también el mecanismo de fondo del <b>asma</b>.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span> de 6 a 8 semanas.</b> Ese dato explica al paciente que «sigue tosiendo» un mes después y no tiene neumonía.</li>
+    </ol>
+  </div>
   <details class="s2-quiz-card" open>
     <summary>📝 Preguntas — Síndrome Infeccioso <span class="s2-qbadge">tocar para ver</span><span class="s2-chev">▸</span></summary>
     <div class="s2-quiz-body">
@@ -1191,7 +1617,7 @@
 
   <div class="s2-exam">
     <h4>Lo que más cae — Síndrome infeccioso</h4>
-    <p>Frecuencia relativa según el banco oficial de la cátedra revisado para este bloque.</p>
+    <p>Frecuencia relativa según las preguntas basadas en exámenes de la cátedra revisadas para este bloque.</p>
     <div class="s2-freq"><b>Definición de bronquitis crónica: 3 meses/año × 2 años</b><span class="s2-bar"><i style="width:100%"></i></span></div>
     <div class="s2-freq"><b>Etiología más frecuente de la bronquitis aguda: viral</b><span class="s2-bar"><i style="width:88%"></i></span></div>
     <div class="s2-freq"><b>Examen físico: qué está conservado y qué no</b><span class="s2-bar"><i style="width:76%"></i></span></div>
@@ -1206,6 +1632,11 @@
       <div class="pattern-card gold"><h5>Asociaciones</h5><p>VSR → bronquiolitis del lactante; Bordetella → tos ferina.</p></div>
     </div>
   </div>
+
+  <div class="s2-puente">
+    En la bronquitis el bronquio se hincha <b>por una infección y por unos días</b>. Ahora aparecen dos enfermedades en las que el bronquio se estrecha <b>siempre</b>: una que se abre y se cierra —y vuelve a la normalidad entre crisis— y otra que ya no vuelve. <b>Bloque 03 · Síndrome obstructivo: asma y EPOC.</b>
+  </div>
+
 </section>
 
 <!-- ================= BLOQUE 03 · SÍNDROME OBSTRUCTIVO ================= -->
@@ -1213,6 +1644,25 @@
   <div class="section-marker"><span class="section-marker-num">— BLOQUE 03 · UNIDAD I</span></div>
   <h2>Síndrome Obstructivo (Asma y EPOC)</h2>
 
+
+  <div class="s2-mapa">
+    <h4>Bloque 03 de 10 · Unidad I · el segundo síndrome respiratorio</h4>
+    <div class="s2-rama"><b>Dónde estamos</b><span>El bronquio ya no se hincha por unos días: <b>se estrecha de forma crónica</b>. El aire entra, pero <b>cuesta sacarlo</b>. Todo el bloque gira alrededor de la <b>espiración</b>.</span></div>
+    <div class="s2-rama"><b>Qué viene antes</b><span>Del bloque 02: bronquio inflamado, alvéolo aireado, <b>sibilancias y roncus</b>. Acá el mismo bronquio, pero estrechado siempre.</span></div>
+    <div class="s2-rama"><b>Qué se aprende acá</b><span><i>Asma</i><i>EPOC</i><i>Reversibilidad</i><i>Espirometría</i><i>Atrapamiento aéreo</i><i>Índice tabáquico</i></span></div>
+    <div class="s2-rama"><b>Adónde lleva</b><span>Acá el alvéolo tiene <b>aire de más</b>. En el bloque 04 va a tener <b>líquido en lugar de aire</b>, y en el 05 el problema va a estar <b>fuera del pulmón</b>, entre las dos pleuras. La percusión es la maniobra que separa los tres.</span></div>
+  </div>
+
+  <div class="s2-antes">
+    <h4>Una sola idea sostiene el bloque entero</h4>
+    <p><b>Obstructivo = cuesta sacar el aire.</b> Y si cuesta sacarlo, el aire <b>se queda dentro</b>. Eso se llama <b>atrapamiento aéreo</b>, y de ahí sale casi todo lo demás:</p>
+    <ul>
+      <li>Más aire atrapado → el tórax se <b>infla</b> → <b><span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">hipersonoridad<b>?</b><i onclick="event.stopPropagation()"><b>Hipersonoridad</b>Sonido de la percusión <b>más resonante de lo normal</b>, porque debajo hay <b>más aire</b> que en un pulmón sano. Es el opuesto de la <b>matidez</b>, que indica líquido o tejido macizo. Llevada al extremo se llama <b>timpanismo</b>, y aparece en el neumotórax.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span></b> a la percusión y <b>tórax en tonel</b> en la inspección.</li>
+      <li>Más aire entre la voz y la mano → las <b>vibraciones vocales bajan</b>.</li>
+      <li>Aire pasando por un tubo angosto y a presión → <b>silba</b>: la <b>sibilancia</b>, sobre todo en la espiración.</li>
+    </ul>
+    <p>Y una sola pregunta separa las dos enfermedades del bloque: <b>¿el bronquio vuelve a abrirse o no?</b> Si vuelve, es <b>asma</b>. Si no vuelve del todo, es <b>EPOC</b>.</p>
+  </div>
   <div class="s2-flow">
     <div class="s2-pill"><span class="e">🌬️</span><b>Obstrucción</b><small>espiratoria</small></div>
     <div class="s2-pill"><span class="e">🔄</span><b>Asma</b><small>REVERSIBLE</small></div>
@@ -1239,6 +1689,15 @@
 </figure>
 
 <h4>Fisiopatología (la cadena)</h4>
+  <p class="s2-chain-l">Del bronquio estrecho a cada signo del examen físico</p>
+  <div class="s2-chain">
+    <div><b>1 · Estímulo</b><span>Un alérgeno, un virus, aire frío o el ejercicio tocan un bronquio ya <b>hiperreactivo</b> por la inflamación crónica.</span></div>
+    <div><b>2 · Obstrucción</b><span>Tres cosas a la vez: <b>broncoespasmo</b> del músculo liso, <b>edema</b> de la mucosa y <b>moco</b> en la luz.</span></div>
+    <div><b>3 · Espiración prolongada</b><span>Al soltar el aire, la presión de afuera aprieta más el bronquio. Por eso la obstrucción <b>empeora en la espiración</b> y el paciente tarda en vaciar.</span></div>
+    <div><b>4 · Atrapamiento</b><span>Queda aire dentro. El pulmón trabaja <b>hiperinsuflado</b>: percusión hipersonora, vibraciones vocales disminuidas, músculos accesorios en marcha.</span></div>
+    <div><b>5 · Consecuencia</b><span>Aire a presión en un tubo angosto: <b>sibilancias espiratorias</b>. Cuando la obstrucción es tan grave que casi no pasa aire, las sibilancias <b>desaparecen</b>: es el <b>tórax silencioso</b>, signo de gravedad extrema.</span></div>
+  </div>
+
   <div class="illustration">
     <svg role="img" viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" aria-label="Fisiopatología del asma">
       <g font-family="Spectral, serif" font-size="11.5" font-weight="700">
@@ -1302,6 +1761,39 @@
   </table>
 
   <h4>Examen físico del asma (inspección · palpación · percusión · auscultación)</h4>
+  <p class="s2-chain-l">Del pulmón sano al pulmón obstruido · qué cambia en cada paso</p>
+  <div class="s2-ippa">
+    <div>
+      <b>Paso 1 · Inspección</b>
+      <h5>Mirar cómo espira</h5>
+      <p>Se cronometra sin decírselo: cuánto tarda en soltar el aire y si usa el cuello y los hombros para respirar.</p>
+      <span class="s2-norm"><b>Lo normal:</b> la espiración dura más o menos lo mismo que la inspiración y es pasiva, sin esfuerzo.</span>
+      <span class="s2-anor"><b>En el asma:</b> <b>espiración prolongada</b>. En crisis, uso de músculos accesorios e hiperventilación.</span>
+    </div>
+    <div>
+      <b>Paso 2 · Palpación</b>
+      <h5>Vibraciones vocales</h5>
+      <p>El aire es mal conductor del sonido. Cuanto más aire haya de más, menos vibración llega a la mano.</p>
+      <span class="s2-norm"><b>Lo normal:</b> vibraciones simétricas y bien perceptibles.</span>
+      <span class="s2-anor"><b>En el asma:</b> <b>conservadas o disminuidas</b>, según cuánto aire quede atrapado.</span>
+    </div>
+    <div>
+      <b>Paso 3 · Percusión</b>
+      <h5>Cuánto aire hay debajo</h5>
+      <p>Acá la percusión no busca líquido: busca <b>exceso</b> de aire.</p>
+      <span class="s2-norm"><b>Lo normal:</b> sonoridad pulmonar.</span>
+      <span class="s2-anor"><b>En el asma:</b> sonoridad normal o <b>hipersonoridad</b> por atrapamiento aéreo. Nunca matidez — si hay matidez, el problema es otro.</span>
+    </div>
+    <div>
+      <b>Paso 4 · Auscultación</b>
+      <h5>Cuándo y cómo silba</h5>
+      <p>Importa <b>en qué fase</b> suena: eso gradúa la gravedad mejor que la intensidad del ruido.</p>
+      <span class="s2-norm"><b>Lo normal:</b> murmullo vesicular limpio, sin agregados.</span>
+      <span class="s2-anor"><b>En el asma:</b> <b>sibilancias</b> — primero solo en la espiración forzada, después en la espiración normal, y en la crisis grave <b>en las dos fases</b>. Si dejan de oírse y el paciente está peor: <b>tórax silencioso</b>.</span>
+    </div>
+  </div>
+  <p class="s2-cap">Compare con el bloque 02: allá la percusión y las vibraciones estaban <b>intactas</b>. Acá empiezan a moverse — pero hacia el lado del <b>exceso de aire</b>, nunca hacia la matidez.</p>
+
   <table>
     <thead><tr><th>Maniobra</th><th>Hallazgo</th></tr></thead>
     <tbody>
@@ -1312,6 +1804,19 @@
     </tbody>
   </table>
 
+
+  <div class="s2-patron">
+    <h4>Asma · cómo se reconoce</h4>
+    <div class="s2-eq">
+      <span><b>Joven</b> con antecedente de <b>atopia</b></span><i>+</i>
+      <span>Síntomas <b>episódicos</b>, con temporadas sin nada</span><i>+</i>
+      <span><b>Sibilancias espiratorias</b> + tos seca</span><i>+</i>
+      <span>Espirometría obstructiva que <b>mejora con broncodilatador</b></span><i>=</i>
+      <span class="s2-res">ASMA</span>
+    </div>
+    <p>La palabra que decide es <b>reversibilidad</b>: en el adulto, aumento del VEF₁ <b>&gt;12 % y &gt;200 mL</b> después del <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">broncodilatador<b>?</b><i onclick="event.stopPropagation()"><b>Broncodilatador</b>Fármaco inhalado que <b>relaja el músculo liso</b> del bronquio y lo abre. En la prueba se mide la espirometría, se administra el broncodilatador y se repite: si el VEF₁ mejora <b>más de 12 % y más de 200 mL</b>, la obstrucción es <b>reversible</b>.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span>. Ese número es lo que convierte «obstrucción» en «asma».</p>
+    <p><b>Cuidado con el falso negativo:</b> entre las crisis la espirometría puede ser <b>normal</b>. Una espirometría normal <b>no descarta asma</b> — por eso existen el peak flow con variabilidad diurna &gt;20 % y la prueba de broncoprovocación.</p>
+  </div>
   <h4>Métodos diagnósticos del asma (sin resumir)</h4>
   <p>El estudio definitivo y <strong>patrón oro</strong> es la <strong>espirometría</strong>: muestra un trastorno ventilatorio obstructivo (DVO), con <strong>VEF₁/CVF &lt; 0,7</strong> (<strong>índice de Tiffeneau</strong>) y VEF₁ normal o disminuido.</p>
   <p><strong>Clasificación de gravedad del DVO en el asma según el VEF₁ (% del previsto):</strong></p>
@@ -1400,6 +1905,19 @@
       <div class="s2-photo s2-i10" role="img" aria-label="Enfisema — silueta cardíaca y diafragma"></div>
   </div>
   <p class="med-image-caption">📷 Enfisema/hiperinsuflación: silueta cardíaca aplanada y estrechada, hiperinsuflación con gran radiolucidez y diafragma bajo y aplanado; reducción de la trama vascular, aumento de los espacios intercostales y rectificación costal.</p>
+
+  <div class="s2-patron">
+    <h4>EPOC · cómo se reconoce</h4>
+    <div class="s2-eq">
+      <span><b>Adulto fumador</b>, más de 40 años</span><i>+</i>
+      <span>Disnea <b>progresiva</b> y tos productiva crónica</span><i>+</i>
+      <span><b>Tórax en tonel</b> + hipersonoridad + murmullo <b>disminuido</b></span><i>+</i>
+      <span>VEF₁/CVF <b>&lt;0,70</b> que <b>no se corrige</b> con broncodilatador</span><i>=</i>
+      <span class="s2-res">EPOC</span>
+    </div>
+    <p>Todo tiene que contar <b>la misma historia</b>: la edad, el tiempo, la exposición y la <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">espirometría<b>?</b><i onclick="event.stopPropagation()"><b>Espirometría</b>Prueba en la que el paciente <b>sopla con fuerza</b> dentro de un aparato que mide cuánto aire saca y en cuánto tiempo. Da dos números clave: la <b>CVF</b> (todo el aire soplado) y el <b>VEF₁</b> (lo soplado en el primer segundo). Su cociente <b>VEF₁/CVF &lt;0,70</b> define la obstrucción.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span>. Asma = <b>variabilidad</b>. EPOC = <b>persistencia</b>.</p>
+    <p><b>La excepción que se pregunta:</b> EPOC en alguien que <b>no fuma</b>, con historia familiar, o con enfisema de las <b>bases</b> (panlobular) → sospechar <b>deficiencia de alfa-1-antitripsina</b>.</p>
+  </div>
   <h4>🚬 Índice tabáquico</h4>
   <p>Cuantifica la exposición acumulada al tabaco (paquetes/año) y permite estimar el riesgo que tiene un fumador de padecer EPOC. Es un dato clave en la anamnesis del paciente respiratorio.</p>
   <table>
@@ -1416,6 +1934,17 @@
   <p class="med-image-caption">📷 Signos de hiperinsuflación del enfisema: aumento de los espacios intercostales, rectificación de las costillas (horizontalizadas) y de las cúpulas diafragmáticas, "corazón en gota" (pequeño y vertical) y aumento del diámetro anteroposterior con mayor espacio retrosternal (perfil).</p>
   
 
+
+  <div class="s2-cierre">
+    <h4>Síndrome obstructivo · lo que no se puede olvidar</h4>
+    <ol>
+      <li><b>Obstructivo es un problema de espiración.</b> El aire entra y no sale: queda atrapado. De ese atrapamiento salen la hipersonoridad, el tórax en tonel y las vibraciones vocales disminuidas.</li>
+      <li><b>Lo que separa asma de EPOC es la reversibilidad.</b> Asma: obstrucción <b>reversible</b>, joven, atópico, episódico. EPOC: obstrucción <b>poco o nada reversible</b>, adulto fumador, progresiva.</li>
+      <li><b>El criterio funcional es VEF₁/CVF &lt;0,70</b> (índice de Tiffeneau) post-broncodilatador; la reversibilidad en el adulto es <b>&gt;12 % y &gt;200 mL</b> de VEF₁.</li>
+      <li><b>Una espirometría normal no descarta asma:</b> entre crisis la obstrucción puede no estar. Y <b>no toda sibilancia es asma</b> — en el lactante piense bronquiolitis por VSR; si la sibilancia es de un solo lado, piense cuerpo extraño o tumor.</li>
+      <li><b>El tórax silencioso es gravedad extrema, no mejoría.</b> Si las sibilancias desaparecen y el paciente está peor, casi no está pasando aire.</li>
+    </ol>
+  </div>
   <details class="s2-quiz-card" open>
     <summary>📝 Preguntas — Síndrome Obstructivo <span class="s2-qbadge">tocar para ver</span><span class="s2-chev">▸</span></summary>
     <div class="s2-quiz-body">
@@ -1640,7 +2169,7 @@
 
   <div class="s2-exam">
     <h4>Lo que más cae — Síndrome obstructivo</h4>
-    <p>Frecuencia relativa según el banco oficial de la cátedra revisado para este bloque.</p>
+    <p>Frecuencia relativa según las preguntas basadas en exámenes de la cátedra revisadas para este bloque.</p>
     <div class="s2-freq"><b>VEF₁/CVF post-BD &lt;0,70 confirma obstrucción</b><span class="s2-bar"><i style="width:100%"></i></span></div>
     <div class="s2-freq"><b>Asma reversible/variable × EPOC persistente</b><span class="s2-bar"><i style="width:94%"></i></span></div>
     <div class="s2-freq"><b>Blue bloater × pink puffer: por qué el nombre</b><span class="s2-bar"><i style="width:78%"></i></span></div>
@@ -1656,6 +2185,11 @@
       <div class="pattern-card gold"><h5>Clínica</h5><p>Predominio espiratorio de la sibilancia y su progresión por gravedad.</p></div>
     </div>
   </div>
+
+  <div class="s2-puente">
+    Hasta acá el alvéolo siempre tuvo aire —poco o de más, pero aire—. Por eso la percusión nunca dio matidez. Ahora el aire va a ser <b>reemplazado por exudado dentro del alvéolo</b>, y el examen físico se da vuelta entero: aparece la matidez, y las vibraciones vocales, en lugar de bajar, <b>suben</b>. <b>Bloque 04 · Síndrome parenquimatoso: condensación y neumonía.</b>
+  </div>
+
 </section>
 
 <!-- ================= BLOQUE 04 · SÍNDROME PARENQUIMATOSO ================= -->
@@ -1663,6 +2197,25 @@
   <div class="section-marker"><span class="section-marker-num">— BLOQUE 04 · UNIDAD I</span></div>
   <h2>Síndrome Parenquimatoso (Condensación · Neumonía)</h2>
 
+
+  <div class="s2-mapa">
+    <h4>Bloque 04 de 10 · Unidad I · el síndrome que da vuelta el examen físico</h4>
+    <div class="s2-rama"><b>Dónde estamos</b><span>Por primera vez el problema <b>no está en el bronquio</b>: está <b>dentro del alvéolo</b>. El aire se fue y quedó exudado. El pulmón, en esa zona, deja de ser esponja y se vuelve <b>macizo</b>.</span></div>
+    <div class="s2-rama"><b>Qué viene antes</b><span>Del bloque 02, la infección; del 03, el atrapamiento aéreo. Acá el aire no sobra ni cuesta sacarlo: <b>directamente no está</b>.</span></div>
+    <div class="s2-rama"><b>Qué se aprende acá</b><span><i>Condensación</i><i>Neumonía</i><i>Atelectasia</i><i>NAC y nosocomial</i><i>Broncograma aéreo</i><i>CURB-65</i></span></div>
+    <div class="s2-rama"><b>Adónde lleva</b><span>Este bloque es el <b>espejo</b> del bloque 05. Acá el sonido se transmite <b>mejor</b> (vibraciones aumentadas); allá, con aire o líquido en la pleura, se transmite <b>peor</b> (vibraciones abolidas). Los dos dan matidez, y por eso se confunden.</span></div>
+  </div>
+
+  <div class="s2-antes">
+    <h4>Una regla de física, y el bloque se deduce solo</h4>
+    <p><b>El aire amortigua el sonido; el tejido lleno de líquido lo transmite mejor.</b> Nada más que eso.</p>
+    <ul>
+      <li>Alvéolo <b>con aire</b> (normal) → la voz llega a la mano <b>suave</b> y la percusión suena <b>hueca</b>.</li>
+      <li>Alvéolo <b>lleno de exudado, con el bronquio abierto</b> → la voz llega <b>amplificada</b> (vibraciones vocales <b>aumentadas</b>) y la percusión suena <b>maciza</b>: matidez.</li>
+      <li>Y como el bronquio sigue abierto, el ruido que normalmente se oye solo sobre la tráquea <b>viaja hasta la periferia</b>: eso es el <b>soplo tubárico</b>.</li>
+    </ul>
+    <p>Guarde esta comparación, porque es la pregunta favorita del examen: <b>condensación = vibraciones ↑ · derrame y neumotórax = vibraciones ↓</b>. Los tres dan alteración de la percusión, pero solo uno <b>aumenta</b> la transmisión.</p>
+  </div>
   <div class="s2-flow">
     <div class="s2-pill"><span class="e">💧</span><b>Alvéolo lleno</b><small>líquido/<span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">exudado<b>?</b><i onclick="event.stopPropagation()"><b>Trasudado y exudado</b><b>Trasudado</b>: líquido pobre en proteínas, que sale por un <b>desequilibrio de presiones</b> — sube la hidrostática (insuficiencia cardíaca) o baja la oncótica (hipoalbuminemia). El vaso está sano. <b>Exudado</b>: líquido rico en proteínas y células, que sale porque la <b>pared vascular está inflamada</b> y se volvió permeable — infección, neoplasia, TBC.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span></small></div>
     <div class="s2-pill"><span class="e">📈</span><b>↑ Vibraciones</b><small>vocales</small></div>
@@ -1821,7 +2374,50 @@
   </div>
 
 
+
+  <p class="s2-chain-l">Del germen al soplo tubárico</p>
+  <div class="s2-chain">
+    <div><b>1 · Falla la defensa</b><span>El inóculo supera las barreras —vibrisas y moco nasal, escalera mucociliar, reflejo de la tos, macrófago alveolar— o alguna de ellas está rota (conciencia alterada, disfagia, tabaco, intubación).</span></div>
+    <div><b>2 · Inflamación alveolar</b><span>El germen llega al alvéolo. Llegan neutrófilos, proteínas y líquido: se forma el <b>exudado</b>.</span></div>
+    <div><b>3 · Se pierde el aire</b><span>El exudado ocupa el lugar del aire. El volumen del pulmón <b>se mantiene</b> —esto lo separa de la atelectasia, que colapsa—.</span></div>
+    <div><b>4 · Cambia la conducción</b><span>El tejido macizo conduce el sonido <b>mejor</b> que el aire: vibraciones vocales <b>aumentadas</b> y percusión <b>mate</b>.</span></div>
+    <div><b>5 · Lo que se oye</b><span>El bronquio sigue <b>permeable</b>, así que transmite el ruido traqueal hasta la pared: <b>soplo tubárico</b>, <b>broncofonía</b>, <b>pectoriloquia áfona</b>, <b>egofonía</b>, y <b>crepitantes</b> por los alvéolos que se despegan al final de la inspiración.</span></div>
+  </div>
+
   <h4>Examen físico de la condensación (inspección · palpación · percusión · auscultación)</h4>
+  <p class="s2-chain-l">Del pulmón sano al pulmón condensado · los cuatro pasos, uno por uno</p>
+  <div class="s2-ippa">
+    <div>
+      <b>Paso 1 · Inspección</b>
+      <h5>Mirar la expansión</h5>
+      <p>Se compara cómo suben los dos hemitórax. El lado enfermo duele y está rígido: se mueve menos.</p>
+      <span class="s2-norm"><b>Lo normal:</b> los dos lados se expanden igual.</span>
+      <span class="s2-anor"><b>En la condensación:</b> <b>movilidad disminuida</b> del hemitórax afectado. Sin retracción y sin abombamiento — el volumen se conserva.</span>
+    </div>
+    <div>
+      <b>Paso 2 · Palpación</b>
+      <h5>El paso que define el síndrome</h5>
+      <p>Manos simétricas, «treinta y tres», comparar. Es la maniobra que separa este síndrome de todos los demás.</p>
+      <span class="s2-norm"><b>Lo normal:</b> vibraciones iguales de los dos lados.</span>
+      <span class="s2-anor"><b>En la condensación: vibraciones vocales AUMENTADAS</b> sobre el área enferma, con la expansión reducida. Es el <b>único</b> síndrome de la unidad que las aumenta.</span>
+    </div>
+    <div>
+      <b>Paso 3 · Percusión</b>
+      <h5>Se fue el aire</h5>
+      <p>El sonido cambia porque debajo del dedo ya no hay aire, sino tejido lleno de líquido.</p>
+      <span class="s2-norm"><b>Lo normal:</b> sonoridad pulmonar.</span>
+      <span class="s2-anor"><b>En la condensación:</b> <b>matidez o submatidez</b> sobre el área afectada, con los límites del lóbulo comprometido.</span>
+    </div>
+    <div>
+      <b>Paso 4 · Auscultación</b>
+      <h5>El murmullo se va y algo lo reemplaza</h5>
+      <p>Se ausculta y después se hace <b>hablar</b> al paciente: la voz confirma lo que la mano ya sintió.</p>
+      <span class="s2-norm"><b>Lo normal:</b> murmullo vesicular presente; la voz se oye lejana y confusa.</span>
+      <span class="s2-anor"><b>En la condensación:</b> <b>desaparece el murmullo vesicular</b> y lo reemplaza el <b>soplo tubárico</b>; <b>broncofonía</b>, <b>pectoriloquia áfona</b>, a veces <b>egofonía</b>, y <b>crepitantes inspiratorios</b>.</span>
+    </div>
+  </div>
+  <p class="s2-cap">Los cuatro pasos alterados y todos en la misma dirección: <b>el sonido se transmite mejor</b>. Ese es el sello del síndrome parenquimatoso.</p>
+
   <table>
     <thead><tr><th>Maniobra</th><th>Hallazgo (según el material)</th></tr></thead>
     <tbody>
@@ -1831,6 +2427,19 @@
       <tr><td><strong>Auscultación</strong></td><td>Desaparece el <strong><span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">murmullo vesicular<b>?</b><i onclick="event.stopPropagation()"><b>Murmullo vesicular</b>El <b>ruido respiratorio normal</b>: suave, de baja intensidad, como una brisa. Se oye durante casi toda la inspiración y solo al comienzo de la espiración. Nace del aire que entra a los bronquiolos y alvéolos. Que <b>disminuya o desaparezca</b> siempre es anormal.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span></strong> y es reemplazado por <strong>soplo tubárico</strong>, ↑ <strong><span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">broncofonía<b>?</b><i onclick="event.stopPropagation()"><b>Broncofonía</b>La voz del paciente se oye con el estetoscopio <b>más fuerte y más nítida</b> de lo normal. Es el equivalente auditivo de las vibraciones vocales aumentadas: signo de <b>condensación</b>.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span></strong>, <strong><span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">pectoriloquia áfona<b>?</b><i onclick="event.stopPropagation()"><b>Pectoriloquia áfona</b>Se le pide al paciente que <b>susurre</b> —«treinta y tres» en voz muy baja— y aun así se entienden las palabras con claridad a través del estetoscopio. En un pulmón normal el susurro llega como un murmullo indistinguible. Es uno de los signos más específicos de <b>condensación</b>.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span></strong> y en ocasiones <strong><span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">egofonía<b>?</b><i onclick="event.stopPropagation()"><b>Egofonía</b>La voz adquiere un timbre <b>nasal y tembloroso, «de cabra»</b> (del griego <em>aix</em>, cabra). Clásicamente se busca haciendo decir «iiii», que se escucha como «eeee». Aparece sobre una condensación y en el borde superior de un derrame pleural.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span></strong>. Además, <strong>crepitantes inspiratorios</strong></td></tr>
     </tbody>
   </table>
+
+  <div class="s2-patron">
+    <h4>Condensación · cómo se reconoce</h4>
+    <div class="s2-eq">
+      <span>Expansión <b>disminuida</b> de un lado</span><i>+</i>
+      <span>Vibraciones vocales <b>AUMENTADAS</b></span><i>+</i>
+      <span><b>Matidez</b> a la percusión</span><i>+</i>
+      <span><b>Soplo tubárico</b> y <b>crepitantes</b> localizados</span><i>=</i>
+      <span class="s2-res">SÍNDROME DE CONDENSACIÓN</span>
+    </div>
+    <p><b>Y dentro de la condensación, dos causas que se separan por la auscultación:</b> si el bronquio está <b>abierto</b> hay soplo tubárico y crepitantes → <b>neumonía</b>. Si el bronquio está <b>tapado</b> no entra aire y no hay nada que transmitir → <b>silencio</b>, murmullo abolido y sin soplo → <b>atelectasia</b>.</p>
+    <p><b>El tercer dato es la tráquea:</b> la atelectasia <b>tira</b> del mediastino <b>hacia</b> el lado enfermo; el derrame y el neumotórax a tensión lo <b>empujan</b> hacia el lado sano.</p>
+  </div>
   <h3>Neumonía: clasificación según su adquisición 🦠</h3>
   <p>La <strong>neumonía</strong> es la infección del parénquima pulmonar y la <strong>causa más común</strong> del síndrome de condensación. Se clasifica según <strong>dónde se adquirió</strong>, lo que cambia los gérmenes probables y el manejo.</p>
 <figure class="s2-fig">
@@ -1947,6 +2556,18 @@
     <p>Una condensación puede convivir con un derrame pequeño. El orden fijo evita perderlo.</p>
   </aside>
 
+
+  <div class="s2-patron">
+    <h4>Neumonía · el patrón completo, del relato a la placa</h4>
+    <div class="s2-eq">
+      <span><b>Fiebre</b> + tos + expectoración</span><i>+</i>
+      <span>Patrón físico de <b>condensación</b></span><i>+</i>
+      <span>Opacidad con <b>broncograma aéreo</b></span><i>=</i>
+      <span class="s2-res">NEUMONÍA</span>
+    </div>
+    <p>El <b>broncograma aéreo</b> es la confirmación radiológica de lo que dice el examen físico: hay aire dentro del bronquio sobre un fondo lleno de exudado. Es decir, <b>el relleno es alveolar y el bronquio está permeable</b> — exactamente lo que explica el soplo tubárico.</p>
+    <p><b>Después del diagnóstico vienen dos preguntas más,</b> y cada una tiene su herramienta: <b>¿dónde se contagió?</b> → la regla de las <b>48 horas</b> (NAC o nosocomial), que decide qué germen sospechar. <b>¿se interna?</b> → el <b>CURB-65</b>. Y el CURB-65 <b>no mide oxigenación</b>: la SpO₂ se revisa siempre aparte del puntaje.</p>
+  </div>
   <h3>Escore CURB-65 / CRB-65</h3>
   <p>Es un <strong>escore que ayuda a decidir entre dar el alta o internar</strong> al paciente con neumonía. Cada ítem suma 1 punto:</p>
 <figure class="s2-fig">
@@ -1977,6 +2598,17 @@
   </table>
   <div class="key-box danger"><strong>Aplicación clínica:</strong> si al aplicar el CRB-65 el resultado indica hospitalización, se recomienda internar <strong>especialmente</strong> si hay hipoxemia, comorbilidades descompensadas, Rx con complicaciones o red de apoyo reducida con riesgo de no cumplir el tratamiento.</div>
 
+
+  <div class="s2-cierre">
+    <h4>Síndrome parenquimatoso · lo que no se puede olvidar</h4>
+    <ol>
+      <li><b>La condensación es el único síndrome de la unidad que AUMENTA las vibraciones vocales.</b> Matidez + vibraciones aumentadas + soplo tubárico + crepitantes localizados. Todo porque el tejido macizo transmite mejor que el aire.</li>
+      <li><b>Neumonía y atelectasia comparten la matidez; las separan el volumen y la auscultación.</b> Neumonía: volumen conservado, bronquio abierto, soplo y crepitantes. Atelectasia: pérdida de volumen, bronquio tapado, silencio, y la tráquea se desplaza <b>hacia</b> la lesión.</li>
+      <li><b>La neumonía es la causa más común del síndrome de condensación</b>, y el agente principal de la NAC es <b>Streptococcus pneumoniae</b>.</li>
+      <li><b>La regla de las 48 horas define dónde se adquirió:</b> antes de las 48 h del ingreso (o fuera del hospital) = <b>comunitaria</b>; después de las 48 h = <b>nosocomial</b>.</li>
+      <li><b>CURB-65: un punto por ítem</b> — Confusión · Urea &gt;7 mmol/L · FR ≥30 · PAS &lt;90 o PAD ≤60 · edad ≥65. Decide alta o internación, pero <b>no mide oxigenación</b>.</li>
+    </ol>
+  </div>
   <details class="s2-quiz-card" open>
     <summary>📝 Preguntas — Síndrome Parenquimatoso <span class="s2-qbadge">tocar para ver</span><span class="s2-chev">▸</span></summary>
     <div class="s2-quiz-body">
@@ -2088,7 +2720,7 @@
 
   <div class="s2-exam">
     <h4>Lo que más cae — Síndrome parenquimatoso</h4>
-    <p>Frecuencia relativa según el banco oficial de la cátedra revisado para este bloque.</p>
+    <p>Frecuencia relativa según las preguntas basadas en exámenes de la cátedra revisadas para este bloque.</p>
     <div class="s2-freq"><b>Condensación: VV aumentadas + matidez + crepitantes</b><span class="s2-bar"><i style="width:100%"></i></span></div>
     <div class="s2-freq"><b>CURB-65: los cinco criterios y sus valores</b><span class="s2-bar"><i style="width:90%"></i></span></div>
     <div class="s2-freq"><b>NAC ≤48 h × nosocomial &gt;48 h del ingreso</b><span class="s2-bar"><i style="width:82%"></i></span></div>
@@ -2118,6 +2750,11 @@
   </ul>
   <span class="rm-src">Argente-Álvarez, <em>Semiología Médica</em>; Bates, <em>Guía de Exploración Física</em>.</span>
 </div>
+
+  <div class="s2-puente">
+    Hasta acá todo pasaba <b>dentro</b> del pulmón: en el bronquio o en el alvéolo. Ahora el pulmón va a estar sano y el problema va a estar <b>afuera</b>, en el espacio entre las dos pleuras: líquido en uno, aire en el otro. Y como algo se mete entre el pulmón y la mano, las vibraciones vocales van a hacer <b>lo contrario</b> de lo que acaba de ver. <b>Bloque 05 · Síndromes pleurales.</b>
+  </div>
+
 </section>
 
 <!-- ================= BLOQUE 05 · SÍNDROMES PLEURALES ================= -->
@@ -2125,6 +2762,23 @@
   <div class="section-marker"><span class="section-marker-num">— BLOQUE 05 · UNIDAD I</span></div>
   <h2>Síndromes Pleurales (Derrame y Neumotórax)</h2>
 
+
+  <div class="s2-mapa">
+    <h4>Bloque 05 de 10 · Unidad I · el bloque que cierra el aparato respiratorio</h4>
+    <div class="s2-rama"><b>Dónde estamos</b><span>El pulmón puede estar <b>sano</b>. El problema está <b>afuera</b>: en el espacio entre las dos pleuras, donde se metió algo que no debería estar — <b>líquido</b> (derrame) o <b>aire</b> (neumotórax).</span></div>
+    <div class="s2-rama"><b>Qué viene antes</b><span>Del bloque 04, la condensación: matidez con vibraciones <b>aumentadas</b>. Acá empieza el <b>espejo</b> de aquello.</span></div>
+    <div class="s2-rama"><b>Qué se aprende acá</b><span><i>Derrame pleural</i><i>Trasudado y exudado</i><i>Criterios de Light</i><i>Neumotórax</i><i>Neumotórax a tensión</i><i>La tabla de los 3 síndromes</i></span></div>
+    <div class="s2-rama"><b>Adónde lleva</b><span>Cierra la Unidad I. Acá se junta todo en <b>una sola tabla</b> —condensación, derrame y neumotórax— y en la forma de razonar frente a un paciente con síntomas respiratorios. Después empieza el aparato cardiovascular.</span></div>
+  </div>
+
+  <div class="s2-antes">
+    <h4>Dos ideas de física y el bloque se arma solo</h4>
+    <ul>
+      <li><b>Todo lo que se meta entre el pulmón y la pared funciona como un aislante.</b> Da igual si es líquido o aire: la voz y el ruido llegan <b>peor</b> a la mano y al estetoscopio. Por eso, en los <b>dos</b> síndromes de este bloque, las vibraciones vocales <b>bajan</b> y el murmullo vesicular <b>baja o desaparece</b>.</li>
+      <li><b>La percusión no pregunta «hay algo», pregunta «qué hay».</b> Líquido → suena <b>mate</b>, como golpear un muslo. Aire → suena <b>timpánico</b>, como golpear un tambor. Esa sola maniobra separa derrame de neumotórax junto a la cama del paciente.</li>
+    </ul>
+    <p>Y hay que traer una idea del bloque 01: <b>la pleura visceral no duele; la parietal sí</b>, por los nervios intercostales y el frénico. De ahí salen el <b>dolor pleurítico</b> y el <b>dolor referido al hombro</b>.</p>
+  </div>
   <div class="s2-flow">
     <div class="s2-pill"><span class="e">💧</span><b>Derrame</b><small>líquido</small></div>
     <div class="s2-pill"><span class="e">🌫️</span><b>Neumotórax</b><small>aire</small></div>
@@ -2279,6 +2933,13 @@
 
   <div class="key-box"><strong>Inervación (importante):</strong> la <strong>pleura visceral NO tiene fibras sensitivas al dolor</strong>. El estímulo doloroso proviene de la <strong>pleura parietal</strong>, inervada por el <strong>nervio frénico</strong> y los <strong>nervios intercostales</strong>. La función del líquido pleural es <strong>evitar la fricción</strong> entre ambas hojas.</div>
 
+
+  <aside class="s2-margin">
+    <b class="t">No confundir</b>
+    <p>Derrame y neumotórax dan <em>los mismos</em> hallazgos en la palpación: vibraciones bajas.</p>
+    <p>Lo único que los separa es la percusión: <b>mate</b> el líquido, <b>timpánico</b> el aire.</p>
+  </aside>
+
   <h3>Derrame pleural 💧</h3>
   <p>Acúmulo <strong>anormal de líquido</strong> en el espacio pleural. Normalmente existe de <strong>0,1 a 0,2 mL/kg</strong> de líquido (hasta ~25 mL) entre la pleura parietal y la visceral.</p>
 <figure class="s2-fig">
@@ -2338,6 +2999,38 @@
   </ul>
 
   <h4>⭐ Examen físico del derrame pleural (inspección · palpación · percusión · auscultación)</h4>
+  <p class="s2-chain-l">Derrame · qué cambia en cada paso, y por qué</p>
+  <div class="s2-ippa">
+    <div>
+      <b>Paso 1 · Inspección</b>
+      <h5>El hemitórax ocupado</h5>
+      <p>El líquido ocupa lugar: ese lado se mueve menos y puede verse abombado.</p>
+      <span class="s2-norm"><b>Lo normal:</b> hemitórax simétricos, expansión igual.</span>
+      <span class="s2-anor"><b>En el derrame:</b> <b>menos movilidad</b> del lado afectado, respiración <b>superficial</b> (porque respirar hondo duele), taquipnea y <b>signo de Lemos Torres</b>.</span>
+    </div>
+    <div>
+      <b>Paso 2 · Palpación</b>
+      <h5>El líquido aísla</h5>
+      <p>Entre la voz y la mano hay ahora una capa de líquido que no deja pasar la vibración.</p>
+      <span class="s2-norm"><b>Lo normal:</b> vibraciones simétricas.</span>
+      <span class="s2-anor"><b>En el derrame:</b> expansibilidad reducida y <b>vibraciones vocales disminuidas</b>. Si además hay pleuritis, se puede palpar <b>frote</b>.</span>
+    </div>
+    <div>
+      <b>Paso 3 · Percusión</b>
+      <h5>La maniobra que decide</h5>
+      <p>Debajo del dedo hay líquido, no aire.</p>
+      <span class="s2-norm"><b>Lo normal:</b> sonoridad pulmonar.</span>
+      <span class="s2-anor"><b>En el derrame: matidez.</b> Si el derrame es libre, la matidez <b>se mueve al cambiar de postura</b> (<b>signo del desnivel</b>), y la matidez sobre la columna es el <b>signo de Signorelli</b>.</span>
+    </div>
+    <div>
+      <b>Paso 4 · Auscultación</b>
+      <h5>Silencio abajo, ruido en el borde</h5>
+      <p>Se ausculta de abajo hacia arriba, buscando dónde termina el líquido.</p>
+      <span class="s2-norm"><b>Lo normal:</b> murmullo vesicular presente en todo el campo.</span>
+      <span class="s2-anor"><b>En el derrame:</b> murmullo <b>disminuido o ausente</b> sobre el líquido. Y en el <b>límite superior</b>, donde el derrame comprime el pulmón y lo condensa, aparecen <b>soplo pleurítico, egofonía y pectoriloquia</b>.</span>
+    </div>
+  </div>
+
   <table>
     <thead><tr><th>Maniobra</th><th>Hallazgo (según el material)</th></tr></thead>
     <tbody>
@@ -2370,6 +3063,19 @@
   <p class="med-image-caption">📷 Opacidad homogénea de base que borra el contorno diafragmático con concavidad superior: la "curva de Damoiseau" o signo del menisco. La Rx detecta ≥250–500 mL en PA (75–100 mL en perfil); la ecografía detecta derrames escasos (hasta ~10 mL) y guía la toracocentesis.</p>
   
 
+
+  <div class="s2-patron">
+    <h4>Derrame pleural · cómo se reconoce</h4>
+    <div class="s2-eq">
+      <span>Menos movilidad + <b>abovedamiento</b></span><i>+</i>
+      <span>Vibraciones vocales <b>↓</b></span><i>+</i>
+      <span><b>Matidez</b> que se desplaza con la postura</span><i>+</i>
+      <span>Murmullo <b>abolido</b> en la base</span><i>=</i>
+      <span class="s2-res">DERRAME PLEURAL</span>
+    </div>
+    <p><b>Después del patrón vienen dos preguntas más.</b> Primero, <b>¿trasudado o exudado?</b> — alcanza con <b>un</b> criterio de Light positivo para llamarlo exudado. Trasudado = desequilibrio de presiones (insuficiencia cardíaca, cirrosis, síndrome nefrótico). Exudado = inflamación (infección, TBC, neoplasia, embolia, pancreatitis, colagenopatías).</p>
+    <p>Segundo, <b>¿cuánto líquido hay?</b> — la radiografía PA necesita <b>250–500 mL</b> para verlo (75–100 mL en perfil); la <b>ecografía</b> detecta hasta unos <b>10 mL</b> y es lo mejor para <b>guiar la toracocentesis</b>.</p>
+  </div>
   <h3>Neumotórax 🌫️</h3>
   <p>Presencia de <strong>aire en la cavidad pleural</strong> (filtrado de aire entre el pulmón y la cavidad pleural). Al entrar aire, el pulmón se colapsa hacia el hilio.</p>
 <figure class="s2-fig">
@@ -2397,6 +3103,38 @@
   </ul>
 
   <h4>⭐ Examen físico del neumotórax (inspección · palpación · percusión · auscultación)</h4>
+  <p class="s2-chain-l">Neumotórax · el mismo aislante, pero de aire</p>
+  <div class="s2-ippa">
+    <div>
+      <b>Paso 1 · Inspección</b>
+      <h5>Un lado que no se mueve</h5>
+      <p>El aire a presión mantiene el hemitórax inflado y quieto.</p>
+      <span class="s2-norm"><b>Lo normal:</b> los dos lados se expanden igual.</span>
+      <span class="s2-anor"><b>En el neumotórax:</b> asimetría, <b>inmovilidad del lado afectado</b>, <b>abovedamiento</b> y uso de músculos intercostales.</span>
+    </div>
+    <div>
+      <b>Paso 2 · Palpación</b>
+      <h5>El aire aísla igual que el líquido</h5>
+      <p>Mismo mecanismo que en el derrame: algo se interpuso entre el pulmón y la mano.</p>
+      <span class="s2-norm"><b>Lo normal:</b> vibraciones simétricas.</span>
+      <span class="s2-anor"><b>En el neumotórax: vibraciones vocales disminuidas</b> — igual que en el derrame. La palpación <b>no</b> los separa.</span>
+    </div>
+    <div>
+      <b>Paso 3 · Percusión</b>
+      <h5>Acá se separan</h5>
+      <p>Es la única maniobra que distingue el derrame del neumotórax.</p>
+      <span class="s2-norm"><b>Lo normal:</b> sonoridad pulmonar.</span>
+      <span class="s2-anor"><b>En el neumotórax: hipersonoridad o timpanismo.</b> Aire de más suena a tambor. En el derrame, en el mismo sitio, habría matidez.</span>
+    </div>
+    <div>
+      <b>Paso 4 · Auscultación</b>
+      <h5>El timbre metálico</h5>
+      <p>Se busca primero si hay murmullo, y después si el poco que queda suena raro.</p>
+      <span class="s2-norm"><b>Lo normal:</b> murmullo vesicular presente.</span>
+      <span class="s2-anor"><b>En el neumotórax:</b> murmullo <b>disminuido</b> —<b>abolido</b> si el colapso es total—, con <b>soplo anfórico</b> (timbre metálico, como soplar en una botella vacía) y <b>anforofonía</b>.</span>
+    </div>
+  </div>
+
   <table>
     <thead><tr><th>Maniobra</th><th>Hallazgo (según el material)</th></tr></thead>
     <tbody>
@@ -2420,6 +3158,26 @@
     <li><strong>Neumotórax hipertensivo:</strong> cúpula diafragmática rebajada y <strong>desvío del mediastino</strong> (al lado contralateral) — urgencia.</li>
   </ul>
 
+
+  <div class="s2-patron">
+    <h4>Neumotórax · cómo se reconoce</h4>
+    <div class="s2-eq">
+      <span>Dolor <b>en punta de costado</b> súbito</span><i>+</i>
+      <span>Vibraciones vocales <b>↓</b></span><i>+</i>
+      <span><b>Hipersonoridad</b> / timpanismo</span><i>+</i>
+      <span>Murmullo <b>abolido</b> + soplo <b>anfórico</b></span><i>=</i>
+      <span class="s2-res">NEUMOTÓRAX</span>
+    </div>
+    <p><b>Y una alarma que se reconoce sin imagen:</b> si además hay hipotensión, taquicardia, ingurgitación yugular y la <b>tráquea desviada hacia el lado sano</b>, es un <b>neumotórax a tensión</b>. Es un diagnóstico <b>clínico</b> y una urgencia: se descomprime <b>antes</b> de pedir la radiografía.</p>
+    <p><b>La otra cara del mismo desplazamiento:</b> la <b>atelectasia</b> del bloque 04 tira del mediastino <b>hacia</b> el lado enfermo; el neumotórax a tensión y el derrame masivo lo <b>empujan</b> hacia el lado sano.</p>
+  </div>
+
+  <aside class="s2-margin">
+    <b class="t">Hacia dónde se fue la tráquea</b>
+    <p>Si se desvió al <b>lado sano</b>, algo empuja: derrame masivo o neumotórax a tensión.</p>
+    <p>Si se desvió <b>hacia el lado enfermo</b>, algo tira: atelectasia, con pérdida de volumen.</p>
+  </aside>
+
   <h3>⭐ La tabla que une la Unidad I — los 3 síndromes</h3>
   <table>
     <thead><tr><th>Maniobra</th><th>Condensación</th><th>Derrame</th><th>Neumotórax</th></tr></thead>
@@ -2432,6 +3190,31 @@
   </table>
   <div class="key-box danger"><strong>El truco de oro:</strong> solo la <strong>condensación AUMENTA</strong> las vibraciones. Derrame y neumotórax las DISMINUYEN; se diferencian por la percusión (matidez vs. hipersonoridad).</div>
 
+
+  <div class="s2-cierre">
+    <h4>Síndromes pleurales · lo que no se puede olvidar</h4>
+    <ol>
+      <li><b>Derrame y neumotórax comparten todo menos la percusión.</b> Los dos bajan las vibraciones vocales y el murmullo. Líquido → <b>matidez</b>. Aire → <b>hipersonoridad</b>.</li>
+      <li><b>Solo la condensación aumenta las vibraciones vocales.</b> Es el truco de oro de toda la Unidad I y la pregunta más repetida.</li>
+      <li><b>Un criterio de Light positivo ya basta para llamarlo exudado</b> (proteínas pleura/suero &gt;0,5 · LDH pleura/suero &gt;0,6 · LDH pleural &gt;2/3 del límite superior sérico). Ninguno → trasudado.</li>
+      <li><b>La pleura visceral no duele.</b> El dolor pleurítico nace en la <b>parietal</b> (intercostales y frénico); por el frénico, la irritación diafragmática se refiere al <b>hombro</b>.</li>
+      <li><b>El neumotórax a tensión es diagnóstico clínico y se trata antes de la placa:</b> hipotensión, ingurgitación yugular y <b>tráquea desviada al lado sano</b>.</li>
+    </ol>
+  </div>
+
+  <div class="s2-razonar">
+    <h4>Unidad I · cómo razonar frente a un paciente con síntomas respiratorios</h4>
+    <p>Todo lo visto en los bloques 01 a 05 se usa en este orden, y siempre el mismo. Estas seis preguntas llevan del relato al síndrome sin necesidad de memorizar tablas:</p>
+    <ol>
+      <li><b>¿Qué lo trajo?</b> Los seis síntomas del bloque 01 — tos, expectoración, disnea, hemoptisis, dolor torácico, cianosis. Interrogue cada uno con el guion completo: inicio, características, intensidad, evolución, qué lo desencadena, duración y síntomas acompañantes.</li>
+      <li><b>¿Cuánto hace y cómo empezó?</b> Súbito en minutos → neumotórax, embolia. Días con fiebre → infección. Meses o años y progresivo → EPOC, neoplasia. Episódico, con temporadas normales → asma.</li>
+      <li><b>Mire, toque, golpee, escuche — siempre en ese orden, siempre comparando los dos lados.</b> No cambie el orden para «ir directo a lo importante»: la mitad de los diagnósticos de esta unidad se hacen con la mano, antes del estetoscopio.</li>
+      <li><b>Empiece por la palpación, porque parte el problema en dos.</b> ¿Las vibraciones vocales están <b>aumentadas</b>? Entonces hay <b>tejido macizo pegado a la pared</b>: condensación. ¿Están <b>disminuidas</b>? Entonces <b>algo se interpuso</b>: derrame, neumotórax, o aire atrapado de más.</li>
+      <li><b>Después percuta, porque decide entre las opciones que quedaron.</b> Matidez con vibraciones ↑ → condensación. Matidez con vibraciones ↓ → derrame. Hipersonoridad con vibraciones ↓ → neumotórax o atrapamiento aéreo.</li>
+      <li><b>Recién ahí ausculte, para confirmar y para nombrar la causa.</b> Soplo tubárico y crepitantes localizados → neumonía. Silencio total sin soplo → atelectasia. Soplo anfórico → neumotórax. Sibilancias en la espiración → obstrucción. Roncus que cambian al toser → secreción. Frote → pleura inflamada.</li>
+    </ol>
+    <p><b>Y una última pregunta antes de cerrar:</b> ¿la tráquea está centrada? Si se fue <b>hacia</b> el lado enfermo, hay pérdida de volumen (atelectasia). Si se fue hacia el <b>lado sano</b>, algo está empujando (derrame masivo, neumotórax a tensión) — y eso puede ser una urgencia.</p>
+  </div>
   <details class="s2-quiz-card" open>
     <summary>📝 Preguntas — Síndromes Pleurales <span class="s2-qbadge">tocar para ver</span><span class="s2-chev">▸</span></summary>
     <div class="s2-quiz-body">
@@ -2537,6 +3320,16 @@
   </div>
 
   <div class="rm-detalle">
+  <div class="s2-exam">
+    <h4>Lo que más cae — Síndromes pleurales</h4>
+    <p>Frecuencia relativa según las preguntas basadas en exámenes de la cátedra revisadas para este bloque.</p>
+    <div class="s2-freq"><b>La tabla de los 3 síndromes: solo la condensación aumenta las VV</b><span class="s2-bar"><i style="width:100%"></i></span></div>
+    <div class="s2-freq"><b>Examen físico del derrame (palpación y auscultación)</b><span class="s2-bar"><i style="width:90%"></i></span></div>
+    <div class="s2-freq"><b>Criterios de Light: exudado con un solo criterio</b><span class="s2-bar"><i style="width:78%"></i></span></div>
+    <div class="s2-freq"><b>Signos del derrame: Damoiseau, Signorelli, desnivel, Lemos Torres</b><span class="s2-bar"><i style="width:70%"></i></span></div>
+    <div class="s2-freq"><b>Causas iatrogénicas del neumotórax («cite»)</b><span class="s2-bar"><i style="width:60%"></i></span></div>
+    <div class="s2-freq"><b>La pleura visceral no duele; dolor en punta de costado</b><span class="s2-bar"><i style="width:52%"></i></span></div>
+  </div>
     <h3>🎯 Organización — cómo lo evalúa la cátedra</h3>
     <div class="pattern-grid">
       <div class="pattern-card"><h5>"Cite" clásicos</h5><p>Enfermedades <strong>exudativas</strong> del derrame y causas <strong>iatrogénicas</strong> del neumotórax: tenelas listadas.</p></div>
@@ -2562,6 +3355,11 @@
      ambos abolen el murmullo vesicular.</p>
   <span class="rm-src">Argente-Álvarez, <em>Semiología Médica</em>; Surós, <em>Semiología Médica y Técnica Exploratoria</em>.</span>
 </div>
+
+  <div class="s2-puente">
+    Termina el aparato respiratorio y empieza el <b>cardiovascular</b>. Y hay algo que se lleva puesto: la <b>disnea</b>, la <b>cianosis</b> y el <b>dolor torácico</b> vuelven a aparecer — pero ahora el motor del problema es el corazón, no el pulmón. Buena parte de la Unidad II consiste, justamente, en <b>separar esos dos orígenes</b>. <b>Bloque 06 · Motivo de consulta cardíaco.</b>
+  </div>
+
 </section>
 
 <!-- ================= BLOQUE 06 · MOTIVO DE CONSULTA CARDÍACO ================= -->
@@ -2569,6 +3367,23 @@
   <div class="section-marker"><span class="section-marker-num">— BLOQUE 06 · UNIDAD II</span></div>
   <h2>Motivo de consulta cardíaco</h2>
 
+
+  <div class="s2-mapa">
+    <h4>Bloque 06 de 10 · Unidad II · empieza el aparato cardiovascular</h4>
+    <div class="s2-rama"><b>Dónde estamos</b><span>En el <b>primer escalón</b> de la Unidad II, igual que el bloque 01 lo fue de la respiratoria: los <b>síntomas</b> con los que llega el paciente cardíaco. Todavía no hay enfermedad con nombre.</span></div>
+    <div class="s2-rama"><b>Qué viene antes</b><span>Toda la Unidad I. Tres de estos seis síntomas —<b>disnea</b>, <b>dolor torácico</b> y <b>cianosis</b>— ya se estudiaron con origen pulmonar. Acá se aprende a reconocerlos cuando el motor es el corazón.</span></div>
+    <div class="s2-rama"><b>Qué se aprende acá</b><span><i>Dolor precordial</i><i>Disnea cardíaca</i><i>Palpitaciones</i><i>Síncope</i><i>Edema</i><i>Cianosis</i><i>Focos de auscultación</i></span></div>
+    <div class="s2-rama"><b>Adónde lleva</b><span>Estos síntomas se combinan en las tres entidades siguientes: <b>insuficiencia cardíaca</b> (bloque 07), <b>hipertensión arterial</b> (bloque 08) y su lectura eléctrica, el <b>ECG</b> (bloque 09).</span></div>
+  </div>
+
+  <div class="s2-antes">
+    <h4>Dos ideas de fisiología, y el bloque entero se deduce</h4>
+    <ul>
+      <li><b>El corazón duele cuando le falta oxígeno, no cuando se mueve.</b> Por eso el dolor isquémico aparece con el <b>esfuerzo</b> —que le pide más oxígeno— y cede con el <b>reposo</b>. Y por eso <b>no cambia con la postura</b>: la postura no modifica el consumo de oxígeno del miocardio. El pericardio, en cambio, es una membrana inflamada: <b>sí</b> cambia con la postura y con la respiración. Ese solo dato separa los dos dolores.</li>
+      <li><b>Cuando el corazón no expulsa lo que recibe, la sangre se acumula por detrás.</b> Si falla el lado <b>izquierdo</b>, la sangre se acumula en el <b>pulmón</b>: disnea, ortopnea, disnea paroxística nocturna. Si falla el <b>derecho</b>, se acumula en el <b>cuerpo</b>: edema de piernas, ingurgitación yugular, hígado grande. Toda la clínica cardiovascular se ordena con esa frase.</li>
+    </ul>
+    <p>Y algo que se retoma del bloque 01: la <b>ortopnea</b> y la <b>disnea paroxística nocturna</b> ya estaban descritas allá, marcadas como banderas de <b>insuficiencia cardíaca izquierda</b>. Acá se explica por qué.</p>
+  </div>
   <div class="s2-flow">
     <div class="s2-pill"><span class="e">💥</span><b>Dolor</b><small>precordial</small></div>
     <div class="s2-pill"><span class="e">💓</span><b>Palpitaciones</b><small>latido percibido</small></div>
@@ -2696,6 +3511,15 @@
   </div>
 
   <h3>1) Dolor torácico 💥</h3>
+  <p class="s2-chain-l">Por qué el dolor isquémico se siente donde se siente</p>
+  <div class="s2-chain">
+    <div><b>1 · Desequilibrio</b><span>El miocardio pide más oxígeno del que la coronaria le puede entregar — por esfuerzo, por emoción, o porque el vaso se cerró o se espasmó.</span></div>
+    <div><b>2 · Isquemia</b><span>La célula pasa a metabolismo anaerobio y libera sustancias que estimulan las terminaciones nerviosas del corazón.</span></div>
+    <div><b>3 · Vía nerviosa</b><span>La señal entra a la médula por las raíces torácicas <b>T1–T4</b>, que también reciben la sensibilidad de la pared del tórax y del <b>borde interno del brazo izquierdo</b>.</span></div>
+    <div><b>4 · Dolor referido</b><span>El cerebro no distingue el origen: interpreta el dolor como si viniera de la piel de esa zona. De ahí el dolor <b>retroesternal</b> y la irradiación al <b>borde cubital</b> del brazo, hasta el <b>anular y el meñique</b>.</span></div>
+    <div><b>5 · Acompañantes</b><span>La irritación del <b>neumogástrico</b> (vago) suma náuseas, vómitos, sudoración y hasta desmayo. Por eso un infarto puede llegar disfrazado de indigestión.</span></div>
+  </div>
+
   <p>Se clasifica <strong>según la causa</strong> en cuatro tipos:</p>
 <figure class="s2-fig">
   <div class="s2-photo s2-i23" role="img" aria-label="Dolor isquémico, pericárdico, aórtico y de pared torácica"></div>
@@ -2807,6 +3631,41 @@
   </aside>
 
 
+
+  <div class="s2-vs">
+    <div>
+      <h5>Angina de Vázquez (de decúbito)</h5>
+      <ul>
+        <li>Aparece un rato <b>después de acostarse</b>; suele despertar al paciente.</li>
+        <li><b>Mecanismo:</b> al acostarse vuelve más sangre de las piernas → sube la precarga → el ventrículo trabaja más → más consumo de oxígeno.</li>
+        <li><b>Depende de la postura: mejora al sentarse</b>, pararse o caminar unos metros.</li>
+      </ul>
+    </div>
+    <div class="s2-vs-mid">frente a</div>
+    <div>
+      <h5>Angina de Prinzmetal (variante)</h5>
+      <ul>
+        <li>Aparece <b>en reposo o durante el sueño</b>, sin relación con el esfuerzo.</li>
+        <li><b>Mecanismo: vasoespasmo coronario</b> — el vaso se cierra solo.</li>
+        <li><b>No depende de la postura:</b> incorporarse no la mejora.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="s2-cap">Las dos aparecen fuera del esfuerzo, y por eso se confunden. La pregunta que las separa es una sola: <b>¿mejora al incorporarse?</b></p>
+
+  <div class="s2-patron">
+    <h4>Dolor isquémico · cómo se reconoce en el interrogatorio</h4>
+    <div class="s2-eq">
+      <span><b>Retroesternal</b>, «zona de la corbata»</span><i>+</i>
+      <span>Carácter <b>opresivo</b>, no punzante</span><i>+</i>
+      <span>Irradia al <b>borde cubital</b> izquierdo (anular y meñique)</span><i>+</i>
+      <span>Lo trae el <b>esfuerzo</b>, lo saca el <b>reposo</b> en 2–5 min</span><i>+</i>
+      <span><b>No</b> cambia con la postura</span><i>=</i>
+      <span class="s2-res">ISQUEMIA MIOCÁRDICA</span>
+    </div>
+    <p>La cátedra lo dice sin rodeos: <b>el interrogatorio sigue siendo el método más adecuado para reconocer la isquemia miocárdica</b>. Antes del electro y antes de la troponina.</p>
+    <p><b>Los tres que se le parecen, y qué los delata:</b> el <b>pericárdico</b> mejora al inclinarse hacia adelante y empeora con la tos y la respiración. El <b>aórtico</b> es máximo desde el primer segundo, se va al cuello y a la espalda, y da <b>pulsos asimétricos</b>. El <b>atípico</b> es un pinchazo de segundos, a la izquierda, en alguien joven y sin relación con el esfuerzo.</p>
+  </div>
   <h3>2) Disnea cardíaca 🌬️</h3>
   <p>Puede ser de <strong>esfuerzo</strong>, de <strong>reposo</strong> (reposo físico y mental), <strong>continua</strong> o <strong>episódica/súbita</strong> (paroxística). Se gradúa por la capacidad funcional:</p>
   <table>
@@ -2868,6 +3727,39 @@
   </div>
   <p class="med-image-caption">📷 Cálculo del índice cardiotórácico (ICT) en Rx PA: A + B (diámetros del corazón a cada lado de la línea media) sobre C (diámetro torácico interno). Normal &lt; 0,5; un ICT aumentado sugiere cardiomegalia.</p>
   <h3>⭐ Examen físico cardiovascular (inspección · palpación · percusión · auscultación)</h3>
+  <p class="s2-chain-l">La técnica cardiovascular · qué se busca y qué es normal</p>
+  <div class="s2-ippa">
+    <div>
+      <b>Paso 1 · Inspección</b>
+      <h5>Mirar el cuello, la piel y la punta</h5>
+      <p>Se mira al paciente semisentado a 45°: cuello, color de piel y mucosas, piernas, y si se ve latir la punta del corazón.</p>
+      <span class="s2-norm"><b>Lo normal:</b> sin cianosis, sin edemas, yugulares no ingurgitadas a 45°, choque de la punta poco visible o no visible.</span>
+      <span class="s2-anor"><b>Anormal:</b> <b>cianosis</b>, <b>ingurgitación yugular</b>, <b>edemas</b>, latidos visibles anormales o choque de la punta desplazado.</span>
+    </div>
+    <div>
+      <b>Paso 2 · Palpación</b>
+      <h5>Buscar el choque de la punta</h5>
+      <p>Se busca con la palma y después con la yema. Es el punto donde el ventrículo izquierdo golpea la pared, y coincide con el <b>foco mitral</b>.</p>
+      <span class="s2-norm"><b>Lo normal:</b> en el <b>5.º espacio intercostal, línea medioclavicular</b> izquierda, de pequeña superficie.</span>
+      <span class="s2-anor"><b>Anormal:</b> desplazado hacia <b>afuera y abajo</b> = ventrículo izquierdo agrandado, y eso se sabe <b>antes</b> de pedir cualquier estudio. También se palpan <b>frémitos</b> (soplos que se tocan) y los <b>pulsos periféricos</b>, comparando los dos lados.</span>
+    </div>
+    <div>
+      <b>Paso 3 · Percusión</b>
+      <h5>El paso que hoy casi no se usa</h5>
+      <p>Buscaba delimitar el área cardíaca golpeando la pared.</p>
+      <span class="s2-norm"><b>Lo normal:</b> matidez cardíaca dentro de sus límites habituales.</span>
+      <span class="s2-anor"><b>Hoy es de valor limitado:</b> la radiografía y el ecocardiograma miden el tamaño del corazón mucho mejor. Se menciona, se hace, pero no decide.</span>
+    </div>
+    <div>
+      <b>Paso 4 · Auscultación</b>
+      <h5>Los cuatro focos, siempre en el mismo orden</h5>
+      <p>Se recorre en <b>«Z»</b>: aórtico (2.º EIC derecho) → pulmonar (2.º EIC izquierdo) → tricuspídeo (borde esternal bajo) → mitral (punta). Así ninguna válvula queda sin escuchar.</p>
+      <span class="s2-norm"><b>Lo normal:</b> <b>R1 y R2</b> nítidos, sin ruidos agregados y sin soplos.</span>
+      <span class="s2-anor"><b>Anormal:</b> <b>ritmo de galope</b> (tercer o cuarto ruido), <b>soplos</b>, y en la insuficiencia cardíaca, <b>crepitantes en las dos bases</b> pulmonares.</span>
+    </div>
+  </div>
+  <p class="s2-cap">Los focos <b>no</b> están donde está la válvula: están donde el chorro de sangre proyecta mejor el sonido contra la pared.</p>
+
   <table>
     <thead><tr><th>Maniobra</th><th>Qué se busca</th></tr></thead>
     <tbody>
@@ -2878,6 +3770,17 @@
     </tbody>
   </table>
 
+
+  <div class="s2-cierre">
+    <h4>Motivo de consulta cardíaco · lo que no se puede olvidar</h4>
+    <ol>
+      <li><b>El dolor isquémico no se modifica con la postura; el pericárdico sí</b> (mejora inclinado hacia adelante). Es la pregunta de una línea que separa los dos.</li>
+      <li><b>La irradiación no es «al brazo»: es al borde cubital</b> del brazo, antebrazo y mano izquierdos, hasta los dedos <b>anular y meñique</b>. Ese detalle aparece escrito así en los enunciados.</li>
+      <li><b>Vázquez y Prinzmetal aparecen las dos fuera del esfuerzo, por motivos opuestos.</b> Vázquez = aumento de precarga al acostarse, <b>mejora al incorporarse</b>. Prinzmetal = <b>vasoespasmo</b>, no depende de la postura.</li>
+      <li><b>El edema cardíaco es vespertino, bilateral, de miembros inferiores y con signo de godet</b>, y se gradúa del 1 al 4 por profundidad y tiempo de recuperación (hasta 1 cm y 2–5 minutos en el grado 4).</li>
+      <li><b>El síncope cardíaco es el de peor pronóstico:</b> sin pródromo, durante el esfuerzo o en decúbito. El más <b>frecuente</b>, en cambio, es el neurogénico vasovagal.</li>
+    </ol>
+  </div>
   <details class="s2-quiz-card" open>
     <summary>📝 Preguntas — Motivo de consulta cardíaco <span class="s2-qbadge">tocar para ver</span><span class="s2-chev">▸</span></summary>
     <div class="s2-quiz-body">
@@ -2949,7 +3852,7 @@
 
   <div class="s2-exam">
     <h4>Lo que más cae — Motivo de consulta cardiovascular</h4>
-    <p>Frecuencia relativa según el banco oficial de la cátedra revisado para este bloque.</p>
+    <p>Frecuencia relativa según las preguntas basadas en exámenes de la cátedra revisadas para este bloque.</p>
     <div class="s2-freq"><b>Perfil del dolor isquémico y su irradiación cubital</b><span class="s2-bar"><i style="width:100%"></i></span></div>
     <div class="s2-freq"><b>Angina de Vázquez × Prinzmetal</b><span class="s2-bar"><i style="width:88%"></i></span></div>
     <div class="s2-freq"><b>Isquémico no cambia con la postura; pericárdico sí</b><span class="s2-bar"><i style="width:80%"></i></span></div>
@@ -2965,6 +3868,11 @@
       <div class="pattern-card gold"><h5>Grados funcionales</h5><p>Asociar el grado (I–IV) con el tipo de esfuerzo.</p></div>
     </div>
   </div>
+
+  <div class="s2-puente">
+    Ya están los seis síntomas y la técnica para buscarlos. Ahora aparecen <b>todos juntos y en el mismo paciente</b>: disnea que empeora acostado, edema de piernas, yugulares llenas y crepitantes en las bases. Ese conjunto tiene nombre, estadios, grados y criterios. <b>Bloque 07 · Insuficiencia cardíaca.</b>
+  </div>
+
 </section>
 
 <!-- ================= BLOQUE 07 · INSUFICIENCIA CARDÍACA ================= -->
@@ -2972,6 +3880,25 @@
   <div class="section-marker"><span class="section-marker-num">— BLOQUE 07 · UNIDAD II</span></div>
   <h2>Insuficiencia Cardíaca</h2>
 
+
+  <div class="s2-mapa">
+    <h4>Bloque 07 de 10 · Unidad II · la primera enfermedad cardíaca con nombre</h4>
+    <div class="s2-rama"><b>Dónde estamos</b><span>Los seis síntomas del bloque 06 dejan de estar sueltos y se juntan en <b>un solo paciente</b>. Ese conjunto es la insuficiencia cardíaca: <b>la bomba no entrega lo que el cuerpo pide</b>.</span></div>
+    <div class="s2-rama"><b>Qué viene antes</b><span>Del bloque 06: <b>disnea</b>, <b>ortopnea</b>, <b>disnea paroxística nocturna</b>, <b>edema con godet</b> y el <b>choque de la punta</b>. Del bloque 01: por qué la ortopnea es bandera de fallo izquierdo.</span></div>
+    <div class="s2-rama"><b>Qué se aprende acá</b><span><i>IC izquierda</i><i>IC derecha</i><i>Estadios A–D</i><i>Clases NYHA</i><i>Criterios de Framingham</i><i>Desencadenantes</i></span></div>
+    <div class="s2-rama"><b>Adónde lleva</b><span>La <b>hipertensión</b> del bloque 08 es una de sus causas principales, y el <b>ECG</b> del bloque 09 es una de las herramientas para buscar por qué falló la bomba.</span></div>
+  </div>
+
+  <div class="s2-antes">
+    <h4>Una sola frase organiza el bloque entero</h4>
+    <p><b>La sangre se acumula detrás del ventrículo que falla.</b> Todo lo demás sale de ahí, sin memorizar listas:</p>
+    <ul>
+      <li>Detrás del <b>ventrículo izquierdo</b> está el <b>pulmón</b>. Si falla el izquierdo → <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">congestión<b>?</b><i onclick="event.stopPropagation()"><b>Congestión</b>Acumulación de sangre y líquido <b>por detrás</b> de la cámara que no logra vaciarse. Si la cámara que falla es la izquierda, la congestión es <b>pulmonar</b>; si es la derecha, es <b>sistémica</b> (yugulares, hígado, piernas). No es lo mismo que <b>bajo gasto</b>, que es la falta de sangre <b>hacia adelante</b>.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span> pulmonar → <b>disnea, ortopnea, disnea paroxística nocturna, crepitantes en las bases</b>.</li>
+      <li>Detrás del <b>ventrículo derecho</b> está <b>todo el cuerpo</b>. Si falla el derecho → congestión sistémica → <b>ingurgitación yugular, hepatomegalia, ascitis, edema de piernas</b>.</li>
+      <li>Y hacia adelante, en los dos casos, <b>llega menos sangre a los tejidos</b>: fatiga, piel fría, poca orina, confusión. Es el <b>bajo gasto</b>, y es el eje que más se olvida.</li>
+    </ul>
+    <p>Regla corta: <b>pulmón = izquierda · yugular y piernas = derecha</b>. Y la causa más frecuente de fallo derecho es el propio fallo izquierdo.</p>
+  </div>
   <div class="s2-flow">
     <div class="s2-pill"><span class="e">❤️</span><b>Bomba falla</b><small>no satisface demanda</small></div>
     <div class="s2-pill"><span class="e">🌬️</span><b>Disnea</b><small>+ fatiga</small></div>
@@ -3056,6 +3983,15 @@
 
 
   <h3>IC izquierda vs. derecha vs. global</h3>
+  <p class="s2-chain-l">Por qué la congestión empeora aunque la bomba no empeore de golpe</p>
+  <div class="s2-chain">
+    <div><b>1 · La bomba falla</b><span>Sobrecarga de volumen o de presión, pérdida de miocardio, caída de la contractilidad o restricción al llenado: cinco mecanismos, todas las causas.</span></div>
+    <div><b>2 · Cae el gasto</b><span>Llega menos sangre a los tejidos y a los riñones. El cuerpo lo lee como si hubiera <b>poca sangre</b>.</span></div>
+    <div><b>3 · Compensación</b><span>Se activan el <b>simpático</b> y el eje <b><span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">renina-angiotensina-aldosterona<b>?</b><i onclick="event.stopPropagation()"><b>Eje renina-angiotensina-aldosterona</b>Sistema hormonal que el riñón activa cuando le llega poca sangre. Retiene <b>sodio y agua</b> y <b>cierra los vasos</b> para sostener la presión. A corto plazo salva; a largo plazo <b>sobrecarga aún más</b> al corazón que ya falla, y por eso la congestión progresa.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span></b>: sube la frecuencia, se retienen sodio y agua, los vasos se contraen.</span></div>
+    <div><b>4 · A corto plazo funciona</b><span>La presión se mantiene y el paciente parece estable. Por eso la enfermedad puede avanzar en silencio durante años (estadios A y B).</span></div>
+    <div><b>5 · A largo plazo la hunde</b><span>Más volumen y más resistencia = <b>más trabajo</b> para un ventrículo que ya no da abasto. El círculo se cierra y la congestión progresa: aparecen los síntomas del estadio C.</span></div>
+  </div>
+
 <figure class="s2-fig">
   <div class="s2-photo s2-i27" role="img" aria-label="Congestión pulmonar, congestión sistémica y signos de bajo gasto"></div>
   <figcaption><b>Dos circuitos más el bajo gasto</b> — La sangre se acumula <em>detrás</em> del ventrículo que falla y llega menos flujo <em>hacia delante</em>. Ese segundo eje —el <b>bajo gasto</b>: fatiga, piel fría, oliguria, confusión— suele olvidarse y también se pregunta.
@@ -3099,6 +4035,39 @@
   </table>
   <div class="key-box">IC <strong>global/congestiva</strong>: coexisten ambos patrones. La causa más común de IC derecha es la IC izquierda.</div>
 
+
+  <p class="s2-chain-l">La técnica · cómo se busca la congestión en un examen físico</p>
+  <div class="s2-ippa">
+    <div>
+      <b>Paso 1 · Inspección</b>
+      <h5>El cuello a 45° y las piernas</h5>
+      <p>Paciente semisentado a 45°, cuello descubierto. Se mira la vena yugular, el color, la respiración y los tobillos.</p>
+      <span class="s2-norm"><b>Lo normal:</b> yugulares colapsadas a 45°, sin edemas, respiración cómoda en decúbito.</span>
+      <span class="s2-anor"><b>En la IC:</b> <b>ingurgitación yugular</b> (derecha), <b>edema maleolar bilateral</b>, taquipnea, y el paciente que <b>no tolera acostarse</b> (izquierda).</span>
+    </div>
+    <div>
+      <b>Paso 2 · Palpación</b>
+      <h5>La punta, el hígado y el reflujo</h5>
+      <p>Se palpa el <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">choque de la punta<b>?</b><i onclick="event.stopPropagation()"><b>Choque de la punta (ictus cordis)</b>Golpe que da la punta del <b>ventrículo izquierdo</b> contra la pared del tórax en cada latido. Normalmente se palpa en el <b>5.º espacio intercostal, línea medioclavicular</b>. Si está desplazado hacia <b>afuera y abajo</b>, el ventrículo está agrandado — y eso se sabe sin ningún estudio.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span>, el borde del hígado, y se hace la maniobra del <b>reflujo hepatoyugular</b>: presión sostenida sobre el hipocondrio derecho mirando el cuello.</p>
+      <span class="s2-norm"><b>Lo normal:</b> punta en 5.º EIC línea medioclavicular, hígado no palpable bajo el reborde, la yugular no se llena al comprimir.</span>
+      <span class="s2-anor"><b>En la IC:</b> punta <b>desplazada afuera y abajo</b> (ventrículo dilatado), <b>hepatomegalia</b> y <b>reflujo hepatoyugular positivo</b> — los dos, criterios de Framingham.</span>
+    </div>
+    <div>
+      <b>Paso 3 · Percusión</b>
+      <h5>Buscar líquido donde no debería estar</h5>
+      <p>Se percute las bases pulmonares y, si corresponde, el abdomen.</p>
+      <span class="s2-norm"><b>Lo normal:</b> sonoridad pulmonar hasta las bases; abdomen timpánico.</span>
+      <span class="s2-anor"><b>En la IC:</b> <b>matidez basal</b> si hay <b>derrame pleural</b> (criterio menor), y matidez desplazable en el abdomen si hay <b>ascitis</b>.</span>
+    </div>
+    <div>
+      <b>Paso 4 · Auscultación</b>
+      <h5>El galope y las bases</h5>
+      <p>Primero el corazón en los cuatro focos, después los dos campos pulmonares de abajo hacia arriba.</p>
+      <span class="s2-norm"><b>Lo normal:</b> R1 y R2 solos, sin tercer ruido; murmullo vesicular limpio en las bases.</span>
+      <span class="s2-anor"><b>En la IC:</b> <b>ritmo de galope</b> por tercer ruido (criterio mayor) y <b>estertores crepitantes en las dos bases</b>, que suben de nivel cuanto peor está la congestión.</span>
+    </div>
+  </div>
+  <p class="s2-cap">Seis de los criterios mayores de Framingham se encuentran con las manos y el estetoscopio, sin ningún estudio: ingurgitación yugular, reflujo hepatoyugular, estertores, tercer ruido, disnea paroxística nocturna y edema agudo de pulmón.</p>
   <h3>⭐ Estadios en el desarrollo de la IC (A–D)</h3>
   <table>
     <thead><tr><th>Estadio</th><th>Descripción</th><th>Ejemplos</th></tr></thead>
@@ -3183,6 +4152,19 @@
   </div>
 
 
+
+  <div class="s2-patron">
+    <h4>Insuficiencia cardíaca · cómo se reconoce</h4>
+    <div class="s2-eq">
+      <span><b>Disnea</b> que empeora acostado</span><i>+</i>
+      <span><b>Crepitantes</b> en las dos bases</span><i>+</i>
+      <span><b>Ingurgitación yugular</b> + edema con godet</span><i>+</i>
+      <span><b>Tercer ruido</b> (galope)</span><i>=</i>
+      <span class="s2-res">INSUFICIENCIA CARDÍACA</span>
+    </div>
+    <p><b>Y la regla que lo formaliza es Framingham: 2 criterios mayores, o 1 mayor + 2 menores.</b> Fíjese en el patrón: los hallazgos <b>de arriba</b> (pulmón) son del fallo izquierdo y los <b>de abajo</b> (yugular, hígado, piernas) del derecho. Cuando están los dos, es <b>IC global o congestiva</b>.</p>
+    <p><b>Tres escalas, tres preguntas distintas — y mezclarlas es el error clásico:</b> <b>Framingham</b> responde «¿es insuficiencia cardíaca?». Los <b>estadios A–D</b> responden «¿cuánto avanzó?» y <b>no retroceden</b>. Las <b>clases NYHA I–IV</b> responden «¿cuánto lo limita hoy?» y <b>sí pueden mejorar</b>. La forma correcta de decirlo nombra dos: «estadio C, NYHA II».</p>
+  </div>
 <h3>Factores de riesgo y desencadenantes de la IC</h3>
   <table>
     <thead><tr><th>Factores desencadenantes</th><th>Factores de riesgo</th></tr></thead>
@@ -3204,6 +4186,17 @@
     <li>En la Rx pueden verse <strong>líneas B de Kerley</strong> (congestión).</li>
   </ul>
 
+
+  <div class="s2-cierre">
+    <h4>Insuficiencia cardíaca · lo que no se puede olvidar</h4>
+    <ol>
+      <li><b>La sangre se acumula detrás del ventrículo que falla.</b> Izquierda → pulmón (disnea, ortopnea, DPN, crepitantes). Derecha → cuerpo (yugular, hígado, edema). Y la causa más frecuente de fallo derecho es el <b>fallo izquierdo</b>.</li>
+      <li><b>Framingham: 2 criterios mayores, o 1 mayor + 2 menores.</b> Mayores clave: edema agudo de pulmón, DPN, estertores, ingurgitación yugular, reflujo hepatoyugular, PVC &gt;16 cmH₂O, cardiomegalia y <b>tercer ruido</b>.</li>
+      <li><b>Estadio, NYHA y Framingham no son lo mismo.</b> El estadio no retrocede; la clase NYHA sí puede mejorar; Framingham solo dice si hay o no enfermedad. <b>NYHA IV no equivale a estadio D.</b></li>
+      <li><b>NYHA II no da síntomas en reposo</b> — eso es el IV. El II aparece con esfuerzos moderados de la vida diaria. Es una trampa de verdadero o falso repetida.</li>
+      <li><b>Ante una descompensación, busque siempre el desencadenante.</b> El más frecuente y el más evitable es el <b>abandono de la medicación o el exceso de sal</b>; después, infección, arritmia, isquemia, crisis hipertensiva y anemia.</li>
+    </ol>
+  </div>
   <details class="s2-quiz-card" open>
     <summary>📝 Preguntas — Insuficiencia Cardíaca <span class="s2-qbadge">tocar para ver</span><span class="s2-chev">▸</span></summary>
     <div class="s2-quiz-body">
@@ -3279,7 +4272,7 @@
 
   <div class="s2-exam">
     <h4>Lo que más cae — Insuficiencia cardíaca</h4>
-    <p>Frecuencia relativa según el banco oficial de la cátedra revisado para este bloque.</p>
+    <p>Frecuencia relativa según las preguntas basadas en exámenes de la cátedra revisadas para este bloque.</p>
     <div class="s2-freq"><b>Framingham: 2 mayores o 1 mayor + 2 menores</b><span class="s2-bar"><i style="width:100%"></i></span></div>
     <div class="s2-freq"><b>Lesión estructural sin síntomas = estadio B</b><span class="s2-bar"><i style="width:90%"></i></span></div>
     <div class="s2-freq"><b>Izquierda congestiona pulmón; derecha, periferia</b><span class="s2-bar"><i style="width:82%"></i></span></div>
@@ -3295,6 +4288,11 @@
       <div class="pattern-card gold"><h5>Izq vs der</h5><p>Congestión pulmonar (izq) vs sistémica (der); factores desencadenantes.</p></div>
     </div>
   </div>
+
+  <div class="s2-puente">
+    Uno de los cinco mecanismos que acaban de ver —la <b>sobrecarga de presión</b>— tiene una causa que está en casi todos los consultorios y que casi nunca da síntomas hasta que ya hizo daño. Se mide con un aparato, y medirla mal cambia el diagnóstico. <b>Bloque 08 · Hipertensión arterial.</b>
+  </div>
+
 </section>
 
 <!-- ================= BLOQUE 08 · HIPERTENSIÓN ARTERIAL ================= -->
@@ -3302,6 +4300,26 @@
   <div class="section-marker"><span class="section-marker-num">— BLOQUE 08 · UNIDAD II</span></div>
   <h2>Hipertensión Arterial (HTA)</h2>
 
+
+  <div class="s2-mapa">
+    <h4>Bloque 08 de 10 · Unidad II · la enfermedad que casi no da síntomas</h4>
+    <div class="s2-rama"><b>Dónde estamos</b><span>En la única entidad de la materia donde <b>el diagnóstico depende de una técnica</b>, no de un hallazgo. Si el aparato se usa mal, el paciente queda mal clasificado — y todo lo demás se cae.</span></div>
+    <div class="s2-rama"><b>Qué viene antes</b><span>Del bloque 07: la <b>sobrecarga de presión</b> como uno de los cinco mecanismos que llevan a insuficiencia cardíaca. La hipertensión es la causa más común de esa sobrecarga.</span></div>
+    <div class="s2-rama"><b>Qué se aprende acá</b><span><i>Primaria y secundaria</i><i>Técnica de medición</i><i>Fases de Korotkoff</i><i>Clasificación por cifras</i><i>Órganos blanco</i><i>Crisis hipertensiva</i></span></div>
+    <div class="s2-rama"><b>Adónde lleva</b><span>El daño que la presión hace al ventrículo izquierdo —la <b>hipertrofia</b>— se ve en el <b>ECG</b> del bloque 09, y termina en la insuficiencia cardíaca del bloque 07. Los tres bloques son la misma historia en tres momentos.</span></div>
+  </div>
+
+  <div class="s2-antes">
+    <h4>Una ecuación y una advertencia</h4>
+    <p>La ecuación: <b>presión arterial = gasto cardíaco × resistencia vascular</b>. Solo hay dos maneras de subir la presión — que el corazón mande más sangre, o que los vasos estén más cerrados. Toda la fisiopatología del bloque cabe en esos dos términos.</p>
+    <ul>
+      <li>El <b>simpático</b> sube los dos: acelera el corazón y cierra los vasos.</li>
+      <li>El <b>riñón</b> retiene sodio y agua → más volumen → más <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">gasto cardíaco<b>?</b><i onclick="event.stopPropagation()"><b>Gasto cardíaco</b>Cantidad de sangre que el corazón expulsa <b>por minuto</b>: frecuencia cardíaca × volumen de cada latido. Es uno de los dos factores de la presión arterial; el otro es la <b>resistencia vascular</b>. Subir cualquiera de los dos sube la presión.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span>.</li>
+      <li>El eje <b>renina-angiotensina-aldosterona</b> hace las dos cosas a la vez.</li>
+      <li>Con los años, la pared del vaso se engrosa (<b>remodelado</b>) y la resistencia queda alta <b>de forma fija</b>.</li>
+    </ul>
+    <p>Y la advertencia: <b>la hipertensión casi no se siente</b>. El paciente no viene por síntomas — viene por otra cosa y se le encuentra la cifra. Por eso este bloque no enseña a reconocer un síntoma: enseña a <b>medir bien</b> y a buscar el <b>daño que ya está hecho</b> en el corazón, el riñón, el cerebro y la retina.</p>
+  </div>
   <div class="s2-flow">
     <div class="s2-pill"><span class="e">📈</span><b>PA elevada</b><small>≥140/90</small></div>
     <div class="s2-pill"><span class="e">🧬</span><b>Primaria</b><small>~90 %</small></div>
@@ -3404,6 +4422,15 @@
   </div>
 
 
+
+  <p class="s2-chain-l">De la cifra alta al daño de órgano</p>
+  <div class="s2-chain">
+    <div><b>1 · Presión alta sostenida</b><span>Años de presión elevada, la mayor parte del tiempo <b>sin ningún síntoma</b>.</span></div>
+    <div><b>2 · La pared responde</b><span>El vaso se engrosa para tolerar la presión, y el <b>ventrículo izquierdo</b> también: <b>hipertrofia</b>.</span></div>
+    <div><b>3 · Se pierde la reserva</b><span>El músculo hipertrofiado necesita más oxígeno y se llena peor. La arteriola engrosada deja pasar menos sangre a los órganos.</span></div>
+    <div><b>4 · Daño de órgano blanco</b><span><b>Corazón</b> (<span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">hipertrofia<b>?</b><i onclick="event.stopPropagation()"><b>Hipertrofia</b>Aumento del <b>grosor</b> del músculo porque trabaja contra más resistencia — igual que un músculo entrenado. En el corazón <b>no es una buena noticia</b>: el músculo engrosado necesita más oxígeno, se llena peor y termina fallando. Es distinto de la <b>dilatación</b>, donde la cámara se agranda y la pared se adelgaza.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span>, isquemia, insuficiencia) · <b>riñón</b> (nefroesclerosis) · <b>cerebro</b> (ACV) · <b>retina</b> (retinopatía) · <b>aorta</b>.</span></div>
+    <div><b>5 · Consecuencia</b><span>Por eso el <b>fondo de ojo</b> es parte esencial del examen: la retina es el único lugar del cuerpo donde se ven las arteriolas <b>en directo</b> — y muestran lo que está pasando en el riñón y en el cerebro.</span></div>
+  </div>
   <h3>Clasificación (primaria vs. secundaria)</h3>
   <table>
     <thead><tr><th>Primaria (esencial)</th><th>Secundaria</th></tr></thead>
@@ -3440,6 +4467,38 @@
   </table>
 
   <h3>⭐ Técnica de medición y escala de Korotkoff</h3>
+  <p class="s2-chain-l">La técnica · en la hipertensión, medir bien ES el diagnóstico</p>
+  <div class="s2-ippa">
+    <div>
+      <b>Paso 0 · Antes de inflar</b>
+      <h5>Preparar la toma</h5>
+      <p>La mitad de los errores ocurren antes de tocar el aparato.</p>
+      <span class="s2-norm"><b>Bien hecho:</b> ambiente calmo, <b>3–5 minutos de reposo</b>, sentado con la espalda apoyada y los <b>pies en el piso</b>, <b>brazo a la altura del corazón</b>, vejiga vacía, sin cigarrillo por 30 min ni ejercicio por 60 min.</span>
+      <span class="s2-anor"><b>Mal hecho:</b> pierna cruzada, brazo colgando, paciente recién llegado o hablando — cada uno de esos detalles sube la cifra y crea un hipertenso que no lo es.</span>
+    </div>
+    <div>
+      <b>Paso 1 · El manguito</b>
+      <h5>El tamaño cambia el número</h5>
+      <p>El manguito debe cubrir alrededor del <b>80 % de la circunferencia</b> del brazo.</p>
+      <span class="s2-norm"><b>Correcto:</b> manguito adecuado al brazo del paciente.</span>
+      <span class="s2-anor"><b>Incorrecto:</b> manguito <b>chico</b> para un brazo grueso → cifra <b>falsamente alta</b>. Manguito grande para un brazo delgado → cifra falsamente baja.</span>
+    </div>
+    <div>
+      <b>Paso 2 · Inflar y desinflar</b>
+      <h5>Dónde empezar y a qué velocidad</h5>
+      <p>Se palpa primero el <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">pulso radial<b>?</b><i onclick="event.stopPropagation()"><b>Pulso radial</b>Latido que se palpa en la <b>muñeca</b>, del lado del pulgar. En la toma de presión sirve para hallar la <b>sistólica palpable</b>: se infla el manguito hasta que el pulso <b>desaparece</b>, y desde ahí se suben 20–30 mmHg más. Ese paso es lo que evita caer en el <b>pozo auscultatorio</b>.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span> y se infla hasta que desaparece; desde ahí, <b>20–30 mmHg más</b>. Se desinfla a <b>2 mmHg por segundo</b>.</p>
+      <span class="s2-norm"><b>Correcto:</b> por encima de la sistólica palpable, y bajada lenta y pareja.</span>
+      <span class="s2-anor"><b>El error clásico: el pozo (agujero) auscultatorio</b> — los ruidos <b>desaparecen y vuelven</b> entre las primeras fases. Si se infla poco, se <b>subestima la sistólica</b> o se <b>sobreestima la diastólica</b>. Se evita inflando 30 mmHg por encima de la desaparición del pulso.</span>
+    </div>
+    <div>
+      <b>Paso 3 · Leer y repetir</b>
+      <h5>Una cifra no diagnostica</h5>
+      <p>Se lee la sistólica en la <b>primera fase</b> de Korotkoff y la diastólica en el paso de la <b>cuarta a la quinta</b>. Y se mide en <b>los dos brazos</b>.</p>
+      <span class="s2-norm"><b>Criterio de la cátedra:</b> promedio de <b>2 o más lecturas</b> en <b>2 o más visitas</b>. Una sola cifra alta no hace el diagnóstico, salvo urgencia clínica.</span>
+      <span class="s2-anor"><b>Señal de alarma:</b> diferencia mayor de <b>15 mmHg entre los brazos</b> — obliga a pensar en enfermedad arterial, coartación o disección.</span>
+    </div>
+  </div>
+
   <ul>
     <li>Paciente <strong>sentado</strong>, pies en el piso, <strong>brazo a la altura del corazón</strong>.</li>
     <li>Manguito adecuado (cubrir ~80 % de la circunferencia del brazo).</li>
@@ -3487,6 +4546,20 @@
     </tbody>
   </table>
 
+
+  <div class="s2-patron">
+    <h4>Hipertensión · las tres preguntas que se hacen siempre, en este orden</h4>
+    <div class="s2-eq">
+      <span><b>¿Está bien medida?</b></span><i>→</i>
+      <span><b>¿Primaria o secundaria?</b></span><i>→</i>
+      <span><b>¿Ya dañó algún órgano?</b></span><i>=</i>
+      <span class="s2-res">CONDUCTA</span>
+    </div>
+    <p><b>1 · Bien medida:</b> promedio de 2 o más lecturas en 2 o más visitas, con la técnica completa. Antes de eso no hay diagnóstico.</p>
+    <p><b>2 · Primaria (90–95 %) o secundaria (5–10 %):</b> la secundaria se sospecha por pistas, y cada pista apunta a una causa. Comienzo muy joven o muy tardío, o presión que no baja con nada → sospeche. <b>Potasio bajo</b> o hipertensión resistente → aldosteronismo. <b>Crisis</b> con cefalea, palpitaciones y sudoración → feocromocitoma. <b>Presión más alta en los brazos que en las piernas</b>, con pulsos femorales débiles o retrasados → coartación de aorta. La causa más común de HTA secundaria es la <b>enfermedad renal</b>.</p>
+    <p><b>3 · Daño de órgano blanco:</b> corazón, riñón, cerebro, retina y aorta. Acá el <b>fondo de ojo</b> no es un extra — es parte esencial del examen del hipertenso.</p>
+    <p><b>Y una advertencia sobre la crisis:</b> lo que separa una <b>urgencia</b> de una <b>emergencia</b> hipertensiva <b>no es la cifra</b>, sino si hay <b>lesión aguda de órgano</b> — cerebro, corazón, aorta, riñón o retina.</p>
+  </div>
   <h3>⭐ Examen físico del hipertenso</h3>
   <table>
     <thead><tr><th>Maniobra</th><th>Qué se busca</th></tr></thead>
@@ -3498,6 +4571,17 @@
     </tbody>
   </table>
 
+
+  <div class="s2-cierre">
+    <h4>Hipertensión arterial · lo que no se puede olvidar</h4>
+    <ol>
+      <li><b>El diagnóstico es un promedio, no una cifra:</b> 2 o más lecturas en 2 o más visitas. Una sola toma alta no hace hipertenso a nadie, salvo urgencia clínica.</li>
+      <li><b>La relación entre presión y riesgo es continua:</b> cada <b>20 mmHg</b> de sistólica o <b>10 mmHg</b> de diastólica <b>duplica</b> el riesgo cardiovascular. No hay umbral mágico.</li>
+      <li><b>Primaria 90–95 % · secundaria 5–10 %</b>, y la causa más común de la secundaria es la <b>enfermedad renal</b>.</li>
+      <li><b>Korotkoff: la sistólica se lee en la primera fase; la diastólica, en el paso de la cuarta a la quinta.</b> Y el <b>pozo auscultatorio</b> es la trampa técnica del bloque: hace subestimar la sistólica o sobreestimar la diastólica.</li>
+      <li><b>Mire las conjunciones de la tabla de clasificación:</b> «normal» y «elevada» exigen <b>y</b> (las dos cifras); los estadios se cumplen con <b>o</b> (basta una). Ese detalle cambia la respuesta correcta.</li>
+    </ol>
+  </div>
   <details class="s2-quiz-card" open>
     <summary>📝 Preguntas — Hipertensión Arterial <span class="s2-qbadge">tocar para ver</span><span class="s2-chev">▸</span></summary>
     <div class="s2-quiz-body">
@@ -3573,7 +4657,7 @@
 
   <div class="s2-exam">
     <h4>Lo que más cae — Hipertensión arterial</h4>
-    <p>Frecuencia relativa según el banco oficial de la cátedra revisado para este bloque.</p>
+    <p>Frecuencia relativa según las preguntas basadas en exámenes de la cátedra revisadas para este bloque.</p>
     <div class="s2-freq"><b>Korotkoff: fase I = PAS · fase V = PAD</b><span class="s2-bar"><i style="width:100%"></i></span></div>
     <div class="s2-freq"><b>Cada 20/10 mmHg duplica el riesgo cardiovascular</b><span class="s2-bar"><i style="width:90%"></i></span></div>
     <div class="s2-freq"><b>Primaria 90–95% × secundaria 5–10%</b><span class="s2-bar"><i style="width:80%"></i></span></div>
@@ -3589,6 +4673,11 @@
       <div class="pattern-card gold"><h5>Órganos blanco</h5><p>Corazón/riñón/retina/cerebro y el examen (fondo de ojo).</p></div>
     </div>
   </div>
+
+  <div class="s2-puente">
+    La hipertensión y la insuficiencia cardíaca dejan huella en el músculo del corazón, y esa huella se puede <b>leer</b>: el corazón genera electricidad cada vez que late, y esa electricidad se dibuja en papel. Ahora toca aprender a leer ese dibujo. <b>Bloque 09 · Electrocardiograma.</b>
+  </div>
+
 </section>
 
 <!-- ================= BLOQUE 09 · ELECTROCARDIOGRAMA ================= -->
@@ -3596,6 +4685,24 @@
   <div class="section-marker"><span class="section-marker-num">— BLOQUE 09 · UNIDAD II</span></div>
   <h2>Electrocardiograma (ECG)</h2>
 
+
+  <div class="s2-mapa">
+    <h4>Bloque 09 de 10 · Unidad II · el bloque que cierra el aparato cardiovascular</h4>
+    <div class="s2-rama"><b>Dónde estamos</b><span>En el <b>único método complementario</b> que la materia enseña a leer paso a paso. No es un examen físico, pero se usa igual: <b>con un orden fijo</b>, para que ningún hallazgo quede sin ver.</span></div>
+    <div class="s2-rama"><b>Qué viene antes</b><span>Del bloque 07, la <b>cardiomegalia</b> y el fallo de bomba; del 08, la <b>hipertrofia</b> por presión alta. Los dos dejan su huella en el trazado.</span></div>
+    <div class="s2-rama"><b>Qué se aprende acá</b><span><i>Sistema de conducción</i><i>P · QRS · T</i><i>PR · RR · QT</i><i>El papel y la calibración</i><i>12 derivaciones</i><i>Localización de paredes</i></span></div>
+    <div class="s2-rama"><b>Adónde lleva</b><span>Cierra la Unidad II: acá se junta todo el razonamiento cardiovascular. Después empieza el aparato digestivo.</span></div>
+  </div>
+
+  <div class="s2-antes">
+    <h4>Tres ideas y el trazado deja de ser un dibujo raro</h4>
+    <ul>
+      <li><b>El electro registra solo dos cosas:</b> células que <b>se <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">despolarizan<b>?</b><i onclick="event.stopPropagation()"><b>Despolarización</b>Momento en que la célula cardíaca <b>se activa</b>: entran cargas positivas, cambia el voltaje de la membrana y el músculo se contrae. En el trazado la despolarización de las <b>aurículas</b> es la onda <b>P</b>, y la de los <b>ventrículos</b>, el <b>QRS</b>.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span></b> (se estimulan y se contraen) y células que <b>se repolarizan</b> (se recuperan). Nada más. Cada onda es uno de esos dos fenómenos, en alguna parte del corazón.</li>
+      <li><b>La electricidad nace arriba y baja.</b> Aurículas (onda <b>P</b>) → freno en el nodo AV (segmento <b>PR</b>) → ventrículos (<b>QRS</b>) → recuperación ventricular (onda <b>T</b>). Ese orden es el orden del trazado, de izquierda a derecha.</li>
+      <li><b>El papel es un reloj.</b> A 25 mm/s: un cuadrito chico = <b>0,04 s</b>; un cuadro grande = <b>0,20 s</b>. A lo <b>ancho</b> se mide <b>tiempo</b>; a lo <b>alto</b>, <b>voltaje</b>. Confundir los dos ejes es el error que arruina todo el cálculo.</li>
+    </ul>
+    <p>Con eso solo ya se detectan las alteraciones más frecuentes, sin saber cardiología: si el <b>PR</b> es largo hay bloqueo, si el <b>QRS</b> es ancho el impulso no bajó por las vías rápidas, y la frecuencia sale de dividir <b>300</b> entre los cuadros grandes que hay de una R a la siguiente.</p>
+  </div>
   <div class="s2-flow">
     <div class="s2-pill"><span class="e">⚡</span><b>Impulso</b><small>sistema de conducción</small></div>
     <div class="s2-pill"><span class="e">📈</span><b>Ondas</b><small>P · QRS · T</small></div>
@@ -3707,6 +4814,15 @@
   </ul>
 
   <h3>⚡ Sistema de conducción</h3>
+  <p class="s2-chain-l">Del nodo sinusal al papel · quién dibuja cada parte</p>
+  <div class="s2-chain">
+    <div><b>1 · Nodo sinusal</b><span><span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">Marcapasos fisiológico<b>?</b><i onclick="event.stopPropagation()"><b>Marcapasos fisiológico</b>La estructura que <b>marca el ritmo</b> del corazón porque se despolariza sola y más rápido que las demás. Normalmente es el <b>nodo sinusal</b> (60–100 lpm). Si falla, toma el mando el <b>nodo AV</b> (40–60 lpm) y, si también falla, el ventrículo (20–40 lpm): cuanto más abajo, más lento.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span>, en el ángulo superior de la aurícula derecha. Dispara el impulso. <b>Su descarga no se ve</b> en el trazado: es demasiado pequeña.</span></div>
+    <div><b>2 · Aurículas</b><span>El impulso las recorre y las despolariza: eso dibuja la <b>onda P</b>.</span></div>
+    <div><b>3 · Nodo AV</b><span>Frena el impulso a propósito, para que las aurículas terminen de vaciarse antes de que los ventrículos se contraigan. Ese freno es el <b>segmento PR</b> — una línea plana porque no hay masa muscular moviéndose.</span></div>
+    <div><b>4 · His-Purkinje</b><span>Vías rápidas que reparten el impulso por los dos ventrículos casi al mismo tiempo. Por eso el <b>QRS es angosto</b>: menos de 0,12 s.</span></div>
+    <div><b>5 · Recuperación</b><span>Los ventrículos se repolarizan: <b>onda T</b>. La repolarización de las aurículas ocurre al mismo tiempo que el QRS y <b>queda escondida</b> dentro de él.</span></div>
+  </div>
+
 <figure class="s2-fig">
   <div class="s2-photo s2-i34" role="img" aria-label="Sistema de conducción cardíaco y correspondencia con las ondas del ECG"></div>
   <figcaption><b>Conducción, ondas e intervalos</b> — Cada estructura del sistema de conducción tiene su traducción en el trazado: la despolarización auricular es la onda P, el retraso en el nodo AV es el segmento PR, y la despolarización ventricular es el QRS.</figcaption>
@@ -3848,6 +4964,39 @@
   </aside>
 
 
+
+  <p class="s2-chain-l">La técnica de lectura · el mismo orden fijo, siempre</p>
+  <div class="s2-ippa">
+    <div>
+      <b>Paso 1 · Validar</b>
+      <h5>Antes de interpretar nada</h5>
+      <p>Se mira el papel, no el trazado: velocidad, amplitud y colocación de los electrodos.</p>
+      <span class="s2-norm"><b>Lo normal:</b> <b>25 mm/s</b> y <b>10 mm = 1 mV</b>, con la marca de calibración correcta.</span>
+      <span class="s2-anor"><b>Si esto falla, todo lo demás falla:</b> otra velocidad o amplitud y <b>cada intervalo que mida estará mal</b>. Y unos electrodos invertidos <b>crean hallazgos que no existen</b>.</span>
+    </div>
+    <div>
+      <b>Paso 2 · Ritmo y frecuencia</b>
+      <h5>¿Manda el nodo sinusal?</h5>
+      <p>Se busca si hay una P antes de cada QRS y si los QRS están a distancias parejas. Después se cuenta.</p>
+      <span class="s2-norm"><b>Lo normal:</b> una <b>P antes de cada QRS</b>, RR regulares, <b>60–100 lpm</b>. Cuenta rápida: <b>300 ÷ cuadros grandes entre dos R</b> — dos cuadros = 150, tres = 100, cuatro = 75, cinco = 60.</span>
+      <span class="s2-anor"><b>Anormal:</b> sin P, P que no conducen, o RR irregulares. Si el ritmo es <b>irregular</b>, la cuenta cambia: se cuentan los QRS en <b>10 segundos</b> y se multiplica por <b>6</b>.</span>
+    </div>
+    <div>
+      <b>Paso 3 · Ondas e intervalos</b>
+      <h5>Medir, no mirar</h5>
+      <p>Se miden con los cuadritos, uno por uno, en el mismo orden en que aparecen.</p>
+      <span class="s2-norm"><b>Lo normal:</b> <b>PR 0,12–0,20 s</b> (3 a 5 cuadritos) · <b>QRS &lt;0,12 s</b> · segmento <b>ST isoeléctrico</b> · onda T redondeada, algo asimétrica y positiva.</span>
+      <span class="s2-anor"><b>Anormal:</b> <b>PR largo</b> → bloqueo AV. <b>PR corto</b> → preexcitación. <b>QRS ancho</b> → bloqueo de rama, origen ventricular o fármacos que bloquean el sodio. <b>ST elevado o deprimido</b> → isquemia.</span>
+    </div>
+    <div>
+      <b>Paso 4 · Dónde está el problema</b>
+      <h5>Las 12 derivaciones como 12 cámaras</h5>
+      <p>Cada derivación mira el corazón desde un ángulo distinto: seis en el plano frontal (I, II, III, aVR, aVL, aVF) y seis en el horizontal (V1–V6).</p>
+      <span class="s2-norm"><b>La lógica:</b> el hallazgo aparece en las derivaciones que <b>miran</b> la pared enferma. Las demás lo ven de reojo o no lo ven.</span>
+      <span class="s2-anor"><b>Localización:</b> V1–V2 = <b>septal</b> · V3–V4 = <b>anterior</b> · V5–V6, I y aVL = <b>lateral</b> · II, III y aVF = <b>inferior</b>. Por eso se dice «infarto inferior»: no es una suposición, es qué derivaciones lo muestran.</span>
+    </div>
+  </div>
+  <p class="s2-cap">El orden importa tanto como en el examen físico: si empieza por la onda llamativa y saltea la calibración, va a interpretar un trazado que no es el del paciente.</p>
   <h3>🔌 Derivaciones (12 en el ECG de rutina)</h3>
   <p>La derivación mide la corriente en la dirección de la línea que une dos electrodos. El ECG estándar tiene <strong>12 derivaciones</strong>: 3 bipolares + 3 aumentadas (plano frontal) y 6 precordiales (plano horizontal).</p>
   <table>
@@ -3872,6 +5021,25 @@
   </table>
   <div class="key-box">Adicionales <strong>posteriores</strong>: V7 (axilar posterior), V8 (escapular media), V9 (paravertebral izquierda), todas en 5.º EIC. <strong>Derechas</strong>: V3R y V4R (espejo en el hemitórax derecho).</div>
 
+
+  <div class="s2-patron">
+    <h4>Los tres patrones que se piden reconocer sin ser cardiólogo</h4>
+    <div class="s2-eq">
+      <span><b>PR &gt;0,20 s</b> constante</span><i>=</i>
+      <span class="s2-res">BLOQUEO AV</span>
+    </div>
+    <div class="s2-eq">
+      <span><b>QRS ≥0,12 s</b></span><i>=</i>
+      <span class="s2-res">EL IMPULSO NO BAJÓ POR LAS VÍAS RÁPIDAS</span>
+    </div>
+    <div class="s2-eq">
+      <span>Sin onda <b>P</b></span><i>+</i>
+      <span><b>RR irregular</b></span><i>=</i>
+      <span class="s2-res">FIBRILACIÓN AURICULAR</span>
+    </div>
+    <p>Los tres se leen con lo único que hace falta saber: <b>dónde empieza y dónde termina cada onda</b>, y cuánto vale <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">un cuadrito<b>?</b><i onclick="event.stopPropagation()"><b>El cuadrito del papel</b>A la velocidad estándar de <b>25 mm/s</b>, cada cuadrado chico de <b>1 mm</b> vale <b>0,04 segundos</b> a lo ancho y <b>0,1 mV</b> a lo alto. El cuadro grande de 5 mm vale <b>0,20 s</b>. Todo intervalo se mide contando cuadritos — por eso hay que <b>verificar la calibración</b> antes de medir nada.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span>. Nada más.</p>
+    <p><b>Y una distinción que la cátedra pregunta tal cual:</b> los <b>intervalos envuelven ondas</b> (el PR incluye la onda P; el QT incluye el QRS y la T); los <b>segmentos no tienen ondas adentro</b> (el segmento PR y el segmento ST son líneas planas).</p>
+  </div>
   <h3>🧭 Localización de las paredes (qué derivaciones miran cada cara)</h3>
   <table>
     <thead><tr><th>Pared / cara</th><th>Derivaciones</th></tr></thead>
@@ -3884,6 +5052,31 @@
     </tbody>
   </table>
 
+
+  <div class="s2-cierre">
+    <h4>Electrocardiograma · lo que no se puede olvidar</h4>
+    <ol>
+      <li><b>A 25 mm/s: cuadrito chico = 0,04 s · cuadro grande = 0,20 s · 25 mm = 1 segundo.</b> Y 10 mm de alto = 1 mV. Ancho es tiempo, alto es voltaje.</li>
+      <li><b>PR normal 0,12–0,20 s · QRS &lt;0,12 s.</b> PR largo = bloqueo AV; PR corto = preexcitación; QRS ancho = el impulso no bajó por His-Purkinje.</li>
+      <li><b>Frecuencia con ritmo regular: 300 ÷ cuadros grandes entre dos R.</b> Con ritmo irregular: QRS en 10 segundos × 6.</li>
+      <li><b>El segmento PR es el freno del nodo AV, y la repolarización auricular queda oculta dentro del QRS.</b> Los <b>intervalos</b> envuelven ondas; los <b>segmentos</b> no.</li>
+      <li><b>Las paredes se localizan por derivaciones:</b> V1–V2 septal · V3–V4 anterior · V5–V6, I, aVL lateral · II, III, aVF inferior.</li>
+    </ol>
+  </div>
+
+  <div class="s2-razonar">
+    <h4>Unidad II · cómo razonar frente a un paciente cardiovascular</h4>
+    <p>Los bloques 06 a 09 se usan en este orden, y siempre el mismo:</p>
+    <ol>
+      <li><b>¿Qué lo trajo?</b> Los seis motivos del bloque 06: dolor, disnea, palpitaciones, síncope, edema, cianosis. En cardiología el interrogatorio pesa más que en ningún otro aparato — sobre todo para reconocer la isquemia.</li>
+      <li><b>Si duele el pecho, primero descarte lo grave con tres preguntas.</b> ¿Cambia con la postura? (si mejora inclinado hacia adelante → pericárdico). ¿Fue máximo desde el primer segundo y se va a la espalda? (→ aórtico, revise pulsos en los dos brazos). ¿Aparece con el esfuerzo, es opresivo y se va al borde cubital? (→ isquémico).</li>
+      <li><b>Si hay disnea, decida de dónde viene.</b> Pulmonar o cardíaca es la pregunta que atraviesa toda la materia. A favor del corazón: <b>ortopnea</b>, <b>disnea paroxística nocturna</b>, edema vespertino de piernas, ingurgitación yugular, tercer ruido y crepitantes en las dos bases. A favor del pulmón: tos y expectoración de años, sibilancias, tórax en tonel, hallazgos <b>de un solo lado</b>.</li>
+      <li><b>Examine buscando congestión, y busque de arriba hacia abajo.</b> Cuello (yugulares a 45°) → punta del corazón (dónde está y cómo late) → hígado y reflujo hepatoyugular → bases pulmonares → piernas. Ese recorrido reúne, él solo, la mitad de los criterios de Framingham.</li>
+      <li><b>Mida la presión bien, no rápido.</b> Reposo, posición, manguito adecuado, los dos brazos, promedio de varias lecturas. Una técnica descuidada crea hipertensos que no lo son y tranquiliza a hipertensos que sí lo son.</li>
+      <li><b>Recién ahí pida el electro — y léalo con el mismo orden fijo.</b> Calibración → ritmo y frecuencia → ondas e intervalos → qué pared. El ECG confirma o descarta lo que usted ya sospechaba; no reemplaza el paso anterior.</li>
+    </ol>
+    <p><b>Y una regla que vale para toda la unidad:</b> el corazón y el pulmón comparten los síntomas —disnea, dolor, cianosis— pero <b>no comparten los signos</b>. Ingurgitación yugular, tercer ruido, edema con godet y hepatomegalia hablan de corazón. Matidez, vibraciones vocales alteradas y hallazgos de un solo lado hablan de pulmón.</p>
+  </div>
   <details class="s2-quiz-card" open>
     <summary>📝 Preguntas — Electrocardiograma <span class="s2-qbadge">tocar para ver</span><span class="s2-chev">▸</span></summary>
     <div class="s2-quiz-body">
@@ -3977,7 +5170,7 @@
 
   <div class="s2-exam">
     <h4>Lo que más cae — Electrocardiograma</h4>
-    <p>Frecuencia relativa según el banco oficial de la cátedra revisado para este bloque.</p>
+    <p>Frecuencia relativa según las preguntas basadas en exámenes de la cátedra revisadas para este bloque.</p>
     <div class="s2-freq"><b>Intervalo PR × segmento PR × intervalo RR</b><span class="s2-bar"><i style="width:100%"></i></span></div>
     <div class="s2-freq"><b>V4 = 5.º EIC, línea medioclavicular izquierda</b><span class="s2-bar"><i style="width:92%"></i></span></div>
     <div class="s2-freq"><b>Papel: 1 mm = 0,04 s · 5 mm = 0,20 s</b><span class="s2-bar"><i style="width:84%"></i></span></div>
@@ -3993,6 +5186,11 @@
       <div class="pattern-card gold"><h5>Conducción</h5><p>"Dibuje y explique" el sistema SA → AV → His → Purkinje.</p></div>
     </div>
   </div>
+
+  <div class="s2-puente">
+    Termina el aparato cardiovascular y empieza el <b>digestivo</b>. Cambia el órgano y cambia la técnica —acá la percusión y la palpación abdominal reemplazan al estetoscopio—, pero la forma de razonar es exactamente la misma: <b>síntoma → mecanismo → hallazgo → patrón</b>. <b>Bloque 10 · Sistema gástrico.</b>
+  </div>
+
 </section>
 
 <!-- ================= BLOQUE 10 · SISTEMA GÁSTRICO ================= -->
@@ -4000,6 +5198,26 @@
   <div class="section-marker"><span class="section-marker-num">— BLOQUE 10 · UNIDAD III</span></div>
   <h2>Sistema Gástrico (Gastritis y Úlcera)</h2>
 
+
+  <div class="s2-mapa">
+    <h4>Bloque 10 de 10 · Unidad III · el aparato digestivo</h4>
+    <div class="s2-rama"><b>Dónde estamos</b><span>En el último bloque de la materia, y en el <b>único aparato donde el examen físico casi no aporta</b>: acá el diagnóstico lo hacen el <b>interrogatorio</b> y la <b>endoscopia</b>. Lo que la mano busca no es el diagnóstico, es la <b>complicación</b>.</span></div>
+    <div class="s2-rama"><b>Qué viene antes</b><span>Del bloque 01, la diferencia entre <b>hemoptisis y hematemesis</b> — acá aparece del otro lado, como sangrado digestivo.</span></div>
+    <div class="s2-rama"><b>Qué se aprende acá</b><span><i>Enfermedad ácido-péptica</i><i>Gastritis aguda y crónica</i><i>Tipos A · B · AB</i><i>H. pylori</i><i>Úlcera gástrica y duodenal</i><i>Complicaciones</i></span></div>
+    <div class="s2-rama"><b>Adónde lleva</b><span>Cierra el programa. Después vienen el compendio de tablas, el banco general de preguntas y el mazo completo de flashcards.</span></div>
+  </div>
+
+  <div class="s2-antes">
+    <h4>Una balanza, y todo el bloque se explica solo</h4>
+    <p>El estómago fabrica ácido todos los días y no se digiere a sí mismo. Eso funciona porque hay <b>una balanza</b>: de un lado la <b>agresión</b>, del otro la <b>defensa</b>.</p>
+    <ul>
+      <li><b>Agresión:</b> ácido clorhídrico, pepsina, <b>H. pylori</b>, bilis que refluye, alcohol, estrés.</li>
+      <li><b>Defensa:</b> la capa de <b>moco</b>, el <b>bicarbonato</b> que la neutraliza por debajo, el <b>flujo de sangre</b> de la <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">mucosa<b>?</b><i onclick="event.stopPropagation()"><b>Mucosa</b>Capa que <b>reviste por dentro</b> el tubo digestivo. Tiene tres partes: el <b>epitelio</b> que toca la luz, la <b>lámina propia</b> debajo, y una fina capa muscular, la <b>muscular de la mucosa</b>. Esa última capa es la frontera que define el nombre de la lesión: si el daño no la atraviesa es <b>erosión</b>; si la atraviesa, <b>úlcera</b>.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span> y la rapidez con que el epitelio se repara.</li>
+      <li><b>La lesión aparece cuando la agresión gana</b>, y depende de dos cosas: <b>cuánto tiempo</b> permanece el factor que agrede y <b>cuánto resiste</b> la barrera.</li>
+    </ul>
+    <p>Con esa balanza se entiende lo que parece raro: <b>los AINE dañan el estómago sin ser ácidos</b>. Bloquean la COX, bajan las prostaglandinas, y con ellas caen el moco, el bicarbonato y el flujo de la mucosa. No aumentan la agresión: <b>desarman la defensa</b>.</p>
+    <p>Y la <b>profundidad</b> pone el nombre: si la lesión <b>no</b> atraviesa la muscular de la mucosa es una <b>erosión</b>; si la atraviesa, es una <b>úlcera</b>.</p>
+  </div>
   <div class="s2-flow">
     <div class="s2-pill"><span class="e">🔥</span><b>Gastritis</b><small>inflamación mucosa</small></div>
     <div class="s2-pill"><span class="e">🦠</span><b>H. pylori</b><small>causa clave</small></div>
@@ -4054,6 +5272,15 @@
   </ul>
   <div class="key-box"><strong>H. pylori:</strong> se relaciona con la falta de saneamiento básico (agua sin filtrar/tratar). Vías de transmisión: <strong>fecal-oral, oral-oral y gastro-oral</strong>.</div>
 
+
+  <p class="s2-chain-l">De H. pylori a la úlcera</p>
+  <div class="s2-chain">
+    <div><b>1 · Llegada</b><span><b>H. pylori</b> entra con agua o alimentos contaminados —de ahí su relación con la falta de saneamiento—. Vías: <b>fecal-oral, oral-oral y gastro-oral</b>.</span></div>
+    <div><b>2 · Coloniza</b><span>Se instala bajo la capa de moco, sobre todo en el <b><span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">antro<b>?</b><i onclick="event.stopPropagation()"><b>Antro gástrico</b>Porción <b>final</b> del estómago, justo antes del píloro. Es donde se instala con preferencia <b>H. pylori</b>, y por eso la gastritis <b>tipo B</b> es antral. El <b>cuerpo y el fundus</b> —la parte alta— son en cambio el territorio de la gastritis <b>tipo A</b>, autoinmune.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span></b>. Ahí queda protegido del ácido.</span></div>
+    <div><b>3 · Inflama</b><span>La mucosa se llena de células inflamatorias: eso <b>es</b> la gastritis. En el antro, la gastritis <b>tipo B</b>, la más frecuente de todas.</span></div>
+    <div><b>4 · Rompe la balanza</b><span>La defensa cae y la agresión sigue. Con el tiempo la inflamación se hace <b>crónica</b> y aparece <b>atrofia</b>.</span></div>
+    <div><b>5 · Consecuencia</b><span>Si el daño atraviesa la muscular de la mucosa: <b>úlcera</b>. Y de ahí, sus tres complicaciones: <b>hemorragia</b> (hasta el shock), <b>perforación</b> (peritonitis) y <b>obstrucción</b>.</span></div>
+  </div>
   <h3>Factores de riesgo y desencadenantes (gastritis/úlcera)</h3>
   <table>
     <thead><tr><th>Factores desencadenantes</th><th>Factores de riesgo</th></tr></thead>
@@ -4090,6 +5317,28 @@
     </tbody>
   </table>
 
+
+  <div class="s2-patron">
+    <h4>Los tres tipos de gastritis crónica · qué los separa</h4>
+    <div class="s2-eq">
+      <span><b>Cuerpo y fundus</b></span><i>+</i>
+      <span><b>Autoinmune</b></span><i>+</i>
+      <span>Anemia perniciosa · <b>aclorhidria</b></span><i>=</i>
+      <span class="s2-res">TIPO A</span>
+    </div>
+    <div class="s2-eq">
+      <span><b>Antro</b></span><i>+</i>
+      <span><b>H. pylori</b></span><i>+</i>
+      <span>La <b>más frecuente</b></span><i>=</i>
+      <span class="s2-res">TIPO B</span>
+    </div>
+    <div class="s2-eq">
+      <span><b>Antro y cuerpo</b> (pangastritis)</span><i>+</i>
+      <span>Extensión de la tipo B</span><i>=</i>
+      <span class="s2-res">TIPO AB</span>
+    </div>
+    <p><b>El dato del tipo A que suele olvidarse:</b> además de autoinmune, de cuerpo y fundus, con anemia perniciosa y aclorhidria, tiene <b>mayor riesgo de cáncer gástrico</b>.</p>
+  </div>
   <h3>⭐ Manifestaciones clínicas</h3>
   <p>La manifestación más frecuente es el <strong>dolor epigástrico quemante (epigastralgia)</strong>. Lo más "preguntable" es su <strong>relación con la comida</strong>, que ayuda a diferenciar la úlcera duodenal de la gástrica:</p>
 <figure class="s2-fig">
@@ -4154,6 +5403,24 @@
   </div>
 
 
+
+  <div class="s2-patron">
+    <h4>Úlcera duodenal o gástrica · el patrón está en el reloj de las comidas</h4>
+    <div class="s2-eq">
+      <span>Dolor <b>2 a 5 horas después</b> de comer, y de noche</span><i>+</i>
+      <span><b>Alivia al comer</b>; empeora en ayunas</span><i>+</i>
+      <span>Paciente <b>joven</b> (20–45 años)</span><i>=</i>
+      <span class="s2-res">ÚLCERA DUODENAL</span>
+    </div>
+    <div class="s2-eq">
+      <span>Dolor <b>al comer</b> (posprandial)</span><i>+</i>
+      <span>Náuseas, a veces <b>pérdida de peso</b></span><i>+</i>
+      <span>Paciente <b>mayor</b></span><i>=</i>
+      <span class="s2-res">ÚLCERA GÁSTRICA</span>
+    </div>
+    <p><b>La regla corta:</b> <b>D</b>uodenal → mejora al come<b>r</b>. <b>G</b>ástrica → duele al come<b>r</b>.</p>
+    <p><b>Y la consecuencia práctica que cambia la conducta:</b> en la <b>úlcera gástrica siempre se biopsia</b>, para descartar cáncer. En la duodenal la biopsia no es indispensable, salvo que sea refractaria o sospechosa de malignidad.</p>
+  </div>
   <h3>Úlcera péptica</h3>
   <p>Es una lesión del <strong>estómago o la porción proximal del duodeno</strong>. Causas principales: <strong>H. pylori</strong> (daña la mucosa gastroduodenal), <strong>AINE</strong> y, raramente, tumores secretores de <strong>gastrina</strong> (gastrinoma / síndrome de Zollinger-Ellison). El dolor se describe clásicamente "en 4 tiempos" en relación con las comidas.</p>
 <div class="key-box danger"><strong>Complicaciones de la úlcera péptica:</strong> <strong>hemorragia</strong> (puede llevar a shock hipovolémico), <strong>perforación</strong> (peritonitis) y obstrucción.</div>
@@ -4244,6 +5511,39 @@
 
 
   <h3>⭐ Examen físico</h3>
+  <p class="s2-chain-l">La técnica abdominal · acá el orden cambia, y hay un motivo</p>
+  <div class="s2-ippa">
+    <div>
+      <b>Paso 1 · Inspección</b>
+      <h5>Mirar el abdomen y al paciente</h5>
+      <p>Forma del abdomen, si respira con él, color de piel y conjuntivas.</p>
+      <span class="s2-norm"><b>Lo normal:</b> abdomen plano y blando, que se mueve con la respiración; conjuntivas rosadas.</span>
+      <span class="s2-anor"><b>En gastritis y úlcera: habitualmente normal.</b> Solo se altera en las complicaciones: <b>palidez</b> si hubo sangrado, o un abdomen inmóvil y quieto en el <b>abdomen agudo</b>.</span>
+    </div>
+    <div>
+      <b>Paso 2 · Auscultación</b>
+      <h5>Antes de tocar, y no después</h5>
+      <p>En el abdomen la auscultación va <b>segunda</b>, no cuarta: si primero se palpa, se estimula el intestino y los ruidos dejan de ser los del paciente.</p>
+      <span class="s2-norm"><b>Lo normal:</b> ruidos hidroaéreos presentes, cada pocos segundos.</span>
+      <span class="s2-anor"><b>Anormal:</b> ruidos <b>disminuidos o ausentes</b> → íleo o peritonitis. Es un signo de complicación, no de gastritis.</span>
+    </div>
+    <div>
+      <b>Paso 3 · Percusión</b>
+      <h5>Un dato que salva</h5>
+      <p>Se <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">percute<b>?</b><i onclick="event.stopPropagation()"><b>Percusión</b>Golpear con un dedo sobre otro apoyado en el cuerpo para escuchar qué hay debajo. <b>Timpanismo</b> = aire (intestino). <b>Matidez</b> = órgano macizo o líquido. Por eso el hígado da matidez: si esa matidez <b>desaparece</b>, hay aire libre entre el hígado y la pared — <b>perforación</b>.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span> el abdomen en general y, sobre todo, <b>el hígado</b>.</p>
+      <span class="s2-norm"><b>Lo normal:</b> timpanismo en el abdomen y <b>matidez hepática</b> presente en el hipocondrio derecho.</span>
+      <span class="s2-anor"><b>La alarma:</b> si la <b>matidez hepática desaparece</b>, hay aire libre entre el hígado y la pared — <b>neumoperitoneo</b>, es decir, <b>úlcera perforada</b>. Un hallazgo de percusión que cambia la conducta en el acto.</span>
+    </div>
+    <div>
+      <b>Paso 4 · Palpación</b>
+      <h5>Suave primero, profunda después</h5>
+      <p>Se empieza lejos de donde duele y se termina en el epigastrio.</p>
+      <span class="s2-norm"><b>Lo normal:</b> abdomen blando, depresible, sin dolor.</span>
+      <span class="s2-anor"><b>En gastritis y úlcera:</b> a lo sumo un <b>discreto dolor en epigastrio</b>. Si en cambio hay <b>defensa</b> o un <b>abdomen en tabla</b>, ya no está examinando una úlcera: está examinando una <b>perforación</b>.</span>
+    </div>
+  </div>
+  <p class="s2-cap">Este es el bloque donde el examen físico <b>no hace el diagnóstico</b>. Lo hacen el interrogatorio —sobre todo la relación del dolor con la comida— y la <b>endoscopia con biopsia</b>. La mano está para detectar la complicación.</p>
+
   <table>
     <thead><tr><th>Maniobra</th><th>Hallazgo</th></tr></thead>
     <tbody>
@@ -4262,6 +5562,29 @@
     <li>En la úlcera duodenal la biopsia no es indispensable salvo casos refractarios o sugestivos de malignidad; en la <strong>úlcera gástrica</strong> siempre conviene biopsiar para descartar cáncer.</li>
   </ul>
 
+
+  <div class="s2-cierre">
+    <h4>Sistema gástrico · lo que no se puede olvidar</h4>
+    <ol>
+      <li><b>Todo sale de la balanza agresión-defensa.</b> Y los <b>AINE</b> dañan <b>desarmando la defensa</b>: bloquean la COX, bajan las prostaglandinas y con ellas el moco, el bicarbonato y el flujo de la mucosa.</li>
+      <li><b>Erosión y úlcera se separan por la profundidad:</b> la erosión <b>no</b> atraviesa la muscular de la mucosa; la úlcera <b>sí</b>.</li>
+      <li><b>Duodenal mejora al comer y duele 2–5 h después y de noche; gástrica duele al comer.</b> Y la <b>gástrica siempre se biopsia</b>, para descartar cáncer.</li>
+      <li><b>Tipo A: autoinmune, cuerpo y fundus, anemia perniciosa, aclorhidria y mayor riesgo de cáncer. Tipo B: H. pylori, antro, la más frecuente. Tipo AB: pangastritis.</b></li>
+      <li><b>La endoscopia alta con biopsia es el examen de mayor exactitud</b>, y las tres complicaciones de la úlcera son <b>hemorragia, perforación y obstrucción</b>. La <b>matidez hepática ausente</b> es el signo de percusión que delata la perforación.</li>
+    </ol>
+  </div>
+
+  <div class="s2-razonar">
+    <h4>Unidad III · cómo razonar frente a un paciente con dolor en el epigastrio</h4>
+    <ol>
+      <li><b>Primero descarte lo urgente, y hágalo con la mano.</b> ¿Hay defensa, abdomen en tabla o <b>matidez hepática ausente</b>? → perforación. ¿Hay palidez, taquicardia, hipotensión, <b>hematemesis o melena</b>? → hemorragia digestiva. Esas dos preguntas van antes que cualquier otra cosa.</li>
+      <li><b>Después ubique el dolor en el reloj de las comidas.</b> Es el dato que más orienta: mejora al comer y despierta de noche → duodenal. Empeora al comer, con náuseas y pérdida de peso → gástrica. Pero el dolor <b>orienta, no confirma</b>.</li>
+      <li><b>Busque la causa entre las tres frecuentes:</b> ¿toma <b>AINE</b> o aspirina? ¿alcohol y tabaco? ¿vive donde el agua no se trata (<b>H. pylori</b>)? La cuarta, rara, es el tumor secretor de gastrina (Zollinger-Ellison).</li>
+      <li><b>Pregunte por las señales de alarma:</b> pérdida de peso, vómitos persistentes, anemia, dificultad para tragar, edad mayor o antecedente familiar de cáncer gástrico. Cualquiera de ellas apura la endoscopia.</li>
+      <li><b>Confirme con el estudio que corresponde.</b> La <b>endoscopia digestiva alta con biopsia</b> es el examen de mayor exactitud: ve la lesión, la biopsia y detecta H. pylori. La radiografía contrastada tiene utilidad limitada.</li>
+      <li><b>Y no cierre sin la biopsia cuando la úlcera es gástrica.</b> Es la regla que separa una úlcera benigna de un cáncer que se le parece.</li>
+    </ol>
+  </div>
   <details class="s2-quiz-card" open>
     <summary>📝 Preguntas — Sistema Gástrico <span class="s2-qbadge">tocar para ver</span><span class="s2-chev">▸</span></summary>
     <div class="s2-quiz-body">
@@ -4339,7 +5662,7 @@
 
   <div class="s2-exam">
     <h4>Lo que más cae — Gastritis y úlcera péptica</h4>
-    <p>Frecuencia relativa según el banco oficial de la cátedra revisado para este bloque.</p>
+    <p>Frecuencia relativa según las preguntas basadas en exámenes de la cátedra revisadas para este bloque.</p>
     <div class="s2-freq"><b>Tipo A autoinmune (cuerpo/fundus) × tipo B antral</b><span class="s2-bar"><i style="width:100%"></i></span></div>
     <div class="s2-freq"><b>Úlcera gástrica × duodenal: relación con la comida</b><span class="s2-bar"><i style="width:90%"></i></span></div>
     <div class="s2-freq"><b>Endoscopia + biopsia como método de mayor exactitud</b><span class="s2-bar"><i style="width:78%"></i></span></div>
@@ -4355,6 +5678,11 @@
       <div class="pattern-card gold"><h5>Complicaciones</h5><p>Hemorragia, perforación (peritonitis), obstrucción.</p></div>
     </div>
   </div>
+
+  <div class="s2-puente">
+    Con esto termina el programa de <b>Semiología II</b>. Lo que sigue no es materia nueva: es la misma, ordenada de otra manera para repasar — el <b>compendio de tablas</b>, el <b>banco general de preguntas</b> en el orden de los bloques, y el <b>mazo completo de flashcards</b> con la ruleta para el repaso al azar.
+  </div>
+
 </section>
 
 <!-- ================= BLOQUE FINAL · COMPENDIO DE TABLAS ================= -->

@@ -53,6 +53,7 @@ const FILES = {
   'embriologia':                  'embriologia.html',
   'histologia-i':                 'histologia-i.html',
   'histologia-i-practica':        'histologia-i-practica.html',
+  'histologia-ii-practica':       'histologia-ii-practica.html',
   'anatomia-i':                   'anatomia-i.html',
   'biologia':                     'biologia.html',
   'medicina-legal':               'medicina-legal.html',
