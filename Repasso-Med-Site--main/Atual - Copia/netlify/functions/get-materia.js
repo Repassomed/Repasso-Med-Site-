@@ -58,6 +58,7 @@ const FILES = {
   'biologia':                     'biologia.html',
   'medicina-legal':               'medicina-legal.html',
   'anatomia-patologica-ii':       'anatomia-patologica-ii.html',
+  'anatomia-patologica-ii-practica': 'anatomia-patologica-ii-practica.html',
   'fisiopatologia-ii':            'fisiopatologia-ii.html',
   'toxicologia':                  'toxicologia.html',
   'dermatologia':                 'dermatologia.html',

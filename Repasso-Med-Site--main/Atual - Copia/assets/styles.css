@@ -833,21 +833,39 @@ footer strong { color:var(--gold-soft); }
 #materias-container .rm-cuaderno .container>*{position:relative;z-index:1;}
 #materias-container .rm-cuaderno .container,
 #materias-container .rm-cuaderno .container-wide{padding-left:clamp(46px,6vw,64px)!important;}
+/* =====================================================================
+   RENDERIZAÇÃO SOB DEMANDA — a correção do «trava e não mostra a aba»
+   ---------------------------------------------------------------------
+   Anatomía I tem 49.475 elementos numa única aba. Fisiopatología II,
+   32.639. O navegador precisa medir, posicionar e pintar TUDO isso antes
+   de mostrar a primeira linha — por isso trava, e por isso em tablet e
+   celular a aba às vezes nem aparece inteira.
+
+   `content-visibility:auto` faz o navegador pular as seções que estão
+   fora da tela: ele só monta cada uma quando você chega perto. O pico
+   de trabalho cai para o tamanho de uma seção, não da matéria inteira.
+
+   Antes isto valia só até 640px. Agora vale em TODA largura — o
+   travamento não é exclusivo do celular, e no desktop também é ganho.
+
+   `contain-intrinsic-size` é a altura estimada de uma seção ainda não
+   renderizada; serve para a barra de rolagem não pular. Navegador antigo
+   ignora as duas linhas, sem prejuízo nenhum.
+
+   Se algum dia atrapalhar o «buscar na página», basta apagar este bloco.
+   ===================================================================== */
+#materias-container .rm-cuaderno > section.container{
+  content-visibility:auto;
+  contain-intrinsic-size:1px 2400px;
+}
+/* O bloco aberto pelo índice nunca pode estar «pulado» no momento do
+   salto, senão a rolagem mira uma altura estimada e erra o alvo. */
+#materias-container .rm-cuaderno > section.container:target,
+#materias-container .rm-cuaderno > section.container:focus-within{
+  content-visibility:visible;
+}
+
 @media(max-width:640px){
-    /* ⚠️ 2.ª camada de proteção do iOS — «um problema ocorreu repetidamente»
-     é a mensagem do Safari quando a aba estoura a memória de renderização.
-     `content-visibility:auto` faz o navegador NÃO renderizar as seções que
-     estão fora da tela; ele só as monta quando você chega perto delas.
-     Numa matéria de 700 questões isso derruba o pico de memória para uma
-     fração. Só no celular — no desktop nada muda.
-     `contain-intrinsic-size` dá uma altura estimada para a barra de rolagem
-     não pular. Navegador antigo ignora as duas linhas, sem prejuízo.
-     Se algum dia atrapalhar o «buscar na página» do celular, basta apagar
-     este bloco. */
-  #materias-container .rm-cuaderno > section.container{
-    content-visibility:auto;
-    contain-intrinsic-size:1px 2200px;
-  }
 #materias-container .rm-cuaderno .container,
   #materias-container .rm-cuaderno .container-wide{
     /* No celular a lombada encolhe para 22px E o papel milimetrado sai:
