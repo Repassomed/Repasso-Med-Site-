@@ -858,6 +858,28 @@ footer strong { color:var(--gold-soft); }
   content-visibility:auto;
   contain-intrinsic-size:1px 2400px;
 }
+/* `content-visibility:auto` implica `contain:paint`, e um contêiner de
+   pintura ancora os `position:fixed` de dentro dele. Enquanto houver uma
+   imagem ampliada (.rm-fs) naquela seção, a contenção é solta — senão a
+   foto ampliada aparece presa à seção, fora da tela. A classe é posta
+   pelo app-core.js (não usamos :has(), que falta em navegador antigo). */
+/* Fondo oscuro mientras hay una foto ampliada. El app-core.js lo inserta
+   como HERMANO de la imagen ampliada: así queda en el mismo contexto de
+   apilamiento que ella y el z-index se respeta (un `body::before` quedaba
+   POR ENCIMA de la foto, porque el contenedor de materias crea su propio
+   contexto). Un clic acá lo recoge el app-core.js y cierra.
+   Sin `blur` ni `backdrop-filter`: en iOS eso es justamente lo que mata la
+   pestaña en páginas largas (§8). */
+.rm-fs-back{
+  position:fixed;inset:0;z-index:99998;
+  background:rgba(8,14,24,.74);
+  cursor:zoom-out;
+}
+#materias-container .rm-cuaderno > section.container.rm-fs-host,
+#materias-container .rm-cuaderno > section.container-wide.rm-fs-host{
+  content-visibility:visible!important;
+  contain:none!important;
+}
 /* O bloco aberto pelo índice nunca pode estar «pulado» no momento do
    salto, senão a rolagem mira uma altura estimada e erra o alvo. */
 #materias-container .rm-cuaderno > section.container:target,
