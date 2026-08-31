@@ -362,12 +362,17 @@ var RepassoMed = (function(){
     return '';
   }
 
+  /* Cabeçalhos que se repetem em TODO bloco e não ajudam a localizar
+     nada — só poluem o índice. Ficam no conteúdo; saem só da lista. */
+  var SUB_FORA = /organizaci[óo]n\s*[—·\-]\s*c[óo]mo|c[óo]mo lo eval[úu]a la c[áa]tedra|^c[óo]mo estudiar|^resumen explicado|^desde cero$/i;
+
   function subtitulos(bloco){
     var hs = Array.prototype.slice.call(bloco.querySelectorAll('h3'));
     var out = [];
     hs.forEach(function(h, i){
       var t = h.textContent.replace(RE_EMOJI, '').replace(/\s+/g, ' ').trim();
       if (!t || t.length > 90) return;               // rótulo longo demais não é subtítulo
+      if (SUB_FORA.test(t)) return;                  // cabeçalho repetido: fora do índice
       if (!h.id) h.id = bloco.id + '-s' + (i + 1);
       out.push({ id: h.id, txt: t, tipo: tipoSub(t) });
     });
