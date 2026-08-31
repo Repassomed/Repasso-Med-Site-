@@ -883,6 +883,7 @@ const SUPABASE_URL  = "https://ltizbamvskcgigmqobfo.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0aXpiYW12c2tjZ2lnbXFvYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMjEyMzQsImV4cCI6MjA5NTg5NzIzNH0.pCVNq9tSibknAm6hKuTeAd8ItozQrXiBTiwaEn9xX0U";
 
 const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+window.RM_SB = _sb;   // a caixa de sugestões (app-core.js) usa este cliente
 
 /* =====================================================================
    CATÁLOGO LOCAL — liga cada matéria ao seu arquivo, aba e rótulo do menu.
@@ -906,7 +907,6 @@ const CATALOGO = [
   { slug:'histologia-ii-practica', tab:'histo2p', file:'materias/histologia-ii-practica.html', title:'Histología II Práctica', sub:'Laminarios · Sistemas y Órganos' },
   { slug:'anatomia-i', tab:'anato1', file:'materias/anatomia-i.html', title:'Anatomía I', sub:'Tórax · Miembro superior · Cuello' },
   { slug:'anatomia-patologica-ii', tab:'anato2', file:'materias/anatomia-patologica-ii.html', title:'Anatopatologia II', sub:'Digestivo · Hígado · Tiroides' },
-  { slug:'anatomia-patologica-ii-practica', tab:'anatoprat2', file:'materias/anatomia-patologica-ii-practica.html', title:'Anatopatologia II Práctica', sub:'Láminas · Casos clínicos · Flashcards' },
   { slug:'medicina-legal', tab:'medlegal', file:'materias/medicina-legal.html', title:'Medicina Legal', sub:'Tanatología · Lesiones · Deontología' },
   { slug:'fisiopatologia-ii', tab:'fisio2', file:'materias/fisiopatologia-ii.html', title:'Fisiopatologia II', sub:'Digestivo · Hígado · Páncreas · Riñón' },
   { slug:'toxicologia', tab:'toxico', file:'materias/toxicologia.html', title:'Toxicología', sub:'Intoxicaciones · Toxidromes · Antídotos' },
@@ -923,10 +923,14 @@ const SEMESTRE_FALLBACK = {
   'anatomia-patologica':5, 'anatomia-patologica-practica':5, 'fisiopatologia':5,
   'imagenologia':5, 'semiologia':5, 'farmacologia':5, 'medicina-familiar':5,
   'semiologia-ii':6, 'farmacologia-ii':6, 'anatomia-patologica-ii':6, 'medicina-legal':6,
-  'anatomia-patologica-ii-practica':6,
   'fisiopatologia-ii':6, 'toxicologia':7, 'dermatologia':7,
   'guarani':2
 };
+/* O motor (app-core.js) precisa do catálogo para escrever o nome da
+   matéria no topo de cada aba. Expor aqui evita que cada arquivo de
+   matéria tenha de trazer o próprio título. */
+window.RM_CATALOGO = CATALOGO;
+
 let SEMESTER_BY_SLUG = new Map();   // slug -> semestre (vindo do banco)
 let MENU_GROUPS = new Map();        // semestre -> [itens do CATALOGO liberados]
 let OPEN_SEM = null;                // semestre com o painel aberto
@@ -1461,7 +1465,6 @@ const RM_SUBJ_STYLE = {
   'anatomia-patologica':          { ic:'micro',   c:'#c0392b' },
   'anatomia-patologica-practica': { ic:'lamina',  c:'#c0392b' },
   'anatomia-patologica-ii':       { ic:'micro',   c:'#c0392b' },
-  'anatomia-patologica-ii-practica': { ic:'lamina',  c:'#c0392b' },
   'fisiopatologia':               { ic:'ecg',     c:'#3a78c2' },
   'imagenologia':                 { ic:'rayosx',  c:'#13314f' },
   'semiologia':                   { ic:'esteto',  c:'#12988a' },

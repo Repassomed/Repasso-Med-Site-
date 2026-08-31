@@ -148,6 +148,39 @@ var RepassoMed = (function(){
      final oscuro pasaría a azul marino sobre azul marino (ilegible) y
      reaparecería la barra degradada bajo cada título. Las pestañas de
      materia siempre tienen id "tab-XXXX". */
+  /* ---------------------------------------------------------------
+     TÍTULO DA MATÉRIA
+     Todas as abas passam a abrir com o nome da matéria em destaque,
+     sem depender de cada arquivo trazer o seu. O nome sai do catálogo
+     do index.html (window.RM_CATALOGO) pelo id da aba; se não houver
+     catálogo, cai no <h1> que a matéria já tenha; se não houver nada,
+     não injeta nada — nunca inventa um nome.
+     --------------------------------------------------------------- */
+  function nomeDaMateria(tabEl){
+    var tab = (tabEl.id || '').replace(/^tab-/, '');
+    try{
+      var cat = window.RM_CATALOGO || [];
+      for (var i = 0; i < cat.length; i++){
+        if (cat[i].tab === tab) return { titulo: cat[i].title, sub: cat[i].sub || '' };
+      }
+    }catch(_){}
+    var h1 = tabEl.querySelector('h1');
+    if (h1 && h1.textContent.trim()) return { titulo: h1.textContent.trim(), sub: '' };
+    return null;
+  }
+
+  function tituloMateria(tabEl){
+    if (tabEl.querySelector(':scope > .rm-subject-head')) return;   // já tem
+    var d = nomeDaMateria(tabEl);
+    if (!d) return;
+    var head = document.createElement('header');
+    head.className = 'rm-subject-head';
+    head.innerHTML =
+      '<h1>' + esc(d.titulo) + '</h1>' +
+      (d.sub ? '<p>' + esc(d.sub) + '</p>' : '');
+    tabEl.insertBefore(head, tabEl.firstChild);
+  }
+
   function adoptCuaderno(tabEl){
     if (!/^tab-/.test(tabEl.id || '')) return;
     tabEl.classList.add('rm-cuaderno');
@@ -292,7 +325,8 @@ var RepassoMed = (function(){
     lamina: '<rect x="6.2" y="2.8" width="11.6" height="18.4" rx="1.8"/><circle cx="12" cy="8.4" r="2.7"/><path d="M8.8 14.2h6.4M8.8 17.2h4"/>',
     diana:  '<circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1.2"/>',
     brujula:'<circle cx="12" cy="12" r="8.6"/><path d="M15.2 8.8l-1.9 4.5-4.5 1.9 1.9-4.5z"/>',
-    video:  '<rect x="2.6" y="6" width="13" height="12" rx="2.4"/><path d="M15.6 11l5.8-3.2v8.4L15.6 13z"/>'
+    video:  '<rect x="2.6" y="6" width="13" height="12" rx="2.4"/><path d="M15.6 11l5.8-3.2v8.4L15.6 13z"/>',
+    buzon:  '<path d="M3 8.6 12 3l9 5.6v9.8a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 18.4z"/><path d="M3 8.8 12 14.4l9-5.6"/>'
   };
   /* Qual seção é qual: pelo id (a regra do padrão) e, em segundo lugar,
      por palavra do título. Bloco comum não entra aqui — leva o número. */
@@ -317,6 +351,29 @@ var RepassoMed = (function(){
     return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
+  /* Subtítulos de um bloco: os <h3> que ele já tem.
+     O id é criado só quando falta — nunca sobrescrevemos um id existente,
+     porque links antigos e o mapeamento do admin dependem dele. */
+  /* Todo bloco termina com «Preguntas» e «Flashcards». Marcá-los com cor
+     própria deixa claro, sem ler, onde acaba a teoria e começa o treino. */
+  function tipoSub(t){
+    if (/pregunta|quest|banco|examen|quiz/i.test(t)) return 'quiz';
+    if (/flashcard|mazo|tarjeta|ruleta/i.test(t))    return 'fc';
+    return '';
+  }
+
+  function subtitulos(bloco){
+    var hs = Array.prototype.slice.call(bloco.querySelectorAll('h3'));
+    var out = [];
+    hs.forEach(function(h, i){
+      var t = h.textContent.replace(RE_EMOJI, '').replace(/\s+/g, ' ').trim();
+      if (!t || t.length > 90) return;               // rótulo longo demais não é subtítulo
+      if (!h.id) h.id = bloco.id + '-s' + (i + 1);
+      out.push({ id: h.id, txt: t, tipo: tipoSub(t) });
+    });
+    return out;
+  }
+
   function buildTOC(blocks){
     var nav = document.createElement('nav');
     nav.className = 'rm-menu';
@@ -328,14 +385,35 @@ var RepassoMed = (function(){
       var ico   = tocIcon(b.id, label);
       var chip  = ico ? svgIcon(ico) : pad(++n);
       var sub   = kickerFromBlock(b).replace(RE_EMOJI, '').trim();
-      items += '<a href="#' + b.id + '" data-target="' + b.id + '"' +
-                 (ico ? ' class="is-especial"' : '') + '>' +
-                 '<span class="rm-menu-num">' + chip + '</span>' +
-                 '<span class="rm-menu-tx"><b>' + esc(label) + '</b>' +
-                   (sub && sub !== 'Tema' ? '<small>' + esc(sub) + '</small>' : '') +
-                 '</span>' +
-                 '<span class="rm-menu-go" aria-hidden="true">→</span>' +
-               '</a>';
+      var subs  = subtitulos(b);
+
+      var linha =
+        '<a href="#' + b.id + '" data-target="' + b.id + '"' +
+          (ico ? ' class="is-especial"' : '') +
+          (subs.length ? ' data-subs="1" aria-expanded="false"' : '') + '>' +
+          '<span class="rm-menu-num">' + chip + '</span>' +
+          '<span class="rm-menu-tx"><b>' + esc(label) + '</b>' +
+            (sub && sub !== 'Tema' ? '<small>' + esc(sub) + '</small>' : '') +
+          '</span>' +
+          (subs.length
+            ? '<span class="rm-menu-caret" aria-hidden="true">▾</span>'
+            : '<span class="rm-menu-go" aria-hidden="true">→</span>') +
+        '</a>';
+
+      var lista = '';
+      if (subs.length){
+        lista = '<div class="rm-menu-subs" hidden>' +
+          '<a href="#' + b.id + '" data-target="' + b.id + '" class="rm-sub is-top">' +
+            '<i></i><span>Comienzo del bloque</span></a>' +
+          subs.map(function(x){
+            return '<a href="#' + x.id + '" data-target="' + x.id + '"' +
+                   ' class="rm-sub' + (x.tipo ? ' is-' + x.tipo : '') + '">' +
+                   '<i></i><span>' + esc(x.txt) + '</span></a>';
+          }).join('') +
+        '</div>';
+      }
+
+      items += '<div class="rm-menu-item">' + linha + lista + '</div>';
     });
     nav.innerHTML =
       '<button class="rm-menu-btn" type="button" aria-label="Abrir el índice de la materia" aria-expanded="false">' +
@@ -380,6 +458,140 @@ var RepassoMed = (function(){
       '</div>';
     first.parentNode.insertBefore(banner, first);
     banks.forEach(function(b){ b.classList.add('rm-bank'); });
+  }
+
+  /* =================================================================
+     CAIXA DE SUGESTÕES
+     Card no rodapé do índice. Abre uma gaveta: à direita no desktop e
+     no tablet, subindo de baixo no celular. A página continua atrás,
+     sem escurecer nada — o aluno fecha e volta ao ponto onde estava.
+
+     Envia para a tabela `feedback` do Supabase usando o cliente que o
+     index.html já criou (window.RM_SB). Se a tabela ainda não existir
+     ou o aluno não estiver logado, o painel diz o que houve em vez de
+     falhar em silêncio.
+     ================================================================= */
+  var sugBox = null, sugTab = null;
+
+  /* Card próprio, fixo na lateral esquerda logo abaixo do botão do
+     índice. Fica fora do painel de propósito: assim o aluno vê a caixa
+     sem precisar abrir o índice, e ela não some quando ele escolhe um
+     bloco. Um por matéria, criado junto com o índice. */
+  function cardSugestoes(tabEl, nav){
+    if (tabEl.querySelector(':scope > .rm-sug-fab')) return;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'rm-sug-fab';
+    b.setAttribute('aria-label', 'Abrir la caja de sugerencias');
+    b.innerHTML =
+      '<span class="ic">' + svgIcon(TOC_ICONS.buzon) + '</span>' +
+      '<span class="tx"><b>Caja de sugerencias</b>' +
+        '<small>tu opinión mejora la materia</small></span>';
+    b.addEventListener('click', function(){ abrirSugestoes(tabEl); });
+    if (nav && nav.parentNode) nav.parentNode.insertBefore(b, nav.nextSibling);
+    else tabEl.insertBefore(b, tabEl.firstChild);
+  }
+
+  function sbCliente(){
+    return (typeof window !== 'undefined' && (window.RM_SB || window._sb)) || null;
+  }
+
+  function montarSugestoes(){
+    if (sugBox) return sugBox;
+    sugBox = document.createElement('div');
+    sugBox.id = 'rm-sug';
+    sugBox.setAttribute('role', 'dialog');
+    sugBox.setAttribute('aria-label', 'Caja de sugerencias');
+    sugBox.innerHTML =
+      '<div class="rm-sug-head">' +
+        '<b>Tu opinión es muy importante<br>para nuestra mejora</b>' +
+        '<button type="button" class="rm-sug-x" aria-label="Cerrar">✕</button>' +
+      '</div>' +
+      '<div class="rm-sug-body">' +
+        '<p class="rm-sug-hint">Contanos qué te ayudó, qué falta o qué se puede mejorar. ' +
+          'Leemos todos los mensajes.</p>' +
+        '<textarea class="rm-sug-tx" rows="7" maxlength="4000" ' +
+          'placeholder="Escribí acá tu sugerencia..."></textarea>' +
+        '<div class="rm-sug-foot">' +
+          '<span class="rm-sug-msg" role="status"></span>' +
+          '<button type="button" class="rm-sug-send">Enviar</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(sugBox);
+
+    sugBox.querySelector('.rm-sug-x').addEventListener('click', fecharSugestoes);
+    sugBox.querySelector('.rm-sug-send').addEventListener('click', enviarSugestao);
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && sugBox.classList.contains('on')) fecharSugestoes();
+    });
+    return sugBox;
+  }
+
+  function abrirSugestoes(tabEl){
+    sugTab = tabEl;
+    var b = montarSugestoes();
+    b.querySelector('.rm-sug-msg').textContent = '';
+    b.querySelector('.rm-sug-msg').className = 'rm-sug-msg';
+    b.querySelector('.rm-sug-send').disabled = false;
+    b.querySelector('.rm-sug-send').textContent = 'Enviar';
+    b.classList.add('on');
+    setTimeout(function(){ b.querySelector('.rm-sug-tx').focus(); }, 60);
+  }
+
+  function fecharSugestoes(){
+    if (sugBox) sugBox.classList.remove('on');
+  }
+
+  function aviso(txt, erro){
+    var m = sugBox.querySelector('.rm-sug-msg');
+    m.textContent = txt;
+    m.className = 'rm-sug-msg' + (erro ? ' err' : ' ok');
+  }
+
+  async function enviarSugestao(){
+    var ta   = sugBox.querySelector('.rm-sug-tx');
+    var btn  = sugBox.querySelector('.rm-sug-send');
+    var msg  = (ta.value || '').trim();
+    if (msg.length < 3){ aviso('Escribí un poquito más, por favor.', true); ta.focus(); return; }
+
+    var sb = sbCliente();
+    if (!sb){ aviso('No se pudo conectar. Recargá la página e intentá de nuevo.', true); return; }
+
+    btn.disabled = true; btn.textContent = 'Enviando...'; aviso('', false);
+    try{
+      var u = await sb.auth.getUser();
+      var user = u && u.data && u.data.user;
+      if (!user){ aviso('Iniciá sesión para poder enviar.', true); btn.disabled = false; btn.textContent = 'Enviar'; return; }
+
+      var nome = '';
+      try{
+        var p = await sb.from('profiles').select('full_name').eq('id', user.id).maybeSingle();
+        nome = (p && p.data && p.data.full_name) || '';
+      }catch(_){}
+
+      var slug = '';
+      try{
+        var tab = (sugTab && sugTab.id || '').replace(/^tab-/, '');
+        var cat = window.RM_CATALOGO || [];
+        for (var i = 0; i < cat.length; i++) if (cat[i].tab === tab) { slug = cat[i].slug; break; }
+      }catch(_){}
+
+      var r = await sb.from('feedback').insert({
+        user_id: user.id, nombre: nome || null, email: user.email || null,
+        subject_slug: slug || null, mensaje: msg
+      });
+      if (r && r.error) throw r.error;
+
+      ta.value = '';
+      btn.textContent = 'Enviado ✓';
+      aviso('¡Gracias! Tu mensaje llegó. Podés cerrar y seguir estudiando.', false);
+    }catch(e){
+      var t = (e && e.message) || '';
+      aviso(/relation .*feedback|does not exist/i.test(t)
+              ? 'La caja de sugerencias todavía no está habilitada.'
+              : (/Demasiados/i.test(t) ? t : 'No se pudo enviar. Probá de nuevo en un momento.'), true);
+      btn.disabled = false; btn.textContent = 'Enviar';
+    }
   }
 
   function setupMenu(tabEl, nav){
@@ -428,6 +640,24 @@ var RepassoMed = (function(){
     panel.querySelectorAll('a').forEach(function(a){
       a.addEventListener('click', function(e){
         e.preventDefault();
+        /* Bloco COM subtítulos: o clique abre a lista, não salta. Quem
+           quer ir direto ao bloco usa «Comienzo del bloque», que é o
+           primeiro item da lista. Bloco sem subtítulo salta na hora,
+           como sempre foi. */
+        if (a.dataset.subs === '1'){
+          var caixa = a.parentNode.querySelector('.rm-menu-subs');
+          var abrir = caixa.hasAttribute('hidden');
+          panel.querySelectorAll('.rm-menu-subs').forEach(function(c){
+            if (c !== caixa) { c.setAttribute('hidden',''); }
+          });
+          panel.querySelectorAll('a[data-subs]').forEach(function(o){
+            if (o !== a) { o.setAttribute('aria-expanded','false'); o.classList.remove('open'); }
+          });
+          if (abrir) caixa.removeAttribute('hidden'); else caixa.setAttribute('hidden','');
+          a.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+          a.classList.toggle('open', abrir);
+          return;
+        }
         close();
         irPara(a.getAttribute('data-target'));
       });
@@ -469,6 +699,7 @@ var RepassoMed = (function(){
     tabEl.dataset.rmDone = '1';
 
     adoptCuaderno(tabEl);
+    tituloMateria(tabEl);
     normalizeQuizzes(tabEl);
     unifyTags(tabEl);
     unifyHeadings(tabEl);
@@ -485,6 +716,7 @@ var RepassoMed = (function(){
     var nav = buildTOC(blocks);
     tabEl.insertBefore(nav, tabEl.firstChild);
     setupMenu(tabEl, nav);
+    cardSugestoes(tabEl, nav);
 
     markRevisao(tabEl);
     setupScrollSpy(tabEl);

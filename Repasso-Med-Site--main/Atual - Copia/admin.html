@@ -143,6 +143,16 @@
   .acc-row .who small{display:block;color:var(--ink-soft);font-weight:400;font-size:12px;}
   .acc-row .meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
   .acc-row .dates{font-size:11px;color:var(--ink-soft);text-align:right;line-height:1.4;}
+  /* sugestões */
+  .sug{border:1px solid var(--line);border-left:3px solid var(--accent-lt);border-radius:10px;
+    padding:12px 14px;margin-bottom:10px;background:var(--panel);}
+  .sug.nova{border-left-color:var(--gold,#d8a32a);background:#fffdf4;}
+  .sug .top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+  .sug .who{font-weight:700;font-size:14px;}
+  .sug .meta{font-size:11px;color:var(--ink-soft);}
+  .sug .msg{font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+  .sug .acts{margin-top:9px;display:flex;gap:8px;flex-wrap:wrap;}
+  .sug .acts button{font-size:12px;padding:5px 10px;}
   /* seleção múltipla + data da última liberação (lista de usuários) */
   .urow .pick{width:19px;height:19px;flex:0 0 auto;cursor:pointer;accent-color:var(--accent-lt);margin:0;}
   .urow .who{flex:1;min-width:0;}
@@ -224,6 +234,15 @@
       </div>
       <div id="dashGrid" class="dash-grid"><p class="muted">Cargando indicadores...</p></div>
       <div id="dashRecent" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- CAIXA DE SUGESTÕES DOS ALUNOS -->
+    <div class="card" id="sugCard">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <label style="margin:0;">Sugerencias de los alumnos</label>
+        <span class="muted" id="sugCnt"></span>
+      </div>
+      <div id="sugList" style="margin-top:12px;"></div>
     </div>
 
     <!-- PENDENTES DE APROVAÇÃO -->
@@ -608,10 +627,68 @@ function escapeHtml(s){
    FASE 2 — DASHBOARD DE MONITORAMENTO
    Uma única RPC (admin_dashboard_stats) traz todos os indicadores.
    ===================================================================== */
+/* =====================================================================
+   SUGESTÕES DOS ALUNOS
+   Chegam pelo card «Caja de sugerencias» do índice de cada matéria.
+   Lê a tabela `feedback`. Se ela ainda não existir, o card só avisa —
+   nunca quebra o painel.
+   ===================================================================== */
+async function loadFeedback(){
+  const box = document.getElementById('sugList');
+  const cnt = document.getElementById('sugCnt');
+  if(!box) return;
+  box.innerHTML = '<p class="muted">Cargando...</p>';
+
+  const { data, error } = await sb.from('feedback')
+    .select('id,nombre,email,subject_slug,mensaje,leido_en,created_at')
+    .order('created_at', { ascending:false })
+    .limit(50);
+
+  if(error){
+    const falta = /relation .*feedback|does not exist/i.test(error.message || '');
+    box.innerHTML = '<p class="' + (falta ? 'muted' : 'err') + '">' +
+      (falta ? 'Todavía no está creada la tabla. Corré <b>caixa-de-sugestoes.sql</b> en Supabase.'
+             : 'Error: ' + escapeHtml(error.message)) + '</p>';
+    if(cnt) cnt.textContent = '';
+    return;
+  }
+  const list = data || [];
+  const novas = list.filter(x => !x.leido_en).length;
+  if(cnt) cnt.innerHTML = list.length
+    ? '<b>' + novas + '</b> sin leer · ' + list.length + ' en total'
+    : '';
+  if(!list.length){
+    box.innerHTML = '<p class="muted">Todavía no hay sugerencias.</p>';
+    return;
+  }
+  box.innerHTML = list.map(x => {
+    const quando = new Date(x.created_at).toLocaleString('es');
+    const quem   = escapeHtml(x.nombre || x.email || 'Alumno');
+    const mail   = x.email ? ' · ' + escapeHtml(x.email) : '';
+    const mat    = x.subject_slug ? ' · ' + escapeHtml(x.subject_slug) : '';
+    return '<div class="sug' + (x.leido_en ? '' : ' nova') + '" id="sug-' + x.id + '">' +
+      '<div class="top"><span class="who">' + quem + '</span>' +
+        '<span class="meta">' + escapeHtml(quando) + mail + mat + '</span></div>' +
+      '<div class="msg">' + escapeHtml(x.mensaje) + '</div>' +
+      '<div class="acts">' +
+        (x.leido_en ? '' :
+          '<button class="btn-ghost" onclick="markFeedback(\'' + x.id + '\')">Marcar como leída</button>') +
+      '</div></div>';
+  }).join('');
+}
+
+async function markFeedback(id){
+  const { error } = await sb.from('feedback')
+    .update({ leido_en: new Date().toISOString() }).eq('id', id);
+  if(error){ alert('Error: ' + error.message); return; }
+  loadFeedback();
+}
+
 async function loadDashboard(){
   const grid = document.getElementById('dashGrid');
   const rec  = document.getElementById('dashRecent');
   if(!grid) return;
+  loadFeedback();
   const { data, error } = await sb.rpc('admin_dashboard_stats');
   if(error){
     grid.innerHTML = '<p class="err">Error: ' + escapeHtml(error.message) + '</p>';
