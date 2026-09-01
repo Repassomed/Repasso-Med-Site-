@@ -38,13 +38,32 @@
 <style id="anatoprat-plus2-style">
 /* ===== zoom fullscreen de láminas (clic) ===== */
 #tab-anatoprat .rmimg{cursor:zoom-in;}
-#tab-anatoprat .rmimg.rm-fs{position:fixed!important;inset:0!important;margin:auto!important;
-  width:min(90vw,560px)!important;height:min(78vh,560px)!important;
-  z-index:99999!important;background-size:contain!important;background-repeat:no-repeat!important;
-  background-position:center!important;background-color:#0d0d12!important;border:4px solid #fff!important;border-radius:14px!important;
-  box-shadow:0 24px 80px rgba(0,0,0,.6)!important;cursor:zoom-out!important;}
-#tab-anatoprat .rmimg.rm-fs::after{content:"✕ tocá para cerrar";position:absolute;top:-32px;right:0;color:#fff;
-  font-family:var(--font-ui);font-size:.78rem;background:rgba(0,0,0,.65);padding:.25rem .65rem;border-radius:16px;white-space:nowrap;}
+/* AMPLIACIÓN · corregida 01/09/2026 -------------------------------------
+   Antes esto era `position:fixed`. El styles.css global pone
+   `content-visibility:auto` en cada sección, y eso implica `contain:paint`:
+   la sección pasa a ser el contenedor de los `position:fixed` de adentro.
+   La foto ampliada quedaba anclada a una sección de decenas de miles de
+   píxeles en vez de a la ventana — desaparecía de la pantalla y descolocaba
+   la página.
+
+   Ahora la ficha CRECE EN EL LUGAR: sólo alto y ancho, ningún posicionado
+   fijo. No depende de app-core.js ni de ninguna clase del motor, así que
+   funciona con cualquier versión de los archivos compartidos.
+   El markup no cambió: siguen siendo los mismos 181 `toggle('rm-fs')`. */
+#tab-anatoprat .rmimg.rm-fs{
+  width:100%!important;height:min(76vh,760px)!important;aspect-ratio:auto!important;
+  background-size:contain!important;background-repeat:no-repeat!important;
+  background-position:center!important;background-color:#0d0d12!important;
+  border:3px solid #10243D!important;border-radius:12px!important;
+  box-shadow:0 10px 34px rgba(0,0,0,.28)!important;cursor:zoom-out!important;position:relative!important;}
+#tab-anatoprat .rmimg.rm-fs::after{content:"✕ tocá de nuevo para achicar";position:absolute;
+  left:50%;transform:translateX(-50%);bottom:8px;color:#fff;
+  font-family:var(--font-mono,ui-monospace,monospace);font-size:.72rem;letter-spacing:.06em;
+  background:rgba(8,14,24,.86);padding:.28rem .8rem;border-radius:16px;white-space:nowrap;}
+/* mejora progresiva: donde el navegador soporta :has(), la ficha ampliada
+   ocupa la fila entera de la grilla. Donde no, igual crece en alto. */
+#tab-anatoprat .lam-shot:has(.rmimg.rm-fs),
+#tab-anatoprat .mat-card:has(.rmimg.rm-fs){grid-column:1/-1;}
 /* ===== bloque aditivo ===== */
 #tab-anatoprat .ap-add{background:linear-gradient(180deg,rgba(125,58,82,.05),rgba(125,58,82,.01));
   border:1px solid var(--rule);border-left:4px solid #7d3a52;border-radius:14px;padding:1.1rem 1.3rem;margin:1.4rem 0;}
