@@ -1466,42 +1466,42 @@ footer strong { color:var(--gold-soft); }
 }
 @keyframes rmSubIn{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:none;}}
 
-.rm-menu .rm-sub{
+.rm-menu .rm-idx-sub{
   --sc:#3a5470;
   display:flex;align-items:center;gap:.55rem;padding:.44rem .55rem;
   border:none;background:none;border-radius:9px;text-decoration:none;
   font-family:var(--font-ui);font-size:.845rem;line-height:1.32;color:#41556c;
   transition:background .15s ease,color .15s ease,padding-left .15s ease;
 }
-.rm-menu .rm-sub::before{content:none;}
-.rm-menu .rm-sub i{
+.rm-menu .rm-idx-sub::before{content:none;}
+.rm-menu .rm-idx-sub i{
   flex:0 0 auto;width:6px;height:6px;border-radius:50%;background:var(--sc);
   opacity:.45;transition:all .15s ease;
 }
-.rm-menu .rm-sub span{min-width:0;}
-.rm-menu .rm-sub:hover{
+.rm-menu .rm-idx-sub span{min-width:0;}
+.rm-menu .rm-idx-sub:hover{
   background:#fff;color:var(--ink);padding-left:.75rem;
   box-shadow:0 2px 10px rgba(19,49,79,.09);transform:none;
 }
 /* halo no hover. color-mix não existe em Safari antigo, então o valor
    simples vem primeiro e serve de reserva. */
-.rm-menu .rm-sub:hover i{opacity:1;transform:scale(1.35);
+.rm-menu .rm-idx-sub:hover i{opacity:1;transform:scale(1.35);
   box-shadow:0 0 0 3px rgba(19,49,79,.14);}
 @supports (color: color-mix(in srgb, red 50%, transparent)){
-  .rm-menu .rm-sub:hover i{
+  .rm-menu .rm-idx-sub:hover i{
     box-shadow:0 0 0 3px color-mix(in srgb,var(--sc) 20%,transparent);}
 }
 
 /* preguntas e flashcards: cor própria, para se achar sem ler */
-.rm-menu .rm-sub.is-quiz{--sc:#D62839;}
-.rm-menu .rm-sub.is-fc{--sc:#5D3AE0;}
-.rm-menu .rm-sub.is-quiz,
-.rm-menu .rm-sub.is-fc{
+.rm-menu .rm-idx-sub.is-quiz{--sc:#D62839;}
+.rm-menu .rm-idx-sub.is-fc{--sc:#5D3AE0;}
+.rm-menu .rm-idx-sub.is-quiz,
+.rm-menu .rm-idx-sub.is-fc{
   font-family:var(--font-mono);font-size:.66rem;letter-spacing:.07em;
   text-transform:uppercase;font-weight:700;color:var(--sc);
 }
-.rm-menu .rm-sub.is-quiz i,.rm-menu .rm-sub.is-fc i{opacity:.85;}
-.rm-menu .rm-sub.is-top{
+.rm-menu .rm-idx-sub.is-quiz i,.rm-menu .rm-idx-sub.is-fc i{opacity:.85;}
+.rm-menu .rm-idx-sub.is-top{
   font-family:var(--font-mono);font-size:.62rem;letter-spacing:.09em;
   text-transform:uppercase;color:#8a99ab;--sc:#8a99ab;
 }
@@ -1541,3 +1541,61 @@ footer strong { color:var(--gold-soft); }
   .rm-sug-fab .ic{width:30px;height:30px;}
 }
 @media (prefers-reduced-motion: reduce){ .rm-sug-fab{transition:none;} }
+
+
+/* =====================================================================
+   SUBTÍTULOS NA PÁGINA
+   Os mesmos <h3> que aparecem no índice ganham cartão próprio: número de
+   ordem, faixa colorida e fundo de papel. Ficam visíveis de longe, o que
+   é o ponto — numa matéria longa o aluno precisa achar a divisão só
+   passando o olho.
+   Só recebem isso os h3 marcados pelo motor (rm-h3), nunca os de card
+   ou de caixa de questões.
+   ===================================================================== */
+#materias-container .rm-cuaderno h3.rm-h3{
+  --sc:#13314f;
+  counter-increment:rmh3;
+  position:relative;
+  display:flex;align-items:center;gap:.7rem;
+  margin:2.2rem 0 1rem;padding:.85rem 1rem .85rem .95rem;
+  border:1px solid var(--n-line,#DFD3B8);
+  border-left:5px solid var(--sc);
+  border-radius:12px;
+  background:linear-gradient(180deg,#fffdf7,#f9f4e7);
+  box-shadow:0 2px 0 rgba(16,36,61,.05);
+  font-family:var(--n-font-d,'Fraunces',Georgia,serif);
+  font-size:clamp(1.12rem,2.3vw,1.42rem);
+  font-weight:800;line-height:1.25;color:var(--n-ink,#10243D);
+  scroll-margin-top:calc(var(--topbar-h) + var(--tabs-h) + 16px);
+}
+/* faixa fina no topo, para o cartão não parecer só uma caixa */
+#materias-container .rm-cuaderno h3.rm-h3::after{
+  content:'';position:absolute;left:5px;right:0;top:-1px;height:2px;
+  border-radius:2px 2px 0 0;
+  background:linear-gradient(90deg,var(--sc),transparent 70%);
+  opacity:.35;
+}
+/* preguntas e flashcards: mesma cor do índice */
+#materias-container .rm-cuaderno h3.rm-h3-quiz{--sc:#D62839;}
+#materias-container .rm-cuaderno h3.rm-h3-fc{--sc:#5D3AE0;}
+#materias-container .rm-cuaderno h3.rm-h3-quiz,
+#materias-container .rm-cuaderno h3.rm-h3-fc{
+  background:linear-gradient(180deg,#fffdf7,#fdf2f3);
+  color:var(--sc);
+}
+#materias-container .rm-cuaderno h3.rm-h3-fc{
+  background:linear-gradient(180deg,#fffdf7,#f4f1fe);
+}
+@media (max-width:640px){
+  #materias-container .rm-cuaderno h3.rm-h3{
+    margin:1.7rem 0 .85rem;padding:.7rem .8rem .7rem .78rem;
+    border-left-width:4px;gap:.55rem;
+  }
+}
+
+/* o alvo de um salto do índice nunca pode estar «pulado» pelo
+   content-visibility no momento da medida */
+#materias-container .rm-cuaderno > section.container.rm-cv-on,
+#materias-container .rm-cuaderno > section.container-wide.rm-cv-on{
+  content-visibility:visible;
+}

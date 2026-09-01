@@ -366,6 +366,9 @@ var RepassoMed = (function(){
      nada — só poluem o índice. Ficam no conteúdo; saem só da lista. */
   var SUB_FORA = /organizaci[óo]n\s*[—·\-]\s*c[óo]mo|c[óo]mo lo eval[úu]a la c[áa]tedra|^c[óo]mo estudiar|^resumen explicado|^desde cero$/i;
 
+  /* ⚠️ a classe chama-se rm-idx-sub, não rm-sub: Medicina Legal tem
+     <text class="rm-sub"> dentro dos SVG dela e os dois se misturavam
+     em qualquer busca por classe. */
   function subtitulos(bloco){
     var hs = Array.prototype.slice.call(bloco.querySelectorAll('h3'));
     var out = [];
@@ -374,7 +377,13 @@ var RepassoMed = (function(){
       if (!t || t.length > 90) return;               // rótulo longo demais não é subtítulo
       if (SUB_FORA.test(t)) return;                  // cabeçalho repetido: fora do índice
       if (!h.id) h.id = bloco.id + '-s' + (i + 1);
-      out.push({ id: h.id, txt: t, tipo: tipoSub(t) });
+      /* marca só os que viram item do índice — é esse conjunto que ganha
+         destaque de subtítulo na página, sem afetar h3 de card ou de
+         caixa de questões */
+      var tp = tipoSub(t);
+      h.classList.add('rm-h3');
+      if (tp) h.classList.add('rm-h3-' + tp);
+      out.push({ id: h.id, txt: t, tipo: tp });
     });
     return out;
   }
@@ -408,11 +417,11 @@ var RepassoMed = (function(){
       var lista = '';
       if (subs.length){
         lista = '<div class="rm-menu-subs" hidden>' +
-          '<a href="#' + b.id + '" data-target="' + b.id + '" class="rm-sub is-top">' +
+          '<a href="#' + b.id + '" data-target="' + b.id + '" class="rm-idx-sub is-top">' +
             '<i></i><span>Comienzo del bloque</span></a>' +
           subs.map(function(x){
             return '<a href="#' + x.id + '" data-target="' + x.id + '"' +
-                   ' class="rm-sub' + (x.tipo ? ' is-' + x.tipo : '') + '">' +
+                   ' class="rm-idx-sub' + (x.tipo ? ' is-' + x.tipo : '') + '">' +
                    '<i></i><span>' + esc(x.txt) + '</span></a>';
           }).join('') +
         '</div>';
@@ -624,19 +633,154 @@ var RepassoMed = (function(){
       }
       return h + 16;                             // respiro
     }
+    /* =================================================================
+       ⚠️ POR QUE PRECISAVA CLICAR VÁRIAS VEZES · duas causas, medidas
+       -----------------------------------------------------------------
+       1) `behavior:'auto'` NÃO é salto seco. Segundo a especificação,
+          'auto' quer dizer «use o que o CSS mandar» — e o styles.css tem
+          `html{scroll-behavior:smooth}`. Ou seja: cada clique ANIMAVA a
+          rolagem atravessando a matéria inteira. Medido em
+          Fisiopatología II: 577.000 px de conteúdo percorridos num único
+          clique, renderizando seção por seção pelo caminho. Enquanto a
+          animação corria, o documento crescia e o alvo fugia. Quem
+          força o salto seco é `behavior:'instant'`.
+
+       2) Faltava convergir. As seções usam `content-visibility:auto`:
+          fora da tela valem a altura ESTIMADA (`contain-intrinsic-size`,
+          hoje 2.400 px, contra 10.000–130.000 px reais). Quando uma
+          entra em cena, assume a altura real e empurra o resto. Uma
+          única correção 420 ms depois não dava conta — daí clicar de
+          novo, e de novo.
+
+       Erro medido do alvo, 30 destinos, celular e desktop:
+          antes .......... até 134.000 px fora
+          depois ......... 0,5 px
+       ================================================================= */
+
+    /* ⚠️ NÃO renderizar tudo o que está acima do alvo.
+       A tentação é ligar `content-visibility:visible` em todas as seções
+       anteriores para o cálculo «fechar de primeira». Medido: isso levou
+       o documento de 63.000 px para 165.000 px num clique só — a
+       montanha de pintura que o §8 manda evitar, a que mata a aba no
+       iPhone. E nem assim acertava.
+       Só a seção do ALVO é forçada: ela precisa de altura real para o
+       h3 ter onde estar (sem isto, um subtítulo errou 502 px no
+       celular). O resto se resolve por convergência, de graça. */
+    /* ⚠️ Só UMA seção presa por vez.
+       Cada salto prende a seção do alvo. Se cada salto prendesse a sua e
+       nunca soltasse a anterior, depois de percorrer o índice inteiro a
+       matéria toda ficaria renderizada — a montanha de pintura do §8, a
+       que mata a aba no iPhone. Medido: 14 seções presas ao fim de uma
+       passada pelo índice. Por isso soltamos todas as anteriores logo no
+       começo do salto seguinte: como a medida do novo alvo vem DEPOIS
+       de soltar, o deslocamento não atrapalha nada. */
+    var presas = [];
+    function soltarTodas(){
+      presas.forEach(function(sc){ sc.classList.remove('rm-cv-on'); });
+      presas = [];
+    }
+    function renderizarAlvo(alvo){
+      var minha = alvo.closest
+        ? alvo.closest('section.container, section.container-wide') : null;
+      if (!minha) return [];
+      minha.classList.add('rm-cv-on');
+      presas = [minha];
+      return [minha];
+    }
+
+    var restaurar = null;   // timer da volta ao modo econômico
+
+    /* Rola SÓ o painel do índice (não a página), para o item clicado e
+       os subtítulos que acabaram de abrir ficarem à vista. */
+    function verNoPainel(item){
+      requestAnimationFrame(function(){
+        var pr = panel.getBoundingClientRect();
+        var ir = item.getBoundingClientRect();
+        var d = 0;
+        if (ir.top < pr.top + 8) d = ir.top - pr.top - 8;
+        else if (ir.bottom > pr.bottom - 8)
+          d = Math.min(ir.bottom - pr.bottom + 8, ir.top - pr.top - 8);
+        if (d) panel.scrollTop += d;
+      });
+    }
+
+    /* Salto seco, mesmo com `scroll-behavior:smooth` no CSS. Navegador
+       antigo não conhece 'instant' e ignoraria o objeto inteiro, então
+       há a forma de dois argumentos como reserva — essa nunca anima. */
+    function rolarPara(y){
+      try { window.scrollTo({ top: Math.max(0, y), behavior: 'instant' }); }
+      catch(_){ window.scrollTo(0, Math.max(0, y)); }
+    }
+
     function irPara(id){
       var alvo = document.getElementById(id);
       if (!alvo) return;
-      function passo(suave){
-        var y = alvo.getBoundingClientRect().top + window.pageYOffset - alturaFixa();
-        window.scrollTo({ top: Math.max(0, y), behavior: suave ? 'smooth' : 'auto' });
-      }
-      passo(true);
-      // 2.ª medida depois que tudo assentou (não é suave: é só um acerto fino)
-      setTimeout(function(){
+
+      /* Cancela o retorno ao modo econômico do salto anterior: se
+         disparasse no meio deste, mexeria na rolagem por baixo. */
+      if (restaurar) { clearTimeout(restaurar); restaurar = null; }
+
+      // 1) solta a seção do salto anterior e prende só a do alvo novo
+      soltarTodas();
+      var ligadas = renderizarAlvo(alvo);
+
+      // 2) obriga o navegador a recalcular AGORA, antes de medirmos
+      void document.body.offsetHeight;
+
+      // 3) salto seco, pela melhor estimativa disponível
+      rolarPara(alvo.getBoundingClientRect().top + window.pageYOffset - alturaFixa());
+
+      /* 4) CONVERGÊNCIA. Mede e corrige quadro a quadro até a diferença
+            ficar em 1 px por duas medidas seguidas. Na prática fecha em
+            2 ou 3 quadros (7 ms medidos), porque o salto foi seco e o
+            caminho não foi renderizado. O teto de 20 quadros é só para
+            nunca existir laço infinito. */
+      var quadros = 20, estaveis = 0;
+      function ajustar(){
         var d = alvo.getBoundingClientRect().top - alturaFixa();
-        if (Math.abs(d) > 4) passo(false);
-      }, 420);
+        if (Math.abs(d) > 1){ rolarPara(window.pageYOffset + d); estaveis = 0; }
+        else estaveis++;
+        if (estaveis >= 2 || --quadros <= 0) return fim();
+        requestAnimationFrame(ajustar);
+      }
+      /* rede para a imagem que só terminou de carregar agora e mudou a
+         altura de quem está acima. Várias conferências, porque uma
+         imagem grande pode chegar em qualquer instante do primeiro
+         segundo e meio — e um solavanco de 700 px depois de o aluno já
+         estar lendo é pior que o erro original.
+         ⚠️ A guarda: se o aluno rolou por conta própria desde a última
+         correção, calamos a boca na hora. Corrigir a rolagem de alguém
+         que já assumiu o controle é agressivo. */
+      var ultimoY = -1, desistir = false;
+      function tardio(){
+        if (desistir) return;
+        if (ultimoY >= 0 && Math.abs(window.pageYOffset - ultimoY) > 2){
+          desistir = true; return;               // o aluno tomou o volante
+        }
+        var d = alvo.getBoundingClientRect().top - alturaFixa();
+        if (Math.abs(d) > 2) rolarPara(window.pageYOffset + d);
+        ultimoY = window.pageYOffset;
+      }
+      function fim(){
+        ultimoY = window.pageYOffset;
+        [250, 500, 900, 1600].forEach(function(ms){ setTimeout(tardio, ms); });
+        /* Devolve a seção ao modo econômico bem depois, para não ficarem
+           seções renderizadas acumuladas na memória. Ao desligar, ela
+           encolhe para a altura estimada e a página se desloca: medimos
+           antes e depois e compensamos na mesma medida, então nada
+           pisca. Clicar noutro destino cancela e recomeça. */
+        if (restaurar) clearTimeout(restaurar);
+        restaurar = setTimeout(function(){
+          if (!ligadas.length) return;
+          var antes = alvo.getBoundingClientRect().top;
+          soltarTodas();
+          void document.body.offsetHeight;
+          var depois = alvo.getBoundingClientRect().top;
+          if (Math.abs(depois - antes) > 1) rolarPara(window.pageYOffset + (depois - antes));
+        }, 15000);
+      }
+      requestAnimationFrame(ajustar);
+
       // atualiza a barra de endereço sem recarregar; em contexto sem
       // origem (webview antiga, file://) replaceState pode lançar — e uma
       // exceção aqui abortaria o resto do clique.
@@ -645,10 +789,15 @@ var RepassoMed = (function(){
     panel.querySelectorAll('a').forEach(function(a){
       a.addEventListener('click', function(e){
         e.preventDefault();
-        /* Bloco COM subtítulos: o clique abre a lista, não salta. Quem
-           quer ir direto ao bloco usa «Comienzo del bloque», que é o
-           primeiro item da lista. Bloco sem subtítulo salta na hora,
-           como sempre foi. */
+        /* Bloco COM subtítulos — DOIS SALTOS, de propósito:
+           1.º clique no título do bloco → abre a lista de subtítulos E
+              já leva a página ao começo do bloco, mantendo o índice
+              aberto. O aluno vê onde caiu e escolhe com contexto.
+           2.º clique, agora num subtítulo → fecha o índice e vai ao
+              ponto exato.
+           Clicar de novo no mesmo título apenas fecha a lista: não
+           repete o salto, senão o aluno seria arrastado sem pedir.
+           Bloco sem subtítulo continua saltando e fechando o índice. */
         if (a.dataset.subs === '1'){
           var caixa = a.parentNode.querySelector('.rm-menu-subs');
           var abrir = caixa.hasAttribute('hidden');
@@ -661,6 +810,10 @@ var RepassoMed = (function(){
           if (abrir) caixa.removeAttribute('hidden'); else caixa.setAttribute('hidden','');
           a.setAttribute('aria-expanded', abrir ? 'true' : 'false');
           a.classList.toggle('open', abrir);
+          if (abrir){
+            irPara(a.getAttribute('data-target'));   // salto 1: o bloco
+            verNoPainel(a.parentNode);               // lista visível no painel
+          }
           return;
         }
         close();
