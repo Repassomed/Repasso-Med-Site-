@@ -1,0 +1,93 @@
+CARPETA DE IMÁGENES · ORTOPEDIA Y TRAUMATOLOGÍA
+================================================
+
+DÓNDE VA ESTA CARPETA
+---------------------
+    Atual - Copia/assets/img/orto/
+
+Copiar la carpeta "orto" completa dentro de assets/img/ del repositorio,
+al lado de derma, toxico, anato2, etc.
+
+Todas las URL del HTML son raíz-relativas: /assets/img/orto/<archivo>
+
+Los ARCHIVOS son idénticos a los de las entregas 1 y 2. Si ya la subiste,
+no hace falta volver a subirla: sólo cambió este archivo de instrucciones.
+
+
+POR QUÉ LOS ARCHIVOS ESTÁN RENOMBRADOS
+--------------------------------------
+En el Drive, ocho de estas imágenes tienen nombre en portugués y con
+acentos (ó, á, ç). Un nombre con acento en una URL obliga a codificarlo
+en porcentaje y se rompe en cuanto un sistema normaliza los acentos de
+otra manera (NFC frente a NFD): el resultado es un 404 silencioso en
+producción.
+
+    → CONVIENE RENOMBRAR TAMBIÉN LOS ARCHIVOS DEL DRIVE con estos mismos
+      nombres, para que Drive y sitio no se desincronicen.
+
+
+MAPEO NOMBRE EN EL DRIVE  →  NOMBRE EN EL SITIO
+-----------------------------------------------
+ortho_u01_01_diagnostico_traumatologico.webp
+  → ortho_u01_01_diagnostico_traumatologico.webp                  (sin cambio)
+
+ortho_u01_03_seleccion_imagen.webp
+  → ortho_u01_03_seleccion_imagen.webp                            (sin cambio)
+
+infográfico_de_diagnóstico_traumatológico.webp
+  → ortho_u01_04_diagnostico_traumatologico_ampliado.webp
+
+infográfico_de_radiografia_em_trauma.webp
+  → ortho_u01_05_radiografia_en_trauma.webp
+
+guia_visual_de_exames_ortopédicos.webp
+  → ortho_u01_06_que_estudio_pedir.webp
+
+infográfico_médico_sobre_lesões_musculares.webp
+  → ortho_u02_01_lesiones_musculares.webp
+
+infográfico_médico_sobre_lesões_tendinosas.webp
+  → ortho_u02_03_lesiones_tendinosas.webp
+
+infográfico_clínico_sobre_entorses_e_lesões_ligame.webp
+  → ortho_u02_04_esguinces.webp
+
+infográfico_médico_sobre_luxações_do_ombro.webp
+  → ortho_u02_05_luxaciones.webp
+
+infográfico_médico_de_fraturasraio_x_sintomas_e_m.webp
+  → ortho_u02_06_fracturas.webp
+
+infográfico_de_imobilização_ortopédica_em_espanhol.webp
+  → ortho_u04_01_inmovilizacion.webp
+
+consolidação_óssea_fases_e_tratamentos.webp
+  → ortho_u05_01_consolidacion_osea.webp
+
+infográfico_osteomielite_versus_artrite_séptica.webp
+  → ortho_u13_01_osteomielitis_artritis_septica.webp   (para el bloque 14)
+
+
+USADAS EN LA ENTREGA 3 · 12 de 13
+---------------------------------
+Bloque 01 · ortho_u01_01 · ortho_u01_03 · ortho_u01_04 · ortho_u01_05 · ortho_u01_06
+Bloque 02 · ortho_u02_01 · ortho_u02_03
+Bloque 03 · ortho_u02_04 · ortho_u02_05
+Bloque 04 · ortho_u02_06
+Bloque 05 · ortho_u04_01
+Bloque 06 · ortho_u05_01
+
+La única que todavía no se usa es ortho_u13_01, reservada para el
+bloque 14 (Unidad XIII · Infecciones articulares).
+
+
+NO INCLUIDAS · 4 imágenes con defectos (pendientes de corrección)
+-----------------------------------------------------------------
+ortho_u01_02_lectura_radiografia.webp        · dos glifos rotos (□) donde
+                                               deberían ir flechas
+infográfico_sobre_distensão_muscular.webp    · el rótulo dice POLICE pero
+                                               las letras listadas son PICER
+infográfico_médico_síndrome_compartimental   · la fórmula del ΔP usa la PAM;
+                                               el criterio usa la DIASTÓLICA
+infográfico_de_fraturas_fisárias_pediátricas · mnemotecnia inventada; la
+                                               cátedra usa SALTER
