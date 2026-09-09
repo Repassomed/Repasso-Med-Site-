@@ -915,6 +915,7 @@ const CATALOGO = [
   { slug:'dermatologia', tab:'derma', file:'materias/dermatologia.html', title:'Dermatología', sub:'Piel · Lesiones elementales · Terapéutica' },
   { slug:'guarani', tab:'guarani', file:'materias/guarani.html', title:'Guaraní', sub:'Saludos · Cuerpo humano · Patologías · Diálogos clínicos' },
   { slug:'ortopedia', tab:'orto', file:'materias/ortopedia.html', title:'Ortopedia y Traumatología', sub:'Diagnóstico · Partes blandas · Fracturas' },
+  { slug:'oftalmologia', tab:'oftalmo', file:'materias/oftalmologia.html', title:'Oftalmología', sub:'Ojo rojo · Catarata · Glaucoma · Retina' },
 ];
 
 /* Semestre de cada matéria. A VERDADE vem do banco (subjects.semester,
@@ -928,6 +929,7 @@ const SEMESTRE_FALLBACK = {
   'semiologia-ii':6, 'farmacologia-ii':6, 'anatomia-patologica-ii':6, 'medicina-legal':6,
   'anatomia-patologica-ii-practica':6,
   'fisiopatologia-ii':6, 'toxicologia':7, 'dermatologia':7, 'ortopedia':7,
+  'oftalmologia':7,
   'guarani':2
 };
 /* O motor (app-core.js) precisa do catálogo para escrever o nome da
@@ -1461,6 +1463,7 @@ const RM_ICON_PATHS = {
 /* matéria → ícone + cor. A cor entra como variável CSS no card. */
 const RM_SUBJ_STYLE = {
   'biologia':                     { ic:'celula',  c:'#1d7a4f' },
+  ojo:    '<path d="M2.4 12s3.5-6.3 9.6-6.3S21.6 12 21.6 12s-3.5 6.3-9.6 6.3S2.4 12 2.4 12z"/><circle cx="12" cy="12" r="3.1"/><circle cx="12" cy="12" r=".95"/>',
   'anatomia-i':                   { ic:'hueso',   c:'#13314f' },
   'histologia-i':                 { ic:'tejido',  c:'#d8a32a' },
   'histologia-i-practica':        { ic:'lamina',  c:'#d8a32a' },
@@ -1484,6 +1487,7 @@ const RM_SUBJ_STYLE = {
   'toxicologia':                  { ic:'frasco',  c:'#7c5cff' },
   'dermatologia':                 { ic:'tejido',  c:'#e0663d' },
   'ortopedia':                    { ic:'hueso',   c:'#8a5a2b' },
+  'oftalmologia':                 { ic:'ojo',     c:'#0a7d72' },
 };
 
 /* hex → rgba com alfa, para o fundo suave do ícone */
