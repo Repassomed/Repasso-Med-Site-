@@ -852,6 +852,93 @@ var RepassoMed = (function(){
     });
   }
 
+  /* =====================================================================
+     ALTURA ESTIMADA DE CADA SEÇÃO — a correção do «respondi e a página
+     pulou para o fim»
+     ---------------------------------------------------------------------
+     O styles.css põe `content-visibility:auto` nas seções da matéria para
+     o navegador não montar a matéria inteira de uma vez (é o que impede o
+     travamento do §8). Enquanto uma seção está «pulada», o navegador usa
+     a altura CHUTADA em `contain-intrinsic-size` no lugar da real. O CSS
+     chutava 2400px para toda seção.
+
+     Medido no Chrome 141, 1280x900:
+
+        matéria                  altura média real   erro do chute
+        dermatologia .............. 14.674 px .........  6,1x
+        anatomía patológica II .... 17.396 px .........  7,2x
+        semiología II ............. 15.204 px .........  6,3x
+        fisiopatología II ......... 31.665 px ......... 13,2x
+        (pior seção: bancofp2, 91.880 px .............. 38,3x)
+
+     Com um erro desses, qualquer coisa que mexa no layout — revelar a
+     resposta de uma questão, por exemplo — faz o navegador remontar as
+     seções vizinhas, a altura do documento salta dezenas de milhares de
+     píxeis de uma vez, e a âncora de rolagem do Chrome «corrige» a
+     posição empurrando o aluno para longe. Medido antes desta correção,
+     respondendo as questões do fim dos blocos:
+
+        dermatologia ............ 2 de 15 respostas fugiram (até 22.983 px,
+                                  uma delas parando no fim da página)
+        semiología II ........... 5 de 45 respostas fugiram (até 24.613 px)
+        anatomía patológica II .. 1 de 45 respostas fugiu  (42.771 px)
+
+     Depois: 0 fugas nas três matérias, deslocamento máximo 106 px — que é
+     só a própria resposta entrando na tela, o comportamento desejado.
+
+     O chute agora sai do conteúdo da própria seção. A contagem de
+     elementos prevê a altura muito melhor que a de caracteres: medido em
+     4 matérias, 13–22 px por elemento (quase sempre 15–20), contra
+     0,31–1,02 px por caractere. Usamos 17 px/elemento.
+
+     `querySelectorAll('*').length` NÃO força layout — só percorre a
+     árvore. Nenhuma seção é renderizada aqui; o ganho do §8 fica intacto.
+
+     As duas atribuições são de propósito: a primeira é a forma que todo
+     navegador entende; a segunda acrescenta a palavra `auto`, que manda o
+     navegador GUARDAR a altura real depois que a seção aparece uma vez e
+     usar essa, e não o chute, daí em diante. Navegador que não conheça
+     `auto` descarta a segunda e fica com a primeira — sem prejuízo.
+     ===================================================================== */
+  /* Conta os elementos que de fato OCUPAM altura, podando o que está
+     escondido. Sem esta poda a conta erra feio justamente nos fechos de
+     matéria: `dermcierre` são 151 flashcards que o lançador de jogo
+     esconde (`display:none`), e a estimativa dava 14,7x a altura real;
+     `bancofcap2`, 49,9x; `s2-banco`, 22,0x. Um erro nesse tamanho é o
+     mesmo problema que estamos corrigindo, só que ao contrário.
+     A poda é uma descida na árvore, não uma consulta de estilo: nada
+     aqui força layout nem renderiza seção nenhuma. */
+  function contarVisiveis(el){
+    var n = 0, f = el.firstElementChild;
+    while (f){
+      n++;
+      var pular = false;
+      if (f.hasAttribute('hidden')) pular = true;
+      else if (f.style && f.style.display === 'none') pular = true;
+      else if (f.tagName === 'DETAILS' && !f.open) pular = true;   // só o <summary> aparece
+      if (!pular) n += contarVisiveis(f);
+      else if (f.tagName === 'DETAILS' && !f.open){
+        var sm = f.querySelector('summary');
+        if (sm) n += 1 + contarVisiveis(sm);
+      }
+      f = f.nextElementSibling;
+    }
+    return n;
+  }
+
+  function estimarAlturas(tabEl){
+    var secs = tabEl.querySelectorAll(':scope > section.container, :scope > section.container-wide');
+    Array.prototype.forEach.call(secs, function(sec){
+      var h = Math.round(contarVisiveis(sec) * 17);
+      if (h < 600)    h = 600;        // portada, bibliografia
+      if (h > 120000) h = 120000;     // teto de sanidade
+      try {
+        sec.style.containIntrinsicSize = '1px ' + h + 'px';
+        sec.style.containIntrinsicSize = 'auto 1px auto ' + h + 'px';
+      } catch(_){}
+    });
+  }
+
   function enhanceTab(tabEl){
     if (tabEl.dataset.rmDone) return;
     tabEl.dataset.rmDone = '1';
@@ -862,6 +949,7 @@ var RepassoMed = (function(){
     unifyTags(tabEl);
     unifyHeadings(tabEl);
     enhanceVideos(tabEl);
+    estimarAlturas(tabEl);
 
     var blocks = Array.prototype.slice.call(tabEl.querySelectorAll(':scope > section.container, :scope > section.container-wide'))
       .filter(function(s){ return s.id && s.querySelector('h2') && !s.classList.contains('locked-content'); });
@@ -884,7 +972,8 @@ var RepassoMed = (function(){
     document.querySelectorAll('#materias-container > .tab-content').forEach(enhanceTab);
   }
 
-  return { enhanceAll: enhanceAll, enhanceTab: enhanceTab, normalizeQuizzes: normalizeQuizzes };
+  return { enhanceAll: enhanceAll, enhanceTab: enhanceTab, normalizeQuizzes: normalizeQuizzes,
+           estimarAlturas: estimarAlturas };
 })();
 
 window.RepassoMed = RepassoMed;
@@ -1126,6 +1215,14 @@ window.RepassoMed = RepassoMed;
     injectCSS();
     try{ setupDecks(document); }catch(e){ console.error('decks',e); }
     try{ document.querySelectorAll('.rmatlas').forEach(initAtlas); }catch(e){ console.error('atlas',e); }
+    /* Reestima DEPOIS dos decks: é aqui que as `.fc-grid` viram
+       `display:none` e a seção fica muito mais baixa do que a contagem
+       feita no enhanceTab supunha. */
+    try{
+      if (RepassoMed.estimarAlturas)
+        document.querySelectorAll('#materias-container > .tab-content')
+          .forEach(RepassoMed.estimarAlturas);
+    }catch(e){ console.error('alturas',e); }
   };
   RepassoMed.initAtlas=initAtlas;
 })();

@@ -856,7 +856,15 @@ footer strong { color:var(--gold-soft); }
    ===================================================================== */
 #materias-container .rm-cuaderno > section.container{
   content-visibility:auto;
+  /* Chute de partida, válido só até o app-core.js medir cada seção pelo
+     seu conteúdo (função `estimarAlturas`) e escrever a estimativa boa no
+     style inline. 2400px sozinho errava de 6x a 38x, e era isso que fazia
+     a página pular para o fim quando o aluno revelava uma resposta.
+     A segunda linha acrescenta `auto`: o navegador guarda a altura real
+     depois da primeira aparição e passa a usá-la. Navegador que não
+     conheça `auto` descarta a linha e fica com a de cima. */
   contain-intrinsic-size:1px 2400px;
+  contain-intrinsic-size:auto 1px auto 2400px;
 }
 /* `content-visibility:auto` implica `contain:paint`, e um contêiner de
    pintura ancora os `position:fixed` de dentro dele. Enquanto houver uma
