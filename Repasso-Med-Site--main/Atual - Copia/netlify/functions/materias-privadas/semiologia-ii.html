@@ -434,7 +434,7 @@
     <div>
       <b>En el medio</b>
       <h5>Entender el mecanismo</h5>
-      <p>La <b>cadena causal</b> muestra en cinco pasos por qué aparece cada hallazgo, y la <b>técnica del
+      <p>La <b>cadena causal</b> recorre paso a paso por qué aparece cada hallazgo, y la <b>técnica del
       examen</b> muestra los cuatro pasos —inspección, palpación, percusión, auscultación— con <b>lo normal
       en verde</b> y <b>lo anormal en rojo</b>.</p>
       <span class="s2-norm"><b>Para qué sirve:</b> nunca se aprende un hallazgo anormal sin haber visto antes cómo es el normal. Es la única forma de reconocerlo junto a la cama.</span>
@@ -4260,7 +4260,7 @@
     <div>
       <b>Paso 2 · Palpación</b>
       <h5>La punta, el hígado y el reflujo</h5>
-      <p>Se palpa el <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">choque de la punta<b>?</b><i onclick="event.stopPropagation()"><b>Choque de la punta (ictus cordis)</b>Golpe que da la punta del <b>ventrículo izquierdo</b> contra la pared del tórax en cada latido. Normalmente se palpa en el <b>5.º espacio intercostal, línea medioclavicular</b>. Si está desplazado hacia <b>afuera y abajo</b>, el ventrículo está agrandado — y eso se sabe sin ningún estudio.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span>, el borde del hígado, y se hace la maniobra del <b>reflujo hepatoyugular</b>: presión sostenida sobre el hipocondrio derecho mirando el cuello.</p>
+      <p>Se palpa el <span class="s2-gl" onclick="var o=this.classList.contains('on');document.querySelectorAll('#tab-semio2 .s2-gl.on').forEach(function(e){e.classList.remove('on')});if(!o)this.classList.add('on')">choque de la punta<b>?</b><i onclick="event.stopPropagation()"><b>Choque de la punta (ictus cordis)</b>Golpe que da la punta del <b>ventrículo izquierdo</b> contra la pared del tórax en cada latido. Normalmente se palpa en el <b>5.º espacio intercostal, línea medioclavicular</b>. Si está desplazado hacia <b>afuera y abajo</b>, el ventrículo está agrandado — y eso se sabe sin ningún estudio.<span class="s2-gl-close">tocá la palabra para cerrar</span></i></span>, el borde del hígado, y se hace la maniobra del <b>reflujo hepatoyugular</b>: con el paciente todavía a 45° y respirando normalmente —sin que haga fuerza ni contenga el aire, porque eso da falsos positivos—, se apoya la palma sobre el hipocondrio derecho y se comprime de forma firme y sostenida durante unos <b>10 a 15 segundos</b>, mirando el cuello todo el tiempo. Esa presión devuelve al tórax la sangre estancada en el hígado; un ventrículo derecho sano la acomoda sin que se note, y uno que ya está lleno no puede, así que la columna yugular sube y <b>se mantiene alta mientras dure la compresión</b>. Eso es el reflujo positivo: no el ascenso de un instante, sino el que no cede.</p>
       <span class="s2-norm"><b>Lo normal:</b> punta en 5.º EIC línea medioclavicular, hígado no palpable bajo el reborde, la yugular no se llena al comprimir.</span>
       <span class="s2-anor"><b>En la IC:</b> punta <b>desplazada afuera y abajo</b> (ventrículo dilatado), <b>hepatomegalia</b> y <b>reflujo hepatoyugular positivo</b> — los dos, criterios de Framingham.</span>
     </div>
@@ -4390,12 +4390,23 @@
   <h3>Métodos diagnósticos</h3>
   <div class="key-box exam">🏆 <strong>Estudio clave / patrón de referencia:</strong> el <strong>ecocardiograma</strong> evalúa la fracción de eyección (FE &lt;45–50 % = disfunción sistólica) y la estructura cardíaca.</div>
   <ul>
-    <li><strong>Rx de tórax:</strong> cardiomegalia, signos de congestión.</li>
-    <li><strong>Ecocardiograma:</strong> estudio clave; evalúa la fracción de eyección y la estructura.</li>
-    <li><strong>Ecocardiograma:</strong> determina si hay dilatación ventricular, evalúa la función sistólica y diastólica, mide el espesor ventricular e informa sobre pericardio y válvulas (<strong>FE &lt;45–50 % = disfunción sistólica</strong>).</li>
-    <li><strong>Marcadores hormonales:</strong> BNP.</li>
-    <li><strong>Exámenes generales:</strong> hemograma, electrolitos, perfil lipídico, función renal, glicemia, función hepática y tiroidea, <strong>serología para Chagas</strong>, Rx de tórax PA y perfil, y ECG de 12 derivaciones.</li>
-    <li>En la Rx pueden verse <strong>líneas B de Kerley</strong> (congestión).</li>
+    <li><strong>Ecocardiograma</strong> — el estudio clave, porque es el único que contesta
+    <em>por qué</em> falla la bomba. Dice si el ventrículo está dilatado, mide el espesor de sus
+    paredes, evalúa la función sistólica y la diastólica, informa sobre válvulas y pericardio, y
+    da el número que define el fenotipo: la fracción de eyección
+    (<strong>FE &lt;45–50 % = disfunción sistólica</strong>).</li>
+    <li><strong>Rx de tórax</strong> (PA y perfil) — cardiomegalia, medida con el índice
+    cardiotorácico, y los signos de congestión: redistribución de flujo hacia los vértices,
+    <strong>líneas B de Kerley</strong> y, si la congestión avanzó, derrame pleural.</li>
+    <li><strong>ECG de 12 derivaciones</strong> — no diagnostica insuficiencia cardíaca, pero
+    rara vez es normal en ella y suele mostrar la causa: secuela de infarto, hipertrofia
+    ventricular izquierda o una fibrilación auricular que explique la descompensación.</li>
+    <li><strong>Marcadores hormonales: BNP</strong> — el péptido que el ventrículo libera cuando
+    se distiende. Su mayor utilidad es descartar: un BNP bajo en un paciente con disnea vuelve
+    muy improbable que la causa sea cardíaca.</li>
+    <li><strong>Exámenes generales</strong> — hemograma, electrolitos, perfil lipídico, función
+    renal, glicemia, función hepática y tiroidea, y <strong>serología para Chagas</strong>, que en
+    nuestro medio es una causa que hay que buscar activamente.</li>
   </ul>
 
 
@@ -4711,11 +4722,6 @@
     </div>
   </div>
 
-  <ul>
-    <li>Paciente <strong>sentado</strong>, pies en el piso, <strong>brazo a la altura del corazón</strong>.</li>
-    <li>Manguito adecuado (cubrir ~80 % de la circunferencia del brazo).</li>
-    <li><strong>Inflar 20–30 mmHg por encima de la PAS palpable</strong> (desaparición del pulso).</li>
-  </ul>
   <div class="key-box exam"><strong>Agujero (pozo) auscultatorio:</strong> desaparición transitoria de los ruidos de Korotkoff entre las primeras fases. Puede llevar a <strong>subestimar la PAS o sobreestimar la PAD</strong>. Se evita inflando ~30 mmHg por encima de la desaparición del pulso. Se ha atribuido a un aumento de la resistencia periférica (hipertensos, estenosis aórtica grave).</div>
 
   <h4>🩺 Escala de Korotkoff (las 5 fases)</h4>
@@ -5688,7 +5694,11 @@
     de la secreción ácida es máxima. Es un dolor epigástrico <strong>en quemazón</strong>, que
     puede irradiar al dorso y que <strong>alivia con la alimentación o con antiácidos</strong>.</p>
     <p>La cátedra lo resume en un ritmo de tres tiempos que conviene memorizar tal cual:
-    <strong>duele — come — pasa</strong>.</p>
+    <strong>duele — come — pasa</strong>. Y es el mismo ritmo que otros textos describen «en
+    cuatro tiempos», simplemente porque le agregan el cuarto: <strong>vuelve a doler</strong> dos
+    a cinco horas más tarde, cuando el estómago ya se vació y el ácido queda otra vez sin nada
+    que neutralizarlo. Tres o cuatro tiempos son la misma historia contada hasta distinto punto;
+    lo que se evalúa es la relación con la comida, no el número.</p>
   </div>
 
   <div class="key-box exam">
