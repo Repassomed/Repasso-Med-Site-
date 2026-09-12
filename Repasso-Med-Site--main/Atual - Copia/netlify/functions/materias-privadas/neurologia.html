@@ -1,0 +1,946 @@
+<div class="tab-content rm-cuaderno" id="tab-neuro">
+<!-- =====================================================================
+     REPASSO MED · NEUROLOGÍA · 7.º semestre
+     slug neurologia · tab neuro
+     Dieciséis bloques, construidos sobre las dos unidades del material
+     de la cátedra:
+
+       UNIDAD I · Semiología y exploración neurológica
+         neub01  Estado de conciencia
+         neub02  Lenguaje y afasias
+         neub03  Facies, actitud y marcha · atención
+         neub04  Pares craneales I–VI · olfato, visión y oculomotores
+         neub05  Pares craneales V, VII y VIII
+         neub06  Pares craneales IX–XII
+         neub07  Sistema motor · fuerza, tono y reflejos
+         neub08  Sistema sensitivo · vías y modalidades
+
+       UNIDAD II · Síndromes neurológicos
+         neub09  Síndromes irritativos
+         neub10  Síndromes deficitarios
+         neub11  Síndromes lobares
+         neub12  Síndromes alternos del tronco encefálico
+         neub13  Síndromes medulares
+         neub14  Cerebeloso, piramidal y extrapiramidal
+         neub15  Síndromes periféricos y radiculares
+         neub16  Unión neuromuscular
+
+       banconeu    Banco general de preguntas
+       revisaoneu  Cierre · algoritmo de localización y mazo general
+
+     Una sola pregunta organiza la asignatura entera:
+     ¿DÓNDE ESTÁ LA LESIÓN?
+
+     Figuras: infografías en /assets/img/neuro/ + esquemas propios en SVG.
+     Fuente de verdad: contenido de la cátedra; la literatura (Adams y
+     Victor, DeJong, Blumenfeld, Bradley) aclara y completa, nunca amplía
+     el temario.
+     ===================================================================== -->
+
+<section class="container" id="neuportada">
+  <div class="rmc-hero">
+    <div class="ov">Repasso Med · 7.º semestre</div>
+    <h1>Neuro<em>logía</em></h1>
+    <p>Toda la neurología clínica contesta una sola pregunta: <b>¿dónde está la lesión?</b> No se
+    memoriza una lista de enfermedades — se aprende a leer un signo hacia atrás, hasta el punto exacto
+    del sistema nervioso que lo produjo. Esta asignatura enseña ese camino desde cero: primero cómo
+    funciona la vía normal, después qué pasa cuando se corta, y recién entonces cómo se llama el
+    síndrome.</p>
+  </div>
+
+  <h4>El recorrido que hace un neurólogo</h4>
+  <p>Cada bloque de esta materia repite el mismo circuito. No es un adorno: es el método. Cuando veas
+  un paciente, vas a recorrerlo en este orden, y cuando veas una pregunta de examen, vas a recorrerlo
+  al revés —del signo hacia la lesión—.</p>
+
+  <div class="rmc-flow">
+    <span class="rmc-pill">1 · Síntoma</span>
+    <span class="rmc-arrow">→</span>
+    <span class="rmc-pill">2 · Examen</span>
+    <span class="rmc-arrow">→</span>
+    <span class="rmc-pill">3 · Vía</span>
+    <span class="rmc-arrow">→</span>
+    <span class="rmc-pill">4 · Localización</span>
+    <span class="rmc-arrow">→</span>
+    <span class="rmc-pill">5 · Síndrome</span>
+  </div>
+  <p class="rmc-cap">Del lado del paciente al nombre en el libro — nunca al revés.</p>
+
+  <div class="rmc-postit">
+    <h5>Desde cero · las tres ideas que hacen falta antes de empezar</h5>
+    <p><b>1 · Casi todo cruza.</b> El cerebro manda al lado opuesto del cuerpo y siente el lado opuesto
+    del cuerpo. Por eso una lesión en el hemisferio izquierdo da un déficit derecho. Pero cada vía
+    cruza <em>en un punto distinto</em>, y ese detalle es el que permite localizar: saber <b>dónde</b>
+    decusa cada vía es la mitad de la neurología.</p>
+    <p><b>2 · El cerebro no es homogéneo.</b> Cada trozo de corteza hace una cosa distinta, y está
+    ordenado como un mapa del cuerpo. Por eso la lesión no da «menos cerebro»: da un déficit con
+    forma, y esa forma dice dónde está.</p>
+    <p><b>3 · El sistema nervioso tiene dos pisos motores.</b> Uno arriba, en el cerebro
+    (<b>motoneurona superior</b>), y otro abajo, en la médula o el tronco, que es el que sale hacia el
+    músculo (<b>motoneurona inferior</b>). Los dos producen debilidad, pero con signos <em>opuestos</em>.
+    Distinguirlos es lo primero que se pregunta y lo primero que hay que dominar.</p>
+  </div>
+
+  <h4>Cómo está armada la asignatura</h4>
+  <p>Dos unidades, y una depende de la otra. La <b>Unidad I</b> enseña a explorar: qué se le pide al
+  paciente, qué se observa y qué significa cada hallazgo. La <b>Unidad II</b> enseña a agrupar esos
+  hallazgos en síndromes con nombre y con dirección anatómica. No se puede reconocer un síndrome de
+  Wallenberg sin saber antes qué hace el núcleo espinal del trigémino — por eso el orden importa.</p>
+
+  <div class="rmc-scroll">
+    <table>
+      <tr><th>Unidad</th><th>Bloques</th><th>Qué aprendés a hacer</th></tr>
+      <tr>
+        <td><b>I · Semiología y exploración</b></td>
+        <td>01 a 08</td>
+        <td>Explorar conciencia, lenguaje, marcha, los doce pares craneales, la fuerza, el tono, los
+        reflejos y las cuatro modalidades sensitivas — y saber qué informa cada maniobra.</td>
+      </tr>
+      <tr>
+        <td><b>II · Síndromes neurológicos</b></td>
+        <td>09 a 16</td>
+        <td>Reconocer el patrón: irritativo o deficitario, cortical o de tronco, medular, cerebeloso,
+        extrapiramidal, periférico, radicular o de la unión neuromuscular.</td>
+      </tr>
+    </table>
+  </div>
+
+  <aside class="rmc-margin">
+    <b class="t">Anotación al margen</b>
+    <p>Si en un examen dudás, preguntate siempre lo mismo: <b>¿qué está cruzado y qué no?</b> Ahí suele
+    estar la respuesta.</p>
+  </aside>
+
+  <div class="rmc-postit blue">
+    <h5>Sobre los nombres propios</h5>
+    <p>La neurología está llena de epónimos —Wallenberg, Weber, Brown-Séquard, Froment— y aprenderlos
+    sueltos no sirve de nada. En esta materia <b>ningún nombre aparece solo</b>: siempre va con su
+    <b>localización</b>, la <b>estructura lesionada</b> y el <b>signo que lo delata</b>. El nombre es lo
+    último que se memoriza, no lo primero.</p>
+    <p>Lo mismo con el vocabulario viejo. La cátedra usa términos clásicos —<b>protuberancia</b> por
+    puente, <b>patético</b> por troclear, <b>neumogástrico</b> por vago— y vas a encontrarlos en el
+    examen. Se enseñan <em>los dos</em>, siempre juntos: el que cae en la prueba y el que vas a leer en
+    la literatura.</p>
+  </div>
+
+  <div class="rmc-bank-head">
+    <h3>Estado de la asignatura</h3>
+    <p>Lo que hay publicado en esta pestaña, contado por el generador y no escrito a mano.</p>
+    <div class="rmc-bank-stats">
+      <span>16 bloques</span>
+      <span>2 unidades</span>
+      <span>32 infografías</span>
+    </div>
+  </div>
+
+  <div class="rmc-note">
+    <p>Construido sobre el <b>contenido de la cátedra</b> y la literatura de referencia (Adams y
+    Victor, DeJong, Blumenfeld, Bradley), con preguntas <b>basadas en exámenes</b> y el criterio de la
+    cátedra como fuente de verdad.</p>
+  </div>
+</section>
+
+<section class="container" id="neub01">
+  <div class="section-marker"><span class="section-marker-num">— BLOQUE 01 · UNIDAD I · SEMIOLOGÍA</span></div>
+  <h2>🧠 Estado de conciencia</h2>
+
+  <div class="rmc-detalle">
+    <h3>1 · Concepto: qué es exactamente «estar consciente»</h3>
+    <p>La <b>conciencia</b> es el estado de plena percepción de uno mismo y del entorno. Suena abstracto,
+    pero en neurología se rompe en dos piezas que se lesionan por separado y se exploran por separado.
+    Entender esa división es lo que permite, más adelante, decir <em>dónde</em> está el problema.</p>
+
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Componente</th><th>Qué es</th><th>Quién lo sostiene</th><th>Si falla…</th></tr>
+        <tr>
+          <td><b>Alerta o vigilia</b></td>
+          <td>El nivel de despertar. Que los ojos se abran y el cerebro esté «encendido».</td>
+          <td><b>Sistema reticular activador ascendente (SRAA)</b>, en el tronco encefálico</td>
+          <td>El paciente se duerme, se estupora, entra en coma</td>
+        </tr>
+        <tr>
+          <td><b>Contenido de conciencia</b></td>
+          <td>Lo que hay <em>dentro</em>: pensamiento, memoria, lenguaje, afecto, reconocimiento.</td>
+          <td><b>Corteza cerebral</b> de ambos hemisferios</td>
+          <td>El paciente está despierto pero desorientado, afásico, demente</td>
+        </tr>
+      </table>
+    </div>
+
+    <p>La consecuencia práctica es inmediata: se puede estar <b>despierto sin contenido</b> —es el estado
+    vegetativo— y se puede tener la corteza intacta pero estar en coma, si lo lesionado es el interruptor
+    del tronco. <b>Alerta y contenido no son lo mismo y no viven en el mismo sitio.</b></p>
+
+    <h3>2 · Anatomía funcional: el interruptor y la pantalla</h3>
+    <p>Conviene imaginarlo como un aparato de dos partes. El <b>SRAA</b> es el interruptor: una red difusa
+    de neuronas que sube desde el tronco encefálico, hace escala en el <b>tálamo</b> y desde ahí riega
+    toda la corteza con proyecciones difusas —los <b>núcleos intralaminares talámicos</b>—. La
+    <b>corteza</b> es la pantalla: lo que se ve depende de ella, pero sólo se ve si el interruptor está
+    encendido.</p>
+
+    <figure class="rmc-fig">
+      <svg viewBox="0 0 760 420" role="img" aria-label="Esquema del sistema reticular activador ascendente: desde el tronco encefálico sube al tálamo y desde allí se proyecta de forma difusa a toda la corteza cerebral." style="width:100%;height:auto;display:block;background:#FFFDF7;border-radius:14px;border:1.5px solid #DFD3B8">
+        <defs>
+          <marker id="neuA1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#4B32B8"/>
+          </marker>
+        </defs>
+        <text x="380" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="19" font-weight="700" fill="#13314f">El interruptor de la conciencia</text>
+        <path d="M120,300 Q120,140 330,110 Q540,82 640,110" fill="none" stroke="#DFD3B8" stroke-width="2" stroke-dasharray="5 5"/>
+        <ellipse cx="400" cy="140" rx="235" ry="72" fill="#12C2B0" fill-opacity=".14" stroke="#0A7D72" stroke-width="2"/>
+        <text x="400" y="130" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#0A7D72">CORTEZA CEREBRAL</text>
+        <text x="400" y="156" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#13314f">contenido: pensar, hablar, reconocer</text>
+        <line x1="300" y1="212" x2="300" y2="184" stroke="#4B32B8" stroke-width="2.4" marker-end="url(#neuA1)"/>
+        <line x1="400" y1="212" x2="400" y2="184" stroke="#4B32B8" stroke-width="2.4" marker-end="url(#neuA1)"/>
+        <line x1="500" y1="212" x2="500" y2="184" stroke="#4B32B8" stroke-width="2.4" marker-end="url(#neuA1)"/>
+        <text x="585" y="205" font-family="system-ui,sans-serif" font-size="13" fill="#4B32B8">proyección difusa</text>
+        <rect x="300" y="214" width="200" height="54" rx="12" fill="#4B32B8" fill-opacity=".16" stroke="#4B32B8" stroke-width="2"/>
+        <text x="400" y="238" text-anchor="middle" font-family="Georgia,serif" font-size="16" font-weight="700" fill="#4B32B8">TÁLAMO</text>
+        <text x="400" y="258" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#13314f">núcleos intralaminares</text>
+        <line x1="400" y1="300" x2="400" y2="272" stroke="#4B32B8" stroke-width="2.4" marker-end="url(#neuA1)"/>
+        <text x="418" y="292" font-family="system-ui,sans-serif" font-size="13" fill="#4B32B8">relevo</text>
+        <rect x="286" y="302" width="228" height="56" rx="12" fill="#a3271c" fill-opacity=".14" stroke="#a3271c" stroke-width="2"/>
+        <text x="400" y="326" text-anchor="middle" font-family="Georgia,serif" font-size="16" font-weight="700" fill="#a3271c">SRAA · TRONCO ENCEFÁLICO</text>
+        <text x="400" y="346" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#13314f">nivel de alerta — el interruptor</text>
+        <rect x="28" y="230" width="232" height="122" rx="12" fill="#F7F1E2" stroke="#DFD3B8" stroke-width="1.5"/>
+        <text x="44" y="254" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#13314f">Leélo de abajo hacia arriba</text>
+        <text x="44" y="278" font-family="system-ui,sans-serif" font-size="13" fill="#13314f">Si se apaga el SRAA o el</text>
+        <text x="44" y="296" font-family="system-ui,sans-serif" font-size="13" fill="#13314f">tálamo → no hay alerta,</text>
+        <text x="44" y="314" font-family="system-ui,sans-serif" font-size="13" fill="#13314f">aunque la corteza esté sana.</text>
+        <text x="44" y="338" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#a3271c">Eso es el coma.</text>
+        <rect x="500" y="230" width="232" height="122" rx="12" fill="#F7F1E2" stroke="#DFD3B8" stroke-width="1.5"/>
+        <text x="516" y="254" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#13314f">Y al revés</text>
+        <text x="516" y="278" font-family="system-ui,sans-serif" font-size="13" fill="#13314f">Si el SRAA funciona pero la</text>
+        <text x="516" y="296" font-family="system-ui,sans-serif" font-size="13" fill="#13314f">corteza está destruida →</text>
+        <text x="516" y="314" font-family="system-ui,sans-serif" font-size="13" fill="#13314f">abre los ojos, no responde.</text>
+        <text x="516" y="338" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#0A7D72">Eso es el estado vegetativo.</text>
+        <text x="380" y="396" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#13314f">Alerta = tronco y tálamo · Contenido = corteza</text>
+      </svg>
+      <figcaption><b>Cómo leer el esquema:</b> seguí la flecha de abajo hacia arriba. El nivel de alerta
+      nace en el tronco, pasa obligatoriamente por el tálamo y recién entonces llega a la corteza. Los
+      dos recuadros laterales son las dos maneras de romper el circuito, y dan cuadros clínicos
+      opuestos: <b>coma</b> si se corta abajo, <b>estado vegetativo</b> si se destruye arriba.</figcaption>
+    </figure>
+
+    <h3>3 · Los niveles de alteración de la conciencia</h3>
+    <p>La cátedra los ordena de menor a mayor compromiso. No son etiquetas sueltas: describen un
+    continuo, y lo que los separa es <b>qué estímulo hace falta para obtener respuesta</b>. Esa es la
+    pregunta que hay que hacerse frente a la cama.</p>
+
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Nivel</th><th>Características clínicas</th><th>Respuesta a estímulos</th></tr>
+        <tr>
+          <td><b>Alerta normal</b></td>
+          <td>Vigilia completa, orientado en tiempo, espacio y persona</td>
+          <td>Adecuada a todos los estímulos</td>
+        </tr>
+        <tr>
+          <td><b>Obnubilación / letargo</b></td>
+          <td>Reducción leve a moderada del estado de alerta, tendencia a la somnolencia,
+          <span class="rmc-gl">bradipsiquia<b>?</b><i><b class="rmc-gl-close">✕ cerrar</b>
+          Lentitud del pensamiento. El paciente contesta bien, pero tarda: procesa despacio.
+          No es lo mismo que confusión —el contenido es correcto, lo que falla es la
+          <b>velocidad</b>—.</i></span></td>
+          <td>Lenta pero adecuada</td>
+        </tr>
+        <tr>
+          <td><b>Estupor</b></td>
+          <td>Similar al sueño profundo; requiere estímulos vigorosos para despertar, y vuelve a
+          dormirse al retirarlos</td>
+          <td>Mínima, sólo a estímulos intensos</td>
+        </tr>
+        <tr>
+          <td><b>Coma</b></td>
+          <td>Inconsciencia completa. No abre los ojos, no hay ciclo sueño-vigilia</td>
+          <td>Sin respuesta, o sólo respuestas reflejas</td>
+        </tr>
+        <tr>
+          <td><b>Estado vegetativo</b></td>
+          <td><b>Vigilia sin conciencia</b>: ciclos sueño-vigilia preservados, sin ninguna interacción
+          consciente</td>
+          <td>Apertura ocular espontánea, <b>sin seguimiento</b> visual</td>
+        </tr>
+        <tr>
+          <td><b>Estado mínimamente consciente</b></td>
+          <td>Conductas que sí traducen contenido de conciencia, <b>sostenidas y reproducibles</b></td>
+          <td>Obedece órdenes simples; comunicación inconsistente</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="rmc-trap">
+      <p><b>La trampa clásica.</b> <b>Coma</b> y <b>estado vegetativo</b> se confunden porque los dos
+      parecen «no estar ahí». El dato que los separa es <b>la apertura ocular</b>: en el coma los ojos
+      están cerrados y no hay ciclo sueño-vigilia; en el estado vegetativo los ojos se abren solos y
+      hay ciclo, pero <b>no hay seguimiento ni respuesta con propósito</b>. Vigilia conservada,
+      contenido perdido.</p>
+      <p>Y el que sigue: <b>estado vegetativo</b> frente a <b>mínimamente consciente</b>. La diferencia
+      no es que «a veces parece responder»: es que en el mínimamente consciente la conducta es
+      <b>reproducible</b> —obedece una orden simple hoy y mañana—. Un movimiento aislado no alcanza.</p>
+    </div>
+
+    <h3>4 · La escala de coma de Glasgow</h3>
+    <p>Desarrollada en <b>1974</b> en la Universidad de Glasgow, es el método estándar para medir el
+    nivel de conciencia de forma objetiva. Su valor no está en el número en sí, sino en que permite
+    que dos profesionales distintos, en momentos distintos, digan lo mismo — y así detectar si el
+    paciente se está deteriorando.</p>
+
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Apertura ocular (1–4)</th><th>Respuesta verbal (1–5)</th><th>Respuesta motora (1–6)</th></tr>
+        <tr><td>4 · espontánea</td><td>5 · orientado</td><td>6 · obedece órdenes</td></tr>
+        <tr><td>3 · a la orden verbal</td><td>4 · confuso</td><td>5 · localiza el dolor</td></tr>
+        <tr><td>2 · al dolor</td><td>3 · palabras inapropiadas</td><td>4 · retirada al dolor</td></tr>
+        <tr><td>1 · no responde</td><td>2 · sonidos incomprensibles</td><td>3 · flexión anormal (descorticación)</td></tr>
+        <tr><td>—</td><td>1 · ausente</td><td>2 · extensión anormal (descerebración)</td></tr>
+        <tr><td>—</td><td>—</td><td>1 · ausente</td></tr>
+      </table>
+    </div>
+
+    <p>Los tres componentes se suman. El <b>mínimo posible es 3</b> —no existe el cero, porque cada
+    apartado empieza en 1— y el máximo es 15.</p>
+
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Puntaje</th><th>Clasificación</th><th>Significado clínico</th></tr>
+        <tr><td><b>15</b></td><td>Normal</td><td>Conciencia completamente normal</td></tr>
+        <tr><td><b>14–13</b></td><td>TCE leve</td><td>Alteración leve, en general buen pronóstico</td></tr>
+        <tr><td><b>12–9</b></td><td>TCE moderado</td><td>Requiere vigilancia estrecha: riesgo de deterioro</td></tr>
+        <tr><td><b>≤ 8</b></td><td>TCE grave</td><td><b>Indicación de intubación</b> y manejo en terapia intensiva</td></tr>
+        <tr><td><b>3</b></td><td>Coma profundo</td><td>Mínimo puntaje posible; mal pronóstico</td></tr>
+      </table>
+    </div>
+
+    <div class="rmc-postit green">
+      <h5>El número que hay que saber de memoria</h5>
+      <p><b>Glasgow ≤ 8 = intubar.</b> La razón es mecánica, no burocrática: por debajo de 8 el paciente
+      ha perdido la capacidad de proteger su vía aérea —no tose, no traga, la lengua cae— y el riesgo
+      de broncoaspiración es alto. Se intuba para proteger el pulmón, no para tratar el cerebro.</p>
+    </div>
+
+    <h3>5 · Las dos posturas anormales: descorticación y descerebración</h3>
+    <p>Cuando el paciente no obedece órdenes, la respuesta motora al dolor se convierte en el dato más
+    localizador de todo el examen. Hay dos posturas patológicas, y la diferencia entre ellas indica
+    <b>a qué altura</b> está el daño: cuanto más abajo, peor.</p>
+
+    <div class="rmc-scroll">
+      <table>
+        <tr><th></th><th>Descorticación (flexora)</th><th>Descerebración (extensora)</th></tr>
+        <tr>
+          <td><b>Brazos</b></td>
+          <td>Apretados contra los costados, con <b>codos, muñecas y dedos flexionados</b></td>
+          <td>En <b>aducción y extensión rígida</b> del codo, antebrazos en <b>pronación</b>, muñecas y
+          dedos flexionados</td>
+        </tr>
+        <tr>
+          <td><b>Piernas</b></td>
+          <td>En extensión y rotación interna, pies en flexión plantar</td>
+          <td>Rígidas y extendidas en las rodillas, pies en flexión plantar</td>
+        </tr>
+        <tr>
+          <td><b>Dónde está la lesión</b></td>
+          <td>Lesión destructiva de los <b>haces corticoespinales</b> dentro o muy cerca de los
+          <b>hemisferios cerebrales</b></td>
+          <td><b>Diencéfalo, mesencéfalo o protuberancia</b> — más abajo</td>
+        </tr>
+        <tr>
+          <td><b>Puntaje en Glasgow</b></td>
+          <td>Motor <b>3</b></td>
+          <td>Motor <b>2</b></td>
+        </tr>
+        <tr>
+          <td><b>Detalle que se pregunta</b></td>
+          <td>Cuando es <b>unilateral</b>, es la postura de la hemiplejía espástica crónica</td>
+          <td>También la inducen trastornos metabólicos graves: <b>hipoxia, hipoglucemia</b></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="rmc-postit">
+      <h5>Cómo no confundirlas nunca más</h5>
+      <p>Fijate sólo en los <b>brazos</b>. En la <b>desCOrticación</b> los brazos van hacia el
+      <b>COrazón</b> —se flexionan y se cierran sobre el pecho—. En la <b>desCErebración</b> los brazos
+      se <b>Extienden</b> y se giran hacia adentro. Flexión arriba, lesión arriba; extensión, lesión
+      más abajo.</p>
+      <p>Y la regla que ordena las dos: <b>cuanto más extensora es la postura, más caudal y más grave
+      es la lesión</b>. Si un paciente pasa de flexionar a extender, se está deteriorando — eso es una
+      urgencia.</p>
+    </div>
+
+    <h3>6 · La exploración ocular en el paciente con conciencia alterada</h3>
+    <p>Cuando el paciente no colabora, los ojos siguen informando. Son la ventana al tronco encefálico,
+    porque los núcleos que mueven el ojo están repartidos justamente por el mesencéfalo y la
+    protuberancia.</p>
+
+    <h4>6.1 · Hacia dónde miran los ojos</h4>
+    <p>La desviación conjugada de la mirada tiene dos lecturas opuestas, y la clave es si la lesión
+    <b>destruye</b> o <b>irrita</b>:</p>
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Tipo de lesión</th><th>Hacia dónde miran los ojos</th><th>Por qué</th></tr>
+        <tr>
+          <td><b>Lesión estructural</b> (destructiva: infarto, hemorragia)</td>
+          <td><b>Miran A la lesión</b> — y de espaldas a la hemiparesia</td>
+          <td>El campo ocular frontal de ese lado deja de empujar la mirada al lado contrario, así que
+          gana el lado sano y los ojos se desvían hacia el hemisferio dañado</td>
+        </tr>
+        <tr>
+          <td><b>Lesión irritativa</b> (crisis epiléptica)</td>
+          <td><b>Miran CONTRARIO a la lesión</b></td>
+          <td>El foco no está apagado sino descargando: empuja la mirada hacia el lado opuesto</td>
+        </tr>
+      </table>
+    </div>
+    <p class="rmc-cap">«El paciente mira su lesión… salvo que la lesión esté convulsionando.»</p>
+
+    <h4>6.2 · Reflejo oculocefálico · «ojos de muñeca»</h4>
+    <p>Se gira la cabeza del paciente de un lado a otro. Si el tronco está intacto, los ojos se mueven
+    <b>en sentido contrario</b> al giro —como los ojos pintados de una muñeca—, manteniendo la mirada
+    fija. Es una respuesta refleja: no requiere corteza, sólo un tronco funcionante.</p>
+    <p>Cuando el reflejo <b>desaparece</b> y los ojos quedan quietos, arrastrados con la cabeza, el
+    paciente ha perdido la capacidad de mover los ojos hacia un lado, y eso sugiere <b>lesión del
+    mesencéfalo o de la protuberancia</b>. Es decir: el interruptor no sólo está apagado, está roto en
+    su propio cableado.</p>
+
+    <h4>6.3 · Reflejo oculovestibular · estimulación calórica</h4>
+    <p>Es la versión más potente de la misma idea. Se irriga el conducto auditivo externo con agua fría,
+    lo que estimula el laberinto y, a través de las conexiones vestibulares del tronco, desvía los ojos.
+    Una respuesta presente confirma integridad troncoencefálica; su ausencia bilateral es un signo de
+    daño grave del tronco.</p>
+
+    <div class="rmc-note">
+      <p><b>Por qué estas tres maniobras están juntas.</b> Las tres exploran lo mismo desde ángulos
+      distintos: <b>si el tronco encefálico todavía funciona</b>. Y eso importa porque el tronco es donde
+      vive el SRAA — el interruptor del punto 2. Cuando el reflejo oculocefálico y el oculovestibular
+      desaparecen, no es un hallazgo ocular: es la confirmación de que la lesión llegó al sitio que
+      sostiene la conciencia.</p>
+    </div>
+
+    <h3>7 · Síntesis del bloque</h3>
+    <div class="rmc-postit blue">
+      <h5>Si te acordás de cinco cosas, que sean éstas</h5>
+      <p><b>1 ·</b> La conciencia tiene dos piezas: <b>alerta</b> (SRAA, tronco → tálamo) y
+      <b>contenido</b> (corteza). Se lesionan por separado.</p>
+      <p><b>2 ·</b> <b>Coma</b> = ojos cerrados, sin ciclo sueño-vigilia. <b>Estado vegetativo</b> = ojos
+      abiertos, con ciclo, sin contenido ni seguimiento.</p>
+      <p><b>3 ·</b> Glasgow suma ocular (4) + verbal (5) + motora (6); mínimo <b>3</b>, y
+      <b>≤ 8 indica intubación</b>.</p>
+      <p><b>4 ·</b> <b>Flexión</b> (descorticación) = lesión hemisférica, motor 3. <b>Extensión</b>
+      (descerebración) = lesión de diencéfalo, mesencéfalo o protuberancia, motor 2. Extensión es peor.</p>
+      <p><b>5 ·</b> En la lesión <b>estructural</b> los ojos <b>miran a la lesión</b>; en la
+      <b>irritativa</b>, al lado contrario.</p>
+    </div>
+
+    <div class="rmc-note">
+      <p><b>Cómo se conecta con el bloque siguiente.</b> Acabás de aprender a medir el <em>nivel</em> de
+      conciencia. El bloque 02 se ocupa del <em>contenido</em>: el lenguaje. Y ahí vas a ver que un
+      paciente puede estar perfectamente alerta —Glasgow 15— y aun así no poder hablar ni entender,
+      porque lo lesionado no es el interruptor sino una región muy concreta de la corteza.</p>
+    </div>
+  </div>
+
+  <h3>🎴 Flashcards · Bloque 01</h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>¿Cuáles son los dos componentes de la conciencia y qué estructura sostiene cada uno?</b></div><div class="fc-back"><b>Alerta o vigilia</b> → sistema reticular activador ascendente (SRAA), en el tronco encefálico, con relevo en el tálamo. <b>Contenido</b> → corteza cerebral.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué distingue el coma del estado vegetativo?</b></div><div class="fc-back">La <b>apertura ocular y el ciclo sueño-vigilia</b>. En el coma los ojos están cerrados y no hay ciclo. En el estado vegetativo hay apertura ocular espontánea y ciclo conservado, pero <b>sin seguimiento ni respuesta con propósito</b>: vigilia sin conciencia.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué define el estado mínimamente consciente frente al vegetativo?</b></div><div class="fc-back">Que existen conductas que traducen contenido de conciencia y son <b>sostenidas y reproducibles</b> — obedece órdenes simples, aunque la comunicación sea inconsistente.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Cuál es el puntaje mínimo de la escala de Glasgow y por qué no es cero?</b></div><div class="fc-back"><b>3.</b> Porque cada uno de los tres apartados —ocular, verbal y motor— empieza en 1, no en 0.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué puntaje de Glasgow indica intubación y por qué?</b></div><div class="fc-back"><b>≤ 8.</b> Por debajo de ese valor el paciente no protege la vía aérea —no tose, no traga— y el riesgo de broncoaspiración es alto. Se intuba para proteger el pulmón.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué postura anormal indica lesión hemisférica y cuánto puntúa en la respuesta motora?</b></div><div class="fc-back"><b>Descorticación</b> (respuesta flexora): brazos flexionados sobre el pecho, piernas extendidas. Lesión de los haces corticoespinales dentro o cerca de los hemisferios. Puntúa <b>motor 3</b>.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué postura anormal indica lesión de diencéfalo, mesencéfalo o protuberancia?</b></div><div class="fc-back"><b>Descerebración</b> (respuesta extensora): brazos en aducción, extensión rígida y <b>pronación</b>; piernas rígidas en extensión. Puntúa <b>motor 2</b>. También la inducen la hipoxia y la hipoglucemia graves.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Paciente con desviación conjugada de la mirada por un infarto. ¿Hacia dónde miran los ojos?</b></div><div class="fc-back"><b>Hacia la lesión</b>, y de espaldas a la hemiparesia. En la lesión estructural el campo ocular frontal dañado deja de empujar la mirada al lado contrario.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Paciente en crisis epiléptica con desviación de la mirada. ¿Hacia dónde miran los ojos?</b></div><div class="fc-back"><b>Hacia el lado contrario a la lesión</b>. El foco irritativo no está apagado: descarga y empuja la mirada al lado opuesto.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué significa la desaparición del reflejo oculocefálico («ojos de muñeca»)?</b></div><div class="fc-back">Que el paciente pierde la capacidad de mover los ojos hacia un lado al girar la cabeza, lo que sugiere <b>lesión del mesencéfalo o de la protuberancia</b>. Confirma que el daño alcanzó el tronco, donde vive el SRAA.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué es la bradipsiquia y en qué nivel de conciencia aparece?</b></div><div class="fc-back"><b>Lentitud del pensamiento</b>: el paciente contesta correctamente pero tarda. Es típica de la <b>obnubilación o letargo</b>, donde la respuesta es lenta pero adecuada.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué estructura talámica proyecta de forma difusa a toda la corteza y por qué importa?</b></div><div class="fc-back">Los <b>núcleos intralaminares talámicos</b>. Importan porque son el relevo obligatorio entre el SRAA del tronco y la corteza: una lesión talámica bilateral apaga la alerta aunque la corteza esté sana.</div></div>
+  </div>
+</section>
+
+<section class="container" id="neub02">
+  <div class="section-marker"><span class="section-marker-num">— BLOQUE 02 · UNIDAD I · SEMIOLOGÍA</span></div>
+  <h2>🗣️ Lenguaje y afasias</h2>
+
+  <div class="rmc-detalle">
+    <h3>1 · Concepto: por qué el lenguaje localiza tan bien</h3>
+    <p>El bloque anterior midió el <em>nivel</em> de conciencia. Este se ocupa del <em>contenido</em>, y
+    empieza por el que mejor localiza de todos: el lenguaje. La razón es anatómica. Casi todas las
+    funciones cerebrales están repartidas por los dos hemisferios; el lenguaje, no. Vive concentrado en
+    unas pocas regiones de <b>un solo hemisferio</b>, y cada una hace algo distinto. Por eso un trastorno
+    del lenguaje no dice sólo «hay daño cerebral»: dice <b>en qué centímetro</b> está.</p>
+
+    <div class="rmc-postit">
+      <h5>Desde cero · dominancia hemisférica</h5>
+      <p>En el <b>95–99 % de los diestros</b> y en el <b>60–70 % de los zurdos</b>, el hemisferio
+      <b>izquierdo</b> es el dominante para el lenguaje. Dominante no quiere decir «más importante»:
+      quiere decir que ahí están las áreas del lenguaje. Consecuencia práctica que se pregunta siempre:
+      una <b>afasia</b> indica lesión del hemisferio <b>izquierdo</b> en la enorme mayoría de los
+      pacientes — y, como el izquierdo manda al lado derecho, suele acompañarse de
+      <b>hemiparesia derecha</b>.</p>
+    </div>
+
+    <h3>2 · Anatomía funcional: tres piezas y un cable</h3>
+    <p>El circuito mínimo del lenguaje tiene tres componentes, y cada uno tiene su irrigación propia —
+    dato que explica por qué un infarto de una rama concreta da un tipo concreto de afasia.</p>
+
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Estructura</th><th>Dónde está</th><th>Qué hace</th><th>Irrigación</th></tr>
+        <tr>
+          <td><b>Área de Broca</b><br>(Brodmann <b>44 y 45</b>)</td>
+          <td><b>Tercera circunvolución frontal</b> izquierda</td>
+          <td><b>Produce</b> el lenguaje: programación motora del habla, articulación de palabras,
+          sintaxis gramatical</td>
+          <td>Arteria cerebral media, <b>división superior</b></td>
+        </tr>
+        <tr>
+          <td><b>Área de Wernicke</b><br>(Brodmann <b>22</b>)</td>
+          <td>Región <b>posterior del lóbulo temporal</b> izquierdo</td>
+          <td><b>Comprende</b>: procesamiento auditivo-verbal, interpretación semántica, decodificación
+          fonológica</td>
+          <td>Arteria cerebral media, <b>división inferior</b></td>
+        </tr>
+        <tr>
+          <td><b>Fascículo arqueado</b></td>
+          <td>Tracto de <b>sustancia blanca</b> que une Wernicke con Broca</td>
+          <td>Permite la <b>repetición</b>: lleva lo comprendido hasta el área que lo produce</td>
+          <td>Territorio profundo perisilviano</td>
+        </tr>
+      </table>
+    </div>
+
+    <figure class="rmc-fig">
+      <svg viewBox="0 0 760 340" role="img" aria-label="Circuito del lenguaje: el área de Wernicke comprende, el fascículo arqueado transporta y el área de Broca produce el habla." style="width:100%;height:auto;display:block;background:#FFFDF7;border-radius:14px;border:1.5px solid #DFD3B8">
+        <defs>
+          <marker id="neuA2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#4B32B8"/>
+          </marker>
+        </defs>
+        <text x="380" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="19" font-weight="700" fill="#13314f">El circuito del lenguaje · hemisferio izquierdo</text>
+        <path d="M70,190 Q110,90 260,78 Q470,62 640,120 Q700,150 680,210 Q650,268 480,276 Q240,286 120,250 Q70,230 70,190 Z" fill="#F7F1E2" stroke="#DFD3B8" stroke-width="2"/>
+        <text x="120" y="120" font-family="system-ui,sans-serif" font-size="13" fill="#6B7C93">frontal</text>
+        <text x="600" y="120" font-family="system-ui,sans-serif" font-size="13" fill="#6B7C93">occipital</text>
+        <rect x="150" y="150" width="150" height="62" rx="12" fill="#a3271c" fill-opacity=".16" stroke="#a3271c" stroke-width="2.2"/>
+        <text x="225" y="176" text-anchor="middle" font-family="Georgia,serif" font-size="16" font-weight="700" fill="#a3271c">BROCA</text>
+        <text x="225" y="197" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#13314f">áreas 44–45 · produce</text>
+        <rect x="452" y="150" width="160" height="62" rx="12" fill="#0A7D72" fill-opacity=".16" stroke="#0A7D72" stroke-width="2.2"/>
+        <text x="532" y="176" text-anchor="middle" font-family="Georgia,serif" font-size="16" font-weight="700" fill="#0A7D72">WERNICKE</text>
+        <text x="532" y="197" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#13314f">área 22 · comprende</text>
+        <path d="M448,166 Q376,126 304,166" fill="none" stroke="#4B32B8" stroke-width="3" marker-end="url(#neuA2)"/>
+        <text x="376" y="120" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#4B32B8">fascículo arqueado</text>
+        <text x="376" y="140" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#4B32B8">repetición</text>
+        <rect x="150" y="238" width="462" height="30" rx="9" fill="#12C2B0" fill-opacity=".12" stroke="#0A7D72" stroke-width="1.4"/>
+        <text x="381" y="258" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#13314f">cisura de Silvio · todo el circuito es <tspan font-weight="700">perisilviano</tspan></text>
+        <text x="380" y="310" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#13314f">Se comprende atrás · se produce adelante · el cable de en medio repite</text>
+      </svg>
+      <figcaption><b>Cómo leer el esquema:</b> el lenguaje entra por detrás y sale por delante. Wernicke
+      —atrás, temporal— entiende; el fascículo arqueado lleva el mensaje hacia adelante; Broca —adelante,
+      frontal— lo convierte en habla. Memorizá esa dirección y los tres síndromes principales se deducen
+      solos: si se rompe atrás no entiende, si se rompe adelante no habla, y si se corta el cable no
+      puede repetir aunque entienda y hable.</figcaption>
+    </figure>
+
+    <h3>3 · Qué es una afasia — y qué no lo es</h3>
+    <p><b>Afasia</b> es un trastorno <b>adquirido</b> del lenguaje causado por una lesión cerebral, que
+    afecta la producción y/o la comprensión del lenguaje hablado y/o escrito, <b>sin que se explique por
+    un déficit sensorial, motor o un trastorno mental</b>. Cada palabra de esa definición excluye algo:
+    «adquirido» excluye los trastornos del desarrollo; «sin déficit sensorial o motor» excluye al sordo y
+    al que tiene la lengua paralizada; «sin trastorno mental» excluye al psicótico.</p>
+
+    <div class="rmc-trap">
+      <p><b>Afasia no es disartria.</b> Es la confusión más frecuente del bloque y cae en examen.</p>
+      <p>La <b>afasia</b> es un problema del <b>lenguaje</b> como sistema: las palabras están mal
+      elegidas, mal ordenadas o no se entienden. El paciente puede tener una articulación perfecta y aun
+      así decir una frase sin sentido.</p>
+      <p>La <b>disartria</b> es un problema del <b>habla</b> como acto motor: la palabra elegida es la
+      correcta, pero sale mal pronunciada porque fallan los músculos que la articulan —lengua, labios,
+      velo, laringe— o su control. El paciente <b>escribe bien</b>, porque su lenguaje está intacto.</p>
+      <p><b>La prueba que las separa:</b> pedile que <b>escriba</b>. El disártrico escribe
+      correctamente; el afásico, no.</p>
+    </div>
+
+    <h3>4 · Cómo se explora: cuatro preguntas, en este orden</h3>
+    <p>No hace falta una batería complicada. Con cuatro parámetros se clasifica cualquier afasia, y
+    conviene explorarlos siempre en el mismo orden:</p>
+    <div class="rmc-flow">
+      <span class="rmc-pill">1 · ¿Es fluente?</span>
+      <span class="rmc-arrow">→</span>
+      <span class="rmc-pill">2 · ¿Comprende?</span>
+      <span class="rmc-arrow">→</span>
+      <span class="rmc-pill">3 · ¿Repite?</span>
+      <span class="rmc-arrow">→</span>
+      <span class="rmc-pill">4 · ¿Nombra?</span>
+    </div>
+    <p><b>Fluidez:</b> se escucha hablar espontáneamente. No fluente = pocas palabras, esfuerzo, habla
+    telegráfica. <b>Comprensión:</b> órdenes simples sin gesto («cerrá los ojos»). <b>Repetición:</b> se
+    le pide repetir una frase — y ésta es la que separa los grupos, porque explora el fascículo
+    arqueado. <b>Nominación:</b> mostrar objetos y pedir el nombre; se altera en casi todas las afasias,
+    por eso sirve poco para clasificar y mucho para detectar.</p>
+
+    <h3>5 · Los síndromes afásicos</h3>
+    <p>Esta tabla es la del material de la cátedra. Leéla por columnas, no por filas: la columna de la
+    <b>repetición</b> es la que más rinde, porque divide el mundo en dos.</p>
+
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Tipo</th><th>Fluidez</th><th>Comprensión</th><th>Repetición</th><th>Localización</th></tr>
+        <tr>
+          <td><b>Broca</b> (motora)</td><td>No fluente</td><td>Preservada</td><td>Alterada</td>
+          <td>Frontal inferior izquierda (44–45)</td>
+        </tr>
+        <tr>
+          <td><b>Wernicke</b> (sensitiva)</td><td>Fluente</td><td>Alterada</td><td>Alterada</td>
+          <td>Temporal posterior izquierdo (22)</td>
+        </tr>
+        <tr>
+          <td><b>De conducción</b></td><td>Fluente</td><td>Preservada</td><td><b>Muy alterada</b></td>
+          <td><b>Fascículo arqueado</b></td>
+        </tr>
+        <tr>
+          <td><b>Global</b></td><td>No fluente</td><td>Alterada</td><td>Alterada</td>
+          <td>Perisilviana extensa</td>
+        </tr>
+        <tr>
+          <td><b>Anómica</b></td><td>Fluente</td><td>Preservada</td><td>Preservada</td>
+          <td>Variable — la menos localizadora</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="rmc-postit green">
+      <h5>El atajo que ordena toda la tabla</h5>
+      <p><b>Primero preguntá si repite.</b> Si la repetición está conservada, la lesión está <em>fuera</em>
+      del circuito perisilviano. Si está alterada, la lesión está <em>dentro</em>.</p>
+      <p>Y dentro del circuito, desempatá con la comprensión: <b>no comprende → Wernicke</b> (atrás);
+      <b>comprende pero no habla → Broca</b> (adelante); <b>comprende y habla pero no repite →
+      conducción</b> (el cable del medio); <b>ni habla ni comprende → global</b> (todo el territorio).</p>
+    </div>
+
+    <h4>5.1 · Lo que se ve en la cama</h4>
+    <p>La tabla clasifica, pero no describe. Vale la pena saber cómo suena cada una:</p>
+    <p><b>Afasia de Broca.</b> Habla <b>telegráfica</b>: pocas palabras, con esfuerzo, sin nexos
+    gramaticales —«agua… querer… no»—. La comprensión está relativamente preservada, y eso tiene una
+    consecuencia cruel: <b>el paciente es consciente de su déficit</b> y se frustra. Como el área 44–45
+    está pegada a la corteza motora, suele acompañarse de <b>hemiparesia derecha de predominio
+    braquiofacial</b>.</p>
+    <p><b>Afasia de Wernicke.</b> Habla <b>fluente pero vacía</b>, con ritmo y melodía normales, llena de
+    <b>parafasias</b> —cambia una palabra por otra— y de <b>neologismos</b>; en los casos graves,
+    <b>jergafasia</b>: suena a idioma inventado. No comprende órdenes ni lenguaje escrito. Y como no
+    comprende, <b>no se da cuenta de que habla mal</b>: hay anosognosia para la propia afasia. Al estar
+    lejos de la corteza motora, <b>puede no haber hemiparesia</b> — por eso se confunde con un cuadro
+    psiquiátrico.</p>
+    <p><b>Afasia de conducción.</b> Entiende y habla, pero al pedirle que repita una frase fracasa de
+    forma desproporcionada. Es la firma de la desconexión: la información llega a Wernicke y no puede
+    viajar hasta Broca.</p>
+
+    <aside class="rmc-margin">
+      <b class="t">Anotación al margen</b>
+      <p>Wernicke habla mucho y dice poco; Broca dice poco y sabe que dice poco.</p>
+    </aside>
+
+    <h3>6 · Síntesis del bloque</h3>
+    <div class="rmc-postit blue">
+      <h5>Si te acordás de cinco cosas, que sean éstas</h5>
+      <p><b>1 ·</b> El lenguaje vive en el hemisferio <b>izquierdo</b> en el 95–99 % de los diestros. Una
+      afasia localiza a la izquierda, y suele venir con hemiparesia derecha.</p>
+      <p><b>2 ·</b> <b>Broca</b> adelante (44–45) produce; <b>Wernicke</b> atrás (22) comprende; el
+      <b>fascículo arqueado</b> los une y permite repetir.</p>
+      <p><b>3 ·</b> La <b>repetición</b> es el parámetro que más clasifica: alterada = lesión dentro del
+      circuito perisilviano.</p>
+      <p><b>4 ·</b> La lesión aislada del fascículo arqueado da <b>afasia de conducción</b>: comprende,
+      habla, pero no repite.</p>
+      <p><b>5 ·</b> <b>Afasia ≠ disartria.</b> El disártrico escribe bien; el afásico, no.</p>
+    </div>
+
+    <div class="rmc-note">
+      <p><b>Cómo se conecta con el bloque siguiente.</b> El lenguaje se explora escuchando. El bloque 03
+      se explora <em>mirando</em>: la cara y la forma de caminar del paciente dan un diagnóstico
+      topográfico antes de tocarlo. Y vas a reencontrar la disartria allí, ahora como signo de una lesión
+      cerebelosa.</p>
+    </div>
+  </div>
+
+  <h3>🎴 Flashcards · Bloque 02</h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>¿En qué hemisferio está el lenguaje y en qué proporción de la población?</b></div><div class="fc-back">En el <b>izquierdo</b>, en el <b>95–99 % de los diestros</b> y en el <b>60–70 % de los zurdos</b>. Por eso una afasia localiza la lesión a la izquierda y suele acompañarse de hemiparesia derecha.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Dónde está el área de Broca, qué áreas de Brodmann ocupa y qué arteria la irriga?</b></div><div class="fc-back"><b>Tercera circunvolución frontal izquierda</b>, áreas <b>44 y 45</b>. Irrigada por la <b>división superior de la arteria cerebral media</b>. Produce el lenguaje: programación motora del habla y sintaxis.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Dónde está el área de Wernicke, qué área de Brodmann ocupa y qué arteria la irriga?</b></div><div class="fc-back">Región <b>posterior del lóbulo temporal izquierdo</b>, área <b>22</b>. Irrigada por la <b>división inferior de la arteria cerebral media</b>. Comprende el lenguaje hablado.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué afasia produce la lesión aislada del fascículo arqueado y cómo se reconoce?</b></div><div class="fc-back"><b>Afasia de conducción.</b> Habla fluente y comprensión preservada, pero <b>repetición muy alterada</b>: es una desconexión entre Wernicke y Broca.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué parámetro del lenguaje separa mejor los síndromes afásicos y por qué?</b></div><div class="fc-back">La <b>repetición</b>. Si está alterada, la lesión está dentro del circuito perisilviano; si está preservada, está fuera de él.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Paciente con habla no fluente, comprensión preservada y repetición alterada. ¿Qué afasia y dónde?</b></div><div class="fc-back"><b>Afasia de Broca</b>, por lesión frontal inferior izquierda (áreas 44–45). Habla telegráfica, con esfuerzo, y el paciente <b>es consciente</b> de su déficit.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Paciente con habla fluente pero incomprensible, con neologismos, que no entiende órdenes. ¿Qué afasia y dónde?</b></div><div class="fc-back"><b>Afasia de Wernicke</b>, por lesión temporal posterior izquierda (área 22). Hay <b>anosognosia</b>: no se da cuenta de que habla mal.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué afasia tiene fluidez, comprensión y repetición conservadas?</b></div><div class="fc-back">La <b>afasia anómica</b>. Su localización es variable y es la <b>menos localizadora</b> de todas: el déficit principal es encontrar el nombre de las cosas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Cómo se diferencia una afasia de una disartria junto a la cama?</b></div><div class="fc-back">Pidiéndole que <b>escriba</b>. La disartria es un fallo <b>motor del habla</b>: el paciente escribe bien. La afasia es un fallo del <b>lenguaje</b>: la escritura también está alterada.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Por qué la afasia de Broca suele venir con hemiparesia y la de Wernicke puede no traerla?</b></div><div class="fc-back">Porque el área de Broca (44–45) está <b>pegada a la corteza motora</b>, así que la lesión alcanza la vía motora y da hemiparesia derecha braquiofacial. Wernicke está <b>lejos</b> del área motora, y su lesión puede cursar sin déficit motor.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué cuatro parámetros se exploran para clasificar una afasia?</b></div><div class="fc-back"><b>Fluidez, comprensión, repetición y nominación.</b> La nominación se altera en casi todas, así que detecta bien pero clasifica mal.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Definición de afasia: ¿qué tres cosas excluye expresamente?</b></div><div class="fc-back">Trastorno <b>adquirido</b> del lenguaje por lesión cerebral que no se explica por <b>déficit sensorial</b> (sordera), <b>déficit motor</b> (parálisis de los articuladores) ni <b>trastorno mental</b>.</div></div>
+  </div>
+</section>
+
+<section class="container" id="neub03">
+  <div class="section-marker"><span class="section-marker-num">— BLOQUE 03 · UNIDAD I · SEMIOLOGÍA</span></div>
+  <h2>🚶 Facies, actitud y marcha · atención</h2>
+
+  <div class="rmc-detalle">
+    <h3>1 · Concepto: el examen que empieza antes de tocar al paciente</h3>
+    <p>Este bloque reúne lo que se explora <b>mirando</b>. La cara y la forma de caminar son, en
+    neurología, dos exámenes completos que se hacen mientras el paciente entra al consultorio. No son
+    impresiones vagas: cada patrón tiene un sustrato anatómico, y varios permiten un diagnóstico
+    topográfico antes de cualquier maniobra.</p>
+
+    <h3>2 · Facies</h3>
+    <p>La <b>facies</b> es el conjunto de rasgos, expresión, postura y movimientos de la cara que reflejan
+    el estado neurológico. Su observación orienta el diagnóstico incluso antes de las pruebas
+    complementarias.</p>
+
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Facies</th><th>Aspecto</th><th>Características</th><th>Se asocia a</th></tr>
+        <tr>
+          <td><b>Parkinsoniana</b></td><td>Inexpresiva, «cara de máscara»</td>
+          <td><span class="rmc-gl">Hipomimia<b>?</b><i><b class="rmc-gl-close">✕ cerrar</b>
+          Reducción de la expresividad facial: la cara se mueve menos al hablar y al emocionarse.
+          <b>Amimia</b> es su grado extremo, la ausencia completa.</i></span>, parpadeo disminuido, boca
+          entreabierta, sialorrea</td>
+          <td>Enfermedad de Parkinson y parkinsonismos</td>
+        </tr>
+        <tr>
+          <td><b>Miasténica</b></td><td>Cansada, fatigada</td>
+          <td><b>Ptosis fluctuante</b>, diplopía, debilidad facial <b>que empeora con el uso</b></td>
+          <td>Miastenia gravis</td>
+        </tr>
+        <tr>
+          <td><b>Parálisis facial periférica</b></td><td>Asimetría <b>evidente</b></td>
+          <td>Desviación de la boca <b>al lado sano</b>, imposibilidad de cerrar el ojo, borramiento del
+          surco nasogeniano</td>
+          <td>Lesión del <b>VII par</b> — parálisis de Bell</td>
+        </tr>
+        <tr>
+          <td><b>Parálisis facial central</b></td><td>Asimetría <b>parcial</b></td>
+          <td>Compromiso del <b>tercio inferior</b> de la cara, con <b>conservación del movimiento
+          frontal</b></td>
+          <td>Lesión <b>supranuclear</b></td>
+        </tr>
+        <tr>
+          <td><b>Amímica</b></td><td>Ausencia de expresión emocional</td>
+          <td>Cara rígida, escasa respuesta afectiva</td>
+          <td>Lesiones frontales, Parkinson avanzado</td>
+        </tr>
+        <tr>
+          <td><b>Coreica</b></td><td>Inquieta, cambiante</td>
+          <td>Movimientos involuntarios de labios y lengua, gesticulación exagerada</td>
+          <td>Corea de Huntington, coreas secundarias</td>
+        </tr>
+        <tr>
+          <td><b>Distónica</b></td><td>Posturas anormales</td>
+          <td>Contracciones musculares sostenidas, gestos faciales forzados</td>
+          <td>Distonías primarias o secundarias</td>
+        </tr>
+        <tr>
+          <td><b>Pseudobulbar</b></td><td>Incongruente con el estado emocional</td>
+          <td><b>Risa o llanto espasmódico</b>, dificultad para controlar la expresión</td>
+          <td>Lesiones <b>bilaterales corticobulbares</b></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="rmc-trap">
+      <p><b>La comparación que siempre cae: facial central frente a facial periférica.</b></p>
+      <p>La clave está en <b>la frente</b>. El tercio superior de la cara recibe inervación cortical de
+      <b>los dos</b> hemisferios; el tercio inferior, sólo del contrario. Por eso:</p>
+      <p><b>Periférica</b> (lesión del nervio o del núcleo, VII par): se afecta <b>toda la hemicara</b>.
+      El paciente <b>no puede arrugar la frente</b> ni cerrar el ojo del lado enfermo.</p>
+      <p><b>Central</b> (lesión supranuclear, por encima del núcleo): sólo se afecta el <b>tercio
+      inferior</b> contralateral. El paciente <b>sí arruga la frente</b>, porque le queda la inervación
+      del otro hemisferio.</p>
+      <p class="rmc-cap">Si arruga la frente, la lesión está arriba (central). Si no, está en el nervio.</p>
+    </div>
+
+    <h3>3 · Actitud y marcha</h3>
+    <p>La <b>marcha</b> es el acto de caminar: movimientos coordinados de comienzo voluntario que luego
+    se vuelven automáticos. Participan el sistema nervioso central y periférico, el sistema muscular y
+    las estructuras óseas y articulares — por eso una marcha anormal puede venir del hueso, del músculo
+    o del cerebro, y el examen sirve justamente para decidir de cuál.</p>
+
+    <h4>3.1 · Cómo se explora</h4>
+    <p>El material de la cátedra divide la exploración en dos miradas: una <b>segmentaria</b>, parte por
+    parte, y otra <b>de conjunto</b>.</p>
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Segmento</th><th>Qué observar</th></tr>
+        <tr><td><b>I · Cabeza</b></td><td>¿Firme y dirigida hacia adelante, u oscila y se dirige a los lados o hacia abajo?</td></tr>
+        <tr><td><b>II · Tronco</b></td><td>¿Vertical, o con inclinación lateral, anterior o posterior?</td></tr>
+        <tr><td><b>III · Brazos</b></td><td>¿Balanceo normal? ¿Los separa del tronco buscando apoyo? ¿Los mueve involuntariamente sin finalidad?</td></tr>
+        <tr><td><b>IV · Muslos y piernas</b></td><td>¿Se elevan a la misma altura? ¿Las rodillas se separan o se acercan? ¿Permanecen rígidas en extensión?</td></tr>
+        <tr><td><b>V · Pies</b></td><td>¿Qué parte llega primero al suelo —punta, talón, bordes—? ¿La punta se eleva al caminar?</td></tr>
+      </table>
+    </div>
+    <p><b>De conjunto:</b> si la marcha es rápida o lenta, fácil o torpe; si sigue una línea recta o
+    tiende a oscilar; si necesita asistencia —familiar, bastón—. Se le pide caminar hacia adelante, hacia
+    atrás y de forma lateral, <b>con los ojos abiertos y luego cerrados</b>, y finalmente <b>detenerse
+    bruscamente</b> para ver si lo hace con seguridad o se tambalea.</p>
+
+    <div class="rmc-postit">
+      <h5>Por qué se pide cerrar los ojos</h5>
+      <p>Es la maniobra más informativa de todo el examen de la marcha, y conviene entender el mecanismo
+      en lugar de memorizarlo. El equilibrio se sostiene sobre <b>tres</b> entradas: la <b>vista</b>, la
+      <b>propiocepción</b> y el <b>vestíbulo</b>. Con los ojos abiertos, la vista puede <em>tapar</em> la
+      falla de las otras dos.</p>
+      <p>Al cerrar los ojos se retira esa ayuda. Si el paciente empeora mucho, lo que falla es la
+      <b>propiocepción</b> o el <b>vestíbulo</b>. Si empeora poco o nada, el problema es
+      <b>cerebeloso</b>: el cerebelo no se compensa con la vista. Eso es exactamente lo que mide el
+      <b>signo de Romberg</b>.</p>
+    </div>
+
+    <h4>3.2 · Marchas por alteración osteomuscular</h4>
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Marcha</th><th>Mecanismo</th><th>Qué se ve</th></tr>
+        <tr>
+          <td><b>De Trendelenburg</b> y <b>de pato</b></td>
+          <td>Debilidad del <b>glúteo medio</b>, cuya acción normal es elevar la pelvis del lado opuesto
+          al que se apoya</td>
+          <td><b>Descenso de la pelvis del lado que no apoya</b>. Bilateral, se llama marcha de pato.
+          Causas: atrofia muscular, poliomielitis</td>
+        </tr>
+        <tr>
+          <td><b>En steppage</b> (equina)</td>
+          <td>Debilidad del <b>tibial anterior</b>, que normalmente hace la dorsiflexión del pie</td>
+          <td><b>Pie caído</b>: el paciente eleva exageradamente la rodilla para no arrastrar la punta,
+          y el pie cae en plantiflexión</td>
+        </tr>
+        <tr>
+          <td><b>De la debilidad</b></td><td>Desacondicionamiento tras reposo prolongado</td>
+          <td>Marcha insegura y lenta, sin patrón focal</td>
+        </tr>
+        <tr>
+          <td><b>Antálgica</b></td><td>Compensación para evitar el dolor</td>
+          <td>Acorta el tiempo de apoyo sobre el lado doloroso</td>
+        </tr>
+      </table>
+    </div>
+
+    <h4>3.3 · Marchas por alteración neurológica</h4>
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Marcha</th><th>Lesión</th><th>Qué se ve</th></tr>
+        <tr>
+          <td><b>Atáxica sensitiva</b> (tabética)</td>
+          <td>Interrupción de las <b>vías propioceptivas</b> de la médula (cordones posteriores)</td>
+          <td>Pérdida del sentido de posición y de la orientación espacial: mira el suelo, levanta mucho
+          el pie y lo deja caer. <b>Empeora mucho al cerrar los ojos</b></td>
+        </tr>
+        <tr>
+          <td><b>Atáxica cerebelosa</b> («de ebrio»)</td>
+          <td>Alteración de los mecanismos de <b>coordinación</b> del cerebelo y sus conexiones</td>
+          <td>Base amplia, zigzagueante, inestable. <b>No empeora significativamente al cerrar los
+          ojos</b></td>
+        </tr>
+        <tr>
+          <td><b>Hemiparética espástica</b> («en segador»)</td>
+          <td>Compromiso <b>unilateral</b> del haz corticoespinal — típicamente vascular</td>
+          <td>La pierna espástica en extensión describe un semicírculo hacia afuera, como quien siega</td>
+        </tr>
+        <tr>
+          <td><b>Paraparética espástica</b> («en tijeras»)</td>
+          <td>Compromiso <b>bilateral</b> del haz corticoespinal — disfunción de la médula espinal</td>
+          <td>Las piernas se cruzan una delante de la otra por la aducción espástica</td>
+        </tr>
+        <tr>
+          <td><b>Parkinsoniana</b></td><td>Enfermedad de Parkinson</td>
+          <td>Pasos cortos, rigidez, temblor, bradicinesia, postura en flexión, dificultad para
+          <b>iniciar</b> la marcha, tendencia a caer hacia adelante y a <b>acelerar los pasos</b></td>
+        </tr>
+        <tr>
+          <td><b>Apráxica</b></td>
+          <td>Lesiones cerebrales extensas, principalmente <b>frontales</b></td>
+          <td>Pérdida de la habilidad de usar apropiadamente los miembros inferiores al caminar: los pies
+          parecen «pegados al suelo» aunque la fuerza esté conservada</td>
+        </tr>
+        <tr>
+          <td><b>Histérica</b></td><td>Alteración de la esfera psicomotora</td>
+          <td>Teatralidad, componentes atáxicos y espásticos mezclados que no respetan ningún patrón
+          anatómico</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="rmc-trap">
+      <p><b>Las tres ataxias — comparación obligatoria.</b> «Ataxia» significa sólo <em>incoordinación</em>;
+      hay tres causas y se separan con dos preguntas.</p>
+      <div class="rmc-scroll">
+        <table>
+          <tr><th></th><th>Cerebelosa</th><th>Sensitiva</th><th>Vestibular</th></tr>
+          <tr><td><b>Dónde está la lesión</b></td><td>Cerebelo y sus vías</td><td>Cordones posteriores / nervio periférico</td><td>Aparato vestibular u VIII par</td></tr>
+          <tr><td><b>Al cerrar los ojos</b></td><td><b>Casi no empeora</b> (Romberg negativo)</td><td><b>Empeora mucho</b> (Romberg positivo)</td><td>Empeora, con caída hacia un <b>lado fijo</b></td></tr>
+          <tr><td><b>Cómo cae</b></td><td>Hacia cualquier lado, base amplia</td><td>Mira el suelo, pisa fuerte</td><td>Siempre hacia el <b>mismo</b> lado</td></tr>
+          <tr><td><b>Acompañantes</b></td><td>Dismetría, disdiadococinesia, disartria escandida, hipotonía</td><td>Pérdida de vibración y posición</td><td><b>Vértigo</b> y <b>nistagmo</b></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>4 · Atención</h3>
+    <p>La atención es la puerta de entrada de todo lo demás: sin ella no se puede valorar memoria,
+    lenguaje ni cálculo, porque el paciente no llega a registrar el estímulo. Por eso se explora
+    temprano.</p>
+    <p>Se distinguen dos formas: la <b>atención activa</b>, en la que la voluntad del sujeto se dirige
+    hacia un objetivo determinado, y la <b>atención pasiva</b>, en la que no interviene la voluntad —es
+    el estímulo el que captura.</p>
+
+    <div class="rmc-scroll">
+      <table>
+        <tr><th>Alteración</th><th>En qué consiste</th><th>Se ve en</th></tr>
+        <tr><td><b>Hiperprosexia</b></td><td>Sobreactividad atentiva: fija la atención sobre varias cosas a la vez</td><td>Procesos hipomaníacos o maníacos</td></tr>
+        <tr><td><b>Hipoprosexia</b></td><td>Atención reducida, retardada o debilitada</td><td>Procesos melancólicos</td></tr>
+        <tr><td><b>Aprosexia</b></td><td>La atención <b>no puede fijarse</b>: el paciente se distrae constantemente</td><td>Cuadros confusionales y orgánicos</td></tr>
+        <tr><td><b>Paraprosexia</b></td><td>Atención alterada de modo <b>cualitativo</b>, con conciencia no lúcida</td><td>Estados confusionales</td></tr>
+      </table>
+    </div>
+
+    <p><b>Cómo se explora.</b> Se le pide al paciente <b>tachar, en un texto impreso, todas las letras
+    iguales a la que indica el examinador</b> (m, n, p…). Se marca cada minuto y se compara el
+    rendimiento entre minutos sucesivos, computando aciertos y errores. Lo que informa no es sólo cuántas
+    tachó, sino <b>si el rendimiento cae con el tiempo</b>: eso mide la atención sostenida.</p>
+
+    <h3>5 · Síntesis del bloque</h3>
+    <div class="rmc-postit blue">
+      <h5>Si te acordás de cinco cosas, que sean éstas</h5>
+      <p><b>1 ·</b> <b>Facial central</b> = sólo el tercio inferior, <b>arruga la frente</b>. <b>Facial
+      periférica</b> = toda la hemicara, <b>no arruga la frente</b>.</p>
+      <p><b>2 ·</b> Cerrar los ojos separa las ataxias: la <b>cerebelosa casi no empeora</b>; la
+      <b>sensitiva empeora mucho</b> (Romberg positivo).</p>
+      <p><b>3 ·</b> <b>En segador</b> = haz corticoespinal <b>unilateral</b>. <b>En tijeras</b> = haz
+      corticoespinal <b>bilateral</b>, médula.</p>
+      <p><b>4 ·</b> <b>Steppage</b> = pie caído por debilidad del tibial anterior. <b>Trendelenburg</b> =
+      caída de la pelvis del lado que no apoya, por debilidad del glúteo medio.</p>
+      <p><b>5 ·</b> La atención se explora con la <b>prueba de tachado</b>, y lo que informa es la caída
+      del rendimiento minuto a minuto.</p>
+    </div>
+
+    <div class="rmc-note">
+      <p><b>Cómo se conecta con el bloque siguiente.</b> Ya mirando al paciente detectaste una parálisis
+      facial y una ataxia. Los bloques 04, 05 y 06 desarman ese «mirar» en doce exploraciones
+      sistemáticas: los pares craneales, uno por uno, con su origen, su recorrido y la maniobra que lo
+      pone a prueba.</p>
+    </div>
+  </div>
+
+  <h3>🎴 Flashcards · Bloque 03</h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>¿Cómo se distingue una parálisis facial central de una periférica y por qué?</b></div><div class="fc-back">Por la <b>frente</b>. La <b>central</b> (supranuclear) afecta sólo el <b>tercio inferior</b> contralateral y el paciente <b>sí arruga la frente</b>, porque el tercio superior recibe inervación de ambos hemisferios. La <b>periférica</b> (VII par) afecta <b>toda la hemicara</b> y <b>no puede arrugar la frente</b>.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Hacia qué lado se desvía la boca en una parálisis facial periférica?</b></div><div class="fc-back">Hacia el <b>lado sano</b>, porque los músculos de ese lado quedan sin oposición. Se acompaña de imposibilidad de cerrar el ojo y borramiento del surco nasogeniano del lado enfermo.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué facies muestra ptosis fluctuante y debilidad que empeora con el uso?</b></div><div class="fc-back">La <b>facies miasténica</b>, de la miastenia gravis. Lo característico es la <b>fatigabilidad</b>: empeora a lo largo del día y con el uso repetido.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué lesión produce la facies pseudobulbar y cómo se manifiesta?</b></div><div class="fc-back">Lesiones <b>bilaterales corticobulbares</b>. Se manifiesta con <b>risa o llanto espasmódico</b> incongruente con el estado emocional real.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Por qué se pide caminar con los ojos cerrados?</b></div><div class="fc-back">Porque el equilibrio se sostiene sobre vista, propiocepción y vestíbulo. Al quitar la vista, se desenmascara el fallo de las otras dos: si empeora mucho, la lesión es <b>propioceptiva o vestibular</b>; si no empeora, es <b>cerebelosa</b>.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Marcha de base amplia y zigzagueante que NO empeora al cerrar los ojos. ¿Qué ataxia?</b></div><div class="fc-back"><b>Ataxia cerebelosa</b> («marcha de ebrio»), con <b>Romberg negativo</b>. El cerebelo no se compensa con la vista, por eso cerrar los ojos cambia poco.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Marcha que empeora mucho al cerrar los ojos, con el paciente mirando el suelo. ¿Qué ataxia y qué vía?</b></div><div class="fc-back"><b>Ataxia sensitiva o tabética</b>, por interrupción de las <b>vías propioceptivas de los cordones posteriores</b>. <b>Romberg positivo</b>.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué marcha indica lesión unilateral del haz corticoespinal y cómo se llama?</b></div><div class="fc-back">La <b>marcha hemiparética espástica</b> o <b>«en segador»</b>: la pierna en extensión espástica describe un semicírculo hacia afuera. Causa típica: lesión vascular.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué marcha indica lesión bilateral del haz corticoespinal?</b></div><div class="fc-back">La <b>marcha paraparética espástica</b> o <b>«en tijeras»</b>, con las piernas cruzándose por aducción espástica. Indica disfunción de la <b>médula espinal</b>.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué músculo falla en la marcha en steppage y qué se ve?</b></div><div class="fc-back">El <b>tibial anterior</b>, que hace la dorsiflexión del pie. Resultado: <b>pie caído</b>; el paciente eleva mucho la rodilla para no arrastrar la punta.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué músculo falla en la marcha de Trendelenburg y cuál es su acción normal?</b></div><div class="fc-back">El <b>glúteo medio</b>, cuya acción normal es <b>elevar la pelvis del lado opuesto al que se apoya</b>. Al fallar, la pelvis <b>desciende del lado que no apoya</b>. Bilateral se llama marcha de pato.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué es la aprosexia y en qué se diferencia de la hipoprosexia?</b></div><div class="fc-back"><b>Aprosexia</b>: la atención <b>no puede fijarse</b> en absoluto, el paciente se distrae constantemente. <b>Hipoprosexia</b>: la atención está sólo <b>reducida, retardada o debilitada</b>, típica de procesos melancólicos.</div></div>
+  </div>
+</section>
+
+</div><!-- /#tab-neuro -->
