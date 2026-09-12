@@ -792,7 +792,7 @@
     <div id="pane-login">
       <p class="sub">Acceda con su cuenta para ver sus asignaturas.</p>
       <label>E-mail</label>
-      <input id="au-email" type="email" autocomplete="username" placeholder="su@email.com">
+      <input id="au-email" type="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="su@email.com">
       <label>Contraseña</label>
       <input id="au-pass" type="password" autocomplete="current-password" placeholder="••••••••"
              onkeydown="if(event.key==='Enter')authLogin()">
@@ -804,7 +804,7 @@
     <div id="pane-reset" class="hidden">
       <p class="sub">Poné tu e-mail y te enviamos un enlace para crear una contraseña nueva.</p>
       <label>E-mail</label>
-      <input id="rs-email" type="email" autocomplete="username" placeholder="su@email.com"
+      <input id="rs-email" type="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="su@email.com"
              onkeydown="if(event.key==='Enter')authReset()">
       <button onclick="authReset()">Enviar enlace</button>
       <button type="button" class="au-link" onclick="authSwitch('login')">← Volver a entrar</button>
@@ -816,7 +816,7 @@
       <label>Nombre completo</label>
       <input id="su-name" type="text" autocomplete="name" placeholder="Nombre y apellido">
       <label>E-mail</label>
-      <input id="su-email" type="email" autocomplete="username" placeholder="su@email.com">
+      <input id="su-email" type="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="su@email.com">
       <label>Teléfono <span style="color:#7f968f;">(contacto y soporte)</span></label>
       <div class="rm-phone-row">
         <select id="su-ddi">
@@ -1097,7 +1097,7 @@ function showKicked(msg){
    LOGIN
    ===================================================================== */
 async function authLogin(){
-  const email = document.getElementById('au-email').value.trim();
+  const email = document.getElementById('au-email').value.trim().toLowerCase();
   const pass  = document.getElementById('au-pass').value;
   const msg   = document.getElementById('au-msg');
   msg.className=''; msg.textContent = '';
@@ -1106,7 +1106,7 @@ async function authLogin(){
   if(error){
     let m = error.message || 'Error al iniciar sesión.';
     if(/Email not confirmed/i.test(m)) m = 'Debe confirmar su e-mail antes de entrar. Revise su correo.';
-    else if(/Invalid login credentials/i.test(m)) m = 'E-mail o contraseña incorrectos.';
+    else if(/Invalid login credentials/i.test(m)) m = 'E-mail o contraseña incorrectos. Revisá que el e-mail sea exactamente el mismo con el que creaste la cuenta; si no recordás la contraseña, usá «Recuperar contraseña».';
     msg.className=''; msg.textContent = m; return;
   }
   await afterLogin();
@@ -1127,7 +1127,7 @@ function authSwitch(which){
 
 /* envia o e-mail de recuperação de senha (fluxo nativo do Supabase) */
 async function authReset(){
-  const email = document.getElementById('rs-email').value.trim();
+  const email = document.getElementById('rs-email').value.trim().toLowerCase();
   const msg = document.getElementById('au-msg');
   msg.className=''; msg.textContent='';
   if(!email){ msg.textContent = 'Poné tu e-mail.'; return; }
@@ -1153,7 +1153,7 @@ function joinPhone(ddi, raw){
 /* cadastro de novo usuário (fica pendente de aprovação do admin) */
 async function authSignup(){
   const name  = document.getElementById('su-name').value.trim();
-  const email = document.getElementById('su-email').value.trim();
+  const email = document.getElementById('su-email').value.trim().toLowerCase();
   const ddi   = document.getElementById('su-ddi').value;
   const phone = joinPhone(ddi, document.getElementById('su-phone').value);
   const pass  = document.getElementById('su-pass').value;
