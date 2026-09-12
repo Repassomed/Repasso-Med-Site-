@@ -1110,6 +1110,17 @@ footer strong { color:var(--gold-soft); }
   width:100%;aspect-ratio:3/2;background-size:cover;background-position:center;
   border-radius:14px;border:1.5px solid var(--n-line);
 }
+/* Las infografías reales son <img>, no contenedores con background-image.
+   Sobre un <img>, el `aspect-ratio:3/2` de arriba reemplaza la proporción
+   intrínseca y `object-fit:fill` la estira para llenar esa caja: una lámina
+   4:3 quedaba comprimida un 11 % en vertical. Cada imagen conserva acá su
+   proporción natural; la regla de arriba sigue intacta para cualquier
+   `div.rmc-photo` con background-image, que sí necesita una proporción
+   declarada para tener altura. Selector más específico que el anterior
+   (id + 2 clases + tipo), así que no depende del orden del archivo. */
+#materias-container .rm-cuaderno img.rmc-photo{
+  aspect-ratio:auto;height:auto;object-fit:contain;
+}
 #materias-container .rm-cuaderno figure.rmc-fig{margin:1.7rem 0;}
 #materias-container .rm-cuaderno figure.rmc-fig figcaption{
   font-family:var(--n-font-u);font-size:.85rem;color:var(--n-mute);line-height:1.65;margin-top:.7rem;font-style:normal;
