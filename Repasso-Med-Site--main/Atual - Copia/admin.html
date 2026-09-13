@@ -69,6 +69,15 @@
   .subj input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent-lt);flex:0 0 auto;cursor:pointer;}
   .subj .sname{font-weight:600;flex:1;}
   .subj .sexp{font-size:11px;color:var(--ink-soft);}
+  /* agrupamento por semestre no detalhe do usuário (dinâmico: subjects.semester) */
+  .sem-group{margin:0 0 16px;}
+  .sem-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:8px 10px;border-radius:10px;background:rgba(29,122,79,.08);
+    border:1px solid rgba(29,122,79,.18);margin-bottom:8px;}
+  .sem-bar .sem-title{font-weight:700;flex:1;min-width:150px;}
+  .sem-bar .sem-count{font-size:11px;color:var(--ink-soft);font-weight:400;}
+  .sem-bar button{font-size:11px;padding:5px 9px;}
+  @media(max-width:560px){ .sem-bar .sem-title{flex:1 0 100%;} }
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
   .back{background:none;border:none;color:var(--ink-soft);padding:0;margin-bottom:14px;font-size:13px;}
   .back:hover{color:var(--ink);}
@@ -504,6 +513,7 @@
         <button class="btn-gold"     onclick="renewAll()">Renovar acesso</button>
         <button class="btn-ghost"    onclick="toggleAccount()" id="btnToggle">Bloquear conta</button>
         <button class="btn-gold"     onclick="forceRefresh()">Forzar actualización del navegador</button>
+        <button class="btn-ghost"    onclick="sendPasswordReset()" id="btnReset">Enviar redefinição de senha</button>
       </div>
       <p class="muted" style="margin:8px 0 0;">
         «Forzar actualización» sirve cuando el alumno ya tiene el acceso liberado
@@ -1900,7 +1910,23 @@ async function renderSubjects(){
   grants.forEach(g=>{ map[g.subject_slug] = g.expires_at; planMap[g.subject_slug] = g.plan; });
   const grid = document.getElementById('subjectsGrid');
   grid.innerHTML = '';
-  SUBJECTS.forEach(s=>{
+
+  /* Agrupa por subjects.semester. NÃO há lista fixa de semestres: o que
+     existir no banco aparece, então uma matéria nova cai sozinha na seção
+     certa e um 8.º semestre futuro renderiza sem tocar neste código.
+     Matérias sem semestre definido ficam num grupo próprio no fim. */
+  const groups = new Map();
+  (SUBJECTS || []).forEach(s=>{
+    const k = (s.semester === null || s.semester === undefined || s.semester === '')
+      ? null : Number(s.semester);
+    if(!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(s);
+  });
+  const keys = [...groups.keys()].sort((a,b)=>{
+    if(a === null) return 1; if(b === null) return -1; return a - b;
+  });
+
+  const cell = (s)=>{
     const granted = Object.prototype.hasOwnProperty.call(map, s.slug);
     const exp = map[s.slug];
     let expTxt = '';
@@ -1916,47 +1942,165 @@ async function renderSubjects(){
       <input type="checkbox" ${granted?'checked':''} onchange="toggleSubject('${s.slug}', this.checked)">
       <span class="sname">${escapeHtml(s.name)}</span>
       <span class="sexp">${escapeHtml(expTxt)}</span>`;
-    grid.appendChild(div);
+    return div;
+  };
+
+  keys.forEach(k=>{
+    const list = groups.get(k);
+    const libs = list.filter(s=>Object.prototype.hasOwnProperty.call(map, s.slug)).length;
+    const wrap = document.createElement('div');
+    wrap.className = 'sem-group';
+    const bar = document.createElement('div');
+    bar.className = 'sem-bar';
+    const titulo = (k === null) ? 'Sem semestre definido' : (k + '.º semestre');
+    bar.innerHTML = `
+      <span class="sem-title">${escapeHtml(titulo)}
+        <span class="sem-count">· ${libs}/${list.length} liberada(s)</span></span>`;
+    if(k !== null){
+      const bG = document.createElement('button');
+      bG.className = 'btn-primary'; bG.textContent = 'Liberar semestre';
+      bG.onclick = ()=>grantSemester(k);
+      const bR = document.createElement('button');
+      bR.className = 'btn-danger'; bR.textContent = 'Remover semestre';
+      bR.onclick = ()=>revokeSemester(k);
+      const bN = document.createElement('button');
+      bN.className = 'btn-gold'; bN.textContent = 'Renovar semestre';
+      bN.onclick = ()=>renewSemester(k);
+      bar.appendChild(bG); bar.appendChild(bR); bar.appendChild(bN);
+    }
+    wrap.appendChild(bar);
+    list.forEach(s=>wrap.appendChild(cell(s)));
+    grid.appendChild(wrap);
   });
+}
+
+/* ---- AÇÕES POR SEMESTRE ----------------------------------------------
+   Reutilizam exatamente a mesma gravação de uma matéria isolada
+   (grantOne/revokeOne, que o checkbox também usa). Não existe um segundo
+   caminho de acesso: é o mesmo upsert/delete em user_subjects, aplicado às
+   matérias cujo subjects.semester bate com o semestre escolhido. */
+function subjectsOfSemester(sem){
+  return (SUBJECTS || []).filter(s => Number(s.semester) === Number(sem));
+}
+
+async function grantSemester(sem){
+  const list = subjectsOfSemester(sem);
+  if(!list.length) return;
+  if(!confirm('Liberar as ' + list.length + ' matérias do ' + sem + '.º semestre para este usuário?')) return;
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Processando...';
+  let ok=0, fail=0, lastErr='';
+  for(const s of list){
+    const r = await grantOne(s.slug);
+    if(r.ok) ok++; else { fail++; lastErr = r.error || lastErr; }
+  }
+  msg.className = fail ? 'err' : 'ok';
+  msg.textContent = ok + ' matéria(s) liberada(s) do ' + sem + '.º semestre'
+    + (fail ? (' · ' + fail + ' falharam: ' + lastErr) : ' ✓');
+  await renderSubjects();
+}
+
+async function revokeSemester(sem){
+  const list = subjectsOfSemester(sem);
+  if(!list.length) return;
+  if(!confirm('REMOVER o acesso às ' + list.length + ' matérias do ' + sem + '.º semestre deste usuário?')) return;
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Processando...';
+  const grants = await getGrants();
+  const tem = new Set(grants.map(g=>g.subject_slug));
+  let ok=0, fail=0, lastErr='';
+  for(const s of list){
+    if(!tem.has(s.slug)) continue;          // não tenta remover o que não existe
+    const r = await revokeOne(s.slug);
+    if(r.ok) ok++; else { fail++; lastErr = r.error || lastErr; }
+  }
+  msg.className = fail ? 'err' : 'ok';
+  msg.textContent = ok + ' matéria(s) removida(s) do ' + sem + '.º semestre'
+    + (fail ? (' · ' + fail + ' falharam: ' + lastErr) : ' ✓');
+  await renderSubjects();
+}
+
+/* Renovar o semestre = reaplicar a data de expiração escolhida às matérias
+   desse semestre que JÁ estão liberadas. Não libera nada novo. */
+async function renewSemester(sem){
+  const iso = readExpiry();
+  if(!iso){ alert('Escolha uma nova data de expiração antes de renovar.'); return; }
+  const list = subjectsOfSemester(sem);
+  const grants = await getGrants();
+  const tem = new Set(grants.map(g=>g.subject_slug));
+  const alvo = list.filter(s=>tem.has(s.slug));
+  if(!alvo.length){ alert('Nenhuma matéria liberada neste semestre para renovar.'); return; }
+  if(!confirm('Renovar a expiração das ' + alvo.length + ' matérias já liberadas do ' + sem + '.º semestre?')) return;
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Processando...';
+  let ok=0, fail=0, lastErr='';
+  for(const s of alvo){
+    const r = await grantOne(s.slug);       // mesmo upsert: atualiza expires_at
+    if(r.ok) ok++; else { fail++; lastErr = r.error || lastErr; }
+  }
+  msg.className = fail ? 'err' : 'ok';
+  msg.textContent = ok + ' matéria(s) renovada(s) do ' + sem + '.º semestre'
+    + (fail ? (' · ' + fail + ' falharam: ' + lastErr) : ' ✓');
+  await renderSubjects();
+}
+
+/* ---- GRAVAÇÃO DE UMA MATÉRIA (caminho único de acesso) ----------------
+   O checkbox e as ações por semestre chamam estas duas funções. Mantêm
+   exatamente o upsert/delete que já existia, com o .select() de confirmação
+   que revela falha de policy de RLS (sem ele, o erro fica invisível). */
+async function grantOne(slug){
+  const expiry = readExpiry();
+  const { data:{ user } } = await sb.auth.getUser();
+  const { data, error } = await sb.from('user_subjects')
+    .upsert({ user_id: CURRENT.id, subject_slug: slug, expires_at: expiry,
+              granted_by: user.id, plan: readPlan() },
+            { onConflict: 'user_id,subject_slug' })
+    .select();
+  if(error) return { ok:false, error: error.message };
+  if(!data || !data.length)
+    return { ok:false, error:'gravação não confirmada pelo banco (policy de UPDATE em user_subjects)' };
+  return { ok:true };
+}
+
+async function revokeOne(slug){
+  const { data, error } = await sb.from('user_subjects')
+    .delete().eq('user_id', CURRENT.id).eq('subject_slug', slug)
+    .select();
+  if(error) return { ok:false, error: error.message };
+  if(!data || !data.length)
+    return { ok:false, error:'remoção não confirmada pelo banco (policy de DELETE em user_subjects)' };
+  return { ok:true };
 }
 
 /* liberar / bloquear UMA disciplina (o checkbox) */
 async function toggleSubject(slug, checked){
   const msg = document.getElementById('detailMsg');
   msg.textContent = 'Salvando...';
-  if(checked){
-    const expiry = readExpiry();
-    const { data:{ user } } = await sb.auth.getUser();
-    /* FIX (expiração/revogação): .select() no final confirma se a linha foi
-       realmente gravada (upsert em conflito exige UPDATE, que depende de
-       policy de RLS). Sem isso, uma falha de permissão fica invisível. */
-    const { data, error } = await sb.from('user_subjects')
-      .upsert({ user_id: CURRENT.id, subject_slug: slug, expires_at: expiry,
-                granted_by: user.id, plan: readPlan() },
-              { onConflict: 'user_id,subject_slug' })
-      .select();
-    if(error){ msg.className='err'; msg.textContent='Erro: '+error.message; return; }
-    if(!data || !data.length){
-      msg.className='err';
-      msg.textContent='A gravação não foi confirmada pelo banco (verifique as policies de UPDATE em user_subjects).';
-      await renderSubjects();
-      return;
-    }
-  } else {
-    /* FIX (expiração/revogação): idem, confirma se o DELETE realmente removeu algo */
-    const { data, error } = await sb.from('user_subjects')
-      .delete().eq('user_id', CURRENT.id).eq('subject_slug', slug)
-      .select();
-    if(error){ msg.className='err'; msg.textContent='Erro: '+error.message; return; }
-    if(!data || !data.length){
-      msg.className='err';
-      msg.textContent='A remoção não foi confirmada pelo banco (verifique as policies de DELETE em user_subjects).';
-      await renderSubjects();
-      return;
-    }
-  }
+  const r = checked ? await grantOne(slug) : await revokeOne(slug);
+  if(!r.ok){ msg.className='err'; msg.textContent='Erro: '+r.error; await renderSubjects(); return; }
   msg.className='ok'; msg.textContent='Salvo ✓';
   await renderSubjects();
+}
+
+/* ---- REDEFINIÇÃO DE SENHA PELO ADMIN --------------------------------
+   Dispara o MESMO fluxo seguro que o aluno usa no site. O admin não vê,
+   não escolhe e não armazena senha nenhuma: o Supabase manda o link ao
+   e-mail do aluno e o aluno define a senha no site. Usa a chave anon —
+   nenhuma service_role no navegador. */
+async function sendPasswordReset(){
+  if(!CURRENT || !CURRENT.email){ alert('Abra um usuário primeiro.'); return; }
+  if(!confirm('Enviar e-mail de redefinição de senha para ' + CURRENT.email + '?\n\nO aluno recebe um link e escolhe a nova senha. Você não verá a senha dele.')) return;
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Enviando…';
+  const btn = document.getElementById('btnReset'); if(btn) btn.disabled = true;
+  try{
+    const { error } = await sb.auth.resetPasswordForEmail(CURRENT.email, {
+      redirectTo: location.origin + '/?recovery=1'
+    });
+    if(error){ msg.className='err'; msg.textContent='Não foi possível enviar: ' + error.message; return; }
+    msg.className='ok';
+    msg.textContent='E-mail de redefinição enviado para ' + CURRENT.email + ' ✓ — peça que o aluno confira a caixa de entrada e o spam.';
+  }catch(e){
+    msg.className='err'; msg.textContent='Erro de conexão ao enviar o e-mail.';
+  }finally{
+    if(btn) btn.disabled = false;
+  }
 }
 
 /* plano escolhido para novas liberações */
