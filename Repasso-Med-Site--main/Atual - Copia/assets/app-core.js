@@ -487,22 +487,27 @@ var RepassoMed = (function(){
      ================================================================= */
   var sugBox = null, sugTab = null;
 
-  /* Card próprio, fixo na lateral esquerda logo abaixo do botão do
-     índice. Fica fora do painel de propósito: assim o aluno vê a caixa
-     sem precisar abrir o índice, e ela não some quando ele escolhe um
-     bloco. Um por matéria, criado junto com o índice. */
+  /* Atalho fixo na lateral esquerda, no topo da coluna de controles.
+     É só o envelope: o texto permanente «Caja de sugerencias» roubava
+     largura da leitura em toda matéria, e o acesso principal agora vive
+     no cabeçalho, ao lado da Loja. Aqui fica o atalho discreto, para
+     quem já está lendo e não quer subir até o topo.
+
+     O rótulo não some — vai para `aria-label` e `title`, que é onde o
+     leitor de tela e o tooltip o procuram.
+
+     Um por matéria, criado junto com o índice, e ABERTO ANTES dele na
+     ordem visual: envelope → volver arriba → índice. */
   function cardSugestoes(tabEl, nav){
     if (tabEl.querySelector(':scope > .rm-sug-fab')) return;
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'rm-sug-fab';
     b.setAttribute('aria-label', 'Abrir la caja de sugerencias');
-    b.innerHTML =
-      '<span class="ic">' + svgIcon(TOC_ICONS.buzon) + '</span>' +
-      '<span class="tx"><b>Caja de sugerencias</b>' +
-        '<small>tu opinión mejora la materia</small></span>';
+    b.setAttribute('title', 'Caja de sugerencias');
+    b.innerHTML = '<span class="ic">' + svgIcon(TOC_ICONS.buzon) + '</span>';
     b.addEventListener('click', function(){ abrirSugestoes(tabEl); });
-    if (nav && nav.parentNode) nav.parentNode.insertBefore(b, nav.nextSibling);
+    if (nav && nav.parentNode) nav.parentNode.insertBefore(b, nav);
     else tabEl.insertBefore(b, tabEl.firstChild);
   }
 
@@ -972,8 +977,22 @@ var RepassoMed = (function(){
     document.querySelectorAll('#materias-container > .tab-content').forEach(enhanceTab);
   }
 
+  /* Chamada pelo botão do cabeçalho, ao lado da Loja de matérias.
+     Abre A MESMA gaveta do envelope da lateral — `abrirSugestoes` é a
+     função que já existia, e `#rm-sug` continua sendo instância única no
+     `<body>`. Dois atalhos, um painel: nada de segundo modal, segundo
+     estado ou segundo listener.
+
+     Sem argumento, adota a matéria aberta no momento, que é o que dá o
+     `subject_slug` da sugestão. Fora de uma matéria (início, loja) fica
+     sem matéria, e o envio continua válido. */
+  function abrirCaixaSugestoes(tabEl){
+    abrirSugestoes(tabEl ||
+      document.querySelector('#materias-container > .tab-content.active[id^="tab-"]') || null);
+  }
+
   return { enhanceAll: enhanceAll, enhanceTab: enhanceTab, normalizeQuizzes: normalizeQuizzes,
-           estimarAlturas: estimarAlturas };
+           estimarAlturas: estimarAlturas, abrirSugestoes: abrirCaixaSugestoes };
 })();
 
 window.RepassoMed = RepassoMed;
