@@ -714,9 +714,13 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     var box = document.createElement('div');
     box.className = 'rm-tools';
     box.innerHTML =
-      '<button type="button" class="rm-tools-btn rm-top" title="Volver arriba" aria-label="Volver arriba">' +
+      /* Só «Arriba» no rótulo visível: «Volver arriba» custava quase o
+         dobro da largura sobre a leitura, e a seta já diz o resto. O
+         rótulo inteiro continua no title e no aria-label. */
+      '<button type="button" class="rm-tools-btn rm-top" title="Volver arriba" ' +
+        'aria-label="Volver arriba, al inicio de la materia">' +
         ico('<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>') +
-        '<span class="tx">Volver arriba</span></button>';
+        '<span class="tx">Arriba</span></button>';
 
     var dir = document.createElement('div');
     dir.className = 'rm-tools-r';

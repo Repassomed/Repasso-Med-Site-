@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Spectral:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
 <!-- CSS compartilhado por todas as matérias -->
-<link rel="stylesheet" href="assets/styles.css?v=20260915">
+<link rel="stylesheet" href="assets/styles.css?v=20260916">
 
 <!-- SDK do Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -885,11 +885,11 @@
 
 
 <!-- Funções de interação das matérias (switchTab, checkAnswer, checkTF, toggleAnswer, RepassoMed) -->
-<script src="assets/app-core.js?v=20260915"></script>
+<script src="assets/app-core.js?v=20260916"></script>
 <!-- Ferramentas globais de estudo: voltar ao topo, marca-texto + borracha,
      «continuar de onde paraste» e zoom dos infográficos. Aditivo: envolve
      RepassoMed.enhanceAll e injeta o próprio CSS. -->
-<script src="assets/rm-tools.js?v=20260915"></script>
+<script src="assets/rm-tools.js?v=20260916"></script>
 
 <script>
 /* =====================================================================
@@ -933,6 +933,7 @@ const CATALOGO = [
   { slug:'guarani', tab:'guarani', file:'materias/guarani.html', title:'Guaraní', sub:'Saludos · Cuerpo humano · Patologías · Diálogos clínicos' },
   { slug:'ortopedia', tab:'orto', file:'materias/ortopedia.html', title:'Ortopedia y Traumatología', sub:'Diagnóstico · Partes blandas · Fracturas' },
   { slug:'oftalmologia', tab:'oftalmo', file:'materias/oftalmologia.html', title:'Oftalmología', sub:'Ojo rojo · Catarata · Glaucoma · Retina' },
+  { slug:'neurologia', tab:'neuro', file:'materias/neurologia.html', title:'Neurología', sub:'Localización · Pares craneales · Síndromes' },
 ];
 
 /* Semestre de cada matéria. A VERDADE vem do banco (subjects.semester,
@@ -946,7 +947,7 @@ const SEMESTRE_FALLBACK = {
   'semiologia-ii':6, 'farmacologia-ii':6, 'anatomia-patologica-ii':6, 'medicina-legal':6,
   'anatomia-patologica-ii-practica':6,
   'fisiopatologia-ii':6, 'toxicologia':7, 'dermatologia':7, 'ortopedia':7,
-  'oftalmologia':7,
+  'oftalmologia':7, 'neurologia':7,
   'guarani':2
 };
 /* O motor (app-core.js) precisa do catálogo para escrever o nome da
@@ -1505,6 +1506,7 @@ const RM_SUBJ_STYLE = {
   'dermatologia':                 { ic:'tejido',  c:'#e0663d' },
   'ortopedia':                    { ic:'hueso',   c:'#8a5a2b' },
   'oftalmologia':                 { ic:'ojo',     c:'#0a7d72' },
+  'neurologia':                   { ic:'esteto',  c:'#4b32b8' },
 };
 
 /* hex → rgba com alfa, para o fundo suave do ícone */
