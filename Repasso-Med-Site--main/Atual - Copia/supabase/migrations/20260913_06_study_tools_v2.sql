@@ -1,6 +1,6 @@
 -- =====================================================================
 -- REPASSO MED · Ferramentas de estudo V2 (toolbox · caneta · anotações)
--- Data: 2026-09-16
+-- Data: 2026-09-13
 --
 -- ADITIVO E IDEMPOTENTE.
 -- Não faz DROP de tabela, não faz TRUNCATE, não desabilita RLS, não
@@ -14,7 +14,7 @@
 --   3) cria public.user_notes        — «Minhas anotações»;
 --   4) cria public.study_tools_beta  — quem recebe a V2 (fail closed).
 --
--- Rollback: ver 20260916_01_study_tools_v2_rollback.sql
+-- Rollback: ver 20260913_06_study_tools_v2_rollback.sql
 -- =====================================================================
 
 
@@ -37,7 +37,7 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 comment on constraint user_highlights_color_valid on public.user_highlights is
-  'Cinco cores do marcador. «yellow» entrou na V2 (2026-09-16) e é o padrão do cliente novo; as quatro antigas continuam em uso.';
+  'Cinco cores do marcador. «yellow» entrou na V2 (2026-09-13) e é o padrão do cliente novo; as quatro antigas continuam em uso.';
 
 
 -- ---------------------------------------------------------------------

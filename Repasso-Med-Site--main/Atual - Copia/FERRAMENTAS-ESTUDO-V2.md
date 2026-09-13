@@ -76,20 +76,56 @@ Verificado em teste automatizado com quatro perfis (ver §10).
 
 ## 4 · Toolbox
 
-Minimizada por omissão: um botão de 46 px na margem direita, vertical ao meio
-no desktop e acima da zona do polegar no telemóvel. Um toque expande **para
-dentro** da tela.
+**Um trilho vertical de 58 px que nunca cresce em largura.** Minimizada por
+omissão: só o botão do estojo, encostado à direita e centrado na vertical
+(no telemóvel, acima da zona do polegar). Um toque abre o trilho **para
+baixo**, com as ferramentas uma sob a outra:
 
-Dentro: **Marcador · Lápiz · Goma · Deshacer · Mis apuntes**. Os sub-painéis
-(cores, espessuras) só aparecem para a ferramenta activa.
+```
+      [ estojo ]        ← fechada
+          ↓
+     [ marca-texto ]
+     [ caneta ]
+     [ borracha ]
+     ───────────
+     [ desfazer ]
+     [ anotações ]
+```
 
-`ESC` fecha, por esta ordem: gaveta de anotações → ferramenta activa → painel.
-Tocar fora minimiza, mas nunca no meio de um traço nem com uma ferramenta armada.
+**Sem rótulos permanentes.** O nome de cada ferramenta vive no `title` e no
+`aria-label`; a coluna fica com ícone e nada mais.
 
-Abaixo de 560 px os rótulos desaparecem e fica só o ícone — o nome continua no
-`title` e no `aria-label`.
+**Subcontrolos também em coluna.** As cinco cores do marcador e as três cores
++ três grossuras da caneta abrem *dentro* do trilho, empilhadas — a caixa
+continua com os mesmos 58 px. Medido em seis viewports: 58 px em todos
+(52 px abaixo de 560 px), aberta ou fechada, com ou sem subcontrolos.
 
----
+**Estado activo** não depende da cor: o botão fica *carregado para dentro*
+(`inset box-shadow` + fundo mais escuro) **e** ganha uma barra dourada de 3 px
+na margem esquerda. O estojo, quando há ferramenta armada, ganha um anel
+dourado. Mais `aria-pressed` em todos.
+
+`ESC` fecha por esta ordem: gaveta de anotações → ferramenta activa → trilho.
+Tocar fora minimiza, mas nunca no meio de um traço nem com ferramenta armada.
+
+### Ícones
+
+Todos refeitos como SVG inline próprios, no vocabulário do caderno do Repasso
+Med: azul-marinho da marca, dourado nos detalhes, e a cor da própria
+ferramenta no que interessa. Cada um tem gradiente curto e camadas para dar
+profundidade — sem filtros, sem biblioteca, sem PNG. Sete ícones em ~4 kB.
+
+| Ícone | Desenho |
+|---|---|
+| Estojo (fechada) | maleta azul-marinho com faixa dourada e pega |
+| Marca-texto | corpo azul-marinho, ponta chanfrada amarela, risco amarelo por baixo |
+| Caneta | corpo azul com anel dourado e bico escuro |
+| Borracha | bloco rosa com face lateral mais escura e sombra |
+| Desfazer | seta azul curva com ponta cheia |
+| Anotações | post-it amarelo com canto dobrado e duas linhas |
+
+Os ids dos gradientes são únicos por ícone, para dois nunca se pisarem na
+mesma página.
 
 ## 5 · Marcador — um clique
 
@@ -184,7 +220,7 @@ Gravação com *debounce* de 700 ms e no `blur`, nunca por tecla. Apagar pede co
 
 ## 9 · Schema e RLS
 
-`supabase/migrations/20260916_01_study_tools_v2.sql` — aditiva e idempotente.
+`supabase/migrations/20260913_06_study_tools_v2.sql` — aditiva e idempotente.
 Sem `DROP` de tabela, sem `TRUNCATE`, sem desabilitar RLS, sem tocar em Auth,
 `profiles`, `orders`, `products` ou dispositivos.
 
@@ -200,7 +236,7 @@ concorrência: com tablet e desktop abertos ao mesmo tempo, cada um insere e
 apaga os seus traços e o pior caso é um traço a mais — nunca todos os desenhos
 do bloco perdidos por uma escrita que chegou depois.
 
-Rollback em `20260916_01_study_tools_v2_rollback.sql`. **Para apenas desligar a
+Rollback em `20260913_06_study_tools_v2_rollback.sql`. **Para apenas desligar a
 V2 sem perder nada, não corra o rollback**: basta
 `update public.study_tools_beta set enabled = false;` e pôr `ROLLOUT = 'off'`.
 

@@ -170,80 +170,111 @@ body.rm2-drawing{ -webkit-user-select:none; user-select:none; }
 #rm2-ink path.ink-red  { stroke:#c0392b; }
 body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
-/* ---------- toolbox -------------------------------------------------- */
+/* ---------- toolbox: um trilho vertical estreito ---------------------- */
+/* Regra de ouro do desenho: o trilho tem 58 px e NUNCA cresce em largura.
+   Cores e grossuras abrem para baixo, dentro do proprio trilho, para nao
+   comer faixa de leitura — sobretudo em tablet. */
 .rm2-box{
-  position:fixed; right:max(10px, env(safe-area-inset-right)); z-index:2147483000;
+  --rm2-brand:#13314f; --rm2-deep:#081726; --rm2-gold:#d8a32a;
+  position:fixed; right:max(9px, env(safe-area-inset-right)); z-index:2147483000;
   top:50%; transform:translateY(-50%);
-  display:flex; flex-direction:column; align-items:flex-end; gap:8px;
-  font-family:inherit;
+  display:flex; flex-direction:column; align-items:center; gap:9px; width:58px;
 }
 .rm2-fab{
-  width:46px; height:46px; border-radius:14px; border:1px solid rgba(16,36,61,.14);
-  background:#fff; color:#10243D; cursor:pointer;
+  position:relative; width:52px; height:52px; border-radius:17px; padding:0;
+  border:1px solid rgba(16,36,61,.13); cursor:pointer;
+  background:linear-gradient(175deg,#ffffff 0%,#f2f6fb 100%);
   display:grid; place-items:center;
-  box-shadow:0 6px 22px rgba(8,23,38,.16), 0 1px 2px rgba(8,23,38,.10);
+  box-shadow:0 8px 20px rgba(8,23,38,.17), inset 0 1px 0 #fff, 0 2px 4px rgba(8,23,38,.08);
   transition:transform .16s ease, box-shadow .16s ease;
 }
-.rm2-fab:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(8,23,38,.20); }
-.rm2-fab:focus-visible{ outline:3px solid #10243D; outline-offset:2px; }
-.rm2-fab svg{ width:22px; height:22px; }
-.rm2-fab.armed{ background:#10243D; color:#fff; border-color:#10243D; }
-.rm2-fab .dot{
-  position:absolute; margin:22px 0 0 22px; width:9px; height:9px; border-radius:50%;
-  border:2px solid #fff; box-shadow:0 0 0 1px rgba(8,23,38,.2);
-}
+.rm2-fab:hover{ transform:translateY(-1.5px); box-shadow:0 12px 26px rgba(8,23,38,.22), inset 0 1px 0 #fff; }
+.rm2-fab:active{ transform:translateY(0); }
+.rm2-fab:focus-visible{ outline:3px solid var(--rm2-brand); outline-offset:3px; }
+.rm2-fab svg{ width:30px; height:30px; display:block; }
+.rm2-fab.armed{ box-shadow:0 0 0 2.5px var(--rm2-gold), 0 8px 20px rgba(8,23,38,.20), inset 0 1px 0 #fff; }
+.rm2-box.open .rm2-fab{ background:linear-gradient(175deg,#f7fafd 0%,#e9f0f7 100%); }
 
 .rm2-panel{
-  display:none; flex-direction:column; gap:6px;
-  background:rgba(255,255,255,.97); backdrop-filter:saturate(1.3) blur(6px);
-  border:1px solid rgba(16,36,61,.13); border-radius:16px; padding:7px;
-  box-shadow:0 14px 40px rgba(8,23,38,.20), 0 2px 6px rgba(8,23,38,.10);
-  max-height:min(78vh, 620px); overflow:auto; -webkit-overflow-scrolling:touch;
+  display:none; flex-direction:column; align-items:center; gap:3px;
+  width:58px; padding:7px 4px;
+  background:linear-gradient(180deg,rgba(255,255,255,.985) 0%,rgba(246,249,253,.985) 100%);
+  border:1px solid rgba(16,36,61,.12); border-radius:20px;
+  box-shadow:0 16px 42px rgba(8,23,38,.20), 0 2px 6px rgba(8,23,38,.10), inset 0 1px 0 #fff;
+  max-height:min(76vh,660px); overflow-y:auto; overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
+.rm2-panel::-webkit-scrollbar{ width:0; }
 .rm2-box.open .rm2-panel{ display:flex; }
-.rm2-box.open .rm2-fab{ background:#10243D; color:#fff; border-color:#10243D; }
 
 .rm2-btn{
-  display:flex; align-items:center; gap:9px; width:100%;
-  padding:8px 11px 8px 9px; border-radius:11px; border:1px solid transparent;
-  background:transparent; color:#10243D; cursor:pointer;
-  font-size:13.5px; font-weight:600; line-height:1.1; white-space:nowrap; text-align:left;
+  position:relative; width:44px; height:44px; flex:0 0 44px; padding:0;
+  border:1px solid transparent; border-radius:14px; background:transparent;
+  cursor:pointer; display:grid; place-items:center;
+  transition:background .13s ease, box-shadow .13s ease, transform .13s ease;
 }
-.rm2-btn svg{ width:19px; height:19px; flex:0 0 19px; }
-.rm2-btn:hover{ background:rgba(16,36,61,.06); }
-.rm2-btn:focus-visible{ outline:3px solid #10243D; outline-offset:1px; }
-.rm2-btn.on{ background:#10243D; color:#fff; }
-.rm2-btn[disabled]{ opacity:.38; cursor:default; }
+.rm2-btn svg{ width:27px; height:27px; display:block; }
+.rm2-btn:hover{ background:rgba(19,49,79,.055); }
+.rm2-btn:focus-visible{ outline:3px solid var(--rm2-brand); outline-offset:1px; }
+.rm2-btn[disabled]{ opacity:.32; cursor:default; }
 .rm2-btn[disabled]:hover{ background:transparent; }
-.rm2-sep{ height:1px; background:rgba(16,36,61,.10); margin:2px 4px; }
+/* ESTADO ACTIVO: carregado para dentro + barra dourada a esquerda.
+   Relevo e marca de posicao, nunca so a cor. */
+.rm2-btn.on{
+  background:linear-gradient(180deg,#e6edf6 0%,#d7e2ef 100%);
+  border-color:rgba(19,49,79,.16);
+  box-shadow:inset 0 2px 5px rgba(8,23,38,.17), inset 0 -1px 0 rgba(255,255,255,.7);
+  transform:translateY(.5px);
+}
+.rm2-btn.on::before{
+  content:""; position:absolute; left:-4px; top:11px; width:3px; height:22px;
+  border-radius:3px; background:var(--rm2-gold); box-shadow:0 0 0 1px rgba(179,133,26,.25);
+}
+.rm2-sep{ width:26px; height:1px; background:rgba(16,36,61,.12); margin:4px 0; flex:0 0 1px; }
 
-.rm2-sub{ display:none; padding:2px 4px 6px; }
-.rm2-sub.on{ display:block; }
-.rm2-swatches{ display:flex; gap:6px; flex-wrap:wrap; }
-.rm2-swatches button{
-  width:26px; height:26px; border-radius:9px; cursor:pointer;
-  border:2px solid rgba(16,36,61,.18);
+/* ---- subcontrolos: sempre em coluna, sempre dentro dos 58 px -------- */
+.rm2-sub{ display:none; flex-direction:column; align-items:center; gap:5px; padding:5px 0 6px; }
+.rm2-sub.on{ display:flex; }
+.rm2-sw{
+  width:26px; height:26px; flex:0 0 26px; padding:0; cursor:pointer; position:relative;
+  border-radius:9px; border:1.5px solid rgba(16,36,61,.16);
+  box-shadow:0 1px 2px rgba(8,23,38,.12), inset 0 1px 0 rgba(255,255,255,.45);
+  transition:transform .12s ease, box-shadow .12s ease;
 }
-.rm2-swatches button:focus-visible{ outline:3px solid #10243D; outline-offset:2px; }
-.rm2-swatches button[aria-checked="true"]{ border-color:#10243D; transform:scale(1.1); }
-.rm2-swatches button[aria-checked="true"]::after{
-  content:"✓"; display:block; font-size:13px; line-height:22px; text-align:center;
-  color:#10243D; font-weight:800;
+.rm2-sw:hover{ transform:scale(1.07); }
+.rm2-sw:focus-visible{ outline:3px solid var(--rm2-brand); outline-offset:2px; }
+.rm2-sw[aria-checked="true"]{
+  border-color:var(--rm2-brand);
+  box-shadow:0 0 0 2px rgba(19,49,79,.18), 0 2px 5px rgba(8,23,38,.20);
+  transform:scale(1.07);
 }
-.rm2-sw-yellow{ background:rgba(255,214,0,.62); } .rm2-sw-red{ background:rgba(255,86,86,.62); }
-.rm2-sw-blue{ background:rgba(64,150,255,.60); }  .rm2-sw-green{ background:rgba(46,196,110,.60); }
-.rm2-sw-pink{ background:rgba(255,99,190,.58); }
-.rm2-sw-black{ background:#10243D; } .rm2-sw-pblue{ background:#1f5fd0; } .rm2-sw-pred{ background:#c0392b; }
-.rm2-swatches button[data-pc][aria-checked="true"]::after{ color:#fff; }
+.rm2-sw[aria-checked="true"]::after{
+  content:""; position:absolute; inset:0; margin:auto; width:8px; height:5px;
+  border-left:2.2px solid #10243D; border-bottom:2.2px solid #10243D;
+  transform:rotate(-45deg) translate(1px,-2px);
+}
+.rm2-sw[data-pc][aria-checked="true"]::after{ border-color:#fff; }
+.rm2-sw-yellow{ background:linear-gradient(160deg,#ffe373,#f5c518); }
+.rm2-sw-red{    background:linear-gradient(160deg,#ff9a9a,#f1616a); }
+.rm2-sw-blue{   background:linear-gradient(160deg,#93c6ff,#3f8fe0); }
+.rm2-sw-green{  background:linear-gradient(160deg,#96e8b8,#35b97a); }
+.rm2-sw-pink{   background:linear-gradient(160deg,#ffb0dd,#ef62b4); }
+.rm2-sw-black{  background:linear-gradient(160deg,#3a5473,#10243D); }
+.rm2-sw-pblue{  background:linear-gradient(160deg,#4f8ee6,#1f5fd0); }
+.rm2-sw-pred{   background:linear-gradient(160deg,#e0645a,#c0392b); }
 
-.rm2-widths{ display:flex; gap:6px; margin-top:6px; }
-.rm2-widths button{
-  flex:1; height:28px; border-radius:9px; cursor:pointer; background:#fff;
-  border:1px solid rgba(16,36,61,.18); display:grid; place-items:center;
+.rm2-w{
+  width:30px; height:22px; flex:0 0 22px; padding:0; cursor:pointer;
+  border-radius:8px; border:1px solid rgba(16,36,61,.16);
+  background:linear-gradient(180deg,#fff,#f3f7fb);
+  display:grid; place-items:center; transition:box-shadow .12s ease;
 }
-.rm2-widths button[aria-checked="true"]{ border-color:#10243D; background:rgba(16,36,61,.07); }
-.rm2-widths button:focus-visible{ outline:3px solid #10243D; outline-offset:1px; }
-.rm2-widths i{ display:block; background:#10243D; border-radius:99px; width:17px; }
+.rm2-w:focus-visible{ outline:3px solid var(--rm2-brand); outline-offset:1px; }
+.rm2-w[aria-checked="true"]{
+  border-color:var(--rm2-brand);
+  box-shadow:inset 0 1px 3px rgba(8,23,38,.16), 0 0 0 1.5px rgba(19,49,79,.16);
+}
+.rm2-w i{ display:block; width:17px; border-radius:99px; background:linear-gradient(90deg,#2d5b86,#10243D); }
 .rm2-w-thin i{ height:2px; } .rm2-w-medium i{ height:4px; } .rm2-w-thick i{ height:7px; }
 
 /* ---------- gaveta de anotações -------------------------------------- */
@@ -289,30 +320,23 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 }
 
 /* ---------- responsivo ----------------------------------------------- */
-@media (max-width:820px){
-  .rm2-box{ top:auto; bottom:max(88px, calc(env(safe-area-inset-bottom) + 78px)); transform:none; }
-  .rm2-panel{ max-height:min(66vh, 460px); }
-  .rm2-btn{ font-size:13px; padding:9px 11px; }
-}
-/* No telemóvel a barra fica só com ícones: o rótulo custava metade da
-   largura da coluna de leitura. O nome continua no title e no aria-label,
-   por isso nem o leitor de ecrã nem o rato perdem nada. */
+/* Tablet e a prioridade: o trilho fica encostado a direita, centrado na
+   vertical, e nunca ultrapassa 58 px de largura em viewport nenhum. */
+@media (max-width:1024px){ .rm2-box{ right:max(8px, env(safe-area-inset-right)); } }
+@media (max-height:640px){ .rm2-panel{ max-height:64vh; } }
 @media (max-width:560px){
-  .rm2-btn .tx{ display:none; }
-  .rm2-btn{ justify-content:center; padding:9px; gap:0; }
-  .rm2-panel{ padding:6px; gap:4px; }
-  .rm2-swatches{ justify-content:center; gap:5px; }
-  .rm2-swatches button{ width:24px; height:24px; border-radius:8px; }
-  .rm2-swatches button[aria-checked="true"]::after{ font-size:11px; line-height:20px; }
-  .rm2-widths button{ height:26px; }
-  .rm2-sub{ padding:2px 0 5px; }
+  .rm2-box{ top:auto; bottom:max(84px, calc(env(safe-area-inset-bottom) + 74px));
+            transform:none; width:52px; }
+  .rm2-panel{ width:52px; padding:6px 3px; max-height:min(58vh,420px); }
+  .rm2-btn{ width:40px; height:40px; flex:0 0 40px; border-radius:12px; }
+  .rm2-btn svg{ width:25px; height:25px; }
+  .rm2-fab{ width:48px; height:48px; border-radius:15px; }
+  .rm2-fab svg{ width:28px; height:28px; }
+  .rm2-sw{ width:24px; height:24px; flex:0 0 24px; }
+  .rm2-w{ width:28px; }
 }
-@media (max-width:430px){
-  .rm2-fab{ width:42px; height:42px; border-radius:12px; }
-}
-@media (prefers-reduced-motion: reduce){
-  .rm2-fab{ transition:none; }
-}
+@media (prefers-reduced-motion: reduce){ .rm2-fab,.rm2-btn,.rm2-sw{ transition:none; } }
+
 `;
     document.head.appendChild(css);
   }
@@ -970,59 +994,116 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   var box = null;
 
-  function ico(d) {
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
-      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+  /* ------------------------------------------------------------------
+     ÍCONES — SVG inline, próprios, com um pouco de profundidade.
+     Nada de biblioteca, nada de PNG: seis gradientes curtos e paths
+     simples, ~4 kB no total. Cada um tem os seus ids de gradiente para
+     dois ícones nunca se pisarem na mesma página.
+     A linguagem é a do caderno do Repasso Med: azul-marinho da marca,
+     dourado nos detalhes, e a cor da própria ferramenta no que interessa.
+     ------------------------------------------------------------------ */
+  function ico(corpo) {
+    return '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">' + corpo + '</svg>';
+  }
+  function grad(id, a, b, vert) {
+    return '<linearGradient id="' + id + '" x1="0" y1="0" x2="' + (vert ? '0' : '1') +
+      '" y2="1"><stop offset="0" stop-color="' + a + '"/><stop offset="1" stop-color="' + b + '"/></linearGradient>';
   }
 
   var I = {
-    tools: '<path d="M14.7 6.3a4 4 0 0 1 5 5L9 22l-5 1 1-5Z"/><path d="M12.5 8.5 15.5 11.5"/>',
-    mark:  '<path d="M4 20h4L18 10a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/>',
-    pen:   '<path d="M3 21l3.2-.8L20 6.4a2.3 2.3 0 0 0-3.3-3.3L3 16.9Z"/><path d="M15.2 4.8 19.2 8.8"/>',
-    erase: '<path d="M8 20H5l-2-2 9-9 6 6-5 5Z"/><path d="M14 6l4 4"/><path d="M9 20h11"/>',
-    undo:  '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
-    note:  '<path d="M5 4h11l3 3v13H5Z"/><path d="M8 10h8"/><path d="M8 14h6"/>'
+    /* estojo de ferramentas fechado, com uma caneta a espreitar */
+    tools:
+      '<defs>' + grad('rm2gA', '#2d5b86', '#0b2138') + grad('rm2gB', '#f0c24e', '#cf9b1d') + '</defs>' +
+      '<path d="M5 12.5h22a2.5 2.5 0 0 1 2.5 2.5v9A3.5 3.5 0 0 1 26 27.5H6A3.5 3.5 0 0 1 2.5 24v-9A2.5 2.5 0 0 1 5 12.5Z" fill="url(#rm2gA)"/>' +
+      '<path d="M11 12.5V10a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2.5" fill="none" stroke="#2d5b86" stroke-width="2.4" stroke-linecap="round"/>' +
+      '<rect x="2.5" y="17" width="27" height="4.4" rx="1.4" fill="url(#rm2gB)"/>' +
+      '<rect x="13.6" y="15.6" width="4.8" height="7.2" rx="1.6" fill="#f7f9fc"/>' +
+      '<path d="M2.5 15.2h27" stroke="#ffffff" stroke-opacity=".18" stroke-width="1.2"/>',
+
+    /* marca-texto: corpo azul-marinho, ponta chanfrada amarela e o risco */
+    mark:
+      '<defs>' + grad('rm2mA', '#2d5b86', '#10243D') + grad('rm2mB', '#ffe066', '#f0b90b') + '</defs>' +
+      '<path d="M20.4 3.6a3.1 3.1 0 0 1 4.4 0l3.6 3.6a3.1 3.1 0 0 1 0 4.4l-8.5 8.5-8-8Z" fill="url(#rm2mA)"/>' +
+      '<path d="M11.9 12.1l8 8-3.6 3.6-1.9.5-4.5-4.5.4-2Z" fill="url(#rm2mB)"/>' +
+      '<path d="M9.9 19.7l4.5 4.5-2.2 2.2H6.4l-1.2-1.2Z" fill="#fff3bf"/>' +
+      '<rect x="4" y="27.3" width="24" height="3" rx="1.5" fill="url(#rm2mB)" opacity=".85"/>' +
+      '<path d="M21.6 5.4l5.3 5.3" stroke="#ffffff" stroke-opacity=".3" stroke-width="1.6" stroke-linecap="round"/>',
+
+    /* caneta premium: corpo azul, anel dourado, bico escuro */
+    pen:
+      '<defs>' + grad('rm2pA', '#4f8ee6', '#153f7a') + grad('rm2pB', '#f0c24e', '#cf9b1d') + '</defs>' +
+      '<path d="M22.2 2.6a3.2 3.2 0 0 1 4.5 0l2.7 2.7a3.2 3.2 0 0 1 0 4.5L13.6 25.6l-7.2-7.2Z" fill="url(#rm2pA)"/>' +
+      '<path d="M18.6 6.2l7.2 7.2-2.3 2.3-7.2-7.2Z" fill="url(#rm2pB)"/>' +
+      '<path d="M6.4 18.4l7.2 7.2-4.4 2.3-5.5 1.4 1.4-5.5Z" fill="#e9eff7"/>' +
+      '<path d="M3.7 29.3l1.4-5.5 4.1 4.1Z" fill="#10243D"/>' +
+      '<path d="M24.1 4.4l3.6 3.6" stroke="#ffffff" stroke-opacity=".35" stroke-width="1.8" stroke-linecap="round"/>',
+
+    /* borracha: bloco rosa com face lateral mais escura e banda branca */
+    erase:
+      '<defs>' + grad('rm2eA', '#ffa8bf', '#e9607f') + grad('rm2eB', '#d64a6b', '#a92f4c') + '</defs>' +
+      '<path d="M13.2 4.1a3.4 3.4 0 0 1 4.8 0l9.9 9.9a3.4 3.4 0 0 1 0 4.8l-6 6H11l-7.9-7.9a3.4 3.4 0 0 1 0-4.8Z" fill="url(#rm2eA)"/>' +
+      '<path d="M11 24.8h10.9l-2.1 2.1H12.9Z" fill="url(#rm2eB)"/>' +
+      '<path d="M8.6 8.7l12.2 12.2-3.3 3.3H12L5.3 17.5Z" fill="#ffffff" opacity=".42"/>' +
+      '<rect x="3.4" y="27.4" width="25.2" height="2.9" rx="1.45" fill="#10243D" opacity=".16"/>',
+
+    /* desfazer: seta azul curva, com ponta cheia */
+    undo:
+      '<defs>' + grad('rm2uA', '#5a9bea', '#1d5bb5', true) + '</defs>' +
+      '<path d="M8.6 13.8h9.8a7.4 7.4 0 0 1 0 14.8h-3.6" fill="none" stroke="url(#rm2uA)" stroke-width="3.6" stroke-linecap="round"/>' +
+      '<path d="M11.4 5.8 4.2 13l7.2 7.2Z" fill="url(#rm2uA)"/>' +
+      '<path d="M9.6 9.1 6.6 12.1l3 3Z" fill="#ffffff" opacity=".28"/>',
+
+    /* anotações: post-it amarelo com canto dobrado e duas linhas */
+    note:
+      '<defs>' + grad('rm2nA', '#ffe999', '#f4c534') + grad('rm2nB', '#e0ab1f', '#b5831a') + '</defs>' +
+      '<path d="M5.2 3.4h16.2l6.2 6.2v16.4a2.6 2.6 0 0 1-2.6 2.6H5.2a2.6 2.6 0 0 1-2.6-2.6V6a2.6 2.6 0 0 1 2.6-2.6Z" fill="url(#rm2nA)"/>' +
+      '<path d="M21.4 3.4 27.6 9.6h-4.5a1.7 1.7 0 0 1-1.7-1.7Z" fill="url(#rm2nB)"/>' +
+      '<rect x="7.2" y="13.4" width="14" height="2.5" rx="1.25" fill="#10243D" opacity=".62"/>' +
+      '<rect x="7.2" y="19" width="10" height="2.5" rx="1.25" fill="#10243D" opacity=".45"/>' +
+      '<rect x="3.6" y="6.6" width="1.8" height="18" rx=".9" fill="#ffffff" opacity=".4"/>'
   };
 
+  /* Trilho vertical. Sem rótulos permanentes: o nome vive no title e no
+     aria-label, e a coluna fica com 58 px de ponta a ponta. */
   function montar() {
     if (box && box.isConnected) return;
     box = document.createElement('div');
     box.className = 'rm2-box';
+
+    function botao(attr, icone, titulo, rotulo, pressed) {
+      return '<button type="button" class="rm2-btn" ' + attr +
+        (pressed ? ' aria-pressed="false"' : '') +
+        ' title="' + titulo + '" aria-label="' + rotulo + '">' + ico(icone) + '</button>';
+    }
+
     box.innerHTML =
       '<div class="rm2-panel" id="rm2-panel" role="group" aria-label="Herramientas de estudio">' +
-        '<button type="button" class="rm2-btn" data-t="highlight" aria-pressed="false" ' +
-          'title="Marcador de texto" aria-label="Marcador de texto">' + ico(I.mark) + '<span class="tx">Marcador</span></button>' +
-        '<div class="rm2-sub" data-sub="highlight">' +
-          '<div class="rm2-swatches" role="radiogroup" aria-label="Color del marcador">' +
-            HL_CORES.map(function (c) {
-              return '<button type="button" class="rm2-sw-' + c + '" data-hc="' + c + '" role="radio" ' +
-                'aria-checked="false" title="' + nomeCor(c) + '" aria-label="Marcador ' + nomeCor(c) + '"></button>';
-            }).join('') +
-          '</div>' +
+        botao('data-t="highlight"', I.mark, 'Marcador de texto', 'Marcador de texto', true) +
+        '<div class="rm2-sub" data-sub="highlight" role="radiogroup" aria-label="Color del marcador">' +
+          HL_CORES.map(function (c) {
+            return '<button type="button" class="rm2-sw rm2-sw-' + c + '" data-hc="' + c + '" role="radio" ' +
+              'aria-checked="false" title="' + nomeCor(c) + '" aria-label="Marcador ' + nomeCor(c) + '"></button>';
+          }).join('') +
         '</div>' +
 
-        '<button type="button" class="rm2-btn" data-t="pen" aria-pressed="false" ' +
-          'title="Lápiz" aria-label="Lápiz para escribir a mano">' + ico(I.pen) + '<span class="tx">Lápiz</span></button>' +
+        botao('data-t="pen"', I.pen, 'Lápiz', 'Lápiz para escribir a mano', true) +
         '<div class="rm2-sub" data-sub="pen">' +
-          '<div class="rm2-swatches" role="radiogroup" aria-label="Color del lápiz">' +
-            '<button type="button" class="rm2-sw-black" data-pc="black" role="radio" aria-checked="false" title="Negro" aria-label="Lápiz negro"></button>' +
-            '<button type="button" class="rm2-sw-pblue" data-pc="blue"  role="radio" aria-checked="false" title="Azul"  aria-label="Lápiz azul"></button>' +
-            '<button type="button" class="rm2-sw-pred"  data-pc="red"   role="radio" aria-checked="false" title="Rojo"  aria-label="Lápiz rojo"></button>' +
+          '<div class="rm2-sub on" role="radiogroup" aria-label="Color del lápiz" style="padding:0">' +
+            '<button type="button" class="rm2-sw rm2-sw-black" data-pc="black" role="radio" aria-checked="false" title="Negro" aria-label="Lápiz negro"></button>' +
+            '<button type="button" class="rm2-sw rm2-sw-pblue" data-pc="blue"  role="radio" aria-checked="false" title="Azul"  aria-label="Lápiz azul"></button>' +
+            '<button type="button" class="rm2-sw rm2-sw-pred"  data-pc="red"   role="radio" aria-checked="false" title="Rojo"  aria-label="Lápiz rojo"></button>' +
           '</div>' +
-          '<div class="rm2-widths" role="radiogroup" aria-label="Grosor del lápiz">' +
-            '<button type="button" class="rm2-w-thin"   data-pw="thin"   role="radio" aria-checked="false" title="Fino"   aria-label="Trazo fino"><i></i></button>' +
-            '<button type="button" class="rm2-w-medium" data-pw="medium" role="radio" aria-checked="false" title="Medio"  aria-label="Trazo medio"><i></i></button>' +
-            '<button type="button" class="rm2-w-thick"  data-pw="thick"  role="radio" aria-checked="false" title="Grueso" aria-label="Trazo grueso"><i></i></button>' +
+          '<div class="rm2-sub on" role="radiogroup" aria-label="Grosor del lápiz" style="padding:4px 0 0">' +
+            '<button type="button" class="rm2-w rm2-w-thin"   data-pw="thin"   role="radio" aria-checked="false" title="Fino"   aria-label="Trazo fino"><i></i></button>' +
+            '<button type="button" class="rm2-w rm2-w-medium" data-pw="medium" role="radio" aria-checked="false" title="Medio"  aria-label="Trazo medio"><i></i></button>' +
+            '<button type="button" class="rm2-w rm2-w-thick"  data-pw="thick"  role="radio" aria-checked="false" title="Grueso" aria-label="Trazo grueso"><i></i></button>' +
           '</div>' +
         '</div>' +
 
-        '<button type="button" class="rm2-btn" data-t="eraser" aria-pressed="false" ' +
-          'title="Goma de borrar" aria-label="Goma: borrar marcas y trazos">' + ico(I.erase) + '<span class="tx">Goma</span></button>' +
+        botao('data-t="eraser"', I.erase, 'Goma de borrar', 'Goma: borrar marcas y trazos', true) +
         '<div class="rm2-sep"></div>' +
-        '<button type="button" class="rm2-btn" data-a="undo" title="Deshacer" aria-label="Deshacer la última acción">' +
-          ico(I.undo) + '<span class="tx">Deshacer</span></button>' +
-        '<button type="button" class="rm2-btn" data-a="notes" title="Mis apuntes" aria-label="Abrir mis apuntes">' +
-          ico(I.note) + '<span class="tx">Mis apuntes</span></button>' +
+        botao('data-a="undo"', I.undo, 'Deshacer', 'Deshacer la última acción', false) +
+        botao('data-a="notes"', I.note, 'Mis apuntes', 'Abrir mis apuntes', false) +
       '</div>' +
       '<button type="button" class="rm2-fab" id="rm2-fab" aria-expanded="false" aria-controls="rm2-panel" ' +
         'title="Herramientas de estudio" aria-label="Herramientas de estudio">' + ico(I.tools) + '</button>';
@@ -1090,7 +1171,9 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', String(on));
     });
-    box.querySelectorAll('.rm2-sub').forEach(function (s) {
+    /* só os sub-painéis de topo abrem e fecham; os de dentro (cores e
+       grossuras do lápis) ficam sempre abertos dentro do seu pai */
+    box.querySelectorAll('.rm2-sub[data-sub]').forEach(function (s) {
       s.classList.toggle('on', s.getAttribute('data-sub') === st.tool);
     });
     box.querySelectorAll('[data-hc]').forEach(function (b) {

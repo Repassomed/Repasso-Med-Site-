@@ -1,6 +1,6 @@
 -- =====================================================================
 -- ROLLBACK · Ferramentas de estudo V2
--- Reverte 20260916_01_study_tools_v2.sql
+-- Reverte 20260913_06_study_tools_v2.sql
 --
 -- ATENÇÃO — ORDEM. O passo 4 repõe o CHECK antigo de user_highlights,
 -- que NÃO admite 'yellow'. Se já existirem marcações amarelas gravadas,
