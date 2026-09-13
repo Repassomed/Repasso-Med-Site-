@@ -1,0 +1,28 @@
+-- =====================================================================
+-- REPASSO MED · correção do DEFAULT de user_highlights.color
+-- Data: 2026-09-13
+--
+-- PROBLEMA. A migração 20260913_01 criou a coluna com
+--   color text NOT NULL DEFAULT 'yellow'
+-- mas o CHECK só aceita ('red','blue','green','pink'). Como 'yellow' não
+-- está na lista, qualquer INSERT que não informasse `color` rebentava com
+-- 23514 (check constraint "user_highlights_color_valid").
+--
+-- Na prática o site nunca caiu nisto, porque o cliente manda sempre a cor
+-- escolhida na paleta — mas o default era uma armadilha para qualquer
+-- inserção futura (script, importação, painel admin).
+--
+-- CORREÇÃO. Passar o default para 'red', que é a primeira cor da paleta e
+-- também a cor inicial do marcador no cliente. Não se mexe no CHECK, nem
+-- no tipo, nem no NOT NULL, nem em nenhuma outra coluna ou tabela.
+--
+-- A 20260913_01 também foi corrigida no repositório, para que uma
+-- instalação nova já nasça certa; esta migração existe porque a primeira
+-- JÁ TINHA SIDO APLICADA na base real.
+--
+-- Idempotente: reexecutar não tem efeito.
+-- Rollback: alter table public.user_highlights alter column color set default 'yellow';
+--           (não recomendado — repõe o bug)
+-- =====================================================================
+
+alter table public.user_highlights alter column color set default 'red';
