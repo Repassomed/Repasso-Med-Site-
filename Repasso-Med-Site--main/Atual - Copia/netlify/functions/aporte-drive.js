@@ -108,48 +108,133 @@ exports.handler = async (event) => {
       });
     }
 
-    // 5) URLs assinadas — uma por arquivo, 10 minutos
+    /* 5) DESTINO CONFERIDO NO BANCO, não no que o navegador gravou.
+       `semester` e `subject_slug` vêm de uma linha que o próprio aluno
+       inseriu: são dados, não verdade. Antes de qualquer coisa tocar o
+       Drive, o slug tem que existir em `subjects`, estar ativo e ter o
+       semestre que a contribuição diz ter. O NOME da pasta sai do
+       registro real — nunca de texto do cliente. */
+    let materia = '';
+    let semestre = linha.semester;
+    if (linha.subject_slug) {
+      let m = null;
+      try {
+        const mRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/subjects?slug=eq.${encodeURIComponent(linha.subject_slug)}` +
+          `&is_active=is.true&select=slug,name,semester`,
+          { headers: sr() }
+        );
+        m = mRes.ok ? (await mRes.json())[0] : null;
+      } catch (e) { console.error('subjects no consultado'); }
+
+      if (!m) {
+        console.error('slug inexistente o inactivo en el aporte', id);
+        await marcar(id, {
+          drive_status: 'error',
+          drive_error: 'La materia indicada no existe o no está activa. No se creó ninguna carpeta.'
+        });
+        return resp(409, { error: 'materia inválida' });
+      }
+      /* Semestre adulterado: a linha diz um, o catálogo diz outro.
+         Não «corrigimos» em silêncio — recusamos, porque a divergência
+         em si já é sinal de que o dado não é confiável. */
+      if (linha.semester !== null && Number(linha.semester) !== Number(m.semester)) {
+        console.error('semestre incoherente con subjects en el aporte', id);
+        await marcar(id, {
+          drive_status: 'error',
+          drive_error: 'El semestre no coincide con el de la materia en el catálogo. No se creó ninguna carpeta.'
+        });
+        return resp(409, { error: 'semestre incoherente' });
+      }
+      materia = m.name || '';
+      semestre = m.semester;          /* a fonte é o catálogo, não a linha */
+    }
+    /* Sem matéria é um caminho legítimo — «General / no estoy seguro».
+       Vai para o geral do semestre, sem inventar matéria nenhuma. Mas o
+       semestre aqui continua sendo número que o navegador gravou, então
+       também é conferido: tem que ser um semestre que existe no
+       catálogo. Um valor fora disso não recusa o envio — seria perder
+       material por um detalhe — e sim cai em «Sin clasificar», que é
+       exatamente o lugar de um destino que não dá para confirmar. */
+    else if (semestre !== null && semestre !== undefined) {
+      try {
+        const sRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/subjects?semester=eq.${encodeURIComponent(semestre)}` +
+          `&is_active=is.true&select=semester&limit=1`,
+          { headers: sr() }
+        );
+        const existe = sRes.ok && (await sRes.json()).length > 0;
+        if (!existe) {
+          console.error('semestre sin correspondencia en el catálogo, aporte', id);
+          semestre = null;
+        }
+      } catch (e) {
+        console.error('semestre no verificado; va a «Sin clasificar»');
+        semestre = null;
+      }
+    }
+
+    /* 6) CAMINHOS CONFERIDOS ANTES DE A SERVICE ROLE ASSINAR QUALQUER
+       COISA. Todo objeto deste aporte tem que morar exatamente em
+       `<user_id do dono>/<id do aporte>/`. Um metadado adulterado não
+       pode fazer a chave de serviço assinar o caminho de outra pessoa.
+       Um único caminho fora do lugar aborta o espelhamento inteiro. */
     const arquivos = Array.isArray(linha.files) ? linha.files : [];
+    const prefixo = `${linha.user_id}/${linha.id}/`;
+    const forasteiros = arquivos.filter(f =>
+      !f || typeof f.path !== 'string' ||
+      !f.path.startsWith(prefixo) ||
+      f.path.length <= prefixo.length ||
+      f.path.includes('..')
+    );
+    if (forasteiros.length) {
+      console.error('path fuera del prefijo del aporte', id, forasteiros.length);
+      await marcar(id, {
+        drive_status: 'error',
+        drive_error: 'Hay archivos con una ruta que no pertenece a este aporte. No se copió nada.'
+      });
+      return resp(409, { error: 'ruta de archivo inválida' });
+    }
+
+    /* 7) URLs assinadas — uma por arquivo, 10 minutos.
+       OU TODAS, OU NENHUMA. Se um arquivo não consegue assinatura, ele
+       não chegaria ao Drive; seguir com os outros faria o Apps Script
+       declarar `complete` sobre um conjunto menor, e o buffer inteiro
+       — inclusive o arquivo que nunca viajou — seria apagado. */
     const assinados = [];
+    let falhaAssinatura = null;
     for (const f of arquivos) {
-      if (!f || typeof f.path !== 'string') continue;
       const s = await fetch(
         `${SUPABASE_URL}/storage/v1/object/sign/aportes/${encodeURI(f.path)}`,
         { method: 'POST', headers: { ...sr(), 'Content-Type': 'application/json' },
           body: JSON.stringify({ expiresIn: ASSINATURA_SEG }) }
       );
-      if (!s.ok) {
-        console.error('no se pudo firmar un archivo del aporte', id);
-        continue;
-      }
+      if (!s.ok) { falhaAssinatura = `HTTP ${s.status}`; break; }
       const j = await s.json();
+      const assinada = j.signedURL || j.signedUrl || '';
+      if (!assinada) { falhaAssinatura = 'respuesta sin URL firmada'; break; }
       assinados.push({
         name: String(f.name || 'archivo').slice(0, 200),
         mime: String(f.mime || ''),
         size: Number(f.size) || 0,
-        url: `${SUPABASE_URL}/storage/v1${j.signedURL || j.signedUrl || ''}`
+        url: `${SUPABASE_URL}/storage/v1${assinada}`
       });
     }
-    if (arquivos.length && !assinados.length) {
-      await marcar(id, { drive_status: 'error', drive_error: 'No se pudo firmar ningún archivo.' });
-      return resp(502, { error: 'no se pudieron preparar los archivos' });
+    if (assinados.length !== arquivos.length) {
+      console.error('firma incompleta en el aporte', id, assinados.length, '/', arquivos.length);
+      await marcar(id, {
+        drive_status: 'error',
+        drive_error: 'No se pudieron preparar todos los archivos (' +
+          assinados.length + ' de ' + arquivos.length +
+          (falhaAssinatura ? ' · ' + falhaAssinatura : '') +
+          '). No se copió nada; el material sigue guardado. Probá «Copiar al Drive» de nuevo.'
+      });
+      return resp(502, { error: 'no se pudieron preparar los archivos', retry: true });
     }
 
-    // 6) nome legível da matéria, para a pasta do Drive
-    let materia = linha.subject_slug || '';
-    if (linha.subject_slug) {
-      try {
-        const mRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/subjects?slug=eq.${encodeURIComponent(linha.subject_slug)}&select=name,semester`,
-          { headers: sr() }
-        );
-        const m = mRes.ok ? (await mRes.json())[0] : null;
-        if (m && m.name) materia = m.name;
-      } catch (e) { console.error('nombre de materia no resuelto'); }
-    }
-
-    // 7) Apps Script. O frontend NUNCA escolhe folder id: mandamos
-    //    semestre e matéria, e o script resolve a pasta dentro do root.
+    /* 8) Apps Script. O frontend NUNCA escolhe folder id: mandamos
+       semestre e matéria JÁ VALIDADOS, e o script resolve a pasta
+       dentro do root. */
     const gas = await fetch(GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -160,7 +245,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         token: GAS_TOKEN,
         contribution_id: linha.id,
-        semester: linha.semester,
+        semester: semestre,
         subject_slug: linha.subject_slug || '',
         subject_name: materia || '',
         message: linha.mensaje || '',
@@ -178,8 +263,50 @@ exports.handler = async (event) => {
       // cortado, e sem nunca ecoar token nenhum
       const detalhe = (out && out.error) || texto.slice(0, 300) || ('HTTP ' + gas.status);
       console.error('apps script recusou o aporte', linha.id, 'HTTP', gas.status);
-      await marcar(id, { drive_status: 'error', drive_error: String(detalhe).slice(0, 500) });
-      return resp(502, { error: 'no se pudo copiar al Drive', pending: true });
+      await marcar(id, {
+        drive_status: 'error',
+        drive_error: String(detalhe).slice(0, 500),
+        /* a pasta pode ter sido criada antes de a cópia falhar: guardar
+           o link poupa o admin de procurá-la à mão */
+        ...(out && out.folder_url ? { drive_folder_url: out.folder_url } : {})
+      });
+      return resp(502, { error: 'no se pudo copiar al Drive', retry: true });
+    }
+
+    /* CÓPIA PARCIAL NÃO É CÓPIA FEITA.
+       O Apps Script pode responder `ok:true` com `complete:false` — a
+       pasta existe, alguns arquivos entraram, outros não. Marcar isso
+       como «enviado» seria dizer ao painel que está resolvido quando
+       falta material; e apagar o buffer nesse estado destruiria
+       justamente o que permite terminar o trabalho.
+
+       Então: só `ok && complete` vira «enviado», preenche `drive_sent_at`
+       e autoriza a limpeza. Qualquer outra coisa é `error` com o link da
+       pasta preservado, o buffer INTEIRO de pé, e o «Copiar al Drive» do
+       painel pronto para completar o que faltou — o Apps Script conta
+       como gravado o arquivo cujo nome já existe na pasta, então o retry
+       só busca o que falta. */
+    const completo = out.complete === true;
+
+    if (!completo) {
+      const detalhe = Array.isArray(out.failed) && out.failed.length
+        ? out.failed.join(' · ').slice(0, 380)
+        : 'sin detalle del Apps Script';
+      console.error('copia parcial en el aporte', linha.id,
+                    (out.saved || 0) + '+' + (out.already || 0), '/', arquivos.length);
+      await marcar(id, {
+        drive_status: 'error',
+        drive_folder_url: out.folder_url || null,
+        drive_error: 'Copia incompleta: ' +
+          ((out.saved || 0) + (out.already || 0)) + ' de ' + arquivos.length +
+          ' archivo(s) en el Drive. ' + detalhe +
+          ' · El material sigue guardado; probá «Copiar al Drive» de nuevo.'
+      });
+      return resp(502, {
+        error: 'copia incompleta', retry: true,
+        folder_url: out.folder_url || null,
+        saved: out.saved, already: out.already, total: arquivos.length
+      });
     }
 
     await marcar(id, {
@@ -190,15 +317,11 @@ exports.handler = async (event) => {
     });
 
     /* O Storage é BUFFER, o Drive é DESTINO. Com a cópia confirmada
-       arquivo por arquivo (`complete`), a cópia temporária sai: material
-       de aluno não fica guardado em dois lugares sem motivo.
-
-       Só com `complete`. Se UM arquivo faltou, o buffer fica de pé — é
-       ele que permite o «Copiar al Drive» do painel tentar de novo. E
-       falhar ao apagar o buffer nunca derruba o envio: o material já
-       está no Drive, que é o que importa. */
-    let limpou = false;
-    if (out.complete === true) limpou = await limparBuffer(arquivos);
+       arquivo por arquivo, a cópia temporária sai: material de aluno não
+       fica guardado em dois lugares sem motivo. Falhar ao apagar o
+       buffer nunca derruba o envio — o material já está no Drive, que é
+       o que importa. */
+    const limpou = await limparBuffer(arquivos);
 
     return resp(200, {
       ok: true, folder_url: out.folder_url || null,

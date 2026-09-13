@@ -51,7 +51,7 @@
 
    ANTES DE PUBLICAR
    -----------------------------------------------------------------
-   Veja CONTRIBUICOES-MATERIAL-EXTERNO.md §4. Em resumo: colar este
+   Veja CONTRIBUICOES-MATERIAL-EXTERNO.md §5. Em resumo: colar este
    arquivo em um projeto novo, rodar `setup()` UMA vez, e implantar como
    Aplicativo da Web (Executar como: Eu · Acesso: Qualquer pessoa).
    ===================================================================== */
@@ -76,13 +76,27 @@ var PROP_ARVORE = 'RM_ARVORE';      /* cache dos ids canônicos */
 function setup() {
   var props = PropertiesService.getScriptProperties();
 
-  /* 1 · a raiz é mesmo «Material Externo»? */
-  var root = DriveApp.getFolderById(ROOT_FOLDER_ID);
-  var nome = root.getName();
+  /* 1 · a raiz é mesmo «Material Externo»?
+     FAIL CLOSED. Um aviso no log seria lido depois de o script já estar
+     publicado apontando para a pasta errada — e material de aluno
+     espalhado no lugar errado não se desfaz com um Ctrl+Z. Então aqui
+     não se avisa: aborta. */
+  var root, nome;
+  try {
+    root = DriveApp.getFolderById(ROOT_FOLDER_ID);
+    nome = root.getName();
+  } catch (e) {
+    throw new Error(
+      'ROOT_FOLDER_ID inaccesible o inexistente (' + ROOT_FOLDER_ID + '). ' +
+      'Verificá el id y que esta cuenta de Google tenga acceso a la carpeta. ' +
+      'setup() no continuó: nada fue creado ni configurado.');
+  }
   Logger.log('Raiz: "' + nome + '"  (' + ROOT_FOLDER_ID + ')');
   if (reduzir(nome).indexOf('material externo') < 0) {
-    Logger.log('⚠️  A raiz não se chama «Material Externo». Confirme o ROOT_FOLDER_ID');
-    Logger.log('    antes de seguir: um id errado espalharia material no lugar errado.');
+    throw new Error(
+      'La carpeta raíz se llama "' + nome + '", no «Material Externo». ' +
+      'Corregí ROOT_FOLDER_ID antes de seguir. setup() no continuó: no se generó ' +
+      'token, no se guardó el árbol y nada fue creado.');
   }
 
   /* 2 · mapeia semestres e matérias existentes */
@@ -120,7 +134,7 @@ function setup() {
 /* Relê a árvore do Drive sem gerar token nem escrever nada além do
    cache. Útil depois de criar pastas de semestre/matéria à mão. */
 function recarregarArvore() {
-  var root = DriveApp.getFolderById(ROOT_FOLDER_ID);
+  var root = raizValidada();
   var arvore = lerArvore(root);
   PropertiesService.getScriptProperties().setProperty(PROP_ARVORE, JSON.stringify(arvore));
   Logger.log('Árvore recarregada: ' + Object.keys(arvore).length + ' semestre(s).');
@@ -148,13 +162,18 @@ function doPost(e) {
     /* 1 · a pasta da matéria, reaproveitando a árvore que já existe */
     var destinoMateria = resolverMateria(dados.semester, dados.subject_name, dados.subject_slug);
 
+
     /* 2 · a pasta do envio. O nome NÃO leva identidade: data, hora e um
        pedaço do id bastam para achar, e o resto está no painel.
        Reenviar o mesmo aporte reaproveita a pasta em vez de duplicá-la. */
     var quando = dados.created_at ? new Date(dados.created_at) : new Date();
     if (isNaN(quando.getTime())) quando = new Date();
     var tz = Session.getScriptTimeZone();
-    var sufixo = id.replace(/-/g, '').slice(0, 6).toUpperCase();
+    /* 12 hex = 48 bits. Com 6 (24 bits) duas contribuições diferentes
+       colidiriam por acaso já na casa das dezenas de milhares — e uma
+       colisão aqui significaria material de um aluno caindo na pasta de
+       outro. 12 afasta isso do domínio do plausível. */
+    var sufixo = id.replace(/-/g, '').slice(0, 12).toUpperCase();
     var nomeEnvio = Utilities.formatDate(quando, tz, 'yyyy-MM-dd_HHmm') + '_' + sufixo;
 
     var destino = acharPorSufixo(destinoMateria, sufixo) || destinoMateria.createFolder(nomeEnvio);
@@ -231,6 +250,18 @@ function doGet() {
    Árvore do Drive
    ===================================================================== */
 
+/* A raiz, conferida a cada uso. Se o id for trocado por engano depois da
+   publicação, o endpoint para em vez de escrever no lugar errado. */
+function raizValidada() {
+  var f;
+  try { f = DriveApp.getFolderById(ROOT_FOLDER_ID); }
+  catch (e) { throw new Error('ROOT_FOLDER_ID inaccesible'); }
+  if (reduzir(f.getName()).indexOf('material externo') < 0) {
+    throw new Error('la carpeta raíz no es «Material Externo»');
+  }
+  return f;
+}
+
 /* Lê root → semestres → matérias. Só leitura. */
 function lerArvore(root) {
   var arvore = {};
@@ -264,7 +295,7 @@ function salvarCache(arvore) {
    e sempre abaixo do root — um `subject_name` com barras ou «..» é
    achatado por `limpo()` e nunca vira travessia de diretório. */
 function resolverMateria(semestre, nomeMateria, slug) {
-  var root = DriveApp.getFolderById(ROOT_FOLDER_ID);
+  var root = raizValidada();
   var n = numeroSemestre(semestre);
   var arvore = arvoreCache();
 

@@ -1536,6 +1536,20 @@ footer strong { color:var(--gold-soft); }
 .rm-ap-lista .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap;color:var(--ink);}
 .rm-ap-lista .s{flex:0 0 auto;font-family:var(--font-mono);color:#8794a4;}
+/* tirar um arquivo da seleção antes de enviar */
+.rm-ap-x{flex:0 0 auto;width:22px;height:22px;margin-left:2px;padding:0;
+  border:1px solid var(--rule);border-radius:7px;background:#fff;cursor:pointer;
+  font-family:var(--font-ui);font-size:11px;line-height:1;color:#8794a4;
+  transition:color .14s,border-color .14s,background .14s;}
+.rm-ap-x:hover{color:#c0392b;border-color:#e0a99f;background:#fdf4f2;}
+.rm-ap-x:focus-visible{outline:3px solid var(--brand);outline-offset:2px;}
+.rm-ap-lista li.mal .rm-ap-x{color:#c0392b;border-color:#e0a99f;}
+@media (max-width:700px){
+  /* alvo de toque utilizável sem virar botão gigante */
+  .rm-ap-x{width:28px;height:28px;font-size:12px;}
+  .rm-ap-lista li{padding:7px 8px 7px 10px;}
+}
+@media (prefers-reduced-motion: reduce){ .rm-ap-x{transition:none;} }
 
 .rm-ap-aviso{margin:4px 0 0;padding:11px 13px;border-radius:10px;background:#fbf7ea;
   border:1px solid #ecdfb8;font-size:12.5px;line-height:1.55;color:#6a5a33;}

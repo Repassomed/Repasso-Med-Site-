@@ -131,9 +131,90 @@ Dizer «100 % anônimo» seria mentira, e mentira sobre privacidade é a pior es
 Dizer «confidencial» é verdade, e é o que o aluno precisa saber para se sentir à
 vontade de contribuir.
 
+### Quando alguma coisa falha no meio
+
+O caminho tem quatro etapas, e cada uma erra de um jeito. A regra que atravessa todas
+é a mesma: **material só se apaga quando já está guardado em outro lugar.**
+
+| Onde falha | O que acontece | O buffer é apagado? |
+|---|---|---|
+| upload de um arquivo | nada é gravado; os que já subiram são apagados | — não chega a existir envio |
+| INSERT da linha | os arquivos já subidos são apagados (ver §4) | — idem |
+| **uma assinatura de URL** | **não chama o Apps Script**; envio fica `error` | **não** |
+| destino inválido (matéria/semestre/caminho) | **não chama o Apps Script**; envio fica `error` | **não** |
+| **cópia parcial no Drive** (`complete:false`) | envio fica `error` com o link da pasta | **não** |
+| Apps Script recusa ou cai | envio fica `error` | **não** |
+| tudo certo (`ok` **e** `complete`) | envio fica `enviado` | **sim** |
+
+Uma assinatura que falha **para tudo**: seguir com os outros faria o Apps Script
+declarar «completo» sobre um conjunto menor, e o buffer inteiro — inclusive o arquivo
+que nunca viajou — seria apagado. Uma cópia parcial **nunca** vira `enviado`: dizer ao
+painel que está resolvido quando falta material é pior do que mostrar o erro.
+
+Em todos os casos de `error` o botão **«Copiar al Drive»** termina o trabalho. O Apps
+Script conta como gravado o arquivo cujo nome já existe na pasta, então o retry só
+busca o que falta, e a pasta do envio é sempre a mesma — o nome dela carrega 12
+dígitos hexadecimais do `contribution_id`.
+
+### O destino é conferido no servidor, não aceito do navegador
+
+`semester` e `subject_slug` vêm de uma linha que o próprio aluno inseriu: são dados,
+não verdade. Antes de qualquer coisa tocar o Drive, a função Netlify confere contra
+`public.subjects`:
+
+- o slug tem de **existir** e estar **ativo**;
+- o semestre da linha tem de **bater** com o do catálogo — divergência é recusa, não
+  correção silenciosa: a divergência em si já diz que o dado não é confiável;
+- o **nome** da pasta sai do registro real, nunca de texto do cliente;
+- sem matéria («General»), o semestre ainda é conferido; um valor que não existe no
+  catálogo não recusa o envio — seria perder material por um detalhe — e sim cai em
+  `Sin clasificar`.
+
+E antes de a chave de serviço assinar qualquer coisa, **todo** caminho de arquivo tem
+de morar exatamente em `<user_id do dono>/<id do aporte>/`. Um caminho fora do lugar
+aborta o espelhamento inteiro: um metadado adulterado não pode fazer a `service_role`
+assinar o arquivo de outra pessoa.
+
 ---
 
-## 4. ⏸️ O QUE FALTA FAZER À MÃO
+## 4. Arquivos órfãos no Storage
+
+Os bytes sobem antes de a linha existir. Se o INSERT falhar — rede, anti-spam,
+navegador fechado —, os objetos ficam sem nada que os explique: ninguém os vê no
+painel, ninguém os apaga, e eles contam no plano.
+
+**Abrir o DELETE para o dono resolveria o órfão e criaria um problema pior:** ele
+poderia apagar o material de um envio já feito, antes do espelhamento, e o painel
+ficaria apontando para o nada.
+
+Então a policy `aportes_delete_huerfano` (migration 05) deixa o dono apagar **só
+enquanto o arquivo for órfão de verdade**:
+
+```sql
+(storage.foldername(name))[1] = auth.uid()::text      -- é da minha pasta
+and not exists (select 1 from public.external_contributions c
+                 where c.id::text = (storage.foldername(name))[2])   -- e o envio não existe
+```
+
+Criada a linha, a policy deixa de casar e o navegador não apaga mais nada. Comprovado:
+
+| | pode apagar? |
+|---|---|
+| órfão da própria pasta | **sim** |
+| órfão de outro aluno | não |
+| arquivo de um envio já gravado | não |
+
+**O caso que isto não cobre, de propósito:** se o navegador fechar *entre* o upload e o
+INSERT, não há mais quem chame a limpeza, e o órfão fica. Não vale um job agendado nem
+uma função com chave de serviço varrendo sozinha material de aluno — o custo de um
+engano é apagar coisa boa. A limpeza desse resto é manual, pelo painel do Supabase
+(Storage → `aportes`), e é segura porque a regra é simples: **uma pasta
+`<uid>/<id>/` cujo `<id>` não aparece em `external_contributions` não pertence a
+nenhum envio.**
+
+---
+
+## 5. ⏸️ O QUE FALTA FAZER À MÃO
 
 Isto **não pode ser feito por um agente**: exige a sua conta Google e o painel da
 Netlify. Enquanto não for feito, a funcionalidade **funciona pela metade** — o aluno
@@ -194,7 +275,7 @@ variáveis novas só entram em vigor em um build novo.
 
 ---
 
-## 5. O que foi alterado no repositório
+## 6. O que foi alterado no repositório
 
 | Arquivo | O que mudou |
 |---|---|
@@ -207,6 +288,7 @@ variáveis novas só entram em vigor em um build novo.
 | `supabase/migrations/20260913_03_external_contributions.sql` | **novo** — tabela, RLS, anti-spam e bucket privado (já aplicada) |
 | `supabase/migrations/20260913_03_external_contributions_rollback.sql` | **novo** — desfaz, com o `DROP` do bucket comentado de propósito |
 | `supabase/migrations/20260913_04_external_contributions_review.sql` | **novo** — coluna `review_status` (curadoria), aditiva à tabela criada na 03 |
+| `supabase/migrations/20260913_05_aportes_limpeza_huerfanos.sql` | **novo** — policy que deixa o dono apagar o arquivo **só enquanto for órfão** |
 
 ### O que **não** foi tocado
 
@@ -217,7 +299,7 @@ acrescenta; não altera nem apaga nada anterior.
 
 ---
 
-## 6. Onde o material cai no Drive
+## 7. Onde o material cai no Drive
 
 A raiz **já é** «Material Externo» e **já tem** a árvore montada à mão. O script
 **reutiliza** essa árvore; não monta uma segunda ao lado dela.
@@ -273,7 +355,7 @@ dentro do bucket é achatado (sem acento, sem espaço, sem barra).
 
 ---
 
-## 7. Tabela `external_contributions`
+## 8. Tabela `external_contributions`
 
 | Coluna | Para que serve |
 |---|---|

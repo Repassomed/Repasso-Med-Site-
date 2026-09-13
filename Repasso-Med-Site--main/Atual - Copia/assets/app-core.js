@@ -590,6 +590,7 @@ var RepassoMed = (function(){
     b.querySelector('.rm-sug-send').textContent = 'Enviar';
     trocarModo('sugerencia');
     avisoAporte('', false);
+    limparArquivos();
     var envAp = b.querySelector('.rm-ap-send');
     if (envAp){ envAp.disabled = false; envAp.textContent = '📚 Ayudá a ampliar nuestra base'; }
     b.classList.add('on');
@@ -752,9 +753,17 @@ var RepassoMed = (function(){
     var sem  = box.querySelector('#rm-ap-sem');
     var file = box.querySelector('#rm-ap-file');
     var env  = box.querySelector('.rm-ap-send');
+    var ul   = box.querySelector('.rm-ap-lista');
     if (sem)  sem.addEventListener('change', function(){ pintarMaterias(sem.value); });
-    if (file) file.addEventListener('change', function(){ pintarArquivos(); });
+    if (file) file.addEventListener('change', function(){
+      juntarArquivos(file.files ? Array.prototype.slice.call(file.files) : []);
+    });
     if (env)  env.addEventListener('click', enviarAporte);
+    /* delegado: a lista se redesenha inteira a cada mudança */
+    if (ul) ul.addEventListener('click', function(e){
+      var b = e.target.closest && e.target.closest('.rm-ap-x');
+      if (b) removerArquivo(parseInt(b.getAttribute('data-i'), 10));
+    });
   }
 
   /* O catálogo vem de `public.subjects`, que é a fonte real do site.
@@ -804,20 +813,32 @@ var RepassoMed = (function(){
     pintarMaterias('');
   }
 
+  /* O destino tem que ser uma ESCOLHA. O valor vazio é sempre o convite
+     («Elegí…»), nunca um destino: quem não sabe a matéria marca «Otra /
+     general» de propósito, e isso é diferente de não ter marcado nada. */
   function pintarMaterias(sem){
     if (!sugBox) return;
     var sel = sugBox.querySelector('#rm-ap-mat');
     if (!sel) return;
+
+    if (!sem){
+      sel.innerHTML = '<option value="">Elegí primero el semestre…</option>';
+      return;
+    }
+    if (sem === 'otro'){
+      /* sem semestre não há lista de matérias — e escolher «Otro» já foi
+         a decisão consciente que o fluxo pede */
+      sel.innerHTML = '<option value="__gen">General / no es de una materia</option>';
+      return;
+    }
     var lista = (materias || []).filter(function(m){
-      return sem && sem !== 'otro' ? String(m.semester) === String(sem) : false;
+      return String(m.semester) === String(sem);
     });
-    sel.innerHTML = '<option value="">' +
-        (lista.length ? 'Elegí la materia…' : 'General / no es de una materia') +
-      '</option>' +
+    sel.innerHTML = '<option value="">Elegí la materia…</option>' +
       lista.map(function(m){
         return '<option value="' + escAttr(m.slug) + '">' + escHtml(m.name) + '</option>';
       }).join('') +
-      (lista.length ? '<option value="__gen">Otra / general</option>' : '');
+      '<option value="__gen">Otra / general</option>';
   }
 
   function escHtml(t){
@@ -842,21 +863,63 @@ var RepassoMed = (function(){
     return (base || 'archivo').slice(0, 80);
   }
 
-  function arquivosEscolhidos(){
+  /* A seleção vive AQUI, não no `<input type=file>`.
+     `input.files` é um FileList só de leitura: não dá para tirar um
+     arquivo de dentro dele. Guardando a lista à parte, o aluno escolhe
+     em várias tandas, vê o que juntou e remove o que não quis — que é o
+     que o fluxo pede — sem ter de recomeçar a seleção do zero. */
+  var escolhidos = [];
+
+  function arquivosEscolhidos(){ return escolhidos.slice(); }
+
+  function limparArquivos(){
+    escolhidos = [];
     var inp = sugBox && sugBox.querySelector('#rm-ap-file');
-    return inp && inp.files ? Array.prototype.slice.call(inp.files) : [];
+    if (inp) inp.value = '';
+    pintarArquivos();
+  }
+
+  function juntarArquivos(novos){
+    for (var i = 0; i < novos.length; i++){
+      var f = novos[i], repetido = false;
+      for (var j = 0; j < escolhidos.length; j++){
+        if (escolhidos[j].name === f.name && escolhidos[j].size === f.size &&
+            escolhidos[j].lastModified === f.lastModified){ repetido = true; break; }
+      }
+      if (!repetido) escolhidos.push(f);
+    }
+    /* zera o input: sem isto, escolher o MESMO arquivo depois de
+       removê-lo não dispara `change` e ele nunca volta */
+    var inp = sugBox && sugBox.querySelector('#rm-ap-file');
+    if (inp) inp.value = '';
+    pintarArquivos();
+  }
+
+  function removerArquivo(i){
+    if (i < 0 || i >= escolhidos.length) return;
+    escolhidos.splice(i, 1);
+    pintarArquivos();
+    /* devolve o foco a um alvo que ainda existe */
+    var ul = sugBox && sugBox.querySelector('.rm-ap-lista');
+    var bts = ul ? ul.querySelectorAll('.rm-ap-x') : [];
+    if (bts.length) bts[Math.min(i, bts.length - 1)].focus();
+    else { var d = sugBox && sugBox.querySelector('.rm-ap-drop'); if (d) d.focus(); }
   }
 
   function pintarArquivos(){
     var ul = sugBox && sugBox.querySelector('.rm-ap-lista');
     if (!ul) return;
-    var fs = arquivosEscolhidos();
-    ul.innerHTML = fs.map(function(f){
+    var fs = escolhidos;
+    ul.innerHTML = fs.map(function(f, i){
       var mal = f.size > APORTE_MAX_BYTES ||
                 (APORTE_MIMES.indexOf(f.type) < 0 && f.type !== '');
       return '<li class="' + (mal ? 'mal' : '') + '">' +
         '<span class="n">' + escHtml(f.name) + '</span>' +
-        '<span class="s">' + kb(f.size) + '</span></li>';
+        '<span class="s">' + kb(f.size) + '</span>' +
+        '<button type="button" class="rm-ap-x" data-i="' + i + '" ' +
+          'title="Quitar este archivo" ' +
+          'aria-label="Quitar ' + escAttr(f.name) + '">✕</button>' +
+      '</li>';
     }).join('');
     avisoAporte('', false);
     if (fs.length > APORTE_MAX_ARQ) {
@@ -880,6 +943,18 @@ var RepassoMed = (function(){
 
     if (!fs.length && msg.length < 3){
       avisoAporte('Adjuntá al menos un archivo o contanos qué querés aportar.', true);
+      return;
+    }
+    /* Destino é escolha, não omissão: o valor vazio nunca vira «general»
+       por acidente. Quem não sabe marca «Otro» / «Otra / general». */
+    if (!sem){
+      avisoAporte('Elegí el semestre. Si no estás seguro, marcá «Otro / no estoy seguro».', true);
+      sugBox.querySelector('#rm-ap-sem').focus();
+      return;
+    }
+    if (!slug){
+      avisoAporte('Elegí la materia. Si no corresponde a ninguna, marcá «Otra / general».', true);
+      sugBox.querySelector('#rm-ap-mat').focus();
       return;
     }
     if (fs.length > APORTE_MAX_ARQ){
@@ -920,37 +995,53 @@ var RepassoMed = (function(){
       var envioId = (window.crypto && window.crypto.randomUUID)
         ? window.crypto.randomUUID() : uuidSimples();
 
-      /* 1) bytes → bucket privado, um por vez, com o progresso à vista */
-      var meta = [];
-      for (var k = 0; k < fs.length; k++){
-        var f = fs[k];
-        btn.textContent = fs.length > 1
-          ? 'Subiendo ' + (k + 1) + '/' + fs.length + '...'
-          : 'Subiendo...';
-        var caminho = user.id + '/' + envioId + '/' +
-                      (k + 1) + '-' + nomeSeguro(f.name);
-        var up = await sb.storage.from('aportes').upload(caminho, f, {
-          contentType: f.type || 'application/octet-stream',
-          upsert: false
-        });
-        if (up && up.error) throw up.error;
-        meta.push({ path: caminho, name: String(f.name).slice(0, 200),
-                    size: f.size, mime: f.type || '' });
-      }
+      /* 1) bytes → bucket privado, um por vez, com o progresso à vista.
+         `subidos` guarda o que já entrou: se o passo 2 falhar, é por
+         esta lista que a limpeza volta e apaga. */
+      var meta = [], subidos = [];
+      try {
+        for (var k = 0; k < fs.length; k++){
+          var f = fs[k];
+          btn.textContent = fs.length > 1
+            ? 'Subiendo ' + (k + 1) + '/' + fs.length + '...'
+            : 'Subiendo...';
+          var caminho = user.id + '/' + envioId + '/' +
+                        (k + 1) + '-' + nomeSeguro(f.name);
+          var up = await sb.storage.from('aportes').upload(caminho, f, {
+            contentType: f.type || 'application/octet-stream',
+            upsert: false
+          });
+          if (up && up.error) throw up.error;
+          subidos.push(caminho);
+          meta.push({ path: caminho, name: String(f.name).slice(0, 200),
+                      size: f.size, mime: f.type || '' });
+        }
 
-      /* 2) metadados → Postgres (nunca os bytes) */
-      btn.textContent = 'Guardando...';
-      var r = await sb.from('external_contributions').insert({
-        id: envioId,
-        user_id: user.id,
-        nombre: nome || null,
-        email: user.email || null,
-        semester: (sem && sem !== 'otro') ? parseInt(sem, 10) : null,
-        subject_slug: (slug && slug !== '__gen') ? slug : null,
-        mensaje: msg || null,
-        files: meta
-      });
-      if (r && r.error) throw r.error;
+        /* 2) metadados → Postgres (nunca os bytes) */
+        btn.textContent = 'Guardando...';
+        var r = await sb.from('external_contributions').insert({
+          id: envioId,
+          user_id: user.id,
+          nombre: nome || null,
+          email: user.email || null,
+          semester: (sem && sem !== 'otro') ? parseInt(sem, 10) : null,
+          subject_slug: (slug && slug !== '__gen') ? slug : null,
+          mensaje: msg || null,
+          files: meta
+        });
+        if (r && r.error) throw r.error;
+      } catch (falha) {
+        /* Bytes no bucket sem linha que os explique são lixo invisível:
+           ninguém os vê no painel e ninguém os apaga. Como a linha NÃO
+           existe, a policy `aportes_delete_huerfano` permite ao dono
+           apagá-los — e só enquanto forem órfãos mesmo. Se a limpeza
+           falhar, o erro original é que importa; ele segue adiante. */
+        if (subidos.length){
+          try { await sb.storage.from('aportes').remove(subidos); }
+          catch (_){ }
+        }
+        throw falha;
+      }
 
       /* 3) espelhamento no Drive — se falhar, o envio já está salvo */
       var aviso = '¡Gracias! Tu material llegó. Lo vamos a revisar.';
@@ -970,8 +1061,7 @@ var RepassoMed = (function(){
       }
 
       sugBox.querySelector('#rm-ap-msg').value = '';
-      sugBox.querySelector('#rm-ap-file').value = '';
-      pintarArquivos();
+      limparArquivos();
       btn.textContent = 'Enviado ✓';
       avisoAporte(aviso, false);
     }catch(e){
