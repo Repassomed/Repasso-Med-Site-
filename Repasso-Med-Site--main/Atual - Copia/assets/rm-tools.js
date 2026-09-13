@@ -708,6 +708,12 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
        .rm-tools    (esquerda)  volver arriba
        .rm-tools-r  (direita)   marcador em cima, goma embaixo, paleta
                                 abrindo para dentro da tela            */
+  /* A V2 (assets/rm-tools-v2.js) assume marcador, goma e paleta dentro da
+     própria Toolbox. Quando ela está activa para este utilizador, a coluna
+     direita legada não se monta — o «Volver arriba» da esquerda fica como
+     está, para toda a gente. Sem a V2, nada aqui muda. */
+  function v2Ativa() { return window.RM_STUDY_V2_ACTIVE === true; }
+
   function montarBarra(tabEl) {
     if (tabEl.querySelector(':scope > .rm-tools')) return;
 
@@ -743,16 +749,19 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
         '<span class="tx">Goma</span></button>';
 
     tabEl.insertBefore(box, tabEl.firstChild);
-    tabEl.insertBefore(dir, box.nextSibling);
+    if (!v2Ativa()) tabEl.insertBefore(dir, box.nextSibling);
 
     var bTop = box.querySelector('.rm-top');
-    var bMark = dir.querySelector('.rm-mark');
-    var bErase = dir.querySelector('.rm-erase');
-    var pal = dir.querySelector('.rm-pal');
 
     bTop.addEventListener('click', function () {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
+
+    if (v2Ativa()) { medirBarra(); return; }
+
+    var bMark = dir.querySelector('.rm-mark');
+    var bErase = dir.querySelector('.rm-erase');
+    var pal = dir.querySelector('.rm-pal');
 
     bMark.addEventListener('click', function () {
       estado.marcando = !estado.marcando;
@@ -819,7 +828,7 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     /* desktop e touch: ao soltar, se o marcador estiver ligado, aplica */
     ['mouseup', 'touchend'].forEach(function (ev) {
       document.addEventListener(ev, function (e) {
-        if (!estado.marcando) return;
+        if (!estado.marcando || v2Ativa()) return;
         if (e.target && e.target.closest && e.target.closest('.rm-tools,.rm-tools-r,.rm-pal')) return;
         setTimeout(function () {
           var s = window.getSelection();
@@ -830,7 +839,7 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
 
     /* borracha */
     document.addEventListener('click', function (e) {
-      if (!estado.apagando) return;
+      if (!estado.apagando || v2Ativa()) return;
       var sp = e.target && e.target.closest && e.target.closest('.rm-hl');
       if (!sp) return;
       e.preventDefault(); e.stopPropagation();
@@ -1286,12 +1295,17 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
   /* 10 · arranque                                                      */
   /* ---------------------------------------------------------------- */
 
+  var ganchosAba = [];
+
   function prepararAba(tabEl) {
     if (!tabEl || !tabEl.id || tabEl.id.indexOf('tab-') !== 0) return;
     montarBarra(tabEl);
     marcarZoomaveis(tabEl);
     sincronizarAba(tabEl);
     if (tabEl.classList.contains('active')) observarProgresso(tabEl);
+    for (var i = 0; i < ganchosAba.length; i++) {
+      try { ganchosAba[i](tabEl); } catch (e) { console.warn('[rm-tools] gancho', e); }
+    }
   }
 
   function prepararTodas() {
@@ -1354,6 +1368,30 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     abrirLB: abrirLB,
     ehDidatica: ehDidatica,
     indexar: indexar,
-    escolher: escolher
+    escolher: escolher,
+
+    /* --- superfície usada pela V2 (assets/rm-tools-v2.js) ---------------
+       Expor é deliberado: a V2 EVOLUI este motor, não o reimplementa. A
+       ancoragem por TextQuoteSelector, o pintar/despintar e o acesso ao
+       Supabase continuam a viver aqui, num sítio só. */
+    sb: sb,
+    userId: userId,
+    toast: toast,
+    abaAtiva: abaAtiva,
+    slugDoTab: slugDoTab,
+    blocoDe: blocoDe,
+    normalizar: normalizar,
+    ocorrencias: ocorrencias,
+    rangeDe: rangeDe,
+    faixaNoIndice: faixaNoIndice,
+    pintar: pintar,
+    despintar: despintar,
+    marcarSelecao: marcarSelecao,
+    apagarHighlight: apagar,
+    carregarHighlights: carregarHighlights,
+    medirBarra: medirBarra,
+    fecharLB: fecharLB,
+    lbAberto: function () { return !!(lb && lb.classList.contains('rm-lb-open')); },
+    onAbaPronta: function (fn) { if (typeof fn === 'function') ganchosAba.push(fn); }
   };
 })();
