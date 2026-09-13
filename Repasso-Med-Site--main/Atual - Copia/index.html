@@ -939,6 +939,7 @@ const CATALOGO = [
   { slug:'ortopedia', tab:'orto', file:'materias/ortopedia.html', title:'Ortopedia y Traumatología', sub:'Diagnóstico · Partes blandas · Fracturas' },
   { slug:'oftalmologia', tab:'oftalmo', file:'materias/oftalmologia.html', title:'Oftalmología', sub:'Ojo rojo · Catarata · Glaucoma · Retina' },
   { slug:'neurologia', tab:'neuro', file:'materias/neurologia.html', title:'Neurología', sub:'Localización · Pares craneales · Síndromes' },
+  { slug:'anestesiologia', tab:'ane', file:'materias/anestesiologia.html', title:'Anestesiología', sub:'Preanestésica · ASA · Vía aérea · Regional' },
 ];
 
 /* Semestre de cada matéria. A VERDADE vem do banco (subjects.semester,
@@ -952,7 +953,7 @@ const SEMESTRE_FALLBACK = {
   'semiologia-ii':6, 'farmacologia-ii':6, 'anatomia-patologica-ii':6, 'medicina-legal':6,
   'anatomia-patologica-ii-practica':6,
   'fisiopatologia-ii':6, 'toxicologia':7, 'dermatologia':7, 'ortopedia':7,
-  'oftalmologia':7, 'neurologia':7,
+  'oftalmologia':7, 'neurologia':7, 'anestesiologia':7,
   'guarani':2
 };
 /* O motor (app-core.js) precisa do catálogo para escrever o nome da
@@ -1480,13 +1481,14 @@ const RM_ICON_PATHS = {
   casa:   '<path d="M3.6 10.6 12 3.8l8.4 6.8V20a1 1 0 0 1-1 1H4.6a1 1 0 0 1-1-1z"/><path d="M9.4 21v-5.2h5.2V21"/>',
   balanza:'<path d="M12 3.6v16.8"/><path d="M6.5 20.4h11"/><path d="M4.5 7.4h15"/><path d="M4.5 7.4 2 13h5z"/><path d="M19.5 7.4 22 13h-5z"/>',
   libro:  '<path d="M3.6 4.4h5.9a3 3 0 0 1 2.5 1.3 3 3 0 0 1 2.5-1.3h5.9v14.1h-5.9a3 3 0 0 0-2.5 1.3 3 3 0 0 0-2.5-1.3H3.6z"/><path d="M12 5.7v14.1"/>',
-  trofeo: '<path d="M7 4h10v4.5a5 5 0 0 1-10 0z"/><path d="M7 5.5H4.6v1.6A3.4 3.4 0 0 0 8 10.5M17 5.5h2.4v1.6a3.4 3.4 0 0 1-3.4 3.4"/><path d="M12 13.5V17M8.5 20.4h7"/>'
+  trofeo: '<path d="M7 4h10v4.5a5 5 0 0 1-10 0z"/><path d="M7 5.5H4.6v1.6A3.4 3.4 0 0 0 8 10.5M17 5.5h2.4v1.6a3.4 3.4 0 0 1-3.4 3.4"/><path d="M12 13.5V17M8.5 20.4h7"/>',
+  ojo:    '<path d="M2.4 12s3.5-6.3 9.6-6.3S21.6 12 21.6 12s-3.5 6.3-9.6 6.3S2.4 12 2.4 12z"/><circle cx="12" cy="12" r="3.1"/><circle cx="12" cy="12" r=".95"/>',
+  jeringa:'<rect x="7" y="9" width="11" height="6" rx="1" transform="rotate(-45 12 12)"/><path d="M8.5 15.5 5.2 18.8"/><path d="M16.2 7.8 19.6 4.4"/><path d="M18.3 3.1 20.9 5.7"/><path d="M14.7 6.3 17.7 9.3"/><path d="M11.8 10.4 13.6 12.2M13.6 8.7 15.4 10.5"/>',
 };
 
 /* matéria → ícone + cor. A cor entra como variável CSS no card. */
 const RM_SUBJ_STYLE = {
   'biologia':                     { ic:'celula',  c:'#1d7a4f' },
-  ojo:    '<path d="M2.4 12s3.5-6.3 9.6-6.3S21.6 12 21.6 12s-3.5 6.3-9.6 6.3S2.4 12 2.4 12z"/><circle cx="12" cy="12" r="3.1"/><circle cx="12" cy="12" r=".95"/>',
   'anatomia-i':                   { ic:'hueso',   c:'#13314f' },
   'histologia-i':                 { ic:'tejido',  c:'#d8a32a' },
   'histologia-i-practica':        { ic:'lamina',  c:'#d8a32a' },
@@ -1512,6 +1514,7 @@ const RM_SUBJ_STYLE = {
   'ortopedia':                    { ic:'hueso',   c:'#8a5a2b' },
   'oftalmologia':                 { ic:'ojo',     c:'#0a7d72' },
   'neurologia':                   { ic:'esteto',  c:'#4b32b8' },
+  'anestesiologia':               { ic:'jeringa', c:'#1f6f8b' },
 };
 
 /* hex → rgba com alfa, para o fundo suave do ícone */
