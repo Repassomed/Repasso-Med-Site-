@@ -100,22 +100,47 @@
     var st = document.createElement('style');
     st.id = 'rm-tools-css';
     st.textContent = `
-/* ---------- barra de ferramentas (coluna esquerda, acima do índice) ---------- */
-:root{ --rm-tools-h: 0px; }
-#materias-container .rm-tools{
-  position:fixed; left:14px; z-index:361;
-  top:calc(var(--topbar-h) + var(--tabs-h) + 14px);
-  display:flex; flex-direction:column; gap:6px; align-items:flex-start;
+/* ---------- as duas colunas de controles ----------------------------
+
+   ESQUERDA — o que serve para NAVEGAR, empilhado nesta ordem:
+       [ ✉ envelope ]  →  [ ↑ volver arriba ]  →  [ ☰ índice ]
+
+   DIREITA — o que serve para MARCAR, e por isso fica do lado da mão que
+   seleciona, longe do índice:
+       [ marcador ]
+       [ goma ]
+
+   Antes, marcador e goma dividiam a coluna esquerda com o «volver
+   arriba» e empurravam o índice para baixo; com a paleta aberta, o
+   conjunto descia sobre a área de leitura. Separar as duas colunas
+   devolve o meio da tela para a matéria.
+
+   O empilhamento da esquerda é uma soma de alturas conhecidas:
+     --rm-sug-slot  envelope + folga  (fixo, em styles.css)
+     --rm-tools-h   altura real da barra, medida por medirBarra()
+   -------------------------------------------------------------------- */
+:root{ --rm-tools-h: 0px; --rm-rail-top: calc(var(--topbar-h) + var(--tabs-h) + 14px); }
+
+#materias-container .rm-tools,
+#materias-container .rm-tools-r{
+  position:fixed; z-index:361;
+  display:flex; flex-direction:column; gap:6px;
   font-family:var(--font-ui, Inter, system-ui, sans-serif);
 }
-.tab-content:not(.active) .rm-tools{ display:none; }
-
-/* o índice e a caixa de sugestões descem o tamanho da barra */
-#materias-container .rm-menu{
-  top:calc(var(--topbar-h) + var(--tabs-h) + 14px + var(--rm-tools-h));
+#materias-container .rm-tools{
+  left:14px; align-items:flex-start;
+  top:calc(var(--rm-rail-top) + var(--rm-sug-slot));
 }
-@media (min-width:681px){
-  .rm-sug-fab{ top:calc(var(--topbar-h) + var(--tabs-h) + 14px + 52px + var(--rm-tools-h)); }
+#materias-container .rm-tools-r{
+  right:14px; align-items:flex-end;
+  top:var(--rm-rail-top);
+}
+.tab-content:not(.active) .rm-tools,
+.tab-content:not(.active) .rm-tools-r{ display:none; }
+
+/* o índice desce o envelope + a barra */
+#materias-container .rm-menu{
+  top:calc(var(--rm-rail-top) + var(--rm-sug-slot) + var(--rm-tools-h));
 }
 
 .rm-tools-btn{
@@ -131,7 +156,12 @@
 .rm-tools-btn svg{ width:15px; height:15px; flex:0 0 auto; }
 .rm-tools-btn.on{ background:linear-gradient(120deg,#10243D,#1d3f68); color:#fff; }
 .rm-tools-btn.on svg{ stroke:#FFC233; }
-.rm-tools-row{ display:flex; gap:6px; align-items:center; }
+
+/* A linha do marcador: a paleta cresce PARA DENTRO DA TELA, à esquerda
+   do botão, porque o botão está encostado na borda direita. Assim ela
+   nunca sai do viewport e nunca cobre a goma, que está na linha de
+   baixo. */
+.rm-tools-slot{ display:flex; align-items:center; gap:8px; }
 
 /* paleta de cores */
 .rm-pal{
@@ -232,16 +262,31 @@ body.rm-lb-open{ overflow:hidden; }
 body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
 #materias-container img.rm-zoomable{ cursor:zoom-in; }
 
-/* ---------- telas pequenas ---------- */
+/* ---------- tablet e celular: a paleta fica EM PÉ ----------
+   Deitada ela é uma caixa branca de ~130 px atravessada sobre o texto.
+   Em telas largas isso cai na margem e não custa nada; de 1100 px para
+   baixo cai em cima da leitura. Em pé, logo abaixo da coluna, ela ocupa
+   a mesma faixa que os dois botões já ocupam — nenhuma largura nova de
+   leitura — e continua sem sair do viewport, sem cobrir a goma (abre
+   depois dela) e sem chegar perto do índice, que está do outro lado. */
+@media (max-width:1100px){
+  .rm-pal{ flex-direction:column; padding:6px; gap:5px;
+    position:absolute; top:calc(100% + 6px); right:0; }
+  .rm-pal button{ width:24px; height:24px; }
+}
+
+/* ---------- telas pequenas ----------
+   Os botões viram círculos só de ícone (o rótulo sobrevive em
+   aria-label e title), e as duas colunas sobem 6 px para devolver
+   altura de leitura. Nada volta para cima do texto. */
 @media (max-width:700px){
-  #materias-container .rm-tools{ left:10px; top:calc(var(--topbar-h) + var(--tabs-h) + 8px);
-    flex-direction:row; gap:5px; align-items:center; }
-  #materias-container .rm-menu{
-    top:calc(var(--topbar-h) + var(--tabs-h) + 8px + var(--rm-tools-h)); left:10px; }
+  :root{ --rm-rail-top: calc(var(--topbar-h) + var(--tabs-h) + 8px); }
+  #materias-container .rm-tools{ left:10px; }
+  #materias-container .rm-tools-r{ right:10px; }
+  #materias-container .rm-menu{ left:10px; }
   .rm-tools-btn{ padding:.5rem; border-radius:50%; }
   .rm-tools-btn .tx{ display:none; }
-  .rm-tools-row{ gap:5px; }
-  .rm-pal{ position:absolute; top:calc(100% + 6px); left:0; }
+  .rm-tools-slot{ gap:6px; }
 }
 @media (prefers-reduced-motion: reduce){
   .rm-tools-btn, .rm-resume, .rm-toast{ transition:none; }
@@ -258,7 +303,7 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
   /* Onde NÃO se marca: controles, navegação e widgets interativos.
      A ferramenta é para conteúdo didático (§9). */
   var SKIP = 'button,input,select,textarea,option,svg,canvas,video,audio,iframe,a,label,' +
-    '.rm-tools,.rm-pal,.rm-menu,.rm-sug-fab,#rm-sug,.rm-lb,.rm-resume,.rm-toast,' +
+    '.rm-tools,.rm-tools-r,.rm-pal,.rm-menu,.rm-sug-fab,#rm-sug,.rm-lb,.rm-resume,.rm-toast,' +
     '.rmfc-overlay,.rmfc-launch,.rmatlas,.flashcard,.fc-grid,.rmc-gl,' +
     '.reveal-btn,.tf-buttons,[data-option],[onclick]';
 
@@ -657,6 +702,12 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
       'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + (extra || '') + '</svg>';
   }
 
+  /* Duas colunas, os MESMOS handlers de sempre: nada aqui é uma segunda
+     implementação das ferramentas — só mudou onde cada botão mora.
+
+       .rm-tools    (esquerda)  volver arriba
+       .rm-tools-r  (direita)   marcador em cima, goma embaixo, paleta
+                                abrindo para dentro da tela            */
   function montarBarra(tabEl) {
     if (tabEl.querySelector(':scope > .rm-tools')) return;
 
@@ -665,29 +716,35 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     box.innerHTML =
       '<button type="button" class="rm-tools-btn rm-top" title="Volver arriba" aria-label="Volver arriba">' +
         ico('<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>') +
-        '<span class="tx">Volver arriba</span></button>' +
-      '<div class="rm-tools-row">' +
+        '<span class="tx">Volver arriba</span></button>';
+
+    var dir = document.createElement('div');
+    dir.className = 'rm-tools-r';
+    dir.innerHTML =
+      '<div class="rm-tools-slot">' +
+        '<div class="rm-pal" role="radiogroup" aria-label="Color del marcador">' +
+          '<button type="button" class="c-red"   data-c="red"   role="radio" aria-checked="true"  title="Rojo claro"  aria-label="Rojo claro"></button>' +
+          '<button type="button" class="c-blue"  data-c="blue"  role="radio" aria-checked="false" title="Azul claro"  aria-label="Azul claro"></button>' +
+          '<button type="button" class="c-green" data-c="green" role="radio" aria-checked="false" title="Verde claro" aria-label="Verde claro"></button>' +
+          '<button type="button" class="c-pink"  data-c="pink"  role="radio" aria-checked="false" title="Rosa claro"  aria-label="Rosa claro"></button>' +
+        '</div>' +
         '<button type="button" class="rm-tools-btn rm-mark" title="Marcador de texto" ' +
           'aria-label="Marcador de texto" aria-pressed="false">' +
           ico('<path d="M4 20h4l10-10a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/>') +
           '<span class="tx">Marcador</span></button>' +
-        '<button type="button" class="rm-tools-btn rm-erase" title="Goma de borrar marcas" ' +
-          'aria-label="Goma: borrar marcas" aria-pressed="false">' +
-          ico('<path d="M8 20H5l-2-2 9-9 6 6-5 5Z"/><path d="M14 6l4 4"/><path d="M9 20h11"/>') +
-          '<span class="tx">Goma</span></button>' +
       '</div>' +
-      '<div class="rm-pal" role="radiogroup" aria-label="Color del marcador">' +
-        '<button type="button" class="c-red"   data-c="red"   role="radio" aria-checked="true"  title="Rojo claro"  aria-label="Rojo claro"></button>' +
-        '<button type="button" class="c-blue"  data-c="blue"  role="radio" aria-checked="false" title="Azul claro"  aria-label="Azul claro"></button>' +
-        '<button type="button" class="c-green" data-c="green" role="radio" aria-checked="false" title="Verde claro" aria-label="Verde claro"></button>' +
-        '<button type="button" class="c-pink"  data-c="pink"  role="radio" aria-checked="false" title="Rosa claro"  aria-label="Rosa claro"></button>' +
-      '</div>';
+      '<button type="button" class="rm-tools-btn rm-erase" title="Goma de borrar marcas" ' +
+        'aria-label="Goma: borrar marcas" aria-pressed="false">' +
+        ico('<path d="M8 20H5l-2-2 9-9 6 6-5 5Z"/><path d="M14 6l4 4"/><path d="M9 20h11"/>') +
+        '<span class="tx">Goma</span></button>';
+
     tabEl.insertBefore(box, tabEl.firstChild);
+    tabEl.insertBefore(dir, box.nextSibling);
 
     var bTop = box.querySelector('.rm-top');
-    var bMark = box.querySelector('.rm-mark');
-    var bErase = box.querySelector('.rm-erase');
-    var pal = box.querySelector('.rm-pal');
+    var bMark = dir.querySelector('.rm-mark');
+    var bErase = dir.querySelector('.rm-erase');
+    var pal = dir.querySelector('.rm-pal');
 
     bTop.addEventListener('click', function () {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -696,14 +753,14 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     bMark.addEventListener('click', function () {
       estado.marcando = !estado.marcando;
       if (estado.marcando) estado.apagando = false;
-      refletir(box);
+      refletir();
       if (estado.marcando) toast('Marcador activo · seleccioná el texto');
     });
 
     bErase.addEventListener('click', function () {
       estado.apagando = !estado.apagando;
       if (estado.apagando) estado.marcando = false;
-      refletir(box);
+      refletir();
       if (estado.apagando) toast('Goma activa · tocá una marca');
     });
 
@@ -720,12 +777,15 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     medirBarra();
   }
 
-  function refletir(box) {
-    var raiz = box || document.querySelector('.tab-content.active .rm-tools');
+  function refletir() {
     document.body.classList.toggle('rm-marking', estado.marcando);
     document.body.classList.toggle('rm-erasing', estado.apagando);
-    document.querySelectorAll('.rm-tools').forEach(function (b) {
+    /* marcador, goma e paleta vivem na coluna DIREITA desde a
+       reorganização do layout; o «volver arriba» continua na esquerda e
+       não tem estado para refletir */
+    document.querySelectorAll('.rm-tools-r').forEach(function (b) {
       var m = b.querySelector('.rm-mark'), e = b.querySelector('.rm-erase'), p = b.querySelector('.rm-pal');
+      if (!m || !e || !p) return;
       m.classList.toggle('on', estado.marcando); m.setAttribute('aria-pressed', String(estado.marcando));
       e.classList.toggle('on', estado.apagando); e.setAttribute('aria-pressed', String(estado.apagando));
       p.classList.toggle('on', estado.marcando);
@@ -733,19 +793,13 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     medirBarra();
   }
 
-  /* a barra empurra o índice e a caixa de sugestões para baixo */
+  /* A barra da esquerda empurra o índice para baixo. Agora ela tem um
+     botão só, e a paleta saiu daqui para a coluna direita — então não há
+     mais o caso de a paleta aberta tapar o botão do índice. */
   function medirBarra() {
     var b = document.querySelector('#materias-container > .tab-content.active > .rm-tools');
     if (!b) { document.documentElement.style.setProperty('--rm-tools-h', '0px'); return; }
-    var r = b.getBoundingClientRect(), base = r.bottom;
-    /* em telas pequenas a paleta é absoluta: entra na conta só quando
-       está aberta, senão taparia o botão do índice */
-    var pal = b.querySelector('.rm-pal.on');
-    if (pal) {
-      var pr = pal.getBoundingClientRect();
-      if (pr.height) base = Math.max(base, pr.bottom);
-    }
-    var h = Math.round(base - r.top);
+    var h = Math.round(b.getBoundingClientRect().height);
     document.documentElement.style.setProperty('--rm-tools-h', (h ? h + 8 : 0) + 'px');
   }
 
@@ -762,7 +816,7 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     ['mouseup', 'touchend'].forEach(function (ev) {
       document.addEventListener(ev, function (e) {
         if (!estado.marcando) return;
-        if (e.target && e.target.closest && e.target.closest('.rm-tools,.rm-pal')) return;
+        if (e.target && e.target.closest && e.target.closest('.rm-tools,.rm-tools-r,.rm-pal')) return;
         setTimeout(function () {
           var s = window.getSelection();
           if (s && s.rangeCount && !s.isCollapsed) marcarSelecao();
@@ -1026,7 +1080,7 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
   function ehDidatica(img) {
     if (!img || img.tagName !== 'IMG') return false;
     if (!img.closest(TABS_SEL)) return false;                       // home/loja/topbar fora
-    if (img.closest('.rmatlas, .rm-lb, .rmfc-overlay, .rm-menu, .rm-tools')) return false;
+    if (img.closest('.rmatlas, .rm-lb, .rmfc-overlay, .rm-menu, .rm-tools, .rm-tools-r')) return false;
     if (img.classList.contains('rmatlas-base') || img.classList.contains('rmatlas-zoomimg')) return false;
     if (img.classList.contains('hp-lb-img')) return false;          // já é a cópia ampliada
     /* nunca roubar o clique de um widget interativo: flashcard vira,

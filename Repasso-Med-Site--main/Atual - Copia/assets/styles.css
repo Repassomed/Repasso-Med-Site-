@@ -1596,40 +1596,69 @@ footer strong { color:var(--gold-soft); }
 }
 
 /* =====================================================================
-   CAIXA DE SUGESTÕES · card próprio, fixo abaixo do índice
+   CAIXA DE SUGESTÕES · dois atalhos, UM painel
+
+   (1) `.rm-sug-top` — acesso principal, no cabeçalho, ao lado da Loja
+       de matérias. Alcançável de qualquer lugar do site, inclusive fora
+       de uma matéria.
+   (2) `.rm-sug-fab` — atalho discreto na coluna esquerda da matéria,
+       para quem já está lendo e não quer subir até o topo.
+
+   Os dois chamam `RepassoMed.abrirSugestoes`, que abre a MESMA gaveta
+   `#rm-sug` — instância única no `<body>`.
+
+   O card antigo trazia o rótulo «Caja de sugerencias» escrito por
+   extenso e ocupava até 300 px de largura em toda matéria, o tempo
+   todo. O rótulo não sumiu: mudou de lugar (cabeçalho) e continua em
+   `aria-label`/`title` no atalho da lateral.
    ===================================================================== */
+
+/* ---------- (1) botão do cabeçalho ---------- */
+.rm-sug-top{
+  display:flex;align-items:center;gap:.42rem;
+  flex:0 0 auto;margin-right:10px;
+  padding:7px 13px;border-radius:8px;cursor:pointer;
+  font-family:var(--font-ui);font-weight:700;font-size:13px;line-height:1;
+  /* vidro sobre o azul da barra: acompanha a Loja sem competir com ela,
+     que é dourada e continua sendo a ação de maior peso comercial */
+  background:rgba(255,255,255,.12);color:#eaf2fa;
+  border:1px solid rgba(255,255,255,.26);
+  transition:background .16s ease,border-color .16s ease,color .16s ease;
+}
+.rm-sug-top:hover{background:rgba(255,255,255,.22);border-color:var(--gold);color:#fff;}
+.rm-sug-top:focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
+.rm-sug-top svg{width:16px;height:16px;flex:0 0 auto;}
+
+/* ---------- (2) envelope da coluna esquerda ---------- */
 .rm-sug-fab{
   position:fixed;left:14px;z-index:359;
-  top:calc(var(--topbar-h) + var(--tabs-h) + 14px + 52px);
-  display:flex;align-items:center;gap:.6rem;
-  max-width:min(300px,calc(100vw - 28px));
-  padding:.6rem .8rem .6rem .62rem;
-  border:none;border-radius:14px;cursor:pointer;text-align:left;
+  top:calc(var(--topbar-h) + var(--tabs-h) + 14px);
+  display:grid;place-items:center;
+  width:var(--rm-sug-size);height:var(--rm-sug-size);
+  padding:0;border:none;border-radius:50%;cursor:pointer;
   font-family:var(--font-ui);
   background:linear-gradient(120deg,#8f6408,#c08f1c 55%,#d8a32a);
-  color:#fff;box-shadow:0 8px 22px rgba(143,100,8,.32);
+  color:#fff;box-shadow:0 6px 18px rgba(143,100,8,.32);
   transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;
 }
 .tab-content:not(.active) .rm-sug-fab{display:none;}
-.rm-sug-fab:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(143,100,8,.40);filter:brightness(1.05);}
-.rm-sug-fab .ic{flex:0 0 auto;width:32px;height:32px;border-radius:10px;
-  display:grid;place-items:center;background:rgba(255,255,255,.20);color:#fff;}
+.rm-sug-fab:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(143,100,8,.40);filter:brightness(1.05);}
+.rm-sug-fab:focus-visible{outline:3px solid #10243D;outline-offset:2px;}
+.rm-sug-fab .ic{display:grid;place-items:center;}
 .rm-sug-fab .ic svg{width:17px;height:17px;}
-.rm-sug-fab .tx{min-width:0;}
-.rm-sug-fab b{display:block;font-size:.83rem;font-weight:800;line-height:1.2;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rm-sug-fab small{display:block;margin-top:.12rem;font-family:var(--font-mono);
-  font-size:.55rem;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.85);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
-@media (max-width:680px){
-  /* no celular o botão do índice é só o ícone; o card acompanha e
-     encolhe para não cobrir a matéria */
-  .rm-sug-fab{top:auto;bottom:16px;left:14px;padding:.55rem .7rem .55rem .55rem;}
-  .rm-sug-fab .tx{display:none;}
-  .rm-sug-fab .ic{width:30px;height:30px;}
+/* altura reservada ao envelope na coluna esquerda; `rm-tools.js` usa
+   esta medida para empilhar «volver arriba» e o índice logo abaixo */
+:root{ --rm-sug-size:40px; --rm-sug-slot:46px; }
+@media (max-width:700px){ :root{ --rm-sug-size:34px; --rm-sug-slot:40px; } }
+@media (max-width:700px){
+  .rm-sug-fab{left:10px;}
+  .rm-sug-fab .ic svg{width:15px;height:15px;}
+  /* no celular o cabeçalho fica apertado: só o envelope */
+  .rm-sug-top{padding:7px 9px;margin-right:8px;}
+  .rm-sug-top .tx{display:none;}
 }
-@media (prefers-reduced-motion: reduce){ .rm-sug-fab{transition:none;} }
+@media (prefers-reduced-motion: reduce){ .rm-sug-fab,.rm-sug-top{transition:none;} }
 
 
 /* =====================================================================
