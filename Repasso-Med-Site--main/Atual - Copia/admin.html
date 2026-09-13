@@ -69,6 +69,15 @@
   .subj input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent-lt);flex:0 0 auto;cursor:pointer;}
   .subj .sname{font-weight:600;flex:1;}
   .subj .sexp{font-size:11px;color:var(--ink-soft);}
+  /* agrupamento por semestre no detalhe do usuário (dinâmico: subjects.semester) */
+  .sem-group{margin:0 0 16px;}
+  .sem-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:8px 10px;border-radius:10px;background:rgba(29,122,79,.08);
+    border:1px solid rgba(29,122,79,.18);margin-bottom:8px;}
+  .sem-bar .sem-title{font-weight:700;flex:1;min-width:150px;}
+  .sem-bar .sem-count{font-size:11px;color:var(--ink-soft);font-weight:400;}
+  .sem-bar button{font-size:11px;padding:5px 9px;}
+  @media(max-width:560px){ .sem-bar .sem-title{flex:1 0 100%;} }
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
   .back{background:none;border:none;color:var(--ink-soft);padding:0;margin-bottom:14px;font-size:13px;}
   .back:hover{color:var(--ink);}
@@ -118,10 +127,14 @@
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
   /* navegação do painel (Usuarios / Acceso por materia) */
-  .adm-nav{display:flex;gap:6px;margin-bottom:18px;background:var(--panel2);
+  /* ⚠️ as abas já não cabiam em 390 px com quatro (transbordavam 130 px);
+     com a quinta seriam 246 px. `flex-wrap` deixa a linha quebrar em vez
+     de empurrar a página inteira para o lado. */
+  .adm-nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;background:var(--panel2);
     border:1px solid var(--line);border-radius:11px;padding:4px;}
   .adm-tab{flex:0 0 auto;background:transparent;color:var(--ink-soft);font-weight:700;
     padding:9px 16px;border-radius:8px;}
+  @media(max-width:520px){ .adm-tab{flex:1 1 auto;padding:9px 10px;font-size:13px;text-align:center;} }
   .adm-tab.active{background:var(--accent);color:#fff;}
   .adm-tab:hover:not(.active){color:var(--ink);background:rgba(19,49,79,.05);}
   /* acesso por matéria (Fase 3) */
@@ -153,6 +166,38 @@
   .sug .msg{font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
   .sug .acts{margin-top:9px;display:flex;gap:8px;flex-wrap:wrap;}
   .sug .acts button{font-size:12px;padding:5px 10px;}
+  /* aportes de material externo */
+  .tabbadge{display:inline-block;margin-left:7px;min-width:18px;padding:1px 5px;border-radius:9px;
+    background:var(--gold,#d8a32a);color:#fff;font-size:11px;font-weight:800;line-height:1.5;}
+  .tabbadge.hidden{display:none;}
+  .ap .top{align-items:center;}
+  .apbadge{margin-left:auto;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:800;
+    letter-spacing:.02em;white-space:nowrap;}
+  .apbadge.ok{background:#e6f5ec;color:#1d7a4f;}
+  .apbadge.warn{background:#fbf3e0;color:#8a6a15;}
+  .apbadge.bad{background:#fbecea;color:#c0392b;}
+  /* curadoria humana — tom mais frio que o estado técnico do Drive */
+  .apbadge.rev{margin-left:auto;border:1px solid transparent;}
+  .apbadge.rev + .apbadge{margin-left:6px;}
+  .apbadge.nva{background:#eef3fb;color:#2d4b73;border-color:#d4e0ef;}
+  .apbadge.vst{background:#f2f2f4;color:#5a6170;border-color:#e2e2e6;}
+  .apbadge.apr{background:#e9f6f1;color:#12705a;border-color:#cfe9df;}
+  .apbadge.dsc{background:#f5f2f2;color:#8a7b7b;border-color:#e6dede;}
+  .ap-id{margin-top:4px;font-family:var(--font-mono,monospace);font-size:10.5px;letter-spacing:.04em;}
+  .ap-rev{display:inline-flex;gap:8px;flex-wrap:wrap;margin-left:auto;}
+  .ap-file.is-drive{cursor:default;opacity:.72;}
+  .ap-file.is-drive:hover{border-color:var(--line);background:#fff;}
+  .ap-files{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;}
+  .ap-file{display:inline-flex;align-items:baseline;gap:8px;max-width:100%;
+    border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;
+    padding:6px 10px;font-family:inherit;font-size:12.5px;color:inherit;}
+  .ap-file:hover{border-color:var(--accent-lt,#888);background:#fafafa;}
+  .ap-file .n{display:block;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}
+  .ap-file .t{display:block;margin-top:1px;font-family:var(--font-mono,monospace);
+    font-size:9.5px;letter-spacing:.02em;color:var(--ink-soft);opacity:.75;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ap-file .s{color:var(--ink-soft);font-size:11px;}
+  .ap .acts a.btn-ghost{display:inline-block;text-decoration:none;font-size:12px;padding:5px 10px;}
   /* seleção múltipla + data da última liberação (lista de usuários) */
   .urow .pick{width:19px;height:19px;flex:0 0 auto;cursor:pointer;accent-color:var(--accent-lt);margin:0;}
   .urow .who{flex:1;min-width:0;}
@@ -222,6 +267,7 @@
     <button class="adm-tab" id="navSubjects" onclick="showView('subjects')">Acceso por materia</button>
     <button class="adm-tab" id="navSales" onclick="showView('sales')">Ventas</button>
     <button class="adm-tab" id="navAds" onclick="showView('ads')">Anuncios</button>
+    <button class="adm-tab" id="navAportes" onclick="showView('aportes')">Aportes<span id="navAportesBadge" class="tabbadge hidden"></span></button>
   </div>
 
   <!-- BUSCA -->
@@ -469,6 +515,25 @@
     </div>
   </div>
 
+  <!-- APORTES: material externo enviado pelos alunos (→ Google Drive) -->
+  <div id="aportesView" class="hidden">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <label style="margin:0;">Aportes de los alumnos</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="muted" id="apCnt"></span>
+          <button class="btn-ghost" onclick="loadAportes()">Actualizar</button>
+        </div>
+      </div>
+      <p class="muted" style="margin:6px 0 0;">Material externo enviado desde la caja
+        «Sugerencias y aportes» de cada materia. Mientras la copia al Drive está
+        pendiente, los archivos viven en un bucket <b>privado</b> y el enlace se firma
+        en el clic, por 10&nbsp;minutos. Una vez <b>En el Drive</b>, esa copia temporal
+        se borra y el material se abre en la carpeta del Drive.</p>
+      <div id="apList" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
   <!-- DETALHE DO USUÁRIO -->
   <div id="detailView" class="hidden">
     <button class="back" onclick="closeDetail()">← Voltar para a busca</button>
@@ -504,6 +569,7 @@
         <button class="btn-gold"     onclick="renewAll()">Renovar acesso</button>
         <button class="btn-ghost"    onclick="toggleAccount()" id="btnToggle">Bloquear conta</button>
         <button class="btn-gold"     onclick="forceRefresh()">Forzar actualización del navegador</button>
+        <button class="btn-ghost"    onclick="sendPasswordReset()" id="btnReset">Enviar redefinição de senha</button>
       </div>
       <p class="muted" style="margin:8px 0 0;">
         «Forzar actualización» sirve cuando el alumno ya tiene el acceso liberado
@@ -614,6 +680,7 @@ async function enterApp(){
   DASH_TIMER = setInterval(loadDashboard, 30000);  // "em tempo real" (janela de 5 min)
   loadPending();
   loadAllUsers();
+  contarAportesNuevos();               // badge NOVA na aba «Aportes»
 }
 
 /* escapa texto vindo do banco antes de injetar no HTML (anti-XSS) */
@@ -679,9 +746,219 @@ async function loadFeedback(){
 
 async function markFeedback(id){
   const { error } = await sb.from('feedback')
-    .update({ leido_en: new Date().toISOString() }).eq('id', id);
+    .update({ leido_en: new Date().toISOString(), review_status: 'vista' }).eq('id', id);
   if(error){ alert('Error: ' + error.message); return; }
   loadFeedback();
+}
+
+/* =====================================================================
+   APORTES DE MATERIAL EXTERNO
+   Llegan por la pestaña «Aportar material» de la caja de sugerencias.
+   La tabla `external_contributions` guarda SOLO metadatos: los archivos
+   están en el bucket privado `aportes` y, si el Apps Script está
+   configurado, también espelhados en el Drive del equipo.
+   Si la tabla todavía no existe, la tarjeta lo dice — nunca rompe.
+   ===================================================================== */
+/* Dois eixos, de propósito separados:
+   · `drive_status` é MÁQUINA — o espelhamento deu certo ou não;
+   · `review_status` é GENTE — a equipe olhou, aproveitou ou descartou.
+   Misturar os dois num campo só daria um estado que mente metade do tempo. */
+const AP_ESTADO = {
+  pendiente: { txt:'Drive pendiente', cls:'warn' },
+  enviado:   { txt:'En el Drive',     cls:'ok'   },
+  error:     { txt:'Falló el Drive',  cls:'bad'  }
+};
+const AP_REVISION = {
+  nueva:       { txt:'Nueva',       cls:'nva' },
+  vista:       { txt:'Visualizada', cls:'vst' },
+  aprovechada: { txt:'Aprovechada', cls:'apr' },
+  descartada:  { txt:'Descartada',  cls:'dsc' }
+};
+
+async function contarAportesNuevos(){
+  const b = document.getElementById('navAportesBadge');
+  if(!b) return;
+  const { count, error } = await sb.from('external_contributions')
+    .select('id', { count:'exact', head:true }).is('leido_en', null);
+  if(error || !count){ b.classList.add('hidden'); b.textContent=''; return; }
+  b.textContent = count > 99 ? '99+' : count;
+  b.classList.remove('hidden');
+}
+
+async function loadAportes(){
+  const box = document.getElementById('apList');
+  const cnt = document.getElementById('apCnt');
+  if(!box) return;
+  box.innerHTML = '<p class="muted">Cargando...</p>';
+
+  const { data, error } = await sb.from('external_contributions')
+    .select('id,user_id,nombre,email,semester,subject_slug,mensaje,files,drive_status,drive_folder_url,drive_error,leido_en,review_status,created_at')
+    .order('created_at', { ascending:false })
+    .limit(80);
+
+  if(error){
+    const falta = /relation .*external_contributions|does not exist/i.test(error.message || '');
+    box.innerHTML = '<p class="' + (falta ? 'muted' : 'err') + '">' +
+      (falta ? 'Todavía no está creada la tabla. Corré <b>supabase/migrations/20260913_03_external_contributions.sql</b> en Supabase.'
+             : 'Error: ' + escapeHtml(error.message)) + '</p>';
+    if(cnt) cnt.textContent = '';
+    return;
+  }
+
+  const list = data || [];
+  const novas = list.filter(x => !x.leido_en).length;
+  if(cnt) cnt.innerHTML = list.length
+    ? '<b>' + novas + '</b> sin leer · ' + list.length + ' en total'
+    : '';
+  if(!list.length){
+    box.innerHTML = '<p class="muted">Todavía no hay aportes.</p>';
+    contarAportesNuevos();
+    return;
+  }
+
+  box.innerHTML = list.map(x => {
+    const quando = new Date(x.created_at).toLocaleString('es');
+    const quem   = escapeHtml(x.nombre || x.email || 'Alumno');
+    const mail   = x.email ? ' · ' + escapeHtml(x.email) : '';
+    const dest   = [
+      (x.semester || x.semester === 0) ? x.semester + '.º sem.' : null,
+      x.subject_slug || null
+    ].filter(Boolean).join(' · ');
+
+    const est = AP_ESTADO[x.drive_status] || AP_ESTADO.pendiente;
+    const rev = AP_REVISION[x.review_status] || AP_REVISION.nueva;
+    const arq = Array.isArray(x.files) ? x.files : [];
+    const enDrive = x.drive_status === 'enviado';
+
+    /* Nunca carregamos o arquivo aqui dentro: o que existe é um enlace
+       assinado, criado no clique e válido por 10 minutos.
+       Com o material já espelhado, a cópia temporária do Storage foi
+       apagada — aí os nomes viram texto e o acesso é pelo Drive. */
+    const archivos = !arq.length
+      ? '<p class="muted" style="margin:8px 0 0;font-size:12.5px;">Sin archivos — solo mensaje.</p>'
+      /* O NOME DO ALUNO é o título — é por ele que o administrador
+         reconhece o material. O nome técnico do Drive
+         («01_A82F92C731D4_prova.pdf») serve para desempatar homônimos e
+         para achar o arquivo na pasta, então aparece embaixo, pequeno, e
+         só quando de fato difere do original. */
+      : '<div class="ap-files">' + arq.map((f, i) => {
+          const nome = escapeHtml(f.name || ('archivo ' + (i+1)));
+          const tec  = apNombreDrive(x.id, i, f.name);
+          const sub  = '<span class="t">' + escapeHtml(tec) + '</span>';
+          return enDrive
+            ? '<span class="ap-file is-drive" title="Copia temporal ya borrada — abrilo en el Drive">' +
+                '<span class="n">' + nome + sub + '</span>' +
+                '<span class="s">' + apPeso(f.size) + '</span></span>'
+            : '<button class="ap-file" onclick="abrirArchivo(\'' + escapeHtml(f.path) + '\')">' +
+                '<span class="n">' + nome + sub + '</span>' +
+                '<span class="s">' + apPeso(f.size) + '</span></button>';
+        }).join('') + '</div>';
+
+    const nArq = arq.length
+      ? arq.length + (arq.length === 1 ? ' archivo' : ' archivos')
+      : 'sin archivos';
+
+    return '<div class="sug ap' + (x.leido_en ? '' : ' nova') + '" id="ap-' + x.id + '">' +
+      '<div class="top">' +
+        '<span class="who">' + quem + '</span>' +
+        '<span class="meta">' + escapeHtml(quando) + mail +
+          (dest ? ' · ' + escapeHtml(dest) : '') + ' · ' + nArq + '</span>' +
+        '<span class="apbadge rev ' + rev.cls + '">' + rev.txt + '</span>' +
+        '<span class="apbadge ' + est.cls + '">' + est.txt + '</span>' +
+      '</div>' +
+      '<div class="ap-id muted">id ' + escapeHtml(String(x.id).slice(0,8)) +
+        ' · usuario ' + escapeHtml(String(x.user_id || '').slice(0,8)) + '</div>' +
+      (x.mensaje ? '<div class="msg">' + escapeHtml(x.mensaje) + '</div>' : '') +
+      archivos +
+      (x.drive_error ? '<p class="err" style="margin:8px 0 0;font-size:12px;">' +
+          escapeHtml(x.drive_error) + '</p>' : '') +
+      '<div class="acts">' +
+        (x.drive_folder_url
+          ? '<a class="btn-ghost" href="' + escapeHtml(x.drive_folder_url) + '" target="_blank" rel="noopener">Abrir en el Drive</a>'
+          : '<button class="btn-ghost" onclick="reenviarAporte(\'' + x.id + '\')">Copiar al Drive</button>') +
+        (enDrive && x.drive_error
+          ? '<button class="btn-ghost" onclick="reenviarAporte(\'' + x.id + '\')">Reintentar</button>' : '') +
+        (x.leido_en ? '' :
+          '<button class="btn-ghost" onclick="markAporte(\'' + x.id + '\')">Marcar como leído</button>') +
+        '<span class="ap-rev">' +
+          (x.review_status === 'aprovechada' ? '' :
+            '<button class="btn-ghost" onclick="revisarAporte(\'' + x.id + '\',\'aprovechada\')">Aprovechada</button>') +
+          (x.review_status === 'descartada' ? '' :
+            '<button class="btn-ghost" onclick="revisarAporte(\'' + x.id + '\',\'descartada\')">Descartar</button>') +
+          (x.review_status === 'nueva' || x.review_status === 'vista' ? '' :
+            '<button class="btn-ghost" onclick="revisarAporte(\'' + x.id + '\',\'vista\')">Volver a pendiente</button>') +
+        '</span>' +
+      '</div></div>';
+  }).join('');
+
+  contarAportesNuevos();
+}
+
+/* Espelha `nomeDrive()` de aporte-drive.js — é só para EXIBIR. O nome
+   que vale continua sendo gerado no servidor; se algum dia os dois
+   divergirem, quem manda é o do servidor e este texto vira só uma pista
+   de onde procurar na pasta. */
+function apNombreDrive(id, i, original){
+  const ordinal = String(i + 1).padStart(2, '0');
+  const curto = String(id).replace(/-/g, '').slice(0, 12).toUpperCase();
+  const base = String(original == null ? '' : original)
+    .replace(/[\r\n\t]+/g, ' ').trim().slice(0, 200)
+    .replace(/[\/\\]+/g, '-').replace(/\.{2,}/g, '.')
+    .replace(/^[.\s]+/, '').replace(/\s+/g, ' ').slice(0, 150) || 'archivo';
+  return ordinal + '_' + curto + '_' + base;
+}
+
+function apPeso(n){
+  n = Number(n) || 0;
+  if(n < 1024) return n + ' B';
+  if(n < 1048576) return Math.round(n/1024) + ' KB';
+  return (n/1048576).toFixed(1).replace('.', ',') + ' MB';
+}
+
+/* El bucket es privado: el enlace se firma acá, en el momento del clic,
+   y vale 10 minutos. Nunca existe una URL pública del material. */
+async function abrirArchivo(path){
+  const { data, error } = await sb.storage.from('aportes').createSignedUrl(path, 600);
+  if(error || !data){ alert('No se pudo abrir el archivo: ' + ((error && error.message) || '')); return; }
+  window.open(data.signedUrl, '_blank', 'noopener');
+}
+
+/* Reintento del espejado en el Drive. La función Netlify vuelve a
+   validar que quien llama es admin: acá no hay atajo. */
+async function reenviarAporte(id){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ alert('Sesión expirada.'); return; }
+  try{
+    const r = await fetch('/.netlify/functions/aporte-drive', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + session.access_token },
+      body: JSON.stringify({ contribution_id: id })
+    });
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok){
+      alert(j.error || ('No se pudo copiar al Drive (HTTP ' + r.status + ').'));
+    }
+  }catch(e){
+    alert('No se pudo copiar al Drive: ' + (e && e.message ? e.message : e));
+  }
+  loadAportes();
+}
+
+/* Curadoria: a equipe diz o que fez com o material. Marcar também o
+   `leido_en`, porque decidir implica ter olhado. */
+async function revisarAporte(id, estado){
+  const campos = { review_status: estado };
+  if (estado !== 'nueva') campos.leido_en = new Date().toISOString();
+  const { error } = await sb.from('external_contributions').update(campos).eq('id', id);
+  if(error){ alert('Error: ' + error.message); return; }
+  loadAportes();
+}
+
+async function markAporte(id){
+  const { error } = await sb.from('external_contributions')
+    .update({ leido_en: new Date().toISOString(), review_status: 'vista' }).eq('id', id);
+  if(error){ alert('Error: ' + error.message); return; }
+  loadAportes();
 }
 
 async function loadDashboard(){
@@ -730,8 +1007,8 @@ async function loadDashboard(){
    NAVEGAÇÃO ENTRE VIEWS (usuarios/panel  ↔  acceso por materia)
    ===================================================================== */
 function showView(which){
-  const views = { users:'searchView', subjects:'subjectsView', sales:'salesView', ads:'adsView' };
-  const navs  = { users:'navUsers',   subjects:'navSubjects',  sales:'navSales',  ads:'navAds'  };
+  const views = { users:'searchView', subjects:'subjectsView', sales:'salesView', ads:'adsView', aportes:'aportesView' };
+  const navs  = { users:'navUsers',   subjects:'navSubjects',  sales:'navSales',  ads:'navAds', aportes:'navAportes' };
   Object.keys(views).forEach(k=>{
     const v = document.getElementById(views[k]);
     if(v) v.classList.toggle('hidden', k !== which);
@@ -742,6 +1019,7 @@ function showView(which){
   if(which === 'subjects') loadSubjectAccess();
   if(which === 'sales')    loadSales();
   if(which === 'ads')      loadAds();
+  if(which === 'aportes')  loadAportes();
 }
 
 /* =====================================================================
@@ -1900,7 +2178,23 @@ async function renderSubjects(){
   grants.forEach(g=>{ map[g.subject_slug] = g.expires_at; planMap[g.subject_slug] = g.plan; });
   const grid = document.getElementById('subjectsGrid');
   grid.innerHTML = '';
-  SUBJECTS.forEach(s=>{
+
+  /* Agrupa por subjects.semester. NÃO há lista fixa de semestres: o que
+     existir no banco aparece, então uma matéria nova cai sozinha na seção
+     certa e um 8.º semestre futuro renderiza sem tocar neste código.
+     Matérias sem semestre definido ficam num grupo próprio no fim. */
+  const groups = new Map();
+  (SUBJECTS || []).forEach(s=>{
+    const k = (s.semester === null || s.semester === undefined || s.semester === '')
+      ? null : Number(s.semester);
+    if(!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(s);
+  });
+  const keys = [...groups.keys()].sort((a,b)=>{
+    if(a === null) return 1; if(b === null) return -1; return a - b;
+  });
+
+  const cell = (s)=>{
     const granted = Object.prototype.hasOwnProperty.call(map, s.slug);
     const exp = map[s.slug];
     let expTxt = '';
@@ -1916,47 +2210,165 @@ async function renderSubjects(){
       <input type="checkbox" ${granted?'checked':''} onchange="toggleSubject('${s.slug}', this.checked)">
       <span class="sname">${escapeHtml(s.name)}</span>
       <span class="sexp">${escapeHtml(expTxt)}</span>`;
-    grid.appendChild(div);
+    return div;
+  };
+
+  keys.forEach(k=>{
+    const list = groups.get(k);
+    const libs = list.filter(s=>Object.prototype.hasOwnProperty.call(map, s.slug)).length;
+    const wrap = document.createElement('div');
+    wrap.className = 'sem-group';
+    const bar = document.createElement('div');
+    bar.className = 'sem-bar';
+    const titulo = (k === null) ? 'Sem semestre definido' : (k + '.º semestre');
+    bar.innerHTML = `
+      <span class="sem-title">${escapeHtml(titulo)}
+        <span class="sem-count">· ${libs}/${list.length} liberada(s)</span></span>`;
+    if(k !== null){
+      const bG = document.createElement('button');
+      bG.className = 'btn-primary'; bG.textContent = 'Liberar semestre';
+      bG.onclick = ()=>grantSemester(k);
+      const bR = document.createElement('button');
+      bR.className = 'btn-danger'; bR.textContent = 'Remover semestre';
+      bR.onclick = ()=>revokeSemester(k);
+      const bN = document.createElement('button');
+      bN.className = 'btn-gold'; bN.textContent = 'Renovar semestre';
+      bN.onclick = ()=>renewSemester(k);
+      bar.appendChild(bG); bar.appendChild(bR); bar.appendChild(bN);
+    }
+    wrap.appendChild(bar);
+    list.forEach(s=>wrap.appendChild(cell(s)));
+    grid.appendChild(wrap);
   });
+}
+
+/* ---- AÇÕES POR SEMESTRE ----------------------------------------------
+   Reutilizam exatamente a mesma gravação de uma matéria isolada
+   (grantOne/revokeOne, que o checkbox também usa). Não existe um segundo
+   caminho de acesso: é o mesmo upsert/delete em user_subjects, aplicado às
+   matérias cujo subjects.semester bate com o semestre escolhido. */
+function subjectsOfSemester(sem){
+  return (SUBJECTS || []).filter(s => Number(s.semester) === Number(sem));
+}
+
+async function grantSemester(sem){
+  const list = subjectsOfSemester(sem);
+  if(!list.length) return;
+  if(!confirm('Liberar as ' + list.length + ' matérias do ' + sem + '.º semestre para este usuário?')) return;
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Processando...';
+  let ok=0, fail=0, lastErr='';
+  for(const s of list){
+    const r = await grantOne(s.slug);
+    if(r.ok) ok++; else { fail++; lastErr = r.error || lastErr; }
+  }
+  msg.className = fail ? 'err' : 'ok';
+  msg.textContent = ok + ' matéria(s) liberada(s) do ' + sem + '.º semestre'
+    + (fail ? (' · ' + fail + ' falharam: ' + lastErr) : ' ✓');
+  await renderSubjects();
+}
+
+async function revokeSemester(sem){
+  const list = subjectsOfSemester(sem);
+  if(!list.length) return;
+  if(!confirm('REMOVER o acesso às ' + list.length + ' matérias do ' + sem + '.º semestre deste usuário?')) return;
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Processando...';
+  const grants = await getGrants();
+  const tem = new Set(grants.map(g=>g.subject_slug));
+  let ok=0, fail=0, lastErr='';
+  for(const s of list){
+    if(!tem.has(s.slug)) continue;          // não tenta remover o que não existe
+    const r = await revokeOne(s.slug);
+    if(r.ok) ok++; else { fail++; lastErr = r.error || lastErr; }
+  }
+  msg.className = fail ? 'err' : 'ok';
+  msg.textContent = ok + ' matéria(s) removida(s) do ' + sem + '.º semestre'
+    + (fail ? (' · ' + fail + ' falharam: ' + lastErr) : ' ✓');
+  await renderSubjects();
+}
+
+/* Renovar o semestre = reaplicar a data de expiração escolhida às matérias
+   desse semestre que JÁ estão liberadas. Não libera nada novo. */
+async function renewSemester(sem){
+  const iso = readExpiry();
+  if(!iso){ alert('Escolha uma nova data de expiração antes de renovar.'); return; }
+  const list = subjectsOfSemester(sem);
+  const grants = await getGrants();
+  const tem = new Set(grants.map(g=>g.subject_slug));
+  const alvo = list.filter(s=>tem.has(s.slug));
+  if(!alvo.length){ alert('Nenhuma matéria liberada neste semestre para renovar.'); return; }
+  if(!confirm('Renovar a expiração das ' + alvo.length + ' matérias já liberadas do ' + sem + '.º semestre?')) return;
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Processando...';
+  let ok=0, fail=0, lastErr='';
+  for(const s of alvo){
+    const r = await grantOne(s.slug);       // mesmo upsert: atualiza expires_at
+    if(r.ok) ok++; else { fail++; lastErr = r.error || lastErr; }
+  }
+  msg.className = fail ? 'err' : 'ok';
+  msg.textContent = ok + ' matéria(s) renovada(s) do ' + sem + '.º semestre'
+    + (fail ? (' · ' + fail + ' falharam: ' + lastErr) : ' ✓');
+  await renderSubjects();
+}
+
+/* ---- GRAVAÇÃO DE UMA MATÉRIA (caminho único de acesso) ----------------
+   O checkbox e as ações por semestre chamam estas duas funções. Mantêm
+   exatamente o upsert/delete que já existia, com o .select() de confirmação
+   que revela falha de policy de RLS (sem ele, o erro fica invisível). */
+async function grantOne(slug){
+  const expiry = readExpiry();
+  const { data:{ user } } = await sb.auth.getUser();
+  const { data, error } = await sb.from('user_subjects')
+    .upsert({ user_id: CURRENT.id, subject_slug: slug, expires_at: expiry,
+              granted_by: user.id, plan: readPlan() },
+            { onConflict: 'user_id,subject_slug' })
+    .select();
+  if(error) return { ok:false, error: error.message };
+  if(!data || !data.length)
+    return { ok:false, error:'gravação não confirmada pelo banco (policy de UPDATE em user_subjects)' };
+  return { ok:true };
+}
+
+async function revokeOne(slug){
+  const { data, error } = await sb.from('user_subjects')
+    .delete().eq('user_id', CURRENT.id).eq('subject_slug', slug)
+    .select();
+  if(error) return { ok:false, error: error.message };
+  if(!data || !data.length)
+    return { ok:false, error:'remoção não confirmada pelo banco (policy de DELETE em user_subjects)' };
+  return { ok:true };
 }
 
 /* liberar / bloquear UMA disciplina (o checkbox) */
 async function toggleSubject(slug, checked){
   const msg = document.getElementById('detailMsg');
   msg.textContent = 'Salvando...';
-  if(checked){
-    const expiry = readExpiry();
-    const { data:{ user } } = await sb.auth.getUser();
-    /* FIX (expiração/revogação): .select() no final confirma se a linha foi
-       realmente gravada (upsert em conflito exige UPDATE, que depende de
-       policy de RLS). Sem isso, uma falha de permissão fica invisível. */
-    const { data, error } = await sb.from('user_subjects')
-      .upsert({ user_id: CURRENT.id, subject_slug: slug, expires_at: expiry,
-                granted_by: user.id, plan: readPlan() },
-              { onConflict: 'user_id,subject_slug' })
-      .select();
-    if(error){ msg.className='err'; msg.textContent='Erro: '+error.message; return; }
-    if(!data || !data.length){
-      msg.className='err';
-      msg.textContent='A gravação não foi confirmada pelo banco (verifique as policies de UPDATE em user_subjects).';
-      await renderSubjects();
-      return;
-    }
-  } else {
-    /* FIX (expiração/revogação): idem, confirma se o DELETE realmente removeu algo */
-    const { data, error } = await sb.from('user_subjects')
-      .delete().eq('user_id', CURRENT.id).eq('subject_slug', slug)
-      .select();
-    if(error){ msg.className='err'; msg.textContent='Erro: '+error.message; return; }
-    if(!data || !data.length){
-      msg.className='err';
-      msg.textContent='A remoção não foi confirmada pelo banco (verifique as policies de DELETE em user_subjects).';
-      await renderSubjects();
-      return;
-    }
-  }
+  const r = checked ? await grantOne(slug) : await revokeOne(slug);
+  if(!r.ok){ msg.className='err'; msg.textContent='Erro: '+r.error; await renderSubjects(); return; }
   msg.className='ok'; msg.textContent='Salvo ✓';
   await renderSubjects();
+}
+
+/* ---- REDEFINIÇÃO DE SENHA PELO ADMIN --------------------------------
+   Dispara o MESMO fluxo seguro que o aluno usa no site. O admin não vê,
+   não escolhe e não armazena senha nenhuma: o Supabase manda o link ao
+   e-mail do aluno e o aluno define a senha no site. Usa a chave anon —
+   nenhuma service_role no navegador. */
+async function sendPasswordReset(){
+  if(!CURRENT || !CURRENT.email){ alert('Abra um usuário primeiro.'); return; }
+  if(!confirm('Enviar e-mail de redefinição de senha para ' + CURRENT.email + '?\n\nO aluno recebe um link e escolhe a nova senha. Você não verá a senha dele.')) return;
+  const msg = document.getElementById('detailMsg'); msg.className='ok'; msg.textContent='Enviando…';
+  const btn = document.getElementById('btnReset'); if(btn) btn.disabled = true;
+  try{
+    const { error } = await sb.auth.resetPasswordForEmail(CURRENT.email, {
+      redirectTo: location.origin + '/?recovery=1'
+    });
+    if(error){ msg.className='err'; msg.textContent='Não foi possível enviar: ' + error.message; return; }
+    msg.className='ok';
+    msg.textContent='E-mail de redefinição enviado para ' + CURRENT.email + ' ✓ — peça que o aluno confira a caixa de entrada e o spam.';
+  }catch(e){
+    msg.className='err'; msg.textContent='Erro de conexão ao enviar o e-mail.';
+  }finally{
+    if(btn) btn.disabled = false;
+  }
 }
 
 /* plano escolhido para novas liberações */

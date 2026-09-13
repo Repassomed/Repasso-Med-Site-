@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Spectral:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
 <!-- CSS compartilhado por todas as matérias -->
-<link rel="stylesheet" href="assets/styles.css?v=20260909">
+<link rel="stylesheet" href="assets/styles.css?v=20260916">
 
 <!-- SDK do Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -766,6 +766,19 @@
   </div>
   <div class="rm-spacer"></div>
   <button type="button" class="rm-store-btn hidden" id="rm-store-btn" onclick="openStore()">Loja de Matérias</button>
+  <!-- Acesso principal à caixa de sugestões. Abre A MESMA gaveta que o
+       envelope da lateral da matéria (RepassoMed.abrirSugestoes): não há
+       segundo painel nem segundo estado. -->
+  <button type="button" class="rm-sug-top" id="rm-sug-top"
+          title="Caja de sugerencias" aria-label="Abrir la caja de sugerencias"
+          onclick="RepassoMed.abrirSugestoes()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M3 8.6 12 3l9 5.6v9.8a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 18.4z"/>
+      <path d="M3 8.8 12 14.4l9-5.6"/>
+    </svg>
+    <span class="tx">Caja de sugerencias</span>
+  </button>
   <span class="rm-user" id="rm-user"></span>
 </div>
 
@@ -792,7 +805,7 @@
     <div id="pane-login">
       <p class="sub">Acceda con su cuenta para ver sus asignaturas.</p>
       <label>E-mail</label>
-      <input id="au-email" type="email" autocomplete="username" placeholder="su@email.com">
+      <input id="au-email" type="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="su@email.com">
       <label>Contraseña</label>
       <input id="au-pass" type="password" autocomplete="current-password" placeholder="••••••••"
              onkeydown="if(event.key==='Enter')authLogin()">
@@ -804,7 +817,7 @@
     <div id="pane-reset" class="hidden">
       <p class="sub">Poné tu e-mail y te enviamos un enlace para crear una contraseña nueva.</p>
       <label>E-mail</label>
-      <input id="rs-email" type="email" autocomplete="username" placeholder="su@email.com"
+      <input id="rs-email" type="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="su@email.com"
              onkeydown="if(event.key==='Enter')authReset()">
       <button onclick="authReset()">Enviar enlace</button>
       <button type="button" class="au-link" onclick="authSwitch('login')">← Volver a entrar</button>
@@ -816,7 +829,7 @@
       <label>Nombre completo</label>
       <input id="su-name" type="text" autocomplete="name" placeholder="Nombre y apellido">
       <label>E-mail</label>
-      <input id="su-email" type="email" autocomplete="username" placeholder="su@email.com">
+      <input id="su-email" type="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="su@email.com">
       <label>Teléfono <span style="color:#7f968f;">(contacto y soporte)</span></label>
       <div class="rm-phone-row">
         <select id="su-ddi">
@@ -872,7 +885,11 @@
 
 
 <!-- Funções de interação das matérias (switchTab, checkAnswer, checkTF, toggleAnswer, RepassoMed) -->
-<script src="assets/app-core.js?v=20260909"></script>
+<script src="assets/app-core.js?v=20260916"></script>
+<!-- Ferramentas globais de estudo: voltar ao topo, marca-texto + borracha,
+     «continuar de onde paraste» e zoom dos infográficos. Aditivo: envolve
+     RepassoMed.enhanceAll e injeta o próprio CSS. -->
+<script src="assets/rm-tools.js?v=20260916"></script>
 
 <script>
 /* =====================================================================
@@ -1098,7 +1115,7 @@ function showKicked(msg){
    LOGIN
    ===================================================================== */
 async function authLogin(){
-  const email = document.getElementById('au-email').value.trim();
+  const email = document.getElementById('au-email').value.trim().toLowerCase();
   const pass  = document.getElementById('au-pass').value;
   const msg   = document.getElementById('au-msg');
   msg.className=''; msg.textContent = '';
@@ -1107,7 +1124,7 @@ async function authLogin(){
   if(error){
     let m = error.message || 'Error al iniciar sesión.';
     if(/Email not confirmed/i.test(m)) m = 'Debe confirmar su e-mail antes de entrar. Revise su correo.';
-    else if(/Invalid login credentials/i.test(m)) m = 'E-mail o contraseña incorrectos.';
+    else if(/Invalid login credentials/i.test(m)) m = 'E-mail o contraseña incorrectos. Revisá que el e-mail sea exactamente el mismo con el que creaste la cuenta; si no recordás la contraseña, usá «Recuperar contraseña».';
     msg.className=''; msg.textContent = m; return;
   }
   await afterLogin();
@@ -1128,7 +1145,7 @@ function authSwitch(which){
 
 /* envia o e-mail de recuperação de senha (fluxo nativo do Supabase) */
 async function authReset(){
-  const email = document.getElementById('rs-email').value.trim();
+  const email = document.getElementById('rs-email').value.trim().toLowerCase();
   const msg = document.getElementById('au-msg');
   msg.className=''; msg.textContent='';
   if(!email){ msg.textContent = 'Poné tu e-mail.'; return; }
@@ -1154,7 +1171,7 @@ function joinPhone(ddi, raw){
 /* cadastro de novo usuário (fica pendente de aprovação do admin) */
 async function authSignup(){
   const name  = document.getElementById('su-name').value.trim();
-  const email = document.getElementById('su-email').value.trim();
+  const email = document.getElementById('su-email').value.trim().toLowerCase();
   const ddi   = document.getElementById('su-ddi').value;
   const phone = joinPhone(ddi, document.getElementById('su-phone').value);
   const pass  = document.getElementById('su-pass').value;
