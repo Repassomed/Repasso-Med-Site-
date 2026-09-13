@@ -66,7 +66,12 @@
   function abaAtiva() { var t = RT(); return t ? t.abaAtiva() : null; }
   function slugDoTab(el) { var t = RT(); return t ? t.slugDoTab(el) : ''; }
   function toast(m, err) { var t = RT(); if (t) t.toast(m, err); }
-  function lbAberto() { var t = RT(); return t ? t.lbAberto() : false; }
+  /* Duas fontes: a classe que o rm-tools põe no body (síncrona, e posta
+     também quando o aluno clica na imagem) e a API pública. */
+  function lbAberto() {
+    if (document.body.classList.contains('rm-lb-open')) return true;
+    var t = RT(); return t ? t.lbAberto() : false;
+  }
 
   var LS = {
     get: function (k, d) { try { return localStorage.getItem('rm2.' + k) || d; } catch (e) { return d; } },
@@ -158,6 +163,15 @@ body.rm2-t-eraser #materias-container .rm-hl{
 }
 body.rm2-drawing{ -webkit-user-select:none; user-select:none; }
 
+/* Com o zoom aberto a matéria sai de cena: a toolbox e a gaveta saem também.
+   O rm-tools põe .rm-lb-open no body ao abrir o lightbox, e tira-o ao fechar
+   — inclusive quando o aluno clica na própria imagem, que é o caminho que um
+   wrapper da API pública nunca veria. A camada de tinta já é pointer-events:
+   none e vive em z-index 60, muito abaixo do lightbox. */
+body.rm-lb-open .rm2-box,
+body.rm-lb-open .rm2-notes{ display:none !important; }
+body.rm-lb-open #rm2-ink{ visibility:hidden; }
+
 /* ---------- camada de tinta ----------------------------------------- */
 #rm2-ink{
   position:absolute; left:0; top:0; width:100%; height:0;
@@ -176,7 +190,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
    comer faixa de leitura — sobretudo em tablet. */
 .rm2-box{
   --rm2-brand:#13314f; --rm2-deep:#081726; --rm2-gold:#d8a32a;
-  position:fixed; right:max(9px, env(safe-area-inset-right)); z-index:2147483000;
+  position:fixed; right:max(9px, env(safe-area-inset-right)); z-index:99991;
   top:50%; transform:translateY(-50%);
   display:flex; flex-direction:column; align-items:center; gap:9px; width:58px;
 }
@@ -279,7 +293,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
 /* ---------- gaveta de anotações -------------------------------------- */
 .rm2-notes{
-  position:fixed; z-index:2147483001; right:0; top:0; height:100%;
+  position:fixed; z-index:99993; right:0; top:0; height:100%;
   width:min(400px, 92vw); background:#fff; display:none; flex-direction:column;
   box-shadow:-18px 0 48px rgba(8,23,38,.24); border-left:1px solid rgba(16,36,61,.12);
 }
@@ -676,7 +690,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
     var slug = slugDoTab(abaAtiva());
     (st.strokes[slug] = st.strokes[slug] || []).push(t.rec);
-    pushUndo({ tipo: 'ink-add', slug: slug, id: t.rec.id });
+    pushUndo({ tipo: 'ink-add', slug: slug, rec: t.rec, id: t.rec.id });
     filaGravar(slug, t.rec, t.path);
   }
 
@@ -689,9 +703,16 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   }
 
   /* ---- persistência: uma gravação por traço, nunca por ponto -------- */
+  /* Gravar um traço é assíncrono, e o aluno pode desfazer ou apagar antes de
+     o INSERT responder. Se nada segurasse essa corrida, o apagar não teria o
+     que apagar —o id ainda era «tmp-»— e o traço voltava no reload seguinte.
+     Marca-se o registo como cancelado e, quando a resposta chega, apaga-se
+     imediatamente a linha que acabou de nascer. */
   async function filaGravar(slug, rec, pathEl) {
     var s = sb(), uid = st.uid;
     if (!s || !uid) { toast('Dibujado (sin sincronizar)', true); return; }
+    if (rec.cancelado) return;                 // cancelado antes sequer de partir
+    rec.gravando = true;
     try {
       var r = await s.from('user_ink_strokes').insert({
         user_id: uid, subject_slug: slug, anchor_id: rec.anchor_id,
@@ -700,11 +721,22 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (r.error) throw r.error;
       var antigo = rec.id;
       rec.id = r.data.id;
+
+      if (rec.cancelado) {                     // desfeito/apagado enquanto gravava
+        rec.gravando = false;
+        remover(rec.id);
+        try { await s.from('user_ink_strokes').delete().eq('user_id', uid).eq('id', rec.id); }
+        catch (e2) { console.warn('[rm2] ink compensating delete', e2 && e2.message); }
+        return;
+      }
+
       if (pathEl) pathEl.setAttribute('data-ink', rec.id);
       remapear(antigo, rec.id);
     } catch (e) {
       console.warn('[rm2] ink insert', e && e.message);
       toast('No se pudo guardar el trazo.', true);
+    } finally {
+      rec.gravando = false;
     }
   }
 
@@ -755,7 +787,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       lista.splice(i, 1);
       remover(rec.id);
       apagando.inks.push(rec);
-      apagarNoBanco(rec.id);
+      apagarNoBanco(rec);
     }
 
     /* 2 · marcações — a camada de tinta é pointer-events:none, por isso o
@@ -809,8 +841,14 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     toast(n === 1 ? 'Borrado ✓' : n + ' elementos borrados ✓');
   }
 
-  async function apagarNoBanco(id) {
-    if (String(id).indexOf('tmp-') === 0) return;
+  /* Recebe o REGISTO, não só o id: é a única forma de marcar o cancelamento
+     de um INSERT que ainda está no ar. */
+  async function apagarNoBanco(rec) {
+    if (!rec) return;
+    if (typeof rec !== 'object') rec = { id: rec };     // compatibilidade
+    rec.cancelado = true;
+    var id = rec.id;
+    if (String(id).indexOf('tmp-') === 0) return;       // o filaGravar compensa
     var s = sb(); if (!s || !st.uid) return;
     try { await s.from('user_ink_strokes').delete().eq('user_id', st.uid).eq('id', id); }
     catch (e) { console.warn('[rm2] ink delete', e && e.message); }
@@ -839,11 +877,14 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
     if (op.tipo === 'ink-add') {
       var lista = st.strokes[op.slug] || [];
+      var alvo = op.rec || null;
       for (var i = lista.length - 1; i >= 0; i--) {
-        if (String(lista[i].id) === String(op.id)) { lista.splice(i, 1); break; }
+        if (lista[i] === alvo || String(lista[i].id) === String(op.id)) {
+          alvo = lista[i]; lista.splice(i, 1); break;
+        }
       }
-      remover(op.id);
-      apagarNoBanco(op.id);
+      remover(alvo ? alvo.id : op.id);
+      apagarNoBanco(alvo || op.id);
       toast('Trazo deshecho ✓');
       return;
     }
@@ -885,7 +926,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     var idVelho = rec.id;
     var novo = {
       id: 'tmp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
-      anchor_id: rec.anchor_id, color: rec.color, width: rec.width, points: rec.points
+      anchor_id: rec.anchor_id, color: rec.color, width: rec.width, points: rec.points,
+      cancelado: false
     };
     (st.strokes[slug] = st.strokes[slug] || []).push(novo);
     remapear(idVelho, novo.id);           // quem apontava para o traço antigo passa a apontar para este
@@ -1224,6 +1266,20 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   }
 
   var notas = [];
+  var pendentes = {};      // id -> timer do debounce
+  var flushers = {};       // id -> gravar já, com o que está no campo
+
+  function cancelarFlush(n) {
+    if (pendentes[n.id]) { clearTimeout(pendentes[n.id]); delete pendentes[n.id]; }
+  }
+
+  /* Chamado no blur, na troca de matéria e ao sair da página. */
+  function flushNotas() {
+    Object.keys(flushers).forEach(function (id) {
+      if (pendentes[id]) { clearTimeout(pendentes[id]); delete pendentes[id]; }
+      try { flushers[id](); } catch (e) {}
+    });
+  }
 
   async function abrirNotas() {
     montarDrawer();
@@ -1241,6 +1297,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   }
 
   function fecharNotas() {
+    flushNotas();
     st.notasAbertas = false;
     if (drawer) drawer.classList.remove('on');
   }
@@ -1267,6 +1324,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   }
 
   function render() {
+    flushNotas();
+    flushers = {};
     var corpo = drawer.querySelector('[data-body]');
     if (!notas.length) { corpo.innerHTML = '<div class="empty">Todavía no hay apuntes en esta materia.<br>Tocá «Nuevo» para empezar.</div>'; return; }
     corpo.innerHTML = '';
@@ -1282,13 +1341,23 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       el.querySelector('textarea').value = n.body || '';
       el.querySelector('.meta b').textContent = n.anchor_label || '';
       el.querySelector('.meta span').textContent = n.updated_at ? new Date(n.updated_at).toLocaleDateString() : '';
-      var gravar = debounce(function () {
+      /* Escrever chama o debounce; sair do campo, trocar de matéria ou fechar
+         a página chamam o flush imediato. O blur estava a passar pelo mesmo
+         debounce de 700 ms, e era aí que se perdiam as últimas letras. */
+      var agora = function () {
+        cancelarFlush(n);
         salvarNota(n, el.querySelector('input').value, el.querySelector('textarea').value);
-      }, 700);
+      };
+      var gravar = function () {
+        cancelarFlush(n);
+        pendentes[n.id] = setTimeout(function () { delete pendentes[n.id]; agora(); }, 700);
+        flushers[n.id] = agora;
+      };
+      flushers[n.id] = agora;
       el.querySelector('input').addEventListener('input', gravar);
       el.querySelector('textarea').addEventListener('input', gravar);
-      el.querySelector('input').addEventListener('blur', gravar);
-      el.querySelector('textarea').addEventListener('blur', gravar);
+      el.querySelector('input').addEventListener('blur', agora);
+      el.querySelector('textarea').addEventListener('blur', agora);
       el.querySelector('.del').addEventListener('click', function () { apagarNota(n, el); });
       corpo.appendChild(el);
     });
@@ -1402,6 +1471,14 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       st.open = false; refletir();
     }, true);
 
+    /* Sair da página é o caso em que mais se perde texto: pagehide dispara
+       mesmo quando o separador vai para a bfcache, e visibilitychange apanha
+       o mudar de app no telemóvel. */
+    window.addEventListener('pagehide', flushNotas);
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) flushNotas();
+    });
+
     var reflow = debounce(reposicionarTudo, 120);
     window.addEventListener('resize', reflow);
     window.addEventListener('orientationchange', function () { setTimeout(reposicionarTudo, 220); });
@@ -1444,6 +1521,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       var sw = window.switchTab;
       window.switchTab = function () {
         var r = sw.apply(this, arguments);
+        flushNotas();                       // antes de trocar, grava o que falta
         setTimeout(function () {
           fecharNotas();
           var el = abaAtiva(); if (el) sincronizarAba(el);
@@ -1460,6 +1538,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       abrirNotas: abrirNotas,
       fecharNotas: fecharNotas,
       sincronizarAba: sincronizarAba,
+      flushNotas: flushNotas,
       reposicionar: reposicionarTudo,
       simplificar: simplificar,
       dDe: dDe,
