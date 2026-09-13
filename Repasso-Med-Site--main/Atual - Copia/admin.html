@@ -127,10 +127,14 @@
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
   /* navegação do painel (Usuarios / Acceso por materia) */
-  .adm-nav{display:flex;gap:6px;margin-bottom:18px;background:var(--panel2);
+  /* ⚠️ as abas já não cabiam em 390 px com quatro (transbordavam 130 px);
+     com a quinta seriam 246 px. `flex-wrap` deixa a linha quebrar em vez
+     de empurrar a página inteira para o lado. */
+  .adm-nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;background:var(--panel2);
     border:1px solid var(--line);border-radius:11px;padding:4px;}
   .adm-tab{flex:0 0 auto;background:transparent;color:var(--ink-soft);font-weight:700;
     padding:9px 16px;border-radius:8px;}
+  @media(max-width:520px){ .adm-tab{flex:1 1 auto;padding:9px 10px;font-size:13px;text-align:center;} }
   .adm-tab.active{background:var(--accent);color:#fff;}
   .adm-tab:hover:not(.active){color:var(--ink);background:rgba(19,49,79,.05);}
   /* acesso por matéria (Fase 3) */
@@ -162,6 +166,38 @@
   .sug .msg{font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
   .sug .acts{margin-top:9px;display:flex;gap:8px;flex-wrap:wrap;}
   .sug .acts button{font-size:12px;padding:5px 10px;}
+  /* aportes de material externo */
+  .tabbadge{display:inline-block;margin-left:7px;min-width:18px;padding:1px 5px;border-radius:9px;
+    background:var(--gold,#d8a32a);color:#fff;font-size:11px;font-weight:800;line-height:1.5;}
+  .tabbadge.hidden{display:none;}
+  .ap .top{align-items:center;}
+  .apbadge{margin-left:auto;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:800;
+    letter-spacing:.02em;white-space:nowrap;}
+  .apbadge.ok{background:#e6f5ec;color:#1d7a4f;}
+  .apbadge.warn{background:#fbf3e0;color:#8a6a15;}
+  .apbadge.bad{background:#fbecea;color:#c0392b;}
+  /* curadoria humana — tom mais frio que o estado técnico do Drive */
+  .apbadge.rev{margin-left:auto;border:1px solid transparent;}
+  .apbadge.rev + .apbadge{margin-left:6px;}
+  .apbadge.nva{background:#eef3fb;color:#2d4b73;border-color:#d4e0ef;}
+  .apbadge.vst{background:#f2f2f4;color:#5a6170;border-color:#e2e2e6;}
+  .apbadge.apr{background:#e9f6f1;color:#12705a;border-color:#cfe9df;}
+  .apbadge.dsc{background:#f5f2f2;color:#8a7b7b;border-color:#e6dede;}
+  .ap-id{margin-top:4px;font-family:var(--font-mono,monospace);font-size:10.5px;letter-spacing:.04em;}
+  .ap-rev{display:inline-flex;gap:8px;flex-wrap:wrap;margin-left:auto;}
+  .ap-file.is-drive{cursor:default;opacity:.72;}
+  .ap-file.is-drive:hover{border-color:var(--line);background:#fff;}
+  .ap-files{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;}
+  .ap-file{display:inline-flex;align-items:baseline;gap:8px;max-width:100%;
+    border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;
+    padding:6px 10px;font-family:inherit;font-size:12.5px;color:inherit;}
+  .ap-file:hover{border-color:var(--accent-lt,#888);background:#fafafa;}
+  .ap-file .n{display:block;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}
+  .ap-file .t{display:block;margin-top:1px;font-family:var(--font-mono,monospace);
+    font-size:9.5px;letter-spacing:.02em;color:var(--ink-soft);opacity:.75;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ap-file .s{color:var(--ink-soft);font-size:11px;}
+  .ap .acts a.btn-ghost{display:inline-block;text-decoration:none;font-size:12px;padding:5px 10px;}
   /* seleção múltipla + data da última liberação (lista de usuários) */
   .urow .pick{width:19px;height:19px;flex:0 0 auto;cursor:pointer;accent-color:var(--accent-lt);margin:0;}
   .urow .who{flex:1;min-width:0;}
@@ -231,6 +267,7 @@
     <button class="adm-tab" id="navSubjects" onclick="showView('subjects')">Acceso por materia</button>
     <button class="adm-tab" id="navSales" onclick="showView('sales')">Ventas</button>
     <button class="adm-tab" id="navAds" onclick="showView('ads')">Anuncios</button>
+    <button class="adm-tab" id="navAportes" onclick="showView('aportes')">Aportes<span id="navAportesBadge" class="tabbadge hidden"></span></button>
   </div>
 
   <!-- BUSCA -->
@@ -478,6 +515,25 @@
     </div>
   </div>
 
+  <!-- APORTES: material externo enviado pelos alunos (→ Google Drive) -->
+  <div id="aportesView" class="hidden">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <label style="margin:0;">Aportes de los alumnos</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="muted" id="apCnt"></span>
+          <button class="btn-ghost" onclick="loadAportes()">Actualizar</button>
+        </div>
+      </div>
+      <p class="muted" style="margin:6px 0 0;">Material externo enviado desde la caja
+        «Sugerencias y aportes» de cada materia. Mientras la copia al Drive está
+        pendiente, los archivos viven en un bucket <b>privado</b> y el enlace se firma
+        en el clic, por 10&nbsp;minutos. Una vez <b>En el Drive</b>, esa copia temporal
+        se borra y el material se abre en la carpeta del Drive.</p>
+      <div id="apList" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
   <!-- DETALHE DO USUÁRIO -->
   <div id="detailView" class="hidden">
     <button class="back" onclick="closeDetail()">← Voltar para a busca</button>
@@ -624,6 +680,7 @@ async function enterApp(){
   DASH_TIMER = setInterval(loadDashboard, 30000);  // "em tempo real" (janela de 5 min)
   loadPending();
   loadAllUsers();
+  contarAportesNuevos();               // badge NOVA na aba «Aportes»
 }
 
 /* escapa texto vindo do banco antes de injetar no HTML (anti-XSS) */
@@ -689,9 +746,219 @@ async function loadFeedback(){
 
 async function markFeedback(id){
   const { error } = await sb.from('feedback')
-    .update({ leido_en: new Date().toISOString() }).eq('id', id);
+    .update({ leido_en: new Date().toISOString(), review_status: 'vista' }).eq('id', id);
   if(error){ alert('Error: ' + error.message); return; }
   loadFeedback();
+}
+
+/* =====================================================================
+   APORTES DE MATERIAL EXTERNO
+   Llegan por la pestaña «Aportar material» de la caja de sugerencias.
+   La tabla `external_contributions` guarda SOLO metadatos: los archivos
+   están en el bucket privado `aportes` y, si el Apps Script está
+   configurado, también espelhados en el Drive del equipo.
+   Si la tabla todavía no existe, la tarjeta lo dice — nunca rompe.
+   ===================================================================== */
+/* Dois eixos, de propósito separados:
+   · `drive_status` é MÁQUINA — o espelhamento deu certo ou não;
+   · `review_status` é GENTE — a equipe olhou, aproveitou ou descartou.
+   Misturar os dois num campo só daria um estado que mente metade do tempo. */
+const AP_ESTADO = {
+  pendiente: { txt:'Drive pendiente', cls:'warn' },
+  enviado:   { txt:'En el Drive',     cls:'ok'   },
+  error:     { txt:'Falló el Drive',  cls:'bad'  }
+};
+const AP_REVISION = {
+  nueva:       { txt:'Nueva',       cls:'nva' },
+  vista:       { txt:'Visualizada', cls:'vst' },
+  aprovechada: { txt:'Aprovechada', cls:'apr' },
+  descartada:  { txt:'Descartada',  cls:'dsc' }
+};
+
+async function contarAportesNuevos(){
+  const b = document.getElementById('navAportesBadge');
+  if(!b) return;
+  const { count, error } = await sb.from('external_contributions')
+    .select('id', { count:'exact', head:true }).is('leido_en', null);
+  if(error || !count){ b.classList.add('hidden'); b.textContent=''; return; }
+  b.textContent = count > 99 ? '99+' : count;
+  b.classList.remove('hidden');
+}
+
+async function loadAportes(){
+  const box = document.getElementById('apList');
+  const cnt = document.getElementById('apCnt');
+  if(!box) return;
+  box.innerHTML = '<p class="muted">Cargando...</p>';
+
+  const { data, error } = await sb.from('external_contributions')
+    .select('id,user_id,nombre,email,semester,subject_slug,mensaje,files,drive_status,drive_folder_url,drive_error,leido_en,review_status,created_at')
+    .order('created_at', { ascending:false })
+    .limit(80);
+
+  if(error){
+    const falta = /relation .*external_contributions|does not exist/i.test(error.message || '');
+    box.innerHTML = '<p class="' + (falta ? 'muted' : 'err') + '">' +
+      (falta ? 'Todavía no está creada la tabla. Corré <b>supabase/migrations/20260913_03_external_contributions.sql</b> en Supabase.'
+             : 'Error: ' + escapeHtml(error.message)) + '</p>';
+    if(cnt) cnt.textContent = '';
+    return;
+  }
+
+  const list = data || [];
+  const novas = list.filter(x => !x.leido_en).length;
+  if(cnt) cnt.innerHTML = list.length
+    ? '<b>' + novas + '</b> sin leer · ' + list.length + ' en total'
+    : '';
+  if(!list.length){
+    box.innerHTML = '<p class="muted">Todavía no hay aportes.</p>';
+    contarAportesNuevos();
+    return;
+  }
+
+  box.innerHTML = list.map(x => {
+    const quando = new Date(x.created_at).toLocaleString('es');
+    const quem   = escapeHtml(x.nombre || x.email || 'Alumno');
+    const mail   = x.email ? ' · ' + escapeHtml(x.email) : '';
+    const dest   = [
+      (x.semester || x.semester === 0) ? x.semester + '.º sem.' : null,
+      x.subject_slug || null
+    ].filter(Boolean).join(' · ');
+
+    const est = AP_ESTADO[x.drive_status] || AP_ESTADO.pendiente;
+    const rev = AP_REVISION[x.review_status] || AP_REVISION.nueva;
+    const arq = Array.isArray(x.files) ? x.files : [];
+    const enDrive = x.drive_status === 'enviado';
+
+    /* Nunca carregamos o arquivo aqui dentro: o que existe é um enlace
+       assinado, criado no clique e válido por 10 minutos.
+       Com o material já espelhado, a cópia temporária do Storage foi
+       apagada — aí os nomes viram texto e o acesso é pelo Drive. */
+    const archivos = !arq.length
+      ? '<p class="muted" style="margin:8px 0 0;font-size:12.5px;">Sin archivos — solo mensaje.</p>'
+      /* O NOME DO ALUNO é o título — é por ele que o administrador
+         reconhece o material. O nome técnico do Drive
+         («01_A82F92C731D4_prova.pdf») serve para desempatar homônimos e
+         para achar o arquivo na pasta, então aparece embaixo, pequeno, e
+         só quando de fato difere do original. */
+      : '<div class="ap-files">' + arq.map((f, i) => {
+          const nome = escapeHtml(f.name || ('archivo ' + (i+1)));
+          const tec  = apNombreDrive(x.id, i, f.name);
+          const sub  = '<span class="t">' + escapeHtml(tec) + '</span>';
+          return enDrive
+            ? '<span class="ap-file is-drive" title="Copia temporal ya borrada — abrilo en el Drive">' +
+                '<span class="n">' + nome + sub + '</span>' +
+                '<span class="s">' + apPeso(f.size) + '</span></span>'
+            : '<button class="ap-file" onclick="abrirArchivo(\'' + escapeHtml(f.path) + '\')">' +
+                '<span class="n">' + nome + sub + '</span>' +
+                '<span class="s">' + apPeso(f.size) + '</span></button>';
+        }).join('') + '</div>';
+
+    const nArq = arq.length
+      ? arq.length + (arq.length === 1 ? ' archivo' : ' archivos')
+      : 'sin archivos';
+
+    return '<div class="sug ap' + (x.leido_en ? '' : ' nova') + '" id="ap-' + x.id + '">' +
+      '<div class="top">' +
+        '<span class="who">' + quem + '</span>' +
+        '<span class="meta">' + escapeHtml(quando) + mail +
+          (dest ? ' · ' + escapeHtml(dest) : '') + ' · ' + nArq + '</span>' +
+        '<span class="apbadge rev ' + rev.cls + '">' + rev.txt + '</span>' +
+        '<span class="apbadge ' + est.cls + '">' + est.txt + '</span>' +
+      '</div>' +
+      '<div class="ap-id muted">id ' + escapeHtml(String(x.id).slice(0,8)) +
+        ' · usuario ' + escapeHtml(String(x.user_id || '').slice(0,8)) + '</div>' +
+      (x.mensaje ? '<div class="msg">' + escapeHtml(x.mensaje) + '</div>' : '') +
+      archivos +
+      (x.drive_error ? '<p class="err" style="margin:8px 0 0;font-size:12px;">' +
+          escapeHtml(x.drive_error) + '</p>' : '') +
+      '<div class="acts">' +
+        (x.drive_folder_url
+          ? '<a class="btn-ghost" href="' + escapeHtml(x.drive_folder_url) + '" target="_blank" rel="noopener">Abrir en el Drive</a>'
+          : '<button class="btn-ghost" onclick="reenviarAporte(\'' + x.id + '\')">Copiar al Drive</button>') +
+        (enDrive && x.drive_error
+          ? '<button class="btn-ghost" onclick="reenviarAporte(\'' + x.id + '\')">Reintentar</button>' : '') +
+        (x.leido_en ? '' :
+          '<button class="btn-ghost" onclick="markAporte(\'' + x.id + '\')">Marcar como leído</button>') +
+        '<span class="ap-rev">' +
+          (x.review_status === 'aprovechada' ? '' :
+            '<button class="btn-ghost" onclick="revisarAporte(\'' + x.id + '\',\'aprovechada\')">Aprovechada</button>') +
+          (x.review_status === 'descartada' ? '' :
+            '<button class="btn-ghost" onclick="revisarAporte(\'' + x.id + '\',\'descartada\')">Descartar</button>') +
+          (x.review_status === 'nueva' || x.review_status === 'vista' ? '' :
+            '<button class="btn-ghost" onclick="revisarAporte(\'' + x.id + '\',\'vista\')">Volver a pendiente</button>') +
+        '</span>' +
+      '</div></div>';
+  }).join('');
+
+  contarAportesNuevos();
+}
+
+/* Espelha `nomeDrive()` de aporte-drive.js — é só para EXIBIR. O nome
+   que vale continua sendo gerado no servidor; se algum dia os dois
+   divergirem, quem manda é o do servidor e este texto vira só uma pista
+   de onde procurar na pasta. */
+function apNombreDrive(id, i, original){
+  const ordinal = String(i + 1).padStart(2, '0');
+  const curto = String(id).replace(/-/g, '').slice(0, 12).toUpperCase();
+  const base = String(original == null ? '' : original)
+    .replace(/[\r\n\t]+/g, ' ').trim().slice(0, 200)
+    .replace(/[\/\\]+/g, '-').replace(/\.{2,}/g, '.')
+    .replace(/^[.\s]+/, '').replace(/\s+/g, ' ').slice(0, 150) || 'archivo';
+  return ordinal + '_' + curto + '_' + base;
+}
+
+function apPeso(n){
+  n = Number(n) || 0;
+  if(n < 1024) return n + ' B';
+  if(n < 1048576) return Math.round(n/1024) + ' KB';
+  return (n/1048576).toFixed(1).replace('.', ',') + ' MB';
+}
+
+/* El bucket es privado: el enlace se firma acá, en el momento del clic,
+   y vale 10 minutos. Nunca existe una URL pública del material. */
+async function abrirArchivo(path){
+  const { data, error } = await sb.storage.from('aportes').createSignedUrl(path, 600);
+  if(error || !data){ alert('No se pudo abrir el archivo: ' + ((error && error.message) || '')); return; }
+  window.open(data.signedUrl, '_blank', 'noopener');
+}
+
+/* Reintento del espejado en el Drive. La función Netlify vuelve a
+   validar que quien llama es admin: acá no hay atajo. */
+async function reenviarAporte(id){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ alert('Sesión expirada.'); return; }
+  try{
+    const r = await fetch('/.netlify/functions/aporte-drive', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + session.access_token },
+      body: JSON.stringify({ contribution_id: id })
+    });
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok){
+      alert(j.error || ('No se pudo copiar al Drive (HTTP ' + r.status + ').'));
+    }
+  }catch(e){
+    alert('No se pudo copiar al Drive: ' + (e && e.message ? e.message : e));
+  }
+  loadAportes();
+}
+
+/* Curadoria: a equipe diz o que fez com o material. Marcar também o
+   `leido_en`, porque decidir implica ter olhado. */
+async function revisarAporte(id, estado){
+  const campos = { review_status: estado };
+  if (estado !== 'nueva') campos.leido_en = new Date().toISOString();
+  const { error } = await sb.from('external_contributions').update(campos).eq('id', id);
+  if(error){ alert('Error: ' + error.message); return; }
+  loadAportes();
+}
+
+async function markAporte(id){
+  const { error } = await sb.from('external_contributions')
+    .update({ leido_en: new Date().toISOString(), review_status: 'vista' }).eq('id', id);
+  if(error){ alert('Error: ' + error.message); return; }
+  loadAportes();
 }
 
 async function loadDashboard(){
@@ -740,8 +1007,8 @@ async function loadDashboard(){
    NAVEGAÇÃO ENTRE VIEWS (usuarios/panel  ↔  acceso por materia)
    ===================================================================== */
 function showView(which){
-  const views = { users:'searchView', subjects:'subjectsView', sales:'salesView', ads:'adsView' };
-  const navs  = { users:'navUsers',   subjects:'navSubjects',  sales:'navSales',  ads:'navAds'  };
+  const views = { users:'searchView', subjects:'subjectsView', sales:'salesView', ads:'adsView', aportes:'aportesView' };
+  const navs  = { users:'navUsers',   subjects:'navSubjects',  sales:'navSales',  ads:'navAds', aportes:'navAportes' };
   Object.keys(views).forEach(k=>{
     const v = document.getElementById(views[k]);
     if(v) v.classList.toggle('hidden', k !== which);
@@ -752,6 +1019,7 @@ function showView(which){
   if(which === 'subjects') loadSubjectAccess();
   if(which === 'sales')    loadSales();
   if(which === 'ads')      loadAds();
+  if(which === 'aportes')  loadAportes();
 }
 
 /* =====================================================================
