@@ -154,14 +154,15 @@ exports.handler = async (event) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       redirect: 'follow',
+      /* NENHUMA identidade atravessa para o Drive: nem nome, nem e-mail,
+         nem user_id. Quem enviou só se descobre no painel, com login de
+         administrador. O Drive recebe o destino, o recado e os bytes. */
       body: JSON.stringify({
         token: GAS_TOKEN,
         contribution_id: linha.id,
         semester: linha.semester,
         subject_slug: linha.subject_slug || '',
         subject_name: materia || '',
-        student_name: linha.nombre || '',
-        student_email: linha.email || '',
         message: linha.mensaje || '',
         created_at: linha.created_at,
         files: assinados
@@ -187,7 +188,22 @@ exports.handler = async (event) => {
       drive_error: null,
       drive_sent_at: new Date().toISOString()
     });
-    return resp(200, { ok: true, folder_url: out.folder_url || null });
+
+    /* O Storage é BUFFER, o Drive é DESTINO. Com a cópia confirmada
+       arquivo por arquivo (`complete`), a cópia temporária sai: material
+       de aluno não fica guardado em dois lugares sem motivo.
+
+       Só com `complete`. Se UM arquivo faltou, o buffer fica de pé — é
+       ele que permite o «Copiar al Drive» do painel tentar de novo. E
+       falhar ao apagar o buffer nunca derruba o envio: o material já
+       está no Drive, que é o que importa. */
+    let limpou = false;
+    if (out.complete === true) limpou = await limparBuffer(arquivos);
+
+    return resp(200, {
+      ok: true, folder_url: out.folder_url || null,
+      saved: out.saved, already: out.already, buffer_cleared: limpou
+    });
 
   } catch (e) {
     console.error('aporte-drive', e && e.message ? e.message : String(e));
@@ -196,6 +212,26 @@ exports.handler = async (event) => {
 };
 
 /* ------------------------------------------------------------------ */
+
+/* Remove os objetos do bucket privado. Devolve true só se TODOS saíram.
+   Nunca lança: é limpeza, não é a entrega. */
+async function limparBuffer(arquivos) {
+  const paths = (arquivos || []).map(f => f && f.path).filter(p => typeof p === 'string');
+  if (!paths.length) return false;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/aportes`, {
+      method: 'DELETE',
+      headers: { ...sr(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefixes: paths })
+    });
+    if (!r.ok) { console.error('buffer no borrado, HTTP', r.status); return false; }
+    const out = await r.json().catch(() => null);
+    return Array.isArray(out) ? out.length === paths.length : true;
+  } catch (e) {
+    console.error('buffer no borrado');
+    return false;
+  }
+}
 
 async function marcar(id, campos) {
   try {

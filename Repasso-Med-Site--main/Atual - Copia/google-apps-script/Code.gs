@@ -1,71 +1,129 @@
 /* =====================================================================
    REPASSO MED · APORTES DE ALUMNOS → GOOGLE DRIVE
-   Web App de Apps Script. É a única peça que tem permissão no Drive.
+   Web App de Apps Script. É a única peça com permissão no Drive.
 
    COMO ISTO SE ENCAIXA
    -----------------------------------------------------------------
-   navegador → Supabase Storage (bucket privado)
+   navegador → Supabase Storage (buffer privado)
              → linha em external_contributions
              → Netlify Function aporte-drive
              → ESTE script → Drive
 
    A função Netlify manda URLs ASSINADAS de 10 minutos. Este script
    busca os bytes por elas. Assim o bucket continua privado e nenhuma
-   chave do Supabase precisa existir dentro do Apps Script.
+   chave do Supabase precisa existir aqui dentro.
+
+   ONDE O MATERIAL VAI PARAR — e o que mudou
+   -----------------------------------------------------------------
+   A pasta raiz JÁ É «Material Externo» e JÁ TEM a árvore montada à mão:
+
+       Material Externo/
+         1º Semestre/   Anatomia I · Biologia · Embriologia · ...
+         2 semestre/    ...
+         5 semestre/    ...
+         6 semestre/    ...
+         7 semestre/    Oftalmologia · Toxicologia · Neurologia · ...
+
+   A versão anterior deste arquivo criava «Aportes de alumnos» e, dentro
+   dela, «7.º semestre» e «Oftalmología» — uma SEGUNDA árvore paralela à
+   que já existe. Agora o script REUTILIZA a árvore real:
+
+       Material Externo/7 semestre/Oftalmologia/2026-09-13_1420_A82F92/
+
+   REUTILIZAR EXIGE NORMALIZAR, porque os dois lados escrevem diferente
+   -----------------------------------------------------------------
+   · o semestre aparece como «1º Semestre» e como «7 semestre»;
+   · as pastas estão em PORTUGUÊS sem acento («Oftalmologia»,
+     «Ortopedia e Traumatologia»), e o catálogo do site está em
+     CASTELHANO («Oftalmología», «Ortopedia y Traumatología»).
+
+   Comparar os nomes crus criaria «Oftalmología» ao lado de
+   «Oftalmologia». Então comparamos uma forma reduzida: minúsculas, sem
+   acento, sem pontuação, sem os conectores «e»/«y»/«de», com
+   «pratica»↔«practica» unificados e o sufixo «teórica» descartado —
+   é ele que separa «Histologia I Teórica» de «Histología I».
 
    O QUE ESTE SCRIPT NUNCA FAZ
    -----------------------------------------------------------------
-   Não apaga nada. Não move nada. Não toca na Biblioteca. Só CRIA, e
-   sempre abaixo da pasta raiz configurada em ROOT_FOLDER_ID.
+   Não apaga. Não move. Não renomeia. Não toca a Biblioteca. Só CRIA, e
+   sempre abaixo de ROOT_FOLDER_ID. Nenhum nome, e-mail ou user_id vai
+   para o Drive: a identidade fica no Supabase, visível só no painel.
 
    ANTES DE PUBLICAR
    -----------------------------------------------------------------
-   1. Cole este arquivo em um projeto novo em https://script.google.com
-   2. Rode UMA VEZ a função `setup()` (ela pede a autorização do Google
-      e guarda o segredo). Veja o passo-a-passo no arquivo
-      CONTRIBUICOES-MATERIAL-EXTERNO.md do repositório.
-   3. Implantar → Nova implantação → Aplicativo da Web
-        Executar como: Eu
-        Quem pode acessar: Qualquer pessoa
-      «Qualquer pessoa» é o que permite a chamada do servidor da
-      Netlify. Quem protege o endpoint é o token compartilhado, não a
-      obscuridade da URL.
-   4. Copie a URL /exec e cole no Netlify como APPS_SCRIPT_URL.
+   Veja CONTRIBUICOES-MATERIAL-EXTERNO.md §4. Em resumo: colar este
+   arquivo em um projeto novo, rodar `setup()` UMA vez, e implantar como
+   Aplicativo da Web (Executar como: Eu · Acesso: Qualquer pessoa).
    ===================================================================== */
 
-/* Pasta raiz do Drive da equipe. Nada é criado fora dela. */
+/* «Material Externo». Nada é criado fora dela. */
 var ROOT_FOLDER_ID = '1jE4fwQblxZsPWR6R8IM02iMI-DxxwZoQ';
 
-/* Nome da pasta que agrupa tudo o que vem dos alunos. Criada na
-   primeira vez; depois é sempre reaproveitada. */
-var PASTA_APORTES = 'Aportes de alumnos';
+/* Onde cai um envio cujo semestre não corresponde a nenhuma pasta.
+   Fica dentro do root, ao lado dos semestres. */
+var PASTA_SEM_CLASIFICAR = 'Sin clasificar';
+
+var PROP_TOKEN = 'APPS_SCRIPT_TOKEN';
+var PROP_ARVORE = 'RM_ARVORE';      /* cache dos ids canônicos */
 
 /* =====================================================================
-   setup() — RODE ESTA FUNÇÃO UMA VEZ, À MÃO
-   Guarda o segredo compartilhado e confirma que o script enxerga a
-   pasta raiz. O segredo fica nas Propriedades do Script, nunca no
-   código: assim ele não vai parar no repositório.
+   setup() — RODE UMA VEZ, À MÃO
+
+   Valida a raiz, mapeia a árvore REAL que já existe e guarda os ids
+   canônicos. Não cria, não move, não apaga nada. Imprime um diagnóstico
+   sem nenhum dado de aluno.
    ===================================================================== */
 function setup() {
   var props = PropertiesService.getScriptProperties();
-  var token = props.getProperty('APPS_SCRIPT_TOKEN');
 
+  /* 1 · a raiz é mesmo «Material Externo»? */
+  var root = DriveApp.getFolderById(ROOT_FOLDER_ID);
+  var nome = root.getName();
+  Logger.log('Raiz: "' + nome + '"  (' + ROOT_FOLDER_ID + ')');
+  if (reduzir(nome).indexOf('material externo') < 0) {
+    Logger.log('⚠️  A raiz não se chama «Material Externo». Confirme o ROOT_FOLDER_ID');
+    Logger.log('    antes de seguir: um id errado espalharia material no lugar errado.');
+  }
+
+  /* 2 · mapeia semestres e matérias existentes */
+  var arvore = lerArvore(root);
+  var semestres = Object.keys(arvore).sort(function (a, b) { return Number(a) - Number(b); });
+  Logger.log('Semestres encontrados: ' + semestres.length);
+  for (var i = 0; i < semestres.length; i++) {
+    var s = arvore[semestres[i]];
+    var mats = Object.keys(s.materias);
+    Logger.log('  · semestre ' + semestres[i] + '  pasta "' + s.nome + '"  → ' +
+               mats.length + ' materia(s)');
+    for (var j = 0; j < mats.length; j++) Logger.log('      - ' + s.materias[mats[j]].nome);
+  }
+  props.setProperty(PROP_ARVORE, JSON.stringify(arvore));
+  Logger.log('Árvore guardada em ScriptProperties. Matérias novas ainda assim são');
+  Logger.log('procuradas ao vivo antes de criar qualquer pasta.');
+
+  /* 3 · segredo compartilhado */
+  var token = props.getProperty(PROP_TOKEN);
   if (!token) {
-    /* Gera um segredo forte na primeira execução. Copie-o do log e
-       cole no Netlify como APPS_SCRIPT_TOKEN. */
     token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
-    props.setProperty('APPS_SCRIPT_TOKEN', token);
+    props.setProperty(PROP_TOKEN, token);
+    Logger.log('');
     Logger.log('APPS_SCRIPT_TOKEN gerado. COPIE a linha abaixo e cole no Netlify:');
     Logger.log(token);
   } else {
-    Logger.log('APPS_SCRIPT_TOKEN já existia. Se você o perdeu, apague a propriedade');
-    Logger.log('em Configurações do projeto → Propriedades do script e rode setup() de novo.');
+    Logger.log('');
+    Logger.log('APPS_SCRIPT_TOKEN já existia — não foi gerado outro.');
+    Logger.log('Se o perdeu: Configurações do projeto → Propriedades do script,');
+    Logger.log('apague a propriedade e rode setup() de novo.');
   }
+  return 'ok';
+}
 
+/* Relê a árvore do Drive sem gerar token nem escrever nada além do
+   cache. Útil depois de criar pastas de semestre/matéria à mão. */
+function recarregarArvore() {
   var root = DriveApp.getFolderById(ROOT_FOLDER_ID);
-  var base = subpasta(root, PASTA_APORTES);
-  Logger.log('Raiz OK: ' + root.getName());
-  Logger.log('Pasta de aportes: ' + base.getUrl());
+  var arvore = lerArvore(root);
+  PropertiesService.getScriptProperties().setProperty(PROP_ARVORE, JSON.stringify(arvore));
+  Logger.log('Árvore recarregada: ' + Object.keys(arvore).length + ' semestre(s).');
   return 'ok';
 }
 
@@ -76,76 +134,74 @@ function doPost(e) {
   try {
     var dados = JSON.parse((e && e.postData && e.postData.contents) || '{}');
 
-    var esperado = PropertiesService.getScriptProperties().getProperty('APPS_SCRIPT_TOKEN');
+    var esperado = PropertiesService.getScriptProperties().getProperty(PROP_TOKEN);
     if (!esperado) return json({ ok: false, error: 'setup() todavía no fue ejecutado' });
+    /* O token recebido nunca é registrado: um log não é lugar de segredo,
+       nem do certo nem do errado. */
     if (!igual(String(dados.token || ''), esperado)) {
-      /* Não registramos o token recebido: um log é um lugar onde um
-         segredo não deve existir, nem o certo nem o errado. */
       return json({ ok: false, error: 'token inválido' });
     }
 
     var id = String(dados.contribution_id || '').trim();
-    if (!id) return json({ ok: false, error: 'contribution_id ausente' });
+    if (!/^[0-9a-f-]{16,40}$/i.test(id)) return json({ ok: false, error: 'contribution_id inválido' });
 
-    /* Árvore: raiz → Aportes de alumnos → Semestre N → Materia → envio.
-       O chamador manda semestre e nome de matéria; quem decide o
-       caminho real é este script, e sempre abaixo da raiz. */
-    var root = DriveApp.getFolderById(ROOT_FOLDER_ID);
-    var base = subpasta(root, PASTA_APORTES);
+    /* 1 · a pasta da matéria, reaproveitando a árvore que já existe */
+    var destinoMateria = resolverMateria(dados.semester, dados.subject_name, dados.subject_slug);
 
-    var sem  = dados.semester;
-    var semNome = (sem === 0 || sem) ? (sem + '.º semestre') : 'Sin semestre';
-    var matNome = limpo(dados.subject_name || dados.subject_slug || '') || 'General';
+    /* 2 · a pasta do envio. O nome NÃO leva identidade: data, hora e um
+       pedaço do id bastam para achar, e o resto está no painel.
+       Reenviar o mesmo aporte reaproveita a pasta em vez de duplicá-la. */
+    var quando = dados.created_at ? new Date(dados.created_at) : new Date();
+    if (isNaN(quando.getTime())) quando = new Date();
+    var tz = Session.getScriptTimeZone();
+    var sufixo = id.replace(/-/g, '').slice(0, 6).toUpperCase();
+    var nomeEnvio = Utilities.formatDate(quando, tz, 'yyyy-MM-dd_HHmm') + '_' + sufixo;
 
-    var pasta = subpasta(subpasta(base, limpo(semNome)), matNome);
+    var destino = acharPorSufixo(destinoMateria, sufixo) || destinoMateria.createFolder(nomeEnvio);
 
-    /* Uma pasta por envio: data + aluno + os 8 primeiros dígitos do id.
-       O id evita colisão quando o mesmo aluno manda duas vezes no mesmo
-       dia; a data e o nome deixam a pasta legível sem abrir nada. */
-    var quando = Utilities.formatDate(
-      dados.created_at ? new Date(dados.created_at) : new Date(),
-      Session.getScriptTimeZone(), 'yyyy-MM-dd');
-    var quem = limpo(dados.student_name || dados.student_email || 'Alumno').slice(0, 60);
-    var destino = subpasta(pasta, quando + ' — ' + quem + ' — ' + id.slice(0, 8));
-
-    /* Ficha do envio: quem mandou, para que matéria e o que escreveu.
-       Sem ela, daqui a um mês a pasta é um monte de PDF sem contexto. */
+    /* 3 · ficha do envio, também sem identidade */
     var ficha =
-      'APORTE DE ALUMNO · REPASSO MED\n' +
-      '================================\n' +
+      'APORTE · REPASSO MED\n' +
+      '====================\n' +
       'Id:        ' + id + '\n' +
-      'Fecha:     ' + quando + '\n' +
-      'Alumno:    ' + (dados.student_name || '(sin nombre)') + '\n' +
-      'Correo:    ' + (dados.student_email || '(sin correo)') + '\n' +
-      'Semestre:  ' + semNome + '\n' +
-      'Materia:   ' + matNome + (dados.subject_slug ? ' (' + dados.subject_slug + ')' : '') + '\n' +
+      'Fecha:     ' + Utilities.formatDate(quando, tz, 'yyyy-MM-dd HH:mm') + '\n' +
+      'Semestre:  ' + (numeroSemestre(dados.semester) || '(sin indicar)') + '\n' +
+      'Materia:   ' + (limpo(dados.subject_name) || '(general)') +
+        (dados.subject_slug ? ' [' + limpo(dados.subject_slug) + ']' : '') + '\n' +
       '\nMensaje del alumno\n------------------\n' +
-      ((dados.message || '').trim() || '(sin mensaje)') + '\n';
-    destino.createFile('_ficha.txt', ficha, MimeType.PLAIN_TEXT);
+      ((dados.message || '').trim() || '(sin mensaje)') + '\n' +
+      '\nArchivos\n--------\n' +
+      ((dados.files || []).map(function (a, i) {
+        return (i + 1) + '. ' + (a.name || 'archivo');
+      }).join('\n') || '(ninguno)') + '\n' +
+      '\nEl remitente se identifica solo en el panel administrativo.\n';
+    gravarFicha(destino, ficha);
 
-    /* Os arquivos. Cada URL assinada vale poucos minutos e é usada uma
-       vez só. Um arquivo que falha não derruba os outros: fica listado
-       no resultado para o painel administrativo mostrar. */
+    /* 4 · os arquivos. Cada URL assinada vale poucos minutos. Um arquivo
+       que falha não derruba os outros — volta listado, e o painel
+       mostra o motivo. Reenvio não duplica: nome que já existe é
+       considerado gravado. */
     var arquivos = dados.files || [];
-    var gravados = 0, falhas = [];
+    var gravados = 0, jaEstavam = 0, falhas = [];
     for (var i = 0; i < arquivos.length; i++) {
       var a = arquivos[i];
+      var nomeArq = limpoArquivo(a.name) || ('archivo-' + (i + 1));
       try {
+        if (destino.getFilesByName(nomeArq).hasNext()) { jaEstavam++; continue; }
         var r = UrlFetchApp.fetch(a.url, { muteHttpExceptions: true, followRedirects: true });
         if (r.getResponseCode() !== 200) {
-          falhas.push((a.name || 'archivo') + ': HTTP ' + r.getResponseCode());
+          falhas.push(nomeArq + ': HTTP ' + r.getResponseCode());
           continue;
         }
-        var blob = r.getBlob().setName(a.name || ('archivo-' + (i + 1)));
-        if (a.mime) { try { blob = blob.getAs(a.mime); } catch (ignora) {} }
-        destino.createFile(blob);
+        destino.createFile(r.getBlob().setName(nomeArq));
         gravados++;
       } catch (err) {
-        falhas.push((a.name || 'archivo') + ': ' + err);
+        falhas.push(nomeArq + ': ' + err);
       }
     }
 
-    if (arquivos.length && gravados === 0) {
+    var completo = (gravados + jaEstavam) === arquivos.length;
+    if (arquivos.length && !completo && gravados === 0) {
       return json({ ok: false, error: 'ningún archivo pudo copiarse — ' + falhas.join(' · '),
                     folder_url: destino.getUrl() });
     }
@@ -154,6 +210,9 @@ function doPost(e) {
       ok: true,
       folder_url: destino.getUrl(),
       saved: gravados,
+      already: jaEstavam,
+      total: arquivos.length,
+      complete: completo,          /* só com isto o backend limpa o buffer */
       failed: falhas
     });
 
@@ -162,35 +221,182 @@ function doPost(e) {
   }
 }
 
-/* GET serve só para conferir, do navegador, que a implantação está de
-   pé. Não revela nada: nem token, nem id de pasta, nem conteúdo. */
+/* GET só confirma que a implantação está de pé. Não revela token, id de
+   pasta nem conteúdo. */
 function doGet() {
   return json({ ok: true, service: 'repasso-med-aportes' });
 }
 
 /* =====================================================================
-   Auxiliares
+   Árvore do Drive
    ===================================================================== */
 
-/* Pega a subpasta pelo nome, ou cria se não existir. Nunca apaga e
-   nunca sobe um nível: só desce a partir da pasta recebida. */
+/* Lê root → semestres → matérias. Só leitura. */
+function lerArvore(root) {
+  var arvore = {};
+  var it = root.getFolders();
+  while (it.hasNext()) {
+    var f = it.next();
+    var n = numeroSemestre(f.getName());
+    if (n === null) continue;                  /* não é pasta de semestre */
+    var sem = { id: f.getId(), nome: f.getName(), materias: {} };
+    var im = f.getFolders();
+    while (im.hasNext()) {
+      var m = im.next();
+      sem.materias[reduzir(m.getName())] = { id: m.getId(), nome: m.getName() };
+    }
+    arvore[String(n)] = sem;
+  }
+  return arvore;
+}
+
+function arvoreCache() {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty(PROP_ARVORE) || '{}'); }
+  catch (e) { return {}; }
+}
+function salvarCache(arvore) {
+  try { PropertiesService.getScriptProperties().setProperty(PROP_ARVORE, JSON.stringify(arvore)); }
+  catch (e) { /* cache é conveniência: perdê-lo não pode derrubar o envio */ }
+}
+
+/* Devolve a pasta da matéria, criando o mínimo possível.
+   O chamador manda semestre e nome; QUEM decide o caminho é este script,
+   e sempre abaixo do root — um `subject_name` com barras ou «..» é
+   achatado por `limpo()` e nunca vira travessia de diretório. */
+function resolverMateria(semestre, nomeMateria, slug) {
+  var root = DriveApp.getFolderById(ROOT_FOLDER_ID);
+  var n = numeroSemestre(semestre);
+  var arvore = arvoreCache();
+
+  /* --- pasta do semestre --- */
+  var pastaSem = null;
+  if (n !== null) {
+    var c = arvore[String(n)];
+    if (c && c.id) { try { pastaSem = DriveApp.getFolderById(c.id); } catch (e) { pastaSem = null; } }
+    if (!pastaSem) {                            /* cache frio ou pasta nova */
+      arvore = lerArvore(root); salvarCache(arvore);
+      var c2 = arvore[String(n)];
+      if (c2 && c2.id) { try { pastaSem = DriveApp.getFolderById(c2.id); } catch (e) { pastaSem = null; } }
+    }
+    /* Semestre sem pasta: criamos UMA, com o mesmo feitio das que já
+       existem («7 semestre»), dentro do root. */
+    if (!pastaSem) pastaSem = root.createFolder(n + ' semestre');
+  } else {
+    pastaSem = subpasta(root, PASTA_SEM_CLASIFICAR);
+  }
+
+  /* --- pasta da matéria --- */
+  var chaves = chavesMateria(nomeMateria, slug);
+  if (!chaves.length) return subpasta(pastaSem, 'General');
+
+  /* procura ao vivo: alguém pode ter criado a pasta à mão hoje */
+  var it = pastaSem.getFolders();
+  while (it.hasNext()) {
+    var f = it.next();
+    if (chaves.indexOf(reduzir(f.getName())) >= 0) return f;
+  }
+  /* não existe: cria com o nome do catálogo do site, dentro do semestre
+     já validado. Nunca fora do root. */
+  return pastaSem.createFolder(limpo(nomeMateria) || limpo(slug) || 'General');
+}
+
+/* Reaproveita a pasta de um envio que já veio antes (retry do painel). */
+function acharPorSufixo(pai, sufixo) {
+  var it = pai.getFolders();
+  while (it.hasNext()) {
+    var f = it.next();
+    if (f.getName().slice(-(sufixo.length + 1)) === '_' + sufixo) return f;
+  }
+  return null;
+}
+
+function gravarFicha(pasta, texto) {
+  var it = pasta.getFilesByName('contribuicao.txt');
+  if (it.hasNext()) { it.next().setContent(texto); return; }
+  pasta.createFile('contribuicao.txt', texto, MimeType.PLAIN_TEXT);
+}
+
 function subpasta(pai, nome) {
   var it = pai.getFoldersByName(nome);
   return it.hasNext() ? it.next() : pai.createFolder(nome);
 }
 
-/* Nome de pasta sem os caracteres que o Drive trata de forma estranha
-   e sem espaço sobrando nas pontas. */
+/* =====================================================================
+   Normalização — o coração da reutilização
+   ===================================================================== */
+
+/* «1º Semestre» → 1 · «7 semestre» → 7 · 7 → 7 · «Sin clasificar» → null */
+function numeroSemestre(v) {
+  if (v === 0 || v) {
+    var m = String(v).match(/\d+/);
+    if (m) {
+      var n = parseInt(m[0], 10);
+      if (n >= 1 && n <= 20) return n;
+    }
+  }
+  return null;
+}
+
+/* Forma reduzida usada para comparar nomes dos dois lados. */
+function reduzir(txt) {
+  var t = String(txt == null ? '' : txt).toLowerCase();
+  /* tira acento sem depender de normalize(), que o motor antigo do
+     Apps Script nem sempre tem */
+  var de = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
+  var para = 'aaaaaeeeeiiiiooooouuuucn';
+  var out = '';
+  for (var i = 0; i < t.length; i++) {
+    var p = de.indexOf(t.charAt(i));
+    out += p >= 0 ? para.charAt(p) : t.charAt(i);
+  }
+  out = out
+    .replace(/[^a-z0-9]+/g, ' ')                 /* pontuação e hífen do slug */
+    /* PT ↔ ES e singular/plural: «Prática», «Praticas», «Práctica» */
+    .replace(/\bpraticas?\b/g, 'practica')
+    .replace(/\bpracticas\b/g, 'practica')
+    /* a cátedra escreve «Anatopatologia»; o catálogo, «Anatomía Patológica» */
+    .replace(/\banatomia patologica\b/g, 'anatopatologia')
+    .replace(/\banatomia patologico\b/g, 'anatopatologia')
+    /* «Teórica» é o curso padrão: o que distingue é só a «Práctica» */
+    .replace(/\bteoricas?\b|\bteoricos?\b|\bteorias?\b/g, '')
+    .replace(/\b(e|y|de|del|da|do|la|el)\b/g, '')/* conectores */
+    .replace(/\s+/g, ' ')
+    .trim()
+    /* «Fisiopatología» no catálogo é «Fisiopatologia I» no Drive. Um «i»
+       solto no fim não distingue nada; «ii» e «iii» sim, e ficam. */
+    .replace(/\si$/, '');
+  return out;
+}
+
+/* Todas as formas pelas quais a mesma matéria pode estar escrita. */
+function chavesMateria(nome, slug) {
+  var ks = [];
+  [nome, slug].forEach(function (v) {
+    var r = reduzir(v);
+    if (r && ks.indexOf(r) < 0) ks.push(r);
+  });
+  return ks;
+}
+
+/* Nome de pasta: sem barra, sem quebra de linha, sem «..», sem espaço
+   sobrando. É o que impede um `subject_name` manipulado de virar caminho. */
 function limpo(txt) {
   return String(txt == null ? '' : txt)
     .replace(/[\/\\\r\n\t]+/g, ' ')
+    .replace(/\.{2,}/g, '.')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 120);
 }
 
-/* Comparação de tamanho constante: um `==` normal devolve mais cedo no
-   primeiro caractere diferente, e esse tempo é informação. */
+/* Nome de arquivo: o do aluno, preservado, menos o que quebraria o Drive. */
+function limpoArquivo(txt) {
+  var t = limpo(txt).replace(/^[.\s]+/, '');
+  return t.slice(0, 200);
+}
+
+/* Comparação de tamanho constante: um `==` devolve no primeiro caractere
+   diferente, e esse tempo é informação. */
 function igual(a, b) {
   if (a.length !== b.length) return false;
   var d = 0;

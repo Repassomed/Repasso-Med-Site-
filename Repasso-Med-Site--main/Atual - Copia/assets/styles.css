@@ -191,8 +191,14 @@ ul li::marker { color: var(--accent); }
 .rm-menu-panel{
   position:absolute; top: calc(100% + 10px); left:0;
   width: 380px; max-width: calc(100vw - 28px);
-  max-height: calc(100vh - var(--topbar-h) - var(--tabs-h) - 40px);
+  /* Reserva enquanto o JS não mede: `100dvh` já desconta a barra de
+     endereço do celular, que o `100vh` antigo ignorava. O valor final
+     vem de `ajustarAltura()` em app-core.js, que mede onde o painel
+     realmente começa — ver o comentário lá. */
+  max-height: calc(100dvh - var(--topbar-h) - var(--tabs-h) - 160px);
   overflow-y:auto; -webkit-overflow-scrolling:touch;
+  /* chegar ao fim da lista não pode arrastar a matéria atrás dela */
+  overscroll-behavior:contain;
   background:#fff; border:1px solid var(--rule); border-radius:16px;
   box-shadow: var(--shadow-lg);
   padding:.85rem;
@@ -215,7 +221,9 @@ ul li::marker { color: var(--accent); }
   text-transform:uppercase; color:#8a99ab; margin-left:auto;
 }
 
-.rm-menu-list{ display:flex; flex-direction:column; gap:.4rem; }
+/* uma folga no fim da lista: o último item não pode encostar na borda
+   do painel, senão o dedo pega a moldura em vez do link */
+.rm-menu-list{ display:flex; flex-direction:column; gap:.4rem; padding-bottom:.5rem; }
 
 /* mesma linguagem dos cards de semestre do topo */
 .rm-menu a{
@@ -1480,6 +1488,15 @@ footer strong { color:var(--gold-soft); }
 .rm-sug-body[hidden]{display:none;}
 
 .rm-ap{gap:0;}
+/* convite, não formulário burocrático: é a primeira coisa que o aluno
+   lê ao abrir a aba, e é o que decide se ele contribui */
+.rm-ap-hero{margin:0 0 15px;padding:14px 15px;border-radius:14px;
+  background:linear-gradient(135deg,#f3f8ff,#fdf7ec);border:1px solid #e3e9f2;}
+.rm-ap-hero b{display:block;font-family:var(--font-display,'Fraunces',Georgia,serif);
+  font-size:1.02rem;font-weight:800;line-height:1.3;color:var(--brand);margin-bottom:7px;}
+.rm-ap-hero p{margin:0;font-size:13.5px;line-height:1.55;color:#4f5f70;}
+.rm-ap-hero-cta{margin-top:8px !important;font-weight:700;color:var(--brand) !important;}
+.rm-ap-send{white-space:normal;line-height:1.25;}
 .rm-ap-campo{display:block;margin-bottom:13px;}
 /* :not(.rm-ap-drop) porque o seletor de arquivos também é um <label>
    e não deve herdar o caixa-alta nem o display:block do rótulo. */
@@ -1520,8 +1537,9 @@ footer strong { color:var(--gold-soft); }
   white-space:nowrap;color:var(--ink);}
 .rm-ap-lista .s{flex:0 0 auto;font-family:var(--font-mono);color:#8794a4;}
 
-.rm-ap-aviso{margin:4px 0 0;padding:10px 12px;border-radius:10px;background:#fbf7ea;
-  border:1px solid #ecdfb8;font-size:12.5px;line-height:1.5;color:#6a5a33;}
+.rm-ap-aviso{margin:4px 0 0;padding:11px 13px;border-radius:10px;background:#fbf7ea;
+  border:1px solid #ecdfb8;font-size:12.5px;line-height:1.55;color:#6a5a33;}
+.rm-ap-aviso b{color:#5a4a20;}
 
 .rm-ap-msg{flex:1;font-size:12.5px;line-height:1.4;}
 .rm-ap-msg.ok{color:#1d7a4f;}

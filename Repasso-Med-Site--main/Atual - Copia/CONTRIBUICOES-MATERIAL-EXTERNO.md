@@ -7,8 +7,11 @@ e o que falta fazer à mão para ligá-la.
 
 ## 1. Onde o aluno encontra isto
 
-Dentro de **qualquer matéria**, no mesmo botão que já existia:
-**«Sugerencias y aportes»**, logo abaixo do índice.
+Em **dois lugares**, os dois abrindo a **mesma** gaveta:
+
+- **«Caja de sugerencias»** no cabeçalho, ao lado da Loja de matérias — alcançável de
+  qualquer parte do site, inclusive fora de uma matéria;
+- o **envelope** na coluna esquerda da matéria, para quem já está lendo.
 
 O painel agora tem **duas abas**:
 
@@ -17,9 +20,9 @@ O painel agora tem **duas abas**:
 | **Sugerencia** | recado de texto (o que já existia) | tabela `feedback` → card «Sugerencias de los alumnos» |
 | **Aportar material** | semestre + matéria + recado + arquivos | tabela `external_contributions` + Storage + Drive → aba «Aportes» |
 
-**Não há um segundo botão flutuante.** No celular o botão de sugestões já divide o
-canto inferior esquerdo com a barra de ferramentas de estudo; mais um ali tiraria
-espaço da matéria. Um botão, um painel, dois modos.
+**Não há um segundo painel.** `#rm-sug` é instância única no `<body>`, e os dois
+atalhos chamam a mesma `RepassoMed.abrirSugestoes`. Dois atalhos, uma caixa,
+duas abas.
 
 Funciona em **todas as matérias, inclusive nas que ainda não existem**: o card é
 criado por `app-core.js` junto com o índice de cada matéria, e a lista de matérias
@@ -33,20 +36,30 @@ vem da tabela `subjects`, não de uma lista escrita à mão.
 navegador
    │  bytes (upload direto)
    ▼
-Supabase Storage · bucket PRIVADO «aportes»
+Supabase Storage · bucket PRIVADO «aportes»   ← BUFFER, não destino
    │  só o caminho
    ▼
 Postgres · external_contributions       ← o envio já está salvo AQUI
    │  só o id do envio
    ▼
 Netlify Function · aporte-drive         ← valida a sessão, assina as URLs
-   │  URLs assinadas (10 min)
+   │  URLs assinadas (10 min) · NENHUMA identidade viaja
    ▼
 Apps Script (Web App)                   ← a única peça com permissão no Drive
    │
    ▼
-Google Drive · <root>/Aportes de alumnos/<semestre>/<materia>/<envio>
+Google Drive · Material Externo/<semestre>/<materia>/<AAAA-MM-DD_HHmm_XXXXXX>/
+   │
+   └─ cópia confirmada arquivo por arquivo → o buffer do Storage é apagado
 ```
+
+### O Storage é buffer; o Drive é destino
+
+Confirmada a cópia de **todos** os arquivos, a função apaga a cópia temporária do
+bucket: material de aluno não fica guardado em dois lugares sem motivo. Se **um**
+arquivo faltar, o buffer permanece — é ele que permite ao botão «Copiar al Drive»
+do painel tentar de novo. Falhar ao apagar o buffer nunca derruba o envio: o
+material já está no Drive, que é o que importa.
 
 ### Por que os bytes não passam pela função Netlify
 
@@ -101,12 +114,22 @@ mensagem honesta, não um erro.
 
 ### O que o aluno lê, e por que não promete anonimato
 
-> «Tu nombre y tu correo van junto con el material, así podemos agradecerte y
-> preguntarte si hace falta. **No es un envío anónimo.** Mandá solo material que
-> puedas compartir.»
+> «**Tu contribución es confidencial.** Tu identidad no se mostrará públicamente ni
+> será asociada al material frente a otros estudiantes. El equipo de Repasso Med puede
+> identificar al remitente para organización, seguridad y, si fuera necesario, contacto
+> sobre el material.»
 
-O nome e o e-mail **realmente** viajam com o material. Dizer «100 % anônimo» seria
-mentira, e mentira sobre privacidade é a pior espécie.
+Isto é exatamente o que acontece, e a distinção importa:
+
+| | vê quem enviou? |
+|---|---|
+| Outros estudantes | **não** — o material nunca aparece associado a alguém |
+| Google Drive | **não** — pasta e ficha não levam nome, e-mail nem `user_id` |
+| Painel administrativo | **sim** — nome, e-mail, `user_id`, data, semestre, matéria, recado |
+
+Dizer «100 % anônimo» seria mentira, e mentira sobre privacidade é a pior espécie.
+Dizer «confidencial» é verdade, e é o que o aluno precisa saber para se sentir à
+vontade de contribuir.
 
 ---
 
@@ -132,7 +155,11 @@ consegue enviar, o painel mostra tudo, mas a cópia no Drive fica «pendiente».
      O aviso aparece porque o script é seu e não passou por verificação pública.
    - Abra **Registro de execução**. Ele imprime um **token gerado** (uma linha longa
      de letras e números). **Copie essa linha** — é o valor de `APPS_SCRIPT_TOKEN`.
-   - Ele também imprime a URL da pasta *Aportes de alumnos*, já criada.
+   - Ele também imprime o **diagnóstico da árvore**: quantos semestres achou e, em
+     cada um, que matérias já existem. Confira essa lista — é ela que o script vai
+     reaproveitar. Se faltar alguma pasta que você esperava, crie-a à mão no Drive e
+     rode **`recarregarArvore()`** (não precisa autorizar de novo).
+   - `setup()` **não cria, não move e não apaga nada.** Só lê e guarda os ids.
 5. **Implantar → Nova implantação → Aplicativo da Web**
    - Descrição: `Repasso Med · aportes`
    - **Executar como: Eu**
@@ -179,6 +206,7 @@ variáveis novas só entram em vigor em um build novo.
 | `google-apps-script/Code.gs` | **novo** — o Web App que escreve no Drive |
 | `supabase/migrations/20260913_03_external_contributions.sql` | **novo** — tabela, RLS, anti-spam e bucket privado (já aplicada) |
 | `supabase/migrations/20260913_03_external_contributions_rollback.sql` | **novo** — desfaz, com o `DROP` do bucket comentado de propósito |
+| `supabase/migrations/20260913_04_external_contributions_review.sql` | **novo** — coluna `review_status` (curadoria), aditiva à tabela criada na 03 |
 
 ### O que **não** foi tocado
 
@@ -189,25 +217,59 @@ acrescenta; não altera nem apaga nada anterior.
 
 ---
 
-## 6. Estrutura de pastas criada no Drive
+## 6. Onde o material cai no Drive
+
+A raiz **já é** «Material Externo» e **já tem** a árvore montada à mão. O script
+**reutiliza** essa árvore; não monta uma segunda ao lado dela.
 
 ```
-<root>/
-└── Aportes de alumnos/
-    ├── 7.º semestre/
-    │   └── Oftalmología/
-    │       └── 2026-09-13 — Ana Gómez — aaaaaaaa/
-    │           ├── _ficha.txt          ← quem mandou, para que matéria, o recado
-    │           ├── Resumen — Glaucoma (versión ñ).pdf
-    │           └── Pizarrón ÁÉÍÓÚ.JPG
-    └── Sin semestre/
-        └── General/
-            └── …
+Material Externo/                      ← ROOT_FOLDER_ID, já existente
+├── 1º Semestre/                       ← já existente
+│   └── Biologia/                      ← já existente
+├── 7 semestre/                        ← já existente
+│   └── Oftalmologia/                  ← já existente
+│       └── 2026-09-13_1420_A82F92/    ← ÚNICA pasta criada por envio
+│           ├── contribuicao.txt
+│           ├── Resumen — Glaucoma (versión ñ).pdf
+│           └── Pizarrón ÁÉÍÓÚ.JPG
+└── Sin clasificar/                    ← só se o envio não trouxer semestre
 ```
 
-O `_ficha.txt` existe porque, daqui a um mês, uma pasta cheia de PDF sem contexto não
-serve para nada. Os nomes de arquivo do aluno são **preservados como ele os mandou**;
-só o caminho dentro do bucket é achatado (sem acento, sem espaço, sem barra).
+### Reutilizar exige normalizar
+
+Os dois lados escrevem diferente, e comparar os nomes crus criaria duplicatas:
+
+- o semestre aparece como **«1º Semestre»** e como **«7 semestre»**;
+- as pastas estão em **português sem acento** («Oftalmologia», «Ortopedia e
+  Traumatologia», «Anatopatologia»), e o catálogo do site está em **castelhano**
+  («Oftalmología», «Ortopedia y Traumatología», «Anatomía Patológica I»).
+
+O script compara uma forma reduzida: minúsculas, sem acento, sem pontuação, sem os
+conectores `e`/`y`/`de`, com `pratica`/`praticas` → `practica`, `anatomia
+patologica` → `anatopatologia`, o sufixo `teórica` descartado (é ele que separa
+«Histologia I Teórica» de «Histología I») e um `I` solto no fim removido («Fisiopatología»
+↔ «Fisiopatologia I»). `II` e `III` **ficam**, que aí distinguem de verdade.
+
+Conferido contra as pastas reais e o catálogo real: **22 das 27 matérias reutilizam
+a pasta existente, 5 criariam pasta nova** (as que de fato ainda não existem no
+Drive: as quatro do 2.º semestre e Imagenología). **Zero colisões.**
+
+Uma matéria sem pasta ganha uma **dentro do semestre já validado**, com o nome do
+catálogo. Um semestre sem pasta ganha uma no formato que já se usa (`7 semestre`).
+**Nunca fora do root.**
+
+### Nenhuma identidade vai para o Drive
+
+A pasta do envio chama-se `AAAA-MM-DD_HHmm_XXXXXX` — data, hora e seis dígitos do
+`contribution_id`. Nem nome, nem e-mail, nem `user_id`. O `contribuicao.txt` leva id,
+data, semestre, matéria, o recado do aluno e a lista de arquivos, e termina dizendo
+onde o remetente se identifica: **só no painel administrativo**.
+
+Reenviar o mesmo aporte **não duplica**: o script procura a pasta que termina com
+aquele sufixo e reaproveita; arquivo com nome que já existe é considerado gravado.
+
+Os nomes de arquivo do aluno são **preservados como ele os mandou**; só o caminho
+dentro do bucket é achatado (sem acento, sem espaço, sem barra).
 
 ---
 
@@ -224,6 +286,11 @@ só o caminho dentro do bucket é achatado (sem acento, sem espaço, sem barra).
 | `drive_status` | `pendiente` · `enviado` · `error` |
 | `drive_folder_url`, `drive_error`, `drive_sent_at` | resultado do espelhamento |
 | `leido_en` | badge NOVA do painel |
+| `review_status` | curadoria humana: `nueva` · `vista` · `aprovechada` · `descartada` |
+
+`drive_status` é **máquina** (o espelhamento deu certo ou não); `review_status` é
+**gente** (a equipe olhou, aproveitou ou descartou). São eixos diferentes de
+propósito: empilhá-los num campo só daria um estado que mente metade do tempo.
 
 **RLS** — o mesmo trio já usado em `feedback`:
 `insert_self` (`user_id = auth.uid()`), `select_self`, `admin_all` (`is_admin()`).

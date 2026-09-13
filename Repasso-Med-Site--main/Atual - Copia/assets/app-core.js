@@ -430,9 +430,13 @@ var RepassoMed = (function(){
       items += '<div class="rm-menu-item">' + linha + lista + '</div>';
     });
     nav.innerHTML =
-      '<button class="rm-menu-btn" type="button" aria-label="Abrir el índice de la materia" aria-expanded="false">' +
+      /* Só «Índice» no botão. «Índice de la materia» ocupava quase o dobro
+         da largura sobre a leitura o tempo todo; o rótulo inteiro segue
+         no aria-label, no title e no cabeçalho do próprio painel. */
+      '<button class="rm-menu-btn" type="button" title="Índice de la materia" ' +
+        'aria-label="Abrir el índice de la materia" aria-expanded="false">' +
         '<span class="rm-menu-bars"><i></i><i></i><i></i></span>' +
-        '<span class="rm-menu-btn-text">Índice de la materia</span>' +
+        '<span class="rm-menu-btn-text">Índice</span>' +
       '</button>' +
       '<div class="rm-menu-panel" role="menu">' +
         '<div class="rm-menu-head"><b>Índice de la materia</b>' +
@@ -587,7 +591,7 @@ var RepassoMed = (function(){
     trocarModo('sugerencia');
     avisoAporte('', false);
     var envAp = b.querySelector('.rm-ap-send');
-    if (envAp){ envAp.disabled = false; envAp.textContent = 'Enviar'; }
+    if (envAp){ envAp.disabled = false; envAp.textContent = '📚 Ayudá a ampliar nuestra base'; }
     b.classList.add('on');
     setTimeout(function(){ b.querySelector('.rm-sug-tx').focus(); }, 60);
   }
@@ -690,8 +694,13 @@ var RepassoMed = (function(){
   function formularioAporte(){
     return '' +
       '<div class="rm-sug-body rm-ap" data-modo="aporte" hidden>' +
-        '<p class="rm-sug-hint">Mandanos resúmenes, exámenes viejos, fotos del pizarrón, ' +
-          'PDFs de la cátedra — lo que te sirvió a vos le sirve a los demás.</p>' +
+        '<div class="rm-ap-hero">' +
+          '<b>💙 Ayudanos a construir Repasso Med</b>' +
+          '<p>Una pregunta que recuerdes del examen, una foto, un PDF, un material ' +
+            'de la cátedra o incluso una anotación puede ayudar a cientos de estudiantes.</p>' +
+          '<p class="rm-ap-hero-cta">Compartí lo que tengas, aunque esté incompleto. ' +
+            'Nosotros nos encargamos del resto.</p>' +
+        '</div>' +
         '<div class="rm-ap-campo">' +
           '<label for="rm-ap-sem">Semestre</label>' +
           '<select id="rm-ap-sem" class="rm-ap-sel"></select>' +
@@ -724,12 +733,17 @@ var RepassoMed = (function(){
           '</label>' +
           '<ul class="rm-ap-lista" aria-live="polite"></ul>' +
         '</div>' +
-        '<p class="rm-ap-aviso">Tu nombre y tu correo van junto con el material, así ' +
-          'podemos agradecerte y preguntarte si hace falta. No es un envío anónimo. ' +
-          'Mandá solo material que puedas compartir.</p>' +
+        /* O administrador CONSEGUE identificar quem enviou. Dizer
+           «100 % anónimo» seria mentira, e mentira sobre privacidade é a
+           pior espécie. O que é verdade — e é o que o aluno precisa
+           saber — é que nenhum outro estudante o vê. */
+        '<p class="rm-ap-aviso"><b>Tu contribución es confidencial.</b> Tu identidad no ' +
+          'se mostrará públicamente ni será asociada al material frente a otros ' +
+          'estudiantes. El equipo de Repasso Med puede identificar al remitente para ' +
+          'organización, seguridad y, si fuera necesario, contacto sobre el material.</p>' +
         '<div class="rm-sug-foot">' +
           '<span class="rm-ap-msg" role="status"></span>' +
-          '<button type="button" class="rm-ap-send">Enviar</button>' +
+          '<button type="button" class="rm-ap-send">📚 Ayudá a ampliar nuestra base</button>' +
         '</div>' +
       '</div>';
   }
@@ -887,7 +901,8 @@ var RepassoMed = (function(){
     if (!sb){ avisoAporte('No se pudo conectar. Recargá la página e intentá de nuevo.', true); return; }
 
     btn.disabled = true;
-    var soltar = function(){ btn.disabled = false; btn.textContent = 'Enviar'; };
+    var ROTULO = '📚 Ayudá a ampliar nuestra base';
+    var soltar = function(){ btn.disabled = false; btn.textContent = ROTULO; };
     btn.textContent = 'Enviando...';
     avisoAporte('', false);
 
@@ -982,10 +997,47 @@ var RepassoMed = (function(){
   function setupMenu(tabEl, nav){
     var btn = nav.querySelector('.rm-menu-btn');
     var panel = nav.querySelector('.rm-menu-panel');
-    function open(){ nav.classList.add('open'); btn.setAttribute('aria-expanded','true'); }
+
+    /* ALTURA DO PAINEL — medida, não calculada de cabeça.
+
+       O CSS limitava o painel a `100vh - topbar - tabs - 40px`, uma conta
+       que só valeria se ele começasse logo abaixo da barra de abas. Ele
+       não começa: abaixo dele estão o envelope, o «arriba» e o próprio
+       botão do índice. Esses ~105 px nunca eram descontados, então o
+       painel terminava ABAIXO da borda da tela — e como ele é absoluto
+       dentro de um elemento `fixed`, esse rabo não se alcança rolando:
+       em Oftalmología, «Banco general» e «Mazo general» ficavam fora,
+       nas quatro larguras testadas, inclusive no desktop.
+
+       Em vez de chutar um número novo, medimos onde o painel realmente
+       começa e damos a ele o que sobra até o fim da tela. `env(safe-area-
+       inset-bottom)` cobre a faixa do gesto do iPhone. */
+    var FOLGA = 16;
+    function ajustarAltura(){
+      if (!nav.classList.contains('open')) return;
+      /* `visualViewport` é o que enxerga a tela REAL do celular quando a
+         barra de endereço aparece e some; `innerHeight` não acompanha. */
+      var alturaTela = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      var topo = panel.getBoundingClientRect().top;
+      var livre = Math.max(180, Math.round(alturaTela - topo - FOLGA));
+      panel.style.maxHeight = 'calc(' + livre + 'px - env(safe-area-inset-bottom, 0px))';
+    }
+
+    function open(){
+      nav.classList.add('open');
+      btn.setAttribute('aria-expanded','true');
+      ajustarAltura();
+      /* o `top` do painel depende da barra de ferramentas, que pode ainda
+         estar se medindo no primeiro quadro */
+      requestAnimationFrame(ajustarAltura);
+    }
     function close(){ nav.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
     function toggle(){ nav.classList.contains('open') ? close() : open(); }
     btn.addEventListener('click', function(e){ e.stopPropagation(); toggle(); });
+
+    window.addEventListener('resize', ajustarAltura);
+    window.addEventListener('orientationchange', function(){ setTimeout(ajustarAltura, 220); });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', ajustarAltura);
     /* Clicar num bloco: rolagem EXATA até o topo dele.
        A âncora nativa encosta o bloco no topo da janela — mas a barra
        superior e a barra de abas ficam por cima, escondendo o título. Era
