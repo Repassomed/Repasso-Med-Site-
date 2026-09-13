@@ -27,7 +27,7 @@ create table if not exists public.user_highlights (
   prefix       text        not null default '',
   suffix       text        not null default '',
   occurrence   smallint    not null default 0,
-  color        text        not null default 'yellow',
+  color        text        not null default 'red',
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
@@ -46,6 +46,7 @@ exception when duplicate_object then null; end $$;
 do $$ begin
   alter table public.user_highlights
     add constraint user_highlights_color_valid check (color in ('red','blue','green','pink'));
+  -- o default acima TEM de pertencer a esta lista (ver 20260913_02)
 exception when duplicate_object then null; end $$;
 
 create index if not exists user_highlights_user_subject_idx

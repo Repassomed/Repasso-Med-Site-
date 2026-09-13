@@ -166,7 +166,7 @@ body.rm-marking #materias-container{ cursor:text; }
 /* ---------- aviso discreto ---------- */
 .rm-toast{
   position:fixed; left:50%; bottom:26px; transform:translate(-50%,14px);
-  z-index:100020; pointer-events:none; opacity:0;
+  z-index:99992; pointer-events:none; opacity:0;
   background:#10243D; color:#fff; border-radius:999px;
   padding:.55rem 1rem; font:700 .82rem/1 var(--font-ui, Inter, sans-serif);
   box-shadow:0 10px 30px rgba(8,23,38,.35);
@@ -177,7 +177,7 @@ body.rm-marking #materias-container{ cursor:text; }
 
 /* ---------- card «continuar de onde paraste» ---------- */
 .rm-resume{
-  position:fixed; right:18px; bottom:18px; z-index:100010;
+  position:fixed; right:18px; bottom:18px; z-index:99990;   /* abaixo dos avisos do site (99998/99999) */
   width:min(330px, calc(100vw - 36px));
   background:#fff; border-radius:18px; overflow:hidden;
   box-shadow:0 18px 50px rgba(8,23,38,.30); border:1px solid rgba(8,23,38,.10);
@@ -855,10 +855,20 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
   /* 8 · card «continuar de onde paraste»                               */
   /* ---------------------------------------------------------------- */
 
+  /* Os recados do site têm prioridade absoluta. São três, todos modais de
+     ecrã inteiro criados e removidos do DOM pelo index.html:
+       #rm-ad         anúncio/flyer        (showAnnouncement / closeAnnouncement)
+       #rm-thanks     obrigado pós-compra  (showThanks / closeThanks)
+       #rm-phone-ask  pedido de telefone   (removido ao guardar/saltar)
+     Enquanto existir um deles no DOM, o card de retomada não aparece. */
+  var AVISOS = '#rm-ad, #rm-thanks, #rm-phone-ask';
+
+  function avisoAberto() { return !!document.querySelector(AVISOS); }
+
   async function ofrecerRetomar() {
     var s = sb(), uid = await userId();
     if (!s || !uid) return;
-    if (document.getElementById('rm-ad')) return;          // anúncio tem prioridade (§27)
+    if (avisoAberto()) return;                              // recado primeiro (§27)
     if (document.querySelector('.rm-resume')) return;
 
     var row = null;
@@ -1214,9 +1224,17 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
 
     prepararTodas();
 
-    /* o card de retomada entra depois dos avisos do site (§27) */
-    setTimeout(function tentar(n) {
-      if (document.getElementById('rm-ad')) { setTimeout(function () { tentar(0); }, 1500); return; }
+    /* o card de retomada só entra depois de o aluno fechar o recado (§27).
+       Espera até 3 min; passado isso desiste em silêncio, para nunca
+       ficar um temporizador vivo para sempre. */
+    var esperou = 0;
+    setTimeout(function tentar() {
+      if (avisoAberto()) {
+        esperou += 1200;
+        if (esperou > 180000) return;
+        setTimeout(tentar, 1200);
+        return;
+      }
       ofrecerRetomar();
     }, 2500);
   }
