@@ -316,6 +316,14 @@ grant execute on function public.mark_suggestion_read(uuid)    to authenticated;
 grant execute on function public.admin_suggestion_threads(int) to authenticated;
 grant execute on function public.my_suggestion_threads()       to authenticated;
 
+/* `suggestion_messages_normalize` é função de TRIGGER. Chamada direto
+   pela API ela já falharia («trigger functions can only be called as
+   triggers»), mas o Postgres concede EXECUTE a PUBLIC em toda função
+   nova e o linter do Supabase aponta isso com razão. Segunda tranca
+   fechada: ninguém a alcança pela API, nem para receber o erro. */
+revoke all on function public.suggestion_messages_normalize()
+  from public, anon, authenticated;
+
 grant select, insert on public.suggestion_messages to authenticated;
 grant update, delete on public.suggestion_messages to authenticated;
 /* Os grants acima são só o primeiro portão, o do Postgres. Quem decide
