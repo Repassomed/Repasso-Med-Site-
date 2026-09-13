@@ -192,7 +192,10 @@
     border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;
     padding:6px 10px;font-family:inherit;font-size:12.5px;color:inherit;}
   .ap-file:hover{border-color:var(--accent-lt,#888);background:#fafafa;}
-  .ap-file .n{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ap-file .n{display:block;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}
+  .ap-file .t{display:block;margin-top:1px;font-family:var(--font-mono,monospace);
+    font-size:9.5px;letter-spacing:.02em;color:var(--ink-soft);opacity:.75;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .ap-file .s{color:var(--ink-soft);font-size:11px;}
   .ap .acts a.btn-ghost{display:inline-block;text-decoration:none;font-size:12px;padding:5px 10px;}
   /* seleção múltipla + data da última liberação (lista de usuários) */
@@ -833,13 +836,22 @@ async function loadAportes(){
        apagada — aí os nomes viram texto e o acesso é pelo Drive. */
     const archivos = !arq.length
       ? '<p class="muted" style="margin:8px 0 0;font-size:12.5px;">Sin archivos — solo mensaje.</p>'
+      /* O NOME DO ALUNO é o título — é por ele que o administrador
+         reconhece o material. O nome técnico do Drive
+         («01_A82F92C731D4_prova.pdf») serve para desempatar homônimos e
+         para achar o arquivo na pasta, então aparece embaixo, pequeno, e
+         só quando de fato difere do original. */
       : '<div class="ap-files">' + arq.map((f, i) => {
           const nome = escapeHtml(f.name || ('archivo ' + (i+1)));
+          const tec  = apNombreDrive(x.id, i, f.name);
+          const sub  = '<span class="t">' + escapeHtml(tec) + '</span>';
           return enDrive
             ? '<span class="ap-file is-drive" title="Copia temporal ya borrada — abrilo en el Drive">' +
-                '<span class="n">' + nome + '</span><span class="s">' + apPeso(f.size) + '</span></span>'
+                '<span class="n">' + nome + sub + '</span>' +
+                '<span class="s">' + apPeso(f.size) + '</span></span>'
             : '<button class="ap-file" onclick="abrirArchivo(\'' + escapeHtml(f.path) + '\')">' +
-                '<span class="n">' + nome + '</span><span class="s">' + apPeso(f.size) + '</span></button>';
+                '<span class="n">' + nome + sub + '</span>' +
+                '<span class="s">' + apPeso(f.size) + '</span></button>';
         }).join('') + '</div>';
 
     const nArq = arq.length
@@ -880,6 +892,20 @@ async function loadAportes(){
   }).join('');
 
   contarAportesNuevos();
+}
+
+/* Espelha `nomeDrive()` de aporte-drive.js — é só para EXIBIR. O nome
+   que vale continua sendo gerado no servidor; se algum dia os dois
+   divergirem, quem manda é o do servidor e este texto vira só uma pista
+   de onde procurar na pasta. */
+function apNombreDrive(id, i, original){
+  const ordinal = String(i + 1).padStart(2, '0');
+  const curto = String(id).replace(/-/g, '').slice(0, 12).toUpperCase();
+  const base = String(original == null ? '' : original)
+    .replace(/[\r\n\t]+/g, ' ').trim().slice(0, 200)
+    .replace(/[\/\\]+/g, '-').replace(/\.{2,}/g, '.')
+    .replace(/^[.\s]+/, '').replace(/\s+/g, ' ').slice(0, 150) || 'archivo';
+  return ordinal + '_' + curto + '_' + base;
 }
 
 function apPeso(n){

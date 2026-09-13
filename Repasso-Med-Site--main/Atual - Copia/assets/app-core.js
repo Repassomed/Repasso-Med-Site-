@@ -689,6 +689,44 @@ var RepassoMed = (function(){
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'text/plain'
   ];
+  /* MIME PELA EXTENSÃO, QUANDO O NAVEGADOR NÃO SABE
+     `File.type` vem vazio com frequência em HEIC do iPhone e nos
+     formatos do Office — depende do sistema, não do site. O bucket tem
+     lista fixa de tipos e NÃO aceita `application/octet-stream`, então o
+     antigo `f.type || 'application/octet-stream'` não era um fallback:
+     era uma recusa garantida no upload.
+
+     A extensão é o que sobra para inferir, e ela só pode abrir portas
+     que a lista do bucket já abre — nada de executável, nada de tipo
+     genérico servindo de passe-livre. Extensão desconhecida com tipo
+     vazio é recusada aqui, com o motivo à vista, em vez de falhar
+     depois com um erro de Storage que não explica nada. */
+  var APORTE_EXT = {
+    pdf:  'application/pdf',
+    jpg:  'image/jpeg', jpeg: 'image/jpeg',
+    png:  'image/png',  webp: 'image/webp', gif: 'image/gif',
+    heic: 'image/heic', heif: 'image/heif',
+    doc:  'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ppt:  'application/vnd.ms-powerpoint',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    xls:  'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    txt:  'text/plain'
+  };
+
+  /* O tipo com que o arquivo será enviado, ou '' se não der para saber.
+     Um `File.type` que o bucket não aceita também cai aqui: a extensão
+     desempata (um .docx que o sistema rotulou de `application/zip`, por
+     exemplo), e só o que está na lista passa. */
+  function tipoDoArquivo(f){
+    var t = (f && f.type) || '';
+    if (t && APORTE_MIMES.indexOf(t) >= 0) return t;
+    var m = /\.([A-Za-z0-9]+)$/.exec((f && f.name) || '');
+    var ext = m ? m[1].toLowerCase() : '';
+    return APORTE_EXT[ext] || '';
+  }
+
   var materias = null;        /* cache do catálogo, uma consulta por sessão */
   var materiasEmVoo = null;
 
@@ -911,8 +949,7 @@ var RepassoMed = (function(){
     if (!ul) return;
     var fs = escolhidos;
     ul.innerHTML = fs.map(function(f, i){
-      var mal = f.size > APORTE_MAX_BYTES ||
-                (APORTE_MIMES.indexOf(f.type) < 0 && f.type !== '');
+      var mal = f.size > APORTE_MAX_BYTES || !tipoDoArquivo(f);
       return '<li class="' + (mal ? 'mal' : '') + '">' +
         '<span class="n">' + escHtml(f.name) + '</span>' +
         '<span class="s">' + kb(f.size) + '</span>' +
@@ -966,8 +1003,9 @@ var RepassoMed = (function(){
         avisoAporte('«' + fs[i].name + '» pesa ' + kb(fs[i].size) + '. El máximo es 50 MB.', true);
         return;
       }
-      if (fs[i].type && APORTE_MIMES.indexOf(fs[i].type) < 0){
-        avisoAporte('«' + fs[i].name + '» es de un tipo que no aceptamos todavía.', true);
+      if (!tipoDoArquivo(fs[i])){
+        avisoAporte('«' + fs[i].name + '» es de un tipo que no aceptamos todavía. ' +
+                    'Aceptamos PDF, fotos, Word, PowerPoint, Excel y texto.', true);
         return;
       }
     }
@@ -1008,13 +1046,15 @@ var RepassoMed = (function(){
           var caminho = user.id + '/' + envioId + '/' +
                         (k + 1) + '-' + nomeSeguro(f.name);
           var up = await sb.storage.from('aportes').upload(caminho, f, {
-            contentType: f.type || 'application/octet-stream',
+            /* nunca `application/octet-stream`: o bucket o recusa, e usá-lo
+               como curinga seria abrir a lista de tipos por uma frestinha */
+            contentType: tipoDoArquivo(f),
             upsert: false
           });
           if (up && up.error) throw up.error;
           subidos.push(caminho);
           meta.push({ path: caminho, name: String(f.name).slice(0, 200),
-                      size: f.size, mime: f.type || '' });
+                      size: f.size, mime: tipoDoArquivo(f) });
         }
 
         /* 2) metadados → Postgres (nunca os bytes) */

@@ -48,7 +48,7 @@ Netlify Function · aporte-drive         ← valida a sessão, assina as URLs
 Apps Script (Web App)                   ← a única peça com permissão no Drive
    │
    ▼
-Google Drive · Material Externo/<semestre>/<materia>/<AAAA-MM-DD_HHmm_XXXXXX>/
+Google Drive · Material Externo/<semestre>/<materia>/<AAAA-MM-DD_HHmm_12HEX>/
    │
    └─ cópia confirmada arquivo por arquivo → o buffer do Storage é apagado
 ```
@@ -310,10 +310,10 @@ Material Externo/                      ← ROOT_FOLDER_ID, já existente
 │   └── Biologia/                      ← já existente
 ├── 7 semestre/                        ← já existente
 │   └── Oftalmologia/                  ← já existente
-│       └── 2026-09-13_1420_A82F92/    ← ÚNICA pasta criada por envio
+│       └── 2026-09-13_1420_A82F92C731D4/   ← ÚNICA pasta criada por envio
 │           ├── contribuicao.txt
-│           ├── Resumen — Glaucoma (versión ñ).pdf
-│           └── Pizarrón ÁÉÍÓÚ.JPG
+│           ├── 01_A82F92C731D4_Resumen — Glaucoma (versión ñ).pdf
+│           └── 02_A82F92C731D4_Pizarrón ÁÉÍÓÚ.JPG
 └── Sin clasificar/                    ← só se o envio não trouxer semestre
 ```
 
@@ -342,16 +342,71 @@ catálogo. Um semestre sem pasta ganha uma no formato que já se usa (`7 semestr
 
 ### Nenhuma identidade vai para o Drive
 
-A pasta do envio chama-se `AAAA-MM-DD_HHmm_XXXXXX` — data, hora e seis dígitos do
-`contribution_id`. Nem nome, nem e-mail, nem `user_id`. O `contribuicao.txt` leva id,
-data, semestre, matéria, o recado do aluno e a lista de arquivos, e termina dizendo
-onde o remetente se identifica: **só no painel administrativo**.
+A pasta do envio chama-se `AAAA-MM-DD_HHmm_<12 hex do contribution_id>`. Nem nome,
+nem e-mail, nem `user_id`. O `contribuicao.txt` leva id, data, semestre, matéria, o
+recado do aluno e a lista de arquivos, e termina dizendo onde o remetente se
+identifica: **só no painel administrativo**.
+
+### O nome técnico dos arquivos — e por que ele existe
+
+```
+<ordinal>_<12 hex do contribution_id>_<nome original seguro>
+
+01_A82F92C731D4_prova.pdf
+02_A82F92C731D4_prova.pdf
+```
+
+Dois arquivos **diferentes** podem legitimamente se chamar `prova.pdf` — a prova de
+2024 e a de 2025, duas fotos do mesmo quadro. O Apps Script decidia «este já está
+lá?» procurando pelo nome do aluno: o segundo `prova.pdf` achava o primeiro, contava
+como já gravado, a soma fechava, `complete` vinha `true` e o backend apagava o
+buffer. **O segundo arquivo desaparecia sem que ninguém visse.**
+
+O nome técnico é três coisas ao mesmo tempo:
+
+| | |
+|---|---|
+| **único** | o ordinal separa homônimos, inclusive os que a sanitização deixaria iguais (`prova final.pdf` e `prova-final.pdf`) |
+| **determinístico** | sai da posição no array `files` e do id do aporte — nada de sorteio nem de relógio |
+| **estável** | o mesmo arquivo, na mesma posição, do mesmo aporte, gera o mesmo nome em toda tentativa: é isso que faz o retry reconhecer arquivo por arquivo |
+
+Ele é montado **no servidor**, na função Netlify, a partir da linha do banco — o
+navegador nunca manda nome técnico, porque mandar seria deixá-lo escolher onde grava.
+O Apps Script **exige** um nome técnico válido (`NN_<12 hex>_…`): sem ele não grava
+nada e devolve erro, porque cair de volta no nome do aluno reabriria o buraco.
+
+**O nome original nunca se perde.** Fica em `files[].name` no banco, aparece como
+título no painel administrativo e é listado no `contribuicao.txt` ao lado do técnico:
+
+```
+Archivos
+--------
+
+1. prova.pdf
+   → 01_A82F92C731D4_prova.pdf
+
+2. prova.pdf
+   → 02_A82F92C731D4_prova.pdf
+```
 
 Reenviar o mesmo aporte **não duplica**: o script procura a pasta que termina com
-aquele sufixo e reaproveita; arquivo com nome que já existe é considerado gravado.
+aquele sufixo e reaproveita; arquivo cujo **nome técnico** já existe é considerado
+gravado.
 
-Os nomes de arquivo do aluno são **preservados como ele os mandou**; só o caminho
-dentro do bucket é achatado (sem acento, sem espaço, sem barra).
+### Tipo do arquivo quando o navegador não sabe
+
+`File.type` vem vazio com frequência em HEIC do iPhone e nos formatos do Office —
+depende do sistema, não do site. O bucket tem lista fixa de tipos e **não aceita**
+`application/octet-stream`, então o antigo `f.type || 'application/octet-stream'` não
+era um fallback: era uma recusa garantida no upload.
+
+Agora o tipo é inferido pela **extensão**, e só entre os que o bucket já aceita:
+`.pdf .jpg .jpeg .png .webp .gif .heic .heif .doc .docx .ppt .pptx .xls .xlsx .txt`.
+Nada de executável, nada de tipo genérico servindo de passe-livre. Extensão
+desconhecida com tipo vazio é recusada **no navegador**, com o motivo à vista, em vez
+de falhar depois com um erro de Storage que não explica nada. A extensão também
+desempata quando o sistema rotula errado — um `.docx` anunciado como
+`application/zip`, por exemplo.
 
 ---
 

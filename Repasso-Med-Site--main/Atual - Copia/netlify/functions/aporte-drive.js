@@ -214,7 +214,10 @@ exports.handler = async (event) => {
       const assinada = j.signedURL || j.signedUrl || '';
       if (!assinada) { falhaAssinatura = 'respuesta sin URL firmada'; break; }
       assinados.push({
-        name: String(f.name || 'archivo').slice(0, 200),
+        original_name: nomeOriginal(f.name),
+        /* nome técnico: é ele, e não o nome do aluno, que decide no Apps
+           Script se o arquivo já está lá. Ver `nomeDrive()`. */
+        drive_name: nomeDrive(assinados.length, linha.id, f.name),
         mime: String(f.mime || ''),
         size: Number(f.size) || 0,
         url: `${SUPABASE_URL}/storage/v1${assinada}`
@@ -335,6 +338,54 @@ exports.handler = async (event) => {
 };
 
 /* ------------------------------------------------------------------ */
+
+/* ---------------------------------------------------------------------
+   NOME TÉCNICO DO ARQUIVO NO DRIVE
+
+   Dois arquivos DIFERENTES podem legitimamente se chamar «prova.pdf» —
+   a prova de 2024 e a de 2025, duas fotos do mesmo quadro. O Apps
+   Script decidia «este já está lá?» procurando pelo nome do aluno, e
+   então o segundo «prova.pdf» achava o primeiro, contava como já
+   gravado, e a soma `saved + already === total` dava `complete: true`.
+   O backend apagava o buffer. O segundo arquivo desaparecia sem que
+   ninguém visse — nem o aluno, nem o painel.
+
+   O nome técnico resolve isso sendo três coisas ao mesmo tempo:
+
+     ÚNICO         o ordinal separa homônimos, inclusive os que a
+                   sanitização deixaria idênticos («prova final.pdf» e
+                   «prova-final.pdf»);
+     DETERMINÍSTICO  sai da posição no array `files` e do id do aporte,
+                   não de sorteio nem de relógio;
+     ESTÁVEL       o mesmo arquivo, na mesma posição, do mesmo aporte,
+                   gera o mesmo nome em toda tentativa — é isso que faz
+                   o retry reconhecer o que já subiu, um por um.
+
+       01_A82F92C731D4_prova.pdf
+       02_A82F92C731D4_prova.pdf
+
+   Gerado AQUI, no servidor, a partir da linha do banco. O navegador
+   nunca manda nome técnico: mandar seria deixá-lo escolher onde grava.
+   ------------------------------------------------------------------ */
+
+function nomeOriginal(n) {
+  return String(n == null ? '' : n).replace(/[\r\n\t]+/g, ' ').trim().slice(0, 200)
+         || 'archivo';
+}
+
+function nomeDrive(i, contributionId, original) {
+  const ordinal = String(i + 1).padStart(2, '0');
+  const curto = String(contributionId).replace(/-/g, '').slice(0, 12).toUpperCase();
+  /* o nome do aluno sobrevive legível — só saem barras, controles e os
+     «..» que poderiam virar caminho */
+  const base = nomeOriginal(original)
+    .replace(/[\/\\]+/g, '-')
+    .replace(/\.{2,}/g, '.')
+    .replace(/^[.\s]+/, '')
+    .replace(/\s+/g, ' ')
+    .slice(0, 150) || 'archivo';
+  return `${ordinal}_${curto}_${base}`;
+}
 
 /* Remove os objetos do bucket privado. Devolve true só se TODOS saíram.
    Nunca lança: é limpeza, não é a entrega. */

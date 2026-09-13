@@ -28,7 +28,10 @@
    dela, «7.º semestre» e «Oftalmología» — uma SEGUNDA árvore paralela à
    que já existe. Agora o script REUTILIZA a árvore real:
 
-       Material Externo/7 semestre/Oftalmologia/2026-09-13_1420_A82F92/
+       Material Externo/7 semestre/Oftalmologia/2026-09-13_1420_A82F92C731D4/
+         ├── contribuicao.txt
+         ├── 01_A82F92C731D4_prova.pdf
+         └── 02_A82F92C731D4_prova.pdf     ← outro arquivo, mesmo nome
 
    REUTILIZAR EXIGE NORMALIZAR, porque os dois lados escrevem diferente
    -----------------------------------------------------------------
@@ -62,6 +65,10 @@ var ROOT_FOLDER_ID = '1jE4fwQblxZsPWR6R8IM02iMI-DxxwZoQ';
 /* Onde cai um envio cujo semestre não corresponde a nenhuma pasta.
    Fica dentro do root, ao lado dos semestres. */
 var PASTA_SEM_CLASIFICAR = 'Sin clasificar';
+
+/* «01_A82F92C731D4_lo que sea.pdf» — ordinal, 12 hex do id do aporte, e
+   o nome do aluno. Quem monta isto é o backend; aqui só se confere. */
+var RE_NOME_TECNICO = /^\d{2,3}_[0-9A-F]{12}_.+/;
 
 var PROP_TOKEN = 'APPS_SCRIPT_TOKEN';
 var PROP_ARVORE = 'RM_ARVORE';      /* cache dos ids canônicos */
@@ -189,33 +196,57 @@ function doPost(e) {
         (dados.subject_slug ? ' [' + limpo(dados.subject_slug) + ']' : '') + '\n' +
       '\nMensaje del alumno\n------------------\n' +
       ((dados.message || '').trim() || '(sin mensaje)') + '\n' +
+      /* Os dois nomes, sempre: o do aluno é o que o administrador
+         reconhece, e o técnico é o que está de fato na pasta. Com dois
+         «prova.pdf», é esta lista que diz qual é qual. */
       '\nArchivos\n--------\n' +
       ((dados.files || []).map(function (a, i) {
-        return (i + 1) + '. ' + (a.name || 'archivo');
-      }).join('\n') || '(ninguno)') + '\n' +
+        return (i + 1) + '. ' + (a.original_name || a.name || 'archivo') +
+               '\n   → ' + (a.drive_name || '(sin nombre técnico)');
+      }).join('\n\n') || '(ninguno)') + '\n' +
       '\nEl remitente se identifica solo en el panel administrativo.\n';
     gravarFicha(destino, ficha);
 
-    /* 4 · os arquivos. Cada URL assinada vale poucos minutos. Um arquivo
-       que falha não derruba os outros — volta listado, e o painel
-       mostra o motivo. Reenvio não duplica: nome que já existe é
-       considerado gravado. */
+    /* 4 · os arquivos.
+
+       A CHAVE DE IDEMPOTÊNCIA É O `drive_name`, NUNCA O NOME DO ALUNO.
+       Dois arquivos diferentes podem legitimamente se chamar
+       «prova.pdf». Procurando pelo nome do aluno, o segundo achava o
+       primeiro, contava como já gravado, a soma fechava, `complete`
+       vinha true — e o backend apagava o buffer. O segundo arquivo
+       sumia sem que ninguém visse.
+
+       O `drive_name` vem pronto do backend, derivado da posição no
+       array e do id do aporte: «01_A82F92C731D4_prova.pdf». Único entre
+       homônimos, e o mesmo em toda tentativa, que é o que faz o retry
+       reconhecer arquivo por arquivo.
+
+       Sem `drive_name` válido não se grava nada: cair de volta no nome
+       do aluno seria reabrir exatamente o buraco que isto fecha.
+
+       Uma URL assinada vale poucos minutos. Um arquivo que falha não
+       derruba os outros — volta listado, e o painel mostra o motivo. */
     var arquivos = dados.files || [];
     var gravados = 0, jaEstavam = 0, falhas = [];
     for (var i = 0; i < arquivos.length; i++) {
       var a = arquivos[i];
-      var nomeArq = limpoArquivo(a.name) || ('archivo-' + (i + 1));
+      var rotulo = limpoArquivo(a.original_name || a.name) || ('archivo-' + (i + 1));
+      var nomeArq = limpoArquivo(a.drive_name);
+      if (!RE_NOME_TECNICO.test(nomeArq)) {
+        falhas.push(rotulo + ': nombre técnico ausente o inválido');
+        continue;
+      }
       try {
         if (destino.getFilesByName(nomeArq).hasNext()) { jaEstavam++; continue; }
         var r = UrlFetchApp.fetch(a.url, { muteHttpExceptions: true, followRedirects: true });
         if (r.getResponseCode() !== 200) {
-          falhas.push(nomeArq + ': HTTP ' + r.getResponseCode());
+          falhas.push(rotulo + ': HTTP ' + r.getResponseCode());
           continue;
         }
         destino.createFile(r.getBlob().setName(nomeArq));
         gravados++;
       } catch (err) {
-        falhas.push(nomeArq + ': ' + err);
+        falhas.push(rotulo + ': ' + err);
       }
     }
 
