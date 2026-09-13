@@ -513,6 +513,8 @@ var RepassoMed = (function(){
     b.addEventListener('click', function(){ abrirSugestoes(tabEl); });
     if (nav && nav.parentNode) nav.parentNode.insertBefore(b, nav);
     else tabEl.insertBefore(b, tabEl.firstChild);
+    /* o envelope nasce depois da contagem de mensagens; repinta o número */
+    pintarBadges(msgEstado.total);
   }
 
   function sbCliente(){
@@ -535,6 +537,8 @@ var RepassoMed = (function(){
           'aria-selected="true" data-modo="sugerencia">Sugerencia</button>' +
         '<button type="button" class="rm-sug-tab" role="tab" ' +
           'aria-selected="false" data-modo="aporte">Aportar material</button>' +
+        '<button type="button" class="rm-sug-tab" role="tab" ' +
+          'aria-selected="false" data-modo="mensajes">Mis mensajes</button>' +
       '</div>' +
       '<div class="rm-sug-body" data-modo="sugerencia">' +
         '<p class="rm-sug-hint">Contanos qué te ayudó, qué falta o qué se puede mejorar. ' +
@@ -546,7 +550,15 @@ var RepassoMed = (function(){
           '<button type="button" class="rm-sug-send">Enviar</button>' +
         '</div>' +
       '</div>' +
-      formularioAporte();
+      formularioAporte() +
+      /* terceira metade: o que a equipe respondeu. Fica no MESMO painel
+         porque é a mesma conversa — abrir outra gaveta para ler a
+         resposta da sugestão que se acabou de mandar seria absurdo. */
+      '<div class="rm-sug-body" data-modo="mensajes" hidden>' +
+        '<p class="rm-sug-hint">Acá aparecen las respuestas del equipo a lo que nos mandaste. ' +
+          'Podés seguir la conversación sin salir de la materia.</p>' +
+        '<div class="rm-msg-list"></div>' +
+      '</div>';
     document.body.appendChild(sugBox);
 
     sugBox.querySelector('.rm-sug-x').addEventListener('click', fecharSugestoes);
@@ -578,23 +590,33 @@ var RepassoMed = (function(){
     for (var j = 0; j < corpos.length; j++){
       corpos[j].hidden = corpos[j].dataset.modo !== modo;
     }
-    if (modo === 'aporte') carregarMaterias();
+    if (modo === 'aporte')   carregarMaterias();
+    if (modo === 'mensajes') carregarMisMensajes();
   }
 
-  function abrirSugestoes(tabEl){
+  function abrirSugestoes(tabEl, modo){
     sugTab = tabEl;
     var b = montarSugestoes();
     b.querySelector('.rm-sug-msg').textContent = '';
     b.querySelector('.rm-sug-msg').className = 'rm-sug-msg';
     b.querySelector('.rm-sug-send').disabled = false;
     b.querySelector('.rm-sug-send').textContent = 'Enviar';
-    trocarModo('sugerencia');
+    modo = modo || 'sugerencia';
+    /* a gaveta é montada na primeira abertura, DEPOIS de a contagem de
+       mensagens já ter rodado. Sem este repinte a aba «Mis mensajes»
+       nasceria sem o número, mesmo havendo resposta por ler. */
+    pintarBadges(msgEstado.total);
+    trocarModo(modo);
     avisoAporte('', false);
     limparArquivos();
     var envAp = b.querySelector('.rm-ap-send');
     if (envAp){ envAp.disabled = false; envAp.textContent = '📚 Ayudá a ampliar nuestra base'; }
     b.classList.add('on');
-    setTimeout(function(){ b.querySelector('.rm-sug-tx').focus(); }, 60);
+    /* o cursor só vai para o campo de escrever quando o painel abre PARA
+       escrever; abrindo em «Mis mensajes» roubaria o foco da leitura */
+    if (modo === 'sugerencia'){
+      setTimeout(function(){ b.querySelector('.rm-sug-tx').focus(); }, 60);
+    }
   }
 
   function fecharSugestoes(){
@@ -651,6 +673,285 @@ var RepassoMed = (function(){
               : (/Demasiados/i.test(t) ? t : 'No se pudo enviar. Probá de nuevo en un momento.'), true);
       btn.disabled = false; btn.textContent = 'Enviar';
     }
+  }
+
+
+  /* =================================================================
+     MIS MENSAJES — a volta da caixa de sugestões
+     (ADMIN V2 · ETAPA B)
+
+     Até aqui a caixa era mão-única: o aluno escrevia e o texto sumia
+     dentro do painel. Agora a equipe responde, e a resposta precisa
+     chegar sem atrapalhar quem está estudando.
+
+     POR QUE NÃO EXISTE MODAL AQUI
+     Um modal no meio da leitura obriga a fechar alguma coisa para
+     continuar — e a pessoa estava lendo fisiopatologia, não esperando
+     notificação. Então o aviso é de dois tipos, ambos ignoráveis:
+       · um número vermelho no envelope e no botão do cabeçalho, que
+         fica lá até ser lido;
+       · um toast discreto no rodapé, uma vez por sessão, que some
+         sozinho em 14 segundos e tem um ✕.
+     Nada escurece a tela. Nada bloqueia o scroll.
+
+     O QUE CONTA COMO «LIDO»
+     Abrir a conversa. Só isso. Ver o número no envelope não marca
+     nada, e passar o mouse também não — senão o contador zeraria sem
+     ninguém ter lido. Quem grava é `mark_suggestion_read`, que toca
+     apenas `read_at`, apenas das mensagens do admin, apenas dentro da
+     conversa de quem chamou.
+
+     TEXTO PURO
+     Tudo que vem do banco passa por `esc()` antes de virar HTML, e o
+     texto respeita quebras de linha por CSS (`white-space:pre-wrap`),
+     não por marcação. Mensagem é mensagem, não documento.
+     ================================================================= */
+  var msgEstado = { iniciado:false, total:0, avisado:false };
+
+  function recorte(t, n){
+    t = String(t || '').replace(/\s+/g, ' ').trim();
+    return t.length > n ? t.slice(0, n - 1) + '…' : t;
+  }
+
+  /* Quantas respostas do admin este aluno ainda não leu.
+     Não filtra por `user_id`: o RLS já limita a leitura às linhas dele.
+     `head:true` traz só a contagem — nenhuma mensagem viaja à toa. */
+  function contarMensajes(){
+    var sb = sbCliente();
+    if (!sb) return Promise.resolve(0);
+    return sb.auth.getUser().then(function(u){
+      var user = u && u.data && u.data.user;
+      if (!user) return 0;
+      return sb.from('suggestion_messages')
+        .select('id', { count:'exact', head:true })
+        .eq('sender_type', 'admin')
+        .is('read_at', null)
+        .then(function(r){ return (r && !r.error && r.count) || 0; });
+    }).catch(function(){ return 0; });
+  }
+
+  function pintarBadges(n){
+    var alvos = [];
+    var topo = document.getElementById('rm-sug-top');
+    if (topo) alvos.push(topo);
+    var fabs = document.querySelectorAll('.rm-sug-fab');
+    for (var i = 0; i < fabs.length; i++) alvos.push(fabs[i]);
+    if (sugBox){
+      var aba = sugBox.querySelector('.rm-sug-tab[data-modo="mensajes"]');
+      if (aba) alvos.push(aba);
+    }
+    for (var j = 0; j < alvos.length; j++){
+      var el = alvos[j];
+      var b  = el.querySelector('.rm-sug-badge');
+      if (!n){ if (b && b.parentNode) b.parentNode.removeChild(b); continue; }
+      if (!b){
+        b = document.createElement('span');
+        b.className = 'rm-sug-badge';
+        el.appendChild(b);
+      }
+      b.textContent = n > 9 ? '9+' : String(n);
+      b.setAttribute('aria-label', n + (n === 1 ? ' mensaje sin leer' : ' mensajes sin leer'));
+    }
+  }
+
+  function refrescarBadges(){
+    return contarMensajes().then(function(n){
+      msgEstado.total = n;
+      pintarBadges(n);
+      return n;
+    });
+  }
+
+  /* Toast: uma vez por sessão, sai sozinho, tem ✕, não bloqueia nada. */
+  function avisarMensajes(n){
+    if (msgEstado.avisado || !n) return;
+    msgEstado.avisado = true;
+    var t = document.createElement('div');
+    t.className = 'rm-msg-toast';
+    t.setAttribute('role', 'status');
+    t.innerHTML =
+      '<div class="tx"><b>' +
+        (n === 1 ? 'Tenés una respuesta del equipo'
+                 : 'Tenés ' + n + ' respuestas del equipo') +
+      '</b><span>Sobre lo que nos mandaste por la caja de sugerencias.</span></div>' +
+      '<button type="button" class="rm-msg-ver">Ver</button>' +
+      '<button type="button" class="rm-msg-x" aria-label="Cerrar aviso">✕</button>';
+    document.body.appendChild(t);
+    setTimeout(function(){ t.classList.add('on'); }, 30);
+
+    var saiu = false;
+    function fechar(){
+      if (saiu) return;
+      saiu = true;
+      t.classList.remove('on');
+      setTimeout(function(){ if (t.parentNode) t.parentNode.removeChild(t); }, 280);
+    }
+    t.querySelector('.rm-msg-x').addEventListener('click', fechar);
+    t.querySelector('.rm-msg-ver').addEventListener('click', function(){
+      fechar();
+      abrirCaixaSugestoes(null, 'mensajes');
+    });
+    setTimeout(fechar, 14000);
+  }
+
+  function iniciarMensajes(){
+    if (msgEstado.iniciado) return;
+    msgEstado.iniciado = true;
+    contarMensajes().then(function(n){
+      msgEstado.total = n;
+      pintarBadges(n);
+      avisarMensajes(n);
+    });
+  }
+
+  function caixaMensajes(){
+    return sugBox && sugBox.querySelector('.rm-sug-body[data-modo="mensajes"] .rm-msg-list');
+  }
+
+  function carregarMisMensajes(){
+    var cx = caixaMensajes();
+    if (!cx) return;
+    var sb = sbCliente();
+    if (!sb){
+      cx.innerHTML = '<p class="rm-msg-vacio">No se pudo conectar. Recargá la página.</p>';
+      return;
+    }
+    cx.innerHTML = '<p class="rm-msg-vacio">Cargando...</p>';
+
+    sb.auth.getUser().then(function(u){
+      var user = u && u.data && u.data.user;
+      if (!user){
+        cx.innerHTML = '<p class="rm-msg-vacio">Iniciá sesión para ver tus mensajes.</p>';
+        return null;
+      }
+      return sb.rpc('my_suggestion_threads');
+    }).then(function(r){
+      if (!r) return;
+      if (r.error) throw r.error;
+      var hilos = r.data || [];
+      if (!hilos.length){
+        cx.innerHTML = '<p class="rm-msg-vacio">Todavía no mandaste ninguna sugerencia. ' +
+          'Cuando mandes una, la respuesta del equipo aparece acá.</p>';
+        return;
+      }
+      cx.innerHTML = hilos.map(function(h){
+        var quando = new Date(h.created_at).toLocaleDateString('es');
+        var mat    = h.subject_slug ? ' · ' + esc(h.subject_slug) : '';
+        var resp   = Number(h.respuestas) || 0;
+        var novas  = Number(h.sin_leer) || 0;
+        return '<button type="button" class="rm-msg-hilo' + (novas ? ' nuevo' : '') +
+            '" data-id="' + esc(h.suggestion_id) + '">' +
+          '<span class="h1">' + esc(recorte(h.mensaje, 90)) + '</span>' +
+          '<span class="h2">' + esc(quando) + mat + ' · ' +
+            (resp ? (resp === 1 ? '1 mensaje' : resp + ' mensajes')
+                  : 'sin respuesta todavía') + '</span>' +
+          (novas ? '<span class="n">' + novas + '</span>' : '') +
+        '</button>';
+      }).join('');
+      var bts = cx.querySelectorAll('.rm-msg-hilo');
+      for (var i = 0; i < bts.length; i++){
+        bts[i].addEventListener('click', function(){ abrirHilo(this.getAttribute('data-id')); });
+      }
+    }).catch(function(e){
+      var t = (e && e.message) || '';
+      cx.innerHTML = '<p class="rm-msg-vacio">' +
+        (/could not find the function|does not exist|schema cache/i.test(t)
+          ? 'Esta parte todavía no está habilitada.'
+          : 'No se pudieron cargar tus mensajes. Probá de nuevo en un momento.') + '</p>';
+    });
+  }
+
+  function abrirHilo(id){
+    var cx = caixaMensajes();
+    var sb = sbCliente();
+    if (!cx || !sb) return;
+    cx.innerHTML = '<p class="rm-msg-vacio">Cargando conversación...</p>';
+
+    sb.from('suggestion_messages')
+      .select('id,sender_type,message,created_at')
+      .eq('suggestion_id', id)
+      .order('created_at', { ascending:true })
+      .then(function(r){
+        if (r.error) throw r.error;
+        var ms = r.data || [];
+        cx.innerHTML =
+          '<button type="button" class="rm-msg-volver">← Volver a mis mensajes</button>' +
+          '<div class="rm-msg-chat">' +
+            (ms.length ? ms.map(function(m){
+              var meu = m.sender_type !== 'admin';
+              return '<div class="rm-msg-b ' + (meu ? 'yo' : 'eq') + '">' +
+                '<span class="tx">' + esc(m.message) + '</span>' +
+                '<span class="w">' + (meu ? 'Vos' : 'Equipo Repasso') + ' · ' +
+                  esc(new Date(m.created_at).toLocaleString('es')) + '</span></div>';
+            }).join('')
+            : '<p class="rm-msg-vacio">Todavía no hay respuestas en esta conversación.</p>') +
+          '</div>' +
+          '<div class="rm-msg-send">' +
+            '<textarea class="rm-msg-tx" rows="3" maxlength="4000" ' +
+              'placeholder="Escribí acá si querés agregar algo..."></textarea>' +
+            '<div class="rm-msg-foot">' +
+              '<span class="rm-msg-aviso" role="status"></span>' +
+              '<button type="button" class="rm-msg-env">Enviar</button>' +
+            '</div>' +
+          '</div>';
+
+        cx.querySelector('.rm-msg-volver').addEventListener('click', carregarMisMensajes);
+        cx.querySelector('.rm-msg-env').addEventListener('click', function(){
+          responderHilo(id, this);
+        });
+        var chat = cx.querySelector('.rm-msg-chat');
+        if (chat) chat.scrollTop = chat.scrollHeight;
+
+        /* ABRIR a conversa é o que conta como ler */
+        return sb.rpc('mark_suggestion_read', { p_suggestion_id: id });
+      })
+      .then(function(){ refrescarBadges(); })
+      .catch(function(){
+        cx.innerHTML = '<p class="rm-msg-vacio">No se pudo abrir la conversación. ' +
+          'Probá de nuevo en un momento.</p>';
+      });
+  }
+
+  function responderHilo(id, btn){
+    var corpo = sugBox && sugBox.querySelector('.rm-sug-body[data-modo="mensajes"]');
+    if (!corpo) return;
+    var ta = corpo.querySelector('.rm-msg-tx');
+    var av = corpo.querySelector('.rm-msg-aviso');
+    var txt = (ta.value || '').trim();
+    av.className = 'rm-msg-aviso';
+    av.textContent = '';
+    if (txt.length < 2){
+      av.className = 'rm-msg-aviso err';
+      av.textContent = 'Escribí un poquito más, por favor.';
+      ta.focus();
+      return;
+    }
+    var sb = sbCliente();
+    if (!sb) return;
+    btn.disabled = true; btn.textContent = 'Enviando...';
+
+    sb.auth.getUser().then(function(u){
+      var user = u && u.data && u.data.user;
+      if (!user) throw new Error('sin sesión');
+      /* `sender_type` TEM de ser 'alumno': a policy do banco não aceita
+         outra coisa vinda daqui, e é isso que impede alguém de se
+         passar pela equipe. `user_id` é conferido pela policy e
+         reescrito por um trigger com o dono real da sugestão. */
+      return sb.from('suggestion_messages').insert({
+        suggestion_id: id,
+        user_id: user.id,
+        sender_type: 'alumno',
+        message: txt
+      });
+    }).then(function(r){
+      btn.disabled = false; btn.textContent = 'Enviar';
+      if (r && r.error) throw r.error;
+      abrirHilo(id);
+    }).catch(function(){
+      btn.disabled = false; btn.textContent = 'Enviar';
+      av.className = 'rm-msg-aviso err';
+      av.textContent = 'No se pudo enviar. Probá de nuevo en un momento.';
+    });
   }
 
   /* =================================================================
@@ -1523,6 +1824,7 @@ var RepassoMed = (function(){
 
   function enhanceAll(){
     document.querySelectorAll('#materias-container > .tab-content').forEach(enhanceTab);
+    iniciarMensajes();
   }
 
   /* Chamada pelo botão do cabeçalho, ao lado da Loja de matérias.
@@ -1534,13 +1836,17 @@ var RepassoMed = (function(){
      Sem argumento, adota a matéria aberta no momento, que é o que dá o
      `subject_slug` da sugestão. Fora de uma matéria (início, loja) fica
      sem matéria, e o envio continua válido. */
-  function abrirCaixaSugestoes(tabEl){
+  function abrirCaixaSugestoes(tabEl, modo){
     abrirSugestoes(tabEl ||
-      document.querySelector('#materias-container > .tab-content.active[id^="tab-"]') || null);
+      document.querySelector('#materias-container > .tab-content.active[id^="tab-"]') || null,
+      modo);
   }
 
   return { enhanceAll: enhanceAll, enhanceTab: enhanceTab, normalizeQuizzes: normalizeQuizzes,
-           estimarAlturas: estimarAlturas, abrirSugestoes: abrirCaixaSugestoes };
+           estimarAlturas: estimarAlturas, abrirSugestoes: abrirCaixaSugestoes,
+           /* usado depois do login, quando o aluno já tem sessão e o
+              contador de mensagens pode finalmente ser consultado */
+           checarMensajes: iniciarMensajes };
 })();
 
 window.RepassoMed = RepassoMed;

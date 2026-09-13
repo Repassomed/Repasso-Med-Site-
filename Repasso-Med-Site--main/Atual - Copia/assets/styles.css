@@ -1692,6 +1692,111 @@ footer strong { color:var(--gold-soft); }
 }
 @media (prefers-reduced-motion: reduce){ .rm-sug-fab,.rm-sug-top{transition:none;} }
 
+/* ---------- (3) MIS MENSAJES — a volta da caixa (ADMIN V2 · etapa B) ----
+   O aviso de resposta nova não pode competir com o estudo. Por isso ele
+   é sempre periférico: um número no envelope e um toast no rodapé que
+   sai sozinho. Nada escurece a tela, nada bloqueia o scroll, nada exige
+   um clique para a leitura continuar.
+   ---------------------------------------------------------------------- */
+.rm-sug-top,.rm-sug-fab,.rm-sug-tab{position:relative;}
+.rm-sug-badge{
+  position:absolute;top:-5px;right:-5px;z-index:2;
+  min-width:17px;height:17px;padding:0 4px;border-radius:9px;
+  display:grid;place-items:center;
+  font-family:var(--font-ui);font-size:10.5px;font-weight:800;line-height:1;
+  background:#c0392b;color:#fff;border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+/* dentro da gaveta o fundo é claro: a borda branca sumiria */
+.rm-sug-tab .rm-sug-badge{top:1px;right:1px;border-color:transparent;}
+
+.rm-msg-toast{
+  position:fixed;left:50%;bottom:18px;z-index:420;
+  transform:translate(-50%,26px);opacity:0;pointer-events:none;
+  display:flex;align-items:center;gap:12px;
+  max-width:min(520px,calc(100vw - 32px));
+  padding:12px 14px;border-radius:13px;
+  background:#10243D;color:#eaf2fa;
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 14px 34px rgba(8,20,35,.34);
+  font-family:var(--font-ui);
+  transition:opacity .24s ease,transform .24s ease;
+}
+.rm-msg-toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
+.rm-msg-toast .tx{min-width:0;line-height:1.35;}
+.rm-msg-toast .tx b{display:block;font-size:13.5px;font-weight:800;}
+.rm-msg-toast .tx span{display:block;margin-top:2px;font-size:12px;opacity:.78;}
+.rm-msg-toast button{
+  flex:0 0 auto;cursor:pointer;font-family:inherit;font-weight:700;
+  border-radius:8px;padding:7px 12px;font-size:12.5px;
+  background:var(--gold,#d8a32a);color:#2c1810;border:none;
+}
+.rm-msg-toast .rm-msg-x{
+  background:transparent;color:#eaf2fa;border:1px solid rgba(255,255,255,.24);
+  padding:6px 9px;font-weight:600;
+}
+.rm-msg-toast .rm-msg-x:hover{background:rgba(255,255,255,.12);}
+@media (max-width:520px){
+  .rm-msg-toast{left:12px;right:12px;transform:translateY(26px);max-width:none;}
+  .rm-msg-toast.on{transform:translateY(0);}
+}
+@media (prefers-reduced-motion: reduce){ .rm-msg-toast{transition:none;} }
+
+/* lista de conversas dentro da gaveta */
+.rm-msg-vacio{margin:0;padding:14px 2px;font-size:13.5px;line-height:1.55;color:#5c6b7a;}
+.rm-msg-hilo{
+  display:block;width:100%;text-align:left;position:relative;cursor:pointer;
+  margin-bottom:8px;padding:11px 42px 11px 13px;border-radius:11px;
+  background:#fbf8f1;border:1px solid #e4d9bf;font-family:inherit;color:inherit;
+  transition:border-color .14s ease,background .14s ease;
+}
+.rm-msg-hilo:hover{border-color:#13314f;background:#fff;}
+.rm-msg-hilo.nuevo{border-left:3px solid #c0392b;}
+.rm-msg-hilo .h1{display:block;font-size:13.5px;font-weight:600;line-height:1.4;}
+.rm-msg-hilo .h2{display:block;margin-top:4px;font-size:11.5px;color:#6a7889;}
+.rm-msg-hilo .n{
+  position:absolute;top:50%;right:12px;transform:translateY(-50%);
+  min-width:19px;height:19px;padding:0 5px;border-radius:10px;
+  display:grid;place-items:center;
+  background:#c0392b;color:#fff;font-size:11px;font-weight:800;
+}
+.rm-msg-volver{
+  display:inline-block;margin-bottom:10px;padding:0;cursor:pointer;
+  background:none;border:none;font-family:inherit;font-size:12.5px;color:#6a7889;
+}
+.rm-msg-volver:hover{color:#13314f;}
+
+/* a conversa em si */
+.rm-msg-chat{
+  display:flex;flex-direction:column;gap:8px;
+  max-height:46vh;overflow-y:auto;margin-bottom:12px;
+}
+.rm-msg-b{max-width:86%;padding:9px 12px;border-radius:12px;}
+.rm-msg-b .tx{display:block;font-size:13.5px;line-height:1.55;
+  white-space:pre-wrap;word-break:break-word;}
+.rm-msg-b .w{display:block;margin-top:5px;font-size:10.5px;opacity:.72;}
+.rm-msg-b.eq{align-self:flex-start;background:#fbf8f1;border:1px solid #e4d9bf;
+  border-bottom-left-radius:4px;}
+.rm-msg-b.yo{align-self:flex-end;background:rgba(19,49,79,.08);
+  border:1px solid rgba(19,49,79,.16);border-bottom-right-radius:4px;}
+.rm-msg-tx{
+  width:100%;min-height:70px;resize:vertical;box-sizing:border-box;
+  font-family:inherit;font-size:13.5px;line-height:1.5;padding:9px 11px;
+  border-radius:10px;border:1px solid #e4d9bf;background:#fbf8f1;color:inherit;
+}
+.rm-msg-tx:focus{outline:none;border-color:#13314f;}
+.rm-msg-foot{display:flex;align-items:center;gap:10px;margin-top:8px;}
+.rm-msg-foot .rm-msg-env{
+  margin-left:auto;flex:0 0 auto;cursor:pointer;font-family:inherit;font-weight:700;
+  border:none;border-radius:9px;padding:8px 16px;font-size:13px;
+  background:#13314f;color:#fff;
+}
+.rm-msg-foot .rm-msg-env:hover{background:#1d456b;}
+.rm-msg-foot .rm-msg-env:disabled{opacity:.6;cursor:default;}
+.rm-msg-aviso{font-size:12.5px;color:#1d7a4f;}
+.rm-msg-aviso.err{color:#c0392b;}
+@media (max-width:520px){ .rm-msg-b{max-width:94%;} }
+
 
 /* =====================================================================
    SUBTÍTULOS NA PÁGINA

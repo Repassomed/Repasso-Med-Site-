@@ -166,6 +166,29 @@
   .sug .msg{font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
   .sug .acts{margin-top:9px;display:flex;gap:8px;flex-wrap:wrap;}
   .sug .acts button{font-size:12px;padding:5px 10px;}
+  /* conversa dentro da sugestão (ADMIN V2 · etapa B) */
+  .sug .thr{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);}
+  .sug .thr.hidden{display:none;}
+  .thr-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;
+    max-height:340px;overflow-y:auto;}
+  .thr-m{max-width:82%;padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.5;}
+  .thr-m .thr-tx{white-space:pre-wrap;word-break:break-word;}
+  .thr-m .thr-w{margin-top:5px;font-size:10.5px;letter-spacing:.02em;opacity:.72;}
+  .thr-m.them{align-self:flex-start;background:var(--panel2);
+    border:1px solid var(--line);border-bottom-left-radius:4px;}
+  .thr-m.mine{align-self:flex-end;background:rgba(19,49,79,.08);
+    border:1px solid rgba(19,49,79,.16);border-bottom-right-radius:4px;}
+  .thr-send textarea{width:100%;min-height:74px;resize:vertical;
+    font-family:inherit;font-size:13.5px;line-height:1.5;padding:9px 11px;
+    border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);}
+  .thr-send textarea:focus{outline:none;border-color:var(--accent-lt);}
+  .thr-foot{display:flex;align-items:center;gap:10px;margin-top:8px;}
+  .thr-foot .ok,.thr-foot .err{margin:0;font-size:12.5px;}
+  .thr-foot button{margin-left:auto;flex:0 0 auto;}
+  /* o .apbadge padrão empurra tudo com margin-left:auto; dentro das ações
+     da sugestão ele é só mais um item da fila */
+  .sug .acts .apbadge{margin-left:0;}
+  @media(max-width:640px){ .thr-m{max-width:94%;} }
   /* aportes de material externo */
   .tabbadge{display:inline-block;margin-left:7px;min-width:18px;padding:1px 5px;border-radius:9px;
     background:var(--gold,#d8a32a);color:#fff;font-size:11px;font-weight:800;line-height:1.5;}
@@ -865,58 +888,208 @@ function escapeHtml(s){
    Uma única RPC (admin_dashboard_stats) traz todos os indicadores.
    ===================================================================== */
 /* =====================================================================
-   SUGESTÕES DOS ALUNOS
-   Chegam pelo card «Caja de sugerencias» do índice de cada matéria.
-   Lê a tabela `feedback`. Se ela ainda não existir, o card só avisa —
-   nunca quebra o painel.
+   SUGESTÕES E CONVERSAS DOS ALUNOS   (ADMIN V2 · ETAPA B)
+
+   Antes isto era mão-única: o aluno escrevia, a linha caía em
+   `feedback`, o painel lia e marcava como lida. Se a resposta exigia
+   uma pergunta de volta — «em qual bloco?», «qual navegador?» — não
+   havia por onde. Agora cada sugestão tem uma conversa pendurada, na
+   tabela `suggestion_messages`.
+
+   A LISTA VEM EM UMA CHAMADA SÓ
+   `admin_suggestion_threads` devolve a sugestão JUNTO com o resumo da
+   conversa: quantas respostas tem, quantas mensagens de aluno o painel
+   ainda não viu e quem falou por último. Pedir isso conversa por
+   conversa seriam 50 requisições por tela.
+
+   SE A MIGRATION AINDA NÃO FOI RODADA
+   A função não existe, e aí o card cai no `select` antigo direto em
+   `feedback` e mostra as sugestões sem a parte de conversa. O painel
+   não quebra: perde um recurso e avisa.
    ===================================================================== */
+let SUG_OPEN = null;            /* id da conversa aberta, uma por vez */
+
 async function loadFeedback(){
   const box = document.getElementById('sugList');
   const cnt = document.getElementById('sugCnt');
   if(!box) return;
   box.innerHTML = '<p class="muted">Cargando...</p>';
 
-  const { data, error } = await sb.from('feedback')
-    .select('id,nombre,email,subject_slug,mensaje,leido_en,created_at')
-    .order('created_at', { ascending:false })
-    .limit(50);
+  let list = null, conversas = true;
 
-  if(error){
-    const falta = /relation .*feedback|does not exist/i.test(error.message || '');
-    box.innerHTML = '<p class="' + (falta ? 'muted' : 'err') + '">' +
-      (falta ? 'Todavía no está creada la tabla. Corré <b>caixa-de-sugestoes.sql</b> en Supabase.'
-             : 'Error: ' + escapeHtml(error.message)) + '</p>';
-    if(cnt) cnt.textContent = '';
-    return;
+  const rpc = await sb.rpc('admin_suggestion_threads', { p_limit: 50 });
+  if(rpc.error){
+    if(/could not find the function|does not exist|schema cache/i.test(rpc.error.message || '')){
+      /* migration 07 ainda não rodou: modo antigo, sem conversa */
+      conversas = false;
+      const old = await sb.from('feedback')
+        .select('id,nombre,email,subject_slug,mensaje,leido_en,created_at')
+        .order('created_at', { ascending:false }).limit(50);
+      if(old.error){
+        const falta = /relation .*feedback|does not exist/i.test(old.error.message || '');
+        box.innerHTML = '<p class="' + (falta ? 'muted' : 'err') + '">' +
+          (falta ? 'Todavía no está creada la tabla. Corré <b>caixa-de-sugestoes.sql</b> en Supabase.'
+                 : 'Error: ' + escapeHtml(old.error.message)) + '</p>';
+        if(cnt) cnt.textContent = '';
+        return;
+      }
+      list = (old.data || []).map(x => Object.assign({ suggestion_id:x.id }, x));
+    }else{
+      box.innerHTML = '<p class="err">Error: ' + escapeHtml(rpc.error.message) + '</p>';
+      if(cnt) cnt.textContent = '';
+      return;
+    }
+  }else{
+    list = rpc.data || [];
   }
-  const list = data || [];
-  const novas = list.filter(x => !x.leido_en).length;
+
+  const novas   = list.filter(x => !x.leido_en).length;
+  const pendend = list.reduce((a,x) => a + Number(x.sin_leer_admin || 0), 0);
+  const esperam = list.filter(x => Number(x.respuestas || 0) > 0 && x.ultimo_autor === 'alumno').length;
   if(cnt) cnt.innerHTML = list.length
-    ? '<b>' + novas + '</b> sin leer · ' + list.length + ' en total'
+    ? '<b>' + novas + '</b> sin leer · ' + list.length + ' en total' +
+      (pendend ? ' · <b style="color:#c0392b;">' + pendend + '</b> respuesta(s) de alumno sin ver' : '') +
+      (esperam ? ' · ' + esperam + ' esperando al equipo' : '') +
+      (conversas ? '' : ' · <i>conversaciones no disponibles: falta la migration 07</i>')
     : '';
+
   if(!list.length){
     box.innerHTML = '<p class="muted">Todavía no hay sugerencias.</p>';
     return;
   }
-  box.innerHTML = list.map(x => {
-    const quando = new Date(x.created_at).toLocaleString('es');
-    const quem   = escapeHtml(x.nombre || x.email || 'Alumno');
-    const mail   = x.email ? ' · ' + escapeHtml(x.email) : '';
-    const mat    = x.subject_slug ? ' · ' + escapeHtml(x.subject_slug) : '';
-    return '<div class="sug' + (x.leido_en ? '' : ' nova') + '" id="sug-' + x.id + '">' +
-      '<div class="top"><span class="who">' + quem + '</span>' +
-        '<span class="meta">' + escapeHtml(quando) + mail + mat + '</span></div>' +
-      '<div class="msg">' + escapeHtml(x.mensaje) + '</div>' +
-      '<div class="acts">' +
-        (x.leido_en ? '' :
-          '<button class="btn-ghost" onclick="markFeedback(\'' + x.id + '\')">Marcar como leída</button>') +
-      '</div></div>';
-  }).join('');
+  box.innerHTML = list.map(x => sugCard(x, conversas)).join('');
+
+  /* se havia uma conversa aberta, reabre — senão responder fecharia a
+     própria janela em que a pessoa acabou de escrever */
+  if(SUG_OPEN){
+    const b = document.getElementById('thr-' + SUG_OPEN);
+    if(b){ b.classList.remove('hidden'); loadThread(SUG_OPEN); }
+    else SUG_OPEN = null;
+  }
 }
 
+function sugCard(x, conversas){
+  const id     = x.suggestion_id || x.id;
+  const quando = new Date(x.created_at).toLocaleString('es');
+  const quem   = escapeHtml(x.nombre || x.email || 'Alumno');
+  const mail   = x.email ? ' · ' + escapeHtml(x.email) : '';
+  const mat    = x.subject_slug ? ' · ' + escapeHtml(x.subject_slug) : '';
+  const resp   = Number(x.respuestas || 0);
+  const pend   = Number(x.sin_leer_admin || 0);
+  const espera = resp > 0 && x.ultimo_autor === 'alumno';
+
+  return '<div class="sug' + (x.leido_en ? '' : ' nova') + '" id="sug-' + id + '">' +
+    '<div class="top"><span class="who">' + quem + '</span>' +
+      '<span class="meta">' + escapeHtml(quando) + mail + mat + '</span></div>' +
+    '<div class="msg">' + escapeHtml(x.mensaje) + '</div>' +
+    '<div class="acts">' +
+      (conversas
+        ? '<button class="btn-primary" onclick="toggleThread(\'' + id + '\')">' +
+            (resp ? 'Ver conversación (' + resp + ')' : 'Responder') + '</button>'
+        : '') +
+      (pend   ? '<span class="apbadge bad">' + pend + ' sin ver</span>' :
+       espera ? '<span class="apbadge warn">esperando al equipo</span>' : '') +
+      (x.leido_en ? '' :
+        '<button class="btn-ghost" onclick="markFeedback(\'' + id + '\')">Marcar como leída</button>') +
+    '</div>' +
+    (conversas ? '<div class="thr hidden" id="thr-' + id + '"></div>' : '') +
+  '</div>';
+}
+
+async function toggleThread(id){
+  const box = document.getElementById('thr-' + id);
+  if(!box) return;
+  const abrir = box.classList.contains('hidden');
+  if(SUG_OPEN && SUG_OPEN !== id){
+    const outra = document.getElementById('thr-' + SUG_OPEN);
+    if(outra) outra.classList.add('hidden');
+  }
+  box.classList.toggle('hidden', !abrir);
+  SUG_OPEN = abrir ? id : null;
+  if(abrir) await loadThread(id);
+}
+
+async function loadThread(id){
+  const box = document.getElementById('thr-' + id);
+  if(!box) return;
+  if(!box.innerHTML) box.innerHTML = '<p class="muted">Cargando conversación...</p>';
+
+  const { data, error } = await sb.from('suggestion_messages')
+    .select('id,sender_type,message,created_at,read_at')
+    .eq('suggestion_id', id)
+    .order('created_at', { ascending:true });
+
+  if(error){
+    box.innerHTML = '<p class="err">Error: ' + escapeHtml(error.message) + '</p>';
+    return;
+  }
+  const msgs = data || [];
+
+  box.innerHTML =
+    (msgs.length
+      ? '<div class="thr-list">' + msgs.map(m =>
+          '<div class="thr-m ' + (m.sender_type === 'admin' ? 'mine' : 'them') + '">' +
+            '<div class="thr-tx">' + escapeHtml(m.message) + '</div>' +
+            '<div class="thr-w">' + (m.sender_type === 'admin' ? 'Equipo' : 'Alumno') + ' · ' +
+              escapeHtml(new Date(m.created_at).toLocaleString('es')) +
+              (m.sender_type === 'admin' ? (m.read_at ? ' · leído' : ' · sin leer') : '') +
+            '</div></div>').join('') + '</div>'
+      : '<p class="muted" style="margin:0 0 12px;">Todavía no hay respuestas. Escribí la primera.</p>') +
+    '<div class="thr-send">' +
+      '<textarea id="thrtx-' + id + '" rows="3" maxlength="4000" ' +
+        'placeholder="Escribí la respuesta para el alumno..."></textarea>' +
+      '<div class="thr-foot"><span class="ok" id="thrmsg-' + id + '"></span>' +
+        '<button onclick="sendThread(\'' + id + '\')">Responder</button></div>' +
+    '</div>';
+
+  /* abrir a conversa É o ato de ler: marca só as mensagens DO ALUNO */
+  const porVer = msgs.filter(m => m.sender_type === 'alumno' && !m.read_at).map(m => m.id);
+  if(porVer.length){
+    const up = await sb.from('suggestion_messages')
+      .update({ read_at: new Date().toISOString() }).in('id', porVer);
+    if(!up.error){
+      const cnt = document.getElementById('sugCnt');
+      if(cnt){ /* o contador do topo será refeito no próximo loadFeedback */ }
+    }
+  }
+}
+
+async function sendThread(id){
+  const ta  = document.getElementById('thrtx-' + id);
+  const msg = document.getElementById('thrmsg-' + id);
+  if(!ta) return;
+  const txt = (ta.value || '').trim();
+  msg.className = 'ok'; msg.textContent = '';
+  if(txt.length < 2){
+    msg.className = 'err'; msg.textContent = 'Escribí la respuesta.'; ta.focus(); return;
+  }
+  const btn = document.querySelector('#thr-' + id + ' .thr-foot button');
+  if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+  /* `user_id` vai ausente DE PROPÓSITO: um trigger no banco o preenche
+     com o dono real da sugestão. Mandar daqui seria uma cópia a mais
+     para poder divergir. `message` é texto puro — nada de HTML. */
+  const { error } = await sb.from('suggestion_messages')
+    .insert({ suggestion_id: id, sender_type: 'admin', message: txt });
+
+  if(btn){ btn.disabled = false; btn.textContent = 'Responder'; }
+  if(error){
+    msg.className = 'err'; msg.textContent = 'Error: ' + error.message; return;
+  }
+  ta.value = '';
+  await loadThread(id);
+  loadFeedback();
+}
+
+/* Marca a SUGESTÃO como lida. Antes esta função também mandava
+   `review_status: 'vista'`, coluna que nunca existiu em `feedback` (ela
+   existe em `external_contributions`, que é outra tabela). O PostgREST
+   rejeitava a escrita inteira, então o botão falhava e `leido_en` não
+   era gravado por este caminho. O campo inventado saiu; nenhuma coluna
+   nova foi criada para substituí-lo. */
 async function markFeedback(id){
   const { error } = await sb.from('feedback')
-    .update({ leido_en: new Date().toISOString(), review_status: 'vista' }).eq('id', id);
+    .update({ leido_en: new Date().toISOString() }).eq('id', id);
   if(error){ alert('Error: ' + error.message); return; }
   loadFeedback();
 }
