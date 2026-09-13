@@ -66,6 +66,7 @@ const FILES = {
   'guarani':                      'guarani.html',
   'ortopedia':                    'ortopedia.html',
   'oftalmologia':                 'oftalmologia.html',
+  'neurologia':                   'neurologia.html',
 };
 
 /* ---------------------------------------------------------------------

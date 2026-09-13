@@ -430,9 +430,13 @@ var RepassoMed = (function(){
       items += '<div class="rm-menu-item">' + linha + lista + '</div>';
     });
     nav.innerHTML =
-      '<button class="rm-menu-btn" type="button" aria-label="Abrir el índice de la materia" aria-expanded="false">' +
+      /* Só «Índice» no botão. «Índice de la materia» ocupava quase o dobro
+         da largura sobre a leitura o tempo todo; o rótulo inteiro segue
+         no aria-label, no title e no cabeçalho do próprio painel. */
+      '<button class="rm-menu-btn" type="button" title="Índice de la materia" ' +
+        'aria-label="Abrir el índice de la materia" aria-expanded="false">' +
         '<span class="rm-menu-bars"><i></i><i></i><i></i></span>' +
-        '<span class="rm-menu-btn-text">Índice de la materia</span>' +
+        '<span class="rm-menu-btn-text">Índice</span>' +
       '</button>' +
       '<div class="rm-menu-panel" role="menu">' +
         '<div class="rm-menu-head"><b>Índice de la materia</b>' +
@@ -487,22 +491,27 @@ var RepassoMed = (function(){
      ================================================================= */
   var sugBox = null, sugTab = null;
 
-  /* Card próprio, fixo na lateral esquerda logo abaixo do botão do
-     índice. Fica fora do painel de propósito: assim o aluno vê a caixa
-     sem precisar abrir o índice, e ela não some quando ele escolhe um
-     bloco. Um por matéria, criado junto com o índice. */
+  /* Atalho fixo na lateral esquerda, no topo da coluna de controles.
+     É só o envelope: o texto permanente «Caja de sugerencias» roubava
+     largura da leitura em toda matéria, e o acesso principal agora vive
+     no cabeçalho, ao lado da Loja. Aqui fica o atalho discreto, para
+     quem já está lendo e não quer subir até o topo.
+
+     O rótulo não some — vai para `aria-label` e `title`, que é onde o
+     leitor de tela e o tooltip o procuram.
+
+     Um por matéria, criado junto com o índice, e ABERTO ANTES dele na
+     ordem visual: envelope → volver arriba → índice. */
   function cardSugestoes(tabEl, nav){
     if (tabEl.querySelector(':scope > .rm-sug-fab')) return;
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'rm-sug-fab';
     b.setAttribute('aria-label', 'Abrir la caja de sugerencias');
-    b.innerHTML =
-      '<span class="ic">' + svgIcon(TOC_ICONS.buzon) + '</span>' +
-      '<span class="tx"><b>Caja de sugerencias</b>' +
-        '<small>tu opinión mejora la materia</small></span>';
+    b.setAttribute('title', 'Caja de sugerencias');
+    b.innerHTML = '<span class="ic">' + svgIcon(TOC_ICONS.buzon) + '</span>';
     b.addEventListener('click', function(){ abrirSugestoes(tabEl); });
-    if (nav && nav.parentNode) nav.parentNode.insertBefore(b, nav.nextSibling);
+    if (nav && nav.parentNode) nav.parentNode.insertBefore(b, nav);
     else tabEl.insertBefore(b, tabEl.firstChild);
   }
 
@@ -521,7 +530,13 @@ var RepassoMed = (function(){
         '<b>Tu opinión es muy importante<br>para nuestra mejora</b>' +
         '<button type="button" class="rm-sug-x" aria-label="Cerrar">✕</button>' +
       '</div>' +
-      '<div class="rm-sug-body">' +
+      '<div class="rm-sug-tabs" role="tablist">' +
+        '<button type="button" class="rm-sug-tab on" role="tab" ' +
+          'aria-selected="true" data-modo="sugerencia">Sugerencia</button>' +
+        '<button type="button" class="rm-sug-tab" role="tab" ' +
+          'aria-selected="false" data-modo="aporte">Aportar material</button>' +
+      '</div>' +
+      '<div class="rm-sug-body" data-modo="sugerencia">' +
         '<p class="rm-sug-hint">Contanos qué te ayudó, qué falta o qué se puede mejorar. ' +
           'Leemos todos los mensajes.</p>' +
         '<textarea class="rm-sug-tx" rows="7" maxlength="4000" ' +
@@ -530,7 +545,8 @@ var RepassoMed = (function(){
           '<span class="rm-sug-msg" role="status"></span>' +
           '<button type="button" class="rm-sug-send">Enviar</button>' +
         '</div>' +
-      '</div>';
+      '</div>' +
+      formularioAporte();
     document.body.appendChild(sugBox);
 
     sugBox.querySelector('.rm-sug-x').addEventListener('click', fecharSugestoes);
@@ -538,7 +554,31 @@ var RepassoMed = (function(){
     document.addEventListener('keydown', function(e){
       if (e.key === 'Escape' && sugBox.classList.contains('on')) fecharSugestoes();
     });
+
+    var abas = sugBox.querySelectorAll('.rm-sug-tab');
+    for (var i = 0; i < abas.length; i++){
+      abas[i].addEventListener('click', function(){ trocarModo(this.dataset.modo); });
+    }
+    ligarAporte(sugBox);
     return sugBox;
+  }
+
+  /* Troca entre «Sugerencia» e «Aportar material». As duas metades
+     existem no mesmo painel de propósito: o aluno que abriu para
+     reclamar de uma figura pode mandar a figura boa sem fechar nada. */
+  function trocarModo(modo){
+    if (!sugBox) return;
+    var abas = sugBox.querySelectorAll('.rm-sug-tab');
+    for (var i = 0; i < abas.length; i++){
+      var on = abas[i].dataset.modo === modo;
+      abas[i].classList.toggle('on', on);
+      abas[i].setAttribute('aria-selected', on ? 'true' : 'false');
+    }
+    var corpos = sugBox.querySelectorAll('.rm-sug-body');
+    for (var j = 0; j < corpos.length; j++){
+      corpos[j].hidden = corpos[j].dataset.modo !== modo;
+    }
+    if (modo === 'aporte') carregarMaterias();
   }
 
   function abrirSugestoes(tabEl){
@@ -548,6 +588,11 @@ var RepassoMed = (function(){
     b.querySelector('.rm-sug-msg').className = 'rm-sug-msg';
     b.querySelector('.rm-sug-send').disabled = false;
     b.querySelector('.rm-sug-send').textContent = 'Enviar';
+    trocarModo('sugerencia');
+    avisoAporte('', false);
+    limparArquivos();
+    var envAp = b.querySelector('.rm-ap-send');
+    if (envAp){ envAp.disabled = false; envAp.textContent = '📚 Ayudá a ampliar nuestra base'; }
     b.classList.add('on');
     setTimeout(function(){ b.querySelector('.rm-sug-tx').focus(); }, 60);
   }
@@ -608,13 +653,521 @@ var RepassoMed = (function(){
     }
   }
 
+  /* =================================================================
+     APORTAR MATERIAL EXTERNO
+     A segunda metade do mesmo painel. O aluno manda um resumo, uma
+     prova antiga, a foto do quadro, o PDF da cátedra — e isso chega
+     ao Drive da equipe e ao painel administrativo.
+
+     POR QUE O ARQUIVO NÃO PASSA PELA FUNÇÃO NETLIFY
+     Uma Netlify Function aceita 6 MB de payload; em base64 sobram uns
+     4,4 MB de arquivo real, menos que um PDF de aula. Então os bytes
+     vão DIRETO do navegador para o bucket privado `aportes` do
+     Supabase Storage (o mesmo caminho que o painel já usa para os
+     flyers), e a função só recebe o identificador do envio.
+
+     ORDEM DAS OPERAÇÕES — e por que é esta
+     1. sorteamos o id do envio ANTES de subir nada, porque ele é parte
+        do caminho do arquivo no bucket;
+     2. subimos os arquivos;
+     3. gravamos a linha de metadados;
+     4. pedimos o espelhamento no Drive.
+     Se o passo 4 falhar, o material NÃO se perde: a linha existe, o
+     painel mostra o envio como «pendiente» e o reenvio é um clique.
+     ================================================================= */
+
+  var APORTE_MAX_ARQ  = 10;
+  var APORTE_MAX_BYTES = 50 * 1024 * 1024;   /* teto do bucket */
+  var APORTE_MIMES = [
+    'application/pdf',
+    'image/jpeg','image/png','image/webp','image/gif','image/heic','image/heif',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain'
+  ];
+  /* MIME PELA EXTENSÃO, QUANDO O NAVEGADOR NÃO SABE
+     `File.type` vem vazio com frequência em HEIC do iPhone e nos
+     formatos do Office — depende do sistema, não do site. O bucket tem
+     lista fixa de tipos e NÃO aceita `application/octet-stream`, então o
+     antigo `f.type || 'application/octet-stream'` não era um fallback:
+     era uma recusa garantida no upload.
+
+     A extensão é o que sobra para inferir, e ela só pode abrir portas
+     que a lista do bucket já abre — nada de executável, nada de tipo
+     genérico servindo de passe-livre. Extensão desconhecida com tipo
+     vazio é recusada aqui, com o motivo à vista, em vez de falhar
+     depois com um erro de Storage que não explica nada. */
+  var APORTE_EXT = {
+    pdf:  'application/pdf',
+    jpg:  'image/jpeg', jpeg: 'image/jpeg',
+    png:  'image/png',  webp: 'image/webp', gif: 'image/gif',
+    heic: 'image/heic', heif: 'image/heif',
+    doc:  'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ppt:  'application/vnd.ms-powerpoint',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    xls:  'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    txt:  'text/plain'
+  };
+
+  /* O tipo com que o arquivo será enviado, ou '' se não der para saber.
+     Um `File.type` que o bucket não aceita também cai aqui: a extensão
+     desempata (um .docx que o sistema rotulou de `application/zip`, por
+     exemplo), e só o que está na lista passa. */
+  function tipoDoArquivo(f){
+    var t = (f && f.type) || '';
+    if (t && APORTE_MIMES.indexOf(t) >= 0) return t;
+    var m = /\.([A-Za-z0-9]+)$/.exec((f && f.name) || '');
+    var ext = m ? m[1].toLowerCase() : '';
+    return APORTE_EXT[ext] || '';
+  }
+
+  var materias = null;        /* cache do catálogo, uma consulta por sessão */
+  var materiasEmVoo = null;
+
+  function formularioAporte(){
+    return '' +
+      '<div class="rm-sug-body rm-ap" data-modo="aporte" hidden>' +
+        '<div class="rm-ap-hero">' +
+          '<b>💙 Ayudanos a construir Repasso Med</b>' +
+          '<p>Una pregunta que recuerdes del examen, una foto, un PDF, un material ' +
+            'de la cátedra o incluso una anotación puede ayudar a cientos de estudiantes.</p>' +
+          '<p class="rm-ap-hero-cta">Compartí lo que tengas, aunque esté incompleto. ' +
+            'Nosotros nos encargamos del resto.</p>' +
+        '</div>' +
+        '<div class="rm-ap-campo">' +
+          '<label for="rm-ap-sem">Semestre</label>' +
+          '<select id="rm-ap-sem" class="rm-ap-sel"></select>' +
+        '</div>' +
+        '<div class="rm-ap-campo">' +
+          '<label for="rm-ap-mat">Materia</label>' +
+          '<select id="rm-ap-mat" class="rm-ap-sel"></select>' +
+        '</div>' +
+        '<div class="rm-ap-campo">' +
+          '<label for="rm-ap-msg">Contanos qué es <span class="rm-ap-opt">(opcional)</span></label>' +
+          '<textarea id="rm-ap-msg" class="rm-ap-tx" rows="3" maxlength="2000" ' +
+            'placeholder="Ej.: resumen del bloque de shock, hecho con la clase del 12/08."></textarea>' +
+        '</div>' +
+        '<div class="rm-ap-campo">' +
+          /* rótulo como <span>: o <label> de verdade é o botão abaixo,
+             e dois <label> para o mesmo campo confundem o leitor de tela */
+          '<span class="rm-ap-rot">Archivos <span class="rm-ap-opt">(opcional · hasta ' +
+            APORTE_MAX_ARQ + ', 50 MB cada uno)</span></span>' +
+          /* o seletor nativo escreve «Choose Files / No file chosen» em
+             inglês, qualquer que seja o idioma da página: escondemos o
+             campo e usamos um <label> nosso, em castelhano */
+          '<input type="file" id="rm-ap-file" class="rm-ap-file" multiple ' +
+            'accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.heic,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt">' +
+          '<label class="rm-ap-drop" for="rm-ap-file">' +
+            '<span class="ic">' + svgIcon(
+              '<path d="M12 16V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/>' +
+              '<path d="M4 15v3.4A1.6 1.6 0 0 0 5.6 20h12.8a1.6 1.6 0 0 0 1.6-1.6V15"/>') +
+            '</span>' +
+            '<span class="tx">Elegí los archivos<small>PDF, fotos, Word, PowerPoint</small></span>' +
+          '</label>' +
+          '<ul class="rm-ap-lista" aria-live="polite"></ul>' +
+        '</div>' +
+        /* O administrador CONSEGUE identificar quem enviou. Dizer
+           «100 % anónimo» seria mentira, e mentira sobre privacidade é a
+           pior espécie. O que é verdade — e é o que o aluno precisa
+           saber — é que nenhum outro estudante o vê. */
+        '<p class="rm-ap-aviso"><b>Tu contribución es confidencial.</b> Tu identidad no ' +
+          'se mostrará públicamente ni será asociada al material frente a otros ' +
+          'estudiantes. El equipo de Repasso Med puede identificar al remitente para ' +
+          'organización, seguridad y, si fuera necesario, contacto sobre el material.</p>' +
+        '<div class="rm-sug-foot">' +
+          '<span class="rm-ap-msg" role="status"></span>' +
+          '<button type="button" class="rm-ap-send">📚 Ayudá a ampliar nuestra base</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function ligarAporte(box){
+    var sem  = box.querySelector('#rm-ap-sem');
+    var file = box.querySelector('#rm-ap-file');
+    var env  = box.querySelector('.rm-ap-send');
+    var ul   = box.querySelector('.rm-ap-lista');
+    if (sem)  sem.addEventListener('change', function(){ pintarMaterias(sem.value); });
+    if (file) file.addEventListener('change', function(){
+      juntarArquivos(file.files ? Array.prototype.slice.call(file.files) : []);
+    });
+    if (env)  env.addEventListener('click', enviarAporte);
+    /* delegado: a lista se redesenha inteira a cada mudança */
+    if (ul) ul.addEventListener('click', function(e){
+      var b = e.target.closest && e.target.closest('.rm-ap-x');
+      if (b) removerArquivo(parseInt(b.getAttribute('data-i'), 10));
+    });
+  }
+
+  /* O catálogo vem de `public.subjects`, que é a fonte real do site.
+     Não existe uma segunda lista de matérias escrita à mão aqui. */
+  function carregarMaterias(){
+    if (materias) return Promise.resolve(materias);
+    if (materiasEmVoo) return materiasEmVoo;
+    var sb = sbCliente();
+    if (!sb) return Promise.resolve(null);
+    materiasEmVoo = sb.from('subjects')
+      .select('slug,name,semester,sort_order')
+      .eq('is_active', true)
+      .order('semester', { ascending: true })
+      .order('sort_order', { ascending: true })
+      .then(function(r){
+        materiasEmVoo = null;
+        if (r && r.error) throw r.error;
+        materias = (r && r.data) || [];
+        pintarSemestres();
+        return materias;
+      })
+      .catch(function(){
+        materiasEmVoo = null;
+        /* Sem catálogo o envio continua possível: o aluno escreve no
+           recado a que matéria pertence. Nunca travamos por isto. */
+        pintarSemestres();
+        return null;
+      });
+    return materiasEmVoo;
+  }
+
+  function pintarSemestres(){
+    if (!sugBox) return;
+    var sel = sugBox.querySelector('#rm-ap-sem');
+    if (!sel) return;
+    var vistos = {}, ordem = [];
+    (materias || []).forEach(function(m){
+      if (m.semester == null) return;
+      if (!vistos[m.semester]) { vistos[m.semester] = 1; ordem.push(m.semester); }
+    });
+    ordem.sort(function(a, b){ return a - b; });
+    sel.innerHTML = '<option value="">Elegí el semestre…</option>' +
+      ordem.map(function(n){
+        return '<option value="' + n + '">' + n + '.º semestre</option>';
+      }).join('') +
+      '<option value="otro">Otro / no estoy seguro</option>';
+    pintarMaterias('');
+  }
+
+  /* O destino tem que ser uma ESCOLHA. O valor vazio é sempre o convite
+     («Elegí…»), nunca um destino: quem não sabe a matéria marca «Otra /
+     general» de propósito, e isso é diferente de não ter marcado nada. */
+  function pintarMaterias(sem){
+    if (!sugBox) return;
+    var sel = sugBox.querySelector('#rm-ap-mat');
+    if (!sel) return;
+
+    if (!sem){
+      sel.innerHTML = '<option value="">Elegí primero el semestre…</option>';
+      return;
+    }
+    if (sem === 'otro'){
+      /* sem semestre não há lista de matérias — e escolher «Otro» já foi
+         a decisão consciente que o fluxo pede */
+      sel.innerHTML = '<option value="__gen">General / no es de una materia</option>';
+      return;
+    }
+    var lista = (materias || []).filter(function(m){
+      return String(m.semester) === String(sem);
+    });
+    sel.innerHTML = '<option value="">Elegí la materia…</option>' +
+      lista.map(function(m){
+        return '<option value="' + escAttr(m.slug) + '">' + escHtml(m.name) + '</option>';
+      }).join('') +
+      '<option value="__gen">Otra / general</option>';
+  }
+
+  function escHtml(t){
+    return String(t == null ? '' : t)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function escAttr(t){ return escHtml(t).replace(/"/g, '&quot;'); }
+
+  function kb(n){
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return Math.round(n / 1024) + ' KB';
+    return (n / 1024 / 1024).toFixed(1).replace('.', ',') + ' MB';
+  }
+
+  /* Nome seguro para virar caminho de Storage e, depois, nome de
+     arquivo no Drive: sem acento, sem barra, sem espaço duplo. */
+  function nomeSeguro(nome){
+    var base = String(nome || 'archivo')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-zA-Z0-9._-]+/g, '-')
+      .replace(/-+/g, '-').replace(/^[-.]+|[-.]+$/g, '');
+    return (base || 'archivo').slice(0, 80);
+  }
+
+  /* A seleção vive AQUI, não no `<input type=file>`.
+     `input.files` é um FileList só de leitura: não dá para tirar um
+     arquivo de dentro dele. Guardando a lista à parte, o aluno escolhe
+     em várias tandas, vê o que juntou e remove o que não quis — que é o
+     que o fluxo pede — sem ter de recomeçar a seleção do zero. */
+  var escolhidos = [];
+
+  function arquivosEscolhidos(){ return escolhidos.slice(); }
+
+  function limparArquivos(){
+    escolhidos = [];
+    var inp = sugBox && sugBox.querySelector('#rm-ap-file');
+    if (inp) inp.value = '';
+    pintarArquivos();
+  }
+
+  function juntarArquivos(novos){
+    for (var i = 0; i < novos.length; i++){
+      var f = novos[i], repetido = false;
+      for (var j = 0; j < escolhidos.length; j++){
+        if (escolhidos[j].name === f.name && escolhidos[j].size === f.size &&
+            escolhidos[j].lastModified === f.lastModified){ repetido = true; break; }
+      }
+      if (!repetido) escolhidos.push(f);
+    }
+    /* zera o input: sem isto, escolher o MESMO arquivo depois de
+       removê-lo não dispara `change` e ele nunca volta */
+    var inp = sugBox && sugBox.querySelector('#rm-ap-file');
+    if (inp) inp.value = '';
+    pintarArquivos();
+  }
+
+  function removerArquivo(i){
+    if (i < 0 || i >= escolhidos.length) return;
+    escolhidos.splice(i, 1);
+    pintarArquivos();
+    /* devolve o foco a um alvo que ainda existe */
+    var ul = sugBox && sugBox.querySelector('.rm-ap-lista');
+    var bts = ul ? ul.querySelectorAll('.rm-ap-x') : [];
+    if (bts.length) bts[Math.min(i, bts.length - 1)].focus();
+    else { var d = sugBox && sugBox.querySelector('.rm-ap-drop'); if (d) d.focus(); }
+  }
+
+  function pintarArquivos(){
+    var ul = sugBox && sugBox.querySelector('.rm-ap-lista');
+    if (!ul) return;
+    var fs = escolhidos;
+    ul.innerHTML = fs.map(function(f, i){
+      var mal = f.size > APORTE_MAX_BYTES || !tipoDoArquivo(f);
+      return '<li class="' + (mal ? 'mal' : '') + '">' +
+        '<span class="n">' + escHtml(f.name) + '</span>' +
+        '<span class="s">' + kb(f.size) + '</span>' +
+        '<button type="button" class="rm-ap-x" data-i="' + i + '" ' +
+          'title="Quitar este archivo" ' +
+          'aria-label="Quitar ' + escAttr(f.name) + '">✕</button>' +
+      '</li>';
+    }).join('');
+    avisoAporte('', false);
+    if (fs.length > APORTE_MAX_ARQ) {
+      avisoAporte('Son ' + fs.length + ' archivos; el máximo es ' + APORTE_MAX_ARQ + '.', true);
+    }
+  }
+
+  function avisoAporte(txt, erro){
+    var m = sugBox && sugBox.querySelector('.rm-ap-msg');
+    if (!m) return;
+    m.textContent = txt;
+    m.className = 'rm-ap-msg' + (erro ? ' err' : (txt ? ' ok' : ''));
+  }
+
+  async function enviarAporte(){
+    var btn = sugBox.querySelector('.rm-ap-send');
+    var msg = (sugBox.querySelector('#rm-ap-msg').value || '').trim();
+    var sem = sugBox.querySelector('#rm-ap-sem').value;
+    var slug = sugBox.querySelector('#rm-ap-mat').value;
+    var fs  = arquivosEscolhidos();
+
+    if (!fs.length && msg.length < 3){
+      avisoAporte('Adjuntá al menos un archivo o contanos qué querés aportar.', true);
+      return;
+    }
+    /* Destino é escolha, não omissão: o valor vazio nunca vira «general»
+       por acidente. Quem não sabe marca «Otro» / «Otra / general». */
+    if (!sem){
+      avisoAporte('Elegí el semestre. Si no estás seguro, marcá «Otro / no estoy seguro».', true);
+      sugBox.querySelector('#rm-ap-sem').focus();
+      return;
+    }
+    if (!slug){
+      avisoAporte('Elegí la materia. Si no corresponde a ninguna, marcá «Otra / general».', true);
+      sugBox.querySelector('#rm-ap-mat').focus();
+      return;
+    }
+    if (fs.length > APORTE_MAX_ARQ){
+      avisoAporte('Son ' + fs.length + ' archivos; el máximo es ' + APORTE_MAX_ARQ + '.', true);
+      return;
+    }
+    for (var i = 0; i < fs.length; i++){
+      if (fs[i].size > APORTE_MAX_BYTES){
+        avisoAporte('«' + fs[i].name + '» pesa ' + kb(fs[i].size) + '. El máximo es 50 MB.', true);
+        return;
+      }
+      if (!tipoDoArquivo(fs[i])){
+        avisoAporte('«' + fs[i].name + '» es de un tipo que no aceptamos todavía. ' +
+                    'Aceptamos PDF, fotos, Word, PowerPoint, Excel y texto.', true);
+        return;
+      }
+    }
+
+    var sb = sbCliente();
+    if (!sb){ avisoAporte('No se pudo conectar. Recargá la página e intentá de nuevo.', true); return; }
+
+    btn.disabled = true;
+    var ROTULO = '📚 Ayudá a ampliar nuestra base';
+    var soltar = function(){ btn.disabled = false; btn.textContent = ROTULO; };
+    btn.textContent = 'Enviando...';
+    avisoAporte('', false);
+
+    try{
+      var u = await sb.auth.getUser();
+      var user = u && u.data && u.data.user;
+      if (!user){ avisoAporte('Iniciá sesión para poder enviar.', true); soltar(); return; }
+
+      var nome = '';
+      try{
+        var pr = await sb.from('profiles').select('full_name').eq('id', user.id).maybeSingle();
+        nome = (pr && pr.data && pr.data.full_name) || '';
+      }catch(_){}
+
+      var envioId = (window.crypto && window.crypto.randomUUID)
+        ? window.crypto.randomUUID() : uuidSimples();
+
+      /* 1) bytes → bucket privado, um por vez, com o progresso à vista.
+         `subidos` guarda o que já entrou: se o passo 2 falhar, é por
+         esta lista que a limpeza volta e apaga. */
+      var meta = [], subidos = [];
+      try {
+        for (var k = 0; k < fs.length; k++){
+          var f = fs[k];
+          btn.textContent = fs.length > 1
+            ? 'Subiendo ' + (k + 1) + '/' + fs.length + '...'
+            : 'Subiendo...';
+          var caminho = user.id + '/' + envioId + '/' +
+                        (k + 1) + '-' + nomeSeguro(f.name);
+          var up = await sb.storage.from('aportes').upload(caminho, f, {
+            /* nunca `application/octet-stream`: o bucket o recusa, e usá-lo
+               como curinga seria abrir a lista de tipos por uma frestinha */
+            contentType: tipoDoArquivo(f),
+            upsert: false
+          });
+          if (up && up.error) throw up.error;
+          subidos.push(caminho);
+          meta.push({ path: caminho, name: String(f.name).slice(0, 200),
+                      size: f.size, mime: tipoDoArquivo(f) });
+        }
+
+        /* 2) metadados → Postgres (nunca os bytes) */
+        btn.textContent = 'Guardando...';
+        var r = await sb.from('external_contributions').insert({
+          id: envioId,
+          user_id: user.id,
+          nombre: nome || null,
+          email: user.email || null,
+          semester: (sem && sem !== 'otro') ? parseInt(sem, 10) : null,
+          subject_slug: (slug && slug !== '__gen') ? slug : null,
+          mensaje: msg || null,
+          files: meta
+        });
+        if (r && r.error) throw r.error;
+      } catch (falha) {
+        /* Bytes no bucket sem linha que os explique são lixo invisível:
+           ninguém os vê no painel e ninguém os apaga. Como a linha NÃO
+           existe, a policy `aportes_delete_huerfano` permite ao dono
+           apagá-los — e só enquanto forem órfãos mesmo. Se a limpeza
+           falhar, o erro original é que importa; ele segue adiante. */
+        if (subidos.length){
+          try { await sb.storage.from('aportes').remove(subidos); }
+          catch (_){ }
+        }
+        throw falha;
+      }
+
+      /* 3) espelhamento no Drive — se falhar, o envio já está salvo */
+      var aviso = '¡Gracias! Tu material llegó. Lo vamos a revisar.';
+      try{
+        var ses = await sb.auth.getSession();
+        var tok = ses && ses.data && ses.data.session && ses.data.session.access_token;
+        if (tok){
+          var resp = await fetch('/.netlify/functions/aporte-drive', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+            body: JSON.stringify({ contribution_id: envioId })
+          });
+          if (!resp.ok) aviso += ' (La copia al Drive quedó pendiente; el equipo ya la ve igual.)';
+        }
+      }catch(_){
+        aviso += ' (La copia al Drive quedó pendiente; el equipo ya la ve igual.)';
+      }
+
+      sugBox.querySelector('#rm-ap-msg').value = '';
+      limparArquivos();
+      btn.textContent = 'Enviado ✓';
+      avisoAporte(aviso, false);
+    }catch(e){
+      var t = (e && e.message) || '';
+      avisoAporte(
+        /relation .*external_contributions|does not exist|Bucket not found/i.test(t)
+          ? 'Los aportes todavía no están habilitados.'
+          : (/poco tiempo/i.test(t) ? t
+          : (/exceeded the maximum|Payload too large|size/i.test(t)
+             ? 'Algún archivo es demasiado grande. El máximo es 50 MB por archivo.'
+             : 'No se pudo enviar. Probá de nuevo en un momento.')), true);
+      soltar();
+    }
+  }
+
+  function uuidSimples(){
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){
+      var r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
   function setupMenu(tabEl, nav){
     var btn = nav.querySelector('.rm-menu-btn');
     var panel = nav.querySelector('.rm-menu-panel');
-    function open(){ nav.classList.add('open'); btn.setAttribute('aria-expanded','true'); }
+
+    /* ALTURA DO PAINEL — medida, não calculada de cabeça.
+
+       O CSS limitava o painel a `100vh - topbar - tabs - 40px`, uma conta
+       que só valeria se ele começasse logo abaixo da barra de abas. Ele
+       não começa: abaixo dele estão o envelope, o «arriba» e o próprio
+       botão do índice. Esses ~105 px nunca eram descontados, então o
+       painel terminava ABAIXO da borda da tela — e como ele é absoluto
+       dentro de um elemento `fixed`, esse rabo não se alcança rolando:
+       em Oftalmología, «Banco general» e «Mazo general» ficavam fora,
+       nas quatro larguras testadas, inclusive no desktop.
+
+       Em vez de chutar um número novo, medimos onde o painel realmente
+       começa e damos a ele o que sobra até o fim da tela. `env(safe-area-
+       inset-bottom)` cobre a faixa do gesto do iPhone. */
+    var FOLGA = 16;
+    function ajustarAltura(){
+      if (!nav.classList.contains('open')) return;
+      /* `visualViewport` é o que enxerga a tela REAL do celular quando a
+         barra de endereço aparece e some; `innerHeight` não acompanha. */
+      var alturaTela = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      var topo = panel.getBoundingClientRect().top;
+      var livre = Math.max(180, Math.round(alturaTela - topo - FOLGA));
+      panel.style.maxHeight = 'calc(' + livre + 'px - env(safe-area-inset-bottom, 0px))';
+    }
+
+    function open(){
+      nav.classList.add('open');
+      btn.setAttribute('aria-expanded','true');
+      ajustarAltura();
+      /* o `top` do painel depende da barra de ferramentas, que pode ainda
+         estar se medindo no primeiro quadro */
+      requestAnimationFrame(ajustarAltura);
+    }
     function close(){ nav.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
     function toggle(){ nav.classList.contains('open') ? close() : open(); }
     btn.addEventListener('click', function(e){ e.stopPropagation(); toggle(); });
+
+    window.addEventListener('resize', ajustarAltura);
+    window.addEventListener('orientationchange', function(){ setTimeout(ajustarAltura, 220); });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', ajustarAltura);
     /* Clicar num bloco: rolagem EXATA até o topo dele.
        A âncora nativa encosta o bloco no topo da janela — mas a barra
        superior e a barra de abas ficam por cima, escondendo o título. Era
@@ -972,8 +1525,22 @@ var RepassoMed = (function(){
     document.querySelectorAll('#materias-container > .tab-content').forEach(enhanceTab);
   }
 
+  /* Chamada pelo botão do cabeçalho, ao lado da Loja de matérias.
+     Abre A MESMA gaveta do envelope da lateral — `abrirSugestoes` é a
+     função que já existia, e `#rm-sug` continua sendo instância única no
+     `<body>`. Dois atalhos, um painel: nada de segundo modal, segundo
+     estado ou segundo listener.
+
+     Sem argumento, adota a matéria aberta no momento, que é o que dá o
+     `subject_slug` da sugestão. Fora de uma matéria (início, loja) fica
+     sem matéria, e o envio continua válido. */
+  function abrirCaixaSugestoes(tabEl){
+    abrirSugestoes(tabEl ||
+      document.querySelector('#materias-container > .tab-content.active[id^="tab-"]') || null);
+  }
+
   return { enhanceAll: enhanceAll, enhanceTab: enhanceTab, normalizeQuizzes: normalizeQuizzes,
-           estimarAlturas: estimarAlturas };
+           estimarAlturas: estimarAlturas, abrirSugestoes: abrirCaixaSugestoes };
 })();
 
 window.RepassoMed = RepassoMed;
