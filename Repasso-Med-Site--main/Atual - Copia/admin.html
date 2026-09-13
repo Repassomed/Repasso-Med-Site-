@@ -222,6 +222,75 @@
   .bulkpick .opt:hover{border-color:var(--accent-lt);}
   .bulkpick .opt input{width:17px;height:17px;margin:0;accent-color:var(--red);cursor:pointer;}
   .bulkpick .opt .c{margin-left:auto;font-size:11px;color:var(--ink-soft);white-space:nowrap;}
+  /* ===== ADMIN V2 · FINANCIERO ===================================== */
+  .fin-per{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+  .fin-pb{background:var(--panel2);color:var(--ink-soft);border:1px solid var(--line);
+    font-size:13px;font-weight:700;padding:7px 13px;border-radius:9px;}
+  .fin-pb:hover:not(.active){color:var(--ink);border-color:var(--ink-soft);}
+  .fin-pb.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .fin-cust{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-top:12px;align-items:end;}
+  @media(max-width:640px){.fin-cust{grid-template-columns:1fr;}}
+  .fin-var{display:block;margin-top:5px;font-size:11px;font-weight:800;letter-spacing:.02em;}
+  .fin-var.up{color:var(--green);}
+  .fin-var.down{color:var(--red);}
+  .fin-var.flat,.fin-var.none{color:var(--ink-soft);font-weight:600;}
+  .stat.fin-pend{border-color:var(--gold);}
+  .stat.fin-pend .n{color:#8a6a15;}
+  /* gráfico: barras em HTML puro, sem biblioteca externa */
+  .fin-tg{display:inline-flex;gap:4px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:9px;padding:3px;}
+  .fin-tb{background:transparent;color:var(--ink-soft);font-size:12px;font-weight:700;
+    padding:5px 11px;border-radius:7px;}
+  .fin-tb.active{background:var(--accent);color:#fff;}
+  .fin-hov{min-height:19px;margin-top:10px;font-size:12.5px;color:var(--ink-soft);}
+  .fin-hov b{color:var(--ink);}
+  .fin-scroll{overflow-x:auto;overflow-y:hidden;}
+  .fin-bars{display:flex;align-items:flex-end;gap:3px;height:180px;margin-top:4px;
+    border-bottom:1px solid var(--line);}
+  .fin-bar{flex:1 1 0;min-width:3px;display:flex;flex-direction:column;justify-content:flex-end;
+    height:100%;cursor:default;}
+  .fin-bar i{display:block;height:var(--h);min-height:2px;border-radius:4px 4px 0 0;
+    background:linear-gradient(180deg,var(--accent-lt),var(--accent));transition:background .12s;}
+  .fin-bar:hover i{background:var(--gold);}
+  .fin-bar.zero i{background:var(--line);}
+  .fin-axis{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;
+    color:var(--ink-soft);}
+  /* tabelas de ranking */
+  .fin-tbl{margin-top:12px;border:1px solid var(--line);border-radius:11px;overflow:hidden;}
+  .fin-th,.fin-tr{display:grid;gap:10px;align-items:center;padding:10px 13px;}
+  .fin-th{grid-template-columns:1fr 120px 92px 118px;background:var(--panel2);
+    font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;
+    border-bottom:1px solid var(--line);}
+  .fin-tr{grid-template-columns:1fr 120px 92px 118px;border-bottom:1px solid var(--line);}
+  .fin-tr:last-child{border-bottom:none;}
+  .fin-tr:hover{background:var(--panel2);}
+  .fin-tbl.c3 .fin-th,.fin-tbl.c3 .fin-tr{grid-template-columns:1fr 92px 118px;}
+  @media(max-width:700px){
+    .fin-th{display:none;}
+    .fin-tr,.fin-tbl.c3 .fin-tr{grid-template-columns:1fr;gap:3px;}
+    .fin-tr .num{text-align:left !important;}
+  }
+  .fin-tr .nm{font-weight:600;font-size:13.5px;min-width:0;overflow-wrap:anywhere;}
+  .fin-tr .nm small{display:block;color:var(--ink-soft);font-weight:400;font-size:11px;}
+  .fin-th .num{text-align:right;}
+  .fin-tr .num{text-align:right;font-variant-numeric:tabular-nums;font-size:13.5px;}
+  .fin-tr .num b{font-size:14.5px;}
+  .fin-share{height:4px;border-radius:3px;background:var(--line);margin-top:6px;overflow:hidden;}
+  .fin-share i{display:block;height:100%;background:var(--accent-lt);}
+  .fin-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;
+    background:rgba(19,49,79,.08);color:var(--accent);white-space:nowrap;}
+  .fin-tag.combo,.fin-tag.nuevo{background:rgba(216,163,42,.16);color:#8a6a15;}
+  /* aviso honesto — não é enfeite, é contrato com o leitor do painel */
+  .fin-warn{margin-top:12px;padding:11px 13px;border-radius:10px;background:#fffdf4;
+    border:1px solid #ecdcae;font-size:12.5px;line-height:1.55;color:#6b5a22;}
+  .fin-warn b{color:#5a4a16;}
+  /* pagamentos pendentes */
+  .fin-pen{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 13px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;}
+  .fin-pen .who{flex:1;min-width:180px;font-weight:600;font-size:13.5px;overflow-wrap:anywhere;}
+  .fin-pen .who small{display:block;color:var(--ink-soft);font-weight:400;font-size:11.5px;}
+  .fin-pen .dates{font-size:11px;color:var(--ink-soft);text-align:right;line-height:1.5;}
+  .fin-pen .dates b{color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums;}
 </style>
 </head>
 <body>
@@ -266,6 +335,7 @@
     <button class="adm-tab active" id="navUsers" onclick="showView('users')">Usuarios y panel</button>
     <button class="adm-tab" id="navSubjects" onclick="showView('subjects')">Acceso por materia</button>
     <button class="adm-tab" id="navSales" onclick="showView('sales')">Ventas</button>
+    <button class="adm-tab" id="navFin" onclick="showView('fin')">Financiero</button>
     <button class="adm-tab" id="navAds" onclick="showView('ads')">Anuncios</button>
     <button class="adm-tab" id="navAportes" onclick="showView('aportes')">Aportes<span id="navAportesBadge" class="tabbadge hidden"></span></button>
   </div>
@@ -458,6 +528,106 @@
         <button class="btn-ghost" onclick="loadOrders()">Actualizar</button>
       </div>
       <div id="orderList" class="ulist" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       FINANCIERO (ADMIN V2 · ETAPA A)
+       Solo LECTURA. Todos los números vienen de funciones del servidor
+       que validan is_admin() antes de sumar nada. El navegador no baja
+       la lista de pedidos: baja los totales ya calculados.
+       =================================================================== -->
+  <div id="finView" class="hidden">
+
+    <!-- período -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <label style="margin:0;">Período</label>
+        <span class="muted" id="finRange"></span>
+      </div>
+      <div class="fin-per" id="finPer">
+        <button class="fin-pb" onclick="finSetPer('hoy')"    data-per="hoy">Hoy</button>
+        <button class="fin-pb active" onclick="finSetPer('7')" data-per="7">7 días</button>
+        <button class="fin-pb" onclick="finSetPer('30')"     data-per="30">30 días</button>
+        <button class="fin-pb" onclick="finSetPer('mes')"    data-per="mes">Este mes</button>
+        <button class="fin-pb" onclick="finSetPer('all')"    data-per="all">Todo</button>
+        <button class="fin-pb" onclick="finSetPer('custom')" data-per="custom">Personalizado</button>
+      </div>
+      <div class="fin-cust hidden" id="finCust">
+        <div><label>Desde</label><input type="date" id="finFrom"></div>
+        <div><label>Hasta</label><input type="date" id="finTo"></div>
+        <div><button onclick="finApplyCustom()">Aplicar</button></div>
+      </div>
+      <p id="finMsg" class="err" style="margin:10px 0 0;"></p>
+    </div>
+
+    <!-- caja del período -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <label style="margin:0;">Caja del período</label>
+        <button class="btn-ghost" onclick="loadFin()">Actualizar</button>
+      </div>
+      <div id="finStats" class="dash-grid"><p class="muted">Cargando indicadores...</p></div>
+      <div class="fin-warn">
+        Los ingresos suman <b>el valor del pedido</b>, ya con el cupón descontado. No suman
+        <b>lo que el comprador pagó en cuotas</b>: el recargo del crédito lo cobra InfinitePay
+        y no entra en la caja de la escuela. La fecha de cada venta es la de la
+        <b>confirmación del pago</b>, no la de creación del pedido.
+      </div>
+    </div>
+
+    <!-- evolución -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <label style="margin:0;">Evolución</label>
+        <div class="fin-tg">
+          <button class="fin-tb active" onclick="finSetMetric('receita')" data-m="receita">Ingresos</button>
+          <button class="fin-tb"        onclick="finSetMetric('vendas')"  data-m="vendas">Ventas</button>
+        </div>
+      </div>
+      <div class="fin-hov" id="finHover"></div>
+      <div id="finChart"></div>
+    </div>
+
+    <!-- productos -->
+    <div class="card">
+      <label>Productos vendidos</label>
+      <p class="muted" style="margin:6px 0 0;">Un pedido puede llevar varios productos. Los ingresos
+        se <b>reparten</b> entre los ítems del pedido en proporción al precio de cada uno, para que el
+        mismo pedido no se cuente dos veces. Por el redondeo del reparto la suma de esta tabla puede
+        quedar a unos centavos del total de caja: <b>el número de caja es el de arriba</b>.</p>
+      <div id="finProd"></div>
+    </div>
+
+    <!-- materias y combos -->
+    <div class="card">
+      <label>Materias y combos de semestre</label>
+      <p class="muted" style="margin:6px 0 0;">El <b>combo de semestre</b> no se mezcla con las materias
+        sueltas: libera todas las materias del semestre y por eso se cuenta aparte. «Materia completa»
+        es acceso total a <b>una</b> materia, no es combo.</p>
+      <div id="finMat"></div>
+    </div>
+
+    <!-- cupones -->
+    <div class="card">
+      <label>Cupones usados</label>
+      <p class="muted" style="margin:6px 0 0;">Solo pedidos pagos. <b>Descuento</b> es lo que la escuela
+        dejó de cobrar; <b>ingresos</b> es lo que entró después del descuento.</p>
+      <div id="finCup"></div>
+    </div>
+
+    <!-- oportunidades -->
+    <div class="card">
+      <label>Oportunidades · Pagos pendientes</label>
+      <p class="muted" style="margin:6px 0 0;">Pedidos que fueron creados y cuyo pago <b>no fue
+        confirmado</b>. Nada más que eso.</p>
+      <div class="fin-warn">
+        Esto <b>no</b> es «carrito abandonado». La base no guarda ningún evento de carrito, ninguna
+        sesión de checkout y ningún historial de navegación: no hay forma de saber quién desistió y
+        quién simplemente todavía no pagó. Lo que sí se sabe es si esa persona <b>ya compró otra vez</b>,
+        y eso aparece en cada línea.
+      </div>
+      <div id="finPend"></div>
     </div>
   </div>
 
@@ -1007,8 +1177,8 @@ async function loadDashboard(){
    NAVEGAÇÃO ENTRE VIEWS (usuarios/panel  ↔  acceso por materia)
    ===================================================================== */
 function showView(which){
-  const views = { users:'searchView', subjects:'subjectsView', sales:'salesView', ads:'adsView', aportes:'aportesView' };
-  const navs  = { users:'navUsers',   subjects:'navSubjects',  sales:'navSales',  ads:'navAds', aportes:'navAportes' };
+  const views = { users:'searchView', subjects:'subjectsView', sales:'salesView', fin:'finView', ads:'adsView', aportes:'aportesView' };
+  const navs  = { users:'navUsers',   subjects:'navSubjects',  sales:'navSales',  fin:'navFin',  ads:'navAds', aportes:'navAportes' };
   Object.keys(views).forEach(k=>{
     const v = document.getElementById(views[k]);
     if(v) v.classList.toggle('hidden', k !== which);
@@ -1018,8 +1188,404 @@ function showView(which){
   document.getElementById('detailView').classList.add('hidden');
   if(which === 'subjects') loadSubjectAccess();
   if(which === 'sales')    loadSales();
+  if(which === 'fin')      loadFin();
   if(which === 'ads')      loadAds();
   if(which === 'aportes')  loadAportes();
+}
+
+
+/* =====================================================================
+   ADMIN V2 · ETAPA A — FINANCIERO
+   Somente leitura. Nenhum número é somado aqui: tudo vem pronto das
+   funções `admin_fin_*`, que validam `is_admin()` no servidor antes de
+   olhar um pedido sequer. O navegador nunca baixa a lista de pedidos
+   para somar no cliente — ela pode ter milhares de linhas.
+
+   TRÊS COISAS QUE ESTA TELA NÃO FAZ, DE PROPÓSITO
+   1. Não soma `paid_amount`. O que o comprador pagou parcelado inclui o
+      juro da InfinitePay, que não entra no caixa da escola.
+   2. Não chama pedido pendente de «carrinho abandonado». A base não tem
+      evento de carrinho; o que ela sabe é que o pagamento não foi
+      confirmado, e é só isso que a tela diz.
+   3. Não trata telefone de cadastro como autorização de marketing.
+   ===================================================================== */
+
+let FIN = {
+  per: '7',            /* hoy | 7 | 30 | mes | all | custom              */
+  from: null, to: null,/* Date | null — só usados quando per === custom  */
+  metric: 'receita',   /* receita | vendas — alterna o gráfico           */
+  points: [],          /* série já preenchida com os dias sem venda      */
+  bucket: 'day',       /* day | month — escolhido pelo tamanho do período*/
+  loading: false
+};
+
+const FIN_PLAN = { parcial1:'Parcial 1', parcial2:'Parcial 2', final:'Final',
+                   completa:'Materia completa', semestre:'Combo semestre' };
+const FIN_MES  = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+/* ---------- formatação ------------------------------------------------
+   Sem símbolo de moeda: a conta InfinitePay pode estar em guaranis ou em
+   reais, e o resto do painel já trabalha assim. Inventar «R$» aqui seria
+   mentir metade do tempo. */
+function finMoney(c){
+  return (Number(c || 0) / 100).toLocaleString('es-AR',
+    { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function finNum(n){ return Number(n || 0).toLocaleString('es-AR'); }
+
+function finIsoDay(d){
+  return d.getFullYear() + '-' +
+         String(d.getMonth() + 1).padStart(2,'0') + '-' +
+         String(d.getDate()).padStart(2,'0');
+}
+/* parse componente a componente: `new Date('2026-09-13')` seria UTC e
+   voltaria um dia atrás para quem está a oeste de Greenwich. */
+function finParseDay(iso){
+  const p = String(iso).split('-').map(Number);
+  return new Date(p[0], p[1] - 1, p[2]);
+}
+function finBucketLabel(k){
+  const p = String(k).split('-').map(Number);
+  return FIN.bucket === 'month' ? (FIN_MES[p[1]-1] + ' ' + p[0])
+                                : (p[2] + ' ' + FIN_MES[p[1]-1]);
+}
+
+/* ---------- período ---------------------------------------------------
+   Os limites são calculados em DIAS LOCAIS do navegador e mandados em
+   ISO. O limite de cima é sempre exclusivo (amanhã 00:00), para que a
+   venda de hoje às 23h entre no «hoy». A aritmética é por componente de
+   data, não por milissegundos, para não escorregar em mudança de fuso. */
+function finRange(){
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  const man = new Date(y, m, d + 1);
+  switch(FIN.per){
+    case 'hoy': return [new Date(y, m, d),      man];
+    case '7':   return [new Date(y, m, d - 6),  man];
+    case '30':  return [new Date(y, m, d - 29), man];
+    case 'mes': return [new Date(y, m, 1),      man];
+    case 'all': return [null, null];
+    default:    return [FIN.from, FIN.to];
+  }
+}
+
+function finRangeLabel(from, to){
+  if(!from || !to) return 'todo el histórico';
+  const fim = new Date(to.getTime() - 1);
+  const d = x => x.getDate() + ' ' + FIN_MES[x.getMonth()] + ' ' + x.getFullYear();
+  return d(from) === d(fim) ? d(from) : (d(from) + ' → ' + d(fim));
+}
+
+function finSetPer(per){
+  FIN.per = per;
+  document.querySelectorAll('#finPer .fin-pb').forEach(b =>
+    b.classList.toggle('active', b.dataset.per === per));
+  const cust = document.getElementById('finCust');
+  cust.classList.toggle('hidden', per !== 'custom');
+  if(per === 'custom'){
+    const f = document.getElementById('finFrom'), t = document.getElementById('finTo');
+    if(!f.value || !t.value){
+      const n = new Date();
+      t.value = finIsoDay(n);
+      f.value = finIsoDay(new Date(n.getFullYear(), n.getMonth(), n.getDate() - 29));
+    }
+    return;                       /* espera o clique em «Aplicar» */
+  }
+  loadFin();
+}
+
+function finApplyCustom(){
+  const msg = document.getElementById('finMsg');
+  const fv = document.getElementById('finFrom').value;
+  const tv = document.getElementById('finTo').value;
+  msg.textContent = '';
+  if(!fv || !tv){ msg.textContent = 'Elegí las dos fechas.'; return; }
+  const a = fv.split('-').map(Number), b = tv.split('-').map(Number);
+  const from = new Date(a[0], a[1] - 1, a[2]);
+  const to   = new Date(b[0], b[1] - 1, b[2] + 1);   /* fim do dia escolhido */
+  if(to <= from){
+    msg.textContent = 'La fecha «hasta» tiene que ser igual o posterior a «desde».';
+    return;
+  }
+  FIN.from = from; FIN.to = to; FIN.per = 'custom';
+  loadFin();
+}
+
+/* ---------- carga -----------------------------------------------------
+   Seis chamadas em paralelo. Se qualquer uma falhar, a tela mostra o
+   erro em vez de exibir números pela metade — meio painel financeiro é
+   pior que nenhum. */
+async function loadFin(){
+  if(FIN.loading) return;
+  FIN.loading = true;
+
+  const msg = document.getElementById('finMsg');
+  msg.textContent = '';
+
+  const r = finRange(), from = r[0], to = r[1];
+  const pf = from ? from.toISOString() : null;
+  const pt = to   ? to.toISOString()   : null;
+  let tz = 'America/Sao_Paulo';
+  try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; }catch(_){}
+
+  document.getElementById('finRange').textContent = finRangeLabel(from, to);
+  document.getElementById('finStats').innerHTML = '<p class="muted">Cargando indicadores...</p>';
+
+  try{
+    const res = await Promise.all([
+      sb.rpc('admin_fin_resumo',     { p_from: pf, p_to: pt }),
+      sb.rpc('admin_fin_serie',      { p_from: pf, p_to: pt, p_bucket: 'day', p_tz: tz }),
+      sb.rpc('admin_fin_produtos',   { p_from: pf, p_to: pt }),
+      sb.rpc('admin_fin_materias',   { p_from: pf, p_to: pt }),
+      sb.rpc('admin_fin_cupones',    { p_from: pf, p_to: pt }),
+      sb.rpc('admin_fin_pendientes', { p_from: pf, p_to: pt, p_limit: 200 })
+    ]);
+    const bad = res.filter(x => x && x.error)[0];
+    if(bad) throw bad.error;
+
+    finRenderStats(res[0].data || {});
+    FIN.points = finSeries(res[1].data || [], from, to);
+    finDrawChart();
+    finRenderProd(res[2].data || []);
+    finRenderMat (res[3].data || []);
+    finRenderCup (res[4].data || []);
+    finRenderPend(res[5].data || []);
+  }catch(e){
+    const t = (e && e.message) || '';
+    msg.textContent =
+      /could not find the function|does not exist|schema cache/i.test(t)
+        ? 'Las funciones del panel financiero todavía no están en la base. Corré la migration 20260913_06_admin_v2_financeiro.sql en Supabase.'
+        : (/no autorizado|42501|permission denied/i.test(t)
+            ? 'Tu cuenta no tiene permiso de administrador para ver el financiero.'
+            : 'Error: ' + t);
+    document.getElementById('finStats').innerHTML = '';
+    ['finChart','finProd','finMat','finCup','finPend'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.innerHTML = '';
+    });
+    document.getElementById('finHover').innerHTML = '';
+  }finally{
+    FIN.loading = false;
+  }
+}
+
+/* ---------- série -----------------------------------------------------
+   O servidor devolve só os dias QUE TIVERAM venda. Um gráfico feito
+   apenas com esses dias mentiria: dez vendas espalhadas em dois meses
+   apareceriam como dez dias seguidos de movimento. Então os buracos são
+   preenchidos com zero aqui. Acima de 92 pontos o gráfico passa a
+   agrupar por mês, senão as barras viram fio de cabelo. */
+function finSeries(rows, from, to){
+  let d0, d1;
+  if(from && to){
+    d0 = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+    d1 = new Date(to.getFullYear(),   to.getMonth(),   to.getDate() - 1);
+  }else if(rows.length){
+    d0 = finParseDay(rows[0].periodo);
+    d1 = finParseDay(rows[rows.length - 1].periodo);
+  }else{
+    FIN.bucket = 'day';
+    return [];
+  }
+  if(d1 < d0) d1 = d0;
+
+  const dias = Math.round((d1 - d0) / 864e5) + 1;
+  const out  = [];
+
+  if(dias <= 92){
+    FIN.bucket = 'day';
+    const map = new Map(rows.map(x => [x.periodo, x]));
+    for(let i = 0; i < dias; i++){
+      const d = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + i);
+      const k = finIsoDay(d), x = map.get(k);
+      out.push({ k: k,
+                 receita: Number((x && x.receita_cents) || 0),
+                 vendas:  Number((x && x.vendas) || 0) });
+    }
+  }else{
+    FIN.bucket = 'month';
+    const acc = new Map();
+    rows.forEach(x => {
+      const k = String(x.periodo).slice(0, 7);
+      const o = acc.get(k) || { receita:0, vendas:0 };
+      o.receita += Number(x.receita_cents || 0);
+      o.vendas  += Number(x.vendas || 0);
+      acc.set(k, o);
+    });
+    let cur = new Date(d0.getFullYear(), d0.getMonth(), 1);
+    const fim = new Date(d1.getFullYear(), d1.getMonth(), 1);
+    while(cur <= fim){
+      const k = cur.getFullYear() + '-' + String(cur.getMonth() + 1).padStart(2,'0');
+      const o = acc.get(k) || { receita:0, vendas:0 };
+      out.push({ k: k + '-01', receita:o.receita, vendas:o.vendas });
+      cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    }
+  }
+  return out;
+}
+
+/* ---------- gráfico ---------------------------------------------------
+   Barras em HTML puro. Nenhuma biblioteca externa: o painel funciona
+   com a rede ruim da faculdade e não depende de CDN nenhum. */
+function finSetMetric(m){
+  FIN.metric = m;
+  document.querySelectorAll('.fin-tb').forEach(b =>
+    b.classList.toggle('active', b.dataset.m === m));
+  finDrawChart();
+}
+
+function finDrawChart(){
+  const box = document.getElementById('finChart');
+  const hov = document.getElementById('finHover');
+  const pts = FIN.points;
+  if(!pts.length){
+    box.innerHTML = '<p class="muted" style="margin-top:10px;">Sin ventas pagadas en este período.</p>';
+    hov.innerHTML = '';
+    return;
+  }
+  const money = FIN.metric === 'receita';
+  const val   = p => money ? p.receita : p.vendas;
+  const max   = Math.max.apply(null, pts.map(val)) || 1;
+  const total = pts.reduce((a, p) => a + val(p), 0);
+  const unid = pts.length + ' ' + (FIN.bucket === 'month'
+                ? (pts.length === 1 ? 'mes' : 'meses')
+                : (pts.length === 1 ? 'día' : 'días'));
+  const resumo = () => 'Total del período: <b>' +
+    (money ? finMoney(total) : finNum(total) + (total === 1 ? ' venta' : ' ventas')) +
+    '</b> · ' + unid;
+
+  box.innerHTML =
+    '<div class="fin-scroll"><div class="fin-bars" id="finBars">' +
+    pts.map((p, i) => {
+      const v = val(p);
+      const h = v ? Math.max(Math.round(v / max * 100), 1) : 0;
+      const t = finBucketLabel(p.k) + ' · ' +
+                (money ? finMoney(v) : finNum(v) + (v === 1 ? ' venta' : ' ventas'));
+      return '<div class="fin-bar' + (v ? '' : ' zero') + '" data-i="' + i +
+             '" title="' + escapeHtml(t) + '"><i style="--h:' + h + '%"></i></div>';
+    }).join('') +
+    '</div></div>' +
+    '<div class="fin-axis"><span>' + escapeHtml(finBucketLabel(pts[0].k)) + '</span>' +
+    /* com tudo em zero, «máximo 1» seria um número inventado pelo divisor
+       de segurança lá em cima. Nesse caso a legenda diz o que houve. */
+    '<span>' + (total ? ('máximo ' + (money ? finMoney(max) : finNum(max)))
+                      : 'sin ventas pagadas en este período') + '</span>' +
+    '<span>' + escapeHtml(finBucketLabel(pts[pts.length - 1].k)) + '</span></div>';
+
+  hov.innerHTML = resumo();
+  const holder = document.getElementById('finBars');
+  holder.onmouseover = ev => {
+    const b = ev.target.closest('.fin-bar'); if(!b) return;
+    const p = pts[Number(b.dataset.i)]; if(!p) return;
+    const v = val(p);
+    hov.innerHTML = escapeHtml(finBucketLabel(p.k)) + ': <b>' +
+      (money ? finMoney(v) : finNum(v) + (v === 1 ? ' venta' : ' ventas')) + '</b>';
+  };
+  holder.onmouseleave = () => { hov.innerHTML = resumo(); };
+}
+
+/* ---------- tabelas --------------------------------------------------- */
+function finVazio(id, txt){
+  document.getElementById(id).innerHTML =
+    '<p class="muted" style="margin-top:12px;">' + txt + '</p>';
+}
+
+function finVarHtml(cur, prev, money){
+  if(prev === null || prev === undefined)
+    return '<span class="fin-var none">sin período anterior para comparar</span>';
+  cur = Number(cur || 0); prev = Number(prev || 0);
+  if(prev === 0)
+    return cur > 0 ? '<span class="fin-var up">nuevo en este período</span>'
+                   : '<span class="fin-var none">antes tampoco hubo</span>';
+  const pct = Math.round((cur - prev) / prev * 100);
+  const cls = pct > 0 ? 'up' : (pct < 0 ? 'down' : 'flat');
+  const sig = pct > 0 ? '▲ +' : (pct < 0 ? '▼ ' : '= ');
+  return '<span class="fin-var ' + cls + '">' + sig + pct + '% · antes ' +
+         (money ? finMoney(prev) : finNum(prev)) + '</span>';
+}
+
+function finRenderStats(r){
+  const st = (n, l, extra, cls) =>
+    '<div class="stat' + (cls ? ' ' + cls : '') + '"><div class="n">' + n + '</div>' +
+    '<div class="l">' + l + '</div>' + (extra || '') + '</div>';
+  document.getElementById('finStats').innerHTML =
+    st(finMoney(r.receita_cents),  'Ingresos',              finVarHtml(r.receita_cents, r.prev_receita_cents, true)) +
+    st(finNum(r.vendas),           'Ventas pagadas',        finVarHtml(r.vendas,        r.prev_vendas,        false)) +
+    st(finMoney(r.ticket_cents),   'Ticket promedio',       finVarHtml(r.ticket_cents,  r.prev_ticket_cents,  true)) +
+    st(finNum(r.clientes),         'Alumnos que compraron') +
+    st(finMoney(r.desconto_cents), 'Descuentos dados') +
+    st(finNum(r.pendentes_n),      'Pagos pendientes',
+       '<span class="fin-var none">' + finMoney(r.pendentes_cents) + ' sin confirmar</span>', 'fin-pend');
+}
+
+function finRenderProd(rows){
+  if(!rows.length) return finVazio('finProd', 'Sin ventas pagadas en este período.');
+  const max = Math.max.apply(null, rows.map(r => Number(r.receita_cents || 0))) || 1;
+  document.getElementById('finProd').innerHTML =
+    '<div class="fin-tbl"><div class="fin-th"><span>Producto</span><span>Tipo</span>' +
+    '<span class="num">Unidades</span><span class="num">Ingresos</span></div>' +
+    rows.map(r => {
+      const combo = r.plan_type === 'semestre';
+      const sub   = combo ? ('semestre ' + (r.semester || '?')) : (r.subject_slug || '');
+      const share = Math.round(Number(r.receita_cents || 0) / max * 100);
+      return '<div class="fin-tr">' +
+        '<div class="nm">' + escapeHtml(r.nome || '(sin nombre)') +
+          (sub ? '<small>' + escapeHtml(sub) + '</small>' : '') +
+          '<div class="fin-share"><i style="width:' + share + '%"></i></div></div>' +
+        '<div><span class="fin-tag' + (combo ? ' combo' : '') + '">' +
+          escapeHtml(FIN_PLAN[r.plan_type] || r.plan_type || '—') + '</span></div>' +
+        '<div class="num">' + finNum(r.unidades) + '</div>' +
+        '<div class="num"><b>' + finMoney(r.receita_cents) + '</b></div></div>';
+    }).join('') + '</div>';
+}
+
+function finRenderMat(rows){
+  if(!rows.length) return finVazio('finMat', 'Sin ventas pagadas en este período.');
+  const max = Math.max.apply(null, rows.map(r => Number(r.receita_cents || 0))) || 1;
+  document.getElementById('finMat').innerHTML =
+    '<div class="fin-tbl c3"><div class="fin-th"><span>Materia o combo</span>' +
+    '<span class="num">Unidades</span><span class="num">Ingresos</span></div>' +
+    rows.map(r => {
+      const share = Math.round(Number(r.receita_cents || 0) / max * 100);
+      return '<div class="fin-tr">' +
+        '<div class="nm">' + escapeHtml(r.rotulo || r.clave) +
+          (r.tipo === 'combo' ? ' <span class="fin-tag combo">combo</span>' : '') +
+          '<div class="fin-share"><i style="width:' + share + '%"></i></div></div>' +
+        '<div class="num">' + finNum(r.unidades) + '</div>' +
+        '<div class="num"><b>' + finMoney(r.receita_cents) + '</b></div></div>';
+    }).join('') + '</div>';
+}
+
+function finRenderCup(rows){
+  if(!rows.length) return finVazio('finCup', 'Ningún cupón usado en este período.');
+  document.getElementById('finCup').innerHTML =
+    '<div class="fin-tbl"><div class="fin-th"><span>Cupón</span><span>Descuento dado</span>' +
+    '<span class="num">Usos</span><span class="num">Ingresos</span></div>' +
+    rows.map(r =>
+      '<div class="fin-tr"><div class="nm">' + escapeHtml(r.code || '—') + '</div>' +
+      '<div><span class="fin-tag">−' + finMoney(r.desconto_cents) + '</span></div>' +
+      '<div class="num">' + finNum(r.usos) + '</div>' +
+      '<div class="num"><b>' + finMoney(r.receita_cents) + '</b></div></div>'
+    ).join('') + '</div>';
+}
+
+function finRenderPend(rows){
+  if(!rows.length) return finVazio('finPend', 'Ningún pago pendiente en este período.');
+  document.getElementById('finPend').innerHTML =
+    '<div class="ulist">' + rows.map(r => {
+      const cuando = new Date(r.created_at).toLocaleString('es');
+      return '<div class="fin-pen">' +
+        '<div class="who">' + escapeHtml(r.nome || r.email || 'Alumno') +
+          '<small>' + escapeHtml(r.email || 'sin e-mail') + ' · ' +
+            escapeHtml(r.telefone || 'sin teléfono') + '</small>' +
+          '<small>' + escapeHtml(r.produtos || 'producto no identificado') + '</small></div>' +
+        '<span class="fin-tag' + (r.ja_comprou ? '' : ' nuevo') + '">' +
+          (r.ja_comprou ? 'ya compró antes' : 'todavía no compró nada') + '</span>' +
+        '<div class="dates">' + escapeHtml(cuando) +
+          '<br><b>' + finMoney(r.amount_cents) + '</b></div></div>';
+    }).join('') + '</div>' +
+    '<p class="muted" style="margin-top:12px;">El teléfono es el del <b>registro</b> de la cuenta. ' +
+    '<b>No hay consentimiento de marketing registrado</b> en la base: nadie marcó en ningún momento ' +
+    'que quiere recibir mensajes. Tenelo en cuenta antes de escribir.</p>';
 }
 
 /* =====================================================================
