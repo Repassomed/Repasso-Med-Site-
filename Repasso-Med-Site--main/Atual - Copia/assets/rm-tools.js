@@ -788,13 +788,28 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
 
   var prog = { slug: '', blockId: '', label: '', ratio: 0, sujo: false, io: null, mexeu: false };
 
-  /* Só gravamos depois de o aluno realmente se mexer na matéria. Abrir a
-     aba e ficar no topo NÃO pode sobrescrever o ponto onde ele parou —
-     senão o card de retomada perderia o lugar antes de ser usado. */
+  /* Só gravamos depois de o aluno realmente PERCORRER a matéria: abrir a
+     aba e ficar no topo não pode sobrescrever o ponto onde ele parou,
+     senão o card de retomada perde o lugar antes de ser usado.
+
+     O sinal é o GESTO de percorrer, não a posição nem o clique. Fechar um
+     aviso, responder a uma questão ou revelar uma resposta são cliques que
+     mudam a altura da página e mexem no scrollY sem que o aluno tenha saído
+     do sítio — contá-los gravava o primeiro bloco por cima do ponto certo.
+     Por isso ouvimos a roda, o arrasto com o dedo e as teclas de navegação,
+     mais o clique no índice, que é uma ida deliberada a outro bloco. */
+  var TECLAS_ROLAR = { PageDown: 1, PageUp: 1, Home: 1, End: 1, ' ': 1,
+                       ArrowDown: 1, ArrowUp: 1, Spacebar: 1 };
   function marcarInteracao() { prog.mexeu = true; }
-  ['wheel', 'touchmove', 'keydown', 'pointerdown'].forEach(function (ev) {
-    window.addEventListener(ev, marcarInteracao, { passive: true });
-  });
+  window.addEventListener('wheel', marcarInteracao, { passive: true });
+  window.addEventListener('touchmove', marcarInteracao, { passive: true });
+  window.addEventListener('keydown', function (e) {
+    if (TECLAS_ROLAR[e.key]) marcarInteracao();
+  }, { passive: true });
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest && e.target.closest('.rm-menu a[data-target]');
+    if (a) marcarInteracao();
+  }, true);
 
   var salvarProgresso = debounce(async function () {
     if (!prog.sujo || !prog.slug || !prog.blockId) return;
@@ -922,31 +937,64 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     });
   }
 
-  /* Reaproveita a navegação do índice (app-core), que já sabe lidar com
-     `content-visibility`, com a altura estimada dos blocos e com imagem
-     que só carrega depois. Só se não houver link é que rolamos à mão,
-     convergindo até o bloco parar no lugar. */
-  async function irAoBloco(tab, blockId) {
-    var link = document.querySelector(
-      '#tab-' + tab + ' .rm-menu a[data-target="' + blockId + '"]');
-    if (link) { link.click(); return; }
+  /* `switchTab()` manda o topo com `behavior:'smooth'`. Se a matéria já
+     estava aberta, `openTab()` volta na hora e nós navegaríamos para o
+     bloco COM ESSA ANIMAÇÃO AINDA A CORRER — e a correção tardia do
+     app-core, que desiste quando parece que o aluno rolou sozinho,
+     interpreta a animação como isso mesmo e larga o bloco longe.
+     Por isso esperamos a rolagem estabilizar antes de navegar. */
+  function esperarRolagemAssentar(maxMs) {
+    return new Promise(function (res) {
+      var t0 = Date.now(), ult = -1, estaveis = 0;
+      (function tick() {
+        var y = Math.round(window.pageYOffset);
+        if (y === ult) estaveis++; else { estaveis = 0; ult = y; }
+        if (estaveis >= 3 || Date.now() - t0 > (maxMs || 2500)) return res();
+        requestAnimationFrame(function () { setTimeout(tick, 32); });
+      })();
+    });
+  }
 
-    var alvo = document.querySelector('#tab-' + tab + ' #' + CSS.escape(blockId));
-    if (!alvo) return;
-    var topo = 0;
+  function alturaFixaTopo() {
     try {
       var cs = getComputedStyle(document.documentElement);
-      var tb = parseFloat(cs.getPropertyValue('--topbar-h')) || 0;
-      var tt = parseFloat(cs.getPropertyValue('--tabs-h')) || 0;
-      topo = tb + tt + 16;
-    } catch (e) {}
-    for (var i = 0; i < 14; i++) {
+      return (parseFloat(cs.getPropertyValue('--topbar-h')) || 0) +
+             (parseFloat(cs.getPropertyValue('--tabs-h')) || 0) + 16;
+    } catch (e) { return 0; }
+  }
+
+  /* Convergência própria: mede e corrige até o bloco parar debaixo da
+     barra fixa. É o que garante o pouso mesmo com `content-visibility`
+     a mudar as alturas por baixo enquanto rolamos. */
+  async function convergir(alvo) {
+    var topo = alturaFixaTopo();
+    for (var i = 0; i < 16; i++) {
       var d = alvo.getBoundingClientRect().top - topo;
       if (Math.abs(d) <= 2) break;
       try { window.scrollTo({ top: Math.max(0, window.pageYOffset + d), behavior: 'instant' }); }
       catch (e) { window.scrollTo(0, Math.max(0, window.pageYOffset + d)); }
       await new Promise(function (r) { requestAnimationFrame(function () { setTimeout(r, 40); }); });
     }
+    return Math.abs(alvo.getBoundingClientRect().top - topo);
+  }
+
+  async function irAoBloco(tab, blockId) {
+    await esperarRolagemAssentar(2500);
+    var alvo = document.querySelector('#tab-' + tab + ' #' + CSS.escape(blockId));
+    if (!alvo) return;
+
+    /* Primeiro pelo índice: é a navegação do app-core, que já sabe soltar
+       o `content-visibility` do destino. Mas o resultado depende do estado
+       do menu, por isso NUNCA confiamos nele às cegas — conferimos e,
+       se não pousou, convergimos à mão. */
+    var link = document.querySelector(
+      '#tab-' + tab + ' .rm-menu a[data-target="' + blockId + '"]');
+    if (link) {
+      link.click();
+      await new Promise(function (r) { setTimeout(r, 700); });
+      if (Math.abs(alvo.getBoundingClientRect().top - alturaFixaTopo()) <= 300) return;
+    }
+    await convergir(alvo);
   }
 
   function esc(t) {
