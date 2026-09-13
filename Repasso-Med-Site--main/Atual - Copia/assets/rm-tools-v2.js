@@ -294,9 +294,21 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   .rm2-panel{ max-height:min(66vh, 460px); }
   .rm2-btn{ font-size:13px; padding:9px 11px; }
 }
+/* No telemóvel a barra fica só com ícones: o rótulo custava metade da
+   largura da coluna de leitura. O nome continua no title e no aria-label,
+   por isso nem o leitor de ecrã nem o rato perdem nada. */
+@media (max-width:560px){
+  .rm2-btn .tx{ display:none; }
+  .rm2-btn{ justify-content:center; padding:9px; gap:0; }
+  .rm2-panel{ padding:6px; gap:4px; }
+  .rm2-swatches{ justify-content:center; gap:5px; }
+  .rm2-swatches button{ width:24px; height:24px; border-radius:8px; }
+  .rm2-swatches button[aria-checked="true"]::after{ font-size:11px; line-height:20px; }
+  .rm2-widths button{ height:26px; }
+  .rm2-sub{ padding:2px 0 5px; }
+}
 @media (max-width:430px){
   .rm2-fab{ width:42px; height:42px; border-radius:12px; }
-  .rm2-panel{ padding:6px; }
 }
 @media (prefers-reduced-motion: reduce){
   .rm2-fab{ transition:none; }
@@ -979,7 +991,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     box.innerHTML =
       '<div class="rm2-panel" id="rm2-panel" role="group" aria-label="Herramientas de estudio">' +
         '<button type="button" class="rm2-btn" data-t="highlight" aria-pressed="false" ' +
-          'title="Marcador de texto" aria-label="Marcador de texto">' + ico(I.mark) + 'Marcador</button>' +
+          'title="Marcador de texto" aria-label="Marcador de texto">' + ico(I.mark) + '<span class="tx">Marcador</span></button>' +
         '<div class="rm2-sub" data-sub="highlight">' +
           '<div class="rm2-swatches" role="radiogroup" aria-label="Color del marcador">' +
             HL_CORES.map(function (c) {
@@ -990,7 +1002,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         '</div>' +
 
         '<button type="button" class="rm2-btn" data-t="pen" aria-pressed="false" ' +
-          'title="Lápiz" aria-label="Lápiz para escribir a mano">' + ico(I.pen) + 'Lápiz</button>' +
+          'title="Lápiz" aria-label="Lápiz para escribir a mano">' + ico(I.pen) + '<span class="tx">Lápiz</span></button>' +
         '<div class="rm2-sub" data-sub="pen">' +
           '<div class="rm2-swatches" role="radiogroup" aria-label="Color del lápiz">' +
             '<button type="button" class="rm2-sw-black" data-pc="black" role="radio" aria-checked="false" title="Negro" aria-label="Lápiz negro"></button>' +
@@ -1005,12 +1017,12 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         '</div>' +
 
         '<button type="button" class="rm2-btn" data-t="eraser" aria-pressed="false" ' +
-          'title="Goma de borrar" aria-label="Goma: borrar marcas y trazos">' + ico(I.erase) + 'Goma</button>' +
+          'title="Goma de borrar" aria-label="Goma: borrar marcas y trazos">' + ico(I.erase) + '<span class="tx">Goma</span></button>' +
         '<div class="rm2-sep"></div>' +
         '<button type="button" class="rm2-btn" data-a="undo" title="Deshacer" aria-label="Deshacer la última acción">' +
-          ico(I.undo) + 'Deshacer</button>' +
+          ico(I.undo) + '<span class="tx">Deshacer</span></button>' +
         '<button type="button" class="rm2-btn" data-a="notes" title="Mis apuntes" aria-label="Abrir mis apuntes">' +
-          ico(I.note) + 'Mis apuntes</button>' +
+          ico(I.note) + '<span class="tx">Mis apuntes</span></button>' +
       '</div>' +
       '<button type="button" class="rm2-fab" id="rm2-fab" aria-expanded="false" aria-controls="rm2-panel" ' +
         'title="Herramientas de estudio" aria-label="Herramientas de estudio">' + ico(I.tools) + '</button>';

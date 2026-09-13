@@ -1391,7 +1391,11 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     carregarHighlights: carregarHighlights,
     medirBarra: medirBarra,
     fecharLB: fecharLB,
-    lbAberto: function () { return !!(lb && lb.classList.contains('rm-lb-open')); },
+    /* a classe de aberto é 'on' (ver abrirLB/fecharLB); aceita-se também
+       'rm-lb-open' para o caso de o nome voltar a mudar */
+    lbAberto: function () {
+      return !!(lb && (lb.classList.contains('on') || lb.classList.contains('rm-lb-open')));
+    },
     onAbaPronta: function (fn) { if (typeof fn === 'function') ganchosAba.push(fn); }
   };
 })();
