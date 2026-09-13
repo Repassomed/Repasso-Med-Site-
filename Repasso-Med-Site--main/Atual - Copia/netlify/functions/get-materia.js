@@ -67,6 +67,7 @@ const FILES = {
   'ortopedia':                    'ortopedia.html',
   'oftalmologia':                 'oftalmologia.html',
   'neurologia':                   'neurologia.html',
+  'anestesiologia':               'anestesiologia.html',
 };
 
 /* ---------------------------------------------------------------------
