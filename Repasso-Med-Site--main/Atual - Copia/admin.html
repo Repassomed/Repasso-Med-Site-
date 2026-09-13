@@ -166,6 +166,80 @@
   .sug .msg{font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
   .sug .acts{margin-top:9px;display:flex;gap:8px;flex-wrap:wrap;}
   .sug .acts button{font-size:12px;padding:5px 10px;}
+  /* ===== ADMIN V2 · ACCESOS / CRM (etapa C) ======================== */
+  .acc-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;}
+  .acc-bar .grow{flex:1 1 220px;min-width:0;}
+  .acc-fil{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .acc-fb{background:var(--panel2);color:var(--ink-soft);border:1px solid var(--line);
+    font-size:12.5px;font-weight:700;padding:6px 11px;border-radius:8px;}
+  .acc-fb:hover:not(.active){color:var(--ink);border-color:var(--ink-soft);}
+  .acc-fb.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  /* telefone: três estados, e nenhum deles diz «tem WhatsApp» */
+  .tel{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;
+    font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .tel .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;}
+  .tel.ok   .dot{background:var(--green);}
+  .tel.dud  .dot{background:var(--gold);}
+  .tel.none .dot{background:var(--line);}
+  .tel.none{color:var(--ink-soft);font-style:italic;}
+  .wa{display:inline-flex;align-items:center;gap:5px;text-decoration:none;
+    padding:4px 9px;border-radius:7px;font-size:11.5px;font-weight:700;
+    border:1px solid #bfe3cb;background:#eef8f1;color:#166a41;white-space:nowrap;}
+  .wa:hover{background:#e0f2e7;border-color:#8fcaa5;}
+  .wa.dud{border-color:#ecdcae;background:#fffdf4;color:#8a6a15;}
+  /* linha de aluno */
+  .acc-l{display:grid;grid-template-columns:22px 1fr 190px 150px 120px;gap:12px;
+    align-items:center;padding:11px 13px;background:var(--panel2);
+    border:1px solid var(--line);border-radius:10px;}
+  .acc-l.sel{border-color:var(--accent-lt);background:rgba(19,49,79,.06);}
+  .acc-l .pick{width:19px;height:19px;margin:0;cursor:pointer;accent-color:var(--accent-lt);}
+  .acc-l .who{min-width:0;cursor:pointer;}
+  .acc-l .who .nm{font-weight:600;font-size:13.5px;overflow-wrap:anywhere;}
+  .acc-l .who .em{display:block;font-size:11.5px;color:var(--ink-soft);overflow-wrap:anywhere;}
+  .acc-l .when{font-size:11.5px;color:var(--ink-soft);line-height:1.45;}
+  .acc-l .when b{color:var(--ink);}
+  .acc-l .ent{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;}
+  @media(max-width:900px){
+    .acc-l{grid-template-columns:22px 1fr;}
+    .acc-l .tels,.acc-l .when,.acc-l .ent{grid-column:2;justify-content:flex-start;}
+  }
+  .acc-st{display:inline-block;padding:2px 8px;border-radius:999px;
+    font-size:10.5px;font-weight:800;letter-spacing:.03em;white-space:nowrap;}
+  .acc-st.hoy{background:#e6f5ec;color:#1d7a4f;}
+  .acc-st.semana{background:#eef3fb;color:#2d4b73;}
+  .acc-st.mes{background:#f2f2f4;color:#5a6170;}
+  .acc-st.inactivo{background:#fbf3e0;color:#8a6a15;}
+  .acc-st.nunca{background:#fbecea;color:#c0392b;}
+  /* gaveta do CRM: entra pela direita, não escurece a tela */
+  .crm{position:fixed;top:0;right:0;bottom:0;width:min(430px,100vw);z-index:60;
+    background:var(--panel);border-left:1px solid var(--line);
+    box-shadow:-14px 0 40px rgba(19,49,79,.16);
+    display:flex;flex-direction:column;transform:translateX(102%);
+    transition:transform .22s ease;}
+  .crm.on{transform:translateX(0);}
+  .crm-head{display:flex;align-items:flex-start;gap:10px;padding:16px 18px;
+    border-bottom:1px solid var(--line);}
+  .crm-head .t{flex:1;min-width:0;font-weight:800;font-size:15px;overflow-wrap:anywhere;}
+  .crm-head .t small{display:block;font-weight:400;font-size:11.5px;color:var(--ink-soft);}
+  .crm-x{background:none;border:none;color:var(--ink-soft);font-size:17px;padding:0 4px;cursor:pointer;}
+  .crm-x:hover{color:var(--ink);}
+  .crm-body{flex:1;overflow-y:auto;padding:16px 18px 26px;}
+  .crm-sec{margin-bottom:18px;}
+  .crm-sec > h4{margin:0 0 8px;font-size:11px;color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+  .crm-kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .crm-kv div{background:var(--panel2);border:1px solid var(--line);
+    border-radius:9px;padding:9px 11px;}
+  .crm-kv b{display:block;font-size:14px;font-variant-numeric:tabular-nums;}
+  .crm-kv small{display:block;font-size:10.5px;color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+  .crm-li{display:flex;align-items:center;gap:9px;padding:8px 11px;margin-bottom:6px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:9px;font-size:12.5px;}
+  .crm-li .n{flex:1;min-width:0;overflow-wrap:anywhere;}
+  .crm-li .n small{display:block;color:var(--ink-soft);font-size:11px;}
+  .crm-li.venc{opacity:.62;}
+  @media(max-width:520px){ .crm-kv{grid-template-columns:1fr;} }
+  @media (prefers-reduced-motion: reduce){ .crm{transition:none;} }
   /* conversa dentro da sugestão (ADMIN V2 · etapa B) */
   .sug .thr{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);}
   .sug .thr.hidden{display:none;}
@@ -359,6 +433,7 @@
     <button class="adm-tab" id="navSubjects" onclick="showView('subjects')">Acceso por materia</button>
     <button class="adm-tab" id="navSales" onclick="showView('sales')">Ventas</button>
     <button class="adm-tab" id="navFin" onclick="showView('fin')">Financiero</button>
+    <button class="adm-tab" id="navAcc" onclick="showView('acc')">Accesos</button>
     <button class="adm-tab" id="navAds" onclick="showView('ads')">Anuncios</button>
     <button class="adm-tab" id="navAportes" onclick="showView('aportes')">Aportes<span id="navAportesBadge" class="tabbadge hidden"></span></button>
   </div>
@@ -654,6 +729,87 @@
     </div>
   </div>
 
+  <!-- ===================================================================
+       ACCESOS / CRM (ADMIN V2 · ETAPA C)
+       Solo LECTURA. Ninguna de estas pantallas escribe en la base.
+       =================================================================== -->
+  <div id="accView" class="hidden">
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <label style="margin:0;">Quién está entrando</label>
+        <button class="btn-ghost" onclick="loadAcc()">Actualizar</button>
+      </div>
+      <div id="accStats" class="dash-grid"><p class="muted">Cargando...</p></div>
+      <div class="fin-warn" id="accFuente"></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <label style="margin:0;">Alumnos</label>
+        <span class="muted" id="accInfo"></span>
+      </div>
+
+      <div class="acc-bar">
+        <div class="grow"><input id="accQ" placeholder="Nombre, e-mail o teléfono..."
+          onkeydown="if(event.key==='Enter')accBuscar()"></div>
+        <button class="btn-primary" onclick="accBuscar()">Buscar</button>
+        <button class="btn-ghost" onclick="accLimpiar()">Limpiar</button>
+      </div>
+
+      <div class="acc-fil" id="accFil">
+        <button class="acc-fb active" onclick="accSetFiltro('todos')"      data-f="todos">Todos</button>
+        <button class="acc-fb" onclick="accSetFiltro('hoy')"              data-f="hoy">Hoy</button>
+        <button class="acc-fb" onclick="accSetFiltro('7d')"               data-f="7d">7 días</button>
+        <button class="acc-fb" onclick="accSetFiltro('30d')"              data-f="30d">30 días</button>
+        <button class="acc-fb" onclick="accSetFiltro('inactivos')"        data-f="inactivos">Inactivos +30</button>
+        <button class="acc-fb" onclick="accSetFiltro('nunca')"            data-f="nunca">Nunca dieron señal</button>
+        <button class="acc-fb" onclick="accSetFiltro('con_pago')"         data-f="con_pago">Ya compraron</button>
+        <button class="acc-fb" onclick="accSetFiltro('sin_pago')"         data-f="sin_pago">Nunca compraron</button>
+        <button class="acc-fb" onclick="accSetFiltro('pendientes')"       data-f="pendientes">Pago pendiente</button>
+        <button class="acc-fb" onclick="accSetFiltro('vigentes')"         data-f="vigentes">Con materias vigentes</button>
+        <button class="acc-fb" onclick="accSetFiltro('vencidos')"         data-f="vencidos">Solo materias vencidas</button>
+        <button class="acc-fb" onclick="accSetFiltro('con_tel')"          data-f="con_tel">Con teléfono</button>
+        <button class="acc-fb" onclick="accSetFiltro('sin_tel')"          data-f="sin_tel">Sin teléfono</button>
+      </div>
+
+      <div class="selbar">
+        <label><input type="checkbox" id="accAll" onchange="accSelPagina(this.checked)">
+          Seleccionar los de esta página</label>
+        <button class="btn-ghost" id="accSelTodo" onclick="accSelFiltro()" style="font-size:12px;padding:5px 10px;"></button>
+      </div>
+
+      <div id="accBulk" class="bulk hidden">
+        <span class="n"><b id="accCount">0</b> seleccionado(s)</span>
+        <button class="btn-primary" onclick="accExportWhatsApp()">Exportar para WhatsApp</button>
+        <button class="btn-ghost"   onclick="accExportPlanilla()">Exportar planilla completa</button>
+        <button class="btn-ghost"   onclick="accLimparSel()">Limpiar selección</button>
+        <span class="muted" id="accBulkMsg" style="margin:0;"></span>
+      </div>
+
+      <div class="fin-warn">
+        <b>Consentimiento de marketing: no registrado.</b> No existe en la base ninguna columna de
+        opt-in — nadie marcó nunca que quiere recibir mensajes. El teléfono es el que la persona dio
+        para <b>crear la cuenta</b>, no una autorización para campañas. Además, un número bien
+        formado <b>no prueba que exista una cuenta de WhatsApp</b>: el botón solo abre tu WhatsApp con
+        ese número, y quien decide si escribe y qué escribe sos vos.
+      </div>
+
+      <p id="accMsg" class="err" style="margin:10px 0 0;"></p>
+      <div id="accList" class="ulist"></div>
+      <div id="accPag" style="display:flex;gap:8px;align-items:center;margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <!-- ficha lateral do CRM: entra pela direita, não escurece a tela -->
+  <div class="crm" id="crm" role="dialog" aria-label="Ficha del alumno" aria-hidden="true">
+    <div class="crm-head">
+      <div class="t" id="crmTitulo">Alumno</div>
+      <button class="crm-x" onclick="crmCerrar()" aria-label="Cerrar ficha">✕</button>
+    </div>
+    <div class="crm-body" id="crmBody"></div>
+  </div>
+
   <!-- ANÚNCIOS / FLYERS (Fase 9) -->
   <div id="adsView" class="hidden">
     <div class="card">
@@ -887,6 +1043,542 @@ function escapeHtml(s){
    FASE 2 — DASHBOARD DE MONITORAMENTO
    Uma única RPC (admin_dashboard_stats) traz todos os indicadores.
    ===================================================================== */
+
+/* =====================================================================
+   ADMIN V2 · ETAPA C — ACCESOS / CRM / WHATSAPP
+
+   TRÊS COISAS QUE ESTA TELA SE RECUSA A DIZER
+   -----------------------------------------------------------------
+   1. Não chama nada de «último acesso». O banco tem três sinais
+      parecidos e diferentes: `access_log` conta LOGIN, `last_seen` é o
+      batimento da sessão viva, e `user_study_progress.updated_at` é
+      progresso de ROLAGEM. A tela mostra os dois primeiros com o nome
+      certo e não usa o terceiro para inferir presença.
+   2. Não diz que um número «tem WhatsApp». Diz que ele está bem
+      formado, mal formado ou ausente. Se existe conta do outro lado,
+      isso só se descobre escrevendo — e não há jeito oficial de
+      consultar isso sem mandar mensagem.
+   3. Não trata telefone de cadastro como autorização de marketing.
+      Não existe coluna de consentimento no banco, e a tela repete isso
+      ao lado da lista e dentro de cada arquivo exportado.
+
+   O QUE ESTA TELA NÃO FAZ, DE PROPÓSITO
+   -----------------------------------------------------------------
+   Não integra a WhatsApp Cloud API, não dispara mensagem nenhuma, não
+   automatiza navegador, não é bot e não verifica existência de conta.
+   O botão de WhatsApp é UM LINK `wa.me` — abre o WhatsApp da pessoa que
+   está no painel, com o número preenchido e o texto VAZIO. Quem escreve
+   e quem aperta enviar é gente.
+   ===================================================================== */
+
+let ACC = {
+  q: '', filtro: 'todos', pagina: 0, tam: 50,
+  linhas: [], total: 0, sel: {}, cargando: false
+};
+
+const ACC_FILTRO_NOME = {
+  todos:'todos', hoy:'activos-hoy', '7d':'activos-7-dias', '30d':'activos-30-dias',
+  inactivos:'inactivos-mas-30-dias', nunca:'nunca-dieron-senal',
+  con_pago:'ya-compraron', sin_pago:'nunca-compraron', pendientes:'pagos-pendientes',
+  vigentes:'con-materias-vigentes', vencidos:'solo-materias-vencidas',
+  con_tel:'con-telefono', sin_tel:'sin-telefono'
+};
+
+/* ---------------------------------------------------------------------
+   O UTILITÁRIO ÚNICO DE TELEFONE
+   Existe UMA função para classificar número no painel inteiro — esta.
+   A aba Financiero usa a mesma. Duas regras em dois lugares acabariam
+   discordando no primeiro número esquisito, e aí o painel mentiria em
+   um dos dois.
+
+   TRÊS ESTADOS, e o que cada um quer dizer de verdade:
+     ausente     não há número guardado
+     válido      está BEM FORMADO para o país que o prefixo indica
+     sospechoso  não fecha com nenhum formato conhecido
+
+   «Válido» NÃO quer dizer «existe», NÃO quer dizer «é de quem diz ser»
+   e principalmente NÃO quer dizer «tem WhatsApp».
+
+   Os formatos vieram da conferência dos 159 números que já existem:
+   Brasil (+55) aparece com 13 dígitos, Paraguai (+595) com 12, e 12
+   números não fecham com nada — são justamente os que caem em
+   «sospechoso».
+   --------------------------------------------------------------------- */
+function rmTel(bruto){
+  const cru = String(bruto == null ? '' : bruto).trim();
+  if(!cru) return { estado:'ausente', pais:'', motivo:'sin teléfono registrado',
+                    e164:'', digitos:'', bonito:'—', wa:'' };
+
+  const d = cru.replace(/\D+/g, '');
+  const mais = /^\+/.test(cru);
+
+  const feito = (pais, motivo) => ({
+    estado:'valido', pais: pais, motivo: motivo || '',
+    e164: '+' + d, digitos: d, bonito: rmTelBonito(d), wa: 'https://wa.me/' + d
+  });
+  const duvida = motivo => ({
+    estado:'sospechoso', pais:'', motivo: motivo,
+    e164: d ? '+' + d : '', digitos: d, bonito: d ? '+' + d : cru,
+    wa: d ? 'https://wa.me/' + d : ''
+  });
+
+  if(!d)             return duvida('no tiene ningún dígito');
+  if(d.length < 8)   return duvida('demasiado corto: ' + d.length + ' dígitos');
+  if(d.length > 15)  return duvida('más largo que el máximo internacional de 15 dígitos');
+
+  /* Brasil: 55 + DDD(2) + 8 ou 9 dígitos */
+  if(d.indexOf('55') === 0){
+    if(d.length === 12 || d.length === 13) return feito('Brasil');
+    return duvida('con el 55 se esperan 12 o 13 dígitos, hay ' + d.length);
+  }
+  /* Paraguay: 595 + 8 ou 9 dígitos */
+  if(d.indexOf('595') === 0){
+    if(d.length === 11 || d.length === 12) return feito('Paraguay');
+    return duvida('con el 595 se esperan 11 o 12 dígitos, hay ' + d.length);
+  }
+  /* Sem «+» e sem prefixo conhecido, o mais provável é faltar o código
+     do país — e mandar assim para o WhatsApp cairia em outro lugar. */
+  if(!mais) return duvida('sin código de país');
+  return feito('otro país', 'código de país no reconocido; el largo es plausible');
+}
+
+function rmTelBonito(d){
+  if(d.indexOf('55') === 0 && d.length === 13)
+    return '+55 (' + d.slice(2,4) + ') ' + d.slice(4,9) + '-' + d.slice(9);
+  if(d.indexOf('55') === 0 && d.length === 12)
+    return '+55 (' + d.slice(2,4) + ') ' + d.slice(4,8) + '-' + d.slice(8);
+  if(d.indexOf('595') === 0)
+    return '+595 ' + d.slice(3,6) + ' ' + d.slice(6,9) + ' ' + d.slice(9);
+  return '+' + d;
+}
+
+/* Chip de telefone + botão. Usado na lista de acessos, na ficha do CRM
+   e nos pagos pendientes do Financiero — sempre este, nunca outro. */
+function telChip(bruto, comBotao){
+  const t = rmTel(bruto);
+  const cls = t.estado === 'valido' ? 'ok' : (t.estado === 'sospechoso' ? 'dud' : 'none');
+  const rot = t.estado === 'ausente' ? 'sin teléfono' : t.bonito;
+  let h = '<span class="tel ' + cls + '" title="' +
+    escapeHtml(t.estado === 'valido'
+      ? ('bien formado · ' + t.pais + ' — número válido no prueba que exista WhatsApp')
+      : t.motivo) + '"><i class="dot"></i>' + escapeHtml(rot) + '</span>';
+  if(comBotao && t.wa){
+    /* número duvidoso também ganha botão — às vezes é só um dígito a
+       mais e a pessoa resolve na hora. Mas o rótulo avisa ANTES do
+       clique, porque abrir uma conversa com um número mal formado é
+       escrever para outra pessoa, não para esta. */
+    const duvida = t.estado === 'sospechoso';
+    h += ' <a class="wa' + (duvida ? ' dud' : '') + '" target="_blank" ' +
+         'rel="noopener noreferrer" href="' + escapeHtml(t.wa) + '" ' +
+         'title="' + escapeHtml(duvida
+            ? 'Número mal formado: ' + t.motivo + '. Abrir esto puede caer en otra persona.'
+            : 'Abre tu WhatsApp con este número, sin texto escrito. No manda nada solo, y no prueba que exista la cuenta.') +
+         '">' + (duvida ? 'WhatsApp (dudoso)' : 'WhatsApp') + '</a>';
+  }
+  return h;
+}
+
+/* ---------------------------------------------------------------------
+   CARGA
+   --------------------------------------------------------------------- */
+function accTz(){
+  try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo'; }
+  catch(_){ return 'America/Sao_Paulo'; }
+}
+
+async function loadAcc(){
+  if(ACC.cargando) return;
+  ACC.cargando = true;
+  const msg = document.getElementById('accMsg');
+  msg.textContent = '';
+  document.getElementById('accStats').innerHTML = '<p class="muted">Cargando...</p>';
+
+  try{
+    const tz = accTz();
+    const res = await Promise.all([
+      sb.rpc('admin_acc_resumo', { p_tz: tz }),
+      sb.rpc('admin_acc_usuarios', {
+        p_busca: ACC.q || null, p_estado: ACC.filtro,
+        p_limit: ACC.tam, p_offset: ACC.pagina * ACC.tam, p_tz: tz
+      })
+    ]);
+    const bad = res.filter(x => x && x.error)[0];
+    if(bad) throw bad.error;
+
+    accRenderStats(res[0].data || {});
+    ACC.linhas = res[1].data || [];
+    ACC.total  = ACC.linhas.length ? Number(ACC.linhas[0].total_filtrado || 0) : 0;
+    accRenderLista();
+  }catch(e){
+    const t = (e && e.message) || '';
+    msg.textContent =
+      /could not find the function|does not exist|schema cache/i.test(t)
+        ? 'Falta correr la migration 20260913_08_admin_v2_acessos.sql en Supabase.'
+        : (/no autorizado|42501|permission denied/i.test(t)
+            ? 'Tu cuenta no tiene permiso de administrador.'
+            : 'Error: ' + t);
+    document.getElementById('accStats').innerHTML = '';
+    document.getElementById('accList').innerHTML = '';
+    document.getElementById('accPag').innerHTML = '';
+    document.getElementById('accInfo').textContent = '';
+  }finally{
+    ACC.cargando = false;
+  }
+}
+
+function accRenderStats(r){
+  const st = (n, l, extra, cls) =>
+    '<div class="stat' + (cls ? ' ' + cls : '') + '"><div class="n">' + n + '</div>' +
+    '<div class="l">' + l + '</div>' + (extra || '') + '</div>';
+  document.getElementById('accStats').innerHTML =
+    st(finNum(r.hoy),          'Activos hoy', '', 'live') +
+    st(finNum(r.semana),       'Últimos 7 días') +
+    st(finNum(r.mes),          'Últimos 30 días') +
+    st(finNum(r.inactivos_30), 'Inactivos +30 días') +
+    st(finNum(r.nunca),        'Nunca dieron señal') +
+    st(finNum(r.total),        'Cuentas en total',
+       '<span class="fin-var none">' + finNum(r.sin_telefono) + ' sin teléfono</span>');
+
+  document.getElementById('accFuente').innerHTML =
+    '<b>De dónde sale «visto por última vez».</b> Del latido de la sesión ' +
+    '(<code>user_sessions.last_seen</code>) y del último ingreso registrado ' +
+    '(<code>access_log</code>), lo que sea más reciente. <b>No</b> se usa el avance de lectura ' +
+    'dentro de la materia: eso dice que alguien scrolleó una página, no que entró al sitio, y ' +
+    'llamarlo «último acceso» sería inventar. Quien nunca dio ninguna de las dos señales aparece ' +
+    'como <b>«nunca»</b> — hoy son ' + finNum(r.nunca) + ' de ' + finNum(r.total) + ' cuentas, ' +
+    'la mayoría creadas sin haber llegado a entrar.';
+}
+
+function accCuando(iso){
+  if(!iso) return '<i>nunca</i>';
+  const d = new Date(iso), ahora = new Date();
+  const h = Math.round((ahora - d) / 36e5);
+  if(h < 1)  return '<b>hace minutos</b>';
+  if(h < 24) return '<b>hace ' + h + ' h</b>';
+  const dias = Math.round(h / 24);
+  if(dias < 30) return 'hace ' + dias + ' d';
+  return d.toLocaleDateString('es');
+}
+
+const ACC_EST_ROT = { hoy:'hoy', semana:'esta semana', mes:'este mes',
+                      inactivo:'inactivo +30 d', nunca:'nunca entró' };
+
+function accRenderLista(){
+  const box = document.getElementById('accList');
+  const info = document.getElementById('accInfo');
+  const selTodo = document.getElementById('accSelTodo');
+
+  if(!ACC.linhas.length){
+    box.innerHTML = '<p class="muted">Ningún alumno con este filtro.</p>';
+    info.textContent = '';
+    document.getElementById('accPag').innerHTML = '';
+    selTodo.textContent = '';
+    accPintarBulk();
+    return;
+  }
+  const desde = ACC.pagina * ACC.tam + 1;
+  const hasta = Math.min(desde + ACC.linhas.length - 1, ACC.total);
+  info.innerHTML = desde + '–' + hasta + ' de <b>' + finNum(ACC.total) + '</b>';
+  selTodo.textContent = 'Seleccionar los ' + finNum(ACC.total) + ' del filtro';
+  selTodo.classList.toggle('hidden', ACC.total <= ACC.linhas.length);
+
+  box.innerHTML = ACC.linhas.map(u => {
+    const sel = !!ACC.sel[u.user_id];
+    const ent = [];
+    if(u.materias_vigentes) ent.push('<span class="utag">' + u.materias_vigentes + ' vigente(s)</span>');
+    if(u.materias_vencidas) ent.push('<span class="utag exp">' + u.materias_vencidas + ' vencida(s)</span>');
+    if(!ent.length)         ent.push('<span class="utag none">sin materias</span>');
+    if(u.pendientes)        ent.push('<span class="apbadge warn">' + u.pendientes + ' pendiente(s)</span>');
+
+    return '<div class="acc-l' + (sel ? ' sel' : '') + '" id="accl-' + u.user_id + '">' +
+      '<input type="checkbox" class="pick"' + (sel ? ' checked' : '') +
+        ' onchange="accToggle(\'' + u.user_id + '\', this.checked)"' +
+        ' aria-label="Seleccionar alumno">' +
+      '<div class="who" onclick="crmAbrir(\'' + u.user_id + '\')">' +
+        '<span class="nm">' + escapeHtml(u.nombre || '(sin nombre)') + ' ' +
+          '<span class="acc-st ' + u.estado + '">' + (ACC_EST_ROT[u.estado] || u.estado) + '</span></span>' +
+        '<span class="em">' + escapeHtml(u.email || 'sin e-mail') + '</span></div>' +
+      '<div class="tels">' + telChip(u.telefone, true) + '</div>' +
+      '<div class="when">visto ' + accCuando(u.visto) +
+        '<br><span style="opacity:.8;">' + finNum(u.logins) +
+        (Number(u.logins) === 1 ? ' ingreso' : ' ingresos') + '</span></div>' +
+      '<div class="ent">' + ent.join('') + '</div>' +
+    '</div>';
+  }).join('');
+
+  const paginas = Math.ceil(ACC.total / ACC.tam);
+  document.getElementById('accPag').innerHTML = paginas > 1
+    ? '<button class="btn-ghost" onclick="accPag(-1)"' + (ACC.pagina === 0 ? ' disabled' : '') + '>← Anterior</button>' +
+      '<span class="muted">Página ' + (ACC.pagina + 1) + ' de ' + paginas + '</span>' +
+      '<button class="btn-ghost" onclick="accPag(1)"' + (ACC.pagina >= paginas - 1 ? ' disabled' : '') + '>Siguiente →</button>'
+    : '';
+
+  document.getElementById('accAll').checked =
+    ACC.linhas.length > 0 && ACC.linhas.every(u => ACC.sel[u.user_id]);
+  accPintarBulk();
+}
+
+function accPag(d){
+  ACC.pagina = Math.max(0, ACC.pagina + d);
+  loadAcc();
+}
+function accBuscar(){
+  ACC.q = (document.getElementById('accQ').value || '').trim();
+  ACC.pagina = 0;
+  loadAcc();
+}
+function accLimpiar(){
+  document.getElementById('accQ').value = '';
+  ACC.q = ''; ACC.pagina = 0;
+  loadAcc();
+}
+function accSetFiltro(f){
+  ACC.filtro = f; ACC.pagina = 0;
+  document.querySelectorAll('#accFil .acc-fb').forEach(b =>
+    b.classList.toggle('active', b.dataset.f === f));
+  loadAcc();
+}
+
+/* ---------------------------------------------------------------------
+   SELEÇÃO
+   --------------------------------------------------------------------- */
+function accToggle(id, on){
+  const u = ACC.linhas.filter(x => x.user_id === id)[0];
+  if(on && u) ACC.sel[id] = u; else delete ACC.sel[id];
+  const row = document.getElementById('accl-' + id);
+  if(row) row.classList.toggle('sel', !!on);
+  accPintarBulk();
+}
+function accSelPagina(on){
+  ACC.linhas.forEach(u => { if(on) ACC.sel[u.user_id] = u; else delete ACC.sel[u.user_id]; });
+  accRenderLista();
+}
+async function accSelFiltro(){
+  const b = document.getElementById('accBulkMsg');
+  b.textContent = 'Buscando los ' + finNum(ACC.total) + '...';
+  try{
+    const { data, error } = await sb.rpc('admin_acc_usuarios', {
+      p_busca: ACC.q || null, p_estado: ACC.filtro,
+      p_limit: 5000, p_offset: 0, p_tz: accTz()
+    });
+    if(error) throw error;
+    (data || []).forEach(u => { ACC.sel[u.user_id] = u; });
+    b.textContent = '';
+    accRenderLista();
+  }catch(e){
+    b.textContent = 'No se pudo: ' + ((e && e.message) || '');
+  }
+}
+function accLimparSel(){ ACC.sel = {}; accRenderLista(); }
+
+function accPintarBulk(){
+  const n = Object.keys(ACC.sel).length;
+  document.getElementById('accBulk').classList.toggle('hidden', n === 0);
+  document.getElementById('accCount').textContent = n;
+}
+
+/* ---------------------------------------------------------------------
+   EXPORTAÇÃO
+   O arquivo do WhatsApp sai no formato que a agenda importa — `Name` e
+   `Phone`, dois campos e nada mais. Só entram números BEM FORMADOS: um
+   número torto importado vira contato torto, e depois vira mensagem
+   para o número errado. Quantos ficaram de fora aparece na tela.
+   --------------------------------------------------------------------- */
+function csvCampo(v, crudo){
+  let s = String(v == null ? '' : v);
+  /* Um campo que começa com = + - @ vira FÓRMULA quando o arquivo é
+     aberto no Excel ou no Sheets. O nome e o e-mail são texto que o
+     próprio aluno escolheu, então alguém poderia cadastrar-se como
+     `=algo(...)` e o arquivo executaria isso na máquina de quem abrir.
+     O apóstrofo na frente é a marca padrão de «isto é texto».
+
+     O TELEFONE é a exceção e passa CRU: ele é gerado pelo nosso
+     normalizador, não pelo aluno, e precisa sair como +E164 para a
+     agenda do celular importar o contato certo. */
+  if(!crudo && /^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return /[",;\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function bajarCSV(nombre, texto){
+  /* o BOM faz o Excel abrir os acentos certos em vez de «JosÃ©» */
+  const blob = new Blob(['﻿' + texto], { type:'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+function nombreArchivo(tipo, filtro){
+  const h = new Date();
+  const f = h.getFullYear() + '-' + String(h.getMonth()+1).padStart(2,'0') +
+            '-' + String(h.getDate()).padStart(2,'0');
+  return 'repassomed_' + tipo + '_' + (filtro || 'seleccion') + '_' + f + '.csv';
+}
+
+/* Recebe uma lista qualquer de {nombre, telefone}. A aba Financiero
+   manda os pagos pendientes por aqui — mesmo formato, mesma regra. */
+function exportarWhatsApp(gente, filtro, onMsg){
+  const buenos = [], fuera = { ausente:0, sospechoso:0 };
+  gente.forEach(p => {
+    const t = rmTel(p.telefone);
+    if(t.estado === 'valido') buenos.push([p.nombre || p.email || 'Alumno', t.e164]);
+    else fuera[t.estado]++;
+  });
+  if(!buenos.length){
+    if(onMsg) onMsg('Ninguno de los ' + gente.length + ' tiene un teléfono bien formado.');
+    return;
+  }
+  const csv = 'Name,Phone\n' +
+    buenos.map(r => csvCampo(r[0]) + ',' + csvCampo(r[1], true)).join('\n');
+  bajarCSV(nombreArchivo('whatsapp', filtro), csv);
+  if(onMsg){
+    const fora = fuera.ausente + fuera.sospechoso;
+    onMsg(buenos.length + ' exportado(s)' + (fora
+      ? ' · ' + fora + ' afuera (' + fuera.ausente + ' sin teléfono, ' +
+        fuera.sospechoso + ' con formato dudoso)'
+      : '') + ' · recordá: no hay consentimiento de marketing registrado.');
+  }
+}
+
+function accExportWhatsApp(){
+  const gente = Object.keys(ACC.sel).map(k => ACC.sel[k]);
+  exportarWhatsApp(gente, ACC_FILTRO_NOME[ACC.filtro] || ACC.filtro,
+    t => { document.getElementById('accBulkMsg').textContent = t; });
+}
+
+function accExportPlanilla(){
+  const gente = Object.keys(ACC.sel).map(k => ACC.sel[k]);
+  if(!gente.length) return;
+  const cab = ['Nombre','Email','Telefono','Estado del telefono','Pais del telefono',
+               'Estado de actividad','Visto por ultima vez','Ultimo ingreso','Ingresos',
+               'Materias vigentes','Materias vencidas','Compras pagas','Gasto',
+               'Pagos pendientes','Cuenta creada','Consentimiento de marketing'];
+  /* o segundo item de cada par diz se o valor sai CRU (sem a proteção
+     contra fórmula). Só o telefone sai cru, e pelo motivo explicado em
+     `csvCampo`: ele precisa chegar como +E164 na agenda. */
+  const filas = gente.map(u => {
+    const t = rmTel(u.telefone);
+    return [
+      [u.nombre || '',                                              false],
+      [u.email  || '',                                              false],
+      [t.estado === 'ausente' ? '' : t.e164,                        true ],
+      [t.estado,                                                    false],
+      [t.pais || '',                                                false],
+      [ACC_EST_ROT[u.estado] || u.estado,                           false],
+      [u.visto        ? new Date(u.visto).toLocaleString('es') : 'nunca',        false],
+      [u.ultimo_login ? new Date(u.ultimo_login).toLocaleString('es') : 'nunca', false],
+      [u.logins,            false], [u.materias_vigentes, false],
+      [u.materias_vencidas, false], [u.compras_pagas,     false],
+      [(Number(u.gasto_cents || 0) / 100).toFixed(2), false],
+      [u.pendientes, false],
+      [u.creado_en ? new Date(u.creado_en).toLocaleDateString('es') : '', false],
+      ['NO REGISTRADO', false]
+    ].map(c => csvCampo(c[0], c[1])).join(',');
+  });
+  bajarCSV(nombreArchivo('alumnos', ACC_FILTRO_NOME[ACC.filtro] || ACC.filtro),
+           cab.map(csvCampo).join(',') + '\n' + filas.join('\n'));
+  document.getElementById('accBulkMsg').textContent =
+    gente.length + ' fila(s) exportada(s). La columna de consentimiento va como NO REGISTRADO ' +
+    'en todas, porque es lo que la base sabe.';
+}
+
+/* ---------------------------------------------------------------------
+   FICHA DO ALUNO — gaveta lateral, não modal
+   --------------------------------------------------------------------- */
+function crmCerrar(){
+  const d = document.getElementById('crm');
+  d.classList.remove('on');
+  d.setAttribute('aria-hidden', 'true');
+}
+
+async function crmAbrir(id){
+  const d = document.getElementById('crm');
+  const body = document.getElementById('crmBody');
+  document.getElementById('crmTitulo').textContent = 'Cargando...';
+  body.innerHTML = '';
+  d.classList.add('on');
+  d.setAttribute('aria-hidden', 'false');
+
+  try{
+    const { data, error } = await sb.rpc('admin_acc_detalle', { p_user_id: id });
+    if(error) throw error;
+    crmRender(data || {});
+  }catch(e){
+    body.innerHTML = '<p class="err">Error: ' + escapeHtml((e && e.message) || '') + '</p>';
+  }
+}
+
+function crmRender(u){
+  document.getElementById('crmTitulo').innerHTML =
+    escapeHtml(u.nombre || '(sin nombre)') +
+    '<small>' + escapeHtml(u.email || 'sin e-mail') + '</small>';
+
+  const kv = (n, l) => '<div><b>' + n + '</b><small>' + l + '</small></div>';
+  const mat = (u.materias || []);
+  const ped = (u.pedidos  || []);
+  const pagas = ped.filter(p => p.status === 'paid');
+  const gasto = pagas.reduce((a,p) => a + Number(p.amount_cents || 0), 0);
+
+  document.getElementById('crmBody').innerHTML =
+    '<div class="crm-sec"><h4>Contacto</h4>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">' +
+        telChip(u.telefone, true) + '</div>' +
+      '<p class="muted" style="margin:8px 0 0;font-size:11.5px;">Teléfono de <b>registro</b>. ' +
+      'Consentimiento de marketing: <b>no registrado</b> — la base no tiene dónde guardarlo.</p>' +
+    '</div>' +
+
+    '<div class="crm-sec"><h4>Actividad</h4><div class="crm-kv">' +
+      kv(u.ultima_actividad ? new Date(u.ultima_actividad).toLocaleString('es') : 'nunca', 'Latido de sesión') +
+      kv(u.ultimo_login ? new Date(u.ultimo_login).toLocaleString('es') : 'nunca', 'Último ingreso') +
+      kv(finNum(u.logins), 'Ingresos') +
+      kv(finNum(u.dispositivos), 'Dispositivos') +
+    '</div>' +
+    '<p class="muted" style="margin:8px 0 0;font-size:11.5px;">' +
+      (u.progreso_ultimo
+        ? 'Último avance de <b>lectura</b>: ' + escapeHtml(new Date(u.progreso_ultimo).toLocaleString('es')) +
+          '. Es scroll dentro de una materia, no un ingreso — va aparte a propósito.'
+        : 'Sin avance de lectura registrado.') +
+    '</p></div>' +
+
+    '<div class="crm-sec"><h4>Materias (' + mat.length + ')</h4>' +
+      (mat.length ? mat.map(m =>
+        '<div class="crm-li' + (m.vigente ? '' : ' venc') + '">' +
+          '<span class="n">' + escapeHtml(m.nombre || m.slug) +
+            '<small>' + escapeHtml(m.plan || 'sin plan') + ' · ' +
+              (m.hasta ? (m.vigente ? 'hasta ' : 'venció ') +
+                escapeHtml(new Date(m.hasta).toLocaleDateString('es')) : 'sin vencimiento') +
+            '</small></span>' +
+          '<span class="utag' + (m.vigente ? '' : ' exp') + '">' +
+            (m.vigente ? 'vigente' : 'vencida') + '</span></div>').join('')
+       : '<p class="muted">Todavía no tiene ninguna materia liberada.</p>') +
+    '</div>' +
+
+    '<div class="crm-sec"><h4>Compras</h4><div class="crm-kv">' +
+      kv(finNum(pagas.length), 'Pedidos pagos') +
+      kv(finMoney(gasto), 'Total gastado') +
+    '</div>' +
+    (ped.length ? '<div style="margin-top:10px;">' + ped.map(p =>
+      '<div class="crm-li">' +
+        '<span class="n">' + escapeHtml(p.productos || 'producto no identificado') +
+          '<small>' + escapeHtml(new Date(p.creado).toLocaleDateString('es')) +
+            (p.cupon ? ' · cupón ' + escapeHtml(p.cupon) : '') + '</small></span>' +
+        '<span class="apbadge ' + (p.status === 'paid' ? 'ok' : 'warn') + '">' +
+          (p.status === 'paid' ? 'pago' : 'pendiente') + '</span>' +
+        '<b style="font-variant-numeric:tabular-nums;">' + finMoney(p.amount_cents) + '</b>' +
+      '</div>').join('') + '</div>'
+     : '<p class="muted" style="margin-top:10px;">Sin pedidos.</p>') +
+    '</div>';
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    const d = document.getElementById('crm');
+    if(d && d.classList.contains('on')) crmCerrar();
+  }
+});
+
 /* =====================================================================
    SUGESTÕES E CONVERSAS DOS ALUNOS   (ADMIN V2 · ETAPA B)
 
@@ -1350,8 +2042,8 @@ async function loadDashboard(){
    NAVEGAÇÃO ENTRE VIEWS (usuarios/panel  ↔  acceso por materia)
    ===================================================================== */
 function showView(which){
-  const views = { users:'searchView', subjects:'subjectsView', sales:'salesView', fin:'finView', ads:'adsView', aportes:'aportesView' };
-  const navs  = { users:'navUsers',   subjects:'navSubjects',  sales:'navSales',  fin:'navFin',  ads:'navAds', aportes:'navAportes' };
+  const views = { users:'searchView', subjects:'subjectsView', sales:'salesView', fin:'finView', acc:'accView', ads:'adsView', aportes:'aportesView' };
+  const navs  = { users:'navUsers',   subjects:'navSubjects',  sales:'navSales',  fin:'navFin',  acc:'navAcc',  ads:'navAds', aportes:'navAportes' };
   Object.keys(views).forEach(k=>{
     const v = document.getElementById(views[k]);
     if(v) v.classList.toggle('hidden', k !== which);
@@ -1362,6 +2054,7 @@ function showView(which){
   if(which === 'subjects') loadSubjectAccess();
   if(which === 'sales')    loadSales();
   if(which === 'fin')      loadFin();
+  if(which === 'acc')      loadAcc();
   if(which === 'ads')      loadAds();
   if(which === 'aportes')  loadAportes();
 }
@@ -1388,6 +2081,7 @@ let FIN = {
   from: null, to: null,/* Date | null — só usados quando per === custom  */
   metric: 'receita',   /* receita | vendas — alterna o gráfico           */
   points: [],          /* série já preenchida com os dias sem venda      */
+  pendientes: [],      /* últimos pendentes carregados, para a exportação*/
   bucket: 'day',       /* day | month — escolhido pelo tamanho do período*/
   loading: false
 };
@@ -1742,15 +2436,23 @@ function finRenderCup(rows){
 }
 
 function finRenderPend(rows){
+  FIN.pendientes = rows;
   if(!rows.length) return finVazio('finPend', 'Ningún pago pendiente en este período.');
+
+  /* o chip e o botão de WhatsApp são os MESMOS da aba Accesos: uma
+     regra só para classificar telefone no painel inteiro */
   document.getElementById('finPend').innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0;">' +
+      '<button class="btn-ghost" onclick="finExportPend()">Exportar para WhatsApp</button>' +
+      '<span class="muted" id="finPendMsg"></span>' +
+    '</div>' +
     '<div class="ulist">' + rows.map(r => {
       const cuando = new Date(r.created_at).toLocaleString('es');
       return '<div class="fin-pen">' +
         '<div class="who">' + escapeHtml(r.nome || r.email || 'Alumno') +
-          '<small>' + escapeHtml(r.email || 'sin e-mail') + ' · ' +
-            escapeHtml(r.telefone || 'sin teléfono') + '</small>' +
-          '<small>' + escapeHtml(r.produtos || 'producto no identificado') + '</small></div>' +
+          '<small>' + escapeHtml(r.email || 'sin e-mail') + '</small>' +
+          '<small>' + escapeHtml(r.produtos || 'producto no identificado') + '</small>' +
+          '<div style="margin-top:6px;">' + telChip(r.telefone, true) + '</div></div>' +
         '<span class="fin-tag' + (r.ja_comprou ? '' : ' nuevo') + '">' +
           (r.ja_comprou ? 'ya compró antes' : 'todavía no compró nada') + '</span>' +
         '<div class="dates">' + escapeHtml(cuando) +
@@ -1759,6 +2461,17 @@ function finRenderPend(rows){
     '<p class="muted" style="margin-top:12px;">El teléfono es el del <b>registro</b> de la cuenta. ' +
     '<b>No hay consentimiento de marketing registrado</b> en la base: nadie marcó en ningún momento ' +
     'que quiere recibir mensajes. Tenelo en cuenta antes de escribir.</p>';
+}
+
+/* Manda a lista de pendientes pelo MESMO exportador da aba Accesos.
+   Sai `repassomed_whatsapp_pagos-pendientes_AAAA-MM-DD.csv`, com
+   `Name,Phone` e só os números bem formados. */
+function finExportPend(){
+  exportarWhatsApp(
+    (FIN.pendientes || []).map(r => ({ nombre: r.nome, email: r.email, telefone: r.telefone })),
+    'pagos-pendientes',
+    t => { const el = document.getElementById('finPendMsg'); if(el) el.textContent = t; }
+  );
 }
 
 /* =====================================================================
