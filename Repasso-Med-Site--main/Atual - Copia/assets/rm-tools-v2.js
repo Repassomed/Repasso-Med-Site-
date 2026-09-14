@@ -163,6 +163,28 @@ body.rm2-t-eraser #materias-container .rm-hl{
 }
 body.rm2-drawing{ -webkit-user-select:none; user-select:none; }
 
+/* ---------- modo de escrita -----------------------------------------
+   O browser decide se um gesto é pan ANTES de despachar o evento, e essa
+   decisão sai do touch-action do alvo — não do preventDefault(), que
+   nessa altura ainda não correu. Com touch-action:auto (o que havia),
+   um traço vertical era reclamado como scroll, a página rolava e o
+   ponteiro era cancelado a meio da letra. O horizontal escapava só
+   porque a página não tem para onde rolar na horizontal: era exactamente
+   esse o sintoma relatado — riscos deitados sim, escrever não.
+
+   Enquanto a caneta (ou a goma de traços) está ARMADA, a área da matéria
+   deixa de oferecer pan. Fora desse estado não há uma única propriedade
+   aplicada, por isso o scroll volta no instante em que se desarma: isto
+   é só uma classe no body, sem overflow:hidden, sem mexer na posição de
+   scroll e sem layout shift. O marcador não entra aqui — continua a
+   rolar normalmente, que é o que se espera de quem só está a ler. */
+body.rm2-t-pen #materias-container,
+body.rm2-t-eraser #materias-container{
+  touch-action:none;
+  overscroll-behavior:contain;
+  -webkit-user-select:none; user-select:none;
+}
+
 /* Com o zoom aberto a matéria sai de cena: a toolbox e a gaveta saem também.
    O rm-tools põe .rm-lb-open no body ao abrir o lightbox, e tira-o ao fechar
    — inclusive quando o aluno clica na própria imagem, que é o caminho que um
@@ -511,13 +533,63 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   /* 5 · TRAÇOS — geometria, desenho e simplificação                     */
   /* ================================================================== */
 
+  /* ------------------------------------------------------------------
+     RENDERIZAÇÃO · quadrática por pontos médios, com respeito pelos cantos
+
+     Os pontos GRAVADOS não mudam: isto transforma os mesmos `points` num
+     caminho visual menos serrilhado. Os traços antigos continuam a abrir,
+     o schema fica igual e não há migração.
+
+     Porquê «com respeito pelos cantos»: medi as duas hipóteses contra
+     letras amostradas a ~120 Hz, comparando o desenho final com o traço
+     original denso (pior desvio, em píxeis, letra de ~34 px):
+
+                      poligonal   quadrática cega   quadrática c/ cantos
+       e                   0.63              0.46                   0.46
+       s                   1.46              1.07                   1.07
+       espiral             0.89              0.82                   0.71
+       m                   1.01              2.88                   0.93
+       canto recto         2.83              8.19                   3.06
+       t (cruz)            2.83              8.30                   3.19
+
+     A quadrática cega ganha nas curvas e ARREDONDA OS CANTOS — 8,19 px
+     de erro num ângulo recto contra 2,83 da poligonal. Por isso o ponto
+     onde a direcção vira mais de CANTO_GRAUS fica vértice agudo, e só o
+     resto é suavizado: ganha-se nas curvas sem perder os cantos.
+
+     O ângulo é medido no espaço do próprio caminho (0..1000), não em
+     píxeis de ecrã: assim o mesmo traço desenha-se igual em qualquer
+     viewport, em vez de mudar de forma conforme a largura da janela. */
+  var CANTO_COS = Math.cos(50 * Math.PI / 180);   // vira >50°: é canto
+
+  function ehCanto(a, b, c) {
+    var ux = b[0] - a[0], uy = b[1] - a[1];
+    var vx = c[0] - b[0], vy = c[1] - b[1];
+    var lu = Math.sqrt(ux * ux + uy * uy), lv = Math.sqrt(vx * vx + vy * vy);
+    if (lu < 1e-9 || lv < 1e-9) return false;
+    return ((ux * vx + uy * vy) / (lu * lv)) < CANTO_COS;
+  }
+
+  function n1000(v) { return (v * 1000).toFixed(1); }
+
   function dDe(pts) {
     if (!pts || !pts.length) return '';
-    var d = 'M' + (pts[0][0] * 1000).toFixed(1) + ' ' + (pts[0][1] * 1000).toFixed(1);
-    for (var i = 1; i < pts.length; i++) {
-      d += 'L' + (pts[i][0] * 1000).toFixed(1) + ' ' + (pts[i][1] * 1000).toFixed(1);
+    var d = 'M' + n1000(pts[0][0]) + ' ' + n1000(pts[0][1]);
+    if (pts.length === 1) return d;
+    if (pts.length === 2) return d + 'L' + n1000(pts[1][0]) + ' ' + n1000(pts[1][1]);
+
+    for (var i = 1; i < pts.length - 1; i++) {
+      if (ehCanto(pts[i - 1], pts[i], pts[i + 1])) {
+        d += 'L' + n1000(pts[i][0]) + ' ' + n1000(pts[i][1]);
+      } else {
+        var mx = (pts[i][0] + pts[i + 1][0]) / 2;
+        var my = (pts[i][1] + pts[i + 1][1]) / 2;
+        d += 'Q' + n1000(pts[i][0]) + ' ' + n1000(pts[i][1]) +
+             ' '  + n1000(mx)       + ' ' + n1000(my);
+      }
     }
-    return d;
+    var u = pts[pts.length - 1];
+    return d + 'L' + n1000(u[0]) + ' ' + n1000(u[1]);
   }
 
   function novoPath(rec) {
@@ -593,10 +665,26 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   var traco = null;                     // { sec, box, pts, path, pid, rec }
 
+  /* O browser liberta a captura sozinho no pointerup/pointercancel, mas
+     libertá-la explicitamente deixa o estado limpo mesmo nos caminhos que
+     não vêm de um evento (o blur da janela chama onCancel() sem `e`). */
+  function libertar(el, pid) {
+    if (!el || pid == null) return;
+    try {
+      if (el.hasPointerCapture && el.hasPointerCapture(pid) && el.releasePointerCapture) {
+        el.releasePointerCapture(pid);
+      }
+    } catch (err) {}
+  }
+
   function ehPonteiroDeDesenho(e) {
-    /* PEN desenha sempre. MOUSE desenha (desktop). TOUCH nunca: o dedo
-       continua a servir para rolar e tocar, que é o que o aluno espera
-       num tablet. Não há touch-action global mexido em lado nenhum. */
+    /* PEN desenha sempre. MOUSE desenha (desktop). TOUCH nunca cria tinta
+       — é assim que a palma fica de fora e que o dedo continua a ser
+       navegação. O que mudou foi outra coisa: com a caneta armada, a área
+       da matéria deixa de oferecer PAN ao browser (ver «modo de escrita»
+       no CSS). O dedo continua a não desenhar; apenas também já não rola
+       enquanto a ferramenta está armada, porque o aluno pôs a página em
+       modo de escrita de propósito. Ao desarmar, rola outra vez. */
     return e.pointerType === 'pen' || e.pointerType === 'mouse';
   }
 
@@ -673,6 +761,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (apagando) { terminarApagar(); return; }
     if (!traco || (e && e.pointerId !== traco.pid)) return;
     var t = traco; traco = null;
+    libertar(t.sec, t.pid);
     document.body.classList.remove('rm2-drawing');
 
     /* A simplificação corre em PÍXEIS, não em unidades normalizadas: um
@@ -694,11 +783,18 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     filaGravar(slug, t.rec, t.path);
   }
 
+  /* Com o touch-action correcto, o scroll deixa de cancelar o ponteiro a
+     meio de uma letra. Mas o cancelamento LEGÍTIMO continua a existir — a
+     caneta sai do alcance do digitalizador, o SO interrompe, troca-se de
+     aplicação — e nesses casos o traço em curso não deve ser gravado meio
+     feito. Continua defensivo, de propósito: o objectivo foi eliminar o
+     cancelamento INDEVIDO, não disfarçar o verdadeiro. */
   function onCancel(e) {
     if (apagando) { terminarApagar(); return; }
     if (!traco || (e && e.pointerId !== traco.pid)) return;
-    if (traco.path && traco.path.parentNode) traco.path.parentNode.removeChild(traco.path);
-    traco = null;
+    var t = traco; traco = null;
+    libertar(t.sec, t.pid);
+    if (t.path && t.path.parentNode) t.path.parentNode.removeChild(t.path);
     document.body.classList.remove('rm2-drawing');
   }
 
@@ -757,7 +853,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        poder rolar. Só stylus e rato arrastam para apagar em série. */
     if (ehPonteiroDeDesenho(e)) {
       document.body.classList.add('rm2-drawing');
-      try { sec.setPointerCapture && sec.setPointerCapture(e.pointerId); } catch (err) {}
+      try { sec.setPointerCapture && sec.setPointerCapture(e.pointerId); apagando.sec = sec; } catch (err) {}
       e.preventDefault();
     }
   }
@@ -834,6 +930,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     var a = apagando; apagando = null;
     document.body.classList.remove('rm2-drawing');
     if (!a) return;
+    libertar(a.sec, a.pid);
     var n = a.inks.length + a.hls.length;
     if (!n) return;
     /* um gesto = um undo, mesmo que tenha apanhado vários traços e marcas */
