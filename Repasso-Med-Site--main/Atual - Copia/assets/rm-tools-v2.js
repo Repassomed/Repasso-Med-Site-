@@ -1489,13 +1489,34 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   /* 14 · ARRANQUE                                                       */
   /* ================================================================== */
 
-  async function iniciar() {
+  var montado = false;      // a V2 já está de pé: nunca montar segunda vez
+  var aTentar = false;      // já há uma tentativa em voo: não correr duas em paralelo
+  var semAcesso = {};       // uid -> true: já se perguntou e a resposta foi não
+
+
+  /* `uidDaSessao` vem do evento de auth, quando existe. É preferível ao
+     RMTools.userId(), que guarda o valor em cache: depois de um logout
+     seguido de login na MESMA página, a cache podia devolver o uid antigo. */
+  async function iniciar(uidDaSessao) {
+    if (montado || aTentar) return;
     var t = RT();
     if (!t || !t.userId || !t.onAbaPronta) return;       // rm-tools antigo: não faz nada
-    var uid = await t.userId();
-    var ok = await hasStudyToolsV2Access(uid);
-    if (!ok) return;                                     // ← toda a gente que não é tester sai aqui
+    aTentar = true;
+    try {
+      var uid = uidDaSessao || await t.userId();
+      if (!uid) return;                                  // ainda sem sessão: espera-se o evento de auth
+      if (semAcesso[uid]) return;                        // já se perguntou por este uid: não repetir
+      var ok = await hasStudyToolsV2Access(uid);
+      if (!ok) { semAcesso[uid] = true; return; }        // ← quem não é tester sai aqui, uma vez só
+      if (montado) return;                               // outra tentativa chegou primeiro
+      montado = true;
+      await montarTudo(t, uid);
+    } finally {
+      aTentar = false;
+    }
+  }
 
+  async function montarTudo(t, uid) {
     st.uid = uid;
     window.RM_STUDY_V2_ACTIVE = true;
     document.body.classList.add('rm-v2');
@@ -1546,8 +1567,60 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     };
   }
 
-  /* rm-tools.js corre no DOMContentLoaded; entramos logo a seguir. */
-  function arrancar() { setTimeout(function () { iniciar().catch(function (e) { console.warn('[rm2]', e); }); }, 0); }
+  /* ------------------------------------------------------------------
+     ARRANQUE · porque não basta o DOMContentLoaded
+
+     No index.html o cliente Supabase nasce DEPOIS deste ficheiro, e o
+     login acontece DENTRO da página: o `authLogin()` chama `afterLogin()`
+     e nunca recarrega. Quem abre o site deslogado — que é o caso de uma
+     janela anónima, de uma cache limpa ou de um hard refresh — passava
+     por aqui com a sessão ainda por nascer, saía com uid nulo, e não
+     havia segunda oportunidade: a toolbox nunca aparecia.
+
+     A correcção é ouvir o estado de autenticação que o site já tem, em
+     vez de adivinhar o momento certo. Uma tentativa imediata (cobre quem
+     recarrega já com sessão válida) e uma subscrição a onAuthStateChange
+     (cobre quem entra depois). `montado` garante que só monta uma vez.
+     ------------------------------------------------------------------ */
+  var subscrito = false;
+
+  function tentar(uid) {
+    iniciar(uid).catch(function (e) { console.warn('[rm2]', e); });
+  }
+
+  function ouvirAuth() {
+    if (subscrito) return true;
+    var s = sb();
+    if (!s || !s.auth || typeof s.auth.onAuthStateChange !== 'function') return false;
+    try {
+      s.auth.onAuthStateChange(function (evt, sessao) {
+        var uid = sessao && sessao.user && sessao.user.id;
+        if (evt === 'SIGNED_OUT') return;   // o site recarrega no logout; nada a desmontar
+        if (uid) tentar(uid);
+      });
+      subscrito = true;
+      return true;
+    } catch (e) {
+      console.warn('[rm2] auth listener', e && e.message);
+      return false;
+    }
+  }
+
+  /* O cliente Supabase é criado depois deste script. Espera-se por ele um
+     tempo limitado — nunca um polling sem fim: ao fim de ~6 s desiste-se e
+     fica tudo exactamente como o site era antes da V2. */
+  var TENTATIVAS = 40, INTERVALO = 150;
+
+  function arrancar() {
+    tentar();                       // já pode haver sessão restaurada
+    if (ouvirAuth()) return;
+    var n = 0;
+    var timer = setInterval(function () {
+      n++;
+      if (ouvirAuth() || montado || n >= TENTATIVAS) clearInterval(timer);
+    }, INTERVALO);
+  }
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', arrancar);
   else arrancar();
 })();
