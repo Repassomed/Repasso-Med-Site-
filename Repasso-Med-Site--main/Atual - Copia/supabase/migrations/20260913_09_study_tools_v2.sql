@@ -14,7 +14,7 @@
 --   3) cria public.user_notes        — «Minhas anotações»;
 --   4) cria public.study_tools_beta  — quem recebe a V2 (fail closed).
 --
--- Rollback: ver 20260913_06_study_tools_v2_rollback.sql
+-- Rollback: ver 20260913_09_study_tools_v2_rollback.sql
 -- =====================================================================
 
 
@@ -48,9 +48,20 @@ comment on constraint user_highlights_color_valid on public.user_highlights is
 --    tempo nunca se sobrescrevem — cada um insere e apaga os seus traços
 --    e o pior caso é um traço a mais, nunca todos os desenhos perdidos.
 --
---    `points` é um array de pares [x,y] NORMALIZADOS (0..1) dentro da
---    caixa da âncora, nunca coordenadas absolutas da página. Por isso o
---    desenho acompanha o bloco quando o viewport muda.
+--    `points` é um array de pares [x,y] NORMALIZADOS pela caixa da âncora,
+--    nunca coordenadas absolutas da página. Por isso o desenho acompanha o
+--    bloco quando o viewport muda.
+--
+--    O valor típico cai em 0..1, mas NÃO é garantido estar lá: o cliente
+--    limita cada eixo ao intervalo -1.5 .. 2.5, de propósito. Um traço que
+--    começa dentro do parágrafo e sai um pouco pela margem — um círculo à
+--    volta de uma palavra, uma seta que aponta para fora — continua a ser
+--    um traço legítimo, e cortá-lo em 0..1 achatava-o contra a borda.
+--    O limite existe só para travar um valor absurdo (a âncora medida a
+--    zero, por exemplo), não para manter o desenho dentro da caixa.
+--    Por isso a constraint abaixo valida a FORMA e o TAMANHO do array,
+--    e deliberadamente não valida o intervalo numérico: quem manda nele é
+--    o cliente, e a base não deve rejeitar um traço bem-feito.
 -- ---------------------------------------------------------------------
 create table if not exists public.user_ink_strokes (
   id           uuid        primary key default gen_random_uuid(),
@@ -109,7 +120,7 @@ create policy user_ink_strokes_delete_self on public.user_ink_strokes
   for delete to authenticated using (user_id = auth.uid());
 
 comment on table public.user_ink_strokes is
-  'Traços da caneta. Uma linha por traço (nunca um JSON agregado por bloco, para que dois dispositivos não se sobrescrevam). points = pares [x,y] normalizados 0..1 dentro da âncora.';
+  'Traços da caneta. Uma linha por traço (nunca um JSON agregado por bloco, para que dois dispositivos não se sobrescrevam). points = pares [x,y] normalizados pela caixa da âncora; tipicamente 0..1, mas o cliente admite -1.5..2.5 para o traço que sai um pouco da âncora de propósito.';
 
 
 -- ---------------------------------------------------------------------

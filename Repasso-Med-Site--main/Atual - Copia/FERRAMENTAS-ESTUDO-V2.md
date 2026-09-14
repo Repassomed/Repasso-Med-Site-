@@ -164,7 +164,7 @@ As cinco ficam mais presentes que as actuais (opacidade 0,36–0,42 contra
 Nada é guardado em coordenadas absolutas da página. Cada traço guarda:
 
 ```
-subject_slug · anchor_id · color · width · points[[x,y], …]   // 0..1 dentro da âncora
+subject_slug · anchor_id · color · width · points[[x,y], …]   // normalizados pela âncora
 ```
 
 `anchor_id` é `idDaSeccao` ou `idDaSeccao>índice`, onde o índice aponta para o
@@ -175,6 +175,21 @@ bloco, mas **nunca muda de bloco**.
 
 Porquê o parágrafo e não só a secção: uma secção pode ter 18 000 px de altura, e
 normalizar por uma caixa dessas esmaga a forma do traço quando o viewport muda.
+
+**Os pontos não estão garantidamente em 0..1.** O valor típico cai nesse
+intervalo — é o que significa «dentro da âncora» — mas o cliente limita cada
+eixo a **-1.5 .. 2.5**, e essa margem é deliberada. Um círculo à volta de uma
+palavra, um sublinhado que passa da última letra ou uma seta que aponta para
+fora do parágrafo saem da caixa e continuam a ser traços legítimos; cortá-los
+em 0..1 achatava-os contra a borda. O limite existe apenas para travar um valor
+absurdo — a âncora medida a zero, por exemplo — e não para manter o desenho
+dentro da caixa.
+
+Por isso a `check` da migração valida a **forma** e o **tamanho** do array
+(`jsonb` array, 1 a 1200 pontos) e **não** valida o intervalo numérico: quem
+manda nele é o cliente, e a base não deve rejeitar um traço bem-feito.
+O `overflow:visible` do `<svg>` de cada âncora (`#rm2-ink svg`) é o que deixa a
+parte que sai continuar visível em vez de ser recortada na borda do parágrafo.
 
 A camada de tinta é um `<div id="rm2-ink">` ao nível do `<body>`, em coordenadas
 de **página**: rola com o documento sem um único listener de scroll, e **não**
@@ -220,7 +235,7 @@ Gravação com *debounce* de 700 ms e no `blur`, nunca por tecla. Apagar pede co
 
 ## 9 · Schema e RLS
 
-`supabase/migrations/20260913_06_study_tools_v2.sql` — aditiva e idempotente.
+`supabase/migrations/20260913_09_study_tools_v2.sql` — aditiva e idempotente.
 Sem `DROP` de tabela, sem `TRUNCATE`, sem desabilitar RLS, sem tocar em Auth,
 `profiles`, `orders`, `products` ou dispositivos.
 
@@ -236,7 +251,7 @@ concorrência: com tablet e desktop abertos ao mesmo tempo, cada um insere e
 apaga os seus traços e o pior caso é um traço a mais — nunca todos os desenhos
 do bloco perdidos por uma escrita que chegou depois.
 
-Rollback em `20260913_06_study_tools_v2_rollback.sql`. **Para apenas desligar a
+Rollback em `20260913_09_study_tools_v2_rollback.sql`. **Para apenas desligar a
 V2 sem perder nada, não corra o rollback**: basta
 `update public.study_tools_beta set enabled = false;` e pôr `ROLLOUT = 'off'`.
 
