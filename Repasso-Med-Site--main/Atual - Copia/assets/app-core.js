@@ -124,7 +124,51 @@ var RepassoMed = (function(){
     if (btn) btn.remove();
   }
 
-  function normalizeQuizzes(scope){ scope.querySelectorAll('.quiz-item').forEach(normalizeOne); }
+  /* ---------------------------------------------------------------
+     RESPOSTA SEM SAÍDA
+
+     Uma questão pode ficar com a resposta inalcançável: ela tem
+     <div class="answer">, mas não é de múltipla escolha (não há
+     ul.options para clicar) e não tem botão para abrir. Como
+     `.answer` nasce com display:none, o aluno NUNCA vê aquele texto.
+
+     A causa não é um bug de lógica: as matérias foram escritas em duas
+     convenções diferentes. Anestesiología dá botão a TODA questão;
+     Neurología, Ortopedia, Toxicología e Dermatología só dão às de
+     múltipla escolha — e aí as de tipo CITA, DEFINE, COMPLETÁ ou CASO
+     ficam mudas. Medido no shell real: 136 respostas presas em
+     Ortopedia, 68 em Toxicología, 42 em Neurología, 18 en Dermatología.
+
+     Reescrever 25 arquivos para acrescentar um botão que o próprio
+     código sabe criar seria caro e arriscado. O botão que falta é
+     criado aqui, com o mesmo markup, a mesma classe e o mesmo
+     comportamento dos que já existem — e só quando faltar.
+     Idempotente: roda de novo sem duplicar nada.
+     --------------------------------------------------------------- */
+  function garantirSaida(item){
+    if (item.classList.contains('interactive')) return false;  // MCQ: abre ao responder
+    if (item.querySelector('ul.options'))       return false;  // vai virar MCQ
+    if (item.querySelector('.reveal-btn'))      return false;  // já tem saída
+    var ans = item.querySelector('.answer');
+    if (!ans || !ans.parentNode)                return false;
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'reveal-btn';
+    btn.textContent = 'Ver respuesta';
+    /* `toggleAnswer` lê `btn.nextElementSibling`, então o botão tem de
+       entrar imediatamente antes da resposta — não em qualquer lugar. */
+    btn.setAttribute('onclick', 'toggleAnswer(this)');
+    ans.parentNode.insertBefore(btn, ans);
+    return true;
+  }
+
+  function normalizeQuizzes(scope){
+    scope.querySelectorAll('.quiz-item').forEach(function(item){
+      normalizeOne(item);
+      garantirSaida(item);
+    });
+  }
 
 
   /* ---------------------------------------------------------------
