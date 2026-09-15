@@ -1075,6 +1075,10 @@ function escapeHtml(s){
 let ACC = {
   q: '', filtros: [], pagina: 0, tam: 50,
   linhas: [], total: 0, sel: {}, cargando: false,
+  gen: 0,            // LATEST STATE WINS: cada loadAcc() leva o seu número; só a
+                      // geração mais recente pode pintar a lista — uma resposta de
+                      // geração antiga (filtro/busca/página já mudaram entretanto)
+                      // é descartada, nunca tratada como resultado definitivo
   v2: null,          // null = ainda não se sabe; false = migration por correr
   vazioReal: false   // lista vazia PORQUE o filtro não achou (≠ falha a carregar)
 };
@@ -1212,6 +1216,14 @@ function accTz(){
 }
 
 async function loadAcc(){
+  /* LATEST STATE WINS. Cada chamada regista a sua geração ANTES de saber
+     se vai correr — assim uma mudança de filtro/busca/página feita
+     enquanto outra consulta está em curso fica registada mesmo que esta
+     chamada não dispare rede nenhuma. Quando a consulta em curso termina,
+     se já houver geração mais nova do que a que ela pediu, o resultado é
+     descartado (nunca pintado) e o próprio loadAcc() se relança sozinho
+     com o estado ATUAL — não o de quando começou. */
+  const minhaGen = ++ACC.gen;
   if(ACC.cargando) return;
   ACC.cargando = true;
   const msg = document.getElementById('accMsg');
@@ -1225,6 +1237,7 @@ async function loadAcc(){
       sb.rpc('admin_acc_resumo', { p_tz: tz }),
       accPedir(ACC.tam, ACC.pagina * ACC.tam, tz)
     ]);
+    if(minhaGen !== ACC.gen) return;   // já há um estado mais novo: esta resposta morre aqui
     const bad = res.filter(x => x && x.error)[0];
     if(bad) throw bad.error;
 
@@ -1240,6 +1253,7 @@ async function loadAcc(){
     accPintarFiltros();
     accRenderLista();
   }catch(e){
+    if(minhaGen !== ACC.gen) return;   // idem para o erro: não pisa um estado mais novo
     const t = (e && e.message) || '';
     ACC.vazioReal = false;              // não respondeu: não é «ninguém cumpre»
     msg.textContent =
@@ -1256,6 +1270,7 @@ async function loadAcc(){
     document.getElementById('accInfo').textContent = '';
   }finally{
     ACC.cargando = false;
+    if(minhaGen !== ACC.gen) loadAcc();   // havia estado mais novo pendente: busca-o agora
   }
 }
 
