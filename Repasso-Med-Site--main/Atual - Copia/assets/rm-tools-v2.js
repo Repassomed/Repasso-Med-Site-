@@ -692,6 +692,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (st.tool !== 'pen' && st.tool !== 'eraser') return;
     if (lbAberto()) return;                             // zoom aberto: caneta suspensa
     if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes,.rm-tools,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug')) return;
+    if (gestoMorto()) abortarTraco();                   // traço órfão não bloqueia o seguinte
     if (traco || apagando) return;                      // rejeição de palma/2.º ponteiro
     if (e.pointerType === 'mouse' && e.button !== 0) return;
 
@@ -792,10 +793,51 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   function onCancel(e) {
     if (apagando) { terminarApagar(); return; }
     if (!traco || (e && e.pointerId !== traco.pid)) return;
+    abortarTraco();
+  }
+
+  /* Deitar fora o traço em curso. Ponto ÚNICO: tudo o que interrompe um
+     gesto passa por aqui, para não haver um caminho que se esqueça de
+     limpar uma das três coisas (o registo, a captura e a classe). */
+  function abortarTraco() {
+    if (!traco) return;
     var t = traco; traco = null;
     libertar(t.sec, t.pid);
     if (t.path && t.path.parentNode) t.path.parentNode.removeChild(t.path);
     document.body.classList.remove('rm2-drawing');
+  }
+
+  /* ------------------------------------------------------------------
+     RECONCILIAÇÃO · o que fazia a caneta «travar»
+
+     O `traco` sobrevivia a tudo o que não fosse um pointerup ou um
+     pointercancel com o id certo. Trocar de matéria, rodar o tablet ou
+     mudar de aplicação a meio de uma letra deixava-o aberto para sempre,
+     e o onDown tem uma guarda de rejeição de palma — `if (traco) return`
+     — que a partir daí recusava TODOS os traços seguintes: a caneta
+     ficava morta, e como o modo de escrita continuava ligado a página
+     também não rolava. Era esse o travamento.
+
+     Medido na main antes desta correcção, interrompendo a meio do traço:
+
+       mudança de aplicação ....... não voltava a desenhar
+       troca de matéria ........... não voltava a desenhar
+       resize / rotação ........... não voltava a desenhar
+       blur da janela ............. recuperava (já tinha gancho)
+       pointercancel .............. recuperava (já era tratado)
+
+     Agora todos desembocam no mesmo sítio. */
+  function reconciliarGesto() {
+    if (apagando) terminarApagar();
+    abortarTraco();
+  }
+
+  /* Um traço cuja secção já saiu do documento é lixo: a matéria foi
+     trocada ou reinjectada por baixo dele. Serve de rede para qualquer
+     caminho futuro que se esqueça de chamar a reconciliação. */
+  function gestoMorto() {
+    if (!traco) return false;
+    return !traco.sec || !document.contains(traco.sec);
   }
 
   /* ---- persistência: uma gravação por traço, nunca por ponto -------- */
@@ -1249,7 +1291,19 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
     document.body.appendChild(box);
 
+    /* ------------------------------------------------------------------
+       O FAB é a saída do modo de escrita.
+
+       Com a caneta armada, o modo de escrita tira o pan à área de leitura.
+       Se o painel pudesse fechar nesse estado, ficava uma página que não
+       rola e cujo botão de sair está escondido — só o FAB à vista, sem
+       nada que diga que é ele que desarma. Era a queixa de «não consigo
+       desativar para voltar a rolar».
+
+       Por isso, com uma ferramenta armada o FAB DESARMA em vez de fechar;
+       sem ferramenta armada, abre e fecha o painel como sempre fez. */
     box.querySelector('#rm2-fab').addEventListener('click', function () {
+      if (st.tool !== 'none') { escolherFerramenta('none'); return; }
       st.open = !st.open; refletir();
     });
 
@@ -1300,10 +1354,20 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   function refletir() {
     if (!box) return;
+    /* INVARIANTE: nunca há modo de escrita sem saída à vista. Enquanto uma
+       ferramenta estiver armada o painel fica aberto, portanto o botão que
+       a desarma está sempre no ecrã. Qualquer caminho que tente fechar o
+       painel com a ferramenta armada é corrigido aqui, e não só no FAB. */
+    if (st.tool !== 'none') st.open = true;
     box.classList.toggle('open', st.open);
     var fab = box.querySelector('#rm2-fab');
     fab.setAttribute('aria-expanded', String(st.open));
     fab.classList.toggle('armed', st.tool !== 'none');
+    /* o rótulo diz o que o botão faz AGORA, que é o que um leitor de ecrã
+       anuncia e o que aparece no tooltip de quem usa rato */
+    var armado = st.tool !== 'none';
+    fab.setAttribute('title', armado ? 'Salir del modo escritura' : 'Herramientas de estudio');
+    fab.setAttribute('aria-label', armado ? 'Salir del modo escritura' : 'Herramientas de estudio');
 
     box.querySelectorAll('.rm2-btn[data-t]').forEach(function (b) {
       var on = b.getAttribute('data-t') === st.tool;
@@ -1550,7 +1614,19 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     }, { passive: false });
     document.addEventListener('pointerup', onUp, { passive: true });
     document.addEventListener('pointercancel', onCancel, { passive: true });
-    window.addEventListener('blur', function () { onCancel(); });
+    window.addEventListener('blur', function () { reconciliarGesto(); });
+
+    /* O browser tira a captura quando o elemento sai do documento ou o
+       dispositivo desaparece, e nesses casos NÃO há pointerup nenhum. */
+    document.addEventListener('lostpointercapture', function (e) {
+      if (traco && e.pointerId === traco.pid) abortarTraco();
+      else if (apagando && e.pointerId === apagando.pid) terminarApagar();
+    }, true);
+
+    /* Mudar de aplicação no tablet: a letra em curso não se fecha sozinha. */
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) reconciliarGesto();
+    });
 
     /* ESC: fecha o que estiver aberto, depois volta a «nenhuma» */
     document.addEventListener('keydown', function (e) {
@@ -1576,9 +1652,15 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (document.hidden) flushNotas();
     });
 
+    /* A caixa da âncora é medida no início do traço. Se o viewport muda a
+       meio, essa medida deixa de valer: o traço continuaria a ser escrito
+       com coordenadas de uma caixa que já não existe. Fecha-se o gesto
+       antes de reposicionar — e, sobretudo, deixa de ficar preso. */
     var reflow = debounce(reposicionarTudo, 120);
-    window.addEventListener('resize', reflow);
-    window.addEventListener('orientationchange', function () { setTimeout(reposicionarTudo, 220); });
+    window.addEventListener('resize', function () { reconciliarGesto(); reflow(); });
+    window.addEventListener('orientationchange', function () {
+      reconciliarGesto(); setTimeout(reposicionarTudo, 220);
+    });
     document.addEventListener('visibilitychange', function () { if (!document.hidden) reflow(); });
   }
 
@@ -1638,6 +1720,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (typeof window.switchTab === 'function') {
       var sw = window.switchTab;
       window.switchTab = function () {
+        reconciliarGesto();                 // a matéria sai debaixo do traço
         var r = sw.apply(this, arguments);
         flushNotas();                       // antes de trocar, grava o que falta
         setTimeout(function () {
