@@ -170,6 +170,20 @@
   .acc-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;}
   .acc-bar .grow{flex:1 1 220px;min-width:0;}
   .acc-fil{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+/* grupos de filtros e chips de filtro activo — mesma linguagem visual
+   dos botões que já existiam, só arrumados por grupo */
+.acc-grp{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 6px;}
+.acc-grp > .lbl{font:700 11px/1 inherit;letter-spacing:.06em;text-transform:uppercase;
+  opacity:.55;min-width:74px;}
+.acc-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 8px;min-height:0;}
+.acc-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;
+  background:rgba(19,49,79,.08);font:600 12px/1 inherit;}
+.acc-chip button{border:0;background:transparent;cursor:pointer;font:700 13px/1 inherit;
+  opacity:.6;padding:0 1px;}
+.acc-chip button:hover{opacity:1;}
+.acc-chips .limpar{border:0;background:transparent;cursor:pointer;text-decoration:underline;
+  font:600 12px/1 inherit;opacity:.7;}
+.acc-chips .limpar:hover{opacity:1;}
   .acc-fb{background:var(--panel2);color:var(--ink-soft);border:1px solid var(--line);
     font-size:12.5px;font-weight:700;padding:6px 11px;border-radius:8px;}
   .acc-fb:hover:not(.active){color:var(--ink);border-color:var(--ink-soft);}
@@ -757,21 +771,8 @@
         <button class="btn-ghost" onclick="accLimpiar()">Limpiar</button>
       </div>
 
-      <div class="acc-fil" id="accFil">
-        <button class="acc-fb active" onclick="accSetFiltro('todos')"      data-f="todos">Todos</button>
-        <button class="acc-fb" onclick="accSetFiltro('hoy')"              data-f="hoy">Hoy</button>
-        <button class="acc-fb" onclick="accSetFiltro('7d')"               data-f="7d">7 días</button>
-        <button class="acc-fb" onclick="accSetFiltro('30d')"              data-f="30d">30 días</button>
-        <button class="acc-fb" onclick="accSetFiltro('inactivos')"        data-f="inactivos">Inactivos +30</button>
-        <button class="acc-fb" onclick="accSetFiltro('nunca')"            data-f="nunca">Nunca dieron señal</button>
-        <button class="acc-fb" onclick="accSetFiltro('con_pago')"         data-f="con_pago">Ya compraron</button>
-        <button class="acc-fb" onclick="accSetFiltro('sin_pago')"         data-f="sin_pago">Nunca compraron</button>
-        <button class="acc-fb" onclick="accSetFiltro('pendientes')"       data-f="pendientes">Pago pendiente</button>
-        <button class="acc-fb" onclick="accSetFiltro('vigentes')"         data-f="vigentes">Con materias vigentes</button>
-        <button class="acc-fb" onclick="accSetFiltro('vencidos')"         data-f="vencidos">Solo materias vencidas</button>
-        <button class="acc-fb" onclick="accSetFiltro('con_tel')"          data-f="con_tel">Con teléfono</button>
-        <button class="acc-fb" onclick="accSetFiltro('sin_tel')"          data-f="sin_tel">Sin teléfono</button>
-      </div>
+      <div id="accFil"></div>
+      <div id="accChips" class="acc-chips"></div>
 
       <div class="selbar">
         <label><input type="checkbox" id="accAll" onchange="accSelPagina(this.checked)">
@@ -1072,17 +1073,41 @@ function escapeHtml(s){
    ===================================================================== */
 
 let ACC = {
-  q: '', filtro: 'todos', pagina: 0, tam: 50,
-  linhas: [], total: 0, sel: {}, cargando: false
+  q: '', filtros: [], pagina: 0, tam: 50,
+  linhas: [], total: 0, sel: {}, cargando: false,
+  v2: null,          // null = ainda não se sabe; false = migration por correr
+  vazioReal: false   // lista vazia PORQUE o filtro não achou (≠ falha a carregar)
 };
+
+/* Os critérios, agrupados. E entre grupos, OU dentro do grupo: escolher
+   «Hoy» e «7 días» é «uma coisa OU a outra»; escolher «Hoy» e «Con
+   teléfono» é «as duas». Um grupo sem nada escolhido não restringe. */
+const ACC_GRUPOS = [
+  { id:'actividad', rot:'Actividad', ops:[
+      ['hoy','Hoy'], ['7d','7 días'], ['30d','30 días'],
+      ['inactivos','Inactivos +30'], ['nunca','Nunca dieron señal'] ] },
+  { id:'compra', rot:'Compras', ops:[
+      ['con_pago','Ya compraron'], ['sin_pago','Nunca compraron'],
+      ['compra_abierta','Compra sin terminar'], ['pendientes','Con pendiente (bruto)'] ] },
+  { id:'materias', rot:'Materias', ops:[
+      ['vigentes','Con materias vigentes'], ['vencidos','Solo materias vencidas'] ] },
+  { id:'contacto', rot:'Contacto', ops:[
+      ['con_tel','Con teléfono'], ['sin_tel','Sin teléfono'] ] }
+];
 
 const ACC_FILTRO_NOME = {
   todos:'todos', hoy:'activos-hoy', '7d':'activos-7-dias', '30d':'activos-30-dias',
   inactivos:'inactivos-mas-30-dias', nunca:'nunca-dieron-senal',
   con_pago:'ya-compraron', sin_pago:'nunca-compraron', pendientes:'pagos-pendientes',
+  compra_abierta:'compra-sin-terminar',
   vigentes:'con-materias-vigentes', vencidos:'solo-materias-vencidas',
   con_tel:'con-telefono', sin_tel:'sin-telefono'
 };
+/* rótulo curto de cada critério, para os chips de «filtros activos» */
+const ACC_ROT = (function(){ const m={}; ACC_GRUPOS.forEach(g=>g.ops.forEach(o=>{m[o[0]]=o[1];})); return m; })();
+function accNomeArquivo(){
+  return ACC.filtros.length ? ACC.filtros.map(f=>ACC_FILTRO_NOME[f]||f).join('_') : 'todos';
+}
 
 /* ---------------------------------------------------------------------
    O UTILITÁRIO ÚNICO DE TELEFONE
@@ -1191,28 +1216,36 @@ async function loadAcc(){
   ACC.cargando = true;
   const msg = document.getElementById('accMsg');
   msg.textContent = '';
+  accPintarFiltros();        // os botões aparecem mesmo que a consulta falhe
   document.getElementById('accStats').innerHTML = '<p class="muted">Cargando...</p>';
 
   try{
     const tz = accTz();
     const res = await Promise.all([
       sb.rpc('admin_acc_resumo', { p_tz: tz }),
-      sb.rpc('admin_acc_usuarios', {
-        p_busca: ACC.q || null, p_estado: ACC.filtro,
-        p_limit: ACC.tam, p_offset: ACC.pagina * ACC.tam, p_tz: tz
-      })
+      accPedir(ACC.tam, ACC.pagina * ACC.tam, tz)
     ]);
     const bad = res.filter(x => x && x.error)[0];
     if(bad) throw bad.error;
 
     accRenderStats(res[0].data || {});
+    ACC.vazioReal = true;               // a consulta respondeu
     ACC.linhas = res[1].data || [];
     ACC.total  = ACC.linhas.length ? Number(ACC.linhas[0].total_filtrado || 0) : 0;
+    if(ACC.v2 === false && ACC.filtros.length > 1){
+      msg.textContent = 'Filtros combinados: falta correr la migration ' +
+        '20260915_01_admin_acc_filtros.sql. Por ahora vale solo «' +
+        (ACC_ROT[ACC.filtros[0]] || ACC.filtros[0]) + '».';
+    }
+    accPintarFiltros();
     accRenderLista();
   }catch(e){
     const t = (e && e.message) || '';
+    ACC.vazioReal = false;              // não respondeu: não é «ninguém cumpre»
     msg.textContent =
-      /could not find the function|does not exist|schema cache/i.test(t)
+      /^FALTA_MIGRATION: /.test(t)
+        ? t.replace(/^FALTA_MIGRATION: /, '')
+      : /could not find the function|does not exist|schema cache/i.test(t)
         ? 'Falta correr la migration 20260913_08_admin_v2_acessos.sql en Supabase.'
         : (/no autorizado|42501|permission denied/i.test(t)
             ? 'Tu cuenta no tiene permiso de administrador.'
@@ -1269,7 +1302,16 @@ function accRenderLista(){
   const selTodo = document.getElementById('accSelTodo');
 
   if(!ACC.linhas.length){
-    box.innerHTML = '<p class="muted">Ningún alumno con este filtro.</p>';
+    /* Uma lista vazia porque o filtro não achou ninguém NÃO é o mesmo que
+       uma lista vazia porque a consulta falhou. O erro tem a sua própria
+       mensagem em #accMsg e deixa esta caixa em branco; aqui só se chega
+       quando a consulta correu bem e devolveu zero. */
+    box.innerHTML = ACC.vazioReal
+      ? '<p class="muted">La consulta funcionó: <b>ningún alumno</b> cumple ' +
+        (ACC.filtros.length === 1 ? 'este filtro.' :
+         ACC.filtros.length  >  1 ? 'esta combinación de ' + ACC.filtros.length + ' filtros.' :
+                                    'la búsqueda.') + '</p>'
+      : '<p class="muted">Sin datos.</p>';
     info.textContent = '';
     document.getElementById('accPag').innerHTML = '';
     selTodo.textContent = '';
@@ -1288,7 +1330,13 @@ function accRenderLista(){
     if(u.materias_vigentes) ent.push('<span class="utag">' + u.materias_vigentes + ' vigente(s)</span>');
     if(u.materias_vencidas) ent.push('<span class="utag exp">' + u.materias_vencidas + ' vencida(s)</span>');
     if(!ent.length)         ent.push('<span class="utag none">sin materias</span>');
-    if(u.pendientes)        ent.push('<span class="apbadge warn">' + u.pendientes + ' pendiente(s)</span>');
+    /* «compras_abiertas» só existe na função nova. Quando ela está lá,
+       mostra-se o número que interessa — pendentes que a pessoa ainda não
+       pagou noutro pedido — e o bruto fica para o caso antigo. */
+    if(u.compras_abiertas > 0)
+      ent.push('<span class="apbadge warn">' + u.compras_abiertas + ' compra(s) sin terminar</span>');
+    else if(u.compras_abiertas == null && u.pendientes)
+      ent.push('<span class="apbadge warn">' + u.pendientes + ' pendiente(s)</span>');
 
     return '<div class="acc-l' + (sel ? ' sel' : '') + '" id="accl-' + u.user_id + '">' +
       '<input type="checkbox" class="pick"' + (sel ? ' checked' : '') +
@@ -1332,10 +1380,83 @@ function accLimpiar(){
   ACC.q = ''; ACC.pagina = 0;
   loadAcc();
 }
+/* ---------------------------------------------------------------------
+   A CHAMADA
+   Prefere a função nova (filtros combinados + «compra sin terminar»).
+   Se a migration ainda não tiver corrido, recua para a função antiga com
+   UM filtro — assim o painel nunca fica partido à espera do banco; só
+   avisa que os filtros combinados ainda não estão disponíveis.
+   --------------------------------------------------------------------- */
+async function accPedir(limit, offset, tz){
+  if(ACC.v2 !== false){
+    const r = await sb.rpc('admin_acc_usuarios_v2', {
+      p_busca: ACC.q || null, p_filtros: ACC.filtros,
+      p_limit: limit, p_offset: offset, p_tz: tz
+    });
+    const t = (r && r.error && r.error.message) || '';
+    if(!(r && r.error && /could not find the function|does not exist|schema cache/i.test(t))){
+      ACC.v2 = true; return r;
+    }
+    ACC.v2 = false;                       // só se conclui isto uma vez
+  }
+  /* A função antiga não conhece «compra_abierta». O CASE dela cai no
+     ramo final e devolve TODA a gente — o que seria pior do que falhar,
+     porque parecia um resultado. Antes disso, diz-se o que se passa. */
+  const soVelhos = ACC.filtros.filter(f => f !== 'compra_abierta');
+  if(ACC.filtros.indexOf('compra_abierta') !== -1){
+    return { data: null, error: { message:
+      'FALTA_MIGRATION: el filtro «Compra sin terminar» necesita la migration ' +
+      '20260915_01_admin_acc_filtros.sql.' } };
+  }
+  return sb.rpc('admin_acc_usuarios', {
+    p_busca: ACC.q || null, p_estado: soVelhos[0] || 'todos',
+    p_limit: limit, p_offset: offset, p_tz: tz
+  });
+}
+
+/* ---------------------------------------------------------------------
+   FILTROS COMBINADOS
+   Cada critério é um interruptor. Dentro do mesmo grupo somam-se (OU);
+   entre grupos cruzam-se (E). Quem faz essa conta é a função no banco —
+   aqui só se junta a lista e se mostra o que está ligado.
+   --------------------------------------------------------------------- */
+function accPintarFiltros(){
+  const cx = document.getElementById('accFil');
+  if(cx && !cx.dataset.pronto){
+    cx.innerHTML = ACC_GRUPOS.map(g =>
+      '<div class="acc-grp"><span class="lbl">' + g.rot + '</span>' +
+      g.ops.map(o =>
+        '<button type="button" class="acc-fb" data-f="' + o[0] + '"' +
+        ' onclick="accSetFiltro(\'' + o[0] + '\')" aria-pressed="false">' +
+        escapeHtml(o[1]) + '</button>').join('') +
+      '</div>').join('');
+    cx.dataset.pronto = '1';
+  }
+  document.querySelectorAll('#accFil .acc-fb').forEach(b => {
+    const on = ACC.filtros.indexOf(b.dataset.f) !== -1;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  const ch = document.getElementById('accChips');
+  if(!ch) return;
+  if(!ACC.filtros.length){ ch.innerHTML = '<span class="muted">Sin filtros: todos los alumnos.</span>'; return; }
+  ch.innerHTML = ACC.filtros.map(f =>
+      '<span class="acc-chip">' + escapeHtml(ACC_ROT[f] || f) +
+      '<button type="button" onclick="accSetFiltro(\'' + f + '\')"' +
+      ' aria-label="Quitar filtro ' + escapeHtml(ACC_ROT[f] || f) + '">×</button></span>').join('') +
+    '<button type="button" class="limpar" onclick="accLimparFiltros()">Quitar todos</button>';
+}
+
 function accSetFiltro(f){
-  ACC.filtro = f; ACC.pagina = 0;
-  document.querySelectorAll('#accFil .acc-fb').forEach(b =>
-    b.classList.toggle('active', b.dataset.f === f));
+  const i = ACC.filtros.indexOf(f);
+  if(i === -1) ACC.filtros.push(f); else ACC.filtros.splice(i, 1);
+  ACC.pagina = 0;                    // mudar o filtro volta à primeira página
+  accPintarFiltros();
+  loadAcc();
+}
+function accLimparFiltros(){
+  ACC.filtros = []; ACC.pagina = 0;
+  accPintarFiltros();
   loadAcc();
 }
 
@@ -1357,10 +1478,7 @@ async function accSelFiltro(){
   const b = document.getElementById('accBulkMsg');
   b.textContent = 'Buscando los ' + finNum(ACC.total) + '...';
   try{
-    const { data, error } = await sb.rpc('admin_acc_usuarios', {
-      p_busca: ACC.q || null, p_estado: ACC.filtro,
-      p_limit: 5000, p_offset: 0, p_tz: accTz()
-    });
+    const { data, error } = await accPedir(5000, 0, accTz());
     if(error) throw error;
     (data || []).forEach(u => { ACC.sel[u.user_id] = u; });
     b.textContent = '';
@@ -1444,7 +1562,7 @@ function exportarWhatsApp(gente, filtro, onMsg){
 
 function accExportWhatsApp(){
   const gente = Object.keys(ACC.sel).map(k => ACC.sel[k]);
-  exportarWhatsApp(gente, ACC_FILTRO_NOME[ACC.filtro] || ACC.filtro,
+  exportarWhatsApp(gente, accNomeArquivo(),
     t => { document.getElementById('accBulkMsg').textContent = t; });
 }
 
@@ -1477,7 +1595,7 @@ function accExportPlanilla(){
       ['NO REGISTRADO', false]
     ].map(c => csvCampo(c[0], c[1])).join(',');
   });
-  bajarCSV(nombreArchivo('alumnos', ACC_FILTRO_NOME[ACC.filtro] || ACC.filtro),
+  bajarCSV(nombreArchivo('alumnos', accNomeArquivo()),
            cab.map(csvCampo).join(',') + '\n' + filas.join('\n'));
   document.getElementById('accBulkMsg').textContent =
     gente.length + ' fila(s) exportada(s). La columna de consentimiento va como NO REGISTRADO ' +
