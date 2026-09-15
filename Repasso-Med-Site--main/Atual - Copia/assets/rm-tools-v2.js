@@ -1300,10 +1300,12 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        nada que diga que é ele que desarma. Era a queixa de «não consigo
        desativar para voltar a rolar».
 
-       Por isso, com uma ferramenta armada o FAB DESARMA em vez de fechar;
-       sem ferramenta armada, abre e fecha o painel como sempre fez. */
+       Por isso, com lápiz ou goma armados o FAB DESARMA em vez de fechar;
+       o marcador não bloqueia o scroll, por isso continua a valer o
+       comportamento antigo: o FAB só abre e fecha o painel, e o marcador
+       segue activo depois de fechar. */
     box.querySelector('#rm2-fab').addEventListener('click', function () {
-      if (st.tool !== 'none') { escolherFerramenta('none'); return; }
+      if (modoEscritaBloqueante()) { escolherFerramenta('none'); return; }
       st.open = !st.open; refletir();
     });
 
@@ -1341,6 +1343,15 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     return { yellow: 'Amarillo', red: 'Rojo', blue: 'Azul', green: 'Verde', pink: 'Rosa' }[c] || c;
   }
 
+  /* Só lápiz e goma tiram o pan à área de leitura (ver touch-action:none
+     no CSS, escopado a body.rm2-t-pen/eraser). O marcador nunca bloqueia
+     o scroll, por isso não precisa do painel sempre aberto nem do FAB a
+     desarmá-lo: fechar a barra com o marcador ligado é seguro, porque a
+     página continua a rolar como sempre. */
+  function modoEscritaBloqueante() {
+    return st.tool === 'pen' || st.tool === 'eraser';
+  }
+
   function escolherFerramenta(t) {
     if (traco) onCancel();
     if (apagando) terminarApagar();
@@ -1354,20 +1365,24 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   function refletir() {
     if (!box) return;
-    /* INVARIANTE: nunca há modo de escrita sem saída à vista. Enquanto uma
-       ferramenta estiver armada o painel fica aberto, portanto o botão que
-       a desarma está sempre no ecrã. Qualquer caminho que tente fechar o
-       painel com a ferramenta armada é corrigido aqui, e não só no FAB. */
-    if (st.tool !== 'none') st.open = true;
+    /* INVARIANTE: nunca há modo de escrita bloqueante sem saída à vista.
+       Enquanto lápiz ou goma estiverem armados o painel fica aberto,
+       portanto o botão que os desarma está sempre no ecrã. Qualquer
+       caminho que tente fechar o painel nesse estado é corrigido aqui,
+       e não só no FAB. O marcador não bloqueia o scroll, por isso pode
+       fechar o painel e continuar activo. */
+    if (modoEscritaBloqueante()) st.open = true;
     box.classList.toggle('open', st.open);
     var fab = box.querySelector('#rm2-fab');
     fab.setAttribute('aria-expanded', String(st.open));
     fab.classList.toggle('armed', st.tool !== 'none');
     /* o rótulo diz o que o botão faz AGORA, que é o que um leitor de ecrã
-       anuncia e o que aparece no tooltip de quem usa rato */
-    var armado = st.tool !== 'none';
-    fab.setAttribute('title', armado ? 'Salir del modo escritura' : 'Herramientas de estudio');
-    fab.setAttribute('aria-label', armado ? 'Salir del modo escritura' : 'Herramientas de estudio');
+       anuncia e o que aparece no tooltip de quem usa rato. Só lápiz e
+       goma fazem o FAB sair do modo de escrita; com o marcador o FAB
+       continua a só abrir/fechar o painel. */
+    var bloqueante = modoEscritaBloqueante();
+    fab.setAttribute('title', bloqueante ? 'Salir del modo escritura' : 'Herramientas de estudio');
+    fab.setAttribute('aria-label', bloqueante ? 'Salir del modo escritura' : 'Herramientas de estudio');
 
     box.querySelectorAll('.rm2-btn[data-t]').forEach(function (b) {
       var on = b.getAttribute('data-t') === st.tool;
@@ -1640,7 +1655,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     document.addEventListener('pointerdown', function (e) {
       if (!st.open || traco || apagando) return;
       if (e.target.closest && e.target.closest('.rm2-box,.rm2-notes')) return;
-      if (st.tool !== 'none') return;             // ferramenta armada: mantém aberto
+      if (modoEscritaBloqueante()) return;         // lápiz/goma armados: mantém aberto
       st.open = false; refletir();
     }, true);
 
