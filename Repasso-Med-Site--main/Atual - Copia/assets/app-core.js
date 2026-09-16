@@ -57,15 +57,26 @@ function checkAnswer(optEl) {
   _revealAnswer(item);
 }
 
+/* Qual das duas opções o botão representa. A convenção do site é
+   `data-tf="V"` / `data-tf="F"`, mas Guaraní escreveu os 108 botões sem
+   esse atributo. Sem ele, `dataset.tf === 'V'` é sempre falso, e carregar
+   em «Verdadero» era pontuado como se tivesse escolhido «Falso» — as 54
+   perguntas de V/F da matéria davam INCORRECTO à resposta certa. Quando
+   o atributo falta, lê-se o rótulo do próprio botão. */
+function _tfEsVerdadero(b){
+  if (b.dataset && b.dataset.tf) return b.dataset.tf.toUpperCase() === 'V';
+  return /^\s*v/i.test(b.textContent || '');
+}
+
 function checkTF(btn, expected) {
   var item = btn.closest('.quiz-item');
   if (!item || item.classList.contains('answered')) return;
   item.classList.add('answered');
-  var chosen = btn.dataset.tf === 'V';
+  var chosen = _tfEsVerdadero(btn);
   var isCorrect = chosen === expected;
   item.querySelectorAll('.tf-btn').forEach(function(b){
     b.disabled = true;
-    if ((b.dataset.tf === 'V') === expected) b.classList.add('correct');
+    if (_tfEsVerdadero(b) === expected) b.classList.add('correct');
     if (b === btn && !isCorrect) b.classList.add('wrong');
   });
   var feedback = document.createElement('div');
@@ -144,10 +155,27 @@ var RepassoMed = (function(){
      criado aqui, com o mesmo markup, a mesma classe e o mesmo
      comportamento dos que já existem — e só quando faltar.
      Idempotente: roda de novo sem duplicar nada.
+
+     As de VERDADERO/FALSO também já têm saída própria, e não pela
+     mesma porta: o aluno carrega num `.tf-btn`, o `checkTF` marca
+     certo/errado e chama `_revealAnswer`. Dar-lhes um botão seria
+     dar-lhes um segundo caminho — e um que abre a resposta antes de
+     responder, que é exactamente o que a pergunta quer evitar.
      --------------------------------------------------------------- */
   function garantirSaida(item){
     if (item.classList.contains('interactive')) return false;  // MCQ: abre ao responder
     if (item.querySelector('ul.options'))       return false;  // vai virar MCQ
+    /* O V/F é verificado antes do `.reveal-btn` de propósito: Guaraní dá
+       às suas 54 perguntas de V/F um «Ver respuesta» além dos dois
+       botões, e é justamente esse botão que aqui se tira. */
+    if (item.querySelector('.tf-buttons, .tf-btn')){
+      /* Mesmo caso que `normalizeOne` já resolve no MCQ: havendo saída
+         própria, a porta extra abre a resposta antes de o aluno
+         responder. */
+      var extra = item.querySelector('.reveal-btn');
+      if (extra) extra.remove();
+      return false;
+    }
     if (item.querySelector('.reveal-btn'))      return false;  // já tem saída
     var ans = item.querySelector('.answer');
     if (!ans || !ans.parentNode)                return false;
