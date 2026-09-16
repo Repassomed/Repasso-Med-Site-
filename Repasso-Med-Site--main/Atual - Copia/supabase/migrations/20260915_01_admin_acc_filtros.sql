@@ -219,3 +219,26 @@ $function$;
 
 comment on function public.admin_acc_usuarios_v2(text, text[], integer, integer, text) is
   'Lista de alunos do painel Accesos com filtros combinaveis (E entre grupos, OU dentro do grupo). compras_abiertas = pedidos pendentes cujos produtos a pessoa ainda nao pagou em nenhum outro pedido. Somente leitura.';
+
+
+/* ---------------------------------------------------------------------
+   PERMISSÕES
+
+   `create function` dá EXECUTE a PUBLIC por omissão. Numa função
+   SECURITY DEFINER isso significa que qualquer papel — incluindo `anon`,
+   que é o papel de quem nem sequer entrou — pode chamá-la, e o único
+   obstáculo passa a ser o `is_admin()` lá dentro. Esse portão funciona
+   (`is_admin()` é `coalesce(..., false)`, nunca devolve null, portanto o
+   `if not` dispara sempre que não for admin), mas ele é a ÚLTIMA linha,
+   não deve ser a única.
+
+   As três funções da mesma família — `admin_acc_resumo`,
+   `admin_acc_usuarios` e `admin_acc_detalle` — já são criadas com estas
+   mesmas linhas em 20260913_08_admin_v2_acessos.sql, e em produção a sua
+   ACL é `{postgres, authenticated, service_role}`: sem PUBLIC, sem anon.
+   Sem este bloco, a v2 nasceria MAIS PERMISSIVA do que a v1 que vem
+   substituir, o que seria uma regressão de privilégio.
+   --------------------------------------------------------------------- */
+revoke all on function public.admin_acc_usuarios_v2(text, text[], integer, integer, text) from public, anon;
+
+grant execute on function public.admin_acc_usuarios_v2(text, text[], integer, integer, text) to authenticated;
