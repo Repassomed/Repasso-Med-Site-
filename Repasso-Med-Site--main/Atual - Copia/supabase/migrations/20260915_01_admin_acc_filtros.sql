@@ -39,11 +39,45 @@
 --   · uma compra distinta ainda pendente       -> aparece, mesmo que a
 --     pessoa tenha outras compras pagas.
 --
--- A cobertura é medida contra a UNIÃO de tudo o que a pessoa já pagou, e
--- não contra um pedido pago de cada vez: assim uma cesta pendente {A,B}
+-- A cobertura é medida contra a UNIÃO de vários pedidos pagos, e não
+-- contra um pedido pago de cada vez: assim uma cesta pendente {A,B}
 -- também é considerada coberta se A e B foram pagos em pedidos
 -- separados. Hoje esse caso não existe em produção (medido: 0), mas o
 -- critério mais largo não custa nada e não se engana se ele aparecer.
+--
+-- MAS essa união NÃO é a vida inteira da pessoa: é só o que ela pagou
+-- DEPOIS de o pendente ter nascido. A razão é que a mesma matéria pode
+-- ser comprada outra vez, de forma legítima:
+--
+--   · todos os 93 produtos têm `duration_days = 180`, ou seja, todo o
+--     acesso vendido expira;
+--   · `grant_paid_order()` tem um caminho explícito de RENOVAÇÃO — o
+--     `on conflict (user_id, subject_slug) do update` que estica
+--     `expires_at` para `greatest(antigo, novo)` e sobe o plano de
+--     parcial para completa. Esse ramo só faz sentido se comprar de novo
+--     for uma operação esperada;
+--   · `create-checkout.js` não tem nenhuma verificação de «já tens isto»,
+--     e a loja mostra todos os produtos activos, anunciando os dias de
+--     acesso;
+--   · não há unique, check nem trigger em `orders` que impeça um segundo
+--     pedido do mesmo `product_id` (o único unique é
+--     `order_items (order_id, product_id)`, que só evita o mesmo produto
+--     duas vezes no MESMO carrinho).
+--
+-- Com a união histórica, a primeira renovação de cada aluno nasceria
+-- invisível no painel: «já pagou isso alguma vez na vida» apagaria uma
+-- compra nova e genuína. Com o corte no tempo, uma tentativa antiga só é
+-- dada como resolvida pelo pagamento que veio DEPOIS dela — que é a única
+-- evidência, nos dados que existem, de que pertence à mesma tentativa.
+--
+-- LIMITE HONESTO DESTE CRITÉRIO: o esquema não guarda nenhuma coluna que
+-- agrupe tentativas da mesma compra (não há sessão de checkout, nem
+-- referência externa, nem grupo de pedido — só `created_at` e `paid_at`).
+-- Por isso um segundo clique dado LOGO A SEGUIR a um pagamento aparece
+-- como compra em aberto. Medido em produção: existe exactamente 1 caso,
+-- criado 18 segundos depois do pagamento. É um falso positivo
+-- administrativo assumido de propósito — é preferível mostrar a mais do
+-- que esconder uma compra realmente pendente.
 --
 -- Se um pedido pendente não tiver nenhum produto registado, conta como
 -- NÃO finalizado: não há evidência de que tenha sido concluído, e é
@@ -105,8 +139,9 @@ begin
      and lower(btrim(x)) <> 'todos';
 
   return query
-  with pagos as (   -- tudo o que cada pessoa já pagou, achatado
-    select o.user_id, array_agg(distinct pr) as prods
+  with pagos as (   -- cada produto pago, com o MOMENTO em que foi pago
+    select o.user_id, pr as product_id,
+           coalesce(o.paid_at, o.created_at) as pago_en
       from public.orders o
       cross join lateral unnest(
         coalesce(
@@ -115,7 +150,6 @@ begin
           '{}'::uuid[])
       ) as pr
      where o.status = 'paid'
-     group by o.user_id
   ),
   base as (
     select p.id, p.full_name, p.email, nullif(btrim(coalesce(p.phone,'')),'') as tel,
@@ -145,13 +179,18 @@ begin
           from public.orders o2 where o2.user_id = p.id
       ) o on true
       left join lateral (
-        /* pendentes cujo conteúdo a pessoa ainda NÃO pagou */
+        /* pendentes que nenhum pagamento POSTERIOR veio resolver */
         select count(*)::int as n
           from public.orders o3
          where o3.user_id = p.id
            and o3.status = 'pending'
            and not (
-             coalesce((select g.prods from pagos g where g.user_id = p.id), '{}'::uuid[])
+             /* só o que foi pago DEPOIS deste pendente nascer pode ser o
+                desfecho da mesma tentativa; o que veio antes é história */
+             coalesce((select array_agg(distinct g.product_id)
+                         from pagos g
+                        where g.user_id = p.id
+                          and g.pago_en >= o3.created_at), '{}'::uuid[])
              @>
              /* conjunto do pedido; vazio -> nunca é «coberto», conta */
              coalesce(
