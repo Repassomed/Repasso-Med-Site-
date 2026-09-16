@@ -233,10 +233,21 @@ body.rm2-drawing{ -webkit-user-select:none; user-select:none; }
    deixa de oferecer pan. Fora desse estado não há uma única propriedade
    aplicada, por isso o scroll volta no instante em que se desarma: isto
    é só uma classe no body, sem overflow:hidden, sem mexer na posição de
-   scroll e sem layout shift. O marcador não entra aqui — continua a
-   rolar normalmente, que é o que se espera de quem só está a ler. */
+   scroll e sem layout shift.
+
+   O marcador ENTRA aqui desde que passou a ter gesto próprio também por
+   dedo (arrastar uma vez sobre o texto marca, sem long-press): por um
+   dedo, arrastar-para-marcar e arrastar-para-rolar são o MESMO gesto até
+   ao primeiro movimento, e não há como o browser adivinhar qual antes de
+   o pointerdown acontecer. Suspende-se o pan só enquanto o marcador está
+   armado — mouse e trackpad não usam touch-action para rolar, por isso
+   continuam a rolar normalmente o tempo todo — e ao desarmar o scroll por
+   dedo volta imediatamente, sem página presa (mesmo princípio do FAB da
+   caneta: nunca fica bloqueio sem saída — aqui a saída é qualquer troca
+   de ferramenta, sempre ao alcance). */
 body.rm2-t-pen #materias-container,
-body.rm2-t-eraser #materias-container{
+body.rm2-t-eraser #materias-container,
+body.rm2-t-highlight #materias-container{
   touch-action:none;
   overscroll-behavior:contain;
 }
@@ -926,6 +937,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     diagLog('reconciliar:' + (motivo || '?'), null);
     if (apagando) terminarApagar();
     abortarTraco();
+    abortarGestoMarcador(motivo);   // mesma filosofia fail-safe, agora também para o marcador
   }
 
   /* Um traço cuja secção já saiu do documento é lixo: a matéria foi
@@ -1243,25 +1255,25 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   /* O fluxo antigo (mouseup/touchend → window.getSelection()) EXIGIA que
      o browser já tivesse construído sozinho uma selecção nativa quando o
      gesto soltasse — em desktop isso acontece de graça com o arrasto do
-     rato, mas em touch normalmente só depois de um long-press, e fechar a
-     toolbox a meio (ver o listener de «clicar fora» mais abaixo) ainda
-     atrapalhava. Por isso: ARMAR MARCADOR → ARRASTAR UMA VEZ → SOLTAR →
+     rato, mas em touch normalmente só depois de um long-press. Por isso:
+     ARMAR MARCADOR → ARRASTAR UMA VEZ (mouse, pen OU dedo) → SOLTAR →
      TEXTO MARCADO, com uma Range construída por nós a partir do PONTO do
      gesto, não da selecção do browser.
 
      A ancoragem, o pintar/despintar e o Supabase continuam exactamente os
      mesmos (rm-tools.js, `marcarRange`) — só muda como a Range chega lá.
 
-     Só MOUSE e PEN (stylus) usam este gesto. TOUCH fica de fora de
-     propósito: para arrastar-para-seleccionar por dedo funcionar em cima
-     de uma área que também tem de continuar a rolar por dedo (o marcador
-     nunca bloqueia scroll — PR anterior, testado), seria preciso
-     touch-action:none só nesse arrasto, e não há forma de distinguir «vai
-     seleccionar» de «vai rolar» ANTES do gesto começar. Por toque, o
-     caminho continua a ser o long-press nativo do próprio SO + o fallback
-     de `window.getSelection()` mais abaixo — limitação conhecida,
-     registada aqui em vez de fingida resolvida. */
-  var hlGesto = null;               // { pid, tab, ini, fim, moveu }
+     Mouse, pen e touch passam pela MESMA máquina (onHlDown/Move/Up/Cancel);
+     a única diferença por tipo de ponteiro é como se evita interferência
+     nativa: mouse/pen apanham o `dragstart` (arrastar uma selecção já
+     existente); touch ganha `touch-action:none` em CSS (o marcador agora
+     suspende o pan por dedo enquanto está armado — antes não bloqueava
+     scroll nenhum; ver comentário no CSS) e `preventDefault()` já no
+     `pointerdown`, que é a forma correcta de vetar o long-press nativo
+     (menu de contexto, lupa de selecção) sem tocar no duplo-clique do
+     rato — esse preventDefault só corre para `touch`. */
+  var hlGesto = null;               // { pid, tipo, tab, sec, el, x0, y0, ini, fim, moveu }
+  var HL_LIMIAR_PX = 5;             // abaixo disto é jitter, não arrasto (item 4)
 
   function pontoDoEvento(x, y) {
     try {
@@ -1311,41 +1323,104 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     try { window.getSelection().removeAllRanges(); } catch (e) {}
   }
 
+  /* Ponto ÚNICO de término anormal do gesto do marcador — o mesmo espírito
+     do `abortarTraco` da caneta (item 2). Chamado por interrupções globais
+     (reconciliarGesto), por pointercancel/lostpointercapture e por troca
+     de ferramenta. Depois disto: hlGesto === null, nenhuma captura
+     pendurada, nenhuma selecção que o gesto tenha criado sobra. */
+  function abortarGestoMarcador(motivo) {
+    if (!hlGesto) return;
+    var g = hlGesto; hlGesto = null;
+    libertar(g.el, g.pid);
+    if (g.moveu) limparSelecaoDoGesto();
+    diagLog('hl-abort:' + (motivo || '?'), null);
+  }
+
   function onHlDown(e) {
     if (st.tool !== 'highlight') return;
     if (lbAberto()) return;
-    if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;   // touch: ver nota acima
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (hlGesto) return;                                // 2.º ponteiro: ignora, não troca a meio
     var tab = abaAtiva(); if (!tab) return;
     if (!alvoElegivelParaMarcar(e.target, tab)) return;
     var p0 = pontoDoEvento(e.clientX, e.clientY);
     if (!p0) return;
-    hlGesto = { pid: e.pointerId, tipo: e.pointerType, tab: tab, ini: p0, fim: null, moveu: false };
+    /* Vetar já aqui o long-press nativo (menu de contexto / lupa de
+       selecção) é o que permite ao dedo arrastar-para-marcar em vez de
+       accionar a UI de selecção do próprio SO. Só para touch: em mouse
+       isto mataria o duplo-clique nativo (seleccionar palavra → tocar
+       numa cor, fluxo que continua a existir na paleta). */
+    if (e.pointerType === 'touch') e.preventDefault();
+    var sec = e.target.closest && e.target.closest('section[id]');
+    var el = e.target;
+    try { el.setPointerCapture && el.setPointerCapture(e.pointerId); } catch (err) {}
+    hlGesto = {
+      pid: e.pointerId, tipo: e.pointerType, tab: tab, sec: sec || null, el: el,
+      x0: e.clientX, y0: e.clientY, ini: p0, fim: null, moveu: false
+    };
   }
 
   function onHlMove(e) {
     if (!hlGesto || e.pointerId !== hlGesto.pid) return;
+    var g = hlGesto;
+    /* item 4 — limiar de movimento: jitter não é arrasto */
+    var dx = e.clientX - g.x0, dy = e.clientY - g.y0;
+    if (!g.moveu && (dx * dx + dy * dy) < HL_LIMIAR_PX * HL_LIMIAR_PX) return;
+
+    /* item 5 — a Range não pode fugir da zona elegível nem, de
+       preferência, do bloco/secção onde o gesto começou: em vez de
+       seguir o ponteiro cegamente, cada movimento verifica o alvo REAL
+       antes de o aceitar como novo fim. Fora da zona (ou noutra secção):
+       clamp — fica-se pelo último ponto válido, em vez de deixar uma
+       selecção atravessar a toolbox, o menu ou a interface inteira.
+
+       DOIS testes de zona, porque `elementFromPoint` e
+       `caretRangeFromPoint` nem sempre concordam: no VÃO entre dois
+       blocos (a margem entre duas `<section>`, por exemplo) o hit-test
+       da caixa devolve o contentor genérico por cima, mas o hit-test do
+       caret pode «encaixar» no carácter mais próximo — que pode já
+       pertencer ao bloco SEGUINTE. Validar só `elementFromPoint` deixava
+       a Range escapar exactamente por essa fresta; o teste de secção usa
+       antes o nó em que o caret REALMENTE resolveu, o mesmo que
+       `construirRange` vai usar.
+
+       E porque não basta REJEITAR o ponto fora da zona: o rato não teve
+       o mousedown prevenido (de propósito, para não matar o duplo-clique
+       nativo), por isso o próprio browser continua a alargar a SUA
+       selecção sozinho em paralelo, a cada mousemove — e ganhava sempre
+       por último se nos limitássemos a ignorar o movimento. Por isso
+       esta função REAFIRMA sempre a nossa Range (a nova, se o ponto é
+       válido; a última válida, senão) depois do limiar — nunca deixa o
+       browser preencher a selecção sozinho por omissão nossa. */
+    var alvo = document.elementFromPoint(e.clientX, e.clientY);
     var p1 = pontoDoEvento(e.clientX, e.clientY);
-    if (!p1) return;
-    var range = construirRange(hlGesto.ini, p1);
-    if (!range) return;
-    hlGesto.fim = p1;
-    hlGesto.moveu = true;
-    /* feedback visual do arrasto: a mesma selecção azul de sempre, só que
-       construída por nós — não é preciso um overlay novo para isto */
-    try { var s = window.getSelection(); s.removeAllRanges(); s.addRange(range); } catch (err) {}
+    var aceitavel = !!(p1 && alvoElegivelParaMarcar(alvo, g.tab));
+    if (aceitavel && g.sec) {
+      var elCaret = (p1.node.nodeType === 1) ? p1.node : p1.node.parentElement;
+      var secAtual = elCaret && elCaret.closest && elCaret.closest('section[id]');
+      if (secAtual !== g.sec) aceitavel = false;
+    }
+    if (aceitavel) g.fim = p1;
+
+    var range = g.fim ? construirRange(g.ini, g.fim) : null;
+    try {
+      var s = window.getSelection(); s.removeAllRanges();
+      if (range && !range.collapsed) s.addRange(range);
+    } catch (err) {}
+    if (range && !range.collapsed) g.moveu = true;
     e.preventDefault();
   }
 
   async function onHlUp(e) {
     if (!hlGesto || (e && e.pointerId !== hlGesto.pid)) return;
     var g = hlGesto; hlGesto = null;
+    libertar(g.el, g.pid);
     /* toque sem arrasto: não cria lixo (M11). E não mexe na selecção —
        um simples clique pode ser o início de um duplo-clique nativo do
        browser (seleccionar uma palavra para depois tocar numa cor, o
        fluxo antigo que continua a existir na paleta); só limpamos a
        selecção quando fomos NÓS a construí-la, isto é, quando houve
-       arrasto de facto. */
+       arrasto de facto além do limiar. */
     if (!g.moveu || !g.fim) return;
     var range = construirRange(g.ini, g.fim);
     limparSelecaoDoGesto();
@@ -1359,9 +1434,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   function onHlCancel(e) {
     if (!hlGesto || (e && e.pointerId !== hlGesto.pid)) return;
-    var moveu = hlGesto.moveu;
-    hlGesto = null;
-    if (moveu) limparSelecaoDoGesto();   // só limpa a selecção que fomos nós a criar
+    abortarGestoMarcador('pointercancel');
   }
 
   /* ================================================================== */
@@ -1600,6 +1673,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   function escolherFerramenta(t) {
     if (traco) onCancel();
     if (apagando) terminarApagar();
+    if (hlGesto) abortarGestoMarcador('troca-ferramenta');
     st.tool = t;
     if (t !== 'none') st.open = true;
     if (t === 'pen' || t === 'eraser') limparSelecaoResidual();
@@ -1845,7 +1919,10 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   /* ================================================================== */
 
   function ligar() {
-    /* marcador — MOUSE e PEN: gesto próprio, um arrasto e pronto. */
+    /* marcador — MOUSE, PEN e TOUCH pela MESMA máquina de gesto: um
+       arrasto e pronto (ver «9b»). O «seleccionar palavra → tocar numa
+       cor» continua a existir à parte, no clique da paleta de cores mais
+       abaixo — não depende disto. */
     document.addEventListener('pointerdown', onHlDown, true);
     document.addEventListener('pointermove', onHlMove, { passive: false });
     document.addEventListener('pointerup', onHlUp, true);
@@ -1863,20 +1940,6 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     document.addEventListener('dragstart', function (e) {
       if (hlGesto) e.preventDefault();
     }, true);
-
-    /* marcador — TOUCH: sem gesto próprio (ver nota em «9b»); fica o
-       long-press nativo do SO + a selecção que ele produzir sozinho.
-       Só `touchend` — `mouseup` saiu daqui de propósito, porque agora
-       mouse e pen têm o gesto acima, e um `mouseup` chegando 30 ms depois
-       de uma marcação já em curso (rede lenta) duplicava a marca. */
-    document.addEventListener('touchend', function (e) {
-      if (st.tool !== 'highlight') return;
-      if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes')) return;
-      setTimeout(function () {
-        var s = window.getSelection();
-        if (s && s.rangeCount && !s.isCollapsed) aplicarMarcacao();
-      }, 30);
-    }, { passive: true });
 
     /* Defesa em profundidade contra selecção nativa em modo de escrita
        bloqueante (lápis/goma): mesmo que o CSS (user-select:none) não
@@ -1918,6 +1981,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       diagLog('lostpointercapture', e);
       if (traco && e.pointerId === traco.pid) abortarTraco();
       else if (apagando && e.pointerId === apagando.pid) terminarApagar();
+      else if (hlGesto && e.pointerId === hlGesto.pid) abortarGestoMarcador('lostpointercapture');
     }, true);
 
     /* Mudar de aplicação no tablet: a letra em curso não se fecha sozinha. */
