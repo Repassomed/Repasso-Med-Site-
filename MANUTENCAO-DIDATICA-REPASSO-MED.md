@@ -957,11 +957,39 @@ REGRA: uma questão nova só entra se acrescentar VALOR AVALIATIVO REAL ao
 banco. Não acumular questões apenas porque o enunciado foi escrito de
 maneira diferente. Um banco maior não é um banco melhor.
 
-Atenção a um caso que PARECE duplicata e não é: duas questões com o mesmo
-enunciado, mas com alternativas e gabaritos diferentes, são variantes
-legítimas quando as duas caíram na prova e cada uma isola um erro distinto.
-Nesse caso, preservar as duas e registrar por quê. A duplicata real exige
-coincidência de enunciado E de alternativas E de gabarito.
+A duplicação é determinada principalmente pelo CONTEÚDO e pelo RACIOCÍNIO
+AVALIATIVO, e NÃO pela identidade literal do enunciado ou das alternativas.
+
+Isto quer dizer que NÃO transformam automaticamente uma questão repetida em
+questão nova:
+
+- trocar as alternativas;
+- mudar a ordem das alternativas;
+- mudar a letra correta;
+- trocar pequenas palavras do enunciado;
+- mudar o contexto superficial (nome, idade, cidade, esporte do paciente);
+- a questão vir de outra prova, de outra fila ou de outro semestre.
+
+Se duas questões cobram essencialmente o mesmo conceito, o mesmo raciocínio
+e a mesma conclusão científica, sem ganho avaliativo real, então são
+DUPLICATA SEMÂNTICA e NÃO devem ser inseridas — mesmo que as alternativas
+sejam diferentes, mesmo que o gabarito caia em outra letra e mesmo que
+tenham caído em provas distintas.
+
+Duas questões do mesmo tema só podem coexistir quando houver DIFERENÇA
+AVALIATIVA REAL, isto é, quando uma delas exigir:
+
+- outro mecanismo;
+- outra aplicação;
+- outro diagnóstico diferencial;
+- outro estágio ou fase da doença;
+- outra complicação;
+- um contexto clínico que mude o raciocínio, e não apenas a ambientação;
+- outro erro conceitual a ser isolado.
+
+Na dúvida entre «duplicata semântica» e «relacionada mas distinta», a
+pergunta que decide é: um aluno que acertou a primeira pode errar a segunda
+por não saber alguma coisa a mais? Se a resposta for não, é duplicata.
 
 Registrar sempre a decisão tomada para cada questão recebida, com a
 categoria e o motivo, e citar o id da questão já existente que motivou o

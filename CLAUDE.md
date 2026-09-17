@@ -94,12 +94,19 @@ ATUALIZAÇÃO DE QUESTÕES**
 Ler essa seção ANTES de inserir qualquer questão. Em resumo, ela exige:
 
 - **Auditoria de duplicatas antes de tudo** (8-A.1): comparar cada questão
-  recebida com TODAS as já existentes na matéria, olhando enunciado, conceito
-  central, resposta, raciocínio exigido, contexto clínico e objetivo
-  pedagógico. Classificar em DUPLICATA EXATA e DUPLICATA SEMÂNTICA (não
-  inserir) ou RELACIONADA MAS DISTINTA e NOVA (pode inserir). **Uma questão
-  só entra se acrescentar valor avaliativo real.** Registrar cada descarte
-  com o id da questão que já cobria o ponto.
+  recebida com TODAS as já existentes na matéria, olhando conceito central,
+  conhecimento necessário, mecanismo/raciocínio, conclusão científica,
+  contexto clínico relevante e objetivo pedagógico. Classificar em DUPLICATA
+  EXATA e DUPLICATA SEMÂNTICA (não inserir) ou RELACIONADA MAS DISTINTA e
+  NOVA (pode inserir). **Uma questão só entra se acrescentar valor
+  avaliativo real.** Registrar cada descarte com o id da questão que já
+  cobria o ponto.
+  **A duplicação é determinada principalmente pelo conteúdo e pelo raciocínio
+  avaliativo, e não pela identidade literal do enunciado ou das
+  alternativas.** Trocar alternativas, ordem, letra correta, pequenas
+  palavras, contexto superficial ou prova de origem NÃO torna uma questão
+  repetida em questão nova. Na dúvida: um aluno que acertou a primeira pode
+  errar a segunda por não saber algo a mais? Se não, é duplicata.
 - **Lei absoluta de cobertura** (8-A.2): nenhuma questão cobra o que o resumo
   não ensinou antes. **RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA.**
   A explicação depois da resposta não substitui o ensino prévio.
