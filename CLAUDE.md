@@ -82,35 +82,6 @@ Melhorar sem reduzir indevidamente a profundidade.
 Preservar conteúdos importantes.
 
 
-## 5-A. QUESTÕES · BANCO GERAL · QUESTÕES BASEADAS EM EXAME
-
-Se a tarefa envolver **adicionar questões**, **atualizar o banco de questões**,
-**incorporar questões de prova**, **corrigir gabaritos** ou **reconciliar
-questões do Drive com o site**, o protocolo completo e obrigatório está em:
-
-MANUTENCAO-DIDATICA-REPASSO-MED.md → seção **8-A · LEI DE INTEGRAÇÃO E
-ATUALIZAÇÃO DE QUESTÕES**
-
-Ler essa seção ANTES de inserir qualquer questão. Em resumo, ela exige:
-
-- **Localização dupla**: toda questão vai no FINAL DO BLOCO correspondente
-  E no BANCO GERAL, idênticas, sem divergência (8-A.1).
-- **Lei absoluta de cobertura**: nenhuma questão cobra o que o resumo não
-  ensinou antes. RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA.
-  A explicação depois da resposta não substitui o ensino prévio (8-A.2).
-- **Rótulo correto**: «Basada en preguntas de examen», nunca «Pregunta
-  oficial» sem comprovação (8-A.3).
-- **Recuperação máxima**: o enunciado vale mais do que recuperar as
-  alternativas originais; é permitido reconstruir alternativas, mas nunca
-  inventar a resposta correta — se não for determinável, vira pendência (8-A.4).
-- **Distratores plausíveis**, pelo menos dois muito próximos entre si; a
-  dificuldade vem da distração, nunca da ambiguidade (8-A.5).
-- **Gabarito sem padrão previsível**; corrigir apenas por REORDENAÇÃO das
-  alternativas, nunca alterando a resposta científica correta (8-A.6).
-- **Preservação**: não apagar nem substituir questões antigas; comparar antes
-  de inserir para não duplicar (8-A.8).
-- **Atualizar as contagens declaradas** no texto do site (8-A.9).
-
 ## 6. PADRÃO VISUAL
 
 Quando necessário, consultar:
