@@ -138,6 +138,63 @@
   }
 
   /* ================================================================== */
+  /* 2b · DIAGNÓSTICO — SÓ BETA, SÓ EM MEMÓRIA                           */
+  /* ================================================================== */
+
+  /* Os testes sintéticos (CDP) não reproduziram a falha física relatada
+     no tablet. Isto é a rede que falta: um anel de ~100 eventos, só na
+     memória do separador, NUNCA enviado ao servidor. Serve para o tester
+     copiar o estado se o bug físico voltar a acontecer — nada mais.
+
+     Deliberadamente NÃO regista: texto da matéria, conteúdo de notas,
+     e-mail, tokens ou qualquer dado pessoal. Só metadados do gesto. Os
+     `pointermove` de um traço não entram aqui — a um por movimento, o
+     anel encheria-se num único traço e perderia-se o antes/depois que
+     interessa; só o que muda de estado é que fica registado. */
+  var DIAG_MAX = 100;
+  var diag = [];
+
+  function diagAlvo(el) {
+    if (!el || el.nodeType !== 1) return '';
+    var tag = (el.tagName || '').toLowerCase();
+    var cls = (typeof el.className === 'string' && el.className) ?
+      '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : '';
+    return tag + cls;
+  }
+
+  function diagTemCaptura(e) {
+    try {
+      return !!(e && e.target && e.target.hasPointerCapture && e.pointerId != null &&
+        e.target.hasPointerCapture(e.pointerId));
+    } catch (err) { return false; }
+  }
+
+  function diagLog(tipo, e) {
+    try {
+      diag.push({
+        t: Date.now(), tipo: tipo,
+        pointerType: e ? e.pointerType : null,
+        pointerId: e ? e.pointerId : null,
+        buttons: e ? e.buttons : null,
+        tool: st.tool,
+        traco: !!traco, apagando: !!apagando,
+        captura: diagTemCaptura(e),
+        alvo: e ? diagAlvo(e.target) : ''
+      });
+      if (diag.length > DIAG_MAX) diag.shift();
+    } catch (err) { /* diagnóstico nunca pode ser causa de erro novo */ }
+  }
+
+  /* window.RMToolsV2.debug() — só isto, nada de painel permanente. Devolve
+     a cópia (para o tester copiar/colar) e também imprime uma tabela. */
+  function debug() {
+    var copia = diag.slice();
+    try { if (console.table) console.table(copia); else console.log(copia); }
+    catch (err) { console.log(copia); }
+    return copia;
+  }
+
+  /* ================================================================== */
   /* 3 · CSS                                                             */
   /* ================================================================== */
 
@@ -176,13 +233,40 @@ body.rm2-drawing{ -webkit-user-select:none; user-select:none; }
    deixa de oferecer pan. Fora desse estado não há uma única propriedade
    aplicada, por isso o scroll volta no instante em que se desarma: isto
    é só uma classe no body, sem overflow:hidden, sem mexer na posição de
-   scroll e sem layout shift. O marcador não entra aqui — continua a
-   rolar normalmente, que é o que se espera de quem só está a ler. */
+   scroll e sem layout shift.
+
+   O marcador ENTRA aqui desde que passou a ter gesto próprio também por
+   dedo (arrastar uma vez sobre o texto marca, sem long-press): por um
+   dedo, arrastar-para-marcar e arrastar-para-rolar são o MESMO gesto até
+   ao primeiro movimento, e não há como o browser adivinhar qual antes de
+   o pointerdown acontecer. Suspende-se o pan só enquanto o marcador está
+   armado — mouse e trackpad não usam touch-action para rolar, por isso
+   continuam a rolar normalmente o tempo todo — e ao desarmar o scroll por
+   dedo volta imediatamente, sem página presa (mesmo princípio do FAB da
+   caneta: nunca fica bloqueio sem saída — aqui a saída é qualquer troca
+   de ferramenta, sempre ao alcance). */
 body.rm2-t-pen #materias-container,
-body.rm2-t-eraser #materias-container{
+body.rm2-t-eraser #materias-container,
+body.rm2-t-highlight #materias-container{
   touch-action:none;
   overscroll-behavior:contain;
+}
+
+/* Defesa em profundidade contra selecção nativa durante lápis/goma.
+   O user-select:none acima ficava só dentro de #materias-container; isto
+   alarga-o à página inteira enquanto o modo de escrita está armado — se
+   alguma coisa deixar passar um pointerdown sem anchorDe() reconhecer o
+   alvo (fora da matéria, numa borda, num nó ainda não medido), o browser
+   continua sem conseguir começar uma selecção em lado nenhum. Notas e
+   campos de escrita legítimos ficam de fora de propósito: quem estiver a
+   escrever um apunte continua a poder seleccionar o que já escreveu. */
+body.rm2-t-pen, body.rm2-t-eraser{
   -webkit-user-select:none; user-select:none;
+}
+body.rm2-t-pen input, body.rm2-t-pen textarea, body.rm2-t-pen [contenteditable],
+body.rm2-t-eraser input, body.rm2-t-eraser textarea, body.rm2-t-eraser [contenteditable],
+body.rm2-t-pen .rm2-notes, body.rm2-t-eraser .rm2-notes{
+  -webkit-user-select:text; user-select:text;
 }
 
 /* Com o zoom aberto a matéria sai de cena: a toolbox e a gaveta saem também.
@@ -690,8 +774,10 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   function onDown(e) {
     if (st.tool !== 'pen' && st.tool !== 'eraser') return;
+    diagLog('pointerdown', e);
     if (lbAberto()) return;                             // zoom aberto: caneta suspensa
     if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes,.rm-tools,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug')) return;
+    if (gestoMorto()) abortarTraco();                   // traço órfão não bloqueia o seguinte
     if (traco || apagando) return;                      // rejeição de palma/2.º ponteiro
     if (e.pointerType === 'mouse' && e.button !== 0) return;
 
@@ -743,44 +829,61 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   function onMove(e) {
     if (!traco || e.pointerId !== traco.pid) return;
-    /* getCoalescedEvents() pode devolver uma lista VAZIA — acontece no
-       primeiro movimento de alguns dispositivos e em eventos sintéticos.
-       Um `|| [e]` não chega, porque [] é truthy: era assim que se perdia
-       o traço inteiro. */
-    var evs = null;
-    try { if (e.getCoalescedEvents) evs = e.getCoalescedEvents(); } catch (err) { evs = null; }
-    if (!evs || !evs.length) evs = [e];
-    for (var i = 0; i < evs.length; i++) addPonto(evs[i]);
-    /* só se reescreve o atributo `d`; nenhum nó é criado ou destruído,
-       nenhum reflow do documento (§12) */
-    traco.path.setAttribute('d', dDe(traco.pts));
+    /* Falha a meio de um movimento não pode deixar `traco` pendurado para
+       sempre — é o mesmo espírito da reconciliação, só que para uma
+       excepção em vez de uma interrupção externa (§5, fail-safe). */
+    try {
+      /* getCoalescedEvents() pode devolver uma lista VAZIA — acontece no
+         primeiro movimento de alguns dispositivos e em eventos sintéticos.
+         Um `|| [e]` não chega, porque [] é truthy: era assim que se perdia
+         o traço inteiro. */
+      var evs = null;
+      try { if (e.getCoalescedEvents) evs = e.getCoalescedEvents(); } catch (err) { evs = null; }
+      if (!evs || !evs.length) evs = [e];
+      for (var i = 0; i < evs.length; i++) addPonto(evs[i]);
+      /* só se reescreve o atributo `d`; nenhum nó é criado ou destruído,
+         nenhum reflow do documento (§12) */
+      traco.path.setAttribute('d', dDe(traco.pts));
+    } catch (err) {
+      console.warn('[rm2] onMove', err && err.message);
+      diagLog('onMove-erro', e);
+      abortarTraco();
+      return;
+    }
     e.preventDefault();
   }
 
   function onUp(e) {
+    diagLog('pointerup', e);
     if (apagando) { terminarApagar(); return; }
     if (!traco || (e && e.pointerId !== traco.pid)) return;
     var t = traco; traco = null;
     libertar(t.sec, t.pid);
     document.body.classList.remove('rm2-drawing');
 
-    /* A simplificação corre em PÍXEIS, não em unidades normalizadas: um
-       bloco muito alto faz 40 px verticais valerem 0,002 em y, e um RDP
-       cego a isso achatava a escrita numa recta. */
-    var pts = simplificarEmPixeis(t.pts, t.box, 0.7);
-    if (pts.length > 1200) pts = pts.filter(function (_, i) { return i % 2 === 0; });
+    try {
+      /* A simplificação corre em PÍXEIS, não em unidades normalizadas: um
+         bloco muito alto faz 40 px verticais valerem 0,002 em y, e um RDP
+         cego a isso achatava a escrita numa recta. */
+      var pts = simplificarEmPixeis(t.pts, t.box, 0.7);
+      if (pts.length > 1200) pts = pts.filter(function (_, i) { return i % 2 === 0; });
 
-    if (pts.length < 2) { if (t.path.parentNode) t.path.parentNode.removeChild(t.path); return; }
+      if (pts.length < 2) { if (t.path.parentNode) t.path.parentNode.removeChild(t.path); return; }
 
-    /* 5 casas: num bloco de 18 000 px isto dá ~0,2 px de quantização. */
-    t.rec.points = pts.map(function (p) { return [ +p[0].toFixed(5), +p[1].toFixed(5) ]; });
-    t.path.setAttribute('d', dDe(t.rec.points));
-    t.path.setAttribute('data-ink', t.rec.id);
+      /* 5 casas: num bloco de 18 000 px isto dá ~0,2 px de quantização. */
+      t.rec.points = pts.map(function (p) { return [ +p[0].toFixed(5), +p[1].toFixed(5) ]; });
+      t.path.setAttribute('d', dDe(t.rec.points));
+      t.path.setAttribute('data-ink', t.rec.id);
 
-    var slug = slugDoTab(abaAtiva());
-    (st.strokes[slug] = st.strokes[slug] || []).push(t.rec);
-    pushUndo({ tipo: 'ink-add', slug: slug, rec: t.rec, id: t.rec.id });
-    filaGravar(slug, t.rec, t.path);
+      var slug = slugDoTab(abaAtiva());
+      (st.strokes[slug] = st.strokes[slug] || []).push(t.rec);
+      pushUndo({ tipo: 'ink-add', slug: slug, rec: t.rec, id: t.rec.id });
+      filaGravar(slug, t.rec, t.path);
+    } catch (err) {
+      console.warn('[rm2] onUp', err && err.message);
+      diagLog('onUp-erro', e);
+      if (t.path && t.path.parentNode) t.path.parentNode.removeChild(t.path);
+    }
   }
 
   /* Com o touch-action correcto, o scroll deixa de cancelar o ponteiro a
@@ -790,12 +893,59 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
      feito. Continua defensivo, de propósito: o objectivo foi eliminar o
      cancelamento INDEVIDO, não disfarçar o verdadeiro. */
   function onCancel(e) {
+    diagLog('pointercancel', e);
     if (apagando) { terminarApagar(); return; }
     if (!traco || (e && e.pointerId !== traco.pid)) return;
+    abortarTraco();
+  }
+
+  /* Deitar fora o traço em curso. Ponto ÚNICO: tudo o que interrompe um
+     gesto passa por aqui, para não haver um caminho que se esqueça de
+     limpar uma das quatro coisas (o registo, a captura, a classe e
+     qualquer selecção nativa que possa ter começado enquanto o gesto
+     estava em curso — §4D do diagnóstico de estabilidade). */
+  function abortarTraco() {
+    if (!traco) return;
     var t = traco; traco = null;
     libertar(t.sec, t.pid);
     if (t.path && t.path.parentNode) t.path.parentNode.removeChild(t.path);
     document.body.classList.remove('rm2-drawing');
+    limparSelecaoResidual();
+  }
+
+  /* ------------------------------------------------------------------
+     RECONCILIAÇÃO · o que fazia a caneta «travar»
+
+     O `traco` sobrevivia a tudo o que não fosse um pointerup ou um
+     pointercancel com o id certo. Trocar de matéria, rodar o tablet ou
+     mudar de aplicação a meio de uma letra deixava-o aberto para sempre,
+     e o onDown tem uma guarda de rejeição de palma — `if (traco) return`
+     — que a partir daí recusava TODOS os traços seguintes: a caneta
+     ficava morta, e como o modo de escrita continuava ligado a página
+     também não rolava. Era esse o travamento.
+
+     Medido na main antes desta correcção, interrompendo a meio do traço:
+
+       mudança de aplicação ....... não voltava a desenhar
+       troca de matéria ........... não voltava a desenhar
+       resize / rotação ........... não voltava a desenhar
+       blur da janela ............. recuperava (já tinha gancho)
+       pointercancel .............. recuperava (já era tratado)
+
+     Agora todos desembocam no mesmo sítio. */
+  function reconciliarGesto(motivo) {
+    diagLog('reconciliar:' + (motivo || '?'), null);
+    if (apagando) terminarApagar();
+    abortarTraco();
+    abortarGestoMarcador(motivo);   // mesma filosofia fail-safe, agora também para o marcador
+  }
+
+  /* Um traço cuja secção já saiu do documento é lixo: a matéria foi
+     trocada ou reinjectada por baixo dele. Serve de rede para qualquer
+     caminho futuro que se esqueça de chamar a reconciliação. */
+  function gestoMorto() {
+    if (!traco) return false;
+    return !traco.sec || !document.contains(traco.sec);
   }
 
   /* ---- persistência: uma gravação por traço, nunca por ponto -------- */
@@ -929,6 +1079,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   function terminarApagar() {
     var a = apagando; apagando = null;
     document.body.classList.remove('rm2-drawing');
+    limparSelecaoResidual();
     if (!a) return;
     libertar(a.sec, a.pid);
     var n = a.inks.length + a.hls.length;
@@ -1075,17 +1226,215 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   /* O botão do marcador ACTIVA o modo. Não é preciso escolher cor: usa a
      última, e amarelo se nunca houve nenhuma. A paleta abre por baixo só
-     para trocar, nunca como pré-requisito (§5 do encargo). */
+     para trocar, nunca como pré-requisito (§5 do encargo).
+
+     Regista no undo comparando o tamanho da lista antes/depois — é o
+     mesmo truque nos dois caminhos que acabam por marcar (o de gesto e o
+     de selecção nativa), por isso vive numa função só. */
+  function registarUndoMarcacao(slug, antes) {
+    var lista = RT().estado.porSlug[slug] || [];
+    if (lista.length > antes) {
+      pushUndo({ tipo: 'hl-add', slug: slug, id: lista[lista.length - 1].id });
+    }
+  }
+
   async function aplicarMarcacao() {
     var tab = abaAtiva(); if (!tab) return;
     var slug = slugDoTab(tab);
     var antes = (RT().estado.porSlug[slug] || []).length;
     RT().estado.cor = st.hlColor;
     await RT().marcarSelecao();
-    var lista = RT().estado.porSlug[slug] || [];
-    if (lista.length > antes) {
-      pushUndo({ tipo: 'hl-add', slug: slug, id: lista[lista.length - 1].id });
+    registarUndoMarcacao(slug, antes);
+  }
+
+  /* ================================================================== */
+  /* 9b · MARCADOR — GESTO REAL (arrastar uma vez, sem depender de o      */
+  /*      browser ter produzido sozinho uma selecção nativa)              */
+  /* ================================================================== */
+
+  /* O fluxo antigo (mouseup/touchend → window.getSelection()) EXIGIA que
+     o browser já tivesse construído sozinho uma selecção nativa quando o
+     gesto soltasse — em desktop isso acontece de graça com o arrasto do
+     rato, mas em touch normalmente só depois de um long-press. Por isso:
+     ARMAR MARCADOR → ARRASTAR UMA VEZ (mouse, pen OU dedo) → SOLTAR →
+     TEXTO MARCADO, com uma Range construída por nós a partir do PONTO do
+     gesto, não da selecção do browser.
+
+     A ancoragem, o pintar/despintar e o Supabase continuam exactamente os
+     mesmos (rm-tools.js, `marcarRange`) — só muda como a Range chega lá.
+
+     Mouse, pen e touch passam pela MESMA máquina (onHlDown/Move/Up/Cancel);
+     a única diferença por tipo de ponteiro é como se evita interferência
+     nativa: mouse/pen apanham o `dragstart` (arrastar uma selecção já
+     existente); touch ganha `touch-action:none` em CSS (o marcador agora
+     suspende o pan por dedo enquanto está armado — antes não bloqueava
+     scroll nenhum; ver comentário no CSS) e `preventDefault()` já no
+     `pointerdown`, que é a forma correcta de vetar o long-press nativo
+     (menu de contexto, lupa de selecção) sem tocar no duplo-clique do
+     rato — esse preventDefault só corre para `touch`. */
+  var hlGesto = null;               // { pid, tipo, tab, sec, el, x0, y0, ini, fim, moveu }
+  var HL_LIMIAR_PX = 5;             // abaixo disto é jitter, não arrasto (item 4)
+
+  function pontoDoEvento(x, y) {
+    try {
+      if (document.caretPositionFromPoint) {
+        var p = document.caretPositionFromPoint(x, y);
+        if (p && p.offsetNode) return { node: p.offsetNode, offset: p.offset };
+      }
+    } catch (e) {}
+    try {
+      if (document.caretRangeFromPoint) {
+        var r = document.caretRangeFromPoint(x, y);
+        if (r) return { node: r.startContainer, offset: r.startOffset };
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  /* Mesma lista de exclusão do resto da V2 (toolbox, notas, menu…) mais o
+     que o motor antigo já recusa (controlos, inputs, alternativas de
+     quiz…) — reutilizado via `dentroDoSkip`, nunca duplicado aqui. */
+  function alvoElegivelParaMarcar(target, tab) {
+    if (!target || !tab || !tab.contains(target)) return false;
+    if (target.closest && target.closest(
+      '.rm2-box,.rm2-notes,.rm-tools,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug')) return false;
+    var t = RT();
+    if (t && t.dentroDoSkip && t.dentroDoSkip(target)) return false;
+    return true;
+  }
+
+  /* Tenta as duas ordens: entre um pointerdown e o ponto actual, qualquer
+     um pode vir primeiro ou depois no documento (arrasto de trás para
+     a frente é normal). */
+  function construirRange(a, b) {
+    var tentativas = [[a, b], [b, a]];
+    for (var i = 0; i < tentativas.length; i++) {
+      try {
+        var r = document.createRange();
+        r.setStart(tentativas[i][0].node, tentativas[i][0].offset);
+        r.setEnd(tentativas[i][1].node, tentativas[i][1].offset);
+        if (!r.collapsed) return r;
+      } catch (e) {}
     }
+    return null;
+  }
+
+  function limparSelecaoDoGesto() {
+    try { window.getSelection().removeAllRanges(); } catch (e) {}
+  }
+
+  /* Ponto ÚNICO de término anormal do gesto do marcador — o mesmo espírito
+     do `abortarTraco` da caneta (item 2). Chamado por interrupções globais
+     (reconciliarGesto), por pointercancel/lostpointercapture e por troca
+     de ferramenta. Depois disto: hlGesto === null, nenhuma captura
+     pendurada, nenhuma selecção que o gesto tenha criado sobra. */
+  function abortarGestoMarcador(motivo) {
+    if (!hlGesto) return;
+    var g = hlGesto; hlGesto = null;
+    libertar(g.el, g.pid);
+    if (g.moveu) limparSelecaoDoGesto();
+    diagLog('hl-abort:' + (motivo || '?'), null);
+  }
+
+  function onHlDown(e) {
+    if (st.tool !== 'highlight') return;
+    if (lbAberto()) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (hlGesto) return;                                // 2.º ponteiro: ignora, não troca a meio
+    var tab = abaAtiva(); if (!tab) return;
+    if (!alvoElegivelParaMarcar(e.target, tab)) return;
+    var p0 = pontoDoEvento(e.clientX, e.clientY);
+    if (!p0) return;
+    /* Vetar já aqui o long-press nativo (menu de contexto / lupa de
+       selecção) é o que permite ao dedo arrastar-para-marcar em vez de
+       accionar a UI de selecção do próprio SO. Só para touch: em mouse
+       isto mataria o duplo-clique nativo (seleccionar palavra → tocar
+       numa cor, fluxo que continua a existir na paleta). */
+    if (e.pointerType === 'touch') e.preventDefault();
+    var sec = e.target.closest && e.target.closest('section[id]');
+    var el = e.target;
+    try { el.setPointerCapture && el.setPointerCapture(e.pointerId); } catch (err) {}
+    hlGesto = {
+      pid: e.pointerId, tipo: e.pointerType, tab: tab, sec: sec || null, el: el,
+      x0: e.clientX, y0: e.clientY, ini: p0, fim: null, moveu: false
+    };
+  }
+
+  function onHlMove(e) {
+    if (!hlGesto || e.pointerId !== hlGesto.pid) return;
+    var g = hlGesto;
+    /* item 4 — limiar de movimento: jitter não é arrasto */
+    var dx = e.clientX - g.x0, dy = e.clientY - g.y0;
+    if (!g.moveu && (dx * dx + dy * dy) < HL_LIMIAR_PX * HL_LIMIAR_PX) return;
+
+    /* item 5 — a Range não pode fugir da zona elegível nem, de
+       preferência, do bloco/secção onde o gesto começou: em vez de
+       seguir o ponteiro cegamente, cada movimento verifica o alvo REAL
+       antes de o aceitar como novo fim. Fora da zona (ou noutra secção):
+       clamp — fica-se pelo último ponto válido, em vez de deixar uma
+       selecção atravessar a toolbox, o menu ou a interface inteira.
+
+       DOIS testes de zona, porque `elementFromPoint` e
+       `caretRangeFromPoint` nem sempre concordam: no VÃO entre dois
+       blocos (a margem entre duas `<section>`, por exemplo) o hit-test
+       da caixa devolve o contentor genérico por cima, mas o hit-test do
+       caret pode «encaixar» no carácter mais próximo — que pode já
+       pertencer ao bloco SEGUINTE. Validar só `elementFromPoint` deixava
+       a Range escapar exactamente por essa fresta; o teste de secção usa
+       antes o nó em que o caret REALMENTE resolveu, o mesmo que
+       `construirRange` vai usar.
+
+       E porque não basta REJEITAR o ponto fora da zona: o rato não teve
+       o mousedown prevenido (de propósito, para não matar o duplo-clique
+       nativo), por isso o próprio browser continua a alargar a SUA
+       selecção sozinho em paralelo, a cada mousemove — e ganhava sempre
+       por último se nos limitássemos a ignorar o movimento. Por isso
+       esta função REAFIRMA sempre a nossa Range (a nova, se o ponto é
+       válido; a última válida, senão) depois do limiar — nunca deixa o
+       browser preencher a selecção sozinho por omissão nossa. */
+    var alvo = document.elementFromPoint(e.clientX, e.clientY);
+    var p1 = pontoDoEvento(e.clientX, e.clientY);
+    var aceitavel = !!(p1 && alvoElegivelParaMarcar(alvo, g.tab));
+    if (aceitavel && g.sec) {
+      var elCaret = (p1.node.nodeType === 1) ? p1.node : p1.node.parentElement;
+      var secAtual = elCaret && elCaret.closest && elCaret.closest('section[id]');
+      if (secAtual !== g.sec) aceitavel = false;
+    }
+    if (aceitavel) g.fim = p1;
+
+    var range = g.fim ? construirRange(g.ini, g.fim) : null;
+    try {
+      var s = window.getSelection(); s.removeAllRanges();
+      if (range && !range.collapsed) s.addRange(range);
+    } catch (err) {}
+    if (range && !range.collapsed) g.moveu = true;
+    e.preventDefault();
+  }
+
+  async function onHlUp(e) {
+    if (!hlGesto || (e && e.pointerId !== hlGesto.pid)) return;
+    var g = hlGesto; hlGesto = null;
+    libertar(g.el, g.pid);
+    /* toque sem arrasto: não cria lixo (M11). E não mexe na selecção —
+       um simples clique pode ser o início de um duplo-clique nativo do
+       browser (seleccionar uma palavra para depois tocar numa cor, o
+       fluxo antigo que continua a existir na paleta); só limpamos a
+       selecção quando fomos NÓS a construí-la, isto é, quando houve
+       arrasto de facto além do limiar. */
+    if (!g.moveu || !g.fim) return;
+    var range = construirRange(g.ini, g.fim);
+    limparSelecaoDoGesto();
+    if (!range || range.collapsed) return;
+    var slug = slugDoTab(g.tab);
+    var antes = (RT().estado.porSlug[slug] || []).length;
+    RT().estado.cor = st.hlColor;
+    await RT().marcarRange(range, st.hlColor, g.tab);
+    registarUndoMarcacao(slug, antes);
+  }
+
+  function onHlCancel(e) {
+    if (!hlGesto || (e && e.pointerId !== hlGesto.pid)) return;
+    abortarGestoMarcador('pointercancel');
   }
 
   /* ================================================================== */
@@ -1249,7 +1598,21 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
     document.body.appendChild(box);
 
+    /* ------------------------------------------------------------------
+       O FAB é a saída do modo de escrita.
+
+       Com a caneta armada, o modo de escrita tira o pan à área de leitura.
+       Se o painel pudesse fechar nesse estado, ficava uma página que não
+       rola e cujo botão de sair está escondido — só o FAB à vista, sem
+       nada que diga que é ele que desarma. Era a queixa de «não consigo
+       desativar para voltar a rolar».
+
+       Por isso, com lápiz ou goma armados o FAB DESARMA em vez de fechar;
+       o marcador não bloqueia o scroll, por isso continua a valer o
+       comportamento antigo: o FAB só abre e fecha o painel, e o marcador
+       segue activo depois de fechar. */
     box.querySelector('#rm2-fab').addEventListener('click', function () {
+      if (modoEscritaBloqueante()) { escolherFerramenta('none'); return; }
       st.open = !st.open; refletir();
     });
 
@@ -1287,11 +1650,33 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     return { yellow: 'Amarillo', red: 'Rojo', blue: 'Azul', green: 'Verde', pink: 'Rosa' }[c] || c;
   }
 
+  /* Só lápiz e goma tiram o pan à área de leitura (ver touch-action:none
+     no CSS, escopado a body.rm2-t-pen/eraser). O marcador nunca bloqueia
+     o scroll, por isso não precisa do painel sempre aberto nem do FAB a
+     desarmá-lo: fechar a barra com o marcador ligado é seguro, porque a
+     página continua a rolar como sempre. */
+  function modoEscritaBloqueante() {
+    return st.tool === 'pen' || st.tool === 'eraser';
+  }
+
+  /* Limpa qualquer selecção nativa residual. Chamada ao ENTRAR em
+     lápiz/goma (§4C do diagnóstico) e em qualquer término anormal do
+     traço (§4D) — nunca deve sobrar uma selecção do browser depois de o
+     modo de escrita bloqueante ter estado ligado. */
+  function limparSelecaoResidual() {
+    try {
+      var s = window.getSelection();
+      if (s && s.removeAllRanges) s.removeAllRanges();
+    } catch (e) {}
+  }
+
   function escolherFerramenta(t) {
     if (traco) onCancel();
     if (apagando) terminarApagar();
+    if (hlGesto) abortarGestoMarcador('troca-ferramenta');
     st.tool = t;
     if (t !== 'none') st.open = true;
+    if (t === 'pen' || t === 'eraser') limparSelecaoResidual();
     refletir();
     if (t === 'highlight') toast('Marcador activo · seleccioná el texto');
     if (t === 'pen') toast('Lápiz activo · escribí con el lápiz o el ratón');
@@ -1300,10 +1685,24 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   function refletir() {
     if (!box) return;
+    /* INVARIANTE: nunca há modo de escrita bloqueante sem saída à vista.
+       Enquanto lápiz ou goma estiverem armados o painel fica aberto,
+       portanto o botão que os desarma está sempre no ecrã. Qualquer
+       caminho que tente fechar o painel nesse estado é corrigido aqui,
+       e não só no FAB. O marcador não bloqueia o scroll, por isso pode
+       fechar o painel e continuar activo. */
+    if (modoEscritaBloqueante()) st.open = true;
     box.classList.toggle('open', st.open);
     var fab = box.querySelector('#rm2-fab');
     fab.setAttribute('aria-expanded', String(st.open));
     fab.classList.toggle('armed', st.tool !== 'none');
+    /* o rótulo diz o que o botão faz AGORA, que é o que um leitor de ecrã
+       anuncia e o que aparece no tooltip de quem usa rato. Só lápiz e
+       goma fazem o FAB sair do modo de escrita; com o marcador o FAB
+       continua a só abrir/fechar o painel. */
+    var bloqueante = modoEscritaBloqueante();
+    fab.setAttribute('title', bloqueante ? 'Salir del modo escritura' : 'Herramientas de estudio');
+    fab.setAttribute('aria-label', bloqueante ? 'Salir del modo escritura' : 'Herramientas de estudio');
 
     box.querySelectorAll('.rm2-btn[data-t]').forEach(function (b) {
       var on = b.getAttribute('data-t') === st.tool;
@@ -1520,17 +1919,41 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   /* ================================================================== */
 
   function ligar() {
-    /* marcador: um clique activa, soltar a selecção aplica */
-    ['mouseup', 'touchend'].forEach(function (ev) {
-      document.addEventListener(ev, function (e) {
-        if (st.tool !== 'highlight') return;
-        if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes')) return;
-        setTimeout(function () {
-          var s = window.getSelection();
-          if (s && s.rangeCount && !s.isCollapsed) aplicarMarcacao();
-        }, 30);
-      }, { passive: true });
-    });
+    /* marcador — MOUSE, PEN e TOUCH pela MESMA máquina de gesto: um
+       arrasto e pronto (ver «9b»). O «seleccionar palavra → tocar numa
+       cor» continua a existir à parte, no clique da paleta de cores mais
+       abaixo — não depende disto. */
+    document.addEventListener('pointerdown', onHlDown, true);
+    document.addEventListener('pointermove', onHlMove, { passive: false });
+    document.addEventListener('pointerup', onHlUp, true);
+    document.addEventListener('pointercancel', onHlCancel, true);
+
+    /* Ao construirmos a Range nós próprios e chamá-la à Selection (para
+       o feedback visual do arrasto), o ponteiro passa a estar em cima de
+       texto JÁ seleccionado enquanto continua premido — e é exactamente
+       essa combinação que o browser lê como «arrastar a selecção» (drag
+       nativo de texto), que lhe TIRA o ponteiro a meio (é o `pointercancel`
+       que se vê no diagnóstico). Vetar só o `dragstart` do nosso próprio
+       gesto resolve isto sem tocar no `pointerdown` — que continuaria a
+       deixar o duplo-clique nativo (seleccionar palavra, depois tocar
+       numa cor) a funcionar exactamente como antes. */
+    document.addEventListener('dragstart', function (e) {
+      if (hlGesto) e.preventDefault();
+    }, true);
+
+    /* Defesa em profundidade contra selecção nativa em modo de escrita
+       bloqueante (lápis/goma): mesmo que o CSS (user-select:none) não
+       chegue a tempo, ou que `onDown` tenha voltado cedo sem chegar a
+       `preventDefault()` — anchorDe() falhou, o alvo caiu fora do
+       esperado, o ponteiro não foi aceite —, isto veta a selecção na
+       origem. Campos de escrita legítimos ficam de fora. */
+    document.addEventListener('selectstart', function (e) {
+      if (!modoEscritaBloqueante()) return;
+      var t = e.target;
+      if (t && t.closest && t.closest('input,textarea,[contenteditable="true"],.rm2-notes')) return;
+      diagLog('selectstart-bloqueado', null);
+      e.preventDefault();
+    }, true);
 
     /* Com a goma armada, nenhum clique do documento passa para baixo: nem
        abre um link, nem responde a um quiz por engano. O apagar em si é
@@ -1550,7 +1973,21 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     }, { passive: false });
     document.addEventListener('pointerup', onUp, { passive: true });
     document.addEventListener('pointercancel', onCancel, { passive: true });
-    window.addEventListener('blur', function () { onCancel(); });
+    window.addEventListener('blur', function () { reconciliarGesto('blur'); });
+
+    /* O browser tira a captura quando o elemento sai do documento ou o
+       dispositivo desaparece, e nesses casos NÃO há pointerup nenhum. */
+    document.addEventListener('lostpointercapture', function (e) {
+      diagLog('lostpointercapture', e);
+      if (traco && e.pointerId === traco.pid) abortarTraco();
+      else if (apagando && e.pointerId === apagando.pid) terminarApagar();
+      else if (hlGesto && e.pointerId === hlGesto.pid) abortarGestoMarcador('lostpointercapture');
+    }, true);
+
+    /* Mudar de aplicação no tablet: a letra em curso não se fecha sozinha. */
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) reconciliarGesto('visibilitychange');
+    });
 
     /* ESC: fecha o que estiver aberto, depois volta a «nenhuma» */
     document.addEventListener('keydown', function (e) {
@@ -1564,7 +2001,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     document.addEventListener('pointerdown', function (e) {
       if (!st.open || traco || apagando) return;
       if (e.target.closest && e.target.closest('.rm2-box,.rm2-notes')) return;
-      if (st.tool !== 'none') return;             // ferramenta armada: mantém aberto
+      if (modoEscritaBloqueante()) return;         // lápiz/goma armados: mantém aberto
       st.open = false; refletir();
     }, true);
 
@@ -1576,9 +2013,15 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (document.hidden) flushNotas();
     });
 
+    /* A caixa da âncora é medida no início do traço. Se o viewport muda a
+       meio, essa medida deixa de valer: o traço continuaria a ser escrito
+       com coordenadas de uma caixa que já não existe. Fecha-se o gesto
+       antes de reposicionar — e, sobretudo, deixa de ficar preso. */
     var reflow = debounce(reposicionarTudo, 120);
-    window.addEventListener('resize', reflow);
-    window.addEventListener('orientationchange', function () { setTimeout(reposicionarTudo, 220); });
+    window.addEventListener('resize', function () { reconciliarGesto('resize'); reflow(); });
+    window.addEventListener('orientationchange', function () {
+      reconciliarGesto('orientationchange'); setTimeout(reposicionarTudo, 220);
+    });
     document.addEventListener('visibilitychange', function () { if (!document.hidden) reflow(); });
   }
 
@@ -1638,6 +2081,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (typeof window.switchTab === 'function') {
       var sw = window.switchTab;
       window.switchTab = function () {
+        reconciliarGesto('troca-de-materia');  // a matéria sai debaixo do traço
         var r = sw.apply(this, arguments);
         flushNotas();                       // antes de trocar, grava o que falta
         setTimeout(function () {
@@ -1660,7 +2104,10 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       reposicionar: reposicionarTudo,
       simplificar: simplificar,
       dDe: dDe,
-      hasAccess: hasStudyToolsV2Access
+      hasAccess: hasStudyToolsV2Access,
+      /* diagnóstico de hardware físico (§7 do encargo): só memória, só
+         beta, nunca enviado ao servidor — ver «2b · DIAGNÓSTICO» acima */
+      debug: debug
     };
   }
 
