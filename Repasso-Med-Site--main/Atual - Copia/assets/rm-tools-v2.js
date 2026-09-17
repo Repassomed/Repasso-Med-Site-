@@ -278,6 +278,20 @@ body.rm2-t-pen #materias-container{
   touch-action:pan-x pan-y pinch-zoom;
   overscroll-behavior:contain;
 }
+/* ENQUANTO A STYLUS ESTÁ EM CONTACTO o pan sai de cena por completo.
+   Medido nesta branch, antes disto: com a caneta a escrever, um contacto
+   grande (width 68 px) e perto era correctamente classificado como palma
+   — defaultPrevented ficava true no pointerdown E nos pointermove —
+   e a página rolava 158 px na mesma. A razão não é o classificador: com
+   'pan-x pan-y pinch-zoom' quem decide o pan é o compositor, ANTES de o
+   JS correr, e um preventDefault() já não lho tira. Enquanto o JS for o
+   único guarda, a palma rola a matéria por baixo da letra.
+   Só durante o contacto real da caneta, portanto — não enquanto ela está
+   apenas armada. Levantando a stylus, o dedo volta a rolar de imediato,
+   que é o comportamento Goodnotes-like que esta PR quer. */
+body.rm2-t-pen.rm2-pen-down #materias-container{
+  touch-action:none;
+}
 body.rm2-t-eraser #materias-container,
 body.rm2-t-highlight #materias-container{
   touch-action:none;
@@ -829,6 +843,15 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
      a stylus a aproximar-se já é sinal, mesmo antes de tocar. */
   var penState = { active: false, lastX: 0, lastY: 0, lastActiveAt: 0, lastContactEndAt: 0 };
 
+  /* Ponto único: o contacto da stylus é o que decide se a área ainda
+     oferece pan ao dedo (ver o CSS .rm2-pen-down). Fica junto do estado
+     para não haver um caminho de término que se esqueça de o desligar. */
+  function penEmContacto(ligado) {
+    penState.active = !!ligado;
+    if (!ligado) penState.lastContactEndAt = Date.now();
+    try { document.body.classList.toggle('rm2-pen-down', !!ligado); } catch (e) {}
+  }
+
   function registarPen(e) {
     penState.lastX = e.clientX; penState.lastY = e.clientY;
     penState.lastActiveAt = Date.now();
@@ -1007,7 +1030,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (st.tool === 'eraser') { comecarApagar(e, sec); return; }
     if (!ehPonteiroDeDesenho(e)) return;
 
-    if (e.pointerType === 'pen') { penState.active = true; registarPen(e); }
+    if (e.pointerType === 'pen') { penEmContacto(true); registarPen(e); }
 
     var b = caixa(sec);
     traco = {
@@ -1109,7 +1132,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        Cancela-se o frame pendente só para não desenhar, à toa, num traço
        que está prestes a ser substituído pelo `d` final e definitivo. */
     cancelarRenderizacaoPendente(t);
-    if (t.tipo === 'pen') { penState.active = false; penState.lastContactEndAt = Date.now(); }
+    if (t.tipo === 'pen') penEmContacto(false);
     libertar(t.sec, t.pid);
     document.body.classList.remove('rm2-drawing');
 
@@ -1160,7 +1183,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (!traco) return;
     var t = traco; traco = null;
     cancelarRenderizacaoPendente(t);
-    if (t.tipo === 'pen') { penState.active = false; penState.lastContactEndAt = Date.now(); }
+    if (t.tipo === 'pen') penEmContacto(false);
     libertar(t.sec, t.pid);
     if (t.path && t.path.parentNode) t.path.parentNode.removeChild(t.path);
     document.body.classList.remove('rm2-drawing');
