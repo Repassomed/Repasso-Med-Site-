@@ -314,6 +314,14 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     return true;
   }
 
+  /* Mesma lista de exclusão, mas para um ELEMENTO (não um nó de texto) —
+     é o que um gesto de ponteiro tem em `e.target` antes de sequer existir
+     um Range. Usado pela V2 para decidir se um pointerdown começa um
+     gesto de marcador, sem duplicar a lista de controlos/widgets aqui. */
+  function dentroDoSkip(el) {
+    return !!(el && el.closest && el.closest(SKIP));
+  }
+
   /* Índice normalizado do bloco: espaços colapsados, com mapa de volta
      para (nó de texto, offset). É o que permite achar de novo a mesma
      frase mesmo que o HTML ao redor tenha mudado. */
@@ -571,6 +579,91 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     }
   }
 
+  /* Faz a marcação a partir de um Range JÁ RESOLVIDO — não olha para
+     `window.getSelection()`. É o que permite à V2 (rm-tools-v2.js)
+     construir a sua própria Range por gesto (pointerdown→pointermove→
+     pointerup com caretRangeFromPoint/caretPositionFromPoint) sem depender
+     de o browser ter produzido sozinho uma selecção nativa — a ancoragem
+     por TextQuoteSelector, o pintar/despintar e o Supabase continuam
+     exactamente os mesmos, só muda COMO a Range chega até aqui.
+     Devolve true/false: se marcou (ou recoloriu) com sucesso. */
+  async function marcarRange(range, cor, tabParam) {
+    var tab = tabParam || abaAtiva(); if (!tab) return false;
+    if (!range || range.collapsed) return false;
+    if (!tab.contains(range.commonAncestorContainer)) return false;
+
+    var texto = normalizar(range.toString());
+    if (texto.length < 2) return false;
+    if (texto.length > 2000) { toast('Selección demasiado larga.', true); return false; }
+
+    /* §18 — nunca aninhar spans: se toca uma marcação existente, troca a cor */
+    var tocadas = [];
+    tab.querySelectorAll('.rm-hl').forEach(function (sp) {
+      if (range.intersectsNode(sp)) {
+        var id = sp.getAttribute('data-hl');
+        if (id && tocadas.indexOf(id) === -1) tocadas.push(id);
+      }
+    });
+    if (tocadas.length) {
+      await recolorir(tocadas, cor, tab);
+      limparSelecao();
+      return true;
+    }
+
+    var bloco = blocoDe(range.startContainer);
+    if (!bloco) { toast('Ese texto no se puede marcar.', true); return false; }
+
+    var idx = indexar(bloco);
+    var faixa = faixaNoIndice(idx, range);
+    var ini = faixa[0], fim = faixa[1];
+    if (ini < 0 || fim <= ini) { toast('Ese texto no se puede marcar.', true); return false; }
+
+    var exact = idx.norm.slice(ini, fim).trim();
+    if (exact.length < 2) return false;
+    var real = idx.norm.indexOf(exact, Math.max(0, ini - 2));
+    if (real < 0) real = ini;
+
+    var prefix = idx.norm.slice(Math.max(0, real - 40), real);
+    var suffix = idx.norm.slice(real + exact.length, real + exact.length + 40);
+    var occ = ocorrencias(idx.norm, exact).indexOf(real);
+
+    var slug = slugDoTab(tab);
+    var tmpId = 'tmp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    var r2 = rangeDe(idx, real, real + exact.length) || range;
+    if (!pintar(r2, cor, tmpId)) { toast('No se pudo marcar.', true); return false; }
+    limparSelecao();
+
+    var s = sb(), uid = await userId();
+    if (!s || !uid) { toast('Marcado (sin sincronizar)', true); return true; }
+    try {
+      var ins = await s.from('user_highlights').insert({
+        user_id: uid, subject_slug: slug, block_id: bloco.id,
+        exact_text: exact, prefix: prefix, suffix: suffix,
+        occurrence: occ < 0 ? 0 : occ, color: cor
+      }).select('id').single();
+      if (ins.error) throw ins.error;
+      tab.querySelectorAll('.rm-hl[data-hl="' + tmpId + '"]').forEach(function (sp) {
+        sp.setAttribute('data-hl', ins.data.id);
+      });
+      (estado.porSlug[slug] = estado.porSlug[slug] || []).push({
+        id: ins.data.id, block_id: bloco.id, exact_text: exact,
+        prefix: prefix, suffix: suffix, occurrence: occ < 0 ? 0 : occ, color: cor
+      });
+      toast('Marcado ✓');
+      return true;
+    } catch (e) {
+      despintar(tmpId, tab);
+      toast('No se pudo guardar la marca.', true);
+      console.warn('[rm-tools] insert', e && e.message);
+      return false;
+    }
+  }
+
+  /* Fluxo antigo: resolve a Range a partir da selecção nativa do browser
+     (ou da última guardada por `guardarSelecao`) e delega em marcarRange.
+     Continua a ser o único caminho para quem ainda depende da selecção
+     nativa — a barra legada (rm-tools.js sozinho) e o fallback de toque
+     da V2, que usa o long-press nativo em vez de um gesto próprio. */
   async function marcarSelecao() {
     var tab = abaAtiva(); if (!tab) return;
     var sel = window.getSelection();
@@ -582,70 +675,7 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
       range = ultimaSel;
     }
     if (!range || range.collapsed) return;
-
-    var texto = normalizar(range.toString());
-    if (texto.length < 2) return;
-    if (texto.length > 2000) { toast('Selección demasiado larga.', true); return; }
-
-    /* §18 — nunca aninhar spans: se toca uma marcação existente, troca a cor */
-    var tocadas = [];
-    tab.querySelectorAll('.rm-hl').forEach(function (sp) {
-      if (range.intersectsNode(sp)) {
-        var id = sp.getAttribute('data-hl');
-        if (id && tocadas.indexOf(id) === -1) tocadas.push(id);
-      }
-    });
-    if (tocadas.length) {
-      await recolorir(tocadas, estado.cor, tab);
-      limparSelecao();
-      return;
-    }
-
-    var bloco = blocoDe(range.startContainer);
-    if (!bloco) { toast('Ese texto no se puede marcar.', true); return; }
-
-    var idx = indexar(bloco);
-    var faixa = faixaNoIndice(idx, range);
-    var ini = faixa[0], fim = faixa[1];
-    if (ini < 0 || fim <= ini) { toast('Ese texto no se puede marcar.', true); return; }
-
-    var exact = idx.norm.slice(ini, fim).trim();
-    if (exact.length < 2) return;
-    var real = idx.norm.indexOf(exact, Math.max(0, ini - 2));
-    if (real < 0) real = ini;
-
-    var prefix = idx.norm.slice(Math.max(0, real - 40), real);
-    var suffix = idx.norm.slice(real + exact.length, real + exact.length + 40);
-    var occ = ocorrencias(idx.norm, exact).indexOf(real);
-
-    var slug = slugDoTab(tab);
-    var tmpId = 'tmp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
-    var r2 = rangeDe(idx, real, real + exact.length) || range;
-    if (!pintar(r2, estado.cor, tmpId)) { toast('No se pudo marcar.', true); return; }
-    limparSelecao();
-
-    var s = sb(), uid = await userId();
-    if (!s || !uid) { toast('Marcado (sin sincronizar)', true); return; }
-    try {
-      var ins = await s.from('user_highlights').insert({
-        user_id: uid, subject_slug: slug, block_id: bloco.id,
-        exact_text: exact, prefix: prefix, suffix: suffix,
-        occurrence: occ < 0 ? 0 : occ, color: estado.cor
-      }).select('id').single();
-      if (ins.error) throw ins.error;
-      tab.querySelectorAll('.rm-hl[data-hl="' + tmpId + '"]').forEach(function (sp) {
-        sp.setAttribute('data-hl', ins.data.id);
-      });
-      (estado.porSlug[slug] = estado.porSlug[slug] || []).push({
-        id: ins.data.id, block_id: bloco.id, exact_text: exact,
-        prefix: prefix, suffix: suffix, occurrence: occ < 0 ? 0 : occ, color: estado.cor
-      });
-      toast('Marcado ✓');
-    } catch (e) {
-      despintar(tmpId, tab);
-      toast('No se pudo guardar la marca.', true);
-      console.warn('[rm-tools] insert', e && e.message);
-    }
+    await marcarRange(range, estado.cor, tab);
   }
 
   async function recolorir(ids, cor, tab) {
@@ -1387,6 +1417,8 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     pintar: pintar,
     despintar: despintar,
     marcarSelecao: marcarSelecao,
+    marcarRange: marcarRange,
+    dentroDoSkip: dentroDoSkip,
     apagarHighlight: apagar,
     carregarHighlights: carregarHighlights,
     medirBarra: medirBarra,
