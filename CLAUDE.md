@@ -82,6 +82,43 @@ Melhorar sem reduzir indevidamente a profundidade.
 Preservar conteúdos importantes.
 
 
+## 5-A. QUESTÕES · BANCO GERAL · QUESTÕES BASEADAS EM EXAME
+
+Se a tarefa envolver **adicionar questões**, **atualizar o banco de questões**,
+**incorporar questões de prova**, **corrigir gabaritos** ou **reconciliar
+questões do Drive com o site**, o protocolo completo e obrigatório está em:
+
+MANUTENCAO-DIDATICA-REPASSO-MED.md → seção **8-A · LEI DE INTEGRAÇÃO E
+ATUALIZAÇÃO DE QUESTÕES**
+
+Ler essa seção ANTES de inserir qualquer questão. Em resumo, ela exige:
+
+- **Auditoria de duplicatas antes de tudo** (8-A.1): comparar cada questão
+  recebida com TODAS as já existentes na matéria, olhando enunciado, conceito
+  central, resposta, raciocínio exigido, contexto clínico e objetivo
+  pedagógico. Classificar em DUPLICATA EXATA e DUPLICATA SEMÂNTICA (não
+  inserir) ou RELACIONADA MAS DISTINTA e NOVA (pode inserir). **Uma questão
+  só entra se acrescentar valor avaliativo real.** Registrar cada descarte
+  com o id da questão que já cobria o ponto.
+- **Lei absoluta de cobertura** (8-A.2): nenhuma questão cobra o que o resumo
+  não ensinou antes. **RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA.**
+  A explicação depois da resposta não substitui o ensino prévio.
+- **Onde a questão entra** (8-A.3): no fim do bloco que ensina o assunto e,
+  **nas matérias que já têm banco geral**, também no banco, sem divergência
+  entre as cópias. Matéria sem banco geral não precisa ganhar um por isso.
+- **Rótulo correto** (8-A.4): «Basada en preguntas de examen», nunca
+  «Pregunta oficial» sem comprovação.
+- **Recuperação máxima** (8-A.5): o enunciado vale mais do que recuperar as
+  alternativas originais; é permitido reconstruir alternativas, mas nunca
+  inventar a resposta correta — se não for determinável, vira pendência.
+- **Distratores plausíveis e cientificamente defensáveis** (8-A.6): uma única
+  melhor resposta, sem ambiguidade. Aproximar os distratores é desejável,
+  nunca ao ponto de tornar duas alternativas defensáveis.
+- **Gabarito sem padrão previsível** (8-A.7); corrigir apenas por
+  REORDENAÇÃO das alternativas, nunca alterando a resposta científica.
+- **Preservação** (8-A.9): não apagar nem substituir questões antigas.
+- **Atualizar as contagens declaradas** no texto do site (8-A.10).
+
 ## 6. PADRÃO VISUAL
 
 Quando necessário, consultar:
