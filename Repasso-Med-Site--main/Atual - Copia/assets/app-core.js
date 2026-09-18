@@ -57,15 +57,26 @@ function checkAnswer(optEl) {
   _revealAnswer(item);
 }
 
+/* Qual das duas opções o botão representa. A convenção do site é
+   `data-tf="V"` / `data-tf="F"`, mas Guaraní escreveu os 108 botões sem
+   esse atributo. Sem ele, `dataset.tf === 'V'` é sempre falso, e carregar
+   em «Verdadero» era pontuado como se tivesse escolhido «Falso» — as 54
+   perguntas de V/F da matéria davam INCORRECTO à resposta certa. Quando
+   o atributo falta, lê-se o rótulo do próprio botão. */
+function _tfEsVerdadero(b){
+  if (b.dataset && b.dataset.tf) return b.dataset.tf.toUpperCase() === 'V';
+  return /^\s*v/i.test(b.textContent || '');
+}
+
 function checkTF(btn, expected) {
   var item = btn.closest('.quiz-item');
   if (!item || item.classList.contains('answered')) return;
   item.classList.add('answered');
-  var chosen = btn.dataset.tf === 'V';
+  var chosen = _tfEsVerdadero(btn);
   var isCorrect = chosen === expected;
   item.querySelectorAll('.tf-btn').forEach(function(b){
     b.disabled = true;
-    if ((b.dataset.tf === 'V') === expected) b.classList.add('correct');
+    if (_tfEsVerdadero(b) === expected) b.classList.add('correct');
     if (b === btn && !isCorrect) b.classList.add('wrong');
   });
   var feedback = document.createElement('div');
@@ -124,7 +135,68 @@ var RepassoMed = (function(){
     if (btn) btn.remove();
   }
 
-  function normalizeQuizzes(scope){ scope.querySelectorAll('.quiz-item').forEach(normalizeOne); }
+  /* ---------------------------------------------------------------
+     RESPOSTA SEM SAÍDA
+
+     Uma questão pode ficar com a resposta inalcançável: ela tem
+     <div class="answer">, mas não é de múltipla escolha (não há
+     ul.options para clicar) e não tem botão para abrir. Como
+     `.answer` nasce com display:none, o aluno NUNCA vê aquele texto.
+
+     A causa não é um bug de lógica: as matérias foram escritas em duas
+     convenções diferentes. Anestesiología dá botão a TODA questão;
+     Neurología, Ortopedia, Toxicología e Dermatología só dão às de
+     múltipla escolha — e aí as de tipo CITA, DEFINE, COMPLETÁ ou CASO
+     ficam mudas. Medido no shell real: 136 respostas presas em
+     Ortopedia, 68 em Toxicología, 42 em Neurología, 18 en Dermatología.
+
+     Reescrever 25 arquivos para acrescentar um botão que o próprio
+     código sabe criar seria caro e arriscado. O botão que falta é
+     criado aqui, com o mesmo markup, a mesma classe e o mesmo
+     comportamento dos que já existem — e só quando faltar.
+     Idempotente: roda de novo sem duplicar nada.
+
+     As de VERDADERO/FALSO também já têm saída própria, e não pela
+     mesma porta: o aluno carrega num `.tf-btn`, o `checkTF` marca
+     certo/errado e chama `_revealAnswer`. Dar-lhes um botão seria
+     dar-lhes um segundo caminho — e um que abre a resposta antes de
+     responder, que é exactamente o que a pergunta quer evitar.
+     --------------------------------------------------------------- */
+  function garantirSaida(item){
+    if (item.classList.contains('interactive')) return false;  // MCQ: abre ao responder
+    if (item.querySelector('ul.options'))       return false;  // vai virar MCQ
+    /* O V/F é verificado antes do `.reveal-btn` de propósito: Guaraní dá
+       às suas 54 perguntas de V/F um «Ver respuesta» além dos dois
+       botões, e é justamente esse botão que aqui se tira. */
+    if (item.querySelector('.tf-buttons, .tf-btn')){
+      /* Mesmo caso que `normalizeOne` já resolve no MCQ: havendo saída
+         própria, a porta extra abre a resposta antes de o aluno
+         responder. */
+      var extra = item.querySelector('.reveal-btn');
+      if (extra) extra.remove();
+      return false;
+    }
+    if (item.querySelector('.reveal-btn'))      return false;  // já tem saída
+    var ans = item.querySelector('.answer');
+    if (!ans || !ans.parentNode)                return false;
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'reveal-btn';
+    btn.textContent = 'Ver respuesta';
+    /* `toggleAnswer` lê `btn.nextElementSibling`, então o botão tem de
+       entrar imediatamente antes da resposta — não em qualquer lugar. */
+    btn.setAttribute('onclick', 'toggleAnswer(this)');
+    ans.parentNode.insertBefore(btn, ans);
+    return true;
+  }
+
+  function normalizeQuizzes(scope){
+    scope.querySelectorAll('.quiz-item').forEach(function(item){
+      normalizeOne(item);
+      garantirSaida(item);
+    });
+  }
 
 
   /* ---------------------------------------------------------------
