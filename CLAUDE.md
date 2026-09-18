@@ -107,6 +107,25 @@ Ler essa seção ANTES de inserir qualquer questão. Em resumo, ela exige:
   palavras, contexto superficial ou prova de origem NÃO torna uma questão
   repetida em questão nova. Na dúvida: um aluno que acertou a primeira pode
   errar a segunda por não saber algo a mais? Se não, é duplicata.
+- **Lei da questão canônica mais completa** (8-A.1-B): classificar como
+  duplicata encerra a pergunta «entra como questão nova?», mas **não**
+  encerra a análise. **Uma questão semanticamente semelhante não deve ser
+  descartada automaticamente apenas porque o tema já existe no banco.**
+  Antes de decidir, identificar qual das duas versões é mais completa,
+  cientificamente correta, fiel à cátedra e fiel à forma real de cobrança.
+  **Quando duas questões forem redundantes, o banco conserva como canônica
+  a melhor versão, e não necessariamente a mais antiga.** Questões
+  reconstruídas de prova têm preferência sobre versões genéricas quando
+  representam melhor a profundidade e o raciocínio efetivamente cobrados,
+  sem perder correção científica e clareza. **Mais completa não significa
+  mais longa** — nem mais alternativas, nem explicação maior. Hierarquia de
+  decisão: ciência correta → fidelidade à cátedra → fidelidade à forma real
+  de cobrança → profundidade e raciocínio. Quatro decisões: manter a do
+  site, substituir/reformular a existente (preservando o id sempre que
+  seguro, e atualizando também a cópia do banco), manter as duas (só com
+  ganho avaliativo real) ou descartar a recebida. Não confundir completude
+  com sobrecarga, e não inventar detalhe para deixar a pergunta mais
+  difícil.
 - **Lei absoluta de cobertura** (8-A.2): nenhuma questão cobra o que o resumo
   não ensinou antes. **RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA.**
   A explicação depois da resposta não substitui o ensino prévio.
@@ -123,7 +142,11 @@ Ler essa seção ANTES de inserir qualquer questão. Em resumo, ela exige:
   nunca ao ponto de tornar duas alternativas defensáveis.
 - **Gabarito sem padrão previsível** (8-A.7); corrigir apenas por
   REORDENAÇÃO das alternativas, nunca alterando a resposta científica.
-- **Preservação** (8-A.9): não apagar nem substituir questões antigas.
+- **Preservação** (8-A.9): não apagar questões antigas nem substituí-las
+  para melhorar métrica ou variar a redação. A reformulação de 8-A.1-B não
+  é exceção: ela mantém a questão no lugar, com o mesmo id, e só é
+  permitida quando a versão nova é demonstravelmente melhor pelos critérios
+  daquela seção — e sempre registrada no relatório.
 - **Atualizar as contagens declaradas** no texto do site (8-A.10).
 
 ## 6. PADRÃO VISUAL
