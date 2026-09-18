@@ -82,6 +82,73 @@ Melhorar sem reduzir indevidamente a profundidade.
 Preservar conteúdos importantes.
 
 
+## 5-A. QUESTÕES · BANCO GERAL · QUESTÕES BASEADAS EM EXAME
+
+Se a tarefa envolver **adicionar questões**, **atualizar o banco de questões**,
+**incorporar questões de prova**, **corrigir gabaritos** ou **reconciliar
+questões do Drive com o site**, o protocolo completo e obrigatório está em:
+
+MANUTENCAO-DIDATICA-REPASSO-MED.md → seção **8-A · LEI DE INTEGRAÇÃO E
+ATUALIZAÇÃO DE QUESTÕES**
+
+Ler essa seção ANTES de inserir qualquer questão. Em resumo, ela exige:
+
+- **Auditoria de duplicatas antes de tudo** (8-A.1): comparar cada questão
+  recebida com TODAS as já existentes na matéria, olhando conceito central,
+  conhecimento necessário, mecanismo/raciocínio, conclusão científica,
+  contexto clínico relevante e objetivo pedagógico. Classificar em DUPLICATA
+  EXATA e DUPLICATA SEMÂNTICA (não inserir) ou RELACIONADA MAS DISTINTA e
+  NOVA (pode inserir). **Uma questão só entra se acrescentar valor
+  avaliativo real.** Registrar cada descarte com o id da questão que já
+  cobria o ponto.
+  **A duplicação é determinada principalmente pelo conteúdo e pelo raciocínio
+  avaliativo, e não pela identidade literal do enunciado ou das
+  alternativas.** Trocar alternativas, ordem, letra correta, pequenas
+  palavras, contexto superficial ou prova de origem NÃO torna uma questão
+  repetida em questão nova. Na dúvida: um aluno que acertou a primeira pode
+  errar a segunda por não saber algo a mais? Se não, é duplicata.
+- **Lei da questão canônica mais completa** (8-A.1-B): classificar como
+  duplicata encerra a pergunta «entra como questão nova?», mas **não**
+  encerra a análise. **Uma questão semanticamente semelhante não deve ser
+  descartada automaticamente apenas porque o tema já existe no banco.**
+  Antes de decidir, identificar qual das duas versões é mais completa,
+  cientificamente correta, fiel à cátedra e fiel à forma real de cobrança.
+  **Quando duas questões forem redundantes, o banco conserva como canônica
+  a melhor versão, e não necessariamente a mais antiga.** Questões
+  reconstruídas de prova têm preferência sobre versões genéricas quando
+  representam melhor a profundidade e o raciocínio efetivamente cobrados,
+  sem perder correção científica e clareza. **Mais completa não significa
+  mais longa** — nem mais alternativas, nem explicação maior. Hierarquia de
+  decisão: ciência correta → fidelidade à cátedra → fidelidade à forma real
+  de cobrança → profundidade e raciocínio. Quatro decisões: manter a do
+  site, substituir/reformular a existente (preservando o id sempre que
+  seguro, e atualizando também a cópia do banco), manter as duas (só com
+  ganho avaliativo real) ou descartar a recebida. Não confundir completude
+  com sobrecarga, e não inventar detalhe para deixar a pergunta mais
+  difícil.
+- **Lei absoluta de cobertura** (8-A.2): nenhuma questão cobra o que o resumo
+  não ensinou antes. **RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA.**
+  A explicação depois da resposta não substitui o ensino prévio.
+- **Onde a questão entra** (8-A.3): no fim do bloco que ensina o assunto e,
+  **nas matérias que já têm banco geral**, também no banco, sem divergência
+  entre as cópias. Matéria sem banco geral não precisa ganhar um por isso.
+- **Rótulo correto** (8-A.4): «Basada en preguntas de examen», nunca
+  «Pregunta oficial» sem comprovação.
+- **Recuperação máxima** (8-A.5): o enunciado vale mais do que recuperar as
+  alternativas originais; é permitido reconstruir alternativas, mas nunca
+  inventar a resposta correta — se não for determinável, vira pendência.
+- **Distratores plausíveis e cientificamente defensáveis** (8-A.6): uma única
+  melhor resposta, sem ambiguidade. Aproximar os distratores é desejável,
+  nunca ao ponto de tornar duas alternativas defensáveis.
+- **Gabarito sem padrão previsível** (8-A.7); corrigir apenas por
+  REORDENAÇÃO das alternativas, nunca alterando a resposta científica.
+- **Preservação** (8-A.9): não apagar questões antigas nem substituí-las
+  para melhorar métrica ou variar a redação. A reformulação de 8-A.1-B não
+  é exceção: ela mantém a questão no lugar, com o mesmo id, e só é
+  permitida quando a versão nova é demonstravelmente melhor pelos critérios
+  daquela seção — e sempre registrada no relatório.
+- **Atualizar as contagens declaradas** no texto do site (8-A.10).
+
 ## 6. PADRÃO VISUAL
 
 Quando necessário, consultar:
