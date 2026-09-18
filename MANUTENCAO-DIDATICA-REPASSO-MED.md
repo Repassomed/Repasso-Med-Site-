@@ -914,8 +914,9 @@ Palavras-chave para busca: questões, banco geral, banco de questões,
 adicionar questões, basadas en examen, preguntas de examen, gabarito,
 distratores, duplicata, cobertura.
 
-A ordem das subseções é a ordem de execução: primeiro descartar o que é
-duplicata, depois garantir cobertura, só então escrever e inserir.
+A ordem das subseções é a ordem de execução: primeiro identificar o que é
+redundante, depois decidir qual das versões redundantes fica como questão
+canônica, depois garantir cobertura, só então escrever e inserir.
 
 8-A.1 Auditoria de duplicatas — obrigatória, antes de qualquer inserção
 
@@ -994,6 +995,166 @@ por não saber alguma coisa a mais? Se a resposta for não, é duplicata.
 Registrar sempre a decisão tomada para cada questão recebida, com a
 categoria e o motivo, e citar o id da questão já existente que motivou o
 descarte. Nunca descartar em silêncio.
+
+Atenção: classificar como DUPLICATA EXATA ou DUPLICATA SEMÂNTICA encerra a
+pergunta «isto entra como questão nova?», mas NÃO encerra a análise. Toda
+questão assim classificada passa obrigatoriamente por 8-A.1-B, que decide
+qual das duas versões — a que já está no site ou a recebida — fica como
+questão canônica.
+
+8-A.1-B Lei da questão canônica mais completa
+
+A auditoria de 8-A.1 responde «isto é redundante?». Esta seção responde a
+pergunta seguinte, que é obrigatória sempre que a resposta for sim:
+«então qual das duas fica?».
+
+Uma questão semanticamente semelhante NÃO deve ser descartada
+automaticamente apenas porque o tema já existe no banco. Antes da decisão,
+deve-se identificar qual versão é mais completa, cientificamente correta,
+fiel à cátedra e fiel à forma real de cobrança.
+
+Quando duas questões forem redundantes, o banco deve conservar como questão
+canônica a MELHOR versão, e não necessariamente a mais antiga.
+
+Questões reconstruídas de prova recebem preferência sobre versões genéricas
+quando representam melhor a profundidade e o raciocínio efetivamente
+cobrados, sem perder correção científica e clareza.
+
+MAIS COMPLETA NÃO SIGNIFICA MAIS LONGA.
+
+Não significa mais palavras, nem mais alternativas, nem explicação maior.
+Significa a versão que melhor combina:
+
+- correção científica;
+- fidelidade à cátedra;
+- fidelidade à forma REAL de cobrança da prova;
+- profundidade adequada;
+- detalhe relevante;
+- raciocínio avaliativo;
+- capacidade de discriminar quem realmente sabe;
+- clareza;
+- ausência de ambiguidade;
+- valor pedagógico.
+
+Hierarquia para escolher a questão canônica
+
+Ao comparar duas questões semanticamente redundantes, decidir nesta ordem,
+e não em outra:
+
+1. CORREÇÃO CIENTÍFICA. A questão precisa estar cientificamente correta.
+   Uma versão de prova cientificamente errada perde para a versão do site,
+   sempre, e sem exceção. Nenhum dos critérios seguintes compensa isso.
+
+2. FIDELIDADE À CÁTEDRA. Entre duas versões corretas, prefere-se a que
+   estiver mais alinhada ao que a cátedra ensina e nomeia.
+
+3. FIDELIDADE À FORMA REAL DE COBRANÇA. Se uma delas vem de prova ou de
+   reconstrução de prova e representa melhor como o professor REALMENTE
+   cobra — o formato, o recorte, o detalhe que ele pede —, ela tem
+   prioridade sobre a versão genérica do site.
+
+4. PROFUNDIDADE E RACIOCÍNIO. Por fim, escolher a que exige melhor
+   raciocínio e cobre o conceito com profundidade adequada.
+
+O formato também é forma de cobrança. Se a cátedra pede «citá dois» e o
+site só tem alternativa múltipla sobre o mesmo ponto, a versão da prova
+exige do aluno PRODUZIR a resposta em vez de RECONHECÊ-LA, e isso é uma
+diferença avaliativa real, não uma diferença cosmética.
+
+As quatro decisões possíveis
+
+1. MANTER A QUESTÃO EXISTENTE
+   Quando a do site já é tão completa, tão específica e tão fiel ao exame
+   quanto a recebida — ou melhor. A recebida é descartada.
+
+2. SUBSTITUIR / REFORMULAR A EXISTENTE
+   Quando a questão recebida cobra o mesmo conceito, MAS é mais completa,
+   mais específica, mais fiel à cátedra, contém detalhe relevante ausente
+   no site, ou representa melhor a dificuldade real.
+   Nesse caso NÃO manter duas redundantes: transformar a questão existente
+   na versão canônica melhor.
+   Sempre que tecnicamente seguro, PRESERVAR O ID antigo — isso protege
+   referências, banco, âncoras e histórico. Em matéria sem id, preservar a
+   POSIÇÃO da questão no bloco e o gêmeo correspondente no banco.
+   Atualizar tudo junto: enunciado, alternativas, gabarito, explicação,
+   proveniência e a cópia do banco geral.
+   Se a reconstrução não for literal, o rótulo continua sendo
+   «Basada en preguntas de examen» — NUNCA «Pregunta oficial» — e o texto
+   não pode afirmar que a redação é literal.
+
+3. MANTER AS DUAS
+   Somente quando existe GANHO AVALIATIVO REAL: mesma matéria, habilidades
+   diferentes. Por exemplo, uma reconhece o diagnóstico e a outra cobra o
+   mecanismo; uma pede a definição e a outra a aplicação num caso; uma pede
+   a classificação e a outra uma complicação específica.
+
+4. DESCARTAR A RECEBIDA
+   Quando não acrescenta profundidade, nem raciocínio, nem representa
+   melhor a prova, nem melhora a clareza, nem traz detalhe avaliativo
+   relevante.
+
+Regra de ouro
+
+UMA QUESTÃO NOVA NÃO ENTRA APENAS POR SER DE PROVA.
+MAS UMA QUESTÃO DE PROVA TAMBÉM NÃO DEVE SER DESCARTADA APENAS PORQUE O
+MESMO TEMA JÁ EXISTE NO SITE.
+
+Antes de decidir, perguntar: «qual das duas ensina e avalia melhor aquilo
+que a cátedra realmente cobra?». A melhor versão fica como canônica.
+
+Não confundir completude com sobrecarga
+
+Uma questão não fica melhor por tentar cobrar cinco assuntos de uma vez. A
+questão canônica continua tendo objetivo claro, uma única melhor resposta,
+dificuldade adequada, nenhuma ambiguidade e nenhum detalhe inútil.
+
+Se o material da prova contiver dois conceitos avaliativos independentes,
+pode ser melhor dividir em duas questões distintas do que empilhar tudo em
+uma só.
+
+Não inventar detalhe para tornar a pergunta mais difícil. Dificuldade
+fabricada não é profundidade.
+
+Esta lei não enfraquece a lei das duplicatas
+
+Esta seção NÃO significa «se veio da prova, mantenha mesmo duplicada».
+Significa «se há redundância, escolha a melhor».
+
+Nunca manter duas questões só porque:
+
+- vieram de provas diferentes;
+- as alternativas são diferentes;
+- a letra correta mudou.
+
+Esses três continuam sendo, por 8-A.1, marcas de duplicata semântica.
+
+A questão canônica continua obedecendo a lei de cobertura
+
+Reformular ou substituir não dispensa 8-A.2. A versão canônica também só
+pode cobrar o que o resumo ensinou antes:
+
+RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA.
+
+Se a versão da prova é melhor mas cobra um detalhe que o resumo não
+ensinava, o detalhe entra primeiro no resumo, no lugar certo, e só depois a
+questão passa a cobrá-lo.
+
+Registro obrigatório
+
+Para cada questão recebida que caia em redundância, registrar:
+
+- PROVA: [questão ou conceito reconstruído]
+- SITE: [id, ou bloco e enunciado, da questão existente]
+- MAIS COMPLETA: prova / site / equivalentes
+- MAIS FIEL À PROVA: prova / site / equivalentes
+- DECISÃO: manter site / substituir-reformular / manter ambas / descartar
+- JUSTIFICATIVA: uma a três frases
+
+O relatório da rodada (8-A.11) deve informar, além dos números já
+exigidos: quantas descartadas foram reavaliadas, quantas mantiveram a
+versão antiga, quantas foram reformuladas para ficar mais fiéis à prova,
+quantas passaram a coexistir por ganho avaliativo real e quantas foram
+descartadas em definitivo.
 
 8-A.2 Lei absoluta de cobertura
 
@@ -1198,6 +1359,15 @@ Ao adicionar questões novas:
 
 Nunca apagar silenciosamente.
 
+A reformulação prevista em 8-A.1-B não é exceção a nada disto. Ela não
+apaga a questão: a questão continua no mesmo lugar, com o mesmo id, e
+passa a cobrar o mesmo conceito de forma mais completa e mais fiel à
+prova. O que está proibido é o contrário — reescrever para melhorar
+métrica, para variar a redação ou para acomodar material novo sem que a
+versão nova seja demonstravelmente melhor pelos critérios de 8-A.1-B. E a
+reformulação é sempre registrada, com a versão anterior citada no
+relatório.
+
 8-A.10 Contagens declaradas
 
 O site declara números em texto (total do banco, quantas são complementares,
@@ -1216,6 +1386,17 @@ QUESTÕES
 - duplicatas semânticas descartadas (com o id da questão que já cobria);
 - relacionadas mas distintas incorporadas;
 - pendentes, com o motivo exato.
+
+QUESTÃO CANÔNICA (8-A.1-B)
+- redundâncias avaliadas;
+- versão do site mantida;
+- questões antigas reformuladas para ficar mais fiéis à prova (com o id de
+  cada uma e o que mudou);
+- passaram a coexistir por ganho avaliativo real;
+- descartadas em definitivo.
+
+O total final da matéria é contado por questão ÚNICA. Bloco e banco geral
+são a mesma questão em dois lugares, e não duas questões.
 
 COBERTURA
 - novas cobertas;
