@@ -904,6 +904,335 @@ Não usar emoji recente como ícone funcional; usar SVG inline acessível.
 
 O runtime pode corrigir rótulos antigos e aplicar classes, mas isso é rede de segurança. Ao abrir uma matéria para manutenção, corrija também o HTML-fonte.
 
+8-A. LEI DE INTEGRAÇÃO E ATUALIZAÇÃO DE QUESTÕES
+
+Esta seção é o protocolo obrigatório sempre que a tarefa for parecida com
+"adicionar questões de prova à matéria X", "atualizar o banco de questões",
+"incorporar questões novas" ou "reconciliar as questões do Drive com o site".
+
+Palavras-chave para busca: questões, banco geral, banco de questões,
+adicionar questões, basadas en examen, preguntas de examen, gabarito,
+distratores, duplicata, cobertura.
+
+A ordem das subseções é a ordem de execução: primeiro descartar o que é
+duplicata, depois garantir cobertura, só então escrever e inserir.
+
+8-A.1 Auditoria de duplicatas — obrigatória, antes de qualquer inserção
+
+Antes de incorporar qualquer questão nova, comparar obrigatoriamente com
+TODAS as questões já existentes na matéria. Não basta olhar o bloco de
+destino: a comparação é com a matéria inteira.
+
+A comparação deve considerar seis dimensões, e não apenas a redação:
+
+- enunciado;
+- conceito central;
+- resposta correta;
+- mecanismo ou raciocínio exigido;
+- contexto clínico;
+- objetivo pedagógico.
+
+Classificar cada questão recebida em uma destas quatro categorias:
+
+1. DUPLICATA EXATA
+   Mesmo enunciado, ou essencialmente a mesma questão.
+   → NÃO inserir.
+
+2. DUPLICATA SEMÂNTICA / MUITO SIMILAR
+   Formulação diferente, mas cobra o mesmo conceito, o mesmo raciocínio e a
+   mesma resposta, sem ganho didático relevante.
+   → NÃO inserir.
+
+3. RELACIONADA, MAS DISTINTA
+   Mesmo tema, porém cobra outro mecanismo, outra aplicação, outro
+   diagnóstico diferencial, outro contexto clínico ou outro nível de
+   raciocínio.
+   → Pode inserir.
+
+4. NOVA
+   Conteúdo ou raciocínio realmente diferente do que já existe.
+   → Pode inserir.
+
+REGRA: uma questão nova só entra se acrescentar VALOR AVALIATIVO REAL ao
+banco. Não acumular questões apenas porque o enunciado foi escrito de
+maneira diferente. Um banco maior não é um banco melhor.
+
+A duplicação é determinada principalmente pelo CONTEÚDO e pelo RACIOCÍNIO
+AVALIATIVO, e NÃO pela identidade literal do enunciado ou das alternativas.
+
+Isto quer dizer que NÃO transformam automaticamente uma questão repetida em
+questão nova:
+
+- trocar as alternativas;
+- mudar a ordem das alternativas;
+- mudar a letra correta;
+- trocar pequenas palavras do enunciado;
+- mudar o contexto superficial (nome, idade, cidade, esporte do paciente);
+- a questão vir de outra prova, de outra fila ou de outro semestre.
+
+Se duas questões cobram essencialmente o mesmo conceito, o mesmo raciocínio
+e a mesma conclusão científica, sem ganho avaliativo real, então são
+DUPLICATA SEMÂNTICA e NÃO devem ser inseridas — mesmo que as alternativas
+sejam diferentes, mesmo que o gabarito caia em outra letra e mesmo que
+tenham caído em provas distintas.
+
+Duas questões do mesmo tema só podem coexistir quando houver DIFERENÇA
+AVALIATIVA REAL, isto é, quando uma delas exigir:
+
+- outro mecanismo;
+- outra aplicação;
+- outro diagnóstico diferencial;
+- outro estágio ou fase da doença;
+- outra complicação;
+- um contexto clínico que mude o raciocínio, e não apenas a ambientação;
+- outro erro conceitual a ser isolado.
+
+Na dúvida entre «duplicata semântica» e «relacionada mas distinta», a
+pergunta que decide é: um aluno que acertou a primeira pode errar a segunda
+por não saber alguma coisa a mais? Se a resposta for não, é duplicata.
+
+Registrar sempre a decisão tomada para cada questão recebida, com a
+categoria e o motivo, e citar o id da questão já existente que motivou o
+descarte. Nunca descartar em silêncio.
+
+8-A.2 Lei absoluta de cobertura
+
+Nenhuma questão pode cobrar conhecimento que não tenha sido ensinado ANTES,
+no resumo ou bloco correspondente.
+
+Fluxo obrigatório:
+
+RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA
+
+A explicação que vem DEPOIS da resposta NÃO conta como ensino prévio. Ela
+reforça o que já foi ensinado; não pode ser o primeiro lugar em que um
+conhecimento essencial aparece.
+
+Antes de inserir qualquer questão baseada em prova:
+
+1. identificar o conceito necessário para respondê-la;
+2. localizar o bloco correspondente;
+3. verificar se um aluno que estudou SOMENTE aquele bloco chega à resposta;
+4. se faltar algo, acrescentar ao resumo a MENOR explicação necessária,
+   clara e didática;
+5. só então inserir a questão.
+
+Classificar cada questão baseada em prova como COBERTA, COBERTA
+PARCIALMENTE ou NÃO COBERTA, e corrigir as duas últimas.
+
+Não adicionar parágrafos artificiais só para cumprir a regra. Acrescentar
+apenas o conhecimento realmente necessário.
+
+8-A.3 Onde a questão entra
+
+A questão entra no FINAL DO BLOCO que ensina o assunto.
+
+Além disso, quando a matéria tiver BANCO GERAL de questões, a questão entra
+também no banco, na seção do bloco correspondente. Isto não é uma regra
+universal aplicável a qualquer matéria: vale para as matérias que já adotam
+esse padrão, e nessas o banco é um espelho ordenado dos blocos, de modo que
+uma questão presente só num dos dois lugares é um defeito. Matéria sem banco
+geral não precisa ganhar um por causa desta lei.
+
+Onde as duas cópias existem, elas devem representar a MESMA questão, com o
+mesmo enunciado, as mesmas alternativas, o mesmo gabarito, a mesma
+explicação e a mesma proveniência. A cópia do bloco leva id (por exemplo
+id="q-orto438"); a cópia do banco não leva id, para não duplicar
+identificadores no DOM.
+
+Ao terminar, verificar que não há divergência entre as duas cópias. O número
+esperado de divergências é sempre 0.
+
+8-A.4 Questões baseadas em prova
+
+Quando a origem for prova ou recordação de prova, usar os rótulos da seção
+8.1: "Basada en preguntas de examen" ou "Verdadero o falso · basada en
+examen".
+
+Não afirmar "Pregunta oficial", "prueba real" nem "preguntas reales" salvo
+comprovação real e autorização.
+
+Preservar sempre que possível o enunciado lembrado, o conceito cobrado, a
+resposta correta lembrada e o contexto clínico lembrado.
+
+A memória do aluno é pista primária sobre O QUE FOI COBRADO, mas os detalhes
+científicos devem ser confrontados com, nesta ordem:
+
+1. slides e material da cátedra disponíveis;
+2. o conteúdo atual da própria matéria;
+3. literatura complementar, apenas quando necessária e identificada como
+   complemento.
+
+Não corrigir silenciosamente uma recordação que divirja do material.
+Registrar a divergência no relatório.
+
+8-A.5 Extração de foto, PDF, documento ou memória parcial
+
+Objetivo: recuperar o MÁXIMO de questões possível.
+
+Ordem de prioridade:
+
+1. ENUNCIADO / IDEIA CENTRAL DA QUESTÃO
+2. RESPOSTA CORRETA, quando recuperável
+3. CONTEXTO CLÍNICO
+4. ALTERNATIVAS ORIGINAIS
+
+O enunciado tem prioridade maior do que recuperar literalmente todas as
+alternativas. Se houver enunciado confiável mas as alternativas estiverem
+incompletas ou não forem lembradas, NÃO descartar a questão.
+
+É permitido reconstruir alternativas NOVAS, desde que:
+
+- o enunciado e o conceito original sejam preservados;
+- a resposta correta seja comprovável pelo material da cátedra ou pelo
+  resumo;
+- fique claro internamente que as alternativas foram reconstruídas;
+- não se alegue que os distratores reconstruídos eram os originais da prova.
+
+Se nem a resposta correta puder ser determinada com segurança pelo material,
+NÃO inventar. Registrar como pendência, dizendo exatamente o que faltou
+(por exemplo: "o slide que traz a definição é uma imagem sem texto
+extraível").
+
+8-A.6 Padrão dos distratores
+
+Questões reconstruídas não podem ser fáceis por eliminação grosseira.
+
+Para MCQ, preferencialmente 4 alternativas a–d, salvo padrão diferente já
+estabelecido na matéria.
+
+Cada questão deve ter:
+
+- exatamente UMA melhor resposta, sem ambiguidade;
+- distratores PLAUSÍVEIS e CIENTIFICAMENTE DEFENSÁVEIS, isto é, erros que um
+  aluno mal preparado realmente cometeria, e não invenções;
+- dificuldade compatível com prova médica.
+
+Os distratores devem preferencialmente explorar conceitos vizinhos,
+critérios parecidos, fases consecutivas, estruturas anatômicas próximas,
+doenças com apresentação semelhante, indicações e contraindicações
+próximas, números e intervalos próximos, o mecanismo correto aplicado ao
+cenário errado, ou afirmações parcialmente corretas com um detalhe
+discriminador errado.
+
+Aproximar os distratores da resposta correta é desejável, mas NUNCA ao
+ponto de tornar duas alternativas defensáveis. Se aproximar mais um
+distrator criar ambiguidade, afastá-lo. A clareza da resposta certa vem
+antes da dificuldade.
+
+PROIBIDO:
+
+- alternativa obviamente absurda;
+- distrator de outra área sem relação;
+- diferença de tamanho que denuncie a correta;
+- termos absolutos artificiais só para denunciar o erro;
+- duas respostas tecnicamente corretas;
+- alterar o fato científico para tornar a questão difícil.
+
+A dificuldade vem de DISTRAÇÃO PLAUSÍVEL, não de ambiguidade.
+
+8-A.7 Distribuição das letras corretas
+
+É proibido criar padrão previsível de gabarito.
+
+Não aceitar sequências artificiais como A → B → C → D → A → B → C → D, nem
+alternâncias do tipo A → D → A → D, nem concentração excessiva numa mesma
+letra.
+
+Auditar, sobre TODAS as MCQ da matéria e não apenas sobre as novas:
+
+- contagem de A/B/C/D;
+- maior sequência da mesma letra;
+- existência de ciclo periódico e sua maior corrida;
+- ocorrências dos 4-gramas "abcd" e "dcba";
+- χ² ou medida equivalente;
+- exemplos concretos dos padrões encontrados.
+
+Se houver padrão artificial, corrigir SOMENTE por REORDENAÇÃO das
+alternativas. Nunca alterar a resposta científica correta para melhorar a
+distribuição.
+
+A forma mais segura de reordenar é a TRANSPOSIÇÃO: trocar de lugar a
+alternativa correta com a que ocupa a letra de destino. Só duas letras
+mudam, e por isso as referências às demais alternativas dentro da
+explicação continuam válidas. Ao aplicar a troca é obrigatório:
+
+- remapear as letras citadas dentro do bloco .answer (o "a)", o "b) y c)");
+- atualizar o data-correct quando existir;
+- aplicar a MESMA troca à cópia gêmea do banco geral.
+
+A verificação decisiva, depois de reordenar, é esta: aplicar a permutação à
+explicação ANTIGA tem de produzir exatamente a explicação NOVA. Se não
+produzir, a reordenação quebrou a correspondência entre a explicação e as
+letras.
+
+NÃO reordenar quando a ordem das alternativas carrega significado próprio:
+
+- séries ordinais ou numéricas (I, II, III, IV, V; 3.3.A / 3.3.B / 3.3.C);
+- séries graduadas (Grado 0, Grado I, Grado II…);
+- questões com alternativa agregadora ("Todas son correctas", "Ninguna de
+  las anteriores"), que devem permanecer por último.
+
+Depois de corrigir, repetir a auditoria e publicar o antes e o depois.
+
+Não se busca distribuição perfeitamente matemática. Busca-se a ausência de
+padrão explorável.
+
+8-A.8 Explicação obrigatória
+
+Toda questão deve ter gabarito, explicação didática, por que a correta é
+correta e, quando útil, por que os principais distratores estão errados.
+
+A explicação reforça o conteúdo; não introduz pela primeira vez um
+conhecimento essencial que deveria estar no resumo.
+
+8-A.9 Preservação
+
+Ao adicionar questões novas:
+
+- não apagar questões antigas;
+- não mudar gabaritos antigos sem erro científico comprovado;
+- não substituir questões existentes só para melhorar métricas;
+- não transformar questão complementar em "baseada em exame" sem
+  proveniência real.
+
+Nunca apagar silenciosamente.
+
+8-A.10 Contagens declaradas
+
+O site declara números em texto (total do banco, quantas são complementares,
+quantas são baseadas em exame, quantas por bloco, e as barras de frequência).
+Ao inserir ou remover questões, atualizar TODAS essas declarações e conferir
+que a soma por bloco bate com o total.
+
+8-A.11 Relatório obrigatório da rodada
+
+Informar:
+
+QUESTÕES
+- recebidas;
+- novas incorporadas;
+- duplicatas exatas descartadas (com o id da questão que já cobria);
+- duplicatas semânticas descartadas (com o id da questão que já cobria);
+- relacionadas mas distintas incorporadas;
+- pendentes, com o motivo exato.
+
+COBERTURA
+- novas cobertas;
+- antigas baseadas em prova auditadas;
+- parciais encontradas;
+- lacunas encontradas e lacunas corrigidas.
+
+BANCO
+- presentes nos blocos;
+- presentes no banco geral;
+- divergências (esperado 0).
+
+GABARITOS
+- A/B/C/D, maior sequência, padrão periódico antes e depois, métrica.
+
+QA e PENDÊNCIAS que precisam de decisão humana.
+
 9. Diretrizes específicas das 25 matérias
 
 Use a subseção correspondente à MATERIA_ALVO. Essas observações são pistas de auditoria, não conclusões a serem aceitas sem verificar o arquivo atual.
