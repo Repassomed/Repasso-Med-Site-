@@ -885,16 +885,16 @@
 
 
 <!-- Funções de interação das matérias (switchTab, checkAnswer, checkTF, toggleAnswer, RepassoMed) -->
-<script src="assets/app-core.js?v=20260916"></script>
+<script src="assets/app-core.js?v=20260917"></script>
 <!-- Ferramentas globais de estudo: voltar ao topo, marca-texto + borracha,
      «continuar de onde paraste» e zoom dos infográficos. Aditivo: envolve
      RepassoMed.enhanceAll e injeta o próprio CSS. -->
-<script src="assets/rm-tools.js?v=20260916"></script>
+<script src="assets/rm-tools.js?v=2026091602"></script>
 <!-- Ferramentas de estudo V2 (beta fechada): toolbox, caneta, marcador de
      5 cores, goma reversível, desfazer e «Minhas anotações». Aditivo: se o
      utilizador não estiver na beta, este ficheiro não faz absolutamente
      nada e a experiência actual fica intacta. -->
-<script src="assets/rm-tools-v2.js?v=20260916"></script>
+<script src="assets/rm-tools-v2.js?v=2026091602"></script>
 
 <script>
 /* =====================================================================
@@ -2390,18 +2390,74 @@ function addLogoutButton(){
   else { document.getElementById('auth-overlay').classList.remove('hidden'); }
 })();
 
-/* ===================== ANÚNCIO / FLYER =====================
-   Aparece ao entrar, se houver um anúncio ativo que o usuário ainda não
-   viu (conforme a frequência). Fecha ao clicar fora, no X ou no botão. */
-async function showAnnouncement(){
-  let ad;
+/* ===================== ANÚNCIOS / FLYERS =====================
+   Aparecem ao entrar, um de cada vez, em fila: maior `priority` primeiro
+   e, em empate, o mais recente — a MESMA ordem que o painel mostra ao
+   administrador. Fecha ao clicar fora, no X ou no botão; só depois de o
+   actual sair é que o seguinte entra, e nunca há dois modais ao mesmo
+   tempo. Cada anúncio é marcado como visto sozinho: um que já foi visto
+   sai da fila sem impedir os outros de aparecer. */
+
+let AD_FILA = [];        // anúncios ainda por mostrar, já ordenados
+let AD_NO_ECRA = null;   // id do que está no ecrã, ou null
+let AD_A_FECHAR = false; // guarda contra duplo clique no fechar
+
+/* Busca a lista. Se a migration ainda não tiver corrido, recua sozinha
+   para a função antiga de um anúncio só — o site nunca fica à espera da
+   base de dados para mostrar o que já sabia mostrar. */
+async function adBuscarFila(){
+  try{
+    const { data, error } = await _sb.rpc('my_active_announcements');
+    if(!error){
+      if(Array.isArray(data)) return data;
+      if(data && data.id) return [data];     // tolerante a um objecto só
+      return [];
+    }
+    const t = (error && error.message) || '';
+    if(!/could not find the function|does not exist|schema cache/i.test(t)) return [];
+  }catch(e){ return []; }
+  /* recuo: contrato antigo */
   try{
     const { data, error } = await _sb.rpc('my_active_announcement');
-    if(error || !data) return;
-    ad = data;
-  }catch(e){ return; }
-  if(!ad || !ad.id) return;
+    if(error || !data || !data.id) return [];
+    return [data];
+  }catch(e){ return []; }
+}
 
+async function showAnnouncement(){
+  const lista = await adBuscarFila();
+  /* sem duplicados e sem entradas sem id, aconteça o que acontecer */
+  const vistos = {};
+  AD_FILA = (lista || []).filter(a => {
+    if(!a || !a.id || vistos[a.id]) return false;
+    vistos[a.id] = 1; return true;
+  });
+  /* A função do banco já devolve ordenado; ordenar aqui outra vez é de
+     propósito. A ordem passa a ser garantida por quem desenha, e não
+     apenas por quem serve: vale também para o recuo ao contrato antigo e
+     para qualquer consumidor futuro. Maior `priority` primeiro; em
+     empate, o mais recente — o mesmo critério do painel. O desempate
+     final pelo `id` evita que dois avisos criados no mesmo instante
+     troquem de lugar entre entradas. */
+  AD_FILA.sort((x, y) =>
+    (Number(y.priority || 0) - Number(x.priority || 0)) ||
+    (String(y.created_at || '').localeCompare(String(x.created_at || ''))) ||
+    (String(x.id).localeCompare(String(y.id)))
+  );
+  adMostrarProximo();
+}
+
+/* Tira o primeiro da fila e mostra-o. Fila vazia: não deixa nada no
+   ecrã e não bloqueia a página — simplesmente termina. */
+function adMostrarProximo(){
+  if(document.getElementById('rm-ad')) return;   // nunca empilhar
+  const ad = AD_FILA.shift();
+  if(!ad){ AD_NO_ECRA = null; return; }
+  AD_NO_ECRA = ad.id;
+  adRender(ad);
+}
+
+function adRender(ad){
   const media = ad.media_type === 'video'
     ? `<video src="${escAd(ad.media_url)}" autoplay muted loop playsinline
          controls preload="metadata" class="rm-ad-media"></video>`
@@ -2447,10 +2503,29 @@ async function showAnnouncement(){
   requestAnimationFrame(()=> d.classList.add('show'));
 }
 
+/* Fechar: marca SÓ este como visto, tira o modal e só então chama o
+   seguinte. A guarda `AD_A_FECHAR` existe para o duplo clique — sem ela,
+   o segundo clique marcaria duas vezes e, pior, puxaria dois anúncios da
+   fila de uma vez, saltando um. Marcar duas vezes o mesmo id já era
+   inofensivo na base (a RPC tem `on conflict do nothing`), mas saltar um
+   anúncio não era. */
 async function closeAnnouncement(id){
+  if(AD_A_FECHAR) return;
+  AD_A_FECHAR = true;
   const d = document.getElementById('rm-ad');
-  if(d){ d.classList.remove('show'); setTimeout(()=>d.remove(), 200); }
+  if(d){
+    /* mantém-se o fade de saída que já existia, mas ESPERA-SE por ele
+       antes de chamar o seguinte: assim nunca há dois modais no ecrã ao
+       mesmo tempo, nem sequer um a desaparecer por trás do outro. */
+    d.classList.remove('show');
+    await new Promise(r => setTimeout(r, 200));
+    d.remove();
+  }
+  AD_NO_ECRA = null;
+  /* marcar só ESTE como visto; a falha não pode prender a fila */
   try{ await _sb.rpc('mark_announcement_seen', { p_id: id }); }catch(e){}
+  AD_A_FECHAR = false;
+  adMostrarProximo();
 }
 
 function escAd(s){
