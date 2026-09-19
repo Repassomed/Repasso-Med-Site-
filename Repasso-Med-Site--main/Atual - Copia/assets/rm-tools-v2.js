@@ -209,6 +209,217 @@
   }
 
   /* ================================================================== */
+  /* 2c · PAINEL DE DIAGNÓSTICO VISUAL — SÓ BETA, SÓ EM MEMÓRIA          */
+  /* ================================================================== */
+
+  /* O teste físico no tablet contrariou os testes sintéticos: com o lápiz
+     armado, o traço vertical rola a página em vez de escrever. Nenhum
+     ambiente aqui reproduz esse hardware, por isso a peça que falta não é
+     mais uma heurística — é MEDIÇÃO no aparelho real, sem DevTools.
+
+     Este painel mostra, em tempo real, o que o browser diz de cada
+     ponteiro. Deliberadamente NÃO regista: texto da matéria, conteúdo de
+     notas, e-mail, tokens, identificadores de sessão nem qualquer dado
+     pessoal — só metadados do gesto. Nada é enviado para servidor nenhum,
+     nada vai para localStorage: vive no separador e morre com ele.
+
+     A pergunta que ele existe para responder é uma só: a stylus chega
+     como pointerType "pen" ou como "touch"? Tudo o resto no ecrã serve
+     para confirmar a resposta sem ter de acreditar em ninguém. */
+
+  var DIAGV_MAX = 30;                 /* linhas guardadas no anel */
+  var diagV = [];
+  var diagVSeq = 0;
+  var diagVT0 = 0;
+  var diagVCaixa = null;
+  var diagVRaf = 0;
+  var diagVBaseY = {};                /* pointerId -> scrollY no pointerdown */
+
+  function diagAberto() { return !!(diagVCaixa && diagVCaixa.isConnected); }
+
+  function dEsc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function dNum(v, casas) {
+    if (v == null || v !== v) return '–';
+    var m = Math.pow(10, casas == null ? 0 : casas);
+    return String(Math.round(v * m) / m);
+  }
+
+  /* O touch-action EFECTIVO da área de leitura, tal como o compositor o vê
+     neste instante. É o valor que decide se o gesto pode virar scroll. */
+  function diagTouchAction() {
+    try {
+      var el = document.getElementById('materias-container');
+      if (!el) return '(sem #materias-container)';
+      var cs = getComputedStyle(el);
+      return cs.touchAction || cs.getPropertyValue('touch-action') || '(vazio)';
+    } catch (e) { return '(erro)'; }
+  }
+
+  function diagClasses() {
+    var b = document.body, r = [];
+    if (b.classList.contains('rm2-t-pen')) r.push('rm2-t-pen');
+    if (b.classList.contains('rm2-pen-down')) r.push('rm2-pen-down');
+    if (b.classList.contains('rm2-drawing')) r.push('rm2-drawing');
+    return r.length ? r.join(' ') : '(nenhuma)';
+  }
+
+  /* defaultPrevented só é verdade DEPOIS de todos os handlers correrem. Um
+     listener em captura lê-o sempre a false, o que seria uma mentira no
+     painel. Guarda-se a referência do evento e lê-se quando o dispatch já
+     acabou: ao chegar o evento seguinte, ou no rAF do render. */
+  function diagVResolver() {
+    var l = diagV[diagV.length - 1];
+    if (!l || !l._e) return;
+    try {
+      var dp = !!l._e.defaultPrevented;
+      l.dpLast = dp;
+      if (dp) l.dpN = (l.dpN || 0) + 1;
+    } catch (e) {}
+    l._e = null;
+  }
+
+  /* Uma linha por evento — excepto os pointermove consecutivos do mesmo
+     ponteiro, que se juntam numa linha com contador. Sem esse agrupamento
+     um único traço enchia as 30 linhas de movimentos e apagava o
+     pointerdown, que é precisamente o que interessa ver. Os valores
+     mostrados num agregado são os ÚLTIMOS; o contador diz quantos foram. */
+  function diagVReg(e) {
+    if (!diagAberto()) return;
+    try {
+      diagVResolver();
+      var agora = Date.now();
+      if (!diagVT0) diagVT0 = agora;
+
+      if (e.type === 'pointerdown') diagVBaseY[e.pointerId] = window.pageYOffset;
+
+      var topo = diagV[diagV.length - 1];
+      var junta = !!(topo && e.type === 'pointermove' && topo.tipo === 'pointermove' &&
+                     topo.pid === e.pointerId && topo.ptype === e.pointerType);
+      var l = junta ? topo : { n: ++diagVSeq, tipo: e.type, pid: e.pointerId,
+                               ptype: e.pointerType, nEv: 0, dpN: 0 };
+
+      l.t = agora - diagVT0;
+      l.nEv++;
+      l.prim = !!e.isPrimary;
+      l.buttons = e.buttons;
+      l.button = e.button;
+      l.pres = e.pressure;
+      l.w = e.width; l.h = e.height;
+      l.tiltX = e.tiltX; l.tiltY = e.tiltY;
+      l.x = Math.round(e.clientX); l.y = Math.round(e.clientY);
+      l.sY = Math.round(window.pageYOffset);
+      var base = diagVBaseY[e.pointerId];
+      l.dY = (base == null) ? null : Math.round(window.pageYOffset - base);
+      l.canc = !!e.cancelable;
+      l.tool = st.tool;
+      l.traco = !!traco;
+      l.open = !!st.open;
+      l.ta = diagTouchAction();
+      l.cls = diagClasses();
+      l._e = e;
+
+      if (!junta) {
+        diagV.push(l);
+        if (diagV.length > DIAGV_MAX) diagV.shift();
+      }
+      if (e.type === 'pointerup' || e.type === 'pointercancel') delete diagVBaseY[e.pointerId];
+      diagVPedirRender();
+    } catch (err) { /* o diagnóstico nunca pode ser causa de erro novo */ }
+  }
+
+  function diagVPedirRender() {
+    if (diagVRaf || !diagAberto()) return;
+    diagVRaf = requestAnimationFrame(function () { diagVRaf = 0; diagVRender(); });
+  }
+
+  function diagVLinha(l) {
+    var dp = l.dpN ? ('SIM(' + l.dpN + ')') : 'NÃO';
+    return '<div class="rm2-diag-r' + (l.ptype === 'pen' ? ' pen' : '') + '">' +
+      '<b>#' + l.n + ' +' + l.t + 'ms · ' + dEsc(l.tipo) +
+        (l.nEv > 1 ? (' ×' + l.nEv) : '') +
+        ' · type=' + dEsc(l.ptype === '' ? '(vazio)' : (l.ptype == null ? '(null)' : l.ptype)) +
+        ' id=' + dEsc(l.pid) + ' prim=' + (l.prim ? '1' : '0') + '</b>' +
+      '<i>btns=' + dEsc(l.buttons) + ' btn=' + dEsc(l.button) +
+        ' pres=' + dNum(l.pres, 3) +
+        ' w×h=' + dNum(l.w, 1) + '×' + dNum(l.h, 1) +
+        ' tilt=' + dNum(l.tiltX) + '/' + dNum(l.tiltY) +
+        ' xy=' + dEsc(l.x) + ',' + dEsc(l.y) + '</i>' +
+      '<i>scrollY=' + dEsc(l.sY) + ' Δ=' + (l.dY == null ? '–' : ((l.dY > 0 ? '+' : '') + l.dY)) +
+        ' · prevented=' + dp + ' cancelable=' + (l.canc ? 'SIM' : 'NÃO') + '</i>' +
+      '<i>tool=' + dEsc(l.tool) + ' traço=' + (l.traco ? 'SIM' : 'NÃO') +
+        ' toolbox=' + (l.open ? 'aberta' : 'fechada') +
+        ' · ta=' + dEsc(l.ta) + ' · ' + dEsc(l.cls) + '</i>' +
+    '</div>';
+  }
+
+  function diagVRender() {
+    if (!diagAberto()) return;
+    diagVResolver();
+    var corpo = diagVCaixa.querySelector('.rm2-diag-b');
+    var resumo = diagVCaixa.querySelector('.rm2-diag-s');
+    if (resumo) {
+      resumo.innerHTML =
+        '<span>tool=<b>' + dEsc(st.tool) + '</b></span>' +
+        '<span>toolbox=<b>' + (st.open ? 'aberta' : 'fechada') + '</b></span>' +
+        '<span>traço=<b>' + (traco ? 'SIM' : 'NÃO') + '</b></span>' +
+        '<span>touch-action=<b>' + dEsc(diagTouchAction()) + '</b></span>' +
+        '<span>body=<b>' + dEsc(diagClasses()) + '</b></span>' +
+        '<span>scrollY=<b>' + Math.round(window.pageYOffset) + '</b></span>' +
+        '<span>eventos=<b>' + diagVSeq + '</b></span>';
+    }
+    if (corpo) {
+      if (!diagV.length) {
+        corpo.innerHTML = '<div class="rm2-diag-v">Sin eventos todavía. Escribí en la materia.</div>';
+      } else {
+        var h = [];
+        for (var i = diagV.length - 1; i >= 0; i--) h.push(diagVLinha(diagV[i]));
+        corpo.innerHTML = h.join('');
+      }
+    }
+  }
+
+  function limparDiag() {
+    diagV = []; diagVSeq = 0; diagVT0 = 0; diagVBaseY = {};
+    diagVRender();
+  }
+
+  function abrirDiag() {
+    if (diagAberto()) return;
+    diagVCaixa = document.createElement('div');
+    diagVCaixa.className = 'rm2-diag';
+    diagVCaixa.setAttribute('role', 'region');
+    diagVCaixa.setAttribute('aria-label', 'Diagnóstico del lápiz');
+    diagVCaixa.innerHTML =
+      '<div class="rm2-diag-h">' +
+        '<b>Diagnóstico del lápiz</b>' +
+        '<button type="button" data-d="clear">Limpiar</button>' +
+        '<button type="button" data-d="close" aria-label="Cerrar">×</button>' +
+      '</div>' +
+      '<div class="rm2-diag-s"></div>' +
+      '<div class="rm2-diag-b"></div>';
+    diagVCaixa.addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-d]'); if (!b) return;
+      if (b.getAttribute('data-d') === 'clear') limparDiag(); else fecharDiag();
+    });
+    document.body.appendChild(diagVCaixa);
+    diagVRender();
+    refletir();
+  }
+
+  function fecharDiag() {
+    if (diagVCaixa && diagVCaixa.parentNode) diagVCaixa.parentNode.removeChild(diagVCaixa);
+    diagVCaixa = null;
+    if (diagVRaf) { cancelAnimationFrame(diagVRaf); diagVRaf = 0; }
+    refletir();
+  }
+
+  function alternarDiag() { if (diagAberto()) fecharDiag(); else abrirDiag(); }
+
+  /* ================================================================== */
   /* 3 · CSS                                                             */
   /* ================================================================== */
 
@@ -502,6 +713,50 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   .rm2-w{ width:28px; }
 }
 @media (prefers-reduced-motion: reduce){ .rm2-fab,.rm2-btn,.rm2-sw{ transition:none; } }
+
+/* ---------- painel de diagnóstico (só beta, só memória) -------------- */
+/* Fica no canto oposto ao trilho para não tapar a ferramenta que se está
+   a diagnosticar, e com touch-action:auto para o painel poder ser rolado
+   com o dedo mesmo quando a área de leitura estiver bloqueada. */
+.rm2-diag{
+  position:fixed; z-index:99992;
+  left:max(8px, env(safe-area-inset-left));
+  bottom:max(8px, env(safe-area-inset-bottom));
+  width:min(430px, calc(100vw - 80px));
+  max-height:min(52vh, 460px);
+  display:flex; flex-direction:column;
+  background:#0d1a2b; color:#e7f0fa;
+  border:1px solid #22405f; border-radius:14px;
+  box-shadow:0 14px 34px rgba(4,12,22,.42);
+  font:12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  touch-action:auto; overscroll-behavior:contain;
+}
+.rm2-diag-h{
+  display:flex; align-items:center; gap:8px;
+  padding:8px 10px; border-bottom:1px solid #22405f; flex:0 0 auto;
+}
+.rm2-diag-h b{ font-size:12.5px; letter-spacing:.2px; flex:1 1 auto; }
+.rm2-diag-h button{
+  border:1px solid #2f5478; background:#16283f; color:#dbe8f6;
+  border-radius:8px; padding:4px 9px; font:inherit; cursor:pointer;
+}
+.rm2-diag-h button:hover{ background:#1e3c5a; }
+.rm2-diag-h button[data-d="close"]{ padding:2px 8px; font-size:15px; line-height:1.1; }
+.rm2-diag-s{
+  display:flex; flex-wrap:wrap; gap:4px 12px;
+  padding:7px 10px; border-bottom:1px solid #22405f; flex:0 0 auto;
+  color:#9fb8d2;
+}
+.rm2-diag-s b{ color:#ffd77a; font-weight:700; }
+.rm2-diag-b{ overflow:auto; padding:4px 0 8px; flex:1 1 auto; -webkit-overflow-scrolling:touch; }
+.rm2-diag-r{ padding:5px 10px; border-bottom:1px solid rgba(34,64,95,.55); }
+.rm2-diag-r b{ display:block; color:#8fd3ff; font-weight:700; }
+.rm2-diag-r.pen b{ color:#7dffa8; }
+.rm2-diag-r i{ display:block; font-style:normal; color:#b9cde2; word-break:break-word; }
+.rm2-diag-v{ padding:14px 10px; color:#8ea6bf; text-align:center; }
+@media (max-width:560px){
+  .rm2-diag{ width:calc(100vw - 70px); max-height:46vh; font-size:11px; }
+}
 
 `;
     document.head.appendChild(css);
@@ -1823,6 +2078,14 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       '<path d="M11.4 5.8 4.2 13l7.2 7.2Z" fill="url(#rm2uA)"/>' +
       '<path d="M9.6 9.1 6.6 12.1l3 3Z" fill="#ffffff" opacity=".28"/>',
 
+    /* diagnóstico: um traçado de monitor com um ponto a marcar o pico */
+    diag:
+      '<defs>' + grad('rm2dA', '#8fd3ff', '#2f7fd6', true) + '</defs>' +
+      '<rect x="2.6" y="5.4" width="26.8" height="19.4" rx="3.2" fill="none" stroke="url(#rm2dA)" stroke-width="2.6"/>' +
+      '<path d="M6.6 16.4h4l2.6-5.4 3.4 9.2 2.6-5.2h6.2" fill="none" stroke="url(#rm2dA)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<circle cx="16.6" cy="20.2" r="1.9" fill="#ffd77a"/>' +
+      '<rect x="11.4" y="26.6" width="9.2" height="2.4" rx="1.2" fill="url(#rm2dA)"/>',
+
     /* anotações: post-it amarelo com canto dobrado e duas linhas */
     note:
       '<defs>' + grad('rm2nA', '#ffe999', '#f4c534') + grad('rm2nB', '#e0ab1f', '#b5831a') + '</defs>' +
@@ -1874,6 +2137,10 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         '<div class="rm2-sep"></div>' +
         botao('data-a="undo"', I.undo, 'Deshacer', 'Deshacer la última acción', false) +
         botao('data-a="notes"', I.note, 'Mis apuntes', 'Abrir mis apuntes', false) +
+        /* Diagnóstico do lápiz. Está aqui, e não atrás de uma consola, porque
+           quem tem de o ler é o tester com o tablet na mão. Só beta: este
+           ficheiro inteiro só corre para quem tem acesso à V2. */
+        botao('data-a="diag"', I.diag, 'Diagnóstico del lápiz', 'Abrir el diagnóstico del lápiz', false) +
       '</div>' +
       '<button type="button" class="rm2-fab" id="rm2-fab" aria-expanded="false" aria-controls="rm2-panel" ' +
         'title="Herramientas de estudio" aria-label="Herramientas de estudio">' + ico(I.tools) + '</button>';
@@ -1907,6 +2174,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       var a = b.getAttribute('data-a');
       if (a === 'undo') { desfazer(); return; }
       if (a === 'notes') { abrirNotas(); return; }
+      if (a === 'diag') { alternarDiag(); return; }
 
       var hc = b.getAttribute('data-hc');
       if (hc) {
@@ -1932,13 +2200,15 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     return { yellow: 'Amarillo', red: 'Rojo', blue: 'Azul', green: 'Verde', pink: 'Rosa' }[c] || c;
   }
 
-  /* Só a GOMA ainda tira o pan à área de leitura (touch-action:none no
-     CSS, escopado a body.rm2-t-eraser/highlight). A CANETA deixou de
-     bloquear o dedo — devolveu-lhe pan-x/pan-y/pinch-zoom (§0 do encargo,
-     "Goodnotes-like") — por isso já não precisa do painel sempre aberto
-     nem do FAB a desarmá-la: fechar a barra com o lápis armado é seguro,
-     porque a página continua a rolar com o dedo como sempre. O marcador
-     nunca bloqueou o scroll, pela mesma razão de sempre. */
+  /* «Bloqueante» aqui quer dizer uma coisa só: a ferramenta tirou o pan à
+     área de leitura, logo o painel TEM de ficar aberto, porque é lá que
+     está o botão que a desarma. Hoje isso só acontece com a GOMA
+     (touch-action:none escopado a body.rm2-t-eraser/highlight).
+
+     Isto não é o mesmo que «o painel pode fechar-se sozinho»: com o lápiz
+     armado o painel também fica, mas por outra razão — escrever na
+     matéria não é clicar fora (ver o listener de pointerdown em
+     `ligar()`). O FAB e o ESC continuam a fechá-lo nos dois casos. */
   function modoEscritaBloqueante() {
     return st.tool === 'eraser';
   }
@@ -2003,6 +2273,12 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', String(on));
     });
+    /* o botão do diagnóstico acende enquanto o painel estiver no ecrã */
+    var bd = box.querySelector('.rm2-btn[data-a="diag"]');
+    if (bd) {
+      bd.classList.toggle('on', diagAberto());
+      bd.setAttribute('aria-expanded', String(diagAberto()));
+    }
     /* só os sub-painéis de topo abrem e fecham; os de dentro (cores e
        grossuras do lápis) ficam sempre abertos dentro do seu pai */
     box.querySelectorAll('.rm2-sub[data-sub]').forEach(function (s) {
@@ -2307,13 +2583,31 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (st.open) { st.open = false; refletir(); }
     });
 
-    /* clicar fora minimiza (mas nunca no meio de um traço) */
+    /* Clicar fora minimiza — mas «fora» não inclui usar a ferramenta.
+
+       O teste físico no tablet apanhou isto: com o lápiz armado, o
+       pointerdown que COMEÇA o traço chegava aqui primeiro (o listener é
+       de captura e o traço ainda não existe nesse instante, por isso o
+       veto `traco` não cobria o caso) e fechava o painel ao escrever.
+
+       Com uma ferramenta que se usa DENTRO da matéria — lápiz ou goma —
+       tocar na matéria é usá-la, não é clicar fora. O painel só fecha
+       pelo FAB, pelo ESC, ou ao trocar/desarmar a ferramenta. Sem
+       temporizadores: é o estado da ferramenta que decide. */
     document.addEventListener('pointerdown', function (e) {
       if (!st.open || traco || apagando) return;
-      if (e.target.closest && e.target.closest('.rm2-box,.rm2-notes')) return;
-      if (modoEscritaBloqueante()) return;         // goma armada: mantém aberto
+      if (e.target.closest && e.target.closest('.rm2-box,.rm2-notes,.rm2-diag')) return;
+      if (ferramentaDeDesenho()) return;           // lápiz ou goma: mantém aberto
       st.open = false; refletir();
     }, true);
+
+    /* Diagnóstico: captura, para ver o evento mesmo que alguém o pare a
+       meio; passivo, para ser impossível esta linha influenciar o scroll
+       que ela existe para medir. Não faz nada enquanto o painel estiver
+       fechado. */
+    ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(function (ev) {
+      document.addEventListener(ev, diagVReg, { capture: true, passive: true });
+    });
 
     /* Sair da página é o caso em que mais se perde texto: pagehide dispara
        mesmo quando o separador vai para a bfcache, e visibilitychange apanha
@@ -2418,6 +2712,11 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       /* diagnóstico de hardware físico (§7 do encargo): só memória, só
          beta, nunca enviado ao servidor — ver «2b · DIAGNÓSTICO» acima */
       debug: debug,
+      /* painel visual do diagnóstico (§FASE 1): abre/fecha/limpa. Também
+         não sai do separador — nem servidor, nem localStorage. */
+      abrirDiag: abrirDiag,
+      fecharDiag: fecharDiag,
+      limparDiag: limparDiag,
       /* Ganchos SÓ DE LEITURA para os testes automatizados da caneta
          Goodnotes-like (§24 do encargo). Nenhum grava no Supabase, nenhum
          devolve conteúdo da matéria — só o estado interno do roteador de
@@ -2429,6 +2728,9 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         touchNav: touchNav,
         touchPalm: touchPalm,
         temTraco: function () { return !!traco; },
+        diagAberto: diagAberto,
+        diagLinhas: function () { return diagV.slice(); },
+        diagTouchAction: diagTouchAction,
         tracoInfo: function () {
           return traco ? { pid: traco.pid, tipo: traco.tipo, nPontos: traco.pts.length, rafPending: traco.rafPending } : null;
         },
