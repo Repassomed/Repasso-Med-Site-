@@ -1,0 +1,78 @@
+name: Repasso Coordinator (OBSERVE)
+
+# Coordinator V2 — Issue #95. Modo OBSERVE, sem chamada paga.
+#
+# TRAVA EM DUAS CAMADAS, de propósito:
+#   1. este workflow inteiro só roda quando a Variable do repositório
+#      REPASSO_COORDINATOR_ENABLED é exatamente "true" (condição do job,
+#      abaixo) — enquanto for "false" (o valor de hoje), o job nem começa,
+#      então NENHUM segundo de runner é gasto e NENHUM código roda;
+#   2. mesmo que o job rodasse, coordinator/config.py consulta a mesma
+#      variável (e MODE) de novo e recusa qualquer chamada externa se o
+#      portão não abrir. Ver coordinator/config.py.
+#
+# Isto respeita ao pé da letra a Issue #95: "Enquanto ENABLED=false:
+# nenhuma chamada paga; nenhum Coordinator API roda."
+#
+# Eventos que este workflow observaria (Issue #95, "PRIMEIRO ALVO"):
+#   1. PR/checkpoint em NEEDS-AUDIT       (pull_request: labeled)
+#   2. checkpoint BLOCKED-LIMIT           (issue_comment: created, em qualquer issue)
+#   3. comentário novo na Issue #88       (issue_comment: created, issue 88)
+#   4. Guard muda de estado               (workflow_run: completed, "Repasso Guard")
+#
+# Nesta rodada (infra + testes), o job de verdade não constrói o payload
+# de evento a partir do contexto do GitHub Actions ainda — isso fica para
+# quando ENABLED=true for uma decisão tomada, com o primeiro teste
+# controlado descrito na Issue #95. O que existe aqui é o gate real e
+# funcional: o workflow existe, mas fica inerte enquanto ENABLED=false.
+
+on:
+  pull_request:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+  workflow_run:
+    workflows: ["Repasso Guard"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repasso-coordinator-observe-${{ github.event.pull_request.number || github.event.issue.number || github.event.workflow_run.id }}
+  cancel-in-progress: true
+
+jobs:
+  observe:
+    # Camada 1 do portão: enquanto a Variable não for exatamente "true",
+    # o job não roda. Nada de runner, nada de Python, nada de custo.
+    if: ${{ vars.REPASSO_COORDINATOR_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python (só biblioteca padrão)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Confirmar o portão em código (camada 2, defesa em profundidade)
+        env:
+          REPASSO_COORDINATOR_ENABLED: ${{ vars.REPASSO_COORDINATOR_ENABLED }}
+          REPASSO_COORDINATOR_MODE: ${{ vars.REPASSO_COORDINATOR_MODE }}
+        run: |
+          python3 -c "
+          from coordinator.config import Config
+          cfg = Config.from_env()
+          gate = cfg.gate()
+          print(f'Portão: {\"ABERTO\" if gate.open else \"FECHADO\"} — {gate.reason}')
+          "
+
+      - name: (placeholder) construir evento a partir do contexto do GitHub
+        run: |
+          echo "Esta rodada (Issue #95) entrega a infraestrutura e os testes."
+          echo "A construção do payload de evento real a partir do contexto do"
+          echo "GitHub Actions, e a chamada de --out para comentar no PR/Issue,"
+          echo "ficam para a decisão explícita do 'primeiro teste controlado'"
+          echo "descrita na Issue #95 — não fazem parte desta entrega."

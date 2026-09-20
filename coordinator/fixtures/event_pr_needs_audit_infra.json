@@ -1,0 +1,11 @@
+{
+  "raw_type": "PR_NEEDS_AUDIT",
+  "source": "fixture",
+  "repo": "Repassomed/Repasso-Med-Site-",
+  "identity": "pr:998",
+  "payload": {
+    "area": "infraestrutura",
+    "titulo": "Ajuste de workflow",
+    "dedup_fields": {"pr": 998, "estado": "NEEDS-AUDIT"}
+  }
+}

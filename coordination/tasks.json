@@ -49,13 +49,33 @@
       "objetivo": "Criar coordenação de tarefas, verificador automático e cartão de merge, sem tocar em matérias nem em produção.",
       "fonte": "Issue #81",
       "agente": "Claude 2",
-      "estado": "NEEDS-AUDIT",
+      "estado": "DONE",
       "dependencias": [],
       "branch": "infra/c2-coordinator-guard-v1",
       "pr": 94,
-      "commit": "402beb33810c670523f4a79c7e895d0321df020e",
+      "commit": "90f56cfaddcfe741141e5cc65ba5fdc60faf7ee3",
       "issue": 81,
-      "notas": "Não edita matéria, não chama API paga, não escreve no Supabase. Rodada 2: corrigidos os 2 bloqueadores da auditoria independente (self-cert do Guard via extração da base no workflow; ampliação de escopo pelo próprio PR travada pela reserva da base) — 6/6 testes, Guard auto-verificado (0 HARD FAIL, WARNING esperado por bootstrap). Ver checkpoint na Issue #67. Aguardando nova auditoria independente — NÃO MERGEAR (só o José). `arquivos` alinhado com o corpo real do PR (tools/** em vez de tools/qa/**, porque tools/__init__.py fica fora de tools/qa/; .gitignore incluído porque a raiz também recebeu um)."
+      "notas": "MERGEADO por José em 90f56cf. Segunda auditoria independente aprovou como MERGE-READY. Base para infra-coordinator-v2-observe (Issue #95)."
+    },
+    {
+      "id": "infra-coordinator-v2-observe",
+      "titulo": "Repasso Coordinator V2 — modo OBSERVE com API (sem gasto)",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordinator/**",
+        ".github/workflows/coordinator-observe.yml"
+      ],
+      "objetivo": "Construir a infraestrutura do Coordinator (recebimento de evento, contexto mínimo, classificação, roteamento FAST/STANDARD/DEEP, dedup, limites, usage/custo, saída OBSERVE) mantendo REPASSO_COORDINATOR_ENABLED=false e MODE=observe — zero chamada paga nesta rodada.",
+      "fonte": "Issue #95, políticas #82–#93",
+      "agente": "Claude 2",
+      "estado": "IN-PROGRESS",
+      "dependencias": ["infra-coordinator-guard-v1"],
+      "branch": "infra/c2-coordinator-v2-observe",
+      "pr": null,
+      "commit": null,
+      "issue": 95,
+      "notas": "Não edita matéria, Supabase, produção. Não chama API paga. Não muda ENABLED para true. Não faz merge."
     },
     {
       "id": "semiologia-ii-b01-b04-provas",

@@ -1,0 +1,12 @@
+{
+  "raw_type": "PR_NEEDS_AUDIT",
+  "source": "fixture",
+  "repo": "Repassomed/Repasso-Med-Site-",
+  "identity": "pr:999",
+  "payload": {
+    "area": "materia",
+    "materia": "farmacologia-ii",
+    "titulo": "Farmacología II — questões novas da prova",
+    "dedup_fields": {"pr": 999, "estado": "NEEDS-AUDIT"}
+  }
+}

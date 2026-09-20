@@ -1,0 +1,11 @@
+{
+  "raw_type": "GUARD_STATE_CHANGE",
+  "source": "fixture",
+  "repo": "Repassomed/Repasso-Med-Site-",
+  "identity": "pr:997",
+  "payload": {
+    "guard_state": "success",
+    "audit_pack": {"resultado": "APROVADO", "achados": []},
+    "dedup_fields": {"pr": 997, "conclusion": "success"}
+  }
+}
