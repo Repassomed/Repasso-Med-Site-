@@ -1,22 +1,35 @@
 # MAPA DE INSERÇÃO · NOVAS IMAGENS · SEMIOLOGÍA II
 
 **Branch:** `visual/c1-semiologia-ii-imagens-novas` · **base:** `main` `84d31b8`
-**Escopo desta entrega:** somente `assets/img/semio2/`. **`semiologia-ii.html` NÃO foi alterado.**
+**Escopo:** somente `assets/img/semio2/`. **`semiologia-ii.html` NÃO foi alterado.**
 **Fonte:** Drive → Site Repasso Med → Biblioteca → 6.º semestre → Semiología II → **Imagens novas**
 (`14t2Q9VivO8oDAOS5VI9bwAuZP1hTaOa1`)
+
+> ## ⛔ ESTA RODADA NÃO CONSEGUIU REGENERAR NENHUM RASTER
+>
+> Foi pedido corrigir/regerar 9 imagens. **Nenhuma correção foi possível nesta
+> sessão.** Não existe aqui capacidade de gerar imagem: o ambiente tem apenas
+> Pillow e um Chromium headless — não há modelo de imagem, nem `ImageMagick`,
+> nem `cwebp`. As 14 são ilustrações rasterizadas com anatomia desenhada,
+> radiografias e fotografias; não podem ser reproduzidas a partir de HTML/CSS
+> sem virar outra imagem, com outra linguagem visual, fora do padrão das 34
+> infografias já publicadas da matéria.
+>
+> E **remendar texto sobre o raster continua proibido**. Como a errata via
+> `figcaption` também deixou de ser aceita, **toda imagem com defeito de texto
+> fica BLOQUEADA** — não «aprovada com ressalva».
+>
+> **Resultado: 5 aprovadas · 9 BLOQUEADAS.** As 9 precisam voltar para quem tem
+> o pipeline que as produziu. A seção 5 traz o texto exato de cada correção.
 
 | | |
 |---|---|
 | Recebidas do Drive | **14** |
-| Aprovadas e publicadas aqui | **11** |
-| **Pendentes — NÃO publicadas** | **3** |
+| **Aprovadas e publicadas** | **5** |
+| **🔴 BLOQUEADAS — não publicadas** | **9** |
 | Formato | WEBP horizontal **1536 × 1024**, VP8 lossy, RGB — as 14 |
 | Arquivos antigos apagados | **0** |
 | Arquivos antigos sobrescritos | **0** (nenhuma colisão de nome) |
-
-> **Nada foi integrado ao HTML.** Este documento é a instrução de integração para
-> quem tiver o `semiologia-ii.html` reservado. Enquanto não for integrado, as 11
-> novas imagens ficam no repositório sem ser referenciadas — não alteram o site.
 
 ---
 
@@ -38,352 +51,335 @@ e no corpo:
 </figure>
 ```
 
-Existem hoje **44 classes** `s2-i1`…`s2-i44`. Delas, **34 são infografias geradas**
-(todas 1536 × 1024) e **10 são fotos de diapositiva da cátedra** (`rx-*`, `ecg-*`,
-`ic-*`, 860 × 484 e similares), rotuladas `DIAPOSITIVA · …`.
+Existem **44 classes** `s2-i1`…`s2-i44`: **34 infografias geradas** (todas 1536 × 1024)
+e **10 fotos de diapositiva da cátedra** (860 × 484 e similares), rotuladas
+`DIAPOSITIVA · …`.
 
-**Regra de integração:** as diapositivas da cátedra (`s2-i10, i11, i14, i15, i16,
-i20, i22, i26, i29, i36`) **não devem ser substituídas por nenhuma imagem nova** —
-são material-fonte, não infografia.
+### ⛔ As 10 diapositivas da cátedra não podem ser substituídas
+
+`s2-i10` · `s2-i11` · `s2-i14` · `s2-i15` · `s2-i16` · `s2-i20` · `s2-i22` ·
+`s2-i26` · `s2-i29` · `s2-i36`
+
+São material-fonte, não infografia. **Nenhuma imagem nova substitui nenhuma delas.**
 
 Substituir uma infografia = trocar só a URL na regra CSS da classe (ou criar classe
-nova). O `<figure>`, o `aria-label` e o `figcaption` continuam onde estão e são
-ajustados ao conteúdo novo. Isso mantém a ancoragem das marcações do aluno.
+nova). O `<figure>`, o `aria-label` e o `figcaption` continuam onde estão. Isso mantém
+a ancoragem das marcações do aluno.
 
 ---
 
 ## 2 · QUADRO GERAL
 
-| # | Arquivo | Bloco | Tema | Substitui | Status |
+| # | Arquivo | Bloco | Tema | Relação com o acervo | Status |
 |---|---|---|---|---|---|
-| 1 | `semio2-b01-01-tos-expectoracion.webp` | s2-b01 | Tos y expectoración | `s2-i1` · `01-tos-expectoracion-mecanismo-detallado.webp` | 🔴 **PENDENTE** |
-| 2 | `semio2-b01-02-disnea-mmrc-posiciones.webp` | s2-b01 | Disnea posicional + mMRC | `s2-i2` · `02-disnea-posicion-mmrc-mapa-clinico.webp` | 🟢 aprovada · com errata |
-| 3 | `semio2-b01-03-hemoptisis-cianosis.webp` | s2-b01 | Hemoptisis × hematemesis; cianosis | `s2-i3` · `03-hemoptisis-pleura-cianosis-diferenciales.webp` (**parcial**) | 🟢 aprovada |
-| 4 | `semio2-b01-04-ruidos-respiratorios.webp` | s2-b01 | Origem anatômica de cada ruído | — (**adição**) | 🟢 aprovada |
-| 5 | `semio2-b02-01-bronquitis-aguda.webp` | s2-b02 | Mecanismo da bronquite aguda | `s2-i4` · `04-bronquitis-aguda-mecanismo-detallado.webp` | 🟢 aprovada |
-| 6 | `semio2-b02-02-bronquitis-neumonia-diferencias.webp` | s2-b02 | Aguda × crônica × pneumonia | `s2-i5` · `05-bronquitis-aguda-cronica-neumonia-diferencias.webp` | 🔴 **PENDENTE** |
-| 7 | `semio2-b02-03-tos-aguda-ruta-clinica.webp` | s2-b02 | Rota clínica da tos aguda | `s2-i6` · `06-tos-infecciosa-ruta-clinica.webp` | 🟢 aprovada · com errata |
-| 8 | `semio2-b03-01-enfisema-radiografia.webp` | s2-b03 | Rx normal × enfisema, 7 sinais | — (**adição**) | 🟢 aprovada |
-| 9 | `semio2-b03-02-asma-epoc-mecanismos.webp` | s2-b03 | Mecanismos asma × EPOC | `s2-i7` · `07-asma-epoc-mecanismos-obstructivos.webp` | 🔴 **PENDENTE** |
-| 10 | `semio2-b03-03-espirometria-dvo-dvr.webp` | s2-b03 | Espirometria: DVO × DVR, gravidade | — (**adição**) | 🟢 aprovada · com errata |
-| 11 | `semio2-b03-04-asma-control-gravedad.webp` | s2-b03 | Controle GINA + crise grave | — (**adição**) | 🟢 aprovada · com errata |
-| 12 | `semio2-b04-01-condensacion-radiografia.webp` | s2-b04 | Condensação: alvéolo → IPPA → Rx | `s2-i12` · `10-condensacion-alveolar-mecanismo-v2.webp` | 🟢 aprovada |
-| 13 | `semio2-b04-02-neumonia-contexto.webp` | s2-b04 | NAC / nosocomial / aspiração | `s2-i13` · `11-neumonia-contexto-adquisicion-v2.webp` | 🟢 aprovada |
-| 14 | `semio2-b04-03-curb65-gravedad.webp` | s2-b04 | CURB-65 | `s2-i17` · `12-neumonia-ippa-radiografia-curb65-v2.webp` (**parcial — ver aviso**) | 🟢 aprovada |
+| 1 | `semio2-b01-01-tos-expectoracion` | s2-b01 | Tos y expectoración | substituiria `s2-i1` | 🔴 **BLOQUEADA** |
+| 2 | `semio2-b01-02-disnea-mmrc-posiciones` | s2-b01 | Disnea posicional + mMRC | substituiria `s2-i2` | 🔴 **BLOQUEADA** |
+| 3 | `semio2-b01-03-hemoptisis-cianosis` | s2-b01 | Hemoptisis × hematemesis; cianosis | **ADIÇÃO** — não substitui `s2-i3` | 🟢 aprovada |
+| 4 | `semio2-b01-04-ruidos-respiratorios` | s2-b01 | Origem anatômica de cada ruído | **ADIÇÃO** | 🟢 aprovada |
+| 5 | `semio2-b02-01-bronquitis-aguda` | s2-b02 | Mecanismo da bronquite aguda | substitui `s2-i4` | 🟢 aprovada |
+| 6 | `semio2-b02-02-bronquitis-neumonia-diferencias` | s2-b02 | Aguda × crônica × pneumonia | substituiria `s2-i5` | 🔴 **BLOQUEADA** |
+| 7 | `semio2-b02-03-tos-aguda-ruta-clinica` | s2-b02 | Rota clínica da tos aguda | substituiria `s2-i6` | 🔴 **BLOQUEADA** |
+| 8 | `semio2-b03-01-enfisema-radiografia` | s2-b03 | Rx normal × enfisema, 7 sinais | **ADIÇÃO** | 🟢 aprovada |
+| 9 | `semio2-b03-02-asma-epoc-mecanismos` | s2-b03 | Mecanismos asma × EPOC | substituiria `s2-i7` | 🔴 **BLOQUEADA** |
+| 10 | `semio2-b03-03-espirometria-dvo-dvr` | s2-b03 | Espirometria: DVO × DVR | **ADIÇÃO** | 🔴 **BLOQUEADA** |
+| 11 | `semio2-b03-04-asma-control-gravedad` | s2-b03 | Controle GINA + crise grave | **ADIÇÃO** | 🔴 **BLOQUEADA** |
+| 12 | `semio2-b04-01-condensacion-radiografia` | s2-b04 | Condensação: alvéolo → IPPA → Rx | substituiria `s2-i12` | 🔴 **BLOQUEADA** |
+| 13 | `semio2-b04-02-neumonia-contexto` | s2-b04 | NAC / nosocomial / aspiração | substituiria `s2-i13` | 🔴 **BLOQUEADA** |
+| 14 | `semio2-b04-03-curb65-gravedad` | s2-b04 | CURB-65 | **ADIÇÃO** — não substitui `s2-i17` | 🟢 aprovada |
 
 ---
 
-## 3 · FICHA POR ARQUIVO
+## 3 · AS 5 APROVADAS · FICHA DE INTEGRAÇÃO
 
-### 1 · `semio2-b01-01-tos-expectoracion.webp` — 🔴 PENDENTE · NÃO PUBLICADA
+Reauditadas nesta rodada sob o critério estrito «nenhuma errata conhecida».
+Cada uma foi reexaminada com ampliação 2× de tela cheia **e** 3× nas zonas de
+tipo menor. **Nenhuma tem erro científico, textual ou visual conhecido.**
 
-- **Bloco / tema:** s2-b01 · `1) Tos 💨` — arco reflexo, fases, tipos de esputo, classificação por duração.
-- **Substituiria:** `s2-i1` → `01-tos-expectoracion-mecanismo-detallado.webp`.
-- **Ponto de inserção:** regra CSS de `.s2-i1`; a `<figure>` já existe imediatamente antes de `<h3>1) Tos 💨</h3>`.
-- **Motivo de não publicar:** a faixa «CLASIFICACIÓN POR DURACIÓN» imprime
-  **`Aguda ≤ 3 sem` · `Subaguda 3 – 8 sem` · `Crónica > 8 sem`** — as duas primeiras
-  **se sobrepõem exatamente em 3 semanas**. Uma tos de 3 semanas cai em duas classes.
-  A própria `semio2-b02-02` (e o texto do site) usam **`< 3 semanas`** para a aguda.
-- **Correção pedida para a regeneração:** `Aguda <3 semanas · Subaguda 3–8 semanas · Crónica >8 semanas`.
-- **Resto da imagem:** correto e em castelhano limpo (arco reflexo, «No hay receptores
-  de la tos en el parénquima alveolar», «Esputo purulento ≠ bacteria segura»).
-  **Só a faixa de duração precisa mudar.**
+### 3 · `semio2-b01-03-hemoptisis-cianosis.webp` — 🟢 aprovada · **ADIÇÃO**
 
-### 2 · `semio2-b01-02-disnea-mmrc-posiciones.webp` — 🟢 aprovada · com errata
+- **Bloco / tema:** s2-b01 · entre `<h3>4) Hemoptisis 🩸</h3>` e `<h3>5) Dolor torácico ⚡</h3>`.
+- **Relação com o acervo:** ⛔ **ADIÇÃO. NÃO substituir `s2-i3`.**
+  A `s2-i3` (`03-hemoptisis-pleura-cianosis-diferenciales.webp`) ensina **três** pares —
+  hemoptisis/hematemesis, **inervação pleural** e cianosis central/periférica. A nova
+  ensina **dois**: não tem o painel da inervação pleural, que o `figcaption` de `s2-i3`
+  destaca em negrito (*«la pleura visceral y el parénquima pulmonar son insensibles al
+  dolor»*) e que é matéria de prova. **As duas convivem.**
+- **Ponto exato de inserção:** classe CSS nova, p. ex. `s2-i45`; `<figure class="s2-fig">`
+  nova **logo depois** da `<figure>` de `s2-i3`, antes de `<h3>5) Dolor torácico ⚡</h3>`.
+- **Motivo:** aprofunda os dois pares que a `s2-i3` resume em uma faixa — acrescenta pH
+  (≈7,4–8,0 × ≈1,0–3,0), cosquilleo faringolaríngeo × náuseas prévias, restos
+  alimentarios, e as duas fórmulas de fecho.
+- **Conferido:** hemoptisis (sangre roja, espumosa, tos, pH alcalino) ✔ · hematemesis
+  (borra de café, restos alimentarios, pH ácido) ✔ · central (mucosas azules, SpO₂ < 90 %,
+  no mejora con calor) ✔ · periférica (acrocianosis, respeta mucosas, mejora al calentar) ✔
 
-- **Bloco / tema:** s2-b01 · `3) Disnea 🌬️` — ortopnea, DPN, platipnea, trepopnea, bendopnea + escala mMRC 0–4.
-- **Substitui:** `s2-i2` → `02-disnea-posicion-mmrc-mapa-clinico.webp`.
-- **Ponto de inserção:** regra CSS de `.s2-i2`. A `<figure class="s2-fig">` correspondente
-  está entre `<h4>Cuánto es demasiado: la vómica</h4>` e `<h3>3) Disnea 🌬️</h3>`.
-- **Motivo da substituição:** a figura atual tem um defeito **documentado pelo próprio
-  site**, no `figcaption`: *«Dos escalones de la escalera aparecen cortados en la
-  imagen»* — os graus **2 e 3** da mMRC não são legíveis e a legenda precisa
-  reescrevê-los em prosa. **Na imagem nova os cinco graus 0–4 estão inteiros e
-  legíveis**, com texto fiel à mMRC. Também acrescenta bendopnea e trepopnea em
-  fotografia, e as duas caixas «Ortopnea y DPN → piense en IC izquierda» e
-  «Silencio torácico + disnea intensa = gravedad».
-- **⚠️ ERRATA a registrar no `figcaption` ao integrar:**
-  o cartão da DPN escreve **«ahcogo»**; leia-se **«ahogo»**.
-  (Convenção já usada no site para `s2-i5`: *«la imagen escribe “SatO” sin el subíndice»*.)
-- **Ao integrar, remover da legenda** a ressalva sobre os degraus cortados — deixa de ser verdade.
+### 4 · `semio2-b01-04-ruidos-respiratorios.webp` — 🟢 aprovada · **ADIÇÃO**
 
-### 3 · `semio2-b01-03-hemoptisis-cianosis.webp` — 🟢 aprovada
-
-- **Bloco / tema:** s2-b01 · entre `4) Hemoptisis 🩸` e `5) Dolor torácico ⚡` — hemoptisis × hematemesis e cianosis central × periférica.
-- **Substitui parcialmente:** `s2-i3` → `03-hemoptisis-pleura-cianosis-diferenciales.webp`.
-- **Ponto de inserção:** regra CSS de `.s2-i3`; a `<figure>` está imediatamente antes de `<h3>5) Dolor torácico ⚡</h3>`.
-- **⚠️ AVISO DE PERDA DE CONTEÚDO:** a figura atual ensina **três** pares —
-  hemoptisis/hematemesis, **inervação pleural (dor)** e cianosis central/periférica.
-  A nova ensina **dois**: sai o painel da **inervação da pleura**, que o `figcaption`
-  atual destaca em negrito (*«la pleura visceral y el parénquima pulmonar son
-  insensibles al dolor»*) e que é matéria de prova.
-  **Recomendação:** tratar como **adição** (classe nova `s2-i45`) e manter `s2-i3`,
-  **ou** só substituir se o painel pleural for reposto em outra figura do bloco.
-  **Substituir sem mais nada perde conteúdo avaliável.**
-- **Qualidade:** correta. pH alcalino ≈7,4–8,0 × pH ácido ≈1,0–3,0; «respeta mucosas»
-  e «mejora al calentar» na periférica. Sem erro de castelhano.
-
-### 4 · `semio2-b01-04-ruidos-respiratorios.webp` — 🟢 aprovada · **adição**
-
-- **Bloco / tema:** s2-b01 · `1) Tos 💨` → subseção `<h4>Escuche la diferencia</h4>`.
-- **Substitui:** nada. Não existe hoje nenhuma infografia de origem anatômica dos ruídos no bloco 01.
-- **Ponto de inserção exato:** dentro de `<h4>Escuche la diferencia</h4>`, **imediatamente
-  antes do primeiro `<div class="audio-player">`** (o de `MURMULLO VESICULAR NORMAL`),
-  depois do parágrafo que começa por *«Leer la descripción de un ruido y reconocerlo
-  con el estetoscopio son dos habilidades distintas…»*.
+- **Bloco / tema:** s2-b01 · `<h4>Escuche la diferencia</h4>` (dentro de `1) Tos 💨`).
+- **Ponto exato de inserção:** **imediatamente antes do primeiro `<div class="audio-player">`**
+  (o de `MURMULLO VESICULAR NORMAL`), logo após o parágrafo *«Leer la descripción de un
+  ruido y reconocerlo con el estetoscopio son dos habilidades distintas…»*.
   Classe CSS nova, p. ex. `s2-i46`.
-- **Motivo:** os cinco áudios (murmullo, crepitantes, sibilancias, roncus, estridor)
-  são reproduzidos hoje **sem nenhum mapa de onde cada ruído nasce**. A figura dá a
-  âncora anatômica antes da escuta: roncus = brônquio grande + secreção, muda com a
-  tosse; sibilância = via pequena; crepitantes = alvéolo, fim da inspiração; frote =
-  pleura, nas duas fases. Inclui murmullo vesicular normal e os três sinais de
-  transmissão da voz.
-- **Qualidade:** correta e sem erro de castelhano.
+- **Motivo:** os cinco áudios tocam hoje **sem nenhum mapa de onde cada ruído nasce**.
+  A figura dá a âncora anatômica antes da escuta.
+- **Conferido:** roncus (brônquio grande + secreção, grave, muda ao tossir) ✔ ·
+  sibilância (via pequena, aguda, predomina na expiração) ✔ · crepitantes (alvéolo,
+  finos no fim da inspiração) ✔ · frote (pleuras inflamadas, nas duas fases) ✔ ·
+  murmullo vesicular ✔ · broncofonía + pectoriloquia áfona + egofonía ✔
 
-### 5 · `semio2-b02-01-bronquitis-aguda.webp` — 🟢 aprovada
+### 5 · `semio2-b02-01-bronquitis-aguda.webp` — 🟢 aprovada · substitui `s2-i4`
 
 - **Bloco / tema:** s2-b02 · `Traqueobronquitis / Bronquitis aguda 💨`.
-- **Substitui:** `s2-i4` → `04-bronquitis-aguda-mecanismo-detallado.webp`.
-- **Ponto de inserção:** regra CSS de `.s2-i4`; a `<figure>` está imediatamente antes de `<h3>Traqueobronquitis / Bronquitis aguda 💨</h3>`.
-- **Motivo:** mesma sequência da atual (vírus → dano epitelial → inflamação → moco → tos),
-  mas acrescenta o **IPPA completo** (inspeção conservada, VV normais, sonoridade normal,
-  roncus/sibilâncias), o critério de quando pedir Rx e as três caixas de fecho
-  («causa principal: viral», «roncus cambian o desaparecen al toser», «tos
-  posinfecciosa 3–8 semanas», «esputo verde no indica antibiótico»).
-  O subtítulo diz **«alvéolos generalmente conservados»** — a formulação correta.
-- **Qualidade:** correta e sem erro de castelhano.
+- **Ponto exato de inserção:** regra CSS de `.s2-i4`. A `<figure>` já existe
+  imediatamente antes de `<h3>Traqueobronquitis / Bronquitis aguda 💨</h3>`.
+- **Motivo da substituição:** mesma sequência da atual (vírus → dano epitelial →
+  inflamação → moco → tos), mas acrescenta o **IPPA completo**, o critério de quando
+  pedir Rx e as quatro caixas de fecho. O subtítulo diz **«alvéolos generalmente
+  conservados»** — a formulação correta, que é justamente o que falta na `b02-02`.
+- **Substituição limpa:** nada do que a `s2-i4` ensina se perde.
 
-### 6 · `semio2-b02-02-bronquitis-neumonia-diferencias.webp` — 🔴 PENDENTE · NÃO PUBLICADA
+### 8 · `semio2-b03-01-enfisema-radiografia.webp` — 🟢 aprovada · **ADIÇÃO**
 
-- **Bloco / tema:** s2-b02 · `⭐ Examen físico de la bronquitis aguda` — comparação aguda × crônica/EPOC × pneumonia.
-- **Substituiria:** `s2-i5` → `05-bronquitis-aguda-cronica-neumonia-diferencias.webp`.
-- **Ponto de inserção:** regra CSS de `.s2-i5`.
-- **Motivo de não publicar:** o rótulo do detalhe alveolar da coluna do meio diz
-  **«Cambios crónicos en alvéolos (± enfisema)»**, o que ensina que a bronquite
-  crônica **por si** altera o alvéolo. A bronquite crônica é definição **clínica**
-  (tos produtiva ≥3 meses/ano por ≥2 anos) e o alvéolo está conservado; quem destrói
-  o alvéolo é o enfisema, quando coexiste.
-- **Correção pedida para a regeneração:** rótulo equivalente a
-  **`Alvéolo conservado en la bronquitis crónica; si coexiste enfisema, hay destrucción alveolar.`**
-- **Resto da imagem:** bom. Se regenerada, **também substitui uma errata antiga**:
-  a legenda atual de `s2-i5` no site tem de avisar que *«la imagen escribe “SatO” sin
-  el subíndice»* — defeito que a versão nova não tem.
-
-### 7 · `semio2-b02-03-tos-aguda-ruta-clinica.webp` — 🟢 aprovada · com errata
-
-- **Bloco / tema:** s2-b02 · fecho do bloco, antes de `<h3>📝 Preguntas basadas en evaluaciones — Síndrome Infeccioso</h3>`.
-- **Substitui:** `s2-i6` → `06-tos-infecciosa-ruta-clinica.webp`.
-- **Ponto de inserção:** regra CSS de `.s2-i6`.
-- **Motivo:** mantém a ordem não negociável (alarma → focalidade → imagem → tratar) e
-  acrescenta a faixa **«Localización anatómica, pistas clínicas»** (brônquio → tos +
-  roncus; alvéolo → matidez + crepitantes; pleura → dor pleurítico), que é exatamente
-  o raciocínio que o bloco 02 cobra.
-- **⚠️ ERRATA a registrar no `figcaption`:** a assinatura superior direita escreve
-  **«MEJOR DECISIONES»**; leia-se **«MEJORES DECISIONES»**. É texto decorativo, não
-  ensina conteúdo.
-
-### 8 · `semio2-b03-01-enfisema-radiografia.webp` — 🟢 aprovada · **adição**
-
-- **Bloco / tema:** s2-b03 · `<h4>Clasificación espirométrica de la gravedad de la EPOC</h4>` → bloco do enfisema.
-- **Substitui:** **nada. Não apagar nem substituir `s2-i10` nem `s2-i11`** — são
-  `DIAPOSITIVA · Enfisema — silueta cardíaca y diafragma` e `DIAPOSITIVA ·
-  Hiperinsuflación pulmonar (enfisema)`, fotos da cátedra.
-- **Ponto de inserção exato:** logo **depois** de
+- **Bloco / tema:** s2-b03 · bloco do enfisema, depois de
+  `<h4>Clasificación espirométrica de la gravedad de la EPOC</h4>`.
+- **Relação com o acervo:** ⛔ **ADIÇÃO. NÃO substituir `s2-i10` nem `s2-i11`** — são
+  diapositivas da cátedra.
+- **Ponto exato de inserção:** logo **depois** de
   `<div class="key-box exam"><strong>Rx de tórax en EPOC:</strong> rectificación de las
   hemicúpulas diafragmáticas, hiperinsuflación, hipertransparencia pulmonar, "corazón
   en gota" y aumento de los espacios intercostales.</div>`
-  e **antes** de `<div class="material-slide">` com o cabeçalho
+  e **antes** do `<div class="material-slide">` cujo cabeçalho é
   `DIAPOSITIVA · Enfisema — silueta cardíaca y diafragma`.
   Classe CSS nova, p. ex. `s2-i47`.
-- **Motivo:** o `key-box` lista cinco sinais em texto corrido e as duas diapositivas
-  mostram achados soltos, **sem comparação lado a lado com um tórax normal**. A figura
-  nova põe **normal (PA) × enfisema (PA) × enfisema (lateral)** com os **7 sinais
-  numerados sobre as placas** e a tabela normal/enfisema — incluindo o **espaço
-  retroesternal > 2,5 cm** no perfil, que nenhuma imagem atual mostra. Fecha com a
-  distinção que a cátedra cobra: **«La Rx APOYA el enfisema; la EPOC se CONFIRMA con
-  VEF₁/CVF post-BD <0,70»**.
-- **Qualidade:** a melhor do lote. Usa `VEF₁` com subscrito e vírgula decimal, igual ao site.
+- **Motivo:** hoje o `key-box` lista cinco sinais em texto corrido e as duas
+  diapositivas mostram achados soltos, **sem comparação lado a lado com um tórax
+  normal**. A nova põe **normal (PA) × enfisema (PA) × enfisema (lateral)** com os
+  **7 sinais numerados sobre as placas** e a tabela normal/enfisema — incluindo o
+  **espaço retroesternal > 2,5 cm** no perfil, que nenhuma imagem atual mostra.
+  Fecha com a distinção que a cátedra cobra: **«La Rx APOYA el enfisema; la EPOC se
+  CONFIRMA con VEF₁/CVF post-BD <0,70»**.
+- **Conferido:** usa `VEF₁` com subscrito e vírgula decimal, igual ao site ✔ ·
+  os 7 sinais conferem com o `key-box` ✔ · coerência radiológica das três placas ✔
 
-### 9 · `semio2-b03-02-asma-epoc-mecanismos.webp` — 🔴 PENDENTE · NÃO PUBLICADA
-
-- **Bloco / tema:** s2-b03 · `Asma bronquial 🔄`.
-- **Substituiria:** `s2-i7` → `07-asma-epoc-mecanismos-obstructivos.webp`.
-- **Ponto de inserção:** regra CSS de `.s2-i7`.
-- **Motivo de não publicar (1 — o que foi pedido):** a coluna do asma tem como
-  **subtítulo identitário** `INFLAMACIÓN TIPO 2` e abre com «Inflamación tipo 2 —
-  Eosinófilos, IgE, IL-4, IL-5, IL-13». Isso apresenta a inflamação tipo 2 como
-  característica **universal de toda asma**. O próprio site ensina **fenótipos do asma**.
-- **Correção pedida:** **`Inflamación tipo 2 frecuente / fenotipo T2-alto`**.
-- **Motivo de não publicar (2 — achado desta auditoria):** o cabeçalho do painel
-  inferior central imprime **«HALLAZGOS AUSCIULTATORIOS»**; leia-se
-  **«AUSCULTATORIOS»**. Corrigir na mesma regeneração.
-- **Resto da imagem:** bom — sequência causal comum, comparação
-  variabilidade/reversibilidade × persistência post-BD, e «Tórax silencioso = flujo
-  mínimo, no mejoría».
-
-### 10 · `semio2-b03-03-espirometria-dvo-dvr.webp` — 🟢 aprovada · com errata · **adição**
-
-- **Bloco / tema:** s2-b03 · `<h4>Métodos diagnósticos del asma (sin resumir)</h4>`.
-- **Substitui:** nada. **Não substituir `s2-i8`** (`09-obstruccion-confirmacion-gravedad.webp`),
-  que é o algoritmo funcional comum às duas doenças e está deliberadamente colocado
-  entre asma e EPOC.
-- **Ponto de inserção exato:** dentro de `<h4>Métodos diagnósticos del asma (sin
-  resumir)</h4>`, **imediatamente depois da `</table>` da tabela
-  «Clasificación de gravedad del DVO en el asma según el VEF₁ (% del previsto)»**
-  (Leve ≥ 60 % · Moderado 41 – 59 % · Grave ≤ 40 %).
-  Classe CSS nova, p. ex. `s2-i48`.
-- **Motivo:** a figura reproduz **exatamente** essa tabela da cátedra e a põe ao lado
-  do GOLD 1–4, que é a comparação que o site pede em prosa («Dos escalas, no una»).
-  Acrescenta o que hoje só existe em texto: a leitura em 3 passos (cociente → padrão
-  → VEF₁ % para gravidade), as curvas fluxo-volume **DVO × DVR** com a concavidade
-  característica do obstrutivo, e a armadilha «Espirometría normal entre crisis NO
-  descarta asma».
-- **Conferências feitas:** GOLD 1 ≥80 / 2 50–79 / 3 30–49 / 4 <30 ✔ ·
-  gravidade do DVO no asma idêntica à tabela do site ✔ ·
-  o espirômetro mostra VEF₁ 1.60 L, CVF 2.76 L, cociente 0,58 — **aritmeticamente
-  coerente** (1,60 ÷ 2,76 = 0,580) ✔ ·
-  `VEF₁ ↑ >12 % y >200 mL` coincide com a forma dominante do site (4 ocorrências
-  com `>`, 1 com `≥`) ✔
-- **⚠️ ERRATA a registrar no `figcaption`:** o cartão diz **«Gravedad en ASMA»**;
-  trata-se da **gravedad del DVO en el asma**, não da gravidade do asma como doença.
-  O site adverte explicitamente **«Dos escalas, no una»** — a legenda deve repetir isso.
-- **Nota menor:** o visor do espirômetro usa ponto decimal (`1.60 L`); o resto da
-  figura e o site usam vírgula.
-
-### 11 · `semio2-b03-04-asma-control-gravedad.webp` — 🟢 aprovada · com errata · **adição**
-
-- **Bloco / tema:** s2-b03 · `<h4>Control del asma (últimas 4 semanas)</h4>`.
-- **Substitui:** nada.
-- **Ponto de inserção exato:** dentro de `<h4>Control del asma (últimas 4 semanas)</h4>`,
-  ao fim da subseção, antes de `<h4>Diagnóstico diferencial del asma</h4>`.
-  Classe CSS nova, p. ex. `s2-i49`.
-- **Motivo:** hoje o controle do asma é só texto. A figura dá as **quatro perguntas
-  das últimas 4 semanas** com a contagem (0 = controlada · 1–2 = parcialmente ·
-  3–4 = não controlada), os **seis sinais de crise grave** e a caixa do **tórax
-  silencioso** — tudo em uma vista.
-- **Conferências:** contagem GINA correta ✔ · `Mejora ≥ 12 % y ≥ 200 mL tras
-  broncodilatador` ✔ · «Sibilancias que desaparecen mientras el paciente empeora =
-  tórax silencioso» ✔
-- **⚠️ ERRATA a registrar no `figcaption`:** a legenda da contagem escreve
-  **«controláda»** com acento indevido; leia-se **«controlada»**.
-
-### 12 · `semio2-b04-01-condensacion-radiografia.webp` — 🟢 aprovada
-
-- **Bloco / tema:** s2-b04 · `<h4>Por qué el pulmón normalmente no se infecta</h4>` → `Examen físico de la condensación`.
-- **Substitui:** `s2-i12` → `10-condensacion-alveolar-mecanismo-v2.webp`.
-- **Ponto de inserção:** regra CSS de `.s2-i12`; a `<figure>` está entre
-  `<h4>Por qué el pulmón normalmente no se infecta</h4>` e
-  `<h4>Examen físico de la condensación…</h4>`.
-- **Motivo:** mantém a cadeia da atual (ar → exsudato → tecido denso → transmite
-  melhor o som) e **acrescenta a correlação radiográfica que faltava**: normal ×
-  condensação lobar com os três sinais numerados (opacidade alveolar focal,
-  broncograma aéreo, sinal da silhueta) e o contraste **neumonía = volume conservado
-  × atelectasia = perda de volume + mediastino para a lesão** — que é exatamente a
-  armadilha escrita hoje no `figcaption` de `s2-i12`, agora mostrada.
-  Também traz o IPPA em fotografia e a fórmula de fecho
-  `CONDENSACIÓN = VV↑ + MATIDEZ + CREPITANTES`, com a ressalva correta
-  «soplo tubárico **si el bronquio permanece permeable**».
-- **⚠️ Reserva declarada:** a placa pequena rotulada **ATELECTASIA** é ilustrativa e
-  **não consegui confirmar nela a perda de volume nem o desvio mediastinal** que o
-  rótulo afirma. **Não a certifico.** Pede um olhar de radiologia antes de usar essa
-  placa como exemplo em questão. Isso **não afeta** os três sinais numerados da placa
-  de condensação, que conferem.
-
-### 13 · `semio2-b04-02-neumonia-contexto.webp` — 🟢 aprovada
-
-- **Bloco / tema:** s2-b04 · `Neumonía: clasificación según su adquisición 🦠`.
-- **Substitui:** `s2-i13` → `11-neumonia-contexto-adquisicion-v2.webp`.
-- **Ponto de inserção:** regra CSS de `.s2-i13`; a `<figure>` está imediatamente antes de
-  `<h3>Neumonía: clasificación según su adquisición 🦠</h3>`.
-- **Motivo:** mesma regra das 48 h, mas com a **coluna de aspiração** desenvolvida —
-  gatilhos (disfagia, vômito, consciência alterada), **segmentos dependentes segundo a
-  posição** e risco polimicrobiano — que a atual não tem, e que o bloco cobra.
-  Mantém «NAC no identifica el germen» e «típica/atípica é padrão clínico».
-- **Nota menor:** o ícone do decúbito supino diz «lóbulos posteriores». Não existe
-  «lóbulo posterior»; o correto é **segmento posterior do lobo superior e segmento
-  superior do lobo inferior**. Vale precisar no `figcaption`.
-- **Nota menor 2:** a faixa diz `≤48 h = NAC · >48 h = nosocomial`; o texto do site diz
-  `<48 h` / `>48 h`. As 48 h exatas ficam em classes diferentes nas duas redações.
-  Divergência de convenção, não erro — mas convém unificar no `figcaption`.
-
-### 14 · `semio2-b04-03-curb65-gravedad.webp` — 🟢 aprovada
+### 14 · `semio2-b04-03-curb65-gravedad.webp` — 🟢 aprovada · **ADIÇÃO**
 
 - **Bloco / tema:** s2-b04 · `Escore CURB-65 / CRB-65`.
-- **Substitui parcialmente:** `s2-i17` → `12-neumonia-ippa-radiografia-curb65-v2.webp`.
-- **Ponto de inserção:** regra CSS de `.s2-i17`; a `<figure>` está entre
-  `<h4>Neumonía · el patrón completo, del relato a la placa</h4>` e
-  `<h3>Escore CURB-65 / CRB-65</h3>`.
-- **⚠️ AVISO DE PERDA DE CONTEÚDO:** a figura atual cobre **três** coisas —
-  **IPPA sobre o foco + correlação radiológica + CURB-65**. A nova cobre **só o
-  CURB-65**. Substituir direto **apaga o IPPA e a correlação radiológica** desse ponto.
-  **Recomendação:** entrar como **adição** (classe nova `s2-i50`) logo **depois** de
-  `<h3>Escore CURB-65 / CRB-65</h3>`, mantendo `s2-i17` onde está; **ou** substituir
-  apenas se o IPPA/imagem for reposto pela nova `semio2-b04-01`, que já traz os dois.
-- **Conferências:** C confusão · U ureia >7 mmol/L · R FR ≥30/min · B PAS <90 ou
-  PAD ≤60 mmHg · 65 idade ≥65 anos · 1 ponto por critério ✔ ·
-  0–1 ambulatorial · 2 valorar hospitalização · ≥3 grave ✔ — idêntico ao
-  `figcaption` que o site já publica. Mantém «CURB-65 no mide oxigenación: revise
-  SpO₂ siempre» e «No reemplaza el juicio clínico».
+- **Relação com o acervo:** ⛔ **ADIÇÃO. NÃO substituir `s2-i17` às cegas.**
+  A `s2-i17` (`12-neumonia-ippa-radiografia-curb65-v2.webp`) cobre **IPPA sobre o foco +
+  correlação radiológica + CURB-65**. A nova cobre **só o CURB-65**. Substituir direto
+  apaga o IPPA e a correlação radiológica desse ponto do bloco.
+- **Ponto exato de inserção:** classe CSS nova, p. ex. `s2-i48`; `<figure>` nova
+  **logo depois** de `<h3>Escore CURB-65 / CRB-65</h3>`, mantendo `s2-i17` onde está.
+- **Motivo:** dá ao escore uma vista própria, grande e legível, com o critério de cada
+  letra e a decisão de destino — hoje comprimido num terço da `s2-i17`.
+- **Conferido:** C confusão · U ureia > 7 mmol/L · R FR ≥ 30/min · B PAS < 90 **ou**
+  PAD ≤ 60 mmHg · 65 idade ≥ 65 anos · 1 ponto por critério ✔ ·
+  0–1 ambulatorial · 2 valorar hospitalização · ≥ 3 grave ✔ — idêntico ao `figcaption`
+  que o site já publica. Mantém «CURB-65 no mide oxigenación: revise SpO₂ siempre» e
+  «No reemplaza el juicio clínico» ✔
 
 ---
 
-## 4 · ERRATAS A CARREGAR NO `figcaption` (convenção já usada pelo site)
+## 4 · ONDE AS 9 BLOQUEADAS ENTRARIAM, QUANDO FOREM CORRIGIDAS
 
-O site já resolve imperfeições de texto no raster escrevendo a ressalva na legenda —
-por exemplo, em `s2-i5`: *«En la caja inferior derecha la imagen escribe “SatO” sin el
-subíndice: se refiere a SatO₂»*. As quatro erratas abaixo seguem a mesma convenção e
-**não exigem tocar no arquivo de imagem**:
+Registrado agora para que a regeneração já volte com destino definido.
 
-| Arquivo | O que a imagem escreve | O que deve constar na legenda |
-|---|---|---|
-| `semio2-b01-02` | «ahcogo» | léase **«ahogo»** |
-| `semio2-b02-03` | «MEJOR DECISIONES» | léase **«MEJORES DECISIONES»** (texto decorativo) |
-| `semio2-b03-03` | «Gravedad en ASMA» | é a **gravedad del DVO en el asma** — *dos escalas, no una* |
-| `semio2-b03-04` | «controláda» | léase **«controlada»** |
-
-Nenhuma dessas ensina conteúdo errado. As **três pendentes**, sim — por isso não foram publicadas.
+| Arquivo | Bloco | Ponto exato de inserção | Relação |
+|---|---|---|---|
+| `b01-01-tos-expectoracion` | s2-b01 | regra CSS de `.s2-i1`; `<figure>` antes de `<h3>1) Tos 💨</h3>` | substitui `s2-i1` |
+| `b01-02-disnea-mmrc-posiciones` | s2-b01 | regra CSS de `.s2-i2`; `<figure>` entre `<h4>Cuánto es demasiado: la vómica</h4>` e `<h3>3) Disnea 🌬️</h3>` | substitui `s2-i2` |
+| `b02-02-bronquitis-neumonia-diferencias` | s2-b02 | regra CSS de `.s2-i5` | substitui `s2-i5` |
+| `b02-03-tos-aguda-ruta-clinica` | s2-b02 | regra CSS de `.s2-i6`; `<figure>` antes de `<h3>📝 Preguntas basadas en evaluaciones — Síndrome Infeccioso</h3>` | substitui `s2-i6` |
+| `b03-02-asma-epoc-mecanismos` | s2-b03 | regra CSS de `.s2-i7`; `<figure>` antes de `<h3>Asma bronquial 🔄</h3>` | substitui `s2-i7` |
+| `b03-03-espirometria-dvo-dvr` | s2-b03 | dentro de `<h4>Métodos diagnósticos del asma (sin resumir)</h4>`, **logo após a `</table>`** da tabela «Clasificación de gravedad del DVO en el asma según el VEF₁ (% del previsto)» | **adição** — ⛔ não substituir `s2-i8` |
+| `b03-04-asma-control-gravedad` | s2-b03 | fim de `<h4>Control del asma (últimas 4 semanas)</h4>`, antes de `<h4>Diagnóstico diferencial del asma</h4>` | **adição** |
+| `b04-01-condensacion-radiografia` | s2-b04 | regra CSS de `.s2-i12`; `<figure>` entre `<h4>Por qué el pulmón normalmente no se infecta</h4>` e `<h4>Examen físico de la condensación…</h4>` | substitui `s2-i12` |
+| `b04-02-neumonia-contexto` | s2-b04 | regra CSS de `.s2-i13`; `<figure>` antes de `<h3>Neumonía: clasificación según su adquisición 🦠</h3>` | substitui `s2-i13` |
 
 ---
 
-## 5 · O QUE FALTA REGENERAR (3 arquivos)
+## 5 · BRIEF DE REGENERAÇÃO · O TEXTO EXATO DE CADA CORREÇÃO
 
-| Arquivo | Texto atual | Texto que deve aparecer |
-|---|---|---|
-| `semio2-b01-01-tos-expectoracion.webp` | `Aguda ≤ 3 sem` · `Subaguda 3 – 8 sem` · `Crónica > 8 sem` | `Aguda <3 semanas` · `Subaguda 3–8 semanas` · `Crónica >8 semanas` |
-| `semio2-b02-02-bronquitis-neumonia-diferencias.webp` | `Cambios crónicos en alvéolos (± enfisema)` | `Alvéolo conservado en la bronquitis crónica; si coexiste enfisema, hay destrucción alveolar.` |
-| `semio2-b03-02-asma-epoc-mecanismos.webp` | `INFLAMACIÓN TIPO 2` como subtítulo do asma **e** `HALLAZGOS AUSCIULTATORIOS` | `Inflamación tipo 2 frecuente / fenotipo T2-alto` **e** `HALLAZGOS AUSCULTATORIOS` |
+Os 9 arquivos seguem **íntegros no Drive**. Nenhum foi alterado, remendado ou publicado.
+Cada linha abaixo diz o que a imagem imprime hoje e o que a versão nova deve imprimir.
+**Só o trecho citado muda; o resto de cada figura está correto e deve ser preservado.**
 
-Os três arquivos ficam **no Drive**, íntegros. **Não foram alterados, nem remendados,
-nem publicados.** Assim que houver versão regenerada, entram nesta mesma branch com o
-mesmo nome e este mapa passa a valer para as 14.
+### 🔴 1 · `semio2-b01-01-tos-expectoracion.webp`
+
+| | |
+|---|---|
+| Onde | faixa inferior esquerda, «CLASIFICACIÓN POR DURACIÓN» |
+| Imprime hoje | `Aguda ≤ 3 sem` · `Subaguda 3 – 8 sem` · `Crónica > 8 sem` |
+| **Deve imprimir** | **`Aguda <3 semanas` · `Subaguda 3–8 semanas` · `Crónica >8 semanas`** |
+| Por quê | `≤ 3` e `3 – 8` **se sobrepõem exatamente em 3 semanas**: uma tos de 3 semanas cai em duas classes. A própria `b02-02` e o texto do site usam `< 3 semanas`. |
+
+Resto da figura correto: arco reflexo, fases, tipos de esputo, «No hay receptores de la
+tos en el parénquima alveolar», «Esputo purulento ≠ bacteria segura».
+
+### 🔴 2 · `semio2-b01-02-disnea-mmrc-posiciones.webp`
+
+| | |
+|---|---|
+| Onde | cartão **DPN**, segunda linha da legenda |
+| Imprime hoje | `DPN: despierta de noche con ahcogo.` |
+| **Deve imprimir** | **`DPN: despierta de noche con ahogo.`** |
+
+Resto correto e, aliás, **melhor que a imagem publicada hoje**: a `s2-i2` atual tem os
+graus **2 e 3** da mMRC cortados — defeito que o `figcaption` do site precisa compensar
+em prosa (*«Dos escalones de la escalera aparecen cortados en la imagen»*). Na nova os
+cinco graus 0–4 estão inteiros. **Vale a regeneração: um typo separa esta figura de
+resolver um defeito antigo.**
+
+### 🔴 6 · `semio2-b02-02-bronquitis-neumonia-diferencias.webp`
+
+| | |
+|---|---|
+| Onde | rótulo do detalhe alveolar da **coluna do meio** (Bronquitis crónica / EPOC) |
+| Imprime hoje | `Cambios crónicos en alvéolos (± enfisema)` |
+| **Deve imprimir** | **`Alvéolo conservado en la bronquitis crónica; si coexiste enfisema, hay destrucción alveolar.`** |
+| Por quê | a bronquite crônica é definição **clínica** (tos produtiva ≥ 3 meses/ano por ≥ 2 anos) e **o alvéolo está conservado**. Quem destrói o alvéolo é o enfisema, quando coexiste. O rótulo atual atribui alteração alveolar à bronquite crônica por si só. |
+
+Ganho extra da regeneração: a `s2-i5` que ela substituiria tem uma errata antiga —
+o site precisa avisar que *«la imagen escribe “SatO” sin el subíndice»*. A nova não tem.
+
+### 🔴 7 · `semio2-b02-03-tos-aguda-ruta-clinica.webp`
+
+| | |
+|---|---|
+| Onde | assinatura superior direita |
+| Imprime hoje | `MEJOR DECISIONES. MEJORES PACIENTES.` |
+| **Deve imprimir** | **`MEJORES DECISIONES. MEJORES PACIENTES.`** |
+
+Resto correto: alarma → focalidade → imagem → tratar, e a faixa «Localización
+anatómica, pistas clínicas» (brônquio → tos + roncus; alvéolo → matidez + crepitantes;
+pleura → dor pleurítico).
+
+### 🔴 9 · `semio2-b03-02-asma-epoc-mecanismos.webp` — **duas correções**
+
+| | |
+|---|---|
+| Onde (1) | subtítulo da coluna **ASMA** e primeiro marcador da mesma coluna |
+| Imprime hoje | `INFLAMACIÓN TIPO 2` como subtítulo identitário do asma |
+| **Deve imprimir** | **`Inflamación tipo 2 frecuente / fenotipo T2-alto`** |
+| Por quê | apresenta a inflamação tipo 2 como característica **universal de toda asma**. O próprio site ensina **fenótipos do asma**. |
+| Onde (2) | cabeçalho do painel inferior central |
+| Imprime hoje | `HALLAZGOS AUSCIULTATORIOS` |
+| **Deve imprimir** | **`HALLAZGOS AUSCULTATORIOS`** |
+
+Resto correto: sequência causal comum, comparação variabilidade/reversibilidade ×
+persistência post-BD, «Tórax silencioso = flujo mínimo, no mejoría».
+
+### 🔴 10 · `semio2-b03-03-espirometria-dvo-dvr.webp` — **duas correções**
+
+| | |
+|---|---|
+| Onde (1) | cabeçalho do cartão inferior esquerdo-central |
+| Imprime hoje | `Gravedad en ASMA` |
+| **Deve imprimir** | **`Gravedad del DVO en el asma`** |
+| Por quê | são duas escalas diferentes e o site adverte explicitamente **«Dos escalas, no una»**. O cartão traz cortes de VEF₁ % previsto, que graduam o **DVO**, não a gravidade do asma como doença. |
+| Onde (2) | visor do espirômetro, canto superior esquerdo |
+| Imprime hoje | `VEF₁ 1.60 L` · `CVF 2.76 L` · `VEF₁/CVF 0.58` (ponto decimal) |
+| **Deve imprimir** | **`VEF₁ 1,60 L` · `CVF 2,76 L` · `VEF₁/CVF 0,58`** (vírgula decimal, como o resto da figura e o site) |
+
+**Não mexer nos números**, que conferem: 1,60 ÷ 2,76 = **0,580** ✔ ·
+GOLD 1 ≥ 80 % / 2 50–79 % / 3 30–49 % / 4 < 30 % ✔ ·
+Leve ≥ 60 % / Moderado 41–59 % / Grave ≤ 40 % — **idêntico à tabela da cátedra
+publicada no site** ✔ · curvas fluxo-volume com a concavidade correta do obstrutivo ✔ ·
+`VEF₁ ↑ > 12 % y > 200 mL` coincide com a forma dominante do site ✔
+
+### 🔴 11 · `semio2-b03-04-asma-control-gravedad.webp`
+
+| | |
+|---|---|
+| Onde | legenda da contagem, sob as quatro perguntas |
+| Imprime hoje | `0 = controláda; 1–2 = parcialmente controlada; 3–4 = no controlada` |
+| **Deve imprimir** | **`0 = controlada; 1–2 = parcialmente controlada; 3–4 = no controlada`** |
+
+Resto correto: contagem GINA ✔ · seis sinais de crise grave ✔ ·
+`Mejora ≥ 12 % y ≥ 200 mL tras broncodilatador` ✔ · tórax silencioso ✔
+
+### 🔴 12 · `semio2-b04-01-condensacion-radiografia.webp` — **painel radiográfico reprovado**
+
+O item pedia confirmar visualmente a placa rotulada **ATELECTASIA**. **Confirmei o
+contrário: a placa não mostra o que o rótulo afirma.** A medição foi feita sobre os
+pixels dos três painéis da mesma figura, com o mesmo método.
+
+| painel | desvio do eixo opaco central | largura da banda opaca central | assimetria do campo aerado |
+|---|---|---|---|
+| NORMAL | +1,6 % | 14,6 % | 2,6 pp |
+| CONDENSACIÓN LOBAR | +0,8 % | 18,7 % | 33,1 pp |
+| **ATELECTASIA** | **+0,0 %** | **18,9 %** | 26,3 pp |
+
+Leitura:
+
+1. **Desvio mediastinal = 0,0 %.** O eixo opaco central cai **exatamente** no centro
+   geométrico do tórax. O rótulo afirma «mediastino hacia la lesión». **Não há desvio
+   nenhum, para lado nenhum.**
+2. **A placa é geometricamente indistinguível da placa de condensação** logo acima
+   (0,0 % × 0,8 % de desvio; banda de 18,9 % × 18,7 %). O painel existe justamente para
+   **contrastar** «neumonía = volume conservado» com «atelectasia = perda de volume +
+   desvio» — e as duas placas são intercambiáveis. **O contraste didático não existe
+   na imagem.**
+3. Não há sinal de perda de volume: sem fissura deslocada, sem costelas aproximadas,
+   sem elevação diafragmática assimétrica. A traqueia está na linha média.
+4. O eixo central é uma **faixa branca larga e sem estrutura**, sem silhueta cardíaca
+   identificável — artefato de renderização, não anatomia.
+
+**Correção pedida:** substituir a placa de atelectasia por uma que **demonstre**
+perda de volume com desvio mediastinal **para o lado da lesão**, ou **remover o painel
+ATELECTASIA** e deixar a figura só com normal × condensação lobar. Nas duas hipóteses
+o raster tem de ser refeito.
+
+Resto da figura correto e valioso: alvéolo normal × com exsudato, cadeia
+ar → exsudato → tecido denso → transmite melhor o som, IPPA em fotografia, os três
+sinais numerados sobre a placa de condensação (opacidade alveolar focal, broncograma
+aéreo, sinal da silhueta), «soplo tubárico **si el bronquio permanece permeable**» e
+`CONDENSACIÓN = VV↑ + MATIDEZ + CREPITANTES`.
+
+### 🔴 13 · `semio2-b04-02-neumonia-contexto.webp` — **duas correções**
+
+| | |
+|---|---|
+| Onde (1) | ícone do decúbito supino, coluna **ASPIRACIÓN** |
+| Imprime hoje | `Decúbito supino (lóbulos posteriores)` |
+| **Deve imprimir** | **`Decúbito supino (segmento posterior del lóbulo superior y segmento superior del lóbulo inferior)`** |
+| Por quê | **não existe «lóbulo posterior».** Os segmentos dependentes em decúbito dorsal são os nomeados acima. |
+| Onde (2) | cabeçalho da coluna NAC e faixa central |
+| Imprime hoje | `NAC · O ≤48 h TRAS EL INGRESO` e `≤48 h = NAC · >48 h = nosocomial` |
+| **Deve imprimir** | **`NAC · fuera del hospital o <48 h tras el ingreso`** e **`<48 h = NAC · ≥48 h = nosocomial`** |
+| Por quê | a convenção é **≥ 48 h após a admissão = nosocomial**. A redação atual põe as 48 h exatas na NAC. |
+
+Manter correto o que já está: `Decúbito lateral (lóbulo inferior del lado dependiente)` ✔ ·
+NAC não identifica o germe ✔ · típica/atípica é padrão clínico ✔ · NAV ligada a
+ventilação mecânica ✔ · risco polimicrobiano na aspiração ✔
 
 ---
 
 ## 6 · VALIDAÇÃO TÉCNICA DAS 14
 
-Verificação feita em Python puro sobre o cabeçalho RIFF/WEBP (chunk a chunk) **e** com
-Pillow, mais conferência de `md5` contra o byte a byte baixado do Drive.
+Verificação em Python puro sobre o cabeçalho RIFF/WEBP (chunk a chunk) **e** com Pillow,
+mais conferência de `md5` contra o byte a byte baixado do Drive.
 
 ```
-recebidas do Drive ............ 14
+recebidas do Drive ................. 14
 tamanho no Drive = tamanho local ... 14/14 (byte a byte)
-RIFF/WEBP válido .............. 14/14   (chunk único VP8, lossy)
-chunks fecham no fim do arquivo  14/14
-dimensão 1536 x 1024 .......... 14/14   (header VP8 e Pillow concordam)
-modo de cor ................... RGB, 14/14
-arquivos corrompidos .......... 0
-publicadas neste commit ....... 11
-pendentes (não publicadas) .... 3
-colisão de nome com arquivo antigo ... 0
-arquivos antigos apagados ..... 0
-arquivos antigos modificados ... 0
+RIFF/WEBP válido ................... 14/14  (chunk único VP8, lossy)
+chunks fecham no fim do arquivo .... 14/14
+1536 x 1024 ........................ 14/14  (header VP8 e Pillow concordam)
+modo de cor ........................ RGB, 14/14
+arquivos corrompidos ............... 0
+publicadas ......................... 5
+bloqueadas ......................... 9
+colisão de nome .................... 0
+arquivos antigos apagados .......... 0
+arquivos antigos modificados ....... 0
 ```
 
-Compressão: **102 KB – 250 KB** por arquivo (média ≈ 168 KB), dentro da faixa das 34
-infografias já publicadas da matéria (**148 KB – 279 KB**). Nenhuma recompressão foi
-feita: os arquivos estão exatamente como saíram do Drive.
+Compressão das 5 publicadas: **102 – 190 KB**, dentro da faixa das 34 infografias já
+publicadas da matéria (**148 – 279 KB**). Sem recompressão: os arquivos estão
+exatamente como saíram do Drive.
 
-**Dimensão idêntica às 34 infografias existentes (1536 × 1024)** — a troca de URL numa
+**Dimensão idêntica às 34 infografias existentes (1536 × 1024)** — trocar a URL numa
 classe `.s2-iNN` não altera enquadramento nem proporção.
 
 ---
@@ -391,8 +387,8 @@ classe `.s2-iNN` não altera enquadramento nem proporção.
 ## 7 · ANNOTATION-SAFETY
 
 Esta entrega **não toca no `semiologia-ii.html`** e portanto **não move nenhuma âncora**.
-Inventário **somente leitura**, reconferido nesta rodada por consulta de **contagem**
-(sem ler nenhum texto privado do aluno):
+
+Inventário **somente leitura**, por **contagem** (sem ler texto privado do aluno):
 
 ```
 user_highlights ... 73   (s2-b01 69 · s2-b02 1 · s2-b03 3 · s2-b04 0)
@@ -402,27 +398,26 @@ user_notes ......... 0
 
 **Nenhuma escrita no Supabase.**
 
-Ao integrar, o risco está em `s2-b01`, que concentra 69 marcações: **trocar a URL na
-regra CSS não move nada**; inserir um `<figure>` novo no corpo também não move
-highlights (são ancorados por texto), **mas desloca índices de traços de tinta** — e
-hoje a matéria tem **0 traços de tinta**, então o risco é nulo enquanto continuar assim.
+Na integração futura o risco fica em `s2-b01`, que concentra 69 marcações: **trocar a URL
+na regra CSS não move nada**; inserir `<figure>` novo no corpo também não move highlights
+(são ancorados por texto), e só deslocaria **índices de traços de tinta** — hoje **0**.
 Reconferir antes de integrar.
 
 ---
 
-## 8 · PENDÊNCIAS PARA QUEM TIVER O HTML
+## 8 · O QUE PRECISA DE DECISÃO HUMANA
 
-1. **3 imagens a regenerar** (seção 5).
-2. **4 erratas a escrever em `figcaption`** (seção 4).
-3. **2 avisos de perda de conteúdo** ao substituir: `s2-i3` (painel da inervação
-   pleural) e `s2-i17` (IPPA + correlação radiológica). Seções 3.3 e 3.14.
-4. **1 reserva radiológica não certificada:** a placa de atelectasia em
-   `semio2-b04-01`. Seção 3.12.
-5. **Inconsistência preexistente do próprio site**, encontrada nesta auditoria e
-   **não corrigida** (fora do escopo): o critério de reversibilidade aparece
-   **4 vezes como `>12 % y >200 mL`** e **1 vez como `≥12 % y ≥200 mL`**
-   (na caixa «🎯 Organización — cómo lo evalúa la cátedra»). As duas formas existem
-   na literatura, mas o site deveria usar uma só. Registrado para o dono do HTML.
-6. **Coordenação:** a branch `edit/c3-semiologia-ii-provas` (PR #77) altera
-   **apenas** `semiologia-ii.html`. Esta branch altera **apenas**
-   `assets/img/semio2/`. **Interseção de arquivos: nenhuma.** Sem conflito de merge.
+1. **As 9 bloqueadas precisam voltar ao pipeline que as gerou.** Esta sessão não tem
+   capacidade de gerar imagem e o remendo sobre o raster está proibido. A seção 5 traz
+   o texto exato de cada correção.
+2. **`b04-01` tem defeito de conteúdo radiográfico, não só de texto** — o painel da
+   atelectasia precisa ser refeito ou removido. É a única das 9 cuja correção não é
+   apenas tipográfica.
+3. **Inconsistência preexistente do próprio site**, encontrada nesta auditoria e **não
+   corrigida** (fora do escopo assets-only): o critério de reversibilidade aparece
+   **4× como `>12 % y >200 mL`** e **1× como `≥12 % y ≥200 mL`** (na caixa
+   «🎯 Organización — cómo lo evalúa la cátedra»). As duas formas existem na literatura,
+   mas o site deveria usar uma só. Registrado para quem tiver o HTML reservado.
+4. **Coordenação:** a branch `edit/c3-semiologia-ii-provas` (PR #77) altera **apenas**
+   `semiologia-ii.html`. Esta altera **apenas** `assets/img/semio2/`.
+   **Interseção de arquivos: nenhuma.** Sem conflito de merge nos dois sentidos.
