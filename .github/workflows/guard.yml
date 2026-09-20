@@ -4,6 +4,24 @@ name: Repasso Guard
 # nenhuma dependência instalada, nenhum segredo lido, nenhuma API chamada.
 # O Guard NUNCA faz merge e NUNCA decide correção médica sozinho — ele só
 # aponta o que é objetivo e mensurável, para a auditoria humana do José.
+#
+# ATENÇÃO — bloqueador 1 da auditoria independente do PR #94:
+# o passo "Executar o Guard confiável (extraído da base)" abaixo existe para
+# que um PR não possa alterar tools/qa/guard/** e usar essa MESMA versão
+# alterada para se autocertificar. Ele extrai o pacote tools/qa/guard como
+# estava ANTES deste PR (na base) para um diretório fora do checkout, e
+# roda a partir de lá via PYTHONPATH — nunca a partir do código do HEAD.
+#
+# Limitação conhecida, documentada de propósito (não escondida): para PRs
+# do MESMO repositório (não de fork), o GitHub Actions roda a versão DESTE
+# ARQUIVO (guard.yml) que está no HEAD do PR, não a da base. Ou seja, um PR
+# que alterasse também estes passos de extração poderia, em tese, remover
+# essa proteção. A defesa técnica aqui cobre o caso realista (alguém altera
+# checks.py/materia.py sem mexer no workflow); o caso em que o PRÓPRIO
+# guard.yml muda só pode ser fechado por uma regra do repositório que um
+# agente não configura sozinho — recomendado ao José: branch protection ou
+# CODEOWNERS exigindo revisão humana para qualquer mudança em
+# .github/workflows/**.
 
 on:
   pull_request:
@@ -37,17 +55,55 @@ jobs:
         run: |
           printf '%s\n' "$PR_BODY" > /tmp/pr-body.md
 
+      - name: Buscar a base e extrair o Guard confiável (bloqueador 1 do PR #94)
+        id: trusted
+        run: |
+          set -e
+          BASE_REF="origin/${{ github.event.pull_request.base.ref }}"
+          git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=200
+          BASE_SHA="$(git rev-parse "$BASE_REF")"
+
+          if git cat-file -e "$BASE_SHA:tools/qa/guard/__main__.py" 2>/dev/null; then
+            # Caso normal: a base já tem o Guard. Extrai o pacote "tools"
+            # inteiro (não só guard/) porque tools/__init__.py e
+            # tools/qa/__init__.py, um nível acima, também são parte do
+            # pacote Python e precisam vir junto.
+            mkdir -p /tmp/repasso-guard-trusted
+            git archive "$BASE_SHA" tools | tar -x -C /tmp/repasso-guard-trusted
+            echo "pythonpath=/tmp/repasso-guard-trusted" >> "$GITHUB_OUTPUT"
+            echo "fonte=base" >> "$GITHUB_OUTPUT"
+            echo "Guard extraído da base ($BASE_SHA) — execução confiável."
+          else
+            # Bootstrap: a base ainda não tem o Guard (só acontece antes
+            # desta V1 existir na main — normalmente só neste próprio PR).
+            # Não há versão confiável anterior para extrair; usa o código
+            # do próprio checkout e SINALIZA isso claramente no relatório,
+            # em vez de fingir uma garantia que não existe.
+            echo "pythonpath=$GITHUB_WORKSPACE" >> "$GITHUB_OUTPUT"
+            echo "fonte=head-bootstrap" >> "$GITHUB_OUTPUT"
+            echo "AVISO: a base ainda não tem tools/qa/guard — rodando em modo bootstrap (não confiável)."
+          fi
+          echo "base_sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+
       - name: Rodar o Guard
         id: guard
+        env:
+          GUARD_PYTHONPATH: ${{ steps.trusted.outputs.pythonpath }}
         run: |
-          git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=200
           set +e
-          python3 -m tools.qa.guard \
+          # cwd = /tmp de propósito: se rodasse dentro do checkout do PR,
+          # `python3 -m tools.qa.guard` acharia o pacote `tools` do HEAD
+          # ANTES do PYTHONPATH (o cwd entra em sys.path[0]), e a extração
+          # acima não valeria nada. Em /tmp não existe pacote `tools` local
+          # para competir — só o que está em PYTHONPATH é encontrado.
+          cd /tmp && PYTHONPATH="$GUARD_PYTHONPATH" python3 -m tools.qa.guard \
+            --repo "$GITHUB_WORKSPACE" \
             --base "origin/${{ github.event.pull_request.base.ref }}" \
             --head "${{ github.event.pull_request.head.sha }}" \
             --pr-body /tmp/pr-body.md \
             --summary /tmp/guard-summary.md \
-            --audit-pack /tmp/guard-audit-pack.json
+            --audit-pack /tmp/guard-audit-pack.json \
+            --trusted-source "${{ steps.trusted.outputs.fonte }}"
           echo "resultado=$?" >> "$GITHUB_OUTPUT"
 
       - name: Publicar o pacote de auditoria

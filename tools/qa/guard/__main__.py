@@ -18,6 +18,14 @@ escreve no Supabase, não chama nenhuma API, não faz merge, não altera nada no
 repositório além dos dois arquivos de saída.
 
 Só biblioteca padrão. Nenhuma dependência, nenhum custo.
+
+**Sobre o parâmetro ``--trusted-source``:** este módulo NÃO decide sozinho se
+está rodando a partir de código confiável — isso é decidido por quem o
+invoca (o workflow), extraindo o pacote ``tools/qa/guard`` da base do PR
+*antes* de chamar este CLI (ver ``.github/workflows/guard.yml``). O flag só
+existe para que o relatório diga a verdade sobre a própria execução, em vez
+de fingir uma certeza que o módulo não tem. Sem o flag, o valor é
+"desconhecido" — correto para quem roda localmente.
 """
 
 from __future__ import annotations
@@ -164,6 +172,11 @@ def render(findings: list[Finding], ctx: Context, pack: dict) -> str:
     L.append(f"Arquivos alterados: **{len(ctx.changed)}**  ·  "
              f"tarefa declarada: **{ctx.scope.get('tarefa') or '—'}**  ·  "
              f"agente: **{ctx.scope.get('agente') or '—'}**")
+    L.append(f"Código do Guard nesta execução: **{ctx.trusted_source}**"
+             + (" (extraído da base — confiável)" if ctx.trusted_source == "base"
+                else " (⚠️ bootstrap: base ainda não tem o Guard, esta execução usou o próprio PR)"
+                if ctx.trusted_source == "head-bootstrap"
+                else " (execução local, fora do workflow)"))
     L.append("")
 
     for titulo, grupo in (("Erros", duros), ("Avisos", avisos)):
@@ -208,9 +221,31 @@ def render(findings: list[Finding], ctx: Context, pack: dict) -> str:
 # main
 # --------------------------------------------------------------------------
 
-def run(repo: str, base: str, head: str, corpo: str) -> tuple[list[Finding], Context, dict]:
+def _load_tasks_json(repo: str, ref: str) -> tuple[dict | None, Finding | None]:
+    """Lê e valida coordination/tasks.json numa ref. Devolve (dados, erro)."""
+    bruto = _blob(repo, ref, "coordination/tasks.json")
+    if not bruto:
+        return None, None
+    try:
+        return json.loads(bruto), None
+    except json.JSONDecodeError as e:
+        erro = Finding("registro-tarefas", HARD_FAIL,
+                       f"coordination/tasks.json não é JSON válido em {ref}: {e}",
+                       "coordination/tasks.json")
+        return None, erro
+
+
+def run(repo: str, base: str, head: str, corpo: str,
+        trusted_source: str = "desconhecido") -> tuple[list[Finding], Context, dict]:
     mb = _merge_base(repo, base, head)
     mudados = changed_files(repo, mb, head)
+
+    tasks_head, erro_head = _load_tasks_json(repo, head)
+    # A reserva de arquivo de uma tarefa já existente só vale a partir da
+    # BASE — nunca do HEAD deste PR (bloqueador 2 da auditoria do #94).
+    # Ver o docstring de checks.check_scope.
+    tasks_base, erro_base = _load_tasks_json(repo, mb)
+
     ctx = Context(
         repo_root=repo,
         changed=mudados,
@@ -218,31 +253,21 @@ def run(repo: str, base: str, head: str, corpo: str) -> tuple[list[Finding], Con
         head_blob=lambda p: _blob(repo, head, p),
         added_lines=added_lines(repo, mb, head, mudados),
         scope=parse_scope(corpo),
-        tasks=None,
+        tasks=tasks_head,
         file_exists=lambda p: _exists_at(repo, head, p),
+        tasks_base=tasks_base,
+        trusted_source=trusted_source,
     )
 
-    bruto = _blob(repo, head, "coordination/tasks.json")
-    if bruto:
-        try:
-            ctx.tasks = json.loads(bruto)
-        except json.JSONDecodeError as e:
-            ctx.tasks = None
-            erro_json = Finding("registro-tarefas", HARD_FAIL,
-                                f"coordination/tasks.json não é JSON válido: {e}",
-                                "coordination/tasks.json")
-        else:
-            erro_json = None
-    else:
-        erro_json = None
-
     findings: list[Finding] = []
-    if erro_json:
-        findings.append(erro_json)
-    else:
+    for erro in (erro_head, erro_base):
+        if erro:
+            findings.append(erro)
+    if not erro_head:
         findings.extend(checks.check_task_registry(ctx))
     findings.extend(checks.check_scope(ctx))
     findings.extend(checks.check_critical_files(ctx))
+    findings.extend(checks.check_guard_integrity(ctx))
     findings.extend(checks.check_secrets(ctx))
     findings.extend(checks.check_paid_api(ctx))
     findings.extend(checks.check_materias(ctx))
@@ -264,6 +289,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--audit-pack", default=None, help="arquivo onde gravar o pacote JSON")
     ap.add_argument("--allow-fail", action="store_true",
                     help="sempre sair com 0; útil para inspecionar sem reprovar")
+    ap.add_argument("--trusted-source", default="desconhecido",
+                    help="de onde veio o CÓDIGO deste Guard nesta execução: 'base' quando o "
+                         "workflow extraiu tools/qa/guard da base do PR (o caso confiável), "
+                         "'head-bootstrap' quando a base ainda não tinha o Guard. Só descreve "
+                         "a execução no relatório — não afeta nenhuma verificação.")
     a = ap.parse_args(argv)
 
     repo = os.path.abspath(a.repo)
@@ -272,7 +302,7 @@ def main(argv: list[str] | None = None) -> int:
         with open(a.pr_body, encoding="utf-8", errors="replace") as fh:
             corpo = fh.read()
 
-    findings, ctx, pack = run(repo, a.base, a.head, corpo)
+    findings, ctx, pack = run(repo, a.base, a.head, corpo, a.trusted_source)
     resumo = render(findings, ctx, pack)
     print(resumo)
 
@@ -287,6 +317,7 @@ def main(argv: list[str] | None = None) -> int:
             "versao": 1,
             "base": a.base,
             "head": a.head,
+            "trusted_source": ctx.trusted_source,
             "escopo_declarado": ctx.scope,
             "arquivos_alterados": ctx.changed,
             "resultado": ("REPROVADO" if any(f.severity == HARD_FAIL for f in findings)

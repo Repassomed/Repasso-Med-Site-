@@ -43,7 +43,8 @@
       "arquivos": [
         ".github/**",
         "coordination/**",
-        "tools/qa/**"
+        "tools/**",
+        ".gitignore"
       ],
       "objetivo": "Criar coordenação de tarefas, verificador automático e cartão de merge, sem tocar em matérias nem em produção.",
       "fonte": "Issue #81",
@@ -52,9 +53,9 @@
       "dependencias": [],
       "branch": "infra/c2-coordinator-guard-v1",
       "pr": 94,
-      "commit": "c46e98ca1bb7b6ac7b2331912428f76532bd6170",
+      "commit": null,
       "issue": 81,
-      "notas": "Não edita matéria, não chama API paga, não escreve no Supabase. Guard rodou de verdade no GitHub Actions do PR #94 (verde). Aguardando auditoria independente — NÃO MERGEAR (só o José)."
+      "notas": "Não edita matéria, não chama API paga, não escreve no Supabase. Guard rodou de verdade no GitHub Actions do PR #94 (verde). Rodada 2: corrigidos os 2 bloqueadores da auditoria independente (self-cert do Guard e ampliação de escopo pelo próprio PR) — ver checkpoint na Issue #67. Aguardando nova auditoria independente — NÃO MERGEAR (só o José). `arquivos` alinhado com o corpo real do PR (tools/** em vez de tools/qa/**, porque tools/__init__.py fica fora de tools/qa/; .gitignore incluído porque a raiz também recebeu um)."
     },
     {
       "id": "semiologia-ii-b01-b04-provas",

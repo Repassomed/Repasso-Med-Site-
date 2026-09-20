@@ -19,6 +19,23 @@ Severidades:
     HARD FAIL   quebra objetiva, mensurável, introduzida por este PR
     WARNING     precisa de olho humano antes do merge
     INFO        contexto; nunca bloqueia
+
+**Endurecimentos de 2026-09-20, depois da auditoria independente do PR #94**
+(ver `guard-integridade`/`escopo-ampliado` abaixo — os dois bloqueadores):
+
+1. Um PR não pode se autocertificar. `check_scope` agora trata a reserva já
+   registrada em `coordination/tasks.json` **antes** deste PR (lida da BASE,
+   nunca do HEAD) como a única autoridade — nem o corpo do PR, nem uma
+   edição da própria tarefa dentro do mesmo diff, podem ampliá-la. Ver
+   `check_scope` e `check_guard_integrity`.
+2. O código do próprio Guard (`tools/qa/guard/**`) precisa rodar a partir da
+   BASE, não do HEAD do PR — senão um PR que enfraquece uma verificação
+   pode usar essa mesma versão enfraquecida para aprovar a si mesmo. Essa
+   extração acontece em `.github/workflows/guard.yml` (fora deste arquivo,
+   porque a extração em si não pode depender de código que o PR controla).
+   `check_guard_integrity` só relata, de forma transparente, qual foi a
+   fonte usada nesta execução (`--trusted-source`) e sinaliza quando o
+   próprio código do Guard/workflow foi alterado.
 """
 
 from __future__ import annotations
@@ -88,6 +105,16 @@ PAID_API_PATTERNS = [
 RE_NUMBER = re.compile(r"\d+(?:[.,]\d+)?\s*(?:%|mg|g|mL|ml|mmHg|cmH|mmol|mEq|seg|s\b|h\b|años|mm|cm)")
 RE_ANSWER_LINE = re.compile(r"<strong>\s*([a-eA-E])\s*[\)\.\-:]")
 
+# Bloqueador 1 da auditoria do PR #94: um PR não pode auditar a si mesmo.
+# Estes são os arquivos cuja alteração afeta a própria lógica/execução do
+# verificador — por isso o workflow executa o CÓDIGO deles a partir da base,
+# nunca do HEAD do PR (ver .github/workflows/guard.yml). check_guard_integrity
+# só relata a fonte usada e sinaliza quando estes arquivos mudaram.
+GUARD_CODE_PATTERNS = [
+    r"^tools/qa/guard/",
+    r"^\.github/workflows/guard\.yml$",
+]
+
 
 @dataclass
 class Finding:
@@ -115,8 +142,17 @@ class Context:
     head_blob: callable  # (path) -> str | None
     added_lines: dict  # path -> [str]
     scope: dict  # do corpo do PR
-    tasks: dict | None
+    tasks: dict | None  # coordination/tasks.json no HEAD deste PR
     file_exists: callable  # (path) -> bool
+    # tasks.json como estava ANTES deste PR (na base). É a única fonte
+    # confiável de reserva de arquivo — ver check_scope. None quando o
+    # arquivo não existia na base (bootstrap: a própria tarefa é nova).
+    tasks_base: dict | None = None
+    # De onde veio o CÓDIGO do Guard que está rodando esta execução:
+    # "base" (extraído da base, confiável), "head-bootstrap" (a base ainda
+    # não tem o Guard — só acontece antes desta V1 existir na main) ou
+    # "desconhecido" (execução local, sem o wrapper do workflow).
+    trusted_source: str = "desconhecido"
 
 
 # --------------------------------------------------------------------------
@@ -200,21 +236,82 @@ def check_task_registry(ctx: Context) -> list[Finding]:
 
 
 def check_scope(ctx: Context) -> list[Finding]:
-    out: list[Finding] = []
-    permitidos = ctx.scope.get("arquivos") or []
+    """Lei 2 — escopo fechado, endurecida contra autoautorização.
 
-    # Se o PR nomeia uma tarefa, a reserva dela entra no escopo permitido.
+    A reserva de arquivos de uma tarefa **já registrada antes deste PR** é
+    lida da BASE (``ctx.tasks_base``), nunca do HEAD. Isso existe porque a
+    auditoria independente do PR #94 apontou que a versão anterior deste
+    Guard unia o "Arquivos permitidos" do corpo do PR com o que
+    ``tasks.json`` dizia NO HEAD do próprio PR — e um PR pode escrever
+    qualquer coisa em ambos. Union com uma fonte que o próprio PR controla
+    não é uma trava, é um convite.
+
+    Regra agora: se a tarefa já existia na base, a reserva dela na base é a
+    única autoridade. O corpo do PR pode repetir ou estreitar essa reserva,
+    nunca ampliá-la; e uma edição da própria tarefa em ``tasks.json`` dentro
+    do mesmo diff também não amplia nada — só é lida para ser comparada e
+    sinalizada. Só quando a tarefa é NOVA nesta PR (não existia na base)
+    é que não há reserva anterior para proteger, e o comportamento antigo
+    (união) se aplica — não há o que autoautorizar ainda.
+    """
+    out: list[Finding] = []
     tarefa_id = ctx.scope.get("tarefa")
-    tarefa = None
+    corpo_arquivos = list(ctx.scope.get("arquivos") or [])
+
+    tarefa_head = None
     if tarefa_id and ctx.tasks:
         for t in ctx.tasks.get("tarefas", []):
             if t.get("id") == tarefa_id:
-                tarefa = t
-                permitidos = permitidos + list(t.get("arquivos", []))
+                tarefa_head = t
                 break
-        if tarefa is None:
+        if tarefa_head is None:
             out.append(Finding("escopo", WARNING,
                                f"o PR declara a tarefa {tarefa_id!r}, que não existe em coordination/tasks.json."))
+
+    tarefa_base = None
+    if tarefa_id and ctx.tasks_base:
+        for t in ctx.tasks_base.get("tarefas", []):
+            if t.get("id") == tarefa_id:
+                tarefa_base = t
+                break
+
+    if tarefa_base is not None:
+        reserva = list(tarefa_base.get("arquivos") or [])
+
+        # 2a. a própria tarefa tentou se ampliar dentro deste diff?
+        if tarefa_head is not None:
+            ampliada = [g for g in (tarefa_head.get("arquivos") or []) if g not in reserva]
+            if ampliada:
+                out.append(Finding("escopo-ampliado", HARD_FAIL,
+                                   f"a tarefa {tarefa_id!r} tenta ampliar a própria reserva de arquivos "
+                                   "dentro deste mesmo PR. A reserva registrada ANTES deste PR é a única "
+                                   "autoridade (Lei 2) — um PR não pode reescrever sua própria reserva e "
+                                   "se autoautorizar. Ampliar uma reserva exige um PR à parte, revisado "
+                                   "por si só.",
+                                   "coordination/tasks.json",
+                                   {"arquivos_novos": ampliada, "reserva_original": reserva}))
+
+        # 2b. o corpo do PR declarou arquivo além da reserva original?
+        extras_no_corpo = [g for g in corpo_arquivos
+                           if g not in reserva and not any(_glob_match(g, r) for r in reserva)]
+        if extras_no_corpo:
+            out.append(Finding("escopo-ampliado", HARD_FAIL,
+                               f"o corpo do PR declara arquivo(s) fora da reserva original da tarefa "
+                               f"{tarefa_id!r}: {', '.join(extras_no_corpo[:10])}. Um PR não pode "
+                               "autoautorizar seu próprio escopo escrevendo mais no «Arquivos "
+                               "permitidos» do que a reserva já registrada permite.",
+                               detail={"declarados_fora": extras_no_corpo, "reserva_original": reserva}))
+
+        # A reserva da BASE é quem decide o que é permitido — nunca o que o
+        # corpo do PR ou o HEAD de tasks.json dizem por conta própria.
+        permitidos = reserva
+    elif tarefa_head is not None:
+        # Tarefa nova, criada neste mesmo PR: não existe reserva anterior
+        # para proteger, então o corpo e a própria tarefa somam o escopo —
+        # este é o caso de bootstrap (ex.: a primeira tarefa desta V1).
+        permitidos = corpo_arquivos + list(tarefa_head.get("arquivos") or [])
+    else:
+        permitidos = corpo_arquivos
 
     if not permitidos:
         out.append(Finding("escopo", WARNING,
@@ -255,6 +352,63 @@ def check_critical_files(ctx: Context) -> list[Finding]:
     return [Finding("arquivos-criticos", WARNING,
                     "arquivos críticos alterados: risco ALTO e auditoria de regressão ampliada obrigatória (Lei 8).",
                     detail={"arquivos": criticos})]
+
+
+def _is_guard_code(path: str) -> bool:
+    return any(re.search(rx, path) for rx in GUARD_CODE_PATTERNS)
+
+
+def check_guard_integrity(ctx: Context) -> list[Finding]:
+    """Bloqueador 1 da auditoria do PR #94 — transparência sobre a fonte do código.
+
+    Este check não pode, sozinho, IMPEDIR a autocertificação: quem faz isso é
+    a extração do código a partir da base, feita em ``.github/workflows/guard.yml``
+    antes de qualquer módulo Python deste pacote ser importado (ver o
+    comentário no topo daquele arquivo — a extração precisa estar em passos
+    de shell do workflow, não em código deste repositório, senão um PR
+    poderia alterar também o próprio mecanismo de proteção).
+
+    O que este check FAZ: relatar, sempre, de onde veio o código que está
+    rodando esta execução (``ctx.trusted_source``), e sinalizar quando o PR
+    altera o código do Guard ou do workflow — para nunca esconder isso numa
+    lista genérica de "arquivo crítico".
+    """
+    out: list[Finding] = []
+    fonte = ctx.trusted_source or "desconhecido"
+
+    if fonte == "base":
+        out.append(Finding("guard-integridade", INFO,
+                           "esta execução rodou o código do Guard extraído da BASE (confiável), não do "
+                           "HEAD deste PR — mesmo que este PR altere tools/qa/guard/**, essa alteração "
+                           "não pôde se autocertificar nesta execução."))
+    elif fonte == "head-bootstrap":
+        out.append(Finding("guard-integridade", WARNING,
+                           "a base ainda não tem o Guard (bootstrap): esta execução usou o código do "
+                           "PRÓPRIO PR. Isto NÃO é uma autocertificação confiável — precisa de revisão "
+                           "humana direta do código do Guard em si, até que a base passe a ter uma versão "
+                           "publicada dele."))
+    else:
+        out.append(Finding("guard-integridade", WARNING,
+                           f"fonte do código do Guard não identificada ({fonte!r}) — provavelmente uma "
+                           "execução local, fora do wrapper de extração confiável do workflow. Rodar via "
+                           ".github/workflows/guard.yml para a garantia de origem; localmente isto é só "
+                           "informativo."))
+
+    guard_alterado = [p for p in ctx.changed if _is_guard_code(p)]
+    if guard_alterado:
+        workflow_alterado = any(p == ".github/workflows/guard.yml" for p in guard_alterado)
+        aviso_workflow = (
+            " Como .github/workflows/guard.yml está entre eles, a extração confiável por si só pode não "
+            "bastar: o próprio mecanismo de proteção pode ter sido tocado — revisar esse diff manualmente "
+            "linha por linha antes de aprovar."
+            if workflow_alterado else ""
+        )
+        out.append(Finding("guard-codigo-alterado", WARNING,
+                           f"{len(guard_alterado)} arquivo(s) do próprio Guard/workflow foram alterados "
+                           "neste PR: risco ALTO (Lei 8), exige auditoria humana independente da lógica "
+                           f"do verificador, não só do resultado que ele reporta.{aviso_workflow}",
+                           detail={"arquivos": guard_alterado}))
+    return out
 
 
 # --------------------------------------------------------------------------

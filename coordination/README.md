@@ -67,6 +67,32 @@ O Guard confere duas coisas:
 Reservar não é opcional. Uma tarefa sem `arquivos` declarados não pode ser
 verificada, e o Guard diz isso.
 
+**A reserva já registrada é intocável pelo próprio PR que a usa.** Depois da
+primeira auditoria independente (PR #94), o Guard passou a ler a reserva de
+uma tarefa já existente **da BASE**, nunca do HEAD do PR — nem o corpo do
+PR, nem uma edição de `tasks.json` dentro do mesmo diff, conseguem ampliar
+o que já estava reservado antes. Ampliar uma reserva exige um PR à parte,
+revisado por si só. (Tarefa nova, criada dentro do próprio PR, não tem essa
+restrição — não existe reserva anterior para proteger.)
+
+---
+
+## Integridade do próprio Guard
+
+Um PR não pode alterar `tools/qa/guard/**` e usar essa mesma versão
+alterada para se autocertificar. O workflow extrai o código do Guard **da
+base**, nunca do HEAD do PR, antes de rodá-lo — ver o comentário no topo de
+`.github/workflows/guard.yml` e a seção correspondente em `tools/qa/README.md`.
+
+**Limitação que o José precisa saber, não escondida:** essa extração
+protege contra um PR que altera a *lógica* das verificações
+(`checks.py`, `materia.py`). Ela **não** protege sozinha contra um PR que
+altera também o `guard.yml` — o GitHub Actions roda a versão desse arquivo
+que está no HEAD de PRs do mesmo repositório. Fechar esse buraco de vez
+exige uma regra do próprio GitHub (branch protection ou CODEOWNERS
+exigindo revisão humana para qualquer mudança em `.github/workflows/**`),
+que só o dono do repositório configura.
+
 ---
 
 ## N workers

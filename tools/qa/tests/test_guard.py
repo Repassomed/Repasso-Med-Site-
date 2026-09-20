@@ -15,6 +15,12 @@ Prova as duas coisas mínimas exigidas pela Issue #81:
     1. o Guard passa num exemplo válido (nenhum HARD FAIL);
     2. o Guard reprova um fixture quebrado, e reprova pelos motivos certos —
        não só «algo deu HARD FAIL em algum lugar».
+
+Depois da auditoria independente do PR #94, este arquivo ganhou também os
+dois testes adversariais do bloqueador de ESCOPO (Lei 2 endurecida — ver
+``test_scope_lock_*`` abaixo). O teste do bloqueador de INTEGRIDADE DO
+GUARD (um PR não pode se autocertificar) precisa de um git de verdade e
+mora em ``tools/qa/tests/test_trusted_execution.py``, separado.
 """
 
 from __future__ import annotations
@@ -131,8 +137,96 @@ def test_broken_fails() -> None:
     print(f"    (fx-dup preexistente corretamente tratado como INFO, não repetido aqui.)")
 
 
+def test_scope_lock_body_cannot_widen() -> None:
+    """Bloqueador 2, cenário 1 da auditoria do PR #94.
+
+    Tarefa já registrada ANTES deste PR reserva só um arquivo. O corpo do
+    PR declara também um segundo arquivo como «permitido» — e o PR de fato
+    toca os dois. A reserva original tem que vencer: HARD FAIL tanto por
+    «o corpo tentou ampliar» quanto por «arquivo fora do escopo», mesmo o
+    corpo dizendo que está tudo bem.
+    """
+    reserva_original = ["semiologia-ii.html"]
+    tasks_base = {"tarefas": [{"id": "t-exemplo", "arquivos": reserva_original}]}
+    tasks_head = tasks_base  # a tarefa em si não mudou — só o corpo do PR mente
+
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=["semiologia-ii.html", "assets/app-core.js"],
+        base_blob=lambda p: None,
+        head_blob=lambda p: None,
+        added_lines={},
+        scope={"tarefa": "t-exemplo", "arquivos": ["semiologia-ii.html", "assets/app-core.js"]},
+        tasks=tasks_head,
+        tasks_base=tasks_base,
+        file_exists=lambda p: False,
+    )
+    achados = checks.check_scope(ctx)
+    duros = [f for f in achados if f.severity == HARD_FAIL]
+    checks_duros = {f.check for f in duros}
+
+    assert "escopo-ampliado" in checks_duros, (
+        "o corpo do PR declarou assets/app-core.js fora da reserva original de "
+        f"t-exemplo e isso não foi barrado. Achados: {[(f.check, f.message) for f in achados]}"
+    )
+    assert "escopo" in checks_duros, (
+        "assets/app-core.js foi de fato alterado fora da reserva e isso também "
+        "precisa aparecer como «arquivo fora do escopo declarado», não só como "
+        "«escopo-ampliado»."
+    )
+    print("OK  test_scope_lock_body_cannot_widen — corpo do PR não conseguiu ampliar a reserva.")
+
+
+def test_scope_lock_task_cannot_widen_itself() -> None:
+    """Bloqueador 2, cenário 2 da auditoria do PR #94.
+
+    O mesmo PR que usa a tarefa também edita a própria entrada dela em
+    coordination/tasks.json, acrescentando um arquivo à lista de
+    «arquivos» — tentando ampliar a própria reserva dentro do mesmo diff.
+    Isso tem que ser HARD FAIL mesmo que o corpo do PR nem declare nada
+    de novo.
+    """
+    reserva_original = ["semiologia-ii.html"]
+    tasks_base = {"tarefas": [{"id": "t-exemplo", "arquivos": reserva_original}]}
+    tasks_head = {"tarefas": [{"id": "t-exemplo",
+                               "arquivos": ["semiologia-ii.html", "assets/app-core.js"]}]}
+
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=["semiologia-ii.html", "assets/app-core.js", "coordination/tasks.json"],
+        base_blob=lambda p: None,
+        head_blob=lambda p: None,
+        added_lines={},
+        scope={"tarefa": "t-exemplo"},  # corpo nem declara nada extra
+        tasks=tasks_head,
+        tasks_base=tasks_base,
+        file_exists=lambda p: False,
+    )
+    achados = checks.check_scope(ctx)
+    duros = [f for f in achados if f.severity == HARD_FAIL]
+    checks_duros = {f.check for f in duros}
+
+    assert "escopo-ampliado" in checks_duros, (
+        "a tarefa t-exemplo ampliou a própria lista de arquivos dentro do mesmo "
+        f"diff e isso não foi barrado. Achados: {[(f.check, f.message) for f in achados]}"
+    )
+    # a reserva usada para permitir/reprovar tem que continuar sendo a da base
+    achado_ampliado = next(f for f in duros if f.check == "escopo-ampliado")
+    assert achado_ampliado.detail.get("reserva_original") == reserva_original or \
+        any(f.check == "escopo" for f in duros), (
+        "mesmo com a tarefa ampliada no head, assets/app-core.js não devia "
+        "virar permitido — a reserva da base é quem decide."
+    )
+    print("OK  test_scope_lock_task_cannot_widen_itself — tarefa não conseguiu se autoampliar no mesmo diff.")
+
+
 def main() -> int:
-    testes = [test_valid_passes, test_broken_fails]
+    testes = [
+        test_valid_passes,
+        test_broken_fails,
+        test_scope_lock_body_cannot_widen,
+        test_scope_lock_task_cannot_widen_itself,
+    ]
     falhas = 0
     for t in testes:
         try:
