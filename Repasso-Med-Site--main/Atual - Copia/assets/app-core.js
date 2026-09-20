@@ -359,14 +359,20 @@ var RepassoMed = (function(){
     if (m){ var t = m.textContent.replace(/^[\s—–-]+/, '').trim(); if (t) return t.replace(/BLOCO/gi,'BLOQUE').replace(/UNIDADE/gi,'UNIDAD'); }
     return 'Tema';
   }
+  /* O número do cabeçalho é a posição do bloco na sequência de estudo. Um
+     cierre não é um bloco a mais: numerá-lo faz o aluno procurar um «bloque 20»
+     que não existe. Ele mantém o cabeçalho (para não perder o kicker), mas sem
+     número. */
   function decorateBlock(block, index){
     if (block.dataset.rmBlock) return;
     block.dataset.rmBlock = '1';
     var h2 = block.querySelector('h2');
     if (!h2) return;
+    var role = (block.dataset.rmRole || '').toLowerCase();
+    var semNumero = (role === 'review' || role === 'cierre');
     var head = document.createElement('div');
-    head.className = 'rm-block-head';
-    head.innerHTML = '<span class="rm-block-num">' + pad(index) + '</span>' +
+    head.className = 'rm-block-head' + (semNumero ? ' rm-block-head-sem-num' : '');
+    head.innerHTML = (semNumero ? '' : '<span class="rm-block-num">' + pad(index) + '</span>') +
                      '<span class="rm-block-kicker">' + kickerFromBlock(block) + '</span>';
     h2.parentNode.insertBefore(head, h2);
   }
@@ -402,9 +408,14 @@ var RepassoMed = (function(){
   };
   /* Qual seção é qual: pelo id (a regra do padrão) e, em segundo lugar,
      por palavra do título. Bloco comum não entra aqui — leva o número. */
-  function tocIcon(id, label){
+  function tocIcon(id, label, role){
     var s = (id + ' ' + label).toLowerCase();
-    if (/^(banco|prova|simulado|revisao|cuestionario|examen)/.test(id) ||
+    role = (role || '').toLowerCase();
+    /* O papel declarado ganha da heurística de id: um cierre leva bússola,
+       nunca o ícone de banco. */
+    if (role === 'review' || role === 'cierre')                    return TOC_ICONS.brujula;
+    if (role === 'bank')                                           return TOC_ICONS.banco;
+    if (/^(banco|prova|simulado|cuestionario|examen)/.test(id) ||
         /banco de preguntas|banco general|simulacro/.test(s))      return TOC_ICONS.banco;
     if (/flashcard|mazo|tarjeta|ruleta/.test(s))                   return TOC_ICONS.mazo;
     if (/bibliograf|fuentes|nota sobre|imgnote/.test(s))           return TOC_ICONS.libro;
@@ -412,6 +423,10 @@ var RepassoMed = (function(){
     if (/portada|c[óo]mo estudiar|presentaci[óo]n|bienvenid/.test(s)) return TOC_ICONS.brujula;
     if (/video/.test(s))                                           return TOC_ICONS.video;
     if (/repaso general|lo que m[áa]s cae/.test(s))                return TOC_ICONS.diana;
+    /* Último recurso, e só pelo título: um id que contém «cierre» é comum em
+       seções de mazo, bibliografia e láminas, que já têm ícone próprio acima. */
+    if (/repaso final|d[óo]nde est[áa] la lesi[óo]n/.test((label || '').toLowerCase()))
+                                                                   return TOC_ICONS.brujula;
     return null;
   }
   function svgIcon(d){
@@ -468,7 +483,7 @@ var RepassoMed = (function(){
       var h2 = b.querySelector('h2');
       if (!h2 || !b.id) return;
       var label = h2.textContent.replace(RE_EMOJI, '').replace(/\s+/g, ' ').trim();
-      var ico   = tocIcon(b.id, label);
+      var ico   = tocIcon(b.id, label, b.dataset && b.dataset.rmRole);
       var chip  = ico ? svgIcon(ico) : pad(++n);
       var sub   = kickerFromBlock(b).replace(RE_EMOJI, '').trim();
       var subs  = subtitulos(b);
@@ -520,11 +535,24 @@ var RepassoMed = (function(){
 
   function markRevisao(scope){
     var sections = Array.prototype.slice.call(scope.querySelectorAll(':scope > section'));
+    /* Uma seção é banco quando ela DIZ que é, não porque o id começa com uma
+       palavra parecida. O «revisaoneu» de Neurología é um cierre/repaso: tem
+       tabelas e um algoritmo, nenhuma pergunta. Entrava aqui só pelo prefixo
+       «revisao» e saía com cara de banco.
+       O papel declarado no HTML (data-rm-role) manda sobre qualquer heurística. */
     var isBank = function(s){
       if (!s.id) return false;
-      if (/^(prova|simulado|revisao|cuestionario|banco)/i.test(s.id)) return true;
+      var role = (s.dataset && s.dataset.rmRole || '').toLowerCase();
+      if (role === 'review' || role === 'cierre') return false;
+      if (role === 'bank') return true;
+      if (/^(prova|simulado|cuestionario|banco)/i.test(s.id)) return true;
       var h2 = s.querySelector('h2');
-      return h2 && /banco de quest|prova oficial|avalia|revis|simulado/i.test(h2.textContent);
+      if (!h2) return false;
+      /* Lista deliberadamente estreita: «examen» solto aparece em títulos
+         clínicos comuns («Examen físico — Abdomen», «Temas cobrados en Examen
+         Final») e transformaria blocos de conteúdo em bancos. */
+      return /banco de (quest|pregunt)|prova oficial|simulacro|simulado|modo examen/i
+               .test(h2.textContent);
     };
     var banks = sections.filter(isBank);
     if (!banks.length) return;
@@ -2140,9 +2168,16 @@ window.RepassoMed = RepassoMed;
     scope.querySelectorAll('.fc-grid').forEach(function(grid){
       if(grid.dataset.rmDeck) return; grid.dataset.rmDeck='1';
       var n=grid.querySelectorAll('.flashcard').length; if(!n) return;
-      var t='Flashcards', el=grid.previousElementSibling;
-      while(el){ if(/^H[1-6]$/.test(el.tagName)||el.tagName==='SUMMARY'){ t=el.textContent.replace(/^[^0-9A-Za-zÁÉÍÓÚÑáéíóúñ¿]+/, '').replace(/\s*\(\d+\)\s*$/, '').trim()||t; break; } el=el.previousElementSibling; }
-      grid.dataset.deckTitle=t;
+      /* Se o HTML declara o título do mazo, ele manda. A busca pelo heading
+         anterior é só o plano B: quando o grid vem depois de um post-it ou de
+         uma caixa, ela sobe demais e acaba pegando o título de outra secção. */
+      var t=(grid.dataset.deckTitle||'').trim();
+      if(!t){
+        t='Flashcards';
+        var el=grid.previousElementSibling;
+        while(el){ if(/^H[1-6]$/.test(el.tagName)||el.tagName==='SUMMARY'){ t=el.textContent.replace(/^[^0-9A-Za-zÁÉÍÓÚÑáéíóúñ¿]+/, '').replace(/\s*\(\d+\)\s*$/, '').trim()||t; break; } el=el.previousElementSibling; }
+        grid.dataset.deckTitle=t;
+      }
       var ico=grid.dataset.shuffle?'🎲':'🎴';
       var sub=grid.dataset.shuffle?(n+' vistas · orden aleatorio · la cuenta sigue'):(n+' cartas · girar · navegar · barajar');
       var wrap=document.createElement('div'); wrap.className='rmfc-launch'+(grid.dataset.shuffle?' rmfc-roulette':'');

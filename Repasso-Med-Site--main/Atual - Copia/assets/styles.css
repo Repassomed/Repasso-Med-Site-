@@ -1137,7 +1137,30 @@ footer strong { color:var(--gold-soft); }
 #materias-container .rm-cuaderno figure.rmc-fig figcaption b{color:var(--n-ink);}
 #materias-container .rm-cuaderno .rmc-zoom{border-radius:14px;box-shadow:var(--n-shadow);}
 #materias-container .rm-cuaderno .rmc-hint{display:none;}
+
+/* ---- contenedor reutilizable para esquemas SVG ----
+   Un <svg> con viewBox se encoge hasta el ancho del teléfono y el texto que
+   lleva dentro queda ilegible: a 390 px, un esquema de 760 px de ancho llega
+   con la letra a la mitad de su tamaño. Acá no se encoge: se conserva un ancho
+   mínimo legible y el contenedor desplaza en horizontal, igual que las tablas.
+   En escritorio ocupa el ancho disponible y no desborda. */
+#materias-container .rm-cuaderno .rmc-figscroll{
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  border-radius:14px;box-shadow:var(--n-shadow);
+}
+#materias-container .rm-cuaderno .rmc-figscroll > svg{
+  display:block;width:100%;height:auto;max-width:100%;
+}
+/* Modificadores de ancho mínimo legible (sin estilos en línea en el HTML). */
+#materias-container .rm-cuaderno .rmc-figscroll.rmc-fig-700{--rmc-fig-min:700px;}
+#materias-container .rm-cuaderno .rmc-figscroll.rmc-fig-820{--rmc-fig-min:820px;}
+#materias-container .rm-cuaderno .rmc-figscroll.rmc-fig-940{--rmc-fig-min:940px;}
+
 @media(max-width:760px){
+  #materias-container .rm-cuaderno .rmc-figscroll{border:1.5px dashed var(--n-line);}
+  #materias-container .rm-cuaderno .rmc-figscroll > svg{
+    width:var(--rmc-fig-min,680px);min-width:var(--rmc-fig-min,680px);max-width:none;
+  }
   #materias-container .rm-cuaderno .rmc-zoom{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1.5px dashed var(--n-line);}
   #materias-container .rm-cuaderno .rmc-zoom .rmc-photo{width:940px;max-width:none;border-radius:0;border:0;}
   #materias-container .rm-cuaderno .rmc-hint{
@@ -1854,3 +1877,35 @@ footer strong { color:var(--gold-soft); }
 #materias-container .rm-cuaderno > section.container-wide.rm-cv-on{
   content-visibility:visible;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CIERRE / REPASO — seções com data-rm-role="review"
+   Un cierre no es un banco de preguntas. Antes heredaba `.rm-bank`, que le daba
+   el fondo y el `border-radius:0 0` del banco: las dos seções se pegaban y
+   parecían una sola. Acá vuelve a ser una sección propia, separada del banco
+   que la precede, y conserva su section-marker (que está oculto en el resto del
+   sitio porque el `.rm-block-head` lo reemplaza — pero el cierre no lleva
+   número, así que el marker es lo único que anuncia qué es).
+   ═══════════════════════════════════════════════════════════════════════════ */
+#materias-container [data-rm-role="review"].container,
+#materias-container [data-rm-role="review"].container-wide{
+  background:var(--paper, #fff);
+  border-top:3px solid var(--brand-deep, #13314f);
+  border-radius:var(--radius, 14px);
+  margin-top:2.6rem;
+}
+#materias-container [data-rm-role="review"] .section-marker{
+  display:block;margin:0 0 .5rem;
+}
+#materias-container [data-rm-role="review"] .section-marker-num{
+  font-family:var(--font-mono, ui-monospace, monospace);font-weight:800;
+  font-size:.68rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--brand-deep, #13314f);opacity:.85;
+}
+/* cabeçalho sem número: o kicker ocupa a linha sozinho */
+#materias-container .rm-block-head-sem-num{gap:0;}
+
+/* Os quadrinhos «Desde cero» usam <h4>; o reset de margem existia só para <h3>
+   e cada card repetia um style inline. */
+#materias-container .analysis-card h4{margin-top:0;}
