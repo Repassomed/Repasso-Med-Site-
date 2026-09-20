@@ -21,6 +21,12 @@
 >
 > **Resultado: 5 aprovadas · 9 BLOQUEADAS.** As 9 precisam voltar para quem tem
 > o pipeline que as produziu. A seção 5 traz o texto exato de cada correção.
+>
+> **Rodada 3 (revisão):** o Drive foi reconsultado — os 14 arquivos continuam com os
+> mesmos `id`, `fileSize` e `modifiedTime` de 02:57–02:59. **Nada foi regenerado.**
+> O bloqueio das 9 permanece, pelo mesmo motivo. O que esta rodada acrescenta é o
+> **patch de integração das 5 aprovadas, já verificado** — ver
+> `PATCH-INTEGRACION-5-ASSETS.md`, nesta mesma pasta.
 
 | | |
 |---|---|
@@ -402,6 +408,40 @@ Na integração futura o risco fica em `s2-b01`, que concentra 69 marcações: *
 na regra CSS não move nada**; inserir `<figure>` novo no corpo também não move highlights
 (são ancorados por texto), e só deslocaria **índices de traços de tinta** — hoje **0**.
 Reconferir antes de integrar.
+
+---
+
+## 7-A · PATCH DE INTEGRAÇÃO DAS 5 APROVADAS — PRONTO E VERIFICADO
+
+O arquivo **`PATCH-INTEGRACION-5-ASSETS.md`**, nesta pasta, traz o patch completo para
+integrar as 5 aprovadas no `semiologia-ii.html`. **Ele não foi aplicado** — o HTML continua
+intacto nesta branch. Foi montado, aplicado **numa cópia** e verificado:
+
+```
+annotation-safety ... 73/73 resolvem antes e depois · 0 deslocadas · 0 perdidas
+estrutura ........... HTML balanceado · 0 ids duplicados · 0 âncoras mortas
+antirregressão ...... quiz-item 192 -> 192 · block_id 14 -> 14 · 0 asset apagado
+figure .............. 34 -> 38   ·   imgs semio2 ... 44 -> 48
+navegador ........... 390/768/1024/1440 · 0 overflow novo · 0 HTTP >= 400
+                      os 5 assets carregam nas quatro larguras
+```
+
+**Achado da verificação:** `figcaption` **não** está no `SKIP` do `rm-tools.js`, logo texto
+de legenda **entra no índice das marcações**. A primeira redação da legenda de `b01-04`
+continha a expressão «murmullo vesicular», que é uma das 73 marcações do `s2-b01`, e fazia
+essa marcação passar de 1 para 2 ocorrências no bloco. Continuava a resolver certo pelo
+desempate de `prefix`/`suffix`, mas com margem menor. **A legenda foi reescrita** e a
+contagem voltou a 1. Quem escrever legendas nesta matéria precisa rodar essa verificação.
+
+O patch **não remove nada**: `s2-i3` e `s2-i17` continuam publicadas, as 10 diapositivas da
+cátedra não são tocadas, e o `04-bronquitis-aguda-mecanismo-detallado.webp` continua no
+repositório — apenas deixa de ser referenciado, numa troca reversível de uma linha.
+
+**Por que não foi aplicado nesta branch:** o PR #77 (`edit/c3-semiologia-ii-provas`) está
+**aberto e aguardando auditoria** sobre o mesmo `semiologia-ii.html`, com +319/−12 linhas.
+Aplicar aqui criaria uma segunda frente de edição no mesmo arquivo antes de a primeira ser
+auditada. O patch fica pronto para entrar depois — por âncora de texto, não por número de
+linha.
 
 ---
 
