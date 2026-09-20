@@ -411,11 +411,11 @@ var RepassoMed = (function(){
   function tocIcon(id, label, role){
     var s = (id + ' ' + label).toLowerCase();
     role = (role || '').toLowerCase();
-    /* O papel declarado ganha da heurística de id: um cierre leva bússola,
-       nunca o ícone de banco. */
+    /* ADITIVO: só o papel declarado é novo. Sem ele, a heurística abaixo é a
+       de origin/main, inalterada. */
     if (role === 'review' || role === 'cierre')                    return TOC_ICONS.brujula;
     if (role === 'bank')                                           return TOC_ICONS.banco;
-    if (/^(banco|prova|simulado|cuestionario|examen)/.test(id) ||
+    if (/^(banco|prova|simulado|revisao|cuestionario|examen)/.test(id) ||
         /banco de preguntas|banco general|simulacro/.test(s))      return TOC_ICONS.banco;
     if (/flashcard|mazo|tarjeta|ruleta/.test(s))                   return TOC_ICONS.mazo;
     if (/bibliograf|fuentes|nota sobre|imgnote/.test(s))           return TOC_ICONS.libro;
@@ -423,10 +423,6 @@ var RepassoMed = (function(){
     if (/portada|c[óo]mo estudiar|presentaci[óo]n|bienvenid/.test(s)) return TOC_ICONS.brujula;
     if (/video/.test(s))                                           return TOC_ICONS.video;
     if (/repaso general|lo que m[áa]s cae/.test(s))                return TOC_ICONS.diana;
-    /* Último recurso, e só pelo título: um id que contém «cierre» é comum em
-       seções de mazo, bibliografia e láminas, que já têm ícone próprio acima. */
-    if (/repaso final|d[óo]nde est[áa] la lesi[óo]n/.test((label || '').toLowerCase()))
-                                                                   return TOC_ICONS.brujula;
     return null;
   }
   function svgIcon(d){
@@ -535,24 +531,22 @@ var RepassoMed = (function(){
 
   function markRevisao(scope){
     var sections = Array.prototype.slice.call(scope.querySelectorAll(':scope > section'));
-    /* Uma seção é banco quando ela DIZ que é, não porque o id começa com uma
-       palavra parecida. O «revisaoneu» de Neurología é um cierre/repaso: tem
-       tabelas e um algoritmo, nenhuma pergunta. Entrava aqui só pelo prefixo
-       «revisao» e saía com cara de banco.
-       O papel declarado no HTML (data-rm-role) manda sobre qualquer heurística. */
+    /* ADITIVO: o papel declarado no HTML (data-rm-role) decide primeiro. Só
+       isso é novo. Quando a seção não declara papel — que é o caso de todas as
+       matérias antigas — vale exatamente a heurística histórica abaixo, letra
+       por letra, para não reclassificar nada que já estava certo.
+       O «revisaoneu» de Neurología é um cierre: tem tabelas e um algoritmo,
+       nenhuma pergunta. Ele sai do banco porque DECLARA data-rm-role="review",
+       não porque o motor deixou de reconhecer as revisões antigas. */
     var isBank = function(s){
       if (!s.id) return false;
       var role = (s.dataset && s.dataset.rmRole || '').toLowerCase();
       if (role === 'review' || role === 'cierre') return false;
       if (role === 'bank') return true;
-      if (/^(prova|simulado|cuestionario|banco)/i.test(s.id)) return true;
+      /* ↓ heurística legada, idêntica à de origin/main ↓ */
+      if (/^(prova|simulado|revisao|cuestionario|banco)/i.test(s.id)) return true;
       var h2 = s.querySelector('h2');
-      if (!h2) return false;
-      /* Lista deliberadamente estreita: «examen» solto aparece em títulos
-         clínicos comuns («Examen físico — Abdomen», «Temas cobrados en Examen
-         Final») e transformaria blocos de conteúdo em bancos. */
-      return /banco de (quest|pregunt)|prova oficial|simulacro|simulado|modo examen/i
-               .test(h2.textContent);
+      return h2 && /banco de quest|prova oficial|avalia|revis|simulado/i.test(h2.textContent);
     };
     var banks = sections.filter(isBank);
     if (!banks.length) return;
@@ -2168,16 +2162,9 @@ window.RepassoMed = RepassoMed;
     scope.querySelectorAll('.fc-grid').forEach(function(grid){
       if(grid.dataset.rmDeck) return; grid.dataset.rmDeck='1';
       var n=grid.querySelectorAll('.flashcard').length; if(!n) return;
-      /* Se o HTML declara o título do mazo, ele manda. A busca pelo heading
-         anterior é só o plano B: quando o grid vem depois de um post-it ou de
-         uma caixa, ela sobe demais e acaba pegando o título de outra secção. */
-      var t=(grid.dataset.deckTitle||'').trim();
-      if(!t){
-        t='Flashcards';
-        var el=grid.previousElementSibling;
-        while(el){ if(/^H[1-6]$/.test(el.tagName)||el.tagName==='SUMMARY'){ t=el.textContent.replace(/^[^0-9A-Za-zÁÉÍÓÚÑáéíóúñ¿]+/, '').replace(/\s*\(\d+\)\s*$/, '').trim()||t; break; } el=el.previousElementSibling; }
-        grid.dataset.deckTitle=t;
-      }
+      var t='Flashcards', el=grid.previousElementSibling;
+      while(el){ if(/^H[1-6]$/.test(el.tagName)||el.tagName==='SUMMARY'){ t=el.textContent.replace(/^[^0-9A-Za-zÁÉÍÓÚÑáéíóúñ¿]+/, '').replace(/\s*\(\d+\)\s*$/, '').trim()||t; break; } el=el.previousElementSibling; }
+      grid.dataset.deckTitle=t;
       var ico=grid.dataset.shuffle?'🎲':'🎴';
       var sub=grid.dataset.shuffle?(n+' vistas · orden aleatorio · la cuenta sigue'):(n+' cartas · girar · navegar · barajar');
       var wrap=document.createElement('div'); wrap.className='rmfc-launch'+(grid.dataset.shuffle?' rmfc-roulette':'');
