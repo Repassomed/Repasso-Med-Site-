@@ -1,0 +1,174 @@
+{
+  "_": [
+    "Registro de tarefas do Repasso Med. Lido por pessoas e pelo Repasso Guard.",
+    "Este arquivo é uma DECLARAÇÃO de escopo. O Guard compara o que o PR realmente",
+    "tocou contra o que a tarefa declarou, e sinaliza a diferença.",
+    "",
+    "Campos obrigatórios em cada tarefa:",
+    "  id         identificador curto e estável, usado no corpo do PR",
+    "  titulo     uma linha",
+    "  area       materia | infraestrutura | assets | documentacao | ferramentas",
+    "  materia    slug da matéria, ou null quando não se aplica",
+    "  arquivos   caminhos ou globs relativos à raiz do repositório; é a RESERVA",
+    "  objetivo   uma frase",
+    "  fonte      de onde veio o conteúdo ou o pedido",
+    "  agente     Claude 1..4 | humano",
+    "  estado     um dos oito de coordination/STATES.md",
+    "  dependencias  lista de ids que precisam terminar antes",
+    "  branch, pr, commit, issue   podem ser null",
+    "",
+    "Regra: duas tarefas ATIVAS (IN-PROGRESS ou BLOCKED-LIMIT) não podem declarar",
+    "o mesmo arquivo. O Guard sinaliza a colisão."
+  ],
+  "versao": 1,
+  "atualizado_em": "2026-09-20",
+  "agentes_conhecidos": ["Claude 1", "Claude 2", "Claude 3", "Claude 4", "humano"],
+  "estados_validos": [
+    "READY",
+    "IN-PROGRESS",
+    "BLOCKED",
+    "BLOCKED-LIMIT",
+    "NEEDS-AUDIT",
+    "NEEDS-FIX",
+    "MERGE-READY",
+    "DONE"
+  ],
+  "areas_validas": ["materia", "infraestrutura", "assets", "documentacao", "ferramentas"],
+  "tarefas": [
+    {
+      "id": "infra-coordinator-guard-v1",
+      "titulo": "Repasso Coordinator + Guard V1 — fundação segura",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        ".github/**",
+        "coordination/**",
+        "tools/qa/**"
+      ],
+      "objetivo": "Criar coordenação de tarefas, verificador automático e cartão de merge, sem tocar em matérias nem em produção.",
+      "fonte": "Issue #81",
+      "agente": "Claude 2",
+      "estado": "IN-PROGRESS",
+      "dependencias": [],
+      "branch": "infra/c2-coordinator-guard-v1",
+      "pr": null,
+      "commit": null,
+      "issue": 81,
+      "notas": "Não edita matéria, não chama API paga, não escreve no Supabase."
+    },
+    {
+      "id": "semiologia-ii-b01-b04-provas",
+      "titulo": "Semiología II — exame de 17/09 nos bloques 01 a 04",
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "objetivo": "Incorporar o material de prova aos bloques 01–04, com didática e avaliação.",
+      "fonte": "prova de 17/09",
+      "agente": "Claude 3",
+      "estado": "NEEDS-AUDIT",
+      "dependencias": [],
+      "branch": "edit/c3-semiologia-ii-provas",
+      "pr": 77,
+      "commit": "1649ca3",
+      "issue": 67,
+      "notas": "ATENÇÃO: os 73 highlights da matéria estão todos em s2-b01 (69), s2-b02 (1) e s2-b03 (3). Seis usam índice de ocorrência e o exact_text mais curto tem 4 caracteres. Conferir a resolução dos 73 antes do merge."
+    },
+    {
+      "id": "semiologia-ii-assets-novos",
+      "titulo": "Semiología II — assets visuais novos",
+      "area": "assets",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/semio2/**"
+      ],
+      "objetivo": "Publicar as imagens aprovadas e registrar as bloqueadas, sem tocar no HTML da matéria.",
+      "fonte": "Drive · Semiología II · Imagens novas",
+      "agente": "Claude 1",
+      "estado": "NEEDS-AUDIT",
+      "dependencias": [],
+      "branch": "visual/c1-semiologia-ii-imagens-novas",
+      "pr": 78,
+      "commit": "2329b53",
+      "issue": 67,
+      "notas": "5 aprovadas, 9 bloqueadas. Não intersecta o PR #77: este só toca assets, aquele só toca o HTML. O patch de integração das 5 está pronto mas NÃO aplicado."
+    },
+    {
+      "id": "neurologia-cierre-layout",
+      "titulo": "Neurología — cierre deixa de herdar o estilo de banco; bloco 07",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Corrigir a herança de estilo no cierre e melhorar o bloco 07.",
+      "fonte": "revisão visual",
+      "agente": "Claude 3",
+      "estado": "NEEDS-AUDIT",
+      "dependencias": [],
+      "branch": "fix/neurologia-cierre-layout",
+      "pr": 80,
+      "commit": "a7c5f3a",
+      "issue": 67,
+      "notas": null
+    },
+    {
+      "id": "ferramentas-highlights-ancoragem",
+      "titulo": "Marcações — recuperar quando o texto muda, sem adivinhar o lugar",
+      "area": "ferramentas",
+      "materia": null,
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/assets/rm-tools*.js"
+      ],
+      "objetivo": "Tornar a ancoragem das marcações resistente a mudança de texto.",
+      "fonte": "pedido do José",
+      "agente": "Claude 1",
+      "estado": "BLOCKED",
+      "dependencias": [],
+      "branch": "fix/highlights-ancoragem-segura",
+      "pr": 66,
+      "commit": "1f4e577",
+      "issue": 67,
+      "notas": "Pausado por coordenação, conforme a Issue #67."
+    },
+    {
+      "id": "ferramentas-lapiz-toolbox",
+      "titulo": "Lápiz — a toolbox deixa de fechar ao escrever",
+      "area": "ferramentas",
+      "materia": null,
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/assets/rm-tools*.js"
+      ],
+      "objetivo": "Corrigir o fechamento da toolbox e medir o tablet real.",
+      "fonte": "pedido do José",
+      "agente": "Claude 1",
+      "estado": "BLOCKED",
+      "dependencias": [],
+      "branch": "fix/tools-v2-tablet-real",
+      "pr": 64,
+      "commit": "4a524a1",
+      "issue": 67,
+      "notas": "Pausado; o teste físico não resolveu. Colide com ferramentas-highlights-ancoragem no mesmo arquivo — por isso os dois estão BLOCKED e não IN-PROGRESS."
+    },
+    {
+      "id": "semiologia-ii-b05-b10-gaps",
+      "titulo": "Semiología II — corrigir os gaps mapeados nos bloques 05 a 10",
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "objetivo": "Fechar os achados P0 e P1 do mapa read-only: alternativa duplicada no Framingham, vetor e eixo no ECG, líquido pleural, ambiguidade da tabela de PA.",
+      "fonte": "mapa read-only na Issue #67",
+      "agente": null,
+      "estado": "BLOCKED",
+      "dependencias": ["semiologia-ii-b01-b04-provas"],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 67,
+      "notas": "BLOCKED porque o PR #77 tem o mesmo arquivo reservado. Só pode começar depois que o #77 for mergeado ou fechado. Os bloques 05–10 não têm nenhuma marcação de aluno, então a edição em si é segura."
+    }
+  ]
+}
