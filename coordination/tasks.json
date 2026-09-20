@@ -48,13 +48,13 @@
       "objetivo": "Criar coordenação de tarefas, verificador automático e cartão de merge, sem tocar em matérias nem em produção.",
       "fonte": "Issue #81",
       "agente": "Claude 2",
-      "estado": "IN-PROGRESS",
+      "estado": "NEEDS-AUDIT",
       "dependencias": [],
       "branch": "infra/c2-coordinator-guard-v1",
-      "pr": null,
-      "commit": null,
+      "pr": 94,
+      "commit": "c46e98ca1bb7b6ac7b2331912428f76532bd6170",
       "issue": 81,
-      "notas": "Não edita matéria, não chama API paga, não escreve no Supabase."
+      "notas": "Não edita matéria, não chama API paga, não escreve no Supabase. Guard rodou de verdade no GitHub Actions do PR #94 (verde). Aguardando auditoria independente — NÃO MERGEAR (só o José)."
     },
     {
       "id": "semiologia-ii-b01-b04-provas",
