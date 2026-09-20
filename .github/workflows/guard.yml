@@ -1,0 +1,98 @@
+name: Repasso Guard
+
+# Verificador automático de PR (Issue #81). Só biblioteca padrão do Python:
+# nenhuma dependência instalada, nenhum segredo lido, nenhuma API chamada.
+# O Guard NUNCA faz merge e NUNCA decide correção médica sozinho — ele só
+# aponta o que é objetivo e mensurável, para a auditoria humana do José.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: repasso-guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do PR (histórico completo, para o diff contra a base)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Python (só biblioteca padrão)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Salvar o corpo do PR
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          printf '%s\n' "$PR_BODY" > /tmp/pr-body.md
+
+      - name: Rodar o Guard
+        id: guard
+        run: |
+          git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=200
+          set +e
+          python3 -m tools.qa.guard \
+            --base "origin/${{ github.event.pull_request.base.ref }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --pr-body /tmp/pr-body.md \
+            --summary /tmp/guard-summary.md \
+            --audit-pack /tmp/guard-audit-pack.json
+          echo "resultado=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar o pacote de auditoria
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repasso-guard-audit-pack
+          path: |
+            /tmp/guard-audit-pack.json
+            /tmp/guard-summary.md
+          retention-days: 30
+
+      - name: Comentar o resumo no PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const resumo = fs.readFileSync('/tmp/guard-summary.md', 'utf8');
+            const marca = '<!-- repasso-guard-resumo -->';
+            const corpo = marca + '\n' + resumo;
+            const { data: comentarios } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const anterior = comentarios.find(c => c.body && c.body.startsWith(marca));
+            if (anterior) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: anterior.id,
+                body: corpo,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: corpo,
+              });
+            }
+
+      - name: Falhar o job se o Guard reprovou (HARD FAIL)
+        if: steps.guard.outputs.resultado != '0'
+        run: |
+          echo "O Repasso Guard encontrou pelo menos um HARD FAIL. Ver o comentário no PR."
+          exit 1

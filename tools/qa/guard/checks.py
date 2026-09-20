@@ -377,11 +377,16 @@ def _check_counts(nome: str, base, head) -> list[Finding]:
         return []
     out = []
     qb, qh = len(base.questions), len(head.questions)
-    if qh < qb:
-        chaves = {q.key for q in head.questions}
-        perdidas = [q.key for q in base.questions if q.key not in chaves]
+
+    # Comparar pela CHAVE, não só pelo total. Uma questão pode sumir e outra
+    # entrar no mesmo PR — o total bate, mas uma questão real foi perdida
+    # (Lei 1). Julgar só qh < qb deixaria essa perda passar despercebida.
+    chaves = {q.key for q in head.questions}
+    perdidas = [q.key for q in base.questions if q.key not in chaves]
+    if perdidas:
         out.append(Finding("questoes-removidas", HARD_FAIL,
-                           f"{nome}: {qb} → {qh} questões. {len(perdidas)} sumiram.",
+                           f"{nome}: {qb} → {qh} questões; {len(perdidas)} sumiram por chave "
+                           "(id ou enunciado), mesmo que o total não tenha caído.",
                            nome, {"exemplos": perdidas[:8]}))
     fb, fh = base.flashcards, head.flashcards
     if fh < fb:
