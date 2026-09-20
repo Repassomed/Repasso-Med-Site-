@@ -69,13 +69,13 @@
       "objetivo": "Construir a infraestrutura do Coordinator (recebimento de evento, contexto mínimo, classificação, roteamento FAST/STANDARD/DEEP, dedup, limites, usage/custo, saída OBSERVE) mantendo REPASSO_COORDINATOR_ENABLED=false e MODE=observe — zero chamada paga nesta rodada.",
       "fonte": "Issue #95, políticas #82–#93",
       "agente": "Claude 2",
-      "estado": "IN-PROGRESS",
+      "estado": "NEEDS-AUDIT",
       "dependencias": ["infra-coordinator-guard-v1"],
       "branch": "infra/c2-coordinator-v2-observe",
-      "pr": null,
-      "commit": null,
+      "pr": 97,
+      "commit": "851b2b467b4533e6bbfb14d04a49189adff39214",
       "issue": 95,
-      "notas": "Não edita matéria, Supabase, produção. Não chama API paga. Não muda ENABLED para true. Não faz merge."
+      "notas": "Não edita matéria, Supabase, produção. Não chama API paga. Não muda ENABLED para true. Não faz merge. 47/47 testes (coordinator/tests/run_all.py). Guard rodou de verdade no GitHub Actions do PR #97 (verde, extraído da base — guard-integridade=base). Aguardando auditoria independente."
     },
     {
       "id": "semiologia-ii-b01-b04-provas",
