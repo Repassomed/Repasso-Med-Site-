@@ -7,14 +7,26 @@
 
 ---
 
-## 1 · Assets novos
+## 1 · Assets novos · pontos de inserção
 
-| Asset | Slide fonte | Conteúdo | Ponto de inserção recomendado |
+> **Atualizado nesta rodada.** O PR #74 criou os blocos que faltavam, então as
+> orientações antigas — «não existe bloco de sueño» e «35/36 → neub01» —
+> **caducaram e foram removidas**. Os pontos de inserção abaixo são os válidos.
+
+| Asset | Bloco destino | Secção | O que já cobre |
 |---|---|---|---|
-| `neurologia_33_sueno_y_vigilia_regulacion_y_arquitectura.webp` | Slide **7** · Unidad III · «Sueño y vigilia» | SRAA com os cinco núcleos e seus neurotransmissores; Proceso C (NSQ, luz, melatonina) × Proceso S (adenosina); hipnograma da noite; tabela comparativa N1-N2 × N3 × REM em dez linhas | **Não há bloco de sueño na matéria.** Precisa de um bloco novo — sugestão: `neub17 · 😴 Sueño y vigilia`, logo depois do bloco 01 (estado de conciencia), que já ensina o SRAA. A figura entra no fim da secção «arquitectura del sueño» desse bloco novo. |
-| `neurologia_34_trastornos_del_sueno.webp` | Slide **7** · Unidad III | Insomnio agudo × crónico com o modelo 3P de Spielman; hipersomnia primária × secundária; narcolepsia (hipocretina, HLA DQB1\*06:02, TLMS, tratamento); parasomnias NREM / REM / transição | Mesmo bloco novo, na secção de trastornos, depois da figura 33. |
-| `neurologia_35_coma_mecanismo_causas_y_localizacion.webp` | Slide **8** · Unidad IV · «Glasgow, coma, muerte cerebral» | Definição de coma; os três mecanismos (córtex bilateral / SRAA focal / difusa metabólica); causas estruturais × metabólicas; **tabela das pupilas** com nível e etiologia; padrão respiratório, mirada e resposta motora | **Bloco 01**, §6 «La exploración ocular en el paciente con conciencia alterada», **no fim da secção** — depois do último parágrafo e antes do `<h3>7 · Síntesis del bloque</h3>`. |
-| `neurologia_36_muerte_encefalica_diagnostico_y_protocolo.webp` | Slide **8** · Unidad IV | Prerrequisitos e exclusões; os três critérios clínicos; provas confirmatórias; os seis reflexos de tronco com a técnica; protocolo da prova de apneia em seis passos; **Paraguai × AAN**; diagnóstico diferencial muerte encefálica × vegetativo × locked-in × coma reversible | **Bloco 01**, logo depois da figura 35 (ou já dentro de §7, antes do post-it de síntese). Só faz sentido depois de o resumo ensinar muerte encefálica — hoje a matéria **não ensina**: o termo só aparece no banco geral (`bq-neu…`). Ver secção 3. |
+| `neurologia_33_sueno_y_vigilia_regulacion_y_arquitectura.webp` | **`neub17` · Sueño y vigilia** | Fim de **«4 · La arquitectura de la noche»** — ou de **«7 · La tabla que resuelve el bloque»**, que a figura espelha | SRAA com os cinco núcleos e seus neurotransmissores; Proceso C (NSQ, luz, melatonina) × Proceso S (adenosina); hipnograma da noite; comparação N1-N2 × N3 × REM em dez linhas |
+| `neurologia_34_trastornos_del_sueno.webp` | **`neub17` · Sueño y vigilia** | Fim de **«9 · Parasomnias · cada una vive en su fase»**, depois de **«8 · Alteraciones frecuentes»** | Insomnio agudo × crónico com o modelo 3P de Spielman; hipersomnia primária × secundária; narcolepsia (hipocretina, HLA DQB1\*06:02, TLMS, tratamento); parasomnias NREM / REM / transição |
+| `neurologia_35_coma_mecanismo_causas_y_localizacion.webp` | **`neub18` · Coma / muerte encefálica** | Fim de **«3 · Localizar sin moverlo de la cama · hallazgo → nivel»** | Definição de coma; os três mecanismos (córtex bilateral / SRAA focal / difusa metabólica); causas estruturais × metabólicas; tabela das pupilas com nível e etiologia; padrão respiratório, mirada e resposta motora |
+| `neurologia_36_muerte_encefalica_diagnostico_y_protocolo.webp` | **`neub18` · Coma / muerte encefálica** | Fim de **«5 · Muerte cerebral»**, **depois** de o texto explicar os critérios e a prova de apneia | Prerrequisitos e exclusões; os três critérios clínicos; os seis reflexos de tronco com a técnica; prova de apneia **com os dois protocolos separados**; pruebas ancilares **com as duas listas separadas**; certificação e observação Paraguai × AAN; diferencial muerte encefálica × coma × vegetativo × locked-in |
+
+Nomes de secção conferidos no HTML da branch `edit/c2-neurologia-unidades-iii-iv`
+(`856916e`): `neub17 · 🌙 Sueño y vigilia` tem nove secções numeradas e `neub18 ·
+🚨 Glasgow, coma y muerte cerebral` tem cinco, sendo a §5 «Muerte cerebral».
+
+**Ordem de leitura dentro de `neub18`:** primeiro a 35 (coma e localização), depois
+a 36 (muerte encefálica). A 36 só faz sentido depois de o resumo ensinar os
+critérios — a lei 8-A.2 continua a valer.
 
 ### Figuras antigas prontas para voltar a aparecer
 
@@ -37,7 +49,8 @@ highlight neuportada        1
 highlight banconeu          1
 ```
 
-**Nenhum traço de caneta e nenhum grifo está ancorado em `neub01`…`neub16`.**
+**Nenhum traço de caneta e nenhum grifo está ancorado em `neub01`…`neub16`**, nem nos
+blocos novos `neub17` e `neub18`.
 A tinta é posicional (`sec.id + '>' + índice` sobre
 `p,li,h2,h3,h4,h5,table,figure,blockquote`), então inserir um `<figure>` dentro
 de um bloco deslocaria os índices daquele bloco — mas como os blocos não têm
@@ -63,10 +76,10 @@ Conferido abrindo as 30 imagens publicadas, uma a uma, não pelos nomes de arqui
   acrescenta o que falta: os cinco núcleos com seu neurotransmissor e as duas
   vias de projeção.
 - **Buraco de conteúdo:** o slide 8 ensina muerte encefálica com protocolo
-  completo e o **resumo da matéria não ensina isso em lugar nenhum** — o termo
-  só aparece dentro de questões do banco geral. Pela lei 8-A.2 (resumo ensina →
-  questão cobra), isso é uma pendência de texto, não de imagem. Quem editar o
-  HTML precisa escrever a secção antes de pendurar a figura 36.
+  completo. O PR #74 criou `neub18 · Coma / muerte encefálica`; quem reconectar
+  as figuras deve confirmar que o texto desse bloco **ensina os critérios e a
+  prova de apneia antes** de pendurar a figura 36, porque a lei 8-A.2 (resumo
+  ensina → questão cobra) continua a valer.
 
 ---
 
@@ -110,3 +123,39 @@ Nenhuma destas foi alterada — são inconsistências, não erros:
 5. **Marca:** `neurologia_24`, `25`, `27`, `28` e `29` trazem o logotipo
    «Repasso Med»; as outras 25 não. As quatro figuras novas seguem a maioria e
    **não trazem marca no conteúdo central**.
+
+---
+
+## 6 · Registro da reconstrução da figura 36 (rodada Claude 1)
+
+A versão anterior **não podia ser aprovada** e foi refeita. Três defeitos
+científicos, todos corrigidos:
+
+1. **Prova de apneia com «≥ 60 mmHg *o* +20 mmHg».** Essa é a redação **da
+   cátedra**, e ficou preservada e rotulada como tal — mas estava apresentada
+   como se fosse também o critério internacional. A figura passa a mostrar os
+   dois protocolos lado a lado, e o da **AAN/AAP/CNS/SCCM 2023** exige as
+   **quatro condições em conjunto**: ausência de respiração espontânea **e**
+   pH arterial < 7,30 **e** PaCO₂ ≥ 60 mmHg **e** aumento ≥ 20 mmHg sobre a
+   PaCO₂ basal apropriada. A figura diz explicitamente «Nunca ≥ 60 *o* +20».
+   Acrescentou-se a regra da **hipercapnia crónica** (o basal é o do próprio
+   paciente, documentado antes da prova).
+2. **Lista única de provas ancilares.** Estavam misturadas como se todas
+   fossem equivalentes. Agora são duas listas separadas: a **da cátedra**, com
+   as seis que ela ensina, preservada; e a da **AAN 2023**, que aceita
+   **apenas três** — angiografia convencional por cateter de 4 vasos,
+   gammagrafia de perfusão cerebral com radionuclídeo e Doppler transcraniano
+   **só em adultos** — e **não aceita** EEG, potenciais evocados, angio-TC
+   (CTA), RM nem angio-RM.
+3. **«Coinciden en lo demás».** A afirmação era falsa e saiu. O painel 7 diz
+   agora onde coincidem (definição, prerrequisitos, três critérios, apneia
+   obrigatória, certificantes fora da equipa de transplante, equivalência
+   legal) e **onde não coincidem** (umbrales da apneia e lista de ancilares).
+
+Também se acrescentou, porque a prova o cobrou: **«Se exploran los seis
+reflejos, no cuatro»** — o exame pode pedir para *citar quatro*, mas o
+diagnóstico exige a ausência de todos os que o protocolo enumera.
+
+Fonte da coluna da cátedra: slide da Unidad IV, «Escala de Coma de Glasgow,
+coma, muerte cerebral», Dra. Silvia Duarte, Universidad Central del Paraguay.
+**Nenhum outro raster foi alterado nesta rodada.**
