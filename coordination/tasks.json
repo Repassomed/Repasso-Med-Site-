@@ -73,7 +73,7 @@
       "dependencias": ["infra-coordinator-guard-v1"],
       "branch": "infra/c2-coordinator-v2-observe",
       "pr": 97,
-      "commit": "80d6ce9",
+      "commit": "8f9ac3c",
       "issue": 95,
       "notas": "Segunda rodada: fechados os 3 blockers da 2ª auditoria independente (caminho real GitHub->Coordinator->Anthropic->OBSERVE via github_event.py/anthropic_transport.py; dedup/ledger persistentes entre execuções via git_state.py numa branch dedicada; model ID FAST corrigido para claude-haiku-4-5-20251001, confirmado ao vivo na doc oficial). Não edita matéria, Supabase, produção. Não chama API paga (Transport real testado só com mock). Não muda ENABLED para true. Não faz merge. 92/92 testes, 12 módulos (coordinator/tests/run_all.py). Guard local: 0 HARD FAIL. Aguardando nova auditoria independente."
     },
