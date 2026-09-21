@@ -68,6 +68,27 @@ Cobre os 2 gatilhos que seguram segredo em
 Devolve ``None`` quando o payload não corresponde a nenhum evento que o
 Coordinator reconhece — o workflow, nesse caso, não deve nem tentar rodar
 o pipeline (ver o passo correspondente no workflow).
+
+**Correção pós-auditoria independente do PR #104 (B2, B3, B4 do comentário
+de auditoria + requisito de anti-loop da #99):**
+
+- **B2 — diff real como evidência principal.** O corpo da PR é a
+  declaração do worker, nunca prova do que de fato mudou. Um novo
+  parâmetro ``pr_diff`` (texto do diff real, buscado por um passo do
+  workflow via API somente-leitura da branch confiável — nunca do HEAD do
+  PR) passa a acompanhar o evento ``PR_NEEDS_AUDIT`` em
+  ``payload["pr_diff"]``. O texto do diff nunca é executado nem
+  interpretado como instrução por este módulo — é só uma string que
+  atravessa até o prompt da auditoria (ver ``coordinator/audit.py``, que
+  trunca e nunca segue instruções dentro dele).
+- **Anti-self-loop (Issue #99, pedido explícito de José).** Todo
+  comentário automático do Coordinator carrega o marcador
+  ``COORDINATOR_COMMENT_MARKER``. Um ``issue_comment`` que contenha esse
+  marcador é ignorado ANTES de qualquer outra coisa — inclusive antes de
+  checar ``ALLOWED_COMMENT_ACTORS`` — porque José e todos os agentes
+  Claude publicam pela MESMA identidade GitHub ("Repassomed"); sem este
+  filtro, um comentário do próprio Coordinator passaria no filtro de ator
+  confiável e poderia reabrir um ciclo pago sobre si mesmo.
 """
 
 from __future__ import annotations
@@ -99,21 +120,40 @@ RE_ENVOLVE_QUESTOES = re.compile(
 # esta é a lista completa de atores confiáveis para o piloto.
 ALLOWED_COMMENT_ACTORS: frozenset[str] = frozenset({"Repassomed"})
 
+# Anti-self-loop (Issue #99, pedido explícito de José + achado B3 da
+# pré-auditoria do Claude 3): todo comentário que o Coordinator publicar
+# sozinho carrega este marcador — ``merge_card.render_merge_card`` o
+# escreve como a primeira linha de qualquer Cartão de Merge/comentário
+# gerado. Um comentário que já contenha o marcador nunca pode virar um
+# evento novo, porque isso reabriria um ciclo pago sobre a própria saída
+# do Coordinator.
+COORDINATOR_COMMENT_MARKER = "<!-- repasso-coordinator -->"
+
 
 def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None,
-                         audit_pack: dict | None = None) -> Event | None:
+                         audit_pack: dict | None = None, pr_diff: str | None = None) -> Event | None:
     if payload.get("action") != "created":
         return None
 
-    autor = ((payload.get("comment") or {}).get("user") or {}).get("login")
+    comentario = payload.get("comment", {})
+    corpo = comentario.get("body") or ""
+
+    # Anti-self-loop: verificado ANTES de qualquer outra coisa — inclusive
+    # antes do ator confiável, porque o próprio Coordinator publica pela
+    # MESMA identidade GitHub ("Repassomed") que José e os outros agentes.
+    # Sem este filtro na frente, um comentário automático do Coordinator
+    # passaria no filtro de ator confiável abaixo e poderia gerar um novo
+    # INBOX_COMMENT/CHECKPOINT_BLOCKED_LIMIT sobre a própria saída dele.
+    if COORDINATOR_COMMENT_MARKER in corpo:
+        return None
+
+    autor = (comentario.get("user") or {}).get("login")
     if autor not in ALLOWED_COMMENT_ACTORS:
         # Ator não confiável: zero classificação, zero chamada — a decisão
         # termina aqui, nunca chega perto do portão ENABLED/MODE.
         return None
 
     issue = payload.get("issue", {})
-    comentario = payload.get("comment", {})
-    corpo = comentario.get("body") or ""
     numero_issue = issue.get("number")
     numero_comentario = comentario.get("id")
 
@@ -145,7 +185,7 @@ def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None
 
 
 def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
-                        audit_pack: dict | None = None) -> Event | None:
+                        audit_pack: dict | None = None, pr_diff: str | None = None) -> Event | None:
     if payload.get("action") != "completed":
         return None
     run = payload.get("workflow_run", {})
@@ -188,6 +228,14 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                 "body": corpo,
                 "envolve_questoes": bool(RE_ENVOLVE_QUESTOES.search(f"{titulo}\n{corpo}")),
                 "audit_pack": audit_pack,
+                # B2 da auditoria independente do PR #104: o corpo da PR é
+                # a DECLARAÇÃO do worker, nunca a prova do que mudou. O
+                # diff real (buscado pelo workflow via API somente-leitura
+                # da branch confiável — nunca do HEAD do PR) é a evidência
+                # principal entregue ao auditor. Nunca executado nem
+                # interpretado como instrução por este módulo — só uma
+                # string que atravessa até o prompt (ver audit.py).
+                "pr_diff": pr_diff,
                 "dedup_fields": {
                     "pr": numero,
                     "label": LABEL_NEEDS_AUDIT,
@@ -237,8 +285,9 @@ _CONSTRUTORES = {
 
 def build_event_from_github_context(event_name: str, payload: dict, repo: str, *,
                                      pr_info: dict | None = None,
-                                     audit_pack: dict | None = None) -> Event | None:
+                                     audit_pack: dict | None = None,
+                                     pr_diff: str | None = None) -> Event | None:
     construtor = _CONSTRUTORES.get(event_name)
     if construtor is None:
         return None
-    return construtor(payload, repo, pr_info=pr_info, audit_pack=audit_pack)
+    return construtor(payload, repo, pr_info=pr_info, audit_pack=audit_pack, pr_diff=pr_diff)

@@ -25,11 +25,13 @@ Dois jeitos de dar o evento:
         --workers-from-tasks-json coordination/tasks.json \\
         --pr-info-file /tmp/pr-info.json \\
         --guard-audit-pack /tmp/guard-audit-pack/guard-audit-pack.json \\
+        --pr-diff-file /tmp/pr-diff.patch \\
         --out /tmp/coordinator-observe.json
 
-   ``--pr-info-file``/``--guard-audit-pack`` são opcionais e vêm de passos
-   do workflow que leem a PR e baixam o artifact do Guard (bloqueadores 1
-   e 5 da 3ª auditoria) — nunca de código do HEAD do PR.
+   ``--pr-info-file``/``--guard-audit-pack``/``--pr-diff-file`` são
+   opcionais e vêm de passos do workflow que leem a PR, o diff real e
+   baixam o artifact do Guard (bloqueadores 1 e 5 da 3ª auditoria, e B2 da
+   auditoria independente do PR #104) — nunca de código do HEAD do PR.
 
 Persistência entre execuções independentes (bloqueador 2): ``--dedup-store``/
 ``--usage-ledger`` continuam sendo arquivo local (default, preserva o
@@ -83,15 +85,29 @@ def _load_json_if_exists(path: str | None) -> dict | None:
         return json.load(fh)
 
 
+def _load_text_if_exists(path: str | None) -> str | None:
+    if not path or not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
 def _load_github_event(path: str, event_name: str, repo: str, *,
                         pr_info_file: str | None = None,
-                        guard_audit_pack: str | None = None) -> Event | None:
+                        guard_audit_pack: str | None = None,
+                        pr_diff_file: str | None = None) -> Event | None:
     with open(path, encoding="utf-8") as fh:
         payload = json.load(fh)
     pr_info = _load_json_if_exists(pr_info_file)
     audit_pack = _load_json_if_exists(guard_audit_pack)
+    # B2 da auditoria independente do PR #104: diff real da PR, texto puro
+    # (não JSON) — buscado por um passo do workflow via API somente-leitura
+    # da branch confiável, nunca do HEAD do PR (ver o comentário em
+    # github_event.py). Nunca executado; só atravessa como string até o
+    # prompt da auditoria.
+    pr_diff = _load_text_if_exists(pr_diff_file)
     return build_event_from_github_context(event_name, payload, repo,
-                                            pr_info=pr_info, audit_pack=audit_pack)
+                                            pr_info=pr_info, audit_pack=audit_pack, pr_diff=pr_diff)
 
 
 def _load_workers(path: str | None) -> list[Worker]:
@@ -263,6 +279,13 @@ def main(argv: list[str] | None = None) -> int:
                     help="caminho do audit-pack real do Guard (baixado do artifact do run "
                          "observado — bloqueador 5 da 3ª auditoria); mesmo schema que "
                          "tools/qa/guard/__main__.py grava")
+    ap.add_argument("--pr-diff-file", default=None,
+                    help="V3 (correção B2 da auditoria independente do PR #104): arquivo de TEXTO "
+                         "(não JSON) com o diff/patch real da PR, buscado por um passo do workflow "
+                         "via API somente-leitura da branch confiável — nunca do HEAD do PR. É a "
+                         "evidência principal da auditoria semântica; sem ele, MERGE-READY é "
+                         "bloqueado deterministicamente (ver coordinator/merge_card.py::"
+                         "aplicar_gate_diff)")
     ap.add_argument("--out", default=None, help="onde gravar o resultado OBSERVE em JSON")
     ap.add_argument("--comment-out", default=None,
                     help="V3 (Issue #99): quando o Coordinator roda em MODE=active-supervised e a "
@@ -333,7 +356,8 @@ def _observar(a: argparse.Namespace) -> dict | None:
     if a.github_event_name:
         event = _load_github_event(a.event, a.github_event_name, a.repo,
                                     pr_info_file=a.pr_info_file,
-                                    guard_audit_pack=a.guard_audit_pack)
+                                    guard_audit_pack=a.guard_audit_pack,
+                                    pr_diff_file=a.pr_diff_file)
         if event is None:
             print(
                 f"# Repasso Coordinator · OBSERVE\n\n"

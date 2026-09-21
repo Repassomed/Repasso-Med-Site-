@@ -220,6 +220,19 @@ def test_comment_out_flag_is_wired_into_the_real_invocation() -> None:
     print("OK  test_comment_out_flag_is_wired_into_the_real_invocation")
 
 
+def test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli() -> None:
+    """Correção B2 da auditoria independente do PR #104: o diff real da PR
+    precisa ser buscado pelo passo confiável (mesmo passo que já lê
+    número/rótulos da PR) e passado ao CLI via --pr-diff-file."""
+    texto = _ler()
+    idx = texto.index("Buscar dados reais da PR associada")
+    trecho = texto[idx: idx + 2200]
+    assert "mediaType: { format: 'diff' }" in trecho
+    assert "/tmp/pr-diff.patch" in trecho
+    assert "--pr-diff-file /tmp/pr-diff.patch" in texto
+    print("OK  test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli")
+
+
 def test_codeowners_covers_coordinator_and_workflows() -> None:
     """Issue #99, 'SEGURANÇA ANTES DE AUMENTAR PERMISSÕES': antes de dar
     ao Coordinator qualquer nova capacidade de escrita, o código
@@ -274,6 +287,7 @@ def main() -> int:
         test_issues_write_present_only_for_commenting_actions_write_still_absent,
         test_merge_card_comment_step_only_runs_when_comment_file_exists,
         test_comment_out_flag_is_wired_into_the_real_invocation,
+        test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli,
         test_codeowners_covers_coordinator_and_workflows,
     ]
     falhas = 0

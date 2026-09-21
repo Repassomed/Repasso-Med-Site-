@@ -24,6 +24,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from .github_event import COORDINATOR_COMMENT_MARKER
+
 # ---------------------------------------------------------------------------
 # 1. MERGE ≠ PUBLICAÇÃO (Issue #99, comentário 2)
 # ---------------------------------------------------------------------------
@@ -174,6 +176,29 @@ def aplicar_lei_das_questoes(decisao: str, *, envolve_questoes: bool,
     return "NEEDS-FIX", resultado
 
 
+def aplicar_gate_diff(decisao: str, *, diff_disponivel: bool, diff_truncado: bool) -> tuple[str, str | None]:
+    """Gate determinístico B2 (auditoria independente do PR #104): um
+    auditor não pode certificar MERGE-READY sem ter visto o diff real
+    inteiro. Só rebaixa MERGE-READY (nunca promove NEEDS-FIX), e só quando
+    ele de fato foi a decisão — mesmo padrão de ``aplicar_lei_das_questoes``.
+    Devolve (decisão, nota) — nota é ``None`` quando nada mudou."""
+    if decisao != "MERGE-READY":
+        return decisao, None
+    if not diff_disponivel:
+        return "NEEDS-FIX", (
+            "Nenhum diff real da PR foi fornecido a esta auditoria — o corpo da "
+            "PR sozinho não é evidência suficiente para MERGE-READY (Issue #99, "
+            "correção B2 da auditoria independente do PR #104)."
+        )
+    if diff_truncado:
+        return "NEEDS-FIX", (
+            "O diff real da PR foi truncado antes de chegar à auditoria — não "
+            "há garantia de que a mudança inteira foi revisada; tratado como "
+            "NEEDS-FIX por segurança."
+        )
+    return decisao, None
+
+
 # ---------------------------------------------------------------------------
 # 3. Renderização do Cartão de Merge
 # ---------------------------------------------------------------------------
@@ -198,6 +223,11 @@ def render_merge_card(dados: MergeCardInput) -> str:
     alvo = _alvo_por_publicacao(publicacao, list(dados.arquivos_alterados))
 
     L: list[str] = []
+    # Anti-self-loop (Issue #99, pedido explícito de José): sempre a
+    # primeira linha, para que github_event.py::_from_issue_comment
+    # reconheça e ignore qualquer comentário que ecoe este texto, mesmo
+    # publicado pela mesma identidade GitHub usada por José/agentes.
+    L.append(COORDINATOR_COMMENT_MARKER)
     L.append("## 🟣 CARTÃO DE MERGE — Coordinator V3 (auditoria automática, Issue #99)")
     L.append("")
     L.append(f"**PR:** #{dados.pr_number if dados.pr_number is not None else '-'}  ·  "

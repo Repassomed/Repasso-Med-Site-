@@ -94,15 +94,18 @@ name: Repasso Coordinator (OBSERVE)
 #
 # SEGURANÇA ANTES DE AUMENTAR PERMISSÕES (Issue #99): ``issues: write``
 # abaixo é a única permissão nova desta V3, e só é usada para postar um
-# comentário — nunca para fechar/reabrir/rotular. Antes desta rodada,
-# ``main`` não tinha proteção de branch nenhuma; ver ``.github/CODEOWNERS``
-# (novo nesta V3) para a camada de revisão obrigatória em
-# ``coordinator/**`` e ``.github/workflows/**`` — a ativação da regra de
-# "revisão exigida" em si (branch protection) é um passo manual do José em
-# Settings → Branches, documentado no Cartão de Merge/Checkpoint desta PR,
-# porque a API de branch protection não está no escopo de permissões deste
-# workflow (privilégio mínimo: não pedir mais do que o necessário para
-# comentar).
+# comentário — nunca para fechar/reabrir/rotular. ``main`` continua sem
+# nenhuma regra de proteção de branch/Ruleset (nenhum workflow deste
+# repositório tenta configurar isso via API — está fora do escopo de
+# permissões do Coordinator, privilégio mínimo). ``.github/CODEOWNERS``
+# (novo nesta V3) existe só como estrutura/documentação futura — a
+# auditoria independente do PR #104 (achado B3) recomendou explicitamente
+# NÃO ativar "Require review from Code Owners" agora, porque José e todos
+# os agentes Claude publicam pela MESMA identidade GitHub ("Repassomed"),
+# o que tornaria isso uma auto-revisão sem sentido. O passo manual que
+# falta é mais simples e cabe só a José, em Settings → Branches/Rulesets:
+# uma regra para "main" exigindo Pull Request, bloqueando force-push e
+# exigindo que os checks passem — com 0 approvals exigidas por enquanto.
 
 on:
   issue_comment:
@@ -214,6 +217,25 @@ jobs:
             }));
             console.log(`PR #${numero}: rótulos = ${pr.labels.map(l => l.name).join(', ')}`);
 
+            // Correção B2 da auditoria independente do PR #104: o corpo da
+            // PR é a declaração do worker, nunca prova do que mudou. Este
+            // passo já roda com o código confiável da branch padrão (nunca
+            // o HEAD do PR — ver o comentário no topo do arquivo); busca o
+            // diff REAL (texto puro, formato "diff") e escreve em arquivo
+            // próprio para o CLI ler via --pr-diff-file. O texto nunca é
+            // executado por este script nem por coordinator/**, só
+            // atravessa como dado até o prompt da auditoria — nunca
+            // segredo, nunca código deste repositório.
+            const diffResp = await github.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: numero,
+              mediaType: { format: 'diff' },
+            });
+            const diffTexto = typeof diffResp.data === 'string' ? diffResp.data : '';
+            fs.writeFileSync('/tmp/pr-diff.patch', diffTexto);
+            console.log(`Diff real da PR #${numero}: ${diffTexto.length} caracteres (truncamento por tamanho/custo acontece do lado do Coordinator, em coordinator/audit.py::preparar_diff).`);
+
       - name: Baixar o audit-pack real do Guard (artifact do run observado)
         if: github.event_name == 'workflow_run'
         continue-on-error: true # run antigo/sem artifact não pode derrubar o job
@@ -264,6 +286,7 @@ jobs:
           )
           [ -f /tmp/pr-info.json ] && ARGS+=(--pr-info-file /tmp/pr-info.json)
           [ -f /tmp/guard-audit-pack/guard-audit-pack.json ] && ARGS+=(--guard-audit-pack /tmp/guard-audit-pack/guard-audit-pack.json)
+          [ -s /tmp/pr-diff.patch ] && ARGS+=(--pr-diff-file /tmp/pr-diff.patch)
 
           python3 -m coordinator "${ARGS[@]}"
           echo "resultado=$?" >> "$GITHUB_OUTPUT"

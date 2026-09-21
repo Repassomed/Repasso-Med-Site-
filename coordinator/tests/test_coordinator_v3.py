@@ -199,6 +199,51 @@ def test_guard_state_change_carries_head_sha_in_dedup_fields() -> None:
     print("OK  test_guard_state_change_carries_head_sha_in_dedup_fields")
 
 
+def test_comment_with_coordinator_marker_is_ignored_even_from_trusted_actor() -> None:
+    """Anti-self-loop (Issue #99): um comentário que ecoe a própria saída
+    do Coordinator (marcador COORDINATOR_COMMENT_MARKER) nunca pode virar
+    um evento novo — mesmo publicado pela identidade 'Repassomed', a MESMA
+    usada por José e por todos os agentes neste projeto."""
+    from coordinator.github_event import COORDINATOR_COMMENT_MARKER
+
+    corpo = COORDINATOR_COMMENT_MARKER + "\n## 🟣 CARTÃO DE MERGE\n\nEntraram questões novas da prova."
+    payload = {
+        "action": "created",
+        "issue": {"number": 88},
+        "comment": {"id": 4242, "body": corpo, "user": {"login": "Repassomed"}},
+    }
+    assert build_event_from_github_context("issue_comment", payload, REPO) is None
+    print("OK  test_comment_with_coordinator_marker_is_ignored_even_from_trusted_actor")
+
+
+def test_rendered_merge_card_always_carries_the_marker() -> None:
+    from coordinator.github_event import COORDINATOR_COMMENT_MARKER
+
+    dados = merge_card.MergeCardInput(
+        pr_number=1, titulo="x", area="materia", guard_result="APROVADO",
+        audit_decision="NEEDS-FIX", audit_rationale="x", envolve_questoes=False,
+        lei_das_questoes=None,
+    )
+    texto = merge_card.render_merge_card(dados)
+    assert texto.startswith(COORDINATOR_COMMENT_MARKER)
+    print("OK  test_rendered_merge_card_always_carries_the_marker")
+
+
+def test_comment_without_marker_from_trusted_actor_still_works() -> None:
+    """A correção do marcador não pode quebrar o caminho normal de
+    comentário confiável (regressão)."""
+    payload = {
+        "action": "created",
+        "issue": {"number": 88},
+        "comment": {"id": 4243, "body": "Entraram questões novas de Farmacología II.",
+                    "user": {"login": "Repassomed"}},
+    }
+    ev = build_event_from_github_context("issue_comment", payload, REPO)
+    assert ev is not None
+    assert ev.event_type is EventType.INBOX_COMMENT
+    print("OK  test_comment_without_marker_from_trusted_actor_still_works")
+
+
 # ---------------------------------------------------------------------------
 # 3. config.py — active-supervised é aditivo.
 # ---------------------------------------------------------------------------
@@ -354,6 +399,12 @@ def test_render_merge_card_contains_merge_publicacao_alvo_apos_publicar() -> Non
 # 6. observe.py de ponta a ponta — o fluxo completo da V3.
 # ---------------------------------------------------------------------------
 
+_DIFF_REAL_EXEMPLO = (
+    "diff --git a/farmacologia-ii.html b/farmacologia-ii.html\n"
+    "+<p>Novo parágrafo didático.</p>\n"
+)
+
+
 def _evento_pr_materia(*, run_id: int, head_sha: str, body: str, titulo: str = "Farmacología II — provas"):
     payload = {
         "action": "completed",
@@ -367,9 +418,11 @@ def _evento_pr_materia(*, run_id: int, head_sha: str, body: str, titulo: str = "
 
 
 def _observar_pr_materia(*, head_sha: str, body: str, audit_pack: dict | None = None,
-                          transport=None, dedup=None, ledger=None, audit_mode=True, run_id=1):
+                          transport=None, dedup=None, ledger=None, audit_mode=True, run_id=1,
+                          pr_diff: str | None = None):
     payload, pr_info = _evento_pr_materia(run_id=run_id, head_sha=head_sha, body=body)
-    ev = build_event_from_github_context("workflow_run", payload, REPO, pr_info=pr_info, audit_pack=audit_pack)
+    ev = build_event_from_github_context("workflow_run", payload, REPO, pr_info=pr_info,
+                                          audit_pack=audit_pack, pr_diff=pr_diff)
     cfg = Config(enabled=True, mode=ACTIVE_SUPERVISED_MODE if audit_mode else ALLOWED_MODE)
     return observe(ev, config=cfg, dedup=dedup, ledger=ledger, workers=_workers(),
                     transport=transport, audit_mode=audit_mode)
@@ -403,7 +456,7 @@ def test_audit_merge_ready_without_questoes() -> None:
         ledger = UsageLedger(os.path.join(tmp, "usage.json"))
         t = _TransporteContador(_RespostaFalsa("DECISÃO: MERGE-READY\nTudo certo."))
         r = _observar_pr_materia(head_sha="mr1", body="ajuste de prosa didática, sem nada relacionado a avaliação",
-                                  transport=t, dedup=dedup, ledger=ledger)
+                                  transport=t, dedup=dedup, ledger=ledger, pr_diff=_DIFF_REAL_EXEMPLO)
         assert r.status == "OBSERVED"
         assert r.audit_decision == "MERGE-READY"
         assert t.calls == 1
@@ -432,9 +485,71 @@ def test_audit_merge_ready_survives_with_full_report() -> None:
         dedup = Deduplicator(InMemoryStore())
         ledger = UsageLedger(os.path.join(tmp, "usage.json"))
         t = _TransporteContador(_RespostaFalsa("DECISÃO: MERGE-READY\nRelatório completo, tudo correto."))
-        r = _observar_pr_materia(head_sha="lq2", body=corpo, transport=t, dedup=dedup, ledger=ledger)
+        r = _observar_pr_materia(head_sha="lq2", body=corpo, transport=t, dedup=dedup, ledger=ledger,
+                                  pr_diff=_DIFF_REAL_EXEMPLO)
         assert r.audit_decision == "MERGE-READY"
     print("OK  test_audit_merge_ready_survives_with_full_report")
+
+
+def test_audit_merge_ready_blocked_without_real_diff() -> None:
+    """Correção B2 da auditoria independente do PR #104: o auditor não pode
+    certificar MERGE-READY vendo só o corpo da PR — sem diff real, mesmo
+    um 'DECISÃO: MERGE-READY' do LLM tem que ser rebaixado."""
+    with tempfile.TemporaryDirectory() as tmp:
+        dedup = Deduplicator(InMemoryStore())
+        ledger = UsageLedger(os.path.join(tmp, "usage.json"))
+        t = _TransporteContador(_RespostaFalsa("DECISÃO: MERGE-READY\nParece tudo certo."))
+        r = _observar_pr_materia(head_sha="nd1", body="ajuste de prosa didática", transport=t,
+                                  dedup=dedup, ledger=ledger, pr_diff=None)
+        assert r.audit_decision == "NEEDS-FIX", "sem diff real, nunca pode ser MERGE-READY"
+        assert "diff" in r.merge_card.lower()
+    print("OK  test_audit_merge_ready_blocked_without_real_diff")
+
+
+def test_audit_merge_ready_blocked_with_truncated_diff() -> None:
+    diff_enorme = "diff --git a/x b/x\n" + ("+linha nova\n" * 5000)
+    assert len(diff_enorme) > audit.MAX_DIFF_CHARS
+    with tempfile.TemporaryDirectory() as tmp:
+        dedup = Deduplicator(InMemoryStore())
+        ledger = UsageLedger(os.path.join(tmp, "usage.json"))
+        t = _TransporteContador(_RespostaFalsa("DECISÃO: MERGE-READY\nParece tudo certo."))
+        r = _observar_pr_materia(head_sha="td1", body="ajuste de prosa didática", transport=t,
+                                  dedup=dedup, ledger=ledger, pr_diff=diff_enorme)
+        assert r.audit_decision == "NEEDS-FIX", "diff truncado nunca pode sustentar MERGE-READY"
+    print("OK  test_audit_merge_ready_blocked_with_truncated_diff")
+
+
+def test_guard_state_change_hard_fail_yields_needs_fix_with_zero_api_cost() -> None:
+    """B1 da auditoria independente do PR #104: o atalho sem custo tinha
+    que valer para QUALQUER evento com HARD FAIL no audit-pack em
+    active-supervised, não só PR_NEEDS_AUDIT+tipo A. Um GUARD_STATE_CHANGE
+    vermelho de verdade, com HARD FAIL já no audit-pack, não pode gastar
+    STANDARD."""
+    audit_pack = {
+        "versao": 1, "resultado": "REPROVADO",
+        "achados": [{"check": "segredos", "severity": "HARD FAIL", "message": "possível segredo commitado",
+                      "where": "coordinator/observe.py", "detail": {}}],
+        "arquivos_alterados": ["coordinator/observe.py"],
+    }
+    payload = {
+        "action": "completed",
+        "workflow_run": {"name": "Repasso Guard", "conclusion": "failure", "id": 1,
+                          "head_sha": "gsc1", "pull_requests": [{"number": 201}]},
+    }
+    ev = build_event_from_github_context("workflow_run", payload, REPO, audit_pack=audit_pack)
+    with tempfile.TemporaryDirectory() as tmp:
+        dedup = Deduplicator(InMemoryStore())
+        ledger = UsageLedger(os.path.join(tmp, "usage.json"))
+        cfg = Config(enabled=True, mode=ACTIVE_SUPERVISED_MODE)
+        t = _TransporteContador(_RespostaFalsa("nunca devia chegar aqui"))
+        r = observe(ev, config=cfg, dedup=dedup, ledger=ledger, workers=_workers(),
+                     transport=t, audit_mode=True)
+        assert r.status == "OBSERVED"
+        assert r.audit_decision == "NEEDS-FIX"
+        assert r.call_attempted is False
+        assert t.calls == 0, "HARD FAIL do Guard tem que cortar a chamada mesmo fora do caminho PR_NEEDS_AUDIT+tipo A"
+        assert r.should_comment is True
+    print("OK  test_guard_state_change_hard_fail_yields_needs_fix_with_zero_api_cost")
 
 
 def test_audit_scope_restricted_to_pr_needs_audit_type_a() -> None:
@@ -453,6 +568,20 @@ def test_audit_scope_restricted_to_pr_needs_audit_type_a() -> None:
         assert r.should_comment is False
         assert t.calls == 1, "o caminho V2 (resumo genérico) continua fazendo sua chamada normal"
     print("OK  test_audit_scope_restricted_to_pr_needs_audit_type_a")
+
+
+def test_invalid_protocol_response_never_becomes_merge_ready_end_to_end() -> None:
+    """Prova de ponta a ponta (não só a unidade parse_decision): mesmo com
+    diff real e Lei das Questões satisfeita, uma resposta do LLM fora do
+    protocolo nunca pode resultar em MERGE-READY."""
+    with tempfile.TemporaryDirectory() as tmp:
+        dedup = Deduplicator(InMemoryStore())
+        ledger = UsageLedger(os.path.join(tmp, "usage.json"))
+        t = _TransporteContador(_RespostaFalsa("Acho que ficou bom, pode seguir."))
+        r = _observar_pr_materia(head_sha="ip1", body="ajuste de prosa didática", transport=t,
+                                  dedup=dedup, ledger=ledger, pr_diff=_DIFF_REAL_EXEMPLO)
+        assert r.audit_decision == "NEEDS-FIX"
+    print("OK  test_invalid_protocol_response_never_becomes_merge_ready_end_to_end")
 
 
 def test_observe_mode_never_runs_the_audit_path() -> None:
@@ -512,6 +641,9 @@ def main() -> int:
         test_pr_needs_audit_carries_head_sha_audit_pack_and_body,
         test_pr_needs_audit_without_materia_area_leaves_materia_none,
         test_guard_state_change_carries_head_sha_in_dedup_fields,
+        test_comment_with_coordinator_marker_is_ignored_even_from_trusted_actor,
+        test_rendered_merge_card_always_carries_the_marker,
+        test_comment_without_marker_from_trusted_actor_still_works,
         test_active_supervised_mode_opens_gate_and_sets_flag,
         test_observe_mode_is_unaffected_by_the_new_mode,
         test_unknown_mode_still_blocked,
@@ -530,9 +662,13 @@ def main() -> int:
         test_aplicar_lei_das_questoes_nao_se_aplica_fora_de_prova,
         test_render_merge_card_contains_merge_publicacao_alvo_apos_publicar,
         test_guard_hard_fail_yields_needs_fix_with_zero_api_cost,
+        test_guard_state_change_hard_fail_yields_needs_fix_with_zero_api_cost,
         test_audit_merge_ready_without_questoes,
         test_audit_merge_ready_downgraded_by_lei_das_questoes,
         test_audit_merge_ready_survives_with_full_report,
+        test_audit_merge_ready_blocked_without_real_diff,
+        test_audit_merge_ready_blocked_with_truncated_diff,
+        test_invalid_protocol_response_never_becomes_merge_ready_end_to_end,
         test_audit_scope_restricted_to_pr_needs_audit_type_a,
         test_observe_mode_never_runs_the_audit_path,
         test_comment_out_writes_only_when_should_comment_and_card_present,

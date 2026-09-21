@@ -33,14 +33,19 @@ from dataclasses import dataclass, field
 
 from . import anthropic_client
 from .anthropic_transport import AnthropicTransport
-from .audit import AUDIT_SYSTEM_PROMPT, build_audit_prompt, parse_decision
+from .audit import AUDIT_SYSTEM_PROMPT, build_audit_prompt, parse_decision, preparar_diff
 from .budget import BudgetStatus, CallLimiter, UsageLedger, check_budget, priority_allowed
 from .classify import Classification, TaskType, classify
 from .config import Config
 from .context import MinimalContext, build_context
 from .dedup import Deduplicator
 from .events import Event, EventType
-from .merge_card import MergeCardInput, aplicar_lei_das_questoes, render_merge_card
+from .merge_card import (
+    MergeCardInput,
+    aplicar_gate_diff,
+    aplicar_lei_das_questoes,
+    render_merge_card,
+)
 from .redact import redact
 from .routing import RoutingDecision, decide as route_decide
 from .worker_registry import Worker, WorkerSuggestion, pick_worker
@@ -324,11 +329,21 @@ def observe(
     # Quando o próprio Guard já encontrou HARD FAIL (achado objetivo,
     # zero interpretação), a decisão é NEEDS-FIX por definição — pedir uma
     # auditoria STANDARD para "confirmar" isto gastaria uma chamada paga
-    # para reafirmar um fato que já é determinístico. Este atalho só
-    # existe dentro do caminho de auditoria (nunca no V2/OBSERVE puro) e
-    # não usa ``anthropic_client.call`` — zero custo, ``call_attempted``
-    # continua ``False``.
-    if executar_auditoria and contexto.guard_hard_fails:
+    # para reafirmar um fato que já é determinístico.
+    #
+    # Correção B1 da auditoria independente do PR #104: a condição ANTES
+    # dependia de ``executar_auditoria`` (só ``True`` para PR_NEEDS_AUDIT +
+    # tipo A), então um ``GUARD_STATE_CHANGE`` vermelho de verdade
+    # continuava sendo roteado por ``routing.py`` para STANDARD e podia
+    # gastar uma chamada real, mesmo com HARD FAIL objetivo já disponível
+    # no audit-pack. Agora a condição é só ``audit_mode`` (o modo
+    # active-supervised está ligado) + ``contexto.guard_hard_fails`` — vale
+    # para QUALQUER evento com HARD FAIL no audit-pack, não só o caminho de
+    # auditoria semântica de conteúdo. Em MODE=observe (``audit_mode=False``)
+    # esta condição nunca é verdadeira, então o comportamento V2 continua
+    # byte a byte o mesmo. Não usa ``anthropic_client.call`` — zero custo,
+    # ``call_attempted`` continua ``False``.
+    if audit_mode and contexto.guard_hard_fails:
         cartao = _montar_cartao_hard_fail(event, contexto, classificacao)
         return ObserveResult(
             status="OBSERVED",
@@ -364,6 +379,7 @@ def observe(
                 contexto,
                 pr_body=event.payload.get("body"),
                 envolve_questoes=bool(event.payload.get("envolve_questoes")),
+                pr_diff=event.payload.get("pr_diff"),
             ),
             limiter=limitador,
         )
@@ -393,14 +409,26 @@ def observe(
     if executar_auditoria:
         if resultado_chamada.status == "ok":
             decisao_llm = parse_decision(chamada_sanitizada["text"] or "")
-            decisao_final, lei_das_questoes = aplicar_lei_das_questoes(
+            decisao_pos_lei, lei_das_questoes = aplicar_lei_das_questoes(
                 decisao_llm.decision,
                 envolve_questoes=bool(event.payload.get("envolve_questoes")),
                 pr_body=event.payload.get("body"),
             )
+            # Correção B2 da auditoria independente do PR #104: mesmo que a
+            # Lei das Questões não tenha rebaixado nada, um MERGE-READY só
+            # vale se o auditor de fato viu o diff real inteiro. Gate
+            # aplicado por último — só pode rebaixar, nunca promover (mesmo
+            # padrão de aplicar_lei_das_questoes).
+            diff_info = preparar_diff(event.payload.get("pr_diff"))
+            decisao_final, nota_diff = aplicar_gate_diff(
+                decisao_pos_lei, diff_disponivel=diff_info.disponivel, diff_truncado=diff_info.truncado,
+            )
+            rationale_final = decisao_llm.rationale
+            if nota_diff:
+                rationale_final = f"{rationale_final}\n\n{nota_diff}"
             audit_decision_final = decisao_final
             cartao_final = _render_cartao(
-                event, contexto, decisao_final, decisao_llm.rationale,
+                event, contexto, decisao_final, rationale_final,
                 lei_das_questoes=lei_das_questoes,
                 envolve_questoes=bool(event.payload.get("envolve_questoes")),
                 protocol_matched=decisao_llm.protocol_matched,
