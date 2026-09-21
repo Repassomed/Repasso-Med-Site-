@@ -9,12 +9,16 @@ import sys
 
 from . import (
     test_anthropic_client,
+    test_anthropic_transport,
     test_budget,
     test_classify_routing,
     test_config_gate,
     test_dedup,
+    test_git_state,
+    test_github_event,
     test_no_forbidden_writes,
     test_observe_pipeline,
+    test_observe_real_path,
     test_redact,
 )
 
@@ -26,6 +30,10 @@ MODULOS = [
     test_budget,
     test_anthropic_client,
     test_observe_pipeline,
+    test_git_state,
+    test_anthropic_transport,
+    test_github_event,
+    test_observe_real_path,
     test_no_forbidden_writes,
 ]
 

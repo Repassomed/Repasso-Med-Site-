@@ -17,12 +17,20 @@ import re
 
 _RE_ANTHROPIC_KEY = re.compile(r"sk-ant-[A-Za-z0-9_\-]{10,}")
 _RE_GENERIC_LONG_KEY = re.compile(r"\bsk-[A-Za-z0-9]{20,}\b")
+# Credencial embutida numa URL (ex.: https://x-access-token:ghp_...@github.com/...),
+# o padrão que coordinator/git_state.py usa para dar push na branch de estado
+# com o GITHUB_TOKEN do workflow. Um erro de git (repositório não encontrado,
+# autenticação, etc.) ecoa a URL inteira na mensagem — sem isto, o token
+# vazaria pela primeira exceção de rede que aparecesse.
+_RE_URL_CREDENTIAL = re.compile(r"://[^/@\s:]+:[^/@\s]+@")
 
 MARCADOR = "[REDACTED:api-key]"
+MARCADOR_URL = "://[REDACTED:credential]@"
 
 
 def redact(texto: str) -> str:
-    """Troca qualquer trecho parecido com chave de API por um marcador.
+    """Troca qualquer trecho parecido com chave de API ou credencial de URL
+    por um marcador.
 
     Nunca lança exceção — se ``texto`` não for string, devolve como veio
     (quem chama decide se quer converter antes). Isso porque esta função
@@ -32,6 +40,7 @@ def redact(texto: str) -> str:
         return texto
     saida = _RE_ANTHROPIC_KEY.sub(MARCADOR, texto)
     saida = _RE_GENERIC_LONG_KEY.sub(MARCADOR, saida)
+    saida = _RE_URL_CREDENTIAL.sub(MARCADOR_URL, saida)
     return saida
 
 

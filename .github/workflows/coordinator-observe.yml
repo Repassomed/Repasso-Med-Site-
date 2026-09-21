@@ -14,17 +14,32 @@ name: Repasso Coordinator (OBSERVE)
 # Isto respeita ao pé da letra a Issue #95: "Enquanto ENABLED=false:
 # nenhuma chamada paga; nenhum Coordinator API roda."
 #
-# Eventos que este workflow observaria (Issue #95, "PRIMEIRO ALVO"):
+# Eventos que este workflow observa (Issue #95, "PRIMEIRO ALVO"):
 #   1. PR/checkpoint em NEEDS-AUDIT       (pull_request: labeled)
 #   2. checkpoint BLOCKED-LIMIT           (issue_comment: created, em qualquer issue)
 #   3. comentário novo na Issue #88       (issue_comment: created, issue 88)
 #   4. Guard muda de estado               (workflow_run: completed, "Repasso Guard")
 #
-# Nesta rodada (infra + testes), o job de verdade não constrói o payload
-# de evento a partir do contexto do GitHub Actions ainda — isso fica para
-# quando ENABLED=true for uma decisão tomada, com o primeiro teste
-# controlado descrito na Issue #95. O que existe aqui é o gate real e
-# funcional: o workflow existe, mas fica inerte enquanto ENABLED=false.
+# BLOQUEADOR 1 da segunda auditoria (PR #97), agora fechado: o caminho
+# real GitHub -> evento -> Coordinator -> Anthropic -> saída OBSERVE existe
+# de ponta a ponta (coordinator/github_event.py monta o Event a partir do
+# payload de $GITHUB_EVENT_PATH; coordinator/anthropic_transport.py é o
+# Transport real, usado por padrão). Continua inerte enquanto ENABLED=false
+# — o que muda é que agora existe algo de verdade para ligar, não um
+# placeholder.
+#
+# BLOQUEADOR 2, agora fechado: --dedup-git-remote/--usage-git-remote
+# apontam para o MESMO repositório, numa branch dedicada (nunca 'main',
+# nunca mesclada, nunca toca matéria — ver coordinator/git_state.py e
+# coordinator/tests/test_git_state.py). Isso persiste dedup e custo entre
+# execuções independentes deste workflow, que de outro modo começariam do
+# zero a cada runner efêmero.
+#
+# Escopo desta entrega (não escondido, só explícito): o resultado OBSERVE
+# vai para o log do job e para um artifact — este workflow NÃO comenta
+# automaticamente no PR/Issue ainda. A correção exigida pela auditoria do
+# PR #97 pede "produzir saída OBSERVE", não publicar comentário; publicar
+# fica para uma decisão explícita futura.
 
 on:
   pull_request:
@@ -48,11 +63,16 @@ jobs:
     # o job não roda. Nada de runner, nada de Python, nada de custo.
     if: ${{ vars.REPASSO_COORDINATOR_ENABLED == 'true' }}
     runs-on: ubuntu-latest
+    # contents:write só é usado para publicar a branch de estado dedicada
+    # (coordinator-state-*, nunca 'main', nunca matéria — ver
+    # coordinator/git_state.py e o teste que prova isso estruturalmente).
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Python (só biblioteca padrão)
+      - name: Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -69,10 +89,41 @@ jobs:
           print(f'Portão: {\"ABERTO\" if gate.open else \"FECHADO\"} — {gate.reason}')
           "
 
-      - name: (placeholder) construir evento a partir do contexto do GitHub
+      - name: Instalar o SDK da Anthropic (só dentro deste job condicionado)
+        run: pip install -q -r coordinator/requirements.txt
+
+      - name: Rodar o Coordinator sobre o evento real
+        id: coordinator
+        env:
+          # Único lugar que a chave existe: o GitHub Secret, exposto só
+          # como variável de ambiente deste passo — nunca em código, nunca
+          # logada (coordinator/anthropic_transport.py só lê de env, e
+          # coordinator/redact.py sanitiza qualquer eco em erro).
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          echo "Esta rodada (Issue #95) entrega a infraestrutura e os testes."
-          echo "A construção do payload de evento real a partir do contexto do"
-          echo "GitHub Actions, e a chamada de --out para comentar no PR/Issue,"
-          echo "ficam para a decisão explícita do 'primeiro teste controlado'"
-          echo "descrita na Issue #95 — não fazem parte desta entrega."
+          set +e
+          # Remoto com o GITHUB_TOKEN embutido, só para dar push na branch
+          # de estado dedicada (contents:write acima). O GitHub mascara
+          # automaticamente qualquer log que contenha secrets.GITHUB_TOKEN;
+          # como reforço adicional, qualquer erro de git que ecoasse esta
+          # URL também passa por coordinator/redact.py antes de aparecer em
+          # qualquer resultado (ver test_redact_masks_url_embedded_credential).
+          REMOTO_COM_TOKEN="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+          python3 -m coordinator \
+            --github-event-name "${{ github.event_name }}" \
+            --event "${{ github.event_path }}" \
+            --repo "${{ github.repository }}" \
+            --dedup-git-remote "$REMOTO_COM_TOKEN" \
+            --usage-git-remote "$REMOTO_COM_TOKEN" \
+            --out /tmp/coordinator-observe.json
+          echo "resultado=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar o resultado OBSERVE como artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repasso-coordinator-observe
+          path: /tmp/coordinator-observe.json
+          retention-days: 30
+          if-no-files-found: ignore

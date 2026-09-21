@@ -37,8 +37,28 @@ def test_redact_is_noop_on_clean_text() -> None:
     print("OK  test_redact_is_noop_on_clean_text")
 
 
+def test_redact_masks_url_embedded_credential() -> None:
+    """coordinator/git_state.py dá push usando uma URL com o GITHUB_TOKEN
+    embutido (https://x-access-token:TOKEN@github.com/...) — um erro de
+    git pode ecoar essa URL inteira. Sem isto, o token vazaria."""
+    token_falso = "ghp_" + "A1b2C3d4E5f6G7h8I9j0" * 2
+    texto = (
+        f"fatal: repository 'https://x-access-token:{token_falso}@github.com/"
+        "Repassomed/Repasso-Med-Site-.git/' not found"
+    )
+    limpo = redact(texto)
+    assert token_falso not in limpo, "o token embutido na URL vazou do redact()"
+    assert "[REDACTED:credential]" in limpo
+    print("OK  test_redact_masks_url_embedded_credential")
+
+
 def main() -> int:
-    testes = [test_redact_masks_anthropic_key, test_redact_mapping_recurses, test_redact_is_noop_on_clean_text]
+    testes = [
+        test_redact_masks_anthropic_key,
+        test_redact_mapping_recurses,
+        test_redact_is_noop_on_clean_text,
+        test_redact_masks_url_embedded_credential,
+    ]
     falhas = 0
     for t in testes:
         try:

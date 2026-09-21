@@ -126,10 +126,14 @@ def test_deep_disabled_by_default_downgrades_to_standard() -> None:
 def test_model_ids_match_official_docs() -> None:
     from coordinator.models import MODEL_IDS
 
-    assert MODEL_IDS[ModelTier.FAST] == "claude-haiku-4-5"
+    # Confirmado ao vivo em platform.claude.com/docs/en/models/overview
+    # (bloqueador 3 da auditoria do PR #97) — Haiku 4.5 usa o snapshot
+    # pinado como "Claude API ID"; claude-haiku-4-5 é o alias, não errado,
+    # mas não é a forma canônica que a doc lista primeiro.
+    assert MODEL_IDS[ModelTier.FAST] == "claude-haiku-4-5-20251001"
     assert MODEL_IDS[ModelTier.STANDARD] == "claude-sonnet-5"
     assert MODEL_IDS[ModelTier.DEEP] == "claude-opus-5"
-    print("OK  test_model_ids_match_official_docs (confirmados via skill claude-api)")
+    print("OK  test_model_ids_match_official_docs (confirmados ao vivo em platform.claude.com)")
 
 
 def main() -> int:

@@ -1,6 +1,8 @@
 """CLI do Repasso Coordinator V2 — modo OBSERVE.
 
-Uso:
+Dois jeitos de dar o evento:
+
+1. formato interno (testes/uso manual):
 
     python3 -m coordinator --event evento.json \\
         --dedup-store /tmp/coordinator-seen.json \\
@@ -8,15 +10,33 @@ Uso:
         --workers workers.json \\
         --out /tmp/coordinator-observe.json
 
-``evento.json`` é um JSON com os mesmos campos de ``events.Event``:
-``{"raw_type": "...", "source": "...", "repo": "...", "identity": "...",
-"payload": {...}}``.
+   ``evento.json`` é um JSON com os mesmos campos de ``events.Event``:
+   ``{"raw_type": "...", "source": "...", "repo": "...", "identity": "...",
+   "payload": {...}}``.
 
-Este CLI nunca faz chamada de rede. Toda a segurança de "não chamar API
-paga" está em ``coordinator/config.py`` (o portão) e em
-``coordinator/anthropic_client.py`` (nenhum Transport real é injetado
-aqui) — não neste arquivo. Ele só monta o evento, roda o pipeline e
-imprime/grava o resultado.
+2. payload real do GitHub Actions (uso no workflow — bloqueador 1 da
+   auditoria do PR #97), passando o arquivo de
+   ``$GITHUB_EVENT_PATH`` e o nome do evento:
+
+    python3 -m coordinator --github-event-name pull_request \\
+        --event "$GITHUB_EVENT_PATH" --repo "$GITHUB_REPOSITORY" \\
+        --dedup-git-remote "$(git remote get-url origin)" \\
+        --usage-git-remote "$(git remote get-url origin)" \\
+        --out /tmp/coordinator-observe.json
+
+Persistência entre execuções independentes (bloqueador 2): ``--dedup-store``/
+``--usage-ledger`` continuam sendo arquivo local (default, preserva o
+comportamento já testado); ``--dedup-git-remote``/``--usage-git-remote``
+trocam para o backend compartilhado via git (``coordinator/git_state.py``)
+— use estes no workflow real, onde cada execução é um runner efêmero
+diferente.
+
+Este CLI só faz chamada de rede à Anthropic se TUDO isto for verdade ao
+mesmo tempo: ``REPASSO_COORDINATOR_ENABLED=true``, ``REPASSO_COORDINATOR_MODE=observe``,
+e o evento passar por todos os gates do pipeline — ver
+``coordinator/config.py`` e ``coordinator/anthropic_client.py``. O
+Transport real (``coordinator/anthropic_transport.py``) é usado por
+padrão, mas fica inerte até o portão abrir.
 """
 
 from __future__ import annotations
@@ -30,6 +50,8 @@ from .budget import UsageLedger
 from .config import Config
 from .dedup import Deduplicator, FileStore
 from .events import Event
+from .git_state import GitDedupStore, GitJsonStore, GitUsageLedger
+from .github_event import build_event_from_github_context
 from .observe import observe
 from .redact import redact_mapping
 from .worker_registry import Worker, WorkerState
@@ -45,6 +67,12 @@ def _load_event(path: str) -> Event:
         identity=dados.get("identity", ""),
         payload=dados.get("payload", {}),
     )
+
+
+def _load_github_event(path: str, event_name: str, repo: str) -> Event | None:
+    with open(path, encoding="utf-8") as fh:
+        payload = json.load(fh)
+    return build_event_from_github_context(event_name, payload, repo)
 
 
 def _load_workers(path: str | None) -> list[Worker]:
@@ -89,18 +117,58 @@ def render_human(result_dict: dict) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="repasso-coordinator", description="Coordinator V2 — modo OBSERVE.")
-    ap.add_argument("--event", required=True, help="arquivo JSON do evento")
-    ap.add_argument("--dedup-store", default=None, help="arquivo JSON para persistir eventos já vistos")
+    ap.add_argument("--event", required=True,
+                    help="arquivo JSON do evento (formato interno, ou o payload cru do "
+                         "GitHub quando --github-event-name é usado)")
+    ap.add_argument("--github-event-name", default=None,
+                    help="nome do evento do GitHub Actions (pull_request, issue_comment, "
+                         "workflow_run) — quando presente, --event é lido como o payload "
+                         "cru de $GITHUB_EVENT_PATH, não o formato interno")
+    ap.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY", ""),
+                    help="owner/repo — só usado junto com --github-event-name")
+    ap.add_argument("--dedup-store", default=None,
+                    help="arquivo LOCAL para persistir eventos já vistos (não sobrevive entre "
+                         "runners efêmeros — prefira --dedup-git-remote no workflow real)")
+    ap.add_argument("--dedup-git-remote", default=None,
+                    help="remoto git para dedup compartilhado entre execuções independentes "
+                         "(bloqueador 2 — ver coordinator/git_state.py)")
+    ap.add_argument("--dedup-git-branch", default="coordinator-state-dedup",
+                    help="branch dedicada para o estado de dedup (nunca 'main')")
     ap.add_argument("--usage-ledger", default=".coordinator-state/usage.json",
-                    help="arquivo JSON de uso/custo (append-only)")
+                    help="arquivo LOCAL de uso/custo (não sobrevive entre runners efêmeros — "
+                         "prefira --usage-git-remote no workflow real)")
+    ap.add_argument("--usage-git-remote", default=None,
+                    help="remoto git para o ledger de uso/custo compartilhado entre execuções")
+    ap.add_argument("--usage-git-branch", default="coordinator-state-usage",
+                    help="branch dedicada para o ledger de uso (nunca 'main')")
     ap.add_argument("--workers", default=None, help="arquivo JSON com o registro de workers (#82)")
     ap.add_argument("--out", default=None, help="onde gravar o resultado OBSERVE em JSON")
     a = ap.parse_args(argv)
 
     config = Config.from_env()
-    event = _load_event(a.event)
-    dedup = Deduplicator(FileStore(a.dedup_store) if a.dedup_store else None)
-    ledger = UsageLedger(a.usage_ledger)
+
+    if a.github_event_name:
+        event = _load_github_event(a.event, a.github_event_name, a.repo)
+        if event is None:
+            print(
+                f"# Repasso Coordinator · OBSERVE\n\n"
+                f"Evento do GitHub ({a.github_event_name!r}) não corresponde a nenhum tipo "
+                "que esta V2 reconhece — nada a fazer. Isto NÃO é um erro."
+            )
+            return 0
+    else:
+        event = _load_event(a.event)
+
+    if a.dedup_git_remote:
+        dedup = Deduplicator(GitDedupStore(GitJsonStore(a.dedup_git_remote, branch=a.dedup_git_branch)))
+    else:
+        dedup = Deduplicator(FileStore(a.dedup_store) if a.dedup_store else None)
+
+    if a.usage_git_remote:
+        ledger = GitUsageLedger(GitJsonStore(a.usage_git_remote, branch=a.usage_git_branch))
+    else:
+        ledger = UsageLedger(a.usage_ledger)
+
     workers = _load_workers(a.workers)
 
     resultado = observe(event, config=config, dedup=dedup, ledger=ledger, workers=workers)

@@ -4,17 +4,28 @@ A política #90 é explícita: o Coordinator usa NÍVEIS LÓGICOS, não nomes
 comerciais amarrados no código. O mapeamento muda; a lógica FAST/STANDARD/
 DEEP não.
 
-Mapeamento confirmado em 2026-09-20 — verificado nos docs oficiais da
-Anthropic (skill `claude-api` deste ambiente, tabela "Current Models",
-cache de 2026-06-24, ainda vigente) antes de codificar qualquer ID
-concreto, conforme pedido pela Issue #95:
+**Correção pós-auditoria do PR #97 (bloqueador 3).** A primeira versão
+deste arquivo usava ``claude-haiku-4-5`` para FAST, citando só a tabela em
+cache da skill `claude-api`. A auditoria independente pediu confirmação
+com a documentação oficial ATUAL — busquei
+https://platform.claude.com/docs/en/models/overview ao vivo em
+2026-09-21 e a linha "Claude API ID" da tabela "Compare models" traz:
 
-    FAST     = claude-haiku-4-5
-    STANDARD = claude-sonnet-5
-    DEEP     = claude-opus-5
+    Claude Sonnet 5    -> claude-sonnet-5
+    Claude Opus 5      -> claude-opus-5
+    Claude Haiku 4.5   -> claude-haiku-4-5-20251001
 
-Nenhum desses IDs leva sufixo de data — são os identificadores estáveis
-correntes. Se a Anthropic aposentar um deles, só este arquivo muda.
+A mesma tabela também lista ``claude-haiku-4-5`` como "Claude API alias"
+— um apontador de conveniência válido que resolve para o snapshot datado
+— então o alias curto NÃO estava errado tecnicamente. Mas a doc chama o
+snapshot datado de "Claude API ID" (a coluna primária/canônica), então é
+esse que este arquivo usa agora: elimina qualquer ambiguidade e não
+depende do alias continuar apontando para este snapshot específico no
+futuro.
+
+    FAST     = claude-haiku-4-5-20251001   (snapshot pinado; alias: claude-haiku-4-5)
+    STANDARD = claude-sonnet-5              (sem sufixo de data — é a forma canônica)
+    DEEP     = claude-opus-5                (sem sufixo de data — é a forma canônica)
 """
 
 from __future__ import annotations
@@ -32,7 +43,7 @@ class ModelTier(str, Enum):
 # Mapeamento nível lógico -> model id. Revisar periodicamente (Issue #90 §9),
 # sem mudar a lógica de roteamento.
 MODEL_IDS: dict[ModelTier, str] = {
-    ModelTier.FAST: "claude-haiku-4-5",
+    ModelTier.FAST: "claude-haiku-4-5-20251001",
     ModelTier.STANDARD: "claude-sonnet-5",
     ModelTier.DEEP: "claude-opus-5",
 }

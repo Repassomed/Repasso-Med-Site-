@@ -8,10 +8,19 @@ Ordem de decisão — cada passo pode encerrar o pipeline antes do próximo:
 4. montar contexto mínimo (Guard/GitHub, nunca o repo inteiro);
 5. escolher worker sugerido (registro, sem chamada);
 6. decidir nível de modelo (FAST/STANDARD/DEEP, sem chamada);
-7. checar orçamento (ledger local);
+7. checar orçamento (ledger, local ou compartilhado — ver git_state.py);
 8. SÓ ENTÃO, se o portão (Config.gate) estiver aberto e o orçamento
-   permitir, tentar uma chamada — que nesta V2 nunca acontece, porque
-   ENABLED=false sempre fecha o portão primeiro.
+   permitir, ``anthropic_client.call`` é de fato invocado — com um
+   Transport real por padrão (``anthropic_transport.AnthropicTransport``).
+   Continua inerte nesta V2 porque ``ENABLED=false`` sempre fecha o
+   portão primeiro; a chamada em si só acontece quando isso deixar de
+   ser verdade (decisão de José, não deste código).
+
+**Correção pós-auditoria do PR #97 (bloqueador 1):** antes, este módulo
+nunca chegava a chamar ``anthropic_client.call`` — o caminho parava em
+"portão aberto, mas nenhum Transport injetado". Agora o caminho real
+existe de ponta a ponta; o que continua impedindo uma chamada de
+acontecer é só o portão (``Config.gate``), exatamente como deveria ser.
 
 O resultado final é sempre um ``ObserveResult`` com tipo, prioridade,
 worker/modelo sugeridos e a próxima ação em português simples — mesmo
@@ -22,6 +31,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from . import anthropic_client
+from .anthropic_transport import AnthropicTransport
 from .budget import BudgetStatus, CallLimiter, UsageLedger, check_budget, priority_allowed
 from .classify import Classification, classify
 from .config import Config
@@ -30,6 +41,8 @@ from .dedup import Deduplicator
 from .events import Event
 from .routing import RoutingDecision, decide as route_decide
 from .worker_registry import Worker, WorkerSuggestion, pick_worker
+
+MAX_PROMPT_CHARS = 6_000
 
 
 @dataclass(frozen=True)
@@ -45,6 +58,9 @@ class ObserveResult:
     requires_jose_authorization: bool = False
     context_summary: str | None = None
     call_attempted: bool = False
+    call_status: str | None = None  # "ok" | "error" | "limited" | None (nunca tentada)
+    response_text: str | None = None
+    usage: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -59,6 +75,9 @@ class ObserveResult:
             "requires_jose_authorization": self.requires_jose_authorization,
             "context_summary": self.context_summary,
             "call_attempted": self.call_attempted,
+            "call_status": self.call_status,
+            "response_text": self.response_text,
+            "usage": self.usage,
         }
 
 
@@ -81,6 +100,29 @@ def _next_action_text(classification: Classification, routing: RoutingDecision,
     return " ".join(partes)
 
 
+def _build_prompt(contexto: MinimalContext) -> str:
+    """Prompt mínimo a partir do contexto — nunca o repositório inteiro."""
+    partes = [contexto.summary]
+    if contexto.guard_result:
+        partes.append(f"Resultado do Guard: {contexto.guard_result}")
+    if contexto.guard_hard_fails:
+        partes.append("HARD FAILs: " + "; ".join(contexto.guard_hard_fails))
+    if contexto.guard_warnings:
+        partes.append("Avisos: " + "; ".join(contexto.guard_warnings))
+    prompt = "\n".join(partes)
+    if len(prompt) > MAX_PROMPT_CHARS:
+        prompt = prompt[:MAX_PROMPT_CHARS] + "\n… [cortado]"
+    return prompt
+
+
+_SYSTEM_PROMPT = (
+    "Você é o Repasso Coordinator, em modo OBSERVE. Classifique o evento e "
+    "resuma o que um humano (José) precisa saber em 3 frases no máximo, em "
+    "português simples. Nunca decida correção científica sozinho. Nunca "
+    "proponha merge ou edição direta de matéria/Supabase/produção."
+)
+
+
 def observe(
     event: Event,
     *,
@@ -89,6 +131,7 @@ def observe(
     ledger: UsageLedger,
     workers: list[Worker] | None = None,
     deep_enabled: bool = False,
+    transport: anthropic_client.Transport | None = None,
 ) -> ObserveResult:
     # 1. Tipo de evento permitido?
     if not event.is_allowed:
@@ -153,15 +196,41 @@ def observe(
             **resultado_base,
         )
 
-    # Portão aberto e orçamento permite: aqui, e só aqui, uma V3 chamaria
-    # anthropic_client.call(...). Esta V2 marca o evento como processado
-    # (para não reprocessar) e devolve OBSERVED sem chamada real — nenhum
-    # Transport é injetado neste caminho, de propósito (ver anthropic_client.py).
+    # Portão aberto e orçamento permite: agora sim, uma chamada real é
+    # tentada — marca o evento como processado ANTES de chamar, para que
+    # mesmo uma falha/crash no meio da chamada nunca resulte em uma
+    # segunda tentativa para o mesmo evento (Issue #95: "evento repetido
+    # não gera nova chamada" vale acima de "recuperar de uma falha").
     dedup.mark_processed(chave)
+
+    limitador = CallLimiter()
+    pedido = anthropic_client.build_request(
+        roteamento.model_choice,
+        system=_SYSTEM_PROMPT,
+        prompt=_build_prompt(contexto),
+        limiter=limitador,
+    )
+    transporte_real = transport if transport is not None else AnthropicTransport()
+    resultado_chamada = anthropic_client.call(
+        config, pedido, transport=transporte_real, limiter=limitador, event_key=chave,
+    )
+
+    if resultado_chamada.status == "ok" and resultado_chamada.usage is not None:
+        ledger.append(resultado_chamada.usage)
+
+    # .to_dict() é quem sanitiza reason/text via redact() — nunca ler os
+    # atributos crus de CallResult para fora deste módulo (foi exatamente
+    # esse desvio que deixou uma chave falsa vazar num teste antes desta
+    # correção).
+    chamada_sanitizada = resultado_chamada.to_dict()
+
     return ObserveResult(
         status="OBSERVED",
-        reason="Portão aberto e orçamento permite — mas esta V2 não injeta um Transport real.",
+        reason=chamada_sanitizada["reason"],
         next_action=_next_action_text(classificacao, roteamento, worker),
-        call_attempted=False,
+        call_attempted=resultado_chamada.status not in ("blocked",),
+        call_status=resultado_chamada.status,
+        response_text=chamada_sanitizada["text"] or None,
+        usage=chamada_sanitizada.get("usage"),
         **resultado_base,
     )
