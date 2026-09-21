@@ -116,8 +116,9 @@ tipo menor. **Nenhuma tem erro científico, textual ou visual conhecido.**
   (≈7,4–8,0 × ≈1,0–3,0), cosquilleo faringolaríngeo × náuseas prévias, restos
   alimentarios, e as duas fórmulas de fecho.
 - **Conferido:** hemoptisis (sangre roja, espumosa, tos, pH alcalino) ✔ · hematemesis
-  (borra de café, restos alimentarios, pH ácido) ✔ · central (mucosas azules, SpO₂ < 90 %,
-  no mejora con calor) ✔ · periférica (acrocianosis, respeta mucosas, mejora al calentar) ✔
+  (borra de café, restos alimentarios, pH ácido) ✔ · central (mucosas azules, saturación
+  arterial baja / hipoxemia, sin corte numérico rígido, no mejora con calor) ✔ · periférica
+  (acrocianosis, respeta mucosas, mejora al calentar) ✔
 
 ### 4 · `semio2-b01-04-ruidos-respiratorios.webp` — 🟢 aprovada · **ADIÇÃO**
 
@@ -180,9 +181,11 @@ tipo menor. **Nenhuma tem erro científico, textual ou visual conhecido.**
   letra e a decisão de destino — hoje comprimido num terço da `s2-i17`.
 - **Conferido:** C confusão · U ureia > 7 mmol/L · R FR ≥ 30/min · B PAS < 90 **ou**
   PAD ≤ 60 mmHg · 65 idade ≥ 65 anos · 1 ponto por critério ✔ ·
-  0–1 ambulatorial · 2 valorar hospitalização · ≥ 3 grave ✔ — idêntico ao `figcaption`
-  que o site já publica. Mantém «CURB-65 no mide oxigenación: revise SpO₂ siempre» e
-  «No reemplaza el juicio clínico» ✔
+  0 ambulatorial · 1–2 considerar tratamento hospitalar · 3–4 tratamento hospitalar ✔ —
+  padrão da cátedra (Compilado, slide 19); **diverge** do `figcaption` que o site
+  publica hoje (`0–1 / 2 / ≥3`), que fica desatualizado e precisa ser corrigido antes
+  de qualquer integração (ver `PATCH-INTEGRACION-5-ASSETS.md`). Mantém «CURB-65 no
+  mide oxigenación: revise SpO₂ siempre» e «No reemplaza el juicio clínico» ✔
 
 ---
 

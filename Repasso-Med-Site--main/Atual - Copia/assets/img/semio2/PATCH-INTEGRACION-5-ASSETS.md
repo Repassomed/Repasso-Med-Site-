@@ -4,6 +4,11 @@
 > Ele foi montado, aplicado **numa cópia** e **verificado ponta a ponta**. Está aqui
 > pronto para quem tiver o HTML reservado — hoje o PR #77 (`edit/c3-semiologia-ii-provas`),
 > que está aberto e aguardando auditoria sobre o mesmo arquivo.
+>
+> **Obrigatório antes de aplicar:** este patch foi testado sobre `84d31b8`, ANTES do
+> PR #77. Ele **precisa ser revalidado pelas âncoras de texto** (não pelos números de
+> linha) sobre o `semiologia-ii.html` que existir na `main` depois que o PR #77 for
+> mergeado ou fechado — não aplicar cegamente sobre uma base desatualizada.
 
 **Base verificada:** `semiologia-ii.html` em `main` `84d31b8`
 **md5 do arquivo sobre o qual o patch foi testado:** `2fa81ca7408905f71121c6388e75e977`
@@ -174,7 +179,7 @@ servida) e aparecem igualmente na versão sem patch.
 +
 +<figure class="s2-fig">
 +  <div class="s2-photo s2-i48" role="img" aria-label="Los cinco criterios del CURB-65 y la decisión de destino según el puntaje"></div>
-+  <figcaption><b>CURB-65, criterio por criterio</b> — Un punto por ítem: <b>C</b>onfusión &middot; <b>U</b>rea &gt; 7 mmol/L &middot; frecuencia <b>R</b>espiratoria &ge; 30/min &middot; <b>B</b>lood pressure, PAS &lt; 90 o PAD &le; 60 mmHg &middot; <b>65</b> años o más. Después, el destino: <b>0&ndash;1</b> bajo riesgo, manejo ambulatorio si el contexto lo permite; <b>2</b> valorar hospitalización; <b>&ge; 3</b> neumonía grave.
++  <figcaption><b>CURB-65, criterio por criterio</b> — Un punto por ítem: <b>C</b>onfusión &middot; <b>U</b>rea &gt; 7 mmol/L &middot; frecuencia <b>R</b>espiratoria &ge; 30/min &middot; <b>B</b>lood pressure, PAS &lt; 90 o PAD &le; 60 mmHg &middot; <b>65</b> años o más. Después, el destino: <b>0</b> ambulatorio; <b>1&ndash;2</b> considerar tratamiento hospitalario; <b>3&ndash;4</b> tratamiento hospitalario.
 +  <p class="s2-trap">&#9888; <b>Ojo:</b> el CURB-65 <b>no mide oxigenación</b> &mdash; revise siempre la SpO&#8322; &mdash; y no reemplaza el juicio clínico.</p></figcaption>
 +</figure>
 +
