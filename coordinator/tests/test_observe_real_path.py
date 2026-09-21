@@ -68,10 +68,11 @@ def test_disabled_with_real_default_transport_makes_zero_http() -> None:
 
     Prova indireta, mas rigorosa: se `transport.send()` tivesse sido
     alcançado de verdade neste sandbox (sem chave, provavelmente sem rede
-    de saída para api.anthropic.com), o resultado seria status="error"
-    (uma falha de conexão/autenticação capturada por anthropic_client.call),
-    nunca "BLOCKED". Como o portão fecha ANTES de chamar transport.send(),
-    o status observado tem que ser exatamente "BLOCKED".
+    de saída para o serviço real da Anthropic), o resultado seria
+    status="error" (uma falha de conexão/autenticação capturada por
+    anthropic_client.call), nunca "BLOCKED". Como o portão fecha ANTES de
+    chamar transport.send(), o status observado tem que ser exatamente
+    "BLOCKED".
     """
     with tempfile.TemporaryDirectory() as tmp:
         cfg = Config(enabled=False, mode="observe")

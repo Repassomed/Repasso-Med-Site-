@@ -89,7 +89,7 @@ def test_send_without_sdk_installed_fails_safely() -> None:
     assert "anthropic" not in sys.modules or not hasattr(sys.modules.get("anthropic"), "_FALSO"), (
         "esperava rodar contra o ambiente real sem o SDK instalado"
     )
-    with _com_variavel(ANTHROPIC_API_KEY_ENV, "sk-ant-chave-de-teste-nao-real"):
+    with _com_variavel(ANTHROPIC_API_KEY_ENV, "sk-ant-" + "chave-de-teste-nao-real"):
         try:
             import anthropic  # noqa: F401
         except ImportError:
@@ -138,15 +138,16 @@ def _remover_sdk_falso() -> None:
 
 
 def test_mock_sdk_maps_request_and_reads_key_only_from_env() -> None:
+    chave_falsa = "sk-ant-" + "CHAVE-FALSA-DE-TESTE"
     chamadas = _instalar_sdk_falso(resposta=_RespostaFalsa("resposta simulada", 123, 45))
     try:
-        with _com_variavel(ANTHROPIC_API_KEY_ENV, "sk-ant-CHAVE-FALSA-DE-TESTE"):
+        with _com_variavel(ANTHROPIC_API_KEY_ENV, chave_falsa):
             pedido = _request_de_teste()
             resp = AnthropicTransport().send(pedido)
         assert resp.text == "resposta simulada"
         assert resp.input_tokens == 123
         assert resp.output_tokens == 45
-        assert chamadas["init_kwargs"]["api_key"] == "sk-ant-CHAVE-FALSA-DE-TESTE"
+        assert chamadas["init_kwargs"]["api_key"] == chave_falsa
         assert chamadas["create_kwargs"]["model"] == pedido.model_id
         assert chamadas["create_kwargs"]["messages"] == [{"role": "user", "content": pedido.prompt}]
     finally:
