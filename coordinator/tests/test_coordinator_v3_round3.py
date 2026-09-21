@@ -263,6 +263,13 @@ def test_checkpoint_blocked_limit_pipeline_reports_pool_paused_zero_calls() -> N
 # ---------------------------------------------------------------------------
 
 def test_estimated_and_actual_cost_are_never_confused() -> None:
+    """Correção B2 da auditoria independente do PR #104, rodada 4: o valor
+    calculado a partir do usage medido nunca é rotulado "REAL" sozinho —
+    é sempre um CÁLCULO local (tokens medidos × tabela de preço), nunca
+    uma cobrança confirmada pelo provedor. O texto ainda distingue
+    claramente "nenhuma chamada tentada" (ESTIMADO) de "chamada com usage
+    medido" (CALCULADO) — só o rótulo "REAL" é que não pode mais aparecer
+    descrevendo o valor em dólar."""
     with tempfile.TemporaryDirectory() as tmp:
         ledger = UsageLedger(os.path.join(tmp, "usage.json"))
         resumo = costs.montar_resumo_custo(
@@ -275,7 +282,11 @@ def test_estimated_and_actual_cost_are_never_confused() -> None:
             ledger=ledger, brl_rate=5.11, brl_rate_date="2026-09-21", estimated_usd=None, actual_usd=0.002,
         )
         texto2 = costs.render_cost_block(resumo2)
-        assert "REAL" in texto2 and "ESTIMADO" not in texto2
+        assert "CALCULADO" in texto2 and "ESTIMADO" not in texto2
+        assert "REAL" not in texto2, (
+            "o custo calculado a partir do usage medido nunca pode ser rotulado "
+            "'REAL' sozinho — é um cálculo local, não uma cobrança confirmada pelo provedor"
+        )
     print("OK  test_estimated_and_actual_cost_are_never_confused")
 
 

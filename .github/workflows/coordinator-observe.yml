@@ -306,6 +306,23 @@ jobs:
           python3 -m coordinator "${ARGS[@]}"
           echo "resultado=$?" >> "$GITHUB_OUTPUT"
 
+          # Correção B1 da auditoria independente do PR #104, rodada 4:
+          # a função hashFiles() (linguagem de expressão do Actions) só
+          # enxerga arquivos dentro de GITHUB_WORKSPACE — /tmp fica FORA
+          # disso, então usá-la contra um caminho de /tmp no `if:` do passo
+          # seguinte avaliaria sempre como string vazia em produção
+          # (comentário nunca seria publicado, apesar de todos os testes
+          # locais/estruturais passarem, já que nenhum deles executa um
+          # runner real do Actions). O bash comum, ao contrário dessa
+          # função, lê /tmp sem problema — então é aqui, ainda em bash, que
+          # a existência dos dois arquivos é checada e publicada como
+          # output explícito para o próximo passo consultar.
+          if [ -s /tmp/coordinator-comment.md ] && [ -s /tmp/coordinator-comment-target.txt ]; then
+            echo "comment_ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "comment_ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publicar o resultado OBSERVE como artifact
         uses: actions/upload-artifact@v4
         if: always()
@@ -331,11 +348,26 @@ jobs:
         # para a PR) e gravou o número em
         # /tmp/coordinator-comment-target.txt. Este passo só lê esse
         # arquivo — nunca reconstrói a lógica de destino em JavaScript.
-        if: always() && hashFiles('/tmp/coordinator-comment.md') != '' && hashFiles('/tmp/coordinator-comment-target.txt') != ''
+        #
+        # Correção B1 da auditoria independente do PR #104, rodada 4: a
+        # função hashFiles() do Actions não enxerga /tmp (fica fora de
+        # GITHUB_WORKSPACE) — o `if:` abaixo antes chamava essa função
+        # contra um caminho de /tmp e por isso provavelmente NUNCA era
+        # verdadeiro em produção. Agora o `if:` consulta o output explícito
+        # `comment_ready`, gravado em bash pelo passo "Rodar o Coordinator"
+        # (bash lê /tmp normalmente — só aquela função da linguagem de
+        # expressão do Actions é restrita ao workspace). `fs.existsSync`
+        # abaixo continua como segunda camada de segurança dentro do
+        # próprio script.
+        if: always() && steps.coordinator.outputs.comment_ready == 'true'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
+            if (!fs.existsSync('/tmp/coordinator-comment.md') || !fs.existsSync('/tmp/coordinator-comment-target.txt')) {
+              console.log('Arquivo de comentário/destino ausente apesar de comment_ready=true — nada publicado.');
+              return;
+            }
             const corpo = fs.readFileSync('/tmp/coordinator-comment.md', 'utf8');
             const issueNumber = parseInt(fs.readFileSync('/tmp/coordinator-comment-target.txt', 'utf8').trim(), 10);
             if (!Number.isInteger(issueNumber)) {

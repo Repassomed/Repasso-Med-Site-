@@ -131,8 +131,26 @@ def test_comment_step_reads_explicit_target_never_infers_it() -> None:
     assert "context.eventName === 'issue_comment'" not in trecho, (
         "o workflow não pode mais reconstruir a lógica de destino sozinho"
     )
-    assert "hashFiles('/tmp/coordinator-comment-target.txt')" in trecho
+    assert "steps.coordinator.outputs.comment_ready" in trecho
     print("OK  test_comment_step_reads_explicit_target_never_infers_it")
+
+
+def test_hashfiles_against_tmp_is_never_used() -> None:
+    """Correção B1 da auditoria independente do PR #104, rodada 4:
+    hashFiles() é uma função da linguagem de expressão do GitHub Actions
+    e só enxerga arquivos dentro de GITHUB_WORKSPACE — chamá-la contra
+    /tmp/... (como o `if:` do passo de comentário fazia antes desta
+    correção) avalia sempre como string vazia em produção, deixando o
+    passo permanentemente pulado apesar de todos os testes locais
+    passarem (nenhum deles roda um runner real do Actions). Trava
+    estrutural: este padrão nunca pode voltar a aparecer no arquivo."""
+    texto = _ler()
+    assert "hashFiles('/tmp/" not in texto and 'hashFiles("/tmp/' not in texto, (
+        "hashFiles() não pode ser usado contra caminhos em /tmp — "
+        "GITHUB_WORKSPACE é a única árvore que ele enxerga; use um "
+        "output explícito (ex.: comment_ready) gravado em bash"
+    )
+    print("OK  test_hashfiles_against_tmp_is_never_used")
 
 
 def test_comment_target_out_flag_is_wired_into_the_real_invocation() -> None:
@@ -243,11 +261,14 @@ def test_merge_card_comment_step_only_runs_when_comment_file_exists() -> None:
     """O passo que comenta o Cartão de Merge só pode rodar quando o CLI
     gravou --comment-out (MODE=active-supervised com auditoria concluída)
     — nunca incondicionalmente, senão comentaria um arquivo vazio/antigo
-    em MODE=observe."""
+    em MODE=observe. Correção B1 (rodada 4): a condição usa o output
+    explícito comment_ready (gravado em bash), não hashFiles() contra
+    /tmp — e o script mantém fs.existsSync como segunda camada."""
     texto = _ler()
     idx = texto.index("- name: Comentar o Cartão de Merge")
-    trecho = texto[idx: idx + 2000]
-    assert "hashFiles('/tmp/coordinator-comment.md')" in trecho
+    trecho = texto[idx: idx + 2800]
+    assert "steps.coordinator.outputs.comment_ready == 'true'" in trecho
+    assert "fs.existsSync" in trecho
     assert "createComment" in trecho
     print("OK  test_merge_card_comment_step_only_runs_when_comment_file_exists")
 
@@ -330,6 +351,7 @@ def main() -> int:
         test_worker_state_git_remote_is_wired_into_the_real_invocation,
         test_comment_step_reads_explicit_target_never_infers_it,
         test_comment_target_out_flag_is_wired_into_the_real_invocation,
+        test_hashfiles_against_tmp_is_never_used,
     ]
     falhas = 0
     for t in testes:

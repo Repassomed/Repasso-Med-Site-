@@ -2,13 +2,20 @@
 auditoria independente do PR #104, rodada 2: "custos ainda não aparecem
 nos checkpoints").
 
-Regra absoluta desta unidade: ESTIMATIVA e REAL nunca se confundem no
-texto. ``estimated_usd`` só existe quando o pipeline sabe o custo ANTES
-de uma chamada acontecer (ou quando nenhuma chamada foi tentada, e por
-isso é sempre ``0.0``/zero); ``actual_usd`` só existe quando a própria
-API devolveu ``usage`` de verdade (o mesmo ``UsageRecord`` que
-``budget.py``/``anthropic_client.py`` já produzem — este módulo não
-inventa nenhum número novo, só formata o que já existe). O teto mensal
+Regra absoluta desta unidade: ESTIMATIVA-ANTES-DA-CHAMADA e
+CALCULADO-A-PARTIR-DO-USAGE nunca se confundem no texto, e nenhum dos
+dois é chamado de "REAL" sozinho. ``estimated_usd`` só existe quando o
+pipeline sabe o custo ANTES de uma chamada acontecer (ou quando nenhuma
+chamada foi tentada, e por isso é sempre ``0.0``/zero); ``actual_usd`` só
+existe quando a própria API devolveu ``usage`` de verdade — mas mesmo
+nesse caso o valor em dólar continua sendo um CÁLCULO local (tokens
+medidos × tabela de preço fixa em ``budget.py::_PRICE_PER_MTOK_USD``),
+não um valor que a Anthropic confirma ou cobra de volta (achado B2 da
+auditoria independente do PR #104, rodada 4: chamar isso de "REAL"
+sugeria uma cobrança confirmada pelo provedor, quando na verdade só os
+TOKENS são medidos/reais — o preço em USD é sempre derivado). Este
+módulo não inventa nenhum número novo, só formata o que já existe em
+``UsageRecord`` (``budget.py``/``anthropic_client.py``). O teto mensal
 continua em USD (``budget.MONTHLY_BUDGET_USD``); a conversão para BRL é
 só informativa, com taxa e data explícitas — nunca usada para decidir
 nada.
@@ -81,11 +88,12 @@ def render_cost_block(resumo: CostSummary) -> str:
         )
     if resumo.actual_usd is not None:
         L.append(
-            f"- custo REAL (medido pela API) desta chamada: {_fmt_usd(resumo.actual_usd)} "
-            f"({_fmt_brl(resumo.actual_usd, resumo.brl_rate)})"
+            f"- custo CALCULADO a partir do usage medido pela API desta chamada: "
+            f"{_fmt_usd(resumo.actual_usd)} ({_fmt_brl(resumo.actual_usd, resumo.brl_rate)}) "
+            "— tokens medidos × tabela de preço local, não uma cobrança confirmada pelo provedor"
         )
     else:
-        L.append("- custo REAL: nenhuma chamada com usage medido nesta execução")
+        L.append("- custo CALCULADO: nenhuma chamada com usage medido nesta execução")
     L.append(
         f"- gasto acumulado do mês: {_fmt_usd(resumo.month_to_date_usd)} / "
         f"US$ {resumo.monthly_budget_usd:.2f} ({_fmt_brl(resumo.month_to_date_usd, resumo.brl_rate)} / "

@@ -158,7 +158,7 @@ def test_b3_merge_ready_card_shows_real_cost_tier_model_and_calls() -> None:
         r = observe(ev, config=_cfg(), dedup=dedup, ledger=ledger, workers=[], audit_mode=True, transport=t)
 
         assert r.audit_decision == "MERGE-READY"
-        assert "custo REAL" in r.merge_card
+        assert "custo CALCULADO" in r.merge_card
         assert "STANDARD" in r.merge_card
         assert "claude-sonnet-5" in r.merge_card
         assert "chamadas pagas desta tarefa: 1" in r.merge_card
@@ -198,9 +198,10 @@ def test_b3_needs_fix_hard_fail_card_shows_zero_cost_block() -> None:
 
 
 def test_b3_ledger_failure_still_shows_real_usage_and_flags_persistence() -> None:
-    """Se o ledger falhar DEPOIS de uma chamada bem-sucedida, o custo REAL
-    continua visível (não escondido) e a falha de persistência é sinalizada
-    explicitamente — nunca confundida com 'nenhuma chamada foi tentada'."""
+    """Se o ledger falhar DEPOIS de uma chamada bem-sucedida, o custo
+    CALCULADO a partir do usage medido continua visível (não escondido) e
+    a falha de persistência é sinalizada explicitamente — nunca confundida
+    com 'nenhuma chamada foi tentada'."""
     ledger_falho = _LedgerQueSempreFalha("remoto de estado inalcançável")
     t = _TransporteContador(_RespostaFalsa("DECISÃO: NEEDS-FIX\nFalta corrigir X.", input_tokens=500, output_tokens=100))
     ev = _evento_pr_materia(head_sha="b3-3", body="ajuste de prosa didática")
@@ -210,7 +211,7 @@ def test_b3_ledger_failure_still_shows_real_usage_and_flags_persistence() -> Non
     assert r.call_status == "ok_ledger_failed"
     assert r.call_attempted is True
     assert r.audit_decision == "NEEDS-FIX"
-    assert "custo REAL" in r.merge_card, "o custo real não pode desaparecer só porque o ledger falhou"
+    assert "custo CALCULADO" in r.merge_card, "o custo calculado não pode desaparecer só porque o ledger falhou"
     assert "DESATUALIZADO" in r.merge_card, "a falha de persistência precisa ficar visível"
     print("OK  test_b3_ledger_failure_still_shows_real_usage_and_flags_persistence")
 

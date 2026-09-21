@@ -411,7 +411,45 @@ def observe(
     contexto = build_context(event)
 
     # 5. Worker sugerido.
+    #
+    # Correção B3 da auditoria independente do PR #104, rodada 4:
+    # ``pick_worker`` acima deriva de ``coordination/tasks.json``
+    # (declarativo, pode estar desatualizado) — é a única fonte em V2
+    # puro (``audit_mode=False``), mas em modo active-supervised o mesmo
+    # ``ObserveResult`` também alimenta a Inbox (#88), cuja sugestão de
+    # worker já vem SEMPRE de ``worker_registry.escolher_disponivel()``
+    # (ver ``_tratar_inbox_comment``). Sem reconciliar os dois, o mesmo
+    # evento podia produzir DUAS respostas contraditórias sobre "quem é o
+    # worker" — uma em ``resultado_base['worker_suggestion']``/
+    # ``next_action`` (histórico) e outra no comentário visível
+    # (operacional). Quando o registro operacional está disponível, ele
+    # vira a ÚNICA fonte também aqui — o histórico nunca é usado para
+    # anunciar um worker como "vai executar" nesse modo; o
+    # ``conflict_warning`` do registro declarativo (achado de
+    # inconsistência em tasks.json) continua sendo repassado, porque é um
+    # problema do ARQUIVO, não da disponibilidade ao vivo.
     worker = pick_worker(workers or [], area_hint=event.payload.get("area"))
+    if audit_mode and worker_registry is not None:
+        operacional = worker_registry.escolher_disponivel(capability_hint=event.payload.get("area"))
+        if operacional is not None:
+            worker = WorkerSuggestion(
+                worker=operacional.display_name,
+                reason=(
+                    f"{operacional.display_name} está AVAILABLE no registro operacional "
+                    "(fonte única de disponibilidade em modo active-supervised, nunca "
+                    "coordination/tasks.json — achado B3, auditoria independente rodada 4)."
+                ),
+                conflict_warning=worker.conflict_warning,
+            )
+        else:
+            worker = WorkerSuggestion(
+                worker=None,
+                reason=(
+                    "Nenhum worker AVAILABLE no registro operacional (active-supervised) — "
+                    "aguardar, mesmo que coordination/tasks.json sugerisse outro nome."
+                ),
+                conflict_warning=worker.conflict_warning,
+            )
 
     # 6. Roteamento de modelo.
     roteamento = route_decide(event, classificacao, deep_enabled=deep_enabled)
@@ -666,12 +704,15 @@ def observe(
             ledger_erro = redact(f"{type(exc).__name__}: {exc}")
 
     # Correção B3 da auditoria independente do PR #104, rodada 4: custo
-    # REAL (nunca chamado de "estimado") visível também em NEEDS-FIX/
-    # MERGE-READY — antes só os checkpoints zero-custo da Inbox mostravam
-    # este bloco. Quando a chamada teve usage real, ele vem sempre daqui
-    # (nunca do ledger, que pode ter falhado em persistir); quando a
-    # persistência falhou, isso fica sinalizado explicitamente no cartão,
-    # sem esconder que a chamada (e o custo) de fato aconteceu.
+    # CALCULADO a partir do usage medido (nunca chamado de "estimado", e —
+    # correção B2 da rodada 4 — nunca chamado de "REAL" sozinho, porque o
+    # valor em dólar é sempre um cálculo local a partir de tokens medidos,
+    # não uma cobrança confirmada pelo provedor) visível também em
+    # NEEDS-FIX/MERGE-READY — antes só os checkpoints zero-custo da Inbox
+    # mostravam este bloco. Quando a chamada teve usage real, ele vem
+    # sempre daqui (nunca do ledger, que pode ter falhado em persistir);
+    # quando a persistência falhou, isso fica sinalizado explicitamente no
+    # cartão, sem esconder que a chamada (e o custo) de fato aconteceu.
     cartao_final: str | None = None
     if executar_auditoria:
         if resultado_chamada.status == "ok" and resultado_chamada.usage is not None:
@@ -686,7 +727,7 @@ def observe(
                 cost_block += (
                     "\n- ⚠️ o \"gasto acumulado do mês\" acima pode estar DESATUALIZADO: "
                     f"o ledger não conseguiu persistir este registro ({ledger_erro}). O custo "
-                    "REAL desta chamada, listado acima, já aconteceu e não está escondido."
+                    "CALCULADO desta chamada, listado acima, já aconteceu e não está escondido."
                 )
         else:
             resumo_custo = montar_resumo_custo(
