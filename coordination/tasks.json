@@ -21,8 +21,14 @@
     "o mesmo arquivo. O Guard sinaliza a colisão."
   ],
   "versao": 1,
-  "atualizado_em": "2026-09-20",
-  "agentes_conhecidos": ["Claude 1", "Claude 2", "Claude 3", "Claude 4", "humano"],
+  "atualizado_em": "2026-09-21",
+  "agentes_conhecidos": [
+    "Claude 1",
+    "Claude 2",
+    "Claude 3",
+    "Claude 4",
+    "humano"
+  ],
   "estados_validos": [
     "READY",
     "IN-PROGRESS",
@@ -33,7 +39,13 @@
     "MERGE-READY",
     "DONE"
   ],
-  "areas_validas": ["materia", "infraestrutura", "assets", "documentacao", "ferramentas"],
+  "areas_validas": [
+    "materia",
+    "infraestrutura",
+    "assets",
+    "documentacao",
+    "ferramentas"
+  ],
   "tarefas": [
     {
       "id": "infra-coordinator-guard-v1",
@@ -69,13 +81,15 @@
       "objetivo": "Construir a infraestrutura do Coordinator (recebimento de evento, contexto mínimo, classificação, roteamento FAST/STANDARD/DEEP, dedup, limites, usage/custo, saída OBSERVE) mantendo REPASSO_COORDINATOR_ENABLED=false e MODE=observe — zero chamada paga nesta rodada.",
       "fonte": "Issue #95, políticas #82–#93",
       "agente": "Claude 2",
-      "estado": "NEEDS-AUDIT",
-      "dependencias": ["infra-coordinator-guard-v1"],
+      "estado": "DONE",
+      "dependencias": [
+        "infra-coordinator-guard-v1"
+      ],
       "branch": "infra/c2-coordinator-v2-observe",
       "pr": 97,
-      "commit": "458683b",
+      "commit": "36518da3e2d827ba6eaf730df2483006d30f0c93",
       "issue": 95,
-      "notas": "Quinta rodada (Claude 3, mesmo handoff): fechado o único blocker residual da auditoria final sobre o HEAD 4d8af69 — os 4 pontos do PACOTE CONSOLIDADO já tinham passado. Falha do ledger DEPOIS de uma chamada bem-sucedida: ledger.append() rodava sem try/except; uma exceção (ex.: GitUsageLedger/GitJsonStore.update() esgotando tentativas) subia incapturada até __main__.py, onde o resultado de erro gravava call_attempted=false/usage=null — apagando o rastro de uma chamada paga real. Corrigido em observe.py: ledger.append() agora está num try/except; em falha, devolve ObserveResult com status=OBSERVED, call_attempted=true, call_status='ok_ledger_failed' (valor novo), usage/response_text preservados a partir da chamada já sanitizada, reason explicando com o erro do ledger passado por redact(). Nenhum retry (o try/except só envolve a mesma chamada única a ledger.append() que já existia). __main__.py: mesma política de erro>job vermelho do bloqueador 7 — quando call_status=='ok_ledger_failed', grava --out normalmente e retorna 1. Teste novo (test_ledger_failure_after_call.py) cobre os 7 pontos exigidos: mock com sucesso+usage, ledger que lança (determinístico e GitUsageLedger real contra um bare remote com hook pre-receive que recusa push, leitura do orçamento intacta), exatamente 1 chamada e 1 tentativa de append, call_attempted=true, usage/tokens/custo visíveis, erro sanitizado (testado com credencial embutida), sem segunda chamada. Suite: 117 -> 121 testes, 18 -> 19 módulos. Guard local: 0 HARD FAIL. Não edita matéria, Supabase, produção. Não chama API paga. REPASSO_COORDINATOR_ENABLED continua false, MODE continua observe. Não faz merge. Aguardando nova auditoria independente."
+      "notas": "MERGEADO por José no PR #97 em 36518da3. Piloto real OBSERVE concluído com sucesso em 2026-09-21: 1 chamada FAST (177 in / 236 out), custo estimado US$ 0.001357, dedup e usage persistidos, zero retry. Coordinator permanece desligado após o piloto até nova liberação."
     },
     {
       "id": "semiologia-ii-b01-b04-provas",
@@ -125,14 +139,14 @@
       ],
       "objetivo": "Corrigir a herança de estilo no cierre e melhorar o bloco 07.",
       "fonte": "revisão visual",
-      "agente": "Claude 3",
+      "agente": null,
       "estado": "NEEDS-AUDIT",
       "dependencias": [],
       "branch": "fix/neurologia-cierre-layout",
       "pr": 80,
       "commit": "a7c5f3a",
       "issue": 67,
-      "notas": null
+      "notas": "PR #80 continua NEEDS-AUDIT, mas foi temporariamente desatribuído no pós-piloto para que Claude 3 finalize primeiro o PR #77 sem duas tarefas simultâneas. Reatribuir após resolver #77."
     },
     {
       "id": "ferramentas-highlights-ancoragem",
@@ -144,14 +158,14 @@
       ],
       "objetivo": "Tornar a ancoragem das marcações resistente a mudança de texto.",
       "fonte": "pedido do José",
-      "agente": "Claude 1",
+      "agente": null,
       "estado": "BLOCKED",
       "dependencias": [],
       "branch": "fix/highlights-ancoragem-segura",
       "pr": 66,
       "commit": "1f4e577",
       "issue": 67,
-      "notas": "Pausado por coordenação, conforme a Issue #67."
+      "notas": "Pausado por coordenação, conforme a Issue #67. Desatribuído no pós-piloto para não manter Claude 1 artificialmente em conflito no Worker Registry; continua BLOCKED até retomada explícita."
     },
     {
       "id": "ferramentas-lapiz-toolbox",
@@ -163,14 +177,14 @@
       ],
       "objetivo": "Corrigir o fechamento da toolbox e medir o tablet real.",
       "fonte": "pedido do José",
-      "agente": "Claude 1",
+      "agente": null,
       "estado": "BLOCKED",
       "dependencias": [],
       "branch": "fix/tools-v2-tablet-real",
       "pr": 64,
       "commit": "4a524a1",
       "issue": 67,
-      "notas": "Pausado; o teste físico não resolveu. Colide com ferramentas-highlights-ancoragem no mesmo arquivo — por isso os dois estão BLOCKED e não IN-PROGRESS."
+      "notas": "Pausado; o teste físico não resolveu. Desatribuído no pós-piloto para não manter Claude 1 artificialmente em conflito no Worker Registry; continua BLOCKED e não deve ser retomado sem nova decisão."
     },
     {
       "id": "semiologia-ii-b05-b10-gaps",
@@ -184,12 +198,35 @@
       "fonte": "mapa read-only na Issue #67",
       "agente": null,
       "estado": "BLOCKED",
-      "dependencias": ["semiologia-ii-b01-b04-provas"],
+      "dependencias": [
+        "semiologia-ii-b01-b04-provas"
+      ],
       "branch": null,
       "pr": null,
       "commit": null,
       "issue": 67,
       "notas": "BLOCKED porque o PR #77 tem o mesmo arquivo reservado. Só pode começar depois que o #77 for mergeado ou fechado. Os bloques 05–10 não têm nenhuma marcação de aluno, então a edição em si é segura."
+    },
+    {
+      "id": "infra-worker-registry-cleanup-post-pilot",
+      "titulo": "Worker Registry — limpeza pós-piloto do Coordinator V2",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordination/tasks.json"
+      ],
+      "objetivo": "Normalizar estados e atribuições após o piloto real do Coordinator V2, removendo conflitos artificiais sem apagar tarefas pendentes.",
+      "fonte": "Pós-piloto Coordinator V2 · Issues #82 e #95",
+      "agente": "humano",
+      "estado": "NEEDS-AUDIT",
+      "dependencias": [
+        "infra-coordinator-v2-observe"
+      ],
+      "branch": "infra/registry-cleanup-post-pilot",
+      "pr": null,
+      "commit": null,
+      "issue": 82,
+      "notas": "Mudança apenas operacional no registro: marca #97 como DONE; desatribui #64/#66 pausados; mantém Claude 1 somente no #78; mantém Claude 3 somente no #77 e deixa #80 pendente sem agente. Nenhuma matéria ou código do Coordinator é alterado."
     }
   ]
 }
