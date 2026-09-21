@@ -62,6 +62,7 @@ from .events import Event
 from .git_state import GitDedupStore, GitJsonStore, GitUsageLedger
 from .github_event import build_event_from_github_context
 from .observe import observe
+from .openai_config import OpenAIAuditorConfig
 from .redact import redact, redact_mapping
 from .worker_ops import DEFAULT_STATE_BRANCH, LocalJsonWorkerStateStore, OperationalWorkerRegistry
 from .worker_registry import Worker, WorkerState, load_workers_from_tasks_json
@@ -319,6 +320,17 @@ def main(argv: list[str] | None = None) -> int:
                          "--usage-git-remote")
     ap.add_argument("--worker-state-git-branch", default=DEFAULT_STATE_BRANCH,
                     help="branch dedicada para o Worker Registry operacional (nunca 'main')")
+    ap.add_argument("--openai-usage-ledger", default=".coordinator-state/usage-openai.json",
+                    help="arquivo LOCAL de uso/custo do OpenAI Auditor (Issue #106) — SEPARADO do "
+                         "ledger da Anthropic (--usage-ledger); não sobrevive entre runners "
+                         "efêmeros (prefira --openai-usage-git-remote no workflow real)")
+    ap.add_argument("--openai-usage-git-remote", default=None,
+                    help="remoto git para o ledger de uso/custo do OpenAI Auditor, compartilhado "
+                         "entre execuções — mesmo padrão de --usage-git-remote, mas numa branch "
+                         "própria (nunca a mesma branch/arquivo do ledger Anthropic)")
+    ap.add_argument("--openai-usage-git-branch", default="coordinator-state-usage-openai",
+                    help="branch dedicada para o ledger de uso do OpenAI Auditor (nunca 'main', "
+                         "nunca a mesma branch do ledger Anthropic)")
     ap.add_argument("--out", default=None, help="onde gravar o resultado OBSERVE em JSON")
     ap.add_argument("--comment-out", default=None,
                     help="V3 (Issue #99): quando o Coordinator roda em MODE=active-supervised e a "
@@ -434,9 +446,25 @@ def _observar(a: argparse.Namespace) -> dict | None:
     else:
         worker_registry = OperationalWorkerRegistry(LocalJsonWorkerStateStore(a.worker_state_store))
 
+    # OpenAI Auditor (Issue #106): portão/config lidos do ambiente sempre
+    # (mesmo padrão de Config.from_env() acima) — ``OpenAIAuditorConfig.
+    # enabled`` continua ``False`` enquanto a Variable
+    # REPASSO_OPENAI_AUDITOR_ENABLED não for exatamente "true" (produção
+    # hoje), então injetar isto aqui é estruturalmente inerte até José
+    # decidir ligar. O ledger é SEMPRE um armazenamento SEPARADO do
+    # ledger Anthropic — nunca o mesmo arquivo/branch.
+    openai_config = OpenAIAuditorConfig.from_env()
+    if a.openai_usage_git_remote:
+        openai_ledger = GitUsageLedger(
+            GitJsonStore(a.openai_usage_git_remote, branch=a.openai_usage_git_branch)
+        )
+    else:
+        openai_ledger = UsageLedger(a.openai_usage_ledger)
+
     resultado = observe(
         event, config=config, dedup=dedup, ledger=ledger, workers=workers,
         audit_mode=config.is_active_supervised, worker_registry=worker_registry,
+        openai_config=openai_config, openai_ledger=openai_ledger,
     )
     dados = resultado.to_dict()
     return redact_mapping(dados)

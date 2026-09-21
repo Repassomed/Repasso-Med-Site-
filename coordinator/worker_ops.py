@@ -69,6 +69,15 @@ class WorkerRecord:
         sempre calculado, nunca lido de um comando/JSON externo."""
         return True
 
+    @property
+    def can_publish(self) -> bool:
+        """Mesma prova estrutural de ``never_merge`` — Issue #106 pede
+        explicitamente ``can_publish=false`` para ``chatgpt-auditor`` (e,
+        pela mesma lógica, para qualquer worker): sempre ``False``, sempre
+        calculado, nunca lido de comando/JSON externo. Nenhum worker
+        publica/deploya — só José, fora deste pacote."""
+        return False
+
     def to_dict(self) -> dict:
         return {
             "worker_id": self.worker_id,
@@ -84,6 +93,7 @@ class WorkerRecord:
             "can_execute": self.can_execute,
             "can_audit": self.can_audit,
             "never_merge": True,  # sempre True no JSON também — nunca lido de volta como campo.
+            "can_publish": False,  # idem — sempre False no JSON também, nunca lido de volta.
         }
 
     @classmethod

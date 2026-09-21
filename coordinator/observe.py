@@ -32,14 +32,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import NamedTuple
 
-from . import anthropic_client
+from . import anthropic_client, openai_client
 from .anthropic_transport import AnthropicTransport
 from .audit import AUDIT_SYSTEM_PROMPT, build_audit_prompt, parse_decision, preparar_diff
 from .budget import BudgetStatus, CallLimiter, UsageLedger, check_budget, priority_allowed
 from .classify import Classification, TaskType, classify
 from .config import Config
 from .context import MinimalContext, build_context
-from .costs import montar_resumo_custo, render_cost_block
+from .costs import montar_resumo_custo, render_cost_block, render_provider_totals
 from .dedup import Deduplicator
 from .events import INBOX_ISSUE_NUMBER, Event, EventType
 from .handoff import decidir_handoff, decidir_pool
@@ -47,9 +47,22 @@ from .inbox_card import render_checkpoint, render_recebido
 from .merge_card import (
     MergeCardInput,
     aplicar_gate_diff,
+    aplicar_gate_openai,
     aplicar_lei_das_questoes,
     render_merge_card,
 )
+from .openai_audit import (
+    OPENAI_AUDITOR_SYSTEM_PROMPT,
+    OpenAIAuditDecision,
+    build_openai_audit_prompt,
+    escalada_justificada,
+    parse_openai_decision,
+    preparar_diff as preparar_diff_openai,
+)
+from .openai_budget import OpenAICallLimiter
+from .openai_config import OpenAIAuditorConfig
+from .openai_routing import TIER_ZERO as OPENAI_TIER_ZERO, decide as openai_route_decide
+from .openai_transport import OpenAIResponsesTransport
 from .redact import redact
 from .routing import RoutingDecision, decide as route_decide
 from .worker_commands import aplicar_comando, parse_worker_command
@@ -177,7 +190,9 @@ def _arquivos_alterados_do_evento(event: Event) -> tuple[str, ...]:
 
 def _render_cartao(event: Event, contexto: MinimalContext, decisao: str, motivo: str, *,
                     lei_das_questoes, envolve_questoes: bool, protocol_matched: bool,
-                    cost_block: str | None = None) -> str:
+                    cost_block: str | None = None,
+                    openai_resultado: "_ResultadoOpenAI | None" = None,
+                    combined_cost_block: str | None = None) -> str:
     dados = MergeCardInput(
         pr_number=_pr_number_from_identity(event.identity),
         titulo=event.payload.get("titulo"),
@@ -190,6 +205,14 @@ def _render_cartao(event: Event, contexto: MinimalContext, decisao: str, motivo:
         arquivos_alterados=_arquivos_alterados_do_evento(event),
         protocol_matched=protocol_matched,
         cost_block=cost_block,
+        openai_decision=openai_resultado.decision if openai_resultado else None,
+        openai_risk=openai_resultado.risk if openai_resultado else None,
+        openai_rationale=openai_resultado.rationale if openai_resultado else None,
+        openai_findings=openai_resultado.findings if openai_resultado else (),
+        openai_didactic_findings=openai_resultado.didactic_findings if openai_resultado else (),
+        openai_protocol_matched=openai_resultado.protocol_matched if openai_resultado else True,
+        openai_cost_block=openai_resultado.cost_block if openai_resultado else None,
+        combined_cost_block=combined_cost_block,
     )
     return render_merge_card(dados)
 
@@ -358,6 +381,179 @@ def _tratar_checkpoint_blocked_limit(event: Event, classificacao: Classification
     )
 
 
+class _ResultadoOpenAI(NamedTuple):
+    """Saída do passo do OpenAI Auditor (Issue #106). O chamador
+    (``observe()``) só recebe ``None`` inteiro — nunca um objeto com
+    campos vazios — quando o auditor não rodou (desabilitado, roteado
+    para ZERO, ou o ledger não foi injetado); quando roda, todo texto já
+    vem pronto para o Cartão de Merge, nunca dados crus."""
+
+    decision: str
+    risk: str
+    rationale: str
+    findings: tuple[str, ...]
+    didactic_findings: tuple[str, ...]
+    protocol_matched: bool
+    cost_block: str
+    month_to_date_usd: float
+
+
+def _decisao_openai_de_falha(status: str, motivo: str) -> OpenAIAuditDecision:
+    """Mesma filosofia de ``parse_decision``/``parse_openai_decision``:
+    qualquer falha (bloqueado por portão/orçamento/limite, erro de rede)
+    vira NEEDS-FIX explícito, nunca uma exceção, nunca MERGE-READY por
+    omissão. Usada quando ``openai_client.call`` nem chega a devolver
+    ``status="ok"`` — não há texto nenhum para ``parse_openai_decision``
+    interpretar."""
+    return OpenAIAuditDecision(
+        decision="NEEDS-FIX",
+        risk="NORMAL",
+        rationale=f"OpenAI Auditor não produziu uma decisão utilizável (status={status!r}): {motivo}",
+        findings=(),
+        didactic_findings=(),
+        requires_escalation=False,
+        escalation_reason="",
+        protocol_matched=False,
+    )
+
+
+def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: Classification, *,
+                         config: Config, openai_config: OpenAIAuditorConfig | None,
+                         openai_ledger: UsageLedger | None,
+                         openai_transport: openai_client.Transport | None,
+                         event_key: str) -> _ResultadoOpenAI | None:
+    """Segunda opinião independente (Issue #106), sobre o MESMO evento de
+    conteúdo médico/didático Nível C que já passou pela auditoria da
+    Anthropic. Estruturalmente inerte enquanto ``openai_config`` for
+    ``None`` ou ``openai_config.enabled`` for ``False`` — produção
+    continua assim nesta PR (``REPASSO_OPENAI_AUDITOR_ENABLED=false``).
+    Nunca lança: qualquer falha de rede/protocolo/orçamento vira um
+    resultado NEEDS-FIX explícito (``_decisao_openai_de_falha``), nunca
+    uma exceção que derrubaria o pipeline inteiro."""
+    if openai_config is None or not openai_config.enabled or openai_ledger is None:
+        return None
+
+    diff_info = preparar_diff_openai(event.payload.get("pr_diff"))
+    roteamento = openai_route_decide(event, classificacao, diff_disponivel=diff_info.disponivel)
+    if roteamento.tier == OPENAI_TIER_ZERO:
+        return None
+
+    limitador = OpenAICallLimiter()
+    transporte = openai_transport if openai_transport is not None else OpenAIResponsesTransport()
+
+    model_id_principal = openai_config.model if roteamento.tier == "TERRA" else openai_config.high_risk_model
+    tier_principal = roteamento.tier  # "TERRA" | "SOL"
+
+    prompt_texto = build_openai_audit_prompt(
+        contexto, pr_body=event.payload.get("body"),
+        envolve_questoes=bool(event.payload.get("envolve_questoes")),
+        pr_diff=event.payload.get("pr_diff"),
+    )
+
+    pedido = openai_client.build_request(
+        model_id=model_id_principal, tier=tier_principal, system=OPENAI_AUDITOR_SYSTEM_PROMPT,
+        prompt=prompt_texto, limiter=limitador,
+    )
+    resultado_chamada = openai_client.call(
+        openai_config, pedido, transport=transporte, limiter=limitador,
+        ledger=openai_ledger, event_key=event_key,
+    )
+    chamada_sanitizada = resultado_chamada.to_dict()
+
+    if resultado_chamada.status == "ok":
+        decisao = parse_openai_decision(chamada_sanitizada["text"] or "")
+    else:
+        decisao = _decisao_openai_de_falha(resultado_chamada.status, chamada_sanitizada["reason"])
+
+    custo_total = 0.0
+    calls_this_task = 0
+    model_id_final = model_id_principal
+    tier_final = tier_principal
+    if resultado_chamada.status == "ok" and resultado_chamada.usage is not None:
+        custo_total += resultado_chamada.usage.estimated_cost_usd
+        calls_this_task += 1
+        try:
+            openai_ledger.append(resultado_chamada.usage)
+        except Exception:
+            # Mesma filosofia da falha de persistência do ledger Anthropic
+            # (ver observe()): a chamada JÁ aconteceu — nunca vira "nenhuma
+            # chamada foi tentada" só porque a persistência falhou. O custo
+            # calculado desta chamada continua no cost_block abaixo mesmo
+            # que "gasto acumulado do mês" fique temporariamente
+            # desatualizado.
+            pass
+
+    # Escalada para Sol (Issue #106): só quando a chamada principal foi
+    # Terra, teve sucesso, o próprio auditor pediu E registrou motivo
+    # (``escalada_justificada``), e o limitador ainda permite — no máximo
+    # 1 escalada por checkpoint. A escalada, quando acontece com sucesso, é
+    # quem decide de verdade (nunca mistura os dois resultados) — o motivo
+    # da escalada fica registrado na rationale final para rastreabilidade.
+    if (
+        tier_principal == "TERRA"
+        and resultado_chamada.status == "ok"
+        and escalada_justificada(decisao)
+        and limitador.can_escalate()
+    ):
+        pedido_escalada = openai_client.build_request(
+            model_id=openai_config.high_risk_model, tier="SOL", system=OPENAI_AUDITOR_SYSTEM_PROMPT,
+            prompt=prompt_texto, limiter=limitador,
+        )
+        resultado_escalada = openai_client.call(
+            openai_config, pedido_escalada, transport=transporte, limiter=limitador,
+            ledger=openai_ledger, event_key=event_key, escalation=True,
+        )
+        chamada_escalada_sanitizada = resultado_escalada.to_dict()
+        if resultado_escalada.status == "ok":
+            motivo_escalada = decisao.escalation_reason
+            if resultado_escalada.usage is not None:
+                custo_total += resultado_escalada.usage.estimated_cost_usd
+                calls_this_task += 1
+                try:
+                    openai_ledger.append(resultado_escalada.usage)
+                except Exception:
+                    pass
+            decisao_escalada = parse_openai_decision(chamada_escalada_sanitizada["text"] or "")
+            decisao = OpenAIAuditDecision(
+                decision=decisao_escalada.decision,
+                risk=decisao_escalada.risk,
+                rationale=f"[Escalado para Sol — motivo: {motivo_escalada}] {decisao_escalada.rationale}",
+                findings=decisao_escalada.findings,
+                didactic_findings=decisao_escalada.didactic_findings,
+                requires_escalation=False,
+                escalation_reason="",
+                protocol_matched=decisao_escalada.protocol_matched,
+            )
+            model_id_final = openai_config.high_risk_model
+            tier_final = "SOL"
+        # Escalada falhou (erro/limited/blocked): mantém a decisão de
+        # Terra como está — uma falha na segunda chamada nunca apaga um
+        # resultado válido já obtido, e nunca promove nada.
+
+    if calls_this_task > 0:
+        resumo_custo = montar_resumo_custo(
+            ledger=openai_ledger, brl_rate=config.brl_rate, brl_rate_date=config.brl_rate_date,
+            actual_usd=custo_total, tier=tier_final, model_id=model_id_final,
+            calls_this_task=calls_this_task,
+        )
+    else:
+        resumo_custo = montar_resumo_custo(
+            ledger=openai_ledger, brl_rate=config.brl_rate, brl_rate_date=config.brl_rate_date,
+            estimated_usd=0.0, tier=tier_final, model_id=model_id_final, calls_this_task=0,
+        )
+
+    return _ResultadoOpenAI(
+        decision=decisao.decision,
+        risk=decisao.risk,
+        rationale=decisao.rationale,
+        findings=decisao.findings,
+        didactic_findings=decisao.didactic_findings,
+        protocol_matched=decisao.protocol_matched,
+        cost_block=render_cost_block(resumo_custo),
+        month_to_date_usd=openai_ledger.month_to_date_usd(),
+    )
+
+
 _SYSTEM_PROMPT = (
     "Você é o Repasso Coordinator, em modo OBSERVE. Classifique o evento e "
     "resuma o que um humano (José) precisa saber em 3 frases no máximo, em "
@@ -377,6 +573,9 @@ def observe(
     transport: anthropic_client.Transport | None = None,
     audit_mode: bool = False,
     worker_registry: OperationalWorkerRegistry | None = None,
+    openai_config: OpenAIAuditorConfig | None = None,
+    openai_ledger: UsageLedger | None = None,
+    openai_transport: openai_client.Transport | None = None,
 ) -> ObserveResult:
     # 1. Tipo de evento permitido?
     if not event.is_allowed:
@@ -685,6 +884,29 @@ def observe(
             )
             protocol_matched = True
 
+    # OpenAI Auditor (Issue #106) — segunda opinião independente sobre o
+    # MESMO evento, estruturalmente inerte enquanto ``openai_config`` for
+    # ``None``/desabilitado (produção continua assim nesta PR). Roda DEPOIS
+    # da decisão da Anthropic (para o cartão mostrar as duas opiniões
+    # juntas) e só pode REBAIXAR a decisão final (``aplicar_gate_openai`` —
+    # nunca promove, mesmo padrão de ``aplicar_lei_das_questoes``/
+    # ``aplicar_gate_diff``).
+    resultado_openai: _ResultadoOpenAI | None = None
+    if executar_auditoria:
+        resultado_openai = _avaliar_com_openai(
+            event, contexto, classificacao,
+            config=config, openai_config=openai_config, openai_ledger=openai_ledger,
+            openai_transport=openai_transport, event_key=chave,
+        )
+        if resultado_openai is not None:
+            audit_decision_final, nota_openai = aplicar_gate_openai(
+                audit_decision_final,
+                openai_decision=resultado_openai.decision,
+                openai_rationale=resultado_openai.rationale,
+            )
+            if nota_openai:
+                rationale_final = f"{rationale_final}\n\n{nota_openai}"
+
     ledger_persistiu = True
     ledger_erro: str | None = None
     if resultado_chamada.status == "ok" and resultado_chamada.usage is not None:
@@ -736,12 +958,26 @@ def observe(
                 model_id=roteamento.model_choice.model_id, calls_this_task=0,
             )
             cost_block = render_cost_block(resumo_custo)
+
+        # Issue #106: "Mostrar depois: Anthropic: US$X, OpenAI: US$Y,
+        # Total: US$Z" — só quando o OpenAI Auditor de fato rodou (ledger
+        # OpenAI separado, ver openai_budget.py); nunca inventa um total
+        # combinado quando o auditor está desligado.
+        combined_cost_block = None
+        if resultado_openai is not None:
+            combined_cost_block = render_provider_totals(
+                anthropic_month_to_date_usd=ledger.month_to_date_usd(),
+                openai_month_to_date_usd=resultado_openai.month_to_date_usd,
+            )
+
         cartao_final = _render_cartao(
             event, contexto, audit_decision_final, rationale_final,
             lei_das_questoes=lei_das_questoes,
             envolve_questoes=bool(event.payload.get("envolve_questoes")),
             protocol_matched=protocol_matched,
             cost_block=cost_block,
+            openai_resultado=resultado_openai,
+            combined_cost_block=combined_cost_block,
         )
 
     alvo_comentario = _pr_number_from_identity(event.identity)

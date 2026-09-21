@@ -16,7 +16,15 @@ from __future__ import annotations
 import re
 
 _RE_ANTHROPIC_KEY = re.compile(r"sk-ant-[A-Za-z0-9_\-]{10,}")
-_RE_GENERIC_LONG_KEY = re.compile(r"\bsk-[A-Za-z0-9]{20,}\b")
+# Issue #106 (OpenAI Auditor): chaves da OpenAI também começam com "sk-",
+# mas frequentemente incluem um prefixo com hífen antes do segredo em si
+# (ex.: "sk-proj-...") — o padrão genérico anterior exigia 20+ caracteres
+# alfanuméricos IMEDIATAMENTE após "sk-", então um hífen logo no início
+# cortava o match bem antes do mínimo de 20, deixando a chave inteira
+# vazar sem redação. Agora aceita hífen/underscore no corpo da chave,
+# igual ao padrão específico da Anthropic acima — nunca aceitar prefixo
+# nenhum como "confiável o bastante" para pular a sanitização.
+_RE_GENERIC_LONG_KEY = re.compile(r"\bsk-[A-Za-z0-9_\-]{20,}\b")
 # Credencial embutida numa URL (ex.: https://x-access-token:ghp_...@github.com/...),
 # o padrão que coordinator/git_state.py usa para dar push na branch de estado
 # com o GITHUB_TOKEN do workflow. Um erro de git (repositório não encontrado,

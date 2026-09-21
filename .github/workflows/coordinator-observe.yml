@@ -106,6 +106,28 @@ name: Repasso Coordinator (OBSERVE)
 # falta é mais simples e cabe só a José, em Settings → Branches/Rulesets:
 # uma regra para "main" exigindo Pull Request, bloqueando force-push e
 # exigindo que os checks passem — com 0 approvals exigidas por enquanto.
+#
+# ─────────────────────────────────────────────────────────────────────────
+# OPENAI AUDITOR (Issue #106) — segunda opinião independente, SEM ativar em
+# produção nesta PR.
+#
+# Uma segunda API (OpenAI, Responses API, ``store=false`` sempre — ver
+# coordinator/openai_transport.py) entra como auditor adicional, INDEPENDENTE
+# da Anthropic, sobre o MESMO evento de conteúdo médico/didático Nível C
+# (nunca um gatilho novo). Portão totalmente separado do
+# ``REPASSO_COORDINATOR_*``: ``REPASSO_OPENAI_AUDITOR_ENABLED`` continua
+# ``false`` (valor de hoje) — enquanto isso não mudar, nenhuma chamada à
+# OpenAI acontece, mesmo com ``REPASSO_COORDINATOR_MODE=active-supervised``
+# já ligado para a Anthropic (coordinator/openai_config.py::
+# OpenAIAuditorConfig.gate(), checado de novo em ``openai_client.call``
+# antes de qualquer chamada, junto com um hard stop de orçamento interno —
+# nunca confiar só no cap externo do dashboard da OpenAI). O
+# ``OPENAI_API_KEY`` segue a MESMA trava do ``ANTHROPIC_API_KEY``: só existe
+# como env do passo confiável abaixo (branch padrão, nunca o HEAD de um
+# PR). O ledger de custo do OpenAI Auditor é uma branch de estado SEPARADA
+# (``coordinator-state-usage-openai``, nunca a mesma do ledger Anthropic).
+# O Worker Registry operacional continua registrando ``chatgpt-auditor``
+# como ``OFFLINE``/``can_execute=false`` — esta PR não muda isso.
 
 on:
   issue_comment:
@@ -277,6 +299,22 @@ jobs:
           REPASSO_COORDINATOR_MODE: ${{ vars.REPASSO_COORDINATOR_MODE }}
           REPASSO_COORDINATOR_PILOT: ${{ vars.REPASSO_COORDINATOR_PILOT }}
           REPASSO_COORDINATOR_PILOT_EVENT_KEY: ${{ vars.REPASSO_COORDINATOR_PILOT_EVENT_KEY }}
+          # OpenAI Auditor (Issue #106) — mesma trava de sempre: o secret só
+          # existe como env DESTE passo confiável (branch padrão, nunca o
+          # HEAD de um PR — ver o comentário no topo do arquivo), nunca em
+          # código, nunca logado (coordinator/openai_transport.py só lê de
+          # env, e coordinator/redact.py sanitiza qualquer eco em erro,
+          # inclusive chaves no formato "sk-..." da OpenAI). Portão
+          # INDEPENDENTE do REPASSO_COORDINATOR_*: REPASSO_OPENAI_AUDITOR_
+          # ENABLED continua "false" em produção (valor de hoje) — ligar
+          # isto aqui só entrega o dado ao processo; quem decide se uma
+          # chamada acontece é sempre coordinator/openai_config.py::
+          # OpenAIAuditorConfig.gate(), checado de novo em código.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REPASSO_OPENAI_AUDITOR_ENABLED: ${{ vars.REPASSO_OPENAI_AUDITOR_ENABLED }}
+          REPASSO_OPENAI_AUDITOR_MODEL: ${{ vars.REPASSO_OPENAI_AUDITOR_MODEL }}
+          REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL: ${{ vars.REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL }}
+          REPASSO_OPENAI_AUDITOR_BUDGET_USD: ${{ vars.REPASSO_OPENAI_AUDITOR_BUDGET_USD }}
         run: |
           set +e
           # Remoto com o GITHUB_TOKEN embutido, só para dar push na branch
@@ -295,6 +333,7 @@ jobs:
             --usage-git-remote "$REMOTO_COM_TOKEN"
             --workers-from-tasks-json coordination/tasks.json
             --worker-state-git-remote "$REMOTO_COM_TOKEN"
+            --openai-usage-git-remote "$REMOTO_COM_TOKEN"
             --out /tmp/coordinator-observe.json
             --comment-out /tmp/coordinator-comment.md
             --comment-target-out /tmp/coordinator-comment-target.txt

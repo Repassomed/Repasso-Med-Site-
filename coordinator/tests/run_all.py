@@ -26,6 +26,8 @@ from . import (
     test_no_forbidden_writes,
     test_observe_pipeline,
     test_observe_real_path,
+    test_openai_auditor,
+    test_openai_transport,
     test_pilot_mode,
     test_redact,
     test_worker_registry_real,
@@ -55,6 +57,8 @@ MODULOS = [
     test_coordinator_v3,
     test_coordinator_v3_round3,
     test_coordinator_v3_round4,
+    test_openai_transport,
+    test_openai_auditor,
 ]
 
 

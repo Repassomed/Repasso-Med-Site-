@@ -176,6 +176,27 @@ def aplicar_lei_das_questoes(decisao: str, *, envolve_questoes: bool,
     return "NEEDS-FIX", resultado
 
 
+def aplicar_gate_openai(decisao: str, *, openai_decision: str | None,
+                         openai_rationale: str | None) -> tuple[str, str | None]:
+    """Gate determinístico do OpenAI Auditor (Issue #106): uma segunda
+    opinião INDEPENDENTE da Anthropic, sobre o MESMO evento. Mesmo padrão
+    de ``aplicar_lei_das_questoes``/``aplicar_gate_diff``: só pode REBAIXAR
+    um MERGE-READY para NEEDS-FIX, nunca o inverso (o OpenAI Auditor nunca
+    promove uma decisão da Anthropic, mesmo que discorde e ache que devia
+    ser MERGE-READY). ``openai_decision`` é ``None`` sempre que o OpenAI
+    Auditor não rodou (desabilitado, roteado para ZERO, ou bloqueado por
+    portão/orçamento) — nesse caso a decisão da Anthropic passa inalterada,
+    porque 'não rodou' nunca pode ser lido como 'aprovou'."""
+    if openai_decision is None:
+        return decisao, None
+    if decisao == "MERGE-READY" and openai_decision == "NEEDS-FIX":
+        return "NEEDS-FIX", (
+            "O OpenAI Auditor (segunda opinião independente, Issue #106) recomendou "
+            f"NEEDS-FIX: {openai_rationale or '-'}"
+        )
+    return decisao, None
+
+
 def aplicar_gate_diff(decisao: str, *, diff_disponivel: bool, diff_truncado: bool) -> tuple[str, str | None]:
     """Gate determinístico B2 (auditoria independente do PR #104): um
     auditor não pode certificar MERGE-READY sem ter visto o diff real
@@ -221,6 +242,20 @@ class MergeCardInput:
     # zero-custo da Inbox — texto já pronto (``costs.render_cost_block``),
     # nunca recalculado aqui.
     cost_block: str | None = None
+    # OpenAI Auditor (Issue #106) — todos ``None``/vazios quando o auditor
+    # não rodou (desabilitado, roteado para ZERO, ou bloqueado por
+    # portão/orçamento/limite). ``openai_decision`` já é a decisão
+    # ESTRUTURADA reportada pelo auditor (nunca a decisão final do
+    # cartão — essa é ``audit_decision`` acima, já com
+    # ``aplicar_gate_openai`` aplicado).
+    openai_decision: str | None = None  # "MERGE-READY" | "NEEDS-FIX" | None
+    openai_risk: str | None = None  # "NORMAL" | "HIGH" | None
+    openai_rationale: str | None = None
+    openai_findings: tuple[str, ...] = ()
+    openai_didactic_findings: tuple[str, ...] = ()
+    openai_protocol_matched: bool = True
+    openai_cost_block: str | None = None
+    combined_cost_block: str | None = None
 
 
 def render_merge_card(dados: MergeCardInput) -> str:
@@ -257,9 +292,33 @@ def render_merge_card(dados: MergeCardInput) -> str:
         if dados.lei_das_questoes:
             L.append(dados.lei_das_questoes.detalhe)
 
+    if dados.openai_decision is not None:
+        L.append("")
+        L.append(f"**Segunda opinião independente (OpenAI Auditor, Issue #106):** {dados.openai_decision}"
+                  + (f"  ·  **Risco:** {dados.openai_risk}" if dados.openai_risk else ""))
+        if not dados.openai_protocol_matched:
+            L.append(
+                "⚠️ A resposta do OpenAI Auditor não seguiu o protocolo esperado — "
+                "decisão automaticamente tratada como NEEDS-FIX por segurança."
+            )
+        if dados.openai_rationale:
+            L.append(f"**Motivo (OpenAI):** {dados.openai_rationale}")
+        if dados.openai_findings:
+            L.append("**Achados (OpenAI):** " + "; ".join(dados.openai_findings))
+        if dados.openai_didactic_findings:
+            L.append("**Achados didáticos (OpenAI):** " + "; ".join(dados.openai_didactic_findings))
+
     if dados.cost_block:
         L.append("")
         L.append(dados.cost_block)
+
+    if dados.openai_cost_block:
+        L.append("")
+        L.append(dados.openai_cost_block)
+
+    if dados.combined_cost_block:
+        L.append("")
+        L.append(dados.combined_cost_block)
 
     L.append("")
     L.append("**MERGE:** José decide/executa. O Coordinator nunca faz merge.")
