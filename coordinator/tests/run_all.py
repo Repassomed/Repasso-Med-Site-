@@ -16,10 +16,15 @@ from . import (
     test_dedup,
     test_git_state,
     test_github_event,
+    test_guard_state_integration,
+    test_human_output_honesty,
     test_no_forbidden_writes,
     test_observe_pipeline,
     test_observe_real_path,
+    test_pilot_mode,
     test_redact,
+    test_worker_registry_real,
+    test_workflow_security,
 )
 
 MODULOS = [
@@ -35,6 +40,11 @@ MODULOS = [
     test_github_event,
     test_observe_real_path,
     test_no_forbidden_writes,
+    test_pilot_mode,
+    test_worker_registry_real,
+    test_human_output_honesty,
+    test_workflow_security,
+    test_guard_state_integration,
 ]
 
 

@@ -196,7 +196,27 @@ def observe(
             **resultado_base,
         )
 
-    # Portão aberto e orçamento permite: agora sim, uma chamada real é
+    # Modo PILOTO (bloqueador 3 da 3ª auditoria do PR #97) — camada adicional,
+    # só restringe, nunca afrouxa o portão ENABLED/MODE acima. Enquanto
+    # PILOT=true, só a chave exata autorizada pode passar daqui — qualquer
+    # outro evento automático (mesmo de tipo permitido, mesmo com orçamento
+    # OK) fica bloqueado, garantindo tecnicamente "exatamente um evento
+    # controlado" no primeiro teste real.
+    if not config.pilot_allows(chave):
+        dedup.mark_processed(chave)
+        return ObserveResult(
+            status="BLOCKED",
+            reason=(
+                f"PILOT ativo: só o evento autorizado ({config.pilot_event_key!r}) pode "
+                f"gerar chamada; este evento é {chave!r}."
+            ),
+            next_action=_next_action_text(classificacao, roteamento, worker),
+            call_attempted=False,
+            **resultado_base,
+        )
+
+    # Portão aberto, orçamento permite e (se PILOT ativo) é o evento
+    # autorizado: agora sim, uma chamada real é
     # tentada — marca o evento como processado ANTES de chamar, para que
     # mesmo uma falha/crash no meio da chamada nunca resulte em uma
     # segunda tentativa para o mesmo evento (Issue #95: "evento repetido

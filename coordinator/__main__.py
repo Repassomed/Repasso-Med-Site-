@@ -18,11 +18,18 @@ Dois jeitos de dar o evento:
    auditoria do PR #97), passando o arquivo de
    ``$GITHUB_EVENT_PATH`` e o nome do evento:
 
-    python3 -m coordinator --github-event-name pull_request \\
+    python3 -m coordinator --github-event-name workflow_run \\
         --event "$GITHUB_EVENT_PATH" --repo "$GITHUB_REPOSITORY" \\
         --dedup-git-remote "$(git remote get-url origin)" \\
         --usage-git-remote "$(git remote get-url origin)" \\
+        --workers-from-tasks-json coordination/tasks.json \\
+        --pr-info-file /tmp/pr-info.json \\
+        --guard-audit-pack /tmp/guard-audit-pack/guard-audit-pack.json \\
         --out /tmp/coordinator-observe.json
+
+   ``--pr-info-file``/``--guard-audit-pack`` são opcionais e vêm de passos
+   do workflow que leem a PR e baixam o artifact do Guard (bloqueadores 1
+   e 5 da 3ª auditoria) — nunca de código do HEAD do PR.
 
 Persistência entre execuções independentes (bloqueador 2): ``--dedup-store``/
 ``--usage-ledger`` continuam sendo arquivo local (default, preserva o
@@ -54,7 +61,7 @@ from .git_state import GitDedupStore, GitJsonStore, GitUsageLedger
 from .github_event import build_event_from_github_context
 from .observe import observe
 from .redact import redact_mapping
-from .worker_registry import Worker, WorkerState
+from .worker_registry import Worker, WorkerState, load_workers_from_tasks_json
 
 
 def _load_event(path: str) -> Event:
@@ -69,10 +76,22 @@ def _load_event(path: str) -> Event:
     )
 
 
-def _load_github_event(path: str, event_name: str, repo: str) -> Event | None:
+def _load_json_if_exists(path: str | None) -> dict | None:
+    if not path or not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _load_github_event(path: str, event_name: str, repo: str, *,
+                        pr_info_file: str | None = None,
+                        guard_audit_pack: str | None = None) -> Event | None:
     with open(path, encoding="utf-8") as fh:
         payload = json.load(fh)
-    return build_event_from_github_context(event_name, payload, repo)
+    pr_info = _load_json_if_exists(pr_info_file)
+    audit_pack = _load_json_if_exists(guard_audit_pack)
+    return build_event_from_github_context(event_name, payload, repo,
+                                            pr_info=pr_info, audit_pack=audit_pack)
 
 
 def _load_workers(path: str | None) -> list[Worker]:
@@ -106,11 +125,31 @@ def render_human(result_dict: dict) -> str:
     if result_dict.get("next_action"):
         L.append("")
         L.append(f"**Próxima ação:** {result_dict['next_action']}")
+
+    # Bloqueador 8 da 3ª auditoria do PR #97: este texto tem que dizer a
+    # VERDADE sobre se uma chamada foi tentada — nunca afirmar "nenhuma
+    # chamada externa" quando call_attempted=True. Todo o dicionário aqui
+    # já passou por redact_mapping() antes de chegar em render_human(),
+    # então response_text/usage são seguros para aparecer.
+    L.append("")
+    if result_dict.get("call_attempted"):
+        L.append(f"**Chamada à Anthropic:** SIM — status da chamada: `{result_dict.get('call_status')}`.")
+        usage = result_dict.get("usage")
+        if usage:
+            L.append(
+                f"**Uso:** {usage.get('input_tokens')} tokens de entrada + "
+                f"{usage.get('output_tokens')} de saída  ·  "
+                f"**custo estimado:** US$ {usage.get('estimated_cost_usd')}."
+            )
+        if result_dict.get("response_text"):
+            L.append(f"**Resposta (sanitizada):** {result_dict['response_text']}")
+    else:
+        L.append("**Chamada à Anthropic:** NÃO — nenhuma chamada externa foi tentada nesta execução.")
+
     L.append("")
     L.append(
         "O Coordinator nunca decide sozinho correção científica, nunca edita "
-        "matéria/Supabase/produção e nunca faz merge. Esta execução não fez "
-        f"nenhuma chamada externa (call_attempted={result_dict.get('call_attempted')})."
+        "matéria/Supabase/produção e nunca faz merge."
     )
     return "\n".join(L)
 
@@ -121,9 +160,11 @@ def main(argv: list[str] | None = None) -> int:
                     help="arquivo JSON do evento (formato interno, ou o payload cru do "
                          "GitHub quando --github-event-name é usado)")
     ap.add_argument("--github-event-name", default=None,
-                    help="nome do evento do GitHub Actions (pull_request, issue_comment, "
-                         "workflow_run) — quando presente, --event é lido como o payload "
-                         "cru de $GITHUB_EVENT_PATH, não o formato interno")
+                    help="nome do evento do GitHub Actions (issue_comment, workflow_run — "
+                         "'pull_request' foi removido na 3ª auditoria do PR #97 por segurança: "
+                         "não pode segurar segredo num evento que roda código do HEAD de um PR) "
+                         "— quando presente, --event é lido como o payload cru de "
+                         "$GITHUB_EVENT_PATH, não o formato interno")
     ap.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY", ""),
                     help="owner/repo — só usado junto com --github-event-name")
     ap.add_argument("--dedup-store", default=None,
@@ -141,14 +182,28 @@ def main(argv: list[str] | None = None) -> int:
                     help="remoto git para o ledger de uso/custo compartilhado entre execuções")
     ap.add_argument("--usage-git-branch", default="coordinator-state-usage",
                     help="branch dedicada para o ledger de uso (nunca 'main')")
-    ap.add_argument("--workers", default=None, help="arquivo JSON com o registro de workers (#82)")
+    ap.add_argument("--workers", default=None, help="arquivo JSON com o registro de workers (#82) — formato fixture")
+    ap.add_argument("--workers-from-tasks-json", default=None,
+                    help="deriva o registro REAL de workers a partir de coordination/tasks.json "
+                         "(bloqueador 4 da 3ª auditoria) — usar no workflow real; tem precedência "
+                         "sobre --workers quando os dois são passados")
+    ap.add_argument("--pr-info-file", default=None,
+                    help="JSON com number/title/body/labels/updated_at da PR associada ao "
+                         "workflow_run observado, lido por um passo do workflow via API "
+                         "somente-leitura (bloqueador 1 da 3ª auditoria) — nunca do HEAD do PR")
+    ap.add_argument("--guard-audit-pack", default=None,
+                    help="caminho do audit-pack real do Guard (baixado do artifact do run "
+                         "observado — bloqueador 5 da 3ª auditoria); mesmo schema que "
+                         "tools/qa/guard/__main__.py grava")
     ap.add_argument("--out", default=None, help="onde gravar o resultado OBSERVE em JSON")
     a = ap.parse_args(argv)
 
     config = Config.from_env()
 
     if a.github_event_name:
-        event = _load_github_event(a.event, a.github_event_name, a.repo)
+        event = _load_github_event(a.event, a.github_event_name, a.repo,
+                                    pr_info_file=a.pr_info_file,
+                                    guard_audit_pack=a.guard_audit_pack)
         if event is None:
             print(
                 f"# Repasso Coordinator · OBSERVE\n\n"
@@ -169,7 +224,10 @@ def main(argv: list[str] | None = None) -> int:
     else:
         ledger = UsageLedger(a.usage_ledger)
 
-    workers = _load_workers(a.workers)
+    if a.workers_from_tasks_json:
+        workers = load_workers_from_tasks_json(a.workers_from_tasks_json)
+    else:
+        workers = _load_workers(a.workers)
 
     resultado = observe(event, config=config, dedup=dedup, ledger=ledger, workers=workers)
     dados = resultado.to_dict()
