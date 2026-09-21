@@ -516,7 +516,11 @@ def test_privacy_preflight_blocks_secret_and_pii_patterns() -> None:
 
     assert _pf("texto qualquer sem nada sensível, só uma frase normal.").safe is True
 
-    r1 = _pf("veja essa chave: sk-ant-abcdefghij1234567890")
+    # Concatenado de propósito (não como literal único) para que o próprio
+    # scanner de segredos do Repasso Guard não marque esta linha de teste
+    # como um segredo de verdade — mesma convenção já usada em
+    # test_anthropic_transport.py.
+    r1 = _pf("veja essa chave: " + "sk-ant-" + "abcdefghij1234567890")
     assert r1.safe is False and r1.reasons
 
     r2 = _pf("aqui está: API_KEY=abcdef1234567890xyz")
@@ -548,9 +552,11 @@ def test_pipeline_privacy_preflight_blocks_call_with_secret_in_diff() -> None:
     """Pipeline completo: um diff que carregue algo com cara de segredo
     nunca chega a ser enviado à OpenAI — zero chamada, decisão NEEDS-FIX,
     mesmo com Anthropic tendo dito MERGE-READY (achado B6)."""
+    # Concatenado de propósito — ver o comentário equivalente em
+    # test_privacy_preflight_blocks_secret_and_pii_patterns.
     diff_com_segredo = (
         "diff --git a/coordinator/config.py b/coordinator/config.py\n"
-        "+ANTHROPIC_API_KEY = \"sk-ant-abcdefghijklmnopqrstuvwxyz1234567890\"\n"
+        "+ANTHROPIC_API_KEY = \"" + "sk-ant-" + "abcdefghijklmnopqrstuvwxyz1234567890" + "\"\n"
     )
     ev = _evento_pr_materia(head_sha="p-privacy", body="ajuste de prosa didática", diff=diff_com_segredo)
     t_openai = _TransporteOpenAIQueSempreFalha()
