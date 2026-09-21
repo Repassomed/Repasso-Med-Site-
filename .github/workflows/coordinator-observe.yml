@@ -1,0 +1,250 @@
+name: Repasso Coordinator (OBSERVE)
+
+# Coordinator V2 — Issue #95. Modo OBSERVE, sem chamada paga.
+#
+# TRAVA EM VÁRIAS CAMADAS, de propósito:
+#   1. este workflow inteiro só roda quando a Variable do repositório
+#      REPASSO_COORDINATOR_ENABLED é exatamente "true" (condição do job,
+#      abaixo) — enquanto for "false" (o valor de hoje), o job nem começa,
+#      então NENHUM segundo de runner é gasto e NENHUM código roda;
+#   2. mesmo que o job rodasse, coordinator/config.py consulta a mesma
+#      variável (e MODE) de novo e recusa qualquer chamada externa se o
+#      portão não abrir. Ver coordinator/config.py;
+#   3. um evento issue_comment só passa da camada 1 se o autor do
+#      comentário for um ator confiável (ver o `if:` do job) — e
+#      coordinator/github_event.py checa a MESMA regra de novo em código
+#      (ALLOWED_COMMENT_ACTORS), nunca confiando só no `if:` do workflow;
+#   4. enquanto REPASSO_COORDINATOR_PILOT=true, só o evento explicitamente
+#      autorizado (REPASSO_COORDINATOR_PILOT_EVENT_KEY) pode gerar uma
+#      chamada — ver Config.pilot_allows em coordinator/config.py.
+#
+# Isto respeita ao pé da letra a Issue #95: "Enquanto ENABLED=false:
+# nenhuma chamada paga; nenhum Coordinator API roda."
+#
+# Eventos que este workflow observa (Issue #95, "PRIMEIRO ALVO"):
+#   1. PR chega a NEEDS-AUDIT          (workflow_run do Guard + rótulo real da PR)
+#   2. checkpoint BLOCKED-LIMIT        (issue_comment: created, de ator confiável)
+#   3. comentário novo na Issue #88    (issue_comment: created, de ator confiável)
+#   4. Guard muda de estado            (workflow_run: completed, "Repasso Guard")
+#
+# ─────────────────────────────────────────────────────────────────────────
+# BLOQUEADOR 1 da 3ª auditoria (PR #97) — TRUSTED EXECUTION COM SECRETS.
+#
+# Antes desta correção, este workflow tinha um trigger `pull_request:
+# labeled` direto. Para um PR do MESMO repositório (não de fork), o
+# GitHub Actions roda o ARQUIVO deste workflow na versão do PR/merge
+# commit daquele evento — não só o checkout, o workflow inteiro. Como
+# secrets NÃO são restritos para PRs do mesmo repositório (só para forks),
+# um PR que alterasse `coordinator/**`, `requirements.txt` ou este próprio
+# arquivo poderia, em tese, rodar código de sua autoria com
+# ANTHROPIC_API_KEY/GITHUB_TOKEN(write) expostos — a mesma classe de
+# problema que o Guard já fecha para si mesmo (ver o comentário no topo de
+# `.github/workflows/guard.yml`), agora com segredo real em jogo.
+#
+# Correção: o trigger `pull_request` foi REMOVIDO deste workflow. Os dois
+# triggers que sobraram são estruturalmente seguros:
+#   - `workflow_run` SEMPRE usa o arquivo de workflow e o código da branch
+#     PADRÃO do repositório, nunca o do PR que originou a execução
+#     observada — é uma garantia da própria plataforma GitHub Actions,
+#     documentada exatamente para este caso;
+#   - `issue_comment` não carrega nenhum ref de PR para o `actions/
+#     checkout` resolver por padrão — mas, por defesa em profundidade
+#     (nunca confiar só na omissão), o passo de checkout abaixo fixa
+#     EXPLICITAMENTE `ref: <branch padrão>`, então mesmo que o
+#     comportamento padrão do GitHub mudasse, o código executado aqui
+#     nunca seria o de um PR.
+#
+# O evento PR_NEEDS_AUDIT (que antes vinha do payload `pull_request`
+# bruto) agora é sintetizado a partir de `workflow_run` + uma leitura
+# somente-leitura da PR via API (não é execução de código — é dado),
+# feita por um passo deste MESMO job (portanto já rodando a partir da
+# branch padrão). Ver coordinator/github_event.py.
+#
+# BLOQUEADOR 2 — atores confiáveis em issue_comment: ver o `if:` do job.
+# BLOQUEADOR 3 — modo PILOTO: ver REPASSO_COORDINATOR_PILOT no passo
+#   "Rodar o Coordinator" e coordinator/config.py.
+# BLOQUEADOR 4 — Worker Registry real: --workers-from-tasks-json abaixo.
+# BLOQUEADOR 5 — audit-pack real do Guard: passo "Baixar o audit-pack".
+# BLOQUEADOR 6 — dedup do Guard por estado, não run_id: ver
+#   coordinator/github_event.py (`dedup_fields={"conclusion": ...}`).
+# BLOQUEADOR 7 — erro do CLI deixa o job vermelho: último passo abaixo.
+# BLOQUEADOR 8 — saída humana honesta sobre chamada/usage/custo: ver
+#   coordinator/__main__.py::render_human.
+#
+# Escopo desta entrega (não escondido, só explícito): o resultado OBSERVE
+# vai para o log do job e para um artifact — este workflow NÃO comenta
+# automaticamente no PR/Issue ainda (decisão futura separada, já registrada
+# na 2ª auditoria).
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_run:
+    workflows: ["Repasso Guard"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repasso-coordinator-observe-${{ github.event.issue.number || github.event.workflow_run.id }}
+  cancel-in-progress: true
+
+jobs:
+  observe:
+    # Camada 1 do portão: enquanto a Variable não for exatamente "true",
+    # o job não roda. Nada de runner, nada de Python, nada de custo.
+    #
+    # Camada 3 (bloqueador 2): um issue_comment só passa se o autor do
+    # comentário for um ator confiável deste projeto — hoje José e todos
+    # os agentes Claude publicam pela MESMA identidade do GitHub
+    # ("Repassomed"), então esta é a lista completa. Um comentário de
+    # QUALQUER outro autor nem chega a receber secret. Isto espelha
+    # coordinator.github_event.ALLOWED_COMMENT_ACTORS — mudar um sem o
+    # outro quebra a simetria, então os dois precisam ser lidos juntos.
+    # workflow_run não precisa desta checagem: ele não é acionado por
+    # texto de terceiros, é o próprio Guard terminando.
+    if: >
+      vars.REPASSO_COORDINATOR_ENABLED == 'true' &&
+      (github.event_name != 'issue_comment' || github.event.comment.user.login == 'Repassomed')
+    runs-on: ubuntu-latest
+    # contents:write só é usado para publicar a branch de estado dedicada
+    # (coordinator-state-*, nunca 'main', nunca matéria — ver
+    # coordinator/git_state.py e o teste que prova isso estruturalmente).
+    # pull-requests:read só é usado para ler (nunca escrever) o rótulo e o
+    # corpo da PR associada a um workflow_run do Guard — dado, não código.
+    # actions:read é exigido pelo GitHub para baixar artifact de OUTRA
+    # execução (actions/download-artifact@v4 com run-id do workflow_run
+    # observado, abaixo) — achado do "ACHADO ADICIONAL" e do "PACOTE
+    # CONSOLIDADO" (PR #97): permissão omitida vira 'none', então sem isto
+    # o passo de baixar o audit-pack do Guard pode falhar em produção
+    # mesmo com os testes estruturais verdes. Deliberadamente só :read —
+    # este job nunca cria nem apaga artifact, só consome o que o Guard já
+    # publicou (ver test_actions_read_present_actions_write_absent).
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Checkout (SEMPRE a branch padrão — nunca o HEAD de um PR)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Confirmar os portões em código (camada 2, defesa em profundidade)
+        env:
+          REPASSO_COORDINATOR_ENABLED: ${{ vars.REPASSO_COORDINATOR_ENABLED }}
+          REPASSO_COORDINATOR_MODE: ${{ vars.REPASSO_COORDINATOR_MODE }}
+          REPASSO_COORDINATOR_PILOT: ${{ vars.REPASSO_COORDINATOR_PILOT }}
+        run: |
+          python3 -c "
+          from coordinator.config import Config
+          cfg = Config.from_env()
+          gate = cfg.gate()
+          print(f'Portão ENABLED/MODE: {\"ABERTO\" if gate.open else \"FECHADO\"} — {gate.reason}')
+          print(f'Modo PILOTO: {\"ATIVO\" if cfg.pilot else \"inativo\"}')
+          "
+
+      - name: Instalar o SDK da Anthropic (só dentro deste job condicionado)
+        run: pip install -q -r coordinator/requirements.txt
+
+      - name: Buscar dados reais da PR associada (só leitura — bloqueador 1/5)
+        id: prctx
+        if: github.event_name == 'workflow_run'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const run = context.payload.workflow_run;
+            const prs = run.pull_requests || [];
+            if (prs.length === 0) {
+              console.log('workflow_run sem PR associada (mesmo repositório) — nada a buscar.');
+              return;
+            }
+            const numero = prs[0].number;
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: numero,
+            });
+            fs.writeFileSync('/tmp/pr-info.json', JSON.stringify({
+              number: pr.number,
+              title: pr.title,
+              body: pr.body,
+              labels: pr.labels.map(l => l.name),
+              updated_at: pr.updated_at,
+            }));
+            console.log(`PR #${numero}: rótulos = ${pr.labels.map(l => l.name).join(', ')}`);
+
+      - name: Baixar o audit-pack real do Guard (artifact do run observado)
+        if: github.event_name == 'workflow_run'
+        continue-on-error: true # run antigo/sem artifact não pode derrubar o job
+        uses: actions/download-artifact@v4
+        with:
+          name: repasso-guard-audit-pack
+          path: /tmp/guard-audit-pack
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Rodar o Coordinator sobre o evento real
+        id: coordinator
+        env:
+          # Único lugar que a chave existe: o GitHub Secret, exposto só
+          # como variável de ambiente deste passo — nunca em código, nunca
+          # logada (coordinator/anthropic_transport.py só lê de env, e
+          # coordinator/redact.py sanitiza qualquer eco em erro).
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Os portões precisam chegar até AQUI — é este passo que de fato
+          # chama Config.from_env() dentro de `python3 -m coordinator`.
+          # Passo de verificação acima lê as mesmas Variables só para
+          # imprimir; sem repetir aqui, o processo real veria os defaults
+          # seguros (false/observe) mesmo que José tivesse ligado de
+          # verdade — o que tornaria o primeiro teste real impossível.
+          REPASSO_COORDINATOR_ENABLED: ${{ vars.REPASSO_COORDINATOR_ENABLED }}
+          REPASSO_COORDINATOR_MODE: ${{ vars.REPASSO_COORDINATOR_MODE }}
+          REPASSO_COORDINATOR_PILOT: ${{ vars.REPASSO_COORDINATOR_PILOT }}
+          REPASSO_COORDINATOR_PILOT_EVENT_KEY: ${{ vars.REPASSO_COORDINATOR_PILOT_EVENT_KEY }}
+        run: |
+          set +e
+          # Remoto com o GITHUB_TOKEN embutido, só para dar push na branch
+          # de estado dedicada (contents:write acima). O GitHub mascara
+          # automaticamente qualquer log que contenha secrets.GITHUB_TOKEN;
+          # como reforço adicional, qualquer erro de git que ecoasse esta
+          # URL também passa por coordinator/redact.py antes de aparecer em
+          # qualquer resultado (ver test_redact_masks_url_embedded_credential).
+          REMOTO_COM_TOKEN="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+          ARGS=(
+            --github-event-name "${{ github.event_name }}"
+            --event "${{ github.event_path }}"
+            --repo "${{ github.repository }}"
+            --dedup-git-remote "$REMOTO_COM_TOKEN"
+            --usage-git-remote "$REMOTO_COM_TOKEN"
+            --workers-from-tasks-json coordination/tasks.json
+            --out /tmp/coordinator-observe.json
+          )
+          [ -f /tmp/pr-info.json ] && ARGS+=(--pr-info-file /tmp/pr-info.json)
+          [ -f /tmp/guard-audit-pack/guard-audit-pack.json ] && ARGS+=(--guard-audit-pack /tmp/guard-audit-pack/guard-audit-pack.json)
+
+          python3 -m coordinator "${ARGS[@]}"
+          echo "resultado=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar o resultado OBSERVE como artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repasso-coordinator-observe
+          path: /tmp/coordinator-observe.json
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Falhar o job se o Coordinator terminou com erro (bloqueador 7)
+        if: steps.coordinator.outputs.resultado != '0'
+        run: |
+          echo "O Coordinator terminou com código ${{ steps.coordinator.outputs.resultado }} — ver o artifact/log publicado acima."
+          exit 1

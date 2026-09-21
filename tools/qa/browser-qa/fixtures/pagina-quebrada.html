@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8">
+<title>Fixture quebrada</title>
+<style>
+  body { margin: 0; font-family: sans-serif; }
+  .fora-de-largura { width: 3000px; background: #eee; }
+</style>
+</head>
+<body>
+  <h1>Página de teste com defeitos plantados</h1>
+  <div class="fora-de-largura">Esta div é fixa em 3000px e não está dentro de nada rolável: estoura a página de propósito.</div>
+  <img src="imagem-que-nao-existe.png" alt="quebrada de propósito">
+  <script>throw new Error("erro de JS plantado de propósito para o teste");</script>
+</body>
+</html>

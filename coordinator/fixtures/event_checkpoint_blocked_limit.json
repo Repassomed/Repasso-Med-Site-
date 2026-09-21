@@ -1,0 +1,10 @@
+{
+  "raw_type": "CHECKPOINT_BLOCKED_LIMIT",
+  "source": "fixture",
+  "repo": "Repassomed/Repasso-Med-Site-",
+  "identity": "issue:67#comment:5753999999",
+  "payload": {
+    "titulo": "Checkpoint — Claude 3 — Ortopedia",
+    "dedup_fields": {"comment_id": 5753999999}
+  }
+}
