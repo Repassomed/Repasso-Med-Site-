@@ -246,8 +246,8 @@
         "infra-coordinator-v2-observe"
       ],
       "branch": "infra/c2-coordinator-v3-active-supervised",
-      "pr": null,
-      "commit": null,
+      "pr": 104,
+      "commit": "5eb1abb",
       "issue": 99,
       "notas": "Ainda não mergeado. REPASSO_COORDINATOR_MODE continua 'observe' em produção — active-supervised é opt-in, só liga quando José trocar a Variable. Suite completa (33 testes novos + toda a suite V2) verde; Guard rodado localmente. Parado em NEEDS-AUDIT para auditoria independente, conforme pedido."
     }
