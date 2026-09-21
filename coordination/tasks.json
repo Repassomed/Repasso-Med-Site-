@@ -268,8 +268,8 @@
         "infra-coordinator-v3-active-supervised"
       ],
       "branch": "infra/c2-openai-auditor-issue106",
-      "pr": null,
-      "commit": null,
+      "pr": 107,
+      "commit": "388b4f4",
       "issue": 106,
       "notas": "Ainda não mergeado. REPASSO_OPENAI_AUDITOR_ENABLED continua 'false' em produção — este PR só entrega a infraestrutura, nunca liga o auditor de verdade (nenhuma chamada real à OpenAI em código/teste). Novos módulos: openai_config.py (portão independente do Coordinator), openai_budget.py (ledger/limiter/tabela de preço separados), openai_transport.py (único arquivo que importa o SDK openai, Responses API, store=false hardcoded), openai_client.py (portão + orçamento interno + limite de chamadas, mesmo padrão de anthropic_client.py), openai_routing.py (ZERO/Terra/Sol determinístico) e openai_audit.py (prompt + parser do protocolo estruturado DECISION/RISK/REQUIRES_ESCALATION/RATIONALE/FINDINGS/DIDACTIC_FINDINGS — qualquer falha vira NEEDS-FIX, nunca MERGE-READY por omissão). observe.py integra o auditor DENTRO do mesmo caminho de auditoria Nível C já existente (nunca um gatilho novo), com aplicar_gate_openai (merge_card.py) só rebaixando a decisão da Anthropic. Worker Registry (worker_ops.py) ganhou a propriedade estrutural can_publish (sempre False, mesma prova de never_merge). redact.py endurecido para chaves no formato OpenAI com hífen (ex.: sk-proj-...), que o padrão genérico anterior não cobria por completo. Suite completa (64 módulos, incluindo os 2 novos arquivos de teste test_openai_transport.py e test_openai_auditor.py) verde; Guard rodado localmente contra origin/main."
     }
