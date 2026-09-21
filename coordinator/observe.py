@@ -61,6 +61,7 @@ from .openai_audit import (
 )
 from .openai_budget import OpenAICallLimiter
 from .openai_config import OpenAIAuditorConfig
+from .openai_privacy import preflight as privacy_preflight
 from .openai_routing import TIER_ZERO as OPENAI_TIER_ZERO, decide as openai_route_decide
 from .openai_transport import OpenAIResponsesTransport
 from .redact import redact
@@ -105,6 +106,14 @@ class ObserveResult:
     # evento não tem destino conhecido (ex.: workflow_run sem PR
     # associada) — nesse caso o workflow não deve inventar um número.
     comment_target_issue: int | None = None
+    # Correção B3 da auditoria independente do PR #107: sinal EXPLÍCITO,
+    # equivalente ao ``call_status="ok_ledger_failed"`` que o caminho
+    # Anthropic já usa, para quando uma chamada PAGA à OpenAI teve sucesso
+    # mas a correção do custo real não pôde ser persistida no ledger
+    # próprio. ``coordinator/__main__.py`` também faz o workflow sinalizar
+    # erro operacional (código de saída != 0) quando isto é ``True`` —
+    # nunca um problema silencioso que só aparece no texto do cartão.
+    openai_ledger_failed: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -126,6 +135,7 @@ class ObserveResult:
             "merge_card": self.merge_card,
             "should_comment": self.should_comment,
             "comment_target_issue": self.comment_target_issue,
+            "openai_ledger_failed": self.openai_ledger_failed,
         }
 
 
@@ -396,6 +406,12 @@ class _ResultadoOpenAI(NamedTuple):
     protocol_matched: bool
     cost_block: str
     month_to_date_usd: float
+    # Correção B3 da auditoria independente do PR #107: ``False`` quando
+    # QUALQUER chamada paga (principal ou escalada) teve sucesso mas a
+    # persistência do custo real no ledger falhou depois — propagado até
+    # ``ObserveResult.openai_ledger_failed`` para o workflow sinalizar erro
+    # operacional (nunca um problema silencioso).
+    ledger_ok: bool = True
 
 
 def _decisao_openai_de_falha(status: str, motivo: str) -> OpenAIAuditDecision:
@@ -417,6 +433,25 @@ def _decisao_openai_de_falha(status: str, motivo: str) -> OpenAIAuditDecision:
     )
 
 
+def _resultado_openai_zero_custo(*, config: Config, openai_ledger: UsageLedger, decisao: OpenAIAuditDecision,
+                                  tier: str, model_id: str) -> _ResultadoOpenAI:
+    """Monta um ``_ResultadoOpenAI`` sem nenhuma chamada ter acontecido
+    (privacy preflight bloqueou, ou roteamento decidiu ZERO — este
+    segundo caso já é tratado como ``None`` em ``_avaliar_com_openai``,
+    mas o preflight precisa de um resultado VISÍVEL no cartão, nunca
+    silencioso)."""
+    resumo_custo = montar_resumo_custo(
+        ledger=openai_ledger, brl_rate=config.brl_rate, brl_rate_date=config.brl_rate_date,
+        estimated_usd=0.0, tier=tier, model_id=model_id, calls_this_task=0,
+    )
+    return _ResultadoOpenAI(
+        decision=decisao.decision, risk=decisao.risk, rationale=decisao.rationale,
+        findings=decisao.findings, didactic_findings=decisao.didactic_findings,
+        protocol_matched=decisao.protocol_matched, cost_block=render_cost_block(resumo_custo),
+        month_to_date_usd=openai_ledger.month_to_date_usd(),
+    )
+
+
 def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: Classification, *,
                          config: Config, openai_config: OpenAIAuditorConfig | None,
                          openai_ledger: UsageLedger | None,
@@ -429,7 +464,13 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
     continua assim nesta PR (``REPASSO_OPENAI_AUDITOR_ENABLED=false``).
     Nunca lança: qualquer falha de rede/protocolo/orçamento vira um
     resultado NEEDS-FIX explícito (``_decisao_openai_de_falha``), nunca
-    uma exceção que derrubaria o pipeline inteiro."""
+    uma exceção que derrubaria o pipeline inteiro.
+
+    **Persistência do ledger (B2/B3, auditoria independente do PR #107):**
+    ``openai_client.call`` já reserva e corrige o ledger internamente —
+    este método NUNCA chama ``openai_ledger.append`` diretamente, ou o
+    custo seria contado duas vezes (reserva+correção dentro de ``call``,
+    mais um append solto aqui)."""
     if openai_config is None or not openai_config.enabled or openai_ledger is None:
         return None
 
@@ -450,6 +491,34 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
         pr_diff=event.payload.get("pr_diff"),
     )
 
+    # Correção B6 da auditoria independente do PR #107: privacy preflight
+    # determinístico, ANTES de qualquer chamada — sobre o texto EXATO que
+    # seria enviado (system prompt + prompt, já com diff/corpo/contexto
+    # embutidos). Qualquer sinal de segredo/token/dado pessoal bloqueia
+    # 100% do envio — nunca manda o conteúdo para a OpenAI decidir se é
+    # sensível.
+    checagem_privacidade = privacy_preflight(f"{OPENAI_AUDITOR_SYSTEM_PROMPT}\n\n{prompt_texto}")
+    if not checagem_privacidade.safe:
+        decisao_bloqueada = OpenAIAuditDecision(
+            decision="NEEDS-FIX",
+            risk="HIGH",
+            rationale=(
+                "Privacy preflight determinístico bloqueou o envio à OpenAI antes de qualquer "
+                "chamada — sinal(is) de segredo/token/dado pessoal detectado(s) no conteúdo que "
+                f"seria enviado: {'; '.join(checagem_privacidade.reasons)}. Zero chamada realizada "
+                "(achado B6, auditoria independente do PR #107)."
+            ),
+            findings=tuple(f"privacy preflight: {r}" for r in checagem_privacidade.reasons),
+            didactic_findings=(),
+            requires_escalation=False,
+            escalation_reason="",
+            protocol_matched=False,
+        )
+        return _resultado_openai_zero_custo(
+            config=config, openai_ledger=openai_ledger, decisao=decisao_bloqueada,
+            tier=tier_principal, model_id=model_id_principal,
+        )
+
     pedido = openai_client.build_request(
         model_id=model_id_principal, tier=tier_principal, system=OPENAI_AUDITOR_SYSTEM_PROMPT,
         prompt=prompt_texto, limiter=limitador,
@@ -460,7 +529,7 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
     )
     chamada_sanitizada = resultado_chamada.to_dict()
 
-    if resultado_chamada.status == "ok":
+    if resultado_chamada.status in ("ok", "ok_ledger_failed"):
         decisao = parse_openai_decision(chamada_sanitizada["text"] or "")
     else:
         decisao = _decisao_openai_de_falha(resultado_chamada.status, chamada_sanitizada["reason"])
@@ -469,32 +538,46 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
     calls_this_task = 0
     model_id_final = model_id_principal
     tier_final = tier_principal
-    if resultado_chamada.status == "ok" and resultado_chamada.usage is not None:
+    if resultado_chamada.status in ("ok", "ok_ledger_failed") and resultado_chamada.usage is not None:
         custo_total += resultado_chamada.usage.estimated_cost_usd
         calls_this_task += 1
-        try:
-            openai_ledger.append(resultado_chamada.usage)
-        except Exception:
-            # Mesma filosofia da falha de persistência do ledger Anthropic
-            # (ver observe()): a chamada JÁ aconteceu — nunca vira "nenhuma
-            # chamada foi tentada" só porque a persistência falhou. O custo
-            # calculado desta chamada continua no cost_block abaixo mesmo
-            # que "gasto acumulado do mês" fique temporariamente
-            # desatualizado.
-            pass
+        # B2/B3: a reserva + correção do custo já foram persistidas DENTRO
+        # de ``openai_client.call`` (hard cap real, atômico) — nunca
+        # gravar de novo aqui.
 
-    # Escalada para Sol (Issue #106): só quando a chamada principal foi
-    # Terra, teve sucesso, o próprio auditor pediu E registrou motivo
-    # (``escalada_justificada``), e o limitador ainda permite — no máximo
-    # 1 escalada por checkpoint. A escalada, quando acontece com sucesso, é
-    # quem decide de verdade (nunca mistura os dois resultados) — o motivo
-    # da escalada fica registrado na rationale final para rastreabilidade.
-    if (
+    ledger_falhou = resultado_chamada.status == "ok_ledger_failed"
+
+    if resultado_chamada.status == "ok_ledger_failed":
+        # Correção B3: a chamada aconteceu e teve sucesso, mas a correção
+        # do custo real não pôde ser persistida no ledger — fail-closed:
+        # nunca confia na decisão reportada pelo modelo neste caso, e
+        # NUNCA permite escalada (mesmo que Terra tenha pedido uma).
+        decisao = OpenAIAuditDecision(
+            decision="NEEDS-FIX",
+            risk="HIGH",
+            rationale=(
+                "Auditoria OpenAI concluída, mas a persistência do custo no ledger falhou depois "
+                "da chamada — tratado como NEEDS-FIX por segurança (fail-closed) e sem escalada, "
+                f"mesmo que o auditor tivesse pedido: {chamada_sanitizada['reason']} (achado B3, "
+                "auditoria independente do PR #107)."
+            ),
+            findings=decisao.findings if decisao.protocol_matched else (),
+            didactic_findings=decisao.didactic_findings if decisao.protocol_matched else (),
+            requires_escalation=False,
+            escalation_reason="",
+            protocol_matched=False,
+        )
+    elif (
         tier_principal == "TERRA"
         and resultado_chamada.status == "ok"
         and escalada_justificada(decisao)
         and limitador.can_escalate()
     ):
+        # Escalada para Sol (Issue #106): só quando a chamada principal foi
+        # Terra, teve sucesso, o próprio auditor pediu E registrou motivo
+        # (``escalada_justificada``), e o limitador ainda permite — no
+        # máximo 1 escalada por checkpoint.
+        motivo_escalada = decisao.escalation_reason
         pedido_escalada = openai_client.build_request(
             model_id=openai_config.high_risk_model, tier="SOL", system=OPENAI_AUDITOR_SYSTEM_PROMPT,
             prompt=prompt_texto, limiter=limitador,
@@ -504,31 +587,71 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
             ledger=openai_ledger, event_key=event_key, escalation=True,
         )
         chamada_escalada_sanitizada = resultado_escalada.to_dict()
+        model_id_final = openai_config.high_risk_model
+        tier_final = "SOL"
+
+        if resultado_escalada.usage is not None:
+            custo_total += resultado_escalada.usage.estimated_cost_usd
+            calls_this_task += 1
+            # Idem — já persistido dentro de call(), nunca de novo aqui.
+
         if resultado_escalada.status == "ok":
-            motivo_escalada = decisao.escalation_reason
-            if resultado_escalada.usage is not None:
-                custo_total += resultado_escalada.usage.estimated_cost_usd
-                calls_this_task += 1
-                try:
-                    openai_ledger.append(resultado_escalada.usage)
-                except Exception:
-                    pass
             decisao_escalada = parse_openai_decision(chamada_escalada_sanitizada["text"] or "")
+            if decisao_escalada.protocol_matched:
+                decisao = OpenAIAuditDecision(
+                    decision=decisao_escalada.decision,
+                    risk=decisao_escalada.risk,
+                    rationale=f"[Escalado para Sol — motivo: {motivo_escalada}] {decisao_escalada.rationale}",
+                    findings=decisao_escalada.findings,
+                    didactic_findings=decisao_escalada.didactic_findings,
+                    requires_escalation=False,
+                    escalation_reason="",
+                    protocol_matched=True,
+                )
+            else:
+                # Correção B4: Sol respondeu, mas com protocolo inválido —
+                # auditoria incompleta. Nunca mantém o MERGE-READY que
+                # Terra possa ter reportado antes de pedir a escalada.
+                decisao = OpenAIAuditDecision(
+                    decision="NEEDS-FIX", risk="HIGH",
+                    rationale=(
+                        f"Terra pediu escalada ('{motivo_escalada}'), mas a resposta de Sol não "
+                        "seguiu o protocolo esperado — auditoria incompleta, tratada como "
+                        "NEEDS-FIX, nunca MERGE-READY por omissão (achado B4, auditoria "
+                        "independente do PR #107)."
+                    ),
+                    findings=(), didactic_findings=(), requires_escalation=False, escalation_reason="",
+                    protocol_matched=False,
+                )
+        elif resultado_escalada.status == "ok_ledger_failed":
+            ledger_falhou = True
+            # Mesmo tratamento fail-closed do B3, agora sobre a escalada.
             decisao = OpenAIAuditDecision(
-                decision=decisao_escalada.decision,
-                risk=decisao_escalada.risk,
-                rationale=f"[Escalado para Sol — motivo: {motivo_escalada}] {decisao_escalada.rationale}",
-                findings=decisao_escalada.findings,
-                didactic_findings=decisao_escalada.didactic_findings,
-                requires_escalation=False,
-                escalation_reason="",
-                protocol_matched=decisao_escalada.protocol_matched,
+                decision="NEEDS-FIX", risk="HIGH",
+                rationale=(
+                    f"Terra pediu escalada ('{motivo_escalada}'), Sol respondeu, mas a persistência "
+                    f"do custo no ledger falhou — tratado como NEEDS-FIX por segurança "
+                    f"(fail-closed): {chamada_escalada_sanitizada['reason']}"
+                ),
+                findings=(), didactic_findings=(), requires_escalation=False, escalation_reason="",
+                protocol_matched=False,
             )
-            model_id_final = openai_config.high_risk_model
-            tier_final = "SOL"
-        # Escalada falhou (erro/limited/blocked): mantém a decisão de
-        # Terra como está — uma falha na segunda chamada nunca apaga um
-        # resultado válido já obtido, e nunca promove nada.
+        else:
+            # Correção B4: a escalada foi requerida/justificada e NÃO
+            # concluiu (bloqueada/erro/limitada) — a própria falta de uma
+            # segunda opinião completa é motivo de NEEDS-FIX; nunca
+            # preserva a decisão de Terra como se nada tivesse faltado.
+            decisao = OpenAIAuditDecision(
+                decision="NEEDS-FIX", risk="HIGH",
+                rationale=(
+                    f"Terra pediu escalada para Sol ('{motivo_escalada}'), mas a chamada a Sol não "
+                    f"foi concluída (status={resultado_escalada.status!r}: "
+                    f"{chamada_escalada_sanitizada['reason']}) — auditoria incompleta nunca vira "
+                    "MERGE-READY (achado B4, auditoria independente do PR #107)."
+                ),
+                findings=(), didactic_findings=(), requires_escalation=False, escalation_reason="",
+                protocol_matched=False,
+            )
 
     if calls_this_task > 0:
         resumo_custo = montar_resumo_custo(
@@ -551,6 +674,7 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
         protocol_matched=decisao.protocol_matched,
         cost_block=render_cost_block(resumo_custo),
         month_to_date_usd=openai_ledger.month_to_date_usd(),
+        ledger_ok=not ledger_falhou,
     )
 
 
@@ -981,6 +1105,7 @@ def observe(
         )
 
     alvo_comentario = _pr_number_from_identity(event.identity)
+    openai_ledger_falhou = bool(resultado_openai is not None and not resultado_openai.ledger_ok)
 
     if not ledger_persistiu:
         return ObserveResult(
@@ -998,6 +1123,7 @@ def observe(
             merge_card=cartao_final,
             should_comment=executar_auditoria,
             comment_target_issue=alvo_comentario if executar_auditoria else None,
+            openai_ledger_failed=openai_ledger_falhou,
             **resultado_base,
         )
 
@@ -1013,5 +1139,6 @@ def observe(
         merge_card=cartao_final,
         should_comment=executar_auditoria,
         comment_target_issue=alvo_comentario if executar_auditoria else None,
+        openai_ledger_failed=openai_ledger_falhou,
         **resultado_base,
     )

@@ -191,6 +191,9 @@ def test_exception_from_fake_sdk_never_leaks_key_in_result() -> None:
                 def month_to_date_usd(self, *, now=None):
                     return 0.0
 
+                def append(self, record):
+                    pass
+
             resultado = openai_client.call(
                 cfg, _request_de_teste(), transport=OpenAIResponsesTransport(),
                 limiter=OpenAICallLimiter(), ledger=_LedgerFake(), event_key="evt:vaza-chave",

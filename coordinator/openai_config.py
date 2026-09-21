@@ -35,6 +35,8 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
+from .openai_budget import SUPPORTED_MODELS
+
 ENV_ENABLED = "REPASSO_OPENAI_AUDITOR_ENABLED"
 ENV_MODEL = "REPASSO_OPENAI_AUDITOR_MODEL"
 ENV_HIGH_RISK_MODEL = "REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL"
@@ -66,6 +68,25 @@ class OpenAIAuditorConfig:
                 reason=(
                     f"{ENV_ENABLED}=false (ou ausente). Nenhuma chamada à OpenAI é "
                     "permitida enquanto este portão estiver fechado (Issue #106)."
+                ),
+            )
+        # Correção B1 da auditoria independente do PR #107: "a config deve
+        # restringir explicitamente os modelos suportados; não calcular
+        # preço de um modelo arbitrário só pelo rótulo TERRA/SOL". Um
+        # model_id mal configurado numa Variable do GitHub (typo, modelo
+        # descontinuado, etc.) nunca pode chegar perto de uma chamada real
+        # — bloqueado aqui, ANTES de qualquer tentativa, com o mesmo erro
+        # que ``openai_budget.estimate_cost_usd_openai`` levantaria depois
+        # (defesa em profundidade: os dois lugares checam a mesma coisa).
+        nao_suportados = [m for m in (self.model, self.high_risk_model) if m not in SUPPORTED_MODELS]
+        if nao_suportados:
+            return OpenAIGateResult(
+                open=False,
+                reason=(
+                    f"model_id(s) configurado(s) não está(ão) em SUPPORTED_MODELS "
+                    f"({sorted(SUPPORTED_MODELS)!r}): {nao_suportados!r}. Nenhuma chamada é "
+                    "permitida com um modelo não cadastrado explicitamente (achado B1, auditoria "
+                    "independente do PR #107)."
                 ),
             )
         return OpenAIGateResult(open=True, reason="ENABLED=true: portão do OpenAI Auditor aberto.")

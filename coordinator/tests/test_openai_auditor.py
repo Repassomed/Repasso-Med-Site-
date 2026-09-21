@@ -166,6 +166,34 @@ def _pipeline(*, ev: Event, anthropic_texto: str, openai_config: OpenAIAuditorCo
 
 
 # ---------------------------------------------------------------------------
+# B1 — preços oficiais fixados em teste (nunca um placeholder de novo).
+# ---------------------------------------------------------------------------
+
+def test_pricing_table_matches_official_values() -> None:
+    """Achado B1 da auditoria independente do PR #107: fixa os preços
+    oficiais confirmados na auditoria — se alguém mudar a tabela sem
+    querer (ou voltar a um placeholder), este teste quebra."""
+    from coordinator.openai_budget import SUPPORTED_MODELS
+
+    assert SUPPORTED_MODELS["gpt-5.6-terra"] == {"input": 2.00, "output": 12.00}
+    assert SUPPORTED_MODELS["gpt-5.6-sol"] == {"input": 4.00, "output": 20.00}
+    print("OK  test_pricing_table_matches_official_values")
+
+
+def test_estimate_cost_rejects_unsupported_model_id() -> None:
+    """Achado B1: nunca calcular preço de um model_id arbitrário caindo
+    silenciosamente no preço de outro modelo."""
+    from coordinator.openai_budget import estimate_cost_usd_openai
+
+    try:
+        estimate_cost_usd_openai("modelo-que-nao-existe", 1000, 1000)
+        raise AssertionError("devia ter levantado ValueError para model_id não suportado")
+    except ValueError as e:
+        assert "modelo-que-nao-existe" in str(e)
+    print("OK  test_estimate_cost_rejects_unsupported_model_id")
+
+
+# ---------------------------------------------------------------------------
 # Config / portão.
 # ---------------------------------------------------------------------------
 
@@ -179,17 +207,29 @@ def test_config_disabled_by_default() -> None:
 def test_config_reads_env_variables() -> None:
     env = {
         "REPASSO_OPENAI_AUDITOR_ENABLED": "true",
-        "REPASSO_OPENAI_AUDITOR_MODEL": "gpt-x",
-        "REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL": "gpt-y",
+        "REPASSO_OPENAI_AUDITOR_MODEL": "gpt-5.6-terra",
+        "REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL": "gpt-5.6-sol",
         "REPASSO_OPENAI_AUDITOR_BUDGET_USD": "7.5",
     }
     cfg = OpenAIAuditorConfig.from_env(env)
     assert cfg.enabled is True
-    assert cfg.model == "gpt-x"
-    assert cfg.high_risk_model == "gpt-y"
+    assert cfg.model == "gpt-5.6-terra"
+    assert cfg.high_risk_model == "gpt-5.6-sol"
     assert cfg.budget_usd == 7.5
     assert cfg.gate().open is True
     print("OK  test_config_reads_env_variables")
+
+
+def test_config_with_unsupported_model_closes_gate() -> None:
+    """Correção B1 da auditoria independente do PR #107: um model_id fora
+    de SUPPORTED_MODELS (ex.: typo numa Variable do GitHub) nunca pode
+    chegar perto de uma chamada real — o portão fecha, mesmo com
+    ENABLED=true."""
+    cfg = OpenAIAuditorConfig(enabled=True, model="gpt-x-desconhecido")
+    resultado = cfg.gate()
+    assert resultado.open is False
+    assert "SUPPORTED_MODELS" in resultado.reason or "gpt-x-desconhecido" in resultado.reason
+    print("OK  test_config_with_unsupported_model_closes_gate")
 
 
 def test_disabled_config_blocks_before_any_call() -> None:
@@ -232,18 +272,85 @@ def test_call_limiter_escalation_requires_main_first() -> None:
 def test_budget_hard_stop_blocks_new_calls() -> None:
     ledger = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage.json"))
     ledger.append(OpenAIUsageRecord(
-        timestamp=_now_iso(), event_key="seed", tier="TERRA", model_id="x",
+        timestamp=_now_iso(), event_key="seed", tier="TERRA", model_id="gpt-5.6-terra",
         input_tokens=0, output_tokens=0, estimated_cost_usd=5.0,
     ))
     cfg = OpenAIAuditorConfig(enabled=True, budget_usd=5.0)
     lim = OpenAICallLimiter()
-    pedido = openai_client.build_request(model_id="x", tier="TERRA", system="s", prompt="p", limiter=lim)
+    pedido = openai_client.build_request(model_id="gpt-5.6-terra", tier="TERRA", system="s", prompt="p", limiter=lim)
     transporte = _TransporteOpenAIQueSempreFalha()
     resultado = openai_client.call(cfg, pedido, transport=transporte, limiter=lim, ledger=ledger, event_key="x")
     assert resultado.status == "blocked"
     assert transporte.calls == 0
     assert "orçamento" in resultado.reason.lower() or "orcamento" in resultado.reason.lower()
     print("OK  test_budget_hard_stop_blocks_new_calls")
+
+
+def test_budget_conservative_reservation_blocks_call_that_would_cross_cap() -> None:
+    """Teste obrigatório da auditoria independente do PR #107 (achado B2):
+    ledger em US$4.99; uma chamada cujo TETO CONSERVADOR (pior caso de
+    tokens) cruzaria US$5 precisa ser bloqueada ANTES do envio — mesmo
+    que o custo REAL, se a chamada acontecesse, provavelmente ficasse
+    dentro do teto. O hard cap é sobre o pior caso, nunca sobre uma
+    aposta otimista."""
+    ledger = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage.json"))
+    ledger.append(OpenAIUsageRecord(
+        timestamp=_now_iso(), event_key="seed", tier="TERRA", model_id="gpt-5.6-terra",
+        input_tokens=0, output_tokens=0, estimated_cost_usd=4.99,
+    ))
+    cfg = OpenAIAuditorConfig(enabled=True, budget_usd=5.0)
+    lim = OpenAICallLimiter()
+    pedido = openai_client.build_request(
+        model_id="gpt-5.6-terra", tier="TERRA", system="s", prompt="p", limiter=lim,
+    )
+    transporte = _TransporteOpenAIQueSempreFalha()
+    resultado = openai_client.call(cfg, pedido, transport=transporte, limiter=lim, ledger=ledger, event_key="x")
+    assert resultado.status == "blocked"
+    assert transporte.calls == 0, "o teto conservador cruzaria US$5 — a chamada nunca pode ser tentada"
+    print("OK  test_budget_conservative_reservation_blocks_call_that_would_cross_cap")
+
+
+def test_budget_concurrent_reservations_second_call_blocked_by_first_reservation() -> None:
+    """Variante decisiva do teste de concorrência: orçamento pequeno o
+    bastante para caber APENAS UMA reserva conservadora — a segunda
+    chamada, disparada de dentro do ``send()`` da primeira (ou seja,
+    depois que a primeira já reservou, mas antes dela terminar), precisa
+    ser bloqueada."""
+    from coordinator.openai_budget import conservative_call_cost_usd
+
+    teto_uma_chamada = conservative_call_cost_usd("gpt-5.6-terra")
+    orcamento = teto_uma_chamada * 1.5  # cabe 1 reserva, não cabem 2 juntas
+    ledger = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage.json"))
+    cfg = OpenAIAuditorConfig(enabled=True, budget_usd=orcamento)
+    resultados_b = []
+
+    class _TransporteQueDisparaB:
+        def send(self, request):
+            lim_b = OpenAICallLimiter()
+            pedido_b = openai_client.build_request(
+                model_id="gpt-5.6-terra", tier="TERRA", system="s", prompt="p", limiter=lim_b,
+            )
+            resultado_b = openai_client.call(
+                cfg, pedido_b, transport=_TransporteOpenAIQueSempreFalha(), limiter=lim_b,
+                ledger=ledger, event_key="evento-b-bloqueado",
+            )
+            resultados_b.append(resultado_b)
+            return _RespostaOpenAIFalsa(_MERGE_READY_TEXTO, 10, 5)
+
+    lim_a = OpenAICallLimiter()
+    pedido_a = openai_client.build_request(
+        model_id="gpt-5.6-terra", tier="TERRA", system="s", prompt="p", limiter=lim_a,
+    )
+    resultado_a = openai_client.call(
+        cfg, pedido_a, transport=_TransporteQueDisparaB(), limiter=lim_a, ledger=ledger, event_key="evento-a-ok",
+    )
+    assert resultado_a.status == "ok", "a primeira chamada cabia sozinha no orçamento"
+    assert len(resultados_b) == 1
+    assert resultados_b[0].status == "blocked", (
+        "a reserva de A já estava persistida quando B checou o orçamento — as duas juntas "
+        "ultrapassariam o teto, então B precisa ser bloqueada"
+    )
+    print("OK  test_budget_concurrent_reservations_second_call_blocked_by_first_reservation")
 
 
 # ---------------------------------------------------------------------------
@@ -311,6 +418,52 @@ def test_parse_findings_and_didactic_findings() -> None:
     print("OK  test_parse_findings_and_didactic_findings")
 
 
+def test_parse_decision_only_line_is_invalid_protocol_never_merge_ready() -> None:
+    """Teste obrigatório da auditoria independente do PR #107 (achado
+    B5): uma resposta com SÓ a primeira linha (sem RISK/
+    REQUIRES_ESCALATION/ESCALATION_REASON/RATIONALE/FINDINGS/
+    DIDACTIC_FINDINGS) precisa virar NEEDS-FIX com protocol_matched=False
+    — nunca mais um 'default seguro' que fingia protocolo válido."""
+    d = parse_openai_decision("DECISION: MERGE-READY")
+    assert d.decision == "NEEDS-FIX"
+    assert d.protocol_matched is False
+    print("OK  test_parse_decision_only_line_is_invalid_protocol_never_merge_ready")
+
+
+def test_parse_missing_single_required_field_is_invalid() -> None:
+    """Cada campo obrigatório, faltando sozinho, já invalida o protocolo
+    — não é só 'a maioria dos campos'."""
+    completo = (
+        "DECISION: MERGE-READY\nRISK: NORMAL\nREQUIRES_ESCALATION: false\nESCALATION_REASON: -\n"
+        "RATIONALE: tudo certo.\nFINDINGS:\nDIDACTIC_FINDINGS:\n"
+    )
+    sem_risk = completo.replace("RISK: NORMAL\n", "")
+    d = parse_openai_decision(sem_risk)
+    assert d.protocol_matched is False and d.decision == "NEEDS-FIX"
+
+    sem_rationale = completo.replace("RATIONALE: tudo certo.\n", "")
+    d2 = parse_openai_decision(sem_rationale)
+    assert d2.protocol_matched is False and d2.decision == "NEEDS-FIX"
+    print("OK  test_parse_missing_single_required_field_is_invalid")
+
+
+def test_parse_invalid_risk_or_requires_escalation_value_is_invalid() -> None:
+    texto_risk_invalido = (
+        "DECISION: MERGE-READY\nRISK: MEDIO\nREQUIRES_ESCALATION: false\nESCALATION_REASON: -\n"
+        "RATIONALE: x.\nFINDINGS:\nDIDACTIC_FINDINGS:\n"
+    )
+    d = parse_openai_decision(texto_risk_invalido)
+    assert d.protocol_matched is False and d.decision == "NEEDS-FIX"
+
+    texto_escalation_invalido = (
+        "DECISION: MERGE-READY\nRISK: NORMAL\nREQUIRES_ESCALATION: talvez\nESCALATION_REASON: -\n"
+        "RATIONALE: x.\nFINDINGS:\nDIDACTIC_FINDINGS:\n"
+    )
+    d2 = parse_openai_decision(texto_escalation_invalido)
+    assert d2.protocol_matched is False and d2.decision == "NEEDS-FIX"
+    print("OK  test_parse_invalid_risk_or_requires_escalation_value_is_invalid")
+
+
 def test_escalada_justificada_requires_reason() -> None:
     base = OpenAIAuditDecision(
         decision="NEEDS-FIX", risk="HIGH", rationale="x", findings=(), didactic_findings=(),
@@ -352,6 +505,63 @@ def test_redact_masks_openai_style_key_with_hyphens() -> None:
     assert "sk-proj-abcDEF1234567890-xyz-mais-coisa" not in saida
     assert "[REDACTED:api-key]" in saida
     print("OK  test_redact_masks_openai_style_key_with_hyphens")
+
+
+# ---------------------------------------------------------------------------
+# B6 — privacy preflight determinístico ANTES de qualquer envio.
+# ---------------------------------------------------------------------------
+
+def test_privacy_preflight_blocks_secret_and_pii_patterns() -> None:
+    from coordinator.openai_privacy import preflight as _pf
+
+    assert _pf("texto qualquer sem nada sensível, só uma frase normal.").safe is True
+
+    r1 = _pf("veja essa chave: sk-ant-abcdefghij1234567890")
+    assert r1.safe is False and r1.reasons
+
+    r2 = _pf("aqui está: API_KEY=abcdef1234567890xyz")
+    assert r2.safe is False
+
+    r3 = _pf("CPF do aluno: 123.456.789-01")
+    assert r3.safe is False
+
+    r4 = _pf("contato: aluno@example.com")
+    assert r4.safe is False
+    print("OK  test_privacy_preflight_blocks_secret_and_pii_patterns")
+
+
+def test_privacy_preflight_allows_ordinary_pr_content() -> None:
+    """Nunca pode ser tão agressivo a ponto de travar um diff/PR normal
+    de conteúdo médico/didático — sem e-mail, sem CPF, sem token."""
+    from coordinator.openai_privacy import preflight as _pf
+
+    texto = (
+        "diff --git a/farmacologia-ii.html b/farmacologia-ii.html\n"
+        "+<p>A dose de manutenção recomendada é 500mg a cada 8 horas.</p>\n"
+        "Corpo da PR: ajuste de prosa didática na seção de farmacocinética."
+    )
+    assert _pf(texto).safe is True
+    print("OK  test_privacy_preflight_allows_ordinary_pr_content")
+
+
+def test_pipeline_privacy_preflight_blocks_call_with_secret_in_diff() -> None:
+    """Pipeline completo: um diff que carregue algo com cara de segredo
+    nunca chega a ser enviado à OpenAI — zero chamada, decisão NEEDS-FIX,
+    mesmo com Anthropic tendo dito MERGE-READY (achado B6)."""
+    diff_com_segredo = (
+        "diff --git a/coordinator/config.py b/coordinator/config.py\n"
+        "+ANTHROPIC_API_KEY = \"sk-ant-abcdefghijklmnopqrstuvwxyz1234567890\"\n"
+    )
+    ev = _evento_pr_materia(head_sha="p-privacy", body="ajuste de prosa didática", diff=diff_com_segredo)
+    t_openai = _TransporteOpenAIQueSempreFalha()
+    r, _, _, _ = _pipeline(
+        ev=ev, anthropic_texto="DECISÃO: MERGE-READY\nok.", openai_config=OpenAIAuditorConfig(enabled=True),
+        openai_transport=t_openai,
+    )
+    assert t_openai.calls == 0, "privacy preflight precisa bloquear ANTES de qualquer chamada"
+    assert r.audit_decision == "NEEDS-FIX"
+    assert "privacy preflight" in r.merge_card.lower() or "preflight" in r.merge_card.lower()
+    print("OK  test_pipeline_privacy_preflight_blocks_call_with_secret_in_diff")
 
 
 # ---------------------------------------------------------------------------
@@ -453,10 +663,10 @@ def test_pipeline_guard_hard_fail_zero_openai_calls() -> None:
 def test_pipeline_terra_used_for_normal_medical_audit() -> None:
     ev = _evento_pr_materia(head_sha="p4", body="ajuste de prosa didática")
     t_openai = _TransporteOpenAIFalso(_RespostaOpenAIFalsa(_MERGE_READY_TEXTO, 10, 5))
-    cfg = OpenAIAuditorConfig(enabled=True, model="terra-x", high_risk_model="sol-y")
+    cfg = OpenAIAuditorConfig(enabled=True)
     r, _, _, _ = _pipeline(ev=ev, anthropic_texto="DECISÃO: MERGE-READY\nok.", openai_config=cfg, openai_transport=t_openai)
     assert t_openai.calls == 1
-    assert t_openai.requests[0].model_id == "terra-x"
+    assert t_openai.requests[0].model_id == "gpt-5.6-terra"
     assert t_openai.requests[0].tier == "TERRA"
     assert r.audit_decision == "MERGE-READY"
     print("OK  test_pipeline_terra_used_for_normal_medical_audit")
@@ -468,10 +678,10 @@ def test_pipeline_sol_used_directly_when_high_risk_signal_present() -> None:
         "DECISION: NEEDS-FIX\nRISK: HIGH\nREQUIRES_ESCALATION: false\nESCALATION_REASON: -\n"
         "RATIONALE: conflito real entre cátedra e literatura.\nFINDINGS:\nDIDACTIC_FINDINGS:\n", 10, 5,
     ))
-    cfg = OpenAIAuditorConfig(enabled=True, model="terra-x", high_risk_model="sol-y")
+    cfg = OpenAIAuditorConfig(enabled=True)
     r, _, _, _ = _pipeline(ev=ev, anthropic_texto="DECISÃO: MERGE-READY\nok.", openai_config=cfg, openai_transport=t_openai)
     assert t_openai.calls == 1
-    assert t_openai.requests[0].model_id == "sol-y"
+    assert t_openai.requests[0].model_id == "gpt-5.6-sol"
     assert t_openai.requests[0].tier == "SOL"
     assert r.audit_decision == "NEEDS-FIX", "OpenAI discordou — só pode rebaixar, nunca promover"
     print("OK  test_pipeline_sol_used_directly_when_high_risk_signal_present")
@@ -521,6 +731,44 @@ def test_pipeline_escalation_never_requested_without_justification() -> None:
     print("OK  test_pipeline_escalation_never_requested_without_justification")
 
 
+def test_pipeline_terra_merge_ready_escalation_required_sol_errors_never_merge_ready() -> None:
+    """Teste obrigatório da auditoria independente do PR #107 (achado
+    B4): Terra MERGE-READY + escalada requerida/justificada + Sol falha
+    (erro de transporte) => decisão final NUNCA pode ficar MERGE-READY.
+    Uma auditoria que o próprio auditor considerou incompleta (por isso
+    pediu Sol) não pode virar aprovação só porque Sol não respondeu."""
+    resposta_terra = _RespostaOpenAIFalsa(
+        "DECISION: MERGE-READY\nRISK: HIGH\nREQUIRES_ESCALATION: true\nESCALATION_REASON: incerteza "
+        "científica real sobre a dosagem citada\nRATIONALE: parece correto, mas prefiro confirmar."
+        "\nFINDINGS:\nDIDACTIC_FINDINGS:\n", 10, 5,
+    )
+
+    class _TransporteFalhaNaSegunda:
+        def __init__(self, primeira_resposta):
+            self._primeira = primeira_resposta
+            self.calls = 0
+            self.requests: list = []
+
+        def send(self, request):
+            self.calls += 1
+            self.requests.append(request)
+            if self.calls == 1:
+                return self._primeira
+            raise RuntimeError("timeout simulado na escalada para Sol")
+
+    t_openai = _TransporteFalhaNaSegunda(resposta_terra)
+    ev = _evento_pr_materia(head_sha="p6b", body="ajuste de prosa didática")
+    r, _, _, _ = _pipeline(
+        ev=ev, anthropic_texto="DECISÃO: MERGE-READY\nok.", openai_config=OpenAIAuditorConfig(enabled=True),
+        openai_transport=t_openai,
+    )
+    assert t_openai.calls == 2
+    assert r.audit_decision == "NEEDS-FIX", (
+        "Terra pediu escalada e Sol falhou — auditoria incompleta nunca pode virar MERGE-READY"
+    )
+    print("OK  test_pipeline_terra_merge_ready_escalation_required_sol_errors_never_merge_ready")
+
+
 def test_pipeline_budget_exhausted_blocks_openai_call_never_merge_ready() -> None:
     openai_ledger = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage-openai.json"))
     openai_ledger.append(OpenAIUsageRecord(
@@ -552,6 +800,42 @@ def test_pipeline_openai_transport_error_never_yields_merge_ready() -> None:
     print("OK  test_pipeline_openai_transport_error_never_yields_merge_ready")
 
 
+def test_pipeline_ledger_correction_failure_is_fail_closed_and_flagged() -> None:
+    """Achado B3: quando a chamada teve sucesso mas a CORREÇÃO do custo
+    real não persiste, a decisão precisa ser fail-closed (NEEDS-FIX,
+    nunca a decisão real do modelo) E o pipeline precisa sinalizar isso
+    de forma visível em ``ObserveResult.openai_ledger_failed`` — nunca um
+    ``except Exception: pass`` silencioso."""
+
+    class _LedgerFalhaNaCorrecao:
+        def __init__(self, ledger_real):
+            self._real = ledger_real
+
+        def append(self, record):
+            if getattr(record, "kind", "usage") == "correction":
+                raise RuntimeError("falha simulada ao persistir a correção do ledger")
+            self._real.append(record)
+
+        def month_to_date_usd(self, *, now=None):
+            return self._real.month_to_date_usd(now=now)
+
+        def all_records(self):
+            return self._real.all_records()
+
+    openai_ledger_real = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage-openai.json"))
+    openai_ledger_falho = _LedgerFalhaNaCorrecao(openai_ledger_real)
+    t_openai = _TransporteOpenAIFalso(_RespostaOpenAIFalsa(_MERGE_READY_TEXTO, 10, 5))
+    ev = _evento_pr_materia(head_sha="p9b", body="ajuste de prosa didática")
+    r, _, _, _ = _pipeline(
+        ev=ev, anthropic_texto="DECISÃO: MERGE-READY\nok.", openai_config=OpenAIAuditorConfig(enabled=True),
+        openai_transport=t_openai, openai_ledger=openai_ledger_falho,
+    )
+    assert t_openai.calls == 1, "a chamada aconteceu de verdade — só a correção do ledger falhou"
+    assert r.audit_decision == "NEEDS-FIX", "fail-closed: nunca confiar na decisão quando o ledger não confirma o custo"
+    assert r.openai_ledger_failed is True
+    print("OK  test_pipeline_ledger_correction_failure_is_fail_closed_and_flagged")
+
+
 def test_pipeline_shows_separate_anthropic_and_openai_costs_and_combined_total() -> None:
     ev = _evento_pr_materia(head_sha="p10", body="ajuste de prosa didática")
     t_openai = _TransporteOpenAIFalso(_RespostaOpenAIFalsa(_MERGE_READY_TEXTO, 500, 100))
@@ -565,10 +849,25 @@ def test_pipeline_shows_separate_anthropic_and_openai_costs_and_combined_total()
 
     registros_anthropic = ledger.all_records()
     registros_openai = openai_ledger.all_records()
-    assert len(registros_anthropic) == 1 and len(registros_openai) == 1, "ledgers SEPARADOS, cada um com o seu próprio registro"
-    assert registros_openai[0]["provider"] == "openai"
+    assert len(registros_anthropic) == 1, "ledger Anthropic: 1 registro por chamada bem-sucedida"
+    # Correção B2/B3 (auditoria independente do PR #107): o ledger OpenAI
+    # agora grava a RESERVA conservadora antes da chamada e a CORREÇÃO
+    # para o custo real depois — 2 registros por chamada bem-sucedida,
+    # nunca 1 solto (isso é o que dá o hard cap real e a garantia de
+    # nunca perder o custo de uma chamada paga).
+    assert len(registros_openai) == 2, "ledger OpenAI: reserva + correção por chamada bem-sucedida"
+    assert all(r["provider"] == "openai" for r in registros_openai), "ledgers SEPARADOS por provider"
+    assert {r["kind"] for r in registros_openai} == {"reservation", "correction"}
     assert registros_openai[0]["tier"] == "TERRA"
     assert registros_anthropic[0]["tier"] in ("FAST", "STANDARD", "DEEP")
+
+    custo_openai_total = sum(r["estimated_cost_usd"] for r in registros_openai)
+    from coordinator.openai_budget import estimate_cost_usd_openai
+    custo_real_esperado = estimate_cost_usd_openai("gpt-5.6-terra", 500, 100)
+    assert abs(custo_openai_total - custo_real_esperado) < 1e-9, (
+        "a soma reserva+correção precisa bater exatamente com o custo real — nunca contado "
+        "duas vezes, nunca perdido"
+    )
     print("OK  test_pipeline_shows_separate_anthropic_and_openai_costs_and_combined_total")
 
 
@@ -595,12 +894,17 @@ def test_pipeline_observe_mode_ignores_openai_entirely() -> None:
 
 def main() -> int:
     testes = [
+        test_pricing_table_matches_official_values,
+        test_estimate_cost_rejects_unsupported_model_id,
         test_config_disabled_by_default,
         test_config_reads_env_variables,
+        test_config_with_unsupported_model_closes_gate,
         test_disabled_config_blocks_before_any_call,
         test_call_limiter_allows_one_main_and_one_escalation,
         test_call_limiter_escalation_requires_main_first,
         test_budget_hard_stop_blocks_new_calls,
+        test_budget_conservative_reservation_blocks_call_that_would_cross_cap,
+        test_budget_concurrent_reservations_second_call_blocked_by_first_reservation,
         test_routing_zero_without_diff,
         test_routing_terra_for_normal_medical_content,
         test_routing_sol_for_high_risk_signal,
@@ -608,10 +912,15 @@ def main() -> int:
         test_parse_invalid_protocol_defaults_needs_fix,
         test_parse_empty_response_defaults_needs_fix,
         test_parse_findings_and_didactic_findings,
+        test_parse_decision_only_line_is_invalid_protocol_never_merge_ready,
+        test_parse_missing_single_required_field_is_invalid,
+        test_parse_invalid_risk_or_requires_escalation_value_is_invalid,
         test_escalada_justificada_requires_reason,
         test_system_prompt_declares_diff_and_body_as_untrusted_data,
         test_build_prompt_includes_real_diff_verbatim_as_data,
         test_redact_masks_openai_style_key_with_hyphens,
+        test_privacy_preflight_blocks_secret_and_pii_patterns,
+        test_privacy_preflight_allows_ordinary_pr_content,
         test_render_provider_totals_shows_both_and_combined,
         test_aplicar_gate_openai_only_downgrades,
         test_chatgpt_auditor_seed_offline_and_cannot_publish_or_merge,
@@ -622,8 +931,11 @@ def main() -> int:
         test_pipeline_sol_used_directly_when_high_risk_signal_present,
         test_pipeline_escalation_to_sol_happens_once_when_justified,
         test_pipeline_escalation_never_requested_without_justification,
+        test_pipeline_terra_merge_ready_escalation_required_sol_errors_never_merge_ready,
         test_pipeline_budget_exhausted_blocks_openai_call_never_merge_ready,
         test_pipeline_openai_transport_error_never_yields_merge_ready,
+        test_pipeline_ledger_correction_failure_is_fail_closed_and_flagged,
+        test_pipeline_privacy_preflight_blocks_call_with_secret_in_diff,
         test_pipeline_shows_separate_anthropic_and_openai_costs_and_combined_total,
         test_pipeline_observe_mode_ignores_openai_entirely,
     ]

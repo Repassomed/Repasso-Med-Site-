@@ -189,15 +189,15 @@ class OpenAIAuditDecision:
         }
 
 
-def _protocolo_invalido(texto: str) -> OpenAIAuditDecision:
+def _protocolo_invalido(texto: str, *, motivo_estrutural: str | None = None) -> OpenAIAuditDecision:
+    detalhe = f" ({motivo_estrutural})" if motivo_estrutural else ""
     return OpenAIAuditDecision(
         decision="NEEDS-FIX",
         risk="NORMAL",
         rationale=(
-            "A resposta do OpenAI Auditor não seguiu o protocolo esperado (primeira linha "
-            "precisa ser exatamente 'DECISION: MERGE-READY' ou 'DECISION: NEEDS-FIX') — "
-            "tratado como NEEDS-FIX por segurança, nunca como aprovação por omissão. "
-            f"Resposta recebida: {texto[:2000] or '(vazia)'}"
+            "A resposta do OpenAI Auditor não seguiu o protocolo esperado"
+            f"{detalhe} — tratado como NEEDS-FIX por segurança, nunca como aprovação por "
+            f"omissão. Resposta recebida: {texto[:2000] or '(vazia)'}"
         ),
         findings=(),
         didactic_findings=(),
@@ -207,14 +207,36 @@ def _protocolo_invalido(texto: str) -> OpenAIAuditDecision:
     )
 
 
+# Correção B5 da auditoria independente do PR #107: TODOS estes campos
+# precisam aparecer na resposta — a versão anterior só exigia a primeira
+# linha (DECISION) e tratava qualquer outro campo ausente como se tivesse
+# um valor default seguro, marcando ``protocol_matched=True`` mesmo
+# faltando RISK/REQUIRES_ESCALATION/etc. Um protocolo "estruturado" que
+# aceita campos faltando não é estruturado — é só a primeira linha.
+_CAMPOS_OBRIGATORIOS = (
+    "RISK", "REQUIRES_ESCALATION", "ESCALATION_REASON", "RATIONALE", "FINDINGS", "DIDACTIC_FINDINGS",
+)
+
+
 def parse_openai_decision(response_text: str) -> OpenAIAuditDecision:
     """Extrai o resultado estruturado — sempre com um default seguro:
     qualquer resposta que não siga o protocolo EXATO (incluindo erro,
     timeout ou protocolo inválido tratado antes de chegar aqui — ver
-    ``observe.py``) vira NEEDS-FIX, nunca MERGE-READY por omissão. Uma
-    escalada só é considerada JUSTIFICADA (ver ``escalada_justificada``)
-    quando ``requires_escalation`` vem acompanhado de um motivo não vazio
-    — 'a escalada para Sol precisa registrar MOTIVO' (Issue #106)."""
+    ``observe.py``) vira NEEDS-FIX, nunca MERGE-READY por omissão.
+
+    Correção B5: ``protocol_matched=True`` exige TODOS os campos
+    obrigatórios presentes (``_CAMPOS_OBRIGATORIOS``) com valores válidos
+    — ``RISK`` precisa ser exatamente ``NORMAL``/``HIGH``,
+    ``REQUIRES_ESCALATION`` exatamente ``true``/``false``, e
+    ``RATIONALE`` não pode ficar vazio. Uma resposta que só tem a
+    primeira linha (``DECISION: MERGE-READY``) e mais nada agora é
+    protocolo INVÁLIDO -> NEEDS-FIX, nunca mais um "default seguro"
+    silencioso que fingia ``protocol_matched=True``.
+
+    Uma escalada só é considerada JUSTIFICADA (ver
+    ``escalada_justificada``) quando ``requires_escalation`` vem
+    acompanhado de um motivo não vazio — 'a escalada para Sol precisa
+    registrar MOTIVO' (Issue #106)."""
     texto = (response_text or "").strip()
     linhas = texto.splitlines()
     primeira = linhas[0].strip().upper() if linhas else ""
@@ -223,36 +245,44 @@ def parse_openai_decision(response_text: str) -> OpenAIAuditDecision:
     if decision is None:
         return _protocolo_invalido(texto)
 
-    risk = "NORMAL"
-    requires_escalation = False
+    risk: str | None = None
+    requires_escalation: bool | None = None
     escalation_reason = ""
     rationale_linhas: list[str] = []
     findings: list[str] = []
     didactic: list[str] = []
     secao: str | None = None  # None | "rationale" | "findings" | "didactic"
+    campos_vistos: set[str] = set()
 
     for linha in linhas[1:]:
         s = linha.strip()
         su = s.upper()
         if su.startswith("RISK:"):
+            campos_vistos.add("RISK")
             valor = s.split(":", 1)[1].strip().upper()
-            risk = valor if valor in ("NORMAL", "HIGH") else "NORMAL"
+            risk = valor if valor in ("NORMAL", "HIGH") else None
             secao = None
         elif su.startswith("REQUIRES_ESCALATION:"):
-            requires_escalation = s.split(":", 1)[1].strip().lower() == "true"
+            campos_vistos.add("REQUIRES_ESCALATION")
+            valor = s.split(":", 1)[1].strip().lower()
+            requires_escalation = True if valor == "true" else (False if valor == "false" else None)
             secao = None
         elif su.startswith("ESCALATION_REASON:"):
+            campos_vistos.add("ESCALATION_REASON")
             valor = s.split(":", 1)[1].strip()
             escalation_reason = "" if valor in ("", "-") else valor
             secao = None
         elif su.startswith("RATIONALE:"):
+            campos_vistos.add("RATIONALE")
             resto = s.split(":", 1)[1].strip()
             if resto:
                 rationale_linhas.append(resto)
             secao = "rationale"
         elif su.startswith("FINDINGS:"):
+            campos_vistos.add("FINDINGS")
             secao = "findings"
         elif su.startswith("DIDACTIC_FINDINGS:"):
+            campos_vistos.add("DIDACTIC_FINDINGS")
             secao = "didactic"
         elif s.startswith("-") and secao == "findings":
             findings.append(s.lstrip("-").strip())
@@ -261,7 +291,21 @@ def parse_openai_decision(response_text: str) -> OpenAIAuditDecision:
         elif secao == "rationale" and s:
             rationale_linhas.append(s)
 
-    rationale = " ".join(rationale_linhas).strip() or "(sem motivo declarado pelo OpenAI Auditor)"
+    rationale = " ".join(rationale_linhas).strip()
+
+    faltando = [c for c in _CAMPOS_OBRIGATORIOS if c not in campos_vistos]
+    problemas: list[str] = []
+    if faltando:
+        problemas.append(f"campo(s) ausente(s): {', '.join(faltando)}")
+    if "RISK" in campos_vistos and risk is None:
+        problemas.append("RISK com valor inválido (precisa ser NORMAL ou HIGH)")
+    if "REQUIRES_ESCALATION" in campos_vistos and requires_escalation is None:
+        problemas.append("REQUIRES_ESCALATION com valor inválido (precisa ser true ou false)")
+    if "RATIONALE" in campos_vistos and not rationale:
+        problemas.append("RATIONALE vazio")
+
+    if problemas:
+        return _protocolo_invalido(texto, motivo_estrutural="; ".join(problemas))
 
     return OpenAIAuditDecision(
         decision=decision,

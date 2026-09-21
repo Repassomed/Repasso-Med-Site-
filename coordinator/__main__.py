@@ -170,6 +170,7 @@ def _resultado_de_erro(exc: BaseException) -> dict:
         "merge_card": None,
         "should_comment": False,
         "comment_target_issue": None,
+        "openai_ledger_failed": False,
     }
 
 
@@ -397,7 +398,12 @@ def main(argv: list[str] | None = None) -> int:
     # deixar isto virar um crash mudo — mas o sinal externo (workflow
     # vermelho) continua merecido, então checa aqui, sem reabrir a
     # arquitetura de ObserveResult/render_human.
-    if dados_sanitizados.get("call_status") == "ok_ledger_failed":
+    #
+    # Correção B3 da auditoria independente do PR #107: mesma lógica para
+    # o ledger do OpenAI Auditor — uma chamada PAGA cuja correção de custo
+    # não persistiu é um problema operacional equivalente, nunca um
+    # "ok_ledger_failed" silencioso que só aparece no texto do cartão.
+    if dados_sanitizados.get("call_status") == "ok_ledger_failed" or dados_sanitizados.get("openai_ledger_failed"):
         return 1
     return 0
 
