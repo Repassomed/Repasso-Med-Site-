@@ -92,6 +92,15 @@ def _next_action_text(classification: Classification, routing: RoutingDecision,
         partes.append(f"Sugerir {worker.worker} como worker.")
     else:
         partes.append("Nenhum worker FREE disponível agora — aguardar.")
+    # Item 4 do "PACOTE CONSOLIDADO" (PR #97): quando load_workers_from_
+    # tasks_json() encontra um agente com >1 tarefa ativa simultânea, o
+    # Worker Registry devolve CONFLICT (nunca FREE, nunca a primeira tarefa
+    # escolhida em silêncio) — mas isso só é útil se chegar até o humano.
+    # worker.conflict_warning carrega esse aviso; aparece aqui mesmo quando
+    # um OUTRO worker foi sugerido normalmente, porque o problema é no
+    # registro (coordination/tasks.json), não na escolha feita para este evento.
+    if worker.conflict_warning:
+        partes.append(worker.conflict_warning)
     partes.append(f"Nível de modelo sugerido: {routing.model_choice.tier.value}.")
     if routing.needs_semantic_audit:
         partes.append("Exige auditoria semântica antes de MERGE-READY (Nível C, Issue #83).")
@@ -140,9 +149,20 @@ def observe(
             reason=f"Tipo de evento {event.raw_type!r} não está na lista permitida desta V2 (Issue #95).",
         )
 
-    # 2. Deduplicação.
+    # 2. Deduplicação — CLAIM atômico (item 1 do "PACOTE CONSOLIDADO",
+    # PR #97). Antes, esta decisão era is_duplicate() (uma leitura) e só
+    # muito mais tarde, depois de classify/context/worker/routing/budget,
+    # mark_processed() (uma escrita) — duas operações git INDEPENDENTES
+    # em GitDedupStore. Duas execuções concorrentes do mesmo evento podiam
+    # as duas ler "não visto" antes de qualquer uma escrever, e as duas
+    # chegarem à chamada paga. dedup.claim(chave) funde check-and-set num
+    # único ponto atômico: só a execução que realmente vence a corrida
+    # recebe True (ver GitJsonStore.claim_key para como isso é garantido
+    # mesmo entre processos/runners totalmente independentes); qualquer
+    # outra — concorrente ou posterior — recebe False aqui, ANTES de
+    # tocar classify/context/budget/pilot ou o transporte real.
     chave = event.dedup_key()
-    if dedup.is_duplicate(chave):
+    if not dedup.claim(chave):
         return ObserveResult(
             status="DUPLICATE",
             reason=f"Evento já processado (chave {chave}) — nenhuma chamada nova.",
@@ -175,9 +195,11 @@ def observe(
     )
 
     # 8. Portão de segurança — SEMPRE a última palavra sobre chamar ou não.
+    # Nenhum destes três caminhos BLOCKED chama dedup.mark_processed() de
+    # novo — o claim() do passo 2 já registrou este evento como
+    # processado, atomicamente, antes de chegarmos aqui.
     gate = config.gate()
     if not gate.open:
-        dedup.mark_processed(chave)
         return ObserveResult(
             status="BLOCKED",
             reason=gate.reason,
@@ -187,7 +209,6 @@ def observe(
         )
 
     if not orcamento_permite:
-        dedup.mark_processed(chave)
         return ObserveResult(
             status="BLOCKED",
             reason=f"Orçamento: {status_orcamento.message}",
@@ -203,7 +224,6 @@ def observe(
     # OK) fica bloqueado, garantindo tecnicamente "exatamente um evento
     # controlado" no primeiro teste real.
     if not config.pilot_allows(chave):
-        dedup.mark_processed(chave)
         return ObserveResult(
             status="BLOCKED",
             reason=(
@@ -216,13 +236,14 @@ def observe(
         )
 
     # Portão aberto, orçamento permite e (se PILOT ativo) é o evento
-    # autorizado: agora sim, uma chamada real é
-    # tentada — marca o evento como processado ANTES de chamar, para que
-    # mesmo uma falha/crash no meio da chamada nunca resulte em uma
-    # segunda tentativa para o mesmo evento (Issue #95: "evento repetido
-    # não gera nova chamada" vale acima de "recuperar de uma falha").
-    dedup.mark_processed(chave)
-
+    # autorizado: agora sim, uma chamada real é tentada. O evento já foi
+    # marcado como processado no claim() atômico do passo 2 — antes desta
+    # correção, o "marcar como processado" era feito só AQUI (uma escrita
+    # separada da leitura de duplicata), o que deixava a janela de corrida
+    # do item 1. Marcar cedo (dentro do claim) continua garantindo que uma
+    # falha/crash no meio da chamada nunca resulte numa segunda tentativa
+    # para o mesmo evento (Issue #95: "evento repetido não gera nova
+    # chamada" vale acima de "recuperar de uma falha").
     limitador = CallLimiter()
     pedido = anthropic_client.build_request(
         roteamento.model_choice,

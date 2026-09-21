@@ -26,6 +26,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
 from datetime import datetime, timezone
 
 from . import _pathsetup  # noqa: F401
@@ -142,12 +143,150 @@ def test_incremental_updates_accumulate() -> None:
     print("OK  test_incremental_updates_accumulate")
 
 
+def test_concurrent_claim_exactly_one_winner() -> None:
+    """Item 1 do PACOTE CONSOLIDADO (PR #97) — o teste que a versão
+    anterior (seen()+mark() separados) não podia passar.
+
+    Duas THREADS reais, cada uma com sua PRÓPRIA GitDedupStore/GitJsonStore
+    (nada em memória compartilhado entre elas — só o mesmo remoto git, como
+    dois runners efêmeros do GitHub Actions reagindo ao MESMO webhook), e
+    uma threading.Barrier sincronizando o início de cada .claim(): as duas
+    entram em claim() só depois que AMBAS chegaram na barreira, garantindo
+    que as duas leituras fiquem genuinamente sobrepostas no tempo — a
+    janela exata que a versão antiga (is_duplicate() cedo, mark_processed()
+    tarde) deixava aberta.
+
+    Resultado obrigatório: exatamente 1 vencedor (True), o outro False —
+    nunca os dois True, nunca os dois False."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        branch = "coordinator-state-teste-claim-concorrente"
+        chave = "evt:corrida"
+
+        barreira = threading.Barrier(2)
+        resultados: dict[str, bool] = {}
+        erros: list[BaseException] = []
+
+        def corredor(nome: str) -> None:
+            try:
+                loja = GitDedupStore(GitJsonStore(remoto, branch=branch))
+                barreira.wait(timeout=10)  # força sobreposição real das leituras
+                resultados[nome] = loja.claim(chave)
+            except BaseException as e:  # captura para reportar fora da thread
+                erros.append(e)
+
+        t1 = threading.Thread(target=corredor, args=("A",))
+        t2 = threading.Thread(target=corredor, args=("B",))
+        t1.start()
+        t2.start()
+        t1.join(timeout=30)
+        t2.join(timeout=30)
+
+        assert not erros, f"corredor(es) lançaram exceção: {erros}"
+        assert set(resultados) == {"A", "B"}, f"as duas threads precisavam terminar: {resultados}"
+        vencedores = sum(1 for v in resultados.values() if v)
+        assert vencedores == 1, (
+            f"esperava exatamente 1 claim vencedor entre execuções concorrentes, "
+            f"obtive {vencedores}: {resultados}"
+        )
+
+        # E o estado final no remoto reflete só 1 registro da chave —
+        # não dois, não zero.
+        loja_final = GitDedupStore(GitJsonStore(remoto, branch=branch))
+        assert loja_final.seen(chave)
+        dados = loja_final.git_json.read()
+        assert dados.get("keys", []).count(chave) == 1, "a chave não pode aparecer duplicada no estado"
+    print("OK  test_concurrent_claim_exactly_one_winner")
+
+
+def test_concurrent_pipeline_exactly_one_mock_call_and_one_usage_record() -> None:
+    """A mesma corrida, mas passando pelo pipeline `observe()` inteiro —
+    não só o dedup isolado. Duas threads, cada uma com seu PRÓPRIO
+    Deduplicator/UsageLedger git-backed e seu PRÓPRIO transporte mock
+    contador, processando o MESMO evento ao mesmo tempo de verdade.
+
+    Resultado obrigatório: exatamente 1 chamada mock no total, e
+    exatamente 1 usage record no ledger compartilhado — nunca duas
+    chamadas para o mesmo evento, mesmo com as duas threads decidindo
+    "vou chamar a API" quase ao mesmo tempo."""
+    import json as _json
+
+    from coordinator.anthropic_client import TransportResponse
+    from coordinator.config import Config
+    from coordinator.dedup import Deduplicator
+    from coordinator.events import Event
+    from coordinator.observe import observe
+    from coordinator.worker_registry import Worker, WorkerState
+
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        branch_dedup = "coordinator-state-teste-pipeline-concorrente-dedup"
+        branch_ledger = "coordinator-state-teste-pipeline-concorrente-ledger"
+
+        caminho_evento = os.path.join(_pathsetup.FIXTURES, "event_pr_needs_audit.json")
+        with open(caminho_evento, encoding="utf-8") as fh:
+            d = _json.load(fh)
+        evento = Event(raw_type=d["raw_type"], source=d["source"], repo=d["repo"],
+                        identity=d["identity"], payload=d["payload"])
+        cfg = Config(enabled=True, mode="observe")
+        workers = [Worker(name="Claude 2", state=WorkerState.FREE)]
+
+        barreira = threading.Barrier(2)
+        resultados: dict[str, object] = {}
+        chamadas_totais: list[int] = []
+        erros: list[BaseException] = []
+
+        class _TransporteContador:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            def send(self, request):
+                self.calls += 1
+                return TransportResponse("resposta simulada", 30, 10)
+
+        def corredor(nome: str) -> None:
+            try:
+                dedup = Deduplicator(GitDedupStore(GitJsonStore(remoto, branch=branch_dedup)))
+                ledger = GitUsageLedger(GitJsonStore(remoto, branch=branch_ledger))
+                transporte = _TransporteContador()
+                barreira.wait(timeout=10)  # força as duas a chegarem no claim() juntas
+                r = observe(evento, config=cfg, dedup=dedup, ledger=ledger,
+                            workers=workers, transport=transporte)
+                resultados[nome] = r.status
+                chamadas_totais.append(transporte.calls)
+            except BaseException as e:
+                erros.append(e)
+
+        t1 = threading.Thread(target=corredor, args=("A",))
+        t2 = threading.Thread(target=corredor, args=("B",))
+        t1.start()
+        t2.start()
+        t1.join(timeout=30)
+        t2.join(timeout=30)
+
+        assert not erros, f"corredor(es) lançaram exceção: {erros}"
+        assert set(resultados) == {"A", "B"}
+        status_vistos = sorted(resultados.values())
+        assert status_vistos == ["DUPLICATE", "OBSERVED"], (
+            f"exatamente uma execução tinha que OBSERVAR e a outra ver DUPLICATE, obtido {resultados}"
+        )
+        assert sum(chamadas_totais) == 1, (
+            f"exatamente 1 chamada mock no total para o mesmo evento, obtido {sum(chamadas_totais)}"
+        )
+
+        ledger_final = GitUsageLedger(GitJsonStore(remoto, branch=branch_ledger))
+        assert len(ledger_final.all_records()) == 1, "exatamente 1 usage record para o mesmo evento"
+    print("OK  test_concurrent_pipeline_exactly_one_mock_call_and_one_usage_record")
+
+
 def main() -> int:
     testes = [
         test_two_independent_runs_share_dedup,
         test_two_independent_runs_share_usage_ledger,
         test_state_branch_is_orphan_and_never_main,
         test_incremental_updates_accumulate,
+        test_concurrent_claim_exactly_one_winner,
+        test_concurrent_pipeline_exactly_one_mock_call_and_one_usage_record,
     ]
     falhas = 0
     for t in testes:

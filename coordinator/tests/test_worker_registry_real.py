@@ -9,7 +9,7 @@ import sys
 import tempfile
 
 from . import _pathsetup  # noqa: F401
-from coordinator.worker_registry import WorkerState, load_workers_from_tasks_json
+from coordinator.worker_registry import WorkerState, load_workers_from_tasks_json, pick_worker
 
 _TASKS_JSON_MINIMO = {
     "agentes_conhecidos": ["Claude 1", "Claude 2", "Claude 3", "humano"],
@@ -102,6 +102,100 @@ def test_specialization_derived_from_agent_history() -> None:
     print("OK  test_specialization_derived_from_agent_history")
 
 
+def test_agent_with_two_active_tasks_is_conflict_never_free() -> None:
+    """Item 4 do PACOTE CONSOLIDADO (PR #97): >1 tarefa ativa simultânea
+    para o mesmo agente nunca pode virar FREE nem herdar silenciosamente
+    o estado da primeira tarefa da lista."""
+    dados = {
+        "agentes_conhecidos": ["Claude 1"],
+        "tarefas": [
+            {"id": "a-primeira", "agente": "Claude 1", "estado": "NEEDS-AUDIT", "area": "x"},
+            {"id": "b-segunda", "agente": "Claude 1", "estado": "BLOCKED", "area": "y"},
+        ],
+    }
+    with tempfile.TemporaryDirectory() as tmp:
+        caminho = _escrever_tasks_json(tmp, dados)
+        workers = load_workers_from_tasks_json(caminho)
+    c1 = workers[0]
+    assert c1.state is WorkerState.CONFLICT
+    assert c1.state is not WorkerState.FREE
+    assert c1.state is not WorkerState.NEEDS_AUDIT, "não pode herdar silenciosamente a primeira tarefa"
+    assert c1.conflict_detail is not None
+    assert "a-primeira" in c1.conflict_detail and "b-segunda" in c1.conflict_detail
+    print("OK  test_agent_with_two_active_tasks_is_conflict_never_free")
+
+
+def test_conflict_state_is_independent_of_json_task_order() -> None:
+    """A mesma dupla de tarefas ativas, em ordens diferentes no arquivo,
+    tem que produzir EXATAMENTE o mesmo estado e o mesmo conflict_detail —
+    a versão anterior (``next(...)``) dependia da ordem do arquivo."""
+    tarefa_a = {"id": "a-primeira", "agente": "Claude 1", "estado": "NEEDS-AUDIT", "area": "x"}
+    tarefa_b = {"id": "b-segunda", "agente": "Claude 1", "estado": "BLOCKED", "area": "y"}
+
+    def _worker(ordem):
+        dados = {"agentes_conhecidos": ["Claude 1"], "tarefas": ordem}
+        with tempfile.TemporaryDirectory() as tmp:
+            caminho = _escrever_tasks_json(tmp, dados)
+            return load_workers_from_tasks_json(caminho)[0]
+
+    w1 = _worker([tarefa_a, tarefa_b])
+    w2 = _worker([tarefa_b, tarefa_a])
+    assert w1.state is w2.state is WorkerState.CONFLICT
+    assert w1.conflict_detail == w2.conflict_detail, (
+        f"ordem do arquivo não pode mudar o resultado:\n  {w1.conflict_detail!r}\n  {w2.conflict_detail!r}"
+    )
+    print("OK  test_conflict_state_is_independent_of_json_task_order")
+
+
+def test_three_or_more_active_tasks_also_conflict() -> None:
+    """Não é um caso especial de 'exatamente 2' — qualquer N > 1 é CONFLICT."""
+    dados = {
+        "agentes_conhecidos": ["Claude 1"],
+        "tarefas": [
+            {"id": f"t{i}", "agente": "Claude 1", "estado": "BLOCKED", "area": None}
+            for i in range(4)
+        ],
+    }
+    with tempfile.TemporaryDirectory() as tmp:
+        caminho = _escrever_tasks_json(tmp, dados)
+        workers = load_workers_from_tasks_json(caminho)
+    assert workers[0].state is WorkerState.CONFLICT
+    assert workers[0].conflict_detail.count("t") >= 4
+    print("OK  test_three_or_more_active_tasks_also_conflict")
+
+
+def test_pick_worker_never_suggests_a_conflicted_agent_but_still_warns() -> None:
+    """Um agente CONFLICT nunca é sugerido como worker (não é FREE), mas o
+    aviso precisa aparecer mesmo quando OUTRO worker, de verdade FREE, foi
+    sugerido normalmente — o problema é no registro, não na escolha feita
+    para este evento específico."""
+    dados = {
+        "agentes_conhecidos": ["Claude 1", "Claude 4"],
+        "tarefas": [
+            {"id": "a", "agente": "Claude 1", "estado": "NEEDS-AUDIT", "area": None},
+            {"id": "b", "agente": "Claude 1", "estado": "BLOCKED", "area": None},
+        ],
+    }
+    with tempfile.TemporaryDirectory() as tmp:
+        caminho = _escrever_tasks_json(tmp, dados)
+        workers = load_workers_from_tasks_json(caminho)
+    sugestao = pick_worker(workers)
+    assert sugestao.worker == "Claude 4", "Claude 4 é o único de verdade FREE"
+    assert sugestao.conflict_warning is not None
+    assert "Claude 1" in sugestao.conflict_warning
+    assert "NEEDS-INPUT" in sugestao.conflict_warning
+    print("OK  test_pick_worker_never_suggests_a_conflicted_agent_but_still_warns")
+
+
+def test_pick_worker_conflict_warning_absent_when_registry_is_clean() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        caminho = _escrever_tasks_json(tmp, _TASKS_JSON_MINIMO)
+        workers = load_workers_from_tasks_json(caminho)
+    sugestao = pick_worker(workers)
+    assert sugestao.conflict_warning is None
+    print("OK  test_pick_worker_conflict_warning_absent_when_registry_is_clean")
+
+
 def test_real_repo_tasks_json_loads_without_crashing() -> None:
     """Prova de integração: o coordination/tasks.json de VERDADE deste
     repositório carrega sem erro e produz pelo menos um worker por agente
@@ -115,6 +209,20 @@ def test_real_repo_tasks_json_loads_without_crashing() -> None:
     print("OK  test_real_repo_tasks_json_loads_without_crashing")
 
 
+def test_real_repo_conflicts_are_never_free() -> None:
+    """Ground-truth contra o arquivo real: hoje coordination/tasks.json
+    tem agentes com mais de uma tarefa ativa (mais de uma frente aberta ao
+    mesmo tempo) — o registro real precisa marcar isso como CONFLICT,
+    nunca como FREE, e sempre com um conflict_detail preenchido."""
+    caminho_real = os.path.join(_pathsetup.REPO_ROOT, "coordination", "tasks.json")
+    workers = load_workers_from_tasks_json(caminho_real)
+    for w in workers:
+        if w.state is WorkerState.CONFLICT:
+            assert w.conflict_detail, f"{w.name} está CONFLICT sem conflict_detail"
+            assert w.state is not WorkerState.FREE
+    print("OK  test_real_repo_conflicts_are_never_free")
+
+
 def main() -> int:
     testes = [
         test_agent_with_active_task_inherits_its_state,
@@ -124,7 +232,13 @@ def main() -> int:
         test_blocked_limit_agent_is_never_reported_as_free,
         test_unknown_state_string_defaults_to_in_progress_not_free,
         test_specialization_derived_from_agent_history,
+        test_agent_with_two_active_tasks_is_conflict_never_free,
+        test_conflict_state_is_independent_of_json_task_order,
+        test_three_or_more_active_tasks_also_conflict,
+        test_pick_worker_never_suggests_a_conflicted_agent_but_still_warns,
+        test_pick_worker_conflict_warning_absent_when_registry_is_clean,
         test_real_repo_tasks_json_loads_without_crashing,
+        test_real_repo_conflicts_are_never_free,
     ]
     falhas = 0
     for t in testes:

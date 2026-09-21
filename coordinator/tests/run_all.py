@@ -11,6 +11,7 @@ from . import (
     test_anthropic_client,
     test_anthropic_transport,
     test_budget,
+    test_cli_crash_safety,
     test_classify_routing,
     test_config_gate,
     test_dedup,
@@ -45,6 +46,7 @@ MODULOS = [
     test_human_output_honesty,
     test_workflow_security,
     test_guard_state_integration,
+    test_cli_crash_safety,
 ]
 
 

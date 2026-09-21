@@ -113,7 +113,16 @@ jobs:
     # coordinator/git_state.py e o teste que prova isso estruturalmente).
     # pull-requests:read só é usado para ler (nunca escrever) o rótulo e o
     # corpo da PR associada a um workflow_run do Guard — dado, não código.
+    # actions:read é exigido pelo GitHub para baixar artifact de OUTRA
+    # execução (actions/download-artifact@v4 com run-id do workflow_run
+    # observado, abaixo) — achado do "ACHADO ADICIONAL" e do "PACOTE
+    # CONSOLIDADO" (PR #97): permissão omitida vira 'none', então sem isto
+    # o passo de baixar o audit-pack do Guard pode falhar em produção
+    # mesmo com os testes estruturais verdes. Deliberadamente só :read —
+    # este job nunca cria nem apaga artifact, só consome o que o Guard já
+    # publicou (ver test_actions_read_present_write_absent).
     permissions:
+      actions: read
       contents: write
       pull-requests: read
     steps:

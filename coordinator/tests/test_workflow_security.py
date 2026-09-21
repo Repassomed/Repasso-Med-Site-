@@ -128,6 +128,42 @@ def test_workers_from_tasks_json_is_wired_into_the_real_invocation() -> None:
     print("OK  test_workers_from_tasks_json_is_wired_into_the_real_invocation")
 
 
+def _secao_job_permissions(texto: str) -> str:
+    """O bloco `permissions:` DENTRO do job `observe` — não o de nível de
+    workflow (`on:` .. primeiro `permissions:`, já coberto por
+    ``_secao_on``). Delimitado por `steps:`, que sempre vem logo depois."""
+    idx = texto.index("\n    permissions:")
+    fim = texto.index("\n    steps:", idx)
+    return texto[idx:fim]
+
+
+def test_actions_read_present_actions_write_absent() -> None:
+    """Achado do "ACHADO ADICIONAL"/"PACOTE CONSOLIDADO" (PR #97): o job
+    baixa artifact de OUTRA execução (actions/download-artifact@v4 com
+    run-id do workflow_run observado) — isso exige `actions: read`
+    (permissão omitida vira 'none' no GitHub Actions). O job nunca cria
+    nem apaga artifact, então `actions: write` tem que continuar ausente
+    — mais permissão do que o necessário, ainda mais rodando ao lado de
+    ANTHROPIC_API_KEY/GITHUB_TOKEN, é exatamente o que a auditoria de
+    segurança (Claude 1) já cobrou para os outros escopos."""
+    secao = _secao_job_permissions(_ler())
+    assert "actions: read" in secao, "download-artifact@v4 cross-run precisa de actions:read"
+    assert "actions: write" not in secao, "este job só consome artifact, nunca cria/apaga — sem actions:write"
+    print("OK  test_actions_read_present_actions_write_absent")
+
+
+def test_download_artifact_step_is_inside_the_permissioned_job() -> None:
+    """Não basta a permissão existir em algum lugar do arquivo — ela
+    precisa estar no MESMO job que de fato chama download-artifact@v4
+    (hoje há um único job, 'observe', mas isto trava a suposição em
+    código em vez de deixá-la implícita)."""
+    texto = _ler()
+    idx_perm = texto.index("\n    permissions:")
+    idx_download = texto.index("uses: actions/download-artifact@v4")
+    assert idx_download > idx_perm, "o passo de download precisa vir depois do bloco permissions: do job"
+    print("OK  test_download_artifact_step_is_inside_the_permissioned_job")
+
+
 def test_guard_audit_pack_download_step_exists() -> None:
     """Bloqueador 5: precisa existir um passo que baixe o artifact do
     Guard do run OBSERVADO (run-id do workflow_run, não do próprio job)."""
@@ -188,6 +224,8 @@ def main() -> int:
         test_secret_only_exists_inside_a_single_gated_job,
         test_job_gate_checks_enabled_and_trusted_comment_actor,
         test_job_fails_when_coordinator_cli_errors,
+        test_actions_read_present_actions_write_absent,
+        test_download_artifact_step_is_inside_the_permissioned_job,
         test_malicious_pr_editing_coordinator_cannot_run_with_secret,
         test_workers_from_tasks_json_is_wired_into_the_real_invocation,
         test_guard_audit_pack_download_step_exists,

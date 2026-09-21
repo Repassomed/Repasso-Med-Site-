@@ -60,7 +60,7 @@ from .events import Event
 from .git_state import GitDedupStore, GitJsonStore, GitUsageLedger
 from .github_event import build_event_from_github_context
 from .observe import observe
-from .redact import redact_mapping
+from .redact import redact, redact_mapping
 from .worker_registry import Worker, WorkerState, load_workers_from_tasks_json
 
 
@@ -109,6 +109,52 @@ def _load_workers(path: str | None) -> list[Worker]:
             )
         )
     return out
+
+
+def _resultado_de_erro(exc: BaseException) -> dict:
+    """Resultado mínimo, SEMPRE sanitizado, para quando o pipeline crasha
+    antes de ``observe()`` devolver um ``ObserveResult`` normal — item 2
+    do "PACOTE CONSOLIDADO" (PR #97).
+
+    Achado original: ``main()`` não tinha nenhum ``try/except`` em volta
+    da execução real; uma exceção não tratada (ex.: ``GitJsonStore``
+    esgotando tentativas de publicar o estado — RuntimeError já visto de
+    verdade neste projeto) derrubava o processo ANTES das linhas que
+    escrevem ``--out``. O workflow ficava vermelho corretamente (código
+    de saída != 0), mas sem nenhum arquivo em ``--out``, e
+    ``actions/upload-artifact@v4`` usa ``if-no-files-found: ignore`` — ou
+    seja, o job falhava sem publicar nenhum artifact estruturado, só o
+    traceback bruto no log (que expira e nunca foi sanitizado por
+    ``redact()``).
+
+    O mesmo formato de chave de ``ObserveResult.to_dict()`` — para que
+    quem já lê ``coordinator-observe.json`` não precise de um segundo
+    formato só para o caminho de erro. ``status="ERROR"`` é um valor
+    novo, fora dos que ``observe()`` produz (REJECTED/DUPLICATE/BLOCKED/
+    OBSERVED) — deixa explícito que isto é uma falha do próprio
+    Coordinator, não uma decisão normal do pipeline."""
+    return {
+        "status": "ERROR",
+        "reason": redact(f"{type(exc).__name__}: {exc}"),
+        "task_type": None,
+        "priority": None,
+        "worker_suggestion": None,
+        "model_suggestion": None,
+        "next_action": "Erro interno do Coordinator antes de decidir o evento — ver o log do job. Nenhuma chamada à Anthropic foi tentada por este caminho.",
+        "needs_input": False,
+        "requires_jose_authorization": False,
+        "context_summary": None,
+        "call_attempted": False,
+        "call_status": None,
+        "response_text": None,
+        "usage": None,
+    }
+
+
+def _gravar_out(caminho: str, dados: dict) -> None:
+    os.makedirs(os.path.dirname(os.path.abspath(caminho)) or ".", exist_ok=True)
+    with open(caminho, "w", encoding="utf-8") as fh:
+        json.dump(dados, fh, ensure_ascii=False, indent=2)
 
 
 def render_human(result_dict: dict) -> str:
@@ -198,6 +244,45 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", default=None, help="onde gravar o resultado OBSERVE em JSON")
     a = ap.parse_args(argv)
 
+    # Item 2 do "PACOTE CONSOLIDADO" (PR #97): tudo que pode lançar —
+    # carregar evento/config, montar dedup/ledger/workers, chamar
+    # observe() — fica dentro deste try. Antes, uma exceção não tratada
+    # (ex.: GitJsonStore esgotando tentativas de publicar o estado)
+    # derrubava o processo ANTES de qualquer coisa ser escrita em --out,
+    # e actions/upload-artifact@v4 (if-no-files-found: ignore) publicava
+    # nada — o job ficava vermelho (correto), mas sem nenhum artifact
+    # estruturado. Agora, qualquer exceção vira um resultado ERROR
+    # sanitizado, gravado em --out exatamente como um resultado normal
+    # seria, e SÓ DEPOIS o processo sai com código != 0.
+    try:
+        dados_sanitizados = _observar(a)
+    except SystemExit:
+        raise
+    except BaseException as exc:  # noqa: BLE001 — ponto de borda deliberado: qualquer
+        # falha vira artifact sanitizado antes do processo sair, nunca um crash mudo.
+        dados_sanitizados = _resultado_de_erro(exc)
+        print(render_human(dados_sanitizados))
+        if a.out:
+            _gravar_out(a.out, dados_sanitizados)
+        return 1
+
+    if dados_sanitizados is None:
+        # _observar() já imprimiu a mensagem "nada a fazer" e não tem
+        # ObserveResult nenhum para gravar (evento do GitHub fora da
+        # lista reconhecida) — comportamento inalterado desta rodada.
+        return 0
+
+    print(render_human(dados_sanitizados))
+    if a.out:
+        _gravar_out(a.out, dados_sanitizados)
+    return 0
+
+
+def _observar(a: argparse.Namespace) -> dict | None:
+    """A execução real de ponta a ponta — extraída de ``main()`` para que
+    o ``try/except`` do item 2 cubra exatamente isto, sem duplicar a
+    lógica de parsing de argumentos. Devolve ``None`` só no caso "evento
+    do GitHub não reconhecido" (não é erro, não tem ObserveResult)."""
     config = Config.from_env()
 
     if a.github_event_name:
@@ -210,7 +295,7 @@ def main(argv: list[str] | None = None) -> int:
                 f"Evento do GitHub ({a.github_event_name!r}) não corresponde a nenhum tipo "
                 "que esta V2 reconhece — nada a fazer. Isto NÃO é um erro."
             )
-            return 0
+            return None
     else:
         event = _load_event(a.event)
 
@@ -231,16 +316,7 @@ def main(argv: list[str] | None = None) -> int:
 
     resultado = observe(event, config=config, dedup=dedup, ledger=ledger, workers=workers)
     dados = resultado.to_dict()
-    dados_sanitizados = redact_mapping(dados)
-
-    print(render_human(dados_sanitizados))
-
-    if a.out:
-        os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
-        with open(a.out, "w", encoding="utf-8") as fh:
-            json.dump(dados_sanitizados, fh, ensure_ascii=False, indent=2)
-
-    return 0
+    return redact_mapping(dados)
 
 
 if __name__ == "__main__":

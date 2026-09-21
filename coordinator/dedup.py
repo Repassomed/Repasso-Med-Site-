@@ -18,28 +18,51 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass
+import threading
 from typing import Protocol
 
 
 class DedupStore(Protocol):
     def seen(self, key: str) -> bool: ...
     def mark(self, key: str) -> None: ...
+    def claim(self, key: str) -> bool:
+        """Check-and-set: ``True`` só para quem reivindica a chave pela
+        primeira vez; qualquer chamada seguinte com a mesma chave recebe
+        ``False``. Item 1 do "PACOTE CONSOLIDADO" (PR #97) — substitui o
+        par seen()+mark() como forma de decidir "processo este evento?",
+        porque esse par são duas operações INDEPENDENTES (uma leitura,
+        uma escrita, sem nada entre elas impedindo outra execução de ler
+        o mesmo "não visto" primeiro) — exatamente a janela que permitia
+        duas execuções concorrentes chamarem a API para o mesmo evento.
+        ``seen``/``mark`` continuam existindo para quem só precisa
+        consultar ou marcar sem a garantia atômica (ex.: ferramentas de
+        inspeção manual do estado)."""
+        ...
 
 
-@dataclass
 class InMemoryStore:
-    _keys: set[str] | None = None
+    """Não é ``@dataclass`` de propósito: um ``threading.Lock`` não tem
+    ``__eq__``/``repr`` úteis, e o gerador automático do dataclass os
+    incluiria em ambos sem necessidade nenhuma."""
 
-    def __post_init__(self) -> None:
-        if self._keys is None:
-            self._keys = set()
+    def __init__(self, keys: set[str] | None = None) -> None:
+        self._keys: set[str] = keys if keys is not None else set()
+        self._lock = threading.Lock()
 
     def seen(self, key: str) -> bool:
-        return key in self._keys
+        with self._lock:
+            return key in self._keys
 
     def mark(self, key: str) -> None:
-        self._keys.add(key)
+        with self._lock:
+            self._keys.add(key)
+
+    def claim(self, key: str) -> bool:
+        with self._lock:
+            if key in self._keys:
+                return False
+            self._keys.add(key)
+            return True
 
 
 class FileStore:
@@ -79,6 +102,21 @@ class FileStore:
         keys.add(key)
         self._save(keys)
 
+    def claim(self, key: str) -> bool:
+        # Check-and-set no MESMO disco/processo: não tem a garantia
+        # cross-processo que GitDedupStore.claim() tem (não há nada como
+        # o push otimista do git aqui), mas fecha a mesma janela
+        # seen()-depois-mark() para quem usa FileStore sozinho — e este
+        # backend já é documentado como "não sobrevive entre runners
+        # efêmeros, prefira --dedup-git-remote no workflow real" (a
+        # produção real usa GitDedupStore, não este).
+        keys = self._load()
+        if key in keys:
+            return False
+        keys.add(key)
+        self._save(keys)
+        return True
+
 
 class Deduplicator:
     def __init__(self, store: DedupStore | None = None) -> None:
@@ -89,3 +127,9 @@ class Deduplicator:
 
     def mark_processed(self, key: str) -> None:
         self.store.mark(key)
+
+    def claim(self, key: str) -> bool:
+        """Ponto atômico de decisão: ``True`` só para quem processa de
+        verdade este evento; qualquer execução concorrente ou posterior
+        com a mesma chave recebe ``False``. Ver ``DedupStore.claim``."""
+        return self.store.claim(key)
