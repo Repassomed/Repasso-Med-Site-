@@ -297,6 +297,7 @@ jobs:
             --worker-state-git-remote "$REMOTO_COM_TOKEN"
             --out /tmp/coordinator-observe.json
             --comment-out /tmp/coordinator-comment.md
+            --comment-target-out /tmp/coordinator-comment-target.txt
           )
           [ -f /tmp/pr-info.json ] && ARGS+=(--pr-info-file /tmp/pr-info.json)
           [ -f /tmp/guard-audit-pack/guard-audit-pack.json ] && ARGS+=(--guard-audit-pack /tmp/guard-audit-pack/guard-audit-pack.json)
@@ -315,36 +316,31 @@ jobs:
           if-no-files-found: ignore
 
       - name: Comentar o Cartão de Merge/checkpoint (V3, Issue #99)
-        # Só existe quando o CLI de fato gravou --comment-out (MODE=
-        # active-supervised e o evento produziu um Cartão de Merge, um
-        # checkpoint RECEBIDO/BLOCKED-LIMIT/POOL-PAUSADO ou a confirmação
-        # de um comando de worker — ver coordinator/observe.py). Em
-        # MODE=observe (produção hoje) este arquivo nunca é criado, então
-        # este passo é sempre pulado — comportamento V2 inalterado.
+        # Só existe quando o CLI de fato gravou --comment-out E
+        # --comment-target-out juntos (MODE=active-supervised e o evento
+        # produziu um Cartão de Merge/checkpoint COM destino conhecido —
+        # ver coordinator/observe.py). Em MODE=observe (produção hoje)
+        # nenhum dos dois arquivos é criado, então este passo é sempre
+        # pulado — comportamento V2 inalterado.
         #
-        # Rodada 3: o destino do comentário depende de QUAL gatilho gerou
-        # o evento — um workflow_run (Guard) sempre fala na PR associada;
-        # um issue_comment (Inbox #88, checkpoint BLOCKED-LIMIT em
-        # qualquer issue) sempre fala na MESMA issue onde o comentário
-        # original foi postado. Nunca inventa um número de issue/PR.
-        if: always() && hashFiles('/tmp/coordinator-comment.md') != ''
+        # Correção B4 da auditoria independente do PR #104, rodada 4: o
+        # destino NUNCA é inferido aqui — o Coordinator já decidiu (ex.:
+        # um POOL-PAUSADO sempre vai para a Inbox #88, mesmo quando o
+        # checkpoint que o disparou chegou em outra issue; um checkpoint
+        # específico volta para a issue de origem; um Cartão de Merge vai
+        # para a PR) e gravou o número em
+        # /tmp/coordinator-comment-target.txt. Este passo só lê esse
+        # arquivo — nunca reconstrói a lógica de destino em JavaScript.
+        if: always() && hashFiles('/tmp/coordinator-comment.md') != '' && hashFiles('/tmp/coordinator-comment-target.txt') != ''
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const corpo = fs.readFileSync('/tmp/coordinator-comment.md', 'utf8');
-
-            let issueNumber = null;
-            if (context.eventName === 'issue_comment') {
-              issueNumber = context.payload.issue.number;
-            } else {
-              const run = context.payload.workflow_run;
-              const prs = (run && run.pull_requests) || [];
-              if (prs.length === 0) {
-                console.log('Nenhuma PR associada a este workflow_run — nada para comentar.');
-                return;
-              }
-              issueNumber = prs[0].number;
+            const issueNumber = parseInt(fs.readFileSync('/tmp/coordinator-comment-target.txt', 'utf8').trim(), 10);
+            if (!Number.isInteger(issueNumber)) {
+              console.log('Destino do comentário inválido/ilegível — nada publicado.');
+              return;
             }
 
             await github.rest.issues.createComment({

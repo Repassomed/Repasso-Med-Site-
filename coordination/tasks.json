@@ -249,7 +249,7 @@
       "pr": 104,
       "commit": "c2d2afa",
       "issue": 99,
-      "notas": "Ainda não mergeado. REPASSO_COORDINATOR_MODE continua 'observe' em produção — active-supervised é opt-in. Rodada 3: Issue #88 como interface visível (RECEBIDO/checkpoints), custos visíveis (estimado/real separados, BRL informativo), Worker Registry operacional novo (coordinator/worker_ops.py, branch dedicada coordinator-state-workers, separado de tasks.json), comandos naturais de worker, camada de decisão handoff/pool-pausado (estado apenas, execução real fica para #105), anti-loop também no if: do workflow. Suite completa verde; Guard rodado localmente. Parado em NEEDS-AUDIT de novo."
+      "notas": "Ainda não mergeado. REPASSO_COORDINATOR_MODE continua 'observe' em produção — active-supervised é opt-in. Rodada 4: corrigidos os 4 bloqueadores da auditoria independente sobre a rodada 3 (HEAD 772e9dc) — seed do Worker Registry operacional conservador (OFFLINE por padrão, nunca inventa disponibilidade); #88 escolhe worker só pelo registro operacional (AVAILABLE real), nunca pelo histórico de tasks.json; custo REAL (usage/tier/modelo/chamadas) anexado a NEEDS-FIX/MERGE-READY, preservado mesmo se o ledger falhar depois; comment_target_issue explícito no ObserveResult — POOL-PAUSADO sempre vai para a #88 mesmo quando o checkpoint chegou em outra issue, e o workflow nunca infere destino sozinho. Suite completa verde; Guard rodado localmente. Branch protection confirmada ACTIVE em main (Ruleset, PR+checks obrigatórios, sem bypass) — passo externo ao José, já cumprido. Parado em NEEDS-AUDIT de novo."
     }
   ]
 }

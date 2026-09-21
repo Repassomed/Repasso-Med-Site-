@@ -168,6 +168,7 @@ def _resultado_de_erro(exc: BaseException) -> dict:
         "audit_decision": None,
         "merge_card": None,
         "should_comment": False,
+        "comment_target_issue": None,
     }
 
 
@@ -179,15 +180,36 @@ def _gravar_out(caminho: str, dados: dict) -> None:
 
 def _gravar_comment_out(caminho: str, dados: dict) -> None:
     """V3 (Issue #99): só grava quando o pipeline sinalizou
-    ``should_comment`` E de fato produziu um Cartão de Merge — nunca grava
-    um arquivo vazio/parcial que um passo do workflow pudesse publicar por
-    engano. O CLI nunca fala com a API do GitHub; só deixa o texto pronto
-    para o passo do workflow (que já tem o token) publicar."""
+    ``should_comment`` E de fato produziu um Cartão de Merge E sabe o
+    destino explícito (``comment_target_issue`` — correção B4 da
+    auditoria independente do PR #104, rodada 4: sem destino conhecido,
+    nunca grava o texto, para que o workflow nunca tenha que adivinhar
+    onde postar). Nunca grava um arquivo vazio/parcial. O CLI nunca fala
+    com a API do GitHub; só deixa o texto pronto para o passo do workflow
+    (que já tem o token) publicar."""
     if not dados.get("should_comment") or not dados.get("merge_card"):
+        return
+    if dados.get("comment_target_issue") is None:
         return
     os.makedirs(os.path.dirname(os.path.abspath(caminho)) or ".", exist_ok=True)
     with open(caminho, "w", encoding="utf-8") as fh:
         fh.write(dados["merge_card"])
+
+
+def _gravar_comment_target_out(caminho: str, dados: dict) -> None:
+    """Grava só o número da issue/PR de destino — arquivo próprio e
+    minúsculo, para o workflow ler sem precisar reabrir/parsear o JSON
+    completo de ``--out``. Mesma condição de ``_gravar_comment_out``: só
+    escreve quando os três sinais (should_comment, merge_card,
+    comment_target_issue) estão presentes juntos."""
+    if not dados.get("should_comment") or not dados.get("merge_card"):
+        return
+    alvo = dados.get("comment_target_issue")
+    if alvo is None:
+        return
+    os.makedirs(os.path.dirname(os.path.abspath(caminho)) or ".", exist_ok=True)
+    with open(caminho, "w", encoding="utf-8") as fh:
+        fh.write(str(alvo))
 
 
 def render_human(result_dict: dict) -> str:
@@ -305,6 +327,13 @@ def main(argv: list[str] | None = None) -> int:
                          "PR/Issue via github-script — o CLI nunca chama a API do GitHub sozinho. "
                          "Não grava nada quando não há merge_card (ex.: modo observe, ou evento que "
                          "não passou pela auditoria)")
+    ap.add_argument("--comment-target-out", default=None,
+                    help="V3 (correção B4 da auditoria independente do PR #104, rodada 4): grava só o "
+                         "número da issue/PR de destino do comentário (ObserveResult."
+                         "comment_target_issue) — nunca escrito junto com --comment-out se o destino "
+                         "for desconhecido. O workflow lê este arquivo em vez de inferir o destino "
+                         "sozinho (ex.: um POOL-PAUSADO sempre vai para a Inbox #88, mesmo quando o "
+                         "checkpoint que o disparou chegou em outra issue)")
     a = ap.parse_args(argv)
 
     # Item 2 do "PACOTE CONSOLIDADO" (PR #97): tudo que pode lançar —
@@ -329,6 +358,8 @@ def main(argv: list[str] | None = None) -> int:
             _gravar_out(a.out, dados_sanitizados)
         if a.comment_out:
             _gravar_comment_out(a.comment_out, dados_sanitizados)
+        if a.comment_target_out:
+            _gravar_comment_target_out(a.comment_target_out, dados_sanitizados)
         return 1
 
     if dados_sanitizados is None:
@@ -342,6 +373,8 @@ def main(argv: list[str] | None = None) -> int:
         _gravar_out(a.out, dados_sanitizados)
     if a.comment_out:
         _gravar_comment_out(a.comment_out, dados_sanitizados)
+    if a.comment_target_out:
+        _gravar_comment_target_out(a.comment_target_out, dados_sanitizados)
 
     # Auditoria final do PR #97: uma chamada à Anthropic bem-sucedida cujo
     # ledger de uso/custo falhou DEPOIS é um problema operacional real —

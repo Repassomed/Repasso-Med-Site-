@@ -110,15 +110,25 @@ def _slugify(nome: str) -> str:
 
 def default_seed_workers() -> list[WorkerRecord]:
     """Ponto de partida quando a branch de estado ainda não tem nenhum
-    registro operacional — os 4 Claudes humanos conhecidos do projeto
-    (``coordination/tasks.json::agentes_conhecidos``) como AVAILABLE por
-    default (o estado real chega por heartbeat/comando explícito — nunca
-    inventado aqui), e ``chatgpt-auditor`` (Issue #106) já modelado mas
-    OFFLINE/não conectado até a integração real existir."""
+    registro operacional.
+
+    Correção B1 da auditoria independente do PR #104, rodada 3: a versão
+    anterior criava Claude 1-4 já como ``AVAILABLE`` — isso INVENTAVA
+    disponibilidade de sessão humana sem nenhum sinal real (nenhum
+    heartbeat, nenhum comando explícito de José). Um worker só pode ser
+    ``AVAILABLE`` quando alguém de fato disse isso (comando natural na
+    #88, ex.: "Claude 1 disponível") — nunca por suposição do seed.
+
+    Os 4 Claudes humanos conhecidos do projeto
+    (``coordination/tasks.json::agentes_conhecidos``) nascem ``OFFLINE``
+    — inclusive Claude 4, que era só um EXEMPLO de comando de cadastro na
+    Issue #99, não uma instrução para pré-cadastrá-lo como disponível.
+    ``chatgpt-auditor`` (Issue #106) continua ``OFFLINE``/``can_execute
+    =False`` até a integração real existir — sem mudança aqui."""
     humanos = [
         WorkerRecord(
             worker_id=f"claude-{n}", display_name=f"Claude {n}", type="human_session",
-            status="AVAILABLE", capabilities=("conteudo", "codigo"), can_execute=True, can_audit=False,
+            status="OFFLINE", capabilities=("conteudo", "codigo"), can_execute=True, can_audit=False,
         )
         for n in (1, 2, 3, 4)
     ]
@@ -205,6 +215,24 @@ class OperationalWorkerRegistry:
             if w.worker_id == alvo_id or w.display_name.strip().lower() == alvo_nome:
                 return w
         return None
+
+    def escolher_disponivel(self, *, capability_hint: str | None = None) -> WorkerRecord | None:
+        """Correção B2 da auditoria independente do PR #104, rodada 3: a
+        ÚNICA fonte de "quem está disponível agora" — nunca
+        ``coordination/tasks.json`` (histórico/declarativo, pode estar
+        desatualizado ao vivo). Só considera ``status == "AVAILABLE"`` e
+        ``can_execute`` — ``LIMIT``/``BUSY``/``NEAR_LIMIT``/``OFFLINE``
+        nunca são devolvidos aqui, mesmo que sejam o único worker
+        conhecido. Prioriza quem tem a capacidade pedida, mas não exige
+        (nem toda tarefa tem um ``capability_hint`` óbvio)."""
+        disponiveis = [w for w in self.list_workers() if w.status == "AVAILABLE" and w.can_execute]
+        if not disponiveis:
+            return None
+        if capability_hint:
+            com_capacidade = [w for w in disponiveis if capability_hint in w.capabilities]
+            if com_capacidade:
+                return com_capacidade[0]
+        return disponiveis[0]
 
     def upsert(self, record: WorkerRecord, *, message: str) -> WorkerRecord:
         def mutate(dados: dict) -> dict:

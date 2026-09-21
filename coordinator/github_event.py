@@ -195,6 +195,13 @@ def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None
             identity=f"issue:{numero_issue}#comment:{numero_comentario}",
             payload={
                 "titulo": f"Checkpoint BLOCKED-LIMIT na issue #{numero_issue}",
+                # Correção B4 da auditoria independente do PR #104, rodada 3:
+                # a issue de ORIGEM do checkpoint — nunca a #88 por padrão.
+                # ``observe.py`` usa isto para decidir o destino do
+                # comentário: um checkpoint específico volta pra cá, mas um
+                # POOL-PAUSADO global sempre vai para a Inbox (#88),
+                # independentemente de onde o checkpoint chegou.
+                "issue": numero_issue,
                 "agente": _campo_checkpoint(RE_AGENTE_CHECKPOINT, corpo),
                 "tarefa": _campo_checkpoint(RE_TAREFA_CHECKPOINT, corpo),
                 "branch": _campo_checkpoint(RE_BRANCH_CHECKPOINT, corpo),

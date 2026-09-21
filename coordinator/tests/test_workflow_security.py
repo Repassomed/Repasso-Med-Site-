@@ -119,15 +119,25 @@ def test_worker_state_git_remote_is_wired_into_the_real_invocation() -> None:
     print("OK  test_worker_state_git_remote_is_wired_into_the_real_invocation")
 
 
-def test_comment_step_branches_between_issue_comment_and_workflow_run() -> None:
-    """Rodada 3: o destino do comentário (Issue #88/checkpoint vs. PR)
-    depende do gatilho real, nunca fixo em `pull_requests[0]`."""
+def test_comment_step_reads_explicit_target_never_infers_it() -> None:
+    """Correção B4 da auditoria independente do PR #104, rodada 4: o
+    workflow nunca reconstrói a lógica de destino (PR vs. Issue #88 vs.
+    issue de origem) — só lê o número que o Coordinator já decidiu e
+    gravou em /tmp/coordinator-comment-target.txt."""
     texto = _ler()
     idx = texto.index("- name: Comentar o Cartão de Merge")
     trecho = texto[idx: idx + 2000]
-    assert "context.eventName === 'issue_comment'" in trecho
-    assert "context.payload.issue.number" in trecho
-    print("OK  test_comment_step_branches_between_issue_comment_and_workflow_run")
+    assert "coordinator-comment-target.txt" in trecho
+    assert "context.eventName === 'issue_comment'" not in trecho, (
+        "o workflow não pode mais reconstruir a lógica de destino sozinho"
+    )
+    assert "hashFiles('/tmp/coordinator-comment-target.txt')" in trecho
+    print("OK  test_comment_step_reads_explicit_target_never_infers_it")
+
+
+def test_comment_target_out_flag_is_wired_into_the_real_invocation() -> None:
+    assert "--comment-target-out /tmp/coordinator-comment-target.txt" in _ler()
+    print("OK  test_comment_target_out_flag_is_wired_into_the_real_invocation")
 
 
 def test_job_fails_when_coordinator_cli_errors() -> None:
@@ -318,7 +328,8 @@ def main() -> int:
         test_codeowners_covers_coordinator_and_workflows,
         test_job_gate_also_filters_coordinator_marker_second_layer,
         test_worker_state_git_remote_is_wired_into_the_real_invocation,
-        test_comment_step_branches_between_issue_comment_and_workflow_run,
+        test_comment_step_reads_explicit_target_never_infers_it,
+        test_comment_target_out_flag_is_wired_into_the_real_invocation,
     ]
     falhas = 0
     for t in testes:

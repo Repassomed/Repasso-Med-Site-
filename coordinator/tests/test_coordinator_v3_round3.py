@@ -114,8 +114,22 @@ def test_coordinator_marked_comment_is_ignored_zero_api() -> None:
 # 3. Worker Registry — transições de status.
 # ---------------------------------------------------------------------------
 
+def test_worker_seed_is_conservative_never_invents_available() -> None:
+    """Correção B1 da auditoria independente do PR #104, rodada 3: o seed
+    nunca pode inventar disponibilidade — Claude 1-4 nascem OFFLINE até
+    heartbeat/comando explícito, e chatgpt-auditor continua OFFLINE até a
+    Issue #106 conectá-lo de verdade."""
+    registry = OperationalWorkerRegistry(InMemoryWorkerStateStore())
+    for w in registry.list_workers():
+        assert w.status == "OFFLINE", f"{w.worker_id} nasceu {w.status!r}, esperava OFFLINE"
+    print("OK  test_worker_seed_is_conservative_never_invents_available")
+
+
 def test_worker_available_limit_available_transitions() -> None:
     registry = OperationalWorkerRegistry(InMemoryWorkerStateStore())
+    assert registry.find_by_name_or_id("Claude 2").status == "OFFLINE"
+
+    aplicar_comando(registry, parse_worker_command("Claude 2 voltou e está disponível"))
     assert registry.find_by_name_or_id("Claude 2").status == "AVAILABLE"
 
     aplicar_comando(registry, parse_worker_command("Claude 2 entrou em limite"))
@@ -311,8 +325,9 @@ def test_observe_mode_ignores_worker_registry_entirely() -> None:
         assert r.merge_card is None
         assert r.should_comment is False
         assert t.calls == 1, "o caminho V2 (resumo genérico) continua chamando normalmente"
-        # E o Worker Registry nunca foi tocado.
-        assert registry.find_by_name_or_id("Claude 1").status == "AVAILABLE"
+        # E o Worker Registry nunca foi tocado — continua no seed
+        # conservador (OFFLINE), nunca promovido a AVAILABLE por engano.
+        assert registry.find_by_name_or_id("Claude 1").status == "OFFLINE"
     print("OK  test_observe_mode_ignores_worker_registry_entirely")
 
 
@@ -338,6 +353,7 @@ def main() -> int:
     testes = [
         test_valid_inbox_comment_yields_recebido_once,
         test_coordinator_marked_comment_is_ignored_zero_api,
+        test_worker_seed_is_conservative_never_invents_available,
         test_worker_available_limit_available_transitions,
         test_never_merge_is_always_true_structurally,
         test_register_command_sets_capabilities,

@@ -609,7 +609,9 @@ def test_observe_mode_never_runs_the_audit_path() -> None:
 def test_comment_out_writes_only_when_should_comment_and_card_present() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         caminho = os.path.join(tmp, "comentario.md")
-        _gravar_comment_out(caminho, {"should_comment": True, "merge_card": "## Cartão de Merge\nconteúdo"})
+        _gravar_comment_out(caminho, {
+            "should_comment": True, "merge_card": "## Cartão de Merge\nconteúdo", "comment_target_issue": 97,
+        })
         assert os.path.exists(caminho)
         with open(caminho, encoding="utf-8") as fh:
             assert "Cartão de Merge" in fh.read()
@@ -619,7 +621,9 @@ def test_comment_out_writes_only_when_should_comment_and_card_present() -> None:
 def test_comment_out_skips_when_should_comment_false() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         caminho = os.path.join(tmp, "comentario.md")
-        _gravar_comment_out(caminho, {"should_comment": False, "merge_card": "texto que não devia sair"})
+        _gravar_comment_out(caminho, {
+            "should_comment": False, "merge_card": "texto que não devia sair", "comment_target_issue": 97,
+        })
         assert not os.path.exists(caminho)
     print("OK  test_comment_out_skips_when_should_comment_false")
 
@@ -627,9 +631,22 @@ def test_comment_out_skips_when_should_comment_false() -> None:
 def test_comment_out_skips_when_card_missing() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         caminho = os.path.join(tmp, "comentario.md")
-        _gravar_comment_out(caminho, {"should_comment": True, "merge_card": None})
+        _gravar_comment_out(caminho, {"should_comment": True, "merge_card": None, "comment_target_issue": 97})
         assert not os.path.exists(caminho)
     print("OK  test_comment_out_skips_when_card_missing")
+
+
+def test_comment_out_skips_when_target_issue_missing() -> None:
+    """Correção B4 da auditoria independente do PR #104, rodada 4: sem
+    destino explícito, o CLI nunca grava o comentário — o workflow nunca
+    pode ser deixado para adivinhar onde postar."""
+    with tempfile.TemporaryDirectory() as tmp:
+        caminho = os.path.join(tmp, "comentario.md")
+        _gravar_comment_out(caminho, {
+            "should_comment": True, "merge_card": "## Cartão de Merge", "comment_target_issue": None,
+        })
+        assert not os.path.exists(caminho)
+    print("OK  test_comment_out_skips_when_target_issue_missing")
 
 
 def main() -> int:
@@ -674,6 +691,7 @@ def main() -> int:
         test_comment_out_writes_only_when_should_comment_and_card_present,
         test_comment_out_skips_when_should_comment_false,
         test_comment_out_skips_when_card_missing,
+        test_comment_out_skips_when_target_issue_missing,
     ]
     falhas = 0
     for t in testes:

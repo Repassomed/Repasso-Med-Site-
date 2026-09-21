@@ -216,6 +216,11 @@ class MergeCardInput:
     lei_das_questoes: LeiDasQuestoesResult | None
     arquivos_alterados: tuple[str, ...] = ()
     protocol_matched: bool = True
+    # Correção B3 da auditoria independente do PR #104, rodada 3: custo
+    # visível também em NEEDS-FIX/MERGE-READY, não só nos checkpoints
+    # zero-custo da Inbox — texto já pronto (``costs.render_cost_block``),
+    # nunca recalculado aqui.
+    cost_block: str | None = None
 
 
 def render_merge_card(dados: MergeCardInput) -> str:
@@ -251,6 +256,10 @@ def render_merge_card(dados: MergeCardInput) -> str:
         )
         if dados.lei_das_questoes:
             L.append(dados.lei_das_questoes.detalhe)
+
+    if dados.cost_block:
+        L.append("")
+        L.append(dados.cost_block)
 
     L.append("")
     L.append("**MERGE:** José decide/executa. O Coordinator nunca faz merge.")
