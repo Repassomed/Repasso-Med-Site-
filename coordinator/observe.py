@@ -33,12 +33,14 @@ from dataclasses import dataclass, field
 
 from . import anthropic_client
 from .anthropic_transport import AnthropicTransport
+from .audit import AUDIT_SYSTEM_PROMPT, build_audit_prompt, parse_decision
 from .budget import BudgetStatus, CallLimiter, UsageLedger, check_budget, priority_allowed
-from .classify import Classification, classify
+from .classify import Classification, TaskType, classify
 from .config import Config
 from .context import MinimalContext, build_context
 from .dedup import Deduplicator
-from .events import Event
+from .events import Event, EventType
+from .merge_card import MergeCardInput, aplicar_lei_das_questoes, render_merge_card
 from .redact import redact
 from .routing import RoutingDecision, decide as route_decide
 from .worker_registry import Worker, WorkerSuggestion, pick_worker
@@ -62,6 +64,13 @@ class ObserveResult:
     call_status: str | None = None  # "ok" | "error" | "limited" | "ok_ledger_failed" | None (nunca tentada)
     response_text: str | None = None
     usage: dict | None = None
+    # V3 (Issue #99) — só preenchidos quando ``audit_mode`` está ativo E o
+    # evento passou pela auditoria semântica independente (ver
+    # ``executar_auditoria`` em ``observe()``); ``None``/``False`` em
+    # qualquer caminho V2/OBSERVE puro, preservando o formato antigo.
+    audit_decision: str | None = None  # "MERGE-READY" | "NEEDS-FIX" | None
+    merge_card: str | None = None
+    should_comment: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -79,6 +88,9 @@ class ObserveResult:
             "call_status": self.call_status,
             "response_text": self.response_text,
             "usage": self.usage,
+            "audit_decision": self.audit_decision,
+            "merge_card": self.merge_card,
+            "should_comment": self.should_comment,
         }
 
 
@@ -125,6 +137,57 @@ def _build_prompt(contexto: MinimalContext) -> str:
     return prompt
 
 
+def _pr_number_from_identity(identity: str) -> int | None:
+    if identity.startswith("pr:"):
+        try:
+            return int(identity.split(":", 1)[1])
+        except ValueError:
+            return None
+    return None
+
+
+def _arquivos_alterados_do_evento(event: Event) -> tuple[str, ...]:
+    audit_pack = event.payload.get("audit_pack")
+    if not isinstance(audit_pack, dict):
+        return ()
+    return tuple(audit_pack.get("arquivos_alterados", []) or [])
+
+
+def _render_cartao(event: Event, contexto: MinimalContext, decisao: str, motivo: str, *,
+                    lei_das_questoes, envolve_questoes: bool, protocol_matched: bool) -> str:
+    dados = MergeCardInput(
+        pr_number=_pr_number_from_identity(event.identity),
+        titulo=event.payload.get("titulo"),
+        area=event.payload.get("area"),
+        guard_result=contexto.guard_result,
+        audit_decision=decisao,
+        audit_rationale=motivo,
+        envolve_questoes=envolve_questoes,
+        lei_das_questoes=lei_das_questoes,
+        arquivos_alterados=_arquivos_alterados_do_evento(event),
+        protocol_matched=protocol_matched,
+    )
+    return render_merge_card(dados)
+
+
+def _montar_cartao_hard_fail(event: Event, contexto: MinimalContext, classificacao: Classification) -> str:
+    envolve_questoes = bool(event.payload.get("envolve_questoes"))
+    # Um HARD FAIL do Guard já é motivo suficiente por si só — a Lei das
+    # Questões nem precisa ser avaliada para SUBIR a decisão (ela só pode
+    # rebaixar), mas ainda é reportada no cartão quando relevante, para o
+    # José ver o quadro completo de uma vez.
+    _, lei_das_questoes = aplicar_lei_das_questoes(
+        "NEEDS-FIX", envolve_questoes=envolve_questoes, pr_body=event.payload.get("body"),
+    )
+    return _render_cartao(
+        event, contexto, "NEEDS-FIX",
+        "Guard determinístico encontrou HARD FAIL: " + "; ".join(contexto.guard_hard_fails),
+        lei_das_questoes=lei_das_questoes,
+        envolve_questoes=envolve_questoes,
+        protocol_matched=True,
+    )
+
+
 _SYSTEM_PROMPT = (
     "Você é o Repasso Coordinator, em modo OBSERVE. Classifique o evento e "
     "resuma o que um humano (José) precisa saber em 3 frases no máximo, em "
@@ -142,6 +205,7 @@ def observe(
     workers: list[Worker] | None = None,
     deep_enabled: bool = False,
     transport: anthropic_client.Transport | None = None,
+    audit_mode: bool = False,
 ) -> ObserveResult:
     # 1. Tipo de evento permitido?
     if not event.is_allowed:
@@ -180,6 +244,26 @@ def observe(
 
     # 6. Roteamento de modelo.
     roteamento = route_decide(event, classificacao, deep_enabled=deep_enabled)
+
+    # V3 (Issue #99): quando a auditoria ativa-supervisionada substitui a
+    # chamada genérica de resumo por uma auditoria semântica independente.
+    # Só para PR_NEEDS_AUDIT + tipo A (conteúdo médico, área=="materia") —
+    # exatamente o Nível C da Issue #83. classify.py só produz TaskType.A
+    # para PR_NEEDS_AUDIT quando ``area == "materia"``, e
+    # github_event.py::_from_workflow_run só preenche
+    # ``payload["materia"]`` (não-None) nesse mesmo caso — então esta
+    # condição já é equivalente a ``roteamento.needs_semantic_audit``
+    # (routing.py), só expressa em termos da classificação em vez de
+    # reler o payload de novo. Deliberadamente restrito a este único tipo
+    # de evento nesta primeira etapa da V3: eventos administrativos
+    # (Guard vermelho, checkpoint, Inbox) continuam só no caminho V2, sem
+    # comentário automático — evita risco de loop de comentário logo na
+    # primeira entrega (ver ``should_comment`` abaixo).
+    executar_auditoria = (
+        audit_mode
+        and event.event_type is EventType.PR_NEEDS_AUDIT
+        and classificacao.task_type is TaskType.A
+    )
 
     # 7. Orçamento.
     status_orcamento: BudgetStatus = check_budget(ledger)
@@ -236,6 +320,27 @@ def observe(
             **resultado_base,
         )
 
+    # V3 (Issue #99): "Guard determinístico → Coordinator → auditoria".
+    # Quando o próprio Guard já encontrou HARD FAIL (achado objetivo,
+    # zero interpretação), a decisão é NEEDS-FIX por definição — pedir uma
+    # auditoria STANDARD para "confirmar" isto gastaria uma chamada paga
+    # para reafirmar um fato que já é determinístico. Este atalho só
+    # existe dentro do caminho de auditoria (nunca no V2/OBSERVE puro) e
+    # não usa ``anthropic_client.call`` — zero custo, ``call_attempted``
+    # continua ``False``.
+    if executar_auditoria and contexto.guard_hard_fails:
+        cartao = _montar_cartao_hard_fail(event, contexto, classificacao)
+        return ObserveResult(
+            status="OBSERVED",
+            reason="Guard determinístico já encontrou HARD FAIL — NEEDS-FIX automático, sem custo de auditoria.",
+            next_action=_next_action_text(classificacao, roteamento, worker),
+            call_attempted=False,
+            audit_decision="NEEDS-FIX",
+            merge_card=cartao,
+            should_comment=True,
+            **resultado_base,
+        )
+
     # Portão aberto, orçamento permite e (se PILOT ativo) é o evento
     # autorizado: agora sim, uma chamada real é tentada. O evento já foi
     # marcado como processado no claim() atômico do passo 2 — antes desta
@@ -245,13 +350,30 @@ def observe(
     # falha/crash no meio da chamada nunca resulte numa segunda tentativa
     # para o mesmo evento (Issue #95: "evento repetido não gera nova
     # chamada" vale acima de "recuperar de uma falha").
+    #
+    # V3: quando ``executar_auditoria``, a chamada de resumo genérico é
+    # SUBSTITUÍDA (não somada) pela auditoria semântica independente —
+    # continua sendo, no máximo, uma chamada por evento (mesmo
+    # ``CallLimiter``).
     limitador = CallLimiter()
-    pedido = anthropic_client.build_request(
-        roteamento.model_choice,
-        system=_SYSTEM_PROMPT,
-        prompt=_build_prompt(contexto),
-        limiter=limitador,
-    )
+    if executar_auditoria:
+        pedido = anthropic_client.build_request(
+            roteamento.model_choice,
+            system=AUDIT_SYSTEM_PROMPT,
+            prompt=build_audit_prompt(
+                contexto,
+                pr_body=event.payload.get("body"),
+                envolve_questoes=bool(event.payload.get("envolve_questoes")),
+            ),
+            limiter=limitador,
+        )
+    else:
+        pedido = anthropic_client.build_request(
+            roteamento.model_choice,
+            system=_SYSTEM_PROMPT,
+            prompt=_build_prompt(contexto),
+            limiter=limitador,
+        )
     transporte_real = transport if transport is not None else AnthropicTransport()
     resultado_chamada = anthropic_client.call(
         config, pedido, transport=transporte_real, limiter=limitador, event_key=chave,
@@ -262,6 +384,45 @@ def observe(
     # esse desvio que deixou uma chave falsa vazar num teste antes desta
     # correção).
     chamada_sanitizada = resultado_chamada.to_dict()
+
+    # V3: monta a decisão/Cartão de Merge UMA vez, antes do try/except do
+    # ledger abaixo — os dois caminhos de retorno (ledger falhou ou não)
+    # precisam do mesmo resultado de auditoria, nunca recalculado duas vezes.
+    audit_decision_final: str | None = None
+    cartao_final: str | None = None
+    if executar_auditoria:
+        if resultado_chamada.status == "ok":
+            decisao_llm = parse_decision(chamada_sanitizada["text"] or "")
+            decisao_final, lei_das_questoes = aplicar_lei_das_questoes(
+                decisao_llm.decision,
+                envolve_questoes=bool(event.payload.get("envolve_questoes")),
+                pr_body=event.payload.get("body"),
+            )
+            audit_decision_final = decisao_final
+            cartao_final = _render_cartao(
+                event, contexto, decisao_final, decisao_llm.rationale,
+                lei_das_questoes=lei_das_questoes,
+                envolve_questoes=bool(event.payload.get("envolve_questoes")),
+                protocol_matched=decisao_llm.protocol_matched,
+            )
+        else:
+            # A chamada não teve sucesso (error/limited) — nunca vira
+            # MERGE-READY por omissão; mesma filosofia de parse_decision()
+            # quando o protocolo não é seguido.
+            _, lei_das_questoes = aplicar_lei_das_questoes(
+                "NEEDS-FIX",
+                envolve_questoes=bool(event.payload.get("envolve_questoes")),
+                pr_body=event.payload.get("body"),
+            )
+            audit_decision_final = "NEEDS-FIX"
+            cartao_final = _render_cartao(
+                event, contexto, "NEEDS-FIX",
+                f"Auditoria não pôde ser concluída (call_status={resultado_chamada.status!r}) — "
+                "tratado como NEEDS-FIX por segurança.",
+                lei_das_questoes=lei_das_questoes,
+                envolve_questoes=bool(event.payload.get("envolve_questoes")),
+                protocol_matched=True,
+            )
 
     if resultado_chamada.status == "ok" and resultado_chamada.usage is not None:
         try:
@@ -291,6 +452,9 @@ def observe(
                 call_status="ok_ledger_failed",
                 response_text=chamada_sanitizada["text"] or None,
                 usage=chamada_sanitizada.get("usage"),
+                audit_decision=audit_decision_final,
+                merge_card=cartao_final,
+                should_comment=executar_auditoria,
                 **resultado_base,
             )
 
@@ -302,5 +466,8 @@ def observe(
         call_status=resultado_chamada.status,
         response_text=chamada_sanitizada["text"] or None,
         usage=chamada_sanitizada.get("usage"),
+        audit_decision=audit_decision_final,
+        merge_card=cartao_final,
+        should_comment=executar_auditoria,
         **resultado_base,
     )

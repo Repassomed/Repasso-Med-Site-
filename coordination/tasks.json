@@ -227,6 +227,29 @@
       "commit": null,
       "issue": 82,
       "notas": "Mudança apenas operacional no registro: marca #97 como DONE; desatribui #64/#66 pausados; mantém Claude 1 somente no #78; mantém Claude 3 somente no #77 e deixa #80 pendente sem agente. Nenhuma matéria ou código do Coordinator é alterado."
+    },
+    {
+      "id": "infra-coordinator-v3-active-supervised",
+      "titulo": "Repasso Coordinator V3 — coordenação ativa supervisionada (etapa 1)",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordinator/**",
+        ".github/workflows/coordinator-observe.yml",
+        ".github/CODEOWNERS"
+      ],
+      "objetivo": "Corrigir o bug de dedup do GUARD_STATE_CHANGE (identidade agora PR+HEAD_SHA+estado do Guard) e implementar a primeira etapa da V3: novo MODE=active-supervised (aditivo, produção continua em observe), auditoria semântica STANDARD independente para conteúdo Nível C (area==materia), gate determinístico da Lei das Questões (8-A.11) antes de qualquer MERGE-READY, Cartão de Merge com MERGE!=PUBLICAÇÃO, e comentário automático no PR — sem merge, sem edição de matéria/Supabase/produção, sem force-push, sem aumento de orçamento.",
+      "fonte": "Issue #99",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "dependencias": [
+        "infra-coordinator-v2-observe"
+      ],
+      "branch": "infra/c2-coordinator-v3-active-supervised",
+      "pr": null,
+      "commit": null,
+      "issue": 99,
+      "notas": "Ainda não mergeado. REPASSO_COORDINATOR_MODE continua 'observe' em produção — active-supervised é opt-in, só liga quando José trocar a Variable. Suite completa (33 testes novos + toda a suite V2) verde; Guard rodado localmente. Parado em NEEDS-AUDIT para auditoria independente, conforme pedido."
     }
   ]
 }

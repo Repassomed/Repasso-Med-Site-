@@ -148,6 +148,9 @@ def _resultado_de_erro(exc: BaseException) -> dict:
         "call_status": None,
         "response_text": None,
         "usage": None,
+        "audit_decision": None,
+        "merge_card": None,
+        "should_comment": False,
     }
 
 
@@ -155,6 +158,19 @@ def _gravar_out(caminho: str, dados: dict) -> None:
     os.makedirs(os.path.dirname(os.path.abspath(caminho)) or ".", exist_ok=True)
     with open(caminho, "w", encoding="utf-8") as fh:
         json.dump(dados, fh, ensure_ascii=False, indent=2)
+
+
+def _gravar_comment_out(caminho: str, dados: dict) -> None:
+    """V3 (Issue #99): só grava quando o pipeline sinalizou
+    ``should_comment`` E de fato produziu um Cartão de Merge — nunca grava
+    um arquivo vazio/parcial que um passo do workflow pudesse publicar por
+    engano. O CLI nunca fala com a API do GitHub; só deixa o texto pronto
+    para o passo do workflow (que já tem o token) publicar."""
+    if not dados.get("should_comment") or not dados.get("merge_card"):
+        return
+    os.makedirs(os.path.dirname(os.path.abspath(caminho)) or ".", exist_ok=True)
+    with open(caminho, "w", encoding="utf-8") as fh:
+        fh.write(dados["merge_card"])
 
 
 def render_human(result_dict: dict) -> str:
@@ -171,6 +187,12 @@ def render_human(result_dict: dict) -> str:
     if result_dict.get("next_action"):
         L.append("")
         L.append(f"**Próxima ação:** {result_dict['next_action']}")
+    if result_dict.get("audit_decision"):
+        L.append("")
+        L.append(f"**Auditoria V3 (active-supervised):** {result_dict['audit_decision']}")
+        if result_dict.get("merge_card"):
+            L.append("")
+            L.append(result_dict["merge_card"])
 
     # Bloqueador 8 da 3ª auditoria do PR #97: este texto tem que dizer a
     # VERDADE sobre se uma chamada foi tentada — nunca afirmar "nenhuma
@@ -242,6 +264,13 @@ def main(argv: list[str] | None = None) -> int:
                          "observado — bloqueador 5 da 3ª auditoria); mesmo schema que "
                          "tools/qa/guard/__main__.py grava")
     ap.add_argument("--out", default=None, help="onde gravar o resultado OBSERVE em JSON")
+    ap.add_argument("--comment-out", default=None,
+                    help="V3 (Issue #99): quando o Coordinator roda em MODE=active-supervised e a "
+                         "auditoria semântica produziu um Cartão de Merge (ObserveResult.merge_card), "
+                         "grava o texto aqui para um passo do workflow publicar como comentário no "
+                         "PR/Issue via github-script — o CLI nunca chama a API do GitHub sozinho. "
+                         "Não grava nada quando não há merge_card (ex.: modo observe, ou evento que "
+                         "não passou pela auditoria)")
     a = ap.parse_args(argv)
 
     # Item 2 do "PACOTE CONSOLIDADO" (PR #97): tudo que pode lançar —
@@ -264,6 +293,8 @@ def main(argv: list[str] | None = None) -> int:
         print(render_human(dados_sanitizados))
         if a.out:
             _gravar_out(a.out, dados_sanitizados)
+        if a.comment_out:
+            _gravar_comment_out(a.comment_out, dados_sanitizados)
         return 1
 
     if dados_sanitizados is None:
@@ -275,6 +306,8 @@ def main(argv: list[str] | None = None) -> int:
     print(render_human(dados_sanitizados))
     if a.out:
         _gravar_out(a.out, dados_sanitizados)
+    if a.comment_out:
+        _gravar_comment_out(a.comment_out, dados_sanitizados)
 
     # Auditoria final do PR #97: uma chamada à Anthropic bem-sucedida cujo
     # ledger de uso/custo falhou DEPOIS é um problema operacional real —
@@ -326,7 +359,10 @@ def _observar(a: argparse.Namespace) -> dict | None:
     else:
         workers = _load_workers(a.workers)
 
-    resultado = observe(event, config=config, dedup=dedup, ledger=ledger, workers=workers)
+    resultado = observe(
+        event, config=config, dedup=dedup, ledger=ledger, workers=workers,
+        audit_mode=config.is_active_supervised,
+    )
     dados = resultado.to_dict()
     return redact_mapping(dados)
 

@@ -38,6 +38,26 @@ GitHub (o conteúdo de ``$GITHUB_EVENT_PATH``) para o formato interno que
    e só uma mudança real de estado (vermelho→verde ou verde→vermelho)
    produz uma chave nova.
 
+**Correção da V3 (Issue #99, "blocker prioritário").** O item 3 acima
+tinha um bug real, achado em produção (PR #77, Guard run #34): um NOVO
+commit empurrado para a MESMA PR, com o Guard terminando de novo em
+``success`` (o mesmo estado de antes), produzia a MESMA ``dedup_key`` —
+porque só ``conclusion`` entrava em ``dedup_fields``, nunca o commit em
+si. Ou seja, "PR #77 corrigiu o problema X e o Guard passou de novo" era
+tratado como DUPLICATE do "PR #77 passou o Guard pela primeira vez",
+perdendo silenciosamente um evento real. A identidade agora é
+PR + HEAD_SHA + estado do Guard: ``head_sha`` vem direto do campo
+``workflow_run.head_sha`` que o próprio webhook já entrega (nenhuma
+chamada de API adicional) e entra em ``dedup_fields`` ao lado de
+``conclusion``. Resultado: mesma PR + mesmo HEAD + mesmo estado ainda
+colide (rerun do Guard sem nenhum commit novo == DUPLICATE, comportamento
+antigo preservado); mesma PR + NOVO HEAD + mesmo estado agora produz uma
+chave nova (auditoria de verdade), porque o hash do payload muda mesmo
+com ``conclusion`` igual. O mesmo campo foi adicionado a
+``PR_NEEDS_AUDIT`` por consistência (um novo commit na mesma PR, ainda
+com o rótulo NEEDS-AUDIT, já não dependia só de ``updated_at`` para virar
+evento novo).
+
 Cobre os 2 gatilhos que seguram segredo em
 ``.github/workflows/coordinator-observe.yml``:
 
@@ -62,6 +82,15 @@ LABEL_NEEDS_AUDIT = "NEEDS-AUDIT"
 
 RE_AREA = re.compile(r"^\s*[-*]\s*\*\*Área:\*\*\s*(.+)$", re.I | re.M)
 RE_ESTADO_CHECKPOINT = re.compile(r"^ESTADO:\s*(\S+)", re.M)
+
+# V3 (Issue #99, "Lei das Questões" para o Coordinator): detecta, por
+# palavra-chave em título+corpo da PR, se a tarefa envolve prova/questões —
+# mesmo espírito de classify.py::_KEYWORDS_CONTEUDO, mas aqui vira um sinal
+# explícito no payload (``envolve_questoes``) para que merge_card.py saiba
+# exigir o relatório obrigatório de 8-A.11 antes de MERGE-READY.
+RE_ENVOLVE_QUESTOES = re.compile(
+    r"\b(quest(ã|a)o|quest(õ|o)es|prova|gabarito|banco general|banco geral)\b", re.I
+)
 
 # Bloqueador 2 da 3ª auditoria: só este(s) ator(es) podem gerar um evento
 # pago via comentário. Neste projeto, José e todos os agentes Claude
@@ -133,8 +162,20 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
     if estado == "success" and pr_info and LABEL_NEEDS_AUDIT in (pr_info.get("labels") or []):
         numero = pr_info.get("number")
         corpo = pr_info.get("body") or ""
+        titulo = pr_info.get("title") or ""
         m = RE_AREA.search(corpo)
         area = m.group(1).strip().lower() if m else None
+        # ``materia`` aqui é um sinal de PRESENÇA (routing.py só checa
+        # "is not None"), não uma tentativa de extrair um slug estruturado
+        # — o modelo de PR (.github/pull_request_template.md) não tem hoje
+        # um campo "Matéria:" machine-readable separado de "Área:". Quando
+        # a área classificada é "materia" (conteúdo médico — Nível C da
+        # Issue #83), o próprio título da PR entra aqui como identificador
+        # legível para José, e é o suficiente para o roteamento existente
+        # (routing.decide) marcar needs_semantic_audit=True. Uma extração
+        # mais precisa (slug por matéria) fica para quando o template
+        # ganhar um campo dedicado — não é bloqueador desta V3.
+        materia = titulo if area == "materia" else None
         return Event(
             raw_type="PR_NEEDS_AUDIT",
             source="github",
@@ -142,11 +183,19 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
             identity=f"pr:{numero}",
             payload={
                 "area": area,
-                "titulo": pr_info.get("title"),
+                "materia": materia,
+                "titulo": titulo,
+                "body": corpo,
+                "envolve_questoes": bool(RE_ENVOLVE_QUESTOES.search(f"{titulo}\n{corpo}")),
+                "audit_pack": audit_pack,
                 "dedup_fields": {
                     "pr": numero,
                     "label": LABEL_NEEDS_AUDIT,
                     "updated_at": pr_info.get("updated_at"),
+                    # Correção da V3: um novo commit na mesma PR, ainda com
+                    # o rótulo NEEDS-AUDIT, precisa virar auditoria nova —
+                    # ver o comentário no topo do módulo.
+                    "head_sha": run.get("head_sha"),
                 },
             },
         )
@@ -166,10 +215,16 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
             # None. ``context.py`` já sabia ler este formato (mesmo schema
             # que tools/qa/guard/__main__.py grava).
             "audit_pack": audit_pack,
-            # Bloqueador 6: dedup por ESTADO (a identidade já fixa o PR;
-            # só a conclusão entra na chave — NUNCA run_id, que muda a
-            # cada execução e faria verde→verde parecer sempre novo).
-            "dedup_fields": {"conclusion": conclusao},
+            # Bloqueador 6 (PR #97) + correção V3 (Issue #99): dedup por
+            # ESTADO + CONTEÚDO. A identidade já fixa o PR; ``conclusion``
+            # sozinho faz verde→verde e vermelho→vermelho colidirem (nunca
+            # ``run_id``, que muda a cada execução e faria isso parecer
+            # sempre novo) — mas um NOVO commit que termina no MESMO estado
+            # precisa ser tratado como evento novo, não DUPLICATE (era
+            # exatamente isto que estava quebrado: ver o comentário no
+            # topo do módulo). ``head_sha`` vem do próprio payload do
+            # webhook (``workflow_run.head_sha``), sem chamada extra.
+            "dedup_fields": {"conclusion": conclusao, "head_sha": run.get("head_sha")},
         },
     )
 

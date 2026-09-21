@@ -192,6 +192,47 @@ def test_malicious_pr_editing_coordinator_cannot_run_with_secret() -> None:
     print("OK  test_malicious_pr_editing_coordinator_cannot_run_with_secret")
 
 
+def test_issues_write_present_only_for_commenting_actions_write_still_absent() -> None:
+    """V3 (Issue #99): a única permissão nova é issues:write, e só para o
+    passo que posta o Cartão de Merge — actions:write continua ausente
+    (achado do PR #97, nunca revertido por esta V3)."""
+    secao = _secao_job_permissions(_ler())
+    assert "issues: write" in secao
+    assert "actions: write" not in secao
+    print("OK  test_issues_write_present_only_for_commenting_actions_write_still_absent")
+
+
+def test_merge_card_comment_step_only_runs_when_comment_file_exists() -> None:
+    """O passo que comenta o Cartão de Merge só pode rodar quando o CLI
+    gravou --comment-out (MODE=active-supervised com auditoria concluída)
+    — nunca incondicionalmente, senão comentaria um arquivo vazio/antigo
+    em MODE=observe."""
+    texto = _ler()
+    idx = texto.index("- name: Comentar o Cartão de Merge")
+    trecho = texto[idx: idx + 1200]
+    assert "hashFiles('/tmp/coordinator-comment.md')" in trecho
+    assert "createComment" in trecho
+    print("OK  test_merge_card_comment_step_only_runs_when_comment_file_exists")
+
+
+def test_comment_out_flag_is_wired_into_the_real_invocation() -> None:
+    assert "--comment-out /tmp/coordinator-comment.md" in _ler()
+    print("OK  test_comment_out_flag_is_wired_into_the_real_invocation")
+
+
+def test_codeowners_covers_coordinator_and_workflows() -> None:
+    """Issue #99, 'SEGURANÇA ANTES DE AUMENTAR PERMISSÕES': antes de dar
+    ao Coordinator qualquer nova capacidade de escrita, o código
+    crítico/workflows precisa de uma camada de revisão declarada."""
+    caminho = os.path.join(_pathsetup.REPO_ROOT, ".github", "CODEOWNERS")
+    assert os.path.exists(caminho), ".github/CODEOWNERS precisa existir (Issue #99)"
+    with open(caminho, encoding="utf-8") as fh:
+        conteudo = fh.read()
+    assert "/coordinator/" in conteudo
+    assert "/.github/workflows/" in conteudo
+    print("OK  test_codeowners_covers_coordinator_and_workflows")
+
+
 def test_run_step_forwards_enabled_mode_and_pilot_env_to_the_cli() -> None:
     """Bug encontrado nesta rodada: o passo que de fato chama
     `python3 -m coordinator` não repassava REPASSO_COORDINATOR_ENABLED/
@@ -230,6 +271,10 @@ def main() -> int:
         test_workers_from_tasks_json_is_wired_into_the_real_invocation,
         test_guard_audit_pack_download_step_exists,
         test_run_step_forwards_enabled_mode_and_pilot_env_to_the_cli,
+        test_issues_write_present_only_for_commenting_actions_write_still_absent,
+        test_merge_card_comment_step_only_runs_when_comment_file_exists,
+        test_comment_out_flag_is_wired_into_the_real_invocation,
+        test_codeowners_covers_coordinator_and_workflows,
     ]
     falhas = 0
     for t in testes:

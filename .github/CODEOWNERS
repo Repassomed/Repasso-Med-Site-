@@ -1,0 +1,26 @@
+# Camada de revisão obrigatória para código crítico/workflows (Issue #99,
+# "SEGURANÇA ANTES DE AUMENTAR PERMISSÕES"): antes de qualquer nova
+# capacidade do Coordinator (comentar automaticamente, auditoria
+# semântica), o código que PODE tocar segredo/CI e os workflows que
+# seguram ANTHROPIC_API_KEY/GITHUB_TOKEN precisam de revisão — não é
+# suficiente confiar só no bom senso de quem abre a PR.
+#
+# Este arquivo, sozinho, só documenta a intenção — o GitHub só passa a
+# EXIGIR essa revisão quando a branch "main" tiver uma regra de proteção
+# de branch com "Require review from Code Owners" ativada em
+# Settings → Branches. Esse passo é MANUAL e cabe só ao José (a API de
+# branch protection não está no escopo de permissões de nenhum workflow
+# deste repositório — privilégio mínimo: o Coordinator não pede a
+# permissão de administrar o repositório só para isto). Ver o Cartão de
+# Merge desta PR para o passo exato que falta.
+#
+# @Repassomed é a identidade de GitHub usada por José e por todos os
+# agentes Claude neste projeto hoje (não há, ainda, uma identidade
+# distinta por pessoa/agente — ver coordinator/github_event.py::
+# ALLOWED_COMMENT_ACTORS, mesma limitação documentada lá).
+
+/coordinator/                    @Repassomed
+/.github/workflows/              @Repassomed
+/.github/CODEOWNERS              @Repassomed
+/coordination/                   @Repassomed
+/tools/qa/guard/                 @Repassomed
