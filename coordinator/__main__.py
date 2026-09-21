@@ -25,11 +25,13 @@ Dois jeitos de dar o evento:
         --workers-from-tasks-json coordination/tasks.json \\
         --pr-info-file /tmp/pr-info.json \\
         --guard-audit-pack /tmp/guard-audit-pack/guard-audit-pack.json \\
+        --pr-diff-file /tmp/pr-diff.patch \\
         --out /tmp/coordinator-observe.json
 
-   ``--pr-info-file``/``--guard-audit-pack`` são opcionais e vêm de passos
-   do workflow que leem a PR e baixam o artifact do Guard (bloqueadores 1
-   e 5 da 3ª auditoria) — nunca de código do HEAD do PR.
+   ``--pr-info-file``/``--guard-audit-pack``/``--pr-diff-file`` são
+   opcionais e vêm de passos do workflow que leem a PR, o diff real e
+   baixam o artifact do Guard (bloqueadores 1 e 5 da 3ª auditoria, e B2 da
+   auditoria independente do PR #104) — nunca de código do HEAD do PR.
 
 Persistência entre execuções independentes (bloqueador 2): ``--dedup-store``/
 ``--usage-ledger`` continuam sendo arquivo local (default, preserva o
@@ -61,6 +63,7 @@ from .git_state import GitDedupStore, GitJsonStore, GitUsageLedger
 from .github_event import build_event_from_github_context
 from .observe import observe
 from .redact import redact, redact_mapping
+from .worker_ops import DEFAULT_STATE_BRANCH, LocalJsonWorkerStateStore, OperationalWorkerRegistry
 from .worker_registry import Worker, WorkerState, load_workers_from_tasks_json
 
 
@@ -83,15 +86,29 @@ def _load_json_if_exists(path: str | None) -> dict | None:
         return json.load(fh)
 
 
+def _load_text_if_exists(path: str | None) -> str | None:
+    if not path or not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
 def _load_github_event(path: str, event_name: str, repo: str, *,
                         pr_info_file: str | None = None,
-                        guard_audit_pack: str | None = None) -> Event | None:
+                        guard_audit_pack: str | None = None,
+                        pr_diff_file: str | None = None) -> Event | None:
     with open(path, encoding="utf-8") as fh:
         payload = json.load(fh)
     pr_info = _load_json_if_exists(pr_info_file)
     audit_pack = _load_json_if_exists(guard_audit_pack)
+    # B2 da auditoria independente do PR #104: diff real da PR, texto puro
+    # (não JSON) — buscado por um passo do workflow via API somente-leitura
+    # da branch confiável, nunca do HEAD do PR (ver o comentário em
+    # github_event.py). Nunca executado; só atravessa como string até o
+    # prompt da auditoria.
+    pr_diff = _load_text_if_exists(pr_diff_file)
     return build_event_from_github_context(event_name, payload, repo,
-                                            pr_info=pr_info, audit_pack=audit_pack)
+                                            pr_info=pr_info, audit_pack=audit_pack, pr_diff=pr_diff)
 
 
 def _load_workers(path: str | None) -> list[Worker]:
@@ -148,6 +165,10 @@ def _resultado_de_erro(exc: BaseException) -> dict:
         "call_status": None,
         "response_text": None,
         "usage": None,
+        "audit_decision": None,
+        "merge_card": None,
+        "should_comment": False,
+        "comment_target_issue": None,
     }
 
 
@@ -155,6 +176,40 @@ def _gravar_out(caminho: str, dados: dict) -> None:
     os.makedirs(os.path.dirname(os.path.abspath(caminho)) or ".", exist_ok=True)
     with open(caminho, "w", encoding="utf-8") as fh:
         json.dump(dados, fh, ensure_ascii=False, indent=2)
+
+
+def _gravar_comment_out(caminho: str, dados: dict) -> None:
+    """V3 (Issue #99): só grava quando o pipeline sinalizou
+    ``should_comment`` E de fato produziu um Cartão de Merge E sabe o
+    destino explícito (``comment_target_issue`` — correção B4 da
+    auditoria independente do PR #104, rodada 4: sem destino conhecido,
+    nunca grava o texto, para que o workflow nunca tenha que adivinhar
+    onde postar). Nunca grava um arquivo vazio/parcial. O CLI nunca fala
+    com a API do GitHub; só deixa o texto pronto para o passo do workflow
+    (que já tem o token) publicar."""
+    if not dados.get("should_comment") or not dados.get("merge_card"):
+        return
+    if dados.get("comment_target_issue") is None:
+        return
+    os.makedirs(os.path.dirname(os.path.abspath(caminho)) or ".", exist_ok=True)
+    with open(caminho, "w", encoding="utf-8") as fh:
+        fh.write(dados["merge_card"])
+
+
+def _gravar_comment_target_out(caminho: str, dados: dict) -> None:
+    """Grava só o número da issue/PR de destino — arquivo próprio e
+    minúsculo, para o workflow ler sem precisar reabrir/parsear o JSON
+    completo de ``--out``. Mesma condição de ``_gravar_comment_out``: só
+    escreve quando os três sinais (should_comment, merge_card,
+    comment_target_issue) estão presentes juntos."""
+    if not dados.get("should_comment") or not dados.get("merge_card"):
+        return
+    alvo = dados.get("comment_target_issue")
+    if alvo is None:
+        return
+    os.makedirs(os.path.dirname(os.path.abspath(caminho)) or ".", exist_ok=True)
+    with open(caminho, "w", encoding="utf-8") as fh:
+        fh.write(str(alvo))
 
 
 def render_human(result_dict: dict) -> str:
@@ -171,6 +226,12 @@ def render_human(result_dict: dict) -> str:
     if result_dict.get("next_action"):
         L.append("")
         L.append(f"**Próxima ação:** {result_dict['next_action']}")
+    if result_dict.get("audit_decision"):
+        L.append("")
+        L.append(f"**Auditoria V3 (active-supervised):** {result_dict['audit_decision']}")
+        if result_dict.get("merge_card"):
+            L.append("")
+            L.append(result_dict["merge_card"])
 
     # Bloqueador 8 da 3ª auditoria do PR #97: este texto tem que dizer a
     # VERDADE sobre se uma chamada foi tentada — nunca afirmar "nenhuma
@@ -241,7 +302,38 @@ def main(argv: list[str] | None = None) -> int:
                     help="caminho do audit-pack real do Guard (baixado do artifact do run "
                          "observado — bloqueador 5 da 3ª auditoria); mesmo schema que "
                          "tools/qa/guard/__main__.py grava")
+    ap.add_argument("--pr-diff-file", default=None,
+                    help="V3 (correção B2 da auditoria independente do PR #104): arquivo de TEXTO "
+                         "(não JSON) com o diff/patch real da PR, buscado por um passo do workflow "
+                         "via API somente-leitura da branch confiável — nunca do HEAD do PR. É a "
+                         "evidência principal da auditoria semântica; sem ele, MERGE-READY é "
+                         "bloqueado deterministicamente (ver coordinator/merge_card.py::"
+                         "aplicar_gate_diff)")
+    ap.add_argument("--worker-state-store", default=None,
+                    help="arquivo LOCAL para o Worker Registry OPERACIONAL (rodada 3, Issue #99, "
+                         "achado B3) — separado de coordination/tasks.json; não sobrevive entre "
+                         "runners efêmeros (prefira --worker-state-git-remote no workflow real)")
+    ap.add_argument("--worker-state-git-remote", default=None,
+                    help="remoto git para o Worker Registry operacional compartilhado entre "
+                         "execuções independentes — mesmo padrão de --dedup-git-remote/"
+                         "--usage-git-remote")
+    ap.add_argument("--worker-state-git-branch", default=DEFAULT_STATE_BRANCH,
+                    help="branch dedicada para o Worker Registry operacional (nunca 'main')")
     ap.add_argument("--out", default=None, help="onde gravar o resultado OBSERVE em JSON")
+    ap.add_argument("--comment-out", default=None,
+                    help="V3 (Issue #99): quando o Coordinator roda em MODE=active-supervised e a "
+                         "auditoria semântica produziu um Cartão de Merge (ObserveResult.merge_card), "
+                         "grava o texto aqui para um passo do workflow publicar como comentário no "
+                         "PR/Issue via github-script — o CLI nunca chama a API do GitHub sozinho. "
+                         "Não grava nada quando não há merge_card (ex.: modo observe, ou evento que "
+                         "não passou pela auditoria)")
+    ap.add_argument("--comment-target-out", default=None,
+                    help="V3 (correção B4 da auditoria independente do PR #104, rodada 4): grava só o "
+                         "número da issue/PR de destino do comentário (ObserveResult."
+                         "comment_target_issue) — nunca escrito junto com --comment-out se o destino "
+                         "for desconhecido. O workflow lê este arquivo em vez de inferir o destino "
+                         "sozinho (ex.: um POOL-PAUSADO sempre vai para a Inbox #88, mesmo quando o "
+                         "checkpoint que o disparou chegou em outra issue)")
     a = ap.parse_args(argv)
 
     # Item 2 do "PACOTE CONSOLIDADO" (PR #97): tudo que pode lançar —
@@ -264,6 +356,10 @@ def main(argv: list[str] | None = None) -> int:
         print(render_human(dados_sanitizados))
         if a.out:
             _gravar_out(a.out, dados_sanitizados)
+        if a.comment_out:
+            _gravar_comment_out(a.comment_out, dados_sanitizados)
+        if a.comment_target_out:
+            _gravar_comment_target_out(a.comment_target_out, dados_sanitizados)
         return 1
 
     if dados_sanitizados is None:
@@ -275,6 +371,10 @@ def main(argv: list[str] | None = None) -> int:
     print(render_human(dados_sanitizados))
     if a.out:
         _gravar_out(a.out, dados_sanitizados)
+    if a.comment_out:
+        _gravar_comment_out(a.comment_out, dados_sanitizados)
+    if a.comment_target_out:
+        _gravar_comment_target_out(a.comment_target_out, dados_sanitizados)
 
     # Auditoria final do PR #97: uma chamada à Anthropic bem-sucedida cujo
     # ledger de uso/custo falhou DEPOIS é um problema operacional real —
@@ -300,7 +400,8 @@ def _observar(a: argparse.Namespace) -> dict | None:
     if a.github_event_name:
         event = _load_github_event(a.event, a.github_event_name, a.repo,
                                     pr_info_file=a.pr_info_file,
-                                    guard_audit_pack=a.guard_audit_pack)
+                                    guard_audit_pack=a.guard_audit_pack,
+                                    pr_diff_file=a.pr_diff_file)
         if event is None:
             print(
                 f"# Repasso Coordinator · OBSERVE\n\n"
@@ -326,7 +427,17 @@ def _observar(a: argparse.Namespace) -> dict | None:
     else:
         workers = _load_workers(a.workers)
 
-    resultado = observe(event, config=config, dedup=dedup, ledger=ledger, workers=workers)
+    if a.worker_state_git_remote:
+        worker_registry = OperationalWorkerRegistry(
+            GitJsonStore(a.worker_state_git_remote, branch=a.worker_state_git_branch, file_name="workers.json")
+        )
+    else:
+        worker_registry = OperationalWorkerRegistry(LocalJsonWorkerStateStore(a.worker_state_store))
+
+    resultado = observe(
+        event, config=config, dedup=dedup, ledger=ledger, workers=workers,
+        audit_mode=config.is_active_supervised, worker_registry=worker_registry,
+    )
     dados = resultado.to_dict()
     return redact_mapping(dados)
 

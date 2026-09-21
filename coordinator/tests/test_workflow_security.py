@@ -103,6 +103,61 @@ def test_job_gate_checks_enabled_and_trusted_comment_actor() -> None:
     print("OK  test_job_gate_checks_enabled_and_trusted_comment_actor")
 
 
+def test_job_gate_also_filters_coordinator_marker_second_layer() -> None:
+    """Achado B5 da auditoria independente do PR #104, rodada 2:
+    anti-self-loop em duas camadas — o `if:` do job (camada rápida/barata)
+    nem deixa o job começar para um comentário que já carrega o marcador
+    do Coordinator, além do filtro em Python (camada 2, defesa em
+    profundidade, nunca removida)."""
+    bloco = _bloco_do_job(_ler())
+    assert "contains(github.event.comment.body, '<!-- repasso-coordinator -->')" in bloco
+    print("OK  test_job_gate_also_filters_coordinator_marker_second_layer")
+
+
+def test_worker_state_git_remote_is_wired_into_the_real_invocation() -> None:
+    assert "--worker-state-git-remote" in _ler()
+    print("OK  test_worker_state_git_remote_is_wired_into_the_real_invocation")
+
+
+def test_comment_step_reads_explicit_target_never_infers_it() -> None:
+    """Correção B4 da auditoria independente do PR #104, rodada 4: o
+    workflow nunca reconstrói a lógica de destino (PR vs. Issue #88 vs.
+    issue de origem) — só lê o número que o Coordinator já decidiu e
+    gravou em /tmp/coordinator-comment-target.txt."""
+    texto = _ler()
+    idx = texto.index("- name: Comentar o Cartão de Merge")
+    trecho = texto[idx: idx + 2000]
+    assert "coordinator-comment-target.txt" in trecho
+    assert "context.eventName === 'issue_comment'" not in trecho, (
+        "o workflow não pode mais reconstruir a lógica de destino sozinho"
+    )
+    assert "steps.coordinator.outputs.comment_ready" in trecho
+    print("OK  test_comment_step_reads_explicit_target_never_infers_it")
+
+
+def test_hashfiles_against_tmp_is_never_used() -> None:
+    """Correção B1 da auditoria independente do PR #104, rodada 4:
+    hashFiles() é uma função da linguagem de expressão do GitHub Actions
+    e só enxerga arquivos dentro de GITHUB_WORKSPACE — chamá-la contra
+    /tmp/... (como o `if:` do passo de comentário fazia antes desta
+    correção) avalia sempre como string vazia em produção, deixando o
+    passo permanentemente pulado apesar de todos os testes locais
+    passarem (nenhum deles roda um runner real do Actions). Trava
+    estrutural: este padrão nunca pode voltar a aparecer no arquivo."""
+    texto = _ler()
+    assert "hashFiles('/tmp/" not in texto and 'hashFiles("/tmp/' not in texto, (
+        "hashFiles() não pode ser usado contra caminhos em /tmp — "
+        "GITHUB_WORKSPACE é a única árvore que ele enxerga; use um "
+        "output explícito (ex.: comment_ready) gravado em bash"
+    )
+    print("OK  test_hashfiles_against_tmp_is_never_used")
+
+
+def test_comment_target_out_flag_is_wired_into_the_real_invocation() -> None:
+    assert "--comment-target-out /tmp/coordinator-comment-target.txt" in _ler()
+    print("OK  test_comment_target_out_flag_is_wired_into_the_real_invocation")
+
+
 def test_job_fails_when_coordinator_cli_errors() -> None:
     """Bloqueador 7: um passo final precisa fazer o job falhar quando o
     CLI termina com código != 0 — DEPOIS de publicar o artifact (upload
@@ -192,6 +247,63 @@ def test_malicious_pr_editing_coordinator_cannot_run_with_secret() -> None:
     print("OK  test_malicious_pr_editing_coordinator_cannot_run_with_secret")
 
 
+def test_issues_write_present_only_for_commenting_actions_write_still_absent() -> None:
+    """V3 (Issue #99): a única permissão nova é issues:write, e só para o
+    passo que posta o Cartão de Merge — actions:write continua ausente
+    (achado do PR #97, nunca revertido por esta V3)."""
+    secao = _secao_job_permissions(_ler())
+    assert "issues: write" in secao
+    assert "actions: write" not in secao
+    print("OK  test_issues_write_present_only_for_commenting_actions_write_still_absent")
+
+
+def test_merge_card_comment_step_only_runs_when_comment_file_exists() -> None:
+    """O passo que comenta o Cartão de Merge só pode rodar quando o CLI
+    gravou --comment-out (MODE=active-supervised com auditoria concluída)
+    — nunca incondicionalmente, senão comentaria um arquivo vazio/antigo
+    em MODE=observe. Correção B1 (rodada 4): a condição usa o output
+    explícito comment_ready (gravado em bash), não hashFiles() contra
+    /tmp — e o script mantém fs.existsSync como segunda camada."""
+    texto = _ler()
+    idx = texto.index("- name: Comentar o Cartão de Merge")
+    trecho = texto[idx: idx + 2800]
+    assert "steps.coordinator.outputs.comment_ready == 'true'" in trecho
+    assert "fs.existsSync" in trecho
+    assert "createComment" in trecho
+    print("OK  test_merge_card_comment_step_only_runs_when_comment_file_exists")
+
+
+def test_comment_out_flag_is_wired_into_the_real_invocation() -> None:
+    assert "--comment-out /tmp/coordinator-comment.md" in _ler()
+    print("OK  test_comment_out_flag_is_wired_into_the_real_invocation")
+
+
+def test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli() -> None:
+    """Correção B2 da auditoria independente do PR #104: o diff real da PR
+    precisa ser buscado pelo passo confiável (mesmo passo que já lê
+    número/rótulos da PR) e passado ao CLI via --pr-diff-file."""
+    texto = _ler()
+    idx = texto.index("Buscar dados reais da PR associada")
+    trecho = texto[idx: idx + 2200]
+    assert "mediaType: { format: 'diff' }" in trecho
+    assert "/tmp/pr-diff.patch" in trecho
+    assert "--pr-diff-file /tmp/pr-diff.patch" in texto
+    print("OK  test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli")
+
+
+def test_codeowners_covers_coordinator_and_workflows() -> None:
+    """Issue #99, 'SEGURANÇA ANTES DE AUMENTAR PERMISSÕES': antes de dar
+    ao Coordinator qualquer nova capacidade de escrita, o código
+    crítico/workflows precisa de uma camada de revisão declarada."""
+    caminho = os.path.join(_pathsetup.REPO_ROOT, ".github", "CODEOWNERS")
+    assert os.path.exists(caminho), ".github/CODEOWNERS precisa existir (Issue #99)"
+    with open(caminho, encoding="utf-8") as fh:
+        conteudo = fh.read()
+    assert "/coordinator/" in conteudo
+    assert "/.github/workflows/" in conteudo
+    print("OK  test_codeowners_covers_coordinator_and_workflows")
+
+
 def test_run_step_forwards_enabled_mode_and_pilot_env_to_the_cli() -> None:
     """Bug encontrado nesta rodada: o passo que de fato chama
     `python3 -m coordinator` não repassava REPASSO_COORDINATOR_ENABLED/
@@ -230,6 +342,16 @@ def main() -> int:
         test_workers_from_tasks_json_is_wired_into_the_real_invocation,
         test_guard_audit_pack_download_step_exists,
         test_run_step_forwards_enabled_mode_and_pilot_env_to_the_cli,
+        test_issues_write_present_only_for_commenting_actions_write_still_absent,
+        test_merge_card_comment_step_only_runs_when_comment_file_exists,
+        test_comment_out_flag_is_wired_into_the_real_invocation,
+        test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli,
+        test_codeowners_covers_coordinator_and_workflows,
+        test_job_gate_also_filters_coordinator_marker_second_layer,
+        test_worker_state_git_remote_is_wired_into_the_real_invocation,
+        test_comment_step_reads_explicit_target_never_infers_it,
+        test_comment_target_out_flag_is_wired_into_the_real_invocation,
+        test_hashfiles_against_tmp_is_never_used,
     ]
     falhas = 0
     for t in testes:

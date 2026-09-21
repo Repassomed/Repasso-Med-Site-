@@ -36,6 +36,17 @@ o portão ENABLED/MODE esteja aberto e o orçamento permita) fica bloqueado.
 ``PILOT="false"`` (o padrão) não impõe restrição nenhuma além do portão de
 sempre. Isto é aditivo: nunca afrouxa o gate ENABLED/MODE, só pode
 restringir mais.
+
+**MODE="active-supervised" (V3, Issue #99).** Além de ``"observe"``, esta
+V3 introduz um segundo valor permitido para ``REPASSO_COORDINATOR_MODE``.
+É estritamente ADITIVO — a produção de hoje roda com
+``MODE=observe`` (comportamento V2, sem nenhuma mudança), e só passa a
+usar a nova camada de capacidades (auditoria semântica real, comentário
+automático, Cartão de Merge) quando José decidir explicitamente trocar a
+Variable para ``active-supervised``. Enquanto isso não acontecer, todo o
+código novo desta V3 fica inerte pelo mesmo motivo que ``ENABLED=false``
+deixa a V2 inerte: o portão é a primeira coisa checada, sempre. Qualquer
+valor fora de ``ALLOWED_MODES`` continua BLOCKED, como antes.
 """
 
 from __future__ import annotations
@@ -48,8 +59,21 @@ ENV_ENABLED = "REPASSO_COORDINATOR_ENABLED"
 ENV_MODE = "REPASSO_COORDINATOR_MODE"
 ENV_PILOT = "REPASSO_COORDINATOR_PILOT"
 ENV_PILOT_EVENT_KEY = "REPASSO_COORDINATOR_PILOT_EVENT_KEY"
+# Rodada 3 (Issue #99, "custos visíveis"): conversão BRL informativa —
+# nunca usada para decidir nada, só para exibir no checkpoint ao lado do
+# valor real em USD (o teto mensal continua em USD). Taxa/data com
+# default explícito (baseline registrado por José em 21/09/2026, Issue
+# #99 comentário 3) para que o texto nunca minta sobre "de quando" é a
+# taxa — configurável via Variable quando José quiser atualizar.
+ENV_BRL_RATE = "REPASSO_COORDINATOR_BRL_RATE"
+ENV_BRL_RATE_DATE = "REPASSO_COORDINATOR_BRL_RATE_DATE"
+DEFAULT_BRL_RATE = 5.11
+DEFAULT_BRL_RATE_DATE = "2026-09-21"
 
 ALLOWED_MODE = "observe"
+# V3 (Issue #99): segundo modo permitido, aditivo — ver o comentário acima.
+ACTIVE_SUPERVISED_MODE = "active-supervised"
+ALLOWED_MODES = frozenset({ALLOWED_MODE, ACTIVE_SUPERVISED_MODE})
 
 
 @dataclass(frozen=True)
@@ -58,10 +82,22 @@ class Config:
     mode: str
     pilot: bool = False
     pilot_event_key: str | None = None
+    brl_rate: float = DEFAULT_BRL_RATE
+    brl_rate_date: str = DEFAULT_BRL_RATE_DATE
 
     @property
     def mode_allowed(self) -> bool:
-        return self.mode == ALLOWED_MODE
+        return self.mode in ALLOWED_MODES
+
+    @property
+    def is_active_supervised(self) -> bool:
+        """Liga a camada de capacidades da V3 (auditoria semântica real,
+        comentário automático, Cartão de Merge) — só quando o portão
+        ENABLED/MODE já está aberto E o modo é exatamente
+        ``active-supervised``. Em ``observe`` (o modo de produção hoje)
+        isto é sempre ``False``, preservando byte a byte o comportamento
+        já em produção."""
+        return self.mode == ACTIVE_SUPERVISED_MODE
 
     def pilot_allows(self, event_key: str) -> bool:
         """Segunda camada de restrição, só ativa quando PILOT=true.
@@ -83,8 +119,8 @@ class Config:
             return GateResult(
                 open=False,
                 reason=(
-                    f"REPASSO_COORDINATOR_MODE={self.mode!r} não é {ALLOWED_MODE!r}. "
-                    "Esta V2 só sabe operar em modo observe; qualquer outro modo "
+                    f"REPASSO_COORDINATOR_MODE={self.mode!r} não é um dos modos "
+                    f"permitidos ({sorted(ALLOWED_MODES)!r}). Qualquer outro modo "
                     "fica bloqueado, mesmo que ENABLED=true."
                 ),
             )
@@ -96,7 +132,7 @@ class Config:
                     "permitida enquanto o portão estiver fechado."
                 ),
             )
-        return GateResult(open=True, reason="ENABLED=true e MODE=observe: portão aberto.")
+        return GateResult(open=True, reason=f"ENABLED=true e MODE={self.mode!r}: portão aberto.")
 
     @classmethod
     def from_env(cls, env: dict | None = None) -> "Config":
@@ -106,11 +142,18 @@ class Config:
         mode_raw = src.get(ENV_MODE, ALLOWED_MODE)
         pilot_raw = src.get(ENV_PILOT, "false")
         pilot_event_key = src.get(ENV_PILOT_EVENT_KEY) or None
+        try:
+            brl_rate = float(src.get(ENV_BRL_RATE) or DEFAULT_BRL_RATE)
+        except ValueError:
+            brl_rate = DEFAULT_BRL_RATE
+        brl_rate_date = src.get(ENV_BRL_RATE_DATE) or DEFAULT_BRL_RATE_DATE
         return cls(
             enabled=(enabled_raw == "true"),
             mode=mode_raw,
             pilot=(pilot_raw == "true"),
             pilot_event_key=pilot_event_key,
+            brl_rate=brl_rate,
+            brl_rate_date=brl_rate_date,
         )
 
 

@@ -75,6 +75,37 @@ name: Repasso Coordinator (OBSERVE)
 # vai para o log do job e para um artifact — este workflow NÃO comenta
 # automaticamente no PR/Issue ainda (decisão futura separada, já registrada
 # na 2ª auditoria).
+#
+# ─────────────────────────────────────────────────────────────────────────
+# V3 (Issue #99) — "coordenação ativa supervisionada".
+#
+# ``REPASSO_COORDINATOR_MODE=active-supervised`` (aditivo — produção
+# continua em ``observe`` até José decidir trocar) liga uma segunda
+# capacidade: auditoria semântica STANDARD independente para conteúdo
+# Nível C (área=="materia", Issue #83) e, quando ela produz um Cartão de
+# Merge, um comentário automático no PR — SEMPRE só um comentário/estado
+# operacional, NUNCA merge, NUNCA edição de matéria/Supabase/produção,
+# NUNCA force-push, NUNCA aumento de orçamento (ver
+# coordinator/observe.py, coordinator/audit.py, coordinator/merge_card.py
+# e as proibições absolutas documentadas em coordinator/audit.py::
+# AUDIT_SYSTEM_PROMPT). O passo "Comentar o Cartão de Merge" abaixo só
+# publica quando o CLI de fato gravou ``--comment-out`` — nunca comenta
+# um resultado vazio.
+#
+# SEGURANÇA ANTES DE AUMENTAR PERMISSÕES (Issue #99): ``issues: write``
+# abaixo é a única permissão nova desta V3, e só é usada para postar um
+# comentário — nunca para fechar/reabrir/rotular. ``main`` continua sem
+# nenhuma regra de proteção de branch/Ruleset (nenhum workflow deste
+# repositório tenta configurar isso via API — está fora do escopo de
+# permissões do Coordinator, privilégio mínimo). ``.github/CODEOWNERS``
+# (novo nesta V3) existe só como estrutura/documentação futura — a
+# auditoria independente do PR #104 (achado B3) recomendou explicitamente
+# NÃO ativar "Require review from Code Owners" agora, porque José e todos
+# os agentes Claude publicam pela MESMA identidade GitHub ("Repassomed"),
+# o que tornaria isso uma auto-revisão sem sentido. O passo manual que
+# falta é mais simples e cabe só a José, em Settings → Branches/Rulesets:
+# uma regra para "main" exigindo Pull Request, bloqueando force-push e
+# exigindo que os checks passem — com 0 approvals exigidas por enquanto.
 
 on:
   issue_comment:
@@ -104,9 +135,22 @@ jobs:
     # outro quebra a simetria, então os dois precisam ser lidos juntos.
     # workflow_run não precisa desta checagem: ele não é acionado por
     # texto de terceiros, é o próprio Guard terminando.
+    #
+    # Camada 4 (anti-self-loop em duas camadas — achado B5 da auditoria
+    # independente do PR #104, rodada 2): o filtro em Python
+    # (github_event.py::COORDINATOR_COMMENT_MARKER, antes de dedup/API) já
+    # bastava para nunca gerar cobrança recursiva, mas deixava o job
+    # inteiro (checkout, Python, secret exposto ao runner) rodar à toa
+    # para um comentário que o próprio Coordinator publicou — custo de
+    # Actions e superfície desnecessária. Esta camada extra nem deixa o
+    # job começar quando o comentário já contém o marcador; o filtro
+    # Python continua como segunda camada (defesa em profundidade, nunca
+    # confiar só no `if:` do workflow).
     if: >
       vars.REPASSO_COORDINATOR_ENABLED == 'true' &&
-      (github.event_name != 'issue_comment' || github.event.comment.user.login == 'Repassomed')
+      (github.event_name != 'issue_comment' ||
+        (github.event.comment.user.login == 'Repassomed' &&
+         !contains(github.event.comment.body, '<!-- repasso-coordinator -->')))
     runs-on: ubuntu-latest
     # contents:write só é usado para publicar a branch de estado dedicada
     # (coordinator-state-*, nunca 'main', nunca matéria — ver
@@ -125,6 +169,11 @@ jobs:
       actions: read
       contents: write
       pull-requests: read
+      # V3 (Issue #99) — só para postar o Cartão de Merge como comentário
+      # quando a auditoria ativa-supervisionada produzir um (ver o passo
+      # "Comentar o Cartão de Merge" abaixo). Nunca usado para fechar,
+      # reabrir, rotular ou apagar nada — privilégio mínimo.
+      issues: write
     steps:
       - name: Checkout (SEMPRE a branch padrão — nunca o HEAD de um PR)
         uses: actions/checkout@v4
@@ -181,6 +230,25 @@ jobs:
             }));
             console.log(`PR #${numero}: rótulos = ${pr.labels.map(l => l.name).join(', ')}`);
 
+            // Correção B2 da auditoria independente do PR #104: o corpo da
+            // PR é a declaração do worker, nunca prova do que mudou. Este
+            // passo já roda com o código confiável da branch padrão (nunca
+            // o HEAD do PR — ver o comentário no topo do arquivo); busca o
+            // diff REAL (texto puro, formato "diff") e escreve em arquivo
+            // próprio para o CLI ler via --pr-diff-file. O texto nunca é
+            // executado por este script nem por coordinator/**, só
+            // atravessa como dado até o prompt da auditoria — nunca
+            // segredo, nunca código deste repositório.
+            const diffResp = await github.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: numero,
+              mediaType: { format: 'diff' },
+            });
+            const diffTexto = typeof diffResp.data === 'string' ? diffResp.data : '';
+            fs.writeFileSync('/tmp/pr-diff.patch', diffTexto);
+            console.log(`Diff real da PR #${numero}: ${diffTexto.length} caracteres (truncamento por tamanho/custo acontece do lado do Coordinator, em coordinator/audit.py::preparar_diff).`);
+
       - name: Baixar o audit-pack real do Guard (artifact do run observado)
         if: github.event_name == 'workflow_run'
         continue-on-error: true # run antigo/sem artifact não pode derrubar o job
@@ -226,13 +294,34 @@ jobs:
             --dedup-git-remote "$REMOTO_COM_TOKEN"
             --usage-git-remote "$REMOTO_COM_TOKEN"
             --workers-from-tasks-json coordination/tasks.json
+            --worker-state-git-remote "$REMOTO_COM_TOKEN"
             --out /tmp/coordinator-observe.json
+            --comment-out /tmp/coordinator-comment.md
+            --comment-target-out /tmp/coordinator-comment-target.txt
           )
           [ -f /tmp/pr-info.json ] && ARGS+=(--pr-info-file /tmp/pr-info.json)
           [ -f /tmp/guard-audit-pack/guard-audit-pack.json ] && ARGS+=(--guard-audit-pack /tmp/guard-audit-pack/guard-audit-pack.json)
+          [ -s /tmp/pr-diff.patch ] && ARGS+=(--pr-diff-file /tmp/pr-diff.patch)
 
           python3 -m coordinator "${ARGS[@]}"
           echo "resultado=$?" >> "$GITHUB_OUTPUT"
+
+          # Correção B1 da auditoria independente do PR #104, rodada 4:
+          # a função hashFiles() (linguagem de expressão do Actions) só
+          # enxerga arquivos dentro de GITHUB_WORKSPACE — /tmp fica FORA
+          # disso, então usá-la contra um caminho de /tmp no `if:` do passo
+          # seguinte avaliaria sempre como string vazia em produção
+          # (comentário nunca seria publicado, apesar de todos os testes
+          # locais/estruturais passarem, já que nenhum deles executa um
+          # runner real do Actions). O bash comum, ao contrário dessa
+          # função, lê /tmp sem problema — então é aqui, ainda em bash, que
+          # a existência dos dois arquivos é checada e publicada como
+          # output explícito para o próximo passo consultar.
+          if [ -s /tmp/coordinator-comment.md ] && [ -s /tmp/coordinator-comment-target.txt ]; then
+            echo "comment_ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "comment_ready=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Publicar o resultado OBSERVE como artifact
         uses: actions/upload-artifact@v4
@@ -242,6 +331,57 @@ jobs:
           path: /tmp/coordinator-observe.json
           retention-days: 30
           if-no-files-found: ignore
+
+      - name: Comentar o Cartão de Merge/checkpoint (V3, Issue #99)
+        # Só existe quando o CLI de fato gravou --comment-out E
+        # --comment-target-out juntos (MODE=active-supervised e o evento
+        # produziu um Cartão de Merge/checkpoint COM destino conhecido —
+        # ver coordinator/observe.py). Em MODE=observe (produção hoje)
+        # nenhum dos dois arquivos é criado, então este passo é sempre
+        # pulado — comportamento V2 inalterado.
+        #
+        # Correção B4 da auditoria independente do PR #104, rodada 4: o
+        # destino NUNCA é inferido aqui — o Coordinator já decidiu (ex.:
+        # um POOL-PAUSADO sempre vai para a Inbox #88, mesmo quando o
+        # checkpoint que o disparou chegou em outra issue; um checkpoint
+        # específico volta para a issue de origem; um Cartão de Merge vai
+        # para a PR) e gravou o número em
+        # /tmp/coordinator-comment-target.txt. Este passo só lê esse
+        # arquivo — nunca reconstrói a lógica de destino em JavaScript.
+        #
+        # Correção B1 da auditoria independente do PR #104, rodada 4: a
+        # função hashFiles() do Actions não enxerga /tmp (fica fora de
+        # GITHUB_WORKSPACE) — o `if:` abaixo antes chamava essa função
+        # contra um caminho de /tmp e por isso provavelmente NUNCA era
+        # verdadeiro em produção. Agora o `if:` consulta o output explícito
+        # `comment_ready`, gravado em bash pelo passo "Rodar o Coordinator"
+        # (bash lê /tmp normalmente — só aquela função da linguagem de
+        # expressão do Actions é restrita ao workspace). `fs.existsSync`
+        # abaixo continua como segunda camada de segurança dentro do
+        # próprio script.
+        if: always() && steps.coordinator.outputs.comment_ready == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (!fs.existsSync('/tmp/coordinator-comment.md') || !fs.existsSync('/tmp/coordinator-comment-target.txt')) {
+              console.log('Arquivo de comentário/destino ausente apesar de comment_ready=true — nada publicado.');
+              return;
+            }
+            const corpo = fs.readFileSync('/tmp/coordinator-comment.md', 'utf8');
+            const issueNumber = parseInt(fs.readFileSync('/tmp/coordinator-comment-target.txt', 'utf8').trim(), 10);
+            if (!Number.isInteger(issueNumber)) {
+              console.log('Destino do comentário inválido/ilegível — nada publicado.');
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: corpo,
+            });
+            console.log(`Comentário publicado na issue/PR #${issueNumber}.`);
 
       - name: Falhar o job se o Coordinator terminou com erro (bloqueador 7)
         if: steps.coordinator.outputs.resultado != '0'

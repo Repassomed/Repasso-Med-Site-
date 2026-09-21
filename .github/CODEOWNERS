@@ -1,0 +1,33 @@
+# Documentação/estrutura futura para revisão de código crítico/workflows
+# (Issue #99, "SEGURANÇA ANTES DE AUMENTAR PERMISSÕES"). Este arquivo,
+# sozinho, NÃO exige nada — o GitHub só passa a exigir revisão de Code
+# Owners quando uma regra de proteção de branch/Ruleset em "main" tiver
+# "Require review from Code Owners" ativado, e isso é uma decisão
+# separada de José.
+#
+# CORREÇÃO (auditoria independente do PR #104, B3): NÃO ative "Require
+# review from Code Owners" agora. Neste projeto, José e todos os agentes
+# Claude publicam commits/comentários pela MESMA identidade GitHub
+# (@Repassomed — ver coordinator/github_event.py::ALLOWED_COMMENT_ACTORS,
+# mesma limitação documentada lá) — exigir a aprovação desse único "dono"
+# criaria um fluxo de auto-revisão impraticável (a mesma identidade
+# aprovando a si mesma), não uma proteção real.
+#
+# O passo manual recomendado para José, em Settings → Branches (ou
+# Rulesets), é mais simples e já cobre o essencial sem esse problema:
+#   - criar uma regra para "main" exigindo Pull Request antes de merge;
+#   - bloquear force-push e deleção da branch;
+#   - exigir que os checks (Repasso Guard, testes) passem antes de merge;
+#   - manter 0 approvals exigidas por enquanto, até existir uma
+#     identidade GitHub distinta por pessoa/agente.
+#
+# Nenhum workflow deste repositório tenta configurar isso via API —
+# administrar regras do próprio repositório está fora do escopo de
+# permissões do Coordinator (privilégio mínimo). Este arquivo continua
+# só como estrutura pronta para quando fizer sentido usá-la de verdade.
+
+/coordinator/                    @Repassomed
+/.github/workflows/              @Repassomed
+/.github/CODEOWNERS              @Repassomed
+/coordination/                   @Repassomed
+/tools/qa/guard/                 @Repassomed
