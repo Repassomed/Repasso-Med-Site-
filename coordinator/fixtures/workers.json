@@ -1,0 +1,8 @@
+{
+  "workers": [
+    {"name": "Claude 1", "state": "BLOCKED-LIMIT", "specialization": ["assets", "ferramentas"]},
+    {"name": "Claude 3", "state": "BLOCKED-LIMIT", "specialization": ["materia"]},
+    {"name": "Claude 4", "state": "OFFLINE", "specialization": []},
+    {"name": "Claude 2", "state": "FREE", "specialization": ["infraestrutura"]}
+  ]
+}

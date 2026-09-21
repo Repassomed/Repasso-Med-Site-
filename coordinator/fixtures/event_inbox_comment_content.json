@@ -1,0 +1,10 @@
+{
+  "raw_type": "INBOX_COMMENT",
+  "source": "fixture",
+  "repo": "Repassomed/Repasso-Med-Site-",
+  "identity": "issue:88#comment:1001",
+  "payload": {
+    "body": "Entraram questões novas de Farmacología II. Estão no Drive. Prioridade alta por causa da prova.",
+    "dedup_fields": {"comment_id": 1001}
+  }
+}

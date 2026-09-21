@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Matéria de teste · estado quebrado</title></head>
+<body>
+
+<!-- Estado DEPOIS de um PR ERRADO. Cada defeito aqui é proposital e existe
+     para provar que o Guard o encontra. Arquivo de MENTIRA: não é conteúdo do
+     site, não é material didático e não deve ser lido como tal.
+
+     Defeitos plantados:
+       1. fxq02 e fxq02-bk removidas          -> questões removidas + ids removidos
+       2. id "fxq01" repetido em fxq04        -> id duplicado NOVO
+       3. fxq04 com gabarito "e)" sem letra e -> gabarito inválido
+       4. fxq05 com duas alternativas iguais  -> mais de uma resposta defensável
+       5. rótulo proibido «CAYÓ EN EXAMEN»    -> nomenclatura
+       6. um flashcard a menos                -> flashcard removido
+       7. texto declara «12 preguntas»        -> contagem declarada não bate
+       8. <em> sem fechar                     -> HTML desbalanceado novo
+       9. imagem que não existe no repositório-> asset ausente
+      10. href="#fx-b99"                      -> âncora morta
+      11. gabarito de fxq01 mudado de b para c-> Lei 6, decisão humana
+      12. nome de professor                   -> §8.2 manda usar «la cátedra»
+      13. id duplicado fx-dup PREEXISTENTE    -> deve sair como INFO, não como erro -->
+
+<section id="fx-b01">
+  <h2>Bloque 01 · Gasto cardíaco · 12 preguntas</h2>
+  <p>El gasto cardíaco es el producto del <span id="fx-dup">volumen sistólico</span>
+     por la frecuencia cardíaca. Según el Dr. Fernández, <em>la diástole se acorta
+     antes que la sístole.</p>
+  <p>La <span id="fx-dup">precarga</span> depende del retorno venoso.</p>
+
+  <p><a href="#fx-b99">Ir a la sección que no existe</a></p>
+  <img src="/assets/img/fx-no-existe.png" alt="esquema inexistente">
+
+  <div class="flashcard"><strong>⭐ Gasto cardíaco</strong><p>VS × FC.</p></div>
+
+  <div class="quiz-item" id="fxq01">
+    <span class="quiz-tag basada">CAYÓ EN EXAMEN</span>
+    <p class="quiz-question">¿Qué determina el gasto cardíaco?</p>
+    <ul>
+      <li>a) Solamente la frecuencia cardíaca</li>
+      <li>b) El volumen sistólico por la frecuencia cardíaca</li>
+      <li>c) Solamente la presión arterial media</li>
+      <li>d) La resistencia vascular periférica total</li>
+    </ul>
+    <div class="answer"><strong>c) Solamente la presión arterial media</strong>
+      <p>Gabarito trocado de propósito para acionar a Lei 6.</p>
+    </div>
+  </div>
+
+  <div class="quiz-item" id="fxq01">
+    <p class="quiz-question">¿Cuál es la fórmula de la presión de pulso?</p>
+    <ul>
+      <li>a) Sistólica menos diastólica</li>
+      <li>b) Sistólica más diastólica</li>
+      <li>c) Diastólica más un tercio de la diferencia</li>
+      <li>d) Media de las dos presiones</li>
+    </ul>
+    <div class="answer"><strong>e) Ninguna de las anteriores</strong>
+      <p>Alternativa "e" não existe na lista.</p>
+    </div>
+  </div>
+
+  <div class="quiz-item" id="fxq05">
+    <p class="quiz-question">¿Qué aumenta el retorno venoso?</p>
+    <ul>
+      <li>a) La bomba muscular</li>
+      <li>b) La vasoconstricción venosa</li>
+      <li>c) La bomba muscular</li>
+      <li>d) La hipovolemia grave</li>
+    </ul>
+    <div class="answer"><strong>a) La bomba muscular</strong>
+      <p>As alternativas a) e c) são idênticas: há duas respostas defensáveis.</p>
+    </div>
+  </div>
+</section>
+
+<section id="fx-banco">
+  <h2>Banco general</h2>
+
+  <div class="quiz-item" id="fxq01-bk">
+    <p class="quiz-question">¿Qué determina el gasto cardíaco?</p>
+    <ul>
+      <li>a) Solamente la frecuencia cardíaca</li>
+      <li>b) El volumen sistólico por la frecuencia cardíaca</li>
+      <li>c) Solamente la presión arterial media</li>
+      <li>d) La resistencia vascular periférica total</li>
+    </ul>
+    <div class="answer"><strong>b) El volumen sistólico por la frecuencia cardíaca</strong>
+      <p>Es el volumen que el ventrículo expulsa en un minuto.</p>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

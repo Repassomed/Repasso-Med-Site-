@@ -1,0 +1,10 @@
+{
+  "raw_type": "INBOX_COMMENT",
+  "source": "fixture",
+  "repo": "Repassomed/Repasso-Med-Site-",
+  "identity": "issue:88#comment:1003",
+  "payload": {
+    "body": "Será que dá pra dar uma olhada naquilo que conversamos ontem?",
+    "dedup_fields": {"comment_id": 1003}
+  }
+}

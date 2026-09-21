@@ -1,0 +1,7 @@
+{
+  "raw_type": "WEEKLY_HEALTH_AUDIT",
+  "source": "fixture",
+  "repo": "Repassomed/Repasso-Med-Site-",
+  "identity": "cron:weekly",
+  "payload": {"dedup_fields": {}}
+}

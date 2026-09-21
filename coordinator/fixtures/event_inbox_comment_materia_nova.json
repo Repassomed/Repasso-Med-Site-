@@ -1,0 +1,10 @@
+{
+  "raw_type": "INBOX_COMMENT",
+  "source": "fixture",
+  "repo": "Repassomed/Repasso-Med-Site-",
+  "identity": "issue:88#comment:1002",
+  "payload": {
+    "body": "Nova matéria: Cardiología. Pode começar. Material está no Drive.",
+    "dedup_fields": {"comment_id": 1002}
+  }
+}
