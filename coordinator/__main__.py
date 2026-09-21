@@ -275,6 +275,18 @@ def main(argv: list[str] | None = None) -> int:
     print(render_human(dados_sanitizados))
     if a.out:
         _gravar_out(a.out, dados_sanitizados)
+
+    # Auditoria final do PR #97: uma chamada à Anthropic bem-sucedida cujo
+    # ledger de uso/custo falhou DEPOIS é um problema operacional real —
+    # perde persistência compartilhada de custo entre execuções, mesma
+    # classe de risco que uma exceção não tratada (bloqueador 7: erro >
+    # job vermelho). observe() já devolveu um ObserveResult honesto
+    # (call_attempted=True, usage preservado, nada de exceção) em vez de
+    # deixar isto virar um crash mudo — mas o sinal externo (workflow
+    # vermelho) continua merecido, então checa aqui, sem reabrir a
+    # arquitetura de ObserveResult/render_human.
+    if dados_sanitizados.get("call_status") == "ok_ledger_failed":
+        return 1
     return 0
 
 

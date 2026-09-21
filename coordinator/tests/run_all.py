@@ -19,6 +19,7 @@ from . import (
     test_github_event,
     test_guard_state_integration,
     test_human_output_honesty,
+    test_ledger_failure_after_call,
     test_no_forbidden_writes,
     test_observe_pipeline,
     test_observe_real_path,
@@ -47,6 +48,7 @@ MODULOS = [
     test_workflow_security,
     test_guard_state_integration,
     test_cli_crash_safety,
+    test_ledger_failure_after_call,
 ]
 
 

@@ -39,6 +39,7 @@ from .config import Config
 from .context import MinimalContext, build_context
 from .dedup import Deduplicator
 from .events import Event
+from .redact import redact
 from .routing import RoutingDecision, decide as route_decide
 from .worker_registry import Worker, WorkerSuggestion, pick_worker
 
@@ -58,7 +59,7 @@ class ObserveResult:
     requires_jose_authorization: bool = False
     context_summary: str | None = None
     call_attempted: bool = False
-    call_status: str | None = None  # "ok" | "error" | "limited" | None (nunca tentada)
+    call_status: str | None = None  # "ok" | "error" | "limited" | "ok_ledger_failed" | None (nunca tentada)
     response_text: str | None = None
     usage: dict | None = None
 
@@ -256,14 +257,42 @@ def observe(
         config, pedido, transport=transporte_real, limiter=limitador, event_key=chave,
     )
 
-    if resultado_chamada.status == "ok" and resultado_chamada.usage is not None:
-        ledger.append(resultado_chamada.usage)
-
     # .to_dict() é quem sanitiza reason/text via redact() — nunca ler os
     # atributos crus de CallResult para fora deste módulo (foi exatamente
     # esse desvio que deixou uma chave falsa vazar num teste antes desta
     # correção).
     chamada_sanitizada = resultado_chamada.to_dict()
+
+    if resultado_chamada.status == "ok" and resultado_chamada.usage is not None:
+        try:
+            ledger.append(resultado_chamada.usage)
+        except Exception as exc:
+            # Achado da auditoria final do PR #97: a chamada JÁ aconteceu e
+            # teve sucesso — isto é uma falha de PERSISTÊNCIA depois do
+            # fato (ex.: GitUsageLedger.append() sem conseguir publicar o
+            # estado), nunca pode virar "nenhuma chamada foi tentada".
+            # Sem este catch, a exceção subia até __main__.py, onde
+            # _resultado_de_erro() grava call_attempted=false/usage=null —
+            # mentindo sobre uma chamada paga real. O usage retornado pela
+            # própria API (chamada_sanitizada, já sanitizado acima)
+            # continua visível mesmo que o ledger compartilhado não tenha
+            # conseguido gravá-lo; call_status próprio deixa claro que a
+            # chamada teve êxito mas a persistência, não — nunca um retry
+            # (nenhum código aqui tenta a chamada de novo).
+            return ObserveResult(
+                status="OBSERVED",
+                reason=(
+                    "Chamada à Anthropic concluída com sucesso, mas o ledger de uso/custo "
+                    "não conseguiu persistir o registro: "
+                    f"{redact(f'{type(exc).__name__}: {exc}')}"
+                ),
+                next_action=_next_action_text(classificacao, roteamento, worker),
+                call_attempted=True,
+                call_status="ok_ledger_failed",
+                response_text=chamada_sanitizada["text"] or None,
+                usage=chamada_sanitizada.get("usage"),
+                **resultado_base,
+            )
 
     return ObserveResult(
         status="OBSERVED",
