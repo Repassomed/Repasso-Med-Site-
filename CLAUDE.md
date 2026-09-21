@@ -137,6 +137,18 @@ Ler essa seção ANTES de inserir qualquer questão. Em resumo, ela exige:
 - **Recuperação máxima** (8-A.5): o enunciado vale mais do que recuperar as
   alternativas originais; é permitido reconstruir alternativas, mas nunca
   inventar a resposta correta — se não for determinável, vira pendência.
+- **Recuperação máxima + rastreabilidade da fonte** (8-A.5 e 8-A.5-B):
+  aceitar Word, PDF, PDF escaneado, fotos e transcrições auxiliares; extrair o
+  máximo possível, inclusive de fonte parcialmente legível. Reconstrução de
+  trecho/enunciado só é permitida quando o objetivo avaliativo for
+  determinável pelas evidências; nunca alegar transcrição literal quando
+  houve reconstrução. Cada questão precisa manter rastro arquivo →
+  página/imagem → decisão → destino, e o relatório pré-merge deve dizer por
+  fonte o que foi aproveitado, duplicado, reconstruído e não aproveitado.
+- **Prioridade didática silenciosa** (8-A.2-B): conteúdo comprovadamente
+  cobrado em prova vira núcleo didático do resumo. Deve ficar mais claro,
+  destacado e protegido contra futuras reduções de densidade, sem dizer ao
+  aluno “o professor cobra isto” e sem expor estratégia editorial.
 - **Distratores plausíveis e cientificamente defensáveis** (8-A.6): uma única
   melhor resposta, sem ambiguidade. Aproximar os distratores é desejável,
   nunca ao ponto de tornar duas alternativas defensáveis.
