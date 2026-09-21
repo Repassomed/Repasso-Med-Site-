@@ -1184,6 +1184,42 @@ PARCIALMENTE ou NÃO COBERTA, e corrigir as duas últimas.
 Não adicionar parágrafos artificiais só para cumprir a regra. Acrescentar
 apenas o conhecimento realmente necessário.
 
+8-A.2-B Prioridade didática silenciosa baseada no que a cátedra cobra
+
+A lei de cobertura não serve apenas para “encaixar” a resposta no resumo.
+Questões de prova são evidência de quais conceitos merecem MAIOR PRIORIDADE
+DIDÁTICA dentro daquele conteúdo.
+
+Quando provas/gabaritos mostram que um conceito é cobrado, o resumo deve:
+
+- explicar o conceito com clareza suficiente para responder à questão;
+- dar mais destaque visual/didático ao mecanismo, diferença, classificação,
+  critério ou detalhe realmente cobrado;
+- reduzir ambiguidades e prosa periférica ao redor desse ponto;
+- preservar esse núcleo nas futuras manutenções de redução de texto,
+  reorganização ou simplificação;
+- conectar o conceito às comparações e armadilhas que a prova realmente exige.
+
+Isso NÃO significa escrever para o aluno “o professor cobra isto”, nem citar
+nome de professor, nem transformar o resumo num gabarito comentado.
+
+A prioridade é SILENCIOSA: o conteúdo fica melhor ensinado, melhor posicionado
+e mais visível porque é pedagogicamente e avaliativamente central.
+
+Nas futuras manutenções, conteúdo comprovadamente recorrente em provas é
+CONTEÚDO NÚCLEO. Pode ser reescrito, condensado ou reorganizado, mas não pode
+perder:
+
+- o mecanismo necessário;
+- a distinção que a prova exige;
+- o critério/classificação relevante;
+- a informação necessária para chegar à resposta;
+- a ligação entre conceito e aplicação.
+
+Se houver conflito entre “reduzir densidade” e preservar um ponto
+repetidamente cobrado, PRESERVAR O NÚCLEO AVALIATIVO e reduzir primeiro a
+prosa periférica/redundante.
+
 8-A.3 Onde a questão entra
 
 A questão entra no FINAL DO BLOCO que ensina o assunto.
@@ -1254,6 +1290,86 @@ Se nem a resposta correta puder ser determinada com segurança pelo material,
 NÃO inventar. Registrar como pendência, dizendo exatamente o que faltou
 (por exemplo: "o slide que traz a definição é uma imagem sem texto
 extraível").
+
+8-A.5-B Proveniência, legibilidade e reconstrução rastreável do material de prova
+
+Toda fonte recebida deve permanecer rastreável. A fonte pode ser:
+
+- arquivo Word ou outro documento de texto;
+- PDF com texto extraível;
+- PDF escaneado;
+- PDF que contenha fotografias de prova;
+- fotografia/imagem avulsa da prova;
+- transcrição ou datilografia auxiliar feita por José a partir de uma imagem;
+- memória parcial, quando explicitamente identificada como tal.
+
+Antes de editar a matéria, inventariar CADA arquivo de origem separadamente.
+Não misturar silenciosamente questões de documentos diferentes.
+
+Para cada arquivo, registrar internamente:
+
+- nome exato do arquivo;
+- página, imagem ou trecho de origem quando identificável;
+- qualidade da leitura: CLARA / PARCIAL / INSUFICIENTE;
+- número de questões detectadas;
+- número recuperado integralmente;
+- número recuperado parcialmente;
+- número reconstruído;
+- número incorporado como nova;
+- número usado para reformular uma questão canônica existente;
+- número classificado como duplicata;
+- número não aproveitado ou pendente, com o motivo.
+
+Se José produzir um documento digitado para ajudar a ler uma foto ruim, esse
+documento é FONTE AUXILIAR ligada à imagem original, e não uma prova
+independente. Se transcrição e imagem divergirem, registrar o conflito em vez
+de escolher silenciosamente.
+
+REGRA DE RECUPERAÇÃO MÁXIMA
+
+Uma imagem ruim não deve ser descartada cedo demais. Tentar recuperar, nesta
+ordem:
+
+1. leitura visual direta da imagem/PDF;
+2. contexto do restante da mesma prova;
+3. comparação com outras questões da mesma prova/fila;
+4. material atual da cátedra;
+5. conteúdo já aprovado no resumo;
+6. literatura permitida, somente quando necessária para confirmar ciência.
+
+Quando uma parte do enunciado estiver ilegível, é permitido reconstruir o
+trecho ausente SOMENTE se o objetivo avaliativo central puder ser determinado
+com alta confiança pelo fragmento visível + contexto + fontes permitidas.
+
+Quando as alternativas estiverem ilegíveis, podem ser reconstruídas segundo
+8-A.5 e 8-A.6.
+
+Quando parte do próprio enunciado tiver sido reconstruída, registrar a questão
+internamente como RECONSTRUÍDA/PARCIALMENTE RECONSTRUÍDA. Ela pode usar o
+rótulo «Basada en preguntas de examen», mas NUNCA pode ser apresentada como
+transcrição literal.
+
+É proibido preencher lacunas apenas porque uma frase “parece provável”. A
+reconstrução deve preservar o conceito e o raciocínio avaliativo, não imitar
+palavras inexistentes na fonte.
+
+Se houver evidência suficiente para saber o CONCEITO COBRADO, mas não para
+recuperar a redação, pode-se criar uma questão nova baseada naquele conceito,
+com redação própria e rastreável.
+
+Se não for possível determinar com segurança o conceito central ou a resposta
+correta, NÃO inventar: registrar como NÃO APROVEITADA/PENDENTE e dizer o que
+faltou.
+
+RASTREABILIDADE QUESTÃO ↔ FONTE
+
+Toda questão incorporada ou reformulada a partir de prova deve poder ser
+rastreada até pelo menos:
+
+FONTE → página/imagem/trecho → questão recebida/reconstruída → decisão
+(incorporar / reformular / duplicata / pendente) → bloco/questão final no site.
+
+Essa matriz pode ficar no relatório/PR; não precisa aparecer para o aluno.
 
 8-A.6 Padrão dos distratores
 
@@ -1377,7 +1493,35 @@ que a soma por bloco bate com o total.
 
 8-A.11 Relatório obrigatório da rodada
 
-Informar:
+Este relatório é OBRIGATÓRIO antes de José decidir o merge. Ele deve permitir
+entender, sem abrir os arquivos, quanto de cada material foi realmente
+aproveitado.
+
+Começar sempre com um RESUMO PARA MERGE, curto e objetivo:
+
+- arquivos/fontes analisados;
+- questões detectadas no total;
+- questões aproveitadas;
+- questões novas incorporadas;
+- questões antigas reformuladas como canônicas;
+- duplicatas exatas;
+- duplicatas semânticas;
+- relacionadas mas distintas incorporadas;
+- reconstruídas total ou parcialmente;
+- não aproveitadas/pendentes e por quê;
+- blocos da matéria alterados;
+- confirmação de cobertura RESUMO → QUESTÃO → EXPLICAÇÃO;
+- limitações de leitura da fonte.
+
+Depois apresentar uma MATRIZ POR FONTE. Para CADA Word, PDF, página/foto de
+prova ou transcrição auxiliar, informar:
+
+FONTE / PÁGINA-IMAGEM / LEGIBILIDADE / QUESTÕES DETECTADAS / APROVEITADAS /
+NOVAS / REFORMULADAS / DUPLICADAS / RECONSTRUÍDAS / PENDENTES / DESTINO NO
+SITE / OBSERVAÇÃO.
+
+Nunca escrever apenas “prova analisada”. José precisa saber qual documento
+originou cada grupo de questões e o que ficou de fora.
 
 QUESTÕES
 - recebidas;
