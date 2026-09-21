@@ -249,7 +249,7 @@
       "pr": 104,
       "commit": "c2d2afa",
       "issue": 99,
-      "notas": "Ainda não mergeado. REPASSO_COORDINATOR_MODE continua 'observe' em produção — active-supervised é opt-in. Rodada 2: corrigidos B1-B4 da auditoria independente do PR #104 (HARD FAIL sem custo ampliado para qualquer evento, diff real como evidência principal + gate determinístico, marcador anti-self-loop, CODEOWNERS sem exigir Code Owner review ainda). Suite completa verde (55 módulos); Guard rodado localmente. Parado em NEEDS-AUDIT de novo, aguardando nova auditoria independente."
+      "notas": "Ainda não mergeado. REPASSO_COORDINATOR_MODE continua 'observe' em produção — active-supervised é opt-in. Rodada 3: Issue #88 como interface visível (RECEBIDO/checkpoints), custos visíveis (estimado/real separados, BRL informativo), Worker Registry operacional novo (coordinator/worker_ops.py, branch dedicada coordinator-state-workers, separado de tasks.json), comandos naturais de worker, camada de decisão handoff/pool-pausado (estado apenas, execução real fica para #105), anti-loop também no if: do workflow. Suite completa verde; Guard rodado localmente. Parado em NEEDS-AUDIT de novo."
     }
   ]
 }

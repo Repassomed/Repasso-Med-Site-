@@ -30,6 +30,7 @@ quando bloqueado, duplicado ou rejeitado.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import NamedTuple
 
 from . import anthropic_client
 from .anthropic_transport import AnthropicTransport
@@ -38,8 +39,11 @@ from .budget import BudgetStatus, CallLimiter, UsageLedger, check_budget, priori
 from .classify import Classification, TaskType, classify
 from .config import Config
 from .context import MinimalContext, build_context
+from .costs import montar_resumo_custo, render_cost_block
 from .dedup import Deduplicator
 from .events import Event, EventType
+from .handoff import decidir_handoff, decidir_pool
+from .inbox_card import render_checkpoint, render_recebido
 from .merge_card import (
     MergeCardInput,
     aplicar_gate_diff,
@@ -48,6 +52,8 @@ from .merge_card import (
 )
 from .redact import redact
 from .routing import RoutingDecision, decide as route_decide
+from .worker_commands import aplicar_comando, parse_worker_command
+from .worker_ops import OperationalWorkerRegistry
 from .worker_registry import Worker, WorkerSuggestion, pick_worker
 
 MAX_PROMPT_CHARS = 6_000
@@ -193,6 +199,118 @@ def _montar_cartao_hard_fail(event: Event, contexto: MinimalContext, classificac
     )
 
 
+class _ResultadoZeroCusto(NamedTuple):
+    """Saída comum dos dois caminhos novos da rodada 3 (Inbox/checkpoint):
+    nunca envolvem ``anthropic_client.call`` — só leitura/escrita
+    determinística no Worker Registry operacional."""
+
+    reason: str
+    texto: str
+
+
+def _resumo_custo_zero(ledger: UsageLedger, config: Config):
+    # Nenhuma chamada foi tentada nestes caminhos — ESTIMADO é sempre
+    # 0.0 (nunca confundido com REAL, que fica None), mas o gasto
+    # acumulado do mês continua visível (Issue #99, "custos visíveis").
+    return montar_resumo_custo(
+        ledger=ledger, brl_rate=config.brl_rate, brl_rate_date=config.brl_rate_date,
+        estimated_usd=0.0, actual_usd=None, tier=None, model_id=None, calls_this_task=0,
+    )
+
+
+def _tratar_inbox_comment(event: Event, classificacao: Classification, worker: WorkerSuggestion,
+                           worker_registry: OperationalWorkerRegistry, ledger: UsageLedger,
+                           config: Config) -> _ResultadoZeroCusto:
+    """Issue #88 como interface visível (achado B1 da auditoria
+    independente do PR #104): todo comentário válido recebe UMA resposta
+    — ou a confirmação de um comando de worker (José não edita JSON à
+    mão), ou o checkpoint RECEBIDO com custo visível. dedup.claim() (já
+    aplicado antes de chegar aqui) garante que isto acontece uma única
+    vez por comentário, nunca em loop."""
+    corpo = str(event.payload.get("body", ""))
+
+    comando = parse_worker_command(corpo)
+    if comando is not None:
+        confirmacao = aplicar_comando(worker_registry, comando)
+        texto = "\n".join(["<!-- repasso-coordinator -->", f"🛠️ {confirmacao}"])
+        return _ResultadoZeroCusto(reason=f"Comando de worker aplicado: {confirmacao}", texto=texto)
+
+    if classificacao.needs_input:
+        estado, proximo = "BLOCKED (precisa de mais informação)", "aguardando resposta de José na própria Issue #88."
+    elif classificacao.requires_jose_authorization:
+        estado, proximo = "BLOCKED (aguardando autorização de José)", "aguardando 'pode começar' explícito de José."
+    elif worker.worker:
+        estado, proximo = "READY", f"início da execução por {worker.worker}."
+    else:
+        estado, proximo = "EM FILA", "aguardando um worker FREE ficar disponível."
+
+    primeira_linha = next((l.strip() for l in corpo.splitlines() if l.strip()), "(comentário sem texto)")
+    tarefa_resumo = primeira_linha[:160]
+
+    texto = render_recebido(
+        tarefa=tarefa_resumo, prioridade=classificacao.priority.value, estado=estado,
+        worker=worker.worker, proximo_checkpoint=proximo,
+        cost_block=render_cost_block(_resumo_custo_zero(ledger, config)),
+    )
+    return _ResultadoZeroCusto(reason="Comentário válido na Inbox (#88) — RECEBIDO publicado.", texto=texto)
+
+
+def _tratar_checkpoint_blocked_limit(event: Event, classificacao: Classification,
+                                      worker_registry: OperationalWorkerRegistry, ledger: UsageLedger,
+                                      config: Config) -> _ResultadoZeroCusto:
+    """Atualiza o Worker Registry operacional a partir de um checkpoint
+    BLOCKED-LIMIT real e decide (nunca executa) WAIT/HANDOFF/POOL_PAUSED
+    (Issue #99, achado B4 — "contrato/estado operacional", execução real
+    fica para a #105)."""
+    agente = event.payload.get("agente")
+    tarefa = event.payload.get("tarefa")
+    branch = event.payload.get("branch")
+    commit = event.payload.get("commit")
+
+    if agente:
+        worker_registry.set_status(agente, "LIMIT", message=f"checkpoint: {agente} -> LIMIT (BLOCKED-LIMIT)")
+        worker_registry.set_task_progress(
+            agente, current_task=tarefa, branch=branch, commit=commit, progress="BLOCKED-LIMIT",
+            message=f"checkpoint: {agente} progresso",
+        )
+
+    todos = worker_registry.list_workers()
+    cost_block = render_cost_block(_resumo_custo_zero(ledger, config))
+
+    pool = decidir_pool(todos)
+    if pool is not None:
+        executores = [w for w in todos if w.type in ("human_session", "api_runner")]
+        texto = render_checkpoint(
+            "POOL-PAUSADO",
+            linhas={
+                "Motivo": pool.reason,
+                "Workers": ", ".join(f"{w.display_name}={w.status}" for w in executores) or "-",
+            },
+            cost_block=cost_block,
+        )
+        return _ResultadoZeroCusto(reason="Pool de workers pausado — mensagem única publicada.", texto=texto)
+
+    checkpoint_seguro = bool(commit)
+    agente_lower = (agente or "").strip().lower()
+    candidatos = [w for w in todos if w.display_name.strip().lower() != agente_lower]
+    decisao = decidir_handoff(prioridade=classificacao.priority, checkpoint_seguro=checkpoint_seguro,
+                               candidatos_disponiveis=candidatos)
+    texto = render_checkpoint(
+        "BLOCKED-LIMIT",
+        linhas={
+            "Tarefa": tarefa or "-",
+            "Agente": agente or "-",
+            "Branch": branch or "-",
+            "Commit": commit or "-",
+            "Decisão": f"{decisao.action} — {decisao.reason}",
+        },
+        cost_block=cost_block,
+    )
+    return _ResultadoZeroCusto(
+        reason=f"Checkpoint BLOCKED-LIMIT processado — decisão: {decisao.action}.", texto=texto,
+    )
+
+
 _SYSTEM_PROMPT = (
     "Você é o Repasso Coordinator, em modo OBSERVE. Classifique o evento e "
     "resuma o que um humano (José) precisa saber em 3 frases no máximo, em "
@@ -211,6 +329,7 @@ def observe(
     deep_enabled: bool = False,
     transport: anthropic_client.Transport | None = None,
     audit_mode: bool = False,
+    worker_registry: OperationalWorkerRegistry | None = None,
 ) -> ObserveResult:
     # 1. Tipo de evento permitido?
     if not event.is_allowed:
@@ -355,6 +474,36 @@ def observe(
             should_comment=True,
             **resultado_base,
         )
+
+    # V3 rodada 3 (Issue #99, achados B1/B3/B4 da auditoria independente
+    # do PR #104): a Issue #88 vira uma interface conversacional visível
+    # (RECEBIDO/checkpoints) e os comandos naturais de worker/o registro
+    # operacional/a decisão de handoff ficam ativos — tudo determinístico,
+    # zero chamada paga, só quando há um ``worker_registry`` de verdade
+    # para ler/escrever (nunca ``coordination/tasks.json``/matéria).
+    if audit_mode and worker_registry is not None:
+        if event.event_type is EventType.INBOX_COMMENT:
+            zero_custo = _tratar_inbox_comment(event, classificacao, worker, worker_registry, ledger, config)
+            return ObserveResult(
+                status="OBSERVED",
+                reason=zero_custo.reason,
+                next_action=_next_action_text(classificacao, roteamento, worker),
+                call_attempted=False,
+                merge_card=zero_custo.texto,
+                should_comment=True,
+                **resultado_base,
+            )
+        if event.event_type is EventType.CHECKPOINT_BLOCKED_LIMIT:
+            zero_custo = _tratar_checkpoint_blocked_limit(event, classificacao, worker_registry, ledger, config)
+            return ObserveResult(
+                status="OBSERVED",
+                reason=zero_custo.reason,
+                next_action=_next_action_text(classificacao, roteamento, worker),
+                call_attempted=False,
+                merge_card=zero_custo.texto,
+                should_comment=True,
+                **resultado_base,
+            )
 
     # Portão aberto, orçamento permite e (se PILOT ativo) é o evento
     # autorizado: agora sim, uma chamada real é tentada. O evento já foi

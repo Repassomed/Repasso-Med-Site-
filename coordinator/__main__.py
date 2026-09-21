@@ -63,6 +63,7 @@ from .git_state import GitDedupStore, GitJsonStore, GitUsageLedger
 from .github_event import build_event_from_github_context
 from .observe import observe
 from .redact import redact, redact_mapping
+from .worker_ops import DEFAULT_STATE_BRANCH, LocalJsonWorkerStateStore, OperationalWorkerRegistry
 from .worker_registry import Worker, WorkerState, load_workers_from_tasks_json
 
 
@@ -286,6 +287,16 @@ def main(argv: list[str] | None = None) -> int:
                          "evidência principal da auditoria semântica; sem ele, MERGE-READY é "
                          "bloqueado deterministicamente (ver coordinator/merge_card.py::"
                          "aplicar_gate_diff)")
+    ap.add_argument("--worker-state-store", default=None,
+                    help="arquivo LOCAL para o Worker Registry OPERACIONAL (rodada 3, Issue #99, "
+                         "achado B3) — separado de coordination/tasks.json; não sobrevive entre "
+                         "runners efêmeros (prefira --worker-state-git-remote no workflow real)")
+    ap.add_argument("--worker-state-git-remote", default=None,
+                    help="remoto git para o Worker Registry operacional compartilhado entre "
+                         "execuções independentes — mesmo padrão de --dedup-git-remote/"
+                         "--usage-git-remote")
+    ap.add_argument("--worker-state-git-branch", default=DEFAULT_STATE_BRANCH,
+                    help="branch dedicada para o Worker Registry operacional (nunca 'main')")
     ap.add_argument("--out", default=None, help="onde gravar o resultado OBSERVE em JSON")
     ap.add_argument("--comment-out", default=None,
                     help="V3 (Issue #99): quando o Coordinator roda em MODE=active-supervised e a "
@@ -383,9 +394,16 @@ def _observar(a: argparse.Namespace) -> dict | None:
     else:
         workers = _load_workers(a.workers)
 
+    if a.worker_state_git_remote:
+        worker_registry = OperationalWorkerRegistry(
+            GitJsonStore(a.worker_state_git_remote, branch=a.worker_state_git_branch, file_name="workers.json")
+        )
+    else:
+        worker_registry = OperationalWorkerRegistry(LocalJsonWorkerStateStore(a.worker_state_store))
+
     resultado = observe(
         event, config=config, dedup=dedup, ledger=ledger, workers=workers,
-        audit_mode=config.is_active_supervised,
+        audit_mode=config.is_active_supervised, worker_registry=worker_registry,
     )
     dados = resultado.to_dict()
     return redact_mapping(dados)

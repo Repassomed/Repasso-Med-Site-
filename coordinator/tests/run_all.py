@@ -15,6 +15,7 @@ from . import (
     test_classify_routing,
     test_config_gate,
     test_coordinator_v3,
+    test_coordinator_v3_round3,
     test_dedup,
     test_git_state,
     test_github_event,
@@ -51,6 +52,7 @@ MODULOS = [
     test_cli_crash_safety,
     test_ledger_failure_after_call,
     test_coordinator_v3,
+    test_coordinator_v3_round3,
 ]
 
 

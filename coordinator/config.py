@@ -59,6 +59,16 @@ ENV_ENABLED = "REPASSO_COORDINATOR_ENABLED"
 ENV_MODE = "REPASSO_COORDINATOR_MODE"
 ENV_PILOT = "REPASSO_COORDINATOR_PILOT"
 ENV_PILOT_EVENT_KEY = "REPASSO_COORDINATOR_PILOT_EVENT_KEY"
+# Rodada 3 (Issue #99, "custos visíveis"): conversão BRL informativa —
+# nunca usada para decidir nada, só para exibir no checkpoint ao lado do
+# valor real em USD (o teto mensal continua em USD). Taxa/data com
+# default explícito (baseline registrado por José em 21/09/2026, Issue
+# #99 comentário 3) para que o texto nunca minta sobre "de quando" é a
+# taxa — configurável via Variable quando José quiser atualizar.
+ENV_BRL_RATE = "REPASSO_COORDINATOR_BRL_RATE"
+ENV_BRL_RATE_DATE = "REPASSO_COORDINATOR_BRL_RATE_DATE"
+DEFAULT_BRL_RATE = 5.11
+DEFAULT_BRL_RATE_DATE = "2026-09-21"
 
 ALLOWED_MODE = "observe"
 # V3 (Issue #99): segundo modo permitido, aditivo — ver o comentário acima.
@@ -72,6 +82,8 @@ class Config:
     mode: str
     pilot: bool = False
     pilot_event_key: str | None = None
+    brl_rate: float = DEFAULT_BRL_RATE
+    brl_rate_date: str = DEFAULT_BRL_RATE_DATE
 
     @property
     def mode_allowed(self) -> bool:
@@ -130,11 +142,18 @@ class Config:
         mode_raw = src.get(ENV_MODE, ALLOWED_MODE)
         pilot_raw = src.get(ENV_PILOT, "false")
         pilot_event_key = src.get(ENV_PILOT_EVENT_KEY) or None
+        try:
+            brl_rate = float(src.get(ENV_BRL_RATE) or DEFAULT_BRL_RATE)
+        except ValueError:
+            brl_rate = DEFAULT_BRL_RATE
+        brl_rate_date = src.get(ENV_BRL_RATE_DATE) or DEFAULT_BRL_RATE_DATE
         return cls(
             enabled=(enabled_raw == "true"),
             mode=mode_raw,
             pilot=(pilot_raw == "true"),
             pilot_event_key=pilot_event_key,
+            brl_rate=brl_rate,
+            brl_rate_date=brl_rate_date,
         )
 
 

@@ -135,9 +135,22 @@ jobs:
     # outro quebra a simetria, então os dois precisam ser lidos juntos.
     # workflow_run não precisa desta checagem: ele não é acionado por
     # texto de terceiros, é o próprio Guard terminando.
+    #
+    # Camada 4 (anti-self-loop em duas camadas — achado B5 da auditoria
+    # independente do PR #104, rodada 2): o filtro em Python
+    # (github_event.py::COORDINATOR_COMMENT_MARKER, antes de dedup/API) já
+    # bastava para nunca gerar cobrança recursiva, mas deixava o job
+    # inteiro (checkout, Python, secret exposto ao runner) rodar à toa
+    # para um comentário que o próprio Coordinator publicou — custo de
+    # Actions e superfície desnecessária. Esta camada extra nem deixa o
+    # job começar quando o comentário já contém o marcador; o filtro
+    # Python continua como segunda camada (defesa em profundidade, nunca
+    # confiar só no `if:` do workflow).
     if: >
       vars.REPASSO_COORDINATOR_ENABLED == 'true' &&
-      (github.event_name != 'issue_comment' || github.event.comment.user.login == 'Repassomed')
+      (github.event_name != 'issue_comment' ||
+        (github.event.comment.user.login == 'Repassomed' &&
+         !contains(github.event.comment.body, '<!-- repasso-coordinator -->')))
     runs-on: ubuntu-latest
     # contents:write só é usado para publicar a branch de estado dedicada
     # (coordinator-state-*, nunca 'main', nunca matéria — ver
@@ -281,6 +294,7 @@ jobs:
             --dedup-git-remote "$REMOTO_COM_TOKEN"
             --usage-git-remote "$REMOTO_COM_TOKEN"
             --workers-from-tasks-json coordination/tasks.json
+            --worker-state-git-remote "$REMOTO_COM_TOKEN"
             --out /tmp/coordinator-observe.json
             --comment-out /tmp/coordinator-comment.md
           )
@@ -300,32 +314,46 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
-      - name: Comentar o Cartão de Merge no PR (V3, Issue #99)
+      - name: Comentar o Cartão de Merge/checkpoint (V3, Issue #99)
         # Só existe quando o CLI de fato gravou --comment-out (MODE=
-        # active-supervised, PR_NEEDS_AUDIT + tipo A, auditoria concluída
-        # ou HARD FAIL determinístico do Guard — ver
-        # coordinator/observe.py::executar_auditoria). Em MODE=observe
-        # (produção hoje) este arquivo nunca é criado, então este passo é
-        # sempre pulado — comportamento V2 inalterado.
+        # active-supervised e o evento produziu um Cartão de Merge, um
+        # checkpoint RECEBIDO/BLOCKED-LIMIT/POOL-PAUSADO ou a confirmação
+        # de um comando de worker — ver coordinator/observe.py). Em
+        # MODE=observe (produção hoje) este arquivo nunca é criado, então
+        # este passo é sempre pulado — comportamento V2 inalterado.
+        #
+        # Rodada 3: o destino do comentário depende de QUAL gatilho gerou
+        # o evento — um workflow_run (Guard) sempre fala na PR associada;
+        # um issue_comment (Inbox #88, checkpoint BLOCKED-LIMIT em
+        # qualquer issue) sempre fala na MESMA issue onde o comentário
+        # original foi postado. Nunca inventa um número de issue/PR.
         if: always() && hashFiles('/tmp/coordinator-comment.md') != ''
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const corpo = fs.readFileSync('/tmp/coordinator-comment.md', 'utf8');
-            const run = context.payload.workflow_run;
-            const prs = (run && run.pull_requests) || [];
-            if (prs.length === 0) {
-              console.log('Nenhuma PR associada a este workflow_run — nada para comentar.');
-              return;
+
+            let issueNumber = null;
+            if (context.eventName === 'issue_comment') {
+              issueNumber = context.payload.issue.number;
+            } else {
+              const run = context.payload.workflow_run;
+              const prs = (run && run.pull_requests) || [];
+              if (prs.length === 0) {
+                console.log('Nenhuma PR associada a este workflow_run — nada para comentar.');
+                return;
+              }
+              issueNumber = prs[0].number;
             }
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: prs[0].number,
+              issue_number: issueNumber,
               body: corpo,
             });
-            console.log(`Cartão de Merge comentado na PR #${prs[0].number}.`);
+            console.log(`Comentário publicado na issue/PR #${issueNumber}.`);
 
       - name: Falhar o job se o Coordinator terminou com erro (bloqueador 7)
         if: steps.coordinator.outputs.resultado != '0'

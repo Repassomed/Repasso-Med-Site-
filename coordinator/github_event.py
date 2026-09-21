@@ -103,6 +103,23 @@ LABEL_NEEDS_AUDIT = "NEEDS-AUDIT"
 
 RE_AREA = re.compile(r"^\s*[-*]\s*\*\*Área:\*\*\s*(.+)$", re.I | re.M)
 RE_ESTADO_CHECKPOINT = re.compile(r"^ESTADO:\s*(\S+)", re.M)
+# Rodada 3 (Issue #99, Worker Registry operacional + handoff): os mesmos
+# campos que coordination/CHECKPOINT-TEMPLATE.md já define, agora extraídos
+# para o payload — nunca só o texto bruto — porque a atualização do
+# registro operacional e a decisão de handoff precisam saber QUEM (AGENTE),
+# QUAL tarefa (TAREFA) e A PARTIR DE QUE COMMIT/BRANCH retomar.
+RE_AGENTE_CHECKPOINT = re.compile(r"^AGENTE:\s*(.+)$", re.M)
+RE_TAREFA_CHECKPOINT = re.compile(r"^TAREFA:\s*(.+)$", re.M)
+RE_BRANCH_CHECKPOINT = re.compile(r"^BRANCH:\s*(.+)$", re.M)
+RE_COMMIT_CHECKPOINT = re.compile(r"^COMMIT:\s*(.+)$", re.M)
+
+
+def _campo_checkpoint(regex: re.Pattern, corpo: str) -> str | None:
+    m = regex.search(corpo)
+    if not m:
+        return None
+    valor = m.group(1).strip()
+    return None if valor in ("", "-") else valor
 
 # V3 (Issue #99, "Lei das Questões" para o Coordinator): detecta, por
 # palavra-chave em título+corpo da PR, se a tarefa envolve prova/questões —
@@ -178,6 +195,10 @@ def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None
             identity=f"issue:{numero_issue}#comment:{numero_comentario}",
             payload={
                 "titulo": f"Checkpoint BLOCKED-LIMIT na issue #{numero_issue}",
+                "agente": _campo_checkpoint(RE_AGENTE_CHECKPOINT, corpo),
+                "tarefa": _campo_checkpoint(RE_TAREFA_CHECKPOINT, corpo),
+                "branch": _campo_checkpoint(RE_BRANCH_CHECKPOINT, corpo),
+                "commit": _campo_checkpoint(RE_COMMIT_CHECKPOINT, corpo),
                 "dedup_fields": {"comment_id": numero_comentario},
             },
         )

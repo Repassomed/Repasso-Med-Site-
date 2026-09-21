@@ -103,6 +103,33 @@ def test_job_gate_checks_enabled_and_trusted_comment_actor() -> None:
     print("OK  test_job_gate_checks_enabled_and_trusted_comment_actor")
 
 
+def test_job_gate_also_filters_coordinator_marker_second_layer() -> None:
+    """Achado B5 da auditoria independente do PR #104, rodada 2:
+    anti-self-loop em duas camadas — o `if:` do job (camada rápida/barata)
+    nem deixa o job começar para um comentário que já carrega o marcador
+    do Coordinator, além do filtro em Python (camada 2, defesa em
+    profundidade, nunca removida)."""
+    bloco = _bloco_do_job(_ler())
+    assert "contains(github.event.comment.body, '<!-- repasso-coordinator -->')" in bloco
+    print("OK  test_job_gate_also_filters_coordinator_marker_second_layer")
+
+
+def test_worker_state_git_remote_is_wired_into_the_real_invocation() -> None:
+    assert "--worker-state-git-remote" in _ler()
+    print("OK  test_worker_state_git_remote_is_wired_into_the_real_invocation")
+
+
+def test_comment_step_branches_between_issue_comment_and_workflow_run() -> None:
+    """Rodada 3: o destino do comentário (Issue #88/checkpoint vs. PR)
+    depende do gatilho real, nunca fixo em `pull_requests[0]`."""
+    texto = _ler()
+    idx = texto.index("- name: Comentar o Cartão de Merge")
+    trecho = texto[idx: idx + 2000]
+    assert "context.eventName === 'issue_comment'" in trecho
+    assert "context.payload.issue.number" in trecho
+    print("OK  test_comment_step_branches_between_issue_comment_and_workflow_run")
+
+
 def test_job_fails_when_coordinator_cli_errors() -> None:
     """Bloqueador 7: um passo final precisa fazer o job falhar quando o
     CLI termina com código != 0 — DEPOIS de publicar o artifact (upload
@@ -209,7 +236,7 @@ def test_merge_card_comment_step_only_runs_when_comment_file_exists() -> None:
     em MODE=observe."""
     texto = _ler()
     idx = texto.index("- name: Comentar o Cartão de Merge")
-    trecho = texto[idx: idx + 1200]
+    trecho = texto[idx: idx + 2000]
     assert "hashFiles('/tmp/coordinator-comment.md')" in trecho
     assert "createComment" in trecho
     print("OK  test_merge_card_comment_step_only_runs_when_comment_file_exists")
@@ -289,6 +316,9 @@ def main() -> int:
         test_comment_out_flag_is_wired_into_the_real_invocation,
         test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli,
         test_codeowners_covers_coordinator_and_workflows,
+        test_job_gate_also_filters_coordinator_marker_second_layer,
+        test_worker_state_git_remote_is_wired_into_the_real_invocation,
+        test_comment_step_branches_between_issue_comment_and_workflow_run,
     ]
     falhas = 0
     for t in testes:
