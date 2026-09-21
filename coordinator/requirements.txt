@@ -1,0 +1,8 @@
+# Só usado por coordinator/anthropic_transport.py — o único arquivo do
+# pacote que fala com a Anthropic de verdade. O resto do Coordinator (e
+# todo o Repasso Guard, em tools/qa/) continua biblioteca padrão pura.
+#
+# Instalado apenas dentro do job condicionado de
+# .github/workflows/coordinator-observe.yml (se: vars.REPASSO_COORDINATOR_ENABLED
+# == 'true') — enquanto isso for falso, este arquivo nunca é lido em CI.
+anthropic>=1.0
