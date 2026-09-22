@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import Callable, Protocol
@@ -192,8 +193,24 @@ class LocalJsonWorkerStateStore:
 
     def __init__(self, path: str | None) -> None:
         self.path = path
+        # Achado H2 da 2ª auditoria independente do PR #115: sem um lock,
+        # duas threads no MESMO processo compartilhando esta instância
+        # (ex.: dois testes concorrentes de handoff) poderiam cada uma ler
+        # o arquivo ANTES de qualquer uma escrever, e as duas decidirem
+        # "aceita" com base no mesmo estado velho — reabrindo exatamente a
+        # corrida que `conditional_update` existe para fechar. Este lock
+        # torna leitura+avaliação+escrita uma seção crítica única — a
+        # mesma garantia que `git_state.GitJsonStore` obtém via
+        # serialização real de commits no remoto, só que via mutex, já que
+        # aqui é um único processo, sem coordenação entre processos para
+        # fazer.
+        self._lock = threading.Lock()
 
     def read(self) -> dict:
+        with self._lock:
+            return self._ler_sem_lock()
+
+    def _ler_sem_lock(self) -> dict:
         if not self.path or not os.path.exists(self.path):
             return {}
         try:
@@ -202,45 +219,58 @@ class LocalJsonWorkerStateStore:
         except (json.JSONDecodeError, OSError):
             return {}
 
-    def update(self, mutate: Callable[[dict], dict], *, message: str = "") -> dict:
-        novo = mutate(self.read())
+    def _escrever_sem_lock(self, novo: dict) -> None:
         if self.path:
             os.makedirs(os.path.dirname(os.path.abspath(self.path)) or ".", exist_ok=True)
             with open(self.path, "w", encoding="utf-8") as fh:
                 json.dump(novo, fh, indent=2, sort_keys=True)
-        return novo
+
+    def update(self, mutate: Callable[[dict], dict], *, message: str = "") -> dict:
+        with self._lock:
+            novo = mutate(self._ler_sem_lock())
+            self._escrever_sem_lock(novo)
+            return novo
 
     def conditional_update(self, evaluate: Callable[[dict], tuple[bool, dict]], *, message: str = "") -> bool:
-        aceita, novo = evaluate(self.read())
-        if not aceita:
-            return False
-        if self.path:
-            os.makedirs(os.path.dirname(os.path.abspath(self.path)) or ".", exist_ok=True)
-            with open(self.path, "w", encoding="utf-8") as fh:
-                json.dump(novo, fh, indent=2, sort_keys=True)
-        return True
+        with self._lock:
+            aceita, novo = evaluate(self._ler_sem_lock())
+            if not aceita:
+                return False
+            self._escrever_sem_lock(novo)
+            return True
 
 
 class InMemoryWorkerStateStore:
     """Backend em memória, para teste — mesma superfície de
-    ``WorkerStateStore``, sem tocar disco nem git."""
+    ``WorkerStateStore``, sem tocar disco nem git.
+
+    Achado H2 da 2ª auditoria independente do PR #115: mesmo motivo do
+    lock em ``LocalJsonWorkerStateStore`` (ver docstring lá) — duas
+    threads compartilhando a MESMA instância (o caso real de um teste de
+    concorrência de handoff) não podem, cada uma, ler+decidir antes de
+    qualquer uma escrever; ``self._lock`` torna leitura+avaliação+escrita
+    uma seção crítica única."""
 
     def __init__(self, initial: dict | None = None) -> None:
         self._dados: dict = json.loads(json.dumps(initial)) if initial else {}
+        self._lock = threading.Lock()
 
     def read(self) -> dict:
-        return json.loads(json.dumps(self._dados))
+        with self._lock:
+            return json.loads(json.dumps(self._dados))
 
     def update(self, mutate: Callable[[dict], dict], *, message: str = "") -> dict:
-        self._dados = mutate(self.read())
-        return json.loads(json.dumps(self._dados))
+        with self._lock:
+            self._dados = mutate(json.loads(json.dumps(self._dados)))
+            return json.loads(json.dumps(self._dados))
 
     def conditional_update(self, evaluate: Callable[[dict], tuple[bool, dict]], *, message: str = "") -> bool:
-        aceita, novo = evaluate(self.read())
-        if not aceita:
-            return False
-        self._dados = novo
-        return True
+        with self._lock:
+            aceita, novo = evaluate(json.loads(json.dumps(self._dados)))
+            if not aceita:
+                return False
+            self._dados = novo
+            return True
 
 
 class OperationalWorkerRegistry:

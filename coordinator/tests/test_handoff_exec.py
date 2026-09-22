@@ -476,6 +476,64 @@ def test_two_different_tasks_racing_for_same_worker_only_one_wins() -> None:
 
 
 # ---------------------------------------------------------------------------
+# H2 (concorrência REAL). Mesmo cenário acima, mas com as duas chamadas
+# disparadas em threads simultâneas (threading.Barrier) — prova que o
+# lock adicionado a InMemoryWorkerStateStore.conditional_update (achado
+# H2 da 2ª auditoria independente do PR #115) realmente serializa
+# leitura+avaliação+escrita sob concorrência de verdade, não só sob a
+# ordem determinística de chamada do teste anterior.
+# ---------------------------------------------------------------------------
+
+def test_two_different_tasks_racing_for_same_worker_concurrently_only_one_wins() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        anterior_a = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="task-a")
+        anterior_b = _worker("claude-2", "Claude 2", "human_session", "LIMIT", current_task="task-b")
+        novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
+        workers_snapshot_antigo = [anterior_a, anterior_b, novo]
+        registry = _registry(workers_snapshot_antigo)
+
+        tarefa_a = _tarefa(id="task-a", agente="Claude 1")
+        tarefa_b = _tarefa(id="task-b", agente="Claude 2")
+
+        barreira = threading.Barrier(2)
+        resultados: dict[str, object] = {}
+        erros: list[BaseException] = []
+
+        def corredor(nome: str, tarefa, worker_anterior, checkpoint: str) -> None:
+            try:
+                barreira.wait(timeout=10)  # força as duas decisões/escritas a competir de verdade
+                resultados[nome] = executar_handoff(
+                    tarefa, worker_anterior=worker_anterior, workers=workers_snapshot_antigo, registry=registry,
+                    claim_store=_claim_store(remoto), source=_source(), checkpoint_commit=checkpoint,
+                    verificar_checkpoint=_ACEITA_TUDO,
+                )
+            except BaseException as e:
+                erros.append(e)
+
+        t1 = threading.Thread(target=corredor, args=("A", tarefa_a, anterior_a, "aaaaaaa"))
+        t2 = threading.Thread(target=corredor, args=("B", tarefa_b, anterior_b, "bbbbbbb"))
+        t1.start()
+        t2.start()
+        t1.join(timeout=60)
+        t2.join(timeout=60)
+
+        assert not erros, f"corredor(es) lançaram exceção: {erros}"
+        assert set(resultados) == {"A", "B"}
+        vencedores = [n for n, r in resultados.items() if r.action == "HANDOFF_EXECUTED"]
+        perdedores = [n for n, r in resultados.items() if r.action == "BLOCKED"]
+        assert len(vencedores) == 1, f"exatamente 1 execução devia vencer, obtive: {resultados}"
+        assert len(perdedores) == 1, f"exatamente 1 execução devia ser bloqueada, obtive: {resultados}"
+
+        final_novo = registry.find_by_name_or_id("runner-1")
+        # nunca as duas tarefas donas do worker ao mesmo tempo, nunca
+        # nenhuma, mesmo sob concorrência real de threads.
+        assert final_novo.current_task in ("task-a", "task-b")
+        assert final_novo.status == "BUSY"
+    print("OK  test_two_different_tasks_racing_for_same_worker_concurrently_only_one_wins")
+
+
+# ---------------------------------------------------------------------------
 # H3 (1/2). Novo checkpoint/novo dono da MESMA tarefa -> handoff seguinte
 # permitido (transição nova, chave diferente).
 # ---------------------------------------------------------------------------
@@ -748,6 +806,7 @@ def main() -> int:
         test_handoff_without_safe_checkpoint_is_blocked,
         test_checkpoint_syntactically_valid_but_nonexistent_is_blocked,
         test_two_different_tasks_racing_for_same_worker_only_one_wins,
+        test_two_different_tasks_racing_for_same_worker_concurrently_only_one_wins,
         test_new_checkpoint_and_new_owner_allows_a_new_handoff_of_the_same_task,
         test_continuation_runner_task_id_never_collides_with_previous_runner_dispatch_claim,
         test_previous_worker_released_not_left_active,
