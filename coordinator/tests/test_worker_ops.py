@@ -15,8 +15,10 @@ detectado. ``esperado_status`` agora é obrigatório; o cenário obrigatório
 (``test_marcar_available_condicional_recusa_quando_so_o_status_mudou``)
 prova exatamente essa lacuna fechada.
 
-Deliberadamente NÃO registrado em ``coordinator/tests/run_all.py`` nesta
-rodada (mesma decisão operacional já aplicada às Fases B/C/D/F) — roda
+Registrado em ``coordinator/tests/run_all.py`` a partir da Fase G da
+Issue #105 (antes disto rodava só standalone, o que deixava a allowlist
+``coordinator-suite`` — a única validação que o próprio canário executa
+antes de comitar — cega para o mecanismo do canário). Continua rodando
 standalone via ``python3 -m coordinator.tests.test_worker_ops``.
 """
 

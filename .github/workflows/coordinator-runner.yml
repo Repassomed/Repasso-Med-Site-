@@ -99,18 +99,37 @@ name: Repasso Coordinator (RUNNER)
 #   8. FALHA — o job fica vermelho quando o CLI termina com erro (último
 #      passo abaixo), mesma técnica de coordinator-observe.yml.
 #
-# FORA DE ESCOPO desta entrega (decisão explícita da Issue #105 Fase D):
-# não conecta com o scheduler (nenhum handoff automático); não cria
-# nenhuma RunnerTask/patch de canário real (o mecanismo existe, o
-# conteúdo autorizado por José vem depois, numa decisão separada); não
-# ativa REPASSO_RUNNER_ENABLED (continua "false"/ausente em produção); não
-# roda o Runner Dispatch contra o worker_id de nenhum ``api_runner`` ainda
-# — o Worker Registry operacional (Issue #99) ainda não tem esse worker
-# cadastrado, então o heartbeat fica de fora desta invocação por ora
-# (mecanismo já pronto em ``executar_tarefa``/``--worker-id``, só não
-# ligado neste workflow enquanto não houver um worker real para reportar);
-# não implementa edição por trecho/âncora para arquivos grandes (bloqueia
-# a tarefa inteira em vez disso — correção B2-C, evolução futura).
+# ─────────────────────────────────────────────────────────────────────────
+# ATUALIZAÇÃO MÍNIMA DA FASE G (Issue #105, achados G4/G6/G7) — duas
+# mudanças, nada além delas:
+#
+#   (a) um passo NOVO, "Preparar os workers do canário", que roda
+#       `python3 -m coordinator.canary_bootstrap` DEPOIS da confirmação
+#       dos portões e ANTES do Runner Dispatch. Ele registra no Worker
+#       Registry operacional exatamente DOIS workers de ids FIXOS em
+#       código (`api-runner-canary-a`/`api-runner-canary-b`, tipo
+#       `api_runner`, capability `codigo`) — nunca um nome livre, nunca
+#       por heartbeat (que continua rejeitando worker desconhecido,
+#       Fase B item 7), e só quando os MESMOS portões deste workflow já
+#       abriram E a tarefa canônica é exatamente
+#       REPASSO_RUNNER_CANARY_TASK_ID. Um worker que já existe é
+#       preservado EXATAMENTE como está (compare-and-set), então rodar
+#       isto de novo é idempotente e nunca rebaixa um worker em execução.
+#   (b) o passo do Runner Dispatch passa `--worker-id api-runner-canary-a`
+#       e `--worker-state-git-remote` de verdade — é isso que faz a
+#       execução inicial publicar heartbeats REAIS (BUSY/OFFLINE) no
+#       Worker Registry e, no checkpoint BLOCKED-LIMIT, deixar
+#       `last_checkpoint` persistido para o handoff real (Fase E).
+#
+# O gatilho continua `workflow_dispatch` SEM nenhum input; nenhuma
+# Variable é ligada por esta PR; nenhum PR é criado automaticamente;
+# nenhum merge, nenhuma publicação, nenhum deploy.
+#
+# FORA DE ESCOPO (decisão explícita da Issue #105, Fases D e G): não cria
+# PR nem mergeia nada; não publica/deploya; não liga
+# REPASSO_RUNNER_ENABLED (continua "false"/ausente em produção); não
+# implementa edição por trecho/âncora para arquivos grandes (bloqueia a
+# tarefa inteira em vez disso — correção B2-C, evolução futura).
 # ─────────────────────────────────────────────────────────────────────────
 
 on:
@@ -204,6 +223,35 @@ jobs:
               raise SystemExit(1)
           "
 
+      - name: Preparar os workers do canário (bootstrap CANARY-ONLY, mesmos portões)
+        env:
+          # Os MESMOS quatro portões — `canary_bootstrap` chama
+          # `RunnerDispatchConfig.from_env()` e `gate()` por conta própria
+          # e recusa (job vermelho) se qualquer um estiver fechado; sem
+          # repetir as Variables aqui, ele veria os defaults seguros.
+          REPASSO_RUNNER_ENABLED: ${{ vars.REPASSO_RUNNER_ENABLED }}
+          REPASSO_RUNNER_MODE: ${{ vars.REPASSO_RUNNER_MODE }}
+          REPASSO_RUNNER_CANARY_TASK_ID: ${{ vars.REPASSO_RUNNER_CANARY_TASK_ID }}
+          REPASSO_RUNNER_ACTUAL_REF: ${{ github.ref }}
+          REPASSO_RUNNER_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
+        run: |
+          set -e
+          # Sem nenhum nome de worker como argumento: os dois ids são
+          # fixos em coordinator/canary_bootstrap.py. O único dado que
+          # entra é o task_id já validado por formato no passo acima, e
+          # ele ainda é comparado, em código, contra
+          # REPASSO_RUNNER_CANARY_TASK_ID (comparação estrita).
+          # Mesmo remoto com token do passo do Runner Dispatch (o Worker
+          # Registry vive numa branch de estado dedicada,
+          # coordinator-state-workers — nunca a branch padrão, nunca
+          # matéria).
+          REMOTO_COM_TOKEN="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+          python3 -m coordinator.canary_bootstrap \
+            --canonical-task-id "${{ steps.taskid.outputs.task_id }}" \
+            --worker-state-git-remote "$REMOTO_COM_TOKEN" \
+            --out /tmp/canary-bootstrap.json
+
       - name: Rodar o Runner Dispatch sobre a RunnerTask do canário
         id: runner
         env:
@@ -272,12 +320,21 @@ jobs:
           # propósito, para nunca divergir por um literal duplicado neste
           # arquivo; se José precisar apontar para outra branch, precisa
           # ser uma decisão explícita, nunca um valor diferente por acaso.
+          # Fase G (achados G4/G7): a execução INICIAL do canário roda
+          # com o worker de canário A e com o Worker Registry operacional
+          # de verdade — sem isso, `executar_tarefa` não emite heartbeat
+          # nenhum, `WorkerRecord.last_checkpoint` nunca é preenchido e o
+          # handoff real (Fase E) não teria de onde partir. O worker_id é
+          # LITERAL aqui (nunca um input, nunca derivado de Variable): é
+          # o mesmo id fixo que o bootstrap acima registrou.
           python3 -m coordinator.runner_dispatch \
             --task-file "coordinator/runner_tasks/${TASK_ID}.task.json" \
             --generate-via-claude \
             --repo-dir . \
             --state-git-remote "$REMOTO_COM_TOKEN" \
             --usage-git-remote "$REMOTO_COM_TOKEN" \
+            --worker-id api-runner-canary-a \
+            --worker-state-git-remote "$REMOTO_COM_TOKEN" \
             --push-remote-name origin \
             --validation-command-keys coordinator-suite \
             --sucesso-status NEEDS-AUDIT \
@@ -289,7 +346,9 @@ jobs:
         if: always()
         with:
           name: repasso-runner-dispatch-outcome
-          path: /tmp/runner-dispatch-outcome.json
+          path: |
+            /tmp/runner-dispatch-outcome.json
+            /tmp/canary-bootstrap.json
           retention-days: 30
           if-no-files-found: ignore
 

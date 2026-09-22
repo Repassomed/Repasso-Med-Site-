@@ -258,10 +258,10 @@
         ".github/workflows/coordinator-runner.yml",
         "coordination/**"
       ],
-      "objetivo": "Executar um único canário ponta a ponta: fila → runner → heartbeat/checkpoint → handoff/retomada → Guard → auditor → NEEDS-AUDIT/MERGE-READY, sem merge/deploy automático.",
+      "objetivo": "Executar um único canário ponta a ponta: fila → runner → heartbeat/checkpoint → handoff/retomada → Guard → auditor → NEEDS-AUDIT/MERGE-READY, sem merge/deploy automático. A Fase G (#105-G) fechou o wiring operacional que faltava para isso ser possível.",
       "fonte": "Issues #99 #105 #106 · decisão operacional de José",
       "agente": null,
-      "estado": "READY",
+      "estado": "NEEDS-AUDIT",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -270,11 +270,11 @@
         "infra-handoff-real-issue105e",
         "infra-runner-resume-issue105f"
       ],
-      "branch": null,
+      "branch": "infra/coordinator-canary-integration-issue105g",
       "pr": null,
       "commit": null,
       "issue": 105,
-      "notas": "Fases A–F concluídas. Ruleset 'Proteção da main' verificado ativo em 22/09/2026: PR obrigatório, non-fast-forward bloqueado e status check 'guard' obrigatório. Pronto para UM canário integrado controlado; sem merge/deploy automático."
+      "notas": "Fases A–F concluídas. Ruleset 'Proteção da main' verificado ativo em 22/09/2026: PR obrigatório, non-fast-forward bloqueado e status check 'guard' obrigatório. Fase G (#105-G, esta rodada, NEEDS-AUDIT): checkpoint BLOCKED-LIMIT real passou a aplicar RunnerHeartbeat LIMIT de verdade e a executar handoff_exec.executar_handoff (G1); continuação api_runner passou a ser entregue ao Runner Dispatch com o mesmo config/registry/ledger/teto (G2); o portão passou a distinguir tarefa CANÔNICA de execution id derivado, por canonical explícito do código confiável, nunca por prefixo (G3); bootstrap CANARY-ONLY dos workers api-runner-canary-a/b atrás dos mesmos portões do Runner (G4); esses dois nomes (e só eles) aceitos no parser administrativo da Inbox #88, sem autocadastro (G5); RunnerTask materializada em coordinator/runner_tasks/ (G6); workflow do Runner preparando os workers e executando com --worker-id api-runner-canary-a (G7). NENHUMA Variable foi ligada e nenhum canário real foi executado nesta PR. ANTES do canário real, José precisa: (1) ligar as Variables REPASSO_RUNNER_ENABLED/MODE/CANARY_TASK_ID; (2) declarar aqui, nesta tarefa, estado IN-PROGRESS e agente 'api-runner-canary-a' — o handoff só transfere uma tarefa cujo dono declarado é o worker que bateu no limite; (3) na volta do worker, declarar estado BLOCKED-LIMIT e agente 'api-runner-canary-b' para a retomada da Fase F. Merge e publicação continuam sendo decisão exclusiva de José."
     },
     {
       "id": "semiologia-ii-fechamento-assets",

@@ -31,8 +31,10 @@ Dois testes, cada um provando uma metade da garantia:
    competindo pelo mesmo remoto local não-bare ao mesmo tempo, o que
    introduziria contenção alheia ao que este achado testa).
 
-Deliberadamente NÃO registrado em ``coordinator/tests/run_all.py`` nesta
-rodada (mesma decisão operacional já aplicada às Fases B/C/D/F) — roda
+Registrado em ``coordinator/tests/run_all.py`` a partir da Fase G da
+Issue #105 (antes disto rodava só standalone, o que deixava a allowlist
+``coordinator-suite`` — a única validação que o próprio canário executa
+antes de comitar — cega para o mecanismo do canário). Continua rodando
 standalone via ``python3 -m coordinator.tests.test_global_ledger_race``.
 """
 

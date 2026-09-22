@@ -23,8 +23,10 @@ nunca iniciada automaticamente; gate fechado -> zero execução/chamada
 paga; Worker Registry coerente após: tarefa DONE, gate fechado,
 human_session, retomada api_runner.
 
-Deliberadamente NÃO registrado em ``coordinator/tests/run_all.py`` nesta
-rodada (mesma decisão operacional já aplicada às Fases B/C/D/F) — roda
+Registrado em ``coordinator/tests/run_all.py`` a partir da Fase G da
+Issue #105 (antes disto rodava só standalone, o que deixava a allowlist
+``coordinator-suite`` — a única validação que o próprio canário executa
+antes de comitar — cega para o mecanismo do canário). Continua rodando
 standalone via ``python3 -m coordinator.tests.test_worker_commands``.
 """
 
@@ -162,7 +164,10 @@ def _tarefa_original(**overrides) -> RunnerTask:
 
 
 def _config(**overrides) -> RunnerDispatchConfig:
-    campos = dict(enabled=True, mode="canary", canary_task_id="t-original--resume-PLACEHOLDER")
+    # Achado G3 (Fase G): a Variable carrega a tarefa CANÔNICA; o id de
+    # EXECUÇÃO derivado (`--resume-<checkpoint>`) é autorizado pelo
+    # canônico EXPLÍCITO que o código confiável passa adiante.
+    campos = dict(enabled=True, mode="canary", canary_task_id="t-original")
     campos.update(overrides)
     return RunnerDispatchConfig(**campos)
 
@@ -277,7 +282,7 @@ def test_integrado_ponta_a_ponta_f6a_b_c_d() -> None:
             message="setup: claude-2 em LIMIT, dono canônico de t-original",
         )
 
-        config = _config(canary_task_id=f"t-original--resume-{sha[:12]}")
+        config = _config(canary_task_id="t-original")
 
         # Evento REAL: "Claude 2 voltou" — comando reconhecido/aplicado
         # exatamente como o pipeline real (observe.py) faria.
@@ -530,7 +535,7 @@ def test_gate_fechado_zero_execucao_zero_chamada_paga() -> None:
             tarefa_original=_tarefa_original(branch="runner/t-gate", checkpoint_commit="abc1234def0"),
             worker_anterior=worker_anterior, motivo_interrupcao="LIMIT",
         )
-        config = _config(enabled=False, canary_task_id="t-gate--resume-abc1234def0")
+        config = _config(enabled=False, canary_task_id="t-gate")
         chamadas = []
 
         def gerar_patch_espiao():
@@ -587,7 +592,7 @@ def test_f7c_gate_fechado_via_aplicar_comando_preserva_reserva() -> None:
             tarefa_original=_tarefa_original(branch="runner/t-gate2", checkpoint_commit=sha),
             worker_anterior=worker_anterior, motivo_interrupcao="LIMIT",
         )
-        config = _config(enabled=False, canary_task_id=f"t-gate2--resume-{sha[:12]}")
+        config = _config(enabled=False, canary_task_id="t-gate2")
         comando = WorkerCommand(action="SET_AVAILABLE", worker_name="Claude 2")
         workdir = _clonar_workdir(tmp, remoto, "gate2")
         confirmacao = aplicar_comando(
@@ -657,7 +662,7 @@ def test_f7b_geracao_real_de_patch_sem_injecao_manual() -> None:
             ),
             message="setup",
         )
-        config = _config(canary_task_id=f"t-f7b--resume-{sha[:12]}")
+        config = _config(canary_task_id="t-f7b")
         transporte = _CountingTransport(
             response=TransportResponse(
                 text=json.dumps({"files": [{"path": "greeting.txt", "content": "gerado via claude\n"}]}),

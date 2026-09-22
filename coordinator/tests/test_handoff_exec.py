@@ -7,10 +7,11 @@ verdade (não simulado) contra um repositório "remoto" local para o
 concorrência), e ``worker_ops.InMemoryWorkerStateStore`` para o Worker
 Registry (rápido, sem I/O de rede).
 
-Mesma decisão operacional de José já registrada em
-``test_runner_contract.py``/``test_heartbeat.py``/``test_runner_dispatch.py``:
-deliberadamente NÃO registrado em ``coordinator/tests/run_all.py`` nesta
-rodada — roda standalone via ``python3 -m coordinator.tests.test_handoff_exec``.
+Registrado em ``coordinator/tests/run_all.py`` a partir da Fase G da
+Issue #105 (antes disto rodava só standalone, o que deixava a allowlist
+``coordinator-suite`` — a única validação que o próprio canário executa
+antes de comitar — cega para o mecanismo do canário). Continua rodando
+standalone via ``python3 -m coordinator.tests.test_handoff_exec``.
 
 Inclui as correções da 1ª auditoria independente do PR #115 (H1-H3):
 H1 (checkpoint sintaticamente válido mas inexistente -> bloqueado), H2

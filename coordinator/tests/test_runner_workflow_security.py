@@ -7,10 +7,11 @@ Mesma filosofia/técnica de ``test_workflow_security.py`` (que cobre
 como texto/regex simples, sem parser de YAML — igual ao Repasso Guard faz
 com código-fonte.
 
-Deliberadamente NÃO registrado em ``coordinator/tests/run_all.py`` nesta
-rodada, mesma decisão operacional já aplicada a ``test_runner_
-contract.py``/``test_heartbeat.py`` — roda standalone via
-``python3 -m coordinator.tests.test_runner_workflow_security``.
+Registrado em ``coordinator/tests/run_all.py`` a partir da Fase G da
+Issue #105 (antes disto rodava só standalone, o que deixava a allowlist
+``coordinator-suite`` — a única validação que o próprio canário executa
+antes de comitar — cega para o mecanismo do canário). Continua rodando
+standalone via ``python3 -m coordinator.tests.test_runner_workflow_security``.
 """
 
 from __future__ import annotations

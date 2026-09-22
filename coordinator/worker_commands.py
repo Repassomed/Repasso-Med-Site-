@@ -103,6 +103,7 @@ import re
 from dataclasses import dataclass, replace
 from typing import Callable
 
+from .canary_bootstrap import CANARY_WORKER_IDS, e_worker_de_canario
 from .runner_dispatch import RunnerDispatchConfig, StructuredPatch
 from .runner_resume import (
     InterruptedTaskSnapshot,
@@ -114,7 +115,18 @@ from .runner_resume import (
 from .scheduler import load_tasks_from_tasks_json
 from .worker_ops import OperationalWorkerRegistry, WorkerRecord
 
-_NOME = r"(Claude\s*\d+|claude-\d+|chatgpt-auditor)"
+# Achado G5 (Issue #105 Fase G): os DOIS workers de canário entram no
+# parser administrativo de forma ESTRITAMENTE controlada — pelos nomes
+# exatos ("API Runner Canary A"/"B") ou pelos worker_id exatos
+# ("api-runner-canary-a"/"b"), nunca por um padrão genérico tipo
+# "api-runner-*". Isto NÃO muda a regra dos Claude 1-4 (idêntica), NÃO
+# permite nome livre e, sobretudo, NÃO abre caminho para autocadastro: um
+# comando sobre um worker de canário que ainda não existe é RECUSADO em
+# ``aplicar_comando`` (o único cadastro possível continua sendo
+# ``canary_bootstrap.py``, atrás dos mesmos portões do Runner), e
+# ``heartbeat.aplicar_heartbeat`` continua rejeitando worker desconhecido
+# como sempre.
+_NOME = r"(Claude\s*\d+|claude-\d+|chatgpt-auditor|API\s+Runner\s+Canary\s+[AB]|api-runner-canary-[ab])"
 
 RE_REGISTRAR = re.compile(rf"\bcadastr[ae]\b.{{0,10}}{_NOME}.{{0,15}}\bcomo\s+worker\s+de\s+([^.\n]+)", re.I)
 RE_DESATIVAR = re.compile(rf"\bdesativ[ae]\b\s+{_NOME}", re.I)
@@ -319,6 +331,28 @@ def aplicar_comando(
     chamador existente, ex. ``observe.py``): só ``set_status``, nenhuma
     retomada automática."""
     nome = comando.worker_name.strip()
+
+    # Achado G5: os workers de canário nunca nascem de um comando. Eles só
+    # existem depois do bootstrap CANARY-ONLY (``canary_bootstrap.
+    # preparar_workers_do_canario``, atrás dos MESMOS portões do Runner).
+    # Um comando administrativo pode MOVER o estado de um registro que já
+    # existe (é exatamente o caminho pedido: "API Runner Canary B
+    # disponível" -> SET_AVAILABLE -> Fase F), nunca CRIAR o registro —
+    # nem como ``api_runner``, nem (pior) como ``human_session``, que é o
+    # que ``REGISTER``/``set_status`` fariam por padrão.
+    if e_worker_de_canario(nome):
+        if comando.action == "REGISTER":
+            return (
+                f"{nome}: cadastro por comando recusado — os workers de canário "
+                f"({', '.join(CANARY_WORKER_IDS)}) só são preparados pelo bootstrap do canário, "
+                "atrás dos portões do Runner, nunca por comando livre."
+            )
+        if registry.find_by_name_or_id(nome) is None:
+            return (
+                f"{nome}: comando recusado — este worker de canário ainda não existe no registro "
+                "operacional, e um comando nunca o cadastra (o bootstrap do canário, atrás dos "
+                "portões do Runner, é o único caminho). Nada foi alterado."
+            )
 
     if comando.action == "REGISTER":
         registro = WorkerRecord(

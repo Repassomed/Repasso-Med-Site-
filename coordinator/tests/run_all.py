@@ -1,4 +1,4 @@
-"""Roda toda a suíte de testes do Coordinator V2 numa só chamada.
+"""Roda toda a suíte de testes do Coordinator numa só chamada.
 
     python3 -m coordinator.tests.run_all
 """
@@ -11,8 +11,10 @@ from . import (
     test_anthropic_client,
     test_anthropic_transport,
     test_budget,
-    test_cli_crash_safety,
+    test_canary_integration,
     test_classify_routing,
+    test_cli_crash_safety,
+    test_cli_runner_wiring,
     test_config_gate,
     test_coordinator_v3,
     test_coordinator_v3_round3,
@@ -20,17 +22,28 @@ from . import (
     test_dedup,
     test_git_state,
     test_github_event,
+    test_global_ledger_race,
     test_guard_state_integration,
+    test_handoff_exec,
+    test_heartbeat,
     test_human_output_honesty,
     test_ledger_failure_after_call,
     test_no_forbidden_writes,
     test_observe_pipeline,
     test_observe_real_path,
+    test_observe_runner_wiring,
     test_openai_auditor,
     test_openai_transport,
     test_pilot_mode,
     test_redact,
+    test_runner_contract,
+    test_runner_dispatch,
+    test_runner_generate,
+    test_runner_resume,
+    test_runner_workflow_security,
     test_scheduler,
+    test_worker_commands,
+    test_worker_ops,
     test_worker_registry_real,
     test_workflow_security,
 )
@@ -61,6 +74,26 @@ MODULOS = [
     test_openai_transport,
     test_openai_auditor,
     test_scheduler,
+    # Issue #105 (Fases B-G): registrados a partir da Fase G. Até aqui
+    # estes módulos rodavam só standalone, o que deixava a allowlist
+    # `coordinator-suite` (o único comando de validação que o próprio
+    # canário executa antes de comitar) cega justamente para o
+    # mecanismo do canário. Agora a suíte completa cobre contrato,
+    # heartbeat, handoff real, dispatch, geração, retomada, comandos de
+    # worker, segurança do workflow do Runner e a integração final.
+    test_canary_integration,
+    test_cli_runner_wiring,
+    test_global_ledger_race,
+    test_handoff_exec,
+    test_heartbeat,
+    test_observe_runner_wiring,
+    test_runner_contract,
+    test_runner_dispatch,
+    test_runner_generate,
+    test_runner_resume,
+    test_runner_workflow_security,
+    test_worker_commands,
+    test_worker_ops,
 ]
 
 

@@ -14,10 +14,11 @@ patch inválido (bloqueio), dois dispatches simultâneos da mesma tarefa
 (só um vence), resultado DONE nunca é MERGE-READY, heartbeat/checkpoint
 válido e inválido.
 
-Mesma decisão operacional de José já registrada em ``test_runner_
-contract.py``/``test_heartbeat.py``: deliberadamente NÃO registrado em
-``coordinator/tests/run_all.py`` nesta rodada — roda standalone via
-``python3 -m coordinator.tests.test_runner_dispatch``.
+Registrado em ``coordinator/tests/run_all.py`` a partir da Fase G da
+Issue #105 (antes disto rodava só standalone, o que deixava a allowlist
+``coordinator-suite`` — a única validação que o próprio canário executa
+antes de comitar — cega para o mecanismo do canário). Continua rodando
+standalone via ``python3 -m coordinator.tests.test_runner_dispatch``.
 """
 
 from __future__ import annotations
