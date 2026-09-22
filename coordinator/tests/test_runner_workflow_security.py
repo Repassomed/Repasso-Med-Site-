@@ -315,7 +315,13 @@ def test_real_runner_step_uses_generate_via_claude_not_patch_file() -> None:
     assert "--generate-via-claude" in bloco_cmd
     assert "--patch-file" not in bloco_cmd
     assert "--usage-git-remote" in bloco_cmd
-    assert "--usage-git-branch coordinator-state-runner-usage" in bloco_cmd
+    # Correção B4 (3ª auditoria independente do PR #114): --usage-git-branch
+    # NUNCA é passado como literal aqui — o Runner precisa usar o DEFAULT
+    # do próprio CLI (coordinator-state-usage, a mesma branch/ledger
+    # Anthropic GLOBAL do Coordinator OBSERVE), nunca uma branch separada
+    # hardcoded neste workflow que divergiria do default por um refactor
+    # futuro sem ninguém notar.
+    assert "--usage-git-branch" not in bloco_cmd
     print("OK  test_real_runner_step_uses_generate_via_claude_not_patch_file")
 
 

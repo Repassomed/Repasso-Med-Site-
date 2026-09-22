@@ -124,11 +124,49 @@ determinística de sempre.
   efêmeras do GitHub Actions, numa branch de estado dedicada,
   ``DEFAULT_RUNNER_USAGE_STATE_BRANCH``) — o MESMO mecanismo que já
   persiste dedup/orçamento do Coordinator OBSERVE, nunca um ledger
-  paralelo/local para o custo mensal real do Runner.
+  paralelo/local para o custo mensal real do Runner. (A branch em si — se
+  é a MESMA do Coordinator ou uma separada — é decidida pela correção B4,
+  abaixo; B2-B só trocou "arquivo local" por "``GitUsageLedger``
+  persistente", sem decidir ainda QUAL branch.)
 - **B2-C:** ``runner_generate.gerar_patch_via_claude`` agora bloqueia
   fail-closed (zero chamada, zero patch) quando qualquer ``allowed_file``
   existente é maior do que pode ser enviado integralmente ao modelo —
   nunca mais corta/trunca conteúdo de arquivo silenciosamente.
+
+**Correções da 3ª auditoria independente do PR #114 (B3/B4):**
+
+- **B3 (claim ANTES da chamada Anthropic paga):** antes desta correção, o
+  CLI (``main()``) chamava ``runner_generate.gerar_patch_via_claude``
+  ANTES de ``executar_tarefa`` — ou seja, ANTES do claim atômico do
+  ``task_id``. Isso permitia que o MESMO ``task_id``, disparado de novo
+  (repetição/retry manual do canário), gastasse uma segunda chamada paga
+  antes de descobrir que já havia sido reivindicado. ``executar_tarefa``
+  agora aceita ``patch=None`` junto de um novo parâmetro ``gerar_patch``
+  (uma função sem argumento, chamada NO LUGAR de receber um patch já
+  pronto) — o claim (camada já existente, inalterada) continua sendo a
+  PRIMEIRA chamada externa depois do portão/autorização, e só DEPOIS de
+  ``claimed is True`` é que ``gerar_patch()`` é invocada. Uma execução que
+  perde o claim (``claimed=False``) NUNCA chega a chamar ``gerar_patch``
+  — devolve ``BLOCKED`` com **zero chamada Anthropic**, exatamente como já
+  acontecia para o caminho ``--patch-file``. Um único ``RunnerClaimStore``
+  é usado do início ao fim (claim + ``registrar_resultado`` final,
+  inclusive quando a própria geração falha) — nunca dois claims
+  divergentes, nunca uma segunda instância de ``GitJsonStore`` para o
+  mesmo ``task_id``.
+- **B4 (teto Anthropic GLOBAL da Issue #84, não um segundo teto do
+  Runner):** antes desta correção, ``--usage-git-branch`` do Runner tinha
+  DEFAULT ``coordinator-state-runner-usage`` — uma branch de estado
+  SEPARADA da que o Coordinator OBSERVE já usa (``coordinator-state-usage``,
+  default de ``coordinator/__main__.py --usage-git-branch``). Isso criava
+  DOIS tetos mensais de US$20 implícitos (um por sistema), quando a Issue
+  #84 define um teto ÚNICO para o gasto Anthropic total. O default agora é
+  ``coordinator-state-usage`` — a MESMA branch/ledger que o Coordinator já
+  lê/escreve — então ``check_budget``/``priority_allowed`` em
+  ``runner_generate.gerar_patch_via_claude`` decidem sobre o gasto
+  Anthropic TOTAL (Coordinator + Runner), nunca um subconjunto. OpenAI
+  continua com seu próprio ledger separado (``coordinator-state-usage-openai``,
+  inalterado, fora de escopo aqui — a Issue #84 nunca uniu os dois
+  provedores).
 
 **O QUE ESTE MÓDULO DELIBERADAMENTE NÃO FAZ (fora de escopo desta
 rodada):** não conecta com ``scheduler.py`` (nenhuma chamada a
@@ -150,6 +188,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import Callable
 
 from .git_state import GitJsonStore
 from .heartbeat import aplicar_heartbeat
@@ -184,13 +223,18 @@ ENV_RUNNER_EXPECTED_REF = "REPASSO_RUNNER_EXPECTED_REF"
 ALLOWED_RUNNER_MODE = "canary"
 
 DEFAULT_RUNNER_STATE_BRANCH = "coordinator-state-runner"
-# Correção B2-B (auditoria independente do PR #114, 2ª rodada): branch de
-# estado DEDICADA para o ledger de custo/tokens do Runner — mesma
-# convenção já usada pelo Coordinator OBSERVE (uma branch por concern:
-# "coordinator-state-usage", "coordinator-state-usage-openai") — nunca a
-# mesma branch do claim/resultado (DEFAULT_RUNNER_STATE_BRANCH acima),
-# para não misturar dois tipos de estado num único arquivo/histórico.
-DEFAULT_RUNNER_USAGE_STATE_BRANCH = "coordinator-state-runner-usage"
+# Correção B4 (3ª auditoria independente do PR #114): branch do ledger
+# Anthropic GLOBAL — a MESMA que coordinator/__main__.py usa como default
+# de --usage-git-branch para o Coordinator OBSERVE. A 2ª rodada (B2-B)
+# tinha introduzido uma branch SEPARADA aqui ("coordinator-state-runner-
+# usage"), o que criava um segundo teto mensal de US$20 implícito — a
+# Issue #84 define um teto ÚNICO para o gasto Anthropic total (Coordinator
+# + Runner). Nunca renomear esta constante para sugerir "é só do Runner":
+# o valor em si É o ponto — precisa continuar igual ao default real do
+# Coordinator, nunca divergir de novo por um refactor futuro que não
+# perceba a ligação. OpenAI continua com seu próprio ledger separado
+# ("coordinator-state-usage-openai"), fora de escopo aqui.
+DEFAULT_RUNNER_USAGE_STATE_BRANCH = "coordinator-state-usage"
 
 
 @dataclass(frozen=True)
@@ -580,7 +624,7 @@ def _emitir_heartbeat(
 
 def executar_tarefa(
     task: RunnerTask,
-    patch: StructuredPatch,
+    patch: StructuredPatch | None = None,
     *,
     config: RunnerDispatchConfig,
     repo_dir: str,
@@ -591,13 +635,33 @@ def executar_tarefa(
     worker_id: str | None = None,
     worker_registry: OperationalWorkerRegistry | None = None,
     validation_allowlist: dict[str, tuple[str, ...]] | None = None,
+    gerar_patch: Callable[[], object] | None = None,
 ) -> DispatchOutcome:
     """A orquestração completa de uma execução controlada. Nunca decide
     merge/publicação/orçamento — só executa o que ``task``/``patch`` já
     trazem, dentro dos limites que ``runner_contract.RunnerTask`` já
-    valida na própria construção."""
+    valida na própria construção.
+
+    Correção B3 (3ª auditoria independente do PR #114): exatamente um de
+    ``patch``/``gerar_patch`` precisa ser dado. ``gerar_patch`` (sem
+    argumento nenhum — chamada como ``gerar_patch()``) é invocada SÓ
+    DEPOIS que o claim atômico do ``task_id`` já teve êxito — nunca antes.
+    Isso é o que garante que uma chamada Anthropic paga (dentro de
+    ``gerar_patch``, tipicamente ``runner_generate.gerar_patch_via_claude``)
+    só possa acontecer para a execução que de fato venceu o claim; uma
+    repetição do mesmo ``task_id`` que perde o claim nunca chega a invocar
+    ``gerar_patch``, então nunca gasta uma segunda chamada. O valor
+    devolvido por ``gerar_patch()`` é tratado por duck typing (nunca um
+    import de ``runner_generate`` aqui, que criaria um ciclo): precisa ter
+    ``.status`` (``"ok"``/``"blocked"``/``"failed"``), ``.patch``
+    (``StructuredPatch | None``) e ``.reason`` (``str``)."""
     if sucesso_status not in ("DONE", "NEEDS-AUDIT"):
         raise ValueError(f"sucesso_status precisa ser 'DONE' ou 'NEEDS-AUDIT' — recebido {sucesso_status!r}")
+    if (patch is None) == (gerar_patch is None):
+        raise ValueError(
+            "executar_tarefa exige exatamente um de 'patch' (já pronto) ou 'gerar_patch' "
+            "(gerado só depois do claim) — nunca os dois, nunca nenhum."
+        )
 
     # Camada 1: gate. Fechado -> NENHUMA chamada externa (nem git remoto,
     # nem subprocess de teste) — devolve direto, sem tocar em mais nada.
@@ -649,6 +713,28 @@ def executar_tarefa(
             _emitir_heartbeat(worker_id, worker_registry, RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"), heartbeats, notes)
         return DispatchOutcome(result=resultado, claimed=False, external_calls_made=True,
                                 heartbeats=tuple(heartbeats), notes=tuple(notes))
+
+    # Correção B3: só a partir daqui — DEPOIS que ``claimed is True`` —
+    # ``gerar_patch()`` pode ser chamada. Uma repetição do mesmo task_id
+    # já teria devolvido BLOCKED (bloco acima) SEM nunca chegar até aqui,
+    # então nunca chega a gastar uma segunda chamada Anthropic.
+    if patch is None:
+        geracao = gerar_patch()
+        status_geracao = getattr(geracao, "status", None)
+        patch_gerado = getattr(geracao, "patch", None)
+        if status_geracao != "ok" or patch_gerado is None:
+            motivo = getattr(geracao, "reason", None) or "geração do patch falhou sem motivo informado."
+            resultado = RunnerResult(
+                task_id=task.task_id,
+                status=("FAILED" if status_geracao == "failed" else "BLOCKED"),
+                reason=motivo,
+            )
+            claim_store.registrar_resultado(task.task_id, resultado)
+            if worker_id:
+                _emitir_heartbeat(worker_id, worker_registry, RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"), heartbeats, notes)
+            return DispatchOutcome(result=resultado, claimed=True, external_calls_made=True,
+                                    heartbeats=tuple(heartbeats), notes=tuple(notes))
+        patch = patch_gerado
 
     ok_patch, fora = validar_patch_contra_allowed_files(patch, task)
     if not ok_patch:
@@ -789,8 +875,9 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     )
     ap.add_argument(
         "--usage-git-branch", default=DEFAULT_RUNNER_USAGE_STATE_BRANCH,
-        help="branch de estado DEDICADA para o ledger de custo do Runner (nunca 'main', nunca a "
-        f"mesma branch do claim/resultado) — default: {DEFAULT_RUNNER_USAGE_STATE_BRANCH!r}.",
+        help="Correção B4 (PR #114, 3ª auditoria): branch do ledger Anthropic GLOBAL — a MESMA "
+        "que o Coordinator OBSERVE usa (nunca 'main', nunca uma branch separada só do Runner, "
+        f"que criaria um segundo teto mensal implícito) — default: {DEFAULT_RUNNER_USAGE_STATE_BRANCH!r}.",
     )
     ap.add_argument(
         "--budget-usd", type=float, default=None,
@@ -829,14 +916,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERRO fail-closed ao carregar --task-file: {redact(str(exc))}")
         return 1
 
-    if args.generate_via_claude:
-        # Import local (correção B2, PR #114): evita import circular no
-        # nível do módulo — runner_generate.py importa DESTE módulo
-        # (RunnerDispatchConfig/StructuredPatch/validar_patch_contra_allowed_files),
-        # então este módulo só importa runner_generate.py aqui dentro,
-        # tarde, e só quando de fato precisa.
-        from . import runner_generate
+    patch: StructuredPatch | None = None
+    gerar_patch: Callable[[], object] | None = None
 
+    if args.generate_via_claude:
         if not args.usage_git_remote:
             print("ERRO fail-closed: --generate-via-claude exige --usage-git-remote.")
             return 1
@@ -844,22 +927,31 @@ def main(argv: list[str] | None = None) -> int:
         from .git_state import GitUsageLedger
 
         budget_usd = args.budget_usd if args.budget_usd is not None else MONTHLY_BUDGET_USD
-        # Correção B2-B: ledger PERSISTENTE entre execuções efêmeras do
-        # GitHub Actions (branch de estado dedicada do próprio
-        # repositório) — nunca um arquivo local, que desapareceria com o
-        # runner ao fim do job.
-        ledger_persistente = GitUsageLedger(
+        # Correção B4 (3ª auditoria independente do PR #114): o mesmo
+        # ledger GLOBAL de Anthropic (branch/arquivo) que o Coordinator
+        # OBSERVE já usa — nunca um ledger separado do Runner, que criaria
+        # um segundo teto mensal implícito. --usage-git-branch tem esse
+        # mesmo default agora (DEFAULT_RUNNER_USAGE_STATE_BRANCH ==
+        # DEFAULT_GLOBAL_ANTHROPIC_USAGE_BRANCH), mas quem decide de fato é
+        # o valor passado aqui, não um nome de constante.
+        ledger_global = GitUsageLedger(
             GitJsonStore(args.usage_git_remote, branch=args.usage_git_branch)
         )
-        geracao = runner_generate.gerar_patch_via_claude(
-            task, config=config, repo_dir=args.repo_dir,
-            usage_ledger=ledger_persistente,
-            budget_usd=budget_usd,
-        )
-        if geracao.status != "ok" or geracao.patch is None:
-            print(f"ERRO fail-closed na geração via Claude: {redact(geracao.reason)}")
-            return 1
-        patch = geracao.patch
+
+        # Correção B3: NÃO chama a geração agora — só monta o closure.
+        # `gerar_patch()` só é invocada por `executar_tarefa` DEPOIS que o
+        # claim atômico do task_id já teve êxito (import local de
+        # runner_generate aqui dentro do closure, não no nível do módulo,
+        # para nunca criar import circular — runner_generate.py importa
+        # DESTE módulo).
+        def gerar_patch() -> object:
+            from . import runner_generate
+
+            return runner_generate.gerar_patch_via_claude(
+                task, config=config, repo_dir=args.repo_dir,
+                usage_ledger=ledger_global,
+                budget_usd=budget_usd,
+            )
     else:
         try:
             patch = carregar_patch_de_arquivo(args.patch_file)
@@ -886,6 +978,7 @@ def main(argv: list[str] | None = None) -> int:
             sucesso_status=args.sucesso_status,
             worker_id=args.worker_id,
             worker_registry=worker_registry,
+            gerar_patch=gerar_patch,
         )
     except Exception as exc:  # qualquer erro inesperado -> job vermelho, nunca sucesso silencioso
         print(f"ERRO fail-closed: {redact(str(exc))}")

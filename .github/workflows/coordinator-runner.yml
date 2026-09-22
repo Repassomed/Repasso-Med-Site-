@@ -16,6 +16,15 @@ name: Repasso Coordinator (RUNNER)
 # passo — nunca em nenhum outro lugar deste arquivo, nunca aceito como
 # input de workflow_dispatch.
 #
+# Correções da 3ª auditoria independente do PR #114 (B3/B4) — nada deste
+# workflow precisou mudar em ESTRUTURA para B3 (o claim atômico já
+# acontece dentro de `executar_tarefa`, e agora sempre ANTES de qualquer
+# chamada Anthropic — ver `coordinator/runner_dispatch.py`); B4 removeu a
+# flag `--usage-git-branch` literal deste comando, para que o Runner use
+# o default do próprio CLI (`coordinator-state-usage` — a MESMA branch/
+# ledger que o Coordinator OBSERVE já usa), garantindo um teto mensal de
+# Anthropic ÚNICO para Coordinator + Runner, nunca dois implícitos.
+#
 # Deliberadamente um arquivo SEPARADO de coordinator-observe.yml (não
 # tocado nesta rodada) — o Runner é um MECANISMO DE EXECUÇÃO (aplica
 # patch, roda testes, comita/publica numa branch própria), categoricamente
@@ -229,10 +238,11 @@ jobs:
 
           # Remoto com o GITHUB_TOKEN embutido — usado para (a) o claim
           # atômico/registro de resultado na branch de estado DEDICADA do
-          # Runner (coordinator-state-runner) e (b), correção B2-B, o
-          # ledger PERSISTENTE de custo/tokens do Runner numa branch de
-          # estado dedicada SEPARADA (coordinator-state-runner-usage, o
-          # default de --usage-git-branch) — GitJsonStore/GitUsageLedger
+          # Runner (coordinator-state-runner) e (b) o ledger Anthropic
+          # GLOBAL (correção B4, 3ª auditoria independente do PR #114:
+          # "coordinator-state-usage" — a MESMA branch que o Coordinator
+          # OBSERVE já usa, nunca uma separada só do Runner, que criaria
+          # um segundo teto mensal implícito) — GitJsonStore/GitUsageLedger
           # criam seu próprio workdir temporário e precisam de credenciais
           # próprias (mesmo padrão de coordinator-observe.yml). O push da
           # BRANCH DA TAREFA em si (--push-remote-name origin) usa as
@@ -249,13 +259,25 @@ jobs:
           # coordinator/runner_tasks/<task_id>.task.json, no checkout
           # confiável da branch padrão. --patch-file continua existindo na
           # CLI só para uso manual/teste (fora deste workflow).
+          #
+          # Correção B3 (3ª auditoria): o claim atômico do task_id
+          # (dentro de `executar_tarefa`) acontece ANTES de qualquer
+          # chamada Anthropic — este único comando de CLI já garante isso;
+          # não há nenhum passo separado que chame a Anthropic antes do
+          # claim neste workflow.
+          #
+          # Correção B4: --usage-git-branch usa o default do próprio CLI
+          # (DEFAULT_RUNNER_USAGE_STATE_BRANCH == "coordinator-state-usage",
+          # a MESMA branch do Coordinator OBSERVE) — omitido aqui de
+          # propósito, para nunca divergir por um literal duplicado neste
+          # arquivo; se José precisar apontar para outra branch, precisa
+          # ser uma decisão explícita, nunca um valor diferente por acaso.
           python3 -m coordinator.runner_dispatch \
             --task-file "coordinator/runner_tasks/${TASK_ID}.task.json" \
             --generate-via-claude \
             --repo-dir . \
             --state-git-remote "$REMOTO_COM_TOKEN" \
             --usage-git-remote "$REMOTO_COM_TOKEN" \
-            --usage-git-branch coordinator-state-runner-usage \
             --push-remote-name origin \
             --validation-command-keys coordinator-suite \
             --sucesso-status NEEDS-AUDIT \

@@ -30,8 +30,13 @@ import tempfile
 import threading
 
 from . import _pathsetup  # noqa: F401
+from coordinator import runner_generate
+from coordinator.anthropic_client import TransportResponse
+from coordinator.budget import UsageLedger
 from coordinator.classify import Priority
+from coordinator.git_state import GitJsonStore, GitUsageLedger
 from coordinator.runner_dispatch import (
+    DEFAULT_RUNNER_USAGE_STATE_BRANCH,
     FileWrite,
     RunnerDispatchConfig,
     StructuredPatch,
@@ -363,6 +368,176 @@ def test_concurrent_dispatch_same_task_id_only_one_wins() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Correção B3 (3ª auditoria independente do PR #114): o claim atômico
+# precisa acontecer ANTES de qualquer chamada Anthropic paga — uma
+# repetição/perdedor do mesmo task_id nunca pode chegar a chamar o
+# transporte.
+# ---------------------------------------------------------------------------
+
+class _CountingTransport:
+    """Espião: conta quantas vezes send() foi chamado; nunca faz rede de
+    verdade (mesma técnica de test_anthropic_client.py/test_runner_generate.py)."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def send(self, request) -> TransportResponse:
+        self.calls += 1
+        return TransportResponse(
+            text=json.dumps({"files": [{"path": "greeting.txt", "content": "ola\n"}]}),
+            input_tokens=10, output_tokens=10,
+        )
+
+
+def test_claim_happens_before_anthropic_call_loser_makes_zero_calls() -> None:
+    """Correção B3: duas execuções concorrentes do MESMO task_id, cada uma
+    com seu PRÓPRIO 'gerar_patch' ligado a um transporte Anthropic falso
+    separado — só a que vence o claim pode chegar a chamar o transporte;
+    a perdedora precisa devolver BLOCKED com ZERO chamadas."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        workdir_a = _clonar_workdir(tmp, remoto, "work-b3-a")
+        workdir_b = _clonar_workdir(tmp, remoto, "work-b3-b")
+
+        task_id = "canario-b3"
+        task = _task(task_id=task_id, branch=f"runner/{task_id}", allowed_files=("greeting.txt",))
+        config = _config(canary_task_id=task_id)
+
+        transporte_a = _CountingTransport()
+        transporte_b = _CountingTransport()
+
+        barreira = threading.Barrier(2)
+        resultados: dict[str, object] = {}
+        erros: list[BaseException] = []
+
+        def corredor(nome: str, workdir: str, transporte: _CountingTransport) -> None:
+            try:
+                usage_ledger = UsageLedger(os.path.join(tmp, f"ledger-{nome}.json"))
+
+                def gerar():
+                    return runner_generate.gerar_patch_via_claude(
+                        task, config=config, repo_dir=workdir,
+                        usage_ledger=usage_ledger, budget_usd=20.0,
+                        transport=transporte,
+                    )
+
+                barreira.wait(timeout=10)  # força sobreposição real dos dois claims
+                resultados[nome] = executar_tarefa(
+                    task, None, config=config, repo_dir=workdir, state_git_remote=remoto,
+                    gerar_patch=gerar,
+                )
+            except BaseException as e:
+                erros.append(e)
+
+        t1 = threading.Thread(target=corredor, args=("A", workdir_a, transporte_a))
+        t2 = threading.Thread(target=corredor, args=("B", workdir_b, transporte_b))
+        t1.start()
+        t2.start()
+        t1.join(timeout=60)
+        t2.join(timeout=60)
+
+        assert not erros, f"corredor(es) lançaram exceção: {erros}"
+        assert set(resultados) == {"A", "B"}
+
+        total_chamadas_anthropic = transporte_a.calls + transporte_b.calls
+        assert total_chamadas_anthropic == 1, (
+            f"só a execução vencedora do claim pode chamar o transporte Anthropic, "
+            f"total de chamadas={total_chamadas_anthropic} (A={transporte_a.calls}, B={transporte_b.calls})"
+        )
+
+        vencedores = [n for n, o in resultados.items() if o.claimed]
+        assert len(vencedores) == 1
+        perdedor = next(n for n in resultados if n not in vencedores)
+        assert resultados[perdedor].result.status == "BLOCKED"
+        assert resultados[perdedor].claimed is False
+
+        vencedor = resultados[vencedores[0]]
+        assert vencedor.result.status in ("DONE", "NEEDS-AUDIT")
+    print("OK  test_claim_happens_before_anthropic_call_loser_makes_zero_calls")
+
+
+def test_executar_tarefa_requires_exactly_one_of_patch_or_gerar_patch() -> None:
+    task = _task()
+    config = _config()
+    try:
+        executar_tarefa(task, None, config=config, repo_dir="/nao/existe", state_git_remote="/nao/existe.git")
+        raise AssertionError("nem patch nem gerar_patch devia ser rejeitado")
+    except ValueError:
+        pass
+
+    try:
+        executar_tarefa(
+            task, _patch(), config=config, repo_dir="/nao/existe", state_git_remote="/nao/existe.git",
+            gerar_patch=lambda: None,
+        )
+        raise AssertionError("patch E gerar_patch juntos devia ser rejeitado")
+    except ValueError:
+        pass
+    print("OK  test_executar_tarefa_requires_exactly_one_of_patch_or_gerar_patch")
+
+
+# ---------------------------------------------------------------------------
+# Correção B4 (3ª auditoria independente do PR #114): o Runner precisa
+# consultar/gravar no MESMO ledger Anthropic GLOBAL que o Coordinator
+# OBSERVE já usa — nunca um teto mensal separado.
+# ---------------------------------------------------------------------------
+
+def test_default_usage_branch_matches_the_global_coordinator_ledger() -> None:
+    """Prova simples mas direta: a constante que o CLI usa como default de
+    --usage-git-branch precisa ser literalmente a mesma branch que
+    coordinator/__main__.py usa como default para o Coordinator OBSERVE —
+    nunca uma branch 'só do Runner'."""
+    assert DEFAULT_RUNNER_USAGE_STATE_BRANCH == "coordinator-state-usage"
+    print("OK  test_default_usage_branch_matches_the_global_coordinator_ledger")
+
+
+def test_runner_sees_spend_already_recorded_by_coordinator_and_respects_shared_cap() -> None:
+    """Simula o Coordinator OBSERVE gravando gasto Anthropic direto no
+    ledger global (mesma branch que o Runner vai usar) — o Runner, numa
+    instância de GitUsageLedger totalmente nova, precisa (a) VER esse
+    gasto e (b) respeitar o teto compartilhado mesmo sem nunca ter
+    chamado a API ele mesmo."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        branch_global = DEFAULT_RUNNER_USAGE_STATE_BRANCH
+
+        # "O Coordinator" grava um gasto Anthropic alto direto no ledger
+        # global — nenhuma chamada de API de verdade, só a mecânica de
+        # persistência (mesma classe que o Coordinator OBSERVE usa).
+        ledger_coordinator = GitUsageLedger(GitJsonStore(remoto, branch=branch_global))
+        from coordinator.budget import UsageRecord
+        from datetime import datetime, timezone
+        ledger_coordinator.append(UsageRecord(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            event_key="coordinator-observe:evt-1", tier="STANDARD", model_id="claude-sonnet-5",
+            input_tokens=1_000_000, output_tokens=1_000_000, estimated_cost_usd=19.99,
+        ))
+
+        # "O Runner" nunca viu essa gravação em memória — só reconstrói a
+        # partir do MESMO remoto/branch.
+        task = _task(task_id="canario-b4", branch="runner/canario-b4", allowed_files=("greeting.txt",))
+        config = _config(canary_task_id="canario-b4")
+        transporte = _CountingTransport()
+
+        ledger_runner = GitUsageLedger(GitJsonStore(remoto, branch=branch_global))
+        outcome = runner_generate.gerar_patch_via_claude(
+            task, config=config, repo_dir=tmp,
+            usage_ledger=ledger_runner, budget_usd=20.0,  # teto de US$20, igual ao real
+            transport=transporte,
+        )
+
+        assert outcome.status == "blocked"
+        assert transporte.calls == 0, "o gasto já registrado pelo Coordinator precisa bastar para bloquear o Runner"
+        assert "orçamento" in outcome.reason.lower() or "orcamento" in outcome.reason.lower()
+
+        # Prova positiva de visibilidade (independente do bloqueio acima):
+        # o gasto gravado pelo "Coordinator" é lido de fato por uma
+        # instância nova do ledger, do lado do Runner.
+        assert ledger_runner.month_to_date_usd() >= 19.99
+    print("OK  test_runner_sees_spend_already_recorded_by_coordinator_and_respects_shared_cap")
+
+
+# ---------------------------------------------------------------------------
 # DONE nunca é MERGE-READY; checkpoint válido/inválido.
 # ---------------------------------------------------------------------------
 
@@ -463,6 +638,10 @@ def main() -> int:
         test_invalid_patch_file_blocks_cli_before_any_execution,
         test_validation_command_outside_allowlist_blocks,
         test_concurrent_dispatch_same_task_id_only_one_wins,
+        test_claim_happens_before_anthropic_call_loser_makes_zero_calls,
+        test_executar_tarefa_requires_exactly_one_of_patch_or_gerar_patch,
+        test_default_usage_branch_matches_the_global_coordinator_ledger,
+        test_runner_sees_spend_already_recorded_by_coordinator_and_respects_shared_cap,
         test_done_result_never_merge_ready,
         test_invalid_checkpoint_commit_causes_failed_result,
         test_worker_heartbeat_busy_then_offline_recorded_on_success,
