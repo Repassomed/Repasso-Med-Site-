@@ -1,0 +1,416 @@
+"""Testes de ``coordinator/runner_dispatch.py`` — Issue #105, Fase D
+(``#105-D · Execução controlada``).
+
+Mesma técnica de ``test_git_state.py``: git de verdade (não simulado em
+memória) contra um repositório "remoto" local (``git init`` comum, sem
+``--bare``), e ``threading.Barrier`` para forçar concorrência real no
+teste de claim atômico — nunca um mock de subprocess.
+
+Cobre, no mínimo, os cenários exigidos pela Issue #105 Fase D: gate
+desligado (zero chamada externa), task_id fora do canário (zero chamada
+externa), branch main/master rejeitada, Níveis E/D sem jose_authorized
+rejeitados, arquivo fora de allowed_files (bloqueio sem commit/push),
+patch inválido (bloqueio), dois dispatches simultâneos da mesma tarefa
+(só um vence), resultado DONE nunca é MERGE-READY, heartbeat/checkpoint
+válido e inválido.
+
+Mesma decisão operacional de José já registrada em ``test_runner_
+contract.py``/``test_heartbeat.py``: deliberadamente NÃO registrado em
+``coordinator/tests/run_all.py`` nesta rodada — roda standalone via
+``python3 -m coordinator.tests.test_runner_dispatch``.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import threading
+
+from . import _pathsetup  # noqa: F401
+from coordinator.classify import Priority
+from coordinator.runner_dispatch import (
+    FileWrite,
+    RunnerDispatchConfig,
+    StructuredPatch,
+    executar_tarefa,
+)
+from coordinator.runner_dispatch import main as runner_dispatch_main
+from coordinator.runner_contract import RunnerTask
+from coordinator.worker_ops import InMemoryWorkerStateStore, OperationalWorkerRegistry, WorkerRecord
+
+
+def _criar_remoto_local(tmp: str) -> str:
+    """Mesmo padrão de ``test_git_state._criar_remoto_local``: um
+    repositório git comum (não-bare) que funciona como 'o GitHub' — cada
+    checkout é feito num diretório separado, nunca no próprio remoto."""
+    remoto = os.path.join(tmp, "remoto.git")
+    os.makedirs(remoto)
+    subprocess.run(["git", "init", "-q", remoto], check=True)
+    subprocess.run(["git", "-C", remoto, "config", "user.email", "x@example.com"], check=True)
+    subprocess.run(["git", "-C", remoto, "config", "user.name", "X"], check=True)
+    with open(os.path.join(remoto, "README"), "w", encoding="utf-8") as fh:
+        fh.write("repo de mentira só para os testes do Runner Dispatch\n")
+    subprocess.run(["git", "-C", remoto, "add", "-A"], check=True)
+    subprocess.run(["git", "-C", remoto, "commit", "-q", "-m", "bootstrap"], check=True)
+    subprocess.run(["git", "-C", remoto, "checkout", "-q", "-b", "bootstrap"], check=True)
+    return remoto
+
+
+def _clonar_workdir(tmp: str, remoto: str, nome: str) -> str:
+    """Um checkout local que simula o workspace já confiável de um
+    runner do GitHub Actions — clonado do remoto de mentira, na branch
+    'bootstrap' (nunca 'main'/'master', de propósito, para nunca colidir
+    com a checagem de branch protegida do próprio contrato)."""
+    workdir = os.path.join(tmp, nome)
+    subprocess.run(["git", "clone", "-q", remoto, workdir], check=True)
+    subprocess.run(["git", "-C", workdir, "config", "user.email", "x@example.com"], check=True)
+    subprocess.run(["git", "-C", workdir, "config", "user.name", "X"], check=True)
+    subprocess.run(["git", "-C", workdir, "checkout", "-q", "bootstrap"], check=True)
+    return workdir
+
+
+def _task(**overrides) -> RunnerTask:
+    campos = dict(
+        task_id="canario-1",
+        priority=Priority.P2,
+        source_issue=105,
+        branch="runner/canario-1",
+        allowed_files=("greeting.txt",),
+        instructions="Escrever uma saudação de teste em greeting.txt.",
+        checkpoint_commit=None,
+        capabilities_required=(),
+        risk_level="BAIXO",
+        policy_level="C",
+        jose_authorized=False,
+        publication_required=False,
+    )
+    campos.update(overrides)
+    return RunnerTask(**campos)
+
+
+def _patch(files=(FileWrite(path="greeting.txt", content="ola\n"),)) -> StructuredPatch:
+    return StructuredPatch(files=tuple(files))
+
+
+def _config(**overrides) -> RunnerDispatchConfig:
+    campos = dict(enabled=True, mode="canary", canary_task_id="canario-1")
+    campos.update(overrides)
+    return RunnerDispatchConfig(**campos)
+
+
+# ---------------------------------------------------------------------------
+# Portão de segurança — zero chamada externa quando fechado.
+# ---------------------------------------------------------------------------
+
+def test_gate_closed_makes_zero_external_call() -> None:
+    config = _config(enabled=False)
+    outcome = executar_tarefa(
+        _task(), _patch(),
+        config=config,
+        repo_dir="/definitivamente/nao/existe/repo",
+        state_git_remote="/definitivamente/nao/existe/remoto.git",
+    )
+    assert outcome.result is not None and outcome.result.status == "BLOCKED"
+    assert outcome.claimed is False
+    assert outcome.external_calls_made is False
+    assert outcome.heartbeats == ()
+    print("OK  test_gate_closed_makes_zero_external_call")
+
+
+def test_task_id_outside_canary_makes_zero_external_call() -> None:
+    config = _config(canary_task_id="outro-task-id")
+    outcome = executar_tarefa(
+        _task(task_id="canario-1"), _patch(),
+        config=config,
+        repo_dir="/definitivamente/nao/existe/repo",
+        state_git_remote="/definitivamente/nao/existe/remoto.git",
+    )
+    assert outcome.result is not None and outcome.result.status == "BLOCKED"
+    assert outcome.claimed is False
+    assert outcome.external_calls_made is False
+    print("OK  test_task_id_outside_canary_makes_zero_external_call")
+
+
+# ---------------------------------------------------------------------------
+# Invariantes herdados de runner_contract.py — branch protegida, Níveis E/D.
+# ---------------------------------------------------------------------------
+
+def test_branch_main_or_master_rejected_at_construction() -> None:
+    for proibida in ("main", "master", "MAIN", "Master"):
+        try:
+            _task(branch=proibida)
+        except ValueError:
+            continue
+        raise AssertionError(f"branch={proibida!r} devia ter sido rejeitada na construção da RunnerTask")
+    print("OK  test_branch_main_or_master_rejected_at_construction")
+
+
+def test_policy_e_and_d_without_authorization_rejected() -> None:
+    try:
+        _task(policy_level="E")
+        raise AssertionError("policy_level='E' devia ser rejeitado na construção")
+    except ValueError:
+        pass
+
+    try:
+        _task(policy_level="D", jose_authorized=False)
+        raise AssertionError("policy_level='D' sem jose_authorized devia ser rejeitado")
+    except ValueError:
+        pass
+
+    tarefa_d_autorizada = _task(policy_level="D", jose_authorized=True)
+    assert tarefa_d_autorizada.policy_level == "D"
+    print("OK  test_policy_e_and_d_without_authorization_rejected")
+
+
+# ---------------------------------------------------------------------------
+# allowed_files — bloqueio sem commit/push, nos dois lados (pré e patch
+# estruturalmente inválido).
+# ---------------------------------------------------------------------------
+
+def test_file_outside_allowed_files_blocks_without_commit_or_push() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        workdir = _clonar_workdir(tmp, remoto, "work-fora-allowed")
+
+        task = _task(task_id="canario-fora", branch="runner/canario-fora", allowed_files=("greeting.txt",))
+        patch = _patch(files=(FileWrite(path="outro.txt", content="não devia entrar"),))
+        config = _config(canary_task_id="canario-fora")
+
+        outcome = executar_tarefa(task, patch, config=config, repo_dir=workdir, state_git_remote=remoto)
+
+        assert outcome.result is not None and outcome.result.status == "BLOCKED"
+        assert outcome.claimed is True
+        assert "outro.txt" in outcome.result.reason
+
+        r = subprocess.run(["git", "ls-remote", remoto, task.branch], capture_output=True, text=True)
+        assert r.stdout.strip() == "", "nenhum commit podia ter sido publicado para a branch da tarefa"
+    print("OK  test_file_outside_allowed_files_blocks_without_commit_or_push")
+
+
+def test_invalid_patch_rejected_before_any_execution() -> None:
+    try:
+        StructuredPatch.from_dict({})
+        raise AssertionError("patch sem 'files' devia ser rejeitado")
+    except ValueError:
+        pass
+
+    try:
+        StructuredPatch(files=())
+        raise AssertionError("patch com files=() devia ser rejeitado")
+    except ValueError:
+        pass
+
+    try:
+        StructuredPatch(files=(FileWrite(path="a.txt", content="1"), FileWrite(path="a.txt", content="2")))
+        raise AssertionError("patch com caminho duplicado devia ser rejeitado")
+    except ValueError:
+        pass
+    print("OK  test_invalid_patch_rejected_before_any_execution")
+
+
+def test_invalid_patch_file_blocks_cli_before_any_execution() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        task_path = os.path.join(tmp, "task.json")
+        patch_path = os.path.join(tmp, "patch.json")
+        with open(task_path, "w", encoding="utf-8") as fh:
+            json.dump(_task().to_dict(), fh)
+        with open(patch_path, "w", encoding="utf-8") as fh:
+            json.dump({"files": []}, fh)  # patch vazio -> inválido
+
+        codigo = runner_dispatch_main([
+            "--task-file", task_path,
+            "--patch-file", patch_path,
+            "--repo-dir", ".",
+            "--state-git-remote", "/definitivamente/nao/existe/remoto.git",
+        ])
+        assert codigo == 1, "um --patch-file inválido precisa falhar fechado, sem tentar executar nada"
+    print("OK  test_invalid_patch_file_blocks_cli_before_any_execution")
+
+
+def test_validation_command_outside_allowlist_blocks() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        workdir = _clonar_workdir(tmp, remoto, "work-allowlist")
+
+        task = _task(task_id="canario-allowlist", branch="runner/canario-allowlist", allowed_files=("greeting.txt",))
+        patch = _patch()
+        config = _config(canary_task_id="canario-allowlist")
+
+        outcome = executar_tarefa(
+            task, patch, config=config, repo_dir=workdir, state_git_remote=remoto,
+            validation_command_keys=("comando-nao-declarado",),
+        )
+        assert outcome.result is not None and outcome.result.status == "BLOCKED"
+
+        r = subprocess.run(["git", "ls-remote", remoto, task.branch], capture_output=True, text=True)
+        assert r.stdout.strip() == "", "comando fora da allowlist não pode deixar nada publicado"
+    print("OK  test_validation_command_outside_allowlist_blocks")
+
+
+# ---------------------------------------------------------------------------
+# Claim atômico sob concorrência real.
+# ---------------------------------------------------------------------------
+
+def test_concurrent_dispatch_same_task_id_only_one_wins() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        workdir_a = _clonar_workdir(tmp, remoto, "work-a")
+        workdir_b = _clonar_workdir(tmp, remoto, "work-b")
+
+        task_id = "canario-concorrente"
+        task = _task(task_id=task_id, branch=f"runner/{task_id}", allowed_files=("greeting.txt",))
+        patch = _patch()
+        config = _config(canary_task_id=task_id)
+
+        barreira = threading.Barrier(2)
+        resultados: dict[str, object] = {}
+        erros: list[BaseException] = []
+
+        def corredor(nome: str, workdir: str) -> None:
+            try:
+                barreira.wait(timeout=10)  # força sobreposição real dos dois claims
+                resultados[nome] = executar_tarefa(
+                    task, patch, config=config, repo_dir=workdir, state_git_remote=remoto,
+                )
+            except BaseException as e:
+                erros.append(e)
+
+        t1 = threading.Thread(target=corredor, args=("A", workdir_a))
+        t2 = threading.Thread(target=corredor, args=("B", workdir_b))
+        t1.start()
+        t2.start()
+        t1.join(timeout=60)
+        t2.join(timeout=60)
+
+        assert not erros, f"corredor(es) lançaram exceção: {erros}"
+        assert set(resultados) == {"A", "B"}, f"as duas execuções precisavam terminar: {resultados}"
+
+        vencedores = [n for n, o in resultados.items() if o.claimed]
+        assert len(vencedores) == 1, f"exatamente 1 execução devia reivindicar o task_id, obtive {vencedores}"
+        perdedor = next(n for n in resultados if n not in vencedores)
+        assert resultados[perdedor].result.status == "BLOCKED"
+        assert resultados[perdedor].claimed is False
+
+        vencedor = resultados[vencedores[0]]
+        assert vencedor.result.status in ("DONE", "NEEDS-AUDIT")
+    print("OK  test_concurrent_dispatch_same_task_id_only_one_wins")
+
+
+# ---------------------------------------------------------------------------
+# DONE nunca é MERGE-READY; checkpoint válido/inválido.
+# ---------------------------------------------------------------------------
+
+def test_done_result_never_merge_ready() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        workdir = _clonar_workdir(tmp, remoto, "work-done")
+
+        task = _task(task_id="canario-done", branch="runner/canario-done", allowed_files=("greeting.txt",))
+        patch = _patch()
+        config = _config(canary_task_id="canario-done")
+
+        outcome = executar_tarefa(
+            task, patch, config=config, repo_dir=workdir, state_git_remote=remoto,
+            sucesso_status="DONE",
+        )
+        assert outcome.result is not None and outcome.result.status == "DONE"
+        assert outcome.result.merge_ready is False
+        assert outcome.result.never_merge is True
+        assert outcome.result.checkpoint_commit is not None
+        assert outcome.result.branch == task.branch
+
+        r = subprocess.run(["git", "ls-remote", remoto, task.branch], capture_output=True, text=True)
+        assert r.stdout.strip() != "", "o commit devia ter sido publicado na branch da tarefa"
+    print("OK  test_done_result_never_merge_ready")
+
+
+def test_invalid_checkpoint_commit_causes_failed_result() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        workdir = _clonar_workdir(tmp, remoto, "work-checkpoint-invalido")
+
+        task = _task(
+            task_id="canario-checkpoint-ruim", branch="runner/canario-checkpoint-ruim",
+            allowed_files=("greeting.txt",), checkpoint_commit="abc1234",  # SHA plausível, mas inexistente
+        )
+        patch = _patch()
+        config = _config(canary_task_id="canario-checkpoint-ruim")
+
+        outcome = executar_tarefa(task, patch, config=config, repo_dir=workdir, state_git_remote=remoto)
+        assert outcome.result is not None and outcome.result.status == "FAILED"
+        assert outcome.claimed is True
+
+        r = subprocess.run(["git", "ls-remote", remoto, task.branch], capture_output=True, text=True)
+        assert r.stdout.strip() == "", "nada podia ter sido publicado quando o checkpoint não existe"
+    print("OK  test_invalid_checkpoint_commit_causes_failed_result")
+
+
+def test_worker_heartbeat_busy_then_offline_recorded_on_success() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        workdir = _clonar_workdir(tmp, remoto, "work-heartbeat")
+
+        registry = OperationalWorkerRegistry(InMemoryWorkerStateStore({
+            "workers": [
+                WorkerRecord(
+                    worker_id="api-runner", display_name="api-runner", type="api_runner",
+                    status="AVAILABLE", capabilities=("codigo",),
+                ).to_dict()
+            ]
+        }))
+
+        task = _task(task_id="canario-heartbeat", branch="runner/canario-heartbeat", allowed_files=("greeting.txt",))
+        patch = _patch()
+        config = _config(canary_task_id="canario-heartbeat")
+
+        outcome = executar_tarefa(
+            task, patch, config=config, repo_dir=workdir, state_git_remote=remoto,
+            worker_id="api-runner", worker_registry=registry,
+        )
+        assert outcome.result is not None and outcome.result.status == "NEEDS-AUDIT"
+        assert len(outcome.heartbeats) == 2, "esperava um heartbeat BUSY inicial e um OFFLINE final"
+        assert outcome.heartbeats[0]["action"] == "APPLIED"
+        assert outcome.heartbeats[0]["record"]["status"] == "BUSY"
+        assert outcome.heartbeats[0]["record"]["current_task"] == task.task_id
+        assert outcome.heartbeats[-1]["record"]["status"] == "OFFLINE"
+        assert outcome.heartbeats[-1]["record"]["current_task"] is None
+
+        final = registry.find_by_name_or_id("api-runner")
+        assert final is not None
+        assert final.status == "OFFLINE"
+        assert final.current_task is None
+    print("OK  test_worker_heartbeat_busy_then_offline_recorded_on_success")
+
+
+def main() -> int:
+    testes = [
+        test_gate_closed_makes_zero_external_call,
+        test_task_id_outside_canary_makes_zero_external_call,
+        test_branch_main_or_master_rejected_at_construction,
+        test_policy_e_and_d_without_authorization_rejected,
+        test_file_outside_allowed_files_blocks_without_commit_or_push,
+        test_invalid_patch_rejected_before_any_execution,
+        test_invalid_patch_file_blocks_cli_before_any_execution,
+        test_validation_command_outside_allowlist_blocks,
+        test_concurrent_dispatch_same_task_id_only_one_wins,
+        test_done_result_never_merge_ready,
+        test_invalid_checkpoint_commit_causes_failed_result,
+        test_worker_heartbeat_busy_then_offline_recorded_on_success,
+    ]
+    falhas = 0
+    for t in testes:
+        try:
+            t()
+        except AssertionError as e:
+            falhas += 1
+            print(f"FALHOU  {t.__name__}: {e}")
+    print(f"\n{len(testes) - falhas}/{len(testes)} testes passaram.")
+    return 1 if falhas else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
