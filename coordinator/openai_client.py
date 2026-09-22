@@ -167,14 +167,18 @@ def call(config: OpenAIAuditorConfig, request: Request, *, transport: Transport,
                 reason="Limite de 1 chamada principal da OpenAI por checkpoint já atingido.",
             )
 
-    # Correção B10 (auditoria independente do PR #107, HEAD 98c976e): o
-    # teto conservador usa o tamanho REAL do payload combinado
-    # (system + prompt), nunca mais uma constante fixa desconectada que
-    # ignorava as instruções de sistema.
-    input_chars = len(request.system) + len(request.prompt)
+    # Correção B10 (HEAD 98c976e): o teto conservador usa o payload REAL
+    # combinado (system + prompt), nunca mais uma constante fixa
+    # desconectada que ignorava as instruções de sistema. Correção B12
+    # (rodada 3, HEAD 7b0e28c): o teto de tokens em si não vem mais de
+    # contagem de CARACTERES (não comprovadamente segura para Unicode/
+    # multilíngue) — ``conservative_call_cost_usd`` agora deriva o teto
+    # de ``conservative_input_tokens_ceiling`` (bytes UTF-8 + overhead
+    # estrutural), chamado internamente a partir de system/prompt.
     try:
         custo_reservado = conservative_call_cost_usd(
-            request.model_id, input_chars=input_chars, max_output_tokens=request.max_output_tokens,
+            request.model_id, system=request.system, prompt=request.prompt,
+            max_output_tokens=request.max_output_tokens,
         )
     except ValueError as exc:
         # model_id não suportado — já deveria ter sido barrado por

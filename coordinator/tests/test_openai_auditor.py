@@ -318,11 +318,10 @@ def test_budget_concurrent_reservations_second_call_blocked_by_first_reservation
     ser bloqueada."""
     from coordinator.openai_budget import conservative_call_cost_usd
 
-    # "s" + "p" — mesmo payload que ``pedido_a``/``pedido_b`` abaixo usam
-    # (system="s", prompt="p"), já que a correção B10 exige que o teto
-    # conservador reflita o tamanho REAL do payload, não mais uma
-    # constante fixa.
-    teto_uma_chamada = conservative_call_cost_usd("gpt-5.6-terra", input_chars=len("s") + len("p"))
+    # system="s", prompt="p" — mesmo payload que ``pedido_a``/``pedido_b``
+    # abaixo usam, já que a correção B10/B12 exige que o teto conservador
+    # reflita o payload REAL (via contagem de bytes, não caracteres).
+    teto_uma_chamada = conservative_call_cost_usd("gpt-5.6-terra", system="s", prompt="p")
     orcamento = teto_uma_chamada * 1.5  # cabe 1 reserva, não cabem 2 juntas
     ledger = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage.json"))
     cfg = OpenAIAuditorConfig(enabled=True, budget_usd=orcamento)
@@ -374,7 +373,7 @@ def test_budget_reserve_if_within_budget_is_atomic_under_real_concurrent_threads
 
     from coordinator.openai_budget import conservative_call_cost_usd
 
-    teto_uma_chamada = conservative_call_cost_usd("gpt-5.6-terra", input_chars=10)
+    teto_uma_chamada = conservative_call_cost_usd("gpt-5.6-terra", system="sistema-x", prompt="prompt-y")
     orcamento = teto_uma_chamada * 1.5  # cabe 1 reserva, não cabem 2 juntas
     ledger = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage.json"))
 
@@ -430,7 +429,7 @@ def test_budget_transport_error_never_releases_the_reservation() -> None:
     from coordinator.openai_budget import conservative_call_cost_usd
 
     teto_esperado = conservative_call_cost_usd(
-        "gpt-5.6-terra", input_chars=len("sistema") + len("prompt"), max_output_tokens=pedido.max_output_tokens,
+        "gpt-5.6-terra", system="sistema", prompt="prompt", max_output_tokens=pedido.max_output_tokens,
     )
     gasto_pos_falha = ledger.month_to_date_usd()
     assert abs(gasto_pos_falha - teto_esperado) < 1e-9, (
@@ -486,14 +485,75 @@ def test_budget_reservation_scales_with_real_system_and_prompt_length() -> None:
     from coordinator.openai_budget import conservative_call_cost_usd
 
     esperado_curto = conservative_call_cost_usd(
-        "gpt-5.6-terra", input_chars=len("s") + len("p"), max_output_tokens=pedido_curto.max_output_tokens,
+        "gpt-5.6-terra", system="s", prompt="p", max_output_tokens=pedido_curto.max_output_tokens,
     )
     esperado_longo = conservative_call_cost_usd(
-        "gpt-5.6-terra", input_chars=3000 + 3000, max_output_tokens=pedido_longo.max_output_tokens,
+        "gpt-5.6-terra", system="s" * 3000, prompt="p" * 3000, max_output_tokens=pedido_longo.max_output_tokens,
     )
     assert abs(reserva_curta - esperado_curto) < 1e-9
     assert abs(reserva_longa - esperado_longo) < 1e-9
     print("OK  test_budget_reservation_scales_with_real_system_and_prompt_length")
+
+
+def test_budget_conservative_ceiling_uses_utf8_bytes_never_underestimates_unicode() -> None:
+    """Achado B12 da auditoria independente do PR #107 (rodada 3, HEAD
+    7b0e28c): contagem de CARACTERES (code points Unicode) não é uma
+    cota superior comprovadamente segura de tokens — a própria
+    documentação oficial da OpenAI diz que aproximações por caractere são
+    imprecisas (https://developers.openai.com/api/docs/guides/token-counting).
+    Um único caractere não-ASCII pode virar 2, 3 ou até 4 bytes em UTF-8,
+    e um tokenizador BPE byte-level (como o usado pelos modelos OpenAI)
+    nunca produz menos de 1 token por BYTE de entrada — então contagem de
+    BYTES é uma cota superior matemática segura, enquanto contagem de
+    CARACTERES podia SUBESTIMAR. Este teste prova, com texto
+    multilíngue/Unicode de verdade (não só ASCII), que o novo teto usa
+    bytes e é estritamente maior que o antigo teto por caracteres."""
+    from coordinator.openai_budget import (
+        STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE,
+        conservative_input_tokens_ceiling,
+    )
+
+    ascii_texto = "auditoria de conteudo medico"
+    teto_ascii = conservative_input_tokens_ceiling(ascii_texto, "")
+    assert teto_ascii == len(ascii_texto) + STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE, (
+        "para ASCII puro, bytes == caracteres — o teto deve bater exatamente com caracteres + overhead"
+    )
+
+    # Português acentuado, chinês simplificado, russo (cirílico) e emoji —
+    # cada um tem >= 1 caractere que ocupa MAIS de 1 byte em UTF-8.
+    multilingue = "Revisão de auditoria médica — 医学审计 — Медицинский аудит 🩺📋"
+    n_caracteres = len(multilingue)
+    n_bytes = len(multilingue.encode("utf-8"))
+    assert n_bytes > n_caracteres, (
+        "o texto de teste precisa ter caracteres multibyte para provar o achado B12 — "
+        f"{n_bytes} bytes vs {n_caracteres} caracteres"
+    )
+
+    teto_multilingue = conservative_input_tokens_ceiling(multilingue, "")
+    assert teto_multilingue == n_bytes + STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE
+    assert teto_multilingue > n_caracteres + STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE, (
+        "o teto por BYTES precisa ser estritamente maior que o antigo teto por CARACTERES para este "
+        "payload — é exatamente o caso em que a contagem de caracteres subestimava (achado B12)"
+    )
+    print("OK  test_budget_conservative_ceiling_uses_utf8_bytes_never_underestimates_unicode")
+
+
+def test_budget_conservative_ceiling_sums_system_and_prompt_bytes_plus_overhead() -> None:
+    """O teto soma system+prompt — ambos são enviados de verdade à API
+    (``instructions``/``input``) — mais o overhead estrutural fixo, nunca
+    só um dos dois campos isoladamente (achado B12)."""
+    from coordinator.openai_budget import (
+        STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE,
+        conservative_input_tokens_ceiling,
+    )
+
+    system = "Você é um auditor médico independente. 医学"
+    prompt = "Revise este PR com atenção clínica: 🔬"
+    esperado = (
+        len(system.encode("utf-8")) + len(prompt.encode("utf-8")) + STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE
+    )
+    assert conservative_input_tokens_ceiling(system, prompt) == esperado
+    print("OK  test_budget_conservative_ceiling_sums_system_and_prompt_bytes_plus_overhead")
 
 
 # ---------------------------------------------------------------------------
@@ -1074,6 +1134,8 @@ def main() -> int:
         test_budget_reserve_if_within_budget_is_atomic_under_real_concurrent_threads,
         test_budget_transport_error_never_releases_the_reservation,
         test_budget_reservation_scales_with_real_system_and_prompt_length,
+        test_budget_conservative_ceiling_uses_utf8_bytes_never_underestimates_unicode,
+        test_budget_conservative_ceiling_sums_system_and_prompt_bytes_plus_overhead,
         test_routing_zero_without_diff,
         test_routing_terra_for_normal_medical_content,
         test_routing_sol_for_high_risk_signal,

@@ -56,6 +56,51 @@ SUPPORTED_MODELS: dict[str, dict[str, float]] = {
 MAX_OUTPUT_TOKENS_PER_CALL = 2_000
 MAX_INPUT_CHARS_PER_CALL = 8_000
 
+# Correção B12 da auditoria independente do PR #107 (rodada 3, HEAD
+# 7b0e28c): overhead estrutural fixo e conservador para o framing da
+# Responses API de UMA chamada de auditoria (dois campos: instructions=
+# system, input=prompt; sem histórico multi-turno, sem tool schemas) —
+# soma-se ao teto de bytes calculado em conservative_input_tokens_ceiling
+# para cobrir tokens de formatação/papéis que não aparecem no texto bruto
+# de system/prompt. Não deriva de nenhuma medição exata (não existe
+# contrato público de "N tokens fixos de overhead" para a Responses API);
+# é um acréscimo generoso o bastante para o formato de chamada fixo e
+# simples usado aqui (nunca cresce com o payload, então nunca dilui a
+# margem de segurança do teto de bytes conforme o texto cresce).
+STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE = 64
+
+
+def conservative_input_tokens_ceiling(system: str, prompt: str) -> int:
+    """Teto de tokens de entrada COMPROVADAMENTE não-subestimador para o
+    payload inteiro (``system`` + ``prompt``) — nunca menor que a
+    contagem real de tokens que a API vai processar.
+
+    Correção B12 da auditoria independente do PR #107 (rodada 3, HEAD
+    7b0e28c): a versão anterior usava ``len(str)`` — contagem de
+    CARACTERES (code points Unicode) — como teto de tokens, presumindo
+    que "1 caractere >= 1 token" sempre. Isso é falso para texto
+    multilíngue/Unicode: um único caractere não-ASCII pode virar 2, 3 ou
+    até 4 BYTES em UTF-8 (acentuação latina: até 2 bytes; cirílico/grego/
+    hebraico/árabe: até 2 bytes; a maioria do CJK: 3 bytes; muitos emoji:
+    4 bytes), e um tokenizador BPE byte-level — como o usado pelos
+    modelos da OpenAI (tiktoken) — NUNCA produz menos de 1 token por
+    BYTE de entrada: o vocabulário de base inclui os 256 valores de byte
+    como tokens individuais, e as fusões (merges) do BPE só COMBINAM
+    bytes em tokens maiores, nunca dividem um byte em menos de 1 token.
+    Ou seja: contagem de CARACTERES podia SUBESTIMAR o número real de
+    tokens (o próprio bug que a auditoria apontou), enquanto contagem de
+    BYTES (``str.encode('utf-8')``) é uma cota superior MATEMÁTICA sobre
+    o número de tokens, válida para qualquer tokenizador BPE byte-level,
+    em qualquer idioma/script. Fonte oficial confirmando que
+    aproximações por caractere são imprecisas e recomendando contagem
+    real de tokens: https://developers.openai.com/api/docs/guides/token-counting
+
+    Ao teto de bytes soma-se ``STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE``
+    — um acréscimo fixo para o framing da Responses API (papéis/campos
+    ``instructions``/``input``) que não aparece no texto bruto."""
+    payload_bytes = len(system.encode("utf-8")) + len(prompt.encode("utf-8"))
+    return payload_bytes + STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE
+
 
 def estimate_cost_usd_openai(model_id: str, input_tokens: int, output_tokens: int) -> float:
     """Custo CALCULADO a partir de tokens medidos — nunca uma cobrança
@@ -77,11 +122,12 @@ def estimate_cost_usd_openai(model_id: str, input_tokens: int, output_tokens: in
     return (input_tokens / 1_000_000) * precos["input"] + (output_tokens / 1_000_000) * precos["output"]
 
 
-def conservative_call_cost_usd(model_id: str, *, input_chars: int,
+def conservative_call_cost_usd(model_id: str, *, system: str, prompt: str,
                                 max_output_tokens: int = MAX_OUTPUT_TOKENS_PER_CALL) -> float:
     """Teto CONSERVADOR (pior caso) do custo de UMA chamada, calculado
-    ANTES de qualquer chamada acontecer — usa o tamanho REAL do payload
-    de entrada (``input_chars``) e o limite máximo de tokens de saída
+    ANTES de qualquer chamada acontecer — usa o teto de tokens
+    comprovadamente não-subestimador de ``conservative_input_tokens_
+    ceiling(system, prompt)`` e o limite máximo de tokens de saída
     permitidos por chamada, nunca os tokens reais de resposta (que só a
     API sabe depois).
 
@@ -91,18 +137,21 @@ def conservative_call_cost_usd(model_id: str, *, input_chars: int,
     ultrapassou o teto (isso era um "stop-after-crossing", não um hard
     cap).
 
-    Correção B10 da auditoria independente do PR #107 (HEAD 98c976e):
-    ``input_chars`` agora é OBRIGATÓRIO e deve vir do tamanho real e
-    combinado de ``request.system + request.prompt`` no ponto de
-    chamada (``openai_client.py::call``) — nunca mais uma constante fixa
-    e desconectada (``MAX_INPUT_TOKENS_CONSERVATIVE = 16_000``) que só
-    refletia o teto do PROMPT e ignorava as instruções de sistema
-    enviadas separadamente, podendo subestimar a reserva. Cada caractere
-    ainda é tratado como >= 1 token — superestimador deliberado e
-    seguro, já que a proporção real de caracteres por token de qualquer
-    tokenizador atual é sempre >= 1, então isto nunca SUBESTIMA o custo
-    máximo possível de uma chamada com este payload."""
-    return estimate_cost_usd_openai(model_id, input_chars, max_output_tokens)
+    Correção B10 (HEAD 98c976e): ``system``/``prompt`` são OBRIGATÓRIOS e
+    vêm do payload REAL de ``request.system``/``request.prompt`` no
+    ponto de chamada (``openai_client.py::call``) — nunca mais uma
+    constante fixa e desconectada do payload real.
+
+    Correção B12 da auditoria independente do PR #107 (rodada 3, HEAD
+    7b0e28c): a versão anterior recebia ``input_chars`` (contagem de
+    CARACTERES) como teto de tokens — não comprovadamente seguro para
+    texto Unicode/multilíngue (ver ``conservative_input_tokens_
+    ceiling``). Agora recebe ``system``/``prompt`` diretamente e delega
+    o cálculo do teto para essa função, que usa contagem de BYTES
+    (UTF-8) — cota superior matemática de tokens para qualquer
+    tokenizador BPE byte-level — mais um overhead estrutural fixo."""
+    input_tokens_ceiling = conservative_input_tokens_ceiling(system, prompt)
+    return estimate_cost_usd_openai(model_id, input_tokens_ceiling, max_output_tokens)
 
 
 @dataclass
