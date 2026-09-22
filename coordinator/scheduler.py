@@ -79,6 +79,31 @@ B1-B5) — só isto, Fases B+/heartbeat/runner continuam fora de escopo:**
   determinística e estável (especialização extra -> carga -> ``worker_id``
   lexicográfico), nunca ``lista[0]`` sobre uma lista cuja ordem de entrada
   poderia variar.
+
+**Correções da 2ª auditoria independente do PR #108 (HEAD 3d19dc6,
+B6-B7) — só isto, Fases B+/heartbeat/runner continuam fora de escopo:**
+
+- B6: ``remaining_work_bucket`` tinha a semântica INVERTIDA — o campo é
+  "quanto trabalho ainda falta", não "quanto progresso já foi feito", mas
+  ``_bucket_progresso()`` devolvia o próprio valor como se fosse bucket de
+  PROGRESSO (``"ALTO"`` de trabalho restante virava, por engano, "progresso
+  alto"). Uma tarefa com MUITO trabalho restante podia ser tratada como
+  quase concluída e cair em WAIT por engano. Agora existe
+  ``_REMAINING_WORK_PARA_PROGRESSO`` invertendo corretamente: trabalho
+  restante BAIXO -> progresso ALTO; MEDIO -> MEDIO; ALTO -> progresso
+  BAIXO. ``progress_percent`` (quando presente) nunca precisou dessa
+  inversão — já é progresso direto, não trabalho restante.
+- B7: ``risk_level`` existia mas nenhum branch de decisão o usava de
+  verdade (só aparecia em testes que provavam que ele NUNCA vence
+  checkpoint/compatibilidade ausentes — verdade mesmo que o campo nem
+  existisse). Agora ``_risco_e_alto()`` participa do custo-benefício: risco
+  alto + worker ainda NEAR_LIMIT (ainda consegue continuar) + custo de
+  transferência não trivial (MEDIO/ALTO) -> rebaixa HANDOFF para WAIT.
+  Nunca se aplica quando o worker está em LIMIT de verdade (esperar
+  travaria a tarefa, já que o original não pode continuar) e continua
+  nunca superando checkpoint inseguro ou incompatibilidade de capability
+  (esses gates básicos são avaliados antes de qualquer efeito de
+  ``contexto``, como já valia para B3).
 """
 
 from __future__ import annotations
@@ -133,6 +158,32 @@ _ORDEM_PRIORIDADE: dict[Priority, int] = {p: i for i, p in enumerate(Priority)}
 _BUCKETS_PROGRESSO = ("BAIXO", "MEDIO", "ALTO")
 _BUCKETS_CUSTO = ("BAIXO", "MEDIO", "ALTO")
 _STATUS_HANDOFF_VALIDOS = ("LIMIT", "NEAR_LIMIT")
+
+# B6 da 2ª auditoria do PR #108: ``remaining_work_bucket`` é "quanto
+# trabalho FALTA", o oposto semântico de "quanto progresso já foi feito".
+# Esta tabela inverte corretamente antes de usar o valor como proxy de
+# progresso — nunca trata o bucket de trabalho restante como se já fosse
+# um bucket de progresso.
+_REMAINING_WORK_PARA_PROGRESSO: dict[str, str] = {
+    "BAIXO": "ALTO",   # pouco trabalho restante = progresso alto
+    "MEDIO": "MEDIO",
+    "ALTO": "BAIXO",   # muito trabalho restante = progresso baixo
+}
+
+# B7: valores reconhecidos como "risco alto" — o próprio texto "ALTO"
+# (vocabulário desta Fase A) e, já que HandoffContext.risk_level também
+# aceita os Níveis A-E da Issue #83, os dois níveis que aquela issue já
+# trata como mais sensíveis (D exige autorização explícita de José; E é
+# proibido). Qualquer outro valor (None, "BAIXO", "A", "B", "C", texto
+# livre não reconhecido) conta como risco não-alto — nunca inventa
+# urgência que o dado não afirma.
+_NIVEIS_RISCO_ALTO = frozenset({"ALTO", "D", "E"})
+
+
+def _risco_e_alto(risk_level: str | None) -> bool:
+    if not risk_level:
+        return False
+    return risk_level.strip().upper() in _NIVEIS_RISCO_ALTO
 
 
 def _parse_priority(valor: object) -> Priority | None:
@@ -389,11 +440,20 @@ class HandoffContext:
 
     worker_status: str  # "LIMIT" | "NEAR_LIMIT" — por que a avaliação está acontecendo
     progress_percent: int | None = None
-    # Fallback qualitativo quando não há percentual (heartbeat de sessão
-    # humana normalmente só dá isto: "BAIXO"/"MEDIO"/"ALTO").
+    # Fallback qualitativo quando não há percentual: quanto trabalho AINDA
+    # FALTA (não quanto já foi feito) — heartbeat de sessão humana
+    # normalmente só dá isto. B6 da 2ª auditoria do PR #108: o nome do
+    # campo é literal ("trabalho restante"); "ALTO" aqui significa MUITO
+    # trabalho faltando (= progresso BAIXO), nunca o contrário. A inversão
+    # para bucket de progresso acontece em ``_bucket_progresso`` via
+    # ``_REMAINING_WORK_PARA_PROGRESSO`` — este campo nunca é lido
+    # diretamente como se já fosse progresso.
     remaining_work_bucket: str | None = None
     handoff_cost: str = "MEDIO"  # custo qualitativo de transferir contexto AGORA
-    risk_level: str | None = None  # Nível A-E (#83) ou texto livre — só informativo aqui
+    # Nível A-E (#83) ou "BAIXO"/"MEDIO"/"ALTO" — B7 da 2ª auditoria do PR
+    # #108: participa de verdade do custo-benefício via ``_risco_e_alto()``
+    # (ver ``avaliar_handoff_de_tarefa``), nunca só "informativo".
+    risk_level: str | None = None
     # Sinal externo (#84 §4, ex.: budget.priority_allowed) — False nunca
     # gera HANDOFF, mesmo com tudo mais favorável.
     budget_allows: bool = True
@@ -410,15 +470,25 @@ class HandoffContext:
 
 
 def _bucket_progresso(contexto: HandoffContext) -> str | None:
-    """``None`` quando não há NENHUM sinal de progresso — tratado como
-    desconhecido, nunca como "alto" nem "baixo" por suposição."""
+    """Bucket de PROGRESSO (quanto já foi feito) — ``None`` quando não há
+    NENHUM sinal, tratado como desconhecido, nunca como "alto" nem "baixo"
+    por suposição.
+
+    B6 da 2ª auditoria do PR #108: ``progress_percent`` já é progresso
+    direto (sem inversão). ``remaining_work_bucket`` é o OPOSTO —
+    "trabalho restante" — e precisa ser invertido via
+    ``_REMAINING_WORK_PARA_PROGRESSO`` antes de virar bucket de progresso;
+    lê-lo direto (como a versão anterior fazia) tratava "muito trabalho
+    restante" como "progresso alto", exatamente ao contrário."""
     if contexto.progress_percent is not None:
         if contexto.progress_percent < 40:
             return "BAIXO"
         if contexto.progress_percent < 70:
             return "MEDIO"
         return "ALTO"
-    return contexto.remaining_work_bucket
+    if contexto.remaining_work_bucket is not None:
+        return _REMAINING_WORK_PARA_PROGRESSO[contexto.remaining_work_bucket]
+    return None
 
 
 def _e_owner_atual(worker: WorkerRecord, tarefa: TaskRecord) -> bool:
@@ -475,9 +545,31 @@ def avaliar_handoff_de_tarefa(
     if contexto.worker_status == "NEAR_LIMIT" and bucket == "ALTO" and contexto.handoff_cost == "ALTO":
         return HandoffDecision(
             "WAIT",
-            "Worker está só NEAR_LIMIT (ainda pode concluir), progresso já é alto (~70%+) e o "
-            "custo de transferir contexto agora é alto — esperar o worker original terminar é "
-            "mais racional que pagar o handoff (Issue #105 §2, custo-benefício).",
+            "Worker está só NEAR_LIMIT (ainda pode concluir), progresso já é alto (~70%+ — pouco "
+            "trabalho restante) e o custo de transferir contexto agora é alto — esperar o worker "
+            "original terminar é mais racional que pagar o handoff (Issue #105 §2, custo-benefício).",
+        )
+
+    # B7 da 2ª auditoria do PR #108: risco médico/editorial alto participa
+    # do custo-benefício — mas só quando o worker AINDA consegue continuar
+    # (NEAR_LIMIT) e o custo de transferir contexto agora não é trivial.
+    # Nunca se aplica em LIMIT de verdade: ali o original não pode
+    # continuar de jeito nenhum, então esperar só travaria a tarefa — o
+    # risco não muda esse fato. E nunca substitui os gates básicos
+    # (checkpoint/compatibilidade), que já foram conferidos acima, antes
+    # de qualquer efeito de ``contexto``.
+    if (
+        contexto.worker_status == "NEAR_LIMIT"
+        and _risco_e_alto(contexto.risk_level)
+        and contexto.handoff_cost in ("MEDIO", "ALTO")
+    ):
+        return HandoffDecision(
+            "WAIT",
+            "Risco médico/editorial alto, worker ainda consegue continuar (NEAR_LIMIT, não LIMIT) "
+            "e o custo de transferir contexto agora não é trivial — esperar reduz o risco de um "
+            "handoff mal informado (Issue #105 §2); isto nunca se aplica quando o worker está em "
+            "LIMIT de verdade, nem substitui checkpoint seguro ou compatibilidade de capability, "
+            "já conferidos antes deste ponto.",
         )
 
     return decisao

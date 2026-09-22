@@ -3,12 +3,19 @@
 Cobre os critérios de aceitação 2-7 e 10 da Issue #105 em fixture (sem
 execução real — isso é Fase D/E, fora desta rodada), os casos extras
 pedidos no design DESIGN-READY publicado na própria Issue #105, e as
-correções B1-B5 da 1ª auditoria independente do PR #108 (HEAD 17eb734):
-capabilities reais (B2), decisão inteligente de handoff considerando
-progresso/custo/risco/orçamento (B3), exclusão do próprio dono da lista
-de candidatos a handoff (B4) e desempate determinístico independente da
-ordem da lista de workers (B5). B1 (autoria) é corrigido em
-coordination/tasks.json e no corpo do PR, não neste módulo.
+correções das duas primeiras auditorias independentes do PR #108:
+
+- rodada 1 (HEAD 17eb734, B1-B5): capabilities reais (B2), decisão
+  inteligente de handoff considerando progresso/custo/risco/orçamento
+  (B3), exclusão do próprio dono da lista de candidatos a handoff (B4) e
+  desempate determinístico independente da ordem da lista de workers
+  (B5). B1 (autoria) é corrigido em coordination/tasks.json e no corpo
+  do PR, não neste módulo.
+- rodada 2 (HEAD 3d19dc6, B6-B7): semântica de remaining_work_bucket
+  corrigida (B6 — "trabalho restante" é o INVERSO de progresso; BAIXO
+  falta = progresso ALTO, ALTO falta = progresso BAIXO) e risk_level
+  passou a participar de verdade do custo-benefício de handoff, sem
+  jamais enfraquecer os gates de checkpoint/compatibilidade (B7).
 """
 
 from __future__ import annotations
@@ -443,17 +450,48 @@ def test_handoff_near_limit_progresso_alto_mas_custo_baixo_ainda_recomenda_hando
     print("OK  test_handoff_near_limit_progresso_alto_mas_custo_baixo_ainda_recomenda_handoff")
 
 
-def test_handoff_remaining_work_bucket_qualitativo_funciona_sem_percentual() -> None:
-    """'Não precisa inventar precisão onde não existe' — heartbeat de
-    sessão humana pode só dar um bucket qualitativo, sem percentual."""
+def test_handoff_remaining_work_baixo_equivale_a_progresso_alto_e_prefere_esperar() -> None:
+    """B6 (obrigatório pela auditoria): remaining_work_bucket é 'quanto
+    trabalho FALTA' — BAIXO significa pouco falta, ou seja, progresso
+    ALTO. NEAR_LIMIT + remaining_work=BAIXO + handoff_cost=ALTO deve
+    rebaixar para WAIT, exatamente como progress_percent alto faria."""
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    contexto = HandoffContext(worker_status="NEAR_LIMIT", remaining_work_bucket="BAIXO", handoff_cost="ALTO")
+    decisao = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=[_worker("claude-2", capabilities=_CAP_HUMANO)],
+        contexto=contexto,
+    )
+    assert decisao.action == "WAIT"
+    print("OK  test_handoff_remaining_work_baixo_equivale_a_progresso_alto_e_prefere_esperar")
+
+
+def test_handoff_remaining_work_alto_nunca_vira_wait_por_progresso_alto() -> None:
+    """B6 (obrigatório pela auditoria): remaining_work_bucket=ALTO
+    significa MUITO trabalho faltando, ou seja, progresso BAIXO — nunca
+    pode disparar o rebaixamento 'progresso alto + custo alto', mesmo com
+    handoff_cost=ALTO. Continua HANDOFF (os gates básicos já aprovavam)."""
     tarefa = _tarefa("t1", area="materia", agente="Claude 1")
     contexto = HandoffContext(worker_status="NEAR_LIMIT", remaining_work_bucket="ALTO", handoff_cost="ALTO")
     decisao = avaliar_handoff_de_tarefa(
         tarefa, checkpoint_seguro=True, workers=[_worker("claude-2", capabilities=_CAP_HUMANO)],
         contexto=contexto,
     )
-    assert decisao.action == "WAIT"
-    print("OK  test_handoff_remaining_work_bucket_qualitativo_funciona_sem_percentual")
+    assert decisao.action == "HANDOFF"
+    print("OK  test_handoff_remaining_work_alto_nunca_vira_wait_por_progresso_alto")
+
+
+def test_handoff_remaining_work_medio_equivale_a_progresso_medio() -> None:
+    """MEDIO não deveria disparar nem o rebaixamento de B3 (que exige
+    bucket ALTO) nem nada de especial — confirma que o meio-termo continua
+    neutro, sem viés para nenhum dos dois lados."""
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    contexto = HandoffContext(worker_status="NEAR_LIMIT", remaining_work_bucket="MEDIO", handoff_cost="ALTO")
+    decisao = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=[_worker("claude-2", capabilities=_CAP_HUMANO)],
+        contexto=contexto,
+    )
+    assert decisao.action == "HANDOFF"
+    print("OK  test_handoff_remaining_work_medio_equivale_a_progresso_medio")
 
 
 def test_handoff_sem_dado_de_progresso_nao_forca_wait_nem_promove_handoff_alem_do_basico() -> None:
@@ -504,6 +542,87 @@ def test_handoff_risco_alto_nao_favorece_handoff_sem_compatibilidade() -> None:
     )
     assert decisao.action == "WAIT"
     print("OK  test_handoff_risco_alto_nao_favorece_handoff_sem_compatibilidade")
+
+
+def test_handoff_risco_alto_muda_handoff_para_wait_mantendo_resto_igual() -> None:
+    """B7 (obrigatório pela auditoria): mudar SOMENTE risk_level de
+    baixo/ausente para alto, mantendo tudo o mais igual, muda HANDOFF ->
+    WAIT num cenário NEAR_LIMIT apropriado (custo MEDIO/ALTO)."""
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    workers = [_worker("claude-2", capabilities=_CAP_HUMANO)]
+
+    contexto_sem_risco = HandoffContext(worker_status="NEAR_LIMIT", handoff_cost="MEDIO", risk_level=None)
+    decisao_sem_risco = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=workers, contexto=contexto_sem_risco,
+    )
+    assert decisao_sem_risco.action == "HANDOFF", "baseline precisa ser HANDOFF para o teste isolar o risco"
+
+    contexto_com_risco = HandoffContext(worker_status="NEAR_LIMIT", handoff_cost="MEDIO", risk_level="ALTO")
+    decisao_com_risco = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=workers, contexto=contexto_com_risco,
+    )
+    assert decisao_com_risco.action == "WAIT"
+    print("OK  test_handoff_risco_alto_muda_handoff_para_wait_mantendo_resto_igual")
+
+
+def test_handoff_risco_alto_nao_bloqueia_quando_worker_esta_em_limit_real() -> None:
+    """'Risco alto + LIMIT real + checkpoint seguro + compatível ->
+    HANDOFF continua permitido' — o original não pode continuar de jeito
+    nenhum, então esperar não reduziria risco nenhum, só travaria a
+    tarefa."""
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    contexto = HandoffContext(worker_status="LIMIT", handoff_cost="ALTO", risk_level="ALTO")
+    decisao = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=[_worker("claude-2", capabilities=_CAP_HUMANO)],
+        contexto=contexto,
+    )
+    assert decisao.action == "HANDOFF"
+    print("OK  test_handoff_risco_alto_nao_bloqueia_quando_worker_esta_em_limit_real")
+
+
+def test_handoff_risco_baixo_nao_aciona_a_regra_b7() -> None:
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    contexto = HandoffContext(worker_status="NEAR_LIMIT", handoff_cost="ALTO", risk_level="BAIXO")
+    decisao = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=[_worker("claude-2", capabilities=_CAP_HUMANO)],
+        contexto=contexto,
+    )
+    assert decisao.action == "HANDOFF"
+    print("OK  test_handoff_risco_baixo_nao_aciona_a_regra_b7")
+
+
+def test_handoff_risco_alto_com_custo_baixo_nao_aciona_a_regra_b7() -> None:
+    """A regra B7 exige custo de transferência MEDIO/ALTO — risco alto
+    sozinho, com custo baixo, não é motivo para esperar."""
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    contexto = HandoffContext(worker_status="NEAR_LIMIT", handoff_cost="BAIXO", risk_level="ALTO")
+    decisao = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=[_worker("claude-2", capabilities=_CAP_HUMANO)],
+        contexto=contexto,
+    )
+    assert decisao.action == "HANDOFF"
+    print("OK  test_handoff_risco_alto_com_custo_baixo_nao_aciona_a_regra_b7")
+
+
+def test_handoff_risco_reconhece_niveis_d_e_da_issue_83() -> None:
+    """risk_level também aceita os Níveis A-E da própria Issue #83 — D e E
+    contam como risco alto (D exige autorização explícita de José; E é
+    proibido), C não."""
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    workers = [_worker("claude-2", capabilities=_CAP_HUMANO)]
+
+    decisao_d = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=workers,
+        contexto=HandoffContext(worker_status="NEAR_LIMIT", handoff_cost="ALTO", risk_level="D"),
+    )
+    assert decisao_d.action == "WAIT"
+
+    decisao_c = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=workers,
+        contexto=HandoffContext(worker_status="NEAR_LIMIT", handoff_cost="ALTO", risk_level="C"),
+    )
+    assert decisao_c.action == "HANDOFF"
+    print("OK  test_handoff_risco_reconhece_niveis_d_e_da_issue_83")
 
 
 def test_handoff_context_valida_worker_status() -> None:
@@ -693,11 +812,18 @@ def main() -> int:
         test_handoff_p1_limit_progresso_medio_favorece_handoff_com_contexto,
         test_handoff_p1_near_limit_progresso_alto_custo_alto_prefere_esperar,
         test_handoff_near_limit_progresso_alto_mas_custo_baixo_ainda_recomenda_handoff,
-        test_handoff_remaining_work_bucket_qualitativo_funciona_sem_percentual,
+        test_handoff_remaining_work_baixo_equivale_a_progresso_alto_e_prefere_esperar,
+        test_handoff_remaining_work_alto_nunca_vira_wait_por_progresso_alto,
+        test_handoff_remaining_work_medio_equivale_a_progresso_medio,
         test_handoff_sem_dado_de_progresso_nao_forca_wait_nem_promove_handoff_alem_do_basico,
         test_handoff_budget_nao_permite_forca_wait_mesmo_tudo_mais_favoravel,
         test_handoff_risco_alto_nao_favorece_handoff_sem_checkpoint,
         test_handoff_risco_alto_nao_favorece_handoff_sem_compatibilidade,
+        test_handoff_risco_alto_muda_handoff_para_wait_mantendo_resto_igual,
+        test_handoff_risco_alto_nao_bloqueia_quando_worker_esta_em_limit_real,
+        test_handoff_risco_baixo_nao_aciona_a_regra_b7,
+        test_handoff_risco_alto_com_custo_baixo_nao_aciona_a_regra_b7,
+        test_handoff_risco_reconhece_niveis_d_e_da_issue_83,
         test_handoff_context_valida_worker_status,
         test_handoff_context_valida_progress_percent_fora_do_intervalo,
         test_worker_retomando_tarefa_ainda_blocked_limit_recebe_a_mesma_tarefa,
