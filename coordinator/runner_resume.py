@@ -52,17 +52,33 @@ entregaram e já foram auditadas/mergeadas:
    garante idempotência/concorrência sem nenhum mecanismo novo.
 3. ``verificar_checkpoint_no_repo`` — a ÚNICA parte com I/O de leitura
    deste módulo: confirma que o ``checkpoint_commit`` REALMENTE existe no
-   repositório e é ancestral do tip ATUAL da branch remota (nunca uma
-   branch divergente/reescrita) — só leitura (``git fetch``/``cat-file
-   -e``/``merge-base --is-ancestor``), NUNCA ``commit``/``push``/
-   ``merge``/força (prova estrutural em
+   repositório e — 2ª rodada de auditoria, achado F2 — é EXATAMENTE o tip
+   ATUAL da branch remota, não apenas um ancestral dele. Se a branch já
+   avançou além do checkpoint (mesmo sendo ele um ancestral legítimo), a
+   retomada é recusada: ``runner_dispatch.preparar_branch_de_trabalho``
+   recria a branch NO checkpoint (``git checkout -B branch checkpoint``),
+   e um push depois disso seria non-fast-forward contra o que já está
+   publicado — nunca resolvido com force-push, nunca resolvido sozinho.
+   Só leitura (``git fetch``/``rev-parse``/``merge-base --is-ancestor``),
+   NUNCA ``commit``/``push``/``merge``/força (prova estrutural em
    ``test_no_forbidden_writes.py::test_runner_resume_never_writes_to_git``).
 4. ``despachar_retomada`` — orquestração: ``human_session`` NUNCA é
-   iniciada automaticamente (só prepara e devolve ``BLOCKED-LIMIT`` com o
-   checkpoint, "aguardando continuação manual"); ``api_runner`` só
-   prossegue depois do checkpoint confirmado no repositório, e delega
-   TODA a execução real para ``runner_dispatch.executar_tarefa``
-   (inalterado) — nunca reimplementando commit/push/patch/allowlist.
+   iniciada automaticamente, mas — achado F1 — também precisa do
+   checkpoint CONFIRMADO no repositório antes de devolver uma
+   continuação "utilizável" (só então prepara e devolve ``BLOCKED-LIMIT``
+   com o checkpoint, "aguardando continuação manual"); ``api_runner`` só
+   prossegue depois do MESMO checkpoint confirmado, e delega TODA a
+   execução real para ``runner_dispatch.executar_tarefa`` (inalterado) —
+   nunca reimplementando commit/push/patch/allowlist.
+5. ``processar_retorno_de_worker`` — achado F4: o hook determinístico e
+   EVENT-DRIVEN (zero polling) que fecha o laço "worker voltou
+   disponível" -> retomada. Reusa ``scheduler.reprocessar_retorno`` (Fase
+   A, inalterado) por inteiro: se o scheduler decide que o worker ainda é
+   dono da tarefa, despacha a retomada (``despachar_retomada``); se
+   decide que a tarefa já foi concluída/assumida por outro, só devolve a
+   próxima oferta da fila como DADO — nunca a executa (atribuir uma
+   tarefa NOVA é fluxo normal de Runner Dispatch, fora do escopo de
+   retomada da Fase F).
 
 **SEGURANÇA (Issue #105 Fase F, "SEGURANÇA"):** todo conteúdo estrutural
 de uma ``InterruptedTaskSnapshot`` que poderia ter vindo de fora
@@ -76,24 +92,31 @@ texto livre). Mesmo que esse texto contivesse algo como
 campos são valores tipados, atribuídos por código, nunca interpretados a
 partir da string de instruções.
 
-**PARALELISMO COM A FASE E (Claude 1, em paralelo):** este módulo NUNCA
-importa nem edita ``coordinator/handoff.py`` além de consumir a função
-pura já existente (``worker_retomando_deve_assumir``) — nenhuma extensão,
-nenhuma antecipação do trabalho da Fase E. O ponto de integração
-explícito para quando a Fase E mergear é o parâmetro ``worker_receptor``
-de ``avaliar_retomada``/``despachar_retomada``: hoje só exercitado com "o
-mesmo worker que voltou" (via ``scheduler.reprocessar_retorno``, já
-mergeado); quando a Fase E decidir um handoff para um worker DIFERENTE,
-ela só precisa chamar as MESMAS funções passando o worker escolhido — ver
-seção "HOOKS DE INTEGRAÇÃO PENDENTES" no corpo do PR.
+**PARALELISMO COM A FASE E (Claude 1, PR #115, em paralelo):** este módulo
+NUNCA importa nem edita ``coordinator/handoff.py``/``handoff_exec.py``/
+``worker_ops.py`` — só consome a função pura já existente
+(``worker_retomando_deve_assumir``), nunca antecipa nem copia o trabalho
+da Fase E. O ponto de integração é o parâmetro ``worker_receptor`` de
+``avaliar_retomada``/``despachar_retomada``: reconhece DUAS formas
+legítimas de disponibilidade (achado F3 da 2ª rodada de auditoria) —
+"voltou livre" (``AVAILABLE``, ``current_task=None``) ou "já reservado
+pela Fase E para ESTA tarefa" (``BUSY`` com
+``current_task == snapshot.task_id``) — sem importar nem antecipar
+``coordinator/handoff_exec.py``: só reconhece a FORMA da reserva
+(status + current_task), a mesma superfície que ``WorkerRecord`` já
+expõe hoje. Quando o PR #115 mergear, ``handoff_exec.py`` só precisa
+deixar o worker escolhido nesse formato antes de chamar
+``despachar_retomada`` — nenhuma mudança de assinatura prevista.
 
 **O QUE ESTE MÓDULO DELIBERADAMENTE NÃO FAZ:** não decide handoff
 (Fase E); não toca ``coordination/tasks.json``; não ativa nenhuma flag
 nova (reusa ``RunnerDispatchConfig`` da Fase D, inalterada — continua
 ``REPASSO_RUNNER_ENABLED=false`` em produção); não executa nenhum
 canário real; não muda ``scheduler.py``/``handoff.py``/
-``runner_contract.py``/``heartbeat.py``/``runner_dispatch.py`` — todos
-consumidos, nenhum editado.
+``runner_contract.py``/``heartbeat.py``/``runner_dispatch.py``/
+``handoff_exec.py``/``worker_ops.py`` — todos consumidos (quando
+existem), nenhum editado; ``processar_retorno_de_worker`` nunca despacha
+a "próxima oferta" da fila — só a devolve como dado.
 """
 
 from __future__ import annotations
@@ -107,6 +130,7 @@ from .handoff import worker_retomando_deve_assumir
 from .redact import redact
 from .runner_contract import RunnerTask, RunnerResult
 from .runner_dispatch import RunnerDispatchConfig, StructuredPatch, executar_tarefa
+from .scheduler import QueueDecision, TaskRecord, reprocessar_retorno
 from .worker_ops import OperationalWorkerRegistry, WorkerRecord
 
 _ACOES_VALIDAS = ("RESUME", "BLOCKED", "WAIT")
@@ -324,11 +348,45 @@ def avaliar_retomada(
             "BLOCKED", f"worker receptor {worker_receptor.worker_id!r} tem can_execute=False."
         )
 
-    if worker_receptor.status != "AVAILABLE":
+    # Disponibilidade do worker receptor — achado F3 da 2ª rodada de
+    # auditoria: DUAS formas legítimas de estar pronto para retomar, nunca
+    # só "AVAILABLE". (1) voltou livre: AVAILABLE e sem nenhuma tarefa em
+    # mãos. (2) já foi reservado por uma decisão de handoff REAL da Fase E
+    # (coordinator/handoff_exec.py, PR #115, ainda não mergeado) para ESTA
+    # MESMA tarefa: aparece como BUSY com current_task == snapshot.task_id
+    # — não pode ser tratado como "ainda não disponível" (isso o deixaria
+    # em WAIT eterno, já que um worker BUSY numa reserva legítima nunca
+    # fica AVAILABLE sozinho), nem este módulo pode EXIGIR AVAILABLE (a
+    # Fase E já fez essa transição antes de chamar aqui). Este módulo NÃO
+    # importa nem antecipa handoff_exec.py — só reconhece a FORMA da
+    # reserva (status + current_task), a mesma superfície que
+    # ``WorkerRecord`` já expõe hoje.
+    if worker_receptor.status == "AVAILABLE" and worker_receptor.current_task is not None:
+        return ResumeDecision(
+            "BLOCKED",
+            f"worker receptor {worker_receptor.worker_id!r} está AVAILABLE mas com current_task "
+            f"{worker_receptor.current_task!r} preenchido — estado inconsistente, nunca assumir sem uma "
+            "reserva válida.",
+        )
+
+    if worker_receptor.status == "BUSY" and worker_receptor.current_task != snapshot.task_id:
+        return ResumeDecision(
+            "BLOCKED",
+            f"worker receptor {worker_receptor.worker_id!r} está BUSY e current_task "
+            f"({worker_receptor.current_task!r}) não corresponde à tarefa sendo retomada "
+            f"({snapshot.task_id!r}) — nunca tomar de uma reserva alheia.",
+        )
+
+    receptor_livre = worker_receptor.status == "AVAILABLE" and worker_receptor.current_task is None
+    receptor_reservado_para_esta_tarefa = (
+        worker_receptor.status == "BUSY" and worker_receptor.current_task == snapshot.task_id
+    )
+    if not (receptor_livre or receptor_reservado_para_esta_tarefa):
         return ResumeDecision(
             "WAIT",
-            f"worker receptor {worker_receptor.worker_id!r} ainda não está AVAILABLE (status atual: "
-            f"{worker_receptor.status!r}) — aguardando, nada bloqueado permanentemente.",
+            f"worker receptor {worker_receptor.worker_id!r} ainda não está pronto para retomar (status "
+            f"atual: {worker_receptor.status!r}, current_task: {worker_receptor.current_task!r}) — "
+            "aguardando, nada bloqueado permanentemente.",
         )
 
     # Identidade DETERMINÍSTICA da retomada (task_id original + checkpoint):
@@ -374,7 +432,7 @@ def avaliar_retomada(
 
 # ---------------------------------------------------------------------------
 # Verificação REAL do checkpoint — a única parte deste módulo com I/O, e
-# SÓ DE LEITURA (fetch/cat-file/merge-base --is-ancestor). Nunca commit,
+# SÓ DE LEITURA (fetch/rev-parse/merge-base --is-ancestor). Nunca commit,
 # nunca push, nunca merge, nunca força — prova estrutural em
 # test_no_forbidden_writes.py::test_runner_resume_never_writes_to_git.
 # ---------------------------------------------------------------------------
@@ -383,9 +441,17 @@ def _git(repo_dir: str, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", repo_dir, *args], capture_output=True, text=True)
 
 
-def _commit_existe_localmente(repo_dir: str, commit: str) -> bool:
-    r = _git(repo_dir, "cat-file", "-e", f"{commit}^{{commit}}")
-    return r.returncode == 0
+def _resolver_commit_completo(repo_dir: str, commit: str) -> str | None:
+    """Devolve o SHA completo (40 chars) de ``commit`` se ele existe
+    LOCALMENTE, ou ``None`` — nunca lança exceção. Usado em vez de
+    comparar strings de tamanho variável: ``checkpoint_commit`` pode ser
+    um SHA curto (7-40 chars, ``runner_contract._COMMIT_SHA_RE``), então
+    comparar contra o tip (sempre 40 chars via ``rev-parse``) exige
+    normalizar os dois para o mesmo tamanho primeiro."""
+    r = _git(repo_dir, "rev-parse", "--verify", "-q", f"{commit}^{{commit}}")
+    if r.returncode != 0:
+        return None
+    return r.stdout.strip()
 
 
 def verificar_checkpoint_no_repo(repo_dir: str, remote_name: str, branch: str, commit: str) -> tuple[bool, str]:
@@ -393,22 +459,32 @@ def verificar_checkpoint_no_repo(repo_dir: str, remote_name: str, branch: str, c
 
     1. existe (busca ``branch`` do remoto primeiro, se ainda não estiver
        localmente — o commit pode ter sido publicado por outra execução);
-    2. é ANCESTRAL do tip ATUAL de ``branch`` no remoto — nunca aceita um
-       checkpoint de uma branch que foi reescrita/force-pushed por fora
-       (Issue #105: 'branch divergente da main... deve BLOCKED, nunca
-       tentar resolver sozinho'; aqui generalizado para qualquer branch
-       de trabalho, não só main).
+    2. é EXATAMENTE o tip ATUAL de ``branch`` no remoto — achado F2 da 2ª
+       rodada de auditoria: um checkpoint que é só ANCESTRAL do tip
+       (branch avançou depois dele) NÃO é aceito nesta fase, porque
+       ``runner_dispatch.preparar_branch_de_trabalho`` recria a branch NO
+       checkpoint (``git checkout -B branch checkpoint``) e um push
+       depois disso seria non-fast-forward contra o que já está
+       publicado. Retomar NA MESMA branch, nesta fase, exige o
+       checkpoint = tip remoto atual; qualquer avanço detectado é
+       ``BLOCKED`` — nunca resolvido com force-push, nunca resolvido
+       sozinho. Uma branch REESCRITA (o commit nem é mais ancestral do
+       tip) continua igualmente recusada (Issue #105: 'branch divergente
+       da main... deve BLOCKED, nunca tentar resolver sozinho'; aqui
+       generalizado para qualquer branch de trabalho, não só main).
 
     Devolve ``(ok, motivo)`` — nunca levanta exceção por conta própria
     (falha de rede/git vira ``(False, motivo)``, fail-closed)."""
-    if not _commit_existe_localmente(repo_dir, commit):
+    commit_completo = _resolver_commit_completo(repo_dir, commit)
+    if commit_completo is None:
         busca = _git(repo_dir, "fetch", remote_name, branch)
         if busca.returncode != 0:
             return False, (
                 f"não consegui buscar a branch {branch!r} de {remote_name!r} para confirmar o "
                 f"checkpoint {commit!r}: {redact(busca.stderr)}"
             )
-        if not _commit_existe_localmente(repo_dir, commit):
+        commit_completo = _resolver_commit_completo(repo_dir, commit)
+        if commit_completo is None:
             return False, (
                 f"checkpoint_commit {commit!r} não existe (nem localmente, nem após buscar {branch!r} "
                 f"de {remote_name!r}) — retomada recusada, nunca inventar um checkpoint."
@@ -419,14 +495,29 @@ def verificar_checkpoint_no_repo(repo_dir: str, remote_name: str, branch: str, c
         return False, (
             f"não consegui confirmar o tip atual de {branch!r} em {remote_name!r}: {redact(fetch.stderr)}"
         )
-    ancestral = _git(repo_dir, "merge-base", "--is-ancestor", commit, "FETCH_HEAD")
+    tip = _git(repo_dir, "rev-parse", "FETCH_HEAD")
+    if tip.returncode != 0:
+        return False, (
+            f"não consegui resolver o tip atual de {branch!r} em {remote_name!r}: {redact(tip.stderr)}"
+        )
+    tip_completo = tip.stdout.strip()
+
+    if commit_completo == tip_completo:
+        return True, f"checkpoint {commit!r} confirmado: é exatamente o tip atual de {branch!r}."
+
+    ancestral = _git(repo_dir, "merge-base", "--is-ancestor", commit_completo, tip_completo)
     if ancestral.returncode != 0:
         return False, (
-            f"checkpoint {commit!r} não é ancestral do tip ATUAL de {branch!r} — branch "
-            "divergente/reescrita desde o checkpoint; retomada recusada, nunca tentar resolver "
+            f"checkpoint {commit!r} não é ancestral do tip ATUAL de {branch!r} (tip: {tip_completo!r}) — "
+            "branch divergente/reescrita desde o checkpoint; retomada recusada, nunca tentar resolver "
             "sozinho (Issue #105)."
         )
-    return True, f"checkpoint {commit!r} confirmado: existe e é ancestral do tip atual de {branch!r}."
+    return False, (
+        f"branch {branch!r} avançou além do checkpoint {commit!r} (tip atual: {tip_completo!r}) — "
+        "retomar nesta fase exige que o checkpoint seja EXATAMENTE o tip remoto atual (nunca recriar a "
+        "branch mais atrás do que ela já está; nunca force-push; nunca resolver a divergência sozinho — "
+        "Issue #105 Fase F, achado F2)."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -503,17 +594,31 @@ def despachar_retomada(
         raise AssertionError("ResumeDecision.action == 'RESUME' sem 'task' — invariante do próprio módulo quebrada.")
 
     if worker_receptor.type != "api_runner":
+        # Achado F1 da 2ª rodada de auditoria: human_session continua
+        # NUNCA sendo iniciada automaticamente, mas também precisa do
+        # checkpoint CONFIRMADO de verdade no repositório antes de
+        # devolver uma continuação "utilizável" — sem isso, o worker
+        # humano receberia um checkpoint que pode nem existir mais.
+        ok_checkpoint, motivo_checkpoint = verificar_checkpoint_no_repo(
+            repo_dir, remote_name, tarefa.branch, tarefa.checkpoint_commit,
+        )
+        if not ok_checkpoint:
+            resultado = RunnerResult(task_id=tarefa.task_id, status="BLOCKED", reason=motivo_checkpoint)
+            return ResumeOutcome(
+                decision=decisao, result=resultado, external_calls_made=True,
+                notes=("checkpoint/branch não confirmados no repositório — nenhuma continuação preparada.",),
+            )
         resultado = RunnerResult(
             task_id=tarefa.task_id, status="BLOCKED-LIMIT",
             reason=(
                 f"tarefa preparada para retomada por sessão humana ({worker_receptor.worker_id!r}) — "
-                "nunca iniciada automaticamente; aguardando continuação manual a partir do checkpoint "
-                f"{snapshot.checkpoint_commit!r} (Issue #105 Fase F)."
+                "nunca iniciada automaticamente; checkpoint confirmado no repositório; aguardando "
+                f"continuação manual a partir de {snapshot.checkpoint_commit!r} (Issue #105 Fase F)."
             ),
             checkpoint_commit=snapshot.checkpoint_commit, branch=snapshot.branch,
         )
         return ResumeOutcome(
-            decision=decisao, result=resultado, external_calls_made=False,
+            decision=decisao, result=resultado, external_calls_made=True,
             notes=("worker receptor é human_session — preparado, nunca despachado automaticamente.",),
         )
 
@@ -555,3 +660,132 @@ def despachar_retomada(
         decision=decisao, result=outcome.result, dispatch_outcome=outcome,
         external_calls_made=True, notes=outcome.notes,
     )
+
+
+# ---------------------------------------------------------------------------
+# Hook determinístico e EVENT-DRIVEN — achado F4 da 2ª rodada de auditoria:
+# fecha o laço "worker voltou disponível" -> retomada, reusando
+# scheduler.reprocessar_retorno (Fase A) por inteiro.
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class RetornoWorkerOutcome:
+    """Resultado de reagir a UM evento já validado ("este worker está
+    AVAILABLE agora"). Exatamente uma das duas alternativas é preenchida:
+    ``retomada`` (o scheduler decidiu que o worker ainda é dono da tarefa
+    original) ou ``proxima_oferta`` (a tarefa original já foi
+    concluída/assumida — a fila tem, ou não, uma próxima tarefa
+    compatível). Nunca as duas ao mesmo tempo."""
+
+    retomada: ResumeOutcome | None
+    proxima_oferta: QueueDecision | None
+    motivo: str
+
+    def to_dict(self) -> dict:
+        return {
+            "retomada": self.retomada.to_dict() if self.retomada else None,
+            "proxima_oferta": self.proxima_oferta.to_dict() if self.proxima_oferta else None,
+            "motivo": self.motivo,
+        }
+
+
+def processar_retorno_de_worker(
+    *,
+    worker_que_volta: str,
+    tarefa_original: TaskRecord | None,
+    tarefas: list[TaskRecord],
+    workers: list[WorkerRecord],
+    snapshot_da_tarefa_original: InterruptedTaskSnapshot | None = None,
+    repo_dir: str | None = None,
+    remote_name: str = "origin",
+    config: RunnerDispatchConfig | None = None,
+    state_git_remote: str | None = None,
+    validation_command_keys: tuple[str, ...] = (),
+    worker_registry: OperationalWorkerRegistry | None = None,
+    patch: StructuredPatch | None = None,
+    gerar_patch: Callable[[], object] | None = None,
+    allowed_files_override: tuple[str, ...] | None = None,
+) -> RetornoWorkerOutcome:
+    """O hook determinístico e EVENT-DRIVEN pedido pela Fase F (achado
+    F4): reage a UM evento já validado por quem chama (heartbeat/comando
+    ``AVAILABLE`` — essa validação em si é Fase B, fora daqui) chamando
+    ``scheduler.reprocessar_retorno`` (Fase A, reusado por inteiro, nunca
+    reimplementado) e só então decide.
+
+    ZERO POLLING: esta função nunca entra em loop por conta própria —
+    quem detecta o evento chama isto UMA vez, de forma síncrona, em
+    reação a ele. Não há nenhum ``while``/``sleep``/agendamento aqui.
+
+    Duas saídas possíveis de ``reprocessar_retorno`` (que já reusa
+    ``handoff.worker_retomando_deve_assumir`` internamente — não
+    duplicado aqui):
+
+    1. ``retoma_tarefa_id`` preenchido — o worker ainda é dono real da
+       tarefa original. Só despacha de verdade se quem chamou também
+       forneceu ``snapshot_da_tarefa_original`` (o contexto mínimo
+       estruturado — Fase F nunca inventa instructions/allowed_files/
+       policy_level a partir de um ``TaskRecord`` sozinho, que não
+       carrega esses campos) E esse snapshot é da MESMA tarefa que o
+       scheduler decidiu retomar — qualquer divergência é recusada,
+       fail-closed, nunca uma tentativa de adivinhar. O
+       ``worker_receptor`` usado é o PRÓPRIO registro do worker que
+       voltou (buscado em ``workers`` por ``worker_que_volta``) — o
+       evento é sobre ELE, nunca sobre outro worker; a Fase E decidir um
+       handoff para um worker DIFERENTE é um evento diferente, fora
+       deste hook (consome ``despachar_retomada`` diretamente).
+    2. ``proxima_oferta`` preenchida — a tarefa original já foi
+       concluída ou assumida por outro. Este módulo NUNCA despacha essa
+       próxima oferta (não é uma retomada — é uma atribuição NOVA, fluxo
+       normal de Runner Dispatch/handoff, fora do escopo da Fase F) — só
+       devolve a decisão como dado para quem orquestra o Coordinator
+       agir separadamente."""
+    decisao_retorno = reprocessar_retorno(
+        worker_que_volta=worker_que_volta, tarefa_original=tarefa_original, tarefas=tarefas, workers=workers,
+    )
+
+    if decisao_retorno.retoma_tarefa_id is None:
+        return RetornoWorkerOutcome(
+            retomada=None, proxima_oferta=decisao_retorno.proxima_oferta, motivo=decisao_retorno.motivo,
+        )
+
+    if snapshot_da_tarefa_original is None:
+        return RetornoWorkerOutcome(
+            retomada=None, proxima_oferta=None,
+            motivo=(
+                f"scheduler.reprocessar_retorno permitiu retomar {decisao_retorno.retoma_tarefa_id!r}, mas "
+                "nenhum InterruptedTaskSnapshot foi fornecido — Fase F nunca fabrica instructions/"
+                "allowed_files/policy_level a partir só de coordination/tasks.json; retomada automática "
+                "recusada até o contexto mínimo estruturado existir."
+            ),
+        )
+
+    if snapshot_da_tarefa_original.task_id != decisao_retorno.retoma_tarefa_id:
+        return RetornoWorkerOutcome(
+            retomada=None, proxima_oferta=None,
+            motivo=(
+                f"snapshot fornecido é de {snapshot_da_tarefa_original.task_id!r}, mas o scheduler decidiu "
+                f"retomar {decisao_retorno.retoma_tarefa_id!r} — divergência, retomada recusada."
+            ),
+        )
+
+    receptor = next((w for w in workers if w.worker_id == worker_que_volta), None)
+    if receptor is None or repo_dir is None:
+        return RetornoWorkerOutcome(
+            retomada=None, proxima_oferta=None,
+            motivo=(
+                f"scheduler.reprocessar_retorno permitiu retomar, mas faltam o registro do worker "
+                f"{worker_que_volta!r} em 'workers' ou 'repo_dir' para despachar — retomada automática "
+                "recusada."
+            ),
+        )
+
+    outcome = despachar_retomada(
+        snapshot_da_tarefa_original,
+        tarefa_estado=tarefa_original.estado if tarefa_original else "BLOCKED-LIMIT",
+        tarefa_agente_atual=tarefa_original.agente if tarefa_original else None,
+        worker_receptor=receptor,
+        repo_dir=repo_dir, remote_name=remote_name, config=config, state_git_remote=state_git_remote,
+        validation_command_keys=validation_command_keys, worker_registry=worker_registry,
+        patch=patch, gerar_patch=gerar_patch, allowed_files_override=allowed_files_override,
+    )
+    return RetornoWorkerOutcome(retomada=outcome, proxima_oferta=None, motivo=decisao_retorno.motivo)

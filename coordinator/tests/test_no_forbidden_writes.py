@@ -55,7 +55,10 @@ _ARQUIVOS_FONTE = [
 # checagem dedicada (test_runner_resume_never_writes_to_git) proíbe
 # commit/push/merge/rebase/força/reset --hard inteiramente, sem exceção
 # nenhuma, e confirma positivamente que só os comandos de LEITURA
-# esperados (`cat-file`, `fetch`, `merge-base`) aparecem no arquivo.
+# esperados (`rev-parse`, `fetch`, `merge-base`) aparecem no arquivo —
+# achado F2 (2ª rodada de auditoria) trocou `cat-file -e` por
+# `rev-parse --verify -q` para conseguir normalizar SHA curto/completo
+# antes de comparar contra o tip remoto, mas continua sendo só LEITURA.
 _ARQUIVOS_FONTE_GERAL = [
     f for f in _ARQUIVOS_FONTE if f not in ("git_state.py", "runner_dispatch.py", "runner_resume.py")
 ]
@@ -206,7 +209,7 @@ def test_runner_resume_never_writes_to_git() -> None:
             achados.append(f"{descricao} (padrão {padrao.pattern!r})")
     assert not achados, "runner_resume.py: " + "; ".join(achados)
     # Confirma positivamente: só os comandos de leitura esperados aparecem.
-    for comando_esperado in ('"cat-file"', '"fetch"', '"merge-base"'):
+    for comando_esperado in ('"rev-parse"', '"fetch"', '"merge-base"'):
         assert comando_esperado in conteudo, f"runner_resume.py deveria conter {comando_esperado!r}"
     print("OK  test_runner_resume_never_writes_to_git")
 

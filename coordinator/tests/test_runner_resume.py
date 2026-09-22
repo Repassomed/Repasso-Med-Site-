@@ -38,12 +38,15 @@ from coordinator.runner_dispatch import FileWrite, RunnerDispatchConfig, Structu
 from coordinator.runner_resume import (
     InterruptedTaskSnapshot,
     ResumeOutcome,
+    RetornoWorkerOutcome,
     avaliar_retomada,
     despachar_retomada,
     formatar_instrucoes_retomada,
+    processar_retorno_de_worker,
     snapshot_de_interrupcao,
     verificar_checkpoint_no_repo,
 )
+from coordinator.scheduler import TaskRecord
 from coordinator.worker_ops import WorkerRecord
 
 
@@ -219,6 +222,33 @@ def test_verificar_checkpoint_valido_e_ancestral_e_aceito() -> None:
     print("OK  test_verificar_checkpoint_valido_e_ancestral_e_aceito")
 
 
+def test_verificar_checkpoint_ancestral_mas_branch_avancou_e_recusado() -> None:
+    """Achado F2 (2ª rodada de auditoria): um checkpoint que é só
+    ANCESTRAL do tip (a branch avançou de verdade, sem reescrita, depois
+    dele) não basta nesta fase — só o tip EXATO é aceito, porque
+    ``runner_dispatch.preparar_branch_de_trabalho`` recria a branch NO
+    checkpoint e um push depois seria non-fast-forward contra o que já
+    está publicado."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        sha_a = _publicar_branch_com_checkpoint(remoto, tmp, "runner/t-avancou", "greeting.txt", "versao 1\n")
+
+        # Avanço LEGÍTIMO (fast-forward, nunca force-push) publicado por
+        # cima do checkpoint A.
+        outro = _clonar_workdir(tmp, remoto, "avancador")
+        subprocess.run(["git", "-C", outro, "checkout", "-q", "runner/t-avancou"], check=True)
+        with open(os.path.join(outro, "greeting.txt"), "w", encoding="utf-8") as fh:
+            fh.write("versao 2\n")
+        subprocess.run(["git", "-C", outro, "commit", "-q", "-am", "avanco legitimo depois do checkpoint"], check=True)
+        subprocess.run(["git", "-C", outro, "push", "-q", "origin", "runner/t-avancou"], check=True)
+
+        workdir = _clonar_workdir(tmp, remoto, "verificador-avancou")
+        ok, motivo = verificar_checkpoint_no_repo(workdir, "origin", "runner/t-avancou", sha_a)
+        assert ok is False
+        assert "avançou" in motivo
+    print("OK  test_verificar_checkpoint_ancestral_mas_branch_avancou_e_recusado")
+
+
 def test_verificar_checkpoint_branch_divergente_e_recusado() -> None:
     """O checkpoint existia — mas a branch foi reescrita (force-pushed)
     por fora depois dele: o commit antigo não é mais ancestral do tip
@@ -370,8 +400,15 @@ def test_repeticao_idempotente_da_mesma_retomada_nao_executa_duas_vezes() -> Non
             snap, tarefa_estado="BLOCKED-LIMIT", tarefa_agente_atual="claude-2", worker_receptor=receptor,
             repo_dir=workdir2, config=config, state_git_remote=remoto, patch=_patch_greeting(),
         )
+        # A repetição NUNCA executa de novo. Achado F2 mudou QUAL
+        # mecanismo bloqueia esta repetição especificamente: a primeira
+        # execução já empurrou um commit para a branch, então a checagem
+        # de checkpoint (agora exige tip EXATO) recusa a segunda chamada
+        # ANTES de sequer chegar ao claim atômico — não é mais o claim
+        # que diz "reivindicada". O que importa, e o que este teste
+        # prova, é que a segunda chamada NUNCA chega a executar_tarefa.
         assert outcome2.result is not None and outcome2.result.status == "BLOCKED"
-        assert "reivindicada" in outcome2.result.reason
+        assert outcome2.dispatch_outcome is None, "a repetição nunca pode chegar a executar_tarefa de novo"
     print("OK  test_repeticao_idempotente_da_mesma_retomada_nao_executa_duas_vezes")
 
 
@@ -441,29 +478,63 @@ def test_api_runner_com_gate_fechado_bloqueia_sem_chamada_externa() -> None:
 
 
 def test_human_session_nunca_e_despachada_automaticamente() -> None:
-    snap = _snapshot(checkpoint_commit="abc1234")
-    receptor = _worker_receptor(type="human_session", worker_id="claude-4", display_name="Claude 4")
-    chamou_gerar_patch = []
+    """Achado F1 (2ª rodada de auditoria): human_session continua NUNCA
+    sendo iniciada automaticamente, mas agora só devolve BLOCKED-LIMIT
+    DEPOIS de confirmar o checkpoint de verdade no repositório — por
+    isso este teste usa git real (mesmo padrão dos demais), não mais um
+    ``repo_dir`` inexistente."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        sha = _publicar_branch_com_checkpoint(remoto, tmp, "runner/t-human", "greeting.txt", "ola\n")
+        workdir = _clonar_workdir(tmp, remoto, "human-session")
 
-    def gerar_patch_espiao():
-        chamou_gerar_patch.append(True)
-        raise AssertionError("gerar_patch nunca deveria ser chamado para human_session")
+        tarefa = _tarefa_original(branch="runner/t-human")
+        snap = _snapshot(checkpoint_commit=sha, tarefa=tarefa)
+        receptor = _worker_receptor(type="human_session", worker_id="claude-4", display_name="Claude 4")
+        chamou_gerar_patch = []
 
-    outcome = despachar_retomada(
-        # tarefa_agente_atual=None: tarefa já sem dono atual (LIMIT/OFFLINE
-        # liberou a reserva) — só assim um worker DIFERENTE (claude-4,
-        # human_session) pode legitimamente ser o receptor, sem depender
-        # de nenhuma decisão de handoff ainda não mergeada pela Fase E.
-        snap, tarefa_estado="BLOCKED-LIMIT", tarefa_agente_atual=None, worker_receptor=receptor,
-        repo_dir="/definitivamente/nao/existe/repo", state_git_remote="/nao/existe",
-        gerar_patch=gerar_patch_espiao,
-    )
-    assert outcome.result is not None and outcome.result.status == "BLOCKED-LIMIT"
-    assert outcome.result.checkpoint_commit == "abc1234"
-    assert outcome.external_calls_made is False
-    assert outcome.dispatch_outcome is None
-    assert chamou_gerar_patch == [], "human_session nunca pode disparar geração de patch nem execução"
+        def gerar_patch_espiao():
+            chamou_gerar_patch.append(True)
+            raise AssertionError("gerar_patch nunca deveria ser chamado para human_session")
+
+        outcome = despachar_retomada(
+            # tarefa_agente_atual=None: tarefa já sem dono atual (LIMIT/OFFLINE
+            # liberou a reserva) — só assim um worker DIFERENTE (claude-4,
+            # human_session) pode legitimamente ser o receptor, sem depender
+            # de nenhuma decisão de handoff ainda não mergeada pela Fase E.
+            snap, tarefa_estado="BLOCKED-LIMIT", tarefa_agente_atual=None, worker_receptor=receptor,
+            repo_dir=workdir, state_git_remote=remoto, gerar_patch=gerar_patch_espiao,
+        )
+        assert outcome.result is not None and outcome.result.status == "BLOCKED-LIMIT"
+        assert outcome.result.checkpoint_commit == sha
+        assert outcome.external_calls_made is True, "F1: checkpoint precisa ter sido verificado de verdade"
+        assert outcome.dispatch_outcome is None
+        assert chamou_gerar_patch == [], "human_session nunca pode disparar geração de patch nem execução"
     print("OK  test_human_session_nunca_e_despachada_automaticamente")
+
+
+def test_human_session_com_checkpoint_inexistente_e_blocked() -> None:
+    """Achado F1: human_session também precisa do checkpoint CONFIRMADO
+    — nunca produz uma continuação 'utilizável' (BLOCKED-LIMIT) com um
+    checkpoint que não existe de verdade no repositório."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        sha_real = _publicar_branch_com_checkpoint(remoto, tmp, "runner/t-human-x", "greeting.txt", "ola\n")
+        workdir = _clonar_workdir(tmp, remoto, "human-x")
+        fake_sha = ("f" if sha_real[0] != "f" else "e") + sha_real[1:]
+
+        tarefa = _tarefa_original(branch="runner/t-human-x")
+        snap = _snapshot(checkpoint_commit=fake_sha, tarefa=tarefa)
+        receptor = _worker_receptor(type="human_session", worker_id="claude-4", display_name="Claude 4")
+
+        outcome = despachar_retomada(
+            snap, tarefa_estado="BLOCKED-LIMIT", tarefa_agente_atual=None, worker_receptor=receptor,
+            repo_dir=workdir, state_git_remote=remoto,
+        )
+        assert outcome.result is not None and outcome.result.status == "BLOCKED"
+        assert "não existe" in outcome.result.reason
+        assert outcome.dispatch_outcome is None
+    print("OK  test_human_session_com_checkpoint_inexistente_e_blocked")
 
 
 # ---------------------------------------------------------------------------
@@ -526,13 +597,58 @@ def test_zero_chamada_gerar_patch_quando_decisao_e_blocked() -> None:
 
 
 def test_worker_receptor_nao_disponivel_gera_wait_nunca_blocked_permanente() -> None:
+    """LIMIT (sem nenhuma tarefa em mãos ainda) é um estado transitório
+    legítimo — nem 'livre' (AVAILABLE) nem 'reservado pela Fase E'
+    (BUSY na MESMA tarefa), então WAIT, nunca um bloqueio permanente."""
     snap = _snapshot(checkpoint_commit="abc1234")
-    receptor = _worker_receptor(status="BUSY", current_task="outra-tarefa")
+    receptor = _worker_receptor(status="LIMIT", current_task=None)
     decisao = avaliar_retomada(
         snap, tarefa_estado="BLOCKED-LIMIT", tarefa_agente_atual="claude-2", worker_receptor=receptor,
     )
     assert decisao.action == "WAIT"
     print("OK  test_worker_receptor_nao_disponivel_gera_wait_nunca_blocked_permanente")
+
+
+def test_receptor_available_com_current_task_preenchido_e_blocked() -> None:
+    """Achado F3 (2ª rodada de auditoria): AVAILABLE com current_task
+    preenchido é um estado inconsistente — nunca tratado como 'livre'."""
+    snap = _snapshot(checkpoint_commit="abc1234")
+    receptor = _worker_receptor(status="AVAILABLE", current_task="alguma-outra-tarefa")
+    decisao = avaliar_retomada(
+        snap, tarefa_estado="BLOCKED-LIMIT", tarefa_agente_atual="claude-2", worker_receptor=receptor,
+    )
+    assert decisao.action == "BLOCKED"
+    assert "inconsistente" in decisao.reason
+    print("OK  test_receptor_available_com_current_task_preenchido_e_blocked")
+
+
+def test_receptor_busy_reservado_pela_fase_e_para_esta_tarefa_e_reconhecido() -> None:
+    """Achado F3: um worker BUSY com current_task == a tarefa sendo
+    retomada representa uma reserva REAL feita por um handoff da Fase E
+    (coordinator/handoff_exec.py, PR #115, ainda não mergeado) — este
+    módulo reconhece a FORMA dessa reserva (status + current_task) sem
+    importar nem antecipar nada de lá, e NÃO exige AVAILABLE."""
+    snap = _snapshot(checkpoint_commit="abc1234")
+    receptor = _worker_receptor(worker_id="claude-3", status="BUSY", current_task="t-original")
+    decisao = avaliar_retomada(
+        snap, tarefa_estado="BLOCKED-LIMIT", tarefa_agente_atual=None, worker_receptor=receptor,
+    )
+    assert decisao.action == "RESUME"
+    print("OK  test_receptor_busy_reservado_pela_fase_e_para_esta_tarefa_e_reconhecido")
+
+
+def test_receptor_busy_em_outra_tarefa_e_blocked() -> None:
+    """Achado F3: 'BUSY de outra tarefa = BLOCKED' — nunca tomar de uma
+    reserva alheia, e nunca WAIT eterno (um worker BUSY numa tarefa
+    diferente não vai ficar livre para ESTA sozinho)."""
+    snap = _snapshot(checkpoint_commit="abc1234")
+    receptor = _worker_receptor(worker_id="claude-3", status="BUSY", current_task="tarefa-completamente-diferente")
+    decisao = avaliar_retomada(
+        snap, tarefa_estado="BLOCKED-LIMIT", tarefa_agente_atual=None, worker_receptor=receptor,
+    )
+    assert decisao.action == "BLOCKED"
+    assert "reserva alheia" in decisao.reason
+    print("OK  test_receptor_busy_em_outra_tarefa_e_blocked")
 
 
 def test_nenhum_status_de_falha_e_done_ou_merge_ready() -> None:
@@ -557,6 +673,76 @@ def test_nenhum_status_de_falha_e_done_ou_merge_ready() -> None:
     )
     assert decisao_wait.action == "WAIT"
     print("OK  test_nenhum_status_de_falha_e_done_ou_merge_ready")
+
+
+# ---------------------------------------------------------------------------
+# F4 — hook event-driven "worker voltou disponível" -> retomada, reusando
+# scheduler.reprocessar_retorno por inteiro (nunca reimplementado).
+# ---------------------------------------------------------------------------
+
+def test_processar_retorno_de_worker_ainda_dono_retoma_tarefa() -> None:
+    """LIMIT -> AVAILABLE, ainda dono da tarefa original: o hook retoma
+    de verdade (via despachar_retomada, mesmo caminho já testado)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        sha = _publicar_branch_com_checkpoint(remoto, tmp, "runner/t-retorno", "greeting.txt", "ola\n")
+        workdir = _clonar_workdir(tmp, remoto, "retorno-1")
+
+        tarefa = _tarefa_original(branch="runner/t-retorno")
+        snap = _snapshot(checkpoint_commit=sha, tarefa=tarefa)
+        config = _config(canary_task_id=f"t-original--resume-{sha[:12]}")
+
+        tarefa_record = TaskRecord(id="t-original", estado="BLOCKED-LIMIT", area="infra", agente="claude-2")
+        worker_voltou = _worker_receptor(worker_id="claude-2", status="AVAILABLE", current_task=None)
+
+        outcome = processar_retorno_de_worker(
+            worker_que_volta="claude-2", tarefa_original=tarefa_record, tarefas=[tarefa_record],
+            workers=[worker_voltou], snapshot_da_tarefa_original=snap,
+            repo_dir=workdir, config=config, state_git_remote=remoto, patch=_patch_greeting(),
+        )
+        assert isinstance(outcome, RetornoWorkerOutcome)
+        assert outcome.proxima_oferta is None
+        assert outcome.retomada is not None
+        assert outcome.retomada.result is not None and outcome.retomada.result.status == "NEEDS-AUDIT", (
+            outcome.retomada.result
+        )
+    print("OK  test_processar_retorno_de_worker_ainda_dono_retoma_tarefa")
+
+
+def test_processar_retorno_de_worker_tarefa_concluida_oferece_proxima() -> None:
+    """LIMIT -> AVAILABLE, mas a tarefa original já foi concluída
+    (estado DONE): o hook NUNCA tenta retomar — só devolve a próxima
+    oferta da fila (scheduler.escolher_proxima_atribuicao, reusado
+    dentro de reprocessar_retorno) como DADO, sem executar nada."""
+    tarefa_record = TaskRecord(id="t-original", estado="DONE", area="infra", agente="claude-2")
+    proxima_tarefa = TaskRecord(id="t-seguinte", estado="READY", area="infra", agente=None)
+    worker_voltou = _worker_receptor(worker_id="claude-2", status="AVAILABLE", current_task=None)
+
+    outcome = processar_retorno_de_worker(
+        worker_que_volta="claude-2", tarefa_original=tarefa_record,
+        tarefas=[tarefa_record, proxima_tarefa], workers=[worker_voltou],
+    )
+    assert outcome.retomada is None
+    assert outcome.proxima_oferta is not None
+    print("OK  test_processar_retorno_de_worker_tarefa_concluida_oferece_proxima")
+
+
+def test_processar_retorno_de_worker_sem_snapshot_recusa_retomada_automatica() -> None:
+    """O scheduler pode permitir a retomada, mas sem um
+    InterruptedTaskSnapshot este módulo NUNCA fabrica instructions/
+    allowed_files/policy_level a partir só de coordination/tasks.json —
+    recusa a retomada automática (fail-closed), sem fingir sucesso."""
+    tarefa_record = TaskRecord(id="t-original", estado="BLOCKED-LIMIT", area="infra", agente="claude-2")
+    worker_voltou = _worker_receptor(worker_id="claude-2", status="AVAILABLE", current_task=None)
+
+    outcome = processar_retorno_de_worker(
+        worker_que_volta="claude-2", tarefa_original=tarefa_record, tarefas=[tarefa_record],
+        workers=[worker_voltou],
+    )
+    assert outcome.retomada is None
+    assert outcome.proxima_oferta is None
+    assert "snapshot" in outcome.motivo.lower()
+    print("OK  test_processar_retorno_de_worker_sem_snapshot_recusa_retomada_automatica")
 
 
 # ---------------------------------------------------------------------------
@@ -599,6 +785,7 @@ def main() -> int:
         test_checkpoint_valido_gera_decisao_resume_com_tarefa_construida,
         test_verificar_checkpoint_commit_inexistente_e_recusado,
         test_verificar_checkpoint_valido_e_ancestral_e_aceito,
+        test_verificar_checkpoint_ancestral_mas_branch_avancou_e_recusado,
         test_verificar_checkpoint_branch_divergente_e_recusado,
         test_despachar_retomada_com_checkpoint_inexistente_bloqueia,
         test_allowed_files_preservados_exatamente_por_padrao,
@@ -611,11 +798,18 @@ def main() -> int:
         test_duas_retomadas_concorrentes_so_uma_vence,
         test_api_runner_com_gate_fechado_bloqueia_sem_chamada_externa,
         test_human_session_nunca_e_despachada_automaticamente,
+        test_human_session_com_checkpoint_inexistente_e_blocked,
         test_rastreabilidade_worker_anterior_checkpoint_novo_worker,
         test_formatar_instrucoes_retomada_inclui_contexto_estruturado,
         test_zero_chamada_gerar_patch_quando_decisao_e_blocked,
         test_worker_receptor_nao_disponivel_gera_wait_nunca_blocked_permanente,
+        test_receptor_available_com_current_task_preenchido_e_blocked,
+        test_receptor_busy_reservado_pela_fase_e_para_esta_tarefa_e_reconhecido,
+        test_receptor_busy_em_outra_tarefa_e_blocked,
         test_nenhum_status_de_falha_e_done_ou_merge_ready,
+        test_processar_retorno_de_worker_ainda_dono_retoma_tarefa,
+        test_processar_retorno_de_worker_tarefa_concluida_oferece_proxima,
+        test_processar_retorno_de_worker_sem_snapshot_recusa_retomada_automatica,
         test_no_merge_deploy_or_llm_capability_present,
     ]
     falhas = 0
