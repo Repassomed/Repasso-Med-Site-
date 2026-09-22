@@ -34,7 +34,20 @@ _ARQUIVOS_FONTE = [
 # proíbe supabase/matéria/merge/force-push/branch "main" hardcoded, mas
 # permite `subprocess`/`git commit`/`git push` porque é exatamente para
 # isso que o arquivo existe.
-_ARQUIVOS_FONTE_GERAL = [f for f in _ARQUIVOS_FONTE if f != "git_state.py"]
+#
+# runner_dispatch.py (Issue #105, Fase D) também entra separado, pelo
+# mesmo motivo — mas com uma checagem AINDA MAIS estrita
+# (test_runner_dispatch_never_force_pushes_or_merges): "commit/checkpoint
+# somente depois de validações passarem... nunca force-push" (Issue #105
+# §"SEGURANÇA OBRIGATÓRIA") significa que este arquivo específico nem
+# pode CONTER a substring `--force` (nem `force-with-lease`) em lugar
+# nenhum — diferente de git_state.py, que usa `--force-with-lease`
+# deliberadamente (condicionado ao estado esperado) para resolver a
+# corrida de compare-and-swap da PRÓPRIA branch de estado. runner_dispatch.py
+# nunca precisa dessa técnica: ele só publica um commit NOVO numa branch
+# de trabalho nova/própria da tarefa (nunca reescreve uma branch já
+# publicada), então um push comum, sem nenhuma forma de força, já basta.
+_ARQUIVOS_FONTE_GERAL = [f for f in _ARQUIVOS_FONTE if f not in ("git_state.py", "runner_dispatch.py")]
 
 _PADROES_PROIBIDOS = [
     (re.compile(r"\bimport\s+supabase\b"), "import direto do cliente Supabase"),
@@ -66,6 +79,36 @@ _PADROES_PROIBIDOS_GIT_STATE = _PADROES_PROIBIDOS_SEMPRE + [
      "operação destrutiva/de merge de git"),
     (re.compile(r'checkout["\',]\s*.{0,4}"main"|push.{0,20}"main"'),
      'branch "main" hardcoded como alvo de checkout/push'),
+]
+
+# runner_dispatch.py (Issue #105, Fase D): mesma base de sempre, mais
+# merge/rebase destrutivo/branch "main" hardcoded (igual a git_state.py).
+# Nota: "reset --hard" NÃO entra na lista proibida aqui, ao contrário de
+# git_state.py — ``resetar_workdir`` usa ``git reset --hard <commit_base>``
+# de propósito, mas só LOCALMENTE, sobre o workdir descartável da própria
+# tarefa, sempre ANTES de qualquer push (nunca depois, nunca sobre uma
+# branch já publicada/compartilhada) — não afeta histórico remoto nenhum,
+# então não é a mesma classe de risco que "reset --hard" teria em
+# git_state.py (que nunca precisa disso). ADICIONALMENTE, proíbe QUALQUER
+# `--force`/`force-with-lease` no arquivo inteiro — nunca condicionado a
+# nada, porque este módulo nunca tem um caso de uso legítimo para isso (só
+# publica commits novos numa branch de trabalho nova/própria da tarefa,
+# nunca reescreve uma branch já publicada).
+#
+# Os padrões abaixo casam só com o formato de ARGUMENTO de string LITERAL
+# que ``_run_git``/``subprocess`` de fato aceitariam (aspas retas: "merge",
+# "--force") — nunca com prosa em ``crase-dupla`` do docstring do próprio
+# módulo, que cita essas palavras de propósito para explicar que o módulo
+# NUNCA faz isso (mesmo espírito de test_no_forbidden_writes.py permitir
+# que comentários/docstrings citem os padrões proibidos sem disparar
+# falso positivo).
+_PADROES_PROIBIDOS_RUNNER_DISPATCH = _PADROES_PROIBIDOS_SEMPRE + [
+    (re.compile(r"""["']merge["']"""), "argumento de comando git 'merge' (proibido em runner_dispatch.py)"),
+    (re.compile(r"rebase\s+-i"), "rebase interativo"),
+    (re.compile(r'checkout["\',]\s*.{0,4}"main"|push.{0,20}"main"'),
+     'branch "main" hardcoded como alvo de checkout/push'),
+    (re.compile(r"""["']--force\b|["']force-with-lease"""),
+     "push com força (proibido em runner_dispatch.py, sem exceção)"),
 ]
 
 
@@ -104,6 +147,28 @@ def test_git_state_never_targets_main_or_materia() -> None:
     print("OK  test_git_state_never_targets_main_or_materia")
 
 
+def test_runner_dispatch_never_force_pushes_or_merges() -> None:
+    """runner_dispatch.py (Issue #105, Fase D) PODE rodar git commit/push/
+    checkout/reset local (é a razão dele existir — Fase D exige commit/
+    checkpoint depois de validações passarem), mas NUNCA merge, NUNCA
+    force-push/force-with-lease (sem exceção nenhuma, ao contrário de
+    git_state.py — ver comentário acima), NUNCA branch "main"/"master"
+    hardcoded como alvo, e NUNCA nenhuma chamada de Netlify."""
+    caminho = os.path.join(_pathsetup._COORDINATOR_ROOT, "runner_dispatch.py")
+    with open(caminho, encoding="utf-8") as fh:
+        conteudo = fh.read()
+    achados = []
+    for padrao, descricao in _PADROES_PROIBIDOS_RUNNER_DISPATCH:
+        if padrao.search(conteudo):
+            achados.append(f"{descricao} (padrão {padrao.pattern!r})")
+    assert not achados, "runner_dispatch.py: " + "; ".join(achados)
+    # Confirma positivamente: o push real usa o nome de remoto/branch
+    # PARAMETRIZADOS (nunca um literal 'main'/'master' — já garantido por
+    # RunnerTask.__post_init__, mas provado aqui também no próprio texto).
+    assert "task.branch" in conteudo
+    print("OK  test_runner_dispatch_never_force_pushes_or_merges")
+
+
 def test_main_only_writes_its_own_output_and_state_files() -> None:
     """__main__.py pode escrever arquivo (o resultado OBSERVE e o estado de
     dedup/ledger) — mas só isso. Confirma que os únicos `open(..., "w")` no
@@ -126,6 +191,7 @@ def main() -> int:
     testes = [
         test_source_files_have_no_forbidden_patterns,
         test_git_state_never_targets_main_or_materia,
+        test_runner_dispatch_never_force_pushes_or_merges,
         test_main_only_writes_its_own_output_and_state_files,
     ]
     falhas = 0

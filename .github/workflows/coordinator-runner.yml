@@ -1,0 +1,300 @@
+name: Repasso Coordinator (RUNNER)
+
+# Issue #105, Fase D — api_runner: EXECUÇÃO CONTROLADA de uma RunnerTask
+# JÁ AUTORIZADA (coordinator/runner_dispatch.py). Decisão de José (Issue
+# #105): esta é infraestrutura Nível D já autorizada, mas a ATIVAÇÃO real
+# continua DESLIGADA por flag (REPASSO_RUNNER_ENABLED) — nenhum canário
+# real roda só por este arquivo existir.
+#
+# Correção B2-A (2ª auditoria independente do PR #114): no caminho REAL do
+# canário, este workflow agora invoca `coordinator.runner_dispatch` com
+# `--generate-via-claude` (nunca mais `--patch-file`) — RunnerTask
+# autorizada -> Claude/Anthropic (coordinator/runner_generate.py) ->
+# StructuredPatch validado -> aplicar/testar/comitar, tudo dentro do MESMO
+# passo já gated pelos 4 portões (ENABLED + ator + ref + MODE/CANARY_TASK_ID
+# confirmados em código). `ANTHROPIC_API_KEY` só existe como env DESSE
+# passo — nunca em nenhum outro lugar deste arquivo, nunca aceito como
+# input de workflow_dispatch.
+#
+# Correções da 3ª auditoria independente do PR #114 (B3/B4) — nada deste
+# workflow precisou mudar em ESTRUTURA para B3 (o claim atômico já
+# acontece dentro de `executar_tarefa`, e agora sempre ANTES de qualquer
+# chamada Anthropic — ver `coordinator/runner_dispatch.py`); B4 removeu a
+# flag `--usage-git-branch` literal deste comando, para que o Runner use
+# o default do próprio CLI (`coordinator-state-usage` — a MESMA branch/
+# ledger que o Coordinator OBSERVE já usa), garantindo um teto mensal de
+# Anthropic ÚNICO para Coordinator + Runner, nunca dois implícitos.
+#
+# Deliberadamente um arquivo SEPARADO de coordinator-observe.yml (não
+# tocado nesta rodada) — o Runner é um MECANISMO DE EXECUÇÃO (aplica
+# patch, roda testes, comita/publica numa branch própria), categoricamente
+# diferente do Coordinator OBSERVE (só observa eventos e decide
+# classificação/roteamento, nunca escreve código). Compartilhar o mesmo
+# workflow misturaria dois orçamentos/duas superfícies de risco distintas.
+#
+# ─────────────────────────────────────────────────────────────────────────
+# TRAVAS, EM VÁRIAS CAMADAS (Issue #105 §"SEGURANÇA OBRIGATÓRIA"):
+#
+#   1. GATILHO — só `workflow_dispatch`, SEM NENHUM input. Nunca
+#      `pull_request`/`issue_comment`/`schedule`/`push`/execução
+#      automática. Sem input nenhum, não existe "instrução livre" para
+#      aceitar — o único dado que entra é o `task_id` já configurado na
+#      Variable `REPASSO_RUNNER_CANARY_TASK_ID` do repositório (só um
+#      administrador do repositório pode alterá-la), nunca texto digitado
+#      no momento do disparo.
+#   2. ATOR — o `if:` do job exige `github.actor == 'Repassomed'` (mesma
+#      identidade confiável usada em coordinator-observe.yml para
+#      issue_comment — José e todos os agentes Claude publicam por ela).
+#   2-B. REF (correção B1, auditoria independente do PR #114) — o `if:` do
+#      job TAMBÉM exige `github.ref == refs/heads/<default_branch>`.
+#      `workflow_dispatch` pode ser disparado manualmente a partir de
+#      QUALQUER ref do repositório escolhida na hora — o arquivo de
+#      workflow de fato EXECUTADO é o dessa ref, não necessariamente o da
+#      branch padrão, mesmo que o passo de checkout (camada 5) já fixe
+#      explicitamente `default_branch` para o CONTEÚDO do repositório.
+#      Confiar só nesse checkout deixaria a decisão de "qual ref pode
+#      rodar isto" a cargo de quem escolhe o ref no disparo manual, e não
+#      do código — por isso a checagem entra tanto no `if:` do job (camada
+#      rápida/barata) quanto, de novo, em CÓDIGO (`RunnerDispatchConfig.
+#      gate()`, via `ref_allowed`) ANTES de qualquer escrita, na mesma
+#      confirmação da camada 3 abaixo — nunca confiar só no `if:` do
+#      workflow.
+#   3. PORTÃO — `vars.REPASSO_RUNNER_ENABLED` precisa ser exatamente
+#      "true" no `if:` do job (camada rápida/barata, nem deixa o job
+#      começar); um passo em Python confirma de novo, em código, os
+#      QUATRO portões completos (ENABLED + MODE=="canary" + CANARY_TASK_ID
+#      configurado + ref==default_branch) via `RunnerDispatchConfig.gate()`
+#      — nunca confiar só no `if:` do workflow (mesma filosofia de
+#      coordinator-observe.yml).
+#   4. FORMATO DO task_id — validado por regex ANTES de qualquer caminho
+#      ser construído a partir dele (task-file/patch-file); um valor fora
+#      do formato falha fechado, sem tocar em disco/git.
+#   5. CHECKOUT — sempre a branch PADRÃO do repositório
+#      (`github.event.repository.default_branch`), nunca o HEAD de PR
+#      nenhum — `workflow_dispatch` já roda o arquivo/código da branch
+#      escolhida manualmente no disparo, mas o `ref:` explícito é defesa
+#      em profundidade (mesmo padrão de coordinator-observe.yml).
+#      `fetch-depth: 0` (histórico completo) porque uma RunnerTask com
+#      `checkpoint_commit` precisa conseguir fazer checkout de um commit
+#      antigo específico, não só do HEAD raso.
+#   6. PERMISSÕES — só `contents: write`, escopado ao ÚNICO job deste
+#      arquivo (nunca `actions:write`, nunca `pull-requests:write`, nunca
+#      `issues:write` — este workflow não comenta em lugar nenhum, só
+#      executa e publica um artifact). `GITHUB_TOKEN` só existe como env
+#      do passo que de fato precisa dele (embutido na URL do remoto de
+#      estado do claim) — o push da BRANCH DA TAREFA em si usa as
+#      credenciais que o próprio `actions/checkout` já deixou configuradas
+#      no workdir (mesmo token, mesmo escopo, sem reexpor o secret).
+#   7. LLM SÓ NO PASSO GATED (correção B2-A) — `coordinator.runner_generate`
+#      (chamado por `runner_dispatch.py --generate-via-claude`) é o único
+#      lugar deste mecanismo que fala com a Anthropic, e só o faz depois
+#      que `RunnerDispatchConfig.gate()` + `task_autorizada()` já abriram
+#      (os MESMOS 4 portões de sempre — ver `coordinator/runner_generate.py`).
+#      A credencial da Anthropic só existe como env do passo "Rodar o
+#      Runner Dispatch" abaixo — nunca em outro passo, nunca
+#      aceita como input de `workflow_dispatch` (que continua sem nenhum
+#      input, camada 1), nunca logada (`anthropic_client.CallResult.
+#      to_dict()`/`redact_mapping()` já sanitizam qualquer texto de
+#      erro/reason antes de print/artifact).
+#   8. FALHA — o job fica vermelho quando o CLI termina com erro (último
+#      passo abaixo), mesma técnica de coordinator-observe.yml.
+#
+# FORA DE ESCOPO desta entrega (decisão explícita da Issue #105 Fase D):
+# não conecta com o scheduler (nenhum handoff automático); não cria
+# nenhuma RunnerTask/patch de canário real (o mecanismo existe, o
+# conteúdo autorizado por José vem depois, numa decisão separada); não
+# ativa REPASSO_RUNNER_ENABLED (continua "false"/ausente em produção); não
+# roda o Runner Dispatch contra o worker_id de nenhum ``api_runner`` ainda
+# — o Worker Registry operacional (Issue #99) ainda não tem esse worker
+# cadastrado, então o heartbeat fica de fora desta invocação por ora
+# (mecanismo já pronto em ``executar_tarefa``/``--worker-id``, só não
+# ligado neste workflow enquanto não houver um worker real para reportar);
+# não implementa edição por trecho/âncora para arquivos grandes (bloqueia
+# a tarefa inteira em vez disso — correção B2-C, evolução futura).
+# ─────────────────────────────────────────────────────────────────────────
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repasso-coordinator-runner
+  cancel-in-progress: false
+
+jobs:
+  run:
+    # Camada 2 (ator) + camada 3 (portão ENABLED, barato/rápido): nada
+    # disto substitui a confirmação completa em Python abaixo (MODE +
+    # CANARY_TASK_ID), só evita gastar um runner inteiro quando já dá
+    # para saber, de graça, que o portão está fechado ou o ator não é
+    # confiável.
+    if: >
+      vars.REPASSO_RUNNER_ENABLED == 'true' &&
+      github.actor == 'Repassomed' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    # contents:write só é usado para (a) publicar a branch de TRABALHO da
+    # própria tarefa (nunca 'main'/'master' — RunnerTask.__post_init__ já
+    # rejeita isso na construção) e (b) o claim atômico/registro de
+    # resultado na branch de estado dedicada (coordinator-state-runner,
+    # nunca 'main', nunca matéria — mesmo padrão de git_state.py). Sem
+    # actions:write/issues:write/pull-requests:write — este workflow nunca
+    # comenta nem interage com PR/Issue nenhuma.
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout (SEMPRE a branch padrão — nunca HEAD de PR)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          # Histórico completo: uma RunnerTask com checkpoint_commit
+          # precisa conseguir "git checkout -B <branch> <checkpoint>" a
+          # partir de um commit específico, não só do HEAD raso.
+          fetch-depth: 0
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validar o formato do task_id ANTES de construir qualquer caminho
+        id: taskid
+        env:
+          REPASSO_RUNNER_CANARY_TASK_ID: ${{ vars.REPASSO_RUNNER_CANARY_TASK_ID }}
+        run: |
+          set -e
+          TASK_ID="$REPASSO_RUNNER_CANARY_TASK_ID"
+          # Mesmo formato sintático que um nome de branch/id de tarefa
+          # razoável exige — fail-closed: qualquer coisa fora disso (vazio,
+          # maiúsculas, espaço, "..", "/") nem chega a virar um caminho de
+          # arquivo. Isto é defesa em profundidade: mesmo que a Variable do
+          # repositório (só um admin pode alterá-la) viesse maliciosamente
+          # preenchida, nenhum caminho fora de coordinator/runner_tasks/ é
+          # sequer construído.
+          if ! [[ "$TASK_ID" =~ ^[a-z0-9][a-z0-9-]{0,63}$ ]]; then
+            echo "REPASSO_RUNNER_CANARY_TASK_ID ausente ou em formato inválido — portão fechado, nenhum caminho é construído, nada roda."
+            exit 1
+          fi
+          echo "task_id=$TASK_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Instalar dependências do Coordinator
+        run: pip install -q -r coordinator/requirements.txt
+
+      - name: Confirmar os portões em código (camada 2, defesa em profundidade)
+        env:
+          REPASSO_RUNNER_ENABLED: ${{ vars.REPASSO_RUNNER_ENABLED }}
+          REPASSO_RUNNER_MODE: ${{ vars.REPASSO_RUNNER_MODE }}
+          REPASSO_RUNNER_CANARY_TASK_ID: ${{ vars.REPASSO_RUNNER_CANARY_TASK_ID }}
+          # Correção B1 (auditoria independente do PR #114): os dois lados
+          # da comparação de ref, confirmados de novo em código — nunca só
+          # no `if:` do job acima. `RunnerDispatchConfig.gate()` fecha
+          # fail-closed quando eles não batem (ver `ref_allowed` em
+          # coordinator/runner_dispatch.py).
+          REPASSO_RUNNER_ACTUAL_REF: ${{ github.ref }}
+          REPASSO_RUNNER_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
+        run: |
+          python3 -c "
+          from coordinator.runner_dispatch import RunnerDispatchConfig
+          cfg = RunnerDispatchConfig.from_env()
+          gate = cfg.gate()
+          print(f'Portão do Runner: {\"ABERTO\" if gate.open else \"FECHADO\"} — {gate.reason}')
+          if not gate.open:
+              raise SystemExit(1)
+          "
+
+      - name: Rodar o Runner Dispatch sobre a RunnerTask do canário
+        id: runner
+        env:
+          # Os mesmos quatro portões precisam chegar até AQUI — é este
+          # passo que de fato chama RunnerDispatchConfig.from_env() dentro
+          # de `python3 -m coordinator.runner_dispatch`. O passo de
+          # confirmação acima lê as mesmas Variables só para imprimir; sem
+          # repetir aqui, o processo real veria os defaults seguros
+          # (false/canary/vazio) mesmo que José tivesse ligado de verdade.
+          REPASSO_RUNNER_ENABLED: ${{ vars.REPASSO_RUNNER_ENABLED }}
+          REPASSO_RUNNER_MODE: ${{ vars.REPASSO_RUNNER_MODE }}
+          REPASSO_RUNNER_CANARY_TASK_ID: ${{ vars.REPASSO_RUNNER_CANARY_TASK_ID }}
+          # Correção B1 (PR #114): precisam chegar até AQUI também — é este
+          # passo que de fato invoca `python3 -m coordinator.runner_dispatch`,
+          # cujo `RunnerDispatchConfig.from_env()` faz a mesma checagem de
+          # novo (defesa em profundidade, mesmo padrão dos outros portões).
+          REPASSO_RUNNER_ACTUAL_REF: ${{ github.ref }}
+          REPASSO_RUNNER_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
+          # Correção B2-A (2ª auditoria independente do PR #114): a
+          # credencial da Anthropic só existe AQUI — o único passo gated
+          # pelos 4 portões acima. `coordinator.anthropic_transport.
+          # AnthropicTransport` só lê esta env var dentro de `send()`, e só
+          # é alcançada depois que `anthropic_client.call()` confirma o
+          # portão aberto de novo em código (RunnerDispatchConfig, que
+          # `runner_generate.gerar_patch_via_claude` passa direto como
+          # `config`). Nenhum outro passo/job deste arquivo tem acesso a
+          # este secret.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set +e
+          TASK_ID="${{ steps.taskid.outputs.task_id }}"
+
+          # Remoto com o GITHUB_TOKEN embutido — usado para (a) o claim
+          # atômico/registro de resultado na branch de estado DEDICADA do
+          # Runner (coordinator-state-runner) e (b) o ledger Anthropic
+          # GLOBAL (correção B4, 3ª auditoria independente do PR #114:
+          # "coordinator-state-usage" — a MESMA branch que o Coordinator
+          # OBSERVE já usa, nunca uma separada só do Runner, que criaria
+          # um segundo teto mensal implícito) — GitJsonStore/GitUsageLedger
+          # criam seu próprio workdir temporário e precisam de credenciais
+          # próprias (mesmo padrão de coordinator-observe.yml). O push da
+          # BRANCH DA TAREFA em si (--push-remote-name origin) usa as
+          # credenciais que o próprio actions/checkout já deixou
+          # configuradas neste workdir (mesmo GITHUB_TOKEN, mesmo escopo
+          # contents:write) — nunca um segundo remoto/token exposto para
+          # essa parte.
+          REMOTO_COM_TOKEN="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+          # Correção B2-A: caminho REAL do canário usa --generate-via-claude
+          # (RunnerTask autorizada -> Claude/Anthropic -> StructuredPatch
+          # validado), nunca --patch-file — nenhum patch/prompt livre entra
+          # por input deste workflow; a instrução vem só de
+          # coordinator/runner_tasks/<task_id>.task.json, no checkout
+          # confiável da branch padrão. --patch-file continua existindo na
+          # CLI só para uso manual/teste (fora deste workflow).
+          #
+          # Correção B3 (3ª auditoria): o claim atômico do task_id
+          # (dentro de `executar_tarefa`) acontece ANTES de qualquer
+          # chamada Anthropic — este único comando de CLI já garante isso;
+          # não há nenhum passo separado que chame a Anthropic antes do
+          # claim neste workflow.
+          #
+          # Correção B4: --usage-git-branch usa o default do próprio CLI
+          # (DEFAULT_RUNNER_USAGE_STATE_BRANCH == "coordinator-state-usage",
+          # a MESMA branch do Coordinator OBSERVE) — omitido aqui de
+          # propósito, para nunca divergir por um literal duplicado neste
+          # arquivo; se José precisar apontar para outra branch, precisa
+          # ser uma decisão explícita, nunca um valor diferente por acaso.
+          python3 -m coordinator.runner_dispatch \
+            --task-file "coordinator/runner_tasks/${TASK_ID}.task.json" \
+            --generate-via-claude \
+            --repo-dir . \
+            --state-git-remote "$REMOTO_COM_TOKEN" \
+            --usage-git-remote "$REMOTO_COM_TOKEN" \
+            --push-remote-name origin \
+            --validation-command-keys coordinator-suite \
+            --sucesso-status NEEDS-AUDIT \
+            --out /tmp/runner-dispatch-outcome.json
+          echo "resultado=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar o resultado do Runner Dispatch como artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repasso-runner-dispatch-outcome
+          path: /tmp/runner-dispatch-outcome.json
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Falhar o job se o Runner Dispatch terminou com erro
+        if: steps.runner.outputs.resultado != '0'
+        run: |
+          echo "O Runner Dispatch terminou com código ${{ steps.runner.outputs.resultado }} — ver o artifact/log publicado acima."
+          exit 1
