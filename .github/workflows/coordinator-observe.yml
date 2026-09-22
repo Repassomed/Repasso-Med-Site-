@@ -128,6 +128,40 @@ name: Repasso Coordinator (OBSERVE)
 # (``coordinator-state-usage-openai``, nunca a mesma do ledger Anthropic).
 # O Worker Registry operacional continua registrando ``chatgpt-auditor``
 # como ``OFFLINE``/``can_execute=false`` — esta PR não muda isso.
+#
+# ─────────────────────────────────────────────────────────────────────────
+# F8-A (Issue #105, Fase F, 7ª rodada) — LIGA o caminho REAL do Worker
+# Runner a este workflow: um comando ``SET_AVAILABLE`` reconhecido na
+# Inbox (#88) já sabe REAGIR (achado F7-A, `coordinator/__main__.py`
+# repassa `runner_tasks_json_path`/`runner_repo_dir`/`runner_dispatch_
+# config`/`runner_state_git_remote` para `observe()`), mas até esta
+# correção nada os alimentava com um `--runner-repo-dir` real nem com as
+# MESMAS Variables que `coordinator-runner.yml` já usa — então
+# `RunnerDispatchConfig.from_env()` sempre via os defaults seguros
+# (ENABLED=false), e nenhuma retomada `api_runner` de verdade seria
+# despachada por este caminho, mesmo com o Worker Runner ligado.
+#
+# Esta correção só ADICIONA `--runner-repo-dir .` ao comando do passo
+# "Rodar o Coordinator" e disponibiliza, no MESMO passo, as MESMAS 5
+# Variables/expressões que `coordinator-runner.yml` já usa para o Runner
+# — nenhuma flag nova é ligada por conta própria aqui: o valor de
+# `REPASSO_RUNNER_ENABLED` continua "false" (produção hoje) até José
+# decidir mudar a Variable do repositório, e as regras de segurança
+# (REF==default_branch, MODE=="canary", CANARY_TASK_ID configurado) são
+# as MESMAS que `RunnerDispatchConfig.gate()` já impõe — reconfirmadas em
+# código, nunca reimplementadas aqui:
+#   - REPASSO_RUNNER_ENABLED         (mesma Variable do Runner)
+#   - REPASSO_RUNNER_MODE            (mesma Variable do Runner)
+#   - REPASSO_RUNNER_CANARY_TASK_ID  (mesma Variable do Runner)
+#   - REPASSO_RUNNER_ACTUAL_REF      (mesma expressão do Runner: github.ref)
+#   - REPASSO_RUNNER_EXPECTED_REF    (mesma expressão do Runner:
+#                                      refs/heads/<default_branch>)
+# Este job (`observe`) continua sem `workflow_dispatch`/sem o `if:` de
+# ator+ref do Runner — não é o mesmo mecanismo de disparo, e uma retomada
+# `api_runner` só acontece de fato quando TODOS os portões acima abrem em
+# código (RunnerDispatchConfig.gate(), dentro de `despachar_retomada`),
+# nunca só por este job ter rodado.
+# ─────────────────────────────────────────────────────────────────────────
 
 on:
   issue_comment:
@@ -212,6 +246,15 @@ jobs:
           REPASSO_COORDINATOR_ENABLED: ${{ vars.REPASSO_COORDINATOR_ENABLED }}
           REPASSO_COORDINATOR_MODE: ${{ vars.REPASSO_COORDINATOR_MODE }}
           REPASSO_COORDINATOR_PILOT: ${{ vars.REPASSO_COORDINATOR_PILOT }}
+          # F8-A: só informativo aqui — as MESMAS Variables/regras que
+          # coordinator-runner.yml já usa, nunca uma flag nova. O portão do
+          # Runner fechado (o padrão em produção) NUNCA falha este job — só
+          # significa que nenhuma retomada api_runner automática acontece.
+          REPASSO_RUNNER_ENABLED: ${{ vars.REPASSO_RUNNER_ENABLED }}
+          REPASSO_RUNNER_MODE: ${{ vars.REPASSO_RUNNER_MODE }}
+          REPASSO_RUNNER_CANARY_TASK_ID: ${{ vars.REPASSO_RUNNER_CANARY_TASK_ID }}
+          REPASSO_RUNNER_ACTUAL_REF: ${{ github.ref }}
+          REPASSO_RUNNER_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
         run: |
           python3 -c "
           from coordinator.config import Config
@@ -219,6 +262,10 @@ jobs:
           gate = cfg.gate()
           print(f'Portão ENABLED/MODE: {\"ABERTO\" if gate.open else \"FECHADO\"} — {gate.reason}')
           print(f'Modo PILOTO: {\"ATIVO\" if cfg.pilot else \"inativo\"}')
+
+          from coordinator.runner_dispatch import RunnerDispatchConfig
+          runner_gate = RunnerDispatchConfig.from_env().gate()
+          print(f'Portão do Runner (retomada automática via SET_AVAILABLE): {\"ABERTO\" if runner_gate.open else \"FECHADO\"} — {runner_gate.reason}')
           "
 
       - name: Instalar o SDK da Anthropic (só dentro deste job condicionado)
@@ -315,6 +362,20 @@ jobs:
           REPASSO_OPENAI_AUDITOR_MODEL: ${{ vars.REPASSO_OPENAI_AUDITOR_MODEL }}
           REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL: ${{ vars.REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL }}
           REPASSO_OPENAI_AUDITOR_BUDGET_USD: ${{ vars.REPASSO_OPENAI_AUDITOR_BUDGET_USD }}
+          # F8-A (Issue #105, Fase F, 7ª rodada): os MESMOS 5 portões que
+          # coordinator-runner.yml já usa precisam chegar até AQUI — é este
+          # passo que de fato chama RunnerDispatchConfig.from_env() dentro
+          # de `python3 -m coordinator` (via `_observar()`). O passo de
+          # confirmação acima lê as mesmas Variables só para imprimir; sem
+          # repetir aqui, uma retomada api_runner real nunca veria o portão
+          # aberto mesmo que José tivesse ligado de verdade. Nenhuma flag
+          # nova é ligada por este workflow — os valores vêm só das MESMAS
+          # Variables/expressões do Runner.
+          REPASSO_RUNNER_ENABLED: ${{ vars.REPASSO_RUNNER_ENABLED }}
+          REPASSO_RUNNER_MODE: ${{ vars.REPASSO_RUNNER_MODE }}
+          REPASSO_RUNNER_CANARY_TASK_ID: ${{ vars.REPASSO_RUNNER_CANARY_TASK_ID }}
+          REPASSO_RUNNER_ACTUAL_REF: ${{ github.ref }}
+          REPASSO_RUNNER_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
         run: |
           set +e
           # Remoto com o GITHUB_TOKEN embutido, só para dar push na branch
@@ -334,6 +395,7 @@ jobs:
             --workers-from-tasks-json coordination/tasks.json
             --worker-state-git-remote "$REMOTO_COM_TOKEN"
             --openai-usage-git-remote "$REMOTO_COM_TOKEN"
+            --runner-repo-dir .
             --out /tmp/coordinator-observe.json
             --comment-out /tmp/coordinator-comment.md
             --comment-target-out /tmp/coordinator-comment-target.txt

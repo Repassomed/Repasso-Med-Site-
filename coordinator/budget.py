@@ -79,9 +79,28 @@ class UsageRecord:
     input_tokens: int
     output_tokens: int
     estimated_cost_usd: float
+    # Achado F8-C (Issue #105, Fase F, 7ª rodada): campo ADITIVO, opcional,
+    # default "usage" — preserva o formato de todo registro já existente
+    # (Coordinator OBSERVE via ``anthropic_client.call``, que nunca
+    # preenche isto explicitamente). ``coordinator/runner_generate.py``
+    # passou a usar o MESMO ``UsageRecord``/``UsageLedger``/
+    # ``GitUsageLedger`` — nunca um tipo/mecanismo paralelo — para o
+    # padrão "reserva conservadora atômica -> chamada -> correção ->
+    # registro informativo" (mesmo espírito de
+    # ``coordinator.openai_budget.OpenAIUsageRecord.kind``, sem duplicar
+    # nenhuma lógica de lá): "reservation" (reserva do teto conservador,
+    # gravada ANTES da chamada), "correction" (ajusta a reserva para o
+    # custo real depois, delta pode ser negativo) ou "usage" (registro
+    # histórico informativo, não soma de novo — ver
+    # ``informational_cost_usd``). ``month_to_date_usd()``/
+    # ``reserve_if_within_budget()`` continuam somando só
+    # ``estimated_cost_usd``, sempre — ``kind`` nunca muda essa soma,
+    # só rotula o PAPEL de cada registro para quem lê/audita depois.
+    kind: str = "usage"
+    informational_cost_usd: float | None = None
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "timestamp": self.timestamp,
             "event_key": self.event_key,
             "tier": self.tier,
@@ -89,7 +108,11 @@ class UsageRecord:
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,
             "estimated_cost_usd": round(self.estimated_cost_usd, 6),
+            "kind": self.kind,
         }
+        if self.informational_cost_usd is not None:
+            d["informational_cost_usd"] = round(self.informational_cost_usd, 6)
+        return d
 
 
 class _CostRecordLike(Protocol):

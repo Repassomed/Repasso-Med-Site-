@@ -357,6 +357,7 @@ def aplicar_comando(
             # transição é recusada (estado mais novo NUNCA sobrescrito).
             transitou = registry.marcar_available_condicional(
                 atual.worker_id,
+                esperado_status=atual.status,
                 esperado_current_task=atual.current_task,
                 esperado_checkpoint=atual.last_checkpoint,
                 esperado_branch=atual.branch,

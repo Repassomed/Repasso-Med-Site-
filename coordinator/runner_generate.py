@@ -118,11 +118,12 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Protocol
 
 from . import anthropic_client
 from .anthropic_transport import AnthropicTransport
-from .budget import BudgetStatus, CallLimiter, UsageRecord, check_budget, priority_allowed
+from .budget import BudgetStatus, CallLimiter, UsageRecord, check_budget, estimate_cost_usd, priority_allowed
 from .models import ModelTier, resolve as resolve_model
 from .redact import redact
 from .runner_contract import RunnerTask
@@ -144,6 +145,41 @@ from .runner_dispatch import RunnerDispatchConfig, StructuredPatch, validar_patc
 # arquivos grandes é uma evolução futura, fora desta rodada.
 MAX_FILE_CHARS_SENT = 20_000
 
+# Achado F8-C (Issue #105, Fase F, 7ª rodada): mesmo princípio de
+# ``coordinator.openai_budget.conservative_input_tokens_ceiling`` — contagem
+# de BYTES UTF-8 (nunca de caracteres) é uma cota superior MATEMÁTICA sobre
+# o número de tokens que QUALQUER tokenizador BPE byte-level produz (nunca
+# menos de 1 token por byte). ``STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE``
+# cobre a folga de formatação da API (roles, delimitadores) que não aparece
+# no texto puro de system/prompt.
+_STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE = 64
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _conservative_input_tokens_ceiling(system: str, prompt: str) -> int:
+    """Teto de tokens de entrada comprovadamente NÃO-subestimador para
+    ``system + prompt`` — nunca menor que a contagem real de tokens que a
+    API vai processar (mesma técnica/justificativa de
+    ``openai_budget.conservative_input_tokens_ceiling``, aplicada aqui
+    para a Anthropic; nenhuma lógica de lá é reimportada/duplicada, só o
+    mesmo PRINCÍPIO)."""
+    payload_bytes = len((system + prompt).encode("utf-8"))
+    return payload_bytes + _STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE
+
+
+def _conservative_call_cost_usd(*, system: str, prompt: str, max_output_tokens: int) -> float:
+    """Teto CONSERVADOR (pior caso) do custo de UMA chamada, calculado
+    ANTES de qualquer chamada acontecer — usa o teto de tokens de entrada
+    comprovadamente não-subestimador acima e o limite MÁXIMO de tokens de
+    saída permitidos por chamada (nunca os tokens reais de resposta, que
+    só a API sabe depois). Sempre nível STANDARD — o único usado por este
+    módulo (``resolve_model(ModelTier.STANDARD)`` mais abaixo)."""
+    tokens_entrada = _conservative_input_tokens_ceiling(system, prompt)
+    return estimate_cost_usd(ModelTier.STANDARD, tokens_entrada, max_output_tokens)
+
 
 class _UsageLedgerLike(Protocol):
     """Correção B2-B (auditoria independente do PR #114, 2ª rodada): o
@@ -156,10 +192,19 @@ class _UsageLedgerLike(Protocol):
     aqui, sem importar nenhuma das duas implementações, então o mecanismo
     de geração continua funcionando com qualquer uma (produção sempre usa
     ``GitUsageLedger``; os testes usam ``UsageLedger`` de arquivo local só
-    porque é mais simples de isolar em `tempfile.TemporaryDirectory`)."""
+    porque é mais simples de isolar em `tempfile.TemporaryDirectory`).
+
+    Achado F8-C (7ª rodada): ganhou ``reserve_if_within_budget`` — o MESMO
+    método atômico (compare-and-set via lock em processo único;
+    compare-and-set via git em produção) que o OpenAI Auditor já usa
+    (``coordinator/openai_client.py``) para fechar a corrida de orçamento
+    "check_budget → chamada → append" (achado F8-C: duas execuções
+    concorrentes liam o mesmo saldo ANTES de qualquer uma publicar, então
+    as duas podiam passar juntas)."""
 
     def append(self, record: UsageRecord) -> None: ...
     def month_to_date_usd(self, *, now=None) -> float: ...
+    def reserve_if_within_budget(self, candidate, *, budget_usd: float, now=None) -> bool: ...
 
 _SYSTEM_PROMPT = (
     "Você é um gerador determinístico de patch estruturado para o Repasso Med "
@@ -229,6 +274,16 @@ class GenerateOutcome:
     patch: StructuredPatch | None = None
     usage: UsageRecord | None = None
     external_call_made: bool = False
+    # Achado F8-C (7ª rodada): True só quando a chamada TEVE êxito mas a
+    # correção da reserva conservadora para o custo real e/ou o registro
+    # de uso real não puderam ser persistidos no ledger — sinal EXPLÍCITO
+    # (nunca um `except Exception: pass` silencioso, mesmo espírito da
+    # correção B3/B9 do OpenAI Auditor). Nunca reverte ``status``/
+    # ``patch`` — um patch já gerado/validado continua válido mesmo que o
+    # ledger fique temporariamente impreciso (a reserva conservadora, na
+    # pior das hipóteses, permanece contada — nunca um valor menor/
+    # ausente).
+    ledger_correction_failed: bool = False
 
     def to_dict(self) -> dict:
         d = {
@@ -236,6 +291,7 @@ class GenerateOutcome:
             "reason": redact(self.reason),
             "external_call_made": self.external_call_made,
             "patch": self.patch.to_dict() if self.patch else None,
+            "ledger_correction_failed": self.ledger_correction_failed,
         }
         if self.usage:
             d["usage"] = self.usage.to_dict()
@@ -244,6 +300,20 @@ class GenerateOutcome:
 
 def _outcome_bloqueado(motivo: str) -> GenerateOutcome:
     return GenerateOutcome(status="blocked", reason=motivo, external_call_made=False)
+
+
+def _tentar_gravar(usage_ledger: _UsageLedgerLike, record: UsageRecord) -> tuple[bool, str | None]:
+    """Nunca lança — devolve (persistiu, erro_sanitizado). Mesmo helper
+    (mesmo nome/contrato) de ``coordinator/openai_client.py::_tentar_
+    gravar`` — usado para a correção e para o registro de uso, para que
+    uma falha de persistência vire sinal EXPLÍCITO (``GenerateOutcome.
+    ledger_correction_failed``) em vez de uma exceção não tratada ou um
+    `except Exception: pass` silencioso (achado F8-C)."""
+    try:
+        usage_ledger.append(record)
+        return True, None
+    except Exception as exc:  # noqa: BLE001 — ponto de borda deliberado, mesma filosofia do resto do pacote
+        return False, redact(f"{type(exc).__name__}: {exc}")
 
 
 def gerar_patch_via_claude(
@@ -271,7 +341,12 @@ def gerar_patch_via_claude(
             f"({config.canary_task_id!r})."
         )
 
-    # Camada 3 (invariante 2): orçamento mensal, mesmo mecanismo de sempre.
+    # Camada 3 (invariante 2): checagem GRADUADA por prioridade (50/75/90/
+    # 100% do teto — Issue #84 §4), avaliada cedo, ANTES de montar prompt/
+    # ler arquivos — nunca a checagem definitiva de orçamento (essa é a
+    # reserva atômica mais abaixo, achado F8-C); só decide se esta
+    # PRIORIDADE específica deve nem tentar, mais barato que montar o
+    # prompt à toa quando o teto já está apertado.
     status_orcamento: BudgetStatus = check_budget(usage_ledger, budget_usd=budget_usd)
     if not priority_allowed(status_orcamento, task.priority):
         return _outcome_bloqueado(f"Orçamento: {status_orcamento.message}")
@@ -301,6 +376,43 @@ def gerar_patch_via_claude(
     pedido = anthropic_client.build_request(model_choice, system=_SYSTEM_PROMPT, prompt=prompt, limiter=limiter)
     transporte_real = transport if transport is not None else AnthropicTransport()
 
+    # Achado F8-C (Issue #105, Fase F, 7ª rodada, auditoria independente):
+    # "check_budget -> chamada paga -> append" (o fluxo de antes desta
+    # correção) tinha uma corrida real — duas execuções concorrentes podiam
+    # ler o MESMO saldo do ledger ANTES de qualquer uma publicar seu custo,
+    # e as duas passavam juntas no teto. Mesmo padrão já auditado do OpenAI
+    # Auditor (``coordinator/openai_client.py::call``, achados B2/B7/B8/B9
+    # da auditoria independente do PR #107): reserva CONSERVADORA (pior
+    # caso de tokens de entrada/saída) ATÔMICA — checada E gravada como UMA
+    # operação (``UsageLedger.reserve_if_within_budget``/
+    # ``GitUsageLedger.reserve_if_within_budget``, o MESMO ledger GLOBAL
+    # ``coordinator-state-usage``, nunca um segundo orçamento) — ANTES de
+    # qualquer chamada. Uma segunda execução concorrente que leia o ledger
+    # um instante depois já vê o gasto reservado por esta, então as duas
+    # juntas nunca ultrapassam o teto.
+    custo_reservado = _conservative_call_cost_usd(
+        system=_SYSTEM_PROMPT, prompt=prompt, max_output_tokens=pedido.max_output_tokens,
+    )
+    registro_reserva = UsageRecord(
+        timestamp=_now_iso(), event_key=f"runner-task:{task.task_id}", tier=model_choice.tier.value,
+        model_id=model_choice.model_id, input_tokens=0, output_tokens=0,
+        estimated_cost_usd=custo_reservado, kind="reservation",
+    )
+    try:
+        reservou = usage_ledger.reserve_if_within_budget(registro_reserva, budget_usd=budget_usd)
+    except Exception as exc:  # noqa: BLE001 — falha ao reservar = zero chamada, nunca uma exceção solta
+        return _outcome_bloqueado(
+            "Não foi possível reservar orçamento (falha ao persistir a reserva conservadora no "
+            f"ledger Anthropic global) — nenhuma chamada foi tentada: {redact(f'{type(exc).__name__}: {exc}')}"
+        )
+    if not reservou:
+        return _outcome_bloqueado(
+            f"Orçamento: reservar US$ {custo_reservado:.6f} (teto conservador desta chamada) "
+            f"ultrapassaria o limite de US$ {budget_usd:.2f}. Nenhuma chamada foi tentada — hard cap "
+            "real, checado e gravado atomicamente ANTES do envio, sem janela de corrida entre a "
+            "checagem e a reserva (achado F8-C)."
+        )
+
     # Ponto único de chamada (invariante 6: uma tentativa só, sem retry
     # automático — já garantido por anthropic_client.call). `config` aqui é
     # RunnerDispatchConfig, compatível por duck typing com o `.gate()` que
@@ -313,20 +425,62 @@ def gerar_patch_via_claude(
     sanitizado = resultado_chamada.to_dict()
 
     if resultado_chamada.status in ("blocked", "limited"):
+        # `transport.send()` nunca foi chamado — zero tokens consumidos de
+        # verdade — a reserva conservadora pode ser liberada com segurança
+        # (delta negativo = libera 100% dela). Na prática este ramo é
+        # defensivo (os mesmos portões/limiter já foram checados antes da
+        # reserva, poucas linhas acima) — nunca deixa a reserva presa à
+        # toa quando se sabe com certeza que nada foi gasto.
+        _tentar_gravar(usage_ledger, UsageRecord(
+            timestamp=_now_iso(), event_key=f"runner-task:{task.task_id}", tier=model_choice.tier.value,
+            model_id=model_choice.model_id, input_tokens=0, output_tokens=0,
+            estimated_cost_usd=-custo_reservado, kind="correction",
+        ))
         return _outcome_bloqueado(sanitizado["reason"])
     if resultado_chamada.status == "error":
+        # Correção B8 do OpenAI Auditor, mesmo princípio aqui: um erro de
+        # transporte (timeout, conexão perdida) pode ter acontecido DEPOIS
+        # que a Anthropic já processou (e cobrou) a requisição — liberar a
+        # reserva aqui poderia SUBESTIMAR o gasto real. A reserva
+        # conservadora PERMANECE contada — nunca corrigida/liberada neste
+        # ramo (achado F8-C: "erro de transporte mantém a reserva
+        # conservadora").
         return GenerateOutcome(status="failed", reason=sanitizado["reason"], external_call_made=True)
 
-    # A partir daqui a chamada teve êxito (status == "ok") — registrar
-    # custo/tokens no MESMO ledger de sempre (invariante 7), mesmo que a
-    # resposta ainda venha a ser rejeitada por validação abaixo: a chamada
-    # aconteceu e custou, isso não pode desaparecer só porque o conteúdo
-    # devolvido era inválido.
-    if resultado_chamada.usage is not None:
-        try:
-            usage_ledger.append(resultado_chamada.usage)
-        except Exception:  # falha de PERSISTÊNCIA depois do fato — nunca reverte a chamada já feita
-            pass
+    # A partir daqui a chamada teve êxito (status == "ok") — corrige a
+    # reserva CONSERVADORA para o custo REAL (delta pode ser negativo — o
+    # caso comum, já que o teto conservador quase sempre supera o real) e
+    # grava um registro informativo de uso, mesmo que a resposta ainda
+    # venha a ser rejeitada por validação abaixo: a chamada aconteceu e
+    # custou, isso não pode desaparecer só porque o conteúdo devolvido era
+    # inválido (invariante 7, inalterada).
+    custo_real = resultado_chamada.usage.estimated_cost_usd if resultado_chamada.usage else 0.0
+    tokens_entrada_reais = resultado_chamada.usage.input_tokens if resultado_chamada.usage else 0
+    tokens_saida_reais = resultado_chamada.usage.output_tokens if resultado_chamada.usage else 0
+    corrigiu, erro_correcao = _tentar_gravar(usage_ledger, UsageRecord(
+        timestamp=_now_iso(), event_key=f"runner-task:{task.task_id}", tier=model_choice.tier.value,
+        model_id=model_choice.model_id, input_tokens=0, output_tokens=0,
+        estimated_cost_usd=(custo_real - custo_reservado), kind="correction",
+    ))
+    persistiu_uso, erro_uso = _tentar_gravar(usage_ledger, UsageRecord(
+        timestamp=_now_iso(), event_key=f"runner-task:{task.task_id}", tier=model_choice.tier.value,
+        model_id=model_choice.model_id, input_tokens=tokens_entrada_reais, output_tokens=tokens_saida_reais,
+        estimated_cost_usd=0.0, kind="usage", informational_cost_usd=custo_real,
+    ))
+    # Achado F8-C: falha de correção/persistência depois da chamada precisa
+    # aparecer EXPLICITAMENTE para quem chama — nunca um `except Exception:
+    # pass` silencioso (a chamada paga já aconteceu; a reserva conservadora,
+    # na pior das hipóteses, permanece contada — nunca desaparece nem
+    # subestima). Nunca reverte status/patch: um patch já gerado/validado
+    # continua válido mesmo com o ledger temporariamente impreciso.
+    ledger_correction_failed = not (corrigiu and persistiu_uso)
+    nota_ledger = ""
+    if ledger_correction_failed:
+        erro = erro_correcao or erro_uso
+        nota_ledger = (
+            " [AVISO: a chamada foi concluída com sucesso, mas o ledger não pôde ser totalmente "
+            f"atualizado (correção de custo e/ou registro de uso real): {erro}]"
+        )
 
     texto = resultado_chamada.text or ""
     try:
@@ -334,15 +488,19 @@ def gerar_patch_via_claude(
     except (json.JSONDecodeError, ValueError):
         return GenerateOutcome(
             status="failed",
-            reason="resposta do modelo não é um JSON válido — resposta malformada nunca é aplicada parcialmente.",
+            reason="resposta do modelo não é um JSON válido — resposta malformada nunca é aplicada "
+                   f"parcialmente.{nota_ledger}",
             usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
         )
 
     if not isinstance(dados, dict):
         return GenerateOutcome(
             status="failed",
-            reason=f"resposta do modelo precisa ser um objeto JSON, recebido {type(dados).__name__}.",
+            reason=f"resposta do modelo precisa ser um objeto JSON, recebido {type(dados).__name__}."
+                   f"{nota_ledger}",
             usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
         )
 
     try:
@@ -350,20 +508,24 @@ def gerar_patch_via_claude(
     except ValueError as exc:
         return GenerateOutcome(
             status="failed",
-            reason=f"patch estruturado da resposta é inválido (fail-closed, nunca parcial): {exc}",
+            reason=f"patch estruturado da resposta é inválido (fail-closed, nunca parcial): {exc}{nota_ledger}",
             usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
         )
 
     ok_patch, fora = validar_patch_contra_allowed_files(patch, task)
     if not ok_patch:
         return GenerateOutcome(
             status="blocked",
-            reason=f"patch gerado declara caminho(s) fora de allowed_files: {fora} — rejeitado, nunca aplicado.",
+            reason=f"patch gerado declara caminho(s) fora de allowed_files: {fora} — rejeitado, nunca "
+                   f"aplicado.{nota_ledger}",
             usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
         )
 
     return GenerateOutcome(
         status="ok",
-        reason="patch gerado via Claude e validado contra allowed_files.",
+        reason=f"patch gerado via Claude e validado contra allowed_files.{nota_ledger}",
         patch=patch, usage=resultado_chamada.usage, external_call_made=True,
+        ledger_correction_failed=ledger_correction_failed,
     )

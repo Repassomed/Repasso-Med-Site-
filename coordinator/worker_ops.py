@@ -415,22 +415,33 @@ class OperationalWorkerRegistry:
 
     def marcar_available_condicional(
         self, worker_id: str, *,
-        esperado_current_task: str | None, esperado_checkpoint: str | None, esperado_branch: str | None,
+        esperado_status: str, esperado_current_task: str | None,
+        esperado_checkpoint: str | None, esperado_branch: str | None,
         message: str,
     ) -> bool:
-        """Achado F7-D (Issue #105, Fase F, 6ª rodada): CAS para a
+        """Achado F7-D/F8-B (Issue #105, Fase F, 6ª/7ª rodadas): CAS para a
         transição ``SET_AVAILABLE`` (``worker_commands.py``) — nunca mais
         um "read antigo + upsert incondicional". Só escreve
         ``status=AVAILABLE``/``current_task=None`` quando uma leitura
         FRESCA (dentro do próprio ``conditional_update``, repetida a cada
-        tentativa de conflito) ainda mostra ``current_task``/
+        tentativa de conflito) ainda mostra ``status``/``current_task``/
         ``last_checkpoint``/``branch`` EXATAMENTE iguais aos capturados
         por quem chama — ou seja, nenhum heartbeat/handoff real mudou o
         worker entre essa leitura e esta escrita. Se algo mudou, devolve
         ``False`` sem escrever nada — o estado mais novo nunca é
         sobrescrito por uma transição baseada num snapshot velho (mesmo
         princípio de ``transferir_worker_condicional``, achado H2/H4 da
-        Fase E)."""
+        Fase E).
+
+        Achado F8-B (7ª rodada, auditoria independente): a checagem
+        original (F7-D) não incluía ``status`` — um heartbeat concorrente
+        que mudasse SÓ o status (ex.: ``LIMIT`` -> ``BUSY``, sem tocar
+        ``current_task``/``checkpoint``/``branch``, cenário real de uma
+        retomada já em andamento por outro caminho) passava pelo CAS sem
+        ser detectado, e a transição stale ainda sobrescreveria esse
+        status mais novo. Agora ``esperado_status`` é OBRIGATÓRIO — quem
+        chama precisa capturá-lo explicitamente, junto dos outros três
+        campos, do MESMO snapshot que originou a decisão de comando."""
         def evaluate(dados: dict) -> tuple[bool, dict]:
             existentes = dados.get("workers")
             base = {w["worker_id"]: w for w in existentes} if existentes else {
@@ -438,6 +449,8 @@ class OperationalWorkerRegistry:
             }
             fresco = base.get(worker_id)
             if fresco is None:
+                return False, dados
+            if fresco.get("status") != esperado_status:
                 return False, dados
             if fresco.get("current_task") != esperado_current_task:
                 return False, dados

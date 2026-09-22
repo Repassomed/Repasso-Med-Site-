@@ -7,6 +7,14 @@ diretamente na camada de baixo nível, sem passar por
 ``worker_commands.aplicar_comando`` — esse caminho ponta a ponta já é
 coberto por ``test_worker_commands.py``.
 
+Achado F8-B (7ª rodada, auditoria independente): a checagem original de
+``marcar_available_condicional`` (F7-D) não incluía ``status`` — um
+heartbeat concorrente que mudasse SÓ o status (ex.: LIMIT -> BUSY, sem
+tocar current_task/checkpoint/branch) passava pelo CAS sem ser
+detectado. ``esperado_status`` agora é obrigatório; o cenário obrigatório
+(``test_marcar_available_condicional_recusa_quando_so_o_status_mudou``)
+prova exatamente essa lacuna fechada.
+
 Deliberadamente NÃO registrado em ``coordinator/tests/run_all.py`` nesta
 rodada (mesma decisão operacional já aplicada às Fases B/C/D/F) — roda
 standalone via ``python3 -m coordinator.tests.test_worker_ops``.
@@ -39,7 +47,7 @@ def test_marcar_available_condicional_aceita_quando_estado_bate() -> None:
         message="setup",
     )
     ok = registry.marcar_available_condicional(
-        "claude-2", esperado_current_task="t-x", esperado_checkpoint="abc123",
+        "claude-2", esperado_status="LIMIT", esperado_current_task="t-x", esperado_checkpoint="abc123",
         esperado_branch="runner/t-x", message="teste",
     )
     assert ok is True
@@ -73,7 +81,7 @@ def test_marcar_available_condicional_recusa_quando_current_task_mudou() -> None
         message="heartbeat concorrente: checkpoint novo",
     )
     ok = registry.marcar_available_condicional(
-        "claude-2", esperado_current_task="t-x", esperado_checkpoint="abc123",
+        "claude-2", esperado_status="LIMIT", esperado_current_task="t-x", esperado_checkpoint="abc123",
         esperado_branch="runner/t-x", message="teste (stale)",
     )
     assert ok is False, "CAS precisa recusar quando o checkpoint mudou desde a leitura"
@@ -102,7 +110,7 @@ def test_marcar_available_condicional_concorrente_so_uma_vence() -> None:
     def tentar() -> None:
         barreira.wait()
         ok = registry.marcar_available_condicional(
-            "claude-2", esperado_current_task="t-x", esperado_checkpoint="abc123",
+            "claude-2", esperado_status="LIMIT", esperado_current_task="t-x", esperado_checkpoint="abc123",
             esperado_branch="runner/t-x", message="corrida",
         )
         resultados.append(ok)
@@ -118,6 +126,48 @@ def test_marcar_available_condicional_concorrente_so_uma_vence() -> None:
     assert worker.status == "AVAILABLE"
     assert worker.current_task is None
     print("OK  test_marcar_available_condicional_concorrente_so_uma_vence")
+
+
+def test_marcar_available_condicional_recusa_quando_so_o_status_mudou() -> None:
+    """Achado F8-B (7ª rodada, auditoria independente): cenário obrigatório
+    — snapshot inicial LIMIT; um heartbeat concorrente muda SÓ o status
+    para BUSY (task/checkpoint/branch permanecem EXATAMENTE iguais); um
+    SET_AVAILABLE atrasado (que capturou o snapshot ANTES desse
+    heartbeat, então ainda espera status=LIMIT) precisa ser recusado pelo
+    CAS; o registro BUSY precisa permanecer intacto — nunca sobrescrito
+    por uma transição que nem olhava o status antes desta correção (a
+    falha exata que F7-D sozinho não cobria)."""
+    registry = _registry()
+    registry.upsert(
+        WorkerRecord(
+            worker_id="claude-2", display_name="Claude 2", type="api_runner", status="LIMIT",
+            current_task="t-x", last_checkpoint="abc123", branch="runner/t-x", can_execute=True,
+        ),
+        message="snapshot inicial: LIMIT",
+    )
+    # Heartbeat concorrente: SÓ o status muda (BUSY) — current_task,
+    # last_checkpoint e branch continuam EXATAMENTE os mesmos, o cenário
+    # exato em que a checagem antiga (sem esperado_status) não detectaria
+    # nada de diferente.
+    registry.upsert(
+        WorkerRecord(
+            worker_id="claude-2", display_name="Claude 2", type="api_runner", status="BUSY",
+            current_task="t-x", last_checkpoint="abc123", branch="runner/t-x", can_execute=True,
+        ),
+        message="heartbeat concorrente: só o status mudou (LIMIT -> BUSY)",
+    )
+    # SET_AVAILABLE atrasado: capturou o snapshot ANTES do heartbeat acima
+    # (ainda espera status=LIMIT).
+    ok = registry.marcar_available_condicional(
+        "claude-2", esperado_status="LIMIT", esperado_current_task="t-x", esperado_checkpoint="abc123",
+        esperado_branch="runner/t-x", message="SET_AVAILABLE atrasado (stale)",
+    )
+    assert ok is False, "CAS precisa recusar quando SÓ o status mudou desde a leitura"
+    worker = registry.find_by_name_or_id("claude-2")
+    assert worker.status == "BUSY", "o registro BUSY (mais novo) precisa permanecer intacto"
+    assert worker.current_task == "t-x"
+    assert worker.last_checkpoint == "abc123"
+    print("OK  test_marcar_available_condicional_recusa_quando_so_o_status_mudou")
 
 
 # ---------------------------------------------------------------------------
@@ -204,6 +254,7 @@ def main() -> int:
         test_marcar_available_condicional_aceita_quando_estado_bate,
         test_marcar_available_condicional_recusa_quando_current_task_mudou,
         test_marcar_available_condicional_concorrente_so_uma_vence,
+        test_marcar_available_condicional_recusa_quando_so_o_status_mudou,
         test_reservar_current_task_condicional_aceita_quando_livre,
         test_reservar_current_task_condicional_recusa_quando_ja_assumiu_outra_tarefa,
         test_escolher_disponivel_ignora_worker_reservado,

@@ -328,6 +328,70 @@ def test_run_step_forwards_enabled_mode_and_pilot_env_to_the_cli() -> None:
     print("OK  test_run_step_forwards_enabled_mode_and_pilot_env_to_the_cli")
 
 
+def test_runner_repo_dir_flag_is_wired_into_the_real_invocation() -> None:
+    """Achado F8-A (Issue #105, Fase F, 7ª rodada): o passo real precisa
+    passar --runner-repo-dir . para que uma retomada api_runner disparada
+    por um SET_AVAILABLE reconhecido na Inbox (#88) tenha onde ler/
+    escrever a branch de trabalho — sem isto, runner_repo_dir chega
+    sempre None em observe() (retrocompatível, mas nenhuma retomada
+    api_runner de verdade consegue prosseguir)."""
+    texto = _ler()
+    idx_step = texto.index("Rodar o Coordinator sobre o evento real")
+    idx_run = texto.index("run: |", idx_step)
+    bloco_run = texto[idx_run:]
+    assert "--runner-repo-dir ." in bloco_run
+    print("OK  test_runner_repo_dir_flag_is_wired_into_the_real_invocation")
+
+
+def test_run_step_forwards_runner_gate_env_to_the_cli() -> None:
+    """Achado F8-A: os MESMOS 5 nomes de Variable/expressão que
+    coordinator-runner.yml já usa para o Runner precisam chegar até o
+    passo que de fato chama `python3 -m coordinator` — sem isto,
+    `RunnerDispatchConfig.from_env()` (dentro de `_observar()`) sempre
+    veria os defaults seguros (ENABLED=false), mesmo com as Variables do
+    repositório configuradas de verdade."""
+    texto = _ler()
+    idx_step = texto.index("Rodar o Coordinator sobre o evento real")
+    idx_run = texto.index("run: |", idx_step)
+    bloco_env = texto[idx_step:idx_run]
+    for nome in (
+        "REPASSO_RUNNER_ENABLED",
+        "REPASSO_RUNNER_MODE",
+        "REPASSO_RUNNER_CANARY_TASK_ID",
+        "REPASSO_RUNNER_ACTUAL_REF",
+        "REPASSO_RUNNER_EXPECTED_REF",
+    ):
+        assert nome in bloco_env, f"{nome} precisa estar no env do passo que roda o CLI de verdade"
+    print("OK  test_run_step_forwards_runner_gate_env_to_the_cli")
+
+
+def test_runner_gate_env_uses_the_same_variables_and_expressions_as_the_runner_workflow() -> None:
+    """Achado F8-A: 'use as mesmas Variables e mesmas regras de segurança
+    do workflow Runner' — nunca um valor inventado/hardcoded aqui. As
+    3 Variables (ENABLED/MODE/CANARY_TASK_ID) precisam vir de `vars.*`
+    (nunca de um literal fixo), e ACTUAL_REF/EXPECTED_REF precisam usar
+    EXATAMENTE a mesma expressão que coordinator-runner.yml usa
+    (`github.ref` / `refs/heads/<default_branch>`), para que a mesma
+    checagem de ref segura se aplique aqui também."""
+    texto = _ler()
+    idx_step = texto.index("Rodar o Coordinator sobre o evento real")
+    idx_run = texto.index("run: |", idx_step)
+    bloco_env = texto[idx_step:idx_run]
+    assert "REPASSO_RUNNER_ENABLED: ${{ vars.REPASSO_RUNNER_ENABLED }}" in bloco_env
+    assert "REPASSO_RUNNER_MODE: ${{ vars.REPASSO_RUNNER_MODE }}" in bloco_env
+    assert "REPASSO_RUNNER_CANARY_TASK_ID: ${{ vars.REPASSO_RUNNER_CANARY_TASK_ID }}" in bloco_env
+    assert "REPASSO_RUNNER_ACTUAL_REF: ${{ github.ref }}" in bloco_env
+    assert (
+        "REPASSO_RUNNER_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}"
+        in bloco_env
+    )
+    # Nenhuma flag é "ligada por conta própria" — nenhum destes valores
+    # pode ser um literal 'true'/task_id fixo neste arquivo.
+    assert 'REPASSO_RUNNER_ENABLED: "true"' not in texto
+    assert "REPASSO_RUNNER_ENABLED: true" not in texto
+    print("OK  test_runner_gate_env_uses_the_same_variables_and_expressions_as_the_runner_workflow")
+
+
 def main() -> int:
     testes = [
         test_pull_request_trigger_is_absent,
@@ -352,6 +416,9 @@ def main() -> int:
         test_comment_step_reads_explicit_target_never_infers_it,
         test_comment_target_out_flag_is_wired_into_the_real_invocation,
         test_hashfiles_against_tmp_is_never_used,
+        test_runner_repo_dir_flag_is_wired_into_the_real_invocation,
+        test_run_step_forwards_runner_gate_env_to_the_cli,
+        test_runner_gate_env_uses_the_same_variables_and_expressions_as_the_runner_workflow,
     ]
     falhas = 0
     for t in testes:
