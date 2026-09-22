@@ -47,7 +47,18 @@ _ARQUIVOS_FONTE = [
 # nunca precisa dessa técnica: ele só publica um commit NOVO numa branch
 # de trabalho nova/própria da tarefa (nunca reescreve uma branch já
 # publicada), então um push comum, sem nenhuma forma de força, já basta.
-_ARQUIVOS_FONTE_GERAL = [f for f in _ARQUIVOS_FONTE if f not in ("git_state.py", "runner_dispatch.py")]
+#
+# runner_resume.py (Issue #105, Fase F) entra separado pelo mesmo motivo
+# — mas com a checagem MAIS estrita das três: este arquivo não tem NENHUM
+# caso de uso legítimo para `git commit`/`git push` (ele só CONFIRMA um
+# checkpoint já publicado por outra execução — nunca publica nada); a
+# checagem dedicada (test_runner_resume_never_writes_to_git) proíbe
+# commit/push/merge/rebase/força/reset --hard inteiramente, sem exceção
+# nenhuma, e confirma positivamente que só os comandos de LEITURA
+# esperados (`cat-file`, `fetch`, `merge-base`) aparecem no arquivo.
+_ARQUIVOS_FONTE_GERAL = [
+    f for f in _ARQUIVOS_FONTE if f not in ("git_state.py", "runner_dispatch.py", "runner_resume.py")
+]
 
 _PADROES_PROIBIDOS = [
     (re.compile(r"\bimport\s+supabase\b"), "import direto do cliente Supabase"),
@@ -169,6 +180,37 @@ def test_runner_dispatch_never_force_pushes_or_merges() -> None:
     print("OK  test_runner_dispatch_never_force_pushes_or_merges")
 
 
+def test_runner_resume_never_writes_to_git() -> None:
+    """runner_resume.py (Issue #105, Fase F) só CONFIRMA um checkpoint já
+    publicado por outra execução — nunca publica nada. Diferente de
+    git_state.py/runner_dispatch.py (que legitimamente commitam/dão
+    push), este arquivo não tem NENHUM caso de uso para isso: proíbe
+    commit/push/merge/rebase/força/reset --hard por completo, sem
+    exceção nenhuma, e confirma positivamente que só os comandos de
+    LEITURA esperados aparecem."""
+    caminho = os.path.join(_pathsetup._COORDINATOR_ROOT, "runner_resume.py")
+    with open(caminho, encoding="utf-8") as fh:
+        conteudo = fh.read()
+    achados = []
+    for padrao, descricao in _PADROES_PROIBIDOS_SEMPRE + [
+        (re.compile(r'["\']commit["\']'), "argumento de comando git 'commit' (proibido em runner_resume.py)"),
+        (re.compile(r'["\']push["\']'), "argumento de comando git 'push' (proibido em runner_resume.py)"),
+        (re.compile(r"""["']merge["']"""), "argumento de comando git 'merge' (proibido em runner_resume.py)"),
+        (re.compile(r"rebase\s+-i"), "rebase interativo"),
+        (re.compile(r"reset\s+--hard"), "reset destrutivo"),
+        (re.compile(r"""["']--force\b|["']force-with-lease"""), "push com força (proibido em runner_resume.py)"),
+        (re.compile(r'checkout["\',]\s*.{0,4}"main"|push.{0,20}"main"'),
+         'branch "main" hardcoded como alvo de checkout/push'),
+    ]:
+        if padrao.search(conteudo):
+            achados.append(f"{descricao} (padrão {padrao.pattern!r})")
+    assert not achados, "runner_resume.py: " + "; ".join(achados)
+    # Confirma positivamente: só os comandos de leitura esperados aparecem.
+    for comando_esperado in ('"cat-file"', '"fetch"', '"merge-base"'):
+        assert comando_esperado in conteudo, f"runner_resume.py deveria conter {comando_esperado!r}"
+    print("OK  test_runner_resume_never_writes_to_git")
+
+
 def test_main_only_writes_its_own_output_and_state_files() -> None:
     """__main__.py pode escrever arquivo (o resultado OBSERVE e o estado de
     dedup/ledger) — mas só isso. Confirma que os únicos `open(..., "w")` no
@@ -192,6 +234,7 @@ def main() -> int:
         test_source_files_have_no_forbidden_patterns,
         test_git_state_never_targets_main_or_materia,
         test_runner_dispatch_never_force_pushes_or_merges,
+        test_runner_resume_never_writes_to_git,
         test_main_only_writes_its_own_output_and_state_files,
     ]
     falhas = 0
