@@ -143,13 +143,16 @@ def _worker_receptor(**overrides) -> WorkerRecord:
     return WorkerRecord(**campos)
 
 
-def _snapshot(*, checkpoint_commit: str | None, tarefa: RunnerTask | None = None, **overrides) -> InterruptedTaskSnapshot:
+def _snapshot(
+    *, checkpoint_commit: str | None, tarefa: RunnerTask | None = None,
+    canonical_task_id: str = "t-original", **overrides,
+) -> InterruptedTaskSnapshot:
     tarefa = tarefa or _tarefa_original()
-    worker = _worker_anterior(last_checkpoint=checkpoint_commit)
+    worker = _worker_anterior(current_task=canonical_task_id, last_checkpoint=checkpoint_commit)
     return snapshot_de_interrupcao(
-        tarefa_original=tarefa, worker_anterior=worker, motivo_interrupcao="LIMIT",
-        progresso_conhecido="60% — bloco 3 de 5", checks_realizados=("guard local: OK",),
-        pendencias_conhecidas=("adicionar teste de borda",),
+        canonical_task_id=canonical_task_id, tarefa_original=tarefa, worker_anterior=worker,
+        motivo_interrupcao="LIMIT", progresso_conhecido="60% — bloco 3 de 5",
+        checks_realizados=("guard local: OK",), pendencias_conhecidas=("adicionar teste de borda",),
     )
 
 
@@ -746,6 +749,182 @@ def test_processar_retorno_de_worker_sem_snapshot_recusa_retomada_automatica() -
 
 
 # ---------------------------------------------------------------------------
+# F5 — canonical_task_id x execution_task_id, integração com a Fase E
+# (PR #115). NÃO importa coordinator/handoff_exec.py (ainda não mergeado
+# em main) — constrói as fixtures na MESMA FORMA que o código real da
+# Fase E produz (confirmado por leitura, só leitura, do branch
+# origin/infra/handoff-real-issue105e: WorkerRecord.current_task = id
+# CANÔNICO da tarefa; RunnerTask.task_id = id de execução derivado via
+# f"{canonical}--continuacao-{checkpoint}"), sem nunca chamar código de
+# lá.
+# ---------------------------------------------------------------------------
+
+def test_snapshot_recusa_construir_sem_canonical_task_id() -> None:
+    """F5: canonical_task_id é OBRIGATÓRIO e nunca inferido de
+    tarefa_original.task_id (que pode já ser um id de EXECUÇÃO)."""
+    tarefa = _tarefa_original(task_id="t1--continuacao-deadbeef")
+    worker = _worker_anterior(current_task="t1")
+    try:
+        snapshot_de_interrupcao(
+            canonical_task_id="", tarefa_original=tarefa, worker_anterior=worker, motivo_interrupcao="LIMIT",
+        )
+        raise AssertionError("deveria ter recusado canonical_task_id vazio")
+    except ValueError as e:
+        assert "canonical_task_id" in str(e)
+    print("OK  test_snapshot_recusa_construir_sem_canonical_task_id")
+
+
+def test_integracao_fase_e_canonical_e_execution_task_id_nunca_colidem() -> None:
+    """Teste integrado obrigatório (auditoria de integração com o PR #115):
+
+    1. Fase E transfere o canônico 't1' para um api_runner — simulado
+       (sem importar handoff_exec.py) construindo o WorkerRecord na
+       MESMA forma que ``transferir_worker_condicional`` produz:
+       status=BUSY, current_task=CANÔNICO.
+    2. Registry fica BUSY/current_task='t1' — passo 1 já cobre isto.
+    3. A RunnerTask que a Fase E despacha tem um id DERIVADO
+       ('t1--continuacao-<checkpoint>'), nunca 't1' puro (mesma
+       convenção real de ``derivar_task_id_de_continuacao``).
+    4. O Runner 'trabalha' (git real), publica um checkpoint NOVO e
+       entra em LIMIT.
+    5. A Fase F consegue construir o snapshot corretamente — é
+       justamente aqui que, ANTES do achado F5, o código quebrava:
+       comparar current_task ('t1') contra tarefa_original.task_id
+       ('t1--continuacao-<checkpoint A>') nunca batia.
+    6. Uma nova retomada mantém o canônico 't1' e cria um NOVO
+       execution_task_id — diferente tanto do canônico quanto do id de
+       execução anterior da Fase E.
+    7. Nenhuma colisão com o claim anterior — a retomada despacha e
+       conclui (NEEDS-AUDIT), sem nenhum BLOCKED por id já reivindicado.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        checkpoint_a = _publicar_branch_com_checkpoint(remoto, tmp, "runner/t1", "greeting.txt", "v1\n")
+
+        # 1/2 — a Fase E "transferiu" o canônico 't1' para o api_runner
+        # 'claude-2': BUSY + current_task = CANÔNICO (nunca o id derivado).
+        worker_pos_handoff = _worker_receptor(
+            worker_id="claude-2", status="BUSY", current_task="t1", last_checkpoint=checkpoint_a,
+        )
+
+        # 3 — a RunnerTask que a Fase E realmente despacharia tem um id
+        # DERIVADO ('--continuacao-', não '--resume-' — convenção
+        # DIFERENTE da desta Fase F, de propósito: nunca a mesma chave de
+        # claim).
+        execution_id_fase_e = f"t1--continuacao-{checkpoint_a}"
+        tarefa_da_fase_e = _tarefa_original(
+            task_id=execution_id_fase_e, branch="runner/t1", checkpoint_commit=checkpoint_a,
+        )
+
+        # 4 — o runner trabalha, publica um checkpoint NOVO, entra em LIMIT.
+        workdir_execucao = _clonar_workdir(tmp, remoto, "fase-e-executando")
+        subprocess.run(["git", "-C", workdir_execucao, "checkout", "-q", "runner/t1"], check=True)
+        with open(os.path.join(workdir_execucao, "greeting.txt"), "w", encoding="utf-8") as fh:
+            fh.write("v2 - progresso real\n")
+        subprocess.run(["git", "-C", workdir_execucao, "commit", "-q", "-am", "progresso real"], check=True)
+        subprocess.run(["git", "-C", workdir_execucao, "push", "-q", "origin", "runner/t1"], check=True)
+        checkpoint_b = subprocess.run(
+            ["git", "-C", workdir_execucao, "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+        ).stdout.strip()
+        worker_apos_limit = _worker_receptor(
+            worker_id="claude-2", status="LIMIT", current_task="t1", last_checkpoint=checkpoint_b,
+        )
+        assert worker_apos_limit.current_task == "t1", "current_task continua o CANÔNICO mesmo depois do LIMIT"
+
+        # 5 — a Fase F consegue construir o snapshot corretamente: o
+        # canonical_task_id é passado EXPLICITAMENTE ('t1'), nunca
+        # inferido de tarefa_da_fase_e.task_id (que é
+        # 't1--continuacao-<checkpoint_a>', o id de execução ANTERIOR).
+        snap = snapshot_de_interrupcao(
+            canonical_task_id="t1", tarefa_original=tarefa_da_fase_e, worker_anterior=worker_apos_limit,
+            motivo_interrupcao="LIMIT",
+        )
+        assert snap.canonical_task_id == "t1"
+        assert snap.checkpoint_commit == checkpoint_b
+        assert snap.execution_task_id_anterior == execution_id_fase_e
+
+        # 6/7 — nova retomada: canônico continua 't1', execution_task_id
+        # NOVO (checkpoint B), nunca colide com o claim da Fase E
+        # (checkpoint A, sufixo '--continuacao-') nem com o canônico
+        # 't1' sozinho.
+        receptor = _worker_receptor(worker_id="claude-2", status="BUSY", current_task="t1")
+        config = _config(canary_task_id=f"t1--resume-{checkpoint_b[:12]}")
+        workdir_retomada = _clonar_workdir(tmp, remoto, "fase-f-retomada")
+
+        outcome = despachar_retomada(
+            snap, tarefa_estado="BLOCKED-LIMIT", tarefa_agente_atual="claude-2", worker_receptor=receptor,
+            repo_dir=workdir_retomada, config=config, state_git_remote=remoto, patch=_patch_greeting(),
+        )
+        assert outcome.result is not None and outcome.result.status == "NEEDS-AUDIT", outcome.result
+        execution_id_fase_f = outcome.result.task_id
+        assert execution_id_fase_f != "t1"
+        assert execution_id_fase_f != execution_id_fase_e
+        assert execution_id_fase_f == f"t1--resume-{checkpoint_b[:12]}"
+    print("OK  test_integracao_fase_e_canonical_e_execution_task_id_nunca_colidem")
+
+
+# ---------------------------------------------------------------------------
+# F6 — o hook event-driven precisa reagir exatamente uma vez por evento
+# (dedup), mesmo sem nenhum estado novo — via o claim atômico já reusado
+# por despachar_retomada.
+# ---------------------------------------------------------------------------
+
+def test_duas_chamadas_do_hook_para_o_mesmo_evento_nao_executam_duas_vezes() -> None:
+    """Duas chamadas de processar_retorno_de_worker para o MESMO evento
+    (mesmo worker, mesma tarefa, mesmo snapshot) nunca disparam duas
+    execuções reais — o claim atômico já reusado por despachar_retomada
+    garante isso sem nenhum mecanismo de dedup novo."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        sha = _publicar_branch_com_checkpoint(remoto, tmp, "runner/t-evento", "greeting.txt", "ola\n")
+        tarefa = _tarefa_original(branch="runner/t-evento")
+        snap = _snapshot(checkpoint_commit=sha, tarefa=tarefa)
+        config = _config(canary_task_id=f"t-original--resume-{sha[:12]}")
+
+        tarefa_record = TaskRecord(id="t-original", estado="BLOCKED-LIMIT", area="infra", agente="claude-2")
+        worker_voltou = _worker_receptor(worker_id="claude-2", status="AVAILABLE", current_task=None)
+
+        workdir1 = _clonar_workdir(tmp, remoto, "evento-1")
+        outcome1 = processar_retorno_de_worker(
+            worker_que_volta="claude-2", tarefa_original=tarefa_record, tarefas=[tarefa_record],
+            workers=[worker_voltou], snapshot_da_tarefa_original=snap,
+            repo_dir=workdir1, config=config, state_git_remote=remoto, patch=_patch_greeting(),
+        )
+        assert outcome1.retomada is not None and outcome1.retomada.result.status == "NEEDS-AUDIT"
+
+        # Mesmo evento entregue de novo (ex.: redelivery de webhook).
+        workdir2 = _clonar_workdir(tmp, remoto, "evento-2")
+        outcome2 = processar_retorno_de_worker(
+            worker_que_volta="claude-2", tarefa_original=tarefa_record, tarefas=[tarefa_record],
+            workers=[worker_voltou], snapshot_da_tarefa_original=snap,
+            repo_dir=workdir2, config=config, state_git_remote=remoto, patch=_patch_greeting(),
+        )
+        assert outcome2.retomada is not None
+        assert outcome2.retomada.result.status == "BLOCKED"
+        assert outcome2.retomada.dispatch_outcome is None, "a 2ª entrega do MESMO evento nunca pode executar de novo"
+    print("OK  test_duas_chamadas_do_hook_para_o_mesmo_evento_nao_executam_duas_vezes")
+
+
+def test_hook_nunca_despacha_proxima_oferta_mesmo_com_repo_disponivel() -> None:
+    """F6: 'próxima oferta' é sempre devolvida como DADO — mesmo quando o
+    hook TEM tudo que precisaria para despachar (repo_dir/config), ele
+    nunca despacha uma tarefa NOVA (só a retomada da tarefa ORIGINAL é
+    escopo da Fase F)."""
+    tarefa_record = TaskRecord(id="t-original", estado="DONE", area="infra", agente="claude-2")
+    proxima_tarefa = TaskRecord(id="t-seguinte", estado="READY", area="infra", agente=None)
+    worker_voltou = _worker_receptor(worker_id="claude-2", status="AVAILABLE", current_task=None)
+
+    outcome = processar_retorno_de_worker(
+        worker_que_volta="claude-2", tarefa_original=tarefa_record,
+        tarefas=[tarefa_record, proxima_tarefa], workers=[worker_voltou],
+        repo_dir="/algum/repo/valido", config=_config(),
+    )
+    assert outcome.retomada is None
+    assert outcome.proxima_oferta is not None
+    print("OK  test_hook_nunca_despacha_proxima_oferta_mesmo_com_repo_disponivel")
+
+
+# ---------------------------------------------------------------------------
 # 16/17 — nenhuma possibilidade de merge/deploy/force-push; nenhuma chamada
 # real Anthropic/OpenAI. (Ver também test_no_forbidden_writes.py, que já
 # varre runner_resume.py automaticamente — esta é a prova redundante e
@@ -810,6 +989,10 @@ def main() -> int:
         test_processar_retorno_de_worker_ainda_dono_retoma_tarefa,
         test_processar_retorno_de_worker_tarefa_concluida_oferece_proxima,
         test_processar_retorno_de_worker_sem_snapshot_recusa_retomada_automatica,
+        test_snapshot_recusa_construir_sem_canonical_task_id,
+        test_integracao_fase_e_canonical_e_execution_task_id_nunca_colidem,
+        test_duas_chamadas_do_hook_para_o_mesmo_evento_nao_executam_duas_vezes,
+        test_hook_nunca_despacha_proxima_oferta_mesmo_com_repo_disponivel,
         test_no_merge_deploy_or_llm_capability_present,
     ]
     falhas = 0

@@ -92,21 +92,57 @@ texto livre). Mesmo que esse texto contivesse algo como
 campos são valores tipados, atribuídos por código, nunca interpretados a
 partir da string de instruções.
 
-**PARALELISMO COM A FASE E (Claude 1, PR #115, em paralelo):** este módulo
-NUNCA importa nem edita ``coordinator/handoff.py``/``handoff_exec.py``/
-``worker_ops.py`` — só consome a função pura já existente
-(``worker_retomando_deve_assumir``), nunca antecipa nem copia o trabalho
-da Fase E. O ponto de integração é o parâmetro ``worker_receptor`` de
-``avaliar_retomada``/``despachar_retomada``: reconhece DUAS formas
-legítimas de disponibilidade (achado F3 da 2ª rodada de auditoria) —
-"voltou livre" (``AVAILABLE``, ``current_task=None``) ou "já reservado
-pela Fase E para ESTA tarefa" (``BUSY`` com
-``current_task == snapshot.task_id``) — sem importar nem antecipar
-``coordinator/handoff_exec.py``: só reconhece a FORMA da reserva
-(status + current_task), a mesma superfície que ``WorkerRecord`` já
-expõe hoje. Quando o PR #115 mergear, ``handoff_exec.py`` só precisa
-deixar o worker escolhido nesse formato antes de chamar
-``despachar_retomada`` — nenhuma mudança de assinatura prevista.
+**PARALELISMO/INTEGRAÇÃO COM A FASE E (Claude 1, PR #115):** este módulo
+NUNCA importa ``coordinator/handoff_exec.py`` (ainda não mergeado em
+``main`` nesta rodada) nem edita ``handoff.py``/``worker_ops.py`` — só
+consome a função pura já existente (``worker_retomando_deve_assumir``),
+nunca antecipa nem copia o trabalho da Fase E. O ponto de integração é
+o parâmetro ``worker_receptor`` de ``avaliar_retomada``/
+``despachar_retomada``: reconhece DUAS formas legítimas de
+disponibilidade (achado F3) — "voltou livre" (``AVAILABLE``,
+``current_task=None``) ou "já reservado pela Fase E para ESTA tarefa"
+(``BUSY`` com ``current_task == snapshot.canonical_task_id``) — sem
+importar nem antecipar ``handoff_exec.py``: só reconhece a FORMA da
+reserva (status + current_task), a mesma superfície que
+``WorkerRecord`` já expõe hoje.
+
+**F5 — canonical_task_id × execution_task_id (auditoria de integração
+com o PR #115):** a Fase E usa corretamente ``canonical_task_id``
+(``scheduler.TaskRecord.id``/``WorkerRecord.current_task``, estável do
+início ao fim de qualquer número de handoffs/retomadas) separado de
+``execution_task_id`` (``RunnerTask.task_id``/``RunnerClaimStore``,
+DISTINTO a cada execução/continuação — Fase E deriva
+``t1--continuacao-<checkpoint>``, esta Fase F deriva
+``t1--resume-<checkpoint>``). ``InterruptedTaskSnapshot.
+canonical_task_id`` é OBRIGATÓRIO e vem de quem chama (nunca inferido
+removendo sufixos de ``RunnerTask.task_id`` — Fases diferentes usam
+convenções de sufixo diferentes, e "remover sufixo" é ambíguo/frágil).
+Toda comparação de ownership/reserva/``TaskRecord.id``/
+``WorkerRecord.current_task`` usa ``canonical_task_id``;
+``RunnerTask.task_id``/``RunnerClaimStore`` usam ``execution_task_id``,
+derivado fresco a cada retomada — nunca colide com a execução anterior
+nem com a da Fase E (convenções de sufixo diferentes).
+
+**F6 — fechamento do evento automático:** ``processar_retorno_de_worker``
+é o hook REAL a ser chamado quando um heartbeat/comando ``AVAILABLE``
+já validado chega — hoje o ÚNICO ponto de entrada natural para esse
+evento no Coordinator é ``coordinator/worker_commands.py::
+aplicar_comando`` (ação ``SET_AVAILABLE``, Issue #88/#90, arquivo
+PRÉ-EXISTENTE e estável, não pertence a nenhuma Fase do #105). Esta
+rodada NÃO edita ``worker_commands.py`` ainda: o PR #115 continua sem
+estar mergeado em ``main`` (só aprovado/MERGE-READY na própria
+auditoria dele), e o pedido explícito desta rodada foi só tocar esse
+arquivo DEPOIS de atualizar a base com o #115 — fica documentado aqui
+como o próximo passo exato (uma chamada de
+``processar_retorno_de_worker(...)`` dentro do branch
+``SET_AVAILABLE`` de ``aplicar_comando``), não implementado ainda.
+Dedup/"exatamente uma reação por evento" já é garantido
+TRANSITIVAMENTE por este módulo sem nenhum estado novo: o caminho de
+retomada reusa o claim atômico de ``runner_dispatch.RunnerClaimStore``
+(duas chamadas do hook para o MESMO evento nunca executam duas vezes —
+ver ``test_duas_chamadas_do_hook_para_o_mesmo_evento_nao_executam_
+duas_vezes``); o caminho de "próxima oferta" é uma decisão PURA,
+nunca executada por este módulo.
 
 **O QUE ESTE MÓDULO DELIBERADAMENTE NÃO FAZ:** não decide handoff
 (Fase E); não toca ``coordination/tasks.json``; não ativa nenhuma flag
@@ -145,9 +181,22 @@ class InterruptedTaskSnapshot:
     """Retrato SOMENTE-LEITURA de uma tarefa interrompida — só os campos
     estruturados que já existem em algum lugar do sistema (nunca
     histórico de conversa). Construir isto não tem efeito colateral
-    nenhum."""
+    nenhum.
 
-    task_id: str
+    Achado F5 (rodada de integração com a Fase E, PR #115): ``RunnerTask.
+    task_id`` NÃO é uma identidade estável — cada execução/continuação
+    deriva o SEU PRÓPRIO ``task_id`` (Fase E: ``t1--continuacao-
+    <checkpoint>``; esta Fase F: ``t1--resume-<checkpoint>``), porque
+    ``runner_dispatch.RunnerClaimStore`` reivindica esse valor
+    PERMANENTEMENTE na primeira tentativa. ``canonical_task_id`` é a
+    identidade ESTÁVEL da tarefa (a mesma que ``scheduler.TaskRecord.id``
+    e ``WorkerRecord.current_task`` usam, do início ao fim, através de
+    qualquer número de handoffs/retomadas) — é ela que TODA comparação de
+    ownership/reserva usa. ``execution_task_id_anterior`` é só
+    informativo (rastreabilidade: qual foi a ÚLTIMA execução antes desta
+    interrupção) — nunca usado para decidir nada."""
+
+    canonical_task_id: str
     priority: Priority
     source_issue: int | None
     branch: str
@@ -164,10 +213,11 @@ class InterruptedTaskSnapshot:
     progresso_conhecido: str | None = None
     checks_realizados: tuple[str, ...] = ()
     pendencias_conhecidas: tuple[str, ...] = ()
+    execution_task_id_anterior: str | None = None
 
     def to_dict(self) -> dict:
         return {
-            "task_id": self.task_id,
+            "canonical_task_id": self.canonical_task_id,
             "priority": self.priority.value,
             "source_issue": self.source_issue,
             "branch": self.branch,
@@ -183,11 +233,13 @@ class InterruptedTaskSnapshot:
             "progresso_conhecido": self.progresso_conhecido,
             "checks_realizados": list(self.checks_realizados),
             "pendencias_conhecidas": list(self.pendencias_conhecidas),
+            "execution_task_id_anterior": self.execution_task_id_anterior,
         }
 
 
 def snapshot_de_interrupcao(
     *,
+    canonical_task_id: str,
     tarefa_original: RunnerTask,
     worker_anterior: WorkerRecord,
     motivo_interrupcao: str,
@@ -202,15 +254,25 @@ def snapshot_de_interrupcao(
     publicou — Fase B). Recusa construir o snapshot se o worker
     informado não é de fato quem o registro diz estar na tarefa —
     checagem de ownership na própria ORIGEM do dado, antes de qualquer
-    decisão de retomada."""
-    if worker_anterior.current_task != tarefa_original.task_id:
+    decisão de retomada.
+
+    ``canonical_task_id`` (achado F5) é OBRIGATÓRIO e vem de quem chama
+    (``scheduler.TaskRecord.id``/``WorkerRecord.current_task`` — a fonte
+    já canônica) — este módulo NUNCA tenta INFERIR a identidade canônica
+    removendo sufixos de ``tarefa_original.task_id`` (que pode já ser um
+    id de EXECUÇÃO derivado pela Fase E, ex. ``t1--continuacao-X``, e
+    stripping de sufixo por string é ambíguo/frágil quando Fases
+    diferentes usam convenções de sufixo diferentes)."""
+    if not canonical_task_id or not canonical_task_id.strip():
+        raise ValueError("canonical_task_id vazio — retomada precisa de uma identidade canônica estável.")
+    if worker_anterior.current_task != canonical_task_id:
         raise ValueError(
             f"worker {worker_anterior.worker_id!r} não está registrado como dono de "
-            f"{tarefa_original.task_id!r} (current_task={worker_anterior.current_task!r} no Worker "
+            f"{canonical_task_id!r} (current_task={worker_anterior.current_task!r} no Worker "
             "Registry) — snapshot recusado."
         )
     return InterruptedTaskSnapshot(
-        task_id=tarefa_original.task_id,
+        canonical_task_id=canonical_task_id,
         priority=tarefa_original.priority,
         source_issue=tarefa_original.source_issue,
         branch=tarefa_original.branch,
@@ -227,6 +289,7 @@ def snapshot_de_interrupcao(
         progresso_conhecido=progresso_conhecido or worker_anterior.progress,
         checks_realizados=checks_realizados,
         pendencias_conhecidas=pendencias_conhecidas,
+        execution_task_id_anterior=tarefa_original.task_id,
     )
 
 
@@ -240,7 +303,8 @@ def formatar_instrucoes_retomada(snapshot: InterruptedTaskSnapshot) -> str:
         snapshot.instructions.strip(),
         "",
         "--- CONTEXTO DE RETOMADA (Issue #105 Fase F) ---",
-        f"Tarefa original: {snapshot.task_id}",
+        f"Tarefa (id canônico): {snapshot.canonical_task_id}",
+        f"Execução anterior (id derivado): {snapshot.execution_task_id_anterior or 'não informado'}",
         f"Worker anterior: {snapshot.worker_anterior}",
         f"Motivo da interrupção: {snapshot.motivo_interrupcao}",
         f"Checkpoint (commit seguro): {snapshot.checkpoint_commit}",
@@ -292,8 +356,10 @@ def avaliar_retomada(
     de retomada (o que já impõe toda a validação estrutural do contrato
     canônico — Fase C). Fail-closed em cada passo: a primeira condição
     que falha decide o resultado, nunca "no geral parece OK"."""
-    if not snapshot.task_id or not snapshot.task_id.strip():
-        return ResumeDecision("BLOCKED", "task_id vazio — retomada precisa de uma tarefa original identificável.")
+    if not snapshot.canonical_task_id or not snapshot.canonical_task_id.strip():
+        return ResumeDecision(
+            "BLOCKED", "canonical_task_id vazio — retomada precisa de uma tarefa original identificável."
+        )
 
     if not snapshot.checkpoint_commit:
         return ResumeDecision(
@@ -353,7 +419,9 @@ def avaliar_retomada(
     # só "AVAILABLE". (1) voltou livre: AVAILABLE e sem nenhuma tarefa em
     # mãos. (2) já foi reservado por uma decisão de handoff REAL da Fase E
     # (coordinator/handoff_exec.py, PR #115, ainda não mergeado) para ESTA
-    # MESMA tarefa: aparece como BUSY com current_task == snapshot.task_id
+    # MESMA tarefa: aparece como BUSY com current_task ==
+    # snapshot.canonical_task_id (F5: SEMPRE o id canônico, nunca um id
+    # de execução derivado)
     # — não pode ser tratado como "ainda não disponível" (isso o deixaria
     # em WAIT eterno, já que um worker BUSY numa reserva legítima nunca
     # fica AVAILABLE sozinho), nem este módulo pode EXIGIR AVAILABLE (a
@@ -369,17 +437,20 @@ def avaliar_retomada(
             "reserva válida.",
         )
 
-    if worker_receptor.status == "BUSY" and worker_receptor.current_task != snapshot.task_id:
+    # F5: current_task do Worker Registry SEMPRE compara contra o id
+    # CANÔNICO (nunca contra um id de execução derivado — nem o desta
+    # Fase F, nem o "--continuacao-" da Fase E).
+    if worker_receptor.status == "BUSY" and worker_receptor.current_task != snapshot.canonical_task_id:
         return ResumeDecision(
             "BLOCKED",
             f"worker receptor {worker_receptor.worker_id!r} está BUSY e current_task "
-            f"({worker_receptor.current_task!r}) não corresponde à tarefa sendo retomada "
-            f"({snapshot.task_id!r}) — nunca tomar de uma reserva alheia.",
+            f"({worker_receptor.current_task!r}) não corresponde à tarefa (id canônico) sendo retomada "
+            f"({snapshot.canonical_task_id!r}) — nunca tomar de uma reserva alheia.",
         )
 
     receptor_livre = worker_receptor.status == "AVAILABLE" and worker_receptor.current_task is None
     receptor_reservado_para_esta_tarefa = (
-        worker_receptor.status == "BUSY" and worker_receptor.current_task == snapshot.task_id
+        worker_receptor.status == "BUSY" and worker_receptor.current_task == snapshot.canonical_task_id
     )
     if not (receptor_livre or receptor_reservado_para_esta_tarefa):
         return ResumeDecision(
@@ -389,17 +460,24 @@ def avaliar_retomada(
             "aguardando, nada bloqueado permanentemente.",
         )
 
-    # Identidade DETERMINÍSTICA da retomada (task_id original + checkpoint):
-    # a MESMA retomada, pedida de novo, produz o MESMO task_id — é isto
-    # que faz o claim atômico já existente em runner_dispatch.
-    # RunnerClaimStore (Fase D, GitJsonStore.claim_key) garantir
-    # idempotência/concorrência sem nenhum mecanismo novo.
-    task_id_retomada = f"{snapshot.task_id}--resume-{snapshot.checkpoint_commit[:12]}"
+    # F5: execution_task_id DETERMINÍSTICO (id canônico + checkpoint) —
+    # nunca o id canônico sozinho (RunnerClaimStore reivindicaria a
+    # identidade canônica PERMANENTEMENTE, impedindo qualquer execução
+    # futura da mesma tarefa). A MESMA retomada, pedida de novo, produz o
+    # MESMO execution_task_id — é isto que faz o claim atômico já
+    # existente em runner_dispatch.RunnerClaimStore (Fase D,
+    # GitJsonStore.claim_key) garantir idempotência/concorrência sem
+    # nenhum mecanismo novo; um NOVO checkpoint (nova interrupção depois
+    # de progresso real) sempre deriva um execution_task_id DISTINTO,
+    # nunca colidindo com a execução anterior nem com a da Fase E
+    # (convenção de sufixo diferente: "--resume-" aqui, "--continuacao-"
+    # lá — nunca a mesma chave de claim).
+    execution_task_id = f"{snapshot.canonical_task_id}--resume-{snapshot.checkpoint_commit[:12]}"
     instructions = formatar_instrucoes_retomada(snapshot)
 
     try:
         tarefa = RunnerTask(
-            task_id=task_id_retomada,
+            task_id=execution_task_id,
             priority=snapshot.priority,
             source_issue=snapshot.source_issue,
             branch=snapshot.branch,
@@ -422,9 +500,9 @@ def avaliar_retomada(
     return ResumeDecision(
         "RESUME",
         (
-            f"retomada permitida: {snapshot.task_id!r} (worker anterior {snapshot.worker_anterior!r}) -> "
-            f"{worker_receptor.worker_id!r}, a partir do checkpoint {snapshot.checkpoint_commit!r} "
-            f"(task_id de retomada: {task_id_retomada!r})."
+            f"retomada permitida: {snapshot.canonical_task_id!r} (worker anterior "
+            f"{snapshot.worker_anterior!r}) -> {worker_receptor.worker_id!r}, a partir do checkpoint "
+            f"{snapshot.checkpoint_commit!r} (execution_task_id: {execution_task_id!r})."
         ),
         task=tarefa,
     )
@@ -579,8 +657,11 @@ def despachar_retomada(
         # definitivo aconteceu. WAIT NUNCA é terminal ("tente de novo
         # quando o worker receptor ficar disponível") e RunnerResult não
         # tem status "WAIT" — por isso ``result`` fica None só nesse caso.
+        # Antes de RESUME nunca existe um execution_task_id derivado — o
+        # BLOCKED reporta o id CANÔNICO (é tudo que se sabe até aqui;
+        # RunnerResult.task_id só precisa ser não-vazio e rastreável).
         resultado_bloqueio = (
-            RunnerResult(task_id=snapshot.task_id, status="BLOCKED", reason=decisao.reason)
+            RunnerResult(task_id=snapshot.canonical_task_id, status="BLOCKED", reason=decisao.reason)
             if decisao.action == "BLOCKED"
             else None
         )
@@ -759,12 +840,16 @@ def processar_retorno_de_worker(
             ),
         )
 
-    if snapshot_da_tarefa_original.task_id != decisao_retorno.retoma_tarefa_id:
+    # F5: os dois lados desta comparação são SEMPRE ids canônicos —
+    # decisao_retorno.retoma_tarefa_id vem de TaskRecord.id (via
+    # scheduler.reprocessar_retorno), nunca de um execution_task_id.
+    if snapshot_da_tarefa_original.canonical_task_id != decisao_retorno.retoma_tarefa_id:
         return RetornoWorkerOutcome(
             retomada=None, proxima_oferta=None,
             motivo=(
-                f"snapshot fornecido é de {snapshot_da_tarefa_original.task_id!r}, mas o scheduler decidiu "
-                f"retomar {decisao_retorno.retoma_tarefa_id!r} — divergência, retomada recusada."
+                f"snapshot fornecido é de {snapshot_da_tarefa_original.canonical_task_id!r}, mas o "
+                f"scheduler decidiu retomar {decisao_retorno.retoma_tarefa_id!r} — divergência, retomada "
+                "recusada."
             ),
         )
 
