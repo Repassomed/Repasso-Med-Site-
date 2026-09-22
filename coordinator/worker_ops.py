@@ -304,8 +304,20 @@ class OperationalWorkerRegistry:
         ``can_execute`` — ``LIMIT``/``BUSY``/``NEAR_LIMIT``/``OFFLINE``
         nunca são devolvidos aqui, mesmo que sejam o único worker
         conhecido. Prioriza quem tem a capacidade pedida, mas não exige
-        (nem toda tarefa tem um ``capability_hint`` óbvio)."""
-        disponiveis = [w for w in self.list_workers() if w.status == "AVAILABLE" and w.can_execute]
+        (nem toda tarefa tem um ``capability_hint`` óbvio).
+
+        Achado F7-C (Issue #105, Fase F, 6ª rodada): também exige
+        ``current_task is None``. Desde F7-C, ``AVAILABLE`` com
+        ``current_task`` preenchido é um estado legítimo — uma RESERVA
+        (a tarefa anterior ainda é do worker, mas está aguardando retomada
+        manual/portão/contexto — ver ``worker_commands.py``), nunca "livre
+        para uma tarefa nova". Sem esta checagem, um worker reservado
+        seria oferecido uma segunda tarefa enquanto ainda é dono da
+        primeira."""
+        disponiveis = [
+            w for w in self.list_workers()
+            if w.status == "AVAILABLE" and w.can_execute and w.current_task is None
+        ]
         if not disponiveis:
             return None
         if capability_hint:
@@ -397,6 +409,72 @@ class OperationalWorkerRegistry:
                 return False, dados
             base[worker_anterior_id] = {**anterior_fresco, **anterior_patch}
             base[worker_novo_id] = {**novo_fresco, **novo_patch}
+            return True, {"workers": list(base.values())}
+
+        return self.store.conditional_update(evaluate, message=message)
+
+    def marcar_available_condicional(
+        self, worker_id: str, *,
+        esperado_current_task: str | None, esperado_checkpoint: str | None, esperado_branch: str | None,
+        message: str,
+    ) -> bool:
+        """Achado F7-D (Issue #105, Fase F, 6ª rodada): CAS para a
+        transição ``SET_AVAILABLE`` (``worker_commands.py``) — nunca mais
+        um "read antigo + upsert incondicional". Só escreve
+        ``status=AVAILABLE``/``current_task=None`` quando uma leitura
+        FRESCA (dentro do próprio ``conditional_update``, repetida a cada
+        tentativa de conflito) ainda mostra ``current_task``/
+        ``last_checkpoint``/``branch`` EXATAMENTE iguais aos capturados
+        por quem chama — ou seja, nenhum heartbeat/handoff real mudou o
+        worker entre essa leitura e esta escrita. Se algo mudou, devolve
+        ``False`` sem escrever nada — o estado mais novo nunca é
+        sobrescrito por uma transição baseada num snapshot velho (mesmo
+        princípio de ``transferir_worker_condicional``, achado H2/H4 da
+        Fase E)."""
+        def evaluate(dados: dict) -> tuple[bool, dict]:
+            existentes = dados.get("workers")
+            base = {w["worker_id"]: w for w in existentes} if existentes else {
+                w.worker_id: w.to_dict() for w in default_seed_workers()
+            }
+            fresco = base.get(worker_id)
+            if fresco is None:
+                return False, dados
+            if fresco.get("current_task") != esperado_current_task:
+                return False, dados
+            if fresco.get("last_checkpoint") != esperado_checkpoint:
+                return False, dados
+            if fresco.get("branch") != esperado_branch:
+                return False, dados
+            base[worker_id] = {**fresco, "status": "AVAILABLE", "current_task": None, "last_heartbeat": _now_iso()}
+            return True, {"workers": list(base.values())}
+
+        return self.store.conditional_update(evaluate, message=message)
+
+    def reservar_current_task_condicional(
+        self, worker_id: str, *, canonical_task_id: str, message: str,
+    ) -> bool:
+        """Achado F7-C (Issue #105, Fase F, 6ª rodada): restaura
+        ``current_task=canonical_task_id`` (mantendo ``status=AVAILABLE``
+        — NUNCA ``BUSY``, "sem fingir BUSY") quando a tarefa anterior
+        ainda pertence ao worker mas nada avançou de verdade
+        (``human_session`` aguardando retomada manual, portão fechado, ou
+        contexto/snapshot insuficiente — ver ``worker_commands.
+        reagir_a_retorno_de_worker``). CAS: só escreve quando o estado
+        FRESCO ainda mostra EXATAMENTE ``AVAILABLE``+``current_task=None``
+        — se qualquer coisa assumiu o worker nesse intervalo (nova
+        atribuição, outro handoff), a reserva antiga NUNCA sobrescreve
+        esse estado mais novo; devolve ``False`` sem escrever nada."""
+        def evaluate(dados: dict) -> tuple[bool, dict]:
+            existentes = dados.get("workers")
+            base = {w["worker_id"]: w for w in existentes} if existentes else {
+                w.worker_id: w.to_dict() for w in default_seed_workers()
+            }
+            fresco = base.get(worker_id)
+            if fresco is None:
+                return False, dados
+            if fresco.get("status") != "AVAILABLE" or fresco.get("current_task") is not None:
+                return False, dados
+            base[worker_id] = {**fresco, "current_task": canonical_task_id}
             return True, {"workers": list(base.values())}
 
         return self.store.conditional_update(evaluate, message=message)

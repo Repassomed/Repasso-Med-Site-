@@ -38,6 +38,7 @@ import tempfile
 from dataclasses import replace
 
 from . import _pathsetup  # noqa: F401
+from coordinator.anthropic_client import TransportResponse
 from coordinator.classify import Priority
 from coordinator.git_state import GitJsonStore
 from coordinator.handoff_exec import (
@@ -168,6 +169,22 @@ def _config(**overrides) -> RunnerDispatchConfig:
 
 def _patch_greeting() -> StructuredPatch:
     return StructuredPatch(files=(FileWrite(path="greeting.txt", content="retomado\n"),))
+
+
+class _CountingTransport:
+    """Achado F7-B: espião de transporte — nunca faz rede de verdade,
+    conta chamadas (mesma técnica de ``test_runner_generate.py``). Usado
+    para provar o gerador REAL (``runner_generate.gerar_patch_via_claude``)
+    de ponta a ponta sem injetar um ``StructuredPatch``/``gerar_patch``
+    manual."""
+
+    def __init__(self, *, response: TransportResponse) -> None:
+        self.calls = 0
+        self.response = response
+
+    def send(self, request):
+        self.calls += 1
+        return self.response
 
 
 # ---------------------------------------------------------------------------
@@ -471,12 +488,18 @@ def test_human_session_nunca_e_iniciada_automaticamente_via_comando() -> None:
         )
         assert "BLOCKED-LIMIT" in confirmacao, confirmacao
         assert chamou_gerar_patch == [], "human_session nunca pode disparar geração de patch nem execução"
-        # Worker Registry continua coerente: comando SET_AVAILABLE já
-        # deixou AVAILABLE/current_task=None (F6-C) — human_session
-        # preparada, nunca "iniciada" (nunca BUSY).
+        # Achado F7-C (6ª rodada): a tarefa AINDA é do worker (só
+        # preparada para retomada manual, nunca "iniciada" — human_session
+        # nunca despachada automaticamente) — o registro fica AVAILABLE
+        # com a RESERVA restaurada (current_task de volta ao id canônico,
+        # nunca BUSY), não mais current_task=None (comportamento antigo
+        # de F6-C, corrigido por ser agressivo demais: apagava ownership
+        # de uma tarefa que continua sendo do worker).
         worker = registry.find_by_name_or_id("Claude 4")
         assert worker.status == "AVAILABLE"
-        assert worker.current_task is None
+        assert worker.current_task == "t-human", (
+            f"F7-C: reserva precisa ser restaurada (tarefa ainda é do worker) — {worker}"
+        )
     print("OK  test_human_session_nunca_e_iniciada_automaticamente_via_comando")
 
 
@@ -534,6 +557,132 @@ def test_gate_fechado_zero_execucao_zero_chamada_paga() -> None:
     print("OK  test_gate_fechado_zero_execucao_zero_chamada_paga")
 
 
+# ---------------------------------------------------------------------------
+# F7-C (6ª rodada): a reserva (AVAILABLE + current_task=<canonical>) via o
+# comando REAL (aplicar_comando, não reagir_a_retorno_de_worker direto) —
+# portão fechado é um dos três casos em que a tarefa continua do worker.
+# ---------------------------------------------------------------------------
+
+def test_f7c_gate_fechado_via_aplicar_comando_preserva_reserva() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        sha = _publicar_branch_com_checkpoint(remoto, tmp, "runner/t-gate2", "greeting.txt", "ola\n")
+        tasks_path = _escrever_tasks_json(tmp, [
+            {"id": "t-gate2", "estado": "BLOCKED-LIMIT", "area": "infra", "agente": "claude-2"},
+        ])
+        registry = _registry()
+        registry.upsert(
+            WorkerRecord(
+                worker_id="claude-2", display_name="Claude 2", type="api_runner", status="LIMIT",
+                current_task="t-gate2", branch="runner/t-gate2", last_checkpoint=sha, can_execute=True,
+            ),
+            message="setup",
+        )
+        worker_anterior = WorkerRecord(
+            worker_id="claude-2", display_name="Claude 2", type="api_runner", status="LIMIT",
+            current_task="t-gate2", branch="runner/t-gate2", last_checkpoint=sha, can_execute=True,
+        )
+        snap = snapshot_de_interrupcao(
+            canonical_task_id="t-gate2",
+            tarefa_original=_tarefa_original(branch="runner/t-gate2", checkpoint_commit=sha),
+            worker_anterior=worker_anterior, motivo_interrupcao="LIMIT",
+        )
+        config = _config(enabled=False, canary_task_id=f"t-gate2--resume-{sha[:12]}")
+        comando = WorkerCommand(action="SET_AVAILABLE", worker_name="Claude 2")
+        workdir = _clonar_workdir(tmp, remoto, "gate2")
+        confirmacao = aplicar_comando(
+            registry, comando, tasks_json_path=tasks_path, repo_dir=workdir, config=config,
+            state_git_remote=remoto, snapshot_da_tarefa_original=snap,
+        )
+        assert "BLOCKED" in confirmacao, confirmacao
+        # F7-C: portão fechado -> tarefa continua do worker -> reserva
+        # (AVAILABLE + current_task=<canonical>) restaurada, NUNCA BUSY —
+        # comportamento diferente do antigo F6-C (que limpava sempre).
+        worker = registry.find_by_name_or_id("Claude 2")
+        assert worker.status == "AVAILABLE"
+        assert worker.current_task == "t-gate2", (
+            f"F7-C: portão fechado precisa preservar a reserva — {worker}"
+        )
+    print("OK  test_f7c_gate_fechado_via_aplicar_comando_preserva_reserva")
+
+
+def test_f7c_escolher_disponivel_nunca_devolve_worker_reservado() -> None:
+    """F7-C também corrigiu ``escolher_disponivel`` para exigir
+    ``current_task is None`` — um worker reservado (AVAILABLE com
+    current_task preenchido) nunca pode ser oferecido uma segunda
+    tarefa."""
+    registry = _registry()
+    registry.upsert(
+        WorkerRecord(
+            worker_id="claude-2", display_name="Claude 2", type="api_runner", status="AVAILABLE",
+            current_task="t-reservada", can_execute=True,
+        ),
+        message="setup: reservado",
+    )
+    assert registry.escolher_disponivel() is None, "worker reservado nunca pode ser devolvido"
+    registry.upsert(
+        WorkerRecord(
+            worker_id="claude-3", display_name="Claude 3", type="api_runner", status="AVAILABLE",
+            current_task=None, can_execute=True,
+        ),
+        message="setup: livre de verdade",
+    )
+    escolhido = registry.escolher_disponivel()
+    assert escolhido is not None and escolhido.worker_id == "claude-3"
+    print("OK  test_f7c_escolher_disponivel_nunca_devolve_worker_reservado")
+
+
+# ---------------------------------------------------------------------------
+# F7-B (6ª rodada): geração REAL de patch (runner_generate.
+# gerar_patch_via_claude) sem NENHUM patch/gerar_patch injetado
+# manualmente — só um transporte falso (nunca rede de verdade).
+# ---------------------------------------------------------------------------
+
+def test_f7b_geracao_real_de_patch_sem_injecao_manual() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        sha = _publicar_branch_com_checkpoint(remoto, tmp, "runner/t-f7b", "greeting.txt", "ola\n")
+        tasks_path = _escrever_tasks_json(tmp, [
+            {"id": "t-f7b", "estado": "BLOCKED-LIMIT", "area": "infra", "agente": "claude-2"},
+        ])
+        _publicar_handoff_real(
+            remoto, canonical_task_id="t-f7b", worker_novo_id="claude-2",
+            branch="runner/t-f7b", checkpoint_commit=sha,
+        )
+        registry = _registry()
+        registry.upsert(
+            WorkerRecord(
+                worker_id="claude-2", display_name="Claude 2", type="api_runner", status="LIMIT",
+                current_task="t-f7b", branch="runner/t-f7b", last_checkpoint=sha, can_execute=True,
+            ),
+            message="setup",
+        )
+        config = _config(canary_task_id=f"t-f7b--resume-{sha[:12]}")
+        transporte = _CountingTransport(
+            response=TransportResponse(
+                text=json.dumps({"files": [{"path": "greeting.txt", "content": "gerado via claude\n"}]}),
+                input_tokens=100, output_tokens=50,
+            )
+        )
+        comando = WorkerCommand(action="SET_AVAILABLE", worker_name="Claude 2")
+        workdir = _clonar_workdir(tmp, remoto, "f7b")
+        confirmacao = aplicar_comando(
+            registry, comando, tasks_json_path=tasks_path, repo_dir=workdir, config=config,
+            state_git_remote=remoto, transport=transporte,
+            # patch/gerar_patch DELIBERADAMENTE omitidos — F7-B: o teste
+            # ponta a ponta REAL não pode depender de _patch_greeting()
+            # injetado manualmente; despachar_retomada precisa construir
+            # o gerador REAL sozinho (runner_generate.gerar_patch_via_
+            # claude) a partir só de config/repo_dir/state_git_remote.
+        )
+        assert "NEEDS-AUDIT" in confirmacao, confirmacao
+        assert transporte.calls == 1, "gerar_patch_via_claude precisa ter chamado a Anthropic exatamente 1x"
+        worker = registry.find_by_name_or_id("Claude 2")
+        assert worker.status == "OFFLINE"
+        assert worker.current_task is None
+    print("OK  test_f7b_geracao_real_de_patch_sem_injecao_manual")
+
+
 def main() -> int:
     testes = [
         test_set_available_sem_tasks_json_path_ainda_limpa_current_task,
@@ -544,6 +693,9 @@ def main() -> int:
         test_tarefa_ja_concluida_oferece_proxima_sem_execucao_indevida,
         test_human_session_nunca_e_iniciada_automaticamente_via_comando,
         test_gate_fechado_zero_execucao_zero_chamada_paga,
+        test_f7c_gate_fechado_via_aplicar_comando_preserva_reserva,
+        test_f7c_escolher_disponivel_nunca_devolve_worker_reservado,
+        test_f7b_geracao_real_de_patch_sem_injecao_manual,
     ]
     falhas = 0
     for t in testes:

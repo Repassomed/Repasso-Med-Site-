@@ -166,6 +166,17 @@ válido para ``OFFLINE`` — ``runner_contract.py``, Fase C — e
 ``heartbeat.aplicar_heartbeat`` sempre sobrescreve
 ``current_task=heartbeat.task_id``, nunca preserva por omissão).
 
+**F7-B (6ª rodada) — geração real de patch:** no fluxo REAL (comando
+``SET_AVAILABLE`` chegando pela Inbox, sem nenhum ``patch``/``gerar_patch``
+manual) ``despachar_retomada`` agora constrói o gerador de verdade
+sozinho — ``runner_generate.gerar_patch_via_claude``, importado
+localmente (mesma cautela contra ciclo de ``runner_dispatch.py::main()``),
+com a MESMA ``RunnerDispatchConfig`` já validada e o MESMO ledger
+Anthropic GLOBAL (``coordinator-state-usage``, mesma branch que o
+Coordinator OBSERVE e o CLI ``--generate-via-claude`` já usam — nunca um
+ledger/orçamento paralelo). ``patch``/``gerar_patch`` explícitos (uso
+manual/teste) continuam tendo prioridade absoluta quando fornecidos.
+
 **O QUE ESTE MÓDULO DELIBERADAMENTE NÃO FAZ:** não decide handoff
 (Fase E); não toca ``coordination/tasks.json``; não ativa nenhuma flag
 nova (reusa ``RunnerDispatchConfig`` da Fase D, inalterada — continua
@@ -716,6 +727,7 @@ def despachar_retomada(
     patch: StructuredPatch | None = None,
     gerar_patch: Callable[[], object] | None = None,
     allowed_files_override: tuple[str, ...] | None = None,
+    transport: object | None = None,
 ) -> ResumeOutcome:
     """Avalia (puro) e, só se ``RESUME``, prossegue: ``human_session``
     nunca é despachada automaticamente (Issue #105: "não fingir que uma
@@ -725,7 +737,25 @@ def despachar_retomada(
     confirmar o checkpoint de verdade; a execução em si é 100% delegada a
     ``runner_dispatch.executar_tarefa`` (mesmo portão de segurança, mesmo
     claim atômico — nenhum código deste módulo decide gate/claim/patch
-    sozinho)."""
+    sozinho).
+
+    Achado F7-B (6ª rodada): no fluxo REAL não existe ``patch``/
+    ``gerar_patch`` manual — quando quem chama não fornece NENHUM dos
+    dois, este módulo constrói o gerador de verdade sozinho, reusando
+    ``runner_generate.gerar_patch_via_claude`` com a MESMA
+    ``RunnerDispatchConfig`` já validada acima (o portão já foi checado
+    antes deste ponto) e o MESMO ledger Anthropic GLOBAL (branch
+    ``coordinator-state-usage`` do ``state_git_remote`` já em uso — o
+    mesmo mecanismo que o Coordinator OBSERVE e o CLI
+    ``--generate-via-claude`` de ``runner_dispatch.py`` já usam; nunca um
+    ledger/orçamento paralelo). ``gerar_patch()`` só é invocada por
+    ``executar_tarefa`` DEPOIS que o claim atômico do task_id já teve
+    êxito (garantia da própria ``executar_tarefa``, nunca reimplementada
+    aqui) — "claim antes de qualquer chamada paga" é herdado
+    automaticamente. ``transport`` é só um ponto de injeção para teste
+    (nunca usado em produção — lá ``gerar_patch_via_claude`` usa o
+    transporte real por padrão); ``patch``/``gerar_patch`` explícitos
+    continuam tendo prioridade (uso manual/teste)."""
     decisao = avaliar_retomada(
         snapshot, tarefa_estado=tarefa_estado, tarefa_agente_atual=tarefa_agente_atual,
         worker_receptor=worker_receptor, allowed_files_override=allowed_files_override,
@@ -811,11 +841,38 @@ def despachar_retomada(
     if state_git_remote is None:
         raise ValueError("despachar_retomada para api_runner exige 'state_git_remote'.")
 
+    gerar_patch_efetivo = gerar_patch
+    if patch is None and gerar_patch is None:
+        # F7-B: caminho REAL — reusa runner_generate.gerar_patch_via_claude,
+        # nunca uma segunda implementação. Import local (aqui dentro do
+        # closure, não no topo do módulo): runner_generate importa DESTE
+        # módulo? Não — importa de runner_dispatch, já importado acima —
+        # mas o mesmo cuidado de runner_dispatch.py::main() é seguido aqui
+        # por consistência/segurança contra ciclo futuro.
+        from .budget import MONTHLY_BUDGET_USD
+        from .git_state import GitUsageLedger
+        from .runner_dispatch import DEFAULT_RUNNER_USAGE_STATE_BRANCH
+
+        ledger_global = GitUsageLedger(
+            GitJsonStore(state_git_remote, branch=DEFAULT_RUNNER_USAGE_STATE_BRANCH)
+        )
+
+        def _gerar_patch_real() -> object:
+            from . import runner_generate
+
+            return runner_generate.gerar_patch_via_claude(
+                tarefa, config=config, repo_dir=repo_dir,
+                usage_ledger=ledger_global, budget_usd=MONTHLY_BUDGET_USD,
+                transport=transport,
+            )
+
+        gerar_patch_efetivo = _gerar_patch_real
+
     outcome = executar_tarefa(
         tarefa, patch,
         config=config, repo_dir=repo_dir, state_git_remote=state_git_remote,
         validation_command_keys=validation_command_keys, worker_id=worker_receptor.worker_id,
-        worker_registry=worker_registry, gerar_patch=gerar_patch,
+        worker_registry=worker_registry, gerar_patch=gerar_patch_efetivo,
         # Achado F6-D: heartbeat BUSY precisa usar o id CANÔNICO, nunca o
         # execution_task_id derivado de `tarefa.task_id` — só assim
         # WorkerRecord.current_task continua comparável com
@@ -871,6 +928,7 @@ def processar_retorno_de_worker(
     patch: StructuredPatch | None = None,
     gerar_patch: Callable[[], object] | None = None,
     allowed_files_override: tuple[str, ...] | None = None,
+    transport: object | None = None,
 ) -> RetornoWorkerOutcome:
     """O hook determinístico e EVENT-DRIVEN pedido pela Fase F (achado
     F4): reage a UM evento já validado por quem chama (heartbeat/comando
@@ -957,5 +1015,6 @@ def processar_retorno_de_worker(
         repo_dir=repo_dir, remote_name=remote_name, config=config, state_git_remote=state_git_remote,
         validation_command_keys=validation_command_keys, worker_registry=worker_registry,
         patch=patch, gerar_patch=gerar_patch, allowed_files_override=allowed_files_override,
+        transport=transport,
     )
     return RetornoWorkerOutcome(retomada=outcome, proxima_oferta=None, motivo=decisao_retorno.motivo)

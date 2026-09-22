@@ -60,13 +60,47 @@ significa "sem tarefa em mãos".
 módulo até agora) — só assim ``runner_dispatch.executar_tarefa``
 consegue emitir heartbeats de verdade (``BUSY`` com o id CANÔNICO no
 início, ``OFFLINE`` com ``current_task`` limpo no fim) para uma
-retomada ``api_runner`` despachada a partir deste comando."""
+retomada ``api_runner`` despachada a partir deste comando.
+
+**F7-C (6ª rodada) — preservar ownership:** a auditoria apontou que
+F6-C era agressiva demais: limpar ``current_task`` incondicionalmente
+antes mesmo de saber se a tarefa de fato deixou de ser do worker apaga
+ownership de casos onde ela CONTINUA sendo dele (``human_session``
+aguardando retomada manual, portão fechado, ou contexto/checkpoint
+insuficiente). Agora ``SET_AVAILABLE`` só deixa DEFINITIVAMENTE
+``current_task=None`` quando ``_deve_preservar_reserva`` (abaixo),
+avaliada sobre o ``RetornoWorkerOutcome`` real devolvido por
+``reagir_a_retorno_de_worker``, decide que não há mais nada a preservar
+— nos outros casos, restaura ``current_task=<canonical_task_id>``
+mantendo ``status=AVAILABLE`` (uma RESERVA, nunca ``BUSY`` — "sem fingir
+BUSY"). ``worker_ops.OperationalWorkerRegistry.escolher_disponivel``
+também passou a exigir ``current_task is None`` — só assim um worker
+reservado nunca é oferecido uma segunda tarefa.
+
+**F7-D (6ª rodada) — SET_AVAILABLE com CAS:** a transição
+``status=AVAILABLE``/``current_task=None`` (e a restauração da reserva,
+quando aplicável) agora usa
+``OperationalWorkerRegistry.marcar_available_condicional``/
+``reservar_current_task_condicional`` — compare-and-set real sobre
+estado FRESCO (``WorkerStateStore.conditional_update``), nunca mais
+"read antigo + upsert incondicional" (a falha de F6-C). Se um
+heartbeat/handoff real mudou o worker entre a leitura que abriu este
+comando e a escrita, a transição é recusada — o estado mais novo nunca
+é sobrescrito.
+
+**F7-B (6ª rodada) — geração real de patch:** este módulo continua sem
+importar ``runner_generate`` — quem decide o ``gerar_patch`` efetivo
+quando nenhum é fornecido manualmente é ``runner_resume.
+despachar_retomada`` (ver seu docstring), reusando
+``runner_generate.gerar_patch_via_claude`` com a MESMA
+``RunnerDispatchConfig``/ledger Anthropic global de sempre.
+``transport`` é só um ponto de injeção para teste, passado adiante sem
+uso nenhum aqui."""
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, replace
-from datetime import datetime, timezone
 from typing import Callable
 
 from .runner_dispatch import RunnerDispatchConfig, StructuredPatch
@@ -127,10 +161,6 @@ def parse_worker_command(texto: str) -> WorkerCommand | None:
     return None
 
 
-def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
 def reagir_a_retorno_de_worker(
     registry: OperationalWorkerRegistry,
     worker_novo: WorkerRecord,
@@ -147,6 +177,7 @@ def reagir_a_retorno_de_worker(
     motivo_interrupcao: str = "LIMIT",
     patch: StructuredPatch | None = None,
     gerar_patch: Callable[[], object] | None = None,
+    transport: object | None = None,
 ) -> RetornoWorkerOutcome:
     """Achado F6: a reação de verdade a "este worker está AVAILABLE
     agora" — EVENT-DRIVEN (chamada síncrona, zero polling), reusando
@@ -208,8 +239,44 @@ def reagir_a_retorno_de_worker(
         worker_que_volta=worker_novo.worker_id, tarefa_original=tarefa_original, tarefas=tarefas,
         workers=workers, snapshot_da_tarefa_original=snapshot,
         repo_dir=repo_dir, remote_name=remote_name, config=config, state_git_remote=state_git_remote,
-        worker_registry=registry, patch=patch, gerar_patch=gerar_patch,
+        worker_registry=registry, patch=patch, gerar_patch=gerar_patch, transport=transport,
     )
+
+
+def _deve_preservar_reserva(retorno: RetornoWorkerOutcome) -> bool:
+    """Achado F7-C (6ª rodada): decide se a tarefa anterior AINDA pertence
+    ao worker depois da reação a "este worker está AVAILABLE agora" —
+    nunca a partir de suposição, só do que ``processar_retorno_de_worker``
+    de fato decidiu:
+
+    - ``proxima_oferta`` preenchida: o scheduler decidiu que a tarefa
+      original já foi concluída ou assumida por outro — ela NÃO é mais
+      dele. Devolve ``False`` (libera de vez, current_task=None fica
+      como está).
+    - ``retomada`` ausente e ``proxima_oferta`` ausente: nem uma coisa
+      nem outra — snapshot/contexto persistido insuficiente (F6-B
+      fail-closed) ou divergência de dados. A tarefa continua dele, só
+      que nada avançou. Devolve ``True`` (reserva).
+    - ``retomada`` presente com ``dispatch_outcome`` preenchido:
+      ``runner_dispatch.executar_tarefa`` de fato rodou — os PRÓPRIOS
+      heartbeats (``BUSY`` canônico / ``OFFLINE`` limpo, achado F6-D) já
+      deixaram ``current_task`` no estado terminal correto no MESMO
+      Worker Registry; sobrescrever por cima aqui seria stale. Devolve
+      ``False``.
+    - ``retomada`` presente sem ``dispatch_outcome``: decisão pura
+      (BLOCKED/WAIT) ou ``human_session`` preparada (``BLOCKED-LIMIT``) —
+      nenhum heartbeat foi emitido, a tarefa continua dele: portão
+      fechado, checkpoint não confirmado, capabilities/can_execute
+      insuficientes, ou aguardando retomada manual. Devolve ``True``
+      (reserva — nunca ``BUSY``, só ``AVAILABLE`` com ``current_task``
+      preenchido)."""
+    if retorno.proxima_oferta is not None:
+        return False
+    if retorno.retomada is None:
+        return True
+    if retorno.retomada.dispatch_outcome is not None:
+        return False
+    return True
 
 
 def _resumo_retorno(retorno: RetornoWorkerOutcome) -> str:
@@ -236,6 +303,7 @@ def aplicar_comando(
     snapshot_da_tarefa_original: InterruptedTaskSnapshot | None = None,
     patch: StructuredPatch | None = None,
     gerar_patch: Callable[[], object] | None = None,
+    transport: object | None = None,
 ) -> str:
     """Aplica o comando no registro operacional e devolve uma frase curta
     de confirmação (o que vira o corpo do comentário de resposta na #88).
@@ -280,17 +348,27 @@ def aplicar_comando(
             canonical_task_id_anterior = atual.current_task
             checkpoint_anterior = atual.last_checkpoint
             branch_anterior = atual.branch
-            # Achado F6-C: status=AVAILABLE e current_task=None numa
-            # ÚNICA escrita atômica — nunca uma janela em que o registro
-            # mostra AVAILABLE com current_task ainda preenchido (achado
-            # F3: avaliar_retomada já trata isso como estado
-            # inconsistente/BLOCKED). set_status() sozinho preserva
-            # current_task de propósito (SET_LIMIT/DEACTIVATE não devem
-            # inferir essa limpeza) — só SET_AVAILABLE precisa dela.
-            novo = registry.upsert(
-                replace(atual, status="AVAILABLE", current_task=None, last_heartbeat=_now_iso()),
+            # Achado F7-D (6ª rodada): CAS, nunca mais "read antigo +
+            # upsert incondicional" (F6-C). Só transiciona para
+            # AVAILABLE+current_task=None quando uma leitura FRESCA
+            # (dentro do próprio conditional_update) ainda bate com o que
+            # acabamos de ler em `atual` — se um heartbeat/handoff real
+            # mudou current_task/checkpoint/branch nesse meio-tempo, a
+            # transição é recusada (estado mais novo NUNCA sobrescrito).
+            transitou = registry.marcar_available_condicional(
+                atual.worker_id,
+                esperado_current_task=atual.current_task,
+                esperado_checkpoint=atual.last_checkpoint,
+                esperado_branch=atual.branch,
                 message=f"worker: {nome} -> AVAILABLE (current_task liberado)",
             )
+            if not transitou:
+                return (
+                    f"{nome}: transição para AVAILABLE recusada — o estado do worker mudou "
+                    "(heartbeat/handoff concorrente) desde a última leitura; nada foi sobrescrito. "
+                    "Tente novamente."
+                )
+            novo = registry.find_by_name_or_id(nome)
         if tasks_json_path is None:
             return f"{nome} marcado como AVAILABLE."
         retorno = reagir_a_retorno_de_worker(
@@ -299,7 +377,24 @@ def aplicar_comando(
             tasks_json_path=tasks_json_path, repo_dir=repo_dir, remote_name=remote_name,
             config=config, state_git_remote=state_git_remote,
             snapshot_da_tarefa_original=snapshot_da_tarefa_original, patch=patch, gerar_patch=gerar_patch,
+            transport=transport,
         )
+        # Achado F7-C (6ª rodada): só deixa DEFINITIVAMENTE
+        # AVAILABLE+current_task=None quando a tarefa anterior de fato não
+        # pertence mais ao worker. Nos outros casos (human_session
+        # aguardando retomada manual, portão fechado, contexto/checkpoint
+        # insuficiente), restaura a reserva — AVAILABLE com current_task
+        # de volta ao id canônico, nunca BUSY. CAS: só escreve se o
+        # worker ainda estiver EXATAMENTE como a transição acima o deixou
+        # (nenhuma atribuição nova assumiu o worker nesse meio-tempo).
+        if canonical_task_id_anterior is not None and _deve_preservar_reserva(retorno):
+            registry.reservar_current_task_condicional(
+                novo.worker_id, canonical_task_id=canonical_task_id_anterior,
+                message=(
+                    f"worker: {nome} mantém reserva de {canonical_task_id_anterior} "
+                    "(tarefa ainda dele, aguardando retomada)"
+                ),
+            )
         return f"{nome} marcado como AVAILABLE. {_resumo_retorno(retorno)}"
 
     raise ValueError(f"ação de comando desconhecida: {comando.action!r}")
