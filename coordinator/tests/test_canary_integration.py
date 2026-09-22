@@ -77,13 +77,14 @@ from coordinator.runner_dispatch import (
     executar_tarefa,
 )
 from coordinator.runner_generate import gerar_patch_via_claude
-from coordinator.scheduler import TaskRecord
+from coordinator.scheduler import TaskRecord, load_tasks_from_tasks_json
 from coordinator.task_ownership import (
     OperationalWorkerSnapshot,
     visao_operacional_da_tarefa,
 )
 from coordinator.worker_commands import (
     WorkerCommand,
+    _deve_preservar_reserva,
     aplicar_comando,
     parse_worker_command,
     reagir_a_retorno_de_worker,
@@ -817,6 +818,162 @@ def test_g8a_fluxo_completo_sem_agente_declarado_no_tasks_json() -> None:
 
 
 # ---------------------------------------------------------------------------
+# G9 — o resultado fail-closed da visão operacional tem de ser RESPEITADO
+# pelos dois pontos de integração, não só detectado.
+# ---------------------------------------------------------------------------
+
+def test_g9_ambiguidade_de_dois_donos_bloqueia_o_handoff() -> None:
+    """A e B ocupando a MESMA tarefa, declarativo dizendo agente=A. O
+    checkpoint de A detecta a ambiguidade e para: zero handoff, zero
+    claim, zero despacho, zero chamada paga — mesmo que o `agente`
+    declarativo coincidisse com quem mandou o checkpoint."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto, branch_padrao, sha_padrao, registry, config, checkpoint, tasks_path, transporte = (
+            _montar_etapa_b(tmp)
+        )
+        # B passa a ocupar a mesma tarefa (BUSY). Com o heartbeat de A
+        # logo abaixo, viram DOIS donos ativos do mesmo id canônico.
+        registry.upsert(
+            replace(
+                registry.find_by_name_or_id(CANARY_WORKER_B),
+                status="BUSY", current_task=CANARY_TASK_ID, branch=f"runner/{CANARY_TASK_ID}",
+            ),
+            message="teste: B tambem ocupa a tarefa",
+        )
+        antes = _git(remoto, "rev-parse", f"runner/{CANARY_TASK_ID}")
+
+        outcome = processar_checkpoint_de_limite(
+            registry=registry, agente=CANARY_WORKER_A, canonical_task_id=CANARY_TASK_ID,
+            branch=f"runner/{CANARY_TASK_ID}", commit=checkpoint, config=config,
+            repo_dir=_clonar(tmp, remoto, "wb"), tasks_json_path=tasks_path,
+            state_git_remote=remoto, transport=transporte,
+        )
+
+        assert outcome.action == "HEARTBEAT_APPLIED", outcome.reason
+        assert "ownership operacional" in outcome.reason, outcome.reason
+        assert outcome.handoff is None, "ambiguidade nunca pode chegar ao handoff"
+        assert outcome.dispatch is None, "ambiguidade nunca pode chegar ao Runner Dispatch"
+        assert transporte.calls == 0, "zero chamada paga"
+        # O heartbeat LIMIT em si continua valendo (o registro tem de
+        # refletir o limite reportado) — e nada mais aconteceu.
+        assert outcome.heartbeat is not None and outcome.heartbeat.action == "APPLIED"
+        assert _git(remoto, "rev-parse", f"runner/{CANARY_TASK_ID}") == antes
+        assert _git(remoto, "rev-parse", branch_padrao) == sha_padrao
+        assert registry.find_by_name_or_id(CANARY_WORKER_B).status == "BUSY", (
+            "nenhum registro de worker pode ter sido transferido"
+        )
+    print("OK  test_g9_ambiguidade_de_dois_donos_bloqueia_o_handoff")
+
+
+def test_g9_estado_declarativo_terminal_bloqueia_o_handoff() -> None:
+    """Tarefa declarativa já em NEEDS-AUDIT/DONE, com agente=A, e um
+    checkpoint LIMIT de A: zero handoff, zero despacho. A intenção
+    "terminal nunca reabre" passa a ser garantida aqui, não por
+    coincidência entre o agente declarado e o worker do evento."""
+    for estado_terminal in ("NEEDS-AUDIT", "DONE"):
+        with tempfile.TemporaryDirectory() as tmp:
+            remoto, branch_padrao, sha_padrao = _criar_remoto_local(tmp)
+            registry = _registry_vazio()
+            config = _config()
+            preparar_workers_do_canario(registry, config=config, canonical_task_id=CANARY_TASK_ID)
+            checkpoint = _etapa_a(tmp, remoto, registry, config)
+            tasks_path = _tasks_json(tmp, estado=estado_terminal, agente=CANARY_WORKER_A)
+            transporte = _TransporteContado("CANARY_STAGE=2\n")
+            antes = _git(remoto, "rev-parse", f"runner/{CANARY_TASK_ID}")
+
+            outcome = processar_checkpoint_de_limite(
+                registry=registry, agente=CANARY_WORKER_A, canonical_task_id=CANARY_TASK_ID,
+                branch=f"runner/{CANARY_TASK_ID}", commit=checkpoint, config=config,
+                repo_dir=_clonar(tmp, remoto, "wb"), tasks_json_path=tasks_path,
+                state_git_remote=remoto, transport=transporte,
+            )
+
+            assert outcome.action == "HEARTBEAT_APPLIED", (estado_terminal, outcome.reason)
+            assert outcome.handoff is None, estado_terminal
+            assert outcome.dispatch is None, estado_terminal
+            assert transporte.calls == 0, estado_terminal
+            assert _git(remoto, "rev-parse", f"runner/{CANARY_TASK_ID}") == antes
+            assert _git(remoto, "rev-parse", branch_padrao) == sha_padrao
+    print("OK  test_g9_estado_declarativo_terminal_bloqueia_o_handoff")
+
+
+def test_g9_declarativo_sozinho_nunca_autoriza_retomada() -> None:
+    """Declarativo em BLOCKED-LIMIT com agente=B — exatamente a dupla que
+    autorizaria uma retomada — mas SEM prova operacional (nenhum snapshot
+    válido e nenhum dono vivo). A Fase F recusa e preserva a reserva."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto, _, _, registry, config, checkpoint, _tasks_ignorado, _transporte = _montar_etapa_b(tmp)
+        tasks_path = _tasks_json(tmp, estado="BLOCKED-LIMIT", agente=CANARY_WORKER_B)
+
+        # B volta como AVAILABLE, mas nada prova que a tarefa era dele:
+        # o registro não mostra dono vivo e o status anterior não é posse
+        # ativa (AVAILABLE com current_task é RESERVA, nunca posse).
+        registry.upsert(
+            replace(
+                registry.find_by_name_or_id(CANARY_WORKER_B),
+                status="AVAILABLE", current_task=CANARY_TASK_ID,
+            ),
+            message="teste: B com reserva, sem posse ativa",
+        )
+        transporte_c = _TransporteContado("CANARY_STAGE=3\n")
+        antes = _git(remoto, "rev-parse", f"runner/{CANARY_TASK_ID}")
+
+        retorno = reagir_a_retorno_de_worker(
+            registry, registry.find_by_name_or_id(CANARY_WORKER_B),
+            canonical_task_id_anterior=CANARY_TASK_ID, checkpoint_anterior=checkpoint,
+            branch_anterior=f"runner/{CANARY_TASK_ID}",
+            status_anterior="AVAILABLE",  # não é posse ativa
+            tasks_json_path=tasks_path, repo_dir=_clonar(tmp, remoto, "wc"), config=config,
+            state_git_remote=remoto, transport=transporte_c,
+        )
+
+        assert retorno.retomada is None, retorno.retomada
+        assert retorno.proxima_oferta is None, retorno.proxima_oferta
+        assert "ownership operacional" in retorno.motivo, retorno.motivo
+        assert transporte_c.calls == 0, "zero chamada paga"
+        assert _git(remoto, "rev-parse", f"runner/{CANARY_TASK_ID}") == antes
+        # Fail-closed preserva a reserva: nada avançou, a tarefa continua
+        # pendurada nele até alguém com prova operacional aparecer.
+        assert _deve_preservar_reserva(retorno) is True
+    print("OK  test_g9_declarativo_sozinho_nunca_autoriza_retomada")
+
+
+def test_g9_caminho_bom_produz_ownership_vivo_do_worker_certo() -> None:
+    """O contrapeso dos três testes acima: no fluxo bom o heartbeat LIMIT
+    recém-aplicado produz ``fonte="registro"`` com o worker correto, e no
+    retorno da Fase F o snapshot pré-transição produz ``fonte="snapshot"``
+    com quem voltou. É por isso que o portão novo não atrapalha nada."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto, _, _, registry, config, checkpoint, tasks_path, transporte = _montar_etapa_b(tmp)
+
+        # Checkpoint: o heartbeat de A acabou de gravar current_task=canônico.
+        aplicar_heartbeat(registry, RunnerHeartbeat(
+            worker_id=CANARY_WORKER_A, status="LIMIT", task_id=CANARY_TASK_ID,
+            branch=f"runner/{CANARY_TASK_ID}", commit=checkpoint, last_checkpoint=checkpoint,
+        ))
+        declarativa = next(
+            t for t in load_tasks_from_tasks_json(tasks_path) if t.id == CANARY_TASK_ID
+        )
+        visao = visao_operacional_da_tarefa(declarativa, workers=registry.list_workers())
+        assert visao.fonte == "registro", visao.reason
+        assert visao.dono_worker_id == CANARY_WORKER_A
+        assert visao.usou_ownership_vivo is True
+
+        # Retorno: depois do CAS para AVAILABLE não há dono vivo, e o
+        # snapshot pré-transição é quem responde.
+        snapshot = OperationalWorkerSnapshot(
+            worker_id=CANARY_WORKER_B, status="LIMIT", current_task=CANARY_TASK_ID,
+            last_checkpoint=checkpoint, branch=f"runner/{CANARY_TASK_ID}",
+        )
+        visao_retorno = visao_operacional_da_tarefa(declarativa, workers=[], snapshot=snapshot)
+        assert visao_retorno.fonte == "snapshot", visao_retorno.reason
+        assert visao_retorno.dono_worker_id == CANARY_WORKER_B
+        assert visao_retorno.usou_ownership_vivo is True
+        assert transporte.calls == 0
+    print("OK  test_g9_caminho_bom_produz_ownership_vivo_do_worker_certo")
+
+
+# ---------------------------------------------------------------------------
 # G8-B — as continuações automáticas rodam a MESMA validação da execução
 # inicial (coordinator-suite), e uma validação vermelha não commita nada.
 # ---------------------------------------------------------------------------
@@ -1278,6 +1435,10 @@ def main() -> int:
         test_g8a_snapshot_so_vale_quando_bate_com_o_worker_real,
         test_g8a_registro_vivo_vence_o_snapshot_e_impede_trabalho_paralelo,
         test_g8a_fluxo_completo_sem_agente_declarado_no_tasks_json,
+        test_g9_ambiguidade_de_dois_donos_bloqueia_o_handoff,
+        test_g9_estado_declarativo_terminal_bloqueia_o_handoff,
+        test_g9_declarativo_sozinho_nunca_autoriza_retomada,
+        test_g9_caminho_bom_produz_ownership_vivo_do_worker_certo,
         test_g8b_chave_de_validacao_do_canario_e_a_real_da_allowlist,
         test_g8b_etapa_b_roda_coordinator_suite_com_sucesso,
         test_g8b_etapa_c_roda_coordinator_suite_com_sucesso,

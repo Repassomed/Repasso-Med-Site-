@@ -116,6 +116,7 @@ from .runner_resume import (
     recuperar_runner_task_de_handoff,
     snapshot_de_interrupcao,
 )
+from .handoff import worker_retomando_deve_assumir
 from .scheduler import load_tasks_from_tasks_json
 from .task_ownership import OperationalWorkerSnapshot, visao_operacional_da_tarefa
 from .worker_ops import OperationalWorkerRegistry, WorkerRecord
@@ -281,9 +282,43 @@ def reagir_a_retorno_de_worker(
 
     tarefa_para_decisao = tarefa_original
     if tarefa_original is not None:
-        tarefa_para_decisao = visao_operacional_da_tarefa(
+        visao = visao_operacional_da_tarefa(
             tarefa_original, workers=workers, snapshot=snapshot_operacional,
-        ).tarefa
+        )
+        # Achado G9 (auditoria final do PR #118): quando a visão cai para
+        # o declarativo — ambiguidade entre dois donos, estado
+        # declarativo terminal, snapshot que não bate com o WorkerRecord
+        # real, ou simplesmente nenhuma prova operacional — o `agente`/
+        # `estado` antigos do tasks.json NÃO podem, sozinhos, autorizar
+        # uma retomada automática.
+        #
+        # O que é bloqueado é exatamente a AUTORIZAÇÃO: só para aqui o
+        # caso em que o declarativo, sozinho, diria "sim, retoma" (a
+        # tarefa aparece BLOCKED-LIMIT e o agente declarado é justamente
+        # quem voltou). Fail-closed: sem retomada, sem próxima oferta, e
+        # `_deve_preservar_reserva` preserva a reserva — nada avançou.
+        #
+        # O que NÃO é bloqueado é o declarativo RECUSANDO. Tarefa já
+        # concluída, ou já de outro agente, segue o caminho normal: é lá
+        # que o scheduler oferece a próxima tarefa e o worker não fica
+        # parado segurando uma reserva morta. Um dono vivo DIFERENTE
+        # (``fonte="registro"``) também segue o caminho normal, porque é
+        # ``worker_retomando_deve_assumir`` que recusa a retomada — os
+        # dois comportamentos já existiam e continuam com teste próprio.
+        if not visao.usou_ownership_vivo and worker_retomando_deve_assumir(
+            tarefa_estado=tarefa_original.estado,
+            tarefa_agente_atual=tarefa_original.agente,
+            worker_que_volta=worker_novo.worker_id,
+        )[0]:
+            return RetornoWorkerOutcome(
+                retomada=None, proxima_oferta=None,
+                motivo=(
+                    f"ownership operacional de {tarefa_original.id!r} não confirmado para "
+                    f"{worker_novo.worker_id!r} — retomada automática recusada, fail-closed; o registro "
+                    f"declarativo sozinho nunca autoriza uma retomada. Motivo: {visao.reason}"
+                ),
+            )
+        tarefa_para_decisao = visao.tarefa
 
     return processar_retorno_de_worker(
         worker_que_volta=worker_novo.worker_id, tarefa_original=tarefa_para_decisao, tarefas=tarefas,

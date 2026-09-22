@@ -430,6 +430,29 @@ def processar_checkpoint_de_limite(
     # nenhum.
     visao = visao_operacional_da_tarefa(tarefa, workers=workers)
 
+    # Achado G9 (auditoria final do PR #118): detectar a ambiguidade não
+    # basta — o chamador precisa PARAR nela. Quando a visão cai para o
+    # declarativo (dois workers ocupando a mesma tarefa, estado
+    # declarativo terminal, ou simplesmente nenhum ownership operacional
+    # provado), o `agente`/`estado` antigos do tasks.json poderiam, por
+    # coincidência, deixar `_worker_e_o_dono_atual` aceitar o handoff — e
+    # aí a promessa de fail-closed da camada de ownership valeria nada.
+    # Então exige-se as DUAS coisas: ownership vivo de verdade E que esse
+    # dono seja exatamente o worker deste checkpoint. Qualquer outra
+    # combinação para aqui: zero claim, zero handoff, zero despacho, zero
+    # chamada paga. O heartbeat LIMIT já aplicado continua valendo (o
+    # registro precisa refletir o limite reportado), e é só isso.
+    if not visao.usou_ownership_vivo or visao.dono_worker_id != worker_anterior.worker_id:
+        return CheckpointIntegrationOutcome(
+            "HEARTBEAT_APPLIED",
+            (
+                f"heartbeat LIMIT aplicado, mas o ownership operacional de {alvo!r} não foi confirmado "
+                f"para {worker_anterior.worker_id!r} — handoff recusado, fail-closed, nenhum claim e "
+                f"nenhuma execução. Motivo: {visao.reason}"
+            ),
+            heartbeat=resultado_hb,
+        )
+
     claim_store = HandoffClaimStore(
         GitJsonStore(state_git_remote, branch=DEFAULT_HANDOFF_STATE_BRANCH)
     )

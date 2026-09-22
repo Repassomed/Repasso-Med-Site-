@@ -303,6 +303,12 @@ def test_integrado_ponta_a_ponta_f6a_b_c_d() -> None:
         outcome1 = reagir_a_retorno_de_worker(
             registry, novo, canonical_task_id_anterior=canonical_anterior,
             checkpoint_anterior=checkpoint_anterior, branch_anterior=branch_anterior,
+            # Achado G9: a retomada automática exige prova operacional
+            # de ownership. `status_anterior` é o status que o worker
+            # tinha imediatamente antes de virar AVAILABLE — exatamente o
+            # que `aplicar_comando` captura do WorkerRecord real no
+            # caminho de produção.
+            status_anterior="LIMIT",
             tasks_json_path=tasks_path, repo_dir=workdir1, config=config, state_git_remote=remoto,
             patch=_patch_greeting(),
             # snapshot_da_tarefa_original DELIBERADAMENTE omitido — F6-B
@@ -376,6 +382,10 @@ def test_integrado_ponta_a_ponta_f6a_b_c_d() -> None:
         outcome2 = reagir_a_retorno_de_worker(
             registry_concorrente, novo_concorrente, canonical_task_id_anterior=canonical_anterior,
             checkpoint_anterior=checkpoint_anterior, branch_anterior=branch_anterior,
+            # Achado G9: a segunda entrega do MESMO evento carrega o mesmo
+            # estado operacional anterior — é o claim que a recusa, não a
+            # falta de ownership.
+            status_anterior="LIMIT",
             tasks_json_path=tasks_path, repo_dir=workdir2, config=config, state_git_remote=remoto,
             patch=_patch_greeting(),
         )
@@ -553,6 +563,12 @@ def test_gate_fechado_zero_execucao_zero_chamada_paga() -> None:
         outcome = reagir_a_retorno_de_worker(
             registry, novo, canonical_task_id_anterior="t-gate", checkpoint_anterior="abc1234def0",
             branch_anterior="runner/t-gate", tasks_json_path=tasks_path,
+            # Achado G9: a retomada automática exige prova operacional
+            # de ownership. `status_anterior` é o status que o worker
+            # tinha imediatamente antes de virar AVAILABLE — exatamente o
+            # que `aplicar_comando` captura do WorkerRecord real no
+            # caminho de produção.
+            status_anterior="LIMIT",
             repo_dir="/definitivamente/nao/existe/repo", config=config, state_git_remote="/nao/existe",
             snapshot_da_tarefa_original=snap, gerar_patch=gerar_patch_espiao,
         )
