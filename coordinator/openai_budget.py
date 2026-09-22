@@ -56,16 +56,6 @@ SUPPORTED_MODELS: dict[str, dict[str, float]] = {
 MAX_OUTPUT_TOKENS_PER_CALL = 2_000
 MAX_INPUT_CHARS_PER_CALL = 8_000
 
-# Correção B2 da auditoria independente do PR #107 ("hard budget"
-# precisa reservar ANTES da chamada, usando um teto CONSERVADOR de
-# tokens de entrada — nunca os tokens reais, que só a API sabe depois).
-# Espelha ``coordinator.openai_audit.MAX_AUDIT_PROMPT_CHARS`` (o prompt
-# nunca passa desse tamanho em caracteres) tratando cada caractere como
-# >= 1 token — um superestimador deliberado e seguro: a proporção real
-# de caracteres por token de qualquer tokenizador atual é sempre >= 1,
-# então isto nunca SUBESTIMA o custo máximo possível de uma chamada.
-MAX_INPUT_TOKENS_CONSERVATIVE = 16_000
-
 
 def estimate_cost_usd_openai(model_id: str, input_tokens: int, output_tokens: int) -> float:
     """Custo CALCULADO a partir de tokens medidos — nunca uma cobrança
@@ -87,17 +77,32 @@ def estimate_cost_usd_openai(model_id: str, input_tokens: int, output_tokens: in
     return (input_tokens / 1_000_000) * precos["input"] + (output_tokens / 1_000_000) * precos["output"]
 
 
-def conservative_call_cost_usd(model_id: str, *, max_output_tokens: int = MAX_OUTPUT_TOKENS_PER_CALL) -> float:
+def conservative_call_cost_usd(model_id: str, *, input_chars: int,
+                                max_output_tokens: int = MAX_OUTPUT_TOKENS_PER_CALL) -> float:
     """Teto CONSERVADOR (pior caso) do custo de UMA chamada, calculado
-    ANTES de qualquer chamada acontecer — usa o limite máximo de tokens
-    de entrada/saída permitidos por chamada, nunca os tokens reais.
+    ANTES de qualquer chamada acontecer — usa o tamanho REAL do payload
+    de entrada (``input_chars``) e o limite máximo de tokens de saída
+    permitidos por chamada, nunca os tokens reais de resposta (que só a
+    API sabe depois).
 
     Correção B2 da auditoria independente do PR #107: o hard budget
     precisa reservar orçamento suficiente para o PIOR CASO antes de
     enviar qualquer coisa, não só bloquear depois que o gasto real já
     ultrapassou o teto (isso era um "stop-after-crossing", não um hard
-    cap)."""
-    return estimate_cost_usd_openai(model_id, MAX_INPUT_TOKENS_CONSERVATIVE, max_output_tokens)
+    cap).
+
+    Correção B10 da auditoria independente do PR #107 (HEAD 98c976e):
+    ``input_chars`` agora é OBRIGATÓRIO e deve vir do tamanho real e
+    combinado de ``request.system + request.prompt`` no ponto de
+    chamada (``openai_client.py::call``) — nunca mais uma constante fixa
+    e desconectada (``MAX_INPUT_TOKENS_CONSERVATIVE = 16_000``) que só
+    refletia o teto do PROMPT e ignorava as instruções de sistema
+    enviadas separadamente, podendo subestimar a reserva. Cada caractere
+    ainda é tratado como >= 1 token — superestimador deliberado e
+    seguro, já que a proporção real de caracteres por token de qualquer
+    tokenizador atual é sempre >= 1, então isto nunca SUBESTIMA o custo
+    máximo possível de uma chamada com este payload."""
+    return estimate_cost_usd_openai(model_id, input_chars, max_output_tokens)
 
 
 @dataclass
@@ -122,7 +127,19 @@ class OpenAIUsageRecord:
     - ``"usage"``        — registro histórico do uso real desta chamada,
       só para leitura/relatório (não soma de novo: seu valor já está
       refletido pela reserva + correção acima; ver
-      ``coordinator/openai_client.py::call``)."""
+      ``coordinator/openai_client.py::call``).
+
+    ``informational_cost_usd`` (correção B9 da auditoria independente do
+    PR #107, HEAD 98c976e): só preenchido em registros ``kind="usage"``,
+    carrega o custo REAL calculado a partir dos tokens reais devolvidos
+    pela API — para leitura/relatório/auditoria, nunca somado de novo em
+    ``month_to_date_usd()``. Por isso um registro ``"usage"`` sempre tem
+    ``estimated_cost_usd=0.0`` (não participa da soma; o valor real já
+    foi contabilizado pela reserva + correção) e o custo real fica só em
+    ``informational_cost_usd``. Antes desta correção, o custo/tokens
+    reais nunca eram persistidos — só existiam no objeto ``CallResult``
+    devolvido ao chamador, então nada no ledger permitia auditar o uso
+    real depois do fato."""
 
     timestamp: str
     event_key: str
@@ -133,6 +150,7 @@ class OpenAIUsageRecord:
     estimated_cost_usd: float
     provider: str = "openai"
     kind: str = "usage"
+    informational_cost_usd: float | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -145,6 +163,11 @@ class OpenAIUsageRecord:
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,
             "estimated_cost_usd": round(self.estimated_cost_usd, 6),
+            "informational_cost_usd": (
+                round(self.informational_cost_usd, 6)
+                if self.informational_cost_usd is not None
+                else None
+            ),
         }
 
 

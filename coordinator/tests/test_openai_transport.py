@@ -164,6 +164,9 @@ def test_end_to_end_call_with_mock_sdk_registers_usage() -> None:
                 def append(self, record):
                     pass
 
+                def reserve_if_within_budget(self, candidate, *, budget_usd, now=None):
+                    return True
+
             resultado = openai_client.call(
                 cfg, pedido, transport=OpenAIResponsesTransport(), limiter=lim,
                 ledger=_LedgerFake(), event_key="evt:mock-e2e",
@@ -188,20 +191,36 @@ def test_exception_from_fake_sdk_never_leaks_key_in_result() -> None:
             cfg = OpenAIAuditorConfig(enabled=True)
 
             class _LedgerFake:
+                def __init__(self) -> None:
+                    self.appends: list = []
+                    self.reservas: list = []
+
                 def month_to_date_usd(self, *, now=None):
                     return 0.0
 
                 def append(self, record):
-                    pass
+                    self.appends.append(record)
 
+                def reserve_if_within_budget(self, candidate, *, budget_usd, now=None):
+                    self.reservas.append(candidate)
+                    return True
+
+            ledger_fake = _LedgerFake()
             resultado = openai_client.call(
                 cfg, _request_de_teste(), transport=OpenAIResponsesTransport(),
-                limiter=OpenAICallLimiter(), ledger=_LedgerFake(), event_key="evt:vaza-chave",
+                limiter=OpenAICallLimiter(), ledger=ledger_fake, event_key="evt:vaza-chave",
             )
         assert resultado.status == "error"
         dados = resultado.to_dict()
         assert chave_falsa not in dados["reason"], "a chave falsa vazou do resultado da chamada"
         assert "[REDACTED:api-key]" in dados["reason"]
+        # Achado B8 da auditoria independente do PR #107 (HEAD 98c976e): uma
+        # exceção do transporte NUNCA libera a reserva automaticamente — só
+        # a reserva original (via reserve_if_within_budget) deve existir,
+        # nenhuma correção/liberação em cima dela.
+        assert len(ledger_fake.reservas) == 1
+        assert len(ledger_fake.appends) == 0, "exceção do transporte não deve gravar nenhuma correção/liberação"
+        assert "permanece contada" in dados["reason"]
     finally:
         _remover_sdk_falso()
     print("OK  test_exception_from_fake_sdk_never_leaks_key_in_result")

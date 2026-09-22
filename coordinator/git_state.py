@@ -366,8 +366,9 @@ class GitDedupStore:
 
 class GitUsageLedger:
     """Mesma superfície pública de ``coordinator.budget.UsageLedger``
-    (``append``, ``month_to_date_usd``, ``all_records``), mas persistida
-    numa branch de estado compartilhada entre execuções independentes."""
+    (``append``, ``month_to_date_usd``, ``all_records``,
+    ``reserve_if_within_budget``), mas persistida numa branch de estado
+    compartilhada entre execuções independentes."""
 
     def __init__(self, git_json: GitJsonStore) -> None:
         self.git_json = git_json
@@ -388,6 +389,51 @@ class GitUsageLedger:
             if str(r.get("timestamp", "")).startswith(prefixo_mes):
                 total += float(r.get("estimated_cost_usd", 0.0))
         return total
+
+    def reserve_if_within_budget(self, candidate, *, budget_usd: float, now: datetime | None = None) -> bool:
+        """Achado B7 da auditoria independente do PR #107: "checar
+        orçamento" e "gravar a reserva" viram UMA única operação atômica,
+        dentro do MESMO ``mutate``/CAS que ``GitJsonStore.update()`` já
+        executa com retry (novo fetch + reaplicação a cada tentativa, sob
+        ``--force-with-lease``) — nunca duas chamadas git separadas
+        (``month_to_date_usd()`` e depois ``append()``), que deixavam uma
+        janela real entre duas execuções concorrentes lendo o mesmo saldo
+        antes de qualquer uma publicar.
+
+        O predicado é reavaliado a partir de uma leitura FRESCA em cada
+        tentativa (inclusive nos retries) — exatamente o mesmo princípio
+        que ``GitJsonStore.claim_key()`` já usa para o dedup. Quando duas
+        execuções disputam o mesmo orçamento residual, ``update()`` só
+        deixa UMA delas publicar por vez (a lease condicional de
+        ``_push`` protege isso — ver docstring de ``_push``); a que
+        perde recomeça com o estado fresco (agora já contendo a reserva
+        da vencedora) e reavalia o predicado — só ganha quem ainda couber
+        depois disso.
+
+        Devolve ``True`` só quando a reserva foi de fato aceita e
+        publicada; ``False`` quando não coube (nada é gravado, mas ainda
+        assim é publicado um commit vazio/idempotente — aceitável: é só
+        estado operacional numa branch dedicada, nunca matéria)."""
+        aceitou = False
+
+        def mutate(dados: dict) -> dict:
+            nonlocal aceitou
+            registros = dados.get("records", [])
+            agora = now or datetime.now(timezone.utc)
+            prefixo_mes = agora.strftime("%Y-%m")
+            gasto_atual = sum(
+                float(r.get("estimated_cost_usd", 0.0))
+                for r in registros
+                if str(r.get("timestamp", "")).startswith(prefixo_mes)
+            )
+            if gasto_atual + candidate.estimated_cost_usd > budget_usd:
+                aceitou = False
+                return dados
+            aceitou = True
+            return {"records": [*registros, candidate.to_dict()]}
+
+        self.git_json.update(mutate, message=f"usage-reserve: {candidate.event_key} ({candidate.tier})")
+        return aceitou
 
     def all_records(self) -> list[dict]:
         return self.git_json.read().get("records", [])

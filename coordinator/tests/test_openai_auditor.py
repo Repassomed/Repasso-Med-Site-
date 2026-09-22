@@ -318,7 +318,11 @@ def test_budget_concurrent_reservations_second_call_blocked_by_first_reservation
     ser bloqueada."""
     from coordinator.openai_budget import conservative_call_cost_usd
 
-    teto_uma_chamada = conservative_call_cost_usd("gpt-5.6-terra")
+    # "s" + "p" — mesmo payload que ``pedido_a``/``pedido_b`` abaixo usam
+    # (system="s", prompt="p"), já que a correção B10 exige que o teto
+    # conservador reflita o tamanho REAL do payload, não mais uma
+    # constante fixa.
+    teto_uma_chamada = conservative_call_cost_usd("gpt-5.6-terra", input_chars=len("s") + len("p"))
     orcamento = teto_uma_chamada * 1.5  # cabe 1 reserva, não cabem 2 juntas
     ledger = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage.json"))
     cfg = OpenAIAuditorConfig(enabled=True, budget_usd=orcamento)
@@ -351,6 +355,145 @@ def test_budget_concurrent_reservations_second_call_blocked_by_first_reservation
         "ultrapassariam o teto, então B precisa ser bloqueada"
     )
     print("OK  test_budget_concurrent_reservations_second_call_blocked_by_first_reservation")
+
+
+def test_budget_reserve_if_within_budget_is_atomic_under_real_concurrent_threads() -> None:
+    """Achado B7 da auditoria independente do PR #107 (HEAD 98c976e): o
+    teste acima (``..._second_call_blocked_by_first_reservation``) dispara
+    a segunda chamada de DENTRO do ``send()`` da primeira — ou seja,
+    depois que a reserva de A já está persistida, o que nunca exercita a
+    corrida REAL em que duas execuções leem o MESMO saldo pré-reserva ao
+    mesmo tempo (o TOCTOU que a versão anterior de ``openai_client.call``
+    tinha: "ler gasto do mês" e "gravar a reserva" como duas chamadas
+    separadas). Este teste usa ``threading.Barrier`` para forçar N
+    threads a chamarem ``UsageLedger.reserve_if_within_budget`` no MESMO
+    instante, contra um orçamento que cabe exatamente UMA reserva — só a
+    atomicidade real (lock cobrindo leitura+gravação) garante que apenas
+    uma vença."""
+    import threading
+
+    from coordinator.openai_budget import conservative_call_cost_usd
+
+    teto_uma_chamada = conservative_call_cost_usd("gpt-5.6-terra", input_chars=10)
+    orcamento = teto_uma_chamada * 1.5  # cabe 1 reserva, não cabem 2 juntas
+    ledger = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage.json"))
+
+    n_threads = 6
+    barreira = threading.Barrier(n_threads)
+    resultados: list[bool | None] = [None] * n_threads
+
+    def tentar(i: int) -> None:
+        candidato = OpenAIUsageRecord(
+            timestamp=_now_iso(), event_key=f"race-{i}", tier="TERRA", model_id="gpt-5.6-terra",
+            input_tokens=0, output_tokens=0, estimated_cost_usd=teto_uma_chamada, kind="reservation",
+        )
+        barreira.wait()  # todas as threads só passam daqui juntas — força a simultaneidade real
+        resultados[i] = ledger.reserve_if_within_budget(candidato, budget_usd=orcamento)
+
+    threads = [threading.Thread(target=tentar, args=(i,)) for i in range(n_threads)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert resultados.count(True) == 1, (
+        f"orçamento cabia exatamente 1 reserva de US$ {teto_uma_chamada:.6f}, mas "
+        f"{resultados.count(True)} de {n_threads} threads concorrentes venceram — a checagem+gravação "
+        "não é atômica (achado B7, auditoria independente do PR #107, HEAD 98c976e)"
+    )
+    assert resultados.count(False) == n_threads - 1
+    assert abs(ledger.month_to_date_usd() - teto_uma_chamada) < 1e-9, (
+        "o ledger deveria conter exatamente UMA reserva persistida, nunca mais de uma, mesmo sob corrida real"
+    )
+    print("OK  test_budget_reserve_if_within_budget_is_atomic_under_real_concurrent_threads")
+
+
+def test_budget_transport_error_never_releases_the_reservation() -> None:
+    """Achado B8 da auditoria independente do PR #107 (HEAD 98c976e): a
+    versão anterior liberava 100% da reserva sempre que ``transport.send``
+    lançava uma exceção, presumindo que isso sempre significa "nenhum
+    token foi consumido" — uma suposição otimista, não uma garantia (um
+    timeout pode acontecer DEPOIS que a OpenAI já processou e cobrou a
+    requisição). Agora a reserva conservadora precisa permanecer contada
+    integralmente no ledger mesmo quando a chamada falha."""
+    ledger = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage.json"))
+    cfg = OpenAIAuditorConfig(enabled=True, budget_usd=5.0)
+    lim = OpenAICallLimiter()
+    pedido = openai_client.build_request(
+        model_id="gpt-5.6-terra", tier="TERRA", system="sistema", prompt="prompt", limiter=lim,
+    )
+    transporte = _TransporteOpenAIQueSempreFalha()
+    resultado = openai_client.call(cfg, pedido, transport=transporte, limiter=lim, ledger=ledger, event_key="x")
+    assert resultado.status == "error"
+    assert transporte.calls == 1
+
+    from coordinator.openai_budget import conservative_call_cost_usd
+
+    teto_esperado = conservative_call_cost_usd(
+        "gpt-5.6-terra", input_chars=len("sistema") + len("prompt"), max_output_tokens=pedido.max_output_tokens,
+    )
+    gasto_pos_falha = ledger.month_to_date_usd()
+    assert abs(gasto_pos_falha - teto_esperado) < 1e-9, (
+        "a reserva conservadora precisa permanecer integralmente contada depois de uma falha de "
+        f"transporte (esperado US$ {teto_esperado:.6f}, ledger tem US$ {gasto_pos_falha:.6f}) — nunca "
+        "liberada automaticamente (achado B8, auditoria independente do PR #107, HEAD 98c976e)"
+    )
+    registros = ledger.all_records()
+    assert len(registros) == 1 and registros[0]["kind"] == "reservation", (
+        "só a reserva original deve existir — nenhuma correção/liberação gravada em cima dela"
+    )
+    print("OK  test_budget_transport_error_never_releases_the_reservation")
+
+
+def test_budget_reservation_scales_with_real_system_and_prompt_length() -> None:
+    """Achado B10 da auditoria independente do PR #107 (HEAD 98c976e): o
+    teto conservador antes vinha de uma constante fixa e desconectada
+    (``MAX_INPUT_TOKENS_CONSERVATIVE = 16_000``) que só refletia o teto do
+    PROMPT e ignorava as instruções de sistema enviadas separadamente.
+    Agora precisa escalar com o tamanho REAL de ``system + prompt`` — um
+    payload maior reserva mais orçamento que um menor, com o mesmo
+    ``model_id``."""
+    lim_curto = OpenAICallLimiter()
+    pedido_curto = openai_client.build_request(
+        model_id="gpt-5.6-terra", tier="TERRA", system="s", prompt="p", limiter=lim_curto,
+    )
+    lim_longo = OpenAICallLimiter()
+    pedido_longo = openai_client.build_request(
+        model_id="gpt-5.6-terra", tier="TERRA", system="s" * 3000, prompt="p" * 3000, limiter=lim_longo,
+    )
+
+    ledger_curto = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage.json"))
+    ledger_longo = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage.json"))
+    cfg = OpenAIAuditorConfig(enabled=True, budget_usd=100.0)
+
+    openai_client.call(
+        cfg, pedido_curto, transport=_TransporteOpenAIQueSempreFalha(), limiter=lim_curto,
+        ledger=ledger_curto, event_key="curto",
+    )
+    openai_client.call(
+        cfg, pedido_longo, transport=_TransporteOpenAIQueSempreFalha(), limiter=lim_longo,
+        ledger=ledger_longo, event_key="longo",
+    )
+
+    reserva_curta = ledger_curto.month_to_date_usd()
+    reserva_longa = ledger_longo.month_to_date_usd()
+    assert reserva_longa > reserva_curta, (
+        f"um payload de system+prompt muito maior (6000 chars) precisa reservar MAIS que um payload "
+        f"de 2 chars (curto=US$ {reserva_curta:.6f}, longo=US$ {reserva_longa:.6f}) — a reserva não "
+        "pode ser uma constante fixa desconectada do payload real (achado B10)"
+    )
+
+    from coordinator.openai_budget import conservative_call_cost_usd
+
+    esperado_curto = conservative_call_cost_usd(
+        "gpt-5.6-terra", input_chars=len("s") + len("p"), max_output_tokens=pedido_curto.max_output_tokens,
+    )
+    esperado_longo = conservative_call_cost_usd(
+        "gpt-5.6-terra", input_chars=3000 + 3000, max_output_tokens=pedido_longo.max_output_tokens,
+    )
+    assert abs(reserva_curta - esperado_curto) < 1e-9
+    assert abs(reserva_longa - esperado_longo) < 1e-9
+    print("OK  test_budget_reservation_scales_with_real_system_and_prompt_length")
 
 
 # ---------------------------------------------------------------------------
@@ -822,6 +965,9 @@ def test_pipeline_ledger_correction_failure_is_fail_closed_and_flagged() -> None
                 raise RuntimeError("falha simulada ao persistir a correção do ledger")
             self._real.append(record)
 
+        def reserve_if_within_budget(self, candidate, *, budget_usd, now=None):
+            return self._real.reserve_if_within_budget(candidate, budget_usd=budget_usd, now=now)
+
         def month_to_date_usd(self, *, now=None):
             return self._real.month_to_date_usd(now=now)
 
@@ -858,21 +1004,35 @@ def test_pipeline_shows_separate_anthropic_and_openai_costs_and_combined_total()
     assert len(registros_anthropic) == 1, "ledger Anthropic: 1 registro por chamada bem-sucedida"
     # Correção B2/B3 (auditoria independente do PR #107): o ledger OpenAI
     # agora grava a RESERVA conservadora antes da chamada e a CORREÇÃO
-    # para o custo real depois — 2 registros por chamada bem-sucedida,
-    # nunca 1 solto (isso é o que dá o hard cap real e a garantia de
-    # nunca perder o custo de uma chamada paga).
-    assert len(registros_openai) == 2, "ledger OpenAI: reserva + correção por chamada bem-sucedida"
+    # para o custo real depois. Correção B9 (auditoria independente do PR
+    # #107, HEAD 98c976e): também grava um terceiro registro `kind="usage"`
+    # com os tokens reais (estimated_cost_usd=0.0, para não somar de novo
+    # — o valor real já está refletido pela reserva+correção;
+    # informational_cost_usd carrega o custo real só para leitura) — 3
+    # registros por chamada bem-sucedida, nunca 2 (isso é o que permite
+    # auditar depois quais tokens reais cada chamada consumiu).
+    assert len(registros_openai) == 3, "ledger OpenAI: reserva + correção + uso real por chamada bem-sucedida"
     assert all(r["provider"] == "openai" for r in registros_openai), "ledgers SEPARADOS por provider"
-    assert {r["kind"] for r in registros_openai} == {"reservation", "correction"}
+    assert {r["kind"] for r in registros_openai} == {"reservation", "correction", "usage"}
     assert registros_openai[0]["tier"] == "TERRA"
     assert registros_anthropic[0]["tier"] in ("FAST", "STANDARD", "DEEP")
+
+    registro_uso = next(r for r in registros_openai if r["kind"] == "usage")
+    assert registro_uso["input_tokens"] == 500 and registro_uso["output_tokens"] == 100, (
+        "o registro de uso real precisa persistir os tokens reais devolvidos pela API (achado B9)"
+    )
+    assert registro_uso["estimated_cost_usd"] == 0.0, "o registro de uso não soma de novo em month_to_date_usd()"
 
     custo_openai_total = sum(r["estimated_cost_usd"] for r in registros_openai)
     from coordinator.openai_budget import estimate_cost_usd_openai
     custo_real_esperado = estimate_cost_usd_openai("gpt-5.6-terra", 500, 100)
     assert abs(custo_openai_total - custo_real_esperado) < 1e-9, (
-        "a soma reserva+correção precisa bater exatamente com o custo real — nunca contado "
+        "a soma reserva+correção+uso precisa bater exatamente com o custo real — nunca contado "
         "duas vezes, nunca perdido"
+    )
+    assert registro_uso["informational_cost_usd"] is not None
+    assert abs(registro_uso["informational_cost_usd"] - custo_real_esperado) < 1e-9, (
+        "informational_cost_usd precisa carregar o custo real, só para leitura/relatório (achado B9)"
     )
     print("OK  test_pipeline_shows_separate_anthropic_and_openai_costs_and_combined_total")
 
@@ -911,6 +1071,9 @@ def main() -> int:
         test_budget_hard_stop_blocks_new_calls,
         test_budget_conservative_reservation_blocks_call_that_would_cross_cap,
         test_budget_concurrent_reservations_second_call_blocked_by_first_reservation,
+        test_budget_reserve_if_within_budget_is_atomic_under_real_concurrent_threads,
+        test_budget_transport_error_never_releases_the_reservation,
+        test_budget_reservation_scales_with_real_system_and_prompt_length,
         test_routing_zero_without_diff,
         test_routing_terra_for_normal_medical_content,
         test_routing_sol_for_high_risk_signal,
