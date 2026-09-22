@@ -751,6 +751,43 @@ def executar_tarefa(
                 _emitir_heartbeat(worker_id, worker_registry, RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"), heartbeats, notes)
             return DispatchOutcome(result=resultado, claimed=True, external_calls_made=True,
                                     heartbeats=tuple(heartbeats), notes=tuple(notes))
+
+        # Achado F9-B (Issue #105, Fase F, 8ª rodada, auditoria
+        # independente): a chamada Anthropic teve êxito E produziu um
+        # patch válido (status_geracao == "ok" acima), mas a correção da
+        # reserva conservadora/registro de uso no ledger (achado F8-C,
+        # runner_generate.gerar_patch_via_claude) não pôde ser
+        # persistida — ``GenerateOutcome.ledger_correction_failed=True``.
+        # Antes desta correção, este sinal era simplesmente IGNORADO
+        # aqui (só ``.status``/``.patch`` importavam) — um patch gerado
+        # com a contabilidade de custo incerta seguia para
+        # aplicar/commitar/publicar como se nada tivesse acontecido.
+        # Agora: FAIL-CLOSED ANTES de tocar em qualquer arquivo — zero
+        # commit/push (nem ``preparar_branch_de_trabalho`` nem
+        # ``aplicar_patch`` chegam a rodar), o claim permanece consumido
+        # (``claim_store.registrar_resultado`` grava FAILED contra o
+        # MESMO task_id — nunca liberado para uma nova tentativa), sem
+        # retry (nenhum código aqui invoca ``gerar_patch()`` de novo), e
+        # a reserva conservadora já persistida por
+        # ``gerar_patch_via_claude`` permanece contabilizada no ledger
+        # (este bloco nunca toca o ledger, nunca reverte nada).
+        if getattr(geracao, "ledger_correction_failed", False):
+            resultado = RunnerResult(
+                task_id=task.task_id, status="FAILED",
+                reason=(
+                    "chamada Anthropic concluída com sucesso e patch válido gerado, mas a correção "
+                    "da reserva conservadora/registro de uso não pôde ser persistida no ledger "
+                    "Anthropic global — fail-closed antes de aplicar qualquer patch (achado F9-B): "
+                    "zero commit/push, claim permanece consumido, sem retry. A reserva conservadora "
+                    "já feita por gerar_patch_via_claude permanece contabilizada no ledger."
+                ),
+            )
+            claim_store.registrar_resultado(task.task_id, resultado)
+            if worker_id:
+                _emitir_heartbeat(worker_id, worker_registry, RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"), heartbeats, notes)
+            return DispatchOutcome(result=resultado, claimed=True, external_calls_made=True,
+                                    heartbeats=tuple(heartbeats), notes=tuple(notes))
+
         patch = patch_gerado
 
     ok_patch, fora = validar_patch_contra_allowed_files(patch, task)

@@ -477,6 +477,81 @@ def test_executar_tarefa_requires_exactly_one_of_patch_or_gerar_patch() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Achado F9-B (Issue #105, Fase F, 8ª rodada, auditoria independente):
+# GenerateOutcome.ledger_correction_failed=True (a chamada Anthropic teve
+# êxito e produziu um patch válido, mas a correção da reserva/registro de
+# uso não pôde ser persistida — achado F8-C) nunca pode ser silenciosamente
+# ignorado: fail-closed ANTES de aplicar qualquer patch, zero commit/push.
+# ---------------------------------------------------------------------------
+
+class _GeracaoComFalhaDeLedger:
+    """Duck-typed, mesmo contrato de ``runner_generate.GenerateOutcome``
+    (``.status``/``.patch``/``.reason``/``.ledger_correction_failed``) —
+    simula exatamente o achado F9-B: a chamada teve êxito
+    (``status="ok"``) e o patch é VÁLIDO, mas a correção do ledger
+    falhou."""
+
+    status = "ok"
+    reason = "patch gerado via Claude e validado contra allowed_files."
+    ledger_correction_failed = True
+
+    def __init__(self, patch: StructuredPatch) -> None:
+        self.patch = patch
+
+
+def test_ledger_correction_failure_is_fail_closed_before_applying_patch() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        workdir = _clonar_workdir(tmp, remoto, "work-ledger-correction-failed")
+
+        task = _task(task_id="canario-ledger-fail", branch="runner/canario-ledger-fail")
+        config = _config(canary_task_id="canario-ledger-fail")
+        chamadas: list[int] = []
+
+        def gerar_patch_com_ledger_quebrado() -> object:
+            chamadas.append(1)
+            return _GeracaoComFalhaDeLedger(_patch())
+
+        outcome = executar_tarefa(
+            task, None, config=config, repo_dir=workdir, state_git_remote=remoto,
+            gerar_patch=gerar_patch_com_ledger_quebrado,
+        )
+
+        # RunnerResult FAILED explícito — nunca DONE/NEEDS-AUDIT, mesmo
+        # com um patch VÁLIDO em mãos.
+        assert outcome.result is not None and outcome.result.status == "FAILED", outcome.result
+        assert "ledger" in outcome.result.reason.lower()
+        assert outcome.claimed is True, "o claim precisa continuar consumido, nunca liberado"
+
+        # Zero commit/push: a branch da tarefa nunca chegou a existir no
+        # remoto (nem preparar_branch_de_trabalho nem aplicar_patch podem
+        # ter rodado).
+        r = subprocess.run(["git", "ls-remote", remoto, task.branch], capture_output=True, text=True)
+        assert r.stdout.strip() == "", "nenhum commit podia ter sido publicado para a branch da tarefa"
+
+        # Sem retry: gerar_patch() foi chamada exatamente 1 vez.
+        assert len(chamadas) == 1, "gerar_patch() nunca pode ser chamada de novo (sem retry)"
+
+        # O claim permanece consumido: uma segunda tentativa com o MESMO
+        # task_id encontra a chave já reivindicada — nunca uma nova
+        # chamada paga para o mesmo task_id.
+        chamadas_repeticao: list[int] = []
+
+        def gerar_patch_repeticao() -> object:
+            chamadas_repeticao.append(1)
+            return _GeracaoComFalhaDeLedger(_patch())
+
+        outcome2 = executar_tarefa(
+            task, None, config=config, repo_dir=workdir, state_git_remote=remoto,
+            gerar_patch=gerar_patch_repeticao,
+        )
+        assert outcome2.claimed is False
+        assert outcome2.result is not None and outcome2.result.status == "BLOCKED"
+        assert chamadas_repeticao == [], "claim já consumido — gerar_patch() nunca deveria ser chamada de novo"
+    print("OK  test_ledger_correction_failure_is_fail_closed_before_applying_patch")
+
+
+# ---------------------------------------------------------------------------
 # Correção B4 (3ª auditoria independente do PR #114): o Runner precisa
 # consultar/gravar no MESMO ledger Anthropic GLOBAL que o Coordinator
 # OBSERVE já usa — nunca um teto mensal separado.
@@ -640,6 +715,7 @@ def main() -> int:
         test_concurrent_dispatch_same_task_id_only_one_wins,
         test_claim_happens_before_anthropic_call_loser_makes_zero_calls,
         test_executar_tarefa_requires_exactly_one_of_patch_or_gerar_patch,
+        test_ledger_correction_failure_is_fail_closed_before_applying_patch,
         test_default_usage_branch_matches_the_global_coordinator_ledger,
         test_runner_sees_spend_already_recorded_by_coordinator_and_respects_shared_cap,
         test_done_result_never_merge_ready,

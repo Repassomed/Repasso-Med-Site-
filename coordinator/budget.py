@@ -51,6 +51,40 @@ def estimate_cost_usd(tier: ModelTier, input_tokens: int, output_tokens: int) ->
     return (input_tokens / 1_000_000) * precos["input"] + (output_tokens / 1_000_000) * precos["output"]
 
 
+# Achado F9-A (Issue #105, Fase F, 8ª rodada): mesmo princípio de
+# ``coordinator.openai_budget.conservative_input_tokens_ceiling`` e do teto
+# que ``runner_generate.py`` já usa para o Worker Runner (achado F8-C) —
+# contagem de BYTES UTF-8 (nunca de caracteres) é uma cota superior
+# MATEMÁTICA sobre o número de tokens que QUALQUER tokenizador BPE
+# byte-level produz (nunca menos de 1 token por byte). Público AQUI (não
+# mais privado a um único módulo) porque TODO caminho Anthropic pago
+# precisa do MESMO princípio de reserva conservadora contra o MESMO
+# ledger global ``coordinator-state-usage`` — o Coordinator OBSERVE
+# (``observe.py``, achado F9-A) e o Worker Runner (``runner_generate.py``,
+# achado F8-C, que mantém sua própria cópia privada equivalente — nunca
+# reimportada daqui nesta rodada para não reabrir um arquivo já auditado
+# sem necessidade).
+STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE = 64
+
+
+def conservative_input_tokens_ceiling(system: str, prompt: str) -> int:
+    """Teto de tokens de entrada comprovadamente NÃO-subestimador para
+    ``system + prompt`` — nunca menor que a contagem real de tokens que a
+    API vai processar, para QUALQUER idioma/script (mesma justificativa
+    de ``openai_budget.conservative_input_tokens_ceiling``)."""
+    payload_bytes = len((system + prompt).encode("utf-8"))
+    return payload_bytes + STRUCTURAL_OVERHEAD_TOKENS_CONSERVATIVE
+
+
+def conservative_call_cost_usd(tier: ModelTier, *, system: str, prompt: str, max_output_tokens: int) -> float:
+    """Teto CONSERVADOR (pior caso) do custo de UMA chamada, calculado
+    ANTES de qualquer chamada acontecer — usa o teto de tokens de entrada
+    acima e o limite MÁXIMO de tokens de saída permitidos por chamada
+    (nunca os tokens reais de resposta, que só a API sabe depois)."""
+    tokens_entrada = conservative_input_tokens_ceiling(system, prompt)
+    return estimate_cost_usd(tier, tokens_entrada, max_output_tokens)
+
+
 @dataclass
 class CallLimiter:
     """Quantas chamadas o evento ATUAL já gastou, e o teto de token por chamada."""
