@@ -16,6 +16,13 @@ correções das duas primeiras auditorias independentes do PR #108:
   falta = progresso ALTO, ALTO falta = progresso BAIXO) e risk_level
   passou a participar de verdade do custo-benefício de handoff, sem
   jamais enfraquecer os gates de checkpoint/compatibilidade (B7).
+- rodada 3 (HEAD cf6e7d9, B8): Níveis D/E da Issue #83 deixaram de ser
+  tratados como "só mais um risco alto" (o que deixava passar handoff
+  automático em LIMIT sem autorização) — novo policy_level ("A"-"E") e
+  jose_authorized (bool) implementam gates ABSOLUTOS e independentes de
+  worker_status: Nível E nunca gera handoff automático; Nível D exige
+  jose_authorized=True, sempre fail-closed sem isso. risk_level volta a
+  ser só risco qualitativo ("BAIXO"/"MEDIO"/"ALTO"), nunca mais A-E.
 """
 
 from __future__ import annotations
@@ -604,25 +611,120 @@ def test_handoff_risco_alto_com_custo_baixo_nao_aciona_a_regra_b7() -> None:
     print("OK  test_handoff_risco_alto_com_custo_baixo_nao_aciona_a_regra_b7")
 
 
-def test_handoff_risco_reconhece_niveis_d_e_da_issue_83() -> None:
-    """risk_level também aceita os Níveis A-E da própria Issue #83 — D e E
-    contam como risco alto (D exige autorização explícita de José; E é
-    proibido), C não."""
+def test_handoff_context_rejeita_niveis_a_e_em_risk_level() -> None:
+    """B8: Nível A-E da Issue #83 é policy_level, NUNCA mais risk_level —
+    a conflação dos dois eixos era exatamente o bug do B8."""
+    try:
+        HandoffContext(worker_status="NEAR_LIMIT", risk_level="D")
+    except ValueError:
+        print("OK  test_handoff_context_rejeita_niveis_a_e_em_risk_level")
+        return
+    raise AssertionError("HandoffContext deveria rejeitar risk_level='D' — isso agora é policy_level")
+
+
+# ---------------------------------------------------------------------
+# B8 (3ª auditoria do PR #108): Níveis D/E da Issue #83 são POLÍTICA de
+# autonomia, não risco qualitativo — gates absolutos, independentes de
+# worker_status (LIMIT ou NEAR_LIMIT).
+# ---------------------------------------------------------------------
+
+def test_handoff_nivel_e_nunca_handoff_mesmo_limit_checkpoint_seguro_compativel() -> None:
+    """Teste obrigatório 1 da auditoria: E + LIMIT + checkpoint seguro +
+    worker compatível -> nunca HANDOFF. O bug do B8 era exatamente este
+    caso passando despercebido (a regra antiga só olhava NEAR_LIMIT)."""
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    contexto = HandoffContext(worker_status="LIMIT", policy_level="E")
+    decisao = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=[_worker("claude-2", capabilities=_CAP_HUMANO)],
+        contexto=contexto,
+    )
+    assert decisao.action == "WAIT"
+    print("OK  test_handoff_nivel_e_nunca_handoff_mesmo_limit_checkpoint_seguro_compativel")
+
+
+def test_handoff_nivel_e_nunca_handoff_mesmo_near_limit_progresso_baixo_custo_baixo() -> None:
+    """Nível E é proibido independentemente de LIMIT/NEAR_LIMIT, progresso
+    ou custo — mesmo no cenário mais 'favorável' possível ao handoff."""
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    contexto = HandoffContext(
+        worker_status="NEAR_LIMIT", policy_level="E",
+        progress_percent=10, handoff_cost="BAIXO",
+    )
+    decisao = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=[_worker("claude-2", capabilities=_CAP_HUMANO)],
+        contexto=contexto,
+    )
+    assert decisao.action == "WAIT"
+    print("OK  test_handoff_nivel_e_nunca_handoff_mesmo_near_limit_progresso_baixo_custo_baixo")
+
+
+def test_handoff_nivel_d_sem_autorizacao_nunca_handoff() -> None:
+    """Teste obrigatório 2 da auditoria: D + LIMIT + sem autorização ->
+    nunca HANDOFF. jose_authorized é False por padrão — fail-closed."""
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    contexto = HandoffContext(worker_status="LIMIT", policy_level="D")  # jose_authorized=False (padrão)
+    decisao = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=[_worker("claude-2", capabilities=_CAP_HUMANO)],
+        contexto=contexto,
+    )
+    assert decisao.action == "WAIT"
+    print("OK  test_handoff_nivel_d_sem_autorizacao_nunca_handoff")
+
+
+def test_handoff_nivel_d_com_autorizacao_permite_handoff() -> None:
+    """Teste obrigatório 3 da auditoria: D + LIMIT + jose_authorized=True
+    + checkpoint seguro + compatível -> HANDOFF pode ocorrer."""
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    contexto = HandoffContext(worker_status="LIMIT", policy_level="D", jose_authorized=True)
+    decisao = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=[_worker("claude-2", capabilities=_CAP_HUMANO)],
+        contexto=contexto,
+    )
+    assert decisao.action == "HANDOFF"
+    print("OK  test_handoff_nivel_d_com_autorizacao_permite_handoff")
+
+
+def test_handoff_nivel_c_ou_ausente_nao_aciona_gate_de_politica() -> None:
+    """Níveis A/B/C (ou nenhum policy_level declarado) não são o gate
+    absoluto de D/E — a decisão segue os demais critérios normalmente."""
     tarefa = _tarefa("t1", area="materia", agente="Claude 1")
     workers = [_worker("claude-2", capabilities=_CAP_HUMANO)]
 
-    decisao_d = avaliar_handoff_de_tarefa(
-        tarefa, checkpoint_seguro=True, workers=workers,
-        contexto=HandoffContext(worker_status="NEAR_LIMIT", handoff_cost="ALTO", risk_level="D"),
-    )
-    assert decisao_d.action == "WAIT"
-
     decisao_c = avaliar_handoff_de_tarefa(
         tarefa, checkpoint_seguro=True, workers=workers,
-        contexto=HandoffContext(worker_status="NEAR_LIMIT", handoff_cost="ALTO", risk_level="C"),
+        contexto=HandoffContext(worker_status="LIMIT", policy_level="C"),
     )
     assert decisao_c.action == "HANDOFF"
-    print("OK  test_handoff_risco_reconhece_niveis_d_e_da_issue_83")
+
+    decisao_sem_politica = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=True, workers=workers,
+        contexto=HandoffContext(worker_status="LIMIT"),
+    )
+    assert decisao_sem_politica.action == "HANDOFF"
+    print("OK  test_handoff_nivel_c_ou_ausente_nao_aciona_gate_de_politica")
+
+
+def test_handoff_nivel_d_autorizado_ainda_respeita_checkpoint_inseguro() -> None:
+    """jose_authorized=True nunca substitui checkpoint/compatibilidade —
+    esses gates básicos continuam avaliados antes de qualquer efeito de
+    contexto (mesma regra de B3/B7, agora também provada para D)."""
+    tarefa = _tarefa("t1", area="materia", agente="Claude 1")
+    contexto = HandoffContext(worker_status="LIMIT", policy_level="D", jose_authorized=True)
+    decisao = avaliar_handoff_de_tarefa(
+        tarefa, checkpoint_seguro=False, workers=[_worker("claude-2", capabilities=_CAP_HUMANO)],
+        contexto=contexto,
+    )
+    assert decisao.action == "WAIT"
+    print("OK  test_handoff_nivel_d_autorizado_ainda_respeita_checkpoint_inseguro")
+
+
+def test_handoff_context_valida_policy_level() -> None:
+    try:
+        HandoffContext(worker_status="LIMIT", policy_level="Z")
+    except ValueError:
+        print("OK  test_handoff_context_valida_policy_level")
+        return
+    raise AssertionError("HandoffContext deveria rejeitar policy_level fora de A-E")
 
 
 def test_handoff_context_valida_worker_status() -> None:
@@ -823,7 +925,14 @@ def main() -> int:
         test_handoff_risco_alto_nao_bloqueia_quando_worker_esta_em_limit_real,
         test_handoff_risco_baixo_nao_aciona_a_regra_b7,
         test_handoff_risco_alto_com_custo_baixo_nao_aciona_a_regra_b7,
-        test_handoff_risco_reconhece_niveis_d_e_da_issue_83,
+        test_handoff_context_rejeita_niveis_a_e_em_risk_level,
+        test_handoff_nivel_e_nunca_handoff_mesmo_limit_checkpoint_seguro_compativel,
+        test_handoff_nivel_e_nunca_handoff_mesmo_near_limit_progresso_baixo_custo_baixo,
+        test_handoff_nivel_d_sem_autorizacao_nunca_handoff,
+        test_handoff_nivel_d_com_autorizacao_permite_handoff,
+        test_handoff_nivel_c_ou_ausente_nao_aciona_gate_de_politica,
+        test_handoff_nivel_d_autorizado_ainda_respeita_checkpoint_inseguro,
+        test_handoff_context_valida_policy_level,
         test_handoff_context_valida_worker_status,
         test_handoff_context_valida_progress_percent_fora_do_intervalo,
         test_worker_retomando_tarefa_ainda_blocked_limit_recebe_a_mesma_tarefa,

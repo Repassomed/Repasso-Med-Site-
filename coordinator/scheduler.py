@@ -104,6 +104,26 @@ B6-B7) — só isto, Fases B+/heartbeat/runner continuam fora de escopo:**
   nunca superando checkpoint inseguro ou incompatibilidade de capability
   (esses gates básicos são avaliados antes de qualquer efeito de
   ``contexto``, como já valia para B3).
+
+**Correção da 3ª auditoria independente do PR #108 (HEAD cf6e7d9, B8) —
+só isto, Fases B+/heartbeat/runner continuam fora de escopo:**
+
+- B8: os Níveis D/E da Issue #83 eram tratados só como mais um valor de
+  "risco alto" (``_NIVEIS_RISCO_ALTO = {"ALTO", "D", "E"}``), mas a regra
+  de risco só rebaixava HANDOFF quando ``worker_status == NEAR_LIMIT`` —
+  em ``LIMIT``, um handoff Nível D/E passava sem autorização nenhuma,
+  contrariando a própria Issue #83 ("Nível D sempre exige autorização
+  explícita de José ANTES de começar"; "Nível E é proibido"). Risco
+  médico/editorial (``risk_level``, quão sensível é o conteúdo) e nível
+  de autonomia/política (``policy_level``, o que o Coordinator pode
+  decidir sozinho) são dois eixos diferentes — agora separados:
+  ``risk_level`` só aceita ``"BAIXO"/"MEDIO"/"ALTO"`` (nunca mais A-E);
+  novo ``policy_level`` (``"A"``-``"E"``) e ``jose_authorized`` (bool)
+  implementam gates ABSOLUTOS, avaliados ANTES de qualquer outro sinal de
+  ``contexto`` e independentes de ``worker_status``: Nível E nunca gera
+  handoff automático, ponto final; Nível D exige
+  ``jose_authorized=True`` — sem isso, fail-closed (WAIT), mesmo com
+  checkpoint seguro, worker compatível e LIMIT real.
 """
 
 from __future__ import annotations
@@ -170,20 +190,37 @@ _REMAINING_WORK_PARA_PROGRESSO: dict[str, str] = {
     "ALTO": "BAIXO",   # muito trabalho restante = progresso baixo
 }
 
-# B7: valores reconhecidos como "risco alto" — o próprio texto "ALTO"
-# (vocabulário desta Fase A) e, já que HandoffContext.risk_level também
-# aceita os Níveis A-E da Issue #83, os dois níveis que aquela issue já
-# trata como mais sensíveis (D exige autorização explícita de José; E é
-# proibido). Qualquer outro valor (None, "BAIXO", "A", "B", "C", texto
-# livre não reconhecido) conta como risco não-alto — nunca inventa
-# urgência que o dado não afirma.
-_NIVEIS_RISCO_ALTO = frozenset({"ALTO", "D", "E"})
+# B7: valor reconhecido como "risco alto" para o custo-benefício
+# qualitativo de handoff. B8 da 3ª auditoria do PR #108: isto NÃO inclui
+# mais os Níveis D/E da Issue #83 — risco médico/editorial (quanto o
+# conteúdo é sensível) e nível de autonomia/política (o que o Coordinator
+# tem PERMISSÃO de fazer sozinho) são dois eixos diferentes, e tratar D/E
+# como "só mais um risco alto" deixava escapar o caso em que o worker
+# está LIMIT (a regra de risco só se aplicava a NEAR_LIMIT) — ver
+# ``_NIVEL_POLITICA_PROIBIDO``/``_NIVEL_POLITICA_REQUER_AUTORIZACAO``
+# abaixo, que são os gates absolutos para D/E, independentes de
+# worker_status. Qualquer valor de ``risk_level`` fora de
+# "BAIXO"/"MEDIO"/"ALTO" é rejeitado por ``HandoffContext.__post_init__``
+# — nunca mais aceita "D"/"E" por engano neste campo.
+_NIVEIS_RISCO_ALTO = frozenset({"ALTO"})
+_BUCKETS_RISCO = ("BAIXO", "MEDIO", "ALTO")
 
 
 def _risco_e_alto(risk_level: str | None) -> bool:
     if not risk_level:
         return False
     return risk_level.strip().upper() in _NIVEIS_RISCO_ALTO
+
+
+# B8: os Níveis A-E são POLÍTICA de autonomia (Issue #83), não risco
+# qualitativo — vivem em ``HandoffContext.policy_level``, nunca mais em
+# ``risk_level``. Gates absolutos, avaliados independentemente de
+# worker_status (LIMIT ou NEAR_LIMIT): a Issue #83 não abre exceção para
+# "o worker não pode continuar" — Nível E é proibido ponto final, e Nível
+# D exige autorização explícita de José ANTES de começar, sempre.
+_NIVEIS_POLITICA_VALIDOS = ("A", "B", "C", "D", "E")
+_NIVEL_POLITICA_PROIBIDO = "E"
+_NIVEL_POLITICA_REQUER_AUTORIZACAO = "D"
 
 
 def _parse_priority(valor: object) -> Priority | None:
@@ -436,7 +473,17 @@ class HandoffContext:
     (que já passou pelos gates de prioridade/checkpoint/compatibilidade/
     owner) para WAIT quando o custo-benefício não compensa. Risco alto
     nunca "favorece" handoff por si só — é só mais um motivo para manter
-    WAIT quando os gates básicos já não fecham."""
+    WAIT quando os gates básicos já não fecham.
+
+    B8 da 3ª auditoria do PR #108: ``risk_level`` (risco médico/editorial
+    qualitativo) e ``policy_level`` (Nível de autonomia A-E da Issue #83)
+    são dois eixos DIFERENTES — o primeiro é "quão sensível é o conteúdo",
+    o segundo é "o que o Coordinator tem PERMISSÃO de decidir sozinho".
+    Tratar Nível D/E como só mais um valor de risco alto deixava passar
+    handoff automático em D/E sempre que o worker estivesse LIMIT (a
+    regra de risco só valia para NEAR_LIMIT) — os gates de
+    ``policy_level`` abaixo são absolutos e correm independentemente de
+    ``worker_status``, exatamente como a Issue #83 exige."""
 
     worker_status: str  # "LIMIT" | "NEAR_LIMIT" — por que a avaliação está acontecendo
     progress_percent: int | None = None
@@ -450,10 +497,21 @@ class HandoffContext:
     # diretamente como se já fosse progresso.
     remaining_work_bucket: str | None = None
     handoff_cost: str = "MEDIO"  # custo qualitativo de transferir contexto AGORA
-    # Nível A-E (#83) ou "BAIXO"/"MEDIO"/"ALTO" — B7 da 2ª auditoria do PR
-    # #108: participa de verdade do custo-benefício via ``_risco_e_alto()``
-    # (ver ``avaliar_handoff_de_tarefa``), nunca só "informativo".
+    # Risco médico/editorial QUALITATIVO — "BAIXO"/"MEDIO"/"ALTO" apenas.
+    # B8: NUNCA mais os Níveis A-E da Issue #83 (isso é ``policy_level``
+    # agora) — participa do custo-benefício via ``_risco_e_alto()`` (ver
+    # ``avaliar_handoff_de_tarefa``), nunca só "informativo" (B7).
     risk_level: str | None = None
+    # Nível de autonomia/política da Issue #83 ("A"-"E") — B8. Gate
+    # ABSOLUTO, avaliado independentemente de worker_status: "E" nunca
+    # gera handoff automático; "D" exige ``jose_authorized=True``. ``None``
+    # = nenhuma política declarada, gate não se aplica (Fase A ainda não
+    # tem heartbeat real para preencher isto sempre).
+    policy_level: str | None = None
+    # Autorização explícita de José para uma ação Nível D (Issue #83:
+    # "sempre exige autorização explícita de José ANTES de começar") —
+    # nunca inferida, sempre um sinal que precisa ter sido dado de fora.
+    jose_authorized: bool = False
     # Sinal externo (#84 §4, ex.: budget.priority_allowed) — False nunca
     # gera HANDOFF, mesmo com tudo mais favorável.
     budget_allows: bool = True
@@ -465,6 +523,13 @@ class HandoffContext:
             raise ValueError(f"remaining_work_bucket {self.remaining_work_bucket!r} inválido — precisa ser um de {_BUCKETS_PROGRESSO}")
         if self.handoff_cost not in _BUCKETS_CUSTO:
             raise ValueError(f"handoff_cost {self.handoff_cost!r} inválido — precisa ser um de {_BUCKETS_CUSTO}")
+        if self.risk_level is not None and self.risk_level.strip().upper() not in _BUCKETS_RISCO:
+            raise ValueError(
+                f"risk_level {self.risk_level!r} inválido — precisa ser um de {_BUCKETS_RISCO} "
+                "(Nível A-E da Issue #83 é policy_level, não risk_level — B8)"
+            )
+        if self.policy_level is not None and self.policy_level.strip().upper() not in _NIVEIS_POLITICA_VALIDOS:
+            raise ValueError(f"policy_level {self.policy_level!r} inválido — precisa ser um de {_NIVEIS_POLITICA_VALIDOS}")
         if self.progress_percent is not None and not (0 <= self.progress_percent <= 100):
             raise ValueError("progress_percent precisa estar entre 0 e 100")
 
@@ -533,6 +598,28 @@ def avaliar_handoff_de_tarefa(
 
     if decisao.action != "HANDOFF" or contexto is None:
         return decisao
+
+    # B8 da 3ª auditoria do PR #108: gates de POLÍTICA (Issue #83),
+    # absolutos e AVALIADOS ANTES de qualquer outro sinal de contexto —
+    # independentes de worker_status (LIMIT ou NEAR_LIMIT), progresso,
+    # custo ou disponibilidade. Nível E é proibido ponto final. Nível D
+    # exige autorização explícita de José ANTES de começar; sem
+    # ``jose_authorized=True`` o resultado é fail-closed (WAIT), nunca
+    # aprovado por omissão.
+    nivel_politica = contexto.policy_level.strip().upper() if contexto.policy_level else None
+    if nivel_politica == _NIVEL_POLITICA_PROIBIDO:
+        return HandoffDecision(
+            "WAIT",
+            "Nível E (Issue #83) é proibido — nunca pode gerar handoff/oferta automática, "
+            "independentemente de limite, progresso, custo de transferência ou worker disponível.",
+        )
+    if nivel_politica == _NIVEL_POLITICA_REQUER_AUTORIZACAO and not contexto.jose_authorized:
+        return HandoffDecision(
+            "WAIT",
+            "Nível D (Issue #83) sempre exige autorização explícita de José ANTES de começar — "
+            "sem jose_authorized=True, o handoff fica fail-closed (WAIT), mesmo com checkpoint "
+            "seguro e worker compatível disponível.",
+        )
 
     if not contexto.budget_allows:
         return HandoffDecision(
