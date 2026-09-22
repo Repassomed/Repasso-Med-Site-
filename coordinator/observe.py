@@ -66,6 +66,7 @@ from .openai_routing import TIER_ZERO as OPENAI_TIER_ZERO, decide as openai_rout
 from .openai_transport import OpenAIResponsesTransport
 from .redact import redact
 from .routing import RoutingDecision, decide as route_decide
+from .runner_dispatch import RunnerDispatchConfig
 from .worker_commands import aplicar_comando, parse_worker_command
 from .worker_ops import OperationalWorkerRegistry
 from .worker_registry import Worker, WorkerSuggestion, pick_worker
@@ -272,7 +273,11 @@ def _resumo_custo_zero(ledger: UsageLedger, config: Config):
 
 def _tratar_inbox_comment(event: Event, classificacao: Classification,
                            worker_registry: OperationalWorkerRegistry, ledger: UsageLedger,
-                           config: Config) -> _ResultadoZeroCusto:
+                           config: Config, *,
+                           runner_tasks_json_path: str | None = None,
+                           runner_repo_dir: str | None = None,
+                           runner_dispatch_config: RunnerDispatchConfig | None = None,
+                           runner_state_git_remote: str | None = None) -> _ResultadoZeroCusto:
     """Issue #88 como interface visível (achado B1 da auditoria
     independente do PR #104): todo comentário válido recebe UMA resposta
     — ou a confirmação de um comando de worker (José não edita JSON à
@@ -287,12 +292,25 @@ def _tratar_inbox_comment(event: Event, classificacao: Classification,
     ``coordination/tasks.json``. Um worker ``LIMIT``/``BUSY``/``OFFLINE``
     no registro operacional nunca aparece aqui como "início da execução
     por X", mesmo que ``tasks.json`` (declarativo, pode estar
-    desatualizado) sugerisse esse mesmo nome."""
+    desatualizado) sugerisse esse mesmo nome.
+
+    Achado F6-A (Issue #105 Fase F, 5ª rodada): ``runner_tasks_json_
+    path``/``runner_repo_dir``/``runner_dispatch_config``/``runner_
+    state_git_remote`` são OPCIONAIS (``None`` por padrão, retrocompatível
+    com qualquer chamador que não os forneça) — só quando fornecidos é
+    que um comando ``SET_AVAILABLE`` ("Claude 2 voltou") de fato aciona
+    ``runner_resume.processar_retorno_de_worker`` (via
+    ``worker_commands.aplicar_comando``, achados F6-B/C/D) — o pipeline
+    REAL do Coordinator até a retomada automática, nunca um caminho
+    hardcoded/adivinhado."""
     corpo = str(event.payload.get("body", ""))
 
     comando = parse_worker_command(corpo)
     if comando is not None:
-        confirmacao = aplicar_comando(worker_registry, comando)
+        confirmacao = aplicar_comando(
+            worker_registry, comando, tasks_json_path=runner_tasks_json_path, repo_dir=runner_repo_dir,
+            config=runner_dispatch_config, state_git_remote=runner_state_git_remote,
+        )
         texto = "\n".join(["<!-- repasso-coordinator -->", f"🛠️ {confirmacao}"])
         return _ResultadoZeroCusto(
             reason=f"Comando de worker aplicado: {confirmacao}", texto=texto, target_issue=INBOX_ISSUE_NUMBER,
@@ -700,6 +718,10 @@ def observe(
     openai_config: OpenAIAuditorConfig | None = None,
     openai_ledger: UsageLedger | None = None,
     openai_transport: openai_client.Transport | None = None,
+    runner_tasks_json_path: str | None = None,
+    runner_repo_dir: str | None = None,
+    runner_dispatch_config: RunnerDispatchConfig | None = None,
+    runner_state_git_remote: str | None = None,
 ) -> ObserveResult:
     # 1. Tipo de evento permitido?
     if not event.is_allowed:
@@ -892,7 +914,11 @@ def observe(
     # para ler/escrever (nunca ``coordination/tasks.json``/matéria).
     if audit_mode and worker_registry is not None:
         if event.event_type is EventType.INBOX_COMMENT:
-            zero_custo = _tratar_inbox_comment(event, classificacao, worker_registry, ledger, config)
+            zero_custo = _tratar_inbox_comment(
+                event, classificacao, worker_registry, ledger, config,
+                runner_tasks_json_path=runner_tasks_json_path, runner_repo_dir=runner_repo_dir,
+                runner_dispatch_config=runner_dispatch_config, runner_state_git_remote=runner_state_git_remote,
+            )
             return ObserveResult(
                 status="OBSERVED",
                 reason=zero_custo.reason,

@@ -123,36 +123,62 @@ Toda comparação de ownership/reserva/``TaskRecord.id``/
 derivado fresco a cada retomada — nunca colide com a execução anterior
 nem com a da Fase E (convenções de sufixo diferentes).
 
-**F6 — fechamento do evento automático:** ``processar_retorno_de_worker``
-é o hook REAL a ser chamado quando um heartbeat/comando ``AVAILABLE``
-já validado chega — hoje o ÚNICO ponto de entrada natural para esse
-evento no Coordinator é ``coordinator/worker_commands.py::
-aplicar_comando`` (ação ``SET_AVAILABLE``, Issue #88/#90, arquivo
-PRÉ-EXISTENTE e estável, não pertence a nenhuma Fase do #105). Esta
-rodada NÃO edita ``worker_commands.py`` ainda: o PR #115 continua sem
-estar mergeado em ``main`` (só aprovado/MERGE-READY na própria
-auditoria dele), e o pedido explícito desta rodada foi só tocar esse
-arquivo DEPOIS de atualizar a base com o #115 — fica documentado aqui
-como o próximo passo exato (uma chamada de
-``processar_retorno_de_worker(...)`` dentro do branch
-``SET_AVAILABLE`` de ``aplicar_comando``), não implementado ainda.
-Dedup/"exatamente uma reação por evento" já é garantido
+**F6 — fechamento do evento automático (4ª e 5ª rodadas):**
+``processar_retorno_de_worker`` é o hook chamado quando um heartbeat/
+comando ``AVAILABLE`` já validado chega. Desde a 4ª rodada, o ponto de
+entrada real — ``coordinator/worker_commands.py::aplicar_comando``
+(ação ``SET_AVAILABLE``, Issue #88/#90) — já chama esse hook de
+verdade. Dedup/"exatamente uma reação por evento" continua garantido
 TRANSITIVAMENTE por este módulo sem nenhum estado novo: o caminho de
 retomada reusa o claim atômico de ``runner_dispatch.RunnerClaimStore``
-(duas chamadas do hook para o MESMO evento nunca executam duas vezes —
-ver ``test_duas_chamadas_do_hook_para_o_mesmo_evento_nao_executam_
-duas_vezes``); o caminho de "próxima oferta" é uma decisão PURA,
-nunca executada por este módulo.
+(duas chamadas do hook para o MESMO evento nunca executam duas vezes);
+o caminho de "próxima oferta" é uma decisão PURA, nunca executada por
+este módulo.
+
+**F6-B (5ª rodada) — recuperação de contexto a partir de uma fonte
+persistida e confiável:** ``recuperar_runner_task_de_handoff`` (abaixo)
+é a ÚNICA forma deste módulo reconstruir automaticamente uma
+``InterruptedTaskSnapshot`` sem que quem chama forneça uma
+explicitamente — lendo o registro de execuções que
+``handoff_exec.HandoffClaimStore.registrar_execucao`` já grava de
+verdade (branch dedicada ``coordinator-state-handoff``, Fase E, PR
+#115, agora mergeada) toda vez que um handoff real é executado. NUNCA
+fabrica ``instructions``/``allowed_files``/``policy_level`` a partir de
+``coordination/tasks.json`` ou de texto livre — só reconstrói uma
+``RunnerTask`` que já foi validada e persistida de verdade por um
+handoff REAL anterior. Sem um registro confiável (ex.: a PRIMEIRA
+atribuição de uma tarefa, que nunca passou por handoff nenhum, ou uma
+reserva ``human_session``, que nunca carrega uma ``RunnerTask``
+completa) devolve ``None`` — fail-closed, nunca inventa.
+
+**F6-D (5ª rodada) — canonical_task_id nos heartbeats:**
+``runner_dispatch.executar_tarefa`` ganhou o parâmetro OPCIONAL
+``canonical_task_id`` (default ``None`` = ``task.task_id``, mesmo
+comportamento de antes) — quando fornecido, o heartbeat ``BUSY``
+emitido no início da execução usa o id CANÔNICO, nunca o
+``execution_task_id`` derivado, para que ``WorkerRecord.current_task``
+continue comparável com ``TaskRecord.id``/ownership durante toda a
+execução (não só antes/depois dela). ``despachar_retomada`` (abaixo)
+sempre passa ``canonical_task_id=snapshot.canonical_task_id``. O
+heartbeat ``OFFLINE`` final já limpava ``current_task`` mesmo antes
+desta rodada (``RunnerHeartbeat`` sem ``task_id`` é o único formato
+válido para ``OFFLINE`` — ``runner_contract.py``, Fase C — e
+``heartbeat.aplicar_heartbeat`` sempre sobrescreve
+``current_task=heartbeat.task_id``, nunca preserva por omissão).
 
 **O QUE ESTE MÓDULO DELIBERADAMENTE NÃO FAZ:** não decide handoff
 (Fase E); não toca ``coordination/tasks.json``; não ativa nenhuma flag
 nova (reusa ``RunnerDispatchConfig`` da Fase D, inalterada — continua
 ``REPASSO_RUNNER_ENABLED=false`` em produção); não executa nenhum
 canário real; não muda ``scheduler.py``/``handoff.py``/
-``runner_contract.py``/``heartbeat.py``/``runner_dispatch.py``/
-``handoff_exec.py``/``worker_ops.py`` — todos consumidos (quando
-existem), nenhum editado; ``processar_retorno_de_worker`` nunca despacha
-a "próxima oferta" da fila — só a devolve como dado.
+``runner_contract.py``/``heartbeat.py``/``handoff_exec.py``/
+``worker_ops.py`` — todos consumidos, nenhum editado (``runner_dispatch.py``
+ganhou só o parâmetro opcional acima, achado F6-D, nunca sua lógica de
+gate/claim/patch reimplementada); ``processar_retorno_de_worker`` nunca
+despacha a "próxima oferta" da fila — só a devolve como dado;
+``recuperar_runner_task_de_handoff`` só LÊ a branch de estado do
+handoff — nunca escreve nela, nunca reimplementa
+``HandoffClaimStore``/``executar_handoff``.
 """
 
 from __future__ import annotations
@@ -162,7 +188,9 @@ from dataclasses import dataclass
 from typing import Callable
 
 from .classify import Priority
+from .git_state import GitJsonStore
 from .handoff import worker_retomando_deve_assumir
+from .handoff_exec import DEFAULT_HANDOFF_STATE_BRANCH
 from .redact import redact
 from .runner_contract import RunnerTask, RunnerResult
 from .runner_dispatch import RunnerDispatchConfig, StructuredPatch, executar_tarefa
@@ -291,6 +319,58 @@ def snapshot_de_interrupcao(
         pendencias_conhecidas=pendencias_conhecidas,
         execution_task_id_anterior=tarefa_original.task_id,
     )
+
+
+def recuperar_runner_task_de_handoff(
+    *, state_git_remote: str, worker_id: str, canonical_task_id: str,
+    handoff_state_branch: str = DEFAULT_HANDOFF_STATE_BRANCH,
+) -> RunnerTask | None:
+    """Achado F6-B (Issue #105 Fase F, 5ª rodada): recupera o contexto
+    mínimo de uma ``RunnerTask`` a partir da ÚNICA fonte persistida e
+    CONFIÁVEL que o sistema já tem — o registro de execuções de handoff
+    que ``handoff_exec.HandoffClaimStore.registrar_execucao`` já grava
+    de verdade (branch dedicada ``coordinator-state-handoff``, Fase E,
+    nunca ``main``/matéria) toda vez que um handoff REAL é executado.
+    Só LEITURA (``GitJsonStore.read()``) — nunca escreve nessa branch,
+    nunca reimplementa ``HandoffClaimStore``/``executar_handoff``.
+
+    NUNCA fabrica ``instructions``/``allowed_files``/``policy_level`` a
+    partir de ``coordination/tasks.json`` ou de texto livre — o único
+    material aceito aqui é um ``runner_task`` que já foi construído e
+    validado de verdade por ``handoff_exec.derivar_runner_task_
+    continuacao`` (que por sua vez já passou pela validação estrutural
+    completa de ``RunnerTask.__post_init__``) — reconstruído aqui via
+    ``RunnerTask.from_dict``, que RE-VALIDA tudo de novo.
+
+    Devolve ``None`` (fail-closed, nunca inventa) quando não há nenhum
+    registro ``HANDOFF_EXECUTED`` confiável para
+    ``(worker_id, canonical_task_id)`` — por exemplo, a PRIMEIRA
+    atribuição de uma tarefa (nunca passou por handoff nenhum) ou uma
+    reserva ``human_session`` (que nunca carrega uma ``RunnerTask``
+    completa, só uma instrução textual, ``human_instruction``). Quando
+    há mais de um registro (handoffs sucessivos da mesma tarefa para o
+    mesmo worker — raro, mas possível), usa o mais recente
+    (``recorded_at``)."""
+    store = GitJsonStore(remote=state_git_remote, branch=handoff_state_branch)
+    dados = store.read()
+    registros = dados.get("handoffs") or []
+    candidatos = [
+        r for r in registros
+        if isinstance(r, dict)
+        and r.get("action") == "HANDOFF_EXECUTED"
+        and r.get("new_worker_id") == worker_id
+        and r.get("task_id") == canonical_task_id
+        and r.get("runner_task")
+    ]
+    if not candidatos:
+        return None
+    mais_recente = max(candidatos, key=lambda r: r.get("recorded_at") or "")
+    try:
+        return RunnerTask.from_dict(mais_recente["runner_task"])
+    except (KeyError, ValueError, TypeError):
+        # Registro corrompido/incompatível — fail-closed, nunca uma
+        # RunnerTask "quase reconstruída".
+        return None
 
 
 def formatar_instrucoes_retomada(snapshot: InterruptedTaskSnapshot) -> str:
@@ -736,6 +816,11 @@ def despachar_retomada(
         config=config, repo_dir=repo_dir, state_git_remote=state_git_remote,
         validation_command_keys=validation_command_keys, worker_id=worker_receptor.worker_id,
         worker_registry=worker_registry, gerar_patch=gerar_patch,
+        # Achado F6-D: heartbeat BUSY precisa usar o id CANÔNICO, nunca o
+        # execution_task_id derivado de `tarefa.task_id` — só assim
+        # WorkerRecord.current_task continua comparável com
+        # TaskRecord.id/ownership durante a execução, não só antes/depois.
+        canonical_task_id=snapshot.canonical_task_id,
     )
     return ResumeOutcome(
         decision=decisao, result=outcome.result, dispatch_outcome=outcome,

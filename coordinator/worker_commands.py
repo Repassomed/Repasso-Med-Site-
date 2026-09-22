@@ -9,7 +9,7 @@ RECONHECE a intenção; ``aplicar_comando`` é quem de fato escreve no
 ``OperationalWorkerRegistry`` (sempre via ``upsert``/``set_status``,
 nunca tocando ``coordination/tasks.json`` nem matéria).
 
-**Achado F6 (Issue #105, Fase F, 4ª rodada — fechamento do evento
+**Achado F6 (Issue #105, Fase F, 4ª e 5ª rodadas — fechamento do evento
 automático):** a ação ``SET_AVAILABLE`` (comando "Claude 2 voltou" /
 "Claude 2 disponível") é o ponto de entrada REAL de um heartbeat/
 comando ``AVAILABLE`` já validado. ``reagir_a_retorno_de_worker`` reage
@@ -20,24 +20,63 @@ zero polling: é uma chamada síncrona dentro do próprio ``aplicar_comando``,
 nunca um laço/agendamento.
 
 ``tasks_json_path`` é OPCIONAL e por isso continua retrocompatível: sem
-ele (comportamento de todo chamador existente, ex. ``observe.py``),
-``aplicar_comando`` continua fazendo EXATAMENTE o que já fazia — só
-``set_status``, nada de retomada automática. Só quando um chamador
-FORNECE ``tasks_json_path`` (e, opcionalmente, o contexto de despacho —
-``repo_dir``/``config``/``state_git_remote``/``snapshot_da_tarefa_original``)
-é que a reação a SET_AVAILABLE de fato acontece — nenhum caminho
-hardcoded/adivinhado para ``coordination/tasks.json``, mesma disciplina
-de parametrização explícita do resto do pacote (``scheduler.
-load_tasks_from_tasks_json(path)``)."""
+ele (comportamento de todo chamador existente que não o forneça),
+``aplicar_comando`` continua fazendo EXATAMENTE o que já fazia (mais a
+correção F6-C abaixo) — nada de retomada automática. Só quando um
+chamador FORNECE ``tasks_json_path`` é que a reação a SET_AVAILABLE de
+fato acontece — nenhum caminho hardcoded/adivinhado para
+``coordination/tasks.json``, mesma disciplina de parametrização
+explícita do resto do pacote (``scheduler.load_tasks_from_tasks_json
+(path)``). Desde a 5ª rodada, ``coordinator/observe.py::observe``/
+``_tratar_inbox_comment`` já FORNECEM esse contexto de verdade no
+pipeline real (achado F6-A) — ver docstring de ``observe.py``.
+
+**F6-B (5ª rodada):** quando quem chama não fornece
+``snapshot_da_tarefa_original`` explicitamente, ``reagir_a_retorno_de_
+worker`` tenta recuperar o contexto mínimo de uma fonte persistida e
+CONFIÁVEL — ``runner_resume.recuperar_runner_task_de_handoff``, que lê
+o registro real de execuções de handoff (Fase E, PR #115, mergeado).
+Sem um registro confiável, a retomada automática fica indisponível
+(fail-closed) — nunca fabrica ``instructions``/``allowed_files``/
+``policy_level`` a partir de ``coordination/tasks.json`` ou de texto
+livre.
+
+**F6-C (5ª rodada):** ``SET_AVAILABLE`` agora persiste ``status=
+AVAILABLE`` e ``current_task=None`` numa ÚNICA escrita atômica
+(``registry.upsert``) — nunca mais uma janela em que o registro mostra
+``AVAILABLE`` com ``current_task`` ainda preenchido (achado F3:
+``avaliar_retomada`` já trata isso como estado inconsistente/
+``BLOCKED``). A tarefa canônica anterior é capturada ANTES dessa
+escrita (nunca perdida) e passada explicitamente para
+``reagir_a_retorno_de_worker`` via ``canonical_task_id_anterior``.
+``set_status`` sozinho continua preservando ``current_task`` (outros
+comandos — SET_LIMIT/DEACTIVATE — não devem inferir essa limpeza); só
+``SET_AVAILABLE`` precisa dela, porque "disponível" estruturalmente
+significa "sem tarefa em mãos".
+
+**F6-D (5ª rodada):** ``reagir_a_retorno_de_worker`` passa o
+``OperationalWorkerRegistry`` REAL para ``processar_retorno_de_worker``
+(que já aceitava esse parâmetro desde a 3ª rodada, nunca usado por este
+módulo até agora) — só assim ``runner_dispatch.executar_tarefa``
+consegue emitir heartbeats de verdade (``BUSY`` com o id CANÔNICO no
+início, ``OFFLINE`` com ``current_task`` limpo no fim) para uma
+retomada ``api_runner`` despachada a partir deste comando."""
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, replace
+from datetime import datetime, timezone
 from typing import Callable
 
 from .runner_dispatch import RunnerDispatchConfig, StructuredPatch
-from .runner_resume import InterruptedTaskSnapshot, RetornoWorkerOutcome, processar_retorno_de_worker
+from .runner_resume import (
+    InterruptedTaskSnapshot,
+    RetornoWorkerOutcome,
+    processar_retorno_de_worker,
+    recuperar_runner_task_de_handoff,
+    snapshot_de_interrupcao,
+)
 from .scheduler import load_tasks_from_tasks_json
 from .worker_ops import OperationalWorkerRegistry, WorkerRecord
 
@@ -88,16 +127,24 @@ def parse_worker_command(texto: str) -> WorkerCommand | None:
     return None
 
 
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
 def reagir_a_retorno_de_worker(
     registry: OperationalWorkerRegistry,
     worker_novo: WorkerRecord,
     *,
+    canonical_task_id_anterior: str | None,
+    checkpoint_anterior: str | None = None,
+    branch_anterior: str | None = None,
     tasks_json_path: str,
     repo_dir: str | None = None,
     remote_name: str = "origin",
     config: RunnerDispatchConfig | None = None,
     state_git_remote: str | None = None,
     snapshot_da_tarefa_original: InterruptedTaskSnapshot | None = None,
+    motivo_interrupcao: str = "LIMIT",
     patch: StructuredPatch | None = None,
     gerar_patch: Callable[[], object] | None = None,
 ) -> RetornoWorkerOutcome:
@@ -107,37 +154,61 @@ def reagir_a_retorno_de_worker(
     processar_retorno_de_worker`` por inteiro (nenhuma fila
     reimplementada aqui).
 
-    ``worker_novo`` é o ``WorkerRecord`` JÁ com ``status="AVAILABLE"``
-    (depois de ``registry.set_status``). ``set_status`` nunca limpa
-    ``current_task`` sozinho (outros comandos — SET_LIMIT/DEACTIVATE —
-    não devem inferir isso) — mas para os FINS desta reação, "voltou
-    disponível" É a forma "livre" que ``avaliar_retomada`` já reconhece
-    (achado F3: ``AVAILABLE`` + ``current_task=None``), então o registro
-    usado para o hook é normalizado aqui, sem persistir isso de volta no
-    Worker Registry (a persistência de current_task/BUSY, se a retomada
-    for despachada, é responsabilidade de quem chama
-    ``executar_tarefa``/Fase D — não deste módulo).
+    ``worker_novo`` é o ``WorkerRecord`` JÁ persistido com
+    ``status="AVAILABLE"``/``current_task=None`` (achado F6-C — a
+    limpeza acontece em ``aplicar_comando``, ANTES desta chamada, numa
+    única escrita atômica). ``canonical_task_id_anterior``/
+    ``checkpoint_anterior``/``branch_anterior`` são o que o worker tinha
+    ANTES dessa limpeza — capturados por quem chama, nunca inferidos
+    daqui.
 
     ``tarefa_original`` (canônica, para ``TaskRecord.id``/ownership) é
-    resolvida a partir do ``current_task`` que o worker tinha ANTES
-    desta normalização, contra ``tasks_json_path`` — a fonte declarativa
-    de tarefas já usada por ``scheduler.load_tasks_from_tasks_json``,
-    nunca reimplementada aqui."""
+    resolvida contra ``tasks_json_path`` — a fonte declarativa de
+    tarefas já usada por ``scheduler.load_tasks_from_tasks_json``, nunca
+    reimplementada aqui. ``registry.list_workers()`` já reflete o estado
+    REAL e coerente do registro (F6-C) — nenhuma normalização manual
+    precisa acontecer aqui.
+
+    Achado F6-B: quando ``snapshot_da_tarefa_original`` não é fornecido
+    e há uma tarefa canônica anterior conhecida, tenta recuperar o
+    contexto mínimo de uma fonte persistida/confiável
+    (``runner_resume.recuperar_runner_task_de_handoff`` — nunca fabrica
+    nada a partir de ``tasks_json_path``/texto livre; sem registro
+    confiável, a retomada automática simplesmente fica indisponível).
+
+    Achado F6-D: passa ``worker_registry=registry`` (o registro REAL)
+    para ``processar_retorno_de_worker`` — só assim uma retomada
+    ``api_runner`` de fato despachada por este caminho emite heartbeats
+    reais (``BUSY``/``OFFLINE``) no Worker Registry."""
     tarefas = load_tasks_from_tasks_json(tasks_json_path)
     tarefa_original = (
-        next((t for t in tarefas if t.id == worker_novo.current_task), None)
-        if worker_novo.current_task
+        next((t for t in tarefas if t.id == canonical_task_id_anterior), None)
+        if canonical_task_id_anterior
         else None
     )
-    workers = [
-        replace(w, current_task=None) if w.worker_id == worker_novo.worker_id else w
-        for w in registry.list_workers()
-    ]
+    workers = registry.list_workers()
+
+    snapshot = snapshot_da_tarefa_original
+    if snapshot is None and canonical_task_id_anterior and checkpoint_anterior and state_git_remote:
+        runner_task_recuperada = recuperar_runner_task_de_handoff(
+            state_git_remote=state_git_remote, worker_id=worker_novo.worker_id,
+            canonical_task_id=canonical_task_id_anterior,
+        )
+        if runner_task_recuperada is not None:
+            worker_para_snapshot = replace(
+                worker_novo, current_task=canonical_task_id_anterior,
+                last_checkpoint=checkpoint_anterior, branch=branch_anterior,
+            )
+            snapshot = snapshot_de_interrupcao(
+                canonical_task_id=canonical_task_id_anterior, tarefa_original=runner_task_recuperada,
+                worker_anterior=worker_para_snapshot, motivo_interrupcao=motivo_interrupcao,
+            )
+
     return processar_retorno_de_worker(
         worker_que_volta=worker_novo.worker_id, tarefa_original=tarefa_original, tarefas=tarefas,
-        workers=workers, snapshot_da_tarefa_original=snapshot_da_tarefa_original,
+        workers=workers, snapshot_da_tarefa_original=snapshot,
         repo_dir=repo_dir, remote_name=remote_name, config=config, state_git_remote=state_git_remote,
-        patch=patch, gerar_patch=gerar_patch,
+        worker_registry=registry, patch=patch, gerar_patch=gerar_patch,
     )
 
 
@@ -199,11 +270,33 @@ def aplicar_comando(
         return f"{nome} marcado como LIMIT."
 
     if comando.action == "SET_AVAILABLE":
-        novo = registry.set_status(nome, "AVAILABLE", message=f"worker: {nome} -> AVAILABLE")
+        atual = registry.find_by_name_or_id(nome)
+        if atual is None:
+            novo = registry.set_status(nome, "AVAILABLE", message=f"worker: {nome} -> AVAILABLE")
+            canonical_task_id_anterior = None
+            checkpoint_anterior = None
+            branch_anterior = None
+        else:
+            canonical_task_id_anterior = atual.current_task
+            checkpoint_anterior = atual.last_checkpoint
+            branch_anterior = atual.branch
+            # Achado F6-C: status=AVAILABLE e current_task=None numa
+            # ÚNICA escrita atômica — nunca uma janela em que o registro
+            # mostra AVAILABLE com current_task ainda preenchido (achado
+            # F3: avaliar_retomada já trata isso como estado
+            # inconsistente/BLOCKED). set_status() sozinho preserva
+            # current_task de propósito (SET_LIMIT/DEACTIVATE não devem
+            # inferir essa limpeza) — só SET_AVAILABLE precisa dela.
+            novo = registry.upsert(
+                replace(atual, status="AVAILABLE", current_task=None, last_heartbeat=_now_iso()),
+                message=f"worker: {nome} -> AVAILABLE (current_task liberado)",
+            )
         if tasks_json_path is None:
             return f"{nome} marcado como AVAILABLE."
         retorno = reagir_a_retorno_de_worker(
-            registry, novo, tasks_json_path=tasks_json_path, repo_dir=repo_dir, remote_name=remote_name,
+            registry, novo, canonical_task_id_anterior=canonical_task_id_anterior,
+            checkpoint_anterior=checkpoint_anterior, branch_anterior=branch_anterior,
+            tasks_json_path=tasks_json_path, repo_dir=repo_dir, remote_name=remote_name,
             config=config, state_git_remote=state_git_remote,
             snapshot_da_tarefa_original=snapshot_da_tarefa_original, patch=patch, gerar_patch=gerar_patch,
         )

@@ -636,6 +636,7 @@ def executar_tarefa(
     worker_registry: OperationalWorkerRegistry | None = None,
     validation_allowlist: dict[str, tuple[str, ...]] | None = None,
     gerar_patch: Callable[[], object] | None = None,
+    canonical_task_id: str | None = None,
 ) -> DispatchOutcome:
     """A orquestração completa de uma execução controlada. Nunca decide
     merge/publicação/orçamento — só executa o que ``task``/``patch`` já
@@ -654,7 +655,23 @@ def executar_tarefa(
     devolvido por ``gerar_patch()`` é tratado por duck typing (nunca um
     import de ``runner_generate`` aqui, que criaria um ciclo): precisa ter
     ``.status`` (``"ok"``/``"blocked"``/``"failed"``), ``.patch``
-    (``StructuredPatch | None``) e ``.reason`` (``str``)."""
+    (``StructuredPatch | None``) e ``.reason`` (``str``).
+
+    ``canonical_task_id`` (achado F6-D, Issue #105 Fase F, 5ª rodada):
+    ``task.task_id`` é sempre um id de EXECUÇÃO (derivado por geração/
+    checkpoint — ``handoff_exec.derivar_task_id_de_continuacao``/
+    ``runner_resume``'s próprio esquema ``--resume-``) — nunca a
+    identidade CANÔNICA e estável que o Worker Registry usa em
+    ``current_task`` (``scheduler.TaskRecord.id``). O heartbeat BUSY
+    emitido no início desta função precisa usar o id CANÔNICO — nunca o
+    de execução — para que ``WorkerRecord.current_task`` continue
+    comparável com ``TaskRecord.id``/ownership em qualquer momento,
+    inclusive durante a execução. ``claim``/``RunnerResult`` continuam
+    usando ``task.task_id`` (execução) sem nenhuma mudança — só o
+    heartbeat muda. Parâmetro OPCIONAL, ``None`` por padrão =
+    ``task.task_id`` (mesmo comportamento de antes desta rodada, para
+    não quebrar nenhum chamador existente que não tem um id canônico
+    separado para oferecer)."""
     if sucesso_status not in ("DONE", "NEEDS-AUDIT"):
         raise ValueError(f"sucesso_status precisa ser 'DONE' ou 'NEEDS-AUDIT' — recebido {sucesso_status!r}")
     if (patch is None) == (gerar_patch is None):
@@ -694,7 +711,7 @@ def executar_tarefa(
     if worker_id:
         _emitir_heartbeat(
             worker_id, worker_registry,
-            RunnerHeartbeat(worker_id=worker_id, status="BUSY", task_id=task.task_id),
+            RunnerHeartbeat(worker_id=worker_id, status="BUSY", task_id=canonical_task_id or task.task_id),
             heartbeats, notes,
         )
 
