@@ -49,7 +49,7 @@
       "objetivo": "Fechar retomada LIMIT→AVAILABLE e integração E→F sem confundir task_id canônico com execution_task_id.",
       "fonte": "Issue #105 · Fase F",
       "agente": "Claude 2",
-      "estado": "NEEDS-FIX",
+      "estado": "DONE",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -59,9 +59,9 @@
       ],
       "branch": "infra/c2-runner-resume-issue105f",
       "pr": 116,
-      "commit": "92e56accd6738d8340e4d74d70ba1ef028e02499",
+      "commit": "7ed22e2f99e5f7ef159046f4fdc9293687050307",
       "issue": 105,
-      "notas": "Claude 2 está corrigindo F5/F6 da auditoria de integração. Não executar canário antes de nova auditoria."
+      "notas": "PR #116 mergeado por José em 22/09/2026 após auditoria independente final. Fase F encerrada; retomada LIMIT→AVAILABLE, CAS operacional e hard cap Anthropic global aprovados."
     },
     {
       "id": "infra-handoff-real-issue105e",
@@ -76,7 +76,7 @@
       "objetivo": "Executar handoff seguro e atômico entre workers a partir de checkpoint real, sem duplicação.",
       "fonte": "Issue #105 · Fase E",
       "agente": "Claude 1",
-      "estado": "MERGE-READY",
+      "estado": "DONE",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -88,7 +88,7 @@
       "pr": 115,
       "commit": "7d134a75c3329a8c02ceff9b281c03249edb6f8e",
       "issue": 105,
-      "notas": "Auditoria independente final aprovou este HEAD. Aguardando somente merge de José. PUBLICAÇÃO=NÃO."
+      "notas": "PR #115 mergeado por José. Fase E encerrada; handoff real aprovado em auditoria independente."
     },
     {
       "id": "semiologia-ii-assets-novos",
@@ -274,7 +274,7 @@
       "pr": null,
       "commit": null,
       "issue": 105,
-      "notas": "Antes do canário, José precisa confirmar proteção/ruleset da main. Depois do canário aprovado, normalizar Worker Registry e liberar a fila P0/P1/P2."
+      "notas": "Fases A–F estão concluídas. Único bloqueio antes do canário: confirmar proteção/ruleset da main (PR obrigatório, force-push bloqueado e checks requeridos). Depois dessa confirmação, esta tarefa pode virar READY para UM canário integrado controlado."
     },
     {
       "id": "semiologia-ii-fechamento-assets",
