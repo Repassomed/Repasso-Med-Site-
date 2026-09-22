@@ -261,7 +261,7 @@
       "objetivo": "Executar um único canário ponta a ponta: fila → runner → heartbeat/checkpoint → handoff/retomada → Guard → auditor → NEEDS-AUDIT/MERGE-READY, sem merge/deploy automático.",
       "fonte": "Issues #99 #105 #106 · decisão operacional de José",
       "agente": null,
-      "estado": "BLOCKED",
+      "estado": "READY",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -274,7 +274,7 @@
       "pr": null,
       "commit": null,
       "issue": 105,
-      "notas": "Fases A–F estão concluídas. Único bloqueio antes do canário: confirmar proteção/ruleset da main (PR obrigatório, force-push bloqueado e checks requeridos). Depois dessa confirmação, esta tarefa pode virar READY para UM canário integrado controlado."
+      "notas": "Fases A–F concluídas. Ruleset 'Proteção da main' verificado ativo em 22/09/2026: PR obrigatório, non-fast-forward bloqueado e status check 'guard' obrigatório. Pronto para UM canário integrado controlado; sem merge/deploy automático."
     },
     {
       "id": "semiologia-ii-fechamento-assets",
