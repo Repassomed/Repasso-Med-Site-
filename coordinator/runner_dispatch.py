@@ -93,16 +93,37 @@ reimplementados nem enfraquecidos aqui):**
   rejeitado na própria construção do contrato, antes de qualquer código
   deste módulo rodar; Nível D sem ``jose_authorized=True`` idem.
 
+**Correção B2 (auditoria independente do PR #114):** a orquestração
+determinística (``executar_tarefa``) continua, ela mesma, SEM NENHUMA
+chamada de IA — nenhuma linha deste módulo importa ``anthropic``/
+``coordinator.anthropic_client`` no nível do módulo. A conexão "RunnerTask
+autorizada → Claude/Anthropic API → StructuredPatch" agora existe como uma
+camada SEPARADA (``coordinator/runner_generate.py``, nunca reimplementando
+transporte/orçamento/redação — reaproveita ``anthropic_client.build_request``/
+``call``, ``anthropic_transport.AnthropicTransport``, ``budget.CallLimiter``/
+``UsageLedger``/``check_budget``/``priority_allowed``, ``redact.redact``, todos
+JÁ existentes) que só é importada (``import`` local, dentro da função) e só
+é chamada quando o CLI recebe explicitamente ``--generate-via-claude`` em
+vez de ``--patch-file``. Sem essa flag (o comportamento padrão, e o único
+que o workflow de produção usa nesta rodada), o caminho é idêntico ao de
+antes desta correção: um ``StructuredPatch`` já pronto é lido de
+``--patch-file``, nunca gerado. A GERAÇÃO em si nunca aplica/comita nada —
+devolve só um ``StructuredPatch`` já validado (ou ``BLOCKED``/``FAILED``,
+nunca um patch parcial) para este módulo aplicar/validar/comitar da MESMA
+forma determinística de sempre.
+
 **O QUE ESTE MÓDULO DELIBERADAMENTE NÃO FAZ (fora de escopo desta
-rodada):** não chama nenhuma API de IA (Anthropic/OpenAI) — a GERAÇÃO do
-patch é responsabilidade de outro processo, fora deste mecanismo; não
-conecta com ``scheduler.py`` (nenhuma chamada a
+rodada):** não conecta com ``scheduler.py`` (nenhuma chamada a
 ``escolher_proxima_atribuicao``/``avaliar_handoff_de_tarefa`` — isso é
 Fase E, handoff automático); não implementa retomada automática (Fase F);
 não toca ``coordination/tasks.json``; não define nenhuma tarefa/patch de
 canário real (``coordinator/runner_tasks/`` fica vazio nesta rodada — o
 mecanismo existe, o conteúdo autorizado por José vem depois, numa decisão
-separada).
+separada); o workflow de produção (``.github/workflows/coordinator-runner.yml``)
+NÃO foi alterado para usar ``--generate-via-claude`` nesta rodada —
+continua no modo ``--patch-file`` de sempre, então nenhuma chamada de API
+real passa a ser possível em produção só por esta correção existir; ligar
+isso no workflow é uma decisão operacional separada, futura, de José.
 """
 
 from __future__ import annotations
@@ -129,6 +150,16 @@ from .worker_ops import OperationalWorkerRegistry
 ENV_RUNNER_ENABLED = "REPASSO_RUNNER_ENABLED"
 ENV_RUNNER_MODE = "REPASSO_RUNNER_MODE"
 ENV_RUNNER_CANARY_TASK_ID = "REPASSO_RUNNER_CANARY_TASK_ID"
+# Correção B1 (auditoria independente do PR #114): workflow_dispatch pode
+# ser disparado manualmente a partir de QUALQUER ref do repositório — o
+# arquivo de workflow de fato EXECUTADO é o da ref escolhida no disparo,
+# não necessariamente o da branch padrão, mesmo que o passo de checkout
+# desta rodada já fixe explicitamente `github.event.repository.default_branch`
+# para o CONTEÚDO do repositório. Estas duas variáveis deixam o workflow
+# preencher os dois lados da comparação e o portão (`gate()`) fecha
+# fail-closed ANTES de qualquer escrita quando eles não batem.
+ENV_RUNNER_ACTUAL_REF = "REPASSO_RUNNER_ACTUAL_REF"
+ENV_RUNNER_EXPECTED_REF = "REPASSO_RUNNER_EXPECTED_REF"
 
 # Único modo permitido nesta fase — Issue #105: "modo inicial obrigatório:
 # canary". Diferente de coordinator/config.py (ALLOWED_MODES aditivo:
@@ -151,15 +182,46 @@ class RunnerDispatchConfig:
     enabled: bool
     mode: str
     canary_task_id: str | None
+    # Correção B1 (auditoria independente do PR #114). ``None``/``None``
+    # (o padrão) não impõe restrição nenhuma — mesma aditividade de
+    # ``Config.pilot_allows`` em coordinator/config.py, para que chamadas
+    # diretas/testes fora do workflow real continuem funcionando sem
+    # precisar simular um `ref` git. Em produção, o workflow SEMPRE
+    # preenche os dois (`REPASSO_RUNNER_ACTUAL_REF`=``github.ref``,
+    # `REPASSO_RUNNER_EXPECTED_REF`=``refs/heads/<default_branch>``), então
+    # a checagem real fica sempre ativa no único lugar em que isto importa.
+    actual_ref: str | None = None
+    expected_ref: str | None = None
 
     @property
     def mode_allowed(self) -> bool:
         return self.mode == ALLOWED_RUNNER_MODE
 
+    @property
+    def ref_allowed(self) -> bool:
+        """Fail-closed: com os dois campos ausentes, não restringe nada
+        (chamada direta fora do workflow real). Com qualquer um dos dois
+        presente, os DOIS precisam estar presentes e serem EXATAMENTE
+        iguais — um estado parcialmente configurado nunca é tratado como
+        seguro."""
+        if self.actual_ref is None and self.expected_ref is None:
+            return True
+        return bool(self.actual_ref) and bool(self.expected_ref) and self.actual_ref == self.expected_ref
+
     def gate(self) -> RunnerGateResult:
         """A decisão de segurança. Chamada ANTES de qualquer outra coisa
         em ``executar_tarefa`` — enquanto fechado, nenhuma linha depois
         deste ponto roda (nem claim, nem git, nem subprocess)."""
+        if not self.ref_allowed:
+            return RunnerGateResult(
+                False,
+                f"ref do disparo ({self.actual_ref!r}) não corresponde à branch padrão "
+                f"esperada ({self.expected_ref!r}) — portão fechado fail-closed ANTES de "
+                "qualquer escrita (correção B1, auditoria independente do PR #114): "
+                "workflow_dispatch pode ser disparado manualmente a partir de qualquer ref "
+                "do repositório; só a branch padrão é confiável para uma execução com "
+                "contents:write.",
+            )
         if not self.mode_allowed:
             return RunnerGateResult(
                 False,
@@ -194,7 +256,12 @@ class RunnerDispatchConfig:
         enabled_raw = src.get(ENV_RUNNER_ENABLED, "false")
         mode_raw = src.get(ENV_RUNNER_MODE, ALLOWED_RUNNER_MODE)
         canary = src.get(ENV_RUNNER_CANARY_TASK_ID) or None
-        return cls(enabled=(enabled_raw == "true"), mode=mode_raw, canary_task_id=canary)
+        actual_ref = src.get(ENV_RUNNER_ACTUAL_REF) or None
+        expected_ref = src.get(ENV_RUNNER_EXPECTED_REF) or None
+        return cls(
+            enabled=(enabled_raw == "true"), mode=mode_raw, canary_task_id=canary,
+            actual_ref=actual_ref, expected_ref=expected_ref,
+        )
 
 
 # ---------------------------------------------------------------------
@@ -678,7 +745,28 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         description="Runner Dispatch — Issue #105 Fase D (execução controlada por api_runner)."
     )
     ap.add_argument("--task-file", required=True, help="JSON de uma RunnerTask (runner_contract.RunnerTask.from_dict)")
-    ap.add_argument("--patch-file", required=True, help="JSON de um StructuredPatch ({'files': [{'path','content'}]})")
+    ap.add_argument(
+        "--patch-file", default=None,
+        help="JSON de um StructuredPatch ({'files': [{'path','content'}]}) — obrigatório, "
+        "a menos que --generate-via-claude seja passado.",
+    )
+    ap.add_argument(
+        "--generate-via-claude", action="store_true",
+        help="Correção B2 (PR #114): em vez de ler --patch-file, gera o StructuredPatch "
+        "chamando a Anthropic (coordinator.runner_generate) — só a partir de instructions/ "
+        "allowed_files da própria RunnerTask, atrás dos mesmos 3 portões de sempre. Mutuamente "
+        "exclusivo com --patch-file.",
+    )
+    ap.add_argument(
+        "--usage-ledger", default=None,
+        help="caminho do UsageLedger (mesmo mecanismo já usado pelo Coordinator OBSERVE) — "
+        "obrigatório com --generate-via-claude, para registrar custo/tokens da chamada real.",
+    )
+    ap.add_argument(
+        "--budget-usd", type=float, default=None,
+        help="teto mensal em USD para a checagem de orçamento (--generate-via-claude); "
+        "default: coordinator.budget.MONTHLY_BUDGET_USD.",
+    )
     ap.add_argument("--repo-dir", default=".", help="checkout já confiável (branch padrão), nunca HEAD de PR")
     ap.add_argument("--state-git-remote", required=True, help="remoto para a branch de estado do claim/resultado")
     ap.add_argument("--push-remote-name", default="origin")
@@ -696,6 +784,13 @@ def _build_arg_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = _build_arg_parser().parse_args(argv)
 
+    if bool(args.patch_file) == bool(args.generate_via_claude):
+        print(
+            "ERRO fail-closed: informe EXATAMENTE um de --patch-file ou --generate-via-claude "
+            "(nunca os dois, nunca nenhum)."
+        )
+        return 1
+
     config = RunnerDispatchConfig.from_env()
 
     try:
@@ -704,11 +799,35 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERRO fail-closed ao carregar --task-file: {redact(str(exc))}")
         return 1
 
-    try:
-        patch = carregar_patch_de_arquivo(args.patch_file)
-    except Exception as exc:
-        print(f"ERRO fail-closed ao carregar --patch-file: {redact(str(exc))}")
-        return 1
+    if args.generate_via_claude:
+        # Import local (correção B2, PR #114): evita import circular no
+        # nível do módulo — runner_generate.py importa DESTE módulo
+        # (RunnerDispatchConfig/StructuredPatch/validar_patch_contra_allowed_files),
+        # então este módulo só importa runner_generate.py aqui dentro,
+        # tarde, e só quando de fato precisa.
+        from . import runner_generate
+
+        if not args.usage_ledger:
+            print("ERRO fail-closed: --generate-via-claude exige --usage-ledger.")
+            return 1
+        from .budget import MONTHLY_BUDGET_USD, UsageLedger
+
+        budget_usd = args.budget_usd if args.budget_usd is not None else MONTHLY_BUDGET_USD
+        geracao = runner_generate.gerar_patch_via_claude(
+            task, config=config, repo_dir=args.repo_dir,
+            usage_ledger=UsageLedger(args.usage_ledger),
+            budget_usd=budget_usd,
+        )
+        if geracao.status != "ok" or geracao.patch is None:
+            print(f"ERRO fail-closed na geração via Claude: {redact(geracao.reason)}")
+            return 1
+        patch = geracao.patch
+    else:
+        try:
+            patch = carregar_patch_de_arquivo(args.patch_file)
+        except Exception as exc:
+            print(f"ERRO fail-closed ao carregar --patch-file: {redact(str(exc))}")
+            return 1
 
     worker_registry = None
     if args.worker_id and args.worker_state_git_remote:

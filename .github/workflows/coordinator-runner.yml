@@ -30,12 +30,27 @@ name: Repasso Coordinator (RUNNER)
 #   2. ATOR — o `if:` do job exige `github.actor == 'Repassomed'` (mesma
 #      identidade confiável usada em coordinator-observe.yml para
 #      issue_comment — José e todos os agentes Claude publicam por ela).
+#   2-B. REF (correção B1, auditoria independente do PR #114) — o `if:` do
+#      job TAMBÉM exige `github.ref == refs/heads/<default_branch>`.
+#      `workflow_dispatch` pode ser disparado manualmente a partir de
+#      QUALQUER ref do repositório escolhida na hora — o arquivo de
+#      workflow de fato EXECUTADO é o dessa ref, não necessariamente o da
+#      branch padrão, mesmo que o passo de checkout (camada 5) já fixe
+#      explicitamente `default_branch` para o CONTEÚDO do repositório.
+#      Confiar só nesse checkout deixaria a decisão de "qual ref pode
+#      rodar isto" a cargo de quem escolhe o ref no disparo manual, e não
+#      do código — por isso a checagem entra tanto no `if:` do job (camada
+#      rápida/barata) quanto, de novo, em CÓDIGO (`RunnerDispatchConfig.
+#      gate()`, via `ref_allowed`) ANTES de qualquer escrita, na mesma
+#      confirmação da camada 3 abaixo — nunca confiar só no `if:` do
+#      workflow.
 #   3. PORTÃO — `vars.REPASSO_RUNNER_ENABLED` precisa ser exatamente
 #      "true" no `if:` do job (camada rápida/barata, nem deixa o job
-#      começar); um passo em Python confirma de novo, em código, os TRÊS
-#      portões completos (ENABLED + MODE=="canary" + CANARY_TASK_ID
-#      configurado) via `RunnerDispatchConfig.gate()` — nunca confiar só
-#      no `if:` do workflow (mesma filosofia de coordinator-observe.yml).
+#      começar); um passo em Python confirma de novo, em código, os
+#      QUATRO portões completos (ENABLED + MODE=="canary" + CANARY_TASK_ID
+#      configurado + ref==default_branch) via `RunnerDispatchConfig.gate()`
+#      — nunca confiar só no `if:` do workflow (mesma filosofia de
+#      coordinator-observe.yml).
 #   4. FORMATO DO task_id — validado por regex ANTES de qualquer caminho
 #      ser construído a partir dele (task-file/patch-file); um valor fora
 #      do formato falha fechado, sem tocar em disco/git.
@@ -55,10 +70,15 @@ name: Repasso Coordinator (RUNNER)
 #      estado do claim) — o push da BRANCH DA TAREFA em si usa as
 #      credenciais que o próprio `actions/checkout` já deixou configuradas
 #      no workdir (mesmo token, mesmo escopo, sem reexpor o secret).
-#   7. SEM LLM — nenhuma chamada de IA acontece aqui (nem Anthropic, nem
-#      OpenAI); `coordinator/runner_dispatch.py` só aplica um patch JÁ
-#      PRONTO e roda comandos de uma allowlist FECHADA
-#      (`ALLOWED_VALIDATION_COMMANDS`) — nunca texto gerado pelo modelo.
+#   7. SEM LLM NESTE WORKFLOW — nenhuma chamada de IA acontece a partir
+#      deste arquivo; o passo abaixo roda `runner_dispatch.py` no modo
+#      `--patch-file` (patch já pronto), NUNCA `--generate-via-claude`.
+#      Correção B2 (auditoria independente do PR #114): o MECANISMO de
+#      conexão RunnerTask -> Claude/Anthropic -> StructuredPatch agora
+#      existe (`coordinator/runner_generate.py`, atrás dos MESMOS 3
+#      portões + orçamento existente), mas este workflow de produção
+#      continua sem usá-lo — ligar isso aqui é uma decisão operacional
+#      separada e futura de José, não desta correção.
 #   8. FALHA — o job fica vermelho quando o CLI termina com erro (último
 #      passo abaixo), mesma técnica de coordinator-observe.yml.
 #
@@ -71,7 +91,8 @@ name: Repasso Coordinator (RUNNER)
 # — o Worker Registry operacional (Issue #99) ainda não tem esse worker
 # cadastrado, então o heartbeat fica de fora desta invocação por ora
 # (mecanismo já pronto em ``executar_tarefa``/``--worker-id``, só não
-# ligado neste workflow enquanto não houver um worker real para reportar).
+# ligado neste workflow enquanto não houver um worker real para reportar);
+# este workflow não usa `--generate-via-claude` (ver item 7 acima).
 # ─────────────────────────────────────────────────────────────────────────
 
 on:
@@ -93,7 +114,8 @@ jobs:
     # confiável.
     if: >
       vars.REPASSO_RUNNER_ENABLED == 'true' &&
-      github.actor == 'Repassomed'
+      github.actor == 'Repassomed' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     # contents:write só é usado para (a) publicar a branch de TRABALHO da
     # própria tarefa (nunca 'main'/'master' — RunnerTask.__post_init__ já
@@ -147,6 +169,13 @@ jobs:
           REPASSO_RUNNER_ENABLED: ${{ vars.REPASSO_RUNNER_ENABLED }}
           REPASSO_RUNNER_MODE: ${{ vars.REPASSO_RUNNER_MODE }}
           REPASSO_RUNNER_CANARY_TASK_ID: ${{ vars.REPASSO_RUNNER_CANARY_TASK_ID }}
+          # Correção B1 (auditoria independente do PR #114): os dois lados
+          # da comparação de ref, confirmados de novo em código — nunca só
+          # no `if:` do job acima. `RunnerDispatchConfig.gate()` fecha
+          # fail-closed quando eles não batem (ver `ref_allowed` em
+          # coordinator/runner_dispatch.py).
+          REPASSO_RUNNER_ACTUAL_REF: ${{ github.ref }}
+          REPASSO_RUNNER_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
         run: |
           python3 -c "
           from coordinator.runner_dispatch import RunnerDispatchConfig
@@ -169,6 +198,12 @@ jobs:
           REPASSO_RUNNER_ENABLED: ${{ vars.REPASSO_RUNNER_ENABLED }}
           REPASSO_RUNNER_MODE: ${{ vars.REPASSO_RUNNER_MODE }}
           REPASSO_RUNNER_CANARY_TASK_ID: ${{ vars.REPASSO_RUNNER_CANARY_TASK_ID }}
+          # Correção B1 (PR #114): precisam chegar até AQUI também — é este
+          # passo que de fato invoca `python3 -m coordinator.runner_dispatch`,
+          # cujo `RunnerDispatchConfig.from_env()` faz a mesma checagem de
+          # novo (defesa em profundidade, mesmo padrão dos outros 3 portões).
+          REPASSO_RUNNER_ACTUAL_REF: ${{ github.ref }}
+          REPASSO_RUNNER_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
         run: |
           set +e
           TASK_ID="${{ steps.taskid.outputs.task_id }}"

@@ -105,6 +105,44 @@ def test_job_gate_checks_enabled_and_trusted_actor() -> None:
     print("OK  test_job_gate_checks_enabled_and_trusted_actor")
 
 
+def _secao_if_do_job(texto: str) -> str:
+    idx_run = texto.index("\n  run:")
+    idx_if = texto.index("if:", idx_run)
+    idx_runs_on = texto.index("runs-on:", idx_if)
+    return texto[idx_if:idx_runs_on]
+
+
+def test_job_if_requires_ref_to_be_default_branch() -> None:
+    """Correção B1 (auditoria independente do PR #114): workflow_dispatch
+    pode ser disparado manualmente a partir de QUALQUER ref — o `if:` do
+    job precisa exigir explicitamente que a execução venha da branch
+    padrão, ANTES de qualquer passo com contents:write rodar."""
+    secao_if = _secao_if_do_job(_ler())
+    assert "github.ref" in secao_if
+    assert "default_branch" in secao_if
+    assert "refs/heads/" in secao_if
+    print("OK  test_job_if_requires_ref_to_be_default_branch")
+
+
+def test_ref_check_confirmed_again_in_code_before_any_write() -> None:
+    """Defesa em profundidade: o `if:` do workflow não é a única camada —
+    os mesmos dois valores (ref atual / ref esperado) precisam chegar,
+    como env explícito, ao passo que confirma o gate em CÓDIGO (que roda
+    ANTES do passo que de fato executa o Runner Dispatch, o único com
+    capacidade real de escrita)."""
+    texto = _ler()
+    idx_confirmar = texto.index("Confirmar os portões em código")
+    idx_rodar = texto.index("Rodar o Runner Dispatch sobre a RunnerTask do canário")
+    assert idx_confirmar < idx_rodar, "a confirmação do gate precisa vir ANTES do passo que escreve"
+
+    trecho_confirmar = texto[idx_confirmar:idx_rodar]
+    assert "REPASSO_RUNNER_ACTUAL_REF" in trecho_confirmar
+    assert "REPASSO_RUNNER_EXPECTED_REF" in trecho_confirmar
+    assert "github.ref" in trecho_confirmar
+    assert "default_branch" in trecho_confirmar
+    print("OK  test_ref_check_confirmed_again_in_code_before_any_write")
+
+
 def test_full_gate_mode_and_canary_confirmed_in_code() -> None:
     """Camada 2 (defesa em profundidade): o `if:` do job só checa ENABLED
     (barato/rápido) — MODE=='canary' e CANARY_TASK_ID configurado
@@ -112,7 +150,8 @@ def test_full_gate_mode_and_canary_confirmed_in_code() -> None:
     gate()), nunca só no `if:` do workflow."""
     texto = _ler()
     idx = texto.index("Confirmar os portões em código")
-    trecho = texto[idx: idx + 900]
+    fim = texto.index("Rodar o Runner Dispatch sobre a RunnerTask do canário", idx)
+    trecho = texto[idx:fim]
     assert "RunnerDispatchConfig" in trecho
     assert "REPASSO_RUNNER_MODE" in trecho
     assert "REPASSO_RUNNER_CANARY_TASK_ID" in trecho
@@ -217,14 +256,17 @@ def test_run_step_forwards_all_three_gate_env_vars_to_the_real_invocation() -> N
     """Mesmo achado de coordinator-observe.yml: o passo de confirmação só
     IMPRIME os portões — é o passo que de fato chama
     `python3 -m coordinator.runner_dispatch` que precisa repassar as
-    MESMAS três Variables como env, senão o processo real veria sempre os
-    defaults seguros (false/canary/vazio) mesmo com José tendo ligado de
-    verdade."""
+    MESMAS variáveis como env (as 3 originais + as 2 de ref da correção
+    B1), senão o processo real veria sempre os defaults seguros mesmo com
+    José tendo ligado de verdade."""
     texto = _ler()
     idx_step = texto.index("Rodar o Runner Dispatch sobre a RunnerTask do canário")
     idx_run = texto.index("run: |", idx_step)
     bloco_env = texto[idx_step:idx_run]
-    for nome in ("REPASSO_RUNNER_ENABLED", "REPASSO_RUNNER_MODE", "REPASSO_RUNNER_CANARY_TASK_ID"):
+    for nome in (
+        "REPASSO_RUNNER_ENABLED", "REPASSO_RUNNER_MODE", "REPASSO_RUNNER_CANARY_TASK_ID",
+        "REPASSO_RUNNER_ACTUAL_REF", "REPASSO_RUNNER_EXPECTED_REF",
+    ):
         assert nome in bloco_env, f"{nome} precisa estar no env do passo que roda o CLI de verdade"
     print("OK  test_run_step_forwards_all_three_gate_env_vars_to_the_real_invocation")
 
@@ -257,6 +299,8 @@ def main() -> int:
         test_checkout_pins_explicit_default_branch_ref,
         test_checkout_uses_full_history_for_checkpoint_support,
         test_job_gate_checks_enabled_and_trusted_actor,
+        test_job_if_requires_ref_to_be_default_branch,
+        test_ref_check_confirmed_again_in_code_before_any_write,
         test_full_gate_mode_and_canary_confirmed_in_code,
         test_task_id_format_validated_before_any_path_is_built,
         test_secret_only_exists_inside_the_single_gated_job,

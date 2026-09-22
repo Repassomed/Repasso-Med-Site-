@@ -135,6 +135,68 @@ def test_task_id_outside_canary_makes_zero_external_call() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Correção B1 (auditoria independente do PR #114): ref diferente da branch
+# padrão -> zero chamada externa, mesmo com ENABLED/MODE/task_id corretos.
+# ---------------------------------------------------------------------------
+
+def test_ref_mismatch_makes_zero_external_call() -> None:
+    config = _config(actual_ref="refs/heads/alguma-outra-branch", expected_ref="refs/heads/main")
+    assert config.ref_allowed is False
+    outcome = executar_tarefa(
+        _task(), _patch(),
+        config=config,
+        repo_dir="/definitivamente/nao/existe/repo",
+        state_git_remote="/definitivamente/nao/existe/remoto.git",
+    )
+    assert outcome.result is not None and outcome.result.status == "BLOCKED"
+    assert outcome.claimed is False
+    assert outcome.external_calls_made is False
+    assert "ref" in outcome.result.reason.lower()
+    print("OK  test_ref_mismatch_makes_zero_external_call")
+
+
+def test_ref_partially_configured_is_treated_as_mismatch() -> None:
+    """Um estado PARCIAL (só um dos dois lados configurado) nunca pode ser
+    tratado como seguro — fail-closed, igual a um mismatch completo."""
+    only_actual = _config(actual_ref="refs/heads/main", expected_ref=None)
+    assert only_actual.ref_allowed is False
+
+    only_expected = _config(actual_ref=None, expected_ref="refs/heads/main")
+    assert only_expected.ref_allowed is False
+    print("OK  test_ref_partially_configured_is_treated_as_mismatch")
+
+
+def test_ref_absent_on_both_sides_does_not_restrict() -> None:
+    """Chamada direta/teste fora do workflow real (nenhum dos dois
+    configurado) não impõe restrição adicional — mesma aditividade do
+    resto do portão (Config.pilot_allows)."""
+    config = _config()
+    assert config.actual_ref is None and config.expected_ref is None
+    assert config.ref_allowed is True
+    print("OK  test_ref_absent_on_both_sides_does_not_restrict")
+
+
+def test_ref_match_allows_normal_execution() -> None:
+    """Prova positiva: quando os dois lados batem, a execução prossegue
+    normalmente — a correção B1 nunca bloqueia um disparo legítimo da
+    branch padrão."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        workdir = _clonar_workdir(tmp, remoto, "work-ref-ok")
+
+        task = _task(task_id="canario-ref-ok", branch="runner/canario-ref-ok", allowed_files=("greeting.txt",))
+        patch = _patch()
+        config = _config(
+            canary_task_id="canario-ref-ok",
+            actual_ref="refs/heads/main", expected_ref="refs/heads/main",
+        )
+
+        outcome = executar_tarefa(task, patch, config=config, repo_dir=workdir, state_git_remote=remoto)
+        assert outcome.result is not None and outcome.result.status == "NEEDS-AUDIT"
+    print("OK  test_ref_match_allows_normal_execution")
+
+
+# ---------------------------------------------------------------------------
 # Invariantes herdados de runner_contract.py — branch protegida, Níveis E/D.
 # ---------------------------------------------------------------------------
 
@@ -390,6 +452,10 @@ def main() -> int:
     testes = [
         test_gate_closed_makes_zero_external_call,
         test_task_id_outside_canary_makes_zero_external_call,
+        test_ref_mismatch_makes_zero_external_call,
+        test_ref_partially_configured_is_treated_as_mismatch,
+        test_ref_absent_on_both_sides_does_not_restrict,
+        test_ref_match_allows_normal_execution,
         test_branch_main_or_master_rejected_at_construction,
         test_policy_e_and_d_without_authorization_rejected,
         test_file_outside_allowed_files_blocks_without_commit_or_push,
