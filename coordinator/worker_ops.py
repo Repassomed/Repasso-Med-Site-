@@ -327,36 +327,53 @@ class OperationalWorkerRegistry:
         return record
 
     def transferir_worker_condicional(
-        self, *, worker_anterior_id: str, tarefa_id_esperada: str, worker_novo_id: str,
-        worker_anterior_atualizado: WorkerRecord, worker_novo_atualizado: WorkerRecord, message: str,
+        self, *, worker_anterior_id: str, tarefa_id_esperada: str,
+        checkpoint_esperado: str, branch_esperada: str | None,
+        worker_novo_id: str, anterior_patch: dict, novo_patch: dict, message: str,
     ) -> bool:
         """Compare-and-set atômico para o handoff — Issue #105 Fase E
-        (``coordinator/handoff_exec.py``), achado H2 da auditoria
-        independente do PR #115: um ``upsert`` duplo em UM commit não
-        bastava, porque o par (worker anterior liberado, novo worker
-        assumido) era escrito incondicionalmente — duas tarefas
-        DIFERENTES concorrendo pelo mesmo worker novo podiam, cada uma
-        com seu próprio ``claim`` (chaves diferentes, então as duas
-        "vencem"), sobrescrever a reserva uma da outra, com a última
-        escrita ganhando silenciosamente.
+        (``coordinator/handoff_exec.py``), achado H2 da 1ª auditoria e
+        achado H4 da 2ª auditoria independentes do PR #115: um ``upsert``
+        duplo em UM commit não bastava, porque o par (worker anterior
+        liberado, novo worker assumido) era escrito incondicionalmente —
+        duas tarefas DIFERENTES concorrendo pelo mesmo worker novo podiam,
+        cada uma com seu próprio ``claim`` (chaves diferentes, então as
+        duas "vencem"), sobrescrever a reserva uma da outra, com a última
+        escrita ganhando silenciosamente (H2).
 
         Agora a escrita só acontece quando, numa leitura FRESCA repetida
         em CADA tentativa de conflito (``WorkerStateStore.
         conditional_update`` — mesmo princípio de
-        ``git_state.GitJsonStore.claim_key``/``conditional_update``), as
-        duas pré-condições ainda são verdadeiras:
+        ``git_state.GitJsonStore.claim_key``/``conditional_update``),
+        TODAS as pré-condições abaixo ainda são verdadeiras:
 
         1. ``worker_anterior_id`` ainda tem ``current_task ==
            tarefa_id_esperada`` — ainda é o dono real da tarefa sendo
-           transferida (não foi liberado/reatribuído por outra operação
-           entretanto);
-        2. ``worker_novo_id`` ainda está ``AVAILABLE``, ``can_execute`` e
+           transferida (H2);
+        2. ``worker_anterior_id`` ainda tem ``last_checkpoint ==
+           checkpoint_esperado`` — nenhum heartbeat mais novo publicou um
+           checkpoint diferente entre a decisão (snapshot) e esta escrita
+           (H4 da 2ª auditoria: sem isto, uma transição baseada num
+           checkpoint A velho podia sobrescrever um checkpoint B mais novo
+           já publicado por um heartbeat real);
+        3. quando ``branch_esperada`` não é ``None``, ``worker_anterior_id``
+           ainda tem ``branch == branch_esperada`` (mesmo motivo do item 2 —
+           ``None`` significa "nenhuma branch conhecida no snapshot", nunca
+           tratado como incompatibilidade);
+        4. ``worker_novo_id`` ainda está ``AVAILABLE``, ``can_execute`` e
            sem ``current_task`` — ainda é candidato real a assumir a
-           tarefa (nenhuma OUTRA tarefa já o reservou entretanto).
+           tarefa (H2).
 
         Se qualquer uma mudou, nada é escrito e devolve ``False`` — nunca
         sobrescreve um estado mais novo do que o snapshot que gerou a
-        decisão."""
+        decisão.
+
+        ``anterior_patch``/``novo_patch`` (H4): dicts com SÓ os campos que
+        de fato mudam (ex.: ``{"current_task": None}``) — aplicados por
+        cima dos registros FRESCOS lidos aqui dentro, nunca a partir de um
+        ``WorkerRecord`` construído antes do CAS. Isto garante que
+        heartbeat/progresso/capabilities/metadados mais novos do que o
+        snapshot da decisão nunca são apagados por um objeto stale."""
         def evaluate(dados: dict) -> tuple[bool, dict]:
             existentes = dados.get("workers")
             base = {w["worker_id"]: w for w in existentes} if existentes else {
@@ -366,6 +383,10 @@ class OperationalWorkerRegistry:
             novo_fresco = base.get(worker_novo_id)
             if anterior_fresco is None or anterior_fresco.get("current_task") != tarefa_id_esperada:
                 return False, dados
+            if anterior_fresco.get("last_checkpoint") != checkpoint_esperado:
+                return False, dados
+            if branch_esperada is not None and anterior_fresco.get("branch") != branch_esperada:
+                return False, dados
             if novo_fresco is None:
                 return False, dados
             if (
@@ -374,8 +395,8 @@ class OperationalWorkerRegistry:
                 or novo_fresco.get("current_task") is not None
             ):
                 return False, dados
-            base[worker_anterior_id] = worker_anterior_atualizado.to_dict()
-            base[worker_novo_id] = worker_novo_atualizado.to_dict()
+            base[worker_anterior_id] = {**anterior_fresco, **anterior_patch}
+            base[worker_novo_id] = {**novo_fresco, **novo_patch}
             return True, {"workers": list(base.values())}
 
         return self.store.conditional_update(evaluate, message=message)

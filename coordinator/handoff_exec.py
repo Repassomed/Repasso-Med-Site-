@@ -130,6 +130,50 @@ continuam intocados:**
   (ninguém fingiu que o trabalho começou). Um heartbeat real, quando a
   sessão humana de fato começar, é quem marca ``BUSY`` de verdade (fora
   deste módulo, via ``heartbeat.aplicar_heartbeat``, já existente).
+
+---
+
+**Correções da 2ª auditoria independente do PR #115 (H4-H5) — só isto,
+scheduler/heartbeat/runner_contract/runner_dispatch/runner_generate
+continuam intocados; H1/H2/H3 (acima) continuam válidos e inalterados:**
+
+- **H4 (compare-and-set confirmava dono/disponibilidade, mas não o
+  CHECKPOINT fresco):** ``transferir_worker_condicional`` só checava
+  ``current_task``/``AVAILABLE``/``can_execute`` — um heartbeat NOVO do
+  próprio worker anterior (publicando um checkpoint B mais recente, ainda
+  com o mesmo ``current_task``) podia chegar ENTRE a decisão (snapshot em
+  checkpoint A) e o CAS, sem ser detectado; a transição baseada em A ainda
+  passava e sobrescrevia o checkpoint B mais novo com dados construídos a
+  partir do snapshot velho. Corrigido em ``worker_ops.
+  transferir_worker_condicional`` (ver correções lá): agora também exige,
+  na leitura FRESCA, que ``last_checkpoint`` (e, quando conhecida,
+  ``branch``) do worker anterior continuem EXATAMENTE os do snapshot que
+  gerou a decisão — qualquer heartbeat mais novo com checkpoint/branch
+  diferente bloqueia a transição (``BLOCKED``), sem tocar no registro.
+  Além disso, os registros atualizados passaram a ser construídos a
+  partir dos DICTS FRESCOS lidos dentro do próprio CAS (``anterior_patch``/
+  ``novo_patch``, só os campos que de fato mudam) — nunca a partir de um
+  ``WorkerRecord`` (``worker_anterior``/``novo_worker``) capturado antes
+  do CAS, que poderia já estar desatualizado.
+- **H5 (o claim da transição podia queimar permanentemente ANTES de
+  saber se o receptor de fato venceu o CAS, e a chave não incluía o
+  receptor):** o fluxo antigo reivindicava ``tarefa + dono anterior +
+  checkpoint`` e só DEPOIS tentava o CAS do receptor — se o receptor
+  escolhido (ex.: ``runner-1``) deixasse de estar disponível bem nesse
+  intervalo (ocupado por outra tarefa), o CAS falhava mas o claim da
+  transição já estava consumido para sempre, e como a chave não
+  identificava QUAL receptor foi tentado, a MESMA tarefa/checkpoint nunca
+  mais podia ser oferecida a um segundo receptor disponível (``runner-2``)
+  — uma perda de corrida normal virava um bloqueio permanente
+  desnecessário. Corrigido: a chave de idempotência (``chave_transicao``,
+  em ``executar_handoff``) agora inclui também o RECEPTOR — ``f"{tarefa.id}
+  :{worker_anterior.worker_id}:{checkpoint_commit}:{novo_worker.worker_id}"``.
+  Repetir EXATAMENTE a mesma tentativa (mesmo receptor) continua
+  idempotente/bloqueada; uma nova avaliação que escolhe um receptor
+  DIFERENTE usa uma chave diferente e nunca é bloqueada pela tentativa
+  anterior perdida — o CAS fresco do worker anterior (H2/H4) continua
+  sendo a única coisa que impede duas transferências DIFERENTES de
+  vencerem ao mesmo tempo.
 """
 
 from __future__ import annotations
@@ -467,19 +511,27 @@ def executar_handoff(
             task_id=tarefa.id, previous_worker_id=worker_anterior.worker_id,
         )
 
-    # Correção H3: a chave de idempotência é a TRANSIÇÃO (tarefa + dono
-    # anterior + checkpoint) — nunca só a tarefa. Só a PRIMEIRA chamada,
-    # entre quaisquer execuções concorrentes, a reivindicar esta MESMA
-    # transição prossegue; uma transição NOVA (checkpoint/dono anterior
-    # diferente) usa outra chave e nunca é bloqueada por esta.
-    chave_transicao = f"{tarefa.id}:{worker_anterior.worker_id}:{checkpoint_commit}"
+    # Correção H3 + H5 (2ª auditoria independente do PR #115): a chave de
+    # idempotência é a TRANSIÇÃO (tarefa + dono anterior + checkpoint +
+    # worker NOVO) — nunca só a tarefa, e agora também nunca só até o
+    # checkpoint (sem o receptor). H5: antes, se o receptor perdesse a
+    # corrida no compare-and-set (ver mais abaixo), o claim já estava
+    # consumido SEM incluir qual receptor foi tentado — a mesma tarefa/
+    # checkpoint nunca mais podia ser oferecida a OUTRO worker disponível,
+    # transformando uma perda de corrida normal num bloqueio permanente.
+    # Incluir o receptor na chave resolve isso: repetir EXATAMENTE a mesma
+    # tentativa (mesmo receptor) continua idempotente; uma nova avaliação
+    # que escolhe um receptor DIFERENTE usa uma chave diferente e nunca é
+    # bloqueada pela tentativa anterior perdida.
+    chave_transicao = f"{tarefa.id}:{worker_anterior.worker_id}:{checkpoint_commit}:{novo_worker.worker_id}"
     claimed = claim_store.claim(chave_transicao)
     if not claimed:
         return HandoffExecutionResult(
             "BLOCKED",
-            f"esta transição de {tarefa.id!r} (de {worker_anterior.worker_id!r}, checkpoint "
-            f"{checkpoint_commit!r}) já foi reivindicada/executada antes — idempotente, nenhuma segunda "
-            "continuação foi criada. Um checkpoint ou dono anterior diferente gera uma transição nova.",
+            f"esta transição de {tarefa.id!r} (de {worker_anterior.worker_id!r} para "
+            f"{novo_worker.worker_id!r}, checkpoint {checkpoint_commit!r}) já foi reivindicada/executada "
+            "antes — idempotente, nenhuma segunda continuação foi criada. Um checkpoint, dono anterior "
+            "ou receptor diferente gera uma transição nova.",
             task_id=tarefa.id, previous_worker_id=worker_anterior.worker_id,
             new_worker_id=novo_worker.worker_id, new_worker_type=novo_worker.type,
         )
@@ -506,19 +558,27 @@ def executar_handoff(
                 new_worker_id=novo_worker.worker_id, new_worker_type=novo_worker.type,
             )
 
-        anterior_atualizado = replace(worker_anterior, current_task=None)
-        novo_atualizado = replace(
-            novo_worker, status="BUSY", current_task=tarefa.id,
-            branch=source.branch, commit=checkpoint_commit, last_checkpoint=checkpoint_commit,
-        )
-        # Correção H2: compare-and-set — só escreve se, numa leitura
-        # FRESCA, o anterior ainda é dono de `tarefa.id` e o novo ainda
-        # está livre/AVAILABLE/can_execute. Falso = outra tarefa já
-        # reservou o mesmo worker novo nesse intervalo.
+        # Correção H4 (2ª auditoria): os patches trazem SÓ os campos que
+        # mudam — aplicados por cima dos registros FRESCOS dentro do CAS
+        # (nunca a partir de `worker_anterior`/`novo_worker`, que podem já
+        # estar desatualizados por um heartbeat mais novo).
+        anterior_patch = {"current_task": None}
+        novo_patch = {
+            "status": "BUSY", "current_task": tarefa.id,
+            "branch": source.branch, "commit": checkpoint_commit, "last_checkpoint": checkpoint_commit,
+        }
+        # Correção H2 + H4: compare-and-set — só escreve se, numa leitura
+        # FRESCA, o anterior ainda é dono de `tarefa.id`, ainda está no
+        # MESMO checkpoint/branch do snapshot (H4 — um heartbeat mais novo
+        # com checkpoint diferente bloqueia esta transição, sem apagar o
+        # checkpoint novo) e o novo ainda está livre/AVAILABLE/can_execute
+        # (H2 — outra tarefa já reservou o mesmo worker novo nesse
+        # intervalo).
         transferido = registry.transferir_worker_condicional(
             worker_anterior_id=worker_anterior.worker_id, tarefa_id_esperada=tarefa.id,
+            checkpoint_esperado=checkpoint_commit, branch_esperada=worker_anterior.branch,
             worker_novo_id=novo_worker.worker_id,
-            worker_anterior_atualizado=anterior_atualizado, worker_novo_atualizado=novo_atualizado,
+            anterior_patch=anterior_patch, novo_patch=novo_patch,
             message=f"handoff: {tarefa.id} {worker_anterior.worker_id} -> {novo_worker.worker_id}",
         )
         if not transferido:
@@ -546,12 +606,13 @@ def executar_handoff(
         # (o mesmo campo que já exclui um worker de
         # `scheduler._candidatos_disponiveis`), `status` continua
         # exatamente o que já era (observação da auditoria do PR #115).
-        anterior_atualizado = replace(worker_anterior, current_task=None)
-        novo_atualizado = replace(novo_worker, current_task=tarefa.id)
+        anterior_patch = {"current_task": None}
+        novo_patch = {"current_task": tarefa.id}
         transferido = registry.transferir_worker_condicional(
             worker_anterior_id=worker_anterior.worker_id, tarefa_id_esperada=tarefa.id,
+            checkpoint_esperado=checkpoint_commit, branch_esperada=worker_anterior.branch,
             worker_novo_id=novo_worker.worker_id,
-            worker_anterior_atualizado=anterior_atualizado, worker_novo_atualizado=novo_atualizado,
+            anterior_patch=anterior_patch, novo_patch=novo_patch,
             message=(
                 f"handoff: libera {worker_anterior.worker_id} — tarefa {tarefa.id} reservada para "
                 f"{novo_worker.worker_id} (início manual, nunca automático)"

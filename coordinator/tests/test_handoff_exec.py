@@ -18,6 +18,19 @@ H1 (checkpoint sintaticamente válido mas inexistente -> bloqueado), H2
 vence) e H3 (transição/checkpoint novo permite um handoff seguinte
 legítimo da mesma tarefa; a RunnerTask de continuação nunca colide com o
 claim permanente de uma execução anterior do Runner Dispatch).
+
+Inclui também as correções da 2ª auditoria independente do PR #115
+(H4-H5): H4 (o compare-and-set agora também exige checkpoint/branch
+FRESCOS do worker anterior — um heartbeat mais novo bloqueia a
+transição, sem sobrescrever o checkpoint novo) e H5 (a chave de
+idempotência do claim agora inclui o RECEPTOR — perder a corrida do CAS
+para um receptor não impede mais tentar outro receptor disponível).
+
+Por isso, a partir desta rodada, todo ``worker_anterior`` construído nos
+testes precisa ter ``last_checkpoint`` já IGUAL ao ``checkpoint_commit``
+passado para ``executar_handoff`` — representa "o checkpoint que a
+decisão já capturou no snapshot", que o CAS revalida contra o estado
+FRESCO antes de consumir a transição.
 """
 
 from __future__ import annotations
@@ -108,7 +121,9 @@ def _registry(workers: list[WorkerRecord]) -> OperationalWorkerRegistry:
 def test_p1_limit_checkpoint_valid_worker_available_produces_handoff() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="abc1234",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -143,7 +158,9 @@ def test_p1_limit_checkpoint_valid_worker_available_produces_handoff() -> None:
 def test_p3_prefers_wait() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t3")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t3", last_checkpoint="abc1234",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -168,7 +185,9 @@ def test_p3_prefers_wait() -> None:
 def test_no_worker_available_returns_pool_paused() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="abc1234",
+        )
         outro = _worker("claude-2", "Claude 2", "human_session", "OFFLINE")
         workers = [anterior, outro]
         registry = _registry(workers)
@@ -192,7 +211,9 @@ def test_no_worker_available_returns_pool_paused() -> None:
 def test_incompatible_worker_not_selected() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="abc1234",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("conteudo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -217,7 +238,9 @@ def test_incompatible_worker_not_selected() -> None:
 def test_concurrent_handoff_same_task_only_one_wins() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="abc1234",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -263,7 +286,9 @@ def test_concurrent_handoff_same_task_only_one_wins() -> None:
 def test_repeated_handoff_is_idempotent() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="abc1234",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -300,7 +325,9 @@ def test_repeated_handoff_is_idempotent() -> None:
 def test_checkpoint_commit_preserved() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="deadbee",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -325,7 +352,9 @@ def test_checkpoint_commit_preserved() -> None:
 def test_allowed_files_never_widened() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="abc1234",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -353,7 +382,9 @@ def test_allowed_files_never_widened() -> None:
 def test_handoff_without_safe_checkpoint_is_blocked() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="abc1234",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -392,7 +423,9 @@ def test_handoff_without_safe_checkpoint_is_blocked() -> None:
 def test_checkpoint_syntactically_valid_but_nonexistent_is_blocked() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="deadbee",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -441,8 +474,12 @@ def test_checkpoint_syntactically_valid_but_nonexistent_is_blocked() -> None:
 def test_two_different_tasks_racing_for_same_worker_only_one_wins() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior_a = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="task-a")
-        anterior_b = _worker("claude-2", "Claude 2", "human_session", "LIMIT", current_task="task-b")
+        anterior_a = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="task-a", last_checkpoint="aaaaaaa",
+        )
+        anterior_b = _worker(
+            "claude-2", "Claude 2", "human_session", "LIMIT", current_task="task-b", last_checkpoint="bbbbbbb",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers_snapshot_antigo = [anterior_a, anterior_b, novo]
         registry = _registry(workers_snapshot_antigo)
@@ -487,8 +524,12 @@ def test_two_different_tasks_racing_for_same_worker_only_one_wins() -> None:
 def test_two_different_tasks_racing_for_same_worker_concurrently_only_one_wins() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior_a = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="task-a")
-        anterior_b = _worker("claude-2", "Claude 2", "human_session", "LIMIT", current_task="task-b")
+        anterior_a = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="task-a", last_checkpoint="aaaaaaa",
+        )
+        anterior_b = _worker(
+            "claude-2", "Claude 2", "human_session", "LIMIT", current_task="task-b", last_checkpoint="bbbbbbb",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers_snapshot_antigo = [anterior_a, anterior_b, novo]
         registry = _registry(workers_snapshot_antigo)
@@ -541,7 +582,9 @@ def test_two_different_tasks_racing_for_same_worker_concurrently_only_one_wins()
 def test_new_checkpoint_and_new_owner_allows_a_new_handoff_of_the_same_task() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        claude1 = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        claude1 = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="aaaaaaa",
+        )
         claude2 = _worker("claude-2", "Claude 2", "human_session", "AVAILABLE", capabilities=("codigo",))
         # claude-3 já precisa existir no registro operacional desde o início
         # (todo worker real já está cadastrado via default_seed_workers()/
@@ -561,9 +604,12 @@ def test_new_checkpoint_and_new_owner_allows_a_new_handoff_of_the_same_task() ->
         assert primeiro.new_worker_id == "claude-2"
 
         # Claude 2 (agora dono, reserva registrada pelo handoff acima)
-        # chega no próprio limite depois — heartbeat externo simulado.
-        claude2_no_limite = replace(registry.find_by_name_or_id("claude-2"), status="LIMIT")
-        registry.upsert(claude2_no_limite, message="heartbeat simulado: claude-2 -> LIMIT")
+        # continua trabalhando, publica um checkpoint novo via heartbeat
+        # e só depois chega no próprio limite — heartbeat externo simulado.
+        claude2_no_limite = replace(
+            registry.find_by_name_or_id("claude-2"), status="LIMIT", last_checkpoint="bbbbbbb",
+        )
+        registry.upsert(claude2_no_limite, message="heartbeat simulado: claude-2 -> LIMIT, checkpoint bbbbbbb")
         tarefa_mesma_id_novo_dono = _tarefa(agente="Claude 2")  # mesma tarefa (id="t1"), dono agora é Claude 2
 
         segundo = executar_handoff(
@@ -589,7 +635,9 @@ def test_new_checkpoint_and_new_owner_allows_a_new_handoff_of_the_same_task() ->
 def test_continuation_runner_task_id_never_collides_with_previous_runner_dispatch_claim() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="aaaaaaa",
+        )
         runner1 = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         # runner-2 já precisa existir no registro operacional desde o início
         # (mesma razão do teste anterior) — só entra no snapshot de decisão
@@ -615,10 +663,13 @@ def test_continuation_runner_task_id_never_collides_with_previous_runner_dispatc
         claim_store_runner = RunnerClaimStore(GitJsonStore(remoto, branch=DEFAULT_RUNNER_STATE_BRANCH))
         assert claim_store_runner.claim(primeira_runner_task.task_id) is True
 
-        # Runner 1 chega no limite outra vez -> handoff seguinte para
-        # Runner 2, checkpoint NOVO.
-        runner1_no_limite = replace(registry.find_by_name_or_id("runner-1"), status="LIMIT")
-        registry.upsert(runner1_no_limite, message="heartbeat simulado: runner-1 -> LIMIT")
+        # Runner 1 continua trabalhando, publica um checkpoint novo via
+        # heartbeat e só depois chega no limite outra vez -> handoff
+        # seguinte para Runner 2, checkpoint NOVO.
+        runner1_no_limite = replace(
+            registry.find_by_name_or_id("runner-1"), status="LIMIT", last_checkpoint="bbbbbbb",
+        )
+        registry.upsert(runner1_no_limite, message="heartbeat simulado: runner-1 -> LIMIT, checkpoint bbbbbbb")
         tarefa_novo_dono = _tarefa(agente="Runner 1")
 
         segundo = executar_handoff(
@@ -638,13 +689,112 @@ def test_continuation_runner_task_id_never_collides_with_previous_runner_dispatc
 
 
 # ---------------------------------------------------------------------------
+# H4. Heartbeat FRESCO com checkpoint mais novo, chegando entre o
+# snapshot da decisão e o CAS, bloqueia a transição stale e preserva o
+# checkpoint novo (achado H4 da 2ª auditoria independente do PR #115).
+# ---------------------------------------------------------------------------
+
+def test_stale_snapshot_checkpoint_blocked_by_fresh_heartbeat() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        anterior_snapshot_a = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT",
+            current_task="t1", last_checkpoint="aaaaaaa",
+        )
+        novo = _worker("claude-2", "Claude 2", "human_session", "AVAILABLE", capabilities=("codigo",))
+        registry = _registry([anterior_snapshot_a, novo])
+        tarefa = _tarefa()
+
+        # Heartbeat FRESCO chega DEPOIS do snapshot que gerou a decisão
+        # mas ANTES do CAS — publica um checkpoint mais novo (B) para o
+        # MESMO worker/tarefa (current_task não mudou).
+        heartbeat_fresco = replace(anterior_snapshot_a, last_checkpoint="bbbbbbb")
+        registry.upsert(heartbeat_fresco, message="heartbeat fresco: bbbbbbb")
+
+        resultado = executar_handoff(
+            tarefa, worker_anterior=anterior_snapshot_a, workers=[anterior_snapshot_a, novo], registry=registry,
+            claim_store=_claim_store(remoto), source=_source(), checkpoint_commit="aaaaaaa",
+            verificar_checkpoint=_ACEITA_TUDO,
+        )
+
+        assert resultado.action == "BLOCKED", resultado.reason
+        final_anterior = registry.find_by_name_or_id("claude-1")
+        # o bbbbbbb mais novo continua intacto — NUNCA sobrescrito
+        # por uma transição stale baseada em aaaaaaa.
+        assert final_anterior.last_checkpoint == "bbbbbbb"
+        assert final_anterior.current_task == "t1", "nunca liberado por uma transição que não venceu o CAS"
+        final_novo = registry.find_by_name_or_id("claude-2")
+        assert final_novo.current_task is None
+    print("OK  test_stale_snapshot_checkpoint_blocked_by_fresh_heartbeat")
+
+
+# ---------------------------------------------------------------------------
+# H5. Receptor perde a corrida do CAS (ficou ocupado nesse meio-tempo) ->
+# a mesma tarefa/checkpoint ainda pode ser tentada com outro receptor
+# disponível, sem colidir com o claim antigo (achado H5 da 2ª auditoria
+# independente do PR #115).
+# ---------------------------------------------------------------------------
+
+def test_losing_receiver_can_be_retried_with_a_different_worker() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT",
+            current_task="t1", last_checkpoint="aaaaaaa",
+        )
+        runner1 = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
+        runner2 = _worker("runner-2", "Runner 2", "api_runner", "AVAILABLE", capabilities=("codigo",))
+        registry = _registry([anterior, runner1, runner2])
+        tarefa = _tarefa()
+
+        # runner-1 é ocupado por OUTRA tarefa entre a decisão (snapshot,
+        # onde ele ainda aparece AVAILABLE) e a escrita — força o CAS do
+        # primeiro handoff a perder.
+        runner1_ocupado = replace(runner1, status="BUSY", current_task="outra-tarefa")
+        registry.upsert(runner1_ocupado, message="runner-1 ocupado por outra tarefa")
+
+        primeira_tentativa = executar_handoff(
+            tarefa, worker_anterior=anterior, workers=[anterior, runner1], registry=registry,
+            claim_store=_claim_store(remoto), source=_source(), checkpoint_commit="aaaaaaa",
+            verificar_checkpoint=_ACEITA_TUDO,
+        )
+        assert primeira_tentativa.action == "BLOCKED", primeira_tentativa.reason
+        assert registry.find_by_name_or_id("claude-1").current_task == "t1", "claude-1 continua dono, nada mudou"
+
+        # nova avaliação (o scheduler reprocessaria a fila) escolhe
+        # runner-2, ainda disponível — a MESMA tarefa/checkpoint precisa
+        # poder ser transferida a ele, nunca bloqueada pelo claim antigo
+        # de runner-1 (H5 — chave de transição agora inclui o receptor).
+        segunda_tentativa = executar_handoff(
+            tarefa, worker_anterior=anterior, workers=[anterior, runner2], registry=registry,
+            claim_store=_claim_store(remoto), source=_source(), checkpoint_commit="aaaaaaa",
+            verificar_checkpoint=_ACEITA_TUDO,
+        )
+        assert segunda_tentativa.action == "HANDOFF_EXECUTED", segunda_tentativa.reason
+        assert segunda_tentativa.new_worker_id == "runner-2"
+
+        # repetir EXATAMENTE tarefa/checkpoint/receptor (runner-2) continua
+        # idempotente — mesma garantia de H3, agora também por receptor.
+        terceira_tentativa = executar_handoff(
+            tarefa, worker_anterior=anterior, workers=[anterior, runner2], registry=registry,
+            claim_store=_claim_store(remoto), source=_source(), checkpoint_commit="aaaaaaa",
+            verificar_checkpoint=_ACEITA_TUDO,
+        )
+        assert terceira_tentativa.action == "BLOCKED"
+        assert "já foi reivindicada" in terceira_tentativa.reason
+    print("OK  test_losing_receiver_can_be_retried_with_a_different_worker")
+
+
+# ---------------------------------------------------------------------------
 # 10. Worker anterior não permanece simultaneamente como executor ativo.
 # ---------------------------------------------------------------------------
 
 def test_previous_worker_released_not_left_active() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="abc1234",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -674,7 +824,9 @@ def test_previous_worker_released_not_left_active() -> None:
 def test_human_session_never_started_automatically() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="abc1234",
+        )
         novo = _worker("claude-2", "Claude 2", "human_session", "AVAILABLE", capabilities=("codigo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -725,7 +877,9 @@ def test_derived_runner_task_still_respects_runner_dispatch_gates() -> None:
 
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
-        anterior = _worker("claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1")
+        anterior = _worker(
+            "claude-1", "Claude 1", "human_session", "LIMIT", current_task="t1", last_checkpoint="abc1234",
+        )
         novo = _worker("runner-1", "Runner 1", "api_runner", "AVAILABLE", capabilities=("codigo",))
         workers = [anterior, novo]
         registry = _registry(workers)
@@ -809,6 +963,8 @@ def main() -> int:
         test_two_different_tasks_racing_for_same_worker_concurrently_only_one_wins,
         test_new_checkpoint_and_new_owner_allows_a_new_handoff_of_the_same_task,
         test_continuation_runner_task_id_never_collides_with_previous_runner_dispatch_claim,
+        test_stale_snapshot_checkpoint_blocked_by_fresh_heartbeat,
+        test_losing_receiver_can_be_retried_with_a_different_worker,
         test_previous_worker_released_not_left_active,
         test_human_session_never_started_automatically,
         test_derived_runner_task_still_respects_runner_dispatch_gates,
