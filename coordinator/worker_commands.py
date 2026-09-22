@@ -104,7 +104,11 @@ from dataclasses import dataclass, replace
 from typing import Callable
 
 from .canary_bootstrap import CANARY_WORKER_IDS, e_worker_de_canario
-from .runner_dispatch import RunnerDispatchConfig, StructuredPatch
+from .runner_dispatch import (
+    CANARY_VALIDATION_COMMAND_KEYS,
+    RunnerDispatchConfig,
+    StructuredPatch,
+)
 from .runner_resume import (
     InterruptedTaskSnapshot,
     RetornoWorkerOutcome,
@@ -113,6 +117,7 @@ from .runner_resume import (
     snapshot_de_interrupcao,
 )
 from .scheduler import load_tasks_from_tasks_json
+from .task_ownership import OperationalWorkerSnapshot, visao_operacional_da_tarefa
 from .worker_ops import OperationalWorkerRegistry, WorkerRecord
 
 # Achado G5 (Issue #105 Fase G): os DOIS workers de canário entram no
@@ -180,6 +185,12 @@ def reagir_a_retorno_de_worker(
     canonical_task_id_anterior: str | None,
     checkpoint_anterior: str | None = None,
     branch_anterior: str | None = None,
+    # Achado G8-A: o estado que o worker tinha IMEDIATAMENTE ANTES da
+    # transição para AVAILABLE, lido do WorkerRecord REAL por quem chama
+    # (``aplicar_comando``) — nunca do texto do comentário. É o que
+    # permite reconhecer o dono operacional depois que
+    # ``marcar_available_condicional`` já limpou ``current_task``.
+    status_anterior: str | None = None,
     tasks_json_path: str,
     repo_dir: str | None = None,
     remote_name: str = "origin",
@@ -190,6 +201,9 @@ def reagir_a_retorno_de_worker(
     patch: StructuredPatch | None = None,
     gerar_patch: Callable[[], object] | None = None,
     transport: object | None = None,
+    # Achado G8-B: a retomada automática roda a MESMA allowlist de
+    # validação da execução inicial do canário.
+    validation_command_keys: tuple[str, ...] = CANARY_VALIDATION_COMMAND_KEYS,
 ) -> RetornoWorkerOutcome:
     """Achado F6: a reação de verdade a "este worker está AVAILABLE
     agora" — EVENT-DRIVEN (chamada síncrona, zero polling), reusando
@@ -247,11 +261,36 @@ def reagir_a_retorno_de_worker(
                 worker_anterior=worker_para_snapshot, motivo_interrupcao=motivo_interrupcao,
             )
 
+    # Achado G8-A (auditoria do PR #118): a decisão "esta tarefa ainda é
+    # deste worker?" passa a usar o ownership OPERACIONAL, não o `agente`
+    # declarativo de coordination/tasks.json — que continua read-only e,
+    # depois de um handoff A -> B, ficaria uma transferência atrás. Nesta
+    # altura o registro vivo já NÃO aponta dono (a transição atômica para
+    # AVAILABLE acabou de limpar `current_task`), então entra o snapshot
+    # do estado imediatamente anterior, montado por `aplicar_comando` a
+    # partir do WorkerRecord REAL. Se outro worker ocupar a tarefa agora,
+    # ele vence o snapshot e `worker_retomando_deve_assumir` recusa a
+    # retomada — nenhum trabalho paralelo. Nada é escrito em tasks.json.
+    snapshot_operacional = None
+    if canonical_task_id_anterior and status_anterior:
+        snapshot_operacional = OperationalWorkerSnapshot(
+            worker_id=worker_novo.worker_id, status=status_anterior,
+            current_task=canonical_task_id_anterior,
+            last_checkpoint=checkpoint_anterior, branch=branch_anterior,
+        )
+
+    tarefa_para_decisao = tarefa_original
+    if tarefa_original is not None:
+        tarefa_para_decisao = visao_operacional_da_tarefa(
+            tarefa_original, workers=workers, snapshot=snapshot_operacional,
+        ).tarefa
+
     return processar_retorno_de_worker(
-        worker_que_volta=worker_novo.worker_id, tarefa_original=tarefa_original, tarefas=tarefas,
+        worker_que_volta=worker_novo.worker_id, tarefa_original=tarefa_para_decisao, tarefas=tarefas,
         workers=workers, snapshot_da_tarefa_original=snapshot,
         repo_dir=repo_dir, remote_name=remote_name, config=config, state_git_remote=state_git_remote,
         worker_registry=registry, patch=patch, gerar_patch=gerar_patch, transport=transport,
+        validation_command_keys=validation_command_keys,
     )
 
 
@@ -316,6 +355,9 @@ def aplicar_comando(
     patch: StructuredPatch | None = None,
     gerar_patch: Callable[[], object] | None = None,
     transport: object | None = None,
+    # Achado G8-B: a retomada automática disparada por este comando roda
+    # a MESMA allowlist de validação da execução inicial do canário.
+    validation_command_keys: tuple[str, ...] = CANARY_VALIDATION_COMMAND_KEYS,
 ) -> str:
     """Aplica o comando no registro operacional e devolve uma frase curta
     de confirmação (o que vira o corpo do comentário de resposta na #88).
@@ -378,10 +420,18 @@ def aplicar_comando(
             canonical_task_id_anterior = None
             checkpoint_anterior = None
             branch_anterior = None
+            status_anterior = None
         else:
             canonical_task_id_anterior = atual.current_task
             checkpoint_anterior = atual.last_checkpoint
             branch_anterior = atual.branch
+            # Achado G8-A: o status operacional IMEDIATAMENTE anterior,
+            # lido do WorkerRecord real na mesma leitura fresca que o
+            # compare-and-set abaixo confirma. É a prova de que este
+            # worker era o dono (LIMIT + current_task canônico), sem que
+            # ninguém precise editar coordination/tasks.json no meio do
+            # fluxo. Nunca vem do texto do comentário.
+            status_anterior = atual.status
             # Achado F7-D (6ª rodada): CAS, nunca mais "read antigo +
             # upsert incondicional" (F6-C). Só transiciona para
             # AVAILABLE+current_task=None quando uma leitura FRESCA
@@ -409,10 +459,12 @@ def aplicar_comando(
         retorno = reagir_a_retorno_de_worker(
             registry, novo, canonical_task_id_anterior=canonical_task_id_anterior,
             checkpoint_anterior=checkpoint_anterior, branch_anterior=branch_anterior,
+            status_anterior=status_anterior,
             tasks_json_path=tasks_json_path, repo_dir=repo_dir, remote_name=remote_name,
             config=config, state_git_remote=state_git_remote,
             snapshot_da_tarefa_original=snapshot_da_tarefa_original, patch=patch, gerar_patch=gerar_patch,
             transport=transport,
+            validation_command_keys=validation_command_keys,
         )
         # Achado F7-C (6ª rodada): só deixa DEFINITIVAMENTE
         # AVAILABLE+current_task=None quando a tarefa anterior de fato não

@@ -450,6 +450,22 @@ ALLOWED_VALIDATION_COMMANDS: dict[str, tuple[str, ...]] = {
     "coordinator-suite": (sys.executable, "-m", "coordinator.tests.run_all"),
 }
 
+# Achado G8-B (auditoria independente do PR #118): a execução INICIAL do
+# canário roda a suíte porque o workflow passa
+# `--validation-command-keys coordinator-suite`. Os dois caminhos
+# AUTOMÁTICOS (continuação de handoff e retomada da Fase F) não têm
+# workflow nenhum passando isso — e, com o default vazio, o Stage 2 e o
+# Stage 3 poderiam aplicar/commitar/pushar SEM rodar a suíte. Isso
+# quebraria a equivalência de segurança entre as três execuções.
+#
+# Esta constante é a allowlist de validação do canário, literal e fixa em
+# código: os caminhos confiáveis (``checkpoint_handoff`` e
+# ``worker_commands``/``runner_resume``) a propagam explicitamente. Ela é
+# uma tupla de CHAVES da allowlist acima, nunca um comando de shell —
+# comentário, input livre e texto de modelo continuam sem qualquer via
+# para escolher o que roda.
+CANARY_VALIDATION_COMMAND_KEYS: tuple[str, ...] = ("coordinator-suite",)
+
 
 class RunnerCommandNaoPermitido(ValueError):
     pass

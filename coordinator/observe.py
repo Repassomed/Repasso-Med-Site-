@@ -76,7 +76,7 @@ from .openai_routing import TIER_ZERO as OPENAI_TIER_ZERO, decide as openai_rout
 from .openai_transport import OpenAIResponsesTransport
 from .redact import redact
 from .routing import RoutingDecision, decide as route_decide
-from .runner_dispatch import RunnerDispatchConfig
+from .runner_dispatch import CANARY_VALIDATION_COMMAND_KEYS, RunnerDispatchConfig
 from .worker_commands import aplicar_comando, parse_worker_command
 from .worker_ops import OperationalWorkerRegistry
 from .worker_registry import Worker, WorkerSuggestion, pick_worker
@@ -348,6 +348,10 @@ def _tratar_inbox_comment(event: Event, classificacao: Classification,
             # chamada paga do RUNNER, contabilizada no ledger Anthropic
             # GLOBAL — nunca no custo deste evento do Coordinator.
             transport=transport,
+            # Achado G8-B: a retomada da Fase F roda a MESMA allowlist de
+            # validação da execução inicial. Constante literal do código
+            # confiável — nunca uma chave vinda do comentário.
+            validation_command_keys=CANARY_VALIDATION_COMMAND_KEYS,
         )
         texto = "\n".join(["<!-- repasso-coordinator -->", f"🛠️ {confirmacao}"])
         return _ResultadoZeroCusto(
@@ -439,6 +443,12 @@ def _tratar_checkpoint_blocked_limit(event: Event, classificacao: Classification
             # Runner Dispatch, contra o ledger Anthropic GLOBAL (mesmo teto
             # mensal do Coordinator) — nunca um segundo orçamento.
             transport=transport,
+            # Achado G8-B: a continuação automática roda a MESMA
+            # allowlist de validação que o workflow passa na execução
+            # inicial (`--validation-command-keys coordinator-suite`).
+            # Constante literal do código confiável — nunca uma chave
+            # vinda do comentário/payload do evento.
+            validation_command_keys=CANARY_VALIDATION_COMMAND_KEYS,
         )
 
     if agente and (integracao is None or integracao.action == "SKIPPED"):

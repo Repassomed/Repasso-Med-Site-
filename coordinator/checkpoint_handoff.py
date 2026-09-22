@@ -80,6 +80,7 @@ from .heartbeat import HeartbeatApplyResult, aplicar_heartbeat
 from .git_state import GitJsonStore
 from .runner_contract import RunnerHeartbeat, RunnerTask
 from .runner_dispatch import (
+    CANARY_VALIDATION_COMMAND_KEYS,
     DEFAULT_RUNNER_USAGE_STATE_BRANCH,
     DispatchOutcome,
     RunnerDispatchConfig,
@@ -89,6 +90,7 @@ from .runner_dispatch import (
 )
 from .runner_resume import verificar_checkpoint_no_repo
 from .scheduler import TaskRecord, load_tasks_from_tasks_json
+from .task_ownership import visao_operacional_da_tarefa
 from .worker_ops import OperationalWorkerRegistry
 
 # Diretório (relativo ao checkout confiável) das RunnerTask materializadas
@@ -201,7 +203,11 @@ def despachar_continuacao_de_handoff(
     state_git_remote: str,
     worker_registry: OperationalWorkerRegistry,
     canonical_task_id: str,
-    validation_command_keys: tuple[str, ...] = (),
+    # Achado G8-B: default NÃO vazio. A continuação automática roda a
+    # MESMA allowlist de validação da execução inicial do canário. Só
+    # chaves da allowlist fechada de ``runner_dispatch``, nunca comando
+    # livre; quem chama pode estreitar, e é isso que os testes fazem.
+    validation_command_keys: tuple[str, ...] = CANARY_VALIDATION_COMMAND_KEYS,
     patch: StructuredPatch | None = None,
     gerar_patch: Callable[[], object] | None = None,
     transport: object | None = None,
@@ -288,7 +294,8 @@ def processar_checkpoint_de_limite(
     remote_name: str = "origin",
     progresso_percent: int | None = None,
     progresso: str | None = None,
-    validation_command_keys: tuple[str, ...] = (),
+    # Achado G8-B: ver ``despachar_continuacao_de_handoff``.
+    validation_command_keys: tuple[str, ...] = CANARY_VALIDATION_COMMAND_KEYS,
     patch: StructuredPatch | None = None,
     gerar_patch: Callable[[], object] | None = None,
     transport: object | None = None,
@@ -411,11 +418,23 @@ def processar_checkpoint_de_limite(
             "BLOCKED", f"worker {worker_id!r} sumiu do registro depois do heartbeat.", heartbeat=resultado_hb,
         )
 
+    # Achado G8-A (auditoria do PR #118): o dono da tarefa para a DECISÃO
+    # de handoff vem do Worker Registry (ownership vivo, protegido por
+    # CAS e por heartbeat validado), nunca do `agente` declarativo de
+    # coordination/tasks.json — que é read-only durante a execução e, num
+    # multi-handoff, ficaria uma transferência atrás. A visão preserva
+    # id/área/arquivos/dependências/prioridade do declarativo e só troca
+    # `agente`/`estado`; se a tarefa já saiu da janela executável, ou se
+    # dois workers a ocupam, ela devolve o declarativo intacto
+    # (fail-closed). Nada é escrito em tasks.json aqui nem em lugar
+    # nenhum.
+    visao = visao_operacional_da_tarefa(tarefa, workers=workers)
+
     claim_store = HandoffClaimStore(
         GitJsonStore(state_git_remote, branch=DEFAULT_HANDOFF_STATE_BRANCH)
     )
     resultado_handoff = executar_handoff(
-        tarefa,
+        visao.tarefa,
         worker_anterior=worker_anterior,
         workers=workers,
         registry=registry,
@@ -433,7 +452,10 @@ def processar_checkpoint_de_limite(
     if resultado_handoff.action != "HANDOFF_EXECUTED":
         return CheckpointIntegrationOutcome(
             "HEARTBEAT_APPLIED",
-            f"heartbeat LIMIT aplicado; handoff decidiu {resultado_handoff.action}: {resultado_handoff.reason}",
+            (
+                f"heartbeat LIMIT aplicado; handoff decidiu {resultado_handoff.action}: "
+                f"{resultado_handoff.reason} (ownership: {visao.reason})"
+            ),
             heartbeat=resultado_hb, handoff=resultado_handoff,
         )
 

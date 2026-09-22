@@ -307,6 +307,12 @@ def test_integrado_ponta_a_ponta_f6a_b_c_d() -> None:
             patch=_patch_greeting(),
             # snapshot_da_tarefa_original DELIBERADAMENTE omitido — F6-B
             # precisa recuperar sozinho a partir do handoff real publicado.
+            # Achado G8-B: teste de Fase F, não do canário — a allowlist
+            # de validação é estreitada para vazio EXPLICITAMENTE (a
+            # suíte real não roda dentro deste checkout falso). O default
+            # seguro (coordinator-suite) é coberto pelos testes de
+            # canário em test_canary_integration.py.
+            validation_command_keys=(),
         )
 
         # reprocessar_retorno decidiu retomar a PRÓPRIA tarefa.
@@ -674,6 +680,12 @@ def test_f7b_geracao_real_de_patch_sem_injecao_manual() -> None:
         confirmacao = aplicar_comando(
             registry, comando, tasks_json_path=tasks_path, repo_dir=workdir, config=config,
             state_git_remote=remoto, transport=transporte,
+            # Achado G8-B: este teste não é do canário — ele isola a
+            # retomada em si, num checkout falso onde a suíte real não
+            # roda. Estreita a allowlist para vazio EXPLICITAMENTE; o
+            # default seguro (coordinator-suite) fica coberto pelos
+            # testes de canário em test_canary_integration.py.
+            validation_command_keys=(),
             # patch/gerar_patch DELIBERADAMENTE omitidos — F7-B: o teste
             # ponta a ponta REAL não pode depender de _patch_greeting()
             # injetado manualmente; despachar_retomada precisa construir

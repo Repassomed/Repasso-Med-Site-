@@ -34,6 +34,8 @@ via ``python3 -m coordinator.tests.test_canary_integration``.
 
 from __future__ import annotations
 
+import contextlib
+import hashlib
 import json
 import os
 import shutil
@@ -61,10 +63,13 @@ from coordinator.config import ACTIVE_SUPERVISED_MODE, Config
 from coordinator.dedup import Deduplicator, InMemoryStore
 from coordinator.github_event import build_event_from_github_context
 from coordinator.handoff_exec import HandoffExecutionResult, derivar_task_id_de_continuacao
+from coordinator.handoff import worker_retomando_deve_assumir
 from coordinator.heartbeat import aplicar_heartbeat
 from coordinator.observe import observe
 from coordinator.runner_contract import RunnerHeartbeat, RunnerTask
 from coordinator.runner_dispatch import (
+    ALLOWED_VALIDATION_COMMANDS,
+    CANARY_VALIDATION_COMMAND_KEYS,
     FileWrite,
     RunnerDispatchConfig,
     StructuredPatch,
@@ -72,7 +77,17 @@ from coordinator.runner_dispatch import (
     executar_tarefa,
 )
 from coordinator.runner_generate import gerar_patch_via_claude
-from coordinator.worker_commands import WorkerCommand, aplicar_comando, parse_worker_command
+from coordinator.scheduler import TaskRecord
+from coordinator.task_ownership import (
+    OperationalWorkerSnapshot,
+    visao_operacional_da_tarefa,
+)
+from coordinator.worker_commands import (
+    WorkerCommand,
+    aplicar_comando,
+    parse_worker_command,
+    reagir_a_retorno_de_worker,
+)
 from coordinator.worker_ops import (
     InMemoryWorkerStateStore,
     OperationalWorkerRegistry,
@@ -129,8 +144,18 @@ def _clonar(tmp: str, remoto: str, nome: str) -> str:
     return workdir
 
 
-def _tasks_json(tmp: str, *, estado: str, agente: str | None, nome: str = "tasks.json") -> str:
-    caminho = os.path.join(tmp, nome)
+def _tasks_json(tmp: str, *, estado: str = "IN-PROGRESS", agente: str | None = CANARY_WORKER_A) -> str:
+    """O ÚNICO ``coordination/tasks.json`` do canário inteiro (achado
+    G8-A da auditoria do PR #118).
+
+    Os defaults são a PREPARAÇÃO ADMINISTRATIVA que José faz ANTES de
+    ligar o canário — declarar a tarefa em execução e quem a começa. A
+    partir daí este arquivo é read-only: as Etapas A, B e C usam ESTE
+    caminho, byte a byte, sem nenhuma edição, merge ou segundo arquivo no
+    meio do fluxo. Depois do handoff A -> B o ownership vivo passa a vir
+    do Worker Registry (``task_ownership.visao_operacional_da_tarefa``),
+    nunca daqui."""
+    caminho = os.path.join(tmp, "tasks.json")
     with open(caminho, "w", encoding="utf-8") as fh:
         json.dump({"tarefas": [{
             "id": CANARY_TASK_ID,
@@ -143,6 +168,53 @@ def _tasks_json(tmp: str, *, estado: str, agente: str | None, nome: str = "tasks
             "capabilities_required": ["codigo"],
         }]}, fh)
     return caminho
+
+
+def _impressao_digital(caminho: str) -> str:
+    """SHA-256 do arquivo inteiro — a prova byte a byte de que
+    ``coordination/tasks.json`` não foi tocado durante o canário."""
+    with open(caminho, "rb") as fh:
+        return hashlib.sha256(fh.read()).hexdigest()
+
+
+# Comandos de teste por trás da chave REAL ``coordinator-suite``. A chave
+# nunca muda — é ela que os caminhos confiáveis propagam e é ela que os
+# testes verificam em ``validation_commands_run``. O que muda é só o
+# comando por trás dela, porque a suíte de verdade não roda dentro de um
+# checkout falso de dois arquivos. Nenhum shell livre: continua sendo uma
+# entrada de allowlist, com argv fixo em código.
+_VALIDACAO_OK: dict[str, tuple[str, ...]] = {
+    "coordinator-suite": (sys.executable, "-c", "pass"),
+}
+_VALIDACAO_FALHA: dict[str, tuple[str, ...]] = {
+    "coordinator-suite": (sys.executable, "-c", "raise SystemExit(1)"),
+}
+
+
+# Retrato da allowlist REAL, tirado no import, ANTES de qualquer troca —
+# é contra ele que os testes verificam o que ``coordinator-suite`` de fato
+# roda em produção.
+_ALLOWLIST_REAL: dict[str, tuple[str, ...]] = dict(ALLOWED_VALIDATION_COMMANDS)
+
+
+@contextlib.contextmanager
+def _allowlist(tabela: dict[str, tuple[str, ...]]):
+    """Troca o conteúdo de ``ALLOWED_VALIDATION_COMMANDS`` só enquanto o
+    bloco roda, e sempre restaura (try/finally).
+
+    Existe porque os caminhos automáticos NÃO têm — de propósito — nenhum
+    parâmetro de injeção de allowlist: em produção eles usam a tabela do
+    módulo e ponto. Trocar a tabela aqui é o único jeito de exercitar o
+    caminho REAL de ponta a ponta sem rodar a suíte inteira dentro de
+    cada teste."""
+    original = dict(ALLOWED_VALIDATION_COMMANDS)
+    ALLOWED_VALIDATION_COMMANDS.clear()
+    ALLOWED_VALIDATION_COMMANDS.update(tabela)
+    try:
+        yield
+    finally:
+        ALLOWED_VALIDATION_COMMANDS.clear()
+        ALLOWED_VALIDATION_COMMANDS.update(original)
 
 
 class _TransporteContado:
@@ -188,6 +260,14 @@ def _etapa_a(tmp: str, remoto: str, registry: OperationalWorkerRegistry, config:
         tarefa, _patch("CANARY_STAGE=1\n"),
         config=config, repo_dir=workdir, state_git_remote=remoto,
         worker_id=CANARY_WORKER_A, worker_registry=registry,
+        # Achado G8-B: a execução inicial é exatamente o que o workflow
+        # faz (`--validation-command-keys coordinator-suite`). As Etapas
+        # B e C precisam rodar a MESMA chave — é o que os testes abaixo
+        # verificam em `validation_commands_run`.
+        validation_command_keys=CANARY_VALIDATION_COMMAND_KEYS,
+    )
+    assert [c["key"] for c in outcome.validation_commands_run] == ["coordinator-suite"], (
+        outcome.validation_commands_run
     )
     assert outcome.result is not None and outcome.result.status == "NEEDS-AUDIT", outcome.result
     assert outcome.result.checkpoint_commit
@@ -373,7 +453,9 @@ def _montar_etapa_b(tmp: str, *, conteudo_gerado: str = "CANARY_STAGE=2\n"):
     config = _config()
     preparar_workers_do_canario(registry, config=config, canonical_task_id=CANARY_TASK_ID)
     checkpoint = _etapa_a(tmp, remoto, registry, config)
-    tasks_path = _tasks_json(tmp, estado="IN-PROGRESS", agente=CANARY_WORKER_A)
+    # O ÚNICO tasks.json do canário — preparação administrativa feita
+    # ANTES da Etapa A e nunca mais tocada (achado G8-A).
+    tasks_path = _tasks_json(tmp)
     transporte = _TransporteContado(conteudo_gerado)
     return remoto, branch_padrao, sha_padrao, registry, config, checkpoint, tasks_path, transporte
 
@@ -487,10 +569,19 @@ def test_etapa_b_dois_processamentos_concorrentes_so_um_despacha() -> None:
 # ---------------------------------------------------------------------------
 
 def test_etapa_c_comando_da_inbox_retoma_pela_fase_f_e_chega_ao_stage_3() -> None:
+    """Etapas A -> B -> C com UM ÚNICO ``coordination/tasks.json``,
+    byte a byte (achado G8-A da auditoria do PR #118).
+
+    O arquivo é escrito UMA vez, como preparação administrativa ANTES do
+    canário (``IN-PROGRESS``, agente ``api-runner-canary-a``), e nunca
+    mais é tocado: depois do handoff A -> B, quem diz que a tarefa é do
+    B é o Worker Registry, não este arquivo. No fim, a impressão digital
+    SHA-256 precisa ser exatamente a mesma do começo."""
     with tempfile.TemporaryDirectory() as tmp:
         remoto, branch_padrao, sha_padrao, registry, config, checkpoint, tasks_path, transporte = (
             _montar_etapa_b(tmp)
         )
+        digital_inicial = _impressao_digital(tasks_path)
         workdir_b = _clonar(tmp, remoto, "workdir-b")
         etapa_b = processar_checkpoint_de_limite(
             registry=registry, agente=CANARY_WORKER_A, canonical_task_id=CANARY_TASK_ID,
@@ -520,13 +611,20 @@ def test_etapa_c_comando_da_inbox_retoma_pela_fase_f_e_chega_ao_stage_3() -> Non
         comando = parse_worker_command("API Runner Canary B disponível")
         assert comando == WorkerCommand(action="SET_AVAILABLE", worker_name="API Runner Canary B")
 
-        tasks_retomada = _tasks_json(
-            tmp, estado="BLOCKED-LIMIT", agente=CANARY_WORKER_B, nome="tasks-retomada.json"
-        )
+        # G8-A: NENHUM segundo arquivo, nenhuma edição. É o MESMO
+        # tasks_path das Etapas A e B, ainda dizendo IN-PROGRESS/agente A.
+        # A Fase F reconhece o B como dono porque o estado operacional
+        # dele imediatamente antes do SET_AVAILABLE (LIMIT + current_task
+        # canônico + checkpoint) prova isso — não porque alguém mudou a
+        # main no meio do fluxo.
+        declarativo = json.load(open(tasks_path, encoding="utf-8"))["tarefas"][0]
+        assert declarativo["estado"] == "IN-PROGRESS", declarativo
+        assert declarativo["agente"] == CANARY_WORKER_A, declarativo
+
         transporte_c = _TransporteContado("CANARY_STAGE=3\n")
         workdir_c = _clonar(tmp, remoto, "workdir-c")
         confirmacao = aplicar_comando(
-            registry, comando, tasks_json_path=tasks_retomada, repo_dir=workdir_c,
+            registry, comando, tasks_json_path=tasks_path, repo_dir=workdir_c,
             config=config, state_git_remote=remoto, transport=transporte_c,
         )
 
@@ -553,7 +651,304 @@ def test_etapa_c_comando_da_inbox_retoma_pela_fase_f_e_chega_ao_stage_3() -> Non
         assert _git(remoto, "rev-parse", branch_padrao) == sha_padrao, (
             "nenhuma etapa pode ter escrito na branch padrão"
         )
+        # G8-A, a prova central: o declarativo atravessou as três etapas
+        # sem uma única alteração.
+        assert _impressao_digital(tasks_path) == digital_inicial, (
+            "coordination/tasks.json precisa ficar byte a byte igual do início ao fim do canário"
+        )
     print("OK  test_etapa_c_comando_da_inbox_retoma_pela_fase_f_e_chega_ao_stage_3")
+
+
+# ---------------------------------------------------------------------------
+# G8-A — ownership OPERACIONAL: o dono vem do Worker Registry, nunca do
+# `agente` declarativo, e coordination/tasks.json nunca é escrito.
+# ---------------------------------------------------------------------------
+
+def _tarefa_declarativa(*, estado: str = "IN-PROGRESS", agente: str | None = CANARY_WORKER_A) -> TaskRecord:
+    return TaskRecord(
+        id=CANARY_TASK_ID, estado=estado, area="infraestrutura", agente=agente,
+        arquivos=(CANARY_ARQUIVO,), dependencias=(), capabilities_required=("codigo",),
+    )
+
+
+def _worker(worker_id: str, status: str, current_task: str | None) -> WorkerRecord:
+    return WorkerRecord(
+        worker_id=worker_id, display_name=worker_id, type="api_runner", status=status,
+        capabilities=("codigo",), current_task=current_task, can_execute=True,
+    )
+
+
+def test_g8a_dono_vem_do_registro_e_vence_o_agente_declarativo() -> None:
+    """Depois do handoff A -> B, o declarativo ainda diz A. O registro
+    diz B. Quem manda é o registro — e o declarativo sai intacto."""
+    declarativa = _tarefa_declarativa(agente=CANARY_WORKER_A, estado="IN-PROGRESS")
+    workers = [
+        _worker(CANARY_WORKER_A, "AVAILABLE", None),
+        _worker(CANARY_WORKER_B, "LIMIT", CANARY_TASK_ID),
+    ]
+    visao = visao_operacional_da_tarefa(declarativa, workers=workers)
+    assert visao.fonte == "registro", visao.reason
+    assert visao.dono_worker_id == CANARY_WORKER_B
+    assert visao.tarefa.agente == CANARY_WORKER_B
+    assert visao.tarefa.estado == "BLOCKED-LIMIT"
+    # Só agente/estado mudam — reserva, prioridade e dependências vêm
+    # INTEIRAS do declarativo.
+    assert visao.tarefa.id == declarativa.id
+    assert visao.tarefa.arquivos == declarativa.arquivos
+    assert visao.tarefa.dependencias == declarativa.dependencias
+    assert visao.tarefa.capabilities_required == declarativa.capabilities_required
+    # E o objeto declarativo original continua exatamente como estava.
+    assert declarativa.agente == CANARY_WORKER_A and declarativa.estado == "IN-PROGRESS"
+    print("OK  test_g8a_dono_vem_do_registro_e_vence_o_agente_declarativo")
+
+
+def test_g8a_estado_declarativo_terminal_nunca_e_reaberto() -> None:
+    """A proteção "não refaz o que já foi feito" continua inteira: um
+    worker com registro velho não reabre uma tarefa já auditada."""
+    for estado in ("NEEDS-AUDIT", "DONE", "MERGE-READY", "BLOCKED", "NEEDS-FIX"):
+        declarativa = _tarefa_declarativa(estado=estado, agente=None)
+        workers = [_worker(CANARY_WORKER_B, "LIMIT", CANARY_TASK_ID)]
+        visao = visao_operacional_da_tarefa(declarativa, workers=workers)
+        assert visao.fonte == "declarativo", (estado, visao.reason)
+        assert visao.dono_worker_id is None
+        assert visao.tarefa.estado == estado
+    print("OK  test_g8a_estado_declarativo_terminal_nunca_e_reaberto")
+
+
+def test_g8a_dois_donos_no_registro_e_ambiguidade_recusada() -> None:
+    declarativa = _tarefa_declarativa()
+    workers = [
+        _worker(CANARY_WORKER_A, "LIMIT", CANARY_TASK_ID),
+        _worker(CANARY_WORKER_B, "BUSY", CANARY_TASK_ID),
+    ]
+    visao = visao_operacional_da_tarefa(declarativa, workers=workers)
+    assert visao.fonte == "declarativo", visao.reason
+    assert visao.dono_worker_id is None
+    print("OK  test_g8a_dois_donos_no_registro_e_ambiguidade_recusada")
+
+
+def test_g8a_snapshot_so_vale_quando_bate_com_o_worker_real() -> None:
+    """O snapshot é o estado pré-SET_AVAILABLE lido do WorkerRecord real.
+    Um snapshot que aponta para outra tarefa, ou cujo status não era
+    posse ativa, não cria ownership nenhum."""
+    declarativa = _tarefa_declarativa()
+    # Caso bom: LIMIT + current_task canônico.
+    bom = OperationalWorkerSnapshot(
+        worker_id=CANARY_WORKER_B, status="LIMIT", current_task=CANARY_TASK_ID,
+        last_checkpoint="a" * 40, branch=f"runner/{CANARY_TASK_ID}",
+    )
+    visao = visao_operacional_da_tarefa(declarativa, workers=[], snapshot=bom)
+    assert visao.fonte == "snapshot" and visao.dono_worker_id == CANARY_WORKER_B
+    assert visao.tarefa.estado == "BLOCKED-LIMIT"
+
+    # Tarefa errada.
+    errado = replace(bom, current_task="outra-tarefa")
+    assert visao_operacional_da_tarefa(declarativa, workers=[], snapshot=errado).dono_worker_id is None
+    # Status que não é posse ativa (AVAILABLE/OFFLINE = reserva, não posse).
+    for status in ("AVAILABLE", "OFFLINE"):
+        parado = replace(bom, status=status)
+        assert visao_operacional_da_tarefa(declarativa, workers=[], snapshot=parado).dono_worker_id is None
+    print("OK  test_g8a_snapshot_so_vale_quando_bate_com_o_worker_real")
+
+
+def test_g8a_registro_vivo_vence_o_snapshot_e_impede_trabalho_paralelo() -> None:
+    """Se outro worker JÁ assumiu a tarefa, o snapshot de quem volta não
+    pode reabri-la — é exatamente a trava contra trabalho paralelo."""
+    declarativa = _tarefa_declarativa()
+    snapshot_de_b = OperationalWorkerSnapshot(
+        worker_id=CANARY_WORKER_B, status="LIMIT", current_task=CANARY_TASK_ID,
+    )
+    workers = [_worker(CANARY_WORKER_A, "BUSY", CANARY_TASK_ID)]
+    visao = visao_operacional_da_tarefa(declarativa, workers=workers, snapshot=snapshot_de_b)
+    assert visao.dono_worker_id == CANARY_WORKER_A, visao.reason
+    # E a decisão da Fase F, alimentada por essa visão, recusa o B.
+    deve, motivo = worker_retomando_deve_assumir(
+        tarefa_estado=visao.tarefa.estado, tarefa_agente_atual=visao.tarefa.agente,
+        worker_que_volta=CANARY_WORKER_B,
+    )
+    assert deve is False, motivo
+    print("OK  test_g8a_registro_vivo_vence_o_snapshot_e_impede_trabalho_paralelo")
+
+
+def test_g8a_fluxo_completo_sem_agente_declarado_no_tasks_json() -> None:
+    """A prova mais forte de G8-A: nem sequer a preparação administrativa
+    precisa nomear um agente. Com ``agente: null`` e ``estado: READY`` no
+    declarativo — e sem nenhuma edição no meio — o canário vai do Stage 1
+    ao Stage 3 sozinho, porque todo o ownership vem do Worker Registry."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto, branch_padrao, sha_padrao = _criar_remoto_local(tmp)
+        registry = _registry_vazio()
+        config = _config()
+        preparar_workers_do_canario(registry, config=config, canonical_task_id=CANARY_TASK_ID)
+        checkpoint = _etapa_a(tmp, remoto, registry, config)
+
+        tasks_path = _tasks_json(tmp, estado="READY", agente=None)
+        digital_inicial = _impressao_digital(tasks_path)
+
+        etapa_b = processar_checkpoint_de_limite(
+            registry=registry, agente=CANARY_WORKER_A, canonical_task_id=CANARY_TASK_ID,
+            branch=f"runner/{CANARY_TASK_ID}", commit=checkpoint, config=config,
+            repo_dir=_clonar(tmp, remoto, "wb"), tasks_json_path=tasks_path,
+            state_git_remote=remoto, transport=_TransporteContado("CANARY_STAGE=2\n"),
+        )
+        assert etapa_b.action == "DISPATCHED", etapa_b.reason
+        assert etapa_b.handoff.new_worker_id == CANARY_WORKER_B
+        checkpoint_2 = etapa_b.dispatch.result.checkpoint_commit
+
+        limite_b = processar_checkpoint_de_limite(
+            registry=registry, agente=CANARY_WORKER_B, canonical_task_id=CANARY_TASK_ID,
+            branch=f"runner/{CANARY_TASK_ID}", commit=checkpoint_2, config=config,
+            repo_dir=_clonar(tmp, remoto, "wb2"), tasks_json_path=tasks_path,
+            state_git_remote=remoto, transport=_TransporteContado("x\n"),
+        )
+        assert limite_b.action == "HEARTBEAT_APPLIED", limite_b.reason
+
+        transporte_c = _TransporteContado("CANARY_STAGE=3\n")
+        confirmacao = aplicar_comando(
+            registry, parse_worker_command("API Runner Canary B disponível"),
+            tasks_json_path=tasks_path, repo_dir=_clonar(tmp, remoto, "wc"),
+            config=config, state_git_remote=remoto, transport=transporte_c,
+        )
+        assert "NEEDS-AUDIT" in confirmacao, confirmacao
+        assert _git(remoto, "show", f"runner/{CANARY_TASK_ID}:{CANARY_ARQUIVO}") == "CANARY_STAGE=3"
+        assert _impressao_digital(tasks_path) == digital_inicial, "tasks.json nunca pode ser tocado"
+        assert _git(remoto, "rev-parse", branch_padrao) == sha_padrao
+    print("OK  test_g8a_fluxo_completo_sem_agente_declarado_no_tasks_json")
+
+
+# ---------------------------------------------------------------------------
+# G8-B — as continuações automáticas rodam a MESMA validação da execução
+# inicial (coordinator-suite), e uma validação vermelha não commita nada.
+# ---------------------------------------------------------------------------
+
+def test_g8b_chave_de_validacao_do_canario_e_a_real_da_allowlist() -> None:
+    assert CANARY_VALIDATION_COMMAND_KEYS == ("coordinator-suite",)
+    assert "coordinator-suite" in _ALLOWLIST_REAL
+    # Em produção, essa chave roda a suíte do Coordinator — nunca um
+    # comando vindo de comentário, Issue ou input livre.
+    comando = _ALLOWLIST_REAL["coordinator-suite"]
+    assert comando[1:] == ("-m", "coordinator.tests.run_all"), comando
+    print("OK  test_g8b_chave_de_validacao_do_canario_e_a_real_da_allowlist")
+
+
+def test_g8b_etapa_b_roda_coordinator_suite_com_sucesso() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto, _, _, registry, config, checkpoint, tasks_path, transporte = _montar_etapa_b(tmp)
+        outcome = processar_checkpoint_de_limite(
+            registry=registry, agente=CANARY_WORKER_A, canonical_task_id=CANARY_TASK_ID,
+            branch=f"runner/{CANARY_TASK_ID}", commit=checkpoint, config=config,
+            repo_dir=_clonar(tmp, remoto, "wb"), tasks_json_path=tasks_path,
+            state_git_remote=remoto, transport=transporte,
+        )
+        assert outcome.action == "DISPATCHED", outcome.reason
+        rodados = outcome.dispatch.validation_commands_run
+        assert [c["key"] for c in rodados] == ["coordinator-suite"], rodados
+        assert all(c["ok"] for c in rodados), rodados
+    print("OK  test_g8b_etapa_b_roda_coordinator_suite_com_sucesso")
+
+
+def test_g8b_etapa_c_roda_coordinator_suite_com_sucesso() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto, _, _, registry, config, checkpoint, tasks_path, transporte = _montar_etapa_b(tmp)
+        etapa_b = processar_checkpoint_de_limite(
+            registry=registry, agente=CANARY_WORKER_A, canonical_task_id=CANARY_TASK_ID,
+            branch=f"runner/{CANARY_TASK_ID}", commit=checkpoint, config=config,
+            repo_dir=_clonar(tmp, remoto, "wb"), tasks_json_path=tasks_path,
+            state_git_remote=remoto, transport=transporte,
+        )
+        checkpoint_2 = etapa_b.dispatch.result.checkpoint_commit
+        processar_checkpoint_de_limite(
+            registry=registry, agente=CANARY_WORKER_B, canonical_task_id=CANARY_TASK_ID,
+            branch=f"runner/{CANARY_TASK_ID}", commit=checkpoint_2, config=config,
+            repo_dir=_clonar(tmp, remoto, "wb2"), tasks_json_path=tasks_path,
+            state_git_remote=remoto, transport=_TransporteContado("x\n"),
+        )
+        # Mesma sequência que ``aplicar_comando`` faz num SET_AVAILABLE:
+        # captura o estado anterior do WorkerRecord REAL, transiciona de
+        # verdade (compare-and-set) e só então reage ao retorno. Aqui a
+        # chamada é direta porque o teste precisa do ``DispatchOutcome``,
+        # que a confirmação em texto de ``aplicar_comando`` não carrega.
+        antes_do_retorno = registry.find_by_name_or_id(CANARY_WORKER_B)
+        assert antes_do_retorno.status == "LIMIT"
+        assert registry.marcar_available_condicional(
+            antes_do_retorno.worker_id,
+            esperado_status=antes_do_retorno.status,
+            esperado_current_task=antes_do_retorno.current_task,
+            esperado_checkpoint=antes_do_retorno.last_checkpoint,
+            esperado_branch=antes_do_retorno.branch,
+            message="teste: B -> AVAILABLE",
+        )
+        retorno = reagir_a_retorno_de_worker(
+            registry, registry.find_by_name_or_id(CANARY_WORKER_B),
+            canonical_task_id_anterior=antes_do_retorno.current_task,
+            checkpoint_anterior=antes_do_retorno.last_checkpoint,
+            branch_anterior=antes_do_retorno.branch,
+            status_anterior=antes_do_retorno.status,
+            tasks_json_path=tasks_path, repo_dir=_clonar(tmp, remoto, "wc"), config=config,
+            state_git_remote=remoto, transport=_TransporteContado("CANARY_STAGE=3\n"),
+        )
+        assert retorno.retomada is not None, retorno.motivo
+        rodados = retorno.retomada.dispatch_outcome.validation_commands_run
+        assert [c["key"] for c in rodados] == ["coordinator-suite"], rodados
+        assert all(c["ok"] for c in rodados), rodados
+    print("OK  test_g8b_etapa_c_roda_coordinator_suite_com_sucesso")
+
+
+def test_g8b_validacao_vermelha_na_etapa_b_nao_commita_nada() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto, _, _, registry, config, checkpoint, tasks_path, transporte = _montar_etapa_b(tmp)
+        antes = _git(remoto, "rev-parse", f"runner/{CANARY_TASK_ID}")
+        with _allowlist(_VALIDACAO_FALHA):
+            outcome = processar_checkpoint_de_limite(
+                registry=registry, agente=CANARY_WORKER_A, canonical_task_id=CANARY_TASK_ID,
+                branch=f"runner/{CANARY_TASK_ID}", commit=checkpoint, config=config,
+                repo_dir=_clonar(tmp, remoto, "wb"), tasks_json_path=tasks_path,
+                state_git_remote=remoto, transport=transporte,
+            )
+        assert outcome.dispatch is not None
+        assert outcome.dispatch.result.status == "FAILED", outcome.dispatch.result
+        assert outcome.dispatch.result.checkpoint_commit is None
+        rodados = outcome.dispatch.validation_commands_run
+        assert [c["key"] for c in rodados] == ["coordinator-suite"], rodados
+        assert not any(c["ok"] for c in rodados), rodados
+        assert _git(remoto, "rev-parse", f"runner/{CANARY_TASK_ID}") == antes, (
+            "validação vermelha nunca pode commitar/pushar a alteração daquela execução"
+        )
+        assert _git(remoto, "show", f"runner/{CANARY_TASK_ID}:{CANARY_ARQUIVO}") == "CANARY_STAGE=1"
+    print("OK  test_g8b_validacao_vermelha_na_etapa_b_nao_commita_nada")
+
+
+def test_g8b_validacao_vermelha_na_etapa_c_nao_commita_nada() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto, _, _, registry, config, checkpoint, tasks_path, transporte = _montar_etapa_b(tmp)
+        etapa_b = processar_checkpoint_de_limite(
+            registry=registry, agente=CANARY_WORKER_A, canonical_task_id=CANARY_TASK_ID,
+            branch=f"runner/{CANARY_TASK_ID}", commit=checkpoint, config=config,
+            repo_dir=_clonar(tmp, remoto, "wb"), tasks_json_path=tasks_path,
+            state_git_remote=remoto, transport=transporte,
+        )
+        checkpoint_2 = etapa_b.dispatch.result.checkpoint_commit
+        processar_checkpoint_de_limite(
+            registry=registry, agente=CANARY_WORKER_B, canonical_task_id=CANARY_TASK_ID,
+            branch=f"runner/{CANARY_TASK_ID}", commit=checkpoint_2, config=config,
+            repo_dir=_clonar(tmp, remoto, "wb2"), tasks_json_path=tasks_path,
+            state_git_remote=remoto, transport=_TransporteContado("x\n"),
+        )
+        antes = _git(remoto, "rev-parse", f"runner/{CANARY_TASK_ID}")
+        assert antes == checkpoint_2
+        with _allowlist(_VALIDACAO_FALHA):
+            confirmacao = aplicar_comando(
+                registry, parse_worker_command("API Runner Canary B disponível"),
+                tasks_json_path=tasks_path, repo_dir=_clonar(tmp, remoto, "wc"),
+                config=config, state_git_remote=remoto,
+                transport=_TransporteContado("CANARY_STAGE=3\n"),
+            )
+        assert "FAILED" in confirmacao, confirmacao
+        assert _git(remoto, "rev-parse", f"runner/{CANARY_TASK_ID}") == antes, (
+            "validação vermelha nunca pode commitar/pushar a alteração daquela execução"
+        )
+        assert _git(remoto, "show", f"runner/{CANARY_TASK_ID}:{CANARY_ARQUIVO}") == "CANARY_STAGE=2"
+    print("OK  test_g8b_validacao_vermelha_na_etapa_c_nao_commita_nada")
 
 
 def test_pipeline_real_do_observe_executa_a_fase_e_no_checkpoint() -> None:
@@ -810,7 +1205,7 @@ def test_seguranca_despacho_so_acontece_para_handoff_executado_em_api_runner() -
 
 
 def test_seguranca_modulos_novos_sem_merge_deploy_ou_force_push() -> None:
-    for nome in ("checkpoint_handoff.py", "canary_bootstrap.py"):
+    for nome in ("checkpoint_handoff.py", "canary_bootstrap.py", "task_ownership.py"):
         caminho = os.path.join(_pathsetup._COORDINATOR_ROOT, nome)
         with open(caminho, encoding="utf-8") as fh:
             fonte = fh.read()
@@ -877,6 +1272,17 @@ def main() -> int:
         test_etapa_b_replay_do_mesmo_checkpoint_nao_duplica_execucao,
         test_etapa_b_dois_processamentos_concorrentes_so_um_despacha,
         test_etapa_c_comando_da_inbox_retoma_pela_fase_f_e_chega_ao_stage_3,
+        test_g8a_dono_vem_do_registro_e_vence_o_agente_declarativo,
+        test_g8a_estado_declarativo_terminal_nunca_e_reaberto,
+        test_g8a_dois_donos_no_registro_e_ambiguidade_recusada,
+        test_g8a_snapshot_so_vale_quando_bate_com_o_worker_real,
+        test_g8a_registro_vivo_vence_o_snapshot_e_impede_trabalho_paralelo,
+        test_g8a_fluxo_completo_sem_agente_declarado_no_tasks_json,
+        test_g8b_chave_de_validacao_do_canario_e_a_real_da_allowlist,
+        test_g8b_etapa_b_roda_coordinator_suite_com_sucesso,
+        test_g8b_etapa_c_roda_coordinator_suite_com_sucesso,
+        test_g8b_validacao_vermelha_na_etapa_b_nao_commita_nada,
+        test_g8b_validacao_vermelha_na_etapa_c_nao_commita_nada,
         test_pipeline_real_do_observe_executa_a_fase_e_no_checkpoint,
         test_g5_parser_aceita_so_os_dois_nomes_de_canario,
         test_g5_comando_nunca_cadastra_um_worker_de_canario,
@@ -895,7 +1301,17 @@ def main() -> int:
     falhas = 0
     for t in testes:
         try:
-            t()
+            # Achado G8-B: os caminhos automáticos agora rodam
+            # ``coordinator-suite`` de verdade por default (é esse o
+            # ponto). Rodar a suíte INTEIRA dentro de cada despacho de
+            # cada teste levaria minutos e recursaria sobre si mesma, então
+            # a tabela da allowlist roda um comando trivial durante os
+            # testes — a CHAVE continua sendo a real, e é a chave que os
+            # testes verificam. Os testes de FALHA de validação trocam a
+            # tabela outra vez, aninhados aqui dentro, e este bloco
+            # restaura tudo no fim.
+            with _allowlist(_VALIDACAO_OK):
+                t()
         except Exception as e:
             falhas += 1
             print(f"FALHOU  {t.__name__}: {type(e).__name__}: {e}")
