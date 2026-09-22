@@ -68,10 +68,12 @@ def test_runner_heartbeat_roundtrip_to_dict_from_dict() -> None:
         worker_id="claude-2", status="BUSY", task_id="t-1", progress_percent=42,
         branch="runner/t-1-worktree", commit="deadbee", remaining_work_estimate="bloco 6 de 10",
         last_checkpoint="deadbee", notes="seguindo conforme instrução",
+        timestamp="2026-09-22T02:30:00+00:00",
     )
     dados = original.to_dict()
     reconstruida = RunnerHeartbeat.from_dict(dados)
     assert reconstruida == original
+    assert dados["timestamp"] == "2026-09-22T02:30:00+00:00"
     print("OK  test_runner_heartbeat_roundtrip_to_dict_from_dict")
 
 
@@ -110,31 +112,60 @@ def test_allowed_files_vazio_falha_fechado() -> None:
     print("OK  test_allowed_files_vazio_falha_fechado")
 
 
-def test_allowed_files_com_caminho_proibido_falha_fechado() -> None:
-    proibidos = (
-        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html",
-        "Repasso-Med-Site--main/Atual - Copia/index.html",
-        "Repasso-Med-Site--main/Atual - Copia/admin.html",
-        "Repasso-Med-Site--main/Atual - Copia/assets/app-core.js",
-        "Repasso-Med-Site--main/Atual - Copia/styles.css",
-        "netlify.toml",
-        "supabase/migrations/0001_init.sql",
-        "netlify/functions/checkout.js",
-        "../../etc/passwd",
-    )
+def test_allowed_files_com_escape_de_diretorio_falha_fechado() -> None:
+    """Correção C2: allowed_files só valida SINTAXE de caminho (não-vazio,
+    sem escape de diretório) — nunca decide por conteúdo. '..' continua
+    proibido por ser uma questão de segurança sintática, não de política."""
+    proibidos = ("../../etc/passwd", "coordinator/../../../etc/shadow", "..")
     for caminho in proibidos:
         try:
             _tarefa_valida(allowed_files=(caminho,))
             raise AssertionError(f"devia ter rejeitado allowed_files contendo {caminho!r}")
         except ValueError:
             pass
-    print("OK  test_allowed_files_com_caminho_proibido_falha_fechado")
+    print("OK  test_allowed_files_com_escape_de_diretorio_falha_fechado")
 
 
 def test_allowed_files_valido_e_aceito() -> None:
     tarefa = _tarefa_valida(allowed_files=("coordinator/scheduler.py", "coordinator/tests/test_scheduler.py"))
     assert tarefa.allowed_files == ("coordinator/scheduler.py", "coordinator/tests/test_scheduler.py")
     print("OK  test_allowed_files_valido_e_aceito")
+
+
+def test_allowed_files_permite_materia_e_netlify_functions_quando_politica_permite() -> None:
+    """Correção C2 (2ª auditoria independente do PR #111): um blanket ban
+    por CONTEÚDO de caminho tornava impossível representar tarefas que a
+    própria Issue #83 permite — conteúdo médico Nível C (com auditoria
+    semântica obrigatória) ou uma mudança Nível D já autorizada. Estes
+    caminhos, antes rejeitados estruturalmente, agora são aceitos — quem
+    decide sensibilidade é policy_level/jose_authorized, nunca uma lista
+    de substrings de caminho."""
+    caminho_materia = (
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+    )
+    tarefa_nivel_c = _tarefa_valida(
+        allowed_files=(caminho_materia,), policy_level="C", risk_level="ALTO",
+        instructions="Corrigir erro científico na matéria de Toxicología conforme achado da auditoria.",
+    )
+    assert tarefa_nivel_c.allowed_files == (caminho_materia,)
+    assert tarefa_nivel_c.policy_level == "C"
+
+    tarefa_nivel_d = _tarefa_valida(
+        allowed_files=("netlify/functions/checkout.js",), policy_level="D", jose_authorized=True,
+    )
+    assert tarefa_nivel_d.allowed_files == ("netlify/functions/checkout.js",)
+
+    for caminho in (
+        "Repasso-Med-Site--main/Atual - Copia/index.html",
+        "Repasso-Med-Site--main/Atual - Copia/admin.html",
+        "Repasso-Med-Site--main/Atual - Copia/assets/app-core.js",
+        "Repasso-Med-Site--main/Atual - Copia/styles.css",
+        "netlify.toml",
+        "supabase/migrations/0001_init.sql",
+    ):
+        tarefa = _tarefa_valida(allowed_files=(caminho,), policy_level="D", jose_authorized=True)
+        assert tarefa.allowed_files == (caminho,)
+    print("OK  test_allowed_files_permite_materia_e_netlify_functions_quando_politica_permite")
 
 
 # ---------------------------------------------------------------------------
@@ -172,7 +203,7 @@ def test_branch_com_espaco_falha_fechado() -> None:
 
 def test_runner_heartbeat_rejeita_branch_main() -> None:
     try:
-        RunnerHeartbeat(worker_id="claude-2", status="BUSY", branch="main")
+        RunnerHeartbeat(worker_id="claude-2", status="BUSY", task_id="t-1", branch="main")
         raise AssertionError("devia ter rejeitado heartbeat com branch=main")
     except ValueError:
         pass
@@ -314,13 +345,66 @@ def test_runner_result_outros_status_nao_exigem_checkpoint() -> None:
 def test_runner_heartbeat_commit_e_last_checkpoint_exigem_sha_explicito() -> None:
     for campo in ("commit", "last_checkpoint"):
         try:
-            RunnerHeartbeat(worker_id="claude-2", status="BUSY", **{campo: "HEAD"})
+            RunnerHeartbeat(worker_id="claude-2", status="BUSY", task_id="t-1", **{campo: "HEAD"})
             raise AssertionError(f"devia ter rejeitado {campo}='HEAD'")
         except ValueError:
             pass
-    heartbeat = RunnerHeartbeat(worker_id="claude-2", status="BUSY", commit="abc1234", last_checkpoint="abc1234")
+    heartbeat = RunnerHeartbeat(
+        worker_id="claude-2", status="BUSY", task_id="t-1", commit="abc1234", last_checkpoint="abc1234",
+    )
     assert heartbeat.commit == "abc1234"
     print("OK  test_runner_heartbeat_commit_e_last_checkpoint_exigem_sha_explicito")
+
+
+# ---------------------------------------------------------------------------
+# Correção C1: task_id obrigatório/proibido por status, e timestamp ISO8601.
+# ---------------------------------------------------------------------------
+
+def test_runner_heartbeat_busy_near_limit_limit_exigem_task_id() -> None:
+    for status in ("BUSY", "NEAR_LIMIT", "LIMIT"):
+        try:
+            RunnerHeartbeat(worker_id="claude-2", status=status)
+            raise AssertionError(f"devia ter rejeitado status={status!r} sem task_id")
+        except ValueError as e:
+            assert "task_id" in str(e)
+        # Com task_id, funciona.
+        heartbeat = RunnerHeartbeat(worker_id="claude-2", status=status, task_id="t-1")
+        assert heartbeat.task_id == "t-1"
+    print("OK  test_runner_heartbeat_busy_near_limit_limit_exigem_task_id")
+
+
+def test_runner_heartbeat_available_offline_proibem_task_id() -> None:
+    for status in ("AVAILABLE", "OFFLINE"):
+        try:
+            RunnerHeartbeat(worker_id="claude-2", status=status, task_id="t-1")
+            raise AssertionError(f"devia ter rejeitado status={status!r} com task_id preenchido")
+        except ValueError as e:
+            assert "task_id" in str(e)
+        # Sem task_id, funciona.
+        heartbeat = RunnerHeartbeat(worker_id="claude-2", status=status)
+        assert heartbeat.task_id is None
+    print("OK  test_runner_heartbeat_available_offline_proibem_task_id")
+
+
+def test_runner_heartbeat_timestamp_iso8601_opcional() -> None:
+    heartbeat = RunnerHeartbeat(worker_id="claude-2", status="AVAILABLE")
+    assert heartbeat.timestamp is None
+
+    heartbeat = RunnerHeartbeat(
+        worker_id="claude-2", status="BUSY", task_id="t-1", timestamp="2026-09-22T02:30:00+00:00",
+    )
+    assert heartbeat.timestamp == "2026-09-22T02:30:00+00:00"
+    print("OK  test_runner_heartbeat_timestamp_iso8601_opcional")
+
+
+def test_runner_heartbeat_timestamp_invalido_falha_fechado() -> None:
+    for invalido in ("ontem", "22/09/2026", "not-a-date", "2026-13-40"):
+        try:
+            RunnerHeartbeat(worker_id="claude-2", status="AVAILABLE", timestamp=invalido)
+            raise AssertionError(f"devia ter rejeitado timestamp={invalido!r}")
+        except ValueError as e:
+            assert "timestamp" in str(e).lower() or "ISO8601" in str(e)
+    print("OK  test_runner_heartbeat_timestamp_invalido_falha_fechado")
 
 
 # ---------------------------------------------------------------------------
@@ -447,13 +531,13 @@ def test_runner_heartbeat_status_invalido_falha_fechado() -> None:
 def test_runner_heartbeat_progress_percent_fora_de_faixa_falha_fechado() -> None:
     for invalido in (-1, 101, 1000):
         try:
-            RunnerHeartbeat(worker_id="claude-2", status="BUSY", progress_percent=invalido)
+            RunnerHeartbeat(worker_id="claude-2", status="BUSY", task_id="t-1", progress_percent=invalido)
             raise AssertionError(f"devia ter rejeitado progress_percent={invalido!r}")
         except ValueError:
             pass
-    heartbeat = RunnerHeartbeat(worker_id="claude-2", status="BUSY", progress_percent=0)
+    heartbeat = RunnerHeartbeat(worker_id="claude-2", status="BUSY", task_id="t-1", progress_percent=0)
     assert heartbeat.progress_percent == 0
-    heartbeat = RunnerHeartbeat(worker_id="claude-2", status="BUSY", progress_percent=100)
+    heartbeat = RunnerHeartbeat(worker_id="claude-2", status="BUSY", task_id="t-1", progress_percent=100)
     assert heartbeat.progress_percent == 100
     print("OK  test_runner_heartbeat_progress_percent_fora_de_faixa_falha_fechado")
 
@@ -516,8 +600,9 @@ def main() -> int:
         test_runner_result_roundtrip_to_dict_from_dict,
         test_runner_task_from_dict_rejects_invalid_priority_string,
         test_allowed_files_vazio_falha_fechado,
-        test_allowed_files_com_caminho_proibido_falha_fechado,
+        test_allowed_files_com_escape_de_diretorio_falha_fechado,
         test_allowed_files_valido_e_aceito,
+        test_allowed_files_permite_materia_e_netlify_functions_quando_politica_permite,
         test_branch_main_falha_fechado,
         test_branch_vazia_falha_fechado,
         test_branch_com_espaco_falha_fechado,
@@ -536,6 +621,10 @@ def main() -> int:
         test_runner_result_blocked_limit_exige_checkpoint_explicito,
         test_runner_result_outros_status_nao_exigem_checkpoint,
         test_runner_heartbeat_commit_e_last_checkpoint_exigem_sha_explicito,
+        test_runner_heartbeat_busy_near_limit_limit_exigem_task_id,
+        test_runner_heartbeat_available_offline_proibem_task_id,
+        test_runner_heartbeat_timestamp_iso8601_opcional,
+        test_runner_heartbeat_timestamp_invalido_falha_fechado,
         test_capabilities_required_vazio_e_aceito,
         test_capabilities_required_com_valores_e_aceito,
         test_capabilities_required_com_entrada_vazia_falha_fechado,

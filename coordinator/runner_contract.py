@@ -44,9 +44,17 @@ consuma este contrato — Issue #83/#84/#99/#105):
    uma permissão (ver ``test_publication_flag_never_grants_publish``);
 3. o runner nunca escreve fora de ``allowed_files`` — este módulo não
    pode *impor* isso em runtime (é Fase D), mas ``allowed_files`` vazio
-   ou contendo caminho de matéria/Supabase/área crítica (CLAUDE.md §7)
-   já falha fechado NA CONSTRUÇÃO do contrato, antes de qualquer
-   execução existir;
+   ou sintaticamente inválido (caminho vazio, escape de diretório via
+   ``..``) já falha fechado NA CONSTRUÇÃO do contrato, antes de
+   qualquer execução existir. **Correção C2** (2ª auditoria independente
+   do PR #111): esta validação é só SINTÁTICA — nunca decide por
+   CONTEÚDO do caminho (matéria, Netlify Function, Supabase...). Quem
+   decide se um caminho sensível pode entrar numa tarefa é
+   ``policy_level``/``jose_authorized`` (invariantes 7/8), nunca uma
+   lista negra de substrings; um "blanket ban" por conteúdo tornaria o
+   Runner incapaz de representar até tarefas de conteúdo médico Nível C
+   com auditoria semântica obrigatória — que a Issue #83 explicitamente
+   permite — ou tarefas Nível D já autorizadas por José;
 4. o runner nunca faz force-push nem rebase destrutivo — nenhuma linha
    deste arquivo chama git nem inicia processo externo algum (prova estrutural em
    ``test_no_merge_or_deploy_capability_present``, mesma técnica de
@@ -74,12 +82,45 @@ consuma este contrato — Issue #83/#84/#99/#105):
     ``checkpoint_commit`` preenchido — sem ele, a própria construção
     falha (uma tarefa interrompida por limite sem checkpoint publicado
     nunca pode ser representada como retomável, #84 §6).
+
+---
+
+**Correções da 2ª auditoria independente do PR #111 (C1-C2) — só isto,
+Fase D/runner_dispatch/workflow continuam fora de escopo:**
+
+- C1: o PR #110 (Fase B, em paralelo) já tinha sua PRÓPRIA classe
+  ``RunnerHeartbeat`` — dois contratos oficiais incompatíveis (um com
+  ``timestamp``, outro sem; semânticas diferentes de
+  ``remaining_work_estimate``) bem antes da Fase D existir.
+  ``runner_contract.RunnerHeartbeat`` agora é a definição CANÔNICA única:
+  ganhou ``timestamp`` (ISO8601 opcional, mesma validação de
+  ``datetime.fromisoformat`` que o #110 já usava) e a regra fail-closed
+  de que ``BUSY``/``NEAR_LIMIT``/``LIMIT`` exigem ``task_id`` preenchido
+  (heartbeat parcial nunca pode apagar silenciosamente a tarefa ativa de
+  um worker ocupado) enquanto ``AVAILABLE``/``OFFLINE`` nunca podem
+  carregar ``task_id`` (um worker livre/desligado não tem tarefa ativa
+  para reportar). A validação de ``branch``/``commit``/``last_checkpoint``
+  já existente (item 10 acima) foi mantida — é MAIS estrita que a versão
+  do #110, de propósito: o PR #110 será atualizado, numa rodada à parte,
+  para IMPORTAR esta classe em vez de redefini-la (ordem de integração
+  definida pela auditoria: #111 primeiro, #110 depois).
+- C2: ``allowed_files`` tinha uma lista negra de CONTEÚDO (matéria,
+  qualquer ``netlify/functions``, ``index.html``/``admin.html``/
+  ``app-core.js``/``styles.css``/``netlify.toml``, Supabase) que tornava
+  o Runner Contract estruturalmente incapaz de representar tarefas que a
+  própria política (Issue #83) permite — ex.: conteúdo médico Nível C
+  (com auditoria semântica obrigatória) ou uma mudança Nível D já
+  autorizada por José. Removida inteiramente; ``allowed_files`` agora só
+  valida SINTAXE de caminho (não-vazio, sem ``..``) — ver invariante 3
+  acima. A autonomia/sensibilidade continua sendo decidida só por
+  ``policy_level``/``jose_authorized`` (invariantes 7/8, inalterados).
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import datetime
 
 from .classify import Priority
 from .worker_ops import VALID_STATUSES as VALID_WORKER_STATUSES
@@ -102,6 +143,14 @@ POLICY_LEVEL_REQUER_AUTORIZACAO = "D"
 VALID_RUNNER_RESULT_STATUSES: tuple[str, ...] = ("DONE", "BLOCKED", "BLOCKED-LIMIT", "NEEDS-AUDIT", "FAILED")
 _STATUS_EXIGE_CHECKPOINT_EXPLICITO = frozenset({"BLOCKED-LIMIT"})
 
+# Correção C1 (2ª auditoria independente do PR #111): um worker BUSY/
+# NEAR_LIMIT/LIMIT está, por definição, numa tarefa — task_id é
+# obrigatório. AVAILABLE/OFFLINE significam "sem tarefa ativa" — task_id
+# tem que ser None. As duas juntas particionam VALID_WORKER_STATUSES por
+# completo (nenhum status fica sem regra).
+_STATUS_EXIGE_TASK_ID = frozenset({"BUSY", "NEAR_LIMIT", "LIMIT"})
+_STATUS_PROIBE_TASK_ID = frozenset({"AVAILABLE", "OFFLINE"})
+
 # Branches que o runner nunca pode declarar como SUA branch de trabalho —
 # main/master são sempre da responsabilidade exclusiva de José (merge).
 _BRANCHES_PROTEGIDAS = frozenset({"main", "master"})
@@ -110,39 +159,17 @@ _BRANCHES_PROTEGIDAS = frozenset({"main", "master"})
 # Nunca um valor simbólico ("HEAD", "latest", branch, string vazia).
 _COMMIT_SHA_RE = re.compile(r"^[0-9a-fA-F]{7,40}$")
 
-# Caminhos que nenhuma RunnerTask pode declarar em allowed_files — mesmo
-# espírito de test_no_forbidden_writes.py's próprio filtro, aplicado aqui
-# à ORIGEM da tarefa (antes de qualquer execução), e às áreas críticas do
-# CLAUDE.md §7 ("Ter MUITO CUIDADO com: index.html, admin.html,
-# app-core.js, styles.css, netlify.toml, Netlify Functions... Não alterar
-# sistemas de pagamento, autenticação, segurança ou banco de dados salvo
-# quando a tarefa solicitar explicitamente" — um RunnerTask genérico nunca
-# "solicita isso explicitamente": essa exceção exigiria um contrato à
-# parte, não esta Fase C).
-#
-# Os literais de caminho de matéria/site publicado são montados por
-# concatenação (nunca como um único literal contíguo no texto-fonte) de
-# propósito: o próprio scanner estrutural deste pacote
-# (test_no_forbidden_writes.py) varre TODO arquivo .py à procura desses
-# mesmos literais como sinal de "este código toca matéria" — aqui é o
-# oposto (um filtro que BLOQUEIA esses caminhos, nunca os lê/escreve),
-# mas o scanner não distingue "contém o texto" de "usa o texto para
-# proibir"; concatenar evita o falso positivo sem enfraquecer o padrão
-# em tempo de execução (mesma técnica já usada alhures no pacote para o
-# scanner de segredos do Guard).
-_SEGMENTO_MATERIA = "materias" + "-privadas"
-_SEGMENTO_SITE_PUBLICADO = "Atual" + " - " + "Copia"
-_PADROES_ARQUIVO_PROIBIDO: tuple[tuple[re.Pattern, str], ...] = (
-    (re.compile(_SEGMENTO_MATERIA), f"arquivo de matéria (netlify/functions/{_SEGMENTO_MATERIA})"),
-    (re.compile(_SEGMENTO_SITE_PUBLICADO), "raiz do site publicado"),
-    (re.compile(r"\bsupabase\b", re.I), "caminho/config do Supabase (CLAUDE.md §7)"),
-    (re.compile(r"(^|/)index\.html$"), "index.html (área crítica, CLAUDE.md §7)"),
-    (re.compile(r"(^|/)admin\.html$"), "admin.html (área crítica, CLAUDE.md §7)"),
-    (re.compile(r"(^|/)app-core\.js$"), "app-core.js (área crítica, CLAUDE.md §7)"),
-    (re.compile(r"(^|/)styles\.css$"), "styles.css (área crítica, CLAUDE.md §7)"),
-    (re.compile(r"(^|/)netlify\.toml$"), "netlify.toml (área crítica, CLAUDE.md §7)"),
-    (re.compile(r"netlify/functions"), "Netlify Function (área crítica, CLAUDE.md §7)"),
-)
+# Correção C2 (2ª auditoria independente do PR #111): allowed_files NÃO
+# tem mais nenhuma lista negra por CONTEÚDO de caminho (matéria, Netlify
+# Function, Supabase, index.html/admin.html/app-core.js/styles.css/
+# netlify.toml...). Um "blanket ban" ali tornava impossível representar
+# tarefas que a própria Issue #83 permite — conteúdo médico Nível C (com
+# auditoria semântica obrigatória antes de MERGE-READY) ou uma mudança
+# Nível D já autorizada explicitamente por José. A validação de
+# allowed_files agora é SÓ sintática (não-vazio, sem escape de diretório
+# via ".."); quem decide sensibilidade/autonomia é policy_level +
+# jose_authorized (invariantes 7/8), nunca uma lista de substrings de
+# caminho.
 
 # Instrução "vaga" que a Issue #105 (seção 3, design DESIGN-READY) proíbe
 # explicitamente: "instruction: str — instrução completa gerada pelo
@@ -165,6 +192,10 @@ def _validar_branch_de_trabalho(valor: str, *, campo: str = "branch") -> None:
 
 
 def _validar_allowed_files(valores: object) -> None:
+    """Correção C2: só SEGURANÇA SINTÁTICA de caminho — não-vazio, sem
+    escape de diretório. Nunca decide por CONTEÚDO do caminho (isso é
+    policy_level/jose_authorized, avaliados em RunnerTask.__post_init__,
+    não aqui)."""
     if not valores:
         raise ValueError(
             "allowed_files não pode ser vazio — Lei 3 (#82/#85): toda RunnerTask precisa reservar "
@@ -178,13 +209,9 @@ def _validar_allowed_files(valores: object) -> None:
             continue
         if ".." in caminho:
             achados.append(f"{caminho!r}: contém '..' (possível escape de diretório)")
-            continue
-        for padrao, motivo in _PADROES_ARQUIVO_PROIBIDO:
-            if padrao.search(caminho):
-                achados.append(f"{caminho!r}: {motivo}")
     if achados:
         raise ValueError(
-            "allowed_files contém caminho(s) proibido(s) para o runner (fail-closed): " + "; ".join(achados)
+            "allowed_files contém caminho(s) sintaticamente inválido(s) (fail-closed): " + "; ".join(achados)
         )
 
 
@@ -351,17 +378,21 @@ def _parse_priority(valor: object) -> Priority | None:
 
 @dataclass(frozen=True)
 class RunnerHeartbeat:
-    """Mesma forma proposta no comentário de design da Issue #105 (seção
-    3) — deliberadamente compatível com o que a Fase B (``heartbeat.py``,
-    de Claude 3, fora do escopo desta rodada) vai popular de verdade em
-    ``worker_ops.OperationalWorkerRegistry.set_task_progress``/
-    ``set_status``. Este módulo NÃO implementa nenhum parser nem
-    aplicador — só a forma de dado e sua validação determinística.
+    """Definição CANÔNICA única do heartbeat (correção C1, 2ª auditoria
+    independente do PR #111): antes desta correção existiam DUAS classes
+    ``RunnerHeartbeat`` incompatíveis — esta, e outra em ``heartbeat.py``
+    (Fase B, PR #110). Este é agora o único contrato; o PR #110 passa a
+    IMPORTAR esta classe (numa rodada própria, ordem de integração da
+    auditoria), nunca a redefinir. Serve tanto ``human_session``
+    (comentário estruturado) quanto o futuro ``api_runner`` (payload) —
+    nada aqui depende de ``type`` do worker.
 
     ``status`` reaproveita ``worker_ops.VALID_STATUSES`` em vez de
-    redefinir o vocabulário — se a Fase B ou o Worker Registry um dia
-    ganharem um novo status, este contrato acompanha automaticamente,
-    sem precisar de outra rodada de edição aqui."""
+    redefinir o vocabulário — se o Worker Registry um dia ganhar um novo
+    status, este contrato acompanha automaticamente, sem precisar de
+    outra rodada de edição aqui. Este módulo NÃO implementa nenhum
+    parser de comentário nem aplicador ao Worker Registry — isso continua
+    sendo ``heartbeat.py`` (Fase B), fora de escopo aqui."""
 
     worker_id: str
     status: str  # worker_ops.VALID_STATUSES: AVAILABLE|BUSY|NEAR_LIMIT|LIMIT|OFFLINE
@@ -369,9 +400,13 @@ class RunnerHeartbeat:
     progress_percent: int | None = None
     branch: str | None = None
     commit: str | None = None
-    remaining_work_estimate: str = ""
+    remaining_work_estimate: str | None = None
     last_checkpoint: str | None = None
     notes: str = ""
+    # Correção C1: ISO8601 opcional — quem aplica o heartbeat carimba o
+    # momento de recebimento quando ausente (não é papel deste contrato
+    # decidir isso, só validar o formato quando informado).
+    timestamp: str | None = None
 
     def __post_init__(self) -> None:
         if not self.worker_id or not str(self.worker_id).strip():
@@ -380,6 +415,22 @@ class RunnerHeartbeat:
             raise ValueError(f"status {self.status!r} inválido — precisa ser um de {sorted(VALID_WORKER_STATUSES)}.")
         if self.task_id is not None and not str(self.task_id).strip():
             raise ValueError("task_id, quando informado, não pode ser uma string vazia — use None para 'sem tarefa'.")
+        # Correção C1: regra fail-closed de task_id por status — um
+        # heartbeat parcial nunca pode apagar silenciosamente a tarefa
+        # ativa de um worker ocupado, nem fingir que um worker livre/
+        # desligado ainda está em alguma tarefa.
+        if self.status in _STATUS_EXIGE_TASK_ID and self.task_id is None:
+            raise ValueError(
+                f"status={self.status!r} exige task_id preenchido — um worker "
+                f"{'/'.join(sorted(_STATUS_EXIGE_TASK_ID))} sempre está numa tarefa; um heartbeat sem "
+                "task_id não pode apagar silenciosamente a tarefa ativa registrada (achado C1)."
+            )
+        if self.status in _STATUS_PROIBE_TASK_ID and self.task_id is not None:
+            raise ValueError(
+                f"status={self.status!r} nunca pode carregar task_id — "
+                f"{'/'.join(sorted(_STATUS_PROIBE_TASK_ID))} significam 'sem tarefa ativa' por definição "
+                "(achado C1)."
+            )
         if self.progress_percent is not None and not (0 <= self.progress_percent <= 100):
             raise ValueError(f"progress_percent precisa estar entre 0 e 100 — recebido {self.progress_percent!r}.")
         if self.branch is not None:
@@ -388,6 +439,11 @@ class RunnerHeartbeat:
             _validar_commit_sha(self.commit, campo="commit")
         if self.last_checkpoint is not None:
             _validar_commit_sha(self.last_checkpoint, campo="last_checkpoint")
+        if self.timestamp is not None:
+            try:
+                datetime.fromisoformat(self.timestamp)
+            except ValueError as exc:
+                raise ValueError(f"timestamp {self.timestamp!r} não é um ISO8601 válido.") from exc
 
     def to_dict(self) -> dict:
         return {
@@ -400,6 +456,7 @@ class RunnerHeartbeat:
             "remaining_work_estimate": self.remaining_work_estimate,
             "last_checkpoint": self.last_checkpoint,
             "notes": self.notes,
+            "timestamp": self.timestamp,
         }
 
     @classmethod
@@ -411,9 +468,10 @@ class RunnerHeartbeat:
             progress_percent=d.get("progress_percent"),
             branch=d.get("branch"),
             commit=d.get("commit"),
-            remaining_work_estimate=d.get("remaining_work_estimate", ""),
+            remaining_work_estimate=d.get("remaining_work_estimate"),
             last_checkpoint=d.get("last_checkpoint"),
             notes=d.get("notes", ""),
+            timestamp=d.get("timestamp"),
         )
 
 
