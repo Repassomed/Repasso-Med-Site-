@@ -271,6 +271,24 @@ class OperationalWorkerRegistry:
         self.store.update(mutate, message=message)
         return record
 
+    def upsert_many(self, records: list[WorkerRecord], *, message: str) -> list[WorkerRecord]:
+        """Como ``upsert()``, mas grava vários registros em UMA única
+        escrita/commit — Issue #105 Fase E (``coordinator/handoff_exec.py``):
+        handoff precisa atualizar o worker anterior e o novo worker sem
+        nenhuma janela em que os dois aparecem como dono ativo da mesma
+        tarefa, nem uma janela em que só um dos dois lados foi persistido."""
+        def mutate(dados: dict) -> dict:
+            existentes = dados.get("workers")
+            base = {w["worker_id"]: w for w in existentes} if existentes else {
+                w.worker_id: w.to_dict() for w in default_seed_workers()
+            }
+            for record in records:
+                base[record.worker_id] = record.to_dict()
+            return {"workers": list(base.values())}
+
+        self.store.update(mutate, message=message)
+        return records
+
     def set_status(self, nome_ou_id: str, novo_status: str, *, message: str,
                     heartbeat: str | None = None, default_type: str = "human_session") -> WorkerRecord:
         if novo_status not in VALID_STATUSES:
