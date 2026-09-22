@@ -6,3 +6,10 @@
 # .github/workflows/coordinator-observe.yml (se: vars.REPASSO_COORDINATOR_ENABLED
 # == 'true') — enquanto isso for falso, este arquivo nunca é lido em CI.
 anthropic>=1.0
+
+# Só usado por coordinator/openai_transport.py — o único arquivo do
+# pacote que fala com a OpenAI de verdade (Issue #106, OpenAI Auditor).
+# Instalado no mesmo job, sempre — mas fica inerte enquanto
+# REPASSO_OPENAI_AUDITOR_ENABLED != 'true' (openai_config.py::
+# OpenAIAuditorConfig.gate()), portão independente do da Anthropic.
+openai>=1.0

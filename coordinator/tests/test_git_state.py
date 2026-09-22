@@ -279,6 +279,86 @@ def test_concurrent_pipeline_exactly_one_mock_call_and_one_usage_record() -> Non
     print("OK  test_concurrent_pipeline_exactly_one_mock_call_and_one_usage_record")
 
 
+def test_concurrent_reserve_if_within_budget_exactly_one_winner_on_fresh_branch() -> None:
+    """Achado B11 da auditoria independente do PR #107 (rodada 3, HEAD
+    7b0e28c): o teste de concorrência de ``UsageLedger.reserve_if_
+    within_budget`` em ``test_openai_auditor.py`` só prova o caminho
+    LOCAL (lock de processo único). Este teste prova o caminho de
+    PRODUÇÃO: ``GitUsageLedger`` + ``GitJsonStore`` contra um remoto git
+    real, com a branch do ledger AINDA NÃO EXISTENTE — exatamente a
+    corrida na criação da PRIMEIRA branch que a auditoria apontou como
+    desprotegida (``GitJsonStore.update()`` aceitava o resultado do push
+    sem confirmar, por uma leitura independente do remoto, que aquele
+    commit era de fato o vencedor).
+
+    Duas THREADS reais, cada uma com sua PRÓPRIA GitUsageLedger/
+    GitJsonStore (nada compartilhado em memória — só o mesmo remoto, como
+    dois runners efêmeros reagindo ao mesmo checkpoint), sincronizadas por
+    ``threading.Barrier`` para forçar leituras genuinamente sobrepostas
+    (a janela exata em que as duas poderiam ler o MESMO saldo
+    pré-reserva), contra um orçamento pequeno o bastante para caber
+    EXATAMENTE UMA reserva.
+
+    Resultado obrigatório: exatamente 1 ``True`` (reserva aceita), o
+    outro ``False`` — e o estado FINAL no remoto, relido por uma
+    TERCEIRA instância independente, contém exatamente 1 registro de
+    reserva. Nunca 2 (o que aconteceria se um push "vencedor" local não
+    fosse de fato confirmado como o tip real do remoto) nem 0 (a reserva
+    vencedora perdida numa corrida silenciosa)."""
+    from coordinator.openai_budget import OpenAIUsageRecord, conservative_call_cost_usd
+
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        branch = "coordinator-state-teste-reserva-openai-concorrente"  # nunca usada antes neste remoto
+
+        teto_uma_chamada = conservative_call_cost_usd("gpt-5.6-terra", system="s", prompt="p")
+        orcamento = teto_uma_chamada * 1.5  # cabe 1 reserva, não cabem 2 juntas
+
+        barreira = threading.Barrier(2)
+        resultados: dict[str, bool] = {}
+        erros: list[BaseException] = []
+
+        def corredor(nome: str) -> None:
+            try:
+                ledger = GitUsageLedger(GitJsonStore(remoto, branch=branch))
+                candidato = OpenAIUsageRecord(
+                    timestamp=datetime.now(timezone.utc).isoformat(), event_key=f"evt-{nome}",
+                    tier="TERRA", model_id="gpt-5.6-terra", input_tokens=0, output_tokens=0,
+                    estimated_cost_usd=teto_uma_chamada, kind="reservation",
+                )
+                barreira.wait(timeout=10)  # força sobreposição real das duas leituras pré-reserva
+                resultados[nome] = ledger.reserve_if_within_budget(candidato, budget_usd=orcamento)
+            except BaseException as e:  # captura para reportar fora da thread
+                erros.append(e)
+
+        t1 = threading.Thread(target=corredor, args=("A",))
+        t2 = threading.Thread(target=corredor, args=("B",))
+        t1.start()
+        t2.start()
+        t1.join(timeout=60)
+        t2.join(timeout=60)
+
+        assert not erros, f"corredor(es) lançaram exceção: {erros}"
+        assert set(resultados) == {"A", "B"}, f"as duas threads precisavam terminar: {resultados}"
+        vencedores = sum(1 for v in resultados.values() if v)
+        assert vencedores == 1, (
+            f"orçamento cabia exatamente 1 reserva de US$ {teto_uma_chamada:.6f}, mas obtive "
+            f"{vencedores} vencedora(s) entre execuções concorrentes contra uma branch nova: {resultados}"
+        )
+
+        # Confirma no remoto de verdade, com uma TERCEIRA instância
+        # independente (nada em memória compartilhado com A/B): exatamente
+        # 1 registro de reserva sobreviveu.
+        ledger_final = GitUsageLedger(GitJsonStore(remoto, branch=branch))
+        registros_finais = ledger_final.all_records()
+        assert len(registros_finais) == 1, (
+            f"o estado remoto final devia conter exatamente 1 reserva, obtive {len(registros_finais)}: "
+            f"{registros_finais}"
+        )
+        assert abs(ledger_final.month_to_date_usd() - teto_uma_chamada) < 1e-9
+    print("OK  test_concurrent_reserve_if_within_budget_exactly_one_winner_on_fresh_branch")
+
+
 def main() -> int:
     testes = [
         test_two_independent_runs_share_dedup,
@@ -287,6 +367,7 @@ def main() -> int:
         test_incremental_updates_accumulate,
         test_concurrent_claim_exactly_one_winner,
         test_concurrent_pipeline_exactly_one_mock_call_and_one_usage_record,
+        test_concurrent_reserve_if_within_budget_exactly_one_winner_on_fresh_branch,
     ]
     falhas = 0
     for t in testes:

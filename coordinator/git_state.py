@@ -233,6 +233,94 @@ class GitJsonStore:
             f"último erro: {ultimo_erro}"
         )
 
+    def conditional_update(self, evaluate: Callable[[dict], tuple[bool, dict]], *, message: str,
+                            max_attempts: int = 3) -> bool:
+        """Achado B11 da auditoria independente do PR #107 (rodada 3, HEAD
+        7b0e28c): ``update()`` (acima) considera sucesso assim que ``git
+        push`` devolve 0 — mas ``claim_key()`` já precisou de uma proteção
+        adicional (``_sou_eu_o_tip``) porque, sob concorrência real, uma
+        corrida na CRIAÇÃO da PRIMEIRA branch pode fazer dois pushes
+        concorrentes reportarem êxito (returncode 0), mesmo com
+        ``--force-with-lease``, enquanto só um dos dois conteúdos
+        sobrevive de verdade no remoto (medido diretamente, ver docstring
+        de ``_sou_eu_o_tip``). Para uma decisão que só pode ser aceita
+        UMA vez — aqui, "esta reserva de orçamento ainda cabe?" — confiar
+        cegamente no código de saída do push é inseguro: o lado que
+        perdeu a corrida de verdade, mas cujo push local reportou 0,
+        concluiria erroneamente que reservou orçamento que nunca chegou
+        a ser persistido, e seguiria para a chamada paga sem que o hard
+        cap contabilizasse isso — exatamente o cenário que o ledger
+        OpenAI (branch de estado nova, nunca usada antes) expõe.
+
+        Este método replica a mesma proteção de ``claim_key()``: depois
+        do push reportar êxito, uma consulta independente ao remoto
+        (``_sou_eu_o_tip``) confirma que o commit publicado por ESTA
+        tentativa é REALMENTE o tip da branch agora. Só nesse caso o
+        chamador pode confiar no resultado; caso contrário (push
+        rejeitado pelo lease OU aceito mas não confirmado como tip), a
+        tentativa seguinte recomeça com uma leitura fresca e
+        ``evaluate`` é chamado de novo sobre o estado remoto real —
+        nunca sobre a suposição otimista de um push local que pode não
+        ter sobrevivido.
+
+        ``evaluate(dados_atuais)`` devolve ``(aceita, novos_dados)``:
+        quando ``aceita`` já é ``False`` a partir de uma leitura fresca,
+        nada precisa ser publicado — devolve ``False`` direto, sem
+        nenhum push (o orçamento não mudou, então não há estado novo
+        para registrar)."""
+        ultimo_erro = ""
+        for tentativa in range(max_attempts):
+            workdir = self._fresh_workdir()
+            try:
+                caminho = os.path.join(workdir, self.file_name)
+                dados_atuais = {}
+                if os.path.exists(caminho):
+                    try:
+                        with open(caminho, encoding="utf-8") as fh:
+                            dados_atuais = json.load(fh)
+                    except (json.JSONDecodeError, OSError):
+                        dados_atuais = {}
+
+                aceita, novos_dados = evaluate(dados_atuais)
+                if not aceita:
+                    return False  # leitura fresca: já não cabe — nada a publicar.
+
+                with open(caminho, "w", encoding="utf-8") as fh:
+                    json.dump(novos_dados, fh, indent=2, sort_keys=True)
+
+                _run(workdir, "add", self.file_name)
+                # Nonce por tentativa — mesmo motivo de claim_key(): duas
+                # tentativas concorrentes partindo do mesmo estado e
+                # produzindo o mesmo "novos_dados" gerariam um commit
+                # byte-idêntico (mesmo autor/committer/conteúdo), tornando
+                # ``_sou_eu_o_tip`` incapaz de distinguir "eu ganhei" de
+                # "por coincidência temos o mesmo commit".
+                mensagem_commit = f"{message} [{uuid.uuid4().hex}]"
+                commit = _run(workdir, "commit", "-q", "-m", mensagem_commit)
+                if commit.returncode != 0:
+                    ultimo_erro = redact(commit.stderr)
+                    continue
+                meu_sha = _run(workdir, "rev-parse", "HEAD").stdout.strip()
+
+                push = self._push(workdir)
+                if push.returncode == 0 and self._sou_eu_o_tip(meu_sha):
+                    return True  # push aceito E confirmado, por leitura
+                                 # independente do remoto, como o tip real.
+                if push.returncode == 0:
+                    ultimo_erro = (
+                        "push reportou êxito, mas outra execução venceu a corrida de verdade "
+                        "(confirmado por leitura independente do remoto)"
+                    )
+                else:
+                    ultimo_erro = redact(push.stderr)
+                time.sleep(0.2 * (tentativa + 1))
+            finally:
+                shutil.rmtree(workdir, ignore_errors=True)
+        raise RuntimeError(
+            f"não consegui decidir a atualização condicional em {max_attempts} tentativa(s); "
+            f"último erro: {ultimo_erro}"
+        )
+
     def claim_key(self, key: str, *, message: str, max_keys: int | None = None,
                    max_attempts: int = 3) -> bool:
         """Compare-and-swap atômico sobre a lista ``keys`` do JSON: ``True``
@@ -366,8 +454,9 @@ class GitDedupStore:
 
 class GitUsageLedger:
     """Mesma superfície pública de ``coordinator.budget.UsageLedger``
-    (``append``, ``month_to_date_usd``, ``all_records``), mas persistida
-    numa branch de estado compartilhada entre execuções independentes."""
+    (``append``, ``month_to_date_usd``, ``all_records``,
+    ``reserve_if_within_budget``), mas persistida numa branch de estado
+    compartilhada entre execuções independentes."""
 
     def __init__(self, git_json: GitJsonStore) -> None:
         self.git_json = git_json
@@ -388,6 +477,54 @@ class GitUsageLedger:
             if str(r.get("timestamp", "")).startswith(prefixo_mes):
                 total += float(r.get("estimated_cost_usd", 0.0))
         return total
+
+    def reserve_if_within_budget(self, candidate, *, budget_usd: float, now: datetime | None = None) -> bool:
+        """Achado B7 da auditoria independente do PR #107: "checar
+        orçamento" e "gravar a reserva" viram UMA única operação atômica,
+        dentro do MESMO ``evaluate``/CAS que ``GitJsonStore.
+        conditional_update()`` executa com retry (novo fetch +
+        reaplicação a cada tentativa, sob ``--force-with-lease``) — nunca
+        duas chamadas git separadas (``month_to_date_usd()`` e depois
+        ``append()``), que deixavam uma janela real entre duas execuções
+        concorrentes lendo o mesmo saldo antes de qualquer uma publicar.
+
+        O predicado é reavaliado a partir de uma leitura FRESCA em cada
+        tentativa (inclusive nos retries) — mesmo princípio que
+        ``GitJsonStore.claim_key()`` já usa para o dedup.
+
+        Correção B11 da auditoria independente do PR #107 (rodada 3,
+        HEAD 7b0e28c): antes, isto usava ``GitJsonStore.update()``, que
+        considera a reserva aceita assim que ``git push`` reporta êxito
+        — mas essa confirmação não é suficiente na CRIAÇÃO da primeira
+        branch de estado (exatamente o caso do ledger OpenAI, sempre
+        novo): duas execuções concorrentes podem ambas receber sucesso
+        do push, com só uma sobrevivendo de verdade no remoto (mesma
+        corrida que ``claim_key()`` já precisou resolver com
+        ``_sou_eu_o_tip``). Agora usa ``conditional_update()``, que exige
+        essa mesma confirmação independente do remoto antes de devolver
+        ``True`` — nunca confia cegamente no código de saída do push
+        local.
+
+        Devolve ``True`` só quando a reserva foi de fato aceita, publicada
+        E confirmada como o tip real do remoto; ``False`` quando não coube
+        (nada é publicado nesse caso)."""
+
+        def evaluate(dados: dict) -> tuple[bool, dict]:
+            registros = dados.get("records", [])
+            agora = now or datetime.now(timezone.utc)
+            prefixo_mes = agora.strftime("%Y-%m")
+            gasto_atual = sum(
+                float(r.get("estimated_cost_usd", 0.0))
+                for r in registros
+                if str(r.get("timestamp", "")).startswith(prefixo_mes)
+            )
+            if gasto_atual + candidate.estimated_cost_usd > budget_usd:
+                return False, dados
+            return True, {"records": [*registros, candidate.to_dict()]}
+
+        return self.git_json.conditional_update(
+            evaluate, message=f"usage-reserve: {candidate.event_key} ({candidate.tier})",
+        )
 
     def all_records(self) -> list[dict]:
         return self.git_json.read().get("records", [])

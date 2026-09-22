@@ -62,6 +62,7 @@ from .events import Event
 from .git_state import GitDedupStore, GitJsonStore, GitUsageLedger
 from .github_event import build_event_from_github_context
 from .observe import observe
+from .openai_config import OpenAIAuditorConfig
 from .redact import redact, redact_mapping
 from .worker_ops import DEFAULT_STATE_BRANCH, LocalJsonWorkerStateStore, OperationalWorkerRegistry
 from .worker_registry import Worker, WorkerState, load_workers_from_tasks_json
@@ -169,6 +170,7 @@ def _resultado_de_erro(exc: BaseException) -> dict:
         "merge_card": None,
         "should_comment": False,
         "comment_target_issue": None,
+        "openai_ledger_failed": False,
     }
 
 
@@ -319,6 +321,17 @@ def main(argv: list[str] | None = None) -> int:
                          "--usage-git-remote")
     ap.add_argument("--worker-state-git-branch", default=DEFAULT_STATE_BRANCH,
                     help="branch dedicada para o Worker Registry operacional (nunca 'main')")
+    ap.add_argument("--openai-usage-ledger", default=".coordinator-state/usage-openai.json",
+                    help="arquivo LOCAL de uso/custo do OpenAI Auditor (Issue #106) — SEPARADO do "
+                         "ledger da Anthropic (--usage-ledger); não sobrevive entre runners "
+                         "efêmeros (prefira --openai-usage-git-remote no workflow real)")
+    ap.add_argument("--openai-usage-git-remote", default=None,
+                    help="remoto git para o ledger de uso/custo do OpenAI Auditor, compartilhado "
+                         "entre execuções — mesmo padrão de --usage-git-remote, mas numa branch "
+                         "própria (nunca a mesma branch/arquivo do ledger Anthropic)")
+    ap.add_argument("--openai-usage-git-branch", default="coordinator-state-usage-openai",
+                    help="branch dedicada para o ledger de uso do OpenAI Auditor (nunca 'main', "
+                         "nunca a mesma branch do ledger Anthropic)")
     ap.add_argument("--out", default=None, help="onde gravar o resultado OBSERVE em JSON")
     ap.add_argument("--comment-out", default=None,
                     help="V3 (Issue #99): quando o Coordinator roda em MODE=active-supervised e a "
@@ -385,7 +398,12 @@ def main(argv: list[str] | None = None) -> int:
     # deixar isto virar um crash mudo — mas o sinal externo (workflow
     # vermelho) continua merecido, então checa aqui, sem reabrir a
     # arquitetura de ObserveResult/render_human.
-    if dados_sanitizados.get("call_status") == "ok_ledger_failed":
+    #
+    # Correção B3 da auditoria independente do PR #107: mesma lógica para
+    # o ledger do OpenAI Auditor — uma chamada PAGA cuja correção de custo
+    # não persistiu é um problema operacional equivalente, nunca um
+    # "ok_ledger_failed" silencioso que só aparece no texto do cartão.
+    if dados_sanitizados.get("call_status") == "ok_ledger_failed" or dados_sanitizados.get("openai_ledger_failed"):
         return 1
     return 0
 
@@ -434,9 +452,25 @@ def _observar(a: argparse.Namespace) -> dict | None:
     else:
         worker_registry = OperationalWorkerRegistry(LocalJsonWorkerStateStore(a.worker_state_store))
 
+    # OpenAI Auditor (Issue #106): portão/config lidos do ambiente sempre
+    # (mesmo padrão de Config.from_env() acima) — ``OpenAIAuditorConfig.
+    # enabled`` continua ``False`` enquanto a Variable
+    # REPASSO_OPENAI_AUDITOR_ENABLED não for exatamente "true" (produção
+    # hoje), então injetar isto aqui é estruturalmente inerte até José
+    # decidir ligar. O ledger é SEMPRE um armazenamento SEPARADO do
+    # ledger Anthropic — nunca o mesmo arquivo/branch.
+    openai_config = OpenAIAuditorConfig.from_env()
+    if a.openai_usage_git_remote:
+        openai_ledger = GitUsageLedger(
+            GitJsonStore(a.openai_usage_git_remote, branch=a.openai_usage_git_branch)
+        )
+    else:
+        openai_ledger = UsageLedger(a.openai_usage_ledger)
+
     resultado = observe(
         event, config=config, dedup=dedup, ledger=ledger, workers=workers,
         audit_mode=config.is_active_supervised, worker_registry=worker_registry,
+        openai_config=openai_config, openai_ledger=openai_ledger,
     )
     dados = resultado.to_dict()
     return redact_mapping(dados)

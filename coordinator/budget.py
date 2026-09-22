@@ -23,8 +23,10 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Protocol
 
 from .models import ModelTier
 
@@ -90,12 +92,33 @@ class UsageRecord:
         }
 
 
+class _CostRecordLike(Protocol):
+    """Forma mínima que ``reserve_if_within_budget`` precisa de um
+    registro candidato — tanto ``UsageRecord`` (Anthropic) quanto
+    ``coordinator.openai_budget.OpenAIUsageRecord`` já satisfazem isto
+    por duck typing, sem nenhum import cruzado."""
+
+    estimated_cost_usd: float
+
+    def to_dict(self) -> dict: ...
+
+
 class UsageLedger:
     """Registro append-only em JSON. Nunca grava texto de prompt/resposta —
     só metadados de uso — então não há segredo nem conteúdo médico aqui."""
 
     def __init__(self, path: str) -> None:
         self.path = path
+        # Achado B7 da auditoria independente do PR #107 (rodada 2, sobre
+        # o OpenAI Auditor): "checar orçamento" e "gravar a reserva"
+        # precisam ser UMA operação atômica, nunca duas chamadas
+        # separadas com uma janela de corrida entre elas. Este lock cobre
+        # a concorrência DENTRO do mesmo processo (múltiplas threads
+        # compartilhando a mesma instância); concorrência ENTRE processos
+        #/runners independentes é responsabilidade de
+        # ``git_state.GitUsageLedger`` (CAS via git), que implementa o
+        # mesmo método com a mesma semântica.
+        self._lock = threading.Lock()
 
     def _load(self) -> list[dict]:
         if not os.path.exists(self.path):
@@ -107,12 +130,16 @@ class UsageLedger:
         except (json.JSONDecodeError, OSError):
             return []
 
-    def append(self, record: UsageRecord) -> None:
-        registros = self._load()
-        registros.append(record.to_dict())
+    def _save(self, registros: list[dict]) -> None:
         os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
         with open(self.path, "w", encoding="utf-8") as fh:
             json.dump({"records": registros}, fh, indent=2)
+
+    def append(self, record: UsageRecord) -> None:
+        with self._lock:
+            registros = self._load()
+            registros.append(record.to_dict())
+            self._save(registros)
 
     def month_to_date_usd(self, *, now: datetime | None = None) -> float:
         agora = now or datetime.now(timezone.utc)
@@ -122,6 +149,31 @@ class UsageLedger:
             if str(r.get("timestamp", "")).startswith(prefixo_mes):
                 total += float(r.get("estimated_cost_usd", 0.0))
         return total
+
+    def reserve_if_within_budget(self, candidate: _CostRecordLike, *, budget_usd: float,
+                                  now: datetime | None = None) -> bool:
+        """Achado B7 da auditoria independente do PR #107: checa
+        "``month_to_date_usd() + candidate.estimated_cost_usd`` ainda cabe
+        no orçamento?" e, se sim, JÁ GRAVA ``candidate`` — tudo sob o
+        MESMO lock, sem nenhuma leitura de orçamento exposta ao chamador
+        entre o check e o append (a janela que ``openai_client.call()``
+        deixava aberta antes desta correção). Devolve ``True`` só quando
+        a reserva foi de fato aceita e persistida; ``False`` quando não
+        coube — nesse caso nada é gravado."""
+        with self._lock:
+            registros = self._load()
+            agora = now or datetime.now(timezone.utc)
+            prefixo_mes = agora.strftime("%Y-%m")
+            gasto_atual = sum(
+                float(r.get("estimated_cost_usd", 0.0))
+                for r in registros
+                if str(r.get("timestamp", "")).startswith(prefixo_mes)
+            )
+            if gasto_atual + candidate.estimated_cost_usd > budget_usd:
+                return False
+            registros.append(candidate.to_dict())
+            self._save(registros)
+            return True
 
     def all_records(self) -> list[dict]:
         return self._load()

@@ -107,3 +107,18 @@ def render_cost_block(resumo: CostSummary) -> str:
         "o teto continua sendo em USD"
     )
     return "\n".join(L)
+
+
+def render_provider_totals(*, anthropic_month_to_date_usd: float, openai_month_to_date_usd: float) -> str:
+    """Issue #106: "Mostrar depois: Anthropic: US$X, OpenAI: US$Y, Total:
+    US$Z" — os dois ledgers são SEPARADOS (nunca somados na origem, ver
+    ``coordinator/openai_budget.py``); esta é a única função que combina os
+    dois números, e só para EXIBIÇÃO — nenhuma decisão de orçamento lê este
+    total combinado, cada provider continua checando só o próprio teto."""
+    total = anthropic_month_to_date_usd + openai_month_to_date_usd
+    return "\n".join([
+        "**Custo combinado por provider (acumulado do mês):**",
+        f"- Anthropic: {_fmt_usd(anthropic_month_to_date_usd)}",
+        f"- OpenAI: {_fmt_usd(openai_month_to_date_usd)}",
+        f"- Total: {_fmt_usd(total)}",
+    ])
