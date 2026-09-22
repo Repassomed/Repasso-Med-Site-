@@ -291,8 +291,8 @@
         "infra-coordinator-v3-active-supervised"
       ],
       "branch": "infra/scheduler-fila-issue105a",
-      "pr": null,
-      "commit": null,
+      "pr": 108,
+      "commit": "0cb37ba",
       "issue": 105,
       "notas": "Nenhum arquivo do #107 (worker_ops.py/merge_card.py/observe.py/__main__.py/workflow) foi tocado — só consumo aditivo de funções já existentes e auditadas (handoff.py, worker_ops.py, classify.py). coordination/tasks.json só ganhou este próprio registro; nenhuma outra tarefa foi alterada. Suite completa do Coordinator e Guard local rodados antes de abrir o PR. Agente registrado como 'Claude 4' por ser o único sem tarefa ativa no registro no momento desta rodada — a atribuição real fica a critério de José."
     }
