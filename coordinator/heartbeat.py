@@ -80,6 +80,16 @@ D/runner_dispatch/workflow continuam fora de escopo:**
   ``runner_contract.RunnerHeartbeat``. ``parse_heartbeat_comment``
   continua fail-closed: qualquer violação dessas regras vira
   ``HeartbeatParseResult(ok=False, ...)``, nunca uma exceção não tratada.
+
+**Correção do blocker H4 restante (mesma auditoria, HEAD 3097dfa):**
+``parse_heartbeat_comment`` reconhecia a linha ``TIMESTAMP:`` no bloco
+(a chave entrava em ``campos``), mas nunca a repassava para
+``RunnerHeartbeat(...)`` — um ``TIMESTAMP`` inválido no comentário era
+simplesmente IGNORADO (o campo ficava ``None`` por padrão), enquanto o
+mesmo valor, vindo de ``heartbeat_de_payload`` (``api_runner``), já era
+rejeitado pela validação ISO8601 do contrato canônico. Agora
+``timestamp=campos.get("TIMESTAMP") or None`` é passado explicitamente —
+os dois caminhos validam ``TIMESTAMP``/``timestamp`` de forma idêntica.
 """
 
 from __future__ import annotations
@@ -184,6 +194,7 @@ def parse_heartbeat_comment(texto: str) -> HeartbeatParseResult | None:
         CHECKPOINT: abc1234
         REMAINING: bloco 3 de 5
         NOTES: parando por precaução
+        TIMESTAMP: 2026-09-22T02:00:00+00:00
     """
     corpo = texto or ""
     if not _MARCADOR_HEARTBEAT.search(corpo):
@@ -226,6 +237,7 @@ def parse_heartbeat_comment(texto: str) -> HeartbeatParseResult | None:
             remaining_work_estimate=campos.get("REMAINING") or None,
             last_checkpoint=campos.get("CHECKPOINT") or None,
             notes=campos.get("NOTES") or "",
+            timestamp=campos.get("TIMESTAMP") or None,
         )
     except ValueError as exc:
         # H4: qualquer violação do contrato canônico (branch protegida,

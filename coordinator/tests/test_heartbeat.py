@@ -254,6 +254,62 @@ def test_heartbeat_de_payload_e_parse_comment_aplicam_a_mesma_validacao() -> Non
     print("OK  test_heartbeat_de_payload_e_parse_comment_aplicam_a_mesma_validacao")
 
 
+def test_timestamp_invalido_e_rejeitado_igualmente_por_comentario_e_payload() -> None:
+    """Correção do blocker H4 restante: parse_heartbeat_comment esquecia
+    de repassar TIMESTAMP para RunnerHeartbeat, então um TIMESTAMP
+    inválido no comentário era silenciosamente ignorado, enquanto o
+    mesmo valor via heartbeat_de_payload (api_runner) já era rejeitado.
+    Os dois caminhos agora falham exatamente igual."""
+    try:
+        heartbeat_de_payload({
+            "worker_id": "claude-3", "status": "AVAILABLE", "timestamp": "não é uma data",
+        })
+    except ValueError as exc_payload:
+        motivo_payload = str(exc_payload)
+    else:
+        raise AssertionError("payload com timestamp inválido deveria falhar")
+
+    resultado_comentario = parse_heartbeat_comment(
+        "HEARTBEAT\nWORKER: Claude 3\nSTATUS: AVAILABLE\nTIMESTAMP: não é uma data\n"
+    )
+    assert resultado_comentario is not None
+    assert resultado_comentario.ok is False, (
+        "TIMESTAMP inválido no comentário precisa ser rejeitado, nunca ignorado silenciosamente"
+    )
+    assert "timestamp" in resultado_comentario.error.lower()
+    assert "timestamp" in motivo_payload.lower()
+    print("OK  test_timestamp_invalido_e_rejeitado_igualmente_por_comentario_e_payload")
+
+
+def test_timestamp_iso8601_valido_e_preservado_no_comentario() -> None:
+    """TIMESTAMP válido no bloco HEARTBEAT precisa chegar de fato ao
+    RunnerHeartbeat resultante — não só ser reconhecido e descartado."""
+    texto = (
+        "HEARTBEAT\nWORKER: Claude 3\nSTATUS: BUSY\nTASK: t1\n"
+        "TIMESTAMP: 2026-09-22T02:00:00+00:00\n"
+    )
+    resultado = parse_heartbeat_comment(texto)
+    assert resultado.ok is True
+    assert resultado.heartbeat.timestamp == "2026-09-22T02:00:00+00:00"
+    print("OK  test_timestamp_iso8601_valido_e_preservado_no_comentario")
+
+
+def test_timestamp_valido_do_comentario_e_usado_ao_aplicar_heartbeat() -> None:
+    """Prova de ponta a ponta: o TIMESTAMP do comentário vira
+    last_heartbeat de verdade no registro, não é recarimbado por
+    _now_iso() como se estivesse ausente."""
+    registry = _registry_com(_claude(status="AVAILABLE"))
+    texto = (
+        "HEARTBEAT\nWORKER: Claude 3\nSTATUS: BUSY\nTASK: t1\n"
+        "TIMESTAMP: 2026-09-22T02:00:00+00:00\n"
+    )
+    resultado_parse = parse_heartbeat_comment(texto)
+    assert resultado_parse.ok is True
+    resultado = aplicar_heartbeat(registry, resultado_parse.heartbeat)
+    assert resultado.record.last_heartbeat == "2026-09-22T02:00:00+00:00"
+    print("OK  test_timestamp_valido_do_comentario_e_usado_ao_aplicar_heartbeat")
+
+
 # ---------------------------------------------------------------------
 # aplicar_heartbeat — status válidos (AVAILABLE/BUSY/NEAR_LIMIT/LIMIT)
 # ---------------------------------------------------------------------
@@ -517,6 +573,9 @@ def main() -> int:
         test_timestamp_invalido_e_rejeitado,
         test_progress_percent_fora_de_faixa_e_rejeitado,
         test_heartbeat_de_payload_e_parse_comment_aplicam_a_mesma_validacao,
+        test_timestamp_invalido_e_rejeitado_igualmente_por_comentario_e_payload,
+        test_timestamp_iso8601_valido_e_preservado_no_comentario,
+        test_timestamp_valido_do_comentario_e_usado_ao_aplicar_heartbeat,
         test_heartbeat_available_atualiza_registro_e_limpa_tarefa,
         test_heartbeat_busy_atualiza_tarefa_branch_commit_progresso,
         test_heartbeat_near_limit_produz_sinal_de_limite_utilizavel_pelo_scheduler,
