@@ -166,14 +166,22 @@ def default_seed_workers() -> list[WorkerRecord]:
 
 class WorkerStateStore(Protocol):
     """Mesmo protocolo mínimo de ``git_state.GitJsonStore``
-    (``read``/``update``) — ``GitJsonStore`` já implementa isto de
-    verdade; ``LocalJsonWorkerStateStore`` abaixo é o equivalente para
-    execução local/teste, do mesmo jeito que ``dedup.FileStore`` existe
-    ao lado de ``git_state.GitDedupStore``."""
+    (``read``/``update``/``conditional_update``) — ``GitJsonStore`` já
+    implementa isto de verdade; ``LocalJsonWorkerStateStore`` abaixo é o
+    equivalente para execução local/teste, do mesmo jeito que
+    ``dedup.FileStore`` existe ao lado de ``git_state.GitDedupStore``.
+
+    ``conditional_update`` (Issue #105 Fase E, achado H2 da auditoria
+    independente do PR #115) é o que permite um compare-and-set real:
+    ``evaluate(dados_frescos) -> (aceita, novos_dados)`` é reavaliado a
+    partir de uma leitura FRESCA em cada tentativa — nunca sobre um
+    estado antigo capturado antes da escrita."""
 
     def read(self) -> dict: ...
 
     def update(self, mutate: Callable[[dict], dict], *, message: str) -> dict: ...
+
+    def conditional_update(self, evaluate: Callable[[dict], tuple[bool, dict]], *, message: str) -> bool: ...
 
 
 class LocalJsonWorkerStateStore:
@@ -202,6 +210,16 @@ class LocalJsonWorkerStateStore:
                 json.dump(novo, fh, indent=2, sort_keys=True)
         return novo
 
+    def conditional_update(self, evaluate: Callable[[dict], tuple[bool, dict]], *, message: str = "") -> bool:
+        aceita, novo = evaluate(self.read())
+        if not aceita:
+            return False
+        if self.path:
+            os.makedirs(os.path.dirname(os.path.abspath(self.path)) or ".", exist_ok=True)
+            with open(self.path, "w", encoding="utf-8") as fh:
+                json.dump(novo, fh, indent=2, sort_keys=True)
+        return True
+
 
 class InMemoryWorkerStateStore:
     """Backend em memória, para teste — mesma superfície de
@@ -216,6 +234,13 @@ class InMemoryWorkerStateStore:
     def update(self, mutate: Callable[[dict], dict], *, message: str = "") -> dict:
         self._dados = mutate(self.read())
         return json.loads(json.dumps(self._dados))
+
+    def conditional_update(self, evaluate: Callable[[dict], tuple[bool, dict]], *, message: str = "") -> bool:
+        aceita, novo = evaluate(self.read())
+        if not aceita:
+            return False
+        self._dados = novo
+        return True
 
 
 class OperationalWorkerRegistry:
@@ -271,23 +296,59 @@ class OperationalWorkerRegistry:
         self.store.update(mutate, message=message)
         return record
 
-    def upsert_many(self, records: list[WorkerRecord], *, message: str) -> list[WorkerRecord]:
-        """Como ``upsert()``, mas grava vários registros em UMA única
-        escrita/commit — Issue #105 Fase E (``coordinator/handoff_exec.py``):
-        handoff precisa atualizar o worker anterior e o novo worker sem
-        nenhuma janela em que os dois aparecem como dono ativo da mesma
-        tarefa, nem uma janela em que só um dos dois lados foi persistido."""
-        def mutate(dados: dict) -> dict:
+    def transferir_worker_condicional(
+        self, *, worker_anterior_id: str, tarefa_id_esperada: str, worker_novo_id: str,
+        worker_anterior_atualizado: WorkerRecord, worker_novo_atualizado: WorkerRecord, message: str,
+    ) -> bool:
+        """Compare-and-set atômico para o handoff — Issue #105 Fase E
+        (``coordinator/handoff_exec.py``), achado H2 da auditoria
+        independente do PR #115: um ``upsert`` duplo em UM commit não
+        bastava, porque o par (worker anterior liberado, novo worker
+        assumido) era escrito incondicionalmente — duas tarefas
+        DIFERENTES concorrendo pelo mesmo worker novo podiam, cada uma
+        com seu próprio ``claim`` (chaves diferentes, então as duas
+        "vencem"), sobrescrever a reserva uma da outra, com a última
+        escrita ganhando silenciosamente.
+
+        Agora a escrita só acontece quando, numa leitura FRESCA repetida
+        em CADA tentativa de conflito (``WorkerStateStore.
+        conditional_update`` — mesmo princípio de
+        ``git_state.GitJsonStore.claim_key``/``conditional_update``), as
+        duas pré-condições ainda são verdadeiras:
+
+        1. ``worker_anterior_id`` ainda tem ``current_task ==
+           tarefa_id_esperada`` — ainda é o dono real da tarefa sendo
+           transferida (não foi liberado/reatribuído por outra operação
+           entretanto);
+        2. ``worker_novo_id`` ainda está ``AVAILABLE``, ``can_execute`` e
+           sem ``current_task`` — ainda é candidato real a assumir a
+           tarefa (nenhuma OUTRA tarefa já o reservou entretanto).
+
+        Se qualquer uma mudou, nada é escrito e devolve ``False`` — nunca
+        sobrescreve um estado mais novo do que o snapshot que gerou a
+        decisão."""
+        def evaluate(dados: dict) -> tuple[bool, dict]:
             existentes = dados.get("workers")
             base = {w["worker_id"]: w for w in existentes} if existentes else {
                 w.worker_id: w.to_dict() for w in default_seed_workers()
             }
-            for record in records:
-                base[record.worker_id] = record.to_dict()
-            return {"workers": list(base.values())}
+            anterior_fresco = base.get(worker_anterior_id)
+            novo_fresco = base.get(worker_novo_id)
+            if anterior_fresco is None or anterior_fresco.get("current_task") != tarefa_id_esperada:
+                return False, dados
+            if novo_fresco is None:
+                return False, dados
+            if (
+                novo_fresco.get("status") != "AVAILABLE"
+                or not novo_fresco.get("can_execute", True)
+                or novo_fresco.get("current_task") is not None
+            ):
+                return False, dados
+            base[worker_anterior_id] = worker_anterior_atualizado.to_dict()
+            base[worker_novo_id] = worker_novo_atualizado.to_dict()
+            return True, {"workers": list(base.values())}
 
-        self.store.update(mutate, message=message)
-        return records
+        return self.store.conditional_update(evaluate, message=message)
 
     def set_status(self, nome_ou_id: str, novo_status: str, *, message: str,
                     heartbeat: str | None = None, default_type: str = "human_session") -> WorkerRecord:

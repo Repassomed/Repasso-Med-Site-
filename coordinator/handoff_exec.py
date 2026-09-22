@@ -59,8 +59,77 @@ que um ``HandoffContext`` externo tente declarar com os valores de
 ``HandoffSource`` — nunca o contrário. Isto fecha a única forma pela qual
 um ``contexto`` de chamada poderia, por engano ou por dado manipulado,
 aprovar um handoff com uma política mais permissiva do que a tarefa
-original de fato tinha (\"worker receptor não pode ganhar permissões
-maiores que a tarefa original\").
+original de fato tinha ("worker receptor não pode ganhar permissões
+maiores que a tarefa original").
+
+---
+
+**Correções da 1ª auditoria independente do PR #115 (H1-H3) — só isto,
+scheduler/heartbeat/runner_contract/runner_dispatch/runner_generate
+continuam intocados:**
+
+- **H1 (checkpoint "seguro" só validava FORMATO, não existência real):**
+  ``checkpoint_e_seguro()`` (mantida, inalterada) só prova que a string É
+  um SHA sintático — nunca que o commit existe de verdade ou pertence à
+  branch esperada. ``executar_handoff`` ganhou um parâmetro OBRIGATÓRIO
+  ``verificar_checkpoint: Callable[[str, str], bool]`` (recebe
+  ``checkpoint_commit``/``branch``, devolve se o commit existe E é
+  alcançável naquela branch) — chamado só quando o formato já é válido
+  (nunca perde tempo verificando um valor simbólico). Sem parâmetro
+  default nenhum: cada chamador precisa decidir explicitamente como
+  verificar (em produção, contra o checkout real; em teste, um
+  verificador falso) — nunca um "sempre confia no formato" implícito.
+  Deliberadamente este módulo não implementa a verificação real em si
+  (nenhum ``git``/processo externo aqui, mesma razão de nunca importar
+  ``runner_dispatch`` — ver seção acima): a implementação real é uma
+  peça de integração de quem for de fato invocar o handoff em produção.
+- **H2 (duas tarefas DIFERENTES podiam reservar o mesmo worker novo):**
+  o claim antigo protegia só a MESMA tarefa contra si mesma —
+  ``registry.upsert_many()`` (removido) escrevia o par
+  anterior/novo incondicionalmente, então tarefa A e tarefa B, cada uma
+  com sua própria chave de claim, podiam as DUAS vencer e as DUAS
+  atribuir o mesmo worker novo, com a última escrita ganhando em
+  silêncio. Agora ``OperationalWorkerRegistry.transferir_worker_
+  condicional`` (novo, em ``worker_ops.py``) faz um compare-and-set real:
+  só escreve quando, numa leitura FRESCA (repetida em cada tentativa de
+  conflito), o worker anterior AINDA tem a tarefa esperada como
+  ``current_task`` e o worker novo AINDA está ``AVAILABLE``/
+  ``can_execute``/sem ``current_task``. Se qualquer uma mudou (por
+  exemplo, outra tarefa já reservou o mesmo worker novo), nada é
+  escrito e ``executar_handoff`` devolve ``BLOCKED`` — nunca sobrescreve
+  uma reserva mais nova.
+- **H3 (claim eterno por ``tarefa.id`` impedia uma SEGUNDA transferência
+  legítima da mesma tarefa, e colidia com o claim permanente do próprio
+  Runner Dispatch):** o claim de idempotência agora é por TRANSIÇÃO —
+  ``f"{tarefa.id}:{worker_anterior.worker_id}:{checkpoint_commit}"` —
+  nunca só por ``tarefa.id``. Repetir EXATAMENTE a mesma transição (mesmo
+  dono anterior, mesmo checkpoint) continua idempotente/bloqueada; um
+  checkpoint novo OU um dono anterior diferente (ex.: Claude 2, que
+  recebeu a tarefa de Claude 1, chega ao próprio limite depois) produz
+  uma chave diferente e libera um handoff seguinte legítimo. Além disso,
+  a ``RunnerTask`` de continuação para ``api_runner`` deixou de reusar
+  ``tarefa.id`` como o próprio ``RunnerTask.task_id`` — usa
+  ``derivar_task_id_de_continuacao(tarefa.id, checkpoint_commit)``, um
+  identificador DISTINTO por geração/checkpoint. Isto é necessário porque
+  ``runner_dispatch.RunnerClaimStore`` faz o SEU PRÓPRIO claim permanente
+  por ``task_id`` (nunca reaproveitável, nem depois de ``FAILED`` —
+  documentado no próprio ``runner_dispatch.py``: "retomar exige uma
+  RunnerTask NOVA, com outro task_id"); preservar o mesmo ``task_id``
+  faria uma tarefa já executada uma vez pelo Runner Dispatch (mesmo que
+  interrompida) rejeitar a continuação como "já reivindicada", mesmo
+  sendo uma transferência legítima e nova.
+- **Observação sobre ``human_session`` (mesma auditoria):** ao corrigir
+  H2/H3, a sessão humana receptora não pode ficar "livre" para receber
+  OUTRA oferta do scheduler enquanto uma transferência já foi preparada
+  para ela — mas também não pode ser marcada ``BUSY`` (isso fingiria que
+  ela já começou). A reserva agora é representada só por
+  ``current_task = tarefa.id`` (o mesmo campo que já exclui um worker de
+  ``scheduler._candidatos_disponiveis``), com ``status`` inalterado
+  (continua ``AVAILABLE``, nunca ``BUSY``) — verdadeiro nos dois eixos:
+  "reservada" (não pode receber outra oferta) e "ainda não iniciada"
+  (ninguém fingiu que o trabalho começou). Um heartbeat real, quando a
+  sessão humana de fato começar, é quem marca ``BUSY`` de verdade (fora
+  deste módulo, via ``heartbeat.aplicar_heartbeat``, já existente).
 """
 
 from __future__ import annotations
@@ -68,6 +137,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
+from typing import Callable
 
 from .classify import Priority
 from .git_state import GitJsonStore
@@ -79,9 +149,11 @@ from .worker_ops import OperationalWorkerRegistry, WorkerRecord
 DEFAULT_HANDOFF_STATE_BRANCH = "coordinator-state-handoff"
 
 # Mesma faixa de SHA git que runner_contract._COMMIT_SHA_RE usa — repetida
-# aqui (não importada, que é privada de outro módulo) só para decidir
-# ``checkpoint_seguro`` ANTES de tentar construir uma RunnerTask; a
-# validação de verdade continua sendo a do próprio contrato canônico.
+# aqui (não importada, que é privada de outro módulo) só para decidir o
+# FORMATO de ``checkpoint_seguro`` antes de tentar construir uma
+# RunnerTask; a validação de FORMATO de verdade continua sendo a do
+# próprio contrato canônico. A EXISTÊNCIA real do commit (H1) é uma
+# checagem separada, injetada por quem chama ``executar_handoff``.
 _SHA_RE = re.compile(r"^[0-9a-fA-F]{7,40}$")
 
 # Mesmo vocabulário de handoff.py/scheduler.py — nenhum valor novo aqui.
@@ -99,15 +171,33 @@ def _slug(nome: str) -> str:
 
 
 def checkpoint_e_seguro(checkpoint_commit: str | None) -> bool:
-    """``True`` só para um SHA de commit explícito (7-40 hex) — nunca uma
-    string vazia, ``None``, ``"HEAD"``/``"latest"`` ou qualquer valor
-    simbólico. Mesma régua de ``runner_contract`` (Issue #84 §6: "todo
-    handoff deve partir de commit/checkpoint conhecido"), decidida aqui
-    ANTES de qualquer RunnerTask precisar existir — vale também para o
-    caminho ``human_session``, que nunca constrói uma RunnerTask."""
+    """``True`` só para um SHA de commit SINTATICAMENTE válido (7-40 hex)
+    — nunca uma string vazia, ``None``, ``"HEAD"``/``"latest"`` ou
+    qualquer valor simbólico. Mesma régua de ``runner_contract`` (Issue
+    #84 §6: "todo handoff deve partir de commit/checkpoint conhecido").
+
+    Correção H1 (auditoria independente do PR #115): isto prova só o
+    FORMATO — nunca que o commit existe de verdade ou pertence à branch
+    esperada. ``executar_handoff`` combina isto com ``verificar_checkpoint``
+    (injetado, ver docstring do módulo) antes de considerar um checkpoint
+    realmente seguro para consumir o handoff."""
     if not checkpoint_commit:
         return False
     return bool(_SHA_RE.match(checkpoint_commit.strip()))
+
+
+def derivar_task_id_de_continuacao(tarefa_id: str, checkpoint_commit: str) -> str:
+    """Correção H3 (auditoria independente do PR #115): o ``RunnerTask.
+    task_id`` de uma continuação NUNCA pode ser literalmente ``tarefa_id``
+    — ``runner_dispatch.RunnerClaimStore`` já reivindica esse mesmo valor
+    permanentemente na PRIMEIRA tentativa (mesmo que ela termine
+    ``BLOCKED-LIMIT``), então reusar o mesmo ``task_id`` faria o Runner
+    Dispatch rejeitar toda e qualquer continuação legítima como "já
+    reivindicada". Este identificador é DISTINTO por geração/checkpoint
+    (determinístico — a MESMA transição sempre deriva o MESMO id, uma
+    transição NOVA sempre deriva um id diferente), mas continua
+    rastreável até a tarefa canônica (prefixo ``tarefa_id``)."""
+    return f"{tarefa_id}--continuacao-{checkpoint_commit}"
 
 
 @dataclass(frozen=True)
@@ -200,7 +290,9 @@ def derivar_runner_task_continuacao(
     ``ValueError`` exatamente como levantaria para qualquer outra
     RunnerTask). Todo campo sensível vem de ``source``, nunca de outro
     lugar — branch/allowed_files/capabilities_required/risk_level/
-    policy_level/jose_authorized/source_issue/publication_required."""
+    policy_level/jose_authorized/source_issue/publication_required.
+    ``task_id`` precisa já vir DERIVADO (``derivar_task_id_de_
+    continuacao``, correção H3) — nunca a tarefa canônica diretamente."""
     texto = (instructions or "").strip()
     if texto.lower() in _INSTRUCOES_PROIBIDAS:
         raise ValueError(f"instructions={texto!r} é vago demais para uma continuação — gere um texto completo.")
@@ -221,21 +313,26 @@ def derivar_runner_task_continuacao(
 
 
 class HandoffClaimStore:
-    """Reserva atômica de ``tarefa.id`` numa branch de estado DEDICADA
-    (``coordinator-state-handoff``, nunca ``main``, nunca matéria) —
-    reaproveita ``git_state.GitJsonStore.claim_key()``, a MESMA peça que
-    ``runner_dispatch.RunnerClaimStore``/``dedup.GitDedupStore`` já usam
-    para o mesmo problema (nunca uma segunda implementação de compare-
-    and-swap). Depois de reivindicado, um handoff para a mesma tarefa
-    NUNCA pode ser reivindicado de novo — "handoff repetido/idempotente
-    não cria segunda execução" (requisito desta rodada) e "impedir dois
-    workers executando a mesma continuação"."""
+    """Reserva atômica de uma TRANSIÇÃO de handoff numa branch de estado
+    DEDICADA (``coordinator-state-handoff``, nunca ``main``, nunca
+    matéria) — reaproveita ``git_state.GitJsonStore.claim_key()``, a
+    MESMA peça que ``runner_dispatch.RunnerClaimStore``/``dedup.
+    GitDedupStore`` já usam para o mesmo problema (nunca uma segunda
+    implementação de compare-and-swap).
+
+    Correção H3 (auditoria independente do PR #115): a chave reivindicada
+    é a TRANSIÇÃO (``chave_transicao``, calculada por
+    ``executar_handoff`` como ``f"{tarefa.id}:{worker_anterior.worker_id}
+    :{checkpoint_commit}"``) — nunca só ``tarefa.id``. Repetir a MESMA
+    transição continua idempotente (bloqueada na segunda vez); uma
+    transição NOVA (checkpoint ou dono anterior diferente) usa uma chave
+    diferente e nunca é bloqueada por uma reivindicação antiga."""
 
     def __init__(self, git_json: GitJsonStore) -> None:
         self.git_json = git_json
 
-    def claim(self, tarefa_id: str) -> bool:
-        return self.git_json.claim_key(f"handoff:{tarefa_id}", message=f"handoff: claim {tarefa_id}")
+    def claim(self, chave_transicao: str) -> bool:
+        return self.git_json.claim_key(f"handoff:{chave_transicao}", message=f"handoff: claim {chave_transicao}")
 
     def registrar_execucao(self, resultado: "HandoffExecutionResult") -> None:
         def mutate(dados: dict) -> dict:
@@ -288,21 +385,28 @@ def executar_handoff(
     claim_store: HandoffClaimStore,
     source: HandoffSource,
     checkpoint_commit: str | None,
+    verificar_checkpoint: Callable[[str, str], bool],
     contexto: HandoffContext | None = None,
     instructions: str | None = None,
 ) -> HandoffExecutionResult:
     """A orquestração operacional completa do handoff — decide (delegando
     a ``scheduler.avaliar_handoff_de_tarefa``, nunca duplicando a regra),
-    reivindica atomicamente (``claim_store``, nunca duas continuações
-    para a mesma tarefa) e só então atualiza o Worker Registry e deriva a
-    continuação (``RunnerTask`` para ``api_runner``; texto puro para
-    ``human_session`` — NUNCA um estado que finja execução iniciada).
+    reivindica atomicamente a TRANSIÇÃO (``claim_store``, correção H3 —
+    nunca duas execuções da mesma transição, mas uma transição NOVA da
+    mesma tarefa permanece possível) e só então atualiza o Worker
+    Registry — de forma condicional (``transferir_worker_condicional``,
+    correção H2 — nunca sobrescreve uma reserva mais nova) — e deriva a
+    continuação (``RunnerTask`` com ``task_id`` DERIVADO, correção H3,
+    para ``api_runner``; texto puro para ``human_session`` — NUNCA um
+    estado que finja execução iniciada, mas também nunca "livre" para
+    receber outra oferta enquanto reservada).
 
-    Fail-closed em toda borda: ``worker_anterior`` precisa de fato ser o
-    dono declarado da tarefa (``tarefa.agente``) e precisa estar
-    ``LIMIT``/``NEAR_LIMIT`` (motivo de existir um handoff); qualquer
-    violação devolve ``BLOCKED`` sem tocar no Worker Registry nem no
-    claim store."""
+    ``verificar_checkpoint(checkpoint_commit, branch) -> bool`` (correção
+    H1, sem default): só chamado quando ``checkpoint_e_seguro()`` já
+    aprovou o FORMATO; precisa confirmar que o commit existe de verdade e
+    é alcançável naquela branch. Fail-closed em toda borda: qualquer
+    violação devolve ``BLOCKED``/``WAIT`` sem tocar no Worker Registry
+    nem no claim store."""
     pausa = decidir_pool(workers)
     if pausa is not None:
         return HandoffExecutionResult(
@@ -325,7 +429,12 @@ def executar_handoff(
             task_id=tarefa.id, previous_worker_id=worker_anterior.worker_id,
         )
 
-    checkpoint_seguro = checkpoint_e_seguro(checkpoint_commit)
+    # Correção H1: formato válido é só o pré-requisito para gastar a
+    # verificação (potencialmente cara/real) de existência — nunca o
+    # suficiente por si só para considerar o checkpoint seguro.
+    checkpoint_seguro = bool(checkpoint_commit) and checkpoint_e_seguro(checkpoint_commit) and verificar_checkpoint(
+        checkpoint_commit, source.branch,
+    )
 
     # Correção estrutural (ver docstring do módulo): policy_level/
     # jose_authorized/risk_level do contexto SEMPRE vêm de `source` —
@@ -358,16 +467,19 @@ def executar_handoff(
             task_id=tarefa.id, previous_worker_id=worker_anterior.worker_id,
         )
 
-    # Ponto único de concorrência: só a PRIMEIRA chamada, entre quaisquer
-    # execuções concorrentes, a reivindicar esta tarefa prossegue — "dois
-    # workers tentando assumir a mesma continuação -> somente um vence" e
-    # "handoff repetido/idempotente não cria segunda execução".
-    claimed = claim_store.claim(tarefa.id)
+    # Correção H3: a chave de idempotência é a TRANSIÇÃO (tarefa + dono
+    # anterior + checkpoint) — nunca só a tarefa. Só a PRIMEIRA chamada,
+    # entre quaisquer execuções concorrentes, a reivindicar esta MESMA
+    # transição prossegue; uma transição NOVA (checkpoint/dono anterior
+    # diferente) usa outra chave e nunca é bloqueada por esta.
+    chave_transicao = f"{tarefa.id}:{worker_anterior.worker_id}:{checkpoint_commit}"
+    claimed = claim_store.claim(chave_transicao)
     if not claimed:
         return HandoffExecutionResult(
             "BLOCKED",
-            f"handoff para {tarefa.id!r} já foi reivindicado/executado antes — idempotente, nenhuma "
-            "segunda continuação foi criada.",
+            f"esta transição de {tarefa.id!r} (de {worker_anterior.worker_id!r}, checkpoint "
+            f"{checkpoint_commit!r}) já foi reivindicada/executada antes — idempotente, nenhuma segunda "
+            "continuação foi criada. Um checkpoint ou dono anterior diferente gera uma transição nova.",
             task_id=tarefa.id, previous_worker_id=worker_anterior.worker_id,
             new_worker_id=novo_worker.worker_id, new_worker_type=novo_worker.type,
         )
@@ -379,7 +491,8 @@ def executar_handoff(
     if novo_worker.type == "api_runner":
         try:
             runner_task = derivar_runner_task_continuacao(
-                task_id=tarefa.id, priority=tarefa.priority, source=source,
+                task_id=derivar_task_id_de_continuacao(tarefa.id, checkpoint_commit),
+                priority=tarefa.priority, source=source,
                 checkpoint_commit=checkpoint_commit, instructions=texto_instrucoes,
             )
         except ValueError as exc:
@@ -398,10 +511,28 @@ def executar_handoff(
             novo_worker, status="BUSY", current_task=tarefa.id,
             branch=source.branch, commit=checkpoint_commit, last_checkpoint=checkpoint_commit,
         )
-        registry.upsert_many(
-            [anterior_atualizado, novo_atualizado],
+        # Correção H2: compare-and-set — só escreve se, numa leitura
+        # FRESCA, o anterior ainda é dono de `tarefa.id` e o novo ainda
+        # está livre/AVAILABLE/can_execute. Falso = outra tarefa já
+        # reservou o mesmo worker novo nesse intervalo.
+        transferido = registry.transferir_worker_condicional(
+            worker_anterior_id=worker_anterior.worker_id, tarefa_id_esperada=tarefa.id,
+            worker_novo_id=novo_worker.worker_id,
+            worker_anterior_atualizado=anterior_atualizado, worker_novo_atualizado=novo_atualizado,
             message=f"handoff: {tarefa.id} {worker_anterior.worker_id} -> {novo_worker.worker_id}",
         )
+        if not transferido:
+            resultado = HandoffExecutionResult(
+                "BLOCKED",
+                f"o worker {novo_worker.worker_id!r} (ou o próprio {worker_anterior.worker_id!r}) mudou "
+                "de estado entre a decisão e a escrita — outra tarefa provavelmente já o reservou; "
+                "nenhum registro foi sobrescrito.",
+                task_id=tarefa.id, previous_worker_id=worker_anterior.worker_id,
+                new_worker_id=novo_worker.worker_id, new_worker_type=novo_worker.type,
+            )
+            claim_store.registrar_execucao(resultado)
+            return resultado
+
         resultado = HandoffExecutionResult(
             "HANDOFF_EXECUTED", decisao.reason, task_id=tarefa.id,
             previous_worker_id=worker_anterior.worker_id, new_worker_id=novo_worker.worker_id,
@@ -409,18 +540,35 @@ def executar_handoff(
         )
     else:
         # human_session (ou qualquer outro tipo futuro que can_execute):
-        # NUNCA marcamos o novo worker como iniciado — só liberamos o
-        # worker anterior e devolvemos a instrução como TEXTO, para um
-        # humano decidir começar (Issue #105: "human_session não deve
-        # ser fingida como automaticamente inicializável").
+        # NUNCA marcamos BUSY (fingiria que ela já começou), mas também
+        # nunca a deixamos "livre" para o scheduler oferecer outra tarefa
+        # enquanto esta reserva existe — só `current_task` é preenchido
+        # (o mesmo campo que já exclui um worker de
+        # `scheduler._candidatos_disponiveis`), `status` continua
+        # exatamente o que já era (observação da auditoria do PR #115).
         anterior_atualizado = replace(worker_anterior, current_task=None)
-        registry.upsert(
-            anterior_atualizado,
+        novo_atualizado = replace(novo_worker, current_task=tarefa.id)
+        transferido = registry.transferir_worker_condicional(
+            worker_anterior_id=worker_anterior.worker_id, tarefa_id_esperada=tarefa.id,
+            worker_novo_id=novo_worker.worker_id,
+            worker_anterior_atualizado=anterior_atualizado, worker_novo_atualizado=novo_atualizado,
             message=(
-                f"handoff: libera {worker_anterior.worker_id} — tarefa {tarefa.id} oferecida a "
+                f"handoff: libera {worker_anterior.worker_id} — tarefa {tarefa.id} reservada para "
                 f"{novo_worker.worker_id} (início manual, nunca automático)"
             ),
         )
+        if not transferido:
+            resultado = HandoffExecutionResult(
+                "BLOCKED",
+                f"o worker {novo_worker.worker_id!r} (ou o próprio {worker_anterior.worker_id!r}) mudou "
+                "de estado entre a decisão e a escrita — outra tarefa provavelmente já o reservou; "
+                "nenhum registro foi sobrescrito.",
+                task_id=tarefa.id, previous_worker_id=worker_anterior.worker_id,
+                new_worker_id=novo_worker.worker_id, new_worker_type=novo_worker.type,
+            )
+            claim_store.registrar_execucao(resultado)
+            return resultado
+
         resultado = HandoffExecutionResult(
             "HANDOFF_EXECUTED", decisao.reason, task_id=tarefa.id,
             previous_worker_id=worker_anterior.worker_id, new_worker_id=novo_worker.worker_id,
