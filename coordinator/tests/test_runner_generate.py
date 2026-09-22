@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 import tempfile
 
@@ -31,9 +32,10 @@ from . import _pathsetup  # noqa: F401
 from coordinator.anthropic_client import Request, TransportResponse
 from coordinator.budget import UsageLedger
 from coordinator.classify import Priority
+from coordinator.git_state import GitJsonStore, GitUsageLedger
 from coordinator.runner_contract import RunnerTask
 from coordinator.runner_dispatch import RunnerDispatchConfig
-from coordinator.runner_generate import build_prompt, gerar_patch_via_claude
+from coordinator.runner_generate import MAX_FILE_CHARS_SENT, build_prompt, gerar_patch_via_claude
 
 
 class _CountingTransport:
@@ -79,6 +81,24 @@ def _config(**overrides) -> RunnerDispatchConfig:
 
 def _resposta_ok(files: list[dict]) -> TransportResponse:
     return TransportResponse(text=json.dumps({"files": files}), input_tokens=100, output_tokens=50)
+
+
+def _criar_remoto_local(tmp: str) -> str:
+    """Mesmo padrão de test_git_state.py/test_runner_dispatch.py: um
+    repositório git comum (não-bare) que funciona como 'o GitHub' — cada
+    'execução' faz seu próprio GitUsageLedger/GitJsonStore, como runners
+    efêmeros diferentes fariam contra o remoto real."""
+    remoto = os.path.join(tmp, "remoto.git")
+    os.makedirs(remoto)
+    subprocess.run(["git", "init", "-q", remoto], check=True)
+    subprocess.run(["git", "-C", remoto, "config", "user.email", "x@example.com"], check=True)
+    subprocess.run(["git", "-C", remoto, "config", "user.name", "X"], check=True)
+    with open(os.path.join(remoto, "README"), "w", encoding="utf-8") as fh:
+        fh.write("repo de mentira só para os testes do Runner Generate\n")
+    subprocess.run(["git", "-C", remoto, "add", "-A"], check=True)
+    subprocess.run(["git", "-C", remoto, "commit", "-q", "-m", "bootstrap"], check=True)
+    subprocess.run(["git", "-C", remoto, "checkout", "-q", "-b", "bootstrap"], check=True)
+    return remoto
 
 
 # ---------------------------------------------------------------------------
@@ -165,6 +185,139 @@ def test_no_automatic_retry_on_transport_error() -> None:
         assert transporte.calls == 1, "uma tentativa só — nenhum retry automático"
         assert outcome.patch is None
     print("OK  test_no_automatic_retry_on_transport_error")
+
+
+# ---------------------------------------------------------------------------
+# Correção B2-B (2ª auditoria independente do PR #114): custo persiste
+# entre INSTÂNCIAS INDEPENDENTES de GitUsageLedger sobre o mesmo remoto —
+# nunca em memória/arquivo local (que não sobreviveria entre execuções
+# efêmeras do GitHub Actions).
+# ---------------------------------------------------------------------------
+
+def test_usage_persists_across_independent_git_usage_ledger_instances() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        branch_ledger = "coordinator-state-teste-runner-usage"
+
+        # "Execução 1" (um job do GitHub Actions): instância FRESCA do
+        # ledger, orçamento generoso — a chamada tem êxito e o custo é
+        # publicado no remoto.
+        ledger_execucao_1 = GitUsageLedger(GitJsonStore(remoto, branch=branch_ledger))
+        transporte_1 = _CountingTransport(response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}]))
+        outcome_1 = gerar_patch_via_claude(
+            _task(), config=_config(), repo_dir=tmp,
+            usage_ledger=ledger_execucao_1, budget_usd=20.0,
+            transport=transporte_1,
+        )
+        assert outcome_1.status == "ok"
+        assert outcome_1.usage is not None
+
+        # "Execução 2" (um job NOVO, workdir novo, processo novo): uma
+        # instância TOTALMENTE NOVA de GitUsageLedger/GitJsonStore, que
+        # nunca viu a execução 1 em memória — só reconstruída a partir do
+        # MESMO remoto/branch. Precisa ver o gasto já registrado.
+        ledger_execucao_2 = GitUsageLedger(GitJsonStore(remoto, branch=branch_ledger))
+        gasto_visivel = ledger_execucao_2.month_to_date_usd()
+        assert gasto_visivel > 0.0, "o custo da execução 1 precisa ser visível numa instância nova do ledger"
+        assert len(ledger_execucao_2.all_records()) == 1
+    print("OK  test_usage_persists_across_independent_git_usage_ledger_instances")
+
+
+def test_budget_cap_enforced_via_persistent_ledger_across_fresh_instances() -> None:
+    """O hard cap mensal precisa funcionar ENTRE execuções, não só dentro
+    de uma — uma segunda 'execução' (ledger novo, mesmo remoto) precisa
+    ver o gasto da primeira e bloquear se isso já esgotou o orçamento."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        branch_ledger = "coordinator-state-teste-runner-usage-cap"
+
+        ledger_execucao_1 = GitUsageLedger(GitJsonStore(remoto, branch=branch_ledger))
+        transporte_1 = _CountingTransport(response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}]))
+        outcome_1 = gerar_patch_via_claude(
+            _task(), config=_config(), repo_dir=tmp,
+            usage_ledger=ledger_execucao_1, budget_usd=20.0,
+            transport=transporte_1,
+        )
+        assert outcome_1.status == "ok"
+
+        # Execução 2: ledger novo, mesmo remoto/branch, mas com um teto
+        # mensal ínfimo — o gasto já registrado pela execução 1 precisa
+        # bastar para o portão de orçamento fechar ANTES de qualquer
+        # chamada nova, mesmo que esta segunda instância nunca tenha
+        # chamado a API ela mesma.
+        ledger_execucao_2 = GitUsageLedger(GitJsonStore(remoto, branch=branch_ledger))
+        transporte_2 = _CountingTransport(response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}]))
+        outcome_2 = gerar_patch_via_claude(
+            _task(), config=_config(), repo_dir=tmp,
+            usage_ledger=ledger_execucao_2, budget_usd=0.0000001,
+            transport=transporte_2,
+        )
+        assert outcome_2.status == "blocked"
+        assert transporte_2.calls == 0, "orçamento esgotado (visto via ledger persistente) — zero chamada nova"
+    print("OK  test_budget_cap_enforced_via_persistent_ledger_across_fresh_instances")
+
+
+# ---------------------------------------------------------------------------
+# Correção B2-C (2ª auditoria independente do PR #114): allowed_file
+# existente maior do que pode ser enviado INTEGRALMENTE ao modelo ->
+# fail-closed (zero chamada, zero patch) — nunca corta/trunca.
+# ---------------------------------------------------------------------------
+
+def test_oversized_allowed_file_blocks_before_any_call() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        caminho_grande = os.path.join(tmp, "grande.html")
+        with open(caminho_grande, "w", encoding="utf-8") as fh:
+            fh.write("x" * (MAX_FILE_CHARS_SENT + 1))
+
+        transporte = _CountingTransport(response=_resposta_ok([{"path": "grande.html", "content": "y"}]))
+        outcome = gerar_patch_via_claude(
+            _task(allowed_files=("grande.html",)), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "blocked"
+        assert transporte.calls == 0, "arquivo grande demais — nenhuma chamada podia ter sido feita"
+        assert outcome.patch is None
+        assert "grande.html" in outcome.reason
+    print("OK  test_oversized_allowed_file_blocks_before_any_call")
+
+
+def test_file_exactly_at_limit_is_not_blocked() -> None:
+    """Prova positiva: um arquivo cujo tamanho é EXATAMENTE o limite (não
+    maior) não é bloqueado pela correção B2-C — só quem excede o limite."""
+    with tempfile.TemporaryDirectory() as tmp:
+        caminho = os.path.join(tmp, "greeting.txt")
+        with open(caminho, "w", encoding="utf-8") as fh:
+            fh.write("x" * MAX_FILE_CHARS_SENT)
+
+        transporte = _CountingTransport(response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}]))
+        outcome = gerar_patch_via_claude(
+            _task(), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "ok"
+        assert transporte.calls == 1
+    print("OK  test_file_exactly_at_limit_is_not_blocked")
+
+
+def test_oversized_file_outside_allowed_files_does_not_block() -> None:
+    """Contexto mínimo (invariante 3, inalterada): um arquivo grande que
+    NÃO está em allowed_files nunca é lido/considerado — só os próprios
+    allowed_files entram na checagem de tamanho."""
+    with tempfile.TemporaryDirectory() as tmp:
+        with open(os.path.join(tmp, "grande_mas_nao_permitido.html"), "w", encoding="utf-8") as fh:
+            fh.write("x" * (MAX_FILE_CHARS_SENT + 1))
+
+        transporte = _CountingTransport(response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}]))
+        outcome = gerar_patch_via_claude(
+            _task(allowed_files=("greeting.txt",)), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "ok"
+        assert transporte.calls == 1
+    print("OK  test_oversized_file_outside_allowed_files_does_not_block")
 
 
 # ---------------------------------------------------------------------------
@@ -262,6 +415,11 @@ def main() -> int:
         test_budget_exhausted_makes_zero_external_call,
         test_valid_response_returns_patch_and_records_usage,
         test_no_automatic_retry_on_transport_error,
+        test_usage_persists_across_independent_git_usage_ledger_instances,
+        test_budget_cap_enforced_via_persistent_ledger_across_fresh_instances,
+        test_oversized_allowed_file_blocks_before_any_call,
+        test_file_exactly_at_limit_is_not_blocked,
+        test_oversized_file_outside_allowed_files_does_not_block,
         test_malformed_json_response_fails_without_patch,
         test_empty_files_response_fails_without_patch,
         test_response_outside_allowed_files_is_blocked_without_patch,

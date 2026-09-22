@@ -173,7 +173,8 @@ def test_task_id_format_validated_before_any_path_is_built() -> None:
     assert re.search(r"\^\[a-z0-9\]", trecho), "precisa validar o task_id com uma allowlist de formato explícita"
     assert "exit 1" in trecho
     idx_run_step = texto.index("Rodar o Runner Dispatch")
-    trecho_run = texto[idx_run_step: idx_run_step + 1500]
+    idx_run_step_fim = texto.index("Publicar o resultado do Runner Dispatch", idx_run_step)
+    trecho_run = texto[idx_run_step:idx_run_step_fim]
     assert "steps.taskid.outputs.task_id" in trecho_run, (
         "o passo que roda o dispatch precisa usar o task_id JÁ VALIDADO pelo passo anterior"
     )
@@ -191,16 +192,35 @@ def test_secret_only_exists_inside_the_single_gated_job() -> None:
     print("OK  test_secret_only_exists_inside_the_single_gated_job")
 
 
-def test_no_llm_api_keys_anywhere_in_this_workflow() -> None:
-    """Issue #105 §"Execução": nenhuma chamada de IA acontece neste
-    mecanismo — a GERAÇÃO do patch é responsabilidade de outro processo,
-    fora deste workflow. ANTHROPIC_API_KEY/OPENAI_API_KEY nunca podem
-    aparecer aqui (nem como secret, nem como env, nem em comentário que
-    sugira uso real)."""
+def test_anthropic_api_key_only_in_the_gated_runner_step() -> None:
+    """Correção B2-A (2ª auditoria independente do PR #114): a Fase D
+    passou a chamar a Anthropic de verdade no caminho real do canário, mas
+    a credencial só pode existir como env do ÚNICO passo gated que roda
+    `--generate-via-claude` — nunca em outro passo/job, nunca como secret
+    de nível de job/workflow, nunca como input. OPENAI_API_KEY continua
+    proibida em qualquer lugar (este mecanismo nunca usa OpenAI)."""
     texto = _ler()
-    assert "ANTHROPIC_API_KEY" not in texto
     assert "OPENAI_API_KEY" not in texto
-    print("OK  test_no_llm_api_keys_anywhere_in_this_workflow")
+
+    # A referência REAL ao secret (`secrets.ANTHROPIC_API_KEY`) só pode
+    # aparecer uma vez — a prosa dos comentários pode citar o NOME da
+    # variável (sem o prefixo `secrets.`) para explicar a regra, mas nunca
+    # a referência de fato usável.
+    assert texto.count("secrets.ANTHROPIC_API_KEY") == 1, (
+        "a referência real ao secret só pode existir uma vez, no passo gated"
+    )
+
+    idx_step = texto.index("Rodar o Runner Dispatch sobre a RunnerTask do canário")
+    idx_run = texto.index("run: |", idx_step)
+    bloco_env = texto[idx_step:idx_run]
+    assert "secrets.ANTHROPIC_API_KEY" in bloco_env, "o secret precisa estar no env DESTE passo especificamente"
+
+    # nenhum passo/job ANTERIOR a este (checkout, setup, validação de
+    # task_id, confirmação de portão) pode conhecer a referência real ao
+    # secret.
+    texto_antes = texto[:idx_step]
+    assert "secrets.ANTHROPIC_API_KEY" not in texto_antes
+    print("OK  test_anthropic_api_key_only_in_the_gated_runner_step")
 
 
 def test_no_force_push_or_merge_anywhere_in_this_workflow() -> None:
@@ -271,6 +291,34 @@ def test_run_step_forwards_all_three_gate_env_vars_to_the_real_invocation() -> N
     print("OK  test_run_step_forwards_all_three_gate_env_vars_to_the_real_invocation")
 
 
+def test_real_runner_step_uses_generate_via_claude_not_patch_file() -> None:
+    """Correção B2-A (2ª auditoria independente do PR #114): o caminho REAL
+    do canário usa --generate-via-claude (RunnerTask autorizada -> Claude/
+    Anthropic -> StructuredPatch validado), nunca --patch-file (que
+    exigiria um patch já pronto no disco, sem nenhuma conexão real ao
+    modelo) — e passa o ledger PERSISTENTE (correção B2-B), nunca um
+    caminho de arquivo local."""
+    texto = _ler()
+    idx_step = texto.index("Rodar o Runner Dispatch sobre a RunnerTask do canário")
+    # Escopo estrito na LINHA DE COMANDO de fato executada — nunca nos
+    # comentários ao redor (que legitimamente citam "--patch-file" em
+    # prosa, para explicar que ele continua existindo na CLI só para uso
+    # manual/teste, fora deste workflow).
+    # Ancorado na invocação de fato (com a continuação de linha `\`) —
+    # nunca na PROSA do comentário acima, que também cita
+    # "python3 -m coordinator.runner_dispatch" sem essa continuação.
+    idx_cmd = texto.index("python3 -m coordinator.runner_dispatch \\\n", idx_step)
+    idx_cmd_fim = texto.index('--out /tmp/runner-dispatch-outcome.json', idx_cmd) + len(
+        "--out /tmp/runner-dispatch-outcome.json"
+    )
+    bloco_cmd = texto[idx_cmd:idx_cmd_fim]
+    assert "--generate-via-claude" in bloco_cmd
+    assert "--patch-file" not in bloco_cmd
+    assert "--usage-git-remote" in bloco_cmd
+    assert "--usage-git-branch coordinator-state-runner-usage" in bloco_cmd
+    print("OK  test_real_runner_step_uses_generate_via_claude_not_patch_file")
+
+
 def test_validation_command_keys_come_from_a_fixed_declared_set() -> None:
     """Issue #105: 'testes e comandos devem vir de uma allowlist
     declarada, não de texto gerado pelo modelo.' O workflow nunca lê
@@ -304,11 +352,12 @@ def main() -> int:
         test_full_gate_mode_and_canary_confirmed_in_code,
         test_task_id_format_validated_before_any_path_is_built,
         test_secret_only_exists_inside_the_single_gated_job,
-        test_no_llm_api_keys_anywhere_in_this_workflow,
+        test_anthropic_api_key_only_in_the_gated_runner_step,
         test_no_force_push_or_merge_anywhere_in_this_workflow,
         test_permissions_are_contents_write_only_scoped_to_the_job,
         test_job_fails_when_runner_dispatch_cli_errors,
         test_run_step_forwards_all_three_gate_env_vars_to_the_real_invocation,
+        test_real_runner_step_uses_generate_via_claude_not_patch_file,
         test_validation_command_keys_come_from_a_fixed_declared_set,
         test_sucesso_status_is_needs_audit_never_done_by_default,
     ]

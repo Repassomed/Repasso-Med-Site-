@@ -3,12 +3,18 @@ name: Repasso Coordinator (RUNNER)
 # Issue #105, Fase D — api_runner: EXECUÇÃO CONTROLADA de uma RunnerTask
 # JÁ AUTORIZADA (coordinator/runner_dispatch.py). Decisão de José (Issue
 # #105): esta é infraestrutura Nível D já autorizada, mas a ATIVAÇÃO real
-# continua DESLIGADA por flag — este workflow entrega o MECANISMO; não liga
-# a flag (REPASSO_RUNNER_ENABLED), não roda canário, não usa API real
-# nenhuma de IA (nenhuma credencial de nenhum provedor de LLM aparece em
-# lugar nenhum deste arquivo — a GERAÇÃO do patch estruturado acontece FORA
-# deste mecanismo, num processo separado; este workflow só EXECUTA um
-# patch já pronto contra uma RunnerTask já validada).
+# continua DESLIGADA por flag (REPASSO_RUNNER_ENABLED) — nenhum canário
+# real roda só por este arquivo existir.
+#
+# Correção B2-A (2ª auditoria independente do PR #114): no caminho REAL do
+# canário, este workflow agora invoca `coordinator.runner_dispatch` com
+# `--generate-via-claude` (nunca mais `--patch-file`) — RunnerTask
+# autorizada -> Claude/Anthropic (coordinator/runner_generate.py) ->
+# StructuredPatch validado -> aplicar/testar/comitar, tudo dentro do MESMO
+# passo já gated pelos 4 portões (ENABLED + ator + ref + MODE/CANARY_TASK_ID
+# confirmados em código). `ANTHROPIC_API_KEY` só existe como env DESSE
+# passo — nunca em nenhum outro lugar deste arquivo, nunca aceito como
+# input de workflow_dispatch.
 #
 # Deliberadamente um arquivo SEPARADO de coordinator-observe.yml (não
 # tocado nesta rodada) — o Runner é um MECANISMO DE EXECUÇÃO (aplica
@@ -70,15 +76,17 @@ name: Repasso Coordinator (RUNNER)
 #      estado do claim) — o push da BRANCH DA TAREFA em si usa as
 #      credenciais que o próprio `actions/checkout` já deixou configuradas
 #      no workdir (mesmo token, mesmo escopo, sem reexpor o secret).
-#   7. SEM LLM NESTE WORKFLOW — nenhuma chamada de IA acontece a partir
-#      deste arquivo; o passo abaixo roda `runner_dispatch.py` no modo
-#      `--patch-file` (patch já pronto), NUNCA `--generate-via-claude`.
-#      Correção B2 (auditoria independente do PR #114): o MECANISMO de
-#      conexão RunnerTask -> Claude/Anthropic -> StructuredPatch agora
-#      existe (`coordinator/runner_generate.py`, atrás dos MESMOS 3
-#      portões + orçamento existente), mas este workflow de produção
-#      continua sem usá-lo — ligar isso aqui é uma decisão operacional
-#      separada e futura de José, não desta correção.
+#   7. LLM SÓ NO PASSO GATED (correção B2-A) — `coordinator.runner_generate`
+#      (chamado por `runner_dispatch.py --generate-via-claude`) é o único
+#      lugar deste mecanismo que fala com a Anthropic, e só o faz depois
+#      que `RunnerDispatchConfig.gate()` + `task_autorizada()` já abriram
+#      (os MESMOS 4 portões de sempre — ver `coordinator/runner_generate.py`).
+#      A credencial da Anthropic só existe como env do passo "Rodar o
+#      Runner Dispatch" abaixo — nunca em outro passo, nunca
+#      aceita como input de `workflow_dispatch` (que continua sem nenhum
+#      input, camada 1), nunca logada (`anthropic_client.CallResult.
+#      to_dict()`/`redact_mapping()` já sanitizam qualquer texto de
+#      erro/reason antes de print/artifact).
 #   8. FALHA — o job fica vermelho quando o CLI termina com erro (último
 #      passo abaixo), mesma técnica de coordinator-observe.yml.
 #
@@ -92,7 +100,8 @@ name: Repasso Coordinator (RUNNER)
 # cadastrado, então o heartbeat fica de fora desta invocação por ora
 # (mecanismo já pronto em ``executar_tarefa``/``--worker-id``, só não
 # ligado neste workflow enquanto não houver um worker real para reportar);
-# este workflow não usa `--generate-via-claude` (ver item 7 acima).
+# não implementa edição por trecho/âncora para arquivos grandes (bloqueia
+# a tarefa inteira em vez disso — correção B2-C, evolução futura).
 # ─────────────────────────────────────────────────────────────────────────
 
 on:
@@ -189,9 +198,9 @@ jobs:
       - name: Rodar o Runner Dispatch sobre a RunnerTask do canário
         id: runner
         env:
-          # Os mesmos três portões precisam chegar até AQUI — é este passo
-          # que de fato chama RunnerDispatchConfig.from_env() dentro de
-          # `python3 -m coordinator.runner_dispatch`. O passo de
+          # Os mesmos quatro portões precisam chegar até AQUI — é este
+          # passo que de fato chama RunnerDispatchConfig.from_env() dentro
+          # de `python3 -m coordinator.runner_dispatch`. O passo de
           # confirmação acima lê as mesmas Variables só para imprimir; sem
           # repetir aqui, o processo real veria os defaults seguros
           # (false/canary/vazio) mesmo que José tivesse ligado de verdade.
@@ -201,29 +210,52 @@ jobs:
           # Correção B1 (PR #114): precisam chegar até AQUI também — é este
           # passo que de fato invoca `python3 -m coordinator.runner_dispatch`,
           # cujo `RunnerDispatchConfig.from_env()` faz a mesma checagem de
-          # novo (defesa em profundidade, mesmo padrão dos outros 3 portões).
+          # novo (defesa em profundidade, mesmo padrão dos outros portões).
           REPASSO_RUNNER_ACTUAL_REF: ${{ github.ref }}
           REPASSO_RUNNER_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
+          # Correção B2-A (2ª auditoria independente do PR #114): a
+          # credencial da Anthropic só existe AQUI — o único passo gated
+          # pelos 4 portões acima. `coordinator.anthropic_transport.
+          # AnthropicTransport` só lê esta env var dentro de `send()`, e só
+          # é alcançada depois que `anthropic_client.call()` confirma o
+          # portão aberto de novo em código (RunnerDispatchConfig, que
+          # `runner_generate.gerar_patch_via_claude` passa direto como
+          # `config`). Nenhum outro passo/job deste arquivo tem acesso a
+          # este secret.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           set +e
           TASK_ID="${{ steps.taskid.outputs.task_id }}"
 
-          # Remoto com o GITHUB_TOKEN embutido, só para o claim atômico/
-          # registro de resultado na branch de estado DEDICADA
-          # (coordinator-state-runner) — GitJsonStore cria seu próprio
-          # workdir temporário e precisa de credenciais próprias (mesmo
-          # padrão de coordinator-observe.yml). O push da BRANCH DA TAREFA
-          # em si (--push-remote-name origin) usa as credenciais que o
-          # próprio actions/checkout já deixou configuradas neste workdir
-          # (mesmo GITHUB_TOKEN, mesmo escopo contents:write) — nunca um
-          # segundo remoto/token exposto para essa parte.
+          # Remoto com o GITHUB_TOKEN embutido — usado para (a) o claim
+          # atômico/registro de resultado na branch de estado DEDICADA do
+          # Runner (coordinator-state-runner) e (b), correção B2-B, o
+          # ledger PERSISTENTE de custo/tokens do Runner numa branch de
+          # estado dedicada SEPARADA (coordinator-state-runner-usage, o
+          # default de --usage-git-branch) — GitJsonStore/GitUsageLedger
+          # criam seu próprio workdir temporário e precisam de credenciais
+          # próprias (mesmo padrão de coordinator-observe.yml). O push da
+          # BRANCH DA TAREFA em si (--push-remote-name origin) usa as
+          # credenciais que o próprio actions/checkout já deixou
+          # configuradas neste workdir (mesmo GITHUB_TOKEN, mesmo escopo
+          # contents:write) — nunca um segundo remoto/token exposto para
+          # essa parte.
           REMOTO_COM_TOKEN="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
 
+          # Correção B2-A: caminho REAL do canário usa --generate-via-claude
+          # (RunnerTask autorizada -> Claude/Anthropic -> StructuredPatch
+          # validado), nunca --patch-file — nenhum patch/prompt livre entra
+          # por input deste workflow; a instrução vem só de
+          # coordinator/runner_tasks/<task_id>.task.json, no checkout
+          # confiável da branch padrão. --patch-file continua existindo na
+          # CLI só para uso manual/teste (fora deste workflow).
           python3 -m coordinator.runner_dispatch \
             --task-file "coordinator/runner_tasks/${TASK_ID}.task.json" \
-            --patch-file "coordinator/runner_tasks/${TASK_ID}.patch.json" \
+            --generate-via-claude \
             --repo-dir . \
             --state-git-remote "$REMOTO_COM_TOKEN" \
+            --usage-git-remote "$REMOTO_COM_TOKEN" \
+            --usage-git-branch coordinator-state-runner-usage \
             --push-remote-name origin \
             --validation-command-keys coordinator-suite \
             --sucesso-status NEEDS-AUDIT \

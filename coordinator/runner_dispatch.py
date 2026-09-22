@@ -97,20 +97,38 @@ reimplementados nem enfraquecidos aqui):**
 determinística (``executar_tarefa``) continua, ela mesma, SEM NENHUMA
 chamada de IA — nenhuma linha deste módulo importa ``anthropic``/
 ``coordinator.anthropic_client`` no nível do módulo. A conexão "RunnerTask
-autorizada → Claude/Anthropic API → StructuredPatch" agora existe como uma
+autorizada → Claude/Anthropic API → StructuredPatch" existe como uma
 camada SEPARADA (``coordinator/runner_generate.py``, nunca reimplementando
 transporte/orçamento/redação — reaproveita ``anthropic_client.build_request``/
 ``call``, ``anthropic_transport.AnthropicTransport``, ``budget.CallLimiter``/
-``UsageLedger``/``check_budget``/``priority_allowed``, ``redact.redact``, todos
-JÁ existentes) que só é importada (``import`` local, dentro da função) e só
+``check_budget``/``priority_allowed``, ``redact.redact``, todos JÁ
+existentes) que só é importada (``import`` local, dentro da função) e só
 é chamada quando o CLI recebe explicitamente ``--generate-via-claude`` em
-vez de ``--patch-file``. Sem essa flag (o comportamento padrão, e o único
-que o workflow de produção usa nesta rodada), o caminho é idêntico ao de
-antes desta correção: um ``StructuredPatch`` já pronto é lido de
-``--patch-file``, nunca gerado. A GERAÇÃO em si nunca aplica/comita nada —
-devolve só um ``StructuredPatch`` já validado (ou ``BLOCKED``/``FAILED``,
-nunca um patch parcial) para este módulo aplicar/validar/comitar da MESMA
-forma determinística de sempre.
+vez de ``--patch-file``. A GERAÇÃO em si nunca aplica/comita nada — devolve
+só um ``StructuredPatch`` já validado (ou ``BLOCKED``/``FAILED``, nunca um
+patch parcial) para este módulo aplicar/validar/comitar da MESMA forma
+determinística de sempre.
+
+**Correções da 2ª auditoria independente do PR #114 (B2-A/B2-B/B2-C):**
+
+- **B2-A:** o workflow de produção (``.github/workflows/coordinator-runner.yml``)
+  agora usa ``--generate-via-claude`` no caminho REAL do canário (nunca
+  mais ``--patch-file`` nesse passo) — ``ANTHROPIC_API_KEY`` só existe
+  como env do MESMO passo já gated pelos 4 portões (ENABLED + MODE +
+  CANARY_TASK_ID + ref). ``--patch-file`` continua existindo NESTE CLI só
+  para uso manual/teste (mutuamente exclusivo com ``--generate-via-claude``,
+  como antes), nunca é o que o workflow real dispara.
+- **B2-B:** ``--usage-ledger`` (arquivo local) foi REMOVIDO — substituído
+  por ``--usage-git-remote``/``--usage-git-branch``, que constroem um
+  ``coordinator.git_state.GitUsageLedger`` (persistente entre execuções
+  efêmeras do GitHub Actions, numa branch de estado dedicada,
+  ``DEFAULT_RUNNER_USAGE_STATE_BRANCH``) — o MESMO mecanismo que já
+  persiste dedup/orçamento do Coordinator OBSERVE, nunca um ledger
+  paralelo/local para o custo mensal real do Runner.
+- **B2-C:** ``runner_generate.gerar_patch_via_claude`` agora bloqueia
+  fail-closed (zero chamada, zero patch) quando qualquer ``allowed_file``
+  existente é maior do que pode ser enviado integralmente ao modelo —
+  nunca mais corta/trunca conteúdo de arquivo silenciosamente.
 
 **O QUE ESTE MÓDULO DELIBERADAMENTE NÃO FAZ (fora de escopo desta
 rodada):** não conecta com ``scheduler.py`` (nenhuma chamada a
@@ -119,11 +137,8 @@ Fase E, handoff automático); não implementa retomada automática (Fase F);
 não toca ``coordination/tasks.json``; não define nenhuma tarefa/patch de
 canário real (``coordinator/runner_tasks/`` fica vazio nesta rodada — o
 mecanismo existe, o conteúdo autorizado por José vem depois, numa decisão
-separada); o workflow de produção (``.github/workflows/coordinator-runner.yml``)
-NÃO foi alterado para usar ``--generate-via-claude`` nesta rodada —
-continua no modo ``--patch-file`` de sempre, então nenhuma chamada de API
-real passa a ser possível em produção só por esta correção existir; ligar
-isso no workflow é uma decisão operacional separada, futura, de José.
+separada); não implementa edição por trecho/âncora para arquivos grandes
+(bloqueia a tarefa inteira em vez disso, B2-C — evolução futura).
 """
 
 from __future__ import annotations
@@ -169,6 +184,13 @@ ENV_RUNNER_EXPECTED_REF = "REPASSO_RUNNER_EXPECTED_REF"
 ALLOWED_RUNNER_MODE = "canary"
 
 DEFAULT_RUNNER_STATE_BRANCH = "coordinator-state-runner"
+# Correção B2-B (auditoria independente do PR #114, 2ª rodada): branch de
+# estado DEDICADA para o ledger de custo/tokens do Runner — mesma
+# convenção já usada pelo Coordinator OBSERVE (uma branch por concern:
+# "coordinator-state-usage", "coordinator-state-usage-openai") — nunca a
+# mesma branch do claim/resultado (DEFAULT_RUNNER_STATE_BRANCH acima),
+# para não misturar dois tipos de estado num único arquivo/histórico.
+DEFAULT_RUNNER_USAGE_STATE_BRANCH = "coordinator-state-runner-usage"
 
 
 @dataclass(frozen=True)
@@ -758,9 +780,17 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         "exclusivo com --patch-file.",
     )
     ap.add_argument(
-        "--usage-ledger", default=None,
-        help="caminho do UsageLedger (mesmo mecanismo já usado pelo Coordinator OBSERVE) — "
-        "obrigatório com --generate-via-claude, para registrar custo/tokens da chamada real.",
+        "--usage-git-remote", default=None,
+        help="Correção B2-B (PR #114, 2ª auditoria): remoto git para a branch de estado "
+        "PERSISTENTE do custo/tokens do Runner (coordinator.git_state.GitUsageLedger — o MESMO "
+        "mecanismo já usado pelo Coordinator OBSERVE para dedup/orçamento entre execuções "
+        "efêmeras do GitHub Actions). Obrigatório com --generate-via-claude — nunca um arquivo "
+        "local, que não sobreviveria entre runs.",
+    )
+    ap.add_argument(
+        "--usage-git-branch", default=DEFAULT_RUNNER_USAGE_STATE_BRANCH,
+        help="branch de estado DEDICADA para o ledger de custo do Runner (nunca 'main', nunca a "
+        f"mesma branch do claim/resultado) — default: {DEFAULT_RUNNER_USAGE_STATE_BRANCH!r}.",
     )
     ap.add_argument(
         "--budget-usd", type=float, default=None,
@@ -807,15 +837,23 @@ def main(argv: list[str] | None = None) -> int:
         # tarde, e só quando de fato precisa.
         from . import runner_generate
 
-        if not args.usage_ledger:
-            print("ERRO fail-closed: --generate-via-claude exige --usage-ledger.")
+        if not args.usage_git_remote:
+            print("ERRO fail-closed: --generate-via-claude exige --usage-git-remote.")
             return 1
-        from .budget import MONTHLY_BUDGET_USD, UsageLedger
+        from .budget import MONTHLY_BUDGET_USD
+        from .git_state import GitUsageLedger
 
         budget_usd = args.budget_usd if args.budget_usd is not None else MONTHLY_BUDGET_USD
+        # Correção B2-B: ledger PERSISTENTE entre execuções efêmeras do
+        # GitHub Actions (branch de estado dedicada do próprio
+        # repositório) — nunca um arquivo local, que desapareceria com o
+        # runner ao fim do job.
+        ledger_persistente = GitUsageLedger(
+            GitJsonStore(args.usage_git_remote, branch=args.usage_git_branch)
+        )
         geracao = runner_generate.gerar_patch_via_claude(
             task, config=config, repo_dir=args.repo_dir,
-            usage_ledger=UsageLedger(args.usage_ledger),
+            usage_ledger=ledger_persistente,
             budget_usd=budget_usd,
         )
         if geracao.status != "ok" or geracao.patch is None:
