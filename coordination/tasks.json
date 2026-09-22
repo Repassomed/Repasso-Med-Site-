@@ -284,13 +284,13 @@
       "objetivo": "Inventariar Examen.pdf/examen2.pdf/Prova.pdf/ilovepdf_merged.pdf (Drive), aplicar a Lei 8-A integralmente, reforçar o resumo onde as provas mostram núcleo avaliativo, adicionar/reformular questões com rastreabilidade completa e fechar auditoria editorial da matéria.",
       "fonte": "Issue #103 · prioridade P0 confirmada por José em 22/09",
       "agente": "Claude 1",
-      "estado": "IN-PROGRESS",
+      "estado": "NEEDS-AUDIT",
       "dependencias": [],
       "branch": "edit/c1-medicina-legal-issue103",
-      "pr": null,
-      "commit": null,
+      "pr": 109,
+      "commit": "45946b4",
       "issue": 103,
-      "notas": "Iniciado por decisão explícita de José (comentário de 22/09 na Issue #103), revogando a regra de esperar a coordenação (#99/#105/#106/#107) terminar. Não intersecta nenhuma tarefa ativa: nenhuma outra entrada reserva medicina-legal.html. PR #78 (Claude 1, assets de Semiología II) não reserva este arquivo — sem colisão. Trabalho contínuo conforme instrução; checkpoint BLOCKED-LIMIT com commit se atingir limite de sessão antes de NEEDS-AUDIT."
+      "notas": "Iniciado por decisão explícita de José (comentário de 22/09 na Issue #103), revogando a regra de esperar a coordenação (#99/#105/#106/#107) terminar. Não intersecta nenhuma tarefa ativa: nenhuma outra entrada reserva medicina-legal.html. PR #78 (Claude 1, assets de Semiología II) não reserva este arquivo — sem colisão. Rodada 1: inventariadas as 4 fontes do Drive (Examen.pdf, examen2.pdf, Prova.pdf, ilovepdf_merged.pdf); os 3 primeiros lidos integralmente (40 questões distintas, Prova.pdf é duplicata de fonte de Examen.pdf sem grifo). ilovepdf_merged.pdf (88 MB) ficou INACESSÍVEL nesta rodada — excede o limite de 10 MB de download da ferramenta de Drive, leitura em linguagem natural vazia, não indexado para busca de texto (ao contrário dos outros 3, que indexaram); registrado como pendência no PR #109 com sugestão de dividir o arquivo numa rodada futura. Aplicada a Lei 8-A: 17 questões novas incorporadas (bloco + Banco General, 217→234) em 9 blocos, 23 descartadas por duplicata (2 exatas, 21 semânticas), 1 não aproveitada por conflito entre a alternativa marcada na prova e a definição já ensinada (Examen Q14, sem solução determinável pelas fontes — pendência). Resumo reforçado em 10 pontos antes das questões correspondentes. Annotation-safety verificada programaticamente (replicação em Python do algoritmo indexar+escolher de rm-tools.js): as 56 marcações de medlegb01 e a 1 de medlegb02 resolvem identicamente antes/depois; a única que falha já falhava antes (pré-existente, PR #76). Guard local: 0 HARD FAIL. Parado em NEEDS-AUDIT — PR #109 aguardando auditoria independente do conteúdo científico/jurídico."
     }
   ]
 }
