@@ -35,7 +35,16 @@ from typing import NamedTuple
 from . import anthropic_client, openai_client
 from .anthropic_transport import AnthropicTransport
 from .audit import AUDIT_SYSTEM_PROMPT, build_audit_prompt, parse_decision, preparar_diff
-from .budget import BudgetStatus, CallLimiter, UsageLedger, check_budget, priority_allowed
+from .budget import (
+    MONTHLY_BUDGET_USD,
+    BudgetStatus,
+    CallLimiter,
+    UsageLedger,
+    UsageRecord,
+    check_budget,
+    conservative_call_cost_usd,
+    priority_allowed,
+)
 from .classify import Classification, TaskType, classify
 from .config import Config
 from .context import MinimalContext, build_context
@@ -66,6 +75,7 @@ from .openai_routing import TIER_ZERO as OPENAI_TIER_ZERO, decide as openai_rout
 from .openai_transport import OpenAIResponsesTransport
 from .redact import redact
 from .routing import RoutingDecision, decide as route_decide
+from .runner_dispatch import RunnerDispatchConfig
 from .worker_commands import aplicar_comando, parse_worker_command
 from .worker_ops import OperationalWorkerRegistry
 from .worker_registry import Worker, WorkerSuggestion, pick_worker
@@ -182,6 +192,27 @@ def _build_prompt(contexto: MinimalContext) -> str:
     return prompt
 
 
+def _now_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _tentar_gravar_ledger(ledger: UsageLedger, record: UsageRecord) -> tuple[bool, str | None]:
+    """Nunca lança — devolve (persistiu, erro_sanitizado). Mesmo helper
+    (mesmo contrato) de ``coordinator/openai_client.py``/``coordinator/
+    runner_generate.py::_tentar_gravar`` — usado para a correção/registro
+    de uso depois de uma chamada Anthropic bem-sucedida, para que uma
+    falha de persistência vire sinal EXPLÍCITO (``ledger_persistiu``/
+    ``ledger_erro``, já existente neste módulo) em vez de um `except
+    Exception: pass` silencioso (achado F9-A)."""
+    try:
+        ledger.append(record)
+        return True, None
+    except Exception as exc:  # noqa: BLE001 — ponto de borda deliberado, mesma filosofia do resto do pacote
+        return False, redact(f"{type(exc).__name__}: {exc}")
+
+
 def _pr_number_from_identity(identity: str) -> int | None:
     if identity.startswith("pr:"):
         try:
@@ -272,7 +303,11 @@ def _resumo_custo_zero(ledger: UsageLedger, config: Config):
 
 def _tratar_inbox_comment(event: Event, classificacao: Classification,
                            worker_registry: OperationalWorkerRegistry, ledger: UsageLedger,
-                           config: Config) -> _ResultadoZeroCusto:
+                           config: Config, *,
+                           runner_tasks_json_path: str | None = None,
+                           runner_repo_dir: str | None = None,
+                           runner_dispatch_config: RunnerDispatchConfig | None = None,
+                           runner_state_git_remote: str | None = None) -> _ResultadoZeroCusto:
     """Issue #88 como interface visível (achado B1 da auditoria
     independente do PR #104): todo comentário válido recebe UMA resposta
     — ou a confirmação de um comando de worker (José não edita JSON à
@@ -287,12 +322,25 @@ def _tratar_inbox_comment(event: Event, classificacao: Classification,
     ``coordination/tasks.json``. Um worker ``LIMIT``/``BUSY``/``OFFLINE``
     no registro operacional nunca aparece aqui como "início da execução
     por X", mesmo que ``tasks.json`` (declarativo, pode estar
-    desatualizado) sugerisse esse mesmo nome."""
+    desatualizado) sugerisse esse mesmo nome.
+
+    Achado F6-A (Issue #105 Fase F, 5ª rodada): ``runner_tasks_json_
+    path``/``runner_repo_dir``/``runner_dispatch_config``/``runner_
+    state_git_remote`` são OPCIONAIS (``None`` por padrão, retrocompatível
+    com qualquer chamador que não os forneça) — só quando fornecidos é
+    que um comando ``SET_AVAILABLE`` ("Claude 2 voltou") de fato aciona
+    ``runner_resume.processar_retorno_de_worker`` (via
+    ``worker_commands.aplicar_comando``, achados F6-B/C/D) — o pipeline
+    REAL do Coordinator até a retomada automática, nunca um caminho
+    hardcoded/adivinhado."""
     corpo = str(event.payload.get("body", ""))
 
     comando = parse_worker_command(corpo)
     if comando is not None:
-        confirmacao = aplicar_comando(worker_registry, comando)
+        confirmacao = aplicar_comando(
+            worker_registry, comando, tasks_json_path=runner_tasks_json_path, repo_dir=runner_repo_dir,
+            config=runner_dispatch_config, state_git_remote=runner_state_git_remote,
+        )
         texto = "\n".join(["<!-- repasso-coordinator -->", f"🛠️ {confirmacao}"])
         return _ResultadoZeroCusto(
             reason=f"Comando de worker aplicado: {confirmacao}", texto=texto, target_issue=INBOX_ISSUE_NUMBER,
@@ -700,6 +748,10 @@ def observe(
     openai_config: OpenAIAuditorConfig | None = None,
     openai_ledger: UsageLedger | None = None,
     openai_transport: openai_client.Transport | None = None,
+    runner_tasks_json_path: str | None = None,
+    runner_repo_dir: str | None = None,
+    runner_dispatch_config: RunnerDispatchConfig | None = None,
+    runner_state_git_remote: str | None = None,
 ) -> ObserveResult:
     # 1. Tipo de evento permitido?
     if not event.is_allowed:
@@ -892,7 +944,11 @@ def observe(
     # para ler/escrever (nunca ``coordination/tasks.json``/matéria).
     if audit_mode and worker_registry is not None:
         if event.event_type is EventType.INBOX_COMMENT:
-            zero_custo = _tratar_inbox_comment(event, classificacao, worker_registry, ledger, config)
+            zero_custo = _tratar_inbox_comment(
+                event, classificacao, worker_registry, ledger, config,
+                runner_tasks_json_path=runner_tasks_json_path, runner_repo_dir=runner_repo_dir,
+                runner_dispatch_config=runner_dispatch_config, runner_state_git_remote=runner_state_git_remote,
+            )
             return ObserveResult(
                 status="OBSERVED",
                 reason=zero_custo.reason,
@@ -950,10 +1006,73 @@ def observe(
             prompt=_build_prompt(contexto),
             limiter=limitador,
         )
+    # Achado F9-A (Issue #105, Fase F, 8ª rodada, auditoria independente):
+    # o Coordinator OBSERVE e o Worker Runner (``runner_generate.py``,
+    # achado F8-C) compartilham o MESMO ledger GLOBAL
+    # (``coordinator-state-usage``) — "check_budget -> chamada -> append"
+    # (o fluxo de antes desta correção, ainda em uso aqui) tinha uma
+    # corrida real ENTRE OS DOIS caminhos: uma execução do Coordinator e
+    # uma execução do Runner podiam ler o MESMO saldo antes de qualquer
+    # uma publicar seu custo, e as duas passavam juntas no teto mensal.
+    # Mesmo padrão já auditado do OpenAI Auditor e do Runner: reserva
+    # CONSERVADORA (pior caso de tokens de entrada/saída) ATÔMICA —
+    # checada E gravada como UMA operação
+    # (``UsageLedger``/``GitUsageLedger.reserve_if_within_budget``, o
+    # MESMO ledger/orçamento de sempre, nunca um segundo) — ANTES de
+    # qualquer chamada. Uma segunda execução concorrente (Coordinator OU
+    # Runner) que leia o ledger um instante depois já vê o gasto
+    # reservado por esta, então as duas juntas nunca ultrapassam o teto.
+    custo_reservado = conservative_call_cost_usd(
+        roteamento.model_choice.tier, system=pedido.system, prompt=pedido.prompt,
+        max_output_tokens=pedido.max_output_tokens,
+    )
+    registro_reserva = UsageRecord(
+        timestamp=_now_iso(), event_key=chave, tier=pedido.tier, model_id=pedido.model_id,
+        input_tokens=0, output_tokens=0, estimated_cost_usd=custo_reservado, kind="reservation",
+    )
+    try:
+        reservou = ledger.reserve_if_within_budget(registro_reserva, budget_usd=MONTHLY_BUDGET_USD)
+    except Exception as exc:  # noqa: BLE001 — falha ao reservar = zero chamada, nunca uma exceção solta
+        return ObserveResult(
+            status="BLOCKED",
+            reason=(
+                "Não foi possível reservar orçamento (falha ao persistir a reserva conservadora "
+                f"no ledger Anthropic global) — nenhuma chamada foi tentada: "
+                f"{redact(f'{type(exc).__name__}: {exc}')}"
+            ),
+            next_action=_next_action_text(classificacao, roteamento, worker),
+            call_attempted=False,
+            **resultado_base,
+        )
+    if not reservou:
+        return ObserveResult(
+            status="BLOCKED",
+            reason=(
+                f"Orçamento: reservar US$ {custo_reservado:.6f} (teto conservador desta chamada) "
+                f"ultrapassaria o limite de US$ {MONTHLY_BUDGET_USD:.2f}. Nenhuma chamada foi "
+                "tentada — hard cap real, checado e gravado atomicamente ANTES do envio, contra o "
+                "MESMO ledger global que o Worker Runner também usa (achado F9-A)."
+            ),
+            next_action=_next_action_text(classificacao, roteamento, worker),
+            call_attempted=False,
+            **resultado_base,
+        )
+
     transporte_real = transport if transport is not None else AnthropicTransport()
     resultado_chamada = anthropic_client.call(
         config, pedido, transport=transporte_real, limiter=limitador, event_key=chave,
     )
+    if resultado_chamada.status in ("blocked", "limited"):
+        # transport.send() nunca foi chamado — zero tokens consumidos de
+        # verdade — a reserva conservadora pode ser liberada com segurança
+        # (delta negativo = libera 100% dela). Caminho defensivo (o gate/
+        # limiter já foram checados antes da reserva) — nunca deixa a
+        # reserva presa à toa quando se sabe com certeza que nada foi
+        # gasto.
+        _tentar_gravar_ledger(ledger, UsageRecord(
+            timestamp=_now_iso(), event_key=chave, tier=pedido.tier, model_id=pedido.model_id,
+            input_tokens=0, output_tokens=0, estimated_cost_usd=-custo_reservado, kind="correction",
+        ))
 
     # .to_dict() é quem sanitiza reason/text via redact() — nunca ler os
     # atributos crus de CallResult para fora deste módulo (foi exatamente
@@ -1034,20 +1153,34 @@ def observe(
     ledger_persistiu = True
     ledger_erro: str | None = None
     if resultado_chamada.status == "ok" and resultado_chamada.usage is not None:
-        try:
-            ledger.append(resultado_chamada.usage)
-        except Exception as exc:
-            # Achado da auditoria final do PR #97: a chamada JÁ aconteceu e
-            # teve sucesso — isto é uma falha de PERSISTÊNCIA depois do
-            # fato (ex.: GitUsageLedger.append() sem conseguir publicar o
-            # estado), nunca pode virar "nenhuma chamada foi tentada". O
-            # usage retornado pela própria API continua visível mesmo que
-            # o ledger compartilhado não tenha conseguido gravá-lo —
-            # call_status próprio deixa claro que a chamada teve êxito mas
-            # a persistência, não — nunca um retry (nenhum código aqui
-            # tenta a chamada de novo).
+        # Achado F9-A: a chamada JÁ aconteceu e teve sucesso — corrige a
+        # reserva CONSERVADORA (gravada antes da chamada, acima) para o
+        # custo REAL (delta pode ser negativo — o caso comum) e grava um
+        # registro informativo de uso, em vez do simples ``ledger.
+        # append(resultado_chamada.usage)`` de antes desta correção. Uma
+        # falha de PERSISTÊNCIA depois do fato (ex.: GitUsageLedger não
+        # conseguindo publicar o estado) nunca pode virar "nenhuma chamada
+        # foi tentada" — o ``usage`` retornado pela própria API continua
+        # visível mesmo que o ledger compartilhado não tenha conseguido
+        # gravar a correção; ``call_status="ok_ledger_failed"`` (abaixo)
+        # deixa claro que a chamada teve êxito mas a persistência, não —
+        # nunca um retry. Na pior das hipóteses o ledger fica com o valor
+        # CONSERVADOR (a reserva, tipicamente maior que o real) em vez do
+        # valor exato — nunca com um valor menor/ausente.
+        custo_real = resultado_chamada.usage.estimated_cost_usd
+        corrigiu, erro_correcao = _tentar_gravar_ledger(ledger, UsageRecord(
+            timestamp=_now_iso(), event_key=chave, tier=pedido.tier, model_id=pedido.model_id,
+            input_tokens=0, output_tokens=0, estimated_cost_usd=(custo_real - custo_reservado),
+            kind="correction",
+        ))
+        persistiu_uso, erro_uso = _tentar_gravar_ledger(ledger, UsageRecord(
+            timestamp=_now_iso(), event_key=chave, tier=pedido.tier, model_id=pedido.model_id,
+            input_tokens=resultado_chamada.usage.input_tokens, output_tokens=resultado_chamada.usage.output_tokens,
+            estimated_cost_usd=0.0, kind="usage", informational_cost_usd=custo_real,
+        ))
+        if not corrigiu or not persistiu_uso:
             ledger_persistiu = False
-            ledger_erro = redact(f"{type(exc).__name__}: {exc}")
+            ledger_erro = erro_correcao or erro_uso
 
     # Correção B3 da auditoria independente do PR #104, rodada 4: custo
     # CALCULADO a partir do usage medido (nunca chamado de "estimado", e —

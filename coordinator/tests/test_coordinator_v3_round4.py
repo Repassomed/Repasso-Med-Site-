@@ -48,18 +48,29 @@ class _TransporteContador:
 
 
 class _LedgerQueSempreFalha:
-    """Mesma superfície pública de UsageLedger (só ``append``/
-    ``month_to_date_usd`` importam aqui) — ``append`` sempre lança, sem
-    depender de git/rede (mesmo padrão de test_ledger_failure_after_call.py)."""
+    """Mesma superfície pública de UsageLedger (``append``/
+    ``month_to_date_usd``/``reserve_if_within_budget`` importam aqui) —
+    ``append`` sempre lança, sem depender de git/rede (mesmo padrão de
+    test_ledger_failure_after_call.py). Achado F9-A: a RESERVA
+    conservadora (antes da chamada) precisa ter êxito para o cenário que
+    este fixture simula — "a chamada aconteceu, mas a persistência da
+    CORREÇÃO/uso depois falhou" — então ``reserve_if_within_budget`` só
+    delega para um ``UsageLedger`` real (nunca lança), enquanto
+    ``append`` (usado pela correção/uso, depois da chamada) continua
+    sempre falhando."""
 
     def __init__(self, mensagem: str) -> None:
         self.mensagem = mensagem
+        self._reserva_real = UsageLedger(tempfile.mktemp(suffix=".json"))
 
     def append(self, record) -> None:
         raise RuntimeError(self.mensagem)
 
     def month_to_date_usd(self, *, now=None) -> float:
         return 0.0
+
+    def reserve_if_within_budget(self, candidate, *, budget_usd, now=None) -> bool:
+        return self._reserva_real.reserve_if_within_budget(candidate, budget_usd=budget_usd, now=now)
 
 
 def _cfg() -> Config:

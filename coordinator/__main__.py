@@ -40,6 +40,17 @@ trocam para o backend compartilhado via git (``coordinator/git_state.py``)
 — use estes no workflow real, onde cada execução é um runner efêmero
 diferente.
 
+Achado F7-A (Issue #105, Fase F, 6ª rodada): este CLI agora liga o
+caminho REAL até um comando ``SET_AVAILABLE`` reconhecido na Inbox (#88)
+poder disparar uma retomada de verdade (``coordinator.worker_commands.
+aplicar_comando`` -> ``coordinator.runner_resume.
+processar_retorno_de_worker``) — ``_observar()`` sempre repassa
+``--workers-from-tasks-json``/``--worker-state-git-remote`` (já
+existentes, reusados, nunca duplicados) e ``--runner-repo-dir`` (novo,
+opcional) para ``observe()``. Sem ``--runner-repo-dir``, nenhuma
+retomada automática é tentada — comportamento idêntico ao de antes desta
+correção.
+
 Este CLI só faz chamada de rede à Anthropic se TUDO isto for verdade ao
 mesmo tempo: ``REPASSO_COORDINATOR_ENABLED=true``, ``REPASSO_COORDINATOR_MODE=observe``,
 e o evento passar por todos os gates do pipeline — ver
@@ -64,6 +75,7 @@ from .github_event import build_event_from_github_context
 from .observe import observe
 from .openai_config import OpenAIAuditorConfig
 from .redact import redact, redact_mapping
+from .runner_dispatch import RunnerDispatchConfig
 from .worker_ops import DEFAULT_STATE_BRANCH, LocalJsonWorkerStateStore, OperationalWorkerRegistry
 from .worker_registry import Worker, WorkerState, load_workers_from_tasks_json
 
@@ -321,6 +333,19 @@ def main(argv: list[str] | None = None) -> int:
                          "--usage-git-remote")
     ap.add_argument("--worker-state-git-branch", default=DEFAULT_STATE_BRANCH,
                     help="branch dedicada para o Worker Registry operacional (nunca 'main')")
+    ap.add_argument("--runner-repo-dir", default=None,
+                    help="Achado F7-A (Issue #105, Fase F, 6ª rodada): checkout já confiável (branch "
+                         "padrão, nunca HEAD de PR) usado quando um comando SET_AVAILABLE reconhecido "
+                         "na Inbox (#88) dispara uma retomada real (coordinator.worker_commands."
+                         "aplicar_comando -> runner_resume.processar_retorno_de_worker) — mesmo "
+                         "checkout que --repo-dir já significa em runner_dispatch.py. Opcional: sem "
+                         "ele, nenhuma retomada automática é tentada (comportamento inalterado, "
+                         "retrocompatível). runner_tasks_json_path reusa --workers-from-tasks-json (o "
+                         "mesmo coordination/tasks.json, nunca um segundo arquivo) e "
+                         "runner_state_git_remote reusa --worker-state-git-remote (o mesmo remoto do "
+                         "Worker Registry — as branches coordinator-state-handoff/coordinator-state-"
+                         "usage vivem nele também, só em branches dedicadas diferentes) — nenhum "
+                         "parâmetro novo precisa ser duplicado para isto funcionar.")
     ap.add_argument("--openai-usage-ledger", default=".coordinator-state/usage-openai.json",
                     help="arquivo LOCAL de uso/custo do OpenAI Auditor (Issue #106) — SEPARADO do "
                          "ledger da Anthropic (--usage-ledger); não sobrevive entre runners "
@@ -471,6 +496,19 @@ def _observar(a: argparse.Namespace) -> dict | None:
         event, config=config, dedup=dedup, ledger=ledger, workers=workers,
         audit_mode=config.is_active_supervised, worker_registry=worker_registry,
         openai_config=openai_config, openai_ledger=openai_ledger,
+        # Achado F7-A (6ª rodada): liga o caminho REAL até
+        # worker_commands.aplicar_comando — workflow -> CLI -> _observar()
+        # -> observe() -> Inbox -> aplicar_comando(). Reusa os mesmos
+        # parâmetros já existentes (--workers-from-tasks-json,
+        # --worker-state-git-remote) em vez de inventar um segundo
+        # mecanismo; RunnerDispatchConfig.from_env() é a MESMA construção
+        # que runner_dispatch.py::main() já faz (só lê o ambiente, sem
+        # I/O) — inerte até os 3 portões (ENABLED/MODE/CANARY_TASK_ID)
+        # abrirem, então é seguro passá-la sempre.
+        runner_tasks_json_path=a.workers_from_tasks_json,
+        runner_repo_dir=a.runner_repo_dir,
+        runner_dispatch_config=RunnerDispatchConfig.from_env(),
+        runner_state_git_remote=a.worker_state_git_remote,
     )
     dados = resultado.to_dict()
     return redact_mapping(dados)

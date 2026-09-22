@@ -1061,7 +1061,11 @@ def test_pipeline_shows_separate_anthropic_and_openai_costs_and_combined_total()
 
     registros_anthropic = ledger.all_records()
     registros_openai = openai_ledger.all_records()
-    assert len(registros_anthropic) == 1, "ledger Anthropic: 1 registro por chamada bem-sucedida"
+    # Achado F9-A: o ledger Anthropic passou a usar o MESMO padrão
+    # reserva+correção+uso do ledger OpenAI (achados B2/B3/B9 abaixo) — 3
+    # registros por chamada bem-sucedida, não mais 1.
+    assert len(registros_anthropic) == 3, "ledger Anthropic: reserva + correção + uso por chamada bem-sucedida"
+    assert sorted(r["kind"] for r in registros_anthropic) == ["correction", "reservation", "usage"]
     # Correção B2/B3 (auditoria independente do PR #107): o ledger OpenAI
     # agora grava a RESERVA conservadora antes da chamada e a CORREÇÃO
     # para o custo real depois. Correção B9 (auditoria independente do PR

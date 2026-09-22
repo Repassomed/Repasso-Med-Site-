@@ -28,6 +28,8 @@ import subprocess
 import sys
 import tempfile
 
+import threading
+
 from . import _pathsetup  # noqa: F401
 from coordinator.anthropic_client import Request, TransportResponse
 from coordinator.budget import UsageLedger
@@ -35,7 +37,13 @@ from coordinator.classify import Priority
 from coordinator.git_state import GitJsonStore, GitUsageLedger
 from coordinator.runner_contract import RunnerTask
 from coordinator.runner_dispatch import RunnerDispatchConfig
-from coordinator.runner_generate import MAX_FILE_CHARS_SENT, build_prompt, gerar_patch_via_claude
+from coordinator.runner_generate import (
+    MAX_FILE_CHARS_SENT,
+    _SYSTEM_PROMPT,
+    _conservative_call_cost_usd,
+    build_prompt,
+    gerar_patch_via_claude,
+)
 
 
 class _CountingTransport:
@@ -169,7 +177,13 @@ def test_valid_response_returns_patch_and_records_usage() -> None:
         assert outcome.usage is not None
 
         ledger = UsageLedger(ledger_path)
-        assert len(ledger.all_records()) == 1, "a chamada real precisa ter sido registrada no ledger existente"
+        # Achado F8-C: 3 registros por chamada bem-sucedida — reserva
+        # conservadora (ANTES da chamada), correção (para o custo real) e
+        # o registro informativo de uso (mesmo padrão do OpenAI Auditor).
+        registros = ledger.all_records()
+        assert len(registros) == 3, f"reserva + correção + uso precisam estar todos registrados: {registros}"
+        kinds = sorted(r["kind"] for r in registros)
+        assert kinds == ["correction", "reservation", "usage"], kinds
     print("OK  test_valid_response_returns_patch_and_records_usage")
 
 
@@ -219,7 +233,9 @@ def test_usage_persists_across_independent_git_usage_ledger_instances() -> None:
         ledger_execucao_2 = GitUsageLedger(GitJsonStore(remoto, branch=branch_ledger))
         gasto_visivel = ledger_execucao_2.month_to_date_usd()
         assert gasto_visivel > 0.0, "o custo da execução 1 precisa ser visível numa instância nova do ledger"
-        assert len(ledger_execucao_2.all_records()) == 1
+        # Achado F8-C: reserva + correção + uso, os 3 persistidos no MESMO
+        # remoto/branch — visíveis numa instância totalmente nova.
+        assert len(ledger_execucao_2.all_records()) == 3
     print("OK  test_usage_persists_across_independent_git_usage_ledger_instances")
 
 
@@ -336,8 +352,10 @@ def test_malformed_json_response_fails_without_patch() -> None:
         assert outcome.status == "failed"
         assert outcome.patch is None
         # a chamada aconteceu e custou — isso é registrado mesmo que o
-        # CONTEÚDO devolvido tenha sido rejeitado depois.
-        assert len(UsageLedger(ledger_path).all_records()) == 1
+        # CONTEÚDO devolvido tenha sido rejeitado depois. Achado F8-C: 3
+        # registros (reserva + correção + uso), igual a uma resposta válida
+        # — o ledger não sabe/não precisa saber se o CONTEÚDO foi aceito.
+        assert len(UsageLedger(ledger_path).all_records()) == 3
     print("OK  test_malformed_json_response_fails_without_patch")
 
 
@@ -408,6 +426,147 @@ def test_prompt_contains_only_instructions_and_allowed_file_contents() -> None:
     print("OK  test_prompt_contains_only_instructions_and_allowed_file_contents")
 
 
+# ---------------------------------------------------------------------------
+# Achado F8-C (Issue #105, Fase F, 7ª rodada): reserva conservadora ATÔMICA
+# — hard cap real, checado e gravado ANTES de qualquer chamada, nunca mais
+# "check_budget -> chamada -> append" (janela de corrida real).
+# ---------------------------------------------------------------------------
+
+def test_reservation_that_does_not_fit_blocks_with_zero_call_even_when_priority_check_would_allow() -> None:
+    """Distingue a reserva ATÔMICA (F8-C) da checagem graduada antiga
+    (check_budget/priority_allowed, que continua rodando cedo, mas não é
+    mais a barreira definitiva): um orçamento positivo, mas menor que o
+    teto CONSERVADOR desta chamada específica, precisa bloquear — mesmo
+    que check_budget visse isso como 'dentro do orçamento' (razão ~0%,
+    já que budget_usd > 0)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        ledger_path = os.path.join(tmp, "ledger.json")
+        transporte = _CountingTransport(response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}]))
+        # Orçamento positivo (nunca dispara o "stop" de check_budget, que só
+        # aciona com budget_usd<=0 -> razão 1.0), mas ínfimo perto do custo
+        # conservador real (bytes do prompt inteiro + tokens de saída).
+        outcome = gerar_patch_via_claude(
+            _task(), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(ledger_path), budget_usd=0.0000001,
+            transport=transporte,
+        )
+        assert outcome.status == "blocked"
+        assert transporte.calls == 0, "reserva não coube — zero chamada, mesmo com o portão de prioridade aberto"
+        assert outcome.external_call_made is False
+        assert len(UsageLedger(ledger_path).all_records()) == 0, "reserva recusada nunca grava nada"
+    print("OK  test_reservation_that_does_not_fit_blocks_with_zero_call_even_when_priority_check_would_allow")
+
+
+def test_transport_error_keeps_the_conservative_reservation() -> None:
+    """Achado F8-C ('erro de transporte mantém a reserva conservadora'):
+    depois de uma falha de transporte, o ledger continua com a reserva
+    CONSERVADORA contada (nunca liberada/corrigida) — não é possível
+    confirmar que zero tokens foram consumidos antes da falha."""
+    with tempfile.TemporaryDirectory() as tmp:
+        ledger_path = os.path.join(tmp, "ledger.json")
+        ledger = UsageLedger(ledger_path)
+        transporte = _CountingTransport(raise_error=True)
+        outcome = gerar_patch_via_claude(
+            _task(), config=_config(), repo_dir=tmp, usage_ledger=ledger, budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "failed"
+        assert transporte.calls == 1
+        registros = UsageLedger(ledger_path).all_records()
+        assert len(registros) == 1, f"só a reserva precisa permanecer — nunca corrigida/liberada: {registros}"
+        assert registros[0]["kind"] == "reservation"
+        assert registros[0]["estimated_cost_usd"] > 0.0
+    print("OK  test_transport_error_keeps_the_conservative_reservation")
+
+
+def test_ledger_correction_failure_is_surfaced_explicitly_never_silent() -> None:
+    """Achado F8-C: falha ao persistir a correção/uso depois de uma
+    chamada bem-sucedida precisa aparecer em
+    ``GenerateOutcome.ledger_correction_failed`` — nunca um `except
+    Exception: pass` silencioso. O patch já gerado/validado continua
+    ``status='ok'`` (a falha é só de contabilidade, não desfaz a
+    chamada paga nem o patch)."""
+    class _LedgerQuebradoDepoisDaReserva:
+        """Reserva funciona (delega para um UsageLedger real); qualquer
+        append() posterior (correction/usage) falha."""
+
+        def __init__(self, ledger_path: str) -> None:
+            self._real = UsageLedger(ledger_path)
+            self._reservas_feitas = 0
+
+        def reserve_if_within_budget(self, candidate, *, budget_usd, now=None):
+            self._reservas_feitas += 1
+            return self._real.reserve_if_within_budget(candidate, budget_usd=budget_usd, now=now)
+
+        def append(self, record):
+            raise RuntimeError("simulado: falha ao persistir depois da reserva")
+
+        def month_to_date_usd(self, *, now=None):
+            return self._real.month_to_date_usd(now=now)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        ledger_quebrado = _LedgerQuebradoDepoisDaReserva(os.path.join(tmp, "ledger.json"))
+        transporte = _CountingTransport(response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}]))
+        outcome = gerar_patch_via_claude(
+            _task(), config=_config(), repo_dir=tmp, usage_ledger=ledger_quebrado, budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "ok", "falha de contabilidade nunca desfaz um patch já gerado/validado"
+        assert outcome.patch is not None
+        assert outcome.ledger_correction_failed is True
+        assert "ledger" in outcome.reason.lower() or "persist" in outcome.reason.lower()
+        assert ledger_quebrado._reservas_feitas == 1
+    print("OK  test_ledger_correction_failure_is_surfaced_explicitly_never_silent")
+
+
+def test_concorrencia_perto_do_teto_so_uma_reserva_vence() -> None:
+    """Teste concorrente OBRIGATÓRIO (F8-C, auditoria independente): saldo
+    próximo do teto + duas execuções concorrentes -> no máximo UMA
+    reserva/chamada paga vence. Mesma técnica de
+    ``test_worker_ops.py::test_marcar_available_condicional_concorrente_
+    so_uma_vence`` (threading.Barrier real, nunca mockado) — o lock de
+    ``UsageLedger`` cobre a concorrência DENTRO do processo; em produção
+    o mesmo princípio vale via CAS git em ``GitUsageLedger``."""
+    with tempfile.TemporaryDirectory() as tmp:
+        ledger_path = os.path.join(tmp, "ledger.json")
+        ledger = UsageLedger(ledger_path)
+
+        tarefa = _task()
+        prompt_estimado = build_prompt(tarefa, {})
+        custo_unitario = _conservative_call_cost_usd(
+            system=_SYSTEM_PROMPT, prompt=prompt_estimado, max_output_tokens=2000,
+        )
+        # "Saldo próximo do teto": orçamento cabe UMA reserva confortavelmente,
+        # mas não cabe DUAS — a corrida real que F8-C fecha.
+        orcamento = custo_unitario * 1.5
+
+        transportes = [
+            _CountingTransport(response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}]))
+            for _ in range(2)
+        ]
+        resultados: list[str] = []
+        barreira = threading.Barrier(2)
+
+        def tentar(indice: int) -> None:
+            barreira.wait()
+            outcome = gerar_patch_via_claude(
+                tarefa, config=_config(), repo_dir=tmp, usage_ledger=ledger, budget_usd=orcamento,
+                transport=transportes[indice],
+            )
+            resultados.append(outcome.status)
+
+        threads = [threading.Thread(target=tentar, args=(i,)) for i in range(2)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        chamadas_reais = sum(t.calls for t in transportes)
+        assert chamadas_reais == 1, f"no máximo UMA chamada paga pode vencer a corrida: {chamadas_reais}"
+        assert sorted(resultados) == ["blocked", "ok"], resultados
+    print("OK  test_concorrencia_perto_do_teto_so_uma_reserva_vence")
+
+
 def main() -> int:
     testes = [
         test_gate_closed_makes_zero_external_call,
@@ -425,6 +584,10 @@ def main() -> int:
         test_response_outside_allowed_files_is_blocked_without_patch,
         test_non_dict_json_response_fails_without_patch,
         test_prompt_contains_only_instructions_and_allowed_file_contents,
+        test_reservation_that_does_not_fit_blocks_with_zero_call_even_when_priority_check_would_allow,
+        test_transport_error_keeps_the_conservative_reservation,
+        test_ledger_correction_failure_is_surfaced_explicitly_never_silent,
+        test_concorrencia_perto_do_teto_so_uma_reserva_vence,
     ]
     falhas = 0
     for t in testes:

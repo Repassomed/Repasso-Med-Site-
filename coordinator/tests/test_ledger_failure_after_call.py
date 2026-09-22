@@ -84,12 +84,19 @@ class _TransporteContador:
 
 class _LedgerQueSempreFalha:
     """Ponto 2: mesma superfície pública de UsageLedger/GitUsageLedger
-    (só ``append`` importa aqui), mas ``append`` sempre lança — sem
-    depender de git/rede para o teste determinístico."""
+    (``append``/``reserve_if_within_budget`` importam aqui), mas
+    ``append`` sempre lança — sem depender de git/rede para o teste
+    determinístico. Achado F9-A: a RESERVA conservadora (antes da
+    chamada) precisa ter êxito para este cenário — "a chamada aconteceu,
+    mas a persistência DEPOIS falhou" — então ``reserve_if_within_budget``
+    delega para um ``UsageLedger`` real (nunca lança); só ``append``
+    (usado pela correção/uso, depois da chamada) continua sempre
+    falhando."""
 
     def __init__(self, mensagem: str) -> None:
         self.mensagem = mensagem
         self.append_calls = 0
+        self._reserva_real = UsageLedger(tempfile.mktemp(suffix=".json"))
 
     def append(self, record) -> None:
         self.append_calls += 1
@@ -101,6 +108,9 @@ class _LedgerQueSempreFalha:
     def all_records(self) -> list[dict]:
         return []
 
+    def reserve_if_within_budget(self, candidate, *, budget_usd, now=None) -> bool:
+        return self._reserva_real.reserve_if_within_budget(candidate, budget_usd=budget_usd, now=now)
+
 
 def test_successful_call_survives_ledger_failure_with_fake_ledger() -> None:
     transporte = _TransporteContador()
@@ -111,10 +121,13 @@ def test_successful_call_survives_ledger_failure_with_fake_ledger() -> None:
     r = observe(ev, config=cfg, dedup=Deduplicator(InMemoryStore()), ledger=ledger,
                 workers=_workers(), transport=transporte)
 
-    # 3 · exatamente 1 chamada foi feita (e 1 tentativa de ledger.append —
-    #     nenhum retry de nenhum dos dois lados).
+    # 3 · exatamente 1 chamada foi feita. Achado F9-A: depois da chamada
+    #     bem-sucedida, DOIS registros são tentados (correção para o custo
+    #     real + registro informativo de uso) — 2 tentativas de
+    #     ledger.append, não mais 1 — mas nenhum retry dentro de cada uma
+    #     (mesmo padrão de openai_client.py::_tentar_gravar).
     assert transporte.calls == 1, f"esperava exatamente 1 chamada à Anthropic, obtive {transporte.calls}"
-    assert ledger.append_calls == 1, f"esperava exatamente 1 tentativa de ledger.append, obtive {ledger.append_calls}"
+    assert ledger.append_calls == 2, f"esperava exatamente 2 tentativas de ledger.append (correção + uso), obtive {ledger.append_calls}"
 
     # 4 · resultado informa call_attempted=true — nunca falso só porque o
     #     ledger falhou depois.
@@ -176,24 +189,38 @@ def test_ledger_success_path_is_unaffected() -> None:
         assert r.call_status == "ok"
         assert r.call_attempted is True
         assert r.usage is not None
-        assert len(ledger.all_records()) == 1, "o registro tem que ter sido persistido de verdade quando não há falha"
+        # Achado F9-A: 3 registros (reserva + correção + uso), não mais 1.
+        registros = ledger.all_records()
+        assert len(registros) == 3, f"reserva + correção + uso precisam ter sido persistidos: {registros}"
+        assert sorted(r2["kind"] for r2 in registros) == ["correction", "reservation", "usage"]
     print("OK  test_ledger_success_path_is_unaffected")
 
 
-def _remoto_bare_com_hook_que_recusa_push(tmp: str) -> str:
+def _remoto_bare_com_hook_que_recusa_push_apos_a_reserva(tmp: str) -> str:
     """Um remoto git BARE de verdade, com histórico inicial já publicado
     (para que a LEITURA do orçamento em ``check_budget()`` funcione
     normalmente — ``month_to_date_usd()`` roda ANTES da chamada, então
     precisa suceder para o teste sequer chegar no transporte), mas cujo
-    hook ``pre-receive`` recusa QUALQUER push subsequente — exatamente o
-    tipo de falha que ``GitJsonStore.update()`` relata como
+    hook ``pre-receive`` recusa TODO push a partir do segundo —
+    exatamente o tipo de falha que ``GitJsonStore.update()`` relata como
     ``RuntimeError`` depois de esgotar ``max_attempts``.
+
+    Achado F9-A: a reserva CONSERVADORA (achado F9-A) agora é ela mesma
+    um push, ANTES da chamada — um remoto que recusa QUALQUER push
+    (inclusive o primeiro) faria a RESERVA falhar, e o teste nunca
+    chegaria a tentar a chamada (fail-closed correto, mas não é mais o
+    cenário que este teste quer provar: "a chamada aconteceu, só a
+    persistência DEPOIS falhou"). O hook agora conta os pushes recebidos
+    (arquivo contador nos próprios ``hooks/`` do remoto, sobrevive entre
+    invocações do hook) e só recusa a partir do 2º — deixando a reserva
+    (1º push) passar e a correção/uso (pushes seguintes) falharem, exatamente
+    o cenário que a auditoria original descreveu.
 
     Um remoto "que não existe" (a técnica usada em test_cli_crash_safety.py
     para simular o item 2) não serve aqui: ele falha tanto na leitura
     quanto na escrita, e o teste nunca chegaria a tentar a chamada — o
     orçamento falharia primeiro. Aqui a leitura tem que funcionar; só a
-    ESCRITA, depois da chamada, precisa falhar."""
+    ESCRITA depois da reserva precisa falhar."""
     remoto = os.path.join(tmp, "remoto-ledger.git")
     import subprocess
 
@@ -212,9 +239,21 @@ def _remoto_bare_com_hook_que_recusa_push(tmp: str) -> str:
     subprocess.run(["git", "-C", seed, "commit", "-q", "-m", "seed"], check=True)
     subprocess.run(["git", "-C", seed, "push", "-q", "origin", "HEAD:coordinator-state-teste-ledger-hook"], check=True)
 
+    # Instalado DEPOIS do push de seed acima — nunca conta esse push.
+    contador = os.path.join(remoto, "hooks", ".push-count")
     hook = os.path.join(remoto, "hooks", "pre-receive")
     with open(hook, "w", encoding="utf-8") as fh:
-        fh.write("#!/bin/sh\necho 'recusado de propósito (teste)' >&2\nexit 1\n")
+        fh.write(
+            "#!/bin/sh\n"
+            f"COUNT=$(cat {contador} 2>/dev/null || echo 0)\n"
+            "COUNT=$((COUNT + 1))\n"
+            f"echo $COUNT > {contador}\n"
+            "if [ \"$COUNT\" -gt 1 ]; then\n"
+            "  echo 'recusado de propósito (teste, a partir do 2o push)' >&2\n"
+            "  exit 1\n"
+            "fi\n"
+            "exit 0\n"
+        )
     os.chmod(hook, 0o755)
     return remoto
 
@@ -222,10 +261,13 @@ def _remoto_bare_com_hook_que_recusa_push(tmp: str) -> str:
 def test_successful_call_survives_real_git_ledger_failure() -> None:
     """Mesmo cenário dos dois primeiros testes, mas com o backend REAL de
     produção (``GitUsageLedger``/``GitJsonStore``) contra um remoto git
-    bare de verdade cujo push é recusado por um hook ``pre-receive`` —
-    prova que ``GitJsonStore.update()`` esgotando tentativas e levantando
-    ``RuntimeError`` (o caminho real que a auditoria descreveu) é
-    capturado por ``observe()`` do mesmo jeito que o ledger falso acima.
+    bare de verdade cujo push é recusado (a partir do 2º) por um hook
+    ``pre-receive`` — prova que ``GitJsonStore.update()`` esgotando
+    tentativas e levantando ``RuntimeError`` (o caminho real que a
+    auditoria descreveu) é capturado por ``observe()`` do mesmo jeito que
+    o ledger falso acima. Achado F9-A: a RESERVA conservadora (o 1º push,
+    ANTES da chamada) precisa ter êxito para este cenário existir — só a
+    correção/uso (pushes seguintes, DEPOIS da chamada) falham.
 
     Não passa pelo CLI (``coordinator.__main__.main``): o CLI só injeta
     ``AnthropicTransport()`` real (sem chave/rede neste sandbox, uma
@@ -235,7 +277,7 @@ def test_successful_call_survives_real_git_ledger_failure() -> None:
     como o resto desta suíte já faz para o caminho real de ponta a ponta
     (``test_observe_real_path.py``)."""
     with tempfile.TemporaryDirectory() as tmp:
-        remoto = _remoto_bare_com_hook_que_recusa_push(tmp)
+        remoto = _remoto_bare_com_hook_que_recusa_push_apos_a_reserva(tmp)
         transporte = _TransporteContador()
         ledger = GitUsageLedger(GitJsonStore(remoto, branch="coordinator-state-teste-ledger-hook"))
         cfg = Config(enabled=True, mode="observe")
@@ -244,7 +286,7 @@ def test_successful_call_survives_real_git_ledger_failure() -> None:
         r = observe(ev, config=cfg, dedup=Deduplicator(InMemoryStore()), ledger=ledger,
                     workers=_workers(), transport=transporte)
 
-        assert transporte.calls == 1, "exatamente 1 chamada, mesmo com o backend real do ledger recusando o push"
+        assert transporte.calls == 1, "exatamente 1 chamada — a reserva (1o push) teve êxito"
         assert r.status == "OBSERVED"
         assert r.call_attempted is True
         assert r.call_status == "ok_ledger_failed"
@@ -253,8 +295,9 @@ def test_successful_call_survives_real_git_ledger_failure() -> None:
         assert "ledger" in r.reason.lower()
 
         # Confirma que o push foi mesmo recusado (não um falso positivo
-        # por outro motivo) e que a leitura do orçamento tinha funcionado
-        # antes — a mensagem do hook aparece sanitizada no motivo.
+        # por outro motivo) e que a leitura do orçamento e a reserva
+        # conservadora (1º push) tinham funcionado antes — a mensagem do
+        # hook aparece sanitizada no motivo.
         assert "recusado" in r.reason.lower() or "rejected" in r.reason.lower() or "RuntimeError" in r.reason
     print("OK  test_successful_call_survives_real_git_ledger_failure")
 

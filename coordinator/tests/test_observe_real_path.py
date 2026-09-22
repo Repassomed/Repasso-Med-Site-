@@ -107,7 +107,10 @@ def test_enabled_with_mock_makes_exactly_one_call_and_registers_usage() -> None:
         assert r.status == "OBSERVED"
         assert r.call_status == "ok"
         assert r.usage is not None and r.usage["input_tokens"] == 200
-        assert len(ledger.all_records()) == 1
+        # Achado F9-A: 3 registros (reserva + correção + uso), não mais 1.
+        registros = ledger.all_records()
+        assert len(registros) == 3, registros
+        assert sorted(r2["kind"] for r2 in registros) == ["correction", "reservation", "usage"]
     print("OK  test_enabled_with_mock_makes_exactly_one_call_and_registers_usage")
 
 
@@ -160,7 +163,11 @@ def test_two_independent_pipeline_runs_share_state_and_second_duplicate_makes_ze
 
         # A execução 2 também enxerga o gasto que a execução 1 registrou.
         assert ledger_b.month_to_date_usd() > 0
-        assert len(ledger_b.all_records()) == 1
+        # Achado F9-A: 3 registros por chamada bem-sucedida (reserva
+        # conservadora + correção para o custo real + registro
+        # informativo de uso), não mais 1 — mesmo padrão do Worker Runner
+        # (F8-C).
+        assert len(ledger_b.all_records()) == 3
     print("OK  test_two_independent_pipeline_runs_share_state_and_second_duplicate_makes_zero_calls")
 
 
@@ -174,7 +181,14 @@ def test_transport_timeout_through_observe_is_single_attempt() -> None:
                     workers=_workers(), transport=transporte)
         assert transporte.calls == 1, "erro de transporte não pode virar retry loop dentro de observe()"
         assert r.call_status == "error"
-        assert len(ledger.all_records()) == 0, "chamada com erro não registra usage nenhum"
+        # Achado F9-A: a reserva CONSERVADORA (gravada antes da chamada)
+        # permanece contada quando o transporte falha — não é possível
+        # confirmar que zero tokens foram consumidos antes da falha
+        # (mesmo princípio de runner_generate.py, achado F8-C) — nunca
+        # mais "zero registro nenhum".
+        registros = ledger.all_records()
+        assert len(registros) == 1, f"a reserva conservadora precisa permanecer: {registros}"
+        assert registros[0]["kind"] == "reservation"
     print("OK  test_transport_timeout_through_observe_is_single_attempt")
 
 

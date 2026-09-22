@@ -636,6 +636,7 @@ def executar_tarefa(
     worker_registry: OperationalWorkerRegistry | None = None,
     validation_allowlist: dict[str, tuple[str, ...]] | None = None,
     gerar_patch: Callable[[], object] | None = None,
+    canonical_task_id: str | None = None,
 ) -> DispatchOutcome:
     """A orquestração completa de uma execução controlada. Nunca decide
     merge/publicação/orçamento — só executa o que ``task``/``patch`` já
@@ -654,7 +655,23 @@ def executar_tarefa(
     devolvido por ``gerar_patch()`` é tratado por duck typing (nunca um
     import de ``runner_generate`` aqui, que criaria um ciclo): precisa ter
     ``.status`` (``"ok"``/``"blocked"``/``"failed"``), ``.patch``
-    (``StructuredPatch | None``) e ``.reason`` (``str``)."""
+    (``StructuredPatch | None``) e ``.reason`` (``str``).
+
+    ``canonical_task_id`` (achado F6-D, Issue #105 Fase F, 5ª rodada):
+    ``task.task_id`` é sempre um id de EXECUÇÃO (derivado por geração/
+    checkpoint — ``handoff_exec.derivar_task_id_de_continuacao``/
+    ``runner_resume``'s próprio esquema ``--resume-``) — nunca a
+    identidade CANÔNICA e estável que o Worker Registry usa em
+    ``current_task`` (``scheduler.TaskRecord.id``). O heartbeat BUSY
+    emitido no início desta função precisa usar o id CANÔNICO — nunca o
+    de execução — para que ``WorkerRecord.current_task`` continue
+    comparável com ``TaskRecord.id``/ownership em qualquer momento,
+    inclusive durante a execução. ``claim``/``RunnerResult`` continuam
+    usando ``task.task_id`` (execução) sem nenhuma mudança — só o
+    heartbeat muda. Parâmetro OPCIONAL, ``None`` por padrão =
+    ``task.task_id`` (mesmo comportamento de antes desta rodada, para
+    não quebrar nenhum chamador existente que não tem um id canônico
+    separado para oferecer)."""
     if sucesso_status not in ("DONE", "NEEDS-AUDIT"):
         raise ValueError(f"sucesso_status precisa ser 'DONE' ou 'NEEDS-AUDIT' — recebido {sucesso_status!r}")
     if (patch is None) == (gerar_patch is None):
@@ -694,7 +711,7 @@ def executar_tarefa(
     if worker_id:
         _emitir_heartbeat(
             worker_id, worker_registry,
-            RunnerHeartbeat(worker_id=worker_id, status="BUSY", task_id=task.task_id),
+            RunnerHeartbeat(worker_id=worker_id, status="BUSY", task_id=canonical_task_id or task.task_id),
             heartbeats, notes,
         )
 
@@ -734,6 +751,43 @@ def executar_tarefa(
                 _emitir_heartbeat(worker_id, worker_registry, RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"), heartbeats, notes)
             return DispatchOutcome(result=resultado, claimed=True, external_calls_made=True,
                                     heartbeats=tuple(heartbeats), notes=tuple(notes))
+
+        # Achado F9-B (Issue #105, Fase F, 8ª rodada, auditoria
+        # independente): a chamada Anthropic teve êxito E produziu um
+        # patch válido (status_geracao == "ok" acima), mas a correção da
+        # reserva conservadora/registro de uso no ledger (achado F8-C,
+        # runner_generate.gerar_patch_via_claude) não pôde ser
+        # persistida — ``GenerateOutcome.ledger_correction_failed=True``.
+        # Antes desta correção, este sinal era simplesmente IGNORADO
+        # aqui (só ``.status``/``.patch`` importavam) — um patch gerado
+        # com a contabilidade de custo incerta seguia para
+        # aplicar/commitar/publicar como se nada tivesse acontecido.
+        # Agora: FAIL-CLOSED ANTES de tocar em qualquer arquivo — zero
+        # commit/push (nem ``preparar_branch_de_trabalho`` nem
+        # ``aplicar_patch`` chegam a rodar), o claim permanece consumido
+        # (``claim_store.registrar_resultado`` grava FAILED contra o
+        # MESMO task_id — nunca liberado para uma nova tentativa), sem
+        # retry (nenhum código aqui invoca ``gerar_patch()`` de novo), e
+        # a reserva conservadora já persistida por
+        # ``gerar_patch_via_claude`` permanece contabilizada no ledger
+        # (este bloco nunca toca o ledger, nunca reverte nada).
+        if getattr(geracao, "ledger_correction_failed", False):
+            resultado = RunnerResult(
+                task_id=task.task_id, status="FAILED",
+                reason=(
+                    "chamada Anthropic concluída com sucesso e patch válido gerado, mas a correção "
+                    "da reserva conservadora/registro de uso não pôde ser persistida no ledger "
+                    "Anthropic global — fail-closed antes de aplicar qualquer patch (achado F9-B): "
+                    "zero commit/push, claim permanece consumido, sem retry. A reserva conservadora "
+                    "já feita por gerar_patch_via_claude permanece contabilizada no ledger."
+                ),
+            )
+            claim_store.registrar_resultado(task.task_id, resultado)
+            if worker_id:
+                _emitir_heartbeat(worker_id, worker_registry, RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"), heartbeats, notes)
+            return DispatchOutcome(result=resultado, claimed=True, external_calls_made=True,
+                                    heartbeats=tuple(heartbeats), notes=tuple(notes))
+
         patch = patch_gerado
 
     ok_patch, fora = validar_patch_contra_allowed_files(patch, task)

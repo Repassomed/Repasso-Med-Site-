@@ -275,7 +275,14 @@ def test_concurrent_pipeline_exactly_one_mock_call_and_one_usage_record() -> Non
         )
 
         ledger_final = GitUsageLedger(GitJsonStore(remoto, branch=branch_ledger))
-        assert len(ledger_final.all_records()) == 1, "exatamente 1 usage record para o mesmo evento"
+        # Achado F9-A: 3 registros para a ÚNICA chamada que de fato
+        # aconteceu (reserva conservadora + correção para o custo real +
+        # registro informativo de uso) — nunca mais 1; a execução
+        # DUPLICATE nunca chega perto da reserva/chamada (barrada pelo
+        # dedup, bem antes).
+        registros = ledger_final.all_records()
+        assert len(registros) == 3, f"reserva + correção + uso da ÚNICA chamada real: {registros}"
+        assert sorted(r["kind"] for r in registros) == ["correction", "reservation", "usage"]
     print("OK  test_concurrent_pipeline_exactly_one_mock_call_and_one_usage_record")
 
 
