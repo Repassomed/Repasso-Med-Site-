@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import Callable, Protocol
@@ -166,14 +167,22 @@ def default_seed_workers() -> list[WorkerRecord]:
 
 class WorkerStateStore(Protocol):
     """Mesmo protocolo mínimo de ``git_state.GitJsonStore``
-    (``read``/``update``) — ``GitJsonStore`` já implementa isto de
-    verdade; ``LocalJsonWorkerStateStore`` abaixo é o equivalente para
-    execução local/teste, do mesmo jeito que ``dedup.FileStore`` existe
-    ao lado de ``git_state.GitDedupStore``."""
+    (``read``/``update``/``conditional_update``) — ``GitJsonStore`` já
+    implementa isto de verdade; ``LocalJsonWorkerStateStore`` abaixo é o
+    equivalente para execução local/teste, do mesmo jeito que
+    ``dedup.FileStore`` existe ao lado de ``git_state.GitDedupStore``.
+
+    ``conditional_update`` (Issue #105 Fase E, achado H2 da auditoria
+    independente do PR #115) é o que permite um compare-and-set real:
+    ``evaluate(dados_frescos) -> (aceita, novos_dados)`` é reavaliado a
+    partir de uma leitura FRESCA em cada tentativa — nunca sobre um
+    estado antigo capturado antes da escrita."""
 
     def read(self) -> dict: ...
 
     def update(self, mutate: Callable[[dict], dict], *, message: str) -> dict: ...
+
+    def conditional_update(self, evaluate: Callable[[dict], tuple[bool, dict]], *, message: str) -> bool: ...
 
 
 class LocalJsonWorkerStateStore:
@@ -184,8 +193,24 @@ class LocalJsonWorkerStateStore:
 
     def __init__(self, path: str | None) -> None:
         self.path = path
+        # Achado H2 da 2ª auditoria independente do PR #115: sem um lock,
+        # duas threads no MESMO processo compartilhando esta instância
+        # (ex.: dois testes concorrentes de handoff) poderiam cada uma ler
+        # o arquivo ANTES de qualquer uma escrever, e as duas decidirem
+        # "aceita" com base no mesmo estado velho — reabrindo exatamente a
+        # corrida que `conditional_update` existe para fechar. Este lock
+        # torna leitura+avaliação+escrita uma seção crítica única — a
+        # mesma garantia que `git_state.GitJsonStore` obtém via
+        # serialização real de commits no remoto, só que via mutex, já que
+        # aqui é um único processo, sem coordenação entre processos para
+        # fazer.
+        self._lock = threading.Lock()
 
     def read(self) -> dict:
+        with self._lock:
+            return self._ler_sem_lock()
+
+    def _ler_sem_lock(self) -> dict:
         if not self.path or not os.path.exists(self.path):
             return {}
         try:
@@ -194,28 +219,58 @@ class LocalJsonWorkerStateStore:
         except (json.JSONDecodeError, OSError):
             return {}
 
-    def update(self, mutate: Callable[[dict], dict], *, message: str = "") -> dict:
-        novo = mutate(self.read())
+    def _escrever_sem_lock(self, novo: dict) -> None:
         if self.path:
             os.makedirs(os.path.dirname(os.path.abspath(self.path)) or ".", exist_ok=True)
             with open(self.path, "w", encoding="utf-8") as fh:
                 json.dump(novo, fh, indent=2, sort_keys=True)
-        return novo
+
+    def update(self, mutate: Callable[[dict], dict], *, message: str = "") -> dict:
+        with self._lock:
+            novo = mutate(self._ler_sem_lock())
+            self._escrever_sem_lock(novo)
+            return novo
+
+    def conditional_update(self, evaluate: Callable[[dict], tuple[bool, dict]], *, message: str = "") -> bool:
+        with self._lock:
+            aceita, novo = evaluate(self._ler_sem_lock())
+            if not aceita:
+                return False
+            self._escrever_sem_lock(novo)
+            return True
 
 
 class InMemoryWorkerStateStore:
     """Backend em memória, para teste — mesma superfície de
-    ``WorkerStateStore``, sem tocar disco nem git."""
+    ``WorkerStateStore``, sem tocar disco nem git.
+
+    Achado H2 da 2ª auditoria independente do PR #115: mesmo motivo do
+    lock em ``LocalJsonWorkerStateStore`` (ver docstring lá) — duas
+    threads compartilhando a MESMA instância (o caso real de um teste de
+    concorrência de handoff) não podem, cada uma, ler+decidir antes de
+    qualquer uma escrever; ``self._lock`` torna leitura+avaliação+escrita
+    uma seção crítica única."""
 
     def __init__(self, initial: dict | None = None) -> None:
         self._dados: dict = json.loads(json.dumps(initial)) if initial else {}
+        self._lock = threading.Lock()
 
     def read(self) -> dict:
-        return json.loads(json.dumps(self._dados))
+        with self._lock:
+            return json.loads(json.dumps(self._dados))
 
     def update(self, mutate: Callable[[dict], dict], *, message: str = "") -> dict:
-        self._dados = mutate(self.read())
-        return json.loads(json.dumps(self._dados))
+        with self._lock:
+            self._dados = mutate(json.loads(json.dumps(self._dados)))
+            return json.loads(json.dumps(self._dados))
+
+    def conditional_update(self, evaluate: Callable[[dict], tuple[bool, dict]], *, message: str = "") -> bool:
+        with self._lock:
+            aceita, novo = evaluate(json.loads(json.dumps(self._dados)))
+            if not aceita:
+                return False
+            self._dados = novo
+            return True
 
 
 class OperationalWorkerRegistry:
@@ -270,6 +325,81 @@ class OperationalWorkerRegistry:
 
         self.store.update(mutate, message=message)
         return record
+
+    def transferir_worker_condicional(
+        self, *, worker_anterior_id: str, tarefa_id_esperada: str,
+        checkpoint_esperado: str, branch_esperada: str | None,
+        worker_novo_id: str, anterior_patch: dict, novo_patch: dict, message: str,
+    ) -> bool:
+        """Compare-and-set atômico para o handoff — Issue #105 Fase E
+        (``coordinator/handoff_exec.py``), achado H2 da 1ª auditoria e
+        achado H4 da 2ª auditoria independentes do PR #115: um ``upsert``
+        duplo em UM commit não bastava, porque o par (worker anterior
+        liberado, novo worker assumido) era escrito incondicionalmente —
+        duas tarefas DIFERENTES concorrendo pelo mesmo worker novo podiam,
+        cada uma com seu próprio ``claim`` (chaves diferentes, então as
+        duas "vencem"), sobrescrever a reserva uma da outra, com a última
+        escrita ganhando silenciosamente (H2).
+
+        Agora a escrita só acontece quando, numa leitura FRESCA repetida
+        em CADA tentativa de conflito (``WorkerStateStore.
+        conditional_update`` — mesmo princípio de
+        ``git_state.GitJsonStore.claim_key``/``conditional_update``),
+        TODAS as pré-condições abaixo ainda são verdadeiras:
+
+        1. ``worker_anterior_id`` ainda tem ``current_task ==
+           tarefa_id_esperada`` — ainda é o dono real da tarefa sendo
+           transferida (H2);
+        2. ``worker_anterior_id`` ainda tem ``last_checkpoint ==
+           checkpoint_esperado`` — nenhum heartbeat mais novo publicou um
+           checkpoint diferente entre a decisão (snapshot) e esta escrita
+           (H4 da 2ª auditoria: sem isto, uma transição baseada num
+           checkpoint A velho podia sobrescrever um checkpoint B mais novo
+           já publicado por um heartbeat real);
+        3. quando ``branch_esperada`` não é ``None``, ``worker_anterior_id``
+           ainda tem ``branch == branch_esperada`` (mesmo motivo do item 2 —
+           ``None`` significa "nenhuma branch conhecida no snapshot", nunca
+           tratado como incompatibilidade);
+        4. ``worker_novo_id`` ainda está ``AVAILABLE``, ``can_execute`` e
+           sem ``current_task`` — ainda é candidato real a assumir a
+           tarefa (H2).
+
+        Se qualquer uma mudou, nada é escrito e devolve ``False`` — nunca
+        sobrescreve um estado mais novo do que o snapshot que gerou a
+        decisão.
+
+        ``anterior_patch``/``novo_patch`` (H4): dicts com SÓ os campos que
+        de fato mudam (ex.: ``{"current_task": None}``) — aplicados por
+        cima dos registros FRESCOS lidos aqui dentro, nunca a partir de um
+        ``WorkerRecord`` construído antes do CAS. Isto garante que
+        heartbeat/progresso/capabilities/metadados mais novos do que o
+        snapshot da decisão nunca são apagados por um objeto stale."""
+        def evaluate(dados: dict) -> tuple[bool, dict]:
+            existentes = dados.get("workers")
+            base = {w["worker_id"]: w for w in existentes} if existentes else {
+                w.worker_id: w.to_dict() for w in default_seed_workers()
+            }
+            anterior_fresco = base.get(worker_anterior_id)
+            novo_fresco = base.get(worker_novo_id)
+            if anterior_fresco is None or anterior_fresco.get("current_task") != tarefa_id_esperada:
+                return False, dados
+            if anterior_fresco.get("last_checkpoint") != checkpoint_esperado:
+                return False, dados
+            if branch_esperada is not None and anterior_fresco.get("branch") != branch_esperada:
+                return False, dados
+            if novo_fresco is None:
+                return False, dados
+            if (
+                novo_fresco.get("status") != "AVAILABLE"
+                or not novo_fresco.get("can_execute", True)
+                or novo_fresco.get("current_task") is not None
+            ):
+                return False, dados
+            base[worker_anterior_id] = {**anterior_fresco, **anterior_patch}
+            base[worker_novo_id] = {**novo_fresco, **novo_patch}
+            return True, {"workers": list(base.values())}
+
+        return self.store.conditional_update(evaluate, message=message)
 
     def set_status(self, nome_ou_id: str, novo_status: str, *, message: str,
                     heartbeat: str | None = None, default_type: str = "human_session") -> WorkerRecord:
