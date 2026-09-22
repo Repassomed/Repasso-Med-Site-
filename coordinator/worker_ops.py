@@ -51,6 +51,17 @@ class WorkerRecord:
     current_task: str | None = None
     branch: str | None = None
     commit: str | None = None
+    # Campo ADITIVO (Issue #105 Fase 1; achado H3 da auditoria independente
+    # do PR #110): separado de ``commit`` de propósito. ``commit`` é só o
+    # último commit CONHECIDO (pode ser trabalho em andamento, nunca
+    # revisado); ``last_checkpoint`` é o último commit EXPLICITAMENTE
+    # considerado seguro para handoff/retomada (Issue #84 §6: "todo
+    # handoff deve partir de commit/checkpoint conhecido"). Um `commit`
+    # novo nunca vira `last_checkpoint` sozinho — só quem aplica um
+    # heartbeat/checkpoint explícito (`coordinator/heartbeat.py`) decide
+    # isso. Registros antigos sem este campo carregam ``None`` via
+    # ``from_dict`` (nunca inferido do `commit` já existente ali).
+    last_checkpoint: str | None = None
     progress: str | None = None
     last_heartbeat: str | None = None
     can_execute: bool = True
@@ -88,6 +99,7 @@ class WorkerRecord:
             "current_task": self.current_task,
             "branch": self.branch,
             "commit": self.commit,
+            "last_checkpoint": self.last_checkpoint,
             "progress": self.progress,
             "last_heartbeat": self.last_heartbeat,
             "can_execute": self.can_execute,
@@ -107,6 +119,9 @@ class WorkerRecord:
             current_task=d.get("current_task"),
             branch=d.get("branch"),
             commit=d.get("commit"),
+            # H3: ausente em registros antigos -> None, NUNCA inferido de
+            # `commit` — compatibilidade retroativa explícita.
+            last_checkpoint=d.get("last_checkpoint"),
             progress=d.get("progress"),
             last_heartbeat=d.get("last_heartbeat"),
             can_execute=bool(d.get("can_execute", True)),

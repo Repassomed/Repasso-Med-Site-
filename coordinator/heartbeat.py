@@ -13,20 +13,20 @@ SET_LIMIT/SET_AVAILABLE).
 Mesma filosofia determinística de `worker_commands.py`/`scheduler.py`:
 zero chamada de API, zero I/O de rede. Este módulo faz três coisas:
 
-1. ``RunnerHeartbeat`` — o contrato de dados (Issue #105 §3), com
-   validação fail-closed no ``__post_init__``: um payload inválido nunca
-   produz um ``RunnerHeartbeat`` "quase certo", ele simplesmente não
-   existe (``ValueError``). O MESMO contrato serve para heartbeat de
-   sessão humana (comentário estruturado, ``parse_heartbeat_comment``) e
-   para o futuro ``api_runner`` (payload dict, ``heartbeat_de_payload``)
-   — nada aqui depende de `type` do worker.
+1. Consome ``runner_contract.RunnerHeartbeat`` — o contrato CANÔNICO
+   único (ver correções abaixo). Fail-closed: um payload inválido nunca
+   produz um heartbeat "quase certo", ele simplesmente não existe
+   (``ValueError``). O MESMO contrato serve heartbeat de sessão humana
+   (comentário estruturado, ``parse_heartbeat_comment``) e o futuro
+   ``api_runner`` (payload dict, ``heartbeat_de_payload``) — nada aqui
+   depende de `type` do worker.
 2. ``aplicar_heartbeat`` — atualiza o ``OperationalWorkerRegistry``
-   (status, tarefa, branch, commit, progresso, ``last_heartbeat``) numa
-   única escrita (``upsert``), nunca duas chamadas separadas que
-   deixariam uma janela de estado parcial. Worker desconhecido é
-   REJEITADO explicitamente (nunca autocadastrado por um heartbeat —
-   cadastro continua sendo ato humano explícito via `worker_commands.py`,
-   #99).
+   (status, tarefa, branch, commit, ``last_checkpoint``, progresso,
+   ``last_heartbeat``) numa única escrita (``upsert``), nunca duas
+   chamadas separadas que deixariam uma janela de estado parcial. Worker
+   desconhecido é REJEITADO explicitamente (nunca autocadastrado por um
+   heartbeat — cadastro continua sendo ato humano explícito via
+   `worker_commands.py`, #99).
 3. ``avaliar_stale`` — função PURA (recebe um ``WorkerRecord`` já lido,
    nunca o registro/store) que só sinaliza heartbeat velho; nunca muda
    status sozinha. "Worker sumiu" e "worker mudou de estado" são coisas
@@ -40,14 +40,46 @@ Nada aqui executa handoff, dispara runner, escreve em
 para a Fase E (handoff automático) e Fase F (retomada automática)
 reagirem, mais adiante.
 
-**Limitação conhecida, não escondida:** a Issue #105 Fase 1 pede
-``last_checkpoint`` como campo PRÓPRIO do Worker Registry, mas
-`worker_ops.WorkerRecord` (já implementado, fora do escopo desta rodada)
-só tem `commit`. `RunnerHeartbeat` preserva os dois campos separados
-(fidelidade ao contrato pedido), e `aplicar_heartbeat` funde os dois no
-único campo `commit` do registro (preferindo `commit`, com
-`last_checkpoint` como fallback) — sem expandir o schema de
-`worker_ops.py` nesta rodada.
+---
+
+**Correções da auditoria independente do PR #110 (H1-H4) — só isto, Fase
+D/runner_dispatch/workflow continuam fora de escopo:**
+
+- H1: este módulo definia sua PRÓPRIA ``RunnerHeartbeat``, incompatível
+  com a que o PR #111 (``#105-C Runner Contract``, já auditado e
+  mergeado) define em ``runner_contract.py`` — dois contratos oficiais
+  divergentes antes mesmo de existir um consumidor real (Fase D). A
+  classe local foi REMOVIDA por completo; este módulo agora só importa
+  ``from .runner_contract import RunnerHeartbeat`` e usa exclusivamente
+  essa definição — parser, payload, aplicador e testes.
+- H2: ``runner_contract.RunnerHeartbeat.__post_init__`` (correção C1 do
+  PR #111) já garante, na própria CONSTRUÇÃO do objeto, que
+  ``BUSY``/``NEAR_LIMIT``/``LIMIT`` exigem ``task_id`` preenchido e que
+  ``AVAILABLE``/``OFFLINE`` nunca podem carregar ``task_id``. Um
+  heartbeat "BUSY sem TASK" simplesmente não é um ``RunnerHeartbeat``
+  válido — a construção falha (``ValueError``) antes de chegar perto de
+  ``aplicar_heartbeat``, então não existe mais o caminho em que um
+  heartbeat parcial apagaria ``current_task`` por acidente.
+- H3: ``worker_ops.WorkerRecord`` ganhou um campo aditivo
+  ``last_checkpoint`` (ver ``worker_ops.py``), separado de ``commit``.
+  ``commit`` = último commit conhecido; ``last_checkpoint`` = último
+  commit EXPLICITAMENTE considerado seguro para handoff. Os dois são
+  atualizados de forma independente em ``aplicar_heartbeat``: um
+  ``heartbeat.commit`` novo NUNCA vira ``last_checkpoint``
+  automaticamente — só um ``heartbeat.last_checkpoint`` explícito
+  atualiza ``last_checkpoint``. Ausência de qualquer um dos dois num
+  heartbeat preserva o último valor conhecido no registro (nunca apaga
+  por omissão); registros antigos sem ``last_checkpoint`` carregam
+  ``None`` (nunca inferido do ``commit``).
+- H4: com H1 resolvido, heartbeat de sessão humana (via comentário) e o
+  futuro payload de ``api_runner`` passam pela MESMA validação —
+  ``branch`` nunca ``main``/``master``, ``commit``/``last_checkpoint``
+  precisam ser SHA explícito (7-40 hex), ``timestamp`` ISO8601,
+  ``task_id`` conforme o status, ``progress_percent`` 0-100 — porque os
+  dois caminhos constroem exatamente o mesmo
+  ``runner_contract.RunnerHeartbeat``. ``parse_heartbeat_comment``
+  continua fail-closed: qualquer violação dessas regras vira
+  ``HeartbeatParseResult(ok=False, ...)``, nunca uma exceção não tratada.
 """
 
 from __future__ import annotations
@@ -56,7 +88,8 @@ import re
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 
-from .worker_ops import VALID_STATUSES, OperationalWorkerRegistry, WorkerRecord
+from .runner_contract import RunnerHeartbeat
+from .worker_ops import OperationalWorkerRegistry, WorkerRecord
 
 # Requisito #105 §3 (Fase B): sem heartbeat explícito, nunca presumir há
 # quanto tempo é razoável esperar — este é só um DEFAULT que qualquer
@@ -64,68 +97,33 @@ from .worker_ops import VALID_STATUSES, OperationalWorkerRegistry, WorkerRecord
 # próprio valor nunca decide status sozinho, só rotula "stale"/"não stale".
 DEFAULT_STALE_THRESHOLD = timedelta(minutes=30)
 
+__all__ = [
+    "RunnerHeartbeat",
+    "heartbeat_de_payload",
+    "HeartbeatParseResult",
+    "parse_heartbeat_comment",
+    "LimiteSinal",
+    "sinal_de_limite",
+    "HeartbeatApplyResult",
+    "aplicar_heartbeat",
+    "StaleCheck",
+    "avaliar_stale",
+    "DEFAULT_STALE_THRESHOLD",
+]
+
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-@dataclass(frozen=True)
-class RunnerHeartbeat:
-    """Contrato de heartbeat (Issue #105 §3) — mesmo formato para
-    ``human_session`` (via comentário estruturado) e o futuro
-    ``api_runner`` (via payload). Fail-closed: qualquer campo obrigatório
-    ausente ou fora do domínio válido levanta ``ValueError`` no
-    ``__post_init__`` — nunca aceita silenciosamente um heartbeat
-    malformado."""
-
-    worker_id: str
-    status: str  # AVAILABLE | BUSY | NEAR_LIMIT | LIMIT | OFFLINE
-    task_id: str | None = None
-    progress_percent: int | None = None  # 0-100
-    branch: str | None = None
-    commit: str | None = None
-    remaining_work_estimate: str | None = None  # texto curto e qualitativo — nunca inventar precisão
-    last_checkpoint: str | None = None
-    notes: str = ""
-    # ISO8601; ``None`` = quem aplica o heartbeat carimba o momento em que
-    # recebeu (``aplicar_heartbeat`` usa ``_now_iso()``). Informar
-    # explicitamente é o que torna reaplicar o MESMO heartbeat idempotente.
-    timestamp: str | None = None
-
-    def __post_init__(self) -> None:
-        if not self.worker_id or not self.worker_id.strip():
-            raise ValueError("worker_id não pode ser vazio")
-        if self.status not in VALID_STATUSES:
-            raise ValueError(f"status {self.status!r} inválido — precisa ser um de {sorted(VALID_STATUSES)}")
-        if self.progress_percent is not None and not (0 <= self.progress_percent <= 100):
-            raise ValueError(f"progress_percent {self.progress_percent!r} precisa estar entre 0 e 100")
-        if self.timestamp is not None:
-            try:
-                datetime.fromisoformat(self.timestamp)
-            except ValueError as exc:
-                raise ValueError(f"timestamp {self.timestamp!r} não é um ISO8601 válido") from exc
-
-    def to_dict(self) -> dict:
-        return {
-            "worker_id": self.worker_id,
-            "status": self.status,
-            "task_id": self.task_id,
-            "progress_percent": self.progress_percent,
-            "branch": self.branch,
-            "commit": self.commit,
-            "remaining_work_estimate": self.remaining_work_estimate,
-            "last_checkpoint": self.last_checkpoint,
-            "notes": self.notes,
-            "timestamp": self.timestamp,
-        }
-
-
 def heartbeat_de_payload(payload: dict) -> RunnerHeartbeat:
-    """Constrói um ``RunnerHeartbeat`` a partir de um dict — o formato que
-    um futuro ``api_runner`` enviaria (JSON). Fail-closed: campo
-    obrigatório ausente vira ``ValueError`` explícito (nunca ``KeyError``
-    cru vazando do dataclass, nunca um default inventado para
-    ``worker_id``/``status``)."""
+    """Constrói um ``runner_contract.RunnerHeartbeat`` a partir de um dict
+    — o formato que um futuro ``api_runner`` enviaria (JSON). Fail-closed:
+    campo obrigatório ausente vira ``ValueError`` explícito (nunca
+    ``KeyError`` cru vazando do dataclass, nunca um default inventado
+    para ``worker_id``/``status``); qualquer outra violação do contrato
+    canônico (H4) também levanta ``ValueError``, vindo do próprio
+    ``__post_init__`` de ``RunnerHeartbeat``."""
     if "worker_id" not in payload:
         raise ValueError("payload de heartbeat sem 'worker_id'")
     if "status" not in payload:
@@ -167,9 +165,11 @@ def parse_heartbeat_comment(texto: str) -> HeartbeatParseResult | None:
     """``None`` quando o texto não contém um bloco ``HEARTBEAT`` — nesse
     caso o comentário segue o caminho normal (Inbox #88 /
     `worker_commands.py`), não é um erro. Quando o marcador existe mas o
-    bloco é inválido, devolve ``HeartbeatParseResult(ok=False, ...)`` com
-    o motivo — fail-closed, nunca levanta exceção para quem só está
-    tentando reconhecer o comentário.
+    bloco viola o contrato CANÔNICO (``runner_contract.RunnerHeartbeat`` —
+    H4: mesma validação para heartbeat humano e ``api_runner``), devolve
+    ``HeartbeatParseResult(ok=False, ...)`` com o motivo — fail-closed,
+    nunca levanta exceção para quem só está tentando reconhecer o
+    comentário.
 
     Formato esperado (chave: valor, uma por linha, uma linha ``HEARTBEAT``
     em qualquer lugar do comentário)::
@@ -228,6 +228,10 @@ def parse_heartbeat_comment(texto: str) -> HeartbeatParseResult | None:
             notes=campos.get("NOTES") or "",
         )
     except ValueError as exc:
+        # H4: qualquer violação do contrato canônico (branch protegida,
+        # commit/checkpoint que não é SHA explícito, task_id incompatível
+        # com o status etc.) chega aqui como ValueError vindo do
+        # __post_init__ de RunnerHeartbeat — nunca uma exceção não tratada.
         return HeartbeatParseResult(ok=False, heartbeat=None, error=str(exc))
 
     return HeartbeatParseResult(ok=True, heartbeat=heartbeat, error=None)
@@ -245,6 +249,12 @@ class LimiteSinal:
     worker_status: str  # "LIMIT" | "NEAR_LIMIT"
     progress_percent: int | None
     remaining_work_estimate: str | None
+    # H3: o checkpoint SEGURO (SHA explícito), nunca um commit qualquer —
+    # None aqui significa "nenhum checkpoint seguro conhecido ainda"; um
+    # futuro consumidor (Fase E) só deve tratar isto como
+    # ``checkpoint_seguro=True`` para ``scheduler.avaliar_handoff_de_tarefa``
+    # quando este campo não for None.
+    checkpoint_seguro: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -252,12 +262,18 @@ class LimiteSinal:
             "worker_status": self.worker_status,
             "progress_percent": self.progress_percent,
             "remaining_work_estimate": self.remaining_work_estimate,
+            "checkpoint_seguro": self.checkpoint_seguro,
         }
 
 
-def sinal_de_limite(heartbeat: RunnerHeartbeat) -> LimiteSinal | None:
+def sinal_de_limite(heartbeat: RunnerHeartbeat, *, checkpoint_seguro: str | None = None) -> LimiteSinal | None:
     """``None`` quando o heartbeat não é LIMIT/NEAR_LIMIT — não há sinal
-    de handoff nenhum para produzir."""
+    de handoff nenhum para produzir.
+
+    ``checkpoint_seguro``: quando informado (``aplicar_heartbeat`` passa o
+    valor EFETIVO já mesclado com o registro — H3), vence; senão cai no
+    próprio ``heartbeat.last_checkpoint`` (útil para quem chama esta
+    função isoladamente, sem passar por ``aplicar_heartbeat``)."""
     if heartbeat.status not in ("LIMIT", "NEAR_LIMIT"):
         return None
     return LimiteSinal(
@@ -265,6 +281,7 @@ def sinal_de_limite(heartbeat: RunnerHeartbeat) -> LimiteSinal | None:
         worker_status=heartbeat.status,
         progress_percent=heartbeat.progress_percent,
         remaining_work_estimate=heartbeat.remaining_work_estimate,
+        checkpoint_seguro=checkpoint_seguro if checkpoint_seguro is not None else heartbeat.last_checkpoint,
     )
 
 
@@ -308,9 +325,10 @@ class HeartbeatApplyResult:
 
 def aplicar_heartbeat(registry: OperationalWorkerRegistry, heartbeat: RunnerHeartbeat) -> HeartbeatApplyResult:
     """Atualiza o Worker Registry operacional a partir de um
-    ``RunnerHeartbeat`` já validado — uma única escrita (``upsert``),
-    nunca duas chamadas separadas (não existe uma janela em que o
-    registro reflete status novo com tarefa/commit antigos).
+    ``runner_contract.RunnerHeartbeat`` já validado (H1) — uma única
+    escrita (``upsert``), nunca duas chamadas separadas (não existe uma
+    janela em que o registro reflete status novo com tarefa/commit
+    antigos).
 
     Worker desconhecido é REJEITADO explicitamente (requisito #105 Fase
     B, item 7 — "worker desconhecido tratado explicitamente"): um
@@ -321,7 +339,18 @@ def aplicar_heartbeat(registry: OperationalWorkerRegistry, heartbeat: RunnerHear
     comando ADMINISTRATIVO já vindo de um ator confiável (José, na Issue
     #88) — um heartbeat pode vir, no futuro, de um `api_runner` não
     supervisionado linha a linha, então "worker_id desconhecido" é tratado
-    como anomalia a rejeitar, não como registro implícito."""
+    como anomalia a rejeitar, não como registro implícito.
+
+    H2: como ``RunnerHeartbeat`` já garante na própria construção que
+    BUSY/NEAR_LIMIT/LIMIT têm ``task_id`` e AVAILABLE/OFFLINE não têm,
+    ``current_task=heartbeat.task_id`` nunca apaga uma tarefa ativa por
+    acidente — um heartbeat que tentasse isso simplesmente não existiria
+    como objeto válido.
+
+    H3: ``commit`` e ``last_checkpoint`` são mesclados de forma
+    INDEPENDENTE com o que já está no registro — nenhum dos dois infere
+    o outro, e a ausência de qualquer um deles num heartbeat preserva o
+    último valor conhecido (nunca apaga por omissão)."""
     atual = registry.find_by_name_or_id(heartbeat.worker_id)
     if atual is None:
         return HeartbeatApplyResult(
@@ -336,17 +365,13 @@ def aplicar_heartbeat(registry: OperationalWorkerRegistry, heartbeat: RunnerHear
 
     estava_available = atual.status == "AVAILABLE"
     timestamp = heartbeat.timestamp or _now_iso()
-    # commit/branch/progresso: um heartbeat leve (ex.: só "ainda BUSY,
-    # sem novidade") pode não repetir esses campos — ausência AQUI nunca
-    # apaga o último valor conhecido, só current_task é substituído
-    # diretamente (None significa "não está em nenhuma tarefa agora",
-    # informação real, não ausência de dado). Preferimos sempre o valor
-    # mais novo do heartbeat quando ele vem preenchido; commit também
-    # aceita last_checkpoint como fallback antes de cair no valor antigo
-    # (ver docstring do módulo — WorkerRecord só tem `commit`, não um
-    # campo `last_checkpoint` separado).
-    commit_efetivo = heartbeat.commit or heartbeat.last_checkpoint or atual.commit
-    branch_efetivo = heartbeat.branch or atual.branch
+
+    # H3: commit e last_checkpoint nunca se fundem — cada um preserva o
+    # último valor conhecido quando o heartbeat não o repete, e um commit
+    # novo NUNCA vira checkpoint seguro sozinho.
+    commit_efetivo = heartbeat.commit if heartbeat.commit is not None else atual.commit
+    checkpoint_efetivo = heartbeat.last_checkpoint if heartbeat.last_checkpoint is not None else atual.last_checkpoint
+    branch_efetivo = heartbeat.branch if heartbeat.branch is not None else atual.branch
     progresso_efetivo = _formatar_progresso(heartbeat) or atual.progress
 
     novo = replace(
@@ -355,17 +380,19 @@ def aplicar_heartbeat(registry: OperationalWorkerRegistry, heartbeat: RunnerHear
         current_task=heartbeat.task_id,
         branch=branch_efetivo,
         commit=commit_efetivo,
+        last_checkpoint=checkpoint_efetivo,
         progress=progresso_efetivo,
         last_heartbeat=timestamp,
     )
     registry.upsert(novo, message=f"heartbeat: {novo.worker_id} -> {novo.status}")
 
     avisos: list[str] = []
-    if heartbeat.status == "LIMIT" and heartbeat.task_id and not commit_efetivo:
+    if heartbeat.status == "LIMIT" and heartbeat.task_id and not checkpoint_efetivo:
         avisos.append(
-            "LIMIT sem commit/checkpoint registrado — a tarefa não poderá ser retomada com "
-            "segurança até publicar um checkpoint (coordination/STATES.md: "
-            "'BLOCKED-LIMIT exige commit')."
+            "LIMIT sem checkpoint SEGURO registrado (last_checkpoint) — mesmo havendo um commit "
+            "conhecido, ele não vira automaticamente um checkpoint seguro para handoff; a tarefa não "
+            "poderá ser retomada com confiança até alguém publicar um CHECKPOINT explícito "
+            "(coordination/STATES.md: 'BLOCKED-LIMIT exige commit'; Issue #84 §6)."
         )
 
     return HeartbeatApplyResult(
@@ -374,7 +401,7 @@ def aplicar_heartbeat(registry: OperationalWorkerRegistry, heartbeat: RunnerHear
         reason=f"heartbeat aplicado: {novo.worker_id} -> {novo.status}",
         record=novo,
         ficou_disponivel_agora=(not estava_available and novo.status == "AVAILABLE"),
-        sinal_limite=sinal_de_limite(heartbeat),
+        sinal_limite=sinal_de_limite(heartbeat, checkpoint_seguro=checkpoint_efetivo),
         avisos=tuple(avisos),
     )
 
