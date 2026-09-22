@@ -30,6 +30,7 @@ from . import (
     test_openai_transport,
     test_pilot_mode,
     test_redact,
+    test_scheduler,
     test_worker_registry_real,
     test_workflow_security,
 )
@@ -59,6 +60,7 @@ MODULOS = [
     test_coordinator_v3_round4,
     test_openai_transport,
     test_openai_auditor,
+    test_scheduler,
 ]
 
 
