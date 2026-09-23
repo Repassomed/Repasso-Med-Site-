@@ -1065,6 +1065,16 @@
       "output_tokens": 79,
       "tier": "FAST",
       "timestamp": "2026-09-23T02:18:43.503227+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.024916,
+      "event_key": "runner-task:infra-coordinator-final-canary-r4",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-23T02:25:57.967753+00:00"
     }
   ]
 }
