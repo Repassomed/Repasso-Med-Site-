@@ -196,6 +196,26 @@
       "status": "OFFLINE",
       "type": "api_runner",
       "worker_id": "claude-worker-3"
+    },
+    {
+      "branch": null,
+      "can_audit": false,
+      "can_execute": true,
+      "can_publish": false,
+      "capabilities": [
+        "conteudo",
+        "codigo"
+      ],
+      "commit": null,
+      "current_task": null,
+      "display_name": "Claude Worker 4",
+      "last_checkpoint": null,
+      "last_heartbeat": null,
+      "never_merge": true,
+      "progress": null,
+      "status": "AVAILABLE",
+      "type": "api_runner",
+      "worker_id": "claude-worker-4"
     }
   ]
 }
