@@ -39,10 +39,10 @@
       "guard_dispatch_status": null,
       "guard_dispatched_pr": null,
       "pr_number": null,
-      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'fisiopatologia-ii-issue101' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=False.)",
+      "reason": "arquivo(s) existente(s) excede(m) o limite que pode ser enviado integralmente ao modelo (20000 caracteres): ['Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html']. Fail-closed nesta fase can\u00e1rio (corre\u00e7\u00e3o B2-C, auditoria independente do PR #114): nenhuma chamada foi feita, nenhum patch foi gerado, zero escrita. Edi\u00e7\u00e3o por trecho/\u00e2ncora para arquivos grandes \u00e9 uma evolu\u00e7\u00e3o futura, fora desta rodada.",
       "reserved_at": "2026-09-23T20:41:47.645519+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-23T20:41:47.645534+00:00",
+      "status": "BLOCKED",
+      "updated_at": "2026-09-23T20:42:07.667514+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
