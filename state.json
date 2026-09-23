@@ -124,6 +124,31 @@
       "summary": "resposta do modelo n\u00e3o \u00e9 um JSON v\u00e1lido \u2014 resposta malformada nunca \u00e9 aplicada parcialmente.",
       "task_id": "dermatologia-questoes-issue112",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "runner",
+      "commit_sha": null,
+      "component": "runner",
+      "error_id": "ERR-055A47A82B",
+      "error_type": "runner-failed",
+      "fingerprint": "055a47a82b544557e380",
+      "first_seen": "2026-09-23T22:56:59.828050+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "66b4ec492f264b9cb3dcb5de027bc3cf",
+      "issue_sync_updated_at": "2026-09-23T22:56:59.828050+00:00",
+      "last_evidence_hash": "9bea937c2e75c69e14e5",
+      "last_seen": "2026-09-23T22:56:59.828050+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35930924167",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
+      "task_id": "semiologia-ii-b05-b10-gaps-r2",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
