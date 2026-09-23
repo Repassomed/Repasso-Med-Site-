@@ -208,6 +208,14 @@ MAX_FILE_CHARS_SENT = 20_000
 MAX_ANCHOR_CONTEXT_CHARS_PER_FILE = 12_000
 MAX_ANCHOR_CONTEXT_CHARS_TOTAL = 24_000
 MAX_ANCHOR_WINDOWS_PER_FILE = 8
+
+# O Coordinator/auditor continua com o teto global conservador de 2k.
+# Geração de PATCH precisa de mais espaço: uma resposta JSON com HTML/
+# AnchoredEdit pode legitimamente passar de 2k. Run real #65 bateu
+# EXATAMENTE em 2.000 tokens e foi truncado no meio do JSON (Issue #154).
+# O teto próprio do Runner continua finito, entra na reserva conservadora
+# de orçamento ANTES da chamada e não cria retry automático.
+RUNNER_PATCH_MAX_OUTPUT_TOKENS = 8_000
 ANCHOR_WINDOW_CHARS_BEFORE = 700
 ANCHOR_WINDOW_CHARS_AFTER = 900
 
@@ -951,7 +959,10 @@ def gerar_patch_via_claude(
     system_prompt = _SYSTEM_PROMPT_ANCORADO if trechos_por_arquivo else _SYSTEM_PROMPT
 
     model_choice = resolve_model(ModelTier.STANDARD)
-    limiter = CallLimiter()
+    # Não herdar o teto global de 2k do Coordinator: patches estruturados
+    # podem conter milhares de tokens de HTML/JSON. Mantemos uma chamada só
+    # e um teto próprio finito, contabilizado pela mesma reserva de orçamento.
+    limiter = CallLimiter(max_output_tokens=RUNNER_PATCH_MAX_OUTPUT_TOKENS)
     pedido = anthropic_client.build_request(model_choice, system=system_prompt, prompt=prompt, limiter=limiter)
     transporte_real = transport if transport is not None else AnthropicTransport()
 
@@ -1065,10 +1076,19 @@ def gerar_patch_via_claude(
     try:
         dados = json.loads(texto)
     except (json.JSONDecodeError, ValueError):
+        bateu_teto_saida = bool(
+            resultado_chamada.usage
+            and resultado_chamada.usage.output_tokens >= pedido.max_output_tokens
+        )
+        detalhe = (
+            f" A resposta atingiu o teto de saída do Runner ({pedido.max_output_tokens} tokens), "
+            "portanto é tratada como truncada — nunca aplicada parcialmente."
+            if bateu_teto_saida
+            else " Resposta malformada nunca é aplicada parcialmente."
+        )
         return GenerateOutcome(
             status="failed",
-            reason="resposta do modelo não é um JSON válido — resposta malformada nunca é aplicada "
-                   f"parcialmente.{nota_ledger}",
+            reason=f"resposta do modelo não é um JSON válido —{detalhe}{nota_ledger}",
             usage=resultado_chamada.usage, external_call_made=True,
             ledger_correction_failed=ledger_correction_failed,
         )
