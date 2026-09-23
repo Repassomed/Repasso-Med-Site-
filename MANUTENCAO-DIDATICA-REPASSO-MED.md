@@ -20,6 +20,20 @@ ESCOPO: matéria completa ou, em matérias muito grandes, os blocos desta rodada
 
 Não mande o Claude corrigir as 25 matérias numa única execução. Em matérias grandes, trabalhe com 4–6 blocos por rodada, mas faça a auditoria global da matéria antes de editar o primeiro bloco.
 
+## LEI G0 — ALMA DO REPASSO MED · PRECEDÊNCIA DIDÁTICA
+
+Antes de aplicar qualquer fase deste protocolo, ler e obedecer:
+
+`LEI-G0-ALMA-REPASSO-MED.md`
+
+A G0 é a lei primordial de identidade didática do projeto. Ela exige que toda criação, manutenção e correção preserve uma prosa humana, natural e sutilmente próxima; a identidade própria de cada disciplina; a essência da cátedra e da literatura; e, quando houver evidência de provas, a prioridade didática silenciosa da forma real de cobrança.
+
+Ela não reduz nem substitui nenhuma regra abaixo. Ao contrário: profundidade, precisão científica, mecanismos, classificações, fontes, QA e segurança continuam obrigatórios. A função da G0 é impedir que a execução tecnicamente correta transforme o Repasso Med em material genérico ou mecânico.
+
+Em conteúdo médico-didático, o especialista via Anthropic deve auditar a G0 semanticamente antes de MERGE-READY. A evolução desta identidade deve usar páginas aprovadas, feedback e evidência acumulada, nunca deriva silenciosa do modelo.
+
+---
+
 ATUALIZAÇÃO OPERACIONAL — FLUXO COM 3 CONTAS CLAUDE E UMA ISSUE MESTRE
 
 Este arquivo rege um único PROJETO MESTRE de manutenção didática do Repasso Med.
