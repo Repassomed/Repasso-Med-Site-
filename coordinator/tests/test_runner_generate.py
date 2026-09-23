@@ -39,6 +39,7 @@ from coordinator.runner_contract import RunnerTask
 from coordinator.runner_dispatch import RunnerDispatchConfig
 from coordinator.runner_generate import (
     MAX_FILE_CHARS_SENT,
+    RUNNER_PATCH_MAX_OUTPUT_TOKENS,
     _SYSTEM_PROMPT,
     _conservative_call_cost_usd,
     build_prompt,
@@ -189,6 +190,46 @@ def test_valid_response_returns_patch_and_records_usage() -> None:
         kinds = sorted(r["kind"] for r in registros)
         assert kinds == ["correction", "reservation", "usage"], kinds
     print("OK  test_valid_response_returns_patch_and_records_usage")
+
+
+def test_runner_patch_request_tem_teto_proprio_maior_que_coordinator() -> None:
+    """Regressão do run real #65 / Issue #154: o patch bateu exatamente
+    no teto global antigo de 2.000 tokens e o JSON chegou truncado."""
+    with tempfile.TemporaryDirectory() as tmp:
+        transporte = _CountingTransport(
+            response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}])
+        )
+        outcome = gerar_patch_via_claude(
+            _task(), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")),
+            budget_usd=20.0, transport=transporte,
+        )
+        assert outcome.status == "ok"
+        assert transporte.last_request is not None
+        assert transporte.last_request.max_output_tokens == RUNNER_PATCH_MAX_OUTPUT_TOKENS
+        assert RUNNER_PATCH_MAX_OUTPUT_TOKENS > 2_000
+    print("OK  test_runner_patch_request_tem_teto_proprio_maior_que_coordinator")
+
+
+def test_json_invalido_no_teto_reporta_truncamento_explicitamente() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        transporte = _CountingTransport(
+            response=TransportResponse(
+                text='{"files":[{"path":"greeting.txt","content":"cortado',
+                input_tokens=10,
+                output_tokens=RUNNER_PATCH_MAX_OUTPUT_TOKENS,
+            )
+        )
+        outcome = gerar_patch_via_claude(
+            _task(), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")),
+            budget_usd=20.0, transport=transporte,
+        )
+        assert outcome.status == "failed"
+        assert outcome.patch is None
+        assert "truncada" in outcome.reason.lower()
+        assert str(RUNNER_PATCH_MAX_OUTPUT_TOKENS) in outcome.reason
+    print("OK  test_json_invalido_no_teto_reporta_truncamento_explicitamente")
 
 
 def test_no_automatic_retry_on_transport_error() -> None:
@@ -543,7 +584,8 @@ def test_concorrencia_perto_do_teto_so_uma_reserva_vence() -> None:
         tarefa = _task()
         prompt_estimado = build_prompt(tarefa, {})
         custo_unitario = _conservative_call_cost_usd(
-            system=_SYSTEM_PROMPT, prompt=prompt_estimado, max_output_tokens=2000,
+            system=_SYSTEM_PROMPT, prompt=prompt_estimado,
+            max_output_tokens=RUNNER_PATCH_MAX_OUTPUT_TOKENS,
         )
         # "Saldo próximo do teto": orçamento cabe UMA reserva confortavelmente,
         # mas não cabe DUAS — a corrida real que F8-C fecha.
@@ -869,6 +911,8 @@ def main() -> int:
         test_task_id_outside_canary_makes_zero_external_call,
         test_budget_exhausted_makes_zero_external_call,
         test_valid_response_returns_patch_and_records_usage,
+        test_runner_patch_request_tem_teto_proprio_maior_que_coordinator,
+        test_json_invalido_no_teto_reporta_truncamento_explicitamente,
         test_no_automatic_retry_on_transport_error,
         test_usage_persists_across_independent_git_usage_ledger_instances,
         test_budget_cap_enforced_via_persistent_ledger_across_fresh_instances,
