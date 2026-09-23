@@ -45,6 +45,7 @@ from .budget import (
     conservative_call_cost_usd,
     priority_allowed,
 )
+from .checkpoint_handoff import processar_checkpoint_de_limite
 from .classify import Classification, TaskType, classify
 from .config import Config
 from .context import MinimalContext, build_context
@@ -75,7 +76,7 @@ from .openai_routing import TIER_ZERO as OPENAI_TIER_ZERO, decide as openai_rout
 from .openai_transport import OpenAIResponsesTransport
 from .redact import redact
 from .routing import RoutingDecision, decide as route_decide
-from .runner_dispatch import RunnerDispatchConfig
+from .runner_dispatch import CANARY_VALIDATION_COMMAND_KEYS, RunnerDispatchConfig
 from .worker_commands import aplicar_comando, parse_worker_command
 from .worker_ops import OperationalWorkerRegistry
 from .worker_registry import Worker, WorkerSuggestion, pick_worker
@@ -304,6 +305,7 @@ def _resumo_custo_zero(ledger: UsageLedger, config: Config):
 def _tratar_inbox_comment(event: Event, classificacao: Classification,
                            worker_registry: OperationalWorkerRegistry, ledger: UsageLedger,
                            config: Config, *,
+                           transport: anthropic_client.Transport | None = None,
                            runner_tasks_json_path: str | None = None,
                            runner_repo_dir: str | None = None,
                            runner_dispatch_config: RunnerDispatchConfig | None = None,
@@ -340,6 +342,16 @@ def _tratar_inbox_comment(event: Event, classificacao: Classification,
         confirmacao = aplicar_comando(
             worker_registry, comando, tasks_json_path=runner_tasks_json_path, repo_dir=runner_repo_dir,
             config=runner_dispatch_config, state_git_remote=runner_state_git_remote,
+            # Mesmo ponto de injeção de transporte do resto de observe()
+            # (None em produção = transporte real). Um SET_AVAILABLE pode
+            # acionar a retomada da Fase F, cuja geração de patch é uma
+            # chamada paga do RUNNER, contabilizada no ledger Anthropic
+            # GLOBAL — nunca no custo deste evento do Coordinator.
+            transport=transport,
+            # Achado G8-B: a retomada da Fase F roda a MESMA allowlist de
+            # validação da execução inicial. Constante literal do código
+            # confiável — nunca uma chave vinda do comentário.
+            validation_command_keys=CANARY_VALIDATION_COMMAND_KEYS,
         )
         texto = "\n".join(["<!-- repasso-coordinator -->", f"🛠️ {confirmacao}"])
         return _ResultadoZeroCusto(
@@ -373,7 +385,12 @@ def _tratar_inbox_comment(event: Event, classificacao: Classification,
 
 def _tratar_checkpoint_blocked_limit(event: Event, classificacao: Classification,
                                       worker_registry: OperationalWorkerRegistry, ledger: UsageLedger,
-                                      config: Config) -> _ResultadoZeroCusto:
+                                      config: Config, *,
+                                      transport: anthropic_client.Transport | None = None,
+                                      runner_tasks_json_path: str | None = None,
+                                      runner_repo_dir: str | None = None,
+                                      runner_dispatch_config: RunnerDispatchConfig | None = None,
+                                      runner_state_git_remote: str | None = None) -> _ResultadoZeroCusto:
     """Atualiza o Worker Registry operacional a partir de um checkpoint
     BLOCKED-LIMIT real e decide (nunca executa) WAIT/HANDOFF/POOL_PAUSED
     (Issue #99, achado B4 — "contrato/estado operacional", execução real
@@ -384,14 +401,59 @@ def _tratar_checkpoint_blocked_limit(event: Event, classificacao: Classification
     mesmo quando o checkpoint que o disparou chegou em outra issue (ex.:
     #101) — nunca fica preso na issue de origem. Um checkpoint
     BLOCKED-LIMIT específico (sem pool pausado) continua respondendo na
-    MESMA issue onde o checkpoint foi postado."""
+    MESMA issue onde o checkpoint foi postado.
+
+    Achado G1 (Issue #105 Fase G): quando o wiring operacional do Runner
+    é fornecido (``runner_tasks_json_path``/``runner_repo_dir``/
+    ``runner_dispatch_config``/``runner_state_git_remote`` — os MESMOS
+    quatro parâmetros que ``_tratar_inbox_comment`` já recebe, opcionais e
+    retrocompatíveis) E a tarefa do checkpoint é EXATAMENTE o canário
+    autorizado, o evento deixa de ser só uma DECISÃO e passa a executar a
+    Fase E de verdade: ``RunnerHeartbeat`` LIMIT real (com
+    ``last_checkpoint`` persistido, nunca só ``set_status`` +
+    ``set_task_progress``) -> ``handoff_exec.executar_handoff`` ->
+    despacho da continuação ao Runner Dispatch (achado G2). Tudo isso
+    vive em ``coordinator/checkpoint_handoff.py``, que só COSTURA as
+    peças A-F — nada é reimplementado aqui.
+
+    Sem esse wiring, ou para qualquer tarefa que não seja o canário
+    autorizado, o comportamento é EXATAMENTE o de antes: registro
+    operacional atualizado e decisão informativa, zero execução."""
     agente = event.payload.get("agente")
     tarefa = event.payload.get("tarefa")
     branch = event.payload.get("branch")
     commit = event.payload.get("commit")
     issue_origem = event.payload.get("issue") or INBOX_ISSUE_NUMBER
 
-    if agente:
+    integracao = None
+    wiring_completo = all(
+        v is not None for v in (
+            runner_tasks_json_path, runner_repo_dir, runner_dispatch_config, runner_state_git_remote,
+        )
+    )
+    if agente and tarefa and wiring_completo:
+        integracao = processar_checkpoint_de_limite(
+            registry=worker_registry, agente=agente, canonical_task_id=tarefa,
+            branch=branch, commit=commit, progresso=event.payload.get("progresso"),
+            config=runner_dispatch_config, repo_dir=runner_repo_dir,
+            tasks_json_path=runner_tasks_json_path, state_git_remote=runner_state_git_remote,
+            # Mesmo ponto de injeção de transporte que o resto de observe()
+            # já usa (None em produção = transporte real). Quando a
+            # continuação é despachada, a chamada paga acontece DENTRO do
+            # Runner Dispatch, contra o ledger Anthropic GLOBAL (mesmo teto
+            # mensal do Coordinator) — nunca um segundo orçamento.
+            transport=transport,
+            # Achado G8-B: a continuação automática roda a MESMA
+            # allowlist de validação que o workflow passa na execução
+            # inicial (`--validation-command-keys coordinator-suite`).
+            # Constante literal do código confiável — nunca uma chave
+            # vinda do comentário/payload do evento.
+            validation_command_keys=CANARY_VALIDATION_COMMAND_KEYS,
+        )
+
+    if agente and (integracao is None or integracao.action == "SKIPPED"):
+        # Caminho de sempre (nenhuma execução): o registro operacional
+        # ainda precisa refletir o LIMIT reportado no checkpoint.
         worker_registry.set_status(agente, "LIMIT", message=f"checkpoint: {agente} -> LIMIT (BLOCKED-LIMIT)")
         worker_registry.set_task_progress(
             agente, current_task=tarefa, branch=branch, commit=commit, progress="BLOCKED-LIMIT",
@@ -404,17 +466,48 @@ def _tratar_checkpoint_blocked_limit(event: Event, classificacao: Classification
     pool = decidir_pool(todos)
     if pool is not None:
         executores = [w for w in todos if w.type in ("human_session", "api_runner")]
-        texto = render_checkpoint(
-            "POOL-PAUSADO",
-            linhas={
-                "Motivo": pool.reason,
-                "Workers": ", ".join(f"{w.display_name}={w.status}" for w in executores) or "-",
-            },
-            cost_block=cost_block,
-        )
+        linhas_pool = {
+            "Motivo": pool.reason,
+            "Workers": ", ".join(f"{w.display_name}={w.status}" for w in executores) or "-",
+        }
+        if integracao is not None and integracao.action != "SKIPPED":
+            # O aviso global de pool continua sendo a mensagem (e continua
+            # indo para a #88), mas o que o caminho operacional de fato
+            # executou nunca pode sumir do relato — um handoff/despacho
+            # real que acabou de acontecer é exatamente o que explica o
+            # pool ter ficado sem ninguém disponível.
+            linhas_pool["Execução"] = f"{integracao.action} — {integracao.reason}"
+        texto = render_checkpoint("POOL-PAUSADO", linhas=linhas_pool, cost_block=cost_block)
         return _ResultadoZeroCusto(
             reason="Pool de workers pausado — mensagem única publicada na Inbox (#88).",
             texto=texto, target_issue=INBOX_ISSUE_NUMBER,
+        )
+
+    if integracao is not None and integracao.action != "SKIPPED":
+        # Caminho operacional REAL (achados G1/G2): o que aparece no
+        # cartão é o que de fato aconteceu — nunca uma decisão hipotética.
+        linhas = {
+            "Tarefa": tarefa or "-",
+            "Agente": agente or "-",
+            "Branch": branch or "-",
+            "Commit": commit or "-",
+            "Checkpoint seguro": integracao.checkpoint_confirmado or "não confirmado",
+            "Execução": f"{integracao.action} — {integracao.reason}",
+        }
+        if integracao.action == "DISPATCHED":
+            # Honestidade de custo (mesma exigência de test_human_output_
+            # honesty.py): o bloco de custo abaixo é o do COORDINATOR, que
+            # continua sem chamada nenhuma neste caminho. A continuação
+            # despachada pode ter gasto uma chamada do RUNNER — contabilizada
+            # no ledger Anthropic GLOBAL (mesmo teto mensal), nunca aqui.
+            linhas["Custo"] = (
+                "o bloco abaixo é o custo do Coordinator (zero chamada); a continuação despachada é "
+                "contabilizada no ledger Anthropic global do Runner, sob o MESMO teto mensal."
+            )
+        texto = render_checkpoint("BLOCKED-LIMIT", linhas=linhas, cost_block=cost_block)
+        return _ResultadoZeroCusto(
+            reason=f"Checkpoint BLOCKED-LIMIT processado — {integracao.action}.", texto=texto,
+            target_issue=issue_origem,
         )
 
     checkpoint_seguro = bool(commit)
@@ -945,7 +1038,7 @@ def observe(
     if audit_mode and worker_registry is not None:
         if event.event_type is EventType.INBOX_COMMENT:
             zero_custo = _tratar_inbox_comment(
-                event, classificacao, worker_registry, ledger, config,
+                event, classificacao, worker_registry, ledger, config, transport=transport,
                 runner_tasks_json_path=runner_tasks_json_path, runner_repo_dir=runner_repo_dir,
                 runner_dispatch_config=runner_dispatch_config, runner_state_git_remote=runner_state_git_remote,
             )
@@ -960,7 +1053,11 @@ def observe(
                 **resultado_base,
             )
         if event.event_type is EventType.CHECKPOINT_BLOCKED_LIMIT:
-            zero_custo = _tratar_checkpoint_blocked_limit(event, classificacao, worker_registry, ledger, config)
+            zero_custo = _tratar_checkpoint_blocked_limit(
+                event, classificacao, worker_registry, ledger, config, transport=transport,
+                runner_tasks_json_path=runner_tasks_json_path, runner_repo_dir=runner_repo_dir,
+                runner_dispatch_config=runner_dispatch_config, runner_state_git_remote=runner_state_git_remote,
+            )
             return ObserveResult(
                 status="OBSERVED",
                 reason=zero_custo.reason,

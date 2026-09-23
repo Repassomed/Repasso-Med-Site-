@@ -13,11 +13,11 @@ patch vazio (FAILED — nunca aplicado parcialmente), erro de transporte
 (FAILED, uma tentativa só), e o contexto mínimo enviado (só
 instructions + conteúdo dos próprios allowed_files).
 
-Mesma decisão operacional já aplicada a ``test_runner_contract.py``/
-``test_heartbeat.py``/``test_runner_dispatch.py``/``test_runner_workflow_
-security.py``: deliberadamente NÃO registrado em
-``coordinator/tests/run_all.py`` nesta rodada — roda standalone via
-``python3 -m coordinator.tests.test_runner_generate``.
+Registrado em ``coordinator/tests/run_all.py`` a partir da Fase G da
+Issue #105 (antes disto rodava só standalone, o que deixava a allowlist
+``coordinator-suite`` — a única validação que o próprio canário executa
+antes de comitar — cega para o mecanismo do canário). Continua rodando
+standalone via ``python3 -m coordinator.tests.test_runner_generate``.
 """
 
 from __future__ import annotations

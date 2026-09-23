@@ -41,8 +41,10 @@ falha de forma limpa e determinística (``FAILED``) — o que já basta para
 provar que a cadeia INTEIRA foi percorrida até o ponto exato onde uma
 chamada paga aconteceria.
 
-Deliberadamente NÃO registrado em ``coordinator/tests/run_all.py`` nesta
-rodada (mesma decisão operacional já aplicada às Fases B/C/D/F) — roda
+Registrado em ``coordinator/tests/run_all.py`` a partir da Fase G da
+Issue #105 (antes disto rodava só standalone, o que deixava a allowlist
+``coordinator-suite`` — a única validação que o próprio canário executa
+antes de comitar — cega para o mecanismo do canário). Continua rodando
 standalone via ``python3 -m coordinator.tests.test_cli_runner_wiring``.
 """
 
@@ -328,7 +330,12 @@ def test_cli_runner_wiring_com_env_do_workflow_abre_portao_e_despacha_retomada()
         os.environ["REPASSO_COORDINATOR_MODE"] = "active-supervised"
         os.environ["REPASSO_RUNNER_ENABLED"] = "true"
         os.environ["REPASSO_RUNNER_MODE"] = "canary"
-        os.environ["REPASSO_RUNNER_CANARY_TASK_ID"] = execution_task_id_esperado
+        # Achado G3 (Fase G): a Variable carrega a tarefa CANÔNICA — o
+        # execution id `--resume-<checkpoint>` é autorizado pelo canônico
+        # EXPLÍCITO que o código confiável repassa (antes da Fase G, este
+        # teste precisava configurar a Variable com o próprio execution
+        # id, algo impossível no fluxo real).
+        os.environ["REPASSO_RUNNER_CANARY_TASK_ID"] = "t-f8a"
         os.environ["REPASSO_RUNNER_ACTUAL_REF"] = "refs/heads/main"
         os.environ["REPASSO_RUNNER_EXPECTED_REF"] = "refs/heads/main"
         try:

@@ -310,11 +310,41 @@ class RunnerDispatchConfig:
             True, f"portão aberto: modo {self.mode!r}, canário autorizado {self.canary_task_id!r}."
         )
 
-    def task_autorizada(self, task_id: str) -> bool:
-        """Só o EXATO ``task_id`` do canário passa — nunca um prefixo,
-        nunca uma lista, nunca "qualquer tarefa Nível C". Comparação
-        estrita de string."""
-        return bool(self.canary_task_id) and task_id == self.canary_task_id
+    def task_autorizada(self, task_id: str, *, canonical_task_id: str | None = None) -> bool:
+        """Só o canário autorizado passa — nunca um prefixo, nunca uma
+        lista, nunca "qualquer tarefa Nível C". Sempre comparação
+        ESTRITA de string, das duas formas possíveis:
+
+        1. **execução inicial** (``canonical_task_id is None``): o
+           PRÓPRIO ``task_id`` precisa ser EXATAMENTE
+           ``REPASSO_RUNNER_CANARY_TASK_ID`` — o comportamento de sempre,
+           inalterado para todo chamador existente;
+        2. **continuação/retomada** (achado G3, Issue #105 Fase G):
+           ``task.task_id`` é um id de EXECUÇÃO derivado
+           (``handoff_exec.derivar_task_id_de_continuacao`` ->
+           ``...--continuacao-<checkpoint>``; ``runner_resume.
+           avaliar_retomada`` -> ``...--resume-<checkpoint>``), porque
+           ``RunnerClaimStore`` reivindica o ``task_id`` PERMANENTEMENTE
+           na primeira execução. Nesse caso quem autoriza é o
+           ``canonical_task_id`` EXPLÍCITO — que precisa ser EXATAMENTE
+           igual a ``REPASSO_RUNNER_CANARY_TASK_ID``.
+
+        O que isto deliberadamente NÃO faz (a parte que é segurança, não
+        conveniência): nunca ``startswith``/prefixo/sufixo, nunca INFERIR
+        o canônico removendo ``--continuacao-``/``--resume-`` de um
+        ``task_id``, e nunca aceitar um execution id arbitrário só porque
+        "parece" derivado do canário. O ``canonical_task_id`` só chega
+        aqui pelo CÓDIGO CONFIÁVEL que já conhece a identidade canônica
+        (``scheduler.TaskRecord.id``/``InterruptedTaskSnapshot.
+        canonical_task_id``/``handoff_exec`` — ver
+        ``executar_tarefa``/``runner_generate.gerar_patch_via_claude``);
+        nunca de um arquivo de tarefa, de um input de workflow ou de
+        texto de comentário."""
+        if not self.canary_task_id:
+            return False
+        if canonical_task_id is None:
+            return task_id == self.canary_task_id
+        return canonical_task_id == self.canary_task_id
 
     @classmethod
     def from_env(cls, env: dict | None = None) -> "RunnerDispatchConfig":
@@ -419,6 +449,22 @@ def carregar_runner_task_de_arquivo(caminho: str) -> RunnerTask:
 ALLOWED_VALIDATION_COMMANDS: dict[str, tuple[str, ...]] = {
     "coordinator-suite": (sys.executable, "-m", "coordinator.tests.run_all"),
 }
+
+# Achado G8-B (auditoria independente do PR #118): a execução INICIAL do
+# canário roda a suíte porque o workflow passa
+# `--validation-command-keys coordinator-suite`. Os dois caminhos
+# AUTOMÁTICOS (continuação de handoff e retomada da Fase F) não têm
+# workflow nenhum passando isso — e, com o default vazio, o Stage 2 e o
+# Stage 3 poderiam aplicar/commitar/pushar SEM rodar a suíte. Isso
+# quebraria a equivalência de segurança entre as três execuções.
+#
+# Esta constante é a allowlist de validação do canário, literal e fixa em
+# código: os caminhos confiáveis (``checkpoint_handoff`` e
+# ``worker_commands``/``runner_resume``) a propagam explicitamente. Ela é
+# uma tupla de CHAVES da allowlist acima, nunca um comando de shell —
+# comentário, input livre e texto de modelo continuam sem qualquer via
+# para escolher o que roda.
+CANARY_VALIDATION_COMMAND_KEYS: tuple[str, ...] = ("coordinator-suite",)
 
 
 class RunnerCommandNaoPermitido(ValueError):
@@ -690,14 +736,20 @@ def executar_tarefa(
             notes=("portão fechado — zero chamada externa.",),
         )
 
-    # Camada 2: só o task_id do canário passa — idem, zero chamada externa.
-    if not config.task_autorizada(task.task_id):
+    # Camada 2: só o canário autorizado passa — idem, zero chamada
+    # externa. Achado G3 (Issue #105 Fase G): quando ``canonical_task_id``
+    # é informado pelo código confiável (continuação de handoff/retomada),
+    # é ELE que precisa ser exatamente o canário — o ``task.task_id``
+    # continua sendo o id de EXECUÇÃO distinto (claim/RunnerResult), nunca
+    # inferido por prefixo. Sem ``canonical_task_id``, a regra é a de
+    # sempre: ``task.task_id`` exato.
+    if not config.task_autorizada(task.task_id, canonical_task_id=canonical_task_id):
         return DispatchOutcome(
             result=RunnerResult(
                 task_id=task.task_id, status="BLOCKED",
                 reason=(
-                    f"task_id {task.task_id!r} não é o único autorizado nesta fase canário "
-                    f"({config.canary_task_id!r})."
+                    f"task_id {task.task_id!r} (canonical_task_id {canonical_task_id!r}) não é o "
+                    f"único autorizado nesta fase canário ({config.canary_task_id!r})."
                 ),
             ),
             claimed=False, external_calls_made=False,

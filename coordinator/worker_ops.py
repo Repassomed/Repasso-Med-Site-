@@ -338,6 +338,34 @@ class OperationalWorkerRegistry:
         self.store.update(mutate, message=message)
         return record
 
+    def criar_se_ausente_condicional(self, record: WorkerRecord, *, message: str) -> bool:
+        """Achado G4 (Issue #105 Fase G): registra um worker SÓ quando ele
+        ainda não existe — nunca sobrescreve um registro já presente.
+        Devolve ``True`` quando de fato criou, ``False`` quando já havia um
+        registro com esse ``worker_id`` (nada é escrito nesse caso).
+
+        Existe para o bootstrap CANARY-ONLY (``coordinator/
+        canary_bootstrap.py``), que prepara os dois ``api_runner`` do
+        canário atrás dos MESMOS portões do Runner. ``upsert`` não serve
+        ali: ele é incondicional e apagaria estado REAL mais novo (um
+        worker ``BUSY``/``LIMIT`` no meio de uma execução voltaria a
+        ``AVAILABLE`` sem tarefa, exatamente o tipo de sobrescrita que os
+        achados H2/H4/F7-D fecharam). Mesmo mecanismo de compare-and-set
+        (``WorkerStateStore.conditional_update``, releitura FRESCA a cada
+        tentativa de conflito) usado pelos outros métodos deste registro —
+        nunca uma segunda implementação."""
+        def evaluate(dados: dict) -> tuple[bool, dict]:
+            existentes = dados.get("workers")
+            base = {w["worker_id"]: w for w in existentes} if existentes else {
+                w.worker_id: w.to_dict() for w in default_seed_workers()
+            }
+            if record.worker_id in base:
+                return False, dados
+            base[record.worker_id] = record.to_dict()
+            return True, {"workers": list(base.values())}
+
+        return self.store.conditional_update(evaluate, message=message)
+
     def transferir_worker_condicional(
         self, *, worker_anterior_id: str, tarefa_id_esperada: str,
         checkpoint_esperado: str, branch_esperada: str | None,

@@ -23,8 +23,10 @@ nunca iniciada automaticamente; gate fechado -> zero execução/chamada
 paga; Worker Registry coerente após: tarefa DONE, gate fechado,
 human_session, retomada api_runner.
 
-Deliberadamente NÃO registrado em ``coordinator/tests/run_all.py`` nesta
-rodada (mesma decisão operacional já aplicada às Fases B/C/D/F) — roda
+Registrado em ``coordinator/tests/run_all.py`` a partir da Fase G da
+Issue #105 (antes disto rodava só standalone, o que deixava a allowlist
+``coordinator-suite`` — a única validação que o próprio canário executa
+antes de comitar — cega para o mecanismo do canário). Continua rodando
 standalone via ``python3 -m coordinator.tests.test_worker_commands``.
 """
 
@@ -162,7 +164,10 @@ def _tarefa_original(**overrides) -> RunnerTask:
 
 
 def _config(**overrides) -> RunnerDispatchConfig:
-    campos = dict(enabled=True, mode="canary", canary_task_id="t-original--resume-PLACEHOLDER")
+    # Achado G3 (Fase G): a Variable carrega a tarefa CANÔNICA; o id de
+    # EXECUÇÃO derivado (`--resume-<checkpoint>`) é autorizado pelo
+    # canônico EXPLÍCITO que o código confiável passa adiante.
+    campos = dict(enabled=True, mode="canary", canary_task_id="t-original")
     campos.update(overrides)
     return RunnerDispatchConfig(**campos)
 
@@ -277,7 +282,7 @@ def test_integrado_ponta_a_ponta_f6a_b_c_d() -> None:
             message="setup: claude-2 em LIMIT, dono canônico de t-original",
         )
 
-        config = _config(canary_task_id=f"t-original--resume-{sha[:12]}")
+        config = _config(canary_task_id="t-original")
 
         # Evento REAL: "Claude 2 voltou" — comando reconhecido/aplicado
         # exatamente como o pipeline real (observe.py) faria.
@@ -298,10 +303,22 @@ def test_integrado_ponta_a_ponta_f6a_b_c_d() -> None:
         outcome1 = reagir_a_retorno_de_worker(
             registry, novo, canonical_task_id_anterior=canonical_anterior,
             checkpoint_anterior=checkpoint_anterior, branch_anterior=branch_anterior,
+            # Achado G9: a retomada automática exige prova operacional
+            # de ownership. `status_anterior` é o status que o worker
+            # tinha imediatamente antes de virar AVAILABLE — exatamente o
+            # que `aplicar_comando` captura do WorkerRecord real no
+            # caminho de produção.
+            status_anterior="LIMIT",
             tasks_json_path=tasks_path, repo_dir=workdir1, config=config, state_git_remote=remoto,
             patch=_patch_greeting(),
             # snapshot_da_tarefa_original DELIBERADAMENTE omitido — F6-B
             # precisa recuperar sozinho a partir do handoff real publicado.
+            # Achado G8-B: teste de Fase F, não do canário — a allowlist
+            # de validação é estreitada para vazio EXPLICITAMENTE (a
+            # suíte real não roda dentro deste checkout falso). O default
+            # seguro (coordinator-suite) é coberto pelos testes de
+            # canário em test_canary_integration.py.
+            validation_command_keys=(),
         )
 
         # reprocessar_retorno decidiu retomar a PRÓPRIA tarefa.
@@ -365,6 +382,10 @@ def test_integrado_ponta_a_ponta_f6a_b_c_d() -> None:
         outcome2 = reagir_a_retorno_de_worker(
             registry_concorrente, novo_concorrente, canonical_task_id_anterior=canonical_anterior,
             checkpoint_anterior=checkpoint_anterior, branch_anterior=branch_anterior,
+            # Achado G9: a segunda entrega do MESMO evento carrega o mesmo
+            # estado operacional anterior — é o claim que a recusa, não a
+            # falta de ownership.
+            status_anterior="LIMIT",
             tasks_json_path=tasks_path, repo_dir=workdir2, config=config, state_git_remote=remoto,
             patch=_patch_greeting(),
         )
@@ -530,7 +551,7 @@ def test_gate_fechado_zero_execucao_zero_chamada_paga() -> None:
             tarefa_original=_tarefa_original(branch="runner/t-gate", checkpoint_commit="abc1234def0"),
             worker_anterior=worker_anterior, motivo_interrupcao="LIMIT",
         )
-        config = _config(enabled=False, canary_task_id="t-gate--resume-abc1234def0")
+        config = _config(enabled=False, canary_task_id="t-gate")
         chamadas = []
 
         def gerar_patch_espiao():
@@ -542,6 +563,12 @@ def test_gate_fechado_zero_execucao_zero_chamada_paga() -> None:
         outcome = reagir_a_retorno_de_worker(
             registry, novo, canonical_task_id_anterior="t-gate", checkpoint_anterior="abc1234def0",
             branch_anterior="runner/t-gate", tasks_json_path=tasks_path,
+            # Achado G9: a retomada automática exige prova operacional
+            # de ownership. `status_anterior` é o status que o worker
+            # tinha imediatamente antes de virar AVAILABLE — exatamente o
+            # que `aplicar_comando` captura do WorkerRecord real no
+            # caminho de produção.
+            status_anterior="LIMIT",
             repo_dir="/definitivamente/nao/existe/repo", config=config, state_git_remote="/nao/existe",
             snapshot_da_tarefa_original=snap, gerar_patch=gerar_patch_espiao,
         )
@@ -587,7 +614,7 @@ def test_f7c_gate_fechado_via_aplicar_comando_preserva_reserva() -> None:
             tarefa_original=_tarefa_original(branch="runner/t-gate2", checkpoint_commit=sha),
             worker_anterior=worker_anterior, motivo_interrupcao="LIMIT",
         )
-        config = _config(enabled=False, canary_task_id=f"t-gate2--resume-{sha[:12]}")
+        config = _config(enabled=False, canary_task_id="t-gate2")
         comando = WorkerCommand(action="SET_AVAILABLE", worker_name="Claude 2")
         workdir = _clonar_workdir(tmp, remoto, "gate2")
         confirmacao = aplicar_comando(
@@ -657,7 +684,7 @@ def test_f7b_geracao_real_de_patch_sem_injecao_manual() -> None:
             ),
             message="setup",
         )
-        config = _config(canary_task_id=f"t-f7b--resume-{sha[:12]}")
+        config = _config(canary_task_id="t-f7b")
         transporte = _CountingTransport(
             response=TransportResponse(
                 text=json.dumps({"files": [{"path": "greeting.txt", "content": "gerado via claude\n"}]}),
@@ -669,6 +696,12 @@ def test_f7b_geracao_real_de_patch_sem_injecao_manual() -> None:
         confirmacao = aplicar_comando(
             registry, comando, tasks_json_path=tasks_path, repo_dir=workdir, config=config,
             state_git_remote=remoto, transport=transporte,
+            # Achado G8-B: este teste não é do canário — ele isola a
+            # retomada em si, num checkout falso onde a suíte real não
+            # roda. Estreita a allowlist para vazio EXPLICITAMENTE; o
+            # default seguro (coordinator-suite) fica coberto pelos
+            # testes de canário em test_canary_integration.py.
+            validation_command_keys=(),
             # patch/gerar_patch DELIBERADAMENTE omitidos — F7-B: o teste
             # ponta a ponta REAL não pode depender de _patch_greeting()
             # injetado manualmente; despachar_retomada precisa construir

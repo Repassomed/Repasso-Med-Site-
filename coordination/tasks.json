@@ -258,10 +258,10 @@
         ".github/workflows/coordinator-runner.yml",
         "coordination/**"
       ],
-      "objetivo": "Executar um único canário ponta a ponta: fila → runner → heartbeat/checkpoint → handoff/retomada → Guard → auditor → NEEDS-AUDIT/MERGE-READY, sem merge/deploy automático.",
+      "objetivo": "Executar um único canário ponta a ponta: fila → runner → heartbeat/checkpoint → handoff/retomada → Guard → auditor → NEEDS-AUDIT/MERGE-READY, sem merge/deploy automático. A Fase G (#105-G) fechou o wiring operacional que faltava para isso ser possível.",
       "fonte": "Issues #99 #105 #106 · decisão operacional de José",
       "agente": null,
-      "estado": "READY",
+      "estado": "NEEDS-AUDIT",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -270,11 +270,11 @@
         "infra-handoff-real-issue105e",
         "infra-runner-resume-issue105f"
       ],
-      "branch": null,
-      "pr": null,
+      "branch": "infra/coordinator-canary-integration-issue105g",
+      "pr": 118,
       "commit": null,
       "issue": 105,
-      "notas": "Fases A–F concluídas. Ruleset 'Proteção da main' verificado ativo em 22/09/2026: PR obrigatório, non-fast-forward bloqueado e status check 'guard' obrigatório. Pronto para UM canário integrado controlado; sem merge/deploy automático."
+      "notas": "Fases A–F concluídas. Ruleset 'Proteção da main' verificado ativo em 22/09/2026: PR obrigatório, non-fast-forward bloqueado e status check 'guard' obrigatório. Fase G (#105-G, esta rodada, NEEDS-AUDIT): checkpoint BLOCKED-LIMIT real passou a aplicar RunnerHeartbeat LIMIT de verdade e a executar handoff_exec.executar_handoff (G1); continuação api_runner passou a ser entregue ao Runner Dispatch com o mesmo config/registry/ledger/teto (G2); o portão passou a distinguir tarefa CANÔNICA de execution id derivado, por canonical explícito do código confiável, nunca por prefixo (G3); bootstrap CANARY-ONLY dos workers api-runner-canary-a/b atrás dos mesmos portões do Runner (G4); esses dois nomes (e só eles) aceitos no parser administrativo da Inbox #88, sem autocadastro (G5); RunnerTask materializada em coordinator/runner_tasks/ (G6); workflow do Runner preparando os workers e executando com --worker-id api-runner-canary-a (G7). Rodada G8 (auditoria independente do PR #118): o ownership operacional deixou de depender de coordination/tasks.json. coordinator/task_ownership.py monta uma visao operacional do TaskRecord que preserva id/area/arquivos/dependencias/prioridade do declarativo e so troca agente/estado pelo dono confirmado no Worker Registry (G8-A); com isso o canario vai do Stage 1 ao Stage 3 sem nenhuma edicao ou merge da main durante o fluxo, e os testes usam UM unico tasks.json do inicio ao fim. As continuacoes automaticas (handoff e retomada da Fase F) passaram a propagar a mesma allowlist de validacao da execucao inicial, a chave literal 'coordinator-suite' (G8-B). NENHUMA Variable foi ligada e nenhum canário real foi executado nesta PR. ANTES do canário real, José precisa: (1) ligar as Variables REPASSO_RUNNER_ENABLED/MODE/CANARY_TASK_ID; (2) opcionalmente declarar aqui, ANTES de comecar, estado IN-PROGRESS e agente 'api-runner-canary-a'. Depois que o canario comecar, NADA precisa ser alterado neste arquivo: o handoff A->B e a retomada da Fase F passaram a decidir ownership pelo Worker Registry (G8-A). Merge e publicação continuam sendo decisão exclusiva de José."
     },
     {
       "id": "semiologia-ii-fechamento-assets",

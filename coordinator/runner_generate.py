@@ -40,9 +40,11 @@ cliente/API se já existe"):**
 **Invariantes desta correção (B2, auditoria independente do PR #114):**
 
 1. só chama a API depois que ``RunnerDispatchConfig.gate()`` E
-   ``task_autorizada(task.task_id)`` já abriram — gate fechado ou task_id
-   fora do canário = zero chamada externa, devolvido direto (mesma
-   filosofia de ``executar_tarefa``);
+   ``task_autorizada(task.task_id, canonical_task_id=...)`` já abriram —
+   gate fechado ou tarefa fora do canário = zero chamada externa,
+   devolvido direto (mesma filosofia de ``executar_tarefa``; o achado G3
+   da Fase G só acrescentou o canônico EXPLÍCITO para continuações,
+   nunca afrouxou a comparação estrita);
 2. orçamento mensal checado ANTES da chamada (``check_budget``/
    ``priority_allowed``, usando ``task.priority`` — já um
    ``coordinator.classify.Priority`` no contrato canônico) — sem
@@ -324,21 +326,33 @@ def gerar_patch_via_claude(
     usage_ledger: _UsageLedgerLike,
     budget_usd: float,
     transport: object | None = None,
+    canonical_task_id: str | None = None,
 ) -> GenerateOutcome:
     """A camada de GERAÇÃO — nunca aplica nada. Devolve um
     ``StructuredPatch`` já validado contra ``task.allowed_files`` (pronto
     para ``executar_tarefa`` aplicar/validar/comitar), ou ``blocked``/
     ``failed`` com o motivo — nunca um patch parcial/inventado.
+
+    ``canonical_task_id`` (achado G3, Issue #105 Fase G): mesma regra
+    de ``RunnerDispatchConfig.task_autorizada`` usada por
+    ``runner_dispatch.executar_tarefa`` — numa CONTINUAÇÃO/RETOMADA,
+    ``task.task_id`` é um id de EXECUÇÃO derivado e quem autoriza é o id
+    CANÔNICO explícito, passado pelo código confiável (nunca inferido de
+    prefixo/sufixo, nunca lido do arquivo da tarefa). ``None`` (o padrão)
+    mantém exatamente a regra anterior: ``task.task_id`` precisa ser o
+    canário exato. Sem isto, o próprio GERADOR bloquearia uma continuação
+    legitimamente autorizada, mesmo com o Runner Dispatch já a tendo
+    aceitado.
     """
     # Camada 1+2: os MESMOS 3 portões de ``executar_tarefa`` — gate fechado
     # ou task_id fora do canário = zero chamada externa.
     gate = config.gate()
     if not gate.open:
         return _outcome_bloqueado(gate.reason)
-    if not config.task_autorizada(task.task_id):
+    if not config.task_autorizada(task.task_id, canonical_task_id=canonical_task_id):
         return _outcome_bloqueado(
-            f"task_id {task.task_id!r} não é o único autorizado nesta fase canário "
-            f"({config.canary_task_id!r})."
+            f"task_id {task.task_id!r} (canonical_task_id {canonical_task_id!r}) não é o único "
+            f"autorizado nesta fase canário ({config.canary_task_id!r})."
         )
 
     # Camada 3 (invariante 2): checagem GRADUADA por prioridade (50/75/90/

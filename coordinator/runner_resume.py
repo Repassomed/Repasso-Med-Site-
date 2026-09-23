@@ -864,6 +864,14 @@ def despachar_retomada(
                 tarefa, config=config, repo_dir=repo_dir,
                 usage_ledger=ledger_global, budget_usd=MONTHLY_BUDGET_USD,
                 transport=transport,
+                # Achado G3 (Fase G): `tarefa.task_id` aqui é SEMPRE um id
+                # de EXECUÇÃO (`--resume-<checkpoint>`), nunca o canário
+                # exato — sem o canônico EXPLÍCITO, o próprio gerador
+                # bloquearia uma retomada legitimamente autorizada. O
+                # canônico vem do snapshot (que por sua vez o recebeu de
+                # `TaskRecord.id`/`WorkerRecord.current_task`), nunca de
+                # um sufixo removido do execution id.
+                canonical_task_id=snapshot.canonical_task_id,
             )
 
         gerar_patch_efetivo = _gerar_patch_real

@@ -17,8 +17,10 @@ antes da execução; falha de validação nunca vira DONE/MERGE-READY; nenhuma
 possibilidade de merge/deploy/force-push; nenhuma chamada real
 Anthropic/OpenAI.
 
-Deliberadamente NÃO registrado em ``coordinator/tests/run_all.py`` nesta
-rodada (mesma decisão operacional já aplicada às Fases B/C/D) — roda
+Registrado em ``coordinator/tests/run_all.py`` a partir da Fase G da
+Issue #105 (antes disto rodava só standalone, o que deixava a allowlist
+``coordinator-suite`` — a única validação que o próprio canário executa
+antes de comitar — cega para o mecanismo do canário). Continua rodando
 standalone via ``python3 -m coordinator.tests.test_runner_resume``.
 """
 
@@ -157,7 +159,15 @@ def _snapshot(
 
 
 def _config(**overrides) -> RunnerDispatchConfig:
-    campos = dict(enabled=True, mode="canary", canary_task_id="t-original--resume-PLACEHOLDER")
+    # Achado G3 (Issue #105 Fase G): a Variable REPASSO_RUNNER_CANARY_TASK_ID
+    # carrega a tarefa CANÔNICA (nunca um execution id derivado). Antes da
+    # Fase G, estes testes precisavam configurá-la com o próprio
+    # `--resume-<checkpoint>` — a única forma de o gate deixar passar, o
+    # que nunca poderia acontecer no fluxo REAL (o execution id só existe
+    # depois da interrupção, e a Variable é fixada muito antes). Agora o
+    # canônico é passado EXPLICITAMENTE pelo código confiável
+    # (`despachar_retomada` -> `executar_tarefa`/`gerar_patch_via_claude`).
+    campos = dict(enabled=True, mode="canary", canary_task_id="t-original")
     campos.update(overrides)
     return RunnerDispatchConfig(**campos)
 
@@ -284,7 +294,7 @@ def test_despachar_retomada_com_checkpoint_inexistente_bloqueia() -> None:
         fake_sha = ("f" if sha_real[0] != "f" else "e") + sha_real[1:]
         snap = _snapshot(checkpoint_commit=fake_sha, tarefa=tarefa)
         receptor = _worker_receptor()
-        config = _config(canary_task_id=f"t-original--resume-{fake_sha[:12]}")
+        config = _config(canary_task_id="t-original")
 
         outcome = despachar_retomada(
             snap, tarefa_estado="BLOCKED-LIMIT", tarefa_agente_atual="claude-2", worker_receptor=receptor,
@@ -389,7 +399,7 @@ def test_repeticao_idempotente_da_mesma_retomada_nao_executa_duas_vezes() -> Non
         tarefa = _tarefa_original(branch="runner/t-idem")
         snap = _snapshot(checkpoint_commit=sha, tarefa=tarefa)
         receptor = _worker_receptor()
-        config = _config(canary_task_id=f"t-original--resume-{sha[:12]}")
+        config = _config(canary_task_id="t-original")
 
         workdir1 = _clonar_workdir(tmp, remoto, "exec-1")
         outcome1 = despachar_retomada(
@@ -422,7 +432,7 @@ def test_duas_retomadas_concorrentes_so_uma_vence() -> None:
         tarefa = _tarefa_original(branch="runner/t-race")
         snap = _snapshot(checkpoint_commit=sha, tarefa=tarefa)
         receptor = _worker_receptor()
-        config = _config(canary_task_id=f"t-original--resume-{sha[:12]}")
+        config = _config(canary_task_id="t-original")
 
         barreira = threading.Barrier(2)
         resultados: dict[str, ResumeOutcome] = {}
@@ -467,7 +477,7 @@ def test_api_runner_com_gate_fechado_bloqueia_sem_chamada_externa() -> None:
         tarefa = _tarefa_original(branch="runner/t-gate")
         snap = _snapshot(checkpoint_commit=sha, tarefa=tarefa)
         receptor = _worker_receptor()
-        config = _config(enabled=False, canary_task_id=f"t-original--resume-{sha[:12]}")
+        config = _config(enabled=False, canary_task_id="t-original")
 
         outcome = despachar_retomada(
             snap, tarefa_estado="BLOCKED-LIMIT", tarefa_agente_atual="claude-2", worker_receptor=receptor,
@@ -693,7 +703,7 @@ def test_processar_retorno_de_worker_ainda_dono_retoma_tarefa() -> None:
 
         tarefa = _tarefa_original(branch="runner/t-retorno")
         snap = _snapshot(checkpoint_commit=sha, tarefa=tarefa)
-        config = _config(canary_task_id=f"t-original--resume-{sha[:12]}")
+        config = _config(canary_task_id="t-original")
 
         tarefa_record = TaskRecord(id="t-original", estado="BLOCKED-LIMIT", area="infra", agente="claude-2")
         worker_voltou = _worker_receptor(worker_id="claude-2", status="AVAILABLE", current_task=None)
@@ -848,7 +858,7 @@ def test_integracao_fase_e_canonical_e_execution_task_id_nunca_colidem() -> None
         # (checkpoint A, sufixo '--continuacao-') nem com o canônico
         # 't1' sozinho.
         receptor = _worker_receptor(worker_id="claude-2", status="BUSY", current_task="t1")
-        config = _config(canary_task_id=f"t1--resume-{checkpoint_b[:12]}")
+        config = _config(canary_task_id="t1")
         workdir_retomada = _clonar_workdir(tmp, remoto, "fase-f-retomada")
 
         outcome = despachar_retomada(
@@ -879,7 +889,7 @@ def test_duas_chamadas_do_hook_para_o_mesmo_evento_nao_executam_duas_vezes() -> 
         sha = _publicar_branch_com_checkpoint(remoto, tmp, "runner/t-evento", "greeting.txt", "ola\n")
         tarefa = _tarefa_original(branch="runner/t-evento")
         snap = _snapshot(checkpoint_commit=sha, tarefa=tarefa)
-        config = _config(canary_task_id=f"t-original--resume-{sha[:12]}")
+        config = _config(canary_task_id="t-original")
 
         tarefa_record = TaskRecord(id="t-original", estado="BLOCKED-LIMIT", area="infra", agente="claude-2")
         worker_voltou = _worker_receptor(worker_id="claude-2", status="AVAILABLE", current_task=None)

@@ -7,10 +7,11 @@ a prova estrutural de que nenhuma capacidade de merge/deploy existe neste
 módulo.
 
 Mesma técnica de todo o pacote: sem pytest, ``main()`` agrega e reporta.
-Deliberadamente NÃO registrado em ``coordinator/tests/run_all.py`` nesta
-rodada (decisão operacional de José — #105-C não deve tocar esse
-arquivo); roda standalone via
-``python3 -m coordinator.tests.test_runner_contract``.
+Registrado em ``coordinator/tests/run_all.py`` a partir da Fase G da
+Issue #105 (antes disto rodava só standalone, o que deixava a allowlist
+``coordinator-suite`` — a única validação que o próprio canário executa
+antes de comitar — cega para o mecanismo do canário). Continua rodando
+standalone via ``python3 -m coordinator.tests.test_runner_contract``.
 """
 
 from __future__ import annotations
