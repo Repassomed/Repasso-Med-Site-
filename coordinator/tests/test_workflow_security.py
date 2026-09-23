@@ -384,7 +384,7 @@ def test_error_registry_remote_e_token_chegam_ao_passo_confiavel() -> None:
 def test_guard_nao_ganhou_issues_write_por_causa_do_error_registry() -> None:
     """O HARD FAIL e registrado pelo OBSERVE trusted, nunca pelo Guard
     que tambem roda sobre pull_request."""
-    guard_path = os.path.join(_WORKFLOWS, "guard.yml")
+    guard_path = os.path.join(_pathsetup.REPO_ROOT, ".github", "workflows", "guard.yml")
     with open(guard_path, encoding="utf-8") as fh:
         guard = fh.read()
     # O Guard continua com permissions minimas; nenhuma Issue e aberta dali.
