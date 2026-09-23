@@ -1550,6 +1550,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-23T17:55:15.047787+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:infra-worker-bridge-pilot--bridge-a5d13d138577",
+      "informational_cost_usd": 0.003906,
+      "input_tokens": 1663,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 58,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-23T17:55:16.737489+00:00"
     }
   ]
 }
