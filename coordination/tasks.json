@@ -141,7 +141,7 @@
       "objetivo": "Inventariar novas provas, aplicar Lei 8-A, alinhar resumo ao padrão real de cobrança e distinguir conteúdo complementar.",
       "fonte": "Issue #101 · Drive da matéria",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P1",
       "capabilities_required": [
         "conteudo"
@@ -151,8 +151,8 @@
       "pr": null,
       "commit": null,
       "issue": 101,
-      "notas": "Executável quando houver worker livre e sem colisão. Auditoria semântica obrigatória antes de MERGE-READY. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática.",
-      "automation_enabled": true,
+      "notas": "Executável quando houver worker livre e sem colisão. Auditoria semântica obrigatória antes de MERGE-READY. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática. BLOQUEIO DE FONTE (23/09/2026): a Issue #101 exige provas/slides do Google Drive, mas o Worker Bridge atual só recebe contexto do repositório/allowed_files. Não reativar como READY até existir source pack/ingestão confiável dessas fontes; não inventar conteúdo.",
+      "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "MEDIO",
       "policy_level": "C",
@@ -199,7 +199,7 @@
       "objetivo": "Inventariar as fontes novas, incorporar ganho avaliativo real e alinhar resumo/questões ao padrão de cobrança.",
       "fonte": "Issue #102 · Drive Toxicología/Provas",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P1",
       "capabilities_required": [
         "conteudo"
@@ -209,8 +209,8 @@
       "pr": null,
       "commit": null,
       "issue": 102,
-      "notas": "Primeira etapa da frente Toxicología. A tarefa #96 depende desta para evitar dois workers no mesmo HTML. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática.",
-      "automation_enabled": true,
+      "notas": "Primeira etapa da frente Toxicología. A tarefa #96 depende desta para evitar dois workers no mesmo HTML. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática. BLOQUEIO DE FONTE (23/09/2026): objetivo depende explicitamente das provas no Drive Toxicología/Provas. O Worker Bridge atual não recebe conteúdo do Drive; manter BLOCKED até source pack/ingestão confiável para evitar chamada paga sem evidência.",
+      "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "MEDIO",
       "policy_level": "C",
@@ -945,7 +945,7 @@
       "objetivo": "Retomar do zero a execução da Issue #101 após o bloqueio seguro por arquivo >20k, agora usando edição ancorada da Issue #144/#145; inventariar novas provas, aplicar Lei 8-A e Lei G0, alinhar o resumo ao padrão real de cobrança e distinguir conteúdo complementar.",
       "fonte": "Issue #101 · retry explícito após Error Registry #142 e merge do PR #145",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P1",
       "capabilities_required": [
         "conteudo"
@@ -955,8 +955,8 @@
       "pr": null,
       "commit": null,
       "issue": 101,
-      "notas": "Nova tentativa canônica deliberadamente distinta. NÃO reutilizar canonical_task_id nem execution_task_id da tentativa fisiopatologia-ii-issue101, que permanece BLOCKED no runtime para preservar o histórico. José autorizou o retry após merge do #145. Aplicar CLAUDE.md, LEI-G0-ALMA-REPASSO-MED.md, MANUTENCAO-DIDATICA-REPASSO-MED.md e Lei 8-A. Resultado obrigatório NEEDS-AUDIT; sem merge/deploy/publicação automática.",
-      "automation_enabled": true,
+      "notas": "Nova tentativa canônica deliberadamente distinta. NÃO reutilizar canonical_task_id nem execution_task_id da tentativa fisiopatologia-ii-issue101, que permanece BLOCKED no runtime para preservar o histórico. José autorizou o retry após merge do #145. Aplicar CLAUDE.md, LEI-G0-ALMA-REPASSO-MED.md, MANUTENCAO-DIDATICA-REPASSO-MED.md e Lei 8-A. Resultado obrigatório NEEDS-AUDIT; sem merge/deploy/publicação automática. Tentativa real run #62 chamou Anthropic e terminou FAILED porque, sem as fontes do Drive exigidas pela Issue #101, o modelo devolveu resposta segura vazia (files/edits vazios). Error Registry #152. Não repetir automaticamente; aguardar source pack/ingestão.",
+      "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "MEDIO",
       "policy_level": "C",
