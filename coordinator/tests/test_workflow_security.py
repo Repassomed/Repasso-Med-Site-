@@ -365,6 +365,35 @@ def test_run_step_forwards_runner_gate_env_to_the_cli() -> None:
     print("OK  test_run_step_forwards_runner_gate_env_to_the_cli")
 
 
+def test_error_registry_remote_e_token_chegam_ao_passo_confiavel() -> None:
+    """Issue #130: o registry usa a mesma branch padrao confiavel do
+    OBSERVE, sem Secret/Variable nova. O token fica somente no job gated."""
+    texto = _ler()
+    idx_step = texto.index("Rodar o Coordinator sobre o evento real")
+    idx_run = texto.index("run: |", idx_step)
+    bloco_env = texto[idx_step:idx_run]
+    bloco_run = texto[idx_run:]
+    assert "GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}" in bloco_env
+    assert "--error-state-git-remote \"$REMOTO_COM_TOKEN\"" in bloco_run
+    assert "coordinator-state-errors" not in bloco_run, (
+        "a branch do registry e definida em codigo/CLI, nunca por input de workflow"
+    )
+    print("OK  test_error_registry_remote_e_token_chegam_ao_passo_confiavel")
+
+
+def test_guard_nao_ganhou_issues_write_por_causa_do_error_registry() -> None:
+    """O HARD FAIL e registrado pelo OBSERVE trusted, nunca pelo Guard
+    que tambem roda sobre pull_request."""
+    guard_path = os.path.join(_WORKFLOWS, "guard.yml")
+    with open(guard_path, encoding="utf-8") as fh:
+        guard = fh.read()
+    # O Guard continua com permissions minimas; nenhuma Issue e aberta dali.
+    secao = guard[guard.index("\npermissions:"):guard.index("\nconcurrency:")]
+    assert "issues: write" not in secao
+    assert "contents: write" not in secao
+    print("OK  test_guard_nao_ganhou_issues_write_por_causa_do_error_registry")
+
+
 def test_runner_gate_env_uses_the_same_variables_and_expressions_as_the_runner_workflow() -> None:
     """Achado F8-A: 'use as mesmas Variables e mesmas regras de segurança
     do workflow Runner' — nunca um valor inventado/hardcoded aqui. As
@@ -417,6 +446,8 @@ def main() -> int:
         test_comment_target_out_flag_is_wired_into_the_real_invocation,
         test_hashfiles_against_tmp_is_never_used,
         test_runner_repo_dir_flag_is_wired_into_the_real_invocation,
+        test_error_registry_remote_e_token_chegam_ao_passo_confiavel,
+        test_guard_nao_ganhou_issues_write_por_causa_do_error_registry,
         test_run_step_forwards_runner_gate_env_to_the_cli,
         test_runner_gate_env_uses_the_same_variables_and_expressions_as_the_runner_workflow,
     ]
