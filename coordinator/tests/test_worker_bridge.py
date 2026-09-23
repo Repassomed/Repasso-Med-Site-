@@ -1166,7 +1166,7 @@ def test_flags_do_bridge_sao_separadas_das_do_canario() -> None:
 # Integração com o registro REAL: a tarefa piloto desta PR.
 # ---------------------------------------------------------------------------
 
-def test_tarefa_piloto_real_materializa_e_e_autorizada() -> None:
+def test_tarefa_piloto_historica_preserva_contrato_e_metadados() -> None:
     from coordinator.scheduler import load_tasks_from_tasks_json
 
     caminho = os.path.join(_pathsetup.REPO_ROOT, "coordination", "tasks.json")
@@ -1178,7 +1178,7 @@ def test_tarefa_piloto_real_materializa_e_e_autorizada() -> None:
     tarefa = tarefas[piloto_id]
     meta = metadados[piloto_id]
 
-    assert tarefa.estado == "READY"
+    assert tarefa.estado == "DONE"
     assert tarefa.arquivos == (ARQUIVO_PILOTO,)
     assert meta.automation_enabled is True
     assert meta.bridge_enabled is True
@@ -1200,7 +1200,7 @@ def test_tarefa_piloto_real_materializa_e_e_autorizada() -> None:
     assert task.never_merge is True and task.can_publish is False
     assert "WORKER_BRIDGE=OK" in task.instructions
     assert ARQUIVO_PILOTO in task.instructions
-    print("OK  test_tarefa_piloto_real_materializa_e_e_autorizada")
+    print("OK  test_tarefa_piloto_historica_preserva_contrato_e_metadados")
 
 
 def test_infra_do_bridge_nao_e_automatizavel_por_ela_mesma() -> None:
@@ -1215,20 +1215,19 @@ def test_infra_do_bridge_nao_e_automatizavel_por_ela_mesma() -> None:
     print("OK  test_infra_do_bridge_nao_e_automatizavel_por_ela_mesma")
 
 
-def test_piloto_real_r2_nao_pregrava_resultado() -> None:
-    """O registro declarativo do piloto R2 precisa nascer sem resultado
-    pré-gravado. Diferente da antiga asserção de ausência física do arquivo,
-    esta prova continua válida DURANTE o piloto real, quando o próprio patch
-    autorizado cria ARQUIVO_PILOTO antes da validação."""
+def test_piloto_r2_fechado_preserva_evidencia_do_resultado() -> None:
+    """Depois do piloto real, a evidência declarativa precisa permanecer
+    fechada e auditável — nunca voltar para READY nem apagar PR/commit."""
     caminho = os.path.join(_pathsetup.REPO_ROOT, "coordination", "tasks.json")
     with open(caminho, encoding="utf-8") as fh:
         dados = json.load(fh)
     bruto = next(t for t in dados.get("tarefas", []) if t.get("id") == "infra-worker-bridge-pilot-r2")
-    assert bruto.get("estado") == "READY"
-    assert bruto.get("pr") is None and bruto.get("commit") is None
+    assert bruto.get("estado") == "DONE"
+    assert bruto.get("pr") == 134
+    assert bruto.get("commit") == "d62c852a355566374496058bf40f2f9847677a88"
     assert bruto.get("branch") == "runner/infra-worker-bridge-pilot-r2"
     assert bruto.get("automation_enabled") is True and bruto.get("bridge_enabled") is True
-    print("OK  test_piloto_real_r2_nao_pregrava_resultado")
+    print("OK  test_piloto_r2_fechado_preserva_evidencia_do_resultado")
 
 
 def test_nenhum_laco_de_fila_no_bridge() -> None:
@@ -1253,29 +1252,24 @@ def _tasks_json_real() -> str:
     return os.path.join(_pathsetup.REPO_ROOT, "coordination", "tasks.json")
 
 
-def test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado() -> None:
-    """B1: o bloqueador era o piloto depender de ``infra-worker-bridge-v1``,
-    que continua IN-PROGRESS enquanto a PR não é mergeada — depois do merge
-    a main teria a dependência insatisfeita e o piloto nunca seria
-    oferecido. Este teste lê o ``coordination/tasks.json`` REAL, o mesmo
-    arquivo que vai para a main, e exige que o piloto esteja na fila de
-    prontas AGORA."""
+def test_b1_piloto_real_fechado_nao_reabre_a_fila() -> None:
+    """Depois de concluído, o piloto real precisa permanecer DONE e fora
+    da fila. A dependência da infraestrutura continua registrada e
+    satisfeita, mas isso nunca reabre uma tarefa encerrada."""
     tarefas = scheduler.load_tasks_from_tasks_json(_tasks_json_real())
     por_id = {t.id: t for t in tarefas}
 
     piloto = por_id.get("infra-worker-bridge-pilot-r2")
     assert piloto is not None, "a tarefa piloto precisa existir no registro declarativo"
-    assert piloto.estado == "READY", piloto.estado
-
-    # A cadeia inteira, explicitamente: a dependência está declarada E
-    # satisfeita no estado que vai para a main.
+    assert piloto.estado == "DONE", piloto.estado
     assert piloto.dependencias == ("infra-worker-bridge-v1",), piloto.dependencias
+
     infra = por_id.get("infra-worker-bridge-v1")
     assert infra is not None and infra.estado == "DONE", (infra.estado if infra else None)
 
     prontas = [t.id for t in scheduler.proxima_tarefa_pronta(tarefas)]
-    assert "infra-worker-bridge-pilot-r2" in prontas, prontas
-    print("OK  test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado")
+    assert "infra-worker-bridge-pilot-r2" not in prontas, prontas
+    print("OK  test_b1_piloto_real_fechado_nao_reabre_a_fila")
 
 
 def test_b1_piloto_e_escolhido_mesmo_com_outra_tarefa_na_frente_da_fila() -> None:
@@ -2087,12 +2081,12 @@ def main() -> int:
         test_config_do_runner_nao_e_construida_com_portao_fechado,
         test_canario_continua_se_comportando_como_antes,
         test_flags_do_bridge_sao_separadas_das_do_canario,
-        test_tarefa_piloto_real_materializa_e_e_autorizada,
+        test_tarefa_piloto_historica_preserva_contrato_e_metadados,
         test_infra_do_bridge_nao_e_automatizavel_por_ela_mesma,
-        test_piloto_real_r2_nao_pregrava_resultado,
+        test_piloto_r2_fechado_preserva_evidencia_do_resultado,
         test_nenhum_laco_de_fila_no_bridge,
         # Auditoria independente do PR #129 — B1..B5.
-        test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado,
+        test_b1_piloto_real_fechado_nao_reabre_a_fila,
         test_b1_piloto_e_escolhido_mesmo_com_outra_tarefa_na_frente_da_fila,
         test_b1_restricao_do_piloto_nunca_amplia_nem_escreve,
         test_b3_pilot_continua_somente_o_worker_4,
