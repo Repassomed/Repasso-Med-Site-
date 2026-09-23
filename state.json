@@ -2511,6 +2511,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-23T23:45:08.177618+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:semiologia-ii-b07-framingham-r3--bridge-5f7404907fab",
+      "informational_cost_usd": 0.039914,
+      "input_tokens": 6847,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 2622,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-23T23:45:10.249497+00:00"
     }
   ]
 }
