@@ -156,6 +156,16 @@
       "recorded_at": "2026-09-23T22:56:51.760666+00:00",
       "status": "FAILED",
       "task_id": "semiologia-ii-b05-b10-gaps-r2--bridge-91c6069e2b90"
+    },
+    {
+      "branch": "runner/semiologia-ii-b07-framingham-r3",
+      "checkpoint_commit": "e3204ae5a386cba8a5df9dd54e40b7379f0756f5",
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/semiologia-ii-b07-framingham-r3'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "recorded_at": "2026-09-23T23:45:48.547391+00:00",
+      "status": "NEEDS-AUDIT",
+      "task_id": "semiologia-ii-b07-framingham-r3--bridge-5f7404907fab"
     }
   ]
 }
