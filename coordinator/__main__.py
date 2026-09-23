@@ -555,6 +555,7 @@ def main(argv: list[str] | None = None) -> int:
                     state_git_remote=a.error_state_git_remote,
                     owner=owner,
                     repo=repo,
+                    state_branch=a.error_state_git_branch,
                 )
                 print("ERROR-REGISTRY " + json.dumps(item.to_dict(), ensure_ascii=False))
         print(render_human(dados_sanitizados))
