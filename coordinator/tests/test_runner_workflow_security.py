@@ -346,6 +346,21 @@ def test_sucesso_status_is_needs_audit_never_done_by_default() -> None:
     print("OK  test_sucesso_status_is_needs_audit_never_done_by_default")
 
 
+def test_preflight_suite_runs_before_paid_runner_step() -> None:
+    caminho = os.path.join(_pathsetup.REPO_ROOT, ".github", "workflows", "coordinator-runner.yml")
+    with open(caminho, encoding="utf-8") as fh:
+        texto = fh.read()
+    idx_pre = texto.index("- name: Preflight da suíte do Coordinator (ZERO API, antes do claim)")
+    idx_run = texto.index("- name: Rodar o Runner Dispatch sobre a RunnerTask do canário")
+    assert idx_pre < idx_run, "a suíte baseline precisa rodar antes do Runner Dispatch/chamada Anthropic"
+    bloco = texto[idx_pre:idx_run]
+    assert "python3 -m coordinator.tests.run_all" in bloco
+    assert "ANTHROPIC_API_KEY" not in bloco and "secrets." not in bloco, (
+        "preflight baseline precisa ser ZERO API/segredo"
+    )
+    print("OK  test_preflight_suite_runs_before_paid_runner_step")
+
+
 def main() -> int:
     testes = [
         test_workflow_file_exists_and_is_separate_from_observe,
@@ -367,6 +382,7 @@ def main() -> int:
         test_real_runner_step_uses_generate_via_claude_not_patch_file,
         test_validation_command_keys_come_from_a_fixed_declared_set,
         test_sucesso_status_is_needs_audit_never_done_by_default,
+        test_preflight_suite_runs_before_paid_runner_step,
     ]
     falhas = 0
     for t in testes:
