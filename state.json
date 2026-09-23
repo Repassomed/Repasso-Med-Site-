@@ -207,7 +207,7 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": null,
+      "current_task": "infra-worker-bridge-pilot",
       "display_name": "Claude Worker 4",
       "last_checkpoint": null,
       "last_heartbeat": null,
