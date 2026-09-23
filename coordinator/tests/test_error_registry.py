@@ -327,6 +327,19 @@ def test_observe_semantic_needs_fix_vira_erro_mas_guard_success_normal_nao() -> 
     print("OK  test_observe_semantic_needs_fix_vira_erro_mas_guard_success_normal_nao")
 
 
+def test_registry_best_effort_nunca_levanta_quando_estado_falha() -> None:
+    ev = event()
+    out = error_registry.register_best_effort(
+        ev,
+        state_git_remote="/caminho/que-nao-existe/remoto.git",
+        owner="Repassomed",
+        repo="Repasso-Med-Site-",
+    )
+    assert out.action == "FAILED"
+    assert out.error_id == ev.error_id
+    print("OK  test_registry_best_effort_nunca_levanta_quando_estado_falha")
+
+
 def test_cliente_nao_tem_merge_deploy_ou_force_push() -> None:
     names = set(dir(error_registry.GitHubErrorApi))
     forbidden = {"merge", "deploy", "publish", "force_push", "close_pr"}
@@ -347,6 +360,7 @@ def main() -> int:
         test_segredos_sao_redigidos_antes_da_issue,
         test_observe_guard_hard_fail_vira_evento_de_erro_com_evidencia_real,
         test_observe_semantic_needs_fix_vira_erro_mas_guard_success_normal_nao,
+        test_registry_best_effort_nunca_levanta_quando_estado_falha,
         test_cliente_nao_tem_merge_deploy_ou_force_push,
     ]
     failures = 0
