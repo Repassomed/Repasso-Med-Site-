@@ -308,11 +308,12 @@ def _register_observe_errors_best_effort(
 
     if event.raw_type == "GUARD_STATE_CHANGE" and event.payload.get("guard_state") == "failure":
         pr_number = _identity_pr_number(event.identity)
-        evidence = json.dumps(
-            event.payload.get("audit_pack") or {},
-            ensure_ascii=False,
-            sort_keys=True,
-        )
+        audit_pack = event.payload.get("audit_pack")
+        audit_pack = audit_pack if isinstance(audit_pack, dict) else {}
+        scope = audit_pack.get("escopo_declarado")
+        scope = scope if isinstance(scope, dict) else {}
+        task_from_pack = scope.get("tarefa")
+        evidence = json.dumps(audit_pack, ensure_ascii=False, sort_keys=True)
         events.append(error_registry.ErrorEvent(
             component="guard",
             error_type="hard-fail",
@@ -321,9 +322,11 @@ def _register_observe_errors_best_effort(
             severity="HIGH",
             category="guard",
             source="repasso-guard",
-            task_id=event.identity,
+            # workflow_dispatch do Guard pode nao carregar pull_requests
+            # no webhook. O audit-pack confiavel traz a tarefa/HEAD reais.
+            task_id=(str(task_from_pack).strip() if task_from_pack else event.identity),
             pr_number=pr_number,
-            commit_sha=event.payload.get("head_sha"),
+            commit_sha=(audit_pack.get("head") or event.payload.get("head_sha")),
             run_id=event.payload.get("guard_run_id") or run_id,
             evidence=evidence,
         ))
