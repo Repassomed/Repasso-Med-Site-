@@ -1,0 +1,122 @@
+{
+  "workers": [
+    {
+      "branch": null,
+      "can_audit": false,
+      "can_execute": true,
+      "can_publish": false,
+      "capabilities": [
+        "conteudo",
+        "codigo"
+      ],
+      "commit": null,
+      "current_task": null,
+      "display_name": "Claude 1",
+      "last_checkpoint": null,
+      "last_heartbeat": null,
+      "never_merge": true,
+      "progress": null,
+      "status": "OFFLINE",
+      "type": "human_session",
+      "worker_id": "claude-1"
+    },
+    {
+      "branch": null,
+      "can_audit": false,
+      "can_execute": true,
+      "can_publish": false,
+      "capabilities": [
+        "conteudo",
+        "codigo"
+      ],
+      "commit": null,
+      "current_task": null,
+      "display_name": "Claude 2",
+      "last_checkpoint": null,
+      "last_heartbeat": null,
+      "never_merge": true,
+      "progress": null,
+      "status": "OFFLINE",
+      "type": "human_session",
+      "worker_id": "claude-2"
+    },
+    {
+      "branch": null,
+      "can_audit": false,
+      "can_execute": true,
+      "can_publish": false,
+      "capabilities": [
+        "conteudo",
+        "codigo"
+      ],
+      "commit": null,
+      "current_task": null,
+      "display_name": "Claude 3",
+      "last_checkpoint": null,
+      "last_heartbeat": null,
+      "never_merge": true,
+      "progress": null,
+      "status": "OFFLINE",
+      "type": "human_session",
+      "worker_id": "claude-3"
+    },
+    {
+      "branch": null,
+      "can_audit": false,
+      "can_execute": true,
+      "can_publish": false,
+      "capabilities": [
+        "conteudo",
+        "codigo"
+      ],
+      "commit": null,
+      "current_task": null,
+      "display_name": "Claude 4",
+      "last_checkpoint": null,
+      "last_heartbeat": null,
+      "never_merge": true,
+      "progress": null,
+      "status": "OFFLINE",
+      "type": "human_session",
+      "worker_id": "claude-4"
+    },
+    {
+      "branch": null,
+      "can_audit": true,
+      "can_execute": false,
+      "can_publish": false,
+      "capabilities": [
+        "auditoria"
+      ],
+      "commit": null,
+      "current_task": null,
+      "display_name": "ChatGPT Auditor",
+      "last_checkpoint": null,
+      "last_heartbeat": null,
+      "never_merge": true,
+      "progress": null,
+      "status": "OFFLINE",
+      "type": "auditor",
+      "worker_id": "chatgpt-auditor"
+    },
+    {
+      "branch": null,
+      "can_audit": false,
+      "can_execute": true,
+      "can_publish": false,
+      "capabilities": [
+        "codigo"
+      ],
+      "commit": null,
+      "current_task": null,
+      "display_name": "API Runner Canary A",
+      "last_checkpoint": null,
+      "last_heartbeat": null,
+      "never_merge": true,
+      "progress": null,
+      "status": "AVAILABLE",
+      "type": "api_runner",
+      "worker_id": "api-runner-canary-a"
+    }
+  ]
+}
