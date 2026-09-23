@@ -2232,6 +2232,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-23T22:37:02.320943+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:fisiopatologia-ii-issue101-r2--bridge-d76534086233",
+      "informational_cost_usd": 0.021642,
+      "input_tokens": 7676,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 629,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-23T22:37:05.331474+00:00"
     }
   ]
 }
