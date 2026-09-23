@@ -99,6 +99,31 @@
       "summary": "resposta do modelo n\u00e3o \u00e9 um JSON v\u00e1lido \u2014 resposta malformada nunca \u00e9 aplicada parcialmente.",
       "task_id": "semiologia-ii-b05-b10-gaps",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "runner",
+      "commit_sha": null,
+      "component": "runner",
+      "error_id": "ERR-0B2FC4BCEA",
+      "error_type": "runner-failed",
+      "fingerprint": "0b2fc4bceac326588183",
+      "first_seen": "2026-09-23T22:53:54.584635+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "9466f2ec053a4726bc8f087271791c6f",
+      "issue_sync_updated_at": "2026-09-23T22:53:54.584635+00:00",
+      "last_evidence_hash": "bc1f4458bc02365963a9",
+      "last_seen": "2026-09-23T22:53:54.584635+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35930652546",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "resposta do modelo n\u00e3o \u00e9 um JSON v\u00e1lido \u2014 resposta malformada nunca \u00e9 aplicada parcialmente.",
+      "task_id": "dermatologia-questoes-issue112",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
