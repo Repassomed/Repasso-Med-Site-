@@ -17,7 +17,7 @@ import urllib.parse
 import urllib.request
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Callable, Protocol
 
 from .redact import redact
@@ -26,6 +26,7 @@ DEFAULT_ERROR_STATE_BRANCH = "coordinator-state-errors"
 GITHUB_TOKEN_ENV = "GITHUB_TOKEN"
 VALID_SEVERITIES = ("LOW", "MEDIUM", "HIGH", "CRITICAL")
 VALID_STATUSES = ("OPEN", "FIXING", "RESOLVED", "RECURRENT")
+ISSUE_SYNC_STALE_SECONDS = 600
 
 _RE_NAME = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 _RE_SHA = re.compile(r"\b[0-9a-fA-F]{7,40}\b")
@@ -36,6 +37,14 @@ _RE_WS = re.compile(r"\s+")
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _parse_iso(value: object) -> datetime | None:
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        return None
 
 
 def normalize_message(value: object) -> str:
@@ -320,6 +329,9 @@ class ErrorRegistry:
                 "issue_number": None,
                 "issue_sync_status": "PENDING",
                 "issue_sync_token": token,
+                "issue_sync_updated_at": now,
+                "resolution": None,
+                "root_cause": None,
             }
             return True, {**data, "errors": list(items.values())}
         return self.store.conditional_update(
@@ -333,6 +345,7 @@ class ErrorRegistry:
             if rec and rec.get("issue_sync_token") == token:
                 rec["issue_sync_token"] = None
                 rec["issue_sync_status"] = "FAILED" if failed else "SYNCED"
+                rec["issue_sync_updated_at"] = _now()
                 if number is not None:
                     rec["issue_number"] = number
                 items[fp] = rec
@@ -372,15 +385,33 @@ class ErrorRegistry:
             )
 
     def _claim_retry_sync(self, fp: str, token: str) -> bool:
+        """Recupera FAILED e PENDING orfao.
+
+        Se um runner morrer depois do CAS PENDING e antes de persistir o
+        numero da Issue, outra execucao pode assumir somente depois de
+        10 minutos. Antes disso, PENDING continua protegido contra
+        duplicacao concorrente.
+        """
+        now_dt = datetime.now(timezone.utc)
+        now = now_dt.isoformat()
+
         def evaluate(data: dict) -> tuple[bool, dict]:
             items = _records(data)
             rec = items.get(fp)
             if not rec or rec.get("issue_number"):
                 return False, data
-            if rec.get("issue_sync_status") != "FAILED":
+            status = rec.get("issue_sync_status")
+            updated = _parse_iso(rec.get("issue_sync_updated_at"))
+            stale_pending = (
+                status == "PENDING"
+                and updated is not None
+                and now_dt - updated >= timedelta(seconds=ISSUE_SYNC_STALE_SECONDS)
+            )
+            if status != "FAILED" and not stale_pending:
                 return False, data
             rec["issue_sync_status"] = "PENDING"
             rec["issue_sync_token"] = token
+            rec["issue_sync_updated_at"] = now
             items[fp] = rec
             return True, {**data, "errors": list(items.values())}
         return self.store.conditional_update(
@@ -463,6 +494,36 @@ class ErrorRegistry:
                 int(number), count,
             )
 
+    def mark_resolved(
+        self, fingerprint: str, *, resolution: str, root_cause: str = ""
+    ) -> bool:
+        """Suporte explicito ao estado RESOLVED da Issue #130.
+
+        Fechar/reabrir a GitHub Issue continua uma acao externa/humana;
+        este metodo somente persiste a resolucao/root cause no registry.
+        """
+        resolution_clean = redact(resolution).strip()[:2000]
+        root_clean = redact(root_cause).strip()[:2000]
+        if not resolution_clean:
+            raise ValueError("resolution nao pode ser vazia")
+
+        def evaluate(data: dict) -> tuple[bool, dict]:
+            items = _records(data)
+            rec = items.get(fingerprint)
+            if rec is None:
+                return False, data
+            rec["status"] = "RESOLVED"
+            rec["resolution"] = resolution_clean
+            rec["root_cause"] = root_clean or None
+            rec["last_seen"] = _now()
+            items[fingerprint] = rec
+            return True, {**data, "errors": list(items.values())}
+
+        return self.store.conditional_update(
+            evaluate, message="error-registry: resolved " + fingerprint
+        )
+
+
     def register(self, event: ErrorEvent) -> ErrorRegistryOutcome:
         token = uuid.uuid4().hex
         try:
@@ -478,12 +539,13 @@ class ErrorRegistry:
 
 
 def register_best_effort(
-    event: ErrorEvent, *, state_git_remote: str, owner: str, repo: str
+    event: ErrorEvent, *, state_git_remote: str, owner: str, repo: str,
+    state_branch: str = DEFAULT_ERROR_STATE_BRANCH,
 ) -> ErrorRegistryOutcome:
     try:
         from .git_state import GitJsonStore
         registry = ErrorRegistry(
-            GitJsonStore(state_git_remote, branch=DEFAULT_ERROR_STATE_BRANCH),
+            GitJsonStore(state_git_remote, branch=state_branch),
             GitHubErrorApi(owner, repo),
         )
         return registry.register(event)
