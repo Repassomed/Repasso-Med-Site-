@@ -119,9 +119,11 @@ gigante ao modelo. Ela acrescenta um segundo caminho, tipado:
   própria instrução da tarefa), com teto conservador por arquivo e no
   total; o arquivo INTEIRO nunca é enviado, em nenhuma circunstância;
 - a resposta para esse arquivo só pode ser ``AnchoredEdit``
-  (``{path, old_text, new_text}``): ``old_text`` precisa existir
-  EXATAMENTE uma vez no conteúdo atual — 0 ocorrência (âncora inventada)
-  ou 2+ (ambígua) é ``BLOCKED``, zero escrita;
+  (``{path, old_text, new_text}``): ``old_text`` precisa estar contido
+  INTEIRO em um dos trechos que foram de fato enviados (o modelo só pode
+  editar o que leu) E existir EXATAMENTE uma vez no conteúdo atual — 0
+  ocorrência (âncora inventada) ou 2+ (ambígua, contando também
+  ocorrências SOBREPOSTAS) é ``BLOCKED``, zero escrita;
 - ``FileWrite`` para um arquivo GRANDE continua recusado — é exatamente a
   garantia anti-truncamento do B2-C, preservada literalmente;
 - as edições são resolvidas EM MEMÓRIA, todas contra o MESMO conteúdo
@@ -618,8 +620,34 @@ class ResolucaoAncorada:
     files: tuple[FileWrite, ...] = ()
 
 
+def _posicoes_sobrepostas(texto: str, agulha: str, *, limite: int = 2) -> list[int]:
+    """Posições de ``agulha`` em ``texto`` contando OCORRÊNCIAS
+    SOBREPOSTAS, até ``limite``.
+
+    ``str.count`` conta só ocorrências não sobrepostas
+    (``"aaa".count("aa") == 1``, embora casem nas posições 0 e 1), o que
+    faria uma âncora genuinamente ambígua passar pela regra "exatamente
+    uma ocorrência" da Issue #144. A busca aqui avança 1 caractere por
+    match, então nenhuma ambiguidade escapa. Para no ``limite`` porque a
+    decisão só precisa distinguir 0, 1 e "mais de 1" — varrer um HTML de
+    megabytes inteiro depois disso seria trabalho jogado fora."""
+    posicoes: list[int] = []
+    inicio = 0
+    while len(posicoes) < limite:
+        pos = texto.find(agulha, inicio)
+        if pos < 0:
+            break
+        posicoes.append(pos)
+        inicio = pos + 1
+    return posicoes
+
+
 def resolver_anchored_edits(
-    edits: tuple[AnchoredEdit, ...], *, task: RunnerTask, current_contents: dict[str, str]
+    edits: tuple[AnchoredEdit, ...],
+    *,
+    task: RunnerTask,
+    current_contents: dict[str, str],
+    trechos_por_arquivo: dict[str, tuple[TrechoAncorado, ...]] | None = None,
 ) -> ResolucaoAncorada:
     """Aplica as edições EM MEMÓRIA sobre o conteúdo atual e devolve o
     conteúdo FINAL COMPLETO de cada arquivo tocado, como ``FileWrite`` —
@@ -630,15 +658,25 @@ def resolver_anchored_edits(
 
     1. ``path`` precisa estar EXATAMENTE em ``task.allowed_files``;
     2. o arquivo precisa existir (não se ancora no que não existe);
-    3. ``old_text`` precisa existir EXATAMENTE UMA vez no conteúdo atual —
-       0 ocorrência BLOQUEIA (âncora inventada), 2+ BLOQUEIAM (ambígua);
-    4. várias edições no mesmo arquivo só passam se as regiões casadas
+    3. num arquivo GRANDE (o que tem trechos em ``trechos_por_arquivo``),
+       ``old_text`` precisa estar contido INTEIRO em algum dos trechos
+       que foram de fato enviados ao modelo — o modelo só pode editar o
+       que viu. Sem isto, uma âncora alucinada que por acaso fosse única
+       em outra região do arquivo alteraria uma parte que o modelo nunca
+       leu (achado 1 da auditoria independente do HEAD 6bcce53);
+    4. ``old_text`` precisa existir EXATAMENTE UMA vez no conteúdo atual —
+       0 ocorrência BLOQUEIA (âncora inventada), 2+ BLOQUEIAM (ambígua),
+       contando também ocorrências SOBREPOSTAS (achado 2 da mesma
+       auditoria, ver ``_posicoes_sobrepostas``);
+    5. várias edições no mesmo arquivo só passam se as regiões casadas
        forem DISJUNTAS — todas resolvidas contra o MESMO conteúdo
        original, então o resultado não depende da ordem de aplicação;
-    5. nada é produzido até que TODAS as edições de TODOS os arquivos
+    6. nada é produzido até que TODAS as edições de TODOS os arquivos
        tenham validado."""
     if not edits:
         return ResolucaoAncorada(ok=True, reason="nenhuma AnchoredEdit na resposta.")
+
+    trechos_por_arquivo = trechos_por_arquivo or {}
 
     permitidos = set(task.allowed_files)
     fora = sorted({e.path for e in edits if e.path not in permitidos})
@@ -669,9 +707,25 @@ def resolver_anchored_edits(
     for caminho in sorted(por_arquivo):
         original = current_contents[caminho]
         spans: list[tuple[int, int, str]] = []
+        trechos_enviados = trechos_por_arquivo.get(caminho, ())
         for indice, edit in enumerate(por_arquivo[caminho], 1):
-            ocorrencias = original.count(edit.old_text)
-            if ocorrencias == 0:
+            # Achado 1 da auditoria: num arquivo grande, o modelo só viu
+            # trechos — uma âncora que não esteja INTEIRA dentro de um
+            # deles é, por definição, uma âncora que ele não leu, mesmo
+            # que por acaso seja única no arquivo. Editar ali mudaria uma
+            # região invisível ao modelo. Fail-closed.
+            if trechos_enviados and not any(edit.old_text in t.texto for t in trechos_enviados):
+                return ResolucaoAncorada(
+                    ok=False,
+                    reason=(
+                        f"AnchoredEdit #{indice} de {caminho!r}: 'old_text' não está contido em nenhum "
+                        "dos trechos que foram enviados ao modelo — âncora fora do que o modelo leu "
+                        "(arquivo grande), BLOCKED, zero escrita em qualquer arquivo."
+                    ),
+                )
+
+            posicoes = _posicoes_sobrepostas(original, edit.old_text)
+            if not posicoes:
                 return ResolucaoAncorada(
                     ok=False,
                     reason=(
@@ -679,15 +733,16 @@ def resolver_anchored_edits(
                         "(âncora inventada ou o arquivo mudou) — BLOCKED, zero escrita em qualquer arquivo."
                     ),
                 )
-            if ocorrencias > 1:
+            if len(posicoes) > 1:
                 return ResolucaoAncorada(
                     ok=False,
                     reason=(
-                        f"AnchoredEdit #{indice} de {caminho!r}: 'old_text' aparece {ocorrencias} vezes no "
-                        "conteúdo atual — substituição ambígua, BLOCKED, zero escrita em qualquer arquivo."
+                        f"AnchoredEdit #{indice} de {caminho!r}: 'old_text' aparece mais de uma vez no "
+                        "conteúdo atual (inclusive contando ocorrências sobrepostas) — substituição "
+                        "ambígua, BLOCKED, zero escrita em qualquer arquivo."
                     ),
                 )
-            inicio = original.index(edit.old_text)
+            inicio = posicoes[0]
             spans.append((inicio, inicio + len(edit.old_text), edit.new_text))
 
         spans.sort()
@@ -1085,7 +1140,9 @@ def gerar_patch_via_claude(
     # várias derruba a resolução inteira, e nenhum FileWrite chega a
     # existir (muito menos a ser gravado: quem grava é aplicar_patch, lá
     # no runner_dispatch, e só depois de todo este caminho).
-    resolucao = resolver_anchored_edits(edits, task=task, current_contents=contexto)
+    resolucao = resolver_anchored_edits(
+        edits, task=task, current_contents=contexto, trechos_por_arquivo=trechos_por_arquivo,
+    )
     if not resolucao.ok:
         return GenerateOutcome(
             status="blocked",

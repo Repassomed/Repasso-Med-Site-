@@ -705,18 +705,28 @@ def test_arquivo_grande_nunca_e_enviado_integralmente_ao_prompt() -> None:
 
 
 def test_anchored_edit_com_old_text_inexistente_bloqueia() -> None:
+    """Arquivo pequeno de propósito: sem trechos no caminho, isola a
+    regra "0 ocorrência bloqueia". Num arquivo GRANDE uma âncora
+    inexistente também não está em nenhum trecho enviado, então quem
+    dispara primeiro é a checagem de contenção — coberta pelo teste
+    ``..._fora_dos_trechos_enviados_bloqueia``."""
     with tempfile.TemporaryDirectory() as tmp:
-        _escrever_html_grande(tmp)
+        original = "<p>conteúdo pequeno de verdade</p>\n"
+        with open(os.path.join(tmp, "greeting.txt"), "w", encoding="utf-8") as fh:
+            fh.write(original)
+
         transporte = _CountingTransport(
             response=_resposta_edits([
-                {"path": "materia.html", "old_text": "<p>âncora que nunca existiu no arquivo</p>",
+                {"path": "greeting.txt", "old_text": "<p>âncora que nunca existiu no arquivo</p>",
                  "new_text": "<p>x</p>"},
             ])
         )
-        outcome = _gerar(tmp, transporte)
+        outcome = _gerar(tmp, transporte, _task())
         assert outcome.status == "blocked", outcome.reason
         assert outcome.patch is None
         assert "não existe no conteúdo atual" in outcome.reason
+        with open(os.path.join(tmp, "greeting.txt"), encoding="utf-8") as fh:
+            assert fh.read() == original
     print("OK  test_anchored_edit_com_old_text_inexistente_bloqueia")
 
 
@@ -801,6 +811,58 @@ def test_filewrite_em_arquivo_grande_e_recusado_para_nunca_truncar() -> None:
     print("OK  test_filewrite_em_arquivo_grande_e_recusado_para_nunca_truncar")
 
 
+# ---------------------------------------------------------------------------
+# Auditoria independente do HEAD 6bcce53 — dois gaps de fail-closed.
+# ---------------------------------------------------------------------------
+
+def test_anchored_edit_fora_dos_trechos_enviados_bloqueia() -> None:
+    """Achado 1: uma âncora ÚNICA no arquivo, mas numa região que nunca
+    foi enviada ao modelo, editaria uma parte que ele não leu. A
+    unicidade sozinha não basta — a âncora precisa estar contida num dos
+    trechos efetivamente enviados."""
+    with tempfile.TemporaryDirectory() as tmp:
+        original = _escrever_html_grande(tmp)
+        ancora_distante = f"<!-- {_MARCADOR_DISTANTE} -->"
+        assert original.count(ancora_distante) == 1, "a âncora do teste precisa ser única no arquivo"
+
+        transporte = _CountingTransport(
+            response=_resposta_edits([
+                {"path": "materia.html", "old_text": ancora_distante, "new_text": "<!-- trocado -->"},
+            ])
+        )
+        outcome = _gerar(tmp, transporte)
+        assert ancora_distante not in transporte.last_request.prompt, "premissa: o trecho não foi enviado"
+        assert outcome.status == "blocked", outcome.reason
+        assert outcome.patch is None
+        assert "não está contido em nenhum dos trechos" in outcome.reason
+        with open(os.path.join(tmp, "materia.html"), encoding="utf-8") as fh:
+            assert fh.read() == original
+    print("OK  test_anchored_edit_fora_dos_trechos_enviados_bloqueia")
+
+
+def test_anchored_edit_com_ocorrencia_sobreposta_bloqueia() -> None:
+    """Achado 2: ``str.count`` conta só ocorrências NÃO sobrepostas
+    ('aaa'.count('aa') == 1), então uma âncora genuinamente ambígua
+    passaria pela regra 'exatamente uma ocorrência'. Arquivo pequeno de
+    propósito: isola a contagem, sem a checagem de trechos no caminho."""
+    with tempfile.TemporaryDirectory() as tmp:
+        original = "<p>zzzz</p>\n"
+        with open(os.path.join(tmp, "greeting.txt"), "w", encoding="utf-8") as fh:
+            fh.write(original)
+        assert original.count("zzz") == 1, "premissa do achado: str.count enxerga só uma"
+
+        transporte = _CountingTransport(
+            response=_resposta_edits([{"path": "greeting.txt", "old_text": "zzz", "new_text": "y"}])
+        )
+        outcome = _gerar(tmp, transporte, _task())
+        assert outcome.status == "blocked", outcome.reason
+        assert outcome.patch is None
+        assert "ambígua" in outcome.reason
+        with open(os.path.join(tmp, "greeting.txt"), encoding="utf-8") as fh:
+            assert fh.read() == original
+    print("OK  test_anchored_edit_com_ocorrencia_sobreposta_bloqueia")
+
+
 def main() -> int:
     testes = [
         test_gate_closed_makes_zero_external_call,
@@ -832,6 +894,9 @@ def main() -> int:
         test_duas_anchored_edits_no_mesmo_arquivo_aplicam_atomicamente,
         test_uma_anchored_edit_invalida_entre_varias_produz_zero_escrita,
         test_filewrite_em_arquivo_grande_e_recusado_para_nunca_truncar,
+        # Auditoria independente do HEAD 6bcce53.
+        test_anchored_edit_fora_dos_trechos_enviados_bloqueia,
+        test_anchored_edit_com_ocorrencia_sobreposta_bloqueia,
     ]
     falhas = 0
     for t in testes:
