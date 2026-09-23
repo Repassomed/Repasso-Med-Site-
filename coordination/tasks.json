@@ -687,7 +687,8 @@
         "coordinator/**",
         ".github/workflows/coordinator-runner.yml",
         ".github/workflows/coordinator-worker-bridge.yml",
-        "coordination/**"
+        "coordination/**",
+        ".github/workflows/guard.yml"
       ],
       "objetivo": "Transformar a decisão do Scheduler em execução real supervisionada via Claude/Anthropic, com Worker Registry, RunnerTask dinâmica, PR automático e Guard, começando por um piloto único no Claude 4.",
       "fonte": "Issue #128 · autorização explícita de José em 23/09/2026",
@@ -704,7 +705,41 @@
       "pr": null,
       "commit": null,
       "issue": 128,
-      "notas": "Nível D autorizado explicitamente por José para esta implementação. Piloto obrigatório com apenas Claude 4 programático; Claude 1-3 permanecem desligados até aprovação. Nunca merge/deploy/publicação automática."
+      "notas": "Nível D autorizado explicitamente por José para esta implementação. Piloto obrigatório com apenas Claude 4 programático; Claude 1-3 permanecem desligados até aprovação. Nunca merge/deploy/publicação automática.",
+      "automation_enabled": false,
+      "risk_level": "MEDIO",
+      "policy_level": "D",
+      "jose_authorized": true
+    },
+    {
+      "id": "infra-worker-bridge-pilot",
+      "titulo": "Worker Bridge — piloto sintético do Claude Worker 4",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordinator/canary/worker-bridge-pilot.txt"
+      ],
+      "objetivo": "Provar a cadeia completa do Worker Bridge com um trabalho mínimo e determinístico: criar o arquivo coordinator/canary/worker-bridge-pilot.txt contendo exatamente uma linha, WORKER_BRIDGE=OK, terminada por quebra de linha. Se o arquivo já existir com exatamente esse conteúdo, devolva-o sem nenhuma alteração. Nenhum outro arquivo do repositório pode ser criado, alterado ou removido, e nada além dessa linha pode ser escrito no arquivo (sem comentários, sem espaços extras, sem linhas em branco).",
+      "fonte": "Issue #128 · autorização explícita de José em 23/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
+      "branch": "runner/infra-worker-bridge-pilot",
+      "pr": null,
+      "commit": null,
+      "issue": 128,
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "BAIXO",
+      "policy_level": "C",
+      "jose_authorized": false,
+      "notas": "Tarefa sintética e segura, criada por esta PR só para o piloto do Worker Bridge (Issue #128 §8). Nada aqui é conteúdo do site. O arquivo permitido é um caminho EXATO (o Bridge recusa curinga em allowed_files, nunca expande). Nível C: pode executar automaticamente e termina em NEEDS-AUDIT, com auditoria independente antes de qualquer MERGE-READY; jose_authorized não é exigido nesse nível. A dependência de infra-worker-bridge-v1 é intencional: o piloto só entra na fila depois que a infraestrutura estiver DONE no registro declarativo, o que é uma decisão de José posterior ao merge/auditoria desta PR. O piloto NÃO foi executado nesta PR."
     }
   ]
 }

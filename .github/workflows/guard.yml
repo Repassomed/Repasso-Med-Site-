@@ -22,26 +22,135 @@ name: Repasso Guard
 # agente não configura sozinho — recomendado ao José: branch protection ou
 # CODEOWNERS exigindo revisão humana para qualquer mudança em
 # .github/workflows/**.
+#
+# ─────────────────────────────────────────────────────────────────────────
+# GATILHO workflow_dispatch CONFIÁVEL — Issue #128 (Worker Bridge V1), §9.
+#
+# POR QUE ele existe: uma PR criada com o GITHUB_TOKEN do Actions NÃO
+# dispara workflows de `pull_request` — o GitHub bloqueia isso de propósito
+# para evitar recursão de workflow. Então "o Worker Bridge abriu a PR" NÃO
+# faz este Guard rodar. Em vez de trocar o token por um PAT novo (mais
+# poder, mais superfície), o Bridge dispara este workflow explicitamente,
+# por workflow_dispatch, passando SÓ o número da PR.
+#
+# AS TRAVAS desse caminho, todas necessárias:
+#
+#   1. O único input é `pr_number`, e ele é validado por regex ANTES de
+#      qualquer uso (só dígitos). Não existe input de ref, de branch, de
+#      comando, de caminho de arquivo nem de texto livre — então não há
+#      nada aqui que possa virar instrução ou escolher o que roda.
+#   2. O `if:` do job exige, no caminho workflow_dispatch, que
+#      `github.ref` seja a branch PADRÃO do repositório. Isso garante que
+#      a versão EXECUTADA deste arquivo (e do pacote tools/ do checkout
+#      inicial) seja a confiável da branch padrão — não a de uma ref
+#      escolhida por quem disparou.
+#   3. Os metadados vêm da API, nunca do input: o passo "Resolver os
+#      metadados reais da PR" busca a PR de verdade (base ref, head sha,
+#      corpo, estado, repositório do head). Uma PR fechada/mergeada, ou
+#      cujo head venha de outro repositório, é RECUSADA — fail-closed.
+#   4. O HEAD auditado é o REAL: o checkout usa `refs/pull/<n>/head`, o
+#      commit que a PR de fato propõe, e o Guard recebe `--head` igual ao
+#      `head.sha` devolvido pela API.
+#   5. Código não confiável do PR NUNCA é executado com segredo: este job
+#      não instala dependência do PR, não roda script do PR e não roda
+#      nada de dentro do checkout — o único Python executado é
+#      `tools.qa.guard`, extraído da BASE e rodado com cwd em /tmp
+#      (camada que já existia e continua valendo nos dois gatilhos).
+#      O GITHUB_TOKEN deste job continua com `contents: read` +
+#      `pull-requests: write`, exatamente como antes.
+# ─────────────────────────────────────────────────────────────────────────
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Número da PR a auditar (só dígitos)"
+        required: true
+        type: string
 
 permissions:
   contents: read
   pull-requests: write
 
 concurrency:
-  group: repasso-guard-${{ github.event.pull_request.number }}
+  # Um grupo por PR, nos dois gatilhos — nunca um grupo vazio (que
+  # serializaria execuções de PRs diferentes entre si).
+  group: repasso-guard-${{ github.event.pull_request.number || inputs.pr_number }}
   cancel-in-progress: true
 
 jobs:
   guard:
+    # Trava 2: no caminho workflow_dispatch, só a branch padrão pode
+    # executar este workflow. O caminho pull_request continua exatamente
+    # como sempre foi.
+    if: >
+      github.event_name == 'pull_request' ||
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout do PR (histórico completo, para o diff contra a base)
+      - name: Resolver os metadados reais da PR (API, nunca o input livre)
+        id: meta
+        uses: actions/github-script@v7
+        env:
+          # O input entra por env var, nunca interpolado dentro do script —
+          # e é validado por regex antes de qualquer uso.
+          PR_NUMBER_INPUT: ${{ inputs.pr_number }}
+        with:
+          script: |
+            const fs = require('fs');
+
+            let pr;
+            if (context.eventName === 'pull_request') {
+              // Caminho de sempre: o payload do evento JÁ é o metadado
+              // real da PR, emitido pelo próprio GitHub.
+              pr = context.payload.pull_request;
+            } else {
+              // Trava 1: o input é só um número, validado antes de virar
+              // qualquer coisa.
+              const bruto = String(process.env.PR_NUMBER_INPUT || '').trim();
+              if (!/^[0-9]{1,7}$/.test(bruto)) {
+                core.setFailed('pr_number inválido — só dígitos são aceitos. Nada foi auditado.');
+                return;
+              }
+              // Trava 3: metadados REAIS, direto da API.
+              const resposta = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: Number(bruto),
+              });
+              pr = resposta.data;
+              if (pr.state !== 'open') {
+                core.setFailed(`a PR #${bruto} não está aberta (estado ${pr.state}) — nada a auditar.`);
+                return;
+              }
+              const esperado = `${context.repo.owner}/${context.repo.repo}`;
+              const origem = pr.head && pr.head.repo ? pr.head.repo.full_name : null;
+              if (origem !== esperado) {
+                core.setFailed(
+                  `o head da PR #${bruto} vem de ${origem}, não de ${esperado} — ` +
+                  `este caminho confiável audita só PRs do próprio repositório.`
+                );
+                return;
+              }
+            }
+
+            // O corpo é gravado em arquivo pelo Node, nunca interpolado em
+            // shell — texto de PR é conteúdo externo.
+            fs.writeFileSync('/tmp/pr-body.md', (pr.body || '') + '\n', 'utf8');
+
+            core.setOutput('pr_number', String(pr.number));
+            core.setOutput('base_ref', pr.base.ref);
+            core.setOutput('head_sha', pr.head.sha);
+
+      - name: Checkout do HEAD REAL da PR (histórico completo, para o diff contra a base)
         uses: actions/checkout@v4
         with:
+          # Trava 4: `refs/pull/<n>/head` é o commit que a PR propõe de
+          # verdade — existe nos dois gatilhos e resolve exatamente para
+          # `head.sha`. Nenhum script do checkout é executado por este job.
+          ref: refs/pull/${{ steps.meta.outputs.pr_number }}/head
           fetch-depth: 0
 
       - name: Python (só biblioteca padrão)
@@ -49,19 +158,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Salvar o corpo do PR
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
-        run: |
-          printf '%s\n' "$PR_BODY" > /tmp/pr-body.md
-
       - name: Buscar a base e extrair o Guard confiável (bloqueador 1 do PR #94)
         id: trusted
+        env:
+          BASE_REF_NOME: ${{ steps.meta.outputs.base_ref }}
         run: |
           set -e
-          BASE_REF="origin/${{ github.event.pull_request.base.ref }}"
-          git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=200
-          BASE_SHA="$(git rev-parse "$BASE_REF")"
+          # O nome da branch base vem da API (ou do payload do evento),
+          # nunca de input — e entra por env var, nunca interpolado direto
+          # na linha de comando.
+          git fetch origin "$BASE_REF_NOME" --depth=200
+          BASE_SHA="$(git rev-parse "origin/$BASE_REF_NOME")"
 
           if git cat-file -e "$BASE_SHA:tools/qa/guard/__main__.py" 2>/dev/null; then
             # Caso normal: a base já tem o Guard. Extrai o pacote "tools"
@@ -89,6 +196,8 @@ jobs:
         id: guard
         env:
           GUARD_PYTHONPATH: ${{ steps.trusted.outputs.pythonpath }}
+          BASE_REF_NOME: ${{ steps.meta.outputs.base_ref }}
+          HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
         run: |
           set +e
           # cwd = /tmp de propósito: se rodasse dentro do checkout do PR,
@@ -98,8 +207,8 @@ jobs:
           # para competir — só o que está em PYTHONPATH é encontrado.
           cd /tmp && PYTHONPATH="$GUARD_PYTHONPATH" python3 -m tools.qa.guard \
             --repo "$GITHUB_WORKSPACE" \
-            --base "origin/${{ github.event.pull_request.base.ref }}" \
-            --head "${{ github.event.pull_request.head.sha }}" \
+            --base "origin/$BASE_REF_NOME" \
+            --head "$HEAD_SHA" \
             --pr-body /tmp/pr-body.md \
             --summary /tmp/guard-summary.md \
             --audit-pack /tmp/guard-audit-pack.json \
@@ -119,16 +228,21 @@ jobs:
       - name: Comentar o resumo no PR
         if: always()
         uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
         with:
           script: |
             const fs = require('fs');
             const resumo = fs.readFileSync('/tmp/guard-summary.md', 'utf8');
             const marca = '<!-- repasso-guard-resumo -->';
             const corpo = marca + '\n' + resumo;
+            // O número vem do passo de metadados (payload do evento ou
+            // API), nunca do input cru — funciona nos dois gatilhos.
+            const numero = Number(process.env.PR_NUMBER);
             const { data: comentarios } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: numero,
             });
             const anterior = comentarios.find(c => c.body && c.body.startsWith(marca));
             if (anterior) {
@@ -142,7 +256,7 @@ jobs:
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number,
+                issue_number: numero,
                 body: corpo,
               });
             }
