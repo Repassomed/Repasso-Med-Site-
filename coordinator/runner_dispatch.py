@@ -26,11 +26,19 @@ independentes do GitHub Actions).
 
 1. ``RunnerDispatchConfig`` — o portão de segurança (Issue #105 §"SEGURANÇA
    OBRIGATÓRIA"): ``REPASSO_RUNNER_ENABLED`` precisa ser exatamente
-   ``"true"``; ``REPASSO_RUNNER_MODE`` precisa ser exatamente ``"canary"``
-   (único modo permitido nesta fase); só o ``task_id`` EXPLICITAMENTE
-   configurado em ``REPASSO_RUNNER_CANARY_TASK_ID`` pode ser executado.
-   Qualquer outra combinação falha fechado, SEM NENHUMA chamada externa
-   (nem git remoto, nem subprocess de teste) — provado em teste.
+   ``"true"``; ``REPASSO_RUNNER_MODE`` precisa ser um dos modos permitidos;
+   e a tarefa precisa estar EXPLICITAMENTE autorizada. Qualquer outra
+   combinação falha fechado, SEM NENHUMA chamada externa (nem git remoto,
+   nem subprocess de teste) — provado em teste. Dois modos, separados
+   ponta a ponta:
+
+   - ``canary`` (Issue #105, inalterado): autoriza só o ``task_id``
+     configurado em ``REPASSO_RUNNER_CANARY_TASK_ID``;
+   - ``supervised`` (Issue #128 §5, ADITIVO): a Variable do canário não
+     autoriza nada; a autorização vem do Worker Bridge confiável
+     (``coordinator/worker_bridge.py``), em campos que NÃO existem como
+     variável de ambiente — ver ``RUNNER_MODE_SUPERVISED`` e
+     ``SUPERVISED_AUTHORIZATION_SOURCE`` abaixo.
 
 2. ``StructuredPatch``/``FileWrite`` — o "patch estruturado" que a Issue
    #105 exige em vez de shell arbitrário gerado pelo modelo: uma lista de
@@ -215,12 +223,34 @@ ENV_RUNNER_CANARY_TASK_ID = "REPASSO_RUNNER_CANARY_TASK_ID"
 ENV_RUNNER_ACTUAL_REF = "REPASSO_RUNNER_ACTUAL_REF"
 ENV_RUNNER_EXPECTED_REF = "REPASSO_RUNNER_EXPECTED_REF"
 
-# Único modo permitido nesta fase — Issue #105: "modo inicial obrigatório:
-# canary". Diferente de coordinator/config.py (ALLOWED_MODES aditivo:
-# observe + active-supervised): aqui não existe um segundo modo ainda —
-# um valor novo só passa a ser aceito numa rodada futura que o adicione
-# explicitamente, nunca por engano.
+# Modo do canário — Issue #105: "modo inicial obrigatório: canary".
+# Continua EXATAMENTE como era: mesmo nome, mesma semântica, mesma
+# autorização por REPASSO_RUNNER_CANARY_TASK_ID.
 ALLOWED_RUNNER_MODE = "canary"
+
+# Segundo modo, ADITIVO — Issue #128 (Worker Bridge V1), §5. Mesma
+# filosofia de coordinator/config.py (ALLOWED_MODES: observe +
+# active-supervised): um valor novo só passa a ser aceito numa rodada que
+# o adicione explicitamente, nunca por engano.
+#
+# A DIFERENÇA que é segurança, não conveniência: no modo ``supervised``,
+# REPASSO_RUNNER_CANARY_TASK_ID NÃO autoriza nada. A autorização precisa
+# vir do Worker Bridge confiável (``coordinator/worker_bridge.py``),
+# executado a partir da branch padrão depois de: tarefa declarativa
+# válida, portão do Bridge aberto, reserva/claim de runtime vencido,
+# portão de política (Nível E nunca; D só com jose_authorized) e worker
+# programático compatível. Por isso os dois campos que carregam essa
+# autorização (``supervised_task_id``/``supervised_authorized_by``) NUNCA
+# são lidos de variável de ambiente: ``from_env`` não os preenche, e
+# nenhum input de workflow tem como escolher um task_id.
+RUNNER_MODE_SUPERVISED = "supervised"
+ALLOWED_RUNNER_MODES: frozenset[str] = frozenset({ALLOWED_RUNNER_MODE, RUNNER_MODE_SUPERVISED})
+
+# Marcador da única origem de autorização aceita no modo ``supervised``.
+# É comparado por igualdade estrita e só pode ser atribuído em CÓDIGO
+# (``worker_bridge.construir_config_do_runner``) — nunca vem de env,
+# input, arquivo de tarefa ou texto de modelo.
+SUPERVISED_AUTHORIZATION_SOURCE = "worker-bridge"
 
 DEFAULT_RUNNER_STATE_BRANCH = "coordinator-state-runner"
 # Correção B4 (3ª auditoria independente do PR #114): branch do ledger
@@ -258,10 +288,33 @@ class RunnerDispatchConfig:
     # a checagem real fica sempre ativa no único lugar em que isto importa.
     actual_ref: str | None = None
     expected_ref: str | None = None
+    # Issue #128 §5 — SÓ preenchidos em código pelo Worker Bridge
+    # confiável (ver SUPERVISED_AUTHORIZATION_SOURCE acima).
+    # ``from_env`` nunca os preenche: uma config montada só a partir do
+    # ambiente, em modo ``supervised``, tem portão FECHADO por definição.
+    supervised_task_id: str | None = None
+    supervised_authorized_by: str | None = None
 
     @property
     def mode_allowed(self) -> bool:
-        return self.mode == ALLOWED_RUNNER_MODE
+        return self.mode in ALLOWED_RUNNER_MODES
+
+    @property
+    def is_supervised(self) -> bool:
+        return self.mode == RUNNER_MODE_SUPERVISED
+
+    @property
+    def supervised_authorization_ok(self) -> bool:
+        """Fail-closed: no modo ``supervised``, os DOIS campos precisam
+        estar preenchidos E a origem precisa ser exatamente o marcador do
+        Worker Bridge. Um estado parcial nunca é tratado como seguro —
+        mesma regra de ``ref_allowed``."""
+        if not self.is_supervised:
+            return False
+        return (
+            bool(self.supervised_task_id)
+            and self.supervised_authorized_by == SUPERVISED_AUTHORIZATION_SOURCE
+        )
 
     @property
     def ref_allowed(self) -> bool:
@@ -299,6 +352,28 @@ class RunnerDispatchConfig:
                 False,
                 f"{ENV_RUNNER_ENABLED}=false (ou ausente) — nenhuma execução de runner é "
                 "permitida enquanto o portão estiver fechado.",
+            )
+        if self.is_supervised:
+            # Issue #128 §5: aqui a Variable do canário não autoriza NADA.
+            # Sem a autorização injetada em código pelo Worker Bridge
+            # confiável, o portão fica fechado — inclusive (e
+            # principalmente) quando alguém configura
+            # REPASSO_RUNNER_MODE=supervised na mão e dispara o workflow
+            # do Runner direto.
+            if not self.supervised_authorization_ok:
+                return RunnerGateResult(
+                    False,
+                    f"{ENV_RUNNER_MODE}={RUNNER_MODE_SUPERVISED!r} exige autorização vinda do Worker "
+                    f"Bridge confiável (Issue #128 §5): supervised_task_id preenchido e "
+                    f"supervised_authorized_by=={SUPERVISED_AUTHORIZATION_SOURCE!r}, atribuídos só em "
+                    f"código. Recebido supervised_task_id={self.supervised_task_id!r}, "
+                    f"supervised_authorized_by={self.supervised_authorized_by!r} — portão fechado "
+                    f"fail-closed. {ENV_RUNNER_CANARY_TASK_ID} nunca autoriza uma execução supervisionada.",
+                )
+            return RunnerGateResult(
+                True,
+                f"portão aberto: modo {self.mode!r}, tarefa autorizada pelo Worker Bridge "
+                f"{self.supervised_task_id!r}.",
             )
         if not self.canary_task_id:
             return RunnerGateResult(
@@ -339,7 +414,20 @@ class RunnerDispatchConfig:
         canonical_task_id``/``handoff_exec`` — ver
         ``executar_tarefa``/``runner_generate.gerar_patch_via_claude``);
         nunca de um arquivo de tarefa, de um input de workflow ou de
-        texto de comentário."""
+        texto de comentário.
+
+        **Modo ``supervised`` (Issue #128 §5):** a mesma regra, com a
+        outra fonte de autorização — ``supervised_task_id``, atribuído só
+        em código pelo Worker Bridge. ``canary_task_id`` é IGNORADO aqui
+        de propósito: uma execução supervisionada nunca é autorizada pela
+        Variable do canário, e uma execução de canário nunca é autorizada
+        pelo Bridge. Os dois caminhos continuam separados ponta a ponta.
+        """
+        if self.is_supervised:
+            if not self.supervised_authorization_ok:
+                return False
+            alvo = canonical_task_id if canonical_task_id is not None else task_id
+            return alvo == self.supervised_task_id
         if not self.canary_task_id:
             return False
         if canonical_task_id is None:
@@ -354,6 +442,12 @@ class RunnerDispatchConfig:
         canary = src.get(ENV_RUNNER_CANARY_TASK_ID) or None
         actual_ref = src.get(ENV_RUNNER_ACTUAL_REF) or None
         expected_ref = src.get(ENV_RUNNER_EXPECTED_REF) or None
+        # Issue #128 §5: ``supervised_task_id``/``supervised_authorized_by``
+        # NÃO são lidos do ambiente — nem aqui, nem em lugar nenhum. Não
+        # existe nome de variável de ambiente para eles, então nem uma
+        # Variable do repositório nem um input de workflow consegue
+        # autorizar uma tarefa supervisionada. A única atribuição possível
+        # é em código, por ``worker_bridge.construir_config_do_runner``.
         return cls(
             enabled=(enabled_raw == "true"), mode=mode_raw, canary_task_id=canary,
             actual_ref=actual_ref, expected_ref=expected_ref,

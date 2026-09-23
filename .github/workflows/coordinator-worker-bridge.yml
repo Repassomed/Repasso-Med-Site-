@@ -1,0 +1,277 @@
+name: Repasso Coordinator (WORKER BRIDGE)
+
+# Issue #128, Worker Bridge V1 — fecha a lacuna entre a DECISÃO do
+# Scheduler e a EXECUÇÃO real controlada: fila confiável ->
+# claude-worker-4 (api_runner) -> Runner -> commit/checkpoint -> PR ->
+# Guard -> NEEDS-AUDIT. Nada aqui liga nenhuma Variable: enquanto
+# REPASSO_WORKER_BRIDGE_ENABLED não for exatamente "true", este arquivo é
+# inerte — o job nem começa.
+#
+# Deliberadamente um arquivo SEPARADO de coordinator-runner.yml (o
+# canário, NÃO tocado nesta rodada) e de coordinator-observe.yml. As
+# flags também são separadas: ligar o canário nunca liga o Bridge, e
+# vice-versa. O MECANISMO de execução, porém, é o MESMO
+# (coordinator/runner_dispatch.py) — não existe um segundo runner.
+#
+# ─────────────────────────────────────────────────────────────────────────
+# TRAVAS, EM VÁRIAS CAMADAS:
+#
+#   1. GATILHO — dois, e SEM NENHUM input em nenhum dos dois. Nunca
+#      `pull_request`/`issue_comment`/`schedule`/`push`. Sem input, não
+#      existe "instrução livre", "task_id livre" nem "arquivo livre" para
+#      aceitar: a tarefa vem SEMPRE da fila confiável
+#      (coordination/tasks.json + estado operacional persistido), e quem
+#      pode ser executado é decidido pelas Variables do repositório (só
+#      um administrador as altera) mais o portão de política DECLARADO na
+#      própria tarefa.
+#
+#      (a) `workflow_dispatch` — o disparo MANUAL, o único que o modo
+#          `pilot` aceita. O piloto é uma execução observada, com José
+#          olhando; um evento nunca o inicia.
+#      (b) `workflow_run` sobre "Repasso Coordinator (OBSERVE)", tipo
+#          `completed` — a ENTREGA AUTOMÁTICA do modo `active-supervised`
+#          (correção B5 da auditoria independente do PR #129). É o mesmo
+#          encadeamento que o OBSERVE já usa sobre o "Repasso Guard", e a
+#          origem é confiável por quatro razões somadas: o workflow de
+#          origem é fixado pelo NOME, `conclusion == 'success'` exclui
+#          execução abortada, `head_repository` precisa ser ESTE
+#          repositório (nunca um fork) e `head_branch == default_branch`
+#          exclui qualquer execução que tenha nascido fora da branch
+#          padrão.
+#          `workflow_run` não carrega texto de terceiros — não é um
+#          comentário, é um workflow do próprio repositório terminando.
+#          O código Python não mudou de forma: um ciclo decide NO MÁXIMO
+#          UMA atribuição e termina. Automático não é laço, e continua
+#          sem polling.
+#
+#      A origem chega ao Python como REPASSO_WORKER_BRIDGE_TRIGGER
+#      (`manual`/`event`), derivada de `github.event_name` — nunca de
+#      input — e é RECONFERIDA no portão: `pilot` + `event` fecha, e um
+#      valor desconhecido fecha.
+#   2. ATOR — no disparo MANUAL o `if:` exige `github.actor ==
+#      'Repassomed'` (mesma identidade confiável de
+#      coordinator-observe.yml/runner.yml). No caminho `workflow_run` essa
+#      checagem não se aplica de propósito: ali `github.actor` é o ator da
+#      execução de ORIGEM (pode ser `github-actions[bot]`, quando o
+#      OBSERVE nasceu de um `workflow_run` do Guard), então exigi-lo
+#      tornaria a entrega automática imprevisível sem acrescentar
+#      segurança. O que torna aquele caminho confiável é a trava 1(b):
+#      workflow de origem fixado pelo nome + conclusão bem-sucedida +
+#      `head_branch` igual à branch padrão. Nenhum terceiro consegue
+#      produzir essa combinação.
+#   3. REF — o `if:` exige `github.ref == refs/heads/<default_branch>`, e
+#      o MESMO par de refs é confirmado DE NOVO em código
+#      (`WorkerBridgeConfig.gate()`, via `ref_allowed`) antes de qualquer
+#      escrita. `workflow_dispatch` pode ser disparado de qualquer ref, e
+#      o arquivo executado é o daquela ref — nunca confiar só no `if:`.
+#   4. PORTÃO — `vars.REPASSO_WORKER_BRIDGE_ENABLED` precisa ser
+#      exatamente "true" no `if:` (camada barata) e um passo em Python
+#      confirma, em código, o portão completo: ENABLED + MODE válido +
+#      (no modo piloto) PILOT_WORKER_ID/PILOT_TASK_ID + ref esperada.
+#   5. WORKERS — o bootstrap registra QUATRO workers programáticos de ids
+#      FIXOS em código (claude-worker-1..4, type=api_runner). Só
+#      claude-worker-4 nasce AVAILABLE nesta V1; 1–3 nascem OFFLINE com
+#      can_execute=false, então o scheduler nunca os oferece. Um worker
+#      que já existe é preservado EXATAMENTE como está (compare-and-set),
+#      então rodar isto de novo é idempotente. Os `claude-1`..`claude-4`
+#      de SESSÃO HUMANA continuam intocados e nunca são iniciados por
+#      código.
+#   6. PREFLIGHT — a suíte completa do Coordinator roda ANTES do claim e
+#      de qualquer chamada paga. Se ela falhar, o job morre de graça.
+#   7. PERMISSÕES — o mínimo que o fluxo exige, e nada além:
+#      `contents: write` (publicar a branch de TRABALHO da tarefa — nunca
+#      main/master, o que o contrato do Runner já rejeita na construção —
+#      e as branches de estado `coordinator-state-*`),
+#      `pull-requests: write` (abrir a PR da branch produzida) e
+#      `actions: write` (disparar o Guard por workflow_dispatch, porque
+#      uma PR criada com o GITHUB_TOKEN não dispara workflows de
+#      pull_request). Sem `issues: write`, sem nada mais.
+#   8. LLM SÓ NO PASSO GATED — `ANTHROPIC_API_KEY` só existe como env do
+#      passo "Rodar o Worker Bridge", e só é alcançada depois que o
+#      portão do Bridge, o portão do piloto, o portão de política, a
+#      reserva da tarefa e a reserva do worker já passaram (a chamada
+#      acontece dentro de `runner_dispatch.executar_tarefa`, SEMPRE
+#      depois do claim atômico). Nunca é input, nunca é logada.
+#   9. FALHA — o job fica vermelho quando o CLI termina com erro.
+#
+# NUNCA, em nenhum passo: merge, publicação/deploy no Netlify, force-push,
+# escrita na branch padrão, alteração de Supabase/Auth/pagamentos,
+# polling pago ou laço consumindo a fila (uma execução decide NO MÁXIMO
+# UMA atribuição e termina).
+# ─────────────────────────────────────────────────────────────────────────
+
+on:
+  # (a) piloto e operação manual. Sem `inputs:` — de propósito.
+  workflow_dispatch: {}
+  # (b) entrega automática do modo `active-supervised`. O nome do
+  # workflow de origem é FIXO aqui; `types: [completed]` é o único tipo
+  # que o GitHub oferece, e a conclusão é filtrada no `if:` do job.
+  workflow_run:
+    workflows: ["Repasso Coordinator (OBSERVE)"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  # Um ciclo por vez, e `cancel-in-progress: false` de propósito: um
+  # gatilho automático nunca aborta um ciclo em andamento no meio de uma
+  # reserva/execução. Quem perde a vez simplesmente não recebe atribuição.
+  group: repasso-coordinator-worker-bridge
+  cancel-in-progress: false
+
+jobs:
+  bridge:
+    if: >
+      vars.REPASSO_WORKER_BRIDGE_ENABLED == 'true' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      (
+        (github.event_name == 'workflow_dispatch' && github.actor == 'Repassomed') ||
+        (github.event_name == 'workflow_run' &&
+         vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised' &&
+         github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.head_repository.full_name == github.repository &&
+         github.event.workflow_run.head_branch == github.event.repository.default_branch)
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - name: Checkout (SEMPRE a branch padrão — nunca HEAD de PR)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          # Histórico completo: a branch de trabalho da tarefa é criada a
+          # partir deste checkout, e uma retomada por checkpoint precisa
+          # conseguir resolver um commit antigo específico.
+          fetch-depth: 0
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências do Coordinator
+        run: pip install -q -r coordinator/requirements.txt
+
+      - name: Confirmar o portão do Bridge em código (defesa em profundidade)
+        env:
+          REPASSO_WORKER_BRIDGE_ENABLED: ${{ vars.REPASSO_WORKER_BRIDGE_ENABLED }}
+          REPASSO_WORKER_BRIDGE_MODE: ${{ vars.REPASSO_WORKER_BRIDGE_MODE }}
+          REPASSO_WORKER_BRIDGE_PILOT_WORKER_ID: ${{ vars.REPASSO_WORKER_BRIDGE_PILOT_WORKER_ID }}
+          REPASSO_WORKER_BRIDGE_PILOT_TASK_ID: ${{ vars.REPASSO_WORKER_BRIDGE_PILOT_TASK_ID }}
+          REPASSO_WORKER_BRIDGE_ACTUAL_REF: ${{ github.ref }}
+          REPASSO_WORKER_BRIDGE_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
+          # Trava 1: a ORIGEM do ciclo, derivada de `github.event_name` —
+          # nunca de input. `pilot` + `event` fecha o portão em código.
+          REPASSO_WORKER_BRIDGE_TRIGGER: ${{ github.event_name == 'workflow_run' && 'event' || 'manual' }}
+        run: |
+          python3 -c "
+          from coordinator.worker_bridge import WorkerBridgeConfig
+          cfg = WorkerBridgeConfig.from_env()
+          gate = cfg.gate()
+          print(f'Portão do Worker Bridge: {\"ABERTO\" if gate.open else \"FECHADO\"} — {gate.reason}')
+          if not gate.open:
+              raise SystemExit(1)
+          "
+
+      - name: Preparar os workers programáticos (mesmos portões, idempotente)
+        env:
+          # Os MESMOS portões — `bridge_workers` chama
+          # `WorkerBridgeConfig.from_env()` e `gate()` por conta própria e
+          # recusa (job vermelho) se qualquer um estiver fechado; sem
+          # repetir as Variables aqui, ele veria os defaults seguros.
+          REPASSO_WORKER_BRIDGE_ENABLED: ${{ vars.REPASSO_WORKER_BRIDGE_ENABLED }}
+          REPASSO_WORKER_BRIDGE_MODE: ${{ vars.REPASSO_WORKER_BRIDGE_MODE }}
+          REPASSO_WORKER_BRIDGE_PILOT_WORKER_ID: ${{ vars.REPASSO_WORKER_BRIDGE_PILOT_WORKER_ID }}
+          REPASSO_WORKER_BRIDGE_PILOT_TASK_ID: ${{ vars.REPASSO_WORKER_BRIDGE_PILOT_TASK_ID }}
+          REPASSO_WORKER_BRIDGE_ACTUAL_REF: ${{ github.ref }}
+          REPASSO_WORKER_BRIDGE_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
+          # Trava 1: a ORIGEM do ciclo, derivada de `github.event_name` —
+          # nunca de input. `pilot` + `event` fecha o portão em código.
+          REPASSO_WORKER_BRIDGE_TRIGGER: ${{ github.event_name == 'workflow_run' && 'event' || 'manual' }}
+        run: |
+          set -e
+          # Sem nenhum nome de worker como argumento: os quatro ids são
+          # fixos em coordinator/bridge_workers.py. O Worker Registry vive
+          # numa branch de estado dedicada (coordinator-state-workers) —
+          # nunca a branch padrão, nunca matéria.
+          REMOTO_COM_TOKEN="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+          python3 -m coordinator.bridge_workers \
+            --worker-state-git-remote "$REMOTO_COM_TOKEN" \
+            --out /tmp/worker-bridge-bootstrap.json
+
+      - name: Preflight da suíte do Coordinator (ZERO API, antes do claim)
+        run: |
+          python3 -m coordinator.tests.run_all
+
+      - name: Rodar o Worker Bridge (uma atribuição, nunca um laço)
+        id: bridge
+        env:
+          # Os mesmos portões precisam chegar até AQUI — é este passo que
+          # de fato chama WorkerBridgeConfig.from_env() dentro de
+          # `python3 -m coordinator.worker_bridge`. O passo de confirmação
+          # acima só imprime; sem repetir aqui, o processo real veria os
+          # defaults seguros (false/pilot/vazio).
+          REPASSO_WORKER_BRIDGE_ENABLED: ${{ vars.REPASSO_WORKER_BRIDGE_ENABLED }}
+          REPASSO_WORKER_BRIDGE_MODE: ${{ vars.REPASSO_WORKER_BRIDGE_MODE }}
+          REPASSO_WORKER_BRIDGE_PILOT_WORKER_ID: ${{ vars.REPASSO_WORKER_BRIDGE_PILOT_WORKER_ID }}
+          REPASSO_WORKER_BRIDGE_PILOT_TASK_ID: ${{ vars.REPASSO_WORKER_BRIDGE_PILOT_TASK_ID }}
+          REPASSO_WORKER_BRIDGE_ACTUAL_REF: ${{ github.ref }}
+          REPASSO_WORKER_BRIDGE_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
+          # Trava 1: a ORIGEM do ciclo, derivada de `github.event_name` —
+          # nunca de input. `pilot` + `event` fecha o portão em código.
+          REPASSO_WORKER_BRIDGE_TRIGGER: ${{ github.event_name == 'workflow_run' && 'event' || 'manual' }}
+          # Trava 8: a credencial da Anthropic só existe AQUI. É alcançada
+          # apenas dentro de `runner_generate.gerar_patch_via_claude`, que
+          # roda depois do claim atômico do id de execução — nunca antes.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Usado pelo cliente de API do `bridge_pr` (abrir/reutilizar a PR
+          # e despachar o Guard). Lido preguiçosamente, só dentro da
+          # chamada, e nunca logado.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          # Remoto com o token embutido — usado para (a) o claim atômico/
+          # registro de resultado do Runner (coordinator-state-runner),
+          # (b) o Worker Registry operacional (coordinator-state-workers),
+          # (c) o estado operacional das tarefas
+          # (coordinator-state-task-runtime) e (d) o ledger Anthropic
+          # GLOBAL (coordinator-state-usage — a MESMA branch do
+          # Coordinator/Runner, nunca um segundo teto mensal). O push da
+          # BRANCH DA TAREFA usa as credenciais que o actions/checkout já
+          # deixou configuradas neste workdir.
+          REMOTO_COM_TOKEN="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+          python3 -m coordinator.worker_bridge \
+            --tasks-json coordination/tasks.json \
+            --repo-dir . \
+            --state-git-remote "$REMOTO_COM_TOKEN" \
+            --worker-state-git-remote "$REMOTO_COM_TOKEN" \
+            --runtime-state-git-remote "$REMOTO_COM_TOKEN" \
+            --base-branch "${{ github.event.repository.default_branch }}" \
+            --repo-owner "${{ github.repository_owner }}" \
+            --repo-name "${{ github.event.repository.name }}" \
+            --push-remote-name origin \
+            --out /tmp/worker-bridge-outcome.json
+          echo "resultado=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar o resultado do Worker Bridge como artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repasso-worker-bridge-outcome
+          path: |
+            /tmp/worker-bridge-outcome.json
+            /tmp/worker-bridge-bootstrap.json
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Falhar o job se o Worker Bridge terminou com erro
+        if: steps.bridge.outputs.resultado != '0'
+        run: |
+          echo "O Worker Bridge terminou com código ${{ steps.bridge.outputs.resultado }} — ver o artifact/log publicado acima."
+          exit 1

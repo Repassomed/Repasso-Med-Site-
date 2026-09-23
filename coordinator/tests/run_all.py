@@ -42,6 +42,8 @@ from . import (
     test_runner_resume,
     test_runner_workflow_security,
     test_scheduler,
+    test_worker_bridge,
+    test_worker_bridge_workflow_security,
     test_worker_commands,
     test_worker_ops,
     test_worker_registry_real,
@@ -94,6 +96,12 @@ MODULOS = [
     test_runner_workflow_security,
     test_worker_commands,
     test_worker_ops,
+    # Issue #128 (Worker Bridge V1): registrados junto com o próprio
+    # Bridge. A allowlist `coordinator-suite` é a única validação que o
+    # Runner executa antes de comitar — deixar estes dois fora dela
+    # deixaria cega exatamente a camada que decide QUEM executa O QUÊ.
+    test_worker_bridge,
+    test_worker_bridge_workflow_security,
 ]
 
 
