@@ -1,0 +1,19 @@
+{
+  "tasks": [
+    {
+      "branch": "runner/infra-worker-bridge-pilot",
+      "canonical_task_id": "infra-worker-bridge-pilot",
+      "checkpoint_commit": null,
+      "execution_task_id": "infra-worker-bridge-pilot--bridge-a5d13d138577",
+      "guard_dispatch_attempts": 0,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "pr_number": null,
+      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-4' (tarefa 'infra-worker-bridge-pilot' autorizada declarativamente: risco BAIXO, N\u00edvel C, jose_authorized=False.)",
+      "reserved_at": "2026-09-23T17:55:00.827676+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-23T17:55:00.827690+00:00",
+      "worker_id": "claude-worker-4"
+    }
+  ]
+}
