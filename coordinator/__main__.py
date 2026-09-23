@@ -370,6 +370,24 @@ def _register_observe_errors_best_effort(
             evidence=str(data.get("reason") or ""),
         ))
 
+    if (
+        event.raw_type == "PR_NEEDS_AUDIT"
+        and data.get("audit_decision") == "NEEDS-FIX"
+    ):
+        events.append(error_registry.ErrorEvent(
+            component="coordinator-audit",
+            error_type="semantic-needs-fix",
+            title="Auditoria semantica encontrou correcao necessaria",
+            message=f"Auditoria independente marcou {event.identity} como NEEDS-FIX.",
+            severity="MEDIUM",
+            category="content",
+            source="coordinator-audit",
+            task_id=event.identity,
+            pr_number=_identity_pr_number(event.identity),
+            run_id=run_id,
+            evidence=str(data.get("merge_card") or data.get("reason") or ""),
+        ))
+
     if data.get("status") == "ERROR":
         events.append(error_registry.ErrorEvent(
             component="coordinator",
@@ -391,6 +409,7 @@ def _register_observe_errors_best_effort(
             state_git_remote=args.error_state_git_remote,
             owner=owner,
             repo=repo,
+            state_branch=args.error_state_git_branch,
         )
         outcomes.append(outcome)
         print("ERROR-REGISTRY " + json.dumps(outcome.to_dict(), ensure_ascii=False))
