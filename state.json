@@ -147,7 +147,7 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": null,
+      "current_task": "dermatologia-questoes-issue112",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
       "last_heartbeat": "2026-09-23T22:48:54.299265+00:00",
