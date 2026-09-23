@@ -207,13 +207,13 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "fisiopatologia-ii-issue101-r2",
+      "current_task": null,
       "display_name": "Claude Worker 4",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-23T22:36:44.211720+00:00",
+      "last_heartbeat": "2026-09-23T22:37:09.935169+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "BUSY",
+      "status": "OFFLINE",
       "type": "api_runner",
       "worker_id": "claude-worker-4"
     }
