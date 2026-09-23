@@ -68,6 +68,16 @@
       "recorded_at": "2026-09-23T02:58:55.424193+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "infra-coordinator-final-canary-r4--resume-7afac9ef0bd4"
+    },
+    {
+      "branch": "runner/infra-coordinator-final-canary-r4",
+      "checkpoint_commit": "a77f15fea52ebb3aeaec3a0669b53b7490cb91dc",
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/infra-coordinator-final-canary-r4'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "recorded_at": "2026-09-23T03:04:11.496009+00:00",
+      "status": "NEEDS-AUDIT",
+      "task_id": "infra-coordinator-final-canary-r4--resume-0772f1956f32"
     }
   ]
 }
