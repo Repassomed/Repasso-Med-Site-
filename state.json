@@ -13,6 +13,16 @@
       "recorded_at": "2026-09-23T01:00:29.129737+00:00",
       "status": "FAILED",
       "task_id": "infra-coordinator-final-canary"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "n\u00e3o consegui commitar: Author identity unknown\n\n*** Please tell me who you are.\n\nRun\n\n  git config --global user.email \"you@example.com\"\n  git config --global user.name \"Your Name\"\n\nto set your account's default identity.\nOmit --global to set the identity only in this repository.\n\nfatal: empty ident name (for <runner@runnervmtr4k5.c3adq3jopwfujmzz3uv2wispie.gx.internal.cloudapp.net>) not allowed\n",
+      "recorded_at": "2026-09-23T01:23:54.086378+00:00",
+      "status": "FAILED",
+      "task_id": "infra-coordinator-final-canary-r2"
     }
   ]
 }
