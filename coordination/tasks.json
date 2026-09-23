@@ -809,15 +809,19 @@
       "area": "infraestrutura",
       "materia": null,
       "arquivos": [
-        "coordinator/error_registry.py",
-        "coordinator/worker_bridge.py",
-        "coordinator/__main__.py",
-        "coordinator/github_event.py",
-        "coordinator/tests/test_error_registry.py",
-        "coordinator/tests/run_all.py",
-        ".github/workflows/coordinator-worker-bridge.yml",
         ".github/workflows/coordinator-observe.yml",
-        "coordination/tasks.json"
+        ".github/workflows/coordinator-worker-bridge.yml",
+        "coordination/tasks.json",
+        "coordinator/__main__.py",
+        "coordinator/error_registry.py",
+        "coordinator/github_event.py",
+        "coordinator/tests/run_all.py",
+        "coordinator/tests/test_error_registry.py",
+        "coordinator/tests/test_github_event.py",
+        "coordinator/tests/test_worker_bridge.py",
+        "coordinator/tests/test_worker_bridge_workflow_security.py",
+        "coordinator/tests/test_workflow_security.py",
+        "coordinator/worker_bridge.py"
       ],
       "objetivo": "Registrar automaticamente erros acionáveis do Worker Bridge/Runner/Guard/Anthropic/Coordinator em GitHub Issues, com fingerprint, deduplicação, recorrência e estado operacional em coordinator-state-errors.",
       "fonte": "Issue #130 · autorização explícita de José em 23/09/2026",
@@ -840,7 +844,7 @@
       "risk_level": "BAIXO",
       "policy_level": "D",
       "jose_authorized": true,
-      "notas": "Observabilidade apenas. Nunca merge/deploy/publicação. Falha ao registrar erro nunca derruba uma tarefa que já terminou."
+      "notas": "Observabilidade apenas. Nunca merge/deploy/publicação. Falha ao registrar erro nunca derruba uma tarefa que já terminou. Escopo final inclui testes estruturais dos workflows/eventos/Bridge alterados; nenhum arquivo de matéria, Guard ou produção foi incluído."
     }
   ]
 }
