@@ -826,7 +826,7 @@
       "objetivo": "Registrar automaticamente erros acionáveis do Worker Bridge/Runner/Guard/Anthropic/Coordinator em GitHub Issues, com fingerprint, deduplicação, recorrência e estado operacional em coordinator-state-errors.",
       "fonte": "Issue #130 · autorização explícita de José em 23/09/2026",
       "agente": "ChatGPT",
-      "estado": "IN-PROGRESS",
+      "estado": "DONE",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -836,15 +836,15 @@
         "infra-worker-bridge-pr-recovery"
       ],
       "branch": "infra/error-registry-v1",
-      "pr": null,
-      "commit": null,
+      "pr": 137,
+      "commit": "7be8cfdae092d93d46395275edb9320022f8bed5",
       "issue": 130,
       "automation_enabled": false,
       "bridge_enabled": false,
       "risk_level": "BAIXO",
       "policy_level": "D",
       "jose_authorized": true,
-      "notas": "Observabilidade apenas. Nunca merge/deploy/publicação. Falha ao registrar erro nunca derruba uma tarefa que já terminou. Escopo final inclui testes estruturais dos workflows/eventos/Bridge alterados; nenhum arquivo de matéria, Guard ou produção foi incluído."
+      "notas": "Observabilidade apenas. Nunca merge/deploy/publicação. Falha ao registrar erro nunca derruba uma tarefa que já terminou. Escopo final inclui testes estruturais dos workflows/eventos/Bridge alterados; nenhum arquivo de matéria, Guard ou produção foi incluído. Implementação V1 entregue no PR #137: deduplicação/fingerprint, recorrência, recuperação de sync, GitHub Issues, integração Worker Bridge/Runner, Guard HARD FAIL via OBSERVE, erros Anthropic/ledger/Coordinator e auditoria semântica NEEDS-FIX. Guard não recebeu issues:write; nenhuma Variable/Secret nova."
     }
   ]
 }
