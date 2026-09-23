@@ -1453,6 +1453,42 @@
       "risk_level": "ALTO",
       "policy_level": "D",
       "jose_authorized": true
+    },
+    {
+      "id": "infra-guard-audit-pr-context-issue165",
+      "titulo": "P0 — Auditoria semântica automática das PRs abertas pelo Worker Bridge",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        ".github/workflows/coordinator-observe.yml",
+        ".github/workflows/guard.yml",
+        "coordinator/observe.py",
+        "coordinator/github_event.py",
+        "coordinator/tests/test_observe.py",
+        "coordinator/tests/test_workflow_security.py",
+        "coordinator/tests/test_github_event.py"
+      ],
+      "objetivo": "Corrigir o vínculo entre o run do Guard despachado pelo Worker Bridge via workflow_dispatch e a PR real: o workflow_run do OBSERVE pode não trazer pull_requests[0]. Identificar de forma confiável PR, mesmo repo, base main e HEAD auditado usando metadados tipados do Guard/run/artifact; passar PR, diff real e audit-pack ao Coordinator; publicar Cartão de Merge/NEEDS-FIX na PR correta. Falhar fechado se vínculo ausente/inconsistente, sem auditoria paga duplicada, sem auto-merge/deploy. Cobrir ambos os gatilhos do Guard em testes.",
+      "fonte": "Issue #165 · PR #164 / Guard por workflow_dispatch",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
+      "branch": "runner/infra-guard-audit-pr-context-issue165",
+      "pr": null,
+      "commit": null,
+      "issue": 165,
+      "notas": "Auditoria automática ausente na PR #164 antes da correção manual. Verificar evidência real do workflow_run e usar origem confiável; mesmo com Guard verde, sem contexto da PR não há MERGE-READY automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "ALTO",
+      "policy_level": "D",
+      "jose_authorized": true
     }
   ]
 }
