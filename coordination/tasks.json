@@ -770,6 +770,38 @@
       "policy_level": "C",
       "jose_authorized": false,
       "notas": "R2 auditável. Novo canonical task id e nova branch porque R1/claim foram consumidos e FAILED. Mesmo arquivo permitido e mesmo objetivo mínimo; não reutiliza execution id nem runtime da R1."
+    },
+    {
+      "id": "infra-worker-bridge-pr-recovery",
+      "titulo": "Worker Bridge — recuperação de PR pendente",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordinator/worker_bridge.py",
+        "coordinator/tests/test_worker_bridge.py",
+        "coordination/tasks.json"
+      ],
+      "objetivo": "Permitir que uma tarefa já concluída em NEEDS-AUDIT/DONE com branch/checkpoint publicados, mas sem PR por falha de GitHub/rede, abra/reutilize a PR e dispare o Guard sem reexecutar Claude/Runner.",
+      "fonte": "Issue #135 · falha real observada no piloto R2",
+      "agente": "ChatGPT",
+      "estado": "DONE",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
+      "branch": "fix/worker-bridge-pr-recovery",
+      "pr": null,
+      "commit": null,
+      "issue": 135,
+      "automation_enabled": false,
+      "bridge_enabled": false,
+      "risk_level": "BAIXO",
+      "policy_level": "D",
+      "jose_authorized": true,
+      "notas": "Hotfix de manutenção autorizado no fluxo pós-piloto. Não executa Anthropic/Runner no caminho de recuperação; não mergeia/publica/deploya. DONE significa implementação entregue nesta PR; merge continua exclusivamente com José."
     }
   ]
 }
