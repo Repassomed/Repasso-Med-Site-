@@ -104,6 +104,21 @@
       "status": "FAILED",
       "updated_at": "2026-09-23T22:56:55.441777+00:00",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "branch": "runner/semiologia-ii-b07-framingham-r3",
+      "canonical_task_id": "semiologia-ii-b07-framingham-r3",
+      "checkpoint_commit": null,
+      "execution_task_id": "semiologia-ii-b07-framingham-r3--bridge-5f7404907fab",
+      "guard_dispatch_attempts": 0,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "pr_number": null,
+      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'semiologia-ii-b07-framingham-r3' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=True.)",
+      "reserved_at": "2026-09-23T23:44:32.756098+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-23T23:44:32.756111+00:00",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
