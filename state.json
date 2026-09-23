@@ -9,7 +9,7 @@
       "guard_dispatch_status": null,
       "guard_dispatched_pr": null,
       "pr_number": null,
-      "reason": "pelo menos um comando de valida\u00e7\u00e3o da allowlist falhou \u2014 nada foi commitado/publicado.",
+      "reason": "pelo menos um comando de validação da allowlist falhou — nada foi commitado/publicado.",
       "reserved_at": "2026-09-23T17:55:00.827676+00:00",
       "status": "FAILED",
       "updated_at": "2026-09-23T17:55:56.889738+00:00",
@@ -21,13 +21,13 @@
       "checkpoint_commit": "d62c852a355566374496058bf40f2f9847677a88",
       "execution_task_id": "infra-worker-bridge-pilot-r2--bridge-8d97323dc1f0",
       "guard_dispatch_attempts": 0,
-      "guard_dispatch_status": null,
-      "guard_dispatched_pr": null,
-      "pr_number": null,
-      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/infra-worker-bridge-pilot-r2'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "guard_dispatch_status": "DISPATCHED",
+      "guard_dispatched_pr": 134,
+      "pr_number": 134,
+      "reason": "patch aplicado, validações da allowlist passaram, commit/push concluídos (branch 'runner/infra-worker-bridge-pilot-r2'). DONE/NEEDS-AUDIT nunca significa MERGE-READY — auditoria semântica independente decide isso depois (Issue #83 Nível C/#99). PR #134 auditada pelo Repasso Guard e mergeada por José; estado operacional reconciliado após o piloto.",
       "reserved_at": "2026-09-23T18:22:59.794139+00:00",
-      "status": "NEEDS-AUDIT",
-      "updated_at": "2026-09-23T18:23:52.365408+00:00",
+      "status": "DONE",
+      "updated_at": "2026-09-23T18:45:00+00:00",
       "worker_id": "claude-worker-4"
     }
   ]
