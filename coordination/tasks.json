@@ -169,7 +169,7 @@
       "objetivo": "Fechar os achados P0 e P1 do mapa read-only: alternativa duplicada no Framingham, vetor e eixo no ECG, líquido pleural, ambiguidade da tabela de PA.",
       "fonte": "mapa read-only na Issue #67",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "dependencias": [
         "semiologia-ii-b01-b04-provas"
       ],
@@ -177,9 +177,9 @@
       "pr": null,
       "commit": null,
       "issue": 67,
-      "notas": "PR #77 já foi mergeado, então a colisão anterior acabou. Fechar gaps dos bloques 05–10 antes do bug global #93. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática.",
+      "notas": "PR #77 já foi mergeado, então a colisão anterior acabou. Fechar gaps dos bloques 05–10 antes do bug global #93. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática. Tentativa real em active-supervised no run #65 consumiu execution id semiologia-ii-b05-b10-gaps--bridge-bc26f4a32fa3 e terminou FAILED por truncamento da resposta exatamente em 2.000 tokens; Error Registry #154. Não reutilizar esta tentativa.",
       "prioridade_declarada": "P1",
-      "automation_enabled": true,
+      "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "MEDIO",
       "policy_level": "C",
@@ -961,6 +961,36 @@
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true
+    },
+    {
+      "id": "semiologia-ii-b05-b10-gaps-r2",
+      "titulo": "P1 — Semiología II: retry pós-#154 dos gaps B05–B10",
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "objetivo": "Fechar os achados P0 e P1 do mapa read-only: alternativa duplicada no Framingham, vetor e eixo no ECG, líquido pleural, ambiguidade da tabela de PA.",
+      "fonte": "Issue #67 · retry explícito após Error Registry #154",
+      "agente": null,
+      "estado": "READY",
+      "dependencias": [
+        "semiologia-ii-b01-b04-provas"
+      ],
+      "branch": "runner/semiologia-ii-b05-b10-gaps-r2",
+      "pr": null,
+      "commit": null,
+      "issue": 67,
+      "notas": "Nova tentativa canônica após corrigir o teto de saída do Runner. NÃO reutilizar o canonical/execution id da tentativa semiologia-ii-b05-b10-gaps. Fechar alternativa duplicada no Framingham, vetor/eixo no ECG, líquido pleural e ambiguidade da tabela de PA. Resultado obrigatório NEEDS-AUDIT; sem merge/deploy/publicação automática.",
+      "prioridade_declarada": "P1",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "capabilities_required": [
+        "conteudo"
+      ]
     }
   ]
 }
