@@ -14,6 +14,21 @@
       "status": "FAILED",
       "updated_at": "2026-09-23T17:55:56.889738+00:00",
       "worker_id": "claude-worker-4"
+    },
+    {
+      "branch": "runner/infra-worker-bridge-pilot-r2",
+      "canonical_task_id": "infra-worker-bridge-pilot-r2",
+      "checkpoint_commit": null,
+      "execution_task_id": "infra-worker-bridge-pilot-r2--bridge-8d97323dc1f0",
+      "guard_dispatch_attempts": 0,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "pr_number": null,
+      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-4' (tarefa 'infra-worker-bridge-pilot-r2' autorizada declarativamente: risco BAIXO, N\u00edvel C, jose_authorized=False.)",
+      "reserved_at": "2026-09-23T18:22:59.794139+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-23T18:22:59.794185+00:00",
+      "worker_id": "claude-worker-4"
     }
   ]
 }
