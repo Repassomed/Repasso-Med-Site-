@@ -149,6 +149,31 @@
       "summary": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
       "task_id": "semiologia-ii-b05-b10-gaps-r2",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "guard",
+      "commit_sha": "f4b89c6567e0f3654699cf8576fe756e59dd4d6c",
+      "component": "guard",
+      "error_id": "ERR-9663861F93",
+      "error_type": "hard-fail",
+      "fingerprint": "9663861f93b45f64726b",
+      "first_seen": "2026-09-23T23:45:05.089976+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "d8cc8aabb7304f1b9d02a7f1aaaf3ec2",
+      "issue_sync_updated_at": "2026-09-23T23:45:05.089976+00:00",
+      "last_evidence_hash": "44136fa355b3678a1146",
+      "last_seen": "2026-09-23T23:45:05.089976+00:00",
+      "occurrence_count": 1,
+      "pr_number": 161,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35935056242",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:161.",
+      "task_id": "pr:161",
+      "worker_id": null
     }
   ]
 }
