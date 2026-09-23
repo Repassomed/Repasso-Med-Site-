@@ -1419,6 +1419,40 @@
       "commit": null,
       "issue": 91,
       "notas": "Backlog de produto; abaixo das correções P0/P1 e do fechamento das matérias."
+    },
+    {
+      "id": "infra-post-merge-reconciliation-issue162",
+      "titulo": "P0 — Coordinator: reconciliar PR mergeada para runtime DONE",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        ".github/workflows/coordinator-observe.yml",
+        "coordinator/task_runtime.py",
+        "coordinator/observe.py",
+        "coordinator/tests/test_task_runtime.py",
+        "coordinator/tests/test_observe.py"
+      ],
+      "objetivo": "Implementar reconciliação pós-merge: quando uma PR registrada pelo Worker Bridge for realmente mergeada na branch padrão por José, identificar com segurança o canonical_task_id correspondente e promover o runtime NEEDS-AUDIT para DONE por CAS na branch de estado. Fechamento sem merge, PR desconhecida ou inconsistência nunca alteram estado. Após reconciliação, o fluxo deve permitir o próximo ciclo/dependência, sem auto-merge/deploy.",
+      "fonte": "Issue #162 · auditoria estratégica de 23/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
+      "branch": "runner/infra-post-merge-reconciliation-issue162",
+      "pr": null,
+      "commit": null,
+      "issue": 162,
+      "notas": "Bloqueador da autonomia entre tarefas dependentes. Pode exigir novo gatilho confiável no workflow para PR mergeada; mínimo privilégio, mesma-repo/default-branch, idempotência/CAS e testes obrigatórios. NEEDS-AUDIT; José continua único mergeador.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "ALTO",
+      "policy_level": "D",
+      "jose_authorized": true
     }
   ]
 }
