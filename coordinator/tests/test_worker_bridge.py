@@ -1253,6 +1253,18 @@ def test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado() -> None:
     arquivo que vai para a main, e exige que o piloto esteja na fila de
     prontas AGORA."""
     tarefas = scheduler.load_tasks_from_tasks_json(_tasks_json_real())
+    por_id = {t.id: t for t in tarefas}
+
+    piloto = por_id.get("infra-worker-bridge-pilot")
+    assert piloto is not None, "a tarefa piloto precisa existir no registro declarativo"
+    assert piloto.estado == "READY", piloto.estado
+
+    # A cadeia inteira, explicitamente: a dependência está declarada E
+    # satisfeita no estado que vai para a main.
+    assert piloto.dependencias == ("infra-worker-bridge-v1",), piloto.dependencias
+    infra = por_id.get("infra-worker-bridge-v1")
+    assert infra is not None and infra.estado == "DONE", (infra.estado if infra else None)
+
     prontas = [t.id for t in scheduler.proxima_tarefa_pronta(tarefas)]
     assert "infra-worker-bridge-pilot" in prontas, prontas
     print("OK  test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado")
@@ -1387,6 +1399,37 @@ def test_b3_habilitacao_nunca_toca_worker_em_execucao_nem_sessao_humana() -> Non
     inalterado = registry.find_by_name_or_id(bridge_workers.BRIDGE_WORKER_1)
     assert inalterado is not None and inalterado.status == "BUSY"
     assert inalterado.current_task == "alguma-tarefa"
+
+    # LIMIT e NEAR_LIMIT -> idem. Um worker que bateu no teto não é
+    # "promovido" a AVAILABLE por um bootstrap: isso apagaria estado real
+    # e o faria receber tarefa sem ter contexto para executá-la.
+    for status in ("LIMIT", "NEAR_LIMIT"):
+        registry.upsert(
+            WorkerRecord(
+                worker_id=bridge_workers.BRIDGE_WORKER_2,
+                display_name="Claude Worker 2", type="api_runner", status=status,
+                capabilities=bridge_workers.BRIDGE_CAPABILITIES,
+                can_execute=False,
+            ),
+            message=f"teste: worker em {status}",
+        )
+        assert registry.habilitar_worker_programatico_condicional(
+            bridge_workers.BRIDGE_WORKER_2, message="teste"
+        ) is False, status
+        preservado = registry.find_by_name_or_id(bridge_workers.BRIDGE_WORKER_2)
+        assert preservado is not None and preservado.status == status, preservado
+
+    # E o bootstrap completo no modo active-supervised também não os
+    # sobrescreve: ele só reporta quem não pôde ser habilitado.
+    resultado = bridge_workers.preparar_workers_do_bridge(
+        registry, config=_config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED),
+    )
+    assert resultado.action == "PREPARED", resultado.reason
+    assert bridge_workers.BRIDGE_WORKER_1 in resultado.nao_habilitados, resultado.nao_habilitados
+    assert bridge_workers.BRIDGE_WORKER_2 in resultado.nao_habilitados, resultado.nao_habilitados
+    ainda_busy = registry.find_by_name_or_id(bridge_workers.BRIDGE_WORKER_1)
+    assert ainda_busy is not None and ainda_busy.status == "BUSY", ainda_busy
+    assert ainda_busy.current_task == "alguma-tarefa"
 
     # Sessão humana -> impossível habilitar por este caminho (§13).
     assert registry.habilitar_worker_programatico_condicional(

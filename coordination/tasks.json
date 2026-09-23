@@ -693,7 +693,7 @@
       "objetivo": "Transformar a decisão do Scheduler em execução real supervisionada via Claude/Anthropic, com Worker Registry, RunnerTask dinâmica, PR automático e Guard, começando por um piloto único no Claude 4.",
       "fonte": "Issue #128 · autorização explícita de José em 23/09/2026",
       "agente": "claude-4",
-      "estado": "IN-PROGRESS",
+      "estado": "DONE",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -702,10 +702,10 @@
         "infra-coordinator-final-canary-r4"
       ],
       "branch": "infra/worker-bridge-v1",
-      "pr": null,
+      "pr": 129,
       "commit": null,
       "issue": 128,
-      "notas": "Nível D autorizado explicitamente por José para esta implementação. Piloto obrigatório com apenas Claude 4 programático; Claude 1-3 permanecem desligados até aprovação. Nunca merge/deploy/publicação automática.",
+      "notas": "Nível D autorizado explicitamente por José para esta implementação. Piloto obrigatório com apenas Claude 4 programático; Claude 1-3 permanecem desligados até aprovação. Nunca merge/deploy/publicação automática. Estado DONE declarado ao final da implementação, por decisão explícita de José em 23/09/2026, para que a dependência de infra-worker-bridge-pilot fique satisfeita na main imediatamente depois do merge — sem um PR administrativo extra só para isso. DONE aqui significa \"a implementação está entregue e auditada nesta PR\"; o merge continua sendo exclusivamente de José, e o piloto continua só rodando quando ele ligar as Variables.",
       "automation_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "D",
@@ -727,7 +727,9 @@
       "capabilities_required": [
         "codigo"
       ],
-      "dependencias": [],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
       "branch": "runner/infra-worker-bridge-pilot",
       "pr": null,
       "commit": null,
@@ -737,7 +739,7 @@
       "risk_level": "BAIXO",
       "policy_level": "C",
       "jose_authorized": false,
-      "notas": "Tarefa sintética e segura, criada por esta PR só para o piloto do Worker Bridge (Issue #128 §8). Nada aqui é conteúdo do site. O arquivo permitido é um caminho EXATO (o Bridge recusa curinga em allowed_files, nunca expande). Nível C: pode executar automaticamente e termina em NEEDS-AUDIT, com auditoria independente antes de qualquer MERGE-READY; jose_authorized não é exigido nesse nível. SEM dependências, por correção do bloqueador B1 da auditoria independente do PR #129: a versão anterior dependia de infra-worker-bridge-v1, que continua IN-PROGRESS enquanto o PR não é mergeado — depois do merge a main teria a dependência insatisfeita e o piloto nunca seria oferecido (workflow verde e inerte). A dependência também era estruturalmente redundante: esta tarefa só existe na main a partir do MESMO commit de merge que leva o código do Bridge, então a infraestrutura está presente por construção quando a tarefa passa a ser legível. Quem controla a execução continua sendo o portão: automation_enabled, o nível de política, as Variables do piloto e o modo do Bridge. O piloto NÃO foi executado nesta PR."
+      "notas": "Tarefa sintética e segura, criada por esta PR só para o piloto do Worker Bridge (Issue #128 §8). Nada aqui é conteúdo do site. O arquivo permitido é um caminho EXATO (o Bridge recusa curinga em allowed_files, nunca expande). Nível C: pode executar automaticamente e termina em NEEDS-AUDIT, com auditoria independente antes de qualquer MERGE-READY; jose_authorized não é exigido nesse nível. Bloqueador B1 da auditoria independente do PR #129: a dependência de infra-worker-bridge-v1 só é elegível se aquela tarefa estiver DONE no estado que vai para a main, e ela continuava IN-PROGRESS — depois do merge a main teria a dependência insatisfeita e o piloto nunca seria oferecido (workflow verde e inerte). Corrigido como José pediu: infra-worker-bridge-v1 passou a DONE nesta mesma PR, ao final da implementação, e esta tarefa continua READY com a dependência satisfeita. Sem PR administrativo extra. Em modo piloto o Bridge também restringe a fila a esta tarefa, para que ela nunca perca a vez para outra tarefa READY à frente na ordem de desempate. Quem controla a execução continua sendo o portão: automation_enabled, o nível de política, as Variables do piloto e o modo do Bridge. O piloto NÃO foi executado nesta PR."
     }
   ]
 }

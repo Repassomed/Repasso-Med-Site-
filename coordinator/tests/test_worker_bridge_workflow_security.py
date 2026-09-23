@@ -108,6 +108,8 @@ def test_b5_evento_exige_sucesso_branch_padrao_e_modo_active_supervised() -> Non
     assert "vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised'" in condicao, condicao
     assert "github.event.workflow_run.conclusion == 'success'" in condicao, condicao
     assert "github.event.workflow_run.head_branch == github.event.repository.default_branch" in condicao, condicao
+    # E o repositório de origem precisa ser ESTE — nunca um fork.
+    assert "github.event.workflow_run.head_repository.full_name == github.repository" in condicao, condicao
     print("OK  test_b5_evento_exige_sucesso_branch_padrao_e_modo_active_supervised")
 
 

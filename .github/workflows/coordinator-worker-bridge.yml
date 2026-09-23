@@ -32,10 +32,12 @@ name: Repasso Coordinator (WORKER BRIDGE)
 #          `completed` — a ENTREGA AUTOMÁTICA do modo `active-supervised`
 #          (correção B5 da auditoria independente do PR #129). É o mesmo
 #          encadeamento que o OBSERVE já usa sobre o "Repasso Guard", e a
-#          origem é confiável por três razões somadas: o workflow de
+#          origem é confiável por quatro razões somadas: o workflow de
 #          origem é fixado pelo NOME, `conclusion == 'success'` exclui
-#          execução abortada, e `head_branch == default_branch` exclui
-#          qualquer execução que tenha nascido fora da branch padrão.
+#          execução abortada, `head_repository` precisa ser ESTE
+#          repositório (nunca um fork) e `head_branch == default_branch`
+#          exclui qualquer execução que tenha nascido fora da branch
+#          padrão.
 #          `workflow_run` não carrega texto de terceiros — não é um
 #          comentário, é um workflow do próprio repositório terminando.
 #          O código Python não mudou de forma: um ciclo decide NO MÁXIMO
@@ -128,6 +130,7 @@ jobs:
         (github.event_name == 'workflow_run' &&
          vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised' &&
          github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.head_repository.full_name == github.repository &&
          github.event.workflow_run.head_branch == github.event.repository.default_branch)
       )
     runs-on: ubuntu-latest
