@@ -2460,6 +2460,16 @@
       "output_tokens": 109,
       "tier": "FAST",
       "timestamp": "2026-09-23T23:43:28.743330+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.109414,
+      "event_key": "runner-task:semiologia-ii-b07-framingham-r3--bridge-5f7404907fab",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-23T23:44:43.435239+00:00"
     }
   ]
 }
