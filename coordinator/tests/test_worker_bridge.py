@@ -1182,7 +1182,7 @@ def test_tarefa_piloto_real_materializa_e_e_autorizada() -> None:
     assert meta.automation_enabled is True
     assert meta.bridge_enabled is True
     assert meta.risk_level == "BAIXO" and meta.policy_level == "C"
-    assert meta.issue == 128
+    assert meta.issue == 131
 
     politica = worker_bridge.avaliar_politica(meta, task_id=piloto_id)
     assert politica.permitido is True, politica.reason
