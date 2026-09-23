@@ -24,6 +24,16 @@
       "recorded_at": "2026-09-23T01:23:54.086378+00:00",
       "status": "FAILED",
       "task_id": "infra-coordinator-final-canary-r2"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "pelo menos um comando de valida\u00e7\u00e3o da allowlist falhou \u2014 nada foi commitado/publicado.",
+      "recorded_at": "2026-09-23T01:49:37.167300+00:00",
+      "status": "FAILED",
+      "task_id": "infra-coordinator-final-canary-r3"
     }
   ]
 }
