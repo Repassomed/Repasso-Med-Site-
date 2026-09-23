@@ -471,8 +471,12 @@ def _observar(a: argparse.Namespace) -> dict | None:
         workers = _load_workers(a.workers)
 
     if a.worker_state_git_remote:
+        # Worker Registry operacional: usa o MESMO arquivo canônico do
+        # bootstrap do canário e do Runner Dispatch. GitJsonStore já usa
+        # "state.json" por default; não sobrescrever com outro nome aqui,
+        # senão os workflows enxergam registros diferentes na mesma branch.
         worker_registry = OperationalWorkerRegistry(
-            GitJsonStore(a.worker_state_git_remote, branch=a.worker_state_git_branch, file_name="workers.json")
+            GitJsonStore(a.worker_state_git_remote, branch=a.worker_state_git_branch)
         )
     else:
         worker_registry = OperationalWorkerRegistry(LocalJsonWorkerStateStore(a.worker_state_store))
