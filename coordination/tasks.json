@@ -147,11 +147,16 @@
         "conteudo"
       ],
       "dependencias": [],
-      "branch": null,
+      "branch": "runner/fisiopatologia-ii-issue101",
       "pr": null,
       "commit": null,
       "issue": 101,
-      "notas": "Executável quando houver worker livre e sem colisão. Auditoria semântica obrigatória antes de MERGE-READY."
+      "notas": "Executável quando houver worker livre e sem colisão. Auditoria semântica obrigatória antes de MERGE-READY. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": false
     },
     {
       "id": "semiologia-ii-b05-b10-gaps",
@@ -168,12 +173,20 @@
       "dependencias": [
         "semiologia-ii-b01-b04-provas"
       ],
-      "branch": null,
+      "branch": "runner/semiologia-ii-b05-b10-gaps",
       "pr": null,
       "commit": null,
       "issue": 67,
-      "notas": "PR #77 já foi mergeado, então a colisão anterior acabou. Fechar gaps dos bloques 05–10 antes do bug global #93.",
-      "prioridade_declarada": "P1"
+      "notas": "PR #77 já foi mergeado, então a colisão anterior acabou. Fechar gaps dos bloques 05–10 antes do bug global #93. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática.",
+      "prioridade_declarada": "P1",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": false,
+      "capabilities_required": [
+        "conteudo"
+      ]
     },
     {
       "id": "toxicologia-provas-issue102",
@@ -192,11 +205,16 @@
         "conteudo"
       ],
       "dependencias": [],
-      "branch": null,
+      "branch": "runner/toxicologia-provas-issue102",
       "pr": null,
       "commit": null,
       "issue": 102,
-      "notas": "Primeira etapa da frente Toxicología. A tarefa #96 depende desta para evitar dois workers no mesmo HTML."
+      "notas": "Primeira etapa da frente Toxicología. A tarefa #96 depende desta para evitar dois workers no mesmo HTML. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": false
     },
     {
       "id": "dermatologia-questoes-issue112",
@@ -215,11 +233,16 @@
         "conteudo"
       ],
       "dependencias": [],
-      "branch": null,
+      "branch": "runner/dermatologia-questoes-issue112",
       "pr": null,
       "commit": null,
       "issue": 112,
-      "notas": "Não misturar com Toxicología. Aplicar Lei 8-A e QA responsivo."
+      "notas": "Não misturar com Toxicología. Aplicar Lei 8-A e QA responsivo. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": false
     },
     {
       "id": "bug-global-postits-issue93",
@@ -845,6 +868,36 @@
       "policy_level": "D",
       "jose_authorized": true,
       "notas": "Observabilidade apenas. Nunca merge/deploy/publicação. Falha ao registrar erro nunca derruba uma tarefa que já terminou. Escopo final inclui testes estruturais dos workflows/eventos/Bridge alterados; nenhum arquivo de matéria, Guard ou produção foi incluído. Implementação V1 entregue no PR #137: deduplicação/fingerprint, recorrência, recuperação de sync, GitHub Issues, integração Worker Bridge/Runner, Guard HARD FAIL via OBSERVE, erros Anthropic/ledger/Coordinator e auditoria semântica NEEDS-FIX. Guard não recebeu issues:write; nenhuma Variable/Secret nova."
+    },
+    {
+      "id": "coordination-authorize-active-supervised-queue",
+      "titulo": "Autorizar fila real para Worker Bridge active-supervised",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordination/tasks.json"
+      ],
+      "objetivo": "Adicionar metadados explícitos de automação às quatro tarefas READY aprovadas para execução pelo Worker Bridge, preservando Nível C, auditoria obrigatória e merge exclusivo de José.",
+      "fonte": "Autorização explícita de José após piloto do Worker Bridge e Error Registry V1",
+      "agente": "ChatGPT",
+      "estado": "DONE",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-error-registry-v1",
+        "infra-worker-bridge-pr-recovery"
+      ],
+      "branch": "coordination/authorize-active-supervised-queue",
+      "pr": null,
+      "commit": null,
+      "automation_enabled": false,
+      "bridge_enabled": false,
+      "risk_level": "BAIXO",
+      "policy_level": "D",
+      "jose_authorized": true,
+      "notas": "Mudança declarativa de autonomia apenas. Não executa tarefas nesta PR; ativa somente após José mudar REPASSO_WORKER_BRIDGE_MODE para active-supervised."
     }
   ]
 }
