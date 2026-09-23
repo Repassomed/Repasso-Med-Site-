@@ -366,13 +366,13 @@
         "codigo"
       ],
       "dependencias": [
-        "infra-coordinator-final-canary"
+        "infra-coordinator-final-canary-r4"
       ],
       "branch": null,
       "pr": null,
       "commit": null,
       "issue": 113,
-      "notas": "Só iniciar depois da coordenação principal estar estável. Máximo 1 segunda tentativa Anthropic por questão/recorte; sem invenção."
+      "notas": "Só iniciar depois da coordenação principal estar estável. Máximo 1 segunda tentativa Anthropic por questão/recorte; sem invenção. Dependência antiga corrigida para infra-coordinator-final-canary-r4 (DONE). Continua BLOCKED até receber escopo exato sem wildcard e janela operacional após estabilização do intake/fila."
     },
     {
       "id": "ferramentas-highlights-ancoragem",
@@ -1138,6 +1138,356 @@
       "bridge_enabled": true,
       "risk_level": "MEDIO",
       "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "infra-inbox-task-intake-issue160",
+      "titulo": "P1 — Coordinator Intake: transformar Inbox #88 em proposta persistente de tarefa",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        ".github/workflows/coordinator-observe.yml",
+        "coordinator/observe.py",
+        "coordinator/inbox_card.py",
+        "coordinator/task_intake.py",
+        "coordinator/tests/test_observe.py",
+        "coordinator/tests/test_task_intake.py"
+      ],
+      "objetivo": "Implementar Intake seguro da Inbox #88: pedido novo deve ser deduplicado contra coordination/tasks.json, classificado e convertido em proposta TIPADA de registro de tarefa por branch/PR administrativa, nunca escrita direta em main. Pedido ambíguo vira NEEDS-INPUT; matéria nova exige autorização explícita; pedido já registrado apenas referencia a tarefa existente. O workflow pode ganhar somente as permissões mínimas necessárias para abrir a PR de cadastro, preservando anti-self-loop, fail-closed, zero auto-merge e zero deploy.",
+      "fonte": "Issue #160 · auditoria estratégica de 23/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
+      "branch": "runner/infra-inbox-task-intake-issue160",
+      "pr": null,
+      "commit": null,
+      "issue": 160,
+      "notas": "Objetivo é eliminar edição manual recorrente de tasks.json. Alteração de permissões do workflow é sensível: mínimo privilégio, testes estruturais obrigatórios e NEEDS-AUDIT. José continua único mergeador.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "ALTO",
+      "policy_level": "D",
+      "jose_authorized": true
+    },
+    {
+      "id": "infra-source-context-pack-issue158",
+      "titulo": "P1 — Source/Context Pack: levar evidência confiável às tarefas do Worker Bridge",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordinator/source_pack.py",
+        "coordinator/worker_bridge.py",
+        "coordinator/runner_generate.py",
+        "coordinator/tests/test_source_pack.py"
+      ],
+      "objetivo": "Criar mecanismo de source/context pack rastreável, limitado e fail-closed para tarefas que dependem de fontes além do allowed_file. Deve preservar proveniência, limites de tamanho/token e bloquear antes de chamada paga quando fonte obrigatória estiver ausente. A integração real com Google Drive só pode ser ativada quando existir autenticação segura; nunca hardcode de credencial.",
+      "fonte": "Issue #158 · Source Map #89",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-inbox-task-intake-issue160"
+      ],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 158,
+      "notas": "Registrada para não desaparecer. Está BLOCKED porque a estratégia de acesso/autenticação ao Drive e o escopo de integração precisam ser resolvidos em subtarefa segura. Desbloqueia Fisiopatología II #101 e Toxicología #102."
+    },
+    {
+      "id": "global-remover-como-estudar-issue147",
+      "titulo": "P1 ALTA — Global: remover blocos Como estudar a matéria",
+      "area": "materia",
+      "materia": null,
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/**"
+      ],
+      "objetivo": "Inventariar matérias publicadas, identificar blocos metadidáticos 'Como estudar' ou equivalentes e removê-los sem perder conteúdo médico real; executar em lotes pequenos por matéria com annotation-safety e QA.",
+      "fonte": "Issue #147 · decisão explícita de José",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "infra-inbox-task-intake-issue160"
+      ],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Parent backlog. Wildcard não é executável pelo Worker Bridge; o Intake deve quebrar em tarefas por matéria/caminho exato antes da execução. Não reescrever globalmente em uma PR."
+    },
+    {
+      "id": "semiologia-ii-visual-b05-b10",
+      "titulo": "P2 — Semiología II: fechamento visual B05–B10",
+      "area": "assets",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/semio2/**"
+      ],
+      "objetivo": "Executar a auditoria visual já mapeada para B05–B10: corrigir/substituir assets com rótulos vazios, cortes, acentos e lacunas visuais; preservar slides da cátedra. Produção em WEBP horizontal, castelhano, letras grandes, sem setas sobre anatomia.",
+      "fonte": "Issue #67 · mapas read-only/auditoria visual",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P2",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "semiologia-ii-b05-pleural-r3"
+      ],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registrada. Worker Bridge atual não possui pipeline de geração/auditoria visual de imagens; manter BLOCKED até capability visual ser integrada ou subtarefas forem executadas por pipeline apropriado."
+    },
+    {
+      "id": "oftalmologia-s03-s04-hirschberg",
+      "titulo": "P2 — Oftalmología: refazer S03, criar S04 e Hirschberg",
+      "area": "assets",
+      "materia": "oftalmologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/**"
+      ],
+      "objetivo": "Refazer S03 Examen Básico fora do padrão, criar S04 e material do teste de Hirschberg, mantendo castelhano, didática premium e auditoria visual/conceitual.",
+      "fonte": "Backlog editorial registrado por José",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P2",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 3,
+      "notas": "Registrada para memória de fila. Depende de pipeline visual/fontes da matéria; não executar pelo Worker Bridge textual atual."
+    },
+    {
+      "id": "anestesiologia-refacao-infograficos",
+      "titulo": "P2 — Anestesiología: refazer infográficos fora do padrão",
+      "area": "assets",
+      "materia": "anestesiologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/**"
+      ],
+      "objetivo": "Refazer o conjunto de infográficos de Anestesiología no padrão premium atual, com conteúdo didático, legível e auditado.",
+      "fonte": "Backlog editorial registrado por José",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P2",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 3,
+      "notas": "Depende de pipeline visual/fontes. Manter registrado e bloqueado até capability adequada."
+    },
+    {
+      "id": "ortopedia-continuar-slide10",
+      "titulo": "P2 — Ortopedia e Traumatología: continuar produção a partir do slide 10",
+      "area": "assets",
+      "materia": "ortopedia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/**"
+      ],
+      "objetivo": "Retomar produção visual a partir do slide 10, mantendo profundidade didática, menor densidade por imagem e auditoria visual/conceitual.",
+      "fonte": "Backlog editorial registrado por José",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P2",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 3,
+      "notas": "Depende de pipeline visual/fontes; não executar no Worker Bridge textual."
+    },
+    {
+      "id": "fisiopatologia-ii-infograficos-completos",
+      "titulo": "P2 — Fisiopatología II: infográficos completos dos slides atualizados",
+      "area": "assets",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/**"
+      ],
+      "objetivo": "Produzir infográficos completos e ilustrados dos slides atualizados, do bloco esofágico até alterações de vias uterinas, cobrindo conceito, mecanismo, diferenças, classificações e fatos-chave.",
+      "fonte": "Backlog editorial registrado por José",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P2",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "infra-source-context-pack-issue158"
+      ],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 101,
+      "notas": "Depende de fontes atualizadas/Drive e pipeline visual. Separada da tarefa textual #101."
+    },
+    {
+      "id": "farmacologia-ii-antianginosos-infograficos",
+      "titulo": "P2 — Farmacología II: completar sequência de antianginosos",
+      "area": "assets",
+      "materia": "farmacologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/**"
+      ],
+      "objetivo": "Completar a frente de infográficos de Farmacología II com antianginosos, mantendo o padrão didático usado em anti-hipertensivos/diuréticos: mecanismo, classes, fármacos, diferenças e o que mais cai.",
+      "fonte": "Backlog editorial registrado por José",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P2",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 3,
+      "notas": "Registrada. Depende de pipeline visual/fontes; não executar pelo Worker Bridge textual atual."
+    },
+    {
+      "id": "layout-global-desktop-mobile",
+      "titulo": "P2 — Layout global novo desktop + mobile/tablet",
+      "area": "ferramentas",
+      "materia": null,
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/assets/**"
+      ],
+      "objetivo": "Criar novo layout responsivo mantendo identidade visual e funcionalidades, com protótipo desktop/mobile/tablet antes de rollout global.",
+      "fonte": "Backlog de produto registrado por José",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P2",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "bug-global-postits-issue93"
+      ],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 3,
+      "notas": "Só retomar depois do bug global #93, conforme ordem operacional já definida. Exige escopo exato antes de Worker Bridge."
+    },
+    {
+      "id": "audios-por-bloco-issue91",
+      "titulo": "P3 — Áudios por bloco: arquitetura, compressão e streaming",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/assets/**"
+      ],
+      "objetivo": "Planejar/implementar arquitetura leve para áudios por matéria/bloco, compressão, streaming e futura migração para Supabase conforme Issue #91.",
+      "fonte": "Issue #91",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P3",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "layout-global-desktop-mobile"
+      ],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 91,
+      "notas": "Backlog de produto; abaixo das correções P0/P1 e do fechamento das matérias."
+    },
+    {
+      "id": "infra-post-merge-reconciliation-issue162",
+      "titulo": "P0 — Coordinator: reconciliar PR mergeada para runtime DONE",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        ".github/workflows/coordinator-observe.yml",
+        "coordinator/task_runtime.py",
+        "coordinator/observe.py",
+        "coordinator/tests/test_task_runtime.py",
+        "coordinator/tests/test_observe.py"
+      ],
+      "objetivo": "Implementar reconciliação pós-merge: quando uma PR registrada pelo Worker Bridge for realmente mergeada na branch padrão por José, identificar com segurança o canonical_task_id correspondente e promover o runtime NEEDS-AUDIT para DONE por CAS na branch de estado. Fechamento sem merge, PR desconhecida ou inconsistência nunca alteram estado. Após reconciliação, o fluxo deve permitir o próximo ciclo/dependência, sem auto-merge/deploy.",
+      "fonte": "Issue #162 · auditoria estratégica de 23/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
+      "branch": "runner/infra-post-merge-reconciliation-issue162",
+      "pr": null,
+      "commit": null,
+      "issue": 162,
+      "notas": "Bloqueador da autonomia entre tarefas dependentes. Pode exigir novo gatilho confiável no workflow para PR mergeada; mínimo privilégio, mesma-repo/default-branch, idempotência/CAS e testes obrigatórios. NEEDS-AUDIT; José continua único mergeador.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "ALTO",
+      "policy_level": "D",
+      "jose_authorized": true
+    },
+    {
+      "id": "infra-guard-audit-pr-context-issue165",
+      "titulo": "P0 — Auditoria semântica automática das PRs abertas pelo Worker Bridge",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        ".github/workflows/coordinator-observe.yml",
+        ".github/workflows/guard.yml",
+        "coordinator/observe.py",
+        "coordinator/github_event.py",
+        "coordinator/tests/test_observe.py",
+        "coordinator/tests/test_workflow_security.py",
+        "coordinator/tests/test_github_event.py"
+      ],
+      "objetivo": "Corrigir o vínculo entre o run do Guard despachado pelo Worker Bridge via workflow_dispatch e a PR real: o workflow_run do OBSERVE pode não trazer pull_requests[0]. Identificar de forma confiável PR, mesmo repo, base main e HEAD auditado usando metadados tipados do Guard/run/artifact; passar PR, diff real e audit-pack ao Coordinator; publicar Cartão de Merge/NEEDS-FIX na PR correta. Falhar fechado se vínculo ausente/inconsistente, sem auditoria paga duplicada, sem auto-merge/deploy. Cobrir ambos os gatilhos do Guard em testes.",
+      "fonte": "Issue #165 · PR #164 / Guard por workflow_dispatch",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
+      "branch": "runner/infra-guard-audit-pr-context-issue165",
+      "pr": null,
+      "commit": null,
+      "issue": 165,
+      "notas": "Auditoria automática ausente na PR #164 antes da correção manual. Verificar evidência real do workflow_run e usar origem confiável; mesmo com Guard verde, sem contexto da PR não há MERGE-READY automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "ALTO",
+      "policy_level": "D",
       "jose_authorized": true
     }
   ]
