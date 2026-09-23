@@ -1,6 +1,7 @@
 {
   "keys": [
-    "runner-task:infra-coordinator-final-canary"
+    "runner-task:infra-coordinator-final-canary",
+    "runner-task:infra-coordinator-final-canary-r2"
   ],
   "results": [
     {
