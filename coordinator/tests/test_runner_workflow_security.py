@@ -361,6 +361,23 @@ def test_preflight_suite_runs_before_paid_runner_step() -> None:
     print("OK  test_preflight_suite_runs_before_paid_runner_step")
 
 
+def test_stage1_preflight_runs_before_paid_runner_step_and_without_secrets() -> None:
+    texto = _ler()
+    idx_stage1 = texto.index("- name: Preflight pós-patch Stage 1 (ZERO API, antes do claim)")
+    idx_run = texto.index("- name: Rodar o Runner Dispatch sobre a RunnerTask do canário")
+    assert idx_stage1 < idx_run, "a simulação do Stage 1 precisa vir antes do Runner/Anthropic"
+    bloco = texto[idx_stage1:idx_run]
+    assert "CANARY_STAGE=1" in bloco
+    assert "python3 -m coordinator.tests.run_all" in bloco
+    assert "ANTHROPIC_API_KEY" not in bloco and "secrets." not in bloco, (
+        "o preflight pós-patch precisa ser ZERO API/segredo"
+    )
+    assert "trap cleanup EXIT" in bloco and 'rm -f "$CANARY_FILE"' in bloco, (
+        "a simulação precisa limpar o arquivo antes da execução real"
+    )
+    print("OK  test_stage1_preflight_runs_before_paid_runner_step_and_without_secrets")
+
+
 def main() -> int:
     testes = [
         test_workflow_file_exists_and_is_separate_from_observe,
@@ -383,6 +400,7 @@ def main() -> int:
         test_validation_command_keys_come_from_a_fixed_declared_set,
         test_sucesso_status_is_needs_audit_never_done_by_default,
         test_preflight_suite_runs_before_paid_runner_step,
+        test_stage1_preflight_runs_before_paid_runner_step_and_without_secrets,
     ]
     falhas = 0
     for t in testes:
