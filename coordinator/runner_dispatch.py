@@ -136,10 +136,11 @@ determinística de sempre.
   é a MESMA do Coordinator ou uma separada — é decidida pela correção B4,
   abaixo; B2-B só trocou "arquivo local" por "``GitUsageLedger``
   persistente", sem decidir ainda QUAL branch.)
-- **B2-C:** ``runner_generate.gerar_patch_via_claude`` agora bloqueia
-  fail-closed (zero chamada, zero patch) quando qualquer ``allowed_file``
-  existente é maior do que pode ser enviado integralmente ao modelo —
-  nunca mais corta/trunca conteúdo de arquivo silenciosamente.
+- **B2-C:** ``runner_generate.gerar_patch_via_claude`` nunca corta/trunca
+  conteúdo de arquivo silenciosamente. Um ``allowed_file`` maior do que
+  pode ser enviado integralmente ao modelo bloqueava fail-closed (zero
+  chamada, zero patch); desde a Issue #144 ele segue pelo caminho
+  ANCORADO (``AnchoredEdit``) — ver o rodapé deste docstring.
 
 **Correções da 3ª auditoria independente do PR #114 (B3/B4):**
 
@@ -183,8 +184,19 @@ Fase E, handoff automático); não implementa retomada automática (Fase F);
 não toca ``coordination/tasks.json``; não define nenhuma tarefa/patch de
 canário real (``coordinator/runner_tasks/`` fica vazio nesta rodada — o
 mecanismo existe, o conteúdo autorizado por José vem depois, numa decisão
-separada); não implementa edição por trecho/âncora para arquivos grandes
-(bloqueia a tarefa inteira em vez disso, B2-C — evolução futura).
+separada).
+
+**Issue #144 — edição por trecho/âncora em arquivos grandes:** este
+módulo NÃO muda para essa capacidade, e é de propósito. ``AnchoredEdit``
+é uma operação de GERAÇÃO: ``runner_generate`` extrai trechos do arquivo
+grande, valida a unicidade de cada âncora e resolve tudo EM MEMÓRIA,
+entregando aqui exatamente o que este módulo já sabia receber — um
+``StructuredPatch`` de ``FileWrite`` com o conteúdo final COMPLETO de
+cada arquivo. Portanto ``aplicar_patch``, ``validar_patch_contra_
+allowed_files``, ``arquivos_alterados`` (o diff REAL conferido contra
+``allowed_files``), o claim, o Guard, o ``NEEDS-AUDIT`` e o "nunca
+merge/force-push/deploy" continuam sendo exatamente os mesmos, sem uma
+linha de exceção para o caminho ancorado.
 """
 
 from __future__ import annotations

@@ -898,6 +898,41 @@
       "policy_level": "D",
       "jose_authorized": true,
       "notas": "Mudança declarativa de autonomia apenas. Não executa tarefas nesta PR; ativa somente após José mudar REPASSO_WORKER_BRIDGE_MODE para active-supervised."
+    },
+    {
+      "id": "infra-runner-large-file-anchored-edit",
+      "titulo": "Runner — edição segura por trecho em arquivos grandes",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordinator/runner_generate.py",
+        "coordinator/runner_dispatch.py",
+        "coordinator/tests/test_runner_generate.py",
+        "coordinator/tests/test_runner_dispatch.py",
+        "coordinator/tests/test_worker_bridge.py",
+        "coordination/tasks.json"
+      ],
+      "objetivo": "Permitir edição localizada segura de arquivos >20k por âncoras exatas, sem truncar arquivo, sem diff/shell livre e sem ampliar allowed_files.",
+      "fonte": "Issue #144 · falha real da task fisiopatologia-ii-issue101 registrada na Issue #142",
+      "agente": "Claude",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
+      "branch": "fix/runner-large-file-anchored-edit",
+      "pr": 145,
+      "commit": null,
+      "issue": 144,
+      "automation_enabled": false,
+      "bridge_enabled": false,
+      "risk_level": "MEDIO",
+      "policy_level": "D",
+      "jose_authorized": true,
+      "notas": "Hotfix final para liberar tarefas reais com HTMLs grandes em active-supervised. Não autoriza merge/deploy/publicação. Manter fail-closed e compatibilidade com FileWrite para arquivos pequenos."
     }
   ]
 }

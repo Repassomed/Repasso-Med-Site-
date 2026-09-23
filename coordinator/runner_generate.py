@@ -94,17 +94,51 @@ só isto, o resto do módulo continua igual:**
   usando ``UsageLedger`` de arquivo local só porque é mais simples de
   isolar num diretório temporário — a interface é idêntica, então o
   comportamento provado vale para as duas implementações.
-- **B2-C** (arquivos grandes): antes desta correção, um ``allowed_file``
+- **B2-C** (arquivos grandes): antes daquela correção, um ``allowed_file``
   maior que ``MAX_FILE_CHARS_SENT`` era simplesmente CORTADO ao montar o
   prompt (``_clip``, removida) — mas o system prompt pede o conteúdo
   COMPLETO de volta, então o modelo devolveria um "arquivo completo" que
   na verdade só viu uma fatia, e ``FileWrite`` substituiria o arquivo
-  inteiro por essa fatia: truncamento silencioso e destrutivo. Agora
-  ``_arquivos_grandes_demais`` bloqueia a tarefa inteira ANTES de montar
-  o prompt ou chamar o modelo (zero chamada, zero patch, zero escrita)
-  quando qualquer ``allowed_file`` existente excede o limite. Edição por
-  trecho/âncora para arquivos grandes é uma evolução futura, fora desta
-  rodada.
+  inteiro por essa fatia: truncamento silencioso e destrutivo. Por isso
+  ``_arquivos_grandes_demais`` passou a bloquear a tarefa inteira ANTES
+  de montar o prompt ou chamar o modelo.
+
+**Issue #144 (edição segura por trecho/âncora em arquivos grandes):**
+
+O bloqueio puro do B2-C era seguro mas inviabilizava as matérias reais —
+na primeira execução em ``active-supervised`` a task
+``fisiopatologia-ii-issue101`` bloqueou exatamente aí (Error Registry
+#142). Esta rodada NÃO amplia o limite de 20k e NÃO passa a mandar HTML
+gigante ao modelo. Ela acrescenta um segundo caminho, tipado:
+
+- ``FileWrite`` continua sendo o ÚNICO caminho para arquivo pequeno,
+  inalterado — conteúdo completo enviado, conteúdo completo de volta;
+- para um ``allowed_file`` acima de ``MAX_FILE_CHARS_SENT``, só TRECHOS
+  literais vão ao prompt (``extrair_trechos_ancorados``, ancorada nas
+  estruturas naturais do HTML — headings, ids, blocos — e nos termos da
+  própria instrução da tarefa), com teto conservador por arquivo e no
+  total; o arquivo INTEIRO nunca é enviado, em nenhuma circunstância;
+- a resposta para esse arquivo só pode ser ``AnchoredEdit``
+  (``{path, old_text, new_text}``): ``old_text`` precisa estar contido
+  INTEIRO em um dos trechos que foram de fato enviados (o modelo só pode
+  editar o que leu) E existir EXATAMENTE uma vez no conteúdo atual — 0
+  ocorrência (âncora inventada) ou 2+ (ambígua, contando também
+  ocorrências SOBREPOSTAS) é ``BLOCKED``, zero escrita;
+- ``FileWrite`` para um arquivo GRANDE continua recusado — é exatamente a
+  garantia anti-truncamento do B2-C, preservada literalmente;
+- as edições são resolvidas EM MEMÓRIA, todas contra o MESMO conteúdo
+  original (regiões casadas precisam ser disjuntas, então o resultado não
+  depende da ordem), e só então viram ``FileWrite`` com o conteúdo final
+  COMPLETO. Uma edição inválida entre várias invalida a resolução inteira
+  — nenhum ``FileWrite`` chega a existir;
+- daí para a frente nada muda: o mesmo ``StructuredPatch``, a mesma
+  ``validar_patch_contra_allowed_files``, o mesmo ``aplicar_patch`` e o
+  mesmo diff real conferido contra ``allowed_files`` em
+  ``runner_dispatch.executar_tarefa``, o mesmo ledger global, o mesmo
+  Guard, o mesmo ``NEEDS-AUDIT``, o mesmo "nunca merge/deploy";
+- se não for possível localizar contexto confiável para o arquivo grande,
+  a tarefa BLOQUEIA antes de qualquer chamada — o Runner nunca adivinha
+  onde editar.
 
 **O que este módulo deliberadamente NÃO faz:** não aplica patch em disco;
 não comita/publica nada; não decide merge/publicação; não roda nenhum
@@ -112,13 +146,17 @@ comando de shell nem inicia processo externo algum (busca só ``os.path``/
 leitura de arquivo local); não faz retry automático; não liga nenhuma flag
 (``REPASSO_RUNNER_ENABLED`` continua exigido, exatamente como antes desta
 correção); não trunca/corta conteúdo de arquivo para enviar ao modelo
-(bloqueia a tarefa inteira em vez disso, correção B2-C).
+(correção B2-C — um arquivo grande vai por TRECHOS explicitamente
+marcados como tais, nunca como se fosse o arquivo todo, e "conteúdo
+completo" de arquivo grande continua recusado na volta; Issue #144).
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
+import unicodedata
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Protocol
@@ -129,7 +167,12 @@ from .budget import BudgetStatus, CallLimiter, UsageRecord, check_budget, estima
 from .models import ModelTier, resolve as resolve_model
 from .redact import redact
 from .runner_contract import RunnerTask
-from .runner_dispatch import RunnerDispatchConfig, StructuredPatch, validar_patch_contra_allowed_files
+from .runner_dispatch import (
+    FileWrite,
+    RunnerDispatchConfig,
+    StructuredPatch,
+    validar_patch_contra_allowed_files,
+)
 
 # Contexto mínimo (invariante 3): nunca envia o repositório inteiro, só o
 # conteúdo ATUAL dos próprios allowed_files, com o mesmo espírito de corte
@@ -137,15 +180,68 @@ from .runner_dispatch import RunnerDispatchConfig, StructuredPatch, validar_patc
 # porque é conteúdo de ARQUIVO completo, não um campo de evento.
 #
 # Correção B2-C (auditoria independente do PR #114, 2ª rodada): este limite
-# NUNCA mais trunca conteúdo enviado ao modelo — ver `_arquivos_grandes_
-# demais`/o bloqueio fail-closed em `gerar_patch_via_claude`. O system
-# prompt pede o conteúdo COMPLETO do arquivo; enviar uma versão cortada e
-# ainda assim aceitar de volta um "conteúdo completo" arriscaria
-# truncamento silencioso e destrutivo ao aplicar o patch. Nesta fase
-# canário, um allowed_file existente maior que isto BLOQUEIA a tarefa
-# inteira (zero chamada, zero patch) — edição por trecho/âncora para
-# arquivos grandes é uma evolução futura, fora desta rodada.
+# NUNCA trunca conteúdo enviado ao modelo. O system prompt de ``FileWrite``
+# pede o conteúdo COMPLETO do arquivo; enviar uma versão cortada e ainda
+# assim aceitar de volta um "conteúdo completo" arriscaria truncamento
+# silencioso e destrutivo ao aplicar o patch.
+#
+# Issue #144: este limite continua EXATAMENTE o mesmo (nunca foi ampliado)
+# e continua decidindo quem pode ser enviado INTEGRALMENTE ao modelo — o
+# que mudou é só o que acontece com quem excede: em vez de bloquear a
+# tarefa inteira pelo tamanho, o arquivo grande passa a ser tratado pelo
+# caminho ANCORADO (``AnchoredEdit``), em que só TRECHOS relevantes são
+# enviados e a resposta só pode substituir âncoras literais tiradas desses
+# trechos. ``FileWrite`` para um arquivo grande continua BLOQUEADO — o
+# modelo nunca viu o arquivo inteiro, então "conteúdo completo" vindo dele
+# continua sendo truncamento em potencial.
 MAX_FILE_CHARS_SENT = 20_000
+
+# ---------------------------------------------------------------------
+# Issue #144 — edição segura por trecho/âncora em arquivos grandes.
+#
+# O total enviado ao modelo continua conservador: por arquivo grande e no
+# somatório de todos eles. Estes tetos NUNCA são "o arquivo inteiro" —
+# são um orçamento de TRECHOS, e estourar o orçamento corta janelas (nunca
+# corta um trecho pelo meio, nunca envia o arquivo por completo).
+# ---------------------------------------------------------------------
+
+MAX_ANCHOR_CONTEXT_CHARS_PER_FILE = 12_000
+MAX_ANCHOR_CONTEXT_CHARS_TOTAL = 24_000
+MAX_ANCHOR_WINDOWS_PER_FILE = 8
+ANCHOR_WINDOW_CHARS_BEFORE = 700
+ANCHOR_WINDOW_CHARS_AFTER = 900
+
+# Um termo que aparece dezenas de vezes num HTML grande não LOCALIZA nada —
+# usá-lo como âncora de contexto produziria janelas espalhadas e sem
+# relação com a tarefa. Termos assim são descartados (e, se nenhum termo
+# sobrar, a tarefa BLOQUEIA: nunca adivinhar onde editar).
+MAX_KEYWORD_OCCURRENCES = 40
+MIN_KEYWORD_LEN = 4
+MAX_KEYWORDS = 24
+
+# Palavras genéricas de instrução (pt/es) que nunca localizam um trecho
+# específico dentro do HTML — só produziriam ruído.
+_STOPWORDS = frozenset(
+    """
+    para pelo pela pelos pelas como cada onde quando porque sobre entre desde ainda
+    todo toda todos todas esse essa esses essas este esta estes estas isso isto
+    aquele aquela aqueles aquelas mais menos muito muita muitos muitas deve devem
+    precisa precisam necessario necessaria favor seguir usar usando manter mantenha
+    fazer faca facam criar crie adicionar adicione incluir inclua inserir insira
+    remover remova alterar altere modificar modifique atualizar atualize corrigir
+    corrija melhorar melhore revisar revise reescrever garantir garanta arquivo
+    arquivos conteudo texto textos parte partes atual atuais tarefa instrucao
+    instrucoes pagina paginas site html sempre nunca apenas somente tambem depois
+    antes dentro fora sendo pode podem devera deveria caso qualquer outro outra
+    outros outras seja sejam estar estao mesmo mesma mesmos mesmas
+    """.split()
+)
+
+_TOKEN_RE = re.compile(r"[0-9A-Za-zÀ-ÿ_-]+")
+_ASPAS_RE = re.compile("[\"'«»“”]([^\"'«»“”\n]{4,120})[\"'«»“”]")
+_HEADING_RE = re.compile(r"<h[1-6]\b[^>]*>.*?</h[1-6]>", re.IGNORECASE | re.DOTALL)
+_ID_RE = re.compile(r"\bid\s*=\s*[\"'][^\"']{1,120}[\"']", re.IGNORECASE)
+_BLOCO_RE = re.compile(r"<(?:section|article|main|details|summary)\b[^>]*>", re.IGNORECASE)
 
 # Achado F8-C (Issue #105, Fase F, 7ª rodada): mesmo princípio de
 # ``coordinator.openai_budget.conservative_input_tokens_ceiling`` — contagem
@@ -221,6 +317,48 @@ _SYSTEM_PROMPT = (
     'segurança dentro dos caminhos permitidos, devolva exatamente {"files": []}.'
 )
 
+# Issue #144: usado SÓ quando algum allowed_file é grande demais para ser
+# enviado por inteiro. O contrato fica explicitamente com DUAS operações
+# tipadas — ``files``/FileWrite para arquivo pequeno (conteúdo completo,
+# exatamente como antes) e ``edits``/AnchoredEdit para arquivo grande
+# (substituição literal de uma âncora única). Continua sendo resposta
+# estruturada e tipada: nunca diff unificado, nunca shell, nunca texto
+# fora do JSON.
+_SYSTEM_PROMPT_ANCORADO = (
+    "Você é um gerador determinístico de patch estruturado para o Repasso Med "
+    "(Issue #105, Fase D; Issue #144). Devolva SOMENTE um objeto JSON válido, sem "
+    "nenhum texto antes ou depois, sem markdown, no formato EXATO:\n"
+    '{"files": [{"path": "<caminho>", "content": "<conteúdo COMPLETO do arquivo>"}], '
+    '"edits": [{"path": "<caminho>", "old_text": "<texto atual literal>", '
+    '"new_text": "<texto novo>"}]}\n'
+    "Os dois campos são opcionais, mas pelo menos um precisa vir preenchido, e um mesmo "
+    "'path' NUNCA pode aparecer nos dois.\n"
+    "- 'files' (FileWrite) é SÓ para os caminhos cujo conteúdo ATUAL foi enviado por "
+    "INTEIRO no prompt do usuário; 'content' é o conteúdo COMPLETO do arquivo final.\n"
+    "- 'edits' (AnchoredEdit) é OBRIGATÓRIO para os caminhos marcados como ARQUIVO "
+    "GRANDE, de que você recebeu apenas TRECHOS. Para esses, devolver 'files' é sempre "
+    "recusado, porque você não viu o arquivo inteiro.\n"
+    "- Todo 'old_text' precisa ser copiado LITERALMENTE de um dos trechos fornecidos, "
+    "caractere por caractere, e precisa ser longo/específico o bastante para existir "
+    "UMA ÚNICA vez no arquivo. Nunca invente uma âncora, nunca escreva de memória, "
+    "nunca use '...' nem abreviação dentro de 'old_text'.\n"
+    "Cada 'path' precisa ser EXATAMENTE um dos caminhos permitidos informados no prompt "
+    "do usuário — nunca um caminho novo, nunca um caminho fora dessa lista. Nunca um "
+    "diff/patch unificado, nunca um comando de shell, nunca explicação ou comentário "
+    "fora do JSON. Se não for possível cumprir a instrução com segurança dentro dos "
+    'caminhos e trechos permitidos, devolva exatamente {"files": [], "edits": []}.'
+)
+
+_REGRAS_ARQUIVO_GRANDE = (
+    "ATENÇÃO — há arquivo(s) GRANDE(S) nesta tarefa:\n"
+    "- o conteúdo integral desses arquivos NÃO foi enviado, e não será;\n"
+    "- só os trechos literais abaixo podem ser editados;\n"
+    "- a resposta para esses arquivos precisa usar 'edits' (AnchoredEdit), nunca 'files';\n"
+    "- 'old_text' precisa vir LITERALMENTE de um dos trechos fornecidos;\n"
+    "- nenhuma invenção de âncora: se o trecho necessário não estiver abaixo, não edite "
+    "esse arquivo."
+)
+
 
 def _ler_conteudo_atual(repo_dir: str, allowed_files: tuple[str, ...]) -> dict[str, str]:
     """Só lê os próprios ``allowed_files`` (invariante 3: nunca o
@@ -241,18 +379,408 @@ def _ler_conteudo_atual(repo_dir: str, allowed_files: tuple[str, ...]) -> dict[s
 
 def _arquivos_grandes_demais(current_contents: dict[str, str], *, limite: int = MAX_FILE_CHARS_SENT) -> list[str]:
     """Correção B2-C: quais ``allowed_files`` EXISTENTES excedem o limite
-    que pode ser enviado INTEGRALMENTE ao modelo. Não-vazio aqui precisa
-    bloquear a tarefa inteira ANTES de qualquer chamada — nunca truncar e
-    seguir adiante como se o modelo tivesse visto o arquivo por
-    completo."""
+    que pode ser enviado INTEGRALMENTE ao modelo.
+
+    Issue #144: continua sendo exatamente esta a fronteira — o que muda é
+    o tratamento. Um arquivo listado aqui NUNCA é enviado por inteiro e
+    NUNCA aceita ``FileWrite`` de volta; ele segue pelo caminho ANCORADO
+    (trechos + ``AnchoredEdit``), e só bloqueia a tarefa se nem contexto
+    confiável for possível extrair."""
     return sorted(c for c, texto in current_contents.items() if len(texto) > limite)
 
 
-def build_prompt(task: RunnerTask, current_contents: dict[str, str]) -> str:
-    """Monta o prompt com o conteúdo COMPLETO de cada allowed_file — nunca
-    cortado. Só é seguro chamar isto depois que `_arquivos_grandes_demais`
-    já confirmou que nenhum arquivo excede `MAX_FILE_CHARS_SENT` (ver
-    `gerar_patch_via_claude`); esta função em si não corta nada."""
+# ---------------------------------------------------------------------
+# Issue #144 — extração de contexto LOCAL para arquivo grande.
+#
+# Nunca manda o arquivo inteiro: localiza, pelas próprias estruturas do
+# HTML (headings, ids, blocos) e pelos termos da instrução da tarefa, as
+# regiões plausivelmente relevantes e envia só JANELAS literais ao redor
+# delas. Se nada confiável for localizado, quem chama BLOQUEIA — nunca
+# "manda um pedaço qualquer e torce".
+# ---------------------------------------------------------------------
+
+
+def _normalizar(texto: str) -> str:
+    """Minúsculas e sem acento PRESERVANDO os índices — o resultado tem
+    exatamente o mesmo comprimento do original, caractere a caractere,
+    então toda posição encontrada na versão normalizada vale diretamente
+    como posição no texto ORIGINAL (é do original que as janelas são
+    recortadas, literalmente, nunca da versão normalizada)."""
+    saida: list[str] = []
+    for ch in texto:
+        decomposto = unicodedata.normalize("NFD", ch)
+        base = decomposto[0] if decomposto else ch
+        minusculo = base.lower()
+        saida.append(minusculo if len(minusculo) == 1 else ch)
+    return "".join(saida)
+
+
+def _palavras_chave(instructions: str) -> list[str]:
+    """Termos da INSTRUÇÃO que podem localizar um trecho — nunca texto
+    livre do modelo, nunca conteúdo do arquivo."""
+    escolhidas: list[str] = []
+    for bruto in _TOKEN_RE.findall(_normalizar(instructions)):
+        palavra = bruto.strip("-_")
+        if len(palavra) < MIN_KEYWORD_LEN or palavra in _STOPWORDS:
+            continue
+        if palavra not in escolhidas:
+            escolhidas.append(palavra)
+        if len(escolhidas) >= MAX_KEYWORDS:
+            break
+    return escolhidas
+
+
+def _frases_ancora(instructions: str) -> list[str]:
+    """Trechos entre aspas na instrução ("o título X", 'bloco Y') são a
+    âncora mais forte que existe: quem escreveu a tarefa apontou o texto
+    literal. Valem mais que uma palavra solta na pontuação."""
+    frases: list[str] = []
+    for m in _ASPAS_RE.finditer(_normalizar(instructions)):
+        frase = m.group(1).strip()
+        if len(frase) >= MIN_KEYWORD_LEN and frase not in frases:
+            frases.append(frase)
+    return frases
+
+
+def _regioes_estruturais(conteudo_norm: str) -> list[tuple[int, int]]:
+    """As estruturas NATURAIS do HTML (headings, ids, blocos) — uma
+    ocorrência dentro de uma delas vale mais como âncora do que a mesma
+    palavra no meio de um parágrafo qualquer."""
+    regioes: list[tuple[int, int]] = []
+    for padrao in (_HEADING_RE, _ID_RE, _BLOCO_RE):
+        regioes.extend((m.start(), m.end()) for m in padrao.finditer(conteudo_norm))
+    return regioes
+
+
+def _dentro_de_estrutura(pos: int, regioes: list[tuple[int, int]]) -> bool:
+    return any(inicio <= pos < fim for inicio, fim in regioes)
+
+
+def _ocorrencias(
+    conteudo_norm: str, agulha: str, regioes: list[tuple[int, int]], *, base: int
+) -> list[tuple[int, int, int]]:
+    """``(score, posição, tamanho)`` de cada ocorrência. Um termo que
+    aparece demais não localiza nada: descartado por inteiro (lista
+    vazia), nunca usado "só nas primeiras ocorrências" — isso seria
+    escolher um trecho arbitrário."""
+    achados: list[tuple[int, int, int]] = []
+    inicio = 0
+    while True:
+        pos = conteudo_norm.find(agulha, inicio)
+        if pos < 0:
+            break
+        if len(achados) >= MAX_KEYWORD_OCCURRENCES:
+            return []
+        achados.append((base + (3 if _dentro_de_estrutura(pos, regioes) else 0), pos, len(agulha)))
+        inicio = pos + len(agulha)
+    return achados
+
+
+def _janela(conteudo: str, pos: int, tamanho: int) -> tuple[int, int]:
+    """Janela ao redor de uma âncora, alinhada a quebras de linha quando
+    isso não a faz crescer demais (HTML minificado, sem quebras, cairia
+    no arquivo inteiro se o alinhamento fosse incondicional)."""
+    inicio = max(0, pos - ANCHOR_WINDOW_CHARS_BEFORE)
+    fim = min(len(conteudo), pos + tamanho + ANCHOR_WINDOW_CHARS_AFTER)
+    bruto = fim - inicio
+
+    quebra_antes = conteudo.rfind("\n", 0, inicio)
+    inicio_alinhado = 0 if quebra_antes < 0 else quebra_antes + 1
+    quebra_depois = conteudo.find("\n", fim)
+    fim_alinhado = len(conteudo) if quebra_depois < 0 else quebra_depois
+
+    if (fim_alinhado - inicio_alinhado) <= bruto + 400:
+        return inicio_alinhado, fim_alinhado
+    return inicio, fim
+
+
+@dataclass(frozen=True)
+class TrechoAncorado:
+    """Um recorte LITERAL do arquivo atual, com a posição de onde saiu —
+    é exatamente isto (e só isto) que o modelo vê de um arquivo grande."""
+
+    inicio: int
+    fim: int
+    texto: str
+
+
+def extrair_trechos_ancorados(
+    conteudo: str,
+    instructions: str,
+    *,
+    limite_chars: int = MAX_ANCHOR_CONTEXT_CHARS_PER_FILE,
+    max_janelas: int = MAX_ANCHOR_WINDOWS_PER_FILE,
+) -> tuple[TrechoAncorado, ...]:
+    """Trechos relevantes do arquivo para esta instrução. Tupla VAZIA
+    significa "não foi possível localizar contexto confiável" — quem
+    chama precisa BLOQUEAR, nunca enviar um pedaço arbitrário."""
+    conteudo_norm = _normalizar(conteudo)
+    regioes = _regioes_estruturais(conteudo_norm)
+
+    candidatos: list[tuple[int, int, int]] = []
+    for frase in _frases_ancora(instructions):
+        candidatos.extend(_ocorrencias(conteudo_norm, frase, regioes, base=5))
+    for palavra in _palavras_chave(instructions):
+        candidatos.extend(_ocorrencias(conteudo_norm, palavra, regioes, base=1))
+    if not candidatos:
+        return ()
+
+    selecionadas: list[tuple[int, int]] = []
+    total = 0
+    for _score, pos, tamanho in sorted(candidatos, key=lambda c: (-c[0], c[1])):
+        if any(inicio <= pos < fim for inicio, fim in selecionadas):
+            continue
+        if len(selecionadas) >= max_janelas:
+            break
+        inicio, fim = _janela(conteudo, pos, tamanho)
+        if total + (fim - inicio) > limite_chars:
+            break
+        selecionadas.append((inicio, fim))
+        total += fim - inicio
+
+    if not selecionadas:
+        return ()
+
+    selecionadas.sort()
+    unidas: list[list[int]] = []
+    for inicio, fim in selecionadas:
+        if unidas and inicio <= unidas[-1][1]:
+            unidas[-1][1] = max(unidas[-1][1], fim)
+        else:
+            unidas.append([inicio, fim])
+    return tuple(TrechoAncorado(inicio=i, fim=f, texto=conteudo[i:f]) for i, f in unidas)
+
+
+# ---------------------------------------------------------------------
+# Issue #144 — a operação tipada de edição localizada.
+# ---------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class AnchoredEdit:
+    """Substituir ``old_text`` por ``new_text`` num arquivo permitido.
+
+    Deliberadamente NÃO é um diff unificado nem um comando de shell (as
+    mesmas razões de ``FileWrite``): é uma substituição literal, sem
+    contexto ambíguo, sem metacaractere, sem interpretação. A segurança
+    vem da UNICIDADE exigida de ``old_text`` no conteúdo atual — 0 ou mais
+    de 1 ocorrência é BLOCKED, nunca "a primeira que aparecer"."""
+
+    path: str
+    old_text: str
+    new_text: str
+
+    def __post_init__(self) -> None:
+        caminho = (self.path or "").strip()
+        if not caminho:
+            raise ValueError("AnchoredEdit.path não pode ser vazio.")
+        if caminho.startswith("/"):
+            raise ValueError(f"AnchoredEdit.path {caminho!r} não pode ser absoluto.")
+        if ".." in caminho.split("/"):
+            raise ValueError(f"AnchoredEdit.path {caminho!r} contém '..' — possível escape de diretório.")
+        if not isinstance(self.old_text, str) or not self.old_text:
+            raise ValueError("AnchoredEdit.old_text precisa ser texto não vazio — âncora vazia casaria em tudo.")
+        if not isinstance(self.new_text, str):
+            raise ValueError(
+                "AnchoredEdit.new_text precisa ser texto — patch estruturado nunca carrega shell/binário opaco."
+            )
+
+    def to_dict(self) -> dict:
+        return {"path": self.path, "old_text": self.old_text, "new_text": self.new_text}
+
+
+def anchored_edits_de_resposta(d: dict) -> tuple[AnchoredEdit, ...]:
+    """Lê o campo ``edits`` da resposta do modelo. Ausente/vazio = tupla
+    vazia (a resposta só usou ``files``); qualquer coisa malformada é
+    ``ValueError`` — nunca uma edição "interpretada"."""
+    brutos = d.get("edits")
+    if brutos is None:
+        return ()
+    if not isinstance(brutos, list):
+        raise ValueError(f"'edits' precisa ser uma lista, recebido {type(brutos).__name__}.")
+    edits: list[AnchoredEdit] = []
+    for item in brutos:
+        if not isinstance(item, dict):
+            raise ValueError(f"cada item de 'edits' precisa ser um objeto, recebido {type(item).__name__}.")
+        faltando = sorted({"path", "old_text", "new_text"} - set(item))
+        if faltando:
+            raise ValueError(f"AnchoredEdit sem campo(s) obrigatório(s): {faltando}")
+        edits.append(AnchoredEdit(path=item["path"], old_text=item["old_text"], new_text=item["new_text"]))
+    return tuple(edits)
+
+
+@dataclass(frozen=True)
+class ResolucaoAncorada:
+    """Tudo ou nada: ``ok=False`` significa ZERO ``FileWrite`` produzido —
+    uma edição inválida entre várias invalida a resolução inteira, para
+    todos os arquivos, antes de qualquer escrita existir."""
+
+    ok: bool
+    reason: str
+    files: tuple[FileWrite, ...] = ()
+
+
+def _posicoes_sobrepostas(texto: str, agulha: str, *, limite: int = 2) -> list[int]:
+    """Posições de ``agulha`` em ``texto`` contando OCORRÊNCIAS
+    SOBREPOSTAS, até ``limite``.
+
+    ``str.count`` conta só ocorrências não sobrepostas
+    (``"aaa".count("aa") == 1``, embora casem nas posições 0 e 1), o que
+    faria uma âncora genuinamente ambígua passar pela regra "exatamente
+    uma ocorrência" da Issue #144. A busca aqui avança 1 caractere por
+    match, então nenhuma ambiguidade escapa. Para no ``limite`` porque a
+    decisão só precisa distinguir 0, 1 e "mais de 1" — varrer um HTML de
+    megabytes inteiro depois disso seria trabalho jogado fora."""
+    posicoes: list[int] = []
+    inicio = 0
+    while len(posicoes) < limite:
+        pos = texto.find(agulha, inicio)
+        if pos < 0:
+            break
+        posicoes.append(pos)
+        inicio = pos + 1
+    return posicoes
+
+
+def resolver_anchored_edits(
+    edits: tuple[AnchoredEdit, ...],
+    *,
+    task: RunnerTask,
+    current_contents: dict[str, str],
+    trechos_por_arquivo: dict[str, tuple[TrechoAncorado, ...]] | None = None,
+) -> ResolucaoAncorada:
+    """Aplica as edições EM MEMÓRIA sobre o conteúdo atual e devolve o
+    conteúdo FINAL COMPLETO de cada arquivo tocado, como ``FileWrite`` —
+    quem grava continua sendo só ``runner_dispatch.aplicar_patch``, depois
+    da mesma validação de allowed_files e do mesmo diff real de sempre.
+
+    Regras (Issue #144), todas fail-closed:
+
+    1. ``path`` precisa estar EXATAMENTE em ``task.allowed_files``;
+    2. o arquivo precisa existir (não se ancora no que não existe);
+    3. num arquivo GRANDE (o que tem trechos em ``trechos_por_arquivo``),
+       ``old_text`` precisa estar contido INTEIRO em algum dos trechos
+       que foram de fato enviados ao modelo — o modelo só pode editar o
+       que viu. Sem isto, uma âncora alucinada que por acaso fosse única
+       em outra região do arquivo alteraria uma parte que o modelo nunca
+       leu (achado 1 da auditoria independente do HEAD 6bcce53);
+    4. ``old_text`` precisa existir EXATAMENTE UMA vez no conteúdo atual —
+       0 ocorrência BLOQUEIA (âncora inventada), 2+ BLOQUEIAM (ambígua),
+       contando também ocorrências SOBREPOSTAS (achado 2 da mesma
+       auditoria, ver ``_posicoes_sobrepostas``);
+    5. várias edições no mesmo arquivo só passam se as regiões casadas
+       forem DISJUNTAS — todas resolvidas contra o MESMO conteúdo
+       original, então o resultado não depende da ordem de aplicação;
+    6. nada é produzido até que TODAS as edições de TODOS os arquivos
+       tenham validado."""
+    if not edits:
+        return ResolucaoAncorada(ok=True, reason="nenhuma AnchoredEdit na resposta.")
+
+    trechos_por_arquivo = trechos_por_arquivo or {}
+
+    permitidos = set(task.allowed_files)
+    fora = sorted({e.path for e in edits if e.path not in permitidos})
+    if fora:
+        return ResolucaoAncorada(
+            ok=False,
+            reason=(
+                f"AnchoredEdit declara caminho(s) fora de allowed_files: {fora} — rejeitado antes de "
+                "qualquer resolução; zero escrita."
+            ),
+        )
+
+    ausentes = sorted({e.path for e in edits if e.path not in current_contents})
+    if ausentes:
+        return ResolucaoAncorada(
+            ok=False,
+            reason=(
+                f"AnchoredEdit em arquivo(s) que não existe(m) no checkout atual: {ausentes} — não há "
+                "conteúdo onde ancorar; use FileWrite para criar arquivo novo. Zero escrita."
+            ),
+        )
+
+    por_arquivo: dict[str, list[AnchoredEdit]] = {}
+    for edit in edits:
+        por_arquivo.setdefault(edit.path, []).append(edit)
+
+    resultados: list[FileWrite] = []
+    for caminho in sorted(por_arquivo):
+        original = current_contents[caminho]
+        spans: list[tuple[int, int, str]] = []
+        trechos_enviados = trechos_por_arquivo.get(caminho, ())
+        for indice, edit in enumerate(por_arquivo[caminho], 1):
+            # Achado 1 da auditoria: num arquivo grande, o modelo só viu
+            # trechos — uma âncora que não esteja INTEIRA dentro de um
+            # deles é, por definição, uma âncora que ele não leu, mesmo
+            # que por acaso seja única no arquivo. Editar ali mudaria uma
+            # região invisível ao modelo. Fail-closed.
+            if trechos_enviados and not any(edit.old_text in t.texto for t in trechos_enviados):
+                return ResolucaoAncorada(
+                    ok=False,
+                    reason=(
+                        f"AnchoredEdit #{indice} de {caminho!r}: 'old_text' não está contido em nenhum "
+                        "dos trechos que foram enviados ao modelo — âncora fora do que o modelo leu "
+                        "(arquivo grande), BLOCKED, zero escrita em qualquer arquivo."
+                    ),
+                )
+
+            posicoes = _posicoes_sobrepostas(original, edit.old_text)
+            if not posicoes:
+                return ResolucaoAncorada(
+                    ok=False,
+                    reason=(
+                        f"AnchoredEdit #{indice} de {caminho!r}: 'old_text' não existe no conteúdo atual "
+                        "(âncora inventada ou o arquivo mudou) — BLOCKED, zero escrita em qualquer arquivo."
+                    ),
+                )
+            if len(posicoes) > 1:
+                return ResolucaoAncorada(
+                    ok=False,
+                    reason=(
+                        f"AnchoredEdit #{indice} de {caminho!r}: 'old_text' aparece mais de uma vez no "
+                        "conteúdo atual (inclusive contando ocorrências sobrepostas) — substituição "
+                        "ambígua, BLOCKED, zero escrita em qualquer arquivo."
+                    ),
+                )
+            inicio = posicoes[0]
+            spans.append((inicio, inicio + len(edit.old_text), edit.new_text))
+
+        spans.sort()
+        for anterior, seguinte in zip(spans, spans[1:]):
+            if seguinte[0] < anterior[1]:
+                return ResolucaoAncorada(
+                    ok=False,
+                    reason=(
+                        f"{caminho!r}: duas AnchoredEdit casam regiões que se sobrepõem — o resultado "
+                        "dependeria da ordem de aplicação, o que não é determinístico. BLOCKED, zero escrita."
+                    ),
+                )
+
+        final = original
+        for inicio, fim, novo in reversed(spans):
+            final = final[:inicio] + novo + final[fim:]
+        resultados.append(FileWrite(path=caminho, content=final))
+
+    return ResolucaoAncorada(
+        ok=True,
+        reason=f"{len(edits)} AnchoredEdit resolvida(s) em memória sobre {len(resultados)} arquivo(s).",
+        files=tuple(resultados),
+    )
+
+
+def build_prompt(
+    task: RunnerTask,
+    current_contents: dict[str, str],
+    trechos_por_arquivo: dict[str, tuple[TrechoAncorado, ...]] | None = None,
+) -> str:
+    """Monta o prompt com o conteúdo COMPLETO de cada allowed_file pequeno
+    — nunca cortado — e, para cada arquivo listado em
+    ``trechos_por_arquivo``, SOMENTE os trechos literais já extraídos
+    (Issue #144): o arquivo grande nunca entra por inteiro, em nenhuma
+    circunstância. Esta função nunca corta um conteúdo por conta própria:
+    ou o arquivo veio inteiro em ``current_contents`` e é pequeno, ou veio
+    como trechos, decididos antes por ``gerar_patch_via_claude``."""
+    trechos_por_arquivo = trechos_por_arquivo or {}
     partes = [
         f"Instrução da tarefa (task_id={task.task_id}):",
         task.instructions.strip(),
@@ -261,8 +789,24 @@ def build_prompt(task: RunnerTask, current_contents: dict[str, str]) -> str:
     ]
     partes.extend(f"- {c}" for c in task.allowed_files)
     partes.append("")
+    if trechos_por_arquivo:
+        partes.append(_REGRAS_ARQUIVO_GRANDE)
+        partes.append("")
     partes.append("Conteúdo ATUAL de cada caminho ('(arquivo não existe ainda)' se vazio):")
     for caminho in task.allowed_files:
+        trechos = trechos_por_arquivo.get(caminho)
+        if trechos:
+            tamanho = len(current_contents.get(caminho, ""))
+            partes.append(
+                f"--- {caminho} (ARQUIVO GRANDE: {tamanho} caracteres — NÃO enviado por inteiro; "
+                f"{len(trechos)} trecho(s) literal(is) abaixo, use AnchoredEdit) ---"
+            )
+            for indice, trecho in enumerate(trechos, 1):
+                partes.append(
+                    f"[trecho {indice} — caracteres {trecho.inicio}..{trecho.fim} do arquivo, cópia literal]"
+                )
+                partes.append(trecho.texto)
+            continue
         partes.append(f"--- {caminho} ---")
         conteudo = current_contents.get(caminho, "")
         partes.append(conteudo if conteudo else "(arquivo não existe ainda)")
@@ -367,27 +911,48 @@ def gerar_patch_via_claude(
 
     contexto = _ler_conteudo_atual(repo_dir, task.allowed_files)
 
-    # Camada 4 (correção B2-C): fail-closed ANTES de montar o prompt ou
-    # chamar o modelo — um allowed_file existente maior do que o que pode
-    # ser enviado integralmente nunca é enviado parcialmente/cortado. O
-    # system prompt pede o conteúdo COMPLETO de volta; se o modelo não viu
-    # o arquivo inteiro, aceitar uma resposta "completa" arriscaria
-    # truncamento silencioso e destrutivo ao aplicar o patch.
+    # Camada 4 (correção B2-C + Issue #144): um allowed_file existente
+    # maior do que pode ser enviado integralmente NUNCA é enviado
+    # parcialmente/cortado como se fosse o arquivo todo. Em vez de
+    # bloquear pelo tamanho, esses arquivos passam pelo caminho ANCORADO:
+    # só TRECHOS literais, localizados pela instrução da tarefa e pelas
+    # estruturas do próprio HTML, e a resposta para eles só pode ser
+    # AnchoredEdit (o bloqueio de FileWrite em arquivo grande, mais
+    # abaixo, é o que preserva a garantia anti-truncamento do B2-C).
+    #
+    # Se o contexto confiável não puder ser localizado, BLOQUEIA aqui
+    # mesmo — zero chamada, zero patch, nunca um pedaço arbitrário.
     grandes_demais = _arquivos_grandes_demais(contexto)
-    if grandes_demais:
-        return _outcome_bloqueado(
-            f"arquivo(s) existente(s) excede(m) o limite que pode ser enviado integralmente ao "
-            f"modelo ({MAX_FILE_CHARS_SENT} caracteres): {grandes_demais}. Fail-closed nesta fase "
-            "canário (correção B2-C, auditoria independente do PR #114): nenhuma chamada foi feita, "
-            "nenhum patch foi gerado, zero escrita. Edição por trecho/âncora para arquivos grandes "
-            "é uma evolução futura, fora desta rodada."
-        )
+    trechos_por_arquivo: dict[str, tuple[TrechoAncorado, ...]] = {}
+    orcamento_restante = MAX_ANCHOR_CONTEXT_CHARS_TOTAL
+    for caminho in grandes_demais:
+        limite_deste = min(MAX_ANCHOR_CONTEXT_CHARS_PER_FILE, orcamento_restante)
+        if limite_deste <= 0:
+            return _outcome_bloqueado(
+                f"o orçamento total de contexto ancorado ({MAX_ANCHOR_CONTEXT_CHARS_TOTAL} caracteres) "
+                f"acabou antes de chegar em {caminho!r} — há arquivos grandes demais nesta tarefa para "
+                "uma única chamada. Fail-closed (Issue #144): nenhuma chamada foi feita, zero escrita. "
+                "Divida a tarefa em allowed_files menores."
+            )
+        trechos = extrair_trechos_ancorados(contexto[caminho], task.instructions, limite_chars=limite_deste)
+        if not trechos:
+            return _outcome_bloqueado(
+                f"arquivo grande {caminho!r} ({len(contexto[caminho])} caracteres, acima de "
+                f"{MAX_FILE_CHARS_SENT}): não foi possível localizar contexto suficientemente "
+                "confiável para uma edição ancorada a partir da instrução desta tarefa. Fail-closed "
+                "(Issue #144): nenhuma chamada foi feita, nenhum patch foi gerado, zero escrita — o "
+                "Runner nunca adivinha onde editar nem envia o arquivo inteiro. Torne a instrução "
+                "mais específica (cite o título, o id ou o texto literal do bloco a alterar)."
+            )
+        trechos_por_arquivo[caminho] = trechos
+        orcamento_restante -= sum(t.fim - t.inicio for t in trechos)
 
-    prompt = build_prompt(task, contexto)
+    prompt = build_prompt(task, contexto, trechos_por_arquivo)
+    system_prompt = _SYSTEM_PROMPT_ANCORADO if trechos_por_arquivo else _SYSTEM_PROMPT
 
     model_choice = resolve_model(ModelTier.STANDARD)
     limiter = CallLimiter()
-    pedido = anthropic_client.build_request(model_choice, system=_SYSTEM_PROMPT, prompt=prompt, limiter=limiter)
+    pedido = anthropic_client.build_request(model_choice, system=system_prompt, prompt=prompt, limiter=limiter)
     transporte_real = transport if transport is not None else AnthropicTransport()
 
     # Achado F8-C (Issue #105, Fase F, 7ª rodada, auditoria independente):
@@ -405,7 +970,7 @@ def gerar_patch_via_claude(
     # um instante depois já vê o gasto reservado por esta, então as duas
     # juntas nunca ultrapassam o teto.
     custo_reservado = _conservative_call_cost_usd(
-        system=_SYSTEM_PROMPT, prompt=prompt, max_output_tokens=pedido.max_output_tokens,
+        system=system_prompt, prompt=prompt, max_output_tokens=pedido.max_output_tokens,
     )
     registro_reserva = UsageRecord(
         timestamp=_now_iso(), event_key=f"runner-task:{task.task_id}", tier=model_choice.tier.value,
@@ -517,8 +1082,77 @@ def gerar_patch_via_claude(
             ledger_correction_failed=ledger_correction_failed,
         )
 
+    # Issue #144: a resposta pode trazer 'files' (FileWrite, arquivo
+    # pequeno — o caminho de sempre, inalterado) e/ou 'edits'
+    # (AnchoredEdit, arquivo grande). Sem 'edits', tudo abaixo se comporta
+    # EXATAMENTE como antes desta rodada.
     try:
-        patch = StructuredPatch.from_dict(dados)
+        edits = anchored_edits_de_resposta(dados)
+    except ValueError as exc:
+        return GenerateOutcome(
+            status="failed",
+            reason=f"campo 'edits' da resposta é inválido (fail-closed, nunca parcial): {exc}{nota_ledger}",
+            usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
+        )
+
+    try:
+        patch_de_arquivos = StructuredPatch.from_dict(dados) if dados.get("files") else None
+    except (ValueError, KeyError, TypeError) as exc:
+        return GenerateOutcome(
+            status="failed",
+            reason=f"patch estruturado da resposta é inválido (fail-closed, nunca parcial): {exc}{nota_ledger}",
+            usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
+        )
+
+    escritas_completas = patch_de_arquivos.files if patch_de_arquivos else ()
+
+    # Garantia anti-truncamento (correção B2-C, preservada): o modelo só
+    # viu TRECHOS de um arquivo grande, então um "conteúdo completo" dele
+    # é truncamento em potencial — recusado sempre, venha de onde vier.
+    grandes_com_filewrite = sorted({fw.path for fw in escritas_completas if fw.path in trechos_por_arquivo})
+    if grandes_com_filewrite:
+        return GenerateOutcome(
+            status="blocked",
+            reason=(
+                f"resposta devolveu FileWrite (conteúdo completo) para arquivo(s) grande(s) "
+                f"{grandes_com_filewrite}, de que só trechos foram enviados — recusado para nunca "
+                f"truncar o arquivo; esses caminhos só aceitam AnchoredEdit.{nota_ledger}"
+            ),
+            usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
+        )
+
+    caminhos_em_ambos = sorted({fw.path for fw in escritas_completas} & {e.path for e in edits})
+    if caminhos_em_ambos:
+        return GenerateOutcome(
+            status="blocked",
+            reason=(
+                f"resposta declara o(s) mesmo(s) caminho(s) em 'files' e em 'edits': "
+                f"{caminhos_em_ambos} — o resultado seria ambíguo. Rejeitado, zero escrita.{nota_ledger}"
+            ),
+            usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
+        )
+
+    # Resolução EM MEMÓRIA — tudo ou nada. Uma edição inválida entre
+    # várias derruba a resolução inteira, e nenhum FileWrite chega a
+    # existir (muito menos a ser gravado: quem grava é aplicar_patch, lá
+    # no runner_dispatch, e só depois de todo este caminho).
+    resolucao = resolver_anchored_edits(
+        edits, task=task, current_contents=contexto, trechos_por_arquivo=trechos_por_arquivo,
+    )
+    if not resolucao.ok:
+        return GenerateOutcome(
+            status="blocked",
+            reason=f"{resolucao.reason}{nota_ledger}",
+            usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
+        )
+
+    try:
+        patch = StructuredPatch(files=tuple(escritas_completas) + resolucao.files)
     except ValueError as exc:
         return GenerateOutcome(
             status="failed",
@@ -537,9 +1171,10 @@ def gerar_patch_via_claude(
             ledger_correction_failed=ledger_correction_failed,
         )
 
+    detalhe_ancoras = f" ({len(edits)} AnchoredEdit resolvida(s) em memória)" if edits else ""
     return GenerateOutcome(
         status="ok",
-        reason=f"patch gerado via Claude e validado contra allowed_files.{nota_ledger}",
+        reason=f"patch gerado via Claude e validado contra allowed_files{detalhe_ancoras}.{nota_ledger}",
         patch=patch, usage=resultado_chamada.usage, external_call_made=True,
         ledger_correction_failed=ledger_correction_failed,
     )
