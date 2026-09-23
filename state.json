@@ -210,10 +210,10 @@
       "current_task": "infra-worker-bridge-pilot-r2",
       "display_name": "Claude Worker 4",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-23T17:56:00.816555+00:00",
+      "last_heartbeat": "2026-09-23T18:23:03.753881+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "AVAILABLE",
+      "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-4"
     }
