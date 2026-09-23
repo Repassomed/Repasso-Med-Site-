@@ -252,6 +252,10 @@ jobs:
             --worker-state-git-remote "$REMOTO_COM_TOKEN" \
             --out /tmp/canary-bootstrap.json
 
+      - name: Preflight da suíte do Coordinator (ZERO API, antes do claim)
+        run: |
+          python3 -m coordinator.tests.run_all
+
       - name: Rodar o Runner Dispatch sobre a RunnerTask do canário
         id: runner
         env:
