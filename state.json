@@ -10,7 +10,8 @@
     "runner-task:infra-worker-bridge-pilot--bridge-a5d13d138577",
     "runner-task:infra-worker-bridge-pilot-r2--bridge-8d97323dc1f0",
     "runner-task:fisiopatologia-ii-issue101--bridge-058b562d63d4",
-    "runner-task:fisiopatologia-ii-issue101-r2--bridge-d76534086233"
+    "runner-task:fisiopatologia-ii-issue101-r2--bridge-d76534086233",
+    "runner-task:semiologia-ii-b05-b10-gaps--bridge-bc26f4a32fa3"
   ],
   "results": [
     {
