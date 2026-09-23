@@ -167,6 +167,16 @@
       "recorded_at": "2026-09-23T23:45:48.547391+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "semiologia-ii-b07-framingham-r3--bridge-5f7404907fab"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "resposta do modelo n\u00e3o \u00e9 um JSON v\u00e1lido \u2014 Resposta malformada nunca \u00e9 aplicada parcialmente.",
+      "recorded_at": "2026-09-23T23:54:26.777095+00:00",
+      "status": "FAILED",
+      "task_id": "dermatologia-questoes-issue112-r2--bridge-14734f3fa04a"
     }
   ]
 }
