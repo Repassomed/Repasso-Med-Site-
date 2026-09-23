@@ -1604,6 +1604,162 @@ def test_modos_do_bridge_sao_os_mesmos_valores_em_todo_lugar() -> None:
     print("OK  test_modos_do_bridge_sao_os_mesmos_valores_em_todo_lugar")
 
 
+def test_b4_retomada_do_guard_e_executada_por_um_ciclo_de_manutencao() -> None:
+    """Achado da 2ª auditoria independente do PR #129: o estado ``FAILED``
+    era recuperável, mas nada executava a recuperação — a tarefa fica
+    ``NEEDS-AUDIT``, que é justamente o estado que a mantém fora da fila
+    READY, então o scheduler nunca a ofereceria de novo.
+
+    O cenário completo, na ordem que a auditoria exigiu:
+    execução normal -> NEEDS-AUDIT -> PR criada -> 1º dispatch do Guard
+    falha -> novo ciclo faz ZERO chamadas Anthropic e tenta SÓ o Guard ->
+    2º dispatch passa -> 3º ciclo não duplica."""
+    class _ApiComGuardQuebrado(_FakeGitHubApi):
+        quebrado = True
+
+        def despachar_workflow(self, *, arquivo: str, ref: str, inputs: dict) -> None:
+            if self.quebrado:
+                raise bridge_pr.GitHubBridgeApiError("500 simulado do GitHub")
+            super().despachar_workflow(arquivo=arquivo, ref=ref, inputs=inputs)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        api = _ApiComGuardQuebrado()
+        remoto = _criar_remoto_local(tmp)
+        caminho_tasks = _escrever_tasks_json(tmp, [_tarefa()])
+        cfg = _config()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+
+        def rodar(nome_workdir: str, **extra):
+            return worker_bridge.executar_ciclo(
+                config=cfg, tasks_json_path=caminho_tasks,
+                repo_dir=_clonar_workdir(tmp, remoto, nome_workdir),
+                state_git_remote=remoto, worker_registry=registry, runtime_store=store,
+                base_branch="bootstrap", github_api=api, validation_command_keys=(),
+                **extra,
+            )
+
+        # 1. execução normal -> NEEDS-AUDIT, PR criada, Guard FALHA.
+        primeiro = rodar("work-1", patch=_patch_padrao())
+        assert primeiro.action == "DISPATCHED", primeiro
+        assert primeiro.pr is not None and primeiro.pr.pr_number is not None
+        pr_number = primeiro.pr.pr_number
+        assert primeiro.guard is not None and primeiro.guard.action == "FAILED", primeiro.guard
+        registro = store.get("infra-bridge-teste")
+        assert registro is not None
+        assert registro.status == task_runtime.RUNTIME_NEEDS_AUDIT
+        assert registro.guard_dispatch_status == task_runtime.GUARD_DISPATCH_FAILED
+        assert registro.guard_retomada_pendente is True
+        assert len(api.criadas) == 1
+
+        # 2. novo ciclo: ZERO chamada paga e SÓ o Guard é tentado. A
+        #    sentinela falha o teste se qualquer geração acontecer.
+        api.quebrado = False
+        segundo = rodar("work-2", patch=None, gerar_patch=_GeracaoProibida())
+        assert segundo.action == "GUARD_RETRY", segundo
+        assert segundo.guard is not None and segundo.guard.action == "DISPATCHED", segundo.guard
+        assert segundo.dispatch is None, "nenhum Runner pode ter sido executado na manutenção"
+        assert segundo.runner_task is None
+        # Nenhuma PR nova.
+        assert len(api.criadas) == 1, api.criadas
+        # O Guard foi despachado para a PR que JÁ existia.
+        assert api.dispatches[-1][2] == {"pr_number": str(pr_number)}, api.dispatches
+        registro = store.get("infra-bridge-teste")
+        assert registro is not None
+        assert registro.guard_confirmado is True
+        assert registro.guard_dispatch_attempts == 2, registro.guard_dispatch_attempts
+        # A tarefa NÃO foi reaberta nem teve branch/checkpoint mexidos.
+        assert registro.status == task_runtime.RUNTIME_NEEDS_AUDIT
+        assert registro.branch == "runner/infra-bridge-teste"
+        assert registro.pr_number == pr_number
+        assert registro.execution_task_id == primeiro.runtime_record.execution_task_id
+        # Nenhuma tarefa/claim NOVA: o estado operacional continua com um
+        # único registro, o da execução original.
+        assert [r.canonical_task_id for r in store.list_records()] == ["infra-bridge-teste"], (
+            store.list_records()
+        )
+        # E nenhuma branch nova foi publicada no remoto pela manutenção.
+        branches = subprocess.run(
+            ["git", "-C", remoto, "branch", "--format=%(refname:short)"],
+            capture_output=True, text=True, check=True,
+        ).stdout.split()
+        assert sorted(branches) == sorted([
+            "bootstrap", "coordinator-state-runner", "runner/infra-bridge-teste",
+        ]), branches
+
+        # 3. terceiro ciclo: nada a retomar, nenhum Guard duplicado.
+        antes = len(api.dispatches)
+        terceiro = rodar("work-3", patch=None, gerar_patch=_GeracaoProibida())
+        assert terceiro.action in ("NO_ASSIGNMENT", "POOL_PAUSED", "BLOCKED"), terceiro
+        assert len(api.dispatches) == antes, api.dispatches
+        assert len(api.criadas) == 1, api.criadas
+    print("OK  test_b4_retomada_do_guard_e_executada_por_um_ciclo_de_manutencao")
+
+
+def test_b4_retomada_do_guard_respeita_o_portao_do_piloto() -> None:
+    """A manutenção obedece à mesma restrição estrita de identidade que a
+    execução: em modo piloto, uma tarefa que não é a piloto nunca é
+    candidata — nem para retomar o Guard."""
+    store = _runtime_store()
+    reserva = store.reservar("outra-tarefa", worker_id=PILOT_WORKER, branch="runner/outra-tarefa")
+    assert reserva.reservado and reserva.record is not None
+    store.registrar_resultado(
+        "outra-tarefa", status=task_runtime.RUNTIME_NEEDS_AUDIT, worker_id=PILOT_WORKER,
+        execution_task_id=reserva.record.execution_task_id or "", reason="ok",
+        checkpoint_commit="abcdef1",
+    )
+    store.registrar_pr("outra-tarefa", pr_number=404, esperado_status=task_runtime.RUNTIME_NEEDS_AUDIT)
+    store.reservar_guard_dispatch("outra-tarefa", pr_number=404)
+    store.falhar_guard_dispatch("outra-tarefa", pr_number=404)
+
+    registros = store.por_id()
+    assert registros["outra-tarefa"].guard_retomada_pendente is True
+
+    # Em modo piloto (tarefa piloto = infra-bridge-teste): não é candidata.
+    assert worker_bridge.candidato_a_retomada_do_guard(registros, _config()) is None
+    # Em active-supervised: é candidata, porque ali a fila confiável decide.
+    escolhida = worker_bridge.candidato_a_retomada_do_guard(
+        registros, _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+    )
+    assert escolhida is not None and escolhida.canonical_task_id == "outra-tarefa"
+    print("OK  test_b4_retomada_do_guard_respeita_o_portao_do_piloto")
+
+
+def test_b4_retomada_nao_pega_tarefa_sem_pr_nem_guard_ja_confirmado() -> None:
+    """O predicado é estreito de propósito: sem PR registrada não há o que
+    despachar, e um Guard já confirmado nunca volta a ser candidato."""
+    store = _runtime_store()
+
+    # (a) NEEDS-AUDIT sem PR -> não é candidata.
+    r1 = store.reservar("sem-pr", worker_id=PILOT_WORKER, branch="runner/sem-pr")
+    store.registrar_resultado(
+        "sem-pr", status=task_runtime.RUNTIME_NEEDS_AUDIT, worker_id=PILOT_WORKER,
+        execution_task_id=(r1.record.execution_task_id if r1.record else "") or "", reason="ok",
+        checkpoint_commit="abcdef1",
+    )
+    # (b) IN-PROGRESS com PR -> não é candidata (ainda executando).
+    store.reservar("em-progresso", worker_id=PILOT_WORKER, branch="runner/em-progresso")
+    store.registrar_pr("em-progresso", pr_number=11, esperado_status=task_runtime.RUNTIME_IN_PROGRESS)
+    # (c) NEEDS-AUDIT com PR e Guard CONFIRMADO -> não é candidata.
+    r3 = store.reservar("confirmada", worker_id=PILOT_WORKER, branch="runner/confirmada")
+    store.registrar_resultado(
+        "confirmada", status=task_runtime.RUNTIME_NEEDS_AUDIT, worker_id=PILOT_WORKER,
+        execution_task_id=(r3.record.execution_task_id if r3.record else "") or "", reason="ok",
+        checkpoint_commit="abcdef1",
+    )
+    store.registrar_pr("confirmada", pr_number=22, esperado_status=task_runtime.RUNTIME_NEEDS_AUDIT)
+    store.reservar_guard_dispatch("confirmada", pr_number=22)
+    store.confirmar_guard_dispatch("confirmada", pr_number=22)
+
+    registros = store.por_id()
+    for task_id in ("sem-pr", "em-progresso", "confirmada"):
+        assert registros[task_id].guard_retomada_pendente is False, task_id
+    assert worker_bridge.candidato_a_retomada_do_guard(
+        registros, _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+    ) is None
+    print("OK  test_b4_retomada_nao_pega_tarefa_sem_pr_nem_guard_ja_confirmado")
+
+
 def main() -> int:
     testes = [
         test_bridge_desligado_nao_faz_nada,
@@ -1672,6 +1828,9 @@ def main() -> int:
         test_b4_falha_no_primeiro_dispatch_do_guard_e_recuperavel,
         test_b4_pendente_orfao_pode_ser_retomado_mas_confirmado_nunca,
         test_b4_registro_antigo_sem_status_e_lido_como_despachado,
+        test_b4_retomada_do_guard_e_executada_por_um_ciclo_de_manutencao,
+        test_b4_retomada_do_guard_respeita_o_portao_do_piloto,
+        test_b4_retomada_nao_pega_tarefa_sem_pr_nem_guard_ja_confirmado,
         test_b4_ciclo_real_registra_a_falha_do_guard_e_permite_retomada,
         test_b5_piloto_nunca_inicia_por_evento,
         test_b5_evento_e_aceito_somente_em_active_supervised,

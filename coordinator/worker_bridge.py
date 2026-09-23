@@ -45,6 +45,11 @@ operações e o registro do resultado.
     ``restringir_ao_piloto`` ainda tira as OUTRAS tarefas da lista de
     candidatas, para que o piloto nunca perca a vez (correção B1 do
     PR #129);
+3-A. MANUTENÇÃO antes de execução: se alguma tarefa já terminada tem PR
+    aberta e Guard não confirmado (``FAILED``/``PENDING``), o ciclo
+    despacha SÓ o Guard e termina — zero chamada paga, nenhuma PR nova,
+    nenhuma tarefa nova consumida. É o caminho de recuperação que o
+    estado da correção B4 exige para não ficar preso;
  4. filtra SÓ workers programáticos (``bridge_workers.
     workers_programaticos``) — uma sessão humana nunca é iniciada por
     código, e os ``api_runner`` do canário não são sequestrados;
@@ -796,7 +801,12 @@ class BridgeOutcome:
     - ``ALREADY_CLAIMED``: outra execução reservou a tarefa primeiro —
       zero chamada paga;
     - ``DISPATCHED``: a tarefa foi reservada e entregue ao Runner (o
-      resultado real está em ``dispatch``/``runtime_record``).
+      resultado real está em ``dispatch``/``runtime_record``);
+    - ``GUARD_RETRY``: MANUTENÇÃO, não execução. O ciclo encontrou uma
+      tarefa que já terminou e já tem PR, mas cujo Guard nunca foi
+      confirmado, e tentou APENAS o disparo do Guard. Zero chamada paga,
+      nenhuma PR nova, nenhuma tarefa nova consumida (achado da 2ª
+      auditoria independente do PR #129).
     """
 
     action: str
@@ -841,6 +851,99 @@ def visao_da_fila(
     metadados = carregar_metadados_de_automacao(tasks_json_path)
     registros = runtime_store.por_id()
     return task_runtime.aplicar_runtime_em_tarefas(declarativas, registros), metadados, registros
+
+
+def candidato_a_retomada_do_guard(
+    registros: dict[str, TaskRuntimeRecord], config: WorkerBridgeConfig
+) -> TaskRuntimeRecord | None:
+    """Achado da 2ª auditoria independente do PR #129.
+
+    A correção B4 tornou o estado do disparo do Guard RECUPERÁVEL
+    (``FAILED``/``PENDING`` autorizam uma nova tentativa), mas não existia
+    caminho que EXECUTASSE a recuperação: depois de um sucesso a tarefa
+    fica ``NEEDS-AUDIT``, e é justamente esse estado que a mantém fora da
+    fila ``READY`` — então o scheduler nunca a ofereceria de novo e
+    ``_abrir_pr_e_guard`` nunca seria chamado outra vez. Estado
+    recuperável sem caminho de recuperação é o mesmo defeito, um passo
+    mais tarde.
+
+    Esta função é o predicado de busca, e nada além disso. Escolha
+    DETERMINÍSTICA (ordem por ``canonical_task_id``, nunca a ordem de
+    iteração de um dict), e em modo ``pilot`` só a própria tarefa piloto é
+    candidata — a mesma restrição estrita de identidade que vale para
+    execução vale para manutenção."""
+    candidatos = [
+        r for r in registros.values()
+        if r.guard_retomada_pendente
+        and (not config.is_pilot or r.canonical_task_id == (config.pilot_task_id or "").strip())
+    ]
+    if not candidatos:
+        return None
+    return sorted(candidatos, key=lambda r: r.canonical_task_id)[0]
+
+
+def retomar_guard(
+    registro: TaskRuntimeRecord, *,
+    runtime_store: TaskRuntimeStore,
+    github_api: bridge_pr.GitHubBridgeApi,
+    base_branch: str,
+) -> BridgeOutcome:
+    """A ação de MANUTENÇÃO: tenta SÓ o disparo do Guard para a PR que já
+    existe, e termina o ciclo.
+
+    O que ela deliberadamente NÃO faz, ponto por ponto: não chama o
+    Runner nem modelo nenhum (nenhuma chamada paga acontece neste
+    caminho — não há closure de geração aqui); não cria nem procura outra
+    PR (usa o ``pr_number`` já registrado); não toca ``task_id``,
+    ``branch`` nem ``checkpoint``; não reabre a tarefa para ``READY``; e
+    não consome nenhuma tarefa nova da fila.
+
+    A proteção contra duplicação concorrente continua sendo a MESMA:
+    ``reservar_guard_dispatch`` é um compare-and-set, então duas execuções
+    simultâneas não despacham duas vezes, e um Guard já ``DISPATCHED``
+    nunca é redisparado."""
+    pr_number = registro.pr_number
+    assert pr_number is not None  # garantido por ``guard_retomada_pendente``
+    alvo = registro.canonical_task_id
+
+    if not runtime_store.reservar_guard_dispatch(alvo, pr_number=pr_number):
+        return BridgeOutcome(
+            "GUARD_RETRY",
+            f"o Guard da PR #{pr_number} ({alvo!r}) já está confirmado — nada a retomar.",
+            runtime_record=registro,
+            guard=GuardDispatchOutcome(
+                "ALREADY_DISPATCHED",
+                f"reserva recusada por compare-and-set: o Guard da PR #{pr_number} já foi "
+                "despachado com sucesso.",
+                pr_number=pr_number,
+            ),
+        )
+
+    guard_outcome = bridge_pr.disparar_guard(github_api, pr_number=pr_number, ref=base_branch)
+    if guard_outcome.action == "FAILED":
+        runtime_store.falhar_guard_dispatch(alvo, pr_number=pr_number)
+        return BridgeOutcome(
+            "GUARD_RETRY",
+            (
+                f"retomada do Guard da PR #{pr_number} ({alvo!r}) falhou de novo — o estado volta "
+                "para FAILED e uma próxima execução pode tentar outra vez. Nenhuma tarefa nova foi "
+                "consumida e nenhuma chamada paga aconteceu."
+            ),
+            runtime_record=runtime_store.get(alvo) or registro,
+            guard=guard_outcome,
+            notes=(guard_outcome.reason,),
+        )
+
+    runtime_store.confirmar_guard_dispatch(alvo, pr_number=pr_number)
+    return BridgeOutcome(
+        "GUARD_RETRY",
+        (
+            f"Guard despachado com sucesso na retomada da PR #{pr_number} ({alvo!r}). Ciclo de "
+            "MANUTENÇÃO: nenhuma tarefa nova foi consumida e nenhuma chamada paga aconteceu."
+        ),
+        runtime_record=runtime_store.get(alvo) or registro,
+        guard=guard_outcome,
+    )
 
 
 def restringir_ao_piloto(
@@ -903,9 +1006,31 @@ def executar_ciclo(
     # em modo piloto — restrita à tarefa piloto, para que o piloto nunca
     # perca a vez para outra tarefa READY que esteja à frente na fila
     # (correção B1).
-    tarefas, metadados, _registros = visao_da_fila(
+    tarefas, metadados, registros = visao_da_fila(
         tasks_json_path=tasks_json_path, runtime_store=runtime_store
     )
+
+    # 3-A. MANUTENÇÃO antes de execução: uma tarefa que já terminou e já
+    # tem PR, mas cujo Guard nunca foi confirmado, sai daqui com o Guard
+    # despachado — e o ciclo termina. É o caminho que faltava para o
+    # estado recuperável da correção B4 ser de fato recuperado (achado da
+    # 2ª auditoria independente do PR #129). Vem antes de qualquer decisão
+    # de fila de propósito: uma PR esperando auditoria é mais urgente do
+    # que começar trabalho novo, e este caminho não custa nada.
+    pendente = candidato_a_retomada_do_guard(registros, config)
+    if pendente is not None:
+        if github_api is None:
+            notes.append(
+                f"a PR #{pendente.pr_number} de {pendente.canonical_task_id!r} espera retomada do "
+                "Guard, mas nenhum cliente de API do GitHub foi fornecido nesta execução — nada "
+                "foi tentado."
+            )
+        else:
+            return retomar_guard(
+                pendente, runtime_store=runtime_store, github_api=github_api,
+                base_branch=base_branch,
+            )
+
     tarefas = restringir_ao_piloto(tarefas, config)
 
     # 4. só workers programáticos do Bridge.

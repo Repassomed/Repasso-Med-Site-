@@ -261,6 +261,23 @@ class TaskRuntimeRecord:
         return ESTADO_DECLARATIVO_POR_RUNTIME[self.status]
 
     @property
+    def guard_retomada_pendente(self) -> bool:
+        """Achado da 2ª auditoria independente do PR #129: o estado
+        ``FAILED``/``PENDING`` só é recuperável se ALGUÉM voltar a
+        executar o disparo. Esta propriedade é o predicado que o Worker
+        Bridge usa para encontrar, ANTES de pegar uma tarefa nova, uma
+        tarefa que já terminou (``NEEDS-AUDIT``/``DONE``), já tem PR
+        aberta, e cujo Guard ainda não foi confirmado.
+
+        Calculada, nunca gravável: nenhum dado persistido consegue
+        declarar "precisa retomar" por conta própria."""
+        if self.status not in (RUNTIME_NEEDS_AUDIT, RUNTIME_DONE):
+            return False
+        if self.pr_number is None:
+            return False
+        return self.guard_dispatch_status in GUARD_DISPATCH_RETOMAVEIS
+
+    @property
     def guard_confirmado(self) -> bool:
         """Propriedade CALCULADA (nunca campo gravável): o Guard só conta
         como despachado quando a chamada voltou com sucesso. Um
