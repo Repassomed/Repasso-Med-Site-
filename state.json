@@ -1,0 +1,29 @@
+{
+  "errors": [
+    {
+      "category": "runner",
+      "commit_sha": null,
+      "component": "runner",
+      "error_id": "ERR-4B23D04F14",
+      "error_type": "runner-blocked",
+      "fingerprint": "4b23d04f1456b2b652fc",
+      "first_seen": "2026-09-23T20:42:14.087453+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "74c3826fc7324943a93fe1a5dd43ec25",
+      "issue_sync_updated_at": "2026-09-23T20:42:14.087453+00:00",
+      "last_evidence_hash": "ee1fa67040dffd631c3e",
+      "last_seen": "2026-09-23T20:42:14.087453+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35917526794",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "arquivo(s) existente(s) excede(m) o limite que pode ser enviado integralmente ao modelo (20000 caracteres): ['Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html']. Fail-closed nesta fase can\u00e1rio (corre\u00e7\u00e3o B2-C, auditoria independente do PR #114): nenhuma chamada foi feita, nenhum patch foi gerado, zero escrita. Edi\u00e7\u00e3o por trecho/\u00e2ncora para arquivos grandes \u00e9 uma evolu\u00e7\u00e3o futura, fora desta rodada.",
+      "task_id": "fisiopatologia-ii-issue101",
+      "worker_id": "claude-worker-1"
+    }
+  ]
+}
