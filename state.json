@@ -1,4 +1,37 @@
 {
+  "handoffs": [
+    {
+      "action": "HANDOFF_EXECUTED",
+      "checkpoint_commit": "7afac9ef0bd47dbe3118676d0fe290ee4cfd811a",
+      "human_instruction": null,
+      "new_worker_id": "api-runner-canary-b",
+      "new_worker_type": "api_runner",
+      "previous_worker_id": "api-runner-canary-a",
+      "reason": "Prioridade P0 + checkpoint seguro + worker dispon\u00edvel \u2014 handoff recomendado para API Runner Canary B (Issue #99, Caso A).",
+      "recorded_at": "2026-09-23T02:47:51.428356+00:00",
+      "runner_task": {
+        "allowed_files": [
+          "coordinator/canary/runner-canary.txt"
+        ],
+        "branch": "runner/infra-coordinator-final-canary-r4",
+        "can_publish": false,
+        "capabilities_required": [
+          "codigo"
+        ],
+        "checkpoint_commit": "7afac9ef0bd47dbe3118676d0fe290ee4cfd811a",
+        "instructions": "Tarefa do can\u00e1rio integrado (Issue #105). Trabalhe EXCLUSIVAMENTE no arquivo coordinator/canary/runner-canary.txt \u2014 \u00e9 o \u00fanico arquivo permitido, e nenhum outro arquivo do reposit\u00f3rio pode ser criado, alterado ou removido.\n\nEste arquivo n\u00e3o \u00e9 conte\u00fado do site: ele existe s\u00f3 para provar, de forma determin\u00edstica e verific\u00e1vel, que a cadeia fila -> runner -> heartbeat/checkpoint -> handoff -> retomada funciona ponta a ponta. N\u00e3o escreva nada al\u00e9m do que a regra abaixo manda.\n\nREGRA DETERMIN\u00cdSTICA DE TRANSI\u00c7\u00c3O (avalie na ordem e aplique exatamente UMA):\n1. Se coordinator/canary/runner-canary.txt N\u00c3O existir, crie-o com exatamente o conte\u00fado CANARY_STAGE=1\n2. Se o conte\u00fado atual for exatamente CANARY_STAGE=1, troque-o por exatamente CANARY_STAGE=2\n3. Se o conte\u00fado atual for exatamente CANARY_STAGE=2, troque-o por exatamente CANARY_STAGE=3\n4. Se o conte\u00fado atual j\u00e1 for exatamente CANARY_STAGE=3, o can\u00e1rio terminou: devolva o arquivo sem nenhuma altera\u00e7\u00e3o.\n\nFORMATO EXATO do arquivo, em qualquer est\u00e1gio: uma \u00fanica linha, CANARY_STAGE=<n>, terminada por uma quebra de linha \u2014 sem coment\u00e1rios, sem espa\u00e7os extras, sem linhas em branco, sem qualquer outro texto. <n> \u00e9 1, 2 ou 3.\n\nNunca pule um est\u00e1gio, nunca volte um est\u00e1gio e nunca altere nenhum outro arquivo.\n\n--- CONTEXTO DE CONTINUA\u00c7\u00c3O (Issue #105 Fase E/G) ---\nContinua\u00e7\u00e3o da tarefa 'infra-coordinator-final-canary-r4' (prioridade P0), transferida de API Runner Canary A por limite de sess\u00e3o (Issue #105 Fase E). Retome EXATAMENTE a partir do checkpoint 7afac9ef0bd47dbe3118676d0fe290ee4cfd811a \u2014 nunca de uma working tree n\u00e3o commitada, nunca inventando um ponto de partida diferente. Preserve a branch e os allowed_files j\u00e1 reservados; n\u00e3o amplie o escopo al\u00e9m do que a tarefa original j\u00e1 autorizava.",
+        "jose_authorized": false,
+        "never_merge": true,
+        "policy_level": "C",
+        "priority": "P0",
+        "publication_required": false,
+        "risk_level": "BAIXO",
+        "source_issue": 105,
+        "task_id": "infra-coordinator-final-canary-r4--continuacao-7afac9ef0bd47dbe3118676d0fe290ee4cfd811a"
+      },
+      "task_id": "infra-coordinator-final-canary-r4"
+    }
+  ],
   "keys": [
     "handoff:infra-coordinator-final-canary-r4:api-runner-canary-a:7afac9ef0bd47dbe3118676d0fe290ee4cfd811a:api-runner-canary-b"
   ]
