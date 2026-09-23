@@ -46,6 +46,16 @@
       "recorded_at": "2026-09-23T02:26:38.472825+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "infra-coordinator-final-canary-r4"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "n\u00e3o consegui commitar: ",
+      "recorded_at": "2026-09-23T02:48:34.456910+00:00",
+      "status": "FAILED",
+      "task_id": "infra-coordinator-final-canary-r4--continuacao-7afac9ef0bd47dbe3118676d0fe290ee4cfd811a"
     }
   ]
 }
