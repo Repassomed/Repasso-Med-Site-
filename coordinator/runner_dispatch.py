@@ -599,7 +599,8 @@ def commitar_e_publicar(repo_dir: str, task: RunnerTask, push_remote_name: str) 
         "commit", "-q", "-m", mensagem,
     )
     if commit.returncode != 0:
-        raise RunnerGitError(f"não consegui commitar: {redact(commit.stderr)}")
+        detalhe = commit.stderr.strip() or commit.stdout.strip() or "git commit falhou sem saída"
+        raise RunnerGitError(f"não consegui commitar: {redact(detalhe)}")
 
     sha = _run_git(repo_dir, "rev-parse", "HEAD")
     if sha.returncode != 0:
@@ -796,11 +797,37 @@ def executar_tarefa(
         return DispatchOutcome(result=resultado, claimed=False, external_calls_made=True,
                                 heartbeats=tuple(heartbeats), notes=tuple(notes))
 
+    # Correção do canário R4 real: uma continuação com checkpoint precisa
+    # fazer checkout EXATAMENTE desse checkpoint ANTES de gerar o patch.
+    # Caso contrário, o modelo enxerga a main em vez do estado retomado
+    # (no R4 viu "arquivo ausente" e gerou Stage 1 de novo).
+    #
+    # O claim continua acontecendo ANTES deste bloco, portanto a garantia
+    # "claim antes de chamada paga" permanece intacta. Além disso, um
+    # checkpoint inválido agora falha ANTES da chamada Anthropic.
+    commit_base: str | None = None
+
     # Correção B3: só a partir daqui — DEPOIS que ``claimed is True`` —
     # ``gerar_patch()`` pode ser chamada. Uma repetição do mesmo task_id
     # já teria devolvido BLOCKED (bloco acima) SEM nunca chegar até aqui,
     # então nunca chega a gastar uma segunda chamada Anthropic.
     if patch is None:
+        try:
+            commit_base = preparar_branch_de_trabalho(repo_dir, task)
+        except RunnerGitError as exc:
+            resultado = RunnerResult(task_id=task.task_id, status="FAILED", reason=str(exc))
+            claim_store.registrar_resultado(task.task_id, resultado)
+            if worker_id:
+                _emitir_heartbeat(
+                    worker_id, worker_registry,
+                    RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"),
+                    heartbeats, notes,
+                )
+            return DispatchOutcome(
+                result=resultado, claimed=True, external_calls_made=True,
+                heartbeats=tuple(heartbeats), notes=tuple(notes),
+            )
+
         geracao = gerar_patch()
         status_geracao = getattr(geracao, "status", None)
         patch_gerado = getattr(geracao, "patch", None)
@@ -870,15 +897,22 @@ def executar_tarefa(
         return DispatchOutcome(result=resultado, claimed=True, external_calls_made=True,
                                 heartbeats=tuple(heartbeats), notes=tuple(notes))
 
-    try:
-        commit_base = preparar_branch_de_trabalho(repo_dir, task)
-    except RunnerGitError as exc:
-        resultado = RunnerResult(task_id=task.task_id, status="FAILED", reason=str(exc))
-        claim_store.registrar_resultado(task.task_id, resultado)
-        if worker_id:
-            _emitir_heartbeat(worker_id, worker_registry, RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"), heartbeats, notes)
-        return DispatchOutcome(result=resultado, claimed=True, external_calls_made=True,
-                                heartbeats=tuple(heartbeats), notes=tuple(notes))
+    if commit_base is None:
+        try:
+            commit_base = preparar_branch_de_trabalho(repo_dir, task)
+        except RunnerGitError as exc:
+            resultado = RunnerResult(task_id=task.task_id, status="FAILED", reason=str(exc))
+            claim_store.registrar_resultado(task.task_id, resultado)
+            if worker_id:
+                _emitir_heartbeat(
+                    worker_id, worker_registry,
+                    RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"),
+                    heartbeats, notes,
+                )
+            return DispatchOutcome(
+                result=resultado, claimed=True, external_calls_made=True,
+                heartbeats=tuple(heartbeats), notes=tuple(notes),
+            )
 
     try:
         aplicar_patch(repo_dir, patch)
