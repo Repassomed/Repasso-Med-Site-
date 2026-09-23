@@ -8,7 +8,8 @@
     "runner-task:infra-coordinator-final-canary-r4--resume-7afac9ef0bd4",
     "runner-task:infra-coordinator-final-canary-r4--resume-0772f1956f32",
     "runner-task:infra-worker-bridge-pilot--bridge-a5d13d138577",
-    "runner-task:infra-worker-bridge-pilot-r2--bridge-8d97323dc1f0"
+    "runner-task:infra-worker-bridge-pilot-r2--bridge-8d97323dc1f0",
+    "runner-task:fisiopatologia-ii-issue101--bridge-058b562d63d4"
   ],
   "results": [
     {
