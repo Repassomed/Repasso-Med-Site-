@@ -66,18 +66,76 @@ def test_bridge_workflow_existe_e_nao_substitui_o_canario() -> None:
     print("OK  test_bridge_workflow_existe_e_nao_substitui_o_canario")
 
 
-def test_bridge_so_tem_workflow_dispatch_como_gatilho() -> None:
-    """§7: 'workflow_dispatch controlado é aceitável para o piloto'. Nunca
-    pull_request/issue_comment/schedule/push — nenhuma superfície em que
-    um terceiro possa provocar execução."""
+def test_bridge_tem_apenas_os_dois_gatilhos_confiaveis() -> None:
+    """§7 + correção B5 (auditoria do PR #129): ``workflow_dispatch`` para
+    o piloto e ``workflow_run`` do OBSERVE para a entrega automática do
+    modo ``active-supervised``. Nunca ``pull_request``/``issue_comment``/
+    ``schedule``/``push``/``repository_dispatch`` — nenhuma superfície em
+    que um terceiro possa provocar execução (um comentário é texto de
+    terceiro; a conclusão de um workflow do próprio repositório não é)."""
     secao = _secao_on(_ler(_BRIDGE_PATH))
     assert "workflow_dispatch:" in secao
+    assert "workflow_run:" in secao
     for proibido in (
         "pull_request", "pull_request_target", "issue_comment",
-        "schedule:", "push:", "workflow_run", "repository_dispatch",
+        "schedule:", "push:", "repository_dispatch",
     ):
         assert proibido not in secao, f"{proibido!r} não pode ser gatilho do Worker Bridge"
-    print("OK  test_bridge_so_tem_workflow_dispatch_como_gatilho")
+    print("OK  test_bridge_tem_apenas_os_dois_gatilhos_confiaveis")
+
+
+def test_b5_workflow_run_fixa_o_workflow_de_origem_pelo_nome() -> None:
+    """A origem do gatilho automático é FIXA no arquivo: só a conclusão do
+    OBSERVE encadeia o Bridge. Não é "qualquer workflow que termine"."""
+    secao = _secao_on(_ler(_BRIDGE_PATH))
+    assert 'workflows: ["Repasso Coordinator (OBSERVE)"]' in secao, secao
+    assert "types: [completed]" in secao, secao
+    # E o workflow de origem existe de verdade com esse nome exato.
+    observe = os.path.join(_WORKFLOWS, "coordinator-observe.yml")
+    assert os.path.exists(observe)
+    assert "name: Repasso Coordinator (OBSERVE)" in _ler(observe)
+    print("OK  test_b5_workflow_run_fixa_o_workflow_de_origem_pelo_nome")
+
+
+def test_b5_evento_exige_sucesso_branch_padrao_e_modo_active_supervised() -> None:
+    """As três condições somadas que tornam a origem confiável, mais a
+    trava de que o PILOTO nunca inicia por evento (a Variable do modo
+    precisa ser ``active-supervised`` no próprio ``if:``)."""
+    texto = _ler(_BRIDGE_PATH)
+    idx = texto.index("  bridge:")
+    condicao = texto[idx: texto.index("runs-on:", idx)]
+    assert "github.event_name == 'workflow_run'" in condicao, condicao
+    assert "vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised'" in condicao, condicao
+    assert "github.event.workflow_run.conclusion == 'success'" in condicao, condicao
+    assert "github.event.workflow_run.head_branch == github.event.repository.default_branch" in condicao, condicao
+    print("OK  test_b5_evento_exige_sucesso_branch_padrao_e_modo_active_supervised")
+
+
+def test_b5_dispatch_manual_continua_exigindo_o_ator_confiavel() -> None:
+    """O caminho manual não foi afrouxado pela chegada do automático."""
+    texto = _ler(_BRIDGE_PATH)
+    idx = texto.index("  bridge:")
+    condicao = texto[idx: texto.index("runs-on:", idx)]
+    assert "github.event_name == 'workflow_dispatch' && github.actor == 'Repassomed'" in condicao, condicao
+    print("OK  test_b5_dispatch_manual_continua_exigindo_o_ator_confiavel")
+
+
+def test_b5_origem_do_ciclo_chega_ao_python_derivada_do_event_name() -> None:
+    """A origem é DERIVADA de ``github.event_name``, nunca de input, e
+    chega a todos os passos que rodam Python do Bridge — incluindo o que
+    de fato executa o ciclo."""
+    texto = _ler(_BRIDGE_PATH)
+    executavel = _sem_comentarios(texto)
+    assert "REPASSO_WORKER_BRIDGE_TRIGGER" in executavel
+    assert "github.event_name == 'workflow_run' && 'event' || 'manual'" in executavel, (
+        "a origem precisa ser derivada de github.event_name"
+    )
+    idx = texto.index("Rodar o Worker Bridge")
+    passo = texto[idx: texto.index("Publicar o resultado", idx)]
+    assert "REPASSO_WORKER_BRIDGE_TRIGGER" in passo, (
+        "a origem precisa chegar ao passo que executa o ciclo, não só ao que confere o portão"
+    )
+    print("OK  test_b5_origem_do_ciclo_chega_ao_python_derivada_do_event_name")
 
 
 def test_bridge_nao_declara_nenhum_input() -> None:
@@ -298,7 +356,11 @@ def test_guard_nunca_ganhou_permissao_de_merge() -> None:
 def main() -> int:
     testes = [
         test_bridge_workflow_existe_e_nao_substitui_o_canario,
-        test_bridge_so_tem_workflow_dispatch_como_gatilho,
+        test_bridge_tem_apenas_os_dois_gatilhos_confiaveis,
+        test_b5_workflow_run_fixa_o_workflow_de_origem_pelo_nome,
+        test_b5_evento_exige_sucesso_branch_padrao_e_modo_active_supervised,
+        test_b5_dispatch_manual_continua_exigindo_o_ator_confiavel,
+        test_b5_origem_do_ciclo_chega_ao_python_derivada_do_event_name,
         test_bridge_nao_declara_nenhum_input,
         test_bridge_exige_flag_ator_e_ref_no_if_do_job,
         test_bridge_confirma_o_portao_de_novo_em_codigo,

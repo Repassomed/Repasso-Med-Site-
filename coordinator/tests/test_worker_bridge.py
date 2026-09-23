@@ -39,7 +39,7 @@ import tempfile
 import threading
 
 from . import _pathsetup
-from coordinator import bridge_pr, bridge_workers, task_runtime, worker_bridge
+from coordinator import bridge_pr, bridge_workers, scheduler, task_runtime, worker_bridge
 from coordinator.classify import Priority
 from coordinator.runner_contract import RunnerTask
 from coordinator.runner_dispatch import (
@@ -301,10 +301,19 @@ def test_piloto_recusa_tarefa_diferente() -> None:
             config=_config(pilot_task_id="infra-bridge-teste"),
             patch=None, gerar_patch=proibido,
         )
-        assert outcome.action == "BLOCKED", outcome
-        assert "não é a tarefa piloto autorizada" in outcome.reason
+        # Depois da correção B1 a tarefa alheia já não é CANDIDATA em modo
+        # piloto (``restringir_ao_piloto``), então o ciclo termina sem
+        # atribuição em vez de chegar ao portão e ser recusado lá. As duas
+        # formas são inertes; a recusa estrita do portão continua provada
+        # diretamente em test_comparacao_do_piloto_e_estrita_nunca_prefixo.
+        assert outcome.action in ("NO_ASSIGNMENT", "BLOCKED"), outcome
         assert proibido.chamado is False
         assert store.list_records() == []
+        # E o portão continua recusando explicitamente aquele par.
+        ok, motivo = _config(pilot_task_id="infra-bridge-teste").permite(
+            task_id="outra-tarefa", worker_id=PILOT_WORKER
+        )
+        assert ok is False and "não é a tarefa piloto autorizada" in motivo
     print("OK  test_piloto_recusa_tarefa_diferente")
 
 
@@ -467,15 +476,50 @@ def test_arquivo_fora_de_allowed_files_bloqueia_sem_publicar() -> None:
 # ---------------------------------------------------------------------------
 
 def test_worker_incompativel_nao_recebe_atribuicao() -> None:
+    """A capability continua sendo um REQUISITO, não um desempate. O teste
+    constrói a incompatibilidade explicitamente em vez de depender do
+    valor de ``BRIDGE_CAPABILITIES`` — que, pela correção B2 da auditoria
+    do PR #129, passou a incluir ``conteudo`` justamente para poder
+    receber a fila real."""
     with tempfile.TemporaryDirectory() as tmp:
+        registry = _registry_com_workers()
+        atual = registry.find_by_name_or_id(PILOT_WORKER)
+        assert atual is not None
+        registry.upsert(
+            WorkerRecord(
+                worker_id=atual.worker_id, display_name=atual.display_name, type=atual.type,
+                status="AVAILABLE", capabilities=("codigo",), can_execute=True,
+            ),
+            message="teste: worker que só sabe codigo",
+        )
         outcome, _c, store, _r = _ciclo(
             tmp, [_tarefa(capabilities_required=["conteudo"])],
-            patch=None, gerar_patch=_GeracaoProibida(),
+            registry=registry, patch=None, gerar_patch=_GeracaoProibida(),
         )
         assert outcome.action == "NO_ASSIGNMENT", outcome
         assert "capability" in outcome.reason
         assert store.list_records() == []
     print("OK  test_worker_incompativel_nao_recebe_atribuicao")
+
+
+def test_tarefa_de_conteudo_pode_ser_atribuida_a_worker_programatico() -> None:
+    """Correção B2 (auditoria do PR #129): a maior parte da fila real do
+    Repasso Med é ``area=materia`` -> capability ``conteudo``. Com só
+    ``("codigo",)`` o Bridge nunca poderia receber Fisiopatologia II,
+    Toxicologia ou Dermatologia."""
+    assert "conteudo" in bridge_workers.BRIDGE_CAPABILITIES
+    assert "codigo" in bridge_workers.BRIDGE_CAPABILITIES
+    with tempfile.TemporaryDirectory() as tmp:
+        api = _FakeGitHubApi()
+        outcome, _c, store, _r = _ciclo(
+            tmp,
+            [_tarefa(area="materia", materia="Fisiopatologia II", capabilities_required=["conteudo"])],
+            api=api,
+        )
+        assert outcome.action == "DISPATCHED", outcome
+        registro = store.get("infra-bridge-teste")
+        assert registro is not None and registro.status == task_runtime.RUNTIME_NEEDS_AUDIT
+    print("OK  test_tarefa_de_conteudo_pode_ser_atribuida_a_worker_programatico")
 
 
 def test_nenhum_worker_disponivel_nao_executa_nada() -> None:
@@ -856,8 +900,13 @@ def test_disparo_do_guard_e_idempotente() -> None:
         execution_task_id=reserva.record.execution_task_id or "", reason="ok",
         checkpoint_commit="abcdef1",
     )
-    assert store.marcar_guard_disparado("t-guard", pr_number=55) is True
-    assert store.marcar_guard_disparado("t-guard", pr_number=55) is False
+    # Reservar -> confirmar: depois de CONFIRMADO, nada redispara.
+    assert store.reservar_guard_dispatch("t-guard", pr_number=55) is True
+    assert store.confirmar_guard_dispatch("t-guard", pr_number=55) is True
+    assert store.reservar_guard_dispatch("t-guard", pr_number=55) is False
+    registro = store.get("t-guard")
+    assert registro is not None and registro.guard_confirmado is True
+    assert registro.guard_dispatch_attempts == 1
     print("OK  test_disparo_do_guard_e_idempotente")
 
 
@@ -1188,6 +1237,330 @@ def test_nenhum_laco_de_fila_no_bridge() -> None:
     print("OK  test_nenhum_laco_de_fila_no_bridge")
 
 
+# ---------------------------------------------------------------------------
+# Auditoria independente do PR #129 — os cinco bloqueadores (B1..B5)
+# ---------------------------------------------------------------------------
+
+def _tasks_json_real() -> str:
+    return os.path.join(_pathsetup.REPO_ROOT, "coordination", "tasks.json")
+
+
+def test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado() -> None:
+    """B1: o bloqueador era o piloto depender de ``infra-worker-bridge-v1``,
+    que continua IN-PROGRESS enquanto a PR não é mergeada — depois do merge
+    a main teria a dependência insatisfeita e o piloto nunca seria
+    oferecido. Este teste lê o ``coordination/tasks.json`` REAL, o mesmo
+    arquivo que vai para a main, e exige que o piloto esteja na fila de
+    prontas AGORA."""
+    tarefas = scheduler.load_tasks_from_tasks_json(_tasks_json_real())
+    prontas = [t.id for t in scheduler.proxima_tarefa_pronta(tarefas)]
+    assert "infra-worker-bridge-pilot" in prontas, prontas
+    print("OK  test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado")
+
+
+def test_b1_piloto_e_escolhido_mesmo_com_outra_tarefa_na_frente_da_fila() -> None:
+    """B1, a outra metade: ``escolher_proxima_atribuicao`` oferece o
+    PRIMEIRO da fila. Sem a restrição do modo piloto, uma tarefa READY à
+    frente (mesma prioridade, id alfabeticamente menor) seria oferecida, o
+    portão a recusaria e o piloto nunca rodaria — verde e inerte."""
+    with tempfile.TemporaryDirectory() as tmp:
+        api = _FakeGitHubApi()
+        outcome, _c, store, _r = _ciclo(
+            tmp,
+            [
+                # "aaa-..." vem antes de "infra-..." no desempate por id.
+                _tarefa(id="aaa-outra-tarefa", branch="runner/aaa-outra-tarefa",
+                        arquivos=["outro.txt"]),
+                _tarefa(),
+            ],
+            api=api,
+        )
+        assert outcome.action == "DISPATCHED", outcome
+        assert outcome.runtime_record is not None
+        assert outcome.runtime_record.canonical_task_id == "infra-bridge-teste", outcome.runtime_record
+        # E a tarefa alheia continua intocada no estado operacional.
+        assert store.get("aaa-outra-tarefa") is None
+    print("OK  test_b1_piloto_e_escolhido_mesmo_com_outra_tarefa_na_frente_da_fila")
+
+
+def test_b1_restricao_do_piloto_nunca_amplia_nem_escreve() -> None:
+    """A restrição é NARROW: fora do modo piloto a lista volta idêntica, e
+    ela nunca transforma uma tarefa fechada em candidata."""
+    tarefas = [
+        _tarefa_record(_tarefa()),
+        _tarefa_record(_tarefa(id="outra", estado="DONE")),
+    ]
+    iguais = worker_bridge.restringir_ao_piloto(
+        tarefas, _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+    )
+    assert [(t.id, t.estado) for t in iguais] == [(t.id, t.estado) for t in tarefas]
+
+    restritas = worker_bridge.restringir_ao_piloto(tarefas, _config())
+    por_id = {t.id: t.estado for t in restritas}
+    assert por_id["infra-bridge-teste"] == "READY"
+    # A DONE continua DONE — nunca é "reaberta" pela restrição.
+    assert por_id["outra"] == "DONE"
+    print("OK  test_b1_restricao_do_piloto_nunca_amplia_nem_escreve")
+
+
+def test_b3_pilot_continua_somente_o_worker_4() -> None:
+    assert bridge_workers.ids_elegiveis(worker_bridge.BRIDGE_MODE_PILOT) == (
+        bridge_workers.BRIDGE_WORKER_4,
+    )
+    for outro in (bridge_workers.BRIDGE_WORKER_1, bridge_workers.BRIDGE_WORKER_2,
+                  bridge_workers.BRIDGE_WORKER_3):
+        assert bridge_workers.e_worker_elegivel(outro, modo=worker_bridge.BRIDGE_MODE_PILOT) is False
+        ok, motivo = _config().permite(task_id="infra-bridge-teste", worker_id=outro)
+        assert ok is False and "não é elegível" in motivo
+    print("OK  test_b3_pilot_continua_somente_o_worker_4")
+
+
+def test_b3_modo_desconhecido_nao_elege_ninguem() -> None:
+    """Fail-closed: um modo que não existe devolve conjunto VAZIO, nunca o
+    mais permissivo."""
+    assert bridge_workers.ids_elegiveis("qualquer-coisa") == ()
+    assert bridge_workers.ids_elegiveis("") == ()
+    for worker_id in bridge_workers.BRIDGE_WORKER_IDS:
+        assert bridge_workers.e_worker_elegivel(worker_id, modo="qualquer-coisa") is False
+    print("OK  test_b3_modo_desconhecido_nao_elege_ninguem")
+
+
+def test_b3_active_supervised_habilita_os_quatro_por_caminho_explicito() -> None:
+    """B3: o bloqueador era que ``claude-worker-1..3``, criados OFFLINE no
+    piloto, ficariam OFFLINE para sempre — mudar o modo não ligava nada,
+    só uma alteração de código ligaria. Agora o bootstrap no modo
+    ``active-supervised`` habilita os quatro por compare-and-set."""
+    registry = OperationalWorkerRegistry(InMemoryWorkerStateStore())
+
+    # 1. o piloto roda primeiro e cria os quatro: só o 4 elegível.
+    primeiro = bridge_workers.preparar_workers_do_bridge(registry, config=_config())
+    assert primeiro.action == "PREPARED", primeiro.reason
+    assert set(primeiro.criados) == set(bridge_workers.BRIDGE_WORKER_IDS)
+    for worker_id in (bridge_workers.BRIDGE_WORKER_1, bridge_workers.BRIDGE_WORKER_2,
+                      bridge_workers.BRIDGE_WORKER_3):
+        registro = registry.find_by_name_or_id(worker_id)
+        assert registro is not None and registro.status == "OFFLINE" and registro.can_execute is False
+
+    # 2. José muda a Variable do MODO. Nenhuma linha de código muda.
+    segundo = bridge_workers.preparar_workers_do_bridge(
+        registry, config=_config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED),
+    )
+    assert segundo.action == "PREPARED", segundo.reason
+    assert set(segundo.habilitados) == {
+        bridge_workers.BRIDGE_WORKER_1, bridge_workers.BRIDGE_WORKER_2,
+        bridge_workers.BRIDGE_WORKER_3,
+    }, segundo.habilitados
+    for worker_id in bridge_workers.BRIDGE_WORKER_IDS:
+        registro = registry.find_by_name_or_id(worker_id)
+        assert registro is not None, worker_id
+        assert registro.status == "AVAILABLE" and registro.can_execute is True, registro
+        # E continuam sendo o que eram: nunca merge, nunca publicação.
+        assert registro.never_merge is True and registro.can_publish is False
+
+    # 3. idempotente: rodar de novo não habilita ninguém (já estão prontos).
+    terceiro = bridge_workers.preparar_workers_do_bridge(
+        registry, config=_config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED),
+    )
+    assert terceiro.habilitados == (), terceiro.habilitados
+    print("OK  test_b3_active_supervised_habilita_os_quatro_por_caminho_explicito")
+
+
+def test_b3_habilitacao_nunca_toca_worker_em_execucao_nem_sessao_humana() -> None:
+    """A habilitação é CAS com pré-condições fixas: só ``api_runner`` +
+    OFFLINE + ``can_execute=False`` + sem tarefa."""
+    registry = OperationalWorkerRegistry(InMemoryWorkerStateStore())
+    bridge_workers.preparar_workers_do_bridge(registry, config=_config())
+
+    # BUSY com tarefa em andamento -> impossível habilitar.
+    registry.upsert(
+        WorkerRecord(
+            worker_id=bridge_workers.BRIDGE_WORKER_1,
+            display_name="Claude Worker 1", type="api_runner", status="BUSY",
+            capabilities=bridge_workers.BRIDGE_CAPABILITIES,
+            current_task="alguma-tarefa", can_execute=False,
+        ),
+        message="teste: worker em execução",
+    )
+    assert registry.habilitar_worker_programatico_condicional(
+        bridge_workers.BRIDGE_WORKER_1, message="teste"
+    ) is False
+    inalterado = registry.find_by_name_or_id(bridge_workers.BRIDGE_WORKER_1)
+    assert inalterado is not None and inalterado.status == "BUSY"
+    assert inalterado.current_task == "alguma-tarefa"
+
+    # Sessão humana -> impossível habilitar por este caminho (§13).
+    assert registry.habilitar_worker_programatico_condicional(
+        "claude-1", message="teste"
+    ) is False
+    humano = registry.find_by_name_or_id("claude-1")
+    assert humano is not None and humano.type == "human_session" and humano.status == "OFFLINE"
+    print("OK  test_b3_habilitacao_nunca_toca_worker_em_execucao_nem_sessao_humana")
+
+
+def test_b3_active_supervised_pode_atribuir_a_qualquer_um_dos_quatro() -> None:
+    """Com os quatro habilitados, o scheduler pode oferecer a tarefa a
+    qualquer um deles — e o portão do Bridge aceita, porque o modo é
+    ``active-supervised``."""
+    cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+    for worker_id in bridge_workers.BRIDGE_WORKER_IDS:
+        ok, motivo = cfg.permite(task_id="qualquer-tarefa", worker_id=worker_id)
+        assert ok is True, motivo
+    print("OK  test_b3_active_supervised_pode_atribuir_a_qualquer_um_dos_quatro")
+
+
+def test_b4_falha_no_primeiro_dispatch_do_guard_e_recuperavel() -> None:
+    """B4: antes, ``marcar_guard_disparado`` gravava "despachado" ANTES da
+    chamada — uma falha de rede deixava a PR em NEEDS-AUDIT sem Guard para
+    SEMPRE, porque toda tentativa seguinte recebia ALREADY_DISPATCHED."""
+    store = _runtime_store()
+    reserva = store.reservar("t-guard-falha", worker_id=PILOT_WORKER, branch="runner/t-guard-falha")
+    assert reserva.reservado and reserva.record is not None
+    store.registrar_resultado(
+        "t-guard-falha", status=task_runtime.RUNTIME_NEEDS_AUDIT, worker_id=PILOT_WORKER,
+        execution_task_id=reserva.record.execution_task_id or "", reason="ok",
+        checkpoint_commit="abcdef1",
+    )
+
+    # 1ª tentativa: reserva, a chamada FALHA, a falha fica registrada.
+    assert store.reservar_guard_dispatch("t-guard-falha", pr_number=77) is True
+    assert store.falhar_guard_dispatch("t-guard-falha", pr_number=77) is True
+    registro = store.get("t-guard-falha")
+    assert registro is not None
+    assert registro.guard_dispatch_status == task_runtime.GUARD_DISPATCH_FAILED
+    assert registro.guard_confirmado is False
+
+    # 2ª tentativa: AUTORIZADA — é exatamente isto que o bloqueador pedia.
+    assert store.reservar_guard_dispatch("t-guard-falha", pr_number=77) is True
+    assert store.confirmar_guard_dispatch("t-guard-falha", pr_number=77) is True
+    registro = store.get("t-guard-falha")
+    assert registro is not None and registro.guard_confirmado is True
+    assert registro.guard_dispatch_attempts == 2, registro.guard_dispatch_attempts
+
+    # 3ª: já confirmado -> nada redispara (a duplicação continua impossível).
+    assert store.reservar_guard_dispatch("t-guard-falha", pr_number=77) is False
+    print("OK  test_b4_falha_no_primeiro_dispatch_do_guard_e_recuperavel")
+
+
+def test_b4_pendente_orfao_pode_ser_retomado_mas_confirmado_nunca() -> None:
+    """Um processo morto entre a reserva e a confirmação deixa ``PENDING``.
+    Retomar dali é permitido (o Guard é auditoria somente-leitura e o
+    workflow tem ``concurrency`` por PR); redisparar um ``DISPATCHED``
+    nunca é."""
+    store = _runtime_store()
+    reserva = store.reservar("t-guard-orfao", worker_id=PILOT_WORKER, branch="runner/t-guard-orfao")
+    assert reserva.reservado
+    assert store.reservar_guard_dispatch("t-guard-orfao", pr_number=88) is True
+    registro = store.get("t-guard-orfao")
+    assert registro is not None
+    assert registro.guard_dispatch_status == task_runtime.GUARD_DISPATCH_PENDING
+    assert registro.guard_confirmado is False  # PENDING nunca conta como sucesso
+
+    assert store.reservar_guard_dispatch("t-guard-orfao", pr_number=88) is True
+    assert store.confirmar_guard_dispatch("t-guard-orfao", pr_number=88) is True
+    assert store.reservar_guard_dispatch("t-guard-orfao", pr_number=88) is False
+    print("OK  test_b4_pendente_orfao_pode_ser_retomado_mas_confirmado_nunca")
+
+
+def test_b4_registro_antigo_sem_status_e_lido_como_despachado() -> None:
+    """Compatibilidade retroativa conservadora: um registro gravado ANTES
+    da correção tem só ``guard_dispatched_pr``. Ele significava "já
+    despachei", então nunca é lido como PENDING (o que autorizaria um
+    redisparo que a versão antiga não previa)."""
+    antigo = task_runtime.TaskRuntimeRecord.from_dict({
+        "canonical_task_id": "t-antiga",
+        "status": task_runtime.RUNTIME_NEEDS_AUDIT,
+        "guard_dispatched_pr": 12,
+    })
+    assert antigo.guard_dispatch_status == task_runtime.GUARD_DISPATCH_DISPATCHED
+    assert antigo.guard_confirmado is True
+    print("OK  test_b4_registro_antigo_sem_status_e_lido_como_despachado")
+
+
+def test_b4_ciclo_real_registra_a_falha_do_guard_e_permite_retomada() -> None:
+    """O caminho de ponta a ponta: o Bridge roda, a PR abre, o disparo do
+    Guard falha, e o estado operacional guarda FAILED (não "despachado")."""
+    class _ApiComGuardQuebrado(_FakeGitHubApi):
+        def despachar_workflow(self, *, arquivo: str, ref: str, inputs: dict) -> None:
+            raise bridge_pr.GitHubBridgeApiError("500 simulado do GitHub")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        api = _ApiComGuardQuebrado()
+        outcome, _c, store, _r = _ciclo(tmp, [_tarefa()], api=api)
+        assert outcome.action == "DISPATCHED", outcome
+        assert outcome.pr is not None and outcome.pr.pr_number is not None
+        assert outcome.guard is not None and outcome.guard.action == "FAILED", outcome.guard
+        registro = store.get("infra-bridge-teste")
+        assert registro is not None
+        assert registro.guard_dispatch_status == task_runtime.GUARD_DISPATCH_FAILED
+        assert registro.guard_confirmado is False
+        # E uma próxima execução autorizada consegue tentar de novo.
+        assert store.reservar_guard_dispatch(
+            "infra-bridge-teste", pr_number=registro.guard_dispatched_pr or 0
+        ) is True
+    print("OK  test_b4_ciclo_real_registra_a_falha_do_guard_e_permite_retomada")
+
+
+def test_b5_piloto_nunca_inicia_por_evento() -> None:
+    """B5: a entrega automática existe, mas o piloto continua sendo uma
+    execução OBSERVADA. Um evento nunca o inicia — nem se a Variable do
+    modo estiver em ``pilot`` quando o gatilho disparar."""
+    cfg = _config(trigger=worker_bridge.BRIDGE_TRIGGER_EVENT)
+    gate = cfg.gate()
+    assert gate.open is False, gate.reason
+    assert "nunca inicia por evento" in gate.reason
+    print("OK  test_b5_piloto_nunca_inicia_por_evento")
+
+
+def test_b5_evento_e_aceito_somente_em_active_supervised() -> None:
+    cfg = _config(
+        mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED,
+        trigger=worker_bridge.BRIDGE_TRIGGER_EVENT,
+    )
+    assert cfg.gate().open is True, cfg.gate().reason
+    assert cfg.is_event_driven is True
+    print("OK  test_b5_evento_e_aceito_somente_em_active_supervised")
+
+
+def test_b5_gatilho_desconhecido_fecha_o_portao() -> None:
+    for valor in ("cron", "push", "EVENT", "qualquer-coisa"):
+        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED, trigger=valor)
+        gate = cfg.gate()
+        assert gate.open is False, (valor, gate.reason)
+        assert "não é uma origem conhecida" in gate.reason
+    print("OK  test_b5_gatilho_desconhecido_fecha_o_portao")
+
+
+def test_b5_default_do_gatilho_e_manual_e_o_manual_continua_valendo() -> None:
+    """Variável ausente nunca é lida como "veio de um evento confiável", e
+    o disparo manual do piloto continua funcionando exatamente como
+    antes."""
+    cfg = worker_bridge.WorkerBridgeConfig.from_env({
+        worker_bridge.ENV_BRIDGE_ENABLED: "true",
+        worker_bridge.ENV_BRIDGE_MODE: worker_bridge.BRIDGE_MODE_PILOT,
+        worker_bridge.ENV_BRIDGE_PILOT_WORKER_ID: PILOT_WORKER,
+        worker_bridge.ENV_BRIDGE_PILOT_TASK_ID: "infra-worker-bridge-pilot",
+    })
+    assert cfg.trigger == worker_bridge.BRIDGE_TRIGGER_MANUAL
+    assert cfg.is_event_driven is False
+    assert cfg.gate().open is True, cfg.gate().reason
+
+    with tempfile.TemporaryDirectory() as tmp:
+        api = _FakeGitHubApi()
+        outcome, _c, _s, _r = _ciclo(tmp, [_tarefa()], api=api)
+        assert outcome.action == "DISPATCHED", outcome
+    print("OK  test_b5_default_do_gatilho_e_manual_e_o_manual_continua_valendo")
+
+
+def test_modos_do_bridge_sao_os_mesmos_valores_em_todo_lugar() -> None:
+    """Prova estrutural contra divergência: ``worker_bridge.BRIDGE_MODE_*``
+    e ``bridge_workers.MODO_*`` são a MESMA constante, não dois textos
+    iguais por coincidência."""
+    assert worker_bridge.BRIDGE_MODE_PILOT is bridge_workers.MODO_PILOT
+    assert worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED is bridge_workers.MODO_ACTIVE_SUPERVISED
+    assert set(worker_bridge.ALLOWED_BRIDGE_MODES) == set(bridge_workers.ELEGIVEIS_POR_MODO)
+    print("OK  test_modos_do_bridge_sao_os_mesmos_valores_em_todo_lugar")
+
+
 def main() -> int:
     testes = [
         test_bridge_desligado_nao_faz_nada,
@@ -1207,6 +1580,7 @@ def main() -> int:
         test_instrucoes_sao_montadas_da_tarefa_e_nunca_sao_vagas,
         test_arquivo_fora_de_allowed_files_bloqueia_sem_publicar,
         test_worker_incompativel_nao_recebe_atribuicao,
+        test_tarefa_de_conteudo_pode_ser_atribuida_a_worker_programatico,
         test_nenhum_worker_disponivel_nao_executa_nada,
         test_somente_o_worker_4_nasce_elegivel,
         test_sessoes_humanas_nunca_entram_no_pool_do_bridge,
@@ -1243,6 +1617,24 @@ def main() -> int:
         test_infra_do_bridge_nao_e_automatizavel_por_ela_mesma,
         test_piloto_real_nao_foi_executado_nesta_pr,
         test_nenhum_laco_de_fila_no_bridge,
+        # Auditoria independente do PR #129 — B1..B5.
+        test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado,
+        test_b1_piloto_e_escolhido_mesmo_com_outra_tarefa_na_frente_da_fila,
+        test_b1_restricao_do_piloto_nunca_amplia_nem_escreve,
+        test_b3_pilot_continua_somente_o_worker_4,
+        test_b3_modo_desconhecido_nao_elege_ninguem,
+        test_b3_active_supervised_habilita_os_quatro_por_caminho_explicito,
+        test_b3_habilitacao_nunca_toca_worker_em_execucao_nem_sessao_humana,
+        test_b3_active_supervised_pode_atribuir_a_qualquer_um_dos_quatro,
+        test_b4_falha_no_primeiro_dispatch_do_guard_e_recuperavel,
+        test_b4_pendente_orfao_pode_ser_retomado_mas_confirmado_nunca,
+        test_b4_registro_antigo_sem_status_e_lido_como_despachado,
+        test_b4_ciclo_real_registra_a_falha_do_guard_e_permite_retomada,
+        test_b5_piloto_nunca_inicia_por_evento,
+        test_b5_evento_e_aceito_somente_em_active_supervised,
+        test_b5_gatilho_desconhecido_fecha_o_portao,
+        test_b5_default_do_gatilho_e_manual_e_o_manual_continua_valendo,
+        test_modos_do_bridge_sao_os_mesmos_valores_em_todo_lugar,
     ]
     falhas = 0
     for t in testes:

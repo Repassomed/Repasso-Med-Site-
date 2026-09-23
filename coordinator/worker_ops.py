@@ -491,6 +491,60 @@ class OperationalWorkerRegistry:
 
         return self.store.conditional_update(evaluate, message=message)
 
+    def habilitar_worker_programatico_condicional(
+        self, worker_id: str, *, message: str,
+    ) -> bool:
+        """Correção B3 da auditoria independente do PR #129: o caminho de
+        ativação de um worker PROGRAMÁTICO que já existe no registro —
+        ``OFFLINE``/``can_execute=False`` -> ``AVAILABLE``/
+        ``can_execute=True``.
+
+        Existe porque ``criar_se_ausente_condicional`` (corretamente)
+        preserva quem já existe: sem isto, os ``claude-worker-1..3``
+        criados OFFLINE durante o piloto ficariam OFFLINE para sempre, e
+        mudar o modo do Bridge para ``active-supervised`` não ligaria
+        ninguém — só uma alteração de código ligaria.
+
+        As pré-condições são FIXAS aqui, não parâmetros, e são reavaliadas
+        numa leitura fresca a cada tentativa do ``conditional_update``:
+
+        1. ``type == "api_runner"`` — uma ``human_session`` é impossível
+           de habilitar por este caminho, por estrutura e não por
+           convenção. Nenhum ``claude-1``..``claude-4`` humano pode virar
+           worker de API aqui (Issue #128 §13);
+        2. ``status == "OFFLINE"`` — um worker ``BUSY``/``NEAR_LIMIT``/
+           ``LIMIT`` nunca é "promovido" a AVAILABLE, o que apagaria
+           estado real de execução;
+        3. ``can_execute is False`` — quem já podia executar não é tocado;
+        4. ``current_task is None`` — um worker com tarefa em andamento
+           nunca é liberado por este caminho.
+
+        Qualquer divergência devolve ``False`` sem escrever nada. Quem
+        chama decide o que fazer com isso (``bridge_workers.
+        preparar_workers_do_bridge`` apenas reporta)."""
+        def evaluate(dados: dict) -> tuple[bool, dict]:
+            existentes = dados.get("workers")
+            base = {w["worker_id"]: w for w in existentes} if existentes else {
+                w.worker_id: w.to_dict() for w in default_seed_workers()
+            }
+            fresco = base.get(worker_id)
+            if fresco is None:
+                return False, dados
+            if fresco.get("type") != "api_runner":
+                return False, dados
+            if fresco.get("status") != "OFFLINE":
+                return False, dados
+            if fresco.get("can_execute") is not False:
+                return False, dados
+            if fresco.get("current_task") is not None:
+                return False, dados
+            base[worker_id] = {
+                **fresco, "status": "AVAILABLE", "can_execute": True, "current_task": None,
+            }
+            return True, {"workers": list(base.values())}
+
+        return self.store.conditional_update(evaluate, message=message)
+
     def reservar_current_task_condicional(
         self, worker_id: str, *, canonical_task_id: str, message: str,
     ) -> bool:

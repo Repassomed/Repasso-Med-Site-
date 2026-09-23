@@ -41,7 +41,10 @@ operações e o registro do resultado.
     automação do MESMO arquivo;
  3. lê o estado operacional persistido e projeta a visão combinada
     (``task_runtime.aplicar_runtime_em_tarefas``) — é isso que impede
-    uma tarefa já executada de voltar como ``READY``;
+    uma tarefa já executada de voltar como ``READY``; em modo ``pilot``,
+    ``restringir_ao_piloto`` ainda tira as OUTRAS tarefas da lista de
+    candidatas, para que o piloto nunca perca a vez (correção B1 do
+    PR #129);
  4. filtra SÓ workers programáticos (``bridge_workers.
     workers_programaticos``) — uma sessão humana nunca é iniciada por
     código, e os ``api_runner`` do canário não são sequestrados;
@@ -65,7 +68,19 @@ operações e o registro do resultado.
 13. liberação segura do worker (CAS) — nunca deixa ``BUSY`` fantasma,
     nunca apaga o checkpoint de um ``BLOCKED-LIMIT``;
 14. PR idempotente + disparo confiável do Guard (``bridge_pr``), só em
-    caso de sucesso com branch/checkpoint publicados.
+    caso de sucesso com branch/checkpoint publicados. O disparo segue o
+    protocolo RECUPERÁVEL de ``task_runtime`` (reserva ``PENDING`` ->
+    chamada -> ``DISPATCHED``/``FAILED``, correção B4 do PR #129): uma
+    falha de rede nunca deixa a PR em NEEDS-AUDIT sem Guard para sempre,
+    e um ``DISPATCHED`` nunca é redisparado.
+
+**ORIGEM DO CICLO (correção B5 do PR #129):** o mesmo código serve aos
+dois caminhos, e o portão sabe a diferença. ``REPASSO_WORKER_BRIDGE_
+TRIGGER=manual`` é o disparo explícito (``workflow_dispatch``), o único
+que o modo ``pilot`` aceita; ``=event`` é o gatilho automático confiável
+(``workflow_run`` da conclusão bem-sucedida do OBSERVE na branch padrão),
+aceito só em ``active-supervised``. Em qualquer um dos dois, um ciclo
+decide NO MÁXIMO UMA atribuição: automático não significa laço.
 
 **INVARIANTES ABSOLUTOS:**
 
@@ -138,10 +153,22 @@ ENV_BRIDGE_PILOT_TASK_ID = "REPASSO_WORKER_BRIDGE_PILOT_TASK_ID"
 # fail-closed quando não batem — nunca confiar só no `if:` do job.
 ENV_BRIDGE_ACTUAL_REF = "REPASSO_WORKER_BRIDGE_ACTUAL_REF"
 ENV_BRIDGE_EXPECTED_REF = "REPASSO_WORKER_BRIDGE_EXPECTED_REF"
+# Correção B5 da auditoria independente do PR #129: de ONDE veio este
+# ciclo. ``manual`` = alguém clicou "Run workflow" (``workflow_dispatch``);
+# ``event`` = o workflow foi acionado por um evento confiável
+# (``workflow_run`` da conclusão bem-sucedida do OBSERVE na branch padrão).
+# Preenchido pelo workflow a partir de ``github.event_name``, nunca por
+# input livre, e reconferido em código: o modo ``pilot`` NUNCA inicia por
+# evento, e um valor desconhecido fecha o portão.
+ENV_BRIDGE_TRIGGER = "REPASSO_WORKER_BRIDGE_TRIGGER"
 
-BRIDGE_MODE_PILOT = "pilot"
-BRIDGE_MODE_ACTIVE_SUPERVISED = "active-supervised"
+BRIDGE_MODE_PILOT = bridge_workers.MODO_PILOT
+BRIDGE_MODE_ACTIVE_SUPERVISED = bridge_workers.MODO_ACTIVE_SUPERVISED
 ALLOWED_BRIDGE_MODES: tuple[str, ...] = (BRIDGE_MODE_PILOT, BRIDGE_MODE_ACTIVE_SUPERVISED)
+
+BRIDGE_TRIGGER_MANUAL = "manual"
+BRIDGE_TRIGGER_EVENT = "event"
+ALLOWED_BRIDGE_TRIGGERS: tuple[str, ...] = (BRIDGE_TRIGGER_MANUAL, BRIDGE_TRIGGER_EVENT)
 
 # A MESMA chave da allowlist FECHADA de ``runner_dispatch`` que o canário
 # usa. Reaproveitada por valor (não redeclarada como texto) exatamente
@@ -181,10 +208,22 @@ class WorkerBridgeConfig:
     pilot_task_id: str | None = None
     actual_ref: str | None = None
     expected_ref: str | None = None
+    # B5: ``manual`` por default — o comportamento mais restrito. Um ciclo
+    # só é tratado como automático quando o workflow diz explicitamente
+    # que veio de um evento confiável.
+    trigger: str = BRIDGE_TRIGGER_MANUAL
 
     @property
     def mode_allowed(self) -> bool:
         return self.mode in ALLOWED_BRIDGE_MODES
+
+    @property
+    def trigger_allowed(self) -> bool:
+        return self.trigger in ALLOWED_BRIDGE_TRIGGERS
+
+    @property
+    def is_event_driven(self) -> bool:
+        return self.trigger == BRIDGE_TRIGGER_EVENT
 
     @property
     def is_pilot(self) -> bool:
@@ -224,6 +263,22 @@ class WorkerBridgeConfig:
                 f"{ENV_BRIDGE_ENABLED}=false (ou ausente) — nenhuma execução do Worker Bridge é "
                 "permitida enquanto o portão estiver fechado.",
             )
+        if not self.trigger_allowed:
+            return BridgeGateResult(
+                False,
+                f"{ENV_BRIDGE_TRIGGER}={self.trigger!r} não é uma origem conhecida "
+                f"({list(ALLOWED_BRIDGE_TRIGGERS)}) — portão fechado fail-closed.",
+            )
+        if self.is_pilot and self.is_event_driven:
+            # B5: o piloto é uma execução OBSERVADA, com José olhando. Um
+            # evento nunca o inicia — nem se a Variable do modo estiver em
+            # ``pilot`` quando o gatilho automático disparar.
+            return BridgeGateResult(
+                False,
+                f"modo {BRIDGE_MODE_PILOT!r} nunca inicia por evento: este ciclo veio de "
+                f"{ENV_BRIDGE_TRIGGER}={BRIDGE_TRIGGER_EVENT!r}, e o piloto só roda por disparo "
+                "manual explícito. Portão fechado.",
+            )
         if self.is_pilot:
             if not self.pilot_worker_id or not self.pilot_task_id:
                 return BridgeGateResult(
@@ -232,11 +287,11 @@ class WorkerBridgeConfig:
                     f"{ENV_BRIDGE_PILOT_TASK_ID} configurados (comparação estrita) — recebido "
                     f"worker={self.pilot_worker_id!r}, task={self.pilot_task_id!r}. Portão fechado.",
                 )
-            if not bridge_workers.e_worker_elegivel(self.pilot_worker_id):
+            if not bridge_workers.e_worker_elegivel(self.pilot_worker_id, modo=self.mode):
                 return BridgeGateResult(
                     False,
-                    f"worker do piloto {self.pilot_worker_id!r} não é elegível nesta V1 "
-                    f"({list(bridge_workers.ELIGIBLE_WORKER_IDS)}) — portão fechado.",
+                    f"worker do piloto {self.pilot_worker_id!r} não é elegível no modo piloto "
+                    f"({list(bridge_workers.ELIGIBLE_WORKER_IDS_PILOT)}) — portão fechado.",
                 )
             return BridgeGateResult(
                 True,
@@ -259,10 +314,10 @@ class WorkerBridgeConfig:
         worker ainda precisa ser um worker programático ELEGÍVEL, e a
         tarefa ainda precisa passar pelo portão de política declarativa
         (``avaliar_politica``), que é independente deste."""
-        if not bridge_workers.e_worker_elegivel(worker_id):
+        if not bridge_workers.e_worker_elegivel(worker_id, modo=self.mode):
             return False, (
-                f"worker {worker_id!r} não é elegível nesta V1 "
-                f"({list(bridge_workers.ELIGIBLE_WORKER_IDS)}) — nada é executado."
+                f"worker {worker_id!r} não é elegível no modo {self.mode!r} "
+                f"({list(bridge_workers.ids_elegiveis(self.mode))}) — nada é executado."
             )
         if not self.is_pilot:
             return True, f"modo {BRIDGE_MODE_ACTIVE_SUPERVISED!r}: {task_id!r} em {worker_id!r}."
@@ -293,6 +348,9 @@ class WorkerBridgeConfig:
             pilot_task_id=src.get(ENV_BRIDGE_PILOT_TASK_ID) or None,
             actual_ref=src.get(ENV_BRIDGE_ACTUAL_REF) or None,
             expected_ref=src.get(ENV_BRIDGE_EXPECTED_REF) or None,
+            # Default do GATILHO é ``manual``: uma variável ausente nunca
+            # é lida como "veio de um evento confiável".
+            trigger=src.get(ENV_BRIDGE_TRIGGER) or BRIDGE_TRIGGER_MANUAL,
         )
 
 
@@ -785,6 +843,36 @@ def visao_da_fila(
     return task_runtime.aplicar_runtime_em_tarefas(declarativas, registros), metadados, registros
 
 
+def restringir_ao_piloto(
+    tarefas: list[TaskRecord], config: WorkerBridgeConfig
+) -> list[TaskRecord]:
+    """Correção B1 da auditoria independente do PR #129.
+
+    ``scheduler.escolher_proxima_atribuicao`` oferece o PRIMEIRO da fila.
+    Em modo ``pilot``, se qualquer outra tarefa ``READY`` estiver à frente
+    da tarefa piloto (prioridade igual e id alfabeticamente menor, por
+    exemplo), o Bridge receberia ESSA, o portão do piloto a recusaria e o
+    piloto nunca rodaria — verde e inerte, que é o pior resultado
+    possível para um piloto.
+
+    A correção é NARROW, nunca WIDEN: em modo piloto, nenhuma tarefa
+    além da piloto é candidata. As outras continuam presentes na lista
+    (como ``BLOCKED``), então a reserva de arquivo das tarefas ATIVAS e a
+    resolução de dependências continuam exatamente as mesmas — só deixam
+    de ser oferecíveis. Fora do modo piloto a lista volta intacta: é a
+    fila confiável que decide.
+
+    Nada aqui é escrito em lugar nenhum: a lista é a projeção em memória
+    do §3, e ``coordination/tasks.json`` continua intocado."""
+    if not config.is_pilot:
+        return tarefas
+    alvo = (config.pilot_task_id or "").strip()
+    return [
+        t if (t.id == alvo or t.estado != "READY") else replace(t, estado="BLOCKED")
+        for t in tarefas
+    ]
+
+
 def executar_ciclo(
     *,
     config: WorkerBridgeConfig,
@@ -811,10 +899,14 @@ def executar_ciclo(
     if not gate.open:
         return BridgeOutcome("BLOCKED", gate.reason, notes=("portão fechado — zero escrita, zero chamada paga.",))
 
-    # 2-3. visão combinada (declarativo somente leitura + runtime).
+    # 2-3. visão combinada (declarativo somente leitura + runtime), e —
+    # em modo piloto — restrita à tarefa piloto, para que o piloto nunca
+    # perca a vez para outra tarefa READY que esteja à frente na fila
+    # (correção B1).
     tarefas, metadados, _registros = visao_da_fila(
         tasks_json_path=tasks_json_path, runtime_store=runtime_store
     )
+    tarefas = restringir_ao_piloto(tarefas, config)
 
     # 4. só workers programáticos do Bridge.
     todos_workers: list[WorkerRecord] = worker_registry.list_workers()
@@ -1040,8 +1132,8 @@ def _abrir_pr_e_guard(
     A idempotência de cada um vem de um compare-and-set diferente, nunca
     de uma suposição: a PR é reutilizada quando já existe uma aberta para
     a branch, e o Guard só é despachado quando
-    ``marcar_guard_disparado`` registra o par (tarefa, PR) pela PRIMEIRA
-    vez."""
+    ``reservar_guard_dispatch`` consegue reservar o direito de despachar
+    (ver o protocolo recuperável de ``task_runtime``, correção B4)."""
     notas: list[str] = []
     if github_api is None:
         notas.append(
@@ -1070,11 +1162,20 @@ def _abrir_pr_e_guard(
             "número registrado ou o status mudou) — nenhuma PR duplicada foi criada."
         )
 
-    if not runtime_store.marcar_guard_disparado(canonical_task_id, pr_number=pr_outcome.pr_number):
+    # Correção B4 (PR #129): protocolo de três passos, porque marcar
+    # "despachado" ANTES da chamada transformava uma falha de rede numa
+    # PR que ficaria NEEDS-AUDIT sem Guard PARA SEMPRE (toda tentativa
+    # seguinte recebia ALREADY_DISPATCHED). Agora: reserva (PENDING) ->
+    # chamada -> confirma (DISPATCHED) ou marca falha (FAILED, do qual uma
+    # próxima execução autorizada pode tentar de novo). ALREADY_DISPATCHED
+    # passa a significar de fato "a chamada voltou com sucesso".
+    if not runtime_store.reservar_guard_dispatch(
+        canonical_task_id, pr_number=pr_outcome.pr_number
+    ):
         return pr_outcome, GuardDispatchOutcome(
             "ALREADY_DISPATCHED",
-            f"o Guard já havia sido despachado para a PR #{pr_outcome.pr_number} desta tarefa — "
-            "não despacho de novo (idempotente).",
+            f"o Guard já foi despachado COM SUCESSO para a PR #{pr_outcome.pr_number} desta "
+            "tarefa — não despacho de novo (idempotente).",
             pr_number=pr_outcome.pr_number,
         ), notas
 
@@ -1082,7 +1183,18 @@ def _abrir_pr_e_guard(
         github_api, pr_number=pr_outcome.pr_number, ref=base_branch
     )
     if guard_outcome.action == "FAILED":
+        # A falha fica REGISTRADA como falha: é isso que deixa a próxima
+        # execução autorizada tentar de novo em vez de acreditar que o
+        # Guard já rodou.
+        runtime_store.falhar_guard_dispatch(canonical_task_id, pr_number=pr_outcome.pr_number)
         notas.append(guard_outcome.reason)
+        notas.append(
+            f"o disparo do Guard para a PR #{pr_outcome.pr_number} ficou registrado como FAILED — "
+            "uma próxima execução autorizada do Bridge pode tentar de novo (nada fica preso)."
+        )
+        return pr_outcome, guard_outcome, notas
+
+    runtime_store.confirmar_guard_dispatch(canonical_task_id, pr_number=pr_outcome.pr_number)
     return pr_outcome, guard_outcome, notas
 
 

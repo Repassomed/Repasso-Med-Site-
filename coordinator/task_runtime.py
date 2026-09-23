@@ -154,13 +154,53 @@ def novo_token_de_execucao() -> str:
     return uuid.uuid4().hex[:12]
 
 
+# ---------------------------------------------------------------------
+# Correção B4 da auditoria independente do PR #129 — protocolo RECUPERÁVEL
+# de disparo do Guard.
+#
+# O modelo anterior tinha um único campo (``guard_dispatched_pr``) gravado
+# ANTES da chamada ao GitHub: se a chamada falhasse (rede, 5xx, permissão),
+# o registro já dizia "despachado" e toda tentativa futura recebia
+# ALREADY_DISPATCHED — a PR podia ficar NEEDS-AUDIT sem Guard para sempre.
+#
+# Agora são três estados explícitos:
+#
+#   PENDING     -> uma execução reservou o direito de despachar e a chamada
+#                  ainda não voltou (ou o processo morreu no meio);
+#   DISPATCHED  -> a chamada VOLTOU COM SUCESSO. Único estado terminal:
+#                  nada redispara depois disto;
+#   FAILED      -> a chamada voltou com erro. Recuperável: uma próxima
+#                  execução autorizada pode tentar de novo.
+#
+# Uma retomada de ``PENDING`` também é permitida, de propósito: um processo
+# morto entre a reserva e a confirmação deixaria a tarefa presa para
+# sempre, e um segundo disparo do Guard é inofensivo (o Guard é uma
+# auditoria somente-leitura e o workflow tem ``concurrency`` por PR). O que
+# NUNCA acontece é redisparar sobre um ``DISPATCHED`` — a duplicação
+# silenciosa que a idempotência original queria evitar. ``guard_dispatch_
+# attempts`` guarda quantas tentativas houve, para a auditoria.
+# ---------------------------------------------------------------------
+
+GUARD_DISPATCH_PENDING = "PENDING"
+GUARD_DISPATCH_DISPATCHED = "DISPATCHED"
+GUARD_DISPATCH_FAILED = "FAILED"
+VALID_GUARD_DISPATCH_STATUSES: tuple[str, ...] = (
+    GUARD_DISPATCH_PENDING, GUARD_DISPATCH_DISPATCHED, GUARD_DISPATCH_FAILED,
+)
+# Estados a partir dos quais uma nova tentativa é permitida. ``DISPATCHED``
+# está deliberadamente FORA: é o único terminal.
+GUARD_DISPATCH_RETOMAVEIS: tuple[str, ...] = (GUARD_DISPATCH_PENDING, GUARD_DISPATCH_FAILED)
+
+
 @dataclass(frozen=True)
 class TaskRuntimeRecord:
     """O estado operacional de UMA tarefa canônica. Campos mínimos pedidos
     pela Issue #128 §3 (``canonical_task_id``, ``status``, ``worker_id``,
     ``branch``, checkpoint/commit, ``pr_number``, ``updated_at``), mais o
-    ``execution_task_id`` da regra 5 e o ``guard_dispatched_pr`` que torna
-    o disparo do Guard idempotente (§9)."""
+    ``execution_task_id`` da regra 5 e o trio
+    ``guard_dispatched_pr``/``guard_dispatch_status``/
+    ``guard_dispatch_attempts``, que torna o disparo do Guard idempotente
+    E recuperável (§9; correção B4 do PR #129)."""
 
     canonical_task_id: str
     status: str
@@ -170,6 +210,9 @@ class TaskRuntimeRecord:
     pr_number: int | None = None
     execution_task_id: str | None = None
     guard_dispatched_pr: int | None = None
+    # B4 (PR #129): o estado do disparo do Guard, não mais só "houve um".
+    guard_dispatch_status: str | None = None
+    guard_dispatch_attempts: int = 0
     reason: str = ""
     reserved_at: str | None = None
     updated_at: str | None = None
@@ -195,6 +238,15 @@ class TaskRuntimeRecord:
             raise ValueError(
                 f"guard_dispatched_pr precisa ser None ou inteiro positivo — recebido {self.guard_dispatched_pr!r}."
             )
+        if self.guard_dispatch_status is not None and self.guard_dispatch_status not in VALID_GUARD_DISPATCH_STATUSES:
+            raise ValueError(
+                f"guard_dispatch_status {self.guard_dispatch_status!r} inválido — precisa ser None "
+                f"ou um de {VALID_GUARD_DISPATCH_STATUSES}."
+            )
+        if not isinstance(self.guard_dispatch_attempts, int) or self.guard_dispatch_attempts < 0:
+            raise ValueError(
+                f"guard_dispatch_attempts precisa ser inteiro >= 0 — recebido {self.guard_dispatch_attempts!r}."
+            )
 
     @property
     def redistribuivel(self) -> bool:
@@ -208,6 +260,14 @@ class TaskRuntimeRecord:
     def estado_declarativo_equivalente(self) -> str:
         return ESTADO_DECLARATIVO_POR_RUNTIME[self.status]
 
+    @property
+    def guard_confirmado(self) -> bool:
+        """Propriedade CALCULADA (nunca campo gravável): o Guard só conta
+        como despachado quando a chamada voltou com sucesso. Um
+        ``PENDING``/``FAILED`` — ou um registro antigo sem status — nunca
+        é lido como confirmado."""
+        return self.guard_dispatch_status == GUARD_DISPATCH_DISPATCHED
+
     def to_dict(self) -> dict:
         return {
             "canonical_task_id": self.canonical_task_id,
@@ -218,6 +278,8 @@ class TaskRuntimeRecord:
             "pr_number": self.pr_number,
             "execution_task_id": self.execution_task_id,
             "guard_dispatched_pr": self.guard_dispatched_pr,
+            "guard_dispatch_status": self.guard_dispatch_status,
+            "guard_dispatch_attempts": self.guard_dispatch_attempts,
             "reason": self.reason,
             "reserved_at": self.reserved_at,
             "updated_at": self.updated_at,
@@ -234,6 +296,16 @@ class TaskRuntimeRecord:
             pr_number=d.get("pr_number"),
             execution_task_id=d.get("execution_task_id"),
             guard_dispatched_pr=d.get("guard_dispatched_pr"),
+            # Compatibilidade retroativa conservadora: um registro escrito
+            # ANTES da correção B4 tem só ``guard_dispatched_pr``. Ele
+            # significava "já despachei", então é lido como DISPATCHED —
+            # nunca como PENDING, que autorizaria um redisparo que a
+            # versão antiga não previa.
+            guard_dispatch_status=(
+                d.get("guard_dispatch_status")
+                or (GUARD_DISPATCH_DISPATCHED if d.get("guard_dispatched_pr") else None)
+            ),
+            guard_dispatch_attempts=int(d.get("guard_dispatch_attempts") or 0),
             reason=d.get("reason", ""),
             reserved_at=d.get("reserved_at"),
             updated_at=d.get("updated_at"),
@@ -408,26 +480,90 @@ class TaskRuntimeStore:
             evaluate, message=f"task-runtime: PR #{pr_number} para {alvo}"
         )
 
-    def marcar_guard_disparado(self, canonical_task_id: str, *, pr_number: int) -> bool:
-        """CAS que torna o disparo do Guard idempotente: devolve ``True``
-        só na PRIMEIRA vez para aquele par (tarefa, PR). Quem chama só
-        dispara o Guard quando isto devolve ``True``."""
-        alvo = (canonical_task_id or "").strip()
+    def _validar_pr(self, pr_number: int) -> None:
         if not isinstance(pr_number, int) or pr_number <= 0:
             raise ValueError(f"pr_number precisa ser inteiro positivo — recebido {pr_number!r}.")
+
+    def reservar_guard_dispatch(self, canonical_task_id: str, *, pr_number: int) -> bool:
+        """Passo 1 do protocolo B4: reserva o DIREITO de despachar o Guard,
+        ANTES da chamada. Devolve ``True`` só quando a leitura fresca
+        mostra um estado do qual uma tentativa é permitida:
+
+        - nenhum disparo registrado ainda (campo ausente/``None``);
+        - ``FAILED`` (a tentativa anterior falhou de verdade);
+        - ``PENDING`` (uma tentativa anterior nunca se confirmou — processo
+          morto entre a reserva e a confirmação);
+        - ``DISPATCHED`` de uma PR DIFERENTE (o caso de uma PR nova para a
+          mesma tarefa).
+
+        Devolve ``False`` — e não escreve nada — quando o Guard já está
+        ``DISPATCHED`` para ESTA PR. Esse é o único caminho para
+        ``ALREADY_DISPATCHED``, e ele agora significa de fato "a chamada
+        voltou com sucesso", não "alguém tentou uma vez"."""
+        alvo = (canonical_task_id or "").strip()
+        self._validar_pr(pr_number)
 
         def evaluate(dados: dict) -> tuple[bool, dict]:
             base = {t["canonical_task_id"]: t for t in (dados.get("tasks") or []) if t.get("canonical_task_id")}
             fresco = base.get(alvo)
             if fresco is None:
                 return False, dados
-            if fresco.get("guard_dispatched_pr") == pr_number:
+            status = fresco.get("guard_dispatch_status") or (
+                GUARD_DISPATCH_DISPATCHED if fresco.get("guard_dispatched_pr") else None
+            )
+            if status == GUARD_DISPATCH_DISPATCHED and fresco.get("guard_dispatched_pr") == pr_number:
                 return False, dados
-            base[alvo] = {**fresco, "guard_dispatched_pr": pr_number, "updated_at": _now_iso()}
+            base[alvo] = {
+                **fresco,
+                "guard_dispatched_pr": pr_number,
+                "guard_dispatch_status": GUARD_DISPATCH_PENDING,
+                "guard_dispatch_attempts": int(fresco.get("guard_dispatch_attempts") or 0) + 1,
+                "updated_at": _now_iso(),
+            }
             return True, {**dados, "tasks": list(base.values())}
 
         return self.store.conditional_update(
-            evaluate, message=f"task-runtime: Guard despachado para PR #{pr_number} ({alvo})"
+            evaluate, message=f"task-runtime: reserva disparo do Guard para PR #{pr_number} ({alvo})"
+        )
+
+    def _concluir_guard_dispatch(self, canonical_task_id: str, *, pr_number: int, status: str) -> bool:
+        alvo = (canonical_task_id or "").strip()
+        self._validar_pr(pr_number)
+        if status not in (GUARD_DISPATCH_DISPATCHED, GUARD_DISPATCH_FAILED):
+            raise ValueError(f"status de conclusão inválido: {status!r}.")
+
+        def evaluate(dados: dict) -> tuple[bool, dict]:
+            base = {t["canonical_task_id"]: t for t in (dados.get("tasks") or []) if t.get("canonical_task_id")}
+            fresco = base.get(alvo)
+            if fresco is None:
+                return False, dados
+            # Só quem está PENDING para ESTA PR pode concluir: uma
+            # conclusão atrasada de outra tentativa nunca sobrescreve um
+            # DISPATCHED já confirmado.
+            if fresco.get("guard_dispatch_status") != GUARD_DISPATCH_PENDING:
+                return False, dados
+            if fresco.get("guard_dispatched_pr") != pr_number:
+                return False, dados
+            base[alvo] = {**fresco, "guard_dispatch_status": status, "updated_at": _now_iso()}
+            return True, {**dados, "tasks": list(base.values())}
+
+        return self.store.conditional_update(
+            evaluate, message=f"task-runtime: disparo do Guard {status} para PR #{pr_number} ({alvo})"
+        )
+
+    def confirmar_guard_dispatch(self, canonical_task_id: str, *, pr_number: int) -> bool:
+        """Passo 2a: a chamada VOLTOU COM SUCESSO -> ``DISPATCHED``, o
+        único estado terminal."""
+        return self._concluir_guard_dispatch(
+            canonical_task_id, pr_number=pr_number, status=GUARD_DISPATCH_DISPATCHED
+        )
+
+    def falhar_guard_dispatch(self, canonical_task_id: str, *, pr_number: int) -> bool:
+        """Passo 2b: a chamada falhou -> ``FAILED``, recuperável por uma
+        próxima execução autorizada. É o que impede a PR de ficar
+        NEEDS-AUDIT sem Guard para sempre."""
+        return self._concluir_guard_dispatch(
+            canonical_task_id, pr_number=pr_number, status=GUARD_DISPATCH_FAILED
         )
 
 

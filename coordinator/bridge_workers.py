@@ -26,14 +26,27 @@ por compare-and-set que preserva estado real.
 1. **Nome nunca é livre.** Só os quatro ``worker_id`` de
    ``BRIDGE_WORKER_IDS`` — sem parâmetro de nome, sem sufixo derivado,
    sem "qualquer id que comece com claude-worker".
-2. **Um único worker elegível na V1.** ``ELIGIBLE_WORKER_IDS`` é
-   ``("claude-worker-4",)``, literal em código. Só ele nasce
-   ``AVAILABLE``/``can_execute=True``; ``claude-worker-1``-``3`` nascem
-   ``OFFLINE``/``can_execute=False`` e, por isso, nem o
-   ``scheduler._candidatos_disponiveis`` nem
-   ``OperationalWorkerRegistry.escolher_disponivel`` jamais os oferecem.
-   Ligá-los é uma decisão explícita FUTURA de José (depois do piloto),
-   nunca um efeito colateral desta rodada.
+2. **Elegibilidade é por MODO, e o modo vem do portão.** Correção B3
+   da auditoria independente do PR #129: antes a elegibilidade era uma
+   tupla única (``claude-worker-4``), então mudar para
+   ``active-supervised`` depois do piloto NÃO ligava os outros três — só
+   uma alteração de código ligaria, exatamente a lacuna que esta
+   implementação deveria fechar. Agora existem dois conjuntos FIXOS em
+   código, escolhidos pelo modo já validado pelo portão:
+
+   - modo ``pilot``: ``ELIGIBLE_WORKER_IDS_PILOT`` = só
+     ``claude-worker-4``. Os outros três nascem
+     ``OFFLINE``/``can_execute=False`` e, por isso, nem o
+     ``scheduler._candidatos_disponiveis`` nem
+     ``OperationalWorkerRegistry.escolher_disponivel`` jamais os oferecem;
+   - modo ``active-supervised``: ``ELIGIBLE_WORKER_IDS_ACTIVE_SUPERVISED``
+     = os QUATRO ids fixos, e só então ``preparar_workers_do_bridge``
+     habilita por compare-and-set os que ainda estavam OFFLINE.
+
+   Isto não inventa disponibilidade: ``active-supervised`` é uma decisão
+   explícita de José numa Variable do repositório, tomada depois do
+   piloto, e um modo desconhecido devolve conjunto VAZIO (fail-closed).
+   Nenhum id sai de env/input/arquivo em nenhum dos dois casos.
 3. **``AVAILABLE`` nunca vem de seed global.** ``worker_ops.
    default_seed_workers()`` continua SEM estes quatro workers: enquanto
    ninguém rodar este bootstrap com o Bridge ligado, eles simplesmente
@@ -51,7 +64,15 @@ por compare-and-set que preserva estado real.
    um ``BUSY``/``LIMIT`` no meio de uma execução nunca é rebaixado a
    ``AVAILABLE`` por uma segunda execução do bootstrap. Rodar isto duas
    vezes é idempotente.
-6. **Não executa nada.** Não despacha tarefa, não chama modelo nenhum,
+6. **Habilitar um worker existente é CAS e só sobe de OFFLINE.**
+   ``OperationalWorkerRegistry.habilitar_worker_programatico_condicional``
+   só escreve quando uma leitura fresca mostra EXATAMENTE
+   ``type=api_runner`` + ``OFFLINE`` + ``can_execute=False`` +
+   ``current_task=None``. Um worker ``BUSY``/``NEAR_LIMIT``/``LIMIT``, um
+   worker com tarefa em andamento e qualquer ``human_session`` são
+   impossíveis de habilitar por este caminho — não por convenção, por
+   estrutura.
+7. **Não executa nada.** Não despacha tarefa, não chama modelo nenhum,
    não toca branch de trabalho, não abre PR, não publica — só escreve
    registros na branch de estado dedicada do Worker Registry
    (``coordinator-state-workers``, nunca a branch padrão, nunca matéria).
@@ -83,11 +104,40 @@ BRIDGE_DISPLAY_NAMES: dict[str, str] = {
 }
 
 BRIDGE_WORKER_TYPE = "api_runner"
-BRIDGE_CAPABILITIES: tuple[str, ...] = ("codigo",)
 
-# Regra 2 — V1/piloto: só o Worker 4. Literal em código, nunca lido de
-# env/input/arquivo/Variable.
-ELIGIBLE_WORKER_IDS: tuple[str, ...] = (BRIDGE_WORKER_4,)
+# Correção B2 da auditoria independente do PR #129: com só ``("codigo",)``
+# o Bridge não conseguiria receber a MAIOR PARTE da fila real do Repasso
+# Med. ``scheduler._AREA_TO_CAPABILITY`` mapeia ``materia``/``assets``/
+# ``documentacao`` -> ``conteudo``, então Fisiopatologia II, Toxicologia e
+# Dermatologia exigem ``conteudo``, e ``_e_compativel`` recusaria o worker
+# programático para todas elas. As duas capabilities são as MESMAS das
+# sessões humanas (``worker_ops.default_seed_workers``), o que é o ponto:
+# a diferença entre um worker humano e um programático é COMO ele é
+# iniciado, não o que ele sabe fazer.
+#
+# Isto não afrouxa nenhuma segurança: quem decide se uma tarefa pode ser
+# executada automaticamente continua sendo o portão de política
+# DECLARATIVO da própria tarefa (``automation_enabled``, ``risk_level``,
+# ``policy_level``, ``jose_authorized`` — ver ``worker_bridge.
+# avaliar_politica``), o modo do Bridge e a auditoria obrigatória depois
+# do NEEDS-AUDIT. Capability responde "sabe fazer?", não "pode fazer?".
+BRIDGE_CAPABILITIES: tuple[str, ...] = ("conteudo", "codigo")
+
+# Os modos do Bridge, por VALOR — ``worker_bridge.BRIDGE_MODE_*`` aponta
+# para estas constantes em vez de redeclarar o texto, para que os dois
+# módulos nunca divirjam (há teste estrutural provando a identidade).
+MODO_PILOT = "pilot"
+MODO_ACTIVE_SUPERVISED = "active-supervised"
+
+# Regra 2 — conjuntos FIXOS em código, nunca lidos de
+# env/input/arquivo/Variable. O modo (já validado pelo portão) escolhe
+# qual vale; um modo desconhecido não escolhe nenhum.
+ELIGIBLE_WORKER_IDS_PILOT: tuple[str, ...] = (BRIDGE_WORKER_4,)
+ELIGIBLE_WORKER_IDS_ACTIVE_SUPERVISED: tuple[str, ...] = BRIDGE_WORKER_IDS
+ELEGIVEIS_POR_MODO: dict[str, tuple[str, ...]] = {
+    MODO_PILOT: ELIGIBLE_WORKER_IDS_PILOT,
+    MODO_ACTIVE_SUPERVISED: ELIGIBLE_WORKER_IDS_ACTIVE_SUPERVISED,
+}
 
 
 def e_worker_do_bridge(nome_ou_id: str) -> bool:
@@ -104,20 +154,30 @@ def e_worker_do_bridge(nome_ou_id: str) -> bool:
     return any(nome.lower() == alvo for nome in BRIDGE_DISPLAY_NAMES.values())
 
 
-def e_worker_elegivel(worker_id: str) -> bool:
-    return (worker_id or "").strip().lower() in ELIGIBLE_WORKER_IDS
+def ids_elegiveis(modo: str) -> tuple[str, ...]:
+    """Os ids elegíveis NAQUELE modo. Fail-closed: um modo desconhecido
+    (ou vazio) devolve tupla vazia, então nenhum worker é elegível e
+    nenhuma atribuição acontece — nunca o conjunto mais permissivo."""
+    return ELEGIVEIS_POR_MODO.get((modo or "").strip(), ())
 
 
-def registros_do_bridge() -> list[WorkerRecord]:
+def e_worker_elegivel(worker_id: str, *, modo: str) -> bool:
+    """``modo`` é OBRIGATÓRIO e nomeado de propósito: não existe
+    "elegível" em abstrato, e nenhum chamador pode esquecer o modo por
+    acidente de posição (correção B3, PR #129)."""
+    return (worker_id or "").strip().lower() in ids_elegiveis(modo)
+
+
+def registros_do_bridge(*, modo: str) -> list[WorkerRecord]:
     """Os quatro ``WorkerRecord`` exatos que o bootstrap cria —
-    construídos aqui, nunca a partir de dado externo. Só o elegível nasce
-    ``AVAILABLE``; os outros três nascem ``OFFLINE`` e
+    construídos aqui, nunca a partir de dado externo. Só os elegíveis
+    NAQUELE modo nascem ``AVAILABLE``; os demais nascem ``OFFLINE`` e
     ``can_execute=False``. ``never_merge``/``can_publish`` continuam
     propriedades calculadas de ``WorkerRecord`` (sempre ``True``/
     ``False``, nunca campos graváveis)."""
     registros: list[WorkerRecord] = []
     for worker_id in BRIDGE_WORKER_IDS:
-        elegivel = e_worker_elegivel(worker_id)
+        elegivel = e_worker_elegivel(worker_id, modo=modo)
         registros.append(
             WorkerRecord(
                 worker_id=worker_id,
@@ -155,6 +215,11 @@ class BridgeBootstrapResult:
     reason: str
     criados: tuple[str, ...] = ()
     ja_existentes: tuple[str, ...] = ()
+    # Correção B3 (PR #129): quem foi HABILITADO nesta execução (OFFLINE ->
+    # AVAILABLE por CAS, só no modo ``active-supervised``) e quem ficou
+    # como estava porque a leitura fresca não permitia a transição.
+    habilitados: tuple[str, ...] = ()
+    nao_habilitados: tuple[str, ...] = ()
 
     def to_dict(self) -> dict:
         return {
@@ -162,6 +227,8 @@ class BridgeBootstrapResult:
             "reason": self.reason,
             "criados": list(self.criados),
             "ja_existentes": list(self.ja_existentes),
+            "habilitados": list(self.habilitados),
+            "nao_habilitados": list(self.nao_habilitados),
         }
 
 
@@ -183,19 +250,21 @@ def preparar_workers_do_bridge(
             f"portão do Worker Bridge fechado — nenhum worker programático é preparado: {gate.reason}",
         )
 
-    if config.is_pilot and not e_worker_elegivel(config.pilot_worker_id or ""):
+    if config.is_pilot and not e_worker_elegivel(config.pilot_worker_id or "", modo=config.mode):
         return BridgeBootstrapResult(
             "BLOCKED",
             (
                 f"modo piloto configurado para {config.pilot_worker_id!r}, que não é o worker "
-                f"elegível desta V1 ({list(ELIGIBLE_WORKER_IDS)}) — configuração inconsistente, "
-                "nada é registrado (fail-closed)."
+                f"elegível do piloto ({list(ELIGIBLE_WORKER_IDS_PILOT)}) — configuração "
+                "inconsistente, nada é registrado (fail-closed)."
             ),
         )
 
+    elegiveis = ids_elegiveis(config.mode)
+
     criados: list[str] = []
     ja_existentes: list[str] = []
-    for registro in registros_do_bridge():
+    for registro in registros_do_bridge(modo=config.mode):
         if registry.criar_se_ausente_condicional(
             registro, message=f"worker-bridge: prepara worker {registro.worker_id} (Issue #128 §1)"
         ):
@@ -203,15 +272,45 @@ def preparar_workers_do_bridge(
         else:
             ja_existentes.append(registro.worker_id)
 
+    # Correção B3 (PR #129): o caminho de ativação pós-piloto. Um worker
+    # que JÁ existe é preservado por ``criar_se_ausente_condicional``, o
+    # que é correto — mas era também o que tornava a promessa "depois basta
+    # mudar o modo" falsa: claude-worker-1..3, criados OFFLINE durante o
+    # piloto, continuariam OFFLINE para sempre. Aqui eles sobem, e só
+    # aqui: exige modo ``active-supervised`` (portão já validado acima),
+    # id na lista FIXA de elegíveis daquele modo, e um CAS que só aceita
+    # ``api_runner`` + OFFLINE + ``can_execute=False`` + sem tarefa. Nada
+    # disso inventa disponibilidade: o modo é uma decisão de José numa
+    # Variable, tomada depois do piloto.
+    habilitados: list[str] = []
+    nao_habilitados: list[str] = []
+    for worker_id in ja_existentes:
+        if worker_id not in elegiveis:
+            continue
+        if registry.habilitar_worker_programatico_condicional(
+            worker_id,
+            message=(
+                f"worker-bridge: habilita {worker_id} no modo {config.mode} "
+                "(Issue #128 §1 · correção B3 do PR #129)"
+            ),
+        ):
+            habilitados.append(worker_id)
+        else:
+            nao_habilitados.append(worker_id)
+
     return BridgeBootstrapResult(
         "PREPARED",
         (
             f"workers programáticos prontos: criados={criados or '-'}, já existentes "
-            f"(preservados exatamente como estavam)={ja_existentes or '-'}. Elegíveis nesta V1: "
-            f"{list(ELIGIBLE_WORKER_IDS)}; os demais ficam OFFLINE/can_execute=False."
+            f"(preservados exatamente como estavam)={ja_existentes or '-'}, habilitados agora "
+            f"(OFFLINE -> AVAILABLE por CAS)={habilitados or '-'}, elegíveis que continuaram como "
+            f"estavam (em execução, ou já AVAILABLE)={nao_habilitados or '-'}. Elegíveis no modo "
+            f"{config.mode!r}: {list(elegiveis)}; os demais ficam OFFLINE/can_execute=False."
         ),
         criados=tuple(criados),
         ja_existentes=tuple(ja_existentes),
+        habilitados=tuple(habilitados),
+        nao_habilitados=tuple(nao_habilitados),
     )
 
 

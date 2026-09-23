@@ -323,10 +323,14 @@ def disparar_guard(
     garante que o Guard despachado rode a versão confiável do workflow, e
     não a de uma ref escolhida por alguém no momento do disparo.
 
-    A IDEMPOTÊNCIA não vive aqui: ela vive no compare-and-set de
-    ``task_runtime.TaskRuntimeStore.marcar_guard_disparado`` — quem chama
-    só chega a esta função quando aquele CAS devolveu ``True`` pela
-    primeira vez para o par (tarefa, PR)."""
+    A IDEMPOTÊNCIA não vive aqui: ela vive no protocolo recuperável de
+    ``task_runtime`` (correção B4 da auditoria do PR #129) — quem chama só
+    chega a esta função quando ``reservar_guard_dispatch`` devolveu
+    ``True``, e registra depois o desfecho com
+    ``confirmar_guard_dispatch``/``falhar_guard_dispatch``. Por isso esta
+    função pode devolver ``FAILED`` sem deixar nada preso: a falha é
+    registrada como falha, e uma próxima execução autorizada tenta de
+    novo."""
     if not isinstance(pr_number, int) or pr_number <= 0:
         return GuardDispatchOutcome("SKIPPED", f"pr_number inválido ({pr_number!r}) — nada despachado.")
     try:
