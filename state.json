@@ -108,7 +108,7 @@
         "codigo"
       ],
       "commit": "7afac9ef0bd47dbe3118676d0fe290ee4cfd811a",
-      "current_task": "infra-coordinator-final-canary-r4",
+      "current_task": null,
       "display_name": "API Runner Canary A",
       "last_checkpoint": "7afac9ef0bd47dbe3118676d0fe290ee4cfd811a",
       "last_heartbeat": "2026-09-23T02:47:45.016426+00:00",
@@ -119,21 +119,21 @@
       "worker_id": "api-runner-canary-a"
     },
     {
-      "branch": null,
+      "branch": "runner/infra-coordinator-final-canary-r4",
       "can_audit": false,
       "can_execute": true,
       "can_publish": false,
       "capabilities": [
         "codigo"
       ],
-      "commit": null,
-      "current_task": null,
+      "commit": "7afac9ef0bd47dbe3118676d0fe290ee4cfd811a",
+      "current_task": "infra-coordinator-final-canary-r4",
       "display_name": "API Runner Canary B",
-      "last_checkpoint": null,
+      "last_checkpoint": "7afac9ef0bd47dbe3118676d0fe290ee4cfd811a",
       "last_heartbeat": null,
       "never_merge": true,
       "progress": null,
-      "status": "AVAILABLE",
+      "status": "BUSY",
       "type": "api_runner",
       "worker_id": "api-runner-canary-b"
     }
