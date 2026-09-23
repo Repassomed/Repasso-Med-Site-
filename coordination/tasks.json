@@ -227,7 +227,7 @@
       "objetivo": "Corrigir questões desconfiguradas/negrito/pistas de resposta preservando gabarito, IDs, proveniência e annotations.",
       "fonte": "Issue #112",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P2",
       "capabilities_required": [
         "conteudo"
@@ -237,8 +237,8 @@
       "pr": null,
       "commit": null,
       "issue": 112,
-      "notas": "Não misturar com Toxicología. Aplicar Lei 8-A e QA responsivo. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática.",
-      "automation_enabled": true,
+      "notas": "Não misturar com Toxicología. Aplicar Lei 8-A e QA responsivo. Autorizada explicitamente por José para execução via Worker Bridge em active-supervised. Nível C, risco MEDIO; resultado obrigatório NEEDS-AUDIT e auditoria semântica independente antes de qualquer MERGE-READY. Sem merge/deploy/publicação automática. Tentativa real anterior run 35930652546 / Error Registry #156 falhou antes do PR. Não reutilizar o canonical/execution id; retry R2 abaixo carrega escopo detalhado da Issue #112.",
+      "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "MEDIO",
       "policy_level": "C",
@@ -262,14 +262,14 @@
         "codigo"
       ],
       "dependencias": [
-        "semiologia-ii-b05-b10-gaps",
+        "semiologia-ii-b05-pleural-r3",
         "semiologia-ii-fechamento-assets"
       ],
       "branch": null,
       "pr": null,
       "commit": null,
       "issue": 93,
-      "notas": "Prioridade máxima de produto após fechar Semiología II. Não aplicar z-index genérico sem reproduzir a causa."
+      "notas": "Prioridade máxima de produto após fechar Semiología II. Não aplicar z-index genérico sem reproduzir a causa. Dependência textual migrada para a cadeia R3 explícita; só libera após semiologia-ii-b05-pleural-r3 e semiologia-ii-fechamento-assets DONE."
     },
     {
       "id": "infra-coordinator-final-canary-r3",
@@ -973,7 +973,7 @@
       "objetivo": "Fechar os achados P0 e P1 do mapa read-only: alternativa duplicada no Framingham, vetor e eixo no ECG, líquido pleural, ambiguidade da tabela de PA.",
       "fonte": "Issue #67 · retry explícito após Error Registry #154",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "dependencias": [
         "semiologia-ii-b01-b04-provas"
       ],
@@ -981,9 +981,9 @@
       "pr": null,
       "commit": null,
       "issue": 67,
-      "notas": "Nova tentativa canônica após corrigir o teto de saída do Runner. NÃO reutilizar o canonical/execution id da tentativa semiologia-ii-b05-b10-gaps. Fechar alternativa duplicada no Framingham, vetor/eixo no ECG, líquido pleural e ambiguidade da tabela de PA. Resultado obrigatório NEEDS-AUDIT; sem merge/deploy/publicação automática.",
+      "notas": "Nova tentativa canônica após corrigir o teto de saída do Runner. NÃO reutilizar o canonical/execution id da tentativa semiologia-ii-b05-b10-gaps. Fechar alternativa duplicada no Framingham, vetor/eixo no ECG, líquido pleural e ambiguidade da tabela de PA. Resultado obrigatório NEEDS-AUDIT; sem merge/deploy/publicação automática. Execução real run 35930924167 / Error Registry #157 terminou FAILED: resposta segura vazia porque a tarefa não carregava o diagnóstico detalhado da auditoria #67. Não reutilizar; substituída por microtarefas R3 com evidência explícita.",
       "prioridade_declarada": "P1",
-      "automation_enabled": true,
+      "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "MEDIO",
       "policy_level": "C",
@@ -991,6 +991,154 @@
       "capabilities_required": [
         "conteudo"
       ]
+    },
+    {
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "agente": null,
+      "pr": null,
+      "commit": null,
+      "issue": 67,
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "id": "semiologia-ii-b07-framingham-r3",
+      "titulo": "P0 — Semiología II B07: corrigir questão Framingham duplicada",
+      "objetivo": "Corrigir somente o gap P0 de Framingham no B07: a questão atual tem alternativas c e d semanticamente equivalentes para a regra diagnóstica. Preservar como correta a regra ensinada pela cátedra: 2 critérios mayores OU 1 mayor + 2 menores. Tornar o distrator c inequivocamente diferente/incorreto, sem pista editorial como '(combinación incorrecta)', preservando enunciado, proveniência, estrutura, IDs/annotations e espelho no Banco General quando aplicável.",
+      "fonte": "Issue #67 · auditoria independente comentário 5752213771 · Error Registry #157",
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "dependencias": [
+        "semiologia-ii-b01-b04-provas"
+      ],
+      "branch": "runner/semiologia-ii-b07-framingham-r3",
+      "notas": "Microtarefa criada para evitar contexto amplo/vago. Alterar SOMENTE o necessário para o Framingham B07; não expandir para outros gaps. Resultado obrigatório NEEDS-AUDIT; sem merge/deploy/publicação automática."
+    },
+    {
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "agente": null,
+      "pr": null,
+      "commit": null,
+      "issue": 67,
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "id": "semiologia-ii-b08-hta-r3",
+      "titulo": "P1 — Semiología II B08: desambiguar HTA e resolver contradição de obesidade",
+      "objetivo": "No B08, resolver dois pontos auditados: (1) a V/F sobre PA está ambígua porque a cátedra mostra duas classificações — tabela 1 com elevada 120–139/70–89 e atualização com elevada 120–129/<80; a questão deve indicar explicitamente qual tabela/classificação está cobrando, sem apagar a coexistência das duas fontes. (2) obesidad/sobrepeso aparece na cátedra como no modificable, enquanto outra parte do próprio HTML e a questão/flashcards tratam como modificable; resolver com rotulagem explícita de fonte, preservando o que a cátedra cobra e sem apresentar a contradição como fato único universal.",
+      "fonte": "Issue #67 · auditoria independente comentário 5752213771",
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "dependencias": [
+        "semiologia-ii-b07-framingham-r3"
+      ],
+      "branch": "runner/semiologia-ii-b08-hta-r3",
+      "notas": "Alterar só B08 e cópias correspondentes no Banco General, se houver. Preservar IDs/annotations/proveniência. NEEDS-AUDIT obrigatório."
+    },
+    {
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "agente": null,
+      "pr": null,
+      "commit": null,
+      "issue": 67,
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "id": "semiologia-ii-b09-ecg-r3",
+      "titulo": "P1 — Semiología II B09: vetor/eixo ECG + duplicata semântica",
+      "objetivo": "No B09, ensinar explicitamente a regra operacional da cátedra: vetor que se aproxima do eletrodo gera deflexão positiva; que se afasta gera deflexão negativa; quanto mais alinhado à derivação, maior a amplitude. Incluir isodifásico e regra da perpendicular para estimar eixo, além de FREH III se ausente. Auditar Q1 × Q9, que hoje cobram a mesma competência (PR, RR e segmento PR), e eliminar a duplicação sem perder cobertura avaliativa nem gabarito.",
+      "fonte": "Issue #67 · auditoria independente comentário 5752213771",
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "dependencias": [
+        "semiologia-ii-b08-hta-r3"
+      ],
+      "branch": "runner/semiologia-ii-b09-ecg-r3",
+      "notas": "Alterar só B09 e espelho no Banco General quando aplicável. Conteúdo deve permanecer em castelhano e didático desde zero. NEEDS-AUDIT obrigatório."
+    },
+    {
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "agente": null,
+      "pr": null,
+      "commit": null,
+      "issue": 67,
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "id": "semiologia-ii-b05-pleural-r3",
+      "titulo": "P1 — Semiología II B05: completar estudo do líquido pleural",
+      "objetivo": "No B05, incorporar os elementos explicitamente presentes na cátedra e ausentes do HTML: pH < 7,2; amilasa; triglicéridos >110 mg/dL; urea/creatinina e urinotórax; características macroscópicas hialino, amarillo-citrino, lechoso, purulento fétido, achocolatado e olor a orina. Integrar de modo didático sem apagar Light/derrame/neumotórax já corretos e sem inventar valores não presentes na fonte auditada.",
+      "fonte": "Issue #67 · auditoria independente comentário 5752213771",
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "dependencias": [
+        "semiologia-ii-b09-ecg-r3"
+      ],
+      "branch": "runner/semiologia-ii-b05-pleural-r3",
+      "notas": "Última microtarefa textual B05–B10 desta cadeia. Preservar IDs/annotations/espelho e terminar NEEDS-AUDIT."
+    },
+    {
+      "id": "dermatologia-questoes-issue112-r2",
+      "titulo": "P2 — Dermatología: retry seguro de normalização das questões",
+      "area": "materia",
+      "materia": "dermatologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/dermatologia.html"
+      ],
+      "objetivo": "Inventariar as questões de Dermatología e corrigir somente problemas de apresentação/estrutura que denunciem a resposta ou quebrem a questão: negrito/formatação diferenciada em alternativas, listas quebradas, espaçamento/classes/HTML. Preservar enunciado e significado das alternativas, gabarito científico, IDs, block_id, proveniência e annotations; preservar/alinhar o espelho bloco × Banco General. Não remover questão e não alterar gabarito por motivo cosmético. Se uma origem OCR/foto for rastreável, registrar; se o núcleo ou a resposta não forem seguros, não inventar e deixar pendente conforme Lei 8-A.",
+      "fonte": "Issue #112 · retry após Error Registry #156",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P2",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/dermatologia-questoes-issue112-r2",
+      "pr": null,
+      "commit": null,
+      "issue": 112,
+      "notas": "QA: nenhuma resposta visualmente denunciada; HTML/listas íntegros; bloco × Banco General espelhados; annotations preservadas; responsivo 390/768/1024/1440. NEEDS-AUDIT; sem merge/deploy/publicação automática.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
     }
   ]
 }
