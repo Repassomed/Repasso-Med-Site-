@@ -1550,6 +1550,199 @@ def test_b4_ciclo_real_registra_a_falha_do_guard_e_permite_retomada() -> None:
     print("OK  test_b4_ciclo_real_registra_a_falha_do_guard_e_permite_retomada")
 
 
+def test_pr_recovery_detecta_needs_audit_sem_pr_e_respeita_piloto() -> None:
+    store = _runtime_store()
+    reserva = store.reservar(
+        "outra-tarefa", worker_id=PILOT_WORKER, branch="runner/outra-tarefa"
+    )
+    assert reserva.reservado and reserva.record is not None
+    assert store.registrar_resultado(
+        "outra-tarefa",
+        status=task_runtime.RUNTIME_NEEDS_AUDIT,
+        worker_id=PILOT_WORKER,
+        execution_task_id=reserva.record.execution_task_id or "",
+        reason="ok",
+        checkpoint_commit="abcdef1",
+        branch="runner/outra-tarefa",
+    )
+    registros = store.por_id()
+
+    # Em active-supervised a execução publicada sem PR é candidata.
+    ativo = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+    candidato = worker_bridge.candidato_a_retomada_da_pr(registros, ativo)
+    assert candidato is not None and candidato.canonical_task_id == "outra-tarefa"
+
+    # Em pilot só a task piloto exata pode ser recuperada.
+    assert worker_bridge.candidato_a_retomada_da_pr(registros, _config()) is None
+    print("OK  test_pr_recovery_detecta_needs_audit_sem_pr_e_respeita_piloto")
+
+
+def test_pr_recovery_abre_pr_e_guard_sem_runner_nem_anthropic_e_nao_duplica() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        caminho_tasks = _escrever_tasks_json(tmp, [_tarefa()])
+        cfg = _config()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        reserva = store.reservar(
+            "infra-bridge-teste", worker_id=PILOT_WORKER,
+            branch="runner/infra-bridge-teste",
+        )
+        assert reserva.reservado and reserva.record is not None
+        assert store.registrar_resultado(
+            "infra-bridge-teste",
+            status=task_runtime.RUNTIME_NEEDS_AUDIT,
+            worker_id=PILOT_WORKER,
+            execution_task_id=reserva.record.execution_task_id or "",
+            reason="patch já publicado",
+            checkpoint_commit="abcdef1",
+            branch="runner/infra-bridge-teste",
+        )
+
+        api = _FakeGitHubApi()
+        proibido = _GeracaoProibida()
+
+        primeiro = worker_bridge.executar_ciclo(
+            config=cfg,
+            tasks_json_path=caminho_tasks,
+            repo_dir=_clonar_workdir(tmp, remoto, "work-pr-retry-1"),
+            state_git_remote=remoto,
+            worker_registry=registry,
+            runtime_store=store,
+            base_branch="bootstrap",
+            github_api=api,
+            validation_command_keys=(),
+            patch=None,
+            gerar_patch=proibido,
+        )
+        assert primeiro.action == "PR_RETRY", primeiro
+        assert proibido.chamado is False
+        assert primeiro.dispatch is None
+        assert primeiro.pr is not None and primeiro.pr.action == "CREATED"
+        assert primeiro.pr.pr_number == 901
+        assert primeiro.guard is not None and primeiro.guard.action == "DISPATCHED"
+        assert len(api.criadas) == 1
+        assert api.dispatches == [
+            (bridge_pr.GUARD_WORKFLOW_FILE, "bootstrap", {"pr_number": "901"})
+        ]
+
+        registro = store.get("infra-bridge-teste")
+        assert registro is not None
+        assert registro.status == task_runtime.RUNTIME_NEEDS_AUDIT
+        assert registro.branch == "runner/infra-bridge-teste"
+        assert registro.checkpoint_commit == "abcdef1"
+        assert registro.execution_task_id == reserva.record.execution_task_id
+        assert registro.pr_number == 901
+        assert registro.guard_confirmado is True
+
+        # O caminho de manutenção não cria branch/claim/commit novo.
+        branches = subprocess.run(
+            ["git", "-C", remoto, "branch", "--format=%(refname:short)"],
+            capture_output=True, text=True, check=True,
+        ).stdout.split()
+        assert branches == ["bootstrap"], branches
+
+        # Um ciclo seguinte não duplica PR nem Guard e também não gera patch.
+        proibido2 = _GeracaoProibida()
+        segundo = worker_bridge.executar_ciclo(
+            config=cfg,
+            tasks_json_path=caminho_tasks,
+            repo_dir=_clonar_workdir(tmp, remoto, "work-pr-retry-2"),
+            state_git_remote=remoto,
+            worker_registry=registry,
+            runtime_store=store,
+            base_branch="bootstrap",
+            github_api=api,
+            validation_command_keys=(),
+            patch=None,
+            gerar_patch=proibido2,
+        )
+        assert segundo.action in ("NO_ASSIGNMENT", "POOL_PAUSED", "BLOCKED"), segundo
+        assert proibido2.chamado is False
+        assert len(api.criadas) == 1
+        assert len(api.dispatches) == 1
+    print("OK  test_pr_recovery_abre_pr_e_guard_sem_runner_nem_anthropic_e_nao_duplica")
+
+
+def test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte() -> None:
+    class _ApiFalhaUmaPr(_FakeGitHubApi):
+        def __init__(self) -> None:
+            super().__init__()
+            self.tentativas_pr = 0
+
+        def criar_pr(self, *, titulo: str, head: str, base: str, corpo: str) -> dict:
+            self.tentativas_pr += 1
+            if self.tentativas_pr == 1:
+                raise bridge_pr.GitHubBridgeApiError("403 simulado ao criar PR")
+            return super().criar_pr(titulo=titulo, head=head, base=base, corpo=corpo)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        caminho_tasks = _escrever_tasks_json(tmp, [_tarefa()])
+        cfg = _config()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        reserva = store.reservar(
+            "infra-bridge-teste", worker_id=PILOT_WORKER,
+            branch="runner/infra-bridge-teste",
+        )
+        assert reserva.reservado and reserva.record is not None
+        assert store.registrar_resultado(
+            "infra-bridge-teste",
+            status=task_runtime.RUNTIME_NEEDS_AUDIT,
+            worker_id=PILOT_WORKER,
+            execution_task_id=reserva.record.execution_task_id or "",
+            reason="patch já publicado",
+            checkpoint_commit="abcdef1",
+            branch="runner/infra-bridge-teste",
+        )
+
+        api = _ApiFalhaUmaPr()
+
+        primeira = worker_bridge.executar_ciclo(
+            config=cfg,
+            tasks_json_path=caminho_tasks,
+            repo_dir=_clonar_workdir(tmp, remoto, "work-pr-fail-1"),
+            state_git_remote=remoto,
+            worker_registry=registry,
+            runtime_store=store,
+            base_branch="bootstrap",
+            github_api=api,
+            validation_command_keys=(),
+            patch=None,
+            gerar_patch=_GeracaoProibida(),
+        )
+        assert primeira.action == "PR_RETRY"
+        assert primeira.pr is not None and primeira.pr.action == "FAILED"
+        assert store.get("infra-bridge-teste").pr_number is None
+        assert api.dispatches == []
+
+        # Como pr_number continuou ausente, o próximo ciclo tenta somente a PR de novo.
+        proibido = _GeracaoProibida()
+        segunda = worker_bridge.executar_ciclo(
+            config=cfg,
+            tasks_json_path=caminho_tasks,
+            repo_dir=_clonar_workdir(tmp, remoto, "work-pr-fail-2"),
+            state_git_remote=remoto,
+            worker_registry=registry,
+            runtime_store=store,
+            base_branch="bootstrap",
+            github_api=api,
+            validation_command_keys=(),
+            patch=None,
+            gerar_patch=proibido,
+        )
+        assert segunda.action == "PR_RETRY"
+        assert proibido.chamado is False
+        assert segunda.pr is not None and segunda.pr.action == "CREATED"
+        assert segunda.guard is not None and segunda.guard.action == "DISPATCHED"
+        assert store.get("infra-bridge-teste").pr_number == 901
+        assert api.tentativas_pr == 2
+        assert len(api.criadas) == 1
+        assert len(api.dispatches) == 1
+    print("OK  test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte")
+
+
 def test_b5_piloto_nunca_inicia_por_evento() -> None:
     """B5: a entrega automática existe, mas o piloto continua sendo uma
     execução OBSERVADA. Um evento nunca o inicia — nem se a Variable do
@@ -1839,6 +2032,10 @@ def main() -> int:
         test_b4_retomada_do_guard_respeita_o_portao_do_piloto,
         test_b4_retomada_nao_pega_tarefa_sem_pr_nem_guard_ja_confirmado,
         test_b4_ciclo_real_registra_a_falha_do_guard_e_permite_retomada,
+        # Issue #135 — recuperação de PR pendente, zero Claude/Runner.
+        test_pr_recovery_detecta_needs_audit_sem_pr_e_respeita_piloto,
+        test_pr_recovery_abre_pr_e_guard_sem_runner_nem_anthropic_e_nao_duplica,
+        test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte,
         test_b5_piloto_nunca_inicia_por_evento,
         test_b5_evento_e_aceito_somente_em_active_supervised,
         test_b5_gatilho_desconhecido_fecha_o_portao,
