@@ -49,6 +49,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:145.",
       "task_id": "infra-runner-large-file-anchored-edit",
       "worker_id": null
+    },
+    {
+      "category": "runner",
+      "commit_sha": null,
+      "component": "runner",
+      "error_id": "ERR-B28D03FC2E",
+      "error_type": "runner-failed",
+      "fingerprint": "b28d03fc2e654a957455",
+      "first_seen": "2026-09-23T22:37:17.312267+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "4436245086f54099a1db0856a96336dd",
+      "issue_sync_updated_at": "2026-09-23T22:37:17.312267+00:00",
+      "last_evidence_hash": "9bea937c2e75c69e14e5",
+      "last_seen": "2026-09-23T22:37:17.312267+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35929193232",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
+      "task_id": "fisiopatologia-ii-issue101-r2",
+      "worker_id": "claude-worker-4"
     }
   ]
 }
