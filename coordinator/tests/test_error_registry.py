@@ -246,7 +246,12 @@ def test_observe_guard_hard_fail_vira_evento_de_erro_com_evidencia_real() -> Non
                 "guard_state": "failure",
                 "guard_run_id": 123456,
                 "head_sha": "abcdef1234567890",
-                "audit_pack": {"resultado": "REPROVADO", "achados": ["x"]},
+                "audit_pack": {
+                    "resultado": "REPROVADO",
+                    "head": "fedcba9876543210",
+                    "escopo_declarado": {"tarefa": "tarefa-do-guard"},
+                    "achados": ["x"],
+                },
             },
         )
         args = SimpleNamespace(
@@ -264,7 +269,8 @@ def test_observe_guard_hard_fail_vira_evento_de_erro_com_evidencia_real() -> Non
     err = captured[0]
     assert err.component == "guard" and err.error_type == "hard-fail"
     assert err.pr_number == 55
-    assert err.commit_sha == "abcdef1234567890"
+    assert err.task_id == "tarefa-do-guard"
+    assert err.commit_sha == "fedcba9876543210"
     assert str(err.run_id) == "123456"
     print("OK  test_observe_guard_hard_fail_vira_evento_de_erro_com_evidencia_real")
 
