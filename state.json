@@ -108,16 +108,16 @@
     {
       "branch": "runner/semiologia-ii-b07-framingham-r3",
       "canonical_task_id": "semiologia-ii-b07-framingham-r3",
-      "checkpoint_commit": null,
+      "checkpoint_commit": "e3204ae5a386cba8a5df9dd54e40b7379f0756f5",
       "execution_task_id": "semiologia-ii-b07-framingham-r3--bridge-5f7404907fab",
       "guard_dispatch_attempts": 0,
       "guard_dispatch_status": null,
       "guard_dispatched_pr": null,
       "pr_number": null,
-      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'semiologia-ii-b07-framingham-r3' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=True.)",
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/semiologia-ii-b07-framingham-r3'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
       "reserved_at": "2026-09-23T23:44:32.756098+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-23T23:44:32.756111+00:00",
+      "status": "NEEDS-AUDIT",
+      "updated_at": "2026-09-23T23:45:54.327696+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
