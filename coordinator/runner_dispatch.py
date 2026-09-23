@@ -578,13 +578,26 @@ def _primeira_linha(texto: str) -> str:
     return (texto or "").strip().splitlines()[0][:72] if texto and texto.strip() else "(sem instrução)"
 
 
+RUNNER_GIT_AUTHOR_NAME = "Repasso Coordinator Runner"
+RUNNER_GIT_AUTHOR_EMAIL = "repasso-coordinator@users.noreply.github.com"
+
+
 def commitar_e_publicar(repo_dir: str, task: RunnerTask, push_remote_name: str) -> str:
-    """Commit + push SEM ``--force`` — um push rejeitado (branch divergiu
-    do que já existe no remoto) vira ``RunnerGitError``/``FAILED``, nunca
-    uma segunda tentativa com força."""
+    """Commit + push SEM ``--force``.
+
+    O Runner usa uma identidade Git fixa e não privilegiada para o commit,
+    em vez de depender de ``user.name``/``user.email`` do host efêmero.
+    Isso torna GitHub Actions/local equivalentes e nunca usa identidade
+    fornecida por modelo, comentário ou Variable.
+    """
     _run_git(repo_dir, "add", "-A")
     mensagem = f"runner: {task.task_id}\n\n{_primeira_linha(task.instructions)}"
-    commit = _run_git(repo_dir, "commit", "-q", "-m", mensagem)
+    commit = _run_git(
+        repo_dir,
+        "-c", f"user.name={RUNNER_GIT_AUTHOR_NAME}",
+        "-c", f"user.email={RUNNER_GIT_AUTHOR_EMAIL}",
+        "commit", "-q", "-m", mensagem,
+    )
     if commit.returncode != 0:
         raise RunnerGitError(f"não consegui commitar: {redact(commit.stderr)}")
 
