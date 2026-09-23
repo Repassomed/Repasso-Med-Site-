@@ -108,13 +108,13 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "infra-coordinator-final-canary-r3",
+      "current_task": null,
       "display_name": "API Runner Canary A",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-23T01:48:51.747196+00:00",
+      "last_heartbeat": "2026-09-23T01:49:39.011329+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "BUSY",
+      "status": "OFFLINE",
       "type": "api_runner",
       "worker_id": "api-runner-canary-a"
     },
