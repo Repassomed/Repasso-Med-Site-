@@ -90,6 +90,16 @@
       "recorded_at": "2026-09-23T17:55:52.366266+00:00",
       "status": "FAILED",
       "task_id": "infra-worker-bridge-pilot--bridge-a5d13d138577"
+    },
+    {
+      "branch": "runner/infra-worker-bridge-pilot-r2",
+      "checkpoint_commit": "d62c852a355566374496058bf40f2f9847677a88",
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/infra-worker-bridge-pilot-r2'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "recorded_at": "2026-09-23T18:23:48.842658+00:00",
+      "status": "NEEDS-AUDIT",
+      "task_id": "infra-worker-bridge-pilot-r2--bridge-8d97323dc1f0"
     }
   ]
 }
