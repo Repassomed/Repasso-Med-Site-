@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
+from coordinator import __main__ as coordinator_cli
 from coordinator import error_registry
+from coordinator.events import Event
 from coordinator.error_registry import ErrorEvent, ErrorRegistry
 from coordinator.worker_ops import InMemoryWorkerStateStore
 
@@ -218,6 +222,109 @@ def test_segredos_sao_redigidos_antes_da_issue() -> None:
     print("OK  test_segredos_sao_redigidos_antes_da_issue")
 
 
+def test_observe_guard_hard_fail_vira_evento_de_erro_com_evidencia_real() -> None:
+    captured: list[ErrorEvent] = []
+    original = error_registry.register_best_effort
+
+    def fake_register(ev: ErrorEvent, **kwargs):
+        captured.append(ev)
+        return error_registry.ErrorRegistryOutcome(
+            "CREATED", ev.error_id, ev.fingerprint, "teste", issue_number=999,
+            occurrence_count=1,
+        )
+
+    error_registry.register_best_effort = fake_register
+    try:
+        ev = Event(
+            raw_type="GUARD_STATE_CHANGE",
+            source="github",
+            repo="Repassomed/Repasso-Med-Site-",
+            identity="pr:55",
+            payload={
+                "guard_state": "failure",
+                "guard_run_id": 123456,
+                "head_sha": "abcdef1234567890",
+                "audit_pack": {"resultado": "REPROVADO", "achados": ["x"]},
+            },
+        )
+        args = SimpleNamespace(
+            error_state_git_remote="git://fake",
+            error_state_git_branch="coordinator-state-errors",
+            repo="Repassomed/Repasso-Med-Site-",
+        )
+        out = coordinator_cli._register_observe_errors_best_effort(
+            ev, {"status": "OBSERVED", "call_attempted": False}, args
+        )
+    finally:
+        error_registry.register_best_effort = original
+
+    assert len(out) == 1 and len(captured) == 1
+    err = captured[0]
+    assert err.component == "guard" and err.error_type == "hard-fail"
+    assert err.pr_number == 55
+    assert err.commit_sha == "abcdef1234567890"
+    assert str(err.run_id) == "123456"
+    print("OK  test_observe_guard_hard_fail_vira_evento_de_erro_com_evidencia_real")
+
+
+def test_observe_semantic_needs_fix_vira_erro_mas_guard_success_normal_nao() -> None:
+    captured: list[ErrorEvent] = []
+    original = error_registry.register_best_effort
+
+    def fake_register(ev: ErrorEvent, **kwargs):
+        captured.append(ev)
+        return error_registry.ErrorRegistryOutcome(
+            "CREATED", ev.error_id, ev.fingerprint, "teste", issue_number=998,
+            occurrence_count=1,
+        )
+
+    error_registry.register_best_effort = fake_register
+    try:
+        args = SimpleNamespace(
+            error_state_git_remote="git://fake",
+            error_state_git_branch="coordinator-state-errors",
+            repo="Repassomed/Repasso-Med-Site-",
+        )
+        semantic = Event(
+            raw_type="PR_NEEDS_AUDIT",
+            source="github",
+            repo=args.repo,
+            identity="pr:77",
+            payload={},
+        )
+        coordinator_cli._register_observe_errors_best_effort(
+            semantic,
+            {
+                "status": "OBSERVED",
+                "call_attempted": True,
+                "call_status": "ok",
+                "audit_decision": "NEEDS-FIX",
+                "merge_card": "finding concreto",
+            },
+            args,
+        )
+        success_guard = Event(
+            raw_type="GUARD_STATE_CHANGE",
+            source="github",
+            repo=args.repo,
+            identity="pr:78",
+            payload={"guard_state": "success"},
+        )
+        coordinator_cli._register_observe_errors_best_effort(
+            success_guard,
+            {"status": "OBSERVED", "call_attempted": False},
+            args,
+        )
+    finally:
+        error_registry.register_best_effort = original
+
+    assert len(captured) == 1
+    assert captured[0].component == "coordinator-audit"
+    assert captured[0].error_type == "semantic-needs-fix"
+    assert captured[0].pr_number == 77
+    print("OK  test_observe_semantic_needs_fix_vira_erro_mas_guard_success_normal_nao")
+
+
 def test_cliente_nao_tem_merge_deploy_ou_force_push() -> None:
     names = set(dir(error_registry.GitHubErrorApi))
     forbidden = {"merge", "deploy", "publish", "force_push", "close_pr"}
@@ -236,6 +343,8 @@ def main() -> int:
         test_pending_orfao_fica_recuperavel_sem_duplicar_issue,
         test_mark_resolved_persiste_root_cause_e_reaparecimento_vira_recurrent,
         test_segredos_sao_redigidos_antes_da_issue,
+        test_observe_guard_hard_fail_vira_evento_de_erro_com_evidencia_real,
+        test_observe_semantic_needs_fix_vira_erro_mas_guard_success_normal_nao,
         test_cliente_nao_tem_merge_deploy_ou_force_push,
     ]
     failures = 0
