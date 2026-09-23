@@ -41,11 +41,12 @@ import threading
 from . import _pathsetup
 from coordinator import bridge_pr, bridge_workers, scheduler, task_runtime, worker_bridge
 from coordinator.classify import Priority
-from coordinator.runner_contract import RunnerTask
+from coordinator.runner_contract import RunnerResult, RunnerTask
 from coordinator.runner_dispatch import (
     ALLOWED_RUNNER_MODE,
     RUNNER_MODE_SUPERVISED,
     SUPERVISED_AUTHORIZATION_SOURCE,
+    DispatchOutcome,
     FileWrite,
     RunnerDispatchConfig,
     StructuredPatch,
@@ -1743,6 +1744,80 @@ def test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte() 
     print("OK  test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte")
 
 
+def test_error_registry_bridge_sucesso_normal_nao_gera_erro() -> None:
+    record = task_runtime.TaskRuntimeRecord(
+        canonical_task_id="t-ok",
+        status=task_runtime.RUNTIME_NEEDS_AUDIT,
+        worker_id=PILOT_WORKER,
+        branch="runner/t-ok",
+        checkpoint_commit="abcdef1",
+        execution_task_id="t-ok--bridge-123456789abc",
+    )
+    dispatch = DispatchOutcome(
+        result=RunnerResult(
+            task_id="t-ok--bridge-123456789abc",
+            status="NEEDS-AUDIT",
+            reason="ok",
+            checkpoint_commit="abcdef1",
+            branch="runner/t-ok",
+        ),
+        claimed=True,
+        external_calls_made=True,
+    )
+    outcome = worker_bridge.BridgeOutcome(
+        "DISPATCHED", "ok", runtime_record=record, dispatch=dispatch,
+    )
+    assert worker_bridge.error_events_from_outcome(outcome) == []
+    print("OK  test_error_registry_bridge_sucesso_normal_nao_gera_erro")
+
+
+def test_error_registry_bridge_captura_runner_pr_guard_e_liberacao() -> None:
+    record = task_runtime.TaskRuntimeRecord(
+        canonical_task_id="t-falha",
+        status=task_runtime.RUNTIME_FAILED,
+        worker_id=PILOT_WORKER,
+        branch="runner/t-falha",
+        execution_task_id="t-falha--bridge-123456789abc",
+    )
+    dispatch = DispatchOutcome(
+        result=RunnerResult(
+            task_id="t-falha--bridge-123456789abc",
+            status="FAILED",
+            reason="validacao falhou",
+            branch="runner/t-falha",
+        ),
+        claimed=True,
+        external_calls_made=True,
+    )
+    outcome = worker_bridge.BridgeOutcome(
+        "DISPATCHED",
+        "falhou",
+        runtime_record=record,
+        dispatch=dispatch,
+        liberacao=worker_bridge.LiberacaoResult("FAILED", "CAS do worker falhou"),
+        pr=bridge_pr.PrOutcome("FAILED", "GitHub 403 ao criar PR"),
+        guard=bridge_pr.GuardDispatchOutcome("FAILED", "Guard dispatch 500", pr_number=55),
+    )
+    events = worker_bridge.error_events_from_outcome(outcome)
+    tipos = {(e.component, e.error_type) for e in events}
+    assert ("runner", "runner-failed") in tipos
+    assert ("worker-bridge", "github-pr-failed") in tipos
+    assert ("worker-bridge", "guard-dispatch-failed") in tipos
+    assert ("worker-bridge", "worker-release-failed") in tipos
+    assert len(events) == 4
+    print("OK  test_error_registry_bridge_captura_runner_pr_guard_e_liberacao")
+
+
+def test_error_registry_bridge_nao_trata_portao_ou_fila_vazia_como_bug() -> None:
+    assert worker_bridge.error_events_from_outcome(
+        worker_bridge.BridgeOutcome("BLOCKED", "policy recusada")
+    ) == []
+    assert worker_bridge.error_events_from_outcome(
+        worker_bridge.BridgeOutcome("NO_ASSIGNMENT", "fila sem tarefa")
+    ) == []
+    print("OK  test_error_registry_bridge_nao_trata_portao_ou_fila_vazia_como_bug")
+
+
 def test_b5_piloto_nunca_inicia_por_evento() -> None:
     """B5: a entrega automática existe, mas o piloto continua sendo uma
     execução OBSERVADA. Um evento nunca o inicia — nem se a Variable do
@@ -2036,6 +2111,10 @@ def main() -> int:
         test_pr_recovery_detecta_needs_audit_sem_pr_e_respeita_piloto,
         test_pr_recovery_abre_pr_e_guard_sem_runner_nem_anthropic_e_nao_duplica,
         test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte,
+        # Issue #130 — Error Registry do Worker Bridge/Runner.
+        test_error_registry_bridge_sucesso_normal_nao_gera_erro,
+        test_error_registry_bridge_captura_runner_pr_guard_e_liberacao,
+        test_error_registry_bridge_nao_trata_portao_ou_fila_vazia_como_bug,
         test_b5_piloto_nunca_inicia_por_evento,
         test_b5_evento_e_aceito_somente_em_active_supervised,
         test_b5_gatilho_desconhecido_fecha_o_portao,
