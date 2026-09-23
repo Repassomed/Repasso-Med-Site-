@@ -285,6 +285,11 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
         identity=identidade,
         payload={
             "guard_state": estado,
+            # Issue #130: metadados factuais do Guard para o Error Registry.
+            # Vêm do webhook do próprio GitHub, nunca de texto livre.
+            "guard_run_id": run.get("id"),
+            "head_sha": run.get("head_sha"),
+            "guard_conclusion": conclusao,
             # Bloqueador 5 da 3ª auditoria: o pacote de auditoria real do
             # Guard (baixado do artifact do run observado por um passo do
             # workflow — ver o comentário lá) — antes disto sempre era
