@@ -150,10 +150,10 @@
       "current_task": "fisiopatologia-ii-issue101",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": null,
+      "last_heartbeat": "2026-09-23T20:41:54.639958+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "AVAILABLE",
+      "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
