@@ -722,7 +722,7 @@
       "objetivo": "Provar a cadeia completa do Worker Bridge com um trabalho mínimo e determinístico: criar o arquivo coordinator/canary/worker-bridge-pilot.txt contendo exatamente uma linha, WORKER_BRIDGE=OK, terminada por quebra de linha. Se o arquivo já existir com exatamente esse conteúdo, devolva-o sem nenhuma alteração. Nenhum outro arquivo do repositório pode ser criado, alterado ou removido, e nada além dessa linha pode ser escrito no arquivo (sem comentários, sem espaços extras, sem linhas em branco).",
       "fonte": "Issue #128 · autorização explícita de José em 23/09/2026",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -739,7 +739,37 @@
       "risk_level": "BAIXO",
       "policy_level": "C",
       "jose_authorized": false,
-      "notas": "Tarefa sintética e segura, criada por esta PR só para o piloto do Worker Bridge (Issue #128 §8). Nada aqui é conteúdo do site. O arquivo permitido é um caminho EXATO (o Bridge recusa curinga em allowed_files, nunca expande). Nível C: pode executar automaticamente e termina em NEEDS-AUDIT, com auditoria independente antes de qualquer MERGE-READY; jose_authorized não é exigido nesse nível. Bloqueador B1 da auditoria independente do PR #129: a dependência de infra-worker-bridge-v1 só é elegível se aquela tarefa estiver DONE no estado que vai para a main, e ela continuava IN-PROGRESS — depois do merge a main teria a dependência insatisfeita e o piloto nunca seria oferecido (workflow verde e inerte). Corrigido como José pediu: infra-worker-bridge-v1 passou a DONE nesta mesma PR, ao final da implementação, e esta tarefa continua READY com a dependência satisfeita. Sem PR administrativo extra. Em modo piloto o Bridge também restringe a fila a esta tarefa, para que ela nunca perca a vez para outra tarefa READY à frente na ordem de desempate. Quem controla a execução continua sendo o portão: automation_enabled, o nível de política, as Variables do piloto e o modo do Bridge. O piloto NÃO foi executado nesta PR."
+      "notas": "Tarefa sintética e segura, criada por esta PR só para o piloto do Worker Bridge (Issue #128 §8). Nada aqui é conteúdo do site. O arquivo permitido é um caminho EXATO (o Bridge recusa curinga em allowed_files, nunca expande). Nível C: pode executar automaticamente e termina em NEEDS-AUDIT, com auditoria independente antes de qualquer MERGE-READY; jose_authorized não é exigido nesse nível. Bloqueador B1 da auditoria independente do PR #129: a dependência de infra-worker-bridge-v1 só é elegível se aquela tarefa estiver DONE no estado que vai para a main, e ela continuava IN-PROGRESS — depois do merge a main teria a dependência insatisfeita e o piloto nunca seria oferecido (workflow verde e inerte). Corrigido como José pediu: infra-worker-bridge-v1 passou a DONE nesta mesma PR, ao final da implementação, e esta tarefa continua READY com a dependência satisfeita. Sem PR administrativo extra. Em modo piloto o Bridge também restringe a fila a esta tarefa, para que ela nunca perca a vez para outra tarefa READY à frente na ordem de desempate. Quem controla a execução continua sendo o portão: automation_enabled, o nível de política, as Variables do piloto e o modo do Bridge. O piloto NÃO foi executado nesta PR. Tentativa R1 executada em 23/09/2026 no run 35898775287 e encerrada como FAILED antes de commit/push por falso positivo da coordinator-suite: o teste transitório test_piloto_real_nao_foi_executado_nesta_pr reprovava exatamente quando o piloto criava o arquivo autorizado. execution id consumido: infra-worker-bridge-pilot--bridge-a5d13d138577. Não reutilizar. Issue #131."
+    },
+    {
+      "id": "infra-worker-bridge-pilot-r2",
+      "titulo": "Worker Bridge — piloto sintético R2 do Claude Worker 4",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordinator/canary/worker-bridge-pilot.txt"
+      ],
+      "objetivo": "Provar a cadeia completa do Worker Bridge com um trabalho mínimo e determinístico: criar o arquivo coordinator/canary/worker-bridge-pilot.txt contendo exatamente uma linha, WORKER_BRIDGE=OK, terminada por quebra de linha. Nenhum outro arquivo pode ser alterado.",
+      "fonte": "Issue #131 · retry explícito autorizado por José após falso positivo de validação no piloto R1",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
+      "branch": "runner/infra-worker-bridge-pilot-r2",
+      "pr": null,
+      "commit": null,
+      "issue": 131,
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "BAIXO",
+      "policy_level": "C",
+      "jose_authorized": false,
+      "notas": "R2 auditável. Novo canonical task id e nova branch porque R1/claim foram consumidos e FAILED. Mesmo arquivo permitido e mesmo objetivo mínimo; não reutiliza execution id nem runtime da R1."
     }
   ]
 }

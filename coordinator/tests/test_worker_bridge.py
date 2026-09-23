@@ -1172,7 +1172,7 @@ def test_tarefa_piloto_real_materializa_e_e_autorizada() -> None:
     tarefas = {t.id: t for t in load_tasks_from_tasks_json(caminho)}
     metadados = worker_bridge.carregar_metadados_de_automacao(caminho)
 
-    piloto_id = "infra-worker-bridge-pilot"
+    piloto_id = "infra-worker-bridge-pilot-r2"
     assert piloto_id in tarefas, "a tarefa piloto precisa existir no registro declarativo"
     tarefa = tarefas[piloto_id]
     meta = metadados[piloto_id]
@@ -1191,7 +1191,7 @@ def test_tarefa_piloto_real_materializa_e_e_autorizada() -> None:
     assert materializada.ok is True, materializada.reason
     task = materializada.task
     assert task is not None
-    assert task.branch == "runner/infra-worker-bridge-pilot"
+    assert task.branch == "runner/infra-worker-bridge-pilot-r2"
     assert task.allowed_files == (ARQUIVO_PILOTO,)
     assert task.policy_level == "C" and task.risk_level == "BAIXO"
     assert task.jose_authorized is False
@@ -1214,13 +1214,20 @@ def test_infra_do_bridge_nao_e_automatizavel_por_ela_mesma() -> None:
     print("OK  test_infra_do_bridge_nao_e_automatizavel_por_ela_mesma")
 
 
-def test_piloto_real_nao_foi_executado_nesta_pr() -> None:
-    """O arquivo do piloto NÃO pode existir no repositório: o piloto é
-    preparado nesta PR, nunca executado (§8)."""
-    assert not os.path.exists(os.path.join(_pathsetup.REPO_ROOT, ARQUIVO_PILOTO)), (
-        "o arquivo do piloto existe — o piloto não deveria ter sido executado nesta PR."
-    )
-    print("OK  test_piloto_real_nao_foi_executado_nesta_pr")
+def test_piloto_real_r2_nao_pregrava_resultado() -> None:
+    """O registro declarativo do piloto R2 precisa nascer sem resultado
+    pré-gravado. Diferente da antiga asserção de ausência física do arquivo,
+    esta prova continua válida DURANTE o piloto real, quando o próprio patch
+    autorizado cria ARQUIVO_PILOTO antes da validação."""
+    caminho = os.path.join(_pathsetup.REPO_ROOT, "coordination", "tasks.json")
+    with open(caminho, encoding="utf-8") as fh:
+        dados = json.load(fh)
+    bruto = next(t for t in dados.get("tarefas", []) if t.get("id") == "infra-worker-bridge-pilot-r2")
+    assert bruto.get("estado") == "READY"
+    assert bruto.get("pr") is None and bruto.get("commit") is None
+    assert bruto.get("branch") == "runner/infra-worker-bridge-pilot-r2"
+    assert bruto.get("automation_enabled") is True and bruto.get("bridge_enabled") is True
+    print("OK  test_piloto_real_r2_nao_pregrava_resultado")
 
 
 def test_nenhum_laco_de_fila_no_bridge() -> None:
@@ -1255,7 +1262,7 @@ def test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado() -> None:
     tarefas = scheduler.load_tasks_from_tasks_json(_tasks_json_real())
     por_id = {t.id: t for t in tarefas}
 
-    piloto = por_id.get("infra-worker-bridge-pilot")
+    piloto = por_id.get("infra-worker-bridge-pilot-r2")
     assert piloto is not None, "a tarefa piloto precisa existir no registro declarativo"
     assert piloto.estado == "READY", piloto.estado
 
@@ -1266,7 +1273,7 @@ def test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado() -> None:
     assert infra is not None and infra.estado == "DONE", (infra.estado if infra else None)
 
     prontas = [t.id for t in scheduler.proxima_tarefa_pronta(tarefas)]
-    assert "infra-worker-bridge-pilot" in prontas, prontas
+    assert "infra-worker-bridge-pilot-r2" in prontas, prontas
     print("OK  test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado")
 
 
@@ -1581,7 +1588,7 @@ def test_b5_default_do_gatilho_e_manual_e_o_manual_continua_valendo() -> None:
         worker_bridge.ENV_BRIDGE_ENABLED: "true",
         worker_bridge.ENV_BRIDGE_MODE: worker_bridge.BRIDGE_MODE_PILOT,
         worker_bridge.ENV_BRIDGE_PILOT_WORKER_ID: PILOT_WORKER,
-        worker_bridge.ENV_BRIDGE_PILOT_TASK_ID: "infra-worker-bridge-pilot",
+        worker_bridge.ENV_BRIDGE_PILOT_TASK_ID: "infra-worker-bridge-pilot-r2",
     })
     assert cfg.trigger == worker_bridge.BRIDGE_TRIGGER_MANUAL
     assert cfg.is_event_driven is False
@@ -1814,7 +1821,7 @@ def main() -> int:
         test_flags_do_bridge_sao_separadas_das_do_canario,
         test_tarefa_piloto_real_materializa_e_e_autorizada,
         test_infra_do_bridge_nao_e_automatizavel_por_ela_mesma,
-        test_piloto_real_nao_foi_executado_nesta_pr,
+        test_piloto_real_r2_nao_pregrava_resultado,
         test_nenhum_laco_de_fila_no_bridge,
         # Auditoria independente do PR #129 — B1..B5.
         test_b1_piloto_real_esta_elegivel_no_estado_que_sera_mergeado,
