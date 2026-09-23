@@ -336,6 +336,9 @@ jobs:
           # logada (coordinator/anthropic_transport.py só lê de env, e
           # coordinator/redact.py sanitiza qualquer eco em erro).
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Issue #130: usado somente pelo Error Registry para abrir/atualizar
+          # Issues de falha. Este passo sempre executa codigo da branch padrao.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Os portões precisam chegar até AQUI — é este passo que de fato
           # chama Config.from_env() dentro de `python3 -m coordinator`.
           # Passo de verificação acima lê as mesmas Variables só para
@@ -394,6 +397,7 @@ jobs:
             --usage-git-remote "$REMOTO_COM_TOKEN"
             --workers-from-tasks-json coordination/tasks.json
             --worker-state-git-remote "$REMOTO_COM_TOKEN"
+            --error-state-git-remote "$REMOTO_COM_TOKEN"
             --openai-usage-git-remote "$REMOTO_COM_TOKEN"
             --runner-repo-dir .
             --out /tmp/coordinator-observe.json
