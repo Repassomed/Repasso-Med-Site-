@@ -294,6 +294,45 @@ def test_piloto_recusa_worker_diferente() -> None:
     print("OK  test_piloto_recusa_worker_diferente")
 
 
+def test_pilot_filtra_workers_stale_available_antes_do_scheduler() -> None:
+    """Regressão do run real #59 / Issue #150.
+
+    O registro pode carregar worker 1..3 como AVAILABLE de uma passagem
+    anterior por active-supervised. Em pilot isso NÃO autoriza o Scheduler
+    a escolhê-los: somente o worker 4 elegível no modo pode entrar na
+    visão de decisão, sem rebaixar/apagar o estado persistido dos demais.
+    """
+    registry = _registry_com_workers(
+        _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+    )
+    for worker_id in bridge_workers.BRIDGE_WORKER_IDS:
+        fresco = registry.find_by_name_or_id(worker_id)
+        assert fresco is not None and fresco.status == "AVAILABLE", (worker_id, fresco)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        api = _FakeGitHubApi()
+        outcome, _c, _s, _r = _ciclo(
+            tmp, [_tarefa()], config=_config(), registry=registry, api=api,
+        )
+
+    assert outcome.action == "DISPATCHED", outcome
+    assert outcome.decision is not None
+    assert outcome.decision.worker_id == PILOT_WORKER, outcome.decision
+    assert outcome.runner_result_status == "NEEDS-AUDIT", outcome.dispatch
+
+    # O filtro é só uma visão em memória: os workers 1..3 não são
+    # desabilitados/rebaixados como efeito colateral do piloto.
+    for worker_id in (
+        bridge_workers.BRIDGE_WORKER_1,
+        bridge_workers.BRIDGE_WORKER_2,
+        bridge_workers.BRIDGE_WORKER_3,
+    ):
+        fresco = registry.find_by_name_or_id(worker_id)
+        assert fresco is not None and fresco.status == "AVAILABLE", (worker_id, fresco)
+
+    print("OK  test_pilot_filtra_workers_stale_available_antes_do_scheduler")
+
+
 def test_piloto_recusa_tarefa_diferente() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         proibido = _GeracaoProibida()
@@ -2036,6 +2075,7 @@ def main() -> int:
         test_piloto_sem_as_duas_variaveis_fecha_o_portao,
         test_ref_diferente_da_branch_padrao_fecha_o_portao,
         test_piloto_recusa_worker_diferente,
+        test_pilot_filtra_workers_stale_available_antes_do_scheduler,
         test_piloto_recusa_tarefa_diferente,
         test_comparacao_do_piloto_e_estrita_nunca_prefixo,
         test_tarefa_sem_automation_enabled_e_recusada,
