@@ -1,0 +1,19 @@
+{
+  "_": "RunnerTask materializada do canário integrado — Issue #105 Fase G, achado G6. Consumida por .github/workflows/coordinator-runner.yml (--task-file) e por coordinator/checkpoint_handoff.py (origem confiável de branch/allowed_files/política numa continuação de handoff). jose_authorized=false e publication_required=false de propósito: Nível C não exige autorização prévia, e nada aqui é publicado/deployado. Tentativa R2 criada após a primeira execução falhar de forma segura exclusivamente na validação do ambiente de teste; o claim original permanece preservado. Tentativa R3: R2 provou geração+validação, mas o host não tinha identidade Git; R3 usa o Runner com author fixo.",
+  "task_id": "infra-coordinator-final-canary-r3",
+  "priority": "P0",
+  "source_issue": 105,
+  "branch": "runner/infra-coordinator-final-canary-r3",
+  "allowed_files": [
+    "coordinator/canary/runner-canary.txt"
+  ],
+  "instructions": "Tarefa do canário integrado (Issue #105). Trabalhe EXCLUSIVAMENTE no arquivo coordinator/canary/runner-canary.txt — é o único arquivo permitido, e nenhum outro arquivo do repositório pode ser criado, alterado ou removido.\n\nEste arquivo não é conteúdo do site: ele existe só para provar, de forma determinística e verificável, que a cadeia fila -> runner -> heartbeat/checkpoint -> handoff -> retomada funciona ponta a ponta. Não escreva nada além do que a regra abaixo manda.\n\nREGRA DETERMINÍSTICA DE TRANSIÇÃO (avalie na ordem e aplique exatamente UMA):\n1. Se coordinator/canary/runner-canary.txt NÃO existir, crie-o com exatamente o conteúdo CANARY_STAGE=1\n2. Se o conteúdo atual for exatamente CANARY_STAGE=1, troque-o por exatamente CANARY_STAGE=2\n3. Se o conteúdo atual for exatamente CANARY_STAGE=2, troque-o por exatamente CANARY_STAGE=3\n4. Se o conteúdo atual já for exatamente CANARY_STAGE=3, o canário terminou: devolva o arquivo sem nenhuma alteração.\n\nFORMATO EXATO do arquivo, em qualquer estágio: uma única linha, CANARY_STAGE=<n>, terminada por uma quebra de linha — sem comentários, sem espaços extras, sem linhas em branco, sem qualquer outro texto. <n> é 1, 2 ou 3.\n\nNunca pule um estágio, nunca volte um estágio e nunca altere nenhum outro arquivo.",
+  "checkpoint_commit": null,
+  "capabilities_required": [
+    "codigo"
+  ],
+  "risk_level": "BAIXO",
+  "policy_level": "C",
+  "jose_authorized": false,
+  "publication_required": false
+}

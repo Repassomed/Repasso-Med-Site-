@@ -41,6 +41,8 @@ from coordinator.runner_dispatch import (
     FileWrite,
     RunnerDispatchConfig,
     StructuredPatch,
+    RUNNER_GIT_AUTHOR_EMAIL,
+    RUNNER_GIT_AUTHOR_NAME,
     executar_tarefa,
 )
 from coordinator.runner_dispatch import main as runner_dispatch_main
@@ -180,6 +182,46 @@ def test_ref_absent_on_both_sides_does_not_restrict() -> None:
     assert config.actual_ref is None and config.expected_ref is None
     assert config.ref_allowed is True
     print("OK  test_ref_absent_on_both_sides_does_not_restrict")
+
+
+def test_commit_nao_depende_de_identidade_git_do_host() -> None:
+    """Regressão do primeiro canário R2 real: GitHub Actions não garante
+    user.name/user.email. O Runner precisa commitar com identidade fixa,
+    sem depender de config local/global do host."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        workdir = _clonar_workdir(tmp, remoto, "work-sem-identidade")
+        subprocess.run(["git", "-C", workdir, "config", "--unset-all", "user.name"], check=False)
+        subprocess.run(["git", "-C", workdir, "config", "--unset-all", "user.email"], check=False)
+
+        home_vazio = os.path.join(tmp, "home-vazio")
+        os.makedirs(home_vazio)
+        home_antigo = os.environ.get("HOME")
+        os.environ["HOME"] = home_vazio
+        try:
+            task = _task(
+                task_id="canario-sem-identidade",
+                branch="runner/canario-sem-identidade",
+                allowed_files=("greeting.txt",),
+            )
+            outcome = executar_tarefa(
+                task, _patch(),
+                config=_config(canary_task_id="canario-sem-identidade"),
+                repo_dir=workdir, state_git_remote=remoto,
+            )
+        finally:
+            if home_antigo is None:
+                os.environ.pop("HOME", None)
+            else:
+                os.environ["HOME"] = home_antigo
+
+        assert outcome.result is not None and outcome.result.status == "NEEDS-AUDIT", outcome.result
+        autor = subprocess.run(
+            ["git", "-C", workdir, "show", "-s", "--format=%an|%ae", "HEAD"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        assert autor == f"{RUNNER_GIT_AUTHOR_NAME}|{RUNNER_GIT_AUTHOR_EMAIL}", autor
+    print("OK  test_commit_nao_depende_de_identidade_git_do_host")
 
 
 def test_ref_match_allows_normal_execution() -> None:
@@ -706,6 +748,7 @@ def main() -> int:
         test_ref_mismatch_makes_zero_external_call,
         test_ref_partially_configured_is_treated_as_mismatch,
         test_ref_absent_on_both_sides_does_not_restrict,
+        test_commit_nao_depende_de_identidade_git_do_host,
         test_ref_match_allows_normal_execution,
         test_branch_main_or_master_rejected_at_construction,
         test_policy_e_and_d_without_authorization_rejected,
