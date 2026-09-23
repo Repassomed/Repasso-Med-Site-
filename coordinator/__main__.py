@@ -66,6 +66,7 @@ import json
 import os
 import sys
 
+from . import error_registry
 from .budget import UsageLedger
 from .config import Config
 from .dedup import Deduplicator, FileStore
@@ -275,6 +276,149 @@ def render_human(result_dict: dict) -> str:
     return "\n".join(L)
 
 
+def _repo_parts(repo_full_name: str) -> tuple[str | None, str | None]:
+    parts = (repo_full_name or "").strip().split("/", 1)
+    if len(parts) != 2 or not all(parts):
+        return None, None
+    return parts[0], parts[1]
+
+
+def _identity_pr_number(identity: str) -> int | None:
+    if not (identity or "").startswith("pr:"):
+        return None
+    try:
+        value = int(identity.split(":", 1)[1])
+        return value if value > 0 else None
+    except (ValueError, TypeError):
+        return None
+
+
+def _register_observe_errors_best_effort(
+    event: Event, data: dict, args: argparse.Namespace,
+) -> list[error_registry.ErrorRegistryOutcome]:
+    """Issue #130. Observability only; never changes the pipeline result."""
+    if not getattr(args, "error_state_git_remote", None):
+        return []
+    owner, repo = _repo_parts(args.repo)
+    if not owner or not repo:
+        return []
+
+    events: list[error_registry.ErrorEvent] = []
+    run_id = os.environ.get("GITHUB_RUN_ID")
+
+    if event.raw_type == "GUARD_STATE_CHANGE" and event.payload.get("guard_state") == "failure":
+        pr_number = _identity_pr_number(event.identity)
+        audit_pack = event.payload.get("audit_pack")
+        audit_pack = audit_pack if isinstance(audit_pack, dict) else {}
+        scope = audit_pack.get("escopo_declarado")
+        scope = scope if isinstance(scope, dict) else {}
+        task_from_pack = scope.get("tarefa")
+        evidence = json.dumps(audit_pack, ensure_ascii=False, sort_keys=True)
+        events.append(error_registry.ErrorEvent(
+            component="guard",
+            error_type="hard-fail",
+            title="Repasso Guard encontrou HARD FAIL",
+            message=f"Repasso Guard HARD FAIL em {event.identity}.",
+            severity="HIGH",
+            category="guard",
+            source="repasso-guard",
+            # workflow_dispatch do Guard pode nao carregar pull_requests
+            # no webhook. O audit-pack confiavel traz a tarefa/HEAD reais.
+            task_id=(str(task_from_pack).strip() if task_from_pack else event.identity),
+            pr_number=pr_number,
+            commit_sha=(audit_pack.get("head") or event.payload.get("head_sha")),
+            run_id=event.payload.get("guard_run_id") or run_id,
+            evidence=evidence,
+        ))
+
+    call_status = data.get("call_status")
+    if data.get("call_attempted") and call_status == "error":
+        events.append(error_registry.ErrorEvent(
+            component="anthropic-api",
+            error_type="transport-error",
+            title="Chamada Anthropic falhou",
+            message=f"Anthropic falhou no evento {event.identity}.",
+            severity="HIGH",
+            category="anthropic-api",
+            source="coordinator",
+            task_id=event.identity,
+            run_id=run_id,
+            evidence=str(data.get("reason") or ""),
+        ))
+    elif call_status == "ok_ledger_failed":
+        events.append(error_registry.ErrorEvent(
+            component="coordinator",
+            error_type="anthropic-ledger-failed",
+            title="Ledger Anthropic nao persistiu custo",
+            message=f"Ledger Anthropic falhou apos chamada paga no evento {event.identity}.",
+            severity="HIGH",
+            category="workflow",
+            source="coordinator",
+            task_id=event.identity,
+            run_id=run_id,
+            evidence=str(data.get("reason") or ""),
+        ))
+
+    if data.get("openai_ledger_failed"):
+        events.append(error_registry.ErrorEvent(
+            component="openai-auditor",
+            error_type="ledger-failed",
+            title="Ledger do OpenAI Auditor nao persistiu custo",
+            message=f"Ledger OpenAI falhou no evento {event.identity}.",
+            severity="HIGH",
+            category="openai-auditor",
+            source="coordinator",
+            task_id=event.identity,
+            run_id=run_id,
+            evidence=str(data.get("reason") or ""),
+        ))
+
+    if (
+        event.raw_type == "PR_NEEDS_AUDIT"
+        and data.get("audit_decision") == "NEEDS-FIX"
+    ):
+        events.append(error_registry.ErrorEvent(
+            component="coordinator-audit",
+            error_type="semantic-needs-fix",
+            title="Auditoria semantica encontrou correcao necessaria",
+            message=f"Auditoria independente marcou {event.identity} como NEEDS-FIX.",
+            severity="MEDIUM",
+            category="content",
+            source="coordinator-audit",
+            task_id=event.identity,
+            pr_number=_identity_pr_number(event.identity),
+            run_id=run_id,
+            evidence=str(data.get("merge_card") or data.get("reason") or ""),
+        ))
+
+    if data.get("status") == "ERROR":
+        events.append(error_registry.ErrorEvent(
+            component="coordinator",
+            error_type="internal-error",
+            title="Coordinator terminou em ERROR",
+            message=str(data.get("reason") or "Coordinator terminou em ERROR."),
+            severity="CRITICAL",
+            category="coordinator",
+            source="coordinator",
+            task_id=event.identity,
+            run_id=run_id,
+            evidence=str(data.get("reason") or ""),
+        ))
+
+    outcomes: list[error_registry.ErrorRegistryOutcome] = []
+    for error_event in events:
+        outcome = error_registry.register_best_effort(
+            error_event,
+            state_git_remote=args.error_state_git_remote,
+            owner=owner,
+            repo=repo,
+            state_branch=args.error_state_git_branch,
+        )
+        outcomes.append(outcome)
+        print("ERROR-REGISTRY " + json.dumps(outcome.to_dict(), ensure_ascii=False))
+    return outcomes
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="repasso-coordinator", description="Coordinator V2 — modo OBSERVE.")
     ap.add_argument("--event", required=True,
@@ -333,6 +477,11 @@ def main(argv: list[str] | None = None) -> int:
                          "--usage-git-remote")
     ap.add_argument("--worker-state-git-branch", default=DEFAULT_STATE_BRANCH,
                     help="branch dedicada para o Worker Registry operacional (nunca 'main')")
+    ap.add_argument("--error-state-git-remote", default=None,
+                    help="Issue #130: remoto git do Error Registry; usa branch dedicada "
+                         "coordinator-state-errors e nunca escreve na main")
+    ap.add_argument("--error-state-git-branch", default=error_registry.DEFAULT_ERROR_STATE_BRANCH,
+                    help="branch dedicada do Error Registry (nunca main/master)")
     ap.add_argument("--runner-repo-dir", default=None,
                     help="Achado F7-A (Issue #105, Fase F, 6ª rodada): checkout já confiável (branch "
                          "padrão, nunca HEAD de PR) usado quando um comando SET_AVAILABLE reconhecido "
@@ -391,6 +540,27 @@ def main(argv: list[str] | None = None) -> int:
     except BaseException as exc:  # noqa: BLE001 — ponto de borda deliberado: qualquer
         # falha vira artifact sanitizado antes do processo sair, nunca um crash mudo.
         dados_sanitizados = _resultado_de_erro(exc)
+        if a.error_state_git_remote:
+            owner, repo = _repo_parts(a.repo)
+            if owner and repo:
+                item = error_registry.register_best_effort(
+                    error_registry.ErrorEvent(
+                        component="coordinator",
+                        error_type="unexpected-exception",
+                        title="Excecao inesperada no Coordinator",
+                        message=redact(f"{type(exc).__name__}: {exc}"),
+                        severity="CRITICAL",
+                        category="coordinator",
+                        source="coordinator",
+                        run_id=os.environ.get("GITHUB_RUN_ID"),
+                        evidence=redact(f"{type(exc).__name__}: {exc}"),
+                    ),
+                    state_git_remote=a.error_state_git_remote,
+                    owner=owner,
+                    repo=repo,
+                    state_branch=a.error_state_git_branch,
+                )
+                print("ERROR-REGISTRY " + json.dumps(item.to_dict(), ensure_ascii=False))
         print(render_human(dados_sanitizados))
         if a.out:
             _gravar_out(a.out, dados_sanitizados)
@@ -514,8 +684,9 @@ def _observar(a: argparse.Namespace) -> dict | None:
         runner_dispatch_config=RunnerDispatchConfig.from_env(),
         runner_state_git_remote=a.worker_state_git_remote,
     )
-    dados = resultado.to_dict()
-    return redact_mapping(dados)
+    dados = redact_mapping(resultado.to_dict())
+    _register_observe_errors_best_effort(event, dados, a)
+    return dados
 
 
 if __name__ == "__main__":

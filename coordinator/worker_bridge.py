@@ -118,7 +118,7 @@ import re
 import sys
 from dataclasses import dataclass, replace
 
-from . import bridge_pr, bridge_workers, scheduler, task_runtime
+from . import bridge_pr, bridge_workers, error_registry, scheduler, task_runtime
 from .bridge_pr import GuardDispatchOutcome, PrOutcome
 from .classify import Priority
 from .runner_contract import (
@@ -1453,6 +1453,116 @@ def _abrir_pr_e_guard(
     return pr_outcome, guard_outcome, notas
 
 
+def error_events_from_outcome(outcome: BridgeOutcome) -> list[error_registry.ErrorEvent]:
+    """Converte somente falhas ACIONAVEIS do Bridge em eventos do #130.
+
+    Portao fechado, policy recusada e NO_ASSIGNMENT sao decisoes normais,
+    nao bugs. Falha de Runner/PR/Guard/liberacao e excecao real sao erros.
+    """
+    events: list[error_registry.ErrorEvent] = []
+    record = outcome.runtime_record
+    task_id = record.canonical_task_id if record else (
+        outcome.decision.task_id if outcome.decision else None
+    )
+    worker_id = record.worker_id if record else (
+        outcome.decision.worker_id if outcome.decision else None
+    )
+    commit = record.checkpoint_commit if record else None
+    pr_number = (
+        outcome.pr.pr_number if outcome.pr and outcome.pr.pr_number
+        else (record.pr_number if record else None)
+    )
+    run_id = os.environ.get("GITHUB_RUN_ID")
+
+    if outcome.runner_result_status in ("FAILED", "BLOCKED"):
+        status = outcome.runner_result_status
+        reason = (
+            outcome.dispatch.result.reason
+            if outcome.dispatch and outcome.dispatch.result else outcome.reason
+        )
+        events.append(error_registry.ErrorEvent(
+            component="runner",
+            error_type="runner-" + status.lower(),
+            title=f"Runner terminou em {status}",
+            message=reason,
+            severity="HIGH" if status == "FAILED" else "MEDIUM",
+            category="runner",
+            source="worker-bridge",
+            task_id=task_id,
+            worker_id=worker_id,
+            pr_number=pr_number,
+            commit_sha=commit,
+            run_id=run_id,
+            evidence=reason,
+        ))
+
+    if outcome.pr is not None and outcome.pr.action == "FAILED":
+        events.append(error_registry.ErrorEvent(
+            component="worker-bridge",
+            error_type="github-pr-failed",
+            title="Worker Bridge nao conseguiu abrir/reutilizar PR",
+            message=outcome.pr.reason,
+            severity="HIGH",
+            category="worker-bridge",
+            source="worker-bridge",
+            task_id=task_id,
+            worker_id=worker_id,
+            pr_number=pr_number,
+            commit_sha=commit,
+            run_id=run_id,
+            evidence=outcome.pr.reason,
+        ))
+
+    if outcome.guard is not None and outcome.guard.action == "FAILED":
+        events.append(error_registry.ErrorEvent(
+            component="worker-bridge",
+            error_type="guard-dispatch-failed",
+            title="Worker Bridge nao conseguiu despachar o Guard",
+            message=outcome.guard.reason,
+            severity="HIGH",
+            category="guard",
+            source="worker-bridge",
+            task_id=task_id,
+            worker_id=worker_id,
+            pr_number=outcome.guard.pr_number or pr_number,
+            commit_sha=commit,
+            run_id=run_id,
+            evidence=outcome.guard.reason,
+        ))
+
+    if outcome.liberacao is not None and outcome.liberacao.action == "FAILED":
+        events.append(error_registry.ErrorEvent(
+            component="worker-bridge",
+            error_type="worker-release-failed",
+            title="Worker Bridge nao conseguiu liberar worker",
+            message=outcome.liberacao.reason,
+            severity="HIGH",
+            category="claude-worker",
+            source="worker-bridge",
+            task_id=task_id,
+            worker_id=worker_id,
+            pr_number=pr_number,
+            commit_sha=commit,
+            run_id=run_id,
+            evidence=outcome.liberacao.reason,
+        ))
+    return events
+
+
+def register_bridge_errors_best_effort(
+    outcome: BridgeOutcome, *, state_git_remote: str,
+    owner: str | None, repo: str | None,
+) -> list[error_registry.ErrorRegistryOutcome]:
+    if not owner or not repo:
+        return []
+    results: list[error_registry.ErrorRegistryOutcome] = []
+    for event in error_events_from_outcome(outcome):
+        results.append(error_registry.register_best_effort(
+            event, state_git_remote=state_git_remote, owner=owner, repo=repo
+        ))
+    return results
+
+
 # ---------------------------------------------------------------------
 # CLI — invocado por .github/workflows/coordinator-worker-bridge.yml.
 # Nenhum argumento carrega prompt, tarefa ou caminho de arquivo a
@@ -1525,7 +1635,30 @@ def main(argv: list[str] | None = None) -> int:
             budget_usd=args.budget_usd,
             push_remote_name=args.push_remote_name,
         )
+        error_results = register_bridge_errors_best_effort(
+            outcome, state_git_remote=args.state_git_remote,
+            owner=args.repo_owner, repo=args.repo_name,
+        )
+        for item in error_results:
+            print("ERROR-REGISTRY " + json.dumps(item.to_dict(), ensure_ascii=False))
     except Exception as exc:  # qualquer erro inesperado -> job vermelho, nunca sucesso silencioso
+        if args.repo_owner and args.repo_name:
+            event = error_registry.ErrorEvent(
+                component="worker-bridge",
+                error_type="unexpected-exception",
+                title="Excecao inesperada no Worker Bridge",
+                message=redact(str(exc)),
+                severity="CRITICAL",
+                category="worker-bridge",
+                source="worker-bridge",
+                run_id=os.environ.get("GITHUB_RUN_ID"),
+                evidence=redact(str(exc)),
+            )
+            item = error_registry.register_best_effort(
+                event, state_git_remote=args.state_git_remote,
+                owner=args.repo_owner, repo=args.repo_name,
+            )
+            print("ERROR-REGISTRY " + json.dumps(item.to_dict(), ensure_ascii=False))
         print(f"ERRO fail-closed: {redact(str(exc))}")
         return 1
 

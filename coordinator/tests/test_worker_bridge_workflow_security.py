@@ -208,8 +208,8 @@ def test_bridge_checkout_fixa_a_branch_padrao_com_historico_completo() -> None:
 
 
 def test_bridge_tem_permissoes_minimas_e_nada_alem() -> None:
-    """§7: 'permissões mínimas'. O workflow nasce `contents: read`; o job
-    recebe exatamente as três que o fluxo exige."""
+    """Issue #130 adiciona somente issues:write para o Error Registry.
+    O Bridge continua trusted/default-branch e sem permissao de merge/deploy."""
     texto = _ler(_BRIDGE_PATH)
     cabecalho = texto[texto.index("\npermissions:"): texto.index("\nconcurrency:")]
     assert "contents: read" in cabecalho, cabecalho
@@ -218,9 +218,10 @@ def test_bridge_tem_permissoes_minimas_e_nada_alem() -> None:
     assert "contents: write" in do_job
     assert "pull-requests: write" in do_job
     assert "actions: write" in do_job
+    assert "issues: write" in do_job
     executavel = _sem_comentarios(texto)
-    for proibida in ("issues: write", "packages: write", "deployments: write", "id-token: write", "write-all"):
-        assert proibida not in executavel, f"{proibida} não é necessária e não pode estar declarada"
+    for proibida in ("packages: write", "deployments: write", "id-token: write", "write-all"):
+        assert proibida not in executavel, f"{proibida} nao e necessaria e nao pode estar declarada"
     print("OK  test_bridge_tem_permissoes_minimas_e_nada_alem")
 
 
