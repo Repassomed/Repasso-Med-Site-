@@ -89,6 +89,21 @@
       "status": "FAILED",
       "updated_at": "2026-09-23T22:53:48.387653+00:00",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "branch": "runner/semiologia-ii-b05-b10-gaps-r2",
+      "canonical_task_id": "semiologia-ii-b05-b10-gaps-r2",
+      "checkpoint_commit": null,
+      "execution_task_id": "semiologia-ii-b05-b10-gaps-r2--bridge-91c6069e2b90",
+      "guard_dispatch_attempts": 0,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "pr_number": null,
+      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'semiologia-ii-b05-b10-gaps-r2' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=True.)",
+      "reserved_at": "2026-09-23T22:56:05.798384+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-23T22:56:05.798400+00:00",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
