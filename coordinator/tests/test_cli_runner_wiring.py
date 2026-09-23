@@ -295,13 +295,13 @@ def test_cli_runner_wiring_com_env_do_workflow_abre_portao_e_despacha_retomada()
             {"id": "t-f8a", "estado": "BLOCKED-LIMIT", "area": "infra", "agente": "claude-2"},
         ])
 
-        # file_name="workers.json" precisa bater com o que _observar() usa
-        # de verdade (coordinator/__main__.py) — o default de GitJsonStore
-        # é "state.json"; sem repetir aqui, este seed iria para um arquivo
-        # diferente do que o CLI lê, e o worker "sumiria" (voltaria ao seed
-        # default OFFLINE/human_session).
+        # O bootstrap, o Runner Dispatch e _observar() compartilham o
+        # mesmo GitJsonStore default ("state.json") na branch
+        # coordinator-state-workers. Este teste é a regressão do canário
+        # real R4: se o CLI voltar a escolher outro file_name, o worker
+        # semeado aqui "some" e a retomada deixa de acontecer.
         OperationalWorkerRegistry(
-            GitJsonStore(remoto, branch=DEFAULT_STATE_BRANCH, file_name="workers.json")
+            GitJsonStore(remoto, branch=DEFAULT_STATE_BRANCH)
         ).upsert(
             WorkerRecord(
                 worker_id="claude-2", display_name="Claude 2", type="api_runner", status="LIMIT",
@@ -370,7 +370,7 @@ def test_cli_runner_wiring_com_env_do_workflow_abre_portao_e_despacha_retomada()
         assert "Retomada automática avaliada: FAILED" in dados["merge_card"], dados["merge_card"]
 
         worker_final = OperationalWorkerRegistry(
-            GitJsonStore(remoto, branch=DEFAULT_STATE_BRANCH, file_name="workers.json")
+            GitJsonStore(remoto, branch=DEFAULT_STATE_BRANCH)
         ).find_by_name_or_id("claude-2")
         assert worker_final.status == "OFFLINE", (
             "o heartbeat OFFLINE final de executar_tarefa precisa ter rodado de verdade"
@@ -379,11 +379,24 @@ def test_cli_runner_wiring_com_env_do_workflow_abre_portao_e_despacha_retomada()
     print("OK  test_cli_runner_wiring_com_env_do_workflow_abre_portao_e_despacha_retomada")
 
 
+def test_cli_worker_registry_git_usa_state_json_canonico() -> None:
+    """Regressão do canário R4 real: bootstrap/Runner e OBSERVE precisam
+    ler exatamente o mesmo arquivo de estado na mesma branch."""
+    import inspect
+    import coordinator.__main__ as coordinator_main
+
+    fonte = inspect.getsource(coordinator_main._observar)
+    assert 'file_name="workers.json"' not in fonte
+    assert "GitJsonStore(a.worker_state_git_remote, branch=a.worker_state_git_branch)" in fonte
+    print("OK  test_cli_worker_registry_git_usa_state_json_canonico")
+
+
 def main() -> int:
     testes = [
         test_cli_runner_wiring_seta_available_e_oferece_proxima_tarefa,
         test_cli_sem_runner_repo_dir_nao_quebra_comportamento_antigo,
         test_cli_runner_wiring_com_env_do_workflow_abre_portao_e_despacha_retomada,
+        test_cli_worker_registry_git_usa_state_json_canonico,
     ]
     falhas = 0
     for t in testes:
