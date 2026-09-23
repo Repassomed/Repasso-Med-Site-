@@ -28,6 +28,29 @@ Antes de iniciar QUALQUER tarefa:
 5. Não modificar partes do site que não estejam relacionadas à tarefa.
 
 
+## 2-A. LEI G0 — ALMA DO REPASSO MED
+
+A lei editorial/didática de maior precedência do projeto está em:
+
+`LEI-G0-ALMA-REPASSO-MED.md`
+
+Ela é leitura **obrigatória** antes de criar, corrigir, reorganizar, ampliar ou auditar qualquer matéria, página acadêmica, resumo, questão explicada, glossário, infográfico educativo ou outro conteúdo voltado ao aluno.
+
+A G0 determina que o Repasso Med não pode ficar genérico, frio ou com prosa mecânica de IA. O conteúdo deve preservar:
+- voz humana, natural e sutilmente próxima;
+- castelhano simples sem perda de terminologia médica;
+- profundidade e raciocínio;
+- identidade própria de cada disciplina;
+- essência da cátedra e da literatura-base;
+- prioridade didática silenciosa derivada de provas quando houver evidência;
+- bons trechos e personalidade já existentes.
+
+**A G0 não autoriza informalidade forçada nem simplificação científica.** Ela atua junto das demais leis e nunca supera ciência, segurança ou fonte oficial.
+
+Quando houver duas soluções igualmente corretas, preferir a que ensina melhor, preserva melhor a identidade da matéria e soa mais humana sem parecer artificial.
+
+O especialista didático via Anthropic deve fiscalizar explicitamente a G0 nas tarefas de conteúdo. Guard verde, sozinho, não aprova a G0.
+
 ## 3. VÁRIOS CLAUDES TRABALHAM NESTE PROJETO
 
 Este projeto pode ser trabalhado simultaneamente por diferentes contas do Claude.
