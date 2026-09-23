@@ -915,7 +915,7 @@
       "objetivo": "Permitir edição localizada segura de arquivos >20k por âncoras exatas, sem truncar arquivo, sem diff/shell livre e sem ampliar allowed_files.",
       "fonte": "Issue #144 · falha real da task fisiopatologia-ii-issue101 registrada na Issue #142",
       "agente": "Claude",
-      "estado": "NEEDS-AUDIT",
+      "estado": "DONE",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -925,14 +925,42 @@
       ],
       "branch": "fix/runner-large-file-anchored-edit",
       "pr": 145,
-      "commit": null,
+      "commit": "744be31b5bbd3d00b280379b9e21b2677a66305f",
       "issue": 144,
       "automation_enabled": false,
       "bridge_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "D",
       "jose_authorized": true,
-      "notas": "Hotfix final para liberar tarefas reais com HTMLs grandes em active-supervised. Não autoriza merge/deploy/publicação. Manter fail-closed e compatibilidade com FileWrite para arquivos pequenos."
+      "notas": "PR #145 auditado MERGE-READY e mergeado por José em 23/09/2026 (merge 7696b6993508255ab9004107e74a880ec1d48fab). Edição segura por AnchoredEdit para arquivos grandes liberada; limite de 20k, fail-closed, allowed_files, ledger global e sem merge/deploy automático preservados."
+    },
+    {
+      "id": "fisiopatologia-ii-issue101-r2",
+      "titulo": "P1 — Fisiopatología II: retry pós-#145 das novas provas + fechamento editorial",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html"
+      ],
+      "objetivo": "Retomar do zero a execução da Issue #101 após o bloqueio seguro por arquivo >20k, agora usando edição ancorada da Issue #144/#145; inventariar novas provas, aplicar Lei 8-A e Lei G0, alinhar o resumo ao padrão real de cobrança e distinguir conteúdo complementar.",
+      "fonte": "Issue #101 · retry explícito após Error Registry #142 e merge do PR #145",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/fisiopatologia-ii-issue101-r2",
+      "pr": null,
+      "commit": null,
+      "issue": 101,
+      "notas": "Nova tentativa canônica deliberadamente distinta. NÃO reutilizar canonical_task_id nem execution_task_id da tentativa fisiopatologia-ii-issue101, que permanece BLOCKED no runtime para preservar o histórico. José autorizou o retry após merge do #145. Aplicar CLAUDE.md, LEI-G0-ALMA-REPASSO-MED.md, MANUTENCAO-DIDATICA-REPASSO-MED.md e Lei 8-A. Resultado obrigatório NEEDS-AUDIT; sem merge/deploy/publicação automática.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
     }
   ]
 }
