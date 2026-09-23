@@ -2387,6 +2387,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-23T22:56:47.549393+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:semiologia-ii-b05-b10-gaps-r2--bridge-91c6069e2b90",
+      "informational_cost_usd": 0.042844,
+      "input_tokens": 6827,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 2919,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-23T22:56:49.361105+00:00"
     }
   ]
 }
