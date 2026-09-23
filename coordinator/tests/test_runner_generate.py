@@ -54,9 +54,13 @@ class _CountingTransport:
         self.calls = 0
         self.raise_error = raise_error
         self.response = response
+        # Issue #144: o PEDIDO exato que teria ido para a API — é o que
+        # prova que um arquivo grande nunca foi enviado por inteiro.
+        self.last_request: Request | None = None
 
     def send(self, request: Request) -> TransportResponse:
         self.calls += 1
+        self.last_request = request
         if self.raise_error:
             raise TimeoutError("simulado: a API não respondeu a tempo")
         return self.response
@@ -279,7 +283,12 @@ def test_budget_cap_enforced_via_persistent_ledger_across_fresh_instances() -> N
 # fail-closed (zero chamada, zero patch) — nunca corta/trunca.
 # ---------------------------------------------------------------------------
 
-def test_oversized_allowed_file_blocks_before_any_call() -> None:
+def test_arquivo_grande_sem_contexto_confiavel_bloqueia_sem_chamada() -> None:
+    """Issue #144: um arquivo grande deixou de bloquear PELO TAMANHO, mas
+    continua bloqueando quando não é possível localizar contexto
+    confiável nele para a instrução da tarefa (aqui: um arquivo sem
+    nenhuma estrutura e sem nenhum termo da instrução). Fail-closed: o
+    Runner nunca adivinha onde editar nem manda o arquivo inteiro."""
     with tempfile.TemporaryDirectory() as tmp:
         caminho_grande = os.path.join(tmp, "grande.html")
         with open(caminho_grande, "w", encoding="utf-8") as fh:
@@ -292,10 +301,10 @@ def test_oversized_allowed_file_blocks_before_any_call() -> None:
             transport=transporte,
         )
         assert outcome.status == "blocked"
-        assert transporte.calls == 0, "arquivo grande demais — nenhuma chamada podia ter sido feita"
+        assert transporte.calls == 0, "sem contexto confiável — nenhuma chamada podia ter sido feita"
         assert outcome.patch is None
         assert "grande.html" in outcome.reason
-    print("OK  test_oversized_allowed_file_blocks_before_any_call")
+    print("OK  test_arquivo_grande_sem_contexto_confiavel_bloqueia_sem_chamada")
 
 
 def test_file_exactly_at_limit_is_not_blocked() -> None:
@@ -567,6 +576,231 @@ def test_concorrencia_perto_do_teto_so_uma_reserva_vence() -> None:
     print("OK  test_concorrencia_perto_do_teto_so_uma_reserva_vence")
 
 
+# ---------------------------------------------------------------------------
+# Issue #144 — edição segura por trecho/âncora em arquivo grande.
+#
+# Mesma técnica do resto do arquivo: transporte FALSO, nunca rede de
+# verdade. O que estes testes provam, nesta ordem: arquivo pequeno continua
+# no contrato FileWrite de sempre; arquivo grande deixa de bloquear pelo
+# tamanho; o arquivo grande NUNCA vai inteiro para o prompt; âncora
+# inexistente/duplicada/fora de allowed_files bloqueia; duas edições
+# válidas no mesmo arquivo são atômicas; e uma edição inválida entre
+# várias produz ZERO escrita.
+# ---------------------------------------------------------------------------
+
+_INSTRUCAO_GRANDE = 'Revisar a definição de "cianose central" no bloco de semiologia da matéria.'
+_MARCADOR_DISTANTE = "MARCADOR-DISTANTE-NUNCA-NO-PROMPT-9Z"
+_ANCORA = "<p>A cianose central aparece quando a saturação cai abaixo do limiar.</p>"
+_ANCORA_NOVA = "<p>A cianose central aparece quando a hemoglobina reduzida ultrapassa 5 g/dL.</p>"
+_SEGUNDA_ANCORA = '<h3 id="semiologia-cianose-perif">Cianose periférica</h3>'
+_SEGUNDA_ANCORA_NOVA = '<h3 id="semiologia-cianose-perif">Cianose periférica (vasoconstrição)</h3>'
+
+
+def _html_grande(*, ancora_repetida: bool = False) -> str:
+    """HTML acima de MAX_FILE_CHARS_SENT, com estrutura real (headings e
+    ids) e um marcador no fim que nenhuma janela de contexto deve
+    alcançar."""
+    enchimento = "<p>Parágrafo de enchimento sem nenhuma relação com esta tarefa.</p>\n" * 200
+    bloco = (
+        '<section id="semiologia">\n'
+        '<h2 id="semiologia-cianose">Cianose central</h2>\n'
+        f"{_ANCORA}\n"
+        f"{_SEGUNDA_ANCORA}\n"
+        "<p>Ocorre por extração periférica aumentada.</p>\n"
+        "</section>\n"
+    )
+    repetida = f"{_ANCORA}\n" if ancora_repetida else ""
+    html = (
+        "<html><body>\n" + enchimento + bloco + repetida + enchimento
+        + f"<!-- {_MARCADOR_DISTANTE} -->\n</body></html>\n"
+    )
+    assert len(html) > MAX_FILE_CHARS_SENT, len(html)
+    return html
+
+
+def _escrever_html_grande(tmp: str, *, ancora_repetida: bool = False) -> str:
+    conteudo = _html_grande(ancora_repetida=ancora_repetida)
+    with open(os.path.join(tmp, "materia.html"), "w", encoding="utf-8") as fh:
+        fh.write(conteudo)
+    return conteudo
+
+
+def _resposta_edits(edits: list[dict], files: list[dict] | None = None) -> TransportResponse:
+    corpo: dict = {"edits": edits}
+    if files is not None:
+        corpo["files"] = files
+    return TransportResponse(text=json.dumps(corpo), input_tokens=100, output_tokens=50)
+
+
+def _task_grande(**overrides) -> RunnerTask:
+    campos = dict(allowed_files=("materia.html",), instructions=_INSTRUCAO_GRANDE)
+    campos.update(overrides)
+    return _task(**campos)
+
+
+def _gerar(tmp: str, transporte: _CountingTransport, task: RunnerTask | None = None):
+    return gerar_patch_via_claude(
+        task if task is not None else _task_grande(), config=_config(), repo_dir=tmp,
+        usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+        transport=transporte,
+    )
+
+
+def test_arquivo_pequeno_continua_no_contrato_filewrite() -> None:
+    """Compatibilidade (requisito 8): sem nenhum arquivo grande, o
+    contrato enviado ao modelo continua sendo exatamente o de antes —
+    FileWrite com conteúdo completo, sem uma palavra sobre AnchoredEdit."""
+    with tempfile.TemporaryDirectory() as tmp:
+        with open(os.path.join(tmp, "greeting.txt"), "w", encoding="utf-8") as fh:
+            fh.write("conteúdo pequeno\n")
+
+        transporte = _CountingTransport(response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}]))
+        outcome = _gerar(tmp, transporte, _task())
+        assert outcome.status == "ok", outcome.reason
+        assert transporte.last_request.system == _SYSTEM_PROMPT
+        assert "AnchoredEdit" not in transporte.last_request.system
+        assert "ARQUIVO GRANDE" not in transporte.last_request.prompt
+        assert outcome.patch.files[0].content == "ola\n"
+    print("OK  test_arquivo_pequeno_continua_no_contrato_filewrite")
+
+
+def test_arquivo_grande_nao_e_bloqueado_so_pelo_tamanho_e_aplica_anchored_edit() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        original = _escrever_html_grande(tmp)
+        transporte = _CountingTransport(
+            response=_resposta_edits([{"path": "materia.html", "old_text": _ANCORA, "new_text": _ANCORA_NOVA}])
+        )
+        outcome = _gerar(tmp, transporte)
+
+        assert outcome.status == "ok", outcome.reason
+        assert transporte.calls == 1, "arquivo grande com contexto confiável precisa chegar à chamada"
+        assert len(outcome.patch.files) == 1
+        escrita = outcome.patch.files[0]
+        assert escrita.path == "materia.html"
+        assert escrita.content == original.replace(_ANCORA, _ANCORA_NOVA)
+        # O conteúdo final é o arquivo INTEIRO com a troca — nunca uma fatia.
+        assert _MARCADOR_DISTANTE in escrita.content
+        assert len(escrita.content) > MAX_FILE_CHARS_SENT
+    print("OK  test_arquivo_grande_nao_e_bloqueado_so_pelo_tamanho_e_aplica_anchored_edit")
+
+
+def test_arquivo_grande_nunca_e_enviado_integralmente_ao_prompt() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        original = _escrever_html_grande(tmp)
+        transporte = _CountingTransport(
+            response=_resposta_edits([{"path": "materia.html", "old_text": _ANCORA, "new_text": _ANCORA_NOVA}])
+        )
+        outcome = _gerar(tmp, transporte)
+        assert outcome.status == "ok", outcome.reason
+
+        prompt = transporte.last_request.prompt
+        assert original not in prompt, "o arquivo grande nunca pode ir inteiro no prompt"
+        assert _MARCADOR_DISTANTE not in prompt, "trecho distante da tarefa nunca deveria ser enviado"
+        assert len(prompt) < len(original), (len(prompt), len(original))
+        # O trecho que ANCORA a edição precisa ter sido enviado literalmente.
+        assert _ANCORA in prompt
+        assert "ARQUIVO GRANDE" in prompt and "AnchoredEdit" in prompt
+        assert "AnchoredEdit" in transporte.last_request.system
+    print("OK  test_arquivo_grande_nunca_e_enviado_integralmente_ao_prompt")
+
+
+def test_anchored_edit_com_old_text_inexistente_bloqueia() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        _escrever_html_grande(tmp)
+        transporte = _CountingTransport(
+            response=_resposta_edits([
+                {"path": "materia.html", "old_text": "<p>âncora que nunca existiu no arquivo</p>",
+                 "new_text": "<p>x</p>"},
+            ])
+        )
+        outcome = _gerar(tmp, transporte)
+        assert outcome.status == "blocked", outcome.reason
+        assert outcome.patch is None
+        assert "não existe no conteúdo atual" in outcome.reason
+    print("OK  test_anchored_edit_com_old_text_inexistente_bloqueia")
+
+
+def test_anchored_edit_com_old_text_duplicado_bloqueia() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        _escrever_html_grande(tmp, ancora_repetida=True)
+        transporte = _CountingTransport(
+            response=_resposta_edits([{"path": "materia.html", "old_text": _ANCORA, "new_text": _ANCORA_NOVA}])
+        )
+        outcome = _gerar(tmp, transporte)
+        assert outcome.status == "blocked", outcome.reason
+        assert outcome.patch is None
+        assert "ambígua" in outcome.reason
+    print("OK  test_anchored_edit_com_old_text_duplicado_bloqueia")
+
+
+def test_anchored_edit_fora_de_allowed_files_bloqueia() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        _escrever_html_grande(tmp)
+        transporte = _CountingTransport(
+            response=_resposta_edits([{"path": "outra.html", "old_text": _ANCORA, "new_text": _ANCORA_NOVA}])
+        )
+        outcome = _gerar(tmp, transporte)
+        assert outcome.status == "blocked", outcome.reason
+        assert outcome.patch is None
+        assert "outra.html" in outcome.reason
+    print("OK  test_anchored_edit_fora_de_allowed_files_bloqueia")
+
+
+def test_duas_anchored_edits_no_mesmo_arquivo_aplicam_atomicamente() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        original = _escrever_html_grande(tmp)
+        transporte = _CountingTransport(
+            response=_resposta_edits([
+                {"path": "materia.html", "old_text": _ANCORA, "new_text": _ANCORA_NOVA},
+                {"path": "materia.html", "old_text": _SEGUNDA_ANCORA, "new_text": _SEGUNDA_ANCORA_NOVA},
+            ])
+        )
+        outcome = _gerar(tmp, transporte)
+        assert outcome.status == "ok", outcome.reason
+        assert len(outcome.patch.files) == 1, "as duas edições precisam virar UM arquivo final"
+        esperado = original.replace(_ANCORA, _ANCORA_NOVA).replace(_SEGUNDA_ANCORA, _SEGUNDA_ANCORA_NOVA)
+        assert outcome.patch.files[0].content == esperado
+    print("OK  test_duas_anchored_edits_no_mesmo_arquivo_aplicam_atomicamente")
+
+
+def test_uma_anchored_edit_invalida_entre_varias_produz_zero_escrita() -> None:
+    """A edição válida vem PRIMEIRO e a inválida depois: mesmo assim nada
+    é produzido — nenhum FileWrite sequer chega a existir, então
+    ``aplicar_patch`` nunca tem o que gravar."""
+    with tempfile.TemporaryDirectory() as tmp:
+        original = _escrever_html_grande(tmp)
+        transporte = _CountingTransport(
+            response=_resposta_edits([
+                {"path": "materia.html", "old_text": _ANCORA, "new_text": _ANCORA_NOVA},
+                {"path": "materia.html", "old_text": "<p>âncora inexistente</p>", "new_text": "<p>x</p>"},
+            ])
+        )
+        outcome = _gerar(tmp, transporte)
+        assert outcome.status == "blocked", outcome.reason
+        assert outcome.patch is None, "uma edição inválida entre várias = ZERO escrita"
+        with open(os.path.join(tmp, "materia.html"), encoding="utf-8") as fh:
+            assert fh.read() == original, "o arquivo em disco nunca pode ter sido tocado"
+    print("OK  test_uma_anchored_edit_invalida_entre_varias_produz_zero_escrita")
+
+
+def test_filewrite_em_arquivo_grande_e_recusado_para_nunca_truncar() -> None:
+    """A garantia anti-truncamento do B2-C, preservada: o modelo só viu
+    trechos, então um 'conteúdo completo' vindo dele seria o arquivo
+    truncado — recusado sempre."""
+    with tempfile.TemporaryDirectory() as tmp:
+        original = _escrever_html_grande(tmp)
+        transporte = _CountingTransport(
+            response=_resposta_ok([{"path": "materia.html", "content": "<html>versão curta</html>"}])
+        )
+        outcome = _gerar(tmp, transporte)
+        assert outcome.status == "blocked", outcome.reason
+        assert outcome.patch is None
+        assert "materia.html" in outcome.reason
+        with open(os.path.join(tmp, "materia.html"), encoding="utf-8") as fh:
+            assert fh.read() == original
+    print("OK  test_filewrite_em_arquivo_grande_e_recusado_para_nunca_truncar")
+
+
 def main() -> int:
     testes = [
         test_gate_closed_makes_zero_external_call,
@@ -576,7 +810,7 @@ def main() -> int:
         test_no_automatic_retry_on_transport_error,
         test_usage_persists_across_independent_git_usage_ledger_instances,
         test_budget_cap_enforced_via_persistent_ledger_across_fresh_instances,
-        test_oversized_allowed_file_blocks_before_any_call,
+        test_arquivo_grande_sem_contexto_confiavel_bloqueia_sem_chamada,
         test_file_exactly_at_limit_is_not_blocked,
         test_oversized_file_outside_allowed_files_does_not_block,
         test_malformed_json_response_fails_without_patch,
@@ -588,6 +822,16 @@ def main() -> int:
         test_transport_error_keeps_the_conservative_reservation,
         test_ledger_correction_failure_is_surfaced_explicitly_never_silent,
         test_concorrencia_perto_do_teto_so_uma_reserva_vence,
+        # Issue #144 — edição segura por trecho/âncora em arquivo grande.
+        test_arquivo_pequeno_continua_no_contrato_filewrite,
+        test_arquivo_grande_nao_e_bloqueado_so_pelo_tamanho_e_aplica_anchored_edit,
+        test_arquivo_grande_nunca_e_enviado_integralmente_ao_prompt,
+        test_anchored_edit_com_old_text_inexistente_bloqueia,
+        test_anchored_edit_com_old_text_duplicado_bloqueia,
+        test_anchored_edit_fora_de_allowed_files_bloqueia,
+        test_duas_anchored_edits_no_mesmo_arquivo_aplicam_atomicamente,
+        test_uma_anchored_edit_invalida_entre_varias_produz_zero_escrita,
+        test_filewrite_em_arquivo_grande_e_recusado_para_nunca_truncar,
     ]
     falhas = 0
     for t in testes:
