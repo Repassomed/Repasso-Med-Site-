@@ -82,10 +82,11 @@ name: Repasso Coordinator (WORKER BRIDGE)
 #      `contents: write` (publicar a branch de TRABALHO da tarefa — nunca
 #      main/master, o que o contrato do Runner já rejeita na construção —
 #      e as branches de estado `coordinator-state-*`),
-#      `pull-requests: write` (abrir a PR da branch produzida) e
-#      `actions: write` (disparar o Guard por workflow_dispatch, porque
-#      uma PR criada com o GITHUB_TOKEN não dispara workflows de
-#      pull_request). Sem `issues: write`, sem nada mais.
+#      `pull-requests: write` (abrir a PR da branch produzida),
+#      `actions: write` (disparar o Guard por workflow_dispatch) e
+#      `issues: write` (Issue #130: abrir/atualizar SOMENTE registros de
+#      erro pelo Error Registry). Este workflow roda sempre da branch
+#      padrao confiavel; nunca roda codigo de PR. Sem outras escritas.
 #   8. LLM SÓ NO PASSO GATED — `ANTHROPIC_API_KEY` só existe como env do
 #      passo "Rodar o Worker Bridge", e só é alcançada depois que o
 #      portão do Bridge, o portão do piloto, o portão de política, a
@@ -138,6 +139,8 @@ jobs:
       contents: write
       pull-requests: write
       actions: write
+      # Issue #130: somente Error Registry. O Bridge nao fecha/mergeia PR.
+      issues: write
     steps:
       - name: Checkout (SEMPRE a branch padrão — nunca HEAD de PR)
         uses: actions/checkout@v4
