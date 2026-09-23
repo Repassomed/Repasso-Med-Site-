@@ -2336,6 +2336,16 @@
       "output_tokens": 180,
       "tier": "FAST",
       "timestamp": "2026-09-23T22:51:57.181847+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.047614,
+      "event_key": "runner-task:dermatologia-questoes-issue112--bridge-931caf03a787",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-23T22:53:09.887932+00:00"
     }
   ]
 }
