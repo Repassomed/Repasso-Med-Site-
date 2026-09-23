@@ -136,6 +136,26 @@
       "status": "OFFLINE",
       "type": "api_runner",
       "worker_id": "api-runner-canary-b"
+    },
+    {
+      "branch": null,
+      "can_audit": false,
+      "can_execute": false,
+      "can_publish": false,
+      "capabilities": [
+        "conteudo",
+        "codigo"
+      ],
+      "commit": null,
+      "current_task": null,
+      "display_name": "Claude Worker 1",
+      "last_checkpoint": null,
+      "last_heartbeat": null,
+      "never_merge": true,
+      "progress": null,
+      "status": "OFFLINE",
+      "type": "api_runner",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
