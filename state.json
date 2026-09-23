@@ -99,10 +99,10 @@
       "guard_dispatch_status": null,
       "guard_dispatched_pr": null,
       "pr_number": null,
-      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'semiologia-ii-b05-b10-gaps-r2' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=True.)",
+      "reason": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
       "reserved_at": "2026-09-23T22:56:05.798384+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-23T22:56:05.798400+00:00",
+      "status": "FAILED",
+      "updated_at": "2026-09-23T22:56:55.441777+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
