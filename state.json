@@ -117,6 +117,25 @@
       "status": "AVAILABLE",
       "type": "api_runner",
       "worker_id": "api-runner-canary-a"
+    },
+    {
+      "branch": null,
+      "can_audit": false,
+      "can_execute": true,
+      "can_publish": false,
+      "capabilities": [
+        "codigo"
+      ],
+      "commit": null,
+      "current_task": null,
+      "display_name": "API Runner Canary B",
+      "last_checkpoint": null,
+      "last_heartbeat": null,
+      "never_merge": true,
+      "progress": null,
+      "status": "AVAILABLE",
+      "type": "api_runner",
+      "worker_id": "api-runner-canary-b"
     }
   ]
 }
