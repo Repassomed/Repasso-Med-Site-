@@ -278,9 +278,9 @@ def test_cli_runner_wiring_com_env_do_workflow_abre_portao_e_despacha_retomada()
     limpa e determinística (FAILED, zero rede) — o suficiente para provar
     que a cadeia inteira foi percorrida até o ponto onde uma chamada paga
     aconteceria."""
-    assert "ANTHROPIC_API_KEY" not in os.environ, (
-        "este teste depende de ANTHROPIC_API_KEY ausente para um caminho determinístico, sem rede"
-    )
+    # O canário REAL roda esta suíte dentro do passo que possui
+    # ANTHROPIC_API_KEY. Este teste precisa provar o caminho "sem chave"
+    # isoladamente, sem depender do ambiente externo da suíte.
     with tempfile.TemporaryDirectory() as tmp:
         remoto = _criar_remoto_local(tmp)
         sha = _publicar_branch_com_checkpoint(remoto, tmp, "runner/t-f8a", "greeting.txt", "ola\n")
@@ -320,8 +320,13 @@ def test_cli_runner_wiring_com_env_do_workflow_abre_portao_e_despacha_retomada()
                 "REPASSO_COORDINATOR_ENABLED", "REPASSO_COORDINATOR_MODE",
                 "REPASSO_RUNNER_ENABLED", "REPASSO_RUNNER_MODE", "REPASSO_RUNNER_CANARY_TASK_ID",
                 "REPASSO_RUNNER_ACTUAL_REF", "REPASSO_RUNNER_EXPECTED_REF",
+                "ANTHROPIC_API_KEY",
             )
         }
+        # Isola explicitamente o cenário determinístico deste teste:
+        # zero rede/chamada paga, mesmo quando a suíte inteira está sendo
+        # executada dentro do passo gated do canário real.
+        os.environ.pop("ANTHROPIC_API_KEY", None)
         # Os MESMOS nomes/expressões que coordinator-observe.yml define no
         # passo "Rodar o Coordinator" (achado F8-A) — REPASSO_RUNNER_
         # ACTUAL_REF/EXPECTED_REF reproduzem github.ref / refs/heads/
