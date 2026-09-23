@@ -155,6 +155,54 @@ def test_falha_ao_criar_issue_e_recuperavel_sem_duplicar() -> None:
     print("OK  test_falha_ao_criar_issue_e_recuperavel_sem_duplicar")
 
 
+def test_pending_orfao_fica_recuperavel_sem_duplicar_issue() -> None:
+    store = InMemoryWorkerStateStore()
+    api = FakeApi()
+    registry = ErrorRegistry(store, api)
+
+    # Simula processo que ganhou o CAS e morreu antes de sincronizar a Issue.
+    ev = event()
+    token = "token-antigo"
+    assert registry._insert(ev, token) is True
+
+    def tornar_stale(data: dict) -> dict:
+        item = data["errors"][0]
+        item["issue_sync_status"] = "PENDING"
+        item["issue_sync_token"] = token
+        item["issue_sync_updated_at"] = "2020-01-01T00:00:00+00:00"
+        return data
+
+    store.update(tornar_stale, message="teste: pending stale")
+    out = registry.register(ev)
+    assert out.action == "CREATED", out
+    assert out.issue_number == 700
+    assert api.created == [700]
+    assert records(store)[0]["issue_sync_status"] == "SYNCED"
+    print("OK  test_pending_orfao_fica_recuperavel_sem_duplicar_issue")
+
+
+def test_mark_resolved_persiste_root_cause_e_reaparecimento_vira_recurrent() -> None:
+    store = InMemoryWorkerStateStore()
+    api = FakeApi()
+    registry = ErrorRegistry(store, api)
+    ev = event()
+    first = registry.register(ev)
+    assert first.issue_number == 700
+    assert registry.mark_resolved(
+        ev.fingerprint, resolution="corrigido no hotfix", root_cause="permissao ausente"
+    ) is True
+    rec = records(store)[0]
+    assert rec["status"] == "RESOLVED"
+    assert rec["resolution"] == "corrigido no hotfix"
+    assert rec["root_cause"] == "permissao ausente"
+
+    out = registry.register(event(evidence="voltou apos resolucao"))
+    assert out.action == "RECURRENT"
+    assert api.reopened == [700]
+    assert records(store)[0]["status"] == "RECURRENT"
+    print("OK  test_mark_resolved_persiste_root_cause_e_reaparecimento_vira_recurrent")
+
+
 def test_segredos_sao_redigidos_antes_da_issue() -> None:
     store = InMemoryWorkerStateStore()
     api = FakeApi()
@@ -185,6 +233,8 @@ def main() -> int:
         test_evidencia_nova_comenta_a_mesma_issue,
         test_issue_fechada_que_reaparece_vira_recurrent_e_reabre,
         test_falha_ao_criar_issue_e_recuperavel_sem_duplicar,
+        test_pending_orfao_fica_recuperavel_sem_duplicar_issue,
+        test_mark_resolved_persiste_root_cause_e_reaparecimento_vira_recurrent,
         test_segredos_sao_redigidos_antes_da_issue,
         test_cliente_nao_tem_merge_deploy_ou_force_push,
     ]
