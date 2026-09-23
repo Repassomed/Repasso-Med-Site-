@@ -147,7 +147,7 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": null,
+      "current_task": "semiologia-ii-b05-b10-gaps",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
       "last_heartbeat": "2026-09-23T20:42:12.137902+00:00",
