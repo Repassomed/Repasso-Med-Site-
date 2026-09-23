@@ -24,6 +24,31 @@
       "summary": "arquivo(s) existente(s) excede(m) o limite que pode ser enviado integralmente ao modelo (20000 caracteres): ['Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html']. Fail-closed nesta fase can\u00e1rio (corre\u00e7\u00e3o B2-C, auditoria independente do PR #114): nenhuma chamada foi feita, nenhum patch foi gerado, zero escrita. Edi\u00e7\u00e3o por trecho/\u00e2ncora para arquivos grandes \u00e9 uma evolu\u00e7\u00e3o futura, fora desta rodada.",
       "task_id": "fisiopatologia-ii-issue101",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "guard",
+      "commit_sha": "6bcce5376a221e8056f3a4ed0d225eab7fe62f67",
+      "component": "guard",
+      "error_id": "ERR-3468D2B8FD",
+      "error_type": "hard-fail",
+      "fingerprint": "3468d2b8fd6a7d53f347",
+      "first_seen": "2026-09-23T21:25:41.516031+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "356cc449f17b4f21b84d1e8aba558694",
+      "issue_sync_updated_at": "2026-09-23T21:25:41.516031+00:00",
+      "last_evidence_hash": "dfed65be8415d941baa0",
+      "last_seen": "2026-09-23T21:25:41.516031+00:00",
+      "occurrence_count": 1,
+      "pr_number": 145,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35922213366",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:145.",
+      "task_id": "infra-runner-large-file-anchored-edit",
+      "worker_id": null
     }
   ]
 }
