@@ -1163,15 +1163,25 @@ def executar_ciclo(
 
     tarefas = restringir_ao_piloto(tarefas, config)
 
-    # 4. só workers programáticos do Bridge.
+    # 4. só workers programáticos do Bridge E elegíveis no modo atual.
+    #
+    # Issue #150: o Worker Registry é persistente e, por segurança, o
+    # bootstrap nunca rebaixa um worker existente só porque o modo voltou
+    # para pilot. Portanto, depois de uma passagem por active-supervised,
+    # claude-worker-1..3 podem continuar AVAILABLE no registro. O Scheduler
+    # não pode enxergá-los no piloto: a elegibilidade do modo precisa ser
+    # aplicada à VISÃO em memória antes da decisão, sem apagar estado real.
     todos_workers: list[WorkerRecord] = worker_registry.list_workers()
-    workers = bridge_workers.workers_programaticos(todos_workers)
+    workers_do_bridge = bridge_workers.workers_programaticos(todos_workers)
+    ids_elegiveis = set(bridge_workers.ids_elegiveis(config.mode))
+    workers = [w for w in workers_do_bridge if w.worker_id in ids_elegiveis]
     if not workers:
         return BridgeOutcome(
             "NO_ASSIGNMENT",
             (
-                "nenhum worker programático registrado — rode o bootstrap "
-                "(coordinator.bridge_workers) com o Bridge ligado antes de qualquer atribuição."
+                f"nenhum worker programático elegível no modo {config.mode!r} está registrado — "
+                "rode o bootstrap (coordinator.bridge_workers) com o Bridge ligado antes de "
+                "qualquer atribuição."
             ),
         )
 
