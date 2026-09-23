@@ -802,6 +802,45 @@
       "policy_level": "D",
       "jose_authorized": true,
       "notas": "Hotfix de manutenção autorizado no fluxo pós-piloto. Não executa Anthropic/Runner no caminho de recuperação; não mergeia/publica/deploya. DONE significa implementação entregue nesta PR; merge continua exclusivamente com José."
+    },
+    {
+      "id": "infra-error-registry-v1",
+      "titulo": "Error Registry V1 — registro central de falhas",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordinator/error_registry.py",
+        "coordinator/worker_bridge.py",
+        "coordinator/__main__.py",
+        "coordinator/github_event.py",
+        "coordinator/tests/test_error_registry.py",
+        "coordinator/tests/run_all.py",
+        ".github/workflows/coordinator-worker-bridge.yml",
+        ".github/workflows/coordinator-observe.yml",
+        "coordination/tasks.json"
+      ],
+      "objetivo": "Registrar automaticamente erros acionáveis do Worker Bridge/Runner/Guard/Anthropic/Coordinator em GitHub Issues, com fingerprint, deduplicação, recorrência e estado operacional em coordinator-state-errors.",
+      "fonte": "Issue #130 · autorização explícita de José em 23/09/2026",
+      "agente": "ChatGPT",
+      "estado": "IN-PROGRESS",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1",
+        "infra-worker-bridge-pr-recovery"
+      ],
+      "branch": "infra/error-registry-v1",
+      "pr": null,
+      "commit": null,
+      "issue": 130,
+      "automation_enabled": false,
+      "bridge_enabled": false,
+      "risk_level": "BAIXO",
+      "policy_level": "D",
+      "jose_authorized": true,
+      "notas": "Observabilidade apenas. Nunca merge/deploy/publicação. Falha ao registrar erro nunca derruba uma tarefa que já terminou."
     }
   ]
 }
