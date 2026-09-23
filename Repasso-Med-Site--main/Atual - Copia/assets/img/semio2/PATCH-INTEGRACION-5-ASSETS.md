@@ -5,6 +5,11 @@
 > pronto para quem tiver o HTML reservado — hoje o PR #77 (`edit/c3-semiologia-ii-provas`),
 > que está aberto e aguardando auditoria sobre o mesmo arquivo.
 >
+> **Legendas conferidas contra os WEBP finais (rodada atual):** a legenda da cianosis
+> acompanha o raster corrigido — «Baja saturación arterial (hipoxemia)», sem corte rígido
+> de SpO₂ —, e a do CURB-65 acompanha a nota nova da figura sobre o escore 5. As setas
+> continuam `0 / 1–2 / 3–4`, como no material.
+>
 > **Obrigatório antes de aplicar:** este patch foi testado sobre `84d31b8`, ANTES do
 > PR #77. Ele **precisa ser revalidado pelas âncoras de texto** (não pelos números de
 > linha) sobre o `semiologia-ii.html` que existir na `main` depois que o PR #77 for
@@ -12,7 +17,7 @@
 
 **Base verificada:** `semiologia-ii.html` em `main` `84d31b8`
 **md5 do arquivo sobre o qual o patch foi testado:** `2fa81ca7408905f71121c6388e75e977`
-**Efeito:** +4 060 bytes · +4 `<figure>` · +4 imagens referenciadas (44 → 48) · 1 URL trocada
+**Efeito:** +4 169 bytes · +4 `<figure>` · +4 imagens referenciadas (44 → 48) · 1 URL trocada
 
 Se o arquivo tiver mudado (o PR #77 muda), **reaplicar pelas âncoras de texto**, não
 pelos números de linha. As cinco âncoras abaixo são únicas no arquivo e foram conferidas
@@ -155,7 +160,7 @@ servida) e aparecem igualmente na versão sem patch.
 +
 +<figure class="s2-fig">
 +  <div class="s2-photo s2-i45" role="img" aria-label="Hemoptisis frente a hematemesis y cianosis central frente a periférica"></div>
-+  <figcaption><b>Sangre y color: los dos pares, en detalle</b> — Amplía los dos pares que la figura anterior resume. <b>Hemoptisis</b>: sangre roja y espumosa, expulsada <b>con tos</b>, de pH alcalino (&asymp; 7,4 &ndash; 8,0), a veces con cosquilleo faringolaríngeo previo. <b>Hematemesis</b>: sangre oscura o en &laquo;borra de café&raquo;, precedida de <b>náuseas y vómito</b>, con restos alimentarios y pH ácido (&asymp; 1,0 &ndash; 3,0). Abajo, la cianosis: la <b>central</b> compromete lengua y mucosas, cursa con saturación arterial baja y <b>no mejora con el calor</b>; la <b>periférica</b> respeta las mucosas y <b>mejora al calentar</b>.
++  <figcaption><b>Sangre y color: los dos pares, en detalle</b> — Amplía los dos pares que la figura anterior resume. <b>Hemoptisis</b>: sangre roja y espumosa, expulsada <b>con tos</b>, de pH alcalino (&asymp; 7,4 &ndash; 8,0), a veces con cosquilleo faringolaríngeo previo. <b>Hematemesis</b>: sangre oscura o en &laquo;borra de café&raquo;, precedida de <b>náuseas y vómito</b>, con restos alimentarios y pH ácido (&asymp; 1,0 &ndash; 3,0). Abajo, la cianosis: la <b>central</b> compromete lengua y mucosas, cursa con <b>saturación arterial baja</b> (hipoxemia) y <b>no mejora con el calor</b>; la <b>periférica</b> respeta las mucosas y <b>mejora al calentar</b>.
 +  <p class="s2-trap">&#9888; <b>Ojo:</b> el panel de la <b>inervación pleural</b> sigue estando en la figura anterior, y es el que hay que recordar para el dolor: la pleura visceral y el parénquima pulmonar son insensibles.</p></figcaption>
 +</figure>
 +
@@ -179,7 +184,7 @@ servida) e aparecem igualmente na versão sem patch.
 +
 +<figure class="s2-fig">
 +  <div class="s2-photo s2-i48" role="img" aria-label="Los cinco criterios del CURB-65 y la decisión de destino según el puntaje"></div>
-+  <figcaption><b>CURB-65, criterio por criterio</b> — Un punto por ítem: <b>C</b>onfusión &middot; <b>U</b>rea &gt; 7 mmol/L &middot; frecuencia <b>R</b>espiratoria &ge; 30/min &middot; <b>B</b>lood pressure, PAS &lt; 90 o PAD &le; 60 mmHg &middot; <b>65</b> años o más. Después, el destino: <b>0</b> ambulatorio; <b>1&ndash;2</b> considerar tratamiento hospitalario; <b>3&ndash;4</b> tratamiento hospitalario.
++  <figcaption><b>CURB-65, criterio por criterio</b> — Un punto por ítem: <b>C</b>onfusión &middot; <b>U</b>rea &gt; 7 mmol/L &middot; frecuencia <b>R</b>espiratoria &ge; 30/min &middot; <b>B</b>lood pressure, PAS &lt; 90 o PAD &le; 60 mmHg &middot; <b>65</b> años o más. Después, el destino: <b>0</b> ambulatorio; <b>1&ndash;2</b> considerar tratamiento hospitalario; <b>3&ndash;4</b> tratamiento hospitalario. El puntaje va de <b>0 a 5</b>: con <b>5</b> puntos la conducta sigue siendo hospitalaria.
 +  <p class="s2-trap">&#9888; <b>Ojo:</b> el CURB-65 <b>no mide oxigenación</b> &mdash; revise siempre la SpO&#8322; &mdash; y no reemplaza el juicio clínico.</p></figcaption>
 +</figure>
 +

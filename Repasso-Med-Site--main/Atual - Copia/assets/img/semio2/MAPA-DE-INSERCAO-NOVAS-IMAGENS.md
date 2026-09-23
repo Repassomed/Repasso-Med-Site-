@@ -15,9 +15,13 @@
 > sem virar outra imagem, com outra linguagem visual, fora do padrão das 34
 > infografias já publicadas da matéria.
 >
-> E **remendar texto sobre o raster continua proibido**. Como a errata via
-> `figcaption` também deixou de ser aceita, **toda imagem com defeito de texto
-> fica BLOQUEADA** — não «aprovada com ressalva».
+> E **remendar texto sobre o raster continua proibido** como saída para uma imagem
+> defeituosa. Como a errata via `figcaption` também deixou de ser aceita, **toda imagem
+> com defeito de texto fica BLOQUEADA** — não «aprovada com ressalva». As correções
+> cirúrgicas das duas últimas rodadas são outra coisa e não abrem exceção a esta regra: foram
+> pedidas nominalmente pela auditoria independente do PR #78, em imagens já **aprovadas**,
+> e cada uma toca só o ponto apontado (ver «Rodada atual», abaixo). As 9 BLOQUEADAS continuam
+> BLOQUEADAS e continuam precisando de regeneração.
 >
 > **Resultado: 5 aprovadas · 9 BLOQUEADAS.** As 9 precisam voltar para quem tem
 > o pipeline que as produziu. A seção 5 traz o texto exato de cada correção.
@@ -27,6 +31,20 @@
 > O bloqueio das 9 permanece, pelo mesmo motivo. O que esta rodada acrescenta é o
 > **patch de integração das 5 aprovadas, já verificado** — ver
 > `PATCH-INTEGRACION-5-ASSETS.md`, nesta mesma pasta.
+>
+> **Rodada atual (correção cirúrgica pedida pela auditoria):** duas das 5 **aprovadas**
+> receberam correção pontual no raster, por pedido explícito da auditoria
+> independente do PR #78 — não é regeneração e não muda o status das 9 BLOQUEADAS,
+> que continuam precisando do pipeline que as produziu:
+> - `semio2-b01-03-hemoptisis-cianosis.webp`: `Baia` → **`Baja saturación arterial`**,
+>   e o `(hipoxemia)` que a rodada anterior havia sobreposto em corpo e tipo errados
+>   foi refeito no tipo, no tamanho e na posição do próprio painel (segunda linha da
+>   entrada, como em `(labios, lengua, mucosa oral)`). Os glifos vêm das linhas de
+>   texto da própria imagem, por isso tipo, corpo e cor batem exatamente.
+> - `semio2-b04-03-curb65-gravedad.webp`: a faixa de decisão continua **0 / 1–2 / 3–4**,
+>   como no material; ao lado dela entrou a nota que faltava — **«El puntaje va de 0 a 5.
+>   Con 5 puntos la conducta sigue siendo hospitalaria.»** — para que o escore 5, possível
+>   com 5 critérios de 1 ponto, deixe de ficar sem destino.
 
 | | |
 |---|---|
@@ -116,9 +134,13 @@ tipo menor. **Nenhuma tem erro científico, textual ou visual conhecido.**
   (≈7,4–8,0 × ≈1,0–3,0), cosquilleo faringolaríngeo × náuseas prévias, restos
   alimentarios, e as duas fórmulas de fecho.
 - **Conferido:** hemoptisis (sangre roja, espumosa, tos, pH alcalino) ✔ · hematemesis
-  (borra de café, restos alimentarios, pH ácido) ✔ · central (mucosas azules, saturación
-  arterial baja / hipoxemia, sin corte numérico rígido, no mejora con calor) ✔ · periférica
+  (borra de café, restos alimentarios, pH ácido) ✔ · central (mucosas azules, **«Baja
+  saturación arterial / (hipoxemia)»** — literalmente o que o raster imprime hoje, sem
+  corte numérico rígido de SpO₂ —, no mejora con calor) ✔ · periférica
   (acrocianosis, respeta mucosas, mejora al calentar) ✔
+- **Correção de raster nesta rodada:** o arquivo trazia **`Baia`** no lugar de `Baja`, e o
+  `(hipoxemia)` acrescentado antes estava em tipo e corpo estranhos ao painel, invadindo a
+  coluna do ícone. Os dois foram corrigidos. **Nada mais foi tocado nesta imagem.**
 
 ### 4 · `semio2-b01-04-ruidos-respiratorios.webp` — 🟢 aprovada · **ADIÇÃO**
 
@@ -182,10 +204,19 @@ tipo menor. **Nenhuma tem erro científico, textual ou visual conhecido.**
 - **Conferido:** C confusão · U ureia > 7 mmol/L · R FR ≥ 30/min · B PAS < 90 **ou**
   PAD ≤ 60 mmHg · 65 idade ≥ 65 anos · 1 ponto por critério ✔ ·
   0 ambulatorial · 1–2 considerar tratamento hospitalar · 3–4 tratamento hospitalar ✔ —
-  padrão da cátedra (Compilado, slide 19); **diverge** do `figcaption` que o site
+  padrão da cátedra (Compilado, slide 19, e a tabela «Interpretación del escore (según el
+  material)» que o site já publica); **diverge** do `figcaption` que o site
   publica hoje (`0–1 / 2 / ≥3`), que fica desatualizado e precisa ser corrigido antes
   de qualquer integração (ver `PATCH-INTEGRACION-5-ASSETS.md`). Mantém «CURB-65 no
   mide oxigenación: revise SpO₂ siempre» e «No reemplaza el juicio clínico» ✔
+- **Escore 5 · correção de raster nesta rodada:** a figura diz «1 punto por criterio» sobre
+  **5** critérios, logo o total possível chega a **5** — e a faixa da cátedra vai só até
+  `3–4`, o que deixava o 5 sem destino. As três setas **não** foram mexidas (continuam
+  `0 / 1–2 / 3–4`, como no material); ao lado do rótulo «PUNTAJE TOTAL Y DECISIÓN» entrou
+  a nota **«El puntaje va de 0 a 5. Con 5 puntos la conducta sigue siendo hospitalaria.»**
+  O material não tabula o 5 nem dá mortalidade para ele, então a nota diz apenas a
+  continuidade da conduta — **nenhuma classificação nova foi inventada**, e nenhum número
+  de mortalidade foi atribuído ao 5. **Nada mais foi tocado nesta imagem.**
 
 ---
 
