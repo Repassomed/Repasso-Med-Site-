@@ -802,6 +802,10 @@ class BridgeOutcome:
       zero chamada paga;
     - ``DISPATCHED``: a tarefa foi reservada e entregue ao Runner (o
       resultado real está em ``dispatch``/``runtime_record``);
+    - ``PR_RETRY``: MANUTENÇÃO, não execução. O ciclo encontrou uma
+      tarefa já concluída em NEEDS-AUDIT/DONE com branch/checkpoint
+      publicados, mas sem PR registrada, e tenta APENAS abrir/reutilizar
+      a PR e despachar o Guard. Zero chamada paga e zero Runner;
     - ``GUARD_RETRY``: MANUTENÇÃO, não execução. O ciclo encontrou uma
       tarefa que já terminou e já tem PR, mas cujo Guard nunca foi
       confirmado, e tentou APENAS o disparo do Guard. Zero chamada paga,
@@ -851,6 +855,110 @@ def visao_da_fila(
     metadados = carregar_metadados_de_automacao(tasks_json_path)
     registros = runtime_store.por_id()
     return task_runtime.aplicar_runtime_em_tarefas(declarativas, registros), metadados, registros
+
+
+def candidato_a_retomada_da_pr(
+    registros: dict[str, TaskRuntimeRecord], config: WorkerBridgeConfig
+) -> TaskRuntimeRecord | None:
+    """Seleciona uma execução já concluída que publicou branch/checkpoint
+    mas ficou sem PR.
+
+    É o caso observado no piloto R2 quando o GitHub recusou a criação da
+    PR com 403. A tarefa NÃO volta para READY e o Runner/Claude NÃO são
+    executados outra vez: este candidato serve exclusivamente para a
+    manutenção administrativa da PR/Guard.
+
+    Fail-closed: exige status terminal utilizável, branch, checkpoint,
+    execution_task_id e ausência de pr_number. Em modo piloto, somente a
+    tarefa piloto exata pode ser recuperada."""
+    candidatos = [
+        r for r in registros.values()
+        if r.status in (task_runtime.RUNTIME_NEEDS_AUDIT, task_runtime.RUNTIME_DONE)
+        and r.pr_number is None
+        and bool((r.branch or "").strip())
+        and bool((r.checkpoint_commit or "").strip())
+        and bool((r.execution_task_id or "").strip())
+        and bool((r.worker_id or "").strip())
+        and (not config.is_pilot or r.canonical_task_id == (config.pilot_task_id or "").strip())
+    ]
+    if not candidatos:
+        return None
+    return sorted(candidatos, key=lambda r: r.canonical_task_id)[0]
+
+
+def retomar_pr_e_guard(
+    registro: TaskRuntimeRecord, *,
+    tarefas: list[TaskRecord],
+    metadados: dict[str, BridgeTaskMetadata],
+    runtime_store: TaskRuntimeStore,
+    github_api: bridge_pr.GitHubBridgeApi,
+    base_branch: str,
+) -> BridgeOutcome:
+    """Manutenção de PR pendente, com ZERO Runner/Claude/Anthropic.
+
+    Reconstrói apenas os metadados tipados necessários para o corpo da PR
+    a partir da tarefa declarativa confiável e do runtime persistido. Usa
+    a mesma função idempotente ``_abrir_pr_e_guard``, portanto uma PR já
+    existente para a branch é reutilizada e nunca duplicada."""
+    alvo = registro.canonical_task_id
+    tarefa = next((t for t in tarefas if t.id == alvo), None)
+    meta = metadados.get(alvo)
+    if tarefa is None or meta is None:
+        return BridgeOutcome(
+            "PR_RETRY",
+            f"não consigo recuperar PR de {alvo!r}: tarefa/metadados declarativos ausentes — fail-closed.",
+            runtime_record=registro,
+        )
+
+    materializada = materializar_runner_task(
+        tarefa, meta, task_id=registro.execution_task_id
+    )
+    if not materializada.ok or materializada.task is None:
+        return BridgeOutcome(
+            "PR_RETRY",
+            f"não consigo recuperar PR de {alvo!r}: {materializada.reason}",
+            runtime_record=registro,
+        )
+
+    try:
+        runner_task = replace(
+            materializada.task,
+            branch=registro.branch,
+            checkpoint_commit=registro.checkpoint_commit,
+        )
+    except ValueError as exc:
+        return BridgeOutcome(
+            "PR_RETRY",
+            f"runtime publicado de {alvo!r} não reconstrói RunnerTask válida: {exc}",
+            runtime_record=registro,
+        )
+
+    pr_outcome, guard_outcome, notas = _abrir_pr_e_guard(
+        github_api,
+        task=runner_task,
+        tarefa=tarefa,
+        meta=meta,
+        canonical_task_id=alvo,
+        worker_id=registro.worker_id or "",
+        checkpoint_commit=registro.checkpoint_commit,
+        base_branch=base_branch,
+        runtime_store=runtime_store,
+        status_runtime=registro.status,
+    )
+    fresco = runtime_store.get(alvo) or registro
+    return BridgeOutcome(
+        "PR_RETRY",
+        (
+            f"manutenção de PR para {alvo!r}: "
+            f"{pr_outcome.action if pr_outcome else 'SEM_PR'}; "
+            "nenhum Runner/Claude/Anthropic foi executado."
+        ),
+        runner_task=runner_task,
+        runtime_record=fresco,
+        pr=pr_outcome,
+        guard=guard_outcome,
+        notes=tuple(notas),
+    )
 
 
 def candidato_a_retomada_do_guard(
@@ -1010,26 +1118,48 @@ def executar_ciclo(
         tasks_json_path=tasks_json_path, runtime_store=runtime_store
     )
 
-    # 3-A. MANUTENÇÃO antes de execução: uma tarefa que já terminou e já
-    # tem PR, mas cujo Guard nunca foi confirmado, sai daqui com o Guard
-    # despachado — e o ciclo termina. É o caminho que faltava para o
-    # estado recuperável da correção B4 ser de fato recuperado (achado da
-    # 2ª auditoria independente do PR #129). Vem antes de qualquer decisão
-    # de fila de propósito: uma PR esperando auditoria é mais urgente do
-    # que começar trabalho novo, e este caminho não custa nada.
+    # 3-A. MANUTENÇÃO DE PR antes de qualquer execução. Se o Runner já
+    # terminou e publicou branch/checkpoint, mas a PR não foi registrada
+    # (ex.: 403/rede), recuperamos somente PR + Guard. Zero Anthropic,
+    # zero Runner, zero novo claim.
+    pr_pendente = candidato_a_retomada_da_pr(registros, config)
+    if pr_pendente is not None:
+        if github_api is None:
+            return BridgeOutcome(
+                "PR_RETRY",
+                (
+                    f"{pr_pendente.canonical_task_id!r} terminou com branch/checkpoint publicados, "
+                    "mas ainda não tem PR e nenhum cliente GitHub foi fornecido — nada foi "
+                    "reexecutado."
+                ),
+                runtime_record=pr_pendente,
+            )
+        return retomar_pr_e_guard(
+            pr_pendente,
+            tarefas=tarefas,
+            metadados=metadados,
+            runtime_store=runtime_store,
+            github_api=github_api,
+            base_branch=base_branch,
+        )
+
+    # 3-B. MANUTENÇÃO DO GUARD: tarefa já tem PR, mas o Guard nunca foi
+    # confirmado. Tenta somente o Guard e termina.
     pendente = candidato_a_retomada_do_guard(registros, config)
     if pendente is not None:
         if github_api is None:
-            notes.append(
-                f"a PR #{pendente.pr_number} de {pendente.canonical_task_id!r} espera retomada do "
-                "Guard, mas nenhum cliente de API do GitHub foi fornecido nesta execução — nada "
-                "foi tentado."
+            return BridgeOutcome(
+                "GUARD_RETRY",
+                (
+                    f"a PR #{pendente.pr_number} de {pendente.canonical_task_id!r} espera retomada "
+                    "do Guard, mas nenhum cliente GitHub foi fornecido — nada foi reexecutado."
+                ),
+                runtime_record=pendente,
             )
-        else:
-            return retomar_guard(
-                pendente, runtime_store=runtime_store, github_api=github_api,
-                base_branch=base_branch,
-            )
+        return retomar_guard(
+            pendente, runtime_store=runtime_store, github_api=github_api,
+            base_branch=base_branch,
+        )
 
     tarefas = restringir_ao_piloto(tarefas, config)
 
