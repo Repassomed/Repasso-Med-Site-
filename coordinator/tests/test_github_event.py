@@ -87,6 +87,26 @@ def test_workflow_run_carries_real_audit_pack_not_none() -> None:
     print("OK  test_workflow_run_carries_real_audit_pack_not_none")
 
 
+def test_guard_state_change_carrega_run_id_head_e_conclusao_para_error_registry() -> None:
+    payload = {
+        "action": "completed",
+        "workflow_run": {
+            "name": "Repasso Guard",
+            "conclusion": "failure",
+            "id": 987654,
+            "head_sha": "abcdef1234567890",
+            "pull_requests": [{"number": 97}],
+        },
+    }
+    ev = build_event_from_github_context("workflow_run", payload, REPO)
+    assert ev is not None
+    assert ev.event_type is EventType.GUARD_STATE_CHANGE
+    assert ev.payload["guard_run_id"] == 987654
+    assert ev.payload["head_sha"] == "abcdef1234567890"
+    assert ev.payload["guard_conclusion"] == "failure"
+    print("OK  test_guard_state_change_carrega_run_id_head_e_conclusao_para_error_registry")
+
+
 def test_workflow_run_dedup_uses_conclusion_never_run_id() -> None:
     """Bloqueador 6: dois runs consecutivos com a MESMA conclusão têm que
     produzir a MESMA dedup_key, mesmo com run_id diferente — vermelho->
@@ -201,6 +221,7 @@ def main() -> int:
         test_workflow_run_success_with_needs_audit_label_builds_pr_event,
         test_workflow_run_success_without_label_builds_guard_state_change,
         test_workflow_run_carries_real_audit_pack_not_none,
+        test_guard_state_change_carrega_run_id_head_e_conclusao_para_error_registry,
         test_workflow_run_dedup_uses_conclusion_never_run_id,
         test_issue_comment_on_inbox_from_trusted_actor_builds_inbox_event,
         test_issue_comment_from_untrusted_actor_is_rejected,
