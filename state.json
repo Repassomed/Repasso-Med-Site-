@@ -140,7 +140,7 @@
     {
       "branch": null,
       "can_audit": false,
-      "can_execute": false,
+      "can_execute": true,
       "can_publish": false,
       "capabilities": [
         "conteudo",
@@ -153,7 +153,7 @@
       "last_heartbeat": null,
       "never_merge": true,
       "progress": null,
-      "status": "OFFLINE",
+      "status": "AVAILABLE",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
