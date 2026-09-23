@@ -499,6 +499,66 @@ def test_claim_happens_before_anthropic_call_loser_makes_zero_calls() -> None:
     print("OK  test_claim_happens_before_anthropic_call_loser_makes_zero_calls")
 
 
+def test_generator_reads_checkpoint_before_generating_continuation_patch() -> None:
+    """Regressão do canário R4 real: a geração da continuação precisa ver
+    o conteúdo do checkpoint, nunca a main/checkout anterior."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        branch = "runner/canario-checkpoint-context"
+
+        seed = _clonar_workdir(tmp, remoto, "seed-checkpoint-context")
+        subprocess.run(["git", "-C", seed, "checkout", "-q", "-b", branch], check=True)
+        with open(os.path.join(seed, "greeting.txt"), "w", encoding="utf-8") as fh:
+            fh.write("stage-1\n")
+        subprocess.run(["git", "-C", seed, "add", "-A"], check=True)
+        subprocess.run(["git", "-C", seed, "commit", "-q", "-m", "checkpoint stage 1"], check=True)
+        subprocess.run(["git", "-C", seed, "push", "-q", "origin", branch], check=True)
+        checkpoint = subprocess.run(
+            ["git", "-C", seed, "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+
+        workdir = _clonar_workdir(tmp, remoto, "work-checkpoint-context")
+        task_id = "canario-checkpoint-context"
+        task = _task(
+            task_id=task_id, branch=branch, allowed_files=("greeting.txt",),
+            checkpoint_commit=checkpoint,
+        )
+        config = _config(canary_task_id=task_id)
+        conteudo_visto: list[str] = []
+
+        class _GeracaoOk:
+            status = "ok"
+            reason = "ok"
+            ledger_correction_failed = False
+
+            def __init__(self) -> None:
+                self.patch = StructuredPatch(
+                    files=(FileWrite(path="greeting.txt", content="stage-2\n"),)
+                )
+
+        def gerar() -> object:
+            with open(os.path.join(workdir, "greeting.txt"), encoding="utf-8") as fh:
+                conteudo_visto.append(fh.read())
+            return _GeracaoOk()
+
+        outcome = executar_tarefa(
+            task, None, config=config, repo_dir=workdir, state_git_remote=remoto,
+            gerar_patch=gerar,
+        )
+
+        assert conteudo_visto == ["stage-1\n"], (
+            "gerar_patch precisa enxergar o checkpoint antes de decidir a próxima transição"
+        )
+        assert outcome.result is not None and outcome.result.status == "NEEDS-AUDIT", outcome.result
+        publicado = subprocess.run(
+            ["git", "-C", remoto, "show", f"refs/heads/{branch}:greeting.txt"],
+            capture_output=True, text=True, check=True,
+        ).stdout
+        assert publicado == "stage-2\n", publicado
+    print("OK  test_generator_reads_checkpoint_before_generating_continuation_patch")
+
+
 def test_executar_tarefa_requires_exactly_one_of_patch_or_gerar_patch() -> None:
     task = _task()
     config = _config()
@@ -758,6 +818,7 @@ def main() -> int:
         test_validation_command_outside_allowlist_blocks,
         test_concurrent_dispatch_same_task_id_only_one_wins,
         test_claim_happens_before_anthropic_call_loser_makes_zero_calls,
+        test_generator_reads_checkpoint_before_generating_continuation_patch,
         test_executar_tarefa_requires_exactly_one_of_patch_or_gerar_patch,
         test_ledger_correction_failure_is_fail_closed_before_applying_patch,
         test_default_usage_branch_matches_the_global_coordinator_ledger,
