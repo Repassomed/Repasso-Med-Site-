@@ -112,6 +112,16 @@
       "recorded_at": "2026-09-23T20:42:02.056055+00:00",
       "status": "BLOCKED",
       "task_id": "fisiopatologia-ii-issue101--bridge-058b562d63d4"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
+      "recorded_at": "2026-09-23T22:37:07.983560+00:00",
+      "status": "FAILED",
+      "task_id": "fisiopatologia-ii-issue101-r2--bridge-d76534086233"
     }
   ]
 }
