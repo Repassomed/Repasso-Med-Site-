@@ -9,10 +9,10 @@
       "guard_dispatch_status": null,
       "guard_dispatched_pr": null,
       "pr_number": null,
-      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-4' (tarefa 'infra-worker-bridge-pilot' autorizada declarativamente: risco BAIXO, N\u00edvel C, jose_authorized=False.)",
+      "reason": "pelo menos um comando de valida\u00e7\u00e3o da allowlist falhou \u2014 nada foi commitado/publicado.",
       "reserved_at": "2026-09-23T17:55:00.827676+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-23T17:55:00.827690+00:00",
+      "status": "FAILED",
+      "updated_at": "2026-09-23T17:55:56.889738+00:00",
       "worker_id": "claude-worker-4"
     }
   ]
