@@ -256,6 +256,23 @@ jobs:
         run: |
           python3 -m coordinator.tests.run_all
 
+      - name: Preflight pós-patch Stage 1 (ZERO API, antes do claim)
+        run: |
+          set -euo pipefail
+          CANARY_FILE="coordinator/canary/runner-canary.txt"
+          if [ -e "$CANARY_FILE" ]; then
+            echo "O arquivo do canário já existe na main; o Stage 1 precisa começar ausente."
+            exit 1
+          fi
+          mkdir -p "$(dirname "$CANARY_FILE")"
+          cleanup() {
+            rm -f "$CANARY_FILE"
+            rmdir "$(dirname "$CANARY_FILE")" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          printf 'CANARY_STAGE=1\n' > "$CANARY_FILE"
+          python3 -m coordinator.tests.run_all
+
       - name: Rodar o Runner Dispatch sobre a RunnerTask do canário
         id: runner
         env:
