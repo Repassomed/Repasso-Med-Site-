@@ -207,6 +207,9 @@ class TaskRuntimeRecord:
     worker_id: str | None = None
     branch: str | None = None
     checkpoint_commit: str | None = None
+    # Relatório validado da Lei das Questões 8-A, quando aplicável.
+    # Persistido para sobreviver a falha entre commit/push e criação da PR.
+    question_report: dict | None = None
     pr_number: int | None = None
     execution_task_id: str | None = None
     guard_dispatched_pr: int | None = None
@@ -240,6 +243,8 @@ class TaskRuntimeRecord:
                 "interrompida por limite sem checkpoint não pode ser representada como "
                 "retomável (Issue #84 §6; Issue #128 §10)."
             )
+        if self.question_report is not None and not isinstance(self.question_report, dict):
+            raise ValueError("question_report precisa ser None ou dict validado pelo Runner.")
         if self.pr_number is not None and (not isinstance(self.pr_number, int) or self.pr_number <= 0):
             raise ValueError(f"pr_number precisa ser None ou inteiro positivo — recebido {self.pr_number!r}.")
         if self.guard_dispatched_pr is not None and (
@@ -312,6 +317,7 @@ class TaskRuntimeRecord:
             "worker_id": self.worker_id,
             "branch": self.branch,
             "checkpoint_commit": self.checkpoint_commit,
+            "question_report": self.question_report,
             "pr_number": self.pr_number,
             "execution_task_id": self.execution_task_id,
             "guard_dispatched_pr": self.guard_dispatched_pr,
@@ -334,6 +340,7 @@ class TaskRuntimeRecord:
             worker_id=d.get("worker_id"),
             branch=d.get("branch"),
             checkpoint_commit=d.get("checkpoint_commit"),
+            question_report=d.get("question_report"),
             pr_number=d.get("pr_number"),
             execution_task_id=d.get("execution_task_id"),
             guard_dispatched_pr=d.get("guard_dispatched_pr"),
@@ -557,6 +564,7 @@ class TaskRuntimeStore:
         self, canonical_task_id: str, *, status: str, worker_id: str,
         execution_task_id: str, reason: str,
         checkpoint_commit: str | None = None, branch: str | None = None,
+        question_report: dict | None = None,
     ) -> bool:
         """Regra 6: só escreve quando a leitura FRESCA ainda mostra a
         reserva desta MESMA execução (``IN-PROGRESS`` + mesmo
@@ -585,6 +593,9 @@ class TaskRuntimeStore:
                 "reason": reason,
                 "checkpoint_commit": checkpoint_commit if checkpoint_commit is not None else fresco.get("checkpoint_commit"),
                 "branch": branch if branch is not None else fresco.get("branch"),
+                "question_report": (
+                    question_report if question_report is not None else fresco.get("question_report")
+                ),
                 "updated_at": _now_iso(),
             }
             return True, {**dados, "tasks": list(base.values())}
