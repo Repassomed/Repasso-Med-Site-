@@ -271,7 +271,17 @@ jobs:
       - name: Instalar o SDK da Anthropic (só dentro deste job condicionado)
         run: pip install -q -r coordinator/requirements.txt
 
-      - name: Buscar dados reais da PR associada (só leitura — bloqueador 1/5)
+      - name: Baixar o audit-pack e contexto tipado do Guard
+        if: github.event_name == 'workflow_run'
+        continue-on-error: true # runs antigos podem não ter o contexto #165
+        uses: actions/download-artifact@v4
+        with:
+          name: repasso-guard-audit-pack
+          path: /tmp/guard-audit-pack
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Buscar dados reais da PR associada (API + contexto tipado — #165)
         id: prctx
         if: github.event_name == 'workflow_run'
         uses: actions/github-script@v7
@@ -280,34 +290,64 @@ jobs:
             const fs = require('fs');
             const run = context.payload.workflow_run;
             const prs = run.pull_requests || [];
-            if (prs.length === 0) {
-              console.log('workflow_run sem PR associada (mesmo repositório) — nada a buscar.');
+            const contextPath = '/tmp/guard-audit-pack/guard-pr-context.json';
+            let typed = null;
+            if (fs.existsSync(contextPath)) {
+              try {
+                typed = JSON.parse(fs.readFileSync(contextPath, 'utf8'));
+              } catch (e) {
+                console.log('contexto tipado do Guard ilegível — fallback somente para pull_requests do webhook.');
+              }
+            }
+
+            let numero = null;
+            if (prs.length > 0) {
+              numero = Number(prs[0].number);
+            } else if (typed && Number.isInteger(Number(typed.pr_number))) {
+              numero = Number(typed.pr_number);
+              console.log(`workflow_run.pull_requests vazio; usando PR #${numero} do artifact tipado do Guard.`);
+            } else {
+              console.log('workflow_run sem PR associada e sem contexto tipado — nenhuma auditoria semântica será tentada.');
               return;
             }
-            const numero = prs[0].number;
+
             const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: numero,
             });
+
+            const esperadoRepo = `${context.repo.owner}/${context.repo.repo}`;
+            const headRepo = pr.head && pr.head.repo ? pr.head.repo.full_name : null;
+            if (pr.state !== 'open' || headRepo !== esperadoRepo) {
+              console.log(`PR #${numero} não é PR aberta same-repo — auditoria semântica recusada fail-closed.`);
+              return;
+            }
+
+            if (typed) {
+              const contextoConfere =
+                Number(typed.pr_number) === pr.number &&
+                String(typed.base_ref || '') === String(pr.base.ref || '') &&
+                String(typed.head_sha || '') === String(pr.head.sha || '') &&
+                String(typed.head_repo_full_name || '') === String(headRepo || '');
+              if (!contextoConfere) {
+                console.log(`Contexto do Guard não confere com a PR #${numero} real da API — auditoria recusada fail-closed.`);
+                return;
+              }
+            }
+
             fs.writeFileSync('/tmp/pr-info.json', JSON.stringify({
               number: pr.number,
               title: pr.title,
               body: pr.body,
               labels: pr.labels.map(l => l.name),
               updated_at: pr.updated_at,
+              head_sha: pr.head.sha,
+              worker_bridge_needs_audit: Boolean(typed && typed.worker_bridge_needs_audit === true),
             }));
-            console.log(`PR #${numero}: rótulos = ${pr.labels.map(l => l.name).join(', ')}`);
+            console.log(`PR #${numero}: contexto validado; worker_bridge_needs_audit=${Boolean(typed && typed.worker_bridge_needs_audit === true)}.`);
 
-            // Correção B2 da auditoria independente do PR #104: o corpo da
-            // PR é a declaração do worker, nunca prova do que mudou. Este
-            // passo já roda com o código confiável da branch padrão (nunca
-            // o HEAD do PR — ver o comentário no topo do arquivo); busca o
-            // diff REAL (texto puro, formato "diff") e escreve em arquivo
-            // próprio para o CLI ler via --pr-diff-file. O texto nunca é
-            // executado por este script nem por coordinator/**, só
-            // atravessa como dado até o prompt da auditoria — nunca
-            // segredo, nunca código deste repositório.
+            // O corpo da PR é declaração; o diff real é a evidência principal.
             const diffResp = await github.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -316,17 +356,7 @@ jobs:
             });
             const diffTexto = typeof diffResp.data === 'string' ? diffResp.data : '';
             fs.writeFileSync('/tmp/pr-diff.patch', diffTexto);
-            console.log(`Diff real da PR #${numero}: ${diffTexto.length} caracteres (truncamento por tamanho/custo acontece do lado do Coordinator, em coordinator/audit.py::preparar_diff).`);
-
-      - name: Baixar o audit-pack real do Guard (artifact do run observado)
-        if: github.event_name == 'workflow_run'
-        continue-on-error: true # run antigo/sem artifact não pode derrubar o job
-        uses: actions/download-artifact@v4
-        with:
-          name: repasso-guard-audit-pack
-          path: /tmp/guard-audit-pack
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+            console.log(`Diff real da PR #${numero}: ${diffTexto.length} caracteres.`);
 
       - name: Rodar o Coordinator sobre o evento real
         id: coordinator

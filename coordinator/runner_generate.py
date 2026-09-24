@@ -320,8 +320,12 @@ _SYSTEM_PROMPT = (
     "Cada 'path' precisa ser EXATAMENTE um dos caminhos permitidos informados no "
     "prompt do usuário — nunca um caminho novo, nunca um caminho fora dessa lista. "
     "'content' é sempre o CONTEÚDO COMPLETO do arquivo final, nunca um diff/patch "
-    "unificado, nunca um comando de shell. Nunca inclua explicação, comentário ou "
-    "qualquer texto fora do JSON. Se não for possível cumprir a instrução com "
+    "unificado, nunca um comando de shell. Antes de emitir o JSON, faça uma revisão "
+    "interna silenciosa do seu próprio resultado: confirme que cumpriu exatamente o objetivo, "
+    "não tocou fora do escopo, não apagou conteúdo útil por acidente, não introduziu duplicidade "
+    "ou inconsistência e que o arquivo final continua estruturalmente coerente. Não descreva essa "
+    "revisão; ela não substitui a auditoria independente posterior. Nunca inclua explicação, "
+    "comentário ou qualquer texto fora do JSON. Se não for possível cumprir a instrução com "
     'segurança dentro dos caminhos permitidos, devolva exatamente {"files": []}.'
 )
 
@@ -351,10 +355,13 @@ _SYSTEM_PROMPT_ANCORADO = (
     "UMA ÚNICA vez no arquivo. Nunca invente uma âncora, nunca escreva de memória, "
     "nunca use '...' nem abreviação dentro de 'old_text'.\n"
     "Cada 'path' precisa ser EXATAMENTE um dos caminhos permitidos informados no prompt "
-    "do usuário — nunca um caminho novo, nunca um caminho fora dessa lista. Nunca um "
-    "diff/patch unificado, nunca um comando de shell, nunca explicação ou comentário "
-    "fora do JSON. Se não for possível cumprir a instrução com segurança dentro dos "
-    'caminhos e trechos permitidos, devolva exatamente {"files": [], "edits": []}.'
+    "do usuário — nunca um caminho novo, nunca um caminho fora dessa lista. Antes de emitir o "
+    "JSON, faça uma revisão interna silenciosa do próprio patch: objetivo, escopo, preservação "
+    "de conteúdo útil, ausência de duplicidade/inconsistência e coerência estrutural. Não descreva "
+    "essa revisão; ela não substitui a auditoria independente posterior. Nunca um diff/patch "
+    "unificado, nunca um comando de shell, nunca explicação ou comentário fora do JSON. Se não "
+    "for possível cumprir a instrução com segurança dentro dos caminhos e trechos permitidos, "
+    'devolva exatamente {"files": [], "edits": []}.'
 )
 
 _REGRAS_ARQUIVO_GRANDE = (

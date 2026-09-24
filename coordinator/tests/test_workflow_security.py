@@ -230,6 +230,28 @@ def test_guard_audit_pack_download_step_exists() -> None:
     print("OK  test_guard_audit_pack_download_step_exists")
 
 
+def test_guard_context_is_downloaded_before_pr_lookup_and_validated() -> None:
+    """Issue #165: workflow_dispatch do Guard não popula workflow_run.pull_requests.
+    O OBSERVE precisa baixar primeiro o artifact tipado e só então consultar a
+    PR real pela API, validando número/base/head/repositório antes da auditoria."""
+    texto = _ler()
+    idx_download = texto.index("uses: actions/download-artifact@v4")
+    idx_lookup = texto.index("Buscar dados reais da PR associada (API + contexto tipado — #165)")
+    assert idx_download < idx_lookup
+    for trecho in (
+        "guard-pr-context.json",
+        "typed.pr_number",
+        "typed.base_ref",
+        "typed.head_sha",
+        "typed.head_repo_full_name",
+        "worker_bridge_needs_audit",
+        "pr.state !== 'open'",
+        "headRepo !== esperadoRepo",
+    ):
+        assert trecho in texto, f"faltou validação/contexto obrigatório: {trecho}"
+    print("OK  test_guard_context_is_downloaded_before_pr_lookup_and_validated")
+
+
 def test_malicious_pr_editing_coordinator_cannot_run_with_secret() -> None:
     """Prova direta pedida pela 3ª auditoria, amarrando as 3 checagens
     acima numa única afirmação: um PR malicioso que altere
@@ -431,6 +453,7 @@ def main() -> int:
         test_job_fails_when_coordinator_cli_errors,
         test_actions_read_present_actions_write_absent,
         test_download_artifact_step_is_inside_the_permissioned_job,
+        test_guard_context_is_downloaded_before_pr_lookup_and_validated,
         test_malicious_pr_editing_coordinator_cannot_run_with_secret,
         test_workers_from_tasks_json_is_wired_into_the_real_invocation,
         test_guard_audit_pack_download_step_exists,

@@ -202,6 +202,7 @@ def corpo_da_pr(
     nunca é ampliada pelo Bridge."""
     arquivos = ", ".join(f"`{a}`" for a in task.allowed_files)
     linhas = [
+        "<!-- repasso-worker-bridge-needs-audit -->",
         "## ESCOPO",
         "",
         f"- **Tarefa:** {canonical_task_id}",

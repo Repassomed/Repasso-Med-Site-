@@ -138,11 +138,27 @@ jobs:
 
             // O corpo é gravado em arquivo pelo Node, nunca interpolado em
             // shell — texto de PR é conteúdo externo.
-            fs.writeFileSync('/tmp/pr-body.md', (pr.body || '') + '\n', 'utf8');
+            const body = pr.body || '';
+            fs.writeFileSync('/tmp/pr-body.md', body + '\n', 'utf8');
+
+            const headRepo = pr.head && pr.head.repo ? pr.head.repo.full_name : null;
+            const auditContext = {
+              pr_number: pr.number,
+              base_ref: pr.base.ref,
+              head_sha: pr.head.sha,
+              head_repo_full_name: headRepo,
+              source_event: context.eventName,
+              worker_bridge_needs_audit: body.includes('<!-- repasso-worker-bridge-needs-audit -->'),
+            };
+            // Issue #165: este arquivo viaja JUNTO do audit-pack. Assim o
+            // OBSERVE não depende de workflow_run.pull_requests, que vem vazio
+            // quando o Guard foi disparado via workflow_dispatch pelo Bridge.
+            fs.writeFileSync('/tmp/guard-pr-context.json', JSON.stringify(auditContext), 'utf8');
 
             core.setOutput('pr_number', String(pr.number));
             core.setOutput('base_ref', pr.base.ref);
             core.setOutput('head_sha', pr.head.sha);
+            core.setOutput('head_repo_full_name', headRepo || '');
 
       - name: Checkout do HEAD REAL da PR (histórico completo, para o diff contra a base)
         uses: actions/checkout@v4
@@ -223,6 +239,7 @@ jobs:
           path: |
             /tmp/guard-audit-pack.json
             /tmp/guard-summary.md
+            /tmp/guard-pr-context.json
           retention-days: 30
 
       - name: Comentar o resumo no PR

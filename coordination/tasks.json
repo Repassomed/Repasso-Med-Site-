@@ -1483,7 +1483,7 @@
       "pr": null,
       "commit": null,
       "issue": 165,
-      "notas": "Auditoria automática ausente na PR #164 antes da correção manual. Verificar evidência real do workflow_run e usar origem confiável; mesmo com Guard verde, sem contexto da PR não há MERGE-READY automático. Pausada estrategicamente em 24/09/2026: a fila de produção não deve gastar chamadas corrigindo a própria coordenação. Retomar depois que o backlog real estiver drenando com estabilidade.",
+      "notas": "Auditoria automática ausente na PR #164 antes da correção manual. Verificar evidência real do workflow_run e usar origem confiável; mesmo com Guard verde, sem contexto da PR não há MERGE-READY automático. Pausada estrategicamente em 24/09/2026: a fila de produção não deve gastar chamadas corrigindo a própria coordenação. Retomar depois que o backlog real estiver drenando com estabilidade. Substituída pela implementação administrativa R3 entregue na PR desta correção; manter este registro apenas como histórico das tentativas anteriores.",
       "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "ALTO",
@@ -1547,7 +1547,7 @@
       "pr": null,
       "commit": null,
       "issue": 165,
-      "notas": "Novo canonical_task_id; nunca reutilizar claim FAILED da tentativa original. Escopo reduzido a dois workflows e teste estrutural. NEEDS-AUDIT obrigatório. Pausada estrategicamente em 24/09/2026: a fila de produção não deve gastar chamadas corrigindo a própria coordenação. Retomar depois que o backlog real estiver drenando com estabilidade.",
+      "notas": "Novo canonical_task_id; nunca reutilizar claim FAILED da tentativa original. Escopo reduzido a dois workflows e teste estrutural. NEEDS-AUDIT obrigatório. Pausada estrategicamente em 24/09/2026: a fila de produção não deve gastar chamadas corrigindo a própria coordenação. Retomar depois que o backlog real estiver drenando com estabilidade. Substituída pela implementação administrativa R3 entregue na PR desta correção; manter este registro apenas como histórico das tentativas anteriores.",
       "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "ALTO",
@@ -1869,6 +1869,45 @@
       "bridge_enabled": true,
       "risk_level": "MEDIO",
       "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "infra-guard-audit-pr-context-issue165-r3",
+      "titulo": "P0 — Auditoria semântica automática das PRs do Worker Bridge",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordinator/bridge_pr.py",
+        "coordinator/runner_generate.py",
+        ".github/workflows/guard.yml",
+        ".github/workflows/coordinator-observe.yml",
+        "coordinator/github_event.py",
+        "coordinator/tests/test_github_event.py",
+        "coordinator/tests/test_workflow_security.py",
+        "coordination/tasks.json",
+        "coordinator/tests/test_worker_bridge.py",
+        "coordinator/tests/test_worker_bridge_workflow_security.py"
+      ],
+      "objetivo": "Fechar o fluxo automático Worker→Guard→Auditoria Anthropic: marcar PR automática com estado machine-readable NEEDS-AUDIT, transportar contexto tipado da PR no artifact do Guard, recuperar/validar a PR real quando workflow_run.pull_requests vier vazio e disparar a auditoria semântica independente. Adicionar autocheck silencioso do Worker sem nova chamada.",
+      "fonte": "Issue #165 · arquitetura solicitada por José em 23/09/2026",
+      "agente": null,
+      "estado": "DONE",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-resilient-queue-issue172"
+      ],
+      "branch": "fix/worker-bridge-semantic-audit-handoff",
+      "pr": null,
+      "commit": null,
+      "issue": 165,
+      "notas": "Implementação administrativa segura; DONE passa a valer após merge humano. Não faz merge/deploy. Auditoria independente usa diff real + audit-pack do Guard; worker apenas faz autocheck silencioso na própria chamada. Inclui atualização estrita dos testes de segurança que ainda codificavam o desenho anterior sem heartbeat/pr_por_numero; a correção não afrouxa invariantes, apenas distingue leitura/reconciliação de merge e agenda periódica de loop interno.",
+      "automation_enabled": false,
+      "bridge_enabled": false,
+      "risk_level": "ALTO",
+      "policy_level": "D",
       "jose_authorized": true
     }
   ]

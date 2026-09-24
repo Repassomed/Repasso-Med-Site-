@@ -1153,14 +1153,15 @@ def test_nenhuma_publicacao_em_main_ou_master() -> None:
 
 
 def test_cliente_de_api_nao_tem_nenhuma_operacao_de_merge() -> None:
-    """Prova estrutural, mesma técnica de ``never_merge``: a capacidade
-    não existe. O protocolo tem três operações e nenhuma delas integra
-    nada; o cliente real também não expõe outra."""
+    """Prova estrutural: o cliente pode LER PR por número para reconciliar
+    merge humano, mas continua sem qualquer capacidade de integrar/fechar PR."""
     publicos = {
         n for n in dir(bridge_pr.GitHubRestApi)
         if not n.startswith("_")
     }
-    assert publicos == {"prs_abertas_por_head", "criar_pr", "despachar_workflow"}, publicos
+    assert publicos == {
+        "prs_abertas_por_head", "pr_por_numero", "criar_pr", "despachar_workflow"
+    }, publicos
     fonte_path = os.path.join(_pathsetup._COORDINATOR_ROOT, "bridge_pr.py")
     with open(fonte_path, encoding="utf-8") as fh:
         fonte = fh.read().lower()
@@ -1340,16 +1341,17 @@ def test_piloto_r2_fechado_preserva_evidencia_do_resultado() -> None:
 
 
 def test_nenhum_laco_de_fila_no_bridge() -> None:
-    """Prova estrutural do §13 ("não criar polling periódico", "não fazer
-    loop infinito consumindo a fila"): o módulo não tem nenhum ``while``,
-    nenhum ``sleep`` e nenhuma iteração sobre a fila decidindo mais de uma
-    atribuição."""
+    """Uma execução continua consumindo no máximo UMA tarefa. O heartbeat
+    periódico vive no workflow; dentro do módulo não existe loop de dispatch.
+    A iteração de reconciliação pós-merge é manutenção read-only/CAS e não
+    chama o Scheduler nem o Runner múltiplas vezes."""
     caminho = os.path.join(_pathsetup._COORDINATOR_ROOT, "worker_bridge.py")
     with open(caminho, encoding="utf-8") as fh:
         fonte = fh.read()
     assert "while " not in fonte and "while(" not in fonte
     assert "sleep" not in fonte
-    assert "schedule" not in fonte.lower().replace("scheduler", "")
+    assert fonte.count("scheduler.escolher_proxima_atribuicao(") == 1
+    assert fonte.count("executar_tarefa(") == 1
     print("OK  test_nenhum_laco_de_fila_no_bridge")
 
 
