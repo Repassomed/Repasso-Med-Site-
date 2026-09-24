@@ -478,7 +478,7 @@ def check_materias(ctx: Context) -> list[Finding]:
         out.extend(_check_bank_mirror(nome, head))
         out.extend(_check_answers(nome, base, head))
         out.extend(_check_declared_counts(nome, head))
-        out.extend(_check_assets(ctx, nome, head))
+        out.extend(_check_assets(ctx, nome, base, head))
         out.extend(_check_anchors(nome, base, head))
     return out
 
@@ -649,21 +649,64 @@ def _check_declared_counts(nome: str, head) -> list[Finding]:
                     nome)]
 
 
-def _check_assets(ctx: Context, nome: str, head) -> list[Finding]:
-    faltando = []
+def _asset_candidate_paths(asset: str) -> tuple[str, ...]:
+    rel = asset.lstrip("/")
+    # As matérias referenciam por raiz do site; a raiz fica em "Atual - Copia".
+    return (
+        "Repasso-Med-Site--main/Atual - Copia/" + rel,
+        rel,
+    )
+
+
+def _check_assets(ctx: Context, nome: str, base, head) -> list[Finding]:
+    """Lei do delta também para assets.
+
+    Uma matéria antiga pode referenciar imagens que já não existem na base.
+    Alterar uma frase desse HTML não pode transformar essa dívida histórica
+    em HARD FAIL. Continua sendo HARD FAIL quando a PR:
+    - introduz uma referência nova para asset ausente; ou
+    - toca/remove o próprio caminho de um asset já referenciado e o HEAD
+      termina sem esse arquivo.
+
+    Assets ausentes que já estavam referenciados na base e cujo caminho não
+    foi tocado por este PR ficam visíveis como INFO, sem bloquear o delta.
+    """
+    faltando_head: list[str] = []
     for a in head.assets:
-        rel = a.lstrip("/")
-        # As matérias referenciam por raiz do site; a raiz fica em "Atual - Copia".
-        for prefixo in ("Repasso-Med-Site--main/Atual - Copia/", ""):
-            if ctx.file_exists(prefixo + rel):
-                break
+        if not any(ctx.file_exists(p) for p in _asset_candidate_paths(a)):
+            faltando_head.append(a)
+
+    if not faltando_head:
+        return [Finding("assets", INFO, f"{nome}: os {len(head.assets)} assets referenciados existem.", nome)]
+
+    assets_base = set(base.assets) if base is not None else set()
+    novos_ou_quebrados: list[str] = []
+    preexistentes: list[str] = []
+
+    for a in faltando_head:
+        candidatos = _asset_candidate_paths(a)
+        caminho_tocado = any(p in ctx.changed for p in candidatos)
+        if base is None or a not in assets_base or caminho_tocado:
+            novos_ou_quebrados.append(a)
         else:
-            faltando.append(a)
-    if faltando:
-        return [Finding("assets", HARD_FAIL,
-                        f"{nome}: {len(faltando)} asset(s) referenciado(s) que não existem no repositório.",
-                        nome, {"assets": faltando[:12]})]
-    return [Finding("assets", INFO, f"{nome}: os {len(head.assets)} assets referenciados existem.", nome)]
+            preexistentes.append(a)
+
+    out: list[Finding] = []
+    if novos_ou_quebrados:
+        out.append(Finding(
+            "assets", HARD_FAIL,
+            f"{nome}: {len(novos_ou_quebrados)} asset(s) ausente(s) foram introduzidos "
+            "ou quebrados por este PR.",
+            nome, {"assets": novos_ou_quebrados[:12]},
+        ))
+    if preexistentes:
+        out.append(Finding(
+            "assets", INFO,
+            f"{nome}: {len(preexistentes)} asset(s) ausente(s) já estavam referenciados "
+            "antes deste PR; dívida pré-existente registrada sem bloquear o delta.",
+            nome, {"assets": preexistentes[:12]},
+        ))
+    return out
 
 
 def _check_anchors(nome: str, base, head) -> list[Finding]:
