@@ -1432,6 +1432,7 @@ def executar_correcao_de_auditoria(
         canonical_task_id, status=status_runtime, worker_id=worker_id,
         execution_task_id=execution_task_id, reason=motivo_resultado,
         checkpoint_commit=checkpoint, branch=branch_final,
+        question_report=dispatch.question_report,
     )
     registro_final = runtime_store.get(canonical_task_id) or registro
     liberacao = liberar_worker_apos_resultado(
@@ -1731,6 +1732,7 @@ def executar_ciclo(
         canonical_task_id, status=status_runtime, worker_id=worker_id,
         execution_task_id=execution_task_id, reason=motivo_resultado,
         checkpoint_commit=checkpoint, branch=branch_final,
+        question_report=dispatch.question_report,
     ):
         notes.append(
             "compare-and-set recusou o registro do resultado — outra execução alterou o estado "
@@ -1826,6 +1828,9 @@ def _abrir_pr_e_guard(
         )
         return None, None, notas
 
+    registro_para_pr = runtime_store.get(canonical_task_id)
+    question_report = registro_para_pr.question_report if registro_para_pr else None
+
     pr_outcome = bridge_pr.garantir_pr(
         github_api, task=task, canonical_task_id=canonical_task_id,
         worker_id=worker_id,
@@ -1835,6 +1840,7 @@ def _abrir_pr_e_guard(
         dependencias=tarefa.dependencias,
         source_pack_path=meta.source_pack_path,
         source_pack_sha256=meta.source_pack_sha256,
+        question_report=question_report,
     )
     if pr_outcome.pr_number is None:
         notas.append(f"PR não disponível ({pr_outcome.action}): {pr_outcome.reason}")
