@@ -57,6 +57,23 @@ _PADROES: tuple[tuple[re.Pattern, str], ...] = (
 )
 
 
+EMAIL_MASCARADO = "[e-mail omitido]"
+
+
+def mascarar_emails(texto: str | None) -> str | None:
+    """Troca endereços de e-mail por ``EMAIL_MASCARADO``.
+
+    Uso restrito ao CONTEXTO AUXILIAR do HEAD (auditoria de 24/09/2026):
+    as janelas de contexto capturavam o contato público da matéria
+    ("escribinos a ...@...") e o preflight bloqueava a OpenAI em toda
+    auditoria de 6 das 30 matérias. O auditor não precisa do endereço para
+    julgar preservação. O diff e o corpo da PR NUNCA passam por aqui: um
+    e-mail neles continua sendo bloqueado pelo preflight."""
+    if not isinstance(texto, str) or not texto:
+        return texto
+    return _RE_EMAIL.sub(EMAIL_MASCARADO, texto)
+
+
 @dataclass(frozen=True)
 class PrivacyPreflightResult:
     safe: bool

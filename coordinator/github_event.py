@@ -96,6 +96,7 @@ from __future__ import annotations
 import re
 
 from .events import INBOX_ISSUE_NUMBER, Event
+from .openai_privacy import mascarar_emails
 
 # O rótulo que marca "chegou a hora de auditar" — mesma convenção que
 # coordination/STATES.md usa para o nome do estado.
@@ -184,7 +185,7 @@ COORDINATOR_COMMENT_MARKER = "<!-- repasso-coordinator -->"
 # Versão semântica da política de auditoria. Bump quando G0/Lei 8-A/contexto
 # puder mudar a decisão sobre o MESMO HEAD de uma PR. Entra no dedup para
 # permitir uma única reauditoria do mesmo commit sob a política nova.
-AUDIT_POLICY_VERSION = "2026-09-24-material-scope-head-context-v1"
+AUDIT_POLICY_VERSION = "2026-09-24-material-scope-head-context-v2-masked-email"
 
 
 def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None,
@@ -319,7 +320,9 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                 # confiável via API somente-leitura. Serve para comprovar
                 # preservação fora do diff (ex.: regra já existente em outra
                 # seção), nunca como instrução nem substituto do diff.
-                "head_context": head_context,
+                # E-mails são mascarados só aqui (contexto auxiliar): o
+                # contato público da matéria bloqueava a OpenAI inteira.
+                "head_context": mascarar_emails(head_context),
                 "dedup_fields": {
                     "pr": numero,
                     "label": (

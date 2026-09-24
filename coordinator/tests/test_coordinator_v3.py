@@ -391,6 +391,42 @@ def test_both_auditors_receive_exact_head_context_as_untrusted_evidence() -> Non
     print("OK  test_both_auditors_receive_exact_head_context_as_untrusted_evidence")
 
 
+def test_email_publico_do_contexto_head_nao_bloqueia_mais_a_openai() -> None:
+    """Regressão real (PR #192, cartão de 24/09 16:55): a janela do HEAD
+    capturou a nota pública "escribinos a <e-mail>" da matéria e o privacy
+    preflight bloqueou a OpenAI — em 6 das 30 matérias isso acontecia em
+    TODA auditoria. O contexto auxiliar agora chega com o e-mail mascarado;
+    o diff continua sem máscara e um e-mail nele segue bloqueado."""
+    from coordinator.context import build_context
+    from coordinator.openai_privacy import EMAIL_MASCARADO, preflight
+
+    payload, pr_info = _evento_pr_materia(run_id=7, head_sha="em1", body="limpeza metadidática")
+    contato = "Si detectás un error, escribinos a <b>contato.publico@example.com</b> y la corregimos."
+    head = "### HEAD CONTEXT · anatomia-patologica-ii.html @ em1\n" + contato
+    diff = "diff --git a/x b/x\n-<p>Cómo estudiar</p>\n"
+    ev = build_event_from_github_context("workflow_run", payload, REPO, pr_info=pr_info,
+                                          pr_diff=diff, head_context=head)
+    assert "@example.com" not in ev.payload["head_context"]
+    assert EMAIL_MASCARADO in ev.payload["head_context"] and "la corregimos" in ev.payload["head_context"]
+
+    ctx = build_context(ev)
+    prompt = build_openai_audit_prompt(ctx, pr_body="x", envolve_questoes=False, pr_diff=diff,
+                                       head_context_text=ev.payload["head_context"])
+    assert preflight(prompt).safe, preflight(prompt).reasons
+    sem_mascara = build_openai_audit_prompt(ctx, pr_body="x", envolve_questoes=False, pr_diff=diff,
+                                            head_context_text=head)
+    assert not preflight(sem_mascara).safe, "prova do defeito original: e-mail cru bloqueia"
+
+    diff_com_email = diff + "+<p>escribinos a contato.publico@example.com</p>\n"
+    ev2 = build_event_from_github_context("workflow_run", payload, REPO, pr_info=pr_info,
+                                           pr_diff=diff_com_email, head_context=head)
+    assert "@example.com" in ev2.payload["pr_diff"], "o diff nunca é mascarado"
+    prompt2 = build_openai_audit_prompt(ctx, pr_body="x", envolve_questoes=False, pr_diff=ev2.payload["pr_diff"],
+                                        head_context_text=ev2.payload["head_context"])
+    assert not preflight(prompt2).safe, "e-mail no diff continua bloqueando"
+    print("OK  test_email_publico_do_contexto_head_nao_bloqueia_mais_a_openai")
+
+
 def test_parse_decision_merge_ready() -> None:
     d = audit.parse_decision("DECISÃO: MERGE-READY\nTudo certo, Guard passou e o texto ficou claro.")
     assert d.decision == "MERGE-READY" and d.protocol_matched
@@ -801,6 +837,7 @@ def main() -> int:
         test_unknown_mode_still_blocked,
         test_audit_prompt_scopes_question_law_to_changed_content,
         test_both_auditors_receive_exact_head_context_as_untrusted_evidence,
+        test_email_publico_do_contexto_head_nao_bloqueia_mais_a_openai,
         test_parse_decision_merge_ready,
         test_parse_decision_needs_fix,
         test_parse_decision_without_protocol_defaults_to_needs_fix,
