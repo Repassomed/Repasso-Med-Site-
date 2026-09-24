@@ -2718,6 +2718,16 @@
       "output_tokens": 69,
       "tier": "FAST",
       "timestamp": "2026-09-24T00:06:06.690773+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.137006,
+      "event_key": "runner-task:infra-post-merge-reconciliation-issue162--bridge-4b0554eefe82",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T00:07:49.612151+00:00"
     }
   ]
 }
