@@ -1350,17 +1350,32 @@ def test_piloto_r2_fechado_preserva_evidencia_do_resultado() -> None:
 
 
 def test_nenhum_laco_de_fila_no_bridge() -> None:
-    """Uma execução continua consumindo no máximo UMA tarefa. O heartbeat
-    periódico vive no workflow; dentro do módulo não existe loop de dispatch.
-    A iteração de reconciliação pós-merge é manutenção read-only/CAS e não
-    chama o Scheduler nem o Runner múltiplas vezes."""
+    """Uma execução continua consumindo no máximo UMA tarefa.
+
+    Desde o loop NEEDS-FIX existem dois CAMINHOS mutuamente exclusivos:
+    (a) tarefa nova; (b) correção pós-auditoria. Cada caminho escolhe no
+    máximo um worker e chama o Runner uma única vez. O teste antigo contava
+    ocorrências estáticas no arquivo inteiro e passou a dar falso positivo.
+    """
+    import inspect
+
     caminho = os.path.join(_pathsetup._COORDINATOR_ROOT, "worker_bridge.py")
     with open(caminho, encoding="utf-8") as fh:
         fonte = fh.read()
     assert "while " not in fonte and "while(" not in fonte
     assert "sleep" not in fonte
-    assert fonte.count("scheduler.escolher_proxima_atribuicao(") == 1
-    assert fonte.count("executar_tarefa(") == 1
+
+    ciclo = inspect.getsource(worker_bridge.executar_ciclo)
+    fix = inspect.getsource(worker_bridge.executar_correcao_de_auditoria)
+
+    # Caminho normal: uma decisão da fila; se houver NEEDS-FIX, retorna antes
+    # da decisão normal e delega para o caminho de correção.
+    assert ciclo.count("scheduler.escolher_proxima_atribuicao(") == 1
+    assert ciclo.count("executar_correcao_de_auditoria(") == 1
+
+    # Caminho NEEDS-FIX: escolhe um worker e executa exatamente uma correção.
+    assert fix.count("scheduler.escolher_proxima_atribuicao(") == 1
+    assert fix.count("executar_tarefa(") == 1
     print("OK  test_nenhum_laco_de_fila_no_bridge")
 
 
