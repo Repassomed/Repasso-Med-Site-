@@ -159,10 +159,10 @@
       "guard_dispatch_status": null,
       "guard_dispatched_pr": null,
       "pr_number": null,
-      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'infra-post-merge-reconciliation-issue162' autorizada declarativamente: risco ALTO, N\u00edvel D, jose_authorized=True.)",
+      "reason": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
       "reserved_at": "2026-09-24T00:07:41.978241+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-24T00:07:41.978256+00:00",
+      "status": "FAILED",
+      "updated_at": "2026-09-24T00:08:15.731532+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
