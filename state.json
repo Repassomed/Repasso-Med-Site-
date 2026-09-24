@@ -321,6 +321,16 @@
       "recorded_at": "2026-09-24T05:19:33.391437+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "cleanup-como-estudar-guarani--bridge-58d356675753"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "resposta do modelo n\u00e3o \u00e9 um JSON v\u00e1lido \u2014 A resposta atingiu o teto de sa\u00edda do Runner (8000 tokens), portanto \u00e9 tratada como truncada \u2014 nunca aplicada parcialmente.",
+      "recorded_at": "2026-09-24T05:23:20.111940+00:00",
+      "status": "FAILED",
+      "task_id": "cleanup-como-estudar-histologia-i--bridge-013b5fde2845"
     }
   ]
 }
