@@ -147,13 +147,13 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "semiologia-ii-questoes-exames-p0",
+      "current_task": null,
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T04:07:37.744760+00:00",
+      "last_heartbeat": "2026-09-24T04:08:01.686216+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "BUSY",
+      "status": "OFFLINE",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
