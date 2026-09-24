@@ -17,6 +17,7 @@ import re
 import sys
 
 from . import _pathsetup
+from coordinator.github_event import AUDIT_POLICY_VERSION
 
 _WORKFLOW_PATH = os.path.join(_pathsetup.REPO_ROOT, ".github", "workflows", "coordinator-observe.yml")
 
@@ -90,6 +91,9 @@ def test_schedule_reconciler_is_minimal_and_dispatches_only_guard() -> None:
     assert "markerBridge = '<!-- repasso-worker-bridge-needs-audit -->'" in bloco
     assert "markerCoordinator = '<!-- repasso-coordinator -->'" in bloco
     assert "markerGuard = '<!-- repasso-guard-resumo -->'" in bloco
+    assert f"const auditPolicyVersion = '{AUDIT_POLICY_VERSION}';" in bloco
+    assert "Política de auditoria" in bloco
+    assert "cardForCurrentHeadAndPolicy" in bloco
     assert "github.rest.repos.getCommit" in bloco
     assert "pr.head.sha" in bloco
     assert "latestGuardAt >= headCommittedAt" in bloco
@@ -374,6 +378,23 @@ def test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli() -> None:
     print("OK  test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli")
 
 
+def test_exact_head_context_is_read_only_bounded_and_wired_to_cli() -> None:
+    texto = _ler()
+    idx = texto.index("Buscar dados reais da PR associada")
+    fim = texto.index("Rodar o Coordinator sobre o evento real", idx)
+    trecho = texto[idx:fim]
+    assert "github.rest.pulls.listFiles" in trecho
+    assert "github.rest.repos.getContent" in trecho
+    assert "ref: pr.head.sha" in trecho, "contexto precisa vir do HEAD exato já validado"
+    assert ".includes('/materias-privadas/')" in trecho
+    assert ".endsWith('.html')" in trecho
+    assert ".slice(0, 7000)" in trecho, "contexto enviado ao auditor precisa ter teto explícito"
+    assert "/tmp/pr-head-context.txt" in trecho
+    assert "--pr-head-context-file /tmp/pr-head-context.txt" in texto
+    assert "eval(" not in trecho and "exec(" not in trecho
+    print("OK  test_exact_head_context_is_read_only_bounded_and_wired_to_cli")
+
+
 def test_codeowners_covers_coordinator_and_workflows() -> None:
     """Issue #99, 'SEGURANÇA ANTES DE AUMENTAR PERMISSÕES': antes de dar
     ao Coordinator qualquer nova capacidade de escrita, o código
@@ -524,6 +545,7 @@ def main() -> int:
         test_merge_card_comment_step_only_runs_when_comment_file_exists,
         test_comment_out_flag_is_wired_into_the_real_invocation,
         test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli,
+        test_exact_head_context_is_read_only_bounded_and_wired_to_cli,
         test_codeowners_covers_coordinator_and_workflows,
         test_job_gate_also_filters_coordinator_marker_second_layer,
         test_worker_state_git_remote_is_wired_into_the_real_invocation,

@@ -632,6 +632,7 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
         envolve_questoes=bool(event.payload.get("envolve_questoes")),
         pr_diff=event.payload.get("pr_diff"),
         source_pack_text=source_pack_text,
+        head_context_text=event.payload.get("head_context"),
     )
 
     # Correção B6 da auditoria independente do PR #107: privacy preflight
@@ -1117,6 +1118,7 @@ def observe(
                 envolve_questoes=bool(event.payload.get("envolve_questoes")),
                 pr_diff=event.payload.get("pr_diff"),
                 source_pack_text=audit_source_pack_text,
+                head_context_text=event.payload.get("head_context"),
             ),
             limiter=limitador,
         )

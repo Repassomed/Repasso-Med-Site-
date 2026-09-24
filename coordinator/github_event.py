@@ -121,14 +121,50 @@ def _campo_checkpoint(regex: re.Pattern, corpo: str) -> str | None:
     valor = m.group(1).strip()
     return None if valor in ("", "-") else valor
 
-# V3 (Issue #99, "Lei das Questões" para o Coordinator): detecta, por
-# palavra-chave em título+corpo da PR, se a tarefa envolve prova/questões —
-# mesmo espírito de classify.py::_KEYWORDS_CONTEUDO, mas aqui vira um sinal
-# explícito no payload (``envolve_questoes``) para que merge_card.py saiba
-# exigir o relatório obrigatório de 8-A.11 antes de MERGE-READY.
+# V3 (Issue #99, Lei das Questões): para PRs humanas/legadas ainda
+# existe um fallback lexical conservador. PRs AUTOMÁTICAS do Worker Bridge
+# não usam mais o corpo inteiro: notas de auditoria/revalidação podem citar
+# "questões", "gabarito" ou "banco geral" sem que o diff os altere. Nelas,
+# a aplicabilidade vem do ESCOPO tipado (Tarefa + Objetivo) e, nas PRs novas,
+# do campo explícito "Lei 8-A obrigatória: SIM/NÃO".
 RE_ENVOLVE_QUESTOES = re.compile(
-    r"\b(quest(ã|a)o|quest(õ|o)es|prova|gabarito|banco general|banco geral)\b", re.I
+    r"\b(quest(ã|a)o|quest(õ|o)es|prova|provas|gabarito|gabaritos|banco general|banco geral)\b", re.I
 )
+WORKER_BRIDGE_PR_MARKER = "<!-- repasso-worker-bridge-needs-audit -->"
+QUESTION_REPORT_MARKER = "<!-- repasso-question-report -->"
+RE_SCOPE_TAREFA = re.compile(r"^-\s*\*\*Tarefa:\*\*\s*(.+?)\s*$", re.I | re.M)
+RE_SCOPE_OBJETIVO = re.compile(r"^-\s*\*\*Objetivo:\*\*\s*(.+?)\s*$", re.I | re.M)
+RE_SCOPE_LEI_8A = re.compile(
+    r"^-\s*\*\*Lei\s+8-A\s+obrigatória:\*\*\s*(SIM|N[ÃA]O)\s*$",
+    re.I | re.M,
+)
+
+
+def _envolve_questoes_materialmente(*, titulo: str, corpo: str) -> bool:
+    """Sinal determinístico de aplicabilidade material da Lei 8-A.
+
+    Para PR do Worker Bridge, nunca varre o corpo inteiro: comentários de
+    estado, justificativas ou notas de revalidação não podem transformar uma
+    limpeza metadidática numa tarefa de questões. Campo explícito vence; em
+    PR legada automática, usamos apenas Tarefa + Objetivo do ESCOPO e a
+    presença de um relatório 8-A já renderizado. PR humana/legada sem o
+    marcador do Bridge mantém o fallback lexical anterior.
+    """
+    corpo = corpo or ""
+    titulo = titulo or ""
+    if WORKER_BRIDGE_PR_MARKER in corpo:
+        explicito = RE_SCOPE_LEI_8A.search(corpo)
+        if explicito:
+            return explicito.group(1).strip().upper() == "SIM"
+        if QUESTION_REPORT_MARKER in corpo or "## Relatório Lei 8-A" in corpo:
+            return True
+        tarefa = RE_SCOPE_TAREFA.search(corpo)
+        objetivo = RE_SCOPE_OBJETIVO.search(corpo)
+        escopo = "\n".join(
+            x.group(1) for x in (tarefa, objetivo) if x is not None
+        )
+        return bool(RE_ENVOLVE_QUESTOES.search(escopo))
+    return bool(RE_ENVOLVE_QUESTOES.search(f"{titulo}\n{corpo}"))
 
 # Bloqueador 2 da 3ª auditoria: só este(s) ator(es) podem gerar um evento
 # pago via comentário. Neste projeto, José e todos os agentes Claude
@@ -145,10 +181,15 @@ ALLOWED_COMMENT_ACTORS: frozenset[str] = frozenset({"Repassomed"})
 # evento novo, porque isso reabriria um ciclo pago sobre a própria saída
 # do Coordinator.
 COORDINATOR_COMMENT_MARKER = "<!-- repasso-coordinator -->"
+# Versão semântica da política de auditoria. Bump quando G0/Lei 8-A/contexto
+# puder mudar a decisão sobre o MESMO HEAD de uma PR. Entra no dedup para
+# permitir uma única reauditoria do mesmo commit sob a política nova.
+AUDIT_POLICY_VERSION = "2026-09-24-material-scope-head-context-v1"
 
 
 def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None,
-                         audit_pack: dict | None = None, pr_diff: str | None = None) -> Event | None:
+                         audit_pack: dict | None = None, pr_diff: str | None = None,
+                         head_context: str | None = None) -> Event | None:
     if payload.get("action") != "created":
         return None
 
@@ -213,7 +254,8 @@ def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None
 
 
 def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
-                        audit_pack: dict | None = None, pr_diff: str | None = None) -> Event | None:
+                        audit_pack: dict | None = None, pr_diff: str | None = None,
+                        head_context: str | None = None) -> Event | None:
     if payload.get("action") != "completed":
         return None
     run = payload.get("workflow_run", {})
@@ -261,7 +303,9 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                 "materia": materia,
                 "titulo": titulo,
                 "body": corpo,
-                "envolve_questoes": bool(RE_ENVOLVE_QUESTOES.search(f"{titulo}\n{corpo}")),
+                "envolve_questoes": _envolve_questoes_materialmente(
+                    titulo=titulo, corpo=corpo
+                ),
                 "audit_pack": audit_pack,
                 # B2 da auditoria independente do PR #104: o corpo da PR é
                 # a DECLARAÇÃO do worker, nunca a prova do que mudou. O
@@ -271,6 +315,11 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                 # interpretado como instrução por este módulo — só uma
                 # string que atravessa até o prompt (ver audit.py).
                 "pr_diff": pr_diff,
+                # Contexto limitado do HEAD exato, coletado pelo workflow
+                # confiável via API somente-leitura. Serve para comprovar
+                # preservação fora do diff (ex.: regra já existente em outra
+                # seção), nunca como instrução nem substituto do diff.
+                "head_context": head_context,
                 "dedup_fields": {
                     "pr": numero,
                     "label": (
@@ -286,6 +335,7 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                     # a main confiável, não o HEAD da PR. O workflow valida
                     # a PR real pela API e entrega o SHA tipado em pr_info.
                     "head_sha": pr_info.get("head_sha") or run.get("head_sha"),
+                    "audit_policy_version": AUDIT_POLICY_VERSION,
                 },
             },
         )
@@ -333,8 +383,12 @@ _CONSTRUTORES = {
 def build_event_from_github_context(event_name: str, payload: dict, repo: str, *,
                                      pr_info: dict | None = None,
                                      audit_pack: dict | None = None,
-                                     pr_diff: str | None = None) -> Event | None:
+                                     pr_diff: str | None = None,
+                                     head_context: str | None = None) -> Event | None:
     construtor = _CONSTRUTORES.get(event_name)
     if construtor is None:
         return None
-    return construtor(payload, repo, pr_info=pr_info, audit_pack=audit_pack, pr_diff=pr_diff)
+    return construtor(
+        payload, repo, pr_info=pr_info, audit_pack=audit_pack,
+        pr_diff=pr_diff, head_context=head_context,
+    )

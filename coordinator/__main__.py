@@ -110,7 +110,8 @@ def _load_text_if_exists(path: str | None) -> str | None:
 def _load_github_event(path: str, event_name: str, repo: str, *,
                         pr_info_file: str | None = None,
                         guard_audit_pack: str | None = None,
-                        pr_diff_file: str | None = None) -> Event | None:
+                        pr_diff_file: str | None = None,
+                        pr_head_context_file: str | None = None) -> Event | None:
     with open(path, encoding="utf-8") as fh:
         payload = json.load(fh)
     pr_info = _load_json_if_exists(pr_info_file)
@@ -121,8 +122,11 @@ def _load_github_event(path: str, event_name: str, repo: str, *,
     # github_event.py). Nunca executado; só atravessa como string até o
     # prompt da auditoria.
     pr_diff = _load_text_if_exists(pr_diff_file)
-    return build_event_from_github_context(event_name, payload, repo,
-                                            pr_info=pr_info, audit_pack=audit_pack, pr_diff=pr_diff)
+    head_context = _load_text_if_exists(pr_head_context_file)
+    return build_event_from_github_context(
+        event_name, payload, repo, pr_info=pr_info, audit_pack=audit_pack,
+        pr_diff=pr_diff, head_context=head_context,
+    )
 
 
 def _load_workers(path: str | None) -> list[Worker]:
@@ -467,6 +471,10 @@ def main(argv: list[str] | None = None) -> int:
                          "evidência principal da auditoria semântica; sem ele, MERGE-READY é "
                          "bloqueado deterministicamente (ver coordinator/merge_card.py::"
                          "aplicar_gate_diff)")
+    ap.add_argument("--pr-head-context-file", default=None,
+                    help="texto limitado com trechos do HEAD exato da PR, coletados via API "
+                         "somente-leitura pelo workflow confiável. Evidência auxiliar de "
+                         "preservação fora do diff; nunca código executado nem substituto do diff.")
     ap.add_argument("--worker-state-store", default=None,
                     help="arquivo LOCAL para o Worker Registry OPERACIONAL (rodada 3, Issue #99, "
                          "achado B3) — separado de coordination/tasks.json; não sobrevive entre "
@@ -614,7 +622,8 @@ def _observar(a: argparse.Namespace) -> dict | None:
         event = _load_github_event(a.event, a.github_event_name, a.repo,
                                     pr_info_file=a.pr_info_file,
                                     guard_audit_pack=a.guard_audit_pack,
-                                    pr_diff_file=a.pr_diff_file)
+                                    pr_diff_file=a.pr_diff_file,
+                                    pr_head_context_file=a.pr_head_context_file)
         if event is None:
             print(
                 f"# Repasso Coordinator · OBSERVE\n\n"
