@@ -22,7 +22,8 @@
     "runner-task:infra-inbox-task-intake-issue160--bridge-79509fa549c6",
     "runner-task:semiologia-ii-questoes-exames-p0--bridge-503ff9099a9a",
     "runner-task:cleanup-como-estudar-anatomia-patologica-ii--bridge-d062050e0b98",
-    "runner-task:cleanup-como-estudar-anestesiologia--bridge-4ec62ed8fe83"
+    "runner-task:cleanup-como-estudar-anestesiologia--bridge-4ec62ed8fe83",
+    "runner-task:cleanup-como-estudar-bioestadistica--bridge-79489db095d1"
   ],
   "results": [
     {
