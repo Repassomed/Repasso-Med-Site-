@@ -49,6 +49,7 @@ from . import (
     test_worker_bridge_workflow_security,
     test_worker_commands,
     test_worker_ops,
+    test_worker_registry_human_vs_api,
     test_worker_registry_real,
     test_workflow_security,
 )
@@ -77,6 +78,9 @@ MODULOS = [
     test_coordinator_v3,
     test_coordinator_v3_round3,
     test_coordinator_v3_round4,
+    # Issue #258: checkpoint manual não pode consumir slot api_runner do
+    # Worker Bridge — registrado junto do resto de observe()/checkpoint.
+    test_worker_registry_human_vs_api,
     test_openai_transport,
     test_openai_auditor,
     test_scheduler,
