@@ -240,6 +240,7 @@ def _render_cartao(event: Event, contexto: MinimalContext, decisao: str, motivo:
         titulo=event.payload.get("titulo"),
         area=event.payload.get("area"),
         guard_result=contexto.guard_result,
+        head_sha=((event.payload.get("dedup_fields") or {}).get("head_sha")),
         audit_decision=decisao,
         audit_rationale=motivo,
         envolve_questoes=envolve_questoes,
