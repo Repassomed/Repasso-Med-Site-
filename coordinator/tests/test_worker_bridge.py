@@ -1952,6 +1952,84 @@ def test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes() 
     print("OK  test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes")
 
 
+def test_audit_fix_failed_pode_repetir_mesmo_parecer_com_execution_nova() -> None:
+    store, anterior = _store_needs_audit_para_fix()
+    assert anterior is not None
+    primeira = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
+        audit_fingerprint="fp-retry", audit_findings="corrigir X",
+        max_attempts=4, token="111111111111",
+    )
+    assert primeira.reservado and primeira.record is not None
+    exec1 = primeira.record.execution_task_id
+    # A correção falha ANTES de novo HEAD. checkpoint/PR anteriores ficam
+    # preservados; isto é diferente de uma falha comum com attempts=0.
+    assert store.registrar_resultado(
+        "t-fix", status=task_runtime.RUNTIME_FAILED,
+        worker_id=bridge_workers.BRIDGE_WORKER_1,
+        execution_task_id=exec1 or "", reason="patch vazio",
+    )
+    falhou = store.get("t-fix")
+    assert falhou is not None
+    assert falhou.status == task_runtime.RUNTIME_FAILED
+    assert falhou.checkpoint_commit == anterior.checkpoint_commit
+    assert falhou.pr_number == anterior.pr_number
+
+    segunda = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_2,
+        audit_fingerprint="fp-retry", audit_findings="corrigir X",
+        max_attempts=4, token="222222222222",
+    )
+    assert segunda.reservado and segunda.record is not None
+    assert segunda.record.execution_task_id != exec1
+    assert exec1 in segunda.record.execution_history
+    assert segunda.record.audit_fix_attempts == 2
+
+    # FAILED comum continua sem qualquer caminho de retry de auditoria.
+    comum = _runtime_store()
+    r = comum.reservar("t-comum", worker_id=bridge_workers.BRIDGE_WORKER_1, branch="runner/t-comum")
+    assert r.reservado and r.record is not None
+    assert comum.registrar_resultado(
+        "t-comum", status=task_runtime.RUNTIME_FAILED,
+        worker_id=bridge_workers.BRIDGE_WORKER_1,
+        execution_task_id=r.record.execution_task_id or "", reason="falha comum",
+    )
+    recusada = comum.reservar_correcao_apos_auditoria(
+        "t-comum", worker_id=bridge_workers.BRIDGE_WORKER_2,
+        audit_fingerprint="fp-qualquer", audit_findings="qualquer",
+        max_attempts=4, token="333333333333",
+    )
+    assert recusada.reservado is False
+    assert "falha comum" in recusada.reason or "não pertence" in recusada.reason
+    print("OK  test_audit_fix_failed_pode_repetir_mesmo_parecer_com_execution_nova")
+
+
+def test_retry_de_audit_fix_prefere_worker_diferente() -> None:
+    workers = [
+        WorkerRecord(
+            worker_id=bridge_workers.BRIDGE_WORKER_1, display_name="W1",
+            status="AVAILABLE", can_execute=True, current_task=None,
+            capabilities=("conteudo",),
+        ),
+        WorkerRecord(
+            worker_id=bridge_workers.BRIDGE_WORKER_2, display_name="W2",
+            status="AVAILABLE", can_execute=True, current_task=None,
+            capabilities=("conteudo",),
+        ),
+    ]
+    registro = task_runtime.TaskRuntimeRecord(
+        canonical_task_id="t-fix", status=task_runtime.RUNTIME_FAILED,
+        worker_id=bridge_workers.BRIDGE_WORKER_1, branch="runner/t-fix",
+        checkpoint_commit="abcdef1", pr_number=901,
+        execution_task_id="t-fix--bridge-111111111111",
+        audit_fix_attempts=1, last_audit_fix_fingerprint="fp",
+        last_audit_findings="corrigir X",
+    )
+    preferidos = worker_bridge._workers_para_correcao(workers, registro)
+    assert [w.worker_id for w in preferidos] == [bridge_workers.BRIDGE_WORKER_2]
+    print("OK  test_retry_de_audit_fix_prefere_worker_diferente")
+
+
 def test_audit_fix_para_depois_de_duas_correcoes() -> None:
     store, _ = _store_needs_audit_para_fix()
     r1 = store.reservar_correcao_apos_auditoria(
@@ -2402,6 +2480,8 @@ def main() -> int:
         test_audit_fix_so_aceita_cartao_do_bot_confiavel,
         test_audit_fix_merge_ready_nao_reentra_em_correcao,
         test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes,
+        test_audit_fix_failed_pode_repetir_mesmo_parecer_com_execution_nova,
+        test_retry_de_audit_fix_prefere_worker_diferente,
         test_audit_fix_para_depois_de_duas_correcoes,
         test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
