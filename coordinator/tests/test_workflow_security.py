@@ -508,6 +508,7 @@ def main() -> int:
     testes = [
         test_pull_request_trigger_is_absent,
         test_only_safe_triggers_are_present,
+        test_schedule_reconciler_is_minimal_and_dispatches_only_guard,
         test_checkout_pins_explicit_default_branch_ref,
         test_secret_only_exists_inside_a_single_gated_job,
         test_job_gate_checks_enabled_and_trusted_comment_actor,
