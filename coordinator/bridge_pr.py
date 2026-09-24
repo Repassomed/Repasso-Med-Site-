@@ -249,6 +249,7 @@ def corpo_da_pr(
             else "- **Fonte:** Worker Bridge (Issue #128)"
         ),
         f"- **Dependências:** {', '.join(dependencias) if dependencias else '—'}",
+        f"- **Lei 8-A obrigatória:** {'SIM' if task.question_report_required else 'NÃO'}",
     ]
     if source_pack_path and source_pack_sha256:
         linhas += [
