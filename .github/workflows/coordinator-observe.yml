@@ -361,6 +361,80 @@ jobs:
             fs.writeFileSync('/tmp/pr-diff.patch', diffTexto);
             console.log(`Diff real da PR #${numero}: ${diffTexto.length} caracteres.`);
 
+            // Evidência auxiliar limitada do HEAD EXATO auditado. Nunca executa
+            // código da PR: lê somente texto via Contents API no pr.head.sha.
+            // O objetivo é permitir ao auditor confirmar que algo removido do
+            // diff já está preservado em seção útil do arquivo (caso real #208).
+            const STOP = new Set([
+              'para','como','esta','este','essa','esse','isso','isto','uma','uno','unos','unas',
+              'com','con','sem','sin','que','por','los','las','del','das','dos','the','and',
+              'cada','sobre','entre','debe','deben','materia','bloque','estudiar','estudo'
+            ]);
+            const removedPlain = diffTexto
+              .split('\n')
+              .filter(l => l.startsWith('-') && !l.startsWith('---'))
+              .join(' ')
+              .replace(/<[^>]*>/g, ' ')
+              .replace(/&[a-zA-Z#0-9]+;/g, ' ')
+              .toLowerCase();
+            const words = removedPlain.match(/[a-záéíóúüñãõç][a-záéíóúüñãõç'’-]{4,}/gi) || [];
+            const terms = [...new Set(words.map(w => w.toLowerCase()).filter(w => !STOP.has(w)))]
+              .sort((a, b) => b.length - a.length)
+              .slice(0, 32);
+
+            const changed = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: numero,
+              per_page: 100,
+            });
+            const candidates = changed
+              .map(f => f.filename)
+              .filter(name => name.includes('/materias-privadas/') && name.endsWith('.html'))
+              .slice(0, 3);
+
+            const contextParts = [];
+            for (const filename of candidates) {
+              try {
+                const { data: file } = await github.rest.repos.getContent({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  path: filename,
+                  ref: pr.head.sha,
+                });
+                if (!file || Array.isArray(file) || file.type !== 'file' || file.encoding !== 'base64' || !file.content) {
+                  continue;
+                }
+                const content = Buffer.from(file.content.replace(/\n/g, ''), 'base64').toString('utf8');
+                const lower = content.toLowerCase();
+                const windows = [];
+                const usedCenters = [];
+                for (const term of terms) {
+                  const idx = lower.indexOf(term);
+                  if (idx < 0 || usedCenters.some(x => Math.abs(x - idx) < 1200)) continue;
+                  const start = Math.max(0, idx - 900);
+                  const end = Math.min(content.length, idx + 1500);
+                  windows.push(content.slice(start, end));
+                  usedCenters.push(idx);
+                  if (windows.length >= 3) break;
+                }
+                if (!windows.length) {
+                  windows.push(content.slice(0, 2200));
+                }
+                contextParts.push(
+                  `### HEAD CONTEXT · ${filename} @ ${pr.head.sha}\n` + windows.join('\n\n--- trecho ---\n\n')
+                );
+                if (contextParts.join('\n\n').length >= 7000) break;
+              } catch (e) {
+                console.log(`Contexto HEAD: não foi possível ler ${filename}; seguindo sem esse trecho.`);
+              }
+            }
+            const headContext = contextParts.join('\n\n').slice(0, 7000);
+            if (headContext) {
+              fs.writeFileSync('/tmp/pr-head-context.txt', headContext);
+              console.log(`Contexto limitado do HEAD da PR #${numero}: ${headContext.length} caracteres.`);
+            }
+
       - name: Rodar o Coordinator sobre o evento real
         id: coordinator
         env:
@@ -440,6 +514,7 @@ jobs:
           [ -f /tmp/pr-info.json ] && ARGS+=(--pr-info-file /tmp/pr-info.json)
           [ -f /tmp/guard-audit-pack/guard-audit-pack.json ] && ARGS+=(--guard-audit-pack /tmp/guard-audit-pack/guard-audit-pack.json)
           [ -s /tmp/pr-diff.patch ] && ARGS+=(--pr-diff-file /tmp/pr-diff.patch)
+          [ -s /tmp/pr-head-context.txt ] && ARGS+=(--pr-head-context-file /tmp/pr-head-context.txt)
 
           python3 -m coordinator "${ARGS[@]}"
           echo "resultado=$?" >> "$GITHUB_OUTPUT"
