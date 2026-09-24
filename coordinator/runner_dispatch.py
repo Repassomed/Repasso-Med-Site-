@@ -764,6 +764,9 @@ class DispatchOutcome:
     validation_commands_run: tuple[dict, ...] = ()
     heartbeats: tuple[dict, ...] = ()
     notes: tuple[str, ...] = ()
+    # Evidência semântica devolvida pelo gerador (ex.: Lei das Questões
+    # 8-A). Nunca é aplicada no repositório; apenas segue para PR/auditoria.
+    generation_report: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -773,6 +776,7 @@ class DispatchOutcome:
             "validation_commands_run": list(self.validation_commands_run),
             "heartbeats": list(self.heartbeats),
             "notes": list(self.notes),
+            "generation_report": self.generation_report,
         }
 
 
@@ -912,6 +916,7 @@ def executar_tarefa(
     # "claim antes de chamada paga" permanece intacta. Além disso, um
     # checkpoint inválido agora falha ANTES da chamada Anthropic.
     commit_base: str | None = None
+    generation_report: dict | None = None
 
     # Correção B3: só a partir daqui — DEPOIS que ``claimed is True`` —
     # ``gerar_patch()`` pode ser chamada. Uma repetição do mesmo task_id
@@ -937,6 +942,7 @@ def executar_tarefa(
         geracao = gerar_patch()
         status_geracao = getattr(geracao, "status", None)
         patch_gerado = getattr(geracao, "patch", None)
+        generation_report = getattr(geracao, "question_report", None)
         if status_geracao != "ok" or patch_gerado is None:
             motivo = getattr(geracao, "reason", None) or "geração do patch falhou sem motivo informado."
             resultado = RunnerResult(
@@ -1098,8 +1104,11 @@ def executar_tarefa(
     claim_store.registrar_resultado(task.task_id, resultado)
     if worker_id:
         _emitir_heartbeat(worker_id, worker_registry, RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"), heartbeats, notes)
-    return DispatchOutcome(result=resultado, claimed=True, external_calls_made=True,
-                            validation_commands_run=tuple(comandos), heartbeats=tuple(heartbeats), notes=tuple(notes))
+    return DispatchOutcome(
+        result=resultado, claimed=True, external_calls_made=True,
+        validation_commands_run=tuple(comandos), heartbeats=tuple(heartbeats),
+        notes=tuple(notes), generation_report=generation_report,
+    )
 
 
 # ---------------------------------------------------------------------
