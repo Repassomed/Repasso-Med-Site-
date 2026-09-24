@@ -41,6 +41,8 @@ import threading
 from . import _pathsetup
 from coordinator import bridge_pr, bridge_workers, scheduler, task_runtime, worker_bridge
 from coordinator.classify import Priority
+from coordinator.merge_card import avaliar_lei_das_questoes
+from coordinator.question_report import COVERAGE_CONFIRMATION, render_question_report
 from coordinator.runner_contract import RunnerResult, RunnerTask
 from coordinator.runner_dispatch import (
     ALLOWED_RUNNER_MODE,
