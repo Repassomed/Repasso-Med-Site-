@@ -884,6 +884,7 @@ def observe(
     # compara o hash antes de enviar qualquer conteúdo aos auditores.
     # Tarefas sem Source Pack continuam exatamente como antes.
     audit_source_pack_text: str | None = None
+    audit_source_pack_error: str | None = None
     if audit_mode and runner_tasks_json_path and event.payload.get("body"):
         pack_ref_path, _pack_ref_sha = source_pack.source_ref_from_pr_body(event.payload.get("body"))
         if pack_ref_path:
@@ -893,9 +894,10 @@ def observe(
             if pack_load.ok and pack_load.pack is not None:
                 audit_source_pack_text = pack_load.pack.evidence_block()
             else:
+                audit_source_pack_error = pack_load.error or "erro desconhecido"
                 audit_source_pack_text = (
                     "SOURCE PACK INVÁLIDO — isto é um HARD SIGNAL de NEEDS-FIX. "
-                    + (pack_load.error or "erro desconhecido")
+                    + audit_source_pack_error
                 )
 
     # 5. Worker sugerido.
@@ -1244,6 +1246,16 @@ def observe(
                 "tratado como NEEDS-FIX por segurança."
             )
             protocol_matched = True
+
+    # Gate determinístico do Source Pack: se a PR declarou uma fonte
+    # versionada e o SHA/path não puder ser revalidado, nenhum modelo pode
+    # promover MERGE-READY por confiança própria.
+    if executar_auditoria and audit_source_pack_error:
+        audit_decision_final = "NEEDS-FIX"
+        rationale_final = (
+            f"{rationale_final}\n\nGate Source Pack: NEEDS-FIX — "
+            f"{audit_source_pack_error}"
+        )
 
     # OpenAI Auditor (Issue #106) — segunda opinião independente sobre o
     # MESMO evento, estruturalmente inerte enquanto ``openai_config`` for
