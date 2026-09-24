@@ -1,0 +1,191 @@
+name: Repasso Coordinator (AUTO-REPARO)
+
+# Excecao autorizada por Jose: auto-merge SOMENTE de PR gerada pelo proprio
+# auto-reparo tecnico, apos Guard verde e revalidacao independente.
+
+on:
+  workflow_run:
+    workflows:
+      - "Repasso Coordinator (WORKER BRIDGE)"
+      - "Repasso Coordinator (RUNNER)"
+      - "Repasso Coordinator (OBSERVE)"
+      - "Repasso Guard"
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repasso-auto-repair-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: >
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == github.event.repository.default_branch &&
+      (github.event.workflow_run.name == 'Repasso Coordinator (WORKER BRIDGE)' ||
+       github.event.workflow_run.name == 'Repasso Coordinator (RUNNER)' ||
+       github.event.workflow_run.name == 'Repasso Coordinator (OBSERVE)')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Identificar etapa que falhou
+        id: failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const jobs = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              { owner: context.repo.owner, repo: context.repo.repo,
+                run_id: Number(context.payload.workflow_run.id), per_page: 100 }
+            );
+            const failed = [];
+            for (const job of jobs) for (const step of (job.steps || []))
+              if (step.conclusion === 'failure') failed.push(job.name + ' :: ' + step.name);
+            core.setOutput('failed_step', failed.join(' | ').slice(0, 1000));
+      - name: Baixar logs que falharam
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FAILED_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set +e
+          gh run view "$FAILED_RUN_ID" --repo "$GITHUB_REPOSITORY" --log-failed > /tmp/failed.log 2>&1
+          test -s /tmp/failed.log || echo "Falha sem log-failed disponivel." > /tmp/failed.log
+          exit 0
+      - name: Instalar SDKs existentes
+        run: pip install -q -r coordinator/requirements.txt
+      - name: Diagnosticar e abrir PR tecnica quando seguro
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REPASSO_AUTO_REPAIR_ENABLED: "true"
+          REPASSO_OPENAI_AUDITOR_MODEL: ${{ vars.REPASSO_OPENAI_AUDITOR_MODEL }}
+          REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL: ${{ vars.REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL }}
+          REPASSO_OPENAI_AUDITOR_BUDGET_USD: ${{ vars.REPASSO_OPENAI_AUDITOR_BUDGET_USD }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          FAILED_STEP: ${{ steps.failure.outputs.failed_step }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          [ -n "$OPENAI_API_KEY" ] || { echo "OPENAI_API_KEY ausente; pulado."; exit 0; }
+          REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          python3 -m coordinator.auto_repair repair             --workflow-name "$WORKFLOW_NAME" --run-id "$RUN_ID"             --failed-step "$FAILED_STEP" --log /tmp/failed.log             --repo-dir "$GITHUB_WORKSPACE" --state-git-remote "$REMOTE"             --repo "$GITHUB_REPOSITORY" --base-branch "$DEFAULT_BRANCH"
+
+  merge_after_guard:
+    if: >
+      github.event.workflow_run.name == 'Repasso Guard' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Baixar contexto tipado do Guard
+        uses: actions/download-artifact@v4
+        with:
+          name: repasso-guard-audit-pack
+          path: /tmp/guard-pack
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Resolver PR real do artifact
+        id: prctx
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const typed = JSON.parse(fs.readFileSync('/tmp/guard-pack/guard-pr-context.json','utf8'));
+            if (typed.source_event !== 'workflow_dispatch') {
+              core.setOutput('candidate','false'); return;
+            }
+            const n = Number(typed.pr_number);
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner, repo: context.repo.repo, pull_number: n
+            });
+            const same = context.repo.owner + '/' + context.repo.repo;
+            const headRepo = pr.head && pr.head.repo ? pr.head.repo.full_name : '';
+            if (pr.state !== 'open' ||
+                pr.base.ref !== context.payload.repository.default_branch ||
+                headRepo !== same || pr.head.sha !== typed.head_sha ||
+                pr.base.ref !== typed.base_ref || headRepo !== typed.head_repo_full_name) {
+              core.setOutput('candidate','false'); return;
+            }
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner, repo: context.repo.repo, pull_number: n, per_page: 100
+            });
+            fs.writeFileSync('/tmp/pr.json', JSON.stringify(pr));
+            fs.writeFileSync('/tmp/files.json', JSON.stringify(files));
+            core.setOutput('candidate','true');
+      - name: Gate deterministico da excecao
+        id: gate
+        if: steps.prctx.outputs.candidate == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          python3 -m coordinator.auto_repair merge-check             --pr-json /tmp/pr.json --files-json /tmp/files.json             --repo "$GITHUB_REPOSITORY" --state-git-remote "$REMOTE"             --out /tmp/check.json
+          python3 - <<'PY'
+          import json, os
+          d=json.load(open('/tmp/check.json'))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              for k in ('pr_number','head_sha','fingerprint'):
+                  f.write(k+'='+str(d.get(k) or '')+'\n')
+              f.write('eligible='+('true' if d.get('eligible') else 'false')+'\n')
+          print(json.dumps(d, ensure_ascii=False, indent=2))
+          PY
+      - name: Merge excepcional da PR tecnica comprovada
+        id: merge
+        if: steps.gate.outputs.eligible == 'true'
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ steps.gate.outputs.pr_number }}
+          EXPECTED_HEAD: ${{ steps.gate.outputs.head_sha }}
+        with:
+          script: |
+            const n=Number(process.env.PR_NUMBER);
+            const expected=String(process.env.EXPECTED_HEAD || '');
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner, repo: context.repo.repo, pull_number: n
+            });
+            if (pr.state !== 'open' || pr.head.sha !== expected ||
+                pr.base.ref !== context.payload.repository.default_branch) {
+              core.setFailed('PR/HEAD/base mudou depois do gate'); return;
+            }
+            const result = await github.rest.pulls.merge({
+              owner: context.repo.owner, repo: context.repo.repo,
+              pull_number: n, sha: expected, merge_method: 'squash',
+              commit_title: pr.title
+            });
+            if (!result.data.merged) { core.setFailed(result.data.message); return; }
+            core.setOutput('merged','true');
+      - name: Resolver no Error Registry
+        if: steps.merge.outputs.merged == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FINGERPRINT: ${{ steps.gate.outputs.fingerprint }}
+          PR_NUMBER: ${{ steps.gate.outputs.pr_number }}
+        run: |
+          REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          python3 -m coordinator.auto_repair mark-merged             --fingerprint "$FINGERPRINT" --pr-number "$PR_NUMBER"             --state-git-remote "$REMOTE"
