@@ -255,6 +255,16 @@
       "recorded_at": "2026-09-24T04:32:00.786033+00:00",
       "status": "FAILED",
       "task_id": "cleanup-como-estudar-anestesiologia--bridge-4ec62ed8fe83"
+    },
+    {
+      "branch": "runner/cleanup-como-estudar-bioestadistica",
+      "checkpoint_commit": "6e48b4a2f6f0741b8364faab8d5ecbefae8935a1",
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/cleanup-como-estudar-bioestadistica'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "recorded_at": "2026-09-24T04:50:09.457512+00:00",
+      "status": "NEEDS-AUDIT",
+      "task_id": "cleanup-como-estudar-bioestadistica--bridge-79489db095d1"
     }
   ]
 }
