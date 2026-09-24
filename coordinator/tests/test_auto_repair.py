@@ -9,7 +9,8 @@ from . import _pathsetup
 from coordinator.auto_repair import AttemptStore
 from coordinator.auto_repair_policy import (
     PR_MARKER, PR_TITLE_PREFIX, apply_plan, assess_failure,
-    candidate_paths, is_safe_path, parse_plan,
+    candidate_paths, is_safe_path, parse_plan, stable_signature,
+    _relevant_tail,
 )
 
 
@@ -51,6 +52,84 @@ FileExistsError: [Errno 17] File exists: '/tmp/tmpabc/remoto.git'
     )
     assert not b.eligible
     print("OK  test_fileexists_is_technical_timeout_is_not")
+
+
+def test_modulenotfounderror_real_com_429_incidental_continua_tecnica():
+    """Issue #268, caso 1: a causa real é um ModuleNotFoundError (traceback
+    de verdade); um "429" que aparece só na saída NORMAL de testes que
+    RODARAM E PASSARAM antes, no MESMO log, não pode sequestrar a
+    classificação. Antes desta correção isto virava
+    "SKIPPED — falha operacional/transiente (429)" mesmo com um traceback
+    técnico real presente."""
+    log = """OK  test_handles_429_response_gracefully — servidor simulado devolveu 429 e o código tratou certo.
+OK  test_outro_caso_qualquer — passou sem problema.
+Traceback (most recent call last):
+  File "/x/coordinator/worker_bridge.py", line 10, in <module>
+    import yaml
+ModuleNotFoundError: No module named 'yaml'
+"""
+    a = assess_failure("Repasso Coordinator (WORKER BRIDGE)", log, "Rodar o Worker Bridge")
+    assert a.eligible, f"causa técnica real (ModuleNotFoundError) tinha que vencer o 429 incidental: {a.reason}"
+    assert "429" not in a.reason
+    # stable_signature participa da decisão: a assinatura devolvida tem que
+    # ser a linha do traceback real, nunca a saída normal do teste do 429.
+    assert "modulenotfounderror" in a.signature.lower()
+    assert "429" not in a.signature
+    print("OK  test_modulenotfounderror_real_com_429_incidental_continua_tecnica")
+
+
+def test_429_real_bloqueia_sem_traceback_anterior():
+    """Issue #268, caso 2: quando o 429/rate-limit É DE VERDADE a causa
+    (o próprio traceback termina nele, sem nenhum traceback técnico real
+    depois), continua sendo falha operacional — nunca elegível."""
+    log = """Traceback (most recent call last):
+  File "/x/coordinator/openai_client.py", line 5, in call
+    resp.raise_for_status()
+requests.exceptions.HTTPError: 429 Client Error: Too Many Requests for url: https://api.openai.com/v1/responses
+"""
+    a = assess_failure("Repasso Coordinator (WORKER BRIDGE)", log, "Rodar o Worker Bridge")
+    assert not a.eligible, "429 sendo a causa real tinha que continuar bloqueando o auto-reparo"
+    assert "429" in a.reason
+    print("OK  test_429_real_bloqueia_sem_traceback_anterior")
+
+
+def test_operational_so_conta_a_partir_do_ultimo_traceback():
+    """Issue #268, caso 3: ``failed_step``, a presença do traceback e a
+    ``stable_signature`` participam da decisão — não só a presença crua de
+    uma palavra em qualquer lugar do log.
+
+    Prova as duas pontas com o MESMO par base/marcador ("orçamento"):
+    marcador ANTES do traceback real não bloqueia; o MESMO marcador DEPOIS
+    do traceback (ou dentro dele) continua bloqueando — exatamente o
+    comportamento que ``test_fileexists_is_technical_timeout_is_not`` já
+    exige para "Request timed out" e que não pode regredir.
+    """
+    traceback_real = (
+        'Traceback (most recent call last):\n'
+        '  File "/x/coordinator/worker_bridge.py", line 40, in main\n'
+        "ImportError: cannot import name 'foo' from 'coordinator.worker_bridge'\n"
+    )
+    antes = assess_failure(
+        "Repasso Coordinator (WORKER BRIDGE)",
+        "relatório de orçamento do mês anterior: dentro do previsto.\n" + traceback_real,
+        "Rodar o Worker Bridge",
+    )
+    assert antes.eligible, (
+        f"'orçamento' em texto anterior ao traceback real não pode bloquear: {antes.reason}"
+    )
+    depois = assess_failure(
+        "Repasso Coordinator (WORKER BRIDGE)",
+        traceback_real + "\norçamento mensal excedido — execução interrompida.",
+        "Rodar o Worker Bridge",
+    )
+    assert not depois.eligible, "'orçamento' depois do traceback real tinha que continuar bloqueando"
+    assert "orçamento" in depois.reason
+
+    # _relevant_tail em isolamento: sem nenhum traceback no log, o recorte
+    # é o log inteiro (comportamento anterior preservado nesse caso).
+    sem_traceback = "só saída de teste comum, sem crash nenhum"
+    assert _relevant_tail(sem_traceback) == sem_traceback
+    print("OK  test_operational_so_conta_a_partir_do_ultimo_traceback")
 
 
 def test_candidate_does_not_offer_run_all():
@@ -150,6 +229,9 @@ def test_workflow_is_workflow_run_only_and_self_excluded():
 
 TESTS = [
     test_scope_is_strict, test_fileexists_is_technical_timeout_is_not,
+    test_modulenotfounderror_real_com_429_incidental_continua_tecnica,
+    test_429_real_bloqueia_sem_traceback_anterior,
+    test_operational_so_conta_a_partir_do_ultimo_traceback,
     test_candidate_does_not_offer_run_all, test_plan_blocks_backlog_and_assert_rewrite,
     test_apply_preserves_test_assertions, test_attempt_limit_and_run_dedup,
     test_auto_reparo_nunca_faz_merge_e_a_pr_diz_isso, test_workflow_is_workflow_run_only_and_self_excluded,

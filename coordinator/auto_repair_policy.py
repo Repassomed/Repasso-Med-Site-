@@ -101,13 +101,68 @@ def stable_signature(log: str) -> str:
     return redact(s)[:1200]
 
 
+TRACEBACK_MARKER = "traceback (most recent call last):"
+
+
+def _relevant_tail(log: str) -> str:
+    """Do início do ÚLTIMO traceback Python em diante — ou o log inteiro,
+    quando não existe nenhum traceback.
+
+    Achado da Issue #268: um log de CI real acumula saída de vários
+    passos/execuções — inclusive a saída NORMAL de testes que RODARAM E
+    PASSARAM antes da falha real, que pode mencionar um marcador de
+    ``OPERATIONAL`` (ex.: "429") de forma incidental (um teste que verifica
+    tratamento de HTTP 429, por exemplo) sem nenhuma relação com a causa
+    verdadeira. Um caso real: a causa era
+    ``ModuleNotFoundError: No module named 'yaml'`` (um traceback de
+    verdade), mas um "429" solto, mais cedo no MESMO log, em saída normal
+    de outro passo/teste, fazia o classificador devolver "SKIPPED — falha
+    operacional/transiente (429)" sem nunca examinar o traceback real.
+
+    A CAUSA de uma falha real está no ÚLTIMO traceback do log (quando
+    existe um) — nunca em texto que já rolou antes dele. Recortar o log a
+    partir dali, e só procurar ``OPERATIONAL`` nesse trecho, resolve o
+    caso acima sem enfraquecer o caso oposto: quando o marcador
+    operacional É de fato a causa (ex.: um `HTTPError: 429 ...` que é o
+    próprio traceback, ou uma nota operacional impressa DEPOIS do
+    traceback, encerrando a execução), ele continua dentro do recorte e
+    continua bloqueando o auto-reparo (ver
+    ``test_fileexists_is_technical_timeout_is_not`` em
+    ``test_auto_repair.py`` — continua exigindo isso).
+
+    Quando não há NENHUM traceback no log (falha reportada só como
+    "FALHOU  test_x: ..." pelo runner próprio, sem uma exceção não
+    capturada de verdade), o comportamento fica exatamente como antes:
+    o log inteiro é considerado, porque não existe um "início da causa"
+    óbvio para ancorar o recorte.
+    """
+    l = log or ""
+    idx = l.lower().rfind(TRACEBACK_MARKER)
+    return l[idx:] if idx >= 0 else l
+
+
 def assess_failure(workflow: str, log: str, failed_step: str = "") -> TechnicalAssessment:
+    """Decide se o AUTO-REPARO pode tentar consertar esta falha.
+
+    ``failed_step``, a presença de um traceback real e a ``stable_signature``
+    (usada como identidade/fingerprint da falha, ver ``assess`` em
+    ``auto_repair.py``) participam da decisão: os marcadores de
+    ``OPERATIONAL`` só são procurados no trecho RELEVANTE do log — a partir
+    do último traceback real, via ``_relevant_tail`` (Issue #268) — nunca em
+    saída normal de um passo/teste anterior que só por coincidência
+    menciona a mesma palavra. ``TECHNICAL`` e a exigência de evidência em
+    ``coordinator/**`` continuam olhando o log inteiro: a mudança desta
+    correção é só ONDE ``OPERATIONAL`` é procurado, nunca ONDE ``TECHNICAL``
+    é procurado — não amplia o que o auto-reparo pode tentar consertar,
+    só para de deixar um marcador solto vetar uma causa técnica real.
+    """
     sig = stable_signature(log)
     if workflow not in SUPPORTED_WORKFLOWS:
         return TechnicalAssessment(False, "workflow fora do escopo", sig)
     lower = (log or "").lower()
+    tail_lower = _relevant_tail(log).lower()
     for marker in OPERATIONAL:
-        if marker in lower:
+        if marker in tail_lower:
             return TechnicalAssessment(False, f"falha operacional/transiente ({marker})", sig)
     if not any(x in lower for x in TECHNICAL):
         return TechnicalAssessment(False, "sem falha tecnica reproduzivel", sig)
