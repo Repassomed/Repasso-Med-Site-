@@ -874,6 +874,31 @@
       "summary": "RuntimeError: n\u00e3o consegui decidir o claim de 'Repassomed/Repasso-Med-Site-:GUARD_STATE_CHANGE:pr:229:9ece5cb0b3b00949' em 3 tentativa(s); \u00faltimo erro: remote: Internal Server Error        \nremote: Request ID D040:256ACC:1F9435:209436:6AB53520        \nremote: Time 2026-09-24T14:35:13Z\nTo https://github.com/Repassomed/Repasso-Med-Site-.git\n ! [remote rejected] HEAD -> coordinator-state-dedup (Internal Server Error)\nerror: failed to push some refs to 'https://github.com/Repassomed/Repasso-Med-Site-.git'\n",
       "task_id": null,
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "325575953cf16d4bfbb8e20d492c320044497da8",
+      "component": "guard",
+      "error_id": "ERR-F437ECFCC3",
+      "error_type": "hard-fail",
+      "fingerprint": "f437ecfcc38254ecd357",
+      "first_seen": "2026-09-24T14:37:37.281244+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "b62cf3a93d154adc946cbf63a288524a",
+      "issue_sync_updated_at": "2026-09-24T14:37:37.281244+00:00",
+      "last_evidence_hash": "f977d78bf3e6ec0960bb",
+      "last_seen": "2026-09-24T14:37:37.281244+00:00",
+      "occurrence_count": 1,
+      "pr_number": 229,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36013977578",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:229.",
+      "task_id": "pr:229",
+      "worker_id": null
     }
   ]
 }
