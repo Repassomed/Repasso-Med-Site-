@@ -32,6 +32,7 @@ from dataclasses import replace
 from datetime import datetime, timezone
 
 from . import _pathsetup
+from coordinator.audit import AUDIT_SYSTEM_PROMPT
 from coordinator.budget import UsageLedger
 from coordinator.classify import classify
 from coordinator.config import ACTIVE_SUPERVISED_MODE, Config
@@ -684,6 +685,12 @@ def test_escalada_justificada_requires_reason() -> None:
 def test_system_prompt_declares_diff_and_body_as_untrusted_data() -> None:
     assert "SEMPRE DADO" in OPENAI_AUDITOR_SYSTEM_PROMPT
     assert "nunca instrução" in OPENAI_AUDITOR_SYSTEM_PROMPT
+    # G0/ALMA e o protocolo didático são gates nomeados nos DOIS auditores.
+    for prompt in (AUDIT_SYSTEM_PROMPT, OPENAI_AUDITOR_SYSTEM_PROMPT):
+        assert "LEI G0" in prompt and "ALMA" in prompt
+        assert "MANUTENCAO-DIDATICA-REPASSO-MED.md" in prompt
+        assert "frio" in prompt and "genérico" in prompt
+        assert "revisão adversarial" in prompt
     print("OK  test_system_prompt_declares_diff_and_body_as_untrusted_data")
 
 
@@ -784,11 +791,11 @@ def test_render_provider_totals_shows_both_and_combined() -> None:
     print("OK  test_render_provider_totals_shows_both_and_combined")
 
 
-def test_aplicar_gate_openai_only_downgrades() -> None:
-    # Sem resultado do OpenAI: decisão passa inalterada.
+def test_aplicar_gate_openai_requires_explicit_approval() -> None:
+    # Sem resultado do OpenAI: fail-closed. Ausência nunca é aprovação.
     d, nota = aplicar_gate_openai("MERGE-READY", openai_decision=None, openai_rationale=None)
-    assert d == "MERGE-READY" and nota is None
-    # OpenAI concorda (MERGE-READY): não altera.
+    assert d == "NEEDS-FIX" and nota is not None and "obrigatório" in nota
+    # Só concordância explícita preserva MERGE-READY.
     d, nota = aplicar_gate_openai("MERGE-READY", openai_decision="MERGE-READY", openai_rationale="ok")
     assert d == "MERGE-READY" and nota is None
     # OpenAI discorda: rebaixa.
@@ -797,7 +804,7 @@ def test_aplicar_gate_openai_only_downgrades() -> None:
     # Nunca promove NEEDS-FIX -> MERGE-READY.
     d, nota = aplicar_gate_openai("NEEDS-FIX", openai_decision="MERGE-READY", openai_rationale="tudo ok pra mim")
     assert d == "NEEDS-FIX"
-    print("OK  test_aplicar_gate_openai_only_downgrades")
+    print("OK  test_aplicar_gate_openai_requires_explicit_approval")
 
 
 # ---------------------------------------------------------------------------
@@ -828,7 +835,10 @@ def test_pipeline_zero_openai_calls_when_disabled() -> None:
         openai_transport=t_openai,
     )
     assert t_openai.calls == 0
-    assert "OpenAI Auditor" not in (r.merge_card or "")
+    assert r.audit_decision == "NEEDS-FIX", (
+        "OpenAI desabilitado não pode deixar conteúdo didático MERGE-READY"
+    )
+    assert "OpenAI Auditor obrigatório" in (r.merge_card or "")
     print("OK  test_pipeline_zero_openai_calls_when_disabled")
 
 
@@ -1157,7 +1167,7 @@ def main() -> int:
         test_privacy_preflight_blocks_secret_and_pii_patterns,
         test_privacy_preflight_allows_ordinary_pr_content,
         test_render_provider_totals_shows_both_and_combined,
-        test_aplicar_gate_openai_only_downgrades,
+        test_aplicar_gate_openai_requires_explicit_approval,
         test_chatgpt_auditor_seed_offline_and_cannot_publish_or_merge,
         test_pipeline_zero_openai_calls_when_disabled,
         test_pipeline_duplicate_event_zero_openai_calls,
