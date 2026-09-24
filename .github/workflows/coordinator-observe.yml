@@ -230,8 +230,30 @@ jobs:
                 issue_number: pr.number,
                 per_page: 100,
               });
-              if (comments.some(c => String(c.body || '').includes(markerCoordinator))) {
-                continue;
+              const cards = comments.filter(c => String(c.body || '').includes(markerCoordinator));
+              if (cards.length) {
+                // Um cartão de outro HEAD não conclui a auditoria deste commit.
+                // Cartões antigos sem SHA explícito são vinculados pela data do commit.
+                const { data: headCommit } = await github.rest.repos.getCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: pr.head.sha,
+                });
+                const headDateText =
+                  (headCommit.commit && headCommit.commit.committer && headCommit.commit.committer.date) ||
+                  (headCommit.commit && headCommit.commit.author && headCommit.commit.author.date) ||
+                  '';
+                const headCommittedAt = Date.parse(headDateText);
+                const cardForCurrentHead = cards.some(c => {
+                  const card = String(c.body || '');
+                  const audited = card.match(/\*\*HEAD auditado:\*\*\s*`([0-9a-f]{40})`/i);
+                  if (audited) return audited[1].toLowerCase() === pr.head.sha.toLowerCase();
+                  const cardAt = Date.parse(String(c.created_at || ''));
+                  return Number.isFinite(headCommittedAt) &&
+                    Number.isFinite(cardAt) && cardAt >= headCommittedAt;
+                });
+                if (cardForCurrentHead) continue;
+                core.info(`PR #${pr.number}: cartões antigos não cobrem o HEAD ${pr.head.sha}.`);
               }
 
               const headRepo = pr.head && pr.head.repo ? pr.head.repo.full_name : '';
@@ -249,7 +271,8 @@ jobs:
               // reabilita esta quando houver commit novo no HEAD.
               const guardComments = comments
                 .filter(c => String(c.body || '').includes(markerGuard))
-                .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+                .sort((a, b) => String(a.updated_at || a.created_at || '')
+                  .localeCompare(String(b.updated_at || b.created_at || '')));
               const latestGuard = guardComments.length ? guardComments[guardComments.length - 1] : null;
               if (latestGuard && String(latestGuard.body || '').includes('🔴 REPROVADO')) {
                 const { data: headCommit } = await github.rest.repos.getCommit({
@@ -262,7 +285,7 @@ jobs:
                   (headCommit.commit && headCommit.commit.author && headCommit.commit.author.date) ||
                   '';
                 const headCommittedAt = Date.parse(headDateText);
-                const latestGuardAt = Date.parse(String(latestGuard.created_at || ''));
+                const latestGuardAt = Date.parse(String(latestGuard.updated_at || latestGuard.created_at || ''));
                 const blockedOnCurrentHead =
                   Number.isFinite(headCommittedAt) &&
                   Number.isFinite(latestGuardAt) &&
