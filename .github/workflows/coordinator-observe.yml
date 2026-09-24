@@ -187,6 +187,11 @@ jobs:
     # executa código de PR. Só roda do workflow confiável da main e só
     # despacha guard.yml (constante) para uma PR Worker Bridge aberta que
     # ainda não recebeu o marcador do Coordinator.
+    #
+    # Justiça da fila: uma PR cujo Guard já REPROVOU no HEAD atual é
+    # considerada bloqueada e é pulada. Ela só volta a ser elegível quando
+    # o HEAD muda, evitando que uma pendência objetiva monopolize todos os
+    # heartbeats e atrase as PRs seguintes.
     if: >
       github.event_name == 'schedule' &&
       vars.REPASSO_COORDINATOR_ENABLED == 'true' &&
@@ -204,6 +209,7 @@ jobs:
           script: |
             const markerBridge = '<!-- repasso-worker-bridge-needs-audit -->';
             const markerCoordinator = '<!-- repasso-coordinator -->';
+            const markerGuard = '<!-- repasso-guard-resumo -->';
             const pulls = await github.paginate(github.rest.pulls.list, {
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -238,6 +244,39 @@ jobs:
                 continue;
               }
 
+              // Se o último Guard já reprovou ESTE MESMO HEAD, não adianta
+              // redispará-lo a cada heartbeat. Pula para a próxima PR e só
+              // reabilita esta quando houver commit novo no HEAD.
+              const guardComments = comments
+                .filter(c => String(c.body || '').includes(markerGuard))
+                .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+              const latestGuard = guardComments.length ? guardComments[guardComments.length - 1] : null;
+              if (latestGuard && String(latestGuard.body || '').includes('🔴 REPROVADO')) {
+                const { data: headCommit } = await github.rest.repos.getCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: pr.head.sha,
+                });
+                const headDateText =
+                  (headCommit.commit && headCommit.commit.committer && headCommit.commit.committer.date) ||
+                  (headCommit.commit && headCommit.commit.author && headCommit.commit.author.date) ||
+                  '';
+                const headCommittedAt = Date.parse(headDateText);
+                const latestGuardAt = Date.parse(String(latestGuard.created_at || ''));
+                const blockedOnCurrentHead =
+                  Number.isFinite(headCommittedAt) &&
+                  Number.isFinite(latestGuardAt) &&
+                  latestGuardAt >= headCommittedAt;
+
+                if (blockedOnCurrentHead) {
+                  core.info(
+                    `Reconciliação: PR #${pr.number} está bloqueada pelo Guard no HEAD ${pr.head.sha}; ` +
+                    'pulando para a próxima PR até o HEAD mudar.'
+                  );
+                  continue;
+                }
+              }
+
               await github.rest.actions.createWorkflowDispatch({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -247,12 +286,12 @@ jobs:
               });
               core.info(
                 `Reconciliação: Guard redisparado da main para PR #${pr.number}; ` +
-                'uma única PR por heartbeat, sem chamada paga neste job.'
+                'uma única PR elegível por heartbeat, sem chamada paga neste job.'
               );
               return;
             }
 
-            core.info('Reconciliação: nenhuma PR Worker Bridge pendente de Cartão de Merge.');
+            core.info('Reconciliação: nenhuma PR Worker Bridge elegível pendente de Cartão de Merge.');
 
   observe:
     # Camada 1 do portão: enquanto a Variable não for exatamente "true",
