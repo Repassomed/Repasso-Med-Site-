@@ -147,12 +147,12 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "manual-audit-pr248-microtasks",
+      "current_task": "manual-issue259-heartbeat-guard-observe",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T18:56:08.981Z",
+      "last_heartbeat": "2026-09-24T19:32:39.633Z",
       "never_merge": true,
-      "progress": "Auditar/corrigir #248: decomposição Fisiopatología II/Toxicología em microtarefas atômicas, dependências, source packs, escopo e compatibilidade com #246.",
+      "progress": "P0 #259: corrigir cadeia Heartbeat → Guard → OBSERVE que hoje morre após Guard workflow_dispatch.",
       "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
