@@ -169,6 +169,7 @@ from .question_report import QUESTION_REPORT_JSON_SCHEMA, render_question_report
 from .redact import redact
 from .runner_contract import RunnerTask
 from .runner_dispatch import (
+    NO_CHANGE_REASON_PREFIX,
     FileWrite,
     RunnerDispatchConfig,
     StructuredPatch,
@@ -213,15 +214,19 @@ MAX_FILE_CHARS_SENT = 20_000
 # 20+ execuções terminaram em patch vazio ou JSON truncado. O orçamento
 # continua finito e o arquivo grande continua NUNCA indo inteiro — mas
 # agora cabe o BLOCO (<section>) inteiro que a instrução referencia.
-MAX_ANCHOR_CONTEXT_CHARS_PER_FILE = 160_000
-MAX_ANCHOR_CONTEXT_CHARS_TOTAL = 200_000
+# Auditoria de 24/09/2026: os blocos de Fisiopatología II têm 115–171k e os
+# B01–B03 de Toxicología 122–140k; com teto de 110k o bloco-alvo inteiro era
+# descartado e as microtarefas por bloco (#248) só veriam fragmentos. O
+# arquivo (2,2–2,8 MB) continua NUNCA indo inteiro.
+MAX_ANCHOR_CONTEXT_CHARS_PER_FILE = 200_000
+MAX_ANCHOR_CONTEXT_CHARS_TOTAL = 240_000
 MAX_ANCHOR_WINDOWS_PER_FILE = 24
 
 # Bloco inteiro: uma <section> referenciada pela instrução (B08, bloque 8,
 # id literal, ou a seção que contém uma frase entre aspas da instrução)
 # entra INTEIRA, desde que caiba nestes tetos — e nunca quando a própria
 # seção é quase o arquivo todo (aí seria "mandar o arquivo inteiro").
-MAX_SECTION_CHARS = 110_000
+MAX_SECTION_CHARS = 180_000
 MAX_SECTION_FRACTION_OF_FILE = 0.6
 MAX_SECTIONS_BY_PHRASE = 3
 
@@ -345,7 +350,9 @@ _SYSTEM_PROMPT = (
     "ou inconsistência e que o arquivo final continua estruturalmente coerente. Não descreva essa "
     "revisão; ela não substitui a auditoria independente posterior. Nunca inclua explicação, "
     "comentário ou qualquer texto fora do JSON. Se não for possível cumprir a instrução com "
-    'segurança dentro dos caminhos permitidos, devolva exatamente {"files": []}.'
+    'segurança dentro dos caminhos permitidos — ou se o objetivo JÁ estiver cumprido no conteúdo '
+    'atual —, devolva {"files": [], "no_change_reason": "<motivo objetivo, em até 3 frases>"}: '
+    "diga exatamente o que impede a mudança ou onde o objetivo já está atendido."
 )
 
 # Issue #144: usado SÓ quando algum allowed_file é grande demais para ser
@@ -373,6 +380,9 @@ _SYSTEM_PROMPT_ANCORADO = (
     "caractere por caractere, e precisa ser longo/específico o bastante para existir "
     "UMA ÚNICA vez no arquivo. Nunca invente uma âncora, nunca escreva de memória, "
     "nunca use '...' nem abreviação dentro de 'old_text'.\n"
+    "- Se o MESMO texto aparece em mais de um trecho (ex.: uma questão copiada no Banco "
+    "General), acrescente em cada edição o campo opcional \"trecho\": <número do trecho>; "
+    "então 'old_text' precisa aparecer uma única vez dentro daquele trecho.\n"
     "Cada 'path' precisa ser EXATAMENTE um dos caminhos permitidos informados no prompt "
     "do usuário — nunca um caminho novo, nunca um caminho fora dessa lista. Antes de emitir o "
     "JSON, faça uma revisão interna silenciosa do próprio patch: objetivo, escopo, preservação "
@@ -380,8 +390,38 @@ _SYSTEM_PROMPT_ANCORADO = (
     "essa revisão; ela não substitui a auditoria independente posterior. Nunca um diff/patch "
     "unificado, nunca um comando de shell, nunca explicação ou comentário fora do JSON. Se não "
     "for possível cumprir a instrução com segurança dentro dos caminhos e trechos permitidos, "
-    'devolva exatamente {"files": [], "edits": []}.'
+    'ou se o objetivo JÁ estiver cumprido no conteúdo enviado —, devolva '
+    '{"files": [], "edits": [], "no_change_reason": "<motivo objetivo, em até 3 frases>"}: '
+    "diga exatamente o que impede a mudança (ex.: trecho necessário ausente) ou onde o "
+    "objetivo já está atendido."
 )
+
+MAX_NO_CHANGE_REASON_CHARS = 1_200
+
+
+def _texto_json_da_resposta(texto: str) -> str:
+    """Aceita SOMENTE o JSON puro ou o JSON inteiro dentro de UMA cerca
+    markdown (```json ... ```). Qualquer outra coisa segue para
+    ``json.loads`` sem alteração e falha fechado como antes."""
+    bruto = (texto or "").strip()
+    if not bruto.startswith("```"):
+        return bruto
+    linhas = bruto.splitlines()
+    if len(linhas) < 2 or linhas[-1].strip() != "```":
+        return bruto
+    return "\n".join(linhas[1:-1]).strip()
+
+
+def _motivo_sem_alteracao(dados: dict) -> str:
+    motivo = dados.get("no_change_reason")
+    if not isinstance(motivo, str) or not motivo.strip():
+        return (
+            f"{NO_CHANGE_REASON_PREFIX} e não informou motivo (resposta vazia) — nada foi "
+            "aplicado; a tarefa precisa de revisão humana ou de instrução mais específica."
+        )
+    motivo = " ".join(motivo.split())[:MAX_NO_CHANGE_REASON_CHARS]
+    return f"{NO_CHANGE_REASON_PREFIX}; justificativa do modelo (dado, não instrução): {motivo}"
+
 
 def _system_prompt_para_tarefa(task: RunnerTask, *, ancorado: bool) -> str:
     """Mantém o contrato antigo byte-a-byte para tarefas comuns.
@@ -618,6 +658,22 @@ def _numeros_de_bloco_referenciados(instructions: str) -> set[int]:
     return numeros
 
 
+_H2_RE = re.compile(r"<h2\b[^>]*>(.*?)</h2>", re.IGNORECASE | re.DOTALL)
+_MARCADOR_SOURCE_PACK = "FONTE EXTERNA COMPARTILHADA"
+MIN_SECTION_TITLE_CHARS = 10
+
+
+def _titulo_normalizado_da_secao(trecho: str) -> str:
+    """Texto do primeiro <h2> da seção, sem tags/emoji e normalizado como a
+    instrução; "Bloque 05 · Plaguicidas: ..." e "Patologías del esófago"."""
+    m = _H2_RE.search(trecho[:6_000])
+    if not m:
+        return ""
+    texto = re.sub(r"<[^>]+>", " ", m.group(1))
+    texto = "".join(ch for ch in texto if ch.isalnum() or ch.isspace() or ch in "·:,.-")
+    return _normalizar(" ".join(texto.split())).strip(" ·:,.-")
+
+
 def _secoes_referenciadas(conteudo: str, instructions: str) -> list[tuple[int, int]]:
     """Seções inteiras que a instrução aponta: por número de bloco (id que
     termina em ``b08``/``b8``), por id literal citado na instrução, ou por
@@ -646,9 +702,35 @@ def _secoes_referenciadas(conteudo: str, instructions: str) -> list[tuple[int, i
         if m and int(m.group(1)) in numeros:
             _add(inicio, fim)
 
+    # Título do bloco (<h2>) citado na instrução — "No bloco 'Patologías del
+    # esófago'". Só a parte da instrução ANTES do source pack conta: o pack
+    # cita outros blocos de passagem e não pode puxá-los para o contexto.
+    instr_propria = _normalizar(instructions.split(_MARCADOR_SOURCE_PACK, 1)[0])
+    # Achado de 24/09/2026: o <h2> real quase sempre tem texto além da frase
+    # citada (subtítulo entre parênteses, emoji já removido, etc.) — então
+    # "titulo in instr_propria" (título INTEIRO dentro da instrução) falha,
+    # nenhum título casa, e a busca por frase abaixo pega a PRIMEIRA
+    # ocorrência da frase no arquivo inteiro: tipicamente o índice/portada,
+    # que cita o bloco de passagem e vem ANTES dele no arquivo. Casar também
+    # a frase citada DENTRO do título (contenção nos dois sentidos) resolve
+    # o bloco certo antes de a busca por frase ter chance de errar.
+    frases_titulo = [f for f in _frases_ancora(instr_propria) if len(f) >= MIN_SECTION_TITLE_CHARS]
+    titulos_escolhidos: list[str] = []
+    for inicio, fim, _sid in secoes:
+        titulo = _titulo_normalizado_da_secao(conteudo[inicio:fim])
+        if not titulo or len(titulo) < MIN_SECTION_TITLE_CHARS:
+            continue
+        if titulo in instr_propria or any(frase in titulo for frase in frases_titulo):
+            _add(inicio, fim)
+            titulos_escolhidos.append(titulo)
+
     conteudo_norm = _normalizar(conteudo)
     por_frase = 0
-    for frase in _frases_ancora(instructions):
+    # Mesma regra do título: seção INTEIRA só por frase da instrução própria.
+    # Frases citadas no source pack continuam valendo para janelas pequenas.
+    for frase in _frases_ancora(instructions.split(_MARCADOR_SOURCE_PACK, 1)[0]):
+        if any(frase in t for t in titulos_escolhidos):
+            continue  # a frase É o título já escolhido; não puxar o índice
         pos = conteudo_norm.find(frase)
         if pos < 0:
             continue
@@ -662,6 +744,62 @@ def _secoes_referenciadas(conteudo: str, instructions: str) -> list[tuple[int, i
         if por_frase >= MAX_SECTIONS_BY_PHRASE:
             break
     return escolhidas
+
+
+# Espelhos (auditoria de 24/09/2026, B08 PA r4/r5): uma tarefa que pede
+# "alterar o B08 E a cópia correspondente no Banco General" recebia só o
+# B08. As cópias literais da mesma questão/flashcard no banco geral e no
+# mazo geral ficavam fora do contexto, e o modelo só podia deixar o banco
+# divergente ou recusar (patch vazio). Agora, para cada bloco referenciado,
+# as cópias LITERAIS de seus enunciados/frentes de flashcard encontradas
+# fora do bloco entram como trechos — busca determinística, limitada.
+MAX_MIRROR_WINDOWS = 40
+MAX_MIRROR_WINDOW_CHARS = 3_500
+MIN_MIRROR_NEEDLE_CHARS = 12
+_QUIZ_QUESTION_RE = re.compile(r'<p class="quiz-question">(.*?)</p>', re.DOTALL)
+_FC_FRONT_RE = re.compile(r'<div class="fc-front">(.*?)</div>', re.DOTALL)
+_ITEM_ABERTURAS = ('<div class="quiz-item"', '<div class="flashcard"')
+
+
+def _agulhas_de_espelho(trecho: str) -> list[str]:
+    agulhas: list[str] = []
+    for m in _QUIZ_QUESTION_RE.finditer(trecho):
+        interno = m.group(1)
+        enunciado = interno.rsplit("</span>", 1)[-1].strip()
+        if len(enunciado) >= 40:
+            agulhas.append(enunciado[:160])
+    for m in _FC_FRONT_RE.finditer(trecho):
+        frente = m.group(1).strip()
+        if len(frente) >= MIN_MIRROR_NEEDLE_CHARS:
+            agulhas.append(f'<div class="fc-front">{frente}</div>')
+    return list(dict.fromkeys(agulhas))
+
+
+def _janela_do_item(conteudo: str, pos: int) -> tuple[int, int]:
+    inicio = max(conteudo.rfind(a, max(0, pos - 2_000), pos + 1) for a in _ITEM_ABERTURAS)
+    if inicio < 0:
+        inicio = max(0, pos - ANCHOR_WINDOW_CHARS_BEFORE)
+    proximos = [conteudo.find(a, pos + 1) for a in _ITEM_ABERTURAS]
+    proximos = [x for x in proximos if x > 0]
+    fim = min(proximos) if proximos else len(conteudo)
+    fim = min(fim, inicio + MAX_MIRROR_WINDOW_CHARS, len(conteudo))
+    return inicio, fim
+
+
+def _janelas_de_espelho(conteudo: str, secoes: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    janelas: list[tuple[int, int]] = []
+    for s_ini, s_fim in secoes:
+        for agulha in _agulhas_de_espelho(conteudo[s_ini:s_fim]):
+            pos = conteudo.find(agulha)
+            while pos >= 0:
+                if not (s_ini <= pos < s_fim):
+                    janela = _janela_do_item(conteudo, pos)
+                    if janela not in janelas:
+                        janelas.append(janela)
+                    if len(janelas) >= MAX_MIRROR_WINDOWS:
+                        return janelas
+                pos = conteudo.find(agulha, pos + len(agulha))
+    return janelas
 
 
 def extrair_trechos_ancorados(
@@ -686,6 +824,16 @@ def extrair_trechos_ancorados(
         selecionadas.append((inicio, fim))
         total += fim - inicio
 
+    espelhos = 0
+    for inicio, fim in _janelas_de_espelho(conteudo, list(selecionadas)):
+        if any(a <= inicio and fim <= b for a, b in selecionadas):
+            continue
+        if total + (fim - inicio) > limite_chars:
+            continue
+        selecionadas.append((inicio, fim))
+        total += fim - inicio
+        espelhos += 1
+
     candidatos: list[tuple[int, int, int]] = []
     for frase in _frases_ancora(instructions):
         candidatos.extend(_ocorrencias(conteudo_norm, frase, regioes, base=5))
@@ -697,7 +845,7 @@ def extrair_trechos_ancorados(
     for _score, pos, tamanho in sorted(candidatos, key=lambda c: (-c[0], c[1])):
         if any(inicio <= pos < fim for inicio, fim in selecionadas):
             continue
-        if len(selecionadas) >= max_janelas:
+        if len(selecionadas) - espelhos >= max_janelas:
             break
         inicio, fim = _janela(conteudo, pos, tamanho)
         if total + (fim - inicio) > limite_chars:
@@ -736,8 +884,18 @@ class AnchoredEdit:
     path: str
     old_text: str
     new_text: str
+    # Opcional (auditoria de 24/09/2026): número 1-based do trecho enviado
+    # onde a edição vale. Existe para CÓPIAS LITERAIS (ex.: a mesma V/F no
+    # bloco e no Banco General): com ``trecho``, a unicidade exigida é
+    # dentro daquele trecho, cuja posição no arquivo é conhecida — nunca
+    # "a primeira ocorrência" do arquivo.
+    trecho: int | None = None
 
     def __post_init__(self) -> None:
+        if self.trecho is not None and (
+            isinstance(self.trecho, bool) or not isinstance(self.trecho, int) or self.trecho < 1
+        ):
+            raise ValueError(f"AnchoredEdit.trecho precisa ser inteiro >= 1, recebido {self.trecho!r}.")
         caminho = (self.path or "").strip()
         if not caminho:
             raise ValueError("AnchoredEdit.path não pode ser vazio.")
@@ -753,7 +911,10 @@ class AnchoredEdit:
             )
 
     def to_dict(self) -> dict:
-        return {"path": self.path, "old_text": self.old_text, "new_text": self.new_text}
+        d = {"path": self.path, "old_text": self.old_text, "new_text": self.new_text}
+        if self.trecho is not None:
+            d["trecho"] = self.trecho
+        return d
 
 
 def anchored_edits_de_resposta(d: dict) -> tuple[AnchoredEdit, ...]:
@@ -772,7 +933,10 @@ def anchored_edits_de_resposta(d: dict) -> tuple[AnchoredEdit, ...]:
         faltando = sorted({"path", "old_text", "new_text"} - set(item))
         if faltando:
             raise ValueError(f"AnchoredEdit sem campo(s) obrigatório(s): {faltando}")
-        edits.append(AnchoredEdit(path=item["path"], old_text=item["old_text"], new_text=item["new_text"]))
+        edits.append(AnchoredEdit(
+            path=item["path"], old_text=item["old_text"], new_text=item["new_text"],
+            trecho=item.get("trecho"),
+        ))
     return tuple(edits)
 
 
@@ -876,6 +1040,37 @@ def resolver_anchored_edits(
         spans: list[tuple[int, int, str]] = []
         trechos_enviados = trechos_por_arquivo.get(caminho, ())
         for indice, edit in enumerate(por_arquivo[caminho], 1):
+            if edit.trecho is not None:
+                if not trechos_enviados or edit.trecho > len(trechos_enviados):
+                    return ResolucaoAncorada(
+                        ok=False,
+                        reason=(
+                            f"AnchoredEdit #{indice} de {caminho!r}: 'trecho' {edit.trecho} não corresponde a "
+                            "nenhum trecho enviado ao modelo — BLOCKED, zero escrita em qualquer arquivo."
+                        ),
+                    )
+                alvo = trechos_enviados[edit.trecho - 1]
+                locais = _posicoes_sobrepostas(alvo.texto, edit.old_text)
+                if len(locais) != 1:
+                    return ResolucaoAncorada(
+                        ok=False,
+                        reason=(
+                            f"AnchoredEdit #{indice} de {caminho!r}: 'old_text' aparece {len(locais) or 0} "
+                            f"vez(es) dentro do trecho {edit.trecho} (precisa ser exatamente 1) — BLOCKED, "
+                            "zero escrita em qualquer arquivo."
+                        ),
+                    )
+                inicio = alvo.inicio + locais[0]
+                if original[inicio:inicio + len(edit.old_text)] != edit.old_text:
+                    return ResolucaoAncorada(
+                        ok=False,
+                        reason=(
+                            f"AnchoredEdit #{indice} de {caminho!r}: o trecho {edit.trecho} não confere mais "
+                            "com o arquivo atual — BLOCKED, zero escrita em qualquer arquivo."
+                        ),
+                    )
+                spans.append((inicio, inicio + len(edit.old_text), edit.new_text))
+                continue
             # Achado 1 da auditoria: num arquivo grande, o modelo só viu
             # trechos — uma âncora que não esteja INTEIRA dentro de um
             # deles é, por definição, uma âncora que ele não leu, mesmo
@@ -1244,7 +1439,7 @@ def gerar_patch_via_claude(
 
     texto = resultado_chamada.text or ""
     try:
-        dados = json.loads(texto)
+        dados = json.loads(_texto_json_da_resposta(texto))
     except (json.JSONDecodeError, ValueError):
         bateu_teto_saida = bool(
             resultado_chamada.usage
@@ -1268,6 +1463,16 @@ def gerar_patch_via_claude(
             status="failed",
             reason=f"resposta do modelo precisa ser um objeto JSON, recebido {type(dados).__name__}."
                    f"{nota_ledger}",
+            usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
+        )
+
+    # Resposta sem nenhuma alteração: recusa EXPLICADA (ou objetivo já
+    # cumprido), nunca uma falha opaca de "patch vazio". Zero escrita.
+    if not dados.get("files") and not dados.get("edits"):
+        return GenerateOutcome(
+            status="blocked",
+            reason=f"{_motivo_sem_alteracao(dados)}{nota_ledger}",
             usage=resultado_chamada.usage, external_call_made=True,
             ledger_correction_failed=ledger_correction_failed,
         )

@@ -366,6 +366,26 @@ def test_concurrent_reserve_if_within_budget_exactly_one_winner_on_fresh_branch(
     print("OK  test_concurrent_reserve_if_within_budget_exactly_one_winner_on_fresh_branch")
 
 
+def test_erro_5xx_do_remoto_espera_com_recuo_exponencial_limitado() -> None:
+    """Issue #230: 500 transitório do GitHub no push espera mais que uma
+    corrida comum, com recuo exponencial e teto — nunca sem limite."""
+    from coordinator import git_state
+
+    esperas: list[float] = []
+    original = git_state.time.sleep
+    git_state.time.sleep = esperas.append
+    try:
+        erro_500 = "remote: Internal Server Error\n ! [remote rejected] HEAD -> coordinator-state-dedup"
+        for tentativa in range(6):
+            git_state._esperar_antes_de_nova_tentativa(tentativa, erro_500)
+        git_state._esperar_antes_de_nova_tentativa(0, "! [rejected] (stale info)")
+    finally:
+        git_state.time.sleep = original
+    assert esperas[:6] == [1.0, 2.0, 4.0, 8.0, 8.0, 8.0], esperas
+    assert esperas[6] == 0.2, "corrida comum continua com espera curta"
+    print("OK  test_erro_5xx_do_remoto_espera_com_recuo_exponencial_limitado")
+
+
 def main() -> int:
     testes = [
         test_two_independent_runs_share_dedup,
@@ -375,6 +395,7 @@ def main() -> int:
         test_concurrent_claim_exactly_one_winner,
         test_concurrent_pipeline_exactly_one_mock_call_and_one_usage_record,
         test_concurrent_reserve_if_within_budget_exactly_one_winner_on_fresh_branch,
+        test_erro_5xx_do_remoto_espera_com_recuo_exponencial_limitado,
     ]
     falhas = 0
     for t in testes:

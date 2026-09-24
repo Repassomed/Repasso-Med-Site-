@@ -133,6 +133,7 @@ from .runner_contract import (
 from .runner_dispatch import (
     CANARY_VALIDATION_COMMAND_KEYS,
     DEFAULT_RUNNER_USAGE_STATE_BRANCH,
+    NO_CHANGE_REASON_PREFIX,
     RUNNER_MODE_SUPERVISED,
     SUPERVISED_AUTHORIZATION_SOURCE,
     DispatchOutcome,
@@ -1276,7 +1277,9 @@ def reconciliar_merges_confirmados(
     notas: list[str] = []
     mudou = False
     for registro in sorted(registros.values(), key=lambda r: r.canonical_task_id):
-        if registro.status != task_runtime.RUNTIME_NEEDS_AUDIT or registro.pr_number is None:
+        if registro.pr_number is None or not task_runtime.status_reconciliavel_apos_merge(
+            registro.to_dict()
+        ):
             continue
         try:
             pr = github_api.pr_por_numero(registro.pr_number)
@@ -1495,8 +1498,14 @@ def executar_correcao_de_auditoria(
     if status_runtime == task_runtime.RUNTIME_BLOCKED_LIMIT and not checkpoint:
         status_runtime = task_runtime.RUNTIME_BLOCKED
 
+    # Sem novo HEAD, a PR já publicada continua sendo o entregável: FAILED
+    # e BLOCKED voltam para NEEDS-AUDIT (nunca perdem a PR). Toda resposta
+    # sem novo HEAD — inclusive "nenhuma alteração necessária" — entra no
+    # mesmo retry operacional limitado; a seleção prefere outro worker
+    # quando houver alternativa disponível.
     falha_operacional_sem_head = (
-        status_runtime == task_runtime.RUNTIME_FAILED and not checkpoint
+        status_runtime in (task_runtime.RUNTIME_FAILED, task_runtime.RUNTIME_BLOCKED)
+        and not checkpoint
     )
     if falha_operacional_sem_head:
         recuperacao = runtime_store.registrar_falha_operacional_correcao(
@@ -1536,7 +1545,10 @@ def executar_correcao_de_auditoria(
         )
         notes.extend(notas_pr)
     else:
-        if falha_operacional_sem_head and status_runtime == task_runtime.RUNTIME_NEEDS_AUDIT:
+        if (
+            falha_operacional_sem_head
+            and registro_final.audit_fix_execution_failures < MAX_AUDIT_FIX_EXECUTION_FAILURES
+        ):
             notes.append(
                 f"correção terminou em {status_runner} sem novo HEAD; retry operacional "
                 f"{registro_final.audit_fix_execution_failures}/{MAX_AUDIT_FIX_EXECUTION_FAILURES} "
@@ -1545,7 +1557,8 @@ def executar_correcao_de_auditoria(
         elif falha_operacional_sem_head:
             notes.append(
                 f"correção terminou em {status_runner} sem novo HEAD e atingiu o teto de "
-                f"{MAX_AUDIT_FIX_EXECUTION_FAILURES} falhas operacionais; tarefa ficou FAILED."
+                f"{MAX_AUDIT_FIX_EXECUTION_FAILURES} falhas operacionais; o parecer foi encerrado e "
+                f"a PR #{pedido.pr_number} continua em NEEDS-AUDIT (nunca descartada)."
             )
         else:
             notes.append(
