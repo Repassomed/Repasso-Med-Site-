@@ -570,13 +570,16 @@ def test_ledger_correction_failure_is_surfaced_explicitly_never_silent() -> None
 
 
 def test_concorrencia_perto_do_teto_so_uma_reserva_vence() -> None:
-    """Teste concorrente OBRIGATÓRIO (F8-C, auditoria independente): saldo
-    próximo do teto + duas execuções concorrentes -> no máximo UMA
-    reserva/chamada paga vence. Mesma técnica de
-    ``test_worker_ops.py::test_marcar_available_condicional_concorrente_
-    so_uma_vence`` (threading.Barrier real, nunca mockado) — o lock de
-    ``UsageLedger`` cobre a concorrência DENTRO do processo; em produção
-    o mesmo princípio vale via CAS git em ``GitUsageLedger``."""
+    """Saldo próximo do teto + DUAS tentativas simultâneas: enquanto a
+    primeira chamada ainda está em voo e sua reserva conservadora continua
+    ocupando o orçamento, a segunda precisa ser bloqueada ANTES do transporte.
+
+    A versão anterior era flaky: o transporte falso retornava instantaneamente,
+    a primeira execução corrigia a reserva para o custo real e só depois a
+    segunda thread às vezes chegava ao ledger — nesse cenário as chamadas eram
+    sequenciais e ambas podiam caber legitimamente. Aqui a primeira chamada é
+    mantida aberta até a outra tentativa terminar a decisão de reserva.
+    """
     with tempfile.TemporaryDirectory() as tmp:
         ledger_path = os.path.join(tmp, "ledger.json")
         ledger = UsageLedger(ledger_path)
@@ -587,12 +590,31 @@ def test_concorrencia_perto_do_teto_so_uma_reserva_vence() -> None:
             system=_SYSTEM_PROMPT, prompt=prompt_estimado,
             max_output_tokens=RUNNER_PATCH_MAX_OUTPUT_TOKENS,
         )
-        # "Saldo próximo do teto": orçamento cabe UMA reserva confortavelmente,
-        # mas não cabe DUAS — a corrida real que F8-C fecha.
         orcamento = custo_unitario * 1.5
 
+        primeira_entrou = threading.Event()
+        uma_tentativa_finalizou = threading.Event()
+        liberar_primeira = threading.Event()
+        lock_primeiro = threading.Lock()
+        houve_primeira = {"valor": False}
+
+        class _TransportQueSeguraPrimeira(_CountingTransport):
+            def send(self, request: Request) -> TransportResponse:
+                self.calls += 1
+                self.last_request = request
+                with lock_primeiro:
+                    sou_primeira = not houve_primeira["valor"]
+                    if sou_primeira:
+                        houve_primeira["valor"] = True
+                if sou_primeira:
+                    primeira_entrou.set()
+                    assert liberar_primeira.wait(timeout=5), "a primeira chamada não foi liberada pelo teste"
+                return self.response
+
         transportes = [
-            _CountingTransport(response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}]))
+            _TransportQueSeguraPrimeira(
+                response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}])
+            )
             for _ in range(2)
         ]
         resultados: list[str] = []
@@ -605,18 +627,27 @@ def test_concorrencia_perto_do_teto_so_uma_reserva_vence() -> None:
                 transport=transportes[indice],
             )
             resultados.append(outcome.status)
+            uma_tentativa_finalizou.set()
 
         threads = [threading.Thread(target=tentar, args=(i,)) for i in range(2)]
         for t in threads:
             t.start()
+
+        assert primeira_entrou.wait(timeout=5), "nenhuma chamada chegou ao transporte"
+        # A primeira está deliberadamente presa dentro do transporte. Logo,
+        # quem consegue finalizar agora só pode ser a segunda tentativa:
+        # ela deve ter recebido BLOCKED na reserva, sem chamada paga.
+        assert uma_tentativa_finalizou.wait(timeout=5), "a segunda tentativa não concluiu a reserva"
+        liberar_primeira.set()
+
         for t in threads:
-            t.join()
+            t.join(timeout=5)
+            assert not t.is_alive(), "thread de teste ficou presa"
 
         chamadas_reais = sum(t.calls for t in transportes)
-        assert chamadas_reais == 1, f"no máximo UMA chamada paga pode vencer a corrida: {chamadas_reais}"
+        assert chamadas_reais == 1, f"no máximo UMA chamada simultânea pode vencer a corrida: {chamadas_reais}"
         assert sorted(resultados) == ["blocked", "ok"], resultados
     print("OK  test_concorrencia_perto_do_teto_so_uma_reserva_vence")
-
 
 # ---------------------------------------------------------------------------
 # Issue #144 — edição segura por trecho/âncora em arquivo grande.
