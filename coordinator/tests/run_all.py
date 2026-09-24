@@ -49,8 +49,10 @@ from . import (
     test_worker_bridge_workflow_security,
     test_worker_commands,
     test_worker_ops,
+    test_worker_registry_human_vs_api,
     test_worker_registry_real,
     test_workflow_security,
+    test_zero_auto_merge,
 )
 
 MODULOS = [
@@ -77,14 +79,18 @@ MODULOS = [
     test_coordinator_v3,
     test_coordinator_v3_round3,
     test_coordinator_v3_round4,
+    # Issue #258: checkpoint manual não pode consumir slot api_runner do
+    # Worker Bridge — registrado junto do resto de observe()/checkpoint.
+    test_worker_registry_human_vs_api,
     test_openai_transport,
     test_openai_auditor,
     test_scheduler,
     test_source_pack,
-    # Auto-reparo técnico OpenAI: política, anti-loop, escopo e identidade
-    # de auto-merge também entram na suíte que o próprio reparo roda antes
-    # de publicar qualquer branch.
+    # Auto-reparo técnico OpenAI: política, anti-loop e escopo também entram
+    # na suíte que o próprio reparo roda antes de publicar qualquer branch.
     test_auto_repair,
+    # Issue #257: zero auto-merge em todo o código da coordenação.
+    test_zero_auto_merge,
     # Issue #105 (Fases B-G): registrados a partir da Fase G. Até aqui
     # estes módulos rodavam só standalone, o que deixava a allowlist
     # `coordinator-suite` (o único comando de validação que o próprio
