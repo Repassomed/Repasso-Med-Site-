@@ -4299,6 +4299,16 @@
       "output_tokens": 132,
       "tier": "FAST",
       "timestamp": "2026-09-24T05:24:36.166478+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.111552,
+      "event_key": "runner-task:cleanup-como-estudar-histologia-i-practica--bridge-1b0d7998089e",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T05:24:47.601482+00:00"
     }
   ]
 }
