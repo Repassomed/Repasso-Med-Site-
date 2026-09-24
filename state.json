@@ -114,10 +114,10 @@
       "guard_dispatch_status": "DISPATCHED",
       "guard_dispatched_pr": 164,
       "pr_number": 164,
-      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/semiologia-ii-b07-framingham-r3'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "reason": "PR #164 mergeada por Jos\u00e9; reconcilia\u00e7\u00e3o autom\u00e1tica confirmada.",
       "reserved_at": "2026-09-23T23:44:32.756098+00:00",
-      "status": "NEEDS-AUDIT",
-      "updated_at": "2026-09-23T23:46:09.983601+00:00",
+      "status": "DONE",
+      "updated_at": "2026-09-24T04:07:30.541818+00:00",
       "worker_id": "claude-worker-1"
     },
     {
