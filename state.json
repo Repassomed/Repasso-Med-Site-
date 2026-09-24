@@ -6355,6 +6355,16 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-24T21:44:17.431563+00:00"
+    },
+    {
+      "estimated_cost_usd": -0.050722,
+      "event_key": "runner-task:cleanup-como-estudar-guarani--bridge-55e34a454aa8",
+      "input_tokens": 0,
+      "kind": "correction",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T21:45:15.149376+00:00"
     }
   ]
 }
