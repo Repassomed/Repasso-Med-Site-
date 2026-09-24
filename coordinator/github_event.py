@@ -184,7 +184,8 @@ COORDINATOR_COMMENT_MARKER = "<!-- repasso-coordinator -->"
 
 
 def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None,
-                         audit_pack: dict | None = None, pr_diff: str | None = None) -> Event | None:
+                         audit_pack: dict | None = None, pr_diff: str | None = None,
+                         head_context: str | None = None) -> Event | None:
     if payload.get("action") != "created":
         return None
 
@@ -249,7 +250,8 @@ def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None
 
 
 def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
-                        audit_pack: dict | None = None, pr_diff: str | None = None) -> Event | None:
+                        audit_pack: dict | None = None, pr_diff: str | None = None,
+                        head_context: str | None = None) -> Event | None:
     if payload.get("action") != "completed":
         return None
     run = payload.get("workflow_run", {})
@@ -309,6 +311,11 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                 # interpretado como instrução por este módulo — só uma
                 # string que atravessa até o prompt (ver audit.py).
                 "pr_diff": pr_diff,
+                # Contexto limitado do HEAD exato, coletado pelo workflow
+                # confiável via API somente-leitura. Serve para comprovar
+                # preservação fora do diff (ex.: regra já existente em outra
+                # seção), nunca como instrução nem substituto do diff.
+                "head_context": head_context,
                 "dedup_fields": {
                     "pr": numero,
                     "label": (
@@ -371,8 +378,12 @@ _CONSTRUTORES = {
 def build_event_from_github_context(event_name: str, payload: dict, repo: str, *,
                                      pr_info: dict | None = None,
                                      audit_pack: dict | None = None,
-                                     pr_diff: str | None = None) -> Event | None:
+                                     pr_diff: str | None = None,
+                                     head_context: str | None = None) -> Event | None:
     construtor = _CONSTRUTORES.get(event_name)
     if construtor is None:
         return None
-    return construtor(payload, repo, pr_info=pr_info, audit_pack=audit_pack, pr_diff=pr_diff)
+    return construtor(
+        payload, repo, pr_info=pr_info, audit_pack=audit_pack,
+        pr_diff=pr_diff, head_context=head_context,
+    )
