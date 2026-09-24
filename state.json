@@ -167,13 +167,13 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "cleanup-como-estudar-guarani",
+      "current_task": null,
       "display_name": "Claude Worker 2",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T16:04:02.942870+00:00",
+      "last_heartbeat": "2026-09-24T16:05:23.461564+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "BUSY",
+      "status": "OFFLINE",
       "type": "api_runner",
       "worker_id": "claude-worker-2"
     },
