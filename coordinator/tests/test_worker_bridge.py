@@ -2174,7 +2174,7 @@ def test_audit_fix_terceira_falha_operacional_encerra_parecer_sem_perder_a_pr() 
     print("OK  test_audit_fix_terceira_falha_operacional_encerra_parecer_sem_perder_a_pr")
 
 
-def test_audit_fix_sem_alteracao_declarada_encerra_parecer_na_hora() -> None:
+def test_audit_fix_sem_alteracao_declarada_entra_no_retry_limitado() -> None:
     store, _ = _store_needs_audit_para_fix()
     reserva = store.reservar_correcao_apos_auditoria(
         "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
@@ -2186,17 +2186,19 @@ def test_audit_fix_sem_alteracao_declarada_encerra_parecer_na_hora() -> None:
         "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
         execution_task_id=reserva.record.execution_task_id or "",
         reason="o modelo não produziu nenhuma alteração; a regra X já está no bloco 2",
-        max_execution_failures=3, esgotar_parecer=True,
+        max_execution_failures=3,
     )
     assert falha.reservado and falha.record is not None
     assert falha.record.status == task_runtime.RUNTIME_NEEDS_AUDIT
-    assert falha.record.audit_fix_execution_failures == 3
-    assert not store.reservar_correcao_apos_auditoria(
+    assert falha.record.audit_fix_execution_failures == 1
+    segunda = store.reservar_correcao_apos_auditoria(
         "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_2,
         audit_fingerprint="fp-nada", audit_findings="confirmar regra X",
         max_attempts=2, max_execution_failures=3, token="727272727272",
-    ).reservado
-    print("OK  test_audit_fix_sem_alteracao_declarada_encerra_parecer_na_hora")
+    )
+    assert segunda.reservado and segunda.record is not None
+    assert segunda.record.worker_id == bridge_workers.BRIDGE_WORKER_2
+    print("OK  test_audit_fix_sem_alteracao_declarada_entra_no_retry_limitado")
 
 
 def test_merge_reconcilia_failed_legado_de_audit_fix_mas_nao_failed_comum() -> None:
@@ -2244,7 +2246,7 @@ def test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror() -> None:
     print("OK  test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror")
 
 
-def test_audit_fix_integracao_sem_alteracao_mantem_pr_e_nao_repete() -> None:
+def test_audit_fix_integracao_sem_alteracao_mantem_pr_e_tenta_outro_worker() -> None:
     from coordinator.runner_generate import GenerateOutcome
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -2284,15 +2286,23 @@ def test_audit_fix_integracao_sem_alteracao_mantem_pr_e_nao_repete() -> None:
         reg2 = store.get("infra-bridge-teste")
         assert reg2.status == task_runtime.RUNTIME_NEEDS_AUDIT
         assert reg2.pr_number == 901 and reg2.checkpoint_commit == reg1.checkpoint_commit
-        assert any("não será repetido" in n for n in segundo.notes), segundo.notes
+        assert reg2.audit_fix_execution_failures == 1
+        assert any("retry operacional 1/3" in n for n in segundo.notes), segundo.notes
+        worker_primeira_tentativa = reg2.last_audit_fix_worker_id
+        assert worker_primeira_tentativa
 
-        terceiro, *_ = _ciclo(
+        terceiro, _c3, store, registry = _ciclo(
             tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
             api=api, gerar_patch=_sem_alteracao, nome_workdir="work-nochange-3",
         )
-        assert terceiro.action != "AUDIT_FIX", terceiro
-        assert len(chamadas) == 1, "o mesmo parecer nunca é repetido depois de 'sem alteração'"
-    print("OK  test_audit_fix_integracao_sem_alteracao_mantem_pr_e_nao_repete")
+        assert terceiro.action == "AUDIT_FIX", terceiro
+        reg3 = store.get("infra-bridge-teste")
+        assert reg3.audit_fix_execution_failures == 2
+        assert reg3.last_audit_fix_worker_id != worker_primeira_tentativa, (
+            "retry sem novo HEAD deve preferir outro worker quando há alternativa"
+        )
+        assert len(chamadas) == 2
+    print("OK  test_audit_fix_integracao_sem_alteracao_mantem_pr_e_tenta_outro_worker")
 
 
 def test_audit_fix_sucesso_limpa_falhas_operacionais() -> None:
@@ -2846,9 +2856,9 @@ def main() -> int:
         test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado,
         test_audit_fix_falha_operacional_permite_retry_do_mesmo_parecer_sem_nova_rodada,
         test_audit_fix_terceira_falha_operacional_encerra_parecer_sem_perder_a_pr,
-        test_audit_fix_sem_alteracao_declarada_encerra_parecer_na_hora,
+        test_audit_fix_sem_alteracao_declarada_entra_no_retry_limitado,
         test_merge_reconcilia_failed_legado_de_audit_fix_mas_nao_failed_comum,
-        test_audit_fix_integracao_sem_alteracao_mantem_pr_e_nao_repete,
+        test_audit_fix_integracao_sem_alteracao_mantem_pr_e_tenta_outro_worker,
         test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror,
         test_audit_fix_sucesso_limpa_falhas_operacionais,
         test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes,
