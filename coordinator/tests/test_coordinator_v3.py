@@ -795,6 +795,16 @@ def test_openai_privacy_redige_pii_antes_da_rede() -> None:
     print("OK  test_openai_privacy_redige_pii_antes_da_rede")
 
 
+def test_openai_privacy_pii_no_diff_continua_fail_closed() -> None:
+    auxiliar = redact_pii_for_audit("Contexto auxiliar: repasso.med@gmail.com")
+    assert openai_privacy_preflight(auxiliar).safe
+    diff_material = "+<p>novo contato: pessoa.real@example.com</p>"
+    resultado = openai_privacy_preflight(auxiliar + "\n" + diff_material)
+    assert not resultado.safe
+    assert any("e-mail" in r for r in resultado.reasons)
+    print("OK  test_openai_privacy_pii_no_diff_continua_fail_closed")
+
+
 def test_openai_privacy_segredo_continua_fail_closed_apos_redacao_pii() -> None:
     chave = "sk-ant-" + "A" * 24
     limpo = redact_pii_for_audit(f"Contato repasso.med@gmail.com; chave {chave}")
@@ -827,6 +837,7 @@ def main() -> int:
         test_audit_prompt_scopes_question_law_to_changed_content,
         test_both_auditors_receive_exact_head_context_as_untrusted_evidence,
         test_openai_privacy_redige_pii_antes_da_rede,
+        test_openai_privacy_pii_no_diff_continua_fail_closed,
         test_openai_privacy_segredo_continua_fail_closed_apos_redacao_pii,
         test_parse_decision_merge_ready,
         test_parse_decision_needs_fix,
