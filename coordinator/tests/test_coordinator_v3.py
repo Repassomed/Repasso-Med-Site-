@@ -37,9 +37,16 @@ from coordinator.events import EventType
 from coordinator.github_event import build_event_from_github_context
 from coordinator.__main__ import _gravar_comment_out
 from coordinator.observe import observe
+from coordinator.openai_config import OpenAIAuditorConfig
 from coordinator.worker_registry import Worker, WorkerState
 
 REPO = "Repassomed/Repasso-Med-Site-"
+
+_OPENAI_MERGE_READY = (
+    "DECISION: MERGE-READY\nRISK: NORMAL\nREQUIRES_ESCALATION: false\n"
+    "ESCALATION_REASON: -\nRATIONALE: revisão final aprovada.\n"
+    "FINDINGS:\nDIDACTIC_FINDINGS:\n"
+)
 
 
 def _workers() -> list[Worker]:
@@ -424,8 +431,17 @@ def _observar_pr_materia(*, head_sha: str, body: str, audit_pack: dict | None = 
     ev = build_event_from_github_context("workflow_run", payload, REPO, pr_info=pr_info,
                                           audit_pack=audit_pack, pr_diff=pr_diff)
     cfg = Config(enabled=True, mode=ACTIVE_SUPERVISED_MODE if audit_mode else ALLOWED_MODE)
-    return observe(ev, config=cfg, dedup=dedup, ledger=ledger, workers=_workers(),
-                    transport=transport, audit_mode=audit_mode)
+    # Produção exige Anthropic + OpenAI para MERGE-READY. Estes testes V3
+    # focam a primeira auditoria/Lei das Questões, então simulam um OpenAI
+    # independente que aprova quando o pipeline chega até ele.
+    t_openai = _TransporteContador(_RespostaFalsa(_OPENAI_MERGE_READY))
+    openai_ledger = UsageLedger(os.path.join(tempfile.mkdtemp(), "usage-openai.json"))
+    return observe(
+        ev, config=cfg, dedup=dedup, ledger=ledger, workers=_workers(),
+        transport=transport, audit_mode=audit_mode,
+        openai_config=OpenAIAuditorConfig(enabled=True),
+        openai_ledger=openai_ledger, openai_transport=t_openai,
+    )
 
 
 def test_guard_hard_fail_yields_needs_fix_with_zero_api_cost() -> None:
