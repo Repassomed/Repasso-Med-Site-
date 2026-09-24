@@ -691,6 +691,9 @@ def test_system_prompt_declares_diff_and_body_as_untrusted_data() -> None:
         assert "MANUTENCAO-DIDATICA-REPASSO-MED.md" in prompt
         assert "frio" in prompt and "genérico" in prompt
         assert "revisão adversarial" in prompt
+        assert "MATERIALMENTE relevante" in prompt
+        assert "envolve_questoes=false" in prompt
+        assert "não reprove apenas por não receber a matriz completa do banco" in prompt
     print("OK  test_system_prompt_declares_diff_and_body_as_untrusted_data")
 
 
