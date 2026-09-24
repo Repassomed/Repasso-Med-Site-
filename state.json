@@ -1024,6 +1024,31 @@
       "summary": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
       "task_id": "cleanup-como-estudar-guarani",
       "worker_id": "claude-worker-2"
+    },
+    {
+      "category": "guard",
+      "commit_sha": "460b522f2ef55a42acdeb1463d56d0f1865cffd7",
+      "component": "guard",
+      "error_id": "ERR-3F5C67B5E1",
+      "error_type": "hard-fail",
+      "fingerprint": "3f5c67b5e19aae9af160",
+      "first_seen": "2026-09-24T16:10:28.133241+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "4144214cdac64dd8a5825be44ed8274d",
+      "issue_sync_updated_at": "2026-09-24T16:10:28.133241+00:00",
+      "last_evidence_hash": "d0c320e5af05491a19ac",
+      "last_seen": "2026-09-24T16:10:28.133241+00:00",
+      "occurrence_count": 1,
+      "pr_number": 243,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36025393964",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:243.",
+      "task_id": "pr:243",
+      "worker_id": null
     }
   ]
 }
