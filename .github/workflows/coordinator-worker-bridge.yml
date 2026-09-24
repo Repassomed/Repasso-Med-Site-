@@ -144,6 +144,23 @@ jobs:
       github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
       (
         (github.event_name == 'workflow_dispatch' && github.actor == 'Repassomed') ||
+        # Issue #259 — passo "Acionar o Worker Bridge explicitamente" de
+        # coordinator-observe.yml. Quando o próprio OBSERVE foi iniciado
+        # por workflow_dispatch (o caminho novo que fecha a cadeia
+        # Heartbeat -> Guard -> OBSERVE), a conclusão dele fica marcada
+        # pela mesma restrição de anti-recursão do GITHUB_TOKEN e o
+        # listener `workflow_run` abaixo nunca dispararia — mesmo motivo
+        # documentado no comentário do passo em coordinator-observe.yml.
+        # `github-actions[bot]` é a identidade FIXA de qualquer chamada
+        # feita com o GITHUB_TOKEN automático de um job deste próprio
+        # repositório — nunca um ator externo/de fork, que não tem
+        # permissão de disparar workflow_dispatch aqui. Exige
+        # active-supervised, igual aos outros três caminhos automáticos
+        # (schedule/push/workflow_run) — só o caminho humano
+        # (`Repassomed`) continua podendo forçar mesmo fora desse modo,
+        # sem mudança nenhuma nesse comportamento.
+        (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]' &&
+         vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised') ||
         (github.event_name == 'schedule' &&
          vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised') ||
         (github.event_name == 'push' &&

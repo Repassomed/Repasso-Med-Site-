@@ -56,10 +56,23 @@ def test_only_safe_triggers_are_present() -> None:
     """issue_comment/workflow_run continuam confiáveis; schedule também é
     seguro porque sempre executa a versão da branch padrão. O job com
     segredos é explicitamente proibido de rodar em schedule; o heartbeat
-    tem job próprio sem Anthropic/OpenAI."""
+    tem job próprio sem Anthropic/OpenAI.
+
+    Issue #259: `workflow_dispatch:` passou a ser um gatilho SEGURO
+    também — diferente do `pull_request`/`push` continuarem proibidos
+    (que rodam o ARQUIVO do workflow na versão de quem os disparou),
+    `workflow_dispatch` SEMPRE roda a versão do arquivo do `ref` que foi
+    explicitamente pedido no dispatch (garantia da própria plataforma,
+    documentada — mesma usada por guard.yml para o par Bridge -> Guard).
+    O passo que dispara este dispatch (guard.yml) sempre pede a branch
+    padrão explicitamente — nunca um ref controlado por PR. Ver
+    test_workflow_dispatch_guard_run_id_is_strictly_validated e
+    test_workflow_dispatch_restricted_to_internal_actor em
+    test_heartbeat_guard_observe_chain.py para as travas do input."""
     secao = _secao_on(_ler())
     assert "issue_comment:" in secao
     assert "workflow_run:" in secao
+    assert "workflow_dispatch:" in secao
     assert "schedule:" not in secao
     heartbeat = _secao_on(_ler_heartbeat())
     assert 'cron: "19,49 * * * *"' in heartbeat
@@ -69,7 +82,7 @@ def test_only_safe_triggers_are_present() -> None:
     assert "workflow_run:" not in heartbeat
     assert "issue_comment:" not in heartbeat
     assert "pull_request" not in heartbeat and "workflow_dispatch:" not in heartbeat
-    for proibido in ("push:", "workflow_dispatch:", "pull_request_target:"):
+    for proibido in ("push:", "pull_request_target:"):
         assert proibido not in secao, f"{proibido!r} não devia estar nos gatilhos deste workflow"
     print("OK  test_only_safe_triggers_are_present")
 
@@ -259,19 +272,26 @@ def _secao_job_permissions(texto: str) -> str:
     return texto[idx:fim]
 
 
-def test_actions_read_present_actions_write_absent() -> None:
+def test_actions_write_is_scoped_to_download_and_dispatch_only() -> None:
     """Achado do "ACHADO ADICIONAL"/"PACOTE CONSOLIDADO" (PR #97): o job
     baixa artifact de OUTRA execução (actions/download-artifact@v4 com
-    run-id do workflow_run observado) — isso exige `actions: read`
-    (permissão omitida vira 'none' no GitHub Actions). O job nunca cria
-    nem apaga artifact, então `actions: write` tem que continuar ausente
-    — mais permissão do que o necessário, ainda mais rodando ao lado de
-    ANTHROPIC_API_KEY/GITHUB_TOKEN, é exatamente o que a auditoria de
-    segurança (Claude 1) já cobrou para os outros escopos."""
+    run-id do Guard observado) — precisa no mínimo de `actions: read`
+    (permissão omitida vira 'none' no GitHub Actions).
+
+    Issue #259: `actions: write` (antes só :read) passou a ser exigido
+    também pelo novo passo final "Acionar o Worker Bridge explicitamente"
+    (actions.createWorkflowDispatch) — write inclui read, então o download
+    continua funcionando. Este job continua NUNCA cancelando, apagando ou
+    reexecutando um run alheio: só cria UM workflow_dispatch explícito, e
+    só para coordinator-worker-bridge.yml — nunca para guard.yml (isso
+    fecharia um ciclo OBSERVE -> Guard que não existe e não pode existir)."""
     secao = _secao_job_permissions(_ler())
-    assert "actions: read" in secao, "download-artifact@v4 cross-run precisa de actions:read"
-    assert "actions: write" not in secao, "este job só consome artifact, nunca cria/apaga — sem actions:write"
-    print("OK  test_actions_read_present_actions_write_absent")
+    assert "actions: write" in secao, "download-artifact + createWorkflowDispatch (Bridge) precisam de actions:write"
+    assert "actions: read" not in secao, "actions:write já inclui read — não duplicar a permissão"
+    texto = _ler()
+    for proibido in ("cancelWorkflowRun", "deleteWorkflowRun", "reRunWorkflow"):
+        assert proibido not in texto, f"{proibido!r}: actions:write não pode virar mais do que download+dispatch"
+    print("OK  test_actions_write_is_scoped_to_download_and_dispatch_only")
 
 
 def test_download_artifact_step_is_inside_the_permissioned_job() -> None:
@@ -289,11 +309,16 @@ def test_download_artifact_step_is_inside_the_permissioned_job() -> None:
 
 def test_guard_audit_pack_download_step_exists() -> None:
     """Bloqueador 5: precisa existir um passo que baixe o artifact do
-    Guard do run OBSERVADO (run-id do workflow_run, não do próprio job)."""
+    Guard do run OBSERVADO (run-id do workflow_run, não do próprio job).
+
+    Issue #259: o run-id agora também pode vir de `steps.guardrun.
+    outputs.run_id` — o run REAL do Guard, resolvido pela API a partir do
+    input `guard_run_id` (nunca do input cru direto) quando este OBSERVE
+    foi acionado por workflow_dispatch em vez do workflow_run de sempre."""
     texto = _ler()
     idx = texto.index("uses: actions/download-artifact@v4")
     trecho = texto[idx: idx + 400]
-    assert "run-id: ${{ github.event.workflow_run.id }}" in trecho
+    assert "run-id: ${{ github.event.workflow_run.id || steps.guardrun.outputs.run_id }}" in trecho
     assert "name: repasso-guard-audit-pack" in trecho
     print("OK  test_guard_audit_pack_download_step_exists")
 
@@ -337,16 +362,16 @@ def test_malicious_pr_editing_coordinator_cannot_run_with_secret() -> None:
     print("OK  test_malicious_pr_editing_coordinator_cannot_run_with_secret")
 
 
-def test_comment_write_permissions_are_scoped_and_actions_write_still_absent() -> None:
+def test_comment_write_permissions_are_scoped() -> None:
     """O job trusted precisa de issues:write + pull-requests:write para
-    publicar o Cartão de Merge numa PR. Isso não autoriza merge por si só,
-    e actions:write continua ausente do job de auditoria."""
+    publicar o Cartão de Merge numa PR. Isso não autoriza merge por si só.
+    `actions: write` (Issue #259) é coberto e escopado separadamente por
+    test_actions_write_is_scoped_to_download_and_dispatch_only."""
     secao = _secao_job_permissions(_ler())
     assert "issues: write" in secao
     assert "pull-requests: write" in secao
     assert "pull-requests: read" not in secao
-    assert "actions: write" not in secao
-    print("OK  test_comment_write_permissions_are_scoped_and_actions_write_still_absent")
+    print("OK  test_comment_write_permissions_are_scoped")
 
 
 def test_merge_card_comment_step_only_runs_when_comment_file_exists() -> None:
@@ -632,14 +657,14 @@ def main() -> int:
         test_secret_only_exists_inside_a_single_gated_job,
         test_job_gate_checks_enabled_and_trusted_comment_actor,
         test_job_fails_when_coordinator_cli_errors,
-        test_actions_read_present_actions_write_absent,
+        test_actions_write_is_scoped_to_download_and_dispatch_only,
         test_download_artifact_step_is_inside_the_permissioned_job,
         test_guard_context_is_downloaded_before_pr_lookup_and_validated,
         test_malicious_pr_editing_coordinator_cannot_run_with_secret,
         test_workers_from_tasks_json_is_wired_into_the_real_invocation,
         test_guard_audit_pack_download_step_exists,
         test_run_step_forwards_enabled_mode_and_pilot_env_to_the_cli,
-        test_comment_write_permissions_are_scoped_and_actions_write_still_absent,
+        test_comment_write_permissions_are_scoped,
         test_merge_card_comment_step_only_runs_when_comment_file_exists,
         test_comment_out_flag_is_wired_into_the_real_invocation,
         test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli,
