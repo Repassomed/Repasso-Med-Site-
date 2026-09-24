@@ -182,6 +182,8 @@ def test_pr_needs_audit_carries_head_sha_audit_pack_and_body() -> None:
         head_context="### HEAD CONTEXT\nregra preservada fora do diff",
     )
     assert ev.payload["dedup_fields"]["head_sha"] == "f00dcafe"
+    from coordinator.github_event import AUDIT_POLICY_VERSION
+    assert ev.payload["dedup_fields"]["audit_policy_version"] == AUDIT_POLICY_VERSION
     assert ev.payload["audit_pack"] == ap
     assert "regra preservada fora do diff" in ev.payload["head_context"]
     assert ev.payload["body"].startswith("- **Área:**")
@@ -297,7 +299,7 @@ def test_comment_with_coordinator_marker_is_ignored_even_from_trusted_actor() ->
 
 
 def test_rendered_merge_card_always_carries_the_marker() -> None:
-    from coordinator.github_event import COORDINATOR_COMMENT_MARKER
+    from coordinator.github_event import AUDIT_POLICY_VERSION, COORDINATOR_COMMENT_MARKER
 
     dados = merge_card.MergeCardInput(
         pr_number=1, titulo="x", area="materia", guard_result="APROVADO",
@@ -306,6 +308,7 @@ def test_rendered_merge_card_always_carries_the_marker() -> None:
     )
     texto = merge_card.render_merge_card(dados)
     assert texto.startswith(COORDINATOR_COMMENT_MARKER)
+    assert f"**Política de auditoria:** `{AUDIT_POLICY_VERSION}`" in texto
     assert "**HEAD auditado:** `abcdef1234567890`" in texto
     print("OK  test_rendered_merge_card_always_carries_the_marker")
 
