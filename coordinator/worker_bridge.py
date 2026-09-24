@@ -1105,6 +1105,7 @@ def retomar_pr_e_guard(
         base_branch=base_branch,
         runtime_store=runtime_store,
         status_runtime=registro.status,
+        question_report=registro.question_report,
     )
     fresco = runtime_store.get(alvo) or registro
     return BridgeOutcome(
@@ -1437,6 +1438,7 @@ def executar_correcao_de_auditoria(
         canonical_task_id, status=status_runtime, worker_id=worker_id,
         execution_task_id=execution_task_id, reason=motivo_resultado,
         checkpoint_commit=checkpoint, branch=branch_final,
+        question_report=dispatch.generation_report,
     )
     registro_final = runtime_store.get(canonical_task_id) or registro
     liberacao = liberar_worker_apos_resultado(
@@ -1737,6 +1739,7 @@ def executar_ciclo(
         canonical_task_id, status=status_runtime, worker_id=worker_id,
         execution_task_id=execution_task_id, reason=motivo_resultado,
         checkpoint_commit=checkpoint, branch=branch_final,
+        question_report=dispatch.generation_report,
     ):
         notes.append(
             "compare-and-set recusou o registro do resultado — outra execução alterou o estado "
