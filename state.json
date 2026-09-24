@@ -226,11 +226,11 @@
       "guard_dispatched_pr": null,
       "last_audit_findings": "",
       "last_audit_fix_fingerprint": null,
-      "pr_number": null,
+      "pr_number": 192,
       "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/cleanup-como-estudar-anatomia-patologica-ii'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
       "reserved_at": "2026-09-24T04:15:27.357790+00:00",
       "status": "NEEDS-AUDIT",
-      "updated_at": "2026-09-24T04:16:47.093577+00:00",
+      "updated_at": "2026-09-24T04:16:53.766657+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
