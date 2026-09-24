@@ -128,11 +128,48 @@ jobs:
                   latestGuardAt >= headCommittedAt;
 
                 if (blockedOnCurrentHead) {
+                  // Um HARD FAIL objetivo continua congelando o mesmo HEAD,
+                  // EXCETO quando a própria implementação confiável do Guard
+                  // na main mudou depois daquela reprovação. Nesse caso o
+                  // resultado antigo ficou obsoleto e merece exatamente um
+                  // novo dispatch sob o verificador novo (ex.: correção de
+                  // falso positivo de assets), sem exigir clique manual.
+                  const caminhosGuard = [
+                    'tools/qa/guard',
+                    '.github/workflows/guard.yml',
+                  ];
+                  let guardChangedAfterFailure = false;
+                  for (const path of caminhosGuard) {
+                    const { data: commitsGuard } = await github.rest.repos.listCommits({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      sha: context.payload.repository.default_branch,
+                      path,
+                      per_page: 1,
+                    });
+                    const ultimo = commitsGuard && commitsGuard.length ? commitsGuard[0] : null;
+                    const dataGuardText = ultimo && ultimo.commit
+                      ? ((ultimo.commit.committer && ultimo.commit.committer.date) ||
+                         (ultimo.commit.author && ultimo.commit.author.date) || '')
+                      : '';
+                    const guardAt = Date.parse(dataGuardText);
+                    if (Number.isFinite(guardAt) && Number.isFinite(latestGuardAt) && guardAt > latestGuardAt) {
+                      guardChangedAfterFailure = true;
+                      break;
+                    }
+                  }
+
+                  if (!guardChangedAfterFailure) {
+                    core.info(
+                      `Reconciliação: PR #${pr.number} está bloqueada pelo Guard no HEAD ${pr.head.sha}; ` +
+                      'pulando até o HEAD ou a implementação do Guard na main mudar.'
+                    );
+                    continue;
+                  }
                   core.info(
-                    `Reconciliação: PR #${pr.number} está bloqueada pelo Guard no HEAD ${pr.head.sha}; ` +
-                    'pulando para a próxima PR até o HEAD mudar.'
+                    `Reconciliação: PR #${pr.number} teve Guard vermelho no mesmo HEAD, mas o Guard ` +
+                    'da main mudou depois da reprovação; será revalidada uma vez pelo verificador novo.'
                   );
-                  continue;
                 }
               }
 
