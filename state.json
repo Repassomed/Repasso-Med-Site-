@@ -849,6 +849,31 @@
       "summary": "resposta do modelo n\u00e3o \u00e9 um JSON v\u00e1lido \u2014 A resposta atingiu o teto de sa\u00edda do Runner (8000 tokens), portanto \u00e9 tratada como truncada \u2014 nunca aplicada parcialmente.",
       "task_id": "toxicologia-provas-issue102-r2-sourcepack",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "coordinator",
+      "commit_sha": null,
+      "component": "coordinator",
+      "error_id": "ERR-4367D6D155",
+      "error_type": "unexpected-exception",
+      "fingerprint": "4367d6d155463824d2de",
+      "first_seen": "2026-09-24T14:35:14.106833+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "8a95e791ba0340448b53bf20923c7d45",
+      "issue_sync_updated_at": "2026-09-24T14:35:14.106833+00:00",
+      "last_evidence_hash": "98aa047c03fe043cf2b5",
+      "last_seen": "2026-09-24T14:35:14.106833+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36013780674",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "summary": "RuntimeError: n\u00e3o consegui decidir o claim de 'Repassomed/Repasso-Med-Site-:GUARD_STATE_CHANGE:pr:229:9ece5cb0b3b00949' em 3 tentativa(s); \u00faltimo erro: remote: Internal Server Error        \nremote: Request ID D040:256ACC:1F9435:209436:6AB53520        \nremote: Time 2026-09-24T14:35:13Z\nTo https://github.com/Repassomed/Repasso-Med-Site-.git\n ! [remote rejected] HEAD -> coordinator-state-dedup (Internal Server Error)\nerror: failed to push some refs to 'https://github.com/Repassomed/Repasso-Med-Site-.git'\n",
+      "task_id": null,
+      "worker_id": null
     }
   ]
 }
