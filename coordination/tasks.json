@@ -1192,7 +1192,8 @@
         "coordinator/tests/run_all.py",
         "coordination/source-packs/fisiopatologia-ii-issue101-v1.md",
         "coordination/source-packs/toxicologia-issue102-v1.md",
-        "coordination/tasks.json"
+        "coordination/tasks.json",
+        "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md"
       ],
       "objetivo": "Criar mecanismo de source/context pack rastreável, limitado e fail-closed para tarefas que dependem de fontes além do allowed_file. Deve preservar proveniência, limites de tamanho/token e bloquear antes de chamada paga quando fonte obrigatória estiver ausente. A integração real com Google Drive só pode ser ativada quando existir autenticação segura; nunca hardcode de credencial.",
       "fonte": "Issue #158 · Source Map #89",
@@ -1209,7 +1210,7 @@
       "pr": null,
       "commit": null,
       "issue": 158,
-      "notas": "Registrada para não desaparecer. Está BLOCKED porque a estratégia de acesso/autenticação ao Drive e o escopo de integração precisam ser resolvidos em subtarefa segura. Desbloqueia Fisiopatología II #101 e Toxicología #102. Reserva ampliada em PR administrativo separado antes da implementação, conforme Lei 2; necessário para entregar o mesmo source pack ao Worker e aos dois auditores."
+      "notas": "Registrada para não desaparecer. Está BLOCKED porque a estratégia de acesso/autenticação ao Drive e o escopo de integração precisam ser resolvidos em subtarefa segura. Desbloqueia Fisiopatología II #101 e Toxicología #102. Reserva ampliada em PR administrativo separado antes da implementação, conforme Lei 2; necessário para entregar o mesmo source pack ao Worker e aos dois auditores. Reserva ampliada em PR administrativo para incluir o source pack P0 de Semiología II (provas/gabaritos adicionados em 24/09/2026)."
     },
     {
       "id": "global-remover-como-estudar-issue147",
@@ -1953,6 +1954,38 @@
       "risk_level": "ALTO",
       "policy_level": "D",
       "jose_authorized": true
+    },
+    {
+      "id": "semiologia-ii-questoes-exames-p0",
+      "titulo": "P0 — Semiología II: incorporar provas/gabaritos novos e gerar questões baseadas em exame",
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "objetivo": "Inventariar e aproveitar integralmente as novas fontes de prova da pasta Drive de Semiología II/Questões. Priorizar questões reais e núcleos avaliativos comprovados (selección múltiple, COMPLETE, CITE e casos clínicos). Quando a questão integral estiver legível, preservar seu núcleo e gabarito; quando parcial, reconstruir somente com evidência suficiente; quando houver gabarito/foto sem enunciado integral, criar questão baseada em exame apenas se o conceito central e a resposta esperada estiverem seguros. Aplicar a Lei das Questões #100: comparar duplicatas e manter a versão canônica mais completa, registrar fonte/página/imagem/decisão/destino, nunca inventar a resposta correta. Garantir RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA, sem pistas visuais/negrito entregando o gabarito, preservando IDs/annotations e espelho bloco × Banco General.",
+      "fonte": "Drive Site repassomed > Biblioteca > 6 semestre > Semiologia II > Questões; Lei das Questões #100; Lei Científica #86; G0 #87",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "infra-source-context-pack-issue158"
+      ],
+      "branch": "runner/semiologia-ii-questoes-exames-p0",
+      "pr": null,
+      "commit": null,
+      "issue": 67,
+      "notas": "P0 solicitado explicitamente por José em 24/09/2026. Fontes novas: P1 Semiologia 2.pdf (Drive ID 1YL5iZkwBWlhjVQgCy5mO4Px0S6af2eVt), P2 Turma E Semio.pdf (1-duIE59J2t1E-x7_2cLyVww-Q3ieWR_E), gabaritos/fotos (13sgW5SvNL_-hO8UQQT_u1E9JQYyKayUV, 10KmH5xFosW_izSbwJx2xokCVQvFbm4CK, 1WphJ-q5CB-WJVrvVD1XP_05kJNvMTxNK). As imagens confirmam chaves de Fila 1/2, respostas COMPLETE/CITE e casos clínicos; o source pack deve preservar esses vínculos. Relatório obrigatório: detectadas, integrais, parciais, reconstruídas, novas baseadas em exame, duplicadas/canônicas, não aproveitadas e motivo. Resultado NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo pack; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md"
     }
   ]
 }
