@@ -118,6 +118,8 @@ __all__ = [
     "aplicar_heartbeat",
     "StaleCheck",
     "avaliar_stale",
+    "STATUS_COM_HEARTBEAT_ESPERADO",
+    "workers_desatualizados",
     "DEFAULT_STALE_THRESHOLD",
 ]
 
@@ -495,3 +497,40 @@ def avaliar_stale(
         last_heartbeat=worker.last_heartbeat,
         seconds_since=delta_segundos,
     )
+
+
+# Só os status em que um heartbeat continuado é esperado. AVAILABLE/OFFLINE
+# não têm task_id (runner_contract já garante isso na construção) e não
+# "envelhecem" da mesma forma — um worker AVAILABLE há dias não é uma lease
+# órfã, é só um worker ocioso. Auditores/humanos ficam fora deste filtro:
+# ``never_merge``/``can_execute=False`` já os torna irrelevantes para
+# reserva de tarefa.
+STATUS_COM_HEARTBEAT_ESPERADO: frozenset[str] = frozenset({"BUSY", "NEAR_LIMIT", "LIMIT"})
+
+
+def workers_desatualizados(
+    workers: list[WorkerRecord], *, agora: datetime | None = None, limite: timedelta = DEFAULT_STALE_THRESHOLD,
+) -> list[tuple[WorkerRecord, StaleCheck]]:
+    """Aplica ``avaliar_stale`` a cada worker ATIVO (BUSY/NEAR_LIMIT/LIMIT)
+    e devolve só os que estão ``stale`` — PURA, mesma garantia de
+    ``avaliar_stale``: recebe a lista já lida, nunca o registro/store, e
+    não tem nenhum caminho para escrever nada.
+
+    Existe porque ``avaliar_stale`` (Issue #105 Fase B, item 4) foi
+    implementada e testada para "sinalizar heartbeat velho; nunca mudar
+    status sozinha", mas nenhum caminho de produção agregava esse sinal
+    para MÚLTIPLOS workers de uma vez — o sinal existia por worker, mas
+    nada listava quais precisavam de atenção humana. Isto não decide
+    LIMIT/OFFLINE por conta própria (seria exatamente o "inventar
+    disponibilidade" que a Fase B recusa); só reúne o sinal que já existia
+    disperso, para um relatório read-only poder mostrá-lo.
+    """
+    momento = agora or datetime.now(timezone.utc)
+    resultado: list[tuple[WorkerRecord, StaleCheck]] = []
+    for worker in workers:
+        if worker.status not in STATUS_COM_HEARTBEAT_ESPERADO:
+            continue
+        checagem = avaliar_stale(worker, agora=momento, limite=limite)
+        if checagem.stale:
+            resultado.append((worker, checagem))
+    return resultado
