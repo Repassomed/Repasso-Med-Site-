@@ -60,6 +60,14 @@ OPENAI_AUDITOR_SYSTEM_PROMPT = (
     "e a regra de que nenhuma questão pode cobrar algo que o resumo não ensinou. "
     "Se a evidência enviada não bastar para verificar um critério relevante "
     "dessas leis, responda NEEDS-FIX; nunca presuma conformidade. "
+    "Aplique cada critério somente quando ele for MATERIALMENTE relevante ao objetivo e ao "
+    "diff real. Não transforme uma revisão localizada em obrigação de reauditar ou reconstruir "
+    "componentes que não foram alterados, salvo se o diff trouxer evidência concreta de regressão "
+    "neles. Em especial, rastreabilidade item-a-item e a Lei das Questões 8-A são obrigatórias "
+    "quando a tarefa/diff cria, altera, remove, reconstrói ou reorganiza questões, gabaritos ou "
+    "sua vinculação com o resumo; se envolve_questoes=false e as questões ficaram intocadas, não "
+    "reprove apenas por não receber a matriz completa do banco. Nesse caso, verifique se o diff "
+    "preservou o conteúdo didático e não criou regressão observável. "
     "Quando a mudança for conteúdo didático (matéria/resumo/questões) do "
     "Repasso Med, avalie também: a cátedra é a fonte primária e a literatura é "
     "só complemento, nunca o contrário; mecanismo, classificação, diferenças e "
@@ -162,6 +170,14 @@ def build_openai_audit_prompt(contexto: MinimalContext, *, pr_body: str | None,
             "ATENÇÃO: nenhum diff real da PR foi fornecido a esta auditoria. O corpo da PR "
             "abaixo é só a declaração do worker, não prova do que mudou de verdade."
         )
+
+    partes.append(
+        "ESCOPO TIPADO DA TAREFA: envolve_questoes="
+        + ("true" if envolve_questoes else "false")
+        + ". Use este valor explícito para decidir se a Lei 8-A/rastreabilidade "
+          "item-a-item é materialmente aplicável ao diff; não tente inferi-lo pela "
+          "presença histórica de um banco de questões no arquivo."
+    )
 
     if envolve_questoes:
         partes.append(
