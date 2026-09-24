@@ -44,6 +44,25 @@ from .redact import redact
 DEFAULT_BRANCH = "coordinator-state"
 
 
+# Issue #230: o GitHub às vezes devolve 5xx transitório no push da branch de
+# estado ("remote: Internal Server Error"). Corrida comum (lease rejeitado)
+# continua com espera curta; erro do lado do servidor espera mais, com
+# recuo exponencial limitado — nunca um laço sem teto.
+_SINAIS_DE_ERRO_TRANSITORIO = (
+    "internal server error", "502", "503", "504", "bad gateway", "service unavailable",
+    "rpc failed", "timed out", "timeout", "connection reset", "could not resolve host",
+    "early eof", "unexpected disconnect",
+)
+
+
+def _esperar_antes_de_nova_tentativa(tentativa: int, erro: str) -> None:
+    texto = (erro or "").lower()
+    if any(sinal in texto for sinal in _SINAIS_DE_ERRO_TRANSITORIO):
+        time.sleep(min(1.0 * (2 ** tentativa), 8.0))
+    else:
+        time.sleep(0.2 * (tentativa + 1))
+
+
 def _run(repo_dir: str | None, *args: str) -> subprocess.CompletedProcess:
     cmd = ["git"] + (["-C", repo_dir] if repo_dir else []) + list(args)
     return subprocess.run(cmd, capture_output=True, text=True)
@@ -180,7 +199,7 @@ class GitJsonStore:
             shutil.rmtree(workdir, ignore_errors=True)
 
     def update(self, mutate: Callable[[dict], dict], *, message: str,
-               max_attempts: int = 3) -> dict:
+               max_attempts: int = 5) -> dict:
         """Lê o estado atual, aplica ``mutate``, grava e publica.
 
         Se outra execução publicou entre a leitura e a escrita desta (uma
@@ -225,7 +244,7 @@ class GitJsonStore:
                 ultimo_erro = redact(push.stderr)
                 # Corrida com outra execução: descarta e tenta de novo com
                 # um fetch fresco, para incorporar a mudança concorrente.
-                time.sleep(0.2 * (tentativa + 1))
+                _esperar_antes_de_nova_tentativa(tentativa, ultimo_erro)
             finally:
                 shutil.rmtree(workdir, ignore_errors=True)
         raise RuntimeError(
@@ -234,7 +253,7 @@ class GitJsonStore:
         )
 
     def conditional_update(self, evaluate: Callable[[dict], tuple[bool, dict]], *, message: str,
-                            max_attempts: int = 3) -> bool:
+                            max_attempts: int = 5) -> bool:
         """Achado B11 da auditoria independente do PR #107 (rodada 3, HEAD
         7b0e28c): ``update()`` (acima) considera sucesso assim que ``git
         push`` devolve 0 — mas ``claim_key()`` já precisou de uma proteção
@@ -313,7 +332,7 @@ class GitJsonStore:
                     )
                 else:
                     ultimo_erro = redact(push.stderr)
-                time.sleep(0.2 * (tentativa + 1))
+                _esperar_antes_de_nova_tentativa(tentativa, ultimo_erro)
             finally:
                 shutil.rmtree(workdir, ignore_errors=True)
         raise RuntimeError(
@@ -322,7 +341,7 @@ class GitJsonStore:
         )
 
     def claim_key(self, key: str, *, message: str, max_keys: int | None = None,
-                   max_attempts: int = 3) -> bool:
+                   max_attempts: int = 5) -> bool:
         """Compare-and-swap atômico sobre a lista ``keys`` do JSON: ``True``
         só para a PRIMEIRA execução, entre quaisquer processos
         concorrentes, que conseguir registrar ``key``; qualquer outra
@@ -411,7 +430,7 @@ class GitJsonStore:
                     ultimo_erro = "push reportou êxito, mas outra execução venceu a corrida de verdade (confirmado por leitura independente do remoto)"
                 else:
                     ultimo_erro = redact(push.stderr)
-                time.sleep(0.2 * (tentativa + 1))
+                _esperar_antes_de_nova_tentativa(tentativa, ultimo_erro)
             finally:
                 shutil.rmtree(workdir, ignore_errors=True)
         raise RuntimeError(

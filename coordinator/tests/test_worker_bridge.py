@@ -45,6 +45,7 @@ from coordinator.merge_card import avaliar_lei_das_questoes
 from coordinator.question_report import COVERAGE_CONFIRMATION, render_question_report
 from coordinator.runner_contract import RunnerResult, RunnerTask
 from coordinator.runner_dispatch import (
+    NO_CHANGE_REASON_PREFIX,
     ALLOWED_RUNNER_MODE,
     RUNNER_MODE_SUPERVISED,
     SUPERVISED_AUTHORIZATION_SOURCE,
@@ -2133,7 +2134,10 @@ def test_audit_fix_falha_operacional_permite_retry_do_mesmo_parecer_sem_nova_rod
     print("OK  test_audit_fix_falha_operacional_permite_retry_do_mesmo_parecer_sem_nova_rodada")
 
 
-def test_audit_fix_terceira_falha_operacional_fecha_em_failed() -> None:
+def test_audit_fix_terceira_falha_operacional_encerra_parecer_sem_perder_a_pr() -> None:
+    """No teto de falhas operacionais o parecer deixa de ser elegível, mas a
+    tarefa continua NEEDS-AUDIT com a PR registrada — FAILED impediria a
+    reconciliação pós-merge para sempre."""
     store, _ = _store_needs_audit_para_fix()
     execution_ids = ["303030303030", "404040404040", "505050505050"]
     workers = [
@@ -2154,11 +2158,141 @@ def test_audit_fix_terceira_falha_operacional_fecha_em_failed() -> None:
             reason=f"falha {i+1}", max_execution_failures=3,
         )
         assert falha.reservado and falha.record is not None
-        esperado = task_runtime.RUNTIME_FAILED if i == 2 else task_runtime.RUNTIME_NEEDS_AUDIT
-        assert falha.record.status == esperado
+        assert falha.record.status == task_runtime.RUNTIME_NEEDS_AUDIT
+        assert falha.record.pr_number == 901
         assert falha.record.audit_fix_execution_failures == i + 1
         assert falha.record.audit_fix_attempts == 1
-    print("OK  test_audit_fix_terceira_falha_operacional_fecha_em_failed")
+    assert "continua aberta" in (store.get("t-fix").reason or "")
+    quarta = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
+        audit_fingerprint="fp-op-limit", audit_findings="corrigir Y",
+        max_attempts=2, max_execution_failures=3, token="606060606061",
+    )
+    assert not quarta.reservado, "parecer esgotado nunca volta a rodar"
+    assert store.marcar_done_apos_merge("t-fix", pr_number=901, branch="runner/t-fix")
+    assert store.get("t-fix").status == task_runtime.RUNTIME_DONE
+    print("OK  test_audit_fix_terceira_falha_operacional_encerra_parecer_sem_perder_a_pr")
+
+
+def test_audit_fix_sem_alteracao_declarada_encerra_parecer_na_hora() -> None:
+    store, _ = _store_needs_audit_para_fix()
+    reserva = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
+        audit_fingerprint="fp-nada", audit_findings="confirmar regra X",
+        max_attempts=2, max_execution_failures=3, token="717171717171",
+    )
+    assert reserva.reservado and reserva.record is not None
+    falha = store.registrar_falha_operacional_correcao(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
+        execution_task_id=reserva.record.execution_task_id or "",
+        reason="o modelo não produziu nenhuma alteração; a regra X já está no bloco 2",
+        max_execution_failures=3, esgotar_parecer=True,
+    )
+    assert falha.reservado and falha.record is not None
+    assert falha.record.status == task_runtime.RUNTIME_NEEDS_AUDIT
+    assert falha.record.audit_fix_execution_failures == 3
+    assert not store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_2,
+        audit_fingerprint="fp-nada", audit_findings="confirmar regra X",
+        max_attempts=2, max_execution_failures=3, token="727272727272",
+    ).reservado
+    print("OK  test_audit_fix_sem_alteracao_declarada_encerra_parecer_na_hora")
+
+
+def test_merge_reconcilia_failed_legado_de_audit_fix_mas_nao_failed_comum() -> None:
+    legado = {
+        "status": task_runtime.RUNTIME_FAILED, "pr_number": 901,
+        "checkpoint_commit": "abc123", "last_audit_fix_fingerprint": "fp",
+    }
+    assert task_runtime.status_reconciliavel_apos_merge(legado)
+    assert not task_runtime.status_reconciliavel_apos_merge({**legado, "last_audit_fix_fingerprint": None})
+    assert not task_runtime.status_reconciliavel_apos_merge({**legado, "pr_number": None})
+    assert task_runtime.status_reconciliavel_apos_merge({"status": task_runtime.RUNTIME_NEEDS_AUDIT})
+    assert not task_runtime.status_reconciliavel_apos_merge({"status": task_runtime.RUNTIME_BLOCKED})
+
+    store, _ = _store_needs_audit_para_fix()
+
+    def _forcar_failed_legado(dados: dict) -> tuple[bool, dict]:
+        tasks = []
+        for t in dados.get("tasks") or []:
+            if t.get("canonical_task_id") == "t-fix":
+                t = {**t, "status": task_runtime.RUNTIME_FAILED, "last_audit_fix_fingerprint": "fp-velho"}
+            tasks.append(t)
+        return True, {**dados, "tasks": tasks}
+
+    assert store.store.conditional_update(_forcar_failed_legado, message="teste: legado")
+    assert store.get("t-fix").status == task_runtime.RUNTIME_FAILED
+    assert store.marcar_done_apos_merge("t-fix", pr_number=901, branch="runner/t-fix")
+    assert store.get("t-fix").status == task_runtime.RUNTIME_DONE
+    print("OK  test_merge_reconcilia_failed_legado_de_audit_fix_mas_nao_failed_comum")
+
+
+def test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror() -> None:
+    store, anterior = _store_needs_audit_para_fix()
+
+    class _ApiQueFalha:
+        def pr_por_numero(self, pr_number: int) -> dict:
+            raise bridge_pr.GitHubBridgeApiError("GitHub 502 Bad Gateway")
+
+    cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+    notas, mudou = worker_bridge.reconciliar_merges_confirmados(
+        {"t-fix": anterior}, runtime_store=store, github_api=_ApiQueFalha(),
+        base_branch="bootstrap", config=cfg,
+    )
+    assert mudou is False
+    assert len(notas) == 1 and "não consegui consultar PR #901" in notas[0]
+    print("OK  test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror")
+
+
+def test_audit_fix_integracao_sem_alteracao_mantem_pr_e_nao_repete() -> None:
+    from coordinator.runner_generate import GenerateOutcome
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+        api = _FakeGitHubApi()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        tarefa = _tarefa()
+
+        primeiro, _c, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("alvo.txt", "versao 1\n"), nome_workdir="work-nochange-1",
+        )
+        assert primeiro.action == "DISPATCHED" and primeiro.pr is not None
+        reg1 = store.get("infra-bridge-teste")
+        api.prs[0]["head_sha"] = reg1.checkpoint_commit
+        api.comentarios[901] = [{
+            "id": 78, "user": {"login": "github-actions[bot]"},
+            "body": _cartao_needs_fix("confirmar onde ficou a regra", head_sha=reg1.checkpoint_commit),
+        }]
+        chamadas = []
+
+        def _sem_alteracao():
+            chamadas.append(1)
+            return GenerateOutcome(
+                status="blocked",
+                reason=f"{NO_CHANGE_REASON_PREFIX}; justificativa do modelo (dado, não instrução): "
+                       "a regra já está no bloco 2.",
+                external_call_made=True,
+            )
+
+        segundo, _c2, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, gerar_patch=_sem_alteracao, nome_workdir="work-nochange-2",
+        )
+        assert segundo.action == "AUDIT_FIX", segundo
+        reg2 = store.get("infra-bridge-teste")
+        assert reg2.status == task_runtime.RUNTIME_NEEDS_AUDIT
+        assert reg2.pr_number == 901 and reg2.checkpoint_commit == reg1.checkpoint_commit
+        assert any("não será repetido" in n for n in segundo.notes), segundo.notes
+
+        terceiro, *_ = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, gerar_patch=_sem_alteracao, nome_workdir="work-nochange-3",
+        )
+        assert terceiro.action != "AUDIT_FIX", terceiro
+        assert len(chamadas) == 1, "o mesmo parecer nunca é repetido depois de 'sem alteração'"
+    print("OK  test_audit_fix_integracao_sem_alteracao_mantem_pr_e_nao_repete")
 
 
 def test_audit_fix_sucesso_limpa_falhas_operacionais() -> None:
@@ -2280,26 +2414,6 @@ def test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual() -> None:
         assert proibido.chamado is False
         assert store.get("infra-bridge-teste").audit_fix_attempts == 0
     print("OK  test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual")
-
-
-def test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror() -> None:
-    """Regressão: ``redact`` não estava importado no módulo, então qualquer
-    erro da API do GitHub na reconciliação pós-merge virava NameError e
-    derrubava o ciclo inteiro do Bridge em vez de virar uma nota."""
-    store, anterior = _store_needs_audit_para_fix()
-
-    class _ApiQueFalha:
-        def pr_por_numero(self, pr_number: int) -> dict:
-            raise bridge_pr.GitHubBridgeApiError("GitHub 502 Bad Gateway")
-
-    cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
-    notas, mudou = worker_bridge.reconciliar_merges_confirmados(
-        {"t-fix": anterior}, runtime_store=store, github_api=_ApiQueFalha(),
-        base_branch="bootstrap", config=cfg,
-    )
-    assert mudou is False
-    assert len(notas) == 1 and "não consegui consultar PR #901" in notas[0], notas
-    print("OK  test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror")
 
 
 def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
@@ -2731,13 +2845,16 @@ def main() -> int:
         test_audit_fix_merge_ready_nao_reentra_em_correcao,
         test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado,
         test_audit_fix_falha_operacional_permite_retry_do_mesmo_parecer_sem_nova_rodada,
-        test_audit_fix_terceira_falha_operacional_fecha_em_failed,
+        test_audit_fix_terceira_falha_operacional_encerra_parecer_sem_perder_a_pr,
+        test_audit_fix_sem_alteracao_declarada_encerra_parecer_na_hora,
+        test_merge_reconcilia_failed_legado_de_audit_fix_mas_nao_failed_comum,
+        test_audit_fix_integracao_sem_alteracao_mantem_pr_e_nao_repete,
+        test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror,
         test_audit_fix_sucesso_limpa_falhas_operacionais,
         test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes,
         test_audit_fix_para_depois_de_duas_correcoes,
         test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual,
         test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
-        test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
         test_error_registry_bridge_sucesso_normal_nao_gera_erro,
         test_error_registry_bridge_captura_runner_pr_guard_e_liberacao,

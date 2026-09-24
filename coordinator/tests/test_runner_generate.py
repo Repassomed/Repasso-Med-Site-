@@ -41,7 +41,11 @@ from coordinator.runner_contract import RunnerTask
 from coordinator.runner_dispatch import RunnerDispatchConfig
 from coordinator.runner_generate import (
     MAX_FILE_CHARS_SENT,
+    _janelas_de_espelho,
+    _secoes_referenciadas,
+    extrair_trechos_ancorados,
     RUNNER_PATCH_MAX_OUTPUT_TOKENS,
+    NO_CHANGE_REASON_PREFIX,
     _SYSTEM_PROMPT,
     _conservative_call_cost_usd,
     build_prompt,
@@ -478,11 +482,10 @@ def test_malformed_json_response_fails_without_patch() -> None:
     print("OK  test_malformed_json_response_fails_without_patch")
 
 
-def test_empty_files_response_fails_without_patch() -> None:
-    """O prompt instrui o modelo a devolver {"files": []} quando não for
-    seguro cumprir a instrução — StructuredPatch rejeita patch vazio na
-    própria construção, então isto precisa terminar em FAILED, nunca
-    aplicado como 'nada para fazer'."""
+def test_empty_files_response_is_blocked_with_explicit_no_change_reason() -> None:
+    """Resposta vazia não é mais uma falha opaca de "patch vazio": vira
+    BLOCKED, zero escrita, com motivo que começa pelo prefixo estável —
+    e diz que o modelo não justificou quando ele não justificou."""
     with tempfile.TemporaryDirectory() as tmp:
         transporte = _CountingTransport(response=_resposta_ok([]))
         outcome = gerar_patch_via_claude(
@@ -490,9 +493,57 @@ def test_empty_files_response_fails_without_patch() -> None:
             usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
             transport=transporte,
         )
+        assert outcome.status == "blocked"
+        assert outcome.patch is None
+        assert outcome.external_call_made is True
+        assert outcome.reason.startswith(NO_CHANGE_REASON_PREFIX)
+        assert "não informou motivo" in outcome.reason
+    print("OK  test_empty_files_response_is_blocked_with_explicit_no_change_reason")
+
+
+def test_no_change_reason_do_modelo_chega_ao_motivo() -> None:
+    corpo = {"files": [], "edits": [], "no_change_reason": "A regra oral/nasal já está no Bloque 01."}
+    with tempfile.TemporaryDirectory() as tmp:
+        transporte = _CountingTransport(
+            response=TransportResponse(text=json.dumps(corpo), input_tokens=10, output_tokens=10)
+        )
+        outcome = gerar_patch_via_claude(
+            _task(), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "blocked"
+        assert outcome.patch is None
+        assert outcome.reason.startswith(NO_CHANGE_REASON_PREFIX)
+        assert "oral/nasal já está no Bloque 01" in outcome.reason
+    print("OK  test_no_change_reason_do_modelo_chega_ao_motivo")
+
+
+def test_json_dentro_de_uma_cerca_markdown_e_aceito_e_nada_mais() -> None:
+    corpo = json.dumps({"files": [{"path": "greeting.txt", "content": "olá\n"}]})
+    with tempfile.TemporaryDirectory() as tmp:
+        transporte = _CountingTransport(
+            response=TransportResponse(text=f"```json\n{corpo}\n```", input_tokens=10, output_tokens=10)
+        )
+        outcome = gerar_patch_via_claude(
+            _task(allowed_files=("greeting.txt",)), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "ok", outcome.reason
+        assert outcome.patch is not None and outcome.patch.files[0].content == "olá\n"
+    with tempfile.TemporaryDirectory() as tmp:
+        transporte = _CountingTransport(
+            response=TransportResponse(text=f"Aqui está:\n```json\n{corpo}\n```", input_tokens=10, output_tokens=10)
+        )
+        outcome = gerar_patch_via_claude(
+            _task(allowed_files=("greeting.txt",)), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
         assert outcome.status == "failed"
         assert outcome.patch is None
-    print("OK  test_empty_files_response_fails_without_patch")
+    print("OK  test_json_dentro_de_uma_cerca_markdown_e_aceito_e_nada_mais")
 
 
 def test_response_outside_allowed_files_is_blocked_without_patch() -> None:
@@ -1005,6 +1056,132 @@ def test_anchored_edit_com_ocorrencia_sobreposta_bloqueia() -> None:
     print("OK  test_anchored_edit_com_ocorrencia_sobreposta_bloqueia")
 
 
+def test_bloco_referenciado_leva_as_copias_espelhadas_do_banco_geral() -> None:
+    """Regressão da B08 PA r4/r5: a tarefa pede "alterar o B08 e a cópia
+    correspondente no Banco General", mas só o B08 era enviado. As cópias
+    literais da mesma V/F e do mesmo flashcard no banco geral/mazo geral
+    ficavam fora do contexto, e o modelo devolvia patch vazio. Agora elas
+    entram como trechos; itens de blocos NÃO referenciados continuam fora."""
+    vf_b08 = ("La relación entre la presión arterial y el riesgo cardiovascular es continua; "
+              "la PA elevada en consultorio es de PAS 120–139 mmHg y PAD 70–89 mmHg.")
+    vf_b09 = "El eje eléctrico normal del QRS en el plano frontal va de −30° a +90° grados."
+    item = lambda enunciado: (
+        '<div class="quiz-item">\n<p class="quiz-question"><span class="quiz-tag basada">Basada</span>'
+        f'<span class="quiz-tag mcq">V/F</span>{enunciado}</p>\n<div class="answer">V</div>\n</div>\n'
+    )
+    card = lambda frente, verso: (
+        f'<div class="flashcard"><div class="fc-front"><b>{frente}</b></div>'
+        f'<div class="fc-back">{verso}</div></div>\n'
+    )
+    relleno = "<p>" + ("texto de relleno sin relación. " * 400) + "</p>\n"
+    conteudo = (
+        '<section class="container" id="s2-b08">\n<h2>Bloque 08 · HTA</h2>\n' + relleno
+        + item(vf_b08) + card("PA elevada (consultorio)", "PAS 120–139 y PAD 70–89 mmHg.") + "</section>\n"
+        + '<section class="container" id="s2-b09">\n<h2>Bloque 09 · ECG</h2>\n' + relleno
+        + item(vf_b09) + card("Eje normal del QRS", "−30° a +90°.") + "</section>\n"
+        + relleno * 3
+        + '<section class="container" id="s2-banco">\n' + item(vf_b08) + item(vf_b09) + "</section>\n"
+        + relleno * 3
+        + '<section class="container" id="s2-flashcards">\n'
+        + card("PA elevada (consultorio)", "PAS 120-139 / PAD 70-89.") + card("Eje normal del QRS", "−30° a +90°.")
+        + "</section>\n"
+    )
+    assert len(conteudo) > MAX_FILE_CHARS_SENT
+    instr = ("Alterar SOMENTE a classificação de PA do B08 e sua cópia correspondente no "
+             "Banco General, preservando IDs e gabarito.")
+    trechos = extrair_trechos_ancorados(conteudo, instr)
+    coberto = lambda pos: any(t.inicio <= pos < t.fim for t in trechos)
+
+    banco = conteudo.index('id="s2-banco"')
+    mazo = conteudo.index('id="s2-flashcards"')
+    copia_vf_b08 = conteudo.index(vf_b08, banco)
+    copia_card_b08 = conteudo.index("PA elevada (consultorio)", mazo)
+    assert coberto(conteudo.index(vf_b08)), "o próprio B08 precisa estar no contexto"
+    assert coberto(copia_vf_b08), "a cópia da V/F no Banco General precisa estar no contexto"
+    assert coberto(copia_card_b08), "a cópia do flashcard no mazo geral precisa estar no contexto"
+    # Escopo dos ESPELHOS: só cópias de itens do bloco referenciado. (Janelas
+    # por palavra-chave, que já existiam, podem ainda cercar vizinhos.)
+    espelhos = _janelas_de_espelho(conteudo, _secoes_referenciadas(conteudo, instr))
+    dentro = lambda pos: any(a <= pos < b for a, b in espelhos)
+    assert dentro(copia_vf_b08) and dentro(copia_card_b08)
+    assert not dentro(conteudo.index(vf_b09, banco)), "item do B09 (não referenciado) não é espelho"
+    assert not dentro(conteudo.index("Eje normal del QRS", mazo)), "flashcard do B09 não é espelho"
+    for t in trechos:
+        assert conteudo[t.inicio:t.fim] == t.texto, "todo trecho é cópia literal do arquivo"
+    print("OK  test_bloco_referenciado_leva_as_copias_espelhadas_do_banco_geral")
+
+
+def _conteudo_com_copia_literal() -> tuple[str, tuple]:
+    from coordinator.runner_generate import TrechoAncorado
+
+    vf = "<p>La PA elevada en consultorio es de PAS 120–139 mmHg y PAD 70–89 mmHg.</p>"
+    conteudo = "<section id='s2-b08'>" + vf + "</section>" + ("x" * 500) + "<section id='s2-banco'>" + vf + "</section>"
+    b08 = conteudo.index("<section id='s2-b08'>")
+    banco = conteudo.index("<section id='s2-banco'>")
+    fim_b08 = conteudo.index("</section>") + len("</section>")
+    trechos = (
+        TrechoAncorado(inicio=b08, fim=fim_b08, texto=conteudo[b08:fim_b08]),
+        TrechoAncorado(inicio=banco, fim=len(conteudo), texto=conteudo[banco:]),
+    )
+    return conteudo, trechos
+
+
+def test_copia_literal_sem_trecho_continua_ambigua_e_bloqueia() -> None:
+    from coordinator.runner_generate import AnchoredEdit, resolver_anchored_edits
+
+    conteudo, trechos = _conteudo_com_copia_literal()
+    velho = "PAS 120–139 mmHg y PAD 70–89 mmHg"
+    r = resolver_anchored_edits(
+        (AnchoredEdit(path="materia.html", old_text=velho, new_text="X"),),
+        task=_task(allowed_files=("materia.html",)), current_contents={"materia.html": conteudo},
+        trechos_por_arquivo={"materia.html": trechos},
+    )
+    assert not r.ok and "mais de uma vez" in r.reason
+    print("OK  test_copia_literal_sem_trecho_continua_ambigua_e_bloqueia")
+
+
+def test_campo_trecho_desambigua_copia_literal_do_banco_geral() -> None:
+    """Auditoria de 24/09/2026: a mesma V/F aparece literalmente no bloco e
+    no Banco General. Com 'trecho', cada edição vale exatamente onde o
+    modelo a leu — as duas cópias são alteradas, nada mais."""
+    from coordinator.runner_generate import AnchoredEdit, resolver_anchored_edits
+
+    conteudo, trechos = _conteudo_com_copia_literal()
+    velho = "PAS 120–139 mmHg y PAD 70–89 mmHg"
+    novo = "PAS 120–139 mmHg y PAD 70–89 mmHg (tabla usada en la prueba)"
+    r = resolver_anchored_edits(
+        (AnchoredEdit(path="materia.html", old_text=velho, new_text=novo, trecho=1),
+         AnchoredEdit(path="materia.html", old_text=velho, new_text=novo, trecho=2)),
+        task=_task(allowed_files=("materia.html",)), current_contents={"materia.html": conteudo},
+        trechos_por_arquivo={"materia.html": trechos},
+    )
+    assert r.ok, r.reason
+    final = r.files[0].content
+    assert final.count(novo) == 2 and final == conteudo.replace(velho, novo)
+    print("OK  test_campo_trecho_desambigua_copia_literal_do_banco_geral")
+
+
+def test_campo_trecho_invalido_ou_ambiguo_bloqueia_sem_escrita() -> None:
+    from coordinator.runner_generate import AnchoredEdit, anchored_edits_de_resposta, resolver_anchored_edits
+
+    conteudo, trechos = _conteudo_com_copia_literal()
+    ctx = dict(task=_task(allowed_files=("materia.html",)), current_contents={"materia.html": conteudo},
+               trechos_por_arquivo={"materia.html": trechos})
+    r = resolver_anchored_edits((AnchoredEdit(path="materia.html", old_text="PAS", new_text="Y", trecho=3),), **ctx)
+    assert not r.ok and "não corresponde" in r.reason
+    r = resolver_anchored_edits((AnchoredEdit(path="materia.html", old_text="0", new_text="Y", trecho=1),), **ctx)
+    assert not r.ok and "exatamente 1" in r.reason, "0 aparece várias vezes no trecho 1"
+    r = resolver_anchored_edits((AnchoredEdit(path="materia.html", old_text="xxxx", new_text="Y", trecho=1),), **ctx)
+    assert not r.ok and "0 vez" in r.reason
+    for ruim in (0, -1, "2", True):
+        try:
+            anchored_edits_de_resposta({"edits": [{"path": "materia.html", "old_text": "a", "new_text": "b", "trecho": ruim}]})
+        except ValueError:
+            continue
+        raise AssertionError(f"trecho={ruim!r} devia ser recusado")
+    print("OK  test_campo_trecho_invalido_ou_ambiguo_bloqueia_sem_escrita")
+
+
 def main() -> int:
     testes = [
         test_question_report_required_missing_fails_before_patch,
@@ -1022,7 +1199,9 @@ def main() -> int:
         test_file_exactly_at_limit_is_not_blocked,
         test_oversized_file_outside_allowed_files_does_not_block,
         test_malformed_json_response_fails_without_patch,
-        test_empty_files_response_fails_without_patch,
+        test_empty_files_response_is_blocked_with_explicit_no_change_reason,
+        test_no_change_reason_do_modelo_chega_ao_motivo,
+        test_json_dentro_de_uma_cerca_markdown_e_aceito_e_nada_mais,
         test_response_outside_allowed_files_is_blocked_without_patch,
         test_non_dict_json_response_fails_without_patch,
         test_prompt_contains_only_instructions_and_allowed_file_contents,
@@ -1043,6 +1222,11 @@ def main() -> int:
         # Auditoria independente do HEAD 6bcce53.
         test_anchored_edit_fora_dos_trechos_enviados_bloqueia,
         test_anchored_edit_com_ocorrencia_sobreposta_bloqueia,
+        # Auditoria de 24/09/2026 — B08 PA r4/r5: cópias do Banco General.
+        test_bloco_referenciado_leva_as_copias_espelhadas_do_banco_geral,
+        test_copia_literal_sem_trecho_continua_ambigua_e_bloqueia,
+        test_campo_trecho_desambigua_copia_literal_do_banco_geral,
+        test_campo_trecho_invalido_ou_ambiguo_bloqueia_sem_escrita,
     ]
     falhas = 0
     for t in testes:
