@@ -2140,6 +2140,38 @@ def test_audit_fix_para_depois_de_duas_correcoes() -> None:
     print("OK  test_audit_fix_para_depois_de_duas_correcoes")
 
 
+def test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+        api = _FakeGitHubApi()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        tarefa = _tarefa()
+
+        primeiro, _c, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("alvo.txt", "versao 1\n"), nome_workdir="work-stale-card-1",
+        )
+        assert primeiro.action == "DISPATCHED" and primeiro.pr is not None
+        reg1 = store.get("infra-bridge-teste")
+        assert reg1 is not None and reg1.checkpoint_commit
+        api.prs[0]["head_sha"] = reg1.checkpoint_commit
+        api.comentarios[901] = [{
+            "id": 78, "user": {"login": "github-actions[bot]"},
+            "body": _cartao_needs_fix("parecer velho", head_sha="deadbeef12345678"),
+        }]
+
+        proibido = _GeracaoProibida()
+        segundo, *_ = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=None, gerar_patch=proibido, nome_workdir="work-stale-card-2",
+        )
+        assert segundo.action == "NO_ASSIGNMENT", segundo
+        assert proibido.chamado is False
+        assert store.get("infra-bridge-teste").audit_fix_attempts == 0
+    print("OK  test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual")
+
+
 def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
@@ -2159,7 +2191,9 @@ def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
         api.prs[0]["head_sha"] = reg1.checkpoint_commit
         api.comentarios[901] = [{
             "id": 77, "user": {"login": "github-actions[bot]"},
-            "body": _cartao_needs_fix("trocar versao 1 por versao 2"),
+            "body": _cartao_needs_fix(
+                "trocar versao 1 por versao 2", head_sha=reg1.checkpoint_commit
+            ),
         }]
         exec1 = reg1.execution_task_id
         dispatches_antes = len(api.dispatches)
@@ -2568,6 +2602,7 @@ def main() -> int:
         test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado,
         test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes,
         test_audit_fix_para_depois_de_duas_correcoes,
+        test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual,
         test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
         test_error_registry_bridge_sucesso_normal_nao_gera_erro,
