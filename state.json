@@ -624,6 +624,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:203.",
       "task_id": "pr:203",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "06c5950c402f64c6c99075a09dffc36331a04464",
+      "component": "guard",
+      "error_id": "ERR-B44ECF5D08",
+      "error_type": "hard-fail",
+      "fingerprint": "b44ecf5d08d9e98d3364",
+      "first_seen": "2026-09-24T05:18:51.646486+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "d9f4769a93374452aa8697569908186e",
+      "issue_sync_updated_at": "2026-09-24T05:18:51.646486+00:00",
+      "last_evidence_hash": "2e907ac4f8cf8354a7ca",
+      "last_seen": "2026-09-24T05:18:51.646486+00:00",
+      "occurrence_count": 1,
+      "pr_number": 196,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35959335168",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:196.",
+      "task_id": "cleanup-como-estudar-bioestadistica",
+      "worker_id": null
     }
   ]
 }
