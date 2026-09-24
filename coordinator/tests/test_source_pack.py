@@ -7,7 +7,7 @@ import json
 import os
 import tempfile
 
-from coordinator import audit, openai_audit, source_pack
+from coordinator import audit, openai_audit, source_pack, worker_bridge
 from coordinator.context import MinimalContext
 
 
@@ -66,6 +66,19 @@ def test_pr_fixa_pack_e_sha_e_mismatch_bloqueia() -> None:
     print("OK  test_pr_fixa_pack_e_sha_e_mismatch_bloqueia")
 
 
+def test_worker_bloqueia_pack_obrigatorio_invalido_antes_da_execucao() -> None:
+    meta = worker_bridge.BridgeTaskMetadata(
+        task_id="t-fonte", automation_enabled=True, bridge_enabled=True,
+        risk_level="MEDIO", policy_level="C", jose_authorized=True,
+        source_pack_required=True, source_pack_path="coordination/source-packs/x.md",
+        source_pack_text=None, source_pack_error="arquivo ausente",
+    )
+    gate = worker_bridge.avaliar_politica(meta, task_id="t-fonte")
+    assert gate.permitido is False
+    assert "antes de qualquer chamada paga" in gate.reason
+    print("OK  test_worker_bloqueia_pack_obrigatorio_invalido_antes_da_execucao")
+
+
 def test_os_dois_auditores_recebem_o_mesmo_pack() -> None:
     ctx = MinimalContext(
         summary="evento=teste", guard_result="PASS", guard_hard_fails=[],
@@ -91,6 +104,7 @@ def main() -> int:
         test_pack_valido_e_hash,
         test_pack_required_falha_em_ausente_escape_e_tamanho,
         test_pr_fixa_pack_e_sha_e_mismatch_bloqueia,
+        test_worker_bloqueia_pack_obrigatorio_invalido_antes_da_execucao,
         test_os_dois_auditores_recebem_o_mesmo_pack,
     ]
     falhas = 0
