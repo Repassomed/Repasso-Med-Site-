@@ -306,7 +306,8 @@ def test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli() -> None:
     número/rótulos da PR) e passado ao CLI via --pr-diff-file."""
     texto = _ler()
     idx = texto.index("Buscar dados reais da PR associada")
-    trecho = texto[idx: idx + 2200]
+    fim = texto.index("Rodar o Coordinator sobre o evento real", idx)
+    trecho = texto[idx:fim]
     assert "mediaType: { format: 'diff' }" in trecho
     assert "/tmp/pr-diff.patch" in trecho
     assert "--pr-diff-file /tmp/pr-diff.patch" in texto
