@@ -241,6 +241,10 @@ class MergeCardInput:
     audit_rationale: str
     envolve_questoes: bool
     lei_das_questoes: LeiDasQuestoesResult | None
+    # SHA exato do HEAD da PR que Guard + auditores avaliaram. O Worker
+    # Bridge usa este vínculo para nunca aplicar um NEEDS-FIX antigo sobre
+    # um commit novo e para reconciliar runtime atrasado sem adivinhar.
+    head_sha: str | None = None
     arquivos_alterados: tuple[str, ...] = ()
     protocol_matched: bool = True
     # Correção B3 da auditoria independente do PR #104, rodada 3: custo
@@ -279,6 +283,8 @@ def render_merge_card(dados: MergeCardInput) -> str:
     L.append(f"**PR:** #{dados.pr_number if dados.pr_number is not None else '-'}  ·  "
               f"**Título:** {dados.titulo or '-'}  ·  **Área:** {dados.area or '-'}")
     L.append(f"**Resultado do Guard:** {dados.guard_result or '-'}")
+    if dados.head_sha:
+        L.append(f"**HEAD auditado:** `{dados.head_sha}`")
     L.append("")
     L.append(f"**Decisão da auditoria semântica (STANDARD, independente do worker):** {dados.audit_decision}")
     if not dados.protocol_matched:
