@@ -137,6 +137,76 @@ def test_broken_fails() -> None:
     print(f"    (fx-dup preexistente corretamente tratado como INFO, não repetido aqui.)")
 
 
+def test_assets_preexistentes_nao_bloqueiam_delta() -> None:
+    """Asset ausente já referenciado na base é dívida histórica, não regressão."""
+    from types import SimpleNamespace
+
+    asset = "/assets/img/legacy-ausente.webp"
+    base = SimpleNamespace(assets=[asset])
+    head = SimpleNamespace(assets=[asset])
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=[CAMINHO_FIXTURE],
+        base_blob=lambda p: None,
+        head_blob=lambda p: None,
+        added_lines={},
+        scope={"arquivos": [CAMINHO_FIXTURE]},
+        tasks=None,
+        file_exists=lambda p: False,
+    )
+    achados = checks._check_assets(ctx, "materia-fixture.html", base, head)
+    assert not any(f.severity == HARD_FAIL for f in achados), achados
+    infos = [f for f in achados if f.check == "assets"]
+    assert infos and "já estavam referenciados" in infos[0].message, infos
+    print("OK  test_assets_preexistentes_nao_bloqueiam_delta — dívida histórica ficou INFO.")
+
+
+def test_asset_novo_ausente_continua_hard_fail() -> None:
+    """Referência nova ausente continua sendo regressão objetiva e bloqueia."""
+    from types import SimpleNamespace
+
+    asset = "/assets/img/novo-ausente.webp"
+    base = SimpleNamespace(assets=[])
+    head = SimpleNamespace(assets=[asset])
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=[CAMINHO_FIXTURE],
+        base_blob=lambda p: None,
+        head_blob=lambda p: None,
+        added_lines={},
+        scope={"arquivos": [CAMINHO_FIXTURE]},
+        tasks=None,
+        file_exists=lambda p: False,
+    )
+    achados = checks._check_assets(ctx, "materia-fixture.html", base, head)
+    duros = [f for f in achados if f.check == "assets" and f.severity == HARD_FAIL]
+    assert len(duros) == 1 and asset in duros[0].detail.get("assets", []), achados
+    print("OK  test_asset_novo_ausente_continua_hard_fail — regressão nova continua bloqueada.")
+
+
+def test_asset_removido_pelo_pr_continua_hard_fail() -> None:
+    """Se o PR toca/remove o caminho do asset, não pode alegar dívida histórica."""
+    from types import SimpleNamespace
+
+    asset = "/assets/img/removido.webp"
+    caminho = "Repasso-Med-Site--main/Atual - Copia/assets/img/removido.webp"
+    base = SimpleNamespace(assets=[asset])
+    head = SimpleNamespace(assets=[asset])
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=[CAMINHO_FIXTURE, caminho],
+        base_blob=lambda p: "existia" if p == caminho else None,
+        head_blob=lambda p: None,
+        added_lines={},
+        scope={"arquivos": [CAMINHO_FIXTURE, caminho]},
+        tasks=None,
+        file_exists=lambda p: False,
+    )
+    achados = checks._check_assets(ctx, "materia-fixture.html", base, head)
+    assert any(f.check == "assets" and f.severity == HARD_FAIL for f in achados), achados
+    print("OK  test_asset_removido_pelo_pr_continua_hard_fail — remoção continua bloqueada.")
+
+
 def test_scope_lock_body_cannot_widen() -> None:
     """Bloqueador 2, cenário 1 da auditoria do PR #94.
 
@@ -255,6 +325,9 @@ def main() -> int:
     testes = [
         test_valid_passes,
         test_broken_fails,
+        test_assets_preexistentes_nao_bloqueiam_delta,
+        test_asset_novo_ausente_continua_hard_fail,
+        test_asset_removido_pelo_pr_continua_hard_fail,
         test_scope_lock_body_cannot_widen,
         test_scope_lock_task_cannot_widen_itself,
         test_gabarito_enunciado_repetido_sem_falso_aviso,
