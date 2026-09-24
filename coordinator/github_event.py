@@ -181,6 +181,10 @@ ALLOWED_COMMENT_ACTORS: frozenset[str] = frozenset({"Repassomed"})
 # evento novo, porque isso reabriria um ciclo pago sobre a própria saída
 # do Coordinator.
 COORDINATOR_COMMENT_MARKER = "<!-- repasso-coordinator -->"
+# Versão semântica da política de auditoria. Bump quando G0/Lei 8-A/contexto
+# puder mudar a decisão sobre o MESMO HEAD de uma PR. Entra no dedup para
+# permitir uma única reauditoria do mesmo commit sob a política nova.
+AUDIT_POLICY_VERSION = "2026-09-24-material-scope-head-context-v1"
 
 
 def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None,
@@ -331,6 +335,7 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                     # a main confiável, não o HEAD da PR. O workflow valida
                     # a PR real pela API e entrega o SHA tipado em pr_info.
                     "head_sha": pr_info.get("head_sha") or run.get("head_sha"),
+                    "audit_policy_version": AUDIT_POLICY_VERSION,
                 },
             },
         )
