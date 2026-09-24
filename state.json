@@ -1099,6 +1099,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:249.",
       "task_id": "pr:249",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "8669965a77de359ed90b6fef38196ff49c0b75f2",
+      "component": "guard",
+      "error_id": "ERR-8FED483524",
+      "error_type": "hard-fail",
+      "fingerprint": "8fed4835244f5b60b376",
+      "first_seen": "2026-09-24T17:43:57.766639+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "16c2ddf946114a17a6459848f0f9ffd5",
+      "issue_sync_updated_at": "2026-09-24T17:43:57.766639+00:00",
+      "last_evidence_hash": "6b6d567d75047e846e99",
+      "last_seen": "2026-09-24T17:43:57.766639+00:00",
+      "occurrence_count": 1,
+      "pr_number": 253,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36036263892",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:253.",
+      "task_id": "\u2014 (achado da auditoria black-box ponta a ponta p\u00f3s-#245, Claude 4)",
+      "worker_id": null
     }
   ]
 }
