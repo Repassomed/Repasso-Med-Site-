@@ -1053,7 +1053,7 @@
       "notas": "Alterar só B08 e cópias correspondentes no Banco General, se houver. Preservar IDs/annotations/proveniência. NEEDS-AUDIT obrigatório. P0 de Semiología priorizado por José em 24/09/2026 após tarefas amplas falharem por patch vazio/malformado. Executar como microtarefa, usar o source pack compartilhado e devolver relatório obrigatório da Lei 8-A.11; resultado NEEDS-AUDIT com Anthropic + OpenAI, sem merge/deploy automático.",
       "source_pack_required": true,
       "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
-      "questions_report_required": true
+      "question_report_required": true
     },
     {
       "area": "materia",
@@ -1086,7 +1086,7 @@
       "notas": "Alterar só B09 e espelho no Banco General quando aplicável. Conteúdo deve permanecer em castelhano e didático desde zero. NEEDS-AUDIT obrigatório. P0 de Semiología priorizado por José em 24/09/2026 após tarefas amplas falharem por patch vazio/malformado. Executar como microtarefa, usar o source pack compartilhado e devolver relatório obrigatório da Lei 8-A.11; resultado NEEDS-AUDIT com Anthropic + OpenAI, sem merge/deploy automático.",
       "source_pack_required": true,
       "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
-      "questions_report_required": true
+      "question_report_required": true
     },
     {
       "area": "materia",
