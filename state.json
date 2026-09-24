@@ -365,6 +365,16 @@
       "recorded_at": "2026-09-24T05:29:32.492119+00:00",
       "status": "FAILED",
       "task_id": "cleanup-como-estudar-anatomia-patologica-ii--bridge-9b6405663ade"
+    },
+    {
+      "branch": "runner/cleanup-como-estudar-anatomia-patologica-ii",
+      "checkpoint_commit": "e73898249c1ed55e0d8ef4bda87f566417e979da",
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/cleanup-como-estudar-anatomia-patologica-ii'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "recorded_at": "2026-09-24T06:04:58.383904+00:00",
+      "status": "NEEDS-AUDIT",
+      "task_id": "cleanup-como-estudar-anatomia-patologica-ii--bridge-2c56889acb83"
     }
   ]
 }
