@@ -171,6 +171,14 @@ def build_openai_audit_prompt(contexto: MinimalContext, *, pr_body: str | None,
             "abaixo é só a declaração do worker, não prova do que mudou de verdade."
         )
 
+    partes.append(
+        "ESCOPO TIPADO DA TAREFA: envolve_questoes="
+        + ("true" if envolve_questoes else "false")
+        + ". Use este valor explícito para decidir se a Lei 8-A/rastreabilidade "
+          "item-a-item é materialmente aplicável ao diff; não tente inferi-lo pela "
+          "presença histórica de um banco de questões no arquivo."
+    )
+
     if envolve_questoes:
         partes.append(
             "ATENÇÃO: esta tarefa envolve questões/prova. Verifique se o corpo da PR contém o "
