@@ -348,8 +348,8 @@ def garantir_pr(
                 return PrOutcome(
                     "FAILED",
                     f"PR #{pr_number} existe, mas não consegui sincronizar corpo/checkpoint/relatório: "
-                    f"{redact(str(exc))}",
-                    pr_number=pr_number,
+                    f"{redact(str(exc))}. Guard bloqueado até a sincronização ser recuperada.",
+                    pr_number=None,
                     pr_url=pr.get("html_url"),
                 )
         return PrOutcome(
