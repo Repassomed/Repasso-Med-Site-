@@ -220,12 +220,44 @@ def test_scope_lock_task_cannot_widen_itself() -> None:
     print("OK  test_scope_lock_task_cannot_widen_itself — tarefa não conseguiu se autoampliar no mesmo diff.")
 
 
+def test_gabarito_enunciado_repetido_sem_falso_aviso() -> None:
+    """Duas cópias sem id do mesmo enunciado já tinham letras diferentes."""
+    from types import SimpleNamespace
+    from tools.qa.guard.materia import Question
+
+    def pergunta(indice: int, letra: str) -> Question:
+        return Question(
+            index=indice, qid=None, section="b01", is_bank=False,
+            stem="Qual das frases está mal?", options=["a) primeira", "b) segunda", "d) quarta"],
+            answer_letter=letra,
+        )
+
+    base = SimpleNamespace(questions=[pergunta(1, "a"), pergunta(2, "d")])
+    head_inalterado = SimpleNamespace(questions=[pergunta(1, "a"), pergunta(2, "d")])
+    achados = checks._check_answers("guarani.html", base, head_inalterado)
+    assert not any(f.check == "gabarito-alterado" for f in achados), achados
+
+    head_trocado = SimpleNamespace(questions=[pergunta(1, "d"), pergunta(2, "a")])
+    achados = checks._check_answers("guarani.html", base, head_trocado)
+    assert len([f for f in achados if f.check == "gabarito-alterado"]) == 1, achados
+
+    head_alterado = SimpleNamespace(questions=[pergunta(1, "a"), pergunta(2, "b")])
+    achados = checks._check_answers("guarani.html", base, head_alterado)
+    mudancas = [f for f in achados if f.check == "gabarito-alterado"]
+    assert len(mudancas) == 1, achados
+    assert mudancas[0].detail["mudancas"] == [
+        {"questao": "Qual das frases está mal?", "de": ["a", "d"], "para": ["a", "b"]}
+    ], mudancas[0].detail
+    print("OK  test_gabarito_enunciado_repetido_sem_falso_aviso — comparação por ordem das ocorrências.")
+
+
 def main() -> int:
     testes = [
         test_valid_passes,
         test_broken_fails,
         test_scope_lock_body_cannot_widen,
         test_scope_lock_task_cannot_widen_itself,
+        test_gabarito_enunciado_repetido_sem_falso_aviso,
     ]
     falhas = 0
     for t in testes:

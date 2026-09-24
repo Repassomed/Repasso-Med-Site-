@@ -600,17 +600,31 @@ def _check_answers(nome: str, base, head) -> list[Finding]:
                            "Isso cria mais de uma resposta defensável.",
                            nome, {"ocorrencias": duplicadas[:8]}))
 
-    # Lei 6 — gabarito antigo alterado precisa aparecer no pacote de auditoria.
+    # Lei 6 — questões sem id podem compartilhar enunciado (e chave), inclusive
+    # entre bloco e banco. Preservar todas as ocorrências em ordem evita falsos
+    # positivos do dict que guardava apenas a última resposta. Também detecta
+    # uma troca entre duas cópias, mesmo com o mesmo conjunto de letras.
     if base:
-        antes = {q.key: q.answer_letter for q in base.questions if q.answer_letter}
-        mudou = []
+        antes: dict[str, list[str]] = {}
+        depois: dict[str, list[str]] = {}
+        exemplo = {}
+        for q in base.questions:
+            if q.answer_letter:
+                antes.setdefault(q.key, []).append(q.answer_letter)
         for q in head.questions:
-            if q.answer_letter and q.key in antes and antes[q.key] != q.answer_letter:
-                mudou.append({"questao": q.qid or q.stem[:60],
-                              "de": antes[q.key], "para": q.answer_letter})
+            if q.answer_letter:
+                depois.setdefault(q.key, []).append(q.answer_letter)
+                exemplo.setdefault(q.key, q.qid or q.stem[:60])
+        mudou = []
+        for key, letras_atuais in depois.items():
+            if key not in antes or antes[key] == letras_atuais:
+                continue
+            # Adições/remoções ou reordenações exigem inspeção, pois não há
+            # identificador para parear cópias iguais com segurança.
+            mudou.append({"questao": exemplo[key], "de": antes[key], "para": letras_atuais})
         if mudou:
             out.append(Finding("gabarito-alterado", WARNING,
-                               f"{nome}: {len(mudou)} gabarito(s) de questão já existente mudaram. "
+                               f"{nome}: {len(mudou)} grupo(s) de gabaritos de questão já existente mudaram. "
                                "Conteúdo médico: precisa de decisão humana explícita (Lei 6).",
                                nome, {"mudancas": mudou[:10]}))
     if not out:
