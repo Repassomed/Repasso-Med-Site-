@@ -311,7 +311,7 @@ def test_relatorio_8a_persiste_no_runtime_e_entra_no_corpo_da_pr() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         api = _FakeGitHubApi()
         geracao = _GeracaoComRelatorio()
-        tarefa = _tarefa(questions_report_required=True)
+        tarefa = _tarefa(question_report_required=True)
         outcome, _c, store, _r = _ciclo(
             tmp, [tarefa], patch=None, gerar_patch=geracao, api=api,
         )
@@ -324,6 +324,43 @@ def test_relatorio_8a_persiste_no_runtime_e_entra_no_corpo_da_pr() -> None:
         assert geracao.report in body
         assert avaliar_lei_das_questoes(body).satisfeita is True
     print("OK  test_relatorio_8a_persiste_no_runtime_e_entra_no_corpo_da_pr")
+
+
+class _FakeGitHubApiFalhaAtualizacao(_FakeGitHubApi):
+    def atualizar_pr_corpo(self, pr_number: int, *, corpo: str) -> dict:
+        raise bridge_pr.GitHubBridgeApiError("falha simulada de PATCH do corpo")
+
+
+def test_falha_ao_sincronizar_relatorio_bloqueia_guard() -> None:
+    api = _FakeGitHubApiFalhaAtualizacao()
+    task = RunnerTask(
+        task_id="t--bridge-abc123abc123", priority=Priority.P0, source_issue=128,
+        branch="runner/t", allowed_files=("alvo.txt",),
+        instructions="Escrever OK em alvo.txt.", checkpoint_commit=None,
+        capabilities_required=("codigo",), risk_level="BAIXO", policy_level="C",
+        question_report_required=True,
+    )
+    report = _relatorio_8a_valido()
+    first = bridge_pr.garantir_pr(
+        api, task=task, canonical_task_id="t", worker_id=PILOT_WORKER,
+        worker_display="Claude Worker 4", checkpoint_commit="abcdef1",
+        base_branch="main", titulo_tarefa="T", objetivo="Escrever OK.",
+        question_report=report,
+    )
+    assert first.action == "CREATED" and first.pr_number is not None
+
+    second = bridge_pr.garantir_pr(
+        api, task=task, canonical_task_id="t", worker_id=PILOT_WORKER,
+        worker_display="Claude Worker 4", checkpoint_commit="abcdef2",
+        base_branch="main", titulo_tarefa="T", objetivo="Escrever OK.",
+        question_report=report.replace("Rastreabilidade conferida.", "Nova rodada."),
+    )
+    assert second.action == "FAILED"
+    assert second.pr_number is None, (
+        "falha de sincronização precisa tornar a PR indisponível para _abrir_pr_e_guard; "
+        "número preenchido permitiria Guard sobre relatório antigo"
+    )
+    print("OK  test_falha_ao_sincronizar_relatorio_bloqueia_guard")
 
 
 def test_pr_reutilizada_sincroniza_relatorio_sem_duplicar() -> None:
@@ -2416,6 +2453,7 @@ def test_b4_retomada_nao_pega_tarefa_sem_pr_nem_guard_ja_confirmado() -> None:
 def main() -> int:
     testes = [
         test_relatorio_8a_persiste_no_runtime_e_entra_no_corpo_da_pr,
+        test_falha_ao_sincronizar_relatorio_bloqueia_guard,
         test_pr_reutilizada_sincroniza_relatorio_sem_duplicar,
         test_bridge_desligado_nao_faz_nada,
         test_modo_invalido_fecha_o_portao,
