@@ -222,6 +222,16 @@
       "recorded_at": "2026-09-24T00:27:51.892807+00:00",
       "status": "FAILED",
       "task_id": "infra-inbox-task-intake-issue160--bridge-79509fa549c6"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
+      "recorded_at": "2026-09-24T04:07:59.874751+00:00",
+      "status": "FAILED",
+      "task_id": "semiologia-ii-questoes-exames-p0--bridge-503ff9099a9a"
     }
   ]
 }
