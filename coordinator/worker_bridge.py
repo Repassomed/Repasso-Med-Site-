@@ -1413,11 +1413,32 @@ def executar_correcao_de_auditoria(
     if status_runtime == task_runtime.RUNTIME_BLOCKED_LIMIT and not checkpoint:
         status_runtime = task_runtime.RUNTIME_BLOCKED
 
-    runtime_store.registrar_resultado(
-        canonical_task_id, status=status_runtime, worker_id=worker_id,
-        execution_task_id=execution_task_id, reason=motivo_resultado,
-        checkpoint_commit=checkpoint, branch=branch_final,
-    )
+    # Exceção estreita para o loop NEEDS-FIX: uma correção de auditoria
+    # que FALHA sem produzir novo HEAD pode usar a tentativa seguinte já
+    # prevista por MAX_AUDIT_FIX_ATTEMPTS. Isto NÃO vale para execução normal
+    # nem para BLOCKED/BLOCKED-LIMIT. O mesmo checkpoint já auditado permanece
+    # intacto; não há PR/Guard novo até existir commit novo.
+    rearmado_para_retry = False
+    tratou_falha_correcao = False
+    if status_runtime == task_runtime.RUNTIME_FAILED and not checkpoint:
+        tratou_falha_correcao = runtime_store.registrar_falha_correcao_apos_auditoria(
+            canonical_task_id, worker_id=worker_id,
+            execution_task_id=execution_task_id, reason=motivo_resultado,
+            max_attempts=MAX_AUDIT_FIX_ATTEMPTS,
+        )
+        if tratou_falha_correcao:
+            registro_pos_falha = runtime_store.get(canonical_task_id)
+            if registro_pos_falha is not None:
+                status_runtime = registro_pos_falha.status
+                rearmado_para_retry = status_runtime == task_runtime.RUNTIME_NEEDS_AUDIT
+
+    if not tratou_falha_correcao:
+        runtime_store.registrar_resultado(
+            canonical_task_id, status=status_runtime, worker_id=worker_id,
+            execution_task_id=execution_task_id, reason=motivo_resultado,
+            checkpoint_commit=checkpoint, branch=branch_final,
+        )
+
     registro_final = runtime_store.get(canonical_task_id) or registro
     liberacao = liberar_worker_apos_resultado(
         worker_registry, worker_id, canonical_task_id=canonical_task_id,
@@ -1430,7 +1451,14 @@ def executar_correcao_de_auditoria(
         f"correção automática {registro.audit_fix_attempts}/{MAX_AUDIT_FIX_ATTEMPTS} "
         f"executada a partir do checkpoint da PR #{pedido.pr_number}; parecer {pedido.fingerprint}.",
     ]
-    if status_runtime in STATUS_QUE_ABREM_PR:
+    if rearmado_para_retry:
+        notes.append(
+            f"correção #{registro.audit_fix_attempts} falhou sem novo HEAD; o MESMO parecer "
+            f"NEEDS-FIX foi rearmado para a tentativa {registro.audit_fix_attempts + 1}/"
+            f"{MAX_AUDIT_FIX_ATTEMPTS}. Nenhuma PR ou Guard foi redisparado porque o checkpoint "
+            "auditado não mudou."
+        )
+    elif status_runtime in STATUS_QUE_ABREM_PR:
         pr_outcome, guard_outcome, notas_pr = _abrir_pr_e_guard(
             github_api, task=runner_task, tarefa=tarefa, meta=meta,
             canonical_task_id=canonical_task_id, worker_id=worker_id,
@@ -1440,8 +1468,13 @@ def executar_correcao_de_auditoria(
         notes.extend(notas_pr)
     else:
         notes.append(
-            f"correção terminou em {status_runner}; não há novo HEAD auditável e não existe retry "
-            "silencioso desta falha de execução."
+            f"correção terminou em {status_runner}; não há novo HEAD auditável. "
+            + (
+                f"O teto de {MAX_AUDIT_FIX_ATTEMPTS} correções automáticas foi atingido; "
+                "estado terminal preservado."
+                if registro_final.audit_fix_attempts >= MAX_AUDIT_FIX_ATTEMPTS
+                else "Falha não elegível ao retry estreito de correção pós-auditoria."
+            )
         )
 
     return BridgeOutcome(
