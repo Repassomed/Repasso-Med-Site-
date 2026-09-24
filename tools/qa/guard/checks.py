@@ -154,6 +154,13 @@ class Context:
     # não tem o Guard — só acontece antes desta V1 existir na main) ou
     # "desconhecido" (execução local, sem o wrapper do workflow).
     trusted_source: str = "desconhecido"
+    # Issue #256: todos os caminhos de matéria que existem no HEAD deste PR
+    # (não só os que mudaram) — lido via `git ls-tree`, nunca via `ctx.changed`.
+    # Único uso: `check_assets_removed_outside_materia`, para conseguir
+    # avaliar uma matéria cujo HTML o PR não tocou. Default vazio de
+    # propósito — quem não passa este campo (ex.: testes/execuções antigas)
+    # só deixa de ganhar essa checagem extra, nunca quebra o resto.
+    all_materias: tuple[str, ...] = ()
 
 
 # --------------------------------------------------------------------------
@@ -725,6 +732,64 @@ def _check_assets(ctx: Context, nome: str, base, head) -> list[Finding]:
             "antes deste PR; dívida pré-existente registrada sem bloquear o delta.",
             nome, {"assets": preexistentes[:12]},
         ))
+    return out
+
+
+def check_assets_removed_outside_materia(ctx: Context) -> list[Finding]:
+    """Issue #256 — asset quebrado por este PR sem nenhum HTML de matéria mudar.
+
+    ``check_materias`` só roda ``_check_assets`` para as matérias cujo
+    PRÓPRIO ``.html`` está em ``ctx.changed`` (``materias = [p for p in
+    ctx.changed if _is_materia(p)]``). Uma PR pode apagar, mover ou renomear
+    um arquivo de asset sem tocar em nenhum HTML — nesse caso aquele loop
+    nunca examina a matéria que dependia dele, e a referência quebrada fica
+    invisível (nem HARD FAIL, nem INFO). Achado reproduzido na auditoria
+    independente da PR #247 (Claude 3).
+
+    Esta checagem cobre exatamente essa lacuna, sem virar uma varredura
+    absoluta do site: ela só reage a caminhos que EXISTIAM na base e
+    SUMIRAM no HEAD **por causa deste PR** — ``ctx.base_blob(p) is not
+    None and ctx.head_blob(p) is None`` é delete/move/rename real dentro do
+    diff, nunca "este asset já estava ausente antes". Um asset que já era
+    dívida histórica e continua fora de ``ctx.changed`` nunca entra aqui —
+    continua invisível para ESTA checagem (o que é o comportamento correto:
+    "dívida pré-existente não tocada não bloqueia"), exatamente como o
+    ``_check_assets`` de cada matéria alterada já trata separadamente.
+
+    Matérias que JÁ estão em ``ctx.changed`` são puladas aqui de propósito:
+    ``check_materias``/``_check_assets`` já as cobre, e reportar de novo
+    duplicaria o mesmo achado.
+    """
+    materias_no_diff = {p for p in ctx.changed if _is_materia(p)}
+    apagados = {
+        p for p in ctx.changed
+        if not _is_materia(p)
+        and ctx.base_blob(p) is not None
+        and ctx.head_blob(p) is None
+    }
+    if not apagados:
+        return []
+
+    out: list[Finding] = []
+    for materia_path in ctx.all_materias:
+        if materia_path in materias_no_diff:
+            continue
+        head_raw = ctx.head_blob(materia_path)
+        if not head_raw:
+            continue
+        head_parsed = materia.parse(materia_path, head_raw)
+        quebrados = sorted({
+            a for a in head_parsed.assets
+            if apagados.intersection(_asset_candidate_paths(a))
+        })
+        if quebrados:
+            out.append(Finding(
+                "assets", HARD_FAIL,
+                f"{os.path.basename(materia_path)}: {len(quebrados)} asset(s) referenciado(s) "
+                "foram removidos/movidos/renomeados por este PR, mesmo sem alterar o HTML "
+                "da matéria.",
+                materia_path, {"assets": quebrados[:12]},
+            ))
     return out
 
 

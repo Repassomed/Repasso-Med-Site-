@@ -85,6 +85,26 @@ def _blob(repo: str, ref: str, path: str) -> str | None:
     return r.stdout if r.returncode == 0 else None
 
 
+def _all_materia_paths(repo: str, ref: str) -> tuple[str, ...]:
+    """Todos os caminhos de matéria que existem em ``ref`` — não só os que o
+    PR mudou. Usado por ``checks.check_assets_removed_outside_materia``
+    (Issue #256) para conseguir avaliar uma matéria cujo HTML não está em
+    ``ctx.changed``. ``git ls-tree`` lê a árvore de ``ref`` direto, sem
+    precisar de checkout.
+
+    Lista a árvore INTEIRA e filtra com ``checks._is_materia`` (o mesmo
+    predicado que ``check_materias`` já usa) em vez de passar
+    ``checks.MATERIA_DIR`` como pathspec do ``git ls-tree``: a versão real do
+    site fica em ``Repasso-Med-Site--main/Atual - Copia/netlify/…`` — um
+    prefixo mais longo do que ``MATERIA_DIR`` — e ``git ls-tree -- <path>``
+    trata o argumento como pathspec (prefixo), não substring, então nunca
+    encontraria nada nesse layout. ``_is_materia`` já resolve isso em todo o
+    resto do código com ``MATERIA_DIR in path`` (substring), então a mesma
+    regra precisa valer aqui."""
+    raw = _git(repo, "ls-tree", "-r", "--name-only", ref)
+    return tuple(l for l in raw.splitlines() if checks._is_materia(l))
+
+
 def _exists_at(repo: str, ref: str, path: str) -> bool:
     r = subprocess.run(["git", "-C", repo, "cat-file", "-e", f"{ref}:{path}"],
                        capture_output=True, text=True)
@@ -257,6 +277,7 @@ def run(repo: str, base: str, head: str, corpo: str,
         file_exists=lambda p: _exists_at(repo, head, p),
         tasks_base=tasks_base,
         trusted_source=trusted_source,
+        all_materias=_all_materia_paths(repo, head),
     )
 
     findings: list[Finding] = []
@@ -271,6 +292,7 @@ def run(repo: str, base: str, head: str, corpo: str,
     findings.extend(checks.check_secrets(ctx))
     findings.extend(checks.check_paid_api(ctx))
     findings.extend(checks.check_materias(ctx))
+    findings.extend(checks.check_assets_removed_outside_materia(ctx))
     findings.extend(checks.check_nomenclature(ctx))
     findings.extend(checks.check_orphan_materia(ctx))
 

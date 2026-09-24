@@ -76,6 +76,7 @@ def _rodar_tudo(ctx: Context) -> list[checks.Finding]:
     out.extend(checks.check_secrets(ctx))
     out.extend(checks.check_paid_api(ctx))
     out.extend(checks.check_materias(ctx))
+    out.extend(checks.check_assets_removed_outside_materia(ctx))
     out.extend(checks.check_nomenclature(ctx))
     return out
 
@@ -255,6 +256,157 @@ def test_asset_regressao_mascarada_como_divida_preexistente_continua_hard_fail()
     )
 
 
+def _materia_html_com_imagem(asset_ref: str) -> str:
+    return (
+        "<!doctype html><html><body>\n"
+        f'<img src="{asset_ref}" alt="ilustração">\n'
+        '<div class="quiz-item" id="q1">pergunta</div>\n'
+        "</body></html>"
+    )
+
+
+def test_asset_apagado_sem_html_da_materia_mudar_bloqueia() -> None:
+    """Issue #256, caso DELETE.
+
+    A PR apaga o arquivo do asset (existia na base) sem tocar em NENHUM
+    `.html` de matéria. `check_materias` sozinho nunca chegaria a examinar
+    essa matéria (ela não está em `ctx.changed`) — quem tem que pegar a
+    quebra é `check_assets_removed_outside_materia`.
+    """
+    materia_path = checks.MATERIA_DIR + "dermatologia.html"
+    asset_ref = "/assets/img/derma-mapa.webp"
+    asset_repo_path = "Repasso-Med-Site--main/Atual - Copia/assets/img/derma-mapa.webp"
+    html = _materia_html_com_imagem(asset_ref)
+
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=[asset_repo_path],  # só o asset foi apagado; o HTML nem aparece aqui
+        base_blob=lambda p: "conteúdo-binário" if p == asset_repo_path else None,
+        head_blob=lambda p: (html if p == materia_path
+                             else None if p == asset_repo_path
+                             else None),
+        added_lines={},
+        scope={"arquivos": [asset_repo_path]},
+        tasks=None,
+        file_exists=lambda p: False,
+        all_materias=(materia_path,),
+    )
+    achados = checks.check_assets_removed_outside_materia(ctx)
+    duros = [f for f in achados if f.severity == HARD_FAIL]
+    assert duros, "asset apagado sem tocar no HTML da matéria devia continuar HARD FAIL."
+    assert asset_ref in duros[0].detail.get("assets", []), duros
+    print("OK  test_asset_apagado_sem_html_da_materia_mudar_bloqueia — delete detectado sem HTML mudar.")
+
+
+def test_asset_renomeado_sem_html_da_materia_mudar_bloqueia() -> None:
+    """Issue #256, caso RENAME.
+
+    A PR renomeia o arquivo (caminho antigo apagado, caminho novo criado
+    com outro nome) mas o HTML da matéria continua apontando para o
+    caminho ANTIGO — e esse HTML não está no diff. Precisa continuar
+    HARD FAIL: a referência real quebrou.
+    """
+    materia_path = checks.MATERIA_DIR + "dermatologia.html"
+    asset_ref_antigo = "/assets/img/mapa-v1.webp"
+    caminho_antigo = "Repasso-Med-Site--main/Atual - Copia/assets/img/mapa-v1.webp"
+    caminho_novo = "Repasso-Med-Site--main/Atual - Copia/assets/img/mapa-v2.webp"
+    html = _materia_html_com_imagem(asset_ref_antigo)  # HTML NÃO foi atualizado
+
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=[caminho_antigo, caminho_novo],
+        base_blob=lambda p: "conteúdo-binário" if p == caminho_antigo else None,
+        head_blob=lambda p: (html if p == materia_path
+                             else "conteúdo-binário" if p == caminho_novo
+                             else None),
+        added_lines={},
+        scope={"arquivos": [caminho_antigo, caminho_novo]},
+        tasks=None,
+        file_exists=lambda p: p == caminho_novo,
+        all_materias=(materia_path,),
+    )
+    achados = checks.check_assets_removed_outside_materia(ctx)
+    duros = [f for f in achados if f.severity == HARD_FAIL]
+    assert duros, "rename sem atualizar a referência devia continuar HARD FAIL."
+    assert asset_ref_antigo in duros[0].detail.get("assets", []), duros
+    print("OK  test_asset_renomeado_sem_html_da_materia_mudar_bloqueia — rename detectado sem HTML mudar.")
+
+
+def test_asset_movido_de_diretorio_sem_html_da_materia_mudar_bloqueia() -> None:
+    """Issue #256, caso MOVE.
+
+    A PR move o arquivo para outro diretório (caminho antigo some da árvore,
+    reaparece sob um prefixo diferente); o HTML da matéria não muda e
+    continua referenciando o caminho de origem.
+    """
+    materia_path = checks.MATERIA_DIR + "dermatologia.html"
+    asset_ref_antigo = "/assets/img/mapa.webp"
+    caminho_antigo = "Repasso-Med-Site--main/Atual - Copia/assets/img/mapa.webp"
+    caminho_novo = "Repasso-Med-Site--main/Atual - Copia/assets/img/arquivadas/mapa.webp"
+    html = _materia_html_com_imagem(asset_ref_antigo)
+
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=[caminho_antigo, caminho_novo],
+        base_blob=lambda p: "conteúdo-binário" if p == caminho_antigo else None,
+        head_blob=lambda p: (html if p == materia_path
+                             else "conteúdo-binário" if p == caminho_novo
+                             else None),
+        added_lines={},
+        scope={"arquivos": [caminho_antigo, caminho_novo]},
+        tasks=None,
+        file_exists=lambda p: p == caminho_novo,
+        all_materias=(materia_path,),
+    )
+    achados = checks.check_assets_removed_outside_materia(ctx)
+    duros = [f for f in achados if f.severity == HARD_FAIL]
+    assert duros, "move para outro diretório sem atualizar a referência devia continuar HARD FAIL."
+    assert asset_ref_antigo in duros[0].detail.get("assets", []), duros
+    print("OK  test_asset_movido_de_diretorio_sem_html_da_materia_mudar_bloqueia — move detectado sem HTML mudar.")
+
+
+def test_divida_historica_nao_relacionada_nao_bloqueia_sem_html_mudar() -> None:
+    """Issue #256 — não pode voltar ao problema antigo.
+
+    A matéria referencia um asset que JÁ estava ausente antes deste PR e
+    que este PR não toca de forma alguma (nem o arquivo, nem o HTML). Isso
+    é dívida histórica não relacionada — `check_assets_removed_outside_materia`
+    não pode transformar isso em HARD FAIL, nem escanear o site inteiro
+    atrás de dívida antiga: ele só reage a caminhos que SUMIRAM por causa
+    deste PR (estão em `ctx.changed`).
+    """
+    materia_path = checks.MATERIA_DIR + "dermatologia.html"
+    asset_ja_ausente = "/assets/img/legacy-nunca-existiu.webp"  # nunca esteve em ctx.changed
+    html = _materia_html_com_imagem(asset_ja_ausente)
+
+    # O PR mexe em outro arquivo qualquer, sem nenhuma relação com este asset
+    # nem com esta matéria.
+    outro_arquivo = "coordination/tasks.json"
+
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=[outro_arquivo],
+        base_blob=lambda p: "{}" if p == outro_arquivo else None,
+        head_blob=lambda p: (html if p == materia_path
+                             else "{}" if p == outro_arquivo
+                             else None),
+        added_lines={},
+        scope={"arquivos": [outro_arquivo]},
+        tasks=None,
+        file_exists=lambda p: False,
+        all_materias=(materia_path,),
+    )
+    achados = checks.check_assets_removed_outside_materia(ctx)
+    assert not achados, (
+        "dívida histórica não relacionada a este PR não pode virar HARD FAIL nem "
+        f"aparecer aqui de forma alguma: {achados}"
+    )
+    print(
+        "OK  test_divida_historica_nao_relacionada_nao_bloqueia_sem_html_mudar — "
+        "dívida antiga não relacionada continua sem bloquear."
+    )
+
+
 def test_scope_lock_body_cannot_widen() -> None:
     """Bloqueador 2, cenário 1 da auditoria do PR #94.
 
@@ -377,6 +529,10 @@ def main() -> int:
         test_asset_novo_ausente_continua_hard_fail,
         test_asset_removido_pelo_pr_continua_hard_fail,
         test_asset_regressao_mascarada_como_divida_preexistente_continua_hard_fail,
+        test_asset_apagado_sem_html_da_materia_mudar_bloqueia,
+        test_asset_renomeado_sem_html_da_materia_mudar_bloqueia,
+        test_asset_movido_de_diretorio_sem_html_da_materia_mudar_bloqueia,
+        test_divida_historica_nao_relacionada_nao_bloqueia_sem_html_mudar,
         test_scope_lock_body_cannot_widen,
         test_scope_lock_task_cannot_widen_itself,
         test_gabarito_enunciado_repetido_sem_falso_aviso,
