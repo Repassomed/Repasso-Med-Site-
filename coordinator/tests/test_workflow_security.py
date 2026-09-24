@@ -304,14 +304,16 @@ def test_malicious_pr_editing_coordinator_cannot_run_with_secret() -> None:
     print("OK  test_malicious_pr_editing_coordinator_cannot_run_with_secret")
 
 
-def test_issues_write_present_only_for_commenting_actions_write_still_absent() -> None:
-    """V3 (Issue #99): a única permissão nova é issues:write, e só para o
-    passo que posta o Cartão de Merge — actions:write continua ausente
-    (achado do PR #97, nunca revertido por esta V3)."""
+def test_comment_write_permissions_are_scoped_and_actions_write_still_absent() -> None:
+    """O job trusted precisa de issues:write + pull-requests:write para
+    publicar o Cartão de Merge numa PR. Isso não autoriza merge por si só,
+    e actions:write continua ausente do job de auditoria."""
     secao = _secao_job_permissions(_ler())
     assert "issues: write" in secao
+    assert "pull-requests: write" in secao
+    assert "pull-requests: read" not in secao
     assert "actions: write" not in secao
-    print("OK  test_issues_write_present_only_for_commenting_actions_write_still_absent")
+    print("OK  test_comment_write_permissions_are_scoped_and_actions_write_still_absent")
 
 
 def test_merge_card_comment_step_only_runs_when_comment_file_exists() -> None:
@@ -494,7 +496,7 @@ def main() -> int:
         test_workers_from_tasks_json_is_wired_into_the_real_invocation,
         test_guard_audit_pack_download_step_exists,
         test_run_step_forwards_enabled_mode_and_pilot_env_to_the_cli,
-        test_issues_write_present_only_for_commenting_actions_write_still_absent,
+        test_comment_write_permissions_are_scoped_and_actions_write_still_absent,
         test_merge_card_comment_step_only_runs_when_comment_file_exists,
         test_comment_out_flag_is_wired_into_the_real_invocation,
         test_pr_diff_fetch_step_exists_and_is_wired_into_the_cli,
