@@ -453,6 +453,16 @@
       "recorded_at": "2026-09-24T21:45:48.013156+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "cleanup-como-estudar-guarani--bridge-55e34a454aa8"
+    },
+    {
+      "branch": "runner/semiologia-ii-b08-pa-r5",
+      "checkpoint_commit": "937b70d6822c8a096d755f8d38350cba7311f83b",
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/semiologia-ii-b08-pa-r5'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "recorded_at": "2026-09-24T21:51:18.774959+00:00",
+      "status": "NEEDS-AUDIT",
+      "task_id": "semiologia-ii-b08-pa-r5--bridge-6f84748ae648"
     }
   ]
 }
