@@ -278,7 +278,10 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                         if LABEL_NEEDS_AUDIT in (pr_info.get("labels") or [])
                         else "WORKER-BRIDGE-NEEDS-AUDIT"
                     ),
-                    "updated_at": pr_info.get("updated_at"),
+                    # Comentários e outros metadados da PR alteram updated_at sem
+                    # mudar o código auditado. A identidade precisa ser PR + HEAD
+                    # real auditado; incluir updated_at faria o próprio Cartão de
+                    # Merge transformar um rerun idêntico em nova chamada paga.
                     # Para workflow_dispatch do Guard, workflow_run.head_sha é
                     # a main confiável, não o HEAD da PR. O workflow valida
                     # a PR real pela API e entrega o SHA tipado em pr_info.
