@@ -214,15 +214,19 @@ MAX_FILE_CHARS_SENT = 20_000
 # 20+ execuções terminaram em patch vazio ou JSON truncado. O orçamento
 # continua finito e o arquivo grande continua NUNCA indo inteiro — mas
 # agora cabe o BLOCO (<section>) inteiro que a instrução referencia.
-MAX_ANCHOR_CONTEXT_CHARS_PER_FILE = 160_000
-MAX_ANCHOR_CONTEXT_CHARS_TOTAL = 200_000
+# Auditoria de 24/09/2026: os blocos de Fisiopatología II têm 115–171k e os
+# B01–B03 de Toxicología 122–140k; com teto de 110k o bloco-alvo inteiro era
+# descartado e as microtarefas por bloco (#248) só veriam fragmentos. O
+# arquivo (2,2–2,8 MB) continua NUNCA indo inteiro.
+MAX_ANCHOR_CONTEXT_CHARS_PER_FILE = 200_000
+MAX_ANCHOR_CONTEXT_CHARS_TOTAL = 240_000
 MAX_ANCHOR_WINDOWS_PER_FILE = 24
 
 # Bloco inteiro: uma <section> referenciada pela instrução (B08, bloque 8,
 # id literal, ou a seção que contém uma frase entre aspas da instrução)
 # entra INTEIRA, desde que caiba nestes tetos — e nunca quando a própria
 # seção é quase o arquivo todo (aí seria "mandar o arquivo inteiro").
-MAX_SECTION_CHARS = 110_000
+MAX_SECTION_CHARS = 180_000
 MAX_SECTION_FRACTION_OF_FILE = 0.6
 MAX_SECTIONS_BY_PHRASE = 3
 
@@ -654,6 +658,22 @@ def _numeros_de_bloco_referenciados(instructions: str) -> set[int]:
     return numeros
 
 
+_H2_RE = re.compile(r"<h2\b[^>]*>(.*?)</h2>", re.IGNORECASE | re.DOTALL)
+_MARCADOR_SOURCE_PACK = "FONTE EXTERNA COMPARTILHADA"
+MIN_SECTION_TITLE_CHARS = 10
+
+
+def _titulo_normalizado_da_secao(trecho: str) -> str:
+    """Texto do primeiro <h2> da seção, sem tags/emoji e normalizado como a
+    instrução; "Bloque 05 · Plaguicidas: ..." e "Patologías del esófago"."""
+    m = _H2_RE.search(trecho[:6_000])
+    if not m:
+        return ""
+    texto = re.sub(r"<[^>]+>", " ", m.group(1))
+    texto = "".join(ch for ch in texto if ch.isalnum() or ch.isspace() or ch in "·:,.-")
+    return _normalizar(" ".join(texto.split())).strip(" ·:,.-")
+
+
 def _secoes_referenciadas(conteudo: str, instructions: str) -> list[tuple[int, int]]:
     """Seções inteiras que a instrução aponta: por número de bloco (id que
     termina em ``b08``/``b8``), por id literal citado na instrução, ou por
@@ -682,9 +702,24 @@ def _secoes_referenciadas(conteudo: str, instructions: str) -> list[tuple[int, i
         if m and int(m.group(1)) in numeros:
             _add(inicio, fim)
 
+    # Título do bloco (<h2>) citado na instrução — "No bloco 'Patologías del
+    # esófago'". Só a parte da instrução ANTES do source pack conta: o pack
+    # cita outros blocos de passagem e não pode puxá-los para o contexto.
+    instr_propria = _normalizar(instructions.split(_MARCADOR_SOURCE_PACK, 1)[0])
+    titulos_escolhidos: list[str] = []
+    for inicio, fim, _sid in secoes:
+        titulo = _titulo_normalizado_da_secao(conteudo[inicio:fim])
+        if titulo and len(titulo) >= MIN_SECTION_TITLE_CHARS and titulo in instr_propria:
+            _add(inicio, fim)
+            titulos_escolhidos.append(titulo)
+
     conteudo_norm = _normalizar(conteudo)
     por_frase = 0
-    for frase in _frases_ancora(instructions):
+    # Mesma regra do título: seção INTEIRA só por frase da instrução própria.
+    # Frases citadas no source pack continuam valendo para janelas pequenas.
+    for frase in _frases_ancora(instructions.split(_MARCADOR_SOURCE_PACK, 1)[0]):
+        if any(frase in t for t in titulos_escolhidos):
+            continue  # a frase É o título já escolhido; não puxar o índice
         pos = conteudo_norm.find(frase)
         if pos < 0:
             continue

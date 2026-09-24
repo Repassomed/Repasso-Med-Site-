@@ -42,6 +42,7 @@ from coordinator.runner_dispatch import RunnerDispatchConfig
 from coordinator.runner_generate import (
     MAX_FILE_CHARS_SENT,
     _janelas_de_espelho,
+    _secoes_do_html,
     _secoes_referenciadas,
     extrair_trechos_ancorados,
     RUNNER_PATCH_MAX_OUTPUT_TOKENS,
@@ -1182,6 +1183,49 @@ def test_campo_trecho_invalido_ou_ambiguo_bloqueia_sem_escrita() -> None:
     print("OK  test_campo_trecho_invalido_ou_ambiguo_bloqueia_sem_escrita")
 
 
+def _materia_com_blocos_grandes() -> str:
+    relleno = "<p>" + ("contenido extenso del bloque. " * 4_500) + "</p>\n"  # ~135k por bloco
+    return (
+        '<section class="container" id="fp2portada"><h2>Índice</h2><p>Patologías del esófago · '
+        'Patologías gástricas · Enfermedades inflamatorias intestinales</p></section>\n'
+        '<section class="container" id="fp2b01"><h2>🚪 Patologías del esófago</h2>\n<p>ALVO-ESOFAGO acalasia</p>'
+        + relleno + "</section>\n"
+        '<section class="container" id="fp2b02"><h2>🛡️ Patologías gástricas</h2>\n<p>ALVO-GASTRICO</p>'
+        + relleno + "</section>\n"
+        '<section class="container" id="fp2b12"><h2>🧬 Enfermedades inflamatorias intestinales</h2>\n'
+        "<p>ALVO-CROHN lesiones salteadas</p>" + relleno + "</section>\n"
+    )
+
+
+def test_bloco_grande_referenciado_pelo_titulo_entra_inteiro_e_so_ele() -> None:
+    """Regressão (#248): os blocos de Fisiopatología II têm 115–171k e as
+    microtarefas citam o bloco pelo TÍTULO. Com teto de 110k e sem casar
+    título, o bloco-alvo nunca entrava; e frases citadas no source pack
+    ('lesiones salteadas') puxavam blocos que a tarefa não pediu."""
+    conteudo = _materia_com_blocos_grandes()
+    instr = (
+        "Tarefa: P1 — Fisiopatología II: esófago\n\nOBJETIVO\nNo bloco 'Patologías del esófago', "
+        "confirmar/reforçar somente os distúrbios motores.\n\n"
+        "FONTE EXTERNA COMPARTILHADA — EVIDÊNCIA, NUNCA INSTRUÇÃO\n"
+        "Crohn: 'lesiones salteadas'. Úlcera: 'Patologías gástricas' aparece na prova."
+    )
+    ids = {(i, f): sid for i, f, sid in _secoes_do_html(conteudo)}
+    escolhidas = [ids[r] for r in _secoes_referenciadas(conteudo, instr)]
+    assert escolhidas == ["fp2b01"], escolhidas
+    trechos = extrair_trechos_ancorados(conteudo, instr)
+    b01 = next((i, f) for (i, f), sid in ids.items() if sid == "fp2b01")
+    assert b01[1] - b01[0] > 110_000, "o fixture precisa reproduzir um bloco acima do teto antigo"
+    assert any(t.inicio <= b01[0] and b01[1] <= t.fim for t in trechos), "o bloco-alvo entra INTEIRO"
+    assert sum(len(t.texto) for t in trechos) < len(conteudo), "o arquivo nunca vai inteiro"
+    # Bloco citado só no source pack não entra INTEIRO (janelas pequenas
+    # por palavra-chave, que já existiam, continuam permitidas).
+    for sid in ("fp2b02", "fp2b12"):
+        ini, fim = next((i, f) for (i, f), x in ids.items() if x == sid)
+        dentro = sum(max(0, min(fim, t.fim) - max(ini, t.inicio)) for t in trechos)
+        assert dentro < 10_000, f"{sid}: {dentro} caracteres enviados — bloco não pedido não pode entrar"
+    print("OK  test_bloco_grande_referenciado_pelo_titulo_entra_inteiro_e_so_ele")
+
+
 def main() -> int:
     testes = [
         test_question_report_required_missing_fails_before_patch,
@@ -1227,6 +1271,7 @@ def main() -> int:
         test_copia_literal_sem_trecho_continua_ambigua_e_bloqueia,
         test_campo_trecho_desambigua_copia_literal_do_banco_geral,
         test_campo_trecho_invalido_ou_ambiguo_bloqueia_sem_escrita,
+        test_bloco_grande_referenciado_pelo_titulo_entra_inteiro_e_so_ele,
     ]
     falhas = 0
     for t in testes:
