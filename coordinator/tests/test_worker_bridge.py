@@ -186,6 +186,7 @@ class _FakeGitHubApi:
         self.prs: list[dict] = []
         self.criadas: list[dict] = []
         self.dispatches: list[tuple] = []
+        self.atualizacoes: list[tuple[int, str]] = []
         self.comentarios: dict[int, list[dict]] = {}
         self._proximo = primeiro_numero
 
@@ -225,6 +226,14 @@ class _FakeGitHubApi:
         self.prs.append(pr)
         self.criadas.append(pr)
         return pr
+
+    def atualizar_pr_corpo(self, pr_number: int, *, corpo: str) -> dict:
+        for pr in self.prs:
+            if pr.get("number") == pr_number:
+                pr["body"] = corpo
+                self.atualizacoes.append((pr_number, corpo))
+                return pr
+        raise bridge_pr.GitHubBridgeApiError(f"PR #{pr_number} inexistente no fake")
 
     def despachar_workflow(self, *, arquivo: str, ref: str, inputs: dict) -> None:
         self.dispatches.append((arquivo, ref, inputs))
@@ -1014,6 +1023,97 @@ def test_pr_e_idempotente_nunca_duplica() -> None:
     assert len(api.criadas) == 1
     print("OK  test_pr_e_idempotente_nunca_duplica")
 
+
+def _question_report_teste(detectadas: int = 2) -> dict:
+    return {
+        "detectadas": detectadas,
+        "integrais": 1,
+        "parciais": 1,
+        "reconstruidas": 1,
+        "novas_baseadas_em_exame": 0,
+        "duplicadas": 0,
+        "canonicas": 2,
+        "nao_aproveitadas": 0,
+        "itens": [
+            {
+                "origem": "P1.pdf · p.2",
+                "tipo": "selección múltiple",
+                "destino": "B03 · Q1",
+                "decisao": "INTEGRAL",
+                "motivo": "fonte completa",
+            }
+        ],
+    }
+
+
+def test_question_report_required_entra_nas_instrucoes_tipadas() -> None:
+    tarefa_bruta = _tarefa(question_report_required=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        caminho = _escrever_tasks_json(tmp, [tarefa_bruta])
+        meta = worker_bridge.carregar_metadados_de_automacao(caminho)["infra-bridge-teste"]
+        from coordinator.scheduler import load_tasks_from_tasks_json
+        tarefa = load_tasks_from_tasks_json(caminho)[0]
+        instrucoes = worker_bridge.montar_instrucoes(tarefa, meta)
+        assert meta.question_report_required is True
+        assert "RELATORIO_LEI_8A_OBRIGATORIO" in instrucoes
+        assert "origem, tipo, destino, decisao e motivo" in instrucoes
+    print("OK  test_question_report_required_entra_nas_instrucoes_tipadas")
+
+
+def test_pr_renderiza_e_atualiza_relatorio_lei_8a_sem_duplicar() -> None:
+    api = _FakeGitHubApi()
+    task = RunnerTask(
+        task_id="q--bridge-abc123abc123", priority=Priority.P0, source_issue=128,
+        branch="runner/q", allowed_files=("alvo.txt",),
+        instructions="RELATORIO_LEI_8A_OBRIGATORIO\nAtualizar questão.",
+        checkpoint_commit=None, capabilities_required=("conteudo",),
+        risk_level="MEDIO", policy_level="C",
+    )
+    primeiro_report = _question_report_teste(2)
+    primeira = bridge_pr.garantir_pr(
+        api, task=task, canonical_task_id="q", worker_id=PILOT_WORKER,
+        worker_display="Claude Worker 4", checkpoint_commit="abcdef1",
+        base_branch="main", titulo_tarefa="Questões", objetivo="Atualizar questões.",
+        question_report=primeiro_report,
+    )
+    assert primeira.action == "CREATED"
+    assert "<!-- repasso-question-report -->" in api.criadas[0]["body"]
+    assert "**Detectadas:** 2" in api.criadas[0]["body"]
+    assert "P1.pdf · p.2" in api.criadas[0]["body"]
+
+    segundo_report = _question_report_teste(3)
+    segunda = bridge_pr.garantir_pr(
+        api, task=task, canonical_task_id="q", worker_id=PILOT_WORKER,
+        worker_display="Claude Worker 4", checkpoint_commit="abcdef2",
+        base_branch="main", titulo_tarefa="Questões", objetivo="Atualizar questões.",
+        question_report=segundo_report,
+    )
+    assert segunda.action == "REUSED"
+    assert len(api.criadas) == 1
+    assert len(api.atualizacoes) == 1
+    assert "**Detectadas:** 3" in api.atualizacoes[0][1]
+    assert "abcdef2" in api.atualizacoes[0][1]
+    print("OK  test_pr_renderiza_e_atualiza_relatorio_lei_8a_sem_duplicar")
+
+
+def test_runtime_persiste_question_report_para_recuperacao_de_pr() -> None:
+    store = _runtime_store()
+    reserva = store.reservar("q-report", worker_id=PILOT_WORKER, branch="runner/q-report")
+    assert reserva.reservado and reserva.record is not None
+    report = _question_report_teste(2)
+    ok = store.registrar_resultado(
+        "q-report", status=task_runtime.RUNTIME_NEEDS_AUDIT, worker_id=PILOT_WORKER,
+        execution_task_id=reserva.record.execution_task_id or "", reason="ok",
+        checkpoint_commit="abcdef1", branch="runner/q-report", question_report=report,
+    )
+    assert ok is True
+    fresco = store.get("q-report")
+    assert fresco is not None
+    assert fresco.question_report == report
+    serializado = fresco.to_dict()
+    recarregado = task_runtime.TaskRuntimeRecord.from_dict(serializado)
+    assert recarregado.question_report == report
+    print("OK  test_runtime_persiste_question_report_para_recuperacao_de_pr")
 
 def test_disparo_do_guard_e_idempotente() -> None:
     store = _runtime_store()
@@ -2360,6 +2460,9 @@ def main() -> int:
         test_dependencia_considera_done_operacional,
         test_sucesso_termina_em_needs_audit_com_pr_e_guard,
         test_pr_e_idempotente_nunca_duplica,
+        test_question_report_required_entra_nas_instrucoes_tipadas,
+        test_pr_renderiza_e_atualiza_relatorio_lei_8a_sem_duplicar,
+        test_runtime_persiste_question_report_para_recuperacao_de_pr,
         test_disparo_do_guard_e_idempotente,
         test_pr_nao_e_aberta_para_resultado_sem_nada_publicado,
         test_blocked_limit_mantem_checkpoint_e_nao_libera_o_worker,
