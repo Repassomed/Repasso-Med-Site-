@@ -227,7 +227,14 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
     # (nunca do HEAD do PR) — ver o comentário no topo deste módulo. Só
     # existe quando o workflow_run está associado a uma PR (mesmo
     # repositório) e essa leitura teve sucesso.
-    if estado == "success" and pr_info and LABEL_NEEDS_AUDIT in (pr_info.get("labels") or []):
+    precisa_auditoria = bool(
+        pr_info
+        and (
+            LABEL_NEEDS_AUDIT in (pr_info.get("labels") or [])
+            or pr_info.get("worker_bridge_needs_audit") is True
+        )
+    )
+    if estado == "success" and precisa_auditoria:
         numero = pr_info.get("number")
         corpo = pr_info.get("body") or ""
         titulo = pr_info.get("title") or ""
@@ -266,12 +273,16 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                 "pr_diff": pr_diff,
                 "dedup_fields": {
                     "pr": numero,
-                    "label": LABEL_NEEDS_AUDIT,
+                    "label": (
+                        LABEL_NEEDS_AUDIT
+                        if LABEL_NEEDS_AUDIT in (pr_info.get("labels") or [])
+                        else "WORKER-BRIDGE-NEEDS-AUDIT"
+                    ),
                     "updated_at": pr_info.get("updated_at"),
-                    # Correção da V3: um novo commit na mesma PR, ainda com
-                    # o rótulo NEEDS-AUDIT, precisa virar auditoria nova —
-                    # ver o comentário no topo do módulo.
-                    "head_sha": run.get("head_sha"),
+                    # Para workflow_dispatch do Guard, workflow_run.head_sha é
+                    # a main confiável, não o HEAD da PR. O workflow valida
+                    # a PR real pela API e entrega o SHA tipado em pr_info.
+                    "head_sha": pr_info.get("head_sha") or run.get("head_sha"),
                 },
             },
         )
