@@ -39,6 +39,7 @@ jobs:
             const markerBridge = '<!-- repasso-worker-bridge-needs-audit -->';
             const markerCoordinator = '<!-- repasso-coordinator -->';
             const markerGuard = '<!-- repasso-guard-resumo -->';
+            const auditPolicyVersion = '2026-09-24-material-scope-head-context-v1';
             const pulls = await github.paginate(github.rest.pulls.list, {
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -73,16 +74,22 @@ jobs:
                   (headCommit.commit && headCommit.commit.author && headCommit.commit.author.date) ||
                   '';
                 const headCommittedAt = Date.parse(headDateText);
-                const cardForCurrentHead = cards.some(c => {
+                const cardForCurrentHeadAndPolicy = cards.some(c => {
                   const card = String(c.body || '');
+                  const policy = card.match(/\*\*Política de auditoria:\*\*\s*`([^`]+)`/i);
+                  if (!policy || policy[1] !== auditPolicyVersion) return false;
+
                   const audited = card.match(/\*\*HEAD auditado:\*\*\s*`([0-9a-f]{40})`/i);
                   if (audited) return audited[1].toLowerCase() === pr.head.sha.toLowerCase();
                   const cardAt = Date.parse(String(c.created_at || ''));
                   return Number.isFinite(headCommittedAt) &&
                     Number.isFinite(cardAt) && cardAt >= headCommittedAt;
                 });
-                if (cardForCurrentHead) continue;
-                core.info(`PR #${pr.number}: cartões antigos não cobrem o HEAD ${pr.head.sha}.`);
+                if (cardForCurrentHeadAndPolicy) continue;
+                core.info(
+                  `PR #${pr.number}: falta cartão para HEAD ${pr.head.sha} ` +
+                  `na política ${auditPolicyVersion}; Guard será redisparado.`
+                );
               }
 
               const headRepo = pr.head && pr.head.repo ? pr.head.repo.full_name : '';
