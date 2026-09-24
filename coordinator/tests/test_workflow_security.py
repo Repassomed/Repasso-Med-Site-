@@ -17,6 +17,7 @@ import re
 import sys
 
 from . import _pathsetup
+from coordinator.github_event import AUDIT_POLICY_VERSION
 
 _WORKFLOW_PATH = os.path.join(_pathsetup.REPO_ROOT, ".github", "workflows", "coordinator-observe.yml")
 
@@ -90,6 +91,9 @@ def test_schedule_reconciler_is_minimal_and_dispatches_only_guard() -> None:
     assert "markerBridge = '<!-- repasso-worker-bridge-needs-audit -->'" in bloco
     assert "markerCoordinator = '<!-- repasso-coordinator -->'" in bloco
     assert "markerGuard = '<!-- repasso-guard-resumo -->'" in bloco
+    assert f"const auditPolicyVersion = '{AUDIT_POLICY_VERSION}';" in bloco
+    assert "Política de auditoria" in bloco
+    assert "cardForCurrentHeadAndPolicy" in bloco
     assert "github.rest.repos.getCommit" in bloco
     assert "pr.head.sha" in bloco
     assert "latestGuardAt >= headCommittedAt" in bloco
