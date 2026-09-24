@@ -1257,13 +1257,12 @@ def observe(
             f"{audit_source_pack_error}"
         )
 
-    # OpenAI Auditor (Issue #106) — segunda opinião independente sobre o
-    # MESMO evento, estruturalmente inerte enquanto ``openai_config`` for
-    # ``None``/desabilitado (produção continua assim nesta PR). Roda DEPOIS
-    # da decisão da Anthropic (para o cartão mostrar as duas opiniões
-    # juntas) e só pode REBAIXAR a decisão final (``aplicar_gate_openai`` —
-    # nunca promove, mesmo padrão de ``aplicar_lei_das_questoes``/
-    # ``aplicar_gate_diff``).
+    # OpenAI Auditor (Issue #106) — aval final independente sobre o MESMO
+    # checkpoint. Para conteúdo médico-didático, MERGE-READY agora exige
+    # concordância explícita Anthropic + OpenAI. Se o OpenAI estiver
+    # desabilitado, roteado para ZERO, bloqueado, sem orçamento ou sem
+    # resposta utilizável, o gate final é fail-closed: NEEDS-FIX. Ausência
+    # de auditoria nunca equivale a aprovação.
     resultado_openai: _ResultadoOpenAI | None = None
     if executar_auditoria:
         resultado_openai = _avaliar_com_openai(
@@ -1272,14 +1271,13 @@ def observe(
             openai_transport=openai_transport, event_key=chave,
             source_pack_text=audit_source_pack_text,
         )
-        if resultado_openai is not None:
-            audit_decision_final, nota_openai = aplicar_gate_openai(
-                audit_decision_final,
-                openai_decision=resultado_openai.decision,
-                openai_rationale=resultado_openai.rationale,
-            )
-            if nota_openai:
-                rationale_final = f"{rationale_final}\n\n{nota_openai}"
+        audit_decision_final, nota_openai = aplicar_gate_openai(
+            audit_decision_final,
+            openai_decision=(resultado_openai.decision if resultado_openai is not None else None),
+            openai_rationale=(resultado_openai.rationale if resultado_openai is not None else None),
+        )
+        if nota_openai:
+            rationale_final = f"{rationale_final}\n\n{nota_openai}"
 
     ledger_persistiu = True
     ledger_erro: str | None = None
