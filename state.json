@@ -409,6 +409,16 @@
       "recorded_at": "2026-09-24T15:38:31.092123+00:00",
       "status": "FAILED",
       "task_id": "semiologia-ii-b08-pa-r4--bridge-fff9db730d84"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
+      "recorded_at": "2026-09-24T16:02:30.442290+00:00",
+      "status": "FAILED",
+      "task_id": "cleanup-como-estudar-guarani--bridge-866ece60bcee"
     }
   ]
 }
