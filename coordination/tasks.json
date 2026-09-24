@@ -1111,15 +1111,12 @@
       "objetivo": "No B05, incorporar os elementos explicitamente presentes na cátedra e ausentes do HTML: pH < 7,2; amilasa; triglicéridos >110 mg/dL; urea/creatinina e urinotórax; características macroscópicas hialino, amarillo-citrino, lechoso, purulento fétido, achocolatado e olor a orina. Integrar de modo didático sem apagar Light/derrame/neumotórax já corretos e sem inventar valores não presentes na fonte auditada.",
       "fonte": "Issue #67 · auditoria independente comentário 5752213771",
       "estado": "READY",
-      "prioridade_declarada": "P0",
+      "prioridade_declarada": "P1",
       "dependencias": [
         "semiologia-ii-b09-ecg-r3"
       ],
       "branch": "runner/semiologia-ii-b05-pleural-r3",
-      "notas": "Última microtarefa textual B05–B10 desta cadeia. Preservar IDs/annotations/espelho e terminar NEEDS-AUDIT. P0 de Semiología priorizado por José em 24/09/2026 após tarefas amplas falharem por patch vazio/malformado. Executar como microtarefa, usar o source pack compartilhado e devolver relatório obrigatório da Lei 8-A.11; resultado NEEDS-AUDIT com Anthropic + OpenAI, sem merge/deploy automático.",
-      "source_pack_required": true,
-      "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
-      "questions_report_required": true
+      "notas": "Última microtarefa textual B05–B10 desta cadeia. Preservar IDs/annotations/espelho e terminar NEEDS-AUDIT. P0 de Semiología priorizado por José em 24/09/2026 após tarefas amplas falharem por patch vazio/malformado. Executar como microtarefa, usar o source pack compartilhado e devolver relatório obrigatório da Lei 8-A.11; resultado NEEDS-AUDIT com Anthropic + OpenAI, sem merge/deploy automático. Ajuste conservador da fila em 24/09/2026: permanece P1 porque o source pack atual confirma derrame/neumotórax/Light, mas não documenta todos os valores específicos pedidos (pH, amilasa, triglicéridos, urinotórax). Não elevar nem preencher esses dados sem fonte suficiente."
     },
     {
       "id": "dermatologia-questoes-issue112-r2",
