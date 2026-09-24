@@ -469,14 +469,21 @@ class TaskRuntimeStore:
     ) -> ReservaResult:
         """Reserva explicitamente uma correção pedida pela auditoria.
 
-        Este caminho só aceita uma tarefa que terminou em NEEDS-AUDIT,
-        tem branch/checkpoint/PR publicados e recebeu um Cartão NEEDS-FIX
-        novo. Cada reserva gera uma execution id fresca, preserva a anterior
-        no histórico e zera somente o estado de dispatch do Guard, porque o
-        novo commit precisará ser auditado de novo.
+        Este caminho aceita:
+        - NEEDS-AUDIT + um Cartão NEEDS-FIX NOVO; ou
+        - FAILED de uma correção pós-auditoria anterior, somente para repetir
+          o MESMO parecer que ainda não conseguiu produzir um novo HEAD.
 
-        O mesmo fingerprint nunca é consumido duas vezes e max_attempts é
-        um teto duro contra loop de auditoria/correção.
+        O segundo caso não reabre falha comum de tarefa: exige fingerprint
+        já registrado, audit_fix_attempts > 0, branch/checkpoint/PR existentes
+        e o mesmo parecer confiável. Cada reserva gera execution id fresca,
+        preserva o histórico e zera somente o dispatch do Guard.
+
+        Um fingerprint já consumido continua proibido em NEEDS-AUDIT
+        (correção bem-sucedida aguardando nova auditoria). Em FAILED ele pode
+        ser tentado novamente, dentro de max_attempts, porque não houve novo
+        HEAD para o auditor reavaliar. max_attempts é o teto duro contra loop
+        pago infinito.
         """
         alvo = (canonical_task_id or "").strip()
         worker = (worker_id or "").strip()
@@ -493,13 +500,28 @@ class TaskRuntimeStore:
         def evaluate(dados: dict) -> tuple[bool, dict]:
             base = {t["canonical_task_id"]: t for t in (dados.get("tasks") or []) if t.get("canonical_task_id")}
             fresco = base.get(alvo)
-            if fresco is None or fresco.get("status") != RUNTIME_NEEDS_AUDIT:
+            if fresco is None:
                 return False, dados
+            status_atual = fresco.get("status")
+            mesmo_parecer = fresco.get("last_audit_fix_fingerprint") == fingerprint
+            tentativas = int(fresco.get("audit_fix_attempts") or 0)
+
+            if status_atual == RUNTIME_NEEDS_AUDIT:
+                # Em NEEDS-AUDIT, o mesmo parecer já gerou uma correção com
+                # novo HEAD; só uma NOVA auditoria/fingerprint pode reentrar.
+                if mesmo_parecer:
+                    return False, dados
+            elif status_atual == RUNTIME_FAILED:
+                # Retry extremamente estreito: só FAILED de uma correção
+                # anterior do MESMO parecer. Uma falha comum (tentativas=0
+                # ou sem fingerprint) jamais é ressuscitada.
+                if tentativas <= 0 or not mesmo_parecer:
+                    return False, dados
+            else:
+                return False, dados
+
             if not fresco.get("branch") or not fresco.get("checkpoint_commit") or not fresco.get("pr_number"):
                 return False, dados
-            if fresco.get("last_audit_fix_fingerprint") == fingerprint:
-                return False, dados
-            tentativas = int(fresco.get("audit_fix_attempts") or 0)
             if tentativas >= max_attempts:
                 return False, dados
 
@@ -536,12 +558,22 @@ class TaskRuntimeStore:
             atual = self.get(alvo)
             if atual is None:
                 motivo = "registro operacional ausente."
-            elif atual.status != RUNTIME_NEEDS_AUDIT:
-                motivo = f"estado atual {atual.status!r}, não NEEDS-AUDIT."
-            elif atual.last_audit_fix_fingerprint == fingerprint:
-                motivo = "este mesmo parecer NEEDS-FIX já foi consumido."
             elif atual.audit_fix_attempts >= max_attempts:
                 motivo = f"teto de {max_attempts} correções automáticas já atingido."
+            elif atual.status == RUNTIME_NEEDS_AUDIT and atual.last_audit_fix_fingerprint == fingerprint:
+                motivo = (
+                    "este mesmo parecer NEEDS-FIX já produziu novo HEAD e aguarda nova auditoria."
+                )
+            elif atual.status == RUNTIME_FAILED:
+                if atual.audit_fix_attempts <= 0 or atual.last_audit_fix_fingerprint != fingerprint:
+                    motivo = (
+                        "FAILED não pertence a uma correção anterior deste mesmo parecer; "
+                        "falha comum nunca entra em retry automático."
+                    )
+                else:
+                    motivo = "branch/checkpoint/PR incompletos ou corrida concorrente."
+            elif atual.status != RUNTIME_NEEDS_AUDIT:
+                motivo = f"estado atual {atual.status!r} não admite correção automática."
             else:
                 motivo = "branch/checkpoint/PR incompletos ou corrida concorrente."
             return ReservaResult(False, f"correção pós-auditoria não reservada: {motivo}")
