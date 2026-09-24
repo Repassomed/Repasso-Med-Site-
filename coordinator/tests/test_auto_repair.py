@@ -53,6 +53,21 @@ FileExistsError: [Errno 17] File exists: '/tmp/tmpabc/remoto.git'
     print("OK  test_fileexists_is_technical_timeout_is_not")
 
 
+def test_429_so_bloqueia_em_contexto_http():
+    technical = """Traceback (most recent call last):
+  File "/x/coordinator/worker_bridge.py", line 429, in run
+AssertionError: fixture quebrada
+"""
+    a = assess_failure("Repasso Coordinator (WORKER BRIDGE)", technical, "Preflight")
+    assert a.eligible
+
+    rate_limited = technical + "\nHTTP status: 429 Too Many Requests\n"
+    b = assess_failure("Repasso Coordinator (WORKER BRIDGE)", rate_limited, "Preflight")
+    assert not b.eligible
+    assert "429" in b.reason
+    print("OK  test_429_so_bloqueia_em_contexto_http")
+
+
 def test_candidate_does_not_offer_run_all():
     log = """Traceback (most recent call last):
   File "/x/coordinator/tests/run_all.py", line 92, in main
@@ -155,7 +170,8 @@ def test_workflow_is_workflow_run_only_and_self_excluded():
 
 TESTS = [
     test_scope_is_strict, test_fileexists_is_technical_timeout_is_not,
-    test_candidate_does_not_offer_run_all, test_plan_blocks_backlog_and_assert_rewrite,
+    test_429_so_bloqueia_em_contexto_http, test_candidate_does_not_offer_run_all,
+    test_plan_blocks_backlog_and_assert_rewrite,
     test_apply_preserves_test_assertions, test_attempt_limit_and_run_dedup,
     test_merge_identity_and_scope, test_workflow_is_workflow_run_only_and_self_excluded,
 ]
