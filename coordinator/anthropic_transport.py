@@ -31,6 +31,7 @@ import os
 from .anthropic_client import Request, Transport, TransportResponse
 
 ANTHROPIC_API_KEY_ENV = "ANTHROPIC_API_KEY"
+DEFAULT_TIMEOUT_SECONDS = 180.0
 
 
 class AnthropicTransport:
@@ -44,7 +45,9 @@ class AnthropicTransport:
     confirma o portão aberto.
     """
 
-    def __init__(self, *, timeout: float = 60.0, max_retries: int = 0) -> None:
+    def __init__(self, *, timeout: float = DEFAULT_TIMEOUT_SECONDS, max_retries: int = 0) -> None:
+        # Issue #168: 60 s interrompeu uma tarefa real de código (run 35936352652).
+        # O teto de 180 s continua finito e cobre respostas estruturadas maiores.
         # max_retries=0 de propósito: o retry de rede é responsabilidade
         # do SDK por padrão (2 tentativas), mas a Issue #95 pede "uma
         # tentativa só, sem loop" no nível do Coordinator — desligar o
