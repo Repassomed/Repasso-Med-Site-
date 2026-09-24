@@ -2282,6 +2282,26 @@ def test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual() -> None:
     print("OK  test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual")
 
 
+def test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror() -> None:
+    """Regressão: ``redact`` não estava importado no módulo, então qualquer
+    erro da API do GitHub na reconciliação pós-merge virava NameError e
+    derrubava o ciclo inteiro do Bridge em vez de virar uma nota."""
+    store, anterior = _store_needs_audit_para_fix()
+
+    class _ApiQueFalha:
+        def pr_por_numero(self, pr_number: int) -> dict:
+            raise bridge_pr.GitHubBridgeApiError("GitHub 502 Bad Gateway")
+
+    cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+    notas, mudou = worker_bridge.reconciliar_merges_confirmados(
+        {"t-fix": anterior}, runtime_store=store, github_api=_ApiQueFalha(),
+        base_branch="bootstrap", config=cfg,
+    )
+    assert mudou is False
+    assert len(notas) == 1 and "não consegui consultar PR #901" in notas[0], notas
+    print("OK  test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror")
+
+
 def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
@@ -2717,6 +2737,7 @@ def main() -> int:
         test_audit_fix_para_depois_de_duas_correcoes,
         test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual,
         test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
+        test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
         test_error_registry_bridge_sucesso_normal_nao_gera_erro,
         test_error_registry_bridge_captura_runner_pr_guard_e_liberacao,

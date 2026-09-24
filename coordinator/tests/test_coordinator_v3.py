@@ -33,7 +33,7 @@ from coordinator import audit, merge_card
 from coordinator.budget import UsageLedger
 from coordinator.config import ACTIVE_SUPERVISED_MODE, ALLOWED_MODE, Config
 from coordinator.dedup import Deduplicator, InMemoryStore
-from coordinator.events import EventType
+from coordinator.events import Event, EventType
 from coordinator.github_event import build_event_from_github_context
 from coordinator.__main__ import _gravar_comment_out
 from coordinator.observe import observe
@@ -523,6 +523,9 @@ _DIFF_REAL_EXEMPLO = (
 )
 
 
+_TITULO_SEM_AVALIACAO = "Farmacología II — ajuste de prosa"
+
+
 def _evento_pr_materia(*, run_id: int, head_sha: str, body: str, titulo: str = "Farmacología II — provas"):
     payload = {
         "action": "completed",
@@ -537,8 +540,8 @@ def _evento_pr_materia(*, run_id: int, head_sha: str, body: str, titulo: str = "
 
 def _observar_pr_materia(*, head_sha: str, body: str, audit_pack: dict | None = None,
                           transport=None, dedup=None, ledger=None, audit_mode=True, run_id=1,
-                          pr_diff: str | None = None):
-    payload, pr_info = _evento_pr_materia(run_id=run_id, head_sha=head_sha, body=body)
+                          pr_diff: str | None = None, titulo: str = "Farmacología II — provas"):
+    payload, pr_info = _evento_pr_materia(run_id=run_id, head_sha=head_sha, body=body, titulo=titulo)
     ev = build_event_from_github_context("workflow_run", payload, REPO, pr_info=pr_info,
                                           audit_pack=audit_pack, pr_diff=pr_diff)
     cfg = Config(enabled=True, mode=ACTIVE_SUPERVISED_MODE if audit_mode else ALLOWED_MODE)
@@ -582,8 +585,10 @@ def test_audit_merge_ready_without_questoes() -> None:
         dedup = Deduplicator(InMemoryStore())
         ledger = UsageLedger(os.path.join(tmp, "usage.json"))
         t = _TransporteContador(_RespostaFalsa("DECISÃO: MERGE-READY\nTudo certo."))
+        # Título sem "prova(s)": desde a PR #243 o plural também ativa a Lei 8-A.
         r = _observar_pr_materia(head_sha="mr1", body="ajuste de prosa didática, sem nada relacionado a avaliação",
-                                  transport=t, dedup=dedup, ledger=ledger, pr_diff=_DIFF_REAL_EXEMPLO)
+                                  transport=t, dedup=dedup, ledger=ledger, pr_diff=_DIFF_REAL_EXEMPLO,
+                                  titulo=_TITULO_SEM_AVALIACAO)
         assert r.status == "OBSERVED"
         assert r.audit_decision == "MERGE-READY"
         assert t.calls == 1
@@ -627,7 +632,7 @@ def test_audit_merge_ready_blocked_without_real_diff() -> None:
         ledger = UsageLedger(os.path.join(tmp, "usage.json"))
         t = _TransporteContador(_RespostaFalsa("DECISÃO: MERGE-READY\nParece tudo certo."))
         r = _observar_pr_materia(head_sha="nd1", body="ajuste de prosa didática", transport=t,
-                                  dedup=dedup, ledger=ledger, pr_diff=None)
+                                  dedup=dedup, ledger=ledger, pr_diff=None, titulo=_TITULO_SEM_AVALIACAO)
         assert r.audit_decision == "NEEDS-FIX", "sem diff real, nunca pode ser MERGE-READY"
         assert "diff" in r.merge_card.lower()
     print("OK  test_audit_merge_ready_blocked_without_real_diff")

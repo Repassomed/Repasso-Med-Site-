@@ -140,6 +140,7 @@ from .runner_dispatch import (
     StructuredPatch,
     executar_tarefa,
 )
+from .redact import redact
 from .scheduler import QueueDecision, TaskRecord
 from .task_runtime import TaskRuntimeRecord, TaskRuntimeStore
 from .worker_ops import OperationalWorkerRegistry, WorkerRecord
