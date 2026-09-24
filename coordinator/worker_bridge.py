@@ -1818,6 +1818,8 @@ def _abrir_pr_e_guard(
         checkpoint_commit=checkpoint_commit, base_branch=base_branch,
         titulo_tarefa=meta.titulo, objetivo=meta.objetivo, area=tarefa.area,
         dependencias=tarefa.dependencias,
+        source_pack_path=meta.source_pack_path,
+        source_pack_sha256=meta.source_pack_sha256,
     )
     if pr_outcome.pr_number is None:
         notas.append(f"PR não disponível ({pr_outcome.action}): {pr_outcome.reason}")
