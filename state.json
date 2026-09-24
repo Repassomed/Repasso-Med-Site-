@@ -924,6 +924,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:235.",
       "task_id": "<!-- id do registro em coordination/tasks.json, ou \"-\" se n\u00e3o houver -->",
       "worker_id": null
+    },
+    {
+      "category": "runner",
+      "commit_sha": null,
+      "component": "runner",
+      "error_id": "ERR-C5BC5DC04F",
+      "error_type": "runner-failed",
+      "fingerprint": "c5bc5dc04f27dc6f7591",
+      "first_seen": "2026-09-24T15:39:01.743173+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "3b6c1f0b3a5843b38df10cd5deecf271",
+      "issue_sync_updated_at": "2026-09-24T15:39:01.743173+00:00",
+      "last_evidence_hash": "9bea937c2e75c69e14e5",
+      "last_seen": "2026-09-24T15:39:01.743173+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36021382145",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
+      "task_id": "semiologia-ii-b08-pa-r4",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
