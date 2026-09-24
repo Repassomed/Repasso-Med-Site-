@@ -316,7 +316,13 @@ _SYSTEM_PROMPT = (
     "Você é um gerador determinístico de patch estruturado para o Repasso Med "
     "(Issue #105, Fase D). Devolva SOMENTE um objeto JSON válido, sem nenhum texto "
     "antes ou depois, sem markdown, no formato EXATO:\n"
-    '{"files": [{"path": "<caminho>", "content": "<conteúdo COMPLETO do arquivo>"}]}\n'
+    '{"files": [{"path": "<caminho>", "content": "<conteúdo COMPLETO do arquivo>"}], '
+    '"question_report": {"detectadas": 0, "integrais": 0, "parciais": 0, '
+    '"reconstruidas": 0, "novas_baseadas_em_exame": 0, "duplicadas": 0, '
+    '"canonicas": 0, "nao_aproveitadas": 0, "itens": []}}\n'
+    "O campo 'question_report' é OPCIONAL em tarefas comuns e OBRIGATÓRIO somente quando "
+    "a instrução contiver o marcador RELATORIO_LEI_8A_OBRIGATORIO. Nesse caso ele deve "
+    "seguir exatamente o contrato solicitado na instrução; nunca invente proveniência. "
     "Cada 'path' precisa ser EXATAMENTE um dos caminhos permitidos informados no "
     "prompt do usuário — nunca um caminho novo, nunca um caminho fora dessa lista. "
     "'content' é sempre o CONTEÚDO COMPLETO do arquivo final, nunca um diff/patch "
@@ -342,8 +348,13 @@ _SYSTEM_PROMPT_ANCORADO = (
     "nenhum texto antes ou depois, sem markdown, no formato EXATO:\n"
     '{"files": [{"path": "<caminho>", "content": "<conteúdo COMPLETO do arquivo>"}], '
     '"edits": [{"path": "<caminho>", "old_text": "<texto atual literal>", '
-    '"new_text": "<texto novo>"}]}\n'
-    "Os dois campos são opcionais, mas pelo menos um precisa vir preenchido, e um mesmo "
+    '"new_text": "<texto novo>"}], "question_report": {"detectadas": 0, "integrais": 0, '
+    '"parciais": 0, "reconstruidas": 0, "novas_baseadas_em_exame": 0, "duplicadas": 0, '
+    '"canonicas": 0, "nao_aproveitadas": 0, "itens": []}}\n'
+    "Os campos 'files'/'edits' são opcionais, mas pelo menos um precisa vir preenchido, "
+    "e um mesmo path NUNCA pode aparecer nos dois. 'question_report' é OPCIONAL em tarefas "
+    "comuns e OBRIGATÓRIO somente quando a instrução contiver "
+    "RELATORIO_LEI_8A_OBRIGATORIO; nunca invente proveniência. "
     "'path' NUNCA pode aparecer nos dois.\n"
     "- 'files' (FileWrite) é SÓ para os caminhos cujo conteúdo ATUAL foi enviado por "
     "INTEIRO no prompt do usuário; 'content' é o conteúdo COMPLETO do arquivo final.\n"
@@ -363,6 +374,83 @@ _SYSTEM_PROMPT_ANCORADO = (
     "for possível cumprir a instrução com segurança dentro dos caminhos e trechos permitidos, "
     'devolva exatamente {"files": [], "edits": []}.'
 )
+
+QUESTION_REPORT_MARKER = "RELATORIO_LEI_8A_OBRIGATORIO"
+QUESTION_REPORT_COUNT_FIELDS = (
+    "detectadas", "integrais", "parciais", "reconstruidas",
+    "novas_baseadas_em_exame", "duplicadas", "canonicas", "nao_aproveitadas",
+)
+QUESTION_REPORT_ITEM_FIELDS = ("origem", "tipo", "destino", "decisao", "motivo")
+QUESTION_REPORT_MAX_ITEMS = 120
+QUESTION_REPORT_MAX_FIELD_CHARS = 600
+
+
+def question_report_de_resposta(d: dict, *, required: bool) -> dict | None:
+    """Valida o relatório da Lei das Questões 8-A como DADO de auditoria.
+
+    Ele nunca concede escopo, nunca altera allowed_files e nunca é executado.
+    Quando a tarefa exige o relatório, ausência/malformação falha fechado
+    antes de qualquer escrita. Campos extras são descartados para impedir
+    que texto livre viaje como instrução operacional.
+    """
+    bruto = d.get("question_report")
+    if bruto is None:
+        if required:
+            raise ValueError(
+                "question_report obrigatório pela Lei 8-A não foi devolvido; "
+                "patch sem matriz de proveniência não pode avançar."
+            )
+        return None
+    if not isinstance(bruto, dict):
+        raise ValueError("question_report precisa ser um objeto JSON.")
+
+    normalizado: dict[str, object] = {}
+    for campo in QUESTION_REPORT_COUNT_FIELDS:
+        valor = bruto.get(campo)
+        if isinstance(valor, bool) or not isinstance(valor, int) or valor < 0:
+            raise ValueError(f"question_report.{campo} precisa ser inteiro >= 0.")
+        normalizado[campo] = valor
+
+    itens = bruto.get("itens")
+    if not isinstance(itens, list):
+        raise ValueError("question_report.itens precisa ser uma lista.")
+    if len(itens) > QUESTION_REPORT_MAX_ITEMS:
+        raise ValueError(
+            f"question_report.itens excede {QUESTION_REPORT_MAX_ITEMS} linhas; "
+            "divida a tarefa em microtarefas."
+        )
+
+    itens_ok: list[dict[str, str]] = []
+    for indice, item in enumerate(itens, start=1):
+        if not isinstance(item, dict):
+            raise ValueError(f"question_report.itens[{indice}] precisa ser objeto.")
+        linha: dict[str, str] = {}
+        for campo in QUESTION_REPORT_ITEM_FIELDS:
+            valor = item.get(campo)
+            if not isinstance(valor, str) or not valor.strip():
+                raise ValueError(
+                    f"question_report.itens[{indice}].{campo} precisa ser texto não vazio."
+                )
+            texto = valor.strip()
+            if len(texto) > QUESTION_REPORT_MAX_FIELD_CHARS:
+                raise ValueError(
+                    f"question_report.itens[{indice}].{campo} excede "
+                    f"{QUESTION_REPORT_MAX_FIELD_CHARS} caracteres."
+                )
+            linha[campo] = texto
+        itens_ok.append(linha)
+    normalizado["itens"] = itens_ok
+
+    if int(normalizado["nao_aproveitadas"]) > 0 and not any(
+        "NAO" in item["decisao"].upper() or "NÃO" in item["decisao"].upper()
+        for item in itens_ok
+    ):
+        raise ValueError(
+            "question_report declara questões não aproveitadas, mas nenhuma linha de itens "
+            "registra a decisão/motivo correspondente."
+        )
+    return normalizado
+
 
 _REGRAS_ARQUIVO_GRANDE = (
     "ATENÇÃO — há arquivo(s) GRANDE(S) nesta tarefa:\n"
@@ -845,6 +933,9 @@ class GenerateOutcome:
     # pior das hipóteses, permanece contada — nunca um valor menor/
     # ausente).
     ledger_correction_failed: bool = False
+    # Matriz de proveniência da Lei das Questões 8-A. É somente evidência
+    # para PR/auditoria; nunca é aplicada em disco nem interpretada como comando.
+    question_report: dict | None = None
 
     def to_dict(self) -> dict:
         d = {
@@ -853,6 +944,7 @@ class GenerateOutcome:
             "external_call_made": self.external_call_made,
             "patch": self.patch.to_dict() if self.patch else None,
             "ledger_correction_failed": self.ledger_correction_failed,
+            "question_report": self.question_report,
         }
         if self.usage:
             d["usage"] = self.usage.to_dict()
@@ -1109,6 +1201,17 @@ def gerar_patch_via_claude(
             ledger_correction_failed=ledger_correction_failed,
         )
 
+    report_required = QUESTION_REPORT_MARKER in (task.instructions or "")
+    try:
+        question_report = question_report_de_resposta(dados, required=report_required)
+    except ValueError as exc:
+        return GenerateOutcome(
+            status="failed",
+            reason=f"question_report da Lei 8-A é inválido (fail-closed): {exc}{nota_ledger}",
+            usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
+        )
+
     # Issue #144: a resposta pode trazer 'files' (FileWrite, arquivo
     # pequeno — o caminho de sempre, inalterado) e/ou 'edits'
     # (AnchoredEdit, arquivo grande). Sem 'edits', tudo abaixo se comporta
@@ -1204,4 +1307,5 @@ def gerar_patch_via_claude(
         reason=f"patch gerado via Claude e validado contra allowed_files{detalhe_ancoras}.{nota_ledger}",
         patch=patch, usage=resultado_chamada.usage, external_call_made=True,
         ledger_correction_failed=ledger_correction_failed,
+        question_report=question_report,
     )
