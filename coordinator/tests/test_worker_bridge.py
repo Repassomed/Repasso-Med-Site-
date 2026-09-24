@@ -2052,6 +2052,21 @@ def test_audit_fix_so_aceita_cartao_do_bot_confiavel() -> None:
     print("OK  test_audit_fix_so_aceita_cartao_do_bot_confiavel")
 
 
+def test_audit_fix_falha_tecnica_de_auditor_nao_vira_correcao_de_conteudo() -> None:
+    marcadores = worker_bridge.AUDIT_TECHNICAL_FAILURE_MARKERS
+    assert marcadores
+    for indice, marcador in enumerate(marcadores, start=20):
+        body = _cartao_needs_fix(motivo=f"{marcador}: detalhe técnico")
+        comentarios = [{"id": indice, "user": {"login": "github-actions[bot]"}, "body": body}]
+        assert worker_bridge._audit_fix_request_from_comments(comentarios, pr_number=901) is None, marcador
+
+    # Um NEEDS-FIX sem falha de infraestrutura continua elegível.
+    body = _cartao_needs_fix(motivo="seção didática vazia precisa ser corrigida")
+    comentarios = [{"id": 99, "user": {"login": "github-actions[bot]"}, "body": body}]
+    assert worker_bridge._audit_fix_request_from_comments(comentarios, pr_number=901) is not None
+    print("OK  test_audit_fix_falha_tecnica_de_auditor_nao_vira_correcao_de_conteudo")
+
+
 def test_audit_fix_cartao_carrega_head_auditado() -> None:
     body = _cartao_needs_fix(head_sha="abcdef1234567890")
     comentarios = [{"id": 5, "user": {"login": "github-actions[bot]"}, "body": body}]
@@ -2280,6 +2295,26 @@ def test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual() -> None:
         assert proibido.chamado is False
         assert store.get("infra-bridge-teste").audit_fix_attempts == 0
     print("OK  test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual")
+
+
+def test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror() -> None:
+    """Regressão: ``redact`` não estava importado no módulo, então qualquer
+    erro da API do GitHub na reconciliação pós-merge virava NameError e
+    derrubava o ciclo inteiro do Bridge em vez de virar uma nota."""
+    store, anterior = _store_needs_audit_para_fix()
+
+    class _ApiQueFalha:
+        def pr_por_numero(self, pr_number: int) -> dict:
+            raise bridge_pr.GitHubBridgeApiError("GitHub 502 Bad Gateway")
+
+    cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+    notas, mudou = worker_bridge.reconciliar_merges_confirmados(
+        {"t-fix": anterior}, runtime_store=store, github_api=_ApiQueFalha(),
+        base_branch="bootstrap", config=cfg,
+    )
+    assert mudou is False
+    assert len(notas) == 1 and "não consegui consultar PR #901" in notas[0], notas
+    print("OK  test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror")
 
 
 def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
@@ -2707,6 +2742,7 @@ def main() -> int:
         test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte,
         # Feedback automático NEEDS-FIX -> correção -> nova auditoria.
         test_audit_fix_so_aceita_cartao_do_bot_confiavel,
+        test_audit_fix_falha_tecnica_de_auditor_nao_vira_correcao_de_conteudo,
         test_audit_fix_cartao_carrega_head_auditado,
         test_audit_fix_merge_ready_nao_reentra_em_correcao,
         test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado,
@@ -2717,6 +2753,7 @@ def main() -> int:
         test_audit_fix_para_depois_de_duas_correcoes,
         test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual,
         test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
+        test_reconciliacao_com_erro_da_api_vira_nota_nunca_nameerror,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
         test_error_registry_bridge_sucesso_normal_nao_gera_erro,
         test_error_registry_bridge_captura_runner_pr_guard_e_liberacao,

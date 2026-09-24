@@ -66,6 +66,29 @@ class PrivacyPreflightResult:
         return {"safe": self.safe, "reasons": list(self.reasons)}
 
 
+_PII_REDACTIONS: tuple[tuple[re.Pattern, str], ...] = (
+    (_RE_EMAIL, "[EMAIL_REDACTED]"),
+    (_RE_CPF, "[CPF_REDACTED]"),
+    (_RE_PHONE_BR, "[PHONE_REDACTED]"),
+)
+
+
+def redact_pii_for_audit(texto: str) -> str:
+    """Remove PII objetiva do prompt antes da auditoria externa.
+
+    E-mail/CPF/telefone não são necessários para julgar o diff e portanto
+    são substituídos localmente. Segredos, tokens e credenciais NÃO são
+    redigidos aqui de propósito: permanecem visíveis ao preflight e
+    continuam bloqueando a chamada de forma fail-closed.
+    """
+    if not isinstance(texto, str) or not texto:
+        return texto if isinstance(texto, str) else ""
+    sanitizado = texto
+    for padrao, substituto in _PII_REDACTIONS:
+        sanitizado = padrao.sub(substituto, sanitizado)
+    return sanitizado
+
+
 def preflight(texto: str) -> PrivacyPreflightResult:
     """Varre ``texto`` (o prompt EXATO que seria enviado à OpenAI) pelos
     padrões acima. ``safe=False`` com qualquer achado — o chamador

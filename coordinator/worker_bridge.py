@@ -140,6 +140,7 @@ from .runner_dispatch import (
     StructuredPatch,
     executar_tarefa,
 )
+from .redact import redact
 from .scheduler import QueueDecision, TaskRecord
 from .task_runtime import TaskRuntimeRecord, TaskRuntimeStore
 from .worker_ops import OperationalWorkerRegistry, WorkerRecord
@@ -202,6 +203,13 @@ COORDINATOR_BOT_LOGIN = "github-actions[bot]"
 AUDIT_CARD_HEADER = "## 🟣 CARTÃO DE MERGE — Coordinator V3"
 AUDIT_NEEDS_FIX_LINE = (
     "**Decisão da auditoria semântica (STANDARD, independente do worker):** NEEDS-FIX"
+)
+AUDIT_TECHNICAL_FAILURE_MARKERS: tuple[str, ...] = (
+    "Privacy preflight determinístico bloqueou",
+    "A resposta da auditoria não seguiu o protocolo esperado",
+    "A resposta do OpenAI Auditor não seguiu o protocolo esperado",
+    "OpenAI Auditor não produziu uma decisão utilizável",
+    "Auditoria OpenAI concluída, mas a persistência do custo no ledger falhou",
 )
 AUDIT_HEAD_RE = re.compile(r"\*\*HEAD auditado:\*\*\s*`?([0-9a-fA-F]{7,64})`?", re.I)
 
@@ -883,6 +891,13 @@ def _audit_fix_request_from_comments(comentarios: list[dict], *, pr_number: int)
         if not body.startswith(COORDINATOR_COMMENT_MARKER):
             continue
         if AUDIT_CARD_HEADER not in body or AUDIT_NEEDS_FIX_LINE not in body:
+            continue
+        # NEEDS-FIX técnico de auditoria não é instrução de conteúdo. Se
+        # OpenAI/Anthropic não conseguiram produzir um aval utilizável, a
+        # tarefa permanece NEEDS-AUDIT até a infraestrutura reauditar o
+        # mesmo HEAD; nunca mandamos um worker médico "corrigir" PII,
+        # protocolo, rede ou ledger.
+        if any(marcador in body for marcador in AUDIT_TECHNICAL_FAILURE_MARKERS):
             continue
         fingerprint = hashlib.sha256(body.encode("utf-8")).hexdigest()[:24]
         findings = body[:MAX_AUDIT_FINDINGS_CHARS]
