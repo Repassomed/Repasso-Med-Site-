@@ -43,6 +43,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 
 from . import materia
@@ -670,6 +671,20 @@ def _check_assets(ctx: Context, nome: str, base, head) -> list[Finding]:
 
     Assets ausentes que já estavam referenciados na base e cujo caminho não
     foi tocado por este PR ficam visíveis como INFO, sem bloquear o delta.
+
+    Achado da auditoria independente da PR #247 (Claude 3): a versão anterior
+    decidia "isto já era dívida antiga?" checando só se o CAMINHO aparecia em
+    algum lugar de ``base.assets`` (um ``set``). Isso permitia mascarar uma
+    regressão nova: bastava reescrever uma tag `<img>`/`url()` que antes
+    apontava para um asset que EXISTIA, fazendo-a apontar para o MESMO
+    caminho já quebrado usado por OUTRA tag no mesmo arquivo — a contagem de
+    ocorrências crescia (1 → 2), mas o `set` só via "o caminho já existia" e
+    classificava as duas como dívida antiga, escondendo a quebra nova.
+    Agora a comparação é por OCORRÊNCIA (``Counter``), não por presença: um
+    caminho ausente só "cabe" como dívida pré-existente até o limite de
+    quantas vezes ele já aparecia quebrado na base — qualquer ocorrência
+    ALÉM desse orçamento é tratada como nova, mesmo que o texto do caminho já
+    existisse em outra referência.
     """
     faltando_head: list[str] = []
     for a in head.assets:
@@ -679,17 +694,21 @@ def _check_assets(ctx: Context, nome: str, base, head) -> list[Finding]:
     if not faltando_head:
         return [Finding("assets", INFO, f"{nome}: os {len(head.assets)} assets referenciados existem.", nome)]
 
-    assets_base = set(base.assets) if base is not None else set()
+    orcamento_preexistente = Counter(base.assets) if base is not None else Counter()
     novos_ou_quebrados: list[str] = []
     preexistentes: list[str] = []
 
     for a in faltando_head:
         candidatos = _asset_candidate_paths(a)
         caminho_tocado = any(p in ctx.changed for p in candidatos)
-        if base is None or a not in assets_base or caminho_tocado:
-            novos_ou_quebrados.append(a)
-        else:
+        cabe_como_preexistente = (
+            base is not None and not caminho_tocado and orcamento_preexistente[a] > 0
+        )
+        if cabe_como_preexistente:
+            orcamento_preexistente[a] -= 1
             preexistentes.append(a)
+        else:
+            novos_ou_quebrados.append(a)
 
     out: list[Finding] = []
     if novos_ou_quebrados:
