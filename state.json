@@ -4764,6 +4764,16 @@
       "output_tokens": 119,
       "tier": "FAST",
       "timestamp": "2026-09-24T05:49:35.292927+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.038632,
+      "event_key": "Repassomed/Repasso-Med-Site-:PR_NEEDS_AUDIT:pr:192:75b93250093ca5fa",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T05:52:26.201552+00:00"
     }
   ]
 }
