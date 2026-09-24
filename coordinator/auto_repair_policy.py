@@ -157,8 +157,11 @@ def candidate_paths(log: str, workflow: str) -> tuple[tuple[str, ...], dict[str,
         p = _repo_path(raw)
         if p and is_safe_path(p) and p not in paths:
             paths.append(p)
+    # O modulo "principal" e apenas fallback. Se o proprio log/traceback
+    # ja localizou um arquivo seguro, nao ampliamos o contexto por
+    # conveniencia: o modelo so enxerga o que a falha realmente apontou.
     primary = PRIMARY.get(workflow)
-    if primary and is_safe_path(primary) and primary not in paths:
+    if not paths and primary and is_safe_path(primary):
         paths.append(primary)
     return tuple(paths[:6]), {k: tuple(sorted(v)) for k, v in lines.items()}
 
