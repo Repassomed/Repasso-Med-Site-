@@ -354,22 +354,25 @@
       "worker_id": "claude-worker-1"
     },
     {
-      "audit_fix_attempts": 0,
+      "audit_fix_attempts": 1,
+      "audit_fix_execution_failures": 0,
       "branch": "runner/cleanup-como-estudar-guarani",
       "canonical_task_id": "cleanup-como-estudar-guarani",
       "checkpoint_commit": "3449935a23406db8a161f01dd577fc105cf6f1fb",
-      "execution_history": [],
-      "execution_task_id": "cleanup-como-estudar-guarani--bridge-58d356675753",
+      "execution_history": [
+        "cleanup-como-estudar-guarani--bridge-58d356675753"
+      ],
+      "execution_task_id": "cleanup-como-estudar-guarani--bridge-866ece60bcee",
       "guard_dispatch_attempts": 1,
-      "guard_dispatch_status": "DISPATCHED",
-      "guard_dispatched_pr": 208,
-      "last_audit_findings": "",
-      "last_audit_fix_fingerprint": null,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "last_audit_findings": "<!-- repasso-coordinator -->\n## \ud83d\udfe3 CART\u00c3O DE MERGE \u2014 Coordinator V3 (auditoria autom\u00e1tica, Issue #99)\n\n**PR:** #208  \u00b7  **T\u00edtulo:** [worker-bridge] P1 ALTA \u2014 Guaran\u00ed: remover bloco metadid\u00e1tico \u201cComo estudar\u201d  \u00b7  **\u00c1rea:** materia\n**Resultado do Guard:** APROVADO\n**HEAD auditado:** `3449935a23406db8a161f01dd577fc105cf6f1fb`\n\n**Decis\u00e3o da auditoria sem\u00e2ntica (STANDARD, independente do worker):** NEEDS-FIX\n**Motivo:** O diff remove o bloco \"C\u00f3mo estudiar\", mas dentro dele havia uma regra de conte\u00fado real: que cada palavra em guarani \u00e9 \"oral\" ou \"nasal\" e isso define qual part\u00edcula se usa antes dela \u2014 isso \u00e9 um mecanismo de gram\u00e1tica, n\u00e3o apenas dica de estudo. A pr\u00f3pria tarefa pedia que, se houvesse conte\u00fado substantivo misturado no bloco, ele fosse movido para a primeira se\u00e7\u00e3o \u00fatil em vez de apagado, e o diff n\u00e3o mostra essa regra sendo reinserida em nenhum outro lugar do arquivo. Sem ver o restante do arquivo, n\u00e3o d\u00e1 para confirmar se essa explica\u00e7\u00e3o de oral/nasal j\u00e1 existe em outra se\u00e7\u00e3o de gram\u00e1tica ou se foi perdida de vez. Pela lei da c\u00e1tedra, um mecanismo central de classifica\u00e7\u00e3o n\u00e3o pode simplesmente desaparecer numa limpeza de metadid\u00e1tica. Pe\u00e7o que o worker confirme (ou adicione) onde essa regra de oral/nasal ficou preservada antes de aprovarmos o merge.\n\n**AVAL FINAL INDEPENDENTE \u2014 ChatGPT/OpenAI Auditor (Issue #106):** \u2705 MERGE-READY  \u00b7  **Risco:** NORMAL\n**Motivo (OpenAI):** O diff real remove exclusivamente o bloco metadid\u00e1tico \u201cC\u00f3mo estudiar esta materia\u201d. N\u00e3o h\u00e1 altera\u00e7\u00e3o do conte\u00fado disciplinar, das quest\u00f5es, dos gabaritos, das fontes ou da estrutura \u00fatil da mat\u00e9ria. A remo\u00e7\u00e3o atende ao escopo declarado e n\u00e3o cria refer\u00eancia ou \u00e2ncora \u00f3rf\u00e3 vis\u00edvel no diff. O conte\u00fado removido era orienta\u00e7\u00e3o de estudo, n\u00e3o ensino necess\u00e1rio para sustentar cobran\u00e7as.\n\n**API**\n- custo CALCULADO a partir do usage medido pela API desta chamada: US$ 0.023292 (\u2248 R$ 0.1190) \u2014 tokens medidos \u00d7 tabela de pre\u00e7o local, n\u00e3o uma cobran\u00e7a confirmada pelo provedor\n- gasto acumulado do m\u00eas: US$ 1.756387 / US$ 20.00 (\u2248 R$ 8.9751 / \u2248 R$ 102.2000)\n- modelo/tier: STANDARD (claude-sonnet-5)\n- chamadas pagas desta tarefa: 1\n- convers\u00e3o BRL informativa \u00b7 taxa 5.11 (data 2026-09-21) \u2014 o teto continua sendo em USD\n\n**API**\n- custo CALCULADO a partir do usage medido pela API desta chamada: US$ 0.006458 (\u2248 R$ 0.0330) \u2014 tokens medidos \u00d7 tabela de pre\u00e7o local, n\u00e3o uma cobran\u00e7a confirmada pelo provedor\n- gasto acumulado do m\u00eas: US$ 0.075336 / US$ 20.00 (\u2248 R$ 0.3850 / \u2248 R$ 102.2000)\n- modelo/tier: TERRA (gpt-5.6-terra)\n- chamadas pagas desta tarefa: 1\n- convers\u00e3o BRL informativa \u00b7 taxa 5.11 (data 2026-09-21) \u2014 o teto continua sendo em USD\n\n**Custo combinado por provider (acumulado do m\u00eas):**\n- Anthropic: US$ 1.756387\n- OpenAI: US$ 0.075336\n- Total: US$ 1.831723\n\n**MERGE:** Jos\u00e9 decide/executa. O Coordinator nunca faz merge.\n**PUBLICA\u00c7\u00c3O:** SIM\n**MOTIVO:** Arquivos que servem o site/mat\u00e9ria/Netlify Functions foram alterados: Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/guarani.html\n**ALVO:** Netlify/site\n**AP\u00d3S PUBLICAR:** smoke test m\u00ednimo \u2014 abrir a p\u00e1gina/mat\u00e9ria alterada e confirmar que carrega sem erro vis\u00edvel no console; Jos\u00e9 confere, o Coordinator nunca publica/deploya automaticamente.\n\n_Gerado automaticamente pelo Repasso Coordinator (V3, modo active-supervised). N\u00e3o substitui a decis\u00e3o do Jos\u00e9 \u2014 ele \u00e9 a \u00fanica pessoa autorizada a fazer merge desta ou de qualquer outra PR._",
+      "last_audit_fix_fingerprint": "cd4281bac4fbf4e25e8d1c87",
       "pr_number": 208,
-      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/cleanup-como-estudar-guarani'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
-      "reserved_at": "2026-09-24T05:18:35.935889+00:00",
-      "status": "NEEDS-AUDIT",
-      "updated_at": "2026-09-24T05:19:50.114435+00:00",
+      "reason": "corre\u00e7\u00e3o p\u00f3s-auditoria #1 reservada para 'claude-worker-1'; execution id nova, mesma branch/PR e checkpoint vinculado ao HEAD auditado.",
+      "reserved_at": "2026-09-24T16:01:26.402813+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-24T16:01:26.402813+00:00",
       "worker_id": "claude-worker-1"
     },
     {
