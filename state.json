@@ -3792,6 +3792,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-24T05:08:37.611640+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:cleanup-como-estudar-dermatologia--bridge-3810769b5ade",
+      "informational_cost_usd": 0.03137,
+      "input_tokens": 5990,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 1939,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T05:08:40.066004+00:00"
     }
   ]
 }
