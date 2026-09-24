@@ -181,6 +181,7 @@ class _FakeGitHubApi:
         self.prs: list[dict] = []
         self.criadas: list[dict] = []
         self.dispatches: list[tuple] = []
+        self.comentarios: dict[int, list[dict]] = {}
         self._proximo = primeiro_numero
 
     def prs_abertas_por_head(self, branch: str) -> list[dict]:
@@ -193,10 +194,18 @@ class _FakeGitHubApi:
         p = candidatos[0]
         return {
             "number": pr_number,
+            "state": p.get("state", "open"),
             "merged": bool(p.get("merged")),
             "base": {"ref": p.get("base"), "repo": {"full_name": "fake/repo"}},
-            "head": {"ref": p.get("head_branch"), "repo": {"full_name": "fake/repo"}},
+            "head": {
+                "ref": p.get("head_branch"),
+                "sha": p.get("head_sha"),
+                "repo": {"full_name": "fake/repo"},
+            },
         }
+
+    def comentarios_da_pr(self, pr_number: int) -> list[dict]:
+        return list(self.comentarios.get(pr_number, []))
 
     def criar_pr(self, *, titulo: str, head: str, base: str, corpo: str) -> dict:
         pr = {
@@ -1160,7 +1169,7 @@ def test_cliente_de_api_nao_tem_nenhuma_operacao_de_merge() -> None:
         if not n.startswith("_")
     }
     assert publicos == {
-        "prs_abertas_por_head", "pr_por_numero", "criar_pr", "despachar_workflow"
+        "prs_abertas_por_head", "pr_por_numero", "comentarios_da_pr", "criar_pr", "despachar_workflow"
     }, publicos
     fonte_path = os.path.join(_pathsetup._COORDINATOR_ROOT, "bridge_pr.py")
     with open(fonte_path, encoding="utf-8") as fh:
@@ -1849,6 +1858,156 @@ def test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte() 
     print("OK  test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte")
 
 
+def _cartao_needs_fix(motivo: str = "corrigir conceito X") -> str:
+    return "\n".join([
+        worker_bridge.COORDINATOR_COMMENT_MARKER,
+        worker_bridge.AUDIT_CARD_HEADER,
+        "",
+        "**PR:** #901",
+        worker_bridge.AUDIT_NEEDS_FIX_LINE,
+        f"**Motivo:** {motivo}",
+    ])
+
+
+def test_audit_fix_so_aceita_cartao_do_bot_confiavel() -> None:
+    body = _cartao_needs_fix()
+    humano = [{"id": 1, "user": {"login": "Repassomed"}, "body": body}]
+    assert worker_bridge._audit_fix_request_from_comments(humano, pr_number=901) is None
+    outro_bot = [{"id": 2, "user": {"login": "netlify[bot]"}, "body": body}]
+    assert worker_bridge._audit_fix_request_from_comments(outro_bot, pr_number=901) is None
+    confiavel = [{"id": 3, "user": {"login": "github-actions[bot]"}, "body": body}]
+    pedido = worker_bridge._audit_fix_request_from_comments(confiavel, pr_number=901)
+    assert pedido is not None and pedido.pr_number == 901 and pedido.comment_id == 3
+    assert pedido.fingerprint and "corrigir conceito X" in pedido.findings
+    print("OK  test_audit_fix_so_aceita_cartao_do_bot_confiavel")
+
+
+def test_audit_fix_merge_ready_nao_reentra_em_correcao() -> None:
+    body = _cartao_needs_fix().replace("NEEDS-FIX", "MERGE-READY")
+    comentarios = [{"id": 4, "user": {"login": "github-actions[bot]"}, "body": body}]
+    assert worker_bridge._audit_fix_request_from_comments(comentarios, pr_number=901) is None
+    print("OK  test_audit_fix_merge_ready_nao_reentra_em_correcao")
+
+
+def _store_needs_audit_para_fix() -> tuple[TaskRuntimeStore, task_runtime.TaskRuntimeRecord]:
+    store = _runtime_store()
+    reserva = store.reservar("t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1, branch="runner/t-fix")
+    assert reserva.reservado and reserva.record is not None
+    assert store.registrar_resultado(
+        "t-fix", status=task_runtime.RUNTIME_NEEDS_AUDIT,
+        worker_id=bridge_workers.BRIDGE_WORKER_1,
+        execution_task_id=reserva.record.execution_task_id or "",
+        reason="aguarda auditoria", checkpoint_commit="abc123", branch="runner/t-fix",
+    )
+    assert store.registrar_pr("t-fix", pr_number=901, esperado_status=task_runtime.RUNTIME_NEEDS_AUDIT)
+    assert store.reservar_guard_dispatch("t-fix", pr_number=901)
+    assert store.confirmar_guard_dispatch("t-fix", pr_number=901)
+    return store, store.get("t-fix")
+
+
+def test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes() -> None:
+    store, anterior = _store_needs_audit_para_fix()
+    assert anterior is not None
+    primeira = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_2,
+        audit_fingerprint="fp-1", audit_findings="corrigir X", max_attempts=2, token="111111111111",
+    )
+    assert primeira.reservado and primeira.record is not None
+    novo = primeira.record
+    assert novo.execution_task_id != anterior.execution_task_id
+    assert anterior.execution_task_id in novo.execution_history
+    assert novo.branch == anterior.branch and novo.checkpoint_commit == anterior.checkpoint_commit
+    assert novo.pr_number == anterior.pr_number
+    assert novo.guard_dispatch_status is None
+    assert store.registrar_resultado(
+        "t-fix", status=task_runtime.RUNTIME_NEEDS_AUDIT, worker_id=bridge_workers.BRIDGE_WORKER_2,
+        execution_task_id=novo.execution_task_id or "", reason="corrigido",
+        checkpoint_commit="def456", branch="runner/t-fix",
+    )
+    mesma = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_3,
+        audit_fingerprint="fp-1", audit_findings="corrigir X", max_attempts=2, token="222222222222",
+    )
+    assert mesma.reservado is False and "mesmo parecer" in mesma.reason
+    print("OK  test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes")
+
+
+def test_audit_fix_para_depois_de_duas_correcoes() -> None:
+    store, _ = _store_needs_audit_para_fix()
+    r1 = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1, audit_fingerprint="fp-a",
+        audit_findings="A", max_attempts=2, token="aaaaaaaaaaaa",
+    )
+    assert r1.reservado and r1.record is not None
+    assert store.registrar_resultado(
+        "t-fix", status=task_runtime.RUNTIME_NEEDS_AUDIT, worker_id=bridge_workers.BRIDGE_WORKER_1,
+        execution_task_id=r1.record.execution_task_id or "", reason="a", checkpoint_commit="c1", branch="runner/t-fix",
+    )
+    r2 = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_2, audit_fingerprint="fp-b",
+        audit_findings="B", max_attempts=2, token="bbbbbbbbbbbb",
+    )
+    assert r2.reservado and r2.record is not None and r2.record.audit_fix_attempts == 2
+    assert store.registrar_resultado(
+        "t-fix", status=task_runtime.RUNTIME_NEEDS_AUDIT, worker_id=bridge_workers.BRIDGE_WORKER_2,
+        execution_task_id=r2.record.execution_task_id or "", reason="b", checkpoint_commit="c2", branch="runner/t-fix",
+    )
+    r3 = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_3, audit_fingerprint="fp-c",
+        audit_findings="C", max_attempts=2, token="cccccccccccc",
+    )
+    assert r3.reservado is False and "teto de 2" in r3.reason
+    print("OK  test_audit_fix_para_depois_de_duas_correcoes")
+
+
+def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+        api = _FakeGitHubApi()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        tarefa = _tarefa()
+
+        primeiro, _c, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("alvo.txt", "versao 1\n"), nome_workdir="work-audit-fix-1",
+        )
+        assert primeiro.action == "DISPATCHED" and primeiro.pr is not None
+        reg1 = store.get("infra-bridge-teste")
+        assert reg1 is not None and reg1.status == task_runtime.RUNTIME_NEEDS_AUDIT
+        assert reg1.pr_number == 901 and reg1.checkpoint_commit
+        api.prs[0]["head_sha"] = reg1.checkpoint_commit
+        api.comentarios[901] = [{
+            "id": 77, "user": {"login": "github-actions[bot]"},
+            "body": _cartao_needs_fix("trocar versao 1 por versao 2"),
+        }]
+        exec1 = reg1.execution_task_id
+        dispatches_antes = len(api.dispatches)
+
+        segundo, _c2, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("alvo.txt", "versao 2\n"), nome_workdir="work-audit-fix-2",
+        )
+        assert segundo.action == "AUDIT_FIX", segundo
+        reg2 = store.get("infra-bridge-teste")
+        assert reg2 is not None and reg2.status == task_runtime.RUNTIME_NEEDS_AUDIT
+        assert reg2.pr_number == 901
+        assert reg2.execution_task_id != exec1
+        assert exec1 in reg2.execution_history
+        assert reg2.audit_fix_attempts == 1
+        assert len(api.criadas) == 1, "correção precisa reutilizar a mesma PR"
+        assert len(api.dispatches) == dispatches_antes + 1, "novo HEAD precisa de novo Guard"
+        assert segundo.runner_task is not None and "trocar versao 1 por versao 2" in segundo.runner_task.instructions
+
+        # O mesmo cartão não dispara outra correção.
+        api.prs[0]["head_sha"] = reg2.checkpoint_commit
+        terceiro, *_ = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("alvo.txt", "versao 3\n"), nome_workdir="work-audit-fix-3",
+        )
+        assert terceiro.action == "NO_ASSIGNMENT", terceiro
+    print("OK  test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard")
+
 def test_error_registry_bridge_sucesso_normal_nao_gera_erro() -> None:
     record = task_runtime.TaskRuntimeRecord(
         canonical_task_id="t-ok",
@@ -2219,6 +2378,12 @@ def main() -> int:
         test_pr_recovery_detecta_needs_audit_sem_pr_e_respeita_piloto,
         test_pr_recovery_abre_pr_e_guard_sem_runner_nem_anthropic_e_nao_duplica,
         test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte,
+        # Feedback automático NEEDS-FIX -> correção -> nova auditoria.
+        test_audit_fix_so_aceita_cartao_do_bot_confiavel,
+        test_audit_fix_merge_ready_nao_reentra_em_correcao,
+        test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes,
+        test_audit_fix_para_depois_de_duas_correcoes,
+        test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
         test_error_registry_bridge_sucesso_normal_nao_gera_erro,
         test_error_registry_bridge_captura_runner_pr_guard_e_liberacao,
