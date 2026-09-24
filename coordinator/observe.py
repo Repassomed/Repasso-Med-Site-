@@ -71,7 +71,7 @@ from .openai_audit import (
 )
 from .openai_budget import OpenAICallLimiter
 from .openai_config import OpenAIAuditorConfig
-from .openai_privacy import preflight as privacy_preflight
+from .openai_privacy import preflight as privacy_preflight, redact_pii_for_audit
 from .openai_routing import TIER_ZERO as OPENAI_TIER_ZERO, decide as openai_route_decide
 from .openai_transport import OpenAIResponsesTransport
 from .redact import redact
@@ -627,12 +627,22 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
     model_id_principal = openai_config.model if roteamento.tier == "TERRA" else openai_config.high_risk_model
     tier_principal = roteamento.tier  # "TERRA" | "SOL"
 
+    # Contextos auxiliares podem conter contato público/PII que não é
+    # necessário para julgar o diff. Redigimos SOMENTE essas evidências
+    # auxiliares. Corpo da PR e diff permanecem exatos: se eles próprios
+    # contiverem PII, o preflight continua bloqueando fail-closed em vez de
+    # esconder uma mudança material do auditor.
+    source_pack_openai = (
+        redact_pii_for_audit(source_pack_text) if isinstance(source_pack_text, str)
+        else source_pack_text
+    )
+    head_context_openai = redact_pii_for_audit(event.payload.get("head_context"))
     prompt_texto = build_openai_audit_prompt(
         contexto, pr_body=event.payload.get("body"),
         envolve_questoes=bool(event.payload.get("envolve_questoes")),
         pr_diff=event.payload.get("pr_diff"),
-        source_pack_text=source_pack_text,
-        head_context_text=event.payload.get("head_context"),
+        source_pack_text=source_pack_openai,
+        head_context_text=head_context_openai,
     )
 
     # Correção B6 da auditoria independente do PR #107: privacy preflight
