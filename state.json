@@ -189,10 +189,10 @@
       "guard_dispatch_status": null,
       "guard_dispatched_pr": null,
       "pr_number": null,
-      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'infra-inbox-task-intake-issue160' autorizada declarativamente: risco ALTO, N\u00edvel D, jose_authorized=True.)",
+      "reason": "resposta do modelo n\u00e3o \u00e9 um JSON v\u00e1lido \u2014 A resposta atingiu o teto de sa\u00edda do Runner (8000 tokens), portanto \u00e9 tratada como truncada \u2014 nunca aplicada parcialmente.",
       "reserved_at": "2026-09-24T00:26:08.723754+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-24T00:26:08.723769+00:00",
+      "status": "FAILED",
+      "updated_at": "2026-09-24T00:27:56.000611+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
