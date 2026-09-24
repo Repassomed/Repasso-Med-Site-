@@ -170,10 +170,10 @@
       "current_task": null,
       "display_name": "Claude Worker 2",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T06:05:00.477092+00:00",
+      "last_heartbeat": "2026-09-24T06:05:06.938709+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "OFFLINE",
+      "status": "AVAILABLE",
       "type": "api_runner",
       "worker_id": "claude-worker-2"
     },
