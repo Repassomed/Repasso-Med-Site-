@@ -223,12 +223,12 @@ class TaskRuntimeRecord:
     # Preserva os execution ids anteriores quando uma correção substitui o
     # execution_task_id corrente. Histórico auditável, nunca usado como claim.
     execution_history: tuple[str, ...] = ()
-    # Relatório 8-A.11 já validado pelo Runner. Persistido para que uma
-    # falha de rede/403 ao abrir a PR não obrigue nova chamada ao modelo.
-    question_report: str | None = None
     reason: str = ""
     reserved_at: str | None = None
     updated_at: str | None = None
+    # Relatório 8-A.11 já validado pelo Runner. Campo novo no FIM para
+    # preservar a ordem posicional histórica e sobreviver a falhas de PR.
+    question_report: str | None = None
 
     def __post_init__(self) -> None:
         if not self.canonical_task_id or not str(self.canonical_task_id).strip():
