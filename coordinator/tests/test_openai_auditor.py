@@ -691,7 +691,32 @@ def test_system_prompt_declares_diff_and_body_as_untrusted_data() -> None:
         assert "MANUTENCAO-DIDATICA-REPASSO-MED.md" in prompt
         assert "frio" in prompt and "genérico" in prompt
         assert "revisão adversarial" in prompt
+        assert "MATERIALMENTE relevante" in prompt
+        assert "envolve_questoes=false" in prompt
+        assert "não reprove apenas por não receber a matriz completa do banco" in prompt
     print("OK  test_system_prompt_declares_diff_and_body_as_untrusted_data")
+
+
+def test_build_prompts_declare_typed_question_scope_false_explicitly() -> None:
+    ev = _evento_pr_materia(
+        head_sha="scope-false",
+        body="limpeza metadidática sem alterar questões",
+        diff="diff --git a/x.html b/x.html\n-<h2>Cómo estudiar</h2>\n",
+    )
+    ctx = build_context(ev)
+    prompt_openai = build_openai_audit_prompt(
+        ctx, pr_body=ev.payload["body"], envolve_questoes=False,
+        pr_diff=ev.payload["pr_diff"],
+    )
+    from coordinator.audit import build_audit_prompt
+    prompt_anthropic = build_audit_prompt(
+        ctx, pr_body=ev.payload["body"], envolve_questoes=False,
+        pr_diff=ev.payload["pr_diff"],
+    )
+    for prompt in (prompt_anthropic, prompt_openai):
+        assert "ESCOPO TIPADO DA TAREFA: envolve_questoes=false" in prompt
+        assert "não tente inferi-lo" in prompt
+    print("OK  test_build_prompts_declare_typed_question_scope_false_explicitly")
 
 
 def test_build_prompt_includes_real_diff_verbatim_as_data() -> None:
@@ -1165,6 +1190,7 @@ def main() -> int:
         test_parse_invalid_risk_or_requires_escalation_value_is_invalid,
         test_escalada_justificada_requires_reason,
         test_system_prompt_declares_diff_and_body_as_untrusted_data,
+        test_build_prompts_declare_typed_question_scope_false_explicitly,
         test_build_prompt_includes_real_diff_verbatim_as_data,
         test_redact_masks_openai_style_key_with_hyphens,
         test_privacy_preflight_blocks_secret_and_pii_patterns,
