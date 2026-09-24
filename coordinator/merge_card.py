@@ -300,8 +300,12 @@ def render_merge_card(dados: MergeCardInput) -> str:
 
     if dados.openai_decision is not None:
         L.append("")
-        L.append(f"**Segunda opinião independente (OpenAI Auditor, Issue #106):** {dados.openai_decision}"
-                  + (f"  ·  **Risco:** {dados.openai_risk}" if dados.openai_risk else ""))
+        icone_openai = "✅" if dados.openai_decision == "MERGE-READY" else "❌"
+        L.append(
+            f"**AVAL FINAL INDEPENDENTE — ChatGPT/OpenAI Auditor (Issue #106):** "
+            f"{icone_openai} {dados.openai_decision}"
+            + (f"  ·  **Risco:** {dados.openai_risk}" if dados.openai_risk else "")
+        )
         if not dados.openai_protocol_matched:
             L.append(
                 "⚠️ A resposta do OpenAI Auditor não seguiu o protocolo esperado — "
@@ -313,6 +317,12 @@ def render_merge_card(dados: MergeCardInput) -> str:
             L.append("**Achados (OpenAI):** " + "; ".join(dados.openai_findings))
         if dados.openai_didactic_findings:
             L.append("**Achados didáticos (OpenAI):** " + "; ".join(dados.openai_didactic_findings))
+    elif dados.audit_decision == "NEEDS-FIX":
+        L.append("")
+        L.append(
+            "**AVAL FINAL INDEPENDENTE — ChatGPT/OpenAI Auditor (Issue #106):** "
+            "❌ NÃO OBTIDO — MERGE-READY bloqueado."
+        )
 
     if dados.cost_block:
         L.append("")
