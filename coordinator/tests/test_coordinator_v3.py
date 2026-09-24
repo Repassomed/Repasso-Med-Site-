@@ -39,6 +39,7 @@ from coordinator.__main__ import _gravar_comment_out
 from coordinator.observe import observe
 from coordinator.openai_config import OpenAIAuditorConfig
 from coordinator.openai_audit import build_openai_audit_prompt
+from coordinator.openai_privacy import preflight as openai_privacy_preflight, redact_pii_for_audit
 from coordinator.worker_registry import Worker, WorkerState
 
 REPO = "Repassomed/Repasso-Med-Site-"
@@ -781,6 +782,30 @@ def test_comment_out_skips_when_target_issue_missing() -> None:
     print("OK  test_comment_out_skips_when_target_issue_missing")
 
 
+def test_openai_privacy_redige_pii_antes_da_rede() -> None:
+    bruto = "Contato: repasso.med@gmail.com; CPF 123.456.789-00; fone (11) 91234-5678."
+    limpo = redact_pii_for_audit(bruto)
+    assert "repasso.med@gmail.com" not in limpo
+    assert "123.456.789-00" not in limpo
+    assert "(11) 91234-5678" not in limpo
+    assert "[EMAIL_REDACTED]" in limpo
+    assert "[CPF_REDACTED]" in limpo
+    assert "[PHONE_REDACTED]" in limpo
+    assert openai_privacy_preflight(limpo).safe
+    print("OK  test_openai_privacy_redige_pii_antes_da_rede")
+
+
+def test_openai_privacy_segredo_continua_fail_closed_apos_redacao_pii() -> None:
+    chave = "sk-ant-" + "A" * 24
+    limpo = redact_pii_for_audit(f"Contato repasso.med@gmail.com; chave {chave}")
+    assert "repasso.med@gmail.com" not in limpo
+    assert chave in limpo, "segredo nunca deve ser escondido do preflight"
+    resultado = openai_privacy_preflight(limpo)
+    assert not resultado.safe
+    assert any("chave" in r.lower() for r in resultado.reasons)
+    print("OK  test_openai_privacy_segredo_continua_fail_closed_apos_redacao_pii")
+
+
 def main() -> int:
     testes = [
         test_prova_a_mesmo_pr_mesmo_head_mesmo_estado_zero_chamada_nova,
@@ -801,6 +826,8 @@ def main() -> int:
         test_unknown_mode_still_blocked,
         test_audit_prompt_scopes_question_law_to_changed_content,
         test_both_auditors_receive_exact_head_context_as_untrusted_evidence,
+        test_openai_privacy_redige_pii_antes_da_rede,
+        test_openai_privacy_segredo_continua_fail_closed_apos_redacao_pii,
         test_parse_decision_merge_ready,
         test_parse_decision_needs_fix,
         test_parse_decision_without_protocol_defaults_to_needs_fix,
