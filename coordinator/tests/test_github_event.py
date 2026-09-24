@@ -46,6 +46,39 @@ def test_workflow_run_success_with_needs_audit_label_builds_pr_event() -> None:
     print("OK  test_workflow_run_success_with_needs_audit_label_builds_pr_event")
 
 
+def test_worker_bridge_typed_needs_audit_without_label_builds_pr_event() -> None:
+    """Issue #165: PR automática do Worker Bridge não depende de label manual.
+    O contexto tipado validado pelo workflow é suficiente para disparar a
+    auditoria semântica independente."""
+    payload = {
+        "action": "completed",
+        "workflow_run": {
+            "name": "Repasso Guard",
+            "conclusion": "success",
+            "id": 777,
+            "head_sha": "main-sha-nao-e-o-head-da-pr",
+            "pull_requests": [],
+        },
+    }
+    pr_info = {
+        "number": 164,
+        "title": "[worker-bridge] Semiología II",
+        "body": "## ESCOPO\n\n- **Tarefa:** semiologia-x\n- **Área:** materia\n",
+        "labels": [],
+        "updated_at": "2026-09-24T00:00:00Z",
+        "head_sha": "pr-head-real-123",
+        "worker_bridge_needs_audit": True,
+    }
+    ev = build_event_from_github_context("workflow_run", payload, REPO, pr_info=pr_info)
+    assert ev is not None
+    assert ev.event_type is EventType.PR_NEEDS_AUDIT
+    assert ev.identity == "pr:164"
+    assert ev.payload["area"] == "materia"
+    assert ev.payload["dedup_fields"]["head_sha"] == "pr-head-real-123"
+    assert ev.payload["dedup_fields"]["label"] == "WORKER-BRIDGE-NEEDS-AUDIT"
+    print("OK  test_worker_bridge_typed_needs_audit_without_label_builds_pr_event")
+
+
 def test_workflow_run_success_without_label_builds_guard_state_change() -> None:
     """Guard passou, mas a PR ainda não tem o rótulo NEEDS-AUDIT — não é o
     momento de "PR pronta para auditar", só uma mudança de estado do Guard."""
@@ -219,6 +252,7 @@ def test_unknown_event_name_returns_none() -> None:
 def main() -> int:
     testes = [
         test_workflow_run_success_with_needs_audit_label_builds_pr_event,
+        test_worker_bridge_typed_needs_audit_without_label_builds_pr_event,
         test_workflow_run_success_without_label_builds_guard_state_change,
         test_workflow_run_carries_real_audit_pack_not_none,
         test_guard_state_change_carrega_run_id_head_e_conclusao_para_error_registry,
