@@ -17,7 +17,8 @@
     "runner-task:semiologia-ii-b07-framingham-r3--bridge-5f7404907fab",
     "runner-task:dermatologia-questoes-issue112-r2--bridge-14734f3fa04a",
     "runner-task:infra-guard-audit-pr-context-issue165--bridge-7e84030ee60c",
-    "runner-task:infra-post-merge-reconciliation-issue162--bridge-4b0554eefe82"
+    "runner-task:infra-post-merge-reconciliation-issue162--bridge-4b0554eefe82",
+    "runner-task:infra-guard-audit-pr-context-issue165-r2--bridge-252fd0085f8a"
   ],
   "results": [
     {
