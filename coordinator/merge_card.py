@@ -178,23 +178,29 @@ def aplicar_lei_das_questoes(decisao: str, *, envolve_questoes: bool,
 
 def aplicar_gate_openai(decisao: str, *, openai_decision: str | None,
                          openai_rationale: str | None) -> tuple[str, str | None]:
-    """Gate determinístico do OpenAI Auditor (Issue #106): uma segunda
-    opinião INDEPENDENTE da Anthropic, sobre o MESMO evento. Mesmo padrão
-    de ``aplicar_lei_das_questoes``/``aplicar_gate_diff``: só pode REBAIXAR
-    um MERGE-READY para NEEDS-FIX, nunca o inverso (o OpenAI Auditor nunca
-    promove uma decisão da Anthropic, mesmo que discorde e ache que devia
-    ser MERGE-READY). ``openai_decision`` é ``None`` sempre que o OpenAI
-    Auditor não rodou (desabilitado, roteado para ZERO, ou bloqueado por
-    portão/orçamento) — nesse caso a decisão da Anthropic passa inalterada,
-    porque 'não rodou' nunca pode ser lido como 'aprovou'."""
-    if openai_decision is None:
+    """Gate final obrigatório do OpenAI Auditor (Issue #106).
+
+    Para conteúdo médico-didático em active-supervised, MERGE-READY exige
+    CONCORDÂNCIA explícita das duas auditorias independentes: Anthropic e
+    OpenAI. O OpenAI nunca promove um NEEDS-FIX da Anthropic. Se a Anthropic
+    aprovou, porém o OpenAI não rodou/não produziu decisão utilizável, o
+    resultado é NEEDS-FIX por fail-closed — ausência de auditoria nunca é
+    aprovação. Só Anthropic=MERGE-READY + OpenAI=MERGE-READY preserva o
+    MERGE-READY final."""
+    if decisao != "MERGE-READY":
         return decisao, None
-    if decisao == "MERGE-READY" and openai_decision == "NEEDS-FIX":
+    if openai_decision is None:
         return "NEEDS-FIX", (
-            "O OpenAI Auditor (segunda opinião independente, Issue #106) recomendou "
+            "OpenAI Auditor obrigatório não produziu aprovação explícita; "
+            "conteúdo didático só pode ser MERGE-READY quando Anthropic e "
+            "OpenAI Auditor aprovarem o mesmo checkpoint."
+        )
+    if openai_decision != "MERGE-READY":
+        return "NEEDS-FIX", (
+            "O OpenAI Auditor (aval final independente, Issue #106) recomendou "
             f"NEEDS-FIX: {openai_rationale or '-'}"
         )
-    return decisao, None
+    return "MERGE-READY", None
 
 
 def aplicar_gate_diff(decisao: str, *, diff_disponivel: bool, diff_truncado: bool) -> tuple[str, str | None]:
@@ -294,8 +300,12 @@ def render_merge_card(dados: MergeCardInput) -> str:
 
     if dados.openai_decision is not None:
         L.append("")
-        L.append(f"**Segunda opinião independente (OpenAI Auditor, Issue #106):** {dados.openai_decision}"
-                  + (f"  ·  **Risco:** {dados.openai_risk}" if dados.openai_risk else ""))
+        icone_openai = "✅" if dados.openai_decision == "MERGE-READY" else "❌"
+        L.append(
+            f"**AVAL FINAL INDEPENDENTE — ChatGPT/OpenAI Auditor (Issue #106):** "
+            f"{icone_openai} {dados.openai_decision}"
+            + (f"  ·  **Risco:** {dados.openai_risk}" if dados.openai_risk else "")
+        )
         if not dados.openai_protocol_matched:
             L.append(
                 "⚠️ A resposta do OpenAI Auditor não seguiu o protocolo esperado — "
@@ -307,6 +317,12 @@ def render_merge_card(dados: MergeCardInput) -> str:
             L.append("**Achados (OpenAI):** " + "; ".join(dados.openai_findings))
         if dados.openai_didactic_findings:
             L.append("**Achados didáticos (OpenAI):** " + "; ".join(dados.openai_didactic_findings))
+    elif dados.audit_decision == "NEEDS-FIX":
+        L.append("")
+        L.append(
+            "**AVAL FINAL INDEPENDENTE — ChatGPT/OpenAI Auditor (Issue #106):** "
+            "❌ NÃO OBTIDO — MERGE-READY bloqueado."
+        )
 
     if dados.cost_block:
         L.append("")

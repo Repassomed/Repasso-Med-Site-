@@ -71,10 +71,9 @@ name: Repasso Coordinator (OBSERVE)
 # BLOQUEADOR 8 — saída humana honesta sobre chamada/usage/custo: ver
 #   coordinator/__main__.py::render_human.
 #
-# Escopo desta entrega (não escondido, só explícito): o resultado OBSERVE
-# vai para o log do job e para um artifact — este workflow NÃO comenta
-# automaticamente no PR/Issue ainda (decisão futura separada, já registrada
-# na 2ª auditoria).
+# Em active-supervised, o resultado da auditoria de conteúdo é publicado
+# também como Cartão de Merge na própria PR. O comentário é só um parecer:
+# nunca faz merge, deploy, label, close/reopen nem altera a branch da tarefa.
 #
 # ─────────────────────────────────────────────────────────────────────────
 # V3 (Issue #99) — "coordenação ativa supervisionada".
@@ -93,8 +92,9 @@ name: Repasso Coordinator (OBSERVE)
 # um resultado vazio.
 #
 # SEGURANÇA ANTES DE AUMENTAR PERMISSÕES (Issue #99): ``issues: write``
-# abaixo é a única permissão nova desta V3, e só é usada para postar um
-# comentário — nunca para fechar/reabrir/rotular. ``main`` continua sem
+# e ``pull-requests: write`` ficam restritos ao job confiável ``observe``
+# e são usados somente para postar o Cartão de Merge como comentário —
+# nunca para merge, fechar/reabrir, rotular ou alterar branch. ``main`` continua sem
 # nenhuma regra de proteção de branch/Ruleset (nenhum workflow deste
 # repositório tenta configurar isso via API — está fora do escopo de
 # permissões do Coordinator, privilégio mínimo). ``.github/CODEOWNERS``
@@ -108,17 +108,14 @@ name: Repasso Coordinator (OBSERVE)
 # exigindo que os checks passem — com 0 approvals exigidas por enquanto.
 #
 # ─────────────────────────────────────────────────────────────────────────
-# OPENAI AUDITOR (Issue #106) — segunda opinião independente, SEM ativar em
-# produção nesta PR.
+# OPENAI AUDITOR (Issue #106) — aval final independente de conteúdo.
 #
-# Uma segunda API (OpenAI, Responses API, ``store=false`` sempre — ver
-# coordinator/openai_transport.py) entra como auditor adicional, INDEPENDENTE
-# da Anthropic, sobre o MESMO evento de conteúdo médico/didático Nível C
-# (nunca um gatilho novo). Portão totalmente separado do
-# ``REPASSO_COORDINATOR_*``: ``REPASSO_OPENAI_AUDITOR_ENABLED`` continua
-# ``false`` (valor de hoje) — enquanto isso não mudar, nenhuma chamada à
-# OpenAI acontece, mesmo com ``REPASSO_COORDINATOR_MODE=active-supervised``
-# já ligado para a Anthropic (coordinator/openai_config.py::
+# A OpenAI Responses API (``store=false`` sempre — ver
+# coordinator/openai_transport.py) audita o MESMO checkpoint de conteúdo
+# médico/didático Nível C depois da Anthropic (nunca é um gatilho novo).
+# Em produção, ``REPASSO_OPENAI_AUDITOR_ENABLED=true`` habilita a chamada;
+# o código continua fail-closed e reconfirma o portão separado em
+# coordinator/openai_config.py::
 # OpenAIAuditorConfig.gate(), checado de novo em ``openai_client.call``
 # antes de qualquer chamada, junto com um hard stop de orçamento interno —
 # nunca confiar só no cap externo do dashboard da OpenAI). O
@@ -291,8 +288,12 @@ jobs:
     # contents:write só é usado para publicar a branch de estado dedicada
     # (coordinator-state-*, nunca 'main', nunca matéria — ver
     # coordinator/git_state.py e o teste que prova isso estruturalmente).
-    # pull-requests:read só é usado para ler (nunca escrever) o rótulo e o
-    # corpo da PR associada a um workflow_run do Guard — dado, não código.
+    # pull-requests:write é necessário porque o Cartão de Merge é publicado
+    # como comentário numa PR. Em produção, issues:write sozinho retornou 403
+    # "Resource not accessible by integration" mesmo com a auditoria concluída.
+    # Este job confiável continua sem qualquer passo de merge, close, label ou
+    # edição de branch; o write é usado somente para tornar o parecer visível.
+    # A leitura do rótulo/corpo da PR continua sendo apenas dado, nunca código.
     # actions:read é exigido pelo GitHub para baixar artifact de OUTRA
     # execução (actions/download-artifact@v4 com run-id do workflow_run
     # observado, abaixo) — achado do "ACHADO ADICIONAL" e do "PACOTE
@@ -304,7 +305,7 @@ jobs:
     permissions:
       actions: read
       contents: write
-      pull-requests: read
+      pull-requests: write
       # V3 (Issue #99) — só para postar o Cartão de Merge como comentário
       # quando a auditoria ativa-supervisionada produzir um (ver o passo
       # "Comentar o Cartão de Merge" abaixo). Nunca usado para fechar,
