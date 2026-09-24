@@ -218,6 +218,10 @@ class TaskRuntimeRecord:
     # impede o mesmo Cartão de Merge de disparar duas correções; o contador
     # permite um teto explícito no Worker Bridge.
     audit_fix_attempts: int = 0
+    # Falhas de EXECUÇÃO de uma correção (ex.: resposta vazia/malformada)
+    # não contam como um novo ciclo semântico de auditoria. Este contador
+    # limita retries sem HEAD do MESMO parecer para evitar loop/custo infinito.
+    audit_fix_execution_failures: int = 0
     last_audit_fix_fingerprint: str | None = None
     last_audit_findings: str = ""
     # Preserva os execution ids anteriores quando uma correção substitui o
@@ -263,6 +267,11 @@ class TaskRuntimeRecord:
         if not isinstance(self.audit_fix_attempts, int) or self.audit_fix_attempts < 0:
             raise ValueError(
                 f"audit_fix_attempts precisa ser inteiro >= 0 — recebido {self.audit_fix_attempts!r}."
+            )
+        if not isinstance(self.audit_fix_execution_failures, int) or self.audit_fix_execution_failures < 0:
+            raise ValueError(
+                "audit_fix_execution_failures precisa ser inteiro >= 0 — "
+                f"recebido {self.audit_fix_execution_failures!r}."
             )
         if self.last_audit_fix_fingerprint is not None and not str(self.last_audit_fix_fingerprint).strip():
             raise ValueError("last_audit_fix_fingerprint precisa ser None ou string não-vazia.")
@@ -326,6 +335,7 @@ class TaskRuntimeRecord:
             "guard_dispatch_status": self.guard_dispatch_status,
             "guard_dispatch_attempts": self.guard_dispatch_attempts,
             "audit_fix_attempts": self.audit_fix_attempts,
+            "audit_fix_execution_failures": self.audit_fix_execution_failures,
             "last_audit_fix_fingerprint": self.last_audit_fix_fingerprint,
             "last_audit_findings": self.last_audit_findings,
             "execution_history": list(self.execution_history),
@@ -357,6 +367,7 @@ class TaskRuntimeRecord:
             ),
             guard_dispatch_attempts=int(d.get("guard_dispatch_attempts") or 0),
             audit_fix_attempts=int(d.get("audit_fix_attempts") or 0),
+            audit_fix_execution_failures=int(d.get("audit_fix_execution_failures") or 0),
             last_audit_fix_fingerprint=d.get("last_audit_fix_fingerprint"),
             last_audit_findings=d.get("last_audit_findings", ""),
             execution_history=tuple(d.get("execution_history") or ()),
@@ -475,18 +486,17 @@ class TaskRuntimeStore:
     def reservar_correcao_apos_auditoria(
         self, canonical_task_id: str, *, worker_id: str,
         audit_fingerprint: str, audit_findings: str,
-        max_attempts: int, token: str | None = None,
+        max_attempts: int, max_execution_failures: int = 3,
+        token: str | None = None,
     ) -> ReservaResult:
-        """Reserva explicitamente uma correção pedida pela auditoria.
+        """Reserva uma correção pedida pela auditoria, inclusive retry sem HEAD.
 
-        Este caminho só aceita uma tarefa que terminou em NEEDS-AUDIT,
-        tem branch/checkpoint/PR publicados e recebeu um Cartão NEEDS-FIX
-        novo. Cada reserva gera uma execution id fresca, preserva a anterior
-        no histórico e zera somente o estado de dispatch do Guard, porque o
-        novo commit precisará ser auditado de novo.
-
-        O mesmo fingerprint nunca é consumido duas vezes e max_attempts é
-        um teto duro contra loop de auditoria/correção.
+        Um ciclo semântico de correção só é contado uma vez. Se a execução
+        falhar ANTES de produzir novo checkpoint/HEAD (por exemplo resposta
+        vazia/malformada do modelo), o mesmo parecer pode ser tentado de novo
+        com execution id fresca sem consumir outro ciclo semântico.
+        max_execution_failures limita essas falhas operacionais do mesmo
+        parecer. Um HEAD corrigido continua exigindo Guard + nova auditoria.
         """
         alvo = (canonical_task_id or "").strip()
         worker = (worker_id or "").strip()
@@ -496,6 +506,8 @@ class TaskRuntimeStore:
             return ReservaResult(False, "correção pós-auditoria exige tarefa, worker, fingerprint e achados.")
         if not isinstance(max_attempts, int) or max_attempts < 1:
             raise ValueError("max_attempts precisa ser inteiro >= 1.")
+        if not isinstance(max_execution_failures, int) or max_execution_failures < 1:
+            raise ValueError("max_execution_failures precisa ser inteiro >= 1.")
 
         execution_token = token or novo_token_de_execucao()
         novo_execution_id = derivar_execution_task_id(alvo, execution_token)
@@ -503,15 +515,34 @@ class TaskRuntimeStore:
         def evaluate(dados: dict) -> tuple[bool, dict]:
             base = {t["canonical_task_id"]: t for t in (dados.get("tasks") or []) if t.get("canonical_task_id")}
             fresco = base.get(alvo)
-            if fresco is None or fresco.get("status") != RUNTIME_NEEDS_AUDIT:
+            if fresco is None:
+                return False, dados
+
+            status_atual = fresco.get("status")
+            mesmo_parecer = fresco.get("last_audit_fix_fingerprint") == fingerprint
+            retry_sem_head = status_atual == RUNTIME_FAILED and mesmo_parecer
+            if status_atual not in (RUNTIME_NEEDS_AUDIT, RUNTIME_FAILED):
+                return False, dados
+            if status_atual == RUNTIME_FAILED and not retry_sem_head:
                 return False, dados
             if not fresco.get("branch") or not fresco.get("checkpoint_commit") or not fresco.get("pr_number"):
                 return False, dados
-            if fresco.get("last_audit_fix_fingerprint") == fingerprint:
-                return False, dados
+
             tentativas = int(fresco.get("audit_fix_attempts") or 0)
-            if tentativas >= max_attempts:
-                return False, dados
+            falhas_execucao = int(fresco.get("audit_fix_execution_failures") or 0)
+
+            if retry_sem_head:
+                if falhas_execucao >= max_execution_failures:
+                    return False, dados
+                proxima_tentativa = tentativas
+                proximas_falhas = falhas_execucao
+            else:
+                if mesmo_parecer:
+                    return False, dados
+                if tentativas >= max_attempts:
+                    return False, dados
+                proxima_tentativa = tentativas + 1
+                proximas_falhas = 0
 
             historico = list(fresco.get("execution_history") or [])
             anterior = (fresco.get("execution_task_id") or "").strip()
@@ -519,20 +550,26 @@ class TaskRuntimeStore:
                 historico.append(anterior)
 
             agora = _now_iso()
+            rotulo = (
+                f"retry de execução sem HEAD do ciclo #{proxima_tentativa}"
+                if retry_sem_head
+                else f"correção pós-auditoria #{proxima_tentativa}"
+            )
             base[alvo] = {
                 **fresco,
                 "status": RUNTIME_IN_PROGRESS,
                 "worker_id": worker,
                 "execution_task_id": novo_execution_id,
                 "execution_history": historico,
-                "audit_fix_attempts": tentativas + 1,
+                "audit_fix_attempts": proxima_tentativa,
+                "audit_fix_execution_failures": proximas_falhas,
                 "last_audit_fix_fingerprint": fingerprint,
                 "last_audit_findings": findings,
                 "guard_dispatched_pr": None,
                 "guard_dispatch_status": None,
                 "reason": (
-                    f"correção pós-auditoria #{tentativas + 1} reservada para {worker!r}; "
-                    "execution id nova, mesmo branch/checkpoint/PR."
+                    f"{rotulo} reservado para {worker!r}; execution id nova, "
+                    "mesmo branch/checkpoint/PR."
                 ),
                 "reserved_at": agora,
                 "updated_at": agora,
@@ -546,12 +583,22 @@ class TaskRuntimeStore:
             atual = self.get(alvo)
             if atual is None:
                 motivo = "registro operacional ausente."
+            elif atual.status == RUNTIME_FAILED:
+                if atual.last_audit_fix_fingerprint != fingerprint:
+                    motivo = "FAILED não pertence ao parecer NEEDS-FIX atual."
+                elif atual.audit_fix_execution_failures >= max_execution_failures:
+                    motivo = (
+                        f"teto de {max_execution_failures} falhas de execução sem HEAD "
+                        "para este parecer já atingido."
+                    )
+                else:
+                    motivo = "retry sem HEAD perdeu corrida concorrente ou perdeu metadados."
             elif atual.status != RUNTIME_NEEDS_AUDIT:
-                motivo = f"estado atual {atual.status!r}, não NEEDS-AUDIT."
+                motivo = f"estado atual {atual.status!r}, não NEEDS-AUDIT/FAILED recuperável."
             elif atual.last_audit_fix_fingerprint == fingerprint:
-                motivo = "este mesmo parecer NEEDS-FIX já foi consumido."
+                motivo = "este mesmo parecer NEEDS-FIX já foi consumido e produziu estado auditável."
             elif atual.audit_fix_attempts >= max_attempts:
-                motivo = f"teto de {max_attempts} correções automáticas já atingido."
+                motivo = f"teto de {max_attempts} correções semânticas automáticas já atingido."
             else:
                 motivo = "branch/checkpoint/PR incompletos ou corrida concorrente."
             return ReservaResult(False, f"correção pós-auditoria não reservada: {motivo}")
@@ -606,6 +653,43 @@ class TaskRuntimeStore:
         return self.store.conditional_update(
             evaluate, message=f"task-runtime: resultado {alvo} -> {status}"
         )
+
+    def registrar_falha_correcao_sem_head(
+        self, canonical_task_id: str, *, worker_id: str,
+        execution_task_id: str, reason: str,
+    ) -> bool:
+        """Registra FAILED de uma correção que não produziu novo HEAD.
+
+        Preserva branch/checkpoint/PR e o fingerprint do parecer para que
+        outro ciclo possa tentar o MESMO NEEDS-FIX novamente. Só aceita a
+        execução atualmente reservada (CAS); nunca reabre uma falha comum.
+        """
+        alvo = (canonical_task_id or "").strip()
+
+        def evaluate(dados: dict) -> tuple[bool, dict]:
+            base = {t["canonical_task_id"]: t for t in (dados.get("tasks") or []) if t.get("canonical_task_id")}
+            fresco = base.get(alvo)
+            if fresco is None:
+                return False, dados
+            if fresco.get("status") != RUNTIME_IN_PROGRESS:
+                return False, dados
+            if fresco.get("worker_id") != worker_id or fresco.get("execution_task_id") != execution_task_id:
+                return False, dados
+            if not fresco.get("last_audit_fix_fingerprint") or int(fresco.get("audit_fix_attempts") or 0) < 1:
+                return False, dados
+            base[alvo] = {
+                **fresco,
+                "status": RUNTIME_FAILED,
+                "reason": reason,
+                "audit_fix_execution_failures": int(fresco.get("audit_fix_execution_failures") or 0) + 1,
+                "updated_at": _now_iso(),
+            }
+            return True, {**dados, "tasks": list(base.values())}
+
+        return self.store.conditional_update(
+            evaluate, message=f"task-runtime: audit-fix sem HEAD {alvo} -> FAILED"
+        )
+
 
     def registrar_pr(self, canonical_task_id: str, *, pr_number: int, esperado_status: str) -> bool:
         """Grava o número da PR aberta para a tarefa. CAS sobre o status
