@@ -69,6 +69,11 @@ ARQUIVO_PILOTO = "coordinator/canary/worker-bridge-pilot.txt"
 
 def _criar_remoto_local(tmp: str) -> str:
     remoto = os.path.join(tmp, "remoto.git")
+    # Alguns testes de integração executam mais de um ciclo sobre a MESMA
+    # branch/checkpoint/PR. Nesses casos o remoto precisa persistir entre
+    # ciclos; recriá-lo causaria FileExistsError antes de testar o fluxo real.
+    if os.path.isdir(os.path.join(remoto, ".git")):
+        return remoto
     os.makedirs(remoto)
     # ``-b bootstrap`` é deliberado: o remoto de teste NUNCA ganha uma
     # branch chamada ``main`` ou ``master``, para que a prova de "nenhuma
