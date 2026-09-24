@@ -649,6 +649,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:196.",
       "task_id": "cleanup-como-estudar-bioestadistica",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "27400e078c817fea0525b3cf1ed82665030b2b14",
+      "component": "guard",
+      "error_id": "ERR-959FC3B926",
+      "error_type": "hard-fail",
+      "fingerprint": "959fc3b926861f5e8f11",
+      "first_seen": "2026-09-24T05:20:05.258310+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "5e94a4eaaa7b4f9dbc112077e20e1f46",
+      "issue_sync_updated_at": "2026-09-24T05:20:05.258310+00:00",
+      "last_evidence_hash": "0e5759cf420a4b1a973e",
+      "last_seen": "2026-09-24T05:20:05.258310+00:00",
+      "occurrence_count": 1,
+      "pr_number": 204,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35959412081",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:204.",
+      "task_id": "infra-question-report-semiologia-micro-p0",
+      "worker_id": null
     }
   ]
 }
