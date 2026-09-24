@@ -1761,6 +1761,7 @@ def executar_ciclo(
             canonical_task_id=canonical_task_id, worker_id=worker_id,
             checkpoint_commit=checkpoint, base_branch=base_branch,
             runtime_store=runtime_store, status_runtime=status_runtime,
+            question_report=dispatch.generation_report,
         )
         notes.extend(notas_pr)
     else:
