@@ -9,7 +9,7 @@ from . import _pathsetup
 from coordinator.auto_repair import AttemptStore
 from coordinator.auto_repair_policy import (
     PR_MARKER, PR_TITLE_PREFIX, apply_plan, assess_failure,
-    auto_merge_eligibility, candidate_paths, is_safe_path, parse_plan,
+    candidate_paths, is_safe_path, parse_plan,
 )
 
 
@@ -118,26 +118,21 @@ def test_attempt_limit_and_run_dedup():
     print("OK  test_attempt_limit_and_run_dedup")
 
 
-def test_merge_identity_and_scope():
-    fp = "b" * 20
-    body = f"{PR_MARKER}\n<!-- repasso-auto-repair-fingerprint:{fp} -->"
-    ok, _, got = auto_merge_eligibility(
-        title=PR_TITLE_PREFIX+"fixture", body=body, state="open", base="main",
-        head_repo="Repassomed/Repasso-Med-Site-",
-        head_ref=f"auto-repair/{fp[:12]}-a1",
-        expected_repo="Repassomed/Repasso-Med-Site-",
-        changed_files=("coordinator/tests/test_worker_bridge.py",),
-    )
-    assert ok and got == fp
-    bad, _, _ = auto_merge_eligibility(
-        title=PR_TITLE_PREFIX+"x", body=body, state="open", base="main",
-        head_repo="Repassomed/Repasso-Med-Site-",
-        head_ref=f"auto-repair/{fp[:12]}-a1",
-        expected_repo="Repassomed/Repasso-Med-Site-",
-        changed_files=("coordination/tasks.json",),
-    )
-    assert not bad
-    print("OK  test_merge_identity_and_scope")
+def test_auto_reparo_nunca_faz_merge_e_a_pr_diz_isso():
+    """Issue #257: o gate de auto-merge e os subcomandos merge-check/
+    mark-merged foram removidos. A PR de reparo declara que o merge é do
+    José — o reparo abre a PR, despacha o Guard e para."""
+    from coordinator import auto_repair, auto_repair_policy
+
+    assert not hasattr(auto_repair_policy, "auto_merge_eligibility")
+    assert not hasattr(auto_repair, "merge_check") and not hasattr(auto_repair, "mark_merged")
+    sub = auto_repair.parser()._subparsers._group_actions[0].choices
+    assert set(sub) == {"repair"}, sorted(sub)
+    corpo = auto_repair._body("c" * 20, "1", "Repasso Coordinator (WORKER BRIDGE)", "preflight", 1,
+                              ("coordinator/x.py",), "erro")
+    assert "NUNCA faz merge" in corpo and "José é a única pessoa" in corpo
+    assert "auto-merge" not in corpo.lower()
+    print("OK  test_auto_reparo_nunca_faz_merge_e_a_pr_diz_isso")
 
 
 def test_workflow_is_workflow_run_only_and_self_excluded():
@@ -147,9 +142,9 @@ def test_workflow_is_workflow_run_only_and_self_excluded():
     assert "workflow_run:" in on
     assert "pull_request:" not in on and "push:" not in on and "schedule:" not in on
     assert "Repasso Coordinator (AUTO-REPARO)" not in on
-    assert "Repasso Guard" in on
-    assert "workflow_run.conclusion == 'success'" in text
-    assert "typed.source_event !== 'workflow_dispatch'" in text
+    # Issue #257: o gatilho do Guard existia só para o job de merge.
+    assert "Repasso Guard" not in on
+    assert "pulls.merge" not in text and "merge_after_guard" not in text
     print("OK  test_workflow_is_workflow_run_only_and_self_excluded")
 
 
@@ -157,7 +152,7 @@ TESTS = [
     test_scope_is_strict, test_fileexists_is_technical_timeout_is_not,
     test_candidate_does_not_offer_run_all, test_plan_blocks_backlog_and_assert_rewrite,
     test_apply_preserves_test_assertions, test_attempt_limit_and_run_dedup,
-    test_merge_identity_and_scope, test_workflow_is_workflow_run_only_and_self_excluded,
+    test_auto_reparo_nunca_faz_merge_e_a_pr_diz_isso, test_workflow_is_workflow_run_only_and_self_excluded,
 ]
 
 
