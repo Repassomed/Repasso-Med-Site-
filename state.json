@@ -150,10 +150,10 @@
       "current_task": "cleanup-como-estudar-guarani",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T21:43:42.849Z",
+      "last_heartbeat": "2026-09-24T21:44:10.310912+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "AVAILABLE",
+      "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
