@@ -517,12 +517,12 @@
       "last_audit_findings": "",
       "last_audit_fix_fingerprint": null,
       "last_audit_fix_worker_id": null,
-      "pr_number": null,
+      "pr_number": 266,
       "question_report": "## Relat\u00f3rio obrigat\u00f3rio \u2014 Lei das Quest\u00f5es (8-A.11)\n\n### Matriz por fonte\n\n| Fonte | P\u00e1gina/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | Duplicadas/can\u00f4nicas | Reconstru\u00eddas | Pendentes | Destino no site |\n| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n| Site atual \u2014 semiologia-ii.html (Bloque 08 \u00b7 HTA e c\u00f3pia no Banco General) | quest\u00e3o V/F 'La relaci\u00f3n entre la presi\u00f3n arterial y el riesgo cardiovascular es continua...' \u2014 Bloque 08 + Banco General | integral | 1 | 1 | 0 | 1 | 1 | 0 | 0 | Semiolog\u00eda II \u00b7 Bloque 08 (Hipertensi\u00f3n Arterial) + Banco general de preguntas (c\u00f3pia correspondente) |\n\n**Confirma\u00e7\u00e3o de cobertura:** RESUMO ENSINA \u2192 QUEST\u00c3O COBRA \u2192 EXPLICA\u00c7\u00c3O REFOR\u00c7A\n\n**Notas de proveni\u00eancia:** Nenhuma quest\u00e3o nova foi criada nesta execu\u00e7\u00e3o. Apenas o enunciado e a explica\u00e7\u00e3o da quest\u00e3o V/F j\u00e1 existente (e sua c\u00f3pia id\u00eantica no Banco General) foram tornados inequ\u00edvocos, indicando explicitamente que a PA elevada 120\u2013139/70\u201389 corresponde \u00e0 Tabela 1 (consult\u00f3rio/MRPA-MAPA) usada pela prova, sem apagar a Tabela 2 (atualiza\u00e7\u00e3o ACC/AHA, 120\u2013129/<80) j\u00e1 presente no bloco. Obesidade, ECG e demais conte\u00fados n\u00e3o foram tocados.",
       "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/semiologia-ii-b08-pa-r5'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
       "reserved_at": "2026-09-24T21:48:51.514758+00:00",
       "status": "NEEDS-AUDIT",
-      "updated_at": "2026-09-24T21:51:23.938218+00:00",
+      "updated_at": "2026-09-24T21:51:33.276031+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
