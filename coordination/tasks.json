@@ -1198,7 +1198,7 @@
       "objetivo": "Criar mecanismo de source/context pack rastreável, limitado e fail-closed para tarefas que dependem de fontes além do allowed_file. Deve preservar proveniência, limites de tamanho/token e bloquear antes de chamada paga quando fonte obrigatória estiver ausente. A integração real com Google Drive só pode ser ativada quando existir autenticação segura; nunca hardcode de credencial.",
       "fonte": "Issue #158 · Source Map #89",
       "agente": null,
-      "estado": "BLOCKED",
+      "estado": "DONE",
       "prioridade_declarada": "P1",
       "capabilities_required": [
         "codigo"
@@ -1206,11 +1206,13 @@
       "dependencias": [
         "infra-inbox-task-intake-issue160"
       ],
-      "branch": null,
+      "branch": "feat/shared-source-pack-v2-current-main",
       "pr": null,
       "commit": null,
       "issue": 158,
-      "notas": "Registrada para não desaparecer. Está BLOCKED porque a estratégia de acesso/autenticação ao Drive e o escopo de integração precisam ser resolvidos em subtarefa segura. Desbloqueia Fisiopatología II #101 e Toxicología #102. Reserva ampliada em PR administrativo separado antes da implementação, conforme Lei 2; necessário para entregar o mesmo source pack ao Worker e aos dois auditores. Reserva ampliada em PR administrativo para incluir o source pack P0 de Semiología II (provas/gabaritos adicionados em 24/09/2026)."
+      "notas": "Registrada para não desaparecer. Está BLOCKED porque a estratégia de acesso/autenticação ao Drive e o escopo de integração precisam ser resolvidos em subtarefa segura. Desbloqueia Fisiopatología II #101 e Toxicología #102. Reserva ampliada em PR administrativo separado antes da implementação, conforme Lei 2; necessário para entregar o mesmo source pack ao Worker e aos dois auditores. Reserva ampliada em PR administrativo para incluir o source pack P0 de Semiología II (provas/gabaritos adicionados em 24/09/2026). Implementação V2 portada sobre a main atual após a reserva #183: source pack versionado único para Worker + Anthropic Auditor + OpenAI Auditor, com path/SHA-256 na PR e fail-closed antes de chamada paga. Inclui pack P0 de Semiología II.",
+      "automation_enabled": false,
+      "bridge_enabled": false
     },
     {
       "id": "global-remover-como-estudar-issue147",
@@ -1986,6 +1988,66 @@
       "jose_authorized": true,
       "source_pack_required": true,
       "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md"
+    },
+    {
+      "id": "fisiopatologia-ii-issue101-r3-sourcepack",
+      "titulo": "P1 — Fisiopatología II: novas provas + fechamento editorial com source pack",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html"
+      ],
+      "objetivo": "Usar o source pack compartilhado da Issue #101 para alinhar o resumo ao padrão real de cobrança: Crohn/colitis, VHB, Dubin-Johnson/bilirrubina, pancreatitis, úlcera gástrica/estresse, distúrbios motores esofágicos e incontinência. Aplicar Lei G0 e Lei 8-A. Preservar conteúdo correto e distinguir cátedra de prova reconstruída.",
+      "fonte": "Issue #101 · Drive Fisiopatología II · source pack v1",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/fisiopatologia-ii-issue101-r3-sourcepack",
+      "pr": null,
+      "commit": null,
+      "issue": 101,
+      "notas": "Nova tentativa canônica após #142/#152. Não reutilizar r1/r2. O pack v1 inclui prova reconstruída + evidência dos slides atualizados e lista fotos ainda não extraídas. Não afirmar cobertura das fotos. Resultado NEEDS-AUDIT; dois auditores recebem o mesmo pack; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/fisiopatologia-ii-issue101-v1.md"
+    },
+    {
+      "id": "toxicologia-provas-issue102-r2-sourcepack",
+      "titulo": "P1 — Toxicología: incorporar provas P1/P2 com source pack compartilhado",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+      ],
+      "objetivo": "Inventariar e incorporar ganho avaliativo real das provas P1/P2 extraídas no source pack: tratamento geral, catárticos/carvão/lavado/emese, toxidromes/3P, organofosforados, vias de exposição, acetona/cloro/pila botón e temas P2 de animais peçonhentos/fármacos. Preservar proveniência, não inventar gabarito e alinhar RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA.",
+      "fonte": "Issue #102 · Drive Toxicología/Provas · source pack v1",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/toxicologia-provas-issue102-r2-sourcepack",
+      "pr": null,
+      "commit": null,
+      "issue": 102,
+      "notas": "Retry canônico seguro. Pack v1 usa PDFs de prova P1/P2 textualmente extraídos; fotos 20/09–21/09 permanecem inventariadas mas não integralmente extraídas. Não transformar resposta lembrada/rascunho em verdade científica sem checagem. Lei 8-A obrigatória; NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/toxicologia-issue102-v1.md"
     }
   ]
 }
