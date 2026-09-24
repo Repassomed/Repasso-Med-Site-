@@ -949,6 +949,31 @@
       "summary": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
       "task_id": "semiologia-ii-b08-pa-r4",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "guard",
+      "commit_sha": "5d7d5721d73d1d5a5bd190ce1e4c34e719357607",
+      "component": "guard",
+      "error_id": "ERR-F1C45DE802",
+      "error_type": "hard-fail",
+      "fingerprint": "f1c45de80214b6c66f7c",
+      "first_seen": "2026-09-24T15:39:47.614735+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "6db4b8f5e89c4e159e5cae96d00df469",
+      "issue_sync_updated_at": "2026-09-24T15:39:47.614735+00:00",
+      "last_evidence_hash": "22628557afbfb7f605c6",
+      "last_seen": "2026-09-24T15:39:47.614735+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36021686069",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em run:36021686069.",
+      "task_id": "<!-- id do registro em coordination/tasks.json, ou \"-\" se n\u00e3o houver -->",
+      "worker_id": null
     }
   ]
 }
