@@ -62,9 +62,13 @@ def test_only_safe_triggers_are_present() -> None:
     assert "workflow_run:" in secao
     assert "schedule:" not in secao
     heartbeat = _secao_on(_ler_heartbeat())
-    assert 'cron: "10,40 * * * *"' in heartbeat
+    assert 'cron: "19,49 * * * *"' in heartbeat
+    # push só na branch padrão: o merge do José inicia uma cadeia nova,
+    # sem o limite de profundidade de workflow_run.
+    assert "push:" in heartbeat and "branches: [main]" in heartbeat
     assert "workflow_run:" not in heartbeat
     assert "issue_comment:" not in heartbeat
+    assert "pull_request" not in heartbeat and "workflow_dispatch:" not in heartbeat
     for proibido in ("push:", "workflow_dispatch:", "pull_request_target:"):
         assert proibido not in secao, f"{proibido!r} não devia estar nos gatilhos deste workflow"
     print("OK  test_only_safe_triggers_are_present")
@@ -78,6 +82,8 @@ def test_schedule_reconciler_is_minimal_and_dispatches_only_guard() -> None:
     ini = texto.index("  guard_reconcile:")
     bloco = texto[ini:]
     assert "github.event_name == 'schedule'" in bloco
+    assert "github.event_name == 'push'" in bloco
+    assert "github.ref == format('refs/heads/{0}', github.event.repository.default_branch)" in bloco
     assert "REPASSO_COORDINATOR_MODE == 'active-supervised'" in bloco
     assert "actions: write" in bloco
     assert "contents: read" in bloco

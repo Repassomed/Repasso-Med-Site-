@@ -114,7 +114,18 @@ on:
   # não dependemos de José apertar Run para a próxima tarefa elegível.
   # Sem tarefa READY, o ciclo termina sem chamada paga.
   schedule:
-    - cron: "*/30 * * * *"
+    # Fora dos minutos :00/:30 de propósito: são os de maior carga no
+    # GitHub e os mais descartados. Medido em 24/09/2026: o "*/30" rodou
+    # só 3 vezes em ~11 h. O schedule é só rede de segurança.
+    - cron: "7,37 * * * *"
+  # (d) merge do José na branch padrão. É o evento que destrava a fila
+  # (tarefa nova READY, PR mergeada, dependência liberada) e começa uma
+  # cadeia NOVA de workflow_run, sem o limite de profundidade que corta a
+  # cadeia Guard -> OBSERVE -> Bridge. Push feito com GITHUB_TOKEN (branches
+  # de estado/runner) nunca dispara workflow, e o filtro abaixo só aceita
+  # a branch padrão; o código executado é sempre o da própria main.
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -134,6 +145,8 @@ jobs:
       (
         (github.event_name == 'workflow_dispatch' && github.actor == 'Repassomed') ||
         (github.event_name == 'schedule' &&
+         vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised') ||
+        (github.event_name == 'push' &&
          vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised') ||
         (github.event_name == 'workflow_run' &&
          vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised' &&
@@ -176,7 +189,7 @@ jobs:
           REPASSO_WORKER_BRIDGE_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
           # Trava 1: a ORIGEM do ciclo, derivada de `github.event_name` —
           # nunca de input. `pilot` + `event` fecha o portão em código.
-          REPASSO_WORKER_BRIDGE_TRIGGER: ${{ (github.event_name == 'workflow_run' || github.event_name == 'schedule') && 'event' || 'manual' }}
+          REPASSO_WORKER_BRIDGE_TRIGGER: ${{ (github.event_name == 'workflow_run' || github.event_name == 'schedule' || github.event_name == 'push') && 'event' || 'manual' }}
         run: |
           python3 -c "
           from coordinator.worker_bridge import WorkerBridgeConfig
@@ -201,7 +214,7 @@ jobs:
           REPASSO_WORKER_BRIDGE_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
           # Trava 1: a ORIGEM do ciclo, derivada de `github.event_name` —
           # nunca de input. `pilot` + `event` fecha o portão em código.
-          REPASSO_WORKER_BRIDGE_TRIGGER: ${{ (github.event_name == 'workflow_run' || github.event_name == 'schedule') && 'event' || 'manual' }}
+          REPASSO_WORKER_BRIDGE_TRIGGER: ${{ (github.event_name == 'workflow_run' || github.event_name == 'schedule' || github.event_name == 'push') && 'event' || 'manual' }}
         run: |
           set -e
           # Sem nenhum nome de worker como argumento: os quatro ids são
@@ -234,7 +247,7 @@ jobs:
           REPASSO_WORKER_BRIDGE_EXPECTED_REF: refs/heads/${{ github.event.repository.default_branch }}
           # Trava 1: a ORIGEM do ciclo, derivada de `github.event_name` —
           # nunca de input. `pilot` + `event` fecha o portão em código.
-          REPASSO_WORKER_BRIDGE_TRIGGER: ${{ (github.event_name == 'workflow_run' || github.event_name == 'schedule') && 'event' || 'manual' }}
+          REPASSO_WORKER_BRIDGE_TRIGGER: ${{ (github.event_name == 'workflow_run' || github.event_name == 'schedule' || github.event_name == 'push') && 'event' || 'manual' }}
           # Trava 8: a credencial da Anthropic só existe AQUI. É alcançada
           # apenas dentro de `runner_generate.gerar_patch_via_claude`, que
           # roda depois do claim atômico do id de execução — nunca antes.

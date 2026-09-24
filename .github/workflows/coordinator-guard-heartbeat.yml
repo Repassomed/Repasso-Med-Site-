@@ -5,7 +5,14 @@ name: Repasso Guard Heartbeat
 # máximo um Guard por rodada. O Guard concluído aciona OBSERVE via workflow_run.
 on:
   schedule:
-    - cron: "10,40 * * * *"
+    # Minutos fora dos horários de pico; o schedule do GitHub não é
+    # garantido (0 execuções medidas entre 14:42 e 16:40 UTC de 24/09).
+    - cron: "19,49 * * * *"
+  # Merge na branch padrão: cadeia nova, sem o limite de profundidade de
+  # workflow_run que impede o Guard despachado pelo Bridge de acionar o
+  # OBSERVE. Só a branch padrão; o código é sempre o da main.
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -22,7 +29,9 @@ jobs:
     # o HEAD muda, evitando que uma pendência objetiva monopolize todos os
     # heartbeats e atrase as PRs seguintes.
     if: >
-      github.event_name == 'schedule' &&
+      (github.event_name == 'schedule' ||
+       (github.event_name == 'push' &&
+        github.ref == format('refs/heads/{0}', github.event.repository.default_branch))) &&
       vars.REPASSO_COORDINATOR_ENABLED == 'true' &&
       vars.REPASSO_COORDINATOR_MODE == 'active-supervised'
     runs-on: ubuntu-latest
