@@ -229,10 +229,11 @@ def test_rendered_merge_card_always_carries_the_marker() -> None:
     dados = merge_card.MergeCardInput(
         pr_number=1, titulo="x", area="materia", guard_result="APROVADO",
         audit_decision="NEEDS-FIX", audit_rationale="x", envolve_questoes=False,
-        lei_das_questoes=None,
+        lei_das_questoes=None, head_sha="abcdef1234567890",
     )
     texto = merge_card.render_merge_card(dados)
     assert texto.startswith(COORDINATOR_COMMENT_MARKER)
+    assert "**HEAD auditado:** `abcdef1234567890`" in texto
     print("OK  test_rendered_merge_card_always_carries_the_marker")
 
 
