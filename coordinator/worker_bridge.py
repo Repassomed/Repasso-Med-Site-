@@ -444,6 +444,7 @@ class BridgeTaskMetadata:
     fonte: str | None = None
     notas: str | None = None
     source_pack_required: bool = False
+    questions_report_required: bool = False
     source_pack_path: str | None = None
     source_pack_sha256: str | None = None
     source_pack_text: str | None = None
@@ -460,6 +461,7 @@ class BridgeTaskMetadata:
             "branch": self.branch,
             "issue": self.issue,
             "source_pack_required": self.source_pack_required,
+            "questions_report_required": self.questions_report_required,
             "source_pack_path": self.source_pack_path,
             "source_pack_sha256": self.source_pack_sha256,
             "source_pack_error": self.source_pack_error,
@@ -497,6 +499,7 @@ def carregar_metadados_de_automacao(path: str) -> dict[str, BridgeTaskMetadata]:
             fonte=t.get("fonte"),
             notas=t.get("notas"),
             source_pack_required=pack_required,
+            questions_report_required=(t.get("questions_report_required") is True),
             source_pack_path=pack_path,
             source_pack_sha256=(pack_load.pack.sha256 if pack_load.pack else None),
             source_pack_text=(pack_load.pack.evidence_block() if pack_load.pack else None),
@@ -653,6 +656,17 @@ def montar_instrucoes(tarefa: TaskRecord, meta: BridgeTaskMetadata) -> str:
     ]
     if (meta.notas or "").strip():
         partes += ["", "NOTAS DO REGISTRO DE TAREFAS", meta.notas.strip()]
+    if meta.questions_report_required:
+        partes += [
+            "",
+            "RELATÓRIO OBRIGATÓRIO — LEI DAS QUESTÕES 8-A.11",
+            "Além do patch, devolva no mesmo JSON o campo question_report estruturado exigido "
+            "pelo Runner. Preencha a matriz com os números e destinos REAIS desta execução, "
+            "fonte por fonte. Não invente página, imagem, legibilidade, contagem, gabarito ou "
+            "proveniência. Se alguma fonte não puder ser verificada, registre-a como pendente "
+            "em vez de presumir. A confirmação de cobertura deve ser exatamente: "
+            "RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA.",
+        ]
     if meta.source_pack_text:
         partes += [
             "",
@@ -736,6 +750,7 @@ def materializar_runner_task(
             policy_level=meta.policy_level or "",
             jose_authorized=meta.jose_authorized,
             publication_required=False,
+            question_report_required=meta.questions_report_required,
         )
     except ValueError as exc:
         return MaterializacaoResult(
