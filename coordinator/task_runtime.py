@@ -223,6 +223,9 @@ class TaskRuntimeRecord:
     # Preserva os execution ids anteriores quando uma correção substitui o
     # execution_task_id corrente. Histórico auditável, nunca usado como claim.
     execution_history: tuple[str, ...] = ()
+    # Relatório 8-A.11 já validado pelo Runner. Persistido para que uma
+    # falha de rede/403 ao abrir a PR não obrigue nova chamada ao modelo.
+    question_report: str | None = None
     reason: str = ""
     reserved_at: str | None = None
     updated_at: str | None = None
@@ -267,6 +270,11 @@ class TaskRuntimeRecord:
             not isinstance(x, str) or not x.strip() for x in self.execution_history
         ):
             raise ValueError("execution_history precisa ser tuple de ids de execução não-vazios.")
+        if self.question_report is not None:
+            if not isinstance(self.question_report, str) or not self.question_report.strip():
+                raise ValueError("question_report precisa ser None ou texto não-vazio.")
+            if len(self.question_report) > 14000:
+                raise ValueError("question_report excede o limite persistente de 14000 caracteres.")
 
     @property
     def redistribuivel(self) -> bool:
@@ -321,6 +329,7 @@ class TaskRuntimeRecord:
             "last_audit_fix_fingerprint": self.last_audit_fix_fingerprint,
             "last_audit_findings": self.last_audit_findings,
             "execution_history": list(self.execution_history),
+            "question_report": self.question_report,
             "reason": self.reason,
             "reserved_at": self.reserved_at,
             "updated_at": self.updated_at,
@@ -351,6 +360,7 @@ class TaskRuntimeRecord:
             last_audit_fix_fingerprint=d.get("last_audit_fix_fingerprint"),
             last_audit_findings=d.get("last_audit_findings", ""),
             execution_history=tuple(d.get("execution_history") or ()),
+            question_report=d.get("question_report"),
             reason=d.get("reason", ""),
             reserved_at=d.get("reserved_at"),
             updated_at=d.get("updated_at"),
@@ -557,6 +567,7 @@ class TaskRuntimeStore:
         self, canonical_task_id: str, *, status: str, worker_id: str,
         execution_task_id: str, reason: str,
         checkpoint_commit: str | None = None, branch: str | None = None,
+        question_report: str | None = None,
     ) -> bool:
         """Regra 6: só escreve quando a leitura FRESCA ainda mostra a
         reserva desta MESMA execução (``IN-PROGRESS`` + mesmo
@@ -585,6 +596,9 @@ class TaskRuntimeStore:
                 "reason": reason,
                 "checkpoint_commit": checkpoint_commit if checkpoint_commit is not None else fresco.get("checkpoint_commit"),
                 "branch": branch if branch is not None else fresco.get("branch"),
+                "question_report": (
+                    question_report if question_report is not None else fresco.get("question_report")
+                ),
                 "updated_at": _now_iso(),
             }
             return True, {**dados, "tasks": list(base.values())}
