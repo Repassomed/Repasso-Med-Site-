@@ -233,18 +233,22 @@ def test_gabarito_enunciado_repetido_sem_falso_aviso() -> None:
         )
 
     base = SimpleNamespace(questions=[pergunta(1, "a"), pergunta(2, "d")])
-    head_inalterado = SimpleNamespace(questions=[pergunta(1, "d"), pergunta(2, "a")])
+    head_inalterado = SimpleNamespace(questions=[pergunta(1, "a"), pergunta(2, "d")])
     achados = checks._check_answers("guarani.html", base, head_inalterado)
     assert not any(f.check == "gabarito-alterado" for f in achados), achados
+
+    head_trocado = SimpleNamespace(questions=[pergunta(1, "d"), pergunta(2, "a")])
+    achados = checks._check_answers("guarani.html", base, head_trocado)
+    assert len([f for f in achados if f.check == "gabarito-alterado"]) == 1, achados
 
     head_alterado = SimpleNamespace(questions=[pergunta(1, "a"), pergunta(2, "b")])
     achados = checks._check_answers("guarani.html", base, head_alterado)
     mudancas = [f for f in achados if f.check == "gabarito-alterado"]
     assert len(mudancas) == 1, achados
     assert mudancas[0].detail["mudancas"] == [
-        {"questao": "Qual das frases está mal?", "de": ["d"], "para": ["b"]}
+        {"questao": "Qual das frases está mal?", "de": ["a", "d"], "para": ["a", "b"]}
     ], mudancas[0].detail
-    print("OK  test_gabarito_enunciado_repetido_sem_falso_aviso — comparação por multiconjunto.")
+    print("OK  test_gabarito_enunciado_repetido_sem_falso_aviso — comparação por ordem das ocorrências.")
 
 
 def main() -> int:
