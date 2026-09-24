@@ -43,6 +43,7 @@ from . import (
     test_runner_resume,
     test_runner_workflow_security,
     test_scheduler,
+    test_source_pack,
     test_worker_bridge,
     test_worker_bridge_workflow_security,
     test_worker_commands,
@@ -78,6 +79,7 @@ MODULOS = [
     test_openai_transport,
     test_openai_auditor,
     test_scheduler,
+    test_source_pack,
     # Issue #105 (Fases B-G): registrados a partir da Fase G. Até aqui
     # estes módulos rodavam só standalone, o que deixava a allowlist
     # `coordinator-suite` (o único comando de validação que o próprio
