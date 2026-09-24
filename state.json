@@ -150,10 +150,10 @@
       "current_task": "toxicologia-provas-issue102-r2-sourcepack",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T06:07:06.439115+00:00",
+      "last_heartbeat": "2026-09-24T09:32:21.943227+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "AVAILABLE",
+      "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
