@@ -4888,6 +4888,16 @@
       "output_tokens": 1986,
       "tier": "STANDARD",
       "timestamp": "2026-09-24T06:04:19.410466+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.128332,
+      "event_key": "runner-task:semiologia-ii-b08-hta-r3--bridge-955436301e94",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T06:06:36.293575+00:00"
     }
   ]
 }
