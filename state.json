@@ -18,7 +18,8 @@
     "runner-task:dermatologia-questoes-issue112-r2--bridge-14734f3fa04a",
     "runner-task:infra-guard-audit-pr-context-issue165--bridge-7e84030ee60c",
     "runner-task:infra-post-merge-reconciliation-issue162--bridge-4b0554eefe82",
-    "runner-task:infra-guard-audit-pr-context-issue165-r2--bridge-252fd0085f8a"
+    "runner-task:infra-guard-audit-pr-context-issue165-r2--bridge-252fd0085f8a",
+    "runner-task:infra-inbox-task-intake-issue160--bridge-79509fa549c6"
   ],
   "results": [
     {
