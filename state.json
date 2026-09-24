@@ -387,6 +387,16 @@
       "recorded_at": "2026-09-24T06:06:58.136725+00:00",
       "status": "FAILED",
       "task_id": "semiologia-ii-b08-hta-r3--bridge-955436301e94"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "resposta do modelo n\u00e3o \u00e9 um JSON v\u00e1lido \u2014 A resposta atingiu o teto de sa\u00edda do Runner (8000 tokens), portanto \u00e9 tratada como truncada \u2014 nunca aplicada parcialmente.",
+      "recorded_at": "2026-09-24T09:34:06.356919+00:00",
+      "status": "FAILED",
+      "task_id": "toxicologia-provas-issue102-r2-sourcepack--bridge-2508f5d4d0ce"
     }
   ]
 }
