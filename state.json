@@ -308,6 +308,25 @@
       "status": "FAILED",
       "updated_at": "2026-09-24T05:06:44.685822+00:00",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "audit_fix_attempts": 0,
+      "branch": "runner/cleanup-como-estudar-dermatologia",
+      "canonical_task_id": "cleanup-como-estudar-dermatologia",
+      "checkpoint_commit": null,
+      "execution_history": [],
+      "execution_task_id": "cleanup-como-estudar-dermatologia--bridge-3810769b5ade",
+      "guard_dispatch_attempts": 0,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "last_audit_findings": "",
+      "last_audit_fix_fingerprint": null,
+      "pr_number": null,
+      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'cleanup-como-estudar-dermatologia' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=True.)",
+      "reserved_at": "2026-09-24T05:08:02.034259+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-24T05:08:02.034275+00:00",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
