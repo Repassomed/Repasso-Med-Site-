@@ -34,7 +34,7 @@ _REPO_ROOT = os.path.dirname(_ROOT)
 sys.path.insert(0, _REPO_ROOT)
 
 from tools.qa.guard import checks
-from tools.qa.guard.checks import HARD_FAIL, Context
+from tools.qa.guard.checks import HARD_FAIL, INFO, Context
 
 FIXTURES = os.path.join(_REPO_ROOT, "tools", "qa", "fixtures")
 # Caminho de mentira, mas dentro de MATERIA_DIR — é isso que faz _is_materia
@@ -135,6 +135,124 @@ def test_broken_fails() -> None:
 
     print(f"OK  test_broken_fails — {len(duros)} HARD FAIL, todos os {len(esperados)} esperados presentes.")
     print(f"    (fx-dup preexistente corretamente tratado como INFO, não repetido aqui.)")
+
+
+def test_assets_preexistentes_nao_bloqueiam_delta() -> None:
+    """Asset ausente já referenciado na base é dívida histórica, não regressão."""
+    from types import SimpleNamespace
+
+    asset = "/assets/img/legacy-ausente.webp"
+    base = SimpleNamespace(assets=[asset])
+    head = SimpleNamespace(assets=[asset])
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=[CAMINHO_FIXTURE],
+        base_blob=lambda p: None,
+        head_blob=lambda p: None,
+        added_lines={},
+        scope={"arquivos": [CAMINHO_FIXTURE]},
+        tasks=None,
+        file_exists=lambda p: False,
+    )
+    achados = checks._check_assets(ctx, "materia-fixture.html", base, head)
+    assert not any(f.severity == HARD_FAIL for f in achados), achados
+    infos = [f for f in achados if f.check == "assets"]
+    assert infos and "já estavam referenciados" in infos[0].message, infos
+    print("OK  test_assets_preexistentes_nao_bloqueiam_delta — dívida histórica ficou INFO.")
+
+
+def test_asset_novo_ausente_continua_hard_fail() -> None:
+    """Referência nova ausente continua sendo regressão objetiva e bloqueia."""
+    from types import SimpleNamespace
+
+    asset = "/assets/img/novo-ausente.webp"
+    base = SimpleNamespace(assets=[])
+    head = SimpleNamespace(assets=[asset])
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=[CAMINHO_FIXTURE],
+        base_blob=lambda p: None,
+        head_blob=lambda p: None,
+        added_lines={},
+        scope={"arquivos": [CAMINHO_FIXTURE]},
+        tasks=None,
+        file_exists=lambda p: False,
+    )
+    achados = checks._check_assets(ctx, "materia-fixture.html", base, head)
+    duros = [f for f in achados if f.check == "assets" and f.severity == HARD_FAIL]
+    assert len(duros) == 1 and asset in duros[0].detail.get("assets", []), achados
+    print("OK  test_asset_novo_ausente_continua_hard_fail — regressão nova continua bloqueada.")
+
+
+def test_asset_removido_pelo_pr_continua_hard_fail() -> None:
+    """Se o PR toca/remove o caminho do asset, não pode alegar dívida histórica."""
+    from types import SimpleNamespace
+
+    asset = "/assets/img/removido.webp"
+    caminho = "Repasso-Med-Site--main/Atual - Copia/assets/img/removido.webp"
+    base = SimpleNamespace(assets=[asset])
+    head = SimpleNamespace(assets=[asset])
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=[CAMINHO_FIXTURE, caminho],
+        base_blob=lambda p: "existia" if p == caminho else None,
+        head_blob=lambda p: None,
+        added_lines={},
+        scope={"arquivos": [CAMINHO_FIXTURE, caminho]},
+        tasks=None,
+        file_exists=lambda p: False,
+    )
+    achados = checks._check_assets(ctx, "materia-fixture.html", base, head)
+    assert any(f.check == "assets" and f.severity == HARD_FAIL for f in achados), achados
+    print("OK  test_asset_removido_pelo_pr_continua_hard_fail — remoção continua bloqueada.")
+
+
+def test_asset_regressao_mascarada_como_divida_preexistente_continua_hard_fail() -> None:
+    """Achado da auditoria independente (Claude 3, PR #247).
+
+    Uma tag que ANTES apontava para um asset que existia não pode virar
+    dívida antiga só por passar a apontar para o MESMO caminho já quebrado
+    usado por outra tag no mesmo arquivo. O caminho aparecia 1x na base e
+    passa a aparecer 2x no HEAD — a ocorrência extra é regressão nova, não
+    dívida histórica, mesmo que o texto do caminho já existisse em outro
+    lugar do arquivo (comparação por `set` deixava isso passar como INFO).
+    """
+    from types import SimpleNamespace
+
+    quebrado_antigo = "/assets/img/broken-old.webp"  # já ausente na base
+    base = SimpleNamespace(assets=[quebrado_antigo, "/assets/img/working.webp"])
+    # O PR reescreve a tag que apontava pra "working.webp" (existia) para
+    # apontar para o MESMO caminho já quebrado da outra tag. O arquivo
+    # "working.webp" em si nunca é tocado/removido — só deixa de ser
+    # referenciado, então não aparece em `ctx.changed`.
+    head = SimpleNamespace(assets=[quebrado_antigo, quebrado_antigo])
+    ctx = Context(
+        repo_root=_REPO_ROOT,
+        changed=[CAMINHO_FIXTURE],
+        base_blob=lambda p: None,
+        head_blob=lambda p: None,
+        added_lines={},
+        scope={"arquivos": [CAMINHO_FIXTURE]},
+        tasks=None,
+        file_exists=lambda p: False,
+    )
+    achados = checks._check_assets(ctx, "materia-fixture.html", base, head)
+    duros = [f for f in achados if f.check == "assets" and f.severity == HARD_FAIL]
+    assert duros, (
+        "a ocorrência EXTRA de um caminho já quebrado na base é uma regressão nova "
+        "(uma referência que funcionava foi quebrada) e tem que continuar HARD FAIL, "
+        f"mas o Guard só reportou: {achados}"
+    )
+    assert quebrado_antigo in duros[0].detail.get("assets", []), duros
+    # A primeira ocorrência (a que já existia na base) continua contabilizada
+    # como dívida pré-existente — só a ocorrência a mais é que não cabe mais
+    # no orçamento de dívida antiga.
+    infos = [f for f in achados if f.check == "assets" and f.severity == INFO]
+    assert infos and quebrado_antigo in infos[0].detail.get("assets", []), achados
+    print(
+        "OK  test_asset_regressao_mascarada_como_divida_preexistente_continua_hard_fail — "
+        "regressão disfarçada de dívida antiga continua bloqueada."
+    )
 
 
 def test_scope_lock_body_cannot_widen() -> None:
@@ -255,6 +373,10 @@ def main() -> int:
     testes = [
         test_valid_passes,
         test_broken_fails,
+        test_assets_preexistentes_nao_bloqueiam_delta,
+        test_asset_novo_ausente_continua_hard_fail,
+        test_asset_removido_pelo_pr_continua_hard_fail,
+        test_asset_regressao_mascarada_como_divida_preexistente_continua_hard_fail,
         test_scope_lock_body_cannot_widen,
         test_scope_lock_task_cannot_widen_itself,
         test_gabarito_enunciado_repetido_sem_falso_aviso,
