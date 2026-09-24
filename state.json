@@ -150,10 +150,10 @@
       "current_task": "infra-inbox-task-intake-issue160",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T00:13:15.935934+00:00",
+      "last_heartbeat": "2026-09-24T00:26:13.242565+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "AVAILABLE",
+      "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
