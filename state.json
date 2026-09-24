@@ -2831,6 +2831,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-24T00:27:47.587683+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:infra-inbox-task-intake-issue160--bridge-79509fa549c6",
+      "informational_cost_usd": 0.10396,
+      "input_tokens": 11980,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 8000,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T00:27:49.502991+00:00"
     }
   ]
 }
