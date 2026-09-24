@@ -194,6 +194,9 @@ BRIDGE_BRANCH_PREFIX = "runner/"
 # suficiente para fechar achados objetivos sem transformar NEEDS-FIX num
 # loop pago infinito. Depois disso a PR permanece visível para José.
 MAX_AUDIT_FIX_ATTEMPTS = 2
+# Falhas do Runner antes de criar novo HEAD não são nova rodada semântica.
+# O mesmo parecer pode ter até 3 tentativas operacionais, nunca infinito.
+MAX_AUDIT_FIX_EXECUTION_FAILURES = 3
 MAX_AUDIT_FINDINGS_CHARS = 6000
 COORDINATOR_BOT_LOGIN = "github-actions[bot]"
 AUDIT_CARD_HEADER = "## 🟣 CARTÃO DE MERGE — Coordinator V3"
@@ -953,8 +956,17 @@ def _candidato_a_correcao_de_auditoria(
                 continue
         except bridge_pr.GitHubBridgeApiError:
             continue
-        if pedido is None or pedido.fingerprint == registro.last_audit_fix_fingerprint:
+        if pedido is None:
             continue
+        if pedido.fingerprint == registro.last_audit_fix_fingerprint:
+            # O mesmo parecer só volta a ser elegível quando a tentativa
+            # corretiva falhou operacionalmente sem novo HEAD. Parecer já
+            # corrigido (0 falhas pendentes) continua deduplicado.
+            if (
+                registro.audit_fix_execution_failures <= 0
+                or registro.audit_fix_execution_failures >= MAX_AUDIT_FIX_EXECUTION_FAILURES
+            ):
+                continue
         candidatos.append((ordem.get(tarefa.priority, 99), tarefa.id, tarefa, meta, registro, pedido))
     if not candidatos:
         return None
@@ -1339,7 +1351,25 @@ def executar_correcao_de_auditoria(
     """
     canonical_task_id = tarefa.id
     tarefa_para_fila = replace(tarefa, estado="READY", agente=None, dependencias=())
-    decisao = scheduler.escolher_proxima_atribuicao([tarefa_para_fila], workers)
+
+    # Retry operacional do mesmo parecer: se houver qualquer alternativa
+    # realmente OFFER-able, não devolver imediatamente ao worker que acabou
+    # de falhar. Todos os gates/capabilities continuam sendo decididos pelo
+    # scheduler; apenas removemos o último worker do snapshot quando isso
+    # ainda deixa uma oferta válida.
+    workers_para_decisao = workers
+    ultimo_falhou = (
+        registro_anterior.last_audit_fix_worker_id
+        if registro_anterior.audit_fix_execution_failures > 0
+        else None
+    )
+    if ultimo_falhou:
+        sem_ultimo = [w for w in workers if w.worker_id != ultimo_falhou]
+        alternativa = scheduler.escolher_proxima_atribuicao([tarefa_para_fila], sem_ultimo)
+        if alternativa.action == "OFFER" and alternativa.worker_id:
+            workers_para_decisao = sem_ultimo
+
+    decisao = scheduler.escolher_proxima_atribuicao([tarefa_para_fila], workers_para_decisao)
     if decisao.action == "POOL_PAUSED":
         return BridgeOutcome("POOL_PAUSED", decisao.reason, decision=decisao, runtime_record=registro_anterior)
     if decisao.action != "OFFER" or not decisao.worker_id:
@@ -1377,6 +1407,7 @@ def executar_correcao_de_auditoria(
         audit_fingerprint=pedido.fingerprint, audit_findings=pedido.findings,
         max_attempts=MAX_AUDIT_FIX_ATTEMPTS,
         checkpoint_commit=pedido.audited_head_sha or registro_anterior.checkpoint_commit,
+        max_execution_failures=MAX_AUDIT_FIX_EXECUTION_FAILURES,
     )
     if not reserva.reservado or reserva.record is None:
         liberacao = liberar_worker_apos_resultado(
@@ -1447,13 +1478,27 @@ def executar_correcao_de_auditoria(
     if status_runtime == task_runtime.RUNTIME_BLOCKED_LIMIT and not checkpoint:
         status_runtime = task_runtime.RUNTIME_BLOCKED
 
-    runtime_store.registrar_resultado(
-        canonical_task_id, status=status_runtime, worker_id=worker_id,
-        execution_task_id=execution_task_id, reason=motivo_resultado,
-        checkpoint_commit=checkpoint, branch=branch_final,
-        question_report=dispatch.question_report,
+    falha_operacional_sem_head = (
+        status_runtime == task_runtime.RUNTIME_FAILED and not checkpoint
     )
-    registro_final = runtime_store.get(canonical_task_id) or registro
+    if falha_operacional_sem_head:
+        recuperacao = runtime_store.registrar_falha_operacional_correcao(
+            canonical_task_id, worker_id=worker_id,
+            execution_task_id=execution_task_id, reason=motivo_resultado,
+            max_execution_failures=MAX_AUDIT_FIX_EXECUTION_FAILURES,
+        )
+        registro_final = recuperacao.record or runtime_store.get(canonical_task_id) or registro
+        status_runtime = registro_final.status
+    else:
+        runtime_store.registrar_resultado(
+            canonical_task_id, status=status_runtime, worker_id=worker_id,
+            execution_task_id=execution_task_id, reason=motivo_resultado,
+            checkpoint_commit=checkpoint, branch=branch_final,
+            question_report=dispatch.question_report,
+            reset_audit_execution_failures=(status_runtime in STATUS_QUE_ABREM_PR),
+        )
+        registro_final = runtime_store.get(canonical_task_id) or registro
+
     liberacao = liberar_worker_apos_resultado(
         worker_registry, worker_id, canonical_task_id=canonical_task_id,
         resultado_status=status_runtime,
@@ -1465,7 +1510,7 @@ def executar_correcao_de_auditoria(
         f"correção automática {registro.audit_fix_attempts}/{MAX_AUDIT_FIX_ATTEMPTS} "
         f"executada a partir do checkpoint da PR #{pedido.pr_number}; parecer {pedido.fingerprint}.",
     ]
-    if status_runtime in STATUS_QUE_ABREM_PR:
+    if not falha_operacional_sem_head and status_runtime in STATUS_QUE_ABREM_PR:
         pr_outcome, guard_outcome, notas_pr = _abrir_pr_e_guard(
             github_api, task=runner_task, tarefa=tarefa, meta=meta,
             canonical_task_id=canonical_task_id, worker_id=worker_id,
@@ -1474,10 +1519,21 @@ def executar_correcao_de_auditoria(
         )
         notes.extend(notas_pr)
     else:
-        notes.append(
-            f"correção terminou em {status_runner}; não há novo HEAD auditável e não existe retry "
-            "silencioso desta falha de execução."
-        )
+        if falha_operacional_sem_head and status_runtime == task_runtime.RUNTIME_NEEDS_AUDIT:
+            notes.append(
+                f"correção terminou em {status_runner} sem novo HEAD; retry operacional "
+                f"{registro_final.audit_fix_execution_failures}/{MAX_AUDIT_FIX_EXECUTION_FAILURES} "
+                "permanece elegível para o mesmo parecer."
+            )
+        elif falha_operacional_sem_head:
+            notes.append(
+                f"correção terminou em {status_runner} sem novo HEAD e atingiu o teto de "
+                f"{MAX_AUDIT_FIX_EXECUTION_FAILURES} falhas operacionais; tarefa ficou FAILED."
+            )
+        else:
+            notes.append(
+                f"correção terminou em {status_runner}; sem retry automático para este estado."
+            )
 
     return BridgeOutcome(
         "AUDIT_FIX",
