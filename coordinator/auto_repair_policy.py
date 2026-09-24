@@ -264,24 +264,3 @@ def extract_fingerprint(body: str) -> str | None:
     m = FP_MARKER_RE.search(body or "")
     return m.group(1) if m else None
 
-
-def auto_merge_eligibility(*, title: str, body: str, state: str, base: str,
-                           head_repo: str, head_ref: str, expected_repo: str,
-                           changed_files: tuple[str, ...]) -> tuple[bool, str, str | None]:
-    fp = extract_fingerprint(body)
-    checks = [
-        (state == "open", "PR nao aberta"),
-        (base == "main", "base nao e main"),
-        (head_repo == expected_repo, "head fora do repositorio"),
-        (bool(re.fullmatch(r"auto-repair/[0-9a-f]{12}-a[12]", head_ref or "")), "branch invalida"),
-        (title.startswith(PR_TITLE_PREFIX), "titulo invalido"),
-        (PR_MARKER in (body or "") and fp is not None, "marcadores ausentes"),
-        (0 < len(changed_files) <= MAX_CHANGED_FILES, "quantidade de arquivos invalida"),
-        (all(is_safe_path(p) for p in changed_files), "arquivo fora do escopo tecnico"),
-    ]
-    for ok, reason in checks:
-        if not ok:
-            return False, reason, fp
-    if not head_ref.startswith(f"auto-repair/{fp[:12]}-"):
-        return False, "branch nao corresponde ao fingerprint", fp
-    return True, "elegivel apos Guard verde", fp

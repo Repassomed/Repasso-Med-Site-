@@ -32,7 +32,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import NamedTuple
 
-from . import anthropic_client, openai_client, source_pack
+from . import anthropic_client, bridge_workers, openai_client, source_pack
 from .anthropic_transport import AnthropicTransport
 from .audit import AUDIT_SYSTEM_PROMPT, build_audit_prompt, parse_decision, preparar_diff
 from .budget import (
@@ -426,13 +426,27 @@ def _tratar_checkpoint_blocked_limit(event: Event, classificacao: Classification
     commit = event.payload.get("commit")
     issue_origem = event.payload.get("issue") or INBOX_ISSUE_NUMBER
 
+    # Issue #258: um checkpoint é um sinal MANUAL/humano (Issue #88,
+    # ``AGENTE:`` é texto livre do comentário — RE_AGENTE_CHECKPOINT não
+    # restringe a nenhum nome conhecido). Os quatro workers programáticos
+    # do Worker Bridge (``claude-worker-1..4``, ver ``bridge_workers.py``)
+    # são a única capacidade AUTOMÁTICA do Coordinator; um checkpoint que
+    # nomeia um deles como ``agente`` (confusão real observada: sessão
+    # humana registrando progresso sob o id do worker de API por engano)
+    # NUNCA pode escrever no registro operacional por este caminho — faria
+    # exatamente o que a Issue #258 reproduz: consumir um slot AVAILABLE
+    # que só o Bridge deveria oferecer, sem que nenhuma tarefa programática
+    # real tenha sido despachada. Fail-closed: zero escrita, zero
+    # integração/handoff automático; só um aviso explícito no cartão.
+    agente_e_worker_do_bridge = bool(agente) and bridge_workers.e_worker_do_bridge(agente)
+
     integracao = None
     wiring_completo = all(
         v is not None for v in (
             runner_tasks_json_path, runner_repo_dir, runner_dispatch_config, runner_state_git_remote,
         )
     )
-    if agente and tarefa and wiring_completo:
+    if agente and tarefa and wiring_completo and not agente_e_worker_do_bridge:
         integracao = processar_checkpoint_de_limite(
             registry=worker_registry, agente=agente, canonical_task_id=tarefa,
             branch=branch, commit=commit, progresso=event.payload.get("progresso"),
@@ -452,7 +466,7 @@ def _tratar_checkpoint_blocked_limit(event: Event, classificacao: Classification
             validation_command_keys=CANARY_VALIDATION_COMMAND_KEYS,
         )
 
-    if agente and (integracao is None or integracao.action == "SKIPPED"):
+    if agente and not agente_e_worker_do_bridge and (integracao is None or integracao.action == "SKIPPED"):
         # Caminho de sempre (nenhuma execução): o registro operacional
         # ainda precisa refletir o LIMIT reportado no checkpoint.
         worker_registry.set_status(agente, "LIMIT", message=f"checkpoint: {agente} -> LIMIT (BLOCKED-LIMIT)")
@@ -516,21 +530,29 @@ def _tratar_checkpoint_blocked_limit(event: Event, classificacao: Classification
     candidatos = [w for w in todos if w.display_name.strip().lower() != agente_lower]
     decisao = decidir_handoff(prioridade=classificacao.priority, checkpoint_seguro=checkpoint_seguro,
                                candidatos_disponiveis=candidatos)
-    texto = render_checkpoint(
-        "BLOCKED-LIMIT",
-        linhas={
-            "Tarefa": tarefa or "-",
-            "Agente": agente or "-",
-            "Branch": branch or "-",
-            "Commit": commit or "-",
-            "Decisão": f"{decisao.action} — {decisao.reason}",
-        },
-        cost_block=cost_block,
-    )
-    return _ResultadoZeroCusto(
-        reason=f"Checkpoint BLOCKED-LIMIT processado — decisão: {decisao.action}.", texto=texto,
-        target_issue=issue_origem,
-    )
+    linhas_checkpoint = {
+        "Tarefa": tarefa or "-",
+        "Agente": agente or "-",
+        "Branch": branch or "-",
+        "Commit": commit or "-",
+        "Decisão": f"{decisao.action} — {decisao.reason}",
+    }
+    razao = f"Checkpoint BLOCKED-LIMIT processado — decisão: {decisao.action}."
+    if agente_e_worker_do_bridge:
+        # Issue #258: nada foi escrito no Worker Registry para ``agente``
+        # — ele é um dos quatro workers programáticos do Worker Bridge, e
+        # um checkpoint MANUAL nunca pode reservar/mudar o status de um
+        # worker de API (faria exatamente a colisão de capacidade que a
+        # Issue #258 reproduziu). Isto fica visível para o José/o autor do
+        # checkpoint em vez de um "nada aconteceu" silencioso.
+        aviso = (
+            f"{agente!r} é um id reservado ao Worker Bridge programático (claude-worker-1..4); "
+            "checkpoint manual NÃO altera esse registro. Sessão humana/manual: use 'Claude 1'..'Claude 4'."
+        )
+        linhas_checkpoint["Aviso"] = aviso
+        razao += f" Registro do Worker Bridge preservado — {aviso}"
+    texto = render_checkpoint("BLOCKED-LIMIT", linhas=linhas_checkpoint, cost_block=cost_block)
+    return _ResultadoZeroCusto(reason=razao, texto=texto, target_issue=issue_origem)
 
 
 class _ResultadoOpenAI(NamedTuple):
