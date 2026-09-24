@@ -112,6 +112,7 @@ decide NO MÁXIMO UMA atribuição: automático não significa laço.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -120,6 +121,7 @@ from dataclasses import dataclass, replace
 
 from . import bridge_pr, bridge_workers, error_registry, scheduler, task_runtime
 from .bridge_pr import GuardDispatchOutcome, PrOutcome
+from .github_event import COORDINATOR_COMMENT_MARKER
 from .classify import Priority
 from .runner_contract import (
     POLICY_LEVEL_PROIBIDO,
@@ -187,6 +189,17 @@ BRIDGE_VALIDATION_COMMAND_KEYS: tuple[str, ...] = CANARY_VALIDATION_COMMAND_KEYS
 # do canário já usam (``runner/<task_id>``) — nunca ``main``/``master``,
 # nunca uma branch de pessoa/PR.
 BRIDGE_BRANCH_PREFIX = "runner/"
+
+# Ciclo de correção pós-auditoria. Duas correções automáticas no máximo:
+# suficiente para fechar achados objetivos sem transformar NEEDS-FIX num
+# loop pago infinito. Depois disso a PR permanece visível para José.
+MAX_AUDIT_FIX_ATTEMPTS = 2
+MAX_AUDIT_FINDINGS_CHARS = 6000
+COORDINATOR_BOT_LOGIN = "github-actions[bot]"
+AUDIT_CARD_HEADER = "## 🟣 CARTÃO DE MERGE — Coordinator V3"
+AUDIT_NEEDS_FIX_LINE = (
+    "**Decisão da auditoria semântica (STANDARD, independente do worker):** NEEDS-FIX"
+)
 
 # Mesma allowlist de formato de id do workflow do Runner (camada 4) e de
 # ``checkpoint_handoff._TASK_ID_RE``: um id fora deste formato nem chega a
@@ -789,6 +802,96 @@ _RUNNER_STATUS_PARA_RUNTIME: dict[str, str] = {
 STATUS_QUE_ABREM_PR: tuple[str, ...] = (
     task_runtime.RUNTIME_NEEDS_AUDIT, task_runtime.RUNTIME_DONE,
 )
+
+
+@dataclass(frozen=True)
+class AuditFixRequest:
+    pr_number: int
+    fingerprint: str
+    findings: str
+    comment_id: int | None = None
+
+
+def _audit_fix_request_from_comments(comentarios: list[dict], *, pr_number: int) -> AuditFixRequest | None:
+    """Extrai SOMENTE o Cartão NEEDS-FIX publicado pelo workflow confiável.
+
+    Comentário humano, texto copiado ou bot diferente nunca vira instrução
+    automática. O corpo inteiro entra no fingerprint; a mesma auditoria não
+    consegue disparar duas correções mesmo se dois ciclos do Bridge correrem.
+    """
+    for comentario in reversed(comentarios or []):
+        user = comentario.get("user") or {}
+        if (user.get("login") or "").strip() != COORDINATOR_BOT_LOGIN:
+            continue
+        body = (comentario.get("body") or "").strip()
+        if not body.startswith(COORDINATOR_COMMENT_MARKER):
+            continue
+        if AUDIT_CARD_HEADER not in body or AUDIT_NEEDS_FIX_LINE not in body:
+            continue
+        fingerprint = hashlib.sha256(body.encode("utf-8")).hexdigest()[:24]
+        findings = body[:MAX_AUDIT_FINDINGS_CHARS]
+        cid = comentario.get("id")
+        return AuditFixRequest(
+            pr_number=pr_number, fingerprint=fingerprint, findings=findings,
+            comment_id=(cid if isinstance(cid, int) else None),
+        )
+    return None
+
+
+def _candidato_a_correcao_de_auditoria(
+    tarefas: list[TaskRecord], metadados: dict[str, BridgeTaskMetadata],
+    registros: dict[str, TaskRuntimeRecord], *, github_api: bridge_pr.GitHubBridgeApi | None,
+    base_branch: str, config: WorkerBridgeConfig,
+) -> tuple[TaskRecord, BridgeTaskMetadata, TaskRuntimeRecord, AuditFixRequest] | None:
+    """Encontra um NEEDS-FIX novo sem confiar em comentário humano.
+
+    Só considera PR aberta, same branch, no mesmo checkpoint registrado e
+    Guard já despachado. Pilot nunca consome correção automática.
+    """
+    if github_api is None or config.is_pilot:
+        return None
+    por_id = {t.id: t for t in tarefas}
+    candidatos: list[tuple[int, str, TaskRecord, BridgeTaskMetadata, TaskRuntimeRecord, AuditFixRequest]] = []
+    ordem = {p: i for i, p in enumerate(Priority)}
+    for canonical_id, registro in registros.items():
+        if registro.status != task_runtime.RUNTIME_NEEDS_AUDIT:
+            continue
+        if registro.audit_fix_attempts >= MAX_AUDIT_FIX_ATTEMPTS:
+            continue
+        if not registro.guard_confirmado or not registro.pr_number or not registro.branch or not registro.checkpoint_commit:
+            continue
+        tarefa = por_id.get(canonical_id)
+        meta = metadados.get(canonical_id)
+        if tarefa is None or meta is None:
+            continue
+        politica = avaliar_politica(meta, task_id=canonical_id)
+        if not politica.permitido:
+            continue
+        try:
+            pr = github_api.pr_por_numero(registro.pr_number)
+            head = pr.get("head") or {}
+            base = pr.get("base") or {}
+            if pr.get("state") != "open":
+                continue
+            if (head.get("ref") or "").strip() != registro.branch:
+                continue
+            if (head.get("sha") or "").strip() != registro.checkpoint_commit:
+                continue
+            if (base.get("ref") or "").strip() != base_branch:
+                continue
+            pedido = _audit_fix_request_from_comments(
+                github_api.comentarios_da_pr(registro.pr_number), pr_number=registro.pr_number
+            )
+        except bridge_pr.GitHubBridgeApiError:
+            continue
+        if pedido is None or pedido.fingerprint == registro.last_audit_fix_fingerprint:
+            continue
+        candidatos.append((ordem.get(tarefa.priority, 99), tarefa.id, tarefa, meta, registro, pedido))
+    if not candidatos:
+        return None
+    candidatos.sort(key=lambda x: (x[0], x[1]))
+    _, _, tarefa, meta, registro, pedido = candidatos[0]
+    return tarefa, meta, registro, pedido
 
 
 @dataclass(frozen=True)
