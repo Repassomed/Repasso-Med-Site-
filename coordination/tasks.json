@@ -1489,6 +1489,70 @@
       "risk_level": "ALTO",
       "policy_level": "D",
       "jose_authorized": true
+    },
+    {
+      "id": "infra-anthropic-timeout-issue168",
+      "titulo": "P0 — ampliar timeout único da Anthropic para tarefas reais",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        "coordinator/anthropic_transport.py",
+        "coordinator/tests/test_anthropic_transport.py",
+        "coordination/tasks.json"
+      ],
+      "objetivo": "Aumentar o timeout único do transporte Anthropic de 60 para 180 segundos, preservando max_retries=0, orçamento, ledger, redaction e todos os portões.",
+      "fonte": "Issue #168 · Error Registry #167 · run 35936352652",
+      "agente": "ChatGPT",
+      "estado": "DONE",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
+      "branch": "fix/anthropic-timeout-issue168",
+      "pr": null,
+      "commit": "1c8c0031e444f8f5c0165134c50c38b84fd44208",
+      "issue": 168,
+      "notas": "Implementação e teste entregues nesta PR. DONE passa a valer após o merge humano; uma única tentativa permanece, sem retry oculto.",
+      "automation_enabled": false,
+      "bridge_enabled": false,
+      "risk_level": "BAIXO",
+      "policy_level": "D",
+      "jose_authorized": true
+    },
+    {
+      "id": "infra-guard-audit-pr-context-issue165-r2",
+      "titulo": "P0 — retry: vincular Guard do Worker Bridge à PR para auditoria semântica",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        ".github/workflows/guard.yml",
+        ".github/workflows/coordinator-observe.yml",
+        "coordinator/tests/test_workflow_security.py"
+      ],
+      "objetivo": "Implementar somente o vínculo confiável Guard→PR no caminho workflow_dispatch: o Guard deve gravar no próprio artifact contexto tipado com pr_number, base_ref, head_sha e head_repo_full_name obtidos da API; o OBSERVE deve baixar o artifact antes de buscar a PR e, quando workflow_run.pull_requests vier vazio, usar esse contexto apenas após comparar com a PR real da API, mesmo repositório e base padrão. Então buscar diff real, audit-pack e publicar a decisão na PR correta. Contexto ausente/inconsistente falha fechado; sem chamada paga duplicada; preservar caminho pull_request existente.",
+      "fonte": "Issue #165 · retry após timeout #167; escopo reduzido",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-anthropic-timeout-issue168"
+      ],
+      "branch": "runner/infra-guard-audit-pr-context-issue165-r2",
+      "pr": null,
+      "commit": null,
+      "issue": 165,
+      "notas": "Novo canonical_task_id; nunca reutilizar claim FAILED da tentativa original. Escopo reduzido a dois workflows e teste estrutural. NEEDS-AUDIT obrigatório.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "ALTO",
+      "policy_level": "D",
+      "jose_authorized": true
     }
   ]
 }
