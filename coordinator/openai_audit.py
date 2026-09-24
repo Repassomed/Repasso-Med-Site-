@@ -25,9 +25,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .audit import bloco_de_evidencia_de_preservacao
 from .context import MinimalContext
 
-MAX_AUDIT_PROMPT_CHARS = 24_000
+MAX_AUDIT_PROMPT_CHARS = 32_000
 MAX_DIFF_CHARS = 8_000
 
 OPENAI_AUDITOR_SYSTEM_PROMPT = (
@@ -129,7 +130,8 @@ def preparar_diff(pr_diff: str | None) -> DiffParaAuditoriaOpenAI:
 
 def build_openai_audit_prompt(contexto: MinimalContext, *, pr_body: str | None,
                                envolve_questoes: bool, pr_diff: str | None = None,
-                               source_pack_text: str | None = None) -> str:
+                               source_pack_text: str | None = None,
+                               preservation_evidence: str | None = None) -> str:
     """Prompt mínimo — contexto do Guard + DIFF REAL (evidência principal)
     + corpo da PR (contexto/rastreabilidade, nunca prova), nunca o
     repositório inteiro. Mesmo formato de evidência que
@@ -164,6 +166,9 @@ def build_openai_audit_prompt(contexto: MinimalContext, *, pr_body: str | None,
                 "mudança inteira. Registre isso como finding; um gate determinístico separado "
                 "também impede MERGE-READY sem diff completo."
             )
+        bloco_preservacao = bloco_de_evidencia_de_preservacao(preservation_evidence)
+        if bloco_preservacao:
+            partes.append(bloco_preservacao)
     else:
         partes.append(
             "ATENÇÃO: nenhum diff real da PR foi fornecido a esta auditoria. O corpo da PR "

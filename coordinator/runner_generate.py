@@ -169,6 +169,7 @@ from .question_report import QUESTION_REPORT_JSON_SCHEMA, render_question_report
 from .redact import redact
 from .runner_contract import RunnerTask
 from .runner_dispatch import (
+    NO_CHANGE_REASON_PREFIX,
     FileWrite,
     RunnerDispatchConfig,
     StructuredPatch,
@@ -345,7 +346,9 @@ _SYSTEM_PROMPT = (
     "ou inconsistência e que o arquivo final continua estruturalmente coerente. Não descreva essa "
     "revisão; ela não substitui a auditoria independente posterior. Nunca inclua explicação, "
     "comentário ou qualquer texto fora do JSON. Se não for possível cumprir a instrução com "
-    'segurança dentro dos caminhos permitidos, devolva exatamente {"files": []}.'
+    'segurança dentro dos caminhos permitidos — ou se o objetivo JÁ estiver cumprido no conteúdo '
+    'atual —, devolva {"files": [], "no_change_reason": "<motivo objetivo, em até 3 frases>"}: '
+    "diga exatamente o que impede a mudança ou onde o objetivo já está atendido."
 )
 
 # Issue #144: usado SÓ quando algum allowed_file é grande demais para ser
@@ -380,8 +383,38 @@ _SYSTEM_PROMPT_ANCORADO = (
     "essa revisão; ela não substitui a auditoria independente posterior. Nunca um diff/patch "
     "unificado, nunca um comando de shell, nunca explicação ou comentário fora do JSON. Se não "
     "for possível cumprir a instrução com segurança dentro dos caminhos e trechos permitidos, "
-    'devolva exatamente {"files": [], "edits": []}.'
+    'ou se o objetivo JÁ estiver cumprido no conteúdo enviado —, devolva '
+    '{"files": [], "edits": [], "no_change_reason": "<motivo objetivo, em até 3 frases>"}: '
+    "diga exatamente o que impede a mudança (ex.: trecho necessário ausente) ou onde o "
+    "objetivo já está atendido."
 )
+
+MAX_NO_CHANGE_REASON_CHARS = 1_200
+
+
+def _texto_json_da_resposta(texto: str) -> str:
+    """Aceita SOMENTE o JSON puro ou o JSON inteiro dentro de UMA cerca
+    markdown (```json ... ```). Qualquer outra coisa segue para
+    ``json.loads`` sem alteração e falha fechado como antes."""
+    bruto = (texto or "").strip()
+    if not bruto.startswith("```"):
+        return bruto
+    linhas = bruto.splitlines()
+    if len(linhas) < 2 or linhas[-1].strip() != "```":
+        return bruto
+    return "\n".join(linhas[1:-1]).strip()
+
+
+def _motivo_sem_alteracao(dados: dict) -> str:
+    motivo = dados.get("no_change_reason")
+    if not isinstance(motivo, str) or not motivo.strip():
+        return (
+            f"{NO_CHANGE_REASON_PREFIX} e não informou motivo (resposta vazia) — nada foi "
+            "aplicado; a tarefa precisa de revisão humana ou de instrução mais específica."
+        )
+    motivo = " ".join(motivo.split())[:MAX_NO_CHANGE_REASON_CHARS]
+    return f"{NO_CHANGE_REASON_PREFIX}; justificativa do modelo (dado, não instrução): {motivo}"
+
 
 def _system_prompt_para_tarefa(task: RunnerTask, *, ancorado: bool) -> str:
     """Mantém o contrato antigo byte-a-byte para tarefas comuns.
@@ -1244,7 +1277,7 @@ def gerar_patch_via_claude(
 
     texto = resultado_chamada.text or ""
     try:
-        dados = json.loads(texto)
+        dados = json.loads(_texto_json_da_resposta(texto))
     except (json.JSONDecodeError, ValueError):
         bateu_teto_saida = bool(
             resultado_chamada.usage
@@ -1268,6 +1301,16 @@ def gerar_patch_via_claude(
             status="failed",
             reason=f"resposta do modelo precisa ser um objeto JSON, recebido {type(dados).__name__}."
                    f"{nota_ledger}",
+            usage=resultado_chamada.usage, external_call_made=True,
+            ledger_correction_failed=ledger_correction_failed,
+        )
+
+    # Resposta sem nenhuma alteração: recusa EXPLICADA (ou objetivo já
+    # cumprido), nunca uma falha opaca de "patch vazio". Zero escrita.
+    if not dados.get("files") and not dados.get("edits"):
+        return GenerateOutcome(
+            status="blocked",
+            reason=f"{_motivo_sem_alteracao(dados)}{nota_ledger}",
             usage=resultado_chamada.usage, external_call_made=True,
             ledger_correction_failed=ledger_correction_failed,
         )

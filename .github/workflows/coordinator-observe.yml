@@ -361,6 +361,44 @@ jobs:
             fs.writeFileSync('/tmp/pr-diff.patch', diffTexto);
             console.log(`Diff real da PR #${numero}: ${diffTexto.length} caracteres.`);
 
+            // Evidência de preservação da auditoria: conteúdo COMPLETO, no
+            // HEAD real da PR, das matérias com linhas removidas. Somente
+            // leitura; o texto é dado, nunca executado. Falha aqui só
+            // reduz evidência — nunca interrompe a auditoria.
+            try {
+              const arquivos = await github.paginate(github.rest.pulls.listFiles, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: numero,
+                per_page: 100,
+              });
+              const alvos = arquivos.filter(f =>
+                f.status !== 'removed' && f.deletions > 0 &&
+                /netlify\/functions\/materias-privadas\/[^/]+\.html$/.test(f.filename)
+              ).slice(0, 5);
+              const dir = '/tmp/pr-head-files';
+              fs.mkdirSync(dir, { recursive: true });
+              const manifesto = { files: [] };
+              for (let i = 0; i < alvos.length; i++) {
+                const resp = await github.rest.repos.getContent({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  path: alvos[i].filename,
+                  ref: pr.head.sha,
+                  mediaType: { format: 'raw' },
+                });
+                const texto = typeof resp.data === 'string' ? resp.data : '';
+                if (!texto) continue;
+                const nome = `${i}.html`;
+                fs.writeFileSync(`${dir}/${nome}`, texto);
+                manifesto.files.push({ path: alvos[i].filename, file: nome });
+              }
+              fs.writeFileSync(`${dir}/manifest.json`, JSON.stringify(manifesto));
+              console.log(`Evidência de preservação: ${manifesto.files.length} arquivo(s) do HEAD baixado(s).`);
+            } catch (e) {
+              console.log(`Arquivos do HEAD indisponíveis para a evidência de preservação: ${e.message}`);
+            }
+
       - name: Rodar o Coordinator sobre o evento real
         id: coordinator
         env:
@@ -440,6 +478,7 @@ jobs:
           [ -f /tmp/pr-info.json ] && ARGS+=(--pr-info-file /tmp/pr-info.json)
           [ -f /tmp/guard-audit-pack/guard-audit-pack.json ] && ARGS+=(--guard-audit-pack /tmp/guard-audit-pack/guard-audit-pack.json)
           [ -s /tmp/pr-diff.patch ] && ARGS+=(--pr-diff-file /tmp/pr-diff.patch)
+          [ -s /tmp/pr-head-files/manifest.json ] && ARGS+=(--pr-head-files-manifest /tmp/pr-head-files/manifest.json)
 
           python3 -m coordinator "${ARGS[@]}"
           echo "resultado=$?" >> "$GITHUB_OUTPUT"

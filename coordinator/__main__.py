@@ -67,6 +67,7 @@ import os
 import sys
 
 from . import error_registry
+from .audit import construir_evidencia_de_preservacao
 from .budget import UsageLedger
 from .config import Config
 from .dedup import Deduplicator, FileStore
@@ -107,10 +108,52 @@ def _load_text_if_exists(path: str | None) -> str | None:
         return fh.read()
 
 
+MAX_PR_HEAD_FILES = 5
+MAX_PR_HEAD_FILE_BYTES = 4_000_000
+
+
+def _load_pr_head_files(manifest_path: str | None) -> dict[str, str]:
+    """Conteúdo COMPLETO, no HEAD da PR, dos arquivos de matéria alterados.
+
+    O workflow grava cada arquivo num diretório próprio e um manifesto
+    ``{"files": [{"path": <caminho no repo>, "file": <nome local>}]}``. Só
+    arquivos DENTRO do diretório do manifesto são lidos; tudo é texto puro,
+    nunca executado — serve apenas para a evidência de preservação da
+    auditoria (``audit.construir_evidencia_de_preservacao``). Qualquer
+    problema devolve menos evidência, nunca um erro."""
+    dados = None
+    try:
+        dados = _load_json_if_exists(manifest_path)
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(dados, dict) or not manifest_path:
+        return {}
+    base = os.path.realpath(os.path.dirname(manifest_path))
+    out: dict[str, str] = {}
+    for item in (dados.get("files") or [])[:MAX_PR_HEAD_FILES]:
+        if not isinstance(item, dict):
+            continue
+        caminho, nome = item.get("path"), item.get("file")
+        if not isinstance(caminho, str) or not isinstance(nome, str) or not caminho.strip():
+            continue
+        local = os.path.realpath(os.path.join(base, os.path.basename(nome)))
+        if os.path.dirname(local) != base or not os.path.isfile(local):
+            continue
+        if os.path.getsize(local) > MAX_PR_HEAD_FILE_BYTES:
+            continue
+        try:
+            with open(local, encoding="utf-8", errors="replace") as fh:
+                out[caminho.strip()] = fh.read()
+        except OSError:
+            continue
+    return out
+
+
 def _load_github_event(path: str, event_name: str, repo: str, *,
                         pr_info_file: str | None = None,
                         guard_audit_pack: str | None = None,
-                        pr_diff_file: str | None = None) -> Event | None:
+                        pr_diff_file: str | None = None,
+                        pr_head_files_manifest: str | None = None) -> Event | None:
     with open(path, encoding="utf-8") as fh:
         payload = json.load(fh)
     pr_info = _load_json_if_exists(pr_info_file)
@@ -121,8 +164,15 @@ def _load_github_event(path: str, event_name: str, repo: str, *,
     # github_event.py). Nunca executado; só atravessa como string até o
     # prompt da auditoria.
     pr_diff = _load_text_if_exists(pr_diff_file)
-    return build_event_from_github_context(event_name, payload, repo,
-                                            pr_info=pr_info, audit_pack=audit_pack, pr_diff=pr_diff)
+    event = build_event_from_github_context(event_name, payload, repo,
+                                             pr_info=pr_info, audit_pack=audit_pack, pr_diff=pr_diff)
+    if event is not None and pr_diff and pr_head_files_manifest:
+        # Fora de dedup_fields de propósito: a evidência deriva do mesmo
+        # HEAD que já identifica o evento.
+        event.payload["pr_preservation_evidence"] = construir_evidencia_de_preservacao(
+            pr_diff, _load_pr_head_files(pr_head_files_manifest)
+        )
+    return event
 
 
 def _load_workers(path: str | None) -> list[Worker]:
@@ -467,6 +517,10 @@ def main(argv: list[str] | None = None) -> int:
                          "evidência principal da auditoria semântica; sem ele, MERGE-READY é "
                          "bloqueado deterministicamente (ver coordinator/merge_card.py::"
                          "aplicar_gate_diff)")
+    ap.add_argument("--pr-head-files-manifest", default=None,
+                    help="manifesto JSON dos arquivos de matéria da PR no HEAD (conteúdo completo, "
+                         "baixado pelo workflow via API somente-leitura). Usado só para a evidência "
+                         "de preservação da auditoria semântica; nunca executado")
     ap.add_argument("--worker-state-store", default=None,
                     help="arquivo LOCAL para o Worker Registry OPERACIONAL (rodada 3, Issue #99, "
                          "achado B3) — separado de coordination/tasks.json; não sobrevive entre "
@@ -614,7 +668,8 @@ def _observar(a: argparse.Namespace) -> dict | None:
         event = _load_github_event(a.event, a.github_event_name, a.repo,
                                     pr_info_file=a.pr_info_file,
                                     guard_audit_pack=a.guard_audit_pack,
-                                    pr_diff_file=a.pr_diff_file)
+                                    pr_diff_file=a.pr_diff_file,
+                                    pr_head_files_manifest=a.pr_head_files_manifest)
         if event is None:
             print(
                 f"# Repasso Coordinator · OBSERVE\n\n"

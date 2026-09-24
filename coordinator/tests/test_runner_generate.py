@@ -42,6 +42,7 @@ from coordinator.runner_dispatch import RunnerDispatchConfig
 from coordinator.runner_generate import (
     MAX_FILE_CHARS_SENT,
     RUNNER_PATCH_MAX_OUTPUT_TOKENS,
+    NO_CHANGE_REASON_PREFIX,
     _SYSTEM_PROMPT,
     _conservative_call_cost_usd,
     build_prompt,
@@ -478,11 +479,10 @@ def test_malformed_json_response_fails_without_patch() -> None:
     print("OK  test_malformed_json_response_fails_without_patch")
 
 
-def test_empty_files_response_fails_without_patch() -> None:
-    """O prompt instrui o modelo a devolver {"files": []} quando não for
-    seguro cumprir a instrução — StructuredPatch rejeita patch vazio na
-    própria construção, então isto precisa terminar em FAILED, nunca
-    aplicado como 'nada para fazer'."""
+def test_empty_files_response_is_blocked_with_explicit_no_change_reason() -> None:
+    """Resposta vazia não é mais uma falha opaca de "patch vazio": vira
+    BLOCKED, zero escrita, com motivo que começa pelo prefixo estável —
+    e diz que o modelo não justificou quando ele não justificou."""
     with tempfile.TemporaryDirectory() as tmp:
         transporte = _CountingTransport(response=_resposta_ok([]))
         outcome = gerar_patch_via_claude(
@@ -490,9 +490,57 @@ def test_empty_files_response_fails_without_patch() -> None:
             usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
             transport=transporte,
         )
+        assert outcome.status == "blocked"
+        assert outcome.patch is None
+        assert outcome.external_call_made is True
+        assert outcome.reason.startswith(NO_CHANGE_REASON_PREFIX)
+        assert "não informou motivo" in outcome.reason
+    print("OK  test_empty_files_response_is_blocked_with_explicit_no_change_reason")
+
+
+def test_no_change_reason_do_modelo_chega_ao_motivo() -> None:
+    corpo = {"files": [], "edits": [], "no_change_reason": "A regra oral/nasal já está no Bloque 01."}
+    with tempfile.TemporaryDirectory() as tmp:
+        transporte = _CountingTransport(
+            response=TransportResponse(text=json.dumps(corpo), input_tokens=10, output_tokens=10)
+        )
+        outcome = gerar_patch_via_claude(
+            _task(), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "blocked"
+        assert outcome.patch is None
+        assert outcome.reason.startswith(NO_CHANGE_REASON_PREFIX)
+        assert "oral/nasal já está no Bloque 01" in outcome.reason
+    print("OK  test_no_change_reason_do_modelo_chega_ao_motivo")
+
+
+def test_json_dentro_de_uma_cerca_markdown_e_aceito_e_nada_mais() -> None:
+    corpo = json.dumps({"files": [{"path": "greeting.txt", "content": "olá\n"}]})
+    with tempfile.TemporaryDirectory() as tmp:
+        transporte = _CountingTransport(
+            response=TransportResponse(text=f"```json\n{corpo}\n```", input_tokens=10, output_tokens=10)
+        )
+        outcome = gerar_patch_via_claude(
+            _task(allowed_files=("greeting.txt",)), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "ok", outcome.reason
+        assert outcome.patch is not None and outcome.patch.files[0].content == "olá\n"
+    with tempfile.TemporaryDirectory() as tmp:
+        transporte = _CountingTransport(
+            response=TransportResponse(text=f"Aqui está:\n```json\n{corpo}\n```", input_tokens=10, output_tokens=10)
+        )
+        outcome = gerar_patch_via_claude(
+            _task(allowed_files=("greeting.txt",)), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
         assert outcome.status == "failed"
         assert outcome.patch is None
-    print("OK  test_empty_files_response_fails_without_patch")
+    print("OK  test_json_dentro_de_uma_cerca_markdown_e_aceito_e_nada_mais")
 
 
 def test_response_outside_allowed_files_is_blocked_without_patch() -> None:
@@ -1022,7 +1070,9 @@ def main() -> int:
         test_file_exactly_at_limit_is_not_blocked,
         test_oversized_file_outside_allowed_files_does_not_block,
         test_malformed_json_response_fails_without_patch,
-        test_empty_files_response_fails_without_patch,
+        test_empty_files_response_is_blocked_with_explicit_no_change_reason,
+        test_no_change_reason_do_modelo_chega_ao_motivo,
+        test_json_dentro_de_uma_cerca_markdown_e_aceito_e_nada_mais,
         test_response_outside_allowed_files_is_blocked_without_patch,
         test_non_dict_json_response_fails_without_patch,
         test_prompt_contains_only_instructions_and_allowed_file_contents,

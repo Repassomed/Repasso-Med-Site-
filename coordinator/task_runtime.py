@@ -400,6 +400,23 @@ class ReservaResult:
         }
 
 
+def status_reconciliavel_apos_merge(registro: dict) -> bool:
+    """NEEDS-AUDIT sempre; FAILED só no caso LEGADO em que a correção
+    pós-auditoria esgotou sem novo HEAD (antes de 24/09/2026 isso gravava
+    FAILED): há parecer consumido, checkpoint e PR registrados, então a PR
+    continua sendo o entregável válido. FAILED de execução comum (sem PR)
+    nunca é reconciliado."""
+    status = registro.get("status")
+    if status == RUNTIME_NEEDS_AUDIT:
+        return True
+    return bool(
+        status == RUNTIME_FAILED
+        and registro.get("last_audit_fix_fingerprint")
+        and registro.get("checkpoint_commit")
+        and registro.get("pr_number")
+    )
+
+
 class TaskRuntimeStore:
     """Fachada sobre um ``worker_ops.WorkerStateStore`` (``GitJsonStore``
     em produção; ``InMemoryWorkerStateStore``/``LocalJsonWorkerStateStore``
@@ -684,7 +701,9 @@ class TaskRuntimeStore:
         )
 
     def marcar_done_apos_merge(self, canonical_task_id: str, *, pr_number: int, branch: str) -> bool:
-        """Reconcilia SOMENTE uma tarefa NEEDS-AUDIT cuja PR registrada foi
+        """Reconcilia SOMENTE uma tarefa NEEDS-AUDIT (ou FAILED legado de
+        correção pós-auditoria esgotada, ver ``status_reconciliavel_apos_merge``)
+        cuja PR registrada foi
         confirmada externamente como mergeada. O chamador valida os dados da
         PR pela API; aqui o CAS impede evento atrasado, PR trocada ou branch
         divergente de promover estado indevidamente."""
@@ -699,7 +718,7 @@ class TaskRuntimeStore:
             fresco = base.get(alvo)
             if fresco is None:
                 return False, dados
-            if fresco.get("status") != RUNTIME_NEEDS_AUDIT:
+            if not status_reconciliavel_apos_merge(fresco):
                 return False, dados
             if fresco.get("pr_number") != pr_number:
                 return False, dados
@@ -726,13 +745,21 @@ class TaskRuntimeStore:
     def registrar_falha_operacional_correcao(
         self, canonical_task_id: str, *, worker_id: str, execution_task_id: str,
         reason: str, max_execution_failures: int,
+        esgotar_parecer: bool = False,
     ) -> ReservaResult:
-        """Falha de execução do audit-fix SEM novo HEAD.
+        """Falha/recusa do audit-fix SEM novo HEAD.
 
         Só este caminho pode voltar IN-PROGRESS -> NEEDS-AUDIT para repetir
         o MESMO parecer. Tarefa normal FAILED continua terminal. A rodada
         semântica já reservada continua contando UMA vez; retries operacionais
-        do mesmo fingerprint não contam rodadas adicionais. No teto, termina FAILED.
+        do mesmo fingerprint não contam rodadas adicionais.
+
+        No teto (ou com ``esgotar_parecer=True``, quando o worker declarou
+        que não há o que mudar), o parecer deixa de ser elegível, mas a
+        tarefa CONTINUA em NEEDS-AUDIT: a PR registrada ainda é o entregável
+        válido, e só uma nova auditoria ou a decisão do José a resolvem.
+        Antes ela terminava FAILED, e a reconciliação pós-merge (que exige
+        NEEDS-AUDIT) nunca mais a marcava DONE.
         """
         alvo = (canonical_task_id or "").strip()
         worker = (worker_id or "").strip()
@@ -758,27 +785,30 @@ class TaskRuntimeStore:
                 return False, dados
 
             falhas_antes = int(fresco.get("audit_fix_execution_failures") or 0)
-            falhas_agora = falhas_antes + 1
+            falhas_agora = max_execution_failures if esgotar_parecer else falhas_antes + 1
             tentativas = int(fresco.get("audit_fix_attempts") or 0)
-            status_novo = (
-                RUNTIME_NEEDS_AUDIT
-                if falhas_agora < max_execution_failures
-                else RUNTIME_FAILED
-            )
+            if falhas_agora < max_execution_failures:
+                motivo_final = (
+                    f"falha operacional de correção {falhas_agora}/{max_execution_failures} "
+                    f"sem novo HEAD: {motivo}"
+                )
+            else:
+                motivo_final = (
+                    f"correção automática encerrada para este parecer sem novo HEAD "
+                    f"({falhas_agora}/{max_execution_failures}); a PR #{fresco.get('pr_number')} "
+                    f"continua aberta aguardando nova auditoria ou decisão do José. Último motivo: {motivo}"
+                )
             agora = _now_iso()
             base[alvo] = {
                 **fresco,
-                "status": status_novo,
+                "status": RUNTIME_NEEDS_AUDIT,
                 "audit_fix_attempts": tentativas,
                 "audit_fix_execution_failures": falhas_agora,
                 "last_audit_fix_worker_id": worker,
                 # O Guard/cartão continuam válidos para o MESMO checkpoint.
                 "guard_dispatched_pr": fresco.get("pr_number"),
                 "guard_dispatch_status": GUARD_DISPATCH_DISPATCHED,
-                "reason": (
-                    f"falha operacional de correção {falhas_agora}/{max_execution_failures} "
-                    f"sem novo HEAD: {motivo}"
-                ),
+                "reason": motivo_final,
                 "updated_at": agora,
             }
             return True, {**dados, "tasks": list(base.values())}

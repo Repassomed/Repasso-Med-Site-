@@ -470,6 +470,13 @@ class RunnerDispatchConfig:
 # Patch estruturado — nunca shell arbitrário, nunca diff unificado livre.
 # ---------------------------------------------------------------------
 
+# Prefixo estável do motivo quando o gerador devolve uma resposta SEM
+# nenhuma alteração (runner_generate). Quem chama — ex.: a correção
+# pós-auditoria do Worker Bridge — reconhece o caso por este prefixo e não
+# o repete como falha operacional.
+NO_CHANGE_REASON_PREFIX = "o modelo não produziu nenhuma alteração"
+
+
 @dataclass(frozen=True)
 class FileWrite:
     """Uma operação: escrever o conteúdo COMPLETO de um arquivo num

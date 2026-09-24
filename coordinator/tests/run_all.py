@@ -10,6 +10,7 @@ import sys
 from . import (
     test_anthropic_client,
     test_anthropic_transport,
+    test_audit_preservation,
     test_auto_repair,
     test_budget,
     test_canary_integration,
@@ -75,6 +76,8 @@ MODULOS = [
     test_cli_crash_safety,
     test_ledger_failure_after_call,
     test_coordinator_v3,
+    # Evidência de preservação da auditoria (PRs #192/#208).
+    test_audit_preservation,
     test_coordinator_v3_round3,
     test_coordinator_v3_round4,
     test_openai_transport,

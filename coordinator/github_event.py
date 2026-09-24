@@ -95,6 +95,7 @@ from __future__ import annotations
 
 import re
 
+from .audit import AUDIT_PROTOCOL_VERSION
 from .events import INBOX_ISSUE_NUMBER, Event
 
 # O rótulo que marca "chegou a hora de auditar" — mesma convenção que
@@ -286,6 +287,11 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                     # a main confiável, não o HEAD da PR. O workflow valida
                     # a PR real pela API e entrega o SHA tipado em pr_info.
                     "head_sha": pr_info.get("head_sha") or run.get("head_sha"),
+                    # Mudança material no protocolo da auditoria (ex.: a
+                    # evidência de preservação) permite UMA releitura do
+                    # mesmo HEAD; reruns com o mesmo protocolo continuam
+                    # deduplicados.
+                    "audit_protocol": AUDIT_PROTOCOL_VERSION,
                 },
             },
         )

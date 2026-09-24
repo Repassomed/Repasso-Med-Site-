@@ -133,6 +133,7 @@ from .runner_contract import (
 from .runner_dispatch import (
     CANARY_VALIDATION_COMMAND_KEYS,
     DEFAULT_RUNNER_USAGE_STATE_BRANCH,
+    NO_CHANGE_REASON_PREFIX,
     RUNNER_MODE_SUPERVISED,
     SUPERVISED_AUTHORIZATION_SOURCE,
     DispatchOutcome,
@@ -140,6 +141,7 @@ from .runner_dispatch import (
     StructuredPatch,
     executar_tarefa,
 )
+from .redact import redact
 from .scheduler import QueueDecision, TaskRecord
 from .task_runtime import TaskRuntimeRecord, TaskRuntimeStore
 from .worker_ops import OperationalWorkerRegistry, WorkerRecord
@@ -1261,7 +1263,9 @@ def reconciliar_merges_confirmados(
     notas: list[str] = []
     mudou = False
     for registro in sorted(registros.values(), key=lambda r: r.canonical_task_id):
-        if registro.status != task_runtime.RUNTIME_NEEDS_AUDIT or registro.pr_number is None:
+        if registro.pr_number is None or not task_runtime.status_reconciliavel_apos_merge(
+            registro.to_dict()
+        ):
             continue
         try:
             pr = github_api.pr_por_numero(registro.pr_number)
@@ -1480,14 +1484,21 @@ def executar_correcao_de_auditoria(
     if status_runtime == task_runtime.RUNTIME_BLOCKED_LIMIT and not checkpoint:
         status_runtime = task_runtime.RUNTIME_BLOCKED
 
+    # Sem novo HEAD, a PR já publicada continua sendo o entregável: FAILED
+    # e BLOCKED voltam para NEEDS-AUDIT (nunca perdem a PR). Quando o
+    # worker declara que não há o que mudar, o MESMO parecer não é
+    # repetido por outros workers — só uma nova auditoria ou José decidem.
     falha_operacional_sem_head = (
-        status_runtime == task_runtime.RUNTIME_FAILED and not checkpoint
+        status_runtime in (task_runtime.RUNTIME_FAILED, task_runtime.RUNTIME_BLOCKED)
+        and not checkpoint
     )
+    worker_declarou_sem_alteracao = motivo_resultado.startswith(NO_CHANGE_REASON_PREFIX)
     if falha_operacional_sem_head:
         recuperacao = runtime_store.registrar_falha_operacional_correcao(
             canonical_task_id, worker_id=worker_id,
             execution_task_id=execution_task_id, reason=motivo_resultado,
             max_execution_failures=MAX_AUDIT_FIX_EXECUTION_FAILURES,
+            esgotar_parecer=worker_declarou_sem_alteracao,
         )
         registro_final = recuperacao.record or runtime_store.get(canonical_task_id) or registro
         status_runtime = registro_final.status
@@ -1521,7 +1532,16 @@ def executar_correcao_de_auditoria(
         )
         notes.extend(notas_pr)
     else:
-        if falha_operacional_sem_head and status_runtime == task_runtime.RUNTIME_NEEDS_AUDIT:
+        if falha_operacional_sem_head and worker_declarou_sem_alteracao:
+            notes.append(
+                f"correção terminou em {status_runner} sem alteração declarada pelo worker; o "
+                f"parecer não será repetido e a PR #{pedido.pr_number} continua em NEEDS-AUDIT "
+                "aguardando nova auditoria ou decisão do José."
+            )
+        elif (
+            falha_operacional_sem_head
+            and registro_final.audit_fix_execution_failures < MAX_AUDIT_FIX_EXECUTION_FAILURES
+        ):
             notes.append(
                 f"correção terminou em {status_runner} sem novo HEAD; retry operacional "
                 f"{registro_final.audit_fix_execution_failures}/{MAX_AUDIT_FIX_EXECUTION_FAILURES} "
@@ -1530,7 +1550,8 @@ def executar_correcao_de_auditoria(
         elif falha_operacional_sem_head:
             notes.append(
                 f"correção terminou em {status_runner} sem novo HEAD e atingiu o teto de "
-                f"{MAX_AUDIT_FIX_EXECUTION_FAILURES} falhas operacionais; tarefa ficou FAILED."
+                f"{MAX_AUDIT_FIX_EXECUTION_FAILURES} falhas operacionais; o parecer foi encerrado e "
+                f"a PR #{pedido.pr_number} continua em NEEDS-AUDIT (nunca descartada)."
             )
         else:
             notes.append(
