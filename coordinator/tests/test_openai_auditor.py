@@ -691,6 +691,9 @@ def test_system_prompt_declares_diff_and_body_as_untrusted_data() -> None:
         assert "MANUTENCAO-DIDATICA-REPASSO-MED.md" in prompt
         assert "frio" in prompt and "genérico" in prompt
         assert "revisão adversarial" in prompt
+        assert "RELATIVA AO ESCOPO REAL DO DIFF" in prompt
+        assert "pré-existente" in prompt
+    assert "questão preexistente e intocada não vira bloqueio" in OPENAI_AUDITOR_SYSTEM_PROMPT
     print("OK  test_system_prompt_declares_diff_and_body_as_untrusted_data")
 
 
