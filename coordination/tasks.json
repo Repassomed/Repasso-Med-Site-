@@ -999,8 +999,8 @@
         "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
       ],
       "agente": null,
-      "pr": null,
-      "commit": null,
+      "pr": 164,
+      "commit": "e3204ae5a386cba8a5df9dd54e40b7379f0756f5",
       "issue": 67,
       "automation_enabled": true,
       "bridge_enabled": true,
@@ -1014,13 +1014,13 @@
       "titulo": "P0 — Semiología II B07: corrigir questão Framingham duplicada",
       "objetivo": "Corrigir somente o gap P0 de Framingham no B07: a questão atual tem alternativas c e d semanticamente equivalentes para a regra diagnóstica. Preservar como correta a regra ensinada pela cátedra: 2 critérios mayores OU 1 mayor + 2 menores. Tornar o distrator c inequivocamente diferente/incorreto, sem pista editorial como '(combinación incorrecta)', preservando enunciado, proveniência, estrutura, IDs/annotations e espelho no Banco General quando aplicável.",
       "fonte": "Issue #67 · auditoria independente comentário 5752213771 · Error Registry #157",
-      "estado": "READY",
+      "estado": "DONE",
       "prioridade_declarada": "P0",
       "dependencias": [
         "semiologia-ii-b01-b04-provas"
       ],
       "branch": "runner/semiologia-ii-b07-framingham-r3",
-      "notas": "Microtarefa criada para evitar contexto amplo/vago. Alterar SOMENTE o necessário para o Framingham B07; não expandir para outros gaps. Resultado obrigatório NEEDS-AUDIT; sem merge/deploy/publicação automática."
+      "notas": "Microtarefa criada para evitar contexto amplo/vago. Alterar SOMENTE o necessário para o Framingham B07; não expandir para outros gaps. Resultado obrigatório NEEDS-AUDIT; sem merge/deploy/publicação automática. PR #164 mergeada por José; declarativo reconciliado com o runtime DONE em 24/09/2026."
     },
     {
       "area": "materia",
@@ -1041,16 +1041,19 @@
         "conteudo"
       ],
       "id": "semiologia-ii-b08-hta-r3",
-      "titulo": "P1 — Semiología II B08: desambiguar HTA e resolver contradição de obesidade",
+      "titulo": "P0 — Semiología II B08: desambiguar HTA e resolver contradição de obesidade",
       "objetivo": "No B08, resolver dois pontos auditados: (1) a V/F sobre PA está ambígua porque a cátedra mostra duas classificações — tabela 1 com elevada 120–139/70–89 e atualização com elevada 120–129/<80; a questão deve indicar explicitamente qual tabela/classificação está cobrando, sem apagar a coexistência das duas fontes. (2) obesidad/sobrepeso aparece na cátedra como no modificable, enquanto outra parte do próprio HTML e a questão/flashcards tratam como modificable; resolver com rotulagem explícita de fonte, preservando o que a cátedra cobra e sem apresentar a contradição como fato único universal.",
       "fonte": "Issue #67 · auditoria independente comentário 5752213771",
       "estado": "READY",
-      "prioridade_declarada": "P1",
+      "prioridade_declarada": "P0",
       "dependencias": [
         "semiologia-ii-b07-framingham-r3"
       ],
       "branch": "runner/semiologia-ii-b08-hta-r3",
-      "notas": "Alterar só B08 e cópias correspondentes no Banco General, se houver. Preservar IDs/annotations/proveniência. NEEDS-AUDIT obrigatório."
+      "notas": "Alterar só B08 e cópias correspondentes no Banco General, se houver. Preservar IDs/annotations/proveniência. NEEDS-AUDIT obrigatório. Prioridade elevada a P0 em 24/09/2026. Usar o source pack de provas como evidência compartilhada. Lei 8-A obrigatória: devolver matriz de proveniência question_report; resultado passa Guard + Anthropic + OpenAI Auditor antes de MERGE-READY.",
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
+      "question_report_required": true
     },
     {
       "area": "materia",
@@ -1071,16 +1074,19 @@
         "conteudo"
       ],
       "id": "semiologia-ii-b09-ecg-r3",
-      "titulo": "P1 — Semiología II B09: vetor/eixo ECG + duplicata semântica",
+      "titulo": "P0 — Semiología II B09: vetor/eixo ECG + duplicata semântica",
       "objetivo": "No B09, ensinar explicitamente a regra operacional da cátedra: vetor que se aproxima do eletrodo gera deflexão positiva; que se afasta gera deflexão negativa; quanto mais alinhado à derivação, maior a amplitude. Incluir isodifásico e regra da perpendicular para estimar eixo, além de FREH III se ausente. Auditar Q1 × Q9, que hoje cobram a mesma competência (PR, RR e segmento PR), e eliminar a duplicação sem perder cobertura avaliativa nem gabarito.",
       "fonte": "Issue #67 · auditoria independente comentário 5752213771",
       "estado": "READY",
-      "prioridade_declarada": "P1",
+      "prioridade_declarada": "P0",
       "dependencias": [
         "semiologia-ii-b08-hta-r3"
       ],
       "branch": "runner/semiologia-ii-b09-ecg-r3",
-      "notas": "Alterar só B09 e espelho no Banco General quando aplicável. Conteúdo deve permanecer em castelhano e didático desde zero. NEEDS-AUDIT obrigatório."
+      "notas": "Alterar só B09 e espelho no Banco General quando aplicável. Conteúdo deve permanecer em castelhano e didático desde zero. NEEDS-AUDIT obrigatório. Prioridade elevada a P0 em 24/09/2026. Usar o source pack de provas como evidência compartilhada. Lei 8-A obrigatória: devolver matriz de proveniência question_report; resultado passa Guard + Anthropic + OpenAI Auditor antes de MERGE-READY.",
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
+      "question_report_required": true
     },
     {
       "area": "materia",
@@ -2060,7 +2066,7 @@
       "objetivo": "Inventariar e aproveitar integralmente as novas fontes de prova da pasta Drive de Semiología II/Questões. Priorizar questões reais e núcleos avaliativos comprovados (selección múltiple, COMPLETE, CITE e casos clínicos). Quando a questão integral estiver legível, preservar seu núcleo e gabarito; quando parcial, reconstruir somente com evidência suficiente; quando houver gabarito/foto sem enunciado integral, criar questão baseada em exame apenas se o conceito central e a resposta esperada estiverem seguros. Aplicar a Lei das Questões #100: comparar duplicatas e manter a versão canônica mais completa, registrar fonte/página/imagem/decisão/destino, nunca inventar a resposta correta. Garantir RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA, sem pistas visuais/negrito entregando o gabarito, preservando IDs/annotations e espelho bloco × Banco General.",
       "fonte": "Retry explícito autorizado por José em 24/09/2026 após tentativa anterior falhar antes de gerar PR; mesmas fontes/proveniência de semiologia-ii-questoes-exames-p0.",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "conteudo"
@@ -2072,9 +2078,9 @@
       "pr": null,
       "commit": null,
       "issue": 67,
-      "notas": "Retry P0 explícito. Reusar o source pack versionado coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md e o mesmo escopo de um único arquivo. A tentativa anterior falhou por StructuredPatch vazio, sem escrita e sem PR. Não ampliar escopo; resultado obrigatório NEEDS-AUDIT com Anthropic + OpenAI Auditor; sem merge/deploy automático.",
-      "automation_enabled": true,
-      "bridge_enabled": true,
+      "notas": "Retry P0 explícito. Reusar o source pack versionado coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md e o mesmo escopo de um único arquivo. A tentativa anterior falhou por StructuredPatch vazio, sem escrita e sem PR. Não ampliar escopo; resultado obrigatório NEEDS-AUDIT com Anthropic + OpenAI Auditor; sem merge/deploy automático. Segunda tentativa automática também devolveu StructuredPatch vazio (run #127 / Error Registry #198). Tarefa ampla desativada para não queimar novas chamadas; escopo repartido em microtarefas P0 B08 → B09 e demais gaps específicos.",
+      "automation_enabled": false,
+      "bridge_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true,
