@@ -593,6 +593,97 @@ class TaskRuntimeStore:
             evaluate, message=f"task-runtime: resultado {alvo} -> {status}"
         )
 
+    def registrar_falha_correcao_apos_auditoria(
+        self, canonical_task_id: str, *, worker_id: str,
+        execution_task_id: str, reason: str, max_attempts: int,
+    ) -> bool:
+        """Fecha uma execução de correção que FALHOU sem produzir novo HEAD.
+
+        Esta exceção é deliberadamente estreita e NÃO se aplica a uma tarefa
+        normal que falhou. Só aceita o estado IN-PROGRESS criado por
+        ``reservar_correcao_apos_auditoria`` (portanto já existe PR,
+        checkpoint e ``last_audit_findings``).
+
+        Se ainda resta uma tentativa, volta para NEEDS-AUDIT no MESMO
+        checkpoint/PR, restaura o Guard já confirmado daquele HEAD e limpa
+        somente ``last_audit_fix_fingerprint`` para que o MESMO Cartão
+        NEEDS-FIX possa ser consumido outra vez. ``audit_fix_attempts`` não é
+        reduzido: a próxima reserva incrementa normalmente.
+
+        Quando o teto já foi atingido, fica FAILED terminal. Assim uma falha
+        de modelo/patch numa correção pode usar a segunda tentativa prevista,
+        mas nunca cria loop infinito e nunca transforma FAILED comum em retry.
+        """
+        alvo = (canonical_task_id or "").strip()
+        worker = (worker_id or "").strip()
+        execution = (execution_task_id or "").strip()
+        motivo = (reason or "").strip() or "correção pós-auditoria falhou sem motivo informado."
+        if not alvo or not worker or not execution:
+            return False
+        if not isinstance(max_attempts, int) or max_attempts < 1:
+            raise ValueError("max_attempts precisa ser inteiro >= 1.")
+
+        def evaluate(dados: dict) -> tuple[bool, dict]:
+            base = {
+                t["canonical_task_id"]: t
+                for t in (dados.get("tasks") or [])
+                if t.get("canonical_task_id")
+            }
+            fresco = base.get(alvo)
+            if fresco is None:
+                return False, dados
+            if fresco.get("status") != RUNTIME_IN_PROGRESS:
+                return False, dados
+            if fresco.get("worker_id") != worker:
+                return False, dados
+            if fresco.get("execution_task_id") != execution:
+                return False, dados
+            if (
+                not fresco.get("branch")
+                or not fresco.get("checkpoint_commit")
+                or not fresco.get("pr_number")
+                or not fresco.get("last_audit_findings")
+                or not fresco.get("last_audit_fix_fingerprint")
+            ):
+                return False, dados
+
+            tentativas = int(fresco.get("audit_fix_attempts") or 0)
+            agora = _now_iso()
+            if tentativas < max_attempts:
+                base[alvo] = {
+                    **fresco,
+                    "status": RUNTIME_NEEDS_AUDIT,
+                    # Nenhum HEAD novo foi criado. O Guard confirmado do
+                    # checkpoint anterior continua sendo a evidência válida.
+                    "guard_dispatched_pr": fresco.get("pr_number"),
+                    "guard_dispatch_status": GUARD_DISPATCH_DISPATCHED,
+                    # Permite SOMENTE o mesmo parecer ser consumido de novo.
+                    # O contador preservado impede terceira tentativa.
+                    "last_audit_fix_fingerprint": None,
+                    "reason": (
+                        f"correção pós-auditoria #{tentativas} falhou sem novo HEAD; "
+                        f"mesmo parecer rearmado para tentativa {tentativas + 1}/{max_attempts}. "
+                        f"Falha: {motivo}"
+                    ),
+                    "updated_at": agora,
+                }
+            else:
+                base[alvo] = {
+                    **fresco,
+                    "status": RUNTIME_FAILED,
+                    "reason": (
+                        f"correção pós-auditoria #{tentativas} falhou sem novo HEAD e o teto "
+                        f"de {max_attempts} tentativa(s) automáticas foi atingido. "
+                        f"Falha terminal: {motivo}"
+                    ),
+                    "updated_at": agora,
+                }
+            return True, {**dados, "tasks": list(base.values())}
+
+        return self.store.conditional_update(
+            evaluate, message=f"task-runtime: audit-fix failure {alvo}"
+        )
+
     def registrar_pr(self, canonical_task_id: str, *, pr_number: int, esperado_status: str) -> bool:
         """Grava o número da PR aberta para a tarefa. CAS sobre o status
         esperado e sobre ``pr_number`` ainda ausente — chamar duas vezes
