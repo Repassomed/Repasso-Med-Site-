@@ -20,7 +20,11 @@ import types
 
 from . import _pathsetup  # noqa: F401
 from coordinator import anthropic_client
-from coordinator.anthropic_transport import ANTHROPIC_API_KEY_ENV, AnthropicTransport
+from coordinator.anthropic_transport import (
+    ANTHROPIC_API_KEY_ENV,
+    DEFAULT_TIMEOUT_SECONDS,
+    AnthropicTransport,
+)
 from coordinator.budget import CallLimiter
 from coordinator.config import Config
 from coordinator.models import ModelTier, resolve
@@ -148,6 +152,8 @@ def test_mock_sdk_maps_request_and_reads_key_only_from_env() -> None:
         assert resp.input_tokens == 123
         assert resp.output_tokens == 45
         assert chamadas["init_kwargs"]["api_key"] == chave_falsa
+        assert chamadas["init_kwargs"]["timeout"] == DEFAULT_TIMEOUT_SECONDS == 180.0
+        assert chamadas["init_kwargs"]["max_retries"] == 0
         assert chamadas["create_kwargs"]["model"] == pedido.model_id
         assert chamadas["create_kwargs"]["messages"] == [{"role": "user", "content": pedido.prompt}]
     finally:
