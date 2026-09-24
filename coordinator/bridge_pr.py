@@ -80,6 +80,8 @@ class GitHubBridgeApi(Protocol):
 
     def pr_por_numero(self, pr_number: int) -> dict: ...
 
+    def comentarios_da_pr(self, pr_number: int) -> list[dict]: ...
+
     def criar_pr(self, *, titulo: str, head: str, base: str, corpo: str) -> dict: ...
 
     def despachar_workflow(self, *, arquivo: str, ref: str, inputs: dict) -> None: ...
@@ -158,6 +160,21 @@ class GitHubRestApi:
         if not isinstance(dados, dict) or int(dados.get("number") or 0) != pr_number:
             raise GitHubBridgeApiError(f"a consulta da PR #{pr_number} não devolveu uma PR utilizável.")
         return dados
+
+    def comentarios_da_pr(self, pr_number: int) -> list[dict]:
+        """Lê comentários da PR pelo endpoint de issue comments.
+
+        É operação somente-leitura. O Worker Bridge usa isto apenas para
+        consumir o Cartão de Merge machine-readable publicado pelo
+        Coordinator após a auditoria; nunca aceita comentário humano como
+        instrução de correção.
+        """
+        if not isinstance(pr_number, int) or pr_number <= 0:
+            raise ValueError(f"pr_number precisa ser inteiro positivo — recebido {pr_number!r}.")
+        dados = self._requisicao(
+            "GET", f"/repos/{self.owner}/{self.repo}/issues/{pr_number}/comments?per_page=100"
+        )
+        return list(dados) if isinstance(dados, list) else []
 
     def criar_pr(self, *, titulo: str, head: str, base: str, corpo: str) -> dict:
         dados = self._requisicao(
