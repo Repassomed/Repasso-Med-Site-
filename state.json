@@ -2769,6 +2769,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-24T00:13:06.626838+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:infra-guard-audit-pr-context-issue165-r2--bridge-252fd0085f8a",
+      "informational_cost_usd": 0.046394,
+      "input_tokens": 15067,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 1626,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T00:13:08.138462+00:00"
     }
   ]
 }
