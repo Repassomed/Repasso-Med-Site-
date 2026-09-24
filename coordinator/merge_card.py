@@ -24,7 +24,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from .github_event import COORDINATOR_COMMENT_MARKER
+from .github_event import AUDIT_POLICY_VERSION, COORDINATOR_COMMENT_MARKER
 
 # ---------------------------------------------------------------------------
 # 1. MERGE ≠ PUBLICAÇÃO (Issue #99, comentário 2)
@@ -283,6 +283,7 @@ def render_merge_card(dados: MergeCardInput) -> str:
     L.append(f"**PR:** #{dados.pr_number if dados.pr_number is not None else '-'}  ·  "
               f"**Título:** {dados.titulo or '-'}  ·  **Área:** {dados.area or '-'}")
     L.append(f"**Resultado do Guard:** {dados.guard_result or '-'}")
+    L.append(f"**Política de auditoria:** `{AUDIT_POLICY_VERSION}`")
     if dados.head_sha:
         L.append(f"**HEAD auditado:** `{dados.head_sha}`")
     L.append("")
