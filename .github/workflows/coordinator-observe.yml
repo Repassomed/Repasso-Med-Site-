@@ -342,31 +342,56 @@ jobs:
           # `pr_number` de guard.yml.
           GUARD_RUN_ID_INPUT: ${{ inputs.guard_run_id }}
         with:
+          # Achado da auditoria independente (Issue #264, comentário
+          # #5822771107): race condition real. O passo "Acionar o OBSERVE
+          # explicitamente" de guard.yml dispara ESTE dispatch de DENTRO
+          # do último passo da própria execução do Guard — nesse instante
+          # exato, o run do Guard, por definição, ainda não pode estar
+          # `completed` (só vira `completed` depois que TODOS os passos,
+          # incluindo o próprio dispatch, terminam). Uma checagem única e
+          # imediata de `status === 'completed'` falhava fechado por
+          # timing, não por um problema real.
+          #
+          # Corrigido com retry CURTO e LIMITADO (nunca polling infinito)
+          # em resolve_guard_run.mjs — função pura, testada de verdade
+          # com fetch/relógio falsos em resolve_guard_run.test.mjs (7
+          # casos, incluindo exatamente "in_progress no primeiro fetch,
+          # completed no segundo" e o teto do retry nunca sendo
+          # ultrapassado). Este passo só injeta as dependências REAIS
+          # (github.rest.actions.getWorkflowRun, setTimeout) — toda a
+          # decisão vive no módulo testável.
           script: |
             const fs = require('fs');
+            const path = require('path');
+            const { resolverExecucaoDoGuard } = await import(
+              path.join(process.env.GITHUB_WORKSPACE, '.github/workflows/scripts/resolve_guard_run.mjs')
+            );
             const bruto = String(process.env.GUARD_RUN_ID_INPUT || '').trim();
             if (!/^[0-9]{1,15}$/.test(bruto)) {
               core.setFailed('guard_run_id inválido — só dígitos são aceitos. Nada foi observado.');
               return;
             }
             const runId = Number(bruto);
-            const { data: run } = await github.rest.actions.getWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: runId,
+            const resultado = await resolverExecucaoDoGuard({
+              runId,
+              nomeEsperado: 'Repasso Guard',
+              branchEsperada: context.payload.repository.default_branch,
+              buscarRun: async (id) => {
+                const { data } = await github.rest.actions.getWorkflowRun({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: id,
+                });
+                return data;
+              },
+              dormir: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+              logInfo: core.info,
             });
-            if (run.name !== 'Repasso Guard') {
-              core.setFailed(`run ${runId} não é uma execução do Repasso Guard (nome real: ${run.name}) — recusado fail-closed.`);
+            if (!resultado.ok) {
+              core.setFailed(resultado.motivo);
               return;
             }
-            if (run.status !== 'completed') {
-              core.setFailed(`run ${runId} do Guard ainda não terminou (status ${run.status}) — recusado fail-closed.`);
-              return;
-            }
-            if (run.head_branch !== context.payload.repository.default_branch) {
-              core.setFailed(`run ${runId} do Guard não é da branch padrão (${run.head_branch}) — recusado fail-closed.`);
-              return;
-            }
+            const run = resultado.run;
             // Mesmo formato de payload que o GitHub já entrega no evento
             // `workflow_run` real — o passo seguinte e coordinator/
             // github_event.py::_from_workflow_run tratam os dois gatilhos

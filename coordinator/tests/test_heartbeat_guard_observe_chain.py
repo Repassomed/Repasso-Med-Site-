@@ -226,14 +226,44 @@ def test_observe_confirma_o_run_real_pela_api_nunca_confia_so_no_input() -> None
     """O run_id é só uma CHAVE DE BUSCA — o passo precisa buscar a
     execução real pela API e confirmar nome, status e branch padrão antes
     de usar qualquer dado dela (mesma filosofia de guard.yml resolvendo
-    pr_number pela API antes de auditar)."""
+    pr_number pela API antes de auditar).
+
+    Issue #264 (race condition, comentário #5822771107): a decisão de
+    nome/status(retry)/branch foi extraída para resolve_guard_run.mjs —
+    função pura testada de verdade em resolve_guard_run.test.mjs (ver
+    test_guard_run_resolver_race.py). Este passo do workflow só precisa
+    IMPORTAR esse módulo e injetar as dependências reais
+    (getWorkflowRun, setTimeout) — nunca reimplementar a decisão inline."""
     texto = _ler(_OBSERVE_PATH)
     trecho = _passo(texto, "- name: Resolver a execução do Guard observada")
+    assert "resolve_guard_run.mjs" in trecho
+    assert "resolverExecucaoDoGuard" in trecho
     assert "getWorkflowRun" in trecho
-    assert "run.name !== 'Repasso Guard'" in trecho
-    assert "run.status !== 'completed'" in trecho
-    assert "run.head_branch !== context.payload.repository.default_branch" in trecho
+    assert "nomeEsperado: 'Repasso Guard'" in trecho
+    assert "branchEsperada: context.payload.repository.default_branch" in trecho
+    assert "dormir:" in trecho
+    # A decisão em si (nome/status/branch) NÃO pode ser reimplementada
+    # aqui — só no módulo puro testado.
+    assert "run.status !== 'completed'" not in trecho, (
+        "checagem imediata de status foi removida de propósito — ver resolve_guard_run.mjs"
+    )
     print("OK  test_observe_confirma_o_run_real_pela_api_nunca_confia_so_no_input")
+
+
+def test_observe_delega_a_decisao_de_retry_ao_modulo_puro_testado() -> None:
+    """Trava de arquitetura: o passo do workflow é só um wrapper fino —
+    prova que ele importa o módulo (nunca duplica a lógica) e que o
+    módulo puro existe e é exatamente o testado por
+    test_guard_run_resolver_race.py."""
+    texto = _ler(_OBSERVE_PATH)
+    trecho = _passo(texto, "- name: Resolver a execução do Guard observada")
+    assert "await import(" in trecho
+    assert ".github/workflows/scripts/resolve_guard_run.mjs" in trecho
+    caminho_modulo = os.path.join(
+        _pathsetup.REPO_ROOT, ".github", "workflows", "scripts", "resolve_guard_run.mjs"
+    )
+    assert os.path.isfile(caminho_modulo), f"módulo referenciado pelo workflow não existe: {caminho_modulo}"
+    print("OK  test_observe_delega_a_decisao_de_retry_ao_modulo_puro_testado")
 
 
 def test_observe_sintetiza_o_mesmo_formato_de_payload_do_workflow_run_real() -> None:
@@ -413,6 +443,7 @@ def main() -> int:
         test_observe_workflow_dispatch_restrito_ao_disparo_interno_do_guard,
         test_observe_valida_guard_run_id_por_regex_antes_de_qualquer_uso,
         test_observe_confirma_o_run_real_pela_api_nunca_confia_so_no_input,
+        test_observe_delega_a_decisao_de_retry_ao_modulo_puro_testado,
         test_observe_sintetiza_o_mesmo_formato_de_payload_do_workflow_run_real,
         test_observe_cli_reusa_o_caminho_workflow_run_ja_testado_para_dedup,
         test_observe_ganhou_actions_write,
