@@ -6,8 +6,6 @@ import argparse
 import json
 import os
 import re
-import subprocess
-import sys
 
 from . import openai_client
 from .auto_repair_policy import (
@@ -16,6 +14,7 @@ from .auto_repair_policy import (
     candidate_paths, is_safe_path, parse_plan,
 )
 from .bridge_pr import GitHubRestApi, disparar_guard
+from .classify import Priority
 from .error_registry import (
     DEFAULT_ERROR_STATE_BRANCH, ErrorEvent, ErrorRegistry, GitHubErrorApi,
     sanitize_evidence,
@@ -29,6 +28,14 @@ from .openai_config import (
 from .openai_privacy import preflight as privacy_preflight
 from .openai_transport import OpenAIResponsesTransport
 from .redact import redact
+from .runner_contract import RunnerTask
+from .runner_dispatch import (
+    arquivos_alterados,
+    commitar_e_publicar,
+    executar_comandos_validacao,
+    preparar_branch_de_trabalho,
+    resetar_workdir,
+)
 
 ENV_ENABLED = "REPASSO_AUTO_REPAIR_ENABLED"
 MAX_OUTPUT_TOKENS = 2000
@@ -110,26 +117,6 @@ def _parts(repo: str) -> tuple[str, str]:
     if len(p) != 2 or not all(p):
         raise ValueError("repo precisa ser owner/name")
     return p[0], p[1]
-
-
-def _git(repo_dir: str, *args: str):
-    return subprocess.run(["git", *args], cwd=repo_dir, capture_output=True, text=True)
-
-
-def _run(repo_dir: str, *args: str):
-    return subprocess.run(list(args), cwd=repo_dir, capture_output=True, text=True)
-
-
-def _reset(repo_dir: str, base: str) -> None:
-    _git(repo_dir, "reset", "--hard", base)
-    _git(repo_dir, "clean", "-fd")
-
-
-def _changed(repo_dir: str) -> tuple[str, ...]:
-    r = _git(repo_dir, "diff", "--name-only")
-    if r.returncode:
-        raise RuntimeError(redact(r.stderr))
-    return tuple(x for x in r.stdout.splitlines() if x.strip())
 
 
 def _summary(s: str) -> str:
@@ -243,33 +230,51 @@ def repair(args) -> dict:
         attempts.record(fp, "NO_SAFE_FIX", plan.summary)
         return {"status": "SKIPPED", "reason": plan.summary, "fingerprint": fp}
 
-    base = _git(args.repo_dir, "rev-parse", "HEAD").stdout.strip()
     branch = f"auto-repair/{fp[:12]}-a{attempt}"
-    if _git(args.repo_dir, "checkout", "-b", branch).returncode:
-        attempts.record(fp, "GIT_FAILED", "nao criou branch")
-        return {"status": "SKIPPED", "reason": "nao criou branch", "fingerprint": fp}
+    planned_files = tuple(sorted({e.path for e in plan.edits}))
+    runner_task = RunnerTask(
+        task_id=f"auto-repair-{fp}-a{attempt}",
+        priority=Priority.P0,
+        source_issue=int(issue) if issue else None,
+        branch=branch,
+        allowed_files=planned_files,
+        instructions=f"Correção técnica automática restrita: {_summary(plan.summary)}",
+        checkpoint_commit=None,
+        capabilities_required=("codigo",),
+        risk_level="MEDIO",
+        policy_level="D",
+        jose_authorized=True,
+        publication_required=False,
+    )
+    base = None
 
     try:
+        # Todo processo externo passa pela fronteira já auditada do Runner.
+        # auto_repair.py não ganha um segundo executor de shell/git.
+        base = preparar_branch_de_trabalho(args.repo_dir, runner_task)
         touched = apply_plan(args.repo_dir, plan)
-        actual = _changed(args.repo_dir)
-        if not touched or set(touched) != set(actual) or any(not is_safe_path(p) for p in actual):
+        actual = tuple(arquivos_alterados(args.repo_dir))
+        if (
+            not touched
+            or set(touched) != set(actual)
+            or set(actual) != set(runner_task.allowed_files)
+            or any(not is_safe_path(p) for p in actual)
+        ):
             raise ValueError("diff real divergiu da allowlist/plano")
-        tests = _run(args.repo_dir, sys.executable, "-m", "coordinator.tests.run_all")
-        if tests.returncode:
-            raise RuntimeError("suite falhou: " + redact((tests.stdout + tests.stderr)[-3500:]))
 
-        _git(args.repo_dir, "add", "-A")
-        commit = _git(
-            args.repo_dir, "-c", "user.name=Repasso Auto Repair",
-            "-c", "user.email=repasso-auto-repair@users.noreply.github.com",
-            "commit", "-m", f"auto-repair: {_summary(plan.summary)}",
+        tests_ok, test_results = executar_comandos_validacao(
+            args.repo_dir, ("coordinator-suite",)
         )
-        if commit.returncode:
-            raise RuntimeError("commit falhou: " + redact(commit.stderr))
-        head = _git(args.repo_dir, "rev-parse", "HEAD").stdout.strip()
-        push = _git(args.repo_dir, "push", "origin", branch)
-        if push.returncode:
-            raise RuntimeError("push falhou sem force: " + redact(push.stderr))
+        if not tests_ok:
+            detalhe = " | ".join(
+                f"{x.get('key')}: rc={x.get('returncode')} "
+                f"{x.get('stdout_tail','')} {x.get('stderr_tail','')}"
+                for x in test_results
+                if not x.get("ok")
+            )
+            raise RuntimeError("suite falhou: " + redact(detalhe[-3500:]))
+
+        head = commitar_e_publicar(args.repo_dir, runner_task, "origin")
 
         owner, name = _parts(args.repo)
         api = GitHubRestApi(owner=owner, repo=name)
@@ -298,7 +303,8 @@ def repair(args) -> dict:
             "changed_files": list(actual), "guard": guard.to_dict(),
         }
     except Exception as exc:
-        _reset(args.repo_dir, base)
+        if base:
+            resetar_workdir(args.repo_dir, base)
         attempts.record(fp, "REPAIR_FAILED", f"{type(exc).__name__}: {exc}")
         return {"status": "SKIPPED", "reason": redact(f"{type(exc).__name__}: {exc}"), "fingerprint": fp}
 
