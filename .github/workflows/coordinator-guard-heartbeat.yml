@@ -135,7 +135,9 @@ jobs:
                   // novo dispatch sob o verificador novo (ex.: correção de
                   // falso positivo de assets), sem exigir clique manual.
                   const caminhosGuard = [
-                    'tools/qa/guard',
+                    'tools/qa/guard/checks.py',
+                    'tools/qa/guard/materia.py',
+                    'tools/qa/guard/__main__.py',
                     '.github/workflows/guard.yml',
                   ];
                   let guardChangedAfterFailure = false;
