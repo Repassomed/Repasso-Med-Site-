@@ -599,6 +599,31 @@
       "summary": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
       "task_id": "cleanup-como-estudar-embriologia",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "guard",
+      "commit_sha": "7ba735ab27b0f1d2942d0a8bc489f530ea8ab009",
+      "component": "guard",
+      "error_id": "ERR-A56C4167DB",
+      "error_type": "hard-fail",
+      "fingerprint": "a56c4167db1dd16c5c19",
+      "first_seen": "2026-09-24T05:18:41.466912+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "f667fba2987f4879a232788b9dee1398",
+      "issue_sync_updated_at": "2026-09-24T05:18:41.466912+00:00",
+      "last_evidence_hash": "f2b36482a3bcd6aaa53c",
+      "last_seen": "2026-09-24T05:18:41.466912+00:00",
+      "occurrence_count": 1,
+      "pr_number": 203,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35959321412",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:203.",
+      "task_id": "pr:203",
+      "worker_id": null
     }
   ]
 }
