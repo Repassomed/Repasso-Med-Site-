@@ -169,6 +169,13 @@ on:
   workflow_run:
     workflows: ["Repasso Guard"]
     types: [completed]
+  # Reconciliação de liveness: um Guard disparado dentro de uma cadeia
+  # profunda Guard -> OBSERVE -> Worker Bridge -> Guard pode terminar
+  # corretamente sem gerar outro workflow_run por limite da plataforma.
+  # A cada 30 min, este heartbeat quebra a cadeia: ele redispara o Guard
+  # da main para NO MÁXIMO uma PR Worker Bridge ainda sem Cartão de Merge.
+  schedule:
+    - cron: "10,40 * * * *"
 
 permissions:
   contents: read
@@ -178,6 +185,78 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  guard_reconcile:
+    # Este job nunca recebe Anthropic/OpenAI, nunca faz checkout e nunca
+    # executa código de PR. Só roda do workflow confiável da main e só
+    # despacha guard.yml (constante) para uma PR Worker Bridge aberta que
+    # ainda não recebeu o marcador do Coordinator.
+    if: >
+      github.event_name == 'schedule' &&
+      vars.REPASSO_COORDINATOR_ENABLED == 'true' &&
+      vars.REPASSO_COORDINATOR_MODE == 'active-supervised'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: read
+      issues: read
+    steps:
+      - name: Reconciliar uma PR NEEDS-AUDIT sem Cartão de Merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const markerBridge = '<!-- repasso-worker-bridge-needs-audit -->';
+            const markerCoordinator = '<!-- repasso-coordinator -->';
+            const pulls = await github.paginate(github.rest.pulls.list, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              base: context.payload.repository.default_branch,
+              sort: 'created',
+              direction: 'asc',
+              per_page: 100,
+            });
+
+            for (const pr of pulls) {
+              const body = String(pr.body || '');
+              if (!body.includes(markerBridge)) continue;
+
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                per_page: 100,
+              });
+              if (comments.some(c => String(c.body || '').includes(markerCoordinator))) {
+                continue;
+              }
+
+              const headRepo = pr.head && pr.head.repo ? pr.head.repo.full_name : '';
+              const expectedRepo = `${context.repo.owner}/${context.repo.repo}`;
+              if (
+                pr.state !== 'open' ||
+                pr.base.ref !== context.payload.repository.default_branch ||
+                headRepo !== expectedRepo
+              ) {
+                continue;
+              }
+
+              await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'guard.yml',
+                ref: context.payload.repository.default_branch,
+                inputs: { pr_number: String(pr.number) },
+              });
+              core.info(
+                `Reconciliação: Guard redisparado da main para PR #${pr.number}; ` +
+                'uma única PR por heartbeat, sem chamada paga neste job.'
+              );
+              return;
+            }
+
+            core.info('Reconciliação: nenhuma PR Worker Bridge pendente de Cartão de Merge.');
+
   observe:
     # Camada 1 do portão: enquanto a Variable não for exatamente "true",
     # o job não roda. Nada de runner, nada de Python, nada de custo.
@@ -203,6 +282,7 @@ jobs:
     # Python continua como segunda camada (defesa em profundidade, nunca
     # confiar só no `if:` do workflow).
     if: >
+      github.event_name != 'schedule' &&
       vars.REPASSO_COORDINATOR_ENABLED == 'true' &&
       (github.event_name != 'issue_comment' ||
         (github.event.comment.user.login == 'Repassomed' &&

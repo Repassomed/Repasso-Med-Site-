@@ -44,15 +44,41 @@ def test_pull_request_trigger_is_absent() -> None:
 
 
 def test_only_safe_triggers_are_present() -> None:
-    """issue_comment e workflow_run são estruturalmente seguros para um
-    workflow com segredo: nenhum dos dois roda o ARQUIVO do workflow a
-    partir do HEAD de um PR de terceiros."""
+    """issue_comment/workflow_run continuam confiáveis; schedule também é
+    seguro porque sempre executa a versão da branch padrão. O job com
+    segredos é explicitamente proibido de rodar em schedule; o heartbeat
+    tem job próprio sem Anthropic/OpenAI."""
     secao = _secao_on(_ler())
     assert "issue_comment:" in secao
     assert "workflow_run:" in secao
-    for proibido in ("push:", "schedule:", "workflow_dispatch:", "pull_request_target:"):
+    assert "schedule:" in secao
+    assert 'cron: "10,40 * * * *"' in secao
+    for proibido in ("push:", "workflow_dispatch:", "pull_request_target:"):
         assert proibido not in secao, f"{proibido!r} não devia estar nos gatilhos deste workflow"
     print("OK  test_only_safe_triggers_are_present")
+
+
+def test_schedule_reconciler_is_minimal_and_dispatches_only_guard() -> None:
+    """Heartbeat de liveness: zero checkout/segredo/chamada paga e no máximo
+    um dispatch do guard.yml por execução."""
+    texto = _ler()
+    ini = texto.index("  guard_reconcile:")
+    fim = texto.index("  observe:", ini)
+    bloco = texto[ini:fim]
+    assert "github.event_name == 'schedule'" in bloco
+    assert "REPASSO_COORDINATOR_MODE == 'active-supervised'" in bloco
+    assert "actions: write" in bloco
+    assert "contents: read" in bloco
+    assert "pull-requests: read" in bloco
+    assert "issues: read" in bloco
+    assert "actions/checkout" not in bloco
+    assert "ANTHROPIC_API_KEY" not in bloco
+    assert "OPENAI_API_KEY" not in bloco
+    assert "workflow_id: 'guard.yml'" in bloco
+    assert "markerBridge = '<!-- repasso-worker-bridge-needs-audit -->'" in bloco
+    assert "markerCoordinator = '<!-- repasso-coordinator -->'" in bloco
+    assert "return;" in bloco
+    print("OK  test_schedule_reconciler_is_minimal_and_dispatches_only_guard")
 
 
 def test_checkout_pins_explicit_default_branch_ref() -> None:
@@ -70,16 +96,23 @@ def test_checkout_pins_explicit_default_branch_ref() -> None:
 
 
 def test_secret_only_exists_inside_a_single_gated_job() -> None:
-    """ANTHROPIC_API_KEY só pode existir dentro do job cujo `if:` já checa
-    REPASSO_COORDINATOR_ENABLED — e este workflow só pode ter UM job,
-    para não existir um segundo job destravado por engano."""
+    """O heartbeat pode ser um segundo job, mas ele nunca recebe segredo.
+    ANTHROPIC_API_KEY/OPENAI_API_KEY continuam restritos ao job observe,
+    que exclui schedule antes de qualquer passo."""
     texto = _ler()
     assert texto.count("ANTHROPIC_API_KEY") >= 1
 
     idx_jobs = texto.index("\njobs:\n")
     trecho_jobs = texto[idx_jobs:]
     nomes_jobs = re.findall(r"^  ([A-Za-z0-9_-]+):\s*$", trecho_jobs, re.M)
-    assert nomes_jobs == ["observe"], f"esperava só o job 'observe', achei {nomes_jobs}"
+    assert nomes_jobs == ["guard_reconcile", "observe"], f"jobs inesperados: {nomes_jobs}"
+
+    idx_reconcile = texto.index("  guard_reconcile:", idx_jobs)
+    idx_observe = texto.index("  observe:", idx_reconcile)
+    bloco_reconcile = texto[idx_reconcile:idx_observe]
+    assert "ANTHROPIC_API_KEY" not in bloco_reconcile
+    assert "OPENAI_API_KEY" not in bloco_reconcile
+    assert "secrets." not in bloco_reconcile
     print("OK  test_secret_only_exists_inside_a_single_gated_job")
 
 
@@ -96,6 +129,7 @@ def test_job_gate_checks_enabled_and_trusted_comment_actor() -> None:
     exposto. Não é suficiente confiar só na checagem em
     coordinator/github_event.py (camada 2)."""
     bloco = _bloco_do_job(_ler())
+    assert "github.event_name != 'schedule'" in bloco
     assert "REPASSO_COORDINATOR_ENABLED" in bloco
     assert "issue_comment" in bloco
     assert "comment.user.login" in bloco
@@ -184,10 +218,10 @@ def test_workers_from_tasks_json_is_wired_into_the_real_invocation() -> None:
 
 
 def _secao_job_permissions(texto: str) -> str:
-    """O bloco `permissions:` DENTRO do job `observe` — não o de nível de
-    workflow (`on:` .. primeiro `permissions:`, já coberto por
-    ``_secao_on``). Delimitado por `steps:`, que sempre vem logo depois."""
-    idx = texto.index("\n    permissions:")
+    """O bloco permissions DENTRO do job observe, mesmo existindo antes
+    dele o job guard_reconcile."""
+    idx_observe = texto.index("\n  observe:")
+    idx = texto.index("\n    permissions:", idx_observe)
     fim = texto.index("\n    steps:", idx)
     return texto[idx:fim]
 
@@ -213,8 +247,9 @@ def test_download_artifact_step_is_inside_the_permissioned_job() -> None:
     (hoje há um único job, 'observe', mas isto trava a suposição em
     código em vez de deixá-la implícita)."""
     texto = _ler()
-    idx_perm = texto.index("\n    permissions:")
-    idx_download = texto.index("uses: actions/download-artifact@v4")
+    idx_observe = texto.index("\n  observe:")
+    idx_perm = texto.index("\n    permissions:", idx_observe)
+    idx_download = texto.index("uses: actions/download-artifact@v4", idx_observe)
     assert idx_download > idx_perm, "o passo de download precisa vir depois do bloco permissions: do job"
     print("OK  test_download_artifact_step_is_inside_the_permissioned_job")
 
