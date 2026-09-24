@@ -345,17 +345,37 @@ jobs:
         # este próprio guard.yml nem coordinator-worker-bridge.yml — a
         # cadeia continua estritamente Guard -> OBSERVE -> Bridge, nunca
         # ao contrário (ver o teste estrutural que prova isso).
+        #
+        # NUNCA pode virar o veredito do Guard: disparar o próximo elo da
+        # cadeia é um efeito colateral best-effort, nunca parte do que
+        # este workflow certifica sobre a PR. `continue-on-error: true`
+        # (achado ao vivo desta própria PR #264: antes do merge,
+        # coordinator-observe.yml em `main` ainda não tem o gatilho
+        # workflow_dispatch — a API corretamente recusa com 422 "Workflow
+        # does not have 'workflow_dispatch' trigger" — e sem esta trava
+        # esse erro não tratado derrubava o job INTEIRO, inclusive PRs
+        # cujo Guard tinha passado limpo). O `workflow_run` continua como
+        # rede de segurança para exatamente este tipo de falha transitória
+        # do dispatch explícito.
         if: always() && steps.guard.outputs.resultado != ''
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'coordinator-observe.yml',
-              ref: context.payload.repository.default_branch,
-              inputs: { guard_run_id: String(context.runId) },
-            });
-            core.info(
-              `OBSERVE acionado explicitamente por workflow_dispatch para o Guard run ${context.runId}.`
-            );
+            try {
+              await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'coordinator-observe.yml',
+                ref: context.payload.repository.default_branch,
+                inputs: { guard_run_id: String(context.runId) },
+              });
+              core.info(
+                `OBSERVE acionado explicitamente por workflow_dispatch para o Guard run ${context.runId}.`
+              );
+            } catch (e) {
+              core.warning(
+                `Dispatch explícito do OBSERVE falhou (${e.message || e}) — o listener workflow_run ` +
+                'continua como rede de segurança; o veredito deste Guard não muda por causa disso.'
+              );
+            }

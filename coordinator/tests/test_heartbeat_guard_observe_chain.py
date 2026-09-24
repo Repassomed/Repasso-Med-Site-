@@ -130,6 +130,29 @@ def test_guard_aciona_observe_explicitamente_apos_o_veredito() -> None:
     print("OK  test_guard_aciona_observe_explicitamente_apos_o_veredito")
 
 
+def test_guard_dispatch_falho_nunca_vira_veredito_do_guard() -> None:
+    """Achado AO VIVO na própria PR #264 (não hipotético): antes do
+    merge, `coordinator-observe.yml` em `main` ainda não tem o gatilho
+    `workflow_dispatch` — a API recusa com 422 ("Workflow does not have
+    'workflow_dispatch' trigger") — e sem `continue-on-error: true` +
+    try/catch, esse erro não tratado derrubava o JOB INTEIRO do Guard,
+    inclusive PRs cujo conteúdo tinha passado limpo (a run 36053601451
+    desta própria PR reproduziu isso: 'Rodar o Guard' = success, 'Falhar
+    o job se o Guard reprovou' = skipped, e mesmo assim o job inteiro
+    virou 'failure' por causa do dispatch). O dispatch é efeito colateral
+    best-effort — nunca pode fazer uma PR objetivamente aprovada parecer
+    reprovada."""
+    texto = _ler(_GUARD_PATH)
+    idx_passo = texto.index('- name: Acionar o OBSERVE explicitamente')
+    idx_if = texto.index("if: always()", idx_passo)
+    trecho_antes_do_if = texto[idx_passo:idx_if]
+    assert "continue-on-error: true" in trecho_antes_do_if
+    trecho = _passo(texto, '- name: Acionar o OBSERVE explicitamente')
+    assert "try {" in trecho and "} catch (e) {" in trecho
+    assert "core.warning(" in trecho
+    print("OK  test_guard_dispatch_falho_nunca_vira_veredito_do_guard")
+
+
 def test_guard_dispatch_step_e_o_ultimo_do_job() -> None:
     """Precisa vir DEPOIS do passo que falha o job em HARD FAIL — senão
     `steps.guard.outputs.resultado` não estaria disponível ainda, e um
@@ -273,6 +296,21 @@ def test_observe_aciona_bridge_explicitamente_quando_bem_sucedido() -> None:
     print("OK  test_observe_aciona_bridge_explicitamente_quando_bem_sucedido")
 
 
+def test_observe_dispatch_do_bridge_falho_nunca_vira_resultado_do_observe() -> None:
+    """Mesmo achado ao vivo do teste equivalente para guard.yml, um elo
+    abaixo: sem `continue-on-error: true` + try/catch, uma falha no
+    dispatch do Bridge viraria 'failure' NESTE job — e o listener
+    `workflow_run` do Bridge só aceita conclusão 'success', então
+    corromperia justamente o sinal que a rede de segurança depende para
+    funcionar quando ESTE dispatch explícito falha."""
+    texto = _ler(_OBSERVE_PATH)
+    trecho = _passo(texto, "- name: Acionar o Worker Bridge explicitamente")
+    assert "continue-on-error: true" in trecho
+    assert "try {" in trecho and "} catch (e) {" in trecho
+    assert "core.warning(" in trecho
+    print("OK  test_observe_dispatch_do_bridge_falho_nunca_vira_resultado_do_observe")
+
+
 def test_observe_dispatch_do_bridge_e_o_ultimo_passo_do_job() -> None:
     """Precisa vir DEPOIS do passo que falha o job em erro do Coordinator
     (bloqueador 7) — senão `success()` não refletiria o resultado real do
@@ -368,6 +406,7 @@ def main() -> int:
     testes = [
         test_guard_ganhou_actions_write_so_para_o_dispatch,
         test_guard_aciona_observe_explicitamente_apos_o_veredito,
+        test_guard_dispatch_falho_nunca_vira_veredito_do_guard,
         test_guard_dispatch_step_e_o_ultimo_do_job,
         test_guard_so_aciona_observe_nunca_a_si_mesmo_ou_o_bridge,
         test_observe_ganhou_workflow_dispatch_com_input_obrigatorio,
@@ -378,6 +417,7 @@ def main() -> int:
         test_observe_cli_reusa_o_caminho_workflow_run_ja_testado_para_dedup,
         test_observe_ganhou_actions_write,
         test_observe_aciona_bridge_explicitamente_quando_bem_sucedido,
+        test_observe_dispatch_do_bridge_falho_nunca_vira_resultado_do_observe,
         test_observe_dispatch_do_bridge_e_o_ultimo_passo_do_job,
         test_observe_so_aciona_o_bridge_nunca_o_guard_ou_a_si_mesmo,
         test_bridge_aceita_dispatch_automatico_do_observe_so_em_active_supervised,

@@ -775,14 +775,29 @@ jobs:
         # diferente mais adiante — isso já existia, é o funcionamento
         # normal da fila, e cada rodada tem sua própria identidade de
         # dedup (PR/HEAD diferentes), nunca repetindo a MESMA auditoria.
+        # NUNCA pode virar o resultado do OBSERVE: disparar o próximo elo
+        # é efeito colateral best-effort. `continue-on-error: true`
+        # (mesmo achado ao vivo do passo equivalente em guard.yml, PR
+        # #264: uma falha aqui sem essa trava viraria "failure" NESTE
+        # próprio job — e o listener `workflow_run` do Bridge só aceita
+        # conclusão "success", então corromperia o próprio sinal que a
+        # rede de segurança depende para funcionar).
         if: success()
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'coordinator-worker-bridge.yml',
-              ref: context.payload.repository.default_branch,
-            });
-            core.info('Worker Bridge acionado explicitamente por workflow_dispatch após o OBSERVE.');
+            try {
+              await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'coordinator-worker-bridge.yml',
+                ref: context.payload.repository.default_branch,
+              });
+              core.info('Worker Bridge acionado explicitamente por workflow_dispatch após o OBSERVE.');
+            } catch (e) {
+              core.warning(
+                `Dispatch explícito do Worker Bridge falhou (${e.message || e}) — o listener workflow_run ` +
+                'continua como rede de segurança; o resultado deste OBSERVE não muda por causa disso.'
+              );
+            }
