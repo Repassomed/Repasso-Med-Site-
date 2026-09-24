@@ -1065,15 +1065,15 @@
       "pr": null,
       "commit": null,
       "issue": 67,
-      "automation_enabled": true,
-      "bridge_enabled": true,
+      "automation_enabled": false,
+      "bridge_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true,
       "capabilities_required": [
         "conteudo"
       ],
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P0",
       "source_pack_required": true,
       "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
@@ -1086,7 +1086,7 @@
         "semiologia-ii-b07-framingham-r3"
       ],
       "branch": "runner/semiologia-ii-b08-pa-r4",
-      "notas": "Microtarefa P0 atômica criada porque o B08 combinado devolveu patch vazio. Um único conceito: classificação de PA. Lei 8-A obrigatória; source pack compartilhado; resultado NEEDS-AUDIT → Guard → Anthropic → OpenAI; sem merge/deploy automático."
+      "notas": "Microtarefa P0 atômica criada porque o B08 combinado devolveu patch vazio. Um único conceito: classificação de PA. Lei 8-A obrigatória; source pack compartilhado; resultado NEEDS-AUDIT → Guard → Anthropic → OpenAI; sem merge/deploy automático. Execução de 24/09/2026 falhou antes do merge da PR #237 (Runner com contexto por bloco/streaming). Histórico preservado; retry explícito autorizado por José em 24/09/2026 materializado como semiologia-ii-b08-pa-r5."
     },
     {
       "area": "materia",
@@ -1116,7 +1116,7 @@
       "titulo": "P0 — Semiología II B08: resolver somente a divergência obesidade/sobrepeso",
       "objetivo": "Alterar SOMENTE a divergência de obesidad/sobrepeso no B08 e sua cópia correspondente no Banco General, se houver. A cátedra registra obesidad/sobrepeso como no modificable em um ponto, enquanto outra parte do HTML/questão/flashcards trata como modificable. Preservar o padrão cobrado, rotular explicitamente a fonte/contradição e evitar apresentar uma das classificações como verdade universal. Não alterar classificação de PA, ECG ou outros conteúdos. Preservar IDs, annotations, gabarito e estrutura.",
       "dependencias": [
-        "semiologia-ii-b08-pa-r4"
+        "semiologia-ii-b08-pa-r5"
       ],
       "branch": "runner/semiologia-ii-b08-obesidade-r4",
       "notas": "Microtarefa P0 atômica criada porque o B08 combinado devolveu patch vazio. Um único conceito: divergência obesidade/sobrepeso. Lei 8-A obrigatória; source pack compartilhado; resultado NEEDS-AUDIT → Guard → Anthropic → OpenAI; sem merge/deploy automático."
@@ -2152,6 +2152,39 @@
       "jose_authorized": true,
       "source_pack_required": true,
       "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md"
+    },
+    {
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "agente": null,
+      "pr": null,
+      "commit": null,
+      "issue": 67,
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
+      "question_report_required": true,
+      "fonte": "Retry explícito autorizado por José em 24/09/2026 após a r4 falhar antes da ampliação de contexto/streaming do Runner na PR #237. Reusar o mesmo source pack e o mesmo escopo atômico.",
+      "id": "semiologia-ii-b08-pa-r5",
+      "titulo": "P0 — Semiología II B08: retry pós-Runner #237 da classificação da pressão arterial",
+      "objetivo": "Alterar SOMENTE o ponto de classificação de PA do B08 e sua cópia correspondente no Banco General, se houver. A cátedra/prova apresenta coexistência de duas referências: tabela usada na prova com PA elevada 120–139/70–89 e atualização com elevada 120–129/<80. Tornar a questão/V-F inequívoca indicando explicitamente qual tabela/classificação está sendo cobrada, sem apagar a coexistência das duas fontes e sem alterar obesidade, ECG ou outros conteúdos. Preservar IDs, annotations, gabarito e estrutura.",
+      "dependencias": [
+        "semiologia-ii-b07-framingham-r3"
+      ],
+      "branch": "runner/semiologia-ii-b08-pa-r5",
+      "notas": "Retry P0 atômico pós-#237. Alterar somente classificação de PA do B08 e cópia correspondente no Banco General, se houver. Manter Lei 8-A/question_report_required. Sem ampliar escopo, sem alterar obesidade/ECG/outros blocos."
     }
   ]
 }
