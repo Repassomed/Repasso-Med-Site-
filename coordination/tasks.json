@@ -1183,8 +1183,15 @@
       "arquivos": [
         "coordinator/source_pack.py",
         "coordinator/worker_bridge.py",
-        "coordinator/runner_generate.py",
-        "coordinator/tests/test_source_pack.py"
+        "coordinator/bridge_pr.py",
+        "coordinator/audit.py",
+        "coordinator/openai_audit.py",
+        "coordinator/observe.py",
+        "coordinator/tests/test_source_pack.py",
+        "coordinator/tests/run_all.py",
+        "coordination/source-packs/fisiopatologia-ii-issue101-v1.md",
+        "coordination/source-packs/toxicologia-issue102-v1.md",
+        "coordination/tasks.json"
       ],
       "objetivo": "Criar mecanismo de source/context pack rastreável, limitado e fail-closed para tarefas que dependem de fontes além do allowed_file. Deve preservar proveniência, limites de tamanho/token e bloquear antes de chamada paga quando fonte obrigatória estiver ausente. A integração real com Google Drive só pode ser ativada quando existir autenticação segura; nunca hardcode de credencial.",
       "fonte": "Issue #158 · Source Map #89",
