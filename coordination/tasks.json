@@ -1032,8 +1032,8 @@
       "pr": null,
       "commit": null,
       "issue": 67,
-      "automation_enabled": true,
-      "bridge_enabled": true,
+      "automation_enabled": false,
+      "bridge_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true,
@@ -1044,16 +1044,82 @@
       "titulo": "P1 — Semiología II B08: desambiguar HTA e resolver contradição de obesidade",
       "objetivo": "No B08, resolver dois pontos auditados: (1) a V/F sobre PA está ambígua porque a cátedra mostra duas classificações — tabela 1 com elevada 120–139/70–89 e atualização com elevada 120–129/<80; a questão deve indicar explicitamente qual tabela/classificação está cobrando, sem apagar a coexistência das duas fontes. (2) obesidad/sobrepeso aparece na cátedra como no modificable, enquanto outra parte do próprio HTML e a questão/flashcards tratam como modificable; resolver com rotulagem explícita de fonte, preservando o que a cátedra cobra e sem apresentar a contradição como fato único universal.",
       "fonte": "Issue #67 · auditoria independente comentário 5752213771",
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P0",
       "dependencias": [
         "semiologia-ii-b07-framingham-r3"
       ],
       "branch": "runner/semiologia-ii-b08-hta-r3",
-      "notas": "Alterar só B08 e cópias correspondentes no Banco General, se houver. Preservar IDs/annotations/proveniência. NEEDS-AUDIT obrigatório. P0 de Semiología priorizado por José em 24/09/2026 após tarefas amplas falharem por patch vazio/malformado. Executar como microtarefa, usar o source pack compartilhado e devolver relatório obrigatório da Lei 8-A.11; resultado NEEDS-AUDIT com Anthropic + OpenAI, sem merge/deploy automático.",
+      "notas": "Alterar só B08 e cópias correspondentes no Banco General, se houver. Preservar IDs/annotations/proveniência. NEEDS-AUDIT obrigatório. P0 de Semiología priorizado por José em 24/09/2026 após tarefas amplas falharem por patch vazio/malformado. Executar como microtarefa, usar o source pack compartilhado e devolver relatório obrigatório da Lei 8-A.11; resultado NEEDS-AUDIT com Anthropic + OpenAI, sem merge/deploy automático. Execução automática em 24/09/2026 falhou antes de PR com StructuredPatch vazio mesmo após microtask + source pack + Lei 8-A; substituída pelas microtarefas atômicas semiologia-ii-b08-pa-r4 → semiologia-ii-b08-obesidade-r4. Não repetir este escopo combinado.",
       "source_pack_required": true,
       "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
       "question_report_required": true
+    },
+    {
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "agente": null,
+      "pr": null,
+      "commit": null,
+      "issue": 67,
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
+      "question_report_required": true,
+      "fonte": "Issue #67 · auditoria independente comentário 5752213771 · retry atômico autorizado por José em 24/09/2026",
+      "id": "semiologia-ii-b08-pa-r4",
+      "titulo": "P0 — Semiología II B08: desambiguar somente classificação da pressão arterial",
+      "objetivo": "Alterar SOMENTE o ponto de classificação de PA do B08 e sua cópia correspondente no Banco General, se houver. A cátedra/prova apresenta coexistência de duas referências: tabela usada na prova com PA elevada 120–139/70–89 e atualização com elevada 120–129/<80. Tornar a questão/V-F inequívoca indicando explicitamente qual tabela/classificação está sendo cobrada, sem apagar a coexistência das duas fontes e sem alterar obesidade, ECG ou outros conteúdos. Preservar IDs, annotations, gabarito e estrutura.",
+      "dependencias": [
+        "semiologia-ii-b07-framingham-r3"
+      ],
+      "branch": "runner/semiologia-ii-b08-pa-r4",
+      "notas": "Microtarefa P0 atômica criada porque o B08 combinado devolveu patch vazio. Um único conceito: classificação de PA. Lei 8-A obrigatória; source pack compartilhado; resultado NEEDS-AUDIT → Guard → Anthropic → OpenAI; sem merge/deploy automático."
+    },
+    {
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "agente": null,
+      "pr": null,
+      "commit": null,
+      "issue": 67,
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
+      "question_report_required": true,
+      "fonte": "Issue #67 · auditoria independente comentário 5752213771 · retry atômico autorizado por José em 24/09/2026",
+      "id": "semiologia-ii-b08-obesidade-r4",
+      "titulo": "P0 — Semiología II B08: resolver somente a divergência obesidade/sobrepeso",
+      "objetivo": "Alterar SOMENTE a divergência de obesidad/sobrepeso no B08 e sua cópia correspondente no Banco General, se houver. A cátedra registra obesidad/sobrepeso como no modificable em um ponto, enquanto outra parte do HTML/questão/flashcards trata como modificable. Preservar o padrão cobrado, rotular explicitamente a fonte/contradição e evitar apresentar uma das classificações como verdade universal. Não alterar classificação de PA, ECG ou outros conteúdos. Preservar IDs, annotations, gabarito e estrutura.",
+      "dependencias": [
+        "semiologia-ii-b08-pa-r4"
+      ],
+      "branch": "runner/semiologia-ii-b08-obesidade-r4",
+      "notas": "Microtarefa P0 atômica criada porque o B08 combinado devolveu patch vazio. Um único conceito: divergência obesidade/sobrepeso. Lei 8-A obrigatória; source pack compartilhado; resultado NEEDS-AUDIT → Guard → Anthropic → OpenAI; sem merge/deploy automático."
     },
     {
       "area": "materia",
@@ -1080,10 +1146,10 @@
       "estado": "READY",
       "prioridade_declarada": "P0",
       "dependencias": [
-        "semiologia-ii-b08-hta-r3"
+        "semiologia-ii-b08-obesidade-r4"
       ],
       "branch": "runner/semiologia-ii-b09-ecg-r3",
-      "notas": "Alterar só B09 e espelho no Banco General quando aplicável. Conteúdo deve permanecer em castelhano e didático desde zero. NEEDS-AUDIT obrigatório. P0 de Semiología priorizado por José em 24/09/2026 após tarefas amplas falharem por patch vazio/malformado. Executar como microtarefa, usar o source pack compartilhado e devolver relatório obrigatório da Lei 8-A.11; resultado NEEDS-AUDIT com Anthropic + OpenAI, sem merge/deploy automático.",
+      "notas": "Alterar só B09 e espelho no Banco General quando aplicável. Conteúdo deve permanecer em castelhano e didático desde zero. NEEDS-AUDIT obrigatório. P0 de Semiología priorizado por José em 24/09/2026 após tarefas amplas falharem por patch vazio/malformado. Executar como microtarefa, usar o source pack compartilhado e devolver relatório obrigatório da Lei 8-A.11; resultado NEEDS-AUDIT com Anthropic + OpenAI, sem merge/deploy automático. Dependência atualizada para a última microtarefa atômica do B08 (semiologia-ii-b08-obesidade-r4); não iniciar antes das duas correções B08 fecharem.",
       "source_pack_required": true,
       "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
       "question_report_required": true
