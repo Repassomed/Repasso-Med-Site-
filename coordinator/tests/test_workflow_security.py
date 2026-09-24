@@ -21,6 +21,14 @@ from . import _pathsetup
 _WORKFLOW_PATH = os.path.join(_pathsetup.REPO_ROOT, ".github", "workflows", "coordinator-observe.yml")
 
 
+_HEARTBEAT_PATH = os.path.join(_pathsetup.REPO_ROOT, ".github", "workflows", "coordinator-guard-heartbeat.yml")
+
+
+def _ler_heartbeat() -> str:
+    with open(_HEARTBEAT_PATH, encoding="utf-8") as fh:
+        return fh.read()
+
+
 def _ler() -> str:
     with open(_WORKFLOW_PATH, encoding="utf-8") as fh:
         return fh.read()
@@ -51,8 +59,11 @@ def test_only_safe_triggers_are_present() -> None:
     secao = _secao_on(_ler())
     assert "issue_comment:" in secao
     assert "workflow_run:" in secao
-    assert "schedule:" in secao
-    assert 'cron: "10,40 * * * *"' in secao
+    assert "schedule:" not in secao
+    heartbeat = _secao_on(_ler_heartbeat())
+    assert 'cron: "10,40 * * * *"' in heartbeat
+    assert "workflow_run:" not in heartbeat
+    assert "issue_comment:" not in heartbeat
     for proibido in ("push:", "workflow_dispatch:", "pull_request_target:"):
         assert proibido not in secao, f"{proibido!r} não devia estar nos gatilhos deste workflow"
     print("OK  test_only_safe_triggers_are_present")
@@ -62,10 +73,9 @@ def test_schedule_reconciler_is_minimal_and_dispatches_only_guard() -> None:
     """Heartbeat de liveness: zero checkout/segredo/chamada paga, no máximo
     um dispatch do guard.yml por execução e nenhuma fome de fila causada
     por uma PR que já reprovou no HEAD atual."""
-    texto = _ler()
+    texto = _ler_heartbeat()
     ini = texto.index("  guard_reconcile:")
-    fim = texto.index("  observe:", ini)
-    bloco = texto[ini:fim]
+    bloco = texto[ini:]
     assert "github.event_name == 'schedule'" in bloco
     assert "REPASSO_COORDINATOR_MODE == 'active-supervised'" in bloco
     assert "actions: write" in bloco
@@ -120,14 +130,12 @@ def test_secret_only_exists_inside_a_single_gated_job() -> None:
     idx_jobs = texto.index("\njobs:\n")
     trecho_jobs = texto[idx_jobs:]
     nomes_jobs = re.findall(r"^  ([A-Za-z0-9_-]+):\s*$", trecho_jobs, re.M)
-    assert nomes_jobs == ["guard_reconcile", "observe"], f"jobs inesperados: {nomes_jobs}"
+    assert nomes_jobs == ["observe"], f"jobs inesperados: {nomes_jobs}"
 
-    idx_reconcile = texto.index("  guard_reconcile:", idx_jobs)
-    idx_observe = texto.index("  observe:", idx_reconcile)
-    bloco_reconcile = texto[idx_reconcile:idx_observe]
-    assert "ANTHROPIC_API_KEY" not in bloco_reconcile
-    assert "OPENAI_API_KEY" not in bloco_reconcile
-    assert "secrets." not in bloco_reconcile
+    heartbeat = _ler_heartbeat()
+    assert "ANTHROPIC_API_KEY" not in heartbeat
+    assert "OPENAI_API_KEY" not in heartbeat
+    assert "secrets." not in heartbeat
     print("OK  test_secret_only_exists_inside_a_single_gated_job")
 
 
