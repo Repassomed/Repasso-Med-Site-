@@ -281,6 +281,15 @@ def test_unknown_mode_still_blocked() -> None:
 # 4. audit.py — parse_decision nunca aprova por omissão.
 # ---------------------------------------------------------------------------
 
+def test_audit_prompt_scopes_question_law_to_changed_content() -> None:
+    texto = audit.AUDIT_SYSTEM_PROMPT
+    assert "APLICABILIDADE" in texto
+    assert "Não exija prova global de partes intocadas" in texto
+    assert "limpeza exclusivamente metadidática" in texto
+    assert "Rastreabilidade item a item e Lei 8-A só são obrigatórias" in texto
+    print("OK  test_audit_prompt_scopes_question_law_to_changed_content")
+
+
 def test_parse_decision_merge_ready() -> None:
     d = audit.parse_decision("DECISÃO: MERGE-READY\nTudo certo, Guard passou e o texto ficou claro.")
     assert d.decision == "MERGE-READY" and d.protocol_matched
@@ -681,6 +690,7 @@ def main() -> int:
         test_active_supervised_mode_opens_gate_and_sets_flag,
         test_observe_mode_is_unaffected_by_the_new_mode,
         test_unknown_mode_still_blocked,
+        test_audit_prompt_scopes_question_law_to_changed_content,
         test_parse_decision_merge_ready,
         test_parse_decision_needs_fix,
         test_parse_decision_without_protocol_defaults_to_needs_fix,

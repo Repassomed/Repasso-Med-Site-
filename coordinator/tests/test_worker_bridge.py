@@ -2085,6 +2085,102 @@ def test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado() -> None:
     print("OK  test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado")
 
 
+def test_audit_fix_falha_operacional_permite_retry_do_mesmo_parecer_sem_nova_rodada() -> None:
+    store, anterior = _store_needs_audit_para_fix()
+    assert anterior is not None
+    r1 = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
+        audit_fingerprint="fp-op", audit_findings="corrigir X",
+        max_attempts=2, max_execution_failures=3, token="101010101010",
+    )
+    assert r1.reservado and r1.record is not None
+    assert r1.record.audit_fix_attempts == 1
+    falha1 = store.registrar_falha_operacional_correcao(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
+        execution_task_id=r1.record.execution_task_id or "",
+        reason="StructuredPatch vazio", max_execution_failures=3,
+    )
+    assert falha1.reservado and falha1.record is not None
+    reg1 = falha1.record
+    assert reg1.status == task_runtime.RUNTIME_NEEDS_AUDIT
+    assert reg1.audit_fix_attempts == 1, "retry operacional não é nova rodada semântica"
+    assert reg1.audit_fix_execution_failures == 1
+    assert reg1.last_audit_fix_worker_id == bridge_workers.BRIDGE_WORKER_1
+    assert reg1.guard_confirmado
+
+    r2 = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_2,
+        audit_fingerprint="fp-op", audit_findings="corrigir X",
+        max_attempts=2, max_execution_failures=3, token="202020202020",
+    )
+    assert r2.reservado and r2.record is not None
+    assert r2.record.audit_fix_attempts == 1
+    assert r1.record.execution_task_id in r2.record.execution_history
+    print("OK  test_audit_fix_falha_operacional_permite_retry_do_mesmo_parecer_sem_nova_rodada")
+
+
+def test_audit_fix_terceira_falha_operacional_fecha_em_failed() -> None:
+    store, _ = _store_needs_audit_para_fix()
+    execution_ids = ["303030303030", "404040404040", "505050505050"]
+    workers = [
+        bridge_workers.BRIDGE_WORKER_1,
+        bridge_workers.BRIDGE_WORKER_2,
+        bridge_workers.BRIDGE_WORKER_3,
+    ]
+    for i in range(3):
+        reserva = store.reservar_correcao_apos_auditoria(
+            "t-fix", worker_id=workers[i],
+            audit_fingerprint="fp-op-limit", audit_findings="corrigir Y",
+            max_attempts=2, max_execution_failures=3, token=execution_ids[i],
+        )
+        assert reserva.reservado and reserva.record is not None
+        falha = store.registrar_falha_operacional_correcao(
+            "t-fix", worker_id=workers[i],
+            execution_task_id=reserva.record.execution_task_id or "",
+            reason=f"falha {i+1}", max_execution_failures=3,
+        )
+        assert falha.reservado and falha.record is not None
+        esperado = task_runtime.RUNTIME_FAILED if i == 2 else task_runtime.RUNTIME_NEEDS_AUDIT
+        assert falha.record.status == esperado
+        assert falha.record.audit_fix_execution_failures == i + 1
+        assert falha.record.audit_fix_attempts == 1
+    print("OK  test_audit_fix_terceira_falha_operacional_fecha_em_failed")
+
+
+def test_audit_fix_sucesso_limpa_falhas_operacionais() -> None:
+    store, _ = _store_needs_audit_para_fix()
+    r1 = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
+        audit_fingerprint="fp-reset", audit_findings="corrigir Z",
+        max_attempts=2, max_execution_failures=3, token="606060606060",
+    )
+    assert r1.reservado and r1.record is not None
+    assert store.registrar_falha_operacional_correcao(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
+        execution_task_id=r1.record.execution_task_id or "",
+        reason="falha transitória", max_execution_failures=3,
+    ).reservado
+    r2 = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_2,
+        audit_fingerprint="fp-reset", audit_findings="corrigir Z",
+        max_attempts=2, max_execution_failures=3, token="707070707070",
+    )
+    assert r2.reservado and r2.record is not None
+    assert store.registrar_resultado(
+        "t-fix", status=task_runtime.RUNTIME_NEEDS_AUDIT,
+        worker_id=bridge_workers.BRIDGE_WORKER_2,
+        execution_task_id=r2.record.execution_task_id or "", reason="corrigido",
+        checkpoint_commit="newhead123", branch="runner/t-fix",
+        reset_audit_execution_failures=True,
+    )
+    final = store.get("t-fix")
+    assert final is not None
+    assert final.audit_fix_execution_failures == 0
+    assert final.last_audit_fix_worker_id is None
+    assert final.audit_fix_attempts == 1
+    print("OK  test_audit_fix_sucesso_limpa_falhas_operacionais")
+
+
 def test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes() -> None:
     store, anterior = _store_needs_audit_para_fix()
     assert anterior is not None
@@ -2600,6 +2696,9 @@ def main() -> int:
         test_audit_fix_cartao_carrega_head_auditado,
         test_audit_fix_merge_ready_nao_reentra_em_correcao,
         test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado,
+        test_audit_fix_falha_operacional_permite_retry_do_mesmo_parecer_sem_nova_rodada,
+        test_audit_fix_terceira_falha_operacional_fecha_em_failed,
+        test_audit_fix_sucesso_limpa_falhas_operacionais,
         test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes,
         test_audit_fix_para_depois_de_duas_correcoes,
         test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual,
