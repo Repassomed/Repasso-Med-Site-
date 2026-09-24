@@ -2009,15 +2009,20 @@ def test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte() 
     print("OK  test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte")
 
 
-def _cartao_needs_fix(motivo: str = "corrigir conceito X") -> str:
-    return "\n".join([
+def _cartao_needs_fix(motivo: str = "corrigir conceito X", *, head_sha: str | None = None) -> str:
+    linhas = [
         worker_bridge.COORDINATOR_COMMENT_MARKER,
         worker_bridge.AUDIT_CARD_HEADER,
         "",
         "**PR:** #901",
+    ]
+    if head_sha:
+        linhas.append(f"**HEAD auditado:** `{head_sha}`")
+    linhas += [
         worker_bridge.AUDIT_NEEDS_FIX_LINE,
         f"**Motivo:** {motivo}",
-    ])
+    ]
+    return "\n".join(linhas)
 
 
 def test_audit_fix_so_aceita_cartao_do_bot_confiavel() -> None:
@@ -2031,6 +2036,15 @@ def test_audit_fix_so_aceita_cartao_do_bot_confiavel() -> None:
     assert pedido is not None and pedido.pr_number == 901 and pedido.comment_id == 3
     assert pedido.fingerprint and "corrigir conceito X" in pedido.findings
     print("OK  test_audit_fix_so_aceita_cartao_do_bot_confiavel")
+
+
+def test_audit_fix_cartao_carrega_head_auditado() -> None:
+    body = _cartao_needs_fix(head_sha="abcdef1234567890")
+    comentarios = [{"id": 5, "user": {"login": "github-actions[bot]"}, "body": body}]
+    pedido = worker_bridge._audit_fix_request_from_comments(comentarios, pr_number=901)
+    assert pedido is not None
+    assert pedido.audited_head_sha == "abcdef1234567890"
+    print("OK  test_audit_fix_cartao_carrega_head_auditado")
 
 
 def test_audit_fix_merge_ready_nao_reentra_em_correcao() -> None:
@@ -2054,6 +2068,21 @@ def _store_needs_audit_para_fix() -> tuple[TaskRuntimeStore, task_runtime.TaskRu
     assert store.reservar_guard_dispatch("t-fix", pr_number=901)
     assert store.confirmar_guard_dispatch("t-fix", pr_number=901)
     return store, store.get("t-fix")
+
+
+def test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado() -> None:
+    store, anterior = _store_needs_audit_para_fix()
+    assert anterior is not None and anterior.checkpoint_commit == "abc123"
+    reserva = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_2,
+        audit_fingerprint="fp-head", audit_findings="corrigir no head auditado",
+        max_attempts=2, checkpoint_commit="abcdef1234567890", token="121212121212",
+    )
+    assert reserva.reservado and reserva.record is not None
+    assert reserva.record.checkpoint_commit == "abcdef1234567890"
+    assert reserva.record.pr_number == anterior.pr_number
+    assert reserva.record.branch == anterior.branch
+    print("OK  test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado")
 
 
 def test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes() -> None:
@@ -2111,6 +2140,38 @@ def test_audit_fix_para_depois_de_duas_correcoes() -> None:
     print("OK  test_audit_fix_para_depois_de_duas_correcoes")
 
 
+def test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+        api = _FakeGitHubApi()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        tarefa = _tarefa()
+
+        primeiro, _c, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("alvo.txt", "versao 1\n"), nome_workdir="work-stale-card-1",
+        )
+        assert primeiro.action == "DISPATCHED" and primeiro.pr is not None
+        reg1 = store.get("infra-bridge-teste")
+        assert reg1 is not None and reg1.checkpoint_commit
+        api.prs[0]["head_sha"] = reg1.checkpoint_commit
+        api.comentarios[901] = [{
+            "id": 78, "user": {"login": "github-actions[bot]"},
+            "body": _cartao_needs_fix("parecer velho", head_sha="deadbeef12345678"),
+        }]
+
+        proibido = _GeracaoProibida()
+        segundo, *_ = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=None, gerar_patch=proibido, nome_workdir="work-stale-card-2",
+        )
+        assert segundo.action == "NO_ASSIGNMENT", segundo
+        assert proibido.chamado is False
+        assert store.get("infra-bridge-teste").audit_fix_attempts == 0
+    print("OK  test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual")
+
+
 def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
@@ -2130,7 +2191,9 @@ def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
         api.prs[0]["head_sha"] = reg1.checkpoint_commit
         api.comentarios[901] = [{
             "id": 77, "user": {"login": "github-actions[bot]"},
-            "body": _cartao_needs_fix("trocar versao 1 por versao 2"),
+            "body": _cartao_needs_fix(
+                "trocar versao 1 por versao 2", head_sha=reg1.checkpoint_commit
+            ),
         }]
         exec1 = reg1.execution_task_id
         dispatches_antes = len(api.dispatches)
@@ -2534,9 +2597,12 @@ def main() -> int:
         test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte,
         # Feedback automático NEEDS-FIX -> correção -> nova auditoria.
         test_audit_fix_so_aceita_cartao_do_bot_confiavel,
+        test_audit_fix_cartao_carrega_head_auditado,
         test_audit_fix_merge_ready_nao_reentra_em_correcao,
+        test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado,
         test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes,
         test_audit_fix_para_depois_de_duas_correcoes,
+        test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual,
         test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
         test_error_registry_bridge_sucesso_normal_nao_gera_erro,

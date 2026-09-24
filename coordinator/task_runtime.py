@@ -475,7 +475,8 @@ class TaskRuntimeStore:
     def reservar_correcao_apos_auditoria(
         self, canonical_task_id: str, *, worker_id: str,
         audit_fingerprint: str, audit_findings: str,
-        max_attempts: int, token: str | None = None,
+        max_attempts: int, checkpoint_commit: str | None = None,
+        token: str | None = None,
     ) -> ReservaResult:
         """Reserva explicitamente uma correção pedida pela auditoria.
 
@@ -507,6 +508,9 @@ class TaskRuntimeStore:
                 return False, dados
             if not fresco.get("branch") or not fresco.get("checkpoint_commit") or not fresco.get("pr_number"):
                 return False, dados
+            checkpoint_alvo = (checkpoint_commit or fresco.get("checkpoint_commit") or "").strip()
+            if not checkpoint_alvo:
+                return False, dados
             if fresco.get("last_audit_fix_fingerprint") == fingerprint:
                 return False, dados
             tentativas = int(fresco.get("audit_fix_attempts") or 0)
@@ -528,11 +532,12 @@ class TaskRuntimeStore:
                 "audit_fix_attempts": tentativas + 1,
                 "last_audit_fix_fingerprint": fingerprint,
                 "last_audit_findings": findings,
+                "checkpoint_commit": checkpoint_alvo,
                 "guard_dispatched_pr": None,
                 "guard_dispatch_status": None,
                 "reason": (
                     f"correção pós-auditoria #{tentativas + 1} reservada para {worker!r}; "
-                    "execution id nova, mesmo branch/checkpoint/PR."
+                    "execution id nova, mesma branch/PR e checkpoint vinculado ao HEAD auditado."
                 ),
                 "reserved_at": agora,
                 "updated_at": agora,

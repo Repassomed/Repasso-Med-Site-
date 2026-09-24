@@ -200,6 +200,7 @@ AUDIT_CARD_HEADER = "## 🟣 CARTÃO DE MERGE — Coordinator V3"
 AUDIT_NEEDS_FIX_LINE = (
     "**Decisão da auditoria semântica (STANDARD, independente do worker):** NEEDS-FIX"
 )
+AUDIT_HEAD_RE = re.compile(r"\*\*HEAD auditado:\*\*\s*`?([0-9a-fA-F]{7,64})`?", re.I)
 
 # Mesma allowlist de formato de id do workflow do Runner (camada 4) e de
 # ``checkpoint_handoff._TASK_ID_RE``: um id fora deste formato nem chega a
@@ -861,6 +862,7 @@ class AuditFixRequest:
     fingerprint: str
     findings: str
     comment_id: int | None = None
+    audited_head_sha: str | None = None
 
 
 def _audit_fix_request_from_comments(comentarios: list[dict], *, pr_number: int) -> AuditFixRequest | None:
@@ -882,9 +884,12 @@ def _audit_fix_request_from_comments(comentarios: list[dict], *, pr_number: int)
         fingerprint = hashlib.sha256(body.encode("utf-8")).hexdigest()[:24]
         findings = body[:MAX_AUDIT_FINDINGS_CHARS]
         cid = comentario.get("id")
+        head_match = AUDIT_HEAD_RE.search(body)
+        audited_head_sha = head_match.group(1).lower() if head_match else None
         return AuditFixRequest(
             pr_number=pr_number, fingerprint=fingerprint, findings=findings,
             comment_id=(cid if isinstance(cid, int) else None),
+            audited_head_sha=audited_head_sha,
         )
     return None
 
@@ -926,13 +931,26 @@ def _candidato_a_correcao_de_auditoria(
                 continue
             if (head.get("ref") or "").strip() != registro.branch:
                 continue
-            if (head.get("sha") or "").strip() != registro.checkpoint_commit:
+            pr_head_sha = (head.get("sha") or "").strip().lower()
+            if not pr_head_sha:
                 continue
             if (base.get("ref") or "").strip() != base_branch:
                 continue
             pedido = _audit_fix_request_from_comments(
                 github_api.comentarios_da_pr(registro.pr_number), pr_number=registro.pr_number
             )
+            if pedido is None:
+                continue
+            if pedido.audited_head_sha is not None:
+                if pedido.audited_head_sha != pr_head_sha:
+                    # Cartão válido, porém de um commit anterior: nunca aplicar
+                    # seus achados sobre um HEAD novo.
+                    continue
+            elif pr_head_sha != (registro.checkpoint_commit or "").strip().lower():
+                # Compatibilidade fail-closed com cartões antigos que ainda
+                # não trazem HEAD auditado: só são consumidos se o runtime já
+                # aponta exatamente para o HEAD atual.
+                continue
         except bridge_pr.GitHubBridgeApiError:
             continue
         if pedido is None or pedido.fingerprint == registro.last_audit_fix_fingerprint:
@@ -1358,6 +1376,7 @@ def executar_correcao_de_auditoria(
         canonical_task_id, worker_id=worker_id,
         audit_fingerprint=pedido.fingerprint, audit_findings=pedido.findings,
         max_attempts=MAX_AUDIT_FIX_ATTEMPTS,
+        checkpoint_commit=pedido.audited_head_sha or registro_anterior.checkpoint_commit,
     )
     if not reserva.reservado or reserva.record is None:
         liberacao = liberar_worker_apos_resultado(
