@@ -761,6 +761,9 @@ class DispatchOutcome:
     result: RunnerResult | None
     claimed: bool
     external_calls_made: bool
+    # Relatório 8-A.11 produzido/validado pela geração. Nunca é conteúdo
+    # aplicado; acompanha somente a entrega para a PR/auditores.
+    question_report: str | None = None
     validation_commands_run: tuple[dict, ...] = ()
     heartbeats: tuple[dict, ...] = ()
     notes: tuple[str, ...] = ()
@@ -770,6 +773,7 @@ class DispatchOutcome:
             "result": self.result.to_dict() if self.result else None,
             "claimed": self.claimed,
             "external_calls_made": self.external_calls_made,
+            "question_report": self.question_report,
             "validation_commands_run": list(self.validation_commands_run),
             "heartbeats": list(self.heartbeats),
             "notes": list(self.notes),
@@ -913,6 +917,8 @@ def executar_tarefa(
     # checkpoint inválido agora falha ANTES da chamada Anthropic.
     commit_base: str | None = None
 
+    question_report: str | None = None
+
     # Correção B3: só a partir daqui — DEPOIS que ``claimed is True`` —
     # ``gerar_patch()`` pode ser chamada. Uma repetição do mesmo task_id
     # já teria devolvido BLOCKED (bloco acima) SEM nunca chegar até aqui,
@@ -937,6 +943,7 @@ def executar_tarefa(
         geracao = gerar_patch()
         status_geracao = getattr(geracao, "status", None)
         patch_gerado = getattr(geracao, "patch", None)
+        question_report = getattr(geracao, "question_report", None)
         if status_geracao != "ok" or patch_gerado is None:
             motivo = getattr(geracao, "reason", None) or "geração do patch falhou sem motivo informado."
             resultado = RunnerResult(
@@ -987,6 +994,26 @@ def executar_tarefa(
                                     heartbeats=tuple(heartbeats), notes=tuple(notes))
 
         patch = patch_gerado
+
+    if task.question_report_required and not (question_report or "").strip():
+        resultado = RunnerResult(
+            task_id=task.task_id, status="FAILED",
+            reason=(
+                "tarefa exige relatório da Lei das Questões 8-A.11, mas a execução não "
+                "entregou relatório validado — fail-closed antes de aplicar qualquer patch."
+            ),
+        )
+        claim_store.registrar_resultado(task.task_id, resultado)
+        if worker_id:
+            _emitir_heartbeat(
+                worker_id, worker_registry,
+                RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"),
+                heartbeats, notes,
+            )
+        return DispatchOutcome(
+            result=resultado, claimed=True, external_calls_made=True,
+            heartbeats=tuple(heartbeats), notes=tuple(notes),
+        )
 
     ok_patch, fora = validar_patch_contra_allowed_files(patch, task)
     if not ok_patch:
@@ -1098,8 +1125,11 @@ def executar_tarefa(
     claim_store.registrar_resultado(task.task_id, resultado)
     if worker_id:
         _emitir_heartbeat(worker_id, worker_registry, RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"), heartbeats, notes)
-    return DispatchOutcome(result=resultado, claimed=True, external_calls_made=True,
-                            validation_commands_run=tuple(comandos), heartbeats=tuple(heartbeats), notes=tuple(notes))
+    return DispatchOutcome(
+        result=resultado, claimed=True, external_calls_made=True,
+        question_report=question_report,
+        validation_commands_run=tuple(comandos), heartbeats=tuple(heartbeats), notes=tuple(notes),
+    )
 
 
 # ---------------------------------------------------------------------
