@@ -170,10 +170,10 @@
       "current_task": "cleanup-como-estudar-anatomia-patologica-ii",
       "display_name": "Claude Worker 2",
       "last_checkpoint": null,
-      "last_heartbeat": null,
+      "last_heartbeat": "2026-09-24T06:03:46.335093+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "AVAILABLE",
+      "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-2"
     },
