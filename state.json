@@ -149,6 +149,21 @@
       "status": "FAILED",
       "updated_at": "2026-09-24T00:02:52.218258+00:00",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "branch": "runner/infra-post-merge-reconciliation-issue162",
+      "canonical_task_id": "infra-post-merge-reconciliation-issue162",
+      "checkpoint_commit": null,
+      "execution_task_id": "infra-post-merge-reconciliation-issue162--bridge-4b0554eefe82",
+      "guard_dispatch_attempts": 0,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "pr_number": null,
+      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'infra-post-merge-reconciliation-issue162' autorizada declarativamente: risco ALTO, N\u00edvel D, jose_authorized=True.)",
+      "reserved_at": "2026-09-24T00:07:41.978241+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-24T00:07:41.978256+00:00",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
