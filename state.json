@@ -20,7 +20,8 @@
     "runner-task:infra-post-merge-reconciliation-issue162--bridge-4b0554eefe82",
     "runner-task:infra-guard-audit-pr-context-issue165-r2--bridge-252fd0085f8a",
     "runner-task:infra-inbox-task-intake-issue160--bridge-79509fa549c6",
-    "runner-task:semiologia-ii-questoes-exames-p0--bridge-503ff9099a9a"
+    "runner-task:semiologia-ii-questoes-exames-p0--bridge-503ff9099a9a",
+    "runner-task:cleanup-como-estudar-anatomia-patologica-ii--bridge-d062050e0b98"
   ],
   "results": [
     {
