@@ -717,7 +717,7 @@ class TaskRuntimeStore:
     def registrar_falha_operacional_correcao(
         self, canonical_task_id: str, *, worker_id: str, execution_task_id: str,
         reason: str, max_execution_failures: int,
-    ) -> ResultadoAtualizacao:
+    ) -> ReservaResult:
         """Falha de execução do audit-fix SEM novo HEAD.
 
         Só este caminho pode voltar IN-PROGRESS -> NEEDS-AUDIT para repetir
@@ -730,7 +730,7 @@ class TaskRuntimeStore:
         execution_id = (execution_task_id or "").strip()
         motivo = (reason or "").strip() or "falha operacional sem novo HEAD."
         if not alvo or not worker or not execution_id:
-            return ResultadoAtualizacao(False, "falha operacional exige tarefa, worker e execution_task_id.")
+            return ReservaResult(False, "falha operacional exige tarefa, worker e execution_task_id.")
         if not isinstance(max_execution_failures, int) or max_execution_failures < 1:
             raise ValueError("max_execution_failures precisa ser inteiro >= 1.")
 
@@ -783,8 +783,8 @@ class TaskRuntimeStore:
         )
         atual = self.get(alvo)
         if not aceito:
-            return ResultadoAtualizacao(False, "estado mudou; falha operacional não sobrescreveu registro mais novo.", atual)
-        return ResultadoAtualizacao(True, "falha operacional registrada com retry limitado.", atual)
+            return ReservaResult(False, "estado mudou; falha operacional não sobrescreveu registro mais novo.", atual)
+        return ReservaResult(True, "falha operacional registrada com retry limitado.", atual)
 
 
     def reservar_guard_dispatch(self, canonical_task_id: str, *, pr_number: int) -> bool:
