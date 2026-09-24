@@ -343,6 +343,16 @@
       "recorded_at": "2026-09-24T05:25:46.758647+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "cleanup-como-estudar-histologia-i-practica--bridge-1b0d7998089e"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
+      "recorded_at": "2026-09-24T05:27:48.445304+00:00",
+      "status": "FAILED",
+      "task_id": "fisiopatologia-ii-issue101-r3-sourcepack--bridge-2a92ba4566d0"
     }
   ]
 }
