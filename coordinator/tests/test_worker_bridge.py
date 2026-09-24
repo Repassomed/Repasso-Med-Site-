@@ -2084,6 +2084,32 @@ def test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes() 
     print("OK  test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes")
 
 
+def test_runtime_antigo_failed_audit_fix_conta_uma_falha_ao_migrar() -> None:
+    antigo = {
+        "canonical_task_id": "legacy-fix",
+        "status": task_runtime.RUNTIME_FAILED,
+        "worker_id": bridge_workers.BRIDGE_WORKER_1,
+        "branch": "runner/legacy-fix",
+        "checkpoint_commit": "abc123",
+        "pr_number": 901,
+        "execution_task_id": "legacy-fix--bridge-111111111111",
+        "audit_fix_attempts": 1,
+        "last_audit_fix_fingerprint": "fp-legacy",
+        "last_audit_findings": "corrigir X",
+        "reason": "patch vazio",
+    }
+    record = task_runtime.TaskRuntimeRecord.from_dict(antigo)
+    assert record.audit_fix_execution_failures == 1, (
+        "falha de correção anterior ao campo novo não pode ganhar tentativas extras por migração"
+    )
+    print("OK  test_runtime_antigo_failed_audit_fix_conta_uma_falha_ao_migrar")
+
+
+def test_bridge_semantic_fix_cap_e_quatro() -> None:
+    assert worker_bridge.MAX_AUDIT_FIX_ATTEMPTS == 4
+    print("OK  test_bridge_semantic_fix_cap_e_quatro")
+
+
 def test_audit_fix_failed_sem_head_reentra_mesmo_parecer_sem_gastar_ciclo() -> None:
     store, anterior = _store_needs_audit_para_fix()
     assert anterior is not None
@@ -2672,6 +2698,8 @@ def main() -> int:
         test_audit_fix_so_aceita_cartao_do_bot_confiavel,
         test_audit_fix_merge_ready_nao_reentra_em_correcao,
         test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes,
+        test_runtime_antigo_failed_audit_fix_conta_uma_falha_ao_migrar,
+        test_bridge_semantic_fix_cap_e_quatro,
         test_audit_fix_failed_sem_head_reentra_mesmo_parecer_sem_gastar_ciclo,
         test_audit_fix_failed_sem_head_respeita_teto_operacional,
         test_audit_fix_para_depois_de_duas_correcoes,
