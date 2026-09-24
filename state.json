@@ -499,6 +499,31 @@
       "summary": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
       "task_id": "cleanup-como-estudar-anestesiologia",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "runner",
+      "commit_sha": null,
+      "component": "runner",
+      "error_id": "ERR-6484ADBC0E",
+      "error_type": "runner-failed",
+      "fingerprint": "6484adbc0eea84bb2983",
+      "first_seen": "2026-09-24T05:02:10.921753+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "f08328ece8984d5fa8caebf019ebee3d",
+      "issue_sync_updated_at": "2026-09-24T05:02:10.921753+00:00",
+      "last_evidence_hash": "9bea937c2e75c69e14e5",
+      "last_seen": "2026-09-24T05:02:10.921753+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35958031561",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
+      "task_id": "semiologia-ii-questoes-exames-p0-r2",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
