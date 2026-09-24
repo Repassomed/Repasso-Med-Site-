@@ -367,7 +367,15 @@ class TaskRuntimeRecord:
             ),
             guard_dispatch_attempts=int(d.get("guard_dispatch_attempts") or 0),
             audit_fix_attempts=int(d.get("audit_fix_attempts") or 0),
-            audit_fix_execution_failures=int(d.get("audit_fix_execution_failures") or 0),
+            audit_fix_execution_failures=int(
+                d.get("audit_fix_execution_failures")
+                if d.get("audit_fix_execution_failures") is not None
+                else (
+                    1
+                    if d.get("status") == RUNTIME_FAILED and d.get("last_audit_fix_fingerprint")
+                    else 0
+                )
+            ),
             last_audit_fix_fingerprint=d.get("last_audit_fix_fingerprint"),
             last_audit_findings=d.get("last_audit_findings", ""),
             execution_history=tuple(d.get("execution_history") or ()),
