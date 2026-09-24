@@ -147,13 +147,13 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "semiologia-ii-b08-hta-r3",
+      "current_task": null,
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T06:06:30.787103+00:00",
+      "last_heartbeat": "2026-09-24T06:07:00.034866+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "BUSY",
+      "status": "OFFLINE",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
