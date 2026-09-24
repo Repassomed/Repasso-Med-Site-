@@ -839,6 +839,7 @@ def test_pipeline_zero_openai_calls_when_disabled() -> None:
         "OpenAI desabilitado não pode deixar conteúdo didático MERGE-READY"
     )
     assert "OpenAI Auditor obrigatório" in (r.merge_card or "")
+    assert "❌ NÃO OBTIDO — MERGE-READY bloqueado" in (r.merge_card or "")
     print("OK  test_pipeline_zero_openai_calls_when_disabled")
 
 
@@ -888,6 +889,8 @@ def test_pipeline_terra_used_for_normal_medical_audit() -> None:
     assert t_openai.requests[0].model_id == "gpt-5.6-terra"
     assert t_openai.requests[0].tier == "TERRA"
     assert r.audit_decision == "MERGE-READY"
+    assert "AVAL FINAL INDEPENDENTE" in (r.merge_card or "")
+    assert "✅ MERGE-READY" in (r.merge_card or "")
     print("OK  test_pipeline_terra_used_for_normal_medical_audit")
 
 
