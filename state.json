@@ -899,6 +899,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:229.",
       "task_id": "pr:229",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "5d7d5721d73d1d5a5bd190ce1e4c34e719357607",
+      "component": "guard",
+      "error_id": "ERR-91F800F5CF",
+      "error_type": "hard-fail",
+      "fingerprint": "91f800f5cf82fe44fbcc",
+      "first_seen": "2026-09-24T15:35:51.372196+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "6ca60552411b460c934302dabe3642ba",
+      "issue_sync_updated_at": "2026-09-24T15:35:51.372196+00:00",
+      "last_evidence_hash": "22628557afbfb7f605c6",
+      "last_seen": "2026-09-24T15:35:51.372196+00:00",
+      "occurrence_count": 1,
+      "pr_number": 235,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36021251216",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:235.",
+      "task_id": "<!-- id do registro em coordination/tasks.json, ou \"-\" se n\u00e3o houver -->",
+      "worker_id": null
     }
   ]
 }
