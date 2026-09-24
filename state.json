@@ -1224,6 +1224,31 @@
       "summary": "Auditoria independente marcou pr:266 como NEEDS-FIX.",
       "task_id": "pr:266",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "490049f1563c2fcd431f1760bab9834648d68310",
+      "component": "guard",
+      "error_id": "ERR-8CF899A730",
+      "error_type": "hard-fail",
+      "fingerprint": "8cf899a7308e23b31cbc",
+      "first_seen": "2026-09-24T23:24:21.729867+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "c3654b255b504d7f8ea8b2f8c0e73978",
+      "issue_sync_updated_at": "2026-09-24T23:24:21.729867+00:00",
+      "last_evidence_hash": "d5f9d7b4b1f4a2d7f031",
+      "last_seen": "2026-09-24T23:24:21.729867+00:00",
+      "occurrence_count": 1,
+      "pr_number": 270,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36072489223",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:270.",
+      "task_id": "#268",
+      "worker_id": null
     }
   ]
 }
