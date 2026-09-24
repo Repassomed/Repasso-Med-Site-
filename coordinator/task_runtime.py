@@ -497,6 +497,42 @@ class TaskRuntimeStore:
             evaluate, message=f"task-runtime: PR #{pr_number} para {alvo}"
         )
 
+    def marcar_done_apos_merge(self, canonical_task_id: str, *, pr_number: int, branch: str) -> bool:
+        """Reconcilia SOMENTE uma tarefa NEEDS-AUDIT cuja PR registrada foi
+        confirmada externamente como mergeada. O chamador valida os dados da
+        PR pela API; aqui o CAS impede evento atrasado, PR trocada ou branch
+        divergente de promover estado indevidamente."""
+        alvo = (canonical_task_id or "").strip()
+        ramo = (branch or "").strip()
+        self._validar_pr(pr_number)
+        if not alvo or not ramo:
+            return False
+
+        def evaluate(dados: dict) -> tuple[bool, dict]:
+            base = {x["canonical_task_id"]: x for x in (dados.get("tasks") or []) if x.get("canonical_task_id")}
+            fresco = base.get(alvo)
+            if fresco is None:
+                return False, dados
+            if fresco.get("status") != RUNTIME_NEEDS_AUDIT:
+                return False, dados
+            if fresco.get("pr_number") != pr_number:
+                return False, dados
+            if (fresco.get("branch") or "").strip() != ramo:
+                return False, dados
+            if fresco.get("guard_dispatch_status") != GUARD_DISPATCH_DISPATCHED:
+                return False, dados
+            base[alvo] = {
+                **fresco,
+                "status": RUNTIME_DONE,
+                "reason": f"PR #{pr_number} mergeada por José; reconciliação automática confirmada.",
+                "updated_at": _now_iso(),
+            }
+            return True, {**dados, "tasks": list(base.values())}
+
+        return self.store.conditional_update(
+            evaluate, message=f"task-runtime: merge PR #{pr_number} -> DONE ({alvo})"
+        )
+
     def _validar_pr(self, pr_number: int) -> None:
         if not isinstance(pr_number, int) or pr_number <= 0:
             raise ValueError(f"pr_number precisa ser inteiro positivo — recebido {pr_number!r}.")
