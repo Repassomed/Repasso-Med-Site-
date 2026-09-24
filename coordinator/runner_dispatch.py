@@ -761,12 +761,12 @@ class DispatchOutcome:
     result: RunnerResult | None
     claimed: bool
     external_calls_made: bool
-    # Relatório 8-A.11 produzido/validado pela geração. Nunca é conteúdo
-    # aplicado; acompanha somente a entrega para a PR/auditores.
-    question_report: str | None = None
     validation_commands_run: tuple[dict, ...] = ()
     heartbeats: tuple[dict, ...] = ()
     notes: tuple[str, ...] = ()
+    # Relatório 8-A.11 produzido/validado pela geração. Campo novo no FIM
+    # para preservar a ordem posicional histórica do contrato.
+    question_report: str | None = None
 
     def to_dict(self) -> dict:
         return {
