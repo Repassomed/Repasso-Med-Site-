@@ -164,6 +164,21 @@
       "status": "FAILED",
       "updated_at": "2026-09-24T00:08:15.731532+00:00",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "branch": "runner/infra-guard-audit-pr-context-issue165-r2",
+      "canonical_task_id": "infra-guard-audit-pr-context-issue165-r2",
+      "checkpoint_commit": null,
+      "execution_task_id": "infra-guard-audit-pr-context-issue165-r2--bridge-252fd0085f8a",
+      "guard_dispatch_attempts": 0,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "pr_number": null,
+      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'infra-guard-audit-pr-context-issue165-r2' autorizada declarativamente: risco ALTO, N\u00edvel D, jose_authorized=True.)",
+      "reserved_at": "2026-09-24T00:12:37.197447+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-24T00:12:37.197468+00:00",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
