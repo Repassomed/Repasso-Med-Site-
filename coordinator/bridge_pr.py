@@ -84,6 +84,8 @@ class GitHubBridgeApi(Protocol):
 
     def criar_pr(self, *, titulo: str, head: str, base: str, corpo: str) -> dict: ...
 
+    def atualizar_pr_corpo(self, pr_number: int, *, corpo: str) -> dict: ...
+
     def despachar_workflow(self, *, arquivo: str, ref: str, inputs: dict) -> None: ...
 
 
@@ -185,6 +187,18 @@ class GitHubRestApi:
             raise GitHubBridgeApiError("a criação da PR não devolveu um número de PR utilizável.")
         return dados
 
+    def atualizar_pr_corpo(self, pr_number: int, *, corpo: str) -> dict:
+        if not isinstance(pr_number, int) or pr_number <= 0:
+            raise ValueError("pr_number precisa ser inteiro positivo.")
+        dados = self._requisicao(
+            "PATCH", f"/repos/{self.owner}/{self.repo}/pulls/{pr_number}", {"body": corpo},
+        )
+        if not isinstance(dados, dict) or int(dados.get("number") or 0) != pr_number:
+            raise GitHubBridgeApiError(
+                f"a atualização do corpo da PR #{pr_number} não devolveu a PR esperada."
+            )
+        return dados
+
     def despachar_workflow(self, *, arquivo: str, ref: str, inputs: dict) -> None:
         if arquivo != GUARD_WORKFLOW_FILE:
             raise GitHubBridgeApiError(
@@ -206,11 +220,54 @@ def titulo_da_pr(*, canonical_task_id: str, titulo_tarefa: str | None) -> str:
     return f"[worker-bridge] {base}"
 
 
+def _render_question_report(report: dict) -> list[str]:
+    """Renderização determinística do relatório Lei 8-A.
+
+    O relatório já foi validado pelo Runner; aqui ele é somente apresentado
+    para os auditores. Nenhuma célula ganha significado operacional.
+    """
+    campos = (
+        ("Detectadas", "detectadas"),
+        ("Integrais", "integrais"),
+        ("Parciais", "parciais"),
+        ("Reconstruídas", "reconstruidas"),
+        ("Novas baseadas em exame", "novas_baseadas_em_exame"),
+        ("Duplicadas", "duplicadas"),
+        ("Canônicas", "canonicas"),
+        ("Não aproveitadas", "nao_aproveitadas"),
+    )
+    linhas = [
+        "",
+        "<!-- repasso-question-report -->",
+        "## Relatório Lei 8-A — Questões e proveniência",
+        "",
+        " · ".join(f"**{rotulo}:** {int(report.get(chave, 0))}" for rotulo, chave in campos),
+        "",
+        "| Origem | Tipo | Destino | Decisão | Motivo |",
+        "|---|---|---|---|---|",
+    ]
+    for item in report.get("itens", []):
+        valores = []
+        for chave in ("origem", "tipo", "destino", "decisao", "motivo"):
+            valor = str(item.get(chave, "")).replace("|", "\\|").replace("\n", " ").strip()
+            valores.append(valor)
+        linhas.append("| " + " | ".join(valores) + " |")
+    if not report.get("itens"):
+        linhas.append("| — | — | — | — | Nenhuma linha declarada |")
+    linhas += [
+        "",
+        "Este relatório é evidência para auditoria. Não amplia escopo, não substitui o source pack "
+        "e não autoriza merge/publicação.",
+    ]
+    return linhas
+
+
 def corpo_da_pr(
     *, task: RunnerTask, canonical_task_id: str, worker_id: str, worker_display: str,
     checkpoint_commit: str | None, titulo_tarefa: str | None, objetivo: str | None,
     area: str | None = None, dependencias: tuple[str, ...] = (),
     source_pack_path: str | None = None, source_pack_sha256: str | None = None,
+    question_report: dict | None = None,
 ) -> str:
     """O bloco ``## ESCOPO`` que o Repasso Guard já sabe ler
     (``tools/qa/guard/__main__.py::parse_scope``) — os rótulos são
@@ -239,6 +296,8 @@ def corpo_da_pr(
             f"- **Source pack:** `{source_pack_path}`",
             f"- **Source pack SHA-256:** `{source_pack_sha256}`",
         ]
+    if question_report is not None:
+        linhas += _render_question_report(question_report)
     linhas += [
         "",
         "## Execução",
@@ -290,6 +349,7 @@ def garantir_pr(
     base_branch: str, titulo_tarefa: str | None = None, objetivo: str | None = None,
     area: str | None = None, dependencias: tuple[str, ...] = (),
     source_pack_path: str | None = None, source_pack_sha256: str | None = None,
+    question_report: dict | None = None,
 ) -> PrOutcome:
     """§9, idempotente: se já existe PR ABERTA cuja ``head`` é
     ``task.branch``, ela é reutilizada — nunca uma duplicata. A busca é
@@ -310,10 +370,30 @@ def garantir_pr(
 
     if existentes:
         pr = existentes[0]
+        numero = int(pr.get("number") or 0)
+        if question_report is not None and numero > 0:
+            corpo_atualizado = corpo_da_pr(
+                task=task, canonical_task_id=canonical_task_id, worker_id=worker_id,
+                worker_display=worker_display, checkpoint_commit=checkpoint_commit,
+                titulo_tarefa=titulo_tarefa, objetivo=objetivo,
+                area=area, dependencias=dependencias,
+                source_pack_path=source_pack_path, source_pack_sha256=source_pack_sha256,
+                question_report=question_report,
+            )
+            try:
+                api.atualizar_pr_corpo(numero, corpo=corpo_atualizado)
+            except (GitHubBridgeApiError, ValueError) as exc:
+                return PrOutcome(
+                    "FAILED",
+                    f"PR #{numero} existe, mas o relatório Lei 8-A não pôde ser atualizado: "
+                    f"{redact(str(exc))}",
+                    pr_number=numero, pr_url=pr.get("html_url"),
+                )
         return PrOutcome(
             "REUSED",
             f"PR #{pr.get('number')} já está aberta para a branch {task.branch!r} — reutilizada, "
-            "nunca duplicada.",
+            "nunca duplicada."
+            + (" Corpo/relatório Lei 8-A atualizado para o novo checkpoint." if question_report is not None else ""),
             pr_number=pr.get("number"),
             pr_url=pr.get("html_url"),
         )
@@ -329,6 +409,7 @@ def garantir_pr(
                 titulo_tarefa=titulo_tarefa, objetivo=objetivo,
                 area=area, dependencias=dependencias,
                 source_pack_path=source_pack_path, source_pack_sha256=source_pack_sha256,
+                question_report=question_report,
             ),
         )
     except (GitHubBridgeApiError, ValueError) as exc:
