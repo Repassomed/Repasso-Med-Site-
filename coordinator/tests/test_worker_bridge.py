@@ -1307,7 +1307,12 @@ def test_cliente_de_api_nao_tem_nenhuma_operacao_de_merge() -> None:
         if not n.startswith("_")
     }
     assert publicos == {
-        "prs_abertas_por_head", "pr_por_numero", "comentarios_da_pr", "criar_pr", "despachar_workflow"
+        "prs_abertas_por_head",
+        "pr_por_numero",
+        "comentarios_da_pr",
+        "criar_pr",
+        "atualizar_pr_corpo",
+        "despachar_workflow",
     }, publicos
     fonte_path = os.path.join(_pathsetup._COORDINATOR_ROOT, "bridge_pr.py")
     with open(fonte_path, encoding="utf-8") as fh:
@@ -1511,8 +1516,13 @@ def test_nenhum_laco_de_fila_no_bridge() -> None:
     assert ciclo.count("scheduler.escolher_proxima_atribuicao(") == 1
     assert ciclo.count("executar_correcao_de_auditoria(") == 1
 
-    # Caminho NEEDS-FIX: escolhe um worker e executa exatamente uma correção.
-    assert fix.count("scheduler.escolher_proxima_atribuicao(") == 1
+    # Caminho NEEDS-FIX: pode fazer UMA sondagem sem efeito para evitar o
+    # worker que acabou de falhar e depois UMA escolha efetiva. Nenhuma dessas
+    # chamadas executa trabalho; a prova operacional é que executar_tarefa()
+    # aparece exatamente uma vez e não existe laço.
+    assert fix.count("scheduler.escolher_proxima_atribuicao(") <= 2
+    assert "alternativa = scheduler.escolher_proxima_atribuicao(" in fix
+    assert "decisao = scheduler.escolher_proxima_atribuicao(" in fix
     assert fix.count("executar_tarefa(") == 1
     print("OK  test_nenhum_laco_de_fila_no_bridge")
 
