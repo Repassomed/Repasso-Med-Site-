@@ -32,6 +32,8 @@ from .anthropic_client import Request, Transport, TransportResponse
 
 ANTHROPIC_API_KEY_ENV = "ANTHROPIC_API_KEY"
 DEFAULT_TIMEOUT_SECONDS = 180.0
+# Acima disto a chamada usa streaming (Issue #235 — patch do Runner de até 32k tokens).
+STREAMING_THRESHOLD_TOKENS = 8_192
 
 
 class AnthropicTransport:
@@ -75,12 +77,21 @@ class AnthropicTransport:
         cliente = anthropic.Anthropic(
             api_key=chave, timeout=self._timeout, max_retries=self._max_retries
         )
-        resposta = cliente.messages.create(
+        parametros = dict(
             model=request.model_id,
             max_tokens=request.max_output_tokens,
             system=request.system,
             messages=[{"role": "user", "content": request.prompt}],
         )
+        if request.max_output_tokens > STREAMING_THRESHOLD_TOKENS and hasattr(cliente.messages, "stream"):
+            # Issue #235: resposta longa (patch do Runner) sem streaming
+            # estoura o timeout HTTP antes de o modelo terminar. Com
+            # streaming o timeout vale por leitura, não pela resposta toda.
+            # Continua UMA chamada só, sem retry.
+            with cliente.messages.stream(**parametros) as fluxo:
+                resposta = fluxo.get_final_message()
+        else:
+            resposta = cliente.messages.create(**parametros)
         texto = next((b.text for b in resposta.content if b.type == "text"), "")
         return TransportResponse(
             text=texto,

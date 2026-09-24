@@ -206,9 +206,24 @@ MAX_FILE_CHARS_SENT = 20_000
 # corta um trecho pelo meio, nunca envia o arquivo por completo).
 # ---------------------------------------------------------------------
 
-MAX_ANCHOR_CONTEXT_CHARS_PER_FILE = 12_000
-MAX_ANCHOR_CONTEXT_CHARS_TOTAL = 24_000
-MAX_ANCHOR_WINDOWS_PER_FILE = 8
+# Issue #235 (diagnóstico 24/09/2026): com 12k/24k caracteres o modelo via
+# ~1% de uma matéria de 0,5–2,8 MB, quase nunca o bloco inteiro que a
+# tarefa pedia (ex.: B08 de Semiología II, em 437k, ficou FORA dos trechos;
+# "B08" tem 3 letras e era descartado como palavra-chave). Resultado real:
+# 20+ execuções terminaram em patch vazio ou JSON truncado. O orçamento
+# continua finito e o arquivo grande continua NUNCA indo inteiro — mas
+# agora cabe o BLOCO (<section>) inteiro que a instrução referencia.
+MAX_ANCHOR_CONTEXT_CHARS_PER_FILE = 160_000
+MAX_ANCHOR_CONTEXT_CHARS_TOTAL = 200_000
+MAX_ANCHOR_WINDOWS_PER_FILE = 24
+
+# Bloco inteiro: uma <section> referenciada pela instrução (B08, bloque 8,
+# id literal, ou a seção que contém uma frase entre aspas da instrução)
+# entra INTEIRA, desde que caiba nestes tetos — e nunca quando a própria
+# seção é quase o arquivo todo (aí seria "mandar o arquivo inteiro").
+MAX_SECTION_CHARS = 110_000
+MAX_SECTION_FRACTION_OF_FILE = 0.6
+MAX_SECTIONS_BY_PHRASE = 3
 
 # O Coordinator/auditor continua com o teto global conservador de 2k.
 # Geração de PATCH precisa de mais espaço: uma resposta JSON com HTML/
@@ -216,7 +231,10 @@ MAX_ANCHOR_WINDOWS_PER_FILE = 8
 # EXATAMENTE em 2.000 tokens e foi truncado no meio do JSON (Issue #154).
 # O teto próprio do Runner continua finito, entra na reserva conservadora
 # de orçamento ANTES da chamada e não cria retry automático.
-RUNNER_PATCH_MAX_OUTPUT_TOKENS = 8_000
+# Issue #235: 8k tokens truncou 6 execuções reais (JSON cortado). Um bloco
+# inteiro reescrito via AnchoredEdit cabe com folga em 32k. A chamada usa
+# streaming (anthropic_transport) para não estourar o timeout HTTP.
+RUNNER_PATCH_MAX_OUTPUT_TOKENS = 32_000
 ANCHOR_WINDOW_CHARS_BEFORE = 700
 ANCHOR_WINDOW_CHARS_AFTER = 900
 
@@ -542,6 +560,110 @@ class TrechoAncorado:
     texto: str
 
 
+_SECTION_OPEN_RE = re.compile(r"<section\b[^>]*>", re.IGNORECASE)
+_SECTION_TAG_RE = re.compile(r"<(/?)section\b[^>]*>", re.IGNORECASE)
+_SECTION_ID_RE = re.compile(r"\bid\s*=\s*[\"']([^\"']{1,120})[\"']", re.IGNORECASE)
+_SECTION_NUM_RE = re.compile(r"b(?:loque|loco)?[-_]?0*(\d{1,2})$", re.IGNORECASE)
+# "B08", "b8", "B05 a B10", "B05–B10", "bloque 8", "bloco 08", "bloques 5 a 7"
+_REF_RANGE_RE = re.compile(
+    r"\b(?:b|bloque?s?|blocos?)\s*0*(\d{1,2})\s*(?:a|-|–|—|ate|hasta|al)\s*(?:b|bloque?|bloco)?\s*0*(\d{1,2})\b"
+)
+_REF_SINGLE_RE = re.compile(r"\b(?:b|bloque?s?|blocos?)\s*0*(\d{1,2})\b")
+
+
+def _secoes_do_html(conteudo: str) -> list[tuple[int, int, str | None]]:
+    """``(inicio, fim, id)`` de cada ``<section>`` de primeiro nível do
+    arquivo, com o fechamento casado por contagem de aninhamento. Seção
+    sem fechamento vai até o início da próxima (HTML de matéria é
+    fragmento, nunca documento completo)."""
+    secoes: list[tuple[int, int, str | None]] = []
+    profundidade = 0
+    inicio_atual = -1
+    id_atual: str | None = None
+    for m in _SECTION_TAG_RE.finditer(conteudo):
+        fechando = m.group(1) == "/"
+        if not fechando:
+            if profundidade == 0:
+                if inicio_atual >= 0:  # seção anterior nunca fechou
+                    secoes.append((inicio_atual, m.start(), id_atual))
+                inicio_atual = m.start()
+                mid = _SECTION_ID_RE.search(m.group(0))
+                id_atual = mid.group(1) if mid else None
+                profundidade = 1
+            else:
+                profundidade += 1
+        elif profundidade > 0:
+            profundidade -= 1
+            if profundidade == 0 and inicio_atual >= 0:
+                secoes.append((inicio_atual, m.end(), id_atual))
+                inicio_atual = -1
+                id_atual = None
+    if inicio_atual >= 0:
+        secoes.append((inicio_atual, len(conteudo), id_atual))
+    return secoes
+
+
+def _numeros_de_bloco_referenciados(instructions: str) -> set[int]:
+    """Blocos que a INSTRUÇÃO cita explicitamente (nunca texto do modelo)."""
+    texto = _normalizar(instructions)
+    numeros: set[int] = set()
+    for m in _REF_RANGE_RE.finditer(texto):
+        a, b = int(m.group(1)), int(m.group(2))
+        if 0 < a <= b <= 40 and b - a <= 8:
+            numeros.update(range(a, b + 1))
+    for m in _REF_SINGLE_RE.finditer(texto):
+        n = int(m.group(1))
+        if 0 < n <= 40:
+            numeros.add(n)
+    return numeros
+
+
+def _secoes_referenciadas(conteudo: str, instructions: str) -> list[tuple[int, int]]:
+    """Seções inteiras que a instrução aponta: por número de bloco (id que
+    termina em ``b08``/``b8``), por id literal citado na instrução, ou por
+    conter uma frase entre aspas da instrução. Cada seção respeita
+    ``MAX_SECTION_CHARS`` e nunca pode ser quase o arquivo inteiro."""
+    secoes = _secoes_do_html(conteudo)
+    if not secoes:
+        return []
+    teto = min(MAX_SECTION_CHARS, int(len(conteudo) * MAX_SECTION_FRACTION_OF_FILE))
+    instr_norm = _normalizar(instructions)
+    numeros = _numeros_de_bloco_referenciados(instructions)
+    escolhidas: list[tuple[int, int]] = []
+
+    def _add(inicio: int, fim: int) -> None:
+        if fim - inicio <= teto and (inicio, fim) not in escolhidas:
+            escolhidas.append((inicio, fim))
+
+    for inicio, fim, sid in secoes:
+        if not sid:
+            continue
+        sid_norm = sid.strip().lower()
+        if len(sid_norm) >= 4 and sid_norm in instr_norm:
+            _add(inicio, fim)
+            continue
+        m = _SECTION_NUM_RE.search(sid_norm)
+        if m and int(m.group(1)) in numeros:
+            _add(inicio, fim)
+
+    conteudo_norm = _normalizar(conteudo)
+    por_frase = 0
+    for frase in _frases_ancora(instructions):
+        pos = conteudo_norm.find(frase)
+        if pos < 0:
+            continue
+        for inicio, fim, _sid in secoes:
+            if inicio <= pos < fim:
+                antes = len(escolhidas)
+                _add(inicio, fim)
+                if len(escolhidas) > antes:
+                    por_frase += 1
+                break
+        if por_frase >= MAX_SECTIONS_BY_PHRASE:
+            break
+    return escolhidas
+
+
 def extrair_trechos_ancorados(
     conteudo: str,
     instructions: str,
@@ -555,16 +677,23 @@ def extrair_trechos_ancorados(
     conteudo_norm = _normalizar(conteudo)
     regioes = _regioes_estruturais(conteudo_norm)
 
+    # Issue #235: primeiro, os BLOCOS inteiros que a instrução referencia.
+    selecionadas: list[tuple[int, int]] = []
+    total = 0
+    for inicio, fim in _secoes_referenciadas(conteudo, instructions):
+        if total + (fim - inicio) > limite_chars:
+            continue
+        selecionadas.append((inicio, fim))
+        total += fim - inicio
+
     candidatos: list[tuple[int, int, int]] = []
     for frase in _frases_ancora(instructions):
         candidatos.extend(_ocorrencias(conteudo_norm, frase, regioes, base=5))
     for palavra in _palavras_chave(instructions):
         candidatos.extend(_ocorrencias(conteudo_norm, palavra, regioes, base=1))
-    if not candidatos:
+    if not candidatos and not selecionadas:
         return ()
 
-    selecionadas: list[tuple[int, int]] = []
-    total = 0
     for _score, pos, tamanho in sorted(candidatos, key=lambda c: (-c[0], c[1])):
         if any(inicio <= pos < fim for inicio, fim in selecionadas):
             continue
@@ -572,7 +701,7 @@ def extrair_trechos_ancorados(
             break
         inicio, fim = _janela(conteudo, pos, tamanho)
         if total + (fim - inicio) > limite_chars:
-            break
+            continue
         selecionadas.append((inicio, fim))
         total += fim - inicio
 
