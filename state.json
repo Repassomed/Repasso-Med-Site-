@@ -1199,6 +1199,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:264.",
       "task_id": "pr:264",
       "worker_id": null
+    },
+    {
+      "category": "content",
+      "commit_sha": null,
+      "component": "coordinator-audit",
+      "error_id": "ERR-BD6EB764D3",
+      "error_type": "semantic-needs-fix",
+      "fingerprint": "bd6eb764d3a9a85f4b92",
+      "first_seen": "2026-09-24T23:23:41.735269+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "d68e14fd743948649bd2bd4081ba7aaa",
+      "issue_sync_updated_at": "2026-09-24T23:23:41.735269+00:00",
+      "last_evidence_hash": "a8f5790a296483596f14",
+      "last_seen": "2026-09-24T23:23:41.735269+00:00",
+      "occurrence_count": 1,
+      "pr_number": 266,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36072344741",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "Auditoria independente marcou pr:266 como NEEDS-FIX.",
+      "task_id": "pr:266",
+      "worker_id": null
     }
   ]
 }
