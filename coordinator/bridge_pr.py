@@ -84,6 +84,8 @@ class GitHubBridgeApi(Protocol):
 
     def criar_pr(self, *, titulo: str, head: str, base: str, corpo: str) -> dict: ...
 
+    def atualizar_pr_corpo(self, pr_number: int, *, corpo: str) -> dict: ...
+
     def despachar_workflow(self, *, arquivo: str, ref: str, inputs: dict) -> None: ...
 
 
@@ -185,6 +187,19 @@ class GitHubRestApi:
             raise GitHubBridgeApiError("a criação da PR não devolveu um número de PR utilizável.")
         return dados
 
+    def atualizar_pr_corpo(self, pr_number: int, *, corpo: str) -> dict:
+        if not isinstance(pr_number, int) or pr_number <= 0:
+            raise ValueError(f"pr_number precisa ser inteiro positivo — recebido {pr_number!r}.")
+        dados = self._requisicao(
+            "PATCH", f"/repos/{self.owner}/{self.repo}/pulls/{pr_number}",
+            {"body": corpo},
+        )
+        if not isinstance(dados, dict) or int(dados.get("number") or 0) != pr_number:
+            raise GitHubBridgeApiError(
+                f"a atualização do corpo da PR #{pr_number} não devolveu uma PR utilizável."
+            )
+        return dados
+
     def despachar_workflow(self, *, arquivo: str, ref: str, inputs: dict) -> None:
         if arquivo != GUARD_WORKFLOW_FILE:
             raise GitHubBridgeApiError(
@@ -211,6 +226,7 @@ def corpo_da_pr(
     checkpoint_commit: str | None, titulo_tarefa: str | None, objetivo: str | None,
     area: str | None = None, dependencias: tuple[str, ...] = (),
     source_pack_path: str | None = None, source_pack_sha256: str | None = None,
+    question_report: str | None = None,
 ) -> str:
     """O bloco ``## ESCOPO`` que o Repasso Guard já sabe ler
     (``tools/qa/guard/__main__.py::parse_scope``) — os rótulos são
@@ -239,6 +255,8 @@ def corpo_da_pr(
             f"- **Source pack:** `{source_pack_path}`",
             f"- **Source pack SHA-256:** `{source_pack_sha256}`",
         ]
+    if question_report:
+        linhas += ["", question_report.strip()]
     linhas += [
         "",
         "## Execução",
@@ -290,6 +308,7 @@ def garantir_pr(
     base_branch: str, titulo_tarefa: str | None = None, objetivo: str | None = None,
     area: str | None = None, dependencias: tuple[str, ...] = (),
     source_pack_path: str | None = None, source_pack_sha256: str | None = None,
+    question_report: str | None = None,
 ) -> PrOutcome:
     """§9, idempotente: se já existe PR ABERTA cuja ``head`` é
     ``task.branch``, ela é reutilizada — nunca uma duplicata. A busca é
@@ -303,6 +322,15 @@ def garantir_pr(
             f"base ({base_branch!r}) e head ({task.branch!r}) são a mesma branch — nada a abrir.",
         )
 
+    corpo_atualizado = corpo_da_pr(
+        task=task, canonical_task_id=canonical_task_id, worker_id=worker_id,
+        worker_display=worker_display, checkpoint_commit=checkpoint_commit,
+        titulo_tarefa=titulo_tarefa, objetivo=objetivo,
+        area=area, dependencias=dependencias,
+        source_pack_path=source_pack_path, source_pack_sha256=source_pack_sha256,
+        question_report=question_report,
+    )
+
     try:
         existentes = api.prs_abertas_por_head(task.branch)
     except (GitHubBridgeApiError, ValueError) as exc:
@@ -310,11 +338,25 @@ def garantir_pr(
 
     if existentes:
         pr = existentes[0]
+        pr_number = pr.get("number")
+        if not isinstance(pr_number, int) or pr_number <= 0:
+            return PrOutcome("FAILED", "PR existente não tem número utilizável.")
+        if str(pr.get("body") or "") != corpo_atualizado:
+            try:
+                pr = api.atualizar_pr_corpo(pr_number, corpo=corpo_atualizado)
+            except (GitHubBridgeApiError, ValueError) as exc:
+                return PrOutcome(
+                    "FAILED",
+                    f"PR #{pr_number} existe, mas não consegui sincronizar corpo/checkpoint/relatório: "
+                    f"{redact(str(exc))}. Guard bloqueado até a sincronização ser recuperada.",
+                    pr_number=None,
+                    pr_url=pr.get("html_url"),
+                )
         return PrOutcome(
             "REUSED",
-            f"PR #{pr.get('number')} já está aberta para a branch {task.branch!r} — reutilizada, "
-            "nunca duplicada.",
-            pr_number=pr.get("number"),
+            f"PR #{pr_number} já está aberta para a branch {task.branch!r} — reutilizada com "
+            "corpo/checkpoint/relatório sincronizados, nunca duplicada.",
+            pr_number=pr_number,
             pr_url=pr.get("html_url"),
         )
 
@@ -323,13 +365,7 @@ def garantir_pr(
             titulo=titulo_da_pr(canonical_task_id=canonical_task_id, titulo_tarefa=titulo_tarefa),
             head=task.branch,
             base=base_branch,
-            corpo=corpo_da_pr(
-                task=task, canonical_task_id=canonical_task_id, worker_id=worker_id,
-                worker_display=worker_display, checkpoint_commit=checkpoint_commit,
-                titulo_tarefa=titulo_tarefa, objetivo=objetivo,
-                area=area, dependencias=dependencias,
-                source_pack_path=source_pack_path, source_pack_sha256=source_pack_sha256,
-            ),
+            corpo=corpo_atualizado,
         )
     except (GitHubBridgeApiError, ValueError) as exc:
         return PrOutcome("FAILED", f"não consegui abrir a PR: {redact(str(exc))}")

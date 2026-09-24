@@ -444,6 +444,7 @@ class BridgeTaskMetadata:
     fonte: str | None = None
     notas: str | None = None
     source_pack_required: bool = False
+    question_report_required: bool = False
     source_pack_path: str | None = None
     source_pack_sha256: str | None = None
     source_pack_text: str | None = None
@@ -460,6 +461,7 @@ class BridgeTaskMetadata:
             "branch": self.branch,
             "issue": self.issue,
             "source_pack_required": self.source_pack_required,
+            "question_report_required": self.question_report_required,
             "source_pack_path": self.source_pack_path,
             "source_pack_sha256": self.source_pack_sha256,
             "source_pack_error": self.source_pack_error,
@@ -497,6 +499,7 @@ def carregar_metadados_de_automacao(path: str) -> dict[str, BridgeTaskMetadata]:
             fonte=t.get("fonte"),
             notas=t.get("notas"),
             source_pack_required=pack_required,
+            question_report_required=(t.get("question_report_required") is True),
             source_pack_path=pack_path,
             source_pack_sha256=(pack_load.pack.sha256 if pack_load.pack else None),
             source_pack_text=(pack_load.pack.evidence_block() if pack_load.pack else None),
@@ -653,6 +656,17 @@ def montar_instrucoes(tarefa: TaskRecord, meta: BridgeTaskMetadata) -> str:
     ]
     if (meta.notas or "").strip():
         partes += ["", "NOTAS DO REGISTRO DE TAREFAS", meta.notas.strip()]
+    if meta.question_report_required:
+        partes += [
+            "",
+            "RELATÓRIO OBRIGATÓRIO — LEI DAS QUESTÕES 8-A.11",
+            "Além do patch, devolva no mesmo JSON o campo question_report estruturado exigido "
+            "pelo Runner. Preencha a matriz com os números e destinos REAIS desta execução, "
+            "fonte por fonte. Não invente página, imagem, legibilidade, contagem, gabarito ou "
+            "proveniência. Se alguma fonte não puder ser verificada, registre-a como pendente "
+            "em vez de presumir. A confirmação de cobertura deve ser exatamente: "
+            "RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA.",
+        ]
     if meta.source_pack_text:
         partes += [
             "",
@@ -736,6 +750,7 @@ def materializar_runner_task(
             policy_level=meta.policy_level or "",
             jose_authorized=meta.jose_authorized,
             publication_required=False,
+            question_report_required=meta.question_report_required,
         )
     except ValueError as exc:
         return MaterializacaoResult(
@@ -1417,6 +1432,7 @@ def executar_correcao_de_auditoria(
         canonical_task_id, status=status_runtime, worker_id=worker_id,
         execution_task_id=execution_task_id, reason=motivo_resultado,
         checkpoint_commit=checkpoint, branch=branch_final,
+        question_report=dispatch.question_report,
     )
     registro_final = runtime_store.get(canonical_task_id) or registro
     liberacao = liberar_worker_apos_resultado(
@@ -1716,6 +1732,7 @@ def executar_ciclo(
         canonical_task_id, status=status_runtime, worker_id=worker_id,
         execution_task_id=execution_task_id, reason=motivo_resultado,
         checkpoint_commit=checkpoint, branch=branch_final,
+        question_report=dispatch.question_report,
     ):
         notes.append(
             "compare-and-set recusou o registro do resultado — outra execução alterou o estado "
@@ -1811,6 +1828,9 @@ def _abrir_pr_e_guard(
         )
         return None, None, notas
 
+    registro_para_pr = runtime_store.get(canonical_task_id)
+    question_report = registro_para_pr.question_report if registro_para_pr else None
+
     pr_outcome = bridge_pr.garantir_pr(
         github_api, task=task, canonical_task_id=canonical_task_id,
         worker_id=worker_id,
@@ -1820,6 +1840,7 @@ def _abrir_pr_e_guard(
         dependencias=tarefa.dependencias,
         source_pack_path=meta.source_pack_path,
         source_pack_sha256=meta.source_pack_sha256,
+        question_report=question_report,
     )
     if pr_outcome.pr_number is None:
         notas.append(f"PR não disponível ({pr_outcome.action}): {pr_outcome.reason}")

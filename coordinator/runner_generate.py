@@ -165,6 +165,7 @@ from . import anthropic_client
 from .anthropic_transport import AnthropicTransport
 from .budget import BudgetStatus, CallLimiter, UsageRecord, check_budget, estimate_cost_usd, priority_allowed
 from .models import ModelTier, resolve as resolve_model
+from .question_report import QUESTION_REPORT_JSON_SCHEMA, render_question_report
 from .redact import redact
 from .runner_contract import RunnerTask
 from .runner_dispatch import (
@@ -315,7 +316,7 @@ class _UsageLedgerLike(Protocol):
 _SYSTEM_PROMPT = (
     "Você é um gerador determinístico de patch estruturado para o Repasso Med "
     "(Issue #105, Fase D). Devolva SOMENTE um objeto JSON válido, sem nenhum texto "
-    "antes ou depois, sem markdown, no formato EXATO:\n"
+    "antes ou depois, sem markdown, usando somente os campos de patch abaixo:\n"
     '{"files": [{"path": "<caminho>", "content": "<conteúdo COMPLETO do arquivo>"}]}\n'
     "Cada 'path' precisa ser EXATAMENTE um dos caminhos permitidos informados no "
     "prompt do usuário — nunca um caminho novo, nunca um caminho fora dessa lista. "
@@ -363,6 +364,28 @@ _SYSTEM_PROMPT_ANCORADO = (
     "for possível cumprir a instrução com segurança dentro dos caminhos e trechos permitidos, "
     'devolva exatamente {"files": [], "edits": []}.'
 )
+
+def _system_prompt_para_tarefa(task: RunnerTask, *, ancorado: bool) -> str:
+    """Mantém o contrato antigo byte-a-byte para tarefas comuns.
+
+    Só tarefas tipadas com question_report_required=True recebem o campo
+    adicional da Lei 8-A.11. O relatório é dado editorial, nunca patch:
+    não cria caminho, não amplia allowed_files e será validado antes de
+    qualquer escrita.
+    """
+    base = _SYSTEM_PROMPT_ANCORADO if ancorado else _SYSTEM_PROMPT
+    if not task.question_report_required:
+        return base
+    return (
+        base
+        + "\n\nEsta tarefa exige o relatório estruturado da Lei das Questões 8-A.11. "
+          "No MESMO objeto JSON, além de 'files'/'edits', inclua OBRIGATORIAMENTE "
+          "o campo abaixo, sem inventar fonte, página/imagem, contagem ou destino. "
+          "Se alguma evidência não for segura, registre como pendente. O Runner "
+          "validará este objeto antes de tocar em qualquer arquivo:\n"
+        + QUESTION_REPORT_JSON_SCHEMA
+    )
+
 
 _REGRAS_ARQUIVO_GRANDE = (
     "ATENÇÃO — há arquivo(s) GRANDE(S) nesta tarefa:\n"
@@ -804,6 +827,13 @@ def build_prompt(
     ]
     partes.extend(f"- {c}" for c in task.allowed_files)
     partes.append("")
+    if task.question_report_required:
+        partes += [
+            "RELATÓRIO 8-A.11 OBRIGATÓRIO NESTA RESPOSTA:",
+            "Inclua question_report no mesmo JSON do patch conforme o schema do system prompt. "
+            "Os números devem descrever esta execução e a matriz precisa ser fonte por fonte.",
+            "",
+        ]
     if trechos_por_arquivo:
         partes.append(_REGRAS_ARQUIVO_GRANDE)
         partes.append("")
@@ -845,6 +875,9 @@ class GenerateOutcome:
     # pior das hipóteses, permanece contada — nunca um valor menor/
     # ausente).
     ledger_correction_failed: bool = False
+    # Markdown determinístico já validado da Lei 8-A.11. Campo novo no FIM
+    # para não alterar a ordem posicional histórica de GenerateOutcome.
+    question_report: str | None = None
 
     def to_dict(self) -> dict:
         d = {
@@ -852,6 +885,7 @@ class GenerateOutcome:
             "reason": redact(self.reason),
             "external_call_made": self.external_call_made,
             "patch": self.patch.to_dict() if self.patch else None,
+            "question_report": self.question_report,
             "ledger_correction_failed": self.ledger_correction_failed,
         }
         if self.usage:
@@ -963,7 +997,7 @@ def gerar_patch_via_claude(
         orcamento_restante -= sum(t.fim - t.inicio for t in trechos)
 
     prompt = build_prompt(task, contexto, trechos_por_arquivo)
-    system_prompt = _SYSTEM_PROMPT_ANCORADO if trechos_por_arquivo else _SYSTEM_PROMPT
+    system_prompt = _system_prompt_para_tarefa(task, ancorado=bool(trechos_por_arquivo))
 
     model_choice = resolve_model(ModelTier.STANDARD)
     # Não herdar o teto global de 2k do Coordinator: patches estruturados
@@ -1109,6 +1143,21 @@ def gerar_patch_via_claude(
             ledger_correction_failed=ledger_correction_failed,
         )
 
+    question_report_text: str | None = None
+    if task.question_report_required:
+        try:
+            question_report_text = render_question_report(dados.get("question_report"))
+        except ValueError as exc:
+            return GenerateOutcome(
+                status="failed",
+                reason=(
+                    "relatório obrigatório da Lei das Questões 8-A.11 ausente/inválido "
+                    f"(fail-closed antes de qualquer escrita): {exc}{nota_ledger}"
+                ),
+                usage=resultado_chamada.usage, external_call_made=True,
+                ledger_correction_failed=ledger_correction_failed,
+            )
+
     # Issue #144: a resposta pode trazer 'files' (FileWrite, arquivo
     # pequeno — o caminho de sempre, inalterado) e/ou 'edits'
     # (AnchoredEdit, arquivo grande). Sem 'edits', tudo abaixo se comporta
@@ -1202,6 +1251,7 @@ def gerar_patch_via_claude(
     return GenerateOutcome(
         status="ok",
         reason=f"patch gerado via Claude e validado contra allowed_files{detalhe_ancoras}.{nota_ledger}",
-        patch=patch, usage=resultado_chamada.usage, external_call_made=True,
+        patch=patch, question_report=question_report_text,
+        usage=resultado_chamada.usage, external_call_made=True,
         ledger_correction_failed=ledger_correction_failed,
     )

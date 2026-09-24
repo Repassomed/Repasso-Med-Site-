@@ -257,6 +257,10 @@ class RunnerTask:
     policy_level: str
     jose_authorized: bool = False
     publication_required: bool = False
+    # Lei das Questões 8-A.11: quando True, a geração precisa devolver
+    # também um relatório estruturado de proveniência; ausência/invalidade
+    # bloqueia antes de qualquer escrita.
+    question_report_required: bool = False
 
     def __post_init__(self) -> None:
         if not self.task_id or not str(self.task_id).strip():
@@ -341,6 +345,7 @@ class RunnerTask:
             "policy_level": self.policy_level,
             "jose_authorized": self.jose_authorized,
             "publication_required": self.publication_required,
+            "question_report_required": self.question_report_required,
             "never_merge": True,
             "can_publish": False,
         }
@@ -363,6 +368,7 @@ class RunnerTask:
             policy_level=d["policy_level"],
             jose_authorized=bool(d.get("jose_authorized", False)),
             publication_required=bool(d.get("publication_required", False)),
+            question_report_required=bool(d.get("question_report_required", False)),
         )
 
 

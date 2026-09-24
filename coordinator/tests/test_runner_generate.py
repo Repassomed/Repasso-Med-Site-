@@ -35,6 +35,8 @@ from coordinator.anthropic_client import Request, TransportResponse
 from coordinator.budget import UsageLedger
 from coordinator.classify import Priority
 from coordinator.git_state import GitJsonStore, GitUsageLedger
+from coordinator.merge_card import avaliar_lei_das_questoes
+from coordinator.question_report import COVERAGE_CONFIRMATION
 from coordinator.runner_contract import RunnerTask
 from coordinator.runner_dispatch import RunnerDispatchConfig
 from coordinator.runner_generate import (
@@ -92,8 +94,31 @@ def _config(**overrides) -> RunnerDispatchConfig:
     return RunnerDispatchConfig(**campos)
 
 
-def _resposta_ok(files: list[dict]) -> TransportResponse:
-    return TransportResponse(text=json.dumps({"files": files}), input_tokens=100, output_tokens=50)
+def _question_report() -> dict:
+    return {
+        "sources": [{
+            "source": "P1 Semiologia 2.pdf",
+            "page_or_image": "p. 3",
+            "legibility": "integral",
+            "detected": 3,
+            "used": 2,
+            "new": 1,
+            "reformulated": 1,
+            "duplicates": 0,
+            "reconstructed": 0,
+            "pending": 1,
+            "site_destination": "B08 + Banco General",
+        }],
+        "coverage_confirmation": COVERAGE_CONFIRMATION,
+        "notes": "Uma questão ficou pendente por legibilidade insuficiente.",
+    }
+
+
+def _resposta_ok(files: list[dict], *, question_report: dict | None = None) -> TransportResponse:
+    body: dict = {"files": files}
+    if question_report is not None:
+        body["question_report"] = question_report
+    return TransportResponse(text=json.dumps(body), input_tokens=100, output_tokens=50)
 
 
 def _criar_remoto_local(tmp: str) -> str:
@@ -112,6 +137,50 @@ def _criar_remoto_local(tmp: str) -> str:
     subprocess.run(["git", "-C", remoto, "commit", "-q", "-m", "bootstrap"], check=True)
     subprocess.run(["git", "-C", remoto, "checkout", "-q", "-b", "bootstrap"], check=True)
     return remoto
+
+
+def test_question_report_required_missing_fails_before_patch() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        transporte = _CountingTransport(
+            response=_resposta_ok([{"path": "greeting.txt", "content": "ola\n"}])
+        )
+        outcome = gerar_patch_via_claude(
+            _task(question_report_required=True), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert transporte.calls == 1
+        assert outcome.status == "failed"
+        assert outcome.patch is None
+        assert "Lei das Questões 8-A.11" in outcome.reason
+        assert not os.path.exists(os.path.join(tmp, "greeting.txt")), (
+            "geração nunca escreve; relatório ausente não pode chegar ao executor"
+        )
+    print("OK  test_question_report_required_missing_fails_before_patch")
+
+
+def test_question_report_valid_is_rendered_and_satisfies_deterministic_gate() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        transporte = _CountingTransport(
+            response=_resposta_ok(
+                [{"path": "greeting.txt", "content": "ola\n"}],
+                question_report=_question_report(),
+            )
+        )
+        outcome = gerar_patch_via_claude(
+            _task(question_report_required=True), config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "ok", outcome.reason
+        assert outcome.patch is not None
+        assert outcome.question_report is not None
+        gate = avaliar_lei_das_questoes(outcome.question_report)
+        assert gate.satisfeita is True, gate
+        assert "Matriz por fonte" in outcome.question_report
+        assert COVERAGE_CONFIRMATION in outcome.question_report
+        assert "question_report" in transporte.last_request.system
+    print("OK  test_question_report_valid_is_rendered_and_satisfies_deterministic_gate")
 
 
 # ---------------------------------------------------------------------------
@@ -938,6 +1007,8 @@ def test_anchored_edit_com_ocorrencia_sobreposta_bloqueia() -> None:
 
 def main() -> int:
     testes = [
+        test_question_report_required_missing_fails_before_patch,
+        test_question_report_valid_is_rendered_and_satisfies_deterministic_gate,
         test_gate_closed_makes_zero_external_call,
         test_task_id_outside_canary_makes_zero_external_call,
         test_budget_exhausted_makes_zero_external_call,
