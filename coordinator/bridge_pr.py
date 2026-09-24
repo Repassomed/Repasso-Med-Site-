@@ -210,6 +210,7 @@ def corpo_da_pr(
     *, task: RunnerTask, canonical_task_id: str, worker_id: str, worker_display: str,
     checkpoint_commit: str | None, titulo_tarefa: str | None, objetivo: str | None,
     area: str | None = None, dependencias: tuple[str, ...] = (),
+    source_pack_path: str | None = None, source_pack_sha256: str | None = None,
 ) -> str:
     """O bloco ``## ESCOPO`` que o Repasso Guard já sabe ler
     (``tools/qa/guard/__main__.py::parse_scope``) — os rótulos são
@@ -232,6 +233,13 @@ def corpo_da_pr(
             else "- **Fonte:** Worker Bridge (Issue #128)"
         ),
         f"- **Dependências:** {', '.join(dependencias) if dependencias else '—'}",
+    ]
+    if source_pack_path and source_pack_sha256:
+        linhas += [
+            f"- **Source pack:** `{source_pack_path}`",
+            f"- **Source pack SHA-256:** `{source_pack_sha256}`",
+        ]
+    linhas += [
         "",
         "## Execução",
         "",
@@ -281,6 +289,7 @@ def garantir_pr(
     worker_id: str, worker_display: str, checkpoint_commit: str | None,
     base_branch: str, titulo_tarefa: str | None = None, objetivo: str | None = None,
     area: str | None = None, dependencias: tuple[str, ...] = (),
+    source_pack_path: str | None = None, source_pack_sha256: str | None = None,
 ) -> PrOutcome:
     """§9, idempotente: se já existe PR ABERTA cuja ``head`` é
     ``task.branch``, ela é reutilizada — nunca uma duplicata. A busca é
@@ -319,6 +328,7 @@ def garantir_pr(
                 worker_display=worker_display, checkpoint_commit=checkpoint_commit,
                 titulo_tarefa=titulo_tarefa, objetivo=objetivo,
                 area=area, dependencias=dependencias,
+                source_pack_path=source_pack_path, source_pack_sha256=source_pack_sha256,
             ),
         )
     except (GitHubBridgeApiError, ValueError) as exc:
