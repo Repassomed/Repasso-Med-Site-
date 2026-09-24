@@ -4919,6 +4919,16 @@
       "output_tokens": 1081,
       "tier": "STANDARD",
       "timestamp": "2026-09-24T06:06:55.452478+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.118492,
+      "event_key": "runner-task:toxicologia-provas-issue102-r2-sourcepack--bridge-2508f5d4d0ce",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T09:32:28.867826+00:00"
     }
   ]
 }
