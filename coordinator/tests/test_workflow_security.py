@@ -59,8 +59,9 @@ def test_only_safe_triggers_are_present() -> None:
 
 
 def test_schedule_reconciler_is_minimal_and_dispatches_only_guard() -> None:
-    """Heartbeat de liveness: zero checkout/segredo/chamada paga e no máximo
-    um dispatch do guard.yml por execução."""
+    """Heartbeat de liveness: zero checkout/segredo/chamada paga, no máximo
+    um dispatch do guard.yml por execução e nenhuma fome de fila causada
+    por uma PR que já reprovou no HEAD atual."""
     texto = _ler()
     ini = texto.index("  guard_reconcile:")
     fim = texto.index("  observe:", ini)
@@ -71,13 +72,27 @@ def test_schedule_reconciler_is_minimal_and_dispatches_only_guard() -> None:
     assert "contents: read" in bloco
     assert "pull-requests: read" in bloco
     assert "issues: read" in bloco
+    assert "issues: write" not in bloco
     assert "actions/checkout" not in bloco
     assert "ANTHROPIC_API_KEY" not in bloco
     assert "OPENAI_API_KEY" not in bloco
     assert "workflow_id: 'guard.yml'" in bloco
     assert "markerBridge = '<!-- repasso-worker-bridge-needs-audit -->'" in bloco
     assert "markerCoordinator = '<!-- repasso-coordinator -->'" in bloco
-    assert "return;" in bloco
+    assert "markerGuard = '<!-- repasso-guard-resumo -->'" in bloco
+    assert "github.rest.repos.getCommit" in bloco
+    assert "pr.head.sha" in bloco
+    assert "latestGuardAt >= headCommittedAt" in bloco
+    assert "blockedOnCurrentHead" in bloco
+    idx_blocked = bloco.index("if (blockedOnCurrentHead)")
+    idx_dispatch = bloco.index("createWorkflowDispatch")
+    assert idx_blocked < idx_dispatch
+    assert "continue;" in bloco[idx_blocked:idx_dispatch], (
+        "PR reprovada no HEAD atual precisa ser pulada antes do dispatch"
+    )
+    assert "return;" in bloco[idx_dispatch:], (
+        "continua valendo no máximo uma PR elegível por heartbeat"
+    )
     print("OK  test_schedule_reconciler_is_minimal_and_dispatches_only_guard")
 
 
