@@ -42,6 +42,7 @@ from . import _pathsetup
 from coordinator import bridge_pr, bridge_workers, scheduler, task_runtime, worker_bridge
 from coordinator.classify import Priority
 from coordinator.runner_contract import RunnerResult, RunnerTask
+from coordinator.runner_generate import GenerateOutcome
 from coordinator.runner_dispatch import (
     ALLOWED_RUNNER_MODE,
     RUNNER_MODE_SUPERVISED,
@@ -2009,20 +2010,15 @@ def test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte() 
     print("OK  test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte")
 
 
-def _cartao_needs_fix(motivo: str = "corrigir conceito X", *, head_sha: str | None = None) -> str:
-    linhas = [
+def _cartao_needs_fix(motivo: str = "corrigir conceito X") -> str:
+    return "\n".join([
         worker_bridge.COORDINATOR_COMMENT_MARKER,
         worker_bridge.AUDIT_CARD_HEADER,
         "",
         "**PR:** #901",
-    ]
-    if head_sha:
-        linhas.append(f"**HEAD auditado:** `{head_sha}`")
-    linhas += [
         worker_bridge.AUDIT_NEEDS_FIX_LINE,
         f"**Motivo:** {motivo}",
-    ]
-    return "\n".join(linhas)
+    ])
 
 
 def test_audit_fix_so_aceita_cartao_do_bot_confiavel() -> None:
@@ -2036,15 +2032,6 @@ def test_audit_fix_so_aceita_cartao_do_bot_confiavel() -> None:
     assert pedido is not None and pedido.pr_number == 901 and pedido.comment_id == 3
     assert pedido.fingerprint and "corrigir conceito X" in pedido.findings
     print("OK  test_audit_fix_so_aceita_cartao_do_bot_confiavel")
-
-
-def test_audit_fix_cartao_carrega_head_auditado() -> None:
-    body = _cartao_needs_fix(head_sha="abcdef1234567890")
-    comentarios = [{"id": 5, "user": {"login": "github-actions[bot]"}, "body": body}]
-    pedido = worker_bridge._audit_fix_request_from_comments(comentarios, pr_number=901)
-    assert pedido is not None
-    assert pedido.audited_head_sha == "abcdef1234567890"
-    print("OK  test_audit_fix_cartao_carrega_head_auditado")
 
 
 def test_audit_fix_merge_ready_nao_reentra_em_correcao() -> None:
@@ -2068,21 +2055,6 @@ def _store_needs_audit_para_fix() -> tuple[TaskRuntimeStore, task_runtime.TaskRu
     assert store.reservar_guard_dispatch("t-fix", pr_number=901)
     assert store.confirmar_guard_dispatch("t-fix", pr_number=901)
     return store, store.get("t-fix")
-
-
-def test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado() -> None:
-    store, anterior = _store_needs_audit_para_fix()
-    assert anterior is not None and anterior.checkpoint_commit == "abc123"
-    reserva = store.reservar_correcao_apos_auditoria(
-        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_2,
-        audit_fingerprint="fp-head", audit_findings="corrigir no head auditado",
-        max_attempts=2, checkpoint_commit="abcdef1234567890", token="121212121212",
-    )
-    assert reserva.reservado and reserva.record is not None
-    assert reserva.record.checkpoint_commit == "abcdef1234567890"
-    assert reserva.record.pr_number == anterior.pr_number
-    assert reserva.record.branch == anterior.branch
-    print("OK  test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado")
 
 
 def test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes() -> None:
@@ -2110,6 +2082,105 @@ def test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes() 
     )
     assert mesma.reservado is False and "mesmo parecer" in mesma.reason
     print("OK  test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes")
+
+
+def test_runtime_antigo_failed_audit_fix_conta_uma_falha_ao_migrar() -> None:
+    antigo = {
+        "canonical_task_id": "legacy-fix",
+        "status": task_runtime.RUNTIME_FAILED,
+        "worker_id": bridge_workers.BRIDGE_WORKER_1,
+        "branch": "runner/legacy-fix",
+        "checkpoint_commit": "abc123",
+        "pr_number": 901,
+        "execution_task_id": "legacy-fix--bridge-111111111111",
+        "audit_fix_attempts": 1,
+        "last_audit_fix_fingerprint": "fp-legacy",
+        "last_audit_findings": "corrigir X",
+        "reason": "patch vazio",
+    }
+    record = task_runtime.TaskRuntimeRecord.from_dict(antigo)
+    assert record.audit_fix_execution_failures == 1, (
+        "falha de correção anterior ao campo novo não pode ganhar tentativas extras por migração"
+    )
+    print("OK  test_runtime_antigo_failed_audit_fix_conta_uma_falha_ao_migrar")
+
+
+def test_bridge_semantic_fix_cap_e_quatro() -> None:
+    assert worker_bridge.MAX_AUDIT_FIX_ATTEMPTS == 4
+    print("OK  test_bridge_semantic_fix_cap_e_quatro")
+
+
+def test_audit_fix_failed_sem_head_reentra_mesmo_parecer_sem_gastar_ciclo() -> None:
+    store, anterior = _store_needs_audit_para_fix()
+    assert anterior is not None
+    primeira = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
+        audit_fingerprint="fp-retry", audit_findings="corrigir X",
+        max_attempts=2, max_execution_failures=3, token="111111111111",
+    )
+    assert primeira.reservado and primeira.record is not None
+    assert primeira.record.audit_fix_attempts == 1
+    exec_falha = primeira.record.execution_task_id or ""
+    assert store.registrar_falha_correcao_sem_head(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_1,
+        execution_task_id=exec_falha, reason="patch vazio",
+    )
+    falhou = store.get("t-fix")
+    assert falhou is not None and falhou.status == task_runtime.RUNTIME_FAILED
+    assert falhou.audit_fix_attempts == 1
+    assert falhou.audit_fix_execution_failures == 1
+    assert falhou.checkpoint_commit == anterior.checkpoint_commit
+    assert falhou.pr_number == anterior.pr_number
+
+    retry = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_2,
+        audit_fingerprint="fp-retry", audit_findings="corrigir X",
+        max_attempts=2, max_execution_failures=3, token="222222222222",
+    )
+    assert retry.reservado and retry.record is not None
+    assert retry.record.audit_fix_attempts == 1, "retry sem HEAD não gasta outro ciclo semântico"
+    assert retry.record.execution_task_id != exec_falha
+    assert exec_falha in retry.record.execution_history
+    assert store.registrar_resultado(
+        "t-fix", status=task_runtime.RUNTIME_NEEDS_AUDIT,
+        worker_id=bridge_workers.BRIDGE_WORKER_2,
+        execution_task_id=retry.record.execution_task_id or "", reason="corrigido",
+        checkpoint_commit="def456", branch="runner/t-fix",
+    )
+    mesma = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_3,
+        audit_fingerprint="fp-retry", audit_findings="corrigir X",
+        max_attempts=2, max_execution_failures=3, token="333333333333",
+    )
+    assert mesma.reservado is False, "depois de produzir HEAD, o mesmo parecer não pode rodar de novo"
+    print("OK  test_audit_fix_failed_sem_head_reentra_mesmo_parecer_sem_gastar_ciclo")
+
+
+def test_audit_fix_failed_sem_head_respeita_teto_operacional() -> None:
+    store, _ = _store_needs_audit_para_fix()
+    for idx, worker in enumerate((
+        bridge_workers.BRIDGE_WORKER_1,
+        bridge_workers.BRIDGE_WORKER_2,
+    ), start=1):
+        reserva = store.reservar_correcao_apos_auditoria(
+            "t-fix", worker_id=worker, audit_fingerprint="fp-cap",
+            audit_findings="corrigir X", max_attempts=2,
+            max_execution_failures=2, token=f"{idx}" * 12,
+        )
+        assert reserva.reservado and reserva.record is not None
+        assert store.registrar_falha_correcao_sem_head(
+            "t-fix", worker_id=worker,
+            execution_task_id=reserva.record.execution_task_id or "",
+            reason=f"falha {idx}",
+        )
+    bloqueada = store.reservar_correcao_apos_auditoria(
+        "t-fix", worker_id=bridge_workers.BRIDGE_WORKER_3,
+        audit_fingerprint="fp-cap", audit_findings="corrigir X",
+        max_attempts=2, max_execution_failures=2, token="999999999999",
+    )
+    assert bloqueada.reservado is False
+    assert "teto de 2 falhas de execução" in bloqueada.reason
+    print("OK  test_audit_fix_failed_sem_head_respeita_teto_operacional")
 
 
 def test_audit_fix_para_depois_de_duas_correcoes() -> None:
@@ -2140,38 +2211,6 @@ def test_audit_fix_para_depois_de_duas_correcoes() -> None:
     print("OK  test_audit_fix_para_depois_de_duas_correcoes")
 
 
-def test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual() -> None:
-    with tempfile.TemporaryDirectory() as tmp:
-        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
-        api = _FakeGitHubApi()
-        registry = _registry_com_workers(cfg)
-        store = _runtime_store()
-        tarefa = _tarefa()
-
-        primeiro, _c, store, registry = _ciclo(
-            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
-            api=api, patch=_patch_padrao("alvo.txt", "versao 1\n"), nome_workdir="work-stale-card-1",
-        )
-        assert primeiro.action == "DISPATCHED" and primeiro.pr is not None
-        reg1 = store.get("infra-bridge-teste")
-        assert reg1 is not None and reg1.checkpoint_commit
-        api.prs[0]["head_sha"] = reg1.checkpoint_commit
-        api.comentarios[901] = [{
-            "id": 78, "user": {"login": "github-actions[bot]"},
-            "body": _cartao_needs_fix("parecer velho", head_sha="deadbeef12345678"),
-        }]
-
-        proibido = _GeracaoProibida()
-        segundo, *_ = _ciclo(
-            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
-            api=api, patch=None, gerar_patch=proibido, nome_workdir="work-stale-card-2",
-        )
-        assert segundo.action == "NO_ASSIGNMENT", segundo
-        assert proibido.chamado is False
-        assert store.get("infra-bridge-teste").audit_fix_attempts == 0
-    print("OK  test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual")
-
-
 def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
@@ -2191,9 +2230,7 @@ def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
         api.prs[0]["head_sha"] = reg1.checkpoint_commit
         api.comentarios[901] = [{
             "id": 77, "user": {"login": "github-actions[bot]"},
-            "body": _cartao_needs_fix(
-                "trocar versao 1 por versao 2", head_sha=reg1.checkpoint_commit
-            ),
+            "body": _cartao_needs_fix("trocar versao 1 por versao 2"),
         }]
         exec1 = reg1.execution_task_id
         dispatches_antes = len(api.dispatches)
@@ -2221,6 +2258,68 @@ def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
         )
         assert terceiro.action == "NO_ASSIGNMENT", terceiro
     print("OK  test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard")
+
+def test_audit_fix_integracao_falha_sem_head_e_retry_volta_antes_da_fila() -> None:
+    class _GeracaoFalha:
+        def __init__(self) -> None:
+            self.calls = 0
+        def __call__(self):
+            self.calls += 1
+            return GenerateOutcome(
+                status="failed", reason="resposta vazia simulada",
+                patch=None, external_call_made=True,
+            )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+        api = _FakeGitHubApi()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        tarefa = _tarefa()
+
+        primeiro, _c, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("alvo.txt", "versao 1\n"), nome_workdir="work-retry-a",
+        )
+        assert primeiro.pr is not None
+        reg1 = store.get("infra-bridge-teste")
+        assert reg1 is not None and reg1.status == task_runtime.RUNTIME_NEEDS_AUDIT
+        api.prs[0]["head_sha"] = reg1.checkpoint_commit
+        api.comentarios[901] = [{
+            "id": 177, "user": {"login": "github-actions[bot]"},
+            "body": _cartao_needs_fix("corrigir a evidencia"),
+        }]
+
+        geracao_falha = _GeracaoFalha()
+        segundo, _c2, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=None, gerar_patch=geracao_falha, nome_workdir="work-retry-b",
+        )
+        assert segundo.action == "AUDIT_FIX"
+        assert segundo.runner_result_status == "FAILED"
+        reg2 = store.get("infra-bridge-teste")
+        assert reg2 is not None and reg2.status == task_runtime.RUNTIME_FAILED
+        assert reg2.audit_fix_execution_failures == 1
+        worker_que_falhou = reg2.worker_id
+
+        terceiro, _c3, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("alvo.txt", "versao 2\n"), nome_workdir="work-retry-c",
+        )
+        assert terceiro.action == "AUDIT_FIX", terceiro
+        assert terceiro.runner_result_status == "NEEDS-AUDIT"
+        reg3 = store.get("infra-bridge-teste")
+        assert reg3 is not None and reg3.status == task_runtime.RUNTIME_NEEDS_AUDIT
+        assert reg3.audit_fix_attempts == 1
+        assert reg3.checkpoint_commit != reg1.checkpoint_commit
+        assert terceiro.decision is not None
+        assert terceiro.decision.worker_id != worker_que_falhou, (
+            "retry sem HEAD deve preferir outro worker quando houver alternativa"
+        )
+        assert len(api.criadas) == 1
+        assert len(api.dispatches) == 2
+    print("OK  test_audit_fix_integracao_falha_sem_head_e_retry_volta_antes_da_fila")
+
 
 def test_error_registry_bridge_sucesso_normal_nao_gera_erro() -> None:
     record = task_runtime.TaskRuntimeRecord(
@@ -2597,13 +2696,15 @@ def main() -> int:
         test_pr_recovery_falha_de_criacao_permanece_recuperavel_no_ciclo_seguinte,
         # Feedback automático NEEDS-FIX -> correção -> nova auditoria.
         test_audit_fix_so_aceita_cartao_do_bot_confiavel,
-        test_audit_fix_cartao_carrega_head_auditado,
         test_audit_fix_merge_ready_nao_reentra_em_correcao,
-        test_audit_fix_reserva_reconcilia_checkpoint_para_head_auditado,
         test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes,
+        test_runtime_antigo_failed_audit_fix_conta_uma_falha_ao_migrar,
+        test_bridge_semantic_fix_cap_e_quatro,
+        test_audit_fix_failed_sem_head_reentra_mesmo_parecer_sem_gastar_ciclo,
+        test_audit_fix_failed_sem_head_respeita_teto_operacional,
         test_audit_fix_para_depois_de_duas_correcoes,
-        test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual,
         test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
+        test_audit_fix_integracao_falha_sem_head_e_retry_volta_antes_da_fila,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
         test_error_registry_bridge_sucesso_normal_nao_gera_erro,
         test_error_registry_bridge_captura_runner_pr_guard_e_liberacao,
