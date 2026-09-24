@@ -24,6 +24,7 @@ from coordinator.dedup import Deduplicator, InMemoryStore
 from coordinator.events import INBOX_ISSUE_NUMBER
 from coordinator.github_event import build_event_from_github_context
 from coordinator.observe import observe
+from coordinator.openai_config import OpenAIAuditorConfig
 from coordinator.worker_ops import InMemoryWorkerStateStore, OperationalWorkerRegistry, WorkerRecord
 from coordinator.worker_registry import Worker, WorkerState
 
@@ -166,7 +167,17 @@ def test_b3_merge_ready_card_shows_real_cost_tier_model_and_calls() -> None:
         ledger = UsageLedger(os.path.join(tmp, "usage.json"))
         t = _TransporteContador(_RespostaFalsa("DECISÃO: MERGE-READY\nTudo certo.", input_tokens=1000, output_tokens=200))
         ev = _evento_pr_materia(head_sha="b3-1", body="ajuste de prosa didática")
-        r = observe(ev, config=_cfg(), dedup=dedup, ledger=ledger, workers=[], audit_mode=True, transport=t)
+        t_openai = _TransporteContador(_RespostaFalsa(
+            "DECISION: MERGE-READY\nRISK: NORMAL\nREQUIRES_ESCALATION: false\n"
+            "ESCALATION_REASON: -\nRATIONALE: revisão final aprovada.\n"
+            "FINDINGS:\nDIDACTIC_FINDINGS:\n", input_tokens=100, output_tokens=50,
+        ))
+        openai_ledger = UsageLedger(os.path.join(tmp, "usage-openai.json"))
+        r = observe(
+            ev, config=_cfg(), dedup=dedup, ledger=ledger, workers=[], audit_mode=True, transport=t,
+            openai_config=OpenAIAuditorConfig(enabled=True),
+            openai_ledger=openai_ledger, openai_transport=t_openai,
+        )
 
         assert r.audit_decision == "MERGE-READY"
         assert "custo CALCULADO" in r.merge_card
