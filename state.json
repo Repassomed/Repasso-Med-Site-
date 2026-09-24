@@ -147,7 +147,7 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": null,
+      "current_task": "fisiopatologia-ii-issue101-r3-sourcepack",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
       "last_heartbeat": "2026-09-24T05:25:52.786353+00:00",
