@@ -218,7 +218,7 @@
       "audit_fix_attempts": 0,
       "branch": "runner/cleanup-como-estudar-anatomia-patologica-ii",
       "canonical_task_id": "cleanup-como-estudar-anatomia-patologica-ii",
-      "checkpoint_commit": null,
+      "checkpoint_commit": "ce9cf496531647f825b9fc399c6d00bf5c612406",
       "execution_history": [],
       "execution_task_id": "cleanup-como-estudar-anatomia-patologica-ii--bridge-d062050e0b98",
       "guard_dispatch_attempts": 0,
@@ -227,10 +227,10 @@
       "last_audit_findings": "",
       "last_audit_fix_fingerprint": null,
       "pr_number": null,
-      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'cleanup-como-estudar-anatomia-patologica-ii' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=True.)",
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/cleanup-como-estudar-anatomia-patologica-ii'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
       "reserved_at": "2026-09-24T04:15:27.357790+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-24T04:15:27.357804+00:00",
+      "status": "NEEDS-AUDIT",
+      "updated_at": "2026-09-24T04:16:47.093577+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
