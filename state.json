@@ -147,12 +147,12 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "manual-pr208-guarani-needs-fix",
+      "current_task": "manual-infra-pr246-post245",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T16:10:55.375029+00:00",
+      "last_heartbeat": "2026-09-24T17:22:30.981Z",
       "never_merge": true,
-      "progress": "Pista manual reservada: corrigir NEEDS-FIX real da PR #208 (Guaraní).",
+      "progress": "Auditar/corrigir #246 após #245: Runner/Bridge, contexto, retries NEEDS-FIX e capacidade; procurar regressões adjacentes sem tocar #247/#249.",
       "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
@@ -167,12 +167,12 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "manual-infra-pr246",
+      "current_task": "manual-infra-pr249-liveness",
       "display_name": "Claude Worker 2",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T16:05:30.065682+00:00",
+      "last_heartbeat": "2026-09-24T17:22:30.985Z",
       "never_merge": true,
-      "progress": "Pista manual preservada para Claude 2: continuar infraestrutura #245/#246/#249. Não redistribuir.",
+      "progress": "Auditar/corrigir #249: liveness de workflows, push wake, cron, workflow_run depth e tempestade de execuções; procurar falhas adjacentes sem tocar #246/#247.",
       "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-2"
@@ -187,12 +187,12 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "manual-audit-pr247",
+      "current_task": "manual-infra-pr247-guard-delta",
       "display_name": "Claude Worker 3",
       "last_checkpoint": null,
-      "last_heartbeat": null,
+      "last_heartbeat": "2026-09-24T17:22:30.985Z",
       "never_merge": true,
-      "progress": "Pista manual reservada: auditoria independente da PR #247 (lógica do Guard de assets por delta).",
+      "progress": "Auditoria independente/correção #247: Guard de assets por delta; procurar falsos positivos/negativos adjacentes sem tocar Runner/Bridge/workflows.",
       "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-3"
@@ -207,12 +207,12 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "manual-semiologia-ii-b08-pa-r5",
+      "current_task": "manual-coordinator-blackbox-post245",
       "display_name": "Claude Worker 4",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-23T22:37:15.765802+00:00",
+      "last_heartbeat": "2026-09-24T17:22:30.985Z",
       "never_merge": true,
-      "progress": "Pista manual reservada: P0 Semiologia II B08 PA r5, sem tocar infraestrutura.",
+      "progress": "Auditoria black-box ponta a ponta da coordenação na main pós-#245; encontrar falhas distintas das #246/#247/#249 e abrir PR separado somente se houver correção comprovada.",
       "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-4"
