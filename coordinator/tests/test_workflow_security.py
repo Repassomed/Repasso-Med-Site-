@@ -531,8 +531,100 @@ def test_runner_gate_env_uses_the_same_variables_and_expressions_as_the_runner_w
     print("OK  test_runner_gate_env_uses_the_same_variables_and_expressions_as_the_runner_workflow")
 
 
+def _passaria_filtro_de_comentario_do_workflow(payload: dict) -> bool:
+    """Espelho literal da Camada 5 do ``if:`` do OBSERVE para issue_comment."""
+    c = payload.get("comment") or {}
+    corpo = c.get("body") or ""
+    return (
+        (c.get("user") or {}).get("login") == "Repassomed"
+        and "<!-- repasso-coordinator -->" not in corpo
+        and ((payload.get("issue") or {}).get("number") == 88 or "ESTADO:" in corpo)
+    )
+
+
+def test_observe_so_sobe_para_comentario_que_pode_virar_evento() -> None:
+    """Tempestade de 24/09/2026: 9 de 9 OBSERVE por comentário (status de
+    agentes em PRs/issues) terminavam em "nenhum evento" e ainda acordavam
+    um Worker Bridge. O filtro do workflow precisa ser SUPERCONJUNTO do
+    Python: nenhum comentário que o Python transformaria em evento pode ser
+    barrado; os que o Python descarta não sobem o job."""
+    from coordinator.events import INBOX_ISSUE_NUMBER
+    from coordinator.github_event import build_event_from_github_context
+
+    bloco = _ler()[_ler().index("  observe:"):]
+    bloco = bloco[: bloco.index("runs-on:")]
+    assert "github.event.issue.number == 88" in bloco
+    assert "contains(github.event.comment.body, 'ESTADO:')" in bloco
+    assert INBOX_ISSUE_NUMBER == 88, "o número da Inbox no workflow precisa acompanhar o Python"
+
+    def _payload(numero: int, corpo: str, autor: str = "Repassomed") -> dict:
+        return {"action": "created", "issue": {"number": numero},
+                "comment": {"id": 1, "body": corpo, "user": {"login": autor}}}
+
+    casos = [
+        _payload(88, "Claude 2 voltou"),                                  # Inbox/comando
+        _payload(88, "qualquer pedido para a Inbox"),
+        _payload(67, "## CHECKPOINT\nESTADO: BLOCKED-LIMIT\nTAREFA: x\n"),  # checkpoint
+        _payload(208, "## CHECKPOINT\nESTADO: BLOCKED-LIMIT\n"),
+        _payload(208, "Status: Guard verde, aguardando auditoria."),       # ruído real
+        _payload(249, "Andamento da PR #249: testes passando."),
+        _payload(67, "CENTRAL — Claude 1–4 redistribuídos."),
+        _payload(67, "ESTADO: IN-PROGRESS (nota)"),                        # passa no workflow, Python decide
+        _payload(88, "<!-- repasso-coordinator --> cartão"),               # self-loop
+        _payload(88, "pedido", autor="alguem-de-fora"),                    # ator não confiável
+    ]
+    for p in casos:
+        ev = build_event_from_github_context("issue_comment", p, "Repassomed/Repasso-Med-Site-")
+        if ev is not None:
+            assert _passaria_filtro_de_comentario_do_workflow(p), f"evento legítimo barrado: {p}"
+    ruido = [p for p in casos[4:7]]
+    for p in ruido:
+        assert build_event_from_github_context("issue_comment", p, "Repassomed/Repasso-Med-Site-") is None
+        assert not _passaria_filtro_de_comentario_do_workflow(p), f"ruído ainda subiria o job: {p}"
+    print("OK  test_observe_so_sobe_para_comentario_que_pode_virar_evento")
+
+
+def test_guard_sem_veredito_nao_vira_failure_nem_acorda_a_cadeia() -> None:
+    """Reprodução: runs do Guard CANCELADOS pelo próprio concurrency viravam
+    GUARD_STATE_CHANGE 'failure' e abriam Issue falsa de HARD FAIL (#177,
+    #210, #250). Agora não geram evento, e o OBSERVE nem sobe para eles
+    (a lista do workflow é a mesma do Python)."""
+    import json as _json
+    from coordinator.github_event import GUARD_CONCLUSOES_SEM_VEREDITO, build_event_from_github_context
+
+    def _run(conclusao: str) -> dict:
+        return {"action": "completed", "workflow_run": {
+            "name": "Repasso Guard", "conclusion": conclusao, "id": 1, "head_sha": "abc",
+            "pull_requests": [{"number": 245}]}}
+
+    for c in ("cancelled", "skipped", "action_required", "neutral", "stale"):
+        assert build_event_from_github_context("workflow_run", _run(c), "R/R") is None, c
+    for c, estado in (("success", "success"), ("failure", "failure"), ("timed_out", "failure")):
+        ev = build_event_from_github_context("workflow_run", _run(c), "R/R")
+        assert ev is not None and ev.payload["guard_state"] == estado, c
+
+    bloco = _ler()[_ler().index("  observe:"):]
+    bloco = bloco[: bloco.index("runs-on:")]
+    m = re.search(r"fromJSON\('(\[[^']+\])'\)", bloco)
+    assert m, "o if: do OBSERVE precisa filtrar conclusões sem veredito"
+    assert set(_json.loads(m.group(1))) == set(GUARD_CONCLUSOES_SEM_VEREDITO)
+    assert "github.event.workflow_run.conclusion" in bloco
+    print("OK  test_guard_sem_veredito_nao_vira_failure_nem_acorda_a_cadeia")
+
+
+def test_heartbeat_tem_concurrency_proprio_sem_cancelar_em_andamento() -> None:
+    texto = _ler_heartbeat()
+    assert "concurrency:" in texto
+    assert "group: repasso-guard-heartbeat" in texto
+    assert "cancel-in-progress: false" in texto
+    print("OK  test_heartbeat_tem_concurrency_proprio_sem_cancelar_em_andamento")
+
+
 def main() -> int:
     testes = [
+        test_observe_so_sobe_para_comentario_que_pode_virar_evento,
+        test_guard_sem_veredito_nao_vira_failure_nem_acorda_a_cadeia,
+        test_heartbeat_tem_concurrency_proprio_sem_cancelar_em_andamento,
         test_pull_request_trigger_is_absent,
         test_only_safe_triggers_are_present,
         test_schedule_reconciler_is_minimal_and_dispatches_only_guard,

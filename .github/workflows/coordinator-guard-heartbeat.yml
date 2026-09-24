@@ -17,6 +17,14 @@ on:
 permissions:
   contents: read
 
+# Um heartbeat por vez: com push + schedule, duas execuções simultâneas
+# escolheriam a MESMA PR e despachariam o Guard duas vezes. Sem cancelar a
+# execução em andamento; a pendente mais nova substitui a mais velha (as
+# duas fariam exatamente a mesma leitura do estado).
+concurrency:
+  group: repasso-guard-heartbeat
+  cancel-in-progress: false
+
 jobs:
   guard_reconcile:
     # Este job nunca recebe Anthropic/OpenAI, nunca faz checkout e nunca

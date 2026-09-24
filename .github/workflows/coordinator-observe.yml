@@ -200,12 +200,32 @@ jobs:
     # job começar quando o comentário já contém o marcador; o filtro
     # Python continua como segunda camada (defesa em profundidade, nunca
     # confiar só no `if:` do workflow).
+    #
+    # Camada 5 (tempestade de execuções, 24/09/2026): o Python só cria
+    # evento para comentário na Inbox (#88, INBOX_COMMENT/comandos de
+    # worker) ou com linha "ESTADO:" (checkpoint BLOCKED-LIMIT). Qualquer
+    # outro comentário — status de agente em PR/issue — terminava em
+    # "nenhum evento" DEPOIS de subir o job inteiro, e o OBSERVE "success"
+    # ainda acordava um Worker Bridge. Medido: 9 de 9 OBSERVE por
+    # comentário numa janela de 20 min eram desse tipo. Este filtro é um
+    # SUPERCONJUNTO do filtro Python (contains 'ESTADO:' ⊇ ^ESTADO:), então
+    # nunca descarta um evento legítimo; o Python continua decidindo.
+    #
+    # Camada 6: Guard cancelled/skipped/action_required não é veredito
+    # (concurrency do Guard cancela o run anterior a cada push; PR do bot
+    # fica em action_required). Antes virava "failure" e abria Issue falsa
+    # de HARD FAIL; espelha github_event.GUARD_CONCLUSOES_SEM_VEREDITO.
     if: >
       github.event_name != 'schedule' &&
       vars.REPASSO_COORDINATOR_ENABLED == 'true' &&
       (github.event_name != 'issue_comment' ||
         (github.event.comment.user.login == 'Repassomed' &&
-         !contains(github.event.comment.body, '<!-- repasso-coordinator -->')))
+         !contains(github.event.comment.body, '<!-- repasso-coordinator -->') &&
+         (github.event.issue.number == 88 ||
+          contains(github.event.comment.body, 'ESTADO:')))) &&
+      (github.event_name != 'workflow_run' ||
+        !contains(fromJSON('["cancelled","skipped","action_required","neutral","stale"]'),
+                  github.event.workflow_run.conclusion))
     runs-on: ubuntu-latest
     # contents:write só é usado para publicar a branch de estado dedicada
     # (coordinator-state-*, nunca 'main', nunca matéria — ver
