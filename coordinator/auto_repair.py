@@ -10,7 +10,7 @@ import re
 from . import openai_client
 from .auto_repair_policy import (
     MAX_ATTEMPTS, PR_MARKER, PR_TITLE_PREFIX, SYSTEM_PROMPT,
-    apply_plan, assess_failure, auto_merge_eligibility, build_prompt,
+    apply_plan, assess_failure, build_prompt,
     candidate_paths, is_safe_path, parse_plan,
 )
 from .bridge_pr import GitHubRestApi, disparar_guard
@@ -99,13 +99,7 @@ class AttemptStore:
                 rec["auto_repair_pr_number"] = int(pr_number)
             if branch:
                 rec["auto_repair_branch"] = branch
-            if status == "MERGED":
-                rec.update(
-                    status="RESOLVED",
-                    resolution=redact(note)[:2000],
-                    root_cause=rec.get("root_cause") or "corrigido pelo auto-reparo tecnico",
-                )
-            elif status not in ("FIXING", "PR_OPEN"):
+            if status not in ("FIXING", "PR_OPEN"):
                 rec["status"] = "OPEN"
             records[fp] = rec
             return {**data, "errors": list(records.values())}
@@ -171,8 +165,8 @@ def _body(fp: str, run_id: str, workflow: str, step: str, attempt: int,
         "- edição ancorada; sem shell/diff livre;",
         "- suíte completa passou antes do push;",
         "- Guard é despachado pela branch padrão;",
-        "- auto-merge exige Guard verde + HEAD/arquivos + Error Registry coincidentes.",
-        "", "Exceção de merge: somente esta classe técnica foi autorizada por José.",
+        "- o auto-reparo NUNCA faz merge (Issues #99/#257): abre a PR, despacha o Guard",
+        "  e para aqui. José é a única pessoa que decide e executa o merge.",
     ])
 
 
@@ -309,48 +303,6 @@ def repair(args) -> dict:
         return {"status": "SKIPPED", "reason": redact(f"{type(exc).__name__}: {exc}"), "fingerprint": fp}
 
 
-def merge_check(args) -> dict:
-    pr = json.load(open(args.pr_json, encoding="utf-8"))
-    raw = json.load(open(args.files_json, encoding="utf-8"))
-    files = tuple(str(x.get("filename") if isinstance(x, dict) else x) for x in raw)
-    head = pr.get("head") or {}
-    ok, reason, fp = auto_merge_eligibility(
-        title=str(pr.get("title") or ""), body=str(pr.get("body") or ""),
-        state=str(pr.get("state") or ""), base=str((pr.get("base") or {}).get("ref") or ""),
-        head_repo=str((head.get("repo") or {}).get("full_name") or ""),
-        head_ref=str(head.get("ref") or ""), expected_repo=args.repo, changed_files=files,
-    )
-    n = int(pr.get("number") or 0)
-    if ok:
-        state = GitJsonStore(args.state_git_remote, branch=DEFAULT_ERROR_STATE_BRANCH).read()
-        records = {str(x.get("fingerprint")): x for x in (state.get("errors") or []) if isinstance(x, dict)}
-        rec = records.get(fp or "")
-        if not rec:
-            ok, reason = False, "fingerprint ausente no Error Registry"
-        elif int(rec.get("auto_repair_pr_number") or 0) != n:
-            ok, reason = False, "PR nao coincide com Error Registry"
-        elif str(rec.get("auto_repair_branch") or "") != str(head.get("ref") or ""):
-            ok, reason = False, "branch nao coincide com Error Registry"
-        elif str(rec.get("auto_repair_status") or "") not in ("PR_OPEN", "PR_OPEN_GUARD_FAILED"):
-            ok, reason = False, "status do Error Registry nao autoriza merge"
-    out = {
-        "eligible": ok, "reason": reason, "fingerprint": fp, "pr_number": n,
-        "head_sha": str(head.get("sha") or ""), "changed_files": list(files),
-    }
-    json.dump(out, open(args.out, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-    return out
-
-
-def mark_merged(args) -> dict:
-    store = GitJsonStore(args.state_git_remote, branch=DEFAULT_ERROR_STATE_BRANCH)
-    AttemptStore(store).record(
-        args.fingerprint, "MERGED",
-        f"PR #{args.pr_number} mergeada apos Guard verde sob excecao tecnica.",
-        pr_number=args.pr_number,
-    )
-    return {"status": "MERGED", "fingerprint": args.fingerprint, "pr_number": args.pr_number}
-
-
 def parser():
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -359,22 +311,13 @@ def parser():
         r.add_argument("--" + flag, required=True)
     r.add_argument("--failed-step", default="")
     r.add_argument("--base-branch", default="main")
-    m = sub.add_parser("merge-check")
-    for flag in ("pr-json", "files-json", "repo", "state-git-remote", "out"):
-        m.add_argument("--" + flag, required=True)
-    z = sub.add_parser("mark-merged")
-    z.add_argument("--fingerprint", required=True)
-    z.add_argument("--pr-number", type=int, required=True)
-    z.add_argument("--state-git-remote", required=True)
     return p
 
 
 def main(argv=None) -> int:
     args = parser().parse_args(argv)
     try:
-        out = repair(args) if args.cmd == "repair" else (
-            merge_check(args) if args.cmd == "merge-check" else mark_merged(args)
-        )
+        out = repair(args)
     except Exception as exc:
         out = {"status": "SKIPPED", "reason": redact(f"{type(exc).__name__}: {exc}")}
     print(json.dumps(out, ensure_ascii=False, indent=2))
