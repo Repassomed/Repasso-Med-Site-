@@ -6427,6 +6427,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-24T21:50:14.731764+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:semiologia-ii-b08-pa-r5--bridge-6f84748ae648",
+      "informational_cost_usd": 0.176992,
+      "input_tokens": 44566,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 8786,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T21:50:17.094798+00:00"
     }
   ]
 }
