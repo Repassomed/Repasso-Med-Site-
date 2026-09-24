@@ -1920,7 +1920,9 @@
         "coordinator/bridge_pr.py",
         "coordinator/worker_bridge.py",
         "coordinator/tests/test_worker_bridge.py",
-        "coordination/tasks.json"
+        "coordination/tasks.json",
+        "coordinator/tests/test_workflow_security.py",
+        "coordinator/tests/test_runner_generate.py"
       ],
       "objetivo": "Quando o Cartão de Merge confiável concluir NEEDS-FIX, devolver os achados específicos à coordenação, reservar uma execution id nova, corrigir a partir do checkpoint atual na mesma branch/PR, redespachar o Guard e auditar novamente. Máximo de 2 correções automáticas; nunca merge/deploy automático.",
       "fonte": "Decisão operacional de José após PR #175 — 23/09/2026",
@@ -1937,7 +1939,7 @@
       "pr": null,
       "commit": null,
       "issue": 175,
-      "notas": "DONE passa a valer após merge humano desta implementação. Cartão aceito somente do github-actions[bot] com marcador do Coordinator; fingerprint impede duplicação; 2 correções automáticas no máximo; falha de execução continua sem retry silencioso.",
+      "notas": "DONE passa a valer após merge humano desta implementação. Cartão aceito somente do github-actions[bot] com marcador do Coordinator; fingerprint impede duplicação; 2 correções automáticas no máximo; falha de execução continua sem retry silencioso. Também corrige dois bloqueios de preflight já observados na main pós-#175: teste de diff com janela stale e teste concorrente de orçamento flaky, sem alterar a lógica de orçamento.",
       "automation_enabled": false,
       "bridge_enabled": false,
       "risk_level": "ALTO",
