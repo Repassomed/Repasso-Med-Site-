@@ -915,8 +915,6 @@ def _candidato_a_correcao_de_auditoria(
     for canonical_id, registro in registros.items():
         if registro.status != task_runtime.RUNTIME_NEEDS_AUDIT:
             continue
-        if registro.audit_fix_attempts >= MAX_AUDIT_FIX_ATTEMPTS:
-            continue
         if not registro.guard_confirmado or not registro.pr_number or not registro.branch or not registro.checkpoint_commit:
             continue
         tarefa = por_id.get(canonical_id)
@@ -967,6 +965,10 @@ def _candidato_a_correcao_de_auditoria(
                 or registro.audit_fix_execution_failures >= MAX_AUDIT_FIX_EXECUTION_FAILURES
             ):
                 continue
+        elif registro.audit_fix_attempts >= MAX_AUDIT_FIX_ATTEMPTS:
+            # O teto semântico só bloqueia um NOVO parecer. Retry operacional
+            # do parecer já contado acima não cria uma terceira rodada.
+            continue
         candidatos.append((ordem.get(tarefa.priority, 99), tarefa.id, tarefa, meta, registro, pedido))
     if not candidatos:
         return None
