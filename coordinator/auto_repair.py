@@ -31,7 +31,7 @@ from .openai_transport import OpenAIResponsesTransport
 from .redact import redact
 
 ENV_ENABLED = "REPASSO_AUTO_REPAIR_ENABLED"
-MAX_OUTPUT_TOKENS = 4000
+MAX_OUTPUT_TOKENS = 2000
 
 
 class AttemptStore:
@@ -225,7 +225,7 @@ def repair(args) -> dict:
         model_id=cfg.model, tier=TIER_NORMAL, system=SYSTEM_PROMPT,
         prompt=prompt, limiter=limiter,
     )
-    ledger = GitUsageLedger(GitJsonStore(args.state_git_remote, branch="coordinator-state-usage"))
+    ledger = GitUsageLedger(GitJsonStore(args.state_git_remote, branch="coordinator-state-usage-openai"))
     result = openai_client.call(
         cfg, req, transport=OpenAIResponsesTransport(timeout=120.0, max_retries=0),
         limiter=limiter, ledger=ledger, event_key=f"auto-repair:{fp}:a{attempt}",
