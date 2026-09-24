@@ -71,7 +71,7 @@ from .openai_audit import (
 )
 from .openai_budget import OpenAICallLimiter
 from .openai_config import OpenAIAuditorConfig
-from .openai_privacy import preflight as privacy_preflight
+from .openai_privacy import preflight as privacy_preflight, redact_pii_for_audit
 from .openai_routing import TIER_ZERO as OPENAI_TIER_ZERO, decide as openai_route_decide
 from .openai_transport import OpenAIResponsesTransport
 from .redact import redact
@@ -634,6 +634,11 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
         source_pack_text=source_pack_text,
         head_context_text=event.payload.get("head_context"),
     )
+    # PII objetiva (e-mail/CPF/telefone) não é necessária para auditar o
+    # conteúdo. Redigimos LOCALMENTE antes do preflight e antes da rede.
+    # Segredos/tokens ficam intactos para que o preflight continue
+    # bloqueando-os fail-closed.
+    prompt_texto = redact_pii_for_audit(prompt_texto)
 
     # Correção B6 da auditoria independente do PR #107: privacy preflight
     # determinístico, ANTES de qualquer chamada — sobre o texto EXATO que
