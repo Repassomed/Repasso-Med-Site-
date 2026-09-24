@@ -277,6 +277,16 @@
       "recorded_at": "2026-09-24T05:01:59.742320+00:00",
       "status": "FAILED",
       "task_id": "semiologia-ii-questoes-exames-p0-r2--bridge-f03f6b15ff21"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "resposta do modelo n\u00e3o \u00e9 um JSON v\u00e1lido \u2014 A resposta atingiu o teto de sa\u00edda do Runner (8000 tokens), portanto \u00e9 tratada como truncada \u2014 nunca aplicada parcialmente.",
+      "recorded_at": "2026-09-24T05:06:41.287543+00:00",
+      "status": "FAILED",
+      "task_id": "cleanup-como-estudar-biologia--bridge-ccac8ac439a0"
     }
   ]
 }
