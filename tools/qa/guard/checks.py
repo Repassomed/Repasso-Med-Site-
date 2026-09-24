@@ -43,7 +43,6 @@ from __future__ import annotations
 import json
 import os
 import re
-from collections import Counter
 from dataclasses import dataclass, field
 
 from . import materia
@@ -602,29 +601,27 @@ def _check_answers(nome: str, base, head) -> list[Finding]:
                            nome, {"ocorrencias": duplicadas[:8]}))
 
     # Lei 6 — questões sem id podem compartilhar enunciado (e chave), inclusive
-    # entre bloco e banco. Comparar um dict simples guarda só a última letra e
-    # inventa alterações quando o mesmo enunciado já tinha gabaritos distintos.
+    # entre bloco e banco. Preservar todas as ocorrências em ordem evita falsos
+    # positivos do dict que guardava apenas a última resposta. Também detecta
+    # uma troca entre duas cópias, mesmo com o mesmo conjunto de letras.
     if base:
-        antes: dict[str, Counter[str]] = {}
-        depois: dict[str, Counter[str]] = {}
+        antes: dict[str, list[str]] = {}
+        depois: dict[str, list[str]] = {}
         exemplo = {}
         for q in base.questions:
             if q.answer_letter:
-                antes.setdefault(q.key, Counter())[q.answer_letter] += 1
+                antes.setdefault(q.key, []).append(q.answer_letter)
         for q in head.questions:
             if q.answer_letter:
-                depois.setdefault(q.key, Counter())[q.answer_letter] += 1
+                depois.setdefault(q.key, []).append(q.answer_letter)
                 exemplo.setdefault(q.key, q.qid or q.stem[:60])
         mudou = []
         for key, letras_atuais in depois.items():
-            if key not in antes:
+            if key not in antes or antes[key] == letras_atuais:
                 continue
-            removidas = sorted((antes[key] - letras_atuais).elements())
-            adicionadas = sorted((letras_atuais - antes[key]).elements())
-            if removidas and adicionadas:
-                # Com enunciados repetidos não há como parear cada cópia;
-                # exibir os multiconjuntos evita atribuir uma troca inventada.
-                mudou.append({"questao": exemplo[key], "de": removidas, "para": adicionadas})
+            # Adições/remoções ou reordenações exigem inspeção, pois não há
+            # identificador para parear cópias iguais com segurança.
+            mudou.append({"questao": exemplo[key], "de": antes[key], "para": letras_atuais})
         if mudou:
             out.append(Finding("gabarito-alterado", WARNING,
                                f"{nome}: {len(mudou)} grupo(s) de gabaritos de questão já existente mudaram. "
