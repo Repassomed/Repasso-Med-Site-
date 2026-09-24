@@ -147,12 +147,12 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "manual-infra-pr246-post245",
+      "current_task": "manual-audit-pr248-microtasks",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T17:22:30.981Z",
+      "last_heartbeat": "2026-09-24T18:56:08.981Z",
       "never_merge": true,
-      "progress": "Auditar/corrigir #246 após #245: Runner/Bridge, contexto, retries NEEDS-FIX e capacidade; procurar regressões adjacentes sem tocar #247/#249.",
+      "progress": "Auditar/corrigir #248: decomposição Fisiopatología II/Toxicología em microtarefas atômicas, dependências, source packs, escopo e compatibilidade com #246.",
       "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
@@ -167,12 +167,12 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "manual-infra-pr249-liveness",
+      "current_task": "manual-issue257-no-automerge",
       "display_name": "Claude Worker 2",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T17:22:30.985Z",
+      "last_heartbeat": "2026-09-24T18:56:08.981Z",
       "never_merge": true,
-      "progress": "Auditar/corrigir #249: liveness de workflows, push wake, cron, workflow_run depth e tempestade de execuções; procurar falhas adjacentes sem tocar #246/#247.",
+      "progress": "Issue #257: localizar e eliminar qualquer caminho de auto-merge do Coordinator/AUTO-REPARO; provar por testes que José é o único merger.",
       "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-2"
@@ -187,12 +187,12 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "manual-infra-pr247-guard-delta",
+      "current_task": "manual-issue256-asset-only-removal",
       "display_name": "Claude Worker 3",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T17:22:30.985Z",
+      "last_heartbeat": "2026-09-24T18:56:08.981Z",
       "never_merge": true,
-      "progress": "Auditoria independente/correção #247: Guard de assets por delta; procurar falsos positivos/negativos adjacentes sem tocar Runner/Bridge/workflows.",
+      "progress": "Issue #256: Guard deve detectar asset removido/movido mesmo sem HTML alterado, preservando regra por delta da #247.",
       "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-3"
@@ -207,12 +207,12 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "manual-coordinator-blackbox-post245",
+      "current_task": "manual-issue258-worker-capacity-separation",
       "display_name": "Claude Worker 4",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T17:22:30.985Z",
+      "last_heartbeat": "2026-09-24T18:56:08.981Z",
       "never_merge": true,
-      "progress": "Auditoria black-box ponta a ponta da coordenação na main pós-#245; encontrar falhas distintas das #246/#247/#249 e abrir PR separado somente se houver correção comprovada.",
+      "progress": "Issue #258: separar reservas de sessões humanas da capacidade api_runner para evitar NO_ASSIGNMENT falso sem criar colisões.",
       "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-4"
