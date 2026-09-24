@@ -4402,6 +4402,16 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-24T05:27:10.220305+00:00"
+    },
+    {
+      "estimated_cost_usd": -0.07373,
+      "event_key": "runner-task:fisiopatologia-ii-issue101-r3-sourcepack--bridge-2a92ba4566d0",
+      "input_tokens": 0,
+      "kind": "correction",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T05:27:44.858438+00:00"
     }
   ]
 }
