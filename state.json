@@ -2738,6 +2738,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-24T00:08:08.709602+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:infra-post-merge-reconciliation-issue162--bridge-4b0554eefe82",
+      "informational_cost_usd": 0.036852,
+      "input_tokens": 12126,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 1260,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T00:08:10.323893+00:00"
     }
   ]
 }
