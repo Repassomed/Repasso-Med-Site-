@@ -66,22 +66,26 @@ def test_bridge_workflow_existe_e_nao_substitui_o_canario() -> None:
     print("OK  test_bridge_workflow_existe_e_nao_substitui_o_canario")
 
 
-def test_bridge_tem_apenas_os_dois_gatilhos_confiaveis() -> None:
-    """§7 + correção B5 (auditoria do PR #129): ``workflow_dispatch`` para
-    o piloto e ``workflow_run`` do OBSERVE para a entrega automática do
-    modo ``active-supervised``. Nunca ``pull_request``/``issue_comment``/
-    ``schedule``/``push``/``repository_dispatch`` — nenhuma superfície em
-    que um terceiro possa provocar execução (um comentário é texto de
-    terceiro; a conclusão de um workflow do próprio repositório não é)."""
+def test_bridge_tem_apenas_os_tres_gatilhos_confiaveis() -> None:
+    """O Bridge aceita exatamente três origens controladas:
+    workflow_dispatch do José, workflow_run do OBSERVE e heartbeat schedule.
+    O schedule só pode executar em active-supervised; não há input livre nem
+    superfície pull_request/issue_comment/push/repository_dispatch."""
     secao = _secao_on(_ler(_BRIDGE_PATH))
     assert "workflow_dispatch:" in secao
     assert "workflow_run:" in secao
+    assert "schedule:" in secao and 'cron: "*/30 * * * *"' in secao
     for proibido in (
         "pull_request", "pull_request_target", "issue_comment",
-        "schedule:", "push:", "repository_dispatch",
+        "push:", "repository_dispatch",
     ):
         assert proibido not in secao, f"{proibido!r} não pode ser gatilho do Worker Bridge"
-    print("OK  test_bridge_tem_apenas_os_dois_gatilhos_confiaveis")
+    texto = _ler(_BRIDGE_PATH)
+    idx = texto.index("  bridge:")
+    condicao = texto[idx: texto.index("runs-on:", idx)]
+    assert "github.event_name == 'schedule'" in condicao
+    assert "vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised'" in condicao
+    print("OK  test_bridge_tem_apenas_os_tres_gatilhos_confiaveis")
 
 
 def test_b5_workflow_run_fixa_o_workflow_de_origem_pelo_nome() -> None:
@@ -129,9 +133,9 @@ def test_b5_origem_do_ciclo_chega_ao_python_derivada_do_event_name() -> None:
     texto = _ler(_BRIDGE_PATH)
     executavel = _sem_comentarios(texto)
     assert "REPASSO_WORKER_BRIDGE_TRIGGER" in executavel
-    assert "github.event_name == 'workflow_run' && 'event' || 'manual'" in executavel, (
-        "a origem precisa ser derivada de github.event_name"
-    )
+    expressao = "(github.event_name == 'workflow_run' || github.event_name == 'schedule') && 'event' || 'manual'"
+    assert expressao in executavel, "a origem precisa ser derivada de github.event_name"
+    assert executavel.count(expressao) == 3, "gate/bootstrap/execução precisam usar a mesma origem tipada"
     idx = texto.index("Rodar o Worker Bridge")
     passo = texto[idx: texto.index("Publicar o resultado", idx)]
     assert "REPASSO_WORKER_BRIDGE_TRIGGER" in passo, (
@@ -282,17 +286,17 @@ def test_bridge_usa_o_ledger_global_e_nao_um_segundo_teto() -> None:
     print("OK  test_bridge_usa_o_ledger_global_e_nao_um_segundo_teto")
 
 
-def test_bridge_nao_tem_laco_nem_polling() -> None:
-    """§13: 'não criar polling periódico' e 'não fazer loop infinito
-    consumindo a fila'. Uma execução = no máximo UMA atribuição."""
+def test_bridge_heartbeat_nao_vira_laco_de_execucao() -> None:
+    """O heartbeat agenda NOVAS execuções isoladas, mas cada run continua
+    tendo exatamente uma invocação do Bridge e nenhum laço/sleep interno."""
     texto = _ler(_BRIDGE_PATH)
-    assert "schedule:" not in texto, "nenhum cron/polling"
+    assert 'cron: "*/30 * * * *"' in texto
     for proibido in ("while true", "for i in $(seq", "sleep "):
-        assert proibido not in texto, f"{proibido!r} indicaria laço/polling"
+        assert proibido not in texto, f"{proibido!r} indicaria laço interno"
     assert len(re.findall(r"python3 -m coordinator\.worker_bridge", _sem_comentarios(texto))) == 1, (
         "o Bridge é invocado exatamente uma vez por execução"
     )
-    print("OK  test_bridge_nao_tem_laco_nem_polling")
+    print("OK  test_bridge_heartbeat_nao_vira_laco_de_execucao")
 
 
 def test_bridge_falha_o_job_quando_o_cli_da_erro() -> None:
@@ -359,7 +363,7 @@ def test_guard_nunca_ganhou_permissao_de_merge() -> None:
 def main() -> int:
     testes = [
         test_bridge_workflow_existe_e_nao_substitui_o_canario,
-        test_bridge_tem_apenas_os_dois_gatilhos_confiaveis,
+        test_bridge_tem_apenas_os_tres_gatilhos_confiaveis,
         test_b5_workflow_run_fixa_o_workflow_de_origem_pelo_nome,
         test_b5_evento_exige_sucesso_branch_padrao_e_modo_active_supervised,
         test_b5_dispatch_manual_continua_exigindo_o_ator_confiavel,
@@ -375,7 +379,7 @@ def main() -> int:
         test_bridge_roda_a_suite_antes_de_qualquer_chamada_paga,
         test_credencial_paga_so_existe_no_passo_do_bridge,
         test_bridge_usa_o_ledger_global_e_nao_um_segundo_teto,
-        test_bridge_nao_tem_laco_nem_polling,
+        test_bridge_heartbeat_nao_vira_laco_de_execucao,
         test_bridge_falha_o_job_quando_o_cli_da_erro,
         test_guard_aceita_dispatch_com_apenas_um_numero_de_pr,
         test_guard_valida_o_formato_do_numero_antes_de_usar,
