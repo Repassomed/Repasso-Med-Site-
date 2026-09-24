@@ -745,7 +745,6 @@ class TaskRuntimeStore:
     def registrar_falha_operacional_correcao(
         self, canonical_task_id: str, *, worker_id: str, execution_task_id: str,
         reason: str, max_execution_failures: int,
-        esgotar_parecer: bool = False,
     ) -> ReservaResult:
         """Falha/recusa do audit-fix SEM novo HEAD.
 
@@ -754,12 +753,12 @@ class TaskRuntimeStore:
         semântica já reservada continua contando UMA vez; retries operacionais
         do mesmo fingerprint não contam rodadas adicionais.
 
-        No teto (ou com ``esgotar_parecer=True``, quando o worker declarou
-        que não há o que mudar), o parecer deixa de ser elegível, mas a
-        tarefa CONTINUA em NEEDS-AUDIT: a PR registrada ainda é o entregável
-        válido, e só uma nova auditoria ou a decisão do José a resolvem.
-        Antes ela terminava FAILED, e a reconciliação pós-merge (que exige
-        NEEDS-AUDIT) nunca mais a marcava DONE.
+        No teto, o parecer deixa de ser elegível, mas a tarefa CONTINUA em
+        NEEDS-AUDIT: a PR registrada ainda é o entregável válido, e só uma
+        nova auditoria ou a decisão do José a resolvem. Resposta do worker
+        sem novo HEAD — inclusive "nenhuma alteração necessária" — conta
+        como uma tentativa operacional e pode ser refeita por outro worker
+        até o teto; nunca encerra o parecer na primeira resposta.
         """
         alvo = (canonical_task_id or "").strip()
         worker = (worker_id or "").strip()
@@ -785,7 +784,7 @@ class TaskRuntimeStore:
                 return False, dados
 
             falhas_antes = int(fresco.get("audit_fix_execution_failures") or 0)
-            falhas_agora = max_execution_failures if esgotar_parecer else falhas_antes + 1
+            falhas_agora = falhas_antes + 1
             tentativas = int(fresco.get("audit_fix_attempts") or 0)
             if falhas_agora < max_execution_failures:
                 motivo_final = (
