@@ -62,6 +62,7 @@ FileExistsError: boom
     paths, lines = candidate_paths(log, "Repasso Coordinator (WORKER BRIDGE)")
     assert "coordinator/tests/run_all.py" not in paths
     assert "coordinator/tests/test_worker_bridge.py" in paths
+    assert "coordinator/worker_bridge.py" not in paths
     assert 72 in lines["coordinator/tests/test_worker_bridge.py"]
     print("OK  test_candidate_does_not_offer_run_all")
 
