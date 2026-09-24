@@ -327,6 +327,25 @@
       "status": "NEEDS-AUDIT",
       "updated_at": "2026-09-24T05:09:41.261450+00:00",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "audit_fix_attempts": 0,
+      "branch": "runner/cleanup-como-estudar-embriologia",
+      "canonical_task_id": "cleanup-como-estudar-embriologia",
+      "checkpoint_commit": null,
+      "execution_history": [],
+      "execution_task_id": "cleanup-como-estudar-embriologia--bridge-580e15579ddd",
+      "guard_dispatch_attempts": 0,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "last_audit_findings": "",
+      "last_audit_fix_fingerprint": null,
+      "pr_number": null,
+      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'cleanup-como-estudar-embriologia' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=True.)",
+      "reserved_at": "2026-09-24T05:10:42.434060+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-24T05:10:42.434076+00:00",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
