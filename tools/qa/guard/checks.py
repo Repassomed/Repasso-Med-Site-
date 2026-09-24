@@ -43,6 +43,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 
 from . import materia
@@ -600,17 +601,33 @@ def _check_answers(nome: str, base, head) -> list[Finding]:
                            "Isso cria mais de uma resposta defensável.",
                            nome, {"ocorrencias": duplicadas[:8]}))
 
-    # Lei 6 — gabarito antigo alterado precisa aparecer no pacote de auditoria.
+    # Lei 6 — questões sem id podem compartilhar enunciado (e chave), inclusive
+    # entre bloco e banco. Comparar um dict simples guarda só a última letra e
+    # inventa alterações quando o mesmo enunciado já tinha gabaritos distintos.
     if base:
-        antes = {q.key: q.answer_letter for q in base.questions if q.answer_letter}
-        mudou = []
+        antes: dict[str, Counter[str]] = {}
+        depois: dict[str, Counter[str]] = {}
+        exemplo = {}
+        for q in base.questions:
+            if q.answer_letter:
+                antes.setdefault(q.key, Counter())[q.answer_letter] += 1
         for q in head.questions:
-            if q.answer_letter and q.key in antes and antes[q.key] != q.answer_letter:
-                mudou.append({"questao": q.qid or q.stem[:60],
-                              "de": antes[q.key], "para": q.answer_letter})
+            if q.answer_letter:
+                depois.setdefault(q.key, Counter())[q.answer_letter] += 1
+                exemplo.setdefault(q.key, q.qid or q.stem[:60])
+        mudou = []
+        for key, letras_atuais in depois.items():
+            if key not in antes:
+                continue
+            removidas = sorted((antes[key] - letras_atuais).elements())
+            adicionadas = sorted((letras_atuais - antes[key]).elements())
+            if removidas and adicionadas:
+                # Com enunciados repetidos não há como parear cada cópia;
+                # exibir os multiconjuntos evita atribuir uma troca inventada.
+                mudou.append({"questao": exemplo[key], "de": removidas, "para": adicionadas})
         if mudou:
             out.append(Finding("gabarito-alterado", WARNING,
-                               f"{nome}: {len(mudou)} gabarito(s) de questão já existente mudaram. "
+                               f"{nome}: {len(mudou)} grupo(s) de gabaritos de questão já existente mudaram. "
                                "Conteúdo médico: precisa de decisão humana explícita (Lei 6).",
                                nome, {"mudancas": mudou[:10]}))
     if not out:
