@@ -612,6 +612,7 @@ class TaskRuntimeStore:
         execution_task_id: str, reason: str,
         checkpoint_commit: str | None = None, branch: str | None = None,
         question_report: str | None = None,
+        reset_audit_execution_failures: bool = False,
     ) -> bool:
         """Regra 6: só escreve quando a leitura FRESCA ainda mostra a
         reserva desta MESMA execução (``IN-PROGRESS`` + mesmo
@@ -642,6 +643,14 @@ class TaskRuntimeStore:
                 "branch": branch if branch is not None else fresco.get("branch"),
                 "question_report": (
                     question_report if question_report is not None else fresco.get("question_report")
+                ),
+                "audit_fix_execution_failures": (
+                    0 if reset_audit_execution_failures
+                    else int(fresco.get("audit_fix_execution_failures") or 0)
+                ),
+                "last_audit_fix_worker_id": (
+                    None if reset_audit_execution_failures
+                    else fresco.get("last_audit_fix_worker_id")
                 ),
                 "updated_at": _now_iso(),
             }
