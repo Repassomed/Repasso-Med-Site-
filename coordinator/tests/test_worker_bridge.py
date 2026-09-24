@@ -186,6 +186,7 @@ class _FakeGitHubApi:
         self.prs: list[dict] = []
         self.criadas: list[dict] = []
         self.dispatches: list[tuple] = []
+        self.atualizacoes: list[tuple[int, str]] = []
         self.comentarios: dict[int, list[dict]] = {}
         self._proximo = primeiro_numero
 
@@ -226,6 +227,14 @@ class _FakeGitHubApi:
         self.criadas.append(pr)
         return pr
 
+    def atualizar_pr_corpo(self, pr_number: int, *, corpo: str) -> dict:
+        for pr in self.prs:
+            if pr.get("number") == pr_number:
+                pr["body"] = corpo
+                self.atualizacoes.append((pr_number, corpo))
+                return pr
+        raise bridge_pr.GitHubBridgeApiError(f"PR #{pr_number} inexistente no fake")
+
     def despachar_workflow(self, *, arquivo: str, ref: str, inputs: dict) -> None:
         self.dispatches.append((arquivo, ref, inputs))
 
@@ -262,6 +271,91 @@ def _ciclo(
         gerar_patch=gerar_patch,
     )
     return outcome, caminho_tasks, store, reg
+
+
+def _relatorio_8a_valido() -> str:
+    return render_question_report({
+        "sources": [{
+            "source": "P2 Turma E Semio.pdf",
+            "page_or_image": "p. 2",
+            "legibility": "integral",
+            "detected": 2,
+            "used": 2,
+            "new": 1,
+            "reformulated": 1,
+            "duplicates": 0,
+            "reconstructed": 0,
+            "pending": 0,
+            "site_destination": "B09 + Banco General",
+        }],
+        "coverage_confirmation": COVERAGE_CONFIRMATION,
+        "notes": "Rastreabilidade conferida.",
+    })
+
+
+class _GeracaoComRelatorio:
+    def __init__(self, report: str | None = None) -> None:
+        self.report = report or _relatorio_8a_valido()
+        self.calls = 0
+
+    def __call__(self):
+        from types import SimpleNamespace
+        self.calls += 1
+        return SimpleNamespace(
+            status="ok", reason="ok", patch=_patch_padrao(),
+            question_report=self.report, ledger_correction_failed=False,
+        )
+
+
+def test_relatorio_8a_persiste_no_runtime_e_entra_no_corpo_da_pr() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        api = _FakeGitHubApi()
+        geracao = _GeracaoComRelatorio()
+        tarefa = _tarefa(questions_report_required=True)
+        outcome, _c, store, _r = _ciclo(
+            tmp, [tarefa], patch=None, gerar_patch=geracao, api=api,
+        )
+        assert outcome.runner_result_status == "NEEDS-AUDIT", outcome
+        assert geracao.calls == 1
+        registro = store.get("infra-bridge-teste")
+        assert registro is not None and registro.question_report == geracao.report
+        assert outcome.pr is not None and outcome.pr.pr_number is not None
+        body = next(p["body"] for p in api.prs if p["number"] == outcome.pr.pr_number)
+        assert geracao.report in body
+        assert avaliar_lei_das_questoes(body).satisfeita is True
+    print("OK  test_relatorio_8a_persiste_no_runtime_e_entra_no_corpo_da_pr")
+
+
+def test_pr_reutilizada_sincroniza_relatorio_sem_duplicar() -> None:
+    api = _FakeGitHubApi()
+    task = RunnerTask(
+        task_id="t--bridge-abc123abc123", priority=Priority.P0, source_issue=128,
+        branch="runner/t", allowed_files=("alvo.txt",),
+        instructions="Escrever OK em alvo.txt.", checkpoint_commit=None,
+        capabilities_required=("codigo",), risk_level="BAIXO", policy_level="C",
+        question_report_required=True,
+    )
+    report1 = _relatorio_8a_valido()
+    first = bridge_pr.garantir_pr(
+        api, task=task, canonical_task_id="t", worker_id=PILOT_WORKER,
+        worker_display="Claude Worker 4", checkpoint_commit="abcdef1",
+        base_branch="main", titulo_tarefa="T", objetivo="Escrever OK.",
+        question_report=report1,
+    )
+    assert first.action == "CREATED"
+    report2 = report1.replace("Rastreabilidade conferida.", "Rastreabilidade reconferida após correção.")
+    second = bridge_pr.garantir_pr(
+        api, task=task, canonical_task_id="t", worker_id=PILOT_WORKER,
+        worker_display="Claude Worker 4", checkpoint_commit="abcdef2",
+        base_branch="main", titulo_tarefa="T", objetivo="Escrever OK.",
+        question_report=report2,
+    )
+    assert second.action == "REUSED"
+    assert len(api.criadas) == 1
+    assert len(api.atualizacoes) == 1
+    assert report2 in api.prs[0]["body"] and "abcdef2" in api.prs[0]["body"]
+    assert avaliar_lei_das_questoes(api.prs[0]["body"]).satisfeita is True
+    print("OK  test_pr_reutilizada_sincroniza_relatorio_sem_duplicar")
 
 
 # ---------------------------------------------------------------------------
@@ -2321,6 +2415,8 @@ def test_b4_retomada_nao_pega_tarefa_sem_pr_nem_guard_ja_confirmado() -> None:
 
 def main() -> int:
     testes = [
+        test_relatorio_8a_persiste_no_runtime_e_entra_no_corpo_da_pr,
+        test_pr_reutilizada_sincroniza_relatorio_sem_duplicar,
         test_bridge_desligado_nao_faz_nada,
         test_modo_invalido_fecha_o_portao,
         test_piloto_sem_as_duas_variaveis_fecha_o_portao,
