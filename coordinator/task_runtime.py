@@ -730,9 +730,9 @@ class TaskRuntimeStore:
         """Falha de execução do audit-fix SEM novo HEAD.
 
         Só este caminho pode voltar IN-PROGRESS -> NEEDS-AUDIT para repetir
-        o MESMO parecer. Tarefa normal FAILED continua terminal. A primeira
-        falha devolve a rodada semântica que foi reservada; retries do mesmo
-        fingerprint não descontam de novo. No teto, termina FAILED.
+        o MESMO parecer. Tarefa normal FAILED continua terminal. A rodada
+        semântica já reservada continua contando UMA vez; retries operacionais
+        do mesmo fingerprint não contam rodadas adicionais. No teto, termina FAILED.
         """
         alvo = (canonical_task_id or "").strip()
         worker = (worker_id or "").strip()
@@ -760,10 +760,6 @@ class TaskRuntimeStore:
             falhas_antes = int(fresco.get("audit_fix_execution_failures") or 0)
             falhas_agora = falhas_antes + 1
             tentativas = int(fresco.get("audit_fix_attempts") or 0)
-            # Na primeira falha deste fingerprint a reserva havia contado uma
-            # rodada semântica; sem novo HEAD ela não aconteceu de fato.
-            if falhas_antes == 0 and tentativas > 0:
-                tentativas -= 1
             status_novo = (
                 RUNTIME_NEEDS_AUDIT
                 if falhas_agora < max_execution_failures
