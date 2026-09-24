@@ -3493,6 +3493,16 @@
       "output_tokens": 186,
       "tier": "FAST",
       "timestamp": "2026-09-24T04:48:02.425849+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.112122,
+      "event_key": "runner-task:cleanup-como-estudar-bioestadistica--bridge-79489db095d1",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T04:49:09.418921+00:00"
     }
   ]
 }
