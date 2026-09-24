@@ -179,6 +179,21 @@
       "status": "FAILED",
       "updated_at": "2026-09-24T00:13:13.609709+00:00",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "branch": "runner/infra-inbox-task-intake-issue160",
+      "canonical_task_id": "infra-inbox-task-intake-issue160",
+      "checkpoint_commit": null,
+      "execution_task_id": "infra-inbox-task-intake-issue160--bridge-79509fa549c6",
+      "guard_dispatch_attempts": 0,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "pr_number": null,
+      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'infra-inbox-task-intake-issue160' autorizada declarativamente: risco ALTO, N\u00edvel D, jose_authorized=True.)",
+      "reserved_at": "2026-09-24T00:26:08.723754+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-24T00:26:08.723769+00:00",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
