@@ -450,6 +450,28 @@
       "status": "FAILED",
       "updated_at": "2026-09-24T06:07:02.477996+00:00",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "audit_fix_attempts": 0,
+      "audit_fix_execution_failures": 0,
+      "branch": "runner/toxicologia-provas-issue102-r2-sourcepack",
+      "canonical_task_id": "toxicologia-provas-issue102-r2-sourcepack",
+      "checkpoint_commit": null,
+      "execution_history": [],
+      "execution_task_id": "toxicologia-provas-issue102-r2-sourcepack--bridge-2508f5d4d0ce",
+      "guard_dispatch_attempts": 0,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "last_audit_findings": "",
+      "last_audit_fix_fingerprint": null,
+      "last_audit_fix_worker_id": null,
+      "pr_number": null,
+      "question_report": null,
+      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'toxicologia-provas-issue102-r2-sourcepack' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=True.)",
+      "reserved_at": "2026-09-24T09:32:15.033652+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-24T09:32:15.033670+00:00",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
