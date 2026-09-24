@@ -190,10 +190,14 @@ BRIDGE_VALIDATION_COMMAND_KEYS: tuple[str, ...] = CANARY_VALIDATION_COMMAND_KEYS
 # nunca uma branch de pessoa/PR.
 BRIDGE_BRANCH_PREFIX = "runner/"
 
-# Ciclo de correção pós-auditoria. Duas correções automáticas no máximo:
-# suficiente para fechar achados objetivos sem transformar NEEDS-FIX num
-# loop pago infinito. Depois disso a PR permanece visível para José.
-MAX_AUDIT_FIX_ATTEMPTS = 2
+# Ciclo de correção pós-auditoria. José pediu que NEEDS-FIX volte aos
+# workers e seja re-auditado até fechar. Quatro ciclos semânticos são o
+# circuit breaker: depois disso a PR permanece bloqueada/visível e nunca
+# vira aprovação por exaustão.
+MAX_AUDIT_FIX_ATTEMPTS = 4
+# Falha operacional da correção sem novo HEAD pode repetir o MESMO parecer,
+# com execution id nova, mas também tem teto independente.
+MAX_AUDIT_FIX_EXECUTION_FAILURES = 3
 MAX_AUDIT_FINDINGS_CHARS = 6000
 COORDINATOR_BOT_LOGIN = "github-actions[bot]"
 AUDIT_CARD_HEADER = "## 🟣 CARTÃO DE MERGE — Coordinator V3"
@@ -899,10 +903,11 @@ def _candidato_a_correcao_de_auditoria(
     registros: dict[str, TaskRuntimeRecord], *, github_api: bridge_pr.GitHubBridgeApi | None,
     base_branch: str, config: WorkerBridgeConfig,
 ) -> tuple[TaskRecord, BridgeTaskMetadata, TaskRuntimeRecord, AuditFixRequest] | None:
-    """Encontra um NEEDS-FIX novo sem confiar em comentário humano.
+    """Encontra NEEDS-FIX novo ou retry sem HEAD, sempre preso ao HEAD auditado.
 
-    Só considera PR aberta, same branch, no mesmo checkpoint registrado e
-    Guard já despachado. Pilot nunca consome correção automática.
+    NEEDS-AUDIT só consome parecer novo depois de Guard confirmado. FAILED
+    só é elegível quando representa uma correção do MESMO parecer que falhou
+    antes de produzir novo HEAD. Cartão de HEAD antigo nunca corrige HEAD novo.
     """
     if github_api is None or config.is_pilot:
         return None
@@ -910,12 +915,23 @@ def _candidato_a_correcao_de_auditoria(
     candidatos: list[tuple[int, str, TaskRecord, BridgeTaskMetadata, TaskRuntimeRecord, AuditFixRequest]] = []
     ordem = {p: i for i, p in enumerate(Priority)}
     for canonical_id, registro in registros.items():
-        if registro.status != task_runtime.RUNTIME_NEEDS_AUDIT:
+        retry_sem_head = (
+            registro.status == task_runtime.RUNTIME_FAILED
+            and bool(registro.last_audit_fix_fingerprint)
+        )
+        if registro.status not in (task_runtime.RUNTIME_NEEDS_AUDIT, task_runtime.RUNTIME_FAILED):
             continue
-        if registro.audit_fix_attempts >= MAX_AUDIT_FIX_ATTEMPTS:
+        if registro.status == task_runtime.RUNTIME_FAILED and not retry_sem_head:
             continue
-        if not registro.guard_confirmado or not registro.pr_number or not registro.branch or not registro.checkpoint_commit:
+        if registro.status == task_runtime.RUNTIME_NEEDS_AUDIT and registro.audit_fix_attempts >= MAX_AUDIT_FIX_ATTEMPTS:
             continue
+        if retry_sem_head and registro.audit_fix_execution_failures >= MAX_AUDIT_FIX_EXECUTION_FAILURES:
+            continue
+        if not registro.pr_number or not registro.branch or not registro.checkpoint_commit:
+            continue
+        if registro.status == task_runtime.RUNTIME_NEEDS_AUDIT and not registro.guard_confirmado:
+            continue
+
         tarefa = por_id.get(canonical_id)
         meta = metadados.get(canonical_id)
         if tarefa is None or meta is None:
@@ -943,25 +959,26 @@ def _candidato_a_correcao_de_auditoria(
                 continue
             if pedido.audited_head_sha is not None:
                 if pedido.audited_head_sha != pr_head_sha:
-                    # Cartão válido, porém de um commit anterior: nunca aplicar
-                    # seus achados sobre um HEAD novo.
                     continue
             elif pr_head_sha != (registro.checkpoint_commit or "").strip().lower():
-                # Compatibilidade fail-closed com cartões antigos que ainda
-                # não trazem HEAD auditado: só são consumidos se o runtime já
-                # aponta exatamente para o HEAD atual.
                 continue
         except bridge_pr.GitHubBridgeApiError:
             continue
-        if pedido is None or pedido.fingerprint == registro.last_audit_fix_fingerprint:
+
+        if retry_sem_head:
+            if pedido.fingerprint != registro.last_audit_fix_fingerprint:
+                continue
+            if pr_head_sha != (registro.checkpoint_commit or "").strip().lower():
+                continue
+        elif pedido.fingerprint == registro.last_audit_fix_fingerprint:
             continue
+
         candidatos.append((ordem.get(tarefa.priority, 99), tarefa.id, tarefa, meta, registro, pedido))
     if not candidatos:
         return None
     candidatos.sort(key=lambda x: (x[0], x[1]))
     _, _, tarefa, meta, registro, pedido = candidatos[0]
     return tarefa, meta, registro, pedido
-
 
 @dataclass(frozen=True)
 class BridgeOutcome:
@@ -1339,7 +1356,12 @@ def executar_correcao_de_auditoria(
     """
     canonical_task_id = tarefa.id
     tarefa_para_fila = replace(tarefa, estado="READY", agente=None, dependencias=())
-    decisao = scheduler.escolher_proxima_atribuicao([tarefa_para_fila], workers)
+    workers_para_fix = workers
+    if registro_anterior.status == task_runtime.RUNTIME_FAILED and registro_anterior.worker_id:
+        alternativas = [w for w in workers if w.worker_id != registro_anterior.worker_id]
+        if alternativas:
+            workers_para_fix = alternativas
+    decisao = scheduler.escolher_proxima_atribuicao([tarefa_para_fila], workers_para_fix)
     if decisao.action == "POOL_PAUSED":
         return BridgeOutcome("POOL_PAUSED", decisao.reason, decision=decisao, runtime_record=registro_anterior)
     if decisao.action != "OFFER" or not decisao.worker_id:
@@ -1377,6 +1399,7 @@ def executar_correcao_de_auditoria(
         audit_fingerprint=pedido.fingerprint, audit_findings=pedido.findings,
         max_attempts=MAX_AUDIT_FIX_ATTEMPTS,
         checkpoint_commit=pedido.audited_head_sha or registro_anterior.checkpoint_commit,
+        max_execution_failures=MAX_AUDIT_FIX_EXECUTION_FAILURES,
     )
     if not reserva.reservado or reserva.record is None:
         liberacao = liberar_worker_apos_resultado(
@@ -1447,12 +1470,18 @@ def executar_correcao_de_auditoria(
     if status_runtime == task_runtime.RUNTIME_BLOCKED_LIMIT and not checkpoint:
         status_runtime = task_runtime.RUNTIME_BLOCKED
 
-    runtime_store.registrar_resultado(
-        canonical_task_id, status=status_runtime, worker_id=worker_id,
-        execution_task_id=execution_task_id, reason=motivo_resultado,
-        checkpoint_commit=checkpoint, branch=branch_final,
-        question_report=dispatch.question_report,
-    )
+    if status_runtime == task_runtime.RUNTIME_FAILED and not checkpoint:
+        runtime_store.registrar_falha_correcao_sem_head(
+            canonical_task_id, worker_id=worker_id,
+            execution_task_id=execution_task_id, reason=motivo_resultado,
+        )
+    else:
+        runtime_store.registrar_resultado(
+            canonical_task_id, status=status_runtime, worker_id=worker_id,
+            execution_task_id=execution_task_id, reason=motivo_resultado,
+            checkpoint_commit=checkpoint, branch=branch_final,
+            question_report=dispatch.question_report,
+        )
     registro_final = runtime_store.get(canonical_task_id) or registro
     liberacao = liberar_worker_apos_resultado(
         worker_registry, worker_id, canonical_task_id=canonical_task_id,
@@ -1475,8 +1504,9 @@ def executar_correcao_de_auditoria(
         notes.extend(notas_pr)
     else:
         notes.append(
-            f"correção terminou em {status_runner}; não há novo HEAD auditável e não existe retry "
-            "silencioso desta falha de execução."
+            f"correção terminou em {status_runner}; não há novo HEAD auditável. "
+            "FAILED operacional do mesmo parecer/HEAD continua elegível para retry bounded "
+            "antes da fila normal; BLOCKED/LIMIT continuam sem retry silencioso."
         )
 
     return BridgeOutcome(
