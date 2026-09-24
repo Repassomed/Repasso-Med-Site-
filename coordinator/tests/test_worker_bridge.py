@@ -324,6 +324,7 @@ def test_relatorio_8a_persiste_no_runtime_e_entra_no_corpo_da_pr() -> None:
         assert outcome.pr is not None and outcome.pr.pr_number is not None
         body = next(p["body"] for p in api.prs if p["number"] == outcome.pr.pr_number)
         assert geracao.report in body
+        assert "**Lei 8-A obrigatória:** SIM" in body
         assert avaliar_lei_das_questoes(body).satisfeita is True
     print("OK  test_relatorio_8a_persiste_no_runtime_e_entra_no_corpo_da_pr")
 
@@ -1108,6 +1109,7 @@ def test_sucesso_termina_em_needs_audit_com_pr_e_guard() -> None:
         assert "`alvo.txt`" in corpo
         assert "Claude Worker 4" in corpo
         assert bridge_pr.FRASE_MERGE_SO_JOSE in corpo
+        assert "**Lei 8-A obrigatória:** NÃO" in corpo
         assert "NEEDS-AUDIT" in corpo
         assert api.criadas[0]["head_branch"] == "runner/infra-bridge-teste"
         assert api.criadas[0]["base"] == "bootstrap"
