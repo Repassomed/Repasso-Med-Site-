@@ -324,6 +324,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:175.",
       "task_id": "infra-guard-audit-pr-context-issue165-r3",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "d6c688c9cb823ce26347dc8d6d98083371a4745d",
+      "component": "guard",
+      "error_id": "ERR-5669A4817C",
+      "error_type": "hard-fail",
+      "fingerprint": "5669a4817c1ec63257c4",
+      "first_seen": "2026-09-24T00:45:23.317539+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "7d771a4d96034517978e3b032e1e6c27",
+      "issue_sync_updated_at": "2026-09-24T00:45:23.317539+00:00",
+      "last_evidence_hash": "44136fa355b3678a1146",
+      "last_seen": "2026-09-24T00:45:23.317539+00:00",
+      "occurrence_count": 1,
+      "pr_number": 175,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35939782589",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:175.",
+      "task_id": "pr:175",
+      "worker_id": null
     }
   ]
 }
