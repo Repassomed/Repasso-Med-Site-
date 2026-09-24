@@ -211,6 +211,16 @@
       "recorded_at": "2026-09-24T00:13:10.183219+00:00",
       "status": "FAILED",
       "task_id": "infra-guard-audit-pr-context-issue165-r2--bridge-252fd0085f8a"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "resposta do modelo n\u00e3o \u00e9 um JSON v\u00e1lido \u2014 A resposta atingiu o teto de sa\u00edda do Runner (8000 tokens), portanto \u00e9 tratada como truncada \u2014 nunca aplicada parcialmente.",
+      "recorded_at": "2026-09-24T00:27:51.892807+00:00",
+      "status": "FAILED",
+      "task_id": "infra-inbox-task-intake-issue160--bridge-79509fa549c6"
     }
   ]
 }
