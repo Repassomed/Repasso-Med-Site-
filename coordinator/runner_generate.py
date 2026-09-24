@@ -863,9 +863,6 @@ class GenerateOutcome:
     status: str  # "ok" | "blocked" | "failed"
     reason: str
     patch: StructuredPatch | None = None
-    # Markdown determinístico já validado da Lei 8-A.11. Nunca é aplicado
-    # ao repositório; segue apenas para estado operacional/corpo da PR.
-    question_report: str | None = None
     usage: UsageRecord | None = None
     external_call_made: bool = False
     # Achado F8-C (7ª rodada): True só quando a chamada TEVE êxito mas a
@@ -878,6 +875,9 @@ class GenerateOutcome:
     # pior das hipóteses, permanece contada — nunca um valor menor/
     # ausente).
     ledger_correction_failed: bool = False
+    # Markdown determinístico já validado da Lei 8-A.11. Campo novo no FIM
+    # para não alterar a ordem posicional histórica de GenerateOutcome.
+    question_report: str | None = None
 
     def to_dict(self) -> dict:
         d = {
