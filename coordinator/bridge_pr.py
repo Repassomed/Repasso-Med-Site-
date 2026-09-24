@@ -78,6 +78,8 @@ class GitHubBridgeApi(Protocol):
 
     def prs_abertas_por_head(self, branch: str) -> list[dict]: ...
 
+    def pr_por_numero(self, pr_number: int) -> dict: ...
+
     def criar_pr(self, *, titulo: str, head: str, base: str, corpo: str) -> dict: ...
 
     def despachar_workflow(self, *, arquivo: str, ref: str, inputs: dict) -> None: ...
@@ -148,6 +150,14 @@ class GitHubRestApi:
         head = urllib.request.quote(f"{self.owner}:{alvo}", safe="")
         dados = self._requisicao("GET", f"/repos/{self.owner}/{self.repo}/pulls?state=open&head={head}")
         return list(dados) if isinstance(dados, list) else []
+
+    def pr_por_numero(self, pr_number: int) -> dict:
+        if not isinstance(pr_number, int) or pr_number <= 0:
+            raise ValueError(f"pr_number precisa ser inteiro positivo — recebido {pr_number!r}.")
+        dados = self._requisicao("GET", f"/repos/{self.owner}/{self.repo}/pulls/{pr_number}")
+        if not isinstance(dados, dict) or int(dados.get("number") or 0) != pr_number:
+            raise GitHubBridgeApiError(f"a consulta da PR #{pr_number} não devolveu uma PR utilizável.")
+        return dados
 
     def criar_pr(self, *, titulo: str, head: str, base: str, corpo: str) -> dict:
         dados = self._requisicao(

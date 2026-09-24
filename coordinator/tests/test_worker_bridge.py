@@ -174,8 +174,8 @@ class _GeracaoProibida:
 
 
 class _FakeGitHubApi:
-    """Só as três operações do protocolo ``bridge_pr.GitHubBridgeApi``.
-    Nenhuma operação de merge existe — nem aqui nem no cliente real."""
+    """Operações mínimas do protocolo ``bridge_pr.GitHubBridgeApi``.
+    A leitura de PR por número é read-only; nenhuma operação de merge existe."""
 
     def __init__(self, primeiro_numero: int = 901) -> None:
         self.prs: list[dict] = []
@@ -185,6 +185,18 @@ class _FakeGitHubApi:
 
     def prs_abertas_por_head(self, branch: str) -> list[dict]:
         return [p for p in self.prs if p["head_branch"] == branch]
+
+    def pr_por_numero(self, pr_number: int) -> dict:
+        candidatos = [p for p in (self.prs + self.criadas) if p.get("number") == pr_number]
+        if not candidatos:
+            raise bridge_pr.GitHubBridgeApiError(f"PR #{pr_number} inexistente no fake")
+        p = candidatos[0]
+        return {
+            "number": pr_number,
+            "merged": bool(p.get("merged")),
+            "base": {"ref": p.get("base"), "repo": {"full_name": "fake/repo"}},
+            "head": {"ref": p.get("head_branch"), "repo": {"full_name": "fake/repo"}},
+        }
 
     def criar_pr(self, *, titulo: str, head: str, base: str, corpo: str) -> dict:
         pr = {
@@ -826,6 +838,64 @@ def test_runtime_nunca_reabre_tarefa_fechada_no_declarativo() -> None:
         assert visao[0].estado == "NEEDS-AUDIT"
         assert visao[0].agente is None
     print("OK  test_runtime_nunca_reabre_tarefa_fechada_no_declarativo")
+
+
+def test_merge_confirmado_vira_done_e_libera_dependencia_no_mesmo_ciclo() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        base = _tarefa(id="dep-base", arquivos=["base.txt"], branch="runner/dep-base")
+        filha = _tarefa(
+            id="dep-filha", arquivos=["filha.txt"], branch="runner/dep-filha",
+            dependencias=["dep-base"], prioridade_declarada="P1",
+        )
+        reserva = store.reservar("dep-base", worker_id=bridge_workers.BRIDGE_WORKER_1, branch="runner/dep-base")
+        assert reserva.reservado and reserva.record is not None
+        assert store.registrar_resultado(
+            "dep-base", status=task_runtime.RUNTIME_NEEDS_AUDIT,
+            worker_id=bridge_workers.BRIDGE_WORKER_1,
+            execution_task_id=reserva.record.execution_task_id or "", reason="aguarda auditoria",
+            checkpoint_commit="abcdef1", branch="runner/dep-base",
+        )
+        assert store.registrar_pr("dep-base", pr_number=901, esperado_status=task_runtime.RUNTIME_NEEDS_AUDIT)
+        assert store.reservar_guard_dispatch("dep-base", pr_number=901)
+        assert store.confirmar_guard_dispatch("dep-base", pr_number=901)
+        api = _FakeGitHubApi()
+        api.prs.append({"number": 901, "head_branch": "runner/dep-base", "base": "bootstrap", "merged": True})
+
+        outcome, _c, _s, _r = _ciclo(
+            tmp, [base, filha], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("filha.txt"),
+        )
+        assert store.get("dep-base").status == task_runtime.RUNTIME_DONE
+        assert outcome.decision is not None and outcome.decision.task_id == "dep-filha", outcome
+    print("OK  test_merge_confirmado_vira_done_e_libera_dependencia_no_mesmo_ciclo")
+
+
+def test_pr_fechada_sem_merge_ou_branch_divergente_nao_promove_done() -> None:
+    for merged, head in ((False, "runner/dep-base"), (True, "runner/outra")):
+        store = _runtime_store()
+        reserva = store.reservar("dep-base", worker_id=bridge_workers.BRIDGE_WORKER_1, branch="runner/dep-base")
+        assert reserva.reservado and reserva.record is not None
+        assert store.registrar_resultado(
+            "dep-base", status=task_runtime.RUNTIME_NEEDS_AUDIT,
+            worker_id=bridge_workers.BRIDGE_WORKER_1,
+            execution_task_id=reserva.record.execution_task_id or "", reason="aguarda auditoria",
+            checkpoint_commit="abcdef1", branch="runner/dep-base",
+        )
+        assert store.registrar_pr("dep-base", pr_number=901, esperado_status=task_runtime.RUNTIME_NEEDS_AUDIT)
+        assert store.reservar_guard_dispatch("dep-base", pr_number=901)
+        assert store.confirmar_guard_dispatch("dep-base", pr_number=901)
+        api = _FakeGitHubApi()
+        api.prs.append({"number": 901, "head_branch": head, "base": "bootstrap", "merged": merged})
+        notas, mudou = worker_bridge.reconciliar_merges_confirmados(
+            {"dep-base": store.get("dep-base")}, runtime_store=store, github_api=api,
+            base_branch="bootstrap", config=_config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED),
+        )
+        assert mudou is False, notas
+        assert store.get("dep-base").status == task_runtime.RUNTIME_NEEDS_AUDIT
+    print("OK  test_pr_fechada_sem_merge_ou_branch_divergente_nao_promove_done")
 
 
 def test_dependencia_considera_done_operacional() -> None:
@@ -2104,6 +2174,8 @@ def main() -> int:
         test_tarefa_failed_nao_entra_em_retry_automatico,
         test_tarefa_blocked_limit_nao_e_redistribuida_e_guarda_checkpoint,
         test_runtime_nunca_reabre_tarefa_fechada_no_declarativo,
+        test_merge_confirmado_vira_done_e_libera_dependencia_no_mesmo_ciclo,
+        test_pr_fechada_sem_merge_ou_branch_divergente_nao_promove_done,
         test_dependencia_considera_done_operacional,
         test_sucesso_termina_em_needs_audit_com_pr_e_guard,
         test_pr_e_idempotente_nunca_duplica,

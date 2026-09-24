@@ -10,7 +10,7 @@
     "José continua sendo o único responsável por merge e publicação."
   ],
   "versao": 1,
-  "atualizado_em": "2026-09-23",
+  "atualizado_em": "2026-09-24",
   "agentes_conhecidos": [
     "Claude 1",
     "Claude 2",
@@ -1156,7 +1156,7 @@
       "objetivo": "Implementar Intake seguro da Inbox #88: pedido novo deve ser deduplicado contra coordination/tasks.json, classificado e convertido em proposta TIPADA de registro de tarefa por branch/PR administrativa, nunca escrita direta em main. Pedido ambíguo vira NEEDS-INPUT; matéria nova exige autorização explícita; pedido já registrado apenas referencia a tarefa existente. O workflow pode ganhar somente as permissões mínimas necessárias para abrir a PR de cadastro, preservando anti-self-loop, fail-closed, zero auto-merge e zero deploy.",
       "fonte": "Issue #160 · auditoria estratégica de 23/09/2026",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P1",
       "capabilities_required": [
         "codigo"
@@ -1168,8 +1168,8 @@
       "pr": null,
       "commit": null,
       "issue": 160,
-      "notas": "Objetivo é eliminar edição manual recorrente de tasks.json. Alteração de permissões do workflow é sensível: mínimo privilégio, testes estruturais obrigatórios e NEEDS-AUDIT. José continua único mergeador.",
-      "automation_enabled": true,
+      "notas": "Objetivo é eliminar edição manual recorrente de tasks.json. Alteração de permissões do workflow é sensível: mínimo privilégio, testes estruturais obrigatórios e NEEDS-AUDIT. José continua único mergeador. Pausada estrategicamente em 24/09/2026: a fila de produção não deve gastar chamadas corrigindo a própria coordenação. Retomar depois que o backlog real estiver drenando com estabilidade.",
+      "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "ALTO",
       "policy_level": "D",
@@ -1226,7 +1226,7 @@
       "pr": null,
       "commit": null,
       "issue": 147,
-      "notas": "Parent backlog. Wildcard não é executável pelo Worker Bridge; o Intake deve quebrar em tarefas por matéria/caminho exato antes da execução. Não reescrever globalmente em uma PR."
+      "notas": "Parent backlog. Wildcard não é executável pelo Worker Bridge; o Intake deve quebrar em tarefas por matéria/caminho exato antes da execução. Não reescrever globalmente em uma PR. Inventário ao vivo encontrou 10 arquivos com ocorrência real; microtarefas por arquivo exato foram registradas. O parent continua apenas como rastreador global, não executável."
     },
     {
       "id": "semiologia-ii-visual-b05-b10",
@@ -1435,7 +1435,7 @@
       "objetivo": "Implementar reconciliação pós-merge: quando uma PR registrada pelo Worker Bridge for realmente mergeada na branch padrão por José, identificar com segurança o canonical_task_id correspondente e promover o runtime NEEDS-AUDIT para DONE por CAS na branch de estado. Fechamento sem merge, PR desconhecida ou inconsistência nunca alteram estado. Após reconciliação, o fluxo deve permitir o próximo ciclo/dependência, sem auto-merge/deploy.",
       "fonte": "Issue #162 · auditoria estratégica de 23/09/2026",
       "agente": null,
-      "estado": "READY",
+      "estado": "DONE",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -1447,8 +1447,8 @@
       "pr": null,
       "commit": null,
       "issue": 162,
-      "notas": "Bloqueador da autonomia entre tarefas dependentes. Pode exigir novo gatilho confiável no workflow para PR mergeada; mínimo privilégio, mesma-repo/default-branch, idempotência/CAS e testes obrigatórios. NEEDS-AUDIT; José continua único mergeador.",
-      "automation_enabled": true,
+      "notas": "Bloqueador da autonomia entre tarefas dependentes. Pode exigir novo gatilho confiável no workflow para PR mergeada; mínimo privilégio, mesma-repo/default-branch, idempotência/CAS e testes obrigatórios. NEEDS-AUDIT; José continua único mergeador. Implementada diretamente na frente resiliente #172: o Worker Bridge reconcilia PR mergeada -> runtime DONE antes de decidir a fila.",
+      "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "ALTO",
       "policy_level": "D",
@@ -1471,7 +1471,7 @@
       "objetivo": "Corrigir o vínculo entre o run do Guard despachado pelo Worker Bridge via workflow_dispatch e a PR real: o workflow_run do OBSERVE pode não trazer pull_requests[0]. Identificar de forma confiável PR, mesmo repo, base main e HEAD auditado usando metadados tipados do Guard/run/artifact; passar PR, diff real e audit-pack ao Coordinator; publicar Cartão de Merge/NEEDS-FIX na PR correta. Falhar fechado se vínculo ausente/inconsistente, sem auditoria paga duplicada, sem auto-merge/deploy. Cobrir ambos os gatilhos do Guard em testes.",
       "fonte": "Issue #165 · PR #164 / Guard por workflow_dispatch",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -1483,8 +1483,8 @@
       "pr": null,
       "commit": null,
       "issue": 165,
-      "notas": "Auditoria automática ausente na PR #164 antes da correção manual. Verificar evidência real do workflow_run e usar origem confiável; mesmo com Guard verde, sem contexto da PR não há MERGE-READY automático.",
-      "automation_enabled": true,
+      "notas": "Auditoria automática ausente na PR #164 antes da correção manual. Verificar evidência real do workflow_run e usar origem confiável; mesmo com Guard verde, sem contexto da PR não há MERGE-READY automático. Pausada estrategicamente em 24/09/2026: a fila de produção não deve gastar chamadas corrigindo a própria coordenação. Retomar depois que o backlog real estiver drenando com estabilidade.",
+      "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "ALTO",
       "policy_level": "D",
@@ -1535,7 +1535,7 @@
       "objetivo": "Implementar somente o vínculo confiável Guard→PR no caminho workflow_dispatch: o Guard deve gravar no próprio artifact contexto tipado com pr_number, base_ref, head_sha e head_repo_full_name obtidos da API; o OBSERVE deve baixar o artifact antes de buscar a PR e, quando workflow_run.pull_requests vier vazio, usar esse contexto apenas após comparar com a PR real da API, mesmo repositório e base padrão. Então buscar diff real, audit-pack e publicar a decisão na PR correta. Contexto ausente/inconsistente falha fechado; sem chamada paga duplicada; preservar caminho pull_request existente.",
       "fonte": "Issue #165 · retry após timeout #167; escopo reduzido",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "codigo"
@@ -1547,11 +1547,328 @@
       "pr": null,
       "commit": null,
       "issue": 165,
-      "notas": "Novo canonical_task_id; nunca reutilizar claim FAILED da tentativa original. Escopo reduzido a dois workflows e teste estrutural. NEEDS-AUDIT obrigatório.",
-      "automation_enabled": true,
+      "notas": "Novo canonical_task_id; nunca reutilizar claim FAILED da tentativa original. Escopo reduzido a dois workflows e teste estrutural. NEEDS-AUDIT obrigatório. Pausada estrategicamente em 24/09/2026: a fila de produção não deve gastar chamadas corrigindo a própria coordenação. Retomar depois que o backlog real estiver drenando com estabilidade.",
+      "automation_enabled": false,
       "bridge_enabled": true,
       "risk_level": "ALTO",
       "policy_level": "D",
+      "jose_authorized": true
+    },
+    {
+      "id": "infra-worker-bridge-resilient-queue-issue172",
+      "titulo": "P0 — Worker Bridge: fila resiliente, heartbeat e reconciliação pós-merge",
+      "area": "infraestrutura",
+      "materia": null,
+      "arquivos": [
+        ".github/workflows/coordinator-worker-bridge.yml",
+        "coordinator/bridge_pr.py",
+        "coordinator/task_runtime.py",
+        "coordinator/worker_bridge.py",
+        "coordinator/tests/test_worker_bridge.py",
+        "coordination/tasks.json"
+      ],
+      "objetivo": "Adicionar heartbeat periódico em active-supervised e reconciliar PRs mergeadas NEEDS-AUDIT -> DONE antes da decisão da fila, preservando uma atribuição por ciclo, fail-closed, orçamento global e ausência de auto-merge/deploy.",
+      "fonte": "Issue #172",
+      "agente": null,
+      "estado": "DONE",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "codigo"
+      ],
+      "dependencias": [
+        "infra-worker-bridge-v1"
+      ],
+      "branch": "fix/worker-bridge-resilient-queue",
+      "pr": null,
+      "commit": null,
+      "issue": 172,
+      "automation_enabled": false,
+      "bridge_enabled": false,
+      "risk_level": "ALTO",
+      "policy_level": "D",
+      "jose_authorized": true,
+      "notas": "Implementação entregue nesta PR administrativa; DONE passa a valer após merge humano."
+    },
+    {
+      "id": "cleanup-como-estudar-anatomia-patologica-ii",
+      "titulo": "P1 ALTA — Anatomía Patológica II: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "anatomia-patologica-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anatomia-patologica-ii.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Issue #147 · inventário real na main em 24/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/cleanup-como-estudar-anatomia-patologica-ii",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "cleanup-como-estudar-anestesiologia",
+      "titulo": "P1 ALTA — Anestesiología: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "anestesiologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anestesiologia.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Issue #147 · inventário real na main em 24/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/cleanup-como-estudar-anestesiologia",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "cleanup-como-estudar-bioestadistica",
+      "titulo": "P1 ALTA — Bioestadística: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "bioestadistica",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/bioestadistica.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Issue #147 · inventário real na main em 24/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/cleanup-como-estudar-bioestadistica",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "cleanup-como-estudar-biologia",
+      "titulo": "P1 ALTA — Biología: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "biologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/biologia.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Issue #147 · inventário real na main em 24/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/cleanup-como-estudar-biologia",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "cleanup-como-estudar-dermatologia",
+      "titulo": "P1 ALTA — Dermatología: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "dermatologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/dermatologia.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Issue #147 · inventário real na main em 24/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/cleanup-como-estudar-dermatologia",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "cleanup-como-estudar-embriologia",
+      "titulo": "P1 ALTA — Embriología: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "embriologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/embriologia.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Issue #147 · inventário real na main em 24/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/cleanup-como-estudar-embriologia",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "cleanup-como-estudar-guarani",
+      "titulo": "P1 ALTA — Guaraní: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "guarani",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/guarani.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Issue #147 · inventário real na main em 24/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/cleanup-como-estudar-guarani",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "cleanup-como-estudar-histologia-i-practica",
+      "titulo": "P1 ALTA — Histología I Práctica: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "histologia-i-practica",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/histologia-i-practica.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Issue #147 · inventário real na main em 24/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/cleanup-como-estudar-histologia-i-practica",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "cleanup-como-estudar-histologia-i",
+      "titulo": "P1 ALTA — Histología I: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "histologia-i",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/histologia-i.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Issue #147 · inventário real na main em 24/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/cleanup-como-estudar-histologia-i",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "cleanup-como-estudar-semiologia-ii",
+      "titulo": "P1 ALTA — Semiología II: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Issue #147 · inventário real na main em 24/09/2026",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "semiologia-ii-b05-pleural-r3"
+      ],
+      "branch": "runner/cleanup-como-estudar-semiologia-ii",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
       "jose_authorized": true
     }
   ]

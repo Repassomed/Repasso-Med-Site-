@@ -161,7 +161,8 @@ ENV_BRIDGE_EXPECTED_REF = "REPASSO_WORKER_BRIDGE_EXPECTED_REF"
 # Correção B5 da auditoria independente do PR #129: de ONDE veio este
 # ciclo. ``manual`` = alguém clicou "Run workflow" (``workflow_dispatch``);
 # ``event`` = o workflow foi acionado por um evento confiável
-# (``workflow_run`` da conclusão bem-sucedida do OBSERVE na branch padrão).
+# (``workflow_run`` da conclusão bem-sucedida do OBSERVE na branch padrão
+# ou heartbeat ``schedule`` da própria branch padrão, Issue #172).
 # Preenchido pelo workflow a partir de ``github.event_name``, nunca por
 # input livre, e reconferido em código: o modo ``pilot`` NUNCA inicia por
 # evento, e um valor desconhecido fecha o portão.
@@ -1054,6 +1055,68 @@ def retomar_guard(
     )
 
 
+def reconciliar_merges_confirmados(
+    registros: dict[str, TaskRuntimeRecord], *, runtime_store: TaskRuntimeStore,
+    github_api: bridge_pr.GitHubBridgeApi | None, base_branch: str,
+    config: WorkerBridgeConfig,
+) -> tuple[tuple[str, ...], bool]:
+    """Issue #172/#162 — manutenção zero-Anthropic antes da fila.
+
+    Uma tarefa só vira DONE quando a PR registrada no runtime está realmente
+    mergeada, aponta para a mesma branch de trabalho, usa a branch padrão como
+    base e não vem de fork. O CAS do TaskRuntimeStore reconfirma
+    NEEDS-AUDIT/pr_number/branch/Guard antes de escrever. Piloto não reconcilia
+    nada automaticamente.
+    """
+    if github_api is None or config.is_pilot:
+        return (), False
+
+    notas: list[str] = []
+    mudou = False
+    for registro in sorted(registros.values(), key=lambda r: r.canonical_task_id):
+        if registro.status != task_runtime.RUNTIME_NEEDS_AUDIT or registro.pr_number is None:
+            continue
+        try:
+            pr = github_api.pr_por_numero(registro.pr_number)
+        except (bridge_pr.GitHubBridgeApiError, ValueError) as exc:
+            notas.append(
+                f"reconciliação: não consegui consultar PR #{registro.pr_number} de "
+                f"{registro.canonical_task_id!r}: {redact(str(exc))}"
+            )
+            continue
+
+        if not bool(pr.get("merged")):
+            continue
+        base = pr.get("base") if isinstance(pr.get("base"), dict) else {}
+        head = pr.get("head") if isinstance(pr.get("head"), dict) else {}
+        base_repo = base.get("repo") if isinstance(base.get("repo"), dict) else {}
+        head_repo = head.get("repo") if isinstance(head.get("repo"), dict) else {}
+        base_ref = (base.get("ref") or "").strip()
+        head_ref = (head.get("ref") or "").strip()
+        base_full = (base_repo.get("full_name") or "").strip()
+        head_full = (head_repo.get("full_name") or "").strip()
+
+        if base_ref != (base_branch or "").strip():
+            notas.append(f"reconciliação: PR #{registro.pr_number} mergeada em base inesperada {base_ref!r}; ignorada.")
+            continue
+        if head_ref != (registro.branch or "").strip():
+            notas.append(f"reconciliação: PR #{registro.pr_number} head {head_ref!r} diverge da branch registrada; ignorada.")
+            continue
+        if not base_full or head_full != base_full:
+            notas.append(f"reconciliação: PR #{registro.pr_number} não é same-repo; ignorada fail-closed.")
+            continue
+
+        if runtime_store.marcar_done_apos_merge(
+            registro.canonical_task_id, pr_number=registro.pr_number, branch=head_ref
+        ):
+            mudou = True
+            notas.append(
+                f"reconciliação: {registro.canonical_task_id!r} -> DONE após merge confirmado "
+                f"da PR #{registro.pr_number}."
+            )
+    return tuple(notas), mudou
+
+
 def restringir_ao_piloto(
     tarefas: list[TaskRecord], config: WorkerBridgeConfig
 ) -> list[TaskRecord]:
@@ -1117,6 +1180,19 @@ def executar_ciclo(
     tarefas, metadados, registros = visao_da_fila(
         tasks_json_path=tasks_json_path, runtime_store=runtime_store
     )
+
+    # 3-0. Reconciliação pós-merge (Issue #172/#162), zero Anthropic.
+    # Se José já mergeou uma PR registrada em NEEDS-AUDIT, promove a tarefa
+    # a DONE por CAS e recarrega a visão ANTES de resolver dependências.
+    notas_merge, houve_merge = reconciliar_merges_confirmados(
+        registros, runtime_store=runtime_store, github_api=github_api,
+        base_branch=base_branch, config=config,
+    )
+    notes.extend(notas_merge)
+    if houve_merge:
+        tarefas, metadados, registros = visao_da_fila(
+            tasks_json_path=tasks_json_path, runtime_store=runtime_store
+        )
 
     # 3-A. MANUTENÇÃO DE PR antes de qualquer execução. Se o Runner já
     # terminou e publicou branch/checkpoint, mas a PR não foi registrada
