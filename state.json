@@ -2811,6 +2811,16 @@
       "output_tokens": 101,
       "tier": "FAST",
       "timestamp": "2026-09-24T00:25:05.832348+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.135012,
+      "event_key": "runner-task:infra-inbox-task-intake-issue160--bridge-79509fa549c6",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T00:26:17.527809+00:00"
     }
   ]
 }
