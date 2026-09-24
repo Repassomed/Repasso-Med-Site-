@@ -1884,7 +1884,9 @@
         "coordinator/github_event.py",
         "coordinator/tests/test_github_event.py",
         "coordinator/tests/test_workflow_security.py",
-        "coordination/tasks.json"
+        "coordination/tasks.json",
+        "coordinator/tests/test_worker_bridge.py",
+        "coordinator/tests/test_worker_bridge_workflow_security.py"
       ],
       "objetivo": "Fechar o fluxo automático Worker→Guard→Auditoria Anthropic: marcar PR automática com estado machine-readable NEEDS-AUDIT, transportar contexto tipado da PR no artifact do Guard, recuperar/validar a PR real quando workflow_run.pull_requests vier vazio e disparar a auditoria semântica independente. Adicionar autocheck silencioso do Worker sem nova chamada.",
       "fonte": "Issue #165 · arquitetura solicitada por José em 23/09/2026",
@@ -1901,7 +1903,7 @@
       "pr": null,
       "commit": null,
       "issue": 165,
-      "notas": "Implementação administrativa segura; DONE passa a valer após merge humano. Não faz merge/deploy. Auditoria independente usa diff real + audit-pack do Guard; worker apenas faz autocheck silencioso na própria chamada.",
+      "notas": "Implementação administrativa segura; DONE passa a valer após merge humano. Não faz merge/deploy. Auditoria independente usa diff real + audit-pack do Guard; worker apenas faz autocheck silencioso na própria chamada. Inclui atualização estrita dos testes de segurança que ainda codificavam o desenho anterior sem heartbeat/pr_por_numero; a correção não afrouxa invariantes, apenas distingue leitura/reconciliação de merge e agenda periódica de loop interno.",
       "automation_enabled": false,
       "bridge_enabled": false,
       "risk_level": "ALTO",
