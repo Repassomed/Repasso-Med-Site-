@@ -214,7 +214,11 @@ jobs:
               per_page: 100,
             });
 
-            for (const pr of pulls) {
+            // Alternar o ponto de partida evita que uma PR sem cartão
+            // monopolize os heartbeats enquanto outras aguardam auditoria.
+            const offset = pulls.length ? Math.floor(Date.now() / 1800000) % pulls.length : 0;
+            const queue = pulls.slice(offset).concat(pulls.slice(0, offset));
+            for (const pr of queue) {
               const body = String(pr.body || '');
               if (!body.includes(markerBridge)) continue;
 
@@ -225,6 +229,16 @@ jobs:
                 per_page: 100,
               });
               if (comments.some(c => String(c.body || '').includes(markerCoordinator))) {
+                continue;
+              }
+              // Guard vermelho é um bloqueio real. Repeti-lo não produz cartão
+              // e atrasaria outras PRs; um novo Guard verde libera a retomada.
+              const latestGuard = comments
+                .filter(c => String(c.body || '').includes('<!-- repasso-guard-resumo -->'))
+                .sort((a, b) => String(b.updated_at || b.created_at)
+                  .localeCompare(String(a.updated_at || a.created_at)))[0];
+              if (latestGuard && String(latestGuard.body || '').includes('🔴 REPROVADO')) {
+                core.info(`PR #${pr.number}: Guard vermelho; próxima PR da fila.`);
                 continue;
               }
 
