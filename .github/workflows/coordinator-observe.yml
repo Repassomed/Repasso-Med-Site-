@@ -71,10 +71,9 @@ name: Repasso Coordinator (OBSERVE)
 # BLOQUEADOR 8 — saída humana honesta sobre chamada/usage/custo: ver
 #   coordinator/__main__.py::render_human.
 #
-# Escopo desta entrega (não escondido, só explícito): o resultado OBSERVE
-# vai para o log do job e para um artifact — este workflow NÃO comenta
-# automaticamente no PR/Issue ainda (decisão futura separada, já registrada
-# na 2ª auditoria).
+# Em active-supervised, o resultado da auditoria de conteúdo é publicado
+# também como Cartão de Merge na própria PR. O comentário é só um parecer:
+# nunca faz merge, deploy, label, close/reopen nem altera a branch da tarefa.
 #
 # ─────────────────────────────────────────────────────────────────────────
 # V3 (Issue #99) — "coordenação ativa supervisionada".
@@ -109,17 +108,14 @@ name: Repasso Coordinator (OBSERVE)
 # exigindo que os checks passem — com 0 approvals exigidas por enquanto.
 #
 # ─────────────────────────────────────────────────────────────────────────
-# OPENAI AUDITOR (Issue #106) — segunda opinião independente, SEM ativar em
-# produção nesta PR.
+# OPENAI AUDITOR (Issue #106) — aval final independente de conteúdo.
 #
-# Uma segunda API (OpenAI, Responses API, ``store=false`` sempre — ver
-# coordinator/openai_transport.py) entra como auditor adicional, INDEPENDENTE
-# da Anthropic, sobre o MESMO evento de conteúdo médico/didático Nível C
-# (nunca um gatilho novo). Portão totalmente separado do
-# ``REPASSO_COORDINATOR_*``: ``REPASSO_OPENAI_AUDITOR_ENABLED`` continua
-# ``false`` (valor de hoje) — enquanto isso não mudar, nenhuma chamada à
-# OpenAI acontece, mesmo com ``REPASSO_COORDINATOR_MODE=active-supervised``
-# já ligado para a Anthropic (coordinator/openai_config.py::
+# A OpenAI Responses API (``store=false`` sempre — ver
+# coordinator/openai_transport.py) audita o MESMO checkpoint de conteúdo
+# médico/didático Nível C depois da Anthropic (nunca é um gatilho novo).
+# Em produção, ``REPASSO_OPENAI_AUDITOR_ENABLED=true`` habilita a chamada;
+# o código continua fail-closed e reconfirma o portão separado em
+# coordinator/openai_config.py::
 # OpenAIAuditorConfig.gate(), checado de novo em ``openai_client.call``
 # antes de qualquer chamada, junto com um hard stop de orçamento interno —
 # nunca confiar só no cap externo do dashboard da OpenAI). O
