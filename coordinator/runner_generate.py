@@ -706,10 +706,21 @@ def _secoes_referenciadas(conteudo: str, instructions: str) -> list[tuple[int, i
     # esófago'". Só a parte da instrução ANTES do source pack conta: o pack
     # cita outros blocos de passagem e não pode puxá-los para o contexto.
     instr_propria = _normalizar(instructions.split(_MARCADOR_SOURCE_PACK, 1)[0])
+    # Achado de 24/09/2026: o <h2> real quase sempre tem texto além da frase
+    # citada (subtítulo entre parênteses, emoji já removido, etc.) — então
+    # "titulo in instr_propria" (título INTEIRO dentro da instrução) falha,
+    # nenhum título casa, e a busca por frase abaixo pega a PRIMEIRA
+    # ocorrência da frase no arquivo inteiro: tipicamente o índice/portada,
+    # que cita o bloco de passagem e vem ANTES dele no arquivo. Casar também
+    # a frase citada DENTRO do título (contenção nos dois sentidos) resolve
+    # o bloco certo antes de a busca por frase ter chance de errar.
+    frases_titulo = [f for f in _frases_ancora(instr_propria) if len(f) >= MIN_SECTION_TITLE_CHARS]
     titulos_escolhidos: list[str] = []
     for inicio, fim, _sid in secoes:
         titulo = _titulo_normalizado_da_secao(conteudo[inicio:fim])
-        if titulo and len(titulo) >= MIN_SECTION_TITLE_CHARS and titulo in instr_propria:
+        if not titulo or len(titulo) < MIN_SECTION_TITLE_CHARS:
+            continue
+        if titulo in instr_propria or any(frase in titulo for frase in frases_titulo):
             _add(inicio, fim)
             titulos_escolhidos.append(titulo)
 

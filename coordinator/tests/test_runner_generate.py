@@ -1226,6 +1226,47 @@ def test_bloco_grande_referenciado_pelo_titulo_entra_inteiro_e_so_ele() -> None:
     print("OK  test_bloco_grande_referenciado_pelo_titulo_entra_inteiro_e_so_ele")
 
 
+def test_titulo_com_texto_extra_nao_cai_para_o_indice() -> None:
+    """Achado novo (auditoria de 24/09/2026, PR #246): quando o <h2> do
+    bloco-alvo tem texto além da frase citada na instrução (ex.: um
+    subtítulo entre parênteses, comum nos blocos reais de Fisiopatología
+    II/Toxicología), 'titulo in instr_propria' falha porque titulo é
+    SUPERCONJUNTO da frase citada, não substring dela. Sem nenhum título
+    casando, a busca por frase (_frases_ancora) pega a PRIMEIRA ocorrência
+    da frase no arquivo inteiro — que é o índice/portada, por aparecer
+    ANTES do bloco-alvo — e o bloco de verdade nunca entra inteiro. Na
+    prática isso deixava so ~1% do bloco-alvo (135k) no contexto, todo ele
+    vindo de janelas de palavra-chave, nunca do mecanismo de bloco
+    inteiro."""
+    relleno = "<p>" + ("contenido extenso del bloque. " * 4_500) + "</p>\n"  # ~135k por bloco
+    conteudo = (
+        '<section class="container" id="fp2portada"><h2>Índice</h2><p>Patologías del esófago · '
+        'Patologías gástricas</p></section>\n'
+        '<section class="container" id="fp2b01"><h2>🚪 Patologías del esófago (motores y anatómicos)</h2>\n'
+        "<p>ALVO-ESOFAGO acalasia</p>" + relleno + "MARCADOR-FINAL-DO-BLOCO</section>\n"
+        '<section class="container" id="fp2b02"><h2>🛡️ Patologías gástricas</h2>\n<p>ALVO-GASTRICO</p>'
+        + relleno + "</section>\n"
+    )
+    instr = (
+        "Tarefa: P1 — Fisiopatología II: esófago\n\nOBJETIVO\nNo bloco 'Patologías del esófago', "
+        "confirmar/reforçar somente os distúrbios motores."
+    )
+    ids = {(i, f): sid for i, f, sid in _secoes_do_html(conteudo)}
+    escolhidas = [ids[r] for r in _secoes_referenciadas(conteudo, instr)]
+    assert "fp2b01" in escolhidas, (
+        f"o bloco-alvo (fp2b01) precisa ser escolhido pelo título mesmo com texto extra "
+        f"no <h2>; veio {escolhidas}"
+    )
+    assert "fp2portada" not in escolhidas, "o índice/portada nunca é o bloco-alvo"
+    b01 = next((i, f) for (i, f), sid in ids.items() if sid == "fp2b01")
+    trechos = extrair_trechos_ancorados(conteudo, instr)
+    cobertura = sum(max(0, min(b01[1], t.fim) - max(b01[0], t.inicio)) for t in trechos)
+    assert cobertura >= (b01[1] - b01[0]) * 0.95, (
+        f"o bloco-alvo precisa entrar quase inteiro no contexto; só {cobertura}/{b01[1]-b01[0]} chars cobertos"
+    )
+    print("OK  test_titulo_com_texto_extra_nao_cai_para_o_indice")
+
+
 def main() -> int:
     testes = [
         test_question_report_required_missing_fails_before_patch,
@@ -1272,6 +1313,7 @@ def main() -> int:
         test_campo_trecho_desambigua_copia_literal_do_banco_geral,
         test_campo_trecho_invalido_ou_ambiguo_bloqueia_sem_escrita,
         test_bloco_grande_referenciado_pelo_titulo_entra_inteiro_e_so_ele,
+        test_titulo_com_texto_extra_nao_cai_para_o_indice,
     ]
     falhas = 0
     for t in testes:
