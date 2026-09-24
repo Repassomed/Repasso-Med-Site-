@@ -424,6 +424,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:181.",
       "task_id": "infra-source-context-pack-issue158",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "379f44065e4de634803f245a6545646361e50587",
+      "component": "guard",
+      "error_id": "ERR-00343FB1BF",
+      "error_type": "hard-fail",
+      "fingerprint": "00343fb1bf38bd5b26f7",
+      "first_seen": "2026-09-24T04:07:38.262607+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "6578d28c3a3f4780addc2b8b3541813e",
+      "issue_sync_updated_at": "2026-09-24T04:07:38.262607+00:00",
+      "last_evidence_hash": "1195f6e5909ea52597d8",
+      "last_seen": "2026-09-24T04:07:38.262607+00:00",
+      "occurrence_count": 1,
+      "pr_number": 188,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35954227313",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:188.",
+      "task_id": "infra-auto-reparo-openai",
+      "worker_id": null
     }
   ]
 }
