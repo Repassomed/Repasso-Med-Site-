@@ -32,7 +32,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import NamedTuple
 
-from . import anthropic_client, openai_client
+from . import anthropic_client, openai_client, source_pack
 from .anthropic_transport import AnthropicTransport
 from .audit import AUDIT_SYSTEM_PROMPT, build_audit_prompt, parse_decision, preparar_diff
 from .budget import (
@@ -597,7 +597,7 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
                          config: Config, openai_config: OpenAIAuditorConfig | None,
                          openai_ledger: UsageLedger | None,
                          openai_transport: openai_client.Transport | None,
-                         event_key: str) -> _ResultadoOpenAI | None:
+                         event_key: str, source_pack_text: str | None = None) -> _ResultadoOpenAI | None:
     """Segunda opinião independente (Issue #106), sobre o MESMO evento de
     conteúdo médico/didático Nível C que já passou pela auditoria da
     Anthropic. Estruturalmente inerte enquanto ``openai_config`` for
@@ -630,6 +630,7 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
         contexto, pr_body=event.payload.get("body"),
         envolve_questoes=bool(event.payload.get("envolve_questoes")),
         pr_diff=event.payload.get("pr_diff"),
+        source_pack_text=source_pack_text,
     )
 
     # Correção B6 da auditoria independente do PR #107: privacy preflight
@@ -878,6 +879,27 @@ def observe(
     # 4. Contexto mínimo.
     contexto = build_context(event)
 
+    # 4-B. Source Pack compartilhado (Issue #158). A PR do Worker fixa
+    # path + SHA-256. O OBSERVE recarrega esse MESMO arquivo da main e
+    # compara o hash antes de enviar qualquer conteúdo aos auditores.
+    # Tarefas sem Source Pack continuam exatamente como antes.
+    audit_source_pack_text: str | None = None
+    audit_source_pack_error: str | None = None
+    if audit_mode and runner_tasks_json_path and event.payload.get("body"):
+        pack_ref_path, _pack_ref_sha = source_pack.source_ref_from_pr_body(event.payload.get("body"))
+        if pack_ref_path:
+            pack_load = source_pack.load_pack_declared_by_pr(
+                runner_tasks_json_path, event.payload.get("body")
+            )
+            if pack_load.ok and pack_load.pack is not None:
+                audit_source_pack_text = pack_load.pack.evidence_block()
+            else:
+                audit_source_pack_error = pack_load.error or "erro desconhecido"
+                audit_source_pack_text = (
+                    "SOURCE PACK INVÁLIDO — isto é um HARD SIGNAL de NEEDS-FIX. "
+                    + audit_source_pack_error
+                )
+
     # 5. Worker sugerido.
     #
     # Correção B3 da auditoria independente do PR #104, rodada 4:
@@ -1093,6 +1115,7 @@ def observe(
                 pr_body=event.payload.get("body"),
                 envolve_questoes=bool(event.payload.get("envolve_questoes")),
                 pr_diff=event.payload.get("pr_diff"),
+                source_pack_text=audit_source_pack_text,
             ),
             limiter=limitador,
         )
@@ -1224,6 +1247,16 @@ def observe(
             )
             protocol_matched = True
 
+    # Gate determinístico do Source Pack: se a PR declarou uma fonte
+    # versionada e o SHA/path não puder ser revalidado, nenhum modelo pode
+    # promover MERGE-READY por confiança própria.
+    if executar_auditoria and audit_source_pack_error:
+        audit_decision_final = "NEEDS-FIX"
+        rationale_final = (
+            f"{rationale_final}\n\nGate Source Pack: NEEDS-FIX — "
+            f"{audit_source_pack_error}"
+        )
+
     # OpenAI Auditor (Issue #106) — segunda opinião independente sobre o
     # MESMO evento, estruturalmente inerte enquanto ``openai_config`` for
     # ``None``/desabilitado (produção continua assim nesta PR). Roda DEPOIS
@@ -1237,6 +1270,7 @@ def observe(
             event, contexto, classificacao,
             config=config, openai_config=openai_config, openai_ledger=openai_ledger,
             openai_transport=openai_transport, event_key=chave,
+            source_pack_text=audit_source_pack_text,
         )
         if resultado_openai is not None:
             audit_decision_final, nota_openai = aplicar_gate_openai(
