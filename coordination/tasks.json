@@ -1045,12 +1045,15 @@
       "objetivo": "No B08, resolver dois pontos auditados: (1) a V/F sobre PA está ambígua porque a cátedra mostra duas classificações — tabela 1 com elevada 120–139/70–89 e atualização com elevada 120–129/<80; a questão deve indicar explicitamente qual tabela/classificação está cobrando, sem apagar a coexistência das duas fontes. (2) obesidad/sobrepeso aparece na cátedra como no modificable, enquanto outra parte do próprio HTML e a questão/flashcards tratam como modificable; resolver com rotulagem explícita de fonte, preservando o que a cátedra cobra e sem apresentar a contradição como fato único universal.",
       "fonte": "Issue #67 · auditoria independente comentário 5752213771",
       "estado": "READY",
-      "prioridade_declarada": "P1",
+      "prioridade_declarada": "P0",
       "dependencias": [
         "semiologia-ii-b07-framingham-r3"
       ],
       "branch": "runner/semiologia-ii-b08-hta-r3",
-      "notas": "Alterar só B08 e cópias correspondentes no Banco General, se houver. Preservar IDs/annotations/proveniência. NEEDS-AUDIT obrigatório."
+      "notas": "Alterar só B08 e cópias correspondentes no Banco General, se houver. Preservar IDs/annotations/proveniência. NEEDS-AUDIT obrigatório. P0 de Semiología priorizado por José em 24/09/2026 após tarefas amplas falharem por patch vazio/malformado. Executar como microtarefa, usar o source pack compartilhado e devolver relatório obrigatório da Lei 8-A.11; resultado NEEDS-AUDIT com Anthropic + OpenAI, sem merge/deploy automático.",
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
+      "questions_report_required": true
     },
     {
       "area": "materia",
@@ -1075,12 +1078,15 @@
       "objetivo": "No B09, ensinar explicitamente a regra operacional da cátedra: vetor que se aproxima do eletrodo gera deflexão positiva; que se afasta gera deflexão negativa; quanto mais alinhado à derivação, maior a amplitude. Incluir isodifásico e regra da perpendicular para estimar eixo, além de FREH III se ausente. Auditar Q1 × Q9, que hoje cobram a mesma competência (PR, RR e segmento PR), e eliminar a duplicação sem perder cobertura avaliativa nem gabarito.",
       "fonte": "Issue #67 · auditoria independente comentário 5752213771",
       "estado": "READY",
-      "prioridade_declarada": "P1",
+      "prioridade_declarada": "P0",
       "dependencias": [
         "semiologia-ii-b08-hta-r3"
       ],
       "branch": "runner/semiologia-ii-b09-ecg-r3",
-      "notas": "Alterar só B09 e espelho no Banco General quando aplicável. Conteúdo deve permanecer em castelhano e didático desde zero. NEEDS-AUDIT obrigatório."
+      "notas": "Alterar só B09 e espelho no Banco General quando aplicável. Conteúdo deve permanecer em castelhano e didático desde zero. NEEDS-AUDIT obrigatório. P0 de Semiología priorizado por José em 24/09/2026 após tarefas amplas falharem por patch vazio/malformado. Executar como microtarefa, usar o source pack compartilhado e devolver relatório obrigatório da Lei 8-A.11; resultado NEEDS-AUDIT com Anthropic + OpenAI, sem merge/deploy automático.",
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
+      "questions_report_required": true
     },
     {
       "area": "materia",
@@ -1105,12 +1111,15 @@
       "objetivo": "No B05, incorporar os elementos explicitamente presentes na cátedra e ausentes do HTML: pH < 7,2; amilasa; triglicéridos >110 mg/dL; urea/creatinina e urinotórax; características macroscópicas hialino, amarillo-citrino, lechoso, purulento fétido, achocolatado e olor a orina. Integrar de modo didático sem apagar Light/derrame/neumotórax já corretos e sem inventar valores não presentes na fonte auditada.",
       "fonte": "Issue #67 · auditoria independente comentário 5752213771",
       "estado": "READY",
-      "prioridade_declarada": "P1",
+      "prioridade_declarada": "P0",
       "dependencias": [
         "semiologia-ii-b09-ecg-r3"
       ],
       "branch": "runner/semiologia-ii-b05-pleural-r3",
-      "notas": "Última microtarefa textual B05–B10 desta cadeia. Preservar IDs/annotations/espelho e terminar NEEDS-AUDIT."
+      "notas": "Última microtarefa textual B05–B10 desta cadeia. Preservar IDs/annotations/espelho e terminar NEEDS-AUDIT. P0 de Semiología priorizado por José em 24/09/2026 após tarefas amplas falharem por patch vazio/malformado. Executar como microtarefa, usar o source pack compartilhado e devolver relatório obrigatório da Lei 8-A.11; resultado NEEDS-AUDIT com Anthropic + OpenAI, sem merge/deploy automático.",
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md",
+      "questions_report_required": true
     },
     {
       "id": "dermatologia-questoes-issue112-r2",
@@ -1980,9 +1989,9 @@
       "pr": null,
       "commit": null,
       "issue": 67,
-      "notas": "P0 solicitado explicitamente por José em 24/09/2026. Fontes novas: P1 Semiologia 2.pdf (Drive ID 1YL5iZkwBWlhjVQgCy5mO4Px0S6af2eVt), P2 Turma E Semio.pdf (1-duIE59J2t1E-x7_2cLyVww-Q3ieWR_E), gabaritos/fotos (13sgW5SvNL_-hO8UQQT_u1E9JQYyKayUV, 10KmH5xFosW_izSbwJx2xokCVQvFbm4CK, 1WphJ-q5CB-WJVrvVD1XP_05kJNvMTxNK). As imagens confirmam chaves de Fila 1/2, respostas COMPLETE/CITE e casos clínicos; o source pack deve preservar esses vínculos. Relatório obrigatório: detectadas, integrais, parciais, reconstruídas, novas baseadas em exame, duplicadas/canônicas, não aproveitadas e motivo. Resultado NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo pack; sem merge/deploy automático. Tentativa operacional de 24/09/2026 terminou FAILED antes de gerar PR porque o worker devolveu StructuredPatch vazio; histórico preservado e esta execução não deve ser repetida implicitamente. Retry explícito autorizado por José em 24/09/2026 foi materializado como semiologia-ii-questoes-exames-p0-r2.",
-      "automation_enabled": true,
-      "bridge_enabled": true,
+      "notas": "P0 solicitado explicitamente por José em 24/09/2026. Fontes novas: P1 Semiologia 2.pdf (Drive ID 1YL5iZkwBWlhjVQgCy5mO4Px0S6af2eVt), P2 Turma E Semio.pdf (1-duIE59J2t1E-x7_2cLyVww-Q3ieWR_E), gabaritos/fotos (13sgW5SvNL_-hO8UQQT_u1E9JQYyKayUV, 10KmH5xFosW_izSbwJx2xokCVQvFbm4CK, 1WphJ-q5CB-WJVrvVD1XP_05kJNvMTxNK). As imagens confirmam chaves de Fila 1/2, respostas COMPLETE/CITE e casos clínicos; o source pack deve preservar esses vínculos. Relatório obrigatório: detectadas, integrais, parciais, reconstruídas, novas baseadas em exame, duplicadas/canônicas, não aproveitadas e motivo. Resultado NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo pack; sem merge/deploy automático. Tentativa operacional de 24/09/2026 terminou FAILED antes de gerar PR porque o worker devolveu StructuredPatch vazio; histórico preservado e esta execução não deve ser repetida implicitamente. Retry explícito autorizado por José em 24/09/2026 foi materializado como semiologia-ii-questoes-exames-p0-r2. Tarefa ampla encerrada operacionalmente: duas tentativas do pacote amplo falharam antes de PR por StructuredPatch vazio; não repetir. O trabalho restante foi decomposto nas microtarefas P0 B08 → B09 → B05, que preservam o mesmo source pack.",
+      "automation_enabled": false,
+      "bridge_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true,
@@ -2060,7 +2069,7 @@
       "objetivo": "Inventariar e aproveitar integralmente as novas fontes de prova da pasta Drive de Semiología II/Questões. Priorizar questões reais e núcleos avaliativos comprovados (selección múltiple, COMPLETE, CITE e casos clínicos). Quando a questão integral estiver legível, preservar seu núcleo e gabarito; quando parcial, reconstruir somente com evidência suficiente; quando houver gabarito/foto sem enunciado integral, criar questão baseada em exame apenas se o conceito central e a resposta esperada estiverem seguros. Aplicar a Lei das Questões #100: comparar duplicatas e manter a versão canônica mais completa, registrar fonte/página/imagem/decisão/destino, nunca inventar a resposta correta. Garantir RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA, sem pistas visuais/negrito entregando o gabarito, preservando IDs/annotations e espelho bloco × Banco General.",
       "fonte": "Retry explícito autorizado por José em 24/09/2026 após tentativa anterior falhar antes de gerar PR; mesmas fontes/proveniência de semiologia-ii-questoes-exames-p0.",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "conteudo"
@@ -2072,9 +2081,9 @@
       "pr": null,
       "commit": null,
       "issue": 67,
-      "notas": "Retry P0 explícito. Reusar o source pack versionado coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md e o mesmo escopo de um único arquivo. A tentativa anterior falhou por StructuredPatch vazio, sem escrita e sem PR. Não ampliar escopo; resultado obrigatório NEEDS-AUDIT com Anthropic + OpenAI Auditor; sem merge/deploy automático.",
-      "automation_enabled": true,
-      "bridge_enabled": true,
+      "notas": "Retry P0 explícito. Reusar o source pack versionado coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md e o mesmo escopo de um único arquivo. A tentativa anterior falhou por StructuredPatch vazio, sem escrita e sem PR. Não ampliar escopo; resultado obrigatório NEEDS-AUDIT com Anthropic + OpenAI Auditor; sem merge/deploy automático. Tarefa ampla encerrada operacionalmente: duas tentativas do pacote amplo falharam antes de PR por StructuredPatch vazio; não repetir. O trabalho restante foi decomposto nas microtarefas P0 B08 → B09 → B05, que preservam o mesmo source pack.",
+      "automation_enabled": false,
+      "bridge_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true,
