@@ -2028,6 +2028,135 @@ def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
         assert terceiro.action == "NO_ASSIGNMENT", terceiro
     print("OK  test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard")
 
+class _GeracaoFalhaAuditFix:
+    def __init__(self, motivo: str = "StructuredPatch vazio") -> None:
+        self.motivo = motivo
+        self.calls = 0
+
+    def __call__(self):
+        from types import SimpleNamespace
+        self.calls += 1
+        return SimpleNamespace(
+            status="failed", reason=self.motivo, patch=None,
+            ledger_correction_failed=False,
+        )
+
+
+def test_audit_fix_falha_uma_vez_rearma_mesmo_parecer_e_segunda_falha_e_terminal() -> None:
+    """NEEDS-FIX tem até 2 correções; falha da primeira geração não pode
+    jogar a PR no fim da fila nem consumir silenciosamente a segunda chance.
+    Nenhum novo Guard é disparado enquanto não existir novo HEAD."""
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+        api = _FakeGitHubApi()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        tarefa = _tarefa()
+
+        primeiro, _c, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("alvo.txt", "versao 1\n"),
+            nome_workdir="work-audit-fix-retry-base",
+        )
+        assert primeiro.action == "DISPATCHED" and primeiro.pr is not None
+        reg0 = store.get("infra-bridge-teste")
+        assert reg0 is not None and reg0.status == task_runtime.RUNTIME_NEEDS_AUDIT
+        assert reg0.pr_number == 901 and reg0.checkpoint_commit
+        api.prs[0]["head_sha"] = reg0.checkpoint_commit
+        api.comentarios[901] = [{
+            "id": 177, "user": {"login": "github-actions[bot]"},
+            "body": _cartao_needs_fix("corrigir rastreabilidade"),
+        }]
+        dispatches_iniciais = len(api.dispatches)
+        checkpoint_inicial = reg0.checkpoint_commit
+
+        falha1 = _GeracaoFalhaAuditFix("patch vazio na primeira correção")
+        segunda, *_ = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=None, gerar_patch=falha1,
+            nome_workdir="work-audit-fix-retry-1",
+        )
+        assert segunda.action == "AUDIT_FIX", segunda
+        assert falha1.calls == 1
+        reg1 = store.get("infra-bridge-teste")
+        assert reg1 is not None
+        assert reg1.status == task_runtime.RUNTIME_NEEDS_AUDIT, reg1
+        assert reg1.audit_fix_attempts == 1
+        assert reg1.last_audit_fix_fingerprint is None, (
+            "mesmo cartão precisa ficar elegível para a segunda tentativa"
+        )
+        assert reg1.checkpoint_commit == checkpoint_inicial
+        assert reg1.pr_number == 901
+        assert reg1.guard_confirmado is True, (
+            "sem HEAD novo, o Guard já confirmado do checkpoint continua válido"
+        )
+        assert len(api.criadas) == 1
+        assert len(api.dispatches) == dispatches_iniciais, (
+            "falha sem commit não pode redisparar Guard"
+        )
+        assert registry.get(bridge_workers.BRIDGE_WORKER_1).status == "AVAILABLE"
+
+        falha2 = _GeracaoFalhaAuditFix("patch vazio na segunda correção")
+        terceira, *_ = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=None, gerar_patch=falha2,
+            nome_workdir="work-audit-fix-retry-2",
+        )
+        assert terceira.action == "AUDIT_FIX", terceira
+        assert falha2.calls == 1
+        reg2 = store.get("infra-bridge-teste")
+        assert reg2 is not None
+        assert reg2.status == task_runtime.RUNTIME_FAILED
+        assert reg2.audit_fix_attempts == worker_bridge.MAX_AUDIT_FIX_ATTEMPTS == 2
+        assert reg2.last_audit_fix_fingerprint is not None
+        assert reg2.checkpoint_commit == checkpoint_inicial
+        assert reg2.pr_number == 901
+        assert len(api.criadas) == 1
+        assert len(api.dispatches) == dispatches_iniciais
+
+        proibido = _GeracaoProibida()
+        quarta, *_ = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=None, gerar_patch=proibido,
+            nome_workdir="work-audit-fix-retry-terminal",
+        )
+        assert quarta.action in ("NO_ASSIGNMENT", "POOL_PAUSED", "BLOCKED"), quarta
+        assert proibido.chamado is False, "teto atingido: terceira correção nunca pode rodar"
+    print("OK  test_audit_fix_falha_uma_vez_rearma_mesmo_parecer_e_segunda_falha_e_terminal")
+
+
+def test_failed_normal_continua_terminal_sem_retry_automatico() -> None:
+    """A exceção acima é exclusiva do feedback NEEDS-FIX. Uma tarefa normal
+    FAILED continua consumida e nunca ganha retry silencioso."""
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+        api = _FakeGitHubApi()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        tarefa = _tarefa()
+        falha = _GeracaoFalhaAuditFix("falha normal")
+
+        primeiro, *_ = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=None, gerar_patch=falha,
+            nome_workdir="work-normal-failed",
+        )
+        assert falha.calls == 1
+        reg = store.get("infra-bridge-teste")
+        assert reg is not None and reg.status == task_runtime.RUNTIME_FAILED
+        assert reg.audit_fix_attempts == 0
+
+        proibido = _GeracaoProibida()
+        segundo, *_ = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=None, gerar_patch=proibido,
+            nome_workdir="work-normal-failed-again",
+        )
+        assert segundo.action in ("NO_ASSIGNMENT", "POOL_PAUSED", "BLOCKED"), segundo
+        assert proibido.chamado is False
+    print("OK  test_failed_normal_continua_terminal_sem_retry_automatico")
+
+
 def test_error_registry_bridge_sucesso_normal_nao_gera_erro() -> None:
     record = task_runtime.TaskRuntimeRecord(
         canonical_task_id="t-ok",
@@ -2405,6 +2534,8 @@ def main() -> int:
         test_audit_fix_para_depois_de_duas_correcoes,
         test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
+        test_audit_fix_falha_uma_vez_rearma_mesmo_parecer_e_segunda_falha_e_terminal,
+        test_failed_normal_continua_terminal_sem_retry_automatico,
         test_error_registry_bridge_sucesso_normal_nao_gera_erro,
         test_error_registry_bridge_captura_runner_pr_guard_e_liberacao,
         test_error_registry_bridge_nao_trata_portao_ou_fila_vazia_como_bug,
