@@ -310,6 +310,16 @@
       "recorded_at": "2026-09-24T05:11:30.515874+00:00",
       "status": "FAILED",
       "task_id": "cleanup-como-estudar-embriologia--bridge-580e15579ddd"
+    },
+    {
+      "branch": "runner/cleanup-como-estudar-guarani",
+      "checkpoint_commit": "3449935a23406db8a161f01dd577fc105cf6f1fb",
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/cleanup-como-estudar-guarani'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "recorded_at": "2026-09-24T05:19:33.391437+00:00",
+      "status": "NEEDS-AUDIT",
+      "task_id": "cleanup-como-estudar-guarani--bridge-58d356675753"
     }
   ]
 }
