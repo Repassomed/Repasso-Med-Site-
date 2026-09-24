@@ -3369,6 +3369,16 @@
       "output_tokens": 105,
       "tier": "FAST",
       "timestamp": "2026-09-24T04:14:25.568700+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.111294,
+      "event_key": "runner-task:cleanup-como-estudar-anatomia-patologica-ii--bridge-d062050e0b98",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T04:15:36.427399+00:00"
     }
   ]
 }
