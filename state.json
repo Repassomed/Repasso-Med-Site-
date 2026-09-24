@@ -3803,6 +3803,16 @@
       "output_tokens": 1939,
       "tier": "STANDARD",
       "timestamp": "2026-09-24T05:08:40.066004+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.112328,
+      "event_key": "runner-task:cleanup-como-estudar-embriologia--bridge-580e15579ddd",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T05:10:50.110311+00:00"
     }
   ]
 }
