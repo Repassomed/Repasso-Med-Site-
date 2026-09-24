@@ -79,6 +79,46 @@ def test_worker_bridge_typed_needs_audit_without_label_builds_pr_event() -> None
     print("OK  test_worker_bridge_typed_needs_audit_without_label_builds_pr_event")
 
 
+def test_worker_bridge_pr_dedup_ignores_updated_at_when_head_is_same() -> None:
+    """Rerun do Guard da mesma PR/HEAD não pode cobrar auditoria de novo só
+    porque um comentário (inclusive o próprio Cartão de Merge) mudou
+    pr.updated_at. workflow_run.head_sha pode variar em workflow_dispatch
+    porque aponta para a main; a identidade confiável é pr_info.head_sha."""
+    base_payload = {
+        "action": "completed",
+        "workflow_run": {
+            "name": "Repasso Guard",
+            "conclusion": "success",
+            "pull_requests": [],
+        },
+    }
+    base_pr = {
+        "number": 164,
+        "title": "[worker-bridge] Semiología II",
+        "body": "## ESCOPO\n\n- **Tarefa:** semiologia-x\n- **Área:** materia\n",
+        "labels": [],
+        "head_sha": "pr-head-real-123",
+        "worker_bridge_needs_audit": True,
+    }
+    ev1 = build_event_from_github_context(
+        "workflow_run",
+        {**base_payload, "workflow_run": {**base_payload["workflow_run"], "id": 1, "head_sha": "main-a"}},
+        REPO,
+        pr_info={**base_pr, "updated_at": "2026-09-24T05:00:00Z"},
+    )
+    ev2 = build_event_from_github_context(
+        "workflow_run",
+        {**base_payload, "workflow_run": {**base_payload["workflow_run"], "id": 2, "head_sha": "main-b"}},
+        REPO,
+        pr_info={**base_pr, "updated_at": "2026-09-24T05:01:00Z"},
+    )
+    assert ev1 is not None and ev2 is not None
+    assert ev1.dedup_key() == ev2.dedup_key(), (
+        "mesma PR + mesmo HEAD real precisa colidir mesmo se main/run_id/updated_at mudarem"
+    )
+    print("OK  test_worker_bridge_pr_dedup_ignores_updated_at_when_head_is_same")
+
+
 def test_workflow_run_success_without_label_builds_guard_state_change() -> None:
     """Guard passou, mas a PR ainda não tem o rótulo NEEDS-AUDIT — não é o
     momento de "PR pronta para auditar", só uma mudança de estado do Guard."""
@@ -253,6 +293,7 @@ def main() -> int:
     testes = [
         test_workflow_run_success_with_needs_audit_label_builds_pr_event,
         test_worker_bridge_typed_needs_audit_without_label_builds_pr_event,
+        test_worker_bridge_pr_dedup_ignores_updated_at_when_head_is_same,
         test_workflow_run_success_without_label_builds_guard_state_change,
         test_workflow_run_carries_real_audit_pack_not_none,
         test_guard_state_change_carrega_run_id_head_e_conclusao_para_error_registry,
