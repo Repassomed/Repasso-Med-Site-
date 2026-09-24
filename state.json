@@ -328,10 +328,10 @@
       "last_audit_findings": "",
       "last_audit_fix_fingerprint": null,
       "pr_number": 201,
-      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/cleanup-como-estudar-dermatologia'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "reason": "PR #201 mergeada por Jos\u00e9; reconcilia\u00e7\u00e3o autom\u00e1tica confirmada.",
       "reserved_at": "2026-09-24T05:08:02.034259+00:00",
-      "status": "NEEDS-AUDIT",
-      "updated_at": "2026-09-24T05:09:41.261450+00:00",
+      "status": "DONE",
+      "updated_at": "2026-09-24T14:21:14.987795+00:00",
       "worker_id": "claude-worker-1"
     },
     {
