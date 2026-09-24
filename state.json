@@ -399,6 +399,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:178.",
       "task_id": "pr:178",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "8e0c715b7109e42148dc0b9a1290375a646ad7f2",
+      "component": "guard",
+      "error_id": "ERR-9668D7B3FF",
+      "error_type": "hard-fail",
+      "fingerprint": "9668d7b3ff73c42e5a2e",
+      "first_seen": "2026-09-24T02:47:39.941900+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "fb550269f36d41818d1a6e7bdc9ec04a",
+      "issue_sync_updated_at": "2026-09-24T02:47:39.941900+00:00",
+      "last_evidence_hash": "4af9c2a02394a568243d",
+      "last_seen": "2026-09-24T02:47:39.941900+00:00",
+      "occurrence_count": 1,
+      "pr_number": 181,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35948693416",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:181.",
+      "task_id": "infra-source-context-pack-issue158",
+      "worker_id": null
     }
   ]
 }
