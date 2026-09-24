@@ -213,6 +213,16 @@ class TaskRuntimeRecord:
     # B4 (PR #129): o estado do disparo do Guard, não mais só "houve um".
     guard_dispatch_status: str | None = None
     guard_dispatch_attempts: int = 0
+    # Loop de correção pós-auditoria: cada NEEDS-FIX consumido gera uma
+    # execution_task_id NOVA sobre o checkpoint da mesma PR. O fingerprint
+    # impede o mesmo Cartão de Merge de disparar duas correções; o contador
+    # permite um teto explícito no Worker Bridge.
+    audit_fix_attempts: int = 0
+    last_audit_fix_fingerprint: str | None = None
+    last_audit_findings: str = ""
+    # Preserva os execution ids anteriores quando uma correção substitui o
+    # execution_task_id corrente. Histórico auditável, nunca usado como claim.
+    execution_history: tuple[str, ...] = ()
     reason: str = ""
     reserved_at: str | None = None
     updated_at: str | None = None
@@ -247,6 +257,16 @@ class TaskRuntimeRecord:
             raise ValueError(
                 f"guard_dispatch_attempts precisa ser inteiro >= 0 — recebido {self.guard_dispatch_attempts!r}."
             )
+        if not isinstance(self.audit_fix_attempts, int) or self.audit_fix_attempts < 0:
+            raise ValueError(
+                f"audit_fix_attempts precisa ser inteiro >= 0 — recebido {self.audit_fix_attempts!r}."
+            )
+        if self.last_audit_fix_fingerprint is not None and not str(self.last_audit_fix_fingerprint).strip():
+            raise ValueError("last_audit_fix_fingerprint precisa ser None ou string não-vazia.")
+        if not isinstance(self.execution_history, tuple) or any(
+            not isinstance(x, str) or not x.strip() for x in self.execution_history
+        ):
+            raise ValueError("execution_history precisa ser tuple de ids de execução não-vazios.")
 
     @property
     def redistribuivel(self) -> bool:
@@ -297,6 +317,10 @@ class TaskRuntimeRecord:
             "guard_dispatched_pr": self.guard_dispatched_pr,
             "guard_dispatch_status": self.guard_dispatch_status,
             "guard_dispatch_attempts": self.guard_dispatch_attempts,
+            "audit_fix_attempts": self.audit_fix_attempts,
+            "last_audit_fix_fingerprint": self.last_audit_fix_fingerprint,
+            "last_audit_findings": self.last_audit_findings,
+            "execution_history": list(self.execution_history),
             "reason": self.reason,
             "reserved_at": self.reserved_at,
             "updated_at": self.updated_at,
@@ -323,6 +347,10 @@ class TaskRuntimeRecord:
                 or (GUARD_DISPATCH_DISPATCHED if d.get("guard_dispatched_pr") else None)
             ),
             guard_dispatch_attempts=int(d.get("guard_dispatch_attempts") or 0),
+            audit_fix_attempts=int(d.get("audit_fix_attempts") or 0),
+            last_audit_fix_fingerprint=d.get("last_audit_fix_fingerprint"),
+            last_audit_findings=d.get("last_audit_findings", ""),
+            execution_history=tuple(d.get("execution_history") or ()),
             reason=d.get("reason", ""),
             reserved_at=d.get("reserved_at"),
             updated_at=d.get("updated_at"),
@@ -433,6 +461,97 @@ class TaskRuntimeStore:
                 ),
             )
         return ReservaResult(True, f"tarefa {alvo!r} reservada para {worker_id!r}.", record=novo)
+
+    def reservar_correcao_apos_auditoria(
+        self, canonical_task_id: str, *, worker_id: str,
+        audit_fingerprint: str, audit_findings: str,
+        max_attempts: int, token: str | None = None,
+    ) -> ReservaResult:
+        """Reserva explicitamente uma correção pedida pela auditoria.
+
+        Este caminho só aceita uma tarefa que terminou em NEEDS-AUDIT,
+        tem branch/checkpoint/PR publicados e recebeu um Cartão NEEDS-FIX
+        novo. Cada reserva gera uma execution id fresca, preserva a anterior
+        no histórico e zera somente o estado de dispatch do Guard, porque o
+        novo commit precisará ser auditado de novo.
+
+        O mesmo fingerprint nunca é consumido duas vezes e max_attempts é
+        um teto duro contra loop de auditoria/correção.
+        """
+        alvo = (canonical_task_id or "").strip()
+        worker = (worker_id or "").strip()
+        fingerprint = (audit_fingerprint or "").strip()
+        findings = (audit_findings or "").strip()
+        if not alvo or not worker or not fingerprint or not findings:
+            return ReservaResult(False, "correção pós-auditoria exige tarefa, worker, fingerprint e achados.")
+        if not isinstance(max_attempts, int) or max_attempts < 1:
+            raise ValueError("max_attempts precisa ser inteiro >= 1.")
+
+        execution_token = token or novo_token_de_execucao()
+        novo_execution_id = derivar_execution_task_id(alvo, execution_token)
+
+        def evaluate(dados: dict) -> tuple[bool, dict]:
+            base = {t["canonical_task_id"]: t for t in (dados.get("tasks") or []) if t.get("canonical_task_id")}
+            fresco = base.get(alvo)
+            if fresco is None or fresco.get("status") != RUNTIME_NEEDS_AUDIT:
+                return False, dados
+            if not fresco.get("branch") or not fresco.get("checkpoint_commit") or not fresco.get("pr_number"):
+                return False, dados
+            if fresco.get("last_audit_fix_fingerprint") == fingerprint:
+                return False, dados
+            tentativas = int(fresco.get("audit_fix_attempts") or 0)
+            if tentativas >= max_attempts:
+                return False, dados
+
+            historico = list(fresco.get("execution_history") or [])
+            anterior = (fresco.get("execution_task_id") or "").strip()
+            if anterior and anterior not in historico:
+                historico.append(anterior)
+
+            agora = _now_iso()
+            base[alvo] = {
+                **fresco,
+                "status": RUNTIME_IN_PROGRESS,
+                "worker_id": worker,
+                "execution_task_id": novo_execution_id,
+                "execution_history": historico,
+                "audit_fix_attempts": tentativas + 1,
+                "last_audit_fix_fingerprint": fingerprint,
+                "last_audit_findings": findings,
+                "guard_dispatched_pr": None,
+                "guard_dispatch_status": None,
+                "reason": (
+                    f"correção pós-auditoria #{tentativas + 1} reservada para {worker!r}; "
+                    "execution id nova, mesmo branch/checkpoint/PR."
+                ),
+                "reserved_at": agora,
+                "updated_at": agora,
+            }
+            return True, {**dados, "tasks": list(base.values())}
+
+        aceito = self.store.conditional_update(
+            evaluate, message=f"task-runtime: audit-fix {alvo} -> {worker}"
+        )
+        if not aceito:
+            atual = self.get(alvo)
+            if atual is None:
+                motivo = "registro operacional ausente."
+            elif atual.status != RUNTIME_NEEDS_AUDIT:
+                motivo = f"estado atual {atual.status!r}, não NEEDS-AUDIT."
+            elif atual.last_audit_fix_fingerprint == fingerprint:
+                motivo = "este mesmo parecer NEEDS-FIX já foi consumido."
+            elif atual.audit_fix_attempts >= max_attempts:
+                motivo = f"teto de {max_attempts} correções automáticas já atingido."
+            else:
+                motivo = "branch/checkpoint/PR incompletos ou corrida concorrente."
+            return ReservaResult(False, f"correção pós-auditoria não reservada: {motivo}")
+
+        fresco = self.get(alvo)
+        return ReservaResult(
+            True,
+            f"correção pós-auditoria reservada para {worker!r} com execution id fresca.",
+            record=fresco,
+        )
 
     def registrar_resultado(
         self, canonical_task_id: str, *, status: str, worker_id: str,
