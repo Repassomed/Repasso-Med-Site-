@@ -253,6 +253,9 @@ def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None
     return None
 
 
+GUARD_CONCLUSOES_SEM_VEREDITO = frozenset({"cancelled", "skipped", "action_required", "neutral", "stale"})
+
+
 def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                         audit_pack: dict | None = None, pr_diff: str | None = None,
                         head_context: str | None = None) -> Event | None:
@@ -262,6 +265,13 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
     if run.get("name") != "Repasso Guard":
         return None
     conclusao = run.get("conclusion")  # "success" | "failure" | ...
+    # Tempestade de execuções (24/09/2026): o concurrency do Guard cancela o
+    # run anterior a cada push na PR, e PR aberta pelo bot fica em
+    # action_required. Esses runs NÃO são veredito do Guard — tratá-los como
+    # "failure" gerava Issue falsa de "Guard HARD FAIL" no Error Registry
+    # (#177, #210, #250 vieram de runs cancelados) e acordava a cadeia à toa.
+    if conclusao in GUARD_CONCLUSOES_SEM_VEREDITO:
+        return None
     estado = "success" if conclusao == "success" else "failure"
 
     # ``pr_info`` vem de uma leitura somente-leitura da PR, feita por um

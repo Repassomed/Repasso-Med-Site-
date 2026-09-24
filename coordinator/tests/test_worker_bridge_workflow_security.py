@@ -67,23 +67,29 @@ def test_bridge_workflow_existe_e_nao_substitui_o_canario() -> None:
 
 
 def test_bridge_tem_apenas_os_tres_gatilhos_confiaveis() -> None:
-    """O Bridge aceita exatamente três origens controladas:
-    workflow_dispatch do José, workflow_run do OBSERVE e heartbeat schedule.
-    O schedule só pode executar em active-supervised; não há input livre nem
-    superfície pull_request/issue_comment/push/repository_dispatch."""
+    """O Bridge aceita exatamente quatro origens controladas:
+    workflow_dispatch do José, workflow_run do OBSERVE, heartbeat schedule e
+    push na branch padrão (merge do José — cadeia nova, sem o limite de
+    profundidade de workflow_run). schedule e push só executam em
+    active-supervised; não há input livre nem superfície
+    pull_request/issue_comment/repository_dispatch, e push só na main.
+    (Nome do teste preservado por histórico.)"""
     secao = _secao_on(_ler(_BRIDGE_PATH))
     assert "workflow_dispatch:" in secao
     assert "workflow_run:" in secao
-    assert "schedule:" in secao and 'cron: "*/30 * * * *"' in secao
+    assert "schedule:" in secao and 'cron: "7,37 * * * *"' in secao
+    assert "push:" in secao and "branches: [main]" in secao
+    assert "tags:" not in secao and "branches-ignore" not in secao
     for proibido in (
-        "pull_request", "pull_request_target", "issue_comment",
-        "push:", "repository_dispatch",
+        "pull_request", "pull_request_target", "issue_comment", "repository_dispatch",
     ):
         assert proibido not in secao, f"{proibido!r} não pode ser gatilho do Worker Bridge"
     texto = _ler(_BRIDGE_PATH)
     idx = texto.index("  bridge:")
     condicao = texto[idx: texto.index("runs-on:", idx)]
     assert "github.event_name == 'schedule'" in condicao
+    assert "(github.event_name == 'push' &&\n         vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised')" in condicao
+    assert "github.ref == format('refs/heads/{0}', github.event.repository.default_branch)" in condicao
     assert "vars.REPASSO_WORKER_BRIDGE_MODE == 'active-supervised'" in condicao
     print("OK  test_bridge_tem_apenas_os_tres_gatilhos_confiaveis")
 
@@ -133,7 +139,7 @@ def test_b5_origem_do_ciclo_chega_ao_python_derivada_do_event_name() -> None:
     texto = _ler(_BRIDGE_PATH)
     executavel = _sem_comentarios(texto)
     assert "REPASSO_WORKER_BRIDGE_TRIGGER" in executavel
-    expressao = "(github.event_name == 'workflow_run' || github.event_name == 'schedule') && 'event' || 'manual'"
+    expressao = "(github.event_name == 'workflow_run' || github.event_name == 'schedule' || github.event_name == 'push') && 'event' || 'manual'"
     assert expressao in executavel, "a origem precisa ser derivada de github.event_name"
     assert executavel.count(expressao) == 3, "gate/bootstrap/execução precisam usar a mesma origem tipada"
     idx = texto.index("Rodar o Worker Bridge")
@@ -290,7 +296,7 @@ def test_bridge_heartbeat_nao_vira_laco_de_execucao() -> None:
     """O heartbeat agenda NOVAS execuções isoladas, mas cada run continua
     tendo exatamente uma invocação do Bridge e nenhum laço/sleep interno."""
     texto = _ler(_BRIDGE_PATH)
-    assert 'cron: "*/30 * * * *"' in texto
+    assert 'cron: "7,37 * * * *"' in texto
     for proibido in ("while true", "for i in $(seq", "sleep "):
         assert proibido not in texto, f"{proibido!r} indicaria laço interno"
     assert len(re.findall(r"python3 -m coordinator\.worker_bridge", _sem_comentarios(texto))) == 1, (
