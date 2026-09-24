@@ -3327,6 +3327,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-24T04:07:55.660644+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:semiologia-ii-questoes-exames-p0--bridge-503ff9099a9a",
+      "informational_cost_usd": 0.029534,
+      "input_tokens": 10867,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 780,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T04:07:57.511215+00:00"
     }
   ]
 }
