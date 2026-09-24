@@ -193,9 +193,12 @@ BRIDGE_VALIDATION_COMMAND_KEYS: tuple[str, ...] = CANARY_VALIDATION_COMMAND_KEYS
 BRIDGE_BRANCH_PREFIX = "runner/"
 
 # Ciclo de correção pós-auditoria. Duas correções automáticas no máximo:
-# suficiente para fechar achados objetivos sem transformar NEEDS-FIX num
-# loop pago infinito. Depois disso a PR permanece visível para José.
-MAX_AUDIT_FIX_ATTEMPTS = 2
+# suficiente para permitir convergência em mais de uma rodada sem transformar
+# NEEDS-FIX num loop pago infinito. O pedido de José é continuar corrigindo
+# enquanto houver achados; quatro ciclos semânticos são o circuit breaker.
+# Se ainda reprovar depois disso, permanece BLOQUEADA/visível — nunca aprovada
+# por exaustão.
+MAX_AUDIT_FIX_ATTEMPTS = 4
 # Falhas de geração/aplicação que NÃO produziram novo HEAD podem ser
 # repetidas dentro do mesmo ciclo semântico. Limite separado para não
 # transformar resposta vazia/malformada em loop/custo infinito.
