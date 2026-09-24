@@ -150,10 +150,10 @@
       "current_task": "semiologia-ii-b08-pa-r4",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-24T09:34:17.022826+00:00",
+      "last_heartbeat": "2026-09-24T15:37:35.842735+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "AVAILABLE",
+      "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
