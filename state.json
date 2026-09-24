@@ -974,6 +974,31 @@
       "summary": "Repasso Guard HARD FAIL em run:36021686069.",
       "task_id": "<!-- id do registro em coordination/tasks.json, ou \"-\" se n\u00e3o houver -->",
       "worker_id": null
+    },
+    {
+      "category": "content",
+      "commit_sha": null,
+      "component": "coordinator-audit",
+      "error_id": "ERR-AB42B0D580",
+      "error_type": "semantic-needs-fix",
+      "fingerprint": "ab42b0d58066d167eb9d",
+      "first_seen": "2026-09-24T16:00:37.536993+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "d68b35f3965e4704ba406cdc9208d071",
+      "issue_sync_updated_at": "2026-09-24T16:00:37.536993+00:00",
+      "last_evidence_hash": "cd4281bac4fbf4e25e8d",
+      "last_seen": "2026-09-24T16:00:37.536993+00:00",
+      "occurrence_count": 1,
+      "pr_number": 208,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36024161288",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "Auditoria independente marcou pr:208 como NEEDS-FIX.",
+      "task_id": "pr:208",
+      "worker_id": null
     }
   ]
 }
