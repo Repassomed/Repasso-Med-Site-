@@ -749,6 +749,31 @@
       "summary": "Auditoria independente marcou pr:192 como NEEDS-FIX.",
       "task_id": "pr:192",
       "worker_id": null
+    },
+    {
+      "category": "runner",
+      "commit_sha": null,
+      "component": "runner",
+      "error_id": "ERR-57E238400C",
+      "error_type": "runner-failed",
+      "fingerprint": "57e238400c2d69de7871",
+      "first_seen": "2026-09-24T05:27:55.559667+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "283d7e0ac87a4637a22fd353f20deec4",
+      "issue_sync_updated_at": "2026-09-24T05:27:55.559667+00:00",
+      "last_evidence_hash": "9bea937c2e75c69e14e5",
+      "last_seen": "2026-09-24T05:27:55.559667+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "35959882440",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
+      "task_id": "fisiopatologia-ii-issue101-r3-sourcepack",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
