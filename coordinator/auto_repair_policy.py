@@ -43,7 +43,7 @@ PROTECTED = frozenset({
     "coordinator/tests/test_worker_bridge_workflow_security.py",
 })
 OPERATIONAL = tuple(x.lower() for x in (
-    "request timed out", "rate limit", "429", "orçamento", "budget",
+    "request timed out", "rate limit", "too many requests", "orçamento", "budget",
     "resposta do modelo não é um json válido", "resposta malformada nunca é aplicada",
     "structuredpatch sem nenhum filewrite", "atingiu o teto de saída",
     "hard fail", "blocked-limit", "source pack",
@@ -53,6 +53,17 @@ TECHNICAL = tuple(x.lower() for x in (
     "filenotfounderror", "modulenotfounderror", "importerror", "syntaxerror",
     "typeerror", "attributeerror", "keyerror", "valueerror", "falhou  test_",
 ))
+
+# Nunca tratar qualquer número "429" do log como rate-limit: logs de teste
+# carregam números de linha, ids e contagens. Só vale 429 em contexto HTTP.
+RATE_LIMIT_429_RE = re.compile(
+    r"(?:\bhttp(?:\s+status)?\s*[:=]?\s*429\b|"
+    r"\bstatus(?:\s+code)?\s*[:=]?\s*429\b|"
+    r"\berror(?:\s+code)?\s*[:=]?\s*429\b|"
+    r"\b429\b.{0,120}\brate[ -]?limit|"
+    r"\brate[ -]?limit.{0,120}\b429\b)",
+    re.I | re.S,
+)
 
 SYSTEM_PROMPT = """Voce e o AUTO-REPARO tecnico do Repasso Coordinator.
 Corrija SOMENTE o bug tecnico reproduzivel do log. Nunca edite conteudo
@@ -106,6 +117,8 @@ def assess_failure(workflow: str, log: str, failed_step: str = "") -> TechnicalA
     if workflow not in SUPPORTED_WORKFLOWS:
         return TechnicalAssessment(False, "workflow fora do escopo", sig)
     lower = (log or "").lower()
+    if RATE_LIMIT_429_RE.search(log or ""):
+        return TechnicalAssessment(False, "falha operacional/transiente (http 429/rate limit)", sig)
     for marker in OPERATIONAL:
         if marker in lower:
             return TechnicalAssessment(False, f"falha operacional/transiente ({marker})", sig)
