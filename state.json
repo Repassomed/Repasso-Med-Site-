@@ -999,6 +999,31 @@
       "summary": "Auditoria independente marcou pr:208 como NEEDS-FIX.",
       "task_id": "pr:208",
       "worker_id": null
+    },
+    {
+      "category": "runner",
+      "commit_sha": "3449935a23406db8a161f01dd577fc105cf6f1fb",
+      "component": "runner",
+      "error_id": "ERR-379E4FE3D9",
+      "error_type": "runner-failed",
+      "fingerprint": "379e4fe3d9329cd4f227",
+      "first_seen": "2026-09-24T16:02:44.990854+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "714180d56eea4b059d61e08519cde209",
+      "issue_sync_updated_at": "2026-09-24T16:02:44.990854+00:00",
+      "last_evidence_hash": "9bea937c2e75c69e14e5",
+      "last_seen": "2026-09-24T16:02:44.990854+00:00",
+      "occurrence_count": 1,
+      "pr_number": 208,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36024263671",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
+      "task_id": "cleanup-como-estudar-guarani",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
