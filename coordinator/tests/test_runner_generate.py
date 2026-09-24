@@ -426,6 +426,104 @@ def test_empty_files_response_fails_without_patch() -> None:
     print("OK  test_empty_files_response_fails_without_patch")
 
 
+def _question_report_ok() -> dict:
+    return {
+        "detectadas": 2,
+        "integrais": 1,
+        "parciais": 1,
+        "reconstruidas": 1,
+        "novas_baseadas_em_exame": 0,
+        "duplicadas": 0,
+        "canonicas": 2,
+        "nao_aproveitadas": 0,
+        "itens": [
+            {
+                "origem": "P1 Semiologia 2.pdf · p.3",
+                "tipo": "selección múltiple",
+                "destino": "B03 · Q12",
+                "decisao": "INTEGRAL",
+                "motivo": "enunciado e gabarito íntegros na fonte",
+            },
+            {
+                "origem": "gabarito visual FILA 2 · 1.1",
+                "tipo": "selección múltiple",
+                "destino": "B05 · Q7",
+                "decisao": "RECONSTRUIDA",
+                "motivo": "núcleo e resposta seguros; formulação parcial",
+            },
+        ],
+    }
+
+
+def test_question_report_required_missing_fails_closed() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        with open(os.path.join(tmp, "greeting.txt"), "w", encoding="utf-8") as fh:
+            fh.write("antes\n")
+        transporte = _CountingTransport(response=_resposta_ok([
+            {"path": "greeting.txt", "content": "depois\n"}
+        ]))
+        outcome = gerar_patch_via_claude(
+            _task(instructions="RELATORIO_LEI_8A_OBRIGATORIO\nAtualizar questão."),
+            config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "failed"
+        assert outcome.patch is None
+        assert "question_report" in outcome.reason
+    print("OK  test_question_report_required_missing_fails_closed")
+
+
+def test_question_report_valid_travels_with_patch() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        with open(os.path.join(tmp, "greeting.txt"), "w", encoding="utf-8") as fh:
+            fh.write("antes\n")
+        payload = {
+            "files": [{"path": "greeting.txt", "content": "depois\n"}],
+            "question_report": _question_report_ok(),
+        }
+        transporte = _CountingTransport(response=TransportResponse(
+            text=json.dumps(payload), input_tokens=100, output_tokens=80,
+        ))
+        outcome = gerar_patch_via_claude(
+            _task(instructions="RELATORIO_LEI_8A_OBRIGATORIO\nAtualizar questão."),
+            config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "ok", outcome.reason
+        assert outcome.patch is not None
+        assert outcome.question_report is not None
+        assert outcome.question_report["detectadas"] == 2
+        assert outcome.question_report["itens"][0]["decisao"] == "INTEGRAL"
+    print("OK  test_question_report_valid_travels_with_patch")
+
+
+def test_question_report_invalid_not_used_count_fails_closed() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        with open(os.path.join(tmp, "greeting.txt"), "w", encoding="utf-8") as fh:
+            fh.write("antes\n")
+        report = _question_report_ok()
+        report["nao_aproveitadas"] = 1
+        payload = {
+            "files": [{"path": "greeting.txt", "content": "depois\n"}],
+            "question_report": report,
+        }
+        transporte = _CountingTransport(response=TransportResponse(
+            text=json.dumps(payload), input_tokens=100, output_tokens=80,
+        ))
+        outcome = gerar_patch_via_claude(
+            _task(instructions="RELATORIO_LEI_8A_OBRIGATORIO\nAtualizar questão."),
+            config=_config(), repo_dir=tmp,
+            usage_ledger=UsageLedger(os.path.join(tmp, "ledger.json")), budget_usd=20.0,
+            transport=transporte,
+        )
+        assert outcome.status == "failed"
+        assert outcome.patch is None
+        assert "não aproveitadas" in outcome.reason
+    print("OK  test_question_report_invalid_not_used_count_fails_closed")
+
+
 def test_response_outside_allowed_files_is_blocked_without_patch() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         transporte = _CountingTransport(response=_resposta_ok([{"path": "outro.txt", "content": "não devia entrar"}]))
@@ -952,6 +1050,9 @@ def main() -> int:
         test_oversized_file_outside_allowed_files_does_not_block,
         test_malformed_json_response_fails_without_patch,
         test_empty_files_response_fails_without_patch,
+        test_question_report_required_missing_fails_closed,
+        test_question_report_valid_travels_with_patch,
+        test_question_report_invalid_not_used_count_fails_closed,
         test_response_outside_allowed_files_is_blocked_without_patch,
         test_non_dict_json_response_fails_without_patch,
         test_prompt_contains_only_instructions_and_allowed_file_contents,
