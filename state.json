@@ -152,8 +152,8 @@
       "last_checkpoint": null,
       "last_heartbeat": "2026-09-24T16:10:55.375029+00:00",
       "never_merge": true,
-      "progress": null,
-      "status": "AVAILABLE",
+      "progress": "Limite informado por José em 24/09/2026; não oferecer novas tarefas até liberação explícita.",
+      "status": "LIMIT",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
