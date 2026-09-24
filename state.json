@@ -3431,6 +3431,16 @@
       "output_tokens": 140,
       "tier": "FAST",
       "timestamp": "2026-09-24T04:29:40.745686+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.113174,
+      "event_key": "runner-task:cleanup-como-estudar-anestesiologia--bridge-4ec62ed8fe83",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-24T04:31:28.857761+00:00"
     }
   ]
 }
