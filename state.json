@@ -150,10 +150,10 @@
       "current_task": "infra-guard-audit-pr-context-issue165",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-23T23:54:33.921493+00:00",
+      "last_heartbeat": "2026-09-24T00:01:35.455854+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "AVAILABLE",
+      "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
