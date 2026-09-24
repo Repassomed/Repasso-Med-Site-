@@ -999,8 +999,8 @@
         "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
       ],
       "agente": null,
-      "pr": null,
-      "commit": null,
+      "pr": 164,
+      "commit": "f8f10b6e48b67b2269185af9baa27fdf5b862af8",
       "issue": 67,
       "automation_enabled": true,
       "bridge_enabled": true,
@@ -1014,13 +1014,13 @@
       "titulo": "P0 — Semiología II B07: corrigir questão Framingham duplicada",
       "objetivo": "Corrigir somente o gap P0 de Framingham no B07: a questão atual tem alternativas c e d semanticamente equivalentes para a regra diagnóstica. Preservar como correta a regra ensinada pela cátedra: 2 critérios mayores OU 1 mayor + 2 menores. Tornar o distrator c inequivocamente diferente/incorreto, sem pista editorial como '(combinación incorrecta)', preservando enunciado, proveniência, estrutura, IDs/annotations e espelho no Banco General quando aplicável.",
       "fonte": "Issue #67 · auditoria independente comentário 5752213771 · Error Registry #157",
-      "estado": "READY",
+      "estado": "DONE",
       "prioridade_declarada": "P0",
       "dependencias": [
         "semiologia-ii-b01-b04-provas"
       ],
       "branch": "runner/semiologia-ii-b07-framingham-r3",
-      "notas": "Microtarefa criada para evitar contexto amplo/vago. Alterar SOMENTE o necessário para o Framingham B07; não expandir para outros gaps. Resultado obrigatório NEEDS-AUDIT; sem merge/deploy/publicação automática."
+      "notas": "Microtarefa criada para evitar contexto amplo/vago. Alterar SOMENTE o necessário para o Framingham B07; não expandir para outros gaps. Resultado obrigatório NEEDS-AUDIT; sem merge/deploy/publicação automática. Estado declarativo reconciliado em 24/09/2026 com a PR #164 já mergeada; B08 pode depender deste DONE sem depender apenas do runtime."
     },
     {
       "area": "materia",
