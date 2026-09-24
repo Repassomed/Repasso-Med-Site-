@@ -185,6 +185,74 @@ def test_pr_needs_audit_carries_head_sha_audit_pack_and_body() -> None:
     print("OK  test_pr_needs_audit_carries_head_sha_audit_pack_and_body")
 
 
+def _evento_pr_worker_bridge_para_teste(corpo: str, *, title: str = "Limpeza") -> object:
+    payload = {
+        "action": "completed",
+        "workflow_run": {
+            "name": "Repasso Guard", "conclusion": "success", "id": 77,
+            "head_sha": "head-material", "pull_requests": [{"number": 192}],
+        },
+    }
+    pr_info = {
+        "number": 192, "title": title, "body": corpo,
+        "labels": ["NEEDS-AUDIT"], "updated_at": "x",
+    }
+    return build_event_from_github_context("workflow_run", payload, REPO, pr_info=pr_info)
+
+
+def test_worker_bridge_cleanup_nao_vira_questoes_por_nota_de_revalidacao() -> None:
+    corpo = """<!-- repasso-worker-bridge-needs-audit -->
+## ESCOPO
+- **Tarefa:** cleanup-como-estudar-anatomia-patologica-ii
+- **Área:** materia
+- **Objetivo:** Remover somente o bloco metadidático Cómo estudiar e preservar conteúdo real.
+- **Lei 8-A obrigatória:** NÃO
+
+---
+Revalidação: foram preservados banco general, questões, variantes, gabaritos e flashcards.
+"""
+    ev = _evento_pr_worker_bridge_para_teste(corpo)
+    assert ev is not None
+    assert ev.payload["envolve_questoes"] is False, (
+        "texto de revalidação fora do ESCOPO não pode ativar Lei 8-A"
+    )
+    print("OK  test_worker_bridge_cleanup_nao_vira_questoes_por_nota_de_revalidacao")
+
+
+def test_worker_bridge_questao_tipificada_ativa_lei_8a() -> None:
+    corpo = """<!-- repasso-worker-bridge-needs-audit -->
+## ESCOPO
+- **Tarefa:** semiologia-ii-b08-pa-r5
+- **Área:** materia
+- **Objetivo:** Ajustar classificação de PA no B08.
+- **Lei 8-A obrigatória:** SIM
+"""
+    ev = _evento_pr_worker_bridge_para_teste(corpo, title="Semiología II B08")
+    assert ev is not None and ev.payload["envolve_questoes"] is True
+    print("OK  test_worker_bridge_questao_tipificada_ativa_lei_8a")
+
+
+def test_worker_bridge_legado_usa_apenas_tarefa_e_objetivo_nao_corpo_inteiro() -> None:
+    corpo_limpeza = """<!-- repasso-worker-bridge-needs-audit -->
+## ESCOPO
+- **Tarefa:** cleanup-como-estudar-guarani
+- **Objetivo:** Remover somente o bloco metadidático Cómo estudiar.
+---
+Nota: preservar o banco geral de questões e seus gabaritos.
+"""
+    ev_limpeza = _evento_pr_worker_bridge_para_teste(corpo_limpeza)
+    assert ev_limpeza is not None and ev_limpeza.payload["envolve_questoes"] is False
+
+    corpo_prova = """<!-- repasso-worker-bridge-needs-audit -->
+## ESCOPO
+- **Tarefa:** toxicologia-provas-r2
+- **Objetivo:** Incorporar questões de prova com gabarito rastreável.
+"""
+    ev_prova = _evento_pr_worker_bridge_para_teste(corpo_prova)
+    assert ev_prova is not None and ev_prova.payload["envolve_questoes"] is True
+    print("OK  test_worker_bridge_legado_usa_apenas_tarefa_e_objetivo_nao_corpo_inteiro")
+
+
 def test_pr_needs_audit_without_materia_area_leaves_materia_none() -> None:
     payload = {
         "action": "completed",
@@ -682,6 +750,9 @@ def main() -> int:
         test_prova_c_rerun_do_guard_no_mesmo_head_zero_chamada_duplicada,
         test_dedup_key_ainda_diferencia_mudanca_real_de_estado,
         test_pr_needs_audit_carries_head_sha_audit_pack_and_body,
+        test_worker_bridge_cleanup_nao_vira_questoes_por_nota_de_revalidacao,
+        test_worker_bridge_questao_tipificada_ativa_lei_8a,
+        test_worker_bridge_legado_usa_apenas_tarefa_e_objetivo_nao_corpo_inteiro,
         test_pr_needs_audit_without_materia_area_leaves_materia_none,
         test_guard_state_change_carries_head_sha_in_dedup_fields,
         test_comment_with_coordinator_marker_is_ignored_even_from_trusted_actor,
