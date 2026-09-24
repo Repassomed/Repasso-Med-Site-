@@ -208,10 +208,10 @@
       "last_audit_findings": "",
       "last_audit_fix_fingerprint": null,
       "pr_number": null,
-      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'semiologia-ii-questoes-exames-p0' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=True.)",
+      "reason": "patch estruturado da resposta \u00e9 inv\u00e1lido (fail-closed, nunca parcial): StructuredPatch sem nenhum FileWrite \u2014 patch vazio n\u00e3o \u00e9 v\u00e1lido.",
       "reserved_at": "2026-09-24T04:07:33.107420+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-24T04:07:33.107432+00:00",
+      "status": "FAILED",
+      "updated_at": "2026-09-24T04:08:03.936517+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
