@@ -358,7 +358,7 @@
       "audit_fix_execution_failures": 0,
       "branch": "runner/cleanup-como-estudar-guarani",
       "canonical_task_id": "cleanup-como-estudar-guarani",
-      "checkpoint_commit": "31842515a158283ff4d5515305b9646b5816b1b0",
+      "checkpoint_commit": "571ad05842010a6d81201c15391d21ea28d2e151",
       "execution_history": [
         "cleanup-como-estudar-guarani--bridge-58d356675753",
         "cleanup-como-estudar-guarani--bridge-866ece60bcee",
@@ -374,10 +374,10 @@
       "last_audit_fix_worker_id": null,
       "pr_number": 208,
       "question_report": null,
-      "reason": "corre\u00e7\u00e3o p\u00f3s-auditoria #2 reservada para 'claude-worker-1'; execution id nova, mesma branch/PR e checkpoint vinculado ao HEAD auditado.",
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/cleanup-como-estudar-guarani'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
       "reserved_at": "2026-09-24T21:44:07.202237+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-24T21:44:07.202237+00:00",
+      "status": "NEEDS-AUDIT",
+      "updated_at": "2026-09-24T21:45:52.953690+00:00",
       "worker_id": "claude-worker-1"
     },
     {
