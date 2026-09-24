@@ -386,8 +386,9 @@ def garantir_pr(
                 return PrOutcome(
                     "FAILED",
                     f"PR #{numero} existe, mas o relatório Lei 8-A não pôde ser atualizado: "
-                    f"{redact(str(exc))}",
-                    pr_number=numero, pr_url=pr.get("html_url"),
+                    f"{redact(str(exc))}. Tratada como indisponível até o retry de PR; "
+                    "Guard não pode auditar corpo/proveniência antigos.",
+                    pr_number=None, pr_url=pr.get("html_url"),
                 )
         return PrOutcome(
             "REUSED",
