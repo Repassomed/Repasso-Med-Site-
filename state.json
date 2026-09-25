@@ -590,6 +590,28 @@
       "status": "BLOCKED",
       "updated_at": "2026-09-25T20:05:51.455075+00:00",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "audit_fix_attempts": 0,
+      "audit_fix_execution_failures": 0,
+      "branch": "runner/semiologia-ii-b08-obesidade-r4",
+      "canonical_task_id": "semiologia-ii-b08-obesidade-r4",
+      "checkpoint_commit": null,
+      "execution_history": [],
+      "execution_task_id": "semiologia-ii-b08-obesidade-r4--bridge-2f0f3f07c06f",
+      "guard_dispatch_attempts": 0,
+      "guard_dispatch_status": null,
+      "guard_dispatched_pr": null,
+      "last_audit_findings": "",
+      "last_audit_fix_fingerprint": null,
+      "last_audit_fix_worker_id": null,
+      "pr_number": null,
+      "question_report": null,
+      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'semiologia-ii-b08-obesidade-r4' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=True.)",
+      "reserved_at": "2026-09-25T20:19:04.143158+00:00",
+      "status": "IN-PROGRESS",
+      "updated_at": "2026-09-25T20:19:04.143175+00:00",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
