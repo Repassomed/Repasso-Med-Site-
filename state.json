@@ -1274,6 +1274,31 @@
       "summary": "Auditoria independente marcou pr:196 como NEEDS-FIX.",
       "task_id": "pr:196",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "f462b15402d3e06f701fb8f21c9f65b7f3489fa9",
+      "component": "guard",
+      "error_id": "ERR-348457A316",
+      "error_type": "hard-fail",
+      "fingerprint": "348457a316bc58bdf802",
+      "first_seen": "2026-09-25T18:17:05.258430+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "9ad9b66663714d8c88f6a4a4a33972c4",
+      "issue_sync_updated_at": "2026-09-25T18:17:05.258430+00:00",
+      "last_evidence_hash": "64980a5f7bb8538c6ac3",
+      "last_seen": "2026-09-25T18:17:05.258430+00:00",
+      "occurrence_count": 1,
+      "pr_number": 278,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36172289910",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:278.",
+      "task_id": "P0 \u00b7 Issue #274 \u2014 consertar o Worker Bridge, que parou de iniciar em QUALQUER gatilho depois do merge da #264.",
+      "worker_id": null
     }
   ]
 }
