@@ -159,7 +159,7 @@ import re
 import unicodedata
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Protocol
+from typing import Callable, Protocol
 
 from . import anthropic_client
 from .anthropic_transport import AnthropicTransport
@@ -802,12 +802,166 @@ def _janelas_de_espelho(conteudo: str, secoes: list[tuple[int, int]]) -> list[tu
     return janelas
 
 
+# ---------------------------------------------------------------------
+# Canário PR #286 (Issues #296/#297): chaves OBJETIVAS do NEEDS-FIX.
+#
+# A correção pós-auditoria roda no HEAD da PR, e o Guard aponta justamente
+# o que a PR REMOVEU (``block_id de seção removido: histo00``): no arquivo
+# atual essa chave não existe mais. Além disso, a instrução da correção
+# começa pelo objetivo original, cujas palavras ocupavam todas as
+# ``MAX_KEYWORDS`` vagas — o id do parecer nunca virava chave.
+#
+# Regra: ids citados pela parte "CORREÇÃO PÓS-AUDITORIA" da instrução são
+# SÓ chaves de recuperação de contexto (nunca comando):
+# - 1 ocorrência no arquivo atual → janela ao redor, com prioridade;
+# - 0 ocorrências → procura na versão anterior à PR (merge-base) e, se lá
+#   for única, mapeia a região para o arquivo atual por linhas literais
+#   únicas nas DUAS versões; a região antiga vai como referência somente
+#   leitura (nunca vira trecho editável: AnchoredEdit continua exigindo
+#   old_text dentro de um trecho do arquivo ATUAL);
+# - 2+ ocorrências, ou sem âncora única → não escolhe nada (fail-closed).
+# ---------------------------------------------------------------------
+
+MARCADOR_CORRECAO_POS_AUDITORIA = "CORREÇÃO PÓS-AUDITORIA"
+MAX_CHAVES_AUDITORIA = 8
+MAX_REGIAO_MAPEADA_CHARS = 24_000
+MAX_REFERENCIA_BASE_CHARS = 8_000
+MAX_LINHAS_BUSCA_ANCORA = 80
+MIN_LINHA_ANCORA_CHARS = 16
+_RE_ID_VALIDO = re.compile(r"[A-Za-z][A-Za-z0-9_-]{1,63}")
+_RE_BLOCK_IDS_REMOVIDOS = re.compile(r"block_id de seção removido:\s*([^.;\n]+)")
+_RE_ID_LITERAL_NA_AUDITORIA = re.compile(
+    r"\b(?:block_id|id)\s*=\s*[\"'`]([A-Za-z][A-Za-z0-9_-]{1,63})[\"'`]"
+)
+
+
+def chaves_objetivas_da_auditoria(instructions: str) -> tuple[str, ...]:
+    """Ids citados literalmente pelo parecer NEEDS-FIX (só a parte depois
+    de ``MARCADOR_CORRECAO_POS_AUDITORIA``). Fora de uma correção, vazio."""
+    idx = instructions.find(MARCADOR_CORRECAO_POS_AUDITORIA)
+    if idx < 0:
+        return ()
+    secao = instructions[idx:]
+    chaves: list[str] = []
+    brutos: list[str] = []
+    for m in _RE_BLOCK_IDS_REMOVIDOS.finditer(secao):
+        brutos.extend(m.group(1).split(","))
+    brutos.extend(m.group(1) for m in _RE_ID_LITERAL_NA_AUDITORIA.finditer(secao))
+    for bruto in brutos:
+        chave = bruto.strip()
+        if _RE_ID_VALIDO.fullmatch(chave) and chave not in chaves:
+            chaves.append(chave)
+    return tuple(chaves[:MAX_CHAVES_AUDITORIA])
+
+
+def _posicoes_do_id(conteudo: str, chave: str) -> list[int]:
+    padrao = re.compile(r"\bid\s*=\s*[\"']" + re.escape(chave) + r"[\"']")
+    return [m.start() for m in padrao.finditer(conteudo)]
+
+
+def _linha_ancora_unica(base: str, head: str, limite: int, *, para_tras: bool) -> tuple[int, int] | None:
+    """Primeira linha (a partir de ``limite`` na base, para trás ou para a
+    frente) que aparece EXATAMENTE uma vez na base e uma vez no arquivo
+    atual. Devolve ``(posição no atual, tamanho)``."""
+    if para_tras:
+        fim = base.rfind("\n", 0, max(0, limite))
+        for _ in range(MAX_LINHAS_BUSCA_ANCORA):
+            if fim < 0:
+                return None
+            inicio = base.rfind("\n", 0, fim) + 1
+            linha = base[inicio:fim]
+            if (len(linha.strip()) >= MIN_LINHA_ANCORA_CHARS
+                    and base.count(linha) == 1 and head.count(linha) == 1):
+                return head.find(linha), len(linha)
+            fim = inicio - 1
+        return None
+    inicio = base.rfind("\n", 0, limite) + 1
+    for _ in range(MAX_LINHAS_BUSCA_ANCORA):
+        if inicio >= len(base):
+            return None
+        fim = base.find("\n", inicio)
+        fim = len(base) if fim < 0 else fim
+        linha = base[inicio:fim]
+        if (len(linha.strip()) >= MIN_LINHA_ANCORA_CHARS
+                and base.count(linha) == 1 and head.count(linha) == 1):
+            return head.find(linha), len(linha)
+        inicio = fim + 1
+    return None
+
+
+def _mapear_regiao_da_base(base: str, head: str, pos_base: int) -> tuple[int, int, int, int] | None:
+    """``(inicio_atual, fim_atual, inicio_base, fim_base)`` da região onde
+    ficava ``pos_base`` — ou ``None`` se não houver âncora literal única."""
+    secao = next(((i, f) for i, f, _id in _secoes_do_html(base) if i <= pos_base < f), None)
+    if secao is None or secao[1] - secao[0] > MAX_REFERENCIA_BASE_CHARS:
+        secao = _janela(base, pos_base, 0)
+    bi, bf = secao
+    antes = _linha_ancora_unica(base, head, bi, para_tras=True)
+    depois = _linha_ancora_unica(base, head, bf, para_tras=False)
+    if antes is None:
+        return None
+    hi = antes[0]
+    hf = hi + antes[1] + (bf - bi)
+    if depois is not None:
+        if depois[0] < hi:
+            return None  # ordem incoerente entre as versões: não adivinha
+        hf = max(hf, depois[0] + depois[1])
+    hf = min(len(head), hf + ANCHOR_WINDOW_CHARS_AFTER)
+    if hf - hi > MAX_REGIAO_MAPEADA_CHARS:
+        return None
+    return hi, hf, bi, bf
+
+
+@dataclass(frozen=True)
+class ChavesDaAuditoria:
+    janelas: tuple[tuple[int, int], ...]
+    referencias_base: tuple["TrechoAncorado", ...]
+    localizadas: tuple[str, ...]
+    nao_localizadas: tuple[tuple[str, str], ...]
+
+
+def localizar_chaves_da_auditoria(
+    conteudo: str, chaves: tuple[str, ...], conteudo_base: str | None
+) -> ChavesDaAuditoria:
+    janelas: list[tuple[int, int]] = []
+    referencias: list[TrechoAncorado] = []
+    localizadas: list[str] = []
+    falhas: list[tuple[str, str]] = []
+    for chave in chaves:
+        no_atual = _posicoes_do_id(conteudo, chave)
+        if len(no_atual) == 1:
+            janelas.append(_janela(conteudo, no_atual[0], len(chave)))
+            localizadas.append(chave)
+            continue
+        if len(no_atual) > 1:
+            falhas.append((chave, f"ambígua no arquivo atual ({len(no_atual)} ocorrências)"))
+            continue
+        if conteudo_base is None:
+            falhas.append((chave, "ausente do arquivo atual e versão anterior indisponível"))
+            continue
+        na_base = _posicoes_do_id(conteudo_base, chave)
+        if len(na_base) != 1:
+            falhas.append((chave, "ausente também da versão anterior" if not na_base
+                           else f"ambígua na versão anterior ({len(na_base)} ocorrências)"))
+            continue
+        mapeada = _mapear_regiao_da_base(conteudo_base, conteudo, na_base[0])
+        if mapeada is None:
+            falhas.append((chave, "sem linha literal única para localizar a região no arquivo atual"))
+            continue
+        hi, hf, bi, bf = mapeada
+        janelas.append((hi, hf))
+        referencias.append(TrechoAncorado(inicio=bi, fim=bf, texto=conteudo_base[bi:bf]))
+        localizadas.append(chave)
+    return ChavesDaAuditoria(tuple(janelas), tuple(referencias), tuple(localizadas), tuple(falhas))
+
+
 def extrair_trechos_ancorados(
     conteudo: str,
     instructions: str,
     *,
     limite_chars: int = MAX_ANCHOR_CONTEXT_CHARS_PER_FILE,
     max_janelas: int = MAX_ANCHOR_WINDOWS_PER_FILE,
+    janelas_prioritarias: tuple[tuple[int, int], ...] = (),
 ) -> tuple[TrechoAncorado, ...]:
     """Trechos relevantes do arquivo para esta instrução. Tupla VAZIA
     significa "não foi possível localizar contexto confiável" — quem
@@ -815,9 +969,16 @@ def extrair_trechos_ancorados(
     conteudo_norm = _normalizar(conteudo)
     regioes = _regioes_estruturais(conteudo_norm)
 
-    # Issue #235: primeiro, os BLOCOS inteiros que a instrução referencia.
+    # Canário #286: regiões das chaves objetivas do NEEDS-FIX vêm antes de tudo.
     selecionadas: list[tuple[int, int]] = []
     total = 0
+    for inicio, fim in janelas_prioritarias:
+        if total + (fim - inicio) > limite_chars:
+            continue
+        selecionadas.append((inicio, fim))
+        total += fim - inicio
+
+    # Issue #235: depois, os BLOCOS inteiros que a instrução referencia.
     for inicio, fim in _secoes_referenciadas(conteudo, instructions):
         if total + (fim - inicio) > limite_chars:
             continue
@@ -1134,6 +1295,7 @@ def build_prompt(
     task: RunnerTask,
     current_contents: dict[str, str],
     trechos_por_arquivo: dict[str, tuple[TrechoAncorado, ...]] | None = None,
+    referencias_base: dict[str, tuple[TrechoAncorado, ...]] | None = None,
 ) -> str:
     """Monta o prompt com o conteúdo COMPLETO de cada allowed_file pequeno
     — nunca cortado — e, para cada arquivo listado em
@@ -1143,6 +1305,7 @@ def build_prompt(
     ou o arquivo veio inteiro em ``current_contents`` e é pequeno, ou veio
     como trechos, decididos antes por ``gerar_patch_via_claude``."""
     trechos_por_arquivo = trechos_por_arquivo or {}
+    referencias_base = referencias_base or {}
     partes = [
         f"Instrução da tarefa (task_id={task.task_id}):",
         task.instructions.strip(),
@@ -1175,6 +1338,13 @@ def build_prompt(
                     f"[trecho {indice} — caracteres {trecho.inicio}..{trecho.fim} do arquivo, cópia literal]"
                 )
                 partes.append(trecho.texto)
+            for indice, ref in enumerate(referencias_base.get(caminho, ()), 1):
+                partes.append(
+                    f"[REFERÊNCIA {indice} DA VERSÃO ANTERIOR A ESTA PR — caracteres {ref.inicio}..{ref.fim} "
+                    "da base; SOMENTE LEITURA: mostra o que existia antes (ex.: id removido). NÃO é o "
+                    "arquivo atual e NUNCA serve de 'old_text' — ancore só nos trechos acima]"
+                )
+                partes.append(ref.texto)
             continue
         partes.append(f"--- {caminho} ---")
         conteudo = current_contents.get(caminho, "")
@@ -1244,6 +1414,7 @@ def gerar_patch_via_claude(
     budget_usd: float,
     transport: object | None = None,
     canonical_task_id: str | None = None,
+    ler_conteudo_base: Callable[[str], str | None] | None = None,
 ) -> GenerateOutcome:
     """A camada de GERAÇÃO — nunca aplica nada. Devolve um
     ``StructuredPatch`` já validado contra ``task.allowed_files`` (pronto
@@ -1297,7 +1468,13 @@ def gerar_patch_via_claude(
     # mesmo — zero chamada, zero patch, nunca um pedaço arbitrário.
     grandes_demais = _arquivos_grandes_demais(contexto)
     trechos_por_arquivo: dict[str, tuple[TrechoAncorado, ...]] = {}
+    referencias_base: dict[str, tuple[TrechoAncorado, ...]] = {}
     orcamento_restante = MAX_ANCHOR_CONTEXT_CHARS_TOTAL
+    # Canário #286: ids objetivos do NEEDS-FIX têm prioridade na recuperação
+    # (``ler_conteudo_base`` só é fornecido pelo caminho de correção).
+    chaves_auditoria = chaves_objetivas_da_auditoria(task.instructions) if grandes_demais else ()
+    chaves_localizadas: list[str] = []
+    chaves_falhas: list[str] = []
     for caminho in grandes_demais:
         limite_deste = min(MAX_ANCHOR_CONTEXT_CHARS_PER_FILE, orcamento_restante)
         if limite_deste <= 0:
@@ -1307,7 +1484,26 @@ def gerar_patch_via_claude(
                 "uma única chamada. Fail-closed (Issue #144): nenhuma chamada foi feita, zero escrita. "
                 "Divida a tarefa em allowed_files menores."
             )
-        trechos = extrair_trechos_ancorados(contexto[caminho], task.instructions, limite_chars=limite_deste)
+        prioritarias: tuple[tuple[int, int], ...] = ()
+        if chaves_auditoria:
+            base_deste = None
+            if ler_conteudo_base is not None and any(
+                not _posicoes_do_id(contexto[caminho], c) for c in chaves_auditoria
+            ):
+                base_deste = ler_conteudo_base(caminho)
+            achadas = localizar_chaves_da_auditoria(contexto[caminho], chaves_auditoria, base_deste)
+            prioritarias = achadas.janelas
+            chaves_localizadas.extend(achadas.localizadas)
+            chaves_falhas.extend(f"{c} ({motivo})" for c, motivo in achadas.nao_localizadas)
+            refs = tuple(r for r in achadas.referencias_base if r.fim - r.inicio <= limite_deste)
+            if refs:
+                referencias_base[caminho] = refs
+                limite_deste -= sum(r.fim - r.inicio for r in refs)
+                orcamento_restante -= sum(r.fim - r.inicio for r in refs)
+        trechos = extrair_trechos_ancorados(
+            contexto[caminho], task.instructions, limite_chars=limite_deste,
+            janelas_prioritarias=prioritarias,
+        )
         if not trechos:
             return _outcome_bloqueado(
                 f"arquivo grande {caminho!r} ({len(contexto[caminho])} caracteres, acima de "
@@ -1320,7 +1516,14 @@ def gerar_patch_via_claude(
         trechos_por_arquivo[caminho] = trechos
         orcamento_restante -= sum(t.fim - t.inicio for t in trechos)
 
-    prompt = build_prompt(task, contexto, trechos_por_arquivo)
+    if chaves_auditoria and not chaves_localizadas:
+        return _outcome_bloqueado(
+            "correção pós-auditoria: nenhum id objetivo apontado pelo NEEDS-FIX pôde ser localizado "
+            f"com segurança no arquivo grande ({'; '.join(chaves_falhas)}). Fail-closed: nenhuma "
+            "chamada foi feita — o Runner nunca adivinha a região nem envia o arquivo inteiro."
+        )
+
+    prompt = build_prompt(task, contexto, trechos_por_arquivo, referencias_base)
     system_prompt = _system_prompt_para_tarefa(task, ancorado=bool(trechos_por_arquivo))
 
     model_choice = resolve_model(ModelTier.STANDARD)

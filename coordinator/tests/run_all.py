@@ -44,6 +44,7 @@ from . import (
     test_openai_transport,
     test_pilot_mode,
     test_redact,
+    test_runner_audit_fix_context,
     test_runner_contract,
     test_runner_dispatch,
     test_runner_generate,
@@ -124,6 +125,9 @@ MODULOS = [
     test_runner_contract,
     test_runner_dispatch,
     test_runner_generate,
+    # Canário #286 (Issues #296/#297): contexto da correção pós-auditoria
+    # localiza o que o Guard apontou como REMOVIDO, sem ampliar limites.
+    test_runner_audit_fix_context,
     test_runner_resume,
     test_runner_workflow_security,
     test_worker_commands,
