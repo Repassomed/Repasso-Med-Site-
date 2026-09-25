@@ -7605,6 +7605,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-25T21:59:19.622075+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:cleanup-como-estudar-histologia-i-r2--bridge-45bb2b9957a9",
+      "informational_cost_usd": 0.060692,
+      "input_tokens": 21881,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 1693,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-25T21:59:21.975234+00:00"
     }
   ]
 }
