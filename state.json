@@ -596,7 +596,7 @@
       "audit_fix_execution_failures": 0,
       "branch": "runner/semiologia-ii-b08-obesidade-r4",
       "canonical_task_id": "semiologia-ii-b08-obesidade-r4",
-      "checkpoint_commit": "55a865db6313087ef32468e6fc3cae1948f9fc3b",
+      "checkpoint_commit": "4084b97866d17e1067d655f03bc821d6a3e9011f",
       "execution_history": [
         "semiologia-ii-b08-obesidade-r4--bridge-2f0f3f07c06f"
       ],
@@ -608,11 +608,11 @@
       "last_audit_fix_fingerprint": "fe5f374efd0a6781006e31f0",
       "last_audit_fix_worker_id": null,
       "pr_number": 289,
-      "question_report": "## Relat\u00f3rio obrigat\u00f3rio \u2014 Lei das Quest\u00f5es (8-A.11)\n\n### Matriz por fonte\n\n| Fonte | P\u00e1gina/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | Duplicadas/can\u00f4nicas | Reconstru\u00eddas | Pendentes | Destino no site |\n| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n| Material interno da c\u00e1tedra \u2014 resumo B08 Hipertensi\u00f3n Arterial (se\u00e7\u00e3o 'Factores de riesgo: no modificables y modificables') | n\u00e3o aplic\u00e1vel \u2014 nenhuma p\u00e1gina/imagem do source pack externo foi usada nesta corre\u00e7\u00e3o | n\u00e3o aproveitada | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Bloco 08 \u00b7 Hipertensi\u00f3n Arterial \u00b7 se\u00e7\u00e3o 's2-detalle' (resumo), sem altera\u00e7\u00e3o de quest\u00f5es/flashcards |\n\n**Confirma\u00e7\u00e3o de cobertura:** RESUMO ENSINA \u2192 QUEST\u00c3O COBRA \u2192 EXPLICA\u00c7\u00c3O REFOR\u00c7A\n\n**Notas de proveni\u00eancia:** Esta microtarefa n\u00e3o envolveu extra\u00e7\u00e3o, cria\u00e7\u00e3o, reformula\u00e7\u00e3o ou remo\u00e7\u00e3o de quest\u00f5es do source pack (P1/P2/gabaritos); tratou exclusivamente da diverg\u00eancia interna obesidad/sobrepeso (no modificable vs. modificable) no resumo do Bloco 08. Nenhuma quest\u00e3o, flashcard, tabela de classifica\u00e7\u00e3o de PA ou ECG foi alterada; a contradi\u00e7\u00e3o foi sinalizada explicitamente em vez de corrigida silenciosamente, preservando o padr\u00e3o j\u00e1 cobrado nas perguntas e flashcards (obesidad/sobrepeso = modificable). N\u00e3o foi localizada c\u00f3pia id\u00eantica desta frase espec\u00edfica no Banco Geral dentro dos trechos fornecidos, portanto nenhuma edi\u00e7\u00e3o foi feita l\u00e1.",
-      "reason": "corre\u00e7\u00e3o p\u00f3s-auditoria #1 reservada para 'claude-worker-1'; execution id nova, mesma branch/PR e checkpoint vinculado ao HEAD auditado.",
+      "question_report": "## Relat\u00f3rio obrigat\u00f3rio \u2014 Lei das Quest\u00f5es (8-A.11)\n\n### Matriz por fonte\n\n| Fonte | P\u00e1gina/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | Duplicadas/can\u00f4nicas | Reconstru\u00eddas | Pendentes | Destino no site |\n| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n| HTML Semiolog\u00eda II \u2014 nota s2-trap (Bloque 08, HTA) que sinaliza diverg\u00eancia interna obesidad/sobrepeso | trecho 11 do arquivo (lista de fatores + tabela + pergunta CITE + flashcard, todos no mesmo bloco) | integral | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Bloco 08 \u00b7 Hipertensi\u00f3n Arterial \u2014 nota explicativa (n\u00e3o \u00e9 quest\u00e3o de banco) |\n\n**Confirma\u00e7\u00e3o de cobertura:** RESUMO ENSINA \u2192 QUEST\u00c3O COBRA \u2192 EXPLICA\u00c7\u00c3O REFOR\u00c7A\n\n**Notas de proveni\u00eancia:** Nenhuma quest\u00e3o, flashcard ou gabarito foi criado, alterado ou removido nesta tarefa. A \u00fanica mudan\u00e7a foi refor\u00e7ar a nota de diverg\u00eancia obesidad/sobrepeso, agora citando literalmente a tabela, a resposta da pergunta CITE e a flashcard 'Factores modificables' \u2014 todas j\u00e1 existentes no mesmo bloco B08 do arquivo enviado \u2014 para que a contradi\u00e7\u00e3o fique verific\u00e1vel diretamente pelo texto da pr\u00f3pria nota, sem depender de acesso a outras partes do documento.",
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/semiologia-ii-b08-obesidade-r4'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
       "reserved_at": "2026-09-25T20:25:41.469047+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-25T20:25:41.469047+00:00",
+      "status": "NEEDS-AUDIT",
+      "updated_at": "2026-09-25T20:27:41.281122+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
