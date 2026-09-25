@@ -552,6 +552,16 @@
       "recorded_at": "2026-09-25T22:01:19.630291+00:00",
       "status": "BLOCKED",
       "task_id": "cleanup-como-estudar-histologia-i-r2--bridge-1c0d7be60394"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): O bloco metadid\u00e1tico 'C\u00f3mo estudiar'/se\u00e7\u00e3o com block_id 'histo00' apontado na auditoria n\u00e3o est\u00e1 presente em nenhum dos 17 trechos literais fornecidos deste arquivo grande. Sem o trecho exato contendo essa se\u00e7\u00e3o (heading, id e conte\u00fado), n\u00e3o \u00e9 poss\u00edvel construir um old_text literal e espec\u00edfico para a edi\u00e7\u00e3o sem risco de inventar \u00e2ncora ou remover/mesclar conte\u00fado incorretamente, violando a regra de n\u00e3o inven\u00e7\u00e3o de \u00e2ncoras.",
+      "recorded_at": "2026-09-25T22:17:03.172661+00:00",
+      "status": "BLOCKED",
+      "task_id": "cleanup-como-estudar-histologia-i-r2--bridge-ddcdca5fd8ed"
     }
   ]
 }
