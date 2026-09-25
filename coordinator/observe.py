@@ -138,6 +138,10 @@ class ObserveResult:
     # Auditor (resposta vazia/fora do protocolo ou chamada não concluída),
     # nunca de achado de conteúdo.
     audit_technical_failure: bool = False
+    # Uma entrada por chamada paga ao Anthropic Auditor quando houve tentativa
+    # técnica extra; vazia no caminho normal. ``usage`` continua sendo só a
+    # última chamada — esta lista é o que mostra o total pago do evento.
+    auditor_attempts: list = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -161,6 +165,7 @@ class ObserveResult:
             "comment_target_issue": self.comment_target_issue,
             "openai_ledger_failed": self.openai_ledger_failed,
             "audit_technical_failure": self.audit_technical_failure,
+            "auditor_attempts": list(self.auditor_attempts),
         }
 
 
@@ -246,6 +251,18 @@ def _conciliar_ledger_da_chamada(ledger: UsageLedger, resultado, pedido, custo_r
         estimated_cost_usd=0.0, kind="usage", informational_cost_usd=custo_real,
     ))
     return (corrigiu and persistiu_uso), (erro_correcao or erro_uso)
+
+
+def _registro_tentativa(resultado, event_key: str) -> dict:
+    uso = resultado.usage
+    return {
+        "event_key": event_key,
+        "status": resultado.status,
+        "stop_reason": getattr(resultado, "stop_reason", "") or "",
+        "input_tokens": uso.input_tokens if uso is not None else 0,
+        "output_tokens": uso.output_tokens if uso is not None else 0,
+        "estimated_cost_usd": uso.estimated_cost_usd if uso is not None else 0.0,
+    }
 
 
 def _diagnostico_auditor(resultado, pedido) -> str:
@@ -1344,9 +1361,11 @@ def observe(
     tentativas_auditor = 1
     diagnosticos_auditor: list[str] = []
     motivo_sem_retry: str | None = None
+    tentativas_registradas: list[dict] = []
     if (executar_auditoria and resultado_chamada.status == "ok"
             and not parse_decision(resultado_chamada.text or "").protocol_matched):
         diagnosticos_auditor.append(_diagnostico_auditor(resultado_chamada, pedido))
+        tentativas_registradas.append(_registro_tentativa(resultado_chamada, chave))
         ok_1, erro_1 = _conciliar_ledger_da_chamada(ledger, resultado_chamada, pedido, custo_reservado, chave)
         ja_conciliada = True
         if not ok_1:
@@ -1365,6 +1384,7 @@ def observe(
                 chave_ledger = chave_retry
                 ja_conciliada = False
                 tentativas_auditor = 2
+                tentativas_registradas.append(_registro_tentativa(resultado_chamada, chave_retry))
                 if (resultado_chamada.status == "ok"
                         and not parse_decision(resultado_chamada.text or "").protocol_matched):
                     diagnosticos_auditor.append(_diagnostico_auditor(resultado_chamada, pedido))
@@ -1570,6 +1590,7 @@ def observe(
             comment_target_issue=alvo_comentario if executar_auditoria else None,
             openai_ledger_failed=openai_ledger_falhou,
             audit_technical_failure=bool(executar_auditoria and not protocol_matched),
+            auditor_attempts=tentativas_registradas,
             **resultado_base,
         )
 
@@ -1587,5 +1608,6 @@ def observe(
         comment_target_issue=alvo_comentario if executar_auditoria else None,
         openai_ledger_failed=openai_ledger_falhou,
         audit_technical_failure=bool(executar_auditoria and not protocol_matched),
+        auditor_attempts=tentativas_registradas,
         **resultado_base,
     )

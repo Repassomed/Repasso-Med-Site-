@@ -267,6 +267,21 @@ def render_human(result_dict: dict) -> str:
                 f"{usage.get('output_tokens')} de saída  ·  "
                 f"**custo estimado:** US$ {usage.get('estimated_cost_usd')}."
             )
+        # Issue #276: com tentativa técnica extra, ``usage`` é só a última
+        # chamada; o total pago do evento vem de ``auditor_attempts``.
+        tentativas = result_dict.get("auditor_attempts") or []
+        if len(tentativas) > 1:
+            total = sum(float(t.get("estimated_cost_usd") or 0.0) for t in tentativas)
+            detalhe = "; ".join(
+                f"{i}: {t.get('status')}"
+                + (f"/{t.get('stop_reason')}" if t.get("stop_reason") else "")
+                + f", {t.get('output_tokens')} tokens de saída, US$ {float(t.get('estimated_cost_usd') or 0.0):.6f}"
+                for i, t in enumerate(tentativas, start=1)
+            )
+            L.append(
+                f"**Tentativas do auditor:** {len(tentativas)} chamadas pagas neste evento  ·  "
+                f"**custo somado:** US$ {total:.6f} ({detalhe})."
+            )
         if result_dict.get("response_text"):
             L.append(f"**Resposta (sanitizada):** {result_dict['response_text']}")
     else:

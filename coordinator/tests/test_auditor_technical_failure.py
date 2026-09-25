@@ -212,6 +212,46 @@ def test_dedup_mesmo_head_mesma_politica_nao_chama_de_novo() -> None:
     print("OK  test_dedup_mesmo_head_mesma_politica_nao_chama_de_novo")
 
 
+def test_saida_humana_e_artifact_contam_as_duas_chamadas_pagas() -> None:
+    """Achado ao vivo no #208 (run OBSERVE 36174992002): com retry, o log e
+    o artifact mostravam só o usage da 2ª chamada (US$ 0.048308), escondendo a
+    1ª chamada paga (US$ 0.032498). Cartão e ledger já estavam certos."""
+    from coordinator.__main__ import render_human
+
+    t = _Sequencia(_vazia_por_max_tokens(), _Resposta("DECISÃO: MERGE-READY\nRevisão ok."))
+    d = _observar(t, head_sha="hu1").to_dict()
+    tentativas = d["auditor_attempts"]
+    assert len(tentativas) == 2, tentativas
+    assert tentativas[0]["stop_reason"] == "max_tokens" and tentativas[0]["output_tokens"] == 2000
+    assert tentativas[1]["event_key"].endswith("#auditor-retry-1")
+    total = sum(x["estimated_cost_usd"] for x in tentativas)
+    texto = render_human(d)
+    assert "**Tentativas do auditor:** 2 chamadas pagas" in texto, texto
+    assert f"US$ {total:.6f}" in texto, texto
+    print("OK  test_saida_humana_e_artifact_contam_as_duas_chamadas_pagas")
+
+
+def test_retry_com_erro_nao_esconde_a_primeira_chamada_paga() -> None:
+    from coordinator.__main__ import render_human
+
+    t = _Sequencia(_vazia_por_max_tokens(), TimeoutError("Request timed out"))
+    r = _observar(t, head_sha="hu2")
+    d = r.to_dict()
+    assert d["usage"] is None  # a 2ª chamada não teve usage…
+    tentativas = d["auditor_attempts"]
+    assert [x["status"] for x in tentativas] == ["ok", "error"], tentativas
+    assert tentativas[0]["estimated_cost_usd"] > 0  # …mas a 1ª foi paga e aparece.
+    assert "**Tentativas do auditor:** 2 chamadas pagas" in render_human(d)
+    print("OK  test_retry_com_erro_nao_esconde_a_primeira_chamada_paga")
+
+
+def test_sem_retry_artifact_nao_muda() -> None:
+    t = _Sequencia(_Resposta("DECISÃO: MERGE-READY\nTudo certo."))
+    d = _observar(t, head_sha="hu3").to_dict()
+    assert d["auditor_attempts"] == []
+    print("OK  test_sem_retry_artifact_nao_muda")
+
+
 def _sentinela(*_a, **_k):
     raise AssertionError("teste tentou usar um transporte REAL (chamada paga)")
 
@@ -225,6 +265,9 @@ TESTS = [
     test_sem_orcamento_nao_faz_tentativa_extra,
     test_erro_de_transporte_vira_falha_tecnica_sem_retry,
     test_dedup_mesmo_head_mesma_politica_nao_chama_de_novo,
+    test_saida_humana_e_artifact_contam_as_duas_chamadas_pagas,
+    test_retry_com_erro_nao_esconde_a_primeira_chamada_paga,
+    test_sem_retry_artifact_nao_muda,
 ]
 
 
