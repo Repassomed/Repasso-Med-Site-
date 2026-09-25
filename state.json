@@ -596,7 +596,7 @@
       "audit_fix_execution_failures": 0,
       "branch": "runner/semiologia-ii-b08-obesidade-r4",
       "canonical_task_id": "semiologia-ii-b08-obesidade-r4",
-      "checkpoint_commit": "4084b97866d17e1067d655f03bc821d6a3e9011f",
+      "checkpoint_commit": "e653646bcd2f6868b2d03c010a6a39bb9382cb14",
       "execution_history": [
         "semiologia-ii-b08-obesidade-r4--bridge-2f0f3f07c06f",
         "semiologia-ii-b08-obesidade-r4--bridge-549c7bd8afcf"
@@ -609,11 +609,11 @@
       "last_audit_fix_fingerprint": "28f5daaf16a87725d8303a8a",
       "last_audit_fix_worker_id": null,
       "pr_number": 289,
-      "question_report": "## Relat\u00f3rio obrigat\u00f3rio \u2014 Lei das Quest\u00f5es (8-A.11)\n\n### Matriz por fonte\n\n| Fonte | P\u00e1gina/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | Duplicadas/can\u00f4nicas | Reconstru\u00eddas | Pendentes | Destino no site |\n| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n| HTML Semiolog\u00eda II \u2014 nota s2-trap (Bloque 08, HTA) que sinaliza diverg\u00eancia interna obesidad/sobrepeso | trecho 11 do arquivo (lista de fatores + tabela + pergunta CITE + flashcard, todos no mesmo bloco) | integral | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Bloco 08 \u00b7 Hipertensi\u00f3n Arterial \u2014 nota explicativa (n\u00e3o \u00e9 quest\u00e3o de banco) |\n\n**Confirma\u00e7\u00e3o de cobertura:** RESUMO ENSINA \u2192 QUEST\u00c3O COBRA \u2192 EXPLICA\u00c7\u00c3O REFOR\u00c7A\n\n**Notas de proveni\u00eancia:** Nenhuma quest\u00e3o, flashcard ou gabarito foi criado, alterado ou removido nesta tarefa. A \u00fanica mudan\u00e7a foi refor\u00e7ar a nota de diverg\u00eancia obesidad/sobrepeso, agora citando literalmente a tabela, a resposta da pergunta CITE e a flashcard 'Factores modificables' \u2014 todas j\u00e1 existentes no mesmo bloco B08 do arquivo enviado \u2014 para que a contradi\u00e7\u00e3o fique verific\u00e1vel diretamente pelo texto da pr\u00f3pria nota, sem depender de acesso a outras partes do documento.",
-      "reason": "corre\u00e7\u00e3o p\u00f3s-auditoria #2 reservada para 'claude-worker-1'; execution id nova, mesma branch/PR e checkpoint vinculado ao HEAD auditado.",
+      "question_report": "## Relat\u00f3rio obrigat\u00f3rio \u2014 Lei das Quest\u00f5es (8-A.11)\n\n### Matriz por fonte\n\n| Fonte | P\u00e1gina/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | Duplicadas/can\u00f4nicas | Reconstru\u00eddas | Pendentes | Destino no site |\n| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n| coordination/source-packs/semiologia-ii-provas-2026-09-24-v1.md (P2 cardiovascular \u2014 Caso cl\u00ednico HTA) | se\u00e7\u00e3o 'Caso cl\u00ednico HTA' do source pack; menciona obesidade apenas como 'fator de risco' anotado, sem classific\u00e1-la como modific\u00e1vel/n\u00e3o modific\u00e1vel | parcial | 0 | 0 | 0 | 0 | 0 | 0 | 1 | nenhum (nenhuma quest\u00e3o foi criada, alterada ou movida nesta tarefa) |\n\n**Confirma\u00e7\u00e3o de cobertura:** RESUMO ENSINA \u2192 QUEST\u00c3O COBRA \u2192 EXPLICA\u00c7\u00c3O REFOR\u00c7A\n\n**Notas de proveni\u00eancia:** Esta tarefa \u00e9 uma corre\u00e7\u00e3o p\u00f3s-auditoria de texto explicativo (nota s2-trap sobre a contradi\u00e7\u00e3o obesidade/sobrepeso modific\u00e1vel \u00d7 n\u00e3o modific\u00e1vel no B08). Nenhuma quest\u00e3o, flashcard, gabarito ou anota\u00e7\u00e3o foi criada, movida, duplicada ou removida do banco de quest\u00f5es nesta execu\u00e7\u00e3o \u2014 apenas a reda\u00e7\u00e3o da nota foi ajustada para remover uma conclus\u00e3o avaliativa ('el patr\u00f3n efectivamente evaluado...') que a auditoria considerou n\u00e3o verific\u00e1vel a partir do source pack. A refer\u00eancia \u00e0 tabela, \u00e0 pergunta CITE e \u00e0 flashcard internas ao pr\u00f3prio bloco foi mantida por ser verific\u00e1vel diretamente no HTML j\u00e1 existente (mesmo arquivo, mesmo bloco), n\u00e3o por evid\u00eancia externa nova. Nenhuma nova fonte de prova foi usada para gerar conte\u00fado de quest\u00e3o nesta tarefa; por isso a matriz 8-A permanece zerada em cria\u00e7\u00e3o/uso/reformula\u00e7\u00e3o e a fonte \u00e9 registrada como pendente quanto \u00e0 confirma\u00e7\u00e3o de qual classifica\u00e7\u00e3o \u00e9 efetivamente cobrada em exame.",
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/semiologia-ii-b08-obesidade-r4'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
       "reserved_at": "2026-09-25T20:31:58.248842+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-25T20:31:58.248842+00:00",
+      "status": "NEEDS-AUDIT",
+      "updated_at": "2026-09-25T20:33:30.266463+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
