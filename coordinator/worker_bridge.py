@@ -1483,7 +1483,7 @@ def executar_correcao_de_auditoria(
         gerar_patch_efetivo = _closure_de_geracao(
             runner_task, runner_config=runner_config, repo_dir=repo_dir,
             state_git_remote=state_git_remote, canonical_task_id=canonical_task_id,
-            transport=transport, budget_usd=budget_usd,
+            transport=transport, budget_usd=budget_usd, base_branch_da_correcao=base_branch,
         )
 
     dispatch = executar_tarefa(
@@ -1890,7 +1890,7 @@ def executar_ciclo(
 def _closure_de_geracao(
     runner_task: RunnerTask, *, runner_config: RunnerDispatchConfig, repo_dir: str,
     state_git_remote: str, canonical_task_id: str, transport: object | None,
-    budget_usd: float | None,
+    budget_usd: float | None, base_branch_da_correcao: str | None = None,
 ):
     """A MESMA construção de ``checkpoint_handoff.despachar_continuacao_de_handoff``
     e de ``runner_resume.despachar_retomada``: reusa
@@ -1906,12 +1906,27 @@ def _closure_de_geracao(
         ledger_global = GitUsageLedger(
             GitJsonStore(state_git_remote, branch=DEFAULT_RUNNER_USAGE_STATE_BRANCH)
         )
+        ler_base = None
+        if base_branch_da_correcao:
+            # Canário #286: só a correção pós-auditoria lê a versão anterior
+            # à PR (merge-base, somente leitura) para localizar o que o
+            # Guard apontou como REMOVIDO. Nunca vira trecho editável.
+            from .runner_dispatch import ler_arquivo_no_merge_base
+
+            def ler_base(caminho: str) -> str | None:
+                for ref in (f"origin/{base_branch_da_correcao}", base_branch_da_correcao):
+                    conteudo = ler_arquivo_no_merge_base(repo_dir, caminho, base_ref=ref)
+                    if conteudo is not None:
+                        return conteudo
+                return None
+
         return runner_generate.gerar_patch_via_claude(
             runner_task, config=runner_config, repo_dir=repo_dir,
             usage_ledger=ledger_global,
             budget_usd=(MONTHLY_BUDGET_USD if budget_usd is None else budget_usd),
             transport=transport,
             canonical_task_id=canonical_task_id,
+            ler_conteudo_base=ler_base,
         )
 
     return _gerar

@@ -632,6 +632,32 @@ def _run_git(repo_dir: str, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", repo_dir, *args], capture_output=True, text=True)
 
 
+def ler_arquivo_no_merge_base(repo_dir: str, caminho: str, *, base_ref: str) -> str | None:
+    """Conteúdo de ``caminho`` no merge-base entre o HEAD atual (checkpoint
+    da tarefa) e ``base_ref`` — SOMENTE LEITURA (rev-parse/merge-base/show).
+
+    Existe para a correção pós-auditoria de arquivo grande (canário PR
+    #286, Issues #296/#297): o Guard aponta o que a PR REMOVEU (ex.:
+    ``id="histo00"``), e isso só existe na versão anterior à PR. ``None``
+    em qualquer dúvida — nunca inventa conteúdo."""
+    alvo = (caminho or "").strip()
+    if not alvo or alvo.startswith("/") or ".." in alvo.split("/") or alvo.startswith("-"):
+        return None
+    ref = (base_ref or "").strip()
+    if not ref or ref.startswith("-"):
+        return None
+    verificado = _run_git(repo_dir, "rev-parse", "--verify", "-q", f"{ref}^{{commit}}")
+    if verificado.returncode != 0:
+        return None
+    fork = _run_git(repo_dir, "merge-base", "HEAD", verificado.stdout.strip())
+    if fork.returncode != 0 or not fork.stdout.strip():
+        return None
+    conteudo = _run_git(repo_dir, "show", f"{fork.stdout.strip()}:{alvo}")
+    if conteudo.returncode != 0:
+        return None
+    return conteudo.stdout
+
+
 def preparar_branch_de_trabalho(repo_dir: str, task: RunnerTask) -> str:
     """Cria/faz checkout da branch da tarefa. Se ``task.checkpoint_commit``
     estiver preenchido, retoma EXATAMENTE dali (nunca inventa um ponto de
