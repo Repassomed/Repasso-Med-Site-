@@ -267,6 +267,30 @@ def render_human(result_dict: dict) -> str:
                 f"{usage.get('output_tokens')} de saída  ·  "
                 f"**custo estimado:** US$ {usage.get('estimated_cost_usd')}."
             )
+        # Issue #276: com tentativa técnica extra, ``usage`` é só a última
+        # chamada; o total do evento vem de ``auditor_attempts``. Tentativa
+        # sem usage (erro de transporte) é contada como tentativa, nunca como
+        # chamada com custo — o custo somado vem só de usage reportado.
+        tentativas = result_dict.get("auditor_attempts") or []
+        if len(tentativas) > 1:
+            com_uso = [t for t in tentativas if t.get("usage_reported")]
+            total = sum(float(t.get("estimated_cost_usd") or 0.0) for t in com_uso)
+
+            def _detalhe(i: int, t: dict) -> str:
+                s = f"{i}: {t.get('status')}"
+                if t.get("stop_reason"):
+                    s += f"/{t.get('stop_reason')}"
+                if not t.get("usage_reported"):
+                    return s + ", sem uso/custo reportado"
+                return (s + f", {t.get('output_tokens')} tokens de saída, "
+                        f"US$ {float(t.get('estimated_cost_usd') or 0.0):.6f}")
+
+            detalhe = "; ".join(_detalhe(i, t) for i, t in enumerate(tentativas, start=1))
+            L.append(
+                f"**Tentativas do auditor:** {len(tentativas)}  ·  "
+                f"**chamadas com uso/custo reportado:** {len(com_uso)}  ·  "
+                f"**custo somado:** US$ {total:.6f} ({detalhe})."
+            )
         if result_dict.get("response_text"):
             L.append(f"**Resposta (sanitizada):** {result_dict['response_text']}")
     else:
