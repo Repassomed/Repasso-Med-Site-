@@ -15,7 +15,7 @@
       "last_checkpoint": null,
       "last_heartbeat": "2026-09-25T18:52:25.148Z",
       "never_merge": true,
-      "progress": "Sessão manual livre; não reservar sem bloqueador real.",
+      "progress": "Sess\u00e3o manual livre; n\u00e3o reservar sem bloqueador real.",
       "status": "OFFLINE",
       "type": "human_session",
       "worker_id": "claude-1"
@@ -35,7 +35,7 @@
       "last_checkpoint": null,
       "last_heartbeat": "2026-09-25T17:38:00.551Z",
       "never_merge": true,
-      "progress": "P0: corrigir head_context do auditor por seção/bloco.",
+      "progress": "P0: corrigir head_context do auditor por se\u00e7\u00e3o/bloco.",
       "status": "BUSY",
       "type": "human_session",
       "worker_id": "claude-2"
@@ -55,7 +55,7 @@
       "last_checkpoint": null,
       "last_heartbeat": "2026-09-25T18:52:25.148Z",
       "never_merge": true,
-      "progress": "Sessão manual livre; não reservar sem bloqueador real.",
+      "progress": "Sess\u00e3o manual livre; n\u00e3o reservar sem bloqueador real.",
       "status": "OFFLINE",
       "type": "human_session",
       "worker_id": "claude-3"
@@ -75,7 +75,7 @@
       "last_checkpoint": null,
       "last_heartbeat": "2026-09-25T18:52:25.148Z",
       "never_merge": true,
-      "progress": "Sessão manual livre; não reservar sem bloqueador real.",
+      "progress": "Sess\u00e3o manual livre; n\u00e3o reservar sem bloqueador real.",
       "status": "OFFLINE",
       "type": "human_session",
       "worker_id": "claude-4"
@@ -147,7 +147,7 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": null,
+      "current_task": "cleanup-como-estudar-biologia-r2",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
       "last_heartbeat": "2026-09-24T21:51:28.381877+00:00",
