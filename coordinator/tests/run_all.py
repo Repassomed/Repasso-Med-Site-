@@ -54,6 +54,7 @@ from . import (
     test_worker_ops,
     test_worker_registry_human_vs_api,
     test_worker_registry_real,
+    test_workflow_if_blocks_no_comments,
     test_workflow_security,
     test_zero_auto_merge,
 )
@@ -124,6 +125,10 @@ MODULOS = [
     # deixaria cega exatamente a camada que decide QUEM executa O QUÊ.
     test_worker_bridge,
     test_worker_bridge_workflow_security,
+    # Issue #274: regressão estrutural que protege TODO workflow crítico
+    # contra comentário embutido num if: multilinha — a mesma classe de
+    # bug que derrubou o parser do Worker Bridge inteiro.
+    test_workflow_if_blocks_no_comments,
 ]
 
 
