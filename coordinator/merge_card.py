@@ -289,9 +289,18 @@ def render_merge_card(dados: MergeCardInput) -> str:
     L.append("")
     L.append(f"**Decisão da auditoria semântica (STANDARD, independente do worker):** {dados.audit_decision}")
     if not dados.protocol_matched:
+        # Esta frase é o marcador que o Worker Bridge usa para NUNCA mandar
+        # um worker corrigir conteúdo por causa de falha técnica
+        # (worker_bridge.AUDIT_TECHNICAL_FAILURE_MARKERS) — não reescrever.
         L.append(
             "⚠️ A resposta da auditoria não seguiu o protocolo esperado — "
             "decisão automaticamente rebaixada para NEEDS-FIX por segurança."
+        )
+        L.append(
+            "🛠️ **AUDITOR-TECHNICAL-FAILURE** — falha técnica do Anthropic Auditor, "
+            "**não** uma reprovação de conteúdo. Nenhuma alteração de matéria deve ser "
+            "feita por causa deste item; a PR continua bloqueada até uma nova auditoria "
+            "técnica do mesmo HEAD."
         )
     L.append(f"**Motivo:** {dados.audit_rationale}")
 

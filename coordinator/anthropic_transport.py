@@ -97,4 +97,5 @@ class AnthropicTransport:
             text=texto,
             input_tokens=resposta.usage.input_tokens,
             output_tokens=resposta.usage.output_tokens,
+            stop_reason=str(getattr(resposta, "stop_reason", "") or ""),
         )
