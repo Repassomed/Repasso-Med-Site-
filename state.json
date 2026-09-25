@@ -486,6 +486,16 @@
       "recorded_at": "2026-09-25T20:02:42.537657+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "cleanup-como-estudar-histologia-i-r2--bridge-e0a0034dfc09"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): Os 21 trechos fornecidos do arquivo (dermatologia.html) n\u00e3o evidenciam nenhum problema de apresenta\u00e7\u00e3o/estrutura que denuncie a resposta ou quebre a quest\u00e3o (negrito indevido em alternativas, listas quebradas, HTML malformado): as marca\u00e7\u00f5es em <b> aparecem apenas dentro de explica\u00e7\u00f5es ap\u00f3s a revela\u00e7\u00e3o da resposta ou em conte\u00fado textual normal, e as listas <ul class=\"options\"> est\u00e3o \u00edntegras. Sem uma \u00e2ncora literal apontando um problema concreto dentro do material enviado, n\u00e3o h\u00e1 edi\u00e7\u00e3o segura a fazer sem inventar contexto fora do que foi fornecido.",
+      "recorded_at": "2026-09-25T20:05:46.351814+00:00",
+      "status": "BLOCKED",
+      "task_id": "dermatologia-questoes-issue112-r3--bridge-fa42b9e868e4"
     }
   ]
 }
