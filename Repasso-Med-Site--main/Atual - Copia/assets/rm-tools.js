@@ -307,11 +307,35 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     '.rmfc-overlay,.rmfc-launch,.rmatlas,.flashcard,.fc-grid,.rmc-gl,' +
     '.reveal-btn,.tf-buttons,[data-option],[onclick]';
 
-  function podeMarcar(node) {
+  /* Um TERMO de glossário é `<span class="…-gl" onclick="…">palabra…`, e o
+     `[onclick]` do SKIP tira-o do índice. Visualmente, porém, a palavra é
+     prosa: quem lê vê-a no meio da frase e marca-a com o resto. Daí a
+     projecção alternativa (ver `resolverAncora`) — esta função reconhece
+     o termo; a DEFINIÇÃO, que vive em `.…-gl-close`, fica sempre de fora,
+     porque essa não está visível no texto corrido. */
+  function ehTermoGlossario(el) {
+    if (!el || !el.classList) return false;
+    for (var i = 0; i < el.classList.length; i++) {
+      if (/(^|-)gl$/.test(el.classList[i])) return true;
+    }
+    return false;
+  }
+
+  /* `comGlos` é opcional e NUNCA é passado pelos caminhos de criação nem
+     de pintura: chamada com um argumento só, esta função responde hoje
+     exactamente o que respondia antes. É essa a garantia de que nenhuma
+     marcação já existente muda de sítio por causa desta alteração. */
+  function podeMarcar(node, comGlos) {
     var p = node.parentElement;
     if (!p) return false;
-    if (p.closest(SKIP)) return false;
-    return true;
+    var mau = p.closest(SKIP);
+    if (!mau) return true;
+    if (!comGlos) return false;
+    if (!ehTermoGlossario(mau)) return false;
+    if (p.closest('[class*="-gl-close"]')) return false;
+    /* o termo pode estar dentro de um widget que continua excluído */
+    var fora = mau.parentElement && mau.parentElement.closest(SKIP);
+    return !fora;
   }
 
   /* Mesma lista de exclusão, mas para um ELEMENTO (não um nó de texto) —
@@ -325,11 +349,11 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
   /* Índice normalizado do bloco: espaços colapsados, com mapa de volta
      para (nó de texto, offset). É o que permite achar de novo a mesma
      frase mesmo que o HTML ao redor tenha mudado. */
-  function indexar(root) {
+  function indexar(root, comGlos) {
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode: function (n) {
         if (!n.nodeValue || !n.nodeValue.length) return NodeFilter.FILTER_REJECT;
-        return podeMarcar(n) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        return podeMarcar(n, comGlos) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
       }
     });
     var norm = [], map = [], n, prevSpace = true;
@@ -417,17 +441,215 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
       else if (nota === melhorNota) { empate = true; }
     }
     if (empate) {
-      /* contexto não resolveu: só aceita se o índice gravado existir */
-      if (h.occurrence != null && cands[h.occurrence] != null) return cands[h.occurrence];
+      /* O contexto não separou os candidatos. Aceitar o índice gravado às
+         cegas era o buraco antigo: com prefixo e sufixo a bater mal, o
+         `occurrence` de outra versão do texto aponta para a frase errada
+         e a marca aparece noutro sítio sem ninguém dar por isso.
+
+         Agora só se aceita quando TUDO o que podia bater bateu — prefixo
+         e sufixo exactos, nos dois lados que o registo tem. Aí o empate é
+         duplicação verdadeira (a mesma frase repetida com a mesma
+         vizinhança) e `occurrence` é o único dado que os distingue, e
+         continua a ser válido. Fora disso, não se escolhe. */
+      var maxNota = (h.prefix ? 2 : 0) + (h.suffix ? 2 : 0);
+      if (maxNota > 0 && melhorNota === maxNota &&
+          h.occurrence != null && cands[h.occurrence] != null) return cands[h.occurrence];
       return -1;
     }
     if (melhorNota <= 0) return -1;     // contexto não bate com nada: não arrisca
     return melhor;
   }
 
+  /* ------------------------------------------------------------------
+     RECUPERAÇÃO DE MARCAÇÕES QUANDO O TEXTO MUDA
+     ------------------------------------------------------------------
+
+     O problema real: uma revisão editorial pequena faz uma marcação
+     desaparecer. `escolher` acima procura o `exact_text` À LETRA, e
+     bastava trocar uma vírgula por um travessão, dividir o parágrafo ou
+     transformar uma palavra em termo de glossário para o texto guardado
+     deixar de existir — sem candidato nenhum, a marca não era desenhada.
+
+     A regra que manda aqui: é melhor NÃO restaurar uma marcação ambígua
+     do que restaurá-la no sítio errado. Por isso nada disto procura fora
+     do `block_id`, nada aceita um palpite, e qualquer dúvida devolve
+     null — a linha fica no banco, apenas não é pintada.
+
+     Três níveis, do mais estrito para o menos:
+
+       1 · texto exacto dentro do bloco (o caminho de sempre, intacto);
+       2 · o mesmo texto ignorando o que uma revisão mexe sem mudar o
+           sentido — pontuação, travessões, espaços (inclui o </p><p> sem
+           espaço), maiúsculas e acentos — exigindo correspondência ÚNICA
+           e contexto a favor;
+       3 · o mesmo, numa projecção onde o TERMO de glossário conta como
+           prosa, para as marcações feitas antes de a palavra ganhar
+           glossário.
+
+     O que continua a NÃO acontecer: procurar noutro bloco, aceitar
+     semelhança parcial, ou desempatar por proximidade. */
+
+  var SOLTO_MIN = 12;        /* nada abaixo disto entra no nível 2 */
+  var SOLTO_CTX = 12;        /* quanto de prefixo/sufixo tem de bater */
+
+  var dobraCache = Object.create(null);
+
+  /* Um carácter reduzido ao que uma revisão não costuma mudar: letra ou
+     dígito, minúscula, sem acento. Tudo o resto — espaços, pontuação,
+     travessões, aspas — desaparece. */
+  function dobrarChar(ch) {
+    var v = dobraCache[ch];
+    if (v !== undefined) return v;
+    var s = ch;
+    try { s = ch.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) {}
+    s = s.toLowerCase();
+    v = '';
+    for (var i = 0; i < s.length; i++) {
+      if (s[i] >= 'a' && s[i] <= 'z') { v = s[i]; break; }
+      if (s[i] >= '0' && s[i] <= '9') { v = s[i]; break; }
+    }
+    dobraCache[ch] = v;
+    return v;
+  }
+
+  /* Projecção «solta» de um texto, com o mapa de volta para os índices do
+     original. O mapa é o que permite construir o Range final sobre o
+     texto REAL: a projecção serve só para encontrar, nunca para pintar. */
+  function projectarSolto(t) {
+    var txt = [], map = [], s = String(t == null ? '' : t);
+    for (var i = 0; i < s.length; i++) {
+      var c = dobrarChar(s[i]);
+      if (!c) continue;
+      txt.push(c); map.push(i);
+    }
+    return { txt: txt.join(''), map: map };
+  }
+
+  /* Com prefixo e sufixo guardados, pelo menos um dos lados tem de
+     continuar a bater. Nenhum a bater significa que a frase igual que
+     encontrámos está noutro contexto — é o sinal de que não é o mesmo
+     sítio, e aí não se restaura. */
+  function contextoSolto(txt, i, n, h) {
+    var pre = projectarSolto(h.prefix || '').txt;
+    var suf = projectarSolto(h.suffix || '').txt;
+    if (!pre && !suf) return true;               // registo antigo sem contexto
+    var antes = txt.slice(Math.max(0, i - pre.length), i);
+    var depois = txt.slice(i + n, i + n + suf.length);
+    var okPre = !!pre && antes.slice(-SOLTO_CTX) === pre.slice(-SOLTO_CTX);
+    var okSuf = !!suf && depois.slice(0, SOLTO_CTX) === suf.slice(0, SOLTO_CTX);
+    return okPre || okSuf;
+  }
+
+  /* Desempate no espaço solto. Sem rede: ou há um vencedor claro pelo
+     contexto, ou devolve -1. Aqui NÃO se usa `occurrence` — as posições
+     mudaram, e um índice gravado noutra versão do texto não é prova. */
+  function desempatarSolto(txt, cands, n, h) {
+    var pre = projectarSolto(h.prefix || '').txt;
+    var suf = projectarSolto(h.suffix || '').txt;
+    if (!pre && !suf) return -1;
+    var melhor = -1, melhorNota = -1, empate = false;
+    for (var k = 0; k < cands.length; k++) {
+      var i = cands[k];
+      var antes = txt.slice(Math.max(0, i - pre.length), i);
+      var depois = txt.slice(i + n, i + n + suf.length);
+      var nota = 0;
+      if (pre) nota += (antes === pre) ? 2 : (antes.slice(-SOLTO_CTX) === pre.slice(-SOLTO_CTX) ? 1 : 0);
+      if (suf) nota += (depois === suf) ? 2 : (depois.slice(0, SOLTO_CTX) === suf.slice(0, SOLTO_CTX) ? 1 : 0);
+      if (nota > melhorNota) { melhorNota = nota; melhor = i; empate = false; }
+      else if (nota === melhorNota) { empate = true; }
+    }
+    if (empate || melhorNota <= 0) return -1;
+    return melhor;
+  }
+
+  /* A projecção solta deita fora os espaços, e sem espaços «glaucoma»
+     passa a existir dentro de «glaucomatoso». Esta guarda devolve a
+     fronteira de palavra ao texto REAL: se a marcação começava e acabava
+     em palavra inteira, a correspondência também tem de começar e acabar.
+     Sem isto, o nível 2 aceitaria pedaços de palavras maiores. */
+  function alnum(ch) { return ch != null && dobrarChar(ch) !== ''; }
+
+  /* Quem diz se a marcação começava em palavra inteira não é o
+     `exact_text` — é o que estava COLADO a ele, e isso está guardado: o
+     último carácter do prefixo e o primeiro do sufixo.
+
+     Se ali havia um espaço ou um sinal, a marcação começava (ou acabava)
+     em palavra inteira, e a correspondência nova tem de começar (acabar)
+     também — é o que impede «glaucoma» de casar dentro de
+     «glaucomatoso» agora que a projecção solta deitou fora os espaços.
+     Se ali havia uma letra, o aluno marcou mesmo a meio de uma palavra e
+     não se exige fronteira nenhuma. */
+  function fronteiraOk(norm, a, b, h) {
+    var pre = h.prefix || '', suf = h.suffix || '';
+    var coladoAntes = pre ? pre.charAt(pre.length - 1) : null;
+    var coladoDepois = suf ? suf.charAt(0) : null;
+    if (coladoAntes !== null && !alnum(coladoAntes) && alnum(norm.charAt(a - 1))) return false;
+    if (coladoDepois !== null && !alnum(coladoDepois) && alnum(norm.charAt(b))) return false;
+    return true;
+  }
+
+  /* Devolve [ini, fim) em `idx.norm`, ou null. */
+  function acharSolto(idx, h) {
+    var alvo = projectarSolto(h.exact_text).txt;
+    if (alvo.length < SOLTO_MIN) return null;        // curto demais: não arrisca
+    if (!idx.solto) idx.solto = projectarSolto(idx.norm);
+    var P = idx.solto;
+    var brutos = ocorrencias(P.txt, alvo);
+    if (!brutos.length) return null;
+
+    /* fica só com os que respeitam fronteira de palavra no texto real */
+    var cands = [];
+    for (var k = 0; k < brutos.length; k++) {
+      var a = P.map[brutos[k]], b = P.map[brutos[k] + alvo.length - 1] + 1;
+      if (fronteiraOk(idx.norm, a, b, h)) cands.push(brutos[k]);
+    }
+    if (!cands.length) return null;
+
+    var i;
+    if (cands.length === 1) i = cands[0];
+    else { i = desempatarSolto(P.txt, cands, alvo.length, h); if (i < 0) return null; }
+
+    if (!contextoSolto(P.txt, i, alvo.length, h)) return null;
+    return [P.map[i], P.map[i + alvo.length - 1] + 1];
+  }
+
+  /* O resolvedor. Devolve { idx, ini, fim, nivel } ou null.
+     `idx` vem junto de propósito: o nível 3 resolve numa projecção
+     diferente, e o Range tem de ser construído sobre o mapa DESSA
+     projecção, não sobre outro qualquer. */
+  function resolverAncora(bloco, h) {
+    if (!bloco || !h || !h.exact_text) return null;
+
+    var idx = indexar(bloco);
+    var i = escolher(idx.norm, h);
+    if (i >= 0) return { idx: idx, ini: i, fim: i + h.exact_text.length, nivel: 1 };
+
+    var r = acharSolto(idx, h);
+    if (r) return { idx: idx, ini: r[0], fim: r[1], nivel: 2 };
+
+    /* Nível 3 só se o bloco tiver mesmo glossário — não se paga o preço
+       de reindexar um bloco onde não há nada a recuperar. */
+    if (bloco.querySelector && bloco.querySelector('[onclick]')) {
+      var idxG = indexar(bloco, true);
+      if (idxG.norm !== idx.norm) {
+        var j = escolher(idxG.norm, h);
+        if (j >= 0) return { idx: idxG, ini: j, fim: j + h.exact_text.length, nivel: 3 };
+        var rg = acharSolto(idxG, h);
+        if (rg) return { idx: idxG, ini: rg[0], fim: rg[1], nivel: 3 };
+      }
+    }
+    return null;
+  }
+
   /* Envolve um Range em <span class="rm-hl">, atravessando elementos.
      Não move nem reescreve nada: só divide nós de texto. */
-  function pintar(range, cor, id) {
+  /* `comGlos` só é passado pela restauração de nível 3, onde a Range foi
+     resolvida numa projecção que conta o termo de glossário como prosa.
+     Sem ele — que é como todos os outros caminhos chamam — pintar-se-ia
+     à volta do termo e a marca ficaria com um buraco exactamente na
+     palavra que o aluno marcou. Dividir o nó de texto dentro do
+     `<span class="…-gl">` não mexe no `onclick` nem na definição. */
+  function pintar(range, cor, id, comGlos) {
     var alvos = [];
     var walker = document.createTreeWalker(
       range.commonAncestorContainer.nodeType === 1
@@ -437,7 +659,7 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     var n;
     while ((n = walker.nextNode())) {
       if (!range.intersectsNode(n)) continue;
-      if (!podeMarcar(n)) continue;
+      if (!podeMarcar(n, comGlos)) continue;
       var ini = (n === range.startContainer) ? range.startOffset : 0;
       var fim = (n === range.endContainer) ? range.endOffset : n.nodeValue.length;
       if (fim > ini) alvos.push({ node: n, ini: ini, fim: fim });
@@ -531,21 +753,22 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     var porBloco = {};
     lista.forEach(function (h) { (porBloco[h.block_id] = porBloco[h.block_id] || []).push(h); });
 
-    var ok = 0, perdidas = 0;
+    var ok = 0, perdidas = 0, porNivel = { 1: 0, 2: 0, 3: 0 };
     Object.keys(porBloco).forEach(function (bid) {
       var bloco = tabEl.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(bid) : bid));
+      /* o bloco deixou de existir: não se vai procurar noutro sítio */
       if (!bloco) { perdidas += porBloco[bid].length; return; }
       porBloco[bid].forEach(function (h) {
         if (tabEl.querySelector('.rm-hl[data-hl="' + CSS.escape(String(h.id)) + '"]')) { ok++; return; }
-        var idx = indexar(bloco);                       // reindexa a cada marca: o DOM muda ao pintar
-        var i = escolher(idx.norm, h);
-        if (i < 0) { perdidas++; return; }
-        var r = rangeDe(idx, i, i + h.exact_text.length);
+        /* reindexa a cada marca: o DOM muda ao pintar a anterior */
+        var a = resolverAncora(bloco, h);
+        if (!a) { perdidas++; return; }
+        var r = rangeDe(a.idx, a.ini, a.fim);
         if (!r) { perdidas++; return; }
-        if (pintar(r, h.color, h.id)) ok++; else perdidas++;
+        if (pintar(r, h.color, h.id, a.nivel === 3)) { ok++; porNivel[a.nivel]++; } else perdidas++;
       });
     });
-    return { ok: ok, perdidas: perdidas };
+    return { ok: ok, perdidas: perdidas, porNivel: porNivel };
   }
 
   async function sincronizarAba(tabEl) {
@@ -1413,6 +1636,11 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     normalizar: normalizar,
     ocorrencias: ocorrencias,
     rangeDe: rangeDe,
+    /* resolvedor em níveis (exacto → tolerante → glossário). A V2 ainda
+       chama `escolher` directamente no seu `repintar`; fica exposto para
+       poder passar a usá-lo sem duplicar nada. */
+    resolverAncora: resolverAncora,
+    projectarSolto: projectarSolto,
     faixaNoIndice: faixaNoIndice,
     pintar: pintar,
     despintar: despintar,
