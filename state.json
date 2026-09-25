@@ -1424,6 +1424,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:286.",
       "task_id": "cleanup-como-estudar-histologia-i-r2",
       "worker_id": null
+    },
+    {
+      "category": "runner",
+      "commit_sha": "3bb68573f95d280bf5141bd23f3896100af8ddcf",
+      "component": "runner",
+      "error_id": "ERR-155E2B6E9D",
+      "error_type": "runner-blocked",
+      "fingerprint": "155e2b6e9dcd8e7a9b47",
+      "first_seen": "2026-09-25T21:59:35.839569+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "7afcec6c23b34fb7bd69c6c485e974b4",
+      "issue_sync_updated_at": "2026-09-25T21:59:35.839569+00:00",
+      "last_evidence_hash": "8173662e2b8e1fcb9c0d",
+      "last_seen": "2026-09-25T21:59:35.839569+00:00",
+      "occurrence_count": 1,
+      "pr_number": 286,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36194282216",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): Nenhum dos 17 trechos literais fornecidos do arquivo cont\u00e9m a se\u00e7\u00e3o 'C\u00f3mo estudiar' nem o block_id 'histo00' citado na auditoria (o intervalo onde ela provavelmente est\u00e1, entre os caracteres ~9100 e ~15239, n\u00e3o foi enviado). Sem o texto literal exato dessa se\u00e7\u00e3o n\u00e3o \u00e9 poss\u00edvel construir um old_text v\u00e1lido para o AnchoredEdit, e inventar a \u00e2ncora violaria a regra de c\u00f3pia literal \u2014 portanto a edi\u00e7\u00e3o n\u00e3o pode ser feita com seguran\u00e7a nesta rodada.",
+      "task_id": "cleanup-como-estudar-histologia-i-r2",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
