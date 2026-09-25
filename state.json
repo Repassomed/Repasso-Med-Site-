@@ -7078,6 +7078,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-25T19:57:52.668258+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "runner-task:cleanup-como-estudar-biologia-r2--bridge-82c916acb280",
+      "informational_cost_usd": 0.188104,
+      "input_tokens": 19987,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 14813,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-25T19:57:54.753697+00:00"
     }
   ]
 }
