@@ -2072,7 +2072,7 @@
       "objetivo": "Usar o source pack compartilhado da Issue #101 para alinhar o resumo ao padrão real de cobrança: Crohn/colitis, VHB, Dubin-Johnson/bilirrubina, pancreatitis, úlcera gástrica/estresse, distúrbios motores esofágicos e incontinência. Aplicar Lei G0 e Lei 8-A. Preservar conteúdo correto e distinguir cátedra de prova reconstruída.",
       "fonte": "Issue #101 · Drive Fisiopatología II · source pack v1",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P1",
       "capabilities_required": [
         "conteudo"
@@ -2082,9 +2082,9 @@
       "pr": null,
       "commit": null,
       "issue": 101,
-      "notas": "Nova tentativa canônica após #142/#152. Não reutilizar r1/r2. O pack v1 inclui prova reconstruída + evidência dos slides atualizados e lista fotos ainda não extraídas. Não afirmar cobertura das fotos. Resultado NEEDS-AUDIT; dois auditores recebem o mesmo pack; sem merge/deploy.",
-      "automation_enabled": true,
-      "bridge_enabled": true,
+      "notas": "Nova tentativa canônica após #142/#152. Não reutilizar r1/r2. O pack v1 inclui prova reconstruída + evidência dos slides atualizados e lista fotos ainda não extraídas. Não afirmar cobertura das fotos. Resultado NEEDS-AUDIT; dois auditores recebem o mesmo pack; sem merge/deploy. Decomposicao preventiva de capacidade (auditoria de fila 24/09/2026, escopo FILA/dependencias/prioridade): a tarefa combinada nunca foi executada, mas cobre 6-7 blocos H2 distintos num arquivo de matéria grande, o mesmo padrao de risco que ja produziu StructuredPatch vazio em Semiologia II B08 (Error Registry #157/#related) mesmo apos source pack + Lei 8-A. Substituida por microtarefas atomicas por bloco, encadeadas para nunca colidir no mesmo arquivo (Lei 3). Nao repetir este escopo combinado.",
+      "automation_enabled": false,
+      "bridge_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true,
@@ -2102,7 +2102,7 @@
       "objetivo": "Inventariar e incorporar ganho avaliativo real das provas P1/P2 extraídas no source pack: tratamento geral, catárticos/carvão/lavado/emese, toxidromes/3P, organofosforados, vias de exposição, acetona/cloro/pila botón e temas P2 de animais peçonhentos/fármacos. Preservar proveniência, não inventar gabarito e alinhar RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA.",
       "fonte": "Issue #102 · Drive Toxicología/Provas · source pack v1",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P1",
       "capabilities_required": [
         "conteudo"
@@ -2112,9 +2112,9 @@
       "pr": null,
       "commit": null,
       "issue": 102,
-      "notas": "Retry canônico seguro. Pack v1 usa PDFs de prova P1/P2 textualmente extraídos; fotos 20/09–21/09 permanecem inventariadas mas não integralmente extraídas. Não transformar resposta lembrada/rascunho em verdade científica sem checagem. Lei 8-A obrigatória; NEEDS-AUDIT; sem merge/deploy.",
-      "automation_enabled": true,
-      "bridge_enabled": true,
+      "notas": "Retry canônico seguro. Pack v1 usa PDFs de prova P1/P2 textualmente extraídos; fotos 20/09–21/09 permanecem inventariadas mas não integralmente extraídas. Não transformar resposta lembrada/rascunho em verdade científica sem checagem. Lei 8-A obrigatória; NEEDS-AUDIT; sem merge/deploy. Bloque 06 (AINEs/dipirona/paracetamol) nao entrou na decomposicao: checagem pontual do HEAD mostrou que o ponto do source pack ('paracetamol tem antidoto: N-acetilcisteina; a afirmacao de que nao tem antidoto e a falsa') ja esta corretamente refletido no bloco existente; nenhum gap acionavel identificado nesta auditoria de fila. Confirmar em auditoria de conteudo, nao reabrir so por isso. Decomposicao preventiva de capacidade (auditoria de fila 24/09/2026, escopo FILA/dependencias/prioridade): a tarefa combinada nunca foi executada, mas cobre 6-7 blocos H2 distintos num arquivo de matéria grande, o mesmo padrao de risco que ja produziu StructuredPatch vazio em Semiologia II B08 (Error Registry #157/#related) mesmo apos source pack + Lei 8-A. Substituida por microtarefas atomicas por bloco, encadeadas para nunca colidir no mesmo arquivo (Lei 3). Nao repetir este escopo combinado.",
+      "automation_enabled": false,
+      "bridge_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true,
@@ -2185,6 +2185,450 @@
       ],
       "branch": "runner/semiologia-ii-b08-pa-r5",
       "notas": "Retry P0 atômico pós-#237. Alterar somente classificação de PA do B08 e cópia correspondente no Banco General, se houver. Manter Lei 8-A/question_report_required. Sem ampliar escopo, sem alterar obesidade/ECG/outros blocos."
+    },
+    {
+      "id": "fisiopatologia-ii-issue101-r4-esofago",
+      "titulo": "P1 — Fisiopatología II: distúrbios motores esofágicos (acalasia/espasmo difuso)",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html"
+      ],
+      "objetivo": "No bloco 'Patologías del esófago', confirmar/reforçar somente os distúrbios motores do source pack: acalasia (déficit de relajación del EEI + aperistaltismo + degeneração do plexo de Auerbach; forma chagásica envolve também Meissner) e espasmo esofágico difuso/esófago hipercontráctil (ondas não propulsivas em 2/3 inferiores tipo 'sacacorchos'/'rosario', dor retroesternal + disfagia a líquidos e sólidos; manometria com contracciones de amplitud excesiva e relaxamento adequado do EEI = hipercontráctil/cascanueces/martillo neumático). Não tocar outros blocos.",
+      "fonte": "Issue #101 · Drive Fisiopatología II · source pack v1 · decomposicao por bloco (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/fisiopatologia-ii-issue101-r4-esofago",
+      "pr": null,
+      "commit": null,
+      "issue": 101,
+      "notas": "Microtarefa atomica de um unico bloco H2, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado fisiopatologia-ii-issue101-r3-sourcepack, que nunca chegou a rodar mas cobria 6-7 blocos distintos num arquivo grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o bloco indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Aplicar Lei G0 e Lei 8-A; distinguir cátedra de prova reconstruida (o documento fonte se autodeclara 'reconstrucción aproximada'). Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/fisiopatologia-ii-issue101-v1.md"
+    },
+    {
+      "id": "fisiopatologia-ii-issue101-r4-gastricas",
+      "titulo": "P1 — Fisiopatología II: úlcera gástrica e úlceras de estrés (Curling)",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html"
+      ],
+      "objetivo": "No bloco 'Patologías gástricas', confirmar/corrigir somente: (1) dor da úlcera gástrica tende a surgir/intensificar depois da alimentação ('no duele, come, duele, pasa'), distinguindo da úlcera duodenal (dor em jejum, melhora com a alimentação, 'duele, come, pasa'); (2) úlceras agudas por estresse em trauma grave/queimados (ativação simpática + eixo HHA → vasoconstrição/isquemia esplácnica + ↓ moco/bicarbonato + ↑ ácido) e o epônimo Úlceras de Curling associado a queimaduras graves. Não tocar outros blocos.",
+      "fonte": "Issue #101 · Drive Fisiopatología II · source pack v1 · decomposicao por bloco (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "fisiopatologia-ii-issue101-r4-esofago"
+      ],
+      "branch": "runner/fisiopatologia-ii-issue101-r4-gastricas",
+      "pr": null,
+      "commit": null,
+      "issue": 101,
+      "notas": "Microtarefa atomica de um unico bloco H2, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado fisiopatologia-ii-issue101-r3-sourcepack, que nunca chegou a rodar mas cobria 6-7 blocos distintos num arquivo grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o bloco indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Aplicar Lei G0 e Lei 8-A; distinguir cátedra de prova reconstruida (o documento fonte se autodeclara 'reconstrucción aproximada'). Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/fisiopatologia-ii-issue101-v1.md"
+    },
+    {
+      "id": "fisiopatologia-ii-issue101-r4-intestinales",
+      "titulo": "P1 — Fisiopatología II: Crohn × colitis ulcerosa",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html"
+      ],
+      "objetivo": "No bloco 'Enfermedades inflamatorias intestinales', confirmar/corrigir a diferenciação Crohn × colitis ulcerosa: Crohn = inflamación transmural, distribuição segmentar/'lesiones salteadas', pode formar fístulas e granulomas não caseificantes. Não tocar outros blocos.",
+      "fonte": "Issue #101 · Drive Fisiopatología II · source pack v1 · decomposicao por bloco (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "fisiopatologia-ii-issue101-r4-gastricas"
+      ],
+      "branch": "runner/fisiopatologia-ii-issue101-r4-intestinales",
+      "pr": null,
+      "commit": null,
+      "issue": 101,
+      "notas": "Microtarefa atomica de um unico bloco H2, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado fisiopatologia-ii-issue101-r3-sourcepack, que nunca chegou a rodar mas cobria 6-7 blocos distintos num arquivo grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o bloco indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Aplicar Lei G0 e Lei 8-A; distinguir cátedra de prova reconstruida (o documento fonte se autodeclara 'reconstrucción aproximada'). Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/fisiopatologia-ii-issue101-v1.md"
+    },
+    {
+      "id": "fisiopatologia-ii-issue101-r4-pancreaticas",
+      "titulo": "P1 — Fisiopatología II: pancreatitis aguda e crónica",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html"
+      ],
+      "objetivo": "No bloco 'Patologías pancreáticas', confirmar/corrigir: (1) pancreatitis aguda — fator exógeno mais cobrado é consumo excesivo de alcohol; diagnóstico por 2 de 3 critérios (dor típica; amilasa/lipasa ≥3×; TC/RM congruente); patogenia por ativação enzimática intrapancreática (obstrução do conducto, lesão acinar primária, defeitos de transporte intracelular de proenzimas), incluindo obstrução por cálculos/barro biliar; infecção bacteriana direta NÃO é o evento inicial habitual; (2) pancreatitis crónica — células estrelladas ativadas + TGF-β → fibrose/matriz extracelular. Não tocar outros blocos.",
+      "fonte": "Issue #101 · Drive Fisiopatología II · source pack v1 · decomposicao por bloco (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "fisiopatologia-ii-issue101-r4-intestinales"
+      ],
+      "branch": "runner/fisiopatologia-ii-issue101-r4-pancreaticas",
+      "pr": null,
+      "commit": null,
+      "issue": 101,
+      "notas": "Microtarefa atomica de um unico bloco H2, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado fisiopatologia-ii-issue101-r3-sourcepack, que nunca chegou a rodar mas cobria 6-7 blocos distintos num arquivo grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o bloco indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Aplicar Lei G0 e Lei 8-A; distinguir cátedra de prova reconstruida (o documento fonte se autodeclara 'reconstrucción aproximada'). Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/fisiopatologia-ii-issue101-v1.md"
+    },
+    {
+      "id": "fisiopatologia-ii-issue101-r4-hepaticas",
+      "titulo": "P1 — Fisiopatología II: recuperação de VHB e cirrosis/ascitis",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html"
+      ],
+      "objetivo": "No bloco 'Patologías hepáticas', confirmar/corrigir: (1) recuperação de infecção por VHB — o marcador diretamente ligado à proteção é Anti-HBs; combinação possível de recuperação: HBsAg negativo + Anti-HBs positivo + Anti-HBc IgG positivo; (2) cirrosis/ascitis — mecanismo por hipertensão portal + ativação do SRAA + retenção renal de sódio e água. Não tocar outros blocos.",
+      "fonte": "Issue #101 · Drive Fisiopatología II · source pack v1 · decomposicao por bloco (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "fisiopatologia-ii-issue101-r4-pancreaticas"
+      ],
+      "branch": "runner/fisiopatologia-ii-issue101-r4-hepaticas",
+      "pr": null,
+      "commit": null,
+      "issue": 101,
+      "notas": "Microtarefa atomica de um unico bloco H2, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado fisiopatologia-ii-issue101-r3-sourcepack, que nunca chegou a rodar mas cobria 6-7 blocos distintos num arquivo grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o bloco indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Aplicar Lei G0 e Lei 8-A; distinguir cátedra de prova reconstruida (o documento fonte se autodeclara 'reconstrucción aproximada'). Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/fisiopatologia-ii-issue101-v1.md"
+    },
+    {
+      "id": "fisiopatologia-ii-issue101-r4-ictericia",
+      "titulo": "P1 — Fisiopatología II: Dubin-Johnson, Gilbert e distinção com Crigler-Najjar",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html"
+      ],
+      "objetivo": "No bloco 'Ictericia y metabolismo de la bilirrubina', confirmar/corrigir: (1) Dubin-Johnson — hiperbilirrubinemia conjugada por defeito de excreção canalicular (autossômica recessiva, fígado escuro característico); explicitamente NÃO é um defeito primário de conjugação/bilirrubina indireta; (2) Gilbert — hiperbilirrubinemia não conjugada leve por menor atividade da UDP-glucuronosiltransferasa; (3) preservar a distinção já existente com Crigler-Najjar tipo I (ausência completa da enzima) e tipo II (deficiência parcial) e com Rotor (defeito de transporte/captação/armazenamento, sem fígado escuro). Não tocar outros blocos.",
+      "fonte": "Issue #101 · Drive Fisiopatología II · source pack v1 · decomposicao por bloco (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "fisiopatologia-ii-issue101-r4-hepaticas"
+      ],
+      "branch": "runner/fisiopatologia-ii-issue101-r4-ictericia",
+      "pr": null,
+      "commit": null,
+      "issue": 101,
+      "notas": "Microtarefa atomica de um unico bloco H2, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado fisiopatologia-ii-issue101-r3-sourcepack, que nunca chegou a rodar mas cobria 6-7 blocos distintos num arquivo grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o bloco indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Aplicar Lei G0 e Lei 8-A; distinguir cátedra de prova reconstruida (o documento fonte se autodeclara 'reconstrucción aproximada'). Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/fisiopatologia-ii-issue101-v1.md"
+    },
+    {
+      "id": "fisiopatologia-ii-issue101-r4-urinarias",
+      "titulo": "P1 — Fisiopatología II: incontinencia urinaria de esfuerzo",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html"
+      ],
+      "objetivo": "No bloco 'Alteraciones de las vías urinarias', confirmar/corrigir somente a associação entre debilidade do suelo pélvico pós-partos/cirurgia e perda urinária ao tossir/rir/fazer esforço = incontinencia urinaria de esfuerzo, preservando os demais tipos de incontinência já descritos no bloco. Não tocar outros blocos nem os demais tipos de incontinência.",
+      "fonte": "Issue #101 · Drive Fisiopatología II · source pack v1 · decomposicao por bloco (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "fisiopatologia-ii-issue101-r4-ictericia"
+      ],
+      "branch": "runner/fisiopatologia-ii-issue101-r4-urinarias",
+      "pr": null,
+      "commit": null,
+      "issue": 101,
+      "notas": "Microtarefa atomica de um unico bloco H2, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado fisiopatologia-ii-issue101-r3-sourcepack, que nunca chegou a rodar mas cobria 6-7 blocos distintos num arquivo grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o bloco indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Aplicar Lei G0 e Lei 8-A; distinguir cátedra de prova reconstruida (o documento fonte se autodeclara 'reconstrucción aproximada'). Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/fisiopatologia-ii-issue101-v1.md"
+    },
+    {
+      "id": "toxicologia-issue102-r3-b01",
+      "titulo": "P1 — Toxicología Bloque 01: conceitos gerais e toxidrome",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+      ],
+      "objetivo": "No Bloque 01 (panorama geral/reconhecimento do intoxicado), confirmar/reforçar somente: definições de tóxico, xenobiótico, toxina, veneno e DL50; conceito de toxidrome como conjunto de sinais/sintomas de tóxicos com mecanismo semelhante; a regra '3P' (pupilas, peristaltismo, piel) do toxidrome muscarínico. Não tocar outros blocos.",
+      "fonte": "Issue #102 · Drive Toxicología/Provas · source pack v1 · decomposicao por bloque (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/toxicologia-issue102-r3-b01",
+      "pr": null,
+      "commit": null,
+      "issue": 102,
+      "notas": "Microtarefa atomica de um unico Bloque do HTML, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado toxicologia-provas-issue102-r2-sourcepack, que nunca chegou a rodar mas cobria pelo menos 7 Bloques distintos num arquivo de ~2,3 MB — grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o Bloque indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Os PDFs fonte misturam questionarios/reconstrucoes e gabaritos anotados: nao tratar resposta anotada como verdade cientifica quando conflitar com cátedra/literatura; registrar a divergencia. Aplicar Lei G0 e Lei 8-A (RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA); nunca inventar gabarito quando a fonte nao o traz ou o texto esta ambiguo; sem negrito/formatacao que denuncie a resposta. Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/toxicologia-issue102-v1.md"
+    },
+    {
+      "id": "toxicologia-issue102-r3-b02",
+      "titulo": "P1 — Toxicología Bloque 02: vías de descontaminación",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+      ],
+      "objetivo": "No Bloque 02 (descontaminación según la vía), confirmar/reforçar: via cutânea (retirar roupas contaminadas + lavado profuso com água e sabão); via inalatória (retirar da exposição + oxigênio precoce, sem exagerar intubação/traqueostomia como conduta de rotina); lavado gástrico (contraindicações em cáusticos/corrosivos, hidrocarbonetos e paciente com baixo nível de consciência/risco de convulsão sem via aérea protegida; posição Trendelenburg + decúbito lateral izquierdo); emesis/ipecacuana (contraindicações em ácidos/álcalis, idade <6 meses, depressão neurológica/risco de broncoaspiração). Não tocar outros blocos.",
+      "fonte": "Issue #102 · Drive Toxicología/Provas · source pack v1 · decomposicao por bloque (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "toxicologia-issue102-r3-b01"
+      ],
+      "branch": "runner/toxicologia-issue102-r3-b02",
+      "pr": null,
+      "commit": null,
+      "issue": 102,
+      "notas": "Microtarefa atomica de um unico Bloque do HTML, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado toxicologia-provas-issue102-r2-sourcepack, que nunca chegou a rodar mas cobria pelo menos 7 Bloques distintos num arquivo de ~2,3 MB — grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o Bloque indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Os PDFs fonte misturam questionarios/reconstrucoes e gabaritos anotados: nao tratar resposta anotada como verdade cientifica quando conflitar com cátedra/literatura; registrar a divergencia. Aplicar Lei G0 e Lei 8-A (RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA); nunca inventar gabarito quando a fonte nao o traz ou o texto esta ambiguo; sem negrito/formatacao que denuncie a resposta. Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/toxicologia-issue102-v1.md"
+    },
+    {
+      "id": "toxicologia-issue102-r3-b03",
+      "titulo": "P1 — Toxicología Bloque 03: adsorbentes, catárticos e depuración",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+      ],
+      "objetivo": "No Bloque 03 (adsorbentes, catárticos e depuración), confirmar/reforçar: catárticos (sulfato de magnésio, sorbitol, manitol — aceleram o trânsito intestinal); carvão ativado (adsorvente; indicações/contraindicações/efeitos adversos); depuración renal (usada quando o tóxico já foi absorvido; hipotensão com oligúria/IRA/IRC como contraindicação). Não tocar outros blocos.",
+      "fonte": "Issue #102 · Drive Toxicología/Provas · source pack v1 · decomposicao por bloque (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "toxicologia-issue102-r3-b02"
+      ],
+      "branch": "runner/toxicologia-issue102-r3-b03",
+      "pr": null,
+      "commit": null,
+      "issue": 102,
+      "notas": "Microtarefa atomica de um unico Bloque do HTML, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado toxicologia-provas-issue102-r2-sourcepack, que nunca chegou a rodar mas cobria pelo menos 7 Bloques distintos num arquivo de ~2,3 MB — grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o Bloque indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Os PDFs fonte misturam questionarios/reconstrucoes e gabaritos anotados: nao tratar resposta anotada como verdade cientifica quando conflitar com cátedra/literatura; registrar a divergencia. Aplicar Lei G0 e Lei 8-A (RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA); nunca inventar gabarito quando a fonte nao o traz ou o texto esta ambiguo; sem negrito/formatacao que denuncie a resposta. Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/toxicologia-issue102-v1.md"
+    },
+    {
+      "id": "toxicologia-issue102-r3-b04",
+      "titulo": "P1 — Toxicología Bloque 04: tóxicos domésticos (acetona, cloro/cáusticos, pila botón)",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+      ],
+      "objetivo": "No Bloque 04 (tóxicos domésticos), confirmar/reforçar: acetona (odor adocicado no hálito como pista clínica); cloro/cáusticos (estabilização, não induzir vômito, conduta variando conforme a via de exposição); pila botón (localização e sintomas determinam observação vs. extração). Não tocar outros blocos.",
+      "fonte": "Issue #102 · Drive Toxicología/Provas · source pack v1 · decomposicao por bloque (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "toxicologia-issue102-r3-b03"
+      ],
+      "branch": "runner/toxicologia-issue102-r3-b04",
+      "pr": null,
+      "commit": null,
+      "issue": 102,
+      "notas": "Microtarefa atomica de um unico Bloque do HTML, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado toxicologia-provas-issue102-r2-sourcepack, que nunca chegou a rodar mas cobria pelo menos 7 Bloques distintos num arquivo de ~2,3 MB — grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o Bloque indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Os PDFs fonte misturam questionarios/reconstrucoes e gabaritos anotados: nao tratar resposta anotada como verdade cientifica quando conflitar com cátedra/literatura; registrar a divergencia. Aplicar Lei G0 e Lei 8-A (RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA); nunca inventar gabarito quando a fonte nao o traz ou o texto esta ambiguo; sem negrito/formatacao que denuncie a resposta. Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/toxicologia-issue102-v1.md"
+    },
+    {
+      "id": "toxicologia-issue102-r3-b05",
+      "titulo": "P1 — Toxicología Bloque 05: organofosforados e rodenticidas anticoagulantes",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+      ],
+      "objetivo": "No Bloque 05 (plaguicidas), confirmar/reforçar: organofosforados (inibição da acetilcolinesterasa; toxidrome muscarínico — miose, broncorreia, sialorreia; colinesterase sanguínea como exame relevante; atropina como antídoto/medicação de emergência; síndrome intermediário e neuropatia retardada); rodenticidas anticoagulantes tipo warfarina em criança (Vitamina K como conduta). Não tocar outros blocos.",
+      "fonte": "Issue #102 · Drive Toxicología/Provas · source pack v1 · decomposicao por bloque (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "toxicologia-issue102-r3-b04"
+      ],
+      "branch": "runner/toxicologia-issue102-r3-b05",
+      "pr": null,
+      "commit": null,
+      "issue": 102,
+      "notas": "Microtarefa atomica de um unico Bloque do HTML, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado toxicologia-provas-issue102-r2-sourcepack, que nunca chegou a rodar mas cobria pelo menos 7 Bloques distintos num arquivo de ~2,3 MB — grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o Bloque indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Os PDFs fonte misturam questionarios/reconstrucoes e gabaritos anotados: nao tratar resposta anotada como verdade cientifica quando conflitar com cátedra/literatura; registrar a divergencia. Aplicar Lei G0 e Lei 8-A (RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA); nunca inventar gabarito quando a fonte nao o traz ou o texto esta ambiguo; sem negrito/formatacao que denuncie a resposta. Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/toxicologia-issue102-v1.md"
+    },
+    {
+      "id": "toxicologia-issue102-r3-b07",
+      "titulo": "P1 — Toxicología Bloque 07: ofidismo",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+      ],
+      "objetivo": "No Bloque 07 (ofidismo), confirmar/reforçar a classificação por tipo de veneno/soro: acidentes crotálico, elapídico e bothrópico, com o respectivo soro e manifestações clínicas associadas. Não tocar outros blocos.",
+      "fonte": "Issue #102 · Drive Toxicología/Provas · source pack v1 · decomposicao por bloque (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "toxicologia-issue102-r3-b05"
+      ],
+      "branch": "runner/toxicologia-issue102-r3-b07",
+      "pr": null,
+      "commit": null,
+      "issue": 102,
+      "notas": "Microtarefa atomica de um unico Bloque do HTML, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado toxicologia-provas-issue102-r2-sourcepack, que nunca chegou a rodar mas cobria pelo menos 7 Bloques distintos num arquivo de ~2,3 MB — grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o Bloque indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Os PDFs fonte misturam questionarios/reconstrucoes e gabaritos anotados: nao tratar resposta anotada como verdade cientifica quando conflitar com cátedra/literatura; registrar a divergencia. Aplicar Lei G0 e Lei 8-A (RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA); nunca inventar gabarito quando a fonte nao o traz ou o texto esta ambiguo; sem negrito/formatacao que denuncie a resposta. Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/toxicologia-issue102-v1.md"
+    },
+    {
+      "id": "toxicologia-issue102-r3-b08",
+      "titulo": "P1 — Toxicología Bloque 08: aracnídeos e outros venenos por sistema",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+      ],
+      "objetivo": "No Bloque 08 (venenos que atacam sistemas distintos), confirmar/reforçar: escorpião amarelo, aranha marrom/viúva-negra/phoneutria e taturana (lagarta), conforme padrão de cobrança do source pack P2. Não tocar outros blocos.",
+      "fonte": "Issue #102 · Drive Toxicología/Provas · source pack v1 · decomposicao por bloque (auditoria de fila 24/09/2026)",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "toxicologia-issue102-r3-b07"
+      ],
+      "branch": "runner/toxicologia-issue102-r3-b08",
+      "pr": null,
+      "commit": null,
+      "issue": 102,
+      "notas": "Microtarefa atomica de um unico Bloque do HTML, criada pela auditoria de capacidade da fila (24/09/2026) para substituir o pacote combinado toxicologia-provas-issue102-r2-sourcepack, que nunca chegou a rodar mas cobria pelo menos 7 Bloques distintos num arquivo de ~2,3 MB — grande demais para uma unica chamada/StructuredPatch. Alterar SOMENTE o Bloque indicado; preservar conteudo correto ja existente, IDs/annotations e espelho no Banco General quando aplicavel. Os PDFs fonte misturam questionarios/reconstrucoes e gabaritos anotados: nao tratar resposta anotada como verdade cientifica quando conflitar com cátedra/literatura; registrar a divergencia. Aplicar Lei G0 e Lei 8-A (RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA); nunca inventar gabarito quando a fonte nao o traz ou o texto esta ambiguo; sem negrito/formatacao que denuncie a resposta. Resultado obrigatorio NEEDS-AUDIT; Anthropic + OpenAI Auditor recebem o mesmo source pack; sem merge/deploy/publicacao automatica.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/toxicologia-issue102-v1.md"
     }
   ]
 }
