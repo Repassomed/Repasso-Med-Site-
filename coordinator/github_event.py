@@ -184,7 +184,9 @@ COORDINATOR_COMMENT_MARKER = "<!-- repasso-coordinator -->"
 # Versão semântica da política de auditoria. Bump quando G0/Lei 8-A/contexto
 # puder mudar a decisão sobre o MESMO HEAD de uma PR. Entra no dedup para
 # permitir uma única reauditoria do mesmo commit sob a política nova.
-AUDIT_POLICY_VERSION = "2026-09-24-material-scope-head-context-privacy-redact-v2"
+# v3 (Issue #275): head_context ancorado na região do diff — muda a evidência
+# que o auditor recebe sobre o MESMO HEAD (caso real #266).
+AUDIT_POLICY_VERSION = "2026-09-25-anchored-head-context-v3"
 
 
 def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None,

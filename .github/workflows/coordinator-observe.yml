@@ -513,22 +513,19 @@ jobs:
             // código da PR: lê somente texto via Contents API no pr.head.sha.
             // O objetivo é permitir ao auditor confirmar que algo removido do
             // diff já está preservado em seção útil do arquivo (caso real #208).
-            const STOP = new Set([
-              'para','como','esta','este','essa','esse','isso','isto','uma','uno','unos','unas',
-              'com','con','sem','sin','que','por','los','las','del','das','dos','the','and',
-              'cada','sobre','entre','debe','deben','materia','bloque','estudiar','estudo'
-            ]);
-            const removedPlain = diffTexto
-              .split('\n')
-              .filter(l => l.startsWith('-') && !l.startsWith('---'))
-              .join(' ')
-              .replace(/<[^>]*>/g, ' ')
-              .replace(/&[a-zA-Z#0-9]+;/g, ' ')
-              .toLowerCase();
-            const words = removedPlain.match(/[a-záéíóúüñãõç][a-záéíóúüñãõç'’-]{4,}/gi) || [];
-            const terms = [...new Set(words.map(w => w.toLowerCase()).filter(w => !STOP.has(w)))]
-              .sort((a, b) => b.length - a.length)
-              .slice(0, 32);
+            // Issue #275: o contexto é ANCORADO NA REGIÃO DO DIFF (hunk →
+            // seção ancestral → subseções da mesma seção com termos raros),
+            // nunca na primeira ocorrência global de uma palavra — em
+            // matérias de ~700 KB, "verdadero"/"respuesta" aparecem centenas
+            // de vezes e o auditor recebia outro bloco (caso real #266).
+            // Toda a decisão vive em head_context.mjs (função pura, testada
+            // em head_context.test.mjs); este passo só lê os arquivos do
+            // HEAD exato pela API. O módulo vem do checkout da branch
+            // padrão (passo "Checkout" acima) — nunca do HEAD da PR.
+            const path = require('path');
+            const { montarContextoHead } = await import(
+              path.join(process.env.GITHUB_WORKSPACE, '.github/workflows/scripts/head_context.mjs')
+            );
 
             const changed = await github.paginate(github.rest.pulls.listFiles, {
               owner: context.repo.owner,
@@ -541,7 +538,7 @@ jobs:
               .filter(name => name.includes('/materias-privadas/') && name.endsWith('.html'))
               .slice(0, 3);
 
-            const contextParts = [];
+            const arquivosHead = [];
             for (const filename of candidates) {
               try {
                 const { data: file } = await github.rest.repos.getContent({
@@ -553,31 +550,20 @@ jobs:
                 if (!file || Array.isArray(file) || file.type !== 'file' || file.encoding !== 'base64' || !file.content) {
                   continue;
                 }
-                const content = Buffer.from(file.content.replace(/\n/g, ''), 'base64').toString('utf8');
-                const lower = content.toLowerCase();
-                const windows = [];
-                const usedCenters = [];
-                for (const term of terms) {
-                  const idx = lower.indexOf(term);
-                  if (idx < 0 || usedCenters.some(x => Math.abs(x - idx) < 1200)) continue;
-                  const start = Math.max(0, idx - 900);
-                  const end = Math.min(content.length, idx + 1500);
-                  windows.push(content.slice(start, end));
-                  usedCenters.push(idx);
-                  if (windows.length >= 3) break;
-                }
-                if (!windows.length) {
-                  windows.push(content.slice(0, 2200));
-                }
-                contextParts.push(
-                  `### HEAD CONTEXT · ${filename} @ ${pr.head.sha}\n` + windows.join('\n\n--- trecho ---\n\n')
-                );
-                if (contextParts.join('\n\n').length >= 7000) break;
+                arquivosHead.push({
+                  filename,
+                  content: Buffer.from(file.content.replace(/\n/g, ''), 'base64').toString('utf8'),
+                });
               } catch (e) {
                 console.log(`Contexto HEAD: não foi possível ler ${filename}; seguindo sem esse trecho.`);
               }
             }
-            const headContext = contextParts.join('\n\n').slice(0, 7000);
+            const headContext = montarContextoHead({
+              diffTexto,
+              arquivos: arquivosHead,
+              sha: pr.head.sha,
+              limite: 7000,
+            }).slice(0, 7000);
             if (headContext) {
               fs.writeFileSync('/tmp/pr-head-context.txt', headContext);
               console.log(`Contexto limitado do HEAD da PR #${numero}: ${headContext.length} caracteres.`);
