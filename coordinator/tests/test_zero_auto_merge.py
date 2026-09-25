@@ -98,15 +98,170 @@ def _secao_on(texto: str) -> str:
     return texto[ini:fim]
 
 
+# ---------------------------------------------------------------------
+# Leitor mínimo de workflow, só biblioteca padrão (Issue #267).
+#
+# O Worker Bridge e o Runner rodam esta suíte como preflight com APENAS
+# coordinator/requirements.txt instalado — sem PyYAML. Este leitor extrai o
+# que os testes precisam (chaves de mapeamento, permissões do topo e de cada
+# job) e deliberadamente:
+#   - pula blocos de texto (``run: |``, ``script: |``): um "contents: write"
+#     dentro de um script nunca é lido como permissão;
+#   - pula itens de lista (``- name: ...``, ``steps``, ``workflows``);
+#   - aceita permissão inline (``{contents: write}``, ``read-all``,
+#     ``write-all``) e FALHA FECHADO diante de qualquer forma que não
+#     reconheça, em vez de devolver "sem permissão".
+# ---------------------------------------------------------------------
+
+_RE_CHAVE = re.compile(r"""^(?P<ind> *)(?P<chave>"[^"]+"|'[^']+'|[A-Za-z0-9_.\-]+):(?:\s+(?P<valor>.*))?$""")
+_INDICADORES_DE_BLOCO = {"|", ">", "|-", ">-", "|+", ">+"}
+
+
+def _sem_comentario(valor: str) -> str:
+    if valor[:1] in ("'", '"'):
+        return valor.strip()
+    return re.split(r"\s+#", valor, maxsplit=1)[0].strip()
+
+
+def _ler_workflow(texto: str) -> dict:
+    raiz: dict = {}
+    pilha: list[tuple[int, dict]] = [(-1, raiz)]
+    pular_ate: int | None = None
+    for bruta in texto.splitlines():
+        if not bruta.strip() or bruta.lstrip().startswith("#"):
+            continue
+        if "\t" in bruta[: len(bruta) - len(bruta.lstrip())]:
+            raise AssertionError(f"workflow com TAB na indentação — leitor recusa (fail-closed): {bruta!r}")
+        indent = len(bruta) - len(bruta.lstrip(" "))
+        if pular_ate is not None:
+            if indent > pular_ate:
+                continue
+            pular_ate = None
+        conteudo = bruta.strip()
+        if conteudo == "-" or conteudo.startswith("- "):
+            pular_ate = indent  # item de lista: ele e tudo que estiver mais fundo
+            continue
+        m = _RE_CHAVE.match(bruta.rstrip())
+        if not m:
+            continue
+        while pilha[-1][0] >= indent:
+            pilha.pop()
+        pai = pilha[-1][1]
+        chave = m.group("chave").strip("'\"")
+        valor = _sem_comentario(m.group("valor") or "")
+        if valor == "":
+            filho: dict = {}
+            pai[chave] = filho
+            pilha.append((indent, filho))
+        elif valor in _INDICADORES_DE_BLOCO:
+            pai[chave] = valor
+            pular_ate = indent
+        else:
+            pai[chave] = valor.strip("'\"")
+    return raiz
+
+
+def _permissoes(valor, onde: str) -> dict:
+    """Normaliza um bloco ``permissions`` para dict ``escopo -> nível``.
+    ``write-all`` vira contents:write (e é proibido pelos testes);
+    qualquer forma desconhecida quebra o teste (fail-closed)."""
+    if valor is None:
+        return {}
+    if isinstance(valor, dict):
+        return {k: str(v) for k, v in valor.items()}
+    texto = str(valor).strip()
+    if texto == "read-all":
+        return {"contents": "read"}
+    if texto == "write-all":
+        return {"contents": "write", "*": "write-all"}
+    if texto in ("{}", ""):
+        return {}
+    if texto.startswith("{") and texto.endswith("}"):
+        out = {}
+        for par in texto[1:-1].split(","):
+            if not par.strip():
+                continue
+            k, sep, v = par.partition(":")
+            if not sep:
+                raise AssertionError(f"{onde}: permissions inline ilegível: {texto!r}")
+            out[k.strip()] = v.strip()
+        return out
+    raise AssertionError(f"{onde}: forma de permissions não reconhecida: {texto!r}")
+
+
+def test_leitor_de_workflow_sem_pyyaml_e_robusto() -> None:
+    """Prova o leitor contra as armadilhas que um teste por texto teria."""
+    amostra = (
+        "name: X\n"
+        "on:\n"
+        "  workflow_run:\n"
+        "    workflows:\n"
+        "      - \"A\"\n"
+        "permissions:\n"
+        "  contents: read   # comentário\n"
+        "jobs:\n"
+        "  primeiro:\n"
+        "    permissions:\n"
+        "      contents: write\n"
+        "      pull-requests: write\n"
+        "    steps:\n"
+        "      - name: script\n"
+        "        run: |\n"
+        "          permissions:\n"
+        "            contents: write\n"
+        "          merge_after_guard:\n"
+        "      - uses: x\n"
+        "        with:\n"
+        "          contents: write\n"
+        "  segundo:\n"
+        "    permissions: {contents: read, actions: write}\n"
+        "    runs-on: ubuntu-latest\n"
+        "  'terceiro':\n"
+        "    permissions: write-all\n"
+    )
+    d = _ler_workflow(amostra)
+    assert set(d["jobs"]) == {"primeiro", "segundo", "terceiro"}, d["jobs"]
+    assert _permissoes(d.get("permissions"), "topo") == {"contents": "read"}
+    assert _permissoes(d["jobs"]["primeiro"]["permissions"], "p") == {"contents": "write", "pull-requests": "write"}
+    assert "merge_after_guard" not in d["jobs"], "chave dentro de bloco de script não é job"
+    assert _permissoes(d["jobs"]["segundo"]["permissions"], "s") == {"contents": "read", "actions": "write"}
+    assert _permissoes(d["jobs"]["terceiro"]["permissions"], "t")["contents"] == "write"
+    for ruim in ("contents=write", "[contents]"):
+        try:
+            _permissoes(ruim, "x")
+        except AssertionError:
+            continue
+        raise AssertionError(f"forma desconhecida {ruim!r} devia falhar fechado")
+    # Onde PyYAML existir (máquina de desenvolvimento), confere o leitor contra
+    # ele em TODOS os workflows reais. No preflight do Bridge ele não existe e
+    # esta conferência extra é pulada — a garantia acima não depende dela.
+    try:
+        import yaml  # type: ignore
+    except ImportError:
+        yaml = None
+    if yaml is not None:
+        for caminho in sorted(glob.glob(os.path.join(REPO_ROOT, ".github", "workflows", "*.yml"))):
+            texto = _ler(caminho)
+            ref = yaml.safe_load(texto)
+            meu = _ler_workflow(texto)
+            nome = os.path.basename(caminho)
+            assert set(meu.get("jobs") or {}) == set(ref.get("jobs") or {}), nome
+            assert _permissoes(meu.get("permissions"), nome) == {
+                k: str(v) for k, v in (ref.get("permissions") or {}).items()
+            }, nome
+            for job, cfg in (ref.get("jobs") or {}).items():
+                esperado = {k: str(v) for k, v in ((cfg or {}).get("permissions") or {}).items()}
+                assert _permissoes((meu["jobs"][job] or {}).get("permissions"), f"{nome}:{job}") == esperado, (nome, job)
+    print("OK  test_leitor_de_workflow_sem_pyyaml_e_robusto")
+
+
 def test_auto_reparo_nao_reage_ao_guard_e_nao_tem_job_de_merge() -> None:
     """O gatilho do Guard existia só para o job de merge; o reparo técnico
     reage apenas a falhas de Bridge/Runner/OBSERVE."""
-    import yaml  # noqa: WPS433 — PyYAML já é usado pela suíte do Guard/CI
-
     caminho = os.path.join(REPO_ROOT, ".github", "workflows", "coordinator-auto-repair.yml")
     texto = _ler(caminho)
     assert '"Repasso Guard"' not in _secao_on(texto)
-    jobs = yaml.safe_load(texto)["jobs"]
+    jobs = _ler_workflow(texto)["jobs"]
     assert set(jobs) == {"repair"}, sorted(jobs)
     print("OK  test_auto_reparo_nao_reage_ao_guard_e_nao_tem_job_de_merge")
 
@@ -125,18 +280,21 @@ CONTENTS_WRITE_PERMITIDO = {
 
 
 def test_permissoes_de_escrita_sao_so_as_justificadas() -> None:
-    import yaml
-
     encontrados = {}
-    for caminho in sorted(glob.glob(os.path.join(REPO_ROOT, ".github", "workflows", "*.yml"))):
+    caminhos = sorted(glob.glob(os.path.join(REPO_ROOT, ".github", "workflows", "*.yml")))
+    assert len(caminhos) >= 6, "a varredura precisa ver os workflows da coordenação"
+    for caminho in caminhos:
         nome = os.path.basename(caminho)
         texto = _ler(caminho)
         assert "write-all" not in texto, f"{nome}: write-all proibido"
-        d = yaml.safe_load(texto)
-        topo = d.get("permissions") or {}
+        d = _ler_workflow(texto)
+        assert "jobs" in d and d["jobs"], f"{nome}: leitor não encontrou jobs (fail-closed)"
+        topo = _permissoes(d.get("permissions"), f"{nome}:topo")
         assert topo.get("contents") in (None, "read"), f"{nome}: contents no topo precisa ser read"
-        for job, cfg in (d.get("jobs") or {}).items():
-            perms = cfg.get("permissions") or {}
+        for job, cfg in d["jobs"].items():
+            if not isinstance(cfg, dict):
+                raise AssertionError(f"{nome}:{job}: job ilegível (fail-closed)")
+            perms = _permissoes(cfg.get("permissions"), f"{nome}:{job}")
             if perms.get("contents") == "write":
                 encontrados[(nome, job)] = True
     assert set(encontrados) == set(CONTENTS_WRITE_PERMITIDO), sorted(encontrados)
@@ -147,6 +305,7 @@ def main() -> int:
     testes = [
         test_nenhum_codigo_da_coordenacao_tem_caminho_de_merge,
         test_clientes_http_python_nunca_usam_put_nem_editam_estado_da_pr,
+        test_leitor_de_workflow_sem_pyyaml_e_robusto,
         test_auto_reparo_nao_reage_ao_guard_e_nao_tem_job_de_merge,
         test_permissoes_de_escrita_sao_so_as_justificadas,
     ]
