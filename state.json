@@ -599,9 +599,9 @@
       "checkpoint_commit": "55a865db6313087ef32468e6fc3cae1948f9fc3b",
       "execution_history": [],
       "execution_task_id": "semiologia-ii-b08-obesidade-r4--bridge-2f0f3f07c06f",
-      "guard_dispatch_attempts": 0,
-      "guard_dispatch_status": null,
-      "guard_dispatched_pr": null,
+      "guard_dispatch_attempts": 1,
+      "guard_dispatch_status": "PENDING",
+      "guard_dispatched_pr": 289,
       "last_audit_findings": "",
       "last_audit_fix_fingerprint": null,
       "last_audit_fix_worker_id": null,
@@ -610,7 +610,7 @@
       "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/semiologia-ii-b08-obesidade-r4'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
       "reserved_at": "2026-09-25T20:19:04.143158+00:00",
       "status": "NEEDS-AUDIT",
-      "updated_at": "2026-09-25T20:21:36.108090+00:00",
+      "updated_at": "2026-09-25T20:21:38.566169+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
