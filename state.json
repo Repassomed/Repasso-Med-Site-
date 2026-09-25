@@ -6613,6 +6613,17 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-25T03:01:39.105416+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "Repassomed/Repasso-Med-Site-:PR_NEEDS_AUDIT:pr:266:db176b7c7d794daa",
+      "informational_cost_usd": 0.045322,
+      "input_tokens": 12661,
+      "kind": "usage",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 2000,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-25T03:01:40.755662+00:00"
     }
   ]
 }
