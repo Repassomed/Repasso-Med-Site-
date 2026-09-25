@@ -1249,6 +1249,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:270.",
       "task_id": "#268",
       "worker_id": null
+    },
+    {
+      "category": "content",
+      "commit_sha": null,
+      "component": "coordinator-audit",
+      "error_id": "ERR-13231A9C77",
+      "error_type": "semantic-needs-fix",
+      "fingerprint": "13231a9c774fa866e025",
+      "first_seen": "2026-09-25T17:56:01.513615+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "f6140332d552421184326571f7ef7a1e",
+      "issue_sync_updated_at": "2026-09-25T17:56:01.513615+00:00",
+      "last_evidence_hash": "61a41e0dd68ecf1e200a",
+      "last_seen": "2026-09-25T17:56:01.513615+00:00",
+      "occurrence_count": 1,
+      "pr_number": 196,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36170050990",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "Auditoria independente marcou pr:196 como NEEDS-FIX.",
+      "task_id": "pr:196",
+      "worker_id": null
     }
   ]
 }
