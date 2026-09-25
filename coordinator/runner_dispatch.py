@@ -947,7 +947,39 @@ def executar_tarefa(
                 heartbeats=tuple(heartbeats), notes=tuple(notes),
             )
 
-        geracao = gerar_patch()
+        # Achado da auditoria de fechamento (25/09/2026): diferente de
+        # ``preparar_branch_de_trabalho``/``aplicar_patch``
+        # (``RunnerGitError``) e ``executar_comandos_validacao``
+        # (``RunnerCommandNaoPermitido``) logo acima/abaixo, esta chamada
+        # não tinha NENHUMA proteção. ``gerar_patch`` é um callable
+        # injetado e duck-typed (tipicamente
+        # ``runner_generate.gerar_patch_via_claude`` por trás de uma
+        # closure) — pode levantar qualquer exceção não prevista (I/O de
+        # arquivo, bug de tipo, etc.), não só devolver um status
+        # controlado. Sem este try/except, a exceção subia direto por
+        # ``executar_tarefa`` depois do heartbeat BUSY já emitido (acima),
+        # e ``worker_bridge.main()`` só tem um ``except Exception`` no
+        # topo que grava no Error Registry sem nunca liberar o worker —
+        # ele ficava ``BUSY`` para sempre, sem stale-detector algum em
+        # produção para reparar isso. Tratado aqui como o mesmo FAILED
+        # fail-closed já usado para as outras falhas desta função: claim
+        # registrado, heartbeat OFFLINE emitido, sem retry.
+        try:
+            geracao = gerar_patch()
+        except Exception as exc:
+            resultado = RunnerResult(
+                task_id=task.task_id, status="FAILED",
+                reason=(
+                    f"gerar_patch() levantou uma exceção não tratada ({type(exc).__name__}: {exc}) "
+                    "— tratada como falha técnica, nunca propagada. Zero commit/push, claim "
+                    "permanece consumido, sem retry."
+                ),
+            )
+            claim_store.registrar_resultado(task.task_id, resultado)
+            if worker_id:
+                _emitir_heartbeat(worker_id, worker_registry, RunnerHeartbeat(worker_id=worker_id, status="OFFLINE"), heartbeats, notes)
+            return DispatchOutcome(result=resultado, claimed=True, external_calls_made=True,
+                                    heartbeats=tuple(heartbeats), notes=tuple(notes))
         status_geracao = getattr(geracao, "status", None)
         patch_gerado = getattr(geracao, "patch", None)
         question_report = getattr(geracao, "question_report", None)
