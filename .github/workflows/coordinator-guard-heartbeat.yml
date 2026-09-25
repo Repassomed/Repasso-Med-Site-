@@ -56,7 +56,7 @@ jobs:
             const markerBridge = '<!-- repasso-worker-bridge-needs-audit -->';
             const markerCoordinator = '<!-- repasso-coordinator -->';
             const markerGuard = '<!-- repasso-guard-resumo -->';
-            const auditPolicyVersion = '2026-09-24-material-scope-head-context-privacy-redact-v2';
+            const auditPolicyVersion = '2026-09-25-anchored-head-context-v3';
             const pulls = await github.paginate(github.rest.pulls.list, {
               owner: context.repo.owner,
               repo: context.repo.repo,

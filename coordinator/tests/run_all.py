@@ -27,6 +27,7 @@ from . import (
     test_global_ledger_race,
     test_guard_run_resolver_race,
     test_guard_state_integration,
+    test_head_context_anchor,
     test_handoff_exec,
     test_heartbeat,
     test_heartbeat_guard_observe_chain,
@@ -107,6 +108,8 @@ MODULOS = [
     test_heartbeat,
     test_heartbeat_guard_observe_chain,
     test_guard_run_resolver_race,
+    # Issue #275: head_context do auditor ancorado na região do diff.
+    test_head_context_anchor,
     test_observe_runner_wiring,
     test_runner_contract,
     test_runner_dispatch,
