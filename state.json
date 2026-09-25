@@ -555,9 +555,9 @@
       "checkpoint_commit": "3bb68573f95d280bf5141bd23f3896100af8ddcf",
       "execution_history": [],
       "execution_task_id": "cleanup-como-estudar-histologia-i-r2--bridge-e0a0034dfc09",
-      "guard_dispatch_attempts": 0,
-      "guard_dispatch_status": null,
-      "guard_dispatched_pr": null,
+      "guard_dispatch_attempts": 1,
+      "guard_dispatch_status": "PENDING",
+      "guard_dispatched_pr": 286,
       "last_audit_findings": "",
       "last_audit_fix_fingerprint": null,
       "last_audit_fix_worker_id": null,
@@ -566,7 +566,7 @@
       "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/cleanup-como-estudar-histologia-i-r2'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
       "reserved_at": "2026-09-25T19:59:37.163539+00:00",
       "status": "NEEDS-AUDIT",
-      "updated_at": "2026-09-25T20:02:57.431303+00:00",
+      "updated_at": "2026-09-25T20:03:00.192815+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
