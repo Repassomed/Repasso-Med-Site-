@@ -1399,6 +1399,31 @@
       "summary": "Auditoria independente marcou pr:289 como NEEDS-FIX.",
       "task_id": "pr:289",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "3bb68573f95d280bf5141bd23f3896100af8ddcf",
+      "component": "guard",
+      "error_id": "ERR-6C3202385B",
+      "error_type": "hard-fail",
+      "fingerprint": "6c3202385b527edf4f0a",
+      "first_seen": "2026-09-25T21:57:18.838001+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "7e1469d99bef463b8c3e0e71e21a78fb",
+      "issue_sync_updated_at": "2026-09-25T21:57:18.838001+00:00",
+      "last_evidence_hash": "5c1cbebbb4adcd2a854f",
+      "last_seen": "2026-09-25T21:57:18.838001+00:00",
+      "occurrence_count": 1,
+      "pr_number": 286,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36194215216",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:286.",
+      "task_id": "cleanup-como-estudar-histologia-i-r2",
+      "worker_id": null
     }
   ]
 }
