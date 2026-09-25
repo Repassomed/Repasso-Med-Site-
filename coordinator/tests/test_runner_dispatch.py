@@ -660,6 +660,99 @@ def test_ledger_correction_failure_is_fail_closed_before_applying_patch() -> Non
 # OBSERVE já usa — nunca um teto mensal separado.
 # ---------------------------------------------------------------------------
 
+def test_unhandled_exception_in_gerar_patch_never_leaves_worker_busy_forever() -> None:
+    """Achado real de auditoria (fechamento da Coordenação, 25/09/2026):
+    diferente de ``preparar_branch_de_trabalho`` (``RunnerGitError``),
+    ``aplicar_patch`` (``RunnerGitError``) e ``executar_comandos_validacao``
+    (``RunnerCommandNaoPermitido``) — todos protegidos por ``try/except``
+    logo acima — a chamada ``geracao = gerar_patch()`` não tinha NENHUMA
+    proteção. ``gerar_patch`` é um callable injetado (duck-typed,
+    tipicamente ``runner_generate.gerar_patch_via_claude`` por trás de uma
+    closure) que pode levantar qualquer exceção não prevista (ex.: um
+    ``OSError``/``UnicodeDecodeError`` lendo um arquivo corrompido, um bug
+    de tipo). Antes desta correção, essa exceção subia direto por
+    ``executar_tarefa`` — que já tinha emitido o heartbeat BUSY momentos
+    antes (linha ~894, antes do claim) — sem nunca emitir OFFLINE nem
+    registrar o resultado. ``worker_bridge.main()`` só tem um
+    ``except Exception`` bem no topo que grava no Error Registry e retorna
+    1, sem jamais chamar ``liberar_worker_apos_resultado`` (esse código só
+    roda depois de ``executar_tarefa`` retornar normalmente). Resultado:
+    o worker ficava ``BUSY`` para sempre, sem nenhum stale-detector ativo
+    em produção para reparar isso sozinho.
+
+    Este teste prova que uma exceção genuína dentro de ``gerar_patch()``
+    agora vira um ``RunnerResult`` ``FAILED`` normal — claim registrado,
+    heartbeat OFFLINE emitido, ``DispatchOutcome`` devolvido sem nunca
+    propagar — exatamente o mesmo padrão já usado para as outras exceções
+    conhecidas logo acima no código."""
+    with tempfile.TemporaryDirectory() as tmp:
+        remoto = _criar_remoto_local(tmp)
+        workdir = _clonar_workdir(tmp, remoto, "work-gerar-patch-exception")
+
+        registry = OperationalWorkerRegistry(InMemoryWorkerStateStore({
+            "workers": [
+                WorkerRecord(
+                    worker_id="api-runner", display_name="api-runner", type="api_runner",
+                    status="AVAILABLE", capabilities=("codigo",),
+                ).to_dict()
+            ]
+        }))
+
+        task = _task(task_id="canario-gerar-patch-exception", branch="runner/canario-gerar-patch-exception")
+        config = _config(canary_task_id="canario-gerar-patch-exception")
+
+        chamadas: list[int] = []
+
+        def gerar_patch_que_explode() -> object:
+            chamadas.append(1)
+            raise OSError("disco cheio (simulado) — exceção não prevista dentro de gerar_patch()")
+
+        outcome = executar_tarefa(
+            task, None, config=config, repo_dir=workdir, state_git_remote=remoto,
+            gerar_patch=gerar_patch_que_explode,
+            worker_id="api-runner", worker_registry=registry,
+        )
+
+        assert outcome.result is not None and outcome.result.status == "FAILED", outcome.result
+        assert "OSError" in outcome.result.reason or "disco cheio" in outcome.result.reason
+        assert outcome.claimed is True, "o claim precisa continuar consumido, nunca liberado sem registro"
+        assert len(chamadas) == 1
+
+        # O ponto central do bug: o worker NUNCA pode ficar BUSY para
+        # sempre. O heartbeat final precisa ser OFFLINE, com current_task
+        # limpo — não a exceção crua propagando sem liberar nada.
+        assert len(outcome.heartbeats) == 2, "esperava heartbeat BUSY inicial e OFFLINE final, mesmo com exceção"
+        assert outcome.heartbeats[0]["record"]["status"] == "BUSY"
+        assert outcome.heartbeats[-1]["record"]["status"] == "OFFLINE"
+        assert outcome.heartbeats[-1]["record"]["current_task"] is None
+
+        final = registry.find_by_name_or_id("api-runner")
+        assert final is not None
+        assert final.status == "OFFLINE"
+        assert final.current_task is None, "worker precisa ficar livre — nunca preso à tarefa que explodiu"
+
+        # Zero commit/push: nada pôde ter sido publicado.
+        r = subprocess.run(["git", "ls-remote", remoto, task.branch], capture_output=True, text=True)
+        assert r.stdout.strip() == "", "nenhum commit podia ter sido publicado quando gerar_patch() explode"
+
+        # Sem retry automático: o claim já consumido bloqueia uma segunda
+        # tentativa da MESMA task_id, mesmo depois da exceção.
+        chamadas_repeticao: list[int] = []
+
+        def gerar_patch_repeticao() -> object:
+            chamadas_repeticao.append(1)
+            raise OSError("não deveria nem ser chamada de novo")
+
+        outcome2 = executar_tarefa(
+            task, None, config=config, repo_dir=workdir, state_git_remote=remoto,
+            gerar_patch=gerar_patch_repeticao,
+        )
+        assert outcome2.claimed is False
+        assert outcome2.result is not None and outcome2.result.status == "BLOCKED"
+        assert chamadas_repeticao == [], "claim já consumido — gerar_patch() nunca deveria ser chamada de novo"
+    print("OK  test_unhandled_exception_in_gerar_patch_never_leaves_worker_busy_forever")
+
+
 def test_default_usage_branch_matches_the_global_coordinator_ledger() -> None:
     """Prova simples mas direta: a constante que o CLI usa como default de
     --usage-git-branch precisa ser literalmente a mesma branch que
@@ -821,6 +914,7 @@ def main() -> int:
         test_generator_reads_checkpoint_before_generating_continuation_patch,
         test_executar_tarefa_requires_exactly_one_of_patch_or_gerar_patch,
         test_ledger_correction_failure_is_fail_closed_before_applying_patch,
+        test_unhandled_exception_in_gerar_patch_never_leaves_worker_busy_forever,
         test_default_usage_branch_matches_the_global_coordinator_ledger,
         test_runner_sees_spend_already_recorded_by_coordinator_and_respects_shared_cap,
         test_done_result_never_merge_ready,
