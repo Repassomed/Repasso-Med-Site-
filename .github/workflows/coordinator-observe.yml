@@ -166,13 +166,35 @@ on:
   workflow_run:
     workflows: ["Repasso Guard"]
     types: [completed]
+  # Issue #259 — dispatch explícito do PRÓPRIO Guard (passo "Acionar o
+  # OBSERVE explicitamente" em guard.yml), porque um workflow_run
+  # disparado com o GITHUB_TOKEN automático (Heartbeat -> Guard, ou o
+  # próprio gatilho comum do Guard sobre uma PR) não aciona o listener
+  # `workflow_run` acima — restrição documentada de anti-recursão do
+  # GITHUB_TOKEN (ver o
+  # comentário no passo de guard.yml). O `workflow_run` acima continua
+  # exatamente como estava, sem nenhuma mudança: os dois gatilhos convivem
+  # de propósito — o segundo é rede de segurança para quando o primeiro
+  # não fica marcado pelo GITHUB_TOKEN; nunca duplicam custo porque a
+  # mesma identidade HEAD+policy do dedup existente decide isso (ver o
+  # passo "Rodar o Coordinator" abaixo — os dois caminhos convergem para
+  # o MESMO `_from_workflow_run`).
+  workflow_dispatch:
+    inputs:
+      guard_run_id:
+        description: "run_id numérico da execução do Repasso Guard que terminou (só dígitos)"
+        required: true
+        type: string
   # Heartbeat em coordinator-guard-heartbeat.yml (workflow independente).
 
 permissions:
   contents: read
 
 concurrency:
-  group: repasso-coordinator-observe-${{ github.event.issue.number || github.event.workflow_run.id }}
+  group: >-
+    repasso-coordinator-observe-${{
+      github.event.issue.number || github.event.workflow_run.id || inputs.guard_run_id
+    }}
   cancel-in-progress: true
 
 jobs:
@@ -215,6 +237,19 @@ jobs:
     # (concurrency do Guard cancela o run anterior a cada push; PR do bot
     # fica em action_required). Antes virava "failure" e abria Issue falsa
     # de HARD FAIL; espelha github_event.GUARD_CONCLUSOES_SEM_VEREDITO.
+    #
+    # Camada 7 (Issue #259): o caminho workflow_dispatch só existe para o
+    # PRÓPRIO guard.yml acionar (passo "Acionar o OBSERVE explicitamente")
+    # — nunca um "Run workflow" manual com run_id arbitrário. Diferente do
+    # `workflow_run` acima, aqui NÃO dá para checar a conclusão do Guard
+    # neste `if:` (exigiria uma chamada de API, só possível dentro de um
+    # passo) — o equivalente à Camada 6 para este caminho é feito em
+    # código, dentro de `coordinator/github_event.py::_from_workflow_run`,
+    # que já filtra a MESMA lista `GUARD_CONCLUSOES_SEM_VEREDITO` (ver o
+    # passo "Resolver a execução do Guard observada" abaixo, que entrega
+    # exatamente o mesmo formato de payload que o caminho workflow_run já
+    # entregava). Continua defesa em profundidade — só a camada muda de
+    # lugar, nunca desaparece.
     if: >
       github.event_name != 'schedule' &&
       vars.REPASSO_COORDINATOR_ENABLED == 'true' &&
@@ -225,7 +260,8 @@ jobs:
           contains(github.event.comment.body, 'ESTADO:')))) &&
       (github.event_name != 'workflow_run' ||
         !contains(fromJSON('["cancelled","skipped","action_required","neutral","stale"]'),
-                  github.event.workflow_run.conclusion))
+                  github.event.workflow_run.conclusion)) &&
+      (github.event_name != 'workflow_dispatch' || github.actor == 'github-actions[bot]')
     runs-on: ubuntu-latest
     # contents:write só é usado para publicar a branch de estado dedicada
     # (coordinator-state-*, nunca 'main', nunca matéria — ver
@@ -236,16 +272,18 @@ jobs:
     # Este job confiável continua sem qualquer passo de merge, close, label ou
     # edição de branch; o write é usado somente para tornar o parecer visível.
     # A leitura do rótulo/corpo da PR continua sendo apenas dado, nunca código.
-    # actions:read é exigido pelo GitHub para baixar artifact de OUTRA
-    # execução (actions/download-artifact@v4 com run-id do workflow_run
-    # observado, abaixo) — achado do "ACHADO ADICIONAL" e do "PACOTE
-    # CONSOLIDADO" (PR #97): permissão omitida vira 'none', então sem isto
-    # o passo de baixar o audit-pack do Guard pode falhar em produção
-    # mesmo com os testes estruturais verdes. Deliberadamente só :read —
-    # este job nunca cria nem apaga artifact, só consome o que o Guard já
-    # publicou (ver test_actions_read_present_actions_write_absent).
+    # actions:write (Issue #259 — antes só :read) é exigido por DOIS usos:
+    # (a) baixar artifact de OUTRA execução (actions/download-artifact@v4
+    # com run-id do Guard observado, abaixo) — achado original do "ACHADO
+    # ADICIONAL"/"PACOTE CONSOLIDADO" (PR #97): permissão omitida vira
+    # 'none'; (b) o novo passo final "Acionar o Worker Bridge
+    # explicitamente", que chama actions.createWorkflowDispatch — só
+    # write habilita isso (write inclui read, então (a) continua
+    # funcionando). Este job continua sem criar/apagar artifact — só
+    # consome o que o Guard já publicou e dispara UM workflow_dispatch
+    # explícito, nunca cancela/reexecuta run alheio.
     permissions:
-      actions: read
+      actions: write
       contents: write
       pull-requests: write
       # V3 (Issue #99) — só para postar o Cartão de Merge como comentário
@@ -294,24 +332,114 @@ jobs:
       - name: Instalar o SDK da Anthropic (só dentro deste job condicionado)
         run: pip install -q -r coordinator/requirements.txt
 
+      - name: Resolver a execução do Guard observada (Issue #259 — API, nunca confia só no input)
+        id: guardrun
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/github-script@v7
+        env:
+          # O input entra por env var, nunca interpolado dentro do script,
+          # e é validado por regex antes de qualquer uso — mesmo padrão do
+          # `pr_number` de guard.yml.
+          GUARD_RUN_ID_INPUT: ${{ inputs.guard_run_id }}
+        with:
+          # Achado da auditoria independente (Issue #264, comentário
+          # #5822771107): race condition real. O passo "Acionar o OBSERVE
+          # explicitamente" de guard.yml dispara ESTE dispatch de DENTRO
+          # do último passo da própria execução do Guard — nesse instante
+          # exato, o run do Guard, por definição, ainda não pode estar
+          # `completed` (só vira `completed` depois que TODOS os passos,
+          # incluindo o próprio dispatch, terminam). Uma checagem única e
+          # imediata de `status === 'completed'` falhava fechado por
+          # timing, não por um problema real.
+          #
+          # Corrigido com retry CURTO e LIMITADO (nunca polling infinito)
+          # em resolve_guard_run.mjs — função pura, testada de verdade
+          # com fetch/relógio falsos em resolve_guard_run.test.mjs (7
+          # casos, incluindo exatamente "in_progress no primeiro fetch,
+          # completed no segundo" e o teto do retry nunca sendo
+          # ultrapassado). Este passo só injeta as dependências REAIS
+          # (github.rest.actions.getWorkflowRun, setTimeout) — toda a
+          # decisão vive no módulo testável.
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { resolverExecucaoDoGuard } = await import(
+              path.join(process.env.GITHUB_WORKSPACE, '.github/workflows/scripts/resolve_guard_run.mjs')
+            );
+            const bruto = String(process.env.GUARD_RUN_ID_INPUT || '').trim();
+            if (!/^[0-9]{1,15}$/.test(bruto)) {
+              core.setFailed('guard_run_id inválido — só dígitos são aceitos. Nada foi observado.');
+              return;
+            }
+            const runId = Number(bruto);
+            const resultado = await resolverExecucaoDoGuard({
+              runId,
+              nomeEsperado: 'Repasso Guard',
+              branchEsperada: context.payload.repository.default_branch,
+              buscarRun: async (id) => {
+                const { data } = await github.rest.actions.getWorkflowRun({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: id,
+                });
+                return data;
+              },
+              dormir: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+              logInfo: core.info,
+            });
+            if (!resultado.ok) {
+              core.setFailed(resultado.motivo);
+              return;
+            }
+            const run = resultado.run;
+            // Mesmo formato de payload que o GitHub já entrega no evento
+            // `workflow_run` real — o passo seguinte e coordinator/
+            // github_event.py::_from_workflow_run tratam os dois gatilhos
+            // de forma idêntica a partir daqui, incluindo o filtro de
+            // GUARD_CONCLUSOES_SEM_VEREDITO (cancelled/skipped/
+            // action_required/neutral/stale), que já é feito EM CÓDIGO,
+            // não neste script — ver o comentário da Camada 7 no `if:`
+            // deste job.
+            const synthetic = {
+              action: 'completed',
+              workflow_run: {
+                id: run.id,
+                name: run.name,
+                conclusion: run.conclusion,
+                head_sha: run.head_sha,
+                head_branch: run.head_branch,
+                pull_requests: run.pull_requests || [],
+              },
+            };
+            fs.writeFileSync('/tmp/workflow-run-event.json', JSON.stringify(synthetic), 'utf8');
+            core.setOutput('run_id', String(run.id));
+            core.info(`Guard run ${runId} resolvido pela API: conclusão=${run.conclusion}, HEAD=${run.head_sha}.`);
+
       - name: Baixar o audit-pack e contexto tipado do Guard
-        if: github.event_name == 'workflow_run'
+        if: github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
         continue-on-error: true # runs antigos podem não ter o contexto #165
         uses: actions/download-artifact@v4
         with:
           name: repasso-guard-audit-pack
           path: /tmp/guard-audit-pack
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ github.event.workflow_run.id || steps.guardrun.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Buscar dados reais da PR associada (API + contexto tipado — #165)
         id: prctx
-        if: github.event_name == 'workflow_run'
+        if: github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const run = context.payload.workflow_run;
+            // Issue #259: nos dois gatilhos, ``run`` tem o MESMO formato —
+            // ou o payload real do webhook, ou o equivalente sintetizado
+            // pelo passo "Resolver a execução do Guard observada" a partir
+            // da API (nunca do input cru). Todo o resto deste script
+            // continua idêntico nos dois casos.
+            const run = context.eventName === 'workflow_run'
+              ? context.payload.workflow_run
+              : JSON.parse(fs.readFileSync('/tmp/workflow-run-event.json', 'utf8')).workflow_run;
             const prs = run.pull_requests || [];
             const contextPath = '/tmp/guard-audit-pack/guard-pr-context.json';
             let typed = null;
@@ -516,9 +644,25 @@ jobs:
           # qualquer resultado (ver test_redact_masks_url_embedded_credential).
           REMOTO_COM_TOKEN="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
 
+          # Issue #259: o caminho workflow_dispatch não tem um evento
+          # "workflow_run" de verdade em github.event_path (o payload ali é
+          # {inputs, ref, ...} do próprio workflow_dispatch) — usa o
+          # equivalente sintetizado pelo passo "Resolver a execução do
+          # Guard observada" a partir da API real, e passa
+          # --github-event-name "workflow_run" para que
+          # coordinator/github_event.py::_from_workflow_run (já testado
+          # extensivamente) trate os dois gatilhos de forma IDÊNTICA a
+          # partir daqui — dedup por HEAD+policy incluído.
+          GITHUB_EVENT_NAME_EFETIVO="${{ github.event_name }}"
+          EVENT_PATH_EFETIVO="${{ github.event_path }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            GITHUB_EVENT_NAME_EFETIVO="workflow_run"
+            EVENT_PATH_EFETIVO="/tmp/workflow-run-event.json"
+          fi
+
           ARGS=(
-            --github-event-name "${{ github.event_name }}"
-            --event "${{ github.event_path }}"
+            --github-event-name "$GITHUB_EVENT_NAME_EFETIVO"
+            --event "$EVENT_PATH_EFETIVO"
             --repo "${{ github.repository }}"
             --dedup-git-remote "$REMOTO_COM_TOKEN"
             --usage-git-remote "$REMOTO_COM_TOKEN"
@@ -621,3 +765,64 @@ jobs:
         run: |
           echo "O Coordinator terminou com código ${{ steps.coordinator.outputs.resultado }} — ver o artifact/log publicado acima."
           exit 1
+
+      - name: Acionar o Worker Bridge explicitamente (Issue #259)
+        # Mesma razão do passo equivalente em guard.yml, um nível abaixo
+        # na cadeia: quando ESTE OBSERVE foi ele mesmo iniciado por
+        # workflow_dispatch (o caminho novo deste Issue #259), sua
+        # conclusão fica marcada pela mesma restrição de anti-recursão do
+        # GITHUB_TOKEN — o listener `workflow_run` de
+        # coordinator-worker-bridge.yml para "Repasso Coordinator
+        # (OBSERVE)" nunca dispararia. O listener `workflow_run` continua
+        # existindo sem nenhuma mudança (funciona quando este OBSERVE foi
+        # acionado pelo caminho antigo, sem GITHUB_TOKEN no meio); este
+        # passo garante o mesmo resultado nos dois casos.
+        #
+        # `success()` só é verdadeiro depois do passo "Falhar o job se o
+        # Coordinator terminou com erro" acima não ter falhado — ou seja,
+        # o MESMO critério que o `workflow_run.conclusion == 'success'` já
+        # exigido no `if:` do job `bridge` de coordinator-worker-bridge.yml.
+        #
+        # Sem input: coordinator-worker-bridge.yml já aceita
+        # `workflow_dispatch: {}` sem nenhum campo — o Bridge decide
+        # sozinho, lendo o estado real da fila, exatamente como o
+        # "Run workflow" manual já funciona hoje. O `if:` do job `bridge`
+        # exige `github.actor == 'github-actions[bot]' && MODE ==
+        # 'active-supervised'` para este caminho automático (a entrada
+        # manual humana, `github.actor == 'Repassomed'`, continua igual,
+        # sem exigir active-supervised — nada muda para o piloto).
+        #
+        # SEM LOOP: este passo só aciona coordinator-worker-bridge.yml,
+        # nunca este próprio coordinator-observe.yml nem guard.yml — a
+        # cadeia continua estritamente Guard -> OBSERVE -> Bridge, nunca
+        # ao contrário (ver o teste estrutural que prova isso). O Bridge
+        # pode, por si só, despachar um Guard NOVO para uma tarefa
+        # diferente mais adiante — isso já existia, é o funcionamento
+        # normal da fila, e cada rodada tem sua própria identidade de
+        # dedup (PR/HEAD diferentes), nunca repetindo a MESMA auditoria.
+        # NUNCA pode virar o resultado do OBSERVE: disparar o próximo elo
+        # é efeito colateral best-effort. `continue-on-error: true`
+        # (mesmo achado ao vivo do passo equivalente em guard.yml, PR
+        # #264: uma falha aqui sem essa trava viraria "failure" NESTE
+        # próprio job — e o listener `workflow_run` do Bridge só aceita
+        # conclusão "success", então corromperia o próprio sinal que a
+        # rede de segurança depende para funcionar).
+        if: success()
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'coordinator-worker-bridge.yml',
+                ref: context.payload.repository.default_branch,
+              });
+              core.info('Worker Bridge acionado explicitamente por workflow_dispatch após o OBSERVE.');
+            } catch (e) {
+              core.warning(
+                `Dispatch explícito do Worker Bridge falhou (${e.message || e}) — o listener workflow_run ` +
+                'continua como rede de segurança; o resultado deste OBSERVE não muda por causa disso.'
+              );
+            }

@@ -73,6 +73,12 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  # Issue #259 — só para o passo final "Acionar o OBSERVE explicitamente"
+  # chamar `actions.createWorkflowDispatch`. Nenhum outro uso: este job
+  # continua sem ler/escrever artifact de outra execução, sem cancelar
+  # run, sem tocar em branch protection. Privilégio mínimo para essa
+  # única chamada — ver o comentário no passo.
+  actions: write
 
 concurrency:
   # Um grupo por PR, nos dois gatilhos — nunca um grupo vazio (que
@@ -283,3 +289,93 @@ jobs:
         run: |
           echo "O Repasso Guard encontrou pelo menos um HARD FAIL. Ver o comentário no PR."
           exit 1
+
+      - name: Acionar o OBSERVE explicitamente (Issue #259)
+        # ─────────────────────────────────────────────────────────────
+        # POR QUE este passo existe: reprodução real de 24/09/2026 — o
+        # Heartbeat despachou este Guard por workflow_dispatch (run
+        # 36048362310, ator github-actions[bot]), o Guard terminou
+        # SUCCESS, e nenhum "Repasso Coordinator (OBSERVE)" nasceu depois
+        # dele, apesar de coordinator-observe.yml escutar `workflow_run`
+        # para exatamente este workflow.
+        #
+        # CAUSA REAL (não presumida — documentação do GitHub + discussão
+        # oficial da comunidade, Issue #48748): "When you use the
+        # repository's GITHUB_TOKEN to perform tasks, events triggered by
+        # the GITHUB_TOKEN, with the exception of workflow_dispatch and
+        # repository_dispatch, will not create a new workflow run." Um
+        # workflow_dispatch disparado com o GITHUB_TOKEN automático
+        # INICIA o workflow-alvo (é a exceção documentada — por isso o
+        # Guard rodou e terminou SUCCESS), mas a conclusão desse run fica
+        # "marcada" como originada do GITHUB_TOKEN: quem escuta a
+        # conclusão dele via `workflow_run` nunca é acionado. Isto vale
+        # nos DOIS gatilhos deste arquivo — tanto o `workflow_dispatch`
+        # quanto o `pull_request` comum rodam com o mesmo GITHUB_TOKEN de
+        # sistema — então o buraco não era exclusivo do caminho do
+        # Heartbeat.
+        #
+        # CORREÇÃO: em vez de confiar só no listener `workflow_run` de
+        # coordinator-observe.yml (que continua existindo, sem nenhuma
+        # mudança — funciona nos casos raros em que o encadeamento da
+        # plataforma não fica marcado), este passo aciona o OBSERVE por
+        # workflow_dispatch EXPLÍCITO — que a mesma exceção documentada
+        # garante que sempre funciona, mesmo com GITHUB_TOKEN. Isto NÃO
+        # troca o token por um PAT (mais poder, mais superfície) — mesma
+        # escolha já feita para o par Bridge -> Guard, ver o comentário no
+        # topo deste arquivo.
+        #
+        # O único dado passado é o run_id NUMÉRICO desta própria execução
+        # (``context.runId`` — nunca input externo, nunca texto de PR). O
+        # OBSERVE não confia neste valor além de usá-lo como chave de
+        # busca: ele busca a execução real pela API, confirma nome
+        # "Repasso Guard", status "completed" e branch padrão antes de
+        # fazer qualquer coisa com o resultado (ver o passo "Resolver a
+        # execução do Guard observada" em coordinator-observe.yml).
+        #
+        # SEM CHAMADA quando o job foi cancelado antes do Guard terminar
+        # (steps.guard.outputs.resultado fica vazio nesse caso — nada a
+        # reportar). A conclusão objetiva (HARD FAIL ou não) SEMPRE aciona
+        # o OBSERVE: quem decide não gastar auditoria semântica paga num
+        # HARD FAIL objetivo é o próprio OBSERVE (atalho de custo zero já
+        # existente e testado — ver coordinator/tests/test_coordinator_v3.py
+        # ::test_guard_hard_fail_yields_needs_fix_with_zero_api_cost),
+        # nunca este passo.
+        #
+        # SEM LOOP: este passo só aciona coordinator-observe.yml, nunca
+        # este próprio guard.yml nem coordinator-worker-bridge.yml — a
+        # cadeia continua estritamente Guard -> OBSERVE -> Bridge, nunca
+        # ao contrário (ver o teste estrutural que prova isso).
+        #
+        # NUNCA pode virar o veredito do Guard: disparar o próximo elo da
+        # cadeia é um efeito colateral best-effort, nunca parte do que
+        # este workflow certifica sobre a PR. `continue-on-error: true`
+        # (achado ao vivo desta própria PR #264: antes do merge,
+        # coordinator-observe.yml em `main` ainda não tem o gatilho
+        # workflow_dispatch — a API corretamente recusa com 422 "Workflow
+        # does not have 'workflow_dispatch' trigger" — e sem esta trava
+        # esse erro não tratado derrubava o job INTEIRO, inclusive PRs
+        # cujo Guard tinha passado limpo). O `workflow_run` continua como
+        # rede de segurança para exatamente este tipo de falha transitória
+        # do dispatch explícito.
+        if: always() && steps.guard.outputs.resultado != ''
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'coordinator-observe.yml',
+                ref: context.payload.repository.default_branch,
+                inputs: { guard_run_id: String(context.runId) },
+              });
+              core.info(
+                `OBSERVE acionado explicitamente por workflow_dispatch para o Guard run ${context.runId}.`
+              );
+            } catch (e) {
+              core.warning(
+                `Dispatch explícito do OBSERVE falhou (${e.message || e}) — o listener workflow_run ` +
+                'continua como rede de segurança; o veredito deste Guard não muda por causa disso.'
+              );
+            }
