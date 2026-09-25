@@ -475,6 +475,16 @@
       "recorded_at": "2026-09-25T19:57:57.700475+00:00",
       "status": "BLOCKED",
       "task_id": "cleanup-como-estudar-biologia-r2--bridge-82c916acb280"
+    },
+    {
+      "branch": "runner/cleanup-como-estudar-histologia-i-r2",
+      "checkpoint_commit": "3bb68573f95d280bf5141bd23f3896100af8ddcf",
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/cleanup-como-estudar-histologia-i-r2'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "recorded_at": "2026-09-25T20:02:42.537657+00:00",
+      "status": "NEEDS-AUDIT",
+      "task_id": "cleanup-como-estudar-histologia-i-r2--bridge-e0a0034dfc09"
     }
   ]
 }
