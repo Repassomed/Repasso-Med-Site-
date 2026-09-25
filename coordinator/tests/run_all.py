@@ -26,6 +26,7 @@ from . import (
     test_git_state,
     test_github_event,
     test_global_ledger_race,
+    test_guard_dispatch_pr_recovery,
     test_guard_run_resolver_race,
     test_guard_state_integration,
     test_head_context_anchor,
@@ -113,6 +114,9 @@ MODULOS = [
     test_heartbeat,
     test_heartbeat_guard_observe_chain,
     test_guard_run_resolver_race,
+    # Caso real PR #286: HARD FAIL de Guard via workflow_dispatch perdia a
+    # PR; o NEEDS-FIX precisa voltar para a PR do Bridge (fail-closed).
+    test_guard_dispatch_pr_recovery,
     # Issue #275: head_context do auditor ancorado na região do diff.
     test_head_context_anchor,
     test_observe_runner_wiring,

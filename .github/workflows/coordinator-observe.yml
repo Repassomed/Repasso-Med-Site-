@@ -452,7 +452,12 @@ jobs:
             }
 
             let numero = null;
-            if (prs.length > 0) {
+            if (prs.length > 1) {
+              // Mais de uma PR para o mesmo run: ambíguo. Nunca "a primeira
+              // parecida" — fail-closed (espelha github_event.recuperar_pr_do_guard).
+              console.log(`workflow_run associado a ${prs.length} PRs — ambíguo, nenhuma PR recuperada (fail-closed).`);
+              return;
+            } else if (prs.length === 1) {
               numero = Number(prs[0].number);
             } else if (typed && Number.isInteger(Number(typed.pr_number))) {
               numero = Number(typed.pr_number);
@@ -494,6 +499,13 @@ jobs:
               labels: pr.labels.map(l => l.name),
               updated_at: pr.updated_at,
               head_sha: pr.head.sha,
+              // Caso real PR #286: o HARD FAIL de um Guard via workflow_dispatch
+              // precisa destes campos para o Python confirmar PR aberta,
+              // same-repo e base antes de ligar o Cartão NEEDS-FIX à PR.
+              state: pr.state,
+              base_ref: pr.base.ref,
+              head_ref: pr.head.ref,
+              head_repo_full_name: headRepo,
               worker_bridge_needs_audit: Boolean(typed && typed.worker_bridge_needs_audit === true),
             }));
             console.log(`PR #${numero}: contexto validado; worker_bridge_needs_audit=${Boolean(typed && typed.worker_bridge_needs_audit === true)}.`);
