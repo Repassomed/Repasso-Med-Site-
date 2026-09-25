@@ -224,9 +224,11 @@ def test_saida_humana_e_artifact_contam_as_duas_chamadas_pagas() -> None:
     assert len(tentativas) == 2, tentativas
     assert tentativas[0]["stop_reason"] == "max_tokens" and tentativas[0]["output_tokens"] == 2000
     assert tentativas[1]["event_key"].endswith("#auditor-retry-1")
+    assert all(x["usage_reported"] for x in tentativas), tentativas
     total = sum(x["estimated_cost_usd"] for x in tentativas)
     texto = render_human(d)
-    assert "**Tentativas do auditor:** 2 chamadas pagas" in texto, texto
+    assert "**Tentativas do auditor:** 2" in texto, texto
+    assert "**chamadas com uso/custo reportado:** 2" in texto, texto
     assert f"US$ {total:.6f}" in texto, texto
     print("OK  test_saida_humana_e_artifact_contam_as_duas_chamadas_pagas")
 
@@ -239,9 +241,18 @@ def test_retry_com_erro_nao_esconde_a_primeira_chamada_paga() -> None:
     d = r.to_dict()
     assert d["usage"] is None  # a 2ª chamada não teve usage…
     tentativas = d["auditor_attempts"]
+    # A lista completa fica no artifact: 2 tentativas, mas só 1 com usage.
     assert [x["status"] for x in tentativas] == ["ok", "error"], tentativas
+    assert [x["usage_reported"] for x in tentativas] == [True, False], tentativas
     assert tentativas[0]["estimated_cost_usd"] > 0  # …mas a 1ª foi paga e aparece.
-    assert "**Tentativas do auditor:** 2 chamadas pagas" in render_human(d)
+    assert tentativas[1]["estimated_cost_usd"] is None  # nada inventado sem usage.
+    texto = render_human(d)
+    assert "**Tentativas do auditor:** 2" in texto, texto
+    assert "**chamadas com uso/custo reportado:** 1" in texto, texto
+    assert f"**custo somado:** US$ {tentativas[0]['estimated_cost_usd']:.6f}" in texto, texto
+    assert "sem uso/custo reportado" in texto, texto
+    # Honestidade do log: nunca afirmar 2 chamadas pagas com só 1 usage real.
+    assert "2 chamadas pagas" not in texto, texto
     print("OK  test_retry_com_erro_nao_esconde_a_primeira_chamada_paga")
 
 

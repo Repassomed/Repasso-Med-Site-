@@ -138,9 +138,10 @@ class ObserveResult:
     # Auditor (resposta vazia/fora do protocolo ou chamada não concluída),
     # nunca de achado de conteúdo.
     audit_technical_failure: bool = False
-    # Uma entrada por chamada paga ao Anthropic Auditor quando houve tentativa
+    # Uma entrada por tentativa ao Anthropic Auditor quando houve tentativa
     # técnica extra; vazia no caminho normal. ``usage`` continua sendo só a
-    # última chamada — esta lista é o que mostra o total pago do evento.
+    # última chamada — esta lista mostra todas as tentativas, e só as com
+    # ``usage_reported`` entram no custo somado.
     auditor_attempts: list = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -254,14 +255,17 @@ def _conciliar_ledger_da_chamada(ledger: UsageLedger, resultado, pedido, custo_r
 
 
 def _registro_tentativa(resultado, event_key: str) -> dict:
+    # Sem ``usage`` (ex.: erro de transporte) a tentativa continua listada,
+    # mas tokens/custo ficam ``None``: nada é afirmado sem uso reportado.
     uso = resultado.usage
     return {
         "event_key": event_key,
         "status": resultado.status,
         "stop_reason": getattr(resultado, "stop_reason", "") or "",
-        "input_tokens": uso.input_tokens if uso is not None else 0,
-        "output_tokens": uso.output_tokens if uso is not None else 0,
-        "estimated_cost_usd": uso.estimated_cost_usd if uso is not None else 0.0,
+        "usage_reported": uso is not None,
+        "input_tokens": uso.input_tokens if uso is not None else None,
+        "output_tokens": uso.output_tokens if uso is not None else None,
+        "estimated_cost_usd": uso.estimated_cost_usd if uso is not None else None,
     }
 
 
