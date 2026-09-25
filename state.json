@@ -7585,6 +7585,16 @@
       "output_tokens": 107,
       "tier": "FAST",
       "timestamp": "2026-09-25T21:06:07.314091+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.415408,
+      "event_key": "runner-task:cleanup-como-estudar-histologia-i-r2--bridge-45bb2b9957a9",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-25T21:58:54.966366+00:00"
     }
   ]
 }
