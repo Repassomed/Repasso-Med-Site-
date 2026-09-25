@@ -1374,6 +1374,31 @@
       "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): Os 21 trechos fornecidos do arquivo (dermatologia.html) n\u00e3o evidenciam nenhum problema de apresenta\u00e7\u00e3o/estrutura que denuncie a resposta ou quebre a quest\u00e3o (negrito indevido em alternativas, listas quebradas, HTML malformado): as marca\u00e7\u00f5es em <b> aparecem apenas dentro de explica\u00e7\u00f5es ap\u00f3s a revela\u00e7\u00e3o da resposta ou em conte\u00fado textual normal, e as listas <ul class=\"options\"> est\u00e3o \u00edntegras. Sem uma \u00e2ncora literal apontando um problema concreto dentro do material enviado, n\u00e3o h\u00e1 edi\u00e7\u00e3o segura a fazer sem inventar contexto fora do que foi fornecido.",
       "task_id": "dermatologia-questoes-issue112-r3",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "content",
+      "commit_sha": null,
+      "component": "coordinator-audit",
+      "error_id": "ERR-16AF0534F2",
+      "error_type": "semantic-needs-fix",
+      "fingerprint": "16af0534f21406f003d3",
+      "first_seen": "2026-09-25T20:24:12.809159+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "26f330f180ab45a3be2b7120d8e80b9b",
+      "issue_sync_updated_at": "2026-09-25T20:24:12.809159+00:00",
+      "last_evidence_hash": "d386a96f122e34200907",
+      "last_seen": "2026-09-25T20:24:12.809159+00:00",
+      "occurrence_count": 1,
+      "pr_number": 289,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36185327502",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "Auditoria independente marcou pr:289 como NEEDS-FIX.",
+      "task_id": "pr:289",
+      "worker_id": null
     }
   ]
 }
