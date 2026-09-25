@@ -1195,7 +1195,7 @@
       "objetivo": "Inventariar as questões de Dermatología e corrigir somente problemas de apresentação/estrutura que denunciem a resposta ou quebrem a questão: negrito/formatação diferenciada em alternativas, listas quebradas, espaçamento/classes/HTML. Preservar enunciado e significado das alternativas, gabarito científico, IDs, block_id, proveniência e annotations; preservar/alinhar o espelho bloco × Banco General. Não remover questão e não alterar gabarito por motivo cosmético. Se uma origem OCR/foto for rastreável, registrar; se o núcleo ou a resposta não forem seguros, não inventar e deixar pendente conforme Lei 8-A.",
       "fonte": "Issue #112 · retry após Error Registry #156",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P2",
       "capabilities_required": [
         "conteudo"
@@ -1205,9 +1205,9 @@
       "pr": null,
       "commit": null,
       "issue": 112,
-      "notas": "QA: nenhuma resposta visualmente denunciada; HTML/listas íntegros; bloco × Banco General espelhados; annotations preservadas; responsivo 390/768/1024/1440. NEEDS-AUDIT; sem merge/deploy/publicação automática.",
-      "automation_enabled": true,
-      "bridge_enabled": true,
+      "notas": "QA: nenhuma resposta visualmente denunciada; HTML/listas íntegros; bloco × Banco General espelhados; annotations preservadas; responsivo 390/768/1024/1440. NEEDS-AUDIT; sem merge/deploy/publicação automática. Execução FAILED preservada como histórico: a execução de 23/09/2026 (23:54 UTC) terminou FAILED por resposta do modelo em JSON inválido, antes do merge das PRs #237 (Runner com contexto por bloco + streaming, teto de 32k tokens) e #246 (patch vazio vira justificativa explícita). Retry explícito materializado como dermatologia-questoes-issue112-r3 (auditoria da fila real de 25/09/2026); esta tarefa não volta para READY.",
+      "automation_enabled": false,
+      "bridge_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true
@@ -1767,7 +1767,7 @@
       "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
       "fonte": "Issue #147 · inventário real na main em 24/09/2026",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P1",
       "capabilities_required": [
         "conteudo"
@@ -1777,9 +1777,9 @@
       "pr": null,
       "commit": null,
       "issue": 147,
-      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
-      "automation_enabled": true,
-      "bridge_enabled": true,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy. Execução FAILED preservada como histórico: a execução de 24/09/2026 (05:06 UTC) terminou FAILED ao bater o teto antigo de 8.000 tokens de saída, antes do merge da PR #237, que substituiu esse teto por RUNNER_PATCH_MAX_OUTPUT_TOKENS=32.000 com streaming. Retry explícito materializado como cleanup-como-estudar-biologia-r2 (auditoria da fila real de 25/09/2026); esta tarefa não volta para READY.",
+      "automation_enabled": false,
+      "bridge_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true
@@ -1907,7 +1907,7 @@
       "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
       "fonte": "Issue #147 · inventário real na main em 24/09/2026",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P1",
       "capabilities_required": [
         "conteudo"
@@ -1917,9 +1917,9 @@
       "pr": null,
       "commit": null,
       "issue": 147,
-      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
-      "automation_enabled": true,
-      "bridge_enabled": true,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy. Execução FAILED preservada como histórico: a execução de 24/09/2026 (05:23 UTC) terminou FAILED ao bater o teto antigo de 8.000 tokens de saída, antes do merge da PR #237, que substituiu esse teto por RUNNER_PATCH_MAX_OUTPUT_TOKENS=32.000 com streaming. Retry explícito materializado como cleanup-como-estudar-histologia-i-r2 (auditoria da fila real de 25/09/2026); esta tarefa não volta para READY.",
+      "automation_enabled": false,
+      "bridge_enabled": false,
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true
@@ -2185,6 +2185,90 @@
       ],
       "branch": "runner/semiologia-ii-b08-pa-r5",
       "notas": "Retry P0 atômico pós-#237. Alterar somente classificação de PA do B08 e cópia correspondente no Banco General, se houver. Manter Lei 8-A/question_report_required. Sem ampliar escopo, sem alterar obesidade/ECG/outros blocos."
+    },
+    {
+      "id": "dermatologia-questoes-issue112-r3",
+      "titulo": "P2 — Dermatología: retry seguro de normalização das questões",
+      "area": "materia",
+      "materia": "dermatologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/dermatologia.html"
+      ],
+      "objetivo": "Inventariar as questões de Dermatología e corrigir somente problemas de apresentação/estrutura que denunciem a resposta ou quebrem a questão: negrito/formatação diferenciada em alternativas, listas quebradas, espaçamento/classes/HTML. Preservar enunciado e significado das alternativas, gabarito científico, IDs, block_id, proveniência e annotations; preservar/alinhar o espelho bloco × Banco General. Não remover questão e não alterar gabarito por motivo cosmético. Se uma origem OCR/foto for rastreável, registrar; se o núcleo ou a resposta não forem seguros, não inventar e deixar pendente conforme Lei 8-A.",
+      "fonte": "Retry explícito de dermatologia-questoes-issue112-r2: a execução de 23/09/2026 (23:54 UTC) terminou FAILED por resposta do modelo em JSON inválido, antes do merge das PRs #237 (Runner com contexto por bloco + streaming, teto de 32k tokens) e #246 (patch vazio vira justificativa explícita). Auditoria da fila real em 25/09/2026 (Worker Bridge em NO_ASSIGNMENT: nenhuma tarefa READY após o overlay do runtime). Mesmo objetivo, mesmo arquivo exato, mesmas flags/política/risco e mesma autorização do José; sem dependências.",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P2",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/dermatologia-questoes-issue112-r3",
+      "pr": null,
+      "commit": null,
+      "issue": 112,
+      "notas": "QA: nenhuma resposta visualmente denunciada; HTML/listas íntegros; bloco × Banco General espelhados; annotations preservadas; responsivo 390/768/1024/1440. NEEDS-AUDIT; sem merge/deploy/publicação automática.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "cleanup-como-estudar-biologia-r2",
+      "titulo": "P1 ALTA — Biología: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "biologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/biologia.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Retry explícito de cleanup-como-estudar-biologia: a execução de 24/09/2026 (05:06 UTC) terminou FAILED ao bater o teto antigo de 8.000 tokens de saída, antes do merge da PR #237, que substituiu esse teto por RUNNER_PATCH_MAX_OUTPUT_TOKENS=32.000 com streaming. Auditoria da fila real em 25/09/2026 (Worker Bridge em NO_ASSIGNMENT: nenhuma tarefa READY após o overlay do runtime). Mesmo objetivo, mesmo arquivo exato, mesmas flags/política/risco e mesma autorização do José; sem dependências.",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/cleanup-como-estudar-biologia-r2",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
+    },
+    {
+      "id": "cleanup-como-estudar-histologia-i-r2",
+      "titulo": "P1 ALTA — Histología I: remover bloco metadidático “Como estudar”",
+      "area": "materia",
+      "materia": "histologia-i",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/histologia-i.html"
+      ],
+      "objetivo": "Remover somente o bloco/seção metadidática 'Como estudar', 'Cómo estudiar' ou equivalente desta matéria. Preservar todo conteúdo médico/disciplinar real; se houver conteúdo substantivo misturado no bloco, mover esse conteúdo para a primeira seção útil em vez de apagá-lo. Ajustar apenas referências locais de índice/âncora que ficariam órfãs. Não reescrever o restante da matéria.",
+      "fonte": "Retry explícito de cleanup-como-estudar-histologia-i: a execução de 24/09/2026 (05:23 UTC) terminou FAILED ao bater o teto antigo de 8.000 tokens de saída, antes do merge da PR #237, que substituiu esse teto por RUNNER_PATCH_MAX_OUTPUT_TOKENS=32.000 com streaming. Auditoria da fila real em 25/09/2026 (Worker Bridge em NO_ASSIGNMENT: nenhuma tarefa READY após o overlay do runtime). Mesmo objetivo, mesmo arquivo exato, mesmas flags/política/risco e mesma autorização do José; sem dependências.",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/cleanup-como-estudar-histologia-i-r2",
+      "pr": null,
+      "commit": null,
+      "issue": 147,
+      "notas": "Microtarefa independente por arquivo exato. QA: primeiro bloco útil deve ser conteúdo real; sem perda de conteúdo; preservar IDs/annotations fora da seção removida. NEEDS-AUDIT; sem merge/deploy.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true
     }
   ]
 }
