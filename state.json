@@ -530,6 +530,16 @@
       "recorded_at": "2026-09-25T20:33:26.508746+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "semiologia-ii-b08-obesidade-r4--bridge-d062fbd036a7"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): Nenhum dos 17 trechos literais fornecidos do arquivo cont\u00e9m a se\u00e7\u00e3o 'C\u00f3mo estudiar' nem o block_id 'histo00' citado na auditoria (o intervalo onde ela provavelmente est\u00e1, entre os caracteres ~9100 e ~15239, n\u00e3o foi enviado). Sem o texto literal exato dessa se\u00e7\u00e3o n\u00e3o \u00e9 poss\u00edvel construir um old_text v\u00e1lido para o AnchoredEdit, e inventar a \u00e2ncora violaria a regra de c\u00f3pia literal \u2014 portanto a edi\u00e7\u00e3o n\u00e3o pode ser feita com seguran\u00e7a nesta rodada.",
+      "recorded_at": "2026-09-25T21:59:24.965199+00:00",
+      "status": "BLOCKED",
+      "task_id": "cleanup-como-estudar-histologia-i-r2--bridge-45bb2b9957a9"
     }
   ]
 }
