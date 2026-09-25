@@ -85,7 +85,7 @@ def test_429_real_bloqueia_sem_traceback_anterior():
     log = """Traceback (most recent call last):
   File "/x/coordinator/openai_client.py", line 5, in call
     resp.raise_for_status()
-requests.exceptions.HTTPError: 429 Client Error: Too Many Requests for url: https://api.openai.com/v1/responses
+requests.exceptions.HTTPError: 429 Client Error: Too Many Requests
 """
     a = assess_failure("Repasso Coordinator (WORKER BRIDGE)", log, "Rodar o Worker Bridge")
     assert not a.eligible, "429 sendo a causa real tinha que continuar bloqueando o auto-reparo"
