@@ -1299,6 +1299,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:278.",
       "task_id": "P0 \u00b7 Issue #274 \u2014 consertar o Worker Bridge, que parou de iniciar em QUALQUER gatilho depois do merge da #264.",
       "worker_id": null
+    },
+    {
+      "category": "runner",
+      "commit_sha": null,
+      "component": "runner",
+      "error_id": "ERR-C4F2A22BBE",
+      "error_type": "runner-blocked",
+      "fingerprint": "c4f2a22bbe903991ee24",
+      "first_seen": "2026-09-25T19:58:06.607550+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "376064d2b84c41a48991773433ba6e89",
+      "issue_sync_updated_at": "2026-09-25T19:58:06.607550+00:00",
+      "last_evidence_hash": "7381ef1b3deda68017a9",
+      "last_seen": "2026-09-25T19:58:06.607550+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36182510060",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "AnchoredEdit #1 de 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/biologia.html': 'old_text' n\u00e3o est\u00e1 contido em nenhum dos trechos que foram enviados ao modelo \u2014 \u00e2ncora fora do que o modelo leu (arquivo grande), BLOCKED, zero escrita em qualquer arquivo.",
+      "task_id": "cleanup-como-estudar-biologia-r2",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
