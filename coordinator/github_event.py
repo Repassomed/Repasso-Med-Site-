@@ -352,8 +352,17 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
             },
         )
 
-    prs = run.get("pull_requests") or []
-    identidade = f"pr:{prs[0]['number']}" if prs else f"run:{run.get('id')}"
+    # Caso real PR #286 / Error Registry #287: Guard disparado por workflow_dispatch
+    # tem ``pull_requests`` vazio e ``head_sha`` da main. Sem esta
+    # recuperação, o HARD FAIL virava ``run:<id>`` + HEAD da main, o Cartão
+    # NEEDS-FIX não tinha PR de destino e o Worker Bridge nunca o via.
+    recuperada = recuperar_pr_do_guard(run, repo, pr_info=pr_info, audit_pack=audit_pack)
+    if recuperada is not None:
+        identidade = f"pr:{recuperada[0]}"
+        head_sha = recuperada[1]
+    else:
+        identidade = f"run:{run.get('id')}"
+        head_sha = run.get("head_sha")
     return Event(
         raw_type="GUARD_STATE_CHANGE",
         source="github",
@@ -362,9 +371,11 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
         payload={
             "guard_state": estado,
             # Issue #130: metadados factuais do Guard para o Error Registry.
-            # Vêm do webhook do próprio GitHub, nunca de texto livre.
+            # Vêm do webhook do próprio GitHub, nunca de texto livre — ou,
+            # no Guard via workflow_dispatch, da PR recuperada acima (HEAD
+            # real da PR, conferido contra o audit-pack do próprio Guard).
             "guard_run_id": run.get("id"),
-            "head_sha": run.get("head_sha"),
+            "head_sha": head_sha,
             "guard_conclusion": conclusao,
             # Bloqueador 5 da 3ª auditoria: o pacote de auditoria real do
             # Guard (baixado do artifact do run observado por um passo do
@@ -381,9 +392,63 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
             # exatamente isto que estava quebrado: ver o comentário no
             # topo do módulo). ``head_sha`` vem do próprio payload do
             # webhook (``workflow_run.head_sha``), sem chamada extra.
-            "dedup_fields": {"conclusion": conclusao, "head_sha": run.get("head_sha")},
+            "dedup_fields": {"conclusion": conclusao, "head_sha": head_sha},
         },
     )
+
+
+_RE_SHA_COMPLETO = re.compile(r"^[0-9a-f]{40}$")
+
+
+def recuperar_pr_do_guard(run: dict, repo: str, *, pr_info: dict | None,
+                          audit_pack: dict | None) -> tuple[int, str] | None:
+    """PR + HEAD reais de uma execução do Guard, ou ``None`` (fail-closed).
+
+    - ``pull_requests`` do webhook com exatamente UMA PR: caminho de sempre
+      (``pull_request``), HEAD = ``workflow_run.head_sha``. Se ``pr_info``
+      apontar outra PR, é inconsistência → ``None``.
+    - Mais de uma PR: ambíguo → ``None``. Nunca "a primeira parecida".
+    - Nenhuma PR (Guard via ``workflow_dispatch``): só recupera quando TUDO
+      confere entre o ``pr_info`` (PR real lida pela API pelo workflow
+      confiável, já validada contra o contexto tipado do próprio Guard) e o
+      audit-pack desse Guard: PR aberta, head do mesmo repositório, SHA
+      completo, ``audit_pack.head`` == HEAD atual da PR (o Guard auditou
+      exatamente este commit) e ``audit_pack.base`` == base da PR.
+
+    A ligação tarefa ↔ branch registrada ↔ checkpoint continua sendo
+    conferida por quem AGE sobre o NEEDS-FIX (Worker Bridge, contra o
+    runtime da tarefa) — esta função só decide o destino do Cartão.
+    """
+    prs = run.get("pull_requests") or []
+    if len(prs) > 1:
+        return None
+    if len(prs) == 1:
+        numero = prs[0].get("number") if isinstance(prs[0], dict) else None
+        if not isinstance(numero, int) or isinstance(numero, bool) or numero <= 0:
+            return None
+        if isinstance(pr_info, dict) and pr_info.get("number") not in (None, numero):
+            return None
+        return numero, run.get("head_sha")
+    if not isinstance(pr_info, dict) or not isinstance(audit_pack, dict):
+        return None
+    numero = pr_info.get("number")
+    if not isinstance(numero, int) or isinstance(numero, bool) or numero <= 0:
+        return None
+    head = str(pr_info.get("head_sha") or "").strip().lower()
+    if not _RE_SHA_COMPLETO.match(head):
+        return None
+    if pr_info.get("state") != "open":
+        return None
+    if pr_info.get("head_repo_full_name") != repo:
+        return None
+    base_ref = str(pr_info.get("base_ref") or "").strip()
+    if not base_ref or not str(pr_info.get("head_ref") or "").strip():
+        return None
+    if str(audit_pack.get("head") or "").strip().lower() != head:
+        return None
+    if str(audit_pack.get("base") or "").strip() not in (f"origin/{base_ref}", base_ref):
+        return None
+    return numero, head
 
 
 _CONSTRUTORES = {
