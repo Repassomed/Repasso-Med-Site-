@@ -464,6 +464,16 @@
       "recorded_at": "2026-09-24T21:51:18.774959+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "semiologia-ii-b08-pa-r5--bridge-6f84748ae648"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "AnchoredEdit #1 de 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/biologia.html': 'old_text' n\u00e3o est\u00e1 contido em nenhum dos trechos que foram enviados ao modelo \u2014 \u00e2ncora fora do que o modelo leu (arquivo grande), BLOCKED, zero escrita em qualquer arquivo.",
+      "recorded_at": "2026-09-25T19:57:57.700475+00:00",
+      "status": "BLOCKED",
+      "task_id": "cleanup-como-estudar-biologia-r2--bridge-82c916acb280"
     }
   ]
 }
