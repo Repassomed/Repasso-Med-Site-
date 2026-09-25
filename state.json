@@ -1324,6 +1324,31 @@
       "summary": "AnchoredEdit #1 de 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/biologia.html': 'old_text' n\u00e3o est\u00e1 contido em nenhum dos trechos que foram enviados ao modelo \u2014 \u00e2ncora fora do que o modelo leu (arquivo grande), BLOCKED, zero escrita em qualquer arquivo.",
       "task_id": "cleanup-como-estudar-biologia-r2",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "guard",
+      "commit_sha": "3bb68573f95d280bf5141bd23f3896100af8ddcf",
+      "component": "guard",
+      "error_id": "ERR-16D7435ACB",
+      "error_type": "hard-fail",
+      "fingerprint": "16d7435acb6b1d53af84",
+      "first_seen": "2026-09-25T20:03:56.067290+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "242e1be32bd141b180c50317506a9dac",
+      "issue_sync_updated_at": "2026-09-25T20:03:56.067290+00:00",
+      "last_evidence_hash": "5c1cbebbb4adcd2a854f",
+      "last_seen": "2026-09-25T20:03:56.067290+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36183381851",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em run:36183381851.",
+      "task_id": "cleanup-como-estudar-histologia-i-r2",
+      "worker_id": null
     }
   ]
 }
