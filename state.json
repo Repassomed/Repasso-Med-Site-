@@ -519,6 +519,16 @@
       "recorded_at": "2026-09-25T20:27:35.564999+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "semiologia-ii-b08-obesidade-r4--bridge-549c7bd8afcf"
+    },
+    {
+      "branch": "runner/semiologia-ii-b08-obesidade-r4",
+      "checkpoint_commit": "e653646bcd2f6868b2d03c010a6a39bb9382cb14",
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/semiologia-ii-b08-obesidade-r4'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "recorded_at": "2026-09-25T20:33:26.508746+00:00",
+      "status": "NEEDS-AUDIT",
+      "task_id": "semiologia-ii-b08-obesidade-r4--bridge-d062fbd036a7"
     }
   ]
 }
