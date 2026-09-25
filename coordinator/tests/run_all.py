@@ -18,6 +18,7 @@ from . import (
     test_cli_crash_safety,
     test_cli_runner_wiring,
     test_config_gate,
+    test_coordinator_hold,
     test_coordinator_v3,
     test_coordinator_v3_round3,
     test_coordinator_v3_round4,
@@ -133,6 +134,9 @@ MODULOS = [
     # deixaria cega exatamente a camada que decide QUEM executa O QUÊ.
     test_worker_bridge,
     test_worker_bridge_workflow_security,
+    # Issue #281: HOLD / PAUSADO POR JOSÉ (label coordinator:hold) — zero
+    # gasto e zero execução em PR pausada; remover o label retoma o fluxo.
+    test_coordinator_hold,
     # Issue #274: regressão estrutural que protege TODO workflow crítico
     # contra comentário embutido num if: multilinha — a mesma classe de
     # bug que derrubou o parser do Worker Bridge inteiro.

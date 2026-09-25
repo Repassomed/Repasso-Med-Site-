@@ -1011,6 +1011,23 @@ def observe(
             reason=f"Tipo de evento {event.raw_type!r} não está na lista permitida desta V2 (Issue #95).",
         )
 
+    # 1-A. Issue #281: PR em HOLD (label ``coordinator:hold``). Retorna
+    # ANTES do dedup: nenhuma chave é consumida, então remover o label faz
+    # o próximo evento do mesmo HEAD/política ser processado normalmente.
+    # Zero chamada paga, zero Cartão, zero NEEDS-FIX para o Worker Bridge.
+    # HOLD não é MERGE-READY, DONE nem CANCELLED: a PR e o runtime ficam
+    # exatamente como estão.
+    if event.payload.get("coordinator_hold") is True:
+        return ObserveResult(
+            status="HOLD",
+            reason=(
+                f"{event.identity} está em HOLD (label `coordinator:hold`, pausado por José) — "
+                "nenhuma auditoria paga, nenhum Cartão e nenhuma correção. Remover o label "
+                "libera o fluxo normal no HEAD e na política atuais."
+            ),
+            next_action="Aguardar José remover o label `coordinator:hold`.",
+        )
+
     # 2. Deduplicação — CLAIM atômico (item 1 do "PACOTE CONSOLIDADO",
     # PR #97). Antes, esta decisão era is_duplicate() (uma leitura) e só
     # muito mais tarde, depois de classify/context/worker/routing/budget,

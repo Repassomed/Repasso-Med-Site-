@@ -121,7 +121,7 @@ from dataclasses import dataclass, replace
 
 from . import bridge_pr, bridge_workers, error_registry, scheduler, source_pack, task_runtime
 from .bridge_pr import GuardDispatchOutcome, PrOutcome
-from .github_event import COORDINATOR_COMMENT_MARKER
+from .github_event import COORDINATOR_COMMENT_MARKER, pr_em_hold
 from .classify import Priority
 from .runner_contract import (
     POLICY_LEVEL_PROIBIDO,
@@ -945,6 +945,11 @@ def _candidato_a_correcao_de_auditoria(
             head = pr.get("head") or {}
             base = pr.get("base") or {}
             if pr.get("state") != "open":
+                continue
+            if pr_em_hold(pr):
+                # Issue #281: PR pausada por José (label coordinator:hold).
+                # Runtime, branch e checkpoint ficam intocados; nenhuma
+                # correção é reservada nem executada até o label sair.
                 continue
             if (head.get("ref") or "").strip() != registro.branch:
                 continue
