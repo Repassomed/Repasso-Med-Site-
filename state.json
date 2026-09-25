@@ -7192,6 +7192,16 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-25T20:19:15.075842+00:00"
+    },
+    {
+      "estimated_cost_usd": -0.350318,
+      "event_key": "runner-task:semiologia-ii-b08-obesidade-r4--bridge-2f0f3f07c06f",
+      "input_tokens": 0,
+      "kind": "correction",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-25T20:20:33.772637+00:00"
     }
   ]
 }
