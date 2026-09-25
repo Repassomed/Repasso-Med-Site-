@@ -150,10 +150,10 @@
       "current_task": "cleanup-como-estudar-histologia-i-r2",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-25T19:58:05.060917+00:00",
+      "last_heartbeat": "2026-09-25T19:59:43.342940+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "AVAILABLE",
+      "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
