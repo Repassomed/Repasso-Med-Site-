@@ -61,6 +61,10 @@ class TransportResponse:
     text: str
     input_tokens: int
     output_tokens: int
+    # Issue #276: "end_turn" | "max_tokens" | "refusal" | ... — vazio quando o
+    # transporte não informa. Um texto vazio com "max_tokens" significa que o
+    # pensamento adaptativo consumiu todo o teto de saída antes do texto.
+    stop_reason: str = ""
 
 
 class NotConfiguredTransport:
@@ -95,9 +99,11 @@ class CallResult:
     reason: str
     text: str = ""
     usage: UsageRecord | None = None
+    stop_reason: str = ""
 
     def to_dict(self) -> dict:
-        d = {"status": self.status, "reason": redact(self.reason), "text": redact(self.text)}
+        d = {"status": self.status, "reason": redact(self.reason), "text": redact(self.text),
+             "stop_reason": self.stop_reason}
         if self.usage:
             d["usage"] = self.usage.to_dict()
         return d
@@ -144,7 +150,8 @@ def call(config: Config, request: Request, *, transport: Transport,
         output_tokens=resposta.output_tokens,
         estimated_cost_usd=custo,
     )
-    return CallResult(status="ok", reason="Chamada concluída.", text=resposta.text, usage=uso)
+    return CallResult(status="ok", reason="Chamada concluída.", text=resposta.text, usage=uso,
+                      stop_reason=str(getattr(resposta, "stop_reason", "") or ""))
 
 
 def _now_iso() -> str:

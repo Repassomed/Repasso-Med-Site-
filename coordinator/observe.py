@@ -34,7 +34,16 @@ from typing import NamedTuple
 
 from . import anthropic_client, bridge_workers, openai_client, source_pack
 from .anthropic_transport import AnthropicTransport
-from .audit import AUDIT_SYSTEM_PROMPT, build_audit_prompt, parse_decision, preparar_diff
+from .audit import (
+    AUDIT_RETRY_MAX_OUTPUT_TOKENS,
+    AUDIT_SYSTEM_PROMPT,
+    AUDITOR_TECHNICAL_FAILURE,
+    MAX_AUDITOR_TECHNICAL_RETRIES,
+    auditor_technical_diagnosis,
+    build_audit_prompt,
+    parse_decision,
+    preparar_diff,
+)
 from .budget import (
     MONTHLY_BUDGET_USD,
     BudgetStatus,
@@ -125,6 +134,10 @@ class ObserveResult:
     # erro operacional (código de saída != 0) quando isto é ``True`` —
     # nunca um problema silencioso que só aparece no texto do cartão.
     openai_ledger_failed: bool = False
+    # Issue #276: True quando o NEEDS-FIX vem de falha técnica do Anthropic
+    # Auditor (resposta vazia/fora do protocolo ou chamada não concluída),
+    # nunca de achado de conteúdo.
+    audit_technical_failure: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -147,6 +160,7 @@ class ObserveResult:
             "should_comment": self.should_comment,
             "comment_target_issue": self.comment_target_issue,
             "openai_ledger_failed": self.openai_ledger_failed,
+            "audit_technical_failure": self.audit_technical_failure,
         }
 
 
@@ -212,6 +226,94 @@ def _tentar_gravar_ledger(ledger: UsageLedger, record: UsageRecord) -> tuple[boo
         return True, None
     except Exception as exc:  # noqa: BLE001 — ponto de borda deliberado, mesma filosofia do resto do pacote
         return False, redact(f"{type(exc).__name__}: {exc}")
+
+
+def _conciliar_ledger_da_chamada(ledger: UsageLedger, resultado, pedido, custo_reservado: float,
+                                 event_key: str) -> tuple[bool, str | None]:
+    """Reserva conservadora -> custo real + registro de uso (achado F9-A).
+    Sem usage (chamada não aconteceu ou falhou) não há nada a conciliar."""
+    if resultado.status != "ok" or resultado.usage is None:
+        return True, None
+    custo_real = resultado.usage.estimated_cost_usd
+    corrigiu, erro_correcao = _tentar_gravar_ledger(ledger, UsageRecord(
+        timestamp=_now_iso(), event_key=event_key, tier=pedido.tier, model_id=pedido.model_id,
+        input_tokens=0, output_tokens=0, estimated_cost_usd=(custo_real - custo_reservado),
+        kind="correction",
+    ))
+    persistiu_uso, erro_uso = _tentar_gravar_ledger(ledger, UsageRecord(
+        timestamp=_now_iso(), event_key=event_key, tier=pedido.tier, model_id=pedido.model_id,
+        input_tokens=resultado.usage.input_tokens, output_tokens=resultado.usage.output_tokens,
+        estimated_cost_usd=0.0, kind="usage", informational_cost_usd=custo_real,
+    ))
+    return (corrigiu and persistiu_uso), (erro_correcao or erro_uso)
+
+
+def _diagnostico_auditor(resultado, pedido) -> str:
+    return auditor_technical_diagnosis(
+        text=resultado.text,
+        stop_reason=getattr(resultado, "stop_reason", "") or "",
+        output_tokens=(resultado.usage.output_tokens if resultado.usage is not None else None),
+        max_output_tokens=pedido.max_output_tokens,
+    )
+
+
+def _motivo_falha_tecnica_do_auditor(diagnosticos: list[str], tentativas: int,
+                                     motivo_sem_retry: str | None) -> str:
+    detalhe = " | ".join(f"tentativa {i}: {d}" for i, d in enumerate(diagnosticos, start=1))
+    if motivo_sem_retry:
+        detalhe += f" | tentativa extra não feita: {motivo_sem_retry}"
+    return (
+        f"{AUDITOR_TECHNICAL_FAILURE}: A resposta da auditoria não seguiu o protocolo esperado — "
+        f"o Anthropic Auditor não produziu uma decisão utilizável em {tentativas} tentativa(s) "
+        f"({detalhe or 'sem diagnóstico'}). Isto é uma falha TÉCNICA do auditor, não uma "
+        "reprovação de conteúdo: nenhuma alteração de matéria deve ser feita por causa disto. "
+        "A PR continua bloqueada (nunca MERGE-READY) até uma nova auditoria técnica do mesmo HEAD."
+    )
+
+
+def _retry_tecnico_do_auditor(*, config: Config, ledger: UsageLedger, transporte, model_choice,
+                               pedido_original, stop_reason: str, event_key: str):
+    """Issue #276: UMA tentativa técnica extra do Anthropic Auditor.
+
+    Mesmo prompt, mesmo modelo, mesmo portão (``anthropic_client.call`` reconfere
+    ``config.gate()``), mesmo ledger e mesmo teto mensal: a reserva
+    conservadora desta tentativa é gravada atomicamente ANTES do envio. Só o
+    teto de saída muda, e só quando a 1ª parou em "max_tokens". Devolve
+    ``(resultado, pedido, custo_reservado, None)`` ou ``(None, None, 0.0,
+    motivo)`` quando a tentativa extra não é segura/possível.
+    """
+    teto = (AUDIT_RETRY_MAX_OUTPUT_TOKENS if stop_reason == "max_tokens"
+            else pedido_original.max_output_tokens)
+    limitador = CallLimiter(max_calls=1, max_output_tokens=teto)
+    pedido = anthropic_client.build_request(
+        model_choice, system=pedido_original.system, prompt=pedido_original.prompt,
+        limiter=limitador,
+    )
+    custo = conservative_call_cost_usd(
+        model_choice.tier, system=pedido.system, prompt=pedido.prompt,
+        max_output_tokens=pedido.max_output_tokens,
+    )
+    try:
+        reservou = ledger.reserve_if_within_budget(
+            UsageRecord(timestamp=_now_iso(), event_key=event_key, tier=pedido.tier,
+                        model_id=pedido.model_id, input_tokens=0, output_tokens=0,
+                        estimated_cost_usd=custo, kind="reservation"),
+            budget_usd=MONTHLY_BUDGET_USD,
+        )
+    except Exception as exc:  # noqa: BLE001 — sem reserva, sem chamada
+        return None, None, 0.0, redact(f"falha ao reservar orçamento: {type(exc).__name__}: {exc}")
+    if not reservou:
+        return None, None, 0.0, (
+            f"reservar US$ {custo:.6f} ultrapassaria o limite mensal de US$ {MONTHLY_BUDGET_USD:.2f}"
+        )
+    resultado = anthropic_client.call(config, pedido, transport=transporte, limiter=limitador,
+                                      event_key=event_key)
+    if resultado.status in ("blocked", "limited"):
+        _tentar_gravar_ledger(ledger, UsageRecord(
+            timestamp=_now_iso(), event_key=event_key, tier=pedido.tier, model_id=pedido.model_id,
+            input_tokens=0, output_tokens=0, estimated_cost_usd=-custo, kind="correction",
+        ))
+    return resultado, pedido, custo, None
 
 
 def _pr_number_from_identity(identity: str) -> int | None:
@@ -1229,6 +1331,44 @@ def observe(
             input_tokens=0, output_tokens=0, estimated_cost_usd=-custo_reservado, kind="correction",
         ))
 
+    # Issue #276: resposta vazia/fora do protocolo do Anthropic Auditor é
+    # falha TÉCNICA. Concilia a 1ª chamada no ledger e faz no máximo UMA
+    # tentativa extra (orçamento reservado antes, mesmo teto mensal). O
+    # dedup do evento (mesmo HEAD + mesma política) já foi decidido no
+    # claim() lá em cima e não muda: a tentativa extra é parte deste evento.
+    chave_ledger = chave
+    ledger_persistiu = True
+    ledger_erro: str | None = None
+    ja_conciliada = False
+    custo_tentativas_anteriores = 0.0
+    tentativas_auditor = 1
+    diagnosticos_auditor: list[str] = []
+    motivo_sem_retry: str | None = None
+    if (executar_auditoria and resultado_chamada.status == "ok"
+            and not parse_decision(resultado_chamada.text or "").protocol_matched):
+        diagnosticos_auditor.append(_diagnostico_auditor(resultado_chamada, pedido))
+        ok_1, erro_1 = _conciliar_ledger_da_chamada(ledger, resultado_chamada, pedido, custo_reservado, chave)
+        ja_conciliada = True
+        if not ok_1:
+            ledger_persistiu, ledger_erro = False, erro_1
+        if resultado_chamada.usage is not None:
+            custo_tentativas_anteriores = resultado_chamada.usage.estimated_cost_usd
+        if MAX_AUDITOR_TECHNICAL_RETRIES >= 1:
+            chave_retry = f"{chave}#auditor-retry-1"
+            retry, pedido_retry, custo_retry, motivo_sem_retry = _retry_tecnico_do_auditor(
+                config=config, ledger=ledger, transporte=transporte_real,
+                model_choice=roteamento.model_choice, pedido_original=pedido,
+                stop_reason=resultado_chamada.stop_reason, event_key=chave_retry,
+            )
+            if retry is not None:
+                resultado_chamada, pedido, custo_reservado = retry, pedido_retry, custo_retry
+                chave_ledger = chave_retry
+                ja_conciliada = False
+                tentativas_auditor = 2
+                if (resultado_chamada.status == "ok"
+                        and not parse_decision(resultado_chamada.text or "").protocol_matched):
+                    diagnosticos_auditor.append(_diagnostico_auditor(resultado_chamada, pedido))
+
     # .to_dict() é quem sanitiza reason/text via redact() — nunca ler os
     # atributos crus de CallResult para fora deste módulo (foi exatamente
     # esse desvio que deixou uma chave falsa vazar num teste antes desta
@@ -1266,21 +1406,33 @@ def observe(
                 rationale_final = f"{rationale_final}\n\n{nota_diff}"
             audit_decision_final = decisao_final
             protocol_matched = decisao_llm.protocol_matched
+            if not protocol_matched:
+                rationale_final = _motivo_falha_tecnica_do_auditor(
+                    diagnosticos_auditor, tentativas_auditor, motivo_sem_retry,
+                )
+            elif tentativas_auditor > 1:
+                rationale_final = (
+                    f"{rationale_final}\n\n(Decisão da tentativa técnica extra do auditor: a 1ª "
+                    f"resposta não foi utilizável — {'; '.join(diagnosticos_auditor)}.)"
+                )
         else:
             # A chamada não teve sucesso (error/limited) — nunca vira
-            # MERGE-READY por omissão; mesma filosofia de parse_decision()
-            # quando o protocolo não é seguido.
+            # MERGE-READY por omissão. Issue #276: auditor indisponível é
+            # falha TÉCNICA (protocol_matched=False leva o marcador que o
+            # Worker Bridge já reconhece), nunca instrução de conteúdo.
             _, lei_das_questoes = aplicar_lei_das_questoes(
                 "NEEDS-FIX",
                 envolve_questoes=bool(event.payload.get("envolve_questoes")),
                 pr_body=event.payload.get("body"),
             )
             audit_decision_final = "NEEDS-FIX"
-            rationale_final = (
-                f"Auditoria não pôde ser concluída (call_status={resultado_chamada.status!r}) — "
-                "tratado como NEEDS-FIX por segurança."
+            diagnosticos_auditor.append(
+                f"chamada não concluída (call_status={resultado_chamada.status!r})"
             )
-            protocol_matched = True
+            rationale_final = _motivo_falha_tecnica_do_auditor(
+                diagnosticos_auditor, tentativas_auditor, motivo_sem_retry,
+            )
+            protocol_matched = False
 
     # Gate determinístico do Source Pack: se a PR declarou uma fonte
     # versionada e o SHA/path não puder ser revalidado, nenhum modelo pode
@@ -1314,9 +1466,8 @@ def observe(
         if nota_openai:
             rationale_final = f"{rationale_final}\n\n{nota_openai}"
 
-    ledger_persistiu = True
-    ledger_erro: str | None = None
-    if resultado_chamada.status == "ok" and resultado_chamada.usage is not None:
+    if (not ja_conciliada and resultado_chamada.status == "ok"
+            and resultado_chamada.usage is not None):
         # Achado F9-A: a chamada JÁ aconteceu e teve sucesso — corrige a
         # reserva CONSERVADORA (gravada antes da chamada, acima) para o
         # custo REAL (delta pode ser negativo — o caso comum) e grava um
@@ -1331,20 +1482,12 @@ def observe(
         # nunca um retry. Na pior das hipóteses o ledger fica com o valor
         # CONSERVADOR (a reserva, tipicamente maior que o real) em vez do
         # valor exato — nunca com um valor menor/ausente.
-        custo_real = resultado_chamada.usage.estimated_cost_usd
-        corrigiu, erro_correcao = _tentar_gravar_ledger(ledger, UsageRecord(
-            timestamp=_now_iso(), event_key=chave, tier=pedido.tier, model_id=pedido.model_id,
-            input_tokens=0, output_tokens=0, estimated_cost_usd=(custo_real - custo_reservado),
-            kind="correction",
-        ))
-        persistiu_uso, erro_uso = _tentar_gravar_ledger(ledger, UsageRecord(
-            timestamp=_now_iso(), event_key=chave, tier=pedido.tier, model_id=pedido.model_id,
-            input_tokens=resultado_chamada.usage.input_tokens, output_tokens=resultado_chamada.usage.output_tokens,
-            estimated_cost_usd=0.0, kind="usage", informational_cost_usd=custo_real,
-        ))
-        if not corrigiu or not persistiu_uso:
+        ok_final, erro_final = _conciliar_ledger_da_chamada(
+            ledger, resultado_chamada, pedido, custo_reservado, chave_ledger,
+        )
+        if not ok_final:
             ledger_persistiu = False
-            ledger_erro = erro_correcao or erro_uso
+            ledger_erro = ledger_erro or erro_final
 
     # Correção B3 da auditoria independente do PR #104, rodada 4: custo
     # CALCULADO a partir do usage medido (nunca chamado de "estimado", e —
@@ -1358,12 +1501,17 @@ def observe(
     # cartão, sem esconder que a chamada (e o custo) de fato aconteceu.
     cartao_final: str | None = None
     if executar_auditoria:
-        if resultado_chamada.status == "ok" and resultado_chamada.usage is not None:
+        custo_desta_chamada = (resultado_chamada.usage.estimated_cost_usd
+                               if resultado_chamada.status == "ok" and resultado_chamada.usage is not None
+                               else 0.0)
+        chamadas_pagas = (tentativas_auditor if resultado_chamada.status == "ok"
+                          else tentativas_auditor - 1)
+        if chamadas_pagas > 0:
             resumo_custo = montar_resumo_custo(
                 ledger=ledger, brl_rate=config.brl_rate, brl_rate_date=config.brl_rate_date,
-                actual_usd=resultado_chamada.usage.estimated_cost_usd,
+                actual_usd=custo_tentativas_anteriores + custo_desta_chamada,
                 tier=roteamento.model_choice.tier.value, model_id=roteamento.model_choice.model_id,
-                calls_this_task=1,
+                calls_this_task=chamadas_pagas,
             )
             cost_block = render_cost_block(resumo_custo)
             if not ledger_persistiu:
@@ -1421,6 +1569,7 @@ def observe(
             should_comment=executar_auditoria,
             comment_target_issue=alvo_comentario if executar_auditoria else None,
             openai_ledger_failed=openai_ledger_falhou,
+            audit_technical_failure=bool(executar_auditoria and not protocol_matched),
             **resultado_base,
         )
 
@@ -1437,5 +1586,6 @@ def observe(
         should_comment=executar_auditoria,
         comment_target_issue=alvo_comentario if executar_auditoria else None,
         openai_ledger_failed=openai_ledger_falhou,
+        audit_technical_failure=bool(executar_auditoria and not protocol_matched),
         **resultado_base,
     )

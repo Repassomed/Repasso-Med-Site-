@@ -9,6 +9,7 @@ import sys
 
 from . import (
     test_anthropic_client,
+    test_auditor_technical_failure,
     test_anthropic_transport,
     test_auto_repair,
     test_budget,
@@ -83,6 +84,9 @@ MODULOS = [
     test_coordinator_v3,
     test_coordinator_v3_round3,
     test_coordinator_v3_round4,
+    # Issue #276: resposta vazia/fora do protocolo do Anthropic Auditor é
+    # falha técnica (uma tentativa extra no máximo), nunca instrução de conteúdo.
+    test_auditor_technical_failure,
     # Issue #258: checkpoint manual não pode consumir slot api_runner do
     # Worker Bridge — registrado junto do resto de observe()/checkpoint.
     test_worker_registry_human_vs_api,

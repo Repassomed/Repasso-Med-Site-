@@ -218,6 +218,35 @@ class AuditDecision:
         }
 
 
+# Issue #276 — resposta vazia/fora do protocolo é falha TÉCNICA do auditor,
+# nunca uma reprovação de conteúdo. Nos runs reais (#266, #192) o
+# claude-sonnet-5 roda com pensamento adaptativo por padrão; com prompts
+# grandes ele consumiu os 2.000 tokens de saída inteiros pensando
+# (usage.output_tokens == 2000, stop_reason "max_tokens") e não chegou a
+# escrever nenhum bloco de texto.
+AUDITOR_TECHNICAL_FAILURE = "AUDITOR-TECHNICAL-FAILURE"
+# No máximo UMA tentativa técnica extra por evento — nunca um laço.
+MAX_AUDITOR_TECHNICAL_RETRIES = 1
+# Teto de saída só da tentativa extra, e só quando a 1ª parou em
+# "max_tokens": dá espaço para o pensamento terminar e o texto sair. Abaixo
+# de anthropic_transport.STREAMING_THRESHOLD_TOKENS, então continua sem
+# streaming. A reserva conservadora do orçamento é feita sobre este teto.
+AUDIT_RETRY_MAX_OUTPUT_TOKENS = 8_000
+
+
+def auditor_technical_diagnosis(*, text: str, stop_reason: str, output_tokens: int | None,
+                                max_output_tokens: int) -> str:
+    """Descrição curta e factual de por que a resposta não foi utilizável."""
+    partes = ["resposta vazia" if not (text or "").strip() else "resposta fora do protocolo"]
+    if stop_reason:
+        partes.append(f"stop_reason={stop_reason}")
+    if output_tokens is not None:
+        partes.append(f"tokens de saída={output_tokens}/{max_output_tokens}")
+    if stop_reason == "max_tokens" and not (text or "").strip():
+        partes.append("o teto de saída foi consumido antes de qualquer texto (provável pensamento adaptativo)")
+    return "; ".join(partes)
+
+
 def parse_decision(response_text: str) -> AuditDecision:
     """Extrai a decisão da primeira linha da resposta, sempre com um
     default seguro: qualquer resposta que não siga o protocolo EXATO vira
