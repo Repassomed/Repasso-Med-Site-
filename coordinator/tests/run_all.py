@@ -50,6 +50,7 @@ from . import (
     test_worker_bridge,
     test_worker_bridge_workflow_security,
     test_worker_commands,
+    test_worker_health_report,
     test_worker_ops,
     test_worker_registry_human_vs_api,
     test_worker_registry_real,
@@ -115,6 +116,10 @@ MODULOS = [
     test_runner_workflow_security,
     test_worker_commands,
     test_worker_ops,
+    # Auditoria black-box pós-#245 (Claude 4): avaliar_stale existia sem
+    # nenhum chamador em produção — este módulo prova o agregador
+    # read-only que a expõe (workers_desatualizados) e o relatório.
+    test_worker_health_report,
     # Issue #128 (Worker Bridge V1): registrados junto com o próprio
     # Bridge. A allowlist `coordinator-suite` é a única validação que o
     # Runner executa antes de comitar — deixar estes dois fora dela
