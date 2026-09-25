@@ -57,6 +57,10 @@ jobs:
             const markerCoordinator = '<!-- repasso-coordinator -->';
             const markerGuard = '<!-- repasso-guard-resumo -->';
             const auditPolicyVersion = '2026-09-25-anchored-head-context-v3';
+            // Issue #281: HOLD / PAUSADO POR JOSÉ. Só o label ATUAL da PR
+            // decide (nunca texto de comentário). Espelha
+            // coordinator/github_event.py::LABEL_HOLD.
+            const labelHold = 'coordinator:hold';
             const pulls = await github.paginate(github.rest.pulls.list, {
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -70,6 +74,13 @@ jobs:
             for (const pr of pulls) {
               const body = String(pr.body || '');
               if (!body.includes(markerBridge)) continue;
+              // PR em HOLD: sem Guard de reconciliação e sem reauditoria paga,
+              // nem quando a política de auditoria muda. Nada é alterado na PR.
+              const labelsDaPr = (pr.labels || []).map(l => String((l && l.name) || l || ''));
+              if (labelsDaPr.includes(labelHold)) {
+                core.info(`PR #${pr.number}: em HOLD (label ${labelHold}); nenhum Guard será redisparado.`);
+                continue;
+              }
 
               const comments = await github.paginate(github.rest.issues.listComments, {
                 owner: context.repo.owner,

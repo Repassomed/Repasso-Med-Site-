@@ -334,7 +334,8 @@ def _register_observe_errors_best_effort(
     events: list[error_registry.ErrorEvent] = []
     run_id = os.environ.get("GITHUB_RUN_ID")
 
-    if event.raw_type == "GUARD_STATE_CHANGE" and event.payload.get("guard_state") == "failure":
+    if (event.raw_type == "GUARD_STATE_CHANGE" and event.payload.get("guard_state") == "failure"
+            and event.payload.get("coordinator_hold") is not True):  # Issue #281: PR em HOLD
         pr_number = _identity_pr_number(event.identity)
         audit_pack = event.payload.get("audit_pack")
         audit_pack = audit_pack if isinstance(audit_pack, dict) else {}

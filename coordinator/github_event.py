@@ -101,6 +101,25 @@ from .events import INBOX_ISSUE_NUMBER, Event
 # coordination/STATES.md usa para o nome do estado.
 LABEL_NEEDS_AUDIT = "NEEDS-AUDIT"
 
+# Issue #281: HOLD / PAUSADO POR JOSÉ. Só o LABEL atual da PR (lido pela
+# API no workflow confiável, em ``pr_info["labels"]``) liga o HOLD. Texto
+# livre de comentário nunca cria HOLD. PR em HOLD fica aberta, com branch,
+# checkpoint e runtime preservados, mas não recebe auditoria paga, cartão
+# NEEDS-FIX, correção do Worker Bridge nem Guard do Heartbeat. Remover o
+# label libera o fluxo normal no HEAD/política atuais.
+LABEL_HOLD = "coordinator:hold"
+
+
+def pr_em_hold(pr: dict | None) -> bool:
+    """``True`` só quando a PR (``pr_info`` do workflow ou objeto da API do
+    GitHub) tem hoje o label ``coordinator:hold``."""
+    if not isinstance(pr, dict):
+        return False
+    nomes = []
+    for label in pr.get("labels") or []:
+        nomes.append(label.get("name") if isinstance(label, dict) else label)
+    return LABEL_HOLD in nomes
+
 RE_AREA = re.compile(r"^\s*[-*]\s*\*\*Área:\*\*\s*(.+)$", re.I | re.M)
 RE_ESTADO_CHECKPOINT = re.compile(r"^ESTADO:\s*(\S+)", re.M)
 # Rodada 3 (Issue #99, Worker Registry operacional + handoff): os mesmos
@@ -318,6 +337,7 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                 "envolve_questoes": _envolve_questoes_materialmente(
                     titulo=titulo, corpo=corpo
                 ),
+                "coordinator_hold": pr_em_hold(pr_info),
                 "audit_pack": audit_pack,
                 # B2 da auditoria independente do PR #104: o corpo da PR é
                 # a DECLARAÇÃO do worker, nunca a prova do que mudou. O
@@ -370,6 +390,9 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
         identity=identidade,
         payload={
             "guard_state": estado,
+            # Issue #281: HOLD vale mesmo sem PR recuperada — na dúvida,
+            # não gastar nem publicar NEEDS-FIX.
+            "coordinator_hold": pr_em_hold(pr_info),
             # Issue #130: metadados factuais do Guard para o Error Registry.
             # Vêm do webhook do próprio GitHub, nunca de texto livre — ou,
             # no Guard via workflow_dispatch, da PR recuperada acima (HEAD
