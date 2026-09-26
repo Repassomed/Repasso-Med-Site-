@@ -147,7 +147,7 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": null,
+      "current_task": "neurologia-p0-provas-q01-04",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
       "last_heartbeat": "2026-09-26T03:10:43.792592+00:00",
