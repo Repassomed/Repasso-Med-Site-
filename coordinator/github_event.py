@@ -207,6 +207,13 @@ COORDINATOR_COMMENT_MARKER = "<!-- repasso-coordinator -->"
 # v3 (Issue #275): head_context ancorado na região do diff — muda a evidência
 # que o auditor recebe sobre o MESMO HEAD (caso real #266).
 AUDIT_POLICY_VERSION = "2026-09-25-anchored-head-context-v3"
+# Caso real PR #305: até aqui os auditores recebiam só os primeiros 8.000
+# caracteres do diff. Agora recebem o diff inteiro (``audit_diff``). Só os
+# diffs MAIORES que o corte antigo mudaram de evidência sobre o MESMO HEAD,
+# então só eles ganham este campo no dedup — exatamente uma reauditoria.
+# PRs pequenas (vistas inteiras antes) mantêm a mesma chave: zero custo novo.
+LEGACY_AUDIT_DIFF_CHARS = 8_000
+DIFF_EVIDENCE_POLICY = "diff-integral-v1"
 
 
 def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None,
@@ -372,6 +379,8 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                     # a PR real pela API e entrega o SHA tipado em pr_info.
                     "head_sha": pr_info.get("head_sha") or run.get("head_sha"),
                     "audit_policy_version": AUDIT_POLICY_VERSION,
+                    **({"diff_evidence": DIFF_EVIDENCE_POLICY}
+                       if pr_diff and len(pr_diff) > LEGACY_AUDIT_DIFF_CHARS else {}),
                 },
             },
         )

@@ -203,7 +203,8 @@ def aplicar_gate_openai(decisao: str, *, openai_decision: str | None,
     return "MERGE-READY", None
 
 
-def aplicar_gate_diff(decisao: str, *, diff_disponivel: bool, diff_truncado: bool) -> tuple[str, str | None]:
+def aplicar_gate_diff(decisao: str, *, diff_disponivel: bool, diff_truncado: bool,
+                      partes_nao_auditadas: int = 0) -> tuple[str, str | None]:
     """Gate determinístico B2 (auditoria independente do PR #104): um
     auditor não pode certificar MERGE-READY sem ter visto o diff real
     inteiro. Só rebaixa MERGE-READY (nunca promove NEEDS-FIX), e só quando
@@ -219,9 +220,17 @@ def aplicar_gate_diff(decisao: str, *, diff_disponivel: bool, diff_truncado: boo
         )
     if diff_truncado:
         return "NEEDS-FIX", (
-            "O diff real da PR foi truncado antes de chegar à auditoria — não "
+            "O diff real da PR não pôde ser entregue inteiro à auditoria (a "
+            "cobertura de 100% das linhas alteradas não foi comprovada) — não "
             "há garantia de que a mudança inteira foi revisada; tratado como "
             "NEEDS-FIX por segurança."
+        )
+    if partes_nao_auditadas:
+        # Caso real PR #305: diff em partes — basta UMA parte sem decisão
+        # utilizável para a PR nunca ficar MERGE-READY.
+        return "NEEDS-FIX", (
+            f"{partes_nao_auditadas} parte(s) do diff ficaram sem auditoria utilizável — "
+            "qualquer parte não auditada impede MERGE-READY."
         )
     return decisao, None
 
@@ -266,6 +275,10 @@ class MergeCardInput:
     openai_protocol_matched: bool = True
     openai_cost_block: str | None = None
     combined_cost_block: str | None = None
+    # Caso real PR #305: o que exatamente os auditores receberam do diff
+    # (``DIFF COMPLETO: sim`` ou ``DIFF EM N PARTES — …``), para o cartão
+    # nunca deixar dúvida sobre a evidência.
+    evidencia_diff: str | None = None
 
 
 def render_merge_card(dados: MergeCardInput) -> str:
@@ -286,6 +299,8 @@ def render_merge_card(dados: MergeCardInput) -> str:
     L.append(f"**Política de auditoria:** `{AUDIT_POLICY_VERSION}`")
     if dados.head_sha:
         L.append(f"**HEAD auditado:** `{dados.head_sha}`")
+    if dados.evidencia_diff:
+        L.append(f"**Evidência do diff entregue aos auditores:** {dados.evidencia_diff}")
     L.append("")
     L.append(f"**Decisão da auditoria semântica (STANDARD, independente do worker):** {dados.audit_decision}")
     if not dados.protocol_matched:

@@ -9,6 +9,7 @@ import sys
 
 from . import (
     test_anthropic_client,
+    test_audit_diff,
     test_auditor_technical_failure,
     test_anthropic_transport,
     test_auto_repair,
@@ -91,6 +92,9 @@ MODULOS = [
     # Issue #276: resposta vazia/fora do protocolo do Anthropic Auditor é
     # falha técnica (uma tentativa extra no máximo), nunca instrução de conteúdo.
     test_auditor_technical_failure,
+    # Caso real PR #305: o auditor recebe o diff inteiro (ou em partes com
+    # cobertura de 100% provada); evidência incompleta nunca vira chamada paga.
+    test_audit_diff,
     # Issue #258: checkpoint manual não pode consumir slot api_runner do
     # Worker Bridge — registrado junto do resto de observe()/checkpoint.
     test_worker_registry_human_vs_api,

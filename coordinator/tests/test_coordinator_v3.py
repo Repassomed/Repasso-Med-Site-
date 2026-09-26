@@ -29,7 +29,7 @@ import sys
 import tempfile
 
 from . import _pathsetup
-from coordinator import audit, merge_card
+from coordinator import audit, audit_diff, merge_card
 from coordinator.budget import UsageLedger
 from coordinator.config import ACTIVE_SUPERVISED_MODE, ALLOWED_MODE, Config
 from coordinator.dedup import Deduplicator, InMemoryStore
@@ -640,15 +640,19 @@ def test_audit_merge_ready_blocked_without_real_diff() -> None:
 
 
 def test_audit_merge_ready_blocked_with_truncated_diff() -> None:
-    diff_enorme = "diff --git a/x b/x\n" + ("+linha nova\n" * 5000)
-    assert len(diff_enorme) > audit.MAX_DIFF_CHARS
+    """Caso real PR #305: o diff não é mais truncado. Um diff grande demais
+    para ser entregue inteiro (mais partes que o teto) é recusado ANTES de
+    qualquer chamada paga, e nunca sustenta MERGE-READY."""
+    diff_enorme = "diff --git a/x b/x\n" + ("+linha nova\n" * 20000)
+    assert len(diff_enorme) > audit.MAX_DIFF_CHARS * audit_diff.MAX_PARTES_DIFF
     with tempfile.TemporaryDirectory() as tmp:
         dedup = Deduplicator(InMemoryStore())
         ledger = UsageLedger(os.path.join(tmp, "usage.json"))
         t = _TransporteContador(_RespostaFalsa("DECISÃO: MERGE-READY\nParece tudo certo."))
         r = _observar_pr_materia(head_sha="td1", body="ajuste de prosa didática", transport=t,
                                   dedup=dedup, ledger=ledger, pr_diff=diff_enorme)
-        assert r.audit_decision == "NEEDS-FIX", "diff truncado nunca pode sustentar MERGE-READY"
+        assert r.audit_decision == "NEEDS-FIX", "diff que não pode ser entregue inteiro nunca sustenta MERGE-READY"
+        assert t.calls == 0 and r.call_attempted is False, "evidência sabidamente incompleta: zero chamada paga"
     print("OK  test_audit_merge_ready_blocked_with_truncated_diff")
 
 

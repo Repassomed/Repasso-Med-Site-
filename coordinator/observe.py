@@ -36,11 +36,13 @@ from typing import NamedTuple
 
 from . import anthropic_client, bridge_workers, openai_client, source_pack
 from .anthropic_transport import AnthropicTransport
+from .audit_diff import MAX_DIFF_CHARS_POR_PARTE, MAX_PARTES_DIFF, DiffEmpacotado, prompt_contem_parte
 from .audit import (
     AUDIT_RETRY_MAX_OUTPUT_TOKENS,
     AUDIT_SYSTEM_PROMPT,
     AUDITOR_TECHNICAL_FAILURE,
     MAX_AUDITOR_TECHNICAL_RETRIES,
+    AuditDecision,
     auditor_technical_diagnosis,
     build_audit_prompt,
     parse_decision,
@@ -344,6 +346,71 @@ def _retry_tecnico_do_auditor(*, config: Config, ledger: UsageLedger, transporte
     return resultado, pedido, custo, None
 
 
+class _ParteExtraAnthropic(NamedTuple):
+    """Auditoria Anthropic de uma parte 2..N do diff (caso real PR #305)."""
+    indice: int
+    decisao: AuditDecision | None  # None = parte sem decisão utilizável
+    motivo: str
+    custo_usd: float
+    chamadas: int
+    ledger_ok: bool
+    ledger_erro: str | None
+    registro: dict | None
+
+
+def _auditar_parte_extra_anthropic(*, config: Config, ledger: UsageLedger, transporte, model_choice,
+                                   prompt: str, event_key: str, indice: int,
+                                   total: int) -> _ParteExtraAnthropic:
+    """Uma chamada, com reserva conservadora atômica ANTES do envio (mesmo
+    helper da tentativa técnica, mesmo ledger e mesmo teto mensal). Sem
+    retry: parte sem resposta utilizável fica NÃO AUDITADA, e isso sozinho
+    já impede MERGE-READY."""
+    pedido_base = anthropic_client.build_request(
+        model_choice, system=AUDIT_SYSTEM_PROMPT, prompt=prompt, limiter=CallLimiter(),
+    )
+    resultado, pedido, custo, motivo = _retry_tecnico_do_auditor(
+        config=config, ledger=ledger, transporte=transporte, model_choice=model_choice,
+        pedido_original=pedido_base, stop_reason="", event_key=event_key,
+    )
+    if resultado is None:
+        return _ParteExtraAnthropic(indice, None, f"parte {indice}/{total} não auditada: {motivo}",
+                                    0.0, 0, True, None, None)
+    registro = _registro_tentativa(resultado, event_key)
+    if resultado.status != "ok":
+        return _ParteExtraAnthropic(
+            indice, None, f"parte {indice}/{total} não auditada (call_status={resultado.status!r})",
+            0.0, 0, True, None, registro,
+        )
+    custo_real = resultado.usage.estimated_cost_usd if resultado.usage is not None else 0.0
+    ok_l, erro_l = _conciliar_ledger_da_chamada(ledger, resultado, pedido, custo, event_key)
+    decisao = parse_decision(resultado.to_dict()["text"] or "")
+    if not decisao.protocol_matched:
+        return _ParteExtraAnthropic(
+            indice, None, f"parte {indice}/{total}: {_diagnostico_auditor(resultado, pedido)}",
+            custo_real, 1, ok_l, erro_l, registro,
+        )
+    return _ParteExtraAnthropic(indice, decisao, "", custo_real, 1, ok_l, erro_l, registro)
+
+
+def _cartao_evidencia_incompleta(event: Event, contexto: MinimalContext, ledger: UsageLedger,
+                                 config: Config, motivo: str, rotulo: str) -> str:
+    """NEEDS-FIX técnico, sem nenhuma chamada paga: a evidência do diff não
+    pode ser entregue inteira. Marcado como falha técnica para o Worker
+    Bridge NUNCA mandar corrigir conteúdo por causa disto."""
+    envolve_questoes = bool(event.payload.get("envolve_questoes"))
+    _, lei_das_questoes = aplicar_lei_das_questoes(
+        "NEEDS-FIX", envolve_questoes=envolve_questoes, pr_body=event.payload.get("body"),
+    )
+    return _render_cartao(
+        event, contexto, "NEEDS-FIX",
+        f"{AUDITOR_TECHNICAL_FAILURE}: evidência do diff incompleta ANTES da auditoria — {motivo} "
+        "Nenhuma chamada paga foi feita. Não é uma reprovação de conteúdo: nenhuma alteração de "
+        "matéria deve ser feita por causa disto; divida a tarefa em partes menores.",
+        lei_das_questoes=lei_das_questoes, envolve_questoes=envolve_questoes, protocol_matched=False,
+        cost_block=render_cost_block(_resumo_custo_zero(ledger, config)), evidencia_diff=rotulo,
+    )
+
+
 def _pr_number_from_identity(identity: str) -> int | None:
     if identity.startswith("pr:"):
         try:
@@ -364,7 +431,8 @@ def _render_cartao(event: Event, contexto: MinimalContext, decisao: str, motivo:
                     lei_das_questoes, envolve_questoes: bool, protocol_matched: bool,
                     cost_block: str | None = None,
                     openai_resultado: "_ResultadoOpenAI | None" = None,
-                    combined_cost_block: str | None = None) -> str:
+                    combined_cost_block: str | None = None,
+                    evidencia_diff: str | None = None) -> str:
     dados = MergeCardInput(
         pr_number=_pr_number_from_identity(event.identity),
         titulo=event.payload.get("titulo"),
@@ -386,6 +454,7 @@ def _render_cartao(event: Event, contexto: MinimalContext, decisao: str, motivo:
         openai_protocol_matched=openai_resultado.protocol_matched if openai_resultado else True,
         openai_cost_block=openai_resultado.cost_block if openai_resultado else None,
         combined_cost_block=combined_cost_block,
+        evidencia_diff=evidencia_diff,
     )
     return render_merge_card(dados)
 
@@ -775,6 +844,12 @@ class _ResultadoOpenAI(NamedTuple):
     # ``ObserveResult.openai_ledger_failed`` para o workflow sinalizar erro
     # operacional (nunca um problema silencioso).
     ledger_ok: bool = True
+    # Caso real PR #305: custo/chamadas desta auditoria, para somar as
+    # partes do diff num único bloco de custo.
+    custo_usd: float = 0.0
+    chamadas: int = 0
+    tier: str = ""
+    model_id: str = ""
 
 
 def _decisao_openai_de_falha(status: str, motivo: str) -> OpenAIAuditDecision:
@@ -811,7 +886,7 @@ def _resultado_openai_zero_custo(*, config: Config, openai_ledger: UsageLedger, 
         decision=decisao.decision, risk=decisao.risk, rationale=decisao.rationale,
         findings=decisao.findings, didactic_findings=decisao.didactic_findings,
         protocol_matched=decisao.protocol_matched, cost_block=render_cost_block(resumo_custo),
-        month_to_date_usd=openai_ledger.month_to_date_usd(),
+        month_to_date_usd=openai_ledger.month_to_date_usd(), tier=tier, model_id=model_id,
     )
 
 
@@ -819,7 +894,8 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
                          config: Config, openai_config: OpenAIAuditorConfig | None,
                          openai_ledger: UsageLedger | None,
                          openai_transport: openai_client.Transport | None,
-                         event_key: str, source_pack_text: str | None = None) -> _ResultadoOpenAI | None:
+                         event_key: str, source_pack_text: str | None = None,
+                         parte=None) -> _ResultadoOpenAI | None:
     """Segunda opinião independente (Issue #106), sobre o MESMO evento de
     conteúdo médico/didático Nível C que já passou pela auditoria da
     Anthropic. Estruturalmente inerte enquanto ``openai_config`` for
@@ -864,7 +940,20 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
         pr_diff=event.payload.get("pr_diff"),
         source_pack_text=source_pack_openai,
         head_context_text=head_context_openai,
+        parte=parte,
     )
+    escolhida = parte or (diff_info.pacote.partes[0] if diff_info.pacote and diff_info.pacote.partes else None)
+    if diff_info.disponivel and not prompt_contem_parte(prompt_texto, escolhida):
+        # Caso real PR #305: nunca pagar por uma auditoria cuja parte do
+        # diff não chegou inteira ao prompt.
+        return _resultado_openai_zero_custo(
+            config=config, openai_ledger=openai_ledger,
+            decisao=_decisao_openai_de_falha(
+                "evidencia-incompleta",
+                "a parte do diff não coube inteira no prompt — nenhuma chamada foi feita.",
+            ),
+            tier=tier_principal, model_id=model_id_principal,
+        )
 
     # Correção B6 da auditoria independente do PR #107: privacy preflight
     # determinístico, ANTES de qualquer chamada — sobre o texto EXATO que
@@ -1050,6 +1139,47 @@ def _avaliar_com_openai(event: Event, contexto: MinimalContext, classificacao: C
         cost_block=render_cost_block(resumo_custo),
         month_to_date_usd=openai_ledger.month_to_date_usd(),
         ledger_ok=not ledger_falhou,
+        custo_usd=custo_total,
+        chamadas=calls_this_task,
+        tier=tier_final,
+        model_id=model_id_final,
+    )
+
+
+def _combinar_resultados_openai(resultados: list[_ResultadoOpenAI], *, config: Config,
+                                openai_ledger: UsageLedger) -> _ResultadoOpenAI:
+    """Junta as auditorias OpenAI das partes do diff, fail-closed: só
+    MERGE-READY quando TODAS as partes deram MERGE-READY com protocolo
+    válido; o custo mostrado é a soma de todas as chamadas."""
+    total = len(resultados)
+    todas_ok = all(r.decision == "MERGE-READY" and r.protocol_matched for r in resultados)
+    custo = sum(r.custo_usd for r in resultados)
+    chamadas = sum(r.chamadas for r in resultados)
+    ultimo = resultados[-1]
+    if chamadas > 0:
+        resumo = montar_resumo_custo(
+            ledger=openai_ledger, brl_rate=config.brl_rate, brl_rate_date=config.brl_rate_date,
+            actual_usd=custo, tier=ultimo.tier, model_id=ultimo.model_id, calls_this_task=chamadas,
+        )
+    else:
+        resumo = montar_resumo_custo(
+            ledger=openai_ledger, brl_rate=config.brl_rate, brl_rate_date=config.brl_rate_date,
+            estimated_usd=0.0, tier=ultimo.tier, model_id=ultimo.model_id, calls_this_task=0,
+        )
+    return _ResultadoOpenAI(
+        decision="MERGE-READY" if todas_ok else "NEEDS-FIX",
+        risk="HIGH" if any(r.risk == "HIGH" for r in resultados) else "NORMAL",
+        rationale="\n".join(f"[Parte {i}/{total}] {r.decision}: {r.rationale}"
+                            for i, r in enumerate(resultados, start=1)),
+        findings=tuple(f"[parte {i}/{total}] {f}" for i, r in enumerate(resultados, start=1)
+                       for f in r.findings),
+        didactic_findings=tuple(f"[parte {i}/{total}] {f}" for i, r in enumerate(resultados, start=1)
+                                for f in r.didactic_findings),
+        protocol_matched=all(r.protocol_matched for r in resultados),
+        cost_block=render_cost_block(resumo),
+        month_to_date_usd=openai_ledger.month_to_date_usd(),
+        ledger_ok=all(r.ledger_ok for r in resultados),
+        custo_usd=custo, chamadas=chamadas, tier=ultimo.tier, model_id=ultimo.model_id,
     )
 
 
@@ -1355,20 +1485,75 @@ def observe(
     # V3: quando ``executar_auditoria``, a chamada de resumo genérico é
     # SUBSTITUÍDA (não somada) pela auditoria semântica independente —
     # continua sendo, no máximo, uma chamada por evento (mesmo
-    # ``CallLimiter``).
+    # ``CallLimiter``) por PARTE do diff: diff que cabe inteiro = uma parte
+    # (o caso comum); diff maior = até ``MAX_PARTES_DIFF`` partes, cada uma
+    # com reserva própria no MESMO ledger e teto mensal.
+    # Caso real PR #305: o diff vai inteiro (uma parte) ou em partes
+    # numeradas com cobertura de 100% provada. Se isso não for possível, ou
+    # se alguma parte não couber inteira no prompt de QUALQUER dos dois
+    # auditores, NEEDS-FIX técnico agora — nenhuma auditoria paga com
+    # evidência sabidamente incompleta.
+    pacote_diff: DiffEmpacotado | None = None
+    partes_diff: list = []
+
+    def _prompt_da_parte(parte) -> str:
+        return build_audit_prompt(
+            contexto,
+            pr_body=event.payload.get("body"),
+            envolve_questoes=bool(event.payload.get("envolve_questoes")),
+            pr_diff=event.payload.get("pr_diff"),
+            source_pack_text=audit_source_pack_text,
+            head_context_text=event.payload.get("head_context"),
+            parte=parte,
+        )
+
+    if executar_auditoria:
+        pacote_diff = preparar_diff(event.payload.get("pr_diff")).pacote
+        if pacote_diff is not None and pacote_diff.disponivel:
+            partes_diff = list(pacote_diff.partes)
+            motivo_incompleto = None
+            if not pacote_diff.auditavel:
+                motivo_incompleto = (
+                    f"{pacote_diff.rotulo}. Limite: {MAX_PARTES_DIFF} parte(s) de até "
+                    f"{MAX_DIFF_CHARS_POR_PARTE} caracteres."
+                )
+            else:
+                for parte in partes_diff:
+                    prompt_openai = build_openai_audit_prompt(
+                        contexto, pr_body=event.payload.get("body"),
+                        envolve_questoes=bool(event.payload.get("envolve_questoes")),
+                        pr_diff=event.payload.get("pr_diff"), source_pack_text=audit_source_pack_text,
+                        head_context_text=event.payload.get("head_context"), parte=parte,
+                    )
+                    if not (prompt_contem_parte(_prompt_da_parte(parte), parte)
+                            and prompt_contem_parte(prompt_openai, parte)):
+                        motivo_incompleto = (
+                            f"a parte {parte.indice}/{parte.total} do diff não coube inteira no prompt "
+                            "de auditoria."
+                        )
+                        break
+            if motivo_incompleto:
+                return ObserveResult(
+                    status="OBSERVED",
+                    reason=f"Evidência do diff incompleta antes da auditoria — zero chamada paga: {motivo_incompleto}",
+                    next_action=_next_action_text(classificacao, roteamento, worker),
+                    call_attempted=False,
+                    audit_decision="NEEDS-FIX",
+                    merge_card=_cartao_evidencia_incompleta(
+                        event, contexto, ledger, config, motivo_incompleto, pacote_diff.rotulo,
+                    ),
+                    should_comment=True,
+                    comment_target_issue=_pr_number_from_identity(event.identity),
+                    audit_technical_failure=True,
+                    **resultado_base,
+                )
+
     limitador = CallLimiter()
     if executar_auditoria:
         pedido = anthropic_client.build_request(
             roteamento.model_choice,
             system=AUDIT_SYSTEM_PROMPT,
-            prompt=build_audit_prompt(
-                contexto,
-                pr_body=event.payload.get("body"),
-                envolve_questoes=bool(event.payload.get("envolve_questoes")),
-                pr_diff=event.payload.get("pr_diff"),
-                source_pack_text=audit_source_pack_text,
-                head_context_text=event.payload.get("head_context"),
-            ),
+            prompt=_prompt_da_parte(partes_diff[0] if partes_diff else None),
             limiter=limitador,
         )
     else:
@@ -1487,6 +1672,25 @@ def observe(
                         and not parse_decision(resultado_chamada.text or "").protocol_matched):
                     diagnosticos_auditor.append(_diagnostico_auditor(resultado_chamada, pedido))
 
+    # Caso real PR #305: partes 2..N do diff, uma chamada cada, só se a
+    # parte 1 teve resposta. Parte que não roda (orçamento, erro, protocolo)
+    # fica NÃO AUDITADA e impede MERGE-READY no gate de diff.
+    partes_extra: list[_ParteExtraAnthropic] = []
+    if executar_auditoria and len(partes_diff) > 1 and resultado_chamada.status == "ok":
+        if not tentativas_registradas:
+            tentativas_registradas.append(_registro_tentativa(resultado_chamada, chave))
+        for parte in partes_diff[1:]:
+            extra = _auditar_parte_extra_anthropic(
+                config=config, ledger=ledger, transporte=transporte_real,
+                model_choice=roteamento.model_choice, prompt=_prompt_da_parte(parte),
+                event_key=f"{chave}#parte-{parte.indice}", indice=parte.indice, total=parte.total,
+            )
+            partes_extra.append(extra)
+            if extra.registro is not None:
+                tentativas_registradas.append(extra.registro)
+            if not extra.ledger_ok:
+                ledger_persistiu, ledger_erro = False, (ledger_erro or extra.ledger_erro)
+
     # .to_dict() é quem sanitiza reason/text via redact() — nunca ler os
     # atributos crus de CallResult para fora deste módulo (foi exatamente
     # esse desvio que deixou uma chave falsa vazar num teste antes desta
@@ -1516,15 +1720,45 @@ def observe(
             # aplicado por último — só pode rebaixar, nunca promover (mesmo
             # padrão de aplicar_lei_das_questoes).
             diff_info = preparar_diff(event.payload.get("pr_diff"))
+            nao_auditadas = [p for p in partes_extra if p.decisao is None]
+            if partes_extra:
+                todas_mr = decisao_llm.decision == "MERGE-READY" and all(
+                    p.decisao is not None and p.decisao.decision == "MERGE-READY" for p in partes_extra
+                )
+                decisao_pos_lei = decisao_pos_lei if todas_mr else "NEEDS-FIX"
             decisao_final, nota_diff = aplicar_gate_diff(
                 decisao_pos_lei, diff_disponivel=diff_info.disponivel, diff_truncado=diff_info.truncado,
+                partes_nao_auditadas=len(nao_auditadas),
             )
             rationale_final = decisao_llm.rationale
+            if partes_extra:
+                total_partes = len(partes_diff)
+                linhas_partes = [f"[Parte 1/{total_partes}] {decisao_llm.decision}: {decisao_llm.rationale}"]
+                for p in partes_extra:
+                    if p.decisao is None:
+                        linhas_partes.append(f"[Parte {p.indice}/{total_partes}] NÃO AUDITADA: {p.motivo}")
+                    else:
+                        linhas_partes.append(
+                            f"[Parte {p.indice}/{total_partes}] {p.decisao.decision}: {p.decisao.rationale}"
+                        )
+                rationale_final = "\n".join(linhas_partes)
             if nota_diff:
                 rationale_final = f"{rationale_final}\n\n{nota_diff}"
             audit_decision_final = decisao_final
             protocol_matched = decisao_llm.protocol_matched
-            if not protocol_matched:
+            if protocol_matched and nao_auditadas and not (
+                decisao_llm.decision == "NEEDS-FIX"
+                or any(p.decisao is not None and p.decisao.decision == "NEEDS-FIX" for p in partes_extra)
+            ):
+                # Nenhuma parte reprovou conteúdo; faltou auditoria técnica de
+                # alguma — o Worker Bridge nunca deve "corrigir" matéria por isso.
+                protocol_matched = False
+                rationale_final = (
+                    f"{AUDITOR_TECHNICAL_FAILURE}: {len(nao_auditadas)} parte(s) do diff sem auditoria "
+                    f"utilizável ({'; '.join(p.motivo for p in nao_auditadas)}). Falha TÉCNICA, não "
+                    f"reprovação de conteúdo.\n\n{rationale_final}"
+                )
+            elif not protocol_matched:
                 rationale_final = _motivo_falha_tecnica_do_auditor(
                     diagnosticos_auditor, tentativas_auditor, motivo_sem_retry,
                 )
@@ -1570,12 +1804,42 @@ def observe(
     # de auditoria nunca equivale a aprovação.
     resultado_openai: _ResultadoOpenAI | None = None
     if executar_auditoria:
-        resultado_openai = _avaliar_com_openai(
-            event, contexto, classificacao,
-            config=config, openai_config=openai_config, openai_ledger=openai_ledger,
-            openai_transport=openai_transport, event_key=chave,
-            source_pack_text=audit_source_pack_text,
-        )
+        if len(partes_diff) > 1:
+            # Caso real PR #305: a MESMA parte que a Anthropic viu, uma
+            # chamada por parte; combinação fail-closed.
+            por_parte = [
+                _avaliar_com_openai(
+                    event, contexto, classificacao,
+                    config=config, openai_config=openai_config, openai_ledger=openai_ledger,
+                    openai_transport=openai_transport,
+                    event_key=chave if parte.indice == 1 else f"{chave}#parte-{parte.indice}",
+                    source_pack_text=audit_source_pack_text, parte=parte,
+                )
+                for parte in partes_diff
+            ]
+            if all(r is None for r in por_parte):
+                resultado_openai = None
+            elif any(r is None for r in por_parte):
+                ref = next(r for r in por_parte if r is not None)
+                resultado_openai = _combinar_resultados_openai(
+                    [r if r is not None else _resultado_openai_zero_custo(
+                        config=config, openai_ledger=openai_ledger,
+                        decisao=_decisao_openai_de_falha("nao-auditada", "parte do diff sem auditoria OpenAI."),
+                        tier=ref.tier, model_id=ref.model_id) for r in por_parte],
+                    config=config, openai_ledger=openai_ledger,
+                )
+            else:
+                resultado_openai = _combinar_resultados_openai(
+                    por_parte, config=config, openai_ledger=openai_ledger,
+                )
+        else:
+            resultado_openai = _avaliar_com_openai(
+                event, contexto, classificacao,
+                config=config, openai_config=openai_config, openai_ledger=openai_ledger,
+                openai_transport=openai_transport, event_key=chave,
+                source_pack_text=audit_source_pack_text,
+                parte=partes_diff[0] if partes_diff else None,
+            )
         audit_decision_final, nota_openai = aplicar_gate_openai(
             audit_decision_final,
             openai_decision=(resultado_openai.decision if resultado_openai is not None else None),
@@ -1624,6 +1888,9 @@ def observe(
                                else 0.0)
         chamadas_pagas = (tentativas_auditor if resultado_chamada.status == "ok"
                           else tentativas_auditor - 1)
+        # Caso real PR #305: as partes 2..N do diff também são chamadas pagas.
+        custo_desta_chamada += sum(p.custo_usd for p in partes_extra)
+        chamadas_pagas += sum(p.chamadas for p in partes_extra)
         if chamadas_pagas > 0:
             resumo_custo = montar_resumo_custo(
                 ledger=ledger, brl_rate=config.brl_rate, brl_rate_date=config.brl_rate_date,
@@ -1665,6 +1932,7 @@ def observe(
             cost_block=cost_block,
             openai_resultado=resultado_openai,
             combined_cost_block=combined_cost_block,
+            evidencia_diff=(pacote_diff.rotulo if pacote_diff is not None else None),
         )
 
     alvo_comentario = _pr_number_from_identity(event.identity)
