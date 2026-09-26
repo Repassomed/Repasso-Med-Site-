@@ -191,9 +191,13 @@ permissions:
   contents: read
 
 concurrency:
+  # Issue #160: um grupo por COMENTÁRIO (antes: por issue). Com o grupo por
+  # issue + cancel-in-progress, dois pedidos seguidos na #88 cancelavam o
+  # primeiro run — o pedido do José se perdia em silêncio. O dedup por
+  # comment_id continua impedindo processar o mesmo comentário duas vezes.
   group: >-
     repasso-coordinator-observe-${{
-      github.event.issue.number || github.event.workflow_run.id || inputs.guard_run_id
+      github.event.comment.id || github.event.issue.number || github.event.workflow_run.id || inputs.guard_run_id
     }}
   cancel-in-progress: true
 
@@ -672,6 +676,7 @@ jobs:
             --out /tmp/coordinator-observe.json
             --comment-out /tmp/coordinator-comment.md
             --comment-target-out /tmp/coordinator-comment-target.txt
+            --intake-out /tmp/intake-proposal.json
           )
           [ -f /tmp/pr-info.json ] && ARGS+=(--pr-info-file /tmp/pr-info.json)
           [ -f /tmp/guard-audit-pack/guard-audit-pack.json ] && ARGS+=(--guard-audit-pack /tmp/guard-audit-pack/guard-audit-pack.json)
@@ -696,6 +701,12 @@ jobs:
             echo "comment_ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "comment_ready=false" >> "$GITHUB_OUTPUT"
+          fi
+          # Issue #160: proposta de tarefa do Intake (#88) pronta para PR.
+          if [ -s /tmp/intake-proposal.json ]; then
+            echo "intake_ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "intake_ready=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Publicar o resultado OBSERVE como artifact
@@ -757,6 +768,93 @@ jobs:
               body: corpo,
             });
             console.log(`Comentário publicado na issue/PR #${issueNumber}.`);
+
+      - name: Abrir a PR administrativa do Intake (Issue #160)
+        # Pedido do José na Inbox #88 → proposta TIPADA de tarefa → PR que
+        # altera SOMENTE coordination/tasks.json numa branch
+        # coordinator/intake-<task_id>. Nunca escreve na branch padrão,
+        # nunca faz merge, nunca deploya, nunca toca matéria: toda a regra
+        # vive em .github/workflows/scripts/intake_pr.mjs (função pura,
+        # testada em intake_pr.test.mjs) e vem do checkout da branch padrão.
+        # Antes do merge do José nada é executado: o Worker Bridge só lê o
+        # tasks.json da branch padrão.
+        if: >
+          always() && steps.coordinator.outputs.intake_ready == 'true' &&
+          github.event_name == 'issue_comment' && github.event.issue.number == 88
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const crypto = require('crypto');
+            const { abrirPrDoIntake } = await import(
+              path.join(process.env.GITHUB_WORKSPACE, '.github/workflows/scripts/intake_pr.mjs')
+            );
+            const proposta = JSON.parse(fs.readFileSync('/tmp/intake-proposal.json', 'utf8'));
+            const { owner, repo } = context.repo;
+            const baseBranch = context.payload.repository.default_branch;
+            const { data: refBase } = await github.rest.git.getRef({ owner, repo, ref: `heads/${baseBranch}` });
+            const baseSha = refBase.object.sha;
+            const api = {
+              async lerArquivo(caminho, ref) {
+                try {
+                  const { data } = await github.rest.repos.getContent({ owner, repo, path: caminho, ref });
+                  return { texto: Buffer.from(data.content, 'base64').toString('utf8'), sha: data.sha };
+                } catch (e) {
+                  if (e.status === 404) return null;
+                  throw e;
+                }
+              },
+              async criarBranch(nome, sha) {
+                try {
+                  await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${nome}`, sha });
+                  return 'criada';
+                } catch (e) {
+                  if (e.status === 422) return 'existe';
+                  throw e;
+                }
+              },
+              async gravarArquivo({ path: caminho, branch, texto, blobSha, mensagem }) {
+                if (branch === baseBranch || !branch.startsWith('coordinator/intake-')) {
+                  throw new Error('escrita recusada: só a branch administrativa do Intake');
+                }
+                await github.rest.repos.createOrUpdateFileContents({
+                  owner, repo, path: caminho, branch, sha: blobSha, message: mensagem,
+                  content: Buffer.from(texto, 'utf8').toString('base64'),
+                });
+              },
+              async prsAbertas(branch) {
+                const { data } = await github.rest.pulls.list({ owner, repo, state: 'open', head: `${owner}:${branch}` });
+                return data.map(p => ({ number: p.number, html_url: p.html_url }));
+              },
+              async criarPr({ title, body, head, base }) {
+                try {
+                  const { data } = await github.rest.pulls.create({ owner, repo, title, body, head, base });
+                  return { number: data.number, html_url: data.html_url };
+                } catch (e) {
+                  if (e.status === 422) return null;
+                  throw e;
+                }
+              },
+            };
+            const sha256 = (t) => crypto.createHash('sha256').update(t, 'utf8').digest('hex');
+            const r = await abrirPrDoIntake({ api, proposta, baseBranch, baseSha, sha256, log: core.info });
+            core.info(`Intake: ${r.acao} — ${r.motivo || ''}`);
+            let linha;
+            if (r.pr) {
+              linha = `📥 Intake #160: ${r.acao === 'CRIADA' ? 'PR administrativa aberta' : 'PR administrativa já existente'} ` +
+                `para a tarefa \`${proposta.task_id}\`: #${r.pr.number}. Só altera coordination/tasks.json; ` +
+                'nada é executado antes do merge do José.';
+            } else {
+              linha = `⚠️ Intake #160: proposta \`${proposta.task_id}\` não virou PR — ${r.motivo}. Nada foi escrito.`;
+            }
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: 88, body: `<!-- repasso-coordinator -->\n${linha}`,
+            });
+            // Sem disparo automático do Guard aqui: um GUARD_STATE_CHANGE verde
+            // no OBSERVE faz chamada paga (resumo V2), e o Intake é custo zero.
+            // O conteúdo já foi validado duas vezes (Python + intake_pr.mjs).
 
       - name: Falhar o job se o Coordinator terminou com erro (bloqueador 7)
         if: steps.coordinator.outputs.resultado != '0'

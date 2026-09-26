@@ -30,7 +30,8 @@ _EMOJI = {
 
 
 def render_recebido(*, tarefa: str, prioridade: str, estado: str, worker: str | None,
-                     proximo_checkpoint: str, cost_block: str | None = None) -> str:
+                     proximo_checkpoint: str, cost_block: str | None = None,
+                     extras: dict[str, str] | None = None) -> str:
     L = [
         COORDINATOR_COMMENT_MARKER,
         "✅ RECEBIDO",
@@ -40,6 +41,8 @@ def render_recebido(*, tarefa: str, prioridade: str, estado: str, worker: str | 
         f"Worker: {worker or 'será definido automaticamente'}",
         f"Próximo checkpoint: {proximo_checkpoint}",
     ]
+    for chave, valor in (extras or {}).items():
+        L.append(f"{chave}: {valor}")
     if cost_block:
         L += ["", cost_block]
     return "\n".join(L)

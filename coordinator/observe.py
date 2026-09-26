@@ -29,6 +29,8 @@ quando bloqueado, duplicado ou rejeitado.
 
 from __future__ import annotations
 
+import json
+import os
 from dataclasses import dataclass, field
 from typing import NamedTuple
 
@@ -63,6 +65,7 @@ from .dedup import Deduplicator
 from .events import INBOX_ISSUE_NUMBER, Event, EventType
 from .handoff import decidir_handoff, decidir_pool
 from .inbox_card import render_checkpoint, render_recebido
+from .task_intake import interpretar_pedido, montar_proposta_de_pr, sha256_texto
 from .merge_card import (
     MergeCardInput,
     aplicar_gate_diff,
@@ -138,6 +141,9 @@ class ObserveResult:
     # Auditor (resposta vazia/fora do protocolo ou chamada não concluída),
     # nunca de achado de conteúdo.
     audit_technical_failure: bool = False
+    # Issue #160: proposta tipada de tarefa vinda da Inbox #88. O workflow
+    # confiável abre com ela uma PR que altera SOMENTE coordination/tasks.json.
+    intake_proposal: dict | None = None
     # Uma entrada por tentativa ao Anthropic Auditor quando houve tentativa
     # técnica extra; vazia no caminho normal. ``usage`` continua sendo só a
     # última chamada — esta lista mostra todas as tentativas, e só as com
@@ -167,6 +173,7 @@ class ObserveResult:
             "openai_ledger_failed": self.openai_ledger_failed,
             "audit_technical_failure": self.audit_technical_failure,
             "auditor_attempts": list(self.auditor_attempts),
+            "intake_proposal": self.intake_proposal,
         }
 
 
@@ -414,6 +421,8 @@ class _ResultadoZeroCusto(NamedTuple):
     reason: str
     texto: str
     target_issue: int
+    # Issue #160: proposta tipada de tarefa para a PR administrativa.
+    intake: dict | None = None
 
 
 def _resumo_custo_zero(ledger: UsageLedger, config: Config):
@@ -485,6 +494,19 @@ def _tratar_inbox_comment(event: Event, classificacao: Classification,
     worker_disponivel = worker_registry.escolher_disponivel()
     nome_worker = worker_disponivel.display_name if worker_disponivel else None
 
+    # Issue #160: com o repositório confiável disponível, o pedido vira
+    # proposta TIPADA de tarefa (ou referência/NEEDS-INPUT) — nunca escrita
+    # direta em tasks.json, nunca em main.
+    intake = _intake_do_pedido(event, corpo, classificacao, runner_tasks_json_path, runner_repo_dir)
+    if intake is not None:
+        decisao, proposta = intake
+        texto = _render_intake(decisao, corpo, nome_worker, render_cost_block(_resumo_custo_zero(ledger, config)))
+        if texto is not None:
+            return _ResultadoZeroCusto(
+                reason=f"Inbox (#88) — Intake #160: {decisao.acao} ({decisao.motivo})",
+                texto=texto, target_issue=INBOX_ISSUE_NUMBER, intake=proposta,
+            )
+
     if classificacao.needs_input:
         estado, proximo = "BLOCKED (precisa de mais informação)", "aguardando resposta de José na própria Issue #88."
     elif classificacao.requires_jose_authorization:
@@ -505,6 +527,60 @@ def _tratar_inbox_comment(event: Event, classificacao: Classification,
     return _ResultadoZeroCusto(
         reason="Comentário válido na Inbox (#88) — RECEBIDO publicado.", texto=texto, target_issue=INBOX_ISSUE_NUMBER,
     )
+
+
+def _intake_do_pedido(event: Event, corpo: str, classificacao: Classification,
+                      tasks_json_path: str | None, repo_dir: str | None):
+    if not tasks_json_path or not repo_dir or not os.path.isfile(tasks_json_path):
+        return None
+    with open(tasks_json_path, encoding="utf-8") as fh:
+        conteudo = fh.read()
+    tarefas = json.loads(conteudo).get("tarefas", [])
+    comment_id = (event.payload.get("dedup_fields") or {}).get("comment_id")
+    decisao = interpretar_pedido(
+        corpo, tarefas=tarefas, repo_dir=repo_dir,
+        comment_id=comment_id if isinstance(comment_id, int) else None,
+        prioridade_classificada=classificacao.priority.value,
+    )
+    proposta = (montar_proposta_de_pr(decisao, base_sha256=sha256_texto(conteudo))
+                if decisao.acao == "PROPOSTA" else None)
+    return decisao, proposta
+
+
+def _render_intake(decisao, corpo: str, nome_worker: str | None, cost_block: str) -> str | None:
+    """RECEBIDO com o resultado REAL do Intake. ``None`` = não é pedido
+    (ex.: relatório de agente) — segue o RECEBIDO de sempre."""
+    primeira = next((l.strip() for l in corpo.splitlines() if l.strip()), "(comentário sem texto)")[:160]
+    extras: dict[str, str] = {}
+    if decisao.acao == "IGNORADO":
+        return None
+    if decisao.acao == "PROPOSTA":
+        t = decisao.tarefa
+        estado = f"PROPOSTA ({t['estado']} ao entrar na fila)"
+        proximo = ("PR administrativa alterando só coordination/tasks.json — nada é executado antes do "
+                   "merge do José.")
+        extras["Tarefa proposta"] = f"`{t['id']}`"
+        extras["Arquivo"] = f"`{t['arquivos'][0]}`"
+        if t.get("source_pack_required"):
+            extras["Fonte"] = (f"BLOCKED até o source pack `{t['source_pack_path']}` existir — nenhum worker "
+                               "pago antes disso.")
+        if decisao.relacionadas:
+            extras["Relacionadas (não duplicadas)"] = ", ".join(f"`{r.get('id')}` ({r.get('estado')})"
+                                                                for r in decisao.relacionadas)
+        return render_recebido(tarefa=primeira, prioridade=decisao.prioridade or "-", estado=estado,
+                               worker=nome_worker, proximo_checkpoint=proximo, cost_block=cost_block,
+                               extras=extras)
+    if decisao.acao == "EXISTENTE":
+        estado, proximo = "JÁ NA FILA", "nenhuma tarefa nova — acompanhar a existente."
+    elif decisao.acao == "BLOCKED_AUTORIZACAO":
+        estado, proximo = "BLOCKED (aguardando autorização de José)", "aguardando 'pode começar' explícito de José."
+    else:
+        estado, proximo = f"NEEDS-INPUT — {decisao.motivo}", "aguardando resposta de José na própria Issue #88."
+    if decisao.existentes:
+        extras["Tarefa existente"] = "; ".join(decisao.resumo_existentes())
+    extras["Motivo"] = decisao.motivo
+    return render_recebido(tarefa=primeira, prioridade=decisao.prioridade or "-", estado=estado,
+                           worker=nome_worker, proximo_checkpoint=proximo, cost_block=cost_block, extras=extras)
 
 
 def _tratar_checkpoint_blocked_limit(event: Event, classificacao: Classification,
@@ -1246,6 +1322,7 @@ def observe(
                 merge_card=zero_custo.texto,
                 should_comment=True,
                 comment_target_issue=zero_custo.target_issue,
+                intake_proposal=zero_custo.intake,
                 **resultado_base,
             )
         if event.event_type is EventType.CHECKPOINT_BLOCKED_LIMIT:

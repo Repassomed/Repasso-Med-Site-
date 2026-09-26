@@ -66,7 +66,7 @@ import json
 import os
 import sys
 
-from . import error_registry
+from . import error_registry, task_intake
 from .budget import UsageLedger
 from .config import Config
 from .dedup import Deduplicator, FileStore
@@ -213,6 +213,27 @@ def _gravar_comment_out(caminho: str, dados: dict) -> None:
     os.makedirs(os.path.dirname(os.path.abspath(caminho)) or ".", exist_ok=True)
     with open(caminho, "w", encoding="utf-8") as fh:
         fh.write(dados["merge_card"])
+
+
+def _gravar_intake_out(caminho: str | None, dados: dict, tasks_json_path: str | None) -> bool:
+    """Issue #160: grava a proposta da PR administrativa (novo conteúdo de
+    coordination/tasks.json = atual + UMA tarefa). Só quando o conteúdo
+    lido agora é EXATAMENTE aquele sobre o qual o Intake decidiu; qualquer
+    divergência = não grava (fail-closed). Nunca escreve no próprio
+    tasks.json — só no arquivo de saída que o workflow lê."""
+    proposta = dados.get("intake_proposal")
+    if not caminho or not proposta or not tasks_json_path or not os.path.isfile(tasks_json_path):
+        return False
+    with open(tasks_json_path, encoding="utf-8") as fh:
+        atual = fh.read()
+    if task_intake.sha256_texto(atual) != proposta.get("base_sha256"):
+        return False
+    saida = dict(proposta)
+    saida["content"] = task_intake.aplicar_proposta(atual, proposta["tarefa"])
+    os.makedirs(os.path.dirname(os.path.abspath(caminho)) or ".", exist_ok=True)
+    with open(caminho, "w", encoding="utf-8") as fh:
+        json.dump(saida, fh, ensure_ascii=False)
+    return True
 
 
 def _gravar_comment_target_out(caminho: str, dados: dict) -> None:
@@ -547,6 +568,8 @@ def main(argv: list[str] | None = None) -> int:
                          "PR/Issue via github-script — o CLI nunca chama a API do GitHub sozinho. "
                          "Não grava nada quando não há merge_card (ex.: modo observe, ou evento que "
                          "não passou pela auditoria)")
+    ap.add_argument("--intake-out", default=None,
+                    help="Issue #160: grava aqui a proposta da PR administrativa de coordination/tasks.json.")
     ap.add_argument("--comment-target-out", default=None,
                     help="V3 (correção B4 da auditoria independente do PR #104, rodada 4): grava só o "
                          "número da issue/PR de destino do comentário (ObserveResult."
@@ -616,6 +639,7 @@ def main(argv: list[str] | None = None) -> int:
         _gravar_comment_out(a.comment_out, dados_sanitizados)
     if a.comment_target_out:
         _gravar_comment_target_out(a.comment_target_out, dados_sanitizados)
+    _gravar_intake_out(getattr(a, "intake_out", None), dados_sanitizados, a.workers_from_tasks_json)
 
     # Auditoria final do PR #97: uma chamada à Anthropic bem-sucedida cujo
     # ledger de uso/custo falhou DEPOIS é um problema operacional real —
