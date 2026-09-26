@@ -96,6 +96,7 @@ from __future__ import annotations
 import re
 
 from .events import INBOX_ISSUE_NUMBER, Event
+from .task_intake import prioridade_declarada_do_texto
 
 # O rótulo que marca "chegou a hora de auditar" — mesma convenção que
 # coordination/STATES.md usa para o nome do estado.
@@ -244,6 +245,9 @@ def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None
             identity=f"issue:{numero_issue}#comment:{numero_comentario}",
             payload={
                 "body": corpo,
+                # Issue #160: prioridade DECLARADA pelo José ("URGENTE" → P0)
+                # vence a classificação por palavra-chave (#84 §1).
+                "prioridade_declarada": prioridade_declarada_do_texto(corpo),
                 "dedup_fields": {"comment_id": numero_comentario},
             },
         )

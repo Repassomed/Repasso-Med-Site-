@@ -52,6 +52,7 @@ from . import (
     test_runner_workflow_security,
     test_scheduler,
     test_source_pack,
+    test_task_intake,
     test_worker_bridge,
     test_worker_bridge_workflow_security,
     test_worker_commands,
@@ -97,6 +98,9 @@ MODULOS = [
     test_openai_auditor,
     test_scheduler,
     test_source_pack,
+    # Issue #160: Intake da Inbox #88 → proposta tipada → PR administrativa
+    # de coordination/tasks.json (nunca main, nunca merge/deploy).
+    test_task_intake,
     # Auto-reparo técnico OpenAI: política, anti-loop e escopo também entram
     # na suíte que o próprio reparo roda antes de publicar qualquer branch.
     test_auto_repair,
