@@ -2269,6 +2269,37 @@
       "risk_level": "MEDIO",
       "policy_level": "C",
       "jose_authorized": true
+    },
+    {
+      "id": "neurologia-intake-8ee837",
+      "titulo": "P0 — neurologia: URGENTE — P0 — NEUROLOGIA",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "URGENTE — P0 — NEUROLOGIA TAREFA SEPARADA das pendências/PRs antigas de Neurologia. Pode começar. Quero o FECHAMENTO URGENTE COMPLETO de Neurologia. Fontes obrigatórias: - Site Repasso Med / Biblioteca / 7º semestre / Neurologia / Questões; - todos os arquivos novos dessa pasta, incluindo as fotos de prova e o PDF “Provas neuro Aline.pdf”; - materiais/slides da cátedra de Neurologia; - 20 questões de prova que entreguei ao ChatGPT nesta conversa, que serão colocadas no source pack antes da execução. Objetivo: - incorporar as novas questões sem duplicar questões existentes; - corrigir/completar o resumo quando necessário para ensinar o que as provas cobram; - aplicar a Lei das Questões: resumo ensina → questão cobra → explicação reforça; - manter proveniência das questões de prova; - revisar morte encefálica, GBS, PL/HSA e demais pendências científicas já mapeadas; - revisar Banco General e espelhamento das questões; - detectar duplicatas literais e semânticas; - corrigir respostas visualmente denunciadas, negrito indevido e padrões previsíveis A/B/C/D; - revisar post-its/âncoras/IDs sem perder marcações dos alunos; - aplicar ALMA nos trechos trabalhados: linguagem mais simples, humana, menos densa e menos repetitiva, mantendo profundidade; - fazer QA final de conteúdo, questões e estrutura. Não executar sem o source pack das novas provas/questões. Não fazer merge nem deploy automático. José é o único que faz merge.",
+      "fonte": "Issue #88 · comentário 5841738119 · Intake #160",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/neurologia-intake-8ee837",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Criada pelo Intake da Inbox #88 (Issue #160) a partir do pedido do José. Bloqueios: depende de fonte externa (Drive/provas) ainda não materializada: falta o source pack `coordination/source-packs/neurologia-intake-8ee837-v1.md`. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-intake-8ee837-v1.md"
     }
   ]
 }
