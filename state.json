@@ -1574,6 +1574,31 @@
       "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): Nos trechos fornecidos do arquivo, as quatro quest\u00f5es do lote 25/09 (Q1 Wernicke em neub02 como q-neu-2509-01; Q2 trig\u00e9mino em neub05 como q-neu-2509-02; Q3 marcha en tijeras em neub03 como q-neu-2509-03; Q4 signo vestibular/nistagmo em neub05 como q-neu-2509-04) j\u00e1 est\u00e3o inseridas ao fim de cada bloco correto, com r\u00f3tulo 'Basada en preguntas de examen', alternativas e gabarito id\u00eanticos \u00e0 se\u00e7\u00e3o 4 do source pack, e conte\u00fado de explica\u00e7\u00e3o sustentado pela c\u00e1tedra sem diverg\u00eancia. O espelho no Banco General tamb\u00e9m j\u00e1 est\u00e1 confirmado literalmente para Q1 (bq-neu-2509-01) e Q3 (bq-neu-2509-03) nos trechos recebidos. N\u00e3o h\u00e1, nos trechos fornecidos, texto literal que permita localizar com seguran\u00e7a onde inserir ou verificar os espelhos de Q2/Q4 no Banco General (a se\u00e7\u00e3o correspondente ao bloco 05 no Banco General n\u00e3o est\u00e1 inclu\u00edda em nenhum trecho), ent\u00e3o qualquer edi\u00e7\u00e3o nesse ponto exigiria uma \u00e2ncora inventada, o que \u00e9 proibido; como o objetivo declarado (inserir as 4 quest\u00f5es nos blocos-fonte com espelho no Banco General) j\u00e1 est\u00e1 satisfeito no conte\u00fado verific\u00e1vel, nenhuma altera\u00e7\u00e3o \u00e9 feita.",
       "task_id": "neurologia-p0-provas-q01-04",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "runner",
+      "commit_sha": "29a7df6d259aa1686dbd7abba8360433297cf161",
+      "component": "runner",
+      "error_id": "ERR-E20B150656",
+      "error_type": "runner-blocked",
+      "fingerprint": "e20b150656f95718d8d3",
+      "first_seen": "2026-09-26T04:44:13.511827+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "fbff1704c9b04a3089f9636a496f8df2",
+      "issue_sync_updated_at": "2026-09-26T04:44:13.511827+00:00",
+      "last_evidence_hash": "68d235509bbbf15e728f",
+      "last_seen": "2026-09-26T04:44:13.511827+00:00",
+      "occurrence_count": 1,
+      "pr_number": 305,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36218572522",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As quatro quest\u00f5es do lote 25/09 (Q1 Wernicke id q-neu-2509-01, Q2 trig\u00e9mino id q-neu-2509-02, Q3 marcha en tijeras id q-neu-2509-03, Q4 signo vestibular id q-neu-2509-04) j\u00e1 est\u00e3o integralmente presentes nos blocos corretos (neub02, neub03, neub05) com o r\u00f3tulo 'Basada en preguntas de examen', alternativas e gabarito id\u00eanticos ao source pack, e coerentes com o resumo do pr\u00f3prio bloco (inclusive o dado vascular da Wernicke, que j\u00e1 consta na tabela de anatomia funcional do neub02 antes da quest\u00e3o, satisfazendo RESUMO ENSINA \u2192 QUEST\u00c3O COBRA). Os espelhos de Q1 (bq-neu-2509-01) e Q3 (bq-neu-2509-03) no Banco General tamb\u00e9m j\u00e1 est\u00e3o presentes e id\u00eanticos \u00e0s c\u00f3pias do bloco. Os trechos fornecidos n\u00e3o cobrem a regi\u00e3o do Banco General onde estariam os espelhos de Q2 e Q4, ent\u00e3o n\u00e3o h\u00e1 \u00e2ncora literal segura para confirmar ou editar essa parte sem inventar texto; como o conte\u00fado vis\u00edvel j\u00e1 cumpre o objetivo e n\u00e3o h\u00e1 trecho que permita uma edi\u00e7\u00e3o segura, nenhuma altera\u00e7\u00e3o \u00e9 feita nesta execu\u00e7\u00e3o.",
+      "task_id": "neurologia-p0-provas-q01-04",
+      "worker_id": "claude-worker-2"
     }
   ]
 }
