@@ -585,6 +585,16 @@
       "recorded_at": "2026-09-26T03:10:37.865106+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "neurologia-p0-provas-q01-04--bridge-a723b6ce812f"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): Nos trechos fornecidos do arquivo, as quatro quest\u00f5es do lote 25/09 (Q1 Wernicke em neub02 como q-neu-2509-01; Q2 trig\u00e9mino em neub05 como q-neu-2509-02; Q3 marcha en tijeras em neub03 como q-neu-2509-03; Q4 signo vestibular/nistagmo em neub05 como q-neu-2509-04) j\u00e1 est\u00e3o inseridas ao fim de cada bloco correto, com r\u00f3tulo 'Basada en preguntas de examen', alternativas e gabarito id\u00eanticos \u00e0 se\u00e7\u00e3o 4 do source pack, e conte\u00fado de explica\u00e7\u00e3o sustentado pela c\u00e1tedra sem diverg\u00eancia. O espelho no Banco General tamb\u00e9m j\u00e1 est\u00e1 confirmado literalmente para Q1 (bq-neu-2509-01) e Q3 (bq-neu-2509-03) nos trechos recebidos. N\u00e3o h\u00e1, nos trechos fornecidos, texto literal que permita localizar com seguran\u00e7a onde inserir ou verificar os espelhos de Q2/Q4 no Banco General (a se\u00e7\u00e3o correspondente ao bloco 05 no Banco General n\u00e3o est\u00e1 inclu\u00edda em nenhum trecho), ent\u00e3o qualquer edi\u00e7\u00e3o nesse ponto exigiria uma \u00e2ncora inventada, o que \u00e9 proibido; como o objetivo declarado (inserir as 4 quest\u00f5es nos blocos-fonte com espelho no Banco General) j\u00e1 est\u00e1 satisfeito no conte\u00fado verific\u00e1vel, nenhuma altera\u00e7\u00e3o \u00e9 feita.",
+      "recorded_at": "2026-09-26T03:15:08.407604+00:00",
+      "status": "BLOCKED",
+      "task_id": "neurologia-p0-provas-q01-04--bridge-7176ed3c0f06"
     }
   ]
 }
