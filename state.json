@@ -150,10 +150,10 @@
       "current_task": "neurologia-p0-provas-q01-04",
       "display_name": "Claude Worker 1",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-26T03:10:43.792592+00:00",
+      "last_heartbeat": "2026-09-26T03:13:59.284959+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "AVAILABLE",
+      "status": "BUSY",
       "type": "api_runner",
       "worker_id": "claude-worker-1"
     },
