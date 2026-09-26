@@ -596,6 +596,16 @@
       "recorded_at": "2026-09-26T03:15:08.407604+00:00",
       "status": "BLOCKED",
       "task_id": "neurologia-p0-provas-q01-04--bridge-7176ed3c0f06"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As quatro quest\u00f5es do lote 25/09 (Q1 Wernicke id q-neu-2509-01, Q2 trig\u00e9mino id q-neu-2509-02, Q3 marcha en tijeras id q-neu-2509-03, Q4 signo vestibular id q-neu-2509-04) j\u00e1 est\u00e3o integralmente presentes nos blocos corretos (neub02, neub03, neub05) com o r\u00f3tulo 'Basada en preguntas de examen', alternativas e gabarito id\u00eanticos ao source pack, e coerentes com o resumo do pr\u00f3prio bloco (inclusive o dado vascular da Wernicke, que j\u00e1 consta na tabela de anatomia funcional do neub02 antes da quest\u00e3o, satisfazendo RESUMO ENSINA \u2192 QUEST\u00c3O COBRA). Os espelhos de Q1 (bq-neu-2509-01) e Q3 (bq-neu-2509-03) no Banco General tamb\u00e9m j\u00e1 est\u00e3o presentes e id\u00eanticos \u00e0s c\u00f3pias do bloco. Os trechos fornecidos n\u00e3o cobrem a regi\u00e3o do Banco General onde estariam os espelhos de Q2 e Q4, ent\u00e3o n\u00e3o h\u00e1 \u00e2ncora literal segura para confirmar ou editar essa parte sem inventar texto; como o conte\u00fado vis\u00edvel j\u00e1 cumpre o objetivo e n\u00e3o h\u00e1 trecho que permita uma edi\u00e7\u00e3o segura, nenhuma altera\u00e7\u00e3o \u00e9 feita nesta execu\u00e7\u00e3o.",
+      "recorded_at": "2026-09-26T04:44:01.113765+00:00",
+      "status": "BLOCKED",
+      "task_id": "neurologia-p0-provas-q01-04--bridge-99b79c513e70"
     }
   ]
 }
