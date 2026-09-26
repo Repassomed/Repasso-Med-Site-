@@ -563,6 +563,16 @@
       "recorded_at": "2026-09-25T22:17:03.172661+00:00",
       "status": "BLOCKED",
       "task_id": "cleanup-como-estudar-histologia-i-r2--bridge-ddcdca5fd8ed"
+    },
+    {
+      "branch": "runner/neurologia-p0-provas-q01-04",
+      "checkpoint_commit": "19eac6f17d7c6333c0996aeebe6364f079c65c41",
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/neurologia-p0-provas-q01-04'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "recorded_at": "2026-09-26T03:00:02.950350+00:00",
+      "status": "NEEDS-AUDIT",
+      "task_id": "neurologia-p0-provas-q01-04--bridge-2705fdb9e224"
     }
   ]
 }
