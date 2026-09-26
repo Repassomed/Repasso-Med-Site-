@@ -607,6 +607,16 @@
       "recorded_at": "2026-09-26T04:44:01.113765+00:00",
       "status": "BLOCKED",
       "task_id": "neurologia-p0-provas-q01-04--bridge-99b79c513e70"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As quatro quest\u00f5es do lote 25/09 (Q1 Wernicke em neub02 id q-neu-2509-01, Q2 trig\u00e9mino em neub05 id q-neu-2509-02, Q3 marcha en tijeras em neub03 id q-neu-2509-03, Q4 signo vestibular em neub05 id q-neu-2509-04) j\u00e1 est\u00e3o integralmente presentes nos blocos-alvo, com r\u00f3tulo 'Basada en preguntas de examen' correto, alternativas e gabarito conforme o pack, e o espelho de Q1 e Q3 j\u00e1 existe no Banco General (bq-neu-2509-01 e bq-neu-2509-03, confirmados no trecho 23). N\u00e3o h\u00e1, por\u00e9m, nenhum trecho fornecido que cubra a se\u00e7\u00e3o 'Bloque 05' do Banco General (a lacuna entre o trecho 24, que termina em bq-neu022, e o trecho 25, que j\u00e1 est\u00e1 nos flashcards, \u00e9 de ~194 mil caracteres n\u00e3o enviados), de modo que n\u00e3o \u00e9 poss\u00edvel confirmar nem editar com seguran\u00e7a se os espelhos de Q2 e Q4 j\u00e1 existem ali ou faltam \u2014 inserir um bloco novo ali exigiria uma \u00e2ncora que n\u00e3o foi fornecida, o que a regra pro\u00edbe. Como o cotejo direto com as fotos originais da prova (mencionado como pend\u00eancia pela auditoria) tamb\u00e9m n\u00e3o foi realizado nesta execu\u00e7\u00e3o \u2014 o worker s\u00f3 recebeu texto do source pack, nunca as imagens \u2014, esse item permanece pendente e \u00e9 registrado como tal, sem inventar confirma\u00e7\u00e3o de legibilidade visual.",
+      "recorded_at": "2026-09-26T04:47:39.982868+00:00",
+      "status": "BLOCKED",
+      "task_id": "neurologia-p0-provas-q01-04--bridge-9a4b3a70524c"
     }
   ]
 }
