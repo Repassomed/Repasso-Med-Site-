@@ -1599,6 +1599,31 @@
       "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As quatro quest\u00f5es do lote 25/09 (Q1 Wernicke id q-neu-2509-01, Q2 trig\u00e9mino id q-neu-2509-02, Q3 marcha en tijeras id q-neu-2509-03, Q4 signo vestibular id q-neu-2509-04) j\u00e1 est\u00e3o integralmente presentes nos blocos corretos (neub02, neub03, neub05) com o r\u00f3tulo 'Basada en preguntas de examen', alternativas e gabarito id\u00eanticos ao source pack, e coerentes com o resumo do pr\u00f3prio bloco (inclusive o dado vascular da Wernicke, que j\u00e1 consta na tabela de anatomia funcional do neub02 antes da quest\u00e3o, satisfazendo RESUMO ENSINA \u2192 QUEST\u00c3O COBRA). Os espelhos de Q1 (bq-neu-2509-01) e Q3 (bq-neu-2509-03) no Banco General tamb\u00e9m j\u00e1 est\u00e3o presentes e id\u00eanticos \u00e0s c\u00f3pias do bloco. Os trechos fornecidos n\u00e3o cobrem a regi\u00e3o do Banco General onde estariam os espelhos de Q2 e Q4, ent\u00e3o n\u00e3o h\u00e1 \u00e2ncora literal segura para confirmar ou editar essa parte sem inventar texto; como o conte\u00fado vis\u00edvel j\u00e1 cumpre o objetivo e n\u00e3o h\u00e1 trecho que permita uma edi\u00e7\u00e3o segura, nenhuma altera\u00e7\u00e3o \u00e9 feita nesta execu\u00e7\u00e3o.",
       "task_id": "neurologia-p0-provas-q01-04",
       "worker_id": "claude-worker-2"
+    },
+    {
+      "category": "runner",
+      "commit_sha": "29a7df6d259aa1686dbd7abba8360433297cf161",
+      "component": "runner",
+      "error_id": "ERR-BAF5170466",
+      "error_type": "runner-blocked",
+      "fingerprint": "baf5170466218c36a992",
+      "first_seen": "2026-09-26T04:47:50.438179+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "ba1f92c9c78442d2a54b938cc8fa5611",
+      "issue_sync_updated_at": "2026-09-26T04:47:50.438179+00:00",
+      "last_evidence_hash": "ffe0d0e0bda593c8fe3e",
+      "last_seen": "2026-09-26T04:47:50.438179+00:00",
+      "occurrence_count": 1,
+      "pr_number": 305,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36218576423",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As quatro quest\u00f5es do lote 25/09 (Q1 Wernicke em neub02 id q-neu-2509-01, Q2 trig\u00e9mino em neub05 id q-neu-2509-02, Q3 marcha en tijeras em neub03 id q-neu-2509-03, Q4 signo vestibular em neub05 id q-neu-2509-04) j\u00e1 est\u00e3o integralmente presentes nos blocos-alvo, com r\u00f3tulo 'Basada en preguntas de examen' correto, alternativas e gabarito conforme o pack, e o espelho de Q1 e Q3 j\u00e1 existe no Banco General (bq-neu-2509-01 e bq-neu-2509-03, confirmados no trecho 23). N\u00e3o h\u00e1, por\u00e9m, nenhum trecho fornecido que cubra a se\u00e7\u00e3o 'Bloque 05' do Banco General (a lacuna entre o trecho 24, que termina em bq-neu022, e o trecho 25, que j\u00e1 est\u00e1 nos flashcards, \u00e9 de ~194 mil caracteres n\u00e3o enviados), de modo que n\u00e3o \u00e9 poss\u00edvel confirmar nem editar com seguran\u00e7a se os espelhos de Q2 e Q4 j\u00e1 existem ali ou faltam \u2014 inserir um bloco novo ali exigiria uma \u00e2ncora que n\u00e3o foi fornecida, o que a regra pro\u00edbe. Como o cotejo direto com as fotos originais da prova (mencionado como pend\u00eancia pela auditoria) tamb\u00e9m n\u00e3o foi realizado nesta execu\u00e7\u00e3o \u2014 o worker s\u00f3 recebeu texto do source pack, nunca as imagens \u2014, esse item permanece pendente e \u00e9 registrado como tal, sem inventar confirma\u00e7\u00e3o de legibilidade visual.",
+      "task_id": "neurologia-p0-provas-q01-04",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
