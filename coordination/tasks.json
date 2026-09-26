@@ -10,7 +10,7 @@
     "José continua sendo o único responsável por merge e publicação."
   ],
   "versao": 1,
-  "atualizado_em": "2026-09-25",
+  "atualizado_em": "2026-09-26",
   "agentes_conhecidos": [
     "Claude 1",
     "Claude 2",
@@ -2281,7 +2281,7 @@
       "objetivo": "URGENTE — P0 — NEUROLOGIA TAREFA SEPARADA das pendências/PRs antigas de Neurologia. Pode começar. Quero o FECHAMENTO URGENTE COMPLETO de Neurologia. Fontes obrigatórias: - Site Repasso Med / Biblioteca / 7º semestre / Neurologia / Questões; - todos os arquivos novos dessa pasta, incluindo as fotos de prova e o PDF “Provas neuro Aline.pdf”; - materiais/slides da cátedra de Neurologia; - 20 questões de prova que entreguei ao ChatGPT nesta conversa, que serão colocadas no source pack antes da execução. Objetivo: - incorporar as novas questões sem duplicar questões existentes; - corrigir/completar o resumo quando necessário para ensinar o que as provas cobram; - aplicar a Lei das Questões: resumo ensina → questão cobra → explicação reforça; - manter proveniência das questões de prova; - revisar morte encefálica, GBS, PL/HSA e demais pendências científicas já mapeadas; - revisar Banco General e espelhamento das questões; - detectar duplicatas literais e semânticas; - corrigir respostas visualmente denunciadas, negrito indevido e padrões previsíveis A/B/C/D; - revisar post-its/âncoras/IDs sem perder marcações dos alunos; - aplicar ALMA nos trechos trabalhados: linguagem mais simples, humana, menos densa e menos repetitiva, mantendo profundidade; - fazer QA final de conteúdo, questões e estrutura. Não executar sem o source pack das novas provas/questões. Não fazer merge nem deploy automático. José é o único que faz merge.",
       "fonte": "Issue #88 · comentário 5841738119 · Intake #160",
       "agente": null,
-      "estado": "READY",
+      "estado": "BLOCKED",
       "prioridade_declarada": "P0",
       "capabilities_required": [
         "conteudo"
@@ -2291,7 +2291,38 @@
       "pr": null,
       "commit": null,
       "issue": 88,
-      "notas": "Source pack materializado em coordination/source-packs/neurologia-intake-8ee837-v1.md com cátedra, novas provas/fotos, 20 questões digitadas por José, regras de divergência e QA. Tarefa P0 liberada para o Worker Bridge; question_report obrigatório; resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "notas": "Source pack materializado em coordination/source-packs/neurologia-intake-8ee837-v1.md com cátedra, novas provas/fotos, 20 questões digitadas por José, regras de divergência e QA. Tarefa P0 liberada para o Worker Bridge; question_report obrigatório; resultado NEEDS-AUDIT; sem merge/deploy automático. Decomposta em 26/09/2026: o Worker Bridge recusou esta tarefa antes de qualquer chamada paga porque o source pack mestre tem 15.459 caracteres (teto 6.000). Substituída por 12 microtarefas sequenciais: neurologia-p0-provas-q01-04 → neurologia-p0-provas-q05-07 → neurologia-p0-provas-q08-11 → neurologia-p0-provas-q12-14 → neurologia-p0-provas-q15-17 → neurologia-p0-casos-clinicos → neurologia-p0-fechamento-cientifico-1 → neurologia-p0-fechamento-cientifico-2 → neurologia-p0-qa-parte-1 → neurologia-p0-qa-parte-2 → neurologia-p0-qa-parte-3 → neurologia-p0-qa-final. Cada uma tem source pack próprio de no máximo 5.500 caracteres, extraído literalmente do mestre. O pack mestre fica só como documentação/proveniência. Não reexecutar esta tarefa.",
+      "automation_enabled": false,
+      "bridge_enabled": false,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-intake-8ee837-v1.md"
+    },
+    {
+      "id": "neurologia-p0-provas-q01-04",
+      "titulo": "P0 — Neurología 1/12: prova 25/09 · questões 1 a 4",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa do P0 de Neurologia (mãe neurologia-intake-8ee837): integrar SOMENTE as questões 1 a 4 do lote de prova de 25/09/2026 descritas no source pack. Destinos: Q1 área de Wernicke (neub02); Q2 V par/trigémino (neub05); Q3 marcha en tijeras (neub03); Q4 signo vestibular (neub05). Alternativas e chave: seção 4 do pack, cotejadas com a cátedra. Não tocar nas demais questões do lote nem em blocos não citados, exceto o espelho no Banco General. Regras (Lei das Questões 8-A e LEI G0/ALMA): antes de inserir, deduplicar cada questão contra o corpo do bloco, o Banco General (banconeu), as provas antigas e o lote novo; duplicata literal ou semântica não entra como questão nova, e se a versão recebida for demonstravelmente melhor, reformular a existente preservando o id. RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA: se a prova cobra algo que o resumo não ensina, completar primeiro o resumo no bloco correto, com a cátedra como fonte principal e toda divergência de literatura rotulada. Inserir no fim do bloco que ensina o assunto e espelhar no Banco General sem divergência entre as cópias. Rótulo de proveniência: Basada en preguntas de examen (complementares: Pregunta complementaria), nunca Pregunta oficial. Não revelar a resposta por negrito, estilo, cor, ordem ou texto; reordenar alternativas só quando seguro, sem forçar 25/25/25/25 e sem alterar a resposta científica. Não inventar texto ilegível: fragmento inseguro fica PARCIAL/NÃO APROVEITADO com motivo; o OCR do PDF Provas neuro Aline nunca é transcrição canônica. Preservar ids, block_ids, âncoras, highlights e post-its. ALMA só nos trechos tocados. Atualizar as contagens declaradas. question_report completo (detectadas, integrais, parciais, reconstruídas, complementares, duplicadas/canônicas, não aproveitadas + motivo + proveniência). Resultado NEEDS-AUDIT; sem merge nem deploy, José é o único que mergeia.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "runner/neurologia-p0-provas-q01-04",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 1/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
       "automation_enabled": true,
       "bridge_enabled": true,
       "risk_level": "MEDIO",
@@ -2299,7 +2330,370 @@
       "jose_authorized": true,
       "question_report_required": true,
       "source_pack_required": true,
-      "source_pack_path": "coordination/source-packs/neurologia-intake-8ee837-v1.md"
+      "source_pack_path": "coordination/source-packs/neurologia-p0-provas-q01-04-v1.md"
+    },
+    {
+      "id": "neurologia-p0-provas-q05-07",
+      "titulo": "P0 — Neurología 2/12: prova 25/09 · questões 5 a 7",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa do P0 de Neurologia (mãe neurologia-intake-8ee837): integrar SOMENTE as questões 5 a 7 do lote de prova de 25/09/2026 descritas no source pack. Destinos: Q5 neuralgia del trigémino (neub05); Q6 mecanismo da miastenia gravis (neub16); Q7 função de NREM N3 (neub17). Alternativas e chave: seção 4 do pack, cotejadas com a cátedra. Não tocar nas demais questões do lote nem em blocos não citados, exceto o espelho no Banco General. Regras (Lei das Questões 8-A e LEI G0/ALMA): antes de inserir, deduplicar cada questão contra o corpo do bloco, o Banco General (banconeu), as provas antigas e o lote novo; duplicata literal ou semântica não entra como questão nova, e se a versão recebida for demonstravelmente melhor, reformular a existente preservando o id. RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA: se a prova cobra algo que o resumo não ensina, completar primeiro o resumo no bloco correto, com a cátedra como fonte principal e toda divergência de literatura rotulada. Inserir no fim do bloco que ensina o assunto e espelhar no Banco General sem divergência entre as cópias. Rótulo de proveniência: Basada en preguntas de examen (complementares: Pregunta complementaria), nunca Pregunta oficial. Não revelar a resposta por negrito, estilo, cor, ordem ou texto; reordenar alternativas só quando seguro, sem forçar 25/25/25/25 e sem alterar a resposta científica. Não inventar texto ilegível: fragmento inseguro fica PARCIAL/NÃO APROVEITADO com motivo; o OCR do PDF Provas neuro Aline nunca é transcrição canônica. Preservar ids, block_ids, âncoras, highlights e post-its. ALMA só nos trechos tocados. Atualizar as contagens declaradas. question_report completo (detectadas, integrais, parciais, reconstruídas, complementares, duplicadas/canônicas, não aproveitadas + motivo + proveniência). Resultado NEEDS-AUDIT; sem merge nem deploy, José é o único que mergeia.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "neurologia-p0-provas-q01-04"
+      ],
+      "branch": "runner/neurologia-p0-provas-q05-07",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 2/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-p0-provas-q05-07-v1.md"
+    },
+    {
+      "id": "neurologia-p0-provas-q08-11",
+      "titulo": "P0 — Neurología 3/12: prova 25/09 · questões 8 a 11",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa do P0 de Neurologia (mãe neurologia-intake-8ee837): integrar SOMENTE as questões 8 a 11 do lote de prova de 25/09/2026 descritas no source pack. Destinos: Q8 prova de apnea e Q9 reflexos do tronco na muerte cerebral (neub18); Q10 síndrome de Weber (neub12); Q11 provas do III par (neub04). Q8 mantém a chave histórica da cátedra/prova; a atualização AAN/AAP/CNS/SCCM 2023 só aparece como nota separada e rotulada como literatura. A revisão ampla de muerte encefálica no resumo fica para neurologia-p0-fechamento-cientifico-1. Não tocar nas demais questões do lote nem em blocos não citados, exceto o espelho no Banco General. Regras (Lei das Questões 8-A e LEI G0/ALMA): antes de inserir, deduplicar cada questão contra o corpo do bloco, o Banco General (banconeu), as provas antigas e o lote novo; duplicata literal ou semântica não entra como questão nova, e se a versão recebida for demonstravelmente melhor, reformular a existente preservando o id. RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA: se a prova cobra algo que o resumo não ensina, completar primeiro o resumo no bloco correto, com a cátedra como fonte principal e toda divergência de literatura rotulada. Inserir no fim do bloco que ensina o assunto e espelhar no Banco General sem divergência entre as cópias. Rótulo de proveniência: Basada en preguntas de examen (complementares: Pregunta complementaria), nunca Pregunta oficial. Não revelar a resposta por negrito, estilo, cor, ordem ou texto; reordenar alternativas só quando seguro, sem forçar 25/25/25/25 e sem alterar a resposta científica. Não inventar texto ilegível: fragmento inseguro fica PARCIAL/NÃO APROVEITADO com motivo; o OCR do PDF Provas neuro Aline nunca é transcrição canônica. Preservar ids, block_ids, âncoras, highlights e post-its. ALMA só nos trechos tocados. Atualizar as contagens declaradas. question_report completo (detectadas, integrais, parciais, reconstruídas, complementares, duplicadas/canônicas, não aproveitadas + motivo + proveniência). Resultado NEEDS-AUDIT; sem merge nem deploy, José é o único que mergeia.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "neurologia-p0-provas-q05-07"
+      ],
+      "branch": "runner/neurologia-p0-provas-q08-11",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 3/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-p0-provas-q08-11-v1.md"
+    },
+    {
+      "id": "neurologia-p0-provas-q12-14",
+      "titulo": "P0 — Neurología 4/12: prova 25/09 · questões 12 a 14",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa do P0 de Neurologia (mãe neurologia-intake-8ee837): integrar SOMENTE as questões 12 a 14 do lote de prova de 25/09/2026 descritas no source pack. Destinos: Q12 síndrome frontal (neub11); Q13 parálisis facial central (neub05); Q14 Brown-Séquard (neub13). Q12 não tem evidência de cátedra no pack: verificar o que neub11 já ensina; se faltar, completar com literatura identificada e rotulada ou registrar como pendência, nunca inventar justificativa. Não tocar nas demais questões do lote nem em blocos não citados, exceto o espelho no Banco General. Regras (Lei das Questões 8-A e LEI G0/ALMA): antes de inserir, deduplicar cada questão contra o corpo do bloco, o Banco General (banconeu), as provas antigas e o lote novo; duplicata literal ou semântica não entra como questão nova, e se a versão recebida for demonstravelmente melhor, reformular a existente preservando o id. RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA: se a prova cobra algo que o resumo não ensina, completar primeiro o resumo no bloco correto, com a cátedra como fonte principal e toda divergência de literatura rotulada. Inserir no fim do bloco que ensina o assunto e espelhar no Banco General sem divergência entre as cópias. Rótulo de proveniência: Basada en preguntas de examen (complementares: Pregunta complementaria), nunca Pregunta oficial. Não revelar a resposta por negrito, estilo, cor, ordem ou texto; reordenar alternativas só quando seguro, sem forçar 25/25/25/25 e sem alterar a resposta científica. Não inventar texto ilegível: fragmento inseguro fica PARCIAL/NÃO APROVEITADO com motivo; o OCR do PDF Provas neuro Aline nunca é transcrição canônica. Preservar ids, block_ids, âncoras, highlights e post-its. ALMA só nos trechos tocados. Atualizar as contagens declaradas. question_report completo (detectadas, integrais, parciais, reconstruídas, complementares, duplicadas/canônicas, não aproveitadas + motivo + proveniência). Resultado NEEDS-AUDIT; sem merge nem deploy, José é o único que mergeia.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "neurologia-p0-provas-q08-11"
+      ],
+      "branch": "runner/neurologia-p0-provas-q12-14",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 4/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-p0-provas-q12-14-v1.md"
+    },
+    {
+      "id": "neurologia-p0-provas-q15-17",
+      "titulo": "P0 — Neurología 5/12: prova 25/09 · questões 15 a 17",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa do P0 de Neurologia (mãe neurologia-intake-8ee837): integrar SOMENTE as questões 15 a 17 do lote de prova de 25/09/2026 descritas no source pack. Destinos: Q15 hiposmia e Parkinson (neub04); Q16 Eaton-Lambert versus miastenia (neub16); Q17 classificação do TCE pela escala de Glasgow (neub01, onde a escala completa e a tabela do TCE são ensinadas). Não tocar nas demais questões do lote nem em blocos não citados, exceto o espelho no Banco General. Regras (Lei das Questões 8-A e LEI G0/ALMA): antes de inserir, deduplicar cada questão contra o corpo do bloco, o Banco General (banconeu), as provas antigas e o lote novo; duplicata literal ou semântica não entra como questão nova, e se a versão recebida for demonstravelmente melhor, reformular a existente preservando o id. RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA: se a prova cobra algo que o resumo não ensina, completar primeiro o resumo no bloco correto, com a cátedra como fonte principal e toda divergência de literatura rotulada. Inserir no fim do bloco que ensina o assunto e espelhar no Banco General sem divergência entre as cópias. Rótulo de proveniência: Basada en preguntas de examen (complementares: Pregunta complementaria), nunca Pregunta oficial. Não revelar a resposta por negrito, estilo, cor, ordem ou texto; reordenar alternativas só quando seguro, sem forçar 25/25/25/25 e sem alterar a resposta científica. Não inventar texto ilegível: fragmento inseguro fica PARCIAL/NÃO APROVEITADO com motivo; o OCR do PDF Provas neuro Aline nunca é transcrição canônica. Preservar ids, block_ids, âncoras, highlights e post-its. ALMA só nos trechos tocados. Atualizar as contagens declaradas. question_report completo (detectadas, integrais, parciais, reconstruídas, complementares, duplicadas/canônicas, não aproveitadas + motivo + proveniência). Resultado NEEDS-AUDIT; sem merge nem deploy, José é o único que mergeia.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "neurologia-p0-provas-q12-14"
+      ],
+      "branch": "runner/neurologia-p0-provas-q15-17",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 5/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-p0-provas-q15-17-v1.md"
+    },
+    {
+      "id": "neurologia-p0-casos-clinicos",
+      "titulo": "P0 — Neurología 6/12: prova 25/09 · casos clínicos 18 a 20",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa do P0 de Neurologia (mãe neurologia-intake-8ee837): integrar SOMENTE as questões 18 a 20 do lote de prova de 25/09/2026 descritas no source pack. Destinos: Q18 síndrome de Wallenberg / bulbar lateral (neub12); Q19 signo de Lasègue e radiculopatia lumbosacra (neub15); Q20 cálculo de Glasgow e postura de decorticação (neub01). Não tocar nas demais questões do lote nem em blocos não citados, exceto o espelho no Banco General. Regras (Lei das Questões 8-A e LEI G0/ALMA): antes de inserir, deduplicar cada questão contra o corpo do bloco, o Banco General (banconeu), as provas antigas e o lote novo; duplicata literal ou semântica não entra como questão nova, e se a versão recebida for demonstravelmente melhor, reformular a existente preservando o id. RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA: se a prova cobra algo que o resumo não ensina, completar primeiro o resumo no bloco correto, com a cátedra como fonte principal e toda divergência de literatura rotulada. Inserir no fim do bloco que ensina o assunto e espelhar no Banco General sem divergência entre as cópias. Rótulo de proveniência: Basada en preguntas de examen (complementares: Pregunta complementaria), nunca Pregunta oficial. Não revelar a resposta por negrito, estilo, cor, ordem ou texto; reordenar alternativas só quando seguro, sem forçar 25/25/25/25 e sem alterar a resposta científica. Não inventar texto ilegível: fragmento inseguro fica PARCIAL/NÃO APROVEITADO com motivo; o OCR do PDF Provas neuro Aline nunca é transcrição canônica. Preservar ids, block_ids, âncoras, highlights e post-its. ALMA só nos trechos tocados. Atualizar as contagens declaradas. question_report completo (detectadas, integrais, parciais, reconstruídas, complementares, duplicadas/canônicas, não aproveitadas + motivo + proveniência). Resultado NEEDS-AUDIT; sem merge nem deploy, José é o único que mergeia.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "neurologia-p0-provas-q15-17"
+      ],
+      "branch": "runner/neurologia-p0-casos-clinicos",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 6/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-p0-casos-clinicos-v1.md"
+    },
+    {
+      "id": "neurologia-p0-fechamento-cientifico-1",
+      "titulo": "P0 — Neurología 7/12: fechamento científico: muerte encefálica e GBS",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa do P0 de Neurologia (mãe neurologia-intake-8ee837): fechar SOMENTE duas pendências científicas do source pack, sem inserir questões do lote (já integradas). (1) Muerte encefálica (neub18): separar o que diz a cátedra (slide 8) do que diz a literatura 2023 (AAN/AAP/CNS/SCCM), sem misturar critérios de apnea nem provas ancilares e sem alterar a chave histórica da questão de apnea. (2) GBS (neub15): não universalizar a desmielinização; diferenciar AIDP de AMAN/AMSAN com literatura identificada e rotulada. Cátedra é a fonte principal; toda literatura fica rotulada; sem fonte identificável, registrar pendência. Preservar ids, block_ids, âncoras, highlights e post-its; se uma explicação espelhada mudar, atualizar corpo e Banco General juntos. ALMA só nos trechos tocados. Resultado NEEDS-AUDIT; sem merge nem deploy.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "neurologia-p0-casos-clinicos"
+      ],
+      "branch": "runner/neurologia-p0-fechamento-cientifico-1",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 7/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": false,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-p0-fechamento-cientifico-1-v1.md"
+    },
+    {
+      "id": "neurologia-p0-fechamento-cientifico-2",
+      "titulo": "P0 — Neurología 8/12: fechamento científico: PL/HSA e cobertura de final",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa do P0 de Neurologia (mãe neurologia-intake-8ee837): fechar SOMENTE duas pendências do source pack, sem inserir questões do lote. (1) PL/HSA (neub15 e neub19): separar a regra da cátedra da nota clínica/literatura (xantocromía, eritrócitos, imagem), só onde o tema já está presente. (2) Cobertura de final (neub19): cefaleas, migraña, cluster, HSA, Alzheimer/demencias, meningitis, tratamento de epilepsia e Parkinson, EM, encefalitis e interpretação de TC; só acrescentar o que tiver fonte identificada e citada, e sem fonte registrar pendência. Cátedra é a fonte principal; toda literatura fica rotulada. Preservar ids, block_ids, âncoras, highlights e post-its; se uma explicação espelhada mudar, atualizar corpo e Banco General juntos. ALMA só nos trechos tocados. Resultado NEEDS-AUDIT; sem merge nem deploy.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "neurologia-p0-fechamento-cientifico-1"
+      ],
+      "branch": "runner/neurologia-p0-fechamento-cientifico-2",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 8/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": false,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-p0-fechamento-cientifico-2-v1.md"
+    },
+    {
+      "id": "neurologia-p0-qa-parte-1",
+      "titulo": "P0 — Neurología 9/12: QA parte 1 (neub01, neub02, neub03, neub05)",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa de QA do P0 de Neurologia (mãe neurologia-intake-8ee837), parte 1 de 4: revisar SOMENTE neub01, neub02, neub03 e neub05 e as cópias das suas questões no Banco General, com foco nas questões 1 a 5, 13, 17 e 20 do lote de 25/09/2026 e nos trechos que o P0 alterou. Checklist: duplicatas literais e semânticas (manter a canônica mais completa, preservando o id); corpo e Banco General idênticos; proveniência correta (Basada en preguntas de examen ou Pregunta complementaria); explicações coerentes com a resposta; nenhuma resposta denunciada por negrito, estilo, cor ou texto; padrões previsíveis A/B/C/D reordenados só quando seguro, sem forçar 25/25/25/25 e sem mudar a resposta científica; ids, block_ids e âncoras únicos e preservados; post-its e highlights intactos; ALMA só nos trechos trabalhados pelo P0; RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA; contagens declaradas atualizadas. Corrigir só o que falhar; não reescrever o que está correto. Resultado NEEDS-AUDIT; sem merge nem deploy.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "neurologia-p0-fechamento-cientifico-2"
+      ],
+      "branch": "runner/neurologia-p0-qa-parte-1",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 9/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-p0-qa-parte-1-v1.md"
+    },
+    {
+      "id": "neurologia-p0-qa-parte-2",
+      "titulo": "P0 — Neurología 10/12: QA parte 2 (neub04, neub11, neub12)",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa de QA do P0 de Neurologia (mãe neurologia-intake-8ee837), parte 2 de 4: revisar SOMENTE neub04, neub11 e neub12 e as cópias das suas questões no Banco General, com foco nas questões 10, 11, 12, 15 e 18 do lote de 25/09/2026 e nos trechos que o P0 alterou. Checklist: duplicatas literais e semânticas (manter a canônica mais completa, preservando o id); corpo e Banco General idênticos; proveniência correta (Basada en preguntas de examen ou Pregunta complementaria); explicações coerentes com a resposta; nenhuma resposta denunciada por negrito, estilo, cor ou texto; padrões previsíveis A/B/C/D reordenados só quando seguro, sem forçar 25/25/25/25 e sem mudar a resposta científica; ids, block_ids e âncoras únicos e preservados; post-its e highlights intactos; ALMA só nos trechos trabalhados pelo P0; RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA; contagens declaradas atualizadas. Corrigir só o que falhar; não reescrever o que está correto. Resultado NEEDS-AUDIT; sem merge nem deploy.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "neurologia-p0-qa-parte-1"
+      ],
+      "branch": "runner/neurologia-p0-qa-parte-2",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 10/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-p0-qa-parte-2-v1.md"
+    },
+    {
+      "id": "neurologia-p0-qa-parte-3",
+      "titulo": "P0 — Neurología 11/12: QA parte 3 (neub13, neub16, neub17)",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa de QA do P0 de Neurologia (mãe neurologia-intake-8ee837), parte 3 de 4: revisar SOMENTE neub13, neub16 e neub17 e as cópias das suas questões no Banco General, com foco nas questões 6, 7, 14 e 16 do lote de 25/09/2026 e nos trechos que o P0 alterou. Checklist: duplicatas literais e semânticas (manter a canônica mais completa, preservando o id); corpo e Banco General idênticos; proveniência correta (Basada en preguntas de examen ou Pregunta complementaria); explicações coerentes com a resposta; nenhuma resposta denunciada por negrito, estilo, cor ou texto; padrões previsíveis A/B/C/D reordenados só quando seguro, sem forçar 25/25/25/25 e sem mudar a resposta científica; ids, block_ids e âncoras únicos e preservados; post-its e highlights intactos; ALMA só nos trechos trabalhados pelo P0; RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA; contagens declaradas atualizadas. Corrigir só o que falhar; não reescrever o que está correto. Resultado NEEDS-AUDIT; sem merge nem deploy.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "neurologia-p0-qa-parte-2"
+      ],
+      "branch": "runner/neurologia-p0-qa-parte-3",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 11/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-p0-qa-parte-3-v1.md"
+    },
+    {
+      "id": "neurologia-p0-qa-final",
+      "titulo": "P0 — Neurología 12/12: QA final e question_report consolidado",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Microtarefa de QA do P0 de Neurologia (mãe neurologia-intake-8ee837), parte 4 de 4 e última: revisar SOMENTE neub15 e neub18 e as cópias das suas questões no Banco General, com foco nas questões 8, 9 e 19 do lote de 25/09/2026 e nos trechos que o P0 alterou. Além disso, devolver o question_report final consolidado das 20 questões do índice do pack (destino, decisão e proveniência de cada uma). A PR #80 (neurologia-cierre-layout) está aberta e fora da main: não portar nada dela; só registrar no relatório, para reconciliação por José, que ela toca o bloco de sistema motor, o de síndromes deficitários, o cierre final e o Banco General. Resultado esperado do P0: provas novas integradas, resumo ajustado onde faltava, pendências científicas resolvidas ou rotuladas, Banco General coerente, sem duplicatas semânticas, sem chaves denunciadas, âncoras e post-its preservados. Checklist: duplicatas literais e semânticas (manter a canônica mais completa, preservando o id); corpo e Banco General idênticos; proveniência correta (Basada en preguntas de examen ou Pregunta complementaria); explicações coerentes com a resposta; nenhuma resposta denunciada por negrito, estilo, cor ou texto; padrões previsíveis A/B/C/D reordenados só quando seguro, sem forçar 25/25/25/25 e sem mudar a resposta científica; ids, block_ids e âncoras únicos e preservados; post-its e highlights intactos; ALMA só nos trechos trabalhados pelo P0; RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFORÇA; contagens declaradas atualizadas. Corrigir só o que falhar; não reescrever o que está correto. Resultado NEEDS-AUDIT; sem merge nem deploy.",
+      "fonte": "Issue #88 · comentário 5841738119 · decomposição de neurologia-intake-8ee837",
+      "agente": null,
+      "estado": "READY",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [
+        "neurologia-p0-qa-parte-3"
+      ],
+      "branch": "runner/neurologia-p0-qa-final",
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Microtarefa 12/12 da decomposição de neurologia-intake-8ee837, cujo pack mestre de 15.459 caracteres passa do teto de 6.000. Source pack próprio, extrato literal do mestre. Os blocos citados no objetivo cabem no orçamento de contexto ancorado do Runner. Só roda depois que a dependência estiver DONE, então nunca há dois workers editando neurologia.html ao mesmo tempo. Resultado NEEDS-AUDIT; sem merge/deploy automático.",
+      "automation_enabled": true,
+      "bridge_enabled": true,
+      "risk_level": "MEDIO",
+      "policy_level": "C",
+      "jose_authorized": true,
+      "question_report_required": true,
+      "source_pack_required": true,
+      "source_pack_path": "coordination/source-packs/neurologia-p0-qa-final-v1.md"
     }
   ]
 }
