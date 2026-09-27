@@ -263,6 +263,14 @@ def corpo_da_pr(
         "## Execução",
         "",
         f"- **Branch de trabalho:** `{task.branch}`",
+    ]
+    if task.checkpoint_commit:
+        # Projetos compostos continuam do HEAD verde da etapa anterior.
+        # Este SHA vira a base auditável da etapa atual no OBSERVE; assim o
+        # auditor recebe só predecessor aprovado -> HEAD atual, nunca o diff
+        # cumulativo main -> HEAD com etapas já auditadas.
+        linhas.append(f"- **Base auditável da etapa:** `{task.checkpoint_commit}`")
+    linhas += [
         f"- **Checkpoint/commit publicado:** `{checkpoint_commit or '—'}`",
         f"- **Id de execução (claim do Runner):** `{task.task_id}`",
         f"- **Risco:** {task.risk_level}  ·  **Política (Issue #83):** Nível {task.policy_level}"
