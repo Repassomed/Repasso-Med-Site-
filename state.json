@@ -1391,6 +1391,18 @@
       "provider": "openai",
       "tier": "SOL",
       "timestamp": "2026-09-27T23:30:57.292059+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "Repassomed/Repasso-Med-Site-:PR_NEEDS_AUDIT:pr:305:65bfe4965d0be487",
+      "informational_cost_usd": 0.05138,
+      "input_tokens": 9060,
+      "kind": "usage",
+      "model_id": "gpt-5.6-sol",
+      "output_tokens": 757,
+      "provider": "openai",
+      "tier": "SOL",
+      "timestamp": "2026-09-27T23:30:59.357241+00:00"
     }
   ]
 }
