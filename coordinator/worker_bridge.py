@@ -205,6 +205,9 @@ AUDIT_CARD_HEADER = "## 🟣 CARTÃO DE MERGE — Coordinator V3"
 AUDIT_NEEDS_FIX_LINE = (
     "**Decisão da auditoria semântica (STANDARD, independente do worker):** NEEDS-FIX"
 )
+AUDIT_MERGE_READY_LINE = (
+    "**Decisão da auditoria semântica (STANDARD, independente do worker):** MERGE-READY"
+)
 AUDIT_TECHNICAL_FAILURE_MARKERS: tuple[str, ...] = (
     "Privacy preflight determinístico bloqueou",
     "A resposta da auditoria não seguiu o protocolo esperado",
@@ -774,6 +777,171 @@ def materializar_runner_task(
 
 
 # ---------------------------------------------------------------------
+# Projetos compostos (mecanismo mínimo): uma tarefa que declara
+# ``parent_task_id`` continua a MESMA branch da etapa anterior a partir do
+# HEAD real publicado — nunca do checkpoint em cache do runtime, que pode
+# estar desatualizado (achado real: PR #305 recebeu commits manuais depois
+# do último checkpoint automático registrado). Fail-closed sempre que a
+# continuidade não puder ser confirmada — nunca começa do zero por cima de
+# trabalho já publicado.
+# ---------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class ContinuacaoDeEstagio:
+    checkpoint_commit: str | None
+    bloquear: bool
+    nota: str | None
+
+
+def resolver_continuacao_de_estagio(
+    tarefa: TaskRecord, *, branch_alvo: str,
+    tarefas_por_id: dict[str, TaskRecord],
+    registros: dict[str, TaskRuntimeRecord],
+    github_api: bridge_pr.GitHubBridgeApi | None,
+) -> ContinuacaoDeEstagio:
+    """Projeto composto (Neurología P0 e futuros — Semiología II,
+    Fisiopatología II, Farmacología II, Dermatología etc.): quando
+    ``tarefa.parent_task_id`` está preenchido e uma das dependências
+    declaradas é uma ETAPA do MESMO projeto (mesmo ``parent_task_id``),
+    esta função resolve de onde a nova etapa deve continuar — nunca da
+    main, sempre do HEAD real e atual da PR que a etapa anterior publicou.
+
+    Devolve ``ContinuacaoDeEstagio``:
+    - ``(None, False, None)`` — esta tarefa não é continuação de nada
+      (primeira etapa de um projeto composto, ou tarefa avulsa sem
+      ``parent_task_id``): segue o caminho de sempre (branch nova a
+      partir da branch padrão).
+    - ``(sha, False, nota)`` — continuidade confirmada: ``sha`` é o HEAD
+      REAL, confirmado pela API GitHub agora mesmo, da PR publicada pela
+      etapa anterior. Nunca o ``checkpoint_commit`` guardado no runtime
+      (que só é atualizado pelo próprio Runner; um commit manual
+      publicado depois disso deixaria o cache desatualizado).
+    - ``(None, True, nota)`` — existe uma etapa anterior no projeto, mas a
+      continuidade não pôde ser confirmada com segurança (sem PR
+      publicada ainda, branch divergente da declarada, ou API
+      indisponível) — a atribuição desta etapa deve ser recusada
+      (``BLOCKED``) nesta execução, NUNCA prosseguir criando uma branch
+      nova por cima do trabalho já feito.
+    """
+    if not tarefa.parent_task_id:
+        return ContinuacaoDeEstagio(None, False, None)
+
+    predecessor_id = next(
+        (
+            dep_id for dep_id in tarefa.dependencias
+            if (dep := tarefas_por_id.get(dep_id)) is not None
+            and dep.parent_task_id == tarefa.parent_task_id
+        ),
+        None,
+    )
+    if predecessor_id is None:
+        # Primeira etapa do projeto composto (ou nenhuma dependência
+        # declarada pertence à mesma cadeia) — nada a continuar.
+        return ContinuacaoDeEstagio(None, False, None)
+
+    registro = registros.get(predecessor_id)
+    if registro is None or not (registro.branch or "").strip() or registro.pr_number is None:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): a etapa anterior "
+            f"{predecessor_id!r} ainda não publicou branch/PR — continuidade recusada fail-closed, "
+            "nunca começa do zero por cima do trabalho já feito.",
+        )
+    if registro.branch.strip() != branch_alvo.strip():
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): a branch declarada "
+            f"({branch_alvo!r}) difere da branch que a etapa anterior {predecessor_id!r} publicou "
+            f"({registro.branch!r}) — todas as etapas de um projeto composto precisam declarar a "
+            "MESMA branch em coordination/tasks.json.",
+        )
+    if github_api is None:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): sem cliente GitHub "
+            "disponível para confirmar o HEAD real da PR da etapa anterior — continuidade recusada "
+            "(nunca confia em checkpoint sem confirmar pela API).",
+        )
+    try:
+        pr = github_api.pr_por_numero(registro.pr_number)
+    except (bridge_pr.GitHubBridgeApiError, ValueError) as exc:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): não consegui confirmar a "
+            f"PR #{registro.pr_number} da etapa anterior {predecessor_id!r} pela API — continuidade "
+            f"recusada: {redact(str(exc))}",
+        )
+    head = pr.get("head") if isinstance(pr.get("head"), dict) else {}
+    head_ref = (head.get("ref") or "").strip()
+    head_sha = (head.get("sha") or "").strip()
+    if head_ref != branch_alvo.strip() or not head_sha:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): a PR #{registro.pr_number} "
+            f"não está mais na branch esperada ({branch_alvo!r}; real: {head_ref!r}) — continuidade "
+            "recusada fail-closed.",
+        )
+
+    # Gate de auditoria verde (achado real: NEEDS-AUDIT sozinho só diz que o
+    # WORKER terminou — o Guard determinístico e as duas auditorias
+    # semânticas independentes (Anthropic e OpenAI) ainda podem devolver
+    # NEEDS-FIX sobre ESTE MESMO HEAD depois que a etapa seguinte já criou
+    # commits em cima dele, colidindo trabalho de correção com trabalho
+    # novo na mesma branch. A próxima etapa só é liberada quando o Cartão
+    # de Merge confiável MAIS RECENTE desta PR diz MERGE-READY E esse
+    # veredito é sobre o MESMO HEAD que acabamos de confirmar (nunca um
+    # HEAD antigo, nunca um NEEDS-FIX mais novo que ainda não foi
+    # corrigido). ``_candidato_a_correcao_de_auditoria`` continua tendo
+    # prioridade sobre despacho de tarefa nova no mesmo ciclo do Bridge —
+    # então um NEEDS-FIX pendente da etapa anterior é sempre corrigido
+    # antes de a próxima etapa ter qualquer chance de ser oferecida.
+    try:
+        comentarios = github_api.comentarios_da_pr(registro.pr_number)
+    except bridge_pr.GitHubBridgeApiError as exc:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): não consegui ler os "
+            f"comentários da PR #{registro.pr_number} para confirmar auditoria verde — continuidade "
+            f"recusada: {redact(str(exc))}",
+        )
+    veredito = _ultimo_veredito_de_auditoria(comentarios)
+    if veredito is None:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): a etapa anterior "
+            f"{predecessor_id!r} (PR #{registro.pr_number}) ainda não tem um Cartão de Merge "
+            "confiável com veredito reconhecível (Guard + Anthropic + OpenAI) — NEEDS-AUDIT sozinho "
+            "nunca libera a próxima etapa; continuidade recusada fail-closed.",
+        )
+    if veredito.decision != "MERGE-READY":
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): o Cartão de Merge mais "
+            f"recente da PR #{registro.pr_number} (etapa anterior {predecessor_id!r}) diz "
+            f"{veredito.decision!r}, não MERGE-READY — a correção da etapa anterior tem prioridade; "
+            "próxima etapa recusada fail-closed até sair um cartão verde sobre o HEAD corrigido.",
+        )
+    if (veredito.head_sha or "").strip().lower() != head_sha.strip().lower():
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): o Cartão de Merge verde "
+            f"mais recente da PR #{registro.pr_number} audita o HEAD "
+            f"{(veredito.head_sha or '?')[:12]!r}, mas o HEAD real e atual da PR é "
+            f"{head_sha[:12]!r} — a PR ganhou commit novo depois daquele veredito (auditoria "
+            "desatualizada); continuidade recusada fail-closed até uma nova auditoria confirmar "
+            "verde sobre o HEAD atual.",
+        )
+
+    return ContinuacaoDeEstagio(
+        head_sha, False,
+        f"{tarefa.id!r}: continuando o projeto composto {tarefa.parent_task_id!r} a partir do HEAD "
+        f"real ({head_sha[:12]}) publicado pela etapa anterior {predecessor_id!r} (PR "
+        f"#{registro.pr_number}) — Cartão de Merge confiável MERGE-READY confirmado sobre este mesmo "
+        "HEAD (Guard + Anthropic + OpenAI); nenhum merge foi necessário.",
+    )
+
+
+# ---------------------------------------------------------------------
 # §10 — liberação segura do worker depois do resultado.
 # ---------------------------------------------------------------------
 
@@ -910,6 +1078,49 @@ def _audit_fix_request_from_comments(comentarios: list[dict], *, pr_number: int)
             comment_id=(cid if isinstance(cid, int) else None),
             audited_head_sha=audited_head_sha,
         )
+    return None
+
+
+@dataclass(frozen=True)
+class VeredictoDeAuditoria:
+    """O veredito mais recente do Cartão de Merge confiável para UMA PR,
+    qualquer decisão (``MERGE-READY`` ou ``NEEDS-FIX``) — usado SÓ pelo
+    gate de continuidade entre etapas de um projeto composto
+    (``resolver_continuacao_de_estagio``). Nunca decide correção de
+    conteúdo; isso continua sendo ``_audit_fix_request_from_comments``."""
+
+    decision: str  # "MERGE-READY" | "NEEDS-FIX"
+    head_sha: str | None
+
+
+def _ultimo_veredito_de_auditoria(comentarios: list[dict]) -> VeredictoDeAuditoria | None:
+    """Acha o Cartão de Merge confiável MAIS RECENTE (por ordem de chegada
+    da API, não por timestamp — mesma convenção de
+    ``_audit_fix_request_from_comments``) e devolve seu veredito, seja ele
+    qual for.
+
+    ``None`` cobre TRÊS casos que o chamador deve tratar todos como "sem
+    auditoria verde ainda" (fail-closed): nenhum cartão do bot confiável
+    publicado; o cartão mais recente não tem nenhuma das duas linhas de
+    decisão reconhecidas; falha técnica de auditor (Anthropic ou OpenAI)
+    marcada no cartão — uma falha técnica NUNCA conta como MERGE-READY,
+    mesmo que a linha de decisão diga isso por engano."""
+    for comentario in reversed(comentarios or []):
+        user = comentario.get("user") or {}
+        if (user.get("login") or "").strip() != COORDINATOR_BOT_LOGIN:
+            continue
+        body = (comentario.get("body") or "").strip()
+        if not body.startswith(COORDINATOR_COMMENT_MARKER) or AUDIT_CARD_HEADER not in body:
+            continue
+        head_match = AUDIT_HEAD_RE.search(body)
+        head_sha = head_match.group(1).lower() if head_match else None
+        if any(marcador in body for marcador in AUDIT_TECHNICAL_FAILURE_MARKERS):
+            return None
+        if AUDIT_MERGE_READY_LINE in body:
+            return VeredictoDeAuditoria("MERGE-READY", head_sha)
+        if AUDIT_NEEDS_FIX_LINE in body:
+            return VeredictoDeAuditoria("NEEDS-FIX", head_sha)
+        return None
     return None
 
 
@@ -1669,6 +1880,12 @@ def executar_ciclo(
             base_branch=base_branch,
         )
 
+    # Preserva a visão COMPLETA (antes do filtro do piloto) só para
+    # resolver a cadeia de um projeto composto (8-A abaixo): em modo
+    # piloto, ``tarefas`` filtrada pode nem conter a etapa ANTERIOR do
+    # mesmo projeto, e tratar "não encontrei" como "é a primeira etapa"
+    # seria começar do zero por engano por cima de trabalho já publicado.
+    tarefas_completas_por_id = {t.id: t for t in tarefas}
     tarefas = restringir_ao_piloto(tarefas, config)
 
     # 4. só workers programáticos do Bridge E elegíveis no modo atual.
@@ -1751,6 +1968,31 @@ def executar_ciclo(
     validacao = materializar_runner_task(tarefa, meta)
     if not validacao.ok or validacao.task is None:
         return BridgeOutcome("BLOCKED", validacao.reason, decision=decisao)
+
+    # 8-A. PROJETOS COMPOSTOS (mecanismo mínimo): esta etapa continua a
+    # branch da etapa anterior do MESMO projeto, a partir do HEAD REAL e
+    # atual dessa PR — nunca de um checkpoint em cache nem da main. Uma
+    # tarefa sem ``parent_task_id`` (a esmagadora maioria hoje) segue
+    # byte a byte o comportamento de sempre (``continuacao.bloquear`` é
+    # sempre ``False`` e ``checkpoint_commit`` sempre ``None``).
+    continuacao = resolver_continuacao_de_estagio(
+        tarefa, branch_alvo=validacao.task.branch,
+        tarefas_por_id=tarefas_completas_por_id,
+        registros=registros, github_api=github_api,
+    )
+    if continuacao.nota:
+        notes.append(continuacao.nota)
+    if continuacao.bloquear:
+        return BridgeOutcome("BLOCKED", continuacao.nota or "continuidade do projeto composto recusada.", decision=decisao)
+    if continuacao.checkpoint_commit:
+        try:
+            validacao = replace(
+                validacao, task=replace(validacao.task, checkpoint_commit=continuacao.checkpoint_commit)
+            )
+        except ValueError as exc:  # pragma: no cover - defesa em profundidade
+            return BridgeOutcome(
+                "BLOCKED", f"checkpoint de continuação do projeto composto inválido: {exc}", decision=decisao,
+            )
 
     # 9. reserva da TAREFA (compare-and-set). Perdeu: zero chamada paga.
     reserva = runtime_store.reservar(

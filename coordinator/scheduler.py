@@ -173,6 +173,23 @@ _AREA_TO_CAPABILITY: dict[str, str] = {
 # aqui.
 _ESTADOS_ATIVOS = frozenset({"IN-PROGRESS", "BLOCKED-LIMIT"})
 
+# Projetos compostos (ex.: Neurología P0, 12 etapas sobre a MESMA branch):
+# uma dependência ENTRE ETAPAS DO MESMO projeto-mãe (``parent_task_id``
+# igual nas duas pontas) é satisfeita quando a etapa anterior chegou a um
+# CHECKPOINT SEGURO E PÚBLICO — commit publicado, PR aberta/atualizada —
+# nunca quando foi MERGEADA. Sem isto, uma cadeia de N etapas exigiria N
+# merges do José só para a etapa 2 poder começar, o que o próprio desenho
+# do projeto composto existe para evitar. ``NEEDS-AUDIT`` já significa
+# exatamente isso em STATES.md ("o trabalho terminou e o PR está aberto,
+# esperando auditoria"); ``NEEDS-FIX`` fica de fora de propósito — enquanto
+# a etapa anterior está em correção, a próxima etapa não deve começar a
+# editar o MESMO arquivo na mesma branch (a fila de correção de auditoria
+# do Worker Bridge já tem prioridade sobre qualquer atribuição nova, então
+# isto nunca trava a fila, só ordena certo). Uma dependência SEM
+# ``parent_task_id`` compartilhado continua exigindo ``DONE`` — nenhuma
+# tarefa avulsa passou a poder prosseguir sem merge só por acidente.
+_ESTADOS_QUE_LIBERAM_PROXIMA_ETAPA = frozenset({"NEEDS-AUDIT", "MERGE-READY", "DONE"})
+
 _ORDEM_PRIORIDADE: dict[Priority, int] = {p: i for i, p in enumerate(Priority)}
 
 _BUCKETS_PROGRESSO = ("BAIXO", "MEDIO", "ALTO")
@@ -267,6 +284,20 @@ class TaskRecord:
     # própria tarefa declara a capability exigida, ela vence o mapeamento
     # área->capability abaixo — é mais específico que um padrão genérico.
     capabilities_required: tuple[str, ...] = ()
+    # Projetos compostos (mecanismo mínimo, sem planner novo): quando
+    # preenchido, esta tarefa é uma ETAPA de um projeto-mãe (o id daquela
+    # tarefa-mãe, meramente informativo/agregador em coordination/
+    # tasks.json — não precisa existir como tarefa executável). Só
+    # participa de UMA decisão aqui: relaxar a exigência de dependência
+    # (ver ``_dependencias_satisfeitas``) entre etapas do MESMO projeto.
+    # ``None`` (o padrão) preserva byte a byte o comportamento de toda
+    # tarefa existente — dependência sempre exige ``DONE``.
+    parent_task_id: str | None = None
+    # Também OPCIONAL: marca a ÚLTIMA etapa de um projeto composto —
+    # informativo para quem monta o corpo da PR/decide onde a auditoria
+    # semântica completa é obrigatória; o scheduler em si não decide
+    # nada a partir deste campo.
+    final_stage: bool = False
 
     @property
     def priority(self) -> Priority:
@@ -307,15 +338,35 @@ def load_tasks_from_tasks_json(path: str) -> list[TaskRecord]:
                 dependencias=tuple(t.get("dependencias") or ()),
                 prioridade_declarada=_parse_priority(t.get("prioridade_declarada")),
                 capabilities_required=_parse_capabilities(t.get("capabilities_required")),
+                parent_task_id=(str(t["parent_task_id"]).strip() or None) if t.get("parent_task_id") else None,
+                final_stage=t.get("final_stage") is True,
             )
         )
     return tarefas
 
 
+def _dependencia_satisfeita(tarefa: TaskRecord, dep: TaskRecord | None) -> bool:
+    if dep is None:
+        return False
+    if dep.estado == "DONE":
+        return True
+    # Relaxamento SÓ entre etapas do MESMO projeto composto — ver o
+    # comentário de ``_ESTADOS_QUE_LIBERAM_PROXIMA_ETAPA`` acima. Um
+    # ``parent_task_id`` ausente em qualquer uma das duas pontas, ou
+    # pertencente a projetos diferentes, cai no comportamento de sempre
+    # (exige ``DONE``, isto é, mergeada pelo José).
+    if (
+        tarefa.parent_task_id
+        and dep.parent_task_id == tarefa.parent_task_id
+        and dep.estado in _ESTADOS_QUE_LIBERAM_PROXIMA_ETAPA
+    ):
+        return True
+    return False
+
+
 def _dependencias_satisfeitas(tarefa: TaskRecord, por_id: dict[str, TaskRecord]) -> bool:
     for dep_id in tarefa.dependencias:
-        dep = por_id.get(dep_id)
-        if dep is None or dep.estado != "DONE":
+        if not _dependencia_satisfeita(tarefa, por_id.get(dep_id)):
             return False
     return True
 
@@ -334,10 +385,12 @@ def _colide_com_reserva_ativa(tarefa: TaskRecord, reservados: set[str]) -> bool:
 
 def proxima_tarefa_pronta(tarefas: list[TaskRecord]) -> list[TaskRecord]:
     """Fila ordenada de tarefas ``READY`` que podem começar AGORA:
-    dependências concluídas (``DONE``) e nenhuma colisão de arquivo com
-    tarefa ativa (Lei 3, #82/#85). Ordenada por prioridade (P0 primeiro)
-    e, em empate, por ``id`` — determinística, nunca depende da ordem em
-    que ``tarefas`` foi construída ou da ordem de iteração de um dict.
+    dependências satisfeitas (``_dependencia_satisfeita`` — ``DONE`` em
+    geral, ou o checkpoint de etapa anterior do MESMO projeto composto) e
+    nenhuma colisão de arquivo com tarefa ativa (Lei 3, #82/#85). Ordenada
+    por prioridade (P0 primeiro) e, em empate, por ``id`` — determinística,
+    nunca depende da ordem em que ``tarefas`` foi construída ou da ordem
+    de iteração de um dict.
     """
     por_id = {t.id: t for t in tarefas}
     reservados = _arquivos_reservados_por_tarefas_ativas(tarefas)

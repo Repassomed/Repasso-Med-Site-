@@ -2318,6 +2318,7 @@
         "conteudo"
       ],
       "dependencias": [],
+      "parent_task_id": "neurologia-p0-fechamento-2026",
       "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
@@ -2351,7 +2352,8 @@
       "dependencias": [
         "neurologia-p0-provas-q01-04"
       ],
-      "branch": "runner/neurologia-p0-provas-q05-07",
+      "parent_task_id": "neurologia-p0-fechamento-2026",
+      "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
       "issue": 88,
@@ -2384,7 +2386,8 @@
       "dependencias": [
         "neurologia-p0-provas-q05-07"
       ],
-      "branch": "runner/neurologia-p0-provas-q08-11",
+      "parent_task_id": "neurologia-p0-fechamento-2026",
+      "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
       "issue": 88,
@@ -2417,7 +2420,8 @@
       "dependencias": [
         "neurologia-p0-provas-q08-11"
       ],
-      "branch": "runner/neurologia-p0-provas-q12-14",
+      "parent_task_id": "neurologia-p0-fechamento-2026",
+      "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
       "issue": 88,
@@ -2450,7 +2454,8 @@
       "dependencias": [
         "neurologia-p0-provas-q12-14"
       ],
-      "branch": "runner/neurologia-p0-provas-q15-17",
+      "parent_task_id": "neurologia-p0-fechamento-2026",
+      "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
       "issue": 88,
@@ -2483,7 +2488,8 @@
       "dependencias": [
         "neurologia-p0-provas-q15-17"
       ],
-      "branch": "runner/neurologia-p0-casos-clinicos",
+      "parent_task_id": "neurologia-p0-fechamento-2026",
+      "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
       "issue": 88,
@@ -2516,7 +2522,8 @@
       "dependencias": [
         "neurologia-p0-casos-clinicos"
       ],
-      "branch": "runner/neurologia-p0-fechamento-cientifico-1",
+      "parent_task_id": "neurologia-p0-fechamento-2026",
+      "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
       "issue": 88,
@@ -2549,7 +2556,8 @@
       "dependencias": [
         "neurologia-p0-fechamento-cientifico-1"
       ],
-      "branch": "runner/neurologia-p0-fechamento-cientifico-2",
+      "parent_task_id": "neurologia-p0-fechamento-2026",
+      "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
       "issue": 88,
@@ -2582,7 +2590,8 @@
       "dependencias": [
         "neurologia-p0-fechamento-cientifico-2"
       ],
-      "branch": "runner/neurologia-p0-qa-parte-1",
+      "parent_task_id": "neurologia-p0-fechamento-2026",
+      "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
       "issue": 88,
@@ -2615,7 +2624,8 @@
       "dependencias": [
         "neurologia-p0-qa-parte-1"
       ],
-      "branch": "runner/neurologia-p0-qa-parte-2",
+      "parent_task_id": "neurologia-p0-fechamento-2026",
+      "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
       "issue": 88,
@@ -2648,7 +2658,8 @@
       "dependencias": [
         "neurologia-p0-qa-parte-2"
       ],
-      "branch": "runner/neurologia-p0-qa-parte-3",
+      "parent_task_id": "neurologia-p0-fechamento-2026",
+      "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
       "issue": 88,
@@ -2681,7 +2692,8 @@
       "dependencias": [
         "neurologia-p0-qa-parte-3"
       ],
-      "branch": "runner/neurologia-p0-qa-final",
+      "parent_task_id": "neurologia-p0-fechamento-2026",
+      "branch": "runner/neurologia-p0-provas-q01-04",
       "pr": null,
       "commit": null,
       "issue": 88,
@@ -2693,7 +2705,30 @@
       "jose_authorized": true,
       "question_report_required": true,
       "source_pack_required": true,
-      "source_pack_path": "coordination/source-packs/neurologia-p0-qa-final-v1.md"
+      "source_pack_path": "coordination/source-packs/neurologia-p0-qa-final-v1.md",
+      "final_stage": true
+    },
+    {
+      "id": "neurologia-p0-fechamento-2026",
+      "titulo": "P0 — Neurología: projeto composto (fechamento 2026) — tarefa-mãe de agrupamento",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [],
+      "objetivo": "Tarefa-mãe de AGRUPAMENTO/RASTREIO do projeto composto de Neurología (12 etapas, neurologia-p0-provas-q01-04 .. neurologia-p0-qa-final), todas compartilhando a mesma branch (runner/neurologia-p0-provas-q01-04) e a mesma PR consolidada. Esta tarefa NUNCA é executada diretamente (sem automation_enabled/branch/risk_level/policy_level próprios — nenhuma política a autoriza). Ela só passa a DONE depois do fechamento real da etapa final (neurologia-p0-qa-final: NEEDS-AUDIT/MERGE-READY -> José faz UM merge -> DONE operacional), nunca antes disso e nunca automaticamente.",
+      "fonte": "Ajuste FINAL do fluxo contínuo de projetos compostos — mecanismo mínimo parent_task_id + shared branch/checkpoint + stage status",
+      "agente": null,
+      "estado": "BLOCKED",
+      "prioridade_declarada": "P0",
+      "capabilities_required": [],
+      "dependencias": [
+        "neurologia-p0-qa-final"
+      ],
+      "branch": null,
+      "pr": null,
+      "commit": null,
+      "issue": 88,
+      "notas": "Bookkeeping puro: agrupa e torna auditável a cadeia 1/12..12/12 de Neurología como UM projeto composto contínuo, sem exigir merge intermediário entre etapas (cada etapa libera a próxima ao chegar em NEEDS-AUDIT/MERGE-READY/DONE do MESMO parent_task_id — ver scheduler._dependencia_satisfeita). Não tem automation_enabled/branch/risk_level/policy_level: nenhuma política a autoriza a rodar sozinha, então o Bridge nunca a despacha. Passa a DONE manualmente só depois do merge único de José sobre a PR final.",
+      "automation_enabled": false
     }
   ]
 }
