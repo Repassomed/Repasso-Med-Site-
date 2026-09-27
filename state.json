@@ -1699,6 +1699,31 @@
       "summary": "Anthropic falhou no evento pr:318.",
       "task_id": "pr:318",
       "worker_id": null
+    },
+    {
+      "category": "runner",
+      "commit_sha": "bb6b1f9ec8f8b1bad03bd9318ee721d825827c80",
+      "component": "runner",
+      "error_id": "ERR-655B818CCE",
+      "error_type": "runner-failed",
+      "fingerprint": "655b818ccef16a7ac48f",
+      "first_seen": "2026-09-27T23:18:32.518740+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "8be6c31a3eec4c62b291c3f7c40fb5f4",
+      "issue_sync_updated_at": "2026-09-27T23:18:32.518740+00:00",
+      "last_evidence_hash": "9ae570481150a721162c",
+      "last_seen": "2026-09-27T23:18:32.518740+00:00",
+      "occurrence_count": 1,
+      "pr_number": 305,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36358160047",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Falha na chamada ap\u00f3s 0.90s (uma \u00fanica tentativa, sem retry): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CfUoHQgK7rsCJZHZfU39W'}",
+      "task_id": "neurologia-p0-provas-q05-07",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
