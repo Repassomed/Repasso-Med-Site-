@@ -1331,6 +1331,18 @@
       "provider": "openai",
       "tier": "SOL",
       "timestamp": "2026-09-27T21:03:41.717574+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.084808,
+      "event_key": "Repassomed/Repasso-Med-Site-:PR_NEEDS_AUDIT:pr:305:65bfe4965d0be487",
+      "informational_cost_usd": null,
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "gpt-5.6-terra",
+      "output_tokens": 0,
+      "provider": "openai",
+      "tier": "TERRA",
+      "timestamp": "2026-09-27T23:30:26.494918+00:00"
     }
   ]
 }
