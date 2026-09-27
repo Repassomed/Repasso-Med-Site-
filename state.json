@@ -656,7 +656,7 @@
       "execution_history": [],
       "execution_task_id": "neurologia-p0-provas-q05-07--bridge-c7cdcc91d3f8",
       "guard_dispatch_attempts": 1,
-      "guard_dispatch_status": "PENDING",
+      "guard_dispatch_status": "DISPATCHED",
       "guard_dispatched_pr": 305,
       "last_audit_findings": "",
       "last_audit_fix_fingerprint": null,
@@ -666,7 +666,7 @@
       "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/neurologia-p0-provas-q01-04'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
       "reserved_at": "2026-09-27T20:57:26.920687+00:00",
       "status": "NEEDS-AUDIT",
-      "updated_at": "2026-09-27T21:01:51.186887+00:00",
+      "updated_at": "2026-09-27T21:01:54.332416+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
