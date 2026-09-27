@@ -629,6 +629,16 @@
       "recorded_at": "2026-09-27T21:01:40.002882+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "neurologia-p0-provas-q05-07--bridge-c7cdcc91d3f8"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As tr\u00eas quest\u00f5es do escopo desta tarefa j\u00e1 est\u00e3o cobertas no arquivo: Q5 (neuralgia del trig\u00e9mino) est\u00e1 integralmente presente em neub05 como q-neu-2509-05, com espelho bq-neu-2509-05 no Banco General, id\u00eantica ao source pack \u00a74.5. Q6 (mecanismo da miastenia gravis) \u00e9 duplicata sem\u00e2ntica de q-neu078 (neub16), que j\u00e1 testa o mesmo alvo anti-AChR postsin\u00e1ptico com o mesmo gabarito, e Q7 (fun\u00e7\u00e3o do NREM N3) \u00e9 duplicata sem\u00e2ntica de q-neu087 (neub17), que j\u00e1 cobre restaura\u00e7\u00e3o f\u00edsica + GH + mem\u00f3ria declarativa com mais detalhe que o pack. Pela Lei das Quest\u00f5es 8-A, duplicata sem\u00e2ntica n\u00e3o entra como quest\u00e3o nova e nenhuma das vers\u00f5es existentes \u00e9 demonstravelmente melhor a ponto de justificar reformula\u00e7\u00e3o, ent\u00e3o nenhuma edi\u00e7\u00e3o \u00e9 aplicada a neurologia.html.",
+      "recorded_at": "2026-09-27T21:06:51.212327+00:00",
+      "status": "BLOCKED",
+      "task_id": "neurologia-p0-provas-q05-07--bridge-d073b7e52e44"
     }
   ]
 }
