@@ -1283,6 +1283,18 @@
       "provider": "openai",
       "tier": "TERRA",
       "timestamp": "2026-09-27T21:03:18.372409+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "Repassomed/Repasso-Med-Site-:PR_NEEDS_AUDIT:pr:305:12f58ed9f7c5f395",
+      "informational_cost_usd": 0.049606,
+      "input_tokens": 18407,
+      "kind": "usage",
+      "model_id": "gpt-5.6-terra",
+      "output_tokens": 1066,
+      "provider": "openai",
+      "tier": "TERRA",
+      "timestamp": "2026-09-27T21:03:20.245629+00:00"
     }
   ]
 }
