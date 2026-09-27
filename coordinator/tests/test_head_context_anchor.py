@@ -145,6 +145,9 @@ def test_dedup_ganha_campo_cirurgico_so_quando_a_pr_tem_a_matriz_8a() -> None:
     )
     ev_com = _evento_de_pr(corpo=corpo_com_matriz)
     assert ev_com.payload["dedup_fields"].get("head_context_8a") == HEAD_CONTEXT_8A_POLICY
+    # Regressão real pós-#313/#305: a leitura RAW de HTML >1 MB mudou a evidência
+    # do mesmo HEAD; manter v1 faria o Coordinator responder DUPLICATE e pular a auditoria.
+    assert HEAD_CONTEXT_8A_POLICY == "question-report-evidence-v2-large-file-raw"
 
     ev_sem = _evento_de_pr(corpo="- **Área:** infraestrutura\n\nSem nenhuma matriz aqui.")
     assert "head_context_8a" not in ev_sem.payload["dedup_fields"]
