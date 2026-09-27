@@ -652,7 +652,7 @@
       "audit_fix_execution_failures": 0,
       "branch": "runner/neurologia-p0-provas-q01-04",
       "canonical_task_id": "neurologia-p0-provas-q05-07",
-      "checkpoint_commit": null,
+      "checkpoint_commit": "bb6b1f9ec8f8b1bad03bd9318ee721d825827c80",
       "execution_history": [],
       "execution_task_id": "neurologia-p0-provas-q05-07--bridge-c7cdcc91d3f8",
       "guard_dispatch_attempts": 0,
@@ -662,11 +662,11 @@
       "last_audit_fix_fingerprint": null,
       "last_audit_fix_worker_id": null,
       "pr_number": null,
-      "question_report": null,
-      "reason": "atribu\u00edda pelo Worker Bridge a 'claude-worker-1' (tarefa 'neurologia-p0-provas-q05-07' autorizada declarativamente: risco MEDIO, N\u00edvel C, jose_authorized=True.)",
+      "question_report": "## Relat\u00f3rio obrigat\u00f3rio \u2014 Lei das Quest\u00f5es (8-A.11)\n\n### Matriz por fonte\n\n| Fonte | P\u00e1gina/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | Duplicadas/can\u00f4nicas | Reconstru\u00eddas | Pendentes | Destino no site |\n| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n| Fotos WhatsApp del lote 25/09/2026 (Drive \u00b7 Neurologia Dra. Silva Duarte \u00b7 Quest\u00f5es), cotejadas con \u00a73 c\u00e1tedra del source pack | reconstrucci\u00f3n de alternativas \u00a74 do source pack (pregunta 5 do lote), sem acesso direto \u00e0s imagens originais nesta execu\u00e7\u00e3o | parcial | 3 | 1 | 1 | 0 | 2 | 1 | 0 | neub05 (quiz-section, id q-neu-2509-05) + espelho Banco General (id bq-neu-2509-05) |\n| Provas neuro Aline .pdf (OCR autom\u00e1tico) | n\u00e3o identificado individualmente \u2014 OCR ruidoso, n\u00e3o can\u00f4nico | n\u00e3o aproveitada | 0 | 0 | 0 | 0 | 0 | 0 | 0 | nenhum \u2014 apenas corrobora\u00e7\u00e3o secund\u00e1ria, conforme regra do source pack |\n\n**Confirma\u00e7\u00e3o de cobertura:** RESUMO ENSINA \u2192 QUEST\u00c3O COBRA \u2192 EXPLICA\u00c7\u00c3O REFOR\u00c7A\n\n**Notas de proveni\u00eancia:** Q5 (neuralgia do trig\u00e9mino) foi integrada como nova quest\u00e3o em neub05 e espelhada no Banco General, com alternativas reordenadas de forma segura (resposta cient\u00edfica preservada) e proveni\u00eancia 'Basada en preguntas de examen'. Q6 (mecanismo da miastenia gravis) \u00e9 duplicata sem\u00e2ntica de q-neu078/bq-neu078 j\u00e1 existente no bloco 16 e no Banco General (mesmo alvo anti-AChR postsin\u00e1ptico, mesma resposta correta); a vers\u00e3o do lote n\u00e3o \u00e9 demonstravelmente melhor, ent\u00e3o n\u00e3o foi inserida nem reformulada. Q7 (fun\u00e7\u00e3o do N3) \u00e9 duplicata sem\u00e2ntica de q-neu087/bq-neu087 j\u00e1 existente no bloco 17 (mesma resposta: restaura\u00e7\u00e3o f\u00edsica + GH + mem\u00f3ria declarativa, predom\u00ednio na primeira metade); a vers\u00e3o existente \u00e9 mais completa, ent\u00e3o tamb\u00e9m n\u00e3o foi inserida nem reformulada. Nenhuma quest\u00e3o do lote 8, blocos 16/17 ou demais se\u00e7\u00f5es foi tocada, conforme escopo da tarefa. Resultado NEEDS-AUDIT; merge exclusivo de Jos\u00e9.",
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/neurologia-p0-provas-q01-04'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
       "reserved_at": "2026-09-27T20:57:26.920687+00:00",
-      "status": "IN-PROGRESS",
-      "updated_at": "2026-09-27T20:57:26.920705+00:00",
+      "status": "NEEDS-AUDIT",
+      "updated_at": "2026-09-27T21:01:43.464238+00:00",
       "worker_id": "claude-worker-1"
     }
   ]
