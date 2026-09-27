@@ -205,6 +205,9 @@ AUDIT_CARD_HEADER = "## 🟣 CARTÃO DE MERGE — Coordinator V3"
 AUDIT_NEEDS_FIX_LINE = (
     "**Decisão da auditoria semântica (STANDARD, independente do worker):** NEEDS-FIX"
 )
+AUDIT_MERGE_READY_LINE = (
+    "**Decisão da auditoria semântica (STANDARD, independente do worker):** MERGE-READY"
+)
 AUDIT_TECHNICAL_FAILURE_MARKERS: tuple[str, ...] = (
     "Privacy preflight determinístico bloqueou",
     "A resposta da auditoria não seguiu o protocolo esperado",
@@ -878,11 +881,63 @@ def resolver_continuacao_de_estagio(
             f"não está mais na branch esperada ({branch_alvo!r}; real: {head_ref!r}) — continuidade "
             "recusada fail-closed.",
         )
+
+    # Gate de auditoria verde (achado real: NEEDS-AUDIT sozinho só diz que o
+    # WORKER terminou — o Guard determinístico e as duas auditorias
+    # semânticas independentes (Anthropic e OpenAI) ainda podem devolver
+    # NEEDS-FIX sobre ESTE MESMO HEAD depois que a etapa seguinte já criou
+    # commits em cima dele, colidindo trabalho de correção com trabalho
+    # novo na mesma branch. A próxima etapa só é liberada quando o Cartão
+    # de Merge confiável MAIS RECENTE desta PR diz MERGE-READY E esse
+    # veredito é sobre o MESMO HEAD que acabamos de confirmar (nunca um
+    # HEAD antigo, nunca um NEEDS-FIX mais novo que ainda não foi
+    # corrigido). ``_candidato_a_correcao_de_auditoria`` continua tendo
+    # prioridade sobre despacho de tarefa nova no mesmo ciclo do Bridge —
+    # então um NEEDS-FIX pendente da etapa anterior é sempre corrigido
+    # antes de a próxima etapa ter qualquer chance de ser oferecida.
+    try:
+        comentarios = github_api.comentarios_da_pr(registro.pr_number)
+    except bridge_pr.GitHubBridgeApiError as exc:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): não consegui ler os "
+            f"comentários da PR #{registro.pr_number} para confirmar auditoria verde — continuidade "
+            f"recusada: {redact(str(exc))}",
+        )
+    veredito = _ultimo_veredito_de_auditoria(comentarios)
+    if veredito is None:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): a etapa anterior "
+            f"{predecessor_id!r} (PR #{registro.pr_number}) ainda não tem um Cartão de Merge "
+            "confiável com veredito reconhecível (Guard + Anthropic + OpenAI) — NEEDS-AUDIT sozinho "
+            "nunca libera a próxima etapa; continuidade recusada fail-closed.",
+        )
+    if veredito.decision != "MERGE-READY":
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): o Cartão de Merge mais "
+            f"recente da PR #{registro.pr_number} (etapa anterior {predecessor_id!r}) diz "
+            f"{veredito.decision!r}, não MERGE-READY — a correção da etapa anterior tem prioridade; "
+            "próxima etapa recusada fail-closed até sair um cartão verde sobre o HEAD corrigido.",
+        )
+    if (veredito.head_sha or "").strip().lower() != head_sha.strip().lower():
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): o Cartão de Merge verde "
+            f"mais recente da PR #{registro.pr_number} audita o HEAD "
+            f"{(veredito.head_sha or '?')[:12]!r}, mas o HEAD real e atual da PR é "
+            f"{head_sha[:12]!r} — a PR ganhou commit novo depois daquele veredito (auditoria "
+            "desatualizada); continuidade recusada fail-closed até uma nova auditoria confirmar "
+            "verde sobre o HEAD atual.",
+        )
+
     return ContinuacaoDeEstagio(
         head_sha, False,
         f"{tarefa.id!r}: continuando o projeto composto {tarefa.parent_task_id!r} a partir do HEAD "
         f"real ({head_sha[:12]}) publicado pela etapa anterior {predecessor_id!r} (PR "
-        f"#{registro.pr_number}) — nenhum merge foi necessário.",
+        f"#{registro.pr_number}) — Cartão de Merge confiável MERGE-READY confirmado sobre este mesmo "
+        "HEAD (Guard + Anthropic + OpenAI); nenhum merge foi necessário.",
     )
 
 
@@ -1023,6 +1078,49 @@ def _audit_fix_request_from_comments(comentarios: list[dict], *, pr_number: int)
             comment_id=(cid if isinstance(cid, int) else None),
             audited_head_sha=audited_head_sha,
         )
+    return None
+
+
+@dataclass(frozen=True)
+class VeredictoDeAuditoria:
+    """O veredito mais recente do Cartão de Merge confiável para UMA PR,
+    qualquer decisão (``MERGE-READY`` ou ``NEEDS-FIX``) — usado SÓ pelo
+    gate de continuidade entre etapas de um projeto composto
+    (``resolver_continuacao_de_estagio``). Nunca decide correção de
+    conteúdo; isso continua sendo ``_audit_fix_request_from_comments``."""
+
+    decision: str  # "MERGE-READY" | "NEEDS-FIX"
+    head_sha: str | None
+
+
+def _ultimo_veredito_de_auditoria(comentarios: list[dict]) -> VeredictoDeAuditoria | None:
+    """Acha o Cartão de Merge confiável MAIS RECENTE (por ordem de chegada
+    da API, não por timestamp — mesma convenção de
+    ``_audit_fix_request_from_comments``) e devolve seu veredito, seja ele
+    qual for.
+
+    ``None`` cobre TRÊS casos que o chamador deve tratar todos como "sem
+    auditoria verde ainda" (fail-closed): nenhum cartão do bot confiável
+    publicado; o cartão mais recente não tem nenhuma das duas linhas de
+    decisão reconhecidas; falha técnica de auditor (Anthropic ou OpenAI)
+    marcada no cartão — uma falha técnica NUNCA conta como MERGE-READY,
+    mesmo que a linha de decisão diga isso por engano."""
+    for comentario in reversed(comentarios or []):
+        user = comentario.get("user") or {}
+        if (user.get("login") or "").strip() != COORDINATOR_BOT_LOGIN:
+            continue
+        body = (comentario.get("body") or "").strip()
+        if not body.startswith(COORDINATOR_COMMENT_MARKER) or AUDIT_CARD_HEADER not in body:
+            continue
+        head_match = AUDIT_HEAD_RE.search(body)
+        head_sha = head_match.group(1).lower() if head_match else None
+        if any(marcador in body for marcador in AUDIT_TECHNICAL_FAILURE_MARKERS):
+            return None
+        if AUDIT_MERGE_READY_LINE in body:
+            return VeredictoDeAuditoria("MERGE-READY", head_sha)
+        if AUDIT_NEEDS_FIX_LINE in body:
+            return VeredictoDeAuditoria("NEEDS-FIX", head_sha)
+        return None
     return None
 
 
