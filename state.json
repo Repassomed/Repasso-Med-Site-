@@ -673,6 +673,16 @@
       "recorded_at": "2026-09-27T23:33:45.722475+00:00",
       "status": "BLOCKED",
       "task_id": "neurologia-p0-provas-q05-07--bridge-ef5f437d6208"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): Os dois problemas apontados pela auditoria n\u00e3o podem ser corrigidos com seguran\u00e7a nos 7 trechos fornecidos deste arquivo grande. (1) O cabe\u00e7alho 'Las 148 preguntas de la asignatura' do Banco General, que precisaria ser atualizado para 149, n\u00e3o aparece em nenhum dos trechos entregues \u2014 n\u00e3o h\u00e1 \u00e2ncora literal dispon\u00edvel, e a regra pro\u00edbe inventar texto de mem\u00f3ria. (2) A valida\u00e7\u00e3o de cotejo da quest\u00e3o 5 (neuralgia del trig\u00e9mino) com a foto original leg\u00edvel do lote 25/09 exige acesso visual \u00e0s imagens do Drive, que n\u00e3o foi fornecido nesta execu\u00e7\u00e3o; essa \u00e9 uma verifica\u00e7\u00e3o humana de fonte prim\u00e1ria, n\u00e3o uma edi\u00e7\u00e3o de texto que este worker possa realizar. As quest\u00f5es 6 e 7 j\u00e1 est\u00e3o corretamente registradas como duplicatas sem\u00e2nticas (q-neu078/bq-neu078 para miastenia; q-neu087 para NREM N3) e n\u00e3o requerem nova inser\u00e7\u00e3o, conforme a decis\u00e3o j\u00e1 validada pelo Guard.",
+      "recorded_at": "2026-09-27T23:36:29.196119+00:00",
+      "status": "BLOCKED",
+      "task_id": "neurologia-p0-provas-q05-07--bridge-004f8bfe50f7"
     }
   ]
 }
