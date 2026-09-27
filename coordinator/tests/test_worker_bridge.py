@@ -367,6 +367,64 @@ def test_falha_ao_sincronizar_relatorio_bloqueia_guard() -> None:
     print("OK  test_falha_ao_sincronizar_relatorio_bloqueia_guard")
 
 
+def test_corpo_pr_declara_base_auditavel_quando_etapa_continua_projeto_composto() -> None:
+    base_anterior = "89e0750b920d7ca5d2f96f812d677a03d6965eda"
+    task = RunnerTask(
+        task_id="neurologia-p0-provas-q05-07--bridge-abc123abc123",
+        priority=Priority.P0, source_issue=88,
+        branch="runner/neurologia-p0-provas-q01-04",
+        allowed_files=("alvo.txt",),
+        instructions="Integrar Q5-Q7.",
+        checkpoint_commit=base_anterior,
+        capabilities_required=("codigo",), risk_level="MEDIO", policy_level="C",
+        jose_authorized=True, question_report_required=True,
+    )
+    body = bridge_pr.corpo_da_pr(
+        task=task,
+        canonical_task_id="neurologia-p0-provas-q05-07",
+        worker_id=PILOT_WORKER,
+        worker_display="Claude Worker 1",
+        checkpoint_commit="bb6b1f9ec8f8b1bad03bd9318ee721d825827c80",
+        titulo_tarefa="P0 — Neurología 2/12",
+        objetivo="Integrar Q5-Q7.",
+        dependencias=("neurologia-p0-provas-q01-04",),
+        question_report=_relatorio_8a_valido(),
+        stage_audit_base=base_anterior,
+    )
+    assert f"**Base auditável da etapa:** `{base_anterior}`" in body
+    assert "**Checkpoint/commit publicado:** `bb6b1f9ec8f8b1bad03bd9318ee721d825827c80`" in body
+    print("OK  test_corpo_pr_declara_base_auditavel_quando_etapa_continua_projeto_composto")
+
+
+def test_pr_reutilizada_preserva_base_auditavel_sem_confundir_checkpoint_de_retomada() -> None:
+    api = _FakeGitHubApi()
+    base_etapa = "89e0750b920d7ca5d2f96f812d677a03d6965eda"
+    task = RunnerTask(
+        task_id="t--bridge-abc123abc123", priority=Priority.P0, source_issue=128,
+        branch="runner/t", allowed_files=("alvo.txt",),
+        instructions="Escrever OK.", checkpoint_commit=None,
+        capabilities_required=("codigo",), risk_level="BAIXO", policy_level="C",
+    )
+    primeira = bridge_pr.garantir_pr(
+        api, task=task, canonical_task_id="t", worker_id=PILOT_WORKER,
+        worker_display="Claude Worker 4", checkpoint_commit="bb6b1f9ec8f8b1bad03bd9318ee721d825827c80",
+        base_branch="main", titulo_tarefa="T", objetivo="OK.",
+        stage_audit_base=base_etapa,
+    )
+    assert primeira.action == "CREATED"
+    # Uma manutenção posterior não fornece stage_audit_base; a PR existente
+    # deve preservar a base da etapa, em vez de trocá-la pelo checkpoint atual.
+    segunda = bridge_pr.garantir_pr(
+        api, task=task, canonical_task_id="t", worker_id=PILOT_WORKER,
+        worker_display="Claude Worker 4", checkpoint_commit="cc6b1f9ec8f8b1bad03bd9318ee721d825827c80",
+        base_branch="main", titulo_tarefa="T", objetivo="OK.",
+    )
+    assert segunda.action == "REUSED"
+    assert f"**Base auditável da etapa:** `{base_etapa}`" in api.prs[0]["body"]
+    assert "**Checkpoint/commit publicado:** `cc6b1f9ec8f8b1bad03bd9318ee721d825827c80`" in api.prs[0]["body"]
+    print("OK  test_pr_reutilizada_preserva_base_auditavel_sem_confundir_checkpoint_de_retomada")
+
+
 def test_pr_reutilizada_sincroniza_relatorio_sem_duplicar() -> None:
     api = _FakeGitHubApi()
     task = RunnerTask(

@@ -2109,6 +2109,7 @@ def executar_ciclo(
             canonical_task_id=canonical_task_id, worker_id=worker_id,
             checkpoint_commit=checkpoint, base_branch=base_branch,
             runtime_store=runtime_store, status_runtime=status_runtime,
+            stage_audit_base=continuacao.checkpoint_commit,
         )
         notes.extend(notas_pr)
     else:
@@ -2178,7 +2179,7 @@ def _abrir_pr_e_guard(
     github_api: bridge_pr.GitHubBridgeApi | None, *, task: RunnerTask, tarefa: TaskRecord,
     meta: BridgeTaskMetadata, canonical_task_id: str, worker_id: str,
     checkpoint_commit: str | None, base_branch: str, runtime_store: TaskRuntimeStore,
-    status_runtime: str,
+    status_runtime: str, stage_audit_base: str | None = None,
 ) -> tuple[PrOutcome | None, GuardDispatchOutcome | None, list[str]]:
     """§9 — PR idempotente e, depois dela, disparo EXPLÍCITO do Guard.
 
@@ -2208,6 +2209,7 @@ def _abrir_pr_e_guard(
         source_pack_path=meta.source_pack_path,
         source_pack_sha256=meta.source_pack_sha256,
         question_report=question_report,
+        stage_audit_base=stage_audit_base,
     )
     if pr_outcome.pr_number is None:
         notas.append(f"PR não disponível ({pr_outcome.action}): {pr_outcome.reason}")
