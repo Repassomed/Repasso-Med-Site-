@@ -651,6 +651,16 @@
       "recorded_at": "2026-09-27T23:01:22.113597+00:00",
       "status": "BLOCKED",
       "task_id": "neurologia-p0-provas-q05-07--bridge-68ee494a3cc5"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "Falha na chamada ap\u00f3s 0.90s (uma \u00fanica tentativa, sem retry): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CfUoHQgK7rsCJZHZfU39W'}",
+      "recorded_at": "2026-09-27T23:18:24.876980+00:00",
+      "status": "FAILED",
+      "task_id": "neurologia-p0-provas-q05-07--bridge-966bb1d5e385"
     }
   ]
 }
