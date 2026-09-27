@@ -515,15 +515,65 @@ jobs:
             console.log(`PR #${numero}: contexto validado; worker_bridge_needs_audit=${Boolean(typed && typed.worker_bridge_needs_audit === true)}.`);
 
             // O corpo da PR é declaração; o diff real é a evidência principal.
-            const diffResp = await github.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: numero,
-              mediaType: { format: 'diff' },
-            });
-            const diffTexto = typeof diffResp.data === 'string' ? diffResp.data : '';
+            //
+            // Projetos compostos usam UMA PR/branch para várias etapas. Neles,
+            // auditar sempre base(main)->HEAD faz a etapa N "herdar" no diff
+            // todas as mudanças já auditadas da etapa N-1 (caso real #305:
+            // Q1-Q4 voltaram a aparecer na auditoria de Q5-Q7 e viraram falso
+            // NEEDS-FIX). Quando o Bridge declara a base auditável da etapa,
+            // a evidência correta é predecessor aprovado -> HEAD atual.
+            const corpoPr = String(pr.body || '');
+            const baseEtapaMatch = corpoPr.match(
+              /- \*\*Base auditável da etapa:\*\*\s*`([0-9a-f]{40})`/i
+            );
+            const baseEtapa = baseEtapaMatch ? baseEtapaMatch[1].toLowerCase() : null;
+            let diffTexto = '';
+            if (baseEtapa) {
+              const comparacao = await github.request(
+                'GET /repos/{owner}/{repo}/compare/{basehead}',
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  basehead: `${baseEtapa}...${pr.head.sha}`,
+                }
+              );
+              const dadosComparacao = comparacao.data || {};
+              const ancestralValido =
+                String(dadosComparacao.status || '') === 'ahead' &&
+                Number(dadosComparacao.ahead_by || 0) >= 1 &&
+                String(dadosComparacao.base_commit && dadosComparacao.base_commit.sha || '').toLowerCase() === baseEtapa;
+              if (!ancestralValido) {
+                console.log(
+                  `Base auditável da etapa ${baseEtapa} não é ancestral válido do HEAD ${pr.head.sha}; ` +
+                  'auditoria recusada fail-closed (diff vazio).'
+                );
+              } else {
+                const diffEtapaResp = await github.request(
+                  'GET /repos/{owner}/{repo}/compare/{basehead}',
+                  {
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    basehead: `${baseEtapa}...${pr.head.sha}`,
+                    mediaType: { format: 'diff' },
+                  }
+                );
+                diffTexto = typeof diffEtapaResp.data === 'string' ? diffEtapaResp.data : '';
+                console.log(
+                  `Diff incremental da etapa da PR #${numero}: ${baseEtapa.slice(0, 8)} -> ` +
+                  `${pr.head.sha.slice(0, 8)} · ${diffTexto.length} caracteres.`
+                );
+              }
+            } else {
+              const diffResp = await github.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: numero,
+                mediaType: { format: 'diff' },
+              });
+              diffTexto = typeof diffResp.data === 'string' ? diffResp.data : '';
+              console.log(`Diff real da PR #${numero}: ${diffTexto.length} caracteres.`);
+            }
             fs.writeFileSync('/tmp/pr-diff.patch', diffTexto);
-            console.log(`Diff real da PR #${numero}: ${diffTexto.length} caracteres.`);
 
             // Evidência auxiliar limitada do HEAD EXATO auditado. Nunca executa
             // código da PR: lê somente texto via Contents API no pr.head.sha.
