@@ -214,6 +214,20 @@ AUDIT_POLICY_VERSION = "2026-09-25-anchored-head-context-v3"
 # PRs pequenas (vistas inteiras antes) mantêm a mesma chave: zero custo novo.
 LEGACY_AUDIT_DIFF_CHARS = 8_000
 DIFF_EVIDENCE_POLICY = "diff-integral-v1"
+# Issue #305 (caso real: Neurología P0, questões novas em 3 blocos): o
+# head_context passou a extrair evidência didática ancorada nos blocos que
+# a Matriz por fonte da Lei 8-A.11 (``coordinator/question_report.py::
+# render_question_report``) declara em "Destino no site" — antes disso, o
+# OpenAI Auditor não conseguia comprovar RESUMO ENSINA → QUESTÃO COBRA. Só
+# muda a evidência de uma PR que TEM essa matriz renderizada no corpo;
+# mesmo padrão cirúrgico de ``DIFF_EVIDENCE_POLICY`` (Issue #308) — nunca
+# um bump geral de ``AUDIT_POLICY_VERSION`` forçando reauditoria paga em
+# toda PR aberta, só nas que realmente ganham evidência nova.
+LEI_8A_MATRIX_HEADER = (
+    "| Fonte | Página/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | "
+    "Duplicadas/canônicas | Reconstruídas | Pendentes | Destino no site |"
+)
+HEAD_CONTEXT_8A_POLICY = "question-report-evidence-v1"
 
 
 def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None,
@@ -381,6 +395,8 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                     "audit_policy_version": AUDIT_POLICY_VERSION,
                     **({"diff_evidence": DIFF_EVIDENCE_POLICY}
                        if pr_diff and len(pr_diff) > LEGACY_AUDIT_DIFF_CHARS else {}),
+                    **({"head_context_8a": HEAD_CONTEXT_8A_POLICY}
+                       if LEI_8A_MATRIX_HEADER in corpo else {}),
                 },
             },
         )

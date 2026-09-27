@@ -578,8 +578,12 @@ jobs:
               diffTexto,
               arquivos: arquivosHead,
               sha: pr.head.sha,
-              limite: 7000,
-            }).slice(0, 7000);
+              // Issue #305: a "Matriz por fonte" da Lei 8-A.11 (quando a
+              // tarefa exige question_report) vem do corpo REAL da PR já
+              // buscado/validado acima — nunca do input cru do evento.
+              prBody: pr.body,
+              limite: 12000,
+            }).slice(0, 12000);
             if (headContext) {
               fs.writeFileSync('/tmp/pr-head-context.txt', headContext);
               console.log(`Contexto limitado do HEAD da PR #${numero}: ${headContext.length} caracteres.`);

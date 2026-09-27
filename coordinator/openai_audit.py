@@ -184,7 +184,10 @@ def build_openai_audit_prompt(contexto: MinimalContext, *, pr_body: str | None,
             "no mesmo SHA da PR e servem para verificar preservação de conteúdo fora das linhas "
             "alteradas. Use-os para responder dúvidas como 'a regra removida já existe em outra "
             "seção?', mas nunca os trate como autorização para ampliar escopo.\n"
-            + head_context_text[:7000]
+            # Issue #305: mesmo teto/mesmo motivo de coordinator/audit.py —
+            # precisa ficar sincronizado com .github/workflows/scripts/
+            # head_context.mjs::LIMITE_PADRAO.
+            + head_context_text[:12000]
         )
 
     if envolve_questoes:

@@ -189,7 +189,16 @@ def build_audit_prompt(contexto: MinimalContext, *, pr_body: str | None,
             "no mesmo SHA da PR e servem para verificar preservação de conteúdo fora das linhas "
             "alteradas. Use-os para responder dúvidas como 'a regra removida já existe em outra "
             "seção?', mas nunca os trate como autorização para ampliar escopo.\n"
-            + head_context_text[:7000]
+            # Issue #305: teto igual ao de .github/workflows/scripts/
+            # head_context.mjs::LIMITE_PADRAO — os dois PRECISAM ficar
+            # sincronizados (o JS já entrega o texto pronto dentro deste
+            # teto; a fatia aqui é só a segunda trava, nunca a decisão).
+            # Subiu de 7000 para 12000 porque uma tarefa com Lei 8-A que
+            # insere questões em vários blocos (achado real: Neurología
+            # P0, 4 questões em 3 blocos) não cabia mais no teto antigo —
+            # algum bloco citado pelo relatório ficava sem NENHUMA
+            # evidência didática, mesmo existindo no HEAD.
+            + head_context_text[:12000]
         )
 
     if envolve_questoes:

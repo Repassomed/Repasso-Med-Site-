@@ -28,6 +28,9 @@ import subprocess
 import sys
 
 from . import _pathsetup
+from coordinator.github_event import (
+    HEAD_CONTEXT_8A_POLICY, LEI_8A_MATRIX_HEADER, build_event_from_github_context,
+)
 
 _SCRIPT_DIR = os.path.join(_pathsetup.REPO_ROOT, ".github", "workflows", "scripts")
 _MODULE_PATH = os.path.join(_SCRIPT_DIR, "head_context.mjs")
@@ -58,7 +61,8 @@ def test_workflow_usa_contexto_ancorado_e_nao_indexof_global() -> None:
     assert ".indexOf(term)" not in trecho, "regressão da #275: indexOf global voltou"
     assert "content.slice(0, 2200)" not in trecho, "fallback 'começo do arquivo' não pode voltar"
     assert "ref: pr.head.sha" in trecho
-    assert ".slice(0, 7000)" in trecho
+    assert ".slice(0, 12000)" in trecho
+    assert "prBody" in trecho, "Issue #305: o corpo da PR precisa chegar ao módulo (Matriz por fonte 8-A)"
     with open(_MODULE_PATH, encoding="utf-8") as fh:
         modulo = fh.read()
     for proibido in ("require(", "import(", "fetch(", "child_process", "eval(", "new Function"):
@@ -85,15 +89,52 @@ def test_node_test_runner_prova_contexto_do_bloco_do_diff() -> None:
     saida = resultado.stdout + resultado.stderr
     assert resultado.returncode == 0, f"node --test falhou (exit {resultado.returncode}):\n{saida}"
     assert "# fail 0" in saida, f"algum teste JS falhou:\n{saida}"
-    assert "# pass 6" in saida, f"esperava 6 testes passando, saída:\n{saida}"
+    assert "# pass 10" in saida, f"esperava 10 testes passando, saída:\n{saida}"
     for nome in (
         "HTML grande com termos repetidos: contexto vem do bloco B, não do primeiro bloco",
         "o ensino ANTES da questão tem prioridade sobre conteúdo depois dela",
         "teto rígido de tamanho é respeitado mesmo com limite pequeno",
         "fail-closed: arquivo sem hunk no diff não recebe trecho inventado",
+        # Issue #305: evidência didática guiada pelo question_report (Lei 8-A).
+        'question_report: evidência vem do bloco citado em "Destino no site", mesmo com > MAX_CLUSTERS_POR_ARQUIVO blocos alterados',
+        "question_report: nenhuma questão nova/reformulada → não aciona a camada Lei 8-A",
+        'question_report: fail-closed quando "Destino no site" não referencia um bloco real — nunca adivinha',
     ):
         assert nome in saida, f"teste esperado ausente da saída: {nome!r}"
     print("OK  test_node_test_runner_prova_contexto_do_bloco_do_diff")
+
+
+def _evento_de_pr(*, corpo: str, run_id: int = 1, head_sha: str = "a" * 40):
+    payload = {
+        "action": "completed",
+        "workflow_run": {"name": "Repasso Guard", "conclusion": "success", "id": run_id,
+                          "head_sha": head_sha, "pull_requests": [{"number": 305}]},
+    }
+    pr_info = {"number": 305, "title": "PR de teste", "body": corpo,
+               "labels": ["NEEDS-AUDIT"], "updated_at": "2026-09-27T00:00:00Z"}
+    return build_event_from_github_context("workflow_run", payload, "Repassomed/Repasso-Med-Site-",
+                                            pr_info=pr_info)
+
+
+def test_dedup_ganha_campo_cirurgico_so_quando_a_pr_tem_a_matriz_8a() -> None:
+    """Issue #305: mesmo padrão de ``DIFF_EVIDENCE_POLICY`` (Issue #308) —
+    a evidência do head_context só muda para quem TEM a Matriz por fonte
+    renderizada; nunca um bump geral de política forçando reauditoria paga
+    em toda PR aberta."""
+    corpo_com_matriz = (
+        "- **Área:** materia\n\n"
+        "## Relatório obrigatório — Lei das Questões (8-A.11)\n\n"
+        "### Matriz por fonte\n\n"
+        f"{LEI_8A_MATRIX_HEADER}\n"
+        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n"
+        "| Foto | pág | CLARA | 1 | 1 | 1 | 0 | 0 | 0 | 0 | neub02 |\n"
+    )
+    ev_com = _evento_de_pr(corpo=corpo_com_matriz)
+    assert ev_com.payload["dedup_fields"].get("head_context_8a") == HEAD_CONTEXT_8A_POLICY
+
+    ev_sem = _evento_de_pr(corpo="- **Área:** infraestrutura\n\nSem nenhuma matriz aqui.")
+    assert "head_context_8a" not in ev_sem.payload["dedup_fields"]
+    print("OK  test_dedup_ganha_campo_cirurgico_so_quando_a_pr_tem_a_matriz_8a")
 
 
 def main() -> int:
@@ -101,6 +142,7 @@ def main() -> int:
         test_modulo_e_teste_js_existem,
         test_workflow_usa_contexto_ancorado_e_nao_indexof_global,
         test_node_test_runner_prova_contexto_do_bloco_do_diff,
+        test_dedup_ganha_campo_cirurgico_so_quando_a_pr_tem_a_matriz_8a,
     ]
     falhas = 0
     for t in testes:
