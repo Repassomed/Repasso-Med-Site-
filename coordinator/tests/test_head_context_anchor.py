@@ -70,6 +70,20 @@ def test_workflow_usa_contexto_ancorado_e_nao_indexof_global() -> None:
     print("OK  test_workflow_usa_contexto_ancorado_e_nao_indexof_global")
 
 
+def test_workflow_le_arquivo_grande_via_raw_quando_content_api_nao_da_base64() -> None:
+    """Achado real (PR #305): a API de Conteúdo do GitHub só devolve base64
+    para arquivos até 1 MB; ``neurologia.html`` (~1,3 MB) cruzou esse teto e
+    a Camada 0 da Lei 8-A (#311) ficava sem nenhum arquivo para ler,
+    SILENCIOSAMENTE — nenhum log, nenhuma nota ao auditor, nenhuma evidência
+    didática enviada. O passo precisa cair para o media type ``raw`` (sem
+    teto de 1 MB) quando ``encoding`` não vier ``base64``."""
+    trecho = _passo_prctx()
+    assert "mediaType: { format: 'raw' }" in trecho, "fallback para arquivo grande (> 1 MB) ausente"
+    assert "file.encoding === 'base64'" in trecho
+    assert "veio sem conteúdo utilizável" in trecho, "falha dos dois caminhos precisa ficar visível no log"
+    print("OK  test_workflow_le_arquivo_grande_via_raw_quando_content_api_nao_da_base64")
+
+
 def test_node_test_runner_prova_contexto_do_bloco_do_diff() -> None:
     node = shutil.which("node")
     if node is None:
@@ -141,6 +155,7 @@ def main() -> int:
     testes = [
         test_modulo_e_teste_js_existem,
         test_workflow_usa_contexto_ancorado_e_nao_indexof_global,
+        test_workflow_le_arquivo_grande_via_raw_quando_content_api_nao_da_base64,
         test_node_test_runner_prova_contexto_do_bloco_do_diff,
         test_dedup_ganha_campo_cirurgico_so_quando_a_pr_tem_a_matriz_8a,
     ]
