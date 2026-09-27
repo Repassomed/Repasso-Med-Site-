@@ -1674,6 +1674,31 @@
       "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): Ao cotejar as tr\u00eas quest\u00f5es do lote 25/09 (Q5 neuralgia do trig\u00e9mino, Q6 mecanismo da miastenia gravis, Q7 fun\u00e7\u00e3o do NREM N3) contra os blocos-alvo, a Lei das Quest\u00f5es 8-A exige deduplica\u00e7\u00e3o antes de qualquer inser\u00e7\u00e3o, e essa deduplica\u00e7\u00e3o j\u00e1 resolve as tr\u00eas: Q5 j\u00e1 est\u00e1 integralmente presente e espelhada, com a mesma reda\u00e7\u00e3o e chave do source pack, em neub05 (id q-neu-2509-05) e no Banco General (id bq-neu-2509-05), sem diverg\u00eancia entre as c\u00f3pias \u2014 nada a inserir. Q6 \u00e9 duplicata sem\u00e2ntica da quest\u00e3o j\u00e1 existente em neub16 (id q-neu078, 'anticuerpos contra los receptores nicot\u00ednicos postsin\u00e1pticos de acetilcolina'), que cobre o mesmo mecanismo fisiopatol\u00f3gico cobrado pelo pack; inserir de novo violaria a regra de n\u00e3o duplicar. Q7 \u00e9 duplicata sem\u00e2ntica da quest\u00e3o j\u00e1 existente em neub17 (id q-neu087), cuja alternativa correta j\u00e1 inclui restaura\u00e7\u00e3o f\u00edsica + GH + consolida\u00e7\u00e3o da mem\u00f3ria declarativa + predom\u00ednio na primeira metade \u2014 texto mais completo que o do source pack, portanto a vers\u00e3o recebida n\u00e3o \u00e9 'demonstravelmente melhor' e n\u00e3o justifica reformular o id existente. Como as tr\u00eas quest\u00f5es do escopo desta microtarefa j\u00e1 est\u00e3o cobertas sem duplicidade nem inconsist\u00eancia entre bloco",
       "task_id": "neurologia-p0-provas-q05-07",
       "worker_id": "claude-worker-2"
+    },
+    {
+      "category": "anthropic-api",
+      "commit_sha": null,
+      "component": "anthropic-api",
+      "error_id": "ERR-D3B4FCC602",
+      "error_type": "transport-error",
+      "fingerprint": "d3b4fcc602c60c2e4e25",
+      "first_seen": "2026-09-27T23:16:57.709258+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "91372efdd19542b9822135ca6893abfa",
+      "issue_sync_updated_at": "2026-09-27T23:16:57.709258+00:00",
+      "last_evidence_hash": "80c83700890727d59e66",
+      "last_seen": "2026-09-27T23:16:57.709258+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36358128921",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Anthropic falhou no evento pr:318.",
+      "task_id": "pr:318",
+      "worker_id": null
     }
   ]
 }
