@@ -167,13 +167,13 @@
         "codigo"
       ],
       "commit": null,
-      "current_task": "neurologia-p0-provas-q05-07",
+      "current_task": null,
       "display_name": "Claude Worker 2",
       "last_checkpoint": null,
-      "last_heartbeat": "2026-09-27T23:32:35.332092+00:00",
+      "last_heartbeat": "2026-09-27T23:33:47.529563+00:00",
       "never_merge": true,
       "progress": null,
-      "status": "BUSY",
+      "status": "OFFLINE",
       "type": "api_runner",
       "worker_id": "claude-worker-2"
     },
