@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -226,7 +227,7 @@ def corpo_da_pr(
     checkpoint_commit: str | None, titulo_tarefa: str | None, objetivo: str | None,
     area: str | None = None, dependencias: tuple[str, ...] = (),
     source_pack_path: str | None = None, source_pack_sha256: str | None = None,
-    question_report: str | None = None,
+    question_report: str | None = None, stage_audit_base: str | None = None,
 ) -> str:
     """O bloco ``## ESCOPO`` que o Repasso Guard já sabe ler
     (``tools/qa/guard/__main__.py::parse_scope``) — os rótulos são
@@ -264,12 +265,11 @@ def corpo_da_pr(
         "",
         f"- **Branch de trabalho:** `{task.branch}`",
     ]
-    if task.checkpoint_commit:
-        # Projetos compostos continuam do HEAD verde da etapa anterior.
-        # Este SHA vira a base auditável da etapa atual no OBSERVE; assim o
-        # auditor recebe só predecessor aprovado -> HEAD atual, nunca o diff
-        # cumulativo main -> HEAD com etapas já auditadas.
-        linhas.append(f"- **Base auditável da etapa:** `{task.checkpoint_commit}`")
+    if stage_audit_base:
+        # Somente projetos compostos declaram esta base. Não reutilizamos
+        # task.checkpoint_commit aqui: esse campo também existe em retomadas
+        # normais e misturá-los faria uma retomada comum parecer nova etapa.
+        linhas.append(f"- **Base auditável da etapa:** `{stage_audit_base}`")
     linhas += [
         f"- **Checkpoint/commit publicado:** `{checkpoint_commit or '—'}`",
         f"- **Id de execução (claim do Runner):** `{task.task_id}`",
@@ -317,7 +317,7 @@ def garantir_pr(
     base_branch: str, titulo_tarefa: str | None = None, objetivo: str | None = None,
     area: str | None = None, dependencias: tuple[str, ...] = (),
     source_pack_path: str | None = None, source_pack_sha256: str | None = None,
-    question_report: str | None = None,
+    question_report: str | None = None, stage_audit_base: str | None = None,
 ) -> PrOutcome:
     """§9, idempotente: se já existe PR ABERTA cuja ``head`` é
     ``task.branch``, ela é reutilizada — nunca uma duplicata. A busca é
@@ -331,19 +331,29 @@ def garantir_pr(
             f"base ({base_branch!r}) e head ({task.branch!r}) são a mesma branch — nada a abrir.",
         )
 
+    try:
+        existentes = api.prs_abertas_por_head(task.branch)
+    except (GitHubBridgeApiError, ValueError) as exc:
+        return PrOutcome("FAILED", f"não consegui consultar PRs abertas: {redact(str(exc))}")
+
+    # Se estamos reutilizando uma PR composta durante correção/retomada,
+    # preserve a base auditável já declarada mesmo quando o chamador atual
+    # não está no caminho de continuação original.
+    base_auditavel_efetiva = (stage_audit_base or "").strip() or None
+    if existentes and base_auditavel_efetiva is None:
+        corpo_existente = str(existentes[0].get("body") or "")
+        m = re.search(r"- \*\*Base auditável da etapa:\*\*\s*`([0-9a-f]{40})`", corpo_existente, re.I)
+        if m:
+            base_auditavel_efetiva = m.group(1).lower()
+
     corpo_atualizado = corpo_da_pr(
         task=task, canonical_task_id=canonical_task_id, worker_id=worker_id,
         worker_display=worker_display, checkpoint_commit=checkpoint_commit,
         titulo_tarefa=titulo_tarefa, objetivo=objetivo,
         area=area, dependencias=dependencias,
         source_pack_path=source_pack_path, source_pack_sha256=source_pack_sha256,
-        question_report=question_report,
+        question_report=question_report, stage_audit_base=base_auditavel_efetiva,
     )
-
-    try:
-        existentes = api.prs_abertas_por_head(task.branch)
-    except (GitHubBridgeApiError, ValueError) as exc:
-        return PrOutcome("FAILED", f"não consegui consultar PRs abertas: {redact(str(exc))}")
 
     if existentes:
         pr = existentes[0]
