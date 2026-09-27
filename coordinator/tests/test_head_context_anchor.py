@@ -63,6 +63,12 @@ def test_workflow_usa_contexto_ancorado_e_nao_indexof_global() -> None:
     assert "ref: pr.head.sha" in trecho
     assert ".slice(0, 12000)" in trecho
     assert "prBody" in trecho, "Issue #305: o corpo da PR precisa chegar ao módulo (Matriz por fonte 8-A)"
+    assert "github.rest.git.getBlob" in trecho, (
+        "Issue #305: arquivo de matéria >1 MB precisa de fallback Git Blob; "
+        "Contents API pode devolver content vazio/encoding=none"
+    )
+    assert "file_sha: changedFile.sha" in trecho, "fallback precisa ler exatamente o blob do HEAD da PR"
+    assert "changedFile.status !== 'removed'" in trecho, "arquivo removido nunca pode virar contexto do HEAD"
     with open(_MODULE_PATH, encoding="utf-8") as fh:
         modulo = fh.read()
     for proibido in ("require(", "import(", "fetch(", "child_process", "eval(", "new Function"):
