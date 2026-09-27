@@ -662,6 +662,16 @@
       "recorded_at": "2026-09-27T23:18:24.876980+00:00",
       "status": "FAILED",
       "task_id": "neurologia-p0-provas-q05-07--bridge-966bb1d5e385"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): O texto do cabe\u00e7alho do Banco General (\"148/149 preguntas\") apontado pela auditoria n\u00e3o aparece em nenhum dos 7 trechos fornecidos do arquivo neurologia.html, ent\u00e3o n\u00e3o h\u00e1 como ancorar essa corre\u00e7\u00e3o sem inventar texto \u2014 regra que pro\u00edbe old_text n\u00e3o copiado literalmente de um trecho recebido. Al\u00e9m disso, os trechos mostram que a Q5 (neuralgia del trig\u00e9mino) j\u00e1 est\u00e1 integrada em neub05 (id q-neu-2509-05) e espelhada no Banco General (id bq-neu-2509-05), com alternativas embaralhadas preservando a resposta cient\u00edfica (c), e que Q6 (mecanismo da miastenia, j\u00e1 coberto por q-neu078/bq-neu078) e Q7 (fun\u00e7\u00e3o do N3, j\u00e1 coberto por q-neu087) s\u00e3o corretamente reconhecidas como duplicatas sem\u00e2nticas e n\u00e3o foram reinseridas \u2014 ou seja, o objetivo central da tarefa j\u00e1 est\u00e1 atendido no conte\u00fado enviado. A pend\u00eancia restante (cotejo da alternativa reconstru\u00edda da Q5 com a foto original leg\u00edvel) exige valida\u00e7\u00e3o humana visual, que est\u00e1 fora do escopo de um editor de texto e j\u00e1 foi escalada para Sol conforme o cart\u00e3o de auditoria; n\u00e3o \u00e9 poss\u00edvel resolv\u00ea-la nesta resposta sem inventar evid\u00eancia.",
+      "recorded_at": "2026-09-27T23:33:45.722475+00:00",
+      "status": "BLOCKED",
+      "task_id": "neurologia-p0-provas-q05-07--bridge-ef5f437d6208"
     }
   ]
 }
