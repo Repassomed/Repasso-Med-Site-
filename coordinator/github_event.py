@@ -227,7 +227,12 @@ LEI_8A_MATRIX_HEADER = (
     "| Fonte | Página/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | "
     "Duplicadas/canônicas | Reconstruídas | Pendentes | Destino no site |"
 )
-HEAD_CONTEXT_8A_POLICY = "question-report-evidence-v1"
+# PR #313: arquivos de matéria >1 MB passaram a chegar ao mesmo head_context 8-A via fallback RAW.
+# Isso muda a EVIDÊNCIA disponível ao auditor no MESMO HEAD (caso real #305), então
+# precisa de uma nova versão cirúrgica no dedup; sem este bump, a reauditoria pós-#313
+# vira DUPLICATE e nenhuma chamada nova acontece. Continua restrito a PRs com a Matriz
+# 8-A renderizada — não força reauditoria geral.
+HEAD_CONTEXT_8A_POLICY = "question-report-evidence-v2-large-file-raw"
 
 
 def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None,
