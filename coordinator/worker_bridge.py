@@ -774,6 +774,119 @@ def materializar_runner_task(
 
 
 # ---------------------------------------------------------------------
+# Projetos compostos (mecanismo mínimo): uma tarefa que declara
+# ``parent_task_id`` continua a MESMA branch da etapa anterior a partir do
+# HEAD real publicado — nunca do checkpoint em cache do runtime, que pode
+# estar desatualizado (achado real: PR #305 recebeu commits manuais depois
+# do último checkpoint automático registrado). Fail-closed sempre que a
+# continuidade não puder ser confirmada — nunca começa do zero por cima de
+# trabalho já publicado.
+# ---------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class ContinuacaoDeEstagio:
+    checkpoint_commit: str | None
+    bloquear: bool
+    nota: str | None
+
+
+def resolver_continuacao_de_estagio(
+    tarefa: TaskRecord, *, branch_alvo: str,
+    tarefas_por_id: dict[str, TaskRecord],
+    registros: dict[str, TaskRuntimeRecord],
+    github_api: bridge_pr.GitHubBridgeApi | None,
+) -> ContinuacaoDeEstagio:
+    """Projeto composto (Neurología P0 e futuros — Semiología II,
+    Fisiopatología II, Farmacología II, Dermatología etc.): quando
+    ``tarefa.parent_task_id`` está preenchido e uma das dependências
+    declaradas é uma ETAPA do MESMO projeto (mesmo ``parent_task_id``),
+    esta função resolve de onde a nova etapa deve continuar — nunca da
+    main, sempre do HEAD real e atual da PR que a etapa anterior publicou.
+
+    Devolve ``ContinuacaoDeEstagio``:
+    - ``(None, False, None)`` — esta tarefa não é continuação de nada
+      (primeira etapa de um projeto composto, ou tarefa avulsa sem
+      ``parent_task_id``): segue o caminho de sempre (branch nova a
+      partir da branch padrão).
+    - ``(sha, False, nota)`` — continuidade confirmada: ``sha`` é o HEAD
+      REAL, confirmado pela API GitHub agora mesmo, da PR publicada pela
+      etapa anterior. Nunca o ``checkpoint_commit`` guardado no runtime
+      (que só é atualizado pelo próprio Runner; um commit manual
+      publicado depois disso deixaria o cache desatualizado).
+    - ``(None, True, nota)`` — existe uma etapa anterior no projeto, mas a
+      continuidade não pôde ser confirmada com segurança (sem PR
+      publicada ainda, branch divergente da declarada, ou API
+      indisponível) — a atribuição desta etapa deve ser recusada
+      (``BLOCKED``) nesta execução, NUNCA prosseguir criando uma branch
+      nova por cima do trabalho já feito.
+    """
+    if not tarefa.parent_task_id:
+        return ContinuacaoDeEstagio(None, False, None)
+
+    predecessor_id = next(
+        (
+            dep_id for dep_id in tarefa.dependencias
+            if (dep := tarefas_por_id.get(dep_id)) is not None
+            and dep.parent_task_id == tarefa.parent_task_id
+        ),
+        None,
+    )
+    if predecessor_id is None:
+        # Primeira etapa do projeto composto (ou nenhuma dependência
+        # declarada pertence à mesma cadeia) — nada a continuar.
+        return ContinuacaoDeEstagio(None, False, None)
+
+    registro = registros.get(predecessor_id)
+    if registro is None or not (registro.branch or "").strip() or registro.pr_number is None:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): a etapa anterior "
+            f"{predecessor_id!r} ainda não publicou branch/PR — continuidade recusada fail-closed, "
+            "nunca começa do zero por cima do trabalho já feito.",
+        )
+    if registro.branch.strip() != branch_alvo.strip():
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): a branch declarada "
+            f"({branch_alvo!r}) difere da branch que a etapa anterior {predecessor_id!r} publicou "
+            f"({registro.branch!r}) — todas as etapas de um projeto composto precisam declarar a "
+            "MESMA branch em coordination/tasks.json.",
+        )
+    if github_api is None:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): sem cliente GitHub "
+            "disponível para confirmar o HEAD real da PR da etapa anterior — continuidade recusada "
+            "(nunca confia em checkpoint sem confirmar pela API).",
+        )
+    try:
+        pr = github_api.pr_por_numero(registro.pr_number)
+    except (bridge_pr.GitHubBridgeApiError, ValueError) as exc:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): não consegui confirmar a "
+            f"PR #{registro.pr_number} da etapa anterior {predecessor_id!r} pela API — continuidade "
+            f"recusada: {redact(str(exc))}",
+        )
+    head = pr.get("head") if isinstance(pr.get("head"), dict) else {}
+    head_ref = (head.get("ref") or "").strip()
+    head_sha = (head.get("sha") or "").strip()
+    if head_ref != branch_alvo.strip() or not head_sha:
+        return ContinuacaoDeEstagio(
+            None, True,
+            f"{tarefa.id!r} (projeto composto {tarefa.parent_task_id!r}): a PR #{registro.pr_number} "
+            f"não está mais na branch esperada ({branch_alvo!r}; real: {head_ref!r}) — continuidade "
+            "recusada fail-closed.",
+        )
+    return ContinuacaoDeEstagio(
+        head_sha, False,
+        f"{tarefa.id!r}: continuando o projeto composto {tarefa.parent_task_id!r} a partir do HEAD "
+        f"real ({head_sha[:12]}) publicado pela etapa anterior {predecessor_id!r} (PR "
+        f"#{registro.pr_number}) — nenhum merge foi necessário.",
+    )
+
+
+# ---------------------------------------------------------------------
 # §10 — liberação segura do worker depois do resultado.
 # ---------------------------------------------------------------------
 
@@ -1669,6 +1782,12 @@ def executar_ciclo(
             base_branch=base_branch,
         )
 
+    # Preserva a visão COMPLETA (antes do filtro do piloto) só para
+    # resolver a cadeia de um projeto composto (8-A abaixo): em modo
+    # piloto, ``tarefas`` filtrada pode nem conter a etapa ANTERIOR do
+    # mesmo projeto, e tratar "não encontrei" como "é a primeira etapa"
+    # seria começar do zero por engano por cima de trabalho já publicado.
+    tarefas_completas_por_id = {t.id: t for t in tarefas}
     tarefas = restringir_ao_piloto(tarefas, config)
 
     # 4. só workers programáticos do Bridge E elegíveis no modo atual.
@@ -1751,6 +1870,31 @@ def executar_ciclo(
     validacao = materializar_runner_task(tarefa, meta)
     if not validacao.ok or validacao.task is None:
         return BridgeOutcome("BLOCKED", validacao.reason, decision=decisao)
+
+    # 8-A. PROJETOS COMPOSTOS (mecanismo mínimo): esta etapa continua a
+    # branch da etapa anterior do MESMO projeto, a partir do HEAD REAL e
+    # atual dessa PR — nunca de um checkpoint em cache nem da main. Uma
+    # tarefa sem ``parent_task_id`` (a esmagadora maioria hoje) segue
+    # byte a byte o comportamento de sempre (``continuacao.bloquear`` é
+    # sempre ``False`` e ``checkpoint_commit`` sempre ``None``).
+    continuacao = resolver_continuacao_de_estagio(
+        tarefa, branch_alvo=validacao.task.branch,
+        tarefas_por_id=tarefas_completas_por_id,
+        registros=registros, github_api=github_api,
+    )
+    if continuacao.nota:
+        notes.append(continuacao.nota)
+    if continuacao.bloquear:
+        return BridgeOutcome("BLOCKED", continuacao.nota or "continuidade do projeto composto recusada.", decision=decisao)
+    if continuacao.checkpoint_commit:
+        try:
+            validacao = replace(
+                validacao, task=replace(validacao.task, checkpoint_commit=continuacao.checkpoint_commit)
+            )
+        except ValueError as exc:  # pragma: no cover - defesa em profundidade
+            return BridgeOutcome(
+                "BLOCKED", f"checkpoint de continuação do projeto composto inválido: {exc}", decision=decisao,
+            )
 
     # 9. reserva da TAREFA (compare-and-set). Perdeu: zero chamada paga.
     reserva = runtime_store.reservar(

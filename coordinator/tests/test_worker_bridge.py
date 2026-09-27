@@ -2782,6 +2782,228 @@ def test_b4_retomada_nao_pega_tarefa_sem_pr_nem_guard_ja_confirmado() -> None:
     print("OK  test_b4_retomada_nao_pega_tarefa_sem_pr_nem_guard_ja_confirmado")
 
 
+# ---------------------------------------------------------------------------
+# Projetos compostos (Neurología) — continuidade entre etapas sem merge.
+# ---------------------------------------------------------------------------
+
+def test_continuacao_tarefa_sem_parent_task_id_e_neutra() -> None:
+    tarefa = _tarefa_record(_tarefa())
+    resultado = worker_bridge.resolver_continuacao_de_estagio(
+        tarefa, branch_alvo="runner/infra-bridge-teste", tarefas_por_id={},
+        registros={}, github_api=None,
+    )
+    assert resultado.checkpoint_commit is None
+    assert resultado.bloquear is False
+    assert resultado.nota is None
+    print("OK  test_continuacao_tarefa_sem_parent_task_id_e_neutra")
+
+
+def test_continuacao_sem_predecessor_no_mesmo_projeto_e_neutra() -> None:
+    etapa1 = _tarefa_record(_tarefa(id="proj-e1", parent_task_id="proj-mae"))
+    tarefas_por_id = {"proj-e1": etapa1}
+    resultado = worker_bridge.resolver_continuacao_de_estagio(
+        etapa1, branch_alvo="runner/proj-mae", tarefas_por_id=tarefas_por_id,
+        registros={}, github_api=None,
+    )
+    assert resultado.checkpoint_commit is None
+    assert resultado.bloquear is False
+    print("OK  test_continuacao_sem_predecessor_no_mesmo_projeto_e_neutra")
+
+
+def test_continuacao_bloqueia_quando_etapa_anterior_ainda_nao_publicou_pr() -> None:
+    etapa1 = _tarefa_record(_tarefa(id="proj-e1", parent_task_id="proj-mae"))
+    etapa2 = _tarefa_record(_tarefa(
+        id="proj-e2", parent_task_id="proj-mae", dependencias=["proj-e1"],
+    ))
+    tarefas_por_id = {"proj-e1": etapa1, "proj-e2": etapa2}
+    resultado = worker_bridge.resolver_continuacao_de_estagio(
+        etapa2, branch_alvo="runner/proj-mae", tarefas_por_id=tarefas_por_id,
+        registros={}, github_api=None,
+    )
+    assert resultado.bloquear is True
+    assert resultado.checkpoint_commit is None
+    assert "não publicou branch/PR" in resultado.nota
+    print("OK  test_continuacao_bloqueia_quando_etapa_anterior_ainda_nao_publicou_pr")
+
+
+def test_continuacao_bloqueia_quando_branch_declarada_diverge() -> None:
+    etapa1 = _tarefa_record(_tarefa(id="proj-e1", parent_task_id="proj-mae"))
+    etapa2 = _tarefa_record(_tarefa(
+        id="proj-e2", parent_task_id="proj-mae", dependencias=["proj-e1"],
+    ))
+    tarefas_por_id = {"proj-e1": etapa1, "proj-e2": etapa2}
+    registro = task_runtime.TaskRuntimeRecord(
+        canonical_task_id="proj-e1", status=task_runtime.RUNTIME_NEEDS_AUDIT,
+        branch="runner/proj-mae-DIFERENTE", checkpoint_commit="abc123",
+        pr_number=901,
+    )
+    resultado = worker_bridge.resolver_continuacao_de_estagio(
+        etapa2, branch_alvo="runner/proj-mae", tarefas_por_id=tarefas_por_id,
+        registros={"proj-e1": registro}, github_api=None,
+    )
+    assert resultado.bloquear is True
+    assert "branch declarada" in resultado.nota
+    print("OK  test_continuacao_bloqueia_quando_branch_declarada_diverge")
+
+
+def test_continuacao_bloqueia_sem_cliente_github() -> None:
+    etapa1 = _tarefa_record(_tarefa(id="proj-e1", parent_task_id="proj-mae"))
+    etapa2 = _tarefa_record(_tarefa(
+        id="proj-e2", parent_task_id="proj-mae", dependencias=["proj-e1"],
+    ))
+    tarefas_por_id = {"proj-e1": etapa1, "proj-e2": etapa2}
+    registro = task_runtime.TaskRuntimeRecord(
+        canonical_task_id="proj-e1", status=task_runtime.RUNTIME_NEEDS_AUDIT,
+        branch="runner/proj-mae", checkpoint_commit="abc123", pr_number=901,
+    )
+    resultado = worker_bridge.resolver_continuacao_de_estagio(
+        etapa2, branch_alvo="runner/proj-mae", tarefas_por_id=tarefas_por_id,
+        registros={"proj-e1": registro}, github_api=None,
+    )
+    assert resultado.bloquear is True
+    assert "sem cliente GitHub" in resultado.nota
+    print("OK  test_continuacao_bloqueia_sem_cliente_github")
+
+
+def test_continuacao_bloqueia_quando_api_falha_ou_head_ref_diverge() -> None:
+    etapa1 = _tarefa_record(_tarefa(id="proj-e1", parent_task_id="proj-mae"))
+    etapa2 = _tarefa_record(_tarefa(
+        id="proj-e2", parent_task_id="proj-mae", dependencias=["proj-e1"],
+    ))
+    tarefas_por_id = {"proj-e1": etapa1, "proj-e2": etapa2}
+    registro = task_runtime.TaskRuntimeRecord(
+        canonical_task_id="proj-e1", status=task_runtime.RUNTIME_NEEDS_AUDIT,
+        branch="runner/proj-mae", checkpoint_commit="abc123", pr_number=901,
+    )
+    # API sem a PR (erro ao consultar).
+    api_sem_pr = _FakeGitHubApi()
+    resultado = worker_bridge.resolver_continuacao_de_estagio(
+        etapa2, branch_alvo="runner/proj-mae", tarefas_por_id=tarefas_por_id,
+        registros={"proj-e1": registro}, github_api=api_sem_pr,
+    )
+    assert resultado.bloquear is True
+    assert "não consegui confirmar a PR" in resultado.nota
+
+    # API responde, mas a PR já não está mais na branch esperada.
+    api_com_pr = _FakeGitHubApi()
+    api_com_pr.criar_pr(titulo="T", head="runner/proj-mae-outra", base="bootstrap", corpo="x")
+    api_com_pr.prs[0]["number"] = 901
+    resultado2 = worker_bridge.resolver_continuacao_de_estagio(
+        etapa2, branch_alvo="runner/proj-mae", tarefas_por_id=tarefas_por_id,
+        registros={"proj-e1": registro}, github_api=api_com_pr,
+    )
+    assert resultado2.bloquear is True
+    assert "não está mais na branch esperada" in resultado2.nota
+    print("OK  test_continuacao_bloqueia_quando_api_falha_ou_head_ref_diverge")
+
+
+def test_continuacao_usa_head_real_da_pr_da_etapa_anterior() -> None:
+    etapa1 = _tarefa_record(_tarefa(id="proj-e1", parent_task_id="proj-mae"))
+    etapa2 = _tarefa_record(_tarefa(
+        id="proj-e2", parent_task_id="proj-mae", dependencias=["proj-e1"],
+    ))
+    tarefas_por_id = {"proj-e1": etapa1, "proj-e2": etapa2}
+    registro = task_runtime.TaskRuntimeRecord(
+        canonical_task_id="proj-e1", status=task_runtime.RUNTIME_NEEDS_AUDIT,
+        branch="runner/proj-mae", checkpoint_commit="checkpoint-desatualizado",
+        pr_number=901,
+    )
+    api = _FakeGitHubApi()
+    api.criar_pr(titulo="T", head="runner/proj-mae", base="bootstrap", corpo="x")
+    api.prs[0]["number"] = 901
+    api.prs[0]["head_sha"] = "head-real-com-correcao-manual"
+    resultado = worker_bridge.resolver_continuacao_de_estagio(
+        etapa2, branch_alvo="runner/proj-mae", tarefas_por_id=tarefas_por_id,
+        registros={"proj-e1": registro}, github_api=api,
+    )
+    assert resultado.bloquear is False
+    # Prova central do achado real (#305): usa o HEAD atual da API, NUNCA
+    # o checkpoint em cache do runtime (que ficou desatualizado).
+    assert resultado.checkpoint_commit == "head-real-com-correcao-manual"
+    assert "continuando o projeto composto" in resultado.nota
+    print("OK  test_continuacao_usa_head_real_da_pr_da_etapa_anterior")
+
+
+def test_projeto_composto_etapa_2_continua_do_head_real_mesmo_com_checkpoint_desatualizado() -> None:
+    """Prova de ponta a ponta (git real) dos testes obrigatórios #1, #2, #3
+    e #12 do ajuste de fluxo contínuo: a etapa 2 fica elegível quando a
+    etapa 1 termina em NEEDS-AUDIT (sem merge), continua na MESMA branch a
+    partir do HEAD REAL (mesmo havendo uma correção manual publicada depois
+    do checkpoint automático — o achado real da PR #305), enxerga o
+    conteúdo da etapa 1, e reutiliza a MESMA PR (uma única PR consolidada)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+        api = _FakeGitHubApi()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        etapa1 = _tarefa(
+            id="proj-e1", estado="READY", parent_task_id="proj-mae",
+            branch="runner/proj-mae", arquivos=["neuro.html"],
+        )
+        etapa2 = _tarefa(
+            id="proj-e2", estado="READY", parent_task_id="proj-mae",
+            dependencias=["proj-e1"], branch="runner/proj-mae",
+            arquivos=["neuro.html"],
+        )
+
+        primeiro, _c, store, registry = _ciclo(
+            tmp, [etapa1, etapa2], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("neuro.html", "conteudo da etapa 1\n"),
+            nome_workdir="work-composto-e1",
+        )
+        assert primeiro.action == "DISPATCHED" and primeiro.pr is not None
+        reg1 = store.get("proj-e1")
+        assert reg1 is not None and reg1.status == task_runtime.RUNTIME_NEEDS_AUDIT
+        assert reg1.branch == "runner/proj-mae"
+        checkpoint_registrado = reg1.checkpoint_commit
+        api.prs[0]["head_sha"] = checkpoint_registrado
+
+        # Achado real (#305): uma correção manual publicada DEPOIS do
+        # checkpoint automático, sem passar pelo runtime — o registro nunca
+        # fica sabendo, só a branch/PR real sabem.
+        remoto = os.path.join(tmp, "remoto.git")
+        wd_manual = os.path.join(tmp, "work-composto-manual")
+        subprocess.run(["git", "clone", "-q", remoto, wd_manual], check=True)
+        subprocess.run(["git", "-C", wd_manual, "config", "user.email", "x@example.com"], check=True)
+        subprocess.run(["git", "-C", wd_manual, "config", "user.name", "X"], check=True)
+        subprocess.run(["git", "-C", wd_manual, "checkout", "-q", "runner/proj-mae"], check=True)
+        with open(os.path.join(wd_manual, "neuro.html"), "w", encoding="utf-8") as fh:
+            fh.write("conteudo da etapa 1 + correcao manual\n")
+        subprocess.run(["git", "-C", wd_manual, "commit", "-q", "-am", "correção manual"], check=True)
+        subprocess.run(["git", "-C", wd_manual, "push", "-q", "origin", "runner/proj-mae"], check=True)
+        head_apos_correcao_manual = subprocess.run(
+            ["git", "-C", wd_manual, "rev-parse", "HEAD"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        assert head_apos_correcao_manual != checkpoint_registrado
+        api.prs[0]["head_sha"] = head_apos_correcao_manual
+
+        segundo, _c2, store, registry = _ciclo(
+            tmp, [etapa1, etapa2], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=_patch_padrao("neuro.html", "conteudo da etapa 1 + correcao manual + etapa 2\n"),
+            nome_workdir="work-composto-e2",
+        )
+        assert segundo.action == "DISPATCHED", segundo
+        assert any("continuando o projeto composto" in n for n in segundo.notes)
+        assert segundo.runner_result_status == "NEEDS-AUDIT"
+        reg2 = store.get("proj-e2")
+        assert reg2 is not None and reg2.branch == "runner/proj-mae"
+        assert reg2.pr_number == reg1.pr_number == 901, "uma única PR consolidada, nunca uma nova"
+        assert len(api.criadas) == 1, "nenhuma segunda PR foi criada"
+
+        conteudo_final = subprocess.run(
+            ["git", "-C", wd_manual, "fetch", "-q", "origin", "runner/proj-mae"],
+            check=True,
+        )
+        show = subprocess.run(
+            ["git", "-C", wd_manual, "show", "origin/runner/proj-mae:neuro.html"],
+            check=True, capture_output=True, text=True,
+        ).stdout
+        assert "correcao manual" in show, "a correção manual da etapa 1 não pode se perder"
+        assert "etapa 2" in show, "o conteúdo da etapa 2 precisa estar no HEAD final"
+    print("OK  test_projeto_composto_etapa_2_continua_do_head_real_mesmo_com_checkpoint_desatualizado")
+
+
 def main() -> int:
     testes = [
         test_relatorio_8a_persiste_no_runtime_e_entra_no_corpo_da_pr,
@@ -2890,6 +3112,15 @@ def main() -> int:
         test_b5_gatilho_desconhecido_fecha_o_portao,
         test_b5_default_do_gatilho_e_manual_e_o_manual_continua_valendo,
         test_modos_do_bridge_sao_os_mesmos_valores_em_todo_lugar,
+        # Projetos compostos (Neurología) — continuidade entre etapas sem merge.
+        test_continuacao_tarefa_sem_parent_task_id_e_neutra,
+        test_continuacao_sem_predecessor_no_mesmo_projeto_e_neutra,
+        test_continuacao_bloqueia_quando_etapa_anterior_ainda_nao_publicou_pr,
+        test_continuacao_bloqueia_quando_branch_declarada_diverge,
+        test_continuacao_bloqueia_sem_cliente_github,
+        test_continuacao_bloqueia_quando_api_falha_ou_head_ref_diverge,
+        test_continuacao_usa_head_real_da_pr_da_etapa_anterior,
+        test_projeto_composto_etapa_2_continua_do_head_real_mesmo_com_checkpoint_desatualizado,
     ]
     falhas = 0
     for t in testes:

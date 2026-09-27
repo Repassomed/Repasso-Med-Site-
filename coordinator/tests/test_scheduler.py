@@ -65,12 +65,14 @@ def _worker(worker_id: str, *, display_name: str | None = None, status: str = "A
 def _tarefa(id_: str, *, estado: str = "READY", area: str | None = "materia",
             agente: str | None = None, arquivos=(), dependencias=(),
             prioridade_declarada: Priority | None = None,
-            capabilities_required=()) -> TaskRecord:
+            capabilities_required=(), parent_task_id: str | None = None,
+            final_stage: bool = False) -> TaskRecord:
     return TaskRecord(
         id=id_, estado=estado, area=area, agente=agente,
         arquivos=tuple(arquivos), dependencias=tuple(dependencias),
         prioridade_declarada=prioridade_declarada,
         capabilities_required=tuple(capabilities_required),
+        parent_task_id=parent_task_id, final_stage=final_stage,
     )
 
 
@@ -874,6 +876,115 @@ def test_default_seed_workers_sao_compativeis_com_ambas_familias_de_area() -> No
     print("OK  test_default_seed_workers_sao_compativeis_com_ambas_familias_de_area")
 
 
+# ---------------------------------------------------------------------
+# Projetos compostos (Neurología P0, 12 etapas): uma dependência entre
+# etapas do MESMO ``parent_task_id`` é satisfeita em NEEDS-AUDIT/
+# MERGE-READY/DONE, nunca exigindo merge — mas só entre etapas do MESMO
+# projeto; qualquer outra dependência continua exigindo DONE.
+# ---------------------------------------------------------------------
+
+def test_etapa_2_fica_pronta_quando_etapa_1_esta_needs_audit_sem_merge() -> None:
+    etapa1 = _tarefa("proj-e1", estado="NEEDS-AUDIT", parent_task_id="proj-mae",
+                      arquivos=["m.html"])
+    etapa2 = _tarefa("proj-e2", estado="READY", parent_task_id="proj-mae",
+                      arquivos=["m.html"], dependencias=["proj-e1"])
+    fila = proxima_tarefa_pronta([etapa1, etapa2])
+    assert [t.id for t in fila] == ["proj-e2"], "etapa 2 precisa ficar pronta sem nenhum merge"
+    print("OK  test_etapa_2_fica_pronta_quando_etapa_1_esta_needs_audit_sem_merge")
+
+
+def test_etapa_2_no_estado_ready_da_etapa_1_continua_bloqueada() -> None:
+    """Etapa 1 ainda não terminou (nenhum checkpoint publicado) — etapa 2
+    não pode começar, mesmo sendo do mesmo projeto composto."""
+    etapa1 = _tarefa("proj-e1", estado="READY", parent_task_id="proj-mae", arquivos=["m.html"])
+    etapa2 = _tarefa("proj-e2", estado="READY", parent_task_id="proj-mae",
+                      arquivos=["m.html"], dependencias=["proj-e1"])
+    fila = proxima_tarefa_pronta([etapa1, etapa2])
+    # etapa1 (sem dependência nenhuma) É elegível por si só — o que este
+    # teste prova é que etapa2 NÃO aparece: sem checkpoint publicado pela
+    # etapa 1, a etapa 2 não pode começar.
+    assert [t.id for t in fila] == ["proj-e1"], "só a etapa 1 pode começar; etapa 2 continua bloqueada"
+    print("OK  test_etapa_2_no_estado_ready_da_etapa_1_continua_bloqueada")
+
+
+def test_needs_fix_da_etapa_anterior_nao_libera_a_proxima() -> None:
+    """NEEDS-FIX fica de fora de propósito: enquanto a etapa anterior está
+    em correção (mesma branch, mesmo arquivo), a próxima etapa não deve
+    começar a editar por cima. (Na prática, o Worker Bridge sempre prioriza
+    a correção de auditoria pendente antes de qualquer atribuição nova —
+    isto é a mesma garantia expressa no nível do scheduler.)"""
+    etapa1 = _tarefa("proj-e1", estado="NEEDS-FIX", parent_task_id="proj-mae", arquivos=["m.html"])
+    etapa2 = _tarefa("proj-e2", estado="READY", parent_task_id="proj-mae",
+                      arquivos=["m.html"], dependencias=["proj-e1"])
+    fila = proxima_tarefa_pronta([etapa1, etapa2])
+    assert fila == [], "NEEDS-FIX da etapa anterior não libera a próxima etapa"
+    print("OK  test_needs_fix_da_etapa_anterior_nao_libera_a_proxima")
+
+
+def test_relaxamento_nunca_vaza_para_dependencia_de_outro_projeto_ou_avulsa() -> None:
+    """O relaxamento é ESTRITO ao mesmo parent_task_id — uma dependência
+    para uma tarefa de outro projeto (ou sem projeto algum) continua
+    exigindo DONE, exatamente como antes desta mudança."""
+    de_outro_projeto = _tarefa("outro-e1", estado="NEEDS-AUDIT", parent_task_id="outro-projeto")
+    avulsa = _tarefa("avulsa", estado="NEEDS-AUDIT", parent_task_id=None)
+    etapa2_cruzada = _tarefa(
+        "proj-e2", estado="READY", parent_task_id="proj-mae",
+        dependencias=["outro-e1"],
+    )
+    etapa2_sem_projeto_na_dep = _tarefa(
+        "proj-e2b", estado="READY", parent_task_id="proj-mae",
+        dependencias=["avulsa"],
+    )
+    tarefa_avulsa_dependendo_de_needs_audit = _tarefa(
+        "t-avulsa-dep", estado="READY", parent_task_id=None,
+        dependencias=["avulsa"],
+    )
+    todas = [de_outro_projeto, avulsa, etapa2_cruzada, etapa2_sem_projeto_na_dep,
+             tarefa_avulsa_dependendo_de_needs_audit]
+    fila = proxima_tarefa_pronta(todas)
+    assert fila == [], (
+        "nenhuma dessas quatro tarefas deveria ficar pronta: dependência de outro projeto, "
+        "dependência sem parent_task_id compartilhado, e tarefa avulsa dependendo de "
+        "NEEDS-AUDIT continuam exigindo DONE"
+    )
+    print("OK  test_relaxamento_nunca_vaza_para_dependencia_de_outro_projeto_ou_avulsa")
+
+
+def test_dependencia_de_tarefa_sem_parent_task_id_continua_exigindo_done() -> None:
+    """Regressão explícita: mesmo com `tarefa.parent_task_id` preenchido,
+    se a DEPENDÊNCIA em si não declara o mesmo `parent_task_id` (ou não
+    declara nenhum), o comportamento é o de sempre — exige DONE."""
+    dep_sem_projeto = _tarefa("dep-solta", estado="NEEDS-AUDIT", parent_task_id=None)
+    tarefa = _tarefa("proj-e2", estado="READY", parent_task_id="proj-mae",
+                      dependencias=["dep-solta"])
+    assert proxima_tarefa_pronta([dep_sem_projeto, tarefa]) == []
+    dep_sem_projeto_done = _tarefa("dep-solta", estado="DONE", parent_task_id=None)
+    assert [t.id for t in proxima_tarefa_pronta([dep_sem_projeto_done, tarefa])] == ["proj-e2"]
+    print("OK  test_dependencia_de_tarefa_sem_parent_task_id_continua_exigindo_done")
+
+
+def test_load_tasks_from_tasks_json_le_parent_task_id_e_final_stage() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        caminho = os.path.join(tmp, "tasks.json")
+        with open(caminho, "w", encoding="utf-8") as fh:
+            json.dump(
+                {"tarefas": [
+                    {"id": "a", "estado": "NEEDS-AUDIT", "area": "materia",
+                     "parent_task_id": "mae", "final_stage": False},
+                    {"id": "b", "estado": "READY", "area": "materia",
+                     "dependencias": ["a"], "parent_task_id": "mae", "final_stage": True},
+                    {"id": "c", "estado": "READY", "area": "materia"},
+                ]},
+                fh,
+            )
+        tarefas = load_tasks_from_tasks_json(caminho)
+    por_id = {t.id: t for t in tarefas}
+    assert por_id["a"].parent_task_id == "mae"
+    assert por_id["b"].final_stage is True
+    assert por_id["c"].parent_task_id is None and por_id["c"].final_stage is False
+    print("OK  test_load_tasks_from_tasks_json_le_parent_task_id_e_final_stage")
+
+
 def main() -> int:
     testes = [
         test_priority_derived_from_area_matches_classify_defaults,
@@ -944,6 +1055,12 @@ def main() -> int:
         test_load_tasks_from_tasks_json_le_capabilities_required_quando_presente,
         test_real_repo_tasks_json_carrega_e_produz_fila_sem_quebrar,
         test_default_seed_workers_sao_compativeis_com_ambas_familias_de_area,
+        test_etapa_2_fica_pronta_quando_etapa_1_esta_needs_audit_sem_merge,
+        test_etapa_2_no_estado_ready_da_etapa_1_continua_bloqueada,
+        test_needs_fix_da_etapa_anterior_nao_libera_a_proxima,
+        test_relaxamento_nunca_vaza_para_dependencia_de_outro_projeto_ou_avulsa,
+        test_dependencia_de_tarefa_sem_parent_task_id_continua_exigindo_done,
+        test_load_tasks_from_tasks_json_le_parent_task_id_e_final_stage,
     ]
     falhas = 0
     for t in testes:
