@@ -1624,6 +1624,31 @@
       "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As quatro quest\u00f5es do lote 25/09 (Q1 Wernicke em neub02 id q-neu-2509-01, Q2 trig\u00e9mino em neub05 id q-neu-2509-02, Q3 marcha en tijeras em neub03 id q-neu-2509-03, Q4 signo vestibular em neub05 id q-neu-2509-04) j\u00e1 est\u00e3o integralmente presentes nos blocos-alvo, com r\u00f3tulo 'Basada en preguntas de examen' correto, alternativas e gabarito conforme o pack, e o espelho de Q1 e Q3 j\u00e1 existe no Banco General (bq-neu-2509-01 e bq-neu-2509-03, confirmados no trecho 23). N\u00e3o h\u00e1, por\u00e9m, nenhum trecho fornecido que cubra a se\u00e7\u00e3o 'Bloque 05' do Banco General (a lacuna entre o trecho 24, que termina em bq-neu022, e o trecho 25, que j\u00e1 est\u00e1 nos flashcards, \u00e9 de ~194 mil caracteres n\u00e3o enviados), de modo que n\u00e3o \u00e9 poss\u00edvel confirmar nem editar com seguran\u00e7a se os espelhos de Q2 e Q4 j\u00e1 existem ali ou faltam \u2014 inserir um bloco novo ali exigiria uma \u00e2ncora que n\u00e3o foi fornecida, o que a regra pro\u00edbe. Como o cotejo direto com as fotos originais da prova (mencionado como pend\u00eancia pela auditoria) tamb\u00e9m n\u00e3o foi realizado nesta execu\u00e7\u00e3o \u2014 o worker s\u00f3 recebeu texto do source pack, nunca as imagens \u2014, esse item permanece pendente e \u00e9 registrado como tal, sem inventar confirma\u00e7\u00e3o de legibilidade visual.",
       "task_id": "neurologia-p0-provas-q01-04",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "runner",
+      "commit_sha": "bb6b1f9ec8f8b1bad03bd9318ee721d825827c80",
+      "component": "runner",
+      "error_id": "ERR-87BA977D5D",
+      "error_type": "runner-blocked",
+      "fingerprint": "87ba977d5d33e980eef1",
+      "first_seen": "2026-09-27T21:07:01.393543+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "cd47b54ddbe34a98a85dc883e788796d",
+      "issue_sync_updated_at": "2026-09-27T21:07:01.393543+00:00",
+      "last_evidence_hash": "84c0c7349828f2b754f4",
+      "last_seen": "2026-09-27T21:07:01.393543+00:00",
+      "occurrence_count": 1,
+      "pr_number": 305,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36350315087",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As tr\u00eas quest\u00f5es do escopo desta tarefa j\u00e1 est\u00e3o cobertas no arquivo: Q5 (neuralgia del trig\u00e9mino) est\u00e1 integralmente presente em neub05 como q-neu-2509-05, com espelho bq-neu-2509-05 no Banco General, id\u00eantica ao source pack \u00a74.5. Q6 (mecanismo da miastenia gravis) \u00e9 duplicata sem\u00e2ntica de q-neu078 (neub16), que j\u00e1 testa o mesmo alvo anti-AChR postsin\u00e1ptico com o mesmo gabarito, e Q7 (fun\u00e7\u00e3o do NREM N3) \u00e9 duplicata sem\u00e2ntica de q-neu087 (neub17), que j\u00e1 cobre restaura\u00e7\u00e3o f\u00edsica + GH + mem\u00f3ria declarativa com mais detalhe que o pack. Pela Lei das Quest\u00f5es 8-A, duplicata sem\u00e2ntica n\u00e3o entra como quest\u00e3o nova e nenhuma das vers\u00f5es existentes \u00e9 demonstravelmente melhor a ponto de justificar reformula\u00e7\u00e3o, ent\u00e3o nenhuma edi\u00e7\u00e3o \u00e9 aplicada a neurologia.html.",
+      "task_id": "neurologia-p0-provas-q05-07",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
