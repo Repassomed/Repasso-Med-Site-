@@ -142,7 +142,7 @@ def test_b5_origem_do_ciclo_chega_ao_python_derivada_do_event_name() -> None:
     expressao = "(github.event_name == 'workflow_run' || github.event_name == 'schedule' || github.event_name == 'push') && 'event' || 'manual'"
     assert expressao in executavel, "a origem precisa ser derivada de github.event_name"
     assert executavel.count(expressao) == 3, "gate/bootstrap/execução precisam usar a mesma origem tipada"
-    idx = texto.index("Rodar o Worker Bridge")
+    idx = texto.index("Rodar Coordenação V2 (OpenAI coordena, Claude executa)")
     passo = texto[idx: texto.index("Publicar o resultado", idx)]
     assert "REPASSO_WORKER_BRIDGE_TRIGGER" in passo, (
         "a origem precisa chegar ao passo que executa o ciclo, não só ao que confere o portão"
@@ -185,7 +185,7 @@ def test_bridge_confirma_o_portao_de_novo_em_codigo() -> None:
     # O passo que de fato executa precisa receber TODAS as variáveis do
     # portão — senão o processo real veria os defaults seguros e o portão
     # "confirmado" no passo anterior não valeria nada.
-    idx = texto.index("Rodar o Worker Bridge")
+    idx = texto.index("Rodar Coordenação V2 (OpenAI coordena, Claude executa)")
     passo = texto[idx: texto.index("Publicar o resultado", idx)]
     for var in (
         "REPASSO_WORKER_BRIDGE_ENABLED",
@@ -274,7 +274,7 @@ def test_credencial_paga_so_existe_no_passo_do_bridge() -> None:
     linhas = [i for i, l in enumerate(texto.splitlines()) if "ANTHROPIC_API_KEY" in l]
     assert len(linhas) == 1, f"ANTHROPIC_API_KEY aparece em {len(linhas)} linhas — deve existir só no passo gated"
     posicao = texto.index("ANTHROPIC_API_KEY")
-    idx = texto.index("Rodar o Worker Bridge")
+    idx = texto.index("Rodar Coordenação V2 (OpenAI coordena, Claude executa)")
     fim = texto.index("Publicar o resultado", idx)
     assert idx < posicao < fim, "a credencial paga está fora do passo 'Rodar o Worker Bridge'"
     print("OK  test_credencial_paga_so_existe_no_passo_do_bridge")
@@ -299,7 +299,7 @@ def test_bridge_heartbeat_nao_vira_laco_de_execucao() -> None:
     assert 'cron: "7,37 * * * *"' in texto
     for proibido in ("while true", "for i in $(seq", "sleep "):
         assert proibido not in texto, f"{proibido!r} indicaria laço interno"
-    assert len(re.findall(r"python3 -m coordinator\.worker_bridge", _sem_comentarios(texto))) == 1, (
+    assert len(re.findall(r"python3 -m coordinator\.agent_v2", _sem_comentarios(texto))) == 1, (
         "o Bridge é invocado exatamente uma vez por execução"
     )
     print("OK  test_bridge_heartbeat_nao_vira_laco_de_execucao")

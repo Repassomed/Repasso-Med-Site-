@@ -1374,6 +1374,7 @@ def test_cliente_de_api_nao_tem_nenhuma_operacao_de_merge() -> None:
         "criar_pr",
         "atualizar_pr_corpo",
         "despachar_workflow",
+        "despachar_worker_bridge",
     }, publicos
     fonte_path = os.path.join(_pathsetup._COORDINATOR_ROOT, "bridge_pr.py")
     with open(fonte_path, encoding="utf-8") as fh:
@@ -3431,7 +3432,8 @@ def main() -> int:
         test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes,
         test_audit_fix_para_depois_de_duas_correcoes,
         test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual,
-        test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,\n        test_audit_fix_de_questoes_exige_relatorio_acumulado_e_carrega_relatorio_anterior,
+        test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
+        test_audit_fix_de_questoes_exige_relatorio_acumulado_e_carrega_relatorio_anterior,
         test_closure_de_geracao_congela_runner_generate_da_main_antes_do_checkout,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
         test_error_registry_bridge_sucesso_normal_nao_gera_erro,

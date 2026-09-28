@@ -255,9 +255,10 @@ jobs:
 
       - name: Preflight da suíte do Coordinator (ZERO API, antes do claim)
         run: |
+          python3 -m py_compile coordinator/agent_v2.py
           python3 -m coordinator.tests.run_all
 
-      - name: Rodar o Worker Bridge (uma atribuição, nunca um laço)
+      - name: Rodar Coordenação V2 (OpenAI coordena, Claude executa)
         id: bridge
         env:
           # Os mesmos portões precisam chegar até AQUI — é este passo que
@@ -278,6 +279,13 @@ jobs:
           # apenas dentro de `runner_generate.gerar_patch_via_claude`, que
           # roda depois do claim atômico do id de execução — nunca antes.
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Coordenação V2: OpenAI planeja/revisa; usa o mesmo Secret e o mesmo
+          # ledger/teto já existentes do OpenAI Auditor.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REPASSO_OPENAI_AUDITOR_ENABLED: ${{ vars.REPASSO_OPENAI_AUDITOR_ENABLED }}
+          REPASSO_OPENAI_AUDITOR_MODEL: ${{ vars.REPASSO_OPENAI_AUDITOR_MODEL }}
+          REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL: ${{ vars.REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL }}
+          REPASSO_OPENAI_AUDITOR_BUDGET_USD: ${{ vars.REPASSO_OPENAI_AUDITOR_BUDGET_USD }}
           # Usado pelo cliente de API do `bridge_pr` (abrir/reutilizar a PR
           # e despachar o Guard). Lido preguiçosamente, só dentro da
           # chamada, e nunca logado.
@@ -295,7 +303,7 @@ jobs:
           # deixou configuradas neste workdir.
           REMOTO_COM_TOKEN="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
 
-          python3 -m coordinator.worker_bridge \
+          python3 -m coordinator.agent_v2 \
             --tasks-json coordination/tasks.json \
             --repo-dir . \
             --state-git-remote "$REMOTO_COM_TOKEN" \
@@ -304,7 +312,6 @@ jobs:
             --base-branch "${{ github.event.repository.default_branch }}" \
             --repo-owner "${{ github.repository_owner }}" \
             --repo-name "${{ github.event.repository.name }}" \
-            --push-remote-name origin \
             --out /tmp/worker-bridge-outcome.json
           echo "resultado=$?" >> "$GITHUB_OUTPUT"
 
