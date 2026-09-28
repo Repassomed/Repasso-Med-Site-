@@ -750,6 +750,16 @@
       "recorded_at": "2026-09-28T19:46:54.965324+00:00",
       "status": "BLOCKED",
       "task_id": "agent-v2-neurologia-p0-provas-q08-11-b306f9c69e6a"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As quatro quest\u00f5es-alvo (Q8 apnea, Q9 reflejos de tronco, Q10 Weber, Q11 pruebas del III par) j\u00e1 est\u00e3o integralmente presentes no corpo do site \u2014 neub18 (q-neu099, q-neu100), neub12 (q-neu142) e neub04 (q-neu139) \u2014 com o texto, gabarito e proveni\u00eancia 'Basada en preguntas de examen' corretos, e a nota AAN/AAP/CNS/SCCM 2023 j\u00e1 aparece separada e rotulada como literatura em 5.4/5.6 de neub18, sem alterar a chave hist\u00f3rica. Dos quatro espelhos pedidos pelo coordenador (bq-neu099/100/142/139), os trechos fornecidos permitiram conferir bq-neu142 e bq-neu139, que s\u00e3o id\u00eanticos ao corpo; bq-neu099 e bq-neu100 n\u00e3o vieram em nenhum trecho literal, portanto n\u00e3o h\u00e1 \u00e2ncora segura para conferir ou editar esse espelho nesta execu\u00e7\u00e3o \u2014 ficam registrados em deferred_items.",
+      "recorded_at": "2026-09-28T20:25:14.584108+00:00",
+      "status": "BLOCKED",
+      "task_id": "agent-v2-neurologia-p0-provas-q08-11-3629c2880aa5"
     }
   ]
 }
