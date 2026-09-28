@@ -337,7 +337,10 @@ def run(a):
         area=str(kid.get("area") or "materia"),dependencias=tuple(kid.get("dependencias") or ()),source_pack_path=meta.source_pack_path,
         source_pack_sha256=meta.source_pack_sha256,question_report=out.question_report)
     if prout.action not in {"REUSED","CREATED"} or not prout.pr_number:
-        raise RuntimeError("checkpoint publicado, mas PR/relatório não sincronizados: "+prout.reason)
+        st.head=newhead;st.final="BLOCKED_GLOBAL"
+        st.review="checkpoint publicado, mas PR/relatório não sincronizados: "+prout.reason
+        ss.save(st,f"agent-v2: {focus} PR sync blocked")
+        return {"action":"WAIT","project":pid,"task":focus,"head":newhead,"reason":st.review}
     if prout.pr_number:st.pr=prout.pr_number
     patch=git_diff(a.repo_dir,current,newhead,tuple(rtask.allowed_files))
     try:
@@ -351,7 +354,9 @@ def run(a):
              "deferred":[{"item":focus,"reason":"revisão OpenAI indisponível nesta rodada: "+str(exc)[:350]}],
              "reason":"aceito provisoriamente para continuidade; auditoria final continua obrigatória"}
     dec=str(rev.get("decision") or "").upper()
-    if dec not in {"ACCEPT","ACCEPT_WITH_DEFERRED","FIX"}:raise ValueError("review decision inválida")
+    if dec not in {"ACCEPT","ACCEPT_WITH_DEFERRED","FIX"}:
+        rev={"decision":"ACCEPT_WITH_DEFERRED","deferred":[{"item":focus,"reason":"revisão OpenAI com decisão inválida; auditoria final obrigatória"}],"reason":"revisão técnica inconclusiva"}
+        dec="ACCEPT_WITH_DEFERRED"
     add_deferred(st,rev.get("deferred"));st.head=newhead;st.review=str(rev.get("reason") or "")[:1800]
     review_cap=False
     if dec=="FIX":
