@@ -824,6 +824,7 @@ def _janelas_de_espelho(conteudo: str, secoes: list[tuple[int, int]]) -> list[tu
 
 MARCADOR_CORRECAO_POS_AUDITORIA = "CORREÇÃO PÓS-AUDITORIA"
 MAX_CHAVES_AUDITORIA = 8
+MAX_LITERAIS_AUDITORIA = 8
 MAX_REGIAO_MAPEADA_CHARS = 24_000
 MAX_REFERENCIA_BASE_CHARS = 8_000
 MAX_LINHAS_BUSCA_ANCORA = 80
@@ -852,6 +853,43 @@ def chaves_objetivas_da_auditoria(instructions: str) -> tuple[str, ...]:
         if _RE_ID_VALIDO.fullmatch(chave) and chave not in chaves:
             chaves.append(chave)
     return tuple(chaves[:MAX_CHAVES_AUDITORIA])
+
+
+def janelas_literais_da_auditoria(
+    conteudo: str, instructions: str,
+) -> tuple[tuple[int, int], ...]:
+    """Frases LITERAIS entre aspas no trecho pós-auditoria que aparecem
+    exatamente uma vez no arquivo atual viram janelas prioritárias.
+
+    Isto complementa as chaves de id do canário #286: auditores também
+    apontam texto visível concreto (ex.: "Las 148 preguntas de la
+    asignatura"). Se esse literal único já está no arquivo atual, não há
+    motivo para gastar uma chamada paga sem entregar justamente essa
+    região ao modelo. Frase ausente ou ambígua é ignorada fail-closed; ela
+    nunca vira comando nem autoriza arquivo/escopo novo.
+    """
+    idx = instructions.find(MARCADOR_CORRECAO_POS_AUDITORIA)
+    if idx < 0:
+        return ()
+    secao = instructions[idx:]
+    conteudo_norm = _normalizar(conteudo)
+    janelas: list[tuple[int, int]] = []
+    vistas: set[str] = set()
+    for frase in _frases_ancora(secao):
+        frase_norm = _normalizar(frase).strip()
+        if not frase_norm or frase_norm in vistas:
+            continue
+        vistas.add(frase_norm)
+        primeira = conteudo_norm.find(frase_norm)
+        if primeira < 0:
+            continue
+        # Só literal ÚNICO é forte o bastante para ganhar prioridade.
+        if conteudo_norm.find(frase_norm, primeira + len(frase_norm)) >= 0:
+            continue
+        janelas.append(_janela(conteudo, primeira, len(frase_norm)))
+        if len(janelas) >= MAX_LITERAIS_AUDITORIA:
+            break
+    return tuple(janelas)
 
 
 def _posicoes_do_id(conteudo: str, chave: str) -> list[int]:
@@ -1484,7 +1522,7 @@ def gerar_patch_via_claude(
                 "uma única chamada. Fail-closed (Issue #144): nenhuma chamada foi feita, zero escrita. "
                 "Divida a tarefa em allowed_files menores."
             )
-        prioritarias: tuple[tuple[int, int], ...] = ()
+        prioritarias_lista: list[tuple[int, int]] = []
         if chaves_auditoria:
             base_deste = None
             if ler_conteudo_base is not None and any(
@@ -1492,7 +1530,7 @@ def gerar_patch_via_claude(
             ):
                 base_deste = ler_conteudo_base(caminho)
             achadas = localizar_chaves_da_auditoria(contexto[caminho], chaves_auditoria, base_deste)
-            prioritarias = achadas.janelas
+            prioritarias_lista.extend(achadas.janelas)
             chaves_localizadas.extend(achadas.localizadas)
             chaves_falhas.extend(f"{c} ({motivo})" for c, motivo in achadas.nao_localizadas)
             refs = tuple(r for r in achadas.referencias_base if r.fim - r.inicio <= limite_deste)
@@ -1500,6 +1538,15 @@ def gerar_patch_via_claude(
                 referencias_base[caminho] = refs
                 limite_deste -= sum(r.fim - r.inicio for r in refs)
                 orcamento_restante -= sum(r.fim - r.inicio for r in refs)
+
+        # NEEDS-FIX também costuma apontar texto visível, não só ids.
+        # Literais únicos citados pelo auditor entram antes da busca
+        # genérica por palavras, evitando chamada paga sem a âncora exata.
+        for janela in janelas_literais_da_auditoria(contexto[caminho], task.instructions):
+            if janela not in prioritarias_lista:
+                prioritarias_lista.append(janela)
+        prioritarias = tuple(prioritarias_lista)
+
         trechos = extrair_trechos_ancorados(
             contexto[caminho], task.instructions, limite_chars=limite_deste,
             janelas_prioritarias=prioritarias,
