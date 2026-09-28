@@ -130,9 +130,10 @@ def plan_prompt(parent,kids,st,free,runtime,card):
 def validate_plan(p,kids,st,free):
     ids=[str(t["id"]) for t in kids]; action=str(p.get("action") or "").upper()
     if action not in {"EXECUTE","COMPLETE","WAIT"}:raise ValueError("ação OpenAI inválida")
-    ack={x for x in p.get("acknowledge_done") or [] if x in ids}|set(st.done); prefix=[]
+    # OpenAI não pode dar baixa em etapa por declaração.
+    prefix=[]
     for tid in ids:
-        if tid in ack:prefix.append(tid)
+        if tid in st.done:prefix.append(tid)
         else:break
     st.done[:]=prefix
     if action=="EXECUTE":
@@ -188,6 +189,14 @@ def run(a):
     ss=StateStore(GitJsonStore(a.state_git_remote,branch=STATE_BRANCH)); st=ss.get(pid)
     registry=OperationalWorkerRegistry(GitJsonStore(a.worker_state_git_remote,branch=WORKER_STATE_BRANCH))
     rt=TaskRuntimeStore(GitJsonStore(a.runtime_state_git_remote,branch=task_runtime.DEFAULT_TASK_RUNTIME_STATE_BRANCH))
+    # Migração: reaproveita somente o prefixo com checkpoint real na branch compartilhada.
+    if st.cycles==0 and not st.done:
+        regs=rt.por_id()
+        for kid in kids:
+            reg=regs.get(str(kid["id"]))
+            if reg and reg.checkpoint_commit and reg.branch==branch:st.done.append(str(kid["id"]))
+            else:break
+        if st.done:ss.save(st,f"agent-v2: {pid} importa checkpoints legados")
     ledger=GitUsageLedger(GitJsonStore(a.state_git_remote,branch=OPENAI_USAGE_BRANCH))
     ocfg=OpenAIAuditorConfig.from_env()
     if not ocfg.gate().open:raise RuntimeError("OpenAI coordenador: "+ocfg.gate().reason)
@@ -207,7 +216,9 @@ def run(a):
     else:
         p=ask_openai(ocfg,ledger,f"agent-v2:{pid}:{st.cycles}:{current}:plan",PLAN_SYSTEM,plan_prompt(parent,kids,st,free,runtime_context(rt,kids),card))
     p=validate_plan(p,kids,st,free); add_deferred(st,p.get("deferred")); ids=[str(t["id"]) for t in kids]
-    if p["action"]=="COMPLETE" or all(x in st.done for x in ids):
+    if p["action"]=="COMPLETE" and not all(x in st.done for x in ids):
+        raise ValueError("OpenAI tentou concluir projeto com etapas ainda não aceitas pela V2")
+    if all(x in st.done for x in ids):
         if not current or not st.pr:raise RuntimeError("concluído sem PR/HEAD final")
         if st.guard_head!=current:
             g=bridge_pr.disparar_guard(api,pr_number=st.pr,ref=a.base_branch)
