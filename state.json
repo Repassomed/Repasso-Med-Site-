@@ -9671,6 +9671,16 @@
       "output_tokens": 0,
       "tier": "STANDARD",
       "timestamp": "2026-09-28T19:43:19.948471+00:00"
+    },
+    {
+      "estimated_cost_usd": -0.506628,
+      "event_key": "runner-task:agent-v2-neurologia-p0-provas-q08-11-dc643517675e",
+      "input_tokens": 0,
+      "kind": "correction",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-28T19:44:21.512760+00:00"
     }
   ]
 }
