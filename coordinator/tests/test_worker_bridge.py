@@ -2864,6 +2864,39 @@ def test_b4_retomada_nao_pega_tarefa_sem_pr_nem_guard_ja_confirmado() -> None:
 # Projetos compostos (Neurología) — continuidade entre etapas sem merge.
 # ---------------------------------------------------------------------------
 
+def test_fechamento_recebe_pendencias_diferidas_das_etapas_anteriores() -> None:
+    etapa1 = _tarefa_record(_tarefa(id="proj-e1", parent_task_id="proj-mae"))
+    final = _tarefa_record(_tarefa(
+        id="proj-final", parent_task_id="proj-mae", dependencias=["proj-e1"],
+        final_stage=True,
+    ))
+    report = (
+        "## Relatório obrigatório — Lei das Questões (8-A.11)\n\n"
+        "### Pendências diferidas\n\n"
+        "- **Q5** — foto original ilegível · **Fallback:** convertida em Pregunta complementaria\n\n"
+        "**Notas de proveniência:** resto que não deve ser carregado"
+    )
+    registro = task_runtime.TaskRuntimeRecord(
+        canonical_task_id="proj-e1", status=task_runtime.RUNTIME_NEEDS_AUDIT,
+        branch="runner/proj-mae", checkpoint_commit="abc", pr_number=9,
+        question_report=report,
+    )
+    texto = worker_bridge._pendencias_diferidas_para_fechamento(
+        final,
+        tarefas_por_id={"proj-e1": etapa1, "proj-final": final},
+        registros={"proj-e1": registro},
+    )
+    assert texto is not None
+    assert "Q5" in texto and "Pregunta complementaria" in texto
+    assert "resto que não deve ser carregado" not in texto
+    assert worker_bridge._pendencias_diferidas_para_fechamento(
+        etapa1,
+        tarefas_por_id={"proj-e1": etapa1, "proj-final": final},
+        registros={"proj-e1": registro},
+    ) is None
+    print("OK  test_fechamento_recebe_pendencias_diferidas_das_etapas_anteriores")
+
+
 def test_continuacao_tarefa_sem_parent_task_id_e_neutra() -> None:
     tarefa = _tarefa_record(_tarefa())
     resultado = worker_bridge.resolver_continuacao_de_estagio(
@@ -3368,6 +3401,7 @@ def main() -> int:
         test_b5_default_do_gatilho_e_manual_e_o_manual_continua_valendo,
         test_modos_do_bridge_sao_os_mesmos_valores_em_todo_lugar,
         # Projetos compostos (Neurología) — continuidade entre etapas sem merge.
+        test_fechamento_recebe_pendencias_diferidas_das_etapas_anteriores,
         test_continuacao_tarefa_sem_parent_task_id_e_neutra,
         test_continuacao_sem_predecessor_no_mesmo_projeto_e_neutra,
         test_continuacao_bloqueia_quando_etapa_anterior_ainda_nao_publicou_pr,
