@@ -761,6 +761,16 @@
       "recorded_at": "2026-09-28T20:25:14.584108+00:00",
       "status": "BLOCKED",
       "task_id": "agent-v2-neurologia-p0-provas-q08-11-3629c2880aa5"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "AnchoredEdit #2 de 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html': 'old_text' aparece mais de uma vez no conte\u00fado atual (inclusive contando ocorr\u00eancias sobrepostas) \u2014 substitui\u00e7\u00e3o amb\u00edgua, BLOCKED, zero escrita em qualquer arquivo.",
+      "recorded_at": "2026-09-28T20:36:46.707221+00:00",
+      "status": "BLOCKED",
+      "task_id": "agent-v2-neurologia-p0-provas-q08-11-04e4af18477a"
     }
   ]
 }
