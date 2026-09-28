@@ -17,6 +17,7 @@ OPENAI_USAGE_BRANCH="coordinator-state-usage-openai"
 MAX_OUT=1400
 MAX_PROMPT=7600
 MAX_DIFF=12000
+MAX_CYCLES_PER_PROJECT=36
 
 LAWS="""LEIS OBRIGATÓRIAS — REPASSO MED
 1) Cátedra é a base; literatura só corrige/complementa e divergência deve ser rotulada.
@@ -194,7 +195,13 @@ def run(a):
         regs=rt.por_id()
         for kid in kids:
             reg=regs.get(str(kid["id"]))
-            if reg and reg.checkpoint_commit and reg.branch==branch:st.done.append(str(kid["id"]))
+            if reg and reg.checkpoint_commit and reg.branch==branch:
+                st.done.append(str(kid["id"]))
+                report=(reg.question_report or "")
+                marker="### Pendências diferidas"
+                if marker in report:
+                    section=report.split(marker,1)[1].split("**Notas de proveniência:**",1)[0].strip()
+                    add_deferred(st,[{"item":str(kid["id"])+" · pendências legadas","reason":section[:700]}])
             else:break
         if st.done:ss.save(st,f"agent-v2: {pid} importa checkpoints legados")
     ledger=GitUsageLedger(GitJsonStore(a.state_git_remote,branch=OPENAI_USAGE_BRANCH))
@@ -221,6 +228,21 @@ def run(a):
     if all(x in st.done for x in ids):
         if not current or not st.pr:raise RuntimeError("concluído sem PR/HEAD final")
         if st.guard_head!=current:
+            # Antes do Guard final, deixa na própria PR um resumo humano das pendências.
+            prnow=api.pr_por_numero(st.pr)
+            body=str(prnow.get("body") or "")
+            marker="<!-- agent-v2-final -->"
+            report=marker+"\n## Coordenação V2 — fechamento\n\n"
+            report+="**Etapas aceitas:** "+str(len(st.done))+"/"+str(len(ids))+"\n\n"
+            if st.deferred:
+                report+="### Pendências diferidas\n"
+                for item in st.deferred:
+                    report+="- **"+str(item.get("item") or "item")+"** — "+str(item.get("reason") or "")+"\n"
+            else:
+                report+="**Pendências diferidas:** nenhuma.\n"
+            report+="\n**Merge/publicação/deploy: exclusivamente José.**\n"
+            body=body.split(marker,1)[0].rstrip()+"\n\n"+report
+            api.atualizar_pr_corpo(st.pr,corpo=body)
             g=bridge_pr.disparar_guard(api,pr_number=st.pr,ref=a.base_branch)
             if g.action!="DISPATCHED":raise RuntimeError("Guard final: "+g.reason)
             st.guard_head=current
@@ -228,6 +250,10 @@ def run(a):
         return {"action":"FINAL_AUDIT_PENDING","project":pid,"pr":st.pr,"head":current,"deferred":st.deferred}
     if p["action"]=="WAIT":
         st.review=str(p.get("reason") or "WAIT");ss.save(st,f"agent-v2: {pid} WAIT");return {"action":"WAIT","project":pid,"reason":st.review}
+    if st.cycles>=MAX_CYCLES_PER_PROJECT:
+        st.review=f"limite de segurança da V2 atingido ({MAX_CYCLES_PER_PROJECT} ciclos); nenhuma nova chamada paga foi feita."
+        ss.save(st,f"agent-v2: {pid} cycle cap")
+        return {"action":"WAIT","project":pid,"reason":st.review,"deferred":st.deferred}
     focus=str(p["focus_task_id"]);kid=next(t for t in kids if str(t["id"])==focus);wid=str(p["worker_id"])
     if not registry.reservar_current_task_condicional(wid,canonical_task_id=focus,message=f"agent-v2: {wid}->{focus}"):raise RuntimeError("worker deixou de estar livre")
     st.cycles+=1;meta,rtask=materialize(a.tasks_json,kid,p,branch,current,st.cycles)
