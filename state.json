@@ -1,7 +1,10 @@
 {
   "projects": {
     "neurologia-p0-fechamento-2026": {
-      "correction": null,
+      "correction": {
+        "instructions": "Preservar IDs. Ajustar Q9 para apenas citar 4 reflexos ausentes; Q10 para citar 4 sinais/sintomas de Weber; Q11 para citar 3 provas do III. Manter esses detalhes na explica\u00e7\u00e3o. Conferir e igualar integralmente cada espelho bq-neu099/100/142/139 ao corpo.",
+        "task_id": "neurologia-p0-provas-q08-11"
+      },
       "cycles": 2,
       "deferred": [
         {
@@ -22,9 +25,9 @@
         "neurologia-p0-provas-q05-07"
       ],
       "failures": {
-        "neurologia-p0-provas-q08-11": 2
+        "neurologia-p0-provas-q08-11": 1
       },
-      "final": "BLOCKED_FIX",
+      "final": "RUNNING",
       "guard_head": null,
       "head": "716973e1adc047e7461ab80af31c35aa353c3cf3",
       "pr": 305,
