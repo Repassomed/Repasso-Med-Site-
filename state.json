@@ -1799,6 +1799,31 @@
       "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): O cabe\u00e7alho do Banco General que declara '148 preguntas' (apontado pelo Guard) n\u00e3o aparece em nenhum dos 7 trechos literais fornecidos deste arquivo grande, ent\u00e3o n\u00e3o h\u00e1 \u00e2ncora segura para um AnchoredEdit sem inventar texto \u2014 a Lei das Quest\u00f5es 8-A pro\u00edbe essa inven\u00e7\u00e3o. Nos trechos dispon\u00edveis, as tr\u00eas quest\u00f5es do lote 25/09 j\u00e1 est\u00e3o corretamente tratadas: Q5 (neuralgia del trig\u00e9mino) integrada em neub05 como q-neu-2509-05 e espelhada no Banco General como bq-neu-2509-05, e Q6/Q7 corretamente exclu\u00eddas por duplicata sem\u00e2ntica de q-neu078/bq-neu078 (mecanismo da miastenia, neub16) e q-neu087 (fun\u00e7\u00e3o do N3, neub17), confirmando a decis\u00e3o j\u00e1 validada pela auditoria. O achado do auditor OpenAI sobre cotejo fotogr\u00e1fico da Q5 reconstru\u00edda exige valida\u00e7\u00e3o humana de imagem do Drive, o que est\u00e1 fora do alcance de uma tarefa de texto sobre este arquivo e permanece pendente sem decis\u00e3o nesta execu\u00e7\u00e3o.",
       "task_id": "neurologia-p0-provas-q05-07",
       "worker_id": "claude-worker-2"
+    },
+    {
+      "category": "runner",
+      "commit_sha": "bb6b1f9ec8f8b1bad03bd9318ee721d825827c80",
+      "component": "runner",
+      "error_id": "ERR-22AC3CA0AC",
+      "error_type": "runner-blocked",
+      "fingerprint": "22ac3ca0ac01be777c1b",
+      "first_seen": "2026-09-28T00:38:57.551334+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "b371da1ef0f549b595c62896fe5d9e30",
+      "issue_sync_updated_at": "2026-09-28T00:38:57.551334+00:00",
+      "last_evidence_hash": "d6003d391edc984c0093",
+      "last_seen": "2026-09-28T00:38:57.551334+00:00",
+      "occurrence_count": 1,
+      "pr_number": 305,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36362561284",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): O objetivo desta microtarefa (integrar Q5-Q7 do lote 25/09) j\u00e1 est\u00e1 cumprido nos trechos fornecidos: a Q5 (neuralgia do trig\u00e9meo) est\u00e1 inserida em neub05 (id q-neu-2509-05) e espelhada no Banco General (id bq-neu-2509-05), com r\u00f3tulo correto 'Basada en preguntas de examen', alternativas reembaralhadas sem alterar a resposta cient\u00edfica, e o resumo j\u00e1 ensinava o conte\u00fado antes da quest\u00e3o. As Q6 (mecanismo da miastenia) e Q7 (fun\u00e7\u00e3o de N3) foram corretamente tratadas como duplicatas sem\u00e2nticas de quest\u00f5es j\u00e1 existentes (q-neu078/bq-neu078 para o mecanismo anti-AChR postsin\u00e1ptico da miastenia; q-neu087 para as fun\u00e7\u00f5es do N3 \u2014 restauraci\u00f3n f\u00edsica, GH, memoria declarativa, primera mitad), portanto n\u00e3o devem ser inseridas como novas, conforme a Lei 8-A. O \u00fanico problema apontado pela auditoria (cabe\u00e7alho do Banco General ainda dizendo '148 preguntas' ap\u00f3s a inclus\u00e3o da 149\u00aa) n\u00e3o pode ser corrigido nesta resposta porque nenhum dos 7 trechos literais fornecidos cont\u00e9m esse cabe\u00e7alho/contagem do Banco General; sem essa \u00e2ncora literal, uma edi\u00e7\u00e3o desse texto seria inventada, o que \u00e9 proibido. A pend\u00eancia de cotejo da Q5 com a foto original leg\u00edvel (apontada pelo auditor OpenAI) tamb\u00e9m n\u00e3o pod",
+      "task_id": "neurologia-p0-provas-q05-07",
+      "worker_id": "claude-worker-1"
     }
   ]
 }
