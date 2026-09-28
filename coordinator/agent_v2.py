@@ -15,6 +15,7 @@ from .worker_ops import DEFAULT_STATE_BRANCH as WORKER_STATE_BRANCH, Operational
 STATE_BRANCH="coordinator-state-agent-v2"
 OPENAI_USAGE_BRANCH="coordinator-state-usage-openai"
 MAX_OUT=1400
+NOOP_MAX_OUT=3200
 MAX_PROMPT=20000
 MAX_DIFF=16000
 MAX_CYCLES_PER_PROJECT=36
@@ -80,10 +81,10 @@ def project(path,states=None):
     if len(branches)!=1: raise RuntimeError(f"projeto V2 exige uma branch compartilhada; achei {branches}")
     return parent,kids,next(iter(branches))
 
-def ask_openai(cfg,ledger,key,system,prompt):
+def ask_openai(cfg,ledger,key,system,prompt,*,max_output_tokens=MAX_OUT):
     if len(system)>MAX_PROMPT or len(prompt)>MAX_PROMPT:
         raise ValueError("contexto excede limite da V2; nenhuma chamada parcial será paga")
-    lim=OpenAICallLimiter(max_output_tokens=MAX_OUT)
+    lim=OpenAICallLimiter(max_output_tokens=max_output_tokens)
     req=build_request(model_id=cfg.model,tier=TIER_NORMAL,system=system,prompt=prompt,limiter=lim)
     res=call(cfg,req,transport=OpenAIResponsesTransport(timeout=120,max_retries=0),limiter=lim,ledger=ledger,event_key=key)
     if res.status!="ok": raise RuntimeError(f"OpenAI coordenador falhou/bloqueou: {res.reason}")
@@ -220,8 +221,8 @@ def review_existing_work(repo,kid,meta,head,reason,cfg,ledger,key):
     data={"task":kid["id"],"objective":str(kid.get("objetivo") or "")[:1300],
           "source_pack":source[:5000],"claude_no_change_claim":reason[:1800],
           "verified_head":head,"existing_question_html":excerpts}
-    prompt=LAWS+"\nConfira TODAS as partes da tarefa e o espelho do Banco General. Os IDs foram encontrados no HEAD real, mas existência por si só não prova equivalência. Aceite sem novo commit SOMENTE se o conteúdo mostrado ensina e cobra tudo o que a fonte pede, com proveniência correta. Se faltar evidência ou correção, escolha FIX. JSON: {\"decision\":\"ACCEPT_WITH_DEFERRED|FIX\",\"reason\":\"...\",\"correction_instructions\":\"...\",\"deferred\":[{\"item\":\"...\",\"reason\":\"...\"}]}\n"+json.dumps(data,ensure_ascii=False)
-    answer=ask_openai(cfg,ledger,key,REVIEW_SYSTEM,prompt)
+    prompt=LAWS+"\nConfira TODAS as partes da tarefa e o espelho do Banco General. Os IDs foram encontrados no HEAD real, mas existência por si só não prova equivalência. Aceite sem novo commit SOMENTE se o conteúdo mostrado ensina e cobra tudo o que a fonte pede, com proveniência correta. Se faltar evidência ou correção, escolha FIX. Responda JSON curto: reason até 160 caracteres, correction_instructions até 300, deferred no máximo 2 itens. JSON: {\"decision\":\"ACCEPT_WITH_DEFERRED|FIX\",\"reason\":\"...\",\"correction_instructions\":\"...\",\"deferred\":[{\"item\":\"...\",\"reason\":\"...\"}]}\n"+json.dumps(data,ensure_ascii=False)
+    answer=ask_openai(cfg,ledger,key,REVIEW_SYSTEM,prompt,max_output_tokens=NOOP_MAX_OUT)
     if answer.get("decision") not in {"ACCEPT_WITH_DEFERRED","FIX"}:raise ValueError("revisão de no-op sem decisão válida")
     return answer
 
