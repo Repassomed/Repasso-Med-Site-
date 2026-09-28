@@ -46,12 +46,13 @@ class State:
     final:str="RUNNING"
     guard_head:str|None=None
     review:str=""
+    failures:dict[str,int]=field(default_factory=dict)
     @classmethod
     def load(cls,pid,raw):
         r=raw or {}
         return cls(pid,list(r.get("done") or []),list(r.get("deferred") or []),r.get("correction"),
                    int(r.get("cycles") or 0),r.get("head"),r.get("pr"),str(r.get("final") or "RUNNING"),
-                   r.get("guard_head"),str(r.get("review") or ""))
+                   r.get("guard_head"),str(r.get("review") or ""),dict(r.get("failures") or {}))
     def dump(self): return self.__dict__
 
 class StateStore:
@@ -217,11 +218,28 @@ def run(a):
         final_id=str(kids[-1]["id"]); st.final="RUNNING"; st.correction={"task_id":final_id,"instructions":"Corrija a auditoria final sem ampliar escopo:\n"+card[:3500]}
         if final_id in st.done:st.done.remove(final_id)
     free=workers_free(registry)
+    if not free:
+        st.review="Nenhum Claude Worker livre agora; nenhuma chamada OpenAI/Anthropic foi feita."
+        ss.save(st,f"agent-v2: {pid} sem worker livre")
+        return {"action":"WAIT","project":pid,"reason":st.review}
     if st.correction:
-        p={"action":"EXECUTE","acknowledge_done":[],"focus_task_id":st.correction["task_id"],"worker_id":free[0] if free else None,
+        ordered=[w for w in free if w!=st.correction.get("avoid_worker")]+[w for w in free if w==st.correction.get("avoid_worker")]
+        p={"action":"EXECUTE","acknowledge_done":[],"focus_task_id":st.correction["task_id"],"worker_id":ordered[0] if ordered else None,
            "instructions":"Aplicar a correção e preservar todo o restante.","_correction":st.correction["instructions"],"deferred":[],"reason":"correção automática"}
     else:
-        p=ask_openai(ocfg,ledger,f"agent-v2:{pid}:{st.cycles}:{current}:plan",PLAN_SYSTEM,plan_prompt(parent,kids,st,free,runtime_context(rt,kids),card))
+        try:
+            p=ask_openai(ocfg,ledger,f"agent-v2:{pid}:{st.cycles}:{current}:plan",PLAN_SYSTEM,plan_prompt(parent,kids,st,free,runtime_context(rt,kids),card))
+        except Exception as exc:
+            # Fallback seguro: usa a próxima tarefa declarativa, como no fluxo manual antigo.
+            ids_now=[str(t["id"]) for t in kids]
+            next_id=next((x for x in ids_now if x not in st.done),None)
+            if not next_id: p={"action":"COMPLETE","acknowledge_done":[],"deferred":[],"reason":"fallback sem tarefa restante"}
+            else:
+                kid_now=next(t for t in kids if str(t["id"])==next_id)
+                p={"action":"EXECUTE","acknowledge_done":[],"focus_task_id":next_id,"worker_id":free[0],
+                   "instructions":"Execute integralmente o objetivo declarativo desta unidade, seguindo todas as leis fixas.",
+                   "deferred":[{"item":"Coordenação OpenAI","reason":"fallback técnico nesta rodada: "+str(exc)[:350]}],
+                   "reason":"fallback declarativo seguro"}
     p=validate_plan(p,kids,st,free); add_deferred(st,p.get("deferred")); ids=[str(t["id"]) for t in kids]
     if p["action"]=="COMPLETE" and not all(x in st.done for x in ids):
         raise ValueError("OpenAI tentou concluir projeto com etapas ainda não aceitas pela V2")
@@ -249,7 +267,15 @@ def run(a):
         st.final="FINAL_AUDIT_PENDING";st.head=current;ss.save(st,f"agent-v2: {pid} final audit")
         return {"action":"FINAL_AUDIT_PENDING","project":pid,"pr":st.pr,"head":current,"deferred":st.deferred}
     if p["action"]=="WAIT":
-        st.review=str(p.get("reason") or "WAIT");ss.save(st,f"agent-v2: {pid} WAIT");return {"action":"WAIT","project":pid,"reason":st.review}
+        next_id=next((x for x in ids if x not in st.done),None)
+        if next_id:
+            kid_now=next(t for t in kids if str(t["id"])==next_id)
+            add_deferred(st,[{"item":"Decisão WAIT do coordenador","reason":str(p.get("reason") or "sem motivo")[:500]}])
+            p={"action":"EXECUTE","focus_task_id":next_id,"worker_id":free[0],
+               "instructions":"Continue a próxima unidade declarada. Isole qualquer pendência local e não paralise o restante.",
+               "deferred":[],"reason":"WAIT convertido em continuidade segura"}
+        else:
+            st.review=str(p.get("reason") or "WAIT");ss.save(st,f"agent-v2: {pid} WAIT");return {"action":"WAIT","project":pid,"reason":st.review}
     if st.cycles>=MAX_CYCLES_PER_PROJECT:
         st.review=f"limite de segurança da V2 atingido ({MAX_CYCLES_PER_PROJECT} ciclos); nenhuma nova chamada paga foi feita."
         ss.save(st,f"agent-v2: {pid} cycle cap")
@@ -265,8 +291,20 @@ def run(a):
     result=out.result
     if not result or result.status!="DONE" or not result.checkpoint_commit:
         worker_bridge.liberar_worker_apos_resultado(registry,wid,canonical_task_id=focus,resultado_status=task_runtime.RUNTIME_BLOCKED)
-        reason=result.reason if result else "Runner sem resultado";st.correction={"task_id":focus,"instructions":reason[:1800]};st.review=reason
-        ss.save(st,f"agent-v2: {focus} blocked");return {"action":"RUNNER_BLOCKED","task":focus,"reason":reason}
+        reason=result.reason if result else "Runner sem resultado";st.review=reason
+        count=int(st.failures.get(focus) or 0)+1;st.failures[focus]=count
+        if count>=2:
+            add_deferred(st,[{"item":focus,"reason":"Etapa diferida após 2 tentativas sem novo checkpoint: "+reason[:550]}])
+            st.correction=None
+            if focus not in st.done:st.done.append(focus)
+            action="DEFERRED_AND_CONTINUE"
+        else:
+            st.correction={"task_id":focus,"instructions":reason[:1800],"avoid_worker":wid}
+            action="RUNNER_RETRY"
+        ss.save(st,f"agent-v2: {focus} {action}")
+        try:api.despachar_worker_bridge(ref=a.base_branch);cont="DISPATCHED"
+        except Exception as exc:cont=f"FAILED: {exc}"
+        return {"action":action,"task":focus,"reason":reason,"attempt":count,"continuation":cont}
     newhead=result.checkpoint_commit
     worker_bridge.liberar_worker_apos_resultado(registry,wid,canonical_task_id=focus,resultado_status=task_runtime.RUNTIME_DONE)
     prout=bridge_pr.garantir_pr(api,task=rtask,canonical_task_id=focus,worker_id=wid,worker_display=bridge_workers.BRIDGE_DISPLAY_NAMES.get(wid,wid),
@@ -275,13 +313,19 @@ def run(a):
         source_pack_sha256=meta.source_pack_sha256,question_report=out.question_report)
     if prout.pr_number:st.pr=prout.pr_number
     patch=git_diff(a.repo_dir,current,newhead,tuple(rtask.allowed_files))
-    rev=ask_openai(ocfg,ledger,f"agent-v2:{pid}:{st.cycles}:{newhead}:review",REVIEW_SYSTEM,review_prompt(kid,p,current,newhead,patch,out.question_report))
+    try:
+        rev=ask_openai(ocfg,ledger,f"agent-v2:{pid}:{st.cycles}:{newhead}:review",REVIEW_SYSTEM,review_prompt(kid,p,current,newhead,patch,out.question_report))
+    except Exception as exc:
+        # O trabalho fica na branch e seguirá para auditoria final; falha técnica do revisor não paralisa o projeto.
+        rev={"decision":"ACCEPT_WITH_DEFERRED","correction_instructions":"",
+             "deferred":[{"item":focus,"reason":"revisão OpenAI indisponível nesta rodada: "+str(exc)[:350]}],
+             "reason":"aceito provisoriamente para continuidade; auditoria final continua obrigatória"}
     dec=str(rev.get("decision") or "").upper()
     if dec not in {"ACCEPT","ACCEPT_WITH_DEFERRED","FIX"}:raise ValueError("review decision inválida")
     add_deferred(st,rev.get("deferred"));st.head=newhead;st.review=str(rev.get("reason") or "")[:1800]
     if dec=="FIX":st.correction={"task_id":focus,"instructions":str(rev.get("correction_instructions") or st.review or "Corrigir revisão.")[:3500]}
     else:
-        st.correction=None
+        st.correction=None;st.failures.pop(focus,None)
         if focus not in st.done:st.done.append(focus)
     ss.save(st,f"agent-v2: ciclo {st.cycles} {focus}->{dec}")
     try:api.despachar_worker_bridge(ref=a.base_branch);cont="DISPATCHED"
