@@ -2569,6 +2569,48 @@ def test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard() -> None:
         assert terceiro.action == "NO_ASSIGNMENT", terceiro
     print("OK  test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard")
 
+def test_audit_fix_de_questoes_exige_relatorio_acumulado_e_carrega_relatorio_anterior() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = _config(mode=worker_bridge.BRIDGE_MODE_ACTIVE_SUPERVISED)
+        api = _FakeGitHubApi()
+        registry = _registry_com_workers(cfg)
+        store = _runtime_store()
+        tarefa = _tarefa(question_report_required=True)
+        geracao1 = _GeracaoComRelatorio(_relatorio_8a_valido())
+
+        primeiro, _c, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=None, gerar_patch=geracao1, nome_workdir="work-report-stage-1",
+        )
+        assert primeiro.action == "DISPATCHED"
+        reg1 = store.get("infra-bridge-teste")
+        assert reg1 is not None and reg1.question_report
+        api.prs[0]["head_sha"] = reg1.checkpoint_commit
+        api.comentarios[901] = [{
+            "id": 701, "user": {"login": "github-actions[bot]"},
+            "body": _cartao_needs_fix(
+                "relatório descreve só a última tentativa; consolidar a etapa",
+                head_sha=reg1.checkpoint_commit,
+            ),
+        }]
+
+        geracao2 = _GeracaoComRelatorio(
+            _relatorio_8a_valido().replace("Rastreabilidade conferida.", "Relatório acumulado final.")
+        )
+        segundo, _c2, store, registry = _ciclo(
+            tmp, [tarefa], config=cfg, registry=registry, runtime_store=store,
+            api=api, patch=None, gerar_patch=geracao2, nome_workdir="work-report-stage-2",
+        )
+        assert segundo.action == "AUDIT_FIX", segundo
+        assert segundo.runner_task is not None
+        instr = segundo.runner_task.instructions
+        assert "RELATÓRIO 8-A ACUMULADO DA ETAPA" in instr
+        assert "RESULTADO FINAL ACUMULADO" in instr
+        assert "Rastreabilidade conferida." in instr
+        assert "IDs canônicos usados para justificar deduplicação" in instr
+    print("OK  test_audit_fix_de_questoes_exige_relatorio_acumulado_e_carrega_relatorio_anterior")
+
+
 def test_error_registry_bridge_sucesso_normal_nao_gera_erro() -> None:
     record = task_runtime.TaskRuntimeRecord(
         canonical_task_id="t-ok",
@@ -3389,7 +3431,7 @@ def main() -> int:
         test_audit_fix_gera_execution_id_nova_e_mesmo_parecer_nao_roda_duas_vezes,
         test_audit_fix_para_depois_de_duas_correcoes,
         test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual,
-        test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
+        test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,\n        test_audit_fix_de_questoes_exige_relatorio_acumulado_e_carrega_relatorio_anterior,
         test_closure_de_geracao_congela_runner_generate_da_main_antes_do_checkout,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
         test_error_registry_bridge_sucesso_normal_nao_gera_erro,
