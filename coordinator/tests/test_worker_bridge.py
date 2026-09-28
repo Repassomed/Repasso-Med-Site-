@@ -1374,6 +1374,7 @@ def test_cliente_de_api_nao_tem_nenhuma_operacao_de_merge() -> None:
         "criar_pr",
         "atualizar_pr_corpo",
         "despachar_workflow",
+        "despachar_worker_bridge",
     }, publicos
     fonte_path = os.path.join(_pathsetup._COORDINATOR_ROOT, "bridge_pr.py")
     with open(fonte_path, encoding="utf-8") as fh:

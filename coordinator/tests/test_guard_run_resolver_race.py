@@ -76,8 +76,8 @@ def test_node_test_runner_reproduz_in_progress_depois_completed_e_prova_teto() -
     )
     saida = resultado.stdout + resultado.stderr
     assert resultado.returncode == 0, f"node --test falhou (exit {resultado.returncode}):\n{saida}"
-    assert "# fail 0" in saida, f"algum teste JS falhou:\n{saida}"
-    assert "# pass 7" in saida, f"esperava 7 testes passando, saída:\n{saida}"
+    assert "# fail 0" in saida or "ℹ fail 0" in saida, f"algum teste JS falhou:\n{saida}"
+    assert "# pass 7" in saida or "ℹ pass 7" in saida, f"esperava 7 testes passando, saída:\n{saida}"
     for nome_esperado in (
         "primeiro fetch in_progress, segundo fetch completed",
         "retry é CURTO e LIMITADO, nunca polling infinito",

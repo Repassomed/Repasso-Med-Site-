@@ -60,7 +60,7 @@ _ARQUIVOS_FONTE = [
 # `rev-parse --verify -q` para conseguir normalizar SHA curto/completo
 # antes de comparar contra o tip remoto, mas continua sendo só LEITURA.
 _ARQUIVOS_FONTE_GERAL = [
-    f for f in _ARQUIVOS_FONTE if f not in ("git_state.py", "runner_dispatch.py", "runner_resume.py")
+    f for f in _ARQUIVOS_FONTE if f not in ("git_state.py", "runner_dispatch.py", "runner_resume.py", "agent_v2.py")
 ]
 
 _PADROES_PROIBIDOS = [
@@ -137,6 +137,18 @@ def test_source_files_have_no_forbidden_patterns() -> None:
                 achados.append(f"{nome}: {descricao} (padrão {padrao.pattern!r})")
     assert not achados, "Padrões proibidos encontrados:\n" + "\n".join(achados)
     print(f"OK  test_source_files_have_no_forbidden_patterns ({len(_ARQUIVOS_FONTE_GERAL)} arquivos verificados)")
+
+
+def test_agent_v2_git_is_read_only() -> None:
+    caminho = os.path.join(_pathsetup._COORDINATOR_ROOT, "agent_v2.py")
+    with open(caminho, encoding="utf-8") as fh:
+        fonte = fh.read()
+    assert fonte.count("subprocess.run(") == 2
+    assert '["git","-C",repo,"diff"' in fonte
+    assert '["git","-C",repo,"merge-base","--is-ancestor"' in fonte
+    for padrao, descricao in _PADROES_PROIBIDOS_SEMPRE:
+        assert not padrao.search(fonte), descricao
+    print("OK  test_agent_v2_git_is_read_only")
 
 
 def test_git_state_never_targets_main_or_materia() -> None:
@@ -235,6 +247,7 @@ def test_main_only_writes_its_own_output_and_state_files() -> None:
 def main() -> int:
     testes = [
         test_source_files_have_no_forbidden_patterns,
+        test_agent_v2_git_is_read_only,
         test_git_state_never_targets_main_or_materia,
         test_runner_dispatch_never_force_pushes_or_merges,
         test_runner_resume_never_writes_to_git,

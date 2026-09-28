@@ -302,7 +302,7 @@ def test_heartbeat_hold_node() -> None:
                        capture_output=True, text=True, timeout=60)
     saida = r.stdout + r.stderr
     assert r.returncode == 0, saida
-    assert "# fail 0" in saida and "# pass 6" in saida, saida
+    assert ("# fail 0" in saida or "ℹ fail 0" in saida) and ("# pass 6" in saida or "ℹ pass 6" in saida), saida
     print("OK  test_heartbeat_hold_node")
 
 

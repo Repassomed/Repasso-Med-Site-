@@ -332,7 +332,7 @@ def test_13_concorrencia_por_comentario_e_node_prova_uma_pr() -> None:
     r = subprocess.run([node, "--test", _NODE_TEST], cwd=_pathsetup.REPO_ROOT, capture_output=True, text=True,
                        timeout=60)
     saida = r.stdout + r.stderr
-    assert r.returncode == 0 and "# fail 0" in saida and "# pass 6" in saida, saida
+    assert r.returncode == 0 and ("# fail 0" in saida or "ℹ fail 0" in saida) and ("# pass 6" in saida or "ℹ pass 6" in saida), saida
     assert "dois eventos concorrentes: no máximo uma PR" in saida
     print("OK  test_13_concorrencia_por_comentario_e_node_prova_uma_pr")
 

@@ -15,8 +15,8 @@ from .worker_ops import DEFAULT_STATE_BRANCH as WORKER_STATE_BRANCH, Operational
 STATE_BRANCH="coordinator-state-agent-v2"
 OPENAI_USAGE_BRANCH="coordinator-state-usage-openai"
 MAX_OUT=1400
-MAX_PROMPT=7600
-MAX_DIFF=12000
+MAX_PROMPT=20000
+MAX_DIFF=16000
 MAX_CYCLES_PER_PROJECT=36
 
 LAWS="""LEIS OBRIGATÓRIAS — REPASSO MED
@@ -77,8 +77,10 @@ def project(path):
     return parent,kids,next(iter(branches))
 
 def ask_openai(cfg,ledger,key,system,prompt):
+    if len(system)>MAX_PROMPT or len(prompt)>MAX_PROMPT:
+        raise ValueError("contexto excede limite da V2; nenhuma chamada parcial será paga")
     lim=OpenAICallLimiter(max_output_tokens=MAX_OUT)
-    req=build_request(model_id=cfg.model,tier=TIER_NORMAL,system=system[:MAX_PROMPT],prompt=prompt[:MAX_PROMPT],limiter=lim)
+    req=build_request(model_id=cfg.model,tier=TIER_NORMAL,system=system,prompt=prompt,limiter=lim)
     res=call(cfg,req,transport=OpenAIResponsesTransport(timeout=120,max_retries=0),limiter=lim,ledger=ledger,event_key=key)
     if res.status!="ok": raise RuntimeError(f"OpenAI coordenador falhou/bloqueou: {res.reason}")
     obj=json.loads((res.text or "").strip())
@@ -95,7 +97,8 @@ def latest_card(api,pr):
     except Exception:return ""
     for c in reversed(comments):
         b=str(c.get("body") or "")
-        if "CARTÃO DE MERGE" in b:return b[:2600]
+        if (c.get("user") or {}).get("login")==worker_bridge.COORDINATOR_BOT_LOGIN and b.startswith(worker_bridge.COORDINATOR_COMMENT_MARKER) and worker_bridge.AUDIT_CARD_HEADER in b:
+            return b
     return ""
 
 def head_of(pr):
@@ -163,10 +166,10 @@ def materialize(tasks_path,kid,p,branch,checkpoint,cycle):
     return meta,replace(m.task,task_id=f"agent-v2-{tid}-{dig}",branch=branch,checkpoint_commit=checkpoint,instructions=ins)
 
 def git_diff(repo,before,after,files):
-    if not before:return "Primeiro checkpoint V2; sem diff incremental anterior."
+    if not before:return None
     p=subprocess.run(["git","-C",repo,"diff","--no-ext-diff",f"{before}..{after}","--",*files],capture_output=True,text=True)
-    if p.returncode:return "diff indisponível: "+p.stderr[:400]
-    return p.stdout[:MAX_DIFF]+("\n...[truncado só para revisão V2]" if len(p.stdout)>MAX_DIFF else "")
+    if p.returncode or not p.stdout or len(p.stdout)>MAX_DIFF:return None
+    return p.stdout
 
 def review_prompt(kid,p,before,after,patch,report):
     data={"task_id":kid["id"],"title":kid.get("titulo"),"objective":str(kid.get("objetivo") or "")[:1200],
@@ -176,10 +179,17 @@ def review_prompt(kid,p,before,after,patch,report):
     return LAWS+"\nRevise. FIX só se conteúdo publicado realmente precisar correção; pendência isolável deve ser diferida sem travar o todo. JSON: "+schema+"\n"+json.dumps(data,ensure_ascii=False)
 
 def card_state(card,head):
-    if not card or not head or head not in card:return None
-    if "MERGE-READY" in card:return "MERGE-READY"
-    if "NEEDS-FIX" in card:return "NEEDS-FIX"
+    if not card or not head or f"**HEAD auditado:** `{head}`" not in card:return None
+    if any(marker in card for marker in worker_bridge.AUDIT_TECHNICAL_FAILURE_MARKERS):return None
+    if worker_bridge.AUDIT_NEEDS_FIX_LINE in card:return "NEEDS-FIX"
+    if worker_bridge.AUDIT_MERGE_READY_LINE in card and "**AVAL FINAL INDEPENDENTE — ChatGPT/OpenAI Auditor (Issue #106):** ✅ MERGE-READY" in card:
+        return "MERGE-READY"
     return None
+
+def checkpoint_on_head(repo,checkpoint,head):
+    if not checkpoint or not head:return False
+    return subprocess.run(["git","-C",repo,"merge-base","--is-ancestor",checkpoint,head],
+                          stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0
 
 def run(a):
     proj=project(a.tasks_json)
@@ -191,12 +201,14 @@ def run(a):
     ss=StateStore(GitJsonStore(a.state_git_remote,branch=STATE_BRANCH)); st=ss.get(pid)
     registry=OperationalWorkerRegistry(GitJsonStore(a.worker_state_git_remote,branch=WORKER_STATE_BRANCH))
     rt=TaskRuntimeStore(GitJsonStore(a.runtime_state_git_remote,branch=task_runtime.DEFAULT_TASK_RUNTIME_STATE_BRANCH))
-    # Migração: reaproveita somente o prefixo com checkpoint real na branch compartilhada.
-    if st.cycles==0 and not st.done:
+    prs=api.prs_abertas_por_head(branch); pobj=prs[0] if prs else None; current=head_of(pobj)
+    if pobj:st.pr=int(pobj.get("number") or st.pr or 0) or None; st.head=current or st.head
+    # O runtime legado só é evidência quando o commit ainda pertence ao HEAD real da PR.
+    if st.cycles==0 and not st.done and current:
         regs=rt.por_id()
         for kid in kids:
             reg=regs.get(str(kid["id"]))
-            if reg and reg.checkpoint_commit and reg.branch==branch:
+            if reg and reg.status in {"DONE","NEEDS-AUDIT","MERGE-READY"} and reg.branch==branch and checkpoint_on_head(a.repo_dir,reg.checkpoint_commit,current):
                 st.done.append(str(kid["id"]))
                 report=(reg.question_report or "")
                 marker="### Pendências diferidas"
@@ -209,25 +221,36 @@ def run(a):
     ocfg=OpenAIAuditorConfig.from_env()
     # OpenAI é o coordenador principal, mas indisponibilidade técnica/orçamento
     # cai no fallback declarativo seguro; nunca vira loop nem apaga as leis.
-    prs=api.prs_abertas_por_head(branch); pobj=prs[0] if prs else None; current=head_of(pobj)
-    if pobj:st.pr=int(pobj.get("number") or st.pr or 0) or None; st.head=current or st.head
     card=latest_card(api,st.pr); cs=card_state(card,current)
+    if st.final=="COMPLETE":
+        if current!=st.head:raise RuntimeError("HEAD mudou depois da auditoria final; nova revisão necessária")
+        return {"action":"COMPLETE","project":pid,"pr":st.pr,"head":current,"deferred":st.deferred}
     if st.final=="FINAL_AUDIT_PENDING" and cs=="MERGE-READY":
         st.final="COMPLETE"; st.review="Auditoria final MERGE-READY no HEAD exato."; ss.save(st,f"agent-v2: {pid} COMPLETE")
         return {"action":"COMPLETE","project":pid,"pr":st.pr,"head":current,"deferred":st.deferred,"message":"Aguardando somente merge manual de José."}
     if st.final=="FINAL_AUDIT_PENDING" and cs=="NEEDS-FIX":
         final_id=str(kids[-1]["id"]); st.final="RUNNING"; st.correction={"task_id":final_id,"instructions":"Corrija a auditoria final sem ampliar escopo:\n"+card[:3500]}
         if final_id in st.done:st.done.remove(final_id)
+    elif st.final=="FINAL_AUDIT_PENDING":
+        return {"action":"WAIT_AUDIT","project":pid,"pr":st.pr,"head":current,"reason":"aguardando cartão final confiável do HEAD; zero chamada paga"}
+    if st.final in {"BLOCKED_FIX","BLOCKED_GLOBAL"}:
+        return {"action":"WAIT_BLOCKING_FIX","project":pid,"pr":st.pr,"head":current,"review":st.review}
+    if st.cycles>=MAX_CYCLES_PER_PROJECT and len(st.done)<len(kids):
+        return {"action":"WAIT","project":pid,"reason":f"limite de {MAX_CYCLES_PER_PROJECT} ciclos atingido antes de nova chamada paga"}
     free=workers_free(registry)
-    if not free:
+    if not free and len(st.done)<len(kids):
         st.review="Nenhum Claude Worker livre agora; nenhuma chamada OpenAI/Anthropic foi feita."
         ss.save(st,f"agent-v2: {pid} sem worker livre")
         return {"action":"WAIT","project":pid,"reason":st.review}
-    if st.correction:
+    if len(st.done)==len(kids):
+        p={"action":"COMPLETE","deferred":[],"reason":"todos os checkpoints aceitos"}
+    elif st.correction:
         ordered=[w for w in free if w!=st.correction.get("avoid_worker")]+[w for w in free if w==st.correction.get("avoid_worker")]
         p={"action":"EXECUTE","acknowledge_done":[],"focus_task_id":st.correction["task_id"],"worker_id":ordered[0] if ordered else None,
            "instructions":"Aplicar a correção e preservar todo o restante.","_correction":st.correction["instructions"],"deferred":[],"reason":"correção automática"}
     else:
+        next_kid=next(t for t in kids if str(t["id"]) not in st.done)
+        materialize(a.tasks_json,next_kid,{"instructions":"Preflight de escopo, fonte e política."},branch,current,st.cycles+1)
         try:
             p=ask_openai(ocfg,ledger,f"agent-v2:{pid}:{st.cycles}:{current}:plan",PLAN_SYSTEM,plan_prompt(parent,kids,st,free,runtime_context(rt,kids),card))
         except Exception as exc:
@@ -268,22 +291,17 @@ def run(a):
         st.final="FINAL_AUDIT_PENDING";st.head=current;ss.save(st,f"agent-v2: {pid} final audit")
         return {"action":"FINAL_AUDIT_PENDING","project":pid,"pr":st.pr,"head":current,"deferred":st.deferred}
     if p["action"]=="WAIT":
-        next_id=next((x for x in ids if x not in st.done),None)
-        if next_id:
-            kid_now=next(t for t in kids if str(t["id"])==next_id)
-            add_deferred(st,[{"item":"Decisão WAIT do coordenador","reason":str(p.get("reason") or "sem motivo")[:500]}])
-            p={"action":"EXECUTE","focus_task_id":next_id,"worker_id":free[0],
-               "instructions":"Continue a próxima unidade declarada. Isole qualquer pendência local e não paralise o restante.",
-               "deferred":[],"reason":"WAIT convertido em continuidade segura"}
-        else:
-            st.review=str(p.get("reason") or "WAIT");ss.save(st,f"agent-v2: {pid} WAIT");return {"action":"WAIT","project":pid,"reason":st.review}
+        st.review=str(p.get("reason") or "WAIT global/estrutural")[:1800]
+        st.final="BLOCKED_GLOBAL";ss.save(st,f"agent-v2: {pid} WAIT global")
+        return {"action":"WAIT","project":pid,"reason":st.review}
     if st.cycles>=MAX_CYCLES_PER_PROJECT:
         st.review=f"limite de segurança da V2 atingido ({MAX_CYCLES_PER_PROJECT} ciclos); nenhuma nova chamada paga foi feita."
         ss.save(st,f"agent-v2: {pid} cycle cap")
         return {"action":"WAIT","project":pid,"reason":st.review,"deferred":st.deferred}
     focus=str(p["focus_task_id"]);kid=next(t for t in kids if str(t["id"])==focus);wid=str(p["worker_id"])
+    meta,rtask=materialize(a.tasks_json,kid,p,branch,current,st.cycles+1)
     if not registry.reservar_current_task_condicional(wid,canonical_task_id=focus,message=f"agent-v2: {wid}->{focus}"):raise RuntimeError("worker deixou de estar livre")
-    st.cycles+=1;meta,rtask=materialize(a.tasks_json,kid,p,branch,current,st.cycles)
+    st.cycles+=1
     rcfg=worker_bridge.construir_config_do_runner(bcfg,canonical_task_id=focus)
     gen=worker_bridge._closure_de_geracao(rtask,runner_config=rcfg,repo_dir=a.repo_dir,state_git_remote=a.state_git_remote,canonical_task_id=focus,transport=None,budget_usd=a.budget_usd)
     out=executar_tarefa(rtask,None,config=rcfg,repo_dir=a.repo_dir,state_git_remote=a.state_git_remote,
@@ -295,16 +313,18 @@ def run(a):
         reason=result.reason if result else "Runner sem resultado";st.review=reason
         count=int(st.failures.get(focus) or 0)+1;st.failures[focus]=count
         if count>=2:
-            add_deferred(st,[{"item":focus,"reason":"Etapa diferida após 2 tentativas sem novo checkpoint: "+reason[:550]}])
+            add_deferred(st,[{"item":focus,"reason":"Etapa sem checkpoint após 2 tentativas; requer correção antes de avançar: "+reason[:550]}])
             st.correction=None
-            if focus not in st.done:st.done.append(focus)
-            action="DEFERRED_AND_CONTINUE"
+            st.final="BLOCKED_FIX"
+            action="WAIT_BLOCKING_FIX"
         else:
             st.correction={"task_id":focus,"instructions":reason[:1800],"avoid_worker":wid}
             action="RUNNER_RETRY"
         ss.save(st,f"agent-v2: {focus} {action}")
-        try:api.despachar_worker_bridge(ref=a.base_branch);cont="DISPATCHED"
-        except Exception as exc:cont=f"FAILED: {exc}"
+        cont="STOPPED_FOR_SAFETY" if count>=2 else "FAILED"
+        if count<2:
+            try:api.despachar_worker_bridge(ref=a.base_branch);cont="DISPATCHED"
+            except Exception as exc:cont=f"FAILED: {exc}"
         return {"action":action,"task":focus,"reason":reason,"attempt":count,"continuation":cont}
     newhead=result.checkpoint_commit
     worker_bridge.liberar_worker_apos_resultado(registry,wid,canonical_task_id=focus,resultado_status=task_runtime.RUNTIME_DONE)
@@ -312,10 +332,15 @@ def run(a):
         checkpoint_commit=newhead,base_branch=a.base_branch,titulo_tarefa=str(parent.get("titulo") or pid),objetivo=str(parent.get("objetivo") or ""),
         area=str(kid.get("area") or "materia"),dependencias=tuple(kid.get("dependencias") or ()),source_pack_path=meta.source_pack_path,
         source_pack_sha256=meta.source_pack_sha256,question_report=out.question_report)
+    if prout.action not in {"REUSED","CREATED"} or not prout.pr_number:
+        raise RuntimeError("checkpoint publicado, mas PR/relatório não sincronizados: "+prout.reason)
     if prout.pr_number:st.pr=prout.pr_number
     patch=git_diff(a.repo_dir,current,newhead,tuple(rtask.allowed_files))
     try:
-        rev=ask_openai(ocfg,ledger,f"agent-v2:{pid}:{st.cycles}:{newhead}:review",REVIEW_SYSTEM,review_prompt(kid,p,current,newhead,patch,out.question_report))
+        prompt=review_prompt(kid,p,current,newhead,patch,out.question_report) if patch is not None else None
+        if prompt is None or len(prompt)>MAX_PROMPT:
+            raise ValueError("diff completo não cabe na revisão V2; reservado para auditoria final")
+        rev=ask_openai(ocfg,ledger,f"agent-v2:{pid}:{st.cycles}:{newhead}:review",REVIEW_SYSTEM,prompt)
     except Exception as exc:
         # O trabalho fica na branch e seguirá para auditoria final; falha técnica do revisor não paralisa o projeto.
         rev={"decision":"ACCEPT_WITH_DEFERRED","correction_instructions":"",
@@ -330,6 +355,7 @@ def run(a):
         st.correction={"task_id":focus,"instructions":str(rev.get("correction_instructions") or st.review or "Corrigir revisão.")[:3500]}
         if n>=3:
             review_cap=True
+            st.final="BLOCKED_FIX"
             st.review="Correção substantiva permaneceu após 3 revisões; pausa sem nova chamada paga. "+st.review
     else:
         st.correction=None;st.failures.pop(focus,None)

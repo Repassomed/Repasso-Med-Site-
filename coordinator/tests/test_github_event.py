@@ -336,7 +336,8 @@ def main() -> int:
         test_issue_comment_with_no_user_field_is_rejected,
         test_issue_comment_with_checkpoint_blocked_limit_from_trusted_actor,
         test_issue_comment_unrelated_is_ignored,
-        test_workflow_run_other_workflow_is_ignored,\n        test_worker_bridge_relatorio_8a_novo_ganha_policy_de_head_context_v3,
+        test_workflow_run_other_workflow_is_ignored,
+        test_worker_bridge_relatorio_8a_novo_ganha_policy_de_head_context_v3,
         test_pull_request_event_name_is_no_longer_recognized,
         test_unknown_event_name_returns_none,
     ]

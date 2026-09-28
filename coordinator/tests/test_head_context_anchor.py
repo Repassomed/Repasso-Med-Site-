@@ -29,7 +29,7 @@ import sys
 
 from . import _pathsetup
 from coordinator.github_event import (
-    HEAD_CONTEXT_8A_POLICY, LEI_8A_MATRIX_HEADER, build_event_from_github_context,
+    HEAD_CONTEXT_8A_POLICY, LEI_8A_MATRIX_HEADERS, build_event_from_github_context,
 )
 
 _SCRIPT_DIR = os.path.join(_pathsetup.REPO_ROOT, ".github", "workflows", "scripts")
@@ -102,8 +102,8 @@ def test_node_test_runner_prova_contexto_do_bloco_do_diff() -> None:
     )
     saida = resultado.stdout + resultado.stderr
     assert resultado.returncode == 0, f"node --test falhou (exit {resultado.returncode}):\n{saida}"
-    assert "# fail 0" in saida, f"algum teste JS falhou:\n{saida}"
-    assert "# pass 10" in saida, f"esperava 10 testes passando, saída:\n{saida}"
+    assert "# fail 0" in saida or "ℹ fail 0" in saida, f"algum teste JS falhou:\n{saida}"
+    assert "# pass 11" in saida or "ℹ pass 11" in saida, f"esperava 11 testes passando, saída:\n{saida}"
     for nome in (
         "HTML grande com termos repetidos: contexto vem do bloco B, não do primeiro bloco",
         "o ensino ANTES da questão tem prioridade sobre conteúdo depois dela",
@@ -139,7 +139,7 @@ def test_dedup_ganha_campo_cirurgico_so_quando_a_pr_tem_a_matriz_8a() -> None:
         "- **Área:** materia\n\n"
         "## Relatório obrigatório — Lei das Questões (8-A.11)\n\n"
         "### Matriz por fonte\n\n"
-        f"{LEI_8A_MATRIX_HEADER}\n"
+        f"{LEI_8A_MATRIX_HEADERS[0]}\n"
         "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n"
         "| Foto | pág | CLARA | 1 | 1 | 1 | 0 | 0 | 0 | 0 | neub02 |\n"
     )
@@ -147,7 +147,7 @@ def test_dedup_ganha_campo_cirurgico_so_quando_a_pr_tem_a_matriz_8a() -> None:
     assert ev_com.payload["dedup_fields"].get("head_context_8a") == HEAD_CONTEXT_8A_POLICY
     # Regressão real pós-#313/#305: a leitura RAW de HTML >1 MB mudou a evidência
     # do mesmo HEAD; manter v1 faria o Coordinator responder DUPLICATE e pular a auditoria.
-    assert HEAD_CONTEXT_8A_POLICY == "question-report-evidence-v2-large-file-raw"
+    assert HEAD_CONTEXT_8A_POLICY == "question-report-evidence-v3-complementares-canonical-ids"
 
     ev_sem = _evento_de_pr(corpo="- **Área:** infraestrutura\n\nSem nenhuma matriz aqui.")
     assert "head_context_8a" not in ev_sem.payload["dedup_fields"]
