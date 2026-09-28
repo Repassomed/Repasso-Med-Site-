@@ -66,11 +66,14 @@ class StateStore:
 def raw_tasks(path):
     with open(path,encoding="utf-8") as f: return list(json.load(f).get("tarefas") or [])
 
-def project(path):
-    ts=raw_tasks(path); parents=[t for t in ts if t.get("agent_v2_enabled") is True]
+def project(path,states=None):
+    ts=raw_tasks(path); states=states or {}
+    parents=[t for t in ts if t.get("agent_v2_enabled") is True and
+             (states.get(str(t.get("id"))) or {}).get("final")!="COMPLETE" and
+             (any(k.get("parent_task_id")==t.get("id") for k in ts) or t.get("estado")=="READY")]
     if not parents: return None
     parents.sort(key=lambda t:(str(t.get("prioridade_declarada") or "P4"),str(t.get("id"))))
-    parent=parents[0]; pid=str(parent["id"]); kids=[t for t in ts if t.get("parent_task_id")==pid]
+    parent=parents[0]; pid=str(parent["id"]); kids=[t for t in ts if t.get("parent_task_id")==pid] or [parent]
     if not kids: raise RuntimeError("projeto V2 sem tarefas-filhas")
     branches={str(t.get("branch") or "").strip() for t in kids if str(t.get("branch") or "").strip()}
     if len(branches)!=1: raise RuntimeError(f"projeto V2 exige uma branch compartilhada; achei {branches}")
@@ -192,13 +195,14 @@ def checkpoint_on_head(repo,checkpoint,head):
                           stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0
 
 def run(a):
-    proj=project(a.tasks_json)
+    ss=StateStore(GitJsonStore(a.state_git_remote,branch=STATE_BRANCH))
+    proj=project(a.tasks_json,(ss.store.read().get("projects") or {}))
     if not proj:return {"action":"NO_PROJECT","reason":"nenhum agent_v2_enabled"}
     parent,kids,branch=proj; pid=str(parent["id"])
     bcfg=worker_bridge.WorkerBridgeConfig.from_env()
     if not bcfg.gate().open:raise RuntimeError(bcfg.gate().reason)
     api=bridge_pr.GitHubRestApi(owner=a.repo_owner,repo=a.repo_name)
-    ss=StateStore(GitJsonStore(a.state_git_remote,branch=STATE_BRANCH)); st=ss.get(pid)
+    st=ss.get(pid)
     registry=OperationalWorkerRegistry(GitJsonStore(a.worker_state_git_remote,branch=WORKER_STATE_BRANCH))
     rt=TaskRuntimeStore(GitJsonStore(a.runtime_state_git_remote,branch=task_runtime.DEFAULT_TASK_RUNTIME_STATE_BRANCH))
     prs=api.prs_abertas_por_head(branch); pobj=prs[0] if prs else None; current=head_of(pobj)

@@ -268,6 +268,7 @@ def _proposta(texto: str, primeira: str, norm: str, *, prioridade: str, slug: st
         "issue": INTAKE_ISSUE,
         "notas": notas,
         "automation_enabled": not materia_nova,
+        "agent_v2_enabled": not materia_nova,
         "bridge_enabled": True,
         "risk_level": "MEDIO",
         "policy_level": "C",
