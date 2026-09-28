@@ -206,6 +206,15 @@ def latest_noop_reason(results,focus,cycle,head):
             return reason
     return None
 
+def question_html(html,qid):
+    match=re.search(r'<div class="quiz-item" id="'+re.escape(qid)+r'"[^>]*>',html,re.I)
+    if not match:return None
+    depth=0
+    for tag in re.finditer(r'</?div\b[^>]*>',html[match.start():],re.I):
+        depth+=-1 if tag.group(0).lower().startswith('</div') else 1
+        if depth==0:return html[match.start():match.start()+tag.end()]
+    return None
+
 def review_existing_work(repo,kid,meta,head,reason,cfg,ledger,key):
     """Uma edição vazia só pode liberar a etapa após cotejo independente do HEAD."""
     if not head or NO_CHANGE_REASON not in reason:return None
@@ -217,13 +226,13 @@ def review_existing_work(repo,kid,meta,head,reason,cfg,ledger,key):
     if shown.returncode:return None
     excerpts=[]
     for qid in ids:
-        match=re.search(r'id=["\']'+re.escape(qid)+r'["\']',shown.stdout,re.I)
-        if not match:return None
+        block=question_html(shown.stdout,qid)
+        if not block:return None
         mirror="b"+qid
-        mirror_match=re.search(r'id=["\']'+re.escape(mirror)+r'["\']',shown.stdout,re.I)
-        excerpts.append({"id":qid,"html":shown.stdout[match.start():match.start()+2200],
-                         "bank_mirror_id":mirror if mirror_match else None,
-                         "bank_mirror_html":shown.stdout[mirror_match.start():mirror_match.start()+450] if mirror_match else None})
+        bank=question_html(shown.stdout,mirror)
+        equal=bank is not None and block.replace('id="'+qid+'"','id="ID"',1)==bank.replace('id="'+mirror+'"','id="ID"',1)
+        excerpts.append({"id":qid,"html":block[:2600],"bank_mirror_id":mirror if bank else None,
+                         "bank_mirror_exactly_equal":equal,"bank_mirror_html":bank[:2200] if bank and not equal else None})
     source=""
     if meta.source_pack_path:
         with open(os.path.join(repo,meta.source_pack_path),encoding="utf-8") as f:source=f.read()
@@ -231,7 +240,7 @@ def review_existing_work(repo,kid,meta,head,reason,cfg,ledger,key):
     data={"task":kid["id"],"objective":str(kid.get("objetivo") or "")[:1300],
           "source_pack":source[:5000],"claude_no_change_claim":reason[:1800],
           "verified_head":head,"existing_question_html":excerpts}
-    prompt=LAWS+"\nConfira TODAS as partes da tarefa e o espelho do Banco General. Os IDs foram encontrados no HEAD real, mas existência por si só não prova equivalência. Aceite sem novo commit SOMENTE se o conteúdo mostrado ensina e cobra tudo o que a fonte pede, com proveniência correta. Se faltar evidência ou correção, escolha FIX. Responda JSON curto: reason até 160 caracteres, correction_instructions até 300, deferred no máximo 2 itens. JSON: {\"decision\":\"ACCEPT_WITH_DEFERRED|FIX\",\"reason\":\"...\",\"correction_instructions\":\"...\",\"deferred\":[{\"item\":\"...\",\"reason\":\"...\"}]}\n"+json.dumps(data,ensure_ascii=False)
+    prompt=LAWS+"\nConfira TODAS as partes da tarefa e o espelho do Banco General. bank_mirror_exactly_equal foi calculado sobre o HTML integral dos dois itens, ignorando apenas o ID q/bq; não é alegação do Claude. Existência e igualdade por si só não provam equivalência com a fonte. Aceite sem novo commit SOMENTE se o conteúdo ensina e cobra o que a fonte pede, com proveniência correta. Se faltar evidência ou correção, escolha FIX. Responda JSON curto: reason até 160 caracteres, correction_instructions até 300, deferred no máximo 2 itens. JSON: {\"decision\":\"ACCEPT_WITH_DEFERRED|FIX\",\"reason\":\"...\",\"correction_instructions\":\"...\",\"deferred\":[{\"item\":\"...\",\"reason\":\"...\"}]}\n"+json.dumps(data,ensure_ascii=False)
     answer=ask_openai(cfg,ledger,key,REVIEW_SYSTEM,prompt,max_output_tokens=NOOP_MAX_OUT)
     if answer.get("decision") not in {"ACCEPT_WITH_DEFERRED","FIX"}:raise ValueError("revisão de no-op sem decisão válida")
     return answer
@@ -317,6 +326,10 @@ def run(a):
             if rev and rev["decision"]=="ACCEPT_WITH_DEFERRED":
                 return accept_existing_work(st,focus,current,rev,ss,api,a.base_branch)
             if rev and rev["decision"]=="FIX":
+                if int(st.failures.get(focus) or 0)>=2:
+                    st.review="Quesitos ainda exigem correção após 2 no-ops; sem nova chamada Claude. "+str(rev.get("reason") or "")[:500]
+                    ss.save(st,f"agent-v2: {focus} pausa após revisão independente")
+                    return {"action":"WAIT_BLOCKING_FIX","project":pid,"task":focus,"reason":st.review}
                 st.final="RUNNING";st.failures[focus]=1
                 st.correction={"task_id":focus,"instructions":str(rev.get("correction_instructions") or rev.get("reason") or "Corrigir lacuna da revisão.")[:3000]}
                 ss.save(st,f"agent-v2: {focus} noop precisa correção")
