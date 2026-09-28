@@ -1811,6 +1811,18 @@
       "provider": "openai",
       "tier": "TERRA",
       "timestamp": "2026-09-28T19:05:07.104422+00:00"
+    },
+    {
+      "estimated_cost_usd": -0.060146,
+      "event_key": "auto-repair:40118c62b64079454ce5:a1",
+      "informational_cost_usd": null,
+      "input_tokens": 0,
+      "kind": "correction",
+      "model_id": "gpt-5.6-terra",
+      "output_tokens": 0,
+      "provider": "openai",
+      "tier": "TERRA",
+      "timestamp": "2026-09-28T19:05:15.119769+00:00"
     }
   ]
 }
