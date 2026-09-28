@@ -2114,6 +2114,31 @@
       "summary": "bridge\tPreflight da su\u00edte do Coordinator (ZERO API, antes do claim)\t2026-09-28T19:31:48.1931325Z ##[error]Process completed with exit code 1.",
       "task_id": null,
       "worker_id": null
+    },
+    {
+      "category": "workflow",
+      "commit_sha": null,
+      "component": "auto-repair",
+      "error_id": "ERR-37BB299735",
+      "error_type": "technical-workflow-failure",
+      "fingerprint": "37bb2997351a284282e2",
+      "first_seen": "2026-09-28T19:36:26.290374+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "9e0d044f0de249798912130b9456293f",
+      "issue_sync_updated_at": "2026-09-28T19:36:26.290374+00:00",
+      "last_evidence_hash": "caa71c42aa334e870ab8",
+      "last_seen": "2026-09-28T19:36:26.290374+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36473207146",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "bridge\tPreflight da su\u00edte do Coordinator (ZERO API, antes do claim)\t2026-09-28T19:35:51.7309881Z ##[error]Process completed with exit code 1.",
+      "task_id": null,
+      "worker_id": null
     }
   ]
 }
