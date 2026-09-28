@@ -255,6 +255,7 @@ jobs:
 
       - name: Preflight da suíte do Coordinator (ZERO API, antes do claim)
         run: |
+          python3 -m py_compile coordinator/agent_v2.py
           python3 -m coordinator.tests.run_all
 
       - name: Rodar Coordenação V2 (OpenAI coordena, Claude executa)
