@@ -772,6 +772,16 @@
       "recorded_at": "2026-09-28T20:36:46.707221+00:00",
       "status": "BLOCKED",
       "task_id": "agent-v2-neurologia-p0-provas-q08-11-04e4af18477a"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o e n\u00e3o informou motivo (resposta vazia) \u2014 nada foi aplicado; a tarefa precisa de revis\u00e3o humana ou de instru\u00e7\u00e3o mais espec\u00edfica.",
+      "recorded_at": "2026-09-28T21:55:59.141761+00:00",
+      "status": "BLOCKED",
+      "task_id": "agent-v2-neurologia-p0-provas-q08-11-043bce2e1985"
     }
   ]
 }
