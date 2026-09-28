@@ -739,6 +739,16 @@
       "recorded_at": "2026-09-28T19:44:28.760576+00:00",
       "status": "BLOCKED",
       "task_id": "agent-v2-neurologia-p0-provas-q08-11-dc643517675e"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As quatro quest\u00f5es-alvo do lote 25/09 (Q8 apnea, Q9 reflejos de tronco, Q10 Weber, Q11 pruebas del III par) j\u00e1 existem integrais e corretas nos blocos-alvo \u2014 q-neu099 e q-neu100 em neub18 (com a chave hist\u00f3rica da c\u00e1tedra preservada e a nota AAN/AAP/CNS/SCCM 2023 rotulada separadamente), q-neu142 em neub12 e q-neu139 em neub04 \u2014 confirmado pelos trechos fornecidos. As vers\u00f5es do source pack s\u00e3o semanticamente duplicadas dessas quest\u00f5es can\u00f4nicas e n\u00e3o s\u00e3o demonstravelmente melhores, portanto nenhuma inser\u00e7\u00e3o/reformula\u00e7\u00e3o \u00e9 necess\u00e1ria ou segura. O espelho dessas duas \u00faltimas (q-neu099/q-neu100) no Banco General n\u00e3o p\u00f4de ser conferido porque o trecho do Banco General referente ao bloco 18 n\u00e3o foi disponibilizado nos fragmentos literais permitidos, ent\u00e3o nenhuma edi\u00e7\u00e3o foi feita ali para evitar \u00e2ncora inventada.",
+      "recorded_at": "2026-09-28T19:46:54.965324+00:00",
+      "status": "BLOCKED",
+      "task_id": "agent-v2-neurologia-p0-provas-q08-11-b306f9c69e6a"
     }
   ]
 }
