@@ -15,7 +15,7 @@ import sys
 
 from . import _pathsetup  # noqa: F401
 from coordinator.events import EventType
-from coordinator.github_event import build_event_from_github_context
+from coordinator.github_event import HEAD_CONTEXT_8A_POLICY, build_event_from_github_context
 
 REPO = "Repassomed/Repasso-Med-Site-"
 
@@ -271,6 +271,39 @@ def test_workflow_run_other_workflow_is_ignored() -> None:
     print("OK  test_workflow_run_other_workflow_is_ignored")
 
 
+def test_worker_bridge_relatorio_8a_novo_ganha_policy_de_head_context_v3() -> None:
+    payload = {
+        "action": "completed",
+        "workflow_run": {
+            "name": "Repasso Guard",
+            "conclusion": "success",
+            "id": 9001,
+            "pull_requests": [],
+        },
+    }
+    body = (
+        "## ESCOPO\n\n- **Tarefa:** neuro-x\n- **Área:** materia\n\n"
+        "## Relatório obrigatório — Lei das Questões (8-A.11)\n\n"
+        "### Matriz por fonte\n\n"
+        "| Fonte | Página/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | "
+        "Duplicadas/canônicas | Reconstruídas | Complementares | Pendentes | Destino no site |\n"
+    )
+    pr_info = {
+        "number": 305,
+        "title": "[worker-bridge] Neurología",
+        "body": body,
+        "labels": [],
+        "updated_at": "2026-09-28T00:00:00Z",
+        "head_sha": "716973e1adc047e7461ab80af31c35aa353c3cf3",
+        "worker_bridge_needs_audit": True,
+    }
+    ev = build_event_from_github_context("workflow_run", payload, REPO, pr_info=pr_info)
+    assert ev is not None
+    assert ev.payload["dedup_fields"]["head_context_8a"] == HEAD_CONTEXT_8A_POLICY
+    assert "v3" in HEAD_CONTEXT_8A_POLICY
+    print("OK  test_worker_bridge_relatorio_8a_novo_ganha_policy_de_head_context_v3")
+
+
 def test_pull_request_event_name_is_no_longer_recognized() -> None:
     """Bloqueador 1: o construtor de pull_request foi removido de propósito
     — este workflow não confia mais em código/gatilho de PR para segredo.
@@ -303,7 +336,7 @@ def main() -> int:
         test_issue_comment_with_no_user_field_is_rejected,
         test_issue_comment_with_checkpoint_blocked_limit_from_trusted_actor,
         test_issue_comment_unrelated_is_ignored,
-        test_workflow_run_other_workflow_is_ignored,
+        test_workflow_run_other_workflow_is_ignored,\n        test_worker_bridge_relatorio_8a_novo_ganha_policy_de_head_context_v3,
         test_pull_request_event_name_is_no_longer_recognized,
         test_unknown_event_name_returns_none,
     ]

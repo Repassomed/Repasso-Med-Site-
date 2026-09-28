@@ -78,9 +78,12 @@ const MAX_SUBSECOES_RELACIONADAS = 2;
 const MAX_SUBSECOES_8A = 1;
 const MIN_TERMOS_SEGMENTO_8A = 4;
 const MARGEM_LINHAS_HUNK = 3;
-const CABECALHO_MATRIZ_8A =
-  '| Fonte | Página/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | ' +
-  'Duplicadas/canônicas | Reconstruídas | Pendentes | Destino no site |';
+const COLUNAS_8A_OBRIGATORIAS = [
+  'Fonte', 'Página/imagem', 'Legibilidade', 'Detectadas', 'Aproveitadas', 'Novas',
+  'Reformuladas', 'Duplicadas/canônicas', 'Reconstruídas', 'Pendentes', 'Destino no site',
+];
+const MAX_IDS_CANONICOS_8A = 10;
+const MAX_CHARS_EVIDENCIA_CANONICA = 2400;
 
 const STOP = new Set([
   'para', 'como', 'esta', 'este', 'essa', 'esse', 'isso', 'isto', 'uma', 'uno', 'unos', 'unas',
@@ -208,30 +211,77 @@ function celulasDeLinhaTabela(linha) {
 }
 
 /**
- * Lê a "Matriz por fonte" da Lei 8-A.11 (Markdown determinístico produzido
- * por ``coordinator/question_report.py::render_question_report`` e embutido
- * pelo Runner no corpo da PR) e devolve, por fonte, os contadores
- * Novas/Reformuladas e o texto da coluna "Destino no site". Nunca lê prosa
- * livre fora dessa tabela — cabeçalho exato ou nada.
- * @returns {Array<{novas:number, reformuladas:number, destino:string}>}
+ * Lê a "Matriz por fonte" da Lei 8-A.11 pelo NOME das colunas, não pela
+ * posição fixa. Mantém compatibilidade com o relatório antigo e com a
+ * coluna "Complementares" adicionada pela política de pendências diferidas.
+ * @returns {Array<{novas:number, reformuladas:number, complementares:number, destino:string}>}
  */
 export function extrairDestinosDoRelatorio8A(prBody) {
   const linhas = String(prBody || '').split('\n');
-  const idx = linhas.findIndex((l) => l.trim() === CABECALHO_MATRIZ_8A);
-  if (idx < 0) return [];
+  let idx = -1;
+  let mapa = null;
+  for (let i = 0; i < linhas.length; i++) {
+    if (!linhas[i].trim().startsWith('|')) continue;
+    const cel = celulasDeLinhaTabela(linhas[i]);
+    if (!COLUNAS_8A_OBRIGATORIAS.every((nome) => cel.includes(nome))) continue;
+    idx = i;
+    mapa = new Map(cel.map((nome, pos) => [nome, pos]));
+    break;
+  }
+  if (idx < 0 || !mapa) return [];
   const destinos = [];
   for (let i = idx + 2; i < linhas.length; i++) {
     const l = linhas[i];
     if (!l.trim().startsWith('|')) break;
     const cel = celulasDeLinhaTabela(l);
-    if (cel.length < 11) continue;
+    const valor = (nome) => {
+      const pos = mapa.get(nome);
+      return pos === undefined ? '' : (cel[pos] || '');
+    };
     destinos.push({
-      novas: parseInt(cel[5], 10) || 0,
-      reformuladas: parseInt(cel[6], 10) || 0,
-      destino: cel[10],
+      novas: parseInt(valor('Novas'), 10) || 0,
+      reformuladas: parseInt(valor('Reformuladas'), 10) || 0,
+      complementares: parseInt(valor('Complementares'), 10) || 0,
+      destino: valor('Destino no site'),
     });
   }
   return destinos;
+}
+
+/** IDs q-/bq- citados DENTRO do relatório 8-A renderizado. */
+export function extrairIdsCanonicosDoRelatorio8A(prBody) {
+  const corpo = String(prBody || '');
+  const inicio = corpo.indexOf('## Relatório obrigatório — Lei das Questões');
+  if (inicio < 0) return [];
+  const fimExecucao = corpo.indexOf('\n## Execução', inicio);
+  const relatorio = corpo.slice(inicio, fimExecucao >= 0 ? fimExecucao : corpo.length);
+  const ids = relatorio.match(/\b(?:bq|q)-[A-Za-z0-9][A-Za-z0-9_-]{2,80}\b/g) || [];
+  return [...new Set(ids)].slice(0, MAX_IDS_CANONICOS_8A);
+}
+
+function evidenciasCanonicasPorId(linhas, ids) {
+  const trechos = [];
+  const notas = [];
+  for (const id of ids) {
+    const seguro = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('<div\\s+class="quiz-item"\\s+id="' + seguro + '"', 'i');
+    const posicoes = [];
+    for (let i = 0; i < linhas.length; i++) if (re.test(linhas[i])) posicoes.push(i);
+    if (posicoes.length !== 1) {
+      notas.push(posicoes.length === 0
+        ? `id canônico ${id} citado pelo question_report não foi encontrado no HEAD auditado.`
+        : `id canônico ${id} citado pelo question_report aparece ${posicoes.length} vezes; evidência recusada por ambiguidade.`);
+      continue;
+    }
+    const inicio = posicoes[0];
+    let fim = Math.min(linhas.length, inicio + 70);
+    for (let i = inicio + 1; i < fim; i++) {
+      if (/<div\s+class="quiz-item"\s+id="/i.test(linhas[i])) { fim = i; break; }
+    }
+    const texto = recortar(compactar(linhas, inicio + 1, fim), MAX_CHARS_EVIDENCIA_CANONICA);
+    trechos.push(`#### Evidência canônica citada pelo question_report · ${id} · linhas ${inicio + 1}–${fim}\n${texto}`);
+  }
+  return { trechos, notas };
 }
 
 /** ids de seção válidos (já existentes no HEAD) mencionados no texto. */
@@ -502,7 +552,7 @@ function evidenciasLei8A(linhas, linhasNorm, hunksDoArquivo, destinos, idsSecoes
   const blocosAlvo = new Set();
   const notas = [];
   for (const d of destinos) {
-    if (d.novas <= 0 && d.reformuladas <= 0) continue;
+    if (d.novas <= 0 && d.reformuladas <= 0 && d.complementares <= 0) continue;
     const achados = blocosNoTexto(d.destino, idsSecoes);
     if (!achados.size) {
       notas.push(
@@ -547,9 +597,11 @@ function evidenciasLei8A(linhas, linhasNorm, hunksDoArquivo, destinos, idsSecoes
 export function montarContextoHead({ diffTexto, arquivos, sha, prBody, limite = LIMITE_PADRAO }) {
   const hunksPorArquivo = parseHunks(diffTexto);
   const camadaEvidencia8A = [];
+  const camadaCanonica8A = [];
   const camadas = [[], [], []];
   const notas = [];
   const destinos8A = extrairDestinosDoRelatorio8A(prBody);
+  const idsCanonicos8A = extrairIdsCanonicosDoRelatorio8A(prBody);
 
   for (const { filename, content } of (arquivos || []).slice(0, MAX_ARQUIVOS)) {
     const titulo = `### HEAD CONTEXT · ${filename} @ ${sha}`;
@@ -571,6 +623,11 @@ export function montarContextoHead({ diffTexto, arquivos, sha, prBody, limite = 
       blocosCobertosPor8A = blocosAlvo;
       for (const t of trechos) camadaEvidencia8A.push(`${titulo}\n${t}`);
       for (const n of notas8A) notas.push(`${titulo}\n#### Evidência didática (Lei 8-A) — ${n}`);
+    }
+    if (idsCanonicos8A.length) {
+      const { trechos, notas: notasCanonicas } = evidenciasCanonicasPorId(linhas, idsCanonicos8A);
+      for (const t of trechos) camadaCanonica8A.push(`${titulo}\n${t}`);
+      for (const n of notasCanonicas) notas.push(`${titulo}\n#### Evidência canônica (Lei 8-A) — ${n}`);
     }
 
     // Agrupa hunks pela seção ancestral (hunks vizinhos da mesma seção
@@ -653,7 +710,7 @@ export function montarContextoHead({ diffTexto, arquivos, sha, prBody, limite = 
 
   const partes = [];
   let tamanho = 0;
-  for (const bloco of [...camadaEvidencia8A, ...camadas[0], ...camadas[1], ...camadas[2], ...notas]) {
+  for (const bloco of [...camadaEvidencia8A, ...camadaCanonica8A, ...camadas[0], ...camadas[1], ...camadas[2], ...notas]) {
     const custo = bloco.length + (partes.length ? 2 : 0);
     if (tamanho + custo > limite) {
       if (!partes.length) partes.push(bloco.slice(0, limite));

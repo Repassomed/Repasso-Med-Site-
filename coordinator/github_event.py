@@ -223,16 +223,20 @@ DIFF_EVIDENCE_POLICY = "diff-integral-v1"
 # mesmo padrão cirúrgico de ``DIFF_EVIDENCE_POLICY`` (Issue #308) — nunca
 # um bump geral de ``AUDIT_POLICY_VERSION`` forçando reauditoria paga em
 # toda PR aberta, só nas que realmente ganham evidência nova.
-LEI_8A_MATRIX_HEADER = (
-    "| Fonte | Página/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | "
-    "Duplicadas/canônicas | Reconstruídas | Pendentes | Destino no site |"
+LEI_8A_MATRIX_HEADERS = (
+    (
+        "| Fonte | Página/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | "
+        "Duplicadas/canônicas | Reconstruídas | Pendentes | Destino no site |"
+    ),
+    (
+        "| Fonte | Página/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | "
+        "Duplicadas/canônicas | Reconstruídas | Complementares | Pendentes | Destino no site |"
+    ),
 )
-# PR #313: arquivos de matéria >1 MB passaram a chegar ao mesmo head_context 8-A via fallback RAW.
-# Isso muda a EVIDÊNCIA disponível ao auditor no MESMO HEAD (caso real #305), então
-# precisa de uma nova versão cirúrgica no dedup; sem este bump, a reauditoria pós-#313
-# vira DUPLICATE e nenhuma chamada nova acontece. Continua restrito a PRs com a Matriz
-# 8-A renderizada — não força reauditoria geral.
-HEAD_CONTEXT_8A_POLICY = "question-report-evidence-v2-large-file-raw"
+# v3: além do fallback RAW, o head_context aceita a coluna Complementares e
+# recupera por id as questões canônicas citadas pelo question_report. Isto muda
+# a evidência disponível ao auditor no MESMO HEAD somente para PRs com matriz 8-A.
+HEAD_CONTEXT_8A_POLICY = "question-report-evidence-v3-complementares-canonical-ids"
 
 
 def _from_issue_comment(payload: dict, repo: str, *, pr_info: dict | None = None,
@@ -401,7 +405,7 @@ def _from_workflow_run(payload: dict, repo: str, *, pr_info: dict | None = None,
                     **({"diff_evidence": DIFF_EVIDENCE_POLICY}
                        if pr_diff and len(pr_diff) > LEGACY_AUDIT_DIFF_CHARS else {}),
                     **({"head_context_8a": HEAD_CONTEXT_8A_POLICY}
-                       if LEI_8A_MATRIX_HEADER in corpo else {}),
+                       if any(header in corpo for header in LEI_8A_MATRIX_HEADERS) else {}),
                 },
             },
         )
