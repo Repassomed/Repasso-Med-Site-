@@ -717,6 +717,16 @@
       "recorded_at": "2026-09-28T02:52:36.117696+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "neurologia-p0-provas-q05-07--bridge-1316b15b0c1e"
+    },
+    {
+      "branch": "runner/neurologia-p0-provas-q01-04",
+      "checkpoint_commit": "716973e1adc047e7461ab80af31c35aa353c3cf3",
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "patch aplicado, valida\u00e7\u00f5es da allowlist passaram, commit/push conclu\u00eddos (branch 'runner/neurologia-p0-provas-q01-04'). DONE/NEEDS-AUDIT nunca significa MERGE-READY \u2014 auditoria sem\u00e2ntica independente decide isso depois (Issue #83 N\u00edvel C/#99).",
+      "recorded_at": "2026-09-28T05:28:09.324472+00:00",
+      "status": "NEEDS-AUDIT",
+      "task_id": "neurologia-p0-provas-q05-07--bridge-fb5ef4aaa2df"
     }
   ]
 }
