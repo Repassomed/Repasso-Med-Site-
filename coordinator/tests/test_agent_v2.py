@@ -18,9 +18,10 @@ def test_noop_entrega_questao_e_espelho_reais_ao_revisor() -> None:
     kid={"id":"q08-11","arquivos":["neurologia.html"],"objetivo":"Q8"}
     html='<div id="q-neu099">Cátedra e literatura</div><div id="bq-neu099">Espelho</div>'
     seen=[]
-    def fake_ask(cfg,ledger,key,system,prompt):
+    def fake_ask(cfg,ledger,key,system,prompt,**kwargs):
         data=json.loads(prompt[prompt.index('\n{"task":')+1:])
         seen.append(data)
+        assert kwargs["max_output_tokens"]==agent_v2.NOOP_MAX_OUT
         return {"decision":"ACCEPT_WITH_DEFERRED","reason":"canônica presente","deferred":[]}
     with patch.object(agent_v2.subprocess,"run",return_value=SimpleNamespace(returncode=0,stdout=html)), \
          patch.object(agent_v2,"ask_openai",side_effect=fake_ask):
@@ -31,10 +32,21 @@ def test_noop_entrega_questao_e_espelho_reais_ao_revisor() -> None:
     assert seen[0]["verified_head"]=="a"*40
 
 
+def test_recupera_apenas_ultimo_noop_do_mesmo_foco() -> None:
+    import hashlib
+    task_id="agent-v2-q08-11-"+hashlib.sha256(("q08-11:2:"+"a"*40).encode()).hexdigest()[:12]
+    results=[{"task_id":task_id,"status":"BLOCKED","reason":agent_v2.NO_CHANGE_REASON+"; q-neu099"},
+             {"task_id":"agent-v2-q12-14-b","status":"BLOCKED","reason":agent_v2.NO_CHANGE_REASON+"; q-neu200"},
+             {"task_id":task_id,"status":"BLOCKED","reason":agent_v2.NO_CHANGE_REASON+"; q-neu100"}]
+    assert agent_v2.latest_noop_reason(results,"q08-11",2,"a"*40)==results[-1]["reason"]
+    assert agent_v2.latest_noop_reason(results,"q08-11",2,"b"*40) is None
+
+
 def main() -> int:
     test_noop_sem_evidencia_nao_e_aceito()
     test_noop_entrega_questao_e_espelho_reais_ao_revisor()
-    print("2/2 testes passaram.")
+    test_recupera_apenas_ultimo_noop_do_mesmo_foco()
+    print("3/3 testes passaram.")
     return 0
 
 
