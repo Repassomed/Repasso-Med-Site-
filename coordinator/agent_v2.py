@@ -207,7 +207,8 @@ def run(a):
         if st.done:ss.save(st,f"agent-v2: {pid} importa checkpoints legados")
     ledger=GitUsageLedger(GitJsonStore(a.state_git_remote,branch=OPENAI_USAGE_BRANCH))
     ocfg=OpenAIAuditorConfig.from_env()
-    if not ocfg.gate().open:raise RuntimeError("OpenAI coordenador: "+ocfg.gate().reason)
+    # OpenAI é o coordenador principal, mas indisponibilidade técnica/orçamento
+    # cai no fallback declarativo seguro; nunca vira loop nem apaga as leis.
     prs=api.prs_abertas_por_head(branch); pobj=prs[0] if prs else None; current=head_of(pobj)
     if pobj:st.pr=int(pobj.get("number") or st.pr or 0) or None; st.head=current or st.head
     card=latest_card(api,st.pr); cs=card_state(card,current)
