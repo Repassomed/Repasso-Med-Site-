@@ -695,6 +695,16 @@
       "recorded_at": "2026-09-28T00:22:42.389894+00:00",
       "status": "BLOCKED",
       "task_id": "neurologia-p0-provas-q05-07--bridge-eec55cc04763"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): O objetivo desta microtarefa (integrar Q5-Q7 do lote 25/09) j\u00e1 est\u00e1 cumprido nos trechos fornecidos: a Q5 (neuralgia do trig\u00e9meo) est\u00e1 inserida em neub05 (id q-neu-2509-05) e espelhada no Banco General (id bq-neu-2509-05), com r\u00f3tulo correto 'Basada en preguntas de examen', alternativas reembaralhadas sem alterar a resposta cient\u00edfica, e o resumo j\u00e1 ensinava o conte\u00fado antes da quest\u00e3o. As Q6 (mecanismo da miastenia) e Q7 (fun\u00e7\u00e3o de N3) foram corretamente tratadas como duplicatas sem\u00e2nticas de quest\u00f5es j\u00e1 existentes (q-neu078/bq-neu078 para o mecanismo anti-AChR postsin\u00e1ptico da miastenia; q-neu087 para as fun\u00e7\u00f5es do N3 \u2014 restauraci\u00f3n f\u00edsica, GH, memoria declarativa, primera mitad), portanto n\u00e3o devem ser inseridas como novas, conforme a Lei 8-A. O \u00fanico problema apontado pela auditoria (cabe\u00e7alho do Banco General ainda dizendo '148 preguntas' ap\u00f3s a inclus\u00e3o da 149\u00aa) n\u00e3o pode ser corrigido nesta resposta porque nenhum dos 7 trechos literais fornecidos cont\u00e9m esse cabe\u00e7alho/contagem do Banco General; sem essa \u00e2ncora literal, uma edi\u00e7\u00e3o desse texto seria inventada, o que \u00e9 proibido. A pend\u00eancia de cotejo da Q5 com a foto original leg\u00edvel (apontada pelo auditor OpenAI) tamb\u00e9m n\u00e3o pod",
+      "recorded_at": "2026-09-28T00:38:45.211043+00:00",
+      "status": "BLOCKED",
+      "task_id": "neurologia-p0-provas-q05-07--bridge-398d3d95f5a3"
     }
   ]
 }
