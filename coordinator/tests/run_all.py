@@ -8,6 +8,7 @@ from __future__ import annotations
 import sys
 
 from . import (
+    test_agent_v2,
     test_anthropic_client,
     test_audit_diff,
     test_auditor_technical_failure,
@@ -66,6 +67,7 @@ from . import (
 )
 
 MODULOS = [
+    test_agent_v2,
     test_config_gate,
     test_redact,
     test_dedup,

@@ -1,6 +1,6 @@
 """Coordinator V2: OpenAI coordena; Claude executa; José é o único merge."""
 from __future__ import annotations
-import argparse, hashlib, json, os, subprocess, sys
+import argparse, hashlib, json, os, re, subprocess, sys
 from dataclasses import dataclass, field, replace
 from . import bridge_pr, bridge_workers, scheduler, task_runtime, worker_bridge
 from .git_state import GitJsonStore, GitUsageLedger
@@ -18,6 +18,7 @@ MAX_OUT=1400
 MAX_PROMPT=20000
 MAX_DIFF=16000
 MAX_CYCLES_PER_PROJECT=36
+NO_CHANGE_REASON="o modelo não produziu nenhuma alteração"
 
 LAWS="""LEIS OBRIGATÓRIAS — REPASSO MED
 1) Cátedra é a base; literatura só corrige/complementa e divergência deve ser rotulada.
@@ -194,6 +195,48 @@ def checkpoint_on_head(repo,checkpoint,head):
     return subprocess.run(["git","-C",repo,"merge-base","--is-ancestor",checkpoint,head],
                           stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0
 
+def review_existing_work(repo,kid,meta,head,reason,cfg,ledger,key):
+    """Uma edição vazia só pode liberar a etapa após cotejo independente do HEAD."""
+    if not head or NO_CHANGE_REASON not in reason:return None
+    files=tuple(kid.get("arquivos") or ())
+    if len(files)!=1:return None
+    path=str(files[0]); ids=list(dict.fromkeys(re.findall(r"\bq-[a-z0-9-]+\b",reason.lower())))[:8]
+    if not ids:return None
+    shown=subprocess.run(["git","-C",repo,"show",f"{head}:{path}"],capture_output=True,text=True)
+    if shown.returncode:return None
+    excerpts=[]
+    for qid in ids:
+        match=re.search(r'id=["\']'+re.escape(qid)+r'["\']',shown.stdout,re.I)
+        if not match:return None
+        mirror="b"+qid
+        mirror_match=re.search(r'id=["\']'+re.escape(mirror)+r'["\']',shown.stdout,re.I)
+        excerpts.append({"id":qid,"html":shown.stdout[match.start():match.start()+2200],
+                         "bank_mirror_id":mirror if mirror_match else None,
+                         "bank_mirror_html":shown.stdout[mirror_match.start():mirror_match.start()+450] if mirror_match else None})
+    source=""
+    if meta.source_pack_path:
+        with open(os.path.join(repo,meta.source_pack_path),encoding="utf-8") as f:source=f.read()
+        source=source[source.find("## 2."):] if "## 2." in source else source
+    data={"task":kid["id"],"objective":str(kid.get("objetivo") or "")[:1300],
+          "source_pack":source[:5000],"claude_no_change_claim":reason[:1800],
+          "verified_head":head,"existing_question_html":excerpts}
+    prompt=LAWS+"\nConfira TODAS as partes da tarefa e o espelho do Banco General. Os IDs foram encontrados no HEAD real, mas existência por si só não prova equivalência. Aceite sem novo commit SOMENTE se o conteúdo mostrado ensina e cobra tudo o que a fonte pede, com proveniência correta. Se faltar evidência ou correção, escolha FIX. JSON: {\"decision\":\"ACCEPT_WITH_DEFERRED|FIX\",\"reason\":\"...\",\"correction_instructions\":\"...\",\"deferred\":[{\"item\":\"...\",\"reason\":\"...\"}]}\n"+json.dumps(data,ensure_ascii=False)
+    answer=ask_openai(cfg,ledger,key,REVIEW_SYSTEM,prompt)
+    if answer.get("decision") not in {"ACCEPT_WITH_DEFERRED","FIX"}:raise ValueError("revisão de no-op sem decisão válida")
+    return answer
+
+def accept_existing_work(st,focus,head,review,ss,api,base_branch):
+    add_deferred(st,review.get("deferred"))
+    add_deferred(st,[{"item":focus,"reason":"Conteúdo canônico já presente no HEAD; sem nova questão/commit. "+str(review.get("reason") or "")[:500]}])
+    if focus not in st.done:st.done.append(focus)
+    st.head=head;st.review=str(review.get("reason") or "")[:1800]
+    st.correction=None;st.failures.pop(focus,None);st.final="RUNNING"
+    ss.save(st,f"agent-v2: {focus} existente no HEAD revisado")
+    try:api.despachar_worker_bridge(ref=base_branch);continuation="DISPATCHED"
+    except Exception as exc:continuation=f"FAILED: {exc}"
+    return {"action":"ACCEPT_WITH_DEFERRED","project":st.project_id,"task":focus,"head":head,
+            "pr":st.pr,"done":st.done,"deferred":st.deferred,"continuation":continuation}
+
 def run(a):
     ss=StateStore(GitJsonStore(a.state_git_remote,branch=STATE_BRANCH))
     proj=project(a.tasks_json,(ss.store.read().get("projects") or {}))
@@ -237,6 +280,28 @@ def run(a):
         if final_id in st.done:st.done.remove(final_id)
     elif st.final=="FINAL_AUDIT_PENDING":
         return {"action":"WAIT_AUDIT","project":pid,"pr":st.pr,"head":current,"reason":"aguardando cartão final confiável do HEAD; zero chamada paga"}
+    if st.final=="BLOCKED_FIX" and NO_CHANGE_REASON in st.review and st.head==current:
+        focus=next((str(t["id"]) for t in kids if str(t["id"]) not in st.done),None)
+        if focus:
+            kid=next(t for t in kids if str(t["id"])==focus)
+            meta=worker_bridge.carregar_metadados_de_automacao(a.tasks_json).get(focus)
+            try:
+                rev=review_existing_work(a.repo_dir,kid,meta,current,st.review,ocfg,ledger,
+                    f"agent-v2:{pid}:{st.cycles}:{current}:noop-review") if meta else None
+            except Exception as exc:
+                st.final="BLOCKED_GLOBAL";st.review="revisão de conteúdo existente indisponível: "+str(exc)[:700]
+                ss.save(st,f"agent-v2: {focus} noop review blocked")
+                return {"action":"WAIT","project":pid,"reason":st.review}
+            if rev and rev["decision"]=="ACCEPT_WITH_DEFERRED":
+                return accept_existing_work(st,focus,current,rev,ss,api,a.base_branch)
+            if rev and rev["decision"]=="FIX":
+                st.final="RUNNING";st.failures[focus]=1
+                st.correction={"task_id":focus,"instructions":str(rev.get("correction_instructions") or rev.get("reason") or "Corrigir lacuna da revisão.")[:3000]}
+                ss.save(st,f"agent-v2: {focus} noop precisa correção")
+            else:
+                st.final="BLOCKED_GLOBAL";st.review="sem evidência suficiente para aceitar trabalho existente no HEAD"
+                ss.save(st,f"agent-v2: {focus} noop sem evidência")
+                return {"action":"WAIT","project":pid,"reason":st.review}
     if st.final in {"BLOCKED_FIX","BLOCKED_GLOBAL"}:
         return {"action":"WAIT_BLOCKING_FIX","project":pid,"pr":st.pr,"head":current,"review":st.review}
     if st.cycles>=MAX_CYCLES_PER_PROJECT and len(st.done)<len(kids):
@@ -315,6 +380,22 @@ def run(a):
     if not result or result.status!="DONE" or not result.checkpoint_commit:
         worker_bridge.liberar_worker_apos_resultado(registry,wid,canonical_task_id=focus,resultado_status=task_runtime.RUNTIME_BLOCKED)
         reason=result.reason if result else "Runner sem resultado";st.review=reason
+        if current and NO_CHANGE_REASON in reason:
+            try:
+                rev=review_existing_work(a.repo_dir,kid,meta,current,reason,ocfg,ledger,
+                    f"agent-v2:{pid}:{st.cycles}:{current}:noop-review")
+            except Exception as exc:
+                st.final="BLOCKED_GLOBAL";st.review="revisão de conteúdo existente indisponível: "+str(exc)[:700]
+                ss.save(st,f"agent-v2: {focus} noop review blocked")
+                return {"action":"WAIT","project":pid,"task":focus,"reason":st.review}
+            if rev and rev["decision"]=="ACCEPT_WITH_DEFERRED":
+                return accept_existing_work(st,focus,current,rev,ss,api,a.base_branch)
+            if rev and rev["decision"]=="FIX":
+                reason=str(rev.get("correction_instructions") or rev.get("reason") or reason)[:1800]
+            else:
+                st.final="BLOCKED_GLOBAL";st.review="sem evidência suficiente para aceitar trabalho existente no HEAD"
+                ss.save(st,f"agent-v2: {focus} noop sem evidência")
+                return {"action":"WAIT","project":pid,"task":focus,"reason":st.review}
         count=int(st.failures.get(focus) or 0)+1;st.failures[focus]=count
         if count>=2:
             add_deferred(st,[{"item":focus,"reason":"Etapa sem checkpoint após 2 tentativas; requer correção antes de avançar: "+reason[:550]}])

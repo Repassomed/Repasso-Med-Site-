@@ -143,9 +143,10 @@ def test_agent_v2_git_is_read_only() -> None:
     caminho = os.path.join(_pathsetup._COORDINATOR_ROOT, "agent_v2.py")
     with open(caminho, encoding="utf-8") as fh:
         fonte = fh.read()
-    assert fonte.count("subprocess.run(") == 2
+    assert fonte.count("subprocess.run(") == 3
     assert '["git","-C",repo,"diff"' in fonte
     assert '["git","-C",repo,"merge-base","--is-ancestor"' in fonte
+    assert '["git","-C",repo,"show"' in fonte
     for padrao, descricao in _PADROES_PROIBIDOS_SEMPRE:
         assert not padrao.search(fonte), descricao
     print("OK  test_agent_v2_git_is_read_only")
