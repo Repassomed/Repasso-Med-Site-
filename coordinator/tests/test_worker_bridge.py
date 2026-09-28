@@ -3246,6 +3246,18 @@ def test_projeto_composto_needs_fix_da_etapa_anterior_tem_prioridade_sobre_proxi
     print("OK  test_projeto_composto_needs_fix_da_etapa_anterior_tem_prioridade_sobre_proxima_etapa")
 
 
+def test_closure_de_geracao_congela_runner_generate_da_main_antes_do_checkout() -> None:
+    gerar = worker_bridge._closure_de_geracao(
+        None, runner_config=None, repo_dir=".", state_git_remote="irrelevante",
+        canonical_task_id="teste", transport=None, budget_usd=None,
+    )
+    assert "runner_generate" in gerar.__code__.co_freevars, (
+        "runner_generate precisa ser capturado no closure antes de o Runner trocar "
+        "o worktree para uma branch antiga da matéria"
+    )
+    print("OK  test_closure_de_geracao_congela_runner_generate_da_main_antes_do_checkout")
+
+
 def main() -> int:
     testes = [
         test_relatorio_8a_persiste_no_runtime_e_entra_no_corpo_da_pr,
@@ -3345,6 +3357,7 @@ def main() -> int:
         test_audit_fix_para_depois_de_duas_correcoes,
         test_audit_fix_cartao_de_head_antigo_nao_corrige_head_atual,
         test_audit_fix_integracao_corrige_mesma_pr_e_redespacha_guard,
+        test_closure_de_geracao_congela_runner_generate_da_main_antes_do_checkout,
         # Issue #130 — Error Registry do Worker Bridge/Runner.
         test_error_registry_bridge_sucesso_normal_nao_gera_erro,
         test_error_registry_bridge_captura_runner_pr_guard_e_liberacao,
