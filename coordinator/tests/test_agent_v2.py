@@ -16,7 +16,7 @@ def test_noop_sem_evidencia_nao_e_aceito() -> None:
 
 def test_noop_entrega_questao_e_espelho_reais_ao_revisor() -> None:
     kid={"id":"q08-11","arquivos":["neurologia.html"],"objetivo":"Q8"}
-    html='<div id="q-neu099">Cátedra e literatura</div><div id="bq-neu099">Espelho</div>'
+    html='<div class="quiz-item" id="q-neu099"><p>Cátedra</p><div class="answer">Resposta</div></div><div class="quiz-item" id="bq-neu099"><p>Cátedra</p><div class="answer">Resposta</div></div>'
     seen=[]
     def fake_ask(cfg,ledger,key,system,prompt,**kwargs):
         data=json.loads(prompt[prompt.index('\n{"task":')+1:])
@@ -29,6 +29,7 @@ def test_noop_entrega_questao_e_espelho_reais_ao_revisor() -> None:
             "a"*40,"o modelo não produziu nenhuma alteração; q-neu099",None,None,"k")
     assert review["decision"]=="ACCEPT_WITH_DEFERRED"
     assert seen[0]["existing_question_html"][0]["bank_mirror_id"]=="bq-neu099"
+    assert seen[0]["existing_question_html"][0]["bank_mirror_exactly_equal"] is True
     assert seen[0]["verified_head"]=="a"*40
 
 
