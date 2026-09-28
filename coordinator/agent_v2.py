@@ -8,7 +8,7 @@ from .openai_budget import OpenAICallLimiter, TIER_NORMAL
 from .openai_client import build_request, call
 from .openai_config import OpenAIAuditorConfig
 from .openai_transport import OpenAIResponsesTransport
-from .runner_dispatch import executar_tarefa
+from .runner_dispatch import DEFAULT_RUNNER_STATE_BRANCH, executar_tarefa
 from .task_runtime import TaskRuntimeStore
 from .worker_ops import DEFAULT_STATE_BRANCH as WORKER_STATE_BRANCH, OperationalWorkerRegistry
 
@@ -196,6 +196,16 @@ def checkpoint_on_head(repo,checkpoint,head):
     return subprocess.run(["git","-C",repo,"merge-base","--is-ancestor",checkpoint,head],
                           stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0
 
+def latest_noop_reason(results,focus,cycle,head):
+    digest=hashlib.sha256(f"{focus}:{cycle}:{head}".encode()).hexdigest()[:12]
+    task_id=f"agent-v2-{focus}-{digest}"
+    for result in reversed(results if isinstance(results,list) else []):
+        if not isinstance(result,dict):continue
+        reason=str(result.get("reason") or "")
+        if result.get("status")=="BLOCKED" and result.get("task_id")==task_id and reason.startswith(NO_CHANGE_REASON):
+            return reason
+    return None
+
 def review_existing_work(repo,kid,meta,head,reason,cfg,ledger,key):
     """Uma edição vazia só pode liberar a etapa após cotejo independente do HEAD."""
     if not head or NO_CHANGE_REASON not in reason:return None
@@ -281,6 +291,16 @@ def run(a):
         if final_id in st.done:st.done.remove(final_id)
     elif st.final=="FINAL_AUDIT_PENDING":
         return {"action":"WAIT_AUDIT","project":pid,"pr":st.pr,"head":current,"reason":"aguardando cartão final confiável do HEAD; zero chamada paga"}
+    # Uma resposta JSON cortada na revisão anterior não apaga a evidência
+    # original do Runner. Recupera uma única vez do ledger de resultados.
+    if st.final=="BLOCKED_GLOBAL" and st.review.startswith("revisão de conteúdo existente indisponível:") and st.head==current:
+        focus=next((str(t["id"]) for t in kids if str(t["id"]) not in st.done),None)
+        if focus and int(st.failures.get(focus) or 0)<3:
+            results=GitJsonStore(a.state_git_remote,branch=DEFAULT_RUNNER_STATE_BRANCH).read().get("results")
+            reason=latest_noop_reason(results,focus,st.cycles,current)
+            if reason:
+                st.final="BLOCKED_FIX";st.review=reason
+                ss.save(st,f"agent-v2: {focus} recupera justificativa do Runner")
     if st.final=="BLOCKED_FIX" and NO_CHANGE_REASON in st.review and st.head==current:
         focus=next((str(t["id"]) for t in kids if str(t["id"]) not in st.done),None)
         if focus:
@@ -290,6 +310,7 @@ def run(a):
                 rev=review_existing_work(a.repo_dir,kid,meta,current,st.review,ocfg,ledger,
                     f"agent-v2:{pid}:{st.cycles}:{current}:noop-review") if meta else None
             except Exception as exc:
+                st.failures[focus]=3
                 st.final="BLOCKED_GLOBAL";st.review="revisão de conteúdo existente indisponível: "+str(exc)[:700]
                 ss.save(st,f"agent-v2: {focus} noop review blocked")
                 return {"action":"WAIT","project":pid,"reason":st.review}
@@ -386,6 +407,7 @@ def run(a):
                 rev=review_existing_work(a.repo_dir,kid,meta,current,reason,ocfg,ledger,
                     f"agent-v2:{pid}:{st.cycles}:{current}:noop-review")
             except Exception as exc:
+                st.failures[focus]=3
                 st.final="BLOCKED_GLOBAL";st.review="revisão de conteúdo existente indisponível: "+str(exc)[:700]
                 ss.save(st,f"agent-v2: {focus} noop review blocked")
                 return {"action":"WAIT","project":pid,"task":focus,"reason":st.review}
