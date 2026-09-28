@@ -323,11 +323,20 @@ def run(a):
     dec=str(rev.get("decision") or "").upper()
     if dec not in {"ACCEPT","ACCEPT_WITH_DEFERRED","FIX"}:raise ValueError("review decision inválida")
     add_deferred(st,rev.get("deferred"));st.head=newhead;st.review=str(rev.get("reason") or "")[:1800]
-    if dec=="FIX":st.correction={"task_id":focus,"instructions":str(rev.get("correction_instructions") or st.review or "Corrigir revisão.")[:3500]}
+    review_cap=False
+    if dec=="FIX":
+        n=int(st.failures.get(focus) or 0)+1;st.failures[focus]=n
+        st.correction={"task_id":focus,"instructions":str(rev.get("correction_instructions") or st.review or "Corrigir revisão.")[:3500]}
+        if n>=3:
+            review_cap=True
+            st.review="Correção substantiva permaneceu após 3 revisões; pausa sem nova chamada paga. "+st.review
     else:
         st.correction=None;st.failures.pop(focus,None)
         if focus not in st.done:st.done.append(focus)
     ss.save(st,f"agent-v2: ciclo {st.cycles} {focus}->{dec}")
+    if review_cap:
+        return {"action":"WAIT_BLOCKING_FIX","project":pid,"task":focus,"worker":wid,"head":newhead,"pr":st.pr,
+                "done":st.done,"deferred":st.deferred,"review":st.review,"continuation":"STOPPED_FOR_SAFETY"}
     try:api.despachar_worker_bridge(ref=a.base_branch);cont="DISPATCHED"
     except Exception as exc:cont=f"FAILED: {exc}"
     return {"action":dec,"project":pid,"task":focus,"worker":wid,"head":newhead,"pr":st.pr,"done":st.done,"deferred":st.deferred,"review":st.review,"continuation":cont}
