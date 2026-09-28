@@ -2027,6 +2027,18 @@
       "provider": "openai",
       "tier": "TERRA",
       "timestamp": "2026-09-28T20:05:51.467164+00:00"
+    },
+    {
+      "estimated_cost_usd": -0.026088,
+      "event_key": "agent-v2:neurologia-p0-fechamento-2026:2:716973e1adc047e7461ab80af31c35aa353c3cf3:noop-review",
+      "informational_cost_usd": null,
+      "input_tokens": 0,
+      "kind": "correction",
+      "model_id": "gpt-5.6-terra",
+      "output_tokens": 0,
+      "provider": "openai",
+      "tier": "TERRA",
+      "timestamp": "2026-09-28T20:06:19.009414+00:00"
     }
   ]
 }
