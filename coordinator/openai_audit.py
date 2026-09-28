@@ -197,8 +197,16 @@ def build_openai_audit_prompt(contexto: MinimalContext, *, pr_body: str | None,
             "(MANUTENCAO-DIDATICA-REPASSO-MED.md 8-A.11) — matriz por fonte, legibilidade, "
             "detectadas/aproveitadas/novas/reformuladas/duplicadas/reconstruídas/pendentes e "
             "destino no site — e a confirmação RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO "
-            "REFORÇA. Um gate determinístico separado também verifica isto; registre como "
-            "finding se perceber gabarito inventado ou resposta científica alterada "
+            "REFORÇA. PENDÊNCIA DIFERIDA NÃO É, sozinha, motivo para NEEDS-FIX: se a "
+            "questão original sem evidência estiver explicitamente listada como pendente e "
+            "não estiver publicada como baseada em prova, audite normalmente o restante. "
+            "É aceitável um fallback 'Pregunta complementaria' reescrito pelo site quando "
+            "o conceito estiver sustentado por fonte segura e o relatório mantiver a origem "
+            "da prova como pendente. Marque NEEDS-FIX se o item incerto continuar publicado "
+            "como 'Basada en preguntas de examen', se relatório e diff divergirem, se o "
+            "fallback inventar ciência/fonte ou se a pendência comprometer a integridade "
+            "global. Um gate determinístico separado também verifica o relatório; registre "
+            "como finding se perceber gabarito inventado ou resposta científica alterada "
             "silenciosamente."
         )
     prompt = encaixar_corpo_no_prompt(
