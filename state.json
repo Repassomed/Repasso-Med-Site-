@@ -1,0 +1,25 @@
+{
+  "projects": {
+    "neurologia-p0-fechamento-2026": {
+      "correction": null,
+      "cycles": 0,
+      "deferred": [
+        {
+          "item": "neurologia-p0-provas-q05-07 \u00b7 pend\u00eancias legadas",
+          "reason": "- **Q5 \u2014 neuralgia del trig\u00e9mino (prova 25/09/2026)** \u2014 As alternativas foram reconstru\u00eddas a partir das fotos WhatsApp novas, mas o source pack exige cotejo com a imagem original antes de publicar, e esse cotejo n\u00e3o p\u00f4de ser confirmado nesta execu\u00e7\u00e3o (achado da auditoria independente). O conceito cl\u00ednico continua sustentado integralmente pelo resumo do bloco neub05 (se\u00e7\u00e3o V par/trig\u00e9mino). \u00b7 **Fallback:** convertida em Pregunta complementaria (item existente q-neu-2509-05/bq-neu-2509-05 reclassificado, id preservado)\n- **Q6 \u2014 mecanismo fisiopatol\u00f3gico da miastenia gravis (prova 25/09/2026)** \u2014 Duplicata sem\u00e2ntica da quest\u00e3o can\u00f4nica j\u00e1 existente q-neu078/bq-neu078 (mesmo mecanismo anti-AChR"
+        }
+      ],
+      "done": [
+        "neurologia-p0-provas-q01-04",
+        "neurologia-p0-provas-q05-07"
+      ],
+      "failures": {},
+      "final": "RUNNING",
+      "guard_head": null,
+      "head": "716973e1adc047e7461ab80af31c35aa353c3cf3",
+      "pr": 305,
+      "project_id": "neurologia-p0-fechamento-2026",
+      "review": ""
+    }
+  }
+}
