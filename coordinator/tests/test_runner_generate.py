@@ -45,6 +45,7 @@ from coordinator.runner_generate import (
     _secoes_do_html,
     _secoes_referenciadas,
     extrair_trechos_ancorados,
+    janelas_literais_da_auditoria,
     RUNNER_PATCH_MAX_OUTPUT_TOKENS,
     NO_CHANGE_REASON_PREFIX,
     _SYSTEM_PROMPT,
@@ -1267,6 +1268,41 @@ def test_titulo_com_texto_extra_nao_cai_para_o_indice() -> None:
     print("OK  test_titulo_com_texto_extra_nao_cai_para_o_indice")
 
 
+def test_literal_unico_do_needs_fix_vira_janela_prioritaria():
+    alvo = "Las 148 preguntas de la asignatura"
+    conteudo = (
+        "<section><h2>Bloque 01</h2><p>texto sem relação</p></section>"
+        + ("x" * 8_000)
+        + f"<section><h2>{alvo}</h2><p>Banco General</p></section>"
+        + ("y" * 8_000)
+    )
+    instrucoes = (
+        "Atualizar somente as contagens declaradas.\n\n"
+        "CORREÇÃO PÓS-AUDITORIA — contexto obrigatório, sem ampliar escopo\n"
+        f'O auditor apontou que o título "{alvo}" continua desatualizado.'
+    )
+    janelas = janelas_literais_da_auditoria(conteudo, instrucoes)
+    assert len(janelas) == 1
+    inicio, fim = janelas[0]
+    assert alvo in conteudo[inicio:fim]
+    trechos = extrair_trechos_ancorados(
+        conteudo, instrucoes, limite_chars=20_000, max_janelas=1,
+        janelas_prioritarias=janelas,
+    )
+    assert trechos
+    assert any(alvo in trecho.texto for trecho in trechos)
+
+
+def test_literal_ambiguo_do_needs_fix_nao_vira_ancora_prioritaria():
+    alvo = "148 preguntas"
+    conteudo = f"<p>{alvo}</p><div>outro</div><p>{alvo}</p>"
+    instrucoes = (
+        "CORREÇÃO PÓS-AUDITORIA — contexto obrigatório, sem ampliar escopo\n"
+        f'O auditor citou "{alvo}".'
+    )
+    assert janelas_literais_da_auditoria(conteudo, instrucoes) == ()
+
+
 def main() -> int:
     testes = [
         test_question_report_required_missing_fails_before_patch,
@@ -1314,6 +1350,9 @@ def main() -> int:
         test_campo_trecho_invalido_ou_ambiguo_bloqueia_sem_escrita,
         test_bloco_grande_referenciado_pelo_titulo_entra_inteiro_e_so_ele,
         test_titulo_com_texto_extra_nao_cai_para_o_indice,
+        # Recuperação econômica pós-auditoria: literal único ganha contexto.
+        test_literal_unico_do_needs_fix_vira_janela_prioritaria,
+        test_literal_ambiguo_do_needs_fix_nao_vira_ancora_prioritaria,
     ]
     falhas = 0
     for t in testes:
