@@ -88,6 +88,7 @@ class GitHubBridgeApi(Protocol):
     def atualizar_pr_corpo(self, pr_number: int, *, corpo: str) -> dict: ...
 
     def despachar_workflow(self, *, arquivo: str, ref: str, inputs: dict) -> None: ...
+    def despachar_worker_bridge(self, *, ref: str) -> None: ...
 
 
 class GitHubRestApi:
@@ -210,6 +211,15 @@ class GitHubRestApi:
         self._requisicao(
             "POST", f"/repos/{self.owner}/{self.repo}/actions/workflows/{arquivo}/dispatches",
             {"ref": ref, "inputs": inputs},
+        )
+
+    def despachar_worker_bridge(self, *, ref: str) -> None:
+        """Continuação V2: dispara SOMENTE o próprio workflow do Worker Bridge.
+        Não aceita nome livre, input de tarefa, merge ou publicação."""
+        arquivo = "coordinator-worker-bridge.yml"
+        self._requisicao(
+            "POST", f"/repos/{self.owner}/{self.repo}/actions/workflows/{arquivo}/dispatches",
+            {"ref": ref, "inputs": {}},
         )
 
 
