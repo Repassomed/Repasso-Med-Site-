@@ -9134,6 +9134,16 @@
       "output_tokens": 163,
       "tier": "FAST",
       "timestamp": "2026-09-28T05:18:55.869370+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.770988,
+      "event_key": "runner-task:neurologia-p0-provas-q05-07--bridge-fb5ef4aaa2df",
+      "input_tokens": 0,
+      "kind": "reservation",
+      "model_id": "claude-sonnet-5",
+      "output_tokens": 0,
+      "tier": "STANDARD",
+      "timestamp": "2026-09-28T05:25:11.449847+00:00"
     }
   ]
 }
