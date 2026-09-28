@@ -1913,6 +1913,9 @@
       "worker_id": null
     },
     {
+      "auto_repair_attempts": 1,
+      "auto_repair_last_run_id": "36462777879",
+      "auto_repair_status": "FIXING",
       "category": "workflow",
       "commit_sha": null,
       "component": "auto-repair",
@@ -1932,7 +1935,7 @@
       "root_cause": null,
       "run_id": "36462777879",
       "severity": "HIGH",
-      "status": "OPEN",
+      "status": "FIXING",
       "summary": "bridge\tPreflight da su\u00edte do Coordinator (ZERO API, antes do claim)\t2026-09-28T18:07:10.6357170Z ##[error]Process completed with exit code 1.",
       "task_id": null,
       "worker_id": null
