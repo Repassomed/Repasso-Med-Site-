@@ -6,7 +6,7 @@
 // Python via coordinator/tests/test_head_context_anchor.py.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { montarContextoHead, parseHunks, LIMITE_PADRAO } from './head_context.mjs';
+import { montarContextoHead, parseHunks, LIMITE_PADRAO, extrairDestinosDoRelatorio8A, extrairIdsCanonicosDoRelatorio8A } from './head_context.mjs';
 
 const ARQ = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/sintetica.html';
 
@@ -384,4 +384,69 @@ test('question_report: sem tabela 8-A no corpo da PR, comportamento idêntico ao
   const comReportVazio = montarContextoHead({ diffTexto: diff, arquivos: [{ filename: ARQ, content: linhas.join('\n') }], sha: 'x', prBody: 'sem nenhuma tabela 8-A aqui' });
   assert.equal(semReport, comReportVazio);
   assert.ok(!semReport.includes('Lei 8-A'));
+});
+
+
+test('question_report novo: coluna Complementares é lida por nome e ids canônicos viram evidência do HEAD', () => {
+  const header =
+    '| Fonte | Página/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | ' +
+    'Duplicadas/canônicas | Reconstruídas | Complementares | Pendentes | Destino no site |';
+  const prBody = [
+    '## Relatório obrigatório — Lei das Questões (8-A.11)',
+    '',
+    '### Matriz por fonte',
+    '',
+    header,
+    '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |',
+    '| prova | Q5-Q7 | parcial | 3 | 1 | 1 | 1 | 2 | 0 | 1 | 1 | neuB |',
+    '',
+    '### Pendências diferidas',
+    '',
+    '- Q6 duplicata da canônica `q-neu078`; Q7 duplicata da canônica `q-neu087`.',
+    '',
+    '## Execução',
+  ].join('\n');
+
+  const destinos = extrairDestinosDoRelatorio8A(prBody);
+  assert.equal(destinos.length, 1);
+  assert.equal(destinos[0].complementares, 1);
+  assert.equal(destinos[0].destino, 'neuB');
+  assert.deepEqual(extrairIdsCanonicosDoRelatorio8A(prBody), ['q-neu078', 'q-neu087']);
+
+  const content = [
+    '<section class="container" id="neuB">',
+    '<h2>Bloque Beta</h2>',
+    '<h3>Resumen</h3>',
+    '<p>La neuralgia del trigémino causa dolor paroxístico y zonas gatillo.</p>',
+    '<div class="quiz-item" id="q-neu078">',
+    '<p>CANONICA_MIASTENIA anti-AChR postsináptico.</p>',
+    '</div>',
+    '<div class="quiz-item" id="q-neu087">',
+    '<p>CANONICA_N3 restauración física y hormona de crecimiento.</p>',
+    '</div>',
+    '<div class="quiz-item" id="q-neu-new">',
+    '<p>¿Qué caracteriza la neuralgia del trigémino?</p>',
+    '</div>',
+    '</section>',
+  ].join('\n');
+  const diff = [
+    `diff --git a/${ARQ_8A} b/${ARQ_8A}`,
+    `--- a/${ARQ_8A}`,
+    `+++ b/${ARQ_8A}`,
+    '@@ -10,0 +10,3 @@',
+    '+<div class="quiz-item" id="q-neu-new">',
+    '+<p>¿Qué caracteriza la neuralgia del trigémino?</p>',
+    '+</div>',
+    '',
+  ].join('\n');
+  const ctx = montarContextoHead({
+    diffTexto: diff,
+    arquivos: [{ filename: ARQ_8A, content }],
+    sha: 'head-novo',
+    prBody,
+  });
+  assert.ok(ctx.includes('Evidência canônica citada pelo question_report'));
+  assert.ok(ctx.includes('CANONICA_MIASTENIA'));
+  assert.ok(ctx.includes('CANONICA_N3'));
+  assert.ok(ctx.length <= LIMITE_PADRAO);
 });
