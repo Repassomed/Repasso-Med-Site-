@@ -1824,6 +1824,31 @@
       "summary": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): O objetivo desta microtarefa (integrar Q5-Q7 do lote 25/09) j\u00e1 est\u00e1 cumprido nos trechos fornecidos: a Q5 (neuralgia do trig\u00e9meo) est\u00e1 inserida em neub05 (id q-neu-2509-05) e espelhada no Banco General (id bq-neu-2509-05), com r\u00f3tulo correto 'Basada en preguntas de examen', alternativas reembaralhadas sem alterar a resposta cient\u00edfica, e o resumo j\u00e1 ensinava o conte\u00fado antes da quest\u00e3o. As Q6 (mecanismo da miastenia) e Q7 (fun\u00e7\u00e3o de N3) foram corretamente tratadas como duplicatas sem\u00e2nticas de quest\u00f5es j\u00e1 existentes (q-neu078/bq-neu078 para o mecanismo anti-AChR postsin\u00e1ptico da miastenia; q-neu087 para as fun\u00e7\u00f5es do N3 \u2014 restauraci\u00f3n f\u00edsica, GH, memoria declarativa, primera mitad), portanto n\u00e3o devem ser inseridas como novas, conforme a Lei 8-A. O \u00fanico problema apontado pela auditoria (cabe\u00e7alho do Banco General ainda dizendo '148 preguntas' ap\u00f3s a inclus\u00e3o da 149\u00aa) n\u00e3o pode ser corrigido nesta resposta porque nenhum dos 7 trechos literais fornecidos cont\u00e9m esse cabe\u00e7alho/contagem do Banco General; sem essa \u00e2ncora literal, uma edi\u00e7\u00e3o desse texto seria inventada, o que \u00e9 proibido. A pend\u00eancia de cotejo da Q5 com a foto original leg\u00edvel (apontada pelo auditor OpenAI) tamb\u00e9m n\u00e3o pod",
       "task_id": "neurologia-p0-provas-q05-07",
       "worker_id": "claude-worker-1"
+    },
+    {
+      "category": "workflow",
+      "commit_sha": null,
+      "component": "auto-repair",
+      "error_id": "ERR-E075CB854E",
+      "error_type": "technical-workflow-failure",
+      "fingerprint": "e075cb854e4fdcab6f36",
+      "first_seen": "2026-09-28T15:23:07.983582+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "8d5ad75448f64529b07424e74b471868",
+      "issue_sync_updated_at": "2026-09-28T15:23:07.983582+00:00",
+      "last_evidence_hash": "94b6068bc6f3ccf3b392",
+      "last_seen": "2026-09-28T15:23:07.983582+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36443055392",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "bridge\tPreflight da su\u00edte do Coordinator (ZERO API, antes do claim)\t2026-09-28T15:22:38.1473054Z ##[error]Process completed with exit code 1.",
+      "task_id": null,
+      "worker_id": null
     }
   ]
 }
