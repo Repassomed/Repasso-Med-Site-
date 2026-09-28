@@ -2139,12 +2139,21 @@ def _closure_de_geracao(
     e de ``runner_resume.despachar_retomada``: reusa
     ``runner_generate.gerar_patch_via_claude`` com o ledger Anthropic
     GLOBAL e o MESMO teto mensal — nunca um segundo orçamento, nunca um
-    teto próprio do Bridge. Import local (dentro do closure) para nunca
-    criar ciclo de import."""
+    teto próprio do Bridge.
+
+    O módulo ``runner_generate`` é importado AQUI, enquanto o checkout
+    ainda está na branch padrão confiável. ``runner_dispatch.executar_tarefa``
+    troca depois o worktree para a branch/checkpoint da matéria; importar
+    o gerador somente dentro de ``_gerar`` faria uma branch antiga
+    carregar uma versão antiga da própria infraestrutura e ignorar fixes
+    já mergeados na main. A referência do módulo fica congelada no closure;
+    somente os arquivos de conteúdo passam a ser lidos do checkpoint.
+    """
+    from . import runner_generate
+    from .budget import MONTHLY_BUDGET_USD
+    from .git_state import GitJsonStore, GitUsageLedger
+
     def _gerar() -> object:
-        from . import runner_generate
-        from .budget import MONTHLY_BUDGET_USD
-        from .git_state import GitJsonStore, GitUsageLedger
 
         ledger_global = GitUsageLedger(
             GitJsonStore(state_git_remote, branch=DEFAULT_RUNNER_USAGE_STATE_BRANCH)
