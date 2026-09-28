@@ -1886,7 +1886,8 @@
     {
       "auto_repair_attempts": 1,
       "auto_repair_last_run_id": "36447551530",
-      "auto_repair_status": "FIXING",
+      "auto_repair_note": "RuntimeError: suite falhou: coordinator-suite: rc=1  Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/runner/work/Repasso-Med-Site-/Repasso-Med-Site-/coordinator/tests/run_all.py\", line 10, in <module>\n    from . import (\n  File \"/home/runner/work/Repasso-Med-Site-/Repasso-Med-Site-/coordinator/tests/test_github_event.py\", line 339\n    test_workflow_run_other_workflow_is_ignored,\\n        test_worker_bridge_relatorio_8a_novo_ganha_policy_de_head_context_v3,\n                                                 ^\nSyntaxError: unexpected character after line continuation character\n",
+      "auto_repair_status": "REPAIR_FAILED",
       "category": "workflow",
       "commit_sha": null,
       "component": "auto-repair",
@@ -1906,7 +1907,7 @@
       "root_cause": null,
       "run_id": "36447551530",
       "severity": "HIGH",
-      "status": "FIXING",
+      "status": "OPEN",
       "summary": "bridge\tPreflight da su\u00edte do Coordinator (ZERO API, antes do claim)\t2026-09-28T15:58:22.1914915Z ##[error]Process completed with exit code 1.",
       "task_id": null,
       "worker_id": null
