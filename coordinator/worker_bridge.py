@@ -941,6 +941,45 @@ def resolver_continuacao_de_estagio(
     )
 
 
+def _pendencias_diferidas_para_fechamento(
+    tarefa: TaskRecord, *, tarefas_por_id: dict[str, TaskRecord],
+    registros: dict[str, TaskRuntimeRecord], limite_chars: int = 6000,
+) -> str | None:
+    """Contexto mínimo para o estágio final de um projeto composto.
+
+    Cada microetapa já persiste seu question_report no runtime. No final,
+    carregamos SOMENTE as seções "Pendências diferidas" dos irmãos do mesmo
+    parent_task_id. Assim o fechamento consegue dizer a José o que ficou de
+    fora e por quê sem reenviar relatórios completos nem reabrir etapas verdes.
+    """
+    if not tarefa.final_stage or not tarefa.parent_task_id:
+        return None
+    blocos: list[str] = []
+    for item in tarefas_por_id.values():
+        if item.id == tarefa.id or item.parent_task_id != tarefa.parent_task_id:
+            continue
+        registro = registros.get(item.id)
+        report = (registro.question_report if registro else None) or ""
+        inicio = report.find("### Pendências diferidas")
+        if inicio < 0:
+            continue
+        resto = report[inicio:]
+        cortes = [
+            p for p in (
+                resto.find("\n### ", len("### Pendências diferidas")),
+                resto.find("\n**Notas de proveniência:**"),
+            ) if p >= 0
+        ]
+        secao = resto[:min(cortes)] if cortes else resto
+        secao = secao.strip()
+        if secao:
+            blocos.append(f"Etapa {item.id}:\n{secao}")
+    if not blocos:
+        return None
+    texto = "\n\n".join(blocos)
+    return texto[:limite_chars]
+
+
 # ---------------------------------------------------------------------
 # §10 — liberação segura do worker depois do resultado.
 # ---------------------------------------------------------------------
@@ -1992,6 +2031,32 @@ def executar_ciclo(
         except ValueError as exc:  # pragma: no cover - defesa em profundidade
             return BridgeOutcome(
                 "BLOCKED", f"checkpoint de continuação do projeto composto inválido: {exc}", decision=decisao,
+            )
+
+    pendencias_finais = _pendencias_diferidas_para_fechamento(
+        tarefa, tarefas_por_id=tarefas_completas_por_id, registros=registros,
+    )
+    if pendencias_finais:
+        try:
+            validacao = replace(
+                validacao,
+                task=replace(
+                    validacao.task,
+                    instructions=(
+                        validacao.task.instructions.rstrip()
+                        + "\n\nPENDÊNCIAS DIFERIDAS ACUMULADAS DO PROJETO — contexto somente leitura\n"
+                        + "No fechamento final, consolide estes itens no relatório para José. "
+                          "Não invente resolução e não reinsira como questão baseada em prova sem "
+                          "nova evidência segura. Itens já convertidos em Pregunta complementaria "
+                          "continuam complementares, com a origem da prova ainda registrada como "
+                          "pendente quando aplicável.\n\n"
+                        + pendencias_finais
+                    ),
+                ),
+            )
+        except ValueError as exc:
+            return BridgeOutcome(
+                "BLOCKED", f"não consegui anexar pendências diferidas ao fechamento: {exc}", decision=decisao,
             )
 
     # 9. reserva da TAREFA (compare-and-set). Perdeu: zero chamada paga.

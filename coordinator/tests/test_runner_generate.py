@@ -112,8 +112,14 @@ def _question_report() -> dict:
             "reformulated": 1,
             "duplicates": 0,
             "reconstructed": 0,
+            "complementary": 1,
             "pending": 1,
             "site_destination": "B08 + Banco General",
+        }],
+        "deferred_items": [{
+            "item": "Q3 foto ilegível",
+            "reason": "alternativas não confirmadas na fonte primária",
+            "fallback": "convertida em Pregunta complementaria",
         }],
         "coverage_confirmation": COVERAGE_CONFIRMATION,
         "notes": "Uma questão ficou pendente por legibilidade insuficiente.",
@@ -184,7 +190,11 @@ def test_question_report_valid_is_rendered_and_satisfies_deterministic_gate() ->
         gate = avaliar_lei_das_questoes(outcome.question_report)
         assert gate.satisfeita is True, gate
         assert "Matriz por fonte" in outcome.question_report
+        assert "Complementares" in outcome.question_report
+        assert "### Pendências diferidas" in outcome.question_report
+        assert "Q3 foto ilegível" in outcome.question_report
         assert COVERAGE_CONFIRMATION in outcome.question_report
+        assert "Pregunta complementaria" in transporte.last_request.system
         assert "question_report" in transporte.last_request.system
     print("OK  test_question_report_valid_is_rendered_and_satisfies_deterministic_gate")
 

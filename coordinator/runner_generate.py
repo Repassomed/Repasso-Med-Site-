@@ -439,8 +439,20 @@ def _system_prompt_para_tarefa(task: RunnerTask, *, ancorado: bool) -> str:
         + "\n\nEsta tarefa exige o relatório estruturado da Lei das Questões 8-A.11. "
           "No MESMO objeto JSON, além de 'files'/'edits', inclua OBRIGATORIAMENTE "
           "o campo abaixo, sem inventar fonte, página/imagem, contagem ou destino. "
-          "Se alguma evidência não for segura, registre como pendente. O Runner "
-          "validará este objeto antes de tocar em qualquer arquivo:\n"
+          "POLÍTICA DE CONTINUIDADE COM PENDÊNCIAS: uma questão cuja fonte/prova não "
+          "possa ser confirmada NÃO deve travar a etapa inteira. Primeiro tente um "
+          "fallback seguro: se o CONCEITO estiver sustentado pelo resumo/cátedra/literatura "
+          "identificada, você pode criar ou reclassificar uma questão NOVA do site como "
+          "'Pregunta complementaria', reescrita sem alegar que reproduz a prova. Registre "
+          "o item original em deferred_items e conte a nova questão em complementary. "
+          "Se nem o conceito estiver seguro, não publique essa questão; registre-a em "
+          "deferred_items com o motivo e siga trabalhando os demais itens da etapa. "
+          "Duplicata literal/semântica também não bloqueia: preserve a canônica e registre "
+          "a decisão no relatório. NUNCA deixe conteúdo no site com rótulo 'Basada en "
+          "preguntas de examen' quando a evidência da prova estiver pendente. O objetivo é "
+          "entregar todo o restante seguro da etapa e carregar as exceções para o fechamento "
+          "final, não esconder nem inventar confirmação. O Runner validará este objeto antes "
+          "de tocar em qualquer arquivo:\n"
         + QUESTION_REPORT_JSON_SCHEMA
     )
 

@@ -12,7 +12,9 @@ COVERAGE_CONFIRMATION = "RESUMO ENSINA → QUESTÃO COBRA → EXPLICAÇÃO REFOR
 MAX_SOURCES = 24
 MAX_CELL_CHARS = 500
 MAX_NOTES_CHARS = 3000
-MAX_RENDERED_CHARS = 14000
+MAX_DEFERRED_ITEMS = 40
+MAX_DEFERRED_ITEM_CHARS = 500
+MAX_RENDERED_CHARS = 18000
 
 _COUNTER_FIELDS = (
     "detected",
@@ -21,6 +23,7 @@ _COUNTER_FIELDS = (
     "reformulated",
     "duplicates",
     "reconstructed",
+    "complementary",
     "pending",
 )
 
@@ -31,9 +34,11 @@ QUESTION_REPORT_JSON_SCHEMA = (
     '"page_or_image": "<página/imagem/identificador>", '
     '"legibility": "<integral|parcial|visual-confirmada|não aproveitada>", '
     '"detected": 0, "used": 0, "new": 0, "reformulated": 0, '
-    '"duplicates": 0, "reconstructed": 0, "pending": 0, '
+    '"duplicates": 0, "reconstructed": 0, "complementary": 0, "pending": 0, '
     '"site_destination": "<bloco/seção/banco geral>"'
     '}], '
+    '"deferred_items": [{"item": "<Q/item>", "reason": "<motivo objetivo>", '
+    '"fallback": "<não publicada|convertida em Pregunta complementaria|outro fallback seguro>"}], '
     f'"coverage_confirmation": "{COVERAGE_CONFIRMATION}", '
     '"notes": "<opcional; limitações/decisões de proveniência>"'
     '}'
@@ -86,7 +91,10 @@ def render_question_report(raw: object) -> str:
         legibility = _cell(item.get("legibility"), field=f"sources[{index}].legibility")
         destination = _cell(item.get("site_destination"), field=f"sources[{index}].site_destination")
         counts = {
-            key: _count(item.get(key), field=f"sources[{index}].{key}")
+            key: _count(
+                item.get(key, 0 if key == "complementary" else None),
+                field=f"sources[{index}].{key}",
+            )
             for key in _COUNTER_FIELDS
         }
         rows.append(
@@ -102,12 +110,39 @@ def render_question_report(raw: object) -> str:
                     str(counts["reformulated"]),
                     str(counts["duplicates"]),
                     str(counts["reconstructed"]),
+                    str(counts["complementary"]),
                     str(counts["pending"]),
                     destination,
                 ]
             )
             + " |"
         )
+
+    deferred_raw = raw.get("deferred_items")
+    deferred_lines: list[str] = []
+    if deferred_raw is not None:
+        if not isinstance(deferred_raw, list):
+            raise ValueError("question_report.deferred_items precisa ser lista quando informado.")
+        if len(deferred_raw) > MAX_DEFERRED_ITEMS:
+            raise ValueError(
+                f"question_report.deferred_items excede o máximo de {MAX_DEFERRED_ITEMS} itens."
+            )
+        for index, item in enumerate(deferred_raw, 1):
+            if not isinstance(item, dict):
+                raise ValueError(f"deferred_items[{index}] precisa ser objeto.")
+            nome = _cell(
+                item.get("item"), field=f"deferred_items[{index}].item",
+                max_chars=MAX_DEFERRED_ITEM_CHARS,
+            )
+            motivo = _cell(
+                item.get("reason"), field=f"deferred_items[{index}].reason",
+                max_chars=MAX_DEFERRED_ITEM_CHARS,
+            )
+            fallback = _cell(
+                item.get("fallback"), field=f"deferred_items[{index}].fallback",
+                max_chars=MAX_DEFERRED_ITEM_CHARS,
+            )
+            deferred_lines.append(f"- **{nome}** — {motivo} · **Fallback:** {fallback}")
 
     notes_raw = raw.get("notes")
     notes = ""
@@ -123,12 +158,14 @@ def render_question_report(raw: object) -> str:
         "",
         "### Matriz por fonte",
         "",
-        "| Fonte | Página/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | Duplicadas/canônicas | Reconstruídas | Pendentes | Destino no site |",
-        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+        "| Fonte | Página/imagem | Legibilidade | Detectadas | Aproveitadas | Novas | Reformuladas | Duplicadas/canônicas | Reconstruídas | Complementares | Pendentes | Destino no site |",
+        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
         *rows,
         "",
         f"**Confirmação de cobertura:** {COVERAGE_CONFIRMATION}",
     ]
+    if deferred_lines:
+        lines += ["", "### Pendências diferidas", "", *deferred_lines]
     if notes:
         lines += ["", f"**Notas de proveniência:** {notes}"]
 
