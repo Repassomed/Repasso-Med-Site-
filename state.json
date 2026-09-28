@@ -728,6 +728,16 @@
       "recorded_at": "2026-09-28T05:28:09.324472+00:00",
       "status": "NEEDS-AUDIT",
       "task_id": "neurologia-p0-provas-q05-07--bridge-fb5ef4aaa2df"
+    },
+    {
+      "branch": null,
+      "checkpoint_commit": null,
+      "merge_ready": false,
+      "never_merge": true,
+      "reason": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As quatro quest\u00f5es-alvo (Q8 apnea, Q9 reflejos de tronco, Q10 s\u00edndrome de Weber, Q11 pruebas del III par) j\u00e1 existem, integrais e corretas, nos blocos-alvo com espelho em Banco General: q-neu099/bq-neu099-equivalente e q-neu100 em neub18 (apnea e reflejos, com a chave hist\u00f3rica da c\u00e1tedra preservada e a nota AAN/AAP/CNS/SCCM 2023 j\u00e1 rotulada separadamente), q-neu142/bq-neu142 em neub12 (4 signos de Weber) e q-neu139/bq-neu139 em neub04 (3 pruebas del III par). As vers\u00f5es do source pack s\u00e3o semanticamente duplicadas dessas quest\u00f5es can\u00f4nicas e n\u00e3o s\u00e3o demonstravelmente melhores (as existentes j\u00e1 trazem explica\u00e7\u00e3o mais completa e a separa\u00e7\u00e3o c\u00e1tedra/literatura exigida), portanto nenhuma inser\u00e7\u00e3o, reformula\u00e7\u00e3o ou espelho adicional \u00e9 necess\u00e1ria ou seria segura sem duplicar conte\u00fado.",
+      "recorded_at": "2026-09-28T19:44:28.760576+00:00",
+      "status": "BLOCKED",
+      "task_id": "agent-v2-neurologia-p0-provas-q08-11-dc643517675e"
     }
   ]
 }
