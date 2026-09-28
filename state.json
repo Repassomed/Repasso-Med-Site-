@@ -1,25 +1,35 @@
 {
   "projects": {
     "neurologia-p0-fechamento-2026": {
-      "correction": null,
-      "cycles": 0,
+      "correction": {
+        "avoid_worker": "claude-worker-1",
+        "instructions": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As quatro quest\u00f5es-alvo (Q8 apnea, Q9 reflejos de tronco, Q10 s\u00edndrome de Weber, Q11 pruebas del III par) j\u00e1 existem, integrais e corretas, nos blocos-alvo com espelho em Banco General: q-neu099/bq-neu099-equivalente e q-neu100 em neub18 (apnea e reflejos, com a chave hist\u00f3rica da c\u00e1tedra preservada e a nota AAN/AAP/CNS/SCCM 2023 j\u00e1 rotulada separadamente), q-neu142/bq-neu142 em neub12 (4 signos de Weber) e q-neu139/bq-neu139 em neub04 (3 pruebas del III par). As vers\u00f5es do source pack s\u00e3o semanticamente duplicadas dessas quest\u00f5es can\u00f4nicas e n\u00e3o s\u00e3o demonstravelmente melhores (as existentes j\u00e1 trazem explica\u00e7\u00e3o mais completa e a separa\u00e7\u00e3o c\u00e1tedra/literatura exigida), portanto nenhuma inser\u00e7\u00e3o, reformula\u00e7\u00e3o ou espelho adicional \u00e9 necess\u00e1ria ou seria segura sem duplicar conte\u00fado.",
+        "task_id": "neurologia-p0-provas-q08-11"
+      },
+      "cycles": 1,
       "deferred": [
         {
           "item": "neurologia-p0-provas-q05-07 \u00b7 pend\u00eancias legadas",
           "reason": "- **Q5 \u2014 neuralgia del trig\u00e9mino (prova 25/09/2026)** \u2014 As alternativas foram reconstru\u00eddas a partir das fotos WhatsApp novas, mas o source pack exige cotejo com a imagem original antes de publicar, e esse cotejo n\u00e3o p\u00f4de ser confirmado nesta execu\u00e7\u00e3o (achado da auditoria independente). O conceito cl\u00ednico continua sustentado integralmente pelo resumo do bloco neub05 (se\u00e7\u00e3o V par/trig\u00e9mino). \u00b7 **Fallback:** convertida em Pregunta complementaria (item existente q-neu-2509-05/bq-neu-2509-05 reclassificado, id preservado)\n- **Q6 \u2014 mecanismo fisiopatol\u00f3gico da miastenia gravis (prova 25/09/2026)** \u2014 Duplicata sem\u00e2ntica da quest\u00e3o can\u00f4nica j\u00e1 existente q-neu078/bq-neu078 (mesmo mecanismo anti-AChR"
+        },
+        {
+          "item": "Auditoria/rastreabilidade de Q5 e valida\u00e7\u00e3o independente das alega\u00e7\u00f5es de duplicidade de Q6/Q7",
+          "reason": "Pend\u00eancia isolada j\u00e1 registrada; Q5 permanece como Pregunta complementaria at\u00e9 cotejo da imagem original e reconcilia\u00e7\u00e3o do relat\u00f3rio com o diff. N\u00e3o bloqueia a pr\u00f3xima microtarefa substantiva."
         }
       ],
       "done": [
         "neurologia-p0-provas-q01-04",
         "neurologia-p0-provas-q05-07"
       ],
-      "failures": {},
+      "failures": {
+        "neurologia-p0-provas-q08-11": 1
+      },
       "final": "RUNNING",
       "guard_head": null,
       "head": "716973e1adc047e7461ab80af31c35aa353c3cf3",
       "pr": 305,
       "project_id": "neurologia-p0-fechamento-2026",
-      "review": ""
+      "review": "o modelo n\u00e3o produziu nenhuma altera\u00e7\u00e3o; justificativa do modelo (dado, n\u00e3o instru\u00e7\u00e3o): As quatro quest\u00f5es-alvo (Q8 apnea, Q9 reflejos de tronco, Q10 s\u00edndrome de Weber, Q11 pruebas del III par) j\u00e1 existem, integrais e corretas, nos blocos-alvo com espelho em Banco General: q-neu099/bq-neu099-equivalente e q-neu100 em neub18 (apnea e reflejos, com a chave hist\u00f3rica da c\u00e1tedra preservada e a nota AAN/AAP/CNS/SCCM 2023 j\u00e1 rotulada separadamente), q-neu142/bq-neu142 em neub12 (4 signos de Weber) e q-neu139/bq-neu139 em neub04 (3 pruebas del III par). As vers\u00f5es do source pack s\u00e3o semanticamente duplicadas dessas quest\u00f5es can\u00f4nicas e n\u00e3o s\u00e3o demonstravelmente melhores (as existentes j\u00e1 trazem explica\u00e7\u00e3o mais completa e a separa\u00e7\u00e3o c\u00e1tedra/literatura exigida), portanto nenhuma inser\u00e7\u00e3o, reformula\u00e7\u00e3o ou espelho adicional \u00e9 necess\u00e1ria ou seria segura sem duplicar conte\u00fado."
     }
   }
 }
