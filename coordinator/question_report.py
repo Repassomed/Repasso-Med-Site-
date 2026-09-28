@@ -91,7 +91,10 @@ def render_question_report(raw: object) -> str:
         legibility = _cell(item.get("legibility"), field=f"sources[{index}].legibility")
         destination = _cell(item.get("site_destination"), field=f"sources[{index}].site_destination")
         counts = {
-            key: _count(item.get(key), field=f"sources[{index}].{key}")
+            key: _count(
+                item.get(key, 0 if key == "complementary" else None),
+                field=f"sources[{index}].{key}",
+            )
             for key in _COUNTER_FIELDS
         }
         rows.append(
