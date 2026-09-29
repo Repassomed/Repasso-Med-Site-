@@ -2197,6 +2197,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:353.",
       "task_id": "farmacologia-ii-fechamento-147 (registro manual; resolve a pend\u00eancia registrada em `1f023ab`)",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "55789b9aa7eef4075e25003700da790699ef0f77",
+      "component": "guard",
+      "error_id": "ERR-05A9B682F8",
+      "error_type": "hard-fail",
+      "fingerprint": "05a9b682f89576e0e2e5",
+      "first_seen": "2026-09-29T04:38:30.156479+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "f688e29a772e479f85d8c34733ece00b",
+      "issue_sync_updated_at": "2026-09-29T04:38:30.156479+00:00",
+      "last_evidence_hash": "903ec11aaa1adc9aac06",
+      "last_seen": "2026-09-29T04:38:30.156479+00:00",
+      "occurrence_count": 1,
+      "pr_number": 361,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36522045763",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:361.",
+      "task_id": "pr:361",
+      "worker_id": null
     }
   ]
 }
