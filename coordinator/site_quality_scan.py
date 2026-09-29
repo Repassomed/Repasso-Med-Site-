@@ -9,7 +9,7 @@ from coordinator.models import MODEL_IDS, ModelTier
 from coordinator.openai_transport import OpenAIResponsesTransport
 
 MATTER_DIR=Path('Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas')
-EXCLUDED={'bioestadistica.html','imagenologia.html'}
+EXCLUDED={'bioestadistica.html','imagenologia.html','anatomiapatologica-ii.html'}
 CHUNK=140000
 QUALITY_DIR=Path('coordination/quality')
 
@@ -36,15 +36,16 @@ def files(root):
     return [p for p in sorted(b.glob('*.html')) if p.name not in EXCLUDED and 'copia' not in p.name.lower()]
 
 def static(path,text):
-    s=path.stem; out=[]; ids=re.findall(r'\bid=["\']([^"\']+)["\']',text,re.I)
+    s=path.stem; out=[]; visible=re.sub(r'<!--[\\s\\S]*?-->','',text)
+    ids=re.findall(r'\bid=["\']([^"\']+)["\']',visible,re.I)
     dup=[x for x,n in Counter(ids).items() if n>1]
     if dup: out.append(('P0','html','IDs HTML duplicados',','.join(dup[:12]),'Pode quebrar âncoras/navegação/annotation-safety.'))
     for tag in ('section','div','table','tr'):
         a=len(re.findall(fr'<{tag}\b',text,re.I)); f=len(re.findall(fr'</{tag}>',text,re.I))
         if a!=f: out.append(('P0','html',f'HTML possivelmente desbalanceado: <{tag}>',f'aberturas={a}, fechamentos={f}','Pode quebrar layout/componentes.'))
-    if re.search(r'c[oó]mo estudiar|como estudar|c[oó]mo usar (?:esta|la) (?:materia|p[aá]gina)|cómo usar el banco',text,re.I):
+    if re.search(r'c[oó]mo estudiar|como estudar|c[oó]mo usar (?:esta|la) (?:materia|p[aá]gina)|cómo usar el banco',visible,re.I):
         out.append(('P2','alma','Metatexto de estudo/interface ainda presente','Padrão Cómo estudiar/usar encontrado','A regra global #147 manda ir direto ao conteúdo real.'))
-    for m in re.finditer(r'<ul[^>]*class=["\'][^"\']*options[^"\']*["\'][^>]*>(.*?)</ul>',text,re.I|re.S):
+    for m in re.finditer(r'<ul[^>]*class=["\'][^"\']*options[^"\']*["\'][^>]*>(.*?)</ul>',visible,re.I|re.S):
         items=re.findall(r'<li\b[^>]*>(.*?)</li>',m.group(1),re.I|re.S); marked=[x for x in items if re.search(r'<(?:strong|b|mark)\b',x,re.I)]
         if len(items)>=2 and len(marked)==1:
             e=re.sub(r'\s+',' ',html.unescape(re.sub(r'<[^>]+>',' ',marked[0]))).strip()[:180]
@@ -103,6 +104,16 @@ def validate(cands):
             v=str(d.get('decision','UNCERTAIN')).upper(); out[str(d['id'])]=v if v in {'KEEP','UNCERTAIN','DROP'} else 'UNCERTAIN'
     return out,[{'provider':'openai','input_tokens':r.input_tokens,'output_tokens':r.output_tokens}]
 
+def resolve_deterministic(report,current,ts):
+    current_ids={x['id'] for x in current if isinstance(x,dict) and x.get('id')}
+    for x in report.get('findings',[]):
+        if not isinstance(x,dict):continue
+        if x.get('found_by')!='deterministic':continue
+        if x.get('status') not in {'OPEN','REOPENED'}:continue
+        if x.get('id') in current_ids:continue
+        x['status']='RESOLVED';x['resolved_at']=ts
+        x['resolution']='Não reproduzido pelo scanner determinístico na main desta execução.'
+
 def merge(report,new,ts):
     old={x['id']:x for x in report.get('findings',[]) if isinstance(x,dict) and x.get('id')}
     for x in new:
@@ -140,6 +151,6 @@ def main():
         if d=='DROP':drop+=1;continue
         if d in {'UNCERTAIN','UNAVAILABLE'}:unc+=1
         keep.append(x)
-    merge(report,det+keep,ts);report['updated_at']=ts;report.setdefault('cursor',{})[p.stem]=nxt if claude_ok else int(report.get('cursor',{}).get(p.stem,0) or 0);run={'timestamp':ts,'subject':p.stem,'ranges':[f'{a}:{b}' for a,b,_ in chs],'candidates':len(cands),'kept':len(keep)-unc,'uncertain':unc,'dropped':drop,'static_findings':len(det),'usage':usage,'api_error':err};report.setdefault('runs',[]).append(run);report['runs']=report['runs'][-40:]
+    resolve_deterministic(report,det,ts);merge(report,det+keep,ts);report['updated_at']=ts;report.setdefault('cursor',{})[p.stem]=nxt if claude_ok else int(report.get('cursor',{}).get(p.stem,0) or 0);run={'timestamp':ts,'subject':p.stem,'ranges':[f'{a}:{b}' for a,b,_ in chs],'candidates':len(cands),'kept':len(keep)-unc,'uncertain':unc,'dropped':drop,'static_findings':len(det),'usage':usage,'api_error':err};report.setdefault('runs',[]).append(run);report['runs']=report['runs'][-40:]
     rp.parent.mkdir(parents=True,exist_ok=True);rp.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n','utf-8');mp=quality_output(root,a.markdown);mp.parent.mkdir(parents=True,exist_ok=True);mp.write_text(markdown(report),'utf-8');print(json.dumps(run,ensure_ascii=False))
 if __name__=='__main__':main()
