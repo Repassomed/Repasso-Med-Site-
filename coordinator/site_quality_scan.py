@@ -11,6 +11,14 @@ from coordinator.openai_transport import OpenAIResponsesTransport
 MATTER_DIR=Path('Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas')
 EXCLUDED={'bioestadistica.html','imagenologia.html'}
 CHUNK=140000
+QUALITY_DIR=Path('coordination/quality')
+
+def quality_output(root, raw):
+    base=(root/QUALITY_DIR).resolve()
+    target=(root/Path(raw)).resolve()
+    if base not in target.parents:
+        raise SystemExit('Saída do quality scan deve ficar em coordination/quality/')
+    return target
 
 CLAUDE_SYS='''Você é o caça-erros READ-ONLY do Repasso Med. Detecte problemas; nunca corrija nem devolva patch. Use SOMENTE o trecho fornecido. Procure evidência concreta de: erro/contradição científica; conflito cátedra×literatura não rotulado; resumo que não ensina o que a questão cobra; gabarito/explicação incoerente; pista visual de resposta; duplicação; G0/ALMA genérica; densidade excessiva; castelhano confuso; metatexto de como estudar/usar; post-it mal localizado; risco de annotation-safety; HTML suspeito; inconsistência texto/tabela/flashcard/questão. Não invente erro e ignore gosto estilístico. Cátedra é base; literatura corrige/complementa com divergência explícita. RESUMO ENSINA→QUESTÃO COBRA→EXPLICAÇÃO REFORÇA. Preserve IDs/anchors/highlights/ink/notes. Questão de prova exige proveniência real. Responda SOMENTE JSON válido: {"findings":[{"severity":"P0|P1|P2|P3","category":"science|questions|didactics|alma|density|annotations|postits|html|consistency|other","title":"...","location":"...","evidence":"...","why":"...","confidence":"high|medium"}]}. Máximo 18.'''
 OPENAI_SYS='''Você é o segundo revisor independente. Não crie novos achados e não corrija arquivos. Receberá candidatos de outro modelo. Para cada id classifique KEEP, UNCERTAIN ou DROP usando apenas a evidência. KEEP=problema concreto; UNCERTAIN=plausível mas falta contexto; DROP=não demonstrado/gosto estilístico. Responda SOMENTE JSON válido: {"decisions":[{"id":"...","decision":"KEEP|UNCERTAIN|DROP","reason":"..."}]}'''
@@ -116,7 +124,7 @@ def markdown(report):
     return '\n'.join(L)+'\n'
 
 def main():
-    ap=argparse.ArgumentParser(); ap.add_argument('--root',default='.'); ap.add_argument('--subject'); ap.add_argument('--report',default='coordination/quality/global-findings.json'); ap.add_argument('--markdown',default='coordination/quality/global-findings.md'); a=ap.parse_args(); root=Path(a.root).resolve(); rp=root/a.report; report=load(rp); fs=files(root); ts=now()
+    ap=argparse.ArgumentParser(); ap.add_argument('--root',default='.'); ap.add_argument('--subject'); ap.add_argument('--report',default='coordination/quality/global-findings.json'); ap.add_argument('--markdown',default='coordination/quality/global-findings.md'); a=ap.parse_args(); root=Path(a.root).resolve(); rp=quality_output(root,a.report); report=load(rp); fs=files(root); ts=now()
     det=[]
     for p in fs:det += static(p,p.read_text('utf-8',errors='replace'))
     p=choose(fs,report,a.subject); text=p.read_text('utf-8',errors='replace'); chs,nxt=chunks(text,report.get('cursor',{}).get(p.stem,0)); cands=[]; usage=[]; err=None; claude_ok=False
@@ -133,5 +141,5 @@ def main():
         if d in {'UNCERTAIN','UNAVAILABLE'}:unc+=1
         keep.append(x)
     merge(report,det+keep,ts);report['updated_at']=ts;report.setdefault('cursor',{})[p.stem]=nxt if claude_ok else int(report.get('cursor',{}).get(p.stem,0) or 0);run={'timestamp':ts,'subject':p.stem,'ranges':[f'{a}:{b}' for a,b,_ in chs],'candidates':len(cands),'kept':len(keep)-unc,'uncertain':unc,'dropped':drop,'static_findings':len(det),'usage':usage,'api_error':err};report.setdefault('runs',[]).append(run);report['runs']=report['runs'][-40:]
-    rp.parent.mkdir(parents=True,exist_ok=True);rp.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n','utf-8');mp=root/a.markdown;mp.parent.mkdir(parents=True,exist_ok=True);mp.write_text(markdown(report),'utf-8');print(json.dumps(run,ensure_ascii=False))
+    rp.parent.mkdir(parents=True,exist_ok=True);rp.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n','utf-8');mp=quality_output(root,a.markdown);mp.parent.mkdir(parents=True,exist_ok=True);mp.write_text(markdown(report),'utf-8');print(json.dumps(run,ensure_ascii=False))
 if __name__=='__main__':main()
