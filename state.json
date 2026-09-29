@@ -2247,6 +2247,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:372.",
       "task_id": "ortopedia-fechamento-366 (registro manual; achados #368/#366)",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "df6259895ab9f02ebf1258408ff64c3be8f75ea5",
+      "component": "guard",
+      "error_id": "ERR-902740C51D",
+      "error_type": "hard-fail",
+      "fingerprint": "902740c51d228dc06b7f",
+      "first_seen": "2026-09-29T22:49:23.631089+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "1c1ce885ccea40118660540592358ad2",
+      "issue_sync_updated_at": "2026-09-29T22:49:23.631089+00:00",
+      "last_evidence_hash": "a8d9b7b624454503e684",
+      "last_seen": "2026-09-29T22:49:23.631089+00:00",
+      "occurrence_count": 1,
+      "pr_number": 386,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36641699705",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:386.",
+      "task_id": "pr:386",
+      "worker_id": null
     }
   ]
 }
