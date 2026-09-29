@@ -2172,6 +2172,31 @@
       "summary": "bridge\tPreflight da su\u00edte do Coordinator (ZERO API, antes do claim)\t2026-09-28T19:38:59.7301361Z ##[error]Process completed with exit code 1.",
       "task_id": null,
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "2e1dc219c29207f61be5a2dd53d777b83ca5e2e6",
+      "component": "guard",
+      "error_id": "ERR-88B09604DE",
+      "error_type": "hard-fail",
+      "fingerprint": "88b09604de73d4fc1962",
+      "first_seen": "2026-09-29T04:02:08.432529+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "8f0337e1281441d087fa960e8462112d",
+      "issue_sync_updated_at": "2026-09-29T04:02:08.432529+00:00",
+      "last_evidence_hash": "646bacbde9c6001c3ad6",
+      "last_seen": "2026-09-29T04:02:08.432529+00:00",
+      "occurrence_count": 1,
+      "pr_number": 353,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "36519728069",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:353.",
+      "task_id": "farmacologia-ii-fechamento-147 (registro manual; resolve a pend\u00eancia registrada em `1f023ab`)",
+      "worker_id": null
     }
   ]
 }
