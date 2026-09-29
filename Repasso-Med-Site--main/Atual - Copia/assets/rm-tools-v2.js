@@ -559,6 +559,46 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     return (lista[i] || sec);
   }
 
+  /* ------------------------------------------------------------------
+     REVISÃO DE CONTEÚDO · «o traço pode mudar de sítio, mas nunca de
+     bloco» deixa de valer quando o bloco perdeu tanto conteúdo que o
+     sítio novo já não tem nada a ver com o que foi marcado — foi
+     exactamente o caso da limpeza #147 em Farmacología II (f2b00): dois
+     traços desenhados sobre um diagrama que a própria limpeza remove
+     passavam a aparecer sobre outro texto, por coincidência de altura.
+
+     Correcção: qualquer secção pode declarar, no HTML, quando o SEU
+     conteúdo mudou de forma estrutural:
+
+       <section id="f2b00" data-rm-content-rev="2026-09-29">
+
+     Um traço cujo `created_at` é ANTERIOR a essa data deixa de ser
+     desenhado nessa secção — fica órfão, preservado no banco, nunca
+     apagado nem realocado. Um traço criado DEPOIS da revisão (aluno
+     desenha de novo, já vendo o conteúdo actual) funciona normalmente.
+
+     Sem o atributo, nada muda: é essa a razão de não ser preciso migrar
+     nem tocar nas outras matérias com tinta (Anestesiología, Neurología,
+     Ortopedia) — cada uma só passa a filtrar traços quando algum editor
+     humano decidir, secção a secção, que houve uma mudança estrutural
+     que o justifique. Não lê nem escreve nada no Supabase. */
+  function dataRevisaoDaSecao(sec) {
+    var rev = sec && sec.getAttribute && sec.getAttribute('data-rm-content-rev');
+    if (!rev) return null;
+    var t = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(rev) ? rev + 'T00:00:00Z' : rev);
+    return isNaN(t) ? null : t;
+  }
+
+  function tracoOrfaoPorRevisao(rec, alvo) {
+    if (!alvo || !rec || !rec.created_at) return false;
+    var sec = alvo.matches && alvo.matches(ANCHOR_SEL) ? alvo : (alvo.closest ? alvo.closest(ANCHOR_SEL) : null);
+    var revTime = dataRevisaoDaSecao(sec);
+    if (revTime === null) return false;
+    var criadoEm = Date.parse(rec.created_at);
+    if (isNaN(criadoEm)) return false;
+    return criadoEm < revTime;
+  }
+
   function rotuloDe(sec) {
     if (!sec) return '';
     var h = sec.querySelector('h2, h3');
@@ -736,6 +776,12 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   function desenhar(rec) {
     var alvo = elDeAnchor(rec.anchor_id);
     if (!alvo) return null;
+    if (tracoOrfaoPorRevisao(rec, alvo)) {
+      st.orfaos = st.orfaos || {};
+      var lista = (st.orfaos[rec.anchor_id] = st.orfaos[rec.anchor_id] || []);
+      if (lista.indexOf(rec.id) === -1) lista.push(rec.id);
+      return null;
+    }
     var svg = svgDe(alvo, rec.anchor_id);
     var j = svg.querySelector('path[data-ink="' + cssEsc(String(rec.id)) + '"]');
     if (j) return j;
@@ -1733,7 +1779,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (!s || !st.uid) return [];
       try {
         var r = await s.from('user_ink_strokes')
-          .select('id,anchor_id,color,width,points')
+          .select('id,anchor_id,color,width,points,created_at')
           .eq('user_id', st.uid).eq('subject_slug', slug);
         if (r.error) throw r.error;
         st.strokes[slug] = r.data || [];
