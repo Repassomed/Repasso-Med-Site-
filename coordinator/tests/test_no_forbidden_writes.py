@@ -236,14 +236,14 @@ def test_site_quality_scan_is_read_only_and_confined() -> None:
         conteudo = fh.read()
 
     proibidos = [
-        (re.compile(r"\\bimport\\s+supabase\\b"), "import direto do Supabase"),
-        (re.compile(r"\\bfrom\\s+supabase\\b"), "import direto do Supabase"),
-        (re.compile(r"\\bpostgrest\\b", re.I), "cliente postgrest"),
+        (re.compile(r"\bimport\s+supabase\b"), "import direto do Supabase"),
+        (re.compile(r"\bimport\s+supabase\b"), "import direto do Supabase"),
+        (re.compile(r"\bpostgrest\b", re.I), "cliente postgrest"),
         (re.compile(r"SUPABASE_(URL|KEY|SERVICE_ROLE)"), "credencial Supabase"),
-        (re.compile(r"merge_pull_request|pulls/merge|gh\\s+pr\\s+merge"), "merge"),
-        (re.compile(r"git\\s+(?:push|commit|merge)\\b"), "escrita git"),
-        (re.compile(r"\\bsubprocess\\b"), "processo externo"),
-        (re.compile(r"\\bos\\.system\\s*\\("), "shell externo"),
+        (re.compile(r"merge_pull_request|pulls/merge|gh\s+pr\s+merge"), "merge"),
+        (re.compile(r"git\s+(?:push|commit|merge)\b"), "escrita git"),
+        (re.compile(r"\bsubprocess\b"), "processo externo"),
+        (re.compile(r"\bos\.system\s*\("), "shell externo"),
     ]
     achados = [descricao for padrao, descricao in proibidos if padrao.search(conteudo)]
     assert not achados, "site_quality_scan.py: " + "; ".join(achados)
