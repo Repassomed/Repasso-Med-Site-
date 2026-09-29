@@ -1305,75 +1305,96 @@ NÃO inventar. Registrar como pendência, dizendo exatamente o que faltou
 (por exemplo: "o slide que traz a definição é uma imagem sem texto
 extraível").
 
-8-A.5-A Gabarito sem enunciado — aproveitar o sinal sem inventar a prova
+8-A.5-A Gabaritos parciais — separar letras de MCQ de respostas escritas
 
-Um gabarito que traz apenas a LETRA correta, ou apenas uma RESPOSTA curta,
-é evidência de que houve cobrança, mas NÃO contém por si só informação
-suficiente para reconstruir um enunciado.
+Antes de tentar reaproveitar um gabarito sem enunciado, classificar o tipo de
+resposta que ele contém.
 
-Portanto, é obrigatório separar quatro situações:
+A. GABARITO DE SELECCIÓN MÚLTIPLE COM APENAS LETRA (A/B/C/D)
 
-1. MAPEAMENTO SEGURO PARA UMA QUESTÃO REAL
-   Quando outra fonte da mesma prova/fila/data, uma transcrição confiável,
-   outra versão do exame ou um fragmento legível permite ligar aquele
-   gabarito a um enunciado específico com alta confiança.
-   → Pode reconstruir segundo 8-A.5/8-A.5-B e, se a proveniência for
-   suficiente, usar «Basada en preguntas de examen».
+Se a fonte mostra somente a letra correta de uma questão de múltipla escolha
+e o enunciado não está disponível, IGNORAR esse item para reconstrução de
+conteúdo.
 
-2. CONCEITO E RESPOSTA ESPERADA SEGUROS, MAS REDAÇÃO NÃO RECUPERÁVEL
-   Quando o conjunto gabarito + outras provas da mesma cátedra + material da
-   cátedra + conteúdo do site permite identificar com segurança O QUE foi
-   cobrado e QUAL conhecimento resolve a cobrança, mas não permite recuperar
-   a redação original.
-   → Primeiro procurar se já existe questão semanticamente equivalente.
-   → Se já existe, NÃO duplicar: registrar que aquele ponto do gabarito está
-   coberto pela questão canônica existente.
-   → Se não existe e houver ganho avaliativo real, pode criar uma
-   «Pregunta complementaria» própria, inspirada no padrão de cobrança
-   identificado. Internamente registrar a ligação com o gabarito, mas não
-   apresentar a questão como transcrição nem como pergunta real da prova.
+Uma letra isolada NÃO informa:
+- o tema;
+- o enunciado;
+- a resposta textual;
+- o mecanismo cobrado;
+- o nível de profundidade;
+- os distratores;
+- o contexto clínico.
 
-3. APENAS TEMA PROVÁVEL
-   Quando o gabarito sugere um assunto, mas não permite fixar com segurança
-   o conceito central e a resposta esperada.
-   → Não criar questão.
-   → Usar o sinal para AUDITAR COBERTURA: procurar no resumo e no banco se o
-   assunto já é ensinado/cobrado e registrar a lacuna, se houver.
+Portanto:
+- NÃO tentar inferir a pergunta;
+- NÃO criar «Pregunta complementaria» a partir da letra;
+- NÃO rotular qualquer questão como baseada em exame por causa daquela letra;
+- NÃO usar a sequência A/B/C/D para deduzir qual conteúdo caiu.
 
-4. APENAS LETRA, SEM QUALQUER ÂNCORA DE CONTEÚDO
-   Uma sequência como A/B/C/D, isolada, NÃO autoriza inferir tema,
-   enunciado, resposta textual ou mecanismo.
-   → Não criar nem rotular questão a partir dela.
-   → Só pode ser usada para controle estrutural da prova e, quando aplicável,
-   para conferir distribuição/ordem de versões já identificadas por outra
-   fonte.
+A letra pode permanecer registrada apenas como dado estrutural da prova
+(número de itens, fila/versão e distribuição de gabaritos), mas não participa
+da reconstrução de conteúdo.
 
-TRIANGULAÇÃO OBRIGATÓRIA antes de aproveitar gabarito incompleto:
+B. RESPOSTA ESCRITA / COMPLETE / CITE / CASO CLÍNICO / RESPOSTA TEXTUAL
 
-- outra fila/versão da mesma prova;
-- prova de outra turma no mesmo período;
-- questões completas da mesma cátedra;
-- CITE/COMPLETE/caso clínico do mesmo gabarito;
-- slides/material da cátedra;
-- questões já existentes no site.
+Quando o gabarito traz PALAVRAS, FRASES, LISTAS, diagnósticos, critérios,
+exames, fatores de risco, sinais, tratamentos ou outra resposta textual, há
+conteúdo avaliativo real que DEVE ser analisado.
+
+Exemplos:
+- «Pletismografía pulmonar»;
+- «Broncograma aéreo»;
+- «Asma no controlada»;
+- «Procalcitonina»;
+- «Ortopnea»;
+- lista de sinais radiológicos;
+- fatores desencadeantes;
+- diagnóstico e confirmação de caso clínico;
+- critérios ou consequências pedidas em CITE.
+
+Para cada resposta escrita:
+
+1. identificar o conceito que a resposta representa;
+2. procurar se já existe questão no site cobrando aquele mesmo conhecimento;
+3. verificar se o resumo ensina esse ponto;
+4. cruzar com a cátedra e, quando disponível, com outra versão/prova;
+5. decidir entre:
+   - JÁ COBERTA POR QUESTÃO EXISTENTE;
+   - QUESTÃO REAL MAPEÁVEL, quando o enunciado também puder ser recuperado;
+   - NOVA PREGUNTA COMPLEMENTARIA, quando a resposta revela com segurança o
+     conhecimento cobrado, mas o enunciado original não pode ser recuperado;
+   - PENDENTE, quando nem o conceito pode ser determinado com segurança.
+
+Uma resposta escrita NÃO autoriza inventar palavras da pergunta original.
+Quando o enunciado não puder ser recuperado, a nova questão deve ter redação
+própria e ser rotulada como «Pregunta complementaria», nunca apresentada como
+transcrição da prova.
+
+REGRA DE APROVEITAMENTO
+
+O objetivo é recuperar o VALOR AVALIATIVO presente nas respostas textuais,
+não reconstruir artificialmente uma prova que não existe mais.
 
 A pergunta de controle é:
-«Consigo explicar, com evidência, por que ESTE conceito e ESTA resposta
-correspondem a esse sinal de prova?»
+«Esta resposta escrita me permite identificar com segurança qual conhecimento
+o aluno precisava dominar?»
 
-Se a resposta for não, NÃO inventar.
+- Se SIM: verificar cobertura e, se houver ganho real, criar/reformular uma
+  questão conforme 8-A.1, 8-A.2 e 8-A.6.
+- Se NÃO: registrar como pendente e não inventar.
 
-Relatório obrigatório para gabaritos incompletos:
+Relatório obrigatório para gabaritos parciais:
 
-- total de respostas sem enunciado;
-- MAPEADAS PARA QUESTÃO REAL;
+- quantidade de letras de MCQ isoladas: IGNORADAS PARA CONTEÚDO;
+- quantidade de respostas escritas analisadas;
 - JÁ COBERTAS POR QUESTÃO EXISTENTE;
-- TRANSFORMADAS EM COMPLEMENTARES POR SINAL DE COBRANÇA;
+- MAPEADAS PARA QUESTÃO REAL;
+- TRANSFORMADAS EM COMPLEMENTARES;
 - NÃO APROVEITADAS/PENDENTES;
 - evidência usada em cada decisão.
 
-O objetivo é não perder valor avaliativo do material, sem transformar
-ausência de informação em falsa certeza.
+O objetivo é não perder respostas escritas valiosas e, ao mesmo tempo, não
+atribuir significado clínico a uma letra A/B/C/D isolada.
 
 8-A.5-B Proveniência, legibilidade e reconstrução rastreável do material de prova
 
