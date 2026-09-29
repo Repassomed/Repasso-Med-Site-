@@ -521,6 +521,118 @@ def test_gabarito_enunciado_repetido_sem_falso_aviso() -> None:
     print("OK  test_gabarito_enunciado_repetido_sem_falso_aviso — comparação por ordem das ocorrências.")
 
 
+# ---------------------------------------------------------------------------
+# Chave estável da questão (Question.key) — enunciado em <p> ou <div>, sem
+# alternativas e sem o rótulo de proveniência.
+# ---------------------------------------------------------------------------
+def _item(stem_html: str, opts: list[str], correta: int = 0, tag: str | None = None,
+          elemento: str = "div", explicacao: str = "porque sim") -> str:
+    """Uma questão no formato de matéria. ``elemento`` é <div> (Histología I) ou <p>."""
+    rotulo = f'<span class="quiz-tag {tag[0]}">{tag[1]}</span>\n      ' if tag else ""
+    lis = "".join(f"<li>{chr(97 + i)}) {o}</li>" for i, o in enumerate(opts))
+    letra = chr(97 + correta)
+    return (
+        f'<div class="quiz-item">\n'
+        f'      <{elemento} class="quiz-question">{rotulo}{stem_html}</{elemento}>\n'
+        f'      <ul class="options">{lis}</ul>\n'
+        f'      <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>\n'
+        f'      <div class="answer">\n        <p><strong>{letra}) {opts[correta]}.</strong></p>\n'
+        f'        <p>{explicacao}</p>\n      </div>\n    </div>'
+    )
+
+
+def _doc(*itens: str):
+    from tools.qa.guard import materia
+    return materia.parse("fixture.html", '<section id="b01">' + "\n".join(itens) + "</section>")
+
+
+EXAMEN = ("oficial", "Basada en preguntas de examen")
+VARIANTE = ("variante", "Variante")
+COMPLEMENTARIA = ("variante", "Pregunta complementaria")
+VF_EXAMEN = ("oficial vf", "Verdadero o falso · basada en examen")
+OPCS = ["El ADN es ácido", "El núcleo no tiene carga", "El ADN es básico", "La eosina tiñe el núcleo"]
+STEM = "🎨 ¿Por qué el <b>núcleo</b> se tiñe de azul-violeta (es basófilo)?"
+
+
+def test_enunciado_em_p_e_em_div_sao_reconhecidos() -> None:
+    for elemento in ("p", "div"):
+        q = _doc(_item(STEM, OPCS, tag=EXAMEN, elemento=elemento)).questions[0]
+        assert q.stem == "🎨 ¿Por qué el núcleo se tiñe de azul-violeta (es basófilo)?", (elemento, q.stem)
+        assert "ADN" not in q.stem and "Basada" not in q.stem, (elemento, q.stem)
+        assert len(q.options) == 4 and q.answer_letter == "a", (elemento, q.options, q.answer_letter)
+    print("OK  test_enunciado_em_p_e_em_div_sao_reconhecidos — <p> continua e <div> passa a funcionar.")
+
+
+def test_chave_nao_muda_ao_reordenar_alternativas() -> None:
+    for elemento in ("p", "div"):
+        antes = _doc(_item(STEM, OPCS, correta=0, tag=EXAMEN, elemento=elemento)).questions[0]
+        reordenada = [OPCS[2], OPCS[0], OPCS[3], OPCS[1]]     # a correta passa de a) para b)
+        depois = _doc(_item(STEM, reordenada, correta=1, tag=EXAMEN, elemento=elemento)).questions[0]
+        assert antes.answer_letter == "a" and depois.answer_letter == "b"
+        assert antes.key == depois.key, (elemento, antes.key, depois.key)
+    print("OK  test_chave_nao_muda_ao_reordenar_alternativas — A/B/C/D não entra na chave.")
+
+
+def test_chave_nao_muda_ao_trocar_o_rotulo_de_proveniencia() -> None:
+    base = _doc(_item(STEM, OPCS, tag=EXAMEN)).questions[0]
+    for novo in (VARIANTE, COMPLEMENTARIA, None):
+        q = _doc(_item(STEM, OPCS, tag=novo)).questions[0]
+        assert q.key == base.key and q.stem == base.stem, (novo, q.key, base.key)
+    vf = _doc(_item("«La fijación es el primer paso.»", ["V", "F"], tag=VF_EXAMEN)).questions[0]
+    vf2 = _doc(_item("«La fijación es el primer paso.»", ["V", "F"], tag=VARIANTE)).questions[0]
+    assert vf.key == vf2.key, (vf.key, vf2.key)
+    print("OK  test_chave_nao_muda_ao_trocar_o_rotulo_de_proveniencia — «Basada…»/«Variante»/V-F não entram na chave.")
+
+
+def test_chave_muda_quando_o_enunciado_muda_de_verdade() -> None:
+    base = _doc(_item(STEM, OPCS, tag=EXAMEN)).questions[0]
+    outro = _doc(_item("🎨 ¿Por qué el <b>citoplasma</b> se tiñe de rosa (es acidófilo)?", OPCS, tag=EXAMEN)).questions[0]
+    assert base.key != outro.key
+    # caso clínico longo: a edição vem depois do 160.º caractere
+    longo = "Paciente de 34 años, sin antecedentes, que consulta por " + "lesiones pruriginosas " * 12
+    a = _doc(_item(longo + "en el codo derecho.", OPCS)).questions[0]
+    b = _doc(_item(longo + "en el codo izquierdo.", OPCS)).questions[0]
+    assert a.key != b.key, "edição depois do caractere 160 precisa mudar a chave"
+    # e a mesma coisa segue igual
+    assert a.key == _doc(_item(longo + "en el codo derecho.", list(reversed(OPCS)), correta=3)).questions[0].key
+    print("OK  test_chave_muda_quando_o_enunciado_muda_de_verdade — texto clínico real ainda é detectado.")
+
+
+def test_remocao_verdadeira_continua_sendo_detectada() -> None:
+    q1 = _item("¿Qué es la metacromasia?", ["A", "B", "C", "D"], tag=EXAMEN)
+    q2 = _item("¿Cuál es el fijador más común?", ["A", "B", "C", "D"], tag=EXAMEN)
+    q3 = _item("¿Qué tinción muestra las fibras reticulares?", ["A", "B", "C", "D"], tag=VARIANTE)
+    base = _doc(q1, q2, q3)
+
+    # uma sumiu
+    achados = checks._check_counts("histologia-i.html", base, _doc(q1, q3))
+    assert [f.check for f in achados if f.severity == HARD_FAIL] == ["questoes-removidas"], achados
+
+    # uma sumiu e outra nova entrou: o total não muda, mas a perda é vista
+    nova = _item("¿Qué célula produce anticuerpos?", ["A", "B", "C", "D"], tag=VARIANTE)
+    achados = checks._check_counts("histologia-i.html", base, _doc(q1, q3, nova))
+    assert any(f.check == "questoes-removidas" for f in achados), achados
+
+    # duas questões com o mesmo enunciado: se uma some, a contagem por chave cai
+    d1 = _item("¿Qué es un comedón?", ["A", "B", "C", "D"])
+    d2 = _item("¿Qué es un comedón?", ["E", "F", "G", "H"])
+    achados = checks._check_counts("histologia-i.html", _doc(d1, d2), _doc(d1))
+    assert any(f.check == "questoes-removidas" for f in achados), achados
+    print("OK  test_remocao_verdadeira_continua_sendo_detectada — nenhum falso negativo.")
+
+
+def test_reordenar_e_rotular_nao_reprova_como_remocao() -> None:
+    """O caso da Histología I: enunciado em <div>, alternativas reordenadas e rótulo trocado."""
+    q1 = _item(STEM, OPCS, correta=0, tag=EXAMEN)
+    q2 = _item("¿Cómo se llama el aparato que corta?", ["Criostato", "Microscopio", "Condensador", "Micrótomo"], correta=3, tag=EXAMEN)
+    base = _doc(q1, q2)
+    q1b = _item(STEM, [OPCS[1], OPCS[3], OPCS[0], OPCS[2]], correta=2, tag=VARIANTE)
+    q2b = _item("¿Cómo se llama el aparato que corta?", ["Micrótomo", "Condensador", "Microscopio", "Criostato"], correta=0, tag=VARIANTE)
+    achados = checks._check_counts("histologia-i.html", base, _doc(q2b, q1b))   # e em outra ordem
+    assert not any(f.severity == HARD_FAIL for f in achados), achados
+    print("OK  test_reordenar_e_rotular_nao_reprova_como_remocao — Histología I deixa de ser falso positivo.")
+
+
 def main() -> int:
     testes = [
         test_valid_passes,
@@ -536,6 +648,12 @@ def main() -> int:
         test_scope_lock_body_cannot_widen,
         test_scope_lock_task_cannot_widen_itself,
         test_gabarito_enunciado_repetido_sem_falso_aviso,
+        test_enunciado_em_p_e_em_div_sao_reconhecidos,
+        test_chave_nao_muda_ao_reordenar_alternativas,
+        test_chave_nao_muda_ao_trocar_o_rotulo_de_proveniencia,
+        test_chave_muda_quando_o_enunciado_muda_de_verdade,
+        test_remocao_verdadeira_continua_sendo_detectada,
+        test_reordenar_e_rotular_nao_reprova_como_remocao,
     ]
     falhas = 0
     for t in testes:
