@@ -543,8 +543,13 @@ def _check_counts(nome: str, base, head) -> list[Finding]:
     # Comparar pela CHAVE, não só pelo total. Uma questão pode sumir e outra
     # entrar no mesmo PR — o total bate, mas uma questão real foi perdida
     # (Lei 1). Julgar só qh < qb deixaria essa perda passar despercebida.
-    chaves = {q.key for q in head.questions}
-    perdidas = [q.key for q in base.questions if q.key not in chaves]
+    # Contagem por chave (não conjunto): duas questões distintas podem ter o mesmo
+    # enunciado normalizado (e portanto a mesma chave). Se uma delas some, o
+    # total dessa chave cai, e isso tem de ser visto.
+    restantes = Counter(q.key for q in head.questions)
+    perdidas = []
+    for chave, n in Counter(q.key for q in base.questions).items():
+        perdidas.extend([chave] * max(0, n - restantes.get(chave, 0)))
     if perdidas:
         out.append(Finding("questoes-removidas", HARD_FAIL,
                            f"{nome}: {qb} → {qh} questões; {len(perdidas)} sumiram por chave "

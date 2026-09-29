@@ -18,6 +18,7 @@ Nada aqui interpreta conteúdo médico. São contagens e estruturas.
 
 from __future__ import annotations
 
+import hashlib
 import html as _html
 import re
 from dataclasses import dataclass, field
@@ -52,6 +53,20 @@ RE_LETTER = re.compile(r"^\s*([a-eA-E])\s*[\)\.\-:]")
 RE_TAG = re.compile(r"<[^>]+>")
 RE_WS = re.compile(r"\s+")
 
+# Enunciado: o elemento com class="quiz-question" pode ser <p> (a maioria das
+# matérias) ou <div> (Histología I). O rótulo de proveniência que vem dentro
+# dele («Basada en preguntas de examen», «Variante», «Pregunta complementaria»,
+# «Verdadero o falso · basada en examen») é um <span class="quiz-tag …">: é
+# visual e NÃO faz parte do enunciado.
+RE_STEM_OPEN = re.compile(
+    r'<(p|div)\b[^>]*\bclass="[^"]*\bquiz-question\b[^"]*"[^>]*>', re.I)
+RE_QUIZ_TAG_SPAN = re.compile(
+    r'<span\b[^>]*\bclass="[^"]*\bquiz-tag\b[^"]*"[^>]*>.*?</span>', re.I | re.S)
+# Onde o enunciado acaba quando o item não tem .quiz-question: antes das
+# alternativas, dos botões de V/F, do botão de resposta ou da própria resposta.
+RE_STEM_END = re.compile(
+    r'<ul\b|<li\b|\bclass="[^"]*\b(?:options|tf-buttons|answer)\b|<button\b', re.I)
+
 # Seção que funciona como banco geral. Os slugs variam bastante entre matérias
 # (bancofp2, banconeu, s2-banco…), por isso a busca é por substring.
 RE_BANK_SECTION = re.compile(r'<section[^>]*\sid="([^"]*banc[^"]*)"', re.I)
@@ -73,6 +88,45 @@ def _div_end(text: str, start: int) -> int:
         else:
             depth += 1
     return len(text)
+
+
+
+def _element_end(text: str, start: int, tag: str) -> int:
+    """Fim do elemento ``<tag>`` que começa em ``start`` (posição do ``<``).
+
+    Conta a profundidade só das tags de mesmo nome, então serve para ``<div>``
+    aninhado e também para ``<p>``. Se o HTML estiver quebrado devolve o fim do texto.
+    """
+    depth = 0
+    for m in re.finditer(r"<(/?)%s\b[^>]*>" % re.escape(tag), text[start:], re.I):
+        depth += -1 if m.group(1) else 1
+        if depth == 0:
+            return start + m.end()
+    return len(text)
+
+
+def _stem_of(block: str) -> str:
+    """Texto do enunciado de uma questão, sem o rótulo e sem as alternativas.
+
+    A chave estável da questão sai daqui (``Question.key``); por isso o enunciado
+    não pode depender de nada que mude sem o enunciado mudar: nem da ordem das
+    alternativas, nem do rótulo «Basada en…»/«Variante».
+    """
+    m = RE_STEM_OPEN.search(block)
+    if m:
+        end = _element_end(block, m.start(), m.group(1))
+        inner = block[m.end():end]
+        # tira o fechamento do próprio elemento
+        inner = re.sub(r"</%s>\s*$" % m.group(1), "", inner, flags=re.I)
+    else:
+        # Item sem .quiz-question: o que vem antes das alternativas/resposta.
+        cut = RE_STEM_END.search(block, block.find(">") + 1)
+        inner = block[block.find(">") + 1: cut.start() if cut else len(block)]
+    stem = _plain(RE_QUIZ_TAG_SPAN.sub(" ", inner))
+    if stem:
+        return stem
+    # Nada legível: mantém o comportamento antigo (distingue por conteúdo).
+    return _plain(RE_QUIZ_TAG_SPAN.sub(" ", block[:300]))
 
 
 @dataclass
@@ -98,7 +152,13 @@ class Question:
         """
         if self.qid:
             return f"id:{self.qid}"
-        return "stem:" + RE_WS.sub("", self.stem.lower())[:160]
+        norm = RE_WS.sub("", self.stem.lower())
+        if len(norm) <= 160:
+            return "stem:" + norm
+        # Enunciado longo (caso clínico): os primeiros 160 caracteres mantêm a chave
+        # legível nas mensagens e o hash cobre o resto, para que uma edição real
+        # depois do 160.º caractere continue sendo detectada.
+        return "stem:" + norm[:160] + "~" + hashlib.sha1(norm.encode("utf-8")).hexdigest()[:10]
 
 
 @dataclass
@@ -177,8 +237,7 @@ def parse(path: str, raw: str) -> MateriaDoc:
         if not is_bank and bank_start is not None and start >= bank_start:
             is_bank = True
 
-        stem_match = re.search(r'class="quiz-question"[^>]*>(.*?)</p>', block, re.S)
-        stem = _plain(stem_match.group(1)) if stem_match else _plain(block[:300])
+        stem = _stem_of(block)
 
         options = [_plain(o) for o in RE_OPTION_LI.findall(block)]
         # Só conta como alternativa o <li> que começa com letra. Algumas
