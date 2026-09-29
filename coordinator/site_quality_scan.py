@@ -76,7 +76,7 @@ def claude(subject,chs):
         req=anthropic_client.Request(model_id=os.getenv('REPASSO_QUALITY_CLAUDE_MODEL',MODEL_IDS[ModelTier.FAST]),tier='FAST',max_output_tokens=3500,system=CLAUDE_SYS,prompt=f'MATÉRIA:{subject}\nFAIXA:{a}:{b}\nHTML:\n{txt}')
         r=tr.send(req); usage.append({'provider':'anthropic','input_tokens':r.input_tokens,'output_tokens':r.output_tokens,'chunk':i})
         try: items=parse(r.text).get('findings',[])
-        except Exception: items=[]
+        except Exception as exc: raise RuntimeError(f'Claude retornou JSON inválido no chunk {i}') from exc
         for x in items[:18]:
             if not isinstance(x,dict) or not x.get('title') or not x.get('evidence'):continue
             loc=str(x.get('location') or f'{a}:{b}'); z={'subject':subject,'severity':str(x.get('severity','P2')).upper(),'category':str(x.get('category','other')),'title':str(x['title'])[:180],'location':loc[:220],'evidence':str(x['evidence'])[:500],'why':str(x.get('why',''))[:700],'confidence':str(x.get('confidence','medium')),'found_by':'claude'}; z['id']=fid(subject,z['category'],z['title'],z['location'],z['evidence'][:200]); found.append(z)
@@ -88,7 +88,7 @@ def validate(cands):
     req=openai_client.Request(model_id=os.getenv('REPASSO_QUALITY_OPENAI_MODEL','gpt-5.6-terra'),tier='TERRA',max_output_tokens=3000,system=OPENAI_SYS,prompt=json.dumps({'candidates':compact},ensure_ascii=False))
     r=OpenAIResponsesTransport(timeout=120,max_retries=0).send(req)
     try: ds=parse(r.text).get('decisions',[])
-    except Exception: ds=[]
+    except Exception as exc: raise RuntimeError('OpenAI retornou JSON inválido') from exc
     out={}
     for d in ds:
         if isinstance(d,dict) and d.get('id'):
@@ -119,8 +119,8 @@ def main():
     ap=argparse.ArgumentParser(); ap.add_argument('--root',default='.'); ap.add_argument('--subject'); ap.add_argument('--report',default='coordination/quality/global-findings.json'); ap.add_argument('--markdown',default='coordination/quality/global-findings.md'); a=ap.parse_args(); root=Path(a.root).resolve(); rp=root/a.report; report=load(rp); fs=files(root); ts=now()
     det=[]
     for p in fs:det += static(p,p.read_text('utf-8',errors='replace'))
-    p=choose(fs,report,a.subject); text=p.read_text('utf-8',errors='replace'); chs,nxt=chunks(text,report.get('cursor',{}).get(p.stem,0)); cands=[]; usage=[]; err=None
-    try:cands,u=claude(p.stem,chs);usage+=u
+    p=choose(fs,report,a.subject); text=p.read_text('utf-8',errors='replace'); chs,nxt=chunks(text,report.get('cursor',{}).get(p.stem,0)); cands=[]; usage=[]; err=None; claude_ok=False
+    try:cands,u=claude(p.stem,chs);usage+=u;claude_ok=True
     except Exception as e:err=f'Anthropic:{type(e).__name__}:{e}'
     dec={}
     if cands:
@@ -132,6 +132,6 @@ def main():
         if d=='DROP':drop+=1;continue
         if d in {'UNCERTAIN','UNAVAILABLE'}:unc+=1
         keep.append(x)
-    merge(report,det+keep,ts);report['updated_at']=ts;report.setdefault('cursor',{})[p.stem]=nxt;run={'timestamp':ts,'subject':p.stem,'ranges':[f'{a}:{b}' for a,b,_ in chs],'candidates':len(cands),'kept':len(keep)-unc,'uncertain':unc,'dropped':drop,'static_findings':len(det),'usage':usage,'api_error':err};report.setdefault('runs',[]).append(run);report['runs']=report['runs'][-40:]
+    merge(report,det+keep,ts);report['updated_at']=ts;report.setdefault('cursor',{})[p.stem]=nxt if claude_ok else int(report.get('cursor',{}).get(p.stem,0) or 0);run={'timestamp':ts,'subject':p.stem,'ranges':[f'{a}:{b}' for a,b,_ in chs],'candidates':len(cands),'kept':len(keep)-unc,'uncertain':unc,'dropped':drop,'static_findings':len(det),'usage':usage,'api_error':err};report.setdefault('runs',[]).append(run);report['runs']=report['runs'][-40:]
     rp.parent.mkdir(parents=True,exist_ok=True);rp.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n','utf-8');mp=root/a.markdown;mp.parent.mkdir(parents=True,exist_ok=True);mp.write_text(markdown(report),'utf-8');print(json.dumps(run,ensure_ascii=False))
 if __name__=='__main__':main()
