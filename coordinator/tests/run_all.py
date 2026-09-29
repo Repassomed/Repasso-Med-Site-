@@ -53,6 +53,7 @@ from . import (
     test_runner_resume,
     test_runner_workflow_security,
     test_scheduler,
+    test_site_quality_scan,
     test_source_pack,
     test_task_intake,
     test_worker_bridge,
@@ -103,6 +104,7 @@ MODULOS = [
     test_openai_transport,
     test_openai_auditor,
     test_scheduler,
+    test_site_quality_scan,
     test_source_pack,
     # Issue #160: Intake da Inbox #88 → proposta tipada → PR administrativa
     # de coordination/tasks.json (nunca main, nunca merge/deploy).
