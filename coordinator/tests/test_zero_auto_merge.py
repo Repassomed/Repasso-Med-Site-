@@ -276,6 +276,7 @@ CONTENTS_WRITE_PERMITIDO = {
     ("coordinator-runner.yml", "run"): "branch runner/* da tarefa + estado",
     ("coordinator-worker-bridge.yml", "bridge"): "branch runner/* da tarefa + estado",
     ("coordinator-auto-repair.yml", "repair"): "branch auto-repair/* + estado",
+    ("repasso-quality-scan.yml", "scan"): "branch quality/global-site-findings + PR viva de painel",
 }
 
 
