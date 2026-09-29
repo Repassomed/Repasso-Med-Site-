@@ -36,12 +36,12 @@ def files(root):
     return [p for p in sorted(b.glob('*.html')) if p.name not in EXCLUDED and 'copia' not in p.name.lower()]
 
 def static(path,text):
-    s=path.stem; out=[]; visible=re.sub(r'<!--[\\s\\S]*?-->','',text)
+    s=path.stem; out=[]; visible=re.sub(r'<!--[\s\S]*?-->','',text)
     ids=re.findall(r'\bid=["\']([^"\']+)["\']',visible,re.I)
     dup=[x for x,n in Counter(ids).items() if n>1]
     if dup: out.append(('P0','html','IDs HTML duplicados',','.join(dup[:12]),'Pode quebrar âncoras/navegação/annotation-safety.'))
     for tag in ('section','div','table','tr'):
-        a=len(re.findall(fr'<{tag}\b',text,re.I)); f=len(re.findall(fr'</{tag}>',text,re.I))
+        a=len(re.findall(fr'<{tag}\b',visible,re.I)); f=len(re.findall(fr'</{tag}>',visible,re.I))
         if a!=f: out.append(('P0','html',f'HTML possivelmente desbalanceado: <{tag}>',f'aberturas={a}, fechamentos={f}','Pode quebrar layout/componentes.'))
     if re.search(r'c[oó]mo estudiar|como estudar|c[oó]mo usar (?:esta|la) (?:materia|p[aá]gina)|cómo usar el banco',visible,re.I):
         out.append(('P2','alma','Metatexto de estudo/interface ainda presente','Padrão Cómo estudiar/usar encontrado','A regra global #147 manda ir direto ao conteúdo real.'))
