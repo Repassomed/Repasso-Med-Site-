@@ -1,7 +1,7 @@
 {
   "version": 1,
   "cursor": {
-    "anatomia-i": 201062
+    "anatomia-i": 416442
   },
   "findings": [
     {
@@ -17,7 +17,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -33,7 +33,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -49,7 +49,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -65,7 +65,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -81,7 +81,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -97,7 +97,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -209,7 +209,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -225,7 +225,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -241,7 +241,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -257,7 +257,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -273,7 +273,23 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
+      "status": "OPEN"
+    },
+    {
+      "subject": "anatomia-i",
+      "severity": "P2",
+      "category": "consistency",
+      "title": "Conflicto de castellano en bloque 06: 'esternebras de Blainville' vs. literatura estándar",
+      "location": "Bloque 06, sección 2, párrafo sobre cara anterior del esternón",
+      "evidence": "El texto usa 'esternebras de Blainville' con definición glossada, pero esta nomenclatura no es estándar en anatomía española/hispanoamericana. La literatura anatómica clásica (Gray, Moore, Latarjet) los denomina simplemente 'centros de osificación' o 'núcleos de osificación esternales', sin el epónimo de Blainville.",
+      "why": "Si bien 'Blainville' aparece en algunas referencias francesas antiguas, su uso aquí sin justificación cátedra vs. literatura crea ambigüedad. El texto no aclara si es nomenclatura local o si la cátedra exige este término específico. Puede generar confusión en estudiantes que consulten bibliografía estándar.",
+      "confidence": "medium",
+      "found_by": "claude",
+      "id": "deceef50b1221dcb",
+      "openai_validation": "UNCERTAIN",
+      "first_seen": "2026-09-29T18:49:13.631410+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -293,6 +309,22 @@
       "status": "OPEN"
     },
     {
+      "subject": "anatomia-i",
+      "severity": "P2",
+      "category": "consistency",
+      "title": "Densidad extrema en tabla de contenido mediastínico (sección 5)",
+      "location": "Bloque 05, sección 5, tabla 'Contenido del mediastino, órgano por órgano'",
+      "evidence": "La tabla tiene 14 filas con estructura + compartimiento + bloque de estudio. Algunas celdas son confusas: 'Aorta ascendente y arco aórtico' está en 'Medio (ascendente) y superior (arco)' — el 'ascendente' está en el medio pero el arco está en superior, lo que obliga a releer. Además, la tabla promete ordenarse 'por estructura justamente para que sirva con cualquiera de las dos divisiones' pero después dice 'Leela por compartimiento', generando contradicción interna.",
+      "why": "Un estudiante que memoriza por fila puede terminar confundiendo 'aorta ascendente/arco' como una sola estructura cuando son dos. Y la instrucción de lectura ('por compartimiento' vs. 'por estructura') no es coherente con el formato presentado.",
+      "confidence": "medium",
+      "found_by": "claude",
+      "id": "4aa5ed0c3edcfd4e",
+      "openai_validation": "UNCERTAIN",
+      "first_seen": "2026-09-29T18:49:13.631410+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
+      "status": "OPEN"
+    },
+    {
       "id": "6ca7789a3ba8b0ad",
       "subject": "anatomia-i",
       "severity": "P2",
@@ -305,7 +337,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -337,7 +369,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -353,7 +385,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -369,7 +401,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     },
     {
@@ -385,7 +417,7 @@
       "found_by": "deterministic",
       "openai_validation": "deterministic",
       "first_seen": "2026-09-29T13:08:11.084202+00:00",
-      "last_seen": "2026-09-29T13:08:11.084202+00:00",
+      "last_seen": "2026-09-29T18:49:13.631410+00:00",
       "status": "OPEN"
     }
   ],
@@ -422,7 +454,40 @@
         }
       ],
       "api_error": null
+    },
+    {
+      "timestamp": "2026-09-29T18:49:13.631410+00:00",
+      "subject": "anatomia-i",
+      "ranges": [
+        "201062:294515",
+        "294515:416442"
+      ],
+      "candidates": 14,
+      "kept": 0,
+      "uncertain": 2,
+      "dropped": 12,
+      "static_findings": 16,
+      "usage": [
+        {
+          "provider": "anthropic",
+          "input_tokens": 33191,
+          "output_tokens": 2363,
+          "chunk": 1
+        },
+        {
+          "provider": "anthropic",
+          "input_tokens": 45082,
+          "output_tokens": 2370,
+          "chunk": 2
+        },
+        {
+          "provider": "openai",
+          "input_tokens": 3975,
+          "output_tokens": 956
+        }
+      ],
+      "api_error": null
     }
   ],
-  "updated_at": "2026-09-29T13:08:11.084202+00:00"
+  "updated_at": "2026-09-29T18:49:13.631410+00:00"
 }

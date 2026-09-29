@@ -2,8 +2,8 @@
 
 > **READ-ONLY:** registra achados; não corrige matérias, não escreve Supabase e não faz merge.
 
-Atualizado: `2026-09-29T13:08:11.084202+00:00`  
-Abertos: **24** · P0 **6** · P1 **11** · P2 **7** · P3 **0**
+Atualizado: `2026-09-29T18:49:13.631410+00:00`  
+Abertos: **26** · P0 **6** · P1 **11** · P2 **9** · P3 **0**
 
 ## Pendências abertas
 
@@ -100,11 +100,21 @@ Abertos: **24** · P0 **6** · P1 **11** · P2 **7** · P3 **0**
 
 ### P2
 
+- **[anatomia-i] Conflicto de castellano en bloque 06: 'esternebras de Blainville' vs. literatura estándar** — `consistency` · validação `UNCERTAIN`
+  - Local: Bloque 06, sección 2, párrafo sobre cara anterior del esternón
+  - Evidência: El texto usa 'esternebras de Blainville' con definición glossada, pero esta nomenclatura no es estándar en anatomía española/hispanoamericana. La literatura anatómica clásica (Gray, Moore, Latarjet) los denomina simplemente 'centros de osificación' o 'núcleos de osificación esternales', sin el epónimo de Blainville.
+  - Motivo: Si bien 'Blainville' aparece en algunas referencias francesas antiguas, su uso aquí sin justificación cátedra vs. literatura crea ambigüedad. El texto no aclara si es nomenclatura local o si la cátedra exige este término específico. Puede generar confusión en estudiantes que consulten bibliografía estándar.
+  - ID: `deceef50b1221dcb`
 - **[anatomia-i] Contradicción entre SVG y texto sobre ejes/planos** — `consistency` · validação `KEEP`
   - Local: Figura SVG 'Los tres planos y los tres ejes' (a1_b01_02_planos_y_ejes.webp) vs. tabla de ejes
   - Evidência: En la tabla se define eje transverso como 'Laterolateral · horizontal' y 'Perpendicular a los planos **sagitales**'. Pero en la nota rmc-note se lee: 'el eje transverso es **transversal y vertical**, y el eje que le es perpendicular es el **transverso**, no el sagital.' Esta frase es contradictoria consigo misma ('eje transverso es perpendicular al eje transverso').
   - Motivo: Aparente error en redacción de la nota aclaratoria. Debería decir 'el plano sagital es anteroposterior y vertical, y el eje que le es perpendicular es el transverso'. La frase actual crea confusión lógica.
   - ID: `601e4129737fc0eb`
+- **[anatomia-i] Densidad extrema en tabla de contenido mediastínico (sección 5)** — `consistency` · validação `UNCERTAIN`
+  - Local: Bloque 05, sección 5, tabla 'Contenido del mediastino, órgano por órgano'
+  - Evidência: La tabla tiene 14 filas con estructura + compartimiento + bloque de estudio. Algunas celdas son confusas: 'Aorta ascendente y arco aórtico' está en 'Medio (ascendente) y superior (arco)' — el 'ascendente' está en el medio pero el arco está en superior, lo que obliga a releer. Además, la tabla promete ordenarse 'por estructura justamente para que sirva con cualquiera de las dos divisiones' pero después dice 'Leela por compartimiento', generando contradicción interna.
+  - Motivo: Un estudiante que memoriza por fila puede terminar confundiendo 'aorta ascendente/arco' como una sola estructura cuando son dos. Y la instrucción de lectura ('por compartimiento' vs. 'por estructura') no es coherente con el formato presentado.
+  - ID: `4aa5ed0c3edcfd4e`
 - **[anatomia-i] Metatexto de estudo/interface ainda presente** — `alma` · validação `deterministic`
   - Local: anatomia-i
   - Evidência: Padrão Cómo estudiar/usar encontrado
@@ -142,4 +152,5 @@ Achado aceito vira tarefa separada de correção. Nunca corrigir dentro desta PR
 
 ## Últimas execuções
 
+- `2026-09-29T18:49:13.631410+00:00` · **anatomia-i** · faixa `['201062:294515', '294515:416442']` · candidatos 14 · mantidos 0 · incertos 2
 - `2026-09-29T13:08:11.084202+00:00` · **anatomia-i** · faixa `['0:88206', '88206:201062']` · candidatos 19 · mantidos 2 · incertos 1
