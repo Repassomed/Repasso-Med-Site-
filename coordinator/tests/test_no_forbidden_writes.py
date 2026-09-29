@@ -60,7 +60,7 @@ _ARQUIVOS_FONTE = [
 # `rev-parse --verify -q` para conseguir normalizar SHA curto/completo
 # antes de comparar contra o tip remoto, mas continua sendo só LEITURA.
 _ARQUIVOS_FONTE_GERAL = [
-    f for f in _ARQUIVOS_FONTE if f not in ("git_state.py", "runner_dispatch.py", "runner_resume.py", "agent_v2.py")
+    f for f in _ARQUIVOS_FONTE if f not in ("git_state.py", "runner_dispatch.py", "runner_resume.py", "agent_v2.py", "site_quality_scan.py")
 ]
 
 _PADROES_PROIBIDOS = [
@@ -227,6 +227,36 @@ def test_runner_resume_never_writes_to_git() -> None:
     print("OK  test_runner_resume_never_writes_to_git")
 
 
+def test_site_quality_scan_is_read_only_and_confined() -> None:
+    """O caça-erros global pode LER matérias, mas só pode escrever o painel
+    coordination/quality/. Ele não ganha capacidade de editar matéria,
+    Supabase, git, merge ou executar processos externos."""
+    caminho = os.path.join(_pathsetup._COORDINATOR_ROOT, "site_quality_scan.py")
+    with open(caminho, encoding="utf-8") as fh:
+        conteudo = fh.read()
+
+    proibidos = [
+        (re.compile(r"\\bimport\\s+supabase\\b"), "import direto do Supabase"),
+        (re.compile(r"\\bfrom\\s+supabase\\b"), "import direto do Supabase"),
+        (re.compile(r"\\bpostgrest\\b", re.I), "cliente postgrest"),
+        (re.compile(r"SUPABASE_(URL|KEY|SERVICE_ROLE)"), "credencial Supabase"),
+        (re.compile(r"merge_pull_request|pulls/merge|gh\\s+pr\\s+merge"), "merge"),
+        (re.compile(r"git\\s+(?:push|commit|merge)\\b"), "escrita git"),
+        (re.compile(r"\\bsubprocess\\b"), "processo externo"),
+        (re.compile(r"\\bos\\.system\\s*\\("), "shell externo"),
+    ]
+    achados = [descricao for padrao, descricao in proibidos if padrao.search(conteudo)]
+    assert not achados, "site_quality_scan.py: " + "; ".join(achados)
+
+    # Há exatamente duas escritas em disco: JSON e Markdown do painel.
+    assert conteudo.count(".write_text(") == 2
+    assert "QUALITY_DIR=Path('coordination/quality')" in conteudo
+    assert "rp=quality_output(root,a.report)" in conteudo
+    assert "mp=quality_output(root,a.markdown)" in conteudo
+    assert "base not in target.parents" in conteudo
+    print("OK  test_site_quality_scan_is_read_only_and_confined")
+
+
 def test_main_only_writes_its_own_output_and_state_files() -> None:
     """__main__.py pode escrever arquivo (o resultado OBSERVE e o estado de
     dedup/ledger) — mas só isso. Confirma que os únicos `open(..., "w")` no
@@ -252,6 +282,7 @@ def main() -> int:
         test_git_state_never_targets_main_or_materia,
         test_runner_dispatch_never_force_pushes_or_merges,
         test_runner_resume_never_writes_to_git,
+        test_site_quality_scan_is_read_only_and_confined,
         test_main_only_writes_its_own_output_and_state_files,
     ]
     falhas = 0
