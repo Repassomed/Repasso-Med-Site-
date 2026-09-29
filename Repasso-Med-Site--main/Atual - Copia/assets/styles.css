@@ -1324,7 +1324,15 @@ footer strong { color:var(--gold-soft); }
 #materias-container .rm-cuaderno .rmc-margin p+p{margin-top:.45rem;}
 #materias-container .rm-cuaderno .rmc-margin em{font-style:normal;font-weight:700;color:#7A1F16;}
 @media(min-width:920px){
-  #materias-container .rm-cuaderno .rmc-margin{float:right;clear:right;width:300px;margin:.4rem 0 1rem 1.4rem;}
+  #materias-container .rm-cuaderno .rmc-margin{float:right;clear:right;width:300px;margin:.4rem 0 1rem 1.4rem;
+    /* Issue #93 · o float precisa pintar ACIMA dos irmãos que vêm depois dele.
+       `.container>*` (linha ~841) dá z-index:1 a TODO filho direto; o post-it
+       (float, também z:1) empatava com o card seguinte, e o empate se resolve
+       pela ordem no DOM — o card, que vem depois e tem fundo, cobria o post-it
+       (só a fita aparecia). z:2 é o mínimo que desempata: continua muito abaixo
+       do topbar (300), das abas (220), do índice (360) e das ferramentas
+       flutuantes, então não passa por cima de nenhum controle nem modal. */
+    z-index:2;}
   /* los bloques anchos nunca conviven con el post-it: lo dejan pasar primero */
   #materias-container .rm-cuaderno .rmc-scroll,#materias-container .rm-cuaderno figure.rmc-fig,#materias-container .rm-cuaderno .illustration,
   #materias-container .rm-cuaderno .rmc-exam,#materias-container .rm-cuaderno .quiz-section,#materias-container .rm-cuaderno .key-box,
