@@ -1305,6 +1305,76 @@ NÃO inventar. Registrar como pendência, dizendo exatamente o que faltou
 (por exemplo: "o slide que traz a definição é uma imagem sem texto
 extraível").
 
+8-A.5-A Gabarito sem enunciado — aproveitar o sinal sem inventar a prova
+
+Um gabarito que traz apenas a LETRA correta, ou apenas uma RESPOSTA curta,
+é evidência de que houve cobrança, mas NÃO contém por si só informação
+suficiente para reconstruir um enunciado.
+
+Portanto, é obrigatório separar quatro situações:
+
+1. MAPEAMENTO SEGURO PARA UMA QUESTÃO REAL
+   Quando outra fonte da mesma prova/fila/data, uma transcrição confiável,
+   outra versão do exame ou um fragmento legível permite ligar aquele
+   gabarito a um enunciado específico com alta confiança.
+   → Pode reconstruir segundo 8-A.5/8-A.5-B e, se a proveniência for
+   suficiente, usar «Basada en preguntas de examen».
+
+2. CONCEITO E RESPOSTA ESPERADA SEGUROS, MAS REDAÇÃO NÃO RECUPERÁVEL
+   Quando o conjunto gabarito + outras provas da mesma cátedra + material da
+   cátedra + conteúdo do site permite identificar com segurança O QUE foi
+   cobrado e QUAL conhecimento resolve a cobrança, mas não permite recuperar
+   a redação original.
+   → Primeiro procurar se já existe questão semanticamente equivalente.
+   → Se já existe, NÃO duplicar: registrar que aquele ponto do gabarito está
+   coberto pela questão canônica existente.
+   → Se não existe e houver ganho avaliativo real, pode criar uma
+   «Pregunta complementaria» própria, inspirada no padrão de cobrança
+   identificado. Internamente registrar a ligação com o gabarito, mas não
+   apresentar a questão como transcrição nem como pergunta real da prova.
+
+3. APENAS TEMA PROVÁVEL
+   Quando o gabarito sugere um assunto, mas não permite fixar com segurança
+   o conceito central e a resposta esperada.
+   → Não criar questão.
+   → Usar o sinal para AUDITAR COBERTURA: procurar no resumo e no banco se o
+   assunto já é ensinado/cobrado e registrar a lacuna, se houver.
+
+4. APENAS LETRA, SEM QUALQUER ÂNCORA DE CONTEÚDO
+   Uma sequência como A/B/C/D, isolada, NÃO autoriza inferir tema,
+   enunciado, resposta textual ou mecanismo.
+   → Não criar nem rotular questão a partir dela.
+   → Só pode ser usada para controle estrutural da prova e, quando aplicável,
+   para conferir distribuição/ordem de versões já identificadas por outra
+   fonte.
+
+TRIANGULAÇÃO OBRIGATÓRIA antes de aproveitar gabarito incompleto:
+
+- outra fila/versão da mesma prova;
+- prova de outra turma no mesmo período;
+- questões completas da mesma cátedra;
+- CITE/COMPLETE/caso clínico do mesmo gabarito;
+- slides/material da cátedra;
+- questões já existentes no site.
+
+A pergunta de controle é:
+«Consigo explicar, com evidência, por que ESTE conceito e ESTA resposta
+correspondem a esse sinal de prova?»
+
+Se a resposta for não, NÃO inventar.
+
+Relatório obrigatório para gabaritos incompletos:
+
+- total de respostas sem enunciado;
+- MAPEADAS PARA QUESTÃO REAL;
+- JÁ COBERTAS POR QUESTÃO EXISTENTE;
+- TRANSFORMADAS EM COMPLEMENTARES POR SINAL DE COBRANÇA;
+- NÃO APROVEITADAS/PENDENTES;
+- evidência usada em cada decisão.
+
+O objetivo é não perder valor avaliativo do material, sem transformar
+ausência de informação em falsa certeza.
+
 8-A.5-B Proveniência, legibilidade e reconstrução rastreável do material de prova
 
 Toda fonte recebida deve permanecer rastreável. A fonte pode ser:
@@ -1398,6 +1468,46 @@ Cada questão deve ter:
 - distratores PLAUSÍVEIS e CIENTIFICAMENTE DEFENSÁVEIS, isto é, erros que um
   aluno mal preparado realmente cometeria, e não invenções;
 - dificuldade compatível com prova médica.
+
+REGRA DOS DOIS CONCORRENTES PLAUSÍVEIS
+
+Sempre que o conteúdo permitir, a MCQ deve ser construída para que um aluno
+que saiba apenas superficialmente fique em dúvida entre pelo menos DUAS
+alternativas plausíveis.
+
+Isto NÃO significa duas respostas corretas.
+
+Significa:
+- uma alternativa é a melhor resposta e permanece inequivocamente correta;
+- pelo menos um distrator forte deve compartilhar parte relevante do
+  conceito com a correta e só cair quando o aluno aplicar o DETALHE
+  DISCRIMINADOR que a questão pretende avaliar;
+- idealmente os outros distratores também devem representar erros
+  reconhecíveis e próximos, em vez de opções absurdas.
+
+Exemplos de discriminadores adequados:
+- mesmo diagnóstico, mas estágio diferente;
+- mesma classe, mas mecanismo ou receptor diferente;
+- dois diagnósticos com clínica parecida, separados por um achado-chave;
+- dois critérios numéricos próximos;
+- indicação correta para um cenário e contraindicação/indicação de um
+  cenário vizinho;
+- definição quase correta com UM elemento essencial trocado;
+- mecanismo correto aplicado à doença ou etapa errada.
+
+TESTE DE QUALIDADE:
+um aluno que memorizou palavras-chave deve sentir a dúvida; um aluno que
+entendeu o mecanismo, a diferença ou o critério deve conseguir eliminá-la.
+
+A regra vale especialmente para:
+- questões complementares;
+- alternativas reconstruídas de questões de prova;
+- questões novas criadas a partir de evidência parcial.
+
+Quando as alternativas originais de uma prova estiverem completas e
+legíveis, PRESERVÁ-LAS por padrão. Não reescrever uma prova real apenas para
+forçar esta regra, salvo correção científica/estrutural necessária e
+documentada.
 
 Os distratores devem preferencialmente explorar conceitos vizinhos,
 critérios parecidos, fases consecutivas, estruturas anatômicas próximas,
