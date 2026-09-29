@@ -237,7 +237,7 @@ def test_site_quality_scan_is_read_only_and_confined() -> None:
 
     proibidos = [
         (re.compile(r"\bimport\s+supabase\b"), "import direto do Supabase"),
-        (re.compile(r"\bimport\s+supabase\b"), "import direto do Supabase"),
+        (re.compile(r"\bfrom\s+supabase\b"), "import direto do Supabase"),
         (re.compile(r"\bpostgrest\b", re.I), "cliente postgrest"),
         (re.compile(r"SUPABASE_(URL|KEY|SERVICE_ROLE)"), "credencial Supabase"),
         (re.compile(r"merge_pull_request|pulls/merge|gh\s+pr\s+merge"), "merge"),
