@@ -6,14 +6,14 @@ name: Repasso Quality Scan (READ-ONLY)
 # escreve Supabase/Auth/pagamento.
 
 on:
+  # Rodada final 30/09/2026: manual-only para preservar o saldo baixo da
+  # Anthropic. José/ChatGPT dispara quando quiser avançar a auditoria.
   workflow_dispatch:
     inputs:
       subject:
         description: "Slug opcional da matéria (vazio = próxima menos auditada)"
         required: false
         type: string
-  schedule:
-    - cron: "23 6 * * *"
 
 permissions:
   contents: read
