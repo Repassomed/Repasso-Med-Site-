@@ -1662,6 +1662,11 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     document.body.classList.add('rm2-drawing');
     try { sec.setPointerCapture && sec.setPointerCapture(e.pointerId); } catch (err) {}
     addPonto(e);
+    /* Primeira tinta síncrona, só piloto físico — ver `pintarPrimeiraTinta()`
+       mais abaixo (§ refinamento de latência de renderização). Fora do
+       piloto, o traço só aparece no primeiro pointermove, exactamente como
+       antes desta correcção — nenhuma mudança de comportamento para eles. */
+    if (pilotoFisico) pintarPrimeiraTinta();
     e.preventDefault();
   }
 
@@ -1726,6 +1731,38 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     /* só se reescreve o atributo `d`; nenhum nó é criado ou destruído,
        nenhum reflow do documento (§12/§18) */
     traco.path.setAttribute('d', pathIncremental(traco.pathState, traco.pts));
+  }
+
+  /* PRIMEIRA TINTA SÍNCRONA · medido: sem isto, o `d` do path fica vazio
+     ('' — `novoPath()` é chamado com `rec.points` ainda vazio) desde a
+     criação do traço até ao primeiro `pointermove` seguido do próximo
+     `requestAnimationFrame`, porque `onDown()` nunca chama
+     `agendarRenderizacao()` — só `onMove()` chama. Contacto sem nenhum
+     movimento a seguir (ou um SO/dispositivo lento a entregar o primeiro
+     `pointermove`) fica, até lá, sem nenhuma tinta visível.
+
+     Chamada UMA VEZ, dentro do próprio `onDown()`, na mesma tarefa do
+     `pointerdown` — sem esperar por frame nenhum. Único ponto capturado
+     ainda: inicializa-se `pathState` com `novoPathIncremental()` de
+     sempre (fica exactamente "M x y", `congelado:0`, sem mudança nenhuma
+     nessa função partilhada com todos os utilizadores) e pinta-se um `d`
+     LOCAL com um "L" extra para o mesmo ponto — comando de comprimento
+     zero que o `stroke-linecap:round` já existente em `#rm2-ink path`
+     transforma num ponto visível no local exacto do contacto. Não se
+     grava esse "L" de volta em `traco.pathState.d`: a próxima chamada a
+     `pathIncremental()` (no primeiro `onMove`/RAF real) continua a partir
+     do "M x y" original, produzindo exactamente o mesmo resultado de
+     sempre — este ponto extra é só um retrato temporário do primeiro
+     frame, substituído no seguinte.
+
+     Só piloto físico (José + Semiología II) — ver a chamada em `onDown()`.
+     Fora do piloto, nada aqui corre: o traço continua a só aparecer no
+     primeiro `pointermove`, byte a byte como antes desta correcção. */
+  function pintarPrimeiraTinta() {
+    if (!traco || traco.pts.length !== 1) return;
+    if (!traco.pathState) traco.pathState = novoPathIncremental(traco.pts);
+    var p = traco.pts[0];
+    traco.path.setAttribute('d', traco.pathState.d + 'L' + n1000(p[0]) + ' ' + n1000(p[1]));
   }
 
   /* Cancela um RAF pendente sem tentar desenhar num traço já destruído
