@@ -1,0 +1,6 @@
+-- =====================================================================
+-- Reverte 20260930_01_audiobooks_bucket_privado.sql
+-- Só remove o bucket vazio. Se já houver objetos, apague-os antes pelo painel
+-- (o Supabase não deixa apagar bucket com objetos). Nada mais é tocado.
+-- =====================================================================
+-- delete from storage.buckets where id = 'audiobooks';
