@@ -525,14 +525,18 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     return { txt: txt.join(''), map: map };
   }
 
-  /* Com prefixo e sufixo guardados, pelo menos um dos lados tem de
-     continuar a bater. Nenhum a bater significa que a frase igual que
-     encontrámos está noutro contexto — é o sinal de que não é o mesmo
-     sítio, e aí não se restaura. */
+  /* Pelo menos um dos lados do contexto guardado tem de bater. Isto vale
+     inclusive quando o registo não tem prefix nem suffix: sem nenhuma
+     evidência de contexto, o nível tolerante (2/3) NUNCA recupera — só o
+     nível 1 (texto exacto) pode aceitar um registo assim, porque aí o
+     próprio literal ainda existe e não precisa de mais prova nenhuma.
+     Recusar aqui não apaga nada: a marcação continua no banco, só não é
+     pintada — é a mesma regra de "nunca adivinhar" que rege todo o
+     nível 2/3. */
   function contextoSolto(txt, i, n, h) {
     var pre = projectarSolto(h.prefix || '').txt;
     var suf = projectarSolto(h.suffix || '').txt;
-    if (!pre && !suf) return true;               // registo antigo sem contexto
+    if (!pre && !suf) return false;               // sem contexto: nível tolerante recusa
     var antes = txt.slice(Math.max(0, i - pre.length), i);
     var depois = txt.slice(i + n, i + n + suf.length);
     var okPre = !!pre && antes.slice(-SOLTO_CTX) === pre.slice(-SOLTO_CTX);
