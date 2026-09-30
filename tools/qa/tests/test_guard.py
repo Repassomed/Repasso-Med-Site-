@@ -621,6 +621,58 @@ def test_remocao_verdadeira_continua_sendo_detectada() -> None:
     print("OK  test_remocao_verdadeira_continua_sendo_detectada — nenhum falso negativo.")
 
 
+def test_rename_explicito_de_enunciado_sem_id_nao_parece_remocao() -> None:
+    """Correção científica do stem pode ser declarada sem desarmar o detector."""
+    antigo = _item(
+        "¿Por qué el cortisol no activa masivamente el MR renal?",
+        ["pouco cortisol", "sem MR", "100% ligado", "11β-HSD2"],
+        correta=3, tag=COMPLEMENTARIA)
+    base = _doc(antigo)
+    q_antiga = base.questions[0]
+    novo = _item(
+        "Aunque hay mucho más cortisol, ¿qué protege al MR renal?",
+        ["transcortina", "sem MR", "11β-HSD1", "11β-HSD2"],
+        correta=3, tag=COMPLEMENTARIA)
+    attr = f' data-guard-previous-stem-sha1="{q_antiga.stem_sha1}"'
+    novo = novo.replace('<div class="quiz-item">', f'<div class="quiz-item"{attr}>', 1)
+    achados = checks._check_counts("farmacologia-ii.html", base, _doc(novo))
+    assert not any(f.check == "questoes-removidas" for f in achados), achados
+    assert not any(f.severity == HARD_FAIL for f in achados), achados
+    assert any(f.check == "enunciado-renomeado" for f in achados), achados
+    print("OK  test_rename_explicito_de_enunciado_sem_id_nao_parece_remocao")
+
+
+def test_rename_explicito_invalido_nao_esconde_remocao() -> None:
+    antigo = _item("¿Pregunta antigua?", ["A", "B", "C", "D"], correta=1)
+    base = _doc(antigo)
+    novo = _item("¿Pregunta nueva?", ["A", "B", "C", "D"], correta=1)
+    novo = novo.replace(
+        '<div class="quiz-item">',
+        '<div class="quiz-item" data-guard-previous-stem-sha1="' + ("0" * 40) + '">', 1)
+    achados = checks._check_counts("materia.html", base, _doc(novo))
+    duros = {f.check for f in achados if f.severity == HARD_FAIL}
+    assert "rename-enunciado-invalido" in duros, achados
+    assert "questoes-removidas" in duros, achados
+    print("OK  test_rename_explicito_invalido_nao_esconde_remocao")
+
+
+def test_rename_explicito_respeita_multiplicidade() -> None:
+    """Duas cópias iguais exigem duas pontes; uma só não mascara a outra."""
+    antigo = _item("¿Pregunta repetida?", ["A", "B", "C", "D"], correta=2)
+    base = _doc(antigo, antigo)
+    h = base.questions[0].stem_sha1
+    novo = _item("¿Pregunta corrigida?", ["A", "B", "C", "D"], correta=2)
+    marcado = novo.replace(
+        '<div class="quiz-item">',
+        f'<div class="quiz-item" data-guard-previous-stem-sha1="{h}">', 1)
+    achados = checks._check_counts("materia.html", base, _doc(marcado, novo))
+    assert any(f.check == "questoes-removidas" for f in achados), achados
+    achados = checks._check_counts("materia.html", base, _doc(marcado, marcado))
+    assert not any(f.check == "questoes-removidas" for f in achados), achados
+    assert any(f.check == "enunciado-renomeado" for f in achados), achados
+    print("OK  test_rename_explicito_respeita_multiplicidade")
+
+
 def test_reordenar_e_rotular_nao_reprova_como_remocao() -> None:
     """O caso da Histología I: enunciado em <div>, alternativas reordenadas e rótulo trocado."""
     q1 = _item(STEM, OPCS, correta=0, tag=EXAMEN)
@@ -653,6 +705,9 @@ def main() -> int:
         test_chave_nao_muda_ao_trocar_o_rotulo_de_proveniencia,
         test_chave_muda_quando_o_enunciado_muda_de_verdade,
         test_remocao_verdadeira_continua_sendo_detectada,
+        test_rename_explicito_de_enunciado_sem_id_nao_parece_remocao,
+        test_rename_explicito_invalido_nao_esconde_remocao,
+        test_rename_explicito_respeita_multiplicidade,
         test_reordenar_e_rotular_nao_reprova_como_remocao,
     ]
     falhas = 0
