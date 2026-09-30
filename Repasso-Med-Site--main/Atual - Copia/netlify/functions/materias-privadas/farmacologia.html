@@ -72,7 +72,7 @@
 <section class="hero">
   <div class="hero-overline">Guía de Estudio · 5.º Semestre · UCP</div>
   <h1>Farmacología <em>I</em><br><span style="font-weight:400;">desde cero, hasta el examen.</span></h1>
-  <p class="hero-sub">Manual didáctico construido sobre el <strong>contenido de la cátedra</strong> (SNA + Receptores + Antibióticos + AINEs + Opioides) y la literatura de referencia, con <strong>52 infografías propias</strong> y <strong>2 cuestionarios de la cátedra</strong> (44 preguntas basadas en exámenes + 15 complementarias).</p>
+  <p class="hero-sub">Manual didáctico construido sobre el <strong>contenido de la cátedra</strong> (SNA + Receptores + Antibióticos + AINEs + Opioides) y la literatura de referencia, con <strong>52 infografías propias</strong> y <strong>2 cuestionarios de la cátedra</strong> (41 preguntas basadas en exámenes) y 150 preguntas complementarias.</p>
   <div class="hero-meta">
     <div>SNA<span>Simpático · Parasimpático · Entérico</span></div>
     <div>RECEPTORES<span>Colinérgicos · Adrenérgicos α/β</span></div>
@@ -112,6 +112,7 @@
 @keyframes pkMove{0%{transform:translateX(-10px);opacity:.4}50%{transform:translateX(10px);opacity:1}100%{transform:translateX(-10px);opacity:.4}}
 #tab-farmaco .pk-flow .arrow{color:var(--accent);font-size:1.3rem;font-weight:800;}
 #tab-farmaco .pk-mini{font-size:.9rem;color:var(--ink-soft);margin:.5rem 0 0;}
+@media(max-width:600px){#tab-farmaco .pk-org{white-space:normal;max-width:100%;box-sizing:border-box;border-radius:14px}#tab-farmaco .key-box strong{overflow-wrap:anywhere}}
 </style>
 <div class="section-marker"><span class="section-marker-num">— BLOQUE 01 · FARMACOCINÉTICA</span></div>
 <h2>01 · Farmacocinética</h2>
@@ -250,8 +251,8 @@
 <img src="/assets/img/farmaco/far_b01_04_metabolismo_eliminacion.webp" alt="Metabolismo hepático de fase I y II, depuración renal, vida media y estado estable" loading="lazy" decoding="async" width="1600" height="900" onclick="this.classList.toggle('far-fs')">
 <figcaption><span class="far-info-k">Cómo leer</span>Seguí las tres estaciones: <b>hígado</b> (fase I oxida/reduce/hidroliza, fase II conjuga y hace más polar), <b>sangre</b> (el Cl es lo que une concentración y eliminación) y <b>riñón</b> (filtra, secreta, reabsorbe). De la última tarjeta salen los números que caen: t½ ≈ 0,693 × Vd / Cl, y el estado estable llega a las <b>4–5 vidas medias</b>.<br><span class="far-info-w">Ojo</span>la píldora final resume proporciones, no fórmulas cerradas: la dosis de carga depende de Vd y la de mantenimiento del Cl, ambas ajustadas por la concentración objetivo y por F.</figcaption>
 </figure>
-<h3>Preguntas basadas en exámenes de la cátedra</h3><p class="small">Las siguientes están <strong>basadas en preguntas de examen</strong> del cuestionario de la cátedra; se mantienen el enunciado y las alternativas originales, con la resolución del porqué.</p><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Los fármacos ácidos débiles se absorben mejor en medios alcalinos.</p>
+<h3>Preguntas de este bloque</h3><p class="small">Siguen el <strong>criterio de la cátedra</strong> aplicado a este tema.</p><div class="quiz-item interactive">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los fármacos ácidos débiles se absorben mejor en medios alcalinos.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -263,7 +264,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>El principal órgano excretor de fármacos es el hígado.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El principal órgano excretor de fármacos es el hígado.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -275,7 +276,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Las enzimas biotransformadoras de fase I catalizan reacciones de conjugación.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Las enzimas biotransformadoras de fase I catalizan reacciones de conjugación.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -287,7 +288,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Un fármaco ácido débil tiende a ionizarse en mayor porcentaje en un medio alcalino como el del intestino delgado.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Un fármaco ácido débil tiende a ionizarse en mayor porcentaje en un medio alcalino como el del intestino delgado.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -295,11 +296,11 @@
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> VERDADERO. El ácido débil cede su protón en medio alcalino → se <strong>ioniza</strong> más en el intestino.</p>
-    <p><span class="answer-tag zero">📚 Desde cero</span> Coherente con la pregunta a: ionizado en alcalino = peor absorción ahí; no ionizado en ácido = mejor absorción en el estómago.</p>
+    <p><span class="answer-tag zero">📚 Desde cero</span> Ionizado en alcalino = peor absorción ahí; no ionizado en ácido = mejor absorción en el estómago.</p>
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La vía de absorción sublingual está afectada por el efecto de primer paso hepático.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La vía de absorción sublingual está afectada por el efecto de primer paso hepático.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -311,7 +312,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Como resultado de la biotransformación, los fármacos generalmente se inactivan y se convierten en metabolitos más hidrosolubles.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Como resultado de la biotransformación, los fármacos generalmente se inactivan y se convierten en metabolitos más hidrosolubles.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -323,7 +324,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Cuando la barrera hematoencefálica está intacta, las penicilinas entran sin dificultad al tejido nervioso.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Cuando la barrera hematoencefálica está intacta, las penicilinas entran sin dificultad al tejido nervioso.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -335,7 +336,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Los fármacos en forma líquida se absorben más lentamente que en formas sólidas.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los fármacos en forma líquida se absorben más lentamente que en formas sólidas.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -347,7 +348,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La biotransformación de la mayor parte de los fármacos transcurre principalmente en los riñones.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La biotransformación de la mayor parte de los fármacos transcurre principalmente en los riñones.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -359,7 +360,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La farmacodinamia estudia las transformaciones que sufre un fármaco desde su administración hasta su eliminación.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La farmacodinamia estudia las transformaciones que sufre un fármaco desde su administración hasta su eliminación.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -371,7 +372,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Los fármacos liposolubles tienen dificultad para difundir a través de la BHE.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los fármacos liposolubles tienen dificultad para difundir a través de la BHE.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -383,7 +384,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La vascularización de un sitio de absorción no influye en la velocidad de absorción y distribución.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La vascularización de un sitio de absorción no influye en la velocidad de absorción y distribución.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -395,8 +396,8 @@
   </div>
 </div>
 <div class="quiz-item interactive" data-correct="c">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>El papel que cumple la enzima glucuroniltransferasa en el organismo es:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">1)</span> Activar profármacos</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">2)</span> Transformar metabolitos en sustancias liposolubles</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">3)</span> Transformar metabolitos de fármacos en sustancias hidrosolubles</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">4)</span> Bloquear la acción de un medicamento</li></ul>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El papel que cumple la enzima glucuroniltransferasa en el organismo es:</p>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">1)</span> Activar profármacos para que ejerzan su efecto</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">2)</span> Transformar metabolitos en sustancias liposolubles</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">3)</span> Transformar metabolitos de fármacos en sustancias hidrosolubles</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">4)</span> Bloquear la acción de un medicamento</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>3)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> La glucuroniltransferasa es la enzima de la <strong>fase II</strong> que conjuga con ácido glucurónico y vuelve al fármaco <strong>hidrosoluble</strong> para excretarlo.</p>
@@ -551,16 +552,16 @@
   <summary>🎥 Videoclases — Farmacodinámica — receptores y segundos mensajeros</summary>
   <div class="video-collapsible-body"><div class="video-grid-2"><div class="v-item"><iframe loading="lazy" src="https://www.youtube.com/embed/Uq59Z_TW2Wg" title="Farmacodinámica" allowfullscreen></iframe><div class="v-label">Farmacodinámica</div></div></div></div>
 </details>
-<div class="quiz-section"><h3>Preguntas basadas en exámenes de la cátedra</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales basadas en el cuestionario de la cátedra</p><div class="quiz-item interactive" data-correct="b">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>La función principal del IP₃ (inositol trifosfato) es:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Estimular la fosfolipasa C</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Unirse a receptores del retículo endoplásmico liso para liberar calcio</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Estimular la adenilato ciclasa</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Unirse a receptores de prostaglandinas y bloquearlos</li></ul>
+<div class="quiz-section"><h3>Preguntas de este bloque</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales para practicar este tema</p><div class="quiz-item interactive" data-correct="b">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La función principal del IP₃ (inositol trifosfato) es:</p>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Estimular la fosfolipasa C para generar más IP₃ y DAG</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Unirse a receptores del retículo endoplásmico liso para liberar calcio</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Estimular la adenilato ciclasa y elevar el AMPc</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Unirse a receptores de prostaglandinas y bloquearlos</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>B)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> El IP₃ se une a sus receptores en el <strong>retículo endoplásmico liso</strong> y abre canales que <strong>liberan Ca²⁺</strong> al citoplasma; ese calcio actúa como señal para múltiples respuestas celulares (contracción, secreción).</p>
     <p><span class="answer-tag zero">📚 Desde cero</span> La vía IP₃/DAG parte de la fosfolipasa C, que rompe el PIP₂ en <strong>IP₃</strong> (libera Ca²⁺ del RE) y <strong>DAG</strong> (activa la proteína cinasa C). No es el IP₃ el que activa la fosfolipasa C, sino al revés.</p>
   </div>
-</div><p class="small">Están <strong>basadas en preguntas de examen</strong> de la cátedra; enunciado y alternativas originales, con la resolución del porqué.</p><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Un fármaco antagonista, al unirse a su receptor, provoca actividad intrínseca del complejo que forma con éste.</p>
+</div><p class="small">Siguen el <strong>criterio de la cátedra</strong>.</p><div class="quiz-item interactive">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Un fármaco antagonista, al unirse a su receptor, provoca actividad intrínseca del complejo que forma con éste.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -572,7 +573,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Un fármaco que interactúa con un receptor de forma tal que lo bloquea es un fármaco agonista.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Un fármaco que interactúa con un receptor de forma tal que lo bloquea es un fármaco agonista.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -584,7 +585,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>El DAG (diacilglicerol) es un segundo mensajero derivado de fosfolípidos de membrana.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El DAG (diacilglicerol) es un segundo mensajero derivado de fosfolípidos de membrana.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -596,7 +597,7 @@
   </div>
 </div>
 <div class="quiz-item interactive" data-correct="d">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>El AMPc es:</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El AMPc es:</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Un tipo de receptor de membrana</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Una enzima celular</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Un nucleótido de guanosina</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Un segundo mensajero intracelular</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>D)</strong></p>
@@ -605,7 +606,7 @@
   </div>
 </div>
 <div class="quiz-item interactive" data-correct="a">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>El IP3 es un segundo mensajero celular derivado de la hidrólisis de:</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El IP3 es un segundo mensajero celular derivado de la hidrólisis de:</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Fosfolípidos de membrana</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Triglicéridos</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Proteínas de membrana</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Glucógeno</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong></p>
@@ -614,8 +615,8 @@
   </div>
 </div>
 <div class="quiz-item interactive" data-correct="b">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>El destino del IP3 es:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Estimular la enzima PLC</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Combinarse con receptores del retículo endoplásmico liso para liberar Ca²⁺</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Estimular la adenilciclasa</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Bloquear receptores de prostaglandinas</li></ul>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El destino del IP3 es:</p>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Activar la enzima fosfolipasa C y amplificar la señal</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Combinarse con receptores del retículo endoplásmico liso para liberar Ca²⁺</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Estimular la adenilciclasa para aumentar el AMPc</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Bloquear receptores de prostaglandinas de la membrana</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>B)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> El <strong>IP3</strong> viaja al <strong>retículo endoplásmico liso</strong>, se une a sus receptores y libera <strong>Ca²⁺</strong> al citosol.</p>
@@ -623,7 +624,7 @@
   </div>
 </div>
 <div class="quiz-item interactive" data-correct="a">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>La dobutamina es un ejemplo de fármaco que:</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La dobutamina es un ejemplo de fármaco que:</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Actúa como agonista de receptores</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Actúa bloqueando una enzima</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Actúa por sus propiedades físico-químicas</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Ejerce función antiinfecciosa</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong></p>
@@ -925,8 +926,8 @@
 <img src="/assets/img/farmaco/far_b04_02_bloqueadores_neuromusculares.webp" alt="Bloqueo neuromuscular no despolarizante frente a despolarizante, con trazados de tren de cuatro" loading="lazy" decoding="async" width="1600" height="900" onclick="this.classList.toggle('far-fs')">
 <figcaption><span class="far-info-k">Cómo leer</span>La diferencia se lee en los dos gráficos de <b>tren de cuatro</b>: el no despolarizante ocupa el receptor sin activarlo y produce <b>fade</b> (T4 más chico que T1); la succinilcolina lo activa de forma sostenida y deprime las cuatro respuestas por igual, <b>sin fade</b>. De ahí sale la consecuencia práctica: la neostigmina revierte el bloqueo competitivo pero <b>no</b> la fase I de la succinilcolina, y puede prolongarla.</figcaption>
 </figure>
-<h3>Preguntas estilo examen</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales basadas en el cuestionario de la cátedra</p><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Los receptores colinérgicos de la placa neuromuscular son de tipo muscarínicos.</p>
+<h3>Preguntas estilo examen</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales para practicar este tema</p><div class="quiz-item interactive">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los receptores colinérgicos de la placa neuromuscular son de tipo muscarínicos.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -959,7 +960,7 @@
 </div>
 <div class="quiz-item interactive" data-correct="b">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La acetilcolinesterasa en la placa motora cumple la función de:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Sintetizar acetilcolina</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Degradar la acetilcolina y finalizar la señal</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Recaptar noradrenalina</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Abrir canales de calcio</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Sintetizar acetilcolina en el terminal presináptico</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Degradar la acetilcolina y finalizar la señal</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Recaptar la noradrenalina liberada en la sinapsis</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Abrir canales de calcio en el terminal presináptico</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>B)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> La <strong>acetilcolinesterasa degrada la ACh</strong>, terminando la contracción. Inhibirla (neostigmina) prolonga el efecto de la ACh.</p>
@@ -1353,8 +1354,8 @@
 <img src="/assets/img/farmaco/far_b07_02_alpha1_agonistas_antagonistas.webp" alt="Agonistas y antagonistas alfa-1 enfrentados por efecto y uso clínico" loading="lazy" decoding="async" width="1600" height="900" onclick="this.classList.toggle('far-fs')">
 <figcaption><span class="far-info-k">Cómo leer</span>Leé las dos mitades como una misma palanca en dos sentidos: <b>activar α1</b> contrae músculo liso (vaso, iris, cuello vesical) y <b>bloquear α1</b> lo relaja. Por eso la fenilefrina sirve de vasopresor y descongestivo, y la prazosina o la tamsulosina alivian la resistencia vascular y la prostática. La línea que cierra la mitad derecha es la regla de oro del feocromocitoma: <b>primero se bloquea α, después β</b> — al revés se desencadena una crisis hipertensiva.</figcaption>
 </figure>
-<h3>Preguntas estilo examen</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales basadas en el cuestionario de la cátedra</p><div class="quiz-item">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>Clonidina: ¿cuál es su mecanismo de acción, su principal uso terapéutico y otras indicaciones?</p>
+<h3>Preguntas estilo examen</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales para practicar este tema</p><div class="quiz-item">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Clonidina: ¿cuál es su mecanismo de acción, su principal uso terapéutico y otras indicaciones?</p>
   <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>Mecanismo:</strong> agonista de los receptores <strong>α₂-adrenérgicos centrales</strong> (presinápticos). <strong>Uso principal:</strong> <strong>hipertensión arterial</strong>. <strong>Otras indicaciones:</strong> síndrome de abstinencia (opioides, alcohol, tabaco), TDAH, dolor crónico, sofocos/menopausia y como coadyuvante en anestesia.</p>
@@ -1372,7 +1373,7 @@
 </div>
 <div class="quiz-item interactive" data-correct="c">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Para el broncoespasmo del asma se utiliza un agonista:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> α1</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> α2</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> β2 (salbutamol)</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Un β-bloqueante</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> α1 (fenilefrina)</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> α2 (clonidina)</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> β2 (salbutamol)</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Un β-bloqueante</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>C)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Los <strong>agonistas β2</strong> (salbutamol) <strong>dilatan los bronquios</strong>. Un β-bloqueante haría lo contrario.</p>
@@ -1453,8 +1454,8 @@
 <img src="/assets/img/farmaco/far_b08_02_clasificacion_betabloqueadores.webp" alt="Clasificación de los beta-bloqueadores: no selectivos, cardioselectivos, con bloqueo alfa-1 y con ASI" loading="lazy" decoding="async" width="1600" height="900" onclick="this.classList.toggle('far-fs')">
 <figcaption><span class="far-info-k">Cómo leer</span>Recorré las cuatro columnas por lo que <b>agregan o quitan</b> respecto del propranolol: los cardioselectivos quitan el bloqueo β2 (menos broncoespasmo, aunque no riesgo cero); carvedilol y labetalol agregan bloqueo <b>α1</b> y por lo tanto vasodilatación; pindolol y acebutolol agregan actividad simpaticomimética intrínseca. Los nombres siguen una regla clásica: entre los que terminan en <b>-olol</b>, los de inicial A–M suelen ser cardioselectivos (atenolol, bisoprolol, esmolol, metoprolol) y los de N–Z, no selectivos (nadolol, propranolol, sotalol, timolol). <b>Usala con cuidado:</b> es una ayuda de memoria, no una regla farmacológica — <b>carvedilol</b> y <b>labetalol</b> empiezan con A–M y sin embargo NO son cardioselectivos, porque bloquean α1 además de β1 y β2. Ante la duda, decidí por el mecanismo y no por la inicial.</figcaption>
 </figure>
-<h3>Preguntas estilo examen</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales basadas en el cuestionario de la cátedra</p><div class="quiz-item interactive" data-correct="d">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>¿Cuál de los siguientes fármacos es un bloqueador beta NO selectivo con acciones antihipertensivas, antiarrítmicas y antimigrañosa preventiva?</p>
+<h3>Preguntas estilo examen</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales para practicar este tema</p><div class="quiz-item interactive" data-correct="d">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>¿Cuál de los siguientes fármacos es un bloqueador beta NO selectivo con acciones antihipertensivas, antiarrítmicas y antimigrañosa preventiva?</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Timolol</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Dobutamina</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Atenolol</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Propranolol</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>D)</strong></p>
@@ -1565,8 +1566,8 @@
 <img src="/assets/img/farmaco/far_b09_03_riesgos_eleccion_aine.webp" alt="Seis dominios de riesgo que deciden si se puede indicar un AINE" loading="lazy" decoding="async" width="1600" height="900" onclick="this.classList.toggle('far-fs')">
 <figcaption><span class="far-info-k">Cómo leer</span>Usá los seis dominios como una lista de verificación antes de indicar: digestivo, renal, cardiovascular, hemorrágico, respiratorio y obstétrico. El nombre que hay que retener es el <b>triple golpe</b> renal — IECA o ARA-II + diurético + AINE —, y la advertencia del embarazo, donde a partir de las 30 semanas el riesgo es el <b>cierre prematuro del ductus arterioso</b>. La regla del pie vale para todos los casos: la menor dosis eficaz, el menor tiempo posible y <b>un solo AINE por vez</b>.</figcaption>
 </figure>
-<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales basadas en el cuestionario de la cátedra</p><div class="quiz-item interactive" data-correct="c">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>Los AINES (diclofenac, ibuprofeno, ketorolaco, naproxeno, meloxicam, celecoxib) no deben utilizarse en pacientes hipertensos por:</p>
+<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales para practicar este tema</p><div class="quiz-item interactive" data-correct="c">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los AINES (diclofenac, ibuprofeno, ketorolaco, naproxeno, meloxicam, celecoxib) no deben utilizarse en pacientes hipertensos por:</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Bloquear receptores de prostaglandinas</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Bloquear la COX-1 en el epitelio gastro-duodenal</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Bloquear la enzima COX-2 en el aparato yuxtaglomerular</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Bloquear la isoforma de COX-2 en el hipotálamo</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>C)</strong></p>
@@ -1574,7 +1575,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Por eso los AINE están relativamente contraindicados en hipertensos y en insuficiencia renal/cardíaca: reducen las prostaglandinas protectoras del riñón. Las otras opciones no explican el efecto presor.</p>
   </div>
 </div><div class="quiz-item interactive" data-correct="c">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>La aspirina (AAS) no debe prescribirse como antipirético en niños con fiebre por presunta infección viral, para evitar el riesgo de:</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La aspirina (AAS) no debe prescribirse como antipirético en niños con fiebre por presunta infección viral, para evitar el riesgo de:</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Hipotensión arterial</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Hipertensión arterial</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Síndrome de Reye</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Insuficiencia cardíaca</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>C)</strong></p>
@@ -1582,7 +1583,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> El síndrome de Reye es la razón clásica por la que la aspirina está contraindicada como antipirético en menores. Regla de examen: niño + fiebre viral + aspirina = riesgo de Reye.</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La enzima COX-1 es inducible únicamente durante la respuesta inflamatoria.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La enzima COX-1 es inducible únicamente durante la respuesta inflamatoria.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -1593,7 +1594,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Por eso los AINE no selectivos, al inhibir la COX-1, causan gastritis/úlcera y sangrado; los inhibidores selectivos de COX-2 (coxibs) respetan más el estómago pero tienen riesgo cardiovascular.</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Las endorfinas, encefalinas y dinorfinas son prostaglandinas cuya producción es inhibida por los AINEs.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Las endorfinas, encefalinas y dinorfinas son prostaglandinas cuya producción es inhibida por los AINEs.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -1603,9 +1604,9 @@
     <p><span class="answer-tag expl">📝 Por qué</span> FALSO. Las endorfinas, encefalinas y dinorfinas son <strong>péptidos opioides ENDÓGENOS</strong> (neurotransmisores del sistema analgésico propio), NO prostaglandinas. Lo que los AINE inhiben es la síntesis de <strong>prostaglandinas</strong> (vía COX).</p>
     <p><span class="answer-tag zero">📚 Desde cero</span> No confundir dos sistemas distintos: (1) opioides endógenos (endorfinas) que actúan sobre receptores μ/κ/δ; (2) prostaglandinas (derivadas del ácido araquidónico) que los AINE bloquean.</p>
   </div>
-</div><p class="small">El cuestionario de la cátedra es de farmacocinética/farmacodinámica; estas preguntas siguen el <strong>criterio de la cátedra</strong> aplicado a este tema.</p><div class="quiz-item interactive" data-correct="a">
+</div><p class="small">Siguen el <strong>criterio de la cátedra</strong> aplicado a este tema.</p><div class="quiz-item interactive" data-correct="a">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El mecanismo de acción de los AINEs es:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Inhibir la ciclooxigenasa (COX) y reducir prostaglandinas</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Activar receptores opioides</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Bloquear receptores H1</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Inhibir la fosfolipasa A2</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Inhibir la ciclooxigenasa (COX) y reducir prostaglandinas</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Activar receptores opioides μ y κ en la médula espinal</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Bloquear receptores H₁ en el músculo liso bronquial</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Inhibir la fosfolipasa A2 y la liberación de araquidonato</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Los AINEs <strong>inhiben la COX</strong>, bajando la síntesis de prostaglandinas (dolor, fiebre, inflamación). Quien inhibe la fosfolipasa A2 son los <strong>corticoides</strong>.</p>
@@ -1647,7 +1648,7 @@
 </div>
 <div class="quiz-item interactive" data-correct="c">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La inhibición selectiva de la COX-2 (coxibs) se asocia principalmente a:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Mayor daño gástrico</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Agranulocitosis</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Mayor riesgo cardiovascular (trombótico)</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Síndrome de Reye</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Mayor daño gástrico y sangrado digestivo</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Agranulocitosis por depresión medular</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Mayor riesgo cardiovascular (trombótico)</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Síndrome de Reye en niños con fiebre viral</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>C)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Al respetar la COX-1 cuidan el estómago, pero alteran el equilibrio prostaciclina/tromboxano y aumentan el <strong>riesgo cardiovascular</strong>.</p>
@@ -1745,8 +1746,8 @@
   <summary>🎥 Videoclases — Opioides</summary>
   <div class="video-collapsible-body"><div class="video-grid-2"><div class="v-item"><iframe loading="lazy" src="https://www.youtube.com/embed/NhOKQaqZqVs" title="Parte 1" allowfullscreen></iframe><div class="v-label">Parte 1</div></div><div class="v-item"><iframe loading="lazy" src="https://www.youtube.com/embed/8rXG_xk0rCk" title="Parte 2" allowfullscreen></iframe><div class="v-label">Parte 2</div></div></div></div>
 </details>
-<div class="quiz-section"><h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales basadas en el cuestionario de la cátedra</p><div class="quiz-item interactive" data-correct="c">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>Todos los receptores opioides están acoplados a proteínas G. Su activación produce:</p>
+<div class="quiz-section"><h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales para practicar este tema</p><div class="quiz-item interactive" data-correct="c">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Todos los receptores opioides están acoplados a proteínas G. Su activación produce:</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Aumento de la producción de AMPc</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Estimulación de la producción de IP₃ y DAG</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inhibición de la producción de AMPc</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Inhibición de la producción de IP₃ y DAG</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>C)</strong></p>
@@ -1754,7 +1755,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Regla: proteína <strong>Gi</strong> = «i» de inhibir = baja el AMPc. Es el mecanismo de la analgesia opioide: menos AMPc, neurona hiperpolarizada y menos señal dolorosa.</p>
   </div>
 </div><div class="quiz-item interactive" data-correct="c">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>De los siguientes efectos secundarios adversos, ¿cuál está muy relacionado con el uso de morfina y opioides en general?</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>De los siguientes efectos secundarios adversos, ¿cuál está muy relacionado con el uso de morfina y opioides en general?</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">1)</span> Cefaleas</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">2)</span> Acidez</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">3)</span> Constipación</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">4)</span> Vértigos</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>3)</strong></p>
@@ -1762,7 +1763,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Otros efectos opioides: depresión respiratoria (el más peligroso), miosis, náuseas, sedación, euforia y dependencia. La constipación es tan constante que los opioides se usan como antidiarreicos (loperamida).</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La morfina es un opioide agonista potente.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La morfina es un opioide agonista potente.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -1772,9 +1773,9 @@
     <p><span class="answer-tag expl">📝 Por qué</span> VERDADERO. La morfina es el prototipo de <strong>agonista opioide potente (fuerte)</strong>, actúa principalmente sobre el receptor <strong>μ (mu)</strong> produciendo analgesia intensa. Es el estándar de referencia para el dolor severo.</p>
     <p><span class="answer-tag zero">📚 Desde cero</span> Escala de opioides: agonistas potentes (morfina, fentanilo), agonistas débiles (codeína, tramadol), agonistas-antagonistas (nalbufina) y antagonistas puros (naloxona). Efectos adversos μ: depresión respiratoria, estreñimiento, miosis, dependencia.</p>
   </div>
-</div><p class="small">Siguen el <strong>criterio de la cátedra</strong> aplicado a este tema (el cuestionario de la cátedra es de farmacocinética/dinámica).</p><div class="quiz-item interactive" data-correct="a">
+</div><p class="small">Siguen el <strong>criterio de la cátedra</strong> aplicado a este tema.</p><div class="quiz-item interactive" data-correct="a">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los analgésicos opioides ejercen su acción principalmente al:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Actuar como agonistas de los receptores opioides (μ, κ, δ)</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Inhibir la ciclooxigenasa</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Bloquear canales de sodio</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Antagonizar receptores H1</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Actuar como agonistas de los receptores opioides (μ, κ, δ)</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Inhibir la ciclooxigenasa y bajar las prostaglandinas</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Bloquear canales de sodio dependientes de voltaje</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Antagonizar receptores H₁ de la histamina</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Son <strong>agonistas</strong> de los receptores opioides (sobre todo μ), imitando a las endorfinas.</p>
@@ -1976,8 +1977,8 @@
 <img src="/assets/img/farmaco/far_b12_03_h2_vs_ibp.webp" alt="Antagonistas H2 e inhibidores de la bomba de protones sobre la célula parietal" loading="lazy" decoding="async" width="1600" height="900" onclick="this.classList.toggle('far-fs')">
 <figcaption><span class="far-info-k">Cómo leer</span>Mirá el centro: histamina (H2, AMPc), acetilcolina (M3) y gastrina (CCK-B) son tres entradas distintas que convergen en <b>una sola salida</b>, la bomba H⁺/K⁺-ATPasa. Bloquear H2 corta una de las tres vías —efecto rápido, útil de noche, con tolerancia al uso continuo—; bloquear la bomba corta la salida común y por eso suprime más. Recordá dos detalles cobrados: los IBP son <b>profármacos que se activan en medio ácido</b> y rinden más administrados antes de comer, y la <b>cimetidina</b> inhibe el citocromo P450 y tiene efecto antiandrogénico, cosa que la famotidina no.</figcaption>
 </figure>
-<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales basadas en el cuestionario de la cátedra</p><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Los receptores H₁, cuando son estimulados por sus agonistas, median la contracción del músculo liso bronquial.</p>
+<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales para practicar este tema</p><div class="quiz-item interactive">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los receptores H₁, cuando son estimulados por sus agonistas, median la contracción del músculo liso bronquial.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -1988,23 +1989,23 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Los antihistamínicos H₁ (antagonistas) bloquean estos efectos. Recordá: <strong>H₁</strong> = alergia, bronquios, vasos, prurito; <strong>H₂</strong> = secreción ácida gástrica (bloqueada por famotidina/ranitidina).</p>
   </div>
 </div><div class="quiz-item interactive" data-correct="a">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>La loratadina es un fármaco de tipo:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Antihistamínico de 2ª generación</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Analgésico opioide</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> AINE</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Antibiótico</li></ul>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La loratadina es un fármaco de tipo:</p>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Antihistamínico de 2ª generación</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Analgésico opioide de acción central</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> AINE inhibidor selectivo de la COX-2</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Antibiótico betalactámico de amplio espectro</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> La loratadina es un <strong>antihistamínico H₁ de 2ª generación</strong>. Estos (loratadina, cetirizina, fexofenadina) atraviesan poco la barrera hematoencefálica → producen <strong>menos sedación</strong> que los de 1ª generación (difenhidramina).</p>
     <p><span class="answer-tag zero">📚 Desde cero</span> 1ª generación (difenhidramina, clorfeniramina): sedantes, atraviesan la BHE. 2ª generación (loratadina, cetirizina): poco sedantes, más selectivos por H₁ periférico. Ambos son antagonistas H₁ usados en alergia.</p>
   </div>
 </div><div class="quiz-item interactive" data-correct="b">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>Los antihistamínicos de primera generación (dimenhidrinato y meclizina), además de ser útiles en la alergia, son muy eficaces también en el tratamiento de:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Diarreas</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Vértigos, náuseas y vómitos de la cinetosis</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Hipotensión arterial</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Arritmias</li></ul>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los antihistamínicos de primera generación (dimenhidrinato y meclizina), además de ser útiles en la alergia, son muy eficaces también en el tratamiento de:</p>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Diarreas agudas de origen infeccioso</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Vértigos, náuseas y vómitos de la cinetosis</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Hipotensión arterial y shock hipovolémico</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Arritmias ventriculares y taquicardia</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>B)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Los antihistamínicos H₁ de <strong>1ª generación</strong> (dimenhidrinato, meclizina) atraviesan la barrera hematoencefálica y tienen efecto <strong>antiemético y antivertiginoso</strong>: son muy usados contra la <strong>cinetosis</strong> (mareo por movimiento), náuseas y vértigo.</p>
     <p><span class="answer-tag zero">📚 Desde cero</span> Este efecto central es justamente lo que los diferencia de los de 2ª generación (loratadina): al entrar al SNC producen sedación pero también sirven para el mareo por movimiento y el vértigo. Por eso el dimenhidrinato es el clásico «para el mareo del viaje».</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La estimulación de los receptores H₁ produce contracción del músculo liso bronquial.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La estimulación de los receptores H₁ produce contracción del músculo liso bronquial.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -2037,7 +2038,7 @@
 </div>
 <div class="quiz-item interactive" data-correct="b">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los antihistamínicos H2 (ranitidina, famotidina) se utilizan para:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Tratar la alergia</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Reducir la secreción de ácido gástrico (úlcera/ERGE)</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inducir el sueño</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Tratar el vértigo</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Tratar la alergia y la rinitis estacional</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Reducir la secreción de ácido gástrico (úlcera/ERGE)</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inducir sueño y sedación preoperatoria</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Tratar el vértigo y la cinetosis</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>B)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Bloquean H2 en la célula parietal → menos <strong>ácido gástrico</strong>; útiles en úlcera y reflujo.</p>
@@ -2098,8 +2099,8 @@
 <img src="/assets/img/farmaco/far_b13_03_last_emulsion_lipidica.webp" alt="Toxicidad sistémica por anestésicos locales: prevención, pródromos y rescate" loading="lazy" decoding="async" width="1600" height="900" onclick="this.classList.toggle('far-fs')">
 <figcaption><span class="far-info-k">Cómo leer</span>Leé la secuencia como una progresión temporal: primero los <b>pródromos neurológicos</b> (parestesia perioral, sabor metálico, tinnitus, agitación), después la convulsión y por último la <b>cardiotoxicidad</b>, donde la bupivacaína es la más temida. El tratamiento sigue ese mismo orden: detener la inyección, vía aérea y oxígeno, benzodiacepina para la convulsión y <b>emulsión lipídica al 20 %</b> si la toxicidad es grave — bolo aproximado de 1,5 mL/kg seguido de infusión, junto con la reanimación.</figcaption>
 </figure>
-<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales basadas en el cuestionario de la cátedra</p><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>El propofol se utiliza para inducir la anestesia.</p>
+<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales para practicar este tema</p><div class="quiz-item interactive">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El propofol se utiliza para inducir la anestesia.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -2111,7 +2112,7 @@
   </div>
 </div><p class="small">Siguen el <strong>criterio de la cátedra</strong> aplicado a este tema.</p><div class="quiz-item interactive" data-correct="a">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El mecanismo de acción de los anestésicos locales es:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Bloquear los canales de sodio (Na⁺) e impedir la conducción nerviosa</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Activar receptores GABA</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inhibir la COX</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Bloquear receptores opioides</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Bloquear los canales de sodio (Na⁺) e impedir la conducción nerviosa</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Activar receptores GABA-A y aumentar la entrada de cloro</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inhibir la ciclooxigenasa y reducir prostaglandinas</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Bloquear receptores opioides μ en el asta dorsal</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Bloquean los <strong>canales de Na⁺</strong> → no hay despolarización ni conducción del impulso → anestesia local.</p>
@@ -2198,9 +2199,9 @@
 <img src="/assets/img/farmaco/far_b14_03_familias_penicilinas.webp" alt="Las cuatro familias de penicilinas y la lectura correcta de la alergia" loading="lazy" decoding="async" width="1600" height="900" onclick="this.classList.toggle('far-fs')">
 <figcaption><span class="far-info-k">Cómo leer</span>Las columnas están ordenadas por <b>lo que agrega cada familia</b>: las naturales cubren estreptococos y anaerobios de boca y siguen siendo la referencia en sífilis; las antiestafilocócicas resisten la penicilinasa pero <b>no alcanzan al MRSA</b>; las aminopenicilinas suman enterococo, Listeria y algunos gramnegativos; la antipseudomónica cubre Pseudomonas. La franja inferior corrige el error más común: un exantema durante una aminopenicilina, sobre todo con mononucleosis, <b>no prueba alergia mediada por IgE</b>; lo que la define es el patrón inmediato con urticaria o anafilaxia.</figcaption>
 </figure>
-<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales basadas en el cuestionario de la cátedra</p><div class="quiz-item interactive" data-correct="d">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>El sulbactam es:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Un antibiótico quinolónico fluorado</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Un aminoglucósido</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Un macrólido</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Una sustancia bloqueadora de enzimas betalactamasas</li></ul>
+<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales para practicar este tema</p><div class="quiz-item interactive" data-correct="d">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El sulbactam es:</p>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Un antibiótico quinolónico fluorado</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Un aminoglucósido de uso parenteral</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Un macrólido de amplio espectro oral</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Una sustancia bloqueadora de enzimas betalactamasas</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>D)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> El SULBACTAM es un <strong>inhibidor de betalactamasas</strong> (como el ácido clavulánico y el tazobactam). Tiene poca actividad antibiótica propia, pero <strong>protege a la penicilina</strong> de ser destruida por las betalactamasas bacterianas, ampliando su espectro (ej. ampicilina-sulbactam).</p>
@@ -2218,7 +2219,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Los grampositivos tienen una gruesa pared de peptidoglicano, blanco de las penicilinas. Las aminopenicilinas (ampicilina/amoxicilina) amplían el espectro a algunos gramnegativos.</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La ampicilina se administra por vía intramuscular e intravenosa.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La ampicilina se administra por vía intramuscular e intravenosa.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -2229,7 +2230,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> La ampicilina es una aminopenicilina de amplio espectro; su versatilidad de vías la hace muy usada. La amoxicilina, en cambio, es fundamentalmente oral (mejor absorción).</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La penicilina G procaína es de uso intravenoso.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La penicilina G procaína es de uso intravenoso.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -2241,7 +2242,7 @@
   </div>
 </div><p class="small">Siguen el <strong>criterio de la cátedra</strong> aplicado a este tema.</p><div class="quiz-item interactive" data-correct="b">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El mecanismo de acción de las penicilinas es:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Inhibir la subunidad 30S del ribosoma</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Inhibir la síntesis de la pared celular bacteriana</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inhibir la ADN-girasa</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Antagonizar el folato</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Inhibir la subunidad 30S del ribosoma</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Inhibir la síntesis de la pared celular bacteriana</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inhibir la ADN-girasa y la topoisomerasa IV</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Antagonizar la síntesis de ácido fólico</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>B)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Las penicilinas (β-lactámicos) <strong>inhiben la síntesis de la pared</strong> (PBP/transpeptidasas) → bactericidas.</p>
@@ -2262,7 +2263,7 @@
 </div>
 <div class="quiz-item interactive" data-correct="d">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>¿Por qué se combina la amoxicilina con ácido clavulánico?</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Para ampliar la cobertura contra hongos</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Para reducir la alergia</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Para mejorar la absorción oral</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Porque el clavulánico inhibe las β-lactamasas bacterianas</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Para ampliar la cobertura contra hongos</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Para reducir el riesgo de reacciones alérgicas</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Para mejorar la absorción oral y la vida media</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Porque el clavulánico inhibe las β-lactamasas bacterianas</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>D)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> El <strong>clavulánico inhibe las β-lactamasas</strong> que destruirían a la amoxicilina → recupera su efecto.</p>
@@ -2283,7 +2284,7 @@
 </div>
 <div class="quiz-item interactive" data-correct="c">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El principal efecto adverso de las penicilinas es:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Nefrotoxicidad</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Ototoxicidad</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Reacciones alérgicas (hasta anafilaxia)</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Hepatotoxicidad</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Nefrotoxicidad con elevación de creatinina</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Ototoxicidad con hipoacusia y vértigo</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Reacciones alérgicas (hasta anafilaxia)</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Hepatotoxicidad con necrosis hepática aguda</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>C)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Las penicilinas son muy seguras salvo por la <strong>alergia</strong>, que puede llegar a la anafilaxia.</p>
@@ -2321,7 +2322,7 @@
 </figure>
 <h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small">Siguen el <strong>criterio de la cátedra</strong> aplicado a este tema.</p><div class="quiz-item interactive" data-correct="a">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Las cefalosporinas comparten con las penicilinas:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> El mecanismo: inhibir la síntesis de la pared (β-lactámicos bactericidas)</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Ser bacteriostáticas</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inhibir la subunidad 50S</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Antagonizar el folato</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> El mecanismo: inhibir la síntesis de la pared (β-lactámicos bactericidas)</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Ser bacteriostáticas de espectro estrecho</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inhibir la subunidad 50S del ribosoma bacteriano</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Antagonizar la síntesis de ácido fólico (antimetabolitos)</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Ambas son <strong>β-lactámicos</strong>: inhiben la pared y son <strong>bactericidas</strong>.</p>
@@ -2351,7 +2352,7 @@
 </div>
 <div class="quiz-item interactive" data-correct="c">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>En general, al avanzar de la 1.ª a la 3.ª generación de cefalosporinas:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Aumenta la cobertura de grampositivos</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Se vuelven bacteriostáticas</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Aumenta la cobertura de gramnegativos y la penetración al SNC</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Pierden el anillo β-lactámico</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Aumenta la cobertura de grampositivos y de anaerobios</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Se vuelven bacteriostáticas y pierden actividad</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Aumenta la cobertura de gramnegativos y la penetración al SNC</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Aumenta su sensibilidad a las β-lactamasas</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>C)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Sube la cobertura <strong>gramnegativa</strong> y mejora la llegada al <strong>SNC</strong>.</p>
@@ -2395,8 +2396,8 @@
 <img src="/assets/img/farmaco/far_b16_03_tetraciclinas_usos_seguridad.webp" alt="Tetraciclinas: usos, quelación por cationes y efectos adversos" loading="lazy" decoding="async" width="1600" height="900" onclick="this.classList.toggle('far-fs')">
 <figcaption><span class="far-info-k">Cómo leer</span>El círculo del centro es la clave farmacocinética: <b>calcio, magnesio, hierro y aluminio</b> forman quelatos con la tetraciclina y la vuelven inabsorbible, así que hay que separarla de lácteos, antiácidos y suplementos. Las imágenes de la derecha son los adversos que se preguntan: fotosensibilidad, esofagitis si se toma acostado o con poca agua, y depósito en dientes y hueso en desarrollo.<br><span class="far-info-w">Ojo</span>la regla que exige la cátedra es que las tetraciclinas están <b>contraindicadas en el embarazo y en menores de 8 años</b>; la única excepción es la que muestra el recuadro central — ante sospecha de rickettsiosis grave, la doxiciclina no se posterga por la edad.</figcaption>
 </figure>
-<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales basadas en el cuestionario de la cátedra</p><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La azitromicina pertenece al grupo de los aminoglucósidos.</p>
+<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales para practicar este tema</p><div class="quiz-item interactive">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La azitromicina pertenece al grupo de los aminoglucósidos.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -2477,8 +2478,8 @@
 <img src="/assets/img/farmaco/far_b17_02_tmp_smx_folato_seguridad.webp" alt="Bloqueo secuencial de la vía del folato por sulfametoxazol y trimetoprima" loading="lazy" decoding="async" width="1600" height="900" onclick="this.classList.toggle('far-fs')">
 <figcaption><span class="far-info-k">Cómo leer</span>La cabecera es la pregunta entera: dos fármacos, dos enzimas <b>consecutivas</b>. El sulfametoxazol bloquea la <b>dihidropteroato sintasa</b> y la trimetoprima la <b>dihidrofolato reductasa</b>; al cortar dos pasos seguidos la combinación es sinérgica. La selectividad viene de que nosotros no fabricamos folato desde PABA, sino que lo comemos. De los adversos, dos son los que más se evalúan: la hemólisis en el déficit de <b>G6PD</b> y, de la trimetoprima, la <b>hiperpotasemia</b> por bloqueo del canal ENaC junto con una subida de creatinina que no significa daño renal, sino menos secreción tubular.</figcaption>
 </figure>
-<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales basadas en el cuestionario de la cátedra</p><div class="quiz-item interactive" data-correct="a">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>De las siguientes reacciones secundarias, ¿cuál es propia de las sulfonamidas?</p>
+<h3>Preguntas estilo examen (mecanismo · usos · efectos adversos)</h3><p class="small" style="margin:.5rem 0 .6rem;font-weight:700;color:#8e6a1f;">Preguntas adicionales para practicar este tema</p><div class="quiz-item interactive" data-correct="a">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>De las siguientes reacciones secundarias, ¿cuál es propia de las sulfonamidas?</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Cristaluria</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Diarreas</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Cefaleas</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Bloqueo de la placa neuromuscular</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong></p>
@@ -2486,7 +2487,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Otros adversos de las sulfas: alergia, <strong>síndrome de Stevens-Johnson</strong> y <strong>kernicterus</strong> en el recién nacido. El bloqueo neuromuscular es típico de los aminoglucósidos, no de las sulfas.</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Los aminoglucósidos constituyen una alternativa para tratar infecciones por bacterias gramnegativas.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los aminoglucósidos constituyen una alternativa para tratar infecciones por bacterias gramnegativas.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -2497,7 +2498,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Requieren oxígeno para entrar en la bacteria, por eso NO sirven contra anaerobios. Su gran limitación: <strong>nefrotoxicidad y ototoxicidad</strong>, que obligan a monitorizar niveles.</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Las quinolonas son útiles en el tratamiento de infecciones del tracto urinario.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Las quinolonas son útiles en el tratamiento de infecciones del tracto urinario.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -2508,7 +2509,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Ciprofloxacina es clásica para ITU y prostatitis; las «respiratorias» (levo/moxifloxacina) cubren mejor grampositivos y atípicos. Ojo: no inhiben la pared, sino la replicación del ADN.</p>
   </div>
 </div><div class="quiz-item">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>Sulfadiazina de plata: ¿cuál es su mecanismo de acción, su función terapéutica y en qué situaciones está indicada?</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Sulfadiazina de plata: ¿cuál es su mecanismo de acción, su función terapéutica y en qué situaciones está indicada?</p>
   <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>Mecanismo:</strong> antimicrobiano <strong>tópico</strong>; la plata liberada actúa sobre la membrana y el ADN bacteriano, y la sulfonamida inhibe la síntesis de <strong>ácido fólico</strong> bacteriano. <strong>Función:</strong> antibacteriano de amplio espectro de uso local. <strong>Indicación principal:</strong> prevención y tratamiento de infecciones en <strong>quemaduras</strong>.</p>
@@ -2538,7 +2539,7 @@
 </div>
 <div class="quiz-item interactive" data-correct="c">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El cotrimoxazol (sulfametoxazol + trimetoprima) actúa:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Inhibiendo la pared celular</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Inhibiendo la ADN-girasa</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inhibiendo secuencialmente la vía de síntesis del ácido fólico</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Uniéndose al 50S</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Inhibiendo la síntesis de la pared celular bacteriana</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Inhibiendo la ADN-girasa y la topoisomerasa IV</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inhibiendo secuencialmente la vía de síntesis del ácido fólico</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Uniéndose a la subunidad ribosomal 50S y bloqueando la traslocación</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>C)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Es un <strong>antimetabolito del folato</strong>: la sulfa inhibe la dihidropteroato sintasa y la trimetoprima la dihidrofolato reductasa (bloqueo secuencial).</p>
@@ -2547,7 +2548,7 @@
 </div>
 <div class="quiz-item interactive" data-correct="a">
   <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Una reacción adversa grave asociada a las sulfonamidas es:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Síndrome de Stevens-Johnson</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Ototoxicidad</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Tinción dental</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Reacción disulfiram</li></ul>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Síndrome de Stevens-Johnson</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Ototoxicidad y nefrotoxicidad</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Tinción dental permanente en niños</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Reacción tipo disulfiram con el alcohol</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Las sulfas pueden causar reacciones cutáneas graves como el <strong>síndrome de Stevens-Johnson</strong>; también kernicterus en neonatos.</p>
@@ -2667,11 +2668,11 @@
   </div>
 </section>
 <section class="container" id="cuestionario1">
-  <div class="section-marker"><span class="section-marker-num">— EXAMEN · ANTIBIÓTICOS · AINEs · OPIOIDES · ANTIHISTAMÍNICOS</span></div>
+  <div class="section-marker"><span class="section-marker-num">— CUESTIONARIO 1 · ANTIBIÓTICOS · AINEs · OPIOIDES · ANTIHISTAMÍNICOS</span></div>
   <h2>Preguntas en formato de examen</h2>
 
   <div class="key-box exam">
-    <h3>🎯 Este examen mezcla 4 grandes grupos</h3>
+    <h3>🎯 Este cuestionario mezcla 4 grandes grupos</h3>
     <ol>
       <li><strong>Antibióticos</strong>: penicilinas, cefalosporinas, aminoglucósidos, quinolonas, tetraciclinas, sulfas, macrólidos</li>
       <li><strong>AINEs</strong>: clasificación y selectividad COX-1/COX-2 · paracetamol × dipirona (excepciones)</li>
@@ -2755,7 +2756,7 @@
   </div>
 
   <h3 style="margin-top:3rem;color:var(--accent);">Banco de preguntas — Cuestionario 1</h3>
-  <h3 style="color:var(--accent);">✅ Verdadero/Falso (10 oficiales)</h3>
+  <h3 style="color:var(--accent);">✅ Verdadero/Falso (10)</h3>
 <div class="quiz-item interactive">
       <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La risperidona es un fármaco neuroléptico.</p>
       <div class="tf-buttons">
@@ -2866,7 +2867,7 @@
         <p><span class="answer-tag expl">📝 Por qué</span> FALSO — la penicilina V es de uso ORAL. La que es IM/EV es la penicilina G (se destruye por el ácido gástrico, por eso solo funciona por vía parenteral).</p>
         <p><span class="answer-tag zero">📚 Desde cero</span> Regla: V de «vía oral» (resiste el ácido gástrico); G se da IM/EV (se destruye si se toma por boca).</p>
       </div>
-    </div><h3 style="margin-top:2rem;color:var(--accent);">📝 Opción múltiple (10 oficiales — A a J)</h3><div class="quiz-item interactive" data-correct="c">
+    </div><h3 style="margin-top:2rem;color:var(--accent);">📝 Opción múltiple (10 — A a J)</h3><div class="quiz-item interactive" data-correct="c">
       <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>De los siguientes fármacos AINES, señale cual es inhibidor selectivo de la enzima COX-2:</p>
       <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Diclofenac</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Piroxicam</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Meloxicam</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Naproxeno</li><li data-option="e" onclick="checkAnswer(this)"><span class="opt-letter">E)</span> Ibuprofeno</li></ul>
       <div class="answer">
@@ -2880,7 +2881,7 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong> Hipoacusia, vértigos, elevación de creatinina, bloqueo placa NM</p>
         <p><span class="answer-tag expl">📝 Por qué</span> Los aminoglucósidos tienen una TRÍADA TÓXICA: OTOTOXICIDAD (hipoacusia, vértigo), NEFROTOXICIDAD (↑ creatinina) y BLOQUEO NEUROMUSCULAR (raro, a dosis altas o con curare/anestesia).</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Mnemónico: aminoglucósido = «OÍDO + RIÑÓN + PLACA». Por eso se monitorizan dosis y se usan el menor tiempo posible. La aplasia medular (b) es del cloranfenicol.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> Mnemónico: aminoglucósido = «OÍDO + RIÑÓN + PLACA». Por eso se monitorizan dosis y se usan el menor tiempo posible. La aplasia medular es del cloranfenicol.</p>
       </div>
     </div><div class="quiz-item interactive" data-correct="a">
       <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>El mecanismo de acción de las penicilinas consiste en:</p>
@@ -2953,9 +2954,9 @@
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 01 · Farmacocinética <span style="font-weight:400;font-size:.8rem;opacity:.7">(3)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (2)</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Complementarias (2)</p>
 <div class="quiz-item interactive">
-      <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Los fármacos administrados por vía EV sufren efecto de primer paso hepático.</p>
+      <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los fármacos administrados por vía EV sufren efecto de primer paso hepático.</p>
       <div class="tf-buttons">
         <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
         <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -2966,7 +2967,7 @@
         <p><span class="answer-tag zero">📚 Desde cero</span> Primer paso = el hígado «muerde» parte del fármaco antes de que llegue a la sangre. Solo ocurre por vía oral; la EV lo saltea → biodisponibilidad 100%.</p>
       </div>
     </div><div class="quiz-item interactive">
-      <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Los fármacos ácidos débiles en un medio ácido tienden a mantenerse el mayor número de sus moléculas en estado no ionizado.</p>
+      <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los fármacos ácidos débiles en un medio ácido tienden a mantenerse el mayor número de sus moléculas en estado no ionizado.</p>
       <div class="tf-buttons">
         <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
         <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -2976,7 +2977,7 @@
         <p><span class="answer-tag expl">📝 Por qué</span> VERDADERO — «igual con igual»: un ácido débil en medio ácido queda mayoritariamente NO ionizado. La forma no ionizada (sin carga) es liposoluble y atraviesa membranas.</p>
         <p><span class="answer-tag zero">📚 Desde cero</span> Un ácido en un medio ya ácido «no tiene motivo» para soltar su H⁺ → queda neutro (no ionizado). En medio básico se ioniza. La forma no ionizada cruza las membranas.</p>
       </div>
-    </div><p class="small" style="margin:.8rem 0 .3rem;font-weight:700;color:#2a5a8e;">Complementarias (1)</p>
+    </div><p class="small" style="margin:.8rem 0 .3rem;font-weight:700;color:#2a5a8e;">Más complementarias (1)</p>
 <div class="quiz-item interactive">
       <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los fármacos administrados por vía ORAL pueden sufrir efecto de primer paso hepático.</p>
       <div class="tf-buttons">
@@ -2986,16 +2987,16 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO</strong></p>
         <p><span class="answer-tag expl">📝 Por qué</span> VERDADERO — la vía oral SUFRE primer paso (sangre del intestino → vena porta → hígado antes de la circulación sistémica).</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la «b», invertida. La oral es la vía que sufre primer paso; la EV es la que NO lo sufre.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> La oral es la vía que sufre primer paso; la EV es la que NO lo sufre.</p>
       </div>
     </div>
 </div>
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 02 · Farmacodinámica <span style="font-weight:400;font-size:.8rem;opacity:.7">(5)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (3)</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Complementarias (3)</p>
 <div class="quiz-item interactive">
-      <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>El manitol es un ejemplo de fármaco que actúa bloqueando enzimas.</p>
+      <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El manitol es un ejemplo de fármaco que actúa bloqueando enzimas.</p>
       <div class="tf-buttons">
         <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
         <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -3006,7 +3007,7 @@
         <p><span class="answer-tag zero">📚 Desde cero</span> El manitol es un azúcar que «atrae agua» por osmosis. No toca receptor ni enzima. Quien bloquea enzima es el enalapril (ECA) y el mestinón (acetilcolinesterasa).</p>
       </div>
     </div><div class="quiz-item interactive" data-correct="a">
-      <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>El fármaco enalapril es un ejemplo de fármaco que actúa:</p>
+      <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El fármaco enalapril es un ejemplo de fármaco que actúa:</p>
       <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Sobre enzima</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Según sus propiedades físico-químicas</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Sobre receptores</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Sobre enzima y receptores de membrana</li></ul>
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong> Sobre enzima</p>
@@ -3014,14 +3015,14 @@
         <p><span class="answer-tag zero">📚 Desde cero</span> «-pril» = IECA = inhibe enzima. Comparar: manitol actúa por física (osmosis); clonidina sobre receptor; enalapril sobre enzima.</p>
       </div>
     </div><div class="quiz-item interactive" data-correct="c">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>La función principal del IP₃ (inositol trifosfato) es:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">1)</span> Estimular la fosfolipasa C</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">2)</span> Estimular la adenilato ciclasa</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">3)</span> Unirse a receptores del retículo endoplásmico liso para liberar calcio</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">4)</span> Unirse a receptores de prostaglandinas y bloquearlos</li></ul>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La función principal del IP₃ (inositol trifosfato) es:</p>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">1)</span> Estimular la fosfolipasa C para generar más IP₃ y DAG</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">2)</span> Estimular la adenilato ciclasa y elevar el AMPc</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">3)</span> Unirse a receptores del retículo endoplásmico liso para liberar calcio</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">4)</span> Unirse a receptores de prostaglandinas y bloquearlos</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>3)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> El IP₃ se une a sus receptores en el <strong>retículo endoplásmico liso</strong> y abre canales que <strong>liberan Ca²⁺</strong> al citoplasma; ese calcio actúa como señal para múltiples respuestas celulares (contracción, secreción).</p>
     <p><span class="answer-tag zero">📚 Desde cero</span> La vía IP₃/DAG parte de la fosfolipasa C, que rompe el PIP₂ en <strong>IP₃</strong> (libera Ca²⁺ del RE) y <strong>DAG</strong> (activa la proteína cinasa C). No es el IP₃ el que activa la fosfolipasa C, sino al revés.</p>
   </div>
-</div><p class="small" style="margin:.8rem 0 .3rem;font-weight:700;color:#2a5a8e;">Complementarias (2)</p>
+</div><p class="small" style="margin:.8rem 0 .3rem;font-weight:700;color:#2a5a8e;">Más complementarias (2)</p>
 <div class="quiz-item interactive">
       <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El enalapril actúa por sus propiedades físico-químicas, sin involucrar enzimas.</p>
       <div class="tf-buttons">
@@ -3039,7 +3040,7 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>B)</strong> Propiedad física (osmosis)</p>
         <p><span class="answer-tag expl">📝 Por qué</span> El manitol actúa por OSMOSIS (propiedad fisicoquímica): «atrae» agua y funciona como diurético osmótico. No involucra enzima ni receptor.</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la pregunta h. Manitol = osmosis pura. Ejemplo clásico de fármaco que no actúa por receptor ni enzima, sino por física.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> Manitol = osmosis pura. Ejemplo clásico de fármaco que no actúa por receptor ni enzima, sino por física.</p>
       </div>
     </div>
 </div>
@@ -3087,7 +3088,7 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO</strong></p>
         <p><span class="answer-tag expl">📝 Por qué</span> VERDADERO — la sinapsis preganglionar usa ACh en los DOS sistemas, incluido el parasimpático.</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la «a». La afirmación es correcta porque preganglionar = siempre ACh, tanto en el simpático como en el parasimpático.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> La afirmación es correcta porque preganglionar = siempre ACh, tanto en el simpático como en el parasimpático.</p>
       </div>
     </div><div class="quiz-item interactive" data-correct="b">
       <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Las fibras simpáticas postganglionares que inervan la mayoría de los órganos (excepto sudoríparas) liberan:</p>
@@ -3095,15 +3096,15 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>B)</strong> Noradrenalina</p>
         <p><span class="answer-tag expl">📝 Por qué</span> En la regla general, las fibras simpáticas posganglionares liberan NORADRENALINA. La excepción son las sudoríparas (que usan ACh).</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la pregunta H, invertida: aquí se pide la regla general (noradrenalina), dejando claro que las sudoríparas son la excepción.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> Aquí se pide la regla general (noradrenalina), dejando claro que las sudoríparas son la excepción.</p>
       </div>
     </div>
 </div>
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 04 · Placa Motora <span style="font-weight:400;font-size:.8rem;opacity:.7">(2)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (2)</p><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Los receptores colinérgicos de la placa neuromuscular son de tipo muscarínicos.</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes y complementarias (2)</p><div class="quiz-item interactive">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los receptores colinérgicos de la placa neuromuscular son de tipo muscarínicos.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -3198,7 +3199,7 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO</strong></p>
         <p><span class="answer-tag expl">📝 Por qué</span> VERDADERO — la dobutamina (β1) → ↑ AMPc → mayor fuerza de contracción.</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la «d»/«G». Une fármaco (dobutamina), receptor (β1) y mensajero (AMPc). Todo verdadero.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> Une fármaco (dobutamina), receptor (β1) y mensajero (AMPc). Todo verdadero.</p>
       </div>
     </div><div class="quiz-item interactive">
       <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La noradrenalina produce vasoconstricción más intensa que la adrenalina por su mayor afinidad por receptores alfa.</p>
@@ -3209,7 +3210,7 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO</strong></p>
         <p><span class="answer-tag expl">📝 Por qué</span> VERDADERO — la noradrenalina tiene mayor afinidad por α → vasoconstricción más intensa que la adrenalina.</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la «e». La adrenalina prefiere β (corazón); la noradrenalina prefiere α (vasos). Por eso es el vasoconstrictor más potente.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> La adrenalina prefiere β (corazón); la noradrenalina prefiere α (vasos). Por eso es el vasoconstrictor más potente.</p>
       </div>
     </div><div class="quiz-item interactive">
       <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El salbutamol, por ser agonista beta-2, produce broncodilatación.</p>
@@ -3220,7 +3221,7 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO</strong></p>
         <p><span class="answer-tag expl">📝 Por qué</span> VERDADERO — agonista β2 en el bronquio → relajación del músculo liso → broncodilatación.</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la «g». Conecta el salbutamol con su efecto clínico. β2 = bronquio = abrir la vía aérea.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> Conecta el salbutamol con su efecto clínico. β2 = bronquio = abrir la vía aérea.</p>
       </div>
     </div><div class="quiz-item interactive" data-correct="d">
       <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los receptores beta-2 adrenérgicos son abundantes y producen relajación en:</p>
@@ -3228,7 +3229,7 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>D)</strong> Músculo liso bronquial</p>
         <p><span class="answer-tag expl">📝 Por qué</span> Los β2 son abundantes en el músculo liso bronquial (y vascular, GI, GU), donde producen RELAJACIÓN (broncodilatación).</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la pregunta B. β1 = corazón; β2 = bronquio/vasos (relaja); β3 = adiposo (lipólisis).</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> β1 = corazón; β2 = bronquio/vasos (relaja); β3 = adiposo (lipólisis).</p>
       </div>
     </div><div class="quiz-item interactive" data-correct="c">
       <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El efecto broncodilatador del salbutamol está mediado por el segundo mensajero:</p>
@@ -3236,14 +3237,14 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>C)</strong> AMPc</p>
         <p><span class="answer-tag expl">📝 Por qué</span> El salbutamol (β2) actúa vía ↑ AMPc → PKA → inhibe la MLCK → relajación del músculo liso bronquial.</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la pregunta G aplicada al β2. Todo receptor β usa AMPc; el β2 lo usa para relajar el bronquio.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> Todo receptor β usa AMPc; el β2 lo usa para relajar el bronquio.</p>
       </div>
     </div>
 </div>
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 06 · Receptores Colinérgicos <span style="font-weight:400;font-size:.8rem;opacity:.7">(10)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (7)</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes y complementarias (7)</p>
 <div class="quiz-item interactive">
       <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La atropina es un fármaco agonista colinérgico de receptores muscarínicos.</p>
       <div class="tf-buttons">
@@ -3275,7 +3276,7 @@
         <p><span class="answer-tag zero">📚 Desde cero</span> Colinérgico en el ojo = miosis. Al contraer la pupila «abre» el ángulo de drenaje → sale el líquido acumulado → baja la presión del glaucoma.</p>
       </div>
     </div><div class="quiz-item interactive" data-correct="b">
-      <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>El mestinón es un medicamento utilizado contra la miastenia gravis por causar:</p>
+      <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El mestinón es un medicamento utilizado contra la miastenia gravis por causar:</p>
       <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Aumento de la liberación de ACh en la placa NM</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Bloqueo de la enzima acetilcolinesterasa</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Disminución de la producción de anticuerpos contra receptores nicotínicos de la placa NM</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Bloqueo de la enzima colina-acetil-transferasa</li></ul>
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>B)</strong> Bloqueo de la enzima acetilcolinesterasa</p>
@@ -3319,7 +3320,7 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO</strong></p>
         <p><span class="answer-tag expl">📝 Por qué</span> VERDADERO — la pilocarpina (agonista muscarínico) → miosis → mejora el drenaje → ↓ presión intraocular → trata el glaucoma.</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria que conecta la pilocarpina (pregunta E) con el mecanismo. Agonista colinérgico en el ojo = miosis = drena el líquido = baja la presión.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> Agonista colinérgico en el ojo = miosis = drena el líquido = baja la presión.</p>
       </div>
     </div><div class="quiz-item interactive" data-correct="d">
       <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La neostigmina, igual que el mestinón, mejora la miastenia gravis porque:</p>
@@ -3327,7 +3328,7 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>D)</strong> Bloquea la acetilcolinesterasa</p>
         <p><span class="answer-tag expl">📝 Por qué</span> La neostigmina (como el mestinón) bloquea la acetilcolinesterasa → más ACh disponible en la hendidura → compensa los receptores destruidos en la miastenia.</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la pregunta F con otro anticolinesterásico. Mismo mecanismo: inhibir la enzima que destruye la ACh.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> Mismo mecanismo: inhibir la enzima que destruye la ACh.</p>
       </div>
     </div><div class="quiz-item interactive" data-correct="a">
       <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La atropina produce sus efectos por:</p>
@@ -3335,14 +3336,14 @@
       <div class="answer">
         <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong> Efecto antagonista sobre receptores muscarínicos</p>
         <p><span class="answer-tag expl">📝 Por qué</span> La atropina es ANTAGONISTA muscarínico (anticolinérgico): bloquea el receptor muscarínico.</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la pregunta J (ipratropio) aplicada a la atropina. Ambos son antagonistas muscarínicos; la atropina es el prototipo.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> Ambos son antagonistas muscarínicos; la atropina es el prototipo.</p>
       </div>
     </div>
 </div>
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 07 · Agonistas/Antagonistas Adrenérgicos <span style="font-weight:400;font-size:.8rem;opacity:.7">(5)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (3)</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes y complementarias (3)</p>
 <div class="quiz-item interactive" data-correct="d">
       <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>La clonidina es un fármaco antihipertensivo que actúa como:</p>
       <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Agonista alfa-1</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Bloqueador alfa-1</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Agonista Beta-2</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Agonista Alfa-2</li></ul>
@@ -3360,7 +3361,7 @@
         <p><span class="answer-tag zero">📚 Desde cero</span> Las anfetaminas y derivados son «simpaticomiméticos indirectos»: no activan el receptor directamente, sino que hacen liberar más noradrenalina/dopamina. <strong>Matiz farmacológico</strong> (no cambia la respuesta del examen): a diferencia de la anfetamina clásica, el mecanismo predominante del metilfenidato es <strong>inhibir la recaptación</strong> de dopamina y noradrenalina (bloquea DAT/NET, de forma parecida a la cocaína), con un componente liberador menor. Cualquiera de las dos vías aumenta la disponibilidad sináptica del neurotransmisor. De ahí el efecto estimulante (TDAH).</p>
       </div>
     </div><div class="quiz-item">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>Clonidina: ¿cuál es su mecanismo de acción, su principal uso terapéutico y otras indicaciones?</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Clonidina: ¿cuál es su mecanismo de acción, su principal uso terapéutico y otras indicaciones?</p>
   <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>Mecanismo:</strong> agonista de los receptores <strong>α₂-adrenérgicos centrales</strong> (presinápticos). <strong>Uso principal:</strong> <strong>hipertensión arterial</strong>. <strong>Otras indicaciones:</strong> síndrome de abstinencia (opioides, alcohol, tabaco), TDAH, dolor crónico, sofocos/menopausia y como coadyuvante en anestesia.</p>
@@ -3368,29 +3369,29 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Los α₂ funcionan como un «freno» (autorreceptor): cuando se activan, avisan a la neurona que deje de liberar noradrenalina. Por eso un AGONISTA α₂ como la clonidina termina <strong>disminuyendo</strong> la actividad simpática (efecto simpaticolítico central). Su retirada brusca puede causar hipertensión de rebote.</p>
   </div>
 </div><p class="small" style="margin:.8rem 0 .3rem;font-weight:700;color:#2a5a8e;">Complementarias (2)</p>
-<div class="quiz-item interactive" data-correct="d">
+<div class="quiz-item interactive" data-correct="b">
       <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El salbutamol es un fármaco con la siguiente propiedad:</p>
-      <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Antagonista muscarínico</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Agonista alfa-1 selectivo</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Bloqueador despolarizante de placa NM</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Agonista beta-2 selectivo</li></ul>
+      <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Antagonista muscarínico</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Agonista beta-2 selectivo</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Bloqueador despolarizante de placa NM</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Agonista alfa-1 selectivo</li></ul>
       <div class="answer">
-        <p><span class="answer-tag">✓ Respuesta</span> <strong>D)</strong> Agonista beta-2 selectivo</p>
+        <p><span class="answer-tag">✓ Respuesta</span> <strong>B)</strong> Agonista beta-2 selectivo</p>
         <p><span class="answer-tag expl">📝 Por qué</span> El salbutamol es agonista β2 selectivo (broncodilatador).</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria de la pregunta A aplicada al salbutamol. β2 = bronquio = broncodilatación. Es el rescate de la crisis asmática.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> β2 = bronquio = broncodilatación. Es el rescate de la crisis asmática.</p>
       </div>
-    </div><div class="quiz-item interactive" data-correct="d">
+    </div><div class="quiz-item interactive" data-correct="c">
       <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La fenilefrina es un fármaco que actúa como:</p>
-      <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Agonista beta-2 selectivo</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Antagonista muscarínico</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inhibidor de la acetilcolinesterasa</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Agonista alfa-1 selectivo</li></ul>
+      <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Agonista beta-2 selectivo</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Antagonista muscarínico</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Agonista alfa-1 selectivo</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Inhibidor de la acetilcolinesterasa</li></ul>
       <div class="answer">
-        <p><span class="answer-tag">✓ Respuesta</span> <strong>D)</strong> Agonista alfa-1 selectivo</p>
+        <p><span class="answer-tag">✓ Respuesta</span> <strong>C)</strong> Agonista alfa-1 selectivo</p>
         <p><span class="answer-tag expl">📝 Por qué</span> La fenilefrina es agonista α1 selectivo → vasoconstricción → ↑ presión. Se usa en hipotensión y como descongestionante/midriático.</p>
-        <p><span class="answer-tag zero">📚 Desde cero</span> Complementaria en el estilo de la clonidina (C), pero con fenilefrina. α1 = vasoconstricción. No la confundas con la clonidina, que es α2.</p>
+        <p><span class="answer-tag zero">📚 Desde cero</span> α1 = vasoconstricción. No la confundas con la clonidina, que es α2.</p>
       </div>
     </div>
 </div>
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 08 · Beta-Adrenérgicos <span style="font-weight:400;font-size:.8rem;opacity:.7">(2)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (2)</p><div class="quiz-item interactive" data-correct="a">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>¿Cuál de los siguientes fármacos es un bloqueador beta NO selectivo con acciones antihipertensivas, antiarrítmicas y antimigrañosa preventiva?</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes y complementarias (2)</p><div class="quiz-item interactive" data-correct="a">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>¿Cuál de los siguientes fármacos es un bloqueador beta NO selectivo con acciones antihipertensivas, antiarrítmicas y antimigrañosa preventiva?</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Propranolol</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Timolol</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Dobutamina</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Atenolol</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong></p>
@@ -3414,8 +3415,8 @@
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 09 · AINEs <span style="font-weight:400;font-size:.8rem;opacity:.7">(4)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (4)</p><div class="quiz-item interactive" data-correct="d">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>Los AINES (diclofenac, ibuprofeno, ketorolaco, naproxeno, meloxicam, celecoxib) no deben utilizarse en pacientes hipertensos por:</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Complementarias (4)</p><div class="quiz-item interactive" data-correct="d">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los AINES (diclofenac, ibuprofeno, ketorolaco, naproxeno, meloxicam, celecoxib) no deben utilizarse en pacientes hipertensos por:</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Bloquear receptores de prostaglandinas</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Bloquear la COX-1 en el epitelio gastro-duodenal</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Bloquear la isoforma de COX-2 en el hipotálamo</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Bloquear la enzima COX-2 en el aparato yuxtaglomerular</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>D)</strong></p>
@@ -3423,7 +3424,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Por eso los AINE están relativamente contraindicados en hipertensos y en insuficiencia renal/cardíaca: reducen las prostaglandinas protectoras del riñón. Las otras opciones no explican el efecto presor.</p>
   </div>
 </div><div class="quiz-item interactive" data-correct="d">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>La aspirina (AAS) no debe prescribirse como antipirético en niños con fiebre por presunta infección viral, para evitar el riesgo de:</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La aspirina (AAS) no debe prescribirse como antipirético en niños con fiebre por presunta infección viral, para evitar el riesgo de:</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">1)</span> Hipotensión arterial</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">2)</span> Hipertensión arterial</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">3)</span> Insuficiencia cardíaca</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">4)</span> Síndrome de Reye</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>4)</strong></p>
@@ -3432,7 +3433,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La enzima COX-1 es inducible únicamente durante la respuesta inflamatoria.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La enzima COX-1 es inducible únicamente durante la respuesta inflamatoria.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -3443,7 +3444,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Por eso los AINE no selectivos, al inhibir la COX-1, causan gastritis/úlcera y sangrado; los inhibidores selectivos de COX-2 (coxibs) respetan más el estómago pero tienen riesgo cardiovascular.</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Las endorfinas, encefalinas y dinorfinas son prostaglandinas cuya producción es inhibida por los AINEs.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Las endorfinas, encefalinas y dinorfinas son prostaglandinas cuya producción es inhibida por los AINEs.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -3458,8 +3459,8 @@
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 10 · Opioides <span style="font-weight:400;font-size:.8rem;opacity:.7">(3)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (3)</p><div class="quiz-item interactive" data-correct="d">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>Todos los receptores opioides están acoplados a proteínas G. Su activación produce:</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Complementarias (3)</p><div class="quiz-item interactive" data-correct="d">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Todos los receptores opioides están acoplados a proteínas G. Su activación produce:</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Aumento de la producción de AMPc</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Estimulación de la producción de IP₃ y DAG</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Inhibición de la producción de IP₃ y DAG</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Inhibición de la producción de AMPc</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>D)</strong></p>
@@ -3467,7 +3468,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Regla: proteína <strong>Gi</strong> = «i» de inhibir = baja el AMPc. Es el mecanismo de la analgesia opioide: menos AMPc, neurona hiperpolarizada y menos señal dolorosa.</p>
   </div>
 </div><div class="quiz-item interactive" data-correct="a">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>De los siguientes efectos secundarios adversos, ¿cuál está muy relacionado con el uso de morfina y opioides en general?</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>De los siguientes efectos secundarios adversos, ¿cuál está muy relacionado con el uso de morfina y opioides en general?</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Constipación</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Cefaleas</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> Acidez</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Vértigos</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>A)</strong></p>
@@ -3476,7 +3477,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La morfina es un opioide agonista potente.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La morfina es un opioide agonista potente.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -3491,8 +3492,8 @@
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 12 · Antihistamínicos <span style="font-weight:400;font-size:.8rem;opacity:.7">(4)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (4)</p><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Los receptores H₁, cuando son estimulados por sus agonistas, median la contracción del músculo liso bronquial.</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Complementarias (4)</p><div class="quiz-item interactive">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los receptores H₁, cuando son estimulados por sus agonistas, median la contracción del músculo liso bronquial.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -3503,16 +3504,16 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Los antihistamínicos H₁ (antagonistas) bloquean estos efectos. Recordá: <strong>H₁</strong> = alergia, bronquios, vasos, prurito; <strong>H₂</strong> = secreción ácida gástrica (bloqueada por famotidina/ranitidina).</p>
   </div>
 </div><div class="quiz-item interactive" data-correct="b">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>La loratadina es un fármaco de tipo:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Analgésico opioide</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Antihistamínico de 2ª generación</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> AINE</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Antibiótico</li></ul>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La loratadina es un fármaco de tipo:</p>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">A)</span> Analgésico opioide de acción central</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">B)</span> Antihistamínico de 2ª generación</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">C)</span> AINE inhibidor selectivo de la COX-2</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">D)</span> Antibiótico betalactámico de amplio espectro</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>B)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> La loratadina es un <strong>antihistamínico H₁ de 2ª generación</strong>. Estos (loratadina, cetirizina, fexofenadina) atraviesan poco la barrera hematoencefálica → producen <strong>menos sedación</strong> que los de 1ª generación (difenhidramina).</p>
     <p><span class="answer-tag zero">📚 Desde cero</span> 1ª generación (difenhidramina, clorfeniramina): sedantes, atraviesan la BHE. 2ª generación (loratadina, cetirizina): poco sedantes, más selectivos por H₁ periférico. Ambos son antagonistas H₁ usados en alergia.</p>
   </div>
 </div><div class="quiz-item interactive" data-correct="c">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>Los antihistamínicos de primera generación (dimenhidrinato y meclizina), además de ser útiles en la alergia, son muy eficaces también en el tratamiento de:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">1)</span> Diarreas</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">2)</span> Hipotensión arterial</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">3)</span> Vértigos, náuseas y vómitos de la cinetosis</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">4)</span> Arritmias</li></ul>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los antihistamínicos de primera generación (dimenhidrinato y meclizina), además de ser útiles en la alergia, son muy eficaces también en el tratamiento de:</p>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">1)</span> Diarreas agudas de origen infeccioso</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">2)</span> Hipotensión arterial y shock hipovolémico</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">3)</span> Vértigos, náuseas y vómitos de la cinetosis</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">4)</span> Arritmias ventriculares y taquicardia</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>3)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> Los antihistamínicos H₁ de <strong>1ª generación</strong> (dimenhidrinato, meclizina) atraviesan la barrera hematoencefálica y tienen efecto <strong>antiemético y antivertiginoso</strong>: son muy usados contra la <strong>cinetosis</strong> (mareo por movimiento), náuseas y vértigo.</p>
@@ -3520,7 +3521,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La estimulación de los receptores H₁ produce contracción del músculo liso bronquial.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La estimulación de los receptores H₁ produce contracción del músculo liso bronquial.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -3535,9 +3536,9 @@
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 13 · Anestésicos <span style="font-weight:400;font-size:.8rem;opacity:.7">(1)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (1)</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Complementarias (1)</p>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>El propofol se utiliza para inducir la anestesia.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El propofol se utiliza para inducir la anestesia.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -3552,9 +3553,9 @@
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 14 · Penicilinas <span style="font-weight:400;font-size:.8rem;opacity:.7">(4)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (4)</p><div class="quiz-item interactive" data-correct="c">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>El sulbactam es:</p>
-  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">1)</span> Un antibiótico quinolónico fluorado</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">2)</span> Un aminoglucósido</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">3)</span> Una sustancia bloqueadora de enzimas betalactamasas</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">4)</span> Un macrólido</li></ul>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes y complementarias (4)</p><div class="quiz-item interactive" data-correct="c">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>El sulbactam es:</p>
+  <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">1)</span> Un antibiótico quinolónico fluorado</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">2)</span> Un aminoglucósido de uso parenteral</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">3)</span> Una sustancia bloqueadora de enzimas betalactamasas</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">4)</span> Un macrólido de amplio espectro oral</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>3)</strong></p>
     <p><span class="answer-tag expl">📝 Por qué</span> El SULBACTAM es un <strong>inhibidor de betalactamasas</strong> (como el ácido clavulánico y el tazobactam). Tiene poca actividad antibiótica propia, pero <strong>protege a la penicilina</strong> de ser destruida por las betalactamasas bacterianas, ampliando su espectro (ej. ampicilina-sulbactam).</p>
@@ -3573,7 +3574,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Los grampositivos tienen una gruesa pared de peptidoglicano, blanco de las penicilinas. Las aminopenicilinas (ampicilina/amoxicilina) amplían el espectro a algunos gramnegativos.</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La ampicilina se administra por vía intramuscular e intravenosa.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La ampicilina se administra por vía intramuscular e intravenosa.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -3584,7 +3585,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> La ampicilina es una aminopenicilina de amplio espectro; su versatilidad de vías la hace muy usada. La amoxicilina, en cambio, es fundamentalmente oral (mejor absorción).</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La penicilina G procaína es de uso intravenoso.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La penicilina G procaína es de uso intravenoso.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -3599,9 +3600,9 @@
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 16 · Macrólidos y Tetraciclinas <span style="font-weight:400;font-size:.8rem;opacity:.7">(1)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (1)</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Complementarias (1)</p>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>La azitromicina pertenece al grupo de los aminoglucósidos.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>La azitromicina pertenece al grupo de los aminoglucósidos.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button>
@@ -3616,8 +3617,8 @@
 
 <div class="quiz-section">
 <h3 style="border-bottom:3px solid var(--brand,#8b2c8b);padding-bottom:.3rem;margin-top:1.5rem;">📂 17 · Aminoglucósidos y Sulfonamidas <span style="font-weight:400;font-size:.8rem;opacity:.7">(4)</span></h3>
-<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Basadas en exámenes (4)</p><div class="quiz-item interactive" data-correct="c">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>De las siguientes reacciones secundarias, ¿cuál es propia de las sulfonamidas?</p>
+<p class="small" style="margin:.6rem 0 .3rem;font-weight:700;color:#8e6a1f;">Complementarias (4)</p><div class="quiz-item interactive" data-correct="c">
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>De las siguientes reacciones secundarias, ¿cuál es propia de las sulfonamidas?</p>
   <ul class="options interactive-options"><li data-option="a" onclick="checkAnswer(this)"><span class="opt-letter">1)</span> Diarreas</li><li data-option="b" onclick="checkAnswer(this)"><span class="opt-letter">2)</span> Cefaleas</li><li data-option="c" onclick="checkAnswer(this)"><span class="opt-letter">3)</span> Cristaluria</li><li data-option="d" onclick="checkAnswer(this)"><span class="opt-letter">4)</span> Bloqueo de la placa neuromuscular</li></ul>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>3)</strong></p>
@@ -3626,7 +3627,7 @@
   </div>
 </div>
 <div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Los aminoglucósidos constituyen una alternativa para tratar infecciones por bacterias gramnegativas.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Los aminoglucósidos constituyen una alternativa para tratar infecciones por bacterias gramnegativas.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -3637,7 +3638,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Requieren oxígeno para entrar en la bacteria, por eso NO sirven contra anaerobios. Su gran limitación: <strong>nefrotoxicidad y ototoxicidad</strong>, que obligan a monitorizar niveles.</p>
   </div>
 </div><div class="quiz-item interactive">
-  <p class="quiz-question"><span class="quiz-tag oficial">Verdadero o falso · basada en examen</span>Las quinolonas son útiles en el tratamiento de infecciones del tracto urinario.</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Las quinolonas son útiles en el tratamiento de infecciones del tracto urinario.</p>
   <div class="tf-buttons">
     <button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button>
     <button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button>
@@ -3648,7 +3649,7 @@
     <p><span class="answer-tag zero">📚 Desde cero</span> Ciprofloxacina es clásica para ITU y prostatitis; las «respiratorias» (levo/moxifloxacina) cubren mejor grampositivos y atípicos. Ojo: no inhiben la pared, sino la replicación del ADN.</p>
   </div>
 </div><div class="quiz-item">
-  <p class="quiz-question"><span class="quiz-tag oficial">Basada en preguntas de examen</span>Sulfadiazina de plata: ¿cuál es su mecanismo de acción, su función terapéutica y en qué situaciones está indicada?</p>
+  <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span>Sulfadiazina de plata: ¿cuál es su mecanismo de acción, su función terapéutica y en qué situaciones está indicada?</p>
   <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
   <div class="answer">
     <p><span class="answer-tag">✓ Respuesta</span> <strong>Mecanismo:</strong> antimicrobiano <strong>tópico</strong>; la plata liberada actúa sobre la membrana y el ADN bacteriano, y la sulfonamida inhibe la síntesis de <strong>ácido fólico</strong> bacteriano. <strong>Función:</strong> antibacteriano de amplio espectro de uso local. <strong>Indicación principal:</strong> prevención y tratamiento de infecciones en <strong>quemaduras</strong>.</p>
