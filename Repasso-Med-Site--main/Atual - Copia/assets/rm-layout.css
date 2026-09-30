@@ -268,6 +268,13 @@ html.rm-l2 #logout-fab { bottom: calc(18px + var(--rm-player-h) + var(--rm-safe-
 @media (max-width: 560px) {
   html.rm-l2 .rm2-box { bottom: max(84px, calc(env(safe-area-inset-bottom) + 74px + var(--rm-player-h))); }
 }
+/* painel de diagnóstico da caneta (só existe no piloto): abre ao lado da lateral e acima do slot do
+   player, sem cobri-los. Só posição/tamanho (CSS); o motor da caneta não é tocado. */
+html.rm-l2 .rm2-diag {
+  left: calc(var(--rm-left-w) + 8px);
+  bottom: calc(8px + var(--rm-player-h) + var(--rm-safe-b));
+  width: min(430px, calc(100vw - var(--rm-left-w) - 70px));   /* mesma borda direita do original (100vw − 62px) */
+}
 
 @media (prefers-reduced-motion: reduce) {
   .rm-l2-side, .rm-l2-backdrop, .rm-l2-tree-toggle svg, .rm-l2-block-open svg { transition: none !important; }
