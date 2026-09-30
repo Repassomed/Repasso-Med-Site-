@@ -121,6 +121,21 @@ const GUARDS = `
   P.load = function () { window.__real.mediaLoad++; };
   var d = Object.getOwnPropertyDescriptor(P, 'src');
   if (d && d.set) Object.defineProperty(P, 'src', { get: d.get, set: function () { window.__real.mediaSrc++; }, configurable: true });
+  window.__mo = { created: 0, live: 0, dockLive: 0, opts: [] };   // dockLive: só os observers do data-rm-dock (o Playwright/página podem ter outros)
+  var MO = window.MutationObserver;
+  window.MutationObserver = function (cb) {
+    var o = new MO(cb), on = false, obs = o.observe.bind(o), dis = o.disconnect.bind(o);
+    window.__mo.created++;
+    o.observe = function (t, opt) {
+      var dock = !!(opt && opt.attributeFilter && opt.attributeFilter.indexOf('data-rm-dock') >= 0);
+      if (!on) { on = true; o.__dock = dock; window.__mo.live++; if (dock) window.__mo.dockLive++; }
+      window.__mo.opts.push({ root: t === document.documentElement, filter: opt && opt.attributeFilter && opt.attributeFilter.slice(), subtree: !!(opt && opt.subtree), childList: !!(opt && opt.childList), characterData: !!(opt && opt.characterData) });
+      return obs(t, opt);
+    };
+    o.disconnect = function () { if (on) { on = false; window.__mo.live--; if (o.__dock) window.__mo.dockLive--; } return dis(); };
+    return o;
+  };
+  window.MutationObserver.prototype = MO.prototype;
   window.__globalListeners = [];
   var add = EventTarget.prototype.addEventListener;
   EventTarget.prototype.addEventListener = function (t) {
@@ -190,13 +205,13 @@ async function funcionais(browser, port) {
   ok(!rbad.ok && rbad.accepted === 0, 'metadado com URL recusado em loadMetadata');
 
   seccao('Slot: montar e falhar fechado');
-  const antes = await ev(page, () => ({ body: document.body.innerHTML, style: document.documentElement.getAttribute('style') }));
+  const antes = await ev(page, () => ({ body: document.body.innerHTML, style: document.documentElement.getAttribute('style'), slot: document.getElementById('rm-l2-player').outerHTML }));
   await ev(page, () => { var s = document.getElementById('rm-l2-player'); window.__slot = s; s.remove(); });
   ok((await ev(page, () => window.E.attach())) === false, 'attach() sem slot ⇒ false');
   ok((await ev(page, () => window.E.attach('#nao-existe'))) === false, 'attach(seletor inexistente) ⇒ false');
   ok((await ev(page, () => window.E.attach(null))) === false, 'attach(null) ⇒ usa seletor por omissão e falha');
   const depois = await ev(page, () => ({ body: document.body.innerHTML, style: document.documentElement.getAttribute('style') }));
-  ok(antes.body.replace('<div id="rm-l2-player"></div>', '') === depois.body.replace('<div id="rm-l2-player"></div>', ''), 'falha de attach não altera o DOM');
+  ok(antes.body.replace(antes.slot, '') === depois.body, 'falha de attach não altera o DOM');
   ok(antes.style === depois.style, 'falha de attach não altera <html style>');
   ok((await ev(page, () => window.E.play('a1'))) === false, 'sem player montado, play() recusa (nada de som sem controlos)');
   s = await st(page); fi = await fakeInfo(page);
@@ -592,6 +607,216 @@ async function ui(browser, port) {
   await ctx.close();
 }
 
+
+/* ------------------------------------------------------------------ */
+/* E · INTEGRAÇÃO FUTURA COM A LAYOUT V2 (B1): data-rm-dock manda       */
+/* ------------------------------------------------------------------ */
+/* Mesma regra do rm-layout.js do B1 (#411): constantes e fórmula só para o teste saber o que o B1 DECIDIRIA. */
+const B1K = { W_DOCK: 1200, W_RAIL: 768, TEXT_COL: 880, RIGHT_RAIL: 67, PLAYER_W: 240, PLAYER_GAP: 12 };
+const b1Left = lm => lm === 'docked' ? 264 : (lm === 'rail' ? 64 : 0);
+const b1Dock = (w, lm) => ((w - b1Left(lm)) >= (B1K.TEXT_COL + B1K.RIGHT_RAIL + B1K.PLAYER_GAP + B1K.PLAYER_W + 32)) ? 'side' : 'bottom';
+const b1Attrs = (page, lm, dock) => page.evaluate(o => {
+  var h = document.documentElement; h.classList.add('rm-l2');
+  h.setAttribute('data-rm-lmode', o.lm);
+  if (o.dock) h.setAttribute('data-rm-dock', o.dock); else h.removeAttribute('data-rm-dock');
+}, { lm, dock });
+const frame = page => page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+const inter = (a, b) => a.l < b.r - 0.5 && a.r > b.l + 0.5 && a.t < b.b - 0.5 && a.b > b.t + 0.5;
+async function geom(page) {
+  return page.evaluate(() => {
+    const R = e => { if (!e) return null; const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height }; };
+    const c = document.getElementById('conteudo'), cs = getComputedStyle(c), cr = c.getBoundingClientRect();
+    const text = { l: cr.left + parseFloat(cs.paddingLeft), r: cr.right - parseFloat(cs.paddingRight), t: cr.top + parseFloat(cs.paddingTop), b: cr.bottom - parseFloat(cs.paddingBottom) };
+    const hs = getComputedStyle(document.documentElement);
+    return {
+      p: R(document.querySelector('.rm-audio')), slot: R(document.getElementById('rm-l2-player')), side: R(document.getElementById('b1-side')),
+      tools: R(document.getElementById('b1-tools')), diag: R(document.querySelector('.rm2-diag')), cont: R(c), text,
+      leftW: hs.getPropertyValue('--rm-left-w').trim(), rightW: hs.getPropertyValue('--rm-right-w').trim(), playerH: hs.getPropertyValue('--rm-player-h').trim(),
+      mode: document.querySelector('.rm-audio').getAttribute('data-mode'), layout: document.querySelector('.rm-audio').getAttribute('data-layout'),
+      vw: innerWidth, vh: innerHeight, sw: document.documentElement.scrollWidth
+    };
+  });
+}
+async function abrir(page) {
+  await ev(page, MK); await ev(page, it => window.E.loadMetadata(it), ITENS); await ev(page, () => window.E.attach());
+  await PLAY(page, 'a1'); await tick(page, 20); await frame(page);
+}
+/* invariantes comuns: player dentro do slot (horizontal), sem sobrepor sidebar/toolbox/diagnóstico */
+function invariantes(g, rot) {
+  const p = g.p;
+  ok(p && p.w > 0, rot + ': player visível');
+  ok(p.l >= g.slot.l - 0.5 && p.r <= g.slot.r + 0.5, rot + ': player dentro do slot #rm-l2-player (não escapa dele)', { p, slot: g.slot });
+  ok(!inter(p, g.side) || g.side.w === 0, rot + ': não cobre a lateral esquerda', { p, side: g.side });
+  ok(!inter(p, g.tools), rot + ': não cobre a toolbox da direita', { p, tools: g.tools });
+  ok(!inter(p, g.diag), rot + ': não cobre o painel de diagnóstico da caneta', { p, diag: g.diag });
+  ok(p.l >= -0.5 && p.r <= g.vw + 0.5 && p.b <= g.vh + 0.5 && p.t >= -0.5, rot + ': dentro do viewport', p);
+  ok(g.sw <= g.vw, rot + ': sem overflow horizontal', { sw: g.sw, vw: g.vw });
+}
+function textoLivre(g, rot) { ok(!inter(g.p, { l: g.text.l, r: g.text.r, t: -1e6, b: 1e6 }), rot + ': não cobre a coluna de texto', { p: g.p, text: g.text }); }
+
+async function integracaoB1(browser, port) {
+  seccao('B1 · A) 1440 + lateral docked 264 ⇒ B1 diz bottom ⇒ D1 = bottom');
+  {
+    const { ctx, page, reqs, erros } = await novaPagina(browser, port, 1440, 900);
+    const baseReqs = reqs.length;
+    ok(b1Dock(1440, 'docked') === 'bottom', '(sanidade) a fórmula do B1 decide bottom a 1440 com lateral 264', b1Dock(1440, 'docked'));
+    await b1Attrs(page, 'docked', 'bottom');
+    ok((await ev(page, () => window.__real.audioCtor + window.__real.mediaSrc + window.__fake.created.length)) === 0, '0 mídia antes de play (com o B1 presente)');
+    await abrir(page);
+    let g = await geom(page);
+    ok(g.mode === 'bottom' && g.layout === 'b1', 'D1 segue o B1: bottom (e não o breakpoint de 1400 ⇒ lateral)', { mode: g.mode, layout: g.layout });
+    ok(g.leftW === '264px' && g.rightW === '67px', 'variáveis do B1 presentes: --rm-left-w 264px, --rm-right-w 67px', { l: g.leftW, r: g.rightW });
+    invariantes(g, 'A');
+    ok(near(g.p.l, 264, 1) && near(g.p.r, g.vw - 67, 1), 'inferior ocupa exatamente o slot: de --rm-left-w a --rm-right-w', { l: g.p.l, r: g.p.r });
+    ok(near(g.p.b, g.vh, 1), 'encostado ao fundo');
+    ok(near(parseFloat(g.playerH), g.p.h, 1.5) && near(g.slot.h, g.p.h, 1.5), '--rm-player-h do B1 = altura do player e o slot ganha essa altura', { playerH: g.playerH, p: g.p.h, slot: g.slot.h });
+    ok(g.diag.b <= g.p.t + 0.5, 'o diagnóstico da caneta sobe acima do player (via --rm-player-h)', { diagB: g.diag.b, pT: g.p.t });
+    await ev(page, () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+    const fim = await page.evaluate(() => document.getElementById('fim').getBoundingClientRect().bottom), pt = (await geom(page)).p.t;
+    ok(fim <= pt + 0.5, 'com o B1, o fim da página não fica sob o player (o B1 reserva pelo --rm-player-h)', { fim, pt });
+    ok(await ev(page, () => parseFloat(getComputedStyle(document.body).paddingBottom) === 0), 'sem reserva duplicada: o rm-audio.css não põe padding no body quando há B1');
+    ok(await ev(page, () => window.__mo.dockLive === 1), 'um único observer vivo', await ev(page, () => window.__mo));
+    const o = (await ev(page, () => window.__mo.opts)).filter(x => x.filter);
+    ok(o.length === 1 && o.every(x => x.root && x.filter && x.filter.join() === 'data-rm-dock' && !x.subtree && !x.childList && !x.characterData), 'observer restrito: só <html>, só o atributo data-rm-dock, sem subtree/childList', o);
+
+    seccao('B1 · B) mesma viewport: docked ⇒ rail (dock bottom ⇒ side) sem reload');
+    await ev(page, () => { window.__marker = 'mesma-pagina'; });
+    const plays0 = (await fakeInfo(page)).plays, pos0 = (await st(page)).position;
+    ok(b1Dock(1440, 'rail') === 'side', '(sanidade) a fórmula do B1 decide side a 1440 com o trilho de 64', b1Dock(1440, 'rail'));
+    await b1Attrs(page, 'rail', 'side'); await frame(page);
+    g = await geom(page);
+    ok(g.mode === 'lateral' && g.layout === 'b1', 'D1 passou a lateral sem a viewport cruzar breakpoint', { mode: g.mode });
+    ok(await ev(page, () => window.__marker === 'mesma-pagina'), 'sem recarregar a página');
+    ok(g.leftW === '64px', 'B1: --rm-left-w 64px');
+    invariantes(g, 'B');
+    ok(near(g.p.r, g.slot.r, 1), 'lateral encostado à borda direita do slot (= esquerda da toolbox)', { pr: g.p.r, sr: g.slot.r });
+    ok(g.p.r <= g.tools.l + 0.5, 'com folga para a toolbox', { pr: g.p.r, tl: g.tools.l });
+    ok(g.p.l > g.side.r + 100, 'afastado da lateral/trilho esquerdo');
+    textoLivre(g, 'B (rail 1440)');
+    ok(g.playerH === '0px' && near(g.slot.h, 0, 40), 'lateral não reserva espaço: --rm-player-h = 0', { playerH: g.playerH, slotH: g.slot.h });
+    ok(g.p.w <= 240.5, 'largura lateral = 240 px (a reservada pelo B1)', g.p.w);
+    const dentro = await ev(page, () => { const p = document.querySelector('.rm-audio').getBoundingClientRect(); return Array.from(document.querySelectorAll('.rm-audio button, .rm-audio select, .rm-audio input')).every(b => { const r = b.getBoundingClientRect(); return r.left >= p.left - 0.5 && r.right <= p.right + 0.5 && r.top >= p.top - 0.5 && r.bottom <= p.bottom + 0.5; }); });
+    ok(dentro, 'todos os controlos cabem dentro do player lateral de 240 px');
+    const s1 = await st(page);
+    ok(s1.state === 'playing' && s1.position >= pos0 && (await fakeInfo(page)).plays === plays0, 'a reprodução não foi tocada pela mudança de layout (sem novo play, sem perder o ponto)', { s: s1.state, pos: s1.position });
+
+    seccao('B1 · C) mesma viewport: side ⇒ bottom');
+    await b1Attrs(page, 'docked', 'bottom'); await frame(page);
+    g = await geom(page);
+    ok(g.mode === 'bottom' && await ev(page, () => window.__marker === 'mesma-pagina'), 'acompanha side → bottom sem reload', g.mode);
+    invariantes(g, 'C');
+    ok(near(parseFloat(g.playerH), g.p.h, 1.5), '--rm-player-h volta a refletir a altura');
+    await ev(page, () => { document.documentElement.setAttribute('data-rm-dock', 'side'); });
+    ok((await ev(page, () => window.E.refreshLayout())) === 'lateral' && (await geom(page)).mode === 'lateral', 'refreshLayout() relê o dock na hora (síncrono)');
+    await ev(page, () => { document.documentElement.setAttribute('data-rm-dock', 'bottom'); });
+    ok((await ev(page, () => window.E.refreshLayout())) === 'bottom', 'refreshLayout() ⇒ bottom');
+    ok((await st(page)).layout.source === 'b1', 'getState().layout.source = b1');
+
+    seccao('B1 · D) 264 + 67 a 1600 (lateral docked, B1 diz side): sem cobrir lateral nem toolbox');
+    await page.setViewportSize({ width: 1600, height: 900 });
+    ok(b1Dock(1600, 'docked') === 'side', '(sanidade) B1 decide side a 1600 com lateral 264');
+    await b1Attrs(page, 'docked', 'side'); await frame(page);
+    g = await geom(page);
+    ok(g.leftW === '264px' && g.rightW === '67px', 'variáveis 264/67', { l: g.leftW, r: g.rightW });
+    ok(g.mode === 'lateral', 'lateral');
+    invariantes(g, 'D');
+    ok(g.p.l >= 264 && g.p.r <= g.vw - 67 + 0.5, 'player entre --rm-left-w e --rm-right-w', { l: g.p.l, r: g.p.r });
+    if (inter(g.p, { l: g.text.l, r: g.text.r, t: -1e6, b: 1e6 })) console.log('  ⓘ AVISO B1: a 1600 px com lateral docked a fórmula `cabe` do rm-layout.js manda side, mas a coluna de texto (880, centrada) fica ' + Math.round(g.p.l < g.text.r ? g.text.r - g.p.l : 0) + ' px por baixo do player de 240. O motor segue o B1 (autoridade); a correção da fórmula é do B1.');
+    await page.setViewportSize({ width: 1700, height: 900 }); await b1Attrs(page, 'docked', b1Dock(1700, 'docked')); await frame(page);
+    g = await geom(page);
+    ok(g.mode === 'lateral', '1700 + docked: side');
+    invariantes(g, 'D (1700)'); textoLivre(g, 'D (1700 docked)');
+    ok(await ev(page, () => window.__real.mediaPlay === 0 && window.__real.audioCtor === 0), 'sem mídia real');
+    ok(erros.length === 0, 'sem erros de consola', erros);
+    ok(reqs.length === baseReqs && reqs.length === 4, 'sem pedidos além dos 4 ficheiros locais', reqs.length);
+    await ctx.close();
+  }
+
+  seccao('B1 · E) trilho de 64 px');
+  for (const [w, h] of [[1024, 768], [1440, 900], [900, 800]]) {
+    const { ctx, page } = await novaPagina(browser, port, w, h);
+    const dock = b1Dock(w, 'rail');
+    await b1Attrs(page, 'rail', dock); await abrir(page);
+    const g = await geom(page);
+    ok(g.leftW === '64px', `E ${w}: --rm-left-w 64px`, g.leftW);
+    ok(g.mode === (dock === 'side' ? 'lateral' : 'bottom'), `E ${w}: B1 diz ${dock} ⇒ D1 ${g.mode}`, g.mode);
+    invariantes(g, `E ${w}`);
+    ok(g.p.l >= 64 - 0.5 || g.p.w === 0, `E ${w}: nada por baixo do trilho (x ≥ 64)`, g.p.l);
+    if (dock === 'side') textoLivre(g, `E ${w} (rail)`);
+    await ctx.close();
+  }
+
+  seccao('B1 · F) celular: bottom + safe-area');
+  for (const [w, h] of [[390, 844], [320, 568]]) {
+    const { ctx, page } = await novaPagina(browser, port, w, h, { hasTouch: true });
+    await b1Attrs(page, 'off', b1Dock(w, 'off')); await abrir(page);
+    const g = await geom(page);
+    ok(g.mode === 'bottom' && g.layout === 'b1', `F ${w}: bottom`, g.mode);
+    ok(g.leftW === '0px' && g.rightW === '0px', `F ${w}: sem reservas laterais (drawer)`, { l: g.leftW, r: g.rightW });
+    invariantes(g, `F ${w}`);
+    ok(near(g.p.l, 0, 1) && near(g.p.r, g.vw, 1) && near(g.p.b, g.vh, 1), `F ${w}: barra inferior em largura total`, g.p);
+    ok(near(parseFloat(g.playerH), g.p.h, 1.5), `F ${w}: --rm-player-h = altura`);
+    const css = await ev(page, () => { let t = ''; for (const s of Array.from(document.styleSheets)) { try { t += Array.from(s.cssRules).map(x => x.cssText).join(); } catch (e) { } } return t; });
+    ok(/data-layout="b1"\][^}]*data-mode="bottom"\][^}]*safe-area-inset-left/.test(css) && /data-mode="bottom"\][^}]*safe-area-inset-bottom/.test(css), `F ${w}: CSS do modo inferior usa env(safe-area-inset-*)`);
+    ok(await ev(page, () => parseFloat(getComputedStyle(document.querySelector('.rm-audio')).paddingBottom) >= 6), `F ${w}: padding inferior ≥ 6 px (+ safe-area onde houver)`);
+    const alvos = await ev(page, () => Array.from(document.querySelectorAll('.rm-audio button, .rm-audio select')).every(b => { const r = b.getBoundingClientRect(); return r.width >= 43.5 && r.height >= 43.5; }));
+    ok(alvos, `F ${w}: alvos de toque ≥ 44 px`);
+    await ctx.close();
+  }
+
+  seccao('B1 · G) sem data-rm-dock: fallback sintético continua testável');
+  {
+    const { ctx, page } = await novaPagina(browser, port, 1440, 900);
+    await abrir(page);
+    let g = await geom(page);
+    ok(await ev(page, () => !document.documentElement.hasAttribute('data-rm-dock')), 'harness sem data-rm-dock');
+    ok(g.mode === 'lateral' && g.layout === 'fallback' && (await st(page)).layout.source === 'fallback', 'sem B1 a 1440: fallback ⇒ lateral');
+    await page.setViewportSize({ width: 1399, height: 900 }); await frame(page);
+    ok((await geom(page)).mode === 'bottom', 'sem B1 a 1399: fallback ⇒ inferior');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await ev(page, () => document.documentElement.setAttribute('data-rm-dock', 'bottom')); await frame(page);
+    ok((await geom(page)).mode === 'bottom' && (await geom(page)).layout === 'b1', 'com data-rm-dock=bottom o fallback NÃO prevalece (1440 ⇒ bottom)');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await ev(page, () => document.documentElement.setAttribute('data-rm-dock', 'side')); await frame(page);
+    ok((await geom(page)).mode === 'lateral', 'com data-rm-dock=side o fallback NÃO prevalece (390 ⇒ lateral, como o B1 mandar)');
+    await ev(page, () => document.documentElement.setAttribute('data-rm-dock', 'lixo')); await frame(page);
+    ok((await geom(page)).layout === 'fallback', 'valor inválido em data-rm-dock ⇒ ignorado, volta ao fallback');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await ev(page, () => document.documentElement.removeAttribute('data-rm-dock')); await frame(page);
+    ok((await geom(page)).mode === 'lateral' && (await geom(page)).layout === 'fallback', 'B1 desmontado (atributo removido) ⇒ volta ao fallback sem recarregar');
+    await ctx.close();
+  }
+
+  seccao('B1 · H) destroy/unmount: nada fica a observar');
+  {
+    const { ctx, page } = await novaPagina(browser, port, 1440, 900);
+    await b1Attrs(page, 'docked', 'bottom'); await abrir(page);
+    ok(await ev(page, () => window.__mo.dockLive === 1 && !document.getElementById('rm-l2-player').hidden), 'attached: 1 observer vivo e slot aberto');
+    ok(await ev(page, () => document.documentElement.style.getPropertyValue('--rm-player-h') !== ''), '--rm-player-h publicada enquanto aberto');
+    await ev(page, () => window.E.close());
+    ok(await ev(page, () => document.getElementById('rm-l2-player').hidden === true), 'close: slot volta a hidden (como o B1 o deixou)');
+    ok((await ev(page, () => document.documentElement.style.getPropertyValue('--rm-player-h'))) === '0px', 'close: --rm-player-h = 0 (o B1 devolve o espaço)');
+    await PLAY(page, 'a1');
+    await ev(page, () => window.E.destroy());
+    const r = await ev(page, () => ({ live: window.__mo.dockLive, hidden: document.getElementById('rm-l2-player').hidden, ph: document.documentElement.style.getPropertyValue('--rm-player-h'), ah: document.documentElement.style.getPropertyValue('--rm-audio-h'), ui: document.querySelectorAll('.rm-audio').length }));
+    ok(r.live === 0, 'destroy desliga o MutationObserver', r);
+    ok(r.hidden === true && r.ph === '' && r.ah === '' && r.ui === 0, 'destroy devolve slot hidden, remove --rm-player-h/--rm-audio-h e a UI', r);
+    const antes = await ev(page, () => document.documentElement.getAttribute('style') + '|' + document.getElementById('rm-l2-player').outerHTML);
+    await ev(page, () => document.documentElement.setAttribute('data-rm-dock', 'side')); await frame(page);
+    await ev(page, () => document.documentElement.setAttribute('data-rm-dock', 'bottom')); await frame(page);
+    ok((await ev(page, () => document.documentElement.getAttribute('style') + '|' + document.getElementById('rm-l2-player').outerHTML)) === antes, 'mudar data-rm-dock depois do destroy não mexe em mais nada');
+    /* re-attach a outro elemento desliga o observer antigo: nunca mais do que 1 vivo */
+    await ev(page, MK); await ev(page, it => window.E.loadMetadata(it), ITENS); await ev(page, () => window.E.attach());
+    await ev(page, () => { const d = document.createElement('div'); d.id = 'slot2'; document.body.appendChild(d); window.E.attach('#slot2'); });
+    ok(await ev(page, () => window.__mo.dockLive === 1), 'attach a outro slot: continua 1 observer (o anterior saiu)', await ev(page, () => window.__mo));
+    await ev(page, () => window.E.handle('logout'));
+    ok(await ev(page, () => window.__mo.dockLive === 0), "handle('logout') também desliga o observer");
+    const gl = await ev(page, () => window.__globalListeners.filter(x => /rm-audio\.js/.test(x)));
+    ok(gl.length === 0, 'sem listeners globais criados pelo motor', gl);
+    await ctx.close();
+  }
+}
+
 (async () => {
   console.log('D1 · motor sintético rm-audio.js');
   testesNode();
@@ -600,6 +825,7 @@ async function ui(browser, port) {
   try {
     await funcionais(browser, port);
     await ui(browser, port);
+    await integracaoB1(browser, port);
   } catch (e) { koN++; falhas.push('EXCEÇÃO: ' + (e && e.stack || e)); console.log('  ✗ EXCEÇÃO', e); }
   await browser.close(); srv.close();
   const fora = vistos.filter(u => !ROUTES[u]);

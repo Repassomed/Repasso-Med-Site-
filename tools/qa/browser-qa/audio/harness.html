@@ -12,16 +12,52 @@
   p { margin: 0 0 14px; }
   #fake-toolbox { position: fixed; right: 0; top: 40%; width: 48px; height: 160px; background: #13314f; z-index: 1000; }
   #fim { display: block; height: 40px; background: #cde; }
+  #b1-side, #b1-tools, .rm2-diag { display: none; }
+</style>
+<style id="b1-contract">
+/* SNAPSHOT do CONTRATO do Layout V2 B1 (PR #411 @ dfd39a45: rm-layout.css §1, §3, §7, §8).
+   Só o que o player consome — NÃO é o rm-layout.css e não o substitui. Serve para provar, sem
+   depender da #411, que o player respeita a geometria do B1. Só vale com <html class="rm-l2">.
+   O JS do B1 escreve data-rm-lmode (docked/rail/off) e data-rm-dock (side/bottom); aqui os testes
+   escrevem esses atributos como o B1 faria. */
+html.rm-l2 { --rm-left-w: 0px; --rm-right-w: 0px; --rm-player-h: 0px; --rm-safe-b: env(safe-area-inset-bottom, 0px); }
+html.rm-l2[data-rm-lmode="docked"] { --rm-left-w: 264px; }
+html.rm-l2[data-rm-lmode="rail"]   { --rm-left-w: 64px; }
+html.rm-l2[data-rm-lmode="off"]    { --rm-left-w: 0px; }
+html.rm-l2:not([data-rm-lmode="off"]) { --rm-right-w: 67px; }
+html.rm-l2 #materias-container {
+  box-sizing: border-box; padding-left: var(--rm-left-w); padding-right: var(--rm-right-w);
+  padding-bottom: calc(var(--rm-player-h) + var(--rm-safe-b));
+}
+html.rm-l2 #conteudo { max-width: 880px; padding: 2.6rem 2rem; box-sizing: border-box; }   /* .container do site: 880, centrado */
+.rm-l2-player {
+  position: fixed; left: var(--rm-left-w, 0px); right: var(--rm-right-w, 0px); bottom: 0; z-index: 99989;
+  height: var(--rm-player-h, 0px); box-sizing: border-box; padding-bottom: var(--rm-safe-b, 0px);
+}
+.rm-l2-player[hidden] { display: none; }
+html.rm-l2 #b1-side { display: block; position: fixed; left: 0; top: 0; bottom: 0; width: var(--rm-left-w); background: #345; z-index: 360; }
+html.rm-l2 #b1-tools { display: block; position: fixed; right: 9px; top: 40%; width: 58px; height: 160px; background: #13314f; z-index: 1000; }
+html.rm-l2 #fake-toolbox { display: none; }
+html.rm-l2 .rm2-diag {
+  display: block; position: fixed; z-index: 1001; height: 120px; background: #fed;
+  left: calc(var(--rm-left-w) + 8px); bottom: calc(8px + var(--rm-player-h) + var(--rm-safe-b));
+  width: min(430px, calc(100vw - var(--rm-left-w) - 70px));
+}
 </style>
 </head>
 <body>
-<main id="conteudo">
+<div id="b1-side" aria-hidden="true"></div>
+<div id="materias-container">
+<main id="conteudo" class="container">
   <h1>Página de teste sintética</h1>
   <script>for (var i = 1; i <= 60; i++) document.write('<p>Parágrafo sintético ' + i + ' — texto de relleno para dar altura y probar que el mini-player no tapa el contenido.</p>');</script>
   <span id="fim">fin</span>
 </main>
+</div>
+<div id="b1-tools" aria-hidden="true"></div>
+<div class="rm2-diag" aria-hidden="true"></div>
 <div id="fake-toolbox" aria-hidden="true"></div>
-<div id="rm-l2-player"></div>
+<div id="rm-l2-player" class="rm-l2-player" role="region" aria-label="Audiobook" hidden></div>
 <script src="/fake-audio.js"></script>
 <script src="/assets/rm-audio.js"></script>
 </body>

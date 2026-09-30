@@ -43,11 +43,28 @@
      engine.restart()             pausa e volta a 0. NÃO toca sozinho.
      engine.close()               pausa, guarda posição, recolhe o player.
      engine.destroy()             liberta tudo; o motor deixa de servir.
+     engine.refreshLayout()       relê o dock do B1 e reposiciona. Devolve o modo.
      engine.getState()            fotografia (sem URL, sem segredo).
      engine.handle(nome)          ganchos de arbitragem (ver abaixo).
      engine.on(evento, fn)        'state' | 'play' | 'pause' | 'close' | 'error'
      RMAudio.validateItem(item) / validateManifest(lista)
      RMAudio.pauseAll(motivo) / RMAudio.resetSession()
+
+   LAYOUT — QUEM DECIDE ONDE O PLAYER CABE
+     Com a Layout V2 (B1) presente, a AUTORIDADE é `html[data-rm-dock]`
+     (`side` → lateral · `bottom` → inferior): o B1 já calcula viewport,
+     lateral 264/64/0, coluna de texto, toolbox e largura do player. O motor
+     só LÊ esse atributo. O breakpoint próprio (BP_LATERAL) é um fallback
+     SINTÉTICO, usado apenas quando `data-rm-dock` não existe (harness
+     isolado) e nunca prevalece sobre o B1.
+     O player vive DENTRO do slot (`#rm-l2-player`, contêiner reservado pelo
+     B1: fixed entre `--rm-left-w` e `--rm-right-w`). Em modo inferior o
+     motor publica a altura em `--rm-player-h` (o B1 já a usa para reservar
+     espaço e afastar toast/FAB/diagnóstico); em modo lateral publica 0.
+     Acompanha mudanças de `data-rm-dock` SEM cruzar breakpoint com um
+     MutationObserver restrito a esse atributo, criado no attach() e
+     desligado no unmount()/destroy(); `engine.refreshLayout()` faz o mesmo
+     a pedido da integração futura.
 
    GANCHOS DE ARBITRAGEM (não ligados a nada nesta fase)
      engine.handle('subject-change')  → pause
@@ -78,7 +95,7 @@
   var SKIP_S = 15;
   var SLOT_SELECTOR = '#rm-l2-player';
   var LOAD_TIMEOUT_MS = 15000;
-  var BP_LATERAL = 1400;           // ≥ isto: player lateral; abaixo: mini-player inferior
+  var BP_LATERAL = 1400;           // SÓ fallback sintético (sem data-rm-dock): ≥ isto lateral; abaixo inferior
 
   /* ------------------------------------------------------------------ */
   /* 1 · VALIDADOR DE METADADOS                                          */
@@ -210,7 +227,7 @@
     var counters = { sourceRequests: 0, adapterCreated: 0, reauthorizations: 0 };
     var listeners = {};
     var boundAdapterHandlers = null;
-    var mql = null;
+    var mql = null, mo = null, slotWasHidden = false;
 
     function key(m) { return m.audio_id + '@' + m.version; }
     function emit(ev, data) {
@@ -386,7 +403,16 @@
     }
 
     /* ---------- UI ---------- */
+    /* B1 manda: `html[data-rm-dock]` = side | bottom. Sem ele (harness isolado) cai no breakpoint sintético. */
+    function dockB1() {
+      try {
+        var v = root.document.documentElement.getAttribute('data-rm-dock');
+        return v === 'side' || v === 'bottom' ? v : null;
+      } catch (e) { return null; }
+    }
     function layoutMode() {
+      var d = dockB1();
+      if (d) return d === 'side' ? 'lateral' : 'bottom';
       try { return root.matchMedia && root.matchMedia('(min-width:' + BP_LATERAL + 'px)').matches ? 'lateral' : 'bottom'; }
       catch (e) { return 'bottom'; }
     }
@@ -438,15 +464,26 @@
         mql = root.matchMedia('(min-width:' + BP_LATERAL + 'px)');
         if (mql.addEventListener) mql.addEventListener('change', render);
       }
+      /* Só o atributo do dock, só enquanto attached; sai no unmount(). */
+      if (root.MutationObserver) {
+        mo = new root.MutationObserver(function () { render(); });
+        mo.observe(slot.ownerDocument.documentElement, { attributes: true, attributeFilter: ['data-rm-dock'] });
+      }
     }
     function unmount() {
       if (mql && mql.removeEventListener) mql.removeEventListener('change', render);
       mql = null;
+      if (mo) { mo.disconnect(); mo = null; }
       if (ui && ui.parentNode) ui.parentNode.removeChild(ui);
       if (slot) {
         slot.removeAttribute('data-rm-audio'); slot.style.removeProperty('--rm-audio-h');
-        try { slot.ownerDocument.documentElement.style.removeProperty('--rm-audio-h'); } catch (e) { /* ignore */ }
+        if (slotWasHidden) slot.hidden = true;           // devolve o slot ao estado em que o B1 o deixou
+        try {
+          var st = slot.ownerDocument.documentElement.style;
+          st.removeProperty('--rm-audio-h'); st.removeProperty('--rm-player-h');
+        } catch (e) { /* ignore */ }
       }
+      slotWasHidden = false;
       ui = null;
     }
     function render() {
@@ -454,8 +491,13 @@
       var d = dur(), p = pos();
       ui.hidden = !isOpen;
       ui.setAttribute('data-state', state);
-      ui.setAttribute('data-mode', layoutMode());
+      var modo = layoutMode();
+      ui.setAttribute('data-mode', modo);
+      ui.setAttribute('data-layout', dockB1() ? 'b1' : 'fallback');
       slot.setAttribute('data-rm-audio', isOpen ? 'open' : 'closed');
+      /* O slot é o contêiner reservado pelo B1 (nasce `hidden`): abre com o player, fecha com ele. */
+      if (isOpen && slot.hidden) { slot.hidden = false; slotWasHidden = true; }
+      else if (!isOpen && slotWasHidden) { slot.hidden = true; slotWasHidden = false; }
       ui.querySelector('.rm-audio__theme').textContent = current ? current.theme : '';
       ui.querySelector('.rm-audio__title').textContent = current ? current.title : '';
       var tocando = state === 'playing' || state === 'loading';
@@ -474,7 +516,11 @@
       e.textContent = state === 'error' ? 'No se pudo cargar el audio. Probá de nuevo.' : '';
       var h = isOpen && ui.offsetHeight ? ui.offsetHeight + 'px' : '0px';   // o conteúdo reserva este espaço (modo inferior)
       slot.style.setProperty('--rm-audio-h', h);
-      try { slot.ownerDocument.documentElement.style.setProperty('--rm-audio-h', h); } catch (e) { /* ignore */ }
+      try {
+        var hs = slot.ownerDocument.documentElement.style;
+        hs.setProperty('--rm-audio-h', h);
+        hs.setProperty('--rm-player-h', modo === 'bottom' ? h : '0px');      // variável do B1: reserva/afasta o que for fixo
+      } catch (e) { /* ignore */ }
     }
 
     /* ---------- API ---------- */
@@ -591,7 +637,7 @@
       },
 
       getState: function () {
-        var lay = ui && isOpen ? { mode: layoutMode(), height: ui.offsetHeight } : { mode: layoutMode(), height: 0 };
+        var lay = { mode: layoutMode(), source: dockB1() ? 'b1' : 'fallback', height: ui && isOpen ? ui.offsetHeight : 0 };
         return {
           state: state, open: isOpen, destroyed: destroyed, mounted: !!ui,
           audio_id: current ? current.audio_id : null,
@@ -602,6 +648,12 @@
           counters: { sourceRequests: counters.sourceRequests, adapterCreated: counters.adapterCreated, reauthorizations: counters.reauthorizations },
           hasAdapter: !!adapter, layout: lay
         };
+      },
+
+      refreshLayout: function () {
+        if (destroyed) return null;
+        render();
+        return layoutMode();
       },
 
       handle: function (nome) {
