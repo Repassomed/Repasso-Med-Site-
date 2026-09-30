@@ -218,17 +218,22 @@ jobs:
               if n == 368 or head.startswith('quality/') or 'painel contínuo' in title.lower():
                   if e['decision'] != 'KEEP_PANEL':
                       notes.append('#' + str(n) + ': ' + e['decision'] + ' → KEEP_PANEL (painel/relatório de auditoria; nunca fechar nem mergear como matéria)')
-                  e.update(decision='KEEP_PANEL', replacement_pr=0, safe_to_close_without_code_change=False, closure_comment='')
+                  e.update(decision='KEEP_PANEL', replacement_pr=0, safe_to_close_without_code_change=False, closure_comment='', forced=True, forced_by='panel')
+                  forced.add(n)
+                  continue
+              # Imagenología/Bioestadística: proteção INCONDICIONAL. Vale para
+              # qualquer decisão (inclusive CLOSE_*), seja o que for que a
+              # OpenAI ou o Claude respondam — título/branch decide, não a API.
+              if DEFER.search(title + ' ' + head):
+                  if e['decision'] != 'KEEP_DEFERRED':
+                      notes.append('#' + str(n) + ': ' + e['decision'] + ' → KEEP_DEFERRED (Imagenología/Bioestadística deferidas por José; decisão forçada)')
+                  e.update(decision='KEEP_DEFERRED', replacement_pr=0, safe_to_close_without_code_change=False, closure_comment='', forced=True, forced_by='deferred_subject')
+                  e['reason'] = ('DEFERIDA por José: não executar agora. ' + str(e.get('reason') or ''))[:400]
                   forced.add(n)
                   continue
               if e['decision'] == 'CLOSE_SUPERSEDED' and not e['replacement_pr']:
                   notes.append('#' + str(n) + ': CLOSE_SUPERSEDED → REVIEW_MANUALLY (substituta mergeada não verificável)')
                   e.update(decision='REVIEW_MANUALLY', safe_to_close_without_code_change=False, closure_comment='')
-              if DEFER.search(title + ' ' + head) and e['decision'] in {'KEEP_ACTIVE', 'REVIEW_MANUALLY'}:
-                  notes.append('#' + str(n) + ': ' + e['decision'] + ' → KEEP_DEFERRED (Imagenología/Bioestadística deferidas por José)')
-                  e.update(decision='KEEP_DEFERRED', safe_to_close_without_code_change=False, closure_comment='')
-                  e['reason'] = ('DEFERIDA por José: não executar agora. ' + e['reason'])[:400]
-                  forced.add(n)
 
           uncertain = []
           for x in (raw_plan.get('uncertain_numbers') or []):
@@ -375,6 +380,8 @@ jobs:
               for p in group:
                   repl = p.get('replacement_pr')
                   suffix = (' · substituta #' + str(repl)) if isinstance(repl, int) and repl > 0 else ''
+                  if p.get('forced'):
+                      suffix += ' · [decisão forçada: ' + str(p.get('forced_by') or 'determinística') + ']'
                   lines.append('- #' + str(p.get('number')) + suffix + ' — ' + str(p.get('title', '')) + ' — ' + str(p.get('reason', '')))
                   comment = str(p.get('closure_comment') or '').strip()
                   if comment:

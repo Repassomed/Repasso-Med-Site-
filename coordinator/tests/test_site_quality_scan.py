@@ -301,6 +301,103 @@ def test_K_workflow_manual_only_e_chaves_por_passo() -> None:
     print("OK  test_K_workflow_manual_only_e_chaves_por_passo")
 
 
+# --------------------------------------------------------------------------
+# Limpeza de PRs (repasso-pr-cleanup-prep.yml): proteção das matérias
+# deferidas e do painel #368. Executa o bloco REAL de saneamento do workflow.
+# --------------------------------------------------------------------------
+
+def _cleanup_sanitize(raw_plan: dict, opened: list, merged: list | None = None) -> dict:
+    import textwrap
+
+    wf = (_REPO / ".github/workflows/repasso-pr-cleanup-prep.yml").read_text("utf-8")
+    ini = wf.index("# ---------- saneamento determinístico ----------")
+    fim = wf.index("          plan = {", ini)
+    codigo = textwrap.dedent(" " * 10 + wf[ini:fim])
+    ns = {"re": re, "raw_plan": raw_plan, "opened": opened, "merged": merged or []}
+    exec(codigo, ns)
+    return ns
+
+
+def _pr(n: int, title: str, head: str = "claude/x") -> dict:
+    return {"number": n, "title": title, "headRefName": head}
+
+
+def test_L_imagenologia_close_stale_vira_keep_deferred() -> None:
+    ns = _cleanup_sanitize(
+        {"prs": [{"number": 501, "decision": "CLOSE_STALE_NO_MERGE", "reason": "velha",
+                  "safe_to_close_without_code_change": True,
+                  "closure_comment": "Fechando por obsolescência."}]},
+        [_pr(501, "Imagenología — revisión de bloques")],
+    )
+    e = ns["entries"][501]
+    assert e["decision"] == "KEEP_DEFERRED", e
+    assert e["replacement_pr"] == 0, e
+    assert e["safe_to_close_without_code_change"] is False, e
+    assert e["closure_comment"] == "", e
+    assert e["forced"] is True and e["forced_by"] == "deferred_subject", e
+    assert 501 in ns["forced"]
+
+
+def test_M_bioestadistica_close_superseded_vira_keep_deferred() -> None:
+    ns = _cleanup_sanitize(
+        {"prs": [{"number": 502, "decision": "CLOSE_SUPERSEDED", "replacement_pr": 900,
+                  "reason": "substituída", "safe_to_close_without_code_change": True,
+                  "closure_comment": "Substituída pela #900."}]},
+        [_pr(502, "Bioestadística passada fina")],
+        merged=[{"number": 900}],
+    )
+    e = ns["entries"][502]
+    assert e["decision"] == "KEEP_DEFERRED", e
+    assert e["replacement_pr"] == 0, e            # mesmo com substituta verificável
+    assert e["safe_to_close_without_code_change"] is False, e
+    assert e["closure_comment"] == "", e
+    assert e["forced"] is True, e
+
+
+def test_N_deferida_por_branch_e_qualquer_decisao_da_api() -> None:
+    for d in ("KEEP_ACTIVE", "KEEP_PANEL", "CLOSE_STALE_NO_MERGE", "CLOSE_SUPERSEDED",
+              "REVIEW_MANUALLY", "LIXO_INVENTADO"):
+        ns = _cleanup_sanitize(
+            {"prs": [{"number": 503, "decision": d, "replacement_pr": 900,
+                      "safe_to_close_without_code_change": True, "closure_comment": "fechar"}],
+             "uncertain_numbers": [503]},
+            [_pr(503, "Revisão geral", "claude/imagenologia-fechamento")],
+            merged=[{"number": 900}],
+        )
+        e = ns["entries"][503]
+        assert e["decision"] == "KEEP_DEFERRED", (d, e)
+        assert e["safe_to_close_without_code_change"] is False and e["closure_comment"] == "", (d, e)
+        assert e["replacement_pr"] == 0, (d, e)
+        assert 503 not in ns["uncertain"], "deferida forçada não vai ao Claude"
+
+
+def test_O_painel_368_continua_sempre_keep_panel() -> None:
+    for d in ("CLOSE_STALE_NO_MERGE", "CLOSE_SUPERSEDED", "KEEP_ACTIVE", "REVIEW_MANUALLY"):
+        ns = _cleanup_sanitize(
+            {"prs": [{"number": 368, "decision": d, "replacement_pr": 900,
+                      "safe_to_close_without_code_change": True, "closure_comment": "fechar"}]},
+            [_pr(368, "Painel contínuo de auditoria — Imagenología e Bioestadística")],
+            merged=[{"number": 900}],
+        )
+        e = ns["entries"][368]
+        assert e["decision"] == "KEEP_PANEL", (d, e)       # painel vence a deferida
+        assert e["safe_to_close_without_code_change"] is False and e["closure_comment"] == "", e
+        assert e["replacement_pr"] == 0, e
+
+
+def test_P_nao_deferida_close_segue_normal() -> None:
+    ns = _cleanup_sanitize(
+        {"prs": [{"number": 504, "decision": "CLOSE_SUPERSEDED", "replacement_pr": 900,
+                  "safe_to_close_without_code_change": True, "closure_comment": "ok"}]},
+        [_pr(504, "Farmacología II — rodada antiga")],
+        merged=[{"number": 900}],
+    )
+    e = ns["entries"][504]
+    assert e["decision"] == "CLOSE_SUPERSEDED" and e["replacement_pr"] == 900, e
+    assert e["safe_to_close_without_code_change"] is True and e["closure_comment"] == "ok", e
+    assert "forced" not in e, e
+
+
 def main() -> int:
     testes = [
         test_static_ignora_tags_ids_e_metatexto_em_comentario_html,
@@ -317,6 +414,11 @@ def main() -> int:
         test_I_etapas_isolam_chaves_e_saida_needs_claude,
         test_J_fonte_so_escreve_painel_e_estado_intermediario_confinado,
         test_K_workflow_manual_only_e_chaves_por_passo,
+        test_L_imagenologia_close_stale_vira_keep_deferred,
+        test_M_bioestadistica_close_superseded_vira_keep_deferred,
+        test_N_deferida_por_branch_e_qualquer_decisao_da_api,
+        test_O_painel_368_continua_sempre_keep_panel,
+        test_P_nao_deferida_close_segue_normal,
     ]
     falhas = 0
     for teste in testes:
