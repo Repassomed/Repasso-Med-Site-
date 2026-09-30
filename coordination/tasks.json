@@ -400,18 +400,19 @@
       "area": "ferramentas",
       "materia": null,
       "arquivos": [
-        "Repasso-Med-Site--main/Atual - Copia/assets/rm-tools*.js"
+        "Repasso-Med-Site--main/Atual - Copia/assets/rm-tools*.js",
+        "Repasso-Med-Site--main/Atual - Copia/index.html"
       ],
       "objetivo": "Corrigir o fechamento da toolbox e medir o tablet real.",
       "fonte": "pedido do José",
       "agente": null,
       "estado": "BLOCKED",
       "dependencias": [],
-      "branch": "fix/tools-v2-tablet-real",
-      "pr": 64,
+      "branch": "claude/lapiz-retomada-64-main",
+      "pr": 407,
       "commit": "4a524a1",
       "issue": 67,
-      "notas": "Pausado; o teste físico não resolveu. Desatribuído no pós-piloto para não manter Claude 1 artificialmente em conflito no Worker Registry; continua BLOCKED e não deve ser retomado sem nova decisão.",
+      "notas": "Pausado anteriormente porque o teste físico não resolveu; desatribuído no pós-piloto para não manter Claude 1 artificialmente em conflito no Worker Registry. José autorizou em 30/09/2026 a retomada da caneta via PR #407 (branch claude/lapiz-retomada-64-main), com piloto restrito a José + Semiología II e painel de diagnóstico novo em rm-tools-v2.js. index.html é permitido nesta reserva EXCLUSIVAMENTE para a linha do cache-buster de rm-tools-v2.js — nenhum outro conteúdo desse arquivo pertence a esta tarefa.",
       "prioridade_declarada": "P3"
     },
     {
