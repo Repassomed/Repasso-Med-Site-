@@ -547,14 +547,68 @@ def _check_counts(nome: str, base, head) -> list[Finding]:
     # enunciado normalizado (e portanto a mesma chave). Se uma delas some, o
     # total dessa chave cai, e isso tem de ser visto.
     restantes = Counter(q.key for q in head.questions)
+
+    # Correção explícita de enunciado sem id estável.
+    # data-guard-previous-stem-sha1="<sha1>" cria uma ponte auditável para
+    # o enunciado anterior. A ponte só vale quando o fingerprint existe na
+    # base, a questão anterior não tinha id, a seção continua a mesma e a
+    # letra correta permanece igual quando ambas são MCQ.
+    base_por_hash = {}
+    for q in base.questions:
+        base_por_hash.setdefault(q.stem_sha1, []).append(q)
+
+    aliases = Counter()
+    aliases_ok = []
+    aliases_invalidos = []
+    for q in head.questions:
+        prev = q.previous_stem_sha1
+        if not prev:
+            continue
+        candidatos = [
+            b for b in base_por_hash.get(prev, [])
+            if b.qid is None and b.section == q.section
+            and (not b.answer_letter or not q.answer_letter or b.answer_letter == q.answer_letter)
+        ]
+        if prev == q.stem_sha1:
+            aliases_invalidos.append({"questao": q.qid or q.stem[:60],
+                                      "motivo": "fingerprint aponta para o próprio enunciado atual"})
+            continue
+        if not candidatos:
+            aliases_invalidos.append({"questao": q.qid or q.stem[:60],
+                                      "motivo": "fingerprint não casa com questão sem-id da mesma seção/gabarito"})
+            continue
+        chave_antiga = candidatos[0].key
+        aliases[chave_antiga] += 1
+        aliases_ok.append({"questao": q.qid or q.stem[:60],
+                           "de": chave_antiga, "secao": q.section})
+
+    base_counts = Counter(q.key for q in base.questions)
+    for chave, n in list(aliases.items()):
+        excesso = max(0, n - base_counts.get(chave, 0))
+        if excesso:
+            aliases_invalidos.append({"chave": chave,
+                                      "motivo": f"{n} aliases para {base_counts.get(chave, 0)} ocorrência(s) na base"})
+            aliases[chave] -= excesso
+
+    if aliases_invalidos:
+        out.append(Finding("rename-enunciado-invalido", HARD_FAIL,
+                           f"{nome}: marcador explícito de rename inválido/ambíguo.",
+                           nome, {"ocorrencias": aliases_invalidos[:8]}))
+
     perdidas = []
-    for chave, n in Counter(q.key for q in base.questions).items():
-        perdidas.extend([chave] * max(0, n - restantes.get(chave, 0)))
+    for chave, n in base_counts.items():
+        disponiveis = restantes.get(chave, 0) + aliases.get(chave, 0)
+        perdidas.extend([chave] * max(0, n - disponiveis))
     if perdidas:
         out.append(Finding("questoes-removidas", HARD_FAIL,
                            f"{nome}: {qb} → {qh} questões; {len(perdidas)} sumiram por chave "
                            "(id ou enunciado), mesmo que o total não tenha caído.",
                            nome, {"exemplos": perdidas[:8]}))
+    if aliases_ok and not aliases_invalidos:
+        out.append(Finding("enunciado-renomeado", WARNING,
+                           f"{nome}: {len(aliases_ok)} questão(ões) declararam correção explícita de enunciado; "
+                           "a remoção foi pareada pela impressão digital anterior. Conferir conteúdo médico (Lei 6).",
+                           nome, {"ocorrencias": aliases_ok[:8]}))
     fb, fh = base.flashcards, head.flashcards
     if fh < fb:
         out.append(Finding("flashcards-removidos", HARD_FAIL,
