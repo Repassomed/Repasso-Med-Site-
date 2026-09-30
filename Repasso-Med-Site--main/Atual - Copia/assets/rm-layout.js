@@ -162,6 +162,32 @@
     })();
   }
 
+  /* ---------------------- reposicionar a tinta (única) -------------------- */
+  /* O shell desloca o conteúdo NO EIXO X sem mudar o tamanho da section
+     (coluna com largura constante): o ResizeObserver da tinta não dispara e o
+     SVG ficaria deslocado. Esta é a ÚNICA rotina que pede à V2, pela API
+     pública, que reposicione — sempre DEPOIS de o layout assentar (2 frames +
+     respiro, as seções usam content-visibility:auto) e agrupando pedidos
+     seguidos em um só. Não mexe em âncoras, algoritmo nem persistência.
+     Fora da Página completa não roda: a tinta está oculta (caixas zeradas) e a
+     volta ao modo completo já reposiciona (rm-modes.js). */
+  var REPOS = { timer: 0, raf: 0, espera: false };
+  function reposicionarTinta() {
+    if (REPOS.espera) return;
+    REPOS.espera = true;
+    REPOS.raf = requestAnimationFrame(function () {
+      REPOS.raf = requestAnimationFrame(function () {
+        REPOS.timer = setTimeout(function () {
+          REPOS.espera = false; REPOS.timer = 0; REPOS.raf = 0;
+          try {
+            if (S && window.RMModes && !window.RMModes.isFull()) return;
+            if (window.RMToolsV2 && typeof window.RMToolsV2.reposicionar === 'function') window.RMToolsV2.reposicionar();
+          } catch (e) {}
+        }, 120);
+      });
+    });
+  }
+
   /* ---------------------------- modo da lateral ------------------------- */
   function lmode() {
     var w = window.innerWidth || ROOT.clientWidth;
@@ -172,8 +198,10 @@
   function aplicarModo() {
     if (!S) return;
     var w = window.innerWidth || ROOT.clientWidth, m = lmode();
+    var mudou = S.lm !== undefined && S.lm !== m;           // docked ↔ rail ↔ off: muda a reserva lateral
+    S.lm = m;
     ROOT.setAttribute('data-rm-lmode', m);
-    var left = m === 'docked' ? 264 : (m === 'rail' ? 64 : 0);
+    var left =m === 'docked' ? 264 : (m === 'rail' ? 64 : 0);
     /* dock do futuro player: só se a coluna de texto + toolbox + player cabem */
     var cabe = (w - left) >= (TEXT_COL + RIGHT_RAIL + PLAYER_GAP + PLAYER_W + 32);
     ROOT.setAttribute('data-rm-dock', cabe ? 'side' : 'bottom');
@@ -186,6 +214,7 @@
       S.railBtn.style.display = (w >= W_RAIL) ? '' : 'none';
     }
     medirBanda();
+    if (mudou) reposicionarTinta();
   }
 
   /* A faixa é fixed (o sticky do site não gruda: html/body têm overflow-x:hidden).
@@ -498,6 +527,7 @@
     refletirModo();
     atualizarToggleArvore();
     raf2(function () { medirBanda(); espiar(); });
+    reposicionarTinta();                                     // o shell acabou de reservar as laterais
   }
 
   function detach() {
@@ -512,6 +542,7 @@
     ROOT.classList.remove('rm-l2');
     try { window.RMModes.detach(); } catch (e) {}
     S = null;
+    reposicionarTinta();                                     // as reservas saíram: o conteúdo voltou ao X original
   }
 
   window.RMLayout = {
