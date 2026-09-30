@@ -301,11 +301,20 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
   /* ---------------------------------------------------------------- */
 
   /* Onde NÃO se marca: controles, navegação e widgets interativos.
-     A ferramenta é para conteúdo didático (§9). */
+     A ferramenta é para conteúdo didático (§9).
+
+     `[data-rm-ui]` é o contrato da UI DERIVADA (Layout V2: cartões, cabeçalhos
+     de modo, separadores, player…): tudo o que uma camada de interface
+     injeta dentro de um bloco e que NÃO é conteúdo didático leva esse
+     atributo e, por estar aqui, fica fora do índice de texto — logo fora de
+     `indexar`, de `prefix`/`suffix`/`occurrence`, de `resolverAncora` e da
+     pintura. O nó continua no DOM, visível e interactivo; só não conta como
+     texto do bloco. É o ÚNICO sítio que sabe disto: quem precisa da mesma
+     exclusão chama `podeMarcar`/`dentroDoSkip`. */
   var SKIP = 'button,input,select,textarea,option,svg,canvas,video,audio,iframe,a,label,' +
     '.rm-tools,.rm-tools-r,.rm-pal,.rm-menu,.rm-sug-fab,#rm-sug,.rm-lb,.rm-resume,.rm-toast,' +
     '.rmfc-overlay,.rmfc-launch,.rmatlas,.flashcard,.fc-grid,.rmc-gl,' +
-    '.reveal-btn,.tf-buttons,[data-option],[onclick]';
+    '.reveal-btn,.tf-buttons,[data-option],[onclick],[data-rm-ui]';
 
   /* Um TERMO de glossário é `<span class="…-gl" onclick="…">palabra…`, e o
      `[onclick]` do SKIP tira-o do índice. Visualmente, porém, a palavra é
