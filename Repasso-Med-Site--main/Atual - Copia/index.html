@@ -2615,14 +2615,6 @@ function recClearMarks(){
 function recPendAge(){
   try{ const t = Number(localStorage.getItem(RM_REC_PEND)); return t ? Date.now() - t : null; }catch(e){ return null; }
 }
-/* a sessão foi aberta por um link de recuperação? (claim amr do JWT; nada é registado) */
-function recSessionIsRecovery(session){
-  try{
-    const part = String(session.access_token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const pl = JSON.parse(atob(part));
-    return Array.isArray(pl.amr) && pl.amr.some(a => a && a.method === 'recovery');
-  }catch(e){ return false; }
-}
 async function recDropSession(){
   try{ await _sb.auth.signOut({ scope:'local' }); }catch(e){}
 }
@@ -2737,7 +2729,7 @@ async function recPurgeLeftover(){
   const { data:{ session } } = await _sb.auth.getSession();
   const pending = recPendAge() !== null;
   if(!session){ if(pending) recClearMarks(); return false; }
-  if(pending || recSessionIsRecovery(session)){ await recDropSession(); recClearMarks(); return true; }
+  if(pending){ await recDropSession(); recClearMarks(); return true; }   // sessão de recuperação que ficou sem concluir
   return false;
 }
 
