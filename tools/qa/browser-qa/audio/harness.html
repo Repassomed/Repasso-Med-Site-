@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harness sintético · rm-audio (D1)</title>
+<link rel="stylesheet" href="/assets/rm-audio.css">
+<style>
+  html, body { margin: 0; }
+  body { font: 16px/1.5 system-ui, sans-serif; background: #f6f8fb; color: #13314f; }
+  main { padding: 16px; max-width: 760px; margin: 0 auto; }
+  p { margin: 0 0 14px; }
+  #fake-toolbox { position: fixed; right: 0; top: 40%; width: 48px; height: 160px; background: #13314f; z-index: 1000; }
+  #fim { display: block; height: 40px; background: #cde; }
+</style>
+</head>
+<body>
+<main id="conteudo">
+  <h1>Página de teste sintética</h1>
+  <script>for (var i = 1; i <= 60; i++) document.write('<p>Parágrafo sintético ' + i + ' — texto de relleno para dar altura y probar que el mini-player no tapa el contenido.</p>');</script>
+  <span id="fim">fin</span>
+</main>
+<div id="fake-toolbox" aria-hidden="true"></div>
+<div id="rm-l2-player"></div>
+<script src="/fake-audio.js"></script>
+<script src="/assets/rm-audio.js"></script>
+</body>
+</html>
