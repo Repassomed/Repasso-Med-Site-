@@ -35,11 +35,11 @@ function makeBackend(){
     calls:[],mails:[],puts:0,logouts:[],recoverStatus:200,seq:0,rest:[],writes:[]};
   S.addUser=(u)=>{const x={id:u.id||('00000000-0000-4000-8000-'+String(++S.seq).padStart(12,'0')),email:u.email,password:u.password,active:u.active!==false,full_name:u.name||'Aluno Teste'};S.users.set(x.id,x);S.byEmail.set(x.email,x);return x;};
   const userJson=u=>({id:u.id,aud:'authenticated',role:'authenticated',email:u.email,app_metadata:{provider:'email'},user_metadata:{full_name:u.full_name},created_at:'2026-01-01T00:00:00Z'});
-  S.issue=(u,amr)=>{
-    const now=Math.floor(Date.now()/1000), exp=now+3600;
-    const at=b64({alg:'HS256',typ:'JWT'})+'.'+b64({sub:u.id,aud:'authenticated',role:'authenticated',email:u.email,exp,iat:now,amr:[{method:amr,timestamp:now}],session_id:'s'+(++S.seq)})+'.sig'+S.seq;
+  S.issue=(u,amr,keepSid)=>{
+    const now=Math.floor(Date.now()/1000), exp=now+3600, sid=keepSid||('s'+(++S.seq)+'-'+Math.random().toString(36).slice(2,8));
+    const at=b64({alg:'HS256',typ:'JWT'})+'.'+b64({sub:u.id,aud:'authenticated',role:'authenticated',email:u.email,exp,iat:now,amr:[{method:amr,timestamp:now}],session_id:sid})+'.sig'+S.seq;
     const rt='rt'+(++S.seq)+'x'+Math.random().toString(36).slice(2,8);
-    S.sessions.set(at,{uid:u.id,amr,alive:true}); S.refresh.set(rt,{uid:u.id,amr,alive:true,at});
+    S.sessions.set(at,{uid:u.id,amr,alive:true,sid}); S.refresh.set(rt,{uid:u.id,amr,alive:true,at,sid});
     return {access_token:at,token_type:'bearer',expires_in:3600,expires_at:exp,refresh_token:rt,user:userJson(u)};
   };
   /* e-mail de recuperação entregue (token de uso único) */
@@ -98,7 +98,7 @@ function makeBackend(){
       if(ep==='token'&&m==='POST'){
         const g=u.searchParams.get('grant_type');
         if(g==='password'){ const usr=S.byEmail.get(String(body.email||'').toLowerCase()); if(!usr||usr.password!==body.password) return J(400,{code:400,error_code:'invalid_credentials',msg:'Invalid login credentials'}); return J(200,S.issue(usr,'password')); }
-        if(g==='refresh_token'){ const r=S.refresh.get(body.refresh_token); if(!r||!r.alive) return J(400,{code:400,error_code:'refresh_token_not_found',msg:'Invalid Refresh Token: Refresh Token Not Found'}); return J(200,S.issue(S.users.get(r.uid),r.amr)); }
+        if(g==='refresh_token'){ const r=S.refresh.get(body.refresh_token); if(!r||!r.alive) return J(400,{code:400,error_code:'refresh_token_not_found',msg:'Invalid Refresh Token: Refresh Token Not Found'}); return J(200,S.issue(S.users.get(r.uid),r.amr,r.sid)); }   // a session_id se mantém no refresh (como no GoTrue real)
       }
       if(ep==='signup'&&m==='POST'){ S.signups=(S.signups||0)+1; const usr=S.addUser({email:String(body.email).toLowerCase(),password:body.password,active:false}); return J(200,{...userJson(usr),identities:[{}]}); }
       return J(200,{});

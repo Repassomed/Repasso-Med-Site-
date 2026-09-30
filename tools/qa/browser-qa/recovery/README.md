@@ -11,12 +11,12 @@ export RM_SUPABASE_UMD=$PWD/package/dist/umd/supabase.js
 node tools/qa/browser-qa/recovery/recovery.test.cjs     # saída ≠ 0 se algo falhar
 ```
 
-O que cobre (77 verificações): e-mail válido → link → tela de nova senha; salvar → PUT → signOut → login com a
+O que cobre (93 verificações): e-mail válido → link → tela de nova senha; salvar → PUT → signOut → login com a
 senha nova; senha antiga rejeitada; senhas diferentes/curta; link expirado/usado (mensagem + «Solicitar un nuevo
 enlace»); `?recovery=1` manual sem prova (0 PUT, inclusive chamando `doNewPassword()` à força); recarga durante a
-recuperação; isolamento por aba (aba normal não entra na plataforma com a sessão de uma recuperação em curso e NÃO a encerra; sessão de outro usuário nunca é adotada; marca de `localStorage` nunca libera o formulário; marca de aba com UID ≠ sessão falha fechada); usuário não aprovado continua não aprovado; usuário
+recuperação; recuperação vinculada a UID + `session_id` do JWT (aba normal não entra na plataforma com a sessão de uma recuperação em curso e NÃO a encerra nem apaga a marca; sessão de outro usuário, ou do mesmo usuário com sessão nova, nunca é adotada — no evento, no reload e ao salvar; marca de `localStorage` nunca libera o formulário); usuário não aprovado continua não aprovado; usuário
 aprovado mantém os acessos; retorno implícito/hash, fallback para a Site URL, `token_hash`, PKCE; limite de e-mails
-(429); resposta neutra para e-mail inexistente; console sem token; desktop/mobile (1440, 390, 320); cadastro, login
+(429); resposta neutra para e-mail inexistente; console sem token; larguras 1440, 1024, 768, 390 e 320; cadastro, login
 e logout sem regressão.
 
 ## Configuração manual no Supabase (Authentication → URL Configuration)
