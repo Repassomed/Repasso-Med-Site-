@@ -58,6 +58,52 @@
   }
 
   /* ================================================================== */
+  /* 0b · PILOTO — retomada da caneta (#64), restrita de propósito       */
+  /* ================================================================== */
+
+  /* A retomada da caneta (#64/#66/#67) começa num piloto fechado, à parte
+     do rollout geral da V2 acima: só a conta principal do José, só em
+     Semiología II. Os dois testers antigos de `BETA_UIDS` continuam a ver
+     a V2 exactamente como está hoje — nada nesta secção os afecta; fora
+     do piloto, o comportamento actual do site permanece intacto.
+
+     `JOSE_UID` é o mesmo UID que já está em `BETA_UIDS` (conferido contra
+     `profiles.is_admin = true` no Supabase) — não é um terceiro tester,
+     é a conta que vai testar no tablet físico. */
+  var JOSE_UID = 'd4d215d3-36dd-4efb-8869-bdea5376c648';
+  var PILOT_SLUGS = ['semiologia-ii'];
+
+  function pilotoPermitido() {
+    return st.uid === JOSE_UID && PILOT_SLUGS.indexOf(slugDoTab(abaAtiva())) !== -1;
+  }
+
+  /* Ponto de extensão único para a decisão de produto já registada nas
+     #64/#66/#67 — caneta, marca-texto livre e highlight textual SOMENTE
+     na "Página completa", nunca em modos isolados (infográfico solo,
+     questão solo, flashcards solo, audiobook, vídeo, ausculta, Banco de
+     preguntas, Todos los flashcards).
+
+     HOJE essa arquitetura de modos NÃO existe na main: cada matéria é uma
+     página corrida só, sem vista isolada nenhuma — por isso esta função
+     devolve sempre `true`, e nenhuma anotação existente muda de
+     comportamento por causa dela. É só o lugar único que vai precisar de
+     mudar quando essa arquitetura nascer (ex.: `return RT().activeView
+     && RT().activeView() === 'full'`); nenhum chamador de
+     `anotarPermitido()` precisa de saber disso. Não inventar aqui nenhum
+     estado paralelo de "modo" — isso pertence a outra tarefa. */
+  function activeViewPermitido() { return true; }
+
+  /* Porta única para tudo o que cria, altera ou apaga uma anotação: início
+     de traço, marcador, goma, trocar de cor, desfazer/refazer, atalhos de
+     teclado e a própria escrita (writes/persistência). Nenhum destes
+     caminhos deve decidir a condição por conta própria — é sempre esta
+     função, para o dia em que `activeViewPermitido()` deixar de ser
+     `true` fixo não sobrar um caminho esquecido. */
+  function anotarPermitido() {
+    return pilotoPermitido() && activeViewPermitido();
+  }
+
+  /* ================================================================== */
   /* 1 · ATALHOS PARA O MOTOR EXISTENTE                                  */
   /* ================================================================== */
 
@@ -169,6 +215,22 @@
     } catch (err) { return false; }
   }
 
+  /* scrollY no pointerdown de cada ponteiro — é o que permite responder,
+     objectivamente, à pergunta que motivou o diagnóstico físico: a página
+     rolou DURANTE o traço? `diagScrollDelta` compara o scrollY actual com
+     esse valor; nunca usa `occurrence` nem nada do #406, é local a este
+     ficheiro e só existe em memória. */
+  var diagScrollBase = {};
+
+  function diagTouchAction() {
+    try {
+      var el = document.getElementById('materias-container');
+      if (!el) return null;
+      var cs = getComputedStyle(el);
+      return cs.touchAction || cs.getPropertyValue('touch-action') || null;
+    } catch (e) { return null; }
+  }
+
   /* `extra` traz metadados específicos do roteador de touch/palma (§22 do
      encargo): classificação, motivo resumido, largura/altura do contacto,
      pontos acumulados. Nunca conteúdo da matéria, texto, notas, e-mail ou
@@ -177,11 +239,19 @@
     try {
       var w = e && (e.width != null ? e.width : (e.radiusX != null ? e.radiusX * 2 : null));
       var h = e && (e.height != null ? e.height : (e.radiusY != null ? e.radiusY * 2 : null));
+      var scrollY = Math.round(window.pageYOffset);
+      if (e && tipo === 'pointerdown' && e.pointerId != null) diagScrollBase[e.pointerId] = scrollY;
+      var base = e && e.pointerId != null ? diagScrollBase[e.pointerId] : null;
       var entrada = {
         t: Date.now(), tipo: tipo,
         pointerType: e ? e.pointerType : null,
         pointerId: e ? e.pointerId : null,
+        isPrimary: e ? !!e.isPrimary : null,
         buttons: e ? e.buttons : null,
+        pressure: e && e.pressure != null ? e.pressure : null,
+        tiltX: e && e.tiltX != null ? e.tiltX : null,
+        tiltY: e && e.tiltY != null ? e.tiltY : null,
+        cancelable: e ? !!e.cancelable : null,
         tool: st.tool,
         traco: !!traco, apagando: !!apagando,
         captura: diagTemCaptura(e),
@@ -191,11 +261,27 @@
         penLastY: Math.round(penState.lastY || 0),
         rafPending: !!(traco && traco.rafPending),
         touchW: w != null ? Math.round(w) : null,
-        touchH: h != null ? Math.round(h) : null
+        touchH: h != null ? Math.round(h) : null,
+        touchAction: diagTouchAction(),
+        scrollY: scrollY,
+        scrollDelta: base != null ? (scrollY - base) : null,
+        bodyClasses: (function () {
+          var b = document.body, r = [];
+          if (b.classList.contains('rm2-t-pen')) r.push('rm2-t-pen');
+          if (b.classList.contains('rm2-pen-down')) r.push('rm2-pen-down');
+          if (b.classList.contains('rm2-drawing')) r.push('rm2-drawing');
+          if (b.classList.contains('rm2-t-eraser')) r.push('rm2-t-eraser');
+          if (b.classList.contains('rm2-t-highlight')) r.push('rm2-t-highlight');
+          return r.join(' ');
+        })()
       };
       if (extra) { for (var k in extra) if (extra.hasOwnProperty(k)) entrada[k] = extra[k]; }
       diag.push(entrada);
       if (diag.length > DIAG_MAX) diag.shift();
+      if (e && e.pointerId != null && (tipo === 'pointerup' || tipo === 'pointercancel')) {
+        delete diagScrollBase[e.pointerId];
+      }
+      if (diagAberto()) diagVPedirRender();
     } catch (err) { /* diagnóstico nunca pode ser causa de erro novo */ }
   }
 
@@ -207,6 +293,124 @@
     catch (err) { console.log(copia); }
     return copia;
   }
+
+  /* ================================================================== */
+  /* 2c · PAINEL DE DIAGNÓSTICO VISUAL — SÓ PILOTO, SÓ EM MEMÓRIA        */
+  /* ================================================================== */
+
+  /* `debug()` exige DevTools; no piloto físico (tablet, José, Semiología
+     II) DevTools raramente está à mão. Este painel mostra o MESMO anel
+     `diag` já preenchido pelos pontos de `diagLog()` espalhados pelo
+     ficheiro — não duplica captura nenhuma, só desenha o que já existe.
+
+     Restrito a `pilotoPermitido()`: fora do piloto o botão nem aparece no
+     DOM visível e `abrirDiag()` recusa-se a abrir. Continua a não enviar
+     nada para servidor nem localStorage — vive no separador e morre com
+     ele, exactamente como `diag`. */
+  var diagVCaixa = null;
+  var diagVRaf = 0;
+
+  function diagAberto() { return !!(diagVCaixa && diagVCaixa.isConnected); }
+
+  function dEsc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function dNum(v, casas) {
+    if (v == null || v !== v) return '–';
+    var m = Math.pow(10, casas == null ? 0 : casas);
+    return String(Math.round(v * m) / m);
+  }
+
+  function diagVLinha(l) {
+    return '<div class="rm2-diag-r' + (l.pointerType === 'pen' ? ' pen' : '') + '">' +
+      '<b>+' + (l.t - (diag[0] ? diag[0].t : l.t)) + 'ms · ' + dEsc(l.tipo) +
+        ' · type=' + dEsc(l.pointerType == null ? '(null)' : (l.pointerType === '' ? '(vazio)' : l.pointerType)) +
+        ' id=' + dEsc(l.pointerId) + ' prim=' + (l.isPrimary ? '1' : '0') + '</b>' +
+      '<i>btns=' + dEsc(l.buttons) + ' pres=' + dNum(l.pressure, 3) +
+        ' w×h=' + dEsc(l.touchW) + '×' + dEsc(l.touchH) +
+        ' tilt=' + dNum(l.tiltX) + '/' + dNum(l.tiltY) + '</i>' +
+      '<i>scrollY=' + dEsc(l.scrollY) + ' Δ=' + (l.scrollDelta == null ? '–' : ((l.scrollDelta > 0 ? '+' : '') + l.scrollDelta)) +
+        ' · cancelable=' + (l.cancelable ? 'SIM' : 'NÃO') + '</i>' +
+      '<i>tool=' + dEsc(l.tool) + ' traço=' + (l.traco ? 'SIM' : 'NÃO') +
+        ' captura=' + (l.captura ? 'SIM' : 'NÃO') +
+        ' · ta=' + dEsc(l.touchAction) + ' · ' + dEsc(l.bodyClasses || '(nenhuma)') + '</i>' +
+    '</div>';
+  }
+
+  function diagVRender() {
+    if (!diagAberto()) return;
+    var corpo = diagVCaixa.querySelector('.rm2-diag-b');
+    var resumo = diagVCaixa.querySelector('.rm2-diag-s');
+    if (resumo) {
+      resumo.innerHTML =
+        '<span>tool=<b>' + dEsc(st.tool) + '</b></span>' +
+        '<span>traço=<b>' + (traco ? 'SIM' : 'NÃO') + '</b></span>' +
+        '<span>touch-action=<b>' + dEsc(diagTouchAction()) + '</b></span>' +
+        '<span>scrollY=<b>' + Math.round(window.pageYOffset) + '</b></span>' +
+        '<span>eventos=<b>' + diag.length + '</b></span>';
+    }
+    if (corpo) {
+      if (!diag.length) {
+        corpo.innerHTML = '<div class="rm2-diag-v">Sin eventos todavía. Escribí en la materia.</div>';
+      } else {
+        var h = [];
+        for (var i = diag.length - 1; i >= 0; i--) h.push(diagVLinha(diag[i]));
+        corpo.innerHTML = h.join('');
+      }
+    }
+  }
+
+  function diagVPedirRender() {
+    if (diagVRaf || !diagAberto()) return;
+    diagVRaf = requestAnimationFrame(function () { diagVRaf = 0; diagVRender(); });
+  }
+
+  function limparDiag() {
+    diag.length = 0;
+    diagVRender();
+  }
+
+  function abrirDiag() {
+    if (!pilotoPermitido()) return;             // fora do piloto: nunca abre
+    if (diagAberto()) return;
+    diagVCaixa = document.createElement('div');
+    diagVCaixa.className = 'rm2-diag';
+    diagVCaixa.setAttribute('role', 'region');
+    diagVCaixa.setAttribute('aria-label', 'Diagnóstico del lápiz');
+    diagVCaixa.innerHTML =
+      '<div class="rm2-diag-h">' +
+        '<b>Diagnóstico del lápiz</b>' +
+        '<button type="button" data-d="clear">Limpiar</button>' +
+        '<button type="button" data-d="close" aria-label="Cerrar">×</button>' +
+      '</div>' +
+      '<div class="rm2-diag-s"></div>' +
+      '<div class="rm2-diag-b"></div>';
+    diagVCaixa.addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-d]'); if (!b) return;
+      if (b.getAttribute('data-d') === 'clear') limparDiag(); else fecharDiag();
+    });
+    document.body.appendChild(diagVCaixa);
+    diagVRender();
+    refletir();
+  }
+
+  /* Sem chamar `refletir()` — é a versão usada DE DENTRO de `refletir()`
+     (quando o piloto deixa de valer a meio, ex.: trocou de matéria com o
+     painel aberto), onde chamar `refletir()` outra vez criaria recursão.
+     `fecharDiag()`, usada por todo o resto, chama-a e depois reflecte. */
+  function fecharDiagSemRefletir() {
+    if (diagVCaixa && diagVCaixa.parentNode) diagVCaixa.parentNode.removeChild(diagVCaixa);
+    diagVCaixa = null;
+    if (diagVRaf) { cancelAnimationFrame(diagVRaf); diagVRaf = 0; }
+  }
+
+  function fecharDiag() {
+    fecharDiagSemRefletir();
+    refletir();
+  }
+
+  function alternarDiag() { if (diagAberto()) fecharDiag(); else abrirDiag(); }
 
   /* ================================================================== */
   /* 3 · CSS                                                             */
@@ -502,6 +706,57 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   .rm2-w{ width:28px; }
 }
 @media (prefers-reduced-motion: reduce){ .rm2-fab,.rm2-btn,.rm2-sw{ transition:none; } }
+
+/* ---------- painel de diagnóstico (só piloto, só memória) ------------
+   Canto oposto ao trilho (que fica à direita) e, de propósito, também
+   oposto a onde um player de áudio compacto deve ficar (§7 do encargo:
+   a caneta não implementa áudio, só não pode colidir com ele). Com
+   touch-action:auto para poder ser rolado com o dedo mesmo quando a área
+   de leitura estiver bloqueada. Nunca é alvo de anotação (fora de
+   #materias-container, no próprio body). */
+.rm2-diag{
+  position:fixed; z-index:99992;
+  left:max(8px, env(safe-area-inset-left));
+  bottom:max(8px, env(safe-area-inset-bottom));
+  width:min(430px, calc(100vw - 80px));
+  max-height:min(52vh, 460px);
+  display:flex; flex-direction:column;
+  background:#0d1a2b; color:#e7f0fa;
+  border:1px solid #22405f; border-radius:14px;
+  box-shadow:0 14px 34px rgba(4,12,22,.42);
+  font:12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  touch-action:auto; overscroll-behavior:contain;
+}
+.rm2-diag-h{
+  display:flex; align-items:center; gap:8px;
+  padding:8px 10px; border-bottom:1px solid #22405f; flex:0 0 auto;
+}
+.rm2-diag-h b{ font-size:12.5px; letter-spacing:.2px; flex:1 1 auto; }
+.rm2-diag-h button{
+  border:1px solid #2f5478; background:#16283f; color:#dbe8f6;
+  border-radius:8px; padding:4px 9px; font:inherit; cursor:pointer;
+}
+.rm2-diag-h button:hover{ background:#1e3c5a; }
+.rm2-diag-h button[data-d="close"]{ padding:2px 8px; font-size:15px; line-height:1.1; }
+.rm2-diag-s{
+  display:flex; flex-wrap:wrap; gap:4px 12px;
+  padding:7px 10px; border-bottom:1px solid #22405f; flex:0 0 auto;
+  color:#9fb8d2;
+}
+.rm2-diag-s b{ color:#ffd77a; font-weight:700; }
+.rm2-diag-b{ overflow:auto; padding:4px 0 8px; flex:1 1 auto; -webkit-overflow-scrolling:touch; }
+.rm2-diag-r{ padding:5px 10px; border-bottom:1px solid rgba(34,64,95,.55); }
+.rm2-diag-r b{ display:block; color:#8fd3ff; font-weight:700; }
+.rm2-diag-r.pen b{ color:#7dffa8; }
+.rm2-diag-r i{ display:block; font-style:normal; color:#b9cde2; word-break:break-word; }
+.rm2-diag-v{ padding:14px 10px; color:#8ea6bf; text-align:center; }
+@media (max-width:560px){
+  .rm2-diag{ width:calc(100vw - 70px); max-height:46vh; font-size:11px; }
+}
+/* botão do diagnóstico: só existe no DOM para quem está no piloto
+   (montado condicionalmente em montar()) — este display:none é uma
+   segunda camada, não a única defesa. */
+.rm2-btn[data-a="diag"].rm2-piloto-off{ display:none; }
 
 `;
     document.head.appendChild(css);
@@ -1876,7 +2131,17 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       '<path d="M21.4 3.4 27.6 9.6h-4.5a1.7 1.7 0 0 1-1.7-1.7Z" fill="url(#rm2nB)"/>' +
       '<rect x="7.2" y="13.4" width="14" height="2.5" rx="1.25" fill="#10243D" opacity=".62"/>' +
       '<rect x="7.2" y="19" width="10" height="2.5" rx="1.25" fill="#10243D" opacity=".45"/>' +
-      '<rect x="3.6" y="6.6" width="1.8" height="18" rx=".9" fill="#ffffff" opacity=".4"/>'
+      '<rect x="3.6" y="6.6" width="1.8" height="18" rx=".9" fill="#ffffff" opacity=".4"/>',
+
+    /* diagnóstico: um traçado de monitor com um ponto a marcar o pico.
+       Só piloto: o botão que usa este ícone só entra no DOM se
+       `pilotoPermitido()` for verdadeiro no momento do montar(). */
+    diag:
+      '<defs>' + grad('rm2dA', '#8fd3ff', '#2f7fd6', true) + '</defs>' +
+      '<rect x="2.6" y="5.4" width="26.8" height="19.4" rx="3.2" fill="none" stroke="url(#rm2dA)" stroke-width="2.6"/>' +
+      '<path d="M6.6 16.4h4l2.6-5.4 3.4 9.2 2.6-5.2h6.2" fill="none" stroke="url(#rm2dA)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<circle cx="16.6" cy="20.2" r="1.9" fill="#ffd77a"/>' +
+      '<rect x="11.4" y="26.6" width="9.2" height="2.4" rx="1.2" fill="url(#rm2dA)"/>'
   };
 
   /* Trilho vertical. Sem rótulos permanentes: o nome vive no title e no
@@ -1920,6 +2185,11 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         '<div class="rm2-sep"></div>' +
         botao('data-a="undo"', I.undo, 'Deshacer', 'Deshacer la última acción', false) +
         botao('data-a="notes"', I.note, 'Mis apuntes', 'Abrir mis apuntes', false) +
+        /* Diagnóstico do lápiz: o botão está sempre no DOM (a toolbox só é
+           construída uma vez, mas o piloto depende da MATÉRIA activa, que
+           pode trocar depois) — quem decide se aparece é `refletir()`,
+           chamada a cada troca de aba, via a classe `rm2-piloto-off`. */
+        botao('data-a="diag"', I.diag, 'Diagnóstico del lápiz', 'Abrir el diagnóstico del lápiz', false) +
       '</div>' +
       '<button type="button" class="rm2-fab" id="rm2-fab" aria-expanded="false" aria-controls="rm2-panel" ' +
         'title="Herramientas de estudio" aria-label="Herramientas de estudio">' + ico(I.tools) + '</button>';
@@ -1953,6 +2223,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       var a = b.getAttribute('data-a');
       if (a === 'undo') { desfazer(); return; }
       if (a === 'notes') { abrirNotas(); return; }
+      if (a === 'diag') { alternarDiag(); return; }
 
       var hc = b.getAttribute('data-hc');
       if (hc) {
@@ -2063,6 +2334,20 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     box.querySelectorAll('[data-pw]').forEach(function (b) {
       b.setAttribute('aria-checked', String(b.getAttribute('data-pw') === st.penWidth));
     });
+    /* botão do diagnóstico: só visível dentro do piloto (José + Semiología
+       II), reavaliado aqui a cada troca de aba/estado — nunca fixo no
+       momento do mount, porque a matéria activa pode trocar depois. Fora
+       do piloto o painel fecha sozinho se por acaso estivesse aberto
+       (ex.: o aluno estava em Semiología II com o piloto activo e trocou
+       de matéria com o diagnóstico no ecrã). */
+    var permitido = pilotoPermitido();
+    var bd = box.querySelector('.rm2-btn[data-a="diag"]');
+    if (bd) {
+      bd.classList.toggle('rm2-piloto-off', !permitido);
+      bd.classList.toggle('on', diagAberto());
+      bd.setAttribute('aria-expanded', String(diagAberto()));
+    }
+    if (!permitido && diagAberto()) fecharDiagSemRefletir();
     var u = box.querySelector('[data-a="undo"]');
     if (u) u.disabled = !st.undo.length;
 
@@ -2429,10 +2714,10 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (t.medirBarra) t.medirBarra();
 
     t.onAbaPronta(function (tabEl) {
-      if (tabEl.classList.contains('active')) sincronizarAba(tabEl);
+      if (tabEl.classList.contains('active')) { sincronizarAba(tabEl); refletir(); }
     });
     var ativa = abaAtiva();
-    if (ativa) sincronizarAba(ativa);
+    if (ativa) { sincronizarAba(ativa); refletir(); }
 
     if (typeof window.switchTab === 'function') {
       var sw = window.switchTab;
@@ -2443,6 +2728,11 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         setTimeout(function () {
           fecharNotas();
           var el = abaAtiva(); if (el) sincronizarAba(el);
+          /* o piloto (José + Semiología II) depende da matéria activa —
+             reavaliar aqui é o que faz o botão do diagnóstico aparecer ou
+             sumir ao trocar de aba, e fecha o painel sozinho se a nova
+             matéria já não for a do piloto. */
+          refletir();
         }, 0);
         return r;
       };
@@ -2461,9 +2751,13 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       simplificar: simplificar,
       dDe: dDe,
       hasAccess: hasStudyToolsV2Access,
-      /* diagnóstico de hardware físico (§7 do encargo): só memória, só
-         beta, nunca enviado ao servidor — ver «2b · DIAGNÓSTICO» acima */
+      /* diagnóstico de hardware físico: só memória, nunca enviado ao
+         servidor — ver «2b · DIAGNÓSTICO» acima. O painel visual
+         (abrir/fechar/limpar) só abre de facto dentro do piloto. */
       debug: debug,
+      abrirDiag: abrirDiag,
+      fecharDiag: fecharDiag,
+      limparDiag: limparDiag,
       /* Ganchos SÓ DE LEITURA para os testes automatizados da caneta
          Goodnotes-like (§24 do encargo). Nenhum grava no Supabase, nenhum
          devolve conteúdo da matéria — só o estado interno do roteador de
@@ -2474,6 +2768,9 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         penState: penState,
         touchNav: touchNav,
         touchPalm: touchPalm,
+        pilotoPermitido: pilotoPermitido,
+        activeViewPermitido: activeViewPermitido,
+        anotarPermitido: anotarPermitido,
         temTraco: function () { return !!traco; },
         tracoInfo: function () {
           return traco ? { pid: traco.pid, tipo: traco.tipo, nPontos: traco.pts.length, rafPending: traco.rafPending } : null;
