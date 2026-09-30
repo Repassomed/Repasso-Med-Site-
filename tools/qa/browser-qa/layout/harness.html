@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harness · geometria do Layout V2 B1 (real rm-layout.* + styles.css)</title>
+<link rel="stylesheet" href="/assets/styles.css">
+<link rel="stylesheet" href="/assets/rm-layout.css">
+<style>
+  /* a toolbox da V2 (58 px, right 9 px) — só a caixa, para medir */
+  #fake-tools { position: fixed; right: 9px; top: 50%; width: 58px; height: 200px; background: #13314f; z-index: 99991; }
+  /* o player lateral, como o rm-audio.css o desenha dentro do slot: encostado à direita do slot */
+  #stub-player { position: absolute; right: 8px; bottom: 16px; width: var(--rm-player-w, 224px); height: 150px; background: #f90; }
+</style>
+</head>
+<body>
+<div id="materias-container">
+  <div class="tab-content active" id="tab-semio2">
+    <nav class="rm-menu"><div class="rm-menu-item"><a data-target="s2-b01"><span class="rm-menu-tx"><b>Motivo de consulta</b></span></a></div><div class="rm-menu-item"><a data-target="s2-b02"><span class="rm-menu-tx"><b>Examen físico</b></span></a></div></nav>
+    <script>
+      for (var i = 1; i <= 2; i++) document.write('<section class="container" id="s2-b0' + i + '"><h2>Bloque ' + i + '</h2>' + Array(30).join('<p>Texto de relleno sintético para dar altura y ancho reales a la columna de lectura del bloque, con varias líneas para que se note el borde derecho.</p>') + '</section>');
+    </script>
+  </div>
+</div>
+<div id="fake-tools" aria-hidden="true"></div>
+<script>window.RM_CATALOGO = [{ slug: 'semiologia-ii', title: 'Semiología II', sub: '' }];</script>
+<script src="/assets/rm-modes.js"></script>
+<script src="/assets/rm-layout.js"></script>
+</body>
+</html>

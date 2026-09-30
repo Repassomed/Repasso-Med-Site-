@@ -23,6 +23,7 @@ html.rm-l2 {
   --rm-hdr-h: 44px;                     /* faixa compacta */
   --rm-left-w: 0px;                     /* 264 docked · 64 trilho · 0 drawer */
   --rm-right-w: 0px;                    /* toolbox (58) + margem (9) */
+  --rm-player-w: 224px;                 /* largura do player LATERAL (a do dock: rm-layout.js PLAYER_W) */
   --rm-player-h: 0px;                   /* slot do futuro player (0 enquanto não há áudio) */
   --rm-safe-b: env(safe-area-inset-bottom, 0px);
   --rm-band-top: 0px;                   /* medido por JS: topo da faixa na viewport */
