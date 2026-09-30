@@ -748,10 +748,14 @@ async function regressoes(browser, port) {
 /* ------------------------------------------------------------------ */
 /* E · INTEGRAÇÃO FUTURA COM A LAYOUT V2 (B1): data-rm-dock manda       */
 /* ------------------------------------------------------------------ */
-/* Mesma regra do rm-layout.js do B1 (#411): constantes e fórmula só para o teste saber o que o B1 DECIDIRIA. */
-const B1K = { W_DOCK: 1200, W_RAIL: 768, TEXT_COL: 880, RIGHT_RAIL: 67, PLAYER_W: 240, PLAYER_GAP: 12 };
+/* Mesma regra do `decidirDock` do rm-layout.js do B1 (coluna de texto CENTRADA: o espaço livre à direita do cartão
+   é (R − 880)/2), só para o teste saber o que o B1 DECIDIRIA. O teste com o rm-layout.js REAL está no PR do dock. */
+const B1K = { TEXT_COL: 880, RIGHT_RAIL: 67, PLAYER_W: 224, PLAYER_EDGE: 8, PLAYER_GAP: 8 };
 const b1Left = lm => lm === 'docked' ? 264 : (lm === 'rail' ? 64 : 0);
-const b1Dock = (w, lm) => ((w - b1Left(lm)) >= (B1K.TEXT_COL + B1K.RIGHT_RAIL + B1K.PLAYER_GAP + B1K.PLAYER_W + 32)) ? 'side' : 'bottom';
+const b1Dock = (w, lm) => {
+  const left = b1Left(lm), R = w - left - B1K.RIGHT_RAIL, cardR = left + (R + Math.min(B1K.TEXT_COL, R)) / 2;
+  return (w - B1K.RIGHT_RAIL - B1K.PLAYER_EDGE - B1K.PLAYER_W) >= cardR + B1K.PLAYER_GAP ? 'side' : 'bottom';
+};
 const b1Attrs = (page, lm, dock) => page.evaluate(o => {
   var h = document.documentElement; h.classList.add('rm-l2');
   h.setAttribute('data-rm-lmode', o.lm);
@@ -819,19 +823,20 @@ async function integracaoB1(browser, port) {
     seccao('B1 · B) mesma viewport: docked ⇒ rail (dock bottom ⇒ side) sem reload');
     await ev(page, () => { window.__marker = 'mesma-pagina'; });
     const plays0 = (await fakeInfo(page)).plays, pos0 = (await st(page)).position;
-    ok(b1Dock(1440, 'rail') === 'side', '(sanidade) a fórmula do B1 decide side a 1440 com o trilho de 64', b1Dock(1440, 'rail'));
+    await page.setViewportSize({ width: 1600, height: 900 });
+    ok(b1Dock(1600, 'docked') === 'bottom' && b1Dock(1600, 'rail') === 'side', '(sanidade) a 1600: lateral aberta ⇒ bottom, trilho ⇒ side', [b1Dock(1600, 'docked'), b1Dock(1600, 'rail')]);
     await b1Attrs(page, 'rail', 'side'); await frame(page);
     g = await geom(page);
     ok(g.mode === 'lateral' && g.layout === 'b1', 'D1 passou a lateral sem a viewport cruzar breakpoint', { mode: g.mode });
     ok(await ev(page, () => window.__marker === 'mesma-pagina'), 'sem recarregar a página');
     ok(g.leftW === '64px', 'B1: --rm-left-w 64px');
     invariantes(g, 'B');
-    ok(near(g.p.r, g.slot.r, 1), 'lateral encostado à borda direita do slot (= esquerda da toolbox)', { pr: g.p.r, sr: g.slot.r });
+    ok(near(g.p.r, g.slot.r - 8, 1), 'lateral encostado à borda direita do slot (= esquerda da toolbox), com a folga de 8 px do B1', { pr: g.p.r, sr: g.slot.r });
     ok(g.p.r <= g.tools.l + 0.5, 'com folga para a toolbox', { pr: g.p.r, tl: g.tools.l });
     ok(g.p.l > g.side.r + 100, 'afastado da lateral/trilho esquerdo');
-    textoLivre(g, 'B (rail 1440)');
+    textoLivre(g, 'B (rail 1600)');
     ok(g.playerH === '0px' && near(g.slot.h, 0, 40), 'lateral não reserva espaço: --rm-player-h = 0', { playerH: g.playerH, slotH: g.slot.h });
-    ok(g.p.w <= 240.5, 'largura lateral = 240 px (a reservada pelo B1)', g.p.w);
+    ok(g.p.w <= 240.5 && g.p.w >= 200, 'largura lateral = --rm-player-w do B1 (224 px; 240 sem variável)', g.p.w);
     const dentro = await ev(page, () => { const p = document.querySelector('.rm-audio').getBoundingClientRect(); return Array.from(document.querySelectorAll('.rm-audio button, .rm-audio select, .rm-audio input')).every(b => { const r = b.getBoundingClientRect(); return r.left >= p.left - 0.5 && r.right <= p.right + 0.5 && r.top >= p.top - 0.5 && r.bottom <= p.bottom + 0.5; }); });
     ok(dentro, 'todos os controlos cabem dentro do player lateral de 240 px');
     const s1 = await st(page);
@@ -849,20 +854,15 @@ async function integracaoB1(browser, port) {
     ok((await ev(page, () => window.E.refreshLayout())) === 'bottom', 'refreshLayout() ⇒ bottom');
     ok((await st(page)).layout.source === 'b1', 'getState().layout.source = b1');
 
-    seccao('B1 · D) 264 + 67 a 1600 (lateral docked, B1 diz side): sem cobrir lateral nem toolbox');
-    await page.setViewportSize({ width: 1600, height: 900 });
-    ok(b1Dock(1600, 'docked') === 'side', '(sanidade) B1 decide side a 1600 com lateral 264');
+    seccao('B1 · D) 264 + 67 com lateral aberta: side só quando há folga real (1760)');
+    await page.setViewportSize({ width: 1760, height: 900 });
+    ok(b1Dock(1760, 'docked') === 'side', '(sanidade) B1 decide side a 1760 com lateral 264');
     await b1Attrs(page, 'docked', 'side'); await frame(page);
     g = await geom(page);
     ok(g.leftW === '264px' && g.rightW === '67px', 'variáveis 264/67', { l: g.leftW, r: g.rightW });
     ok(g.mode === 'lateral', 'lateral');
-    invariantes(g, 'D');
+    invariantes(g, 'D'); textoLivre(g, 'D (1760 docked)');
     ok(g.p.l >= 264 && g.p.r <= g.vw - 67 + 0.5, 'player entre --rm-left-w e --rm-right-w', { l: g.p.l, r: g.p.r });
-    if (inter(g.p, { l: g.text.l, r: g.text.r, t: -1e6, b: 1e6 })) console.log('  ⓘ AVISO B1: a 1600 px com lateral docked a fórmula `cabe` do rm-layout.js manda side, mas a coluna de texto (880, centrada) fica ' + Math.round(g.p.l < g.text.r ? g.text.r - g.p.l : 0) + ' px por baixo do player de 240. O motor segue o B1 (autoridade); a correção da fórmula é do B1.');
-    await page.setViewportSize({ width: 1700, height: 900 }); await b1Attrs(page, 'docked', b1Dock(1700, 'docked')); await frame(page);
-    g = await geom(page);
-    ok(g.mode === 'lateral', '1700 + docked: side');
-    invariantes(g, 'D (1700)'); textoLivre(g, 'D (1700 docked)');
     ok(await ev(page, () => window.__real.mediaPlay === 0 && window.__real.audioCtor === 0), 'sem mídia real');
     ok(erros.length === 0, 'sem erros de consola', erros);
     ok(reqs.length === baseReqs && reqs.length === 4, 'sem pedidos além dos 4 ficheiros locais', reqs.length);
@@ -870,7 +870,7 @@ async function integracaoB1(browser, port) {
   }
 
   seccao('B1 · E) trilho de 64 px');
-  for (const [w, h] of [[1024, 768], [1440, 900], [900, 800]]) {
+  for (const [w, h] of [[1024, 768], [1600, 900], [900, 800]]) {
     const { ctx, page } = await novaPagina(browser, port, w, h);
     const dock = b1Dock(w, 'rail');
     await b1Attrs(page, 'rail', dock); await abrir(page);

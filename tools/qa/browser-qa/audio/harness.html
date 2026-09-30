@@ -20,7 +20,7 @@
    depender da #411, que o player respeita a geometria do B1. Só vale com <html class="rm-l2">.
    O JS do B1 escreve data-rm-lmode (docked/rail/off) e data-rm-dock (side/bottom); aqui os testes
    escrevem esses atributos como o B1 faria. */
-html.rm-l2 { --rm-left-w: 0px; --rm-right-w: 0px; --rm-player-h: 0px; --rm-safe-b: env(safe-area-inset-bottom, 0px); }
+html.rm-l2 { --rm-left-w: 0px; --rm-right-w: 0px; --rm-player-w: 224px; --rm-player-h: 0px; --rm-safe-b: env(safe-area-inset-bottom, 0px); }
 html.rm-l2[data-rm-lmode="docked"] { --rm-left-w: 264px; }
 html.rm-l2[data-rm-lmode="rail"]   { --rm-left-w: 64px; }
 html.rm-l2[data-rm-lmode="off"]    { --rm-left-w: 0px; }

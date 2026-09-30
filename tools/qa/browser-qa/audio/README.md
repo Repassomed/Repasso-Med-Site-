@@ -59,7 +59,7 @@ O B1 (`rm-layout.js`, PR #411) já decide onde o player cabe e publica `html[dat
 - Acompanha mudanças de `data-rm-dock` **sem** a viewport cruzar breakpoint: `MutationObserver` restrito a
   `<html>` + `attributeFilter:['data-rm-dock']`, criado no `attach()` e desligado no `unmount()`/`destroy()`/`logout`.
   Sem listener global permanente. `engine.refreshLayout()` faz o mesmo de forma síncrona a pedido da integração.
-- `harness.html` traz um **snapshot do contrato** do B1 (`<style id="b1-contract">`, da #411 @ `dfd39a45`) — não é o
+- `harness.html` traz um **snapshot do contrato** do B1 (`<style id="b1-contract">`, da #411) — não é o
   `rm-layout.css` e não depende da #411.
 
 Cenários testados: A) 1440 + lateral 264 ⇒ B1 `bottom` ⇒ D1 `bottom` · B) mesma viewport, docked→rail ⇒ `side` ⇒ D1
@@ -67,10 +67,10 @@ lateral sem reload · C) side→bottom · D) `--rm-left-w:264px`/`--rm-right-w:6
 diagnóstico · E) trilho 64 px (1024/1440/900) · F) celular (bottom + safe-area) · G) sem `data-rm-dock` ⇒ fallback ·
 H) destroy/unmount/logout desligam o observer · I) 0 mídia antes do play.
 
-**Achado para o B1 (não corrigido aqui, `rm-layout.js` é intocável nesta PR):** a condição `cabe` soma
-`880 + 67 + 12 + 240 + 32`, mas a coluna de texto é centrada, então o espaço livre se divide entre os dois lados.
-Entre ~1495 e ~1627 px com lateral docked o B1 manda `side` e o player de 240 px entra ~14–66 px por baixo do texto.
-Com o trilho de 64 px a 1440 px cabe. O teste imprime um `ⓘ AVISO B1` no caso de 1600 px. O motor continua a obedecer o B1.
+**Geometria do dock (corrigida no B1, PR próprio):** a condição `cabe` antiga do `rm-layout.js` ignorava que a coluna de
+texto é centrada (entre ~1495 e ~1690 px, lateral aberta, o player entrava sob o texto). O B1 passou a decidir pelo
+espaço efetivamente livre à direita do cartão e publica `--rm-player-w` (224 px). Este motor usa `--rm-player-w` e
+`--rm-player-edge` (8 px) quando existem; o harness replica a regra nova só para saber o que o B1 decidiria.
 
 ## Limites honestos (fica para D2/D3)
 

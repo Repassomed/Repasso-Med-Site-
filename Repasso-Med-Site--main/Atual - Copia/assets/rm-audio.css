@@ -213,15 +213,14 @@ html:not([data-rm-dock]):has(.rm-audio[data-mode="bottom"]:not([hidden])) {
    O slot tem altura 0 neste modo (--rm-player-h = 0): o player flutua sobre o
    fundo sem reservar espaço. Largura própria, sem depender de números do B1. */
 .rm-audio[data-layout="b1"][data-mode="lateral"] {
-  --rm-audio-side-w: 240px;
   left: auto; top: auto;
-  right: 0;
+  right: var(--rm-player-edge, 8px);                 /* folga até a toolbox: a mesma que o B1 usou para decidir o dock */
   bottom: calc(16px + var(--rm-safe-b, env(safe-area-inset-bottom, 0px)));
-  width: var(--rm-audio-side-w);
+  width: var(--rm-player-w, 224px);                   /* largura que o B1 reservou ao decidir side/bottom */
   max-width: 100%;
   padding: 8px 10px 10px;
 }
-/* 240 px não dá para 5 controlos de 44 px numa linha: o de velocidade desce para a linha seguinte. */
+/* 224 px não dá para 5 controlos de 44 px numa linha: o de velocidade desce para a linha seguinte. */
 .rm-audio[data-layout="b1"][data-mode="lateral"] .rm-audio__ctl { flex-wrap: wrap; row-gap: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
