@@ -277,6 +277,7 @@ CONTENTS_WRITE_PERMITIDO = {
     ("coordinator-worker-bridge.yml", "bridge"): "branch runner/* da tarefa + estado",
     ("coordinator-auto-repair.yml", "repair"): "branch auto-repair/* + estado",
     ("repasso-quality-scan.yml", "scan"): "branch quality/global-site-findings + PR viva de painel",
+    ("repasso-pr-cleanup-prep.yml", "prepare"): "branch quality/pr-cleanup-api + PR de relatório (só 2 arquivos em coordination/quality/)",
 }
 
 
