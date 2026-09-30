@@ -315,12 +315,17 @@
       if (!provider || typeof provider.resolve !== 'function') return Promise.reject({ code: 'no-provider' });
       counters.sourceRequests++;
       if (reason === 'expired') counters.reauthorizations++;
-      return Promise.resolve(provider.resolve(meta, { reason: reason || 'first-play' })).then(function (r) {
-        if (!r || typeof r.src !== 'string' || !r.src) throw { code: 'source-failed' };
-        if (!allowSource(r.src)) throw { code: 'source-rejected' };
-        sources[k] = { src: r.src, expiresAt: typeof r.expiresAt === 'number' ? r.expiresAt : 0 };
-        return r.src;
-      });
+      /* `new Promise(...)` apanha também o throw SÍNCRONO do provider; e qualquer falha do provider
+         (síncrona ou assíncrona) é 'source-failed' — o código do erro do provider nunca é lido como
+         falha de mídia (um code 2/4/'SRC_EXPIRED' seu não pode disparar reautorização). */
+      return new Promise(function (resolve) { resolve(provider.resolve(meta, { reason: reason || 'first-play' })); })
+        .then(function (r) { return r; }, function () { throw { code: 'source-failed' }; })
+        .then(function (r) {
+          if (!r || typeof r.src !== 'string' || !r.src) throw { code: 'source-failed' };
+          if (!allowSource(r.src)) throw { code: 'source-rejected' };
+          sources[k] = { src: r.src, expiresAt: typeof r.expiresAt === 'number' ? r.expiresAt : 0 };
+          return r.src;
+        });
     }
 
     function pauseOthers() {
@@ -328,7 +333,9 @@
     }
 
     /* ---------- reprodução ---------- */
-    function startAt(meta, startSec, reason) {
+    /* A posição é lida NO MOMENTO de usar, nunca congelada no início: um seek()/skip() feito enquanto o
+       provider ou a carga ainda estão pendentes tem de valer. */
+    function startAt(meta, reason) {
       var my = ++token;
       var k = key(meta);
       return ensureSource(meta, reason).then(function (src) {
@@ -339,12 +346,12 @@
           /* Fonte nova (primeira vez, outro item ou reautorizada): o elemento
              volta a currentTime 0 ao trocar de src, por isso o ponto fica
              guardado em `positions` e é reposto depois da carga. */
-          positions[k] = startSec; adapterKey = null; adapterSrc = null;
+          adapterKey = null; adapterSrc = null;
           carga = loadInto(a, src).then(function () { if (my === token) { adapterKey = k; adapterSrc = src; } });
         }
         return carga.then(function () {
           if (my !== token) return false;
-          try { a.currentTime = clamp(startSec, 0, isFinite(a.duration) && a.duration > 0 ? a.duration : meta.duration); } catch (e) { /* ignore */ }
+          try { a.currentTime = clamp(positions[k] || 0, 0, isFinite(a.duration) && a.duration > 0 ? a.duration : meta.duration); } catch (e) { /* ignore */ }
           a.playbackRate = rate;
           return Promise.resolve(a.play()).then(function () {
             if (my !== token) return false;
@@ -355,7 +362,7 @@
         });
       }).catch(function (e) {
         if (my !== token) return false;
-        return onPlayFailure(e, meta, startSec);
+        return onPlayFailure(e, meta);
       });
     }
 
@@ -366,16 +373,15 @@
       return (e.code === 2 || e.code === 4) && !!(provider && typeof provider.resolve === 'function');
     }
 
-    function onPlayFailure(e, meta, startSec) {
+    function onPlayFailure(e, meta) {
       var code = e && e.code;
       if (code === 'no-provider' || code === 'source-rejected' || code === 'source-failed') {
         return fail(code, 'fuente no disponible');
       }
       if (isExpired(e) && reauthTries < 1) {
         reauthTries++;
-        return startAt(meta, startSec, 'expired');        // reautoriza e retoma do mesmo ponto
+        return startAt(meta, 'expired');                  // reautoriza e retoma do mesmo ponto (positions)
       }
-      positions[key(meta)] = startSec;                    // a falha nunca apaga o ponto
       return fail(isExpired(e) ? 'expired' : 'media-error', 'no se pudo reproducir');
     }
 
@@ -396,7 +402,7 @@
       if (isExpired(e) && reauthTries < 1) {
         reauthTries++;
         setState('loading');
-        startAt(current, t, 'expired');
+        startAt(current, 'expired');
         return;
       }
       fail(isExpired(e) ? 'expired' : 'media-error', 'no se pudo reproducir');
@@ -565,7 +571,8 @@
         if (current && key(current) !== key(meta)) { savePos(); pauseAdapter(); }   // A → B: pausa A, guarda onde estava
         current = meta; isOpen = true; err = null; reauthTries = 0;
         state = 'loading'; render(); emit('state', { state: 'loading' });
-        return startAt(meta, positions[key(meta)] || 0, 'first-play');
+        try { return startAt(meta, 'first-play'); }
+        catch (e) { return Promise.resolve(fail('internal', 'error interno')); }   // play() nunca lança: estado nunca fica preso em loading
       },
 
       pause: function () {

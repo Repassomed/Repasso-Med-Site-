@@ -4,7 +4,7 @@
 (function (w) {
   'use strict';
   w.__DUR = w.__DUR || {};
-  w.__fake = { created: [], srcAssignments: [], playCalls: 0, failLoad: 0, failPlay: 0, expired: {}, autoLoad: true };
+  w.__fake = { created: [], srcAssignments: [], playCalls: 0, failLoad: 0, failPlay: 0, playThrows: 0, factoryThrows: 0, expired: {}, autoLoad: true };
 
   function FakeAudio() {
     var et = document.createDocumentFragment();   // EventTarget sem rede
@@ -39,6 +39,7 @@
     this.removeAttribute = function () { self._src = ''; };
     this.play = function () {
       w.__fake.playCalls++;
+      if (w.__fake.playThrows > 0) { w.__fake.playThrows--; throw new Error('play() sincrono falhou'); }
       if (w.__fake.failPlay > 0) { w.__fake.failPlay--; self.error = { code: 4 }; return Promise.reject(new Error('NotSupportedError')); }
       if (w.__fake.expired[self._src]) { self.error = { code: 'SRC_EXPIRED' }; return Promise.reject(Object.assign(new Error('expired'), { code: 'SRC_EXPIRED' })); }
       self.paused = false; setTimeout(function () { fire('playing'); }, 0); return Promise.resolve();
@@ -67,7 +68,10 @@
       return new Promise(function (r) { setTimeout(function () { r(out); }, p.delay); });
     }
   };
-  w.__factory = function () { return new FakeAudio(); };
+  w.__factory = function () {
+    if (w.__fake.factoryThrows > 0) { w.__fake.factoryThrows--; throw new Error('factory falhou'); }
+    return new FakeAudio();
+  };
   w.FakeAudio = FakeAudio;
 
   /* Cria um motor novo para cada teste (destrói o anterior e zera contadores). */
@@ -75,9 +79,9 @@
     o = o || {};
     if (w.E) { try { w.E.destroy(); } catch (e) { /* ignore */ } }
     w.__provider.calls.length = 0; w.__provider.n = 0; w.__provider.delay = 0; w.__provider.failNext = 0;
-    var f = w.__fake; f.created.length = 0; f.srcAssignments.length = 0; f.playCalls = 0; f.failLoad = 0; f.failPlay = 0; f.expired = {}; f.autoLoad = true;
+    var f = w.__fake; f.created.length = 0; f.srcAssignments.length = 0; f.playCalls = 0; f.failLoad = 0; f.failPlay = 0; f.playThrows = 0; f.factoryThrows = 0; f.expired = {}; f.autoLoad = true;
     w.__DUR = { a1: 300, b1: 600, c1: 90 };
-    w.E = w.RMAudio.create({ provider: o.provider === null ? null : w.__provider, audioFactory: w.__factory, userKey: o.userKey || 'u1' });
+    w.E = w.RMAudio.create({ provider: o.provider === undefined ? w.__provider : o.provider, audioFactory: w.__factory, userKey: o.userKey || 'u1' });
     return true;
   };
 })(window);

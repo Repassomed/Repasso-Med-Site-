@@ -14,7 +14,7 @@ node tools/qa/browser-qa/audio/audio.test.cjs      # saída ≠ 0 se algo falhar
 O servidor local escuta só `127.0.0.1` e serve **4 ficheiros** (harness, fake, JS e CSS do motor). Qualquer
 outro pedido é abortado/404 e reprovado pelo teste.
 
-## O que cobre (≈510 verificações)
+## O que cobre (≈550 verificações)
 
 | Bloco | Verificações |
 |---|---|
@@ -30,6 +30,19 @@ outro pedido é abortado/404 e reprovado pelo teste.
 | Destroy | UI/marcas removidas, elemento pausado e sem fonte, motor inerte, eventos tardios ignorados |
 | UI 320/390/768/1024/1440 | modo lateral ≥1400 / mini-player inferior abaixo; dentro do viewport; sem overflow; título com ellipsis; alvos ≥44 px; não cobre o fim da página (inferior) nem a caixa de ferramentas/coluna (lateral); `--rm-audio-h`; CSS com `env(safe-area-inset-*)`; cliques reais; teclado (Tab, Enter, Espaço, setas, Escape); nomes acessíveis, `aria-valuetext`, `role=alert`; troca 1399↔1400 sem recarregar; tema escuro |
 | Zero mídia/rede | guardas no browser (`Audio`, `HTMLMediaElement.play/load/src` reais nunca usados); só 4 pedidos locais; nenhum pedido a ficheiro de áudio; consola limpa; storage vazio |
+
+## Regressões da auditoria `3a48e962`
+
+- **seek()/skip() com provider pendente:** a posição é lida *no momento de usar* (não congelada no início do `play()`).
+  Cobre seek durante o provider, durante a carga do elemento, com `pause`/`restart`/`close`/A→B pendentes e durante a
+  renovação da fonte (vale o ponto mais recente).
+- **provider que lança erro síncrono:** `play()` nunca lança; qualquer falha do provider (síncrona, rejeitada, `null`,
+  ou com `code` 2/4/`SRC_EXPIRED`) vira `source-failed` — sem reautorização em laço e sem ficar preso em `loading`.
+  Idem para `audioFactory` e `audio.play()` síncronos. Todos os testes novos reprovam no motor antigo (15 falhas).
+
+**Sintético × real:** tudo acima prova a LÓGICA do motor com um adapter sintético (`FakeAudio`, sem áudio, rede ou
+Storage). NÃO prova comportamento do `<audio>` real (buffering, Range/206, política de autoplay do iOS, `playbackRate`
+2,5× no Safari, expiração real de URL assinada) — isso exige a entrega de áudio real e teste em aparelho.
 
 ## Integração futura com a Layout V2 (B1) — `data-rm-dock` é a autoridade
 

@@ -608,6 +608,143 @@ async function ui(browser, port) {
 }
 
 
+
+/* ------------------------------------------------------------------ */
+/* F · REGRESSÕES da auditoria 3a48e962 (motor sintético)               */
+/* ------------------------------------------------------------------ */
+const settleMs = (page, ms) => page.evaluate(ms => new Promise(r => setTimeout(r, ms)), ms);
+const tryPlay = (page, id) => page.evaluate(async id => { try { return { threw: false, v: await window.E.play(id) }; } catch (e) { return { threw: true, msg: String(e && e.message || e) }; } }, id);
+const PV = `(function () { window.__pv = { mode: 'ok', calls: 0, reasons: [], resolve: function (m, c) {
+  this.calls++; this.reasons.push(c.reason);
+  if (this.mode === 'sync') throw new Error('provider sincrono falhou');
+  if (this.mode === 'rej4') return Promise.reject({ code: 4 });
+  if (this.mode === 'rejExp') return Promise.reject({ code: 'SRC_EXPIRED' });
+  if (this.mode === 'null') return null;
+  return window.__provider.resolve(m, c);
+} }; return true; })()`;
+const mkPV = async (page) => { await page.evaluate(PV); await page.evaluate(() => { window.__mk({ provider: window.__pv }); }); await ev(page, it => window.E.loadMetadata(it), ITENS); await ev(page, () => window.E.attach()); };
+
+async function regressoes(browser, port) {
+  const { ctx, page, reqs, erros } = await novaPagina(browser, port, 1024, 768);
+
+  seccao('Regressão 1 · seek()/skip() com o provider ainda pendente vale');
+  await ev(page, MK); await ev(page, it => window.E.loadMetadata(it), ITENS); await ev(page, () => window.E.attach());
+  await ev(page, () => { window.__provider.delay = 150; });
+  let pa = ev(page, () => window.E.play('a1'));
+  ok(near(await ev(page, () => window.E.seek(60)), 60), 'seek(60) com o provider pendente devolve 60');
+  ok((await st(page)).state === 'loading' && near((await st(page)).position, 60), 'a interface já mostra 60 s enquanto carrega');
+  ok((await pa) === true, 'play resolve true');
+  let fi = await fakeInfo(page), s = await st(page);
+  ok(near(fi.t[0], 60) && s.state === 'playing' && near(s.position, 60, 0.5), 'a reprodução começa em 60 s (não em 0)', { t: fi.t, pos: s.position });
+  ok(fi.assigned.length === 1 && (await prov(page)).length === 1, 'fonte pedida 1× e src atribuído 1×');
+  /* skip no mesmo cenário */
+  await ev(page, MK); await ev(page, it => window.E.loadMetadata(it), ITENS); await ev(page, () => window.E.attach());
+  await ev(page, () => { window.__provider.delay = 120; });
+  pa = ev(page, () => window.E.play('a1'));
+  await ev(page, () => { window.E.skip(15); window.E.skip(15); });
+  await pa; fi = await fakeInfo(page);
+  ok(near(fi.t[0], 30), 'skip(+15)×2 durante a espera ⇒ começa em 30 s', fi.t);
+  /* seek DURANTE a carga do elemento (fonte já resolvida, loadedmetadata ainda não) */
+  await ev(page, MK); await ev(page, it => window.E.loadMetadata(it), ITENS); await ev(page, () => window.E.attach());
+  await ev(page, () => { window.__fake.autoLoad = false; });
+  pa = ev(page, () => window.E.play('a1'));
+  await ev(page, () => new Promise(r => { const t = setInterval(() => { if (window.__fake.srcAssignments.length) { clearInterval(t); r(); } }, 5); }));
+  await ev(page, () => window.E.seek(45));
+  await ev(page, () => window.__fake.created[0]._settle());
+  ok((await pa) === true && near((await fakeInfo(page)).t[0], 45), 'seek(45) durante a carga do elemento ⇒ começa em 45 s', (await fakeInfo(page)).t);
+  /* seek + pause enquanto pendente: nada toca, ponto guardado, depois retoma nele */
+  await ev(page, MK); await ev(page, it => window.E.loadMetadata(it), ITENS); await ev(page, () => window.E.attach());
+  await ev(page, () => { window.__provider.delay = 120; });
+  pa = ev(page, () => window.E.play('a1'));
+  await ev(page, () => { window.E.seek(60); window.E.pause(); });
+  ok((await pa) === false, 'pause durante a espera cancela o play');
+  await settleMs(page, 200);
+  s = await st(page); fi = await fakeInfo(page);
+  ok(s.state === 'paused' && fi.plays === 0 && near(s.positions['a1@v1'], 60), 'pause preserva o ponto 60 e nada toca', { st: s.state, plays: fi.plays });
+  await ev(page, () => { window.__provider.delay = 0; });
+  ok((await PLAY(page, 'a1')) === true && near((await fakeInfo(page)).t[0], 60), 'depois, play retoma em 60 s');
+  /* restart enquanto pendente: fica em 0, pausado, sem autoplay */
+  await ev(page, MK); await ev(page, it => window.E.loadMetadata(it), ITENS); await ev(page, () => window.E.attach());
+  await ev(page, () => { window.__provider.delay = 120; });
+  pa = ev(page, () => window.E.play('a1'));
+  await ev(page, () => { window.E.seek(60); window.E.restart(); });
+  await pa; await settleMs(page, 200);
+  s = await st(page);
+  ok(s.state === 'paused' && near(s.position, 0) && (await fakeInfo(page)).plays === 0, 'restart durante a espera ⇒ 0, pausado, sem autoplay');
+  /* close enquanto pendente */
+  await ev(page, MK); await ev(page, it => window.E.loadMetadata(it), ITENS); await ev(page, () => window.E.attach());
+  await ev(page, () => { window.__provider.delay = 120; });
+  pa = ev(page, () => window.E.play('a1'));
+  await ev(page, () => { window.E.seek(60); window.E.close(); });
+  await pa; await settleMs(page, 200);
+  s = await st(page);
+  ok(!s.open && near(s.positions['a1@v1'], 60) && (await fakeInfo(page)).plays === 0, 'close durante a espera: recolhe, guarda 60, nada toca');
+  /* exclusividade com seek pendente: B assume, A não toca mais tarde */
+  await ev(page, MK); await ev(page, it => window.E.loadMetadata(it), ITENS); await ev(page, () => window.E.attach());
+  await ev(page, () => { window.__provider.delay = 100; });
+  pa = ev(page, () => window.E.play('a1'));
+  const pb = ev(page, () => window.E.play('b1'));
+  await ev(page, () => window.E.seek(33));
+  await Promise.all([pa, pb]); await settleMs(page, 200);
+  s = await st(page); fi = await fakeInfo(page);
+  ok(s.audio_id === 'b1' && near(fi.t[0], 33, 0.5) && fi.paused.filter(x => !x).length === 1, 'A→B com seek pendente: só B toca e o seek aplica-se ao item atual (B)', { id: s.audio_id, t: fi.t });
+  ok(near(s.positions['a1@v1'] || 0, 0), 'o seek não contamina a posição de A');
+  /* reautorização com seek enquanto o provider responde */
+  await ev(page, MK); await ev(page, it => window.E.loadMetadata(it), ITENS); await ev(page, () => window.E.attach());
+  await PLAY(page, 'a1'); await tick(page, 42);
+  await ev(page, () => { window.__provider.delay = 120; window.__fake.created[0].expireNow(); });
+  await ev(page, () => window.E.seek(10));
+  await settleMs(page, 300);
+  fi = await fakeInfo(page); s = await st(page);
+  ok(s.state === 'playing' && near(fi.t[0], 10, 0.5), 'renovação da fonte retoma no ponto mais recente (10 s), não no antigo (42 s)', { t: fi.t, st: s.state });
+  ok(s.counters.reauthorizations === 1 && (await prov(page)).some(c => c.reason === 'expired'), 'a renovação continua a funcionar (reason=expired)');
+
+  seccao('Regressão 2 · provider lança ERRO SÍNCRONO');
+  await mkPV(page);
+  await ev(page, () => { window.__pv.mode = 'sync'; });
+  let r = await tryPlay(page, 'a1');
+  ok(!r.threw && r.v === false, 'play() não lança: resolve false', r);
+  s = await st(page);
+  ok(s.state === 'error' && s.error.code === 'source-failed', 'estado error/source-failed (não fica preso em loading)', { st: s.state, e: s.error });
+  ok(s.open && s.hasAdapter === false && (await fakeInfo(page)).n === 0, 'player aberto para nova tentativa, sem elemento de áudio criado');
+  ok(await ev(page, () => { const e = document.querySelector('.rm-audio__err'); return !e.hidden && e.textContent.length > 5; }), 'aviso visível ao aluno');
+  ok(await ev(page, () => !document.querySelector('.rm-audio__main').matches('[aria-busy="true"]')), 'botão principal deixa de estar «ocupado»');
+  await ev(page, () => { window.__pv.mode = 'ok'; });
+  ok((await tryPlay(page, 'a1')).v === true && (await st(page)).state === 'playing', 'nova tentativa com o provider recuperado toca');
+  /* outras formas de falha do provider */
+  for (const m of ['rej4', 'rejExp', 'null']) {
+    await mkPV(page);
+    await ev(page, m => { window.__pv.mode = m; }, m);
+    r = await tryPlay(page, 'a1'); s = await st(page);
+    ok(!r.threw && r.v === false && s.state === 'error' && s.error.code === 'source-failed', `provider ${m}: error/source-failed`, { r, e: s.error });
+    ok(await ev(page, () => window.__pv.calls === 1), `provider ${m}: sem reautorização em laço (1 chamada)`, await ev(page, () => window.__pv.reasons));
+  }
+  /* erro síncrono na REAUTORIZAÇÃO: mantém a posição */
+  await mkPV(page);
+  await PLAY(page, 'a1'); await tick(page, 42);
+  await ev(page, () => { window.__pv.mode = 'sync'; window.__fake.created[0].expireNow(); });
+  await settleMs(page, 100);
+  s = await st(page);
+  ok(s.state === 'error' && s.error.code === 'source-failed' && near(s.positions['a1@v1'], 42, 0.5), 'erro síncrono na renovação: error, ponto 42 s preservado', { st: s.state, pos: s.positions });
+  await ev(page, () => { window.__pv.mode = 'ok'; });
+  ok((await tryPlay(page, 'a1')).v === true && near((await fakeInfo(page)).t[0], 42, 0.5), 'recuperado: retoma em 42 s');
+  /* factory e play() síncronos */
+  await mkPV(page);
+  await ev(page, () => { window.__fake.factoryThrows = 1; });
+  r = await tryPlay(page, 'a1'); s = await st(page);
+  ok(!r.threw && r.v === false && s.state === 'error', 'audioFactory lança: play() resolve false, estado error (não loading)', { r, st: s.state });
+  ok((await tryPlay(page, 'a1')).v === true, 'e a tentativa seguinte toca');
+  await mkPV(page);
+  await ev(page, () => { window.__fake.playThrows = 1; });
+  r = await tryPlay(page, 'a1'); s = await st(page);
+  ok(!r.threw && r.v === false && s.state === 'error', 'audio.play() lança síncrono: error (não loading)', { r, st: s.state });
+  ok((await tryPlay(page, 'a1')).v === true && (await st(page)).state === 'playing', 'e a tentativa seguinte toca');
+  ok(erros.length === 0, 'nenhuma exceção escapou para a página (pageerror/console)', erros);
+  ok(await ev(page, () => window.__real.mediaPlay === 0 && window.__real.audioCtor === 0), 'sem mídia real');
+  ok(!reqs.some(x => /\.(m4a|mp3)$/.test(x)), 'sem pedidos de áudio');
+  await ctx.close();
+}
+
 /* ------------------------------------------------------------------ */
 /* E · INTEGRAÇÃO FUTURA COM A LAYOUT V2 (B1): data-rm-dock manda       */
 /* ------------------------------------------------------------------ */
@@ -825,6 +962,7 @@ async function integracaoB1(browser, port) {
   try {
     await funcionais(browser, port);
     await ui(browser, port);
+    await regressoes(browser, port);
     await integracaoB1(browser, port);
   } catch (e) { koN++; falhas.push('EXCEÇÃO: ' + (e && e.stack || e)); console.log('  ✗ EXCEÇÃO', e); }
   await browser.close(); srv.close();
