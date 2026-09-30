@@ -29,7 +29,8 @@ async function clickLink(s,mail,o){const url=s.be.click(mail,o); await s.page.go
   ok(!o.tabs,'abas Entrar/Criar conta ocultas durante a recuperação');
   ok(rest0(s.be)&&!o.loading&&!(await s.page.evaluate(()=>!!document.querySelector('.rm-resume, #main-tabs .main-tab'))),'recuperação NÃO chamou afterLogin (nenhuma consulta de perfil/matérias; só o GET study_tools_beta da V2: '+JSON.stringify(s.be.rest)+') e a plataforma não carregou');
   ok(!/access_token|recovery|type=/.test(o.url)&&o.url==='/','URL limpa (sem hash/recovery), caminho preservado: '+o.url);
-  ok(o.flags.ss==='1'&&!!o.flags.pend,'marcas de recuperação (sem token) gravadas');
+  const pj=(()=>{try{return JSON.parse(o.flags.pend)}catch(e){return null}})();
+  ok(o.flags.ss===s.u.id&&pj&&pj.uid===s.u.id&&!/eyJ|token/i.test(String(o.flags.ss)+String(o.flags.pend)),'marca da ABA = UID esperado; marca entre abas = {uid,t}; nenhum token em storage adicional');
 
   console.log('== 5/6 · senhas diferentes e senha curta bloqueiam (0 PUT)');
   await s.page.fill('#np-pass','nova12345'); await s.page.fill('#np-pass2','outra99999'); await s.page.click('#np-save'); await s.page.waitForTimeout(300);
@@ -42,17 +43,23 @@ async function clickLink(s,mail,o){const url=s.be.click(mail,o); await s.page.go
   ok(o.form&&o.state==='ready'&&rest0(s.be),'reload 1: continua na tela de nova senha, 0 consultas ao banco');
   await s.page.reload(); await s.page.waitForTimeout(1500); o=await obs(s.page);
   ok(o.form&&o.state==='ready'&&rest0(s.be)&&!o.loading,'reload 2: idem');
-  console.log('== 12b · sessão de recuperação esquecida (outra aba / aba nova) NÃO vira login');
+  console.log('== B · 12b · aba NORMAL durante a recuperação: não entra na plataforma e NÃO derruba a recuperação da aba original');
   const p2=await s.context.newPage(); await p2.goto(s.base); await p2.waitForTimeout(1800); let o2=await obs(p2);
-  ok(o2.login&&!o2.loading&&rest0(s.be),'aba nova sem a marca: cai no login, plataforma não carrega, 0 consultas ('+o2.msg.slice(0,48)+'…)');
-  ok(!o2.flags.tok&&!o2.flags.pend,'sessão de recuperação esquecida foi encerrada neste navegador');
-  await p2.close();
+  ok(o2.login&&!o2.form&&!o2.loading&&rest0(s.be),'B · aba normal: cai no login (sem formulário), plataforma não carrega, 0 consultas de perfil/matérias');
+  ok(/en curso en otra pestaña/.test(o2.msg),'B · mensagem: há recuperação em curso em outra aba');
+  ok(o2.flags.tok&&s.be.logouts.length===0,'B · sessão compartilhada NÃO encerrada (token presente, 0 logout no servidor)');
+  await p2.close(); await s.page.bringToFront(); await s.page.waitForTimeout(500); o=await obs(s.page);
+  ok(o.form&&o.state==='ready','B · a aba original segue com a tela de nova senha válida');
+  await s.page.fill('#np-pass','nova12345'); await s.page.fill('#np-pass2','nova12345'); await s.page.click('#np-save'); await s.page.waitForTimeout(1500); o=await obs(s.page);
+  ok(s.be.puts===1&&s.be.pwChanged===1&&o.login&&/Contraseña actualizada/.test(o.msg),'B · a aba original CONCLUI a troca de senha depois (1 PUT) — a outra aba não a matou');
 
   console.log('== 2 · nova senha válida → concluída → vai ao login (não entra sozinho)');
   // nova sessão de recuperação (a anterior foi encerrada pela aba nova)
   s=await setup(b); mail=await ask(s); await clickLink(s,mail);
-  await s.page.fill('#np-pass','nova12345'); await s.page.fill('#np-pass2','nova12345'); await s.page.click('#np-save'); await s.page.waitForTimeout(1500); o=await obs(s.page);
-  ok(s.be.puts===1&&s.be.pwChanged===1,'1 PUT /user e senha trocada no servidor');
+  await s.page.fill('#np-pass','nova12345'); await s.page.fill('#np-pass2','nova12345'); const c0=s.be.calls.length; await s.page.click('#np-save'); await s.page.waitForTimeout(1500); o=await obs(s.page);
+  ok(s.be.puts===1&&s.be.pwChanged===1,'G · 1 PUT /user e senha trocada no servidor');
+  { const tail=s.be.calls.slice(c0).filter(c=>/\/auth\/v1\/(user|logout)/.test(c)&&!/OPTIONS/.test(c)); const gi=tail.indexOf('GET /auth/v1/user'), pi=tail.indexOf('PUT /auth/v1/user'), li=tail.findIndex(c=>/logout/.test(c));
+    ok(gi>=0&&gi<pi&&pi<li,'G · ordem ao salvar: getUser() (confere id === UID da recuperação) → PUT → logout ('+tail.join(' › ')+')'); }
   ok(o.login&&/Contraseña actualizada/.test(o.msg)&&o.tabs,'confirmação clara + painel de login: «'+o.msg+'»');
   ok(s.be.logouts.includes('global')&&!o.flags.tok&&!o.flags.ss&&!o.flags.pend,'sessão de recuperação encerrada (signOut) e marcas limpas');
   ok(rest0(s.be)&&!o.loading,'NÃO entrou na plataforma: 0 consultas ao banco após salvar');
@@ -89,9 +96,13 @@ async function clickLink(s,mail,o){const url=s.be.click(mail,o); await s.page.go
   s=await setup(b); mail=await ask(s); await clickLink(s,mail);                              // 1.º clique consome o token
   const sB=await newSession(b,V,{be:s.be}); await sB.page.goto(s.be.click(mail)); await sB.page.waitForTimeout(1500); o=await obs(sB.page);
   ok(o.invalid&&!o.form,'2.º clique em navegador sem sessão: «Enlace no válido» (usado)');
-  console.log('== 8b · 2.º clique no MESMO navegador (sessão legítima ainda existe) → retoma, não fica morto');
+  console.log('== 8b · F · 2.º clique: MESMA aba retoma; OUTRA aba do mesmo navegador falha fechada e amigável');
+  await s.page.goto(s.be.click(mail)); await s.page.waitForTimeout(1500); o=await obs(s.page);
+  ok(o.form&&o.state==='ready','F · 2.º clique na MESMA aba: retoma a tela de nova senha (marca da aba + sessão com o mesmo UID)');
   const sC=await newSession(b,V,{be:s.be,ctx:s.context}); await sC.page.goto(s.be.click(mail)); await sC.page.waitForTimeout(1500); o=await obs(sC.page);
-  ok(o.form&&o.state==='ready','mesmo navegador: retoma a tela de nova senha com a sessão de recuperação já aberta');
+  ok(o.invalid&&!o.form&&/venció o ya fue usado/.test(await sC.page.locator('#pane-recovery').textContent())&&await sC.page.locator('text=Solicitar un nuevo enlace').count()===1,'F · 2.º clique em OUTRA aba: «Enlace no válido» amigável + «Solicitar un nuevo enlace» (não adota por localStorage)');
+  ok(o.flags.tok&&s.be.logouts.length===0,'F · …e a sessão compartilhada segue intocada');
+  await sC.page.close();
 
   console.log('== 9 · ?recovery=1 manual sem token/sessão NÃO permite updateUser');
   s=await setup(b); await s.page.goto(s.base+'?recovery=1'); await s.page.waitForTimeout(1200); o=await obs(s.page);
@@ -125,6 +136,48 @@ async function clickLink(s,mail,o){const url=s.be.click(mail,o); await s.page.go
   const bad=s.con.filter(x=>/eyJ|access_token|refresh_token|tok\d/.test(x)); ok(bad.length===0&&s.errs.length===0,'console sem tokens/sessão/URL completa e sem erros JS ('+s.con.length+' linhas, '+s.errs.length+' erros)');
   s=await setup(b); mail=await ask(s); await clickLink(s,mail); await s.page.click('text=Cancelar'); await s.page.waitForTimeout(500); o=await obs(s.page);
   ok(o.login&&o.state==='idle'&&!o.flags.tok&&s.be.puts===0,'«Cancelar» na tela de nova senha: encerra a sessão de recuperação e volta ao login (0 PUT)');
+
+  console.log('== ISOLAMENTO · recuperação de A × sessão/aba de outro usuário');
+  const loginUI=async(ss,email,pw)=>{ await ss.page.goto(ss.base); await ss.page.waitForTimeout(500); await ss.page.fill('#au-email',email); await ss.page.fill('#au-pass',pw); await ss.page.click('#pane-login >> text=Entrar'); await ss.page.waitForTimeout(2200); };
+  const KEY=async(pg)=>pg.evaluate(()=>Object.keys(localStorage).find(k=>/^sb-.*-auth-token$/.test(k)));
+  // C · a sessão compartilhada troca para o usuário B durante a recuperação de A
+  s=await setup(b); const uB=s.be.addUser({email:'b@ex.com',password:'senhaB123'}); mail=await ask(s); await clickLink(s,mail); o=await obs(s.page); ok(o.form,'C · recuperação de A aberta');
+  const p3=await s.context.newPage(); await loginUI({page:p3,base:s.base},'b@ex.com','senhaB123');     // B entra normalmente em outra aba
+  await s.page.bringToFront(); await s.page.waitForTimeout(1500); o=await obs(s.page);
+  ok(o.invalid&&!o.form,'C · a aba de recuperação NÃO adota B: fecha o formulário e falha fechada (mensagem + pedir novo link)');
+  await s.page.evaluate(async()=>{try{await doNewPassword()}catch(e){}}); await s.page.waitForTimeout(400);
+  ok(s.be.puts===0&&!s.be.pwChanged&&uB.password==='senhaB123','C · 0 updateUser (PUT) — nem para B nem para A');
+  ok(s.be.logouts.length===0&&(await p3.evaluate(()=>!!Object.keys(localStorage).find(k=>/^sb-.*-auth-token$/.test(k)))),'C · a sessão de B NÃO foi encerrada pela aba de recuperação');
+  await p3.close();
+  // C2 · a troca acontece SEM evento (storage adulterado): o salvar também falha fechado
+  s=await setup(b); s.be.addUser({email:'b@ex.com',password:'senhaB123'}); mail=await ask(s); await clickLink(s,mail);
+  const sB2=await newSession(b,V,{be:s.be}); await loginUI(sB2,'b@ex.com','senhaB123'); const kB=await KEY(sB2.page); const valB=await sB2.page.evaluate(k=>localStorage.getItem(k),kB);
+  const kA=await KEY(s.page); await s.page.evaluate(([k,v])=>localStorage.setItem(k,v),[kA,valB]);     // R passa a ver a sessão de B, sem nenhum evento
+  await s.page.fill('#np-pass','nova12345'); await s.page.fill('#np-pass2','nova12345'); await s.page.click('#np-save'); await s.page.waitForTimeout(1200); o=await obs(s.page);
+  ok(o.invalid&&!o.form&&s.be.puts===0&&!s.be.pwChanged,'C2 · sessão trocada sem evento: getUser() acusa id ≠ UID da recuperação → fecha, 0 PUT');
+  ok(s.be.logouts.length===0,'C2 · sem encerrar a sessão alheia');
+  // D · marca de localStorage fresca + sessão comum: NUNCA formulário
+  const setPend=(pg,uid,ageMs)=>pg.evaluate(([u,a])=>localStorage.setItem('rm.rec.pend',JSON.stringify({uid:u,t:Date.now()-a})),[uid,ageMs]);
+  s=await setup(b); const uB3=s.be.addUser({email:'b@ex.com',password:'senhaB123'}); await loginUI(s,'b@ex.com','senhaB123'); const nTok=()=>s.page.evaluate(()=>!!Object.keys(localStorage).find(k=>/^sb-.*-auth-token$/.test(k)));
+  await setPend(s.page,s.u.id,1000); const rA=s.be.rest.filter(x=>/my_active_subjects/.test(x)).length; await s.page.goto(s.base); await s.page.waitForTimeout(2200); o=await obs(s.page);
+  ok(!o.form&&!o.invalid&&s.be.rest.filter(x=>/my_active_subjects/.test(x)).length>rA,'D1 · marca fresca de OUTRO usuário (A) + sessão comum de B: sem formulário; B entra normalmente (marca alheia ignorada)');
+  await setPend(s.page,uB3.id,1000); const rB=s.be.rest.filter(x=>/my_active_subjects/.test(x)).length; await s.page.goto(s.base); await s.page.waitForTimeout(1800); o=await obs(s.page);
+  ok(!o.form&&o.login&&s.be.rest.filter(x=>/my_active_subjects/.test(x)).length===rB&&await nTok()&&s.be.logouts.length===0,'D2 · marca fresca do MESMO usuário + sessão comum: SEM formulário, sem entrar na plataforma, sessão intocada (0 logout)');
+  await s.page.goto(s.base+'?recovery=1'); await s.page.waitForTimeout(1500); o=await obs(s.page);
+  ok(o.invalid&&!o.form&&s.be.puts===0,'D3 · ?recovery=1 + marca fresca + sessão comum (sem marca desta aba): «Enlace no válido», sem formulário, 0 PUT');
+  await setPend(s.page,uB3.id,2*3600e3); await s.page.goto(s.base); await s.page.waitForTimeout(1800); o=await obs(s.page);
+  ok(!o.form&&o.login&&s.be.logouts.includes('local')&&!(await nTok())&&!(await s.page.evaluate(()=>localStorage.getItem('rm.rec.pend'))),'D4 · marca VENCIDA do mesmo usuário (recuperação esquecida): encerra só a sessão local, limpa a marca, sem formulário');
+  await loginUI(s,'b@ex.com','senhaB123'); await setPend(s.page,s.u.id,2*3600e3); const rC=s.be.rest.filter(x=>/my_active_subjects/.test(x)).length; await s.page.goto(s.base); await s.page.waitForTimeout(2200);
+  ok(s.be.rest.filter(x=>/my_active_subjects/.test(x)).length>rC&&!(await s.page.evaluate(()=>localStorage.getItem('rm.rec.pend'))),'D5 · marca vencida de OUTRO usuário: sessão comum intocada, entra normalmente, marca velha limpa');
+  // E · sessionStorage de recuperação com UID de A + sessão de B
+  s=await setup(b); const uB4=s.be.addUser({email:'b@ex.com',password:'senhaB123'}); await loginUI(s,'b@ex.com','senhaB123');
+  await s.page.evaluate(u=>sessionStorage.setItem('rm.rec',u),s.u.id); const lo0=s.be.logouts.length; await s.page.goto(s.base); await s.page.waitForTimeout(1800); o=await obs(s.page);
+  ok(o.invalid&&!o.form&&s.be.puts===0,'E · sessionStorage com UID de A + sessão de B: NÃO mostra formulário (falha fechada), 0 PUT');
+  ok(s.be.logouts.length===lo0&&await nTok()&&!(await s.page.evaluate(()=>sessionStorage.getItem('rm.rec'))),'E · sessão de B intocada e a marca inválida da aba foi descartada');
+  await s.page.click('text=← Volver a entrar'); await s.page.waitForTimeout(2200); o=await obs(s.page);
+  ok(!o.overlay,'E · «Volver» → B segue no fluxo normal (não perdeu a sessão)');
+  await s.page.evaluate(()=>sessionStorage.setItem('rm.rec','1')); await s.page.goto(s.base); await s.page.waitForTimeout(2000); o=await obs(s.page);
+  ok(!o.form&&!o.invalid&&!o.overlay,'E · marca antiga (valor «1», sem UID) não autoriza nada: fluxo normal');
 
   console.log('== 14 · regressão: cadastro, login, logout');
   s=await setup(b); await s.page.goto(s.base); await s.page.waitForTimeout(500); o=await obs(s.page); ok(o.overlay&&o.login&&o.tabs&&o.state==='idle','acesso normal sem sessão: tela de login habitual');
