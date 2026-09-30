@@ -894,7 +894,7 @@
      5 cores, goma reversível, desfazer e «Minhas anotações». Aditivo: se o
      utilizador não estiver na beta, este ficheiro não faz absolutamente
      nada e a experiência actual fica intacta. -->
-<script src="assets/rm-tools-v2.js?v=2026093003"></script>
+<script src="assets/rm-tools-v2.js?v=2026093004"></script>
 <!-- Layout V2 · Fase B1 (piloto fechado): SÓ o portão. Pergunta ao servidor
      apenas quando a matéria aberta é a do piloto; para quem não é piloto não
      baixa nada além deste arquivo e a experiência atual fica intacta. -->
@@ -908,8 +908,43 @@
 const SUPABASE_URL  = "https://ltizbamvskcgigmqobfo.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0aXpiYW12c2tjZ2lnbXFvYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMjEyMzQsImV4cCI6MjA5NTg5NzIzNH0.pCVNq9tSibknAm6hKuTeAd8ItozQrXiBTiwaEn9xX0U";
 
+/* RECUPERAÇÃO DE SENHA (1/3) — estado e «foto» da URL.
+   O supabase-js consome e apaga o #hash do link sozinho (e de forma assíncrona),
+   por isso a foto é tirada ANTES de criar o cliente. A URL só indica INTENÇÃO:
+   quem prova que há uma sessão de recuperação é o evento PASSWORD_RECOVERY
+   (ou uma sessão de recuperação já guardada por ESTA aba). Nada aqui é registado
+   no console e nenhum token é copiado para fora do supabase-js. */
+const RM_REC_FLAG = 'rm.rec';        // sessionStorage (POR ABA): {uid,sid,t} da sessão de recuperação que ESTA aba provou (sem token)
+const RM_REC_PEND = 'rm.rec.pend';   // localStorage (entre abas): {uid,sid,t} — coordenação: SÓ nega entrada na plataforma; nunca prova nada nem libera o formulário
+const RM_REC_TTL  = 60 * 60 * 1000;  // o link do Supabase vale 1 h por omissão
+const RM_REC = (function(){
+  let q, h, expected = null;
+  try{ q = new URLSearchParams(location.search); h = new URLSearchParams((location.hash||'').replace(/^#/, '')); }
+  catch(e){ q = new URLSearchParams(''); h = new URLSearchParams(''); }
+  try{ expected = recParseMark(sessionStorage.getItem(RM_REC_FLAG)); }catch(e){}   // valor antigo/ilegível = sem autorização
+  const type = h.get('type') || q.get('type') || '';
+  const boot = {
+    queryFlag: q.get('recovery') === '1',
+    type: type,
+    hasTokens: !!(h.get('access_token') && h.get('refresh_token')),      // retorno «implicit» (hash)
+    tokenHash: type === 'recovery' ? (q.get('token_hash') || '') : '',   // modelo de e-mail com token_hash
+    code: q.get('code') || '',                                           // retorno PKCE
+    err: h.get('error_code') || h.get('error') || q.get('error_code') || q.get('error') || '',
+    expected: expected                    // só esta aba: {uid,sid} da recuperação que ela mesma provou (PASSWORD_RECOVERY/verifyOtp/code)
+  };
+  const intent = boot.queryFlag || boot.type === 'recovery' || !!expected;
+  return { state: intent ? 'verifying' : 'idle', uid: null, sid: '', email: '', saving: false, boot: boot, intent: intent };
+})();
+
 const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 window.RM_SB = _sb;   // a caixa de sugestões (app-core.js) usa este cliente
+
+/* Registado logo a seguir ao createClient (o evento sai no mesmo tick em que o
+   cliente termina de ler a URL). O callback não chama o Supabase de dentro dele. */
+_sb.auth.onAuthStateChange(function(event, session){
+  if(event === 'PASSWORD_RECOVERY') setTimeout(function(){ recOnRecoveryEvent(session); }, 0);
+  else if(event !== 'INITIAL_SESSION') setTimeout(function(){ recOnSessionChange(session); }, 0);
+});
 
 /* =====================================================================
    CATÁLOGO LOCAL — liga cada matéria ao seu arquivo, aba e rótulo do menu.
@@ -1137,6 +1172,7 @@ async function authLogin(){
     else if(/Invalid login credentials/i.test(m)) m = 'E-mail o contraseña incorrectos. Revisá que el e-mail sea exactamente el mismo con el que creaste la cuenta; si no recordás la contraseña, usá «Recuperar contraseña».';
     msg.className=''; msg.textContent = m; return;
   }
+  recClearPend();    // entrou com a senha: já não há recuperação pendente a proteger
   await afterLogin();
 }
 
@@ -1162,9 +1198,15 @@ async function authReset(){
   msg.className='ok'; msg.textContent = 'Enviando…';
   try{
     const { error } = await _sb.auth.resetPasswordForEmail(email, {
-      redirectTo: location.origin + location.pathname + '?recovery=1'
+      redirectTo: RM_RECOVERY_REDIRECT()
     });
-    if(error){ msg.className=''; msg.textContent = error.message || 'No se pudo enviar.'; return; }
+    if(error){
+      msg.className='';
+      msg.textContent = (error.status === 429 || /rate limit|over_email_send/i.test((error.code||'') + ' ' + (error.message||'')))
+        ? 'Hiciste varios pedidos seguidos. Esperá un minuto y probá de nuevo.'
+        : (error.message || 'No se pudo enviar.');
+      return;
+    }
   }catch(e){ msg.className=''; msg.textContent = 'Error de conexión.'; return; }
   // resposta sempre positiva (não revela se o e-mail existe — boa prática)
   msg.className='ok';
@@ -2381,13 +2423,11 @@ function addLogoutButton(){
    INÍCIO: se já houver sessão, entra direto; senão, mostra login
    ===================================================================== */
 (async function init(){
-  // retorno do link de recuperação de senha
-  const isRecovery = /(?:[?&#])recovery=1/.test(location.href) ||
-                     /type=recovery/.test(location.hash);
-  if(isRecovery){
-    document.getElementById('auth-overlay').classList.remove('hidden');
-    showResetPassword();
-    return;
+  // retorno do link de recuperação de senha: NÃO é login (ver «RECUPERAÇÃO DE SENHA»)
+  try{
+    if(await recoveryBoot()) return;
+  }catch(e){
+    if(RM_REC.state !== 'idle'){ recInvalid('noSession'); return; }   // nunca deixar uma tela morta
   }
   const { data:{ session } } = await _sb.auth.getSession();
   if(session){ await afterLogin(); }
@@ -2538,40 +2578,353 @@ function escAd(s){
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-/* tela para definir a nova senha (após clicar no link do e-mail) */
-function showResetPassword(){
-  ['pane-login','pane-signup','pane-reset'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.classList.add('hidden');
-  });
-  const host = document.getElementById('pane-login');
-  const box = document.createElement('div');
-  box.id = 'pane-newpass';
-  box.innerHTML = `
-    <p class="sub">Creá tu nueva contraseña.</p>
-    <label>Nueva contraseña <span style="color:#7f968f;">(mín. 6)</span></label>
-    <input id="np-pass" type="password" autocomplete="new-password" placeholder="••••••••">
-    <label>Repetir contraseña</label>
-    <input id="np-pass2" type="password" autocomplete="new-password" placeholder="••••••••"
-           onkeydown="if(event.key==='Enter')doNewPassword()">
-    <button onclick="doNewPassword()">Guardar y entrar</button>`;
-  host.parentNode.insertBefore(box, host);
+/* =====================================================================
+   RECUPERAÇÃO DE SENHA (2/3) — fluxo oficial do Supabase como máquina de estados
+
+   Estados (RM_REC.state):
+     idle       nenhuma recuperação em curso
+     verifying  voltou do e-mail; à espera de provar que há sessão de recuperação
+     confirm    link com token_hash: espera um toque antes de gastar o token
+     ready      há sessão de recuperação VÁLIDA → mostra «Nueva contraseña»
+     invalid    link vencido/usado/sem sessão → mensagem + «Solicitar un nuevo enlace»
+     done       senha alterada → sessão encerrada → volta ao login
+
+   Regras:
+     · a URL (?recovery=1, type=recovery) só indica INTENÇÃO; o formulário só
+       aparece com sessão provada (PASSWORD_RECOVERY, verifyOtp, troca de code ou
+       sessão de recuperação guardada por ESTA aba);
+     · recuperação NUNCA chama afterLogin() e NUNCA dá acesso à plataforma: ela só
+       serve para trocar a senha. Depois de salvar, signOut e login com a NOVA senha;
+     · a recuperação fica VINCULADA à identidade da sessão que a provou: UID + session_id
+       do JWT, guardados só na aba (sessionStorage, sem token). Retomar (recarga, 2.º toque
+       na mesma aba), fechar o formulário e salvar exigem a MESMA sessão: outro usuário, ou
+       o mesmo usuário com sessão nova, falha fechada (0 updateUser) sem encerrar a sessão
+       estranha. A marca de localStorage ({uid,sid,t}) só NEGA entrada na plataforma e nunca
+       libera o formulário; uma aba normal nunca encerra nem apaga uma recuperação em curso
+       em outra aba;
+     · nenhuma chave de serviço, nenhuma Function: tudo pelo cliente anónimo
+       (resetPasswordForEmail / PASSWORD_RECOVERY / updateUser);
+     · nada de token ou URL completa no console.
+   ===================================================================== */
+
+/* URL de retorno enviada ao Supabase. Única e estável: a mesma para qualquer
+   forma de abrir o site (/ ou /index.html). Precisa estar em
+   Authentication → URL Configuration → Redirect URLs (ver README da PR). */
+function RM_RECOVERY_REDIRECT(){
+  return location.origin + location.pathname.replace(/index\.html$/i, '') + '?recovery=1';
 }
 
+/* Identidade da sessão de recuperação = UID + session_id do JWT (claim estável durante toda a sessão, inclusive nos
+   refresh). Só é lido o payload público do JWT; nada é registado nem copiado para storage. */
+function recSidOf(session){
+  try{
+    const part = String(session.access_token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const v = JSON.parse(atob(part)).session_id;
+    return (typeof v === 'string' && v) ? v : '';
+  }catch(e){ return ''; }
+}
+function recParseMark(raw){
+  try{
+    const v = JSON.parse(raw);
+    return (v && typeof v.uid === 'string' && v.uid && typeof v.sid === 'string' && v.sid) ? { uid: v.uid, sid: v.sid, t: Number(v.t) || 0 } : null;
+  }catch(e){ return null; }
+}
+/* a sessão ATUAL é exatamente a da recuperação desta aba? (mesmo UID e, quando conhecida, mesma session_id) */
+function recIsMine(session){
+  if(!session || !session.user || !RM_REC.uid || session.user.id !== RM_REC.uid) return false;
+  return !RM_REC.sid || recSidOf(session) === RM_REC.sid;
+}
+async function recOwnsCurrentSession(){
+  try{ const { data:{ session } } = await _sb.auth.getSession(); return recIsMine(session); }catch(e){ return false; }
+}
+
+/* Marca desta ABA: só ela autoriza retomar (recarga; 2.º toque na mesma aba). Sem session_id não há marca
+   nenhuma (a recuperação vale só em memória): nunca se retoma por UID sozinho nem por carimbo de tempo. */
+function recMarkActive(uid, sid){
+  if(!uid || !sid) return;
+  const mark = JSON.stringify({ uid: uid, sid: sid, t: Date.now() });
+  try{ sessionStorage.setItem(RM_REC_FLAG, mark); }catch(e){}
+  try{ localStorage.setItem(RM_REC_PEND, mark); }catch(e){}
+}
+function recClearTabMark(){ try{ sessionStorage.removeItem(RM_REC_FLAG); }catch(e){} }
+/* marca entre abas: {uid,sid,t} ou null (valor ilegível/antigo = inexistente) */
+function recPendRead(){
+  try{ return recParseMark(localStorage.getItem(RM_REC_PEND)); }catch(e){ return null; }
+}
+/* sem argumentos: apaga (login com senha). Com uid+sid: só apaga a marca DESSA recuperação */
+function recClearPend(uid, sid){
+  try{
+    const v = recPendRead();
+    if(!uid || !v || (v.uid === uid && v.sid === sid)) localStorage.removeItem(RM_REC_PEND);
+  }catch(e){}
+}
+function recClearMarks(uid, sid){ recClearTabMark(); recClearPend(uid, sid); }
+async function recDropSession(){
+  try{ await _sb.auth.signOut({ scope:'local' }); }catch(e){}
+}
+
+/* tira da URL o que é da recuperação (query e hash), preservando o caminho */
+function recCleanUrl(){
+  try{
+    const u = new URL(location.href);
+    ['recovery','type','token_hash','code','error','error_code','error_description'].forEach(k => u.searchParams.delete(k));
+    const qs = u.searchParams.toString();
+    history.replaceState(null, '', u.pathname + (qs ? '?' + qs : ''));
+  }catch(e){}
+}
+
+/* ------------------------------ telas ------------------------------ */
+function recShow(kind, reason){
+  const ov = document.getElementById('auth-overlay');
+  ov.classList.remove('hidden');
+  const tabs = ov.querySelector('.auth-tabs'); if(tabs) tabs.classList.add('hidden');
+  ['pane-login','pane-signup','pane-reset'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.add('hidden'); });
+  const msg = document.getElementById('au-msg'); msg.className = ''; msg.textContent = '';
+  let box = document.getElementById('pane-recovery');
+  if(!box){
+    box = document.createElement('div'); box.id = 'pane-recovery';
+    const host = document.getElementById('pane-login');
+    host.parentNode.insertBefore(box, host);
+  }
+  if(kind === 'verifying'){
+    box.innerHTML = '<p class="sub">Verificando el enlace…</p>';
+  }else if(kind === 'confirm'){
+    box.innerHTML = `
+      <h2>Cambiar contraseña</h2>
+      <p class="sub">Tocá el botón para continuar y crear tu nueva contraseña.</p>
+      <button id="np-go" type="button" onclick="recConfirmLink()">Continuar</button>
+      <button type="button" class="au-link" onclick="recBackToLogin()">← Volver a entrar</button>`;
+  }else if(kind === 'ready'){
+    box.innerHTML = `
+      <h2>Nueva contraseña</h2>
+      <p class="sub">Creá tu nueva contraseña. Después vas a entrar con ella.</p>
+      <label>Nueva contraseña <span style="color:#7f968f;">(mín. 6 caracteres)</span></label>
+      <input id="np-pass" type="password" autocomplete="new-password" placeholder="••••••••">
+      <label>Repetir contraseña</label>
+      <input id="np-pass2" type="password" autocomplete="new-password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')doNewPassword()">
+      <button id="np-save" type="button" onclick="doNewPassword()">Guardar contraseña</button>
+      <button type="button" class="au-link" onclick="recCancel()">Cancelar</button>`;
+    setTimeout(() => { const i = document.getElementById('np-pass'); if(i) try{ i.focus(); }catch(e){} }, 0);
+  }else if(kind === 'invalid'){
+    const txt = reason === 'expired'
+      ? 'El enlace venció o ya fue usado. Cada enlace sirve una sola vez y dura poco tiempo. Pedí uno nuevo y abrilo desde el e-mail más reciente.'
+      : 'No pudimos validar el enlace de recuperación. Pedí uno nuevo y abrilo desde el e-mail más reciente.';
+    box.innerHTML = `
+      <h2 style="color:#c0392b;">Enlace no válido</h2>
+      <p class="sub">${txt}</p>
+      <button type="button" onclick="recRequestNew()">Solicitar un nuevo enlace</button>
+      <button type="button" class="au-link" onclick="recBackToLogin()">← Volver a entrar</button>`;
+  }
+}
+
+/* sai do modo recuperação para o painel normal (login | reset) */
+function recExit(pane){
+  const box = document.getElementById('pane-recovery'); if(box) box.remove();
+  const ov = document.getElementById('auth-overlay');
+  const tabs = ov.querySelector('.auth-tabs'); if(tabs) tabs.classList.remove('hidden');
+  ov.classList.remove('hidden');
+  authSwitch(pane);
+}
+
+function recSetReady(){
+  RM_REC.state = 'ready';
+  recCleanUrl();
+  recShow('ready');
+}
+function recAdopt(session){
+  RM_REC.uid = session.user.id; RM_REC.sid = recSidOf(session); RM_REC.email = session.user.email || '';
+  recMarkActive(RM_REC.uid, RM_REC.sid);
+  recSetReady();
+}
+/* FALHA FECHADA: não adota nada, não encerra a sessão (ela pode ser de outra aba/usuário) */
+function recInvalid(reason){
+  const mineUid = RM_REC.uid, mineSid = RM_REC.sid;
+  RM_REC.state = 'invalid'; RM_REC.uid = null; RM_REC.sid = '';
+  recClearTabMark(); if(mineUid && mineSid) recClearPend(mineUid, mineSid);   // nunca a marca de OUTRA recuperação
+  recCleanUrl();
+  recShow('invalid', reason);
+}
+/* a sessão compartilhada mudou enquanto o formulário estava aberto (login de outro usuário em outra aba,
+   logout, expiração): se já não é a sessão de recuperação desta aba, o formulário fecha */
+function recOnSessionChange(session){
+  if(RM_REC.state !== 'ready') return;
+  if(!recIsMine(session)) recInvalid('noSession');   // outro usuário OU mesmo usuário com OUTRA sessão
+}
+
+/* PASSWORD_RECOVERY: a prova de que existe sessão de recuperação */
+function recOnRecoveryEvent(session){
+  if(RM_REC.state !== 'verifying') return;          // outra aba / evento fora do fluxo
+  if(!session || !session.user) return;
+  recAdopt(session);
+}
+
+/* Retoma a recuperação que ESTA aba já provou (recarga; 2.º toque na mesma aba). Exige, juntas:
+   marca desta aba {uid,sid} + sessão atual + UID igual + session_id igual.
+   Qualquer divergência — inclusive marca em localStorage, outro usuário, ou o MESMO usuário com sessão nova —
+   falha fechada: não adota, não mostra formulário e NÃO encerra a sessão estranha. */
+async function recResumeFromStorage(){
+  const exp = RM_REC.boot.expected;
+  if(!exp) return false;
+  const { data:{ session } } = await _sb.auth.getSession();
+  if(!session || !session.user || session.user.id !== exp.uid || recSidOf(session) !== exp.sid){ recClearTabMark(); return false; }
+  recAdopt(session);
+  return true;
+}
+/* espera (limitada) o evento PASSWORD_RECOVERY */
+async function recWaitReady(ms){
+  const t0 = Date.now();
+  while(RM_REC.state === 'verifying' && Date.now() - t0 < ms){ await new Promise(r => setTimeout(r, 50)); }
+  return RM_REC.state === 'ready';
+}
+/* Aba SEM intenção de recuperação. A marca entre abas {uid,sid,t} serve apenas para NEGAR a entrada na
+   plataforma quando a sessão compartilhada é EXATAMENTE a de uma recuperação (mesmo UID e mesma session_id).
+   Nunca libera formulário, nunca encerra sessão, nunca apaga a marca de uma recuperação que segue ativa em
+   outra aba. Sem marca / marca de outra sessão → fluxo normal. A marca só é limpa por higiene quando já não
+   corresponde a nenhuma sessão e passou o prazo do link. */
+async function recGuardNormalEntry(){
+  const pend = recPendRead();
+  if(!pend) return false;
+  const old = Date.now() - pend.t >= RM_REC_TTL;
+  const { data:{ session } } = await _sb.auth.getSession();
+  if(session && session.user && session.user.id === pend.uid && recSidOf(session) === pend.sid) return true;   // é a sessão de recuperação
+  if(old) recClearPend(pend.uid, pend.sid);
+  return false;
+}
+
+/* ponto de entrada (chamado pelo init): true = a recuperação assumiu a tela */
+async function recoveryBoot(){
+  const b = RM_REC.boot;
+  if(!RM_REC.intent){
+    if(await recGuardNormalEntry()){
+      recExit('login');
+      const m = document.getElementById('au-msg');
+      m.className = '';
+      m.textContent = 'Hay una recuperación de contraseña abierta (en otra pestaña o sin completar). No se usa para entrar. Terminala allí, o ingresá con tu contraseña.';
+      return true;
+    }
+    if(b.err){   // link de e-mail vencido que não era de recuperação (ex.: confirmação)
+      const m = document.getElementById('au-msg');
+      m.className = ''; m.textContent = 'El enlace del e-mail venció o ya fue usado. Si querías cambiar tu contraseña, usá «¿Olvidaste tu contraseña?».';
+      recCleanUrl();
+    }
+    return false;
+  }
+  recShow('verifying');
+  if(b.err){                                     // #error=…otp_expired… no retorno
+    if(await recResumeFromStorage()) return true;   // esta MESMA aba já provou a recuperação (2.º toque)
+    recInvalid('expired'); return true;
+  }
+  if(b.tokenHash){                               // modelo de e-mail com token_hash: espera um toque
+    RM_REC.state = 'confirm'; recShow('confirm'); return true;
+  }
+  if(b.code && !b.hasTokens){                    // retorno PKCE
+    try{
+      const { data, error } = await _sb.auth.exchangeCodeForSession(b.code);
+      recCleanUrl();
+      if(error || !data || !data.session){ if(!(await recResumeFromStorage())) recInvalid('expired'); return true; }
+      recAdopt(data.session);
+    }catch(e){ recInvalid('noSession'); }
+    return true;
+  }
+  if(b.hasTokens){                               // retorno «implicit»: o supabase-js lê o hash e emite o evento
+    if(await recWaitReady(4000)) return true;
+    const { data:{ session } } = await _sb.auth.getSession();   // evento perdido: a sessão do hash vale se for de recuperação
+    if(session && session.user && b.type === 'recovery'){ recAdopt(session); return true; }
+    recInvalid('noSession'); return true;
+  }
+  if(await recResumeFromStorage()) return true;  // recarga durante a recuperação
+  recInvalid('manual'); return true;             // ?recovery=1 sem nada que o prove
+}
+
+/* toque em «Continuar» (link com token_hash) */
+async function recConfirmLink(){
+  if(RM_REC.state !== 'confirm') return;
+  const btn = document.getElementById('np-go'); if(btn) btn.disabled = true;
+  try{
+    const { data, error } = await _sb.auth.verifyOtp({ token_hash: RM_REC.boot.tokenHash, type: 'recovery' });
+    recCleanUrl();
+    if(error || !data || !data.session){ if(!(await recResumeFromStorage())) recInvalid('expired'); return; }
+    recAdopt(data.session);
+  }catch(e){ recInvalid('noSession'); }
+}
+
+/* botões das telas */
+async function recCancel(){
+  const mineUid = RM_REC.uid, mineSid = RM_REC.sid;
+  if(await recOwnsCurrentSession()) await recDropSession();       // só a sessão desta recuperação (UID + session_id); a alheia nunca
+  recClearMarks(mineUid, mineSid);
+  RM_REC.state = 'idle'; RM_REC.uid = null; RM_REC.sid = '';
+  recExit('login');
+}
+function recRequestNew(){
+  RM_REC.state = 'idle'; recClearTabMark(); recCleanUrl();
+  recExit('reset');
+  const em = document.getElementById('rs-email'); if(em && RM_REC.email) em.value = RM_REC.email;
+}
+function recBackToLogin(){
+  RM_REC.state = 'idle'; recClearTabMark(); recCleanUrl();
+  location.reload();     // volta ao fluxo normal (quem já tinha sessão comum continua nela)
+}
+
+/* ------------------------------ salvar ------------------------------ */
 async function doNewPassword(){
-  const p1 = document.getElementById('np-pass').value;
-  const p2 = document.getElementById('np-pass2').value;
+  if(RM_REC.saving) return;
   const msg = document.getElementById('au-msg');
   msg.className=''; msg.textContent='';
+  if(RM_REC.state !== 'ready'){ recInvalid('noSession'); return; }       // sem sessão de recuperação: nem tenta
+  const p1 = (document.getElementById('np-pass')  || {}).value || '';
+  const p2 = (document.getElementById('np-pass2') || {}).value || '';
   if(p1.length < 6){ msg.textContent='La contraseña debe tener al menos 6 caracteres.'; return; }
   if(p1 !== p2){ msg.textContent='Las contraseñas no coinciden.'; return; }
+  RM_REC.saving = true;
+  const btn = document.getElementById('np-save'); if(btn) btn.disabled = true;
   msg.className='ok'; msg.textContent='Guardando…';
+  let concluded = false;
   try{
+    // 1) a sessão atual ainda é EXATAMENTE a da recuperação (UID + session_id) e continua válida?
+    if(!(await recOwnsCurrentSession())){ recInvalid('noSession'); return; }       // outro usuário / sessão nova: 0 PUT, sem tocar nela
+    const { data:{ user }, error: ue } = await _sb.auth.getUser();
+    if(ue || !user || user.id !== RM_REC.uid){ recInvalid('expired'); return; }    // sessão morta OU de outro usuário: fecha sem tocar nela
+    // 2) só agora troca a senha
     const { error } = await _sb.auth.updateUser({ password: p1 });
-    if(error){ msg.className=''; msg.textContent = error.message || 'No se pudo actualizar.'; return; }
-  }catch(e){ msg.className=''; msg.textContent='Error de conexión.'; return; }
-  // limpa o parâmetro e entra
-  history.replaceState({}, '', location.pathname);
-  location.reload();
+    if(error){
+      const code = String(error.code || ''), txt = String(error.message || '');
+      if(code === 'same_password' || /different from the old/i.test(txt)){
+        msg.className=''; msg.textContent='La nueva contraseña debe ser distinta de la anterior.';
+      }else if(code === 'weak_password' || /at least \d+ char|weak/i.test(txt)){
+        msg.className=''; msg.textContent='La contraseña no cumple los requisitos: ' + txt;
+      }else if(error.status === 401 || error.status === 403 || /session|jwt|not authenticated/i.test(code + ' ' + txt)){
+        recInvalid('expired'); return;
+      }else{
+        msg.className=''; msg.textContent = txt || 'No se pudo actualizar.';
+      }
+      return;
+    }
+    concluded = true;
+  }catch(e){
+    msg.className=''; msg.textContent='Error de conexión. Probá de nuevo.';
+    return;
+  }finally{
+    RM_REC.saving = false;
+    const b2 = document.getElementById('np-save'); if(b2 && !concluded) b2.disabled = false;
+  }
+  if(concluded) await recFinish();
+}
+
+/* senha trocada: encerra a sessão de recuperação e leva ao login com a senha NOVA */
+async function recFinish(){
+  const email = RM_REC.email;
+  const mineUid = RM_REC.uid, mineSid = RM_REC.sid;
+  const own = await recOwnsCurrentSession();
+  RM_REC.state = 'done'; RM_REC.uid = null; RM_REC.sid = '';
+  if(own){ try{ await _sb.auth.signOut(); }catch(e){ await recDropSession(); } }   // sessão alheia nunca é encerrada
+  recClearMarks(mineUid, mineSid); recCleanUrl();
+  recExit('login');
+  const em = document.getElementById('au-email'); if(em && email) em.value = email;
+  const msg = document.getElementById('au-msg');
+  msg.className='ok'; msg.textContent='Contraseña actualizada. Ingresá con tu nueva contraseña.';
+  RM_REC.state = 'idle';
 }
 </script>
 
