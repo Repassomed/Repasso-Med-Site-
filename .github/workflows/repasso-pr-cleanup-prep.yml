@@ -1,0 +1,252 @@
+name: Repasso PR Cleanup Prep (READ-ONLY APIs)
+
+# Planeja a limpeza das PRs abertas, mas NÃO fecha nada.
+# OpenAI faz a análise principal. Claude Haiku recebe somente os casos
+# que a OpenAI marcar como incertos, no máximo uma chamada curta.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repasso-pr-cleanup-prep
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout main confiável
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - name: Preparar branch dedicada de relatório
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH='quality/pr-cleanup-api'
+          git config user.name 'repasso-pr-cleanup-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH" || true
+          if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+            git merge --no-edit "origin/${{ github.event.repository.default_branch }}"
+          else
+            git checkout -b "$BRANCH" "origin/${{ github.event.repository.default_branch }}"
+          fi
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências dos clientes já usados pelo projeto
+        run: pip install -q -r coordinator/requirements.txt
+
+      - name: Coletar PRs abertas e merges recentes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/repasso-pr-cleanup
+          gh pr list --state open --limit 100             --json number,title,body,headRefName,baseRefName,isDraft,mergeable,updatedAt,url             > /tmp/repasso-pr-cleanup/open.json
+          gh pr list --state merged --limit 160             --json number,title,mergedAt,url             > /tmp/repasso-pr-cleanup/merged.json
+
+      - name: OpenAI principal + Claude somente em casos incertos
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REPASSO_PR_CLEANUP_OPENAI_MODEL: gpt-5.6-terra
+          REPASSO_PR_CLEANUP_CLAUDE_MODEL: claude-haiku-4-5-20251001
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          from coordinator import anthropic_client, openai_client
+          from coordinator.anthropic_transport import AnthropicTransport
+          from coordinator.openai_transport import OpenAIResponsesTransport
+
+          def parse(raw):
+              return json.loads((raw or '').strip())
+
+          opened=json.loads(Path('/tmp/repasso-pr-cleanup/open.json').read_text('utf-8'))
+          merged=json.loads(Path('/tmp/repasso-pr-cleanup/merged.json').read_text('utf-8'))
+
+          compact=[]
+          for p in opened:
+              compact.append({
+                  'number':p.get('number'),
+                  'title':p.get('title'),
+                  'body':str(p.get('body') or '')[:2800],
+                  'headRefName':p.get('headRefName'),
+                  'baseRefName':p.get('baseRefName'),
+                  'isDraft':p.get('isDraft'),
+                  'mergeable':p.get('mergeable'),
+                  'updatedAt':p.get('updatedAt'),
+                  'url':p.get('url'),
+              })
+
+          sys_openai='''Você é o planejador administrativo READ-ONLY do Repasso Med. NÃO feche PR, NÃO altere branch, NÃO faça merge. Classifique cada PR aberta usando apenas a evidência fornecida e os merges recentes. KEEP_ACTIVE = trabalho ainda necessário. KEEP_PANEL = painel/auditoria viva que deve permanecer aberta e não deve ser mergeada como matéria. CLOSE_SUPERSEDED = uma PR posterior mergeada substituiu claramente o trabalho. CLOSE_STALE_NO_MERGE = tentativa/infra antiga sem utilidade operacional atual e com evidência suficiente para fechar sem merge. REVIEW_MANUALLY = evidência insuficiente. Nunca invente replacement_pr. Imagenología e Bioestadística estão DEFERIDAS por José: a limpeza não pode criar tarefa de conteúdo para elas. Responda SOMENTE JSON válido.'''
+
+          payload={
+              'goal':'Deixar a limpeza administrativa praticamente pronta para um Claude ou humano executar, sem fechar nada.',
+              'rules':[
+                  'José é o único que faz merge.',
+                  'PR #368 é painel contínuo de auditoria e deve ser KEEP_PANEL enquanto estiver em uso.',
+                  'PR antiga de matéria só pode ser CLOSE_SUPERSEDED com substituição posterior mergeada clara.',
+                  'Imagenología e Bioestadística estão deferidas e não devem gerar execução de conteúdo.'
+              ],
+              'open_prs':compact,
+              'recent_merged_prs':merged,
+              'response_schema':{
+                  'prs':[{
+                      'number':123,
+                      'decision':'KEEP_ACTIVE|KEEP_PANEL|CLOSE_SUPERSEDED|CLOSE_STALE_NO_MERGE|REVIEW_MANUALLY',
+                      'replacement_pr':0,
+                      'reason':'...',
+                      'safe_to_close_without_code_change':True,
+                      'closure_comment':'comentário pronto para colar; vazio se não fechar'
+                  }],
+                  'uncertain_numbers':[123]
+              }
+          }
+
+          model_openai=os.getenv('REPASSO_PR_CLEANUP_OPENAI_MODEL','gpt-5.6-terra')
+          req=openai_client.Request(
+              model_id=model_openai,
+              tier='TERRA',
+              max_output_tokens=3200,
+              system=sys_openai,
+              prompt=json.dumps(payload,ensure_ascii=False)
+          )
+          r=OpenAIResponsesTransport(timeout=180,max_retries=0).send(req)
+          plan=parse(r.text)
+          usage=[{'provider':'openai','model':model_openai,'input_tokens':r.input_tokens,'output_tokens':r.output_tokens}]
+
+          uncertain={int(x) for x in plan.get('uncertain_numbers',[]) if str(x).isdigit()}
+          claude_review=None
+          if uncertain:
+              items=[]
+              for p in plan.get('prs',[]):
+                  try:
+                      number=int(p.get('number',-1))
+                  except Exception:
+                      continue
+                  if number in uncertain:
+                      items.append(p)
+              items=items[:24]
+              sys_claude='''Você é o revisor econômico READ-ONLY. Receberá SOMENTE classificações incertas da OpenAI. Não crie PR nova, não invente substituta e não amplie escopo. Para cada item escolha RESOLVE_AS_OPENAI, KEEP_UNCERTAIN ou OVERRIDE, usando apenas a evidência recebida. Responda SOMENTE JSON válido.'''
+              model_claude=os.getenv('REPASSO_PR_CLEANUP_CLAUDE_MODEL','claude-haiku-4-5-20251001')
+              creq=anthropic_client.Request(
+                  model_id=model_claude,
+                  tier='FAST',
+                  max_output_tokens=1200,
+                  system=sys_claude,
+                  prompt=json.dumps({
+                      'items':items,
+                      'schema':{
+                          'decisions':[{
+                              'number':123,
+                              'decision':'RESOLVE_AS_OPENAI|KEEP_UNCERTAIN|OVERRIDE',
+                              'override':'...',
+                              'reason':'...'
+                          }]
+                      }
+                  },ensure_ascii=False)
+              )
+              cr=AnthropicTransport(timeout=180,max_retries=0).send(creq)
+              claude_review=parse(cr.text)
+              usage.append({'provider':'anthropic','model':model_claude,'input_tokens':cr.input_tokens,'output_tokens':cr.output_tokens})
+
+          out=Path('coordination/quality')
+          out.mkdir(parents=True,exist_ok=True)
+          data={
+              'plan':plan,
+              'claude_review':claude_review,
+              'usage':usage,
+              'safety':{
+                  'closes_prs':False,
+                  'merges':False,
+                  'edits_subjects':False,
+                  'writes_supabase':False,
+                  'openai_calls_max':1,
+                  'claude_calls_max':1
+              }
+          }
+          (out/'pr-cleanup-api.json').write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n','utf-8')
+
+          lines=[
+              '# Limpeza administrativa de PRs — plano por APIs',
+              '',
+              '> READ-ONLY: nenhuma PR foi fechada ou mergeada.',
+              '',
+              'OpenAI fez a análise principal; Claude Haiku só revisou itens incertos.',
+              ''
+          ]
+          order=['CLOSE_SUPERSEDED','CLOSE_STALE_NO_MERGE','KEEP_ACTIVE','KEEP_PANEL','REVIEW_MANUALLY']
+          for decision in order:
+              group=[p for p in plan.get('prs',[]) if p.get('decision')==decision]
+              if not group:
+                  continue
+              lines += ['## '+decision,'']
+              for p in group:
+                  repl=p.get('replacement_pr')
+                  suffix=(' · substituta #'+str(repl)) if isinstance(repl,int) and repl>0 else ''
+                  lines.append('- #'+str(p.get('number'))+suffix+' — '+str(p.get('reason','')))
+                  comment=str(p.get('closure_comment') or '').strip()
+                  if comment:
+                      lines.append('  Comentário pronto: '+comment)
+              lines.append('')
+          if claude_review:
+              lines += ['## Desempate Claude API','',json.dumps(claude_review,ensure_ascii=False,indent=2),'']
+          lines += ['## Uso de API','']
+          for u in usage:
+              lines.append('- '+u['provider']+' · '+u['model']+' · in '+str(u['input_tokens'])+' · out '+str(u['output_tokens']))
+          (out/'pr-cleanup-api.md').write_text('\n'.join(lines)+'\n','utf-8')
+          print(json.dumps({'ok':True,'usage':usage},ensure_ascii=False))
+          PY
+
+      - name: Defesa em profundidade
+        run: |
+          set -euo pipefail
+          if git status --porcelain | awk '{print $2}' | grep '^Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/' | grep -q .; then
+            echo 'BLOQUEADO: houve alteração de matéria.' >&2
+            exit 1
+          fi
+          EXTRA="$(git status --porcelain | awk '{print $2}' | grep -v '^coordination/quality/pr-cleanup-api\.' || true)"
+          if [ -n "$EXTRA" ]; then
+            echo 'BLOQUEADO: escrita fora dos dois relatórios permitidos:' >&2
+            echo "$EXTRA" >&2
+            exit 1
+          fi
+
+      - name: Publicar somente os relatórios
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git add coordination/quality/pr-cleanup-api.json coordination/quality/pr-cleanup-api.md
+          if git diff --cached --quiet; then
+            echo 'Plano sem mudança.'
+          else
+            git commit -m 'audit: preparar limpeza administrativa de PRs por APIs'
+            git push origin HEAD:quality/pr-cleanup-api
+          fi
+
+          PR_NUM="$(gh pr list --head quality/pr-cleanup-api --base '${{ github.event.repository.default_branch }}' --state open --json number --jq '.[0].number // empty')"
+          if [ -z "$PR_NUM" ]; then
+            gh pr create               --base '${{ github.event.repository.default_branch }}'               --head quality/pr-cleanup-api               --title '[AUDIT] Plano de limpeza de PRs por OpenAI + Claude — NÃO EXECUTA'               --body 'Relatório READ-ONLY. OpenAI classifica todas as PRs; Claude Haiku revisa somente incertezas. Nada é fechado, mergeado ou alterado automaticamente.'
+          else
+            echo "PR de plano já existe: #$PR_NUM"
+          fi
