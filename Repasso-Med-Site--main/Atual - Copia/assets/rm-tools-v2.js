@@ -323,6 +323,14 @@
   }
 
   function diagVLinha(l) {
+    if (l.tipo === 'touch-adapter-start' || l.tipo === 'touch-adapter-end') {
+      return '<div class="rm2-diag-r pen">' +
+        '<b>+' + (l.t - (diag[0] ? diag[0].t : l.t)) + 'ms · ' + dEsc(l.tipo) +
+          ' · touchId=' + dEsc(l.identifier) + '</b>' +
+        '<i>' + (l.touchType ? 'touchType=' + dEsc(l.touchType) + ' · cancelable=' + (l.cancelableTouch ? 'SIM' : 'NÃO') : 'motivo=' + dEsc(l.motivo)) +
+          (l.maxDeltaScroll != null ? ' · scrollMáx=' + dEsc(l.maxDeltaScroll) + 'px' : '') + '</i>' +
+      '</div>';
+    }
     return '<div class="rm2-diag-r' + (l.pointerType === 'pen' ? ' pen' : '') + '">' +
       '<b>+' + (l.t - (diag[0] ? diag[0].t : l.t)) + 'ms · ' + dEsc(l.tipo) +
         ' · type=' + dEsc(l.pointerType == null ? '(null)' : (l.pointerType === '' ? '(vazio)' : l.pointerType)) +
@@ -472,31 +480,58 @@ body.rm2-drawing{ -webkit-user-select:none; user-select:none; }
    dedo deve poder rolar a matéria com a caneta armada, sem precisar de a
    desarmar primeiro. 'pan-x pan-y pinch-zoom' (equivalente a
    'manipulation') devolve ao dedo o pan nos dois eixos e o pinch nativo,
-   e mantém só a desactivação do double-tap-zoom. O que protege o TRAÇO da
-   stylus deixa de ser o touch-action — que agora é o MESMO para dedo e
-   caneta, porque touch-action não distingue pointerType — e passa a ser
-   inteiramente o roteador de JS (ehPonteiroDeDesenho + a rejeição de
-   palma, mais abaixo): pen preventDefault()+setPointerCapture() no
-   próprio pointerdown, antes de o browser decidir iniciar um pan. Isto
-   funciona porque, ao contrário do dedo, os motores testados não tratam
-   'pen' como candidato a scroll rápido (fast-path) que ignora
-   preventDefault() — ver §27 do encargo para o que fazer se algum
-   browser/hardware não respeitar isto. */
+   e mantém só a desactivação do double-tap-zoom.
+
+   CORRECÇÃO (auditoria independente sobre o vídeo físico de 30/09/2026,
+   José, WhatsApp 17:44:09 — riscos horizontais registavam anchor-ok mas
+   a página deslocava-se na vertical): o parágrafo anterior a esta versão
+   afirmava que "pen preventDefault()+setPointerCapture() no próprio
+   pointerdown, antes de o browser decidir iniciar um pan" bastava porque
+   "os motores testados não tratam 'pen' como candidato a scroll rápido
+   que ignora preventDefault()". Isto está ERRADO como explicação de
+   fundo e o comentário antigo fica corrigido aqui: a nota normativa da
+   spec (Pointer Events L2, "declaring candidate regions for default
+   touch behaviors" — w3.org/TR/pointerevents2/#declaring-candidate-
+   regions-for-default-touch-behaviors) diz explicitamente que, quando o
+   touch-action do alvo PERMITE pan num eixo, o user agent tem licença
+   para começar a panorâmica optimisticamente e pode IGNORAR
+   preventDefault() chamado em qualquer evento — Pointer ou Touch — desse
+   gesto. 'pan-x pan-y pinch-zoom' permite pan nos dois eixos de
+   propósito (é o que devolve o scroll ao dedo). setPointerCapture()
+   só redirecciona onde os eventos SEGUINTES são entregues — não é uma
+   API de bloqueio de gesto nativo (não está nessa secção da spec).
+   preventDefault() aqui continua a ser chamado (é inofensivo e ajuda
+   em alguns motores/casos), mas deixou de ser apresentado como A razão
+   de o traço da stylus não rolar a página — ver ligarAdaptadorTouchStylus()
+   mais abaixo (Touch Events), que é o mecanismo que esta correcção usa
+   para tentar mesmo impedir a panorâmica do PRÓPRIO gesto da stylus, só
+   no piloto físico. Fora do piloto, nada deste ficheiro muda: o preventDefault()
+   do Pointer Event continua a única tentativa, exactamente como antes. */
 body.rm2-t-pen #materias-container{
   touch-action:pan-x pan-y pinch-zoom;
   overscroll-behavior:contain;
 }
-/* ENQUANTO A STYLUS ESTÁ EM CONTACTO o pan sai de cena por completo.
-   Medido nesta branch, antes disto: com a caneta a escrever, um contacto
-   grande (width 68 px) e perto era correctamente classificado como palma
-   — defaultPrevented ficava true no pointerdown E nos pointermove —
-   e a página rolava 158 px na mesma. A razão não é o classificador: com
-   'pan-x pan-y pinch-zoom' quem decide o pan é o compositor, ANTES de o
-   JS correr, e um preventDefault() já não lho tira. Enquanto o JS for o
-   único guarda, a palma rola a matéria por baixo da letra.
-   Só durante o contacto real da caneta, portanto — não enquanto ela está
-   apenas armada. Levantando a stylus, o dedo volta a rolar de imediato,
-   que é o comportamento Goodnotes-like que esta PR quer. */
+/* ENQUANTO A STYLUS ESTÁ EM CONTACTO, esta classe tira o pan da área —
+   mas só ajuda toques SEGUINTES e SEPARADOS (uma palma que assenta depois
+   de a stylus já estar em baixo): para esses, a classe já existe antes
+   do início do toque deles, e a spec permite ao browser respeitar
+   touch-action:none decidido antes do gesto começar.
+
+   CORRECÇÃO (mesma auditoria da nota acima): esta classe NUNCA pôde
+   ajudar o PRÓPRIO gesto da stylus que a activou — penEmContacto(true)
+   corre dentro do pointerdown dessa mesma stylus, e o touch-action
+   candidato para ESSE toque já tinha sido decidido pelo browser antes de
+   qualquer JS correr (era 'pan-x pan-y pinch-zoom', da regra acima,
+   armada desde que a ferramenta foi seleccionada). Trocar a classe
+   depois não reabre essa decisão — é exactamente a mesma explicação da
+   nota grande acima, aplicada aqui. O comentário anterior descrevia um
+   teste (palma de 68px a rolar 158px) e concluía correctamente que "quem
+   decide o pan é o compositor, ANTES de o JS correr" — mas depois
+   generalizava mal, tratando o CASO SEGUINTE (palma depois da stylus) como
+   se resolvesse também o caso da PRÓPRIA stylus, que é geometricamente
+   diferente (mesmo toque, não um toque seguinte). Mantida por ainda
+   ajudar o caso da palma seguinte; NÃO é o mecanismo que protege o traço
+   da própria stylus — isso é ligarAdaptadorTouchStylus(). */
 body.rm2-t-pen.rm2-pen-down #materias-container{
   touch-action:none;
 }
@@ -1307,6 +1342,30 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     diagLog('touch-palm-tardio', null, { pointerId: pid, classificacao: 'palm', razao: 'parado-pos-pen' });
   }
 
+  /* Só classifica IMEDIATAMENTE como palma quando há EVIDÊNCIA DIRECTA
+     desse toque — contacto concorrente com a stylus (`pen-ativa`) ou um
+     contacto fisicamente grande (`contato-grande`). `pen-recente` e
+     `perto` são só circunstanciais (quando/onde), nunca sobre o toque em
+     si, e SOZINHOS OU SOMADOS ENTRE SI não bastam mais para bloquear de
+     imediato.
+
+     Achado do vídeo físico de 30/09/2026 (auditoria independente): logo
+     a seguir a levantar a stylus, o gesto deliberado de "escrever e já a
+     seguir rolar com o mesmo dedo, do mesmo sítio" pontuava exactamente
+     `pen-recente` (1) + `perto` (1) = 2 = PALM_LIMIAR — porque é
+     fisicamente impossível o dedo começar a rolar noutro lugar que não
+     perto de onde se acabou de escrever. Isso classificava como palma e
+     bloqueava um "NOVO gesto deliberado de dedo" que devia navegar
+     IMEDIATAMENTE (requisito explícito desta correcção). A combinação
+     fraca agora cai em `touchNav` como qualquer outra — se o dedo se MOVE
+     de forma sustida (um scroll real), sai de lá sem nunca ter sido
+     bloqueado; só se ficar PARADO é que `reconsiderarNavegacao()` (abaixo)
+     o promove a palma — cobrindo a palma que assenta e não se mexe, sem
+     penalizar o scroll deliberado que a spec/o pedido exigem. */
+  function evidenciaDirectaDePalma(motivos) {
+    return motivos.indexOf('pen-ativa') !== -1 || motivos.indexOf('contato-grande') !== -1;
+  }
+
   /* Roteia um toque (dedo) enquanto a ferramenta é a caneta. Chamado do
      pointerdown partilhado — nunca cria stroke, nunca captura o ponteiro:
      um toque legítimo de navegação deve continuar exactamente como se
@@ -1315,9 +1374,9 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   function rotearToqueComCanetaArmada(e) {
     if (touchPalm[e.pointerId]) { tratarComoPalma(e, touchPalm[e.pointerId].motivos, true); return; }
     var r = pontuarPalma(e);
-    if (r.pontos >= PALM_LIMIAR) { tratarComoPalma(e, r.motivos, false); return; }
+    if (r.pontos >= PALM_LIMIAR && evidenciaDirectaDePalma(r.motivos)) { tratarComoPalma(e, r.motivos, false); return; }
     touchNav[e.pointerId] = { x0: e.clientX, y0: e.clientY, xUlt: e.clientX, yUlt: e.clientY, t0: Date.now() };
-    diagLog('touch-nav', e, { classificacao: 'navigation', razao: 'score-baixo:' + r.pontos });
+    diagLog('touch-nav', e, { classificacao: 'navigation', razao: 'score-sem-evidencia-directa:' + r.pontos + ':' + r.motivos.join('+') });
     setTimeout(function () { reconsiderarNavegacao(e.pointerId); }, PALM_SETTLE_MS);
   }
 
@@ -1334,6 +1393,126 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   function limparToqueRoteado(pid) {
     delete touchNav[pid];
     delete touchPalm[pid];
+  }
+
+  /* ------------------------------------------------------------------
+     ADAPTADOR DE TOUCH EVENTS · só piloto físico (José + Semiología II)
+
+     Abordagem preferencial da correcção do deslocamento vertical (§2 do
+     encargo, achado do vídeo de 30/09/2026): a nota normativa da spec de
+     Pointer Events (ver comentário grande no CSS, acima) diz que, quando
+     touch-action permite pan, preventDefault() num Pointer Event pode
+     ser ignorado pelo browser. O candidato aqui é diferente: TouchEvent,
+     listener explicitamente NÃO passivo, preventDefault() no PRÓPRIO
+     touchstart (ou no primeiro touchmove seguinte, se o touchstart não
+     for cancelable), antes de o browser confirmar a panorâmica — o
+     mecanismo clássico e documentado para "a página não rola durante
+     este toque específico", independente do valor de touch-action.
+
+     Isto é aditivo, nunca substitui o motor de desenho: NUNCA cria
+     `traco`, NUNCA chama `filaGravar`, NUNCA mexe em `apagando` — só
+     tenta impedir a navegação nativa para o contacto que identificar como
+     stylus. Quem desenha continua a ser inteiramente o caminho de Pointer
+     Events (`onDown`/`onMove`/`onUp`), como antes. `Touch.identifier` é
+     tratado como um espaço de chaves PRÓPRIO, nunca comparado nem
+     cruzado com `pointerId` — a spec não garante equivalência entre os
+     dois, mesmo quando na prática certos browsers usam o mesmo número.
+
+     Identificação por `Touch.touchType==='stylus'` (extensão WebKit,
+     Touch.touchType 'direct'|'stylus'|'unknown' conforme
+     w3c.github.io/touch-events/). Onde essa propriedade não existir ou
+     vier 'unknown'/'direct', o toque NÃO é interceptado por este
+     adaptador — ausência de identificação confiável é tratada como
+     LIMITAÇÃO (o toque segue exactamente como antes desta correcção,
+     pelo caminho de Pointer Events + rejeição de palma de sempre), nunca
+     como "detectámos que não é stylus, logo é seguro".
+
+     Registo dos listeners (correcção do blocker de auditoria): sem
+     `window.TouchEvent`, ou para qualquer conta que não seja a do José
+     (`st.uid !== JOSE_UID`), `ligarAdaptadorTouchStylus()` nem chega a
+     chamar `addEventListener` — zero listener não-passivo novo para um
+     segundo `BETA_UID` ou para quem só tem `study_tools_beta`, mesmo que a
+     V2 tenha sido montada para essa conta. Isto é distinto da elegibilidade
+     por gesto: com a conta do José montada mas fora de Semiología II (ou
+     fora da ferramenta lápis), os listeners existem mas
+     `touchAdapterElegivel()` continua a barrar `pilotoPermitido()`/
+     `st.tool`/`touchType`/alvo — nenhum `preventDefault()`, nenhuma entrada
+     em `stylusTouches`, comportamento da matéria exactamente como antes. */
+  var TOUCH_ADAPTER_EXCLUIR = '.rm2-box,.rm2-notes,.rm2-diag,.rm-tools,.rm-tools-r,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug';
+  var stylusTouches = {};   // Touch.identifier -> { x0, y0, scrollY0, scrollX0, maxDeltaScroll }
+
+  function touchAdapterElegivel(touch) {
+    if (!pilotoPermitido() || st.tool !== 'pen') return false;
+    if (touch.touchType !== 'stylus') return false;
+    if (lbAberto()) return false;
+    var alvo = touch.target;
+    if (alvo && alvo.closest && alvo.closest(TOUCH_ADAPTER_EXCLUIR)) return false;
+    if (!alvo || !alvo.closest || !alvo.closest('#materias-container')) return false;
+    return true;
+  }
+
+  function onTouchStartAdaptador(e) {
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      var t = e.changedTouches[i];
+      if (!touchAdapterElegivel(t)) continue;
+      stylusTouches[t.identifier] = {
+        x0: t.clientX, y0: t.clientY,
+        scrollY0: window.pageYOffset, scrollX0: window.pageXOffset,
+        maxDeltaScroll: 0
+      };
+      diagLog('touch-adapter-start', null, {
+        identifier: t.identifier, touchType: t.touchType, cancelableTouch: e.cancelable
+      });
+      if (e.cancelable) e.preventDefault();
+    }
+  }
+
+  function onTouchMoveAdaptador(e) {
+    var algumNosso = false;
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      var t = e.changedTouches[i];
+      var reg = stylusTouches[t.identifier];
+      if (!reg) continue;
+      algumNosso = true;
+      /* deslocamento REAL do scroll durante o contacto — não se aceita só
+         a classe CSS nem defaultPrevented como prova (§6 do encargo). */
+      var dScroll = Math.max(
+        Math.abs(window.pageYOffset - reg.scrollY0),
+        Math.abs(window.pageXOffset - reg.scrollX0)
+      );
+      if (dScroll > reg.maxDeltaScroll) reg.maxDeltaScroll = dScroll;
+    }
+    if (algumNosso && e.cancelable) e.preventDefault();
+  }
+
+  function limparTouchAdaptador(identifier, motivo) {
+    var reg = stylusTouches[identifier];
+    if (!reg) return;
+    diagLog('touch-adapter-end', null, {
+      identifier: identifier, motivo: motivo, maxDeltaScroll: Math.round(reg.maxDeltaScroll)
+    });
+    delete stylusTouches[identifier];
+  }
+
+  function onTouchFimAdaptador(e) {
+    var motivo = e.type === 'touchcancel' ? 'touchcancel' : 'touchend';
+    for (var i = 0; i < e.changedTouches.length; i++) limparTouchAdaptador(e.changedTouches[i].identifier, motivo);
+  }
+
+  /* Rede de segurança para interrupção global (troca de matéria, resize,
+     blur, app-switch — os mesmos motivos de `reconciliarGesto()`): nenhum
+     identifier deste adaptador pode sobreviver a uma reconciliação. */
+  function limparTodosOsTouchesAdaptador(motivo) {
+    for (var id in stylusTouches) limparTouchAdaptador(id, motivo || 'reconciliar');
+  }
+
+  function ligarAdaptadorTouchStylus() {
+    if (typeof window.TouchEvent === 'undefined') return;   // sem Touch Events: sem adaptador, sem afirmar sucesso
+    if (st.uid !== JOSE_UID) return;                         // blocker de auditoria: só a conta física do José chega a registar estes listeners — nunca outro BETA_UID nem study_tools_beta
+    document.addEventListener('touchstart', onTouchStartAdaptador, { passive: false });
+    document.addEventListener('touchmove', onTouchMoveAdaptador, { passive: false });
+    document.addEventListener('touchend', onTouchFimAdaptador, { passive: true });
+    document.addEventListener('touchcancel', onTouchFimAdaptador, { passive: true });
   }
 
   /* O browser liberta a captura sozinho no pointerup/pointercancel, mas
@@ -1411,12 +1590,18 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        activo (`traco`) — nenhuma decide a toolbox ou o scroll sozinha
        por outra.
 
-       `preventDefault()` aqui, o mais cedo possível, impede a navegação
-       nativa atribuída à stylus antes mesmo de se saber se vai nascer
-       traço — o touch-action (CSS) é a segunda camada, nunca a única
-       (§8 do encargo: não confiar em mudar touch-action depois de o
-       próprio gesto já ter começado). */
-    if (pilotoFisico && e.target && e.target.closest && e.target.closest('#materias-container')) {
+       `preventDefault()` aqui é só a segunda camada de sempre — NÃO
+       prova, sozinho, que o scroll nativo fica bloqueado (ver a correcção
+       do bloco de CSS/touch-action mais abaixo e o adaptador de Touch
+       Events em `ligarAdaptadorTouchStylus()`, que é quem de facto tenta
+       impedir a navegação da PRÓPRIA stylus). Restrito a `pointerType
+       ==='pen'` explicitamente — achado da auditoria independente da PR
+       #412: `pilotoFisico` sozinho não filtra `pointerType`, então um
+       clique de RATO (botão esquerdo OU direito, antes mesmo da rejeição
+       de botão mais abaixo) com o lápis seleccionado marcava «contacto
+       físico da stylus» para um evento que nunca foi stylus nenhuma. */
+    if (pilotoFisico && e.pointerType === 'pen' &&
+        e.target && e.target.closest && e.target.closest('#materias-container')) {
       if (!penState.active || penState.pid === e.pointerId) {
         penEmContacto(true, e.pointerId);
         registarPen(e);
@@ -1662,6 +1847,9 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        destas interrupções — mesmo quando não havia `traco` nenhum para
        `abortarTraco()` limpar (âncora falhou, contacto ficou ligado). */
     limparContatoPen();
+    /* Idem para o adaptador de Touch Events — nenhum identifier seu pode
+       ficar a impedir scroll depois de uma interrupção global. */
+    limparTodosOsTouchesAdaptador(motivo);
   }
 
   /* Um traço cuja secção já saiu do documento é lixo: a matéria foi
@@ -2773,6 +2961,11 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        "clicar fora" volta a ser exactamente a de antes desta PR para
        quem está fora do piloto físico. */
     document.addEventListener('pointerdown', onDown, { passive: false });
+    /* Adaptador de Touch Events (§2 do encargo) — aditivo, só piloto
+       físico, só identifica e tenta suprimir a navegação nativa do
+       PRÓPRIO contacto de stylus; não desenha nada. Ver comentário grande
+       junto de `ligarAdaptadorTouchStylus()`. */
+    ligarAdaptadorTouchStylus();
     document.addEventListener('pointermove', function (e) {
       /* Sinal de "pen por perto" para a rejeição de palma — inclui o
          HOVER (pointerType 'pen', buttons 0) quando o hardware/browser o
@@ -2844,9 +3037,30 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     /* A caixa da âncora é medida no início do traço. Se o viewport muda a
        meio, essa medida deixa de valer: o traço continuaria a ser escrito
        com coordenadas de uma caixa que já não existe. Fecha-se o gesto
-       antes de reposicionar — e, sobretudo, deixa de ficar preso. */
+       antes de reposicionar — e, sobretudo, deixa de ficar preso.
+
+       Só que no vídeo físico de 30/09/2026 apareceram MUITOS
+       `reconciliar:resize` seguidos — no iOS a barra de URL some/aparece
+       ao rolar e isso já dispara `resize` (innerHeight muda ~50-100px,
+       innerWidth não muda nada nenhuma), sem geometria nenhuma ter
+       mudado de verdade. Cada um desses abortava um traço em curso.
+       `mudouGeometriaReal()` distingue isto — só dentro do piloto físico
+       (§5 do encargo): fora dele o resize continua a reconciliar sempre,
+       exactamente como era antes desta correcção. */
+    var ultimaLarguraJanela = window.innerWidth, ultimaAlturaJanela = window.innerHeight;
+    var RESIZE_ALTURA_LIMIAR_PX = 150;
+    function mudouGeometriaReal() {
+      var w = window.innerWidth, h = window.innerHeight;
+      var mudou = w !== ultimaLarguraJanela || Math.abs(h - ultimaAlturaJanela) > RESIZE_ALTURA_LIMIAR_PX;
+      ultimaLarguraJanela = w; ultimaAlturaJanela = h;
+      return mudou;
+    }
     var reflow = debounce(reposicionarTudo, 120);
-    window.addEventListener('resize', function () { reconciliarGesto('resize'); reflow(); });
+    window.addEventListener('resize', function () {
+      var real = mudouGeometriaReal();
+      if (!pilotoPermitido() || real) reconciliarGesto('resize');
+      reflow();
+    });
     window.addEventListener('orientationchange', function () {
       reconciliarGesto('orientationchange'); setTimeout(reposicionarTudo, 220);
     });
@@ -2967,6 +3181,9 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         pathIncremental: pathIncremental,
         novoPathIncremental: novoPathIncremental,
         pontuarPalma: pontuarPalma,
+        evidenciaDirectaDePalma: evidenciaDirectaDePalma,
+        stylusTouches: stylusTouches,
+        touchAdapterElegivel: touchAdapterElegivel,
         constantes: {
           PALM_LIMIAR: PALM_LIMIAR, PALM_RECENT_MS: PALM_RECENT_MS,
           PALM_NEAR_PX: PALM_NEAR_PX, PALM_LARGE_CONTACT: PALM_LARGE_CONTACT,
