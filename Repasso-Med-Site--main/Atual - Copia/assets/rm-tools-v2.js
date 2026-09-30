@@ -1425,9 +1425,19 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
      adaptador — ausência de identificação confiável é tratada como
      LIMITAÇÃO (o toque segue exactamente como antes desta correcção,
      pelo caminho de Pointer Events + rejeição de palma de sempre), nunca
-     como "detectámos que não é stylus, logo é seguro". Fora do piloto
-     físico, ou sem `window.TouchEvent`, o adaptador não regista sequer os
-     listeners — zero mudança de comportamento para quem está fora dele. */
+     como "detectámos que não é stylus, logo é seguro".
+
+     Registo dos listeners (correcção do blocker de auditoria): sem
+     `window.TouchEvent`, ou para qualquer conta que não seja a do José
+     (`st.uid !== JOSE_UID`), `ligarAdaptadorTouchStylus()` nem chega a
+     chamar `addEventListener` — zero listener não-passivo novo para um
+     segundo `BETA_UID` ou para quem só tem `study_tools_beta`, mesmo que a
+     V2 tenha sido montada para essa conta. Isto é distinto da elegibilidade
+     por gesto: com a conta do José montada mas fora de Semiología II (ou
+     fora da ferramenta lápis), os listeners existem mas
+     `touchAdapterElegivel()` continua a barrar `pilotoPermitido()`/
+     `st.tool`/`touchType`/alvo — nenhum `preventDefault()`, nenhuma entrada
+     em `stylusTouches`, comportamento da matéria exactamente como antes. */
   var TOUCH_ADAPTER_EXCLUIR = '.rm2-box,.rm2-notes,.rm2-diag,.rm-tools,.rm-tools-r,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug';
   var stylusTouches = {};   // Touch.identifier -> { x0, y0, scrollY0, scrollX0, maxDeltaScroll }
 
@@ -1498,6 +1508,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   function ligarAdaptadorTouchStylus() {
     if (typeof window.TouchEvent === 'undefined') return;   // sem Touch Events: sem adaptador, sem afirmar sucesso
+    if (st.uid !== JOSE_UID) return;                         // blocker de auditoria: só a conta física do José chega a registar estes listeners — nunca outro BETA_UID nem study_tools_beta
     document.addEventListener('touchstart', onTouchStartAdaptador, { passive: false });
     document.addEventListener('touchmove', onTouchMoveAdaptador, { passive: false });
     document.addEventListener('touchend', onTouchFimAdaptador, { passive: true });
