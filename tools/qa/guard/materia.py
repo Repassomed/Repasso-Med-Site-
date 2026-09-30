@@ -52,6 +52,13 @@ RE_STRONG = re.compile(r"<strong[^>]*>(.*?)</strong>", re.I | re.S)
 RE_LETTER = re.compile(r"^\s*([a-eA-E])\s*[\)\.\-:]")
 RE_TAG = re.compile(r"<[^>]+>")
 RE_WS = re.compile(r"\s+")
+# Escape hatch explícito e auditável para uma correção real de enunciado em
+# questão SEM id estável. O valor é o SHA-1 (40 hex) do enunciado anterior
+# normalizado. O Guard só aceita a ponte quando seção e gabarito continuam
+# compatíveis; remoções reais continuam bloqueadas.
+RE_GUARD_PREV_STEM_SHA1 = re.compile(
+    r'\sdata-guard-previous-stem-sha1="([0-9a-fA-F]{40})"', re.I)
+
 
 # Enunciado: o elemento com class="quiz-question" pode ser <p> (a maioria das
 # matérias) ou <div> (Histología I). O rótulo de proveniência que vem dentro
@@ -141,6 +148,13 @@ class Question:
     options: list[str] = field(default_factory=list)
     answer_letter: str | None = None
     answer_text: str = ""
+    previous_stem_sha1: str | None = None
+
+    @property
+    def stem_sha1(self) -> str:
+        """SHA-1 do enunciado normalizado, independente de id."""
+        norm = RE_WS.sub("", self.stem.lower())
+        return hashlib.sha1(norm.encode("utf-8")).hexdigest()
 
     @property
     def key(self) -> str:
@@ -228,8 +242,11 @@ def parse(path: str, raw: str) -> MateriaDoc:
         end = _div_end(raw, start)
         block = raw[start:end]
 
-        id_match = RE_ID_ATTR.search(m.group(0))
+        opening_tag = m.group(0)
+        id_match = RE_ID_ATTR.search(opening_tag)
         qid = id_match.group(1) if id_match else None
+        prev_match = RE_GUARD_PREV_STEM_SHA1.search(opening_tag)
+        previous_stem_sha1 = prev_match.group(1).lower() if prev_match else None
 
         # É banco se o id termina em -bk, ou se está fisicamente dentro da
         # seção de banco. As duas convenções coexistem no repositório.
@@ -266,6 +283,7 @@ def parse(path: str, raw: str) -> MateriaDoc:
                 options=options,
                 answer_letter=answer_letter,
                 answer_text=answer_text,
+                previous_stem_sha1=previous_stem_sha1,
             )
         )
 
