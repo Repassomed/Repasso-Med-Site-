@@ -1,6 +1,6 @@
 # Caneta (traços) — auditoria independente para expansão além do piloto
 
-**Autor:** Claude 2 · **Base auditada:** `main` @ `5161ed2f1a1659de3fd382a9f0f0e4da3468ca06` (já com #412, #413 e #414) ·
+**Autor:** Claude 2 · **Base auditada:** auditoria inicial em `main` @ `5161ed2f1a1659de3fd382a9f0f0e4da3468ca06` (com #412, #413, #414); **repetida nas suítes afetadas no SHA final combinado `04d1fead37ca4a84ea2ec58410c48487772cca48`** (com a #416 do Claude 1, «primeira tinta síncrona no contacto») ·
 **Branch desta entrega:** `claude/ink-audit-expansao` (só testes e este relatório; **nenhum** arquivo de produto foi alterado — `rm-tools-v2.js` e `index.html` ficaram intactos enquanto o Claude 1 os refina).
 
 ## 0. Parecer
@@ -24,6 +24,7 @@
 | `04-pagination` | **9/9** | teto de 1000 linhas (§2-A). |
 | `05-viewports` | **41/41** + 2 achados | 9 perfis de tela emulados, rotação, redimensionar, pinch-zoom (só alinhamento), imagens (não exercitadas). |
 | `06-volume` | **9/9** + 1 achado | curva por volume, 10 navegadores simultâneos, concorrência HTTP limitada. |
+| `07-pilot-path` | **20/20** | caminho do **piloto** (UID do José, `pilotoPermitido()`=true) após a #416: stylus sintético → 201 → sessão independente carrega os mesmos ids; borracha/undo; alinhamento; idêntico ao usuário comum. A latência da #416 **não é mensurável em emulação** (a conta comum mostra a mesma tinta síncrona): exige hardware. |
 
 **Produção (somente leitura, catálogo e contagens agregadas, sem conteúdo):** RLS ligado; 4 policies `user_ink_strokes_*_self` só para `authenticated` (`user_id = auth.uid()`); constraints e índice **idênticos** à migration; `authenticated` tem `statement_timeout = 8 s`; **não há `max_rows` visível no banco** (é configuração do painel da API — confirmar lá). Uso real hoje: **47 traços, 2 usuários, máx. 30 por usuário/matéria, média 21 pontos/traço (máx. 195), tabela de 208 kB**, 307 perfis, 2 linhas na beta. Ou seja: a caneta quase não foi exercitada em produção, e a expansão será o primeiro teste de carga real.
 
@@ -111,7 +112,9 @@ Todos reproduzidos com teste (`tools/qa/ink-audit`). Os arquivos de produto são
 
 Não existe projeto Supabase de teste isolado neste ambiente, e as gravações em produção são proibidas para esta auditoria. Por isso a **persistência na infraestrutura real do Supabase (PostgREST, GoTrue, gateway, rede) não foi comprovada**: os testes provam a lógica do cliente e as regras reais do banco (Postgres real + migration real + RLS real), não o serviço hospedado. Um teste ponta a ponta com **duas contas de teste** em um ambiente autorizado precisa ser feito pelo José (§10, itens 1–2) ou em um projeto/branch Supabase de teste, se for criado.
 
-## 9. Repetir após o refinamento do Claude 1 (SHA final combinado)
+## 9. Repetição após o refinamento do Claude 1 (SHA final combinado)
+
+**Feito em `04d1fead` (main com #416):** `02-persistence` 25/25 · `03-failures` 50/50 · `05-viewports` 41/41 (+2 achados, inalterados) · `06-volume` 9/9 (+1 achado; `reposicionar()` 82 ms com 5000 traços) · `07-pilot-path` 20/20. `01-rls` e `04-pagination` não dependem do código alterado (só policies e a consulta de carga) e não foram repetidas. **Nenhum achado A–G mudou**: a #416 não tocou carga, gravação, apagar nem reposicionamento. Para as próximas correções, repetir conforme a tabela:
 
 | Se a mudança tocar… | Repetir |
 |---|---|

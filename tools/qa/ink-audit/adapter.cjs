@@ -29,7 +29,7 @@ function create({port=0}={}){
   const S={users:new Map(),sessions:new Map(),refresh:new Map(),log:[],chaos:[],maxRows:+(process.env.RM_MAX_ROWS||1000),bytesOut:0,bytesIn:0};
   const pub=u=>({id:u.id,aud:'authenticated',role:'authenticated',email:u.email,app_metadata:{},user_metadata:{},created_at:'2026-01-01T00:00:00Z'});
   function issue(u,sid){const now=Math.floor(Date.now()/1000),exp=now+3600,ssid=sid||crypto.randomUUID();const at=sign({sub:u.id,role:'authenticated',aud:'authenticated',email:u.email,exp,iat:now,session_id:ssid});const rt='rt-'+crypto.randomUUID();S.sessions.set(at,{uid:u.id,alive:true,sid:ssid});S.refresh.set(rt,{uid:u.id,alive:true,sid:ssid});return {access_token:at,token_type:'bearer',expires_in:3600,expires_at:exp,refresh_token:rt,user:pub(u)};}
-  async function addUser(email,password,{beta=true}={}){const id=crypto.randomUUID();await admin.query('insert into public.profiles(id,email) values($1,$2)',[id,email]);if(beta) await admin.query('insert into public.study_tools_beta(user_id) values($1)',[id]);const u={id,email,password};S.users.set(email,u);return u;}
+  async function addUser(email,password,{beta=true,id:fixed}={}){const id=fixed||crypto.randomUUID();await admin.query('insert into public.profiles(id,email) values($1,$2) on conflict (id) do update set email=excluded.email',[id,email]);if(beta) await admin.query('insert into public.study_tools_beta(user_id) values($1) on conflict do nothing',[id]);const u={id,email,password};S.users.set(email,u);return u;}
 
   /* ---------- caos: regras por método+tabela; consumidas em ordem ---------- */
   function chaosFor(method,table){ for(const c of S.chaos){ if(c.method&&c.method!==method) continue; if(c.table&&c.table!==table) continue; if(c.remaining===0) continue; if(c.remaining>0) c.remaining--; c.hits=(c.hits||0)+1; return c; } return null; }
@@ -120,7 +120,7 @@ function create({port=0}={}){
   async function testApi(req,res,url,body){
     const ep=url.pathname.replace('/__test/',''); const j=body?JSON.parse(body):{};
     const ok=(o)=>send(res,200,o||{ok:true});
-    if(ep==='user'){ const u=await addUser(j.email,j.password,{beta:j.beta!==false}); return ok({id:u.id}); }
+    if(ep==='user'){ const u=await addUser(j.email,j.password,{beta:j.beta!==false,id:j.id}); return ok({id:u.id}); }
     if(ep==='chaos'){ S.chaos=(j.rules||[]).map(r=>({remaining:-1,...r})); return ok(); }
     if(ep==='log'){ return ok({log:S.log,bytesOut:S.bytesOut,bytesIn:S.bytesIn}); }
     if(ep==='log/clear'){ S.log=[]; S.bytesOut=0; S.bytesIn=0; return ok(); }

@@ -15,7 +15,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 async function startStack(){ const st=await create({port:0}); return st; }
 let uSeq=0;
-async function mkUser(st,tag,{beta=true}={}){ const email=`${tag}-${Date.now()}-${++uSeq}@teste.invalid`, password='senha-de-teste-123'; const r=await fetch(st.url+'/__test/user',{method:'POST',body:JSON.stringify({email,password,beta})}); const j=await r.json(); return {id:j.id,email,password}; }
+async function mkUser(st,tag,{beta=true,id}={}){ const email=`${tag}-${Date.now()}-${++uSeq}@teste.invalid`, password='senha-de-teste-123'; const r=await fetch(st.url+'/__test/user',{method:'POST',body:JSON.stringify({email,password,beta,id})}); const j=await r.json(); return {id:j.id,email,password}; }
 async function sql(st,q,params){ const r=await st.admin.query(q,params||[]); return r.rows; }          // SÓ para observar/semear (superuser); nunca como prova de RLS
 const countStrokes=async(st,uid,slug='semiologia-ii')=>(await sql(st,'select count(*)::int c from public.user_ink_strokes where user_id=$1 and subject_slug=$2',[uid,slug]))[0].c;
 async function chaos(st,rules){ await fetch(st.url+'/__test/chaos',{method:'POST',body:JSON.stringify({rules})}); }

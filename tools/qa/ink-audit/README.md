@@ -28,6 +28,7 @@ Variáveis opcionais: `PGURL`, `PGADMIN`, `RM_SITE_DIR`, `RM_MATERIAS_DIR`, `RM_
 | `04-pagination.test.cjs` | 999/1000/1001/1500/2500 traços; teto do servidor |
 | `05-viewports.test.cjs` | **emulação** de 9 perfis, rotação, pinch-zoom, imagens, saltos em matéria longa |
 | `06-volume.test.cjs` | curva por volume, concorrência HTTP limitada, 10 navegadores simultâneos |
+| `07-pilot-path.test.cjs` | caminho do piloto (UID do José) pós-#416, comparado ao usuário comum |
 
 As asserções marcadas «RISCO/ACHADO» **passam porque documentam um defeito**; quando ele for corrigido em `rm-tools-v2.js`, devem ser invertidas.
 A suíte é sensível à carga da máquina: se só o cenário 6 de `03-failures` falhar numa execução completa, repita a suíte isolada.
