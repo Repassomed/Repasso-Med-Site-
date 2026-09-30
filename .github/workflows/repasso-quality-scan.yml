@@ -1,9 +1,10 @@
 name: Repasso Quality Scan (READ-ONLY)
 
-# Caça-erros global: lê matérias, usa Claude como finder e OpenAI como
-# segundo revisor, e escreve SOMENTE o painel coordination/quality/ numa
-# branch/PR dedicada. Nunca corrige matéria, nunca faz merge/deploy e nunca
-# escreve Supabase/Auth/pagamento.
+# Caça-erros global: lê matérias, usa a OpenAI (Terra) como analisador
+# principal e o Claude Haiku só como segundo revisor dos achados incertos
+# (0 chamada se não houver dúvida), e escreve SOMENTE o painel
+# coordination/quality/ numa branch/PR dedicada. Nunca corrige matéria,
+# nunca faz merge/deploy e nunca escreve Supabase/Auth/pagamento.
 
 on:
   # Rodada final 30/09/2026: manual-only para preservar o saldo baixo da
@@ -58,21 +59,43 @@ jobs:
             git checkout -b quality/global-site-findings origin/${{ github.event.repository.default_branch }}
           fi
 
-      - name: Rodar caça-erros (somente leitura das matérias)
+      # Etapas A+B: scans estáticos (zero API) + OpenAI (analisador PRINCIPAL,
+      # até 2 chunks). Aqui só existe OPENAI_API_KEY. Falha/JSON inválido =
+      # falha fechada: nada é escrito nem publicado.
+      - name: OpenAI — análise principal da matéria
+        id: openai
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          REPASSO_QUALITY_CLAUDE_MODEL: claude-haiku-4-5-20251001
           REPASSO_QUALITY_OPENAI_MODEL: gpt-5.6-terra
           SUBJECT_INPUT: ${{ inputs.subject }}
         run: |
           set -euo pipefail
           SUBJECT="${SUBJECT_INPUT:-}"
           if [ -n "$SUBJECT" ]; then
-            python3 -m coordinator.site_quality_scan --subject "$SUBJECT"
+            python3 -m coordinator.site_quality_scan --stage openai --subject "$SUBJECT"
           else
-            python3 -m coordinator.site_quality_scan
+            python3 -m coordinator.site_quality_scan --stage openai
           fi
+
+      # Etapa C: Claude Haiku (FAST) só recebe os achados que a OpenAI marcou
+      # NEEDS_SECOND_OPINION (nunca a matéria). 0 chamada se não houver
+      # incerto; no máximo 1, sem retry. Aqui só existe ANTHROPIC_API_KEY.
+      # Falha do Claude não derruba o relatório da OpenAI.
+      - name: Claude Haiku — somente achados incertos (0 ou 1 chamada)
+        if: steps.openai.outputs.needs_claude == 'true'
+        continue-on-error: true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REPASSO_QUALITY_CLAUDE_MODEL: claude-haiku-4-5-20251001
+        run: |
+          set -euo pipefail
+          python3 -m coordinator.site_quality_scan --stage claude
+
+      # Consolida e escreve SOMENTE coordination/quality/. Nenhuma chave de API.
+      - name: Consolidar painel (sem chaves)
+        run: |
+          set -euo pipefail
+          python3 -m coordinator.site_quality_scan --stage finalize
 
       - name: Publicar somente o painel
         env:
