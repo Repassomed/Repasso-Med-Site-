@@ -332,9 +332,12 @@
         ' tilt=' + dNum(l.tiltX) + '/' + dNum(l.tiltY) + '</i>' +
       '<i>scrollY=' + dEsc(l.scrollY) + ' Δ=' + (l.scrollDelta == null ? '–' : ((l.scrollDelta > 0 ? '+' : '') + l.scrollDelta)) +
         ' · cancelable=' + (l.cancelable ? 'SIM' : 'NÃO') + '</i>' +
-      '<i>tool=' + dEsc(l.tool) + ' traço=' + (l.traco ? 'SIM' : 'NÃO') +
+      '<i>tool=' + dEsc(l.tool) + ' penContact=' + (l.penActive ? 'SIM' : 'NÃO') +
+        ' traço=' + (l.traco ? 'SIM' : 'NÃO') +
         ' captura=' + (l.captura ? 'SIM' : 'NÃO') +
         ' · ta=' + dEsc(l.touchAction) + ' · ' + dEsc(l.bodyClasses || '(nenhuma)') + '</i>' +
+      '<i>alvo=' + dEsc(l.alvo || '(?)') +
+        (l.anchorId ? ' · anchor=' + dEsc(l.anchorId) + (l.via ? ' via ' + dEsc(l.via) : '') : '') + '</i>' +
     '</div>';
   }
 
@@ -345,6 +348,7 @@
     if (resumo) {
       resumo.innerHTML =
         '<span>tool=<b>' + dEsc(st.tool) + '</b></span>' +
+        '<span>penContact=<b>' + (penState.active ? 'SIM' : 'NÃO') + '</b></span>' +
         '<span>traço=<b>' + (traco ? 'SIM' : 'NÃO') + '</b></span>' +
         '<span>touch-action=<b>' + dEsc(diagTouchAction()) + '</b></span>' +
         '<span>scrollY=<b>' + Math.round(window.pageYOffset) + '</b></span>' +
@@ -802,6 +806,46 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     return { el: sec, id: sec.id, sec: sec };
   }
 
+  /* Overlays/UI conhecidos que `elementsFromPoint` pode devolver por cima
+     do conteúdo — incluindo `[data-rm-ui]` (Layout V2, PR #408: UI
+     derivada explicitamente fora das âncoras de highlight). Nunca se
+     tenta ancorar dentro de nenhum destes. */
+  var OVERLAY_SEL = '.rm2-box,.rm2-notes,.rm2-diag,.rm-tools,.rm-tools-r,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug,[data-rm-ui]';
+
+  /* Fallback de `anchorDe(e.target)` para um pointerdown de stylus dentro
+     da matéria cujo ALVO REAL caiu fora de qualquer `section[id]` antes
+     de lá chegar (teste físico do José, tablet real: `anchorDe(e.target)`
+     devolvia null e o traço nunca nascia — `traço=NÃO`/`captura=NÃO` no
+     diagnóstico, apesar de `tool=pen` e touch-action correctos).
+
+     `elementsFromPoint` devolve a pilha inteira debaixo do ponto; ignoram-
+     se os overlays conhecidos e tenta-se `anchorDe()` em cada candidato
+     real. Como último recurso seguro, localiza-se a `section[id]` da aba
+     activa cuja caixa realmente contém o ponto. NUNCA inventa âncora fora
+     da matéria; NUNCA muda `SUB_SEL` nem `anchor_id` — usa exactamente a
+     mesma `anchorDe()` e a mesma noção de âncora de sempre, só chegando lá
+     por um caminho diferente quando o alvo do evento não chega. */
+  function anchorPorPonto(x, y, tab) {
+    if (!tab || !document.elementsFromPoint) return null;
+    var pilha;
+    try { pilha = document.elementsFromPoint(x, y); } catch (e) { return null; }
+    for (var i = 0; i < pilha.length; i++) {
+      var el = pilha[i];
+      if (!tab.contains(el)) continue;
+      if (el.closest && el.closest(OVERLAY_SEL)) continue;
+      var anc = anchorDe(el);
+      if (anc) return anc;
+    }
+    var secs = tab.querySelectorAll(ANCHOR_SEL);
+    for (var j = 0; j < secs.length; j++) {
+      var r = secs[j].getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        return { el: secs[j], id: secs[j].id, sec: secs[j] };
+      }
+    }
+    return null;
+  }
+
   /* «ofb02>14» → o 15.º parágrafo da secção ofb02. «ofb02» → a secção. */
   function elDeAnchor(anchorId) {
     var tab = abaAtiva(); if (!tab) return null;
@@ -1142,15 +1186,31 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
      pointermove com pointerType 'pen') como no hover, quando o hardware e
      o browser o expõem (pointermove com pointerType 'pen' e buttons=0) —
      a stylus a aproximar-se já é sinal, mesmo antes de tocar. */
-  var penState = { active: false, lastX: 0, lastY: 0, lastActiveAt: 0, lastContactEndAt: 0 };
+  var penState = { active: false, pid: null, lastX: 0, lastY: 0, lastActiveAt: 0, lastContactEndAt: 0 };
 
   /* Ponto único: o contacto da stylus é o que decide se a área ainda
      oferece pan ao dedo (ver o CSS .rm2-pen-down). Fica junto do estado
-     para não haver um caminho de término que se esqueça de o desligar. */
-  function penEmContacto(ligado) {
+     para não haver um caminho de término que se esqueça de o desligar.
+
+     `pid` guarda de QUEM é o contacto em curso — separado de `traco.pid`
+     de propósito (teste físico do José, tablet real): o contacto tem de
+     poder existir e ser desligado correctamente mesmo quando nenhum
+     `traco` chega a nascer para esse pointerId (âncora não resolvida). */
+  function penEmContacto(ligado, pid) {
     penState.active = !!ligado;
+    penState.pid = ligado ? pid : null;
     if (!ligado) penState.lastContactEndAt = Date.now();
     try { document.body.classList.toggle('rm2-pen-down', !!ligado); } catch (e) {}
+  }
+
+  /* Rede de segurança para qualquer interrupção GLOBAL (blur,
+     visibilitychange, troca de matéria, resize/rotação — ver
+     `reconciliarGesto()`): garante `penContact=false` mesmo quando não há
+     nenhum `traco` para basear a limpeza — exactamente o caso que o
+     diagnóstico físico expôs (âncora falhou, o contacto tinha ficado
+     ligado, e nada que dependesse de `traco` o desligava). */
+  function limparContatoPen() {
+    if (penState.active) penEmContacto(false, null);
   }
 
   function registarPen(e) {
@@ -1302,8 +1362,10 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   function onDown(e) {
     if (st.tool !== 'pen' && st.tool !== 'eraser') return;
     diagLog('pointerdown', e);
-    if (lbAberto()) return;                             // zoom aberto: caneta suspensa
-    if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes,.rm-tools,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug')) return;
+    if (lbAberto()) { diagLog('reject:lightbox', e); return; }     // zoom aberto: caneta suspensa
+    if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes,.rm-tools,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug')) {
+      diagLog('reject:ui', e); return;
+    }
     if (gestoMorto()) abortarTraco();                   // traço órfão não bloqueia o seguinte
 
     /* A CANETA, com dedo, nunca chega a criar traço nem a bloquear nada:
@@ -1318,20 +1380,59 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       return;
     }
 
-    if (traco || apagando) return;                      // rejeição de palma/2.º ponteiro
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    /* CONTACTO FÍSICO da stylus — marcado AQUI, antes de qualquer
+       resolução de âncora ou de qualquer outra guarda, porque tem de
+       existir mesmo quando nenhum traço chega a nascer.
 
-    var anc = anchorDe(e.target);
-    if (!anc) return;
+       Achado do teste físico do José (tablet real): o diagnóstico
+       mostrava `tool=pen`, `cancelable=SIM` e o touch-action a mudar
+       correctamente, mas `traço=NÃO`/`captura=NÃO` — o pointerdown
+       morria mais abaixo, em `anchorDe()`, e como `penEmContacto(true)`
+       só corria DEPOIS da âncora resolver (ver diff), o contacto nunca
+       chegava a ser registado nem o `rm2-pen-down`/touch-action:none
+       entravam a tempo. Três coisas conceptualmente distintas, nunca
+       confundidas entre si daqui em diante: ferramenta seleccionada
+       (`st.tool`), contacto físico (`penState`) e traço activo (`traco`)
+       — nenhuma decide a toolbox ou o scroll sozinha por outra.
+
+       `preventDefault()` aqui, o mais cedo possível, impede a navegação
+       nativa atribuída à stylus antes mesmo de se saber se vai nascer
+       traço — o touch-action (CSS) é a segunda camada, nunca a única
+       (§8 do encargo: não confiar em mudar touch-action depois de o
+       próprio gesto já ter começado). */
+    if (e.pointerType === 'pen' && st.tool === 'pen' &&
+        e.target && e.target.closest && e.target.closest('#materias-container')) {
+      if (!penState.active || penState.pid === e.pointerId) {
+        penEmContacto(true, e.pointerId);
+        registarPen(e);
+      }
+      if (e.cancelable) e.preventDefault();
+    }
+
+    if (traco || apagando) { diagLog('reject:stroke-active', e); return; }   // rejeição de palma/2.º ponteiro
+    if (e.pointerType === 'mouse' && e.button !== 0) { diagLog('reject:mouse-button', e); return; }
+
+    var tab = abaAtiva();
+    if (!tab) { diagLog('reject:no-active-tab', e); return; }
+
+    /* anchorDe(e.target) primeiro, como sempre. Só quando o alvo REAL cai
+       fora de qualquer section[id] antes de lá chegar — por exemplo um
+       elemento de UI derivada do Layout V2 ([data-rm-ui], PR #408,
+       explicitamente fora das âncoras de highlight) — é que se tenta
+       anchorPorPonto(), que usa elementsFromPoint ignorando overlays/UI e,
+       como último recurso, a section[id] cuja caixa contém o ponto. NUNCA
+       inventa âncora fora da matéria; NUNCA muda SUB_SEL/anchor_id. */
+    var ancDireta = anchorDe(e.target);
+    var anc = ancDireta || anchorPorPonto(e.clientX, e.clientY, tab);
+    if (!anc) { diagLog('reject:no-anchor', e); return; }
     var sec = anc.el;
+    diagLog('anchor-ok', e, { anchorId: anc.id, via: ancDireta ? 'target' : 'ponto' });
 
     /* A goma aceita o dedo — um toque apaga e nunca chega a impedir o
        scroll, porque não se faz preventDefault para touch. O lápis, esse,
        só responde a stylus e rato: o dedo já foi tratado acima. */
     if (st.tool === 'eraser') { comecarApagar(e, sec); return; }
-    if (!ehPonteiroDeDesenho(e)) return;
-
-    if (e.pointerType === 'pen') { penEmContacto(true); registarPen(e); }
+    if (!ehPonteiroDeDesenho(e)) { diagLog('reject:not-drawing-pointer', e); return; }
 
     var b = caixa(sec);
     traco = {
@@ -1425,6 +1526,11 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   function onUp(e) {
     diagLog('pointerup', e);
+    /* Contacto limpo AQUI, por pointerId, independente de existir traço —
+       se a âncora tivesse falhado no onDown, `traco` seria null mas o
+       contacto ainda estaria ligado; sem isto `rm2-pen-down` ficava preso
+       (teste físico do José). */
+    if (e.pointerType === 'pen' && penState.active && e.pointerId === penState.pid) penEmContacto(false);
     if (apagando) { terminarApagar(); return; }
     if (!traco || (e && e.pointerId !== traco.pid)) return;
     var t = traco; traco = null;
@@ -1433,7 +1539,6 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        Cancela-se o frame pendente só para não desenhar, à toa, num traço
        que está prestes a ser substituído pelo `d` final e definitivo. */
     cancelarRenderizacaoPendente(t);
-    if (t.tipo === 'pen') penEmContacto(false);
     libertar(t.sec, t.pid);
     document.body.classList.remove('rm2-drawing');
 
@@ -1470,6 +1575,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
      cancelamento INDEVIDO, não disfarçar o verdadeiro. */
   function onCancel(e) {
     diagLog('pointercancel', e);
+    if (e.pointerType === 'pen' && penState.active && e.pointerId === penState.pid) penEmContacto(false);
     if (apagando) { terminarApagar(); return; }
     if (!traco || (e && e.pointerId !== traco.pid)) return;
     abortarTraco();
@@ -1521,6 +1627,10 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        mesma rede de segurança da caneta e do marcador, agora também para
        o roteador de toque (§17 do encargo). */
     touchNav = {}; touchPalm = {};
+    /* Contacto físico da stylus também não pode sobreviver a nenhuma
+       destas interrupções — mesmo quando não havia `traco` nenhum para
+       `abortarTraco()` limpar (âncora falhou, contacto ficou ligado). */
+    limparContatoPen();
   }
 
   /* Um traço cuja secção já saiu do documento é lixo: a matéria foi
@@ -2197,20 +2307,25 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     document.body.appendChild(box);
 
     /* ------------------------------------------------------------------
-       O FAB é a saída do modo de escrita BLOQUEANTE — hoje só a GOMA.
+       O FAB é a saída explícita de qualquer FERRAMENTA DE DESENHO (lápis
+       ou goma) — nunca um jeito de a minimizar silenciosamente mantendo-a
+       armada.
 
-       Com a goma armada, o touch-action:none ainda tira o pan à área de
-       leitura. Se o painel pudesse fechar nesse estado, ficava uma página
-       que não rola e cujo botão de sair está escondido — só o FAB à
-       vista, sem nada que diga que é ele que desarma. Era a queixa de
-       «não consigo desativar para voltar a rolar».
-
-       A CANETA deixou de bloquear o dedo (§0 do encargo): o FAB com o
-       lápis armado agora só abre e fecha o painel, exactamente como já
-       acontecia com o marcador — o lápis segue armado depois de fechar, e
-       o dedo continua a rolar sem precisar de reabrir nada. */
+       Isto MUDOU por evidência de teste físico (tablet real do José): a
+       versão anterior só fazia isto para a goma (que bloqueia o scroll,
+       via touch-action:none) e deixava o lápis apenas abrir/fechar o
+       painel — a lógica era «o lápis não bloqueia o dedo, logo fechar o
+       painel é seguro». Isso continua verdadeiro para o SCROLL (a caneta
+       segue devolvendo pan ao dedo quando não está em contacto, «Goodnotes
+       -like»), mas o teste no tablet mostrou que esconder a toolbox com o
+       lápis armado é, mesmo assim, uma experiência ruim: o aluno perde de
+       vista a ferramenta activa e o botão que a desarma. Por isso a
+       regra passou a ser única para as duas — `ferramentaDeDesenho()`,
+       não `modoEscritaBloqueante()` — e o FAB volta a ser sempre a saída
+       explícita: toca-se nele, sai-se do modo. Continua a existir a outra
+       saída explícita, tocar de novo no ícone da própria ferramenta. */
     box.querySelector('#rm2-fab').addEventListener('click', function () {
-      if (modoEscritaBloqueante()) { escolherFerramenta('none'); return; }
+      if (ferramentaDeDesenho()) { escolherFerramenta('none'); return; }
       st.open = !st.open; refletir();
     });
 
@@ -2249,23 +2364,24 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     return { yellow: 'Amarillo', red: 'Rojo', blue: 'Azul', green: 'Verde', pink: 'Rosa' }[c] || c;
   }
 
-  /* Só a GOMA ainda tira o pan à área de leitura (touch-action:none no
-     CSS, escopado a body.rm2-t-eraser/highlight). A CANETA deixou de
-     bloquear o dedo — devolveu-lhe pan-x/pan-y/pinch-zoom (§0 do encargo,
-     "Goodnotes-like") — por isso já não precisa do painel sempre aberto
-     nem do FAB a desarmá-la: fechar a barra com o lápis armado é seguro,
-     porque a página continua a rolar com o dedo como sempre. O marcador
-     nunca bloqueou o scroll, pela mesma razão de sempre. */
-  function modoEscritaBloqueante() {
-    return st.tool === 'eraser';
-  }
+  /* Só a GOMA tira o pan à área de leitura INCONDICIONALMENTE
+     (touch-action:none no CSS, escopado a body.rm2-t-eraser/highlight,
+     ligado directamente a `st.tool` no toggle de classes de `refletir()`
+     — nenhuma função intermédia decide isso). A CANETA continua a
+     devolver pan-x/pan-y/pinch-zoom ao dedo enquanto a stylus não está em
+     contacto (§0 do encargo, "Goodnotes-like") — isso não mudou.
 
-  /* Distinto de `modoEscritaBloqueante()`: esta é "estamos numa ferramenta
-     que desenha/apaga", usada para vetar selecção nativa — continua a
-     incluir a CANETA mesmo que ela já não bloqueie o painel/scroll. As
-     duas perguntas eram a mesma antes desta tarefa; deixaram de o ser no
-     momento em que o lápis passou a devolver o pan ao dedo sem deixar de
-     precisar de nunca disparar uma selecção nativa por engano. */
+     O que MUDOU (evidência de teste físico, tablet real do José): existia
+     uma `modoEscritaBloqueante()` (só GOMA) usada para decidir se a
+     TOOLBOX podia fechar — a ideia era «a caneta não bloqueia o scroll,
+     logo fechar o painel com ela armada é seguro». Isso continua
+     verdadeiro para o scroll, mas o teste no tablet mostrou que esconder
+     a toolbox com o lápis armado é, mesmo assim, uma experiência ruim.
+     Todas as decisões de toolbox/FAB/clique passaram para
+     `ferramentaDeDesenho()` (lápis + goma); a pergunta antiga («isto
+     bloqueia o scroll?») deixou de ter nenhum lugar que precisasse dela,
+     por isso `modoEscritaBloqueante()` foi removida em vez de deixada sem
+     uso. */
   function ferramentaDeDesenho() {
     return st.tool === 'pen' || st.tool === 'eraser';
   }
@@ -2296,22 +2412,24 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   function refletir() {
     if (!box) return;
-    /* INVARIANTE: nunca há modo de escrita bloqueante sem saída à vista.
-       Enquanto a GOMA estiver armada o painel fica aberto, portanto o
-       botão que a desarma está sempre no ecrã. Qualquer caminho que tente
-       fechar o painel nesse estado é corrigido aqui, e não só no FAB. Nem
-       o marcador nem a caneta bloqueiam o scroll (§0 do encargo), por isso
-       os dois podem fechar o painel e continuar activos. */
-    if (modoEscritaBloqueante()) st.open = true;
+    /* INVARIANTE: enquanto lápis ou goma estiverem armados, o painel fica
+       aberto — ponto único, não só no FAB nem no listener de "clicar
+       fora" (ver ambos). Qualquer caminho que tente fechá-lo nesse estado
+       é corrigido aqui. Mudou de `modoEscritaBloqueante()` (só goma) para
+       `ferramentaDeDesenho()` (lápis + goma) por evidência de teste
+       físico: no tablet real, a toolbox desaparecer ao escrever com a
+       caneta era uma experiência ruim mesmo a caneta não bloqueando o
+       scroll — o marcador continua de fora, exactamente como antes. */
+    if (ferramentaDeDesenho()) st.open = true;
     box.classList.toggle('open', st.open);
     var fab = box.querySelector('#rm2-fab');
     fab.setAttribute('aria-expanded', String(st.open));
     fab.classList.toggle('armed', st.tool !== 'none');
     /* o rótulo diz o que o botão faz AGORA, que é o que um leitor de ecrã
-       anuncia e o que aparece no tooltip de quem usa rato. Só a goma faz o
-       FAB sair do modo de escrita; com o marcador e com a caneta o FAB
-       continua a só abrir/fechar o painel. */
-    var bloqueante = modoEscritaBloqueante();
+       anuncia e o que aparece no tooltip de quem usa rato. Lápis e goma
+       fazem o FAB sair do modo de escrita (ver comentário do FAB); só o
+       marcador deixa o FAB a só abrir/fechar o painel. */
+    var bloqueante = ferramentaDeDesenho();
     fab.setAttribute('title', bloqueante ? 'Salir del modo escritura' : 'Herramientas de estudio');
     fab.setAttribute('aria-label', bloqueante ? 'Salir del modo escritura' : 'Herramientas de estudio');
 
@@ -2569,11 +2687,11 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     /* Defesa em profundidade contra selecção nativa em ferramenta de
        desenho (lápis/goma): mesmo que o CSS (user-select:none) não
        chegue a tempo, ou que `onDown` tenha voltado cedo sem chegar a
-       `preventDefault()` — anchorDe() falhou, o alvo caiu fora do
-       esperado, o ponteiro não foi aceite —, isto veta a selecção na
-       origem. Campos de escrita legítimos ficam de fora. Usa
-       `ferramentaDeDesenho()`, não `modoEscritaBloqueante()`: a caneta
-       continua a precisar disto mesmo já não bloqueando o painel/scroll. */
+       `preventDefault()` — âncora não resolvida, alvo fora do esperado,
+       ponteiro não aceite —, isto veta a selecção na origem. Campos de
+       escrita legítimos ficam de fora. `ferramentaDeDesenho()`: a caneta
+       precisa disto mesmo sem bloquear o scroll do dedo quando não está
+       em contacto. */
     document.addEventListener('selectstart', function (e) {
       if (!ferramentaDeDesenho()) return;
       var t = e.target;
@@ -2582,19 +2700,28 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       e.preventDefault();
     }, true);
 
-    /* Com a goma armada, nenhum clique do documento passa para baixo: nem
-       abre um link, nem responde a um quiz por engano. O apagar em si é
-       feito no gesto de ponteiro (apagarEm), não aqui. */
+    /* Com lápis ou goma armados, nenhum clique do documento passa para
+       baixo: nem abre um link, nem responde a um quiz por engano ao
+       escrever/apagar em cima deles (evidência de teste físico — escrever
+       com a Pencil sobre um card interactivo não pode acioná-lo). O
+       apagar em si é feito no gesto de ponteiro (apagarEm), não aqui; o
+       traço, no onUp. Estendido de `st.tool==='eraser'` para
+       `ferramentaDeDesenho()` por isso mesmo. */
     document.addEventListener('click', function (e) {
-      if (st.tool !== 'eraser') return;
+      if (!ferramentaDeDesenho()) return;
       if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes')) return;
       if (e.target && e.target.closest && e.target.closest('#materias-container')) {
         e.preventDefault(); e.stopPropagation();
       }
     }, true);
 
-    /* caneta e goma de traços */
-    document.addEventListener('pointerdown', onDown, { passive: false });
+    /* caneta e goma de traços — pointerdown/up/cancel em CAPTURE-PHASE de
+       propósito (§ arquitectura obrigatória do teste físico): o contacto
+       da stylus e a limpeza do traço não podem esperar por nada que corra
+       antes na fase de bolha (um `stopPropagation()` de um card/link no
+       meio do caminho, por exemplo) nem depender de `anchorDe()` ter
+       corrido primeiro. */
+    document.addEventListener('pointerdown', onDown, { capture: true, passive: false });
     document.addEventListener('pointermove', function (e) {
       /* Sinal de "pen por perto" para a rejeição de palma — inclui o
          HOVER (pointerType 'pen', buttons 0) quando o hardware/browser o
@@ -2603,8 +2730,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (st.tool === 'pen' && e.pointerType === 'touch') { onTouchMoveComCanetaArmada(e); return; }
       if (traco) onMove(e); else if (apagando) onMoveApagar(e);
     }, { passive: false });
-    document.addEventListener('pointerup', onUp, { passive: true });
-    document.addEventListener('pointercancel', onCancel, { passive: true });
+    document.addEventListener('pointerup', onUp, { capture: true, passive: true });
+    document.addEventListener('pointercancel', onCancel, { capture: true, passive: true });
     /* limpeza dos toques roteados (navegação provisória / palma): qualquer
        toque, classificado ou não, deixa de existir no estado ao soltar —
        nunca fica pendurado a "contaminar" um pointerId reaproveitado. */
@@ -2620,6 +2747,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        dispositivo desaparece, e nesses casos NÃO há pointerup nenhum. */
     document.addEventListener('lostpointercapture', function (e) {
       diagLog('lostpointercapture', e);
+      if (e.pointerType === 'pen' && penState.active && e.pointerId === penState.pid) penEmContacto(false);
       if (traco && e.pointerId === traco.pid) abortarTraco();
       else if (apagando && e.pointerId === apagando.pid) terminarApagar();
       else if (hlGesto && e.pointerId === hlGesto.pid) abortarGestoMarcador('lostpointercapture');
@@ -2638,11 +2766,17 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (st.open) { st.open = false; refletir(); }
     });
 
-    /* clicar fora minimiza (mas nunca no meio de um traço) */
+    /* clicar fora minimiza (mas nunca no meio de um traço, nem com lápis
+       ou goma armados — evidência de teste físico: tocar/escrever na
+       matéria com a caneta NÃO pode fechar a toolbox. Antes só a goma
+       ficava de fora (`modoEscritaBloqueante()`); a caneta caía direto no
+       `st.open = false` abaixo porque, quando este listener corre (fase
+       de captura, antes do próprio onDown), `traco` ainda não existe —
+       era exactamente essa janela que fechava a toolbox no tablet real. */
     document.addEventListener('pointerdown', function (e) {
       if (!st.open || traco || apagando) return;
       if (e.target.closest && e.target.closest('.rm2-box,.rm2-notes')) return;
-      if (modoEscritaBloqueante()) return;         // goma armada: mantém aberto
+      if (ferramentaDeDesenho()) return;         // lápis/goma armados: mantém aberto
       st.open = false; refletir();
     }, true);
 
@@ -2768,6 +2902,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         penState: penState,
         touchNav: touchNav,
         touchPalm: touchPalm,
+        anchorDe: anchorDe,
+        anchorPorPonto: anchorPorPonto,
         pilotoPermitido: pilotoPermitido,
         activeViewPermitido: activeViewPermitido,
         anotarPermitido: anotarPermitido,
