@@ -29,7 +29,7 @@
 
    API (pequena)
      RMAudio.create({ provider, audioFactory, userKey, allowSource, now,
-                      headless })  → engine
+                      headless, positionStore })  → engine
        (sem `attach()` bem-sucedido, `play()` recusa com erro 'no-slot':
         não há som sem controlos visíveis; `headless:true` é só para testes)
      engine.attach(slot?)         monta a UI no slot (elemento ou seletor;
@@ -44,11 +44,24 @@
      engine.close()               pausa, guarda posição, recolhe o player.
      engine.destroy()             liberta tudo; o motor deixa de servir.
      engine.refreshLayout()       relê o dock do B1 e reposiciona. Devolve o modo.
+     engine.savedPosition(id)     segundos guardados (memória ou positionStore); só lê.
+     engine.flush()               grava já a posição atual no positionStore.
      engine.getState()            fotografia (sem URL, sem segredo).
      engine.handle(nome)          ganchos de arbitragem (ver abaixo).
      engine.on(evento, fn)        'state' | 'play' | 'pause' | 'close' | 'error'
      RMAudio.validateItem(item) / validateManifest(lista)
      RMAudio.pauseAll(motivo) / RMAudio.resetSession()
+
+   RETOMADA APÓS RECARREGAR (positionStore, opcional)
+     Sem `positionStore` a posição vive só em memória (D1). Com ele — objeto
+     { get(k) → número|null, set(k, seg), remove(k) } sobre a chave
+     `audio_id@version` — o motor grava a posição ao pausar, fechar, buscar,
+     reiniciar, terminar, trocar de item, destruir e, a tocar, no máximo a cada
+     5 s; e lê ao carregar/tocar (nunca pede mídia para isso). Valor inválido
+     (NaN, negativo, texto, além da duração) ou a ≤ 2 s do fim ⇒ recomeça em 0.
+     Falha do store (quota, modo privado) é ignorada. Nova versão do áudio
+     (`version`) = outra chave ⇒ não herda a posição. O armazenamento concreto
+     (localStorage por UID) é de `rm-audio-store.js`; o motor não conhece nenhum.
 
    LAYOUT — QUEM DECIDE ONDE O PLAYER CABE
      Com a Layout V2 (B1) presente, a AUTORIDADE é `html[data-rm-dock]`
@@ -211,6 +224,8 @@
     var allowSource = typeof opts.allowSource === 'function' ? opts.allowSource : function (s) { return /^synthetic:\/\//.test(s); };
     var userKey = String(opts.userKey || 'anon');
     var now = typeof opts.now === 'function' ? opts.now : Date.now;
+    var store = opts.positionStore && typeof opts.positionStore.get === 'function' && typeof opts.positionStore.set === 'function' ? opts.positionStore : null;
+    var SAVE_EVERY_MS = 5000, lastSave = 0;
     var headless = opts.headless === true;      // só para testes de lógica; por omissão play() exige o player montado
 
     var catalog = {};        // audio_id -> meta
@@ -264,6 +279,29 @@
       if (!current) return;
       var k = key(current);
       positions[k] = clamp(pos(), 0, dur());
+      persist(k);
+    }
+    /* positionStore: nunca deixa o motor falhar; 0 apaga a entrada (recomeçar ≠ guardar zero). */
+    function persist(k) {
+      if (!store) return;
+      lastSave = now();
+      try {
+        var v = positions[k];
+        if (!isFinite(v) || v <= 0) { if (typeof store.remove === 'function') store.remove(k); else store.set(k, 0); }
+        else store.set(k, Math.round(v * 10) / 10);
+      } catch (e) { /* quota / modo privado: a retomada degrada para memória */ }
+    }
+    function durOf(meta) { return meta && meta.duration > 0 ? meta.duration : 0; }
+    function sane(v, meta) {
+      return typeof v === 'number' && isFinite(v) && v > 0 && v < durOf(meta) - 2 ? v : 0;
+    }
+    /* Traz a posição guardada para a memória, uma vez por item; só LÊ. */
+    function hydrate(meta) {
+      var k = key(meta);
+      if (positions[k] !== undefined || !store) return;
+      var v = 0;
+      try { v = sane(store.get(k), meta); } catch (e) { v = 0; }
+      positions[k] = v;
     }
 
     /* ---------- adapter ---------- */
@@ -273,10 +311,15 @@
       counters.adapterCreated++;
       try { adapter.autoplay = false; } catch (e) { /* alguns fakes são só-leitura */ }
       boundAdapterHandlers = {
-        timeupdate: function () { if (current && adapterKey === key(current)) { positions[adapterKey] = adapter.currentTime; render(); } },
+        timeupdate: function () {
+          if (current && adapterKey === key(current)) {
+            positions[adapterKey] = adapter.currentTime; render();
+            if (store && now() - lastSave >= SAVE_EVERY_MS) persist(adapterKey);
+          }
+        },
         playing: function () { if (state === 'loading' || state === 'paused') { if (current && adapterKey === key(current)) setState('playing'); } },
         waiting: function () { if (state === 'playing') setState('loading'); },
-        ended: function () { if (current) { positions[key(current)] = 0; try { adapter.currentTime = 0; } catch (e) { /* ignore */ } } setState('paused'); },
+        ended: function () { if (current) { positions[key(current)] = 0; persist(key(current)); try { adapter.currentTime = 0; } catch (e) { /* ignore */ } } setState('paused'); },
         error: function () { onAdapterError(); }
       };
       Object.keys(boundAdapterHandlers).forEach(function (n) { adapter.addEventListener(n, boundAdapterHandlers[n]); });
@@ -392,6 +435,7 @@
       var t = isFinite(adapter.currentTime) ? adapter.currentTime : pos();
       var estavaTocando = state === 'playing' || state === 'loading';
       positions[key(current)] = clamp(t, 0, dur());
+      persist(key(current));
       if (isExpired(e) && !estavaTocando) {
         /* Expirou com o áudio em pausa: nada a mostrar. A fonte fica marcada
            como vencida; o próximo play() reautoriza e retoma do mesmo ponto. */
@@ -569,7 +613,8 @@
         if (!ui && !headless) return Promise.resolve(fail('no-slot', 'sin reproductor'));
         pauseOthers();
         if (current && key(current) !== key(meta)) { savePos(); pauseAdapter(); }   // A → B: pausa A, guarda onde estava
-        current = meta; isOpen = true; err = null; reauthTries = 0;
+        hydrate(meta);
+        current = meta; isOpen = true; err = null; reauthTries = 0; lastSave = now();
         state = 'loading'; render(); emit('state', { state: 'loading' });
         try { return startAt(meta, 'first-play'); }
         catch (e) { return Promise.resolve(fail('internal', 'error interno')); }   // play() nunca lança: estado nunca fica preso em loading
@@ -587,6 +632,7 @@
         if (destroyed || !current) return 0;
         var v = clamp(Number(seg) || 0, 0, dur());
         positions[key(current)] = v;
+        persist(key(current));
         if (adapter && adapterKey === key(current)) { try { adapter.currentTime = v; } catch (e) { /* ignore */ } }
         render();
         return v;
@@ -612,6 +658,7 @@
         token++;
         pauseAdapter();
         positions[key(current)] = 0;
+        persist(key(current));
         if (adapter && adapterKey === key(current)) { try { adapter.currentTime = 0; } catch (e) { /* ignore */ } }
         err = null;
         setState('paused');                          // NÃO toca sozinho
@@ -655,6 +702,20 @@
           counters: { sourceRequests: counters.sourceRequests, adapterCreated: counters.adapterCreated, reauthorizations: counters.reauthorizations },
           hasAdapter: !!adapter, layout: lay
         };
+      },
+
+      savedPosition: function (id) {
+        var meta = catalog[id];
+        if (!meta) return 0;
+        var k = key(meta), v = positions[k];
+        if (v === undefined) { try { v = store ? sane(store.get(k), meta) : 0; } catch (e) { v = 0; } }
+        return sane(v, meta);
+      },
+
+      flush: function () {
+        if (destroyed || !current) return false;
+        savePos();
+        return true;
       },
 
       refreshLayout: function () {
