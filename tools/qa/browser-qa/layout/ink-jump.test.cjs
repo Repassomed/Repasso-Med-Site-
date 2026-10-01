@@ -9,36 +9,18 @@
 
    Uso:  export NODE_PATH=$(npm root -g)   # ou RM_PLAYWRIGHT=/caminho/do/modulo
          node tools/qa/browser-qa/layout/ink-jump.test.cjs                                                              */
-const http = require('http'), fs = require('fs'), path = require('path');
-const ROOT = path.resolve(__dirname, '../../../../Repasso-Med-Site--main/Atual - Copia');
-const MAT = path.join(ROOT, 'netlify/functions/materias-privadas');
-const MIME = { '.html': 'text/html;charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json' };
+const path = require('path');
+const { serve } = require('./serve.cjs');
 const JOSE = 'd4d215d3-36dd-4efb-8869-bdea5376c648';                   // UID do piloto (público no código da V2: BETA_UIDS)
 const FLAGS = { slug: 'semiologia-ii', layout: true, audio: false, pen: false };
-const MAX = +(process.env.RM_DRIFT_MAX || 2);
+const MAX = +(process.env.RM_DRIFT_MAX || 2);                           // tolerância de alinhamento (px)
 /* tinta só em 2 blocos FUNDOS: o ResizeObserver da V2 só observa âncoras/seções COM tinta; seções sem tinta que mudam de altura acima não o disparam (é o caso real do achado F) */
-const SEED = 's2-b10,s2-banco';                           // tolerância de alinhamento (px)
+const SEED = 's2-b10,s2-banco';
 
 let fails = 0, n = 0;
 const ok = (c, m) => { n++; if (!c) { fails++; console.log('    ✗ FALHA:', m); } else console.log('    ✓', m); return !!c; };
 const info = (m) => console.log('    ·', m);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-function serve() {
-  return new Promise(res => {
-    const srv = http.createServer((q, r) => {
-      const u = decodeURIComponent(q.url.split('?')[0]);
-      let f;
-      if (u === '/p.html') f = path.join(__dirname, 'harness-ink.html');
-      else if (u.startsWith('/m/')) f = path.join(MAT, u.slice(3));
-      else f = path.join(ROOT, u);
-      if (!f.startsWith(ROOT) && !f.startsWith(__dirname)) { r.statusCode = 403; return r.end(); }
-      if (!fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.statusCode = 404; return r.end(); }
-      r.setHeader('content-type', MIME[path.extname(f)] || 'application/octet-stream');
-      r.end(fs.readFileSync(f));
-    }).listen(0, '127.0.0.1', () => res(srv));
-  });
-}
 
 /* desvio da tinta (px): máximo entre TODOS os traços e, à parte, só os que estão na janela de visualização */
 const MEDIR = () => {
@@ -175,7 +157,7 @@ async function ate(page, prazo = 3500) {
     await clicarBloco(page, w, alvo);
     const t0 = Date.now(); let pico = 0, fim = 0;
     let ult = Date.now(), fora = 0; while (Date.now() - t0 < 6500) { const m = await page.evaluate(MEDIR); const ag = Date.now(); if (m.visiveis > MAX) fora += ag - ult; ult = ag; pico = Math.max(pico, m.visiveis); fim = m.visiveis; await page.waitForTimeout(100); }
-    const nImg = await page.evaluate(() => ({ t: document.images.length, ok: [...document.images].filter(i => i.complete && i.naturalWidth > 0).length }));
+    const nImg = await page.evaluate(() => { const im = [...document.images].filter(i => /__img\//.test(i.src)); return { t: im.length, ok: im.filter(i => i.complete && i.naturalWidth > 0).length }; });
     info(`imagens sintéticas carregadas: ${nImg.ok}/${nImg.t}; desvio visível: pico ${pico.toFixed(1)} px, final ${fim.toFixed(1)} px, tempo desalinhado ${fora} ms`);
     ok(fim <= MAX && pico > 100, `o cenário é discriminante: a imagem deslocou o traço (pico ${pico.toFixed(0)} px) e ele voltou ao lugar`);
     ok(fora <= 900, `a tinta fica desalinhada no máximo ~0,9 s depois que as imagens carregam (${fora} ms)`);

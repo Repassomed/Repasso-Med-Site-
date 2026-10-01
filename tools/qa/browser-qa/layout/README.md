@@ -60,3 +60,21 @@ carregando depois do salto. **Validado por mutação:** com o `rm-layout.js`/`rm
 Não testado: aparelho real; imagens `loading="lazy"` reais (a Semiología II não tem `<img>` e a emulação não dispara o
 carregamento lazy: usa-se imagem sintética `eager`); matéria de ~418 mil px (Histología II Práctica) com o layout (o piloto
 é só Semiología II).
+
+## Capturas reais do piloto — `capturas.cjs` e `capturas/`
+
+```bash
+RM_PLAYWRIGHT=... node tools/qa/browser-qa/layout/capturas.cjs <pasta> [prefixo]
+```
+Layout real + Semiología II real + `<style>`/topbar **reais** do `index.html` (`serve.cjs` compõe a página: logo, «REPASSO MED · Guía de
+Estudio», abas). Gera, por caso, `topo`, `drawer` (< 768 px CSS) e `bloque03` (depois de saltar pelo índice) + `metricas.json`
+(lateral, dock, overflow-x, logo carregado, nome da matéria inteiro, erros JS). Casos: 320 · 390 · 768 · 1024 · 1440 · **zoom 200 %**
+(1440 e 1024 → viewport CSS 720 e 512, escala 2: o piloto cai no drawer, como deve) · larguras críticas do dock do player
+1495 · 1627 · 1700 · 1920 (`bottom`, `bottom`, `side`, `side`; o slot do player continua vazio nesta fase).
+`capturas/` guarda uma rodada (WebP). **Limites:** emulação (não aparelho); as fontes do Google não carregam no sandbox (caem nas do
+sistema, portanto tipografia ≠ produção); não há comparação lado a lado com as 4 referências aprovadas porque elas não estão no
+repositório nem no Drive — o acabamento segue a especificação escrita (#67, 30/09, §3).
+
+**Acabamento B1 (só `rm-layout.css/js`):** logo original (`assets/repasso-med-logo.png`, o mesmo do cabeçalho do site) numa pastilha
+branca na faixa persistente; acentos do shell em **laranja da marca** (`--l2-orange #e8772e`: borda da faixa, item ativo, bloco atual,
+chip «Página completa») no lugar do dourado, mantendo navy/branco e a serifa nos títulos; nada do conteúdo da matéria foi tocado.

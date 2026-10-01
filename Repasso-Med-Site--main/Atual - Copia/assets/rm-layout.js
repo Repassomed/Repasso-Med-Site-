@@ -345,6 +345,7 @@
     var band = ui('div', 'rm-l2-band', { id: 'rm-l2-band', role: 'banner', 'aria-label': 'Materia' });
     var hamb = ui('button', 'rm-l2-hamb', { type: 'button', 'aria-label': 'Abrir el índice', 'aria-expanded': 'false', 'aria-controls': 'rm-l2-side' });
     hamb.appendChild(svg('menu'));
+    var logo = ui('img', 'rm-l2-logo', { src: 'assets/repasso-med-logo.png', alt: 'Repasso Med', width: '27', height: '34', decoding: 'async' });   // marca original, o mesmo arquivo do cabeçalho do site
     var nome = ui('div', 'rm-l2-name');
     var b = el('b'); b.textContent = cat.title || 'Semiología II';
     var sm = el('small'); sm.textContent = cat.sub || '';
@@ -352,7 +353,7 @@
     var chip = ui('span', 'rm-l2-chip', { 'aria-live': 'polite' }); chip.textContent = 'Página completa';
     var mat = ui('button', 'rm-l2-mat', { type: 'button', 'aria-label': 'Volver a las materias', title: 'Materias' });
     mat.appendChild(svg('home')); var ml = el('span'); ml.textContent = 'Materias'; mat.appendChild(ml);
-    band.appendChild(hamb); band.appendChild(nome); band.appendChild(ui('span', 'rm-l2-sp')); band.appendChild(chip); band.appendChild(mat);
+    band.appendChild(hamb); band.appendChild(logo); band.appendChild(nome); band.appendChild(ui('span', 'rm-l2-sp')); band.appendChild(chip); band.appendChild(mat);
     return { band: band, hamb: hamb, chip: chip, mat: mat };
   }
 
