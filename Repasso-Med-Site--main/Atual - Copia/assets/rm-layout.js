@@ -156,7 +156,7 @@
     var topo = hdrH() + 16, n = 0;
     (function passo() {
       var d = alvo.getBoundingClientRect().top - topo;
-      if (n++ > 10 || Math.abs(d) <= 2) return;
+      if (n++ > 10 || Math.abs(d) <= 2) { assentarTinta(); return; }   // chegou: a tinta acompanha o conteúdo que assentou
       try { window.scrollTo({ top: Math.max(0, window.pageYOffset + d), behavior: 'instant' }); }
       catch (e) { window.scrollTo(0, Math.max(0, window.pageYOffset + d)); }
       requestAnimationFrame(function () { setTimeout(passo, 40); });   // content-visibility muda alturas por baixo
@@ -183,10 +183,46 @@
           try {
             if (S && window.RMModes && !window.RMModes.isFull()) return;
             if (window.RMToolsV2 && typeof window.RMToolsV2.reposicionar === 'function') window.RMToolsV2.reposicionar();
+            ALT.h = alturaDoc();
           } catch (e) {}
         }, 120);
       });
     });
+  }
+
+  /* --------- tinta × alturas que mudam por baixo (achado F da auditoria #420) ---------
+     As seções usam content-visibility:auto: ao saltar (índice, volta da Página completa) ou ao rolar, as seções puladas
+     são renderizadas e MUDAM DE ALTURA. Os SVG da tinta guardam a geometria de antes, e o ResizeObserver da V2 só observa
+     as âncoras/seções COM tinta: uma seção sem tinta que cresce acima de um traço já renderizado não dispara nada, e o
+     traço fica a milhares de px do texto (medido: 4 000–21 000 px, sem se corrigir sozinho). A altura TOTAL do documento
+     é o sinal barato de que algo acima mudou: se mudou desde o último reposicionamento, pede-se à V2 (API pública) que
+     reposicione — sempre depois de o conteúdo assentar. Não toca âncoras, algoritmo nem persistência. */
+  var ALT = { h: 0, scroll: 0, poll: 0, img: 0 };
+  function alturaDoc() { return Math.round(Math.max(ROOT.scrollHeight, document.body ? document.body.scrollHeight : 0)); }
+  /* fim da rolagem (200 ms sem evento): se a altura do documento mudou, reposiciona */
+  function vigiarAltura() {
+    clearTimeout(ALT.scroll);
+    ALT.scroll = setTimeout(function () { ALT.scroll = 0; if (S && alturaDoc() !== ALT.h) reposicionarTinta(); }, 200);
+  }
+  /* depois de um salto: reposiciona já (o alvo está no lugar) e acompanha até a altura ficar estável por 3 leituras
+     seguidas (≈ 300 ms) — ou 4 s, o que vier primeiro. Um salto novo cancela o acompanhamento do anterior. */
+  function assentarTinta() {
+    if (!S) return;
+    clearTimeout(ALT.poll);
+    var t0 = Date.now(), ult = -1, iguais = 0;
+    reposicionarTinta();
+    (function amostra() {
+      if (!S) return;
+      var h = alturaDoc();
+      if (h === ult) iguais++; else { if (ult !== -1) reposicionarTinta(); iguais = 0; ult = h; }
+      if (iguais >= 3 || Date.now() - t0 > 4000) { ALT.poll = 0; return; }
+      ALT.poll = setTimeout(amostra, 100);
+    })();
+  }
+  /* imagem que termina de carregar muda a altura da seção (sem width/height) */
+  function aoCarregarImagem(e) {
+    var t = e && e.target; if (!S || !t || t.tagName !== 'IMG') return;
+    clearTimeout(ALT.img); ALT.img = setTimeout(function () { ALT.img = 0; if (S) reposicionarTinta(); }, 150);
   }
 
   /* ---------------------------- modo da lateral ------------------------- */
@@ -520,7 +556,8 @@
     S.h = {
       lat: aoClicarLateral,
       resize: function () { aplicarModo(); agendarEspia(); },
-      scroll: function () { medirBanda(); agendarEspia(); },
+      scroll: function () { medirBanda(); agendarEspia(); vigiarAltura(); },
+      img: aoCarregarImagem,
       key: function (e) { if (e.key === 'Escape' && S && S.drawer) { e.preventDefault(); fecharDrawer(); } },
       hamb: function () { if (S.drawer) fecharDrawer(); else abrirDrawer(); },
       back: function () { fecharDrawer(true); },
@@ -535,6 +572,7 @@
     window.addEventListener('resize', S.h.resize);
     window.addEventListener('orientationchange', S.h.resize);
     window.addEventListener('scroll', S.h.scroll, { passive: true });
+    S.tab.addEventListener('load', S.h.img, true);             // 'load' não borbulha: captura
     document.addEventListener('keydown', S.h.key);
     window.RMModes.onChange(function () { refletirModo(); });
   }
@@ -549,7 +587,9 @@
     window.removeEventListener('resize', h.resize);
     window.removeEventListener('orientationchange', h.resize);
     window.removeEventListener('scroll', h.scroll);
+    try { S.tab.removeEventListener('load', h.img, true); } catch (e) {}
     document.removeEventListener('keydown', h.key);
+    clearTimeout(ALT.scroll); clearTimeout(ALT.poll); clearTimeout(ALT.img); ALT.scroll = ALT.poll = ALT.img = 0;
     desarmarAdia();
   }
 
@@ -608,6 +648,7 @@
   window.RMLayout = {
     attach: attach,
     detach: detach,
+    assentarTinta: assentarTinta,                            // usado por rm-modes.js ao voltar à Página completa
     /* só leitura, para teste/diagnóstico */
     _dock: decidirDock, _cartaoTeorico: cartaoTeorico,
     _estado: function () { return S ? { tab: S.tab && S.tab.id, blocos: S.blocos.length, drawer: S.drawer, lmode: ROOT.getAttribute('data-rm-lmode'), dock: ROOT.getAttribute('data-rm-dock') } : null; }

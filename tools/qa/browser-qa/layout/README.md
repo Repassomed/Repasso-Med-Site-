@@ -29,3 +29,34 @@ adiada até a caneta levantar, para não deslocar a escrita no meio de um traço
 O teste imprime a tabela medida (largura × modo → dock e folga em px) e falha se `side` cobrir o cartão, se `bottom`
 ocorrer com folga real, se o slot invadir a toolbox/lateral, se houver overflow horizontal, ou se abrir o player lateral
 deslocar qualquer parágrafo. Validado por mutação (a fórmula antiga reprova com 17 falhas).
+
+## Tinta × saltos e alturas que mudam (achado F da auditoria #420) — `ink-jump.test.cjs`
+
+```bash
+export NODE_PATH=$(npm root -g)     # ou RM_PLAYWRIGHT=/caminho/do/modulo
+node tools/qa/browser-qa/layout/ink-jump.test.cjs
+```
+
+Semiología II **real** + `app-core.js`/`rm-tools.js`/`rm-tools-v2.js` **reais** + piloto (`rm-pilot` → `rm-layout`/`rm-modes` reais).
+Supabase e o gate do piloto são simulados (`harness-ink.html`; 0 rede real, 0 escrita). A tinta é **semeada** como se viesse
+do banco (`?seed=id1,id2`): 1 traço em `s2-b10` e outro em `s2-banco`. Mede, em px, o desvio entre o SVG de cada traço e o
+bloco âncora (os da janela e todos).
+
+**Causa:** as seções usam `content-visibility:auto`; ao saltar/rolar, seções puladas são renderizadas e mudam de altura.
+O `ResizeObserver` da V2 só observa âncoras/seções **com** tinta, então uma seção **sem** tinta que cresce acima de um traço
+já renderizado não dispara nada e o traço fica a milhares de px do texto (medido: 4 000–21 000 px; 489 px com uma imagem
+sem `width/height`), sem se corrigir sozinho.
+
+**Correção (só layout, via API pública `RMToolsV2.reposicionar`):** o layout guarda a altura do documento no último
+reposicionamento e reposiciona (a) ao terminar `irPara()` e acompanhar até a altura estabilizar, (b) ao fim da rolagem
+(200 ms) se a altura mudou, (c) quando uma `<img>` da matéria termina de carregar, (d) ao voltar à Página completa, depois de
+devolver a rolagem. Não toca âncoras, algoritmo nem persistência.
+
+Cenários (1440×900 e 390×844): salto a blocos profundos; **revisitar** (fundo → mais acima → fundo, em página nova);
+volta da Página completa em posição profunda (inclusive vindo de um modo isolado direto a um tema profundo); imagem
+carregando depois do salto. **Validado por mutação:** com o `rm-layout.js`/`rm-modes.js` anteriores o teste reprova
+(9 falhas; a imagem deixa o traço 489 px fora de forma permanente); com a correção, 55/55.
+
+Não testado: aparelho real; imagens `loading="lazy"` reais (a Semiología II não tem `<img>` e a emulação não dispara o
+carregamento lazy: usa-se imagem sintética `eager`); matéria de ~418 mil px (Histología II Práctica) com o layout (o piloto
+é só Semiología II).

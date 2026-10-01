@@ -104,6 +104,8 @@
       } catch (e) {}
       if (!(opts && opts.restaurar === false)) { try { window.scrollTo(0, y); } catch (e) {} }
       if (opts && typeof opts.depois === 'function') { try { opts.depois(); } catch (e) {} }
+      /* a rolagem devolvida renderiza seções puladas (content-visibility): a tinta acompanha o conteúdo que assentou */
+      try { if (window.RMLayout && typeof window.RMLayout.assentarTinta === 'function') window.RMLayout.assentarTinta(); } catch (e) {}
     });
   }
 
