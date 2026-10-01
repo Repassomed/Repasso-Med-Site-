@@ -1,7 +1,10 @@
 # Audiobook real · autorização no servidor (D2 — preparado, NÃO ativado)
 
 Nada aqui é carregado por página alguma, nenhum bucket foi criado, nenhum arquivo de áudio foi enviado, nenhuma variável foi
-definida. Tudo é código + testes para o José auditar. `node tools/qa/audio-server/server.test.cjs` (Node, sem rede, sem Supabase real).
+definida. Tudo é código + testes para o José auditar:
+* `node tools/qa/audio-server/server.test.cjs` — autorização/entrega (Node, sem rede, sem Supabase real);
+* `node tools/qa/audio-server/migration.test.cjs` — migration e rollback executados num **PostgreSQL 16 real e descartável**
+  (cluster temporário local, réplica mínima do esquema `storage`; requer os binários `initdb`/`pg_ctl`/`psql`, ou `RM_PGBIN`).
 
 ## Arquitetura (uma só)
 
@@ -29,7 +32,10 @@ navegador ──(JWT, audio_id)──► get-audio-url ─► URL assinada 10 mi
 ## O que o José precisa fazer para ATIVAR (nada disto foi feito)
 
 1. **Masters → cópias M4A tratadas** (inspeção + 48 × 64 kbps + faststart) e conferir pela escuta o vínculo bloco↔áudio.
-2. **Aplicar** `supabase/migrations/20260930_01_audiobooks_bucket_privado.sql` (cria o bucket **privado**, 30 MB, só M4A; sem políticas).
+2. **Aplicar** `supabase/migrations/20260930_01_audiobooks_bucket_privado.sql`. É **idempotente e corretiva**: deixa SEMPRE o bucket
+   `audiobooks` com `public=false`, 30 MB e só `audio/mp4`/`audio/x-m4a` (mesmo que ele já exista público ou com limite/MIME antigos),
+   remove policies de anon/authenticated/public que citem `audiobooks` e **aborta sem alterar nada** se houver policy ampla
+   (sem `bucket_id`) que também o exporia. Nunca toca outros buckets.
 3. **Enviar** as cópias ao bucket `audiobooks` (painel do Supabase), p.ex. `semiologia-ii/<nome>.v1.m4a`.
 4. No Netlify definir: `RM_PILOT_AUDIO_UIDS` = UID da conta principal; `RM_AUDIO_MANIFEST` = JSON
    `{"semiologia-ii":[{"audio_id":"…","block_id":"s2-b01","theme":"…","title":"…","duration":SEGUNDOS,"order":1,"version":"v1","path":"semiologia-ii/….m4a","ready":true}]}`.
@@ -37,7 +43,8 @@ navegador ──(JWT, audio_id)──► get-audio-url ─► URL assinada 10 mi
 5. **Verificar** (com a sessão do José e com outra conta): manifesto lista os itens só para José; `get-audio-url` devolve
    `src` do bucket só para José; outra conta e outra matéria recebem a negação idêntica.
 
-**Desativar (kill switch, sem deploy):** esvaziar `RM_PILOT_AUDIO_UIDS` (ou `RM_AUDIO_MANIFEST`). Reversão do bucket: ver o `_rollback.sql`.
+**Desativar (kill switch, sem deploy):** esvaziar `RM_PILOT_AUDIO_UIDS` (ou `RM_AUDIO_MANIFEST`). **Rollback real** (`..._rollback.sql`): bucket vazio ⇒ remove só `audiobooks`; com objetos ⇒ **aborta e não apaga nada** (apague os
+objetos pelo painel e rode de novo). Os dois scripts rodam como um único bloco atômico.
 
 ## Custos / egress
 

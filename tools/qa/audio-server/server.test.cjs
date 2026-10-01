@@ -217,14 +217,15 @@ const forma = r => JSON.stringify({ s: r.statusCode, h: r.headers, b: r.body });
     E2.destroy();
   }
 
-  sec('Migration do bucket (não aplicada): privado e sem políticas');
+  sec('Migration do bucket (não aplicada): guarda estática — o teste REAL em PostgreSQL é migration.test.cjs');
   {
     const sql = fs.readFileSync(path.join(SITE, 'supabase', 'migrations', '20260930_01_audiobooks_bucket_privado.sql'), 'utf8').replace(/--.*$/gm, '');
-    ok(/insert into storage\.buckets/i.test(sql) && /'audiobooks'/.test(sql) && /false/.test(sql) && !/true/i.test(sql), 'cria o bucket `audiobooks` com public = false');
-    ok(!/create\s+policy|grant\s|alter\s+table|storage\.objects|to\s+anon|to\s+authenticated|public\s*=\s*true/i.test(sql), 'NENHUMA policy/grant: sem acesso direto por anon/authenticated');
-    ok(/file_size_limit/.test(sql) && /audio\/mp4/.test(sql) && /on conflict \(id\) do nothing/i.test(sql), 'limite de tamanho, só M4A, idempotente');
+    ok(/insert into storage\.buckets/i.test(sql) && /'audiobooks'/.test(sql) && /public\s*=\s*false/i.test(sql) && !/public\s*=\s*true/i.test(sql), 'cria/corrige o bucket `audiobooks` com public = false');
+    ok(!/create\s+policy|grant\s/i.test(sql), 'NENHUMA policy/grant criada: sem acesso direto por anon/authenticated');
+    ok(/file_size_limit/.test(sql) && /audio\/mp4/.test(sql) && /on conflict \(id\) do update/i.test(sql) && !/do\s+nothing/i.test(sql), 'limite de tamanho e só M4A, sempre repostos (DO UPDATE, nunca DO NOTHING)');
     const rb = fs.readFileSync(path.join(SITE, 'supabase', 'migrations', '20260930_01_audiobooks_bucket_privado_rollback.sql'), 'utf8');
-    ok(/audiobooks/.test(rb) && !/^\s*delete\s+from\s+storage\.objects/im.test(rb), 'rollback só remove o bucket (nunca apaga objetos)');
+    const rbc = rb.replace(/--.*$/gm, '');
+    ok(/delete\s+from\s+storage\.buckets\s+where\s+id\s*=\s*'audiobooks'/i.test(rbc) && !/delete\s+from\s+storage\.objects/i.test(rbc), 'rollback REAL: DELETE só do bucket audiobooks, nunca de objetos');
   }
 
   sec('Dormência');
