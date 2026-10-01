@@ -138,7 +138,7 @@
 
   var HL_CORES  = ['yellow', 'red', 'blue', 'green', 'pink'];
   var PEN_CORES = ['black', 'blue', 'red'];
-  var PEN_ESP   = { thin: 2, medium: 4, thick: 7 };
+  var PEN_ESP   = { xthin: 1, thin: 2, medium: 4, thick: 7 };
 
   var st = {
     uid: null,
@@ -684,7 +684,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   box-shadow:inset 0 1px 3px rgba(8,23,38,.16), 0 0 0 1.5px rgba(19,49,79,.16);
 }
 .rm2-w i{ display:block; width:17px; border-radius:99px; background:linear-gradient(90deg,#2d5b86,#10243D); }
-.rm2-w-thin i{ height:2px; } .rm2-w-medium i{ height:4px; } .rm2-w-thick i{ height:7px; }
+.rm2-w-xthin i{ height:1px; } .rm2-w-thin i{ height:2px; } .rm2-w-medium i{ height:4px; } .rm2-w-thick i{ height:7px; }
 
 /* ---------- gaveta de anotações -------------------------------------- */
 .rm2-notes{
@@ -2541,6 +2541,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
             '<button type="button" class="rm2-sw rm2-sw-pred"  data-pc="red"   role="radio" aria-checked="false" title="Rojo"  aria-label="Lápiz rojo"></button>' +
           '</div>' +
           '<div class="rm2-sub on" role="radiogroup" aria-label="Grosor del lápiz" style="padding:4px 0 0">' +
+            '<button type="button" class="rm2-w rm2-w-xthin"  data-pw="xthin"  role="radio" aria-checked="false" title="Extra fino" aria-label="Trazo extra fino"><i></i></button>' +
             '<button type="button" class="rm2-w rm2-w-thin"   data-pw="thin"   role="radio" aria-checked="false" title="Fino"   aria-label="Trazo fino"><i></i></button>' +
             '<button type="button" class="rm2-w rm2-w-medium" data-pw="medium" role="radio" aria-checked="false" title="Medio"  aria-label="Trazo medio"><i></i></button>' +
             '<button type="button" class="rm2-w rm2-w-thick"  data-pw="thick"  role="radio" aria-checked="false" title="Grueso" aria-label="Trazo grueso"><i></i></button>' +
