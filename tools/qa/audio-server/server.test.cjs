@@ -221,11 +221,12 @@ const forma = r => JSON.stringify({ s: r.statusCode, h: r.headers, b: r.body });
   {
     const sql = fs.readFileSync(path.join(SITE, 'supabase', 'migrations', '20260930_01_audiobooks_bucket_privado.sql'), 'utf8').replace(/--.*$/gm, '');
     ok(/insert into storage\.buckets/i.test(sql) && /'audiobooks'/.test(sql) && /public\s*=\s*false/i.test(sql) && !/public\s*=\s*true/i.test(sql), 'cria/corrige o bucket `audiobooks` com public = false');
-    ok(!/create\s+policy|grant\s/i.test(sql), 'NENHUMA policy/grant criada: sem acesso direto por anon/authenticated');
+    ok((sql.match(/create\s+policy/gi) || []).length === 1 && /as\s+restrictive/i.test(sql) && !/as\s+permissive|grant\s/i.test(sql), 'UMA só policy, RESTRICTIVE (só nega, nunca concede) — sem acesso direto por anon/authenticated');
     ok(/file_size_limit/.test(sql) && /audio\/mp4/.test(sql) && /on conflict \(id\) do update/i.test(sql) && !/do\s+nothing/i.test(sql), 'limite de tamanho e só M4A, sempre repostos (DO UPDATE, nunca DO NOTHING)');
     const rb = fs.readFileSync(path.join(SITE, 'supabase', 'migrations', '20260930_01_audiobooks_bucket_privado_rollback.sql'), 'utf8');
     const rbc = rb.replace(/--.*$/gm, '');
     ok(/delete\s+from\s+storage\.buckets\s+where\s+id\s*=\s*'audiobooks'/i.test(rbc) && !/delete\s+from\s+storage\.objects/i.test(rbc), 'rollback REAL: DELETE só do bucket audiobooks, nunca de objetos');
+    ok(/drop policy if exists audiobooks_deny_direct_access on storage\.objects/i.test(rbc), 'rollback remove só a barreira própria, pelo nome exato');
   }
 
   sec('Dormência');

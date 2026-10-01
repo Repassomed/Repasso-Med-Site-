@@ -86,146 +86,219 @@ function novoDb(extra) {
 const estado = db => q(db, `select id||'|'||name||'|'||public||'|'||coalesce(file_size_limit::text,'null')||'|'||coalesce(allowed_mime_types::text,'null') from storage.buckets where id='audiobooks'`);
 const OUTROS = db => q(db, `select md5(string_agg(b::text, ';' order by id)) from (select id,name,owner,public,avif_autodetection,file_size_limit,allowed_mime_types,owner_id from storage.buckets where id <> 'audiobooks') b`);
 const OBJ_OUTROS = db => q(db, `select count(*)||'/'||md5(string_agg(name, ',' order by name)) from storage.objects where bucket_id <> 'audiobooks'`);
-const POL = db => q(db, `select md5(string_agg(policyname||cmd||roles::text||coalesce(qual,'')||coalesce(with_check,''), ';' order by policyname)) from pg_policies where schemaname='storage' and tablename='objects' and policyname not like 'zz_%'`);
-const POL_AUDIO = db => Number(q(db, `select count(*) from pg_policies where schemaname='storage' and tablename='objects' and roles && array['public','anon','authenticated']::name[] and (coalesce(qual,'') ilike '%audiobooks%' or coalesce(with_check,'') ilike '%audiobooks%')`));
+const BARREIRA = 'audiobooks_deny_direct_access';
+/* TODAS as policies de storage.objects, exceto a barreira própria */
+const POL = db => q(db, `select coalesce(md5(string_agg(policyname||permissive||cmd||roles::text||coalesce(qual,'')||coalesce(with_check,''), ';' order by policyname)),'-') from pg_policies where schemaname='storage' and tablename='objects' and policyname <> '${BARREIRA}'`);
+const N_BARREIRA = db => Number(q(db, `select count(*) from pg_policies where schemaname='storage' and tablename='objects' and policyname='${BARREIRA}'`));
 const ESPERADO = 'audiobooks|audiobooks|false|31457280|{audio/mp4,audio/x-m4a}';
+/* resultado da ÚLTIMA instrução, sob um papel (RLS vale); sessão com permissão de DELETE para isolar a RLS do trigger */
+const como = (db, role, sql) => { const r = psql(db, `select set_config('storage.allow_delete_query','true',false); set role ${role}; ${sql}`); return { ok: r.ok, out: r.out.split('\n').pop(), err: r.err }; };
+const contar = (db, role, bucket) => como(db, role, `select count(*) from storage.objects where bucket_id='${bucket || 'audiobooks'}'`).out;
+const comObjetos = db => q(db, `insert into storage.objects (bucket_id, name) values ('audiobooks','semiologia-ii/a.m4a'),('audiobooks','semiologia-ii/b.m4a')`);
 
 try {
   subir();
 
-  sec('A · criação do zero');
+  sec('Fidelidade do teste: SEM a migration, policies amplas VAZAM (o teste enxerga o vazamento)');
+  {
+    const db = novoDb(`insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) values ('audiobooks','audiobooks',false,31457280,array['audio/mp4','audio/x-m4a']);
+      create policy zz_leak_sel on storage.objects for select to anon, authenticated using (true);
+      create policy zz_leak_ins on storage.objects for insert to anon, authenticated with check (bucket_id is not null);
+      create policy zz_leak_upd on storage.objects for update to anon, authenticated using (true) with check (true);
+      create policy zz_leak_del on storage.objects for delete to anon, authenticated using (true);`);
+    comObjetos(db);
+    ok(contar(db, 'anon') === '2' && contar(db, 'authenticated') === '2', 'controle: anon e authenticated LEEM audiobooks sem a barreira');
+    ok(como(db, 'anon', `insert into storage.objects (bucket_id,name) values ('audiobooks','h.m4a')`).ok, 'controle: anon CONSEGUE inserir sem a barreira');
+    ok(como(db, 'anon', `with t as (update storage.objects set name = name||'x' where bucket_id='audiobooks' returning 1) select count(*) from t`).out === '3', 'controle: anon ALTERA objetos sem a barreira');
+    ok(como(db, 'authenticated', `with t as (delete from storage.objects where bucket_id='audiobooks' returning 1) select count(*) from t`).out === '3', 'controle: authenticated APAGA objetos sem a barreira');
+  }
+
+  sec('Criação do zero, estado do bucket e definição da barreira');
   {
     const db = novoDb();
-    ok(estado(db) === '', 'antes: o bucket não existe');
+    ok(estado(db) === '' && N_BARREIRA(db) === 0, 'antes: sem bucket e sem barreira');
     const o0 = OUTROS(db), p0 = POL(db), j0 = OBJ_OUTROS(db);
     const r = psql(db, null, UP);
     ok(r.ok, 'a migration roda sem erro', r.err);
-    ok(estado(db) === ESPERADO, 'bucket criado: privado, 30 MB (31457280), só audio/mp4 e audio/x-m4a', estado(db));
-    ok(POL_AUDIO(db) === 0, 'nenhuma policy public/anon/authenticated menciona audiobooks');
-    ok(OUTROS(db) === o0 && OBJ_OUTROS(db) === j0 && POL(db) === p0, 'H · nenhum outro bucket, objeto ou policy mudou');
+    ok(estado(db) === ESPERADO, 'bucket criado: privado, 30 MB, só audio/mp4 e audio/x-m4a', estado(db));
+    const def = q(db, `select permissive||'|'||cmd||'|'||(select string_agg(r, ',' order by r) from unnest(roles::text[]) r)||'|'||qual||'|'||with_check from pg_policies where policyname='${BARREIRA}'`);
+    ok(def === "RESTRICTIVE|ALL|anon,authenticated|(bucket_id IS DISTINCT FROM 'audiobooks'::text)|(bucket_id IS DISTINCT FROM 'audiobooks'::text)", 'a barreira é RESTRICTIVE, FOR ALL, anon+authenticated, USING e WITH CHECK negam audiobooks', def);
+    ok(Number(q(db, `select count(*) from pg_policies where schemaname='storage' and tablename='objects' and permissive='PERMISSIVE' and policyname='${BARREIRA}'`)) === 0, 'a barreira NÃO é permissiva: não concede nada');
+    ok(OUTROS(db) === o0 && OBJ_OUTROS(db) === j0 && POL(db) === p0, 'nenhum outro bucket, objeto ou policy mudou');
   }
 
-  sec('B · segunda execução (idempotência)');
+  /* 1–4: policies SELECT permissivas, antes E depois da migration */
+  const AMPLAS = [
+    ['1 · USING (true)', 'true'],
+    ['2 · USING (bucket_id IS NOT NULL)', 'bucket_id is not null'],
+    ['3 · USING (bucket_id = bucket_id)', 'bucket_id = bucket_id'],
+    ['4 · USING (bucket_id <> \'outro\')', "bucket_id <> 'outro'"]
+  ];
+  for (const ordem of ['antes', 'depois']) {
+    sec(`1–4 · policies SELECT amplas criadas ${ordem.toUpperCase()} da migration ⇒ 0 acesso a audiobooks`);
+    for (const [nome, using] of AMPLAS) {
+      const db = novoDb();
+      const pol = `create policy zz_ampla on storage.objects for select to anon, authenticated using (${using})`;
+      if (ordem === 'antes') q(db, pol);
+      const r = psql(db, null, UP);
+      if (ordem === 'depois') q(db, pol);
+      comObjetos(db);
+      ok(r.ok, `${nome}: a migration passa (não depende de ler o texto da policy)`, r.err);
+      ok(contar(db, 'anon') === '0' && contar(db, 'authenticated') === '0', `${nome}: anon e authenticated veem 0 objetos de audiobooks`, [contar(db, 'anon'), contar(db, 'authenticated')]);
+      ok(como(db, 'anon', `select count(*) from storage.objects where name like 'semiologia-ii/%'`).out === '0', `${nome}: nem filtrando por nome`);
+      ok(como(db, 'authenticated', `select count(*) from storage.objects`).out === '3', `${nome}: os OUTROS buckets continuam visíveis pela policy (aportes 2 + publico 1)`, como(db, 'authenticated', `select count(*) from storage.objects`).out);
+    }
+  }
+  {
+    /* policy FOR ALL e TO public (vale para anon) também fica sem efeito */
+    const db = novoDb(`create policy zz_all_public on storage.objects for all to public using (true) with check (true)`);
+    psql(db, null, UP); comObjetos(db);
+    ok(contar(db, 'anon') === '0' && contar(db, 'authenticated') === '0' && !como(db, 'anon', `insert into storage.objects (bucket_id,name) values ('audiobooks','h.m4a')`).ok, 'FOR ALL TO public (using true / check true): 0 leitura e 0 escrita em audiobooks');
+  }
+
+  sec('5 · policy legítima do bucket aportes continua funcionando');
   {
     const db = novoDb();
-    psql(db, null, UP);
-    q(db, `insert into storage.objects (bucket_id, name) values ('audiobooks','semiologia-ii/x.v1.m4a')`);
-    const o0 = OUTROS(db), p0 = POL(db);
-    const r1 = psql(db, null, UP), r2 = psql(db, null, UP);
-    ok(r1.ok && r2.ok, 'rodar de novo (2×) não dá erro', r1.err + r2.err);
-    ok(estado(db) === ESPERADO && Number(q(db, `select count(*) from storage.buckets where id='audiobooks'`)) === 1, 'continua exatamente 1 bucket, no mesmo estado');
-    ok(Number(q(db, `select count(*) from storage.objects where bucket_id='audiobooks'`)) === 1, 'os objetos já enviados NÃO são tocados');
-    ok(OUTROS(db) === o0 && POL(db) === p0, 'H · outros buckets e policies idênticos');
-  }
-
-  sec('C · bucket existente PÚBLICO → privado');
-  {
-    const db = novoDb(`insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) values ('audiobooks','audiobooks',true,31457280,array['audio/mp4','audio/x-m4a'])`);
-    ok(estado(db).split('|')[2] === 'true', 'antes: public = true');
-    const o0 = OUTROS(db);
     const r = psql(db, null, UP);
-    ok(r.ok && estado(db) === ESPERADO, 'depois: public = false (e o resto igual)', estado(db) + r.err);
-    ok(OUTROS(db) === o0 && q(db, `select public from storage.buckets where id='publico'`) === 't', 'o bucket `publico` (que É público) continua público e intacto');
-    /* acesso real por role: anon/authenticated não leem nada de audiobooks */
-    q(db, `insert into storage.objects (bucket_id, name) values ('audiobooks','semiologia-ii/a.m4a')`);
-    ok(q(db, `set role anon; select count(*) from storage.objects where bucket_id='audiobooks'`).split('\n').pop() === '0', 'anon enxerga 0 objetos de audiobooks');
-    ok(q(db, `set role authenticated; select count(*) from storage.objects where bucket_id='audiobooks'`).split('\n').pop() === '0', 'authenticated enxerga 0 objetos de audiobooks');
-    ok(!psql(db, `set role authenticated; insert into storage.objects (bucket_id, name) values ('audiobooks','hack.m4a')`).ok, 'authenticated NÃO consegue gravar em audiobooks (RLS)');
-    ok(!psql(db, `set role anon; insert into storage.objects (bucket_id, name) values ('audiobooks','hack.m4a')`).ok, 'anon NÃO consegue gravar em audiobooks (RLS)');
-    ok(q(db, `set role service_role; select count(*) from storage.objects where bucket_id='audiobooks'`).split('\n').pop() === '1', 'a service_role (servidor) continua a ver o objeto (é por ela que o URL assinado é criado)');
-    ok(q(db, `set role authenticated; select count(*) from storage.objects where bucket_id='aportes'`).split('\n').pop() === '2', 'o bucket aportes segue legível pela sua própria policy (não regrediu)');
+    ok(r.ok, 'migration passa com as policies reais de aportes presentes');
+    ok(contar(db, 'authenticated', 'aportes') === '2', 'authenticated lê os 2 objetos de aportes (aportes_select_own)');
+    ok(como(db, 'authenticated', `insert into storage.objects (bucket_id,name) values ('aportes','u3/c.pdf')`).ok && contar(db, 'authenticated', 'aportes') === '3', 'authenticated insere em aportes (aportes_insert_own)');
+    ok(contar(db, 'anon', 'aportes') === '0', 'anon continua sem acesso a aportes (como antes: não há policy para anon)');
+    ok(!como(db, 'authenticated', `insert into storage.objects (bucket_id,name) values ('publico','h.png')`).ok, 'a barreira não concede nada: sem policy, publico continua negado ao authenticated');
   }
 
-  sec('D · limite e MIME antigos/errados → corrigidos');
+  sec('6 · INSERT amplo (WITH CHECK bucket_id IS NOT NULL) não insere em audiobooks');
   {
+    const db = novoDb(`create policy zz_ins on storage.objects for insert to anon, authenticated with check (bucket_id is not null)`);
+    psql(db, null, UP);
+    for (const role of ['anon', 'authenticated']) {
+      const r = como(db, role, `insert into storage.objects (bucket_id,name) values ('audiobooks','hack.m4a')`);
+      ok(!r.ok && /row-level security/i.test(r.err), `${role}: INSERT em audiobooks negado pela RLS`, r.err.slice(0, 90));
+      ok(como(db, role, `insert into storage.objects (bucket_id,name) values ('publico','ok-${role}.png')`).ok, `${role}: INSERT em OUTRO bucket (permitido pela policy ampla) continua funcionando`);
+    }
+    ok(Number(q(db, `select count(*) from storage.objects where bucket_id='audiobooks'`)) === 0, 'nada foi gravado em audiobooks');
+  }
+
+  sec('7 · UPDATE e DELETE amplos não alteram nem removem objetos de audiobooks');
+  {
+    const db = novoDb(`create policy zz_upd on storage.objects for update to anon, authenticated using (true) with check (true);
+                       create policy zz_del on storage.objects for delete to anon, authenticated using (true);
+                       create policy zz_sel on storage.objects for select to anon, authenticated using (true);`);
+    psql(db, null, UP); comObjetos(db);
+    const snap = () => q(db, `select string_agg(name||':'||bucket_id, ',' order by name) from storage.objects where bucket_id='audiobooks'`);
+    const s0 = snap();
+    for (const role of ['anon', 'authenticated']) {
+      ok(como(db, role, `with t as (update storage.objects set name = name||'-x' where bucket_id='audiobooks' returning 1) select count(*) from t`).out === '0', `${role}: UPDATE em audiobooks afeta 0 linhas`);
+      ok(como(db, role, `with t as (delete from storage.objects where bucket_id='audiobooks' returning 1) select count(*) from t`).out === '0', `${role}: DELETE em audiobooks afeta 0 linhas`);
+      const mover = como(db, role, `update storage.objects set bucket_id='audiobooks' where bucket_id='publico'`);
+      ok(!mover.ok && /row-level security/i.test(mover.err), `${role}: não consegue MOVER um objeto de outro bucket para audiobooks (WITH CHECK)`, mover.err.slice(0, 90));
+    }
+    ok(snap() === s0 && Number(q(db, `select count(*) from storage.objects where bucket_id='publico'`)) === 1, 'os objetos de audiobooks continuam idênticos e o de publico não foi movido');
+    ok(como(db, 'anon', `with t as (update storage.objects set name = name||'-y' where bucket_id='publico' returning 1) select count(*) from t`).out === '1', 'UPDATE em OUTRO bucket continua permitido pela policy ampla (a barreira só tira audiobooks)');
+  }
+
+  sec('8 · service_role continua com acesso (é ela que assina a URL)');
+  {
+    const db = novoDb();
+    psql(db, null, UP); comObjetos(db);
+    ok(como(db, 'service_role', `select count(*) from storage.objects where bucket_id='audiobooks'`).out === '2', 'service_role lê os objetos de audiobooks');
+    ok(como(db, 'service_role', `select name from storage.objects where bucket_id='audiobooks' and name='semiologia-ii/a.m4a'`).out === 'semiologia-ii/a.m4a', 'service_role resolve o objeto pelo caminho do manifesto (passo da assinatura)');
+    ok(como(db, 'service_role', `insert into storage.objects (bucket_id,name) values ('audiobooks','semiologia-ii/c.m4a')`).ok, 'service_role grava (upload do processo do José)');
+    ok(como(db, 'service_role', `with t as (update storage.objects set name = name where bucket_id='audiobooks' returning 1) select count(*) from t`).out === '3', 'service_role altera');
+    ok(q(db, `select rolbypassrls from pg_roles where rolname='service_role'`) === 't', '(premissa) a service_role tem BYPASSRLS, por isso a barreira não a afeta');
+    ok(q(db, `select count(*) from pg_policies where policyname='${BARREIRA}' and 'service_role' = any(roles::text[])`) === '0', 'a barreira nem se aplica à service_role');
+  }
+
+  sec('9 · idempotência (2× e 3×) + correções do bucket');
+  {
+    const db = novoDb();
+    ok(psql(db, null, UP).ok, '1ª execução');
+    comObjetos(db);
+    const e1 = estado(db), p1 = POL(db), o1 = OUTROS(db);
+    const r2 = psql(db, null, UP), r3 = psql(db, null, UP);
+    ok(r2.ok && r3.ok, '2ª e 3ª execuções sem erro', r2.err + r3.err);
+    ok(estado(db) === e1 && estado(db) === ESPERADO && Number(q(db, `select count(*) from storage.buckets where id='audiobooks'`)) === 1, 'bucket idêntico, 1 só');
+    ok(N_BARREIRA(db) === 1 && Number(q(db, `select count(*) from pg_policies where schemaname='storage' and tablename='objects'`)) === Number(q(db, `select count(*) from pg_policies where schemaname='storage' and tablename='objects' and policyname <> '${BARREIRA}'`)) + 1, 'continua exatamente 1 barreira (sem duplicar policies)');
+    ok(Number(q(db, `select count(*) from storage.objects where bucket_id='audiobooks'`)) === 2, 'objetos já enviados intactos');
+    ok(POL(db) === p1 && OUTROS(db) === o1, 'policies e buckets dos outros: idênticos');
+    ok(contar(db, 'anon') === '0' && contar(db, 'authenticated') === '0', 'continua com 0 acesso para anon/authenticated');
+    /* o bucket existente público / com limite e MIME errados é corrigido, e a barreira é reposta se alguém a alterar */
     for (const [nome, ins] of [
+      ['público', `values ('audiobooks','audiobooks',true,31457280,array['audio/mp4','audio/x-m4a'])`],
       ['limite 50 MB + MIME mp3', `values ('audiobooks','audiobooks',false,52428800,array['audio/mpeg'])`],
-      ['sem limite e sem MIME (null)', `values ('audiobooks','audiobooks',false,null,null)`],
-      ['limite 1 KB + MIME vários', `values ('audiobooks','audiobooks',false,1024,array['audio/mp4','image/png','application/pdf'])`],
+      ['sem limite e sem MIME', `values ('audiobooks','audiobooks',false,null,null)`],
       ['público + limite e MIME errados', `values ('audiobooks','audiobooks',true,999999999,array['*/*'])`],
       ['MIME vazio {}', `values ('audiobooks','audiobooks',false,31457280,array[]::text[])`]
     ]) {
-      const db = novoDb(`insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) ${ins}`);
-      const o0 = OUTROS(db);
-      const r = psql(db, null, UP);
-      ok(r.ok && estado(db) === ESPERADO, `corrigido: ${nome}`, estado(db) + r.err);
-      ok(OUTROS(db) === o0, `   (e nenhum outro bucket mudou) — ${nome}`);
+      const d = novoDb(`insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) ${ins}`);
+      const ou = OUTROS(d);
+      const r = psql(d, null, UP);
+      ok(r.ok && estado(d) === ESPERADO && OUTROS(d) === ou, `bucket existente (${nome}) ⇒ corrigido, outros intactos`, estado(d) + r.err);
     }
+    const dd = novoDb();
+    psql(dd, null, UP);
+    q(dd, `drop policy ${BARREIRA} on storage.objects; create policy ${BARREIRA} on storage.objects as permissive for select to anon using (true)`);   // alguém «adultera» a barreira
+    ok(psql(dd, null, UP).ok && q(dd, `select permissive from pg_policies where policyname='${BARREIRA}'`) === 'RESTRICTIVE', 'barreira adulterada (permissiva) é substituída pela restritiva correta');
   }
 
-  sec('E · zero policy anon/authenticated/public sobre audiobooks');
+  sec('Falha fechada: RLS desligada em storage.objects');
   {
-    /* policies antigas «vazadas» que citam o bucket → removidas; as dos outros buckets → preservadas */
-    const db = novoDb(`
-      create policy zz_anon_audio on storage.objects for select to anon using (bucket_id = 'audiobooks');
-      create policy zz_auth_audio on storage.objects for all to authenticated using (bucket_id = 'audiobooks') with check (bucket_id = 'audiobooks');
-      create policy zz_pub_audio on storage.objects for select to public using (bucket_id = 'audiobooks' and name like 'semiologia-ii/%');
-      create policy zz_auth_ins_audio on storage.objects for insert to authenticated with check (bucket_id = 'audiobooks');
-      insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) values ('audiobooks','audiobooks',true,null,null);
-      insert into storage.objects (bucket_id, name) values ('audiobooks','semiologia-ii/a.m4a');`);
-    ok(POL_AUDIO(db) === 4 && q(db, `set role anon; select count(*) from storage.objects where bucket_id='audiobooks'`).split('\n').pop() === '1', 'antes: 4 policies vazadas e o anon LÊ o áudio');
-    const p0 = q(db, `select md5(string_agg(policyname, ',' order by policyname)) from pg_policies where schemaname='storage' and tablename='objects' and policyname not like 'zz_%'`);
+    const db = novoDb(`alter table storage.objects disable row level security`);
+    const o0 = OUTROS(db), p0 = POL(db);
     const r = psql(db, null, UP);
-    ok(r.ok && estado(db) === ESPERADO, 'a migration passa e corrige o bucket', r.err);
-    ok(POL_AUDIO(db) === 0, 'depois: 0 policies sobre audiobooks');
-    ok(q(db, `set role anon; select count(*) from storage.objects where bucket_id='audiobooks'`).split('\n').pop() === '0' && !psql(db, `set role authenticated; insert into storage.objects (bucket_id,name) values ('audiobooks','h.m4a')`).ok, 'depois: o anon já não lê e o authenticated não grava');
-    ok(q(db, `select md5(string_agg(policyname, ',' order by policyname)) from pg_policies where schemaname='storage' and tablename='objects' and policyname not like 'zz_%'`) === p0, 'as policies dos OUTROS buckets (aportes, service_role) ficaram idênticas');
-    ok(Number(q(db, `select count(*) from pg_policies where schemaname='storage' and tablename='objects' and policyname in ('aportes_select_own','aportes_insert_own')`)) === 2, 'aportes_select_own e aportes_insert_own continuam lá');
-  }
-  {
-    /* policy AMPLA (sem bucket_id) para authenticated: a migration ABORTA e não altera nada */
-    const db = novoDb(`
-      create policy zz_ampla on storage.objects for select to authenticated using (true);
-      insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) values ('audiobooks','audiobooks',true,1,array['x/y']);`);
-    const antes = estado(db), o0 = OUTROS(db), p0 = POL(db);
-    const r = psql(db, null, UP);
-    ok(!r.ok && /MIGRATION ABORTADA/.test(r.err) && /zz_ampla/.test(r.err), 'policy ampla (using true) ⇒ aborta com mensagem clara e o nome da policy', r.err.slice(0, 200));
-    ok(estado(db) === antes && OUTROS(db) === o0 && POL(db) === p0, 'abortou SEM alterar nada (bucket continua como estava; atomicidade)');
-    q(db, `drop policy zz_ampla on storage.objects`);
-    ok(psql(db, null, UP).ok && estado(db) === ESPERADO, 'removida a policy ampla, a migration passa');
-    /* policy ampla só de INSERT (with_check true) também aborta */
-    const db2 = novoDb(`create policy zz_ampla2 on storage.objects for insert to anon with check (true)`);
-    ok(!psql(db2, null, UP).ok && estado(db2) === '', 'policy ampla de INSERT para anon também aborta (e não cria o bucket)');
-    /* policy ampla só para service_role NÃO conta */
-    const db3 = novoDb();
-    ok(psql(db3, null, UP).ok, 'a policy `service_all using(true)` da service_role não bloqueia (não é public/anon/authenticated)');
+    ok(!r.ok && /RLS está desligada/.test(r.err), 'sem RLS a migration ABORTA com mensagem clara', r.err.slice(0, 160));
+    ok(estado(db) === '' && N_BARREIRA(db) === 0 && OUTROS(db) === o0 && POL(db) === p0, 'e não cria bucket nem barreira (nada alterado)');
   }
 
-  sec('F · rollback com bucket VAZIO');
+  sec('10 · rollback: só artefatos próprios, objetos preservados, fail-closed');
   {
-    const db = novoDb();
-    psql(db, null, UP);
-    ok(!psql(db, `delete from storage.buckets where id='audiobooks'`).ok, '(fidelidade) DELETE direto é bloqueado como no Supabase');
-    const o0 = OUTROS(db), j0 = OBJ_OUTROS(db), p0 = POL(db);
-    const r = psql(db, null, DOWN);
-    ok(r.ok && estado(db) === '', 'rollback remove o bucket audiobooks vazio', r.err);
-    ok(OUTROS(db) === o0 && OBJ_OUTROS(db) === j0 && POL(db) === p0, 'H · aportes e publico (buckets, objetos, policies) intactos');
-    const r2 = psql(db, null, DOWN);
-    ok(r2.ok, 'rodar o rollback de novo: sem erro (nada a fazer)', r2.err);
-    /* a permissão de apagar fica só na transação do rollback */
-    /* na MESMA sessão: rollback e logo a seguir um DELETE em outro bucket — a permissão não pode ter vazado */
-    const db4 = novoDb(); psql(db4, null, UP);
-    const um = sh('psql', ['-X', '-q', '-h', SOCK, '-p', PORT, '-U', 'postgres', '-d', db4, '-At', '-v', 'ON_ERROR_STOP=0', '-f', DOWN, '-c', `delete from storage.buckets where id='aportes'`]);
-    ok(/not allowed/.test(um.stderr || '') && Number(q(db4, `select count(*) from storage.buckets where id='aportes'`)) === 1 && estado(db4) === '', 'na mesma sessão, depois do rollback, apagar OUTRO bucket continua bloqueado (a permissão é local à transação)', um.stderr);
-  }
-
-  sec('G · rollback com bucket COM objetos — não destrói nada');
-  {
-    const db = novoDb();
-    psql(db, null, UP);
-    q(db, `insert into storage.objects (bucket_id, name) values ('audiobooks','semiologia-ii/a.m4a'),('audiobooks','semiologia-ii/b.m4a'),('audiobooks','semiologia-ii/c.m4a')`);
-    const est = estado(db), o0 = OUTROS(db), j0 = OBJ_OUTROS(db), p0 = POL(db);
-    const r = psql(db, null, DOWN);
-    ok(!r.ok && /ROLLBACK ABORTADO/.test(r.err) && /3 objeto/.test(r.err), 'aborta com erro claro, dizendo quantos objetos há', r.err.slice(0, 200));
-    ok(Number(q(db, `select count(*) from storage.objects where bucket_id='audiobooks'`)) === 3 && q(db, `select string_agg(name, ',' order by name) from storage.objects where bucket_id='audiobooks'`) === 'semiologia-ii/a.m4a,semiologia-ii/b.m4a,semiologia-ii/c.m4a', 'os 3 objetos continuam, todos');
-    ok(estado(db) === est, 'o bucket continua configurado (privado, 30 MB, M4A)');
-    ok(OUTROS(db) === o0 && OBJ_OUTROS(db) === j0 && POL(db) === p0, 'H · nada mais mudou');
-    /* depois de esvaziar pelo «painel» (service_role + allow_delete_query), o rollback passa */
-    q(db, `select set_config('storage.allow_delete_query','true',false); delete from storage.objects where bucket_id='audiobooks'; select set_config('storage.allow_delete_query','false',false)`);
-    ok(psql(db, null, DOWN).ok && estado(db) === '', 'esvaziado o bucket, o rollback remove-o');
-    /* um único objeto basta para abortar */
-    const db2 = novoDb(); psql(db2, null, UP); q(db2, `insert into storage.objects (bucket_id, name) values ('audiobooks','so-um.m4a')`);
-    ok(!psql(db2, null, DOWN).ok && estado(db2) === ESPERADO, 'um único objeto já impede o rollback');
+    /* decoys: nomes parecidos e outras restritivas/permissivas que NÃO podem ser tocadas */
+    const DECOYS = `
+      create policy audiobooks_deny_direct_access_v2 on storage.objects as restrictive for all to anon using (bucket_id is distinct from 'audiobooks');
+      create policy zz_outra_restritiva on storage.objects as restrictive for select to authenticated using (name <> 'secreto');
+      create policy zz_pol_aportes_extra on storage.objects for update to authenticated using (bucket_id = 'aportes') with check (bucket_id = 'aportes');
+      create policy zz_pol_ampla on storage.objects for select to anon, authenticated using (true);`;
+    {
+      const db = novoDb(DECOYS);
+      psql(db, null, UP);
+      ok(N_BARREIRA(db) === 1, 'após a migration há 1 barreira');
+      const o0 = OUTROS(db), j0 = OBJ_OUTROS(db), p0 = POL(db);
+      ok(!psql(db, `delete from storage.buckets where id='audiobooks'`).ok, '(fidelidade) DELETE direto é bloqueado como no Supabase');
+      const r = psql(db, null, DOWN);
+      ok(r.ok && estado(db) === '', 'bucket VAZIO: rollback remove o bucket', r.err);
+      ok(N_BARREIRA(db) === 0, 'e remove a barreira própria, pelo nome exato');
+      ok(POL(db) === p0, 'TODAS as outras policies idênticas (aportes_*, service_all, nome parecido `…_v2`, restritiva alheia, ampla alheia)');
+      ok(Number(q(db, `select count(*) from pg_policies where policyname in ('audiobooks_deny_direct_access_v2','zz_outra_restritiva','zz_pol_aportes_extra','zz_pol_ampla','aportes_select_own','aportes_insert_own','service_all')`)) === 7, 'as 7 policies de terceiros continuam lá');
+      ok(OUTROS(db) === o0 && OBJ_OUTROS(db) === j0, 'aportes e publico: buckets e objetos intactos');
+      const r2 = psql(db, null, DOWN);
+      ok(r2.ok, 'rollback repetido: sem erro (nada a fazer)', r2.err);
+      const db4 = novoDb(); psql(db4, null, UP);
+      const um = sh('psql', ['-X', '-q', '-h', SOCK, '-p', PORT, '-U', 'postgres', '-d', db4, '-At', '-v', 'ON_ERROR_STOP=0', '-f', DOWN, '-c', `delete from storage.buckets where id='aportes'`]);
+      ok(/not allowed/.test(um.stderr || '') && Number(q(db4, `select count(*) from storage.buckets where id='aportes'`)) === 1 && estado(db4) === '', 'na mesma sessão, depois do rollback, apagar OUTRO bucket continua bloqueado (permissão local à transação)', um.stderr);
+    }
+    {
+      const db = novoDb(DECOYS);
+      psql(db, null, UP);
+      q(db, `insert into storage.objects (bucket_id, name) values ('audiobooks','semiologia-ii/a.m4a'),('audiobooks','semiologia-ii/b.m4a'),('audiobooks','semiologia-ii/c.m4a')`);
+      const est = estado(db), o0 = OUTROS(db), j0 = OBJ_OUTROS(db), p0 = POL(db);
+      const r = psql(db, null, DOWN);
+      ok(!r.ok && /ROLLBACK ABORTADO/.test(r.err) && /3 objeto/.test(r.err), 'bucket COM objetos: aborta com erro claro e a contagem', r.err.slice(0, 160));
+      ok(q(db, `select string_agg(name, ',' order by name) from storage.objects where bucket_id='audiobooks'`) === 'semiologia-ii/a.m4a,semiologia-ii/b.m4a,semiologia-ii/c.m4a', 'os 3 objetos continuam, todos');
+      ok(estado(db) === est && N_BARREIRA(db) === 1, 'bucket continua configurado E a barreira continua instalada (fail-closed)');
+      ok(contar(db, 'anon') === '0' && contar(db, 'authenticated') === '0', 'anon/authenticated continuam com 0 acesso após o rollback abortado');
+      ok(POL(db) === p0 && OUTROS(db) === o0 && OBJ_OUTROS(db) === j0, 'policies e buckets dos outros intactos');
+      q(db, `select set_config('storage.allow_delete_query','true',false); delete from storage.objects where bucket_id='audiobooks'; select set_config('storage.allow_delete_query','false',false)`);
+      ok(psql(db, null, DOWN).ok && estado(db) === '' && N_BARREIRA(db) === 0, 'esvaziado o bucket (pelo painel), o rollback conclui');
+      const db2 = novoDb(); psql(db2, null, UP); q(db2, `insert into storage.objects (bucket_id, name) values ('audiobooks','so-um.m4a')`);
+      ok(!psql(db2, null, DOWN).ok && estado(db2) === ESPERADO && N_BARREIRA(db2) === 1, 'um único objeto já impede o rollback (barreira mantida)');
+    }
+    {
+      /* bucket já removido à mão mas a barreira ficou: o rollback remove só ela */
+      const db = novoDb(); psql(db, null, UP);
+      q(db, `select set_config('storage.allow_delete_query','true',false); delete from storage.buckets where id='audiobooks'`);
+      const p0 = POL(db);
+      ok(psql(db, null, DOWN).ok && N_BARREIRA(db) === 0 && POL(db) === p0, 'sem bucket: remove só a barreira própria');
+    }
   }
 
   sec('H · nenhum outro bucket é alterado (migration + rollback, ciclo completo)');
@@ -233,9 +306,8 @@ try {
     const db = novoDb(`insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) values ('audiobooks-old','audiobooks-old',true,5,array['a/b']), ('audiobooks2','audiobooks2',true,5,array['a/b'])`);
     const o0 = OUTROS(db), j0 = OBJ_OUTROS(db), p0 = POL(db);
     ok(psql(db, null, UP).ok && psql(db, null, UP).ok && psql(db, null, DOWN).ok && psql(db, null, DOWN).ok, 'up, up, down, down sem erro');
-    ok(OUTROS(db) === o0, 'buckets parecidos (`audiobooks-old`, `audiobooks2`), `aportes` e `publico` byte a byte iguais');
-    ok(OBJ_OUTROS(db) === j0 && POL(db) === p0, 'objetos e policies dos outros buckets idênticos');
-    ok(estado(db) === '', 'só o audiobooks saiu');
+    ok(OUTROS(db) === o0 && OBJ_OUTROS(db) === j0 && POL(db) === p0, 'buckets parecidos, aportes e publico (buckets, objetos, policies) byte a byte iguais');
+    ok(estado(db) === '' && N_BARREIRA(db) === 0, 'só o audiobooks e a barreira saíram');
   }
 
   sec('Texto das migrations (guarda estática)');
@@ -243,10 +315,13 @@ try {
     const up = fs.readFileSync(UP, 'utf8'), down = fs.readFileSync(DOWN, 'utf8');
     const upc = up.replace(/--.*$/gm, ''), downc = down.replace(/--.*$/gm, '');
     ok(!/do\s+nothing/i.test(upc) && /do\s+update/i.test(upc), 'a migration usa DO UPDATE (nunca DO NOTHING)');
-    ok(!/create\s+policy|grant\s|alter\s+table|public\s*=\s*true/i.test(upc), 'a migration não cria policy/grant nem põe public=true');
+    ok(/as\s+restrictive/i.test(upc) && /to\s+anon\s*,\s*authenticated/i.test(upc) && /using\s*\(bucket_id is distinct from 'audiobooks'\)/i.test(upc) && /with check\s*\(bucket_id is distinct from 'audiobooks'\)/i.test(upc), 'a barreira é RESTRICTIVE para anon/authenticated com USING e WITH CHECK');
+    ok((upc.match(/create\s+policy/gi) || []).length === 1 && !/as\s+permissive/i.test(upc) && !/grant\s|alter\s+table|public\s*=\s*true/i.test(upc), 'a migration cria UMA policy (a restritiva), nenhuma permissiva, nenhum grant');
+    ok(!/ilike|pg_policies\s+where[^;]*qual/i.test(upc.replace(/select \* into p from pg_policies[\s\S]*?policyname = 'audiobooks_deny_direct_access';/i, '')), 'a segurança NÃO depende de procurar texto («bucket_id») em outras policies');
+    ok((upc.match(/drop\s+policy/gi) || []).length === 1 && /drop policy if exists audiobooks_deny_direct_access on storage\.objects/i.test(upc), 'a migration só apaga a própria barreira (nome exato)');
     ok(/delete\s+from\s+storage\.buckets\s+where\s+id\s*=\s*'audiobooks'/i.test(downc) && !/delete\s+from\s+storage\.objects/i.test(downc), 'o rollback tem um DELETE real, só do bucket audiobooks, e nunca apaga objetos');
-    ok(!/^\s*--\s*delete/im.test(down), 'o DELETE do rollback NÃO está comentado');
-    ok(!/storage\.buckets[^;]*\b(aportes|publico)\b/i.test(upc + downc), 'nenhum outro bucket é nomeado');
+    ok((downc.match(/drop\s+policy/gi) || []).length === 1 && /drop policy if exists audiobooks_deny_direct_access on storage\.objects/i.test(downc), 'o rollback só remove a policy própria, pelo nome exato');
+    ok(!/^\s*--\s*delete/im.test(down) && !/storage\.buckets[^;]*\b(aportes|publico)\b/i.test(upc + downc), 'DELETE não comentado; nenhum outro bucket é nomeado');
   }
 } catch (e) { koN++; falhas.push('EXCEÇÃO: ' + (e && e.stack || e)); console.log('  ✗ EXCEÇÃO', e); }
 finally { parar(); }

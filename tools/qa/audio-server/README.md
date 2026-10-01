@@ -22,7 +22,7 @@ navegador ──(JWT, audio_id)──► get-audio-url ─► URL assinada 10 mi
 * **Negação uniforme:** qualquer falha (sem token, token inválido, UID fora da lista, outra matéria, áudio inexistente/pendente,
   Supabase fora do ar…) devolve exatamente a mesma resposta (404 `{error:"unavailable"}`; manifesto vazio com 200).
 * **O cliente nunca escolhe caminho nem bucket:** só o `audio_id`; `path`/`bucket`/`url`/`token` na query são ignorados.
-* **Sem acesso direto ao bucket:** a migration não cria política alguma (RLS fecha `anon` e `authenticated`).
+* **Sem acesso direto ao bucket:** policy RESTRICTIVE própria nega `audiobooks` a `anon`/`authenticated` (e nunca concede nada).
 * **Manifesto fora do repositório:** a pasta publicada é a raiz (`publish = "."`), então qualquer arquivo versionado vira URL.
   O manifesto vem da variável `RM_AUDIO_MANIFEST` (JSON). Item `ready:false`, com campo desconhecido, caminho inseguro ou que
   não passe no validador do motor (recusa URL/caminho/token no título, etc.) **não existe** para o cliente.
@@ -33,9 +33,13 @@ navegador ──(JWT, audio_id)──► get-audio-url ─► URL assinada 10 mi
 
 1. **Masters → cópias M4A tratadas** (inspeção + 48 × 64 kbps + faststart) e conferir pela escuta o vínculo bloco↔áudio.
 2. **Aplicar** `supabase/migrations/20260930_01_audiobooks_bucket_privado.sql`. É **idempotente e corretiva**: deixa SEMPRE o bucket
-   `audiobooks` com `public=false`, 30 MB e só `audio/mp4`/`audio/x-m4a` (mesmo que ele já exista público ou com limite/MIME antigos),
-   remove policies de anon/authenticated/public que citem `audiobooks` e **aborta sem alterar nada** se houver policy ampla
-   (sem `bucket_id`) que também o exporia. Nunca toca outros buckets.
+   `audiobooks` com `public=false`, 30 MB e só `audio/mp4`/`audio/x-m4a` (mesmo que ele já exista público ou com limite/MIME antigos)
+   e instala **uma** policy **RESTRICTIVE** (`audiobooks_deny_direct_access`, `for all to anon, authenticated`, `using` e `with check`
+   `bucket_id is distinct from 'audiobooks'`). No Postgres, acesso exige passar em ≥1 policy permissiva **e em todas as restritivas**:
+   assim nenhuma policy permissiva — hoje (`using (true)`, `bucket_id is not null`, `bucket_id = bucket_id`, `bucket_id <> 'x'`, INSERT/UPDATE/DELETE
+   amplos, `for all to public`…) ou no futuro — alcança `audiobooks`, **sem depender de ler o texto de outras policies**. A barreira só
+   nega, nunca concede; a `service_role` (BYPASSRLS, só no servidor) não é afetada; os outros buckets seguem pelas policies deles.
+   A migration **não lê nem apaga policies alheias**; aborta sem alterar nada se a RLS de `storage.objects` estiver desligada.
 3. **Enviar** as cópias ao bucket `audiobooks` (painel do Supabase), p.ex. `semiologia-ii/<nome>.v1.m4a`.
 4. No Netlify definir: `RM_PILOT_AUDIO_UIDS` = UID da conta principal; `RM_AUDIO_MANIFEST` = JSON
    `{"semiologia-ii":[{"audio_id":"…","block_id":"s2-b01","theme":"…","title":"…","duration":SEGUNDOS,"order":1,"version":"v1","path":"semiologia-ii/….m4a","ready":true}]}`.
@@ -43,8 +47,8 @@ navegador ──(JWT, audio_id)──► get-audio-url ─► URL assinada 10 mi
 5. **Verificar** (com a sessão do José e com outra conta): manifesto lista os itens só para José; `get-audio-url` devolve
    `src` do bucket só para José; outra conta e outra matéria recebem a negação idêntica.
 
-**Desativar (kill switch, sem deploy):** esvaziar `RM_PILOT_AUDIO_UIDS` (ou `RM_AUDIO_MANIFEST`). **Rollback real** (`..._rollback.sql`): bucket vazio ⇒ remove só `audiobooks`; com objetos ⇒ **aborta e não apaga nada** (apague os
-objetos pelo painel e rode de novo). Os dois scripts rodam como um único bloco atômico.
+**Desativar (kill switch, sem deploy):** esvaziar `RM_PILOT_AUDIO_UIDS` (ou `RM_AUDIO_MANIFEST`). **Rollback real** (`..._rollback.sql`): bucket vazio ⇒ remove `audiobooks` **e só a policy própria** (nome exato); com objetos ⇒ **aborta,
+não apaga nada e a barreira continua ativa** (apague os objetos pelo painel e rode de novo). Os dois scripts rodam como um único bloco atômico.
 
 ## Custos / egress
 

@@ -6,56 +6,55 @@
 --     public            = false
 --     file_size_limit   = 31457280  (30 MB)
 --     allowed_mime_types= {audio/mp4, audio/x-m4a}   (só M4A)
---     nenhuma policy em storage.objects para public/anon/authenticated
---                       que mencione `audiobooks`
--- É idempotente: rodar de novo não muda nada além de repor esse estado.
+-- e instala UMA barreira — a policy RESTRICTIVE `audiobooks_deny_direct_access`
+-- em storage.objects — que impede anon/authenticated de ler, gravar, alterar ou
+-- apagar objetos do bucket `audiobooks`, QUALQUER que seja o conjunto de policies
+-- permissivas que existam hoje ou venham a existir amanhã.
 --
--- Por que sem políticas: storage.objects tem RLS ligada. Sem policy para
--- `anon`/`authenticated`, NINGUÉM lê ou grava por Storage API com a chave
--- pública — o navegador nunca acessa o bucket. Quem cria URL assinada é a
--- função Netlify `get-audio-url`, com a service_role (só no servidor), depois
--- de checar o UID autenticado + o manifesto.
+-- Por que RESTRICTIVE (e não «procurar a palavra bucket_id»)
+--   No Postgres, para um papel ter acesso a uma linha é preciso passar em pelo
+--   menos UMA policy permissiva E em TODAS as restritivas. A barreira só
+--   restringe; nunca concede nada. Assim, `using (true)`, `using (bucket_id is
+--   not null)`, `using (bucket_id = bucket_id)`, `using (bucket_id <> 'x')`,
+--   `with check (bucket_id is not null)`, policies `for all`/`update`/`delete`
+--   de public/anon/authenticated… NÃO conseguem alcançar `audiobooks`. A garantia
+--   não depende do TEXTO de nenhuma outra policy. A service_role (BYPASSRLS, só
+--   no servidor) não é afetada: é por ela que a função Netlify `get-audio-url`
+--   cria a URL assinada, depois de checar o UID autenticado + o manifesto.
+--   A barreira só tira acesso a `audiobooks`: objetos dos outros buckets
+--   continuam decididos pelas policies deles (a condição é `is distinct from`).
 --
--- Falha fechada (aborta TUDO, nada é alterado) se existir uma policy em
--- storage.objects para public/anon/authenticated que NÃO seja limitada a um
--- bucket (sem `bucket_id` no predicado): ela valeria também para este bucket
--- e corrigi-la mexeria nos outros buckets — decisão humana. As policies dos
--- outros buckets (p.ex. `aportes`) nunca são tocadas.
+-- Policies existentes de outros buckets (p.ex. `aportes_*`) NÃO são lidas nem
+-- alteradas, e esta migration não apaga policy de ninguém: por isso o rollback
+-- só precisa remover o que ela própria criou.
 --
--- Tudo corre num único bloco (atômico). Os masters (~181 MB) NÃO entram aqui:
--- sobem as cópias AAC-LC já tratadas. Reversível: ..._rollback.sql
+-- Falha fechada (aborta TUDO, nada é alterado) se RLS estiver desligada em
+-- storage.objects (as policies seriam ignoradas) ou se, ao final, o bucket ou a
+-- barreira não estiverem exatamente como descritos. Tudo num único bloco atômico.
+-- Os masters (~181 MB) NÃO entram aqui: sobem as cópias AAC-LC já tratadas.
+-- Reversível: ..._rollback.sql
 -- =====================================================================
 do $audiobooks$
 declare
-  p record;
   b record;
+  p record;
 begin
-  -- 1) Segurança primeiro: nada é alterado se houver policy ampla demais.
-  for p in
-    select policyname, qual, with_check
-      from pg_policies
-     where schemaname = 'storage' and tablename = 'objects'
-       and roles && array['public', 'anon', 'authenticated']::name[]
-       and coalesce(qual, '') not ilike '%audiobooks%'
-       and coalesce(with_check, '') not ilike '%audiobooks%'
-       and coalesce(qual, '') not ilike '%bucket_id%'
-       and coalesce(with_check, '') not ilike '%bucket_id%'
-  loop
-    raise exception
-      'MIGRATION ABORTADA: a policy "%" em storage.objects vale para public/anon/authenticated sem limitar o bucket (sem bucket_id). Ela exporia também o bucket audiobooks. Nada foi alterado. Revise essa policy antes de rodar de novo.',
-      p.policyname using errcode = 'P0001';
-  end loop;
+  -- 1) Sem RLS as policies não valem: nunca prosseguir.
+  if not (select c.relrowsecurity
+            from pg_class c join pg_namespace n on n.oid = c.relnamespace
+           where n.nspname = 'storage' and c.relname = 'objects') then
+    raise exception 'MIGRATION ABORTADA: RLS está desligada em storage.objects; nenhuma policy (inclusive a barreira) teria efeito. Nada foi alterado.' using errcode = 'P0001';
+  end if;
 
-  -- 2) Remove policies que mencionem explicitamente o bucket audiobooks.
-  for p in
-    select policyname
-      from pg_policies
-     where schemaname = 'storage' and tablename = 'objects'
-       and roles && array['public', 'anon', 'authenticated']::name[]
-       and (coalesce(qual, '') ilike '%audiobooks%' or coalesce(with_check, '') ilike '%audiobooks%')
-  loop
-    execute format('drop policy %I on storage.objects', p.policyname);
-  end loop;
+  -- 2) Barreira RESTRICTIVE própria (nome exato; recriada a cada execução ⇒ idempotente).
+  drop policy if exists audiobooks_deny_direct_access on storage.objects;
+  create policy audiobooks_deny_direct_access
+    on storage.objects
+    as restrictive
+    for all
+    to anon, authenticated
+    using (bucket_id is distinct from 'audiobooks')
+    with check (bucket_id is distinct from 'audiobooks');
 
   -- 3) Cria OU corrige o bucket (nunca «do nothing»).
   insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -72,6 +71,16 @@ begin
      or b.file_size_limit is distinct from 31457280
      or b.allowed_mime_types is distinct from array['audio/mp4', 'audio/x-m4a']::text[] then
     raise exception 'MIGRATION ABORTADA: o bucket audiobooks não ficou no estado esperado (privado, 30 MB, só M4A).' using errcode = 'P0001';
+  end if;
+
+  select * into p from pg_policies
+   where schemaname = 'storage' and tablename = 'objects' and policyname = 'audiobooks_deny_direct_access';
+  if not found
+     or p.permissive is distinct from 'RESTRICTIVE'
+     or p.cmd is distinct from 'ALL'
+     or not (p.roles::text[] @> array['anon', 'authenticated']::text[] and p.roles::text[] <@ array['anon', 'authenticated']::text[])
+     or p.qual is null or p.with_check is null then
+    raise exception 'MIGRATION ABORTADA: a barreira audiobooks_deny_direct_access não ficou instalada como RESTRICTIVE/ALL para anon e authenticated.' using errcode = 'P0001';
   end if;
 end
 $audiobooks$;
