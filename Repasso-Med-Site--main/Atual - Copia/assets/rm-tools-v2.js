@@ -2011,8 +2011,15 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (rec.cancelado) {                     // desfeito/apagado enquanto gravava
         rec.gravando = false;
         remover(rec.id);
-        try { await s.from('user_ink_strokes').delete().eq('user_id', uid).eq('id', rec.id); }
-        catch (e2) { console.warn('[rm2] ink compensating delete', e2 && e2.message); }
+        /* ACHADO da auditoria independente (2ª ocorrência do padrão do
+           ACHADO B): este DELETE compensatório tinha o mesmo defeito —
+           só try/catch, sem conferir `r.error`. Reusa a MESMA
+           infraestrutura segura do achado B (ver comentário acima de
+           `tentarApagarNoBanco()`), nunca uma segunda implementação: se
+           falhar, nunca finge sucesso — guarda o id para reenvio. */
+        if (await tentarApagarNoBanco(s, uid, rec.id)) { limparPendenteApagar(rec.id); return; }
+        guardarPendenteApagar(rec.id);
+        toast('No se pudo borrar el trazo. Se reintentará.', true);
         return;
       }
 

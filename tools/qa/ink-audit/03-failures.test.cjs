@@ -10,7 +10,12 @@
    sem fila durável completa, sem reenvio de INSERT ao voltar online, sem keepalive/sendBeacon no fechamento da
    aba): só o indicador persistente de "não salvo" muda de forma de detecção (de id «tmp-» para a classe
    `.rm2-ink-pendiente`, ver `pendingCount` em `lib.cjs`), nunca o resultado de rede em si. Não declarar aqui
-   que o achado D foi resolvido. */
+   que o achado D foi resolvido.
+
+   §9 (nova): a auditoria independente encontrou uma 2ª ocorrência do padrão do achado B — o DELETE
+   COMPENSATÓRIO de `filaGravar()` (traço desfeito/apagado enquanto o INSERT ainda estava em voo) também só
+   tinha try/catch, sem conferir `result.error`. CORRIGIDO reusando a mesma infraestrutura segura (nunca uma
+   segunda implementação): `tentarApagarNoBanco()` + fila durável `penApagarPendente.<uid>`. */
 const L=require('./lib.cjs'); const {ok,info}=L;
 const INK='user_ink_strokes';
 (async()=>{
@@ -137,6 +142,46 @@ const INK='user_ink_strokes';
     ok(nPontos!=null&&nPontos<=1200,'o traço gravado tem <= 1200 pontos (dentro da constraint do banco), medido: '+nPontos);
     ok(!tt.some(x=>x.err),'nenhum toast de erro: o traço denso não se perde mais');
     await s.context.close(); }
+
+  console.log('== 9 · DELETE compensatório de filaGravar() falha (auditoria independente: 2ª ocorrência do padrão do ACHADO B) — CORRIGIDO: reusa tentarApagarNoBanco()+fila pendente, nunca finge sucesso');
+  /* Cenário exato: 1 INSERT começa → 2 usuário desfaz ANTES da resposta → 3 INSERT confirma (rec.cancelado===true)
+     → 4 DELETE compensatório de filaGravar() recebe a falha provocada → 5 a linha permanece no banco (quando o
+     DELETE nem chegou a comitar) → 6 o id entra em penApagarPendente.<uid> → 7 conexão normaliza + reload →
+     8 reenviarApagarPendentes() reenvia o DELETE ANTES do SELECT (sincronizarAba) → 9 a linha desaparece de
+     vez → 10 o traço desfeito não reaparece. Testado nas 3 formas de falha aplicáveis a um DELETE. */
+  for (const variant of ['status500', 'drop-before', 'drop-after']) {
+    const {u,s}=await fresh('comp'+variant);
+    await L.chaos(st,[{method:'POST',table:INK,mode:'delay',delayMs:1200}]);
+    await L.drawStroke(s.page,0,{wait:false});                  // 1 · INSERT parte e fica em voo (1200 ms de atraso provocado)
+    const id=await s.page.evaluate(()=>{ const l=RMToolsV2.estado.strokes['semiologia-ii']||[]; return l.length?l[l.length-1].id:null; });
+    ok(!!id,'['+variant+'] traço criado localmente com id próprio (INSERT ainda em voo)');
+    await s.page.evaluate(()=>RMToolsV2.desfazer());            // 2 · usuário desfaz antes da resposta do INSERT (rec.cancelado=true)
+    await s.page.waitForTimeout(400);                           // dá tempo ao DELETE prematuro de apagarNoBanco() (linha ainda não existe: 0 apagadas, sem erro) terminar SEM caos
+    const regraDelete = variant==='status500' ? {method:'DELETE',table:INK,mode:'status',status:500}
+      : variant==='drop-before' ? {method:'DELETE',table:INK,mode:'drop-before'}
+      : {method:'DELETE',table:INK,mode:'drop-after-commit'};
+    await L.chaos(st,[regraDelete]);                            // só agora: a falha provocada espera o DELETE COMPENSATÓRIO de filaGravar()
+    await s.page.waitForTimeout(1800);                          // 3-4 · espera o INSERT (1200 ms) confirmar e o DELETE compensatório disparar e falhar
+    const rows=await rowsOf(u);
+    if (variant==='drop-after') {
+      ok(rows.length===0,'['+variant+'] 5 · o DELETE comitou de verdade antes da conexão cair — a linha já não existe (o cliente só não sabe)');
+    } else {
+      ok(rows.length===1,'['+variant+'] 5 · BLOCKER 1 CORRIGIDO: INSERT confirmou e o DELETE compensatório falhou sem comitar — a linha permanece no banco (nunca finge que apagou)');
+    }
+    const pendentes=await s.page.evaluate((uid)=>JSON.parse(localStorage.getItem('rm2.penApagarPendente.'+uid)||'[]'),u.id);
+    ok(pendentes.indexOf(id)!==-1,'['+variant+'] 6 · o id entrou na fila durável de DELETE pendente (mesma infraestrutura do achado B, sem segunda implementação)');
+    const tt=await toasts(s.page);
+    ok(tt.some(x=>x.err&&/Se reintentará/.test(x.m)),'['+variant+'] o usuário recebe o mesmo aviso de erro/reintento do achado B ('+JSON.stringify(tt.map(x=>x.m))+')');
+    ok(await L.inkCount(s.page)===0,'['+variant+'] o traço desfeito não aparece mais na tela, apesar do DELETE compensatório ter falhado');
+
+    await L.chaos(st,[]);                                       // 7 · "conexão normaliza"
+    await s.page.reload(); await s.page.waitForFunction('window.__ready===true'); await s.page.waitForTimeout(700);
+    ok(await L.inkCount(s.page)===0,'['+variant+'] 8-9-10 · após recarregar: o traço desfeito NÃO reaparece (reenviarApagarPendentes roda antes do SELECT)');
+    ok((await rowsOf(u)).length===0,'['+variant+'] …e a linha de fato não existe mais no banco (não é só efeito visual)');
+    const pendentesDepois=await s.page.evaluate((uid)=>JSON.parse(localStorage.getItem('rm2.penApagarPendente.'+uid)||'[]'),u.id);
+    ok(pendentesDepois.length===0,'['+variant+'] fila de pendentes drenada (sem resíduo)');
+    await s.context.close();
+  }
 
   await br.close(); await st.close(); process.exit(L.finish('FALHAS')?1:0);
 })().catch(e=>{console.error(e);process.exit(2);});
