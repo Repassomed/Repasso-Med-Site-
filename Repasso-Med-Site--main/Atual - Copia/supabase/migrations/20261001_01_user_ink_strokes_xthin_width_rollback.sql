@@ -11,10 +11,20 @@
 -- reverter, ou convertê-los à mão para outra espessura — é humana, não
 -- deste script.
 --
+-- ATOMICIDADE: a VALIDAÇÃO (contagem de linhas 'xthin'), o DROP e o ADD
+-- da constraint correm dentro da MESMA transação explícita
+-- (BEGIN..COMMIT). Se a validação falhar, o `raise exception` aborta a
+-- transação inteira — nenhum DROP chega a ter efeito, e a
+-- constraint larga permanece exatamente como estava: nunca existe uma
+-- janela em que a tabela fica sem nenhuma constraint de width, mesmo se
+-- a conexão cair ou o processo for interrompido a meio.
+--
 -- Não faz DROP de tabela, não toca em RLS, não mexe em user_id, não
 -- toca em user_highlights/user_notes, não muta nenhum traço
 -- thin/medium/thick.
 -- =====================================================================
+
+begin;
 
 do $$
 declare
@@ -31,8 +41,8 @@ end $$;
 alter table public.user_ink_strokes
   drop constraint if exists user_ink_strokes_width_valid;
 
-do $$ begin
-  alter table public.user_ink_strokes
-    add constraint user_ink_strokes_width_valid
-    check (width in ('thin','medium','thick'));
-exception when duplicate_object then null; end $$;
+alter table public.user_ink_strokes
+  add constraint user_ink_strokes_width_valid
+  check (width in ('thin','medium','thick'));
+
+commit;
