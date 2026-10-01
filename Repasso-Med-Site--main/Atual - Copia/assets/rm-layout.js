@@ -150,16 +150,28 @@
   }
 
   /* ------------------------------ rolagem ------------------------------ */
+  /* GERAÇÃO DE NAVEGAÇÃO. Todo callback assíncrono do shell (salto, acompanhamento da altura, reposicionamento da tinta)
+     nasce com a geração em que foi pedido e, DEPOIS de cada espera, confere de novo se ainda é o dono: a geração
+     avança em todo salto novo, troca de modo, attach e detach. Callback velho vira NO-OP — não é um timeout a mais. */
+  var GER = 0;
+  function abaViva(t) { return !!t && t.isConnected !== false && (!t.classList || t.classList.contains('active')); }
+  function vivo(g, tab) {
+    return g === GER && !!S && S.tab === tab && abaViva(tab) && !!window.RMModes && window.RMModes.isFull();
+  }
+  function novaGeracao() { GER++; clearTimeout(ALT.poll); ALT.poll = 0; }
+
   function hdrH() { return (S && S.band ? S.band.offsetHeight : 44) || 44; }
   function irPara(alvo) {
-    if (!alvo) return;
+    if (!alvo || !S) return;
+    var g = (novaGeracao(), GER), tab = S.tab;                      // um salto novo invalida o anterior (e o seu acompanhamento)
     var topo = hdrH() + 16, n = 0;
     (function passo() {
+      if (!vivo(g, tab) || alvo.isConnected === false) return;      // outro salto, outro modo, outra matéria ou detach: NO-OP
       var d = alvo.getBoundingClientRect().top - topo;
-      if (n++ > 10 || Math.abs(d) <= 2) { assentarTinta(); return; }   // chegou: a tinta acompanha o conteúdo que assentou
+      if (n++ > 10 || Math.abs(d) <= 2) { assentarTinta(g); return; }   // chegou: a tinta acompanha o conteúdo que assentou
       try { window.scrollTo({ top: Math.max(0, window.pageYOffset + d), behavior: 'instant' }); }
       catch (e) { window.scrollTo(0, Math.max(0, window.pageYOffset + d)); }
-      requestAnimationFrame(function () { setTimeout(passo, 40); });   // content-visibility muda alturas por baixo
+      requestAnimationFrame(function () { setTimeout(passo, 40); });   // content-visibility muda alturas por baixo (passo confere de novo)
     })();
   }
 
@@ -170,24 +182,66 @@
      pública, que reposicione — sempre DEPOIS de o layout assentar (2 frames +
      respiro, as seções usam content-visibility:auto) e agrupando pedidos
      seguidos em um só. Não mexe em âncoras, algoritmo nem persistência.
-     Fora da Página completa não roda: a tinta está oculta (caixas zeradas) e a
-     volta ao modo completo já reposiciona (rm-modes.js). */
-  var REPOS = { timer: 0, raf: 0, espera: false };
-  function reposicionarTinta() {
+
+     Contexto do pedido {geração, aba, anexo}: ao executar, TUDO é conferido de novo (matéria/aba ainda ativa, shell ainda
+     anexado na mesma geração, ainda na Página completa). Pedido velho = NO-OP.
+     NUNCA durante contato da caneta: se `rm2-pen-down` está ligado (ou há traço em curso), o pedido é coalescido e espera
+     o `pointerup`/`pointercancel` (e o fim do contato); só então reconfere o contexto e executa UMA vez.
+     Fora da Página completa não roda: a tinta está oculta e a volta ao modo completo já pede (rm-modes.js). */
+  var REPOS = { timer: 0, raf: 0, espera: false, ctx: null, pCtx: null, pFn: null, pT: 0, pLoop: 0 };
+  function ctxAtual() { return S ? { g: GER, tab: S.tab, anexo: true } : null; }
+  /* contato da stylus (classe do rm-tools-v2) ou traço em curso (gancho SÓ DE LEITURA da V2): só observa, não decide nada da caneta */
+  function escreveuAgora() {
+    if (escrevendo()) return true;
+    try { var t = window.RMToolsV2 && window.RMToolsV2._test; return !!(t && typeof t.temTraco === 'function' && t.temTraco()); } catch (e) { return false; }
+  }
+  function reposicionarTinta(ctx) {
+    ctx = ctx || ctxAtual();
+    if (!ctx) return;
+    REPOS.ctx = ctx;                                         // o pedido mais novo substitui o anterior (coalesce)
     if (REPOS.espera) return;
     REPOS.espera = true;
     REPOS.raf = requestAnimationFrame(function () {
       REPOS.raf = requestAnimationFrame(function () {
         REPOS.timer = setTimeout(function () {
-          REPOS.espera = false; REPOS.timer = 0; REPOS.raf = 0;
-          try {
-            if (S && window.RMModes && !window.RMModes.isFull()) return;
-            if (window.RMToolsV2 && typeof window.RMToolsV2.reposicionar === 'function') window.RMToolsV2.reposicionar();
-            ALT.h = alturaDoc();
-          } catch (e) {}
+          var c = REPOS.ctx; REPOS.espera = false; REPOS.timer = 0; REPOS.raf = 0; REPOS.ctx = null;
+          executarReposicao(c);
         }, 120);
       });
     });
+  }
+  function executarReposicao(c) {
+    try {
+      if (!c || !abaViva(c.tab)) return;                     // a matéria saiu (ou a aba deixou de ser a ativa)
+      if (c.anexo) { if (!S || S.tab !== c.tab || c.g !== GER || !window.RMModes || !window.RMModes.isFull()) return; }
+      else if (S) return;                                    // pedido de «depois do detach»: só vale se continua desanexado
+      if (escreveuAgora()) { aguardarCaneta(c); return; }
+      if (window.RMToolsV2 && typeof window.RMToolsV2.reposicionar === 'function') window.RMToolsV2.reposicionar();
+      ALT.h = alturaDoc();
+    } catch (e) {}
+  }
+  /* espera o contato acabar: pointerup/pointercancel (captura, só leitura) + touchend/touchcancel (adaptador de Touch Events)
+     + conferência periódica de segurança (uma classe presa não pode travar o pedido para sempre) */
+  function aguardarCaneta(c) {
+    REPOS.pCtx = c;                                          // vários pedidos durante o contato viram UM
+    if (REPOS.pFn) return;
+    var tentar = function () {
+      clearTimeout(REPOS.pT);
+      REPOS.pT = setTimeout(function () {
+        REPOS.pT = 0;
+        if (escreveuAgora()) return;                         // ainda em contato: espera o próximo fim de contato
+        var c2 = REPOS.pCtx; desarmarCaneta();
+        if (c2) reposicionarTinta(c2);                       // reconfere tudo ao executar
+      }, 80);                                                // a classe sai no handler da V2, que pode correr depois do nosso
+    };
+    REPOS.pFn = tentar;
+    ['pointerup', 'pointercancel', 'touchend', 'touchcancel'].forEach(function (t) { document.addEventListener(t, tentar, { capture: true, passive: true }); });
+    REPOS.pLoop = setInterval(tentar, 400);
+  }
+  function desarmarCaneta() {
+    if (REPOS.pFn) ['pointerup', 'pointercancel', 'touchend', 'touchcancel'].forEach(function (t) { document.removeEventListener(t, REPOS.pFn, { capture: true }); });
+    clearTimeout(REPOS.pT); clearInterval(REPOS.pLoop);
+    REPOS.pFn = null; REPOS.pCtx = null; REPOS.pT = 0; REPOS.pLoop = 0;
   }
 
   /* --------- tinta × alturas que mudam por baixo (achado F da auditoria #420) ---------
@@ -205,16 +259,19 @@
     ALT.scroll = setTimeout(function () { ALT.scroll = 0; if (S && alturaDoc() !== ALT.h) reposicionarTinta(); }, 200);
   }
   /* depois de um salto: reposiciona já (o alvo está no lugar) e acompanha até a altura ficar estável por 3 leituras
-     seguidas (≈ 300 ms) — ou 4 s, o que vier primeiro. Um salto novo cancela o acompanhamento do anterior. */
-  function assentarTinta() {
+     seguidas (≈ 300 ms) — ou 4 s, o que vier primeiro. Só enquanto a geração que o pediu continua sendo a atual. */
+  function assentarTinta(g) {
     if (!S) return;
+    if (g === undefined) g = GER;
+    var tab = S.tab;
     clearTimeout(ALT.poll);
     var t0 = Date.now(), ult = -1, iguais = 0;
-    reposicionarTinta();
+    if (!vivo(g, tab)) return;
+    reposicionarTinta({ g: g, tab: tab, anexo: true });
     (function amostra() {
-      if (!S) return;
+      if (!vivo(g, tab)) { ALT.poll = 0; return; }           // outro salto/modo/matéria/detach: o acompanhamento morre
       var h = alturaDoc();
-      if (h === ult) iguais++; else { if (ult !== -1) reposicionarTinta(); iguais = 0; ult = h; }
+      if (h === ult) iguais++; else { if (ult !== -1) reposicionarTinta({ g: g, tab: tab, anexo: true }); iguais = 0; ult = h; }
       if (iguais >= 3 || Date.now() - t0 > 4000) { ALT.poll = 0; return; }
       ALT.poll = setTimeout(amostra, 100);
     })();
@@ -575,7 +632,7 @@
     window.addEventListener('scroll', S.h.scroll, { passive: true });
     S.tab.addEventListener('load', S.h.img, true);             // 'load' não borbulha: captura
     document.addEventListener('keydown', S.h.key);
-    window.RMModes.onChange(function () { refletirModo(); });
+    window.RMModes.onChange(function () { novaGeracao(); refletirModo(); });   // troca de modo: salto/acompanhamento/pedidos anteriores perdem a vez
   }
 
   function desligar() {
@@ -598,6 +655,7 @@
   function attach(tab) {
     if (S && S.tab === tab) return;
     if (S) detach();
+    novaGeracao();
     var cat = catalogo();
     var bl = blocos(tab);
     if (!bl.length) throw new Error('sem blocos');           // nada para navegar: não vira piloto
@@ -633,6 +691,8 @@
 
   function detach() {
     if (!S) { try { ROOT.classList.remove('rm-l2'); } catch (e) {} return; }
+    var abaSaiu = S.tab;
+    novaGeracao(); desarmarCaneta();                         // nada pedido antes do detach pode agir depois dele
     /* sem requestView aqui: voltar à Página completa devolveria a rolagem antiga
        por cima da matéria que o aluno está abrindo. O RMModes.detach() abaixo
        só zera o estado; a classe rm-l2 sai e o conteúdo reaparece sozinho. */
@@ -643,13 +703,16 @@
     ROOT.classList.remove('rm-l2');
     try { window.RMModes.detach(); } catch (e) {}
     S = null;
-    reposicionarTinta();                                     // as reservas saíram: o conteúdo voltou ao X original
+    /* as reservas saíram: o conteúdo voltou ao X original — só importa se a matéria CONTINUA na tela; se o aluno
+       saiu dela, a aba está inativa e o pedido vira NO-OP (0 reposicionamento tardio) */
+    reposicionarTinta({ g: GER, tab: abaSaiu, anexo: false });
   }
 
   window.RMLayout = {
     attach: attach,
     detach: detach,
     assentarTinta: assentarTinta,                            // usado por rm-modes.js ao voltar à Página completa
+    pedirReposicao: function () { reposicionarTinta(); },    // idem: único caminho até RMToolsV2.reposicionar (coalescido, nunca durante o contato da caneta)
     /* só leitura, para teste/diagnóstico */
     _dock: decidirDock, _cartaoTeorico: cartaoTeorico,
     _estado: function () { return S ? { tab: S.tab && S.tab.id, blocos: S.blocos.length, drawer: S.drawer, lmode: ROOT.getAttribute('data-rm-lmode'), dock: ROOT.getAttribute('data-rm-dock') } : null; }

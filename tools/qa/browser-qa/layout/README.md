@@ -55,7 +55,7 @@ devolver a rolagem. Não toca âncoras, algoritmo nem persistência.
 Cenários (1440×900 e 390×844): salto a blocos profundos; **revisitar** (fundo → mais acima → fundo, em página nova);
 volta da Página completa em posição profunda (inclusive vindo de um modo isolado direto a um tema profundo); imagem
 carregando depois do salto. **Validado por mutação:** com o `rm-layout.js`/`rm-modes.js` anteriores o teste reprova
-(9 falhas; a imagem deixa o traço 489 px fora de forma permanente); com a correção, 55/55.
+(15 falhas; a imagem deixa o traço 489 px fora de forma permanente); com a correção, 54/54.
 
 Não testado: aparelho real; imagens `loading="lazy"` reais (a Semiología II não tem `<img>` e a emulação não dispara o
 carregamento lazy: usa-se imagem sintética `eager`); matéria de ~418 mil px (Histología II Práctica) com o layout (o piloto
@@ -78,3 +78,36 @@ repositório nem no Drive — o acabamento segue a especificação escrita (#67,
 **Acabamento B1 (só `rm-layout.css/js`):** logo original (`assets/repasso-med-logo.png`, o mesmo do cabeçalho do site) numa pastilha
 branca na faixa persistente; acentos do shell em **laranja da marca** (`--l2-orange #e8772e`: borda da faixa, item ativo, bloco atual,
 chip «Página completa») no lugar do dourado, mantendo navy/branco e a serifa nos títulos; nada do conteúdo da matéria foi tocado.
+
+
+## Medida de tinta VÁLIDA (`lib-ink.cjs`) — «0 px com 0 paths» = TESTE INVÁLIDO
+
+Auditoria do #425: no 390 px o traço de `s2-b10` nem estava na janela depois do salto (top 1407 > 844) e o teste passava com «0 px».
+Agora uma medida só vale com tinta **realmente visível** no destino: a âncora (bloco de texto) do traço na janela, `paths > 0`,
+bounding box do SVG e do `<path>` finitas e não vazias, e o alinhamento medido. Sem isso o teste **reprova** como inválido (nunca
+passa). SVG longe da âncora = desvio grande = reprova na tolerância (2 px).
+
+## Corridas de transição e caneta × reposicionamento — `race.test.cjs`
+
+```bash
+export NODE_PATH=$(npm root -g)     # ou RM_PLAYWRIGHT=/caminho/do/modulo
+node tools/qa/browser-qa/layout/race.test.cjs
+```
+**Corrigido em `rm-modes.js`:** o callback da volta à Página completa (espera de 2 frames + 120 ms) continuava rodando depois de
+uma nova troca de modo, de um `detach()` ou de sair da matéria: reposicionava a tinta e devolvia a rolagem da Página completa já
+dentro de outro modo. Agora cada transição tem **geração** (`RMModes.gen`, avança em toda troca efetiva, attach e detach) e **aba**;
+depois da espera confere de novo — ainda é a transição atual? mesma aba, ainda ativa/conectada? ainda `full`? ainda anexado? — e
+só então reposiciona, restaura a rolagem e executa `opts.depois`; senão **NO-OP**. Também: se a volta anterior ainda não devolveu
+a rolagem, uma nova saída **não** sobrescreve a posição de saída original (antes ela virava ≈ 0).
+**Corrigido em `rm-layout.js`:** (1) todo `RMToolsV2.reposicionar()` passa por um único caminho coalescido que **nunca** roda com
+`body.rm2-pen-down` (nem com traço em curso, via gancho só de leitura da V2): espera `pointerup`/`pointercancel` (+ `touchend`/`touchcancel`
+do adaptador e conferência periódica de segurança), reconfere matéria/aba/modo/attach/ausência de novo traço e executa **uma** vez;
+(2) `irPara()` e o acompanhamento da altura são invalidados por salto novo, troca de modo, troca de matéria ou detach (geração).
+Nada de reconhecimento da Apple Pencil, Touch Events, scroll, palma, captura, latência ou RDP foi tocado: só leitura.
+
+Cenários: A `preguntas→full→flashcards` antes dos 2 frames+120 ms · B `flashcards→full→preguntas` rápido · C sair da matéria durante a
+espera · D detach durante a transição · E pedido de reposicionamento → o usuário começa o traço antes da execução (+ E3 novo traço
+antes de o pendente executar, E4 matéria sai antes de a caneta levantar) · F `pointerup` → executa UMA vez · G `pointercancel` ·
+H `irPara(A)→irPara(B)` (0 rolagens dirigidas a A depois do clique em B) · I `irPara()` → sair da matéria. 1440 e 390 (a caneta, só em
+1440). **Validado por mutação:** com o `rm-layout.js/rm-modes.js` do HEAD auditado `94006e54` o teste reprova com 50 falhas; com a
+correção, 107/107. Os eventos de caneta são **sintéticos** (`PointerEvent` `pointerType=pen`): provam o caminho de código, não o hardware.

@@ -17,8 +17,9 @@
        camada de tinta fora da Página completa);
      · ao sair da Página completa: desarma a ferramenta (API pública da
        V2, `escolherFerramenta('none')`), guarda a posição de rolagem;
-     · ao voltar: restaura o layout, ESPERA ele assentar e só então pede
-       à V2 que reposicione a tinta (`reposicionar`), devolve a rolagem.
+     · ao voltar: restaura o layout, ESPERA ele assentar e só então (se a
+       transição continua sendo a atual, na mesma aba) pede ao layout que
+       reposicione a tinta e devolve a rolagem; senão é NO-OP.
 
    O que a B1 NÃO faz (vem depois)
      · conteúdo dos modos isolados (B3) — hoje é um painel vazio;
@@ -56,7 +57,16 @@
 
   var FULL = { id: 'full', label: 'Página completa', icon: 'index' };
 
-  var st = { view: 'full', tab: null, scrollY: 0, ouvintes: [], disponiveis: [] };
+  /* `gen` = geração da transição. Avança em TODA troca efetiva de modo, attach e detach. Quem espera algo assíncrono
+     (a volta à Página completa espera o layout assentar) guarda a geração e a aba em que nasceu e, depois da espera,
+     só age se ainda for a transição ATUAL, na MESMA aba, ainda anexado, ainda na Página completa. Senão: NO-OP.
+     `volta` = a volta à Página completa que ainda não devolveu a rolagem (guarda a posição de saída original). */
+  var st = { view: 'full', tab: null, scrollY: 0, ouvintes: [], disponiveis: [], gen: 0, volta: null };
+
+  function abaViva(t) { return !!t && t.isConnected !== false && (!t.classList || t.classList.contains('active')); }
+  function atual(tok, tab) {
+    return st.gen === tok && !!tab && st.tab === tab && st.view === 'full' && abaViva(tab);
+  }
 
   function porId(id) {
     if (id === 'full') return FULL;
@@ -95,17 +105,16 @@
     });
   }
 
-  function voltarParaCompleta(y, opts) {
+  function voltarParaCompleta(tok, tab, y, opts) {
     return assentar().then(function () {
-      try {
-        if (window.RMToolsV2 && typeof window.RMToolsV2.reposicionar === 'function') {
-          window.RMToolsV2.reposicionar();            // tinta: só agora, com o layout completo
-        }
-      } catch (e) {}
+      if (!atual(tok, tab)) return;                       // transição velha (outra troca, detach, outra matéria): NO-OP
+      /* a tinta só é reposicionada pelo layout (único caminho até a V2: coalescido, nunca durante o contato da caneta) */
+      try { if (window.RMLayout && typeof window.RMLayout.pedirReposicao === 'function') window.RMLayout.pedirReposicao(); } catch (e) {}
       if (!(opts && opts.restaurar === false)) { try { window.scrollTo(0, y); } catch (e) {} }
-      if (opts && typeof opts.depois === 'function') { try { opts.depois(); } catch (e) {} }
+      if (st.volta && st.volta.tok === tok) st.volta = null;   // rolagem devolvida: a posição de saída cumpriu o papel
+      if (opts && typeof opts.depois === 'function' && atual(tok, tab)) { try { opts.depois(); } catch (e) {} }
       /* a rolagem devolvida renderiza seções puladas (content-visibility): a tinta acompanha o conteúdo que assentou */
-      try { if (window.RMLayout && typeof window.RMLayout.assentarTinta === 'function') window.RMLayout.assentarTinta(); } catch (e) {}
+      if (atual(tok, tab)) { try { if (window.RMLayout && typeof window.RMLayout.assentarTinta === 'function') window.RMLayout.assentarTinta(); } catch (e) {} }
     });
   }
 
@@ -116,9 +125,13 @@
     if (next !== 'full' && st.disponiveis.indexOf(alvo) === -1) return false;   // recurso ausente
     if (next === st.view) return true;
     var prev = st.view;
+    var tok = ++st.gen;                     // toda troca efetiva invalida o que estava pendente
 
     if (prev === 'full') {                  // saindo da Página completa
-      st.scrollY = window.pageYOffset || 0;
+      /* se a volta anterior ainda não devolveu a rolagem, a posição atual (≈ topo do modo isolado) NÃO é a do aluno:
+         mantém a posição de saída original */
+      if (!st.volta) st.scrollY = window.pageYOffset || 0;
+      st.volta = null;
       desarmarFerramentas();
     }
     st.view = next;
@@ -126,7 +139,8 @@
     emitir(prev);
 
     if (next === 'full') {                  // voltando: layout assenta → tinta → rolagem
-      voltarParaCompleta(st.scrollY, opts);
+      st.volta = { tok: tok };
+      voltarParaCompleta(tok, st.tab, st.scrollY, opts);
     } else {
       try { window.scrollTo(0, 0); } catch (e) {}
     }
@@ -134,6 +148,7 @@
   }
 
   function attach(tab) {
+    st.gen++; st.volta = null;
     st.tab = tab;
     st.view = 'full';
     ROOT.setAttribute('data-rm-view', 'full');
@@ -141,6 +156,7 @@
   }
 
   function detach() {
+    st.gen++; st.volta = null;              // callbacks de transições anteriores viram NO-OP
     st.tab = null;
     st.view = 'full';
     ROOT.removeAttribute('data-rm-view');
@@ -158,6 +174,7 @@
     disponiveis: function () { return st.disponiveis.slice(); },
     requestView: requestView,
     get view() { return st.view; },
+    get gen() { return st.gen; },           // só leitura (testes/diagnóstico)
     isFull: function () { return st.view === 'full'; },
     onChange: function (fn) { if (typeof fn === 'function') st.ouvintes.push(fn); }
   };
