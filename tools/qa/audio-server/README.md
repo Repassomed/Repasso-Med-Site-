@@ -41,14 +41,49 @@ navegador ──(JWT, audio_id)──► get-audio-url ─► URL assinada 10 mi
    nega, nunca concede; a `service_role` (BYPASSRLS, só no servidor) não é afetada; os outros buckets seguem pelas policies deles.
    A migration **não lê nem apaga policies alheias**; aborta sem alterar nada se a RLS de `storage.objects` estiver desligada.
 3. **Enviar** as cópias ao bucket `audiobooks` (painel do Supabase), p.ex. `semiologia-ii/<nome>.v1.m4a`.
-4. No Netlify definir: `RM_PILOT_AUDIO_UIDS` = UID da conta principal; `RM_AUDIO_MANIFEST` = JSON
-   `{"semiologia-ii":[{"audio_id":"…","block_id":"s2-b01","theme":"…","title":"…","duration":SEGUNDOS,"order":1,"version":"v1","path":"semiologia-ii/….m4a","ready":true}]}`.
-   (`SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` já existem.)
-5. **Verificar** (com a sessão do José e com outra conta): manifesto lista os itens só para José; `get-audio-url` devolve
-   `src` do bucket só para José; outra conta e outra matéria recebem a negação idêntica.
+4. No Netlify definir `RM_PILOT_AUDIO_UIDS` (UID da conta principal) e `RM_AUDIO_MANIFEST` (JSON
+   `{"semiologia-ii":[{"audio_id":"…","block_id":"s2-b01","theme":"…","title":"…","duration":SEGUNDOS,"order":1,"version":"v1","path":"semiologia-ii/….m4a","ready":true}]}`).
+   `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` já existem.
+   **⚠ Mudar variável de ambiente no Netlify NÃO tem efeito imediato:** só vale no **próximo deploy** (build). Depois de salvar as
+   variáveis é preciso disparar um deploy (Deploys → Trigger deploy) e esperar terminar — normalmente 1–3 min. Para testar antes de
+   produção, use um **deploy preview** com as variáveis de escopo «Deploy previews».
+5. **Verificar com o script de fumaça** (só lê; o JWT vai por variável de ambiente e nunca é impresso):
+   ```bash
+   RM_BASE=https://<deploy>.netlify.app RM_TOKEN=<jwt da conta do piloto> RM_AUDIO_ID=<audio_id> \
+     node tools/qa/audio-server/smoke-remote.cjs on --save-src /tmp/src.txt     # LIGADO: manifesto, URL, Range 206
+   RM_BASE=… RM_TOKEN=<jwt de OUTRA conta> node tools/qa/audio-server/smoke-remote.cjs deny   # negação idêntica
+   RM_BASE=…                                node tools/qa/audio-server/smoke-remote.cjs deny   # sem token
+   ```
 
-**Desativar (kill switch, sem deploy):** esvaziar `RM_PILOT_AUDIO_UIDS` (ou `RM_AUDIO_MANIFEST`). **Rollback real** (`..._rollback.sql`): bucket vazio ⇒ remove `audiobooks` **e só a policy própria** (nome exato); com objetos ⇒ **aborta,
+## Desativar — o que é imediato e o que não é
+
+| Quando | O que acontece |
+|---|---|
+| Esvaziar `RM_PILOT_AUDIO_UIDS` (ou `RM_AUDIO_MANIFEST`) **e fazer novo deploy** | a partir do fim do deploy: manifesto vazio e `get-audio-url` 404 para todos. **Antes do deploy terminar, nada muda** (a variável antiga continua em uso). |
+| URL assinada **já emitida** | continua válida até expirar (**≤ 10 min** após a emissão): quem já tem a URL ainda consegue baixar/ouvir esse trecho; o motor, ao tentar renovar, recebe 404 e mostra erro. O desligamento **não revoga** URLs já emitidas. |
+| Corte imediato (emergência) | apagar/mover os objetos no Storage (a URL assinada passa a 404 na hora) ou aplicar o rollback abaixo depois de esvaziar o bucket. O corte por variável sozinho leva o tempo de um deploy + até 10 min de URLs em circulação. |
+| Cliente (piloto) | sem manifesto o card não aparece (recurso ausente = acesso ausente); um player já aberto para ao falhar a renovação. |
+
+**Teste real do desligamento** (executar num deploy preview; não foi executado — exige deploy e conta real):
+1. Com tudo ligado: `smoke-remote.cjs on --save-src /tmp/src.txt` (guarda a URL assinada, arquivo 0600; apague depois).
+2. Esvaziar as variáveis, **fazer o deploy**, esperar terminar.
+3. `smoke-remote.cjs off --old-src /tmp/src.txt`: manifesto vazio + 404; o relatório informa se a URL antiga **ainda vale** (esperado nos primeiros ≤ 10 min).
+4. Esperar passar 10 min e repetir só o passo 3: a URL antiga deve vir 400/403.
+5. Religar (variáveis + deploy) e repetir o passo 1.
+O próprio script é testado localmente contra as funções reais com um Supabase falso (`node tools/qa/audio-server/smoke-remote.selftest.cjs`,
+9 verificações: ligado, outra conta, sem token, desligado com URL antiga ainda válida e depois expirada, e reprova se o desligamento não funcionou).
+
+**Rollback do bucket** (`..._rollback.sql`): bucket vazio ⇒ remove `audiobooks` **e só a policy própria** (nome exato); com objetos ⇒ **aborta,
 não apaga nada e a barreira continua ativa** (apague os objetos pelo painel e rode de novo). Os dois scripts rodam como um único bloco atômico.
+
+## Retomada da posição — limites
+
+A posição é guardada **no navegador** (`localStorage`, uma chave por UID + `audio_id@version`; só um número, nada de título/URL). Portanto:
+* **não** acompanha o aluno entre aparelhos nem entre navegadores/perfis; trocar de celular para o computador recomeça do zero;
+* some se o aluno limpar os dados do site ou usar aba anônima/privada (o motor segue funcionando, só sem retomada);
+* fechar a aba sem passar por pausa/fechar pode perder até 5 s (gravação periódica a cada 5 s; `flush()` no `pagehide` da integração reduz isso);
+* nova versão do áudio (`version`) começa em 0.
+Retomada entre aparelhos exigiria uma tabela no Supabase (migration própria, com RLS por UID) — **não** faz parte desta entrega.
 
 ## Custos / egress
 
