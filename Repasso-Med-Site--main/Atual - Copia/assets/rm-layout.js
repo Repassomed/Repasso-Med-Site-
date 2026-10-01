@@ -414,6 +414,58 @@
     return { band: band, hamb: hamb, chip: chip, mat: mat };
   }
 
+  /* ------------------- capa da matéria + SLOTS de arte -------------------
+     A capa é CÓDIGO (HTML/CSS/JS): título, subtítulo, ações e o container da arte. Nada aqui é imagem de texto, e a ARTE FINAL
+     (banner/ilustração autoral da Semiología II) é produzida à parte e integrada depois: o slot só reserva o espaço.
+     SLOT `hero`: enquanto ASSETS.hero for null o container fica `hidden` (estado «vacío», 0 px, sem desenho improvisado);
+     quando houver arquivo, basta preencher o objeto — não é preciso reconstruir o layout:
+       ASSETS.hero = { src: 'assets/semio2/hero-1x.webp', srcset: 'assets/semio2/hero-1x.webp 1x, assets/semio2/hero-2x.webp 2x',
+                       w: 1600, h: 900, alt: 'texto alternativo', pos: '50% 40%' }
+     `w`/`h` reservam o espaço (aspect-ratio ⇒ 0 deslocamento ao carregar); `object-fit: cover` preserva a proporção (sem
+     deformar) e `pos` escolhe o recorte; `srcset` entrega nitidez em retina/tablet. Estados: cargando (esqueleto neutro) →
+     listo; error ⇒ o slot colapsa (sem ícone de imagem quebrada). Também dá para chamar RMLayout.setAsset('hero', spec). */
+  var ASSETS = { hero: null };
+
+  function renderArte(slot) {
+    if (!S || !S.arte) return;
+    var fig = S.arte, spec = ASSETS[slot];
+    while (fig.firstChild) fig.removeChild(fig.firstChild);
+    S.capa.classList.remove('has-art');
+    if (!spec || !spec.src) { fig.hidden = true; fig.setAttribute('data-state', 'vacio'); return; }
+    var w = +spec.w || 16, h = +spec.h || 9;
+    var frame = ui('div', 'rm-l2-art-frame'); frame.style.aspectRatio = w + ' / ' + h;
+    var im = ui('img', 'rm-l2-art-img', { alt: spec.deco ? '' : (spec.alt || ''), width: String(w), height: String(h), decoding: 'async', fetchpriority: 'high' });
+    if (spec.deco) im.setAttribute('role', 'presentation');
+    if (spec.pos) im.style.objectPosition = spec.pos;
+    if (spec.srcset) im.setAttribute('srcset', spec.srcset);
+    if (spec.sizes) im.setAttribute('sizes', spec.sizes);
+    fig.hidden = false; fig.setAttribute('data-state', 'cargando'); S.capa.classList.add('has-art');
+    var tok = S, listo = function () { if (S === tok && S.arte === fig) fig.setAttribute('data-state', 'listo'); };
+    im.addEventListener('load', listo);
+    im.addEventListener('error', function () { if (S === tok && S.arte === fig) { fig.hidden = true; fig.setAttribute('data-state', 'error'); S.capa.classList.remove('has-art'); } });
+    im.src = spec.src;
+    frame.appendChild(im); fig.appendChild(frame);
+    if (im.complete && im.naturalWidth > 0) listo();
+  }
+
+  function montarCapa(cat, bl) {
+    var capa = ui('div', 'rm-l2-cover', { role: 'region', 'aria-label': 'Presentación de la materia' });
+    var cuerpo = ui('div', 'rm-l2-cover-body');
+    var eb = ui('p', 'rm-l2-eyebrow'); eb.textContent = 'Repasso Med · Guía de estudio';
+    var h1 = ui('h1', 'rm-l2-cover-title'); h1.textContent = cat.title || 'Semiología II';
+    cuerpo.appendChild(eb); cuerpo.appendChild(h1);
+    if (cat.sub) { var sb = ui('p', 'rm-l2-cover-sub'); sb.textContent = cat.sub; cuerpo.appendChild(sb); }
+    var meta = ui('p', 'rm-l2-cover-meta'); meta.textContent = bl.length + ' bloques'; cuerpo.appendChild(meta);
+    var acc = ui('div', 'rm-l2-cover-actions');
+    var go = ui('button', 'rm-l2-btn rm-l2-btn-primary', { type: 'button', 'data-act': 'go' }); go.textContent = 'Ir al contenido';
+    var ix = ui('button', 'rm-l2-btn rm-l2-btn-ghost rm-l2-btn-idx', { type: 'button', 'data-act': 'idx' });
+    ix.appendChild(svg('index')); var il = el('span'); il.textContent = 'Ver el índice'; ix.appendChild(il);
+    acc.appendChild(go); acc.appendChild(ix); cuerpo.appendChild(acc);
+    var arte = ui('figure', 'rm-l2-art', { 'data-slot': 'hero', 'data-state': 'vacio' }); arte.hidden = true;
+    capa.appendChild(cuerpo); capa.appendChild(arte);
+    return { capa: capa, arte: arte };
+  }
+
   /* ------------------------------ lateral ------------------------------- */
   function item(icon, label, cls, attrs) {
     var b = ui('button', 'rm-l2-item ' + (cls || ''), Object.assign({ type: 'button', title: label }, attrs || {}));
@@ -620,6 +672,11 @@
       hamb: function () { if (S.drawer) fecharDrawer(); else abrirDrawer(); },
       back: function () { fecharDrawer(true); },
       mat: function () { try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (x) { window.scrollTo(0, 0); } },
+      capa: function (e) {
+        var b = e.target && e.target.closest && e.target.closest('[data-act]'); if (!b || !S) return;
+        if (b.getAttribute('data-act') === 'go') { if (S.blocos[0]) irPara(S.blocos[0].sec); }
+        else if (b.getAttribute('data-act') === 'idx') { if (lmode() === 'docked') { S.lat.tog && S.lat.tog.focus(); } else abrirDrawer(); }
+      },
       raiz: function (e) { if (e.target.closest && e.target.closest('[data-view]')) window.RMModes.requestView('full'); }
     };
     S.side.addEventListener('click', S.h.lat);
@@ -627,6 +684,7 @@
     S.backdrop.addEventListener('click', S.h.back);
     S.mat.addEventListener('click', S.h.mat);
     S.rootEl.addEventListener('click', S.h.raiz);
+    S.capa.addEventListener('click', S.h.capa);
     window.addEventListener('resize', S.h.resize);
     window.addEventListener('orientationchange', S.h.resize);
     window.addEventListener('scroll', S.h.scroll, { passive: true });
@@ -642,6 +700,7 @@
     S.backdrop.removeEventListener('click', h.back);
     S.mat.removeEventListener('click', h.mat);
     S.rootEl.removeEventListener('click', h.raiz);
+    if (S.capa) S.capa.removeEventListener('click', h.capa);
     window.removeEventListener('resize', h.resize);
     window.removeEventListener('orientationchange', h.resize);
     window.removeEventListener('scroll', h.scroll);
@@ -668,6 +727,12 @@
     var lat = montarLateral(tab, bl); S.lat = lat; S.side = lat.side; S.railBtn = lat.railBtn;
     S.backdrop = ui('div', 'rm-l2-backdrop');
     var raiz = montarRaiz(); S.rootEl = raiz.root; S.titulo = raiz.titulo;
+    var cp = montarCapa(cat, bl); S.capa = cp.capa; S.arte = cp.arte;
+    var cab = tab.querySelector(':scope > .rm-subject-head');       // header gerado pelo app-core (não é conteúdo): a capa o substitui no piloto
+    if (cab && cab.parentNode) cab.parentNode.insertBefore(S.capa, cab.nextSibling);
+    else { var s1 = tab.querySelector('section'); (s1 ? s1.parentNode : tab).insertBefore(S.capa, s1 || tab.firstChild); }
+    ROOT.setAttribute('data-rm-cover', '');
+    renderArte('hero');
     S.player = ui('div', 'rm-l2-player', { id: 'rm-l2-player', role: 'region', 'aria-label': 'Audiobook', hidden: '' });   // slot futuro, 0 px
 
     var cont = document.getElementById('materias-container');
@@ -697,8 +762,8 @@
        por cima da matéria que o aluno está abrindo. O RMModes.detach() abaixo
        só zera o estado; a classe rm-l2 sai e o conteúdo reaparece sozinho. */
     desligar();
-    [S.band, S.ph, S.side, S.backdrop, S.rootEl, S.player].forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });
-    ['data-rm-lmode', 'data-rm-dock', 'data-rm-drawer'].forEach(function (a) { ROOT.removeAttribute(a); });
+    [S.band, S.ph, S.side, S.backdrop, S.rootEl, S.player, S.capa].forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });
+    ['data-rm-lmode', 'data-rm-dock', 'data-rm-drawer', 'data-rm-cover'].forEach(function (a) { ROOT.removeAttribute(a); });
     ROOT.style.removeProperty('--rm-band-bottom'); ROOT.style.removeProperty('--rm-band-top');
     ROOT.classList.remove('rm-l2');
     try { window.RMModes.detach(); } catch (e) {}
@@ -711,6 +776,8 @@
   window.RMLayout = {
     attach: attach,
     detach: detach,
+    ASSETS: ASSETS,                                          // slots de arte (hoje vazios): ver «capa da matéria + SLOTS de arte»
+    setAsset: function (slot, spec) { ASSETS[slot] = spec || null; renderArte(slot); },
     assentarTinta: assentarTinta,                            // usado por rm-modes.js ao voltar à Página completa
     pedirReposicao: function () { reposicionarTinta(); },    // idem: único caminho até RMToolsV2.reposicionar (coalescido, nunca durante o contato da caneta)
     /* só leitura, para teste/diagnóstico */

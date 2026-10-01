@@ -29,6 +29,13 @@ const CASOS = [
     await p.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); }); await p.waitForTimeout(300);
     const f = (s) => path.join(OUT, `${PRE}_${c.nome}_${s}.png`);
     await p.screenshot({ path: f('topo') });
+    /* SLOT de arte exercitado com uma imagem SINTÉTICA lisa (não é asset do produto): mostra como o container se comporta; a arte final virá do ChatGPT */
+    if ([1440, 390].includes(c.w) && c.z === 1) {
+      await p.route('**/__art/**', r => r.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="#cfd8e6"/></svg>' }));
+      await p.evaluate(() => window.RMLayout.setAsset('hero', { src: '/__art/sintetica.svg', w: 1600, h: 900, alt: 'imagem sintética de teste (não é asset do produto)' })); await p.waitForTimeout(600);
+      await p.screenshot({ path: f('slot_arte_SINTETICA') });
+      await p.evaluate(() => window.RMLayout.setAsset('hero', null)); await p.waitForTimeout(200);
+    }
     /* salto pelo índice a um bloco (como o aluno) */
     const abrir = async () => { if (c.w / c.z < 768) { await p.click('.rm-l2-hamb'); await p.waitForTimeout(400); } };
     await abrir();

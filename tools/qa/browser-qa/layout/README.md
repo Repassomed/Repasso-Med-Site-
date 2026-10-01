@@ -111,3 +111,36 @@ antes de o pendente executar, E4 matéria sai antes de a caneta levantar) · F `
 H `irPara(A)→irPara(B)` (0 rolagens dirigidas a A depois do clique em B) · I `irPara()` → sair da matéria. 1440 e 390 (a caneta, só em
 1440). **Validado por mutação:** com o `rm-layout.js/rm-modes.js` do HEAD auditado `94006e54` o teste reprova com 50 falhas; com a
 correção, 107/107. Os eventos de caneta são **sintéticos** (`PointerEvent` `pointerType=pen`): provam o caminho de código, não o hardware.
+
+## Etapa 2 — capa da matéria + slot de arte + acabamento (tudo em código) — `cover.test.cjs`
+
+```bash
+export NODE_PATH=$(npm root -g)     # ou RM_PLAYWRIGHT=/caminho/do/modulo
+node tools/qa/browser-qa/layout/cover.test.cjs
+```
+**Divisão de responsabilidades:** o Layout (este código) cuida de estrutura, navegação, hierarquia, tipografia, cores, espaçamento,
+responsividade, estados, abertura/fechamento, posição das imagens e nitidez da UI — em HTML/CSS/JS, nada vira imagem. A arte autoral
+(banners/ilustrações da Semiología II) é produzida fora (ChatGPT → José → integração aqui). **Nenhuma ilustração foi criada.**
+
+- **Capa** (`.rm-l2-cover`, `[data-rm-ui]`, sem ids, filha da aba e irmã das seções — nunca dentro de `section[id]`): eyebrow «Repasso Med ·
+  Guía de estudio», `h1` serifado «Semiología II», subtítulo, «N bloques», ações «Ir al contenido» (1º bloco sob a faixa) e «Ver el
+  índice» (só quando a lateral não está docked). Substitui, no piloto, o `.rm-subject-head` gerado pelo app-core (mesmo título e
+  subtítulo); o hero de **conteúdo** da matéria e todas as seções ficam intactos. Em modo isolado a capa some; `detach()` a remove e
+  devolve o header original.
+- **Slot de arte `hero`** (`RMLayout.ASSETS.hero` / `RMLayout.setAsset('hero', spec)`): hoje **vazio e `hidden`** (0 px, sem caixa vazia nem
+  desenho improvisado). Com arquivo: `w`/`h` reservam o espaço (`aspect-ratio` ⇒ 0 deslocamento), `object-fit: cover` + `pos` (sem
+  deformar), `srcset`/`sizes` (retina/tablet), `fetchpriority=high`, estados `cargando` (esqueleto neutro) → `listo`; `error` (404) ⇒ colapsa.
+  ≥ 1000 px: duas colunas (arte à direita); abaixo: arte em cima do texto; altura máx. 340 px.
+- **Tokens únicos** (`--l2-radius`, `--l2-shadow`, navy/branco/laranja da marca; laranja-texto `#b34e0f` = 5,2:1 sobre branco) para capa, botões, slot e
+  painel de modos; foco visível laranja (navy sobre claro) e alvos ≥ 44 px. Sem progresso, percentual, streak, plano, calendário,
+  gamificação ou recomendação (verificado no teste).
+- Lateral (minimizável, trilho, drawer, hierarquia matéria → bloco → tema, Volver arriba, Sugerencias, Banco, Todos los flashcards):
+  **funcionalidade intacta** (suíte B1 176/176); só elevação sutil e foco.
+
+### Evidências — o que é o quê
+| | |
+|---|---|
+| **TESTADO AUTOMATICAMENTE** (Chromium emulado, harness real) | `cover` 102 · `race` 107 · `ink-jump` 54 · `layout` 183 · B1 176 (neutralidade de índice/IDs/125 highlights). 320 · 390 · 768 · 1024 · 1440 · 1600 · 1920, zoom 200 %, rotação, teclado (Enter/foco), contraste, slot (vazio/cargando/listo/erro, 0 deslocamento) |
+| **VALIDADO VISUALMENTE** (capturas desta pasta) | 320 · 390 · 768 · 1024 · 1440, zoom 200 % (1440 e 1024), dock 1495/1627/1700/1920, slot com imagem **sintética** (1440 e 390). Conferido por mim nas capturas, **sem** comparação com a referência do José (ver abaixo) |
+| **PENDENTE DE TESTE FÍSICO** (José, iPad/aparelho real) | safe-area (notch/home bar), teclado virtual, nitidez real em retina, rotação em hardware, toque/caneta/palma, fluidez com ~100 traços, imagens `lazy` reais, fontes de produção (as do Google não carregam no sandbox) |
+| **PENDENTE DE ASSET (ChatGPT → José)** | arte `hero` (banner/ilustração da Semiología II): preencher `RMLayout.ASSETS.hero` com `src/srcset/w/h/alt` |
