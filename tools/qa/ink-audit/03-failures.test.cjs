@@ -2,7 +2,15 @@
    commit, falha de DELETE, fechamento com operação pendente, traço denso demais.
    Cada cenário usa usuário e sessão próprios. Observação do banco = superuser (só observar).
    Objetivo: medir RISCO de perda / duplicação / traço apagado que reaparece, e confirmar que falha NÃO é apresentada
-   como sucesso. Nada aqui é "correção": é diagnóstico reproduzível. */
+   como sucesso.
+
+   ATUALIZADO após a correção dos achados A/B/C/E (#420): os cenários §5a, §5b, §6 e §8 agora EXIGEM o
+   comportamento corrigido (id gerado no cliente e idempotente, DELETE que avisa e reenvia, decimação em laço);
+   §1-4 e §7 continuam a documentar limitações REAIS e deliberadamente não resolvidas nesta rodada (achado D —
+   sem fila durável completa, sem reenvio de INSERT ao voltar online, sem keepalive/sendBeacon no fechamento da
+   aba): só o indicador persistente de "não salvo" muda de forma de detecção (de id «tmp-» para a classe
+   `.rm2-ink-pendiente`, ver `pendingCount` em `lib.cjs`), nunca o resultado de rede em si. Não declarar aqui
+   que o achado D foi resolvido. */
 const L=require('./lib.cjs'); const {ok,info}=L;
 const INK='user_ink_strokes';
 (async()=>{
@@ -19,17 +27,27 @@ const INK='user_ink_strokes';
 
   console.log('== 1 · rede LENTA (POST com 3 s de atraso): o traço aparece na hora (provisório) e é confirmado depois');
   { const {u,s}=await fresh('lenta'); await L.chaos(st,[{method:'POST',table:INK,mode:'delay',delayMs:3000}]);
-    const t0=Date.now(); const pr=L.drawStroke(s.page,0,{timeout:9000}); await s.page.waitForTimeout(700);
-    ok(await L.inkCount(s.page)===1&&await L.tmpCount(s.page)===1,'aos 0,7 s: traço visível com id provisório «tmp-» (NÃO está gravado ainda)');
+    const t0=Date.now(); const pr=L.drawStroke(s.page,0,{timeout:9000});
+    /* Poll pelo indicador "não salvo" (não por `inkCount`): a tinta já existe no DOM desde o
+       `pointerdown` (onDown cria o <path>), mas `marcarComoPendente()` só liga a classe dentro de
+       `filaGravar()`, chamado do `onUp` — depois do gesto inteiro (16 micro-movimentos simulados +
+       soltar). Esperar só por `inkCount>0` mede o instante ERRADO (meio do gesto, antes de filaGravar
+       sequer começar); esperar pelo indicador mede o instante certo: logo que o envio começa. Uma
+       espera fixa (700 ms, 1,5 s) tanto pode ser curta demais quanto, como o atraso provocado é de 3 s,
+       nunca chega tarde demais — então o polling é mais robusto que os dois extremos. */
+    let apareceuEm=null;
+    for(let i=0;i<60;i++){ await s.page.waitForTimeout(50); if(await L.pendingCount(s.page)>0){ apareceuEm=Date.now()-t0; break; } }
+    ok(apareceuEm!=null&&apareceuEm<2500,'indicador "não salvo" ligou em ~'+apareceuEm+' ms (bem antes do atraso de 3 s provocado)');
+    ok(await L.inkCount(s.page)===1&&await L.pendingCount(s.page)===1,'no instante em que o envio começa: tinta visível com indicador "não salvo" ligado (NÃO está gravado ainda)');
     ok((await rowsOf(u)).length===0,'…e o banco ainda tem 0 linhas (visível ≠ salvo)');
     const r=await pr; const dt=Date.now()-t0; ok(r&&r.status===201,'resposta 201 chegou depois de ~'+Math.round(dt/100)/10+' s');
-    await s.page.waitForTimeout(300); ok(await L.tmpCount(s.page)===0&&(await rowsOf(u)).length===1,'confirmado: id real no DOM e 1 linha no banco');
+    await s.page.waitForTimeout(300); ok(await L.pendingCount(s.page)===0&&(await rowsOf(u)).length===1,'confirmado: indicador "não salvo" removido e 1 linha no banco');
     await s.context.close(); }
 
   console.log('== 2 · requisição PENDURADA (12 s) — sem timeout no cliente; aba fechada antes da resposta');
   { const {u,s}=await fresh('pendurada'); await L.chaos(st,[{method:'POST',table:INK,mode:'delay',delayMs:12000}]);
     await L.drawStroke(s.page,0,{wait:false}); await s.page.waitForTimeout(6000);
-    ok(await L.tmpCount(s.page)===1,'aos 6 s continua provisório, sem aviso de erro ao usuário ('+JSON.stringify(await toasts(s.page))+')');
+    ok(await L.pendingCount(s.page)===1,'aos 6 s continua com indicador "não salvo", sem aviso de erro ao usuário ('+JSON.stringify(await toasts(s.page))+')');
     await s.context.close();           // fecha o navegador com a gravação pendente
     const r=await until(()=>rowsOf(u),x=>x.length>=1,14000);
     info('após fechar a aba com INSERT pendente: o servidor '+(r.length?'AINDA gravou (a requisição já tinha chegado)':'NÃO gravou')+' — depende de a requisição ter chegado ao servidor; o cliente nunca soube o resultado'); }
@@ -40,7 +58,7 @@ const INK='user_ink_strokes';
     ok(r&&r.status===code&&(await rowsOf(u)).length===0,'HTTP '+code+': servidor recusou, 0 linhas no banco');
     ok(tt.some(x=>x.err&&/No se pudo guardar/.test(x.m)),'HTTP '+code+': o usuário recebe «No se pudo guardar el trazo.» (toast de erro, 2,2 s)');
     if(code===500){
-      ok(await L.tmpCount(s.page)===1,'o traço CONTINUA desenhado na tela (id «tmp-», não salvo) → parece salvo para quem não viu o aviso');
+      ok(await L.pendingCount(s.page)===1,'o traço CONTINUA desenhado na tela, com indicador "não salvo" (confirma que não foi gravado) → parece salvo para quem não viu o aviso nem reparou no tracejado');
       await s.page.waitForTimeout(6000); ok((await posts()).length===1,'NENHUM reenvio automático em 6 s (1 única tentativa de POST) — não há fila durável');
       await L.chaos(st,[]); await s.page.reload(); await s.page.waitForFunction('window.__ready===true'); await s.page.waitForTimeout(700);
       ok(await L.inkCount(s.page)===0,'após recarregar o traço desapareceu: PERDA de desenho (já avisada por toast)'); }
@@ -54,41 +72,45 @@ const INK='user_ink_strokes';
     await L.drawStroke(s.page,2); await s.page.waitForTimeout(300); ok((await rowsOf(u)).length===1,'um traço feito já ONLINE é gravado (1 linha); o offline não');
     await s.context.close(); }
 
-  console.log('== 5a · conexão REINICIADA depois do commit: o próprio navegador reenvia o POST (INSERT não é idempotente)');
+  console.log('== 5a · conexão REINICIADA depois do commit: o próprio navegador reenvia o POST — ACHADO C CORRIGIDO: id gerado no cliente, idempotente');
   { const {u,s}=await fresh('reset'); await L.chaos(st,[{method:'POST',table:INK,mode:'drop-after-commit',remaining:1}]);
     await L.drawStroke(s.page,0,{wait:false}); await s.page.waitForTimeout(2500); const n=(await rowsOf(u)).length, np=(await posts()).length;
-    ok(np===2&&n===2,'1 traço desenhado → '+np+' POSTs enviados pelo navegador e '+n+' LINHAS no banco: DUPLICAÇÃO (reenvio automático do navegador após reset; o servidor gerou dois ids)');
-    ok(await L.inkCount(s.page)===1,'…mas a tela mostra 1 traço só: o usuário não percebe a duplicata até recarregar ('+await L.inkCount(s.page)+')');
-    await s.page.reload(); await s.page.waitForFunction('window.__ready===true'); await s.page.waitForTimeout(700); ok(await L.inkCount(s.page)===2,'após recarregar: 2 traços sobrepostos (o desenho aparece duplicado; apagar remove um de cada vez)');
+    ok(np===2&&n===1,'1 traço desenhado → '+np+' POSTs enviados pelo navegador (reenvio automático após reset) mas só '+n+' LINHA no banco: o id gerado no cliente faz o segundo POST bater em 23505, confirmado por leitura, sem duplicar');
+    ok(await L.inkCount(s.page)===1,'a tela mostra 1 traço só');
+    await s.page.reload(); await s.page.waitForFunction('window.__ready===true'); await s.page.waitForTimeout(700); ok(await L.inkCount(s.page)===1,'após recarregar: continua 1 traço só (sem duplicata)');
     await s.context.close(); }
-  console.log('== 5b · erro 504 do gateway DEPOIS do commit (servidor gravou, cliente vê falha): traço «desfeito» que volta e duplicação manual');
+  console.log('== 5b · erro 504 do gateway DEPOIS do commit (servidor gravou, cliente vê falha) — ACHADO C CORRIGIDO: desfazer agora apaga de verdade');
   { const {u,s}=await fresh('perdida'); await L.chaos(st,[{method:'POST',table:INK,mode:'commit-then-status',status:504,remaining:1}]);
     await L.drawStroke(s.page,0); await s.page.waitForTimeout(600);
     ok((await rowsOf(u)).length===1,'o servidor GRAVOU a linha (commit feito)'); const tt=await toasts(s.page); ok(tt.some(x=>x.err&&/No se pudo guardar/.test(x.m)),'…mas o cliente mostra «No se pudo guardar» (falha aparente)');
-    ok(await L.tmpCount(s.page)===1,'o cliente ficou com id «tmp-» (não sabe que está salvo)');
+    ok(await L.pendingCount(s.page)===1,'o cliente mostra o indicador "não salvo" (não sabe que, na verdade, já está gravado no servidor)');
     await s.page.evaluate(()=>RMToolsV2.desfazer()); await s.page.waitForTimeout(800);
-    ok(await L.inkCount(s.page)===0&&(await dels()).length===0,'desfazer remove da tela mas NÃO envia DELETE (id provisório)');
-    ok((await rowsOf(u)).length===1,'RISCO CONFIRMADO: a linha continua no banco após o usuário desfazer → o traço REAPARECE no próximo carregamento');
+    ok(await L.inkCount(s.page)===0&&(await dels()).length===1,'desfazer remove da tela E ENVIA o DELETE — o id já é o real (gerado no cliente), não provisório');
+    ok((await rowsOf(u)).length===0,'CORRIGIDO: a linha foi mesmo apagada do banco depois do desfazer — o traço NÃO reaparece no próximo carregamento');
     await s.page.reload(); await s.page.waitForFunction('window.__ready===true'); await s.page.waitForTimeout(700);
-    ok(await L.inkCount(s.page)===1,'após recarregar: o traço «desfeito» voltou (1 traço)');
-    await L.drawStroke(s.page,0); await s.page.waitForTimeout(300); ok((await rowsOf(u)).length===2,'redesenhar o traço que «falhou» cria SEGUNDA linha: duplicação (2)');
+    ok(await L.inkCount(s.page)===0,'após recarregar: o traço «desfeito» continua desfeito (0 traços)');
+    await L.drawStroke(s.page,0); await s.page.waitForTimeout(300); ok((await rowsOf(u)).length===1,'redesenhar depois disso cria só UMA linha nova (sem duplicação residual)');
     await s.context.close(); }
 
-  console.log('== 6 · DELETE que falha (500 / rede): o traço apagado na tela REAPARECE no recarregamento; undo duplica');
+  console.log('== 6 · DELETE que falha (500 / rede) — ACHADO B CORRIGIDO: aviso + fila de pendentes com reenvio no próximo carregamento');
   for(const mode of ['status500','drop']){ const {u,s}=await fresh('del'+mode); await L.drawStroke(s.page,0); await s.page.waitForTimeout(400); const id=(await rowsOf(u))[0].id;
     await L.chaos(st,[mode==='drop'?{method:'DELETE',table:INK,mode:'drop-before'}:{method:'DELETE',table:INK,mode:'status',status:500}]);
     await L.logClear(st); await s.page.waitForTimeout(600); const did=await erase(s.page,id); await s.page.waitForTimeout(800);
     ok(did&&await L.inkCount(s.page)===0,'['+mode+'] borracha: o traço some da tela');
-    ok((await dels()).length>=1&&(await rowsOf(u)).length===1,'['+mode+'] o DELETE falhou: a linha continua no banco');
-    const tt=await toasts(s.page); ok(!tt.some(x=>x.err),'['+mode+'] o usuário NÃO recebe nenhum aviso de erro ('+JSON.stringify(tt.map(x=>x.m))+') — falha silenciosa');
-    await L.chaos(st,[]); await s.page.evaluate(()=>RMToolsV2.escolherFerramenta('pen')); await s.page.evaluate(()=>RMToolsV2.desfazer()); await s.page.waitForTimeout(1000);
-    const rr=await rowsOf(u); ok(rr.length===2,'['+mode+'] desfazer a borracha cria uma CÓPIA: agora 2 linhas para 1 desenho (duplicação)');
-    await s.page.reload(); await s.page.waitForFunction('window.__ready===true'); await s.page.waitForTimeout(700); ok(await L.inkCount(s.page)===2,'['+mode+'] após recarregar: o desenho aparece DUPLICADO (2 traços idênticos)');
-    await s.context.close(); }
+    ok((await dels()).length>=1&&(await rowsOf(u)).length===1,'['+mode+'] o DELETE falhou: a linha continua no banco (por enquanto)');
+    const tt=await toasts(s.page); ok(tt.some(x=>x.err&&/Se reintentará/.test(x.m)),'['+mode+'] CORRIGIDO: o usuário RECEBE aviso de erro e de que vai reintentar ('+JSON.stringify(tt.map(x=>x.m))+')');
+    /* residual CONHECIDO e não escondido: se o aluno desfizer a borracha ANTES do reenvio ter êxito
+       (nada dispara o reenvio no momento do undo em si, só no próximo carregamento/online), a linha antiga
+       ainda não apagada mais a nova linha do "restaurar" convivem — 2 linhas. Continua documentado aqui de
+       propósito: a correção mínima do achado B não cobre esta janela específica. */
+    await s.page.evaluate(()=>RMToolsV2.escolherFerramenta('pen')); await s.page.evaluate(()=>RMToolsV2.desfazer()); await s.page.waitForTimeout(1000);
+    const rr=await rowsOf(u); L.finding(rr.length===2,'['+mode+'] RESIDUAL CONHECIDO (fora do mínimo do achado B): desfazer a borracha ANTES do reenvio ter êxito ainda pode duplicar (checar: '+rr.length+' linha(s))');
+    await L.chaos(st,[]); await s.context.close(); }
   { const {u,s}=await fresh('delreap'); await L.drawStroke(s.page,0); await s.page.waitForTimeout(400); const id=(await rowsOf(u))[0].id;
     await L.chaos(st,[{method:'DELETE',table:INK,mode:'status',status:500}]); await s.page.waitForTimeout(600); await erase(s.page,id); await s.page.waitForTimeout(600); await L.chaos(st,[]);
     await s.page.reload(); await s.page.waitForFunction('window.__ready===true'); await s.page.waitForTimeout(700);
-    ok(await L.inkCount(s.page)===1,'traço APAGADO REAPARECE após recarregar (DELETE falhou sem aviso e sem novo envio)'); await s.context.close(); }
+    ok(await L.inkCount(s.page)===0,'CORRIGIDO: traço apagado NÃO reaparece após recarregar — o reenvio pendente roda ANTES de buscar os traços, então o DELETE (agora sem chaos) completa antes do SELECT ler a linha de volta');
+    ok((await rowsOf(u)).length===0,'…e a linha realmente não existe mais no banco (não é só um efeito visual)'); await s.context.close(); }
 
   console.log('== 7 · fechar a aba com operação pendente: o que o navegador faz');
   { const {u,s}=await fresh('fechar'); await L.chaos(st,[{method:'POST',table:INK,mode:'drop-before'}]);
@@ -101,17 +123,19 @@ const INK='user_ink_strokes';
     ok(!/retry|retent|setTimeout|online/.test(ink),'código de filaGravar: sem retry, sem timer, sem evento online → sem fila durável/reenvio');
     ok(!/beforeunload/.test(code)&&/addEventListener\('pagehide', flushNotas\)/.test(code),'só as NOTAS têm flush no pagehide; nenhum alerta/flush para traços pendentes'); }
 
-  console.log('== 8 · traço denso/longo demais: o teto do banco (1200 pontos) pode rejeitar o que o cliente envia');
+  console.log('== 8 · traço denso/longo demais — ACHADO E CORRIGIDO: decimação em laço até caber em 1200 pontos');
   { const {u,s}=await fresh('denso',{viewport:{width:1280,height:1400}}); await s.page.evaluate(()=>RMToolsV2.escolherFerramenta('pen')); await L.target(s.page,0); await s.page.waitForTimeout(400);
     const box=await s.page.evaluate(()=>{ const ps=[...document.querySelectorAll('#materias-container section[id] p')].filter(x=>x.textContent.length>150&&x.getBoundingClientRect().height>=50); const r=ps[0].getBoundingClientRect(); return {x:r.left+20,y:r.top+r.height/2,w:r.width}; });
     await s.page.mouse.move(box.x,box.y); await s.page.mouse.down(); let rnd=12345; const rand=()=>{ rnd=(rnd*1103515245+12345)&0x7fffffff; return rnd/0x7fffffff; };
     for(let k=0;k<3400;k++){ await s.page.mouse.move(box.x+(k%700)*0.9+rand()*3,box.y+(rand()-0.5)*90); }
     const resp=s.page.waitForResponse(r=>/user_ink_strokes/.test(r.url())&&r.request().method()==='POST',{timeout:15000}).catch(()=>null);
     await s.page.mouse.up(); const r=await resp; await s.page.waitForTimeout(300); const lg=(await posts()).pop(); const n=(await rowsOf(u)).length;
-    info('traço com 3400 eventos de ponteiro e ruído alto → POST '+(r?r.status():'sem resposta')+'; corpo='+(lg?lg.inB:'?')+' bytes; linhas gravadas='+n);
+    const nPontos=n?(await L.sql(st,'select jsonb_array_length(points) n from public.user_ink_strokes where user_id=$1',[u.id]))[0].n:null;
+    info('traço com 3400 eventos de ponteiro e ruído alto → POST '+(r?r.status():'sem resposta')+'; corpo='+(lg?lg.inB:'?')+' bytes; linhas gravadas='+n+'; pontos gravados='+nPontos);
     const tt=await toasts(s.page);
-    ok(r&&r.status()===400&&n===0,'o cliente enviou MAIS de 1200 pontos (mesmo após simplificar e decimar) e o banco rejeitou (400): o traço NÃO foi salvo');
-    ok(tt.some(x=>x.err&&/No se pudo guardar/.test(x.m)),'…e o usuário recebe o toast de erro (o traço mais longo/denso se perde; some ao recarregar)');
+    ok(r&&r.status()===201&&n===1,'CORRIGIDO: mesmo um traço que antes excedia 1200 pontos depois de UMA decimação agora é aceito (201) — a decimação em laço reduziu o suficiente');
+    ok(nPontos!=null&&nPontos<=1200,'o traço gravado tem <= 1200 pontos (dentro da constraint do banco), medido: '+nPontos);
+    ok(!tt.some(x=>x.err),'nenhum toast de erro: o traço denso não se perde mais');
     await s.context.close(); }
 
   await br.close(); await st.close(); process.exit(L.finish('FALHAS')?1:0);
