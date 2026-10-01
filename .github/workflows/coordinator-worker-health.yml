@@ -1,0 +1,43 @@
+name: Repasso Coordinator (WORKER HEALTH)
+
+# Achado da auditoria black-box pós-#245 (Claude 4): coordinator/heartbeat.py
+# já sabia sinalizar heartbeat velho de um worker (`avaliar_stale`, Issue
+# #105 Fase B), mas nenhum caminho de produção chamava essa função — um
+# worker BUSY/NEAR_LIMIT/LIMIT sem heartbeat recente (runner morto, canário
+# esquecido ligado) ficava invisível indefinidamente, sem nenhum sinal para
+# o José agir.
+#
+# Este workflow SÓ LÊ o Worker Registry operacional e escreve um resumo no
+# Job Summary da execução. Não escreve em nenhuma branch, não muda status de
+# worker, não decide handoff, não chama Anthropic/OpenAI, não comenta em
+# PR/Issue, não faz merge/deploy. `permissions: contents: read` é
+# suficiente porque `GitJsonStore.read()` nunca dá push.
+
+on:
+  schedule:
+    - cron: "20 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  worker_health:
+    if: >
+      vars.REPASSO_COORDINATOR_ENABLED == 'true' &&
+      vars.REPASSO_COORDINATOR_MODE == 'active-supervised'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Relatório read-only de workers ativos com heartbeat velho
+        run: |
+          set -euo pipefail
+          REMOTO_COM_TOKEN="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          python3 -m coordinator.worker_health_report \
+            --worker-state-git-remote "$REMOTO_COM_TOKEN" \
+            --out "$GITHUB_STEP_SUMMARY"
