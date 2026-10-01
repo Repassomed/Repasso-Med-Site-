@@ -1,0 +1,38 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="stylesheet" href="/assets/styles.css"><title>ink-audit</title></head><body>
+<div class="rm-topbar" id="rm-topbar"><span class="rm-brand-word"><b>REPASSO <span>MED</span></b></span><span class="rm-spacer"></span><span class="rm-user">x</span></div>
+<div class="main-tabs" id="main-tabs"><div class="main-tabs-inner" id="main-tabs-inner"><button class="main-tab active">Semiología II</button></div></div>
+<div id="materias-container"></div>
+<button id="logout-fab" type="button">Salir</button>
+<script src="/supabase.js"></script>
+<script>
+/* Página de TESTE (auditoria da caneta): app-core.js, rm-tools.js e rm-tools-v2.js REAIS + supabase-js REAL
+   falando com o adaptador local (Postgres real). Login real (token HS256 emitido pelo adaptador). */
+const P=new URLSearchParams(location.search);
+window.__errs=[];
+window.addEventListener('error',e=>window.__errs.push(String(e.message)));
+window.addEventListener('unhandledrejection',e=>window.__errs.push('rej:'+(e.reason&&e.reason.message||e.reason)));
+window.RM_CATALOGO=[{slug:'semiologia-ii',tab:'semio2',title:'Semiología II',sub:''}];
+window.RM_SB=supabase.createClient(location.origin,'anon-de-teste',{auth:{autoRefreshToken:false,persistSession:true}});
+</script>
+<script src="/assets/app-core.js"></script>
+<script src="/assets/rm-tools.js"></script>
+<script src="/assets/rm-tools-v2.js"></script>
+<script>
+window.openMateria=async function(slug,tab){
+  const t=await (await fetch('/m/'+slug+'.html')).text();
+  const doc=new DOMParser().parseFromString(t,'text/html');
+  const node=document.importNode(doc.querySelector('[id^="tab-"]'),true);
+  const tabId=node.id.replace(/^tab-/,''); if(!window.RM_CATALOGO.some(c=>c.tab===tabId)) window.RM_CATALOGO.push({slug:slug,tab:tabId,title:slug,sub:''});
+  tab=tabId;
+  document.getElementById('materias-container').appendChild(node);
+  RepassoMed.enhanceAll(); switchTab(tab);
+};
+(async()=>{
+  if(P.get('email')){ const r=await RM_SB.auth.signInWithPassword({email:P.get('email'),password:P.get('pw')}); if(r.error){window.__loginError=r.error.message;} }
+  else { const {data}=await RM_SB.auth.getSession(); window.__hadSession=!!data.session; }
+  await openMateria(P.get('slug')||'semiologia-ii',P.get('tab')||'semio2');
+  await new Promise(r=>setTimeout(r,+(P.get('wait')||1800)));
+  window.__ready=true;
+})();
+</script></body></html>
