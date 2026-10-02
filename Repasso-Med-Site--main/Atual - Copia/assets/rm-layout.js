@@ -41,7 +41,8 @@
   var W_RAIL = 768;               // ≥ → trilho de ícones (64); < → só drawer
   var TEXT_COL = 880;             // .container do site
   var RIGHT_RAIL = 67;            // toolbox 58 + margem 9
-  var PLAYER_W = 240, PLAYER_GAP = 12;
+  /* Dock do player (ver decidirDock): largura do player lateral, folga até a toolbox e até o cartão de texto. */
+  var PLAYER_W = 224, PLAYER_EDGE = 8, PLAYER_GAP = 8, DOCK_HYST = 12;
 
   var S = null;                   // estado da instância ativa
 
@@ -195,16 +196,74 @@
     if (w >= W_RAIL) return 'rail';
     return 'off';
   }
+  /* ---------------------------- dock do player ---------------------------
+     Lateral (side) ou inferior (bottom) decide-se pelo ESPAÇO EFETIVAMENTE LIVRE à direita do
+     cartão de texto, não por uma soma de larguras. O `.container` (880) é CENTRADO entre a
+     lateral e a toolbox: o espaço livre divide-se pelos dois lados, logo
+        borda direita do cartão = left + (R + min(880, R)) / 2,   R = largura − left − toolbox
+     e o player lateral (PLAYER_W, encostado à toolbox com PLAYER_EDGE) só cabe se a sua borda
+     esquerda ficar a PLAYER_GAP ou mais dessa borda. Preferimos a borda REAL medida no DOM (o
+     cartão é a folha do caderno, com sombra: não se cobre); sem medida, usamos a fórmula.
+     clientWidth (sem a barra de rolagem) é o mesmo referencial do `position:fixed`.
+     Histerese: para PASSAR de bottom a side exige-se DOCK_HYST px extra (na 1.ª decisão não), para a barra de rolagem
+     (que aparece/desaparece com a altura) não fazer o dock oscilar. */
+  function cartaoTeorico(cw, left) {
+    var R = cw - left - RIGHT_RAIL, col = Math.min(TEXT_COL, R);
+    return left + (R + col) / 2;
+  }
+  function cartaoMedido() {
+    try {
+      var c = document.querySelector('#materias-container .tab-content.active section.container') ||
+              document.querySelector('#materias-container section.container');
+      if (!c) return null;
+      var r = c.getBoundingClientRect();
+      return r.width > 0 ? r.right : null;
+    } catch (e) { return null; }
+  }
+  function decidirDock(cw, left, cartaoR, atual) {
+    var playerL = (cw - RIGHT_RAIL) - PLAYER_EDGE - PLAYER_W;
+    var cr = cartaoR == null ? cartaoTeorico(cw, left) : cartaoR;
+    var folga = playerL - (cr + PLAYER_GAP);
+    return folga >= (atual === 'bottom' ? DOCK_HYST : 0) ? 'side' : 'bottom';
+  }
+
+  /* Mudar lateral/dock no meio de um traço deslocaria a escrita: adia até a caneta levantar. A classe
+     `rm2-pen-down` sai no handler do rm-tools-v2 (que pode correr depois do nosso, em captura): por isso
+     reavalia-se um instante depois do pointerup/cancel, e só então se aplica. */
+  function escrevendo() { try { return !!(document.body && document.body.classList.contains('rm2-pen-down')); } catch (e) { return false; } }
+  function adiarModo() {
+    if (!S || S.adia) return;
+    var retoma = function () {
+      if (!S || !S.adia) return;
+      S.adiaT = setTimeout(function () {
+        S.adiaT = 0;
+        if (!S || escrevendo()) return;              // ainda há contacto: espera o próximo up/cancel
+        desarmarAdia(); aplicarModo();
+      }, 80);
+    };
+    S.adia = retoma;
+    document.addEventListener('pointerup', retoma, true);
+    document.addEventListener('pointercancel', retoma, true);
+  }
+  function desarmarAdia() {
+    if (!S || !S.adia) return;
+    document.removeEventListener('pointerup', S.adia, true);
+    document.removeEventListener('pointercancel', S.adia, true);
+    if (S.adiaT) clearTimeout(S.adiaT);
+    S.adia = null; S.adiaT = 0;
+  }
+
   function aplicarModo() {
     if (!S) return;
+    if (escrevendo()) { adiarModo(); return; }
     var w = window.innerWidth || ROOT.clientWidth, m = lmode();
     var mudou = S.lm !== undefined && S.lm !== m;           // docked ↔ rail ↔ off: muda a reserva lateral
     S.lm = m;
     ROOT.setAttribute('data-rm-lmode', m);
     var left =m === 'docked' ? 264 : (m === 'rail' ? 64 : 0);
-    /* dock do futuro player: só se a coluna de texto + toolbox + player cabem */
-    var cabe = (w - left) >= (TEXT_COL + RIGHT_RAIL + PLAYER_GAP + PLAYER_W + 32);
-    ROOT.setAttribute('data-rm-dock', cabe ? 'side' : 'bottom');
+    /* dock do futuro player: pelo espaço efetivamente livre à direita do cartão de texto
+       (as variáveis de lateral já estão aplicadas; a leitura abaixo força o layout). */
+    ROOT.setAttribute('data-rm-dock', decidirDock(ROOT.clientWidth || w, left, cartaoMedido(), ROOT.getAttribute('data-rm-dock')));
     if (m === 'docked' && S.drawer) fecharDrawer(true);          // não faz sentido drawer com a lateral aberta
     if (S.railBtn) {
       var min = ls('rm.l2.rail') === 'min';
@@ -491,6 +550,7 @@
     window.removeEventListener('orientationchange', h.resize);
     window.removeEventListener('scroll', h.scroll);
     document.removeEventListener('keydown', h.key);
+    desarmarAdia();
   }
 
   /* ------------------------------- attach -------------------------------- */
@@ -549,6 +609,7 @@
     attach: attach,
     detach: detach,
     /* só leitura, para teste/diagnóstico */
+    _dock: decidirDock, _cartaoTeorico: cartaoTeorico,
     _estado: function () { return S ? { tab: S.tab && S.tab.id, blocos: S.blocos.length, drawer: S.drawer, lmode: ROOT.getAttribute('data-rm-lmode'), dock: ROOT.getAttribute('data-rm-dock') } : null; }
   };
 })();
