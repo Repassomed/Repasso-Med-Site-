@@ -40,12 +40,17 @@ node tools/qa/browser-qa/audio-integracao/capturas.cjs /tmp/capturas          # 
 3. **Servidor:** migration do bucket, objetos tratados (ver `tools/audio/`), variáveis `RM_PILOT_AUDIO_UIDS` + `RM_AUDIO_MANIFEST`, **deploy**, verificação com `smoke-remote.cjs` (ver `tools/qa/audio-server/README.md`, incluindo desligamento e limites).
 4. **Sem as duas pontas** (hook no `rm-pilot` + manifesto no servidor) **nada aparece para ninguém**: o boot nem é baixado e, se for, `start()` devolve `false` sem pedir mídia.
 
-## Blocker conhecido do Layout V2 (561–767 px) — DETECTADO e REPORTADO, não corrigido aqui
+## Toolbox × player (561–767 px, 720×450 e demais) — alerta anterior RETIRADO: era falso positivo do teste
 
-A suíte mede, em 561/600/700/767 px (alturas 900/1024 e 520) e em 720×450 (zoom 200 %), se o player inferior cobre a toolbox.
-O resultado sai numa seção própria **«RELATÓRIO · blocker conhecido do Layout V2»**, com `⚠ B1-BLOCKER` quando há cobertura (hoje:
-**720×450 px a zoom 200 %**, player de 135 px; nas demais combinações medidas a toolbox não é coberta). Isso **não reprova** a suíte:
-a regra é do `rm-layout.css` (Claude 2 · #425) e o audiobook não a corrige. Quando o B1 corrigir, a linha passa a `✔ B1-BLOCKER NÃO reproduzido`.
+O alerta «`B1-BLOCKER`» (botões da toolbox «cobertos» pelo player) vinha de `getBoundingClientRect()` em botões que ficam **dentro do painel rolável** da toolbox
+(`.rm2-panel`: `overflow-y:auto`, `max-height: min(76vh, 660px)`). Em janelas baixas parte da pilha de botões fica **recortada pelo próprio painel** (área visível 0 %), com o
+retângulo «abaixo» e portanto «sob» o player — mas recortada não é coberta, e o painel termina acima do player.
+`caneta-real.test.cjs` agora mede o que importa: (1) a **área visível** de cada botão (retângulo ∩ recorte dos ancestrais com overflow ∩ janela); (2) `elementFromPoint` no centro da parte
+visível — o player nunca pode ser o elemento atingido; (3) **rolando o painel** até cada botão, todos ficam ≥ 95 % visíveis e o hit-test devolve o próprio botão; (4) o sentido contrário:
+nenhum **controle do player** fica sob a toolbox; (5) o painel visível nunca entra na faixa do player; (6) **controle negativo**: forçando a toolbox sobre o player o detector acusa.
+Resultado nos Layouts da `main` e da #425 (`cb84bff3`), 14 viewports (561/600/700/767 × 900–1024 e × 520; 720×450 a zoom 200 %; 390, 1024, 1440, 1700, 1920): **nenhuma sobreposição real**.
+Em janelas baixas alguns botões ficam recortados e exigem rolar o painel (relatório `ⓘ`, informativo) — comportamento de painel rolável, não defeito do player.
+No `integracao.test.cjs` a «toolbox» é um **retângulo simulado** do harness (200 px, sem rolagem): a interseção com ele a 720×450 é artefato do stub e só é registrada.
 Com `RM_B1_DIR=<dir com rm-layout.js/css e rm-modes.js>` a mesma suíte roda contra o B1 real (294 verificações nos dois modos).
 
 ## Hook no `rm-pilot.js` — NÃO implementado aqui (Claude 2)
@@ -63,6 +68,20 @@ Sobre a `main` com a #411 (`rm-pilot.js`, 152 linhas), a integração final prec
    ```
 
 O `rm-audio-boot.js` consome só o contrato do B1: slot `#rm-l2-player`, `html[data-rm-dock="side|bottom"]` e `--rm-player-h`. Não depende de `RMLayout._dock` (que só existe a partir da #417).
+
+## Caneta REAL + Layout REAL (`caneta-real.test.cjs`)
+
+`NODE_PATH=$(npm root -g) node tools/qa/browser-qa/audio-integracao/caneta-real.test.cjs` → **55 verificações**. Carrega os arquivos **reais** do repositório
+(`rm-tools.js`, `rm-tools-v2.js`, `rm-layout.js/css`, `rm-modes.js`, `rm-audio-boot.js` + motor) com a matéria Semiología II real (`/h?pen=1&real=1`, conta do José).
+O «Supabase» é um fake em memória (subconjunto do PostgREST que a caneta usa; sobrevive a reload via `sessionStorage`) e o áudio é mp3/ogg sintético — prova a
+**convivência do código**, não o áudio real, não o tablet e não o banco real. `RM_B1_DIR=<dir>` testa outra versão do Layout (p.ex. a branch da #425).
+Cobre: tocar enquanto se escreve (a caneta real gera os mesmos `preventDefault` com e sem áudio; o áudio continua avançando); **alinhamento** de traço e marca-texto
+(posição relativa à âncora) ao **inserir/remover cards** e ao **recarregar** (cards antes ou depois da caneta sincronizar); pausa/fechar com a caneta armada;
+**troca de matéria e logout DURANTE o carregamento do manifesto**; toolbox real × player (área visível + hit-test + rolagem do painel, nos dois sentidos).
+Regressões encontradas e corrigidas em `rm-audio-boot.js`: (1) trocar de aba ou **sair da conta com o manifesto ainda a caminho** deixava os cards/o player nascerem
+(os observadores só eram ligados depois do carregamento ⇒ agora `vigiar()` desde o início); (2) com o Layout da #425 os traços **não se reposicionavam** ao remover os cards
+(⇒ o boot pede a reposição **só pelo caminho protegido do Layout**, `RMLayout.pedirReposicao()` (#425): coalescido, nunca durante o contato da caneta, e o Layout reconfere matéria/geração ao executar; o boot **não** chama `RMToolsV2.reposicionar()` direto nem agenda timers/rAF próprios. Sem `pedirReposicao` (Layout anterior à #425) o boot não faz nada e a V2 reposiciona pelo próprio observador).
+Auditoria do contrato (#430): a 1.ª versão da correção chamava `RMToolsV2.reposicionar()` direto (+ rAF) e **violava** o contrato da #425 — o teste «Contato da caneta × inserir/remover cards» mostra chamadas com `penDown:true` (traço em curso). Esse teste insere, remove e reinsere cards com o traço ativo (`pointerdown` mantido), exige 0 chamadas até o `pointerup`, só execução do Layout depois dele e traços alinhados (um reposicionamento forçado não muda nada); e confere que trocar de aba, sair da conta ou parar o boot não deixam pedido/timer do áudio.
 
 ## Gancho no `rm-pilot.js` — `pilot-gancho.test.cjs` (40 verificações)
 O `rm-pilot.js` (gate do piloto, `layout === true` do servidor, só `semiologia-ii`) passa a: **depois** de `RMLayout.attach(tab)` funcionar, carregar `rm-audio-boot.js?v=VER` e chamar

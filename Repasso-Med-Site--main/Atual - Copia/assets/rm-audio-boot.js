@@ -151,6 +151,21 @@
   }
 
   /* ----------------------- arbitragem e ciclo de vida ----------------------- */
+  /* Inserir/remover os cards muda a altura da matéria. A tinta (V2) é reposicionada SÓ pelo caminho protegido do Layout
+     (`RMLayout.pedirReposicao`, #425): o pedido é coalescido, espera 2 frames + respiro, NUNCA roda enquanto a caneta está em
+     contato (`body.rm2-pen-down`/traço em curso: fica pendente até o pointerup/pointercancel) e, ao executar, reconfere matéria,
+     geração do shell e Página completa. O boot NÃO chama `RMToolsV2.reposicionar()` diretamente nem agenda timers/rAF próprios:
+     assim não há segundo mecanismo concorrente e nenhum callback do áudio sobrevive a trocar de matéria ou sair da conta.
+     Sem `pedirReposicao` (Layout anterior à #425) o boot não faz nada: a V2 reposiciona pelo próprio observador. */
+  function reposicionarTinta() {
+    try {
+      var tab = tabAtiva();
+      if (!tab || tab.id !== TAB_ID) return;                     // outra matéria: nada a reposicionar
+      var L = root.RMLayout;
+      if (L && typeof L.pedirReposicao === 'function') L.pedirReposicao();
+    } catch (e) { /* ignore */ }
+  }
+
   function pausarNativos() {
     var tab = d().getElementById(TAB_ID);
     if (!tab) return;
@@ -177,29 +192,35 @@
   function verificarVida() {
     if (!st) return;
     var tab = tabAtiva();
-    if (!tab || tab.id !== TAB_ID || !d().querySelector(SLOT) || !root.RMLayout) { try { st.engine && st.engine.handle('subject-change'); } catch (e) { /* ignore */ } stop(); }
+    if (!tab || tab.id !== TAB_ID || !d().querySelector(SLOT) || !root.RMLayout) { st.encerrando = true; try { st.engine && st.engine.handle('subject-change'); } catch (e) { /* ignore */ } stop(); }
   }
 
-  function ligarVida() {
+  /* Vigia a VIDA do boot desde o primeiro instante (antes de o manifesto chegar): trocar de matéria, o slot sumir ou SIGNED_OUT
+     enquanto o manifesto/arquivos ainda carregam cancelam tudo — senão cards e player nasceriam numa matéria errada ou para uma
+     sessão que já saiu. O stop() desfaz estes observadores e a subscrição. */
+  function vigiar() {
     var tabs = d().querySelectorAll('#materias-container > .tab-content');
     st.mo = [];
     var mo = new root.MutationObserver(verificarVida);
     Array.prototype.forEach.call(tabs, function (t) { mo.observe(t, { attributes: true, attributeFilter: ['class'] }); });
     mo.observe(d().body, { childList: true });                    // o slot sai do <body> quando o shell se desfaz
     st.mo.push(mo);
+    try {
+      var sb = root.RM_SB || root._sb;
+      if (sb && sb.auth && typeof sb.auth.onAuthStateChange === 'function') {
+        var r = sb.auth.onAuthStateChange(function (evt) { if (evt === 'SIGNED_OUT') { if (st) st.encerrando = true; try { st && st.engine && st.engine.handle('logout'); } catch (e) { /* ignore */ } stop(); } });
+        st.sub = r && r.data && r.data.subscription;
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  function ligarVida() {
     var mp = new root.MutationObserver(sincronizarCaneta);
     mp.observe(d().body, { attributes: true, attributeFilter: ['class'] });
     st.mo.push(mp);
     d().addEventListener('play', aoTocarNativo, true);
     root.addEventListener('pagehide', aoPersistir);
     d().addEventListener('visibilitychange', aoEsconder);
-    try {
-      var sb = root.RM_SB || root._sb;
-      if (sb && sb.auth && typeof sb.auth.onAuthStateChange === 'function') {
-        var r = sb.auth.onAuthStateChange(function (evt) { if (evt === 'SIGNED_OUT') { try { st && st.engine && st.engine.handle('logout'); } catch (e) { /* ignore */ } stop(); } });
-        st.sub = r && r.data && r.data.subscription;
-      }
-    } catch (e) { /* ignore */ }
   }
 
   function stop() {
@@ -209,7 +230,9 @@
     (s.mo || []).forEach(function (m) { try { m.disconnect(); } catch (e) { /* ignore */ } });
     try { d().removeEventListener('play', aoTocarNativo, true); root.removeEventListener('pagehide', aoPersistir); d().removeEventListener('visibilitychange', aoEsconder); } catch (e) { /* ignore */ }
     try { if (s.sub && s.sub.unsubscribe) s.sub.unsubscribe(); } catch (e) { /* ignore */ }
+    var tinham = (s.cards || []).length;
     (s.cards || []).forEach(function (c) { if (c.parentNode) c.parentNode.removeChild(c); });
+    if (tinham && !s.encerrando) reposicionarTinta();             // trocar de matéria/sair da conta (`encerrando`) não pede nada
     var slot = d().querySelector(SLOT); if (slot) slot.removeAttribute('data-rm-pen');
     return true;
   }
@@ -223,6 +246,7 @@
     var base = opts.base || BASE, ver = opts.ver || meuVer, q = ver ? '?v=' + ver : '';
     var mine = { engine: null, cards: [], itens: {}, mo: [], sub: null, caneta: false, ultimoCard: null };
     st = mine;
+    vigiar();
     mine.promise = sessao().then(function (se) {
       if (!se || st !== mine) throw new Error('sin sesión');
       mine.uid = se.uid;
@@ -250,6 +274,7 @@
       if (!mine.engine.attach(SLOT)) throw new Error('sin slot');                  // falha fechada: slot ausente ⇒ nada
       inserirCards();
       if (!mine.cards.length) throw new Error('sin bloques');
+      reposicionarTinta();
       mine.engine.on('state', function (e) {
         if (e.state === 'playing') pausarNativos();                               // audiobook toca ⇒ ausculta/vídeo param
         atualizarCards();
