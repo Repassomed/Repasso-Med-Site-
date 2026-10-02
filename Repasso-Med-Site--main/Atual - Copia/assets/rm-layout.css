@@ -262,6 +262,53 @@ html.rm-l2[data-rm-view]:not([data-rm-view="full"]) .rm-l2-tree { display: none;
 }
 
 /* ---------------------------------------------------------------------
+   6-B · INFOGRAFÍAS (conteúdo real do modo) — só existe com a chave de ativação + contrato de anotações
+         Visão DERIVADA do que a matéria já tem: agrupada por bloco → tema; sem ids; fora de section[id].
+   --------------------------------------------------------------------- */
+.rm-l2-empty[hidden], .rm-l2-real[hidden] { display: none !important; }
+.rm-l2-real { font-family: var(--font-ui, system-ui, sans-serif); color: var(--l2-ink); }
+.rm-l2-ig-head { margin: 0 0 1.1rem; }
+.rm-l2-ig-title { margin: 0; font: 800 clamp(1.5rem, 4.4vw, 2.05rem)/1.1 var(--font-display, Georgia, serif); color: var(--l2-navy); letter-spacing: -.01em; }
+.rm-l2-ig-title::after { content: ""; display: block; width: 48px; height: 3px; margin-top: .65rem; border-radius: 2px; background: var(--l2-orange); }
+.rm-l2-ig-sub { margin: .75rem 0 0; max-width: 40rem; color: var(--l2-muted); font-size: .95rem; line-height: 1.55; }
+.rm-l2-ig-nav {
+  display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1rem; padding: .5rem 0 .9rem;
+  border-bottom: 1px solid var(--l2-rule);
+}
+.rm-l2-ig-chip {
+  min-width: 44px; min-height: 44px; padding: 0 .6rem; border: 1px solid var(--l2-rule); border-radius: var(--l2-radius);
+  background: #fff; color: var(--l2-navy); font: 700 .9rem var(--font-ui, system-ui, sans-serif); cursor: pointer;
+}
+.rm-l2-ig-chip:hover { background: var(--l2-tint); border-color: var(--l2-navy); }
+.rm-l2-ig-group { margin: 1.8rem 0 0; }
+.rm-l2-ig-gh {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .7rem; margin: 0 0 .8rem; padding-bottom: .55rem;
+  border-bottom: 2px solid var(--l2-navy); font: 800 1.15rem/1.25 var(--font-display, Georgia, serif); color: var(--l2-navy);
+}
+.rm-l2-ig-gk { font: 700 .68rem var(--font-mono, ui-monospace, monospace); letter-spacing: .16em; text-transform: uppercase; color: var(--l2-orange-ink); }
+.rm-l2-ig-gn { margin-left: auto; font: 600 .78rem var(--font-ui, system-ui, sans-serif); color: var(--l2-muted); }
+.rm-l2-ig-th { margin: 1.3rem 0 .6rem; font: 700 .92rem/1.3 var(--font-ui, system-ui, sans-serif); color: var(--l2-ink); }
+.rm-l2-ig-th::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: .5rem; border-radius: 2px; background: var(--l2-orange); vertical-align: .05em; }
+.rm-l2-ig-card {
+  margin: 0 0 1.1rem; border: 1px solid var(--l2-rule); border-radius: var(--l2-radius); background: #fff;
+  box-shadow: var(--l2-shadow); overflow: hidden;
+}
+.rm-l2-ig-media {
+  width: 100%; aspect-ratio: 3 / 2; background: #f3eddd center / cover no-repeat; border-bottom: 1px solid var(--l2-rule);
+}
+.rm-l2-ig-img { display: block; width: 100%; height: auto; }
+.rm-l2-ig-meta { padding: .8rem 1rem 1rem; }
+.rm-l2-ig-t { font: 700 1rem/1.3 var(--font-display, Georgia, serif); color: var(--l2-navy); }
+.rm-l2-ig-c { margin: .4rem 0 0; color: #41505f; font-size: .9rem; line-height: 1.55; }
+.rm-l2-ig-go {
+  margin-top: .8rem; min-height: 44px; padding: 0 1rem; border: 1px solid var(--l2-navy); border-radius: var(--l2-radius);
+  background: #fff; color: var(--l2-navy); font: 700 .86rem var(--font-ui, system-ui, sans-serif); cursor: pointer;
+}
+.rm-l2-ig-go:hover { background: var(--l2-navy); color: #fff; }
+.rm-l2-ig-end { margin: 1.6rem 0 0; text-align: center; }
+.rm-l2-real button:focus-visible { outline: 3px solid var(--l2-orange); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------------
    9 · CAPA DA MATÉRIA + SLOT DE ARTE (código; a arte final vem de fora)
        O header gerado pelo app-core (.rm-subject-head: só título e subtítulo, não é conteúdo) é substituído pela capa;
        o hero escuro e todas as seções da matéria ficam intactos logo abaixo.

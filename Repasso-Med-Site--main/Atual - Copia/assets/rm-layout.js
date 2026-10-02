@@ -552,7 +552,9 @@
     return { side: side, railBtn: railBtn, close: close, tree: tree, tog: tog, tl: tl, linhas: linhas, btns: btnsModo, full: full, top: top, sug: sug };
   }
 
-  /* ------------------------- painel vazio dos modos --------------------- */
+  /* ------------------------- raiz dos modos isolados -------------------- */
+  /* `vazio` = o painel de sempre (modo sem conteúdo liberado); `corpo` = o conteúdo real (hoje: Infografías), só quando
+     RMModes.conteudoLiberado(modo) — chave de ativação + contrato de anotações. Sem ids; fora de qualquer section[id]. */
   function montarRaiz() {
     var r = ui('div', 'rm-l2-mode-root', { id: 'rm-mode-root', role: 'region', 'aria-label': 'Modo de estudio' });
     var box = ui('div', 'rm-l2-empty');
@@ -563,7 +565,140 @@
     var back = ui('button', 'rm-l2-empty-back', { type: 'button', 'data-view': 'full' });
     back.textContent = 'Volver a la Página completa'; box.appendChild(back);
     r.appendChild(box);
-    return { root: r, titulo: h, back: back };
+    var corpo = ui('div', 'rm-l2-real'); corpo.hidden = true;
+    r.appendChild(corpo);
+    return { root: r, titulo: h, back: back, vazio: box, corpo: corpo };
+  }
+
+  /* ----------------------- Infografías (conteúdo real) ------------------- */
+  /* Só LÊ o DOM da matéria (RMModes.infograficosDe) e monta uma visão derivada: nada é clonado nem movido, nenhum id é
+     criado, nenhuma section[id] é tocada — os ids, âncoras, highlights e estados de questões/flashcards continuam onde estavam. */
+  function textoLimpo(n) { return ((n && n.textContent) || '').replace(/\s+/g, ' ').trim(); }
+  function tituloELegenda(cap) {
+    var b = cap.querySelector('b, strong');
+    var t = textoLimpo(b), todo = textoLimpo(cap);
+    var resto = t && todo.indexOf(t) === 0 ? todo.slice(t.length) : todo;
+    resto = resto.replace(/^\s*[—–\-:·]\s*/, '');
+    return { t: t || todo, c: t ? resto : '' };
+  }
+  /* tema = o último subtítulo do índice cujo elemento precede a figura DENTRO do bloco; incerto ⇒ sem tema */
+  function temaDe(b, fig) {
+    var achado = null;
+    for (var i = 0; i < b.subs.length; i++) {
+      var sb = b.subs[i];
+      if (sb.el === undefined) { try { sb.el = S.tab.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(sb.id) : sb.id)) || null; } catch (e) { sb.el = null; } }
+      if (!sb.el || !b.sec.contains(sb.el)) continue;
+      if (sb.el.compareDocumentPosition(fig) & 4 /* FOLLOWING */) achado = sb; else break;
+    }
+    return achado;
+  }
+  function agruparInfograficos() {
+    var lista = window.RMModes.infograficosDe(S.tab), grupos = [], vistos = [];
+    S.blocos.forEach(function (b) {
+      var its = lista.filter(function (x) { return x.sec === b.sec; });
+      if (its.length) { grupos.push({ rot: 'Bloque ' + ('0' + b.n).slice(-2), label: b.label, n: b.n, b: b, itens: its }); vistos = vistos.concat(its); }
+    });
+    lista.forEach(function (x) {                                // figura em seção que não é bloco do índice: nunca some
+      if (vistos.indexOf(x) !== -1) return;
+      var g = null; grupos.forEach(function (k) { if (k.b.sec === x.sec) g = k; });
+      if (!g) { var h = x.sec.querySelector('h2'); g = { rot: '', label: textoLimpo(h) || x.sec.id, n: 0, b: { subs: [], sec: x.sec }, itens: [] }; grupos.push(g); }
+      g.itens.push(x);
+    });
+    return { grupos: grupos, total: lista.length };
+  }
+  function bgDe(img) {
+    if (img.tagName === 'IMG') return { tag: 'img', src: img.currentSrc || img.getAttribute('src') || '' };
+    var cs = getComputedStyle(img), bg = cs.backgroundImage || '';
+    return { tag: 'bg', src: bg && bg !== 'none' ? bg : '', ratio: cs.aspectRatio && cs.aspectRatio !== 'auto' ? cs.aspectRatio : '3 / 2' };
+  }
+  function limparCorpo() {
+    if (!S || !S.corpo) return;
+    if (S.ig && S.ig.io) { try { S.ig.io.disconnect(); } catch (e) {} }
+    S.ig = null;
+    while (S.corpo.firstChild) S.corpo.removeChild(S.corpo.firstChild);
+    S.corpo.hidden = true;
+    S.vazio.hidden = false;
+    S.rootEl.removeAttribute('data-rm-real');
+  }
+  function carregarMidia(m) {
+    if (m.getAttribute('data-bg')) { m.style.backgroundImage = m.getAttribute('data-bg'); m.removeAttribute('data-bg'); }
+    var i = m.querySelector('img[data-src]'); if (i) { i.src = i.getAttribute('data-src'); i.removeAttribute('data-src'); }
+  }
+  function renderInfografias() {
+    var d = agruparInfograficos();
+    if (!d.total) return false;                                   // nada real para mostrar: fica o painel vazio
+    var C = S.corpo, ig = { itens: [], grupos: [], io: null };
+    var mids = [];
+    var cab = ui('div', 'rm-l2-ig-head');
+    var h1 = ui('h1', 'rm-l2-ig-title'); h1.textContent = 'Infografías';
+    var sub = ui('p', 'rm-l2-ig-sub');
+    sub.textContent = d.total + (d.total === 1 ? ' infografía' : ' infografías') + ' de la materia, por bloque y tema. Tus marcaciones y tu posición siguen intactas en la Página completa.';
+    cab.appendChild(h1); cab.appendChild(sub);
+    if (d.grupos.length > 1) {
+      var nav = ui('div', 'rm-l2-ig-nav', { role: 'group', 'aria-label': 'Ir a un bloque' });
+      d.grupos.forEach(function (g, gi) {
+        var c = ui('button', 'rm-l2-ig-chip', { type: 'button', 'data-ig-chip': String(gi), 'aria-label': (g.rot ? g.rot + ' · ' : '') + g.label });
+        c.textContent = g.n ? ('0' + g.n).slice(-2) : '·'; nav.appendChild(c);
+      });
+      cab.appendChild(nav);
+    }
+    C.appendChild(cab);
+    d.grupos.forEach(function (g, gi) {
+      var G = ui('div', 'rm-l2-ig-group', { role: 'group', 'aria-label': (g.rot ? g.rot + ' · ' : '') + g.label });
+      var gh = ui('h2', 'rm-l2-ig-gh');
+      if (g.rot) { var ro = ui('span', 'rm-l2-ig-gk'); ro.textContent = g.rot; gh.appendChild(ro); }
+      gh.appendChild(txt(g.label));
+      var cnt = ui('span', 'rm-l2-ig-gn'); cnt.textContent = g.itens.length + (g.itens.length === 1 ? ' infografía' : ' infografías'); gh.appendChild(cnt);
+      G.appendChild(gh); ig.grupos.push(G);
+      var temaAnt;                                                  // undefined = ainda sem tema aberto
+      var algumTema = g.itens.some(function (x) { return !!temaDe(g.b, x.fig); });
+      g.itens.forEach(function (x) {
+        var tm = algumTema ? temaDe(g.b, x.fig) : null, tid = tm ? tm.id : '';
+        if (algumTema && tid !== temaAnt) {
+          var th = ui('h3', 'rm-l2-ig-th'); th.textContent = tm ? tm.txt : 'General del bloque'; G.appendChild(th); temaAnt = tid;
+        }
+        var tl = tituloELegenda(x.cap), bg = bgDe(x.img);
+        var alt = x.img.getAttribute('aria-label') || x.img.getAttribute('alt') || tl.t;
+        var card = ui('div', 'rm-l2-ig-card');
+        var media = ui('div', 'rm-l2-ig-media');
+        if (bg.tag === 'img') {
+          var im = ui('img', 'rm-l2-ig-img', { alt: alt, decoding: 'async', 'data-src': bg.src });
+          media.appendChild(im);
+        } else {
+          media.setAttribute('role', 'img'); media.setAttribute('aria-label', alt);
+          media.style.aspectRatio = bg.ratio;
+          if (bg.src) media.setAttribute('data-bg', bg.src);
+        }
+        card.appendChild(media); mids.push(media);
+        var meta = ui('div', 'rm-l2-ig-meta');
+        var t = ui('div', 'rm-l2-ig-t'); t.textContent = tl.t; meta.appendChild(t);
+        if (tl.c) { var c = ui('p', 'rm-l2-ig-c'); c.textContent = tl.c; meta.appendChild(c); }
+        var go = ui('button', 'rm-l2-ig-go', { type: 'button', 'data-ig-go': String(ig.itens.length) });
+        go.textContent = 'Ver en la página'; meta.appendChild(go);
+        card.appendChild(meta); G.appendChild(card);
+        ig.itens.push(x);
+      });
+      C.appendChild(G);
+    });
+    var fim = ui('div', 'rm-l2-ig-end');
+    var back = ui('button', 'rm-l2-empty-back', { type: 'button', 'data-view': 'full' });
+    back.textContent = 'Volver a la Página completa'; fim.appendChild(back); C.appendChild(fim);
+    S.vazio.hidden = true; C.hidden = false; S.rootEl.setAttribute('data-rm-real', 'infografias');
+    S.ig = ig;
+    /* imagens sob demanda (≈ 8 MB no total): só as que se aproximam da janela */
+    if ('IntersectionObserver' in window) {
+      ig.io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { carregarMidia(e.target); ig.io.unobserve(e.target); } });
+      }, { rootMargin: '700px 0px' });
+      mids.forEach(function (m) { ig.io.observe(m); });
+    } else mids.forEach(carregarMidia);
+    return true;
+  }
+  function pintarModo() {
+    if (!S) return;
+    limparCorpo();
+    var v = window.RMModes.view;
+    if (v !== 'full' && window.RMModes.conteudoLiberado(v) && v === 'infografias') renderInfografias();
   }
 
   /* --------------------------- estado visual ---------------------------- */
@@ -677,7 +812,21 @@
         if (b.getAttribute('data-act') === 'go') { if (S.blocos[0]) irPara(S.blocos[0].sec); }
         else if (b.getAttribute('data-act') === 'idx') { if (lmode() === 'docked') { S.lat.tog && S.lat.tog.focus(); } else abrirDrawer(); }
       },
-      raiz: function (e) { if (e.target.closest && e.target.closest('[data-view]')) window.RMModes.requestView('full'); }
+      raiz: function (e) {
+        var t = e.target && e.target.closest ? e.target : null; if (!t) return;
+        var go = t.closest('[data-ig-go]'), chip = t.closest('[data-ig-chip]');
+        if (go && S && S.ig) {                                   // «Ver en la página»: volta à Página completa e salta até a figura (a posição de saída é a do salto)
+          var x = S.ig.itens[+go.getAttribute('data-ig-go')]; if (!x || !x.fig || x.fig.isConnected === false) return;
+          window.RMModes.requestView('full', { restaurar: false, depois: function () { irPara(x.fig); } });
+          return;
+        }
+        if (chip && S && S.ig) {
+          var G = S.ig.grupos[+chip.getAttribute('data-ig-chip')];
+          if (G) { var yy = Math.max(0, G.getBoundingClientRect().top + (window.pageYOffset || 0) - (hdrH() + 16)); try { window.scrollTo({ top: yy, behavior: 'instant' }); } catch (er) { window.scrollTo(0, yy); } }
+          return;
+        }
+        if (t.closest('[data-view]')) window.RMModes.requestView('full');
+      }
     };
     S.side.addEventListener('click', S.h.lat);
     S.hamb.addEventListener('click', S.h.hamb);
@@ -690,7 +839,7 @@
     window.addEventListener('scroll', S.h.scroll, { passive: true });
     S.tab.addEventListener('load', S.h.img, true);             // 'load' não borbulha: captura
     document.addEventListener('keydown', S.h.key);
-    window.RMModes.onChange(function () { novaGeracao(); refletirModo(); });   // troca de modo: salto/acompanhamento/pedidos anteriores perdem a vez
+    window.RMModes.onChange(function () { novaGeracao(); refletirModo(); pintarModo(); });   // troca de modo: salto/acompanhamento/pedidos anteriores perdem a vez
   }
 
   function desligar() {
@@ -708,6 +857,7 @@
     document.removeEventListener('keydown', h.key);
     clearTimeout(ALT.scroll); clearTimeout(ALT.poll); clearTimeout(ALT.img); ALT.scroll = ALT.poll = ALT.img = 0;
     desarmarAdia();
+    limparCorpo();
   }
 
   /* ------------------------------- attach -------------------------------- */
@@ -726,7 +876,7 @@
     var b = montarBanda(cat); S.band = b.band; S.hamb = b.hamb; S.chip = b.chip; S.mat = b.mat;
     var lat = montarLateral(tab, bl); S.lat = lat; S.side = lat.side; S.railBtn = lat.railBtn;
     S.backdrop = ui('div', 'rm-l2-backdrop');
-    var raiz = montarRaiz(); S.rootEl = raiz.root; S.titulo = raiz.titulo;
+    var raiz = montarRaiz(); S.rootEl = raiz.root; S.titulo = raiz.titulo; S.vazio = raiz.vazio; S.corpo = raiz.corpo;
     var cp = montarCapa(cat, bl); S.capa = cp.capa; S.arte = cp.arte;
     var cab = tab.querySelector(':scope > .rm-subject-head');       // header gerado pelo app-core (não é conteúdo): a capa o substitui no piloto
     if (cab && cab.parentNode) cab.parentNode.insertBefore(S.capa, cab.nextSibling);

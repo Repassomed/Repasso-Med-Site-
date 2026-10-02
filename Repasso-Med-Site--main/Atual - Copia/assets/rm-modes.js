@@ -27,6 +27,19 @@
        gateWrite). Na B1 isso é garantido só por construção: fora da
        Página completa o conteúdo e a toolbox estão ocultos.
      · nada de caneta, touch-action, palma, Supabase.
+
+   B3 · Infografías (PREPARADO, DESLIGADO)
+     · `infograficosDe(tab)` deriva, SÓ LENDO o DOM, os infográficos que existem
+       (figure com legenda + imagem). Radiografias/diapositivas e outras fotos
+       NÃO são infográficos. Nada é contado nem inventado.
+     · O conteúdo real do modo só é liberado quando as DUAS chaves estão ligadas:
+       (1) CFG.conteudoReal (constante deste arquivo; fica false até a PR de
+           ativação) e (2) o contrato de anotações da V2 está pronto
+           (`contratoAnotacoes()`): a V2 consulta o predicado DENTRO dos caminhos
+           de escrita — ocultar ferramenta por CSS não basta.
+       Hoje o contrato NÃO existe (activeViewPermitido() é fixo e anotarPermitido()
+       não está ligado aos caminhos de escrita): o modo fica no painel vazio.
+     · Sem as duas: o modo continua sendo o painel vazio de sempre.
    ===================================================================== */
 (function () {
   'use strict';
@@ -34,11 +47,67 @@
 
   var ROOT = document.documentElement;
 
+  /* ---------------------------------------------------------------------
+     Chave de ativação do conteúdo REAL dos modos isolados. Fica `false` até a
+     PR de ativação (depois de o Claude 1 entregar o contrato de anotações).
+     Os testes ligam esta constante servindo o arquivo com ela trocada — não há
+     gancho público que a ligue em produção.
+     --------------------------------------------------------------------- */
+  var CFG = { conteudoReal: false };
+  var REAIS = { infografias: true };         // modos que já sabem mostrar conteúdo real (os demais continuam vazios)
+
+  /* ---------------------------------------------------------------------
+     CONTRATO DE ANOTAÇÕES (dono: Claude 1 · rm-tools*.js). O ponto de extensão JÁ existe no rm-tools-v2.js:
+     `activeViewPermitido()` (hoje `return true`) dentro de `anotarPermitido()`, a «porta única» de início de traço,
+     marcador, goma, cor, desfazer/refazer, atalhos e escrita. Para o contrato valer, ele precisa:
+       (1) fazer `activeViewPermitido()` consultar `RMModes.annotationsAllowed()` (true só na Página completa);
+       (2) ligar `anotarPermitido()` a TODOS os caminhos de escrita (hoje só é exposta em `_test`);
+       (3) declarar isso em `RMToolsV2.contratoModos = 1` (número ≥ 1).
+     Aqui a declaração NÃO basta: se a V2 expõe `_test.anotarPermitido`, a sonda abaixo exige que ela devolva
+     `false` fora da Página completa — uma declaração falsa não liga o modo.
+     --------------------------------------------------------------------- */
+  function annotationsAllowed() { return st.view === 'full'; }
+  function contratoAnotacoes() {
+    var T = window.RMToolsV2;
+    if (!T || !(+T.contratoModos >= 1)) return { pronto: false, motivo: 'a V2 ainda não declara contratoModos (activeViewPermitido ainda é fixo)' };
+    try {
+      var t = T._test;
+      if (st.view !== 'full' && t && typeof t.anotarPermitido === 'function' && t.anotarPermitido()) {
+        return { pronto: false, motivo: 'a V2 declara o contrato, mas anotarPermitido() ainda libera a escrita fora da Página completa' };
+      }
+    } catch (e) { return { pronto: false, motivo: 'a sonda do contrato falhou' }; }
+    return { pronto: true, motivo: '' };
+  }
+  /* o modo pode mostrar conteúdo real AGORA? (as duas chaves) */
+  function conteudoLiberado(id) {
+    return !!(REAIS[id] && CFG.conteudoReal && contratoAnotacoes().pronto);
+  }
+
+  /* ---------------------------------------------------------------------
+     INFOGRÁFICOS = o que existe, só lendo o DOM.
+     É infográfico: <figure> dentro de uma section[id], COM legenda (<figcaption>) e com imagem
+     (<img> ou o bloco-imagem `.s2-photo[role=img]` / `img.rmc-photo`).
+     NÃO é: radiografia/diapositiva (`.material-slide`, legenda em `.med-image-caption`), foto solta,
+     ícone, logo ou imagem sem figure+legenda.
+     --------------------------------------------------------------------- */
+  var IMG_SEL = 'img, .s2-photo[role="img"], img.rmc-photo';
+  function infograficosDe(tab) {
+    var out = [];
+    if (!tab) return out;
+    Array.prototype.forEach.call(tab.querySelectorAll('section[id] figure'), function (f) {
+      if (f.closest('.material-slide, .med-image')) return;
+      var cap = f.querySelector('figcaption'); var img = f.querySelector(IMG_SEL);
+      if (!cap || !img) return;
+      out.push({ fig: f, img: img, cap: cap, sec: f.closest('section[id]') });
+    });
+    return out;
+  }
+
   /* Ordem fixa dos modos isolados na lateral. `detect` decide se o recurso
      existe DE VERDADE na matéria — senão o acesso nem aparece. */
   var MODOS = [
     { id: 'infografias',   label: 'Infografías',            icon: 'img',
-      detect: function (t) { return !!t.querySelector('section[id] figure img, section[id] .s2-photo[role="img"], section[id] img.rmc-photo'); } },
+      detect: function (t) { return infograficosDe(t).length > 0; } },
     { id: 'preguntas',     label: 'Preguntas por bloque',   icon: 'q',
       detect: function (t) { return !!t.querySelector('section[id] .quiz-item'); } },
     { id: 'flashcards',    label: 'Flashcards por bloque',  icon: 'cards',
@@ -176,6 +245,11 @@
     get view() { return st.view; },
     get gen() { return st.gen; },           // só leitura (testes/diagnóstico)
     isFull: function () { return st.view === 'full'; },
+    annotationsAllowed: annotationsAllowed,  // true só na Página completa (o Claude 1 liga a V2 a isto: activeViewPermitido)
+    contratoAnotacoes: contratoAnotacoes,    // {pronto, motivo}: diagnóstico/gate
+    conteudoLiberado: conteudoLiberado,      // o modo `id` pode mostrar conteúdo real agora?
+    get conteudoRealLigado() { return !!CFG.conteudoReal; },   // só leitura: a chave de ativação (diagnóstico/teste)
+    infograficosDe: infograficosDe,          // só leitura do DOM
     onChange: function (fn) { if (typeof fn === 'function') st.ouvintes.push(fn); }
   };
 })();
