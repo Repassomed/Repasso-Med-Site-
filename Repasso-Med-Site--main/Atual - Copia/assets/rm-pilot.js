@@ -15,13 +15,20 @@
        por UID autenticado). Aqui não existe UID, e-mail nem lista.
      · Não toca no motor de marcação nem na caneta: só chama, quando o
        piloto está ativo, rm-modes.js / rm-layout.js.
+     · AUDIOBOOK (ligação, nada mais): DEPOIS de o Layout V2 anexar com
+       sucesso, carrega rm-audio-boot.js e chama RMAudioBoot.start(); ao
+       desativar, chama RMAudioBoot.stop(). Aqui não há manifesto, UID nem
+       lista: quem decide se existe áudio é o servidor (get-audio-manifest,
+       por UID autenticado) dentro do boot, que falha FECHADO — sem manifesto
+       autorizado nada aparece, nada é baixado e nenhum rm-audio.js/css carrega.
+       Mesmo gate do Layout: só semiologia-ii e só com `layout === true`.
    ===================================================================== */
 (function () {
   'use strict';
   if (window.RMPilot) return;                         // idempotente
 
   var SLUG = 'semiologia-ii';                         // piloto: uma matéria só
-  var VER  = '2026093003';                            // cache-buster dos módulos
+  var VER  = '2026100201';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
   var BASE = 'assets/';
   var COOLDOWN_MS = 30000;                            // depois de uma falha, não insistir
 
@@ -107,7 +114,21 @@
   }
 
   function desativar() {
+    try { if (window.RMAudioBoot) window.RMAudioBoot.stop(); } catch (e) {}      // primeiro o áudio (pausa, guarda a posição, destrói), depois o shell
     try { if (st.loaded && window.RMLayout) window.RMLayout.detach(); } catch (e) {}
+  }
+
+  /* Áudio: só DEPOIS de o Layout V2 ter anexado nesta aba. O módulo é carregado uma vez; `start()` é idempotente e fail-closed
+     (sem sessão, sem manifesto autorizado do servidor ou sem slot: não faz nada). Qualquer falha aqui NUNCA afeta o layout. */
+  var audioLoading = null, audioFalha = 0;
+  function ligarAudio(n, tab) {
+    if (!(window.RMAudioBoot) && !audioLoading && Date.now() - audioFalha >= COOLDOWN_MS) {       // falhou ao carregar: não insiste a cada troca de aba
+      audioLoading = js(BASE + 'rm-audio-boot.js?v=' + VER).then(function () { audioLoading = null; }, function () { audioLoading = null; audioFalha = Date.now(); });
+    }
+    return (audioLoading || Promise.resolve()).then(function () {
+      if (n !== emVoo || tabAtiva() !== tab || !window.RMAudioBoot || !window.RMLayout) return;   // outra aba/avaliação, ou o layout já saiu
+      try { window.RMAudioBoot.start(); } catch (e) {}
+    });
   }
 
   var emVoo = 0;
@@ -120,7 +141,8 @@
       return carregar().then(function (ok) {
         if (!ok || n !== emVoo || tabAtiva() !== tab) return;
         try { window.RMLayout.attach(tab); }
-        catch (e) { try { window.RMLayout.detach(); } catch (e2) {} }   // qualquer erro: volta ao normal
+        catch (e) { try { window.RMLayout.detach(); } catch (e2) {} return; }   // qualquer erro: volta ao normal (e SEM áudio)
+        ligarAudio(n, tab);
       });
     });
   }

@@ -63,3 +63,13 @@ Sobre a `main` com a #411 (`rm-pilot.js`, 152 linhas), a integração final prec
    ```
 
 O `rm-audio-boot.js` consome só o contrato do B1: slot `#rm-l2-player`, `html[data-rm-dock="side|bottom"]` e `--rm-player-h`. Não depende de `RMLayout._dock` (que só existe a partir da #417).
+
+## Gancho no `rm-pilot.js` — `pilot-gancho.test.cjs` (40 verificações)
+O `rm-pilot.js` (gate do piloto, `layout === true` do servidor, só `semiologia-ii`) passa a: **depois** de `RMLayout.attach(tab)` funcionar, carregar `rm-audio-boot.js?v=VER` e chamar
+`RMAudioBoot.start()`; ao desativar, chamar `RMAudioBoot.stop()` **antes** do `detach`. O pilot não conhece manifesto, UID nem lista: quem decide se existe áudio é o servidor
+(`get-audio-manifest`, por UID autenticado) dentro do boot, que falha FECHADO. **Sem manifesto autorizado não aparece nada e não carrega `rm-audio.js/css/store/provider`.**
+O teste usa o `rm-pilot.js` REAL, o Layout REAL, a Semiología II REAL e o servidor de `server.cjs` (funções reais atrás de «Supabase» falso): `layout:false`, sem sessão e outra matéria ⇒ zero pedidos de
+áudio; manifesto vazio / 500 ⇒ boot carrega, o servidor é consultado 1 vez, nada mais; manifesto autorizado ⇒ cards e só então `rm-audio.*`, 0 bytes de mídia antes do play; 5 reavaliações ⇒ 1 boot, 1 manifesto
+(idempotente); sair da matéria ⇒ `stop()` antes do `detach`; sair antes de o boot carregar ⇒ nunca `start()`; `attach` que falha ⇒ nunca `start()`; boot 404 ⇒ layout intacto e sem repetir o pedido (cooldown).
+Mutações: sem a guarda de corrida → reprova; sem o `stop()` → reprova. **Não afirma nada sobre o player/áudio em hardware.**
+**Cache:** `/assets/*` cacheia 7 dias; mudou o `rm-pilot.js` ⇒ sobe `VER` nele **e** a tag `?v=` do `rm-pilot.js` no `index.html` (1 linha).
