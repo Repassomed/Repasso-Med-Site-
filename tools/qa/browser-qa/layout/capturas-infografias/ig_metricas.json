@@ -1,0 +1,161 @@
+{
+ "nota": "modo_SIMULADO = chave e contrato de anotações simulados; vazio_codigo_entregue = código entregue sem alteração",
+ "casos": [
+  {
+   "caso": "320",
+   "viewportCSS": "320×844",
+   "zoom": 1,
+   "lmode": "off",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 6,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "390",
+   "viewportCSS": "390×844",
+   "zoom": 1,
+   "lmode": "off",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 6,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "561",
+   "viewportCSS": "561×1024",
+   "zoom": 1,
+   "lmode": "off",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 6,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "600",
+   "viewportCSS": "600×1024",
+   "zoom": 1,
+   "lmode": "off",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 6,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "700",
+   "viewportCSS": "700×1024",
+   "zoom": 1,
+   "lmode": "off",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 6,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "767",
+   "viewportCSS": "767×1024",
+   "zoom": 1,
+   "lmode": "off",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 6,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "768",
+   "viewportCSS": "768×1024",
+   "zoom": 1,
+   "lmode": "rail",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 6,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "1024",
+   "viewportCSS": "1024×900",
+   "zoom": 1,
+   "lmode": "rail",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 5,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "1440",
+   "viewportCSS": "1440×900",
+   "zoom": 1,
+   "lmode": "docked",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 5,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "1700",
+   "viewportCSS": "1700×900",
+   "zoom": 1,
+   "lmode": "docked",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 5,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "1920",
+   "viewportCSS": "1920×900",
+   "zoom": 1,
+   "lmode": "docked",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 5,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "720x450",
+   "viewportCSS": "720×450",
+   "zoom": 1,
+   "lmode": "off",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 4,
+   "imagensTotal": 34,
+   "errosJS": 0
+  },
+  {
+   "caso": "1440_zoom200",
+   "viewportCSS": "720×450",
+   "zoom": 2,
+   "lmode": "off",
+   "overflowX": 0,
+   "cartoes": 34,
+   "grupos": 10,
+   "imagensCarregadasNaJanela": 4,
+   "imagensTotal": 34,
+   "errosJS": 0
+  }
+ ]
+}

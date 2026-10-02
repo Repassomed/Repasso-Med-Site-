@@ -188,3 +188,33 @@ inline da regra antiga, não a `.rm2-box` real nem o CSS do Layout; fora do esco
 
 ## Assets de arte (ChatGPT → José → integração)
 Especificação completa em [`ASSETS-CHATGPT.md`](ASSETS-CHATGPT.md): hoje 1 slot (`hero`), entregue em 2 resoluções.
+
+## Modo isolado INFOGRAFÍAS — preparado e **DESLIGADO** (`infografias.test.cjs`, `capturas-infografias.cjs`)
+**Estado:** o código está pronto e testado, mas o modo continua sendo o painel vazio de sempre. O conteúdo real só aparece com **duas chaves**:
+1. `CFG.conteudoReal` em `rm-modes.js` (constante `false` no código entregue; a PR de ativação troca para `true` — um diff de 1 linha);
+2. **contrato de anotações da V2 pronto** (`RMModes.contratoAnotacoes().pronto`): `RMToolsV2.contratoModos ≥ 1` **e** a sonda comportamental
+   (`_test.anotarPermitido()` precisa devolver `false` fora da Página completa — uma declaração falsa não liga o modo).
+
+**Contrato com o Claude 1 — situação verificada na `main`:** ocultar a toolbox por CSS não é bloqueio de escrita. O ponto de extensão **já existe** no
+`rm-tools-v2.js` (`activeViewPermitido()` dentro de `anotarPermitido()`), mas hoje (a) `activeViewPermitido()` é um `return true` fixo e (b) `anotarPermitido()`
+**não é chamada por nenhum caminho de escrita** (só é exposta em `_test`). Falta: `activeViewPermitido()` consultar `RMModes.annotationsAllowed()` (pronto aqui;
+`true` só na Página completa), `anotarPermitido()` ligada a TODOS os caminhos (traço, marcador, goma, cor, desfazer/refazer, atalhos, `filaGravar`/apagar, highlight/nota),
+recusa clara sem toast falso nem fila, um save já iniciado conservando o contexto, e `RMToolsV2.contratoModos = 1`. **Enquanto isso não existir, o modo não liga.**
+
+**O que é um «infográfico» (sem inventar):** `<figure>` dentro de `section[id]` **com `<figcaption>` e imagem**. Radiografias/diapositivas (`.material-slide`,
+legenda `.med-image-caption`), fotos soltas e qualquer imagem sem figure+legenda **não** entram. Na Semiología II: **34 infográficos** e 10 diapositivas (excluídas). Os
+números exibidos (total e por bloco) são **derivados do DOM** e o teste os confere contra uma contagem independente.
+
+**Como funciona:** visão derivada em `#rm-mode-root` (fora de `section[id]`, sem ids, tudo `[data-rm-ui]`), agrupada **bloco → tema** (tema = último subtítulo do índice que
+precede a figura; incerto ⇒ «General del bloque»). Nada é clonado nem movido: ids, âncoras, highlights, tinta e estados de questões/flashcards ficam intactos na Página
+completa (as seções só ficam ocultas). Imagens sob demanda (`IntersectionObserver`, ≈ 8 MB no total). «Ver en la página» volta à Página completa e salta até a figura pelo caminho
+com geração/cancelamento já existente (`irPara`). Voltar pelo botão/lateral restaura a posição; o catálogo é descartado.
+
+**Testes (`infografias.test.cjs`, 185):** **A** código entregue → painel vazio, 0 escritas · **B** chave ligada sem contrato / com declaração FALSA → vazio · **C** chave + contrato simulado:
+34 cartões = verdade do DOM (títulos, alt, ordem), 10 blocos, contadores reais, 0 ids novos, 0 `[data-rm-ui]` em `section[id]`, seções **byte a byte idênticas** depois de voltar (com resposta de
+questão e carta virada), ids/highlights/tinta idênticos, tinta **visível e alinhada** (medida válida, `paths > 0`) antes e depois, posição restaurada, caneta armada à força + arrasto → 0 traço/0 escrita,
+imagens sob demanda, atalho de bloco, «Ver en la página», corridas (4× entra/sai) e sair da matéria com o modo aberto · **D** 12 larguras (320…1920 incl. 561, 720×450, 767, 768) + zoom 200 % + rotação:
+0 overflow, proporção da imagem preservada, alvos ≥ 44 px · **E** clique na lateral/drawer. Mutações: incluir diapositivas → 15 falhas; liberar sem contrato → 2 falhas.
+**Limite:** o contrato é **simulado** (a V2 real ainda não o tem); eventos de ponteiro são sintéticos; nada foi testado em hardware.
+**Capturas** (`capturas-infografias/`, 28 WebP + `ig_metricas.json`): 320 · 390 · 561 · 600 · 700 · 767 · 768 · 1024 · 1440 · 1700 · 1920 · 720×450 · zoom 200 %, `modo_SIMULADO` (chave e contrato simulados) e
+`vazio_codigo_entregue` (código entregue, sem alteração). Fontes do Google não carregam no sandbox. **Sem comparação com a referência visual do José: ela não chegou a esta sessão.**
