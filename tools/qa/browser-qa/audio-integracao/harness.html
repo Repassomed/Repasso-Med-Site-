@@ -31,16 +31,55 @@ html.rm-l2 #b1-tools { display: block; position: fixed; right: max(9px, env(safe
 </div>
 <script>
   const SUPABASE_URL = "{{SUPABASE_URL}}";
-  window.__sess = { token: 'tok-jose', uid: 'uid-jose' };
-  window.RM_SB = { auth: {
+  window.__sess = new URLSearchParams(location.search).get('real') ? { token: 'tok-jose-real', uid: 'd4d215d3-36dd-4efb-8869-bdea5376c648' } : { token: 'tok-jose', uid: 'uid-jose' };
+  /* Banco falso em memória para o rm-tools.js / rm-tools-v2.js REAIS (caneta, marca-texto, anotações): subconjunto do PostgREST que eles usam. */
+  window.__db = { user_ink_strokes: [], user_highlights: [], user_notes: [], study_tools_beta: [], user_study_progress: [], my_active_subjects: [{ subject_slug: 'semiologia-ii' }] };
+  try { var sv = sessionStorage.getItem('__rmdb'); if (sv) window.__db = JSON.parse(sv); } catch (e) {}      // sobrevive a reload (teste de recarregamento real)
+  window.__dbOps = []; window.__dbChaos = { atrasoInsert: 0 };
+  window.__dbSave = function () { try { sessionStorage.setItem('__rmdb', JSON.stringify(window.__db)); } catch (e) {} };
+  (function () {
+    var seq = 0; Object.keys(window.__db).forEach(function (k) { window.__db[k].forEach(function (r) { var m = /^id-(\d+)$/.exec(String(r.id)); if (m) seq = Math.max(seq, +m[1]); }); });
+    function Q(t) { this.t = t; this.op = 'select'; this.f = []; this.one = null; this.pay = null; this.lim = Infinity; }
+    ['eq', 'in', 'neq'].forEach(function (m) { Q.prototype[m] = function (k, v) { this.f.push([m, k, v]); return this; }; });
+    Q.prototype.select = function () { return this; };
+    Q.prototype.insert = function (r) { this.op = 'insert'; this.pay = r; return this; };
+    Q.prototype.upsert = function (r) { this.op = 'upsert'; this.pay = r; return this; };
+    Q.prototype.update = function (r) { this.op = 'update'; this.pay = r; return this; };
+    Q.prototype.delete = function () { this.op = 'delete'; return this; };
+    Q.prototype.order = function () { return this; };
+    Q.prototype.limit = function (n) { this.lim = n; return this; };
+    Q.prototype.range = function () { return this; };
+    Q.prototype.single = function () { this.one = 'single'; return this; };
+    Q.prototype.maybeSingle = function () { this.one = 'maybe'; return this; };
+    Q.prototype.match = function (row) { return this.f.every(function (x) { return x[0] === 'eq' ? row[x[1]] === x[2] : x[0] === 'neq' ? row[x[1]] !== x[2] : x[2].indexOf(row[x[1]]) >= 0; }); };
+    Q.prototype.then = function (ok, ko) {
+      var q = this, tab = window.__db[q.t] || (window.__db[q.t] = []), out, run = function () {
+        window.__dbOps.push(q.op + ':' + q.t);
+        if (q.op === 'insert' || q.op === 'upsert') { var rows = [].concat(q.pay).map(function (r) { return Object.assign({ id: 'id-' + (++seq) }, r); }); rows.forEach(function (r) { tab.push(r); }); out = rows; }
+        else if (q.op === 'delete') { out = tab.filter(q.match, q); window.__db[q.t] = tab.filter(function (r) { return !q.match(r); }); }
+        else if (q.op === 'update') { out = tab.filter(q.match, q); out.forEach(function (r) { Object.assign(r, q.pay); }); }
+        else out = tab.filter(q.match, q).slice(0, q.lim);
+        if (q.op !== 'select') window.__dbSave();
+        if (q.one) { if (out.length !== 1) return { data: null, error: q.one === 'maybe' && out.length === 0 ? null : { message: 'rows=' + out.length } }; return { data: out[0], error: null }; }
+        return { data: out, error: null };
+      };
+      var ms = q.op === 'insert' && q.t === 'user_ink_strokes' ? window.__dbChaos.atrasoInsert : 0;
+      return new Promise(function (res) { setTimeout(function () { res(run()); }, ms); }).then(ok, ko);
+    };
+    window.__fromDb = function (t) { return new Q(t); };
+  })();
+  window.__authL = []; window.__authCb = function (evt) { var s = window.__sess ? { access_token: window.__sess.token, user: { id: window.__sess.uid } } : null; window.__authL.slice().forEach(function (f) { try { f(evt, s); } catch (e) {} }); };
+  window.RM_SB = { from: function (t) { return window.__fromDb(t); }, auth: {
+    getUser: function () { return Promise.resolve({ data: { user: window.__sess ? { id: window.__sess.uid } : null } }); },
     getSession: function () { return Promise.resolve({ data: { session: window.__sess ? { access_token: window.__sess.token, user: { id: window.__sess.uid } } : null } }); },
-    onAuthStateChange: function (cb) { window.__authCb = cb; return { data: { subscription: { unsubscribe: function () { window.__authCb = null; } } } }; }
+    onAuthStateChange: function (cb) { window.__authL.push(cb); return { data: { subscription: { unsubscribe: function () { var k = window.__authL.indexOf(cb); if (k >= 0) window.__authL.splice(k, 1); } } } }; }
   } };
   window.RM_CATALOGO = [{ slug: 'semiologia-ii', tab: 'semio2', title: 'Semiología II', sub: '' }];
   /* ligar a aba do piloto como o site faz */
   (function () { var t = document.getElementById('tab-semio2'); if (t) t.classList.add('active'); })();
 </script>
 {{B1_JS}}
+{{TOOLS}}
 <script>
   /* Stub do Layout V2 (só sem RM_B1_DIR): cria o slot e os atributos como o rm-layout.js faria. */
   if (!window.RMLayout) {

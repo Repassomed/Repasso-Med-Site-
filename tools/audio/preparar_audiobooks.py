@@ -223,6 +223,42 @@ def codifica(src, dst, kbps, ar):
         raise RuntimeError(r.stderr[:300])
 
 
+def corta(src, dst, ini, dur, kbps=None, tempo=1.0, ar=32000, copia=False):
+    """Recorta um trecho para ESCUTA. `copia` = só corta (sem recodificar); `tempo` > 1 acelera sem mudar o tom (atempo)."""
+    cmd = [ff(), '-y', '-hide_banner', '-loglevel', 'error', '-nostdin', '-ss', f'{ini:.2f}', '-t', f'{dur * tempo:.2f}', '-i', src, '-vn', '-map', '0:a:0', '-map_metadata', '-1']
+    if copia:
+        cmd += ['-c:a', 'copy']
+    else:
+        if tempo != 1.0:
+            cmd += ['-af', f'atempo={tempo}']
+        cmd += ['-c:a', 'aac', '-profile:a', 'aac_low', '-b:a', f'{kbps}k', '-ac', '1', '-ar', str(ar)]
+    r = subprocess.run(cmd + ['-movflags', '+faststart', dst], capture_output=True, text=True)
+    if r.returncode != 0:
+        raise RuntimeError(r.stderr[:300])
+
+
+def gera_amostras(master, copias, dur, base, pasta, n, janela, vels, ar):
+    """Trechos curtos (n posições espalhadas) para a ESCUTA HUMANA: referência do master, cada cópia a 1× e a 2×/2,5×.
+    Só pequenos recortes, SEMPRE fora do repositório (a pasta é a mesma `--saida`)."""
+    os.makedirs(pasta, exist_ok=True)
+    if not dur or dur < janela + 2 or n <= 0:
+        return []
+    fr = [(k + 1) / (n + 1) for k in range(n)]
+    out = []
+    for i, f in enumerate(fr, 1):
+        ini = max(0.0, min(dur - janela - 1, dur * f - janela / 2))
+        ref = os.path.join(pasta, f'{base}.referencia.t{i}.1x.m4a')
+        corta(master, ref, ini, janela, kbps=128, ar=ar)
+        out.append({'trecho': i, 'inicio_s': round(ini, 1), 'tipo': 'referencia-master(128k)', 'velocidade': '1x', 'arquivo': os.path.relpath(ref, os.path.dirname(pasta))})
+        for kb, cp in copias.items():
+            for v in (1.0,) + tuple(vels):
+                nome = f'{base}.{kb}k.t{i}.{v:g}x.m4a'
+                dst = os.path.join(pasta, nome)
+                corta(cp, dst, ini, janela, kbps=kb, tempo=v, ar=ar, copia=(v == 1.0))
+                out.append({'trecho': i, 'inicio_s': round(ini, 1), 'tipo': f'copia-{kb}k', 'velocidade': f'{v:g}x', 'arquivo': os.path.relpath(dst, os.path.dirname(pasta))})
+    return out
+
+
 def cmd_preparar(a):
     if dentro_do_repo(a.saida):
         sys.exit('RECUSADO: a saída está dentro de um repositório git. Masters e cópias NÃO entram no Git; use uma pasta fora do repositório.')
@@ -246,6 +282,9 @@ def cmd_preparar(a):
                  'loudness': loudness(dst), 'stoi': stoi_janelas(p, dst, info['duracao_s'], n=a.janelas),
                  'stoi_velocidades': {f'{v:g}x': stoi_janelas(p, dst, info['duracao_s'], n=a.janelas_vel, tempo=v) for v in vels}}
             item['copias'].append(c)
+        if a.amostras:
+            item['amostras'] = gera_amostras(p, {c['kbps_alvo']: os.path.join(a.saida, c['arquivo']) for c in item['copias']}, info['duracao_s'], base,
+                                             os.path.join(a.saida, 'amostras'), a.amostras, a.janela_amostra, vels, a.ar)
         item['master_loudness'] = loudness(p)
         # recomendação objetiva: o menor bitrate que passa o limiar (média e pior janela) e não clipa
         rec = None
@@ -347,7 +386,7 @@ def main(argv=None):
     s = sp.add_parser('preparar'); s.add_argument('--origem', required=True); s.add_argument('--saida', required=True)
     s.add_argument('--ar', type=int, default=32000); s.add_argument('--stoi-min', type=float, default=STOI_MIN, dest='stoi_min'); s.add_argument('--janelas', type=int, default=10)
     s.add_argument('--velocidades', default=','.join(f'{v:g}' for v in VELOCIDADES), help='velocidades extra para medir STOI (vazio = só 1×)')
-    s.add_argument('--janelas-vel', type=int, default=5, dest='janelas_vel'); s.add_argument('--stoi-min-vel', type=float, default=STOI_MIN_VEL, dest='stoi_min_vel'); s.set_defaults(f=cmd_preparar)
+    s.add_argument('--janelas-vel', type=int, default=5, dest='janelas_vel'); s.add_argument('--amostras', type=int, default=3, help='trechos para escuta por master (0 = nenhum)'); s.add_argument('--janela-amostra', type=float, default=25.0, dest='janela_amostra'); s.add_argument('--stoi-min-vel', type=float, default=STOI_MIN_VEL, dest='stoi_min_vel'); s.set_defaults(f=cmd_preparar)
     s = sp.add_parser('vincular'); s.add_argument('--transcricao', required=True); s.add_argument('--materia', required=True); s.set_defaults(f=cmd_vincular)
     a = ap.parse_args(argv)
     return a.f(a)

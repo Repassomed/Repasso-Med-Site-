@@ -63,3 +63,16 @@ Sobre a `main` com a #411 (`rm-pilot.js`, 152 linhas), a integração final prec
    ```
 
 O `rm-audio-boot.js` consome só o contrato do B1: slot `#rm-l2-player`, `html[data-rm-dock="side|bottom"]` e `--rm-player-h`. Não depende de `RMLayout._dock` (que só existe a partir da #417).
+
+## Caneta REAL + Layout REAL (`caneta-real.test.cjs`)
+
+`NODE_PATH=$(npm root -g) node tools/qa/browser-qa/audio-integracao/caneta-real.test.cjs` → **55 verificações**. Carrega os arquivos **reais** do repositório
+(`rm-tools.js`, `rm-tools-v2.js`, `rm-layout.js/css`, `rm-modes.js`, `rm-audio-boot.js` + motor) com a matéria Semiología II real (`/h?pen=1&real=1`, conta do José).
+O «Supabase» é um fake em memória (subconjunto do PostgREST que a caneta usa; sobrevive a reload via `sessionStorage`) e o áudio é mp3/ogg sintético — prova a
+**convivência do código**, não o áudio real, não o tablet e não o banco real. `RM_B1_DIR=<dir>` testa outra versão do Layout (p.ex. a branch da #425).
+Cobre: tocar enquanto se escreve (a caneta real gera os mesmos `preventDefault` com e sem áudio; o áudio continua avançando); **alinhamento** de traço e marca-texto
+(posição relativa à âncora) ao **inserir/remover cards** e ao **recarregar** (cards antes ou depois da caneta sincronizar); pausa/fechar com a caneta armada;
+**troca de matéria e logout DURANTE o carregamento do manifesto**; toolbox real × player em 561–767/720×450 (relatório `B1-BLOCKER`, não reprova).
+Regressões encontradas e corrigidas em `rm-audio-boot.js`: (1) trocar de aba ou **sair da conta com o manifesto ainda a caminho** deixava os cards/o player nascerem
+(os observadores só eram ligados depois do carregamento ⇒ agora `vigiar()` desde o início); (2) com o Layout da #425 os traços **não se reposicionavam** ao remover os cards
+(⇒ `RMToolsV2.reposicionar()` — API pública — depois de inserir/remover os cards).

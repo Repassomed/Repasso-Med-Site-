@@ -151,6 +151,14 @@
   }
 
   /* ----------------------- arbitragem e ciclo de vida ----------------------- */
+  /* Inserir/remover os cards muda a altura da matéria: pede à caneta (API pública da V2) que reposicione os traços já desenhados,
+     em vez de depender de quem observa o redimensionamento. Nunca falha: sem a V2 não há nada a reposicionar. */
+  function reposicionarTinta() {
+    var f = function () { try { var t = root.RMToolsV2; if (t && typeof t.reposicionar === 'function') t.reposicionar(); } catch (e) { /* ignore */ } };
+    f();
+    try { root.requestAnimationFrame(f); } catch (e) { /* ignore */ }
+  }
+
   function pausarNativos() {
     var tab = d().getElementById(TAB_ID);
     if (!tab) return;
@@ -180,19 +188,16 @@
     if (!tab || tab.id !== TAB_ID || !d().querySelector(SLOT) || !root.RMLayout) { try { st.engine && st.engine.handle('subject-change'); } catch (e) { /* ignore */ } stop(); }
   }
 
-  function ligarVida() {
+  /* Vigia a VIDA do boot desde o primeiro instante (antes de o manifesto chegar): trocar de matéria, o slot sumir ou SIGNED_OUT
+     enquanto o manifesto/arquivos ainda carregam cancelam tudo — senão cards e player nasceriam numa matéria errada ou para uma
+     sessão que já saiu. O stop() desfaz estes observadores e a subscrição. */
+  function vigiar() {
     var tabs = d().querySelectorAll('#materias-container > .tab-content');
     st.mo = [];
     var mo = new root.MutationObserver(verificarVida);
     Array.prototype.forEach.call(tabs, function (t) { mo.observe(t, { attributes: true, attributeFilter: ['class'] }); });
     mo.observe(d().body, { childList: true });                    // o slot sai do <body> quando o shell se desfaz
     st.mo.push(mo);
-    var mp = new root.MutationObserver(sincronizarCaneta);
-    mp.observe(d().body, { attributes: true, attributeFilter: ['class'] });
-    st.mo.push(mp);
-    d().addEventListener('play', aoTocarNativo, true);
-    root.addEventListener('pagehide', aoPersistir);
-    d().addEventListener('visibilitychange', aoEsconder);
     try {
       var sb = root.RM_SB || root._sb;
       if (sb && sb.auth && typeof sb.auth.onAuthStateChange === 'function') {
@@ -202,6 +207,15 @@
     } catch (e) { /* ignore */ }
   }
 
+  function ligarVida() {
+    var mp = new root.MutationObserver(sincronizarCaneta);
+    mp.observe(d().body, { attributes: true, attributeFilter: ['class'] });
+    st.mo.push(mp);
+    d().addEventListener('play', aoTocarNativo, true);
+    root.addEventListener('pagehide', aoPersistir);
+    d().addEventListener('visibilitychange', aoEsconder);
+  }
+
   function stop() {
     var s = st; if (!s) return false;
     st = null;
@@ -209,7 +223,9 @@
     (s.mo || []).forEach(function (m) { try { m.disconnect(); } catch (e) { /* ignore */ } });
     try { d().removeEventListener('play', aoTocarNativo, true); root.removeEventListener('pagehide', aoPersistir); d().removeEventListener('visibilitychange', aoEsconder); } catch (e) { /* ignore */ }
     try { if (s.sub && s.sub.unsubscribe) s.sub.unsubscribe(); } catch (e) { /* ignore */ }
+    var tinham = (s.cards || []).length;
     (s.cards || []).forEach(function (c) { if (c.parentNode) c.parentNode.removeChild(c); });
+    if (tinham) reposicionarTinta();
     var slot = d().querySelector(SLOT); if (slot) slot.removeAttribute('data-rm-pen');
     return true;
   }
@@ -223,6 +239,7 @@
     var base = opts.base || BASE, ver = opts.ver || meuVer, q = ver ? '?v=' + ver : '';
     var mine = { engine: null, cards: [], itens: {}, mo: [], sub: null, caneta: false, ultimoCard: null };
     st = mine;
+    vigiar();
     mine.promise = sessao().then(function (se) {
       if (!se || st !== mine) throw new Error('sin sesión');
       mine.uid = se.uid;
@@ -250,6 +267,7 @@
       if (!mine.engine.attach(SLOT)) throw new Error('sin slot');                  // falha fechada: slot ausente ⇒ nada
       inserirCards();
       if (!mine.cards.length) throw new Error('sin bloques');
+      reposicionarTinta();
       mine.engine.on('state', function (e) {
         if (e.state === 'playing') pausarNativos();                               // audiobook toca ⇒ ausculta/vídeo param
         atualizarCards();

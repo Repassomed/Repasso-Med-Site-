@@ -51,9 +51,10 @@ async function iniciar(opts) {
     ttl: 600000,                   // validade do token de assinatura (ms)
     banda: 0,                      // bytes/s (0 = sem limite)
     latencia: 0,                   // ms antes do 1.º byte
+    latManifest: 0,                // ms antes de responder ao manifesto (corridas: trocar de matéria/logout durante o carregamento)
     falha: { url: 0, manifest: 0, midia: 0 },   // próximas N respostas com erro
     lixo: false,                   // devolve bytes inválidos como se fosse áudio
-    ligado: true, uids: 'uid-jose',
+    ligado: true, uids: 'uid-jose,d4d215d3-36dd-4efb-8869-bdea5376c648',
     manifesto: [
       { audio_id: 's2-b01-motivo', block_id: 's2-b01', theme: 'Motivo de consulta', title: 'Motivo de consulta', duration: 60, order: 1, version: 'v1', path: 'semiologia-ii/motivo.v1.mp3', ready: true },
       { audio_id: 's2-b03-epoc', block_id: 's2-b03', theme: 'EPOC', title: 'Síndrome EPOC', duration: 45, order: 2, version: 'v1', path: 'semiologia-ii/epoc.v1.ogg', ready: true }
@@ -67,7 +68,7 @@ async function iniciar(opts) {
     const u = new URL(url);
     if (u.pathname === '/auth/v1/user') {
       const t = ((init.headers || {}).Authorization || '').replace('Bearer ', '');
-      return t === 'tok-jose' ? { ok: true, status: 200, json: async () => ({ id: 'uid-jose' }) } : t === 'tok-outro' ? { ok: true, status: 200, json: async () => ({ id: 'uid-outro' }) } : { ok: false, status: 401, json: async () => ({}) };
+      return t === 'tok-jose' ? { ok: true, status: 200, json: async () => ({ id: 'uid-jose' }) } : t === 'tok-jose-real' ? { ok: true, status: 200, json: async () => ({ id: 'd4d215d3-36dd-4efb-8869-bdea5376c648' }) } : t === 'tok-outro' ? { ok: true, status: 200, json: async () => ({ id: 'uid-outro' }) } : { ok: false, status: 401, json: async () => ({}) };
     }
     if (u.pathname.startsWith('/storage/v1/object/sign/audiobooks/') && init.method === 'POST') {
       const tk = 'tk' + (++S.ctr.sign) + '_' + Math.random().toString(36).slice(2, 8);
@@ -93,6 +94,7 @@ async function iniciar(opts) {
         const materia = fs.readFileSync(path.join(SITE, 'netlify', 'functions', 'materias-privadas', 'semiologia-ii.html'), 'utf8');
         html = html.replace('{{MATERIA}}', () => materia).replace('{{SUPABASE_URL}}', S.base)
           .replace('{{B1_CSS}}', B1 ? '<link rel="stylesheet" href="/b1/rm-layout.css">' : '')
+          .replace('{{TOOLS}}', u.searchParams.get('pen') ? '<script src="/assets/rm-tools.js"></script><script src="/assets/rm-tools-v2.js"></script>' : '')
           .replace('{{B1_JS}}', B1 ? '<script src="/b1/rm-modes.js"></script><script src="/b1/rm-layout.js"></script>' : '');
         return send(200, html, { 'content-type': tipo['.html'] });
       }
@@ -107,7 +109,7 @@ async function iniciar(opts) {
       if (u.pathname.startsWith('/.netlify/functions/')) {
         const nome = u.pathname.split('/').pop();
         const ev = { httpMethod: req.method, headers: req.headers, queryStringParameters: Object.fromEntries(u.searchParams) };
-        if (nome === 'get-audio-manifest') { S.ctr.manifest++; if (S.falha.manifest > 0) { S.falha.manifest--; return send(500, '{}'); } const r = await handlers().manifesto(ev); return send(r.statusCode, r.body, r.headers); }
+        if (nome === 'get-audio-manifest') { S.ctr.manifest++; if (S.latManifest) await new Promise(r => setTimeout(r, S.latManifest)); if (S.falha.manifest > 0) { S.falha.manifest--; return send(500, '{}'); } const r = await handlers().manifesto(ev); return send(r.statusCode, r.body, r.headers); }
         if (nome === 'get-audio-url') { if (S.falha.url > 0) { S.falha.url--; return send(404, '{"error":"unavailable"}', { 'content-type': 'application/json' }); } const r = await handlers().assinar(ev); return send(r.statusCode, r.body, r.headers); }
         return send(404, '');
       }

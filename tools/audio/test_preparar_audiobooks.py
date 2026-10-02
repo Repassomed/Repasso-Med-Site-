@@ -92,6 +92,21 @@ class TestPreparacao(Base):
             md = fh.read()
         self.assertIn('STOI em velocidade', md); self.assertIn('2.5x', md)
 
+    def test_amostras_para_escuta_pequenas_e_fora_do_repo(self):
+        it = self.rel['itens'][0]
+        am = it['amostras']
+        self.assertEqual(sorted({x['velocidade'] for x in am}), ['1x', '2.5x', '2x'])
+        self.assertEqual(len([x for x in am if x['tipo'].startswith('referencia')]), 3)
+        self.assertEqual(len([x for x in am if x['tipo'] == 'copia-48k']), 9)          # 3 trechos × (1×, 2×, 2,5×)
+        for x in am:
+            f = os.path.join(self.saida, x['arquivo'])
+            self.assertTrue(os.path.getsize(f) > 1000 and os.path.getsize(f) < 1_500_000, x['arquivo'])
+            self.assertTrue(P.faststart(f), x['arquivo'])
+        d = P.probe(os.path.join(self.saida, [x for x in am if x['tipo'] == 'copia-64k' and x['velocidade'] == '1x'][0]['arquivo']))['duracao_s']
+        d2 = P.probe(os.path.join(self.saida, [x for x in am if x['tipo'] == 'copia-64k' and x['velocidade'] == '2x'][0]['arquivo']))['duracao_s']
+        self.assertAlmostEqual(d, d2, delta=1.0)           # mesma duração de ESCUTA (25 s); a 2× cobre o dobro do conteúdo
+        self.assertFalse(P.dentro_do_repo(self.saida))
+
     def test_tamanhos_e_ordem(self):
         it = self.rel['itens'][0]
         a, b = it['copias']
