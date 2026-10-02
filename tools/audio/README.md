@@ -10,7 +10,7 @@ python3 tools/audio/preparar_audiobooks.py preparar    --origem ~/masters --said
 python3 tools/audio/preparar_audiobooks.py vincular    --transcricao transcricao-s2-b04.txt \
         --materia "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
 python3 tools/audio/montar_manifesto.py --relatorio ~/audiobooks-tratados/relatorio.json --vinculos vinculos.json --saida ~/audiobooks-tratados/manifesto
-python3 -m unittest discover -s tools/audio -p "test_*.py"   # 23 testes (master sintético)
+python3 -m unittest discover -s tools/audio -p "test_*.py"   # 28 testes (master sintético)
 ```
 
 * **inspecionar:** duração, codec/perfil, taxa, canais, bitrate, faststart (só lê).
@@ -20,6 +20,7 @@ python3 -m unittest discover -s tools/audio -p "test_*.py"   # 23 testes (master
   Confere por SHA-256 + mtime que o **master não mudou**. Escreve `relatorio.json` e `relatorio.md` (tamanho/duração antes e depois).
 * **STOI em velocidade:** além de 1×, mede 2× e 2,5× (master e cópia aceleradas igual, sem mudar o tom; `--velocidades`, `--janelas-vel`, `--stoi-min-vel`, limiar provisório 0,90).
 * **montar_manifesto.py:** gera (fora do Git) o JSON candidato de `RM_AUDIO_MANIFEST` + plano de upload, só com vínculo confirmado e escuta OK; não define variável. Ver `RUNBOOK-ATIVACAO-AUDIOBOOKS.md`.
+* **verificar_upload.py:** última conferência dos derivados contra o manifesto candidato, antes do upload (faststart, mono AAC-LC, ≤ 30 MB, duração, `path`); não envia nada.
 * **vincular:** sugere o bloco por **conteúdo** (cosseno TF-IDF entre a transcrição e o texto de cada `section#s2-bNN`); **não recebe nome
   nem número de arquivo**. Resultado `candidato` só com nota ≥ 0,15 e margem ≥ 0,04; senão `indeterminado`. A transcrição vem de um ASR
   rodado fora deste ambiente (Whisper local, p.ex.) — ou da escuta do José.
