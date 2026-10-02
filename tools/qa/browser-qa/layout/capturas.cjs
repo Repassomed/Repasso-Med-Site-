@@ -15,11 +15,13 @@ const CASOS = [
   { w: 1440, z: 2, nome: '1440_zoom200' }, { w: 1024, z: 2, nome: '1024_zoom200' },
   ...[1495, 1627].map(w => ({ w, z: 1, nome: `${w}_dock` }))
 ];
+const SO = (process.env.RM_CASOS || '').split(',').filter(Boolean);                 // ex.: RM_CASOS=561,700,767,720x450 → só esses casos
 (async () => {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
   const srv = await serve(); const base = 'http://127.0.0.1:' + srv.address().port;
   const br = await chromium.launch(); const linhas = [];
   for (const c of CASOS) {
+    if (SO.length && SO.indexOf(c.nome) === -1) continue;
     const h = c.h || (c.w <= 420 ? 844 : c.w <= 800 ? 1024 : 900);
     const ctx = await br.newContext({ viewport: { width: Math.round(c.w / c.z), height: Math.round(h / c.z) }, deviceScaleFactor: c.z });
     const p = await ctx.newPage(); const errs = [];
@@ -39,6 +41,18 @@ const CASOS = [
       await p.waitForTimeout(400);
       await p.screenshot({ path: f(side ? 'player_side_SIMULADO' : 'player_bottom_SIMULADO') });
       await p.evaluate(() => { const H = document.documentElement, sl = document.getElementById('rm-l2-player'); sl.hidden = true; sl.innerHTML = ''; H.style.setProperty('--rm-player-h', '0px'); const bx = document.querySelector('.rm2-box'); if (bx) bx.classList.remove('open'); });
+    }
+    /* PLAYER COMPACTO (53 px, como o chip de «caneta armada» do Audiobook) SIMULADO + toolbox aberta + CANETA ARMADA: o caso apontado na auditoria do Claude 4.
+       Primeiro como o aluno vê; depois com o painel rolado até o fim (os últimos botões ficam atrás da rolagem interna, com a sombra de aviso) */
+    if (c.w >= 561 && c.w <= 767 && c.z === 1) {
+      await p.evaluate(() => { const H = document.documentElement, sl = document.getElementById('rm-l2-player'); sl.hidden = false; sl.innerHTML = '';
+        const b = document.createElement('div'); b.style.cssText = 'position:absolute;left:8px;right:8px;bottom:8px;height:45px;background:#5d6b7e;border-radius:12px;color:#fff;font:700 13px system-ui;display:flex;align-items:center;justify-content:center'; b.textContent = 'PLAYER COMPACTO · SIMULADO · 53 px';
+        sl.appendChild(b); H.style.setProperty('--rm-player-h', '53px'); document.querySelector('.rm2-box').classList.add('open'); try { window.RMToolsV2.escolherFerramenta('pen'); } catch (e) {} });
+      await p.waitForTimeout(500);
+      await p.screenshot({ path: f('player_compacto53_caneta_SIMULADO') });
+      await p.evaluate(() => { const pn = document.querySelector('.rm2-panel'); pn.scrollTop = pn.scrollHeight; }); await p.waitForTimeout(300);
+      await p.screenshot({ path: f('player_compacto53_caneta_painel_rolado_SIMULADO') });
+      await p.evaluate(() => { const H = document.documentElement, sl = document.getElementById('rm-l2-player'); try { window.RMToolsV2.escolherFerramenta('none'); } catch (e) {} sl.hidden = true; sl.innerHTML = ''; H.style.setProperty('--rm-player-h', '0px'); const bx = document.querySelector('.rm2-box'); if (bx) bx.classList.remove('open'); document.querySelector('.rm2-panel').scrollTop = 0; });
     }
     /* SLOT de arte exercitado com uma imagem SINTÉTICA lisa (não é asset do produto): mostra como o container se comporta; a arte final virá do ChatGPT */
     if ([1440, 390].includes(c.w) && c.z === 1) {

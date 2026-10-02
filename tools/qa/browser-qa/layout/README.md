@@ -172,19 +172,31 @@ responsividade, estados, abertura/fechamento, posição das imagens e nitidez da
 | **PENDENTE DE ASSET (ChatGPT → José)** | arte `hero` (banner/ilustração da Semiología II): preencher `RMLayout.ASSETS.hero` com `src/srcset/w/h/alt` |
 
 
-## Blocker 561–767 px — CORRIGIDO na #425 (`player-toolbox.test.cjs`)
+## Blocker 561–767 px — CORRIGIDO na #425 (`player-toolbox.test.cjs`, rodada 2: mede CADA botão)
 **Causa:** a V2 só ancora a toolbox embaixo em `@media (max-width: 560px)`; de 561 a 767 px ela fica centrada na vertical (`top:50%`) e o player
-inferior (largura toda, altura `--rm-player-h`) podia cobri-la, sobretudo em janela baixa e com o painel aberto (medido: 31 de 330 combinações em
-561×420, 600×360, 700×420, 720×450 e 767×400).
-**Correção (só `rm-layout.css`, Layout; o motor do player e a V2 não são tocados):** nessa faixa a toolbox é centrada na área **livre acima do player**
-(`top: calc(50% − player-h/2)`) e o painel é limitado para a caixa caber **entre a faixa do shell e o player** (`max-height ≤ 100% − player-h − 2×faixa − 77px`);
-o painel rola por dentro. Sem player (`--rm-player-h: 0`) o topo é exatamente o original (50 %). ≥ 768 px o slot termina antes da raia da toolbox
-(`--rm-right-w`): não há o que corrigir.
-**Teste:** toolbox **real** da V2 (aberta e fechada) × slot `#rm-l2-player` com `--rm-player-h` de 0/88/120/135/160/220 px × 15 viewports (320 · 390 · 560 ·
-561 × 844 e 420 · 600 × 844 e 360 · 700 × 900 e 420 · **720×450** · 767 × 1024 e 400 · 768 · 1024 · 1440): **ZERO interseção**, toolbox inteira na janela e abaixo
-da faixa, sem player ela continua centrada, 0 overflow. **330/330**; com o `rm-layout.css` da `main` reprova (31 falhas).
+inferior (largura toda, altura `--rm-player-h`) podia cobri-la, sobretudo em janela baixa e com o painel aberto. Com o CSS da `main` o teste reprova (160 falhas).
+
+**Auditoria do Claude 4 (53 px · toolbox aberta · caneta armada · 561×520, 700×520, 767×520, 720×450):** o teste anterior medava só o retângulo da caixa/painel e
+deixava escapar os botões que SAEM dele. Reproduzido com a V2 real. **Leitura exata do que acontece:** o painel da V2 é uma lista **rolável** (`overflow-y:auto`);
+com o chip de caneta armada ele tem 492 px de conteúdo, e em janela de 520 px só cabem ~330. Os últimos botões («Deshacer», «Mis apuntes», «Diagnóstico»)
+ficam **recortados pelo próprio painel** (abaixo da caixa), não pintados sobre o player — `elementFromPoint` nesses pontos devolve o player, não o botão, e rolando o painel
+eles aparecem inteiros ACIMA do player (capturas `*_player_compacto53_caneta_*`). Mesmo assim: (a) a medida antiga contava botão recortado como «visível», e (b) o aluno não percebia que havia mais
+botões e a caixa deixava ~50 px sem uso. Corrigido nas duas pontas:
+1. **Posição (só `rm-layout.css`):** em 561–767 a caixa é centrada na região livre **entre a faixa do shell e o player** (não mais simétrica em torno do meio) e o painel recebe a altura que sobra
+   (`100% − player − faixa − 75px`): 292 → **333 px** em 561×520 com player de 53 px (o «Goma» passa a caber inteiro). Em ≤ 560 px, onde a V2 ancora a caixa embaixo, o mesmo limite vale (antes o painel podia passar do topo da janela
+   com player alto). Sem player (`--rm-player-h: 0`) a posição é a original (centrada).
+2. **Sombras de rolagem** (só pintura, `html.rm-l2 .rm2-panel`): quando o painel rola por dentro aparece sombra suave no lado que ainda tem botões (capas `local`/`scroll`); sem rolagem nada aparece.
+Não foram tocados: motor do player, V2 (`rm-tools*.js`), caneta, Apple Pencil, Touch Events, palma, `rm-audio*`.
+
+**Teste (480 verificações, 420 combinações):** toolbox REAL da V2 × {fechada · aberta · aberta+caneta} × player {0 · 53 · 88 · 120 · 135 · 160 · 220} px × 20 viewports (320×700 · 390×844 e 520 · 560×844 e 520 ·
+561×844 · **561×520** · 561×420 · 600×844 e 360 · 700×900 · **700×520** · 700×420 · **720×450** · 767×1024 · **767×520** · 767×400 · 768 · 1024 · 1440). Para **cada botão visível** de `.rm2-box` (2 898 medidas):
+visível = interseção com a área rolável do painel; se visível agora: 0 px² sob o player e o clique no centro cai nele; **alcançável**: depois de rolar o painel ele fica INTEIRO na área do painel, acima do player, dentro da janela, o clique no centro
+cai nele e o alvo tem ≥ 44 px (≥ 40 em ≤ 560, como a V2); o painel não rola quando há espaço; se rola, há sombra. Em 561/700/767×520 com 53 px e caneta armada: **10 de 13 botões visíveis de imediato**
+(os 3 últimos alcançáveis rolando) e 720×450: 9 de 13; sem a caneta armada (7 botões) todos cabem. 6 combinações têm área livre < 60 px (ex.: 360 px de altura com player de 220 px) e só conferem a interseção da caixa com o player.
+**Contra o CSS da #425 (`0d56af12`) o teste novo reprova (155)** — espaço sem uso, sem sombra de aviso, painel fora da janela em ≤ 560 —; contra o da `main`, reprova com sobreposição real (botões sob o player).
+**Limite:** emulação; o player é o slot real com a altura publicada (o motor de áudio não roda aqui); rolagem por toque do painel com a caneta armada e o chip real do Audiobook são **pendentes de teste físico**.
 Nota: a suíte `audio-integracao` (Claude 4) ainda imprime «B1-BLOCKER ATIVO» em 720×450 porque o harness dela usa uma **toolbox simulada** (`#b1-tools`) com cópia
-inline da regra antiga, não a `.rm2-box` real nem o CSS do Layout; fora do escopo desta PR (pendência para o Claude 4 espelhar a regra ou usar a toolbox real).
+inline da regra antiga, não a `.rm2-box` real nem o CSS do Layout; o teste do Claude 4 com a toolbox real é `caneta-real.test.cjs` (branch `claude/audiobooks-preativacao`).
 
 ## Assets de arte (ChatGPT → José → integração)
 Especificação completa em [`ASSETS-CHATGPT.md`](ASSETS-CHATGPT.md): hoje 1 slot (`hero`), entregue em 2 resoluções.
