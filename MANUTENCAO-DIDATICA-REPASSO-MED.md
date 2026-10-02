@@ -32,6 +32,16 @@ Ela não reduz nem substitui nenhuma regra abaixo. Ao contrário: profundidade, 
 
 Em conteúdo médico-didático, o especialista via Anthropic deve auditar a G0 semanticamente antes de MERGE-READY. A evolução desta identidade deve usar páginas aprovadas, feedback e evidência acumulada, nunca deriva silenciosa do modelo.
 
+## LEI DE ATUALIZAÇÃO CONTÍNUA · NOVAS ANOTAÇÕES E MATERIAIS
+
+Quando a manutenção partir de **novas anotações de aula, novos slides, observações do professor ou material complementar**, aplicar também:
+
+`LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md`
+
+Regra resumida: **comparar sempre com o resumo atual; complementar em vez de substituir; validar cientificamente antes de incorporar; fundir duplicatas; controlar densidade; melhorar o formato didático; preservar profundidade, G0 e annotation-safety.** Literatura-base e material oficial da cátedra continuam como fontes principais; a anotação entra como complemento de alta relevância, especialmente para prioridades didáticas e detalhes enfatizados em aula.
+
+---
+
 ---
 
 ATUALIZAÇÃO OPERACIONAL — FLUXO COM 3 CONTAS CLAUDE E UMA ISSUE MESTRE
