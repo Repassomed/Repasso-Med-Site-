@@ -134,6 +134,9 @@
   gap: 6px;
   margin-top: 2px;
 }
+/* 200 % de zoom num celular (≈195 CSS px): os 5 controlos de 44 px não cabem numa linha ⇒ 2 linhas */
+@media (max-width: 259px) { .rm-audio__ctl { flex-wrap: wrap; } }
+
 .rm-audio__btn,
 .rm-audio__rate {
   font: inherit;
@@ -221,9 +224,60 @@ html:not([data-rm-dock]):has(.rm-audio[data-mode="bottom"]:not([hidden])) {
   padding: 8px 10px 10px;
 }
 /* 224 px não dá para 5 controlos de 44 px numa linha: o de velocidade desce para a linha seguinte. */
-.rm-audio[data-layout="b1"][data-mode="lateral"] .rm-audio__ctl { flex-wrap: wrap; row-gap: 4px; }
+.rm-audio[data-layout="b1"][data-mode="lateral"] .rm-audio__ctl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.rm-audio[data-layout="b1"][data-mode="lateral"] .rm-audio__ctl .rm-audio__rate { grid-column: 1 / -1; width: 100%; }
+.rm-audio[data-layout="b1"][data-mode="lateral"] .rm-audio__btn { min-width: 0; padding: 0 4px; }
+/* o «cerrar» fica sempre com alvo de 44 px (a regra acima, mais específica, o encolhia para 27 px). */
+.rm-audio[data-layout="b1"][data-mode="lateral"] .rm-audio__close { min-width: 44px; padding: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .rm-audio, .rm-audio * { transition: none !important; animation: none !important; }
 }
 @media print { .rm-audio { display: none !important; } }
+
+/* =====================================================================
+   CARD DO AUDIOBOOK (dentro do bloco) + player compacto com a caneta armada
+   O card é UI derivada ([data-rm-ui]): só div/span/b/button/svg; não pede mídia.
+   ===================================================================== */
+.rm-audio-card {
+  display: flex; align-items: center; gap: 12px;
+  box-sizing: border-box; max-width: 100%;
+  margin: 12px 0 18px; padding: 10px 12px;
+  border: 1px solid #d5dde8; border-left: 4px solid var(--accent, #d8a32a); border-radius: 12px;
+  background: rgba(255, 255, 255, .92); color: var(--ink, #13314f);
+  font: 14px/1.3 var(--font-ui, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+}
+.rm-audio-card__ico {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 10px; background: var(--ink, #13314f); color: #fff;
+}
+.rm-audio-card__txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.rm-audio-card__kicker { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: #5b6f86; }
+.rm-audio-card__title { font-size: 15px; font-weight: 650; overflow-wrap: anywhere; }
+.rm-audio-card__btn {
+  flex: 0 0 auto; min-height: 44px; min-width: 44px; padding: 0 14px;
+  font: inherit; font-weight: 650; color: #fff; background: var(--ink, #13314f);
+  border: 1px solid var(--ink, #13314f); border-radius: 10px; cursor: pointer; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.rm-audio-card__btn:hover { filter: brightness(1.12); }
+.rm-audio-card__btn:focus-visible { outline: 3px solid #ffb000; outline-offset: 2px; }
+.rm-audio-card[data-state="playing"] { border-left-color: #1d8f5a; }
+.rm-audio-card[data-state="error"] { border-left-color: #b3261e; }
+@media (max-width: 420px) {
+  .rm-audio-card { flex-wrap: wrap; }
+  .rm-audio-card__btn { flex: 1 1 100%; }
+}
+@media print { .rm-audio-card { display: none !important; } }
+
+/* caneta/borracha armada: o player encolhe para um chip (título + play/pausa + fechar); NUNCA pausa */
+#rm-l2-player[data-rm-pen] .rm-audio { display: flex; align-items: center; gap: 8px; padding-top: 4px; padding-bottom: 4px; }
+#rm-l2-player[data-rm-pen] .rm-audio__head { flex: 1 1 auto; min-width: 0; }
+#rm-l2-player[data-rm-pen] .rm-audio__bar,
+#rm-l2-player[data-rm-pen] .rm-audio__rate,
+#rm-l2-player[data-rm-pen] .rm-audio__ctl [data-a="restart"],
+#rm-l2-player[data-rm-pen] .rm-audio__ctl [data-a="back"],
+#rm-l2-player[data-rm-pen] .rm-audio__ctl [data-a="fwd"],
+#rm-l2-player[data-rm-pen] .rm-audio__theme { display: none; }
+#rm-l2-player[data-rm-pen] .rm-audio__ctl { margin: 0; }
+#rm-l2-player[data-rm-pen] .rm-audio__err { margin: 0; }
