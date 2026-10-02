@@ -14,7 +14,7 @@ node tools/qa/browser-qa/audio/audio.test.cjs      # saída ≠ 0 se algo falhar
 O servidor local escuta só `127.0.0.1` e serve **4 ficheiros** (harness, fake, JS e CSS do motor). Qualquer
 outro pedido é abortado/404 e reprovado pelo teste.
 
-## O que cobre (≈550 verificações)
+## O que cobre (≈590 verificações)
 
 | Bloco | Verificações |
 |---|---|
@@ -43,6 +43,15 @@ outro pedido é abortado/404 e reprovado pelo teste.
 **Sintético × real:** tudo acima prova a LÓGICA do motor com um adapter sintético (`FakeAudio`, sem áudio, rede ou
 Storage). NÃO prova comportamento do `<audio>` real (buffering, Range/206, política de autoplay do iOS, `playbackRate`
 2,5× no Safari, expiração real de URL assinada) — isso exige a entrega de áudio real e teste em aparelho.
+
+## Retomada após recarregar (`positionStore`)
+
+Antes a posição existia só em memória. Agora o motor aceita `positionStore` (`{get,set,remove}` sobre `audio_id@version`);
+`assets/rm-audio-store.js` fornece `RMAudioStore.local(uid)` (localStorage, **um número por chave**, por UID, sem título/URL/texto).
+Grava ao pausar/fechar/buscar/reiniciar/terminar/trocar de item/destruir e, tocando, no máximo a cada 5 s; `flush()` para o
+`pagehide` da integração futura. Lê sem criar elemento de áudio nem pedir fonte (`savedPosition(id)` para o card «Continuar»).
+Inválido / ≤ 2 s do fim / outra `version` ⇒ recomeça em 0; store que lança não quebra nada; `clear()` só apaga as chaves do UID.
+**Teste real de recarregamento** (`page.reload()` com localStorage verdadeiro). Limite: perder a aba sem `flush` perde ≤ 5 s.
 
 ## Integração futura com a Layout V2 (B1) — `data-rm-dock` é a autoridade
 

@@ -11,7 +11,8 @@ const ROUTES = {
   '/harness.html': [path.join(__dirname, 'harness.html'), 'text/html; charset=utf-8'],
   '/fake-audio.js': [path.join(__dirname, 'fake-audio.js'), 'text/javascript; charset=utf-8'],
   '/assets/rm-audio.js': [path.join(SITE, 'assets', 'rm-audio.js'), 'text/javascript; charset=utf-8'],
-  '/assets/rm-audio.css': [path.join(SITE, 'assets', 'rm-audio.css'), 'text/css; charset=utf-8']
+  '/assets/rm-audio.css': [path.join(SITE, 'assets', 'rm-audio.css'), 'text/css; charset=utf-8'],
+  '/assets/rm-audio-store.js': [path.join(SITE, 'assets', 'rm-audio-store.js'), 'text/javascript; charset=utf-8']
 };
 
 let okN = 0, koN = 0; const falhas = [];
@@ -477,10 +478,10 @@ async function funcionais(browser, port) {
   seccao('Zero mídia real e zero rede');
   const real = await ev(page, () => window.__real);
   ok(real.audioCtor === 0 && real.mediaPlay === 0 && real.mediaLoad === 0 && real.mediaSrc === 0, 'nenhum Audio/HTMLMediaElement real usado', real);
-  const permit = new Set(['127.0.0.1:' + port + '/harness.html', '127.0.0.1:' + port + '/fake-audio.js', '127.0.0.1:' + port + '/assets/rm-audio.js', '127.0.0.1:' + port + '/assets/rm-audio.css']);
+  const permit = new Set(['/harness.html', '/fake-audio.js', '/assets/rm-audio.js', '/assets/rm-audio.css', '/assets/rm-audio-store.js'].map(x => '127.0.0.1:' + port + x));
   const extra = reqs.filter(r => !permit.has(r));
-  ok(extra.length === 0, 'só pedidos aos 4 ficheiros locais do harness', extra);
-  ok(reqs.length === baseReqs && reqs.length === 4, 'nenhum pedido novo durante todos os testes', reqs.length);
+  ok(extra.length === 0, 'só pedidos aos 5 ficheiros locais do harness', extra);
+  ok(reqs.length === baseReqs && reqs.length === 5, 'nenhum pedido novo durante todos os testes', reqs.length);
   ok(!reqs.some(r => /\.(m4a|mp3|aac|ogg|wav|webm|mp4)$/i.test(r)), 'nenhum pedido a ficheiro de áudio');
   ok(erros.length === 0, 'sem erros de página/consola', erros);
   ok((await ev(page, () => JSON.stringify([Object.keys(localStorage), Object.keys(sessionStorage)]))) === '[[],[]]', 'storage continua vazio no fim');
@@ -745,6 +746,126 @@ async function regressoes(browser, port) {
   await ctx.close();
 }
 
+
+/* ------------------------------------------------------------------ */
+/* G · RETOMADA APÓS RECARREGAR (positionStore + localStorage por UID)  */
+/* ------------------------------------------------------------------ */
+const MKS = (page, o) => page.evaluate(o => {
+  o = o || {};
+  window.__mk();                                   // zera fake/provider; depois substitui o motor
+  try { window.E.destroy(); } catch (e) { /* ignore */ }
+  window.__clock = window.__clock || { t: 1000 };
+  window.__store = o.noStore ? null : (o.store || window.RMAudioStore.local(o.uid || 'uid-jose'));
+  window.E = window.RMAudio.create({ provider: window.__provider, audioFactory: window.__factory, userKey: o.uid || 'uid-jose', positionStore: window.__store || undefined, now: function () { return window.__clock.t; } });
+  window.E.loadMetadata([
+    { audio_id: 'a1', subject_slug: 'semiologia-ii', block_id: 's2-b01', theme: 'Semiología II', title: 'Audio A', duration: 300, order: 1, version: 'v1' },
+    { audio_id: 'b1', subject_slug: 'semiologia-ii', block_id: 's2-b03', theme: 'Semiología II', title: 'Audio B', duration: 600, order: 2, version: 'v1' }
+  ]);
+  return window.E.attach();
+}, o);
+const lsKeys = page => page.evaluate(() => Object.keys(localStorage).filter(k => k.indexOf('rm.audio.') === 0).sort());
+
+async function retomada(browser, port) {
+  seccao('Retomada após recarregar (positionStore)');
+  const { ctx, page, reqs, erros } = await novaPagina(browser, port, 1024, 768);
+  await page.evaluate(() => localStorage.clear());
+  ok(await MKS(page), 'motor com positionStore anexado');
+  ok((await lsKeys(page)).length === 0, 'montar/carregar metadados não grava nada (0 chaves)');
+  ok((await ev(page, () => window.E.savedPosition('a1'))) === 0 && (await fakeInfo(page)).n === 0, 'savedPosition sem nada guardado = 0, sem criar elemento de áudio');
+
+  /* pause grava */
+  await PLAY(page, 'a1'); await tick(page, 42); await ev(page, () => window.E.pause());
+  ok(JSON.stringify(await lsKeys(page)) === '["rm.audio.pos.uid-jose.a1@v1"]', 'pause grava UMA chave (por UID + audio_id@version)', await lsKeys(page));
+  ok((await ev(page, () => localStorage.getItem('rm.audio.pos.uid-jose.a1@v1'))) === '42', 'o valor guardado é só o número (42)');
+  ok(!(await ev(page, () => JSON.stringify(Object.assign({}, localStorage)))).match(/Audio A|synthetic|http|Semiolog/i), 'nada de título/URL/texto no localStorage');
+
+  /* recarregar: nova página, novo motor */
+  await page.reload(); await page.waitForFunction(() => window.RMAudio && window.__factory);
+  ok(await MKS(page), 'após recarregar: motor novo');
+  ok(near(await ev(page, () => window.E.savedPosition('a1')), 42), 'savedPosition(a1) = 42 logo após recarregar (card pode mostrar «Continuar»)');
+  ok((await fakeInfo(page)).n === 0 && (await prov(page)).length === 0 && (await ev(page, () => window.__real.mediaSrc + window.__real.audioCtor)) === 0, 'ler a posição não cria elemento de áudio, não pede fonte, 0 mídia');
+  ok((await PLAY(page, 'a1')) === true, 'play após recarregar');
+  let fi = await fakeInfo(page);
+  ok(near(fi.t[0], 42) && (await prov(page)).length === 1 && (await prov(page))[0].reason === 'first-play', 'retoma em 42 s; a fonte é pedida agora (1×), não antes', fi.t);
+  ok(near((await st(page)).position, 42), 'a interface mostra 42 s');
+
+  /* throttle a tocar: no máximo a cada 5 s */
+  await ev(page, () => { window.__clock.t = 2000; });
+  await tick(page, 1);
+  ok((await ev(page, () => localStorage.getItem('rm.audio.pos.uid-jose.a1@v1'))) === '42', 'a tocar, dentro dos 5 s não regrava');
+  await ev(page, () => { window.__clock.t = 7000; });
+  await tick(page, 10);
+  ok(near(Number(await ev(page, () => localStorage.getItem('rm.audio.pos.uid-jose.a1@v1'))), 53, 0.6), 'passados 5 s regrava (≈53 s)', await ev(page, () => localStorage.getItem('rm.audio.pos.uid-jose.a1@v1')));
+
+  /* close, seek, flush */
+  await ev(page, () => window.E.seek(100));
+  ok((await ev(page, () => localStorage.getItem('rm.audio.pos.uid-jose.a1@v1'))) === '100', 'seek grava');
+  await tick(page, 20);
+  ok(await ev(page, () => window.E.flush()), 'flush()');
+  ok(near(Number(await ev(page, () => localStorage.getItem('rm.audio.pos.uid-jose.a1@v1'))), 120, 0.6), 'flush grava a posição atual (≈120)');
+  await ev(page, () => window.E.close());
+  await page.reload(); await page.waitForFunction(() => window.RMAudio && window.__factory);
+  await MKS(page);
+  ok(near(await ev(page, () => window.E.savedPosition('a1')), 120, 0.6), 'close + recarregar: 120 s guardados, nada perdido');
+
+  /* restart apaga; fim apaga */
+  await PLAY(page, 'a1'); await ev(page, () => window.E.restart());
+  ok((await lsKeys(page)).length === 0, 'restart (volta a 0) remove a entrada (recomeçar ≠ guardar zero)');
+  await PLAY(page, 'a1'); await tick(page, 300);
+  ok((await lsKeys(page)).length === 0 && (await st(page)).state === 'paused', 'chegar ao fim remove a entrada e não repete sozinho');
+
+  /* A→B: cada um com a sua chave */
+  await MKS(page);
+  await PLAY(page, 'a1'); await tick(page, 70); await PLAY(page, 'b1'); await tick(page, 130); await ev(page, () => window.E.pause());
+  ok(JSON.stringify(await lsKeys(page)) === '["rm.audio.pos.uid-jose.a1@v1","rm.audio.pos.uid-jose.b1@v1"]', 'A→B grava as duas');
+  ok(near(await ev(page, () => window.E.savedPosition('a1')), 70) && near(await ev(page, () => window.E.savedPosition('b1')), 130), 'posições independentes (70 e 130)');
+
+  /* outro utilizador no mesmo navegador */
+  await MKS(page, { uid: 'outra-conta' });
+  ok((await ev(page, () => window.E.savedPosition('a1'))) === 0, 'outra conta não herda a posição de José');
+  await PLAY(page, 'a1'); await ev(page, () => window.E.pause());
+  ok(near((await fakeInfo(page)).t[0], 0), 'outra conta começa em 0');
+  await ev(page, () => window.RMAudioStore.local('outra-conta').clear());
+  ok(JSON.stringify(await lsKeys(page)) === '["rm.audio.pos.uid-jose.a1@v1","rm.audio.pos.uid-jose.b1@v1"]', 'clear() de uma conta não apaga a de José');
+  await ev(page, () => window.RMAudioStore.local('uid-jose').clear());
+  ok((await lsKeys(page)).length === 0, 'clear() de José apaga só as dele');
+
+  /* nova versão do áudio = outra chave */
+  await MKS(page);
+  await PLAY(page, 'a1'); await tick(page, 50); await ev(page, () => window.E.pause());
+  await ev(page, () => { window.E.loadMetadata({ audio_id: 'a1', subject_slug: 'semiologia-ii', block_id: 's2-b01', theme: 'Semiología II', title: 'Audio A (v2)', duration: 300, order: 1, version: 'v2' }); });
+  ok((await ev(page, () => window.E.savedPosition('a1'))) === 0, 'versão v2 do mesmo audio_id não herda a posição da v1');
+
+  /* valores inválidos no storage */
+  for (const [nome, v] of [['NaN', 'NaN'], ['negativo', '-5'], ['texto', 'abc'], ['vazio', ''], ['além da duração', '99999'], ['a 1 s do fim', '299'], ['Infinity', 'Infinity']]) {
+    await ev(page, () => { try { window.E.destroy(); } catch (e) { /* ignore */ } });   // o destroy grava: por isso antes de semear o valor inválido
+    await ev(page, v => { localStorage.clear(); localStorage.setItem('rm.audio.pos.uid-jose.a1@v1', v); }, v);
+    await MKS(page);
+    ok((await ev(page, () => window.E.savedPosition('a1'))) === 0, `valor inválido (${nome}) ⇒ 0`);
+    await PLAY(page, 'a1');
+    ok(near((await fakeInfo(page)).t[0], 0) && (await st(page)).state === 'playing', `valor inválido (${nome}) ⇒ toca do início sem erro`);
+  }
+
+  /* store que lança / storage indisponível: o motor segue */
+  await MKS(page, { store: null, noStore: true });
+  await ev(page, () => { window.E.destroy(); window.E = window.RMAudio.create({ provider: window.__provider, audioFactory: window.__factory, userKey: 'x', positionStore: { get() { throw new Error('quota'); }, set() { throw new Error('quota'); }, remove() { throw new Error('quota'); } } }); window.E.loadMetadata([{ audio_id: 'a1', subject_slug: 's', block_id: 'b', theme: 't', title: 'A', duration: 300, order: 1, version: 'v1' }]); window.E.attach(); });
+  ok((await PLAY(page, 'a1')) === true, 'store que lança: play funciona');
+  await tick(page, 10);
+  ok(await ev(page, () => window.E.pause() && window.E.seek(5) === 5 && window.E.restart() && window.E.close() && window.E.flush() === true), 'store que lança: pause/seek/restart/close/flush não quebram');
+  ok((await ev(page, () => window.E.savedPosition('a1'))) === 0, 'store que lança: savedPosition = 0');
+  /* sem store: comportamento da D1 */
+  await ev(page, () => { try { window.E.destroy(); } catch (e) { /* ignore */ } localStorage.clear(); });
+  await MKS(page, { noStore: true });
+  await PLAY(page, 'a1'); await tick(page, 33); await ev(page, () => window.E.pause());
+  ok((await lsKeys(page)).length === 0 && near((await st(page)).position, 33), 'sem positionStore nada é gravado (memória como na D1)');
+  /* RMAudioStore em si */
+  const st2 = await ev(page, () => { localStorage.clear(); const s = window.RMAudioStore.local('u?x/y'); s.set('k', 12.34); s.set('k2', NaN); s.set('k3', 'x'); const a = s.get('k'), b = s.get('k2'), c = s.get('nao'); s.remove('k'); return { a, b, c, d: s.get('k'), keys: Object.keys(localStorage).filter(k => k.indexOf('rm.audio.') === 0) }; });
+  ok(st2.a === 12.34 && st2.b === null && st2.c === null && st2.d === null && st2.keys.length === 0, 'RMAudioStore: set/get/remove; ignora NaN/texto; UID normalizado na chave', st2);
+  ok(erros.length === 0, 'sem erros de página/consola', erros);
+  ok((await ev(page, () => window.__real.mediaPlay + window.__real.audioCtor + window.__real.mediaSrc)) === 0, 'sem mídia real');
+  await ctx.close();
+}
+
 /* ------------------------------------------------------------------ */
 /* E · INTEGRAÇÃO FUTURA COM A LAYOUT V2 (B1): data-rm-dock manda       */
 /* ------------------------------------------------------------------ */
@@ -865,7 +986,7 @@ async function integracaoB1(browser, port) {
     ok(g.p.l >= 264 && g.p.r <= g.vw - 67 + 0.5, 'player entre --rm-left-w e --rm-right-w', { l: g.p.l, r: g.p.r });
     ok(await ev(page, () => window.__real.mediaPlay === 0 && window.__real.audioCtor === 0), 'sem mídia real');
     ok(erros.length === 0, 'sem erros de consola', erros);
-    ok(reqs.length === baseReqs && reqs.length === 4, 'sem pedidos além dos 4 ficheiros locais', reqs.length);
+    ok(reqs.length === baseReqs && reqs.length === 5, 'sem pedidos além dos 5 ficheiros locais', reqs.length);
     await ctx.close();
   }
 
@@ -963,6 +1084,7 @@ async function integracaoB1(browser, port) {
     await funcionais(browser, port);
     await ui(browser, port);
     await regressoes(browser, port);
+    await retomada(browser, port);
     await integracaoB1(browser, port);
   } catch (e) { koN++; falhas.push('EXCEÇÃO: ' + (e && e.stack || e)); console.log('  ✗ EXCEÇÃO', e); }
   await browser.close(); srv.close();
