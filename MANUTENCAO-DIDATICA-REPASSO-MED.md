@@ -42,8 +42,6 @@ Regra resumida: **comparar sempre com o resumo atual; complementar em vez de sub
 
 ---
 
----
-
 ATUALIZAÇÃO OPERACIONAL — FLUXO COM 3 CONTAS CLAUDE E UMA ISSUE MESTRE
 
 Este arquivo rege um único PROJETO MESTRE de manutenção didática do Repasso Med.
