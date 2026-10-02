@@ -408,7 +408,9 @@
         "tools/qa/ink-audit/03-failures.test.cjs",
         "tools/qa/ink-audit/04-pagination.test.cjs",
         "tools/qa/ink-audit/07-pilot-path.test.cjs",
-        "tools/qa/ink-audit/lib.cjs"
+        "tools/qa/ink-audit/lib.cjs",
+        "tools/qa/browser-qa/layout/harness-ink.html",
+        "tools/qa/browser-qa/layout/anotar-permitido.test.cjs"
       ],
       "objetivo": "Corrigir o fechamento da toolbox e medir o tablet real.",
       "fonte": "pedido do José",
@@ -419,7 +421,7 @@
       "pr": 407,
       "commit": "4a524a1",
       "issue": 67,
-      "notas": "Pausado anteriormente porque o teste físico não resolveu; desatribuído no pós-piloto para não manter Claude 1 artificialmente em conflito no Worker Registry. José autorizou em 30/09/2026 a retomada da caneta via PR #407 (branch claude/lapiz-retomada-64-main), com piloto restrito a José + Semiología II e painel de diagnóstico novo em rm-tools-v2.js. index.html é permitido nesta reserva EXCLUSIVAMENTE para a linha do cache-buster de rm-tools-v2.js — nenhum outro conteúdo desse arquivo pertence a esta tarefa. Em 01/10/2026 José pediu a quarta espessura (xthin); a reserva ganhou as DUAS migrations nominais da quarta espessura (não um wildcard de supabase/migrations/*) — nenhuma outra migration pertence a esta tarefa. Em 01/10/2026 José pediu a correção dos achados A/B/C/E da auditoria de persistência (#420, tools/qa/ink-audit/RELATORIO.md); a reserva ganhou os 5 arquivos nominais de testes diagnósticos que precisaram ser atualizados para exigir o comportamento corrigido (02-persistence/03-failures/04-pagination/07-pilot-path.test.cjs + lib.cjs) — nenhum outro arquivo de tools/qa/ink-audit/ pertence a esta tarefa.",
+      "notas": "Pausado anteriormente porque o teste físico não resolveu; desatribuído no pós-piloto para não manter Claude 1 artificialmente em conflito no Worker Registry. José autorizou em 30/09/2026 a retomada da caneta via PR #407 (branch claude/lapiz-retomada-64-main), com piloto restrito a José + Semiología II e painel de diagnóstico novo em rm-tools-v2.js. index.html é permitido nesta reserva EXCLUSIVAMENTE para a linha do cache-buster de rm-tools-v2.js — nenhum outro conteúdo desse arquivo pertence a esta tarefa. Em 01/10/2026 José pediu a quarta espessura (xthin); a reserva ganhou as DUAS migrations nominais da quarta espessura (não um wildcard de supabase/migrations/*) — nenhuma outra migration pertence a esta tarefa. Em 01/10/2026 José pediu a correção dos achados A/B/C/E da auditoria de persistência (#420, tools/qa/ink-audit/RELATORIO.md); a reserva ganhou os 5 arquivos nominais de testes diagnósticos que precisaram ser atualizados para exigir o comportamento corrigido (02-persistence/03-failures/04-pagination/07-pilot-path.test.cjs + lib.cjs) — nenhum outro arquivo de tools/qa/ink-audit/ pertence a esta tarefa. Em 02/10/2026 José pediu que a frente caneta cobrisse a integração com o Layout V2 (#425) e fechasse o portão anotarPermitido()/activeViewPermitido(); a reserva ganhou os 2 arquivos nominais da suíte de testes do Layout V2 usados para provar o portão: harness-ink.html (mock do Supabase precisava de .range(), que faltava desde a #427) e o novo anotar-permitido.test.cjs — nenhum outro arquivo de tools/qa/browser-qa/ pertence a esta tarefa.",
       "prioridade_declarada": "P3"
     },
     {
