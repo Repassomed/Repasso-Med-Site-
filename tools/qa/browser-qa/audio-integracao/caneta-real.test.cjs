@@ -344,45 +344,65 @@ const relTraco = (p, anchor) => p.evaluate(a => {
       S.latManifest = 0;
     }
 
-    sec('Toolbox REAL × player: 561–767 px e 720×450 (zoom 200 %) — DETECTAR e REPORTAR (o Layout é do Claude 2)');
+    sec('Toolbox REAL × player: ÁREA VISÍVEL de cada botão (recorte do painel rolável + janela), hit-test e rolagem — 561–767 px, 720×450 (zoom 200 %) e demais');
     {
+      /* Por que não getBoundingClientRect() sozinho: o painel da toolbox (`.rm2-panel`) é rolável (`overflow-y:auto`, max-height 76vh): botões fora da faixa visível
+         têm retângulo «abaixo/sob o player» mas estão RECORTADOS pelo painel (área visível 0 %), não cobertos. Mede-se: (1) retângulo ∩ recortes dos ancestrais com overflow ∩ janela;
+         (2) elementFromPoint no centro da parte visível; (3) depois de ROLAR o painel até o botão, ele fica visível (≥ 95 %) e o hit-test devolve o próprio botão — nunca o player. */
       S.zera();
-      const cfg = [[561, 900, 1], [600, 900, 1], [700, 900, 1], [767, 1024, 1], [561, 520, 1], [700, 520, 1], [767, 520, 1], [720, 450, 2], [390, 844, 1], [1024, 768, 1], [1440, 900, 1], [1700, 900, 1], [1920, 1080, 1]];
+      const cfg = [[561, 900, 1], [600, 900, 1], [700, 900, 1], [767, 1024, 1], [561, 520, 1], [600, 520, 1], [700, 520, 1], [767, 520, 1], [720, 450, 2], [390, 844, 1], [1024, 768, 1], [1440, 900, 1], [1700, 900, 1], [1920, 1080, 1]];
+      const MEDIR = () => {
+        const sel = '.rm2-box button', pl = document.querySelector('.rm-audio'), plr = pl ? pl.getBoundingClientRect() : null;
+        const visivel = (el) => { const r = el.getBoundingClientRect(); let L = r.left, T = r.top, R = r.right, B = r.bottom;
+          for (let a = el.parentElement; a && a !== document.documentElement; a = a.parentElement) { const cs = getComputedStyle(a); if (/(auto|scroll|hidden|clip)/.test(cs.overflowY + cs.overflowX)) { const q = a.getBoundingClientRect(); L = Math.max(L, q.left); T = Math.max(T, q.top); R = Math.min(R, q.right); B = Math.min(B, q.bottom); } }
+          L = Math.max(L, 0); T = Math.max(T, 0); R = Math.min(R, innerWidth); B = Math.min(B, innerHeight);
+          const a = Math.max(0, R - L) * Math.max(0, B - T), full = r.width * r.height; return { frac: full ? a / full : 0, cx: (L + R) / 2, cy: (T + B) / 2 }; };
+        const lista = Array.from(document.querySelectorAll(sel)).filter(e => e.offsetParent !== null && !e.disabled);
+        return lista.map(e => { const v = visivel(e); const h = v.frac > 0 ? document.elementFromPoint(v.cx, v.cy) : null; return { el: e, n: (e.getAttribute('aria-label') || e.textContent).trim().slice(0, 40), frac: v.frac, hitEle: !!h && e.contains(h), hitPlayer: !!h && !!h.closest('.rm-audio') }; });
+      };
+      /* sentido contrário: algum CONTROLE do player (botões/velocidade) fica sob a toolbox/qualquer outra coisa? hit-test no centro de cada controle visível */
+      const CTRL = () => Array.from(document.querySelectorAll('.rm-audio button, .rm-audio select')).filter(e => e.offsetParent !== null).map(e => { const r = e.getBoundingClientRect(); const cx = Math.min(Math.max((r.left + r.right) / 2, 0), innerWidth - 1), cy = Math.min(Math.max((r.top + r.bottom) / 2, 0), innerHeight - 1); const hit = document.elementFromPoint(cx, cy); return { n: (e.getAttribute('aria-label') || e.className).toString().slice(0, 30), ok: !!hit && (e.contains(hit) || hit.contains(e)), por: hit ? ((hit.closest('.rm2-box') ? 'toolbox' : hit.className || hit.tagName).toString().slice(0, 24)) : '—', dentro: r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth }; }).filter(o => o.dentro);
       for (const [w, h, dsf] of cfg) {
         const { ctx, page } = await nova(S, browser, w, h, { dsf });
         await boot(page); await card(page, AID).click(); await ate(page, () => window.RMAudioBoot._engine().getState().state === 'playing', null, 10000); await esp(300);
-        const medir = () => page.evaluate(() => {
-          const inter = (a, b) => a.left < b.right - 0.5 && a.right > b.left + 0.5 && a.top < b.bottom - 0.5 && a.bottom > b.top + 0.5;
-          const pl = document.querySelector('.rm-audio').getBoundingClientRect(), bx = document.querySelector('.rm2-box'), br = bx.getBoundingClientRect();
-          const parts = Array.from(bx.querySelectorAll('button, .rm2-fab, .rm2-panel')).filter(e => e.offsetParent !== null).map(e => e.getBoundingClientRect());
-          const alvo = Array.from(bx.querySelectorAll('button')).filter(e => e.offsetParent !== null).map(e => e.getBoundingClientRect());
-          const nomes = Array.from(bx.querySelectorAll('button')).filter(e => e.offsetParent !== null && inter(pl, e.getBoundingClientRect())).map(e => (e.getAttribute('aria-label') || e.textContent.trim()).slice(0, 40));
-          const botoes = Array.from(bx.querySelectorAll('button')).filter(e => e.offsetParent !== null).map(e => { const q = e.getBoundingClientRect(); return { n: (e.getAttribute('aria-label') || e.textContent.trim()).slice(0, 40), t: Math.round(q.top), b: Math.round(q.bottom) }; });
-          return { dock: document.documentElement.getAttribute('data-rm-dock'), cobreBox: inter(pl, br), cobreBtn: alvo.some(r => inter(pl, r)), nomes, botoes, ph: Math.round(pl.height), boxBottom: Math.round(br.bottom), playerTop: Math.round(pl.top), vh: innerHeight };
-        });
-        const fechada = await medir();
-        await page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); await esp(350);
-        const aberta = await medir();
-        const cobre = fechada.cobreBtn || aberta.cobreBtn;
-        /* BASELINE sem player (mesma janela, caneta armada): separa «coberto pelo player» de «já fora da janela por a toolbox ser mais alta que ela» */
-        let genuino = [], foraDaJanela = [];
-        if (cobre) {
-          const b0 = await nova(S, browser, w, h, { dsf }); await attach(b0.page);
-          await b0.page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); await esp(400);
-          const base = await b0.page.evaluate(() => Array.from(document.querySelectorAll('.rm2-box button')).filter(e => e.offsetParent !== null).map(e => { const q = e.getBoundingClientRect(); return { n: (e.getAttribute('aria-label') || e.textContent.trim()).slice(0, 40), b: Math.round(q.bottom), vh: innerHeight }; }));
-          await b0.ctx.close();
-          for (const nm of new Set(fechada.nomes.concat(aberta.nomes))) { const bb = base.find(x => x.n === nm); (bb && bb.b > bb.vh + 0.5 ? foraDaJanela : genuino).push(nm); }
-        }
-        RELATORIO.push({ w, h, dsf, dock: aberta.dock, playerH: aberta.ph, fechada: fechada.cobreBtn, aberta: aberta.cobreBtn, nomes: fechada.nomes.concat(aberta.nomes), genuino, foraDaJanela });
-        if (w > 560 && w < 768) console.log(`  ${cobre ? '⚠ B1-BLOCKER (Claude 2)' : '✔'} ${w}×${h}${dsf > 1 ? ' zoom' + dsf * 100 : ''}: player ${aberta.ph}px ${cobre ? 'COBRE' : 'não cobre'} os botões da toolbox real (fechada: ${fechada.cobreBtn}, aberta: ${aberta.cobreBtn})${cobre ? ' · cobertos por causa do player (visíveis sem ele): ' + JSON.stringify(genuino) + ' · já parcialmente FORA da janela mesmo sem player (toolbox mais alta que a janela): ' + JSON.stringify(foraDaJanela) : ''}`);
-        else ok(!cobre, `${w}×${h}: o player não cobre botões da toolbox real`, { fechada, aberta });
+        await page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); await esp(500);          // caneta armada ⇒ chip + toolbox aberta (pior caso)
+        await page.exposeFunction('__noop' + w + h, () => 0).catch(() => {});
+        const res = await page.evaluate(([MEDIRsrc]) => {
+          const MED = (new Function('return ' + MEDIRsrc))();
+          const painel = document.querySelector('.rm2-panel'), pl = document.querySelector('.rm-audio').getBoundingClientRect();
+          const antes = MED().map(o => ({ n: o.n, frac: o.frac, hitEle: o.hitEle, hitPlayer: o.hitPlayer }));
+          const pr = painel && painel.getBoundingClientRect();
+          const out = { vh: innerHeight, player: [Math.round(pl.top), Math.round(pl.bottom)], painel: painel ? { top: Math.round(pr.top), bottom: Math.round(pr.bottom), rolavel: painel.scrollHeight > painel.clientHeight + 1, sh: painel.scrollHeight, ch: painel.clientHeight } : null, antes, depois: [], painelSobPlayer: !!pr && pr.bottom > pl.top + 0.5 && pr.top < pl.bottom - 0.5 && pr.right > pl.left && pr.left < pl.right };
+          /* rolar o painel até cada botão e medir de novo (cada botão no seu melhor momento) */
+          const nomes = Array.from(document.querySelectorAll('.rm2-box button')).filter(e => e.offsetParent !== null && !e.disabled);
+          nomes.forEach(e => { try { e.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (x) {} const m = MED().find(o => o.el === e); out.depois.push({ n: m.n, frac: m.frac, hitEle: m.hitEle, hitPlayer: m.hitPlayer }); });
+          if (painel) painel.scrollTop = 0;
+          return out;
+        }, [MEDIR.toString()]);
+        const recortados = res.antes.filter(b => b.frac < 0.95).map(b => b.n);
+        const aposRolar = res.depois.filter(b => !(b.frac >= 0.95 && b.hitEle));
+        const cobertoAntes = res.antes.filter(b => b.frac > 0 && b.hitPlayer).map(b => b.n);
+        const emFaixa = w > 560 && w < 768;
+        ok(cobertoAntes.length === 0, `${w}×${h}${dsf > 1 ? ' zoom' + dsf * 100 : ''}: nenhum botão VISÍVEL tem o player por cima no hit-test`, cobertoAntes);
+        const ctrls = await page.evaluate(([src]) => (new Function('return ' + src))()(), [CTRL.toString()]);
+        const ctrlCobertos = ctrls.filter(c => !c.ok);
+        ok(ctrls.length >= 1 && ctrlCobertos.length === 0, `${w}×${h}: nenhum controle do player (${ctrls.length} medidos) fica sob a toolbox ou outro elemento`, ctrlCobertos);
+        ok(!res.painelSobPlayer, `${w}×${h}: o painel da toolbox (parte visível) não entra na faixa do player`, { painel: res.painel, player: res.player });
+        ok(aposRolar.length === 0, `${w}×${h}: depois de rolar o painel TODOS os ${res.depois.length} botões ficam visíveis (≥ 95 %) e o hit-test devolve o próprio botão`, aposRolar);
+        RELATORIO.push({ w, h, dsf, rolavel: !!(res.painel && res.painel.rolavel), recortados });
+        if (recortados.length) console.log(`  ⓘ ${w}×${h}${dsf > 1 ? '@zoom' : ''}: ${recortados.length} botão(ões) recortados pelo painel rolável (acessíveis ao rolar; NÃO cobertos): ${JSON.stringify(recortados)}`);
         await ctx.close();
       }
-      const bl = RELATORIO.filter(x => x.w > 560 && x.w < 768 && (x.fechada || x.aberta));
-      const gen = RELATORIO.filter(x => x.w > 560 && x.w < 768 && x.genuino && x.genuino.length);
-      console.log('\n  RELATÓRIO B1-BLOCKER (toolbox REAL × player): ' + (bl.length ? 'ATIVO em ' + bl.map(x => `${x.w}×${x.h}${x.dsf > 1 ? '@zoom' : ''}`).join(', ') + ' — correção é do Claude 2 (#425, rm-layout.css/rm-tools-v2.js); NÃO feita aqui' : 'não reproduzido nas larguras 561–767 com este Layout'));
-      console.log('  detalhe: ' + (gen.length ? gen.map(x => `${x.w}×${x.h}${x.dsf > 1 ? '@zoom' : ''}: coberto pelo player → ${JSON.stringify(x.genuino)}`).join(' | ') : 'nenhum botão visível sem o player fica coberto por ele') + (bl.some(x => x.foraDaJanela.length) ? ' || fora da janela mesmo sem player: ' + JSON.stringify(Array.from(new Set(bl.flatMap(x => x.foraDaJanela)))) : ''));
+      console.log('\n  RELATÓRIO toolbox × player: ' + (RELATORIO.some(x => x.recortados.length) ? 'viewports baixos têm botões recortados pelo painel rolável (comportamento normal: rolar o painel) — nenhum coberto pelo player, todos acessíveis ao rolar' : 'todos os botões visíveis sem rolar'));
       ok(RELATORIO.length === cfg.length, 'todas as larguras/alturas medidas');
+      /* CONTROLE NEGATIVO: o detector não pode ser vácuo. Forçando a toolbox para baixo, por cima do player, o hit-test TEM de acusar o player. */
+      { const { ctx, page } = await nova(S, browser, 700, 900);
+        await boot(page); await card(page, AID).click(); await ate(page, () => window.RMAudioBoot._engine().getState().state === 'playing', null, 10000);
+        await page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); await esp(400);
+        await page.addStyleTag({ content: '.rm2-box{top:auto !important;bottom:0 !important;transform:none !important}' }); await esp(300);
+        const r = await page.evaluate(([src, c]) => { const m = (new Function('return ' + src))()(); const cc = (new Function('return ' + c))()(); return { botoesSobPlayer: m.filter(o => o.frac > 0 && o.hitPlayer).length, controlesSobToolbox: cc.filter(o => !o.ok).length, total: m.length }; }, [MEDIR.toString(), CTRL.toString()]);
+        ok(r.botoesSobPlayer + r.controlesSobToolbox >= 1, 'controle negativo: com a toolbox FORÇADA sobre o player o hit-test acusa a sobreposição (o detector funciona nos dois sentidos)', r);
+        await ctx.close(); }
     }
   } catch (e) { koN++; falhas.push('EXCEÇÃO: ' + (e && e.stack || e)); console.log('  ✗ EXCEÇÃO', e); }
   await browser.close(); S.fechar();

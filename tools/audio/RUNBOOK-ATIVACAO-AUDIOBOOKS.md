@@ -149,7 +149,7 @@ Conta do José, Semiología II. Abrir DevTools ▸ Network ▸ filtro `sign` (e 
 | Motor, A→B, close, restart, ±15 s, velocidades, retomada por UID | ✅ `audio.test.cjs` 589 (adapter sintético) | ⏳ decodificação | — | ⏳ |
 | Integração: card, portões fail-closed, 0 mídia antes do play, ausculta, caneta simulada, 320→1920 | ✅ `integracao.test.cjs` 294 (mp3/ogg reais por HTTPS local, Layout V2 real) | — | — | ⏳ |
 | **Caneta REAL (`rm-tools-v2.js`) + Layout real + áudio:** escrever tocando, alinhamento de traço **e** marca-texto ao inserir/remover cards e ao recarregar, pausar/fechar, troca de matéria e logout **durante o carregamento** | ✅ `caneta-real.test.cjs` 55 (banco falso em memória; sem tablet) | — | — | ⏳ Apple Pencil/tablet físico |
-| Toolbox REAL × player 561–767 px e 720×450 (zoom 200 %) | ⚠ **detectado e reportado** (Claude 2, #425): ver §7 | — | — | — |
+| Toolbox REAL × player (561–767 px, 720×450 a zoom 200 % e demais): área visível, hit-test e rolagem do painel, nos dois sentidos | ✅ `caneta-real.test.cjs` 136/137: **nenhuma sobreposição real** (o alerta anterior era falso positivo: botões recortados pelo painel rolável) | — | — | ⏳ confirmar em tablet físico (§9 #9) |
 | Decodificação AAC/M4A, duração e faststart **reais**, `playbackRate` 2,5× | ❌ (o Chromium do Playwright não decodifica AAC) | ⏳ | — | ⏳ |
 | Pipeline dos masters (cópias, STOI 1×/2×/2,5×, amostras, manifesto) | ✅ `tools/audio` 24 testes (master **sintético**) | ⏳ masters reais **não processados** | — | — |
 | Voz inteligível / vínculo do bloco pelo conteúdo | ❌ | ⏳ escuta humana | — | — |
@@ -161,7 +161,7 @@ Não declarar «áudio real funcionando» antes de existirem: o relatório dos m
 | Entrega | Dono | Estado em 2026-10-02 |
 |---|---|---|
 | **Hook no `rm-pilot.js`** (único ponto de ligação): após `RMLayout.attach(tab)` carregar `rm-audio-boot.js` e chamar `RMAudioBoot.start()`; em `desativar()`, `RMAudioBoot.stop()`. Linhas exatas em `tools/qa/browser-qa/audio-integracao/README.md`. | **Claude 2**, junto da #425 (ou PR própria dele) | ausente na `main` e na branch da #425 |
-| Sobreposição player × toolbox em 561–767 px / 720×450 (zoom 200 %) | **Claude 2** (#425) | a #425 corrige a caixa da toolbox, mas **botões fora do retângulo da caixa** ainda ficam sob o player (ver o relatório de `caneta-real.test.cjs`) |
+| ~~Sobreposição player × toolbox em 561–767 px / 720×450~~ | — | **retirada**: falso positivo do teste (botões recortados pelo painel rolável, acessíveis ao rolar); verificado por área visível + hit-test + rolagem nos Layouts da `main` e da #425 `cb84bff3` |
 | Contrato consumido pelo áudio (não muda): `#rm-l2-player`, `html[data-rm-dock]`, `--rm-player-h`, `--rm-player-edge` | Claude 2 publica; Claude 4 consome | estável |
 
 O áudio **não edita** esses arquivos. Quando o hook entrar na `main`, o `integracao.test.cjs`/`caneta-real.test.cjs` rodam sem mudança e passam a poder carregar o boot pelo `rm-pilot` real.
@@ -174,7 +174,7 @@ re-sincronizar os testes com a `main` integrada. Comando de re-sincronização (
 git checkout main && git pull
 export NODE_PATH=$(npm root -g)
 node tools/qa/browser-qa/audio-integracao/pilot-gancho.test.cjs        # 40/40 esperado (rm-pilot REAL carrega/para o boot, fail-closed)
-node tools/qa/browser-qa/audio-integracao/caneta-real.test.cjs         # 85 esperado (caneta + layout + áudio reais; B1-BLOCKER só informa)
+node tools/qa/browser-qa/audio-integracao/caneta-real.test.cjs         # 136/137 esperado (caneta + layout + áudio reais; inclui toolbox × player por hit-test)
 node tools/qa/browser-qa/audio-integracao/integracao.test.cjs          # 294 esperado
 node tools/qa/browser-qa/audio/audio.test.cjs && node tools/qa/audio-server/server.test.cjs
 ```
@@ -215,7 +215,7 @@ Pré-requisito: preview ativo com **um** áudio aprovado. Aparelhos: iPad (Safar
 | 6 | Fechar, recarregar, «Continuar» | retoma perto do ponto; restart = 0 sem autoplay |
 | 7 | Auscultação × audiobook | iniciar ausculta pausa o audiobook e não retoma sozinho; e o inverso |
 | 8 | **Caneta**: armar a caneta e escrever com o áudio tocando | o player encolhe (chip), **não pausa**; o traço sai sem atraso nem deslocamento; ao levantar a caneta nada salta |
-| 9 | **Toolbox × player** em retrato e paisagem, janela baixa | nenhum botão da toolbox fica sob o player (hoje: «Abrir mis apuntes» em ~520 px de altura e «Deshacer» a 720×450 com zoom 200 %; **correção do Claude 2 na #425**) |
+| 9 | **Toolbox × player** em retrato e paisagem, janela baixa | com o painel da toolbox aberto (rolando-o se preciso) nenhum botão fica sob o player e nenhum controle do player fica sob a toolbox; todos os botões ficam acessíveis ao rolar o painel (automático: sem sobreposição; falta o tablet físico) |
 | 10 | Inserção de cards com a caneta em contato | nada salta durante o contato; alinha depois de levantar |
 | 11 | Expiração: pausar > 10 min e dar play | URL renovada, posição mantida |
 | 12 | Trocar de matéria e sair da conta | pausa, cards somem; outra conta no mesmo aparelho não herda a posição |

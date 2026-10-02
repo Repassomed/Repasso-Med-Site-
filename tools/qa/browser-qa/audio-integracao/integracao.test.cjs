@@ -8,7 +8,7 @@ const path = require('path');
 const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
 const { iniciar } = require('./server.cjs');
 
-let okN = 0, koN = 0; const falhas = []; const B1_BLOCKER = [];
+let okN = 0, koN = 0; const falhas = []; const STUB_TOOLBOX = [];
 const ok = (c, n, x) => { if (c) okN++; else { koN++; falhas.push(n + (x !== undefined ? ' → ' + JSON.stringify(x) : '')); console.log('  ✗ ' + n + (x !== undefined ? ' → ' + JSON.stringify(x) : '')); } };
 const sec = t => console.log('\n▸ ' + t);
 const near = (a, b, e) => Math.abs(a - b) <= (e === undefined ? 1 : e);
@@ -458,11 +458,10 @@ const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
         ok(await page.evaluate(() => Array.from(document.querySelectorAll('.rm-audio, .rm-audio *, .rm-audio-card, .rm-audio-card *')).every(e => { const r = e.getBoundingClientRect(); return r.width === 0 || r.right <= document.documentElement.clientWidth + 0.5; })), `${w}px: nada do card/player ultrapassa a largura`);
         ok(!g.coberturaSide, `${w}px: não cobre a lateral`);
         if (w > 560 && w < 768) {
-          /* BLOCKER CONHECIDO DO LAYOUT (Claude 2, #425): DETECTAR e REPORTAR, nunca corrigir aqui nem aceitar em silêncio. */
-          B1_BLOCKER.push({ w, h, dsf, cobre: g.coberturaTools, playerH: Math.round(g.p.h) });
-          if (g.coberturaTools) console.log(`  ⚠ B1-BLOCKER (Claude 2 · #425): a ${w}×${h}px (dsf ${dsf}) o player inferior (${Math.round(g.p.h)} px) COBRE a toolbox. O audiobook não decide isso: o B1 só sobe a toolbox acima do player em ≤ 560 px.`);
-          else console.log(`  ✔ ${w}×${h}px: a toolbox NÃO é coberta (B1 já corrigido nesta largura)`);
-        } else ok(!g.coberturaTools, `${w}px: não cobre a toolbox`);
+          /* A «toolbox» deste harness é um RETÂNGULO SIMULADO (#b1-tools, 200 px, centrado): não é a toolbox real (a real tem painel ROLÁVEL, recortado pelo próprio painel).
+             Em 561–767 px só se REGISTRA a interseção com o stub (informativo); a medição que vale — área visível, hit-test e rolagem na toolbox REAL — está em caneta-real.test.cjs. */
+          STUB_TOOLBOX.push({ w, h, dsf, cobre: g.coberturaTools, playerH: Math.round(g.p.h) });
+        } else ok(!g.coberturaTools, `${w}px: não cobre a toolbox (stub)`);
         ok(g.alvos.length === 0, `${w}px: controlos do player ≥ 44 px`, g.alvos);
         if (g.mode === 'bottom') {
           const fim = await page.evaluate(() => { const els = Array.from(document.querySelectorAll('#tab-semio2 section')); const u = els[els.length - 1].getBoundingClientRect().bottom; return { u, pt: document.querySelector('.rm-audio').getBoundingClientRect().top }; });
@@ -472,10 +471,10 @@ const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
       }
     }
 
-    sec('RELATÓRIO · blocker conhecido do Layout V2 (561–767 px) — não é falha desta suíte');
-    { const cob = B1_BLOCKER.filter(x => x.cobre);
-      ok(B1_BLOCKER.length === 9, 'larguras 561/600/700/767 medidas em 2 alturas (900/1024 e 520) + 720×450 a zoom 200 %', B1_BLOCKER.map(x => x.w + '×' + x.h));
-      console.log(cob.length ? `  ⚠ B1-BLOCKER ATIVO: player inferior cobre a toolbox em ${cob.map(x => x.w + '×' + x.h + 'px').join(', ')} (correção: #425 do Claude 2, em rm-layout.css; NÃO feita aqui)` : '  ✔ B1-BLOCKER NÃO reproduzido nas larguras 561–767'); }
+    sec('RELATÓRIO · toolbox SIMULADA (stub do harness) × player em 561–767 px — informativo; a toolbox REAL é medida em caneta-real.test.cjs');
+    { const cob = STUB_TOOLBOX.filter(x => x.cobre);
+      ok(STUB_TOOLBOX.length === 9, 'larguras 561/600/700/767 medidas em 2 alturas (900/1024 e 520) + 720×450 a zoom 200 %', STUB_TOOLBOX.map(x => x.w + '×' + x.h));
+      console.log(cob.length ? `  ⓘ o retângulo SIMULADO da toolbox intersecta o player em ${cob.map(x => x.w + '×' + x.h + 'px').join(', ')}: artefato do stub (200 px fixos, sem rolagem) — NÃO é o comportamento da toolbox real` : '  ✔ o retângulo simulado não intersecta o player'); }
     ok(true, '—');
   } catch (e) { koN++; falhas.push('EXCEÇÃO: ' + (e && e.stack || e)); console.log('  ✗ EXCEÇÃO', e); }
   await browser.close(); S.fechar();
