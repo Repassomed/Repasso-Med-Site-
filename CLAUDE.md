@@ -51,6 +51,24 @@ Quando houver duas soluções igualmente corretas, preferir a que ensina melhor,
 
 O especialista didático via Anthropic deve fiscalizar explicitamente a G0 nas tarefas de conteúdo. Guard verde, sozinho, não aprova a G0.
 
+## 2-B. LEI DE ATUALIZAÇÃO CONTÍNUA
+
+Sempre que entrarem **novas anotações de aula, novos materiais da cátedra, slides, correções ou fontes complementares** para uma matéria já existente, ler e obedecer:
+
+`LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md`
+
+Esta lei exige, antes de editar:
+- comparar a nova fonte com o **resumo atual**;
+- tratar anotações como **complemento de alta relevância**, não como substituição do resumo nem como fonte soberana;
+- manter **G0, ciência, literatura-base e material oficial da cátedra** como referências de maior precedência;
+- verificar cientificamente toda informação da anotação antes de incorporá-la;
+- integrar somente o que agrega, fundindo duplicatas e evitando crescimento desnecessário de densidade;
+- preferir tabela, cards, fluxo ou outra estrutura quando ensinar melhor que prosa;
+- preservar IDs, âncoras, highlights, notas, traços e contratos técnicos;
+- registrar rastreabilidade fonte → bloco → decisão → destino.
+
+Quando José disser que adicionou novas anotações à pasta de uma matéria, isso deve ser interpretado como gatilho para aplicar esta lei completa.
+
 ## 3. VÁRIOS CLAUDES TRABALHAM NESTE PROJETO
 
 Este projeto pode ser trabalhado simultaneamente por diferentes contas do Claude.
