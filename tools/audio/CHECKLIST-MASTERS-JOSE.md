@@ -1,3 +1,5 @@
+> **Atualizado:** como disponibilizar os arquivos, a ativação executável e o quadro de evidências estão em `RUNBOOK-ATIVACAO-AUDIOBOOKS.md` (este checklist continua válido para o processamento local).
+
 # Checklist — processar os 4 masters reais (Semiología II)
 
 Nada abaixo foi executado pelo Claude: o ambiente da sessão **não alcança** os arquivos (o conector do Drive limita downloads a 10 MB e o host
