@@ -97,7 +97,7 @@ Sem URL assinada, sem bucket, sem token. `path` só existe no servidor.
 **Regras:** só José + `semiologia-ii`; item sem confirmação fica `ready:false` (ou fora do manifesto) e **não existe** para ninguém; nada de recurso pago sem a sua
 autorização; produção só depois do ensaio em preview/projeto de teste. **Parar** em qualquer passo que falhe.
 
-**Pré-requisitos (porteiros):** [ ] #425 mergeada **e** o hook no `rm-pilot.js` na `main` (Claude 2 — ver §7) · [ ] os 4 áudios com vínculo **confirmado** e escuta aprovada (§3) ·
+**Pré-requisitos (porteiros):** [x] #425, #430 e #431 (gancho do `rm-pilot.js`) **já na `main`** (ver §7) · [ ] os 4 áudios com vínculo **confirmado** e escuta aprovada (§3) ·
 [ ] `manifesto.json` gerado por `montar_manifesto.py` (§4) · [ ] decisão Free × Pro de egress (README de `tools/qa/audio-server`).
 
 1. **Ensaio no Supabase de TESTE** (exige a sua autorização — pode ter custo; **não** criado). Aplicar `.../supabase/migrations/20260930_01_audiobooks_bucket_privado.sql` e conferir:
@@ -130,7 +130,7 @@ autorização; produção só depois do ensaio em preview/projeto de teste. **Pa
    Todos têm de sair `OK`. O que o script **não** prova: Safari/iPad, decodificação do M4A, voz inteligível (ver quadro).
 5. **Bloqueio direto ao bucket** (anon/authenticated): com a *anon key* e **sem** service_role, `GET <SUPABASE_URL>/storage/v1/object/audiobooks/semiologia-ii/<audio_id>.m4a`
    e `.../object/public/audiobooks/...` ⇒ **recusado** (400/401/403/404), nunca 200. Repetir logado como outra conta.
-6. **Teste no navegador no preview** (§6), só depois do hook do `rm-pilot.js`. **Se algo falhar:** esvaziar `RM_PILOT_AUDIO_UIDS` + novo deploy (corte; URLs já emitidas valem ≤ 10 min).
+6. **Teste no navegador no preview** (§6) — o gancho do `rm-pilot.js` (#431) já está na `main`. **Se algo falhar:** esvaziar `RM_PILOT_AUDIO_UIDS` + novo deploy (corte; URLs já emitidas valem ≤ 10 min).
 7. **Produção** (só com o ensaio 100 % verde e sua ordem expressa): repetir 1–5 no projeto de produção, variáveis no escopo de produção, **novo deploy**, `smoke-remote on/deny/expirada` contra produção, e o roteiro §6 com a sua conta.
    **Rollback:** esvaziar a variável + deploy; se precisar remover o bucket, esvaziá-lo no painel e rodar `..._rollback.sql` (aborta se houver objetos; nunca apaga objetos).
 
@@ -170,25 +170,24 @@ Não declarar «áudio real funcionando» antes de existirem: o relatório dos m
 
 | Entrega | Dono | Estado em 2026-10-02 |
 |---|---|---|
-| **Hook no `rm-pilot.js`** (único ponto de ligação): após `RMLayout.attach(tab)` carregar `rm-audio-boot.js` e chamar `RMAudioBoot.start()`; em `desativar()`, `RMAudioBoot.stop()`. Linhas exatas em `tools/qa/browser-qa/audio-integracao/README.md`. | **Claude 2**, junto da #425 (ou PR própria dele) | ausente na `main` e na branch da #425 |
+| **Hook no `rm-pilot.js`** (único ponto de ligação) | Claude 2 | ✅ **na `main` (#431)**: `pilot-gancho.test.cjs` 72/72 com o `rm-pilot.js` real; sem manifesto autorizado o boot carrega e nada aparece |
 | ~~Sobreposição player × toolbox em 561–767 px / 720×450~~ | — | **retirada**: falso positivo do teste (botões recortados pelo painel rolável, acessíveis ao rolar); verificado por área visível + hit-test + rolagem nos Layouts da `main` e da #425 `cb84bff3` |
 | Contrato consumido pelo áudio (não muda): `#rm-l2-player`, `html[data-rm-dock]`, `--rm-player-h`, `--rm-player-edge` | Claude 2 publica; Claude 4 consome | estável |
 
-O áudio **não edita** esses arquivos. Quando o hook entrar na `main`, o `integracao.test.cjs`/`caneta-real.test.cjs` rodam sem mudança e passam a poder carregar o boot pelo `rm-pilot` real.
+O áudio **não edita** esses arquivos. O gancho já está na `main`; `pilot-gancho.test.cjs` carrega o boot pelo `rm-pilot` real.
 
 ## 8. Ensaio em PREVIEW / Supabase de TESTE — valores concretos para revisão do José (nada aplicado)
 
-**Quando começa:** só depois dos merges manuais **#425 → #430 → #431** (nessa ordem: Layout com `RMLayout.pedirReposicao`, depois o boot, depois o gancho do piloto) e de eu
-re-sincronizar os testes com a `main` integrada. Comando de re-sincronização (read-only) que o Claude roda, e o José pode rodar para conferir:
+**Quando começa:** os merges **#425, #430 e #431 já aconteceram** e os testes foram re-sincronizados com a `main` integrada (abaixo). O que falta é de conteúdo e autorização: masters, vínculos, escuta, Supabase de teste. Comando de re-sincronização (read-only) que o Claude roda, e o José pode rodar para conferir:
 ```bash
 git checkout main && git pull
 export NODE_PATH=$(npm root -g)
-node tools/qa/browser-qa/audio-integracao/pilot-gancho.test.cjs        # 40/40 esperado (rm-pilot REAL carrega/para o boot, fail-closed)
+node tools/qa/browser-qa/audio-integracao/pilot-gancho.test.cjs        # 72/72 esperado (rm-pilot REAL carrega/para o boot, fail-closed)
 node tools/qa/browser-qa/audio-integracao/caneta-real.test.cjs         # 136/137 esperado (caneta + layout + áudio reais; inclui toolbox × player por hit-test)
 node tools/qa/browser-qa/audio-integracao/integracao.test.cjs          # 294 esperado
 node tools/qa/browser-qa/audio/audio.test.cjs && node tools/qa/audio-server/server.test.cjs
 ```
-(Verificado antes dos merges numa árvore temporária `main` + #425 + #431 + #430: 40/40, 85, 294 — nada empurrado.)
+(Verificado na `main` integrada (`a2b0e0e1`): `pilot-gancho` 72/72, `caneta-real` 137, `integracao` 294, `audio` 589, `server` 97, `migration` 110, `smoke-remote` autoteste 13, `tools/audio` 30.)
 
 **Valores concretos propostos (revisar; nenhum aplicado):**
 
