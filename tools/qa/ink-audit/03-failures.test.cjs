@@ -104,13 +104,27 @@ const INK='user_ink_strokes';
     ok(did&&await L.inkCount(s.page)===0,'['+mode+'] borracha: o traço some da tela');
     ok((await dels()).length>=1&&(await rowsOf(u)).length===1,'['+mode+'] o DELETE falhou: a linha continua no banco (por enquanto)');
     const tt=await toasts(s.page); ok(tt.some(x=>x.err&&/Se reintentará/.test(x.m)),'['+mode+'] CORRIGIDO: o usuário RECEBE aviso de erro e de que vai reintentar ('+JSON.stringify(tt.map(x=>x.m))+')');
-    /* residual CONHECIDO e não escondido: se o aluno desfizer a borracha ANTES do reenvio ter êxito
-       (nada dispara o reenvio no momento do undo em si, só no próximo carregamento/online), a linha antiga
-       ainda não apagada mais a nova linha do "restaurar" convivem — 2 linhas. Continua documentado aqui de
-       propósito: a correção mínima do achado B não cobre esta janela específica. */
+    /* DÍVIDA RESIDUAL, documentada de propósito (não fingir resolvida): se a REDE AINDA ESTIVER FORA DO
+       AR no instante exato do desfazer, a reconciliação do achado 3 (abaixo) também tenta o DELETE do id
+       antigo e TAMBÉM falha — duplicação temporária esperada até o próximo reenvio automático
+       (carregamento/evento `online`). Isto não é fila durável completa; é o limite honesto do que dá
+       para fechar sem ela. */
     await s.page.evaluate(()=>RMToolsV2.escolherFerramenta('pen')); await s.page.evaluate(()=>RMToolsV2.desfazer()); await s.page.waitForTimeout(1000);
-    const rr=await rowsOf(u); L.finding(rr.length===2,'['+mode+'] RESIDUAL CONHECIDO (fora do mínimo do achado B): desfazer a borracha ANTES do reenvio ter êxito ainda pode duplicar (checar: '+rr.length+' linha(s))');
+    const rr=await rowsOf(u); L.finding(rr.length===2,'['+mode+'] DÍVIDA RESIDUAL (rede ainda fora do ar no desfazer): ainda pode duplicar temporariamente (checar: '+rr.length+' linha(s))');
     await L.chaos(st,[]); await s.context.close(); }
+
+  console.log('== 6b · ACHADO 3 da auditoria independente (HEAD 11084b7a) CORRIGIDO: desfazer a borracha com a rede JÁ RECUPERADA reconcilia o DELETE pendente, sem duplicar');
+  for(const mode of ['status500','drop']){ const {u,s}=await fresh('fechaduplic'+mode); await L.drawStroke(s.page,0); await s.page.waitForTimeout(400); const id=(await rowsOf(u))[0].id;
+    await L.chaos(st,[mode==='drop'?{method:'DELETE',table:INK,mode:'drop-before'}:{method:'DELETE',table:INK,mode:'status',status:500}]);
+    await L.logClear(st); await s.page.waitForTimeout(600); const did=await erase(s.page,id); await s.page.waitForTimeout(800);
+    ok(did&&await L.inkCount(s.page)===0,'['+mode+'] borracha: o traço some da tela');
+    ok((await rowsOf(u)).length===1,'['+mode+'] o DELETE falhou: a linha continua no banco (por enquanto)');
+    await L.chaos(st,[]);           // "a rede já se recuperou" — exatamente a janela que o achado 3 fecha
+    await s.page.evaluate(()=>RMToolsV2.escolherFerramenta('pen')); await s.page.evaluate(()=>RMToolsV2.desfazer()); await s.page.waitForTimeout(1000);
+    const rr=await rowsOf(u);
+    ok(rr.length===1,'['+mode+'] CORRIGIDO: desfazer reconciliou o DELETE pendente do id antigo (idempotente) antes de restaurar — exatamente 1 linha, sem duplicação (obtido: '+rr.length+')');
+    ok(rr[0]&&rr[0].id!==id,'['+mode+'] a linha que sobrou é a NOVA (do restaurar), não a antiga reconciliada');
+    await s.context.close(); }
   { const {u,s}=await fresh('delreap'); await L.drawStroke(s.page,0); await s.page.waitForTimeout(400); const id=(await rowsOf(u))[0].id;
     await L.chaos(st,[{method:'DELETE',table:INK,mode:'status',status:500}]); await s.page.waitForTimeout(600); await erase(s.page,id); await s.page.waitForTimeout(600); await L.chaos(st,[]);
     await s.page.reload(); await s.page.waitForFunction('window.__ready===true'); await s.page.waitForTimeout(700);
@@ -182,6 +196,80 @@ const INK='user_ink_strokes';
     ok(pendentesDepois.length===0,'['+variant+'] fila de pendentes drenada (sem resíduo)');
     await s.context.close();
   }
+
+  console.log('== 10 · ACHADO 1 da auditoria independente (HEAD 11084b7a) CORRIGIDO: novoIdTraco() sem crypto.randomUUID nunca mais devolve "tmp-" (quebrava o INSERT na coluna uuid)');
+  const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  { const {u,s}=await fresh('semrandomuuid');
+    const testado=await s.page.evaluate(()=>{
+      window.crypto.randomUUID = undefined;                // simula um navegador sem crypto.randomUUID
+      return RMToolsV2._test.novoIdTraco();
+    });
+    ok(UUID_V4_RE.test(testado)&&testado.indexOf('tmp-')!==0,'sem crypto.randomUUID: novoIdTraco() ainda devolve um UUID v4 válido, nunca "tmp-" (obtido: '+testado+')');
+    const r=await L.drawStroke(s.page,0);                   // a mesma página continua com randomUUID indisponível
+    ok(r&&r.status===201,'sem crypto.randomUUID: desenhar grava 201 (ANTES do achado 1 o INSERT rejeitava "tmp-…" como uuid inválido) — status: '+(r&&r.status));
+    const row=(await L.sql(st,'select id from public.user_ink_strokes where user_id=$1',[u.id]))[0];
+    ok(row&&UUID_V4_RE.test(row.id),'a linha gravada no banco tem um UUID v4 válido na coluna id (obtido: '+(row&&row.id)+')');
+    await s.context.close(); }
+  { const {s}=await fresh('semcryptoalgum');
+    const testado=await s.page.evaluate(()=>{
+      window.crypto.randomUUID = undefined;
+      window.crypto.getRandomValues = undefined;            // navegador antigo demais até para getRandomValues
+      return RMToolsV2._test.novoIdTraco();
+    });
+    ok(UUID_V4_RE.test(testado),'sem crypto.randomUUID NEM crypto.getRandomValues (último recurso): ainda devolve um UUID v4 válido (obtido: '+testado+')');
+    await s.context.close(); }
+
+  console.log('== 11 · ACHADO 2 da auditoria independente (HEAD 11084b7a) CORRIGIDO: desfazer ANTES do commit + servidor confirma mas devolve erro — o catch também compensa');
+  { const {u,s}=await fresh('corrida504');
+    await L.chaos(st,[{method:'POST',table:INK,mode:'commit-then-status',status:504,delayMs:1200}]);
+    await L.drawStroke(s.page,0,{wait:false});              // 1 · INSERT parte (vai comitar de verdade em 1200 ms, depois volta 504)
+    const id=await s.page.evaluate(()=>{ const l=RMToolsV2.estado.strokes['semiologia-ii']||[]; return l.length?l[l.length-1].id:null; });
+    ok(!!id,'traço criado localmente com id próprio (INSERT ainda em voo)');
+    await s.page.evaluate(()=>RMToolsV2.desfazer());        // 2 · desfaz ANTES do commit (cancelado=true, DELETE prematuro 0 linhas)
+    await s.page.waitForTimeout(1900);                      // 3 · espera o commit real (1200 ms) + o 504 + o catch rodarem
+    const rows=await rowsOf(u);
+    ok(rows.length===0,'CORRIGIDO: o servidor confirmou o INSERT (commit real) mas a resposta chegou como 504 — o catch ainda assim compensou, sem linha órfã (obtido: '+rows.length+')');
+    await s.context.close(); }
+
+  console.log('== 12 · UID de origem travado (auditoria independente, HEAD 11084b7a): trocar de conta no meio de uma operação em voo não redireciona a pendência');
+  { const {u,s}=await fresh('uidorigem'); await L.drawStroke(s.page,0); await s.page.waitForTimeout(400); const id=(await rowsOf(u))[0].id;
+    await L.chaos(st,[{method:'DELETE',table:INK,mode:'status',status:500,delayMs:1200}]);
+    await L.logClear(st); await s.page.waitForTimeout(300);
+    const did=await erase(s.page,id);
+    ok(did,'borracha clicada (DELETE ainda em voo, atrasado 1200 ms antes de falhar)');
+    const outroUid='11111111-1111-1111-1111-111111111111';
+    await s.page.evaluate((outroUid)=>{ RMToolsV2.estado.uid=outroUid; },outroUid);   // troca de conta NO MEIO do DELETE em voo
+    await s.page.waitForTimeout(1900);                      // espera o DELETE atrasado (1200 ms) + a falha 500 resolverem
+    const log=(await L.logOf(st)).log.filter(x=>x.table===INK&&x.method==='DELETE');
+    ok(log.length>=1&&log[log.length-1].q&&log[log.length-1].q.indexOf('user_id=eq.'+u.id)!==-1,'o DELETE em voo usou o UID de ORIGEM ('+u.id+'), não a conta trocada depois ('+(log[log.length-1]&&log[log.length-1].q)+')');
+    const pendOriginal=await s.page.evaluate((uid)=>JSON.parse(localStorage.getItem('rm2.penApagarPendente.'+uid)||'[]'),u.id);
+    ok(pendOriginal.indexOf(id)!==-1,'o id entrou na fila pendente da conta ORIGINAL, não da conta trocada');
+    const pendOutraConta=await s.page.evaluate((outroUid)=>JSON.parse(localStorage.getItem('rm2.penApagarPendente.'+outroUid)||'[]'),outroUid);
+    ok(pendOutraConta.length===0,'a conta trocada não recebeu nenhuma pendência que não era dela');
+    await s.page.evaluate((uid)=>{ RMToolsV2.estado.uid=uid; },u.id); await s.context.close(); }
+
+  console.log('== 13 · pontos inicial/final preservados na decimação de traços densos (auditoria independente, HEAD 11084b7a)');
+  { const {s}=await fresh('extremos');
+    const r=await s.page.evaluate(()=>{
+      var pts=[]; for (var i=0;i<4000;i++) pts.push([Math.random(),Math.random()]);
+      var primeiro=pts[0].slice(), ultimo=pts[pts.length-1].slice();
+      var out=RMToolsV2._test.decimarPreservandoExtremos(pts.slice(),1200);
+      return { n:out.length, igualPrimeiro: out[0][0]===primeiro[0]&&out[0][1]===primeiro[1],
+        igualUltimo: out[out.length-1][0]===ultimo[0]&&out[out.length-1][1]===ultimo[1] };
+    });
+    ok(r.n<=1200,'decimarPreservandoExtremos() reduz para <=1200 pontos (obtido: '+r.n+')');
+    ok(r.igualPrimeiro,'o PRIMEIRO ponto do array decimado é byte a byte igual ao original (antes: podia já não ser, se tamanho par)');
+    ok(r.igualUltimo,'o ÚLTIMO ponto do array decimado é byte a byte igual ao original (CORRIGIDO: antes do achado, o filtro por índice par descartava o último ponto sempre que o array tinha tamanho par antes de cada passada)');
+    // array de tamanho PAR explícito, para garantir que o caso que falhava antes é exercido
+    const r2=await s.page.evaluate(()=>{
+      var pts=[]; for (var i=0;i<3000;i++) pts.push([i,i*2]);     // tamanho par (3000), valores determinísticos
+      var primeiro=pts[0].slice(), ultimo=pts[pts.length-1].slice();
+      var out=RMToolsV2._test.decimarPreservandoExtremos(pts.slice(),1200);
+      return { igualPrimeiro: out[0][0]===primeiro[0]&&out[0][1]===primeiro[1],
+        igualUltimo: out[out.length-1][0]===ultimo[0]&&out[out.length-1][1]===ultimo[1] };
+    });
+    ok(r2.igualPrimeiro&&r2.igualUltimo,'caso determinístico com array de tamanho par: extremos ainda preservados (regressão direta do bug de paridade)');
+    await s.context.close(); }
 
   await br.close(); await st.close(); process.exit(L.finish('FALHAS')?1:0);
 })().catch(e=>{console.error(e);process.exit(2);});

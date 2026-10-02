@@ -186,18 +186,44 @@
      id real, ficava com o id provisório para sempre, e «desfazer»
      achava que nada tinha sido gravado (o DELETE nem era tentado).
 
-     Corrigido: o id é gerado NO CLIENTE (`crypto.randomUUID()`), uma
-     única vez, ANTES do primeiro POST — o mesmo id em qualquer
-     reenvio automático do navegador. A tabela aceita id vindo do
-     cliente (RLS continua a barrar por `user_id`, nunca por `id`); ver
-     `filaGravar()`. Sem `crypto.randomUUID` (browser muito antigo),
-     cai no esquema «tmp-» de sempre — mais lento a confirmar, mas sem
-     regressão. */
+     Corrigido: o id é gerado NO CLIENTE, uma única vez, ANTES do
+     primeiro POST — o mesmo id em qualquer reenvio automático do
+     navegador. A tabela aceita id vindo do cliente (RLS continua a
+     barrar por `user_id`, nunca por `id`); ver `filaGravar()`.
+
+     AUDITORIA INDEPENDENTE (HEAD 11084b7a, achado 1): o fallback
+     antigo, sem `crypto.randomUUID`, devolvia um id «tmp-…» — mas
+     `filaGravar()` manda esse valor direto na coluna `id` (tipo
+     uuid) do INSERT. Um «tmp-…» não é um UUID válido: o Postgres
+     rejeita a linha inteira (erro de tipo, não 23505), o traço nunca
+     é gravado, e nenhuma lógica desta função sabia disso — ficava só
+     o indicador "não salvo" ligado para sempre. Corrigido: SEMPRE
+     devolve um UUID v4 verdadeiro. `crypto.randomUUID()` quando
+     existe; senão `crypto.getRandomValues()` (universal há muito
+     mais tempo que `randomUUID`) formatado à mão como UUID v4;
+     `Math.random()` só como último recurso, para um navegador sem
+     NENHUM `crypto` utilizável — nunca mais «tmp-» nem qualquer
+     outro valor que não seja um UUID aceito pela coluna. */
   function novoIdTraco() {
     try {
       if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
     } catch (e) {}
-    return 'tmp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    try {
+      if (window.crypto && window.crypto.getRandomValues) {
+        var buf = new Uint8Array(16);
+        window.crypto.getRandomValues(buf);
+        buf[6] = (buf[6] & 0x0f) | 0x40;   // versão 4
+        buf[8] = (buf[8] & 0x3f) | 0x80;   // variante RFC 4122
+        var hex = '';
+        for (var i = 0; i < 16; i++) hex += (buf[i] < 16 ? '0' : '') + buf[i].toString(16);
+        return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' +
+          hex.slice(16, 20) + '-' + hex.slice(20);
+      }
+    } catch (e) {}
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = (Math.random() * 16) | 0, v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
   }
 
   function pushUndo(op) {
@@ -1197,6 +1223,37 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     return out.map(function (p) { return [p[0] / box.w, p[1] / box.h]; });
   }
 
+  /* ACHADO E da auditoria independente (#420): um traço muito denso
+     (escrita rápida com ruído alto) podia continuar acima de 1200 pontos
+     mesmo DEPOIS de uma única decimação — o banco rejeita (constraint
+     1..1200), e o traço inteiro se perdia (POST 400). Corrigido: decima
+     em LAÇO até caber, não só uma vez. Cada passada no máximo reduz a
+     ~metade (índices pares), então o laço termina em poucas iterações
+     mesmo para um traço enorme; o tecto de iterações aqui é só rede de
+     segurança, nunca deve ser atingido (reduzir de 1200 a menos de 2
+     pontos exigiria mais de 600 passadas).
+
+     AUDITORIA INDEPENDENTE (HEAD 11084b7a): o filtro por índice par
+     sempre preserva o primeiro ponto, mas só preserva o último se o
+     array tiver tamanho ÍMPAR antes da passada — em tamanho par o
+     último ponto cai fora, e o fim real do gesto (onde o aluno soltou o
+     dedo/caneta) encolhe um pouco a cada passada. Os extremos nunca são
+     "mais um ponto qualquer": são onde o traço começou e terminou de
+     verdade. Fixados de volta aqui, sempre, independente de quantas
+     passadas rodaram. Função pura (sem efeito colateral, sem estado do
+     módulo) para o teste poder chamá-la direto com qualquer array
+     sintético — ver `_test.decimarPreservandoExtremos`. */
+  function decimarPreservandoExtremos(pts, limite) {
+    if (!pts.length) return pts;
+    var primeiro = pts[0], ultimo = pts[pts.length - 1];
+    var ITER_DECIMAR_MAX = 30;
+    for (var nDecimar = 0; pts.length > limite && nDecimar < ITER_DECIMAR_MAX; nDecimar++) {
+      pts = pts.filter(function (_, i) { return i % 2 === 0; });
+    }
+    if (pts.length >= 2) { pts[0] = primeiro; pts[pts.length - 1] = ultimo; }
+    return pts;
+  }
+
   /* ------------------------------------------------------------------
      RENDERIZAÇÃO AO VIVO · incremental, sem reconstruir o path inteiro
 
@@ -1828,20 +1885,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
          bloco muito alto faz 40 px verticais valerem 0,002 em y, e um RDP
          cego a isso achatava a escrita numa recta. */
       var pts = simplificarEmPixeis(t.pts, t.box, 0.7);
-      /* ACHADO E da auditoria independente (#420): um traço muito denso
-         (escrita rápida com ruído alto) podia continuar acima de 1200
-         pontos mesmo DEPOIS de uma única decimação — o banco rejeita
-         (constraint 1..1200), e o traço inteiro se perdia (POST 400).
-         Corrigido: decima em LAÇO até caber, não só uma vez. Cada
-         passada no máximo reduz a ~metade (índices pares), então o
-         laço termina em poucas iterações mesmo para um traço enorme; o
-         tecto de iterações aqui é só rede de segurança, nunca deve ser
-         atingido (reduzir de 1200 a menos de 2 pontos exigiria mais de
-         600 passadas). */
-      var ITER_DECIMAR_MAX = 30;
-      for (var nDecimar = 0; pts.length > 1200 && nDecimar < ITER_DECIMAR_MAX; nDecimar++) {
-        pts = pts.filter(function (_, i) { return i % 2 === 0; });
-      }
+      pts = decimarPreservandoExtremos(pts, 1200);
 
       if (pts.length < 2) { if (t.path.parentNode) t.path.parentNode.removeChild(t.path); return; }
 
@@ -1987,6 +2031,20 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
      em qualquer reenvio automático do navegador, e conhecido mesmo se
      a resposta nunca chegar. O id deixa de mudar depois do INSERT, por
      isso não há mais remapeamento de id para esta operação. */
+  /* Único ponto que compensa um traço cancelado durante a gravação —
+     chamado tanto quando o INSERT TERMINA (com ou sem erro) quanto de
+     dentro do catch. Reusa a MESMA infraestrutura segura do achado B
+     (`tentarApagarNoBanco()` + fila durável), nunca uma segunda
+     implementação: se o DELETE falhar, nunca finge sucesso — guarda o
+     id para reenvio. */
+  async function compensarCancelamento(s, uid, rec) {
+    rec.gravando = false;
+    remover(rec.id);
+    if (await tentarApagarNoBanco(s, uid, rec.id)) { limparPendenteApagar(uid, rec.id); return; }
+    guardarPendenteApagar(uid, rec.id);
+    toast('No se pudo borrar el trazo. Se reintentará.', true);
+  }
+
   async function filaGravar(slug, rec, pathEl) {
     var s = sb(), uid = st.uid;
     if (!s || !uid) { toast('Dibujado (sin sincronizar)', true); marcarComoPendente(pathEl); return; }
@@ -2008,25 +2066,22 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
            não erro. */
       }
 
-      if (rec.cancelado) {                     // desfeito/apagado enquanto gravava
-        rec.gravando = false;
-        remover(rec.id);
-        /* ACHADO da auditoria independente (2ª ocorrência do padrão do
-           ACHADO B): este DELETE compensatório tinha o mesmo defeito —
-           só try/catch, sem conferir `r.error`. Reusa a MESMA
-           infraestrutura segura do achado B (ver comentário acima de
-           `tentarApagarNoBanco()`), nunca uma segunda implementação: se
-           falhar, nunca finge sucesso — guarda o id para reenvio. */
-        if (await tentarApagarNoBanco(s, uid, rec.id)) { limparPendenteApagar(rec.id); return; }
-        guardarPendenteApagar(rec.id);
-        toast('No se pudo borrar el trazo. Se reintentará.', true);
-        return;
-      }
+      if (rec.cancelado) { await compensarCancelamento(s, uid, rec); return; }   // desfeito/apagado enquanto gravava
 
       rec.confirmado = true;
       desmarcarComoPendente(pathEl);
     } catch (e) {
       console.warn('[rm2] ink insert', e && e.message);
+      /* ACHADO 2 da auditoria independente (HEAD 11084b7a): um erro aqui
+         (ex.: 504 depois do commit) NÃO prova que nada foi gravado — o
+         INSERT pode ter sido confirmado pelo servidor mesmo que a
+         resposta chegue como falha ao cliente. Se o traço já tinha sido
+         cancelado enquanto a gravação estava em voo, nunca tratar esse
+         erro como "nada para limpar": tenta o DELETE compensatório mesmo
+         assim (idempotente — 0 linhas afetadas se de fato não tiver
+         gravado) e enfileira se ele próprio falhar, em vez de deixar a
+         linha órfã no banco para sempre. */
+      if (rec.cancelado) { await compensarCancelamento(s, uid, rec); return; }
       toast('No se pudo guardar el trazo.', true);
       /* o indicador "sin guardar" FICA ligado — ver comentário de
          `marcarComoPendente()` acima. */
@@ -2149,25 +2204,37 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
      aluno e guarda o id (memória + `localStorage`, por conta) para
      reenviar — nunca finge que apagou. Apagar um id que já não existe
      não é erro (0 linhas afectadas), por isso o reenvio é seguro de
-     repetir. */
-  function chavePendentesApagar() {
-    return 'penApagarPendente.' + (st.uid || 'anon');
+     repetir.
+
+     AUDITORIA INDEPENDENTE (HEAD 11084b7a): estas funções liam `st.uid`
+     (uma variável global, mutável) toda vez que precisavam da conta —
+     inclusive DEPOIS de um `await`. Numa operação assíncrona em voo
+     (DELETE pendurado, fila a reenviar), se o aluno trocasse de conta no
+     meio do caminho, a chave de `localStorage` e o filtro `user_id` do
+     próximo passo passavam a usar a conta NOVA, nunca a que originou a
+     pendência — a operação ficava presa na fila errada (ou nenhuma),
+     sem jamais reconciliar a conta antiga. Corrigido: todo chamador
+     captura `uid` UMA VEZ, antes do primeiro `await`, e passa esse
+     mesmo valor explicitamente por todo o caminho — nenhuma destas
+     funções volta a ler `st.uid` sozinha. */
+  function chavePendentesApagar(uid) {
+    return 'penApagarPendente.' + (uid || 'anon');
   }
-  function listaPendentesApagar() {
-    try { return JSON.parse(LS.get(chavePendentesApagar(), '[]')) || []; }
+  function listaPendentesApagar(uid) {
+    try { return JSON.parse(LS.get(chavePendentesApagar(uid), '[]')) || []; }
     catch (e) { return []; }
   }
-  function salvarPendentesApagar(lista) {
-    try { LS.set(chavePendentesApagar(), JSON.stringify(lista)); } catch (e) {}
+  function salvarPendentesApagar(uid, lista) {
+    try { LS.set(chavePendentesApagar(uid), JSON.stringify(lista)); } catch (e) {}
   }
-  function guardarPendenteApagar(id) {
-    var lista = listaPendentesApagar();
-    if (lista.indexOf(id) === -1) { lista.push(id); salvarPendentesApagar(lista); }
+  function guardarPendenteApagar(uid, id) {
+    var lista = listaPendentesApagar(uid);
+    if (lista.indexOf(id) === -1) { lista.push(id); salvarPendentesApagar(uid, lista); }
   }
-  function limparPendenteApagar(id) {
-    var lista = listaPendentesApagar();
+  function limparPendenteApagar(uid, id) {
+    var lista = listaPendentesApagar(uid);
     var depois = lista.filter(function (x) { return x !== id; });
-    if (depois.length !== lista.length) salvarPendentesApagar(depois);
+    if (depois.length !== lista.length) salvarPendentesApagar(uid, depois);
   }
   async function tentarApagarNoBanco(s, uid, id) {
     try {
@@ -2184,10 +2251,10 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
      carregamento) — só cobre o caso comum de falha/instabilidade
      passageira na própria aba. */
   async function reenviarApagarPendentes() {
-    var s = sb(); if (!s || !st.uid) return;
-    var lista = listaPendentesApagar();
+    var s = sb(), uid = st.uid; if (!s || !uid) return;   // UID de origem capturado uma vez
+    var lista = listaPendentesApagar(uid);
     for (var i = 0; i < lista.length; i++) {
-      if (await tentarApagarNoBanco(s, st.uid, lista[i])) limparPendenteApagar(lista[i]);
+      if (await tentarApagarNoBanco(s, uid, lista[i])) limparPendenteApagar(uid, lista[i]);
     }
   }
 
@@ -2199,9 +2266,9 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     rec.cancelado = true;
     var id = rec.id;
     if (String(id).indexOf('tmp-') === 0) return;       // o filaGravar compensa
-    var s = sb(); if (!s || !st.uid) return;
-    if (await tentarApagarNoBanco(s, st.uid, id)) { limparPendenteApagar(id); return; }
-    guardarPendenteApagar(id);
+    var s = sb(), uid = st.uid; if (!s || !uid) return;  // UID de origem capturado uma vez
+    if (await tentarApagarNoBanco(s, uid, id)) { limparPendenteApagar(uid, id); return; }
+    guardarPendenteApagar(uid, id);
     toast('No se pudo borrar el trazo. Se reintentará.', true);
   }
 
@@ -2283,6 +2350,22 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     (st.strokes[slug] = st.strokes[slug] || []).push(novo);
     remapear(idVelho, novo.id);           // quem apontava para o traço antigo passa a apontar para este
     var p = desenhar(novo);
+    /* ACHADO 3 da auditoria independente (HEAD 11084b7a): `restaurarTraco`
+       só é chamado para um traço que FOI apagado — se aquele DELETE tinha
+       falhado e ainda estava pendente (fila do achado B), desfazer criava
+       uma segunda linha sem nunca reinsistir na primeira: duas linhas para
+       um único desenho até o próximo carregamento/evento `online` drenar a
+       fila sozinho. Reconciliado agora: desfazer reinsiste o DELETE do id
+       antigo AQUI MESMO (idempotente — 0 linhas afetadas se já não
+       existir, nunca duplicado), em vez de esperar um gatilho futuro. Se a
+       rede já se recuperou a duplicação nunca chega a existir; se ainda
+       estiver fora do ar, o id continua na mesma fila durável, sem fingir
+       que resolveu. */
+    var s = sb(), uid = st.uid;             // UID de origem capturado uma vez (achado do troca-de-conta)
+    if (s && uid) {
+      if (await tentarApagarNoBanco(s, uid, idVelho)) limparPendenteApagar(uid, idVelho);
+      else guardarPendenteApagar(uid, idVelho);
+    }
     await filaGravar(slug, novo, p);
   }
 
@@ -3423,6 +3506,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         },
         pathIncremental: pathIncremental,
         novoPathIncremental: novoPathIncremental,
+        novoIdTraco: novoIdTraco,
+        decimarPreservandoExtremos: decimarPreservandoExtremos,
         pontuarPalma: pontuarPalma,
         evidenciaDirectaDePalma: evidenciaDirectaDePalma,
         stylusTouches: stylusTouches,
