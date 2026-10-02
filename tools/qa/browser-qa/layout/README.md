@@ -180,7 +180,7 @@ inferior (largura toda, altura `--rm-player-h`) podia cobri-la, sobretudo em jan
 deixava escapar os botões que SAEM dele. Reproduzido com a V2 real. **Leitura exata do que acontece:** o painel da V2 é uma lista **rolável** (`overflow-y:auto`);
 com o chip de caneta armada ele tem 492 px de conteúdo, e em janela de 520 px só cabem ~330. Os últimos botões («Deshacer», «Mis apuntes», «Diagnóstico»)
 ficam **recortados pelo próprio painel** (abaixo da caixa), não pintados sobre o player — `elementFromPoint` nesses pontos devolve o player, não o botão, e rolando o painel
-eles aparecem inteiros ACIMA do player (capturas `*_player_compacto53_caneta_*`). Mesmo assim: (a) a medida antiga contava botão recortado como «visível», e (b) o aluno não percebia que havia mais
+eles aparecem inteiros ACIMA do player (capturas `{561,700,767}x520_player_compacto53_caneta_*` e `720x450_player_compacto53_caneta_*`, com o painel no topo e rolado até o fim; player e chip são SIMULADOS). Mesmo assim: (a) a medida antiga contava botão recortado como «visível», e (b) o aluno não percebia que havia mais
 botões e a caixa deixava ~50 px sem uso. Corrigido nas duas pontas:
 1. **Posição (só `rm-layout.css`):** em 561–767 a caixa é centrada na região livre **entre a faixa do shell e o player** (não mais simétrica em torno do meio) e o painel recebe a altura que sobra
    (`100% − player − faixa − 75px`): 292 → **333 px** em 561×520 com player de 53 px (o «Goma» passa a caber inteiro). Em ≤ 560 px, onde a V2 ancora a caixa embaixo, o mesmo limite vale (antes o painel podia passar do topo da janela

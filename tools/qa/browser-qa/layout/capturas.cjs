@@ -12,6 +12,7 @@ fs.mkdirSync(OUT, { recursive: true });
 const CASOS = [
   ...[320, 390, 561, 600, 700, 767, 768, 1024, 1440, 1700, 1920].map(w => ({ w, z: 1, nome: `${w}` })),
   { w: 720, z: 1, h: 450, nome: '720x450' },
+  ...[561, 700, 767].map(w => ({ w, z: 1, h: 520, nome: `${w}x520` })),     // janela baixa: o caso do player compacto de 53 px com a caneta armada (auditoria do Claude 4)
   { w: 1440, z: 2, nome: '1440_zoom200' }, { w: 1024, z: 2, nome: '1024_zoom200' },
   ...[1495, 1627].map(w => ({ w, z: 1, nome: `${w}_dock` }))
 ];
