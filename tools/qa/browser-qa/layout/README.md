@@ -47,3 +47,11 @@ Com a toolbox **real** da V2 (`.rm2-box`) e um player inferior simulado: entre 5
 só `@media (max-width: 560px)`; fora dela a toolbox fica na posição padrão da V2 e **pode ficar sob o player**. Medido (altura de janela ×
 altura de player 88/120/160/220 px): 390 e 560 → 0/24 combinações com a toolbox coberta; **561, 600, 700, 767 → 5/24** (janelas baixas,
 ≤ ≈ 420 px, com player ≥ 160 px; ex.: janela 320 px, player 160 px: toolbox bottom = 186, player top = 160); 768 → 0/24. **Continua reproduzível.**
+
+### Contrato com o Audiobook (re-sync pós-#429)
+O Audiobook da `main` (`rm-audio.css`, modo lateral) se posiciona com `right: var(--rm-player-edge, 8px); width: var(--rm-player-w, 224px)` dentro do slot
+`#rm-l2-player`, e `html[data-rm-dock="side|bottom"]` é a autoridade de modo; o motor publica `--rm-player-h`. O shell publica as três variáveis
+(`--rm-player-w: 224px`, `--rm-player-edge: 8px` = `PLAYER_EDGE`, `--rm-player-h: 0px` sem player) e o `layout.test.cjs` trava os valores e prova que um
+player posicionado **exatamente com essa regra** fica a ≥ `PLAYER_GAP` do cartão e entre a lateral e a toolbox (1500–1920, aberta e trilho). Validado também
+com o **Audiobook real**: `RM_B1_DIR=<assets> node tools/qa/browser-qa/audio-integracao/integracao.test.cjs` → 294 verificações, 0 falhas (mídia real).
+**535 verificações** no `layout.test.cjs`.

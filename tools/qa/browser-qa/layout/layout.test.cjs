@@ -268,6 +268,36 @@ async function medir(page) {
     await ctx.close();
   }
 
+  /* ---------------------------------------------------------------------------------------------------------
+     CONTRATO PUBLICADO AO AUDIOBOOK (rm-audio.css da main): #rm-l2-player · data-rm-dock="side|bottom" · --rm-player-w/-h/-edge.
+     O player lateral do Audiobook se posiciona com `right: var(--rm-player-edge, 8px); width: var(--rm-player-w, 224px)` DENTRO do
+     slot fixed (entre --rm-left-w e --rm-right-w): a geometria que ele obtém tem de ser a que o dock assumiu ao decidir `side`. */
+  sec('Contrato com o Audiobook: variáveis publicadas e geometria do player lateral idêntica à assumida pelo dock');
+  {
+    const { ctx, page } = await nova(1920, 900, false);
+    const v = await page.evaluate(() => { const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim(); const sl = document.getElementById('rm-l2-player'); return { w: g('--rm-player-w'), h: g('--rm-player-h'), edge: g('--rm-player-edge'), role: sl && sl.getAttribute('role'), hid: sl && sl.hidden, dock: document.documentElement.getAttribute('data-rm-dock') }; });
+    ok(v.w === '224px' && v.edge === '8px' && v.h === '0px', 'o shell publica --rm-player-w=224px, --rm-player-edge=8px e --rm-player-h=0px (sem player)', v);
+    ok(v.role === 'region' && v.hid === true && (v.dock === 'side' || v.dock === 'bottom'), 'slot #rm-l2-player (role=region, hidden sem player) e data-rm-dock publicado', v);
+    await ctx.close();
+  }
+  for (const [w, rail] of [[1700, false], [1760, false], [1920, false], [1500, true], [1627, true], [1920, true]]) {
+    const { ctx, page } = await nova(w, 900, rail);
+    const R = `${rail ? 'trilho' : 'aberta'} ${w}`;
+    const r = await page.evaluate(() => {
+      const H = document.documentElement, cs = getComputedStyle(H), px = x => parseFloat(cs.getPropertyValue(x));
+      const sl = document.getElementById('rm-l2-player'); sl.hidden = false;
+      const pl = document.createElement('div'); pl.style.cssText = 'position:absolute;bottom:0;right:var(--rm-player-edge, 8px);width:var(--rm-player-w, 224px);height:60px';   // mesma regra do rm-audio.css (modo side)
+      sl.appendChild(pl);
+      const b = pl.getBoundingClientRect(), c = document.querySelector('#s2-b01').getBoundingClientRect(), t = document.getElementById('fake-tools').getBoundingClientRect(), sd = document.querySelector('.rm-l2-side').getBoundingClientRect();
+      return { dock: H.getAttribute('data-rm-dock'), pl: b.left, pr: b.right, cardR: c.right, toolsL: t.left, sideR: sd.right, W: px('--rm-player-w'), E: px('--rm-player-edge'), cw: H.clientWidth, rw: px('--rm-right-w') };
+    });
+    ok(r.dock === 'side', `${R}: dock side`, r.dock);
+    ok(Math.abs(r.pr - (r.cw - r.rw - r.E)) < 0.5 && Math.abs((r.pr - r.pl) - r.W) < 0.5, `${R}: o player do Audiobook ocupa exatamente [cw − --rm-right-w − edge − w, cw − --rm-right-w − edge]`, r);
+    ok(r.pl >= r.cardR + 8 - 0.5, `${R}: o player lateral fica ≥ PLAYER_GAP (8px) à direita do cartão de conteúdo (folga ${Math.round(r.pl - r.cardR)}px)`, r);
+    ok(r.pr <= r.toolsL + 0.5 && r.pl >= r.sideR, `${R}: e entre a lateral esquerda e a toolbox`, r);
+    await ctx.close();
+  }
+
   ok(erros.length === 0, 'sem erros de página', erros);
   await browser.close(); srv.close();
   console.log(`\n${okN} verificações OK · ${koN} falhas`);
