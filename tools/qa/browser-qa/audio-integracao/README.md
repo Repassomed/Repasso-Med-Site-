@@ -47,3 +47,19 @@ O resultado sai numa seção própria **«RELATÓRIO · blocker conhecido do Lay
 **720×450 px a zoom 200 %**, player de 135 px; nas demais combinações medidas a toolbox não é coberta). Isso **não reprova** a suíte:
 a regra é do `rm-layout.css` (Claude 2 · #425) e o audiobook não a corrige. Quando o B1 corrigir, a linha passa a `✔ B1-BLOCKER NÃO reproduzido`.
 Com `RM_B1_DIR=<dir com rm-layout.js/css e rm-modes.js>` a mesma suíte roda contra o B1 real (294 verificações nos dois modos).
+
+## Hook no `rm-pilot.js` — NÃO implementado aqui (Claude 2)
+
+Sobre a `main` com a #411 (`rm-pilot.js`, 152 linhas), a integração final precisa de **duas edições**, ambas em `assets/rm-pilot.js`:
+
+1. **`avaliar()`**, logo depois de `window.RMLayout.attach(tab);` (hoje linha 122, dentro do `try`):
+   ```js
+   js(BASE + 'rm-audio-boot.js?v=' + VER).then(function () { if (n === emVoo && tabAtiva() === tab && window.RMAudioBoot) window.RMAudioBoot.start(); }, function () {});
+   ```
+   (`start()` é idempotente e falha fechada: sem manifesto do servidor para o UID, nada aparece e nada é baixado.)
+2. **`desativar()`** (hoje linha 110), antes do `detach`:
+   ```js
+   try { if (window.RMAudioBoot) window.RMAudioBoot.stop(); } catch (e) {}
+   ```
+
+O `rm-audio-boot.js` consome só o contrato do B1: slot `#rm-l2-player`, `html[data-rm-dock="side|bottom"]` e `--rm-player-h`. Não depende de `RMLayout._dock` (que só existe a partir da #417).

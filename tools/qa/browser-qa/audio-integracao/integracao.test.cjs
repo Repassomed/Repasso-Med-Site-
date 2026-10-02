@@ -67,7 +67,7 @@ const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
   const O = { browser };
   try {
     sec('Portões: tudo falha FECHADO e nada de áudio é carregado');
-    { const { ctx, page } = await nova(S, 1024, 768, O); const real = await page.evaluate(() => !!(window.RMLayout && window.RMLayout._dock));
+    { const { ctx, page } = await nova(S, 1024, 768, O); const real = await page.evaluate(() => !!document.querySelector('script[src*="/b1/rm-layout"]') && !!(window.RMLayout && window.RMLayout.attach));   // B1 real = o rm-layout.js servido de RM_B1_DIR (a main só tem `_dock` depois da #417)
       console.log('  Layout V2 usado: ' + (real ? 'REAL (rm-layout.js do B1, RM_B1_DIR)' : 'snapshot do contrato (stub)'));
       ok(process.env.RM_B1_DIR ? real : !real, 'o Layout V2 usado é o esperado pelo ambiente (RM_B1_DIR ⇒ real; senão stub)'); await ctx.close(); }
     {
