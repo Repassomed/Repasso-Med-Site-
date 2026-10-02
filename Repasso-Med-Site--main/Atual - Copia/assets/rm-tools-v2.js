@@ -2446,6 +2446,15 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   }
 
   async function aplicarMarcacao() {
+    /* Único caminho de criação de marcação que NÃO passa por `st.tool`
+       armado: o fluxo antigo "seleccionar texto → tocar numa cor" aplica
+       direto sobre a selecção nativa já existente, mesmo que
+       `escolherFerramenta('highlight')` tenha sido silenciosamente
+       bloqueada (ver o `data-hc` no handler de clique da paleta). Sem
+       este portão aqui, seleccionar texto antes de entrar num modo
+       isolado e só então tocar na cor criaria uma marcação fora da
+       Página completa. */
+    if (!anotarPermitido()) return;
     var tab = abaAtiva(); if (!tab) return;
     var slug = slugDoTab(tab);
     var antes = (RT().estado.porSlug[slug] || []).length;
