@@ -338,6 +338,28 @@ html.rm-l2 #logout-fab { bottom: calc(18px + var(--rm-player-h) + var(--rm-safe-
 @media (max-width: 560px) {
   html.rm-l2 .rm2-box { bottom: max(84px, calc(env(safe-area-inset-bottom) + 74px + var(--rm-player-h))); }
 }
+/* 561–767 px: a V2 só ancora a toolbox embaixo em ≤ 560; daqui até 767 ela fica centrada na vertical (top:50%) e o player inferior
+   (largura toda, altura --rm-player-h) podia cobri-la — sobretudo em janela baixa e com o painel aberto. Centraliza a toolbox na
+   área LIVRE acima do player e limita o painel para a caixa inteira caber ENTRE a faixa do shell e o player: centrada em
+   (0 … 100% − player-h), a caixa só não passa da faixa se medir ≤ 100% − player-h − 2 × faixa; o painel rola por dentro.
+   Sem player (--rm-player-h = 0) o topo devolve exatamente a posição original (50%) e o limite só aperta em janelas muito baixas.
+   ≥ 768 px o slot termina antes da raia da toolbox (--rm-right-w): não há o que corrigir. Só posição/tamanho no Layout: o motor do
+   player e a V2 não são tocados. 77px = leque (52) + espaço (9) + 16 de respiro. */
+@media (min-width: 561px) and (max-width: 767px) {
+  html.rm-l2 .rm2-box { top: calc(50% - (var(--rm-player-h) / 2)); }
+  html.rm-l2 .rm2-panel { max-height: min(76vh, 660px, calc(100vh - var(--rm-player-h) - (2 * var(--rm-hdr-h)) - 77px)); }
+}
+@media (min-width: 561px) and (max-width: 767px) and (max-height: 640px) {
+  html.rm-l2 .rm2-panel { max-height: min(64vh, calc(100vh - var(--rm-player-h) - (2 * var(--rm-hdr-h)) - 77px)); }
+}
+@supports (height: 100dvh) {
+  @media (min-width: 561px) and (max-width: 767px) {
+    html.rm-l2 .rm2-panel { max-height: min(76dvh, 660px, calc(100dvh - var(--rm-player-h) - (2 * var(--rm-hdr-h)) - 77px)); }
+  }
+  @media (min-width: 561px) and (max-width: 767px) and (max-height: 640px) {
+    html.rm-l2 .rm2-panel { max-height: min(64dvh, calc(100dvh - var(--rm-player-h) - (2 * var(--rm-hdr-h)) - 77px)); }
+  }
+}
 /* painel de diagnóstico da caneta (só existe no piloto): abre ao lado da lateral e acima do slot do
    player, sem cobri-los. Só posição/tamanho (CSS); o motor da caneta não é tocado. */
 html.rm-l2 .rm2-diag {
