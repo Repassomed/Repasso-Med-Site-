@@ -132,6 +132,12 @@
     return out;
   }
 
+  /* O grid de flashcards do site fica recolhido (display:none); o que o aluno vê é o LANÇADOR (`.rmfc-launch`), irmão anterior do grid.
+     É ele o alvo de um salto — o grid não tem caixa de layout. */
+  function lancadorFc(fcEl) {
+    var g = fcEl && fcEl.closest && fcEl.closest('.fc-grid'), l = g && g.previousElementSibling;
+    return (l && l.classList && l.classList.contains('rmfc-launch')) ? l : (g || fcEl);
+  }
   /* Recursos REAIS do bloco (só o que existe) + o primeiro alvo de cada tipo. */
   var TIPOS = [
     { k: 'fig',  label: 'Figuras',    sel: 'figure img, .s2-photo[role="img"], img.rmc-photo', up: 'figure, .s2-photo' },
@@ -144,22 +150,41 @@
     var r = [];
     TIPOS.forEach(function (t) {
       var n = sec.querySelector(t.sel);
-      if (n) r.push({ k: t.k, label: t.label, alvo: (n.closest && n.closest(t.up)) || n });
+      if (n) r.push({ k: t.k, label: t.label, alvo: t.k === 'fc' ? lancadorFc(n) : ((n.closest && n.closest(t.up)) || n) });
     });
     return r;
   }
 
   /* ------------------------------ rolagem ------------------------------ */
+  /* GERAÇÃO DE NAVEGAÇÃO. Todo callback assíncrono do shell (salto, acompanhamento da altura, reposicionamento da tinta)
+     nasce com a geração em que foi pedido e, DEPOIS de cada espera, confere de novo se ainda é o dono: a geração
+     avança em todo salto novo, troca de modo, attach e detach. Callback velho vira NO-OP — não é um timeout a mais. */
+  var GER = 0;
+  function abaViva(t) { return !!t && t.isConnected !== false && (!t.classList || t.classList.contains('active')); }
+  function vivo(g, tab) {
+    return g === GER && !!S && S.tab === tab && abaViva(tab) && !!window.RMModes && window.RMModes.isFull();
+  }
+  function novaGeracao() { GER++; clearTimeout(ALT.poll); ALT.poll = 0; }
+
   function hdrH() { return (S && S.band ? S.band.offsetHeight : 44) || 44; }
+  /* alvo sem caixa de layout (display:none: grid de flashcards recolhido, conteúdo de <details> fechado…) nunca é visível: mira o ancestral
+     visível mais próximo — senão o salto «chega» a top = 0 e a rolagem anda para o lado errado */
+  function comCaixa(n) {
+    while (n && n.nodeType === 1 && n.getClientRects && !n.getClientRects().length && n.parentElement) n = n.parentElement;
+    return n;
+  }
   function irPara(alvo) {
-    if (!alvo) return;
+    if (!alvo || !S) return;
+    alvo = comCaixa(alvo);
+    var g = (novaGeracao(), GER), tab = S.tab;                      // um salto novo invalida o anterior (e o seu acompanhamento)
     var topo = hdrH() + 16, n = 0;
     (function passo() {
+      if (!vivo(g, tab) || alvo.isConnected === false) return;      // outro salto, outro modo, outra matéria ou detach: NO-OP
       var d = alvo.getBoundingClientRect().top - topo;
-      if (n++ > 10 || Math.abs(d) <= 2) return;
+      if (n++ > 10 || Math.abs(d) <= 2) { assentarTinta(g); return; }   // chegou: a tinta acompanha o conteúdo que assentou
       try { window.scrollTo({ top: Math.max(0, window.pageYOffset + d), behavior: 'instant' }); }
       catch (e) { window.scrollTo(0, Math.max(0, window.pageYOffset + d)); }
-      requestAnimationFrame(function () { setTimeout(passo, 40); });   // content-visibility muda alturas por baixo
+      requestAnimationFrame(function () { setTimeout(passo, 40); });   // content-visibility muda alturas por baixo (passo confere de novo)
     })();
   }
 
@@ -170,23 +195,104 @@
      pública, que reposicione — sempre DEPOIS de o layout assentar (2 frames +
      respiro, as seções usam content-visibility:auto) e agrupando pedidos
      seguidos em um só. Não mexe em âncoras, algoritmo nem persistência.
-     Fora da Página completa não roda: a tinta está oculta (caixas zeradas) e a
-     volta ao modo completo já reposiciona (rm-modes.js). */
-  var REPOS = { timer: 0, raf: 0, espera: false };
-  function reposicionarTinta() {
+
+     Contexto do pedido {geração, aba, anexo}: ao executar, TUDO é conferido de novo (matéria/aba ainda ativa, shell ainda
+     anexado na mesma geração, ainda na Página completa). Pedido velho = NO-OP.
+     NUNCA durante contato da caneta: se `rm2-pen-down` está ligado (ou há traço em curso), o pedido é coalescido e espera
+     o `pointerup`/`pointercancel` (e o fim do contato); só então reconfere o contexto e executa UMA vez.
+     Fora da Página completa não roda: a tinta está oculta e a volta ao modo completo já pede (rm-modes.js). */
+  var REPOS = { timer: 0, raf: 0, espera: false, ctx: null, pCtx: null, pFn: null, pT: 0, pLoop: 0 };
+  function ctxAtual() { return S ? { g: GER, tab: S.tab, anexo: true } : null; }
+  /* contato da stylus (classe do rm-tools-v2) ou traço em curso (gancho SÓ DE LEITURA da V2): só observa, não decide nada da caneta */
+  function escreveuAgora() {
+    if (escrevendo()) return true;
+    try { var t = window.RMToolsV2 && window.RMToolsV2._test; return !!(t && typeof t.temTraco === 'function' && t.temTraco()); } catch (e) { return false; }
+  }
+  function reposicionarTinta(ctx) {
+    ctx = ctx || ctxAtual();
+    if (!ctx) return;
+    REPOS.ctx = ctx;                                         // o pedido mais novo substitui o anterior (coalesce)
     if (REPOS.espera) return;
     REPOS.espera = true;
     REPOS.raf = requestAnimationFrame(function () {
       REPOS.raf = requestAnimationFrame(function () {
         REPOS.timer = setTimeout(function () {
-          REPOS.espera = false; REPOS.timer = 0; REPOS.raf = 0;
-          try {
-            if (S && window.RMModes && !window.RMModes.isFull()) return;
-            if (window.RMToolsV2 && typeof window.RMToolsV2.reposicionar === 'function') window.RMToolsV2.reposicionar();
-          } catch (e) {}
+          var c = REPOS.ctx; REPOS.espera = false; REPOS.timer = 0; REPOS.raf = 0; REPOS.ctx = null;
+          executarReposicao(c);
         }, 120);
       });
     });
+  }
+  function executarReposicao(c) {
+    try {
+      if (!c || !abaViva(c.tab)) return;                     // a matéria saiu (ou a aba deixou de ser a ativa)
+      if (c.anexo) { if (!S || S.tab !== c.tab || c.g !== GER || !window.RMModes || !window.RMModes.isFull()) return; }
+      else if (S) return;                                    // pedido de «depois do detach»: só vale se continua desanexado
+      if (escreveuAgora()) { aguardarCaneta(c); return; }
+      if (window.RMToolsV2 && typeof window.RMToolsV2.reposicionar === 'function') window.RMToolsV2.reposicionar();
+      ALT.h = alturaDoc();
+    } catch (e) {}
+  }
+  /* espera o contato acabar: pointerup/pointercancel (captura, só leitura) + touchend/touchcancel (adaptador de Touch Events)
+     + conferência periódica de segurança (uma classe presa não pode travar o pedido para sempre) */
+  function aguardarCaneta(c) {
+    REPOS.pCtx = c;                                          // vários pedidos durante o contato viram UM
+    if (REPOS.pFn) return;
+    var tentar = function () {
+      clearTimeout(REPOS.pT);
+      REPOS.pT = setTimeout(function () {
+        REPOS.pT = 0;
+        if (escreveuAgora()) return;                         // ainda em contato: espera o próximo fim de contato
+        var c2 = REPOS.pCtx; desarmarCaneta();
+        if (c2) reposicionarTinta(c2);                       // reconfere tudo ao executar
+      }, 80);                                                // a classe sai no handler da V2, que pode correr depois do nosso
+    };
+    REPOS.pFn = tentar;
+    ['pointerup', 'pointercancel', 'touchend', 'touchcancel'].forEach(function (t) { document.addEventListener(t, tentar, { capture: true, passive: true }); });
+    REPOS.pLoop = setInterval(tentar, 400);
+  }
+  function desarmarCaneta() {
+    if (REPOS.pFn) ['pointerup', 'pointercancel', 'touchend', 'touchcancel'].forEach(function (t) { document.removeEventListener(t, REPOS.pFn, { capture: true }); });
+    clearTimeout(REPOS.pT); clearInterval(REPOS.pLoop);
+    REPOS.pFn = null; REPOS.pCtx = null; REPOS.pT = 0; REPOS.pLoop = 0;
+  }
+
+  /* --------- tinta × alturas que mudam por baixo (achado F da auditoria #420) ---------
+     As seções usam content-visibility:auto: ao saltar (índice, volta da Página completa) ou ao rolar, as seções puladas
+     são renderizadas e MUDAM DE ALTURA. Os SVG da tinta guardam a geometria de antes, e o ResizeObserver da V2 só observa
+     as âncoras/seções COM tinta: uma seção sem tinta que cresce acima de um traço já renderizado não dispara nada, e o
+     traço fica a milhares de px do texto (medido: 4 000–21 000 px, sem se corrigir sozinho). A altura TOTAL do documento
+     é o sinal barato de que algo acima mudou: se mudou desde o último reposicionamento, pede-se à V2 (API pública) que
+     reposicione — sempre depois de o conteúdo assentar. Não toca âncoras, algoritmo nem persistência. */
+  var ALT = { h: 0, scroll: 0, poll: 0, img: 0 };
+  function alturaDoc() { return Math.round(Math.max(ROOT.scrollHeight, document.body ? document.body.scrollHeight : 0)); }
+  /* fim da rolagem (200 ms sem evento): se a altura do documento mudou, reposiciona */
+  function vigiarAltura() {
+    clearTimeout(ALT.scroll);
+    ALT.scroll = setTimeout(function () { ALT.scroll = 0; if (S && alturaDoc() !== ALT.h) reposicionarTinta(); }, 200);
+  }
+  /* depois de um salto: reposiciona já (o alvo está no lugar) e acompanha até a altura ficar estável por 3 leituras
+     seguidas (≈ 300 ms) — ou 4 s, o que vier primeiro. Só enquanto a geração que o pediu continua sendo a atual. */
+  function assentarTinta(g) {
+    if (!S) return;
+    if (g === undefined) g = GER;
+    var tab = S.tab;
+    clearTimeout(ALT.poll);
+    var t0 = Date.now(), ult = -1, iguais = 0;
+    if (!vivo(g, tab)) return;
+    reposicionarTinta({ g: g, tab: tab, anexo: true });
+    (function amostra() {
+      if (!vivo(g, tab)) { ALT.poll = 0; return; }           // outro salto/modo/matéria/detach: o acompanhamento morre
+      var h = alturaDoc();
+      if (h === ult) iguais++; else { if (ult !== -1) reposicionarTinta({ g: g, tab: tab, anexo: true }); iguais = 0; ult = h; }
+      if (iguais >= 3 || Date.now() - t0 > 4000) { ALT.poll = 0; return; }
+      ALT.poll = setTimeout(amostra, 100);
+    })();
+  }
+  /* imagem que termina de carregar muda a altura da seção (sem width/height) */
+  function aoCarregarImagem(e) {
+    var t = e && e.target; if (!S || !t || t.tagName !== 'IMG') return;
+    clearTimeout(ALT.img); ALT.img = setTimeout(function () { ALT.img = 0; if (S) reposicionarTinta(); }, 150);
   }
 
   /* ---------------------------- modo da lateral ------------------------- */
@@ -309,6 +415,7 @@
     var band = ui('div', 'rm-l2-band', { id: 'rm-l2-band', role: 'banner', 'aria-label': 'Materia' });
     var hamb = ui('button', 'rm-l2-hamb', { type: 'button', 'aria-label': 'Abrir el índice', 'aria-expanded': 'false', 'aria-controls': 'rm-l2-side' });
     hamb.appendChild(svg('menu'));
+    var logo = ui('img', 'rm-l2-logo', { src: 'assets/repasso-med-logo.png', alt: 'Repasso Med', width: '27', height: '34', decoding: 'async' });   // marca original, o mesmo arquivo do cabeçalho do site
     var nome = ui('div', 'rm-l2-name');
     var b = el('b'); b.textContent = cat.title || 'Semiología II';
     var sm = el('small'); sm.textContent = cat.sub || '';
@@ -316,8 +423,100 @@
     var chip = ui('span', 'rm-l2-chip', { 'aria-live': 'polite' }); chip.textContent = 'Página completa';
     var mat = ui('button', 'rm-l2-mat', { type: 'button', 'aria-label': 'Volver a las materias', title: 'Materias' });
     mat.appendChild(svg('home')); var ml = el('span'); ml.textContent = 'Materias'; mat.appendChild(ml);
-    band.appendChild(hamb); band.appendChild(nome); band.appendChild(ui('span', 'rm-l2-sp')); band.appendChild(chip); band.appendChild(mat);
+    band.appendChild(hamb); band.appendChild(logo); band.appendChild(nome); band.appendChild(ui('span', 'rm-l2-sp')); band.appendChild(chip); band.appendChild(mat);
     return { band: band, hamb: hamb, chip: chip, mat: mat };
+  }
+
+  /* ------------------- capa da matéria + SLOTS de arte -------------------
+     A capa é CÓDIGO (HTML/CSS/JS): título, subtítulo, ações e o container da arte. Nada aqui é imagem de texto, e a ARTE FINAL
+     (banner/ilustração autoral da Semiología II) é produzida à parte e integrada depois: o slot só reserva o espaço.
+     SLOT `hero`: enquanto ASSETS.hero for null o container fica `hidden` (estado «vacío», 0 px, sem desenho improvisado);
+     quando houver arquivo, basta preencher o objeto — não é preciso reconstruir o layout:
+       ASSETS.hero = { src: 'assets/semio2/hero-1x.webp', srcset: 'assets/semio2/hero-1x.webp 1x, assets/semio2/hero-2x.webp 2x',
+                       w: 1600, h: 900, alt: 'texto alternativo', pos: '50% 40%' }
+     `w`/`h` reservam o espaço (aspect-ratio ⇒ 0 deslocamento ao carregar); `object-fit: cover` preserva a proporção (sem
+     deformar) e `pos` escolhe o recorte; `srcset` entrega nitidez em retina/tablet. Estados: cargando (esqueleto neutro) →
+     listo; error ⇒ o slot colapsa (sem ícone de imagem quebrada). Também dá para chamar RMLayout.setAsset('hero', spec). */
+  var ASSETS = { hero: null };
+
+  function renderArte(slot) {
+    if (!S || !S.arte) return;
+    var fig = S.arte, spec = ASSETS[slot];
+    while (fig.firstChild) fig.removeChild(fig.firstChild);
+    S.capa.classList.remove('has-art');
+    if (!spec || !spec.src) { fig.hidden = true; fig.setAttribute('data-state', 'vacio'); return; }
+    var w = +spec.w || 16, h = +spec.h || 9;
+    var frame = ui('div', 'rm-l2-art-frame'); frame.style.aspectRatio = w + ' / ' + h;
+    var im = ui('img', 'rm-l2-art-img', { alt: spec.deco ? '' : (spec.alt || ''), width: String(w), height: String(h), decoding: 'async', fetchpriority: 'high' });
+    if (spec.deco) im.setAttribute('role', 'presentation');
+    if (spec.pos) im.style.objectPosition = spec.pos;
+    if (spec.srcset) im.setAttribute('srcset', spec.srcset);
+    if (spec.sizes) im.setAttribute('sizes', spec.sizes);
+    fig.hidden = false; fig.setAttribute('data-state', 'cargando'); S.capa.classList.add('has-art');
+    var tok = S, listo = function () { if (S === tok && S.arte === fig) fig.setAttribute('data-state', 'listo'); };
+    im.addEventListener('load', listo);
+    im.addEventListener('error', function () { if (S === tok && S.arte === fig) { fig.hidden = true; fig.setAttribute('data-state', 'error'); S.capa.classList.remove('has-art'); } });
+    im.src = spec.src;
+    frame.appendChild(im); fig.appendChild(frame);
+    if (im.complete && im.naturalWidth > 0) listo();
+  }
+
+  /* Recursos da matéria para a capa: SÓ o que existe, com contagem derivada do DOM (nada inventado).
+     Banco geral e «Todos los flashcards» reúnem as MESMAS entidades dos blocos: ficam fora da contagem (senão contaria duas vezes).
+     Infografía = <figure> com legenda e imagem; radiografias/diapositivas (.material-slide) e fotos soltas NÃO são infográficos.
+     Cada cartão salta, na Página completa, para a primeira ocorrência (irPara: geração/cancelamento já existentes). */
+  var RES_REUNE = /banco|flashcards/i;
+  function recursosDaMateria(tab, bl) {
+    var secs = bl.filter(function (b) { return !RES_REUNE.test(b.id); }).map(function (b) { return b.sec; });
+    var todos = function (sel) { var o = []; secs.forEach(function (sc) { Array.prototype.forEach.call(sc.querySelectorAll(sel), function (n) { o.push(n); }); }); return o; };
+    var out = [];
+    if (bl[0]) out.push({ k: 'res', icon: 'index', t: 'Resumen', sub: 'Contenido completo', alvo: bl[0].sec });
+    var figs = todos('figure').filter(function (f) {
+      return f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image');
+    });
+    if (figs.length) out.push({ k: 'fig', icon: 'img', t: 'Infografías', sub: figs.length + (figs.length === 1 ? ' infografía' : ' infografías'), alvo: figs[0] });
+    var qs = todos('.quiz-item');
+    if (qs.length) out.push({ k: 'quiz', icon: 'q', t: 'Preguntas', sub: qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas'), alvo: qs[0].closest('.quiz-section') || qs[0] });
+    var fc = todos('.flashcard');
+    if (fc.length) out.push({ k: 'fc', icon: 'cards', t: 'Flashcards', sub: fc.length + (fc.length === 1 ? ' tarjeta' : ' tarjetas'), alvo: lancadorFc(fc[0]) });
+    var au = todos('audio');
+    if (au.length) out.push({ k: 'aud', icon: 'wave', t: 'Auscultación', sub: au.length + (au.length === 1 ? ' sonido' : ' sonidos'), alvo: au[0].closest('.audio-player') || au[0] });
+    var vd = todos('details.video-collapsible');
+    if (vd.length) out.push({ k: 'vid', icon: 'play', t: 'Videos', sub: vd.length + (vd.length === 1 ? ' video' : ' videos'), alvo: vd[0] });
+    return out;
+  }
+
+  function montarCapa(cat, bl, tab) {
+    var capa = ui('div', 'rm-l2-cover', { role: 'region', 'aria-label': 'Presentación de la materia' });
+    var cuerpo = ui('div', 'rm-l2-cover-body');
+    var eb = ui('p', 'rm-l2-eyebrow'); eb.textContent = 'Repasso Med · Guía de estudio';
+    var h1 = ui('h1', 'rm-l2-cover-title'); h1.textContent = cat.title || 'Semiología II';
+    cuerpo.appendChild(eb); cuerpo.appendChild(h1);
+    if (cat.sub) { var sb = ui('p', 'rm-l2-cover-sub'); sb.textContent = cat.sub; cuerpo.appendChild(sb); }
+    var meta = ui('p', 'rm-l2-cover-meta'); meta.textContent = bl.length + ' bloques'; cuerpo.appendChild(meta);
+    var acc = ui('div', 'rm-l2-cover-actions');
+    var go = ui('button', 'rm-l2-btn rm-l2-btn-primary', { type: 'button', 'data-act': 'go' }); go.textContent = 'Ir al contenido';
+    var ix = ui('button', 'rm-l2-btn rm-l2-btn-ghost rm-l2-btn-idx', { type: 'button', 'data-act': 'idx' });
+    ix.appendChild(svg('index')); var il = el('span'); il.textContent = 'Ver el índice'; ix.appendChild(il);
+    acc.appendChild(go); acc.appendChild(ix); cuerpo.appendChild(acc);
+    var arte = ui('figure', 'rm-l2-art', { 'data-slot': 'hero', 'data-state': 'vacio' }); arte.hidden = true;
+    capa.appendChild(cuerpo); capa.appendChild(arte);
+    var recs = recursosDaMateria(tab, bl), fila = null;
+    if (recs.length > 1) {                                        // só o Resumen não é uma fileira: recurso ausente = cartão ausente
+      fila = ui('div', 'rm-l2-res', { role: 'group', 'aria-label': 'Recursos de la materia' });
+      recs.forEach(function (r, i) {
+        var c = ui('button', 'rm-l2-rescard rm-l2-rescard--' + r.k, { type: 'button', 'data-res': String(i) });
+        var ic = ui('span', 'rm-l2-rescard-ico'); ic.appendChild(svg(r.icon)); c.appendChild(ic);
+        var tx = ui('span', 'rm-l2-rescard-tx');
+        var tt = ui('b', 'rm-l2-rescard-t'); tt.textContent = r.t; var ss = ui('span', 'rm-l2-rescard-s'); ss.textContent = r.sub;
+        tx.appendChild(tt); tx.appendChild(ss); c.appendChild(tx);
+        var ar = ui('span', 'rm-l2-rescard-go'); ar.appendChild(svg('max')); c.appendChild(ar);
+        c.setAttribute('aria-label', r.t + ': ' + r.sub);
+        fila.appendChild(c);
+      });
+      capa.appendChild(fila);
+    }
+    return { capa: capa, arte: arte, res: recs };
   }
 
   /* ------------------------------ lateral ------------------------------- */
@@ -520,11 +719,22 @@
     S.h = {
       lat: aoClicarLateral,
       resize: function () { aplicarModo(); agendarEspia(); },
-      scroll: function () { medirBanda(); agendarEspia(); },
+      scroll: function () { medirBanda(); agendarEspia(); vigiarAltura(); },
+      img: aoCarregarImagem,
       key: function (e) { if (e.key === 'Escape' && S && S.drawer) { e.preventDefault(); fecharDrawer(); } },
       hamb: function () { if (S.drawer) fecharDrawer(); else abrirDrawer(); },
       back: function () { fecharDrawer(true); },
       mat: function () { try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (x) { window.scrollTo(0, 0); } },
+      capa: function (e) {
+        var rc = e.target && e.target.closest && e.target.closest('[data-res]');
+        if (rc && S && S.capaRes) {                                  // cartão de recurso: salta para a primeira ocorrência, na Página completa
+          var r = S.capaRes[+rc.getAttribute('data-res')]; if (r && r.alvo && r.alvo.isConnected !== false) irPara(r.alvo);
+          return;
+        }
+        var b = e.target && e.target.closest && e.target.closest('[data-act]'); if (!b || !S) return;
+        if (b.getAttribute('data-act') === 'go') { if (S.blocos[0]) irPara(S.blocos[0].sec); }
+        else if (b.getAttribute('data-act') === 'idx') { if (lmode() === 'docked') { S.lat.tog && S.lat.tog.focus(); } else abrirDrawer(); }
+      },
       raiz: function (e) { if (e.target.closest && e.target.closest('[data-view]')) window.RMModes.requestView('full'); }
     };
     S.side.addEventListener('click', S.h.lat);
@@ -532,24 +742,40 @@
     S.backdrop.addEventListener('click', S.h.back);
     S.mat.addEventListener('click', S.h.mat);
     S.rootEl.addEventListener('click', S.h.raiz);
+    S.capa.addEventListener('click', S.h.capa);
     window.addEventListener('resize', S.h.resize);
     window.addEventListener('orientationchange', S.h.resize);
     window.addEventListener('scroll', S.h.scroll, { passive: true });
+    S.tab.addEventListener('load', S.h.img, true);             // 'load' não borbulha: captura
     document.addEventListener('keydown', S.h.key);
-    window.RMModes.onChange(function () { refletirModo(); });
+    window.RMModes.onChange(function () { novaGeracao(); refletirModo(); });   // troca de modo: salto/acompanhamento/pedidos anteriores perdem a vez
   }
 
+  /* Logout que NÃO recarrega a página (o «kick» por sessão duplicada, forceLogout, só mostra um aviso por cima): o shell não pode seguir
+     vivo com saltos/reposicionamentos pendentes. SIGNED_OUT ⇒ detach; sem pedir reposicionamento depois (a sessão acabou). */
+  function ouvirSessao() {
+    try {
+      var sb = window.RM_SB || window._sb;
+      if (!sb || !sb.auth || typeof sb.auth.onAuthStateChange !== 'function') return;
+      var r = sb.auth.onAuthStateChange(function (evt) { if (evt === 'SIGNED_OUT' && S) detach({ sessao: true }); });
+      S.sub = r && r.data && r.data.subscription;
+    } catch (e) {}
+  }
   function desligar() {
+    try { if (S && S.sub && S.sub.unsubscribe) S.sub.unsubscribe(); } catch (e) {}
     var h = S.h; if (!h) return;
     S.side.removeEventListener('click', h.lat);
     S.hamb.removeEventListener('click', h.hamb);
     S.backdrop.removeEventListener('click', h.back);
     S.mat.removeEventListener('click', h.mat);
     S.rootEl.removeEventListener('click', h.raiz);
+    if (S.capa) S.capa.removeEventListener('click', h.capa);
     window.removeEventListener('resize', h.resize);
     window.removeEventListener('orientationchange', h.resize);
     window.removeEventListener('scroll', h.scroll);
+    try { S.tab.removeEventListener('load', h.img, true); } catch (e) {}
     document.removeEventListener('keydown', h.key);
+    clearTimeout(ALT.scroll); clearTimeout(ALT.poll); clearTimeout(ALT.img); ALT.scroll = ALT.poll = ALT.img = 0;
     desarmarAdia();
   }
 
@@ -557,6 +783,7 @@
   function attach(tab) {
     if (S && S.tab === tab) return;
     if (S) detach();
+    novaGeracao();
     var cat = catalogo();
     var bl = blocos(tab);
     if (!bl.length) throw new Error('sem blocos');           // nada para navegar: não vira piloto
@@ -569,6 +796,12 @@
     var lat = montarLateral(tab, bl); S.lat = lat; S.side = lat.side; S.railBtn = lat.railBtn;
     S.backdrop = ui('div', 'rm-l2-backdrop');
     var raiz = montarRaiz(); S.rootEl = raiz.root; S.titulo = raiz.titulo;
+    var cp = montarCapa(cat, bl, tab); S.capa = cp.capa; S.arte = cp.arte; S.capaRes = cp.res;
+    var cab = tab.querySelector(':scope > .rm-subject-head');       // header gerado pelo app-core (não é conteúdo): a capa o substitui no piloto
+    if (cab && cab.parentNode) cab.parentNode.insertBefore(S.capa, cab.nextSibling);
+    else { var s1 = tab.querySelector('section'); (s1 ? s1.parentNode : tab).insertBefore(S.capa, s1 || tab.firstChild); }
+    ROOT.setAttribute('data-rm-cover', '');
+    renderArte('hero');
     S.player = ui('div', 'rm-l2-player', { id: 'rm-l2-player', role: 'region', 'aria-label': 'Audiobook', hidden: '' });   // slot futuro, 0 px
 
     var cont = document.getElementById('materias-container');
@@ -583,6 +816,7 @@
     document.body.appendChild(S.player);
 
     ligar();
+    ouvirSessao();
     aplicarModo();
     refletirModo();
     atualizarToggleArvore();
@@ -590,24 +824,32 @@
     reposicionarTinta();                                     // o shell acabou de reservar as laterais
   }
 
-  function detach() {
+  function detach(opts) {
     if (!S) { try { ROOT.classList.remove('rm-l2'); } catch (e) {} return; }
+    var abaSaiu = S.tab;
+    novaGeracao(); desarmarCaneta();                         // nada pedido antes do detach pode agir depois dele
     /* sem requestView aqui: voltar à Página completa devolveria a rolagem antiga
        por cima da matéria que o aluno está abrindo. O RMModes.detach() abaixo
        só zera o estado; a classe rm-l2 sai e o conteúdo reaparece sozinho. */
     desligar();
-    [S.band, S.ph, S.side, S.backdrop, S.rootEl, S.player].forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });
-    ['data-rm-lmode', 'data-rm-dock', 'data-rm-drawer'].forEach(function (a) { ROOT.removeAttribute(a); });
+    [S.band, S.ph, S.side, S.backdrop, S.rootEl, S.player, S.capa].forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });
+    ['data-rm-lmode', 'data-rm-dock', 'data-rm-drawer', 'data-rm-cover'].forEach(function (a) { ROOT.removeAttribute(a); });
     ROOT.style.removeProperty('--rm-band-bottom'); ROOT.style.removeProperty('--rm-band-top');
     ROOT.classList.remove('rm-l2');
     try { window.RMModes.detach(); } catch (e) {}
     S = null;
-    reposicionarTinta();                                     // as reservas saíram: o conteúdo voltou ao X original
+    /* as reservas saíram: o conteúdo voltou ao X original — só importa se a matéria CONTINUA na tela; se o aluno
+       saiu dela, a aba está inativa e o pedido vira NO-OP (0 reposicionamento tardio) */
+    if (!(opts && opts.sessao)) reposicionarTinta({ g: GER, tab: abaSaiu, anexo: false });      // logout: nada de pedir à V2 depois
   }
 
   window.RMLayout = {
     attach: attach,
-    detach: detach,
+    detach: function () { detach(); },                        // API pública sem argumentos (o rm-pilot chama assim)
+    ASSETS: ASSETS,                                          // slots de arte (hoje vazios): ver «capa da matéria + SLOTS de arte»
+    setAsset: function (slot, spec) { ASSETS[slot] = spec || null; renderArte(slot); },
+    assentarTinta: assentarTinta,                            // usado por rm-modes.js ao voltar à Página completa
+    pedirReposicao: function () { reposicionarTinta(); },    // idem: único caminho até RMToolsV2.reposicionar (coalescido, nunca durante o contato da caneta)
     /* só leitura, para teste/diagnóstico */
     _dock: decidirDock, _cartaoTeorico: cartaoTeorico,
     _estado: function () { return S ? { tab: S.tab && S.tab.id, blocos: S.blocos.length, drawer: S.drawer, lmode: ROOT.getAttribute('data-rm-lmode'), dock: ROOT.getAttribute('data-rm-dock') } : null; }

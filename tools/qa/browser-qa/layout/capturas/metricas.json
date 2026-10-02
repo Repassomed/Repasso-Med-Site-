@@ -1,0 +1,325 @@
+[
+ {
+  "caso": "320",
+  "viewportCSS": "320×844",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "390",
+  "viewportCSS": "390×844",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "561",
+  "viewportCSS": "561×1024",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "600",
+  "viewportCSS": "600×1024",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "700",
+  "viewportCSS": "700×1024",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "767",
+  "viewportCSS": "767×1024",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "768",
+  "viewportCSS": "768×1024",
+  "zoom": 1,
+  "lmode": "rail",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 44,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "1024",
+  "viewportCSS": "1024×900",
+  "zoom": 1,
+  "lmode": "rail",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 44,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "1440",
+  "viewportCSS": "1440×900",
+  "zoom": 1,
+  "lmode": "docked",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 44,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "1700",
+  "viewportCSS": "1700×900",
+  "zoom": 1,
+  "lmode": "docked",
+  "dock": "side",
+  "overflowX": 0,
+  "bandH": 44,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "1920",
+  "viewportCSS": "1920×900",
+  "zoom": 1,
+  "lmode": "docked",
+  "dock": "side",
+  "overflowX": 0,
+  "bandH": 44,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "720x450",
+  "viewportCSS": "720×450",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "561x520",
+  "viewportCSS": "561×520",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "700x520",
+  "viewportCSS": "700×520",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "767x520",
+  "viewportCSS": "767×520",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "1440_zoom200",
+  "viewportCSS": "720×450",
+  "zoom": 2,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "1024_zoom200",
+  "viewportCSS": "512×450",
+  "zoom": 2,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "1495_dock",
+  "viewportCSS": "1495×900",
+  "zoom": 1,
+  "lmode": "docked",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 44,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "1627_dock",
+  "viewportCSS": "1627×900",
+  "zoom": 1,
+  "lmode": "docked",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 44,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ }
+]
