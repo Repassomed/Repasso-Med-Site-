@@ -227,6 +227,8 @@ html:not([data-rm-dock]):has(.rm-audio[data-mode="bottom"]:not([hidden])) {
 .rm-audio[data-layout="b1"][data-mode="lateral"] .rm-audio__ctl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .rm-audio[data-layout="b1"][data-mode="lateral"] .rm-audio__ctl .rm-audio__rate { grid-column: 1 / -1; width: 100%; }
 .rm-audio[data-layout="b1"][data-mode="lateral"] .rm-audio__btn { min-width: 0; padding: 0 4px; }
+/* o «cerrar» fica sempre com alvo de 44 px (a regra acima, mais específica, o encolhia para 27 px). */
+.rm-audio[data-layout="b1"][data-mode="lateral"] .rm-audio__close { min-width: 44px; padding: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .rm-audio, .rm-audio * { transition: none !important; animation: none !important; }

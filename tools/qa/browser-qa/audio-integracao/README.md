@@ -26,7 +26,7 @@ node tools/qa/browser-qa/audio-integracao/capturas.cjs /tmp/capturas          # 
 | **Um por vez** | A→B (1 `Audio`, 1 a tocar); tocar a **ausculta real** pausa o audiobook sem fechá-lo; retomar o audiobook para a ausculta |
 | **Caneta** | armada ⇒ slot `data-rm-pen`, player encolhe (chip), `--rm-player-h` acompanha, áudio **não** pausa, parágrafos não mudam de retângulo, traço `pen` (PointerEvents) sem `preventDefault` do áudio nem rolagem; **nenhum listener global de pointer/touch/mouse/gesture/wheel/scroll** do audiobook |
 | **Ciclo de vida** | mudar `data-rm-dock` a tocar; trocar de matéria; `SIGNED_OUT`; `RMLayout.detach()` ⇒ pausa, guarda posição, remove tudo; stop→start e start repetido sem duplicar |
-| **Larguras** | 320/390/768/1024/1440/1760 + zoom 200 % (195 e 720 CSS px): card e player dentro do viewport, alvos ≥ 44 px, o áudio **não cria overflow** (a matéria já tem elementos largos em 320 px), não cobre lateral/toolbox, fim da página fica acima do player |
+| **Larguras** | 320/390/561/600/700/767/768/1024/1440/1700/1920 (+ 561–767 também com viewport baixo de 520 px) + zoom 200 % (195 e 720 CSS px): card e player dentro do viewport, alvos ≥ 44 px, o áudio **não cria overflow** (a matéria já tem elementos largos em 320 px), não cobre lateral/toolbox, fim da página fica acima do player |
 
 ## Limites honestos
 * O Chromium do Playwright **não decodifica AAC/M4A**: aqui o áudio é mp3/ogg. O M4A é validado pelo pipeline (`tools/audio`) e **precisa de teste em aparelho real** (Safari iOS/Chrome Android: `Range`, autoplay, `playbackRate` 2,5×).
@@ -39,3 +39,11 @@ node tools/qa/browser-qa/audio-integracao/capturas.cjs /tmp/capturas          # 
 2. **Layout V2 (Claude 2, #411/#417):** em `rm-pilot.js`, depois de `RMLayout.attach(tab)`, carregar `assets/rm-audio-boot.js` e chamar `RMAudioBoot.start()`; em `desativar()` chamar `RMAudioBoot.stop()` (contrato no comentário da #417). **Esta PR não edita `rm-pilot.js`, `index.html` nem `rm-layout.*`.**
 3. **Servidor:** migration do bucket, objetos tratados (ver `tools/audio/`), variáveis `RM_PILOT_AUDIO_UIDS` + `RM_AUDIO_MANIFEST`, **deploy**, verificação com `smoke-remote.cjs` (ver `tools/qa/audio-server/README.md`, incluindo desligamento e limites).
 4. **Sem as duas pontas** (hook no `rm-pilot` + manifesto no servidor) **nada aparece para ninguém**: o boot nem é baixado e, se for, `start()` devolve `false` sem pedir mídia.
+
+## Blocker conhecido do Layout V2 (561–767 px) — DETECTADO e REPORTADO, não corrigido aqui
+
+A suíte mede, em 561/600/700/767 px (alturas 900/1024 e 520) e em 720×450 (zoom 200 %), se o player inferior cobre a toolbox.
+O resultado sai numa seção própria **«RELATÓRIO · blocker conhecido do Layout V2»**, com `⚠ B1-BLOCKER` quando há cobertura (hoje:
+**720×450 px a zoom 200 %**, player de 135 px; nas demais combinações medidas a toolbox não é coberta). Isso **não reprova** a suíte:
+a regra é do `rm-layout.css` (Claude 2 · #425) e o audiobook não a corrige. Quando o B1 corrigir, a linha passa a `✔ B1-BLOCKER NÃO reproduzido`.
+Com `RM_B1_DIR=<dir com rm-layout.js/css e rm-modes.js>` a mesma suíte roda contra o B1 real (294 verificações nos dois modos).

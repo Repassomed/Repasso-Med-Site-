@@ -8,7 +8,7 @@ const path = require('path');
 const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
 const { iniciar } = require('./server.cjs');
 
-let okN = 0, koN = 0; const falhas = [];
+let okN = 0, koN = 0; const falhas = []; const B1_BLOCKER = [];
 const ok = (c, n, x) => { if (c) okN++; else { koN++; falhas.push(n + (x !== undefined ? ' → ' + JSON.stringify(x) : '')); console.log('  ✗ ' + n + (x !== undefined ? ' → ' + JSON.stringify(x) : '')); } };
 const sec = t => console.log('\n▸ ' + t);
 const near = (a, b, e) => Math.abs(a - b) <= (e === undefined ? 1 : e);
@@ -56,7 +56,7 @@ async function boot(page, opts) {
 const E = page => page.evaluate(() => { const e = window.RMAudioBoot._engine(); return e ? e.getState() : null; });
 const real = page => page.evaluate(() => { const a = window.__m.audios[0]; return a ? { t: a.currentTime, paused: a.paused, rate: a.playbackRate, pp: a.preservesPitch, dur: a.duration, ready: a.readyState, err: a.error && a.error.code, n: window.__m.audios.length, src: !!a.src } : null; });
 const card = (page, id) => page.locator(`.rm-audio-card[data-audio-id="${id}"] .rm-audio-card__btn`);
-const cardTxt = async (page, id) => (await card(page, id).innerText()).trim();
+const cardTxt = async (page, id) => (await card(page, id).textContent()).trim();   // textContent: innerText devolve '' quando o card está fora do ecrã (content-visibility:auto) com o B1 real
 const media = S => S.log.filter(x => x.p.indexOf('/storage/v1/object/sign/') === 0);
 const ate = async (page, fn, arg, t) => { try { await page.waitForFunction(fn, arg, { timeout: t || 8000 }); return true; } catch (e) { return false; } };
 const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
@@ -76,7 +76,9 @@ const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
         ['outra conta (manifesto vazio no servidor)', { sessao: { token: 'tok-outro', uid: 'uid-outro' } }, null],
         ['token inválido', { sessao: { token: 'tok-falso', uid: 'x' } }, null],
         ['servidor com o piloto DESLIGADO', {}, () => { S.ligado = false; }],
-        ['manifesto com erro 500', {}, () => { S.falha.manifest = 1; }]
+        ['manifesto com erro 500', {}, () => { S.falha.manifest = 1; }],
+        ['UID autorizado mas manifesto VAZIO', {}, () => { S.manifesto0 = S.manifesto; S.manifesto = []; }],
+        ['UID autorizado mas nenhum item PRONTO (ready:false)', {}, () => { S.manifesto0 = S.manifesto; S.manifesto = S.manifesto.map(m => Object.assign({}, m, { ready: false })); }]
       ];
       for (const [nome, op, pre] of casos) {
         S.ligado = true; S.zera(); if (pre) pre();
@@ -87,6 +89,7 @@ const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
         ok(!S.log.some(x => /rm-audio\.(js|css)|rm-audio-store|rm-audio-provider/.test(x.p)) && media(S).length === 0, `${nome}: nenhum arquivo de áudio (css/js/store/provider) carregado, 0 mídia`);
         ok(await page.evaluate(() => window.__m.audioCtor === 0 && window.RMAudioBoot._estado() === null), `${nome}: estado limpo`);
         await ctx.close();
+        if (S.manifesto0) { S.manifesto = S.manifesto0; S.manifesto0 = null; }
       }
       S.ligado = true;
       /* outra aba ativa */
@@ -126,7 +129,7 @@ const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
       const pos = await page.evaluate(() => Array.from(document.querySelectorAll('.rm-audio-card')).map(c => ({ id: c.dataset.audioId, sec: c.closest('section').id, prev: c.previousElementSibling && c.previousElementSibling.tagName, ui: c.hasAttribute('data-rm-ui'), tags: Array.from(c.querySelectorAll('*')).map(e => e.tagName.toLowerCase()).filter((v, i, a) => a.indexOf(v) === i).sort().join() })));
       ok(pos.length === 2 && pos[0].sec === 's2-b01' && pos[1].sec === 's2-b03' && pos.every(p => p.prev === 'H2' && p.ui), 'um card em s2-b01 e outro em s2-b03, logo depois do título, com [data-rm-ui]', pos);
       ok(pos.every(p => !/\b(p|li|h[1-6]|table|figure|blockquote|a|img|audio|video)\b/.test(p.tags.replace(/,/g, ' '))), 'o card só usa div/span/b/button/svg/path', pos[0].tags);
-      ok((await cardTxt(page, AID)) === 'Escuchar' && /Audiolibro · 1 min/.test(await page.locator(`.rm-audio-card[data-audio-id="${AID}"]`).textContent()), 'texto do card: «Escuchar», «Audiolibro · 1 min»');
+      ok((await cardTxt(page, AID)) === 'Escuchar' && /Audiolibro · 1 min/.test(await page.locator(`.rm-audio-card[data-audio-id="${AID}"]`).textContent()), 'texto do card: «Escuchar», «Audiolibro · 1 min»', [await cardTxt(page, AID), await page.locator(`.rm-audio-card[data-audio-id="${AID}"]`).textContent()]);
       ok(media(S).length === 0 && S.ctr.sign === 0 && await page.evaluate(() => window.__m.audioCtor === 0 && window.__m.srcSets.length === 0), 'ZERO mídia antes do play: 0 pedidos ao Storage, 0 assinaturas, 0 elementos Audio, 0 `src`');
       await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' })); await esperar(300); await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
       ok(media(S).length === 0 && S.ctr.sign === 0, 'rolar a página inteira também não pede mídia');
@@ -305,7 +308,7 @@ const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
       const ctx2 = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1024, height: 768 } }); const p2 = await ctx2.newPage();
       await p2.addInitScript(INSTR); await p2.goto(S.base + '/h'); await p2.waitForFunction(() => document.querySelector('#tab-semio2 section[id]'));
       await boot(p2);
-      ok(await cardTxt(p2, AID) === 'Escuchar', 'outro navegador/aparelho NÃO herda a posição (limite documentado: é local ao navegador)');
+      ok(await cardTxt(p2, AID) === 'Escuchar', 'outro navegador/aparelho NÃO herda a posição (limite documentado: é local ao navegador)', await cardTxt(p2, AID));
       await ctx2.close();
       /* outra conta no mesmo navegador */
       await page.evaluate(() => { window.RMAudioBoot.stop(); window.__sess = { token: 'tok-jose', uid: 'uid-outra-conta' }; });
@@ -422,10 +425,10 @@ const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
         await ctx.close(); }
     }
 
-    sec('Larguras 320/390/768/1024/1440 e zoom 200 %: sem overflow, sem cobrir');
+    sec('Larguras 320/390/561/600/700/767/768/1024/1440/1700/1920 e zoom 200 %: sem overflow, sem cobrir');
     {
       S.zera();
-      const cfg = [[320, 568, 1, 'm'], [390, 844, 1, 'm'], [768, 1024, 1, 't'], [1024, 768, 1, ''], [1440, 900, 1, ''], [720, 450, 2, 'zoom200 (1440 → 720 CSS px)'], [195, 422, 2, 'zoom200 (390 → 195 CSS px)']];
+      const cfg = [[320, 568, 1, 'm'], [390, 844, 1, 'm'], [561, 900, 1, 't'], [600, 900, 1, 't'], [700, 900, 1, 't'], [767, 1024, 1, 't'], [561, 520, 1, 't'], [600, 520, 1, 't'], [700, 520, 1, 't'], [767, 520, 1, 't'], [768, 1024, 1, 't'], [1024, 768, 1, ''], [1440, 900, 1, ''], [1700, 900, 1, ''], [1920, 1080, 1, ''], [720, 450, 2, 'zoom200 (1440 → 720 CSS px)'], [195, 422, 2, 'zoom200 (390 → 195 CSS px)']];
       for (const [w, h, dsf, rot] of cfg) {
         const { ctx, page } = await nova(S, w, h, Object.assign({ dsf, touch: rot === 'm' || rot === 't' }, O));
         await page.addStyleTag({ content: '#tab-semio2, #tab-semio2 * { content-visibility: visible !important; }' }); await esperar(300);   // content-visibility:auto esconde o overflow das seções fora do ecrã: força tudo visível, antes e depois
@@ -446,7 +449,7 @@ const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
           const fim = document.querySelector('#tab-semio2 section:last-of-type, #tab-semio2 > *:last-child');
           const inter = (a, b) => a.left < b.right - 0.5 && a.right > b.left + 0.5 && a.top < b.bottom - 0.5 && a.bottom > b.top + 0.5;
           return { mode: document.querySelector('.rm-audio').getAttribute('data-mode'), dock: H.getAttribute('data-rm-dock'), p: { l: p.left, r: p.right, t: p.top, b: p.bottom, w: p.width, h: p.height }, vw: H.clientWidth, vh: innerHeight, sw: H.scrollWidth,
-            coberturaTools: inter(p, tools), coberturaSide: side.width > 0 && inter(p, side), alvos: Array.from(document.querySelectorAll('.rm-audio button, .rm-audio select')).every(b => { const r = b.getBoundingClientRect(); return r.width >= 43.5 && r.height >= 43.5; }), ph: H.style.getPropertyValue('--rm-player-h') };
+            coberturaTools: inter(p, tools), coberturaSide: side.width > 0 && inter(p, side), alvos: Array.from(document.querySelectorAll('.rm-audio button, .rm-audio select')).filter(b => { const r = b.getBoundingClientRect(); return !(r.width >= 43.5 && r.height >= 43.5); }).map(b => (b.getAttribute('aria-label') || b.className) + ':' + Math.round(b.getBoundingClientRect().width) + 'x' + Math.round(b.getBoundingClientRect().height)), ph: H.style.getPropertyValue('--rm-player-h') };
         });
         ok(g.mode === (g.dock === 'side' ? 'lateral' : 'bottom'), `${w}px: modo ${g.mode} = dock ${g.dock} do B1`);
         const dep = await LISTA();
@@ -454,9 +457,13 @@ const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
         ok(dep.every(x => base.includes(x)), `${w}px: o áudio NÃO cria overflow: nenhum elemento NOVO ultrapassa a largura (a matéria já tinha ${base.length} tipos a 320 px ou menos)`, { novos: dep.filter(x => !base.includes(x)) });
         ok(await page.evaluate(() => Array.from(document.querySelectorAll('.rm-audio, .rm-audio *, .rm-audio-card, .rm-audio-card *')).every(e => { const r = e.getBoundingClientRect(); return r.width === 0 || r.right <= document.documentElement.clientWidth + 0.5; })), `${w}px: nada do card/player ultrapassa a largura`);
         ok(!g.coberturaSide, `${w}px: não cobre a lateral`);
-        if (w > 560 && w < 768 && g.coberturaTools) console.log(`  ⓘ AVISO B1: a ${w}px (561–767, sem lateral) o player inferior de ${Math.round(g.p.h)} px cobre a toolbox: o B1 só sobe a toolbox acima do player em ≤ 560 px. É regra do rm-layout.css (Claude 2); o motor não decide isso.`);
-        else ok(!g.coberturaTools, `${w}px: não cobre a toolbox`);
-        ok(g.alvos, `${w}px: controlos do player ≥ 44 px`);
+        if (w > 560 && w < 768) {
+          /* BLOCKER CONHECIDO DO LAYOUT (Claude 2, #425): DETECTAR e REPORTAR, nunca corrigir aqui nem aceitar em silêncio. */
+          B1_BLOCKER.push({ w, h, dsf, cobre: g.coberturaTools, playerH: Math.round(g.p.h) });
+          if (g.coberturaTools) console.log(`  ⚠ B1-BLOCKER (Claude 2 · #425): a ${w}×${h}px (dsf ${dsf}) o player inferior (${Math.round(g.p.h)} px) COBRE a toolbox. O audiobook não decide isso: o B1 só sobe a toolbox acima do player em ≤ 560 px.`);
+          else console.log(`  ✔ ${w}×${h}px: a toolbox NÃO é coberta (B1 já corrigido nesta largura)`);
+        } else ok(!g.coberturaTools, `${w}px: não cobre a toolbox`);
+        ok(g.alvos.length === 0, `${w}px: controlos do player ≥ 44 px`, g.alvos);
         if (g.mode === 'bottom') {
           const fim = await page.evaluate(() => { const els = Array.from(document.querySelectorAll('#tab-semio2 section')); const u = els[els.length - 1].getBoundingClientRect().bottom; return { u, pt: document.querySelector('.rm-audio').getBoundingClientRect().top }; });
           ok(fim.u <= fim.pt + 1, `${w}px: com o fim da página à vista o player não o tapa`, fim);
@@ -465,6 +472,10 @@ const AID = 's2-b01-motivo', AID2 = 's2-b03-epoc';
       }
     }
 
+    sec('RELATÓRIO · blocker conhecido do Layout V2 (561–767 px) — não é falha desta suíte');
+    { const cob = B1_BLOCKER.filter(x => x.cobre);
+      ok(B1_BLOCKER.length === 9, 'larguras 561/600/700/767 medidas em 2 alturas (900/1024 e 520) + 720×450 a zoom 200 %', B1_BLOCKER.map(x => x.w + '×' + x.h));
+      console.log(cob.length ? `  ⚠ B1-BLOCKER ATIVO: player inferior cobre a toolbox em ${cob.map(x => x.w + '×' + x.h + 'px').join(', ')} (correção: #425 do Claude 2, em rm-layout.css; NÃO feita aqui)` : '  ✔ B1-BLOCKER NÃO reproduzido nas larguras 561–767'); }
     ok(true, '—');
   } catch (e) { koN++; falhas.push('EXCEÇÃO: ' + (e && e.stack || e)); console.log('  ✗ EXCEÇÃO', e); }
   await browser.close(); S.fechar();
