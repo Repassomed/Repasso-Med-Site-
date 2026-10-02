@@ -165,3 +165,59 @@ Não declarar «áudio real funcionando» antes de existirem: o relatório dos m
 | Contrato consumido pelo áudio (não muda): `#rm-l2-player`, `html[data-rm-dock]`, `--rm-player-h`, `--rm-player-edge` | Claude 2 publica; Claude 4 consome | estável |
 
 O áudio **não edita** esses arquivos. Quando o hook entrar na `main`, o `integracao.test.cjs`/`caneta-real.test.cjs` rodam sem mudança e passam a poder carregar o boot pelo `rm-pilot` real.
+
+## 8. Ensaio em PREVIEW / Supabase de TESTE — valores concretos para revisão do José (nada aplicado)
+
+**Quando começa:** só depois dos merges manuais **#425 → #430 → #431** (nessa ordem: Layout com `RMLayout.pedirReposicao`, depois o boot, depois o gancho do piloto) e de eu
+re-sincronizar os testes com a `main` integrada. Comando de re-sincronização (read-only) que o Claude roda, e o José pode rodar para conferir:
+```bash
+git checkout main && git pull
+export NODE_PATH=$(npm root -g)
+node tools/qa/browser-qa/audio-integracao/pilot-gancho.test.cjs        # 40/40 esperado (rm-pilot REAL carrega/para o boot, fail-closed)
+node tools/qa/browser-qa/audio-integracao/caneta-real.test.cjs         # 85 esperado (caneta + layout + áudio reais; B1-BLOCKER só informa)
+node tools/qa/browser-qa/audio-integracao/integracao.test.cjs          # 294 esperado
+node tools/qa/browser-qa/audio/audio.test.cjs && node tools/qa/audio-server/server.test.cjs
+```
+(Verificado antes dos merges numa árvore temporária `main` + #425 + #431 + #430: 40/40, 85, 294 — nada empurrado.)
+
+**Valores concretos propostos (revisar; nenhum aplicado):**
+
+| Item | Valor | Observação |
+|---|---|---|
+| Bucket | `audiobooks` | privado: `public=false`, `file_size_limit=31457280` (30 MB), `allowed_mime_types={audio/mp4,audio/x-m4a}` |
+| Policy | `audiobooks_deny_direct_access` | RESTRICTIVE, `for all to anon, authenticated`, nega o bucket; nenhuma policy permissiva criada |
+| Migration | `supabase/migrations/20260930_01_audiobooks_bucket_privado.sql` (rollback `..._rollback.sql`) | já na `main` (#419) |
+| URL assinada | 600 s (10 min) | `get-audio-url`, `no-store` |
+| `RM_PILOT_AUDIO_UIDS` | `d4d215d3-36dd-4efb-8869-bdea5376c648` | UID do José (o mesmo `JOSE_UID` já público em `rm-tools-v2.js`); **só ele**; conferir no painel Auth antes de salvar |
+| `RM_AUDIO_MANIFEST` (hoje) | `{"semiologia-ii":[]}` | **manifesto candidato VAZIO: nenhum áudio está confirmado/aprovado**, então nada pode aparecer. Só `montar_manifesto.py` o preenche, por áudio confirmado + escuta aprovada |
+| Escopo das variáveis | «Deploy previews» (ensaio) | produção só depois do ensaio 100 % verde e sua ordem expressa |
+| Paths dos objetos | `semiologia-ii/<audio_id>.m4a` | sugeridos pelo `plano-upload.md` |
+| Ids/ordem propostos (NÃO confirmados) | A `s2-b01-…` · B `s2-b03-…` · C `s2-b04-…` · D `s2-b05-…` | o `audio_id`, `block_id`, `theme`, `title`, `order` finais saem do vínculo confirmado |
+
+**Passos do ensaio (cada um exige a sua autorização explícita; o Claude não os executa sozinho):**
+1. Supabase de TESTE (branch ou projeto; pode ter custo) → migration → SQL de verificação (§5.1) → upload dos derivados aprovados.
+2. Variáveis só no escopo «Deploy previews» → deploy do preview.
+3. `smoke-remote on / deny / expirada` (§5.4) contra o preview; bloqueio direto ao bucket (§5.5).
+4. Teste no navegador, desktop (§6), e depois o teste físico (§9).
+5. Relatório de evidências no PR; só então o José decide a produção.
+
+## 9. Teste físico — Safari/iPad e Android/Chrome (depois do ensaio no preview)
+
+Pré-requisito: preview ativo com **um** áudio aprovado. Aparelhos: iPad (Safari, com e sem Apple Pencil), iPhone (Safari), Android (Chrome, com e sem stylus). Conta do José; depois uma **outra** conta (deve não ver nada).
+
+| # | Verificação | Passa se |
+|---|---|---|
+| 1 | Card só para o José; outra conta e deslogado | outra conta: 0 cards, 0 `rm-audio*`, 0 pedidos de áudio |
+| 2 | Toque no card → player; URL só no toque | 1 chamada a `get-audio-url`; 0 mídia antes do toque (inspetor remoto: Safari Web Inspector / Chrome `chrome://inspect`) |
+| 3 | Reproduzir/pausar; ±15 s; barra de posição (**Range/206**) | busca no meio do áudio funciona sem recomeçar do zero (200 em vez de 206 = reprova no iOS) |
+| 4 | 1× / 1,25× / 1,5× / 2× / 2,5× | tom não muda (`preservesPitch`); voz inteligível em cada velocidade |
+| 5 | Bloqueio de tela e app em segundo plano (iOS/Android) | comportamento documentado (pausa ou continua); ao voltar, estado coerente; sem erro |
+| 6 | Fechar, recarregar, «Continuar» | retoma perto do ponto; restart = 0 sem autoplay |
+| 7 | Auscultação × audiobook | iniciar ausculta pausa o audiobook e não retoma sozinho; e o inverso |
+| 8 | **Caneta**: armar a caneta e escrever com o áudio tocando | o player encolhe (chip), **não pausa**; o traço sai sem atraso nem deslocamento; ao levantar a caneta nada salta |
+| 9 | **Toolbox × player** em retrato e paisagem, janela baixa | nenhum botão da toolbox fica sob o player (hoje: «Abrir mis apuntes» em ~520 px de altura e «Deshacer» a 720×450 com zoom 200 %; **correção do Claude 2 na #425**) |
+| 10 | Inserção de cards com a caneta em contato | nada salta durante o contato; alinha depois de levantar |
+| 11 | Expiração: pausar > 10 min e dar play | URL renovada, posição mantida |
+| 12 | Trocar de matéria e sair da conta | pausa, cards somem; outra conta no mesmo aparelho não herda a posição |
+
+Registrar por aparelho: modelo/OS/navegador, resultado (✅/❌) por linha e capturas. **Nada disto foi executado.**
