@@ -36,13 +36,16 @@ const INSTR = `(function () {
   def('RMAudioBoot', function (B) { if (!B || B.__w) return B; var s = B.start, p = B.stop; B.start = function () { tick('start'); return s.apply(this, arguments); }; B.stop = function () { tick('stop'); return p.apply(this, arguments); }; B.__w = 1; return B; });
   var obs = new MutationObserver(function (ms) { ms.forEach(function (m) { m.addedNodes && m.addedNodes.forEach(function (n) { if (n.tagName === 'SCRIPT' && /rm-audio/.test(n.src || '')) window.__g.sc.push(n.src.split('/').pop().split('?')[0]); if (n.tagName === 'LINK' && /rm-audio/.test(n.href || '')) window.__g.sc.push(n.href.split('/').pop().split('?')[0]); }); }); });
   obs.observe(document, { childList: true, subtree: true });
+  var v; Object.defineProperty(window, 'RM_SB', { configurable: true, get: function () { return v; }, set: function (x) {
+    if (x && x.auth) x.auth.onAuthStateChange = function (cb) { (window.__authCbs = window.__authCbs || []).push(cb); return { data: { subscription: { unsubscribe: function () { window.__authCbs = (window.__authCbs || []).filter(function (c) { return c !== cb; }); } } } }; };
+    v = x; } });
 })();`;
 
 const req = (S, re) => S.log.filter(l => re.test(l.p));
 const nomes = (S) => S.log.map(l => l.p);
 const audioReq = (S) => S.log.filter(l => /rm-audio|get-audio|\/storage\/v1\/object\/sign\/audiobooks/.test(l.p));
 
-async function pagina(S, browser, { flags, w = 1024, h = 768, semTabAtiva = false, retardoBoot = 0, bootFalha = false, sessao } = {}) {
+async function pagina(S, browser, { flags, w = 1024, h = 768, semTabAtiva = false, retardoBoot = 0, bootFalha = false, sessao, manifestoMs = 0, manifestoRede = false, bootCorpo = null } = {}) {
   const ctx = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: w, height: h } });
   const page = await ctx.newPage();
   const erros = []; page.on('pageerror', e => erros.push(String(e)));
@@ -51,6 +54,9 @@ async function pagina(S, browser, { flags, w = 1024, h = 768, semTabAtiva = fals
   await page.route('**/get-pilot-flags*', r => { S.pilotFlags++; r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(flags) }); });
   if (retardoBoot) await page.route('**/assets/rm-audio-boot.js*', async r => { await esperar(retardoBoot); r.continue(); });
   if (bootFalha) await page.route('**/assets/rm-audio-boot.js*', r => r.fulfill({ status: 404, body: '' }));
+  if (bootCorpo) await page.route('**/assets/rm-audio-boot.js*', r => r.fulfill({ status: 200, contentType: 'text/javascript', body: bootCorpo }));
+  if (manifestoRede) await page.route('**/get-audio-manifest*', r => r.abort('failed'));
+  if (manifestoMs) await page.route('**/get-audio-manifest*', async r => { await esperar(manifestoMs); r.continue(); });
   await page.goto(S.base + '/h');
   await page.waitForFunction(() => document.querySelector('#tab-semio2 section[id]'));
   if (sessao !== undefined) await page.evaluate(s => { window.__sess = s; }, sessao);
@@ -174,6 +180,74 @@ const ordem = (ev) => ev.map(x => x.split('@')[0]);
       const e = await estado(page);
       ok(!ordem(e.ev).includes('start') && e.cards === 0 && !e.layout, 'attach lançou erro: layout desfeito e start() NÃO chamado', e.ev);
       await ctx.close(); }
+
+    /* ---------- 7 · fail-closed com o rm-audio-boot.js FINAL (#430): conta, rede, saída e logout durante o carregamento ---------- */
+    sec('7 · outra conta, erro de rede, saída/logout durante o carregamento, boot com erro');
+    const sair = (page) => page.evaluate(() => { (window.__authCbs || []).slice().forEach(cb => cb('SIGNED_OUT')); });
+    const trocarMateria = (page) => page.evaluate(() => { document.querySelectorAll('#materias-container > .tab-content').forEach(t => t.classList.remove('active')); document.getElementById('tab-outra').classList.add('active'); window.RM_CATALOGO.push({ slug: 'outra', tab: 'outra', title: 'Otra', sub: '' }); window.RMPilot.avaliar(); });
+    const nada = (e, S2, rotulo) => {
+      ok(e.cards === 0 && e.ativo === null && e.audios <= 0, `${rotulo}: 0 cards, boot sem estado ativo, 0 <audio> novos`, e);
+      ok(e.sc.filter(x => x !== 'rm-audio-boot.js').length === 0, `${rotulo}: NENHUM rm-audio.js/css/store/provider carregado`, e.sc);
+      ok(S2.ctr.sign === 0 && S2.ctr.media === 0 && req(S2, /audiobooks/).length === 0, `${rotulo}: 0 assinaturas e 0 bytes de mídia`);
+    };
+    { S.zera(); S.ligado = true; S.falha.manifest = 0;                 // outra conta: o SERVIDOR (por UID) nega — o gate do piloto aqui é deixado permissivo de propósito
+      const { ctx, page, erros } = await pagina(S, browser, { flags: { slug: 'semiologia-ii', layout: true }, sessao: { token: 'tok-outro', uid: 'uid-outro' } });
+      await ligarPiloto(page); await esperar(1500);
+      const e = await estado(page);
+      ok(e.layout && S.ctr.manifest === 1, `outra conta: o servidor foi consultado 1 vez e decide (${S.ctr.manifest})`); nada(e, S, 'outra conta (manifesto negado pelo servidor)');
+      ok(erros.length === 0, 'outra conta: 0 erros JS', erros); await ctx.close(); }
+    { S.zera(); S.ligado = true;                                        // outra conta E o gate do piloto nega (o caso real): zero tudo
+      const { ctx, page } = await pagina(S, browser, { flags: { slug: 'semiologia-ii', layout: false }, sessao: { token: 'tok-outro', uid: 'uid-outro' } });
+      await ligarPiloto(page); await esperar(900);
+      const e = await estado(page);
+      ok(!e.layout && !e.boot && audioReq(S).length === 0 && S.ctr.manifest === 0, 'outra conta + gate do piloto negando: sem layout, sem boot, zero pedidos de áudio', e);
+      await ctx.close(); }
+    { S.zera(); S.ligado = true;
+      const { ctx, page, erros } = await pagina(S, browser, { flags: { slug: 'semiologia-ii', layout: true }, manifestoRede: true });
+      await ligarPiloto(page); await esperar(1500);
+      const e = await estado(page);
+      ok(e.layout && e.slot, 'erro de rede no manifesto: o layout continua anexado'); nada(e, S, 'erro de rede no manifesto');
+      ok(erros.length === 0, 'erro de rede: 0 erros JS', erros); await ctx.close(); }
+    { S.zera(); S.ligado = true;                                        // saída (troca de matéria) com o MANIFESTO ainda a caminho
+      const { ctx, page, erros } = await pagina(S, browser, { flags: { slug: 'semiologia-ii', layout: true }, manifestoMs: 1200 });
+      await ligarPiloto(page);
+      await page.waitForFunction(() => window.__g.ev.some(x => x.indexOf('start@') === 0), null, { timeout: 8000 });
+      await trocarMateria(page); await esperar(2600);
+      const e = await estado(page);
+      nada(e, S, 'saída com o manifesto a caminho'); ok(erros.length === 0, 'saída com o manifesto a caminho: 0 erros JS', erros); await ctx.close(); }
+    { S.zera(); S.ligado = true;                                        // LOGOUT com o manifesto a caminho
+      const { ctx, page, erros } = await pagina(S, browser, { flags: { slug: 'semiologia-ii', layout: true }, manifestoMs: 1200 });
+      await ligarPiloto(page);
+      await page.waitForFunction(() => window.__g.ev.some(x => x.indexOf('start@') === 0), null, { timeout: 8000 });
+      await sair(page); await esperar(2600);
+      const e = await estado(page);
+      ok(!e.layout && !e.slot, 'logout com o manifesto a caminho: o layout se desfez'); nada(e, S, 'logout com o manifesto a caminho');
+      ok(erros.length === 0, 'logout com o manifesto a caminho: 0 erros JS', erros); await ctx.close(); }
+    { S.zera(); S.ligado = true;                                        // LOGOUT enquanto o PRÓPRIO boot ainda carrega: o callback antigo não pode iniciar áudio
+      const { ctx, page, erros } = await pagina(S, browser, { flags: { slug: 'semiologia-ii', layout: true }, retardoBoot: 1500 });
+      await ligarPiloto(page);
+      await page.waitForFunction(() => document.documentElement.classList.contains('rm-l2'), null, { timeout: 8000 });
+      await sair(page); await esperar(2600);
+      const e = await estado(page);
+      ok(!ordem(e.ev).includes('start') && S.ctr.manifest === 0, 'logout durante a carga do boot: start() NUNCA é chamado e o manifesto nunca é pedido', { ev: e.ev, m: S.ctr.manifest });
+      nada(e, S, 'logout durante a carga do boot'); ok(erros.length === 0, 'logout durante a carga do boot: 0 erros JS', erros); await ctx.close(); }
+    { S.zera(); S.ligado = true;                                        // boot que lança ao executar / start() que lança: o layout nunca cai
+      for (const [rotulo, corpo] of [['boot com erro de execução', "throw new Error('boom');"], ['start() que lança', "window.RMAudioBoot = { start: function () { throw new Error('boom'); }, stop: function () {} };"]]) {
+        const { ctx, page } = await pagina(S, browser, { flags: { slug: 'semiologia-ii', layout: true }, bootCorpo: corpo });
+        await ligarPiloto(page); await esperar(1200);
+        const e = await estado(page);
+        ok(e.layout && e.slot && e.cards === 0, `${rotulo}: o layout continua funcionando, sem áudio`, e);
+        ok(await page.evaluate(() => { try { window.switchTab && 0; return !!document.getElementById('rm-l2-player'); } catch (x) { return false; } }), `${rotulo}: o slot do player segue no lugar`);
+        await ctx.close(); }
+    }
+    { S.zera(); S.ligado = true; S.falha.manifest = 0;                  // áudio ATIVO e logout: tudo some, sem erro
+      const { ctx, page, erros } = await pagina(S, browser, { flags: { slug: 'semiologia-ii', layout: true } });
+      await ligarPiloto(page); await page.waitForFunction(() => document.querySelectorAll('.rm-audio-card').length > 0, null, { timeout: 15000 });
+      ok(S.ctr.media === 0 && S.ctr.sign === 0, 'com o áudio ativo e antes do play: 0 assinaturas e 0 bytes de mídia');
+      await sair(page); await esperar(1200);
+      const e = await estado(page);
+      ok(!e.layout && !e.slot && e.cards === 0 && e.ativo === null, 'logout com o áudio ativo: sem layout, sem slot, sem cards, boot sem estado', e);
+      ok(erros.length === 0, 'logout com o áudio ativo: 0 erros JS', erros); await ctx.close(); }
   } finally { await browser.close(); S.fechar(); }
   console.log(`\npilot-gancho: ${okN}/${okN + koN} verificações OK` + (koN ? ` — ${koN} FALHAS` : ''));
   process.exit(koN ? 1 : 0);

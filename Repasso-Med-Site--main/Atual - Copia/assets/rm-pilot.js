@@ -28,7 +28,7 @@
   if (window.RMPilot) return;                         // idempotente
 
   var SLUG = 'semiologia-ii';                         // piloto: uma matéria só
-  var VER  = '2026100201';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
+  var VER  = '2026100202';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
   var BASE = 'assets/';
   var COOLDOWN_MS = 30000;                            // depois de uma falha, não insistir
 
@@ -126,7 +126,7 @@
       audioLoading = js(BASE + 'rm-audio-boot.js?v=' + VER).then(function () { audioLoading = null; }, function () { audioLoading = null; audioFalha = Date.now(); });
     }
     return (audioLoading || Promise.resolve()).then(function () {
-      if (n !== emVoo || tabAtiva() !== tab || !window.RMAudioBoot || !window.RMLayout) return;   // outra aba/avaliação, ou o layout já saiu
+      if (n !== emVoo || tabAtiva() !== tab || !window.RMAudioBoot || !window.RMLayout || !document.getElementById('rm-l2-player')) return;   // outra aba/avaliação, ou o layout já saiu (detach/logout: o slot some)
       try { window.RMAudioBoot.start(); } catch (e) {}
     });
   }
