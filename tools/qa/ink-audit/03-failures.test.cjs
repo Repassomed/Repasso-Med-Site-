@@ -271,5 +271,38 @@ const INK='user_ink_strokes';
     ok(r2.igualPrimeiro&&r2.igualUltimo,'caso determinístico com array de tamanho par: extremos ainda preservados (regressão direta do bug de paridade)');
     await s.context.close(); }
 
+  console.log('== 14 · troca de matéria (aba) com operação pendente em voo — sem órfão, sem duplicata, sem perda');
+  { const {u,s}=await fresh('trocaabains');
+    await L.chaos(st,[{method:'POST',table:INK,mode:'delay',delayMs:1500}]);
+    await L.drawStroke(s.page,0,{wait:false});                 // INSERT parte, ainda em voo
+    const id=await s.page.evaluate(()=>{ const l=RMToolsV2.estado.strokes['semiologia-ii']||[]; return l.length?l[l.length-1].id:null; });
+    ok(!!id,'traço criado localmente (INSERT ainda em voo) antes de trocar de matéria');
+    await s.page.evaluate(()=>window.openMateria('histologia-ii-practica','histo2p'));   // troca ANTES do INSERT responder
+    await s.page.waitForTimeout(2200);                          // espera o INSERT (1500 ms) resolver com a outra matéria ativa
+    ok((await rowsOf(u)).length===1,'o INSERT confirmou normalmente mesmo com outra matéria ativa (1 linha, não órfã)');
+    await s.page.evaluate(()=>window.switchTab('semio2'));       // volta para a matéria original
+    await s.page.waitForTimeout(600);
+    ok(await L.inkCount(s.page)===1,'ao voltar: o traço aparece (não ficou "confirmado" só nos bastidores, sem desenhar)');
+    ok(await L.pendingCount(s.page)===0,'…e sem indicador "não salvo" residual');
+    await s.context.close(); }
+  { const {u,s}=await fresh('trocaabaundo');
+    await L.drawStroke(s.page,0); await s.page.waitForTimeout(400); const id=(await rowsOf(u))[0].id;
+    await L.chaos(st,[{method:'DELETE',table:INK,mode:'status',status:500}]);
+    await L.logClear(st); await s.page.waitForTimeout(300);
+    const did=await erase(s.page,id);
+    ok(did,'[troca] borracha: o traço some da tela (DELETE vai falhar e ficar pendente)');
+    await s.page.evaluate(()=>window.openMateria('histologia-ii-practica','histo2p'));   // troca de matéria com o DELETE ainda pendente
+    await s.page.waitForTimeout(500);
+    await s.page.evaluate(()=>RMToolsV2.escolherFerramenta('pen'));
+    await s.page.evaluate(()=>RMToolsV2.desfazer());             // desfaz (restaura) com a OUTRA matéria ativa — achado 3 reconcilia o id antigo
+    await s.page.waitForTimeout(1000);
+    await L.chaos(st,[]);                                        // rede normaliza antes de voltar
+    await s.page.evaluate(()=>window.switchTab('semio2'));        // volta para a matéria onde o traço foi restaurado
+    await s.page.waitForTimeout(700);
+    ok(await L.inkCount(s.page)===1,'[troca] ao voltar para a matéria original: o traço restaurado aparece (não ficou só no estado, sem desenhar)');
+    const rows=await rowsOf(u);
+    ok(rows.length===1&&rows[0].id!==id,'[troca] exatamente 1 linha no banco, é a NOVA (restaurada), sem duplicar mesmo tendo desfeito com outra matéria ativa');
+    await s.context.close(); }
+
   await br.close(); await st.close(); process.exit(L.finish('FALHAS')?1:0);
 })().catch(e=>{console.error(e);process.exit(2);});
