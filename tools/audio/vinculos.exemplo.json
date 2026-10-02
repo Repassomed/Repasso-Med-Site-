@@ -1,0 +1,55 @@
+[
+  {
+    "_aviso": "MODELO — NADA AQUI ESTÁ CONFIRMADO. Copie para fora do repositório, preencha só depois de ouvir/transcrever e de aprovar a escuta. Com vinculo_confirmado=false o montar_manifesto.py não gera nada.",
+    "master": "Semio_-_Motivo_de_Consulta.m4a",
+    "audio_id": "PROPUESTA-motivo-de-consulta",
+    "block_id": "CONFIRMAR: s2-b01 (respiratorio) ou s2-b06 (cardiaco)",
+    "theme": "PROPUESTA",
+    "title": "PROPUESTA",
+    "order": 1,
+    "version": "v1",
+    "kbps": 48,
+    "vinculo_confirmado": false,
+    "confirmado_por": "escuta | transcricao",
+    "escuta_humana_ok": false
+  },
+  {
+    "master": "Semio_EPOC.m4a",
+    "audio_id": "PROPUESTA-asma-epoc",
+    "block_id": "CONFIRMAR: candidato s2-b03",
+    "theme": "PROPUESTA",
+    "title": "PROPUESTA",
+    "order": 2,
+    "version": "v1",
+    "kbps": 48,
+    "vinculo_confirmado": false,
+    "confirmado_por": "escuta | transcricao",
+    "escuta_humana_ok": false
+  },
+  {
+    "master": "Semio - 3 Sindrome Parenquimatoso.m4a",
+    "audio_id": "PROPUESTA-sindrome-parenquimatoso",
+    "block_id": "CONFIRMAR: candidato s2-b04",
+    "theme": "PROPUESTA",
+    "title": "PROPUESTA",
+    "order": 3,
+    "version": "v1",
+    "kbps": 48,
+    "vinculo_confirmado": false,
+    "confirmado_por": "escuta | transcricao",
+    "escuta_humana_ok": false
+  },
+  {
+    "master": "Semio_-_4_sindrome_pleual.m4a",
+    "audio_id": "PROPUESTA-sindromes-pleurales",
+    "block_id": "CONFIRMAR: candidato s2-b05",
+    "theme": "PROPUESTA",
+    "title": "PROPUESTA",
+    "order": 4,
+    "version": "v1",
+    "kbps": 48,
+    "vinculo_confirmado": false,
+    "confirmado_por": "escuta | transcricao",
+    "escuta_humana_ok": false
+  }
+]

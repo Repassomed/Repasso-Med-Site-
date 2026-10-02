@@ -75,5 +75,25 @@ class T(unittest.TestCase):
         self.assertLess(len(json.dumps({'semiologia-ii': itens}, separators=(',', ':')).encode()), M.LIMITE_ENV)
 
 
+    def test_modelo_vinculos_exemplo_NAO_gera_manifesto(self):
+        """O modelo entregue ao José está todo «não confirmado»: com os masters no relatório ele tem de falhar FECHADO em cada um dos 4."""
+        with open(os.path.join(os.path.dirname(__file__), 'vinculos.exemplo.json'), encoding='utf-8') as f:
+            modelo = json.load(f)
+        self.assertEqual(len(modelo), 4)
+        r = {'itens': [{'master': v['master'], 'recomendado_kbps': 48, 'copias': [copia(48), copia(64, 0.7)]} for v in modelo]}
+        e, itens, plano = M.montar(r, modelo, BLOCOS)
+        self.assertTrue(len([x for x in e if 'NÃO confirmado' in x]) == 4, e)
+        self.assertTrue(len([x for x in e if 'escuta humana' in x]) == 4, e)
+        self.assertTrue(len([x for x in e if 'block_id' in x]) == 4, e)               # «CONFIRMAR: …» não é um bloco da matéria
+        self.assertTrue(all(v['vinculo_confirmado'] is False and v['escuta_humana_ok'] is False for v in modelo))
+
+    def test_rodar_local_recusa_saida_dentro_do_repositorio(self):
+        import subprocess
+        sh = os.path.join(os.path.dirname(__file__), 'rodar_local.sh')
+        r = subprocess.run(['bash', sh, '/tmp', os.path.join(M.RAIZ, 'saida-x')], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 2); self.assertIn('RECUSADO', r.stdout)
+        self.assertFalse(os.path.exists(os.path.join(M.RAIZ, 'saida-x')))
+
+
 if __name__ == '__main__':
     unittest.main()

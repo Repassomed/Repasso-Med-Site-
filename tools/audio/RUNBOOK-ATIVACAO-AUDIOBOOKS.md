@@ -22,9 +22,13 @@ Já tentado e **barrado** (não repetir): download pelo conector do Drive (limit
 criada em 2026-09-21; o nome real é «Audiobooks») contém **exatamente 4 arquivos `.m4a`** — os da tabela acima, com os mesmos ids e tamanhos do inventário anterior (modificados em 21–24/09/2026).
 Nenhum outro arquivo (nem transcrição, nem sons de ausculta) está nessa pasta. O ambiente continua sem alcançar o conteúdo (`drive.google.com` e `drive.usercontent.google.com` sem resposta; conector limitado a 10 MB).
 
+**Reconferido na etapa 2 (depois do merge da #430):** nada mudou. Os 4 arquivos continuam só no Drive; o conector entrega metadados (e `read_file_content` **não suporta áudio**); `drive.google.com`, `drive.usercontent.google.com`
+e `docs.google.com` seguem sem resposta; `uploads/` vazia. **Detalhe novo que muda o caminho 2:** as permissões de cada `.m4a` são só `owner repasso.med` + 3 editores nominais (sem «qualquer pessoa com o link»).
+Logo, **liberar a rede não basta**: o arquivo também precisaria ser compartilhado por link. Não tentei nenhuma contorno de acesso.
+
 Três caminhos, **um basta** (em ordem de preferência):
 
-1. **Rodar na máquina do José** (não depende deste ambiente): §2, com os 4 arquivos numa pasta local fora do Git. O José devolve o `relatorio.md`/`relatorio.json`
+1. **Rodar na máquina do José** (não depende deste ambiente): `bash tools/audio/rodar_local.sh ~/masters ~/audiobooks-tratados` (confere dependências, recusa saída dentro do Git, roda `inspecionar` + `preparar`; nada é enviado) — equivale ao §2, com os 4 arquivos numa pasta local fora do Git. O José devolve o `relatorio.md`/`relatorio.json`
    e a pasta `amostras/` (trechos de ~25 s, pequenos; os derivados completos não precisam voltar). **Este é o caminho mais curto.**
 2. **Liberar a rede do ambiente para o Drive:** no menu do ambiente na barra de título da sessão ▸ *Edit* ▸ *Network access*: nível mais amplo **ou** adicionar
    `drive.google.com`, `drive.usercontent.google.com` e `*.googleusercontent.com` aos domínios permitidos; e em cada arquivo do Drive ▸ Compartilhar ▸
@@ -70,6 +74,10 @@ Para cada áudio o relatório do Claude trará: assunto identificado · bloco re
 Sons de ausculta (mp3 próprios, em `assets/audio/semio*`) **não** recebem o perfil de fala: nada deste pipeline os toca.
 
 ## 4. Manifesto (`RM_AUDIO_MANIFEST`) — só depois de confirmar
+
+**Manifesto candidato desta etapa: VAZIO — `{"semiologia-ii":[]}`.** Nenhum dos 4 áudios foi acessado, ouvido, transcrito nem aprovado; portanto nenhum item pode entrar (item não confirmado fica de fora, e com ele fora nada aparece para ninguém).
+**Não existe arquivo de manifesto no repositório de propósito:** a pasta publicada é a raiz (`publish = "."`), então qualquer arquivo versionado vira URL pública; o manifesto vive só na variável de ambiente.
+`tools/audio/vinculos.exemplo.json` é o **modelo** do `vinculos.json` (4 masters, tudo `vinculo_confirmado:false`; ids/títulos «PROPUESTA»; o áudio A pergunta explicitamente `s2-b01` × `s2-b06`) — um teste garante que ele **não gera manifesto**.
 
 Com o `relatorio.json` e um `vinculos.json` (um objeto por áudio: `master`, `audio_id`, `block_id`, `theme`, `title`, `order`, `version`, `kbps`,
 `vinculo_confirmado:true`, `confirmado_por:"escuta"|"transcricao"`, `escuta_humana_ok:true`):
