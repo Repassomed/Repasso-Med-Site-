@@ -34,11 +34,11 @@ node tools/qa/browser-qa/audio-integracao/capturas.cjs /tmp/capturas          # 
 * `Input.dispatchMouseEvent` sobre texto com áudio tocando travou o Chromium headless (instabilidade da ferramenta, reproduzida sem o audiobook-só com mídia a tocar); por isso o traço usa PointerEvents.
 * O Supabase é falso. A migration do bucket **não** foi validada num Supabase real (ver PR #419).
 
-## Como o audiobook é ligado (nada disto foi feito)
-1. **Pilha de PRs (ordem de merge, uma de cada vez, só o José):** #415 (motor) → #418 (retomada) → #419 (servidor/migration) → esta (integração). Depois de cada merge, a seguinte é reapontada para `main`.
-2. **Layout V2 (Claude 2, #411/#417):** em `rm-pilot.js`, depois de `RMLayout.attach(tab)`, carregar `assets/rm-audio-boot.js` e chamar `RMAudioBoot.start()`; em `desativar()` chamar `RMAudioBoot.stop()` (contrato no comentário da #417). **Esta PR não edita `rm-pilot.js`, `index.html` nem `rm-layout.*`.**
-3. **Servidor:** migration do bucket, objetos tratados (ver `tools/audio/`), variáveis `RM_PILOT_AUDIO_UIDS` + `RM_AUDIO_MANIFEST`, **deploy**, verificação com `smoke-remote.cjs` (ver `tools/qa/audio-server/README.md`, incluindo desligamento e limites).
-4. **Sem as duas pontas** (hook no `rm-pilot` + manifesto no servidor) **nada aparece para ninguém**: o boot nem é baixado e, se for, `start()` devolve `false` sem pedir mídia.
+## Como o audiobook é ligado (estado atual)
+1. **Código na `main`:** motor (#415), retomada (#418), servidor/migration (#419), integração (#429), ferramenta dos masters (#424), Layout V2 (#425), boot final (#430) e **gancho do piloto (#431)**. **Nada foi ativado**: sem manifesto e sem Storage o gancho carrega o boot, o servidor devolve vazio e nada aparece.
+2. **Gancho (#431, já na `main`):** `rm-pilot.js` carrega `rm-audio-boot.js` e chama `RMAudioBoot.start()` depois de `RMLayout.attach(tab)`, e `RMAudioBoot.stop()` em `desativar()` (ver a seção «Gancho no `rm-pilot.js`» abaixo e `pilot-gancho.test.cjs`).
+3. **Servidor (pendente, só com autorização do José):** migration do bucket, objetos tratados (ver `tools/audio/`), variáveis `RM_PILOT_AUDIO_UIDS` + `RM_AUDIO_MANIFEST`, **deploy**, verificação com `smoke-remote.cjs` (ver `tools/qa/audio-server/README.md`).
+4. **Sem o manifesto no servidor nada aparece para ninguém:** o boot é carregado pelo gancho, mas `start()` devolve `false` sem pedir mídia.
 
 ## Toolbox × player (561–767 px, 720×450 e demais) — alerta anterior RETIRADO: era falso positivo do teste
 
@@ -53,21 +53,9 @@ Em janelas baixas alguns botões ficam recortados e exigem rolar o painel (relat
 No `integracao.test.cjs` a «toolbox» é um **retângulo simulado** do harness (200 px, sem rolagem): a interseção com ele a 720×450 é artefato do stub e só é registrada.
 Com `RM_B1_DIR=<dir com rm-layout.js/css e rm-modes.js>` a mesma suíte roda contra o B1 real (294 verificações nos dois modos).
 
-## Hook no `rm-pilot.js` — NÃO implementado aqui (Claude 2)
+## (histórico) Hook no `rm-pilot.js`
 
-Sobre a `main` com a #411 (`rm-pilot.js`, 152 linhas), a integração final precisa de **duas edições**, ambas em `assets/rm-pilot.js`:
-
-1. **`avaliar()`**, logo depois de `window.RMLayout.attach(tab);` (hoje linha 122, dentro do `try`):
-   ```js
-   js(BASE + 'rm-audio-boot.js?v=' + VER).then(function () { if (n === emVoo && tabAtiva() === tab && window.RMAudioBoot) window.RMAudioBoot.start(); }, function () {});
-   ```
-   (`start()` é idempotente e falha fechada: sem manifesto do servidor para o UID, nada aparece e nada é baixado.)
-2. **`desativar()`** (hoje linha 110), antes do `detach`:
-   ```js
-   try { if (window.RMAudioBoot) window.RMAudioBoot.stop(); } catch (e) {}
-   ```
-
-O `rm-audio-boot.js` consome só o contrato do B1: slot `#rm-l2-player`, `html[data-rm-dock="side|bottom"]` e `--rm-player-h`. Não depende de `RMLayout._dock` (que só existe a partir da #417).
+O hook que esta seção descrevia **foi implementado pelo Claude 2 na #431 e já está na `main`** (ver «Gancho no `rm-pilot.js`» abaixo). O boot não depende de `RMLayout._dock`; consome só o slot `#rm-l2-player`, `html[data-rm-dock]`, `--rm-player-h` e `--rm-player-edge`.
 
 ## Caneta REAL + Layout REAL (`caneta-real.test.cjs`)
 

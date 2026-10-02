@@ -22,9 +22,13 @@ Já tentado e **barrado** (não repetir): download pelo conector do Drive (limit
 criada em 2026-09-21; o nome real é «Audiobooks») contém **exatamente 4 arquivos `.m4a`** — os da tabela acima, com os mesmos ids e tamanhos do inventário anterior (modificados em 21–24/09/2026).
 Nenhum outro arquivo (nem transcrição, nem sons de ausculta) está nessa pasta. O ambiente continua sem alcançar o conteúdo (`drive.google.com` e `drive.usercontent.google.com` sem resposta; conector limitado a 10 MB).
 
+**Reconferido na etapa 2 (depois do merge da #430):** nada mudou. Os 4 arquivos continuam só no Drive; o conector entrega metadados (e `read_file_content` **não suporta áudio**); `drive.google.com`, `drive.usercontent.google.com`
+e `docs.google.com` seguem sem resposta; `uploads/` vazia. **Detalhe novo que muda o caminho 2:** as permissões de cada `.m4a` são só `owner repasso.med` + 3 editores nominais (sem «qualquer pessoa com o link»).
+Logo, **liberar a rede não basta**: o arquivo também precisaria ser compartilhado por link. Não tentei nenhuma contorno de acesso.
+
 Três caminhos, **um basta** (em ordem de preferência):
 
-1. **Rodar na máquina do José** (não depende deste ambiente): §2, com os 4 arquivos numa pasta local fora do Git. O José devolve o `relatorio.md`/`relatorio.json`
+1. **Rodar na máquina do José** (não depende deste ambiente): `bash tools/audio/rodar_local.sh ~/masters ~/audiobooks-tratados` (confere dependências, recusa saída dentro do Git, roda `inspecionar` + `preparar`; nada é enviado) — equivale ao §2, com os 4 arquivos numa pasta local fora do Git. O José devolve o `relatorio.md`/`relatorio.json`
    e a pasta `amostras/` (trechos de ~25 s, pequenos; os derivados completos não precisam voltar). **Este é o caminho mais curto.**
 2. **Liberar a rede do ambiente para o Drive:** no menu do ambiente na barra de título da sessão ▸ *Edit* ▸ *Network access*: nível mais amplo **ou** adicionar
    `drive.google.com`, `drive.usercontent.google.com` e `*.googleusercontent.com` aos domínios permitidos; e em cada arquivo do Drive ▸ Compartilhar ▸
@@ -71,6 +75,10 @@ Sons de ausculta (mp3 próprios, em `assets/audio/semio*`) **não** recebem o pe
 
 ## 4. Manifesto (`RM_AUDIO_MANIFEST`) — só depois de confirmar
 
+**Manifesto candidato desta etapa: VAZIO — `{"semiologia-ii":[]}`.** Nenhum dos 4 áudios foi acessado, ouvido, transcrito nem aprovado; portanto nenhum item pode entrar (item não confirmado fica de fora, e com ele fora nada aparece para ninguém).
+**Não existe arquivo de manifesto no repositório de propósito:** a pasta publicada é a raiz (`publish = "."`), então qualquer arquivo versionado vira URL pública; o manifesto vive só na variável de ambiente.
+`tools/audio/vinculos.exemplo.json` é o **modelo** do `vinculos.json` (4 masters, tudo `vinculo_confirmado:false`; ids/títulos «PROPUESTA»; o áudio A pergunta explicitamente `s2-b01` × `s2-b06`) — um teste garante que ele **não gera manifesto**.
+
 Com o `relatorio.json` e um `vinculos.json` (um objeto por áudio: `master`, `audio_id`, `block_id`, `theme`, `title`, `order`, `version`, `kbps`,
 `vinculo_confirmado:true`, `confirmado_por:"escuta"|"transcricao"`, `escuta_humana_ok:true`):
 ```bash
@@ -89,7 +97,7 @@ Sem URL assinada, sem bucket, sem token. `path` só existe no servidor.
 **Regras:** só José + `semiologia-ii`; item sem confirmação fica `ready:false` (ou fora do manifesto) e **não existe** para ninguém; nada de recurso pago sem a sua
 autorização; produção só depois do ensaio em preview/projeto de teste. **Parar** em qualquer passo que falhe.
 
-**Pré-requisitos (porteiros):** [ ] #425 mergeada **e** o hook no `rm-pilot.js` na `main` (Claude 2 — ver §7) · [ ] os 4 áudios com vínculo **confirmado** e escuta aprovada (§3) ·
+**Pré-requisitos (porteiros):** [x] #425, #430 e #431 (gancho do `rm-pilot.js`) **já na `main`** (ver §7) · [ ] os 4 áudios com vínculo **confirmado** e escuta aprovada (§3) ·
 [ ] `manifesto.json` gerado por `montar_manifesto.py` (§4) · [ ] decisão Free × Pro de egress (README de `tools/qa/audio-server`).
 
 1. **Ensaio no Supabase de TESTE** (exige a sua autorização — pode ter custo; **não** criado). Aplicar `.../supabase/migrations/20260930_01_audiobooks_bucket_privado.sql` e conferir:
@@ -122,7 +130,7 @@ autorização; produção só depois do ensaio em preview/projeto de teste. **Pa
    Todos têm de sair `OK`. O que o script **não** prova: Safari/iPad, decodificação do M4A, voz inteligível (ver quadro).
 5. **Bloqueio direto ao bucket** (anon/authenticated): com a *anon key* e **sem** service_role, `GET <SUPABASE_URL>/storage/v1/object/audiobooks/semiologia-ii/<audio_id>.m4a`
    e `.../object/public/audiobooks/...` ⇒ **recusado** (400/401/403/404), nunca 200. Repetir logado como outra conta.
-6. **Teste no navegador no preview** (§6), só depois do hook do `rm-pilot.js`. **Se algo falhar:** esvaziar `RM_PILOT_AUDIO_UIDS` + novo deploy (corte; URLs já emitidas valem ≤ 10 min).
+6. **Teste no navegador no preview** (§6) — o gancho do `rm-pilot.js` (#431) já está na `main`. **Se algo falhar:** esvaziar `RM_PILOT_AUDIO_UIDS` + novo deploy (corte; URLs já emitidas valem ≤ 10 min).
 7. **Produção** (só com o ensaio 100 % verde e sua ordem expressa): repetir 1–5 no projeto de produção, variáveis no escopo de produção, **novo deploy**, `smoke-remote on/deny/expirada` contra produção, e o roteiro §6 com a sua conta.
    **Rollback:** esvaziar a variável + deploy; se precisar remover o bucket, esvaziá-lo no painel e rodar `..._rollback.sql` (aborta se houver objetos; nunca apaga objetos).
 
@@ -162,25 +170,24 @@ Não declarar «áudio real funcionando» antes de existirem: o relatório dos m
 
 | Entrega | Dono | Estado em 2026-10-02 |
 |---|---|---|
-| **Hook no `rm-pilot.js`** (único ponto de ligação): após `RMLayout.attach(tab)` carregar `rm-audio-boot.js` e chamar `RMAudioBoot.start()`; em `desativar()`, `RMAudioBoot.stop()`. Linhas exatas em `tools/qa/browser-qa/audio-integracao/README.md`. | **Claude 2**, junto da #425 (ou PR própria dele) | ausente na `main` e na branch da #425 |
+| **Hook no `rm-pilot.js`** (único ponto de ligação) | Claude 2 | ✅ **na `main` (#431)**: `pilot-gancho.test.cjs` 72/72 com o `rm-pilot.js` real; sem manifesto autorizado o boot carrega e nada aparece |
 | ~~Sobreposição player × toolbox em 561–767 px / 720×450~~ | — | **retirada**: falso positivo do teste (botões recortados pelo painel rolável, acessíveis ao rolar); verificado por área visível + hit-test + rolagem nos Layouts da `main` e da #425 `cb84bff3` |
 | Contrato consumido pelo áudio (não muda): `#rm-l2-player`, `html[data-rm-dock]`, `--rm-player-h`, `--rm-player-edge` | Claude 2 publica; Claude 4 consome | estável |
 
-O áudio **não edita** esses arquivos. Quando o hook entrar na `main`, o `integracao.test.cjs`/`caneta-real.test.cjs` rodam sem mudança e passam a poder carregar o boot pelo `rm-pilot` real.
+O áudio **não edita** esses arquivos. O gancho já está na `main`; `pilot-gancho.test.cjs` carrega o boot pelo `rm-pilot` real.
 
 ## 8. Ensaio em PREVIEW / Supabase de TESTE — valores concretos para revisão do José (nada aplicado)
 
-**Quando começa:** só depois dos merges manuais **#425 → #430 → #431** (nessa ordem: Layout com `RMLayout.pedirReposicao`, depois o boot, depois o gancho do piloto) e de eu
-re-sincronizar os testes com a `main` integrada. Comando de re-sincronização (read-only) que o Claude roda, e o José pode rodar para conferir:
+**Quando começa:** os merges **#425, #430 e #431 já aconteceram** e os testes foram re-sincronizados com a `main` integrada (abaixo). O que falta é de conteúdo e autorização: masters, vínculos, escuta, Supabase de teste. Comando de re-sincronização (read-only) que o Claude roda, e o José pode rodar para conferir:
 ```bash
 git checkout main && git pull
 export NODE_PATH=$(npm root -g)
-node tools/qa/browser-qa/audio-integracao/pilot-gancho.test.cjs        # 40/40 esperado (rm-pilot REAL carrega/para o boot, fail-closed)
+node tools/qa/browser-qa/audio-integracao/pilot-gancho.test.cjs        # 72/72 esperado (rm-pilot REAL carrega/para o boot, fail-closed)
 node tools/qa/browser-qa/audio-integracao/caneta-real.test.cjs         # 136/137 esperado (caneta + layout + áudio reais; inclui toolbox × player por hit-test)
 node tools/qa/browser-qa/audio-integracao/integracao.test.cjs          # 294 esperado
 node tools/qa/browser-qa/audio/audio.test.cjs && node tools/qa/audio-server/server.test.cjs
 ```
-(Verificado antes dos merges numa árvore temporária `main` + #425 + #431 + #430: 40/40, 85, 294 — nada empurrado.)
+(Verificado na `main` integrada (`a2b0e0e1`): `pilot-gancho` 72/72, `caneta-real` 137, `integracao` 294, `audio` 589, `server` 97, `migration` 110, `smoke-remote` autoteste 13, `tools/audio` 30.)
 
 **Valores concretos propostos (revisar; nenhum aplicado):**
 
