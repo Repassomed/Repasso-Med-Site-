@@ -170,3 +170,21 @@ responsividade, estados, abertura/fechamento, posição das imagens e nitidez da
 | **VALIDADO VISUALMENTE** (capturas desta pasta) | 320 · 390 · 768 · 1024 · 1440, zoom 200 % (1440 e 1024), dock 1495/1627/1700/1920, slot com imagem **sintética** (1440 e 390). Conferido por mim nas capturas, **sem** comparação com a referência do José (ver abaixo) |
 | **PENDENTE DE TESTE FÍSICO** (José, iPad/aparelho real) | safe-area (notch/home bar), teclado virtual, nitidez real em retina, rotação em hardware, toque/caneta/palma, fluidez com ~100 traços, imagens `lazy` reais, fontes de produção (as do Google não carregam no sandbox) |
 | **PENDENTE DE ASSET (ChatGPT → José)** | arte `hero` (banner/ilustração da Semiología II): preencher `RMLayout.ASSETS.hero` com `src/srcset/w/h/alt` |
+
+
+## Blocker 561–767 px — CORRIGIDO na #425 (`player-toolbox.test.cjs`)
+**Causa:** a V2 só ancora a toolbox embaixo em `@media (max-width: 560px)`; de 561 a 767 px ela fica centrada na vertical (`top:50%`) e o player
+inferior (largura toda, altura `--rm-player-h`) podia cobri-la, sobretudo em janela baixa e com o painel aberto (medido: 31 de 330 combinações em
+561×420, 600×360, 700×420, 720×450 e 767×400).
+**Correção (só `rm-layout.css`, Layout; o motor do player e a V2 não são tocados):** nessa faixa a toolbox é centrada na área **livre acima do player**
+(`top: calc(50% − player-h/2)`) e o painel é limitado para a caixa caber **entre a faixa do shell e o player** (`max-height ≤ 100% − player-h − 2×faixa − 77px`);
+o painel rola por dentro. Sem player (`--rm-player-h: 0`) o topo é exatamente o original (50 %). ≥ 768 px o slot termina antes da raia da toolbox
+(`--rm-right-w`): não há o que corrigir.
+**Teste:** toolbox **real** da V2 (aberta e fechada) × slot `#rm-l2-player` com `--rm-player-h` de 0/88/120/135/160/220 px × 15 viewports (320 · 390 · 560 ·
+561 × 844 e 420 · 600 × 844 e 360 · 700 × 900 e 420 · **720×450** · 767 × 1024 e 400 · 768 · 1024 · 1440): **ZERO interseção**, toolbox inteira na janela e abaixo
+da faixa, sem player ela continua centrada, 0 overflow. **330/330**; com o `rm-layout.css` da `main` reprova (31 falhas).
+Nota: a suíte `audio-integracao` (Claude 4) ainda imprime «B1-BLOCKER ATIVO» em 720×450 porque o harness dela usa uma **toolbox simulada** (`#b1-tools`) com cópia
+inline da regra antiga, não a `.rm2-box` real nem o CSS do Layout; fora do escopo desta PR (pendência para o Claude 4 espelhar a regra ou usar a toolbox real).
+
+## Assets de arte (ChatGPT → José → integração)
+Especificação completa em [`ASSETS-CHATGPT.md`](ASSETS-CHATGPT.md): hoje 1 slot (`hero`), entregue em 2 resoluções.

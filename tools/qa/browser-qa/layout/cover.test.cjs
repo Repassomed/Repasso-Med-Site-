@@ -2,7 +2,7 @@
    Semiología II REAL + rm-pilot → rm-layout/rm-modes REAIS; supabase/gate simulados; 0 rede real, 0 escrita.
 
    TESTADO AUTOMATICAMENTE aqui (emulação Chromium): estrutura/isolamento da capa ([data-rm-ui], fora de section[id], sem ids), texto real e
-   selecionável (não é imagem), 0 overflow em 320/390/768/1024/1440/1600/1920 + zoom 200% + rotação, alvos ≥ 44 px, contraste do texto,
+   selecionável (não é imagem), 0 overflow em 320/390/561/600/700/720×450/767/768/1024/1440/1600/1700/1920 + zoom 200% + rotação, alvos ≥ 44 px, contraste do texto,
    ações por mouse e teclado, slot de arte (vazio/cargando/listo/erro, 0 deslocamento de layout, proporção preservada, srcset), modos
    isolados ocultam a capa, detach restaura o header, nenhum progresso/gamificação.
    NÃO coberto (precisa de aparelho real): safe-area, teclado virtual, nitidez em retina real, orientação em hardware.
@@ -13,7 +13,7 @@
 const L = require('./lib-ink.cjs');
 const { ok, info, abrir, sleep } = L;
 
-const LARGURAS = [[320, 700], [390, 844], [768, 1024], [1024, 768], [1440, 900], [1600, 900], [1920, 1080]];
+const LARGURAS = [[320, 700], [390, 844], [561, 844], [600, 844], [700, 900], [720, 450], [767, 1024], [768, 1024], [1024, 768], [1440, 900], [1600, 900], [1700, 900], [1920, 1080]];
 const ART = (w, h, cor) => `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="${w}" height="${h}" fill="${cor || '#cfd8e6'}"/></svg>`;
 
 /* contraste WCAG */
@@ -63,7 +63,7 @@ async function abrirCapa(br, base, w, h, o = {}) {
     ok(f.errs.length === 0, `0 erros JS (${f.errs.length})`);
     await p.close(); }
 
-  console.log('\n===== 0 overflow, hierarquia e contraste em 320 · 390 · 768 · 1024 · 1440 · 1600 · 1920 =====');
+  console.log('\n===== 0 overflow, hierarquia e contraste em 320 · 390 · 561 · 600 · 700 · 720×450 · 767 · 768 · 1024 · 1440 · 1600 · 1700 · 1920 =====');
   for (const [w, h] of LARGURAS) {
     const f = await abrirCapa(br, base, w, h); const p = f.page;
     const m = await p.evaluate(() => {

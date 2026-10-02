@@ -34,6 +34,74 @@
   "errosJS": 0
  },
  {
+  "caso": "561",
+  "viewportCSS": "561×1024",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "600",
+  "viewportCSS": "600×1024",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "700",
+  "viewportCSS": "700×1024",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "767",
+  "viewportCSS": "767×1024",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
   "caso": "768",
   "viewportCSS": "768×1024",
   "zoom": 1,
@@ -75,6 +143,57 @@
   "dock": "bottom",
   "overflowX": 0,
   "bandH": 44,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "1700",
+  "viewportCSS": "1700×900",
+  "zoom": 1,
+  "lmode": "docked",
+  "dock": "side",
+  "overflowX": 0,
+  "bandH": 44,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "1920",
+  "viewportCSS": "1920×900",
+  "zoom": 1,
+  "lmode": "docked",
+  "dock": "side",
+  "overflowX": 0,
+  "bandH": 44,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "720x450",
+  "viewportCSS": "720×450",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
   "logoOk": true,
   "logoBox": [
    27,
@@ -141,40 +260,6 @@
   "zoom": 1,
   "lmode": "docked",
   "dock": "bottom",
-  "overflowX": 0,
-  "bandH": 44,
-  "logoOk": true,
-  "logoBox": [
-   27,
-   34
-  ],
-  "nome": "Semiología II",
-  "nomeVisivel": true,
-  "errosJS": 0
- },
- {
-  "caso": "1700_dock",
-  "viewportCSS": "1700×900",
-  "zoom": 1,
-  "lmode": "docked",
-  "dock": "side",
-  "overflowX": 0,
-  "bandH": 44,
-  "logoOk": true,
-  "logoBox": [
-   27,
-   34
-  ],
-  "nome": "Semiología II",
-  "nomeVisivel": true,
-  "errosJS": 0
- },
- {
-  "caso": "1920_dock",
-  "viewportCSS": "1920×900",
-  "zoom": 1,
-  "lmode": "docked",
-  "dock": "side",
   "overflowX": 0,
   "bandH": 44,
   "logoOk": true,

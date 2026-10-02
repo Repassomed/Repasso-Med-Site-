@@ -10,16 +10,17 @@ const JOSE = 'd4d215d3-36dd-4efb-8869-bdea5376c648';
 fs.mkdirSync(OUT, { recursive: true });
 
 const CASOS = [
-  ...[320, 390, 768, 1024, 1440].map(w => ({ w, z: 1, nome: `${w}` })),
+  ...[320, 390, 561, 600, 700, 767, 768, 1024, 1440, 1700, 1920].map(w => ({ w, z: 1, nome: `${w}` })),
+  { w: 720, z: 1, h: 450, nome: '720x450' },
   { w: 1440, z: 2, nome: '1440_zoom200' }, { w: 1024, z: 2, nome: '1024_zoom200' },
-  ...[1495, 1627, 1700, 1920].map(w => ({ w, z: 1, nome: `${w}_dock` }))
+  ...[1495, 1627].map(w => ({ w, z: 1, nome: `${w}_dock` }))
 ];
 (async () => {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
   const srv = await serve(); const base = 'http://127.0.0.1:' + srv.address().port;
   const br = await chromium.launch(); const linhas = [];
   for (const c of CASOS) {
-    const h = c.w <= 420 ? 844 : c.w <= 800 ? 1024 : 900;
+    const h = c.h || (c.w <= 420 ? 844 : c.w <= 800 ? 1024 : 900);
     const ctx = await br.newContext({ viewport: { width: Math.round(c.w / c.z), height: Math.round(h / c.z) }, deviceScaleFactor: c.z });
     const p = await ctx.newPage(); const errs = [];
     p.on('pageerror', e => errs.push(String(e).slice(0, 120)));
@@ -29,6 +30,16 @@ const CASOS = [
     await p.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); }); await p.waitForTimeout(300);
     const f = (s) => path.join(OUT, `${PRE}_${c.nome}_${s}.png`);
     await p.screenshot({ path: f('topo') });
+    /* PLAYER SIMULADO (não é o motor do Audiobook): barra lisa do tamanho publicado em --rm-player-h, para mostrar a convivência com a toolbox (aberta) */
+    if ([561, 700, 767, 1700, 1920].includes(c.w) || c.nome === '720x450') {
+      const side = await p.evaluate(() => document.documentElement.getAttribute('data-rm-dock') === 'side');
+      await p.evaluate((side) => { const H = document.documentElement, sl = document.getElementById('rm-l2-player'); sl.hidden = false; sl.innerHTML = '';
+        const b = document.createElement('div'); b.style.cssText = side ? 'position:absolute;right:var(--rm-player-edge,8px);bottom:16px;width:var(--rm-player-w,224px);height:140px;background:#5d6b7e;border-radius:12px;opacity:.85' : 'position:absolute;inset:0;background:#5d6b7e;opacity:.85';
+        sl.appendChild(b); if (!side) H.style.setProperty('--rm-player-h', '135px'); const bx = document.querySelector('.rm2-box'); if (bx) bx.classList.add('open'); }, side);
+      await p.waitForTimeout(400);
+      await p.screenshot({ path: f(side ? 'player_side_SIMULADO' : 'player_bottom_SIMULADO') });
+      await p.evaluate(() => { const H = document.documentElement, sl = document.getElementById('rm-l2-player'); sl.hidden = true; sl.innerHTML = ''; H.style.setProperty('--rm-player-h', '0px'); const bx = document.querySelector('.rm2-box'); if (bx) bx.classList.remove('open'); });
+    }
     /* SLOT de arte exercitado com uma imagem SINTÉTICA lisa (não é asset do produto): mostra como o container se comporta; a arte final virá do ChatGPT */
     if ([1440, 390].includes(c.w) && c.z === 1) {
       await p.route('**/__art/**', r => r.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="#cfd8e6"/></svg>' }));
