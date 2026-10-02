@@ -83,24 +83,39 @@
      questão solo, flashcards solo, audiobook, vídeo, ausculta, Banco de
      preguntas, Todos los flashcards).
 
-     HOJE essa arquitetura de modos NÃO existe na main: cada matéria é uma
-     página corrida só, sem vista isolada nenhuma — por isso esta função
-     devolve sempre `true`, e nenhuma anotação existente muda de
-     comportamento por causa dela. É só o lugar único que vai precisar de
-     mudar quando essa arquitetura nascer (ex.: `return RT().activeView
-     && RT().activeView() === 'full'`); nenhum chamador de
-     `anotarPermitido()` precisa de saber disso. Não inventar aqui nenhum
-     estado paralelo de "modo" — isso pertence a outra tarefa. */
-  function activeViewPermitido() { return true; }
+     A arquitetura de modos chegou com o Layout V2 (#425, `rm-modes.js`):
+     `window.RMModes.isFull()` é o sinal real de "estamos na Página
+     completa". A B1 da #425 só escondia os modos isolados por CSS
+     (conteúdo/toolbox/tinta ocultos via `data-rm-view`) — construção
+     suficiente para a UI, mas não um portão de verdade: qualquer chamada
+     directa às funções que escrevem (console, atalho, código futuro)
+     continuaria a passar. Esta função fecha esse buraco sem duplicar o
+     estado de modo: lê `RMModes` se existir, e noutra matéria qualquer
+     (sem Layout V2 anexado) devolve `true` — comportamento idêntico ao de
+     sempre para quem não tem a #425. Não inventar aqui nenhum estado
+     paralelo de "modo" — a fonte da verdade é sempre `RMModes.view`. */
+  function activeViewPermitido() {
+    return !window.RMModes || typeof window.RMModes.isFull !== 'function' || window.RMModes.isFull();
+  }
 
   /* Porta única para tudo o que cria, altera ou apaga uma anotação: início
      de traço, marcador, goma, trocar de cor, desfazer/refazer, atalhos de
      teclado e a própria escrita (writes/persistência). Nenhum destes
      caminhos deve decidir a condição por conta própria — é sempre esta
      função, para o dia em que `activeViewPermitido()` deixar de ser
-     `true` fixo não sobrar um caminho esquecido. */
+     `true` fixo não sobrar um caminho esquecido.
+
+     DE PROPÓSITO sem `pilotoPermitido()`: aquele portão é mais estreito
+     (só José + Semiología II) e só regula os refinamentos físicos da
+     stylus dentro de `onDown` e o fecho protegido da toolbox — nunca foi,
+     e não deve passar a ser, a condição de "pode desenhar". Quem já
+     desenha hoje fora do piloto físico (os dois `BETA_UIDS` antigos e
+     quem estiver em `study_tools_beta`) continua a desenhar exactamente
+     como antes; a única coisa nova que esta porta acrescenta é a Página
+     completa. Compor com `pilotoPermitido()` aqui quebraria o desenho
+     para todo mundo que não é o José — por isso NÃO FAZER ISSO. */
   function anotarPermitido() {
-    return pilotoPermitido() && activeViewPermitido();
+    return activeViewPermitido();
   }
 
   /* ================================================================== */
@@ -2289,6 +2304,12 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   /* ================================================================== */
 
   async function desfazer() {
+    /* `desfazer()` cria, apaga ou restaura uma anotação sem exigir
+       nenhuma ferramenta armada — por isso não basta gatear
+       `escolherFerramenta()`. Mesmo portão (`anotarPermitido()`): fora da
+       Página completa, desfazer não faz nada (a pilha de undo fica
+       intacta, pronta para quando o aluno voltar). */
+    if (!anotarPermitido()) return;
     var op = st.undo.pop();
     refletir();
     if (!op) return;
@@ -2952,6 +2973,16 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   }
 
   function escolherFerramenta(t) {
+    /* Desarmar ('none') é sempre permitido — é o próprio `RMModes` quem
+       chama isto ao sair da Página completa (`desarmarFerramentas()`), e
+       isso nunca pode ficar bloqueado. Armar lápis/marcador/goma, porém,
+       passa por `anotarPermitido()`: fora da Página completa a
+       ferramenta simplesmente não arma — sem toast, mesmo padrão
+       silencioso dos outros portões deste arquivo. Como `onDown`/
+       `onHlDown` exigem `st.tool` armado para criar qualquer traço ou
+       marcação, isto fecha a porta de criação/alteração/remoção num único
+       lugar, sem duplicar a checagem em cada caminho de escrita. */
+    if (t !== 'none' && !anotarPermitido()) return;
     if (traco) onCancel();
     if (apagando) terminarApagar();
     if (hlGesto) abortarGestoMarcador('troca-ferramenta');
