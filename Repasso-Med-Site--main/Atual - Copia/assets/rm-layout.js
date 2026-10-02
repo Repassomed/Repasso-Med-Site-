@@ -132,6 +132,12 @@
     return out;
   }
 
+  /* O grid de flashcards do site fica recolhido (display:none); o que o aluno vê é o LANÇADOR (`.rmfc-launch`), irmão anterior do grid.
+     É ele o alvo de um salto — o grid não tem caixa de layout. */
+  function lancadorFc(fcEl) {
+    var g = fcEl && fcEl.closest && fcEl.closest('.fc-grid'), l = g && g.previousElementSibling;
+    return (l && l.classList && l.classList.contains('rmfc-launch')) ? l : (g || fcEl);
+  }
   /* Recursos REAIS do bloco (só o que existe) + o primeiro alvo de cada tipo. */
   var TIPOS = [
     { k: 'fig',  label: 'Figuras',    sel: 'figure img, .s2-photo[role="img"], img.rmc-photo', up: 'figure, .s2-photo' },
@@ -144,7 +150,7 @@
     var r = [];
     TIPOS.forEach(function (t) {
       var n = sec.querySelector(t.sel);
-      if (n) r.push({ k: t.k, label: t.label, alvo: (n.closest && n.closest(t.up)) || n });
+      if (n) r.push({ k: t.k, label: t.label, alvo: t.k === 'fc' ? lancadorFc(n) : ((n.closest && n.closest(t.up)) || n) });
     });
     return r;
   }
@@ -161,8 +167,15 @@
   function novaGeracao() { GER++; clearTimeout(ALT.poll); ALT.poll = 0; }
 
   function hdrH() { return (S && S.band ? S.band.offsetHeight : 44) || 44; }
+  /* alvo sem caixa de layout (display:none: grid de flashcards recolhido, conteúdo de <details> fechado…) nunca é visível: mira o ancestral
+     visível mais próximo — senão o salto «chega» a top = 0 e a rolagem anda para o lado errado */
+  function comCaixa(n) {
+    while (n && n.nodeType === 1 && n.getClientRects && !n.getClientRects().length && n.parentElement) n = n.parentElement;
+    return n;
+  }
   function irPara(alvo) {
     if (!alvo || !S) return;
+    alvo = comCaixa(alvo);
     var g = (novaGeracao(), GER), tab = S.tab;                      // um salto novo invalida o anterior (e o seu acompanhamento)
     var topo = hdrH() + 16, n = 0;
     (function passo() {
@@ -448,7 +461,32 @@
     if (im.complete && im.naturalWidth > 0) listo();
   }
 
-  function montarCapa(cat, bl) {
+  /* Recursos da matéria para a capa: SÓ o que existe, com contagem derivada do DOM (nada inventado).
+     Banco geral e «Todos los flashcards» reúnem as MESMAS entidades dos blocos: ficam fora da contagem (senão contaria duas vezes).
+     Infografía = <figure> com legenda e imagem; radiografias/diapositivas (.material-slide) e fotos soltas NÃO são infográficos.
+     Cada cartão salta, na Página completa, para a primeira ocorrência (irPara: geração/cancelamento já existentes). */
+  var RES_REUNE = /banco|flashcards/i;
+  function recursosDaMateria(tab, bl) {
+    var secs = bl.filter(function (b) { return !RES_REUNE.test(b.id); }).map(function (b) { return b.sec; });
+    var todos = function (sel) { var o = []; secs.forEach(function (sc) { Array.prototype.forEach.call(sc.querySelectorAll(sel), function (n) { o.push(n); }); }); return o; };
+    var out = [];
+    if (bl[0]) out.push({ k: 'res', icon: 'index', t: 'Resumen', sub: 'Contenido completo', alvo: bl[0].sec });
+    var figs = todos('figure').filter(function (f) {
+      return f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image');
+    });
+    if (figs.length) out.push({ k: 'fig', icon: 'img', t: 'Infografías', sub: figs.length + (figs.length === 1 ? ' infografía' : ' infografías'), alvo: figs[0] });
+    var qs = todos('.quiz-item');
+    if (qs.length) out.push({ k: 'quiz', icon: 'q', t: 'Preguntas', sub: qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas'), alvo: qs[0].closest('.quiz-section') || qs[0] });
+    var fc = todos('.flashcard');
+    if (fc.length) out.push({ k: 'fc', icon: 'cards', t: 'Flashcards', sub: fc.length + (fc.length === 1 ? ' tarjeta' : ' tarjetas'), alvo: lancadorFc(fc[0]) });
+    var au = todos('audio');
+    if (au.length) out.push({ k: 'aud', icon: 'wave', t: 'Auscultación', sub: au.length + (au.length === 1 ? ' sonido' : ' sonidos'), alvo: au[0].closest('.audio-player') || au[0] });
+    var vd = todos('details.video-collapsible');
+    if (vd.length) out.push({ k: 'vid', icon: 'play', t: 'Videos', sub: vd.length + (vd.length === 1 ? ' video' : ' videos'), alvo: vd[0] });
+    return out;
+  }
+
+  function montarCapa(cat, bl, tab) {
     var capa = ui('div', 'rm-l2-cover', { role: 'region', 'aria-label': 'Presentación de la materia' });
     var cuerpo = ui('div', 'rm-l2-cover-body');
     var eb = ui('p', 'rm-l2-eyebrow'); eb.textContent = 'Repasso Med · Guía de estudio';
@@ -463,7 +501,22 @@
     acc.appendChild(go); acc.appendChild(ix); cuerpo.appendChild(acc);
     var arte = ui('figure', 'rm-l2-art', { 'data-slot': 'hero', 'data-state': 'vacio' }); arte.hidden = true;
     capa.appendChild(cuerpo); capa.appendChild(arte);
-    return { capa: capa, arte: arte };
+    var recs = recursosDaMateria(tab, bl), fila = null;
+    if (recs.length > 1) {                                        // só o Resumen não é uma fileira: recurso ausente = cartão ausente
+      fila = ui('div', 'rm-l2-res', { role: 'group', 'aria-label': 'Recursos de la materia' });
+      recs.forEach(function (r, i) {
+        var c = ui('button', 'rm-l2-rescard rm-l2-rescard--' + r.k, { type: 'button', 'data-res': String(i) });
+        var ic = ui('span', 'rm-l2-rescard-ico'); ic.appendChild(svg(r.icon)); c.appendChild(ic);
+        var tx = ui('span', 'rm-l2-rescard-tx');
+        var tt = ui('b', 'rm-l2-rescard-t'); tt.textContent = r.t; var ss = ui('span', 'rm-l2-rescard-s'); ss.textContent = r.sub;
+        tx.appendChild(tt); tx.appendChild(ss); c.appendChild(tx);
+        var ar = ui('span', 'rm-l2-rescard-go'); ar.appendChild(svg('max')); c.appendChild(ar);
+        c.setAttribute('aria-label', r.t + ': ' + r.sub);
+        fila.appendChild(c);
+      });
+      capa.appendChild(fila);
+    }
+    return { capa: capa, arte: arte, res: recs };
   }
 
   /* ------------------------------ lateral ------------------------------- */
@@ -673,6 +726,11 @@
       back: function () { fecharDrawer(true); },
       mat: function () { try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (x) { window.scrollTo(0, 0); } },
       capa: function (e) {
+        var rc = e.target && e.target.closest && e.target.closest('[data-res]');
+        if (rc && S && S.capaRes) {                                  // cartão de recurso: salta para a primeira ocorrência, na Página completa
+          var r = S.capaRes[+rc.getAttribute('data-res')]; if (r && r.alvo && r.alvo.isConnected !== false) irPara(r.alvo);
+          return;
+        }
         var b = e.target && e.target.closest && e.target.closest('[data-act]'); if (!b || !S) return;
         if (b.getAttribute('data-act') === 'go') { if (S.blocos[0]) irPara(S.blocos[0].sec); }
         else if (b.getAttribute('data-act') === 'idx') { if (lmode() === 'docked') { S.lat.tog && S.lat.tog.focus(); } else abrirDrawer(); }
@@ -693,7 +751,18 @@
     window.RMModes.onChange(function () { novaGeracao(); refletirModo(); });   // troca de modo: salto/acompanhamento/pedidos anteriores perdem a vez
   }
 
+  /* Logout que NÃO recarrega a página (o «kick» por sessão duplicada, forceLogout, só mostra um aviso por cima): o shell não pode seguir
+     vivo com saltos/reposicionamentos pendentes. SIGNED_OUT ⇒ detach; sem pedir reposicionamento depois (a sessão acabou). */
+  function ouvirSessao() {
+    try {
+      var sb = window.RM_SB || window._sb;
+      if (!sb || !sb.auth || typeof sb.auth.onAuthStateChange !== 'function') return;
+      var r = sb.auth.onAuthStateChange(function (evt) { if (evt === 'SIGNED_OUT' && S) detach({ sessao: true }); });
+      S.sub = r && r.data && r.data.subscription;
+    } catch (e) {}
+  }
   function desligar() {
+    try { if (S && S.sub && S.sub.unsubscribe) S.sub.unsubscribe(); } catch (e) {}
     var h = S.h; if (!h) return;
     S.side.removeEventListener('click', h.lat);
     S.hamb.removeEventListener('click', h.hamb);
@@ -727,7 +796,7 @@
     var lat = montarLateral(tab, bl); S.lat = lat; S.side = lat.side; S.railBtn = lat.railBtn;
     S.backdrop = ui('div', 'rm-l2-backdrop');
     var raiz = montarRaiz(); S.rootEl = raiz.root; S.titulo = raiz.titulo;
-    var cp = montarCapa(cat, bl); S.capa = cp.capa; S.arte = cp.arte;
+    var cp = montarCapa(cat, bl, tab); S.capa = cp.capa; S.arte = cp.arte; S.capaRes = cp.res;
     var cab = tab.querySelector(':scope > .rm-subject-head');       // header gerado pelo app-core (não é conteúdo): a capa o substitui no piloto
     if (cab && cab.parentNode) cab.parentNode.insertBefore(S.capa, cab.nextSibling);
     else { var s1 = tab.querySelector('section'); (s1 ? s1.parentNode : tab).insertBefore(S.capa, s1 || tab.firstChild); }
@@ -747,6 +816,7 @@
     document.body.appendChild(S.player);
 
     ligar();
+    ouvirSessao();
     aplicarModo();
     refletirModo();
     atualizarToggleArvore();
@@ -754,7 +824,7 @@
     reposicionarTinta();                                     // o shell acabou de reservar as laterais
   }
 
-  function detach() {
+  function detach(opts) {
     if (!S) { try { ROOT.classList.remove('rm-l2'); } catch (e) {} return; }
     var abaSaiu = S.tab;
     novaGeracao(); desarmarCaneta();                         // nada pedido antes do detach pode agir depois dele
@@ -770,12 +840,12 @@
     S = null;
     /* as reservas saíram: o conteúdo voltou ao X original — só importa se a matéria CONTINUA na tela; se o aluno
        saiu dela, a aba está inativa e o pedido vira NO-OP (0 reposicionamento tardio) */
-    reposicionarTinta({ g: GER, tab: abaSaiu, anexo: false });
+    if (!(opts && opts.sessao)) reposicionarTinta({ g: GER, tab: abaSaiu, anexo: false });      // logout: nada de pedir à V2 depois
   }
 
   window.RMLayout = {
     attach: attach,
-    detach: detach,
+    detach: function () { detach(); },                        // API pública sem argumentos (o rm-pilot chama assim)
     ASSETS: ASSETS,                                          // slots de arte (hoje vazios): ver «capa da matéria + SLOTS de arte»
     setAsset: function (slot, spec) { ASSETS[slot] = spec || null; renderArte(slot); },
     assentarTinta: assentarTinta,                            // usado por rm-modes.js ao voltar à Página completa

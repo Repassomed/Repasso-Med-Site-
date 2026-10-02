@@ -297,6 +297,37 @@ html.rm-l2[data-rm-cover] #materias-container > .tab-content > .rm-subject-head 
 /* o índice já está à vista quando a lateral está docked */
 html.rm-l2[data-rm-lmode="docked"] .rm-l2-btn-idx { display: none; }
 
+/* fileira de RECURSOS da matéria (só os que existem): cartões brancos com ícone em bloco colorido, título, contagem real e seta —
+   atalhos para a primeira ocorrência na Página completa. HTML/CSS acessível (botões reais), nada de imagem de interface. */
+.rm-l2-res { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 1fr)); gap: .6rem; margin-top: .2rem; }
+.rm-l2-rescard {
+  --rc: var(--l2-navy); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .7rem; width: 100%; min-height: 64px; box-sizing: border-box;
+  padding: .55rem .7rem; border: 1px solid var(--l2-rule); border-radius: var(--l2-radius); background: #fff; box-shadow: var(--l2-shadow);
+  text-align: left; font-family: var(--font-ui, system-ui, sans-serif); color: var(--l2-ink); cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.rm-l2-rescard:hover { border-color: var(--rc); box-shadow: 0 2px 4px rgba(8,23,38,.08), 0 10px 22px rgba(8,23,38,.09); }
+.rm-l2-rescard:active { transform: translateY(1px); }
+.rm-l2-rescard:focus-visible { outline: 3px solid var(--l2-orange); outline-offset: 2px; }
+.rm-l2-rescard--res { --rc: var(--l2-navy); } .rm-l2-rescard--fig { --rc: var(--l2-fig); } .rm-l2-rescard--quiz { --rc: var(--l2-quiz); }
+.rm-l2-rescard--fc { --rc: var(--l2-fc); } .rm-l2-rescard--aud { --rc: var(--l2-aud); } .rm-l2-rescard--vid { --rc: var(--l2-vid); }
+.rm-l2-rescard-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 11px; background: var(--rc); color: #fff; }
+.rm-l2-rescard-ico svg { width: 22px; height: 22px; }
+.rm-l2-rescard-tx { display: grid; min-width: 0; line-height: 1.25; }
+.rm-l2-rescard-t { font: 700 .92rem var(--font-ui, system-ui, sans-serif); color: var(--l2-navy); }
+.rm-l2-rescard-s { font: 500 .78rem var(--font-ui, system-ui, sans-serif); color: var(--l2-muted); }
+.rm-l2-rescard-go { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--l2-rule); color: var(--l2-navy); }
+.rm-l2-rescard-go svg { width: 16px; height: 16px; }
+.rm-l2-rescard:hover .rm-l2-rescard-go { background: var(--rc); border-color: var(--rc); color: #fff; }
+/* telas estreitas: 2 colunas compactas (a capa não pode virar uma pilha de cartões antes do conteúdo); a seta sai, o cartão inteiro continua sendo o alvo */
+@media (max-width: 559.98px) {
+  .rm-l2-res { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  .rm-l2-rescard { grid-template-columns: auto minmax(0, 1fr); gap: .55rem; min-height: 60px; padding: .5rem .55rem; }
+  .rm-l2-rescard-go { display: none; }
+  .rm-l2-rescard-ico { width: 36px; height: 36px; border-radius: 10px; }
+  .rm-l2-rescard-t { font-size: .86rem; } .rm-l2-rescard-s { font-size: .72rem; }
+}
+@media (max-width: 340px) { .rm-l2-res { grid-template-columns: minmax(0, 1fr); } }
 /* slot de arte: reservado só quando existe arquivo (estado «vacío» = hidden = 0 px) */
 .rm-l2-art { margin: 0; min-width: 0; }
 .rm-l2-art[hidden] { display: none; }
