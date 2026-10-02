@@ -30,6 +30,32 @@ O teste imprime a tabela medida (largura × modo → dock e folga em px) e falha
 ocorrer com folga real, se o slot invadir a toolbox/lateral, se houver overflow horizontal, ou se abrir o player lateral
 deslocar qualquer parágrafo. Validado por mutação (a fórmula antiga reprova com 17 falhas).
 
+## Cobertura ampliada (re-auditoria da #417 sobre a `main` pós-#411)
+
+`layout.test.cjs` agora também roda os **22 viewports** 320 · 390 · 561 · 600 · 700 · 767 · 768 · 1024 · 1280 · 1366 · 1440 · 1480 ·
+1495 · 1500 · 1560 · 1600 · 1627 · 1650 · 1690 · 1700 · 1760 · 1920, cada um com a lateral **aberta** e **minimizada**: lateral
+(`docked`/`rail`/`off`), dock (`side`/`bottom`), 0 overflow, slot à esquerda da toolbox (a partir de 768 — abaixo disso a raia direita
+não é reservada, por desenho), `side` ⇒ não cobre cartão/lateral/toolbox e **abrir o player não desloca parágrafos**, `bottom` ⇒ o último
+bloco não fica escondido (reserva `--rm-player-h`). Rotação (celular, tablet, tablet grande, 900×600) volta ao mesmo estado.
+Caneta: com `rm2-pen-down` o resize não muda o dock/lateral; ao **levantar** ou **cancelar** a mudança pendente é aplicada **uma vez**;
+os listeners de fim de contato são removidos (add = remove) e o `detach()` com mudança pendente não deixa timer nem listener.
+A medição espera `fadeInTab` (animação de 0,4 s da aba ativa) terminar: antes ela dava falsos «deslocamentos» de < 1 px.
+**509 verificações, 0 falhas** (3 execuções seguidas); sem a #417 (rm-layout.js/css da `main`) o teste reprova.
+
+### Blocker conhecido 561–767 px (NÃO corrigido aqui; pertence à #425)
+Com a toolbox **real** da V2 (`.rm2-box`) e um player inferior simulado: entre 561 e 767 px a regra que ergue a toolbox acima do player é
+só `@media (max-width: 560px)`; fora dela a toolbox fica na posição padrão da V2 e **pode ficar sob o player**. Medido (altura de janela ×
+altura de player 88/120/160/220 px): 390 e 560 → 0/24 combinações com a toolbox coberta; **561, 600, 700, 767 → 5/24** (janelas baixas,
+≤ ≈ 420 px, com player ≥ 160 px; ex.: janela 320 px, player 160 px: toolbox bottom = 186, player top = 160); 768 → 0/24. **Continua reproduzível.**
+
+### Contrato com o Audiobook (re-sync pós-#429)
+O Audiobook da `main` (`rm-audio.css`, modo lateral) se posiciona com `right: var(--rm-player-edge, 8px); width: var(--rm-player-w, 224px)` dentro do slot
+`#rm-l2-player`, e `html[data-rm-dock="side|bottom"]` é a autoridade de modo; o motor publica `--rm-player-h`. O shell publica as três variáveis
+(`--rm-player-w: 224px`, `--rm-player-edge: 8px` = `PLAYER_EDGE`, `--rm-player-h: 0px` sem player) e o `layout.test.cjs` trava os valores e prova que um
+player posicionado **exatamente com essa regra** fica a ≥ `PLAYER_GAP` do cartão e entre a lateral e a toolbox (1500–1920, aberta e trilho). Validado também
+com o **Audiobook real**: `RM_B1_DIR=<assets> node tools/qa/browser-qa/audio-integracao/integracao.test.cjs` → 294 verificações, 0 falhas (mídia real).
+**535 verificações** no `layout.test.cjs`.
+
 ## Tinta × saltos e alturas que mudam (achado F da auditoria #420) — `ink-jump.test.cjs`
 
 ```bash

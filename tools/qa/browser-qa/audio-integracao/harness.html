@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harness · integração do audiobook (matéria REAL + áudio REAL)</title>
+<link rel="stylesheet" href="/assets/styles.css">
+{{B1_CSS}}
+<style id="b1-contract">
+/* SNAPSHOT do CONTRATO do Layout V2 B1 (#411/#417) — só o que o audiobook consome; usado quando não há RM_B1_DIR (B1 real). */
+html.rm-l2 { --rm-left-w: 0px; --rm-right-w: 0px; --rm-player-w: 224px; --rm-player-h: 0px; --rm-safe-b: env(safe-area-inset-bottom, 0px); }
+html.rm-l2[data-rm-lmode="docked"] { --rm-left-w: 264px; }
+html.rm-l2[data-rm-lmode="rail"]   { --rm-left-w: 64px; }
+html.rm-l2:not([data-rm-lmode="off"]) { --rm-right-w: 67px; }
+html.rm-l2 #materias-container { box-sizing: border-box; padding-left: var(--rm-left-w); padding-right: var(--rm-right-w); padding-bottom: calc(var(--rm-player-h) + var(--rm-safe-b)); }
+.rm-l2-player { position: fixed; left: var(--rm-left-w, 0px); right: var(--rm-right-w, 0px); bottom: 0; z-index: 99989; height: var(--rm-player-h, 0px); box-sizing: border-box; padding-bottom: var(--rm-safe-b, 0px); }
+.rm-l2-player[hidden] { display: none; }
+#b1-side, #b1-tools { display: none; }
+html.rm-l2 #b1-side { display: block; position: fixed; left: 0; top: 0; bottom: 0; width: var(--rm-left-w); background: #345; z-index: 360; }
+/* a toolbox da V2 (.rm2-box): direita, centro; ≤560 px sobe para cima do player (regra do rm-layout.css §8) */
+html.rm-l2 #b1-tools { display: block; position: fixed; right: max(9px, env(safe-area-inset-right)); top: 50%; width: 58px; height: 200px; margin-top: -100px; background: #13314f; z-index: 99991; }
+@media (max-width: 560px) { html.rm-l2 #b1-tools { width: 52px; height: 150px; margin-top: 0; top: auto; bottom: max(84px, calc(env(safe-area-inset-bottom) + 74px + var(--rm-player-h))); } }
+</style>
+</head>
+<body>
+<div id="b1-side" aria-hidden="true"></div>
+<div id="b1-tools" aria-hidden="true"></div>
+<div id="materias-container">
+{{MATERIA}}
+<div class="tab-content" id="tab-outra"><section class="container" id="outra-b01"><h2>Otra materia</h2><p>Contenido de otra materia.</p></section></div>
+</div>
+<script>
+  const SUPABASE_URL = "{{SUPABASE_URL}}";
+  window.__sess = { token: 'tok-jose', uid: 'uid-jose' };
+  window.RM_SB = { auth: {
+    getSession: function () { return Promise.resolve({ data: { session: window.__sess ? { access_token: window.__sess.token, user: { id: window.__sess.uid } } : null } }); },
+    onAuthStateChange: function (cb) { window.__authCb = cb; return { data: { subscription: { unsubscribe: function () { window.__authCb = null; } } } }; }
+  } };
+  window.RM_CATALOGO = [{ slug: 'semiologia-ii', tab: 'semio2', title: 'Semiología II', sub: '' }];
+  /* ligar a aba do piloto como o site faz */
+  (function () { var t = document.getElementById('tab-semio2'); if (t) t.classList.add('active'); })();
+</script>
+{{B1_JS}}
+<script>
+  /* Stub do Layout V2 (só sem RM_B1_DIR): cria o slot e os atributos como o rm-layout.js faria. */
+  if (!window.RMLayout) {
+    window.RMLayout = {
+      attach: function (tab) {
+        var H = document.documentElement; H.classList.add('rm-l2');
+        var w = H.clientWidth, lm = w >= 1200 ? 'docked' : (w >= 768 ? 'rail' : 'off');
+        H.setAttribute('data-rm-lmode', lm);
+        var left = lm === 'docked' ? 264 : (lm === 'rail' ? 64 : 0), R = w - left - 67, col = Math.min(880, R), cardR = left + (R + col) / 2;
+        H.setAttribute('data-rm-dock', (w - 67 - 8 - 224) >= cardR + 8 ? 'side' : 'bottom');
+        if (!document.getElementById('rm-l2-player')) {
+          var s = document.createElement('div'); s.id = 'rm-l2-player'; s.className = 'rm-l2-player'; s.setAttribute('role', 'region'); s.setAttribute('aria-label', 'Audiobook'); s.setAttribute('data-rm-ui', ''); s.hidden = true;
+          document.body.appendChild(s);
+        }
+      },
+      detach: function () {
+        var H = document.documentElement; H.classList.remove('rm-l2'); ['data-rm-lmode', 'data-rm-dock'].forEach(function (a) { H.removeAttribute(a); });
+        var s = document.getElementById('rm-l2-player'); if (s) s.remove();
+      }
+    };
+  }
+</script>
+</body>
+</html>
