@@ -69,7 +69,33 @@ function ok(c, m) { if (c) { pass++; console.log('  ✓', m); } else { fail++; c
     await page.close();
   }
 
-  console.log('== 4 · voltar para a Página completa: lápis volta a armar, nenhuma anotação perdida ==');
+  console.log('== 4 · fluxo antigo "seleccionar texto → tocar numa cor": aplicarMarcacao() não cria em modo isolado ==');
+  { const { page, errs } = await L.abrir(br, base, 1440, 900, { seed: '0' });
+    const selecionou = await page.evaluate(() => {
+      const p = [...document.querySelectorAll('#materias-container section[id] p')].find(x => x.textContent.length > 150);
+      if (!p) return false;
+      const r = document.createRange(); r.selectNodeContents(p);
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      return !s.isCollapsed;
+    });
+    ok(selecionou, 'texto selecionado nativamente (sem nenhuma ferramenta armada)');
+
+    const disponiveis = await page.evaluate(() => window.RMModes.disponiveis().map(m => m.id));
+    if (disponiveis.length === 0) { console.log('  · (sem modo isolado nesta matéria, pulando)'); }
+    else {
+      await page.evaluate((m) => window.RMModes.requestView(m), disponiveis[0]);
+      const antes = await page.evaluate(() => (window.RMTools ? (window.RMTools.estado.porSlug['semiologia-ii'] || []).length : 0));
+      const clicou = await page.evaluate(() => { const b = document.querySelector('[data-hc]'); if (!b) return false; b.click(); return true; });
+      ok(clicou, 'clicou no swatch de cor com a seleção ainda viva (fluxo antigo, sem passar por escolherFerramenta ter sucesso)');
+      await page.waitForTimeout(300);
+      const depois = await page.evaluate(() => (window.RMTools ? (window.RMTools.estado.porSlug['semiologia-ii'] || []).length : 0));
+      ok(depois === antes, 'nenhuma marcação criada em modo isolado via aplicarMarcacao() (' + antes + ' === ' + depois + ')');
+    }
+    ok(errs.length === 0, 'sem erros JS (' + errs.length + ')');
+    await page.close();
+  }
+
+  console.log('== 5 · voltar para a Página completa: lápis volta a armar, nenhuma anotação perdida ==');
   { const { page, errs } = await L.abrir(br, base, 1440, 900, { seed: '1' });
     const totalStrokes = () => page.evaluate(() => {
       var s = window.RMToolsV2.estado.strokes; var n = 0;
