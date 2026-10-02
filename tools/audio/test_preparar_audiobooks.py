@@ -81,6 +81,17 @@ class TestPreparacao(Base):
             self.assertIsNotNone(c['loudness']['lufs'])
             br = i['bitrate_kbps']; self.assertLess(abs(br - c['kbps_alvo']), 10, f'{br} kb/s vs {c["kbps_alvo"]}')
 
+    def test_inteligibilidade_em_2x_e_2_5x_e_relatorio(self):
+        it = self.rel['itens'][0]
+        self.assertEqual(self.rel['velocidades'], ['2x', '2.5x'])
+        for c in it['copias']:
+            self.assertEqual(sorted(c['stoi_velocidades']), ['2.5x', '2x'])
+            for v in c['stoi_velocidades'].values():
+                self.assertTrue(v['janelas'] >= 1 and 0.0 <= v['media'] <= 1.0, v)
+        with open(os.path.join(self.saida, 'relatorio.md'), encoding='utf-8') as fh:
+            md = fh.read()
+        self.assertIn('STOI em velocidade', md); self.assertIn('2.5x', md)
+
     def test_tamanhos_e_ordem(self):
         it = self.rel['itens'][0]
         a, b = it['copias']
