@@ -14,7 +14,7 @@ const L=require('./lib.cjs'); const {ok,info}=L;
   const resp=[]; for(let i=0;i<3;i++){ resp.push(await L.drawStroke(s1.page,i)); }
   ok(resp.every(r=>r&&r.status===201),'3 traços → 3 respostas de gravação 201 confirmadas ('+resp.map(r=>r&&r.status)+')');
   await s1.page.waitForTimeout(500);
-  ok(await L.tmpCount(s1.page)===0,'nenhum traço ficou com id provisório «tmp-» após a confirmação');
+  ok(await L.pendingCount(s1.page)===0,'nenhum traço ficou com indicador "não salvo" após a confirmação');
   let rows=await inkRows(); ok(rows.length===3,'banco tem 3 linhas (observação superuser)');
   const idsDom1=await L.inkIds(s1.page); ok(JSON.stringify(idsDom1)===JSON.stringify(rows.map(r=>r.id).sort()),'ids no DOM = ids no banco');
   const anchors=rows.map(r=>r.anchor_id); info('âncoras gravadas: '+anchors.join(' | '));

@@ -18,7 +18,7 @@ const pen=(page,idx)=>page.evaluate((idx)=>{ const ps=[...document.querySelector
     ok(out.every(o=>o.status===201),'3 traços (stylus sintético) → 3 respostas 201 ('+out.map(o=>o.status)+')');
     info('tinta no DOM: antes do contato '+out[0].m.n0+' → logo após pointerdown '+out[0].m.nDown+' → após o 1º movimento '+out[0].m.nMove+' (síncrono, mesma tarefa)');
     ok(out[0].m.nDown>out[0].m.n0||out[0].m.nMove>out[0].m.n0,'a tinta existe na mesma tarefa do contato/1º movimento'+(u===J?' (piloto; o ganho de latência da #416 só é mensurável em HARDWARE — em emulação a conta comum mostra o mesmo)':''));
-    await s.page.waitForTimeout(400); ok(await L.countStrokes(st,u.id)===3,'3 linhas no banco (observação superuser)'); ok(await L.tmpCount(s.page)===0,'nenhum id provisório restou');
+    await s.page.waitForTimeout(400); ok(await L.countStrokes(st,u.id)===3,'3 linhas no banco (observação superuser)'); ok(await L.pendingCount(s.page)===0,'nenhum indicador "não salvo" restou');
     const ids=await L.inkIds(s.page); await s.context.close();
     const s2=await L.session(br,st,u); ok(JSON.stringify(await L.inkIds(s2.page))===JSON.stringify(ids)&&ids.length===3,'sessão independente (login novo) carrega os MESMOS 3 ids');
     // desfazer + borracha com este usuário

@@ -177,6 +177,55 @@
     });
   }
 
+  /* ACHADO C da auditoria independente (#420): o id do traço era gerado
+     pelo SERVIDOR (`default gen_random_uuid()`), então o INSERT não era
+     idempotente — uma conexão reiniciada logo depois do commit fazia o
+     PRÓPRIO NAVEGADOR reenviar o mesmo POST, e o servidor gerava um id
+     novo para cada tentativa: 2 linhas para 1 traço. Um 504 depois do
+     commit tinha o problema inverso: o cliente nunca chegava a saber o
+     id real, ficava com o id provisório para sempre, e «desfazer»
+     achava que nada tinha sido gravado (o DELETE nem era tentado).
+
+     Corrigido: o id é gerado NO CLIENTE, uma única vez, ANTES do
+     primeiro POST — o mesmo id em qualquer reenvio automático do
+     navegador. A tabela aceita id vindo do cliente (RLS continua a
+     barrar por `user_id`, nunca por `id`); ver `filaGravar()`.
+
+     AUDITORIA INDEPENDENTE (HEAD 11084b7a, achado 1): o fallback
+     antigo, sem `crypto.randomUUID`, devolvia um id «tmp-…» — mas
+     `filaGravar()` manda esse valor direto na coluna `id` (tipo
+     uuid) do INSERT. Um «tmp-…» não é um UUID válido: o Postgres
+     rejeita a linha inteira (erro de tipo, não 23505), o traço nunca
+     é gravado, e nenhuma lógica desta função sabia disso — ficava só
+     o indicador "não salvo" ligado para sempre. Corrigido: SEMPRE
+     devolve um UUID v4 verdadeiro. `crypto.randomUUID()` quando
+     existe; senão `crypto.getRandomValues()` (universal há muito
+     mais tempo que `randomUUID`) formatado à mão como UUID v4;
+     `Math.random()` só como último recurso, para um navegador sem
+     NENHUM `crypto` utilizável — nunca mais «tmp-» nem qualquer
+     outro valor que não seja um UUID aceito pela coluna. */
+  function novoIdTraco() {
+    try {
+      if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+    } catch (e) {}
+    try {
+      if (window.crypto && window.crypto.getRandomValues) {
+        var buf = new Uint8Array(16);
+        window.crypto.getRandomValues(buf);
+        buf[6] = (buf[6] & 0x0f) | 0x40;   // versão 4
+        buf[8] = (buf[8] & 0x3f) | 0x80;   // variante RFC 4122
+        var hex = '';
+        for (var i = 0; i < 16; i++) hex += (buf[i] < 16 ? '0' : '') + buf[i].toString(16);
+        return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' +
+          hex.slice(16, 20) + '-' + hex.slice(20);
+      }
+    } catch (e) {}
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = (Math.random() * 16) | 0, v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
   function pushUndo(op) {
     st.undo.push(op);
     if (st.undo.length > UNDO_MAX) st.undo.shift();
@@ -578,6 +627,11 @@ body.rm-lb-open #rm2-ink{ visibility:hidden; }
 #rm2-ink path.ink-blue { stroke:#1f5fd0; }
 #rm2-ink path.ink-red  { stroke:#c0392b; }
 body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
+/* Indicador PERSISTENTE de "não gravado" (achado D, §2 do relatório de
+   auditoria da caneta) — tracejado discreto, ligado desde o início do
+   envio até a gravação ser confirmada; não é um efeito passageiro de
+   toast. */
+#rm2-ink path.rm2-ink-pendiente{ stroke-dasharray:3 3; opacity:.72; }
 
 /* ---------- toolbox: um trilho vertical estreito ---------------------- */
 /* Regra de ouro do desenho: o trilho tem 58 px e NUNCA cresce em largura.
@@ -1169,6 +1223,37 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     return out.map(function (p) { return [p[0] / box.w, p[1] / box.h]; });
   }
 
+  /* ACHADO E da auditoria independente (#420): um traço muito denso
+     (escrita rápida com ruído alto) podia continuar acima de 1200 pontos
+     mesmo DEPOIS de uma única decimação — o banco rejeita (constraint
+     1..1200), e o traço inteiro se perdia (POST 400). Corrigido: decima
+     em LAÇO até caber, não só uma vez. Cada passada no máximo reduz a
+     ~metade (índices pares), então o laço termina em poucas iterações
+     mesmo para um traço enorme; o tecto de iterações aqui é só rede de
+     segurança, nunca deve ser atingido (reduzir de 1200 a menos de 2
+     pontos exigiria mais de 600 passadas).
+
+     AUDITORIA INDEPENDENTE (HEAD 11084b7a): o filtro por índice par
+     sempre preserva o primeiro ponto, mas só preserva o último se o
+     array tiver tamanho ÍMPAR antes da passada — em tamanho par o
+     último ponto cai fora, e o fim real do gesto (onde o aluno soltou o
+     dedo/caneta) encolhe um pouco a cada passada. Os extremos nunca são
+     "mais um ponto qualquer": são onde o traço começou e terminou de
+     verdade. Fixados de volta aqui, sempre, independente de quantas
+     passadas rodaram. Função pura (sem efeito colateral, sem estado do
+     módulo) para o teste poder chamá-la direto com qualquer array
+     sintético — ver `_test.decimarPreservandoExtremos`. */
+  function decimarPreservandoExtremos(pts, limite) {
+    if (!pts.length) return pts;
+    var primeiro = pts[0], ultimo = pts[pts.length - 1];
+    var ITER_DECIMAR_MAX = 30;
+    for (var nDecimar = 0; pts.length > limite && nDecimar < ITER_DECIMAR_MAX; nDecimar++) {
+      pts = pts.filter(function (_, i) { return i % 2 === 0; });
+    }
+    if (pts.length >= 2) { pts[0] = primeiro; pts[pts.length - 1] = ultimo; }
+    return pts;
+  }
+
   /* ------------------------------------------------------------------
      RENDERIZAÇÃO AO VIVO · incremental, sem reconstruir o path inteiro
 
@@ -1651,7 +1736,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       tipo: e.pointerType,
       rafId: null, rafPending: false, pathState: null,
       rec: {
-        id: 'tmp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+        id: novoIdTraco(),
         anchor_id: anc.id, color: st.penColor, width: st.penWidth, points: []
       }
     };
@@ -1800,7 +1885,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
          bloco muito alto faz 40 px verticais valerem 0,002 em y, e um RDP
          cego a isso achatava a escrita numa recta. */
       var pts = simplificarEmPixeis(t.pts, t.box, 0.7);
-      if (pts.length > 1200) pts = pts.filter(function (_, i) { return i % 2 === 0; });
+      pts = decimarPreservandoExtremos(pts, 1200);
 
       if (pts.length < 2) { if (t.path.parentNode) t.path.parentNode.removeChild(t.path); return; }
 
@@ -1897,39 +1982,109 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     return !traco.sec || !document.contains(traco.sec);
   }
 
+  /* ACHADO C: o 23505 só é aceito como "já está gravado" depois de uma
+     leitura de confirmação — nunca confiando só no código de erro.
+     "Repetição de INSERT só conta como sucesso depois de confirmar o
+     registo correspondente." */
+  function ehViolacaoDeChaveDuplicada(err) {
+    return !!(err && (err.code === '23505' || /duplicate key|unique constraint/i.test(err.message || '')));
+  }
+  async function confirmarRegistoGravado(s, uid, id) {
+    try {
+      var r = await s.from('user_ink_strokes').select('id').eq('user_id', uid).eq('id', id).maybeSingle();
+      return !r.error && !!(r.data && r.data.id);
+    } catch (e) { return false; }
+  }
+
+  /* ACHADO D (mínimo): indicador PERSISTENTE de "não gravado" no próprio
+     traço — fica ligado desde o início do envio até a gravação ser
+     CONFIRMADA (sucesso real ou 23505+leitura de confirmação), nunca
+     removido só por "o POST não gerou excepção". Em caso de erro fica
+     ligado propositalmente: não existe aqui reenvio automático nem fila
+     durável (mudança maior, fora deste mínimo — ver §2 achado D do
+     relatório `tools/qa/ink-audit/RELATORIO.md`); o aluno vê que aquele
+     traço específico continua sem salvar mesmo que a tela não mude mais
+     nada. Não declarar "perda por falta de rede resolvida": só a
+     visibilidade do problema foi corrigida aqui. */
+  function marcarComoPendente(pathEl) {
+    if (pathEl) pathEl.classList.add('rm2-ink-pendiente');
+  }
+  function desmarcarComoPendente(pathEl) {
+    if (pathEl) pathEl.classList.remove('rm2-ink-pendiente');
+  }
+
   /* ---- persistência: uma gravação por traço, nunca por ponto -------- */
   /* Gravar um traço é assíncrono, e o aluno pode desfazer ou apagar antes de
      o INSERT responder. Se nada segurasse essa corrida, o apagar não teria o
-     que apagar —o id ainda era «tmp-»— e o traço voltava no reload seguinte.
-     Marca-se o registo como cancelado e, quando a resposta chega, apaga-se
-     imediatamente a linha que acabou de nascer. */
+     que apagar — e o traço voltava no reload seguinte. Marca-se o registo
+     como cancelado e, quando a resposta chega, apaga-se imediatamente a
+     linha que acabou de nascer.
+
+     ACHADO C da auditoria independente (#420): o id ERA gerado pelo
+     servidor, então o INSERT não era idempotente — uma conexão
+     reiniciada logo depois do commit fazia o próprio navegador reenviar
+     o mesmo POST, e cada tentativa ganhava um id novo (2 linhas para 1
+     traço); um 504 depois do commit tinha o problema inverso (o
+     cliente nunca aprendia o id real, «desfazer» nem tentava apagar).
+     Corrigido: `rec.id` já é um UUID gerado no CLIENTE desde a criação
+     do traço (`novoIdTraco()`, em onDown/restaurarTraco) — o MESMO id
+     em qualquer reenvio automático do navegador, e conhecido mesmo se
+     a resposta nunca chegar. O id deixa de mudar depois do INSERT, por
+     isso não há mais remapeamento de id para esta operação. */
+  /* Único ponto que compensa um traço cancelado durante a gravação —
+     chamado tanto quando o INSERT TERMINA (com ou sem erro) quanto de
+     dentro do catch. Reusa a MESMA infraestrutura segura do achado B
+     (`tentarApagarNoBanco()` + fila durável), nunca uma segunda
+     implementação: se o DELETE falhar, nunca finge sucesso — guarda o
+     id para reenvio. */
+  async function compensarCancelamento(s, uid, rec) {
+    rec.gravando = false;
+    remover(rec.id);
+    if (await tentarApagarNoBanco(s, uid, rec.id)) { limparPendenteApagar(uid, rec.id); return; }
+    guardarPendenteApagar(uid, rec.id);
+    toast('No se pudo borrar el trazo. Se reintentará.', true);
+  }
+
   async function filaGravar(slug, rec, pathEl) {
     var s = sb(), uid = st.uid;
-    if (!s || !uid) { toast('Dibujado (sin sincronizar)', true); return; }
+    if (!s || !uid) { toast('Dibujado (sin sincronizar)', true); marcarComoPendente(pathEl); return; }
     if (rec.cancelado) return;                 // cancelado antes sequer de partir
     rec.gravando = true;
+    marcarComoPendente(pathEl);
     try {
       var r = await s.from('user_ink_strokes').insert({
-        user_id: uid, subject_slug: slug, anchor_id: rec.anchor_id,
+        id: rec.id, user_id: uid, subject_slug: slug, anchor_id: rec.anchor_id,
         color: rec.color, width: rec.width, points: rec.points
       }).select('id').single();
-      if (r.error) throw r.error;
-      var antigo = rec.id;
-      rec.id = r.data.id;
 
-      if (rec.cancelado) {                     // desfeito/apagado enquanto gravava
-        rec.gravando = false;
-        remover(rec.id);
-        try { await s.from('user_ink_strokes').delete().eq('user_id', uid).eq('id', rec.id); }
-        catch (e2) { console.warn('[rm2] ink compensating delete', e2 && e2.message); }
-        return;
+      if (r.error) {
+        if (!ehViolacaoDeChaveDuplicada(r.error) || !(await confirmarRegistoGravado(s, uid, rec.id))) {
+          throw r.error;
+        }
+        /* chave duplicada CONFIRMADA por leitura: é o reenvio automático
+           do navegador para o INSERT que já tinha sido gravado — sucesso,
+           não erro. */
       }
 
-      if (pathEl) pathEl.setAttribute('data-ink', rec.id);
-      remapear(antigo, rec.id);
+      if (rec.cancelado) { await compensarCancelamento(s, uid, rec); return; }   // desfeito/apagado enquanto gravava
+
+      rec.confirmado = true;
+      desmarcarComoPendente(pathEl);
     } catch (e) {
       console.warn('[rm2] ink insert', e && e.message);
+      /* ACHADO 2 da auditoria independente (HEAD 11084b7a): um erro aqui
+         (ex.: 504 depois do commit) NÃO prova que nada foi gravado — o
+         INSERT pode ter sido confirmado pelo servidor mesmo que a
+         resposta chegue como falha ao cliente. Se o traço já tinha sido
+         cancelado enquanto a gravação estava em voo, nunca tratar esse
+         erro como "nada para limpar": tenta o DELETE compensatório mesmo
+         assim (idempotente — 0 linhas afetadas se de fato não tiver
+         gravado) e enfileira se ele próprio falhar, em vez de deixar a
+         linha órfã no banco para sempre. */
+      if (rec.cancelado) { await compensarCancelamento(s, uid, rec); return; }
       toast('No se pudo guardar el trazo.', true);
+      /* o indicador "sin guardar" FICA ligado — ver comentário de
+         `marcarComoPendente()` acima. */
     } finally {
       rec.gravando = false;
     }
@@ -2038,6 +2193,71 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     toast(n === 1 ? 'Borrado ✓' : n + ' elementos borrados ✓');
   }
 
+  /* ACHADO B da auditoria independente (#420): `apagarNoBanco()` só tinha
+     um try/catch, mas o supabase-js NÃO lança em erro HTTP — devolve
+     `{error}`. Um DELETE 500 ou conexão cortada passava pelo `try` sem
+     excepção nenhuma: o traço saía da tela em silêncio, mas a linha
+     continuava no banco, e reaparecia ao recarregar; «desfazer» depois
+     disso recriava o traço — 2 linhas para 1 desenho.
+
+     Corrigido: confere `r.error` explicitamente. Se falhar, avisa o
+     aluno e guarda o id (memória + `localStorage`, por conta) para
+     reenviar — nunca finge que apagou. Apagar um id que já não existe
+     não é erro (0 linhas afectadas), por isso o reenvio é seguro de
+     repetir.
+
+     AUDITORIA INDEPENDENTE (HEAD 11084b7a): estas funções liam `st.uid`
+     (uma variável global, mutável) toda vez que precisavam da conta —
+     inclusive DEPOIS de um `await`. Numa operação assíncrona em voo
+     (DELETE pendurado, fila a reenviar), se o aluno trocasse de conta no
+     meio do caminho, a chave de `localStorage` e o filtro `user_id` do
+     próximo passo passavam a usar a conta NOVA, nunca a que originou a
+     pendência — a operação ficava presa na fila errada (ou nenhuma),
+     sem jamais reconciliar a conta antiga. Corrigido: todo chamador
+     captura `uid` UMA VEZ, antes do primeiro `await`, e passa esse
+     mesmo valor explicitamente por todo o caminho — nenhuma destas
+     funções volta a ler `st.uid` sozinha. */
+  function chavePendentesApagar(uid) {
+    return 'penApagarPendente.' + (uid || 'anon');
+  }
+  function listaPendentesApagar(uid) {
+    try { return JSON.parse(LS.get(chavePendentesApagar(uid), '[]')) || []; }
+    catch (e) { return []; }
+  }
+  function salvarPendentesApagar(uid, lista) {
+    try { LS.set(chavePendentesApagar(uid), JSON.stringify(lista)); } catch (e) {}
+  }
+  function guardarPendenteApagar(uid, id) {
+    var lista = listaPendentesApagar(uid);
+    if (lista.indexOf(id) === -1) { lista.push(id); salvarPendentesApagar(uid, lista); }
+  }
+  function limparPendenteApagar(uid, id) {
+    var lista = listaPendentesApagar(uid);
+    var depois = lista.filter(function (x) { return x !== id; });
+    if (depois.length !== lista.length) salvarPendentesApagar(uid, depois);
+  }
+  async function tentarApagarNoBanco(s, uid, id) {
+    try {
+      var r = await s.from('user_ink_strokes').delete().eq('user_id', uid).eq('id', id);
+      return !r.error;
+    } catch (e) {
+      console.warn('[rm2] ink delete', e && e.message);
+      return false;
+    }
+  }
+  /* Reenvia os DELETEs pendentes desta conta. Chamado ao carregar a
+     matéria e ao voltar a conexão (`online`). Não é fila durável
+     completa (não sobrevive a fechar o navegador antes do próximo
+     carregamento) — só cobre o caso comum de falha/instabilidade
+     passageira na própria aba. */
+  async function reenviarApagarPendentes() {
+    var s = sb(), uid = st.uid; if (!s || !uid) return;   // UID de origem capturado uma vez
+    var lista = listaPendentesApagar(uid);
+    for (var i = 0; i < lista.length; i++) {
+      if (await tentarApagarNoBanco(s, uid, lista[i])) limparPendenteApagar(uid, lista[i]);
+    }
+  }
+
   /* Recebe o REGISTO, não só o id: é a única forma de marcar o cancelamento
      de um INSERT que ainda está no ar. */
   async function apagarNoBanco(rec) {
@@ -2046,9 +2266,10 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     rec.cancelado = true;
     var id = rec.id;
     if (String(id).indexOf('tmp-') === 0) return;       // o filaGravar compensa
-    var s = sb(); if (!s || !st.uid) return;
-    try { await s.from('user_ink_strokes').delete().eq('user_id', st.uid).eq('id', id); }
-    catch (e) { console.warn('[rm2] ink delete', e && e.message); }
+    var s = sb(), uid = st.uid; if (!s || !uid) return;  // UID de origem capturado uma vez
+    if (await tentarApagarNoBanco(s, uid, id)) { limparPendenteApagar(uid, id); return; }
+    guardarPendenteApagar(uid, id);
+    toast('No se pudo borrar el trazo. Se reintentará.', true);
   }
 
   /* ---- apagar uma marcação isolada (usado pela API pública) --------- */
@@ -2122,13 +2343,29 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   async function restaurarTraco(slug, rec) {
     var idVelho = rec.id;
     var novo = {
-      id: 'tmp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+      id: novoIdTraco(),
       anchor_id: rec.anchor_id, color: rec.color, width: rec.width, points: rec.points,
       cancelado: false
     };
     (st.strokes[slug] = st.strokes[slug] || []).push(novo);
     remapear(idVelho, novo.id);           // quem apontava para o traço antigo passa a apontar para este
     var p = desenhar(novo);
+    /* ACHADO 3 da auditoria independente (HEAD 11084b7a): `restaurarTraco`
+       só é chamado para um traço que FOI apagado — se aquele DELETE tinha
+       falhado e ainda estava pendente (fila do achado B), desfazer criava
+       uma segunda linha sem nunca reinsistir na primeira: duas linhas para
+       um único desenho até o próximo carregamento/evento `online` drenar a
+       fila sozinho. Reconciliado agora: desfazer reinsiste o DELETE do id
+       antigo AQUI MESMO (idempotente — 0 linhas afetadas se já não
+       existir, nunca duplicado), em vez de esperar um gatilho futuro. Se a
+       rede já se recuperou a duplicação nunca chega a existir; se ainda
+       estiver fora do ar, o id continua na mesma fila durável, sem fingir
+       que resolveu. */
+    var s = sb(), uid = st.uid;             // UID de origem capturado uma vez (achado do troca-de-conta)
+    if (s && uid) {
+      if (await tentarApagarNoBanco(s, uid, idVelho)) limparPendenteApagar(uid, idVelho);
+      else guardarPendenteApagar(uid, idVelho);
+    }
     await filaGravar(slug, novo, p);
   }
 
@@ -2392,6 +2629,28 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   var emVoo = {};
 
+  /* ACHADO A da auditoria independente (#420): um SELECT sem ORDER BY e
+     sem .range() — com o teto `max_rows` do Supabase (1000 por padrão),
+     1001+ traços no banco viravam exactamente 1000 carregados, e sem
+     ORDER BY o PostgREST devolve pela ordem física da tabela: os traços
+     MAIS RECENTES ficavam de fora, sem nenhum aviso.
+
+     Corrigido: pagina por `created_at,id` (ordem estável mesmo quando
+     dois traços têm o mesmo timestamp) usando `.range()`. O fim é
+     decidido pela página vir VAZIA — nunca por "veio mais curta do que
+     pedi": o painel do Supabase pode limitar cada resposta a um
+     `max_rows` MENOR do que `PAGINA_TRACOS`, e nesse caso uma página
+     "curta" ainda pode ter mais dados depois dela. Por isso o próximo
+     pedido avança pelo NÚMERO REAL de linhas devolvidas (nunca por
+     `PAGINA_TRACOS`), e só pára quando uma página vem com 0 linhas —
+     o único sinal que é verdadeiro para qualquer valor de `max_rows`,
+     conhecido ou não. Um tecto de iterações
+     (`PAGINA_TRACOS_MAX_PAGINAS`) é só rede de segurança contra um
+     laço infinito nunca esperado — nunca deve ser atingido em uso
+     real. */
+  var PAGINA_TRACOS = 1000;
+  var PAGINA_TRACOS_MAX_PAGINAS = 200;   // ao menos 200 000 traços — muito acima de qualquer uso real
+
   async function carregarTracos(slug) {
     if (st.carregado[slug]) return st.strokes[slug] || [];
     if (emVoo[slug]) return emVoo[slug];
@@ -2399,11 +2658,28 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       var s = sb();
       if (!s || !st.uid) return [];
       try {
-        var r = await s.from('user_ink_strokes')
-          .select('id,anchor_id,color,width,points,created_at')
-          .eq('user_id', st.uid).eq('subject_slug', slug);
-        if (r.error) throw r.error;
-        st.strokes[slug] = r.data || [];
+        var todos = [];
+        var inicio = 0;
+        var paginas = 0;
+        while (true) {
+          var r = await s.from('user_ink_strokes')
+            .select('id,anchor_id,color,width,points,created_at')
+            .eq('user_id', st.uid).eq('subject_slug', slug)
+            .order('created_at', { ascending: true })
+            .order('id', { ascending: true })
+            .range(inicio, inicio + PAGINA_TRACOS - 1);
+          if (r.error) throw r.error;
+          var lote = r.data || [];
+          if (!lote.length) break;                          // página vazia: fim real dos dados
+          todos = todos.concat(lote);
+          inicio += lote.length;                             // avança pelo que REALMENTE veio
+          paginas++;
+          if (paginas >= PAGINA_TRACOS_MAX_PAGINAS) {
+            console.warn('[rm2] carregarTracos: limite de páginas atingido, parando por segurança');
+            break;
+          }
+        }
+        st.strokes[slug] = todos;
         st.carregado[slug] = true;
         return st.strokes[slug];
       } catch (e) {
@@ -2419,6 +2695,14 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     var slug = slugDoTab(tabEl);
     if (!slug) return;
     limparCamada();
+    /* achado B: reenvia DELETEs pendentes ANTES de buscar os traços —
+       se corresse depois (ou só em paralelo), um traço cujo DELETE
+       falhou anteriormente seria lido de volta do banco e desenhado de
+       novo NESTE MESMO carregamento, mesmo que o reenvio tivesse êxito
+       um instante depois: a tela mostraria "reapareceu" até o próximo
+       reload. Rodar antes elimina essa janela — fica lento só quando
+       há mesmo pendências (a lista normalmente está vazia). */
+    await reenviarApagarPendentes();
     var lista = await carregarTracos(slug);
     if (abaAtiva() !== tabEl) return;
     lista.forEach(desenhar);
@@ -2933,6 +3217,11 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   /* ================================================================== */
 
   function ligar() {
+    /* achado B: reenvia DELETEs pendentes ao voltar a conexão — além do
+       reenvio já feito em `sincronizarAba()` a cada carregamento de
+       matéria. */
+    window.addEventListener('online', reenviarApagarPendentes);
+
     /* marcador — MOUSE, PEN e TOUCH pela MESMA máquina de gesto: um
        arrasto e pronto (ver «9b»). O «seleccionar palavra → tocar numa
        cor» continua a existir à parte, no clique da paleta de cores mais
@@ -3217,6 +3506,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         },
         pathIncremental: pathIncremental,
         novoPathIncremental: novoPathIncremental,
+        novoIdTraco: novoIdTraco,
+        decimarPreservandoExtremos: decimarPreservandoExtremos,
         pontuarPalma: pontuarPalma,
         evidenciaDirectaDePalma: evidenciaDirectaDePalma,
         stylusTouches: stylusTouches,
