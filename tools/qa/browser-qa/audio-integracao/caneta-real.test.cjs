@@ -357,19 +357,31 @@ const relTraco = (p, anchor) => p.evaluate(a => {
           const parts = Array.from(bx.querySelectorAll('button, .rm2-fab, .rm2-panel')).filter(e => e.offsetParent !== null).map(e => e.getBoundingClientRect());
           const alvo = Array.from(bx.querySelectorAll('button')).filter(e => e.offsetParent !== null).map(e => e.getBoundingClientRect());
           const nomes = Array.from(bx.querySelectorAll('button')).filter(e => e.offsetParent !== null && inter(pl, e.getBoundingClientRect())).map(e => (e.getAttribute('aria-label') || e.textContent.trim()).slice(0, 40));
-          return { dock: document.documentElement.getAttribute('data-rm-dock'), cobreBox: inter(pl, br), cobreBtn: alvo.some(r => inter(pl, r)), nomes, ph: Math.round(pl.height), boxBottom: Math.round(br.bottom), playerTop: Math.round(pl.top), vh: innerHeight };
+          const botoes = Array.from(bx.querySelectorAll('button')).filter(e => e.offsetParent !== null).map(e => { const q = e.getBoundingClientRect(); return { n: (e.getAttribute('aria-label') || e.textContent.trim()).slice(0, 40), t: Math.round(q.top), b: Math.round(q.bottom) }; });
+          return { dock: document.documentElement.getAttribute('data-rm-dock'), cobreBox: inter(pl, br), cobreBtn: alvo.some(r => inter(pl, r)), nomes, botoes, ph: Math.round(pl.height), boxBottom: Math.round(br.bottom), playerTop: Math.round(pl.top), vh: innerHeight };
         });
         const fechada = await medir();
         await page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); await esp(350);
         const aberta = await medir();
         const cobre = fechada.cobreBtn || aberta.cobreBtn;
-        RELATORIO.push({ w, h, dsf, dock: aberta.dock, playerH: aberta.ph, fechada: fechada.cobreBtn, aberta: aberta.cobreBtn, nomes: fechada.nomes.concat(aberta.nomes) });
-        if (w > 560 && w < 768) console.log(`  ${cobre ? '⚠ B1-BLOCKER (Claude 2)' : '✔'} ${w}×${h}${dsf > 1 ? ' zoom' + dsf * 100 : ''}: player ${aberta.ph}px ${cobre ? 'COBRE' : 'não cobre'} os botões da toolbox real (fechada: ${fechada.cobreBtn}, aberta: ${aberta.cobreBtn})${cobre ? ' · botões: ' + JSON.stringify(Array.from(new Set(fechada.nomes.concat(aberta.nomes)))) : ''}`);
+        /* BASELINE sem player (mesma janela, caneta armada): separa «coberto pelo player» de «já fora da janela por a toolbox ser mais alta que ela» */
+        let genuino = [], foraDaJanela = [];
+        if (cobre) {
+          const b0 = await nova(S, browser, w, h, { dsf }); await attach(b0.page);
+          await b0.page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); await esp(400);
+          const base = await b0.page.evaluate(() => Array.from(document.querySelectorAll('.rm2-box button')).filter(e => e.offsetParent !== null).map(e => { const q = e.getBoundingClientRect(); return { n: (e.getAttribute('aria-label') || e.textContent.trim()).slice(0, 40), b: Math.round(q.bottom), vh: innerHeight }; }));
+          await b0.ctx.close();
+          for (const nm of new Set(fechada.nomes.concat(aberta.nomes))) { const bb = base.find(x => x.n === nm); (bb && bb.b > bb.vh + 0.5 ? foraDaJanela : genuino).push(nm); }
+        }
+        RELATORIO.push({ w, h, dsf, dock: aberta.dock, playerH: aberta.ph, fechada: fechada.cobreBtn, aberta: aberta.cobreBtn, nomes: fechada.nomes.concat(aberta.nomes), genuino, foraDaJanela });
+        if (w > 560 && w < 768) console.log(`  ${cobre ? '⚠ B1-BLOCKER (Claude 2)' : '✔'} ${w}×${h}${dsf > 1 ? ' zoom' + dsf * 100 : ''}: player ${aberta.ph}px ${cobre ? 'COBRE' : 'não cobre'} os botões da toolbox real (fechada: ${fechada.cobreBtn}, aberta: ${aberta.cobreBtn})${cobre ? ' · cobertos por causa do player (visíveis sem ele): ' + JSON.stringify(genuino) + ' · já parcialmente FORA da janela mesmo sem player (toolbox mais alta que a janela): ' + JSON.stringify(foraDaJanela) : ''}`);
         else ok(!cobre, `${w}×${h}: o player não cobre botões da toolbox real`, { fechada, aberta });
         await ctx.close();
       }
       const bl = RELATORIO.filter(x => x.w > 560 && x.w < 768 && (x.fechada || x.aberta));
+      const gen = RELATORIO.filter(x => x.w > 560 && x.w < 768 && x.genuino && x.genuino.length);
       console.log('\n  RELATÓRIO B1-BLOCKER (toolbox REAL × player): ' + (bl.length ? 'ATIVO em ' + bl.map(x => `${x.w}×${x.h}${x.dsf > 1 ? '@zoom' : ''}`).join(', ') + ' — correção é do Claude 2 (#425, rm-layout.css/rm-tools-v2.js); NÃO feita aqui' : 'não reproduzido nas larguras 561–767 com este Layout'));
+      console.log('  detalhe: ' + (gen.length ? gen.map(x => `${x.w}×${x.h}${x.dsf > 1 ? '@zoom' : ''}: coberto pelo player → ${JSON.stringify(x.genuino)}`).join(' | ') : 'nenhum botão visível sem o player fica coberto por ele') + (bl.some(x => x.foraDaJanela.length) ? ' || fora da janela mesmo sem player: ' + JSON.stringify(Array.from(new Set(bl.flatMap(x => x.foraDaJanela)))) : ''));
       ok(RELATORIO.length === cfg.length, 'todas as larguras/alturas medidas');
     }
   } catch (e) { koN++; falhas.push('EXCEÇÃO: ' + (e && e.stack || e)); console.log('  ✗ EXCEÇÃO', e); }
