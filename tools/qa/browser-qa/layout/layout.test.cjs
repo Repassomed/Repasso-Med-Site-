@@ -48,6 +48,8 @@ async function medir(page) {
     await page.goto(base);
     await page.evaluate(() => { window.RMLayout.attach(document.getElementById('tab-semio2')); });
     await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 60)))));
+    /* o site anima a aba ativa (fadeInTab .4s, com deslocamento): medir no meio da animação dá falsos «deslocamentos» de < 1 px */
+    await page.evaluate(() => Promise.all(document.getAnimations().map(a => a.finished.catch(() => {}))));
     return { ctx, page };
   };
   const PE = 8, GAP = 8;   // mesmas folgas do rm-layout.js
@@ -154,7 +156,7 @@ async function medir(page) {
     const before = await page.evaluate(() => document.querySelector('#s2-b01 p').getBoundingClientRect().toJSON());
     await page.evaluate(() => { const s = document.getElementById('rm-l2-player'); s.hidden = false; const st = document.createElement('div'); st.id = 'stub-player'; s.appendChild(st); });
     const after = await page.evaluate(() => document.querySelector('#s2-b01 p').getBoundingClientRect().toJSON());
-    ok(JSON.stringify(before) === JSON.stringify(after), 'abrir o player lateral não desloca nenhum parágrafo (mesmo retângulo)');
+    ok(JSON.stringify(before) === JSON.stringify(after), 'abrir o player lateral não desloca nenhum parágrafo (mesmo retângulo)', { before, after });
     const g = await page.evaluate(() => { const p = document.getElementById('stub-player').getBoundingClientRect(), c = document.querySelector('#s2-b01').getBoundingClientRect(), t = document.getElementById('fake-tools').getBoundingClientRect(), sd = document.querySelector('.rm-l2-side').getBoundingClientRect(); return { pl: p.left, pr: p.right, pt: p.top, pb: p.bottom, cr: c.right, tl: t.left, tt: t.top, tb: t.bottom, sr: sd.right }; });
     ok(g.pl >= g.cr, 'player lateral à direita do cartão (não cobre texto)', g);
     ok(g.pr <= g.tl + 0.5, 'player lateral à esquerda da toolbox (não cobre ferramentas)', g);
@@ -168,6 +170,101 @@ async function medir(page) {
     const r = await page.evaluate(() => { const D = window.RMLayout._dock, T = window.RMLayout._cartaoTeorico; return { d: [[1495, 264], [1627, 264], [1691, 264], [1700, 264], [1440, 64], [1491, 64], [1505, 64]].map(a => [a[0], a[1], D(a[0], a[1], null, null)]), t: T(1440, 64) }; });
     ok(r.d.map(x => x[2]).join() === 'bottom,bottom,side,side,bottom,side,side', 'fórmula (sem medida) concorda: aberta só a partir de ~1700; trilho só a partir de ~1500', r.d);
     ok(Math.abs(r.t - 1158.5) < 0.5, 'borda teórica do cartão a 1440 com trilho = 1158.5 (centrado)', r.t);
+    await ctx.close();
+  }
+
+  /* ---------------------------------------------------------------------------------------------------------
+     VIEWPORTS EXIGIDOS (22) × lateral aberta e minimizada: lateral (docked/rail/off), dock (side/bottom), 0 overflow,
+     side não cobre cartão/toolbox/lateral e não desloca parágrafos, bottom reserva --rm-player-h (o último bloco não fica escondido) */
+  const TODOS = [320, 390, 561, 600, 700, 767, 768, 1024, 1280, 1366, 1440, 1480, 1495, 1500, 1560, 1600, 1627, 1650, 1690, 1700, 1760, 1920];
+  sec('22 viewports exigidos × lateral aberta/minimizada: lateral, dock, overflow, cobertura, reserva inferior');
+  const resumo = [];
+  for (const rail of [false, true]) {
+    for (const w of TODOS) {
+      const { ctx, page } = await nova(w, w < 768 ? 844 : 900, rail);
+      const m = await medir(page);
+      const esperado = rail ? (w >= 768 ? 'rail' : 'off') : (w >= 1200 ? 'docked' : (w >= 768 ? 'rail' : 'off'));
+      const R = `${rail ? 'min' : 'aberta'} ${w}`;
+      ok(m.lmode === esperado, `${R}: lateral = ${esperado}`, m.lmode);
+      ok(m.dock === 'side' || m.dock === 'bottom', `${R}: data-rm-dock definido (${m.dock})`);
+      ok(m.sw <= m.cw, `${R}: 0 overflow horizontal`, { sw: m.sw, cw: m.cw });
+      const playerL = m.slotR - PE - m.pw, folga = playerL - (m.cardR + GAP);
+      /* a raia direita (--rm-right-w = 67) só é reservada a partir de 768; abaixo disso a toolbox é um controle flutuante e o
+         player inferior ocupa a largura toda (a convivência vertical dos dois nesse intervalo é assunto da #425, ver README) */
+      if (w >= 768) ok(m.slotR <= m.toolsL + 0.5, `${R}: o slot termina à esquerda da toolbox`, { slotR: m.slotR, toolsL: m.toolsL });
+      else ok(m.rightW === 0 && m.dock === 'bottom', `${R}: abaixo de 768 não há raia direita reservada e o dock é bottom (rightW=${m.rightW}, dock=${m.dock})`);
+      if (m.dock === 'side') {
+        ok(folga >= 0, `${R}: side ⇒ não cobre o cartão (folga ${Math.round(folga)}px)`, { folga });
+        ok(playerL >= m.leftW + 100, `${R}: side ⇒ não cobre a lateral esquerda`);
+        const antes = await page.evaluate(() => document.querySelector('#s2-b01 p').getBoundingClientRect().toJSON());
+        await page.evaluate(() => { const sl = document.getElementById('rm-l2-player'); sl.hidden = false; const st = document.createElement('div'); st.id = 'stub-player'; sl.appendChild(st); });
+        const depois = await page.evaluate(() => document.querySelector('#s2-b01 p').getBoundingClientRect().toJSON());
+        ok(JSON.stringify(antes) === JSON.stringify(depois), `${R}: side ⇒ abrir o player não desloca parágrafos`, { antes, depois });
+        const g = await page.evaluate(() => { const pl = document.getElementById('stub-player').getBoundingClientRect(), t = document.getElementById('fake-tools').getBoundingClientRect(), c = document.querySelector('#s2-b01').getBoundingClientRect(); return { pl: pl.left, pr: pl.right, tl: t.left, cr: c.right }; });
+        ok(g.pl >= g.cr && g.pr <= g.tl + 0.5, `${R}: side ⇒ o player fica entre o cartão e a toolbox`, g);
+      } else {
+        ok(folga < 12 + 1, `${R}: bottom ⇒ de fato não cabia ao lado (folga ${Math.round(folga)}px)`, { folga });
+        await page.evaluate(() => { document.documentElement.style.setProperty('--rm-player-h', '120px'); document.getElementById('rm-l2-player').hidden = false; });
+        await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+        await page.evaluate(() => new Promise(r => setTimeout(r, 120)));
+        const r = await page.evaluate(() => { const blocos = [...document.querySelectorAll('#tab-semio2 section[id]')]; const last = blocos[blocos.length - 1].getBoundingClientRect(), sl = document.getElementById('rm-l2-player').getBoundingClientRect(); return { lastB: last.bottom, slotT: sl.top, h: sl.height }; });
+        ok(r.lastB <= r.slotT + 0.5, `${R}: bottom ⇒ o último bloco não fica escondido atrás do player (reserva --rm-player-h)`, r);
+      }
+      resumo.push([R, m.lmode, m.dock, Math.round(folga)]);
+      await ctx.close();
+    }
+  }
+  console.log('  tabela (viewport, lateral, dock, folga px):'); resumo.forEach(r => console.log('   ', r.join('\t')));
+
+  sec('Rotação (retrato ↔ paisagem) e redimensionamento: lateral e dock coerentes, 0 overflow, sem oscilar');
+  for (const [a, b, rotulo] of [[[844, 390], [390, 844], 'celular'], [[1024, 768], [768, 1024], 'tablet'], [[1366, 1024], [1024, 1366], 'tablet grande'], [[900, 600], [600, 900], '600/900']]) {
+    const { ctx, page } = await nova(a[0], a[1], false);
+    const seq = [];
+    for (const [w, h] of [a, b, a, b, a]) {
+      await page.setViewportSize({ width: w, height: h });
+      await page.evaluate(() => new Promise(r => setTimeout(r, 90)));
+      const m = await medir(page);
+      const esperado = w >= 1200 ? 'docked' : (w >= 768 ? 'rail' : 'off');
+      ok(m.lmode === esperado && m.sw <= m.cw, `${rotulo} ${w}×${h}: lateral ${esperado} e 0 overflow`, { lmode: m.lmode, sw: m.sw, cw: m.cw });
+      seq.push(m.lmode + '/' + m.dock);
+    }
+    ok(seq[0] === seq[2] && seq[2] === seq[4] && seq[1] === seq[3], `${rotulo}: a volta à mesma orientação devolve exatamente o mesmo estado (${seq.join(' → ')})`);
+    await ctx.close();
+  }
+
+  sec('Caneta no papel: resize pendente aplica ao levantar OU cancelar, uma única vez; detach não deixa listener nem timer');
+  for (const fim of ['pointerup', 'pointercancel']) {
+    const { ctx, page } = await nova(1520, 900, true);                  // trilho: o limiar do dock fica ≈ 1491
+    await page.evaluate(() => {                                         // conta add/remove dos listeners de fim de contato (captura)
+      window.__ev = { add: 0, rem: 0 }; const a = document.addEventListener.bind(document), r = document.removeEventListener.bind(document);
+      document.addEventListener = (t, f, o) => { if (t === 'pointerup' || t === 'pointercancel') window.__ev.add++; return a(t, f, o); };
+      document.removeEventListener = (t, f, o) => { if (t === 'pointerup' || t === 'pointercancel') window.__ev.rem++; return r(t, f, o); };
+      window.__apl = 0; new MutationObserver(() => window.__apl++).observe(document.documentElement, { attributes: true, attributeFilter: ['data-rm-dock', 'data-rm-lmode'] });
+    });
+    const d0 = (await medir(page)).dock;
+    await page.evaluate(() => { document.body.classList.add('rm2-pen-down'); });
+    await page.setViewportSize({ width: 1480, height: 900 });            // cruza o limiar do dock em pleno traço
+    await page.evaluate(() => new Promise(r => setTimeout(r, 150)));
+    const meio = await medir(page);
+    ok(meio.dock === d0 && meio.cw === 1480, `${fim}: em pleno traço o dock NÃO mudou (${d0} → ${meio.dock}) apesar do resize para 1480`, meio);
+    ok(await page.evaluate(() => window.__apl) === 0, `${fim}: nenhuma escrita de data-rm-dock/lmode durante o contato`);
+    await page.evaluate((f) => { document.body.classList.remove('rm2-pen-down'); document.dispatchEvent(new Event(f)); }, fim);
+    await page.evaluate(() => new Promise(r => setTimeout(r, 300)));
+    const depois = await medir(page);
+    ok(depois.dock !== d0, `${fim}: ao ${fim === 'pointerup' ? 'levantar' : 'cancelar'} a mudança pendente é aplicada (${d0} → ${depois.dock})`, depois);
+    const ev = await page.evaluate(() => ({ ...window.__ev }));
+    ok(ev.add >= 1 && ev.add === ev.rem, `${fim}: listeners de fim de contato removidos depois de aplicar (add=${ev.add}, remove=${ev.rem})`, ev);
+    /* detach com pedido pendente: timers e listeners somem, nada é aplicado depois */
+    await page.evaluate(() => { window.__ev.add = 0; window.__ev.rem = 0; document.body.classList.add('rm2-pen-down'); });
+    await page.setViewportSize({ width: 1530, height: 900 });
+    await page.evaluate(() => new Promise(r => setTimeout(r, 120)));
+    await page.evaluate(() => window.RMLayout.detach());
+    const evd = await page.evaluate(() => ({ ...window.__ev }));
+    ok(evd.add >= 1 && evd.add === evd.rem, `${fim}: detach com mudança pendente remove os listeners (add=${evd.add}, remove=${evd.rem})`, evd);
+    await page.evaluate(() => { window.__apl = 0; document.body.classList.remove('rm2-pen-down'); });
+    await page.evaluate((f) => document.dispatchEvent(new Event(f)), fim);
+    await page.evaluate(() => new Promise(r => setTimeout(r, 400)));
+    ok(await page.evaluate(() => window.__apl === 0 && !document.documentElement.hasAttribute('data-rm-dock')), `${fim}: depois do detach nenhum timer aplica nada (0 escritas, sem data-rm-dock)`);
     await ctx.close();
   }
 
