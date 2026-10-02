@@ -51,12 +51,13 @@ function okTinta(m, msg) {
   return ok(m.desvio <= MAX, `${msg} — ${descr(m)}`);
 }
 
-async function abrir(br, base, w, h, { seed = SEED, imgs = 0, atrasoImg = 0 } = {}) {
+async function abrir(br, base, w, h, { seed = SEED, imgs = 0, atrasoImg = 0, rotas = null } = {}) {
   const page = await br.newPage({ viewport: { width: w, height: h } });
   const errs = [];
   page.on('pageerror', e => errs.push(String(e).slice(0, 160)));
   page.on('console', m => { if (m.type() === 'error') errs.push('c:' + m.text().slice(0, 140)); });
   await page.route('**/get-pilot-flags*', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(FLAGS) }));
+  if (rotas) await rotas(page);                                          // gancho de teste: rotas/scripts de inicialização extras ANTES da navegação
   if (atrasoImg) await page.route('**/__img/**', async r => { await sleep(atrasoImg); r.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500"><rect width="800" height="500" fill="#cfd8e6"/></svg>' }); });
   await page.goto(`${base}/p.html?slug=semiologia-ii&tab=semio2&uid=${JOSE}&seed=${seed}&wait=1800`, { timeout: 120000 });
   await page.waitForFunction('window.__ready===true', { timeout: 120000 });

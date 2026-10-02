@@ -129,6 +129,65 @@ async function cenariosSairDaMateria(br, base, w, h) {
     await f.page.close(); }
 }
 
+/* LOGOUT sem recarregar a página (forceLogout/«kick» do index.html só mostra um aviso por cima): SIGNED_OUT ⇒ o shell se desfaz e NADA pendente atua depois */
+const CAPTURA_AUTH = (page) => page.addInitScript(() => {
+  let v; Object.defineProperty(window, 'RM_SB', { configurable: true, get: () => v, set: (x) => {
+    if (x && x.auth) x.auth.onAuthStateChange = function (cb) {
+      (window.__authCbs = window.__authCbs || []).push(cb);
+      return { data: { subscription: { unsubscribe() { window.__unsub = (window.__unsub || 0) + 1; window.__authCbs = window.__authCbs.filter(c => c !== cb); } } } };
+    };
+    v = x;
+  } });
+});
+async function cenariosLogout(br, base, w, h, comCaneta) {
+  console.log(`\n===== ${w}×${h} · logout sem recarregar (SIGNED_OUT) =====`);
+  const nova = async () => {
+    const f = await abrir(br, base, w, h, { rotas: CAPTURA_AUTH });
+    ok(await f.page.evaluate(() => (window.__authCbs || []).filter(c => /sessao: true/.test(String(c))).length === 1 && !!window.RMLayout._estado()), 'o layout assinou a sessão (1 listener dele; o app-core tem o próprio) e está anexado');
+    await f.page.evaluate(INSTRUMENTAR); return f;
+  };
+  const sair = (page) => page.evaluate(() => { window.__tSai = performance.now(); window.__authCbs.filter(c => /sessao: true/.test(String(c))).forEach(cb => cb('SIGNED_OUT')); });
+  const limpo = async (f, rotulo) => {
+    const t = await f.page.evaluate(() => window.__tSai);
+    const sc = await rmScrolls(f.page, t), rp = await reposApos(f.page, t);
+    ok(sc.length === 0, `${rotulo}: 0 rolagens do shell depois do logout (${JSON.stringify(sc.map(c => c.arg))})`);
+    ok(rp.length === 0, `${rotulo}: 0 RMToolsV2.reposicionar() depois do logout (${rp.length})`);
+    ok(await f.page.evaluate(() => window.RMLayout._estado() === null && !document.documentElement.classList.contains('rm-l2') && !document.querySelector('[data-rm-ui]')), `${rotulo}: shell desfeito por completo`);
+    ok(await f.page.evaluate(() => (window.__unsub || 0) >= 1 && (window.__authCbs || []).filter(c => /sessao: true/.test(String(c))).length === 0), `${rotulo}: a assinatura da sessão do layout foi cancelada`);
+    ok(f.errs.length === 0, `${rotulo}: 0 erros JS (${f.errs.length})`);
+  };
+
+  console.log('  -- J1 · transição de modo pendente (espera de 2 frames + 120 ms) → logout');
+  { const f = await nova();
+    await f.page.evaluate(async () => { window.__dep = 0; const M = window.RMModes; M.requestView('preguntas'); await new Promise(r => setTimeout(r, 300)); M.requestView('full', { depois: () => { window.__dep++; } }); });
+    await sair(f.page); await f.page.waitForTimeout(1500);
+    ok(await f.page.evaluate(() => window.__dep) === 0, 'J1: 0 callbacks (opts.depois) depois do logout');
+    await limpo(f, 'J1'); await f.page.close(); }
+
+  console.log('  -- J2 · irPara() pendente (acompanhamento da altura) → logout');
+  { const f = await nova();
+    await f.page.evaluate(() => { window.scrollTo(0, 0); }); await f.page.waitForTimeout(300); await f.page.evaluate(INSTRUMENTAR);
+    await f.page.evaluate(() => { if (window.innerWidth < 768) document.querySelector('.rm-l2-hamb').click(); const t = document.querySelector('.rm-l2-tree-toggle'); if (t && t.getAttribute('aria-expanded') !== 'true') t.click(); });
+    await f.page.waitForTimeout(300);
+    await f.page.evaluate(() => { document.querySelector('.rm-l2-block-link[data-target="s2-b10"]').click(); });
+    await sair(f.page); await f.page.waitForTimeout(2500);
+    await limpo(f, 'J2'); await f.page.close(); }
+
+  if (comCaneta) {
+    console.log('  -- J3 · reposicionamento pendente com a caneta em contato → logout → caneta levanta');
+    const f = await nova();
+    await clicarBloco(f.page, w, 's2-b10'); await f.page.waitForTimeout(800); await trazerTinta(f.page, 's2-b10'); await f.page.waitForTimeout(500);
+    await f.page.evaluate(INSTRUMENTAR);
+    await f.page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); await f.page.waitForTimeout(200);
+    const penDown = await f.page.evaluate((fn) => { window.RMLayout.assentarTinta(); return (new Function('return ' + fn))()(); }, PEN.down.toString());
+    ok(penDown, 'J3: contato da caneta ligado (rm2-pen-down) com o pedido de reposicionamento pendente');
+    await sair(f.page); await f.page.waitForTimeout(400);
+    await f.page.evaluate((a) => { (new Function('return ' + a.fn))()('pointerup'); }, { fn: PEN.up.toString() });
+    await f.page.waitForTimeout(1200);
+    await limpo(f, 'J3'); await f.page.close();
+  }
+}
+
 /* caneta (eventos SINTÉTICOS de stylus) */
 const PEN = {
   down: () => { const ps = [...document.querySelectorAll('#materias-container section[id] p')].filter(x => { const r = x.getBoundingClientRect(); return x.textContent.length > 150 && r.height >= 50 && r.top > 80 && r.bottom < innerHeight - 20; });
@@ -236,12 +295,15 @@ async function cenariosSalto(br, base, w, h) {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
   const srv = await L.serve(); const base = 'http://127.0.0.1:' + srv.address().port;
   const br = await chromium.launch();
+  const SO = process.env.RM_RACE_SO || '';                       // RM_RACE_SO=logout → só os cenários J (iteração rápida)
   for (const [w, h] of [[1440, 900], [390, 844]]) {
+    if (SO === 'logout') { await cenariosLogout(br, base, w, h, w >= 1000); continue; }
     await cenariosModos(br, base, w, h);
     await cenariosSairDaMateria(br, base, w, h);
     await cenariosSalto(br, base, w, h);
+    await cenariosLogout(br, base, w, h, w >= 1000);
   }
-  await cenariosCaneta(br, base, 1440, 900);
+  if (!SO) await cenariosCaneta(br, base, 1440, 900);
   await br.close(); srv.close();
   process.exit(L.finish('race') ? 1 : 0);
 })();

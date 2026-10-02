@@ -88,6 +88,65 @@ async function abrirCapa(br, base, w, h, o = {}) {
     await p.close();
   }
 
+  console.log('\n===== RECURSOS da capa: só o que existe, contagem real, salto para a primeira ocorrência =====');
+  /* verdade calculada de forma INDEPENDENTE do código sob teste (por seção de bloco; banco geral e «Todos los flashcards» reúnem as MESMAS entidades) */
+  const VERDADE = () => {
+    const tab = document.querySelector('#materias-container > .tab-content.active');
+    const blocos = [...tab.querySelectorAll(':scope > section[id]')].filter(sc => !/banco|flashcards/i.test(sc.id));
+    const n = (sel) => blocos.reduce((a, sc) => a + sc.querySelectorAll(sel).length, 0);
+    const figs = blocos.reduce((a, sc) => a + [...sc.querySelectorAll('figure')].filter(f => f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image')).length, 0);
+    return { fig: figs, quiz: n('.quiz-item'), fc: n('.flashcard'), aud: n('audio'), vid: n('details.video-collapsible'), quizTodas: tab.querySelectorAll('.quiz-item').length, fcTodas: tab.querySelectorAll('.flashcard').length, slides: tab.querySelectorAll('.material-slide').length };
+  };
+  for (const [w, h] of [[1440, 900], [390, 844]]) {
+    const f = await abrirCapa(br, base, w, h); const p = f.page;
+    const V = await p.evaluate(VERDADE);
+    const cards = await p.evaluate(() => [...document.querySelectorAll('.rm-l2-cover .rm-l2-rescard')].map(c => ({ k: c.className.replace(/.*rescard--(\w+).*/, '$1'), t: c.querySelector('.rm-l2-rescard-t').textContent, s: c.querySelector('.rm-l2-rescard-s').textContent, nome: c.getAttribute('aria-label'), id: c.querySelectorAll('[id]').length + (c.id ? 1 : 0), ui: c.hasAttribute('data-rm-ui') })));
+    const ks = cards.map(c => c.k).join(',');
+    ok(ks === 'res,fig,quiz,fc,aud', `${w}: cartões = só os recursos que EXISTEM, nesta ordem (${ks}); sem «Videos» (0 vídeos na matéria)`);
+    const num = (c) => +(c.s.match(/\d+/) || [NaN])[0];
+    ok(num(cards[1]) === V.fig && V.fig === 34, `${w}: Infografías = ${num(cards[1])} (34 <figure> com legenda; as ${V.slides} diapositivas NÃO entram)`);
+    ok(num(cards[2]) === V.quiz && V.quiz < V.quizTodas, `${w}: Preguntas = ${num(cards[2])} só dos blocos (não ${V.quizTodas}: o banco geral repete as mesmas)`);
+    ok(num(cards[3]) === V.fc && V.fc < V.fcTodas, `${w}: Flashcards = ${num(cards[3])} só dos blocos (não ${V.fcTodas}: o compêndio repete as mesmas)`);
+    ok(num(cards[4]) === V.aud, `${w}: Auscultación = ${num(cards[4])} sonidos (os <audio> da matéria)`);
+    ok(cards.every(c => c.id === 0 && c.ui && c.nome && c.nome.indexOf(c.t) === 0), `${w}: sem ids, [data-rm-ui], nome acessível «Título: contagem» em todos`);
+    /* cada cartão salta para a primeira ocorrência (alinhada abaixo da faixa) */
+    const alvos = { res: () => document.querySelector('#materias-container .tab-content.active > section[id]'), fig: () => [...document.querySelectorAll('section[id] figure')].find(f2 => f2.querySelector('figcaption')), quiz: () => document.querySelector('section[id] .quiz-section, section[id] .quiz-item'), fc: () => document.querySelector('section[id] .rmfc-launch'), aud: () => document.querySelector('section[id] .audio-player, section[id] audio') };
+    for (let i = 0; i < cards.length; i++) {
+      await p.evaluate(() => window.scrollTo(0, 0)); await p.waitForTimeout(250);
+      await p.evaluate((i2) => document.querySelectorAll('.rm-l2-cover .rm-l2-rescard')[i2].click(), i);
+      await p.waitForTimeout(2200);
+      const k = cards[i].k;
+      const z = await p.evaluate((k2) => { const a = ({ res: () => document.querySelector('#materias-container .tab-content.active > section[id]'), fig: () => [...document.querySelectorAll('section[id] figure')].find(x => x.querySelector('figcaption') && x.querySelector('img, .s2-photo[role="img"]') && !x.closest('.material-slide')), quiz: () => { const q = document.querySelector('section[id] .quiz-item'); return q && (q.closest('.quiz-section') || q); }, fc: () => { const q = document.querySelector('section[id] .flashcard'); return q && (() => { const g = q.closest('.fc-grid'), l = g && g.previousElementSibling; return l && l.classList.contains('rmfc-launch') ? l : (g || q); })(); }, aud: () => { const q = document.querySelector('section[id] audio'); return q && (q.closest('.audio-player') || q); } })[k2](); const r = a.getBoundingClientRect(); return { top: Math.round(r.top), hdr: document.getElementById('rm-l2-band').offsetHeight, view: window.RMModes.view, y: Math.round(pageYOffset) }; }, k);
+      ok(z.view === 'full' && Math.abs(z.top - (z.hdr + 16)) <= 3, `${w}: «${cards[i].t}» salta à primeira ocorrência, abaixo da faixa (topo ${z.top}px, esperado ${z.hdr + 16}px)`);
+    }
+    /* o mesmo vale para os chips de recurso da lateral (usavam o grid recolhido): Flashcards leva a um alvo VISÍVEL */
+    if (w >= 1200) {
+      await p.evaluate(() => window.scrollTo(0, 0)); await p.waitForTimeout(250);
+      await p.evaluate(() => { const t = document.querySelector('.rm-l2-tree-toggle'); if (t && t.getAttribute('aria-expanded') !== 'true') t.click(); }); await p.waitForTimeout(250);
+      const ok1 = await p.evaluate(() => { const c = [...document.querySelectorAll('.rm-l2-block-body .rm-l2-chip-r')].find(x => /Flashcards/.test(x.textContent)); if (!c) return false; c.click(); return true; });
+      await p.waitForTimeout(2200);
+      const z2 = await p.evaluate(() => { const a = document.querySelector('section[id] .rmfc-launch'); const r = a.getBoundingClientRect(); return { top: Math.round(r.top), hdr: document.getElementById('rm-l2-band').offsetHeight }; });
+      ok(ok1 && Math.abs(z2.top - (z2.hdr + 16)) <= 3, `${w}: o chip «Flashcards» da lateral também chega ao lançador visível (topo ${z2.top}px, esperado ${z2.hdr + 16}px)`);
+    }
+    /* em modo isolado a capa (e a fileira) não aparece */
+    await p.evaluate(() => { window.scrollTo(0, 0); window.RMModes.requestView('infografias'); }); await p.waitForTimeout(500);
+    ok(await p.evaluate(() => { const r = document.querySelector('.rm-l2-res'); return !r || r.offsetParent === null || r.getClientRects().length === 0; }), `${w}: em modo isolado a fileira de recursos não aparece`);
+    ok(f.errs.length === 0, `${w}: 0 erros JS (${f.errs.length})`);
+    await p.close();
+  }
+  for (const [w, h] of LARGURAS) {
+    const f = await abrirCapa(br, base, w, h); const p = f.page;
+    const m = await p.evaluate(() => {
+      const de = document.documentElement, rs = [...document.querySelectorAll('.rm-l2-cover .rm-l2-rescard')].map(c => c.getBoundingClientRect());
+      const cols = new Set(rs.map(r => Math.round(r.left))).size, ocupa = rs.length ? Math.max(...rs.map(r => r.bottom)) - Math.min(...rs.map(r => r.top)) : 0;
+      return { n: rs.length, ov: de.scrollWidth - de.clientWidth, dentro: rs.every(r => r.left >= -0.5 && r.right <= de.clientWidth + 0.5), minAlvo: Math.min(...rs.map(r => Math.min(r.width, r.height))), cols, ocupa: Math.round(ocupa), vw: de.clientWidth };
+    });
+    ok(m.n === 5 && m.ov <= 0 && m.dentro, `${w}px: 5 cartões dentro da janela, 0 overflow (colunas=${m.cols}, altura da fileira ${m.ocupa}px)`);
+    ok(m.minAlvo >= 44, `${w}px: alvo mínimo ≥ 44 px (menor lado ${m.minAlvo.toFixed(0)})`);
+    ok(w >= 560 || m.cols <= 2, `${w}px: em tela estreita a fileira usa no máximo 2 colunas (a capa não vira uma pilha)`);
+    await p.close();
+  }
+
   console.log('\n===== zoom 200% (viewport CSS = metade, escala 2) e rotação =====');
   for (const [w, h] of [[1440, 900], [1024, 768], [390, 844]]) {
     const ctx = await br.newContext({ viewport: { width: Math.round(w / 2), height: Math.round(h / 2) }, deviceScaleFactor: 2 });

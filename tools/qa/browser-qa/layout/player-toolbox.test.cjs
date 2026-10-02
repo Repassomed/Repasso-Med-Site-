@@ -129,6 +129,42 @@ const MEDIR = ({ ph, estado }) => {
     ok(f.errs.length === 0, `${w}×${h}: 0 erros JS (${f.errs.length})`);
     await p.close();
   }
+  /* ---------- a rolagem interna é PERCEPTÍVEL (medida em pixels) ----------
+     Painel rolável com a caneta armada e o player compacto: a faixa de baixo do painel precisa ficar mais ESCURA (sombra) enquanto há mais botões
+     abaixo e voltar a clarear quando o painel chega ao fim; o mesmo, espelhado, no topo. Controle negativo: painel que não rola não tem sombra. */
+  console.log('\n===== rolagem interna perceptível (pixels) =====');
+  const luma = async (page, buf, y0, y1) => page.evaluate(async ([b64, a, c]) => {
+    const im = new Image(); await new Promise(r => { im.onload = r; im.src = 'data:image/png;base64,' + b64; });
+    const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const g = cv.getContext('2d'); g.drawImage(im, 0, 0);
+    const x0 = Math.floor(im.width * 0.3), x1 = Math.floor(im.width * 0.7), d = g.getImageData(x0, a, x1 - x0, Math.max(1, c - a)).data; let t = 0, n = 0;
+    for (let i = 0; i < d.length; i += 4) { t += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; n++; } return t / n;
+  }, [buf.toString('base64'), y0, y1]);
+  for (const [w, h] of [[561, 520], [700, 520], [767, 520], [720, 450]]) {
+    const f = await abrir(br, base, w, h, { seed: '' }); const p = f.page;
+    await p.evaluate(() => { document.documentElement.style.setProperty('--rm-player-h', '53px'); const sl = document.getElementById('rm-l2-player'); sl.hidden = false; document.querySelector('.rm2-box').classList.add('open'); window.RMToolsV2.escolherFerramenta('pen'); });
+    await p.waitForTimeout(400);
+    const r = await p.evaluate(() => { const pn = document.querySelector('.rm2-panel'); const q = pn.getBoundingClientRect(); return { x: q.left, y: q.top, w: q.width, h: q.height, rola: pn.scrollHeight > pn.clientHeight + 1 }; });
+    const clip = { x: Math.floor(r.x), y: Math.floor(r.y), width: Math.ceil(r.w), height: Math.ceil(r.h) };
+    await p.evaluate(() => { document.querySelector('.rm2-panel').scrollTop = 0; }); await p.waitForTimeout(150);
+    const topo = await p.screenshot({ clip });
+    await p.evaluate(() => { const pn = document.querySelector('.rm2-panel'); pn.scrollTop = pn.scrollHeight; }); await p.waitForTimeout(150);
+    const fim = await p.screenshot({ clip });
+    const baixoT = await luma(p, topo, clip.height - 12, clip.height - 4), baixoF = await luma(p, fim, clip.height - 12, clip.height - 4);
+    const cimaT = await luma(p, topo, 4, 12), cimaF = await luma(p, fim, 4, 12);
+    ok(r.rola, `${w}×${h}: o painel rola por dentro (caneta armada, player de 53 px)`);
+    ok(baixoF - baixoT >= 8, `${w}×${h}: no topo, a borda de BAIXO do painel está mais escura que no fim (luminância ${baixoT.toFixed(0)} → ${baixoF.toFixed(0)}): há mais botões abaixo`);
+    ok(cimaT - cimaF >= 8, `${w}×${h}: no fim, a borda de CIMA está mais escura que no topo (${cimaT.toFixed(0)} → ${cimaF.toFixed(0)}): há botões acima`);
+    /* controle negativo: sem a caneta armada o painel cabe inteiro e não tem sombra */
+    await p.evaluate(() => { window.RMToolsV2.escolherFerramenta('none'); }); await p.waitForTimeout(300);
+    const r2 = await p.evaluate(() => { const pn = document.querySelector('.rm2-panel'); const q = pn.getBoundingClientRect(); return { x: q.left, y: q.top, w: q.width, h: q.height, rola: pn.scrollHeight > pn.clientHeight + 1 }; });
+    if (!r2.rola) {
+      const c2 = { x: Math.floor(r2.x), y: Math.floor(r2.y), width: Math.ceil(r2.w), height: Math.ceil(r2.h) };
+      const sem = await p.screenshot({ clip: c2 }); const e1 = await luma(p, sem, c2.height - 12, c2.height - 4), e3 = await luma(p, sem, 4, 12);
+      ok(e1 >= 245 && e3 >= 245, `${w}×${h}: sem rolagem (caneta desarmada) a borda do painel fica clara — sem sombra de aviso (baixo ${e1.toFixed(0)} · cima ${e3.toFixed(0)}; com rolagem: ${baixoT.toFixed(0)})`);
+    } else info(`${w}×${h}: o painel continua rolando com a caneta desarmada — controle negativo não se aplica`);
+    await p.close();
+  }
+
   await br.close(); srv.close();
   info(`${semEspacoN} combinações sem espaço físico (área livre < 60 px) só conferem a interseção da caixa com o player`);
   info(`${nCombos} combinações · ${nBotoes} medidas de botão · ${nRolagem} botões que só aparecem rolando o painel`);

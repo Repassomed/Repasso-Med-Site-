@@ -204,6 +204,57 @@
   "errosJS": 0
  },
  {
+  "caso": "561x520",
+  "viewportCSS": "561×520",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "700x520",
+  "viewportCSS": "700×520",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
+  "caso": "767x520",
+  "viewportCSS": "767×520",
+  "zoom": 1,
+  "lmode": "off",
+  "dock": "bottom",
+  "overflowX": 0,
+  "bandH": 48,
+  "logoOk": true,
+  "logoBox": [
+   27,
+   34
+  ],
+  "nome": "Semiología II",
+  "nomeVisivel": true,
+  "errosJS": 0
+ },
+ {
   "caso": "1440_zoom200",
   "viewportCSS": "720×450",
   "zoom": 2,
