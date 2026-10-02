@@ -1,0 +1,229 @@
+/* =====================================================================
+   REPASSO MED · rm-audio.css — player compacto do motor rm-audio.js (D1)
+   DORMENTE: nenhuma página carrega este ficheiro nesta fase.
+
+   · Tudo vive dentro de `.rm-audio` (montado no slot que o chamador dá).
+   · COM a Layout V2 (B1): quem decide lateral/inferior é `html[data-rm-dock]`
+     (side/bottom) e o player vive dentro do slot `#rm-l2-player` — ver o
+     bloco «COM A LAYOUT V2» no fim. Sem B1 (harness isolado) vale o
+     fallback sintético abaixo: ≥ 1400px lateral, < 1400px inferior.
+   · Inferior: barra colada ao fundo, respeitando a safe-area.
+   · Sem `transition` obrigatória: com prefers-reduced-motion nada anima.
+   · O motor publica a altura em `--rm-audio-h` (slot e <html>) para o
+     conteúdo poder reservar espaço; a regra `:has` abaixo já o faz em modo
+     inferior para que o mini-player nunca tape o fim da página.
+   ===================================================================== */
+
+.rm-audio {
+  --rma-bg: #ffffff;
+  --rma-fg: #13314f;
+  --rma-muted: #5b6f86;
+  --rma-line: #d5dde8;
+  --rma-accent: #1d5fa8;
+  --rma-accent-fg: #ffffff;
+  --rma-err: #b3261e;
+  --rma-focus: #ffb000;
+
+  box-sizing: border-box;
+  position: fixed;
+  z-index: 2147482000;
+  margin: 0;
+  color: var(--rma-fg);
+  background: var(--rma-bg);
+  border: 1px solid var(--rma-line);
+  font: 14px/1.25 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  box-shadow: 0 6px 24px rgba(10, 30, 60, .18);
+}
+.rm-audio[hidden] { display: none !important; }
+.rm-audio *, .rm-audio *::before, .rm-audio *::after { box-sizing: border-box; }
+
+@media (prefers-color-scheme: dark) {
+  .rm-audio {
+    --rma-bg: #10233a;
+    --rma-fg: #e8eef6;
+    --rma-muted: #9fb2c8;
+    --rma-line: #284563;
+    --rma-accent: #6db3ff;
+    --rma-accent-fg: #07192d;
+    --rma-err: #ffb4ab;
+  }
+}
+
+/* ---------- modo lateral (fallback sintético, sem B1) ---------- */
+.rm-audio[data-mode="lateral"] {
+  left: max(16px, env(safe-area-inset-left));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  border-radius: 14px;
+  padding: 10px 12px 12px;
+}
+
+/* ---------- modo inferior (mini-player) ---------- */
+.rm-audio[data-mode="bottom"] {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  border-width: 1px 0 0;
+  border-radius: 14px 14px 0 0;
+  padding: 6px max(12px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+}
+
+/* ---------- cabeçalho ---------- */
+.rm-audio__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.rm-audio__meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.rm-audio__theme {
+  font-size: 11px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--rma-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rm-audio__title {
+  font-size: 14px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rm-audio[data-mode="bottom"] .rm-audio__theme { display: none; }
+
+/* ---------- barra de posição ---------- */
+.rm-audio__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  min-width: 0;
+}
+.rm-audio__seek {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  margin: 0;
+  accent-color: var(--rma-accent);
+  touch-action: pan-y;
+}
+.rm-audio__time {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--rma-muted);
+  white-space: nowrap;
+}
+
+/* ---------- controlos ---------- */
+.rm-audio__ctl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 2px;
+}
+.rm-audio__btn,
+.rm-audio__rate {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--rma-line);
+  border-radius: 10px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 8px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.rm-audio__btn:hover,
+.rm-audio__rate:hover { border-color: var(--rma-accent); }
+.rm-audio__btn:active { transform: translateY(1px); }
+.rm-audio__main {
+  min-width: 52px;
+  font-size: 16px;
+  color: var(--rma-accent-fg);
+  background: var(--rma-accent);
+  border-color: var(--rma-accent);
+}
+.rm-audio__close {
+  flex: 0 0 auto;
+  min-height: 44px;
+  min-width: 44px;
+  font-size: 20px;
+  line-height: 1;
+  border-color: transparent;
+}
+.rm-audio__rate { min-width: 64px; appearance: auto; }
+.rm-audio:focus-visible,
+.rm-audio__btn:focus-visible,
+.rm-audio__rate:focus-visible,
+.rm-audio__seek:focus-visible {
+  outline: 3px solid var(--rma-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- erro ---------- */
+.rm-audio__err {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--rma-err);
+}
+.rm-audio[data-state="error"] { border-color: var(--rma-err); }
+.rm-audio[data-state="loading"] .rm-audio__main { opacity: .8; }
+
+/* ---------- reservar espaço: o mini-player não tapa o fim da página ----------
+   Só no fallback (sem B1). Com o B1 quem reserva é o próprio B1, via
+   `--rm-player-h` (padding-bottom do #materias-container): reservar aqui
+   também contaria o espaço duas vezes. */
+html:not([data-rm-dock]) body:has(.rm-audio[data-mode="bottom"]:not([hidden])) {
+  padding-bottom: var(--rm-audio-h, 0px);
+}
+html:not([data-rm-dock]):has(.rm-audio[data-mode="bottom"]:not([hidden])) {
+  scroll-padding-bottom: var(--rm-audio-h, 0px);
+}
+
+/* =====================================================================
+   COM A LAYOUT V2 (B1) — `html[data-rm-dock]` manda; o player vive DENTRO
+   do slot #rm-l2-player (fixed entre --rm-left-w e --rm-right-w, altura
+   --rm-player-h). Nada de `left:16px` absoluto: a geometria vem do slot,
+   logo nunca cobre a lateral esquerda nem a toolbox da direita.
+   ===================================================================== */
+.rm-audio[data-layout="b1"] { position: absolute; z-index: auto; }
+
+/* inferior: ocupa o slot de ponta a ponta (o slot tem a altura do player) */
+.rm-audio[data-layout="b1"][data-mode="bottom"] {
+  left: 0; right: 0; bottom: 0; top: auto; width: auto; max-width: none;
+  padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right));
+}
+
+/* lateral: encostado à borda direita do slot (= à esquerda da toolbox), no fundo.
+   O slot tem altura 0 neste modo (--rm-player-h = 0): o player flutua sobre o
+   fundo sem reservar espaço. Largura própria, sem depender de números do B1. */
+.rm-audio[data-layout="b1"][data-mode="lateral"] {
+  left: auto; top: auto;
+  right: var(--rm-player-edge, 8px);                 /* folga até a toolbox: a mesma que o B1 usou para decidir o dock */
+  bottom: calc(16px + var(--rm-safe-b, env(safe-area-inset-bottom, 0px)));
+  width: var(--rm-player-w, 224px);                   /* largura que o B1 reservou ao decidir side/bottom */
+  max-width: 100%;
+  padding: 8px 10px 10px;
+}
+/* 224 px não dá para 5 controlos de 44 px numa linha: o de velocidade desce para a linha seguinte. */
+.rm-audio[data-layout="b1"][data-mode="lateral"] .rm-audio__ctl { flex-wrap: wrap; row-gap: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rm-audio, .rm-audio * { transition: none !important; animation: none !important; }
+}
+@media print { .rm-audio { display: none !important; } }
