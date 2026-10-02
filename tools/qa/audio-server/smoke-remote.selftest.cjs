@@ -10,7 +10,7 @@ const RMAudio = require(path.join(SITE, 'assets', 'rm-audio.js'));
 let okN = 0, koN = 0; const ok = (c, n, x) => { if (c) okN++; else { koN++; console.log('  ✗ ' + n + (x ? ' → ' + x : '')); } };
 
 const MAN = JSON.stringify({ 'semiologia-ii': [{ audio_id: 's2-b01-motivo', block_id: 's2-b01', theme: 'Motivo', title: 'Motivo de consulta', duration: 100, order: 1, version: 'v1', path: 'semiologia-ii/motivo.v1.m4a', ready: true }] });
-let relogio = 1_000_000, ligado = true;
+let relogio = 1_000_000, ligado = true, semRange = false;
 const emitidas = {};          // token de assinatura → expira em
 (async () => {
   let base = '';
@@ -27,7 +27,13 @@ const emitidas = {};          // token de assinatura → expira em
     }
     if (u.pathname === '/sb/auth/v1/user') { const t = (req.headers.authorization || '').replace('Bearer ', ''); return t === 'tok-jose' ? enviar(200, { id: 'uid-jose' }) : t === 'tok-outro' ? enviar(200, { id: 'uid-outro' }) : enviar(401, {}); }
     if (req.method === 'POST' && u.pathname.startsWith('/sb/storage/v1/object/sign/audiobooks/')) { const tk = 'T' + Object.keys(emitidas).length; emitidas[tk] = relogio + 600_000; return enviar(200, { signedURL: u.pathname.replace('/sb/storage/v1', '') + '?token=' + tk }); }
-    if (u.pathname.startsWith('/sb/storage/v1/object/sign/')) { const tk = u.searchParams.get('token'); if (!emitidas[tk] || relogio > emitidas[tk]) return enviar(400, { error: 'expired' }); res.writeHead(206, { 'content-type': 'audio/mp4', 'accept-ranges': 'bytes', 'content-range': 'bytes 0-1/1000' }); return res.end(Buffer.from([0, 0])); }
+    if (u.pathname.startsWith('/sb/storage/v1/object/sign/')) {
+      const tk = u.searchParams.get('token'); if (!emitidas[tk] || relogio > emitidas[tk]) return enviar(400, { error: 'expired' });
+      const TOTAL = 20000, m = /^bytes=(\d+)-(\d*)$/.exec(req.headers.range || '');
+      if (!m || semRange) { res.writeHead(200, { 'content-type': 'audio/mp4' }); return res.end(Buffer.alloc(TOTAL)); }     // servidor SEM suporte a Range
+      const a = +m[1], b = m[2] === '' ? TOTAL - 1 : Math.min(+m[2], TOTAL - 1);
+      res.writeHead(206, { 'content-type': 'audio/mp4', 'accept-ranges': 'bytes', 'content-range': `bytes ${a}-${b}/${TOTAL}` }); return res.end(Buffer.alloc(b - a + 1));
+    }
     return enviar(404, {});
   });
   await new Promise(r => srv.listen(0, '127.0.0.1', r)); base = 'http://127.0.0.1:' + srv.address().port;
@@ -48,6 +54,15 @@ const emitidas = {};          // token de assinatura → expira em
   r = await run('deny', {}); ok(r.c === 0, 'sem token ⇒ negado');
   r = await run('on', { RM_TOKEN: 'tok-outro', RM_AUDIO_ID: 's2-b01-motivo' }); ok(r.c === 1, 'modo on com OUTRA conta reprova (o smoke detecta acesso indevido/ausente)');
 
+  semRange = true;
+  r = await run('on', { RM_TOKEN: 'tok-jose', RM_AUDIO_ID: 's2-b01-motivo' }); ok(r.c === 1 && /Range 206 estrito/.test(r.o), 'Storage que devolve 200 em vez de 206 REPROVA (Safari/iOS não buscaria posição)', r.o);
+  semRange = false;
+  ok((await run('expirada', {}, ['--src', tmp])).c === 1, 'expirada com a URL ainda NOVA (< 10 min) reprova: não prova nada');
+  fs.utimesSync(tmp, new Date(Date.now() - 700_000), new Date(Date.now() - 700_000));
+  r = await run('expirada', { RM_TOKEN: 'tok-jose', RM_AUDIO_ID: 's2-b01-motivo' }, ['--src', tmp]); ok(r.c === 1, 'URL ainda válida no relógio do servidor ⇒ expirada reprova', r.o);
+  relogio += 700_000;                               // o servidor também passou o TTL
+  r = await run('expirada', { RM_TOKEN: 'tok-jose', RM_AUDIO_ID: 's2-b01-motivo' }, ['--src', tmp]); ok(r.c === 0 && /reautoriza/.test(r.o), 'URL expirada: recusada pelo Storage e o servidor emite URL nova', r.o);
+  relogio -= 700_000;
   ligado = false;                                   // «esvaziou a variável e fez o redeploy»
   relogio += 120_000;                               // 2 min depois da emissão
   r = await run('off', { RM_TOKEN: 'tok-jose' }, ['--old-src', tmp]);

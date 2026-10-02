@@ -53,7 +53,9 @@ navegador ──(JWT, audio_id)──► get-audio-url ─► URL assinada 10 mi
      node tools/qa/audio-server/smoke-remote.cjs on --save-src /tmp/src.txt     # LIGADO: manifesto, URL, Range 206
    RM_BASE=… RM_TOKEN=<jwt de OUTRA conta> node tools/qa/audio-server/smoke-remote.cjs deny   # negação idêntica
    RM_BASE=…                                node tools/qa/audio-server/smoke-remote.cjs deny   # sem token
+   RM_BASE=… RM_TOKEN=… RM_AUDIO_ID=… node tools/qa/audio-server/smoke-remote.cjs expirada --src /tmp/src.txt   # ≥ 10 min depois: URL antiga recusada + URL nova emitida
    ```
+   O modo `on` exige **Range 206 estrito** (0-1, meio do arquivo e até o fim): um Storage que devolve 200 reprova (o Safari/iOS não conseguiria buscar posição). Roteiro completo: `tools/audio/RUNBOOK-ATIVACAO-AUDIOBOOKS.md`.
 
 ## Desativar — o que é imediato e o que não é
 

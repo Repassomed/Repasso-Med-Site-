@@ -29,8 +29,10 @@ html.rm-l2 {
   --rm-safe-b: env(safe-area-inset-bottom, 0px);
   --rm-band-top: 0px;                   /* medido por JS: topo da faixa na viewport */
   --rm-band-bottom: 44px;               /* medido por JS: fundo da faixa na viewport */
-  --l2-navy: #13314f; --l2-deep: #081726; --l2-gold: #d8a32a; --l2-ink: #1b2b3d;
+  --l2-navy: #13314f; --l2-deep: #081726; --l2-gold: #d8a32a; --l2-orange: #e8772e; --l2-orange-ink: #b34e0f; --l2-ink: #1b2b3d; --l2-muted: #52627a;
   --l2-rule: #dde5ee; --l2-tint: #edf2f8;
+  /* sistema único de forma e sombra (cards, botões, slots): raio e elevação sutil iguais em todo o shell */
+  --l2-radius: 12px; --l2-shadow: 0 1px 2px rgba(8,23,38,.06), 0 6px 18px rgba(8,23,38,.06);
   --l2-fig: #2563a8; --l2-quiz: #b7791f; --l2-fc: #7c3aed; --l2-aud: #0f766e; --l2-vid: #c2410c;
 
   /* o site mede a altura fixa do topo por estas duas variáveis
@@ -88,7 +90,7 @@ html.rm-l2 #materias-container {
   display: flex; align-items: center; gap: .6rem;
   padding: 0 .7rem;
   background: linear-gradient(100deg, var(--l2-deep), var(--l2-navy) 62%, #0e2742);
-  color: #fff; border-bottom: 2px solid var(--l2-gold);
+  color: #fff; border-bottom: 2px solid var(--l2-orange);
   box-shadow: 0 2px 12px rgba(8,23,38,.22);
   font-family: var(--font-ui, system-ui, sans-serif);
 }
@@ -100,6 +102,11 @@ html.rm-l2 #materias-container {
 }
 .rm-l2-hamb:hover, .rm-l2-mat:hover { background: rgba(255,255,255,.12); }
 html.rm-l2[data-rm-lmode="docked"] .rm-l2-hamb { display: none; }
+.rm-l2-logo {
+  flex: 0 0 auto; height: 34px; width: auto; aspect-ratio: 1024 / 1288; box-sizing: border-box;
+  padding: 2px; border-radius: 8px; background: #fff; object-fit: contain;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.18);
+}
 .rm-l2-name { min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
 .rm-l2-name b {
   font: 800 1.02rem var(--font-display, Georgia, serif); letter-spacing: -.01em;
@@ -111,8 +118,8 @@ html.rm-l2[data-rm-lmode="docked"] .rm-l2-hamb { display: none; }
 }
 .rm-l2-sp { flex: 1 1 auto; }
 .rm-l2-chip {
-  flex: 0 0 auto; padding: .28rem .7rem; border: 1px solid rgba(216,163,42,.7); border-radius: 999px;
-  color: #ffe2a0; font: 700 .7rem var(--font-ui, system-ui, sans-serif); letter-spacing: .02em; white-space: nowrap;
+  flex: 0 0 auto; padding: .28rem .7rem; border: 1px solid rgba(232,119,46,.8); border-radius: 999px;
+  color: #ffd9bd; font: 700 .7rem var(--font-ui, system-ui, sans-serif); letter-spacing: .02em; white-space: nowrap;
 }
 @media (max-width: 620px) { .rm-l2-mat span { display: none; } .rm-l2-name small { display: none; } }
 @media (max-width: 440px) { .rm-l2-chip { display: none; } }
@@ -124,7 +131,7 @@ html.rm-l2[data-rm-lmode="docked"] .rm-l2-hamb { display: none; }
   position: fixed; left: 0; top: var(--rm-band-bottom, 44px); bottom: 0;
   width: var(--rm-left-w); z-index: 360;
   display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden;
-  background: #fff; border-right: 1px solid var(--l2-rule);
+  background: #fff; border-right: 1px solid var(--l2-rule); box-shadow: 6px 0 24px rgba(8,23,38,.035);
   font-family: var(--font-ui, system-ui, sans-serif); color: var(--l2-ink);
 }
 .rm-l2-side-head { flex: 0 0 auto; display: flex; justify-content: flex-end; padding: .25rem .35rem 0; }
@@ -168,7 +175,7 @@ html.rm-l2[data-rm-lmode="rail"] .rm-l2-side:not(.is-open) .rm-l2-side-head { ju
 }
 .rm-l2-item svg { flex: 0 0 auto; }
 .rm-l2-item:hover { background: var(--l2-tint); }
-.rm-l2-item.is-active { background: var(--l2-tint); border-left-color: var(--l2-gold); color: var(--l2-navy); }
+.rm-l2-item.is-active { background: var(--l2-tint); border-left-color: var(--l2-orange); color: var(--l2-navy); }
 .rm-l2-item[data-view="infografias"] svg { color: var(--l2-fig); }
 .rm-l2-item[data-view="preguntas"] svg, .rm-l2-item[data-view="banco"] svg { color: var(--l2-quiz); }
 .rm-l2-item[data-view="flashcards"] svg, .rm-l2-item[data-view="todos-flashcards"] svg { color: var(--l2-fc); }
@@ -199,7 +206,7 @@ html.rm-l2[data-rm-lmode="rail"] .rm-l2-side:not(.is-open) .rm-l2-side-head { ju
 .rm-l2-block-link i { font: 700 .66rem var(--font-mono, monospace); color: #8a6d16; font-style: normal; flex: 0 0 auto; }
 .rm-l2-block-link span { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .rm-l2-block-link:hover { background: var(--l2-tint); }
-.rm-l2-block-link[aria-current="location"] { background: var(--l2-tint); box-shadow: inset 3px 0 0 var(--l2-gold); }
+.rm-l2-block-link[aria-current="location"] { background: var(--l2-tint); box-shadow: inset 3px 0 0 var(--l2-orange); }
 .rm-l2-block-body { padding: 0 .5rem .5rem 2.05rem; }
 .rm-l2-sub {
   display: block; padding: .32rem .5rem; min-height: 30px; box-sizing: border-box; border-radius: 6px;
@@ -223,7 +230,8 @@ html.rm-l2[data-rm-lmode="rail"] .rm-l2-side:not(.is-open) .rm-l2-side-head { ju
 
 /* foco visível em tudo */
 .rm-l2-band button:focus-visible, .rm-l2-side button:focus-visible, .rm-l2-side a:focus-visible,
-.rm-l2-mode-root button:focus-visible { outline: 3px solid #ffc233; outline-offset: 2px; }
+.rm-l2-mode-root button:focus-visible, .rm-l2-cover button:focus-visible { outline: 3px solid var(--l2-orange); outline-offset: 2px; }
+.rm-l2-band button:focus-visible { outline-color: #ffb27a; }   /* sobre o navy da faixa */
 
 /* ---------------------------------------------------------------------
    6 · MODOS ISOLADOS (B1: painel vazio) — fora da Página completa o
@@ -243,14 +251,105 @@ html.rm-l2[data-rm-view]:not([data-rm-view="full"]) #materias-container .rm-hl {
 html.rm-l2[data-rm-view]:not([data-rm-view="full"]) .rm-l2-tree { display: none; }
 
 .rm-l2-empty {
-  padding: 2rem 1.6rem; border: 1px dashed #b9c7d8; border-radius: 16px; background: #f8fafc; text-align: center;
+  padding: 2rem 1.6rem; border: 1px dashed #b9c7d8; border-radius: var(--l2-radius); background: #f8fafc; text-align: center;
   font-family: var(--font-ui, system-ui, sans-serif);
 }
 .rm-l2-empty-t { font: 800 1.35rem var(--font-display, Georgia, serif); color: var(--l2-navy); margin-bottom: .6rem; }
 .rm-l2-empty-p { color: #41505f; font-size: .95rem; line-height: 1.55; max-width: 34rem; margin: 0 auto 1.1rem; }
 .rm-l2-empty-back {
-  min-height: 44px; padding: 0 1.2rem; border: 0; border-radius: 12px; cursor: pointer;
-  background: linear-gradient(120deg, var(--l2-navy), #1d4a75); color: #fff; font: 700 .88rem var(--font-ui, system-ui, sans-serif);
+  min-height: 44px; padding: 0 1.2rem; border: 0; border-radius: var(--l2-radius); cursor: pointer;
+  background: var(--l2-navy); color: #fff; font: 700 .88rem var(--font-ui, system-ui, sans-serif);
+}
+
+/* ---------------------------------------------------------------------
+   9 · CAPA DA MATÉRIA + SLOT DE ARTE (código; a arte final vem de fora)
+       O header gerado pelo app-core (.rm-subject-head: só título e subtítulo, não é conteúdo) é substituído pela capa;
+       o hero escuro e todas as seções da matéria ficam intactos logo abaixo.
+   --------------------------------------------------------------------- */
+html.rm-l2[data-rm-cover] #materias-container > .tab-content > .rm-subject-head { display: none; }
+.rm-l2-cover {
+  box-sizing: border-box; max-width: 880px; margin: 0 auto;
+  padding: clamp(1.1rem, 3.2vw, 2rem) clamp(1rem, 4vw, 2rem) clamp(.9rem, 2vw, 1.4rem);
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem 2rem; align-items: center;
+  font-family: var(--font-ui, system-ui, sans-serif); color: var(--l2-ink);
+  border-bottom: 1px solid var(--l2-rule);
+}
+.rm-l2-cover-body { min-width: 0; }
+.rm-l2-eyebrow { margin: 0 0 .55rem; font: 700 .68rem var(--font-mono, ui-monospace, monospace); letter-spacing: .16em; text-transform: uppercase; color: var(--l2-orange-ink); }
+.rm-l2-cover-title {
+  margin: 0; font: 800 clamp(2rem, 5.2vw, 2.9rem)/1.04 var(--font-display, Georgia, serif); letter-spacing: -.015em; color: var(--l2-navy);
+  overflow-wrap: anywhere;
+}
+.rm-l2-cover-title::after { content: ""; display: block; width: 48px; height: 3px; margin-top: .7rem; border-radius: 2px; background: var(--l2-orange); }
+.rm-l2-cover-sub { margin: .8rem 0 0; font: 500 1.02rem/1.45 var(--font-ui, system-ui, sans-serif); color: var(--l2-muted); }
+.rm-l2-cover-meta { margin: .35rem 0 0; font: 600 .74rem var(--font-mono, ui-monospace, monospace); letter-spacing: .08em; text-transform: uppercase; color: #5b6b80; }
+.rm-l2-cover-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.1rem; }
+.rm-l2-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; padding: 0 1.15rem; box-sizing: border-box;
+  border-radius: var(--l2-radius); border: 1.5px solid var(--l2-navy); cursor: pointer; font: 700 .9rem var(--font-ui, system-ui, sans-serif);
+  transition: background-color .15s, box-shadow .15s, transform .15s;
+}
+.rm-l2-btn-primary { background: var(--l2-navy); color: #fff; box-shadow: var(--l2-shadow); }
+.rm-l2-btn-primary:hover { background: #0e2740; }
+.rm-l2-btn-ghost { background: #fff; color: var(--l2-navy); }
+.rm-l2-btn-ghost:hover { background: var(--l2-tint); }
+.rm-l2-btn:active { transform: translateY(1px); }
+/* o índice já está à vista quando a lateral está docked */
+html.rm-l2[data-rm-lmode="docked"] .rm-l2-btn-idx { display: none; }
+
+/* fileira de RECURSOS da matéria (só os que existem): cartões brancos com ícone em bloco colorido, título, contagem real e seta —
+   atalhos para a primeira ocorrência na Página completa. HTML/CSS acessível (botões reais), nada de imagem de interface. */
+.rm-l2-res { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 1fr)); gap: .6rem; margin-top: .2rem; }
+.rm-l2-rescard {
+  --rc: var(--l2-navy); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .7rem; width: 100%; min-height: 64px; box-sizing: border-box;
+  padding: .55rem .7rem; border: 1px solid var(--l2-rule); border-radius: var(--l2-radius); background: #fff; box-shadow: var(--l2-shadow);
+  text-align: left; font-family: var(--font-ui, system-ui, sans-serif); color: var(--l2-ink); cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.rm-l2-rescard:hover { border-color: var(--rc); box-shadow: 0 2px 4px rgba(8,23,38,.08), 0 10px 22px rgba(8,23,38,.09); }
+.rm-l2-rescard:active { transform: translateY(1px); }
+.rm-l2-rescard:focus-visible { outline: 3px solid var(--l2-orange); outline-offset: 2px; }
+.rm-l2-rescard--res { --rc: var(--l2-navy); } .rm-l2-rescard--fig { --rc: var(--l2-fig); } .rm-l2-rescard--quiz { --rc: var(--l2-quiz); }
+.rm-l2-rescard--fc { --rc: var(--l2-fc); } .rm-l2-rescard--aud { --rc: var(--l2-aud); } .rm-l2-rescard--vid { --rc: var(--l2-vid); }
+.rm-l2-rescard-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 11px; background: var(--rc); color: #fff; }
+.rm-l2-rescard-ico svg { width: 22px; height: 22px; }
+.rm-l2-rescard-tx { display: grid; min-width: 0; line-height: 1.25; }
+.rm-l2-rescard-t { font: 700 .92rem var(--font-ui, system-ui, sans-serif); color: var(--l2-navy); }
+.rm-l2-rescard-s { font: 500 .78rem var(--font-ui, system-ui, sans-serif); color: var(--l2-muted); }
+.rm-l2-rescard-go { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--l2-rule); color: var(--l2-navy); }
+.rm-l2-rescard-go svg { width: 16px; height: 16px; }
+.rm-l2-rescard:hover .rm-l2-rescard-go { background: var(--rc); border-color: var(--rc); color: #fff; }
+/* telas estreitas: 2 colunas compactas (a capa não pode virar uma pilha de cartões antes do conteúdo); a seta sai, o cartão inteiro continua sendo o alvo */
+@media (max-width: 559.98px) {
+  .rm-l2-res { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  .rm-l2-rescard { grid-template-columns: auto minmax(0, 1fr); gap: .55rem; min-height: 60px; padding: .5rem .55rem; }
+  .rm-l2-rescard-go { display: none; }
+  .rm-l2-rescard-ico { width: 36px; height: 36px; border-radius: 10px; }
+  .rm-l2-rescard-t { font-size: .86rem; } .rm-l2-rescard-s { font-size: .72rem; }
+}
+@media (max-width: 340px) { .rm-l2-res { grid-template-columns: minmax(0, 1fr); } }
+/* slot de arte: reservado só quando existe arquivo (estado «vacío» = hidden = 0 px) */
+.rm-l2-art { margin: 0; min-width: 0; }
+.rm-l2-art[hidden] { display: none; }
+.rm-l2-art-frame {
+  position: relative; width: 100%; overflow: hidden; border-radius: var(--l2-radius); background: var(--l2-tint);
+  box-shadow: var(--l2-shadow); max-height: 340px;
+}
+.rm-l2-art-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .25s; }
+.rm-l2-art[data-state="listo"] .rm-l2-art-img { opacity: 1; }
+.rm-l2-art[data-state="cargando"] .rm-l2-art-frame { background: linear-gradient(100deg, var(--l2-tint) 30%, #f7f9fc 50%, var(--l2-tint) 70%); background-size: 220% 100%; }
+@media (prefers-reduced-motion: no-preference) {
+  .rm-l2-art[data-state="cargando"] .rm-l2-art-frame { animation: rm-l2-skel 1.4s linear infinite; }
+}
+@keyframes rm-l2-skel { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+/* com arte: mobile = arte em cima do texto; ≥ 1000 px = duas colunas */
+.rm-l2-cover.has-art .rm-l2-art { order: -1; }
+@media (min-width: 1000px) {
+  .rm-l2-cover.has-art { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
+  .rm-l2-cover.has-art .rm-l2-art { order: 0; }
+}
+@media (max-width: 440px) {
+  .rm-l2-cover-actions .rm-l2-btn { flex: 1 1 100%; }
 }
 
 /* ---------------------------------------------------------------------
@@ -269,6 +368,46 @@ html.rm-l2 .rm-toast { bottom: calc(26px + var(--rm-player-h) + var(--rm-safe-b)
 html.rm-l2 #logout-fab { bottom: calc(18px + var(--rm-player-h) + var(--rm-safe-b)); }
 @media (max-width: 560px) {
   html.rm-l2 .rm2-box { bottom: max(84px, calc(env(safe-area-inset-bottom) + 74px + var(--rm-player-h))); }
+  /* a caixa fica ancorada embaixo (acima do player); o painel não pode crescer além da faixa do shell: 137px = leque (48) + espaço (9) +
+     74 (distância do rodapé) + 6 de respiro; o que passa do limite rola por dentro (sombras de rolagem abaixo) */
+  html.rm-l2 .rm2-panel { max-height: min(58vh, 420px, calc(100vh - var(--rm-player-h) - var(--rm-hdr-h) - env(safe-area-inset-bottom) - 137px)); }
+  @supports (height: 100dvh) {
+    html.rm-l2 .rm2-panel { max-height: min(58dvh, 420px, calc(100dvh - var(--rm-player-h) - var(--rm-hdr-h) - env(safe-area-inset-bottom) - 137px)); }
+  }
+}
+/* 561–767 px: a V2 só ancora a toolbox embaixo em ≤ 560; daqui até 767 ela fica centrada na vertical (top:50%) e o player inferior
+   (largura toda, altura --rm-player-h) podia cobri-la — sobretudo em janela baixa e com o painel aberto.
+   Região livre = entre a faixa do shell (--rm-hdr-h + 6) e o player (− 8): a caixa (painel + 9 + leque 52) é centrada NESSA região e o
+   painel é limitado ao que sobra, então nenhum botão do painel fica sob o player (o que passa do limite rola por dentro do painel —
+   ver «sombras de rolagem» abaixo). Centro da região = 50% − player/2 + (faixa − 2)/2: o termo da faixa (23px, faixa = 48) só entra
+   quando há player, por min(--rm-player-h, 1px) ∈ {0, 1px}. Sem player (--rm-player-h = 0) o topo devolve exatamente a posição
+   original (50%) e o limite só aperta em janelas muito baixas. ≥ 768 px o slot termina antes da raia da toolbox (--rm-right-w).
+   Só posição/tamanho no Layout: o motor do player, a V2 e a caneta não são tocados. 75px = leque (52) + espaço (9) + 6 + 8 de respiro. */
+@media (min-width: 561px) and (max-width: 767px) {
+  html.rm-l2 .rm2-box { top: calc(50% - (var(--rm-player-h) / 2) + (min(var(--rm-player-h), 1px) * 23)); }
+  html.rm-l2 .rm2-panel { max-height: min(76vh, 660px, calc(100vh - var(--rm-player-h) - var(--rm-hdr-h) - 75px)); }
+}
+@media (min-width: 561px) and (max-width: 767px) and (max-height: 640px) {
+  html.rm-l2 .rm2-panel { max-height: min(64vh, calc(100vh - var(--rm-player-h) - var(--rm-hdr-h) - 75px)); }
+}
+@supports (height: 100dvh) {
+  @media (min-width: 561px) and (max-width: 767px) {
+    html.rm-l2 .rm2-panel { max-height: min(76dvh, 660px, calc(100dvh - var(--rm-player-h) - var(--rm-hdr-h) - 75px)); }
+  }
+  @media (min-width: 561px) and (max-width: 767px) and (max-height: 640px) {
+    html.rm-l2 .rm2-panel { max-height: min(64dvh, calc(100dvh - var(--rm-player-h) - var(--rm-hdr-h) - 75px)); }
+  }
+}
+/* Sombras de rolagem: quando o painel rola por dentro (janela baixa + player), os botões que não cabem ficam recortados e o aluno não
+   percebe que há mais. Sombra suave no topo/base SÓ quando há conteúdo para aquele lado (técnica local/scroll: as capas `local`
+   escondem a sombra quando a rolagem chega à borda). Sem rolagem não aparece nada: o painel fica como o da V2. Só pintura. */
+html.rm-l2 .rm2-panel {
+  background:
+    linear-gradient(#fefefe 30%, rgba(254, 254, 254, 0)) center top / 100% 22px no-repeat local,
+    linear-gradient(rgba(246, 249, 253, 0), #f6f9fd 70%) center bottom / 100% 22px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, rgba(8, 23, 38, .26), rgba(8, 23, 38, 0)) center top / 100% 9px no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, rgba(8, 23, 38, .26), rgba(8, 23, 38, 0)) center bottom / 100% 9px no-repeat scroll,
+    linear-gradient(180deg, rgba(255, 255, 255, .985) 0%, rgba(246, 249, 253, .985) 100%);
 }
 /* painel de diagnóstico da caneta (só existe no piloto): abre ao lado da lateral e acima do slot do
    player, sem cobri-los. Só posição/tamanho (CSS); o motor da caneta não é tocado. */
