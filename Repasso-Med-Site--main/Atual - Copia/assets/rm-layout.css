@@ -1,0 +1,283 @@
+/* =====================================================================
+   REPASSO MED · rm-layout.css
+   Layout V2 · Fase B1 — shell visual do PILOTO
+
+   Este CSS só é baixado por rm-pilot.js (conta piloto × semiologia-ii) e
+   TODA regra começa por `html.rm-l2`, classe que rm-layout.js só põe
+   enquanto a matéria do piloto está aberta e tira ao sair dela. Não
+   existe nenhuma regra global aqui: para quem não é piloto este arquivo
+   nem chega a ser pedido; para o piloto, em qualquer outra matéria, ele
+   não casa com nada.
+
+   NADA aqui mexe em section[id], p, li, h2–h5, table, figure ou
+   blockquote do conteúdo: o shell é irmão do conteúdo (faixa e lateral
+   fora do #materias-container, painel de modos como filho dele mas fora
+   de qualquer section[id]). A única coisa que o conteúdo recebe é
+   margem/padding no #materias-container (que não é âncora de nada).
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1 · VARIÁVEIS ÚNICAS (tudo o que é fixo deriva daqui — plano §8.2)
+   --------------------------------------------------------------------- */
+html.rm-l2 {
+  --rm-hdr-h: 44px;                     /* faixa compacta */
+  --rm-left-w: 0px;                     /* 264 docked · 64 trilho · 0 drawer */
+  --rm-right-w: 0px;                    /* toolbox (58) + margem (9) */
+  --rm-player-w: 224px;                 /* largura do player LATERAL (a do dock: rm-layout.js PLAYER_W) */
+  --rm-player-edge: 8px;                /* folga do player lateral até a toolbox (a do dock: rm-layout.js PLAYER_EDGE) */
+  --rm-player-h: 0px;                   /* slot do futuro player (0 enquanto não há áudio) */
+  --rm-safe-b: env(safe-area-inset-bottom, 0px);
+  --rm-band-top: 0px;                   /* medido por JS: topo da faixa na viewport */
+  --rm-band-bottom: 44px;               /* medido por JS: fundo da faixa na viewport */
+  --l2-navy: #13314f; --l2-deep: #081726; --l2-gold: #d8a32a; --l2-ink: #1b2b3d;
+  --l2-rule: #dde5ee; --l2-tint: #edf2f8;
+  --l2-fig: #2563a8; --l2-quiz: #b7791f; --l2-fc: #7c3aed; --l2-aud: #0f766e; --l2-vid: #c2410c;
+
+  /* o site mede a altura fixa do topo por estas duas variáveis
+     (scroll-padding, scroll-margin dos blocos, «continuar de onde paraste»):
+     no piloto o único elemento fixo é a faixa. */
+  --topbar-h: var(--rm-hdr-h);
+  --tabs-h: 0px;
+  /* a barra de marcação V1 (contas sem a V2) começa logo abaixo da faixa */
+  --rm-rail-top: calc(var(--rm-band-bottom) + 14px);
+}
+html.rm-l2[data-rm-lmode="docked"] { --rm-left-w: 264px; }
+html.rm-l2[data-rm-lmode="rail"]   { --rm-left-w: 64px; }
+html.rm-l2[data-rm-lmode="off"]    { --rm-left-w: 0px; }
+html.rm-l2:not([data-rm-lmode="off"]) { --rm-right-w: 67px; }
+@media (max-width: 767.98px) { html.rm-l2 { --rm-hdr-h: 48px; } }
+
+/* ---------------------------------------------------------------------
+   2 · CABEÇALHO DO SITE: deixa de ser fixo (a faixa passa a ser o fixo)
+   --------------------------------------------------------------------- */
+html.rm-l2 .rm-topbar { position: relative; top: auto; height: 60px; }
+html.rm-l2 .main-tabs { position: relative; top: auto; height: 56px; }
+@media (max-width: 700px) {
+  html.rm-l2 .rm-topbar { height: 52px; }
+  html.rm-l2 .main-tabs { height: 50px; }
+}
+
+/* os três flutuantes da esquerda viram itens da lateral (piloto) */
+html.rm-l2 .rm-menu,
+html.rm-l2 .rm-sug-fab,
+html.rm-l2 #materias-container .rm-tools { display: none !important; }
+
+/* ---------------------------------------------------------------------
+   3 · CONTEÚDO: só ganha espaço reservado; a coluna de texto não muda
+   --------------------------------------------------------------------- */
+html.rm-l2 #materias-container {
+  box-sizing: border-box;
+  padding-left: var(--rm-left-w);
+  padding-right: var(--rm-right-w);
+  padding-bottom: calc(var(--rm-player-h) + var(--rm-safe-b));
+}
+
+/* ---------------------------------------------------------------------
+   4 · FAIXA COMPACTA (nome da matéria sempre visível)
+
+   O site aplica overflow-x:hidden em html e body (app-core), o que faz o
+   position:sticky nunca grudar (o próprio cabeçalho antigo já não gruda).
+   Por isso a faixa é FIXED e o JS segue o cabeçalho que some ao rolar:
+   `--rm-band-top` = max(0, topo do espaçador). O espaçador ocupa o lugar
+   da faixa no fluxo, então nada pula.
+   --------------------------------------------------------------------- */
+.rm-l2-band-ph { height: var(--rm-hdr-h); }
+.rm-l2-band {
+  position: fixed; left: 0; right: 0; top: var(--rm-band-top, 0px); z-index: 340;
+  box-sizing: border-box; height: var(--rm-hdr-h);
+  display: flex; align-items: center; gap: .6rem;
+  padding: 0 .7rem;
+  background: linear-gradient(100deg, var(--l2-deep), var(--l2-navy) 62%, #0e2742);
+  color: #fff; border-bottom: 2px solid var(--l2-gold);
+  box-shadow: 0 2px 12px rgba(8,23,38,.22);
+  font-family: var(--font-ui, system-ui, sans-serif);
+}
+.rm-l2-hamb, .rm-l2-mat, .rm-l2-rail-btn, .rm-l2-close {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  min-width: 44px; min-height: 44px; padding: 0 .6rem;
+  border: 0; border-radius: 10px; background: transparent; color: inherit;
+  font: 700 .82rem var(--font-ui, system-ui, sans-serif); cursor: pointer;
+}
+.rm-l2-hamb:hover, .rm-l2-mat:hover { background: rgba(255,255,255,.12); }
+html.rm-l2[data-rm-lmode="docked"] .rm-l2-hamb { display: none; }
+.rm-l2-name { min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.rm-l2-name b {
+  font: 800 1.02rem var(--font-display, Georgia, serif); letter-spacing: -.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rm-l2-name small {
+  font: 600 .58rem var(--font-mono, monospace); letter-spacing: .14em; text-transform: uppercase;
+  color: #9fb6cf; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: .18rem;
+}
+.rm-l2-sp { flex: 1 1 auto; }
+.rm-l2-chip {
+  flex: 0 0 auto; padding: .28rem .7rem; border: 1px solid rgba(216,163,42,.7); border-radius: 999px;
+  color: #ffe2a0; font: 700 .7rem var(--font-ui, system-ui, sans-serif); letter-spacing: .02em; white-space: nowrap;
+}
+@media (max-width: 620px) { .rm-l2-mat span { display: none; } .rm-l2-name small { display: none; } }
+@media (max-width: 440px) { .rm-l2-chip { display: none; } }
+
+/* ---------------------------------------------------------------------
+   5 · LATERAL (docked 264 · trilho 64 · drawer)
+   --------------------------------------------------------------------- */
+.rm-l2-side {
+  position: fixed; left: 0; top: var(--rm-band-bottom, 44px); bottom: 0;
+  width: var(--rm-left-w); z-index: 360;
+  display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden;
+  background: #fff; border-right: 1px solid var(--l2-rule);
+  font-family: var(--font-ui, system-ui, sans-serif); color: var(--l2-ink);
+}
+.rm-l2-side-head { flex: 0 0 auto; display: flex; justify-content: flex-end; padding: .25rem .35rem 0; }
+.rm-l2-rail-btn { color: var(--l2-navy); }
+.rm-l2-rail-btn:hover, .rm-l2-close:hover { background: var(--l2-tint); }
+.rm-l2-close { display: none; color: var(--l2-navy); }
+.rm-l2-side-scroll { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding-bottom: .6rem; }
+.rm-l2-side-foot { flex: 0 0 auto; border-top: 1px solid var(--l2-rule); padding: .3rem 0 calc(.3rem + var(--rm-safe-b)); }
+
+/* drawer (celular / tablet): fora da tela até abrir */
+html.rm-l2[data-rm-lmode="off"] .rm-l2-side {
+  width: min(288px, 86vw); transform: translateX(-102%); visibility: hidden;
+  transition: transform .2s ease, visibility 0s linear .2s;
+}
+html.rm-l2[data-rm-lmode="off"] .rm-l2-rail-btn { display: none; }
+.rm-l2-side.is-open {
+  width: min(288px, 86vw) !important; transform: none !important; visibility: visible !important;
+  z-index: 99995; box-shadow: 8px 0 32px rgba(8,23,38,.28);
+  transition: transform .2s ease, visibility 0s;
+}
+.rm-l2-side.is-open .rm-l2-close { display: inline-flex; }
+.rm-l2-side.is-open .rm-l2-rail-btn { display: none !important; }
+.rm-l2-backdrop {
+  position: fixed; inset: 0; z-index: 99994; background: rgba(8,23,38,.45);
+  opacity: 0; pointer-events: none; transition: opacity .2s ease;
+}
+.rm-l2-backdrop.is-on { opacity: 1; pointer-events: auto; }
+
+/* trilho de ícones: só ícones (o rótulo vai no title) */
+html.rm-l2[data-rm-lmode="rail"] .rm-l2-side:not(.is-open) .lbl,
+html.rm-l2[data-rm-lmode="rail"] .rm-l2-side:not(.is-open) .rm-l2-tree,
+html.rm-l2[data-rm-lmode="rail"] .rm-l2-side:not(.is-open) .rm-l2-sep { display: none; }
+html.rm-l2[data-rm-lmode="rail"] .rm-l2-side:not(.is-open) .rm-l2-item { justify-content: center; padding-left: 0; padding-right: 0; }
+html.rm-l2[data-rm-lmode="rail"] .rm-l2-side:not(.is-open) .rm-l2-side-head { justify-content: center; }
+
+/* itens (modos e atalhos) */
+.rm-l2-item {
+  display: flex; align-items: center; gap: .7rem; width: 100%; min-height: 44px; box-sizing: border-box;
+  padding: .5rem .9rem; border: 0; border-left: 3px solid transparent; background: none;
+  color: var(--l2-ink); font: 600 .88rem var(--font-ui, system-ui, sans-serif); text-align: left; cursor: pointer;
+}
+.rm-l2-item svg { flex: 0 0 auto; }
+.rm-l2-item:hover { background: var(--l2-tint); }
+.rm-l2-item.is-active { background: var(--l2-tint); border-left-color: var(--l2-gold); color: var(--l2-navy); }
+.rm-l2-item[data-view="infografias"] svg { color: var(--l2-fig); }
+.rm-l2-item[data-view="preguntas"] svg, .rm-l2-item[data-view="banco"] svg { color: var(--l2-quiz); }
+.rm-l2-item[data-view="flashcards"] svg, .rm-l2-item[data-view="todos-flashcards"] svg { color: var(--l2-fc); }
+.rm-l2-item[data-view="audiobooks"] svg, .rm-l2-item[data-view="auscultacion"] svg { color: var(--l2-aud); }
+.rm-l2-item[data-view="videos"] svg { color: var(--l2-vid); }
+.rm-l2-sep {
+  padding: .8rem .95rem .25rem; font: 700 .6rem var(--font-mono, monospace);
+  letter-spacing: .14em; text-transform: uppercase; color: #6b7d92;
+}
+
+/* árvore do índice */
+.rm-l2-tree-tools { padding: .15rem .55rem .25rem; }
+.rm-l2-tree-toggle {
+  display: inline-flex; align-items: center; gap: .3rem; min-height: 36px; padding: 0 .55rem;
+  border: 0; border-radius: 8px; background: none; color: #41505f; font: 700 .72rem var(--font-ui, system-ui, sans-serif); cursor: pointer;
+}
+.rm-l2-tree-toggle:hover { background: var(--l2-tint); }
+.rm-l2-tree-toggle svg, .rm-l2-block-open svg { width: 16px; height: 16px; transition: transform .15s ease; }
+.rm-l2-tree-toggle[aria-expanded="false"] svg, .rm-l2-block-open[aria-expanded="false"] svg { transform: rotate(-90deg); }
+.rm-l2-block-head { display: flex; align-items: stretch; }
+.rm-l2-block-open {
+  flex: 0 0 34px; border: 0; background: none; color: #6b7d92; cursor: pointer; display: grid; place-items: center; min-height: 40px;
+}
+.rm-l2-block-link {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: .5rem; padding: .4rem .7rem .4rem .1rem;
+  color: var(--l2-ink); text-decoration: none; font: 700 .82rem/1.25 var(--font-ui, system-ui, sans-serif);
+}
+.rm-l2-block-link i { font: 700 .66rem var(--font-mono, monospace); color: #8a6d16; font-style: normal; flex: 0 0 auto; }
+.rm-l2-block-link span { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.rm-l2-block-link:hover { background: var(--l2-tint); }
+.rm-l2-block-link[aria-current="location"] { background: var(--l2-tint); box-shadow: inset 3px 0 0 var(--l2-gold); }
+.rm-l2-block-body { padding: 0 .5rem .5rem 2.05rem; }
+.rm-l2-sub {
+  display: block; padding: .32rem .5rem; min-height: 30px; box-sizing: border-box; border-radius: 6px;
+  color: #41505f; text-decoration: none; font: 500 .78rem/1.3 var(--font-ui, system-ui, sans-serif);
+}
+.rm-l2-sub:hover { background: var(--l2-tint); color: var(--l2-navy); }
+.rm-l2-chips { display: flex; flex-wrap: wrap; gap: .3rem; padding: .15rem 0 .4rem; }
+.rm-l2-chip-r {
+  min-height: 28px; padding: .15rem .6rem; border: 1px solid var(--l2-rule); border-left-width: 3px; border-radius: 999px;
+  background: #fff; color: var(--l2-ink); font: 700 .68rem var(--font-ui, system-ui, sans-serif); cursor: pointer;
+}
+.rm-l2-chip-r.t-fig { border-left-color: var(--l2-fig); } .rm-l2-chip-r.t-quiz { border-left-color: var(--l2-quiz); }
+.rm-l2-chip-r.t-fc { border-left-color: var(--l2-fc); } .rm-l2-chip-r.t-aud { border-left-color: var(--l2-aud); }
+.rm-l2-chip-r.t-vid { border-left-color: var(--l2-vid); }
+.rm-l2-chip-r:hover { background: var(--l2-tint); }
+@media (pointer: coarse) {
+  .rm-l2-sub { min-height: 44px; display: flex; align-items: center; }
+  .rm-l2-chip-r { min-height: 40px; }
+  .rm-l2-block-link { min-height: 44px; }
+}
+
+/* foco visível em tudo */
+.rm-l2-band button:focus-visible, .rm-l2-side button:focus-visible, .rm-l2-side a:focus-visible,
+.rm-l2-mode-root button:focus-visible { outline: 3px solid #ffc233; outline-offset: 2px; }
+
+/* ---------------------------------------------------------------------
+   6 · MODOS ISOLADOS (B1: painel vazio) — fora da Página completa o
+       conteúdo, a toolbox, os highlights e a camada de tinta ficam ocultos
+   --------------------------------------------------------------------- */
+.rm-l2-mode-root { display: none; }
+html.rm-l2[data-rm-view]:not([data-rm-view="full"]) .rm-l2-mode-root {
+  display: block; max-width: 880px; margin: 0 auto; padding: 2.4rem 1.2rem 3rem; box-sizing: border-box;
+}
+html.rm-l2[data-rm-view]:not([data-rm-view="full"]) #materias-container > .tab-content.active > * { display: none !important; }
+html.rm-l2[data-rm-view]:not([data-rm-view="full"]) .rm2-box,
+html.rm-l2[data-rm-view]:not([data-rm-view="full"]) .rm2-notes,
+html.rm-l2[data-rm-view]:not([data-rm-view="full"]) .rm-tools-r { display: none !important; }
+html.rm-l2[data-rm-view]:not([data-rm-view="full"]) #rm2-ink { display: none !important; }
+html.rm-l2[data-rm-view]:not([data-rm-view="full"]) #materias-container .rm-hl { background: transparent !important; }
+/* a árvore do índice só existe na Página completa */
+html.rm-l2[data-rm-view]:not([data-rm-view="full"]) .rm-l2-tree { display: none; }
+
+.rm-l2-empty {
+  padding: 2rem 1.6rem; border: 1px dashed #b9c7d8; border-radius: 16px; background: #f8fafc; text-align: center;
+  font-family: var(--font-ui, system-ui, sans-serif);
+}
+.rm-l2-empty-t { font: 800 1.35rem var(--font-display, Georgia, serif); color: var(--l2-navy); margin-bottom: .6rem; }
+.rm-l2-empty-p { color: #41505f; font-size: .95rem; line-height: 1.55; max-width: 34rem; margin: 0 auto 1.1rem; }
+.rm-l2-empty-back {
+  min-height: 44px; padding: 0 1.2rem; border: 0; border-radius: 12px; cursor: pointer;
+  background: linear-gradient(120deg, var(--l2-navy), #1d4a75); color: #fff; font: 700 .88rem var(--font-ui, system-ui, sans-serif);
+}
+
+/* ---------------------------------------------------------------------
+   7 · SLOT RESERVADO DO PLAYER (vazio; 0 px; B1 não tem áudio)
+   --------------------------------------------------------------------- */
+.rm-l2-player {
+  position: fixed; left: var(--rm-left-w); right: var(--rm-right-w); bottom: 0; z-index: 99989;
+  height: var(--rm-player-h); box-sizing: border-box; padding-bottom: var(--rm-safe-b);
+}
+.rm-l2-player[hidden] { display: none; }
+
+/* ---------------------------------------------------------------------
+   8 · CONVIVÊNCIA COM OS OUTROS FIXOS (todos derivam das variáveis)
+   --------------------------------------------------------------------- */
+html.rm-l2 .rm-toast { bottom: calc(26px + var(--rm-player-h) + var(--rm-safe-b)); }
+html.rm-l2 #logout-fab { bottom: calc(18px + var(--rm-player-h) + var(--rm-safe-b)); }
+@media (max-width: 560px) {
+  html.rm-l2 .rm2-box { bottom: max(84px, calc(env(safe-area-inset-bottom) + 74px + var(--rm-player-h))); }
+}
+/* painel de diagnóstico da caneta (só existe no piloto): abre ao lado da lateral e acima do slot do
+   player, sem cobri-los. Só posição/tamanho (CSS); o motor da caneta não é tocado. */
+html.rm-l2 .rm2-diag {
+  left: calc(var(--rm-left-w) + 8px);
+  bottom: calc(8px + var(--rm-player-h) + var(--rm-safe-b));
+  width: min(430px, calc(100vw - var(--rm-left-w) - 70px));   /* mesma borda direita do original (100vw − 62px) */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rm-l2-side, .rm-l2-backdrop, .rm-l2-tree-toggle svg, .rm-l2-block-open svg { transition: none !important; }
+}
