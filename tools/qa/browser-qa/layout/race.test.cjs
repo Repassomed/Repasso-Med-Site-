@@ -106,7 +106,7 @@ async function cenariosSairDaMateria(br, base, w, h) {
     const sc = await rmScrolls(f.page, t); const rp = await reposApos(f.page, t);
     ok(restaurou(sc, f.Y).length === 0 && sc.length === 0, `0 rolagens tardias do shell depois do detach (${JSON.stringify(sc.map(c => c.arg))})`);
     ok(await f.page.evaluate(() => window.__dep) === 0, '0 callbacks (opts.depois) depois do detach');
-    ok(rp.length <= 1 && rp.every(c => c.view === 'full'), `no máximo 1 reposicionamento — o do PRÓPRIO detach (a matéria continua na tela e a tinta volta ao X original); nada da transição (${rp.length})`);
+    ok(rp.length === 1 && rp.every(c => c.view === 'full'), `EXATAMENTE 1 reposicionamento — o do PRÓPRIO detach (a matéria continua na tela: a tinta volta ao X original); nada da transição (${rp.length})`);
     ok(await f.page.evaluate(() => !document.documentElement.classList.contains('rm-l2') && !document.querySelector('[data-rm-ui]')), 'shell removido por completo (classe rm-l2 e [data-rm-ui])');
     ok(await f.page.evaluate(() => window.RMModes.gen > 0), 'a geração do módulo avançou (callbacks velhos invalidados)');
     ok(f.errs.length === 0, `0 erros JS (${f.errs.length})`);
