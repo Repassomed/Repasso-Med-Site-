@@ -18,6 +18,10 @@ Já tentado e **barrado** (não repetir): download pelo conector do Drive (limit
 | C | `Semio - 3 Sindrome Parenquimatoso.m4a` | 26 196 225 B | `s2-b04` — Síndrome Parenquimatoso (Condensación · Neumonía) |
 | D | `Semio_-_4_sindrome_pleual.m4a` | 37 840 755 B | `s2-b05` — Síndromes Pleurales (Derrame y Neumotórax) |
 
+**Inventário real do Drive (conferido em 2026-10-02 pelo conector, só metadados):** a pasta `Semiologia II ▸ Audiobooks` (id `1APjpeMTDGrBzytbZSKcsxi704PniIEmT`,
+criada em 2026-09-21; o nome real é «Audiobooks») contém **exatamente 4 arquivos `.m4a`** — os da tabela acima, com os mesmos ids e tamanhos do inventário anterior (modificados em 21–24/09/2026).
+Nenhum outro arquivo (nem transcrição, nem sons de ausculta) está nessa pasta. O ambiente continua sem alcançar o conteúdo (`drive.google.com` e `drive.usercontent.google.com` sem resposta; conector limitado a 10 MB).
+
 Três caminhos, **um basta** (em ordem de preferência):
 
 1. **Rodar na máquina do José** (não depende deste ambiente): §2, com os 4 arquivos numa pasta local fora do Git. O José devolve o `relatorio.md`/`relatorio.json`
@@ -47,6 +51,23 @@ STOI é objetivo: **a escuta humana a 1×, 2× e 2,5× decide** (`escuta_humana_
 Para cada áudio, o relatório do Claude conterá: assunto identificado · bloco recomendado · confiança · trechos/temas que justificam · dúvida residual;
 com dúvida ⇒ **`REVISÃO HUMANA NECESSÁRIA`**. O nome do arquivo nunca é prova. Ferramenta: `vincular --transcricao … --materia
 "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"` (TF-IDF contra cada `section#s2-bNN`), ou a escuta do José.
+
+### O que ouvir para confirmar (derivado do TEXTO da matéria — não do áudio)
+
+A matéria Semiología II tem **10 blocos** (`s2-b01`…`s2-b10`). O vínculo candidato por nome não vale; o conteúdo falado decide, **entre todos os 10**.
+**Armadilha já identificada:** há **dois** blocos de «motivo de consulta» — `s2-b01` (respiratório) e `s2-b06` (cardíaco). O áudio A (`Semio_-_Motivo_de_Consulta`) só se vincula depois de ouvir de qual deles fala.
+
+| Bloco | Título | Termos mais distintivos do bloco (TF-IDF do texto da matéria; procurar no áudio) |
+|---|---|---|
+| `s2-b01` | Motivo de consulta respiratorio | hemoptisis, hematemesis, platipnea, trepopnea, mMRC, glotis, mucosas, tos inspiratoria/forzada, receptores |
+| `s2-b02` | Síndrome Infeccioso (traqueobronquitis y bronquitis) | — (sem áudio candidato) |
+| `s2-b03` | Síndrome Obstructivo (Asma y EPOC) | asma, espirometría, broncodilatador, reversibilidad, atopia, cociente (VEF1/CVF), hiperinsuflación, espiración |
+| `s2-b04` | Síndrome Parenquimatoso (Condensación · Neumonía) | neumonía, nosocomial, CURB-65, urea, condensación, atelectasia, broncograma, soplo tubárico, vibraciones |
+| `s2-b05` | Síndromes Pleurales (Derrame y Neumotórax) | neumotórax, derrame, trasudado/exudado, criterios de Light, toracocentesis, hidrotórax, hemotórax, abovedamiento |
+| `s2-b06`…`s2-b10` | motivo cardíaco · insuficiencia cardíaca · HTA · ECG · sistema gástrico | — |
+
+Para cada áudio o relatório do Claude trará: assunto identificado · bloco recomendado · confiança · trechos que justificam · dúvida residual. **Dúvida ⇒ `REVISÃO HUMANA NECESSÁRIA` e o áudio fica FORA do manifesto.**
+Sons de ausculta (mp3 próprios, em `assets/audio/semio*`) **não** recebem o perfil de fala: nada deste pipeline os toca.
 
 ## 4. Manifesto (`RM_AUDIO_MANIFEST`) — só depois de confirmar
 
