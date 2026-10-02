@@ -37,6 +37,16 @@ async function session(browser,st,user,{viewport={width:1280,height:900},wait=18
 const inkCount=(page)=>page.evaluate(()=>document.querySelectorAll('#rm2-ink path').length);
 const inkIds=(page)=>page.evaluate(()=>[...document.querySelectorAll('#rm2-ink path')].map(p=>p.getAttribute('data-ink')||'').sort());
 const tmpCount=(page)=>page.evaluate(()=>[...document.querySelectorAll('#rm2-ink path')].filter(p=>(p.getAttribute('data-ink')||'').startsWith('tmp-')).length);
+/* ACHADO C corrigido: o id do traço agora é gerado no CLIENTE
+   (`crypto.randomUUID()`) desde a criação — nunca mais passa por um
+   prefixo «tmp-» em navegadores modernos, então `tmpCount` sozinho já
+   não serve para detectar "ainda não confirmado". `pendingCount` lê o
+   indicador PERSISTENTE do achado D (classe `.rm2-ink-pendiente`,
+   ligada em `marcarComoPendente()`/desligada só após confirmação real
+   — sucesso ou 23505+leitura de confirmação) — é a forma correta de
+   perguntar "este traço está visível mas ainda não confirmado como
+   salvo?" depois da correção. */
+const pendingCount=(page)=>page.evaluate(()=>document.querySelectorAll('#rm2-ink path.rm2-ink-pendiente').length);
 
 /* pontos de parágrafos visíveis para desenhar; devolve o alvo i-ésimo (rola até ele) */
 async function target(page,i=0){
@@ -78,4 +88,4 @@ async function eraseStroke(page,id,slug='semiologia-ii'){
   }
   return false;
 }
-module.exports={finding,F,eraseStroke,R,ok,info,finish,sleep,startStack,mkUser,sql,countStrokes,chaos,logOf,logClear,session,inkCount,inkIds,tmpCount,target,drawStroke,pw,Pool};
+module.exports={finding,F,eraseStroke,R,ok,info,finish,sleep,startStack,mkUser,sql,countStrokes,chaos,logOf,logClear,session,inkCount,inkIds,tmpCount,pendingCount,target,drawStroke,pw,Pool};
