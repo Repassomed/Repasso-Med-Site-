@@ -151,12 +151,19 @@
   }
 
   /* ----------------------- arbitragem e ciclo de vida ----------------------- */
-  /* Inserir/remover os cards muda a altura da matéria: pede à caneta (API pública da V2) que reposicione os traços já desenhados,
-     em vez de depender de quem observa o redimensionamento. Nunca falha: sem a V2 não há nada a reposicionar. */
+  /* Inserir/remover os cards muda a altura da matéria. A tinta (V2) é reposicionada SÓ pelo caminho protegido do Layout
+     (`RMLayout.pedirReposicao`, #425): o pedido é coalescido, espera 2 frames + respiro, NUNCA roda enquanto a caneta está em
+     contato (`body.rm2-pen-down`/traço em curso: fica pendente até o pointerup/pointercancel) e, ao executar, reconfere matéria,
+     geração do shell e Página completa. O boot NÃO chama `RMToolsV2.reposicionar()` diretamente nem agenda timers/rAF próprios:
+     assim não há segundo mecanismo concorrente e nenhum callback do áudio sobrevive a trocar de matéria ou sair da conta.
+     Sem `pedirReposicao` (Layout anterior à #425) o boot não faz nada: a V2 reposiciona pelo próprio observador. */
   function reposicionarTinta() {
-    var f = function () { try { var t = root.RMToolsV2; if (t && typeof t.reposicionar === 'function') t.reposicionar(); } catch (e) { /* ignore */ } };
-    f();
-    try { root.requestAnimationFrame(f); } catch (e) { /* ignore */ }
+    try {
+      var tab = tabAtiva();
+      if (!tab || tab.id !== TAB_ID) return;                     // outra matéria: nada a reposicionar
+      var L = root.RMLayout;
+      if (L && typeof L.pedirReposicao === 'function') L.pedirReposicao();
+    } catch (e) { /* ignore */ }
   }
 
   function pausarNativos() {
@@ -185,7 +192,7 @@
   function verificarVida() {
     if (!st) return;
     var tab = tabAtiva();
-    if (!tab || tab.id !== TAB_ID || !d().querySelector(SLOT) || !root.RMLayout) { try { st.engine && st.engine.handle('subject-change'); } catch (e) { /* ignore */ } stop(); }
+    if (!tab || tab.id !== TAB_ID || !d().querySelector(SLOT) || !root.RMLayout) { st.encerrando = true; try { st.engine && st.engine.handle('subject-change'); } catch (e) { /* ignore */ } stop(); }
   }
 
   /* Vigia a VIDA do boot desde o primeiro instante (antes de o manifesto chegar): trocar de matéria, o slot sumir ou SIGNED_OUT
@@ -201,7 +208,7 @@
     try {
       var sb = root.RM_SB || root._sb;
       if (sb && sb.auth && typeof sb.auth.onAuthStateChange === 'function') {
-        var r = sb.auth.onAuthStateChange(function (evt) { if (evt === 'SIGNED_OUT') { try { st && st.engine && st.engine.handle('logout'); } catch (e) { /* ignore */ } stop(); } });
+        var r = sb.auth.onAuthStateChange(function (evt) { if (evt === 'SIGNED_OUT') { if (st) st.encerrando = true; try { st && st.engine && st.engine.handle('logout'); } catch (e) { /* ignore */ } stop(); } });
         st.sub = r && r.data && r.data.subscription;
       }
     } catch (e) { /* ignore */ }
@@ -225,7 +232,7 @@
     try { if (s.sub && s.sub.unsubscribe) s.sub.unsubscribe(); } catch (e) { /* ignore */ }
     var tinham = (s.cards || []).length;
     (s.cards || []).forEach(function (c) { if (c.parentNode) c.parentNode.removeChild(c); });
-    if (tinham) reposicionarTinta();
+    if (tinham && !s.encerrando) reposicionarTinta();             // trocar de matéria/sair da conta (`encerrando`) não pede nada
     var slot = d().querySelector(SLOT); if (slot) slot.removeAttribute('data-rm-pen');
     return true;
   }

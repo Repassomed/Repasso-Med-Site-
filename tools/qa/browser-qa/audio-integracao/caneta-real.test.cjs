@@ -24,6 +24,13 @@ async function nova(S, browser, w, h, o) {
   const page = await ctx.newPage(); const erros = [];
   page.on('pageerror', e => erros.push(String(e)));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|ERR_|403|404|net::/.test(m.text())) erros.push(m.text().slice(0, 200)); });
+  await page.addInitScript(() => {
+    window.__bootTimers = 0;
+    const st0 = window.setTimeout, si0 = window.setInterval, raf0 = window.requestAnimationFrame, deBoot = () => { try { return /rm-audio-boot/.test((new Error().stack || '').split('\n')[3] || ''); } catch (e) { return false; } };   // só quem chama setTimeout/rAF DIRETAMENTE do boot
+    window.setTimeout = function () { if (deBoot()) window.__bootTimers++; return st0.apply(this, arguments); };
+    window.setInterval = function () { if (deBoot()) window.__bootTimers++; return si0.apply(this, arguments); };
+    window.requestAnimationFrame = function () { if (deBoot()) window.__bootTimers++; return raf0.apply(this, arguments); };
+  });
   await page.addInitScript(() => { window.__m = { audioCtor: 0, srcSets: [] }; const A0 = window.Audio; window.Audio = function () { window.__m.audioCtor++; return new (Function.prototype.bind.apply(A0, [null].concat([].slice.call(arguments))))(); }; window.Audio.prototype = A0.prototype; });
   await page.goto(S.base + '/h?pen=1&real=1');
   await page.waitForFunction(() => window.RMToolsV2 && window.RM_STUDY_V2_ACTIVE && document.querySelector('#tab-semio2 section[id]'));
@@ -182,6 +189,88 @@ const relTraco = (p, anchor) => p.evaluate(a => {
       /* o banco continua com UMA marca e UM traço (nenhuma duplicação por causa dos cards) */
       ok(await page.evaluate(() => window.__db.user_highlights.length === 1 && window.__db.user_ink_strokes.length === 1), 'o banco continua com 1 marca-texto e 1 traço (sem duplicar)');
       await ctx.close();
+    }
+
+    sec('Contato da caneta × inserir/remover cards: NUNCA RMToolsV2.reposicionar() durante o contato; só pelo caminho protegido do Layout');
+    {
+      /* mesma forma de dirigir a caneta que o race.test.cjs da #425 (pointerdown no elemento, pointermove no document) */
+      const INSTR_REPOS = () => { window.__repos = []; const r0 = window.RMToolsV2.reposicionar; window.RMToolsV2.reposicionar = function () { window.__repos.push({ t: performance.now(), penDown: document.body.classList.contains('rm2-pen-down'), traco: !!(window.RMToolsV2._test && window.RMToolsV2._test.temTraco && window.RMToolsV2._test.temTraco()) }); return r0.apply(this, arguments); }; };
+      const DOWN = () => { const ps = Array.from(document.querySelectorAll('#tab-semio2 #s2-b03 p')).filter(x => x.textContent.length > 150); const e = ps[0]; e.scrollIntoView({ block: 'center', behavior: 'instant' }); const r = e.getBoundingClientRect();
+        const mk = (ty, x, y, pr) => new PointerEvent(ty, { pointerType: 'pen', pointerId: 7, isPrimary: true, clientX: x, clientY: y, pressure: pr, buttons: pr ? 1 : 0, bubbles: true, cancelable: true, composed: true });
+        window.__penMk = mk; window.__penX = r.left + r.width * 0.2; window.__penY = r.top + r.height / 2; window.__penEl = e;
+        e.dispatchEvent(mk('pointerdown', window.__penX, window.__penY, 0.5)); for (let k = 1; k <= 6; k++) document.dispatchEvent(mk('pointermove', window.__penX + k * 9, window.__penY + Math.sin(k / 2) * 8, 0.5));
+        return { down: document.body.classList.contains('rm2-pen-down'), traco: !!window.RMToolsV2._test.temTraco() }; };
+      const UP = () => { document.dispatchEvent(window.__penMk('pointerup', window.__penX + 60, window.__penY + 4, 0)); };
+      const nRepos = (p) => p.evaluate(() => window.__repos.length);
+      const posicoes = (p) => p.evaluate(() => Array.from(document.querySelectorAll('path[data-ink]')).map(x => { const r = x.getBoundingClientRect(); return [Math.round(r.left * 10) / 10, Math.round(r.top * 10) / 10]; }));
+
+      /* A) contato ligado: inserir, remover e inserir de novo os cards */
+      S.zera();
+      { const { ctx, page, erros } = await nova(S, browser);
+        await attach(page);
+        const temPedir = await page.evaluate(() => typeof window.RMLayout.pedirReposicao === 'function');
+        console.log('  Layout: ' + (temPedir ? 'com RMLayout.pedirReposicao (contrato da #425)' : 'SEM RMLayout.pedirReposicao (Layout anterior à #425): o boot não pede nada; a V2 reposiciona pelo próprio observador'));
+        await tracar(page, '#tab-semio2 #s2-b03 p', 1);                           // S1 já desenhado, antes de qualquer card
+        ok((await tracos(page)).length === 1, 'S1 gravado antes dos cards');
+        const R0 = (await relTraco(page, (await tracos(page))[0].anchor)).out;
+        await page.evaluate(INSTR_REPOS);
+        await page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); await esp(200);
+        await page.addScriptTag({ url: '/assets/rm-audio-boot.js?v=t' });
+        const d = await page.evaluate(DOWN);
+        ok(d.down && d.traco, 'contato da caneta ligado: body.rm2-pen-down e traço em curso (V2 real)', d);
+        const t0 = await page.evaluate(() => performance.now());
+        const r1 = await page.evaluate(() => window.RMAudioBoot.start()); await esp(1300);
+        ok(r1 === true && await page.evaluate(() => document.querySelectorAll('.rm-audio-card').length === 2), 'cards INSERIDOS durante o contato');
+        ok(await page.evaluate(() => document.body.classList.contains('rm2-pen-down') && window.RMToolsV2._test.temTraco()), 'o contato continua ligado e o traço continua em curso');
+        ok(await nRepos(page) === 0, 'inserir card durante o contato: 0 chamadas a RMToolsV2.reposicionar()', await page.evaluate(() => window.__repos));
+        await page.evaluate(() => window.RMAudioBoot.stop()); await esp(900);
+        ok(await page.evaluate(() => document.querySelectorAll('.rm-audio-card').length === 0), 'cards REMOVIDOS durante o contato');
+        ok(await nRepos(page) === 0, 'remover card durante o contato: 0 chamadas a RMToolsV2.reposicionar()', await page.evaluate(() => window.__repos));
+        await page.evaluate(() => window.RMAudioBoot.start()); await esp(1300);
+        ok(await nRepos(page) === 0 && await page.evaluate(() => document.body.classList.contains('rm2-pen-down')), 'inserir de novo, ainda em contato: continua 0 chamadas');
+        const tUp = await page.evaluate(() => { const t = performance.now(); return t; });
+        await page.evaluate(UP); await esp(1500);
+        const rp = await page.evaluate(() => window.__repos);
+        if (temPedir) {
+          ok(rp.length >= 1 && rp.every(x => x.t >= tUp && !x.penDown && !x.traco), 'com o contato terminado, o Layout executa o pedido pendente: só DEPOIS do pointerup, sem rm2-pen-down e sem traço em curso', rp);
+          ok(rp.length <= 2, 'pedidos coalescidos (os 3 eventos de cards viram 1–2 execuções, não 3 + rAF próprios)', rp.length);
+        } else ok(rp.length === 0, 'sem o contrato da #425 o boot NUNCA chama RMToolsV2.reposicionar() diretamente', rp);
+        ok(!(await page.evaluate(() => document.body.classList.contains('rm2-pen-down'))), 'o contato terminou');
+        const tr = await tracos(page);
+        ok(tr.length === 2, 'o traço feito durante as mudanças foi gravado (2 no banco)', tr);
+        /* ALINHAMENTO depois do pointerup: o que está desenhado já é o que um reposicionamento forçado desenharia, e S1 não saiu do lugar */
+        const antes = await posicoes(page);
+        const Rs1 = await relTraco(page, tr[0].anchor), Rs2 = await relTraco(page, tr[1].anchor);
+        await page.evaluate(() => { window.RMToolsV2.reposicionar.__orig; });
+        await page.evaluate(() => { const o = window.RMToolsV2; const f = o.reposicionar; f.call(o); }); await esp(500);   // chamada do TESTE (fora do contato): referência
+        const depois = await posicoes(page);
+        ok(antes.length === 2 && antes.length === depois.length && antes.every((a, i) => near(a[0], depois[i][0], 1.5) && near(a[1], depois[i][1], 1.5)), 'após o pointerup os 2 traços já estão alinhados: um reposicionamento forçado não muda nada (±1,5 px)', { antes, depois });
+        ok(Rs1.out.length >= 1 && near(Rs1.out[0].dx, R0[0].dx, 1.5) && near(Rs1.out[0].dy, R0[0].dy, 1.5), 'S1 (desenhado antes dos cards) continua na mesma posição relativa ao parágrafo', { antes: R0[0], depois: Rs1.out[0] });
+        ok(Rs2.n === Rs1.n && Rs2.out.length >= 1, 'S2 ancorado e desenhado');
+        ok(erros.length === 0, 'nenhum erro de página/console', erros);
+        await ctx.close(); }
+
+      /* B) callbacks/pedidos NÃO sobrevivem a trocar de matéria nem a sair da conta (com um espião em RMLayout.pedirReposicao) */
+      for (const motivo of ['aba', 'logout', 'stop-do-piloto']) {
+        S.zera();
+        const { ctx, page } = await nova(S, browser);
+        await attach(page);
+        await page.evaluate(() => { const L = window.RMLayout; window.__pedidos = 0; const o = L.pedirReposicao || function () {}; L.pedirReposicao = function () { window.__pedidos++; return o.apply(this, arguments); }; });
+        await page.evaluate(INSTR_REPOS);
+        await boot(page); await esp(1800);                                      // deixa assentar o pedido do attach e o dos cards
+        ok(await page.evaluate(() => window.__pedidos) === 1, `${motivo}: inserir os cards pede UMA reposição ao Layout`, await page.evaluate(() => window.__pedidos));
+        const n0 = await nRepos(page);
+        if (motivo === 'aba') await page.evaluate(() => { document.getElementById('tab-semio2').classList.remove('active'); document.getElementById('tab-outra').classList.add('active'); });
+        else if (motivo === 'logout') await page.evaluate(() => { window.__sess = null; window.__authCb('SIGNED_OUT'); });
+        else await page.evaluate(() => window.RMAudioBoot.stop());
+        await esp(1200);
+        ok(await page.evaluate(() => document.querySelectorAll('.rm-audio-card').length === 0 && window.RMAudioBoot._estado() === null), `${motivo}: cards removidos e boot parado`);
+        const esperado = motivo === 'stop-do-piloto' ? 2 : 1;
+        ok(await page.evaluate(() => window.__pedidos) === esperado, `${motivo}: ${motivo === 'stop-do-piloto' ? 'o stop() do piloto na mesma matéria pede a reposição da remoção' : 'remover os cards por causa disto NÃO pede reposição (nada novo ao Layout)'}`, await page.evaluate(() => window.__pedidos));
+        ok(await page.evaluate(() => window.__bootTimers) === 0, `${motivo}: o boot não agenda NENHUM setTimeout/setInterval/requestAnimationFrame (nada para invalidar depois)`, await page.evaluate(() => window.__bootTimers));
+        if (motivo !== 'stop-do-piloto') ok(await nRepos(page) === n0, `${motivo}: nenhum RMToolsV2.reposicionar() novo depois da troca (o pedido da remoção não existe e o do Layout reconfere a matéria)`, await page.evaluate(() => window.__repos));
+        await ctx.close();
+      }
     }
 
     sec('Pausar / fechar com a caneta armada; escrita continua possível');
