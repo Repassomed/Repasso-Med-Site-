@@ -38,6 +38,20 @@ Três caminhos, **um basta** (em ordem de preferência):
 Opcional e muito útil em qualquer caminho: uma **transcrição** (`.txt`) de cada áudio, ou os minutos em que cada tema aparece.
 Os originais nunca são alterados. Enquanto os arquivos não chegam, **o processamento real fica parado**; o restante (runbook, testes, contrato) segue independente.
 
+## 1-B. Pipeline REAL a partir do ZIP dos 4 masters (`processar_zip.py`)
+
+Com o `audiobooks_semiologia2_masters.zip` acessível (nesta sessão ou na máquina do José), um comando faz tudo, **fora do repositório**:
+```bash
+pip install sherpa-onnx imageio-ffmpeg pystoi soundfile numpy scipy
+# modelo de ASR (espanhol) — release do GitHub, ≈ 640 MB (small) ou ≈ 207 MB (base):
+curl -L -o whisper.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-small.tar.bz2 && tar xjf whisper.tar.bz2
+python3 tools/audio/processar_zip.py --zip ~/audiobooks_semiologia2_masters.zip --trabalho ~/audiobooks-trabalho --modelo ./sherpa-onnx-whisper-small
+```
+Etapas: extrai o zip (recusa caminho fora da pasta) e confere os 4 nomes + SHA-256 → inspeciona (codec/duração/canais/bitrate/faststart) → `preparar` (AAC-LC mono 48/64 kbps, faststart, STOI 1×/2×/2,5×, amostras) →
+`transcrever` (ASR local em janelas de 28 s a cada 120 s) → vínculo **pelo conteúdo** (TF-IDF contra os 10 blocos, texto inteiro + blocos de 5 min). Saídas em `~/audiobooks-trabalho`: `RELATORIO-REAL.md`,
+`vinculos-evidencia.json`, `vinculos.json` (RASCUNHO: `vinculo_confirmado` só true com evidência forte e consistente; `escuta_humana_ok` **sempre false**), `tratados/` (derivados + `amostras/`), `transcricoes/`.
+O ASR erra termos médicos: vale como evidência de **tema**. Dúvida ⇒ `REVISÃO HUMANA NECESSÁRIA` e fora do manifesto. Em seguida: escuta humana das amostras → `montar_manifesto.py` → `verificar_upload.py` (§4–§5).
+
 ## 2. Quando os arquivos existirem (ferramenta já na `main`)
 
 ```bash

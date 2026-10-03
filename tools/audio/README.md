@@ -21,6 +21,7 @@ python3 -m unittest discover -s tools/audio -p "test_*.py"   # 28 testes (master
 * **STOI em velocidade:** além de 1×, mede 2× e 2,5× (master e cópia aceleradas igual, sem mudar o tom; `--velocidades`, `--janelas-vel`, `--stoi-min-vel`, limiar provisório 0,90).
 * **montar_manifesto.py:** gera (fora do Git) o JSON candidato de `RM_AUDIO_MANIFEST` + plano de upload, só com vínculo confirmado e escuta OK; não define variável. Ver `RUNBOOK-ATIVACAO-AUDIOBOOKS.md`.
 * **rodar_local.sh / vinculos.exemplo.json:** atalho para o José rodar `inspecionar` + `preparar` na própria máquina e modelo (não confirmado) do `vinculos.json`.
+* **processar_zip.py / transcrever.py:** pipeline real do zip dos 4 masters (inspeção, derivados, ASR local em espanhol, vínculo por conteúdo, relatório e rascunho de `vinculos.json`); ver runbook §1-B.
 * **verificar_upload.py:** última conferência dos derivados contra o manifesto candidato, antes do upload (faststart, mono AAC-LC, ≤ 30 MB, duração, `path`); não envia nada.
 * **vincular:** sugere o bloco por **conteúdo** (cosseno TF-IDF entre a transcrição e o texto de cada `section#s2-bNN`); **não recebe nome
   nem número de arquivo**. Resultado `candidato` só com nota ≥ 0,15 e margem ≥ 0,04; senão `indeterminado`. A transcrição vem de um ASR
