@@ -15850,6 +15850,17 @@
       "output_tokens": 0,
       "tier": "FAST",
       "timestamp": "2026-10-03T05:35:38.737101+00:00"
+    },
+    {
+      "estimated_cost_usd": 0.0,
+      "event_key": "Repassomed/Repasso-Med-Site-:GUARD_STATE_CHANGE:pr:438:e5fde5da8c8bd7b0",
+      "informational_cost_usd": 0.001211,
+      "input_tokens": 281,
+      "kind": "usage",
+      "model_id": "claude-haiku-4-5-20251001",
+      "output_tokens": 186,
+      "tier": "FAST",
+      "timestamp": "2026-10-03T05:35:40.968381+00:00"
     }
   ]
 }
