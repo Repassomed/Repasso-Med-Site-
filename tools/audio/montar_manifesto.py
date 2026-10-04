@@ -66,6 +66,8 @@ def montar(relatorio, vinculos, blocos):
             erros.append(f'{n}: escuta humana da cópia não aprovada (escuta_humana_ok=true)')
         if v.get('block_id') not in blocos:
             erros.append(f"{n}: block_id {v.get('block_id')!r} não existe na matéria")
+        if not v.get('kbps') and rel.get('recomendado_aprovado') is False:
+            erros.append(f'{n}: nenhuma cópia passou os critérios objetivos; informe "kbps" explicitamente só depois de ouvir as amostras'); continue
         kb = v.get('kbps') or rel.get('recomendado_kbps')
         c = next((x for x in rel['copias'] if x['kbps_alvo'] == kb), None)
         if c is None:

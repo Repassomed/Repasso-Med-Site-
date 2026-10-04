@@ -1,24 +1,18 @@
 #!/usr/bin/env bash
-# Roda a preparação dos masters NA MÁQUINA DO JOSÉ (os masters reais não chegam ao ambiente do Claude).
-# Uso:  bash tools/audio/rodar_local.sh ~/masters ~/audiobooks-tratados
-# Os masters ficam só LIDOS; a saída tem de ficar FORA do repositório; nada é enviado a lugar nenhum.
+# Linux/macOS: processa os masters em lote (mesmo fluxo do rodar_local.ps1). Só LÊ os masters; saída fora do repositório; nada é enviado.
+# Uso:  bash tools/audio/rodar_local.sh <pasta-dos-m4a> <pasta-de-trabalho-fora-do-git> <pasta-do-modelo-sherpa-onnx-whisper-small> [semiologia-ii.html]
 set -euo pipefail
-ORIGEM="${1:?uso: rodar_local.sh <pasta-dos-masters> <pasta-de-saida-fora-do-git>}"
-SAIDA="${2:?uso: rodar_local.sh <pasta-dos-masters> <pasta-de-saida-fora-do-git>}"
-RAIZ="$(cd "$(dirname "$0")/../.." && pwd)"
-case "$(cd "$SAIDA" 2>/dev/null && pwd || echo "$SAIDA")" in "$RAIZ"*) echo "RECUSADO: a saída está dentro do repositório."; exit 2;; esac
-python3 - <<'PY' || { echo "Faltam dependências: pip install imageio-ffmpeg pystoi soundfile numpy scipy (ou ffmpeg no PATH)"; exit 3; }
-import importlib
-for m in ("numpy", "scipy", "soundfile", "pystoi"):
-    importlib.import_module(m)
-PY
-echo "== 1/2 inspeção (só lê) =="
-python3 "$RAIZ/tools/audio/preparar_audiobooks.py" inspecionar --origem "$ORIGEM"
-echo "== 2/2 derivados 48/64 kbps + amostras + relatório =="
-python3 "$RAIZ/tools/audio/preparar_audiobooks.py" preparar --origem "$ORIGEM" --saida "$SAIDA"
-cat <<MSG
-
-Pronto. Devolva ao Claude: $SAIDA/relatorio.md, $SAIDA/relatorio.json e a pasta $SAIDA/amostras/ (trechos curtos para escuta).
-Depois: ouvir as amostras (1×, 2×, 2,5×), confirmar o bloco de cada áudio pelo CONTEÚDO e preencher vinculos.json
-(modelo: tools/audio/vinculos.exemplo.json) — só então montar_manifesto.py e verificar_upload.py. Nada foi enviado.
-MSG
+PASTA="${1:?uso: rodar_local.sh <pasta-dos-m4a> <pasta-de-trabalho> <pasta-do-modelo> [semiologia-ii.html]}"
+TRAB="${2:?falta a pasta de trabalho}"
+MODELO="${3:?falta a pasta do modelo (release sherpa-onnx-whisper-small do GitHub, ver LEIAME)}"
+AQUI="$(cd "$(dirname "$0")" && pwd)"
+RAIZ="$(cd "$AQUI/../.." && pwd)"
+case "$(cd "$TRAB" 2>/dev/null && pwd || echo "$TRAB")" in "$RAIZ"*) echo "RECUSADO: a pasta de trabalho está dentro do repositório."; exit 2;; esac
+MATERIA_ARG=(); [ -n "${4:-}" ] && MATERIA_ARG=(--materia "$4")
+python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3,10) else 1)' || { echo "FALHOU: precisa de Python 3.10+"; exit 3; }
+python3 "$AQUI/processar_masters.py" --verificar-ambiente --modelo "$MODELO" "${MATERIA_ARG[@]}" || { echo "FALHOU: ambiente incompleto (pip install -r $AQUI/requirements.txt). Nada foi processado."; exit 3; }
+python3 "$AQUI/processar_masters.py" --pasta "$PASTA" --trabalho "$TRAB" --modelo "$MODELO" "${MATERIA_ARG[@]}"
+EXEC="$(ls -d "$TRAB"/execucao-* | sort | tail -n 1)"
+for f in RELATORIO-REAL.md vinculos-evidencia.json vinculos.json inventario.json tratados/relatorio.json tratados/relatorio.md; do [ -f "$EXEC/$f" ] || { echo "FALHOU: saída ausente: $f"; exit 4; }; done
+python3 "$AQUI/empacotar_retorno.py" --execucao "$EXEC"
+echo "Pronto: $EXEC (nada foi enviado; escuta_humana_ok continua false)."

@@ -16,7 +16,7 @@ def gera(dst, ch=1, kb=48, dur=12, freq=300, faststart=True):
 
 def prep(entradas, saida, **kw):
     import argparse
-    a = dict(origem=None, entradas=entradas, saida=saida, ar=32000, stoi_min=P.STOI_MIN, janelas=3, velocidades='2,2.5', janelas_vel=2, amostras=0, janela_amostra=5.0, stoi_min_vel=P.STOI_MIN_VEL, limpar=False, politica='auto')
+    a = dict(origem=None, entradas=entradas, saida=saida, ar=32000, stoi_min=P.STOI_MIN, janelas=3, velocidades='2,2.5', janelas_vel=2, amostras=0, janela_amostra=5.0, stoi_min_vel=P.STOI_MIN_VEL, politica='auto')
     a.update(kw)
     return P.cmd_preparar(argparse.Namespace(**a))
 
@@ -61,18 +61,74 @@ class Lote(unittest.TestCase):
         finally:
             shutil.rmtree(d, ignore_errors=True)
 
-    # 3 ─ resíduos de execuções anteriores não entram no lote
-    def test_3_saida_nao_vazia_recusada_e_limpar_so_apaga_artefatos_conhecidos(self):
+    # 3 ─ resíduos de execuções anteriores não entram no lote; NADA é apagado (proteção dos originais)
+    def test_3_saida_nao_vazia_recusada_sem_apagar_nada(self):
         d = tempfile.mkdtemp(prefix='rm-res-')
         try:
-            open(os.path.join(d, 'velho.m4a'), 'wb').write(b'x')
-            with self.assertRaises(SystemExit): P.saida_limpa(d)
+            velho, nota = os.path.join(d, 'velho.m4a'), os.path.join(d, 'nota.txt')
+            open(velho, 'wb').write(b'x'); open(nota, 'w').write('minha nota')
+            with self.assertRaises(SystemExit): P.valida_saida(d)
             e = P.descobrir(os.path.join(self.tmp, 'a'))
             with self.assertRaises(SystemExit): prep(e, d)
-            open(os.path.join(d, 'nota.txt'), 'w').write('minha nota')
-            with self.assertRaises(SystemExit): P.saida_limpa(d, limpar=True)                         # arquivo desconhecido: não apaga, recusa
-            self.assertTrue(os.path.exists(os.path.join(d, 'nota.txt')))
-            os.remove(os.path.join(d, 'nota.txt')); P.saida_limpa(d, limpar=True); self.assertEqual(os.listdir(d), [])
+            self.assertEqual(sorted(os.listdir(d)), ['nota.txt', 'velho.m4a'])                       # .m4a e arquivo desconhecido intactos
+            self.assertEqual(open(velho, 'rb').read(), b'x')
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
+    def test_3c_nao_existe_mais_limpar(self):
+        with self.assertRaises(SystemExit):
+            P.main(['preparar', '--origem', os.path.join(self.tmp, 'a'), '--saida', self.tmp + '-lx', '--limpar'])    # opção removida: argparse recusa
+        self.assertFalse(hasattr(P, 'saida_limpa'))
+        self.assertFalse(os.path.exists(self.tmp + '-lx'))
+
+    def test_3d_saida_igual_ou_sobreposta_a_entrada_nao_apaga_originais(self):
+        d = tempfile.mkdtemp(prefix='rm-sob-')
+        try:
+            ent = os.path.join(d, 'ent'); os.makedirs(os.path.join(ent, 'sub'))
+            gera(os.path.join(ent, 'M.m4a')); gera(os.path.join(ent, 'sub', 'N.m4a'), freq=500)
+            desconhecido = os.path.join(ent, 'sub', 'tese.docx'); open(desconhecido, 'w').write('meu texto')
+            antes = {os.path.join(r, f): P.sha256(os.path.join(r, f)) for r, _, fs in os.walk(ent) for f in fs}
+            e = P.descobrir(ent)
+            def intacto():
+                self.assertEqual(antes, {os.path.join(r, f): P.sha256(os.path.join(r, f)) for r, _, fs in os.walk(ent) for f in fs})
+            for saida in (ent, os.path.join(ent, 'sub'), os.path.join(ent, 'novos'), d):          # igual, dentro, subpasta nova, CONTENDO a entrada
+                with self.assertRaises(SystemExit) as c: prep(e, saida)
+                self.assertIn('RECUSADO', str(c.exception)); intacto()
+                with self.assertRaises(SystemExit) as c: P.main(['preparar', '--origem', ent, '--saida', saida])
+                intacto()
+                with self.assertRaises(SystemExit): T.main(['--origem', ent, '--saida', saida, '--modelo', '/x'])
+                intacto()
+            self.assertFalse(os.path.exists(os.path.join(ent, 'novos')))                          # nem a pasta foi criada
+            link = os.path.join(d, 'atalho'); os.symlink(ent, link)                               # symlink para a entrada = a própria entrada
+            with self.assertRaises(SystemExit): prep(e, link)
+            intacto()
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
+    def test_3e_validacao_antes_de_qualquer_escrita(self):
+        d = tempfile.mkdtemp(prefix='rm-val-')
+        try:
+            vazia = os.path.join(d, 'vazia'); os.makedirs(vazia); saida = os.path.join(d, 'saida')
+            with self.assertRaises(SystemExit): P.main(['preparar', '--origem', vazia, '--saida', saida])    # entrada sem áudio
+            self.assertFalse(os.path.exists(saida))                                                   # a saída nem foi criada
+            with self.assertRaises(SystemExit): P.main(['preparar', '--origem', os.path.join(d, 'nao-existe'), '--saida', saida])
+            self.assertFalse(os.path.exists(saida))
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
+    def test_3f_processar_masters_trabalho_sobreposto_a_pasta_recusado(self):
+        d = tempfile.mkdtemp(prefix='rm-trab-')
+        try:
+            ent = os.path.join(d, 'ent'); os.makedirs(ent); gera(os.path.join(ent, 'M.m4a'))
+            antes = P.sha256(os.path.join(ent, 'M.m4a'))
+            orig = Z.verifica_ambiente; Z.verifica_ambiente = lambda *a, **k: []
+            try:
+                for trab in (ent, os.path.join(ent, 'trab'), d):
+                    with self.assertRaises(SystemExit) as c: Z.main(['--pasta', ent, '--trabalho', trab, '--modelo', '/x'])
+                    self.assertIn('RECUSADO', str(c.exception))
+            finally:
+                Z.verifica_ambiente = orig
+            self.assertEqual(os.listdir(ent), ['M.m4a']); self.assertEqual(P.sha256(os.path.join(ent, 'M.m4a')), antes)
         finally:
             shutil.rmtree(d, ignore_errors=True)
 
@@ -169,7 +225,124 @@ class Lote(unittest.TestCase):
 
     def test_saida_dentro_do_git_recusada(self):
         with self.assertRaises(SystemExit): T.main(['--origem', '/tmp', '--saida', os.path.join(Z.RAIZ, 'x'), '--modelo', '/tmp'])
-        with self.assertRaises(SystemExit): Z.main(['--pasta', '/tmp', '--trabalho', os.path.join(Z.RAIZ, 'x'), '--modelo', '/tmp'])
+        orig = Z.verifica_ambiente; Z.verifica_ambiente = lambda *a, **k: []
+        try:
+            with self.assertRaises(SystemExit) as c: Z.main(['--pasta', '/tmp', '--trabalho', os.path.join(Z.RAIZ, 'x'), '--modelo', '/tmp'])
+            self.assertIn('repositório git', str(c.exception))
+        finally:
+            Z.verifica_ambiente = orig
+
+
+class Recomendacao(unittest.TestCase):
+    def cp(self, arq, kb, mb=1.0, stoi=0.97, ok=True, fs=True, pico=-3.0, vel=0.95):
+        return {'arquivo': arq, 'kbps_alvo': kb, 'tamanho_mb': mb, 'info': {'bitrate_kbps': kb}, 'faststart': fs, 'decodifica_sem_erros': ok,
+                'stoi': {'media': stoi, 'minimo': stoi - 0.01}, 'loudness': {'pico_dbfs': pico}, 'stoi_velocidades': {'2x': {'media': vel, 'minimo': vel}}}
+
+    def args(self):
+        import argparse
+        return argparse.Namespace(stoi_min=P.STOI_MIN, stoi_min_vel=P.STOI_MIN_VEL)
+
+    def test_criterios_apontam_o_que_reprovou(self):
+        a = self.args()
+        self.assertEqual(P.criterios_copia(self.cp('a', 48), a), [])
+        self.assertTrue(any('STOI 1×' in x for x in P.criterios_copia(self.cp('a', 48, stoi=0.5), a)))
+        self.assertTrue(any('faststart' in x for x in P.criterios_copia(self.cp('a', 48, fs=False), a)))
+        self.assertTrue(any('30 MiB' in x for x in P.criterios_copia(self.cp('a', 64, mb=31.0), a)))
+        self.assertTrue(any('velocidade' in x for x in P.criterios_copia(self.cp('a', 48, vel=0.5), a)))
+        self.assertTrue(any('clipping' in x for x in P.criterios_copia(self.cp('a', 48, pico=0.0), a)))
+
+    def test_relatorio_mostra_a_recomendada_nao_a_primeira(self):
+        it = {'recomendado_arquivo': 'b.64k.m4a', 'copias': [self.cp('a.48k.m4a', 48), self.cp('b.64k.m4a', 64)]}
+        self.assertEqual(Z.copia_recomendada(it)['arquivo'], 'b.64k.m4a')
+
+    def test_nenhuma_copia_aprovada_fica_explicito_e_manifesto_recusa(self):
+        d = tempfile.mkdtemp(prefix='rm-rep-')
+        try:
+            ent = os.path.join(d, 'ent'); os.makedirs(ent); gera(os.path.join(ent, 'M.m4a'), ch=2, kb=128)
+            rel = prep(P.descobrir(ent), os.path.join(d, 'out'), stoi_min=2.0)                         # limiar impossível: ninguém passa
+            it = rel['itens'][0]
+            self.assertFalse(it['recomendado_aprovado']); self.assertIn('NENHUMA', it['recomendacao_motivo'])
+            self.assertTrue(all(it['criterios_reprovados'][c['arquivo']] for c in it['copias']))
+            self.assertIn('NÃO APROVADA', P.md(rel))
+            v = {'id': it['id'], 'master': it['master'], 'sha256_master': it['sha256_master'], 'audio_id': 's2-t', 'block_id': 's2-b03', 'theme': 't', 'title': 'x', 'order': 1, 'version': 'v1',
+                 'vinculo_confirmado': True, 'confirmado_por': 'transcricao', 'escuta_humana_ok': True}
+            err, _, _ = M.montar(rel, [v], M.blocos_da_materia()); self.assertTrue(any('nenhuma cópia passou' in x for x in err))
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
+    def test_recomendada_aprovada_no_fluxo_normal(self):
+        d = tempfile.mkdtemp(prefix='rm-rep2-')
+        try:
+            ent = os.path.join(d, 'ent'); os.makedirs(ent); gera(os.path.join(ent, 'M.m4a'), ch=2, kb=128)
+            rel = prep(P.descobrir(ent), os.path.join(d, 'out'), stoi_min=0.0, stoi_min_vel=0.0)   # seno não é fala: limiares zerados só para exercitar o caminho aprovado
+            it = rel['itens'][0]
+            self.assertTrue(it['recomendado_aprovado']); self.assertEqual(Z.copia_recomendada(it)['kbps_alvo'], it['recomendado_kbps'])
+            self.assertEqual(len(it['alternativas']), 1)
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
+
+class Cobertura(unittest.TestCase):
+    def jan(self, dur, janela, passo, texto='x'):
+        return [{'inicio_s': round(i, 1), 'fim_s': round(i + d, 1), 'texto': texto} for i, d in T.janelas(dur, janela, passo)]
+
+    def test_janelas_sobrepostas_nao_somam_alem_de_100(self):
+        r = T.cobertura({'duracao_s': 100.0}, self.jan(100.0, 28.0, 10.0))
+        self.assertEqual(r['temporal_pct'], 100.0)                                                   # antes: 254 %
+        r = T.cobertura({'duracao_s': 100.0}, [{'inicio_s': 0, 'fim_s': 28, 'texto': 'x'}, {'inicio_s': 14, 'fim_s': 42, 'texto': 'x'}])
+        self.assertEqual(r['temporal_pct'], 42.0)                                                    # união 0–42, não 56 %
+
+    def test_janelas_separadas(self):
+        r = T.cobertura({'duracao_s': 300.0}, self.jan(300.0, 28.0, 120.0))
+        self.assertEqual(r['temporal_pct'], round(100 * 84 / 300, 1))                                # 3 × 28 s, sem sobreposição
+
+    def test_transcricao_completa_e_limitada_a_duracao_real(self):
+        for dur in (100.0, 85.4, 300.0):
+            self.assertEqual(T.cobertura({'duracao_s': dur}, self.jan(dur, 28.0, 28.0))['temporal_pct'], 100.0, dur)
+        self.assertEqual(T.cobertura({'duracao_s': 50.0}, [{'inicio_s': 0, 'fim_s': 80, 'texto': 'x'}])['temporal_pct'], 100.0)   # janela além do fim é recortada
+
+    def test_cobertura_temporal_difere_de_texto_reconhecido(self):
+        j = self.jan(100.0, 25.0, 25.0); j[1]['texto'] = ''; j[3]['texto'] = ''                      # 2 janelas de silêncio
+        r = T.cobertura({'duracao_s': 100.0}, j)
+        self.assertEqual((r['temporal_pct'], r['com_texto_pct'], r['sem_texto_s'], r['janelas_sem_texto']), (100.0, 50.0, 50.0, 2))
+        self.assertEqual(T.cobertura({'duracao_s': 0}, [])['temporal_pct'], 0.0)
+
+    def test_arquivo_janelas_registra_os_dois_numeros_e_o_aviso(self):
+        d = tempfile.mkdtemp(prefix='rm-cob-')
+        try:
+            e = {'id': 'x-1', 'nome_original': 'x.m4a', 'sha256': '0' * 64}
+            T.escreve_transcricao(d, e, {'duracao_s': 300.0}, self.jan(300.0, 28.0, 120.0), 28.0, 120.0)
+            j = json.load(open(os.path.join(d, 'x-1.janelas.json'), encoding='utf-8'))
+            self.assertTrue(j['amostrada']); self.assertIn('AMOSTRADA', j['aviso']); self.assertEqual(j['cobertura_com_texto_pct'], j['cobertura_temporal_pct'])
+            T.escreve_transcricao(d, e, {'duracao_s': 300.0}, self.jan(300.0, 28.0, 28.0), 28.0, 28.0)
+            j = json.load(open(os.path.join(d, 'x-1.janelas.json'), encoding='utf-8'))
+            self.assertFalse(j['amostrada']); self.assertIsNone(j['aviso'])
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
+
+class Modelo(unittest.TestCase):
+    def test_modelo_ausente_incompleto_e_truncado(self):
+        d = tempfile.mkdtemp(prefix='rm-mod-'); m = os.path.join(d, 'sherpa-onnx-whisper-small')
+        try:
+            self.assertTrue(T.verifica_modelo(m))                                                    # não existe
+            os.makedirs(m)
+            self.assertGreaterEqual(len(T.verifica_modelo(m)), 3)                                    # vazio: encoder, decoder, tokens
+            for n in ('small-encoder.int8.onnx', 'small-decoder.int8.onnx'):
+                with open(os.path.join(m, n), 'wb') as f: f.truncate(11 * 1048576)
+            open(os.path.join(m, 'small-tokens.txt'), 'w').write('a 1\n' * 100)
+            self.assertTrue(any('truncado' in x for x in T.verifica_modelo(m)))                      # vocabulário incompleto
+            open(os.path.join(m, 'small-tokens.txt'), 'w').write('a 1\n' * 50000)
+            self.assertEqual(T.verifica_modelo(m), [])
+            with open(os.path.join(m, 'small-encoder.int8.onnx'), 'wb') as f: f.truncate(1000)       # arquivo cortado
+            self.assertTrue(any('encoder' in x for x in T.verifica_modelo(m)))
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
+    def test_verificar_ambiente_sem_materia_ou_modelo_falha_e_sai_com_1(self):
+        self.assertEqual(Z.main(['--verificar-ambiente', '--modelo', '/nao/existe', '--materia', '/nao/existe.html']), 1)
+        e = Z.verifica_ambiente('/nao/existe', '/nao/existe.html')
+        self.assertTrue(any('matéria' in x for x in e) and any('modelo' in x for x in e))
 
 
 if __name__ == '__main__':

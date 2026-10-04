@@ -1,78 +1,39 @@
 # Runbook — conteúdo REAL dos 4 Audiobooks de Semiología II (piloto: só José)
 
-**Estado:** os 4 masters reais **não estão acessíveis** a este ambiente (ver §1). Portanto **nenhum** resultado de duração, bitrate, qualidade,
-inteligibilidade ou vínculo dos masters reais existe. Este documento só prepara o que o José fornece/executa e o que será testado.
+**Estado:** os 4 masters reais **ainda não foram processados, ouvidos nem aprovados** (o ambiente do Claude não consegue baixá-los; ver §1 e o histórico no fim). **Nenhum** resultado de duração, bitrate,
+qualidade, inteligibilidade ou vínculo dos masters reais existe. Este documento prepara o que o José executa e o que será testado.
 Nada abaixo foi aplicado: nenhuma migration, nenhum upload, nenhuma variável, nenhum deploy.
 
 ---
 
-## 1. ARQUIVOS NECESSÁRIOS DO JOSÉ — como disponibilizar (sem repetir tentativas que já falharam)
+## 1. Os 4 áudios reais e como processá-los (instruções ATUAIS)
 
-Já tentado e **barrado** (não repetir): download pelo conector do Drive (limite de 10 MB por arquivo; os masters têm 26–61 MB) e acesso direto a
-`drive.google.com` (a política de rede do ambiente nega o host, HTTP 000). Nenhum `.m4a` existe no disco da sessão.
+Os quatro `.m4a` **comprimidos** estão na pasta **Audiobooks** do Drive (id `1APjpeMTDGrBzytbZSKcsxi704PniIEmT`). Inventário atual (metadado do Drive, não medição local):
 
-| | Arquivo (nome no Drive) | Tamanho no Drive (metadado) | Vínculo **candidato** (não confirmado) |
+| | Arquivo (nome no Drive) | Tamanho | Vínculo **candidato** (não confirmado; o conteúdo decide) |
 |---|---|---|---|
-| A | `Semio_-_Motivo_de_Consulta.m4a` | 61 275 605 B | `s2-b01` — Motivo de consulta respiratorio |
-| B | `Semio_EPOC.m4a` | 55 806 805 B | `s2-b03` — Síndrome Obstructivo (Asma y EPOC) |
-| C | `Semio - 3 Sindrome Parenquimatoso.m4a` | 26 196 225 B | `s2-b04` — Síndrome Parenquimatoso (Condensación · Neumonía) |
-| D | `Semio_-_4_sindrome_pleual.m4a` | 37 840 755 B | `s2-b05` — Síndromes Pleurales (Derrame y Neumotórax) |
+| A | `Semio_-_Motivo_de_Consulta (1).m4a` | 36.758.530 B | `s2-b01` ou `s2-b06` |
+| B | `Semio_EPOC (1).m4a` | 33.468.886 B | `s2-b03` |
+| C | `Semio - 3 Sindrome Parenquimatoso (1).m4a` | 15.722.673 B | `s2-b04` |
+| D | `Semio_-_4_sindrome_pleual (1).m4a` | 22.662.090 B | `s2-b05` |
 
-**Inventário real do Drive (conferido em 2026-10-02 pelo conector, só metadados):** a pasta `Semiologia II ▸ Audiobooks` (id `1APjpeMTDGrBzytbZSKcsxi704PniIEmT`,
-criada em 2026-09-21; o nome real é «Audiobooks») contém **exatamente 4 arquivos `.m4a`** — os da tabela acima, com os mesmos ids e tamanhos do inventário anterior (modificados em 21–24/09/2026).
-Nenhum outro arquivo (nem transcrição, nem sons de ausculta) está nessa pasta. O ambiente continua sem alcançar o conteúdo (`drive.google.com` e `drive.usercontent.google.com` sem resposta; conector limitado a 10 MB).
+A e B passam de 30 MiB (limite do bucket `audiobooks`): terão de ser reencodados; C e D, se já forem AAC-LC mono ≤ 96 kb/s, são reaproveitados sem perda.
 
-**Reconferido na etapa 2 (depois do merge da #430):** nada mudou. Os 4 arquivos continuam só no Drive; o conector entrega metadados (e `read_file_content` **não suporta áudio**); `drive.google.com`, `drive.usercontent.google.com`
-e `docs.google.com` seguem sem resposta; `uploads/` vazia. **Detalhe novo que muda o caminho 2:** as permissões de cada `.m4a` são só `owner repasso.med` + 3 editores nominais (sem «qualquer pessoa com o link»).
-Logo, **liberar a rede não basta**: o arquivo também precisaria ser compartilhado por link. Não tentei nenhuma contorno de acesso.
+**Fluxo:** baixar a pasta do Drive **em lote** (zip, pelo navegador; nada fica público, nenhuma permissão muda) → extrair se quiser (o ZIP é opcional) → rodar **um comando** → revisar `RELATORIO-REAL.md` e as amostras → devolver o ZIP de retorno.
+**O passo a passo completo e o comando estão no [README](README.md) §1** (guia único). O pacote opcional de scripts está no README §3. O Claude **não** consegue baixar estes arquivos no ambiente da sessão (ver histórico no fim deste documento); por isso o processamento é local.
 
-Três caminhos, **um basta** (em ordem de preferência):
+Depois do processamento: escuta humana → `montar_manifesto.py` → `verificar_upload.py` (§4–§5). Dúvida no vínculo ⇒ `REVISÃO HUMANA NECESSÁRIA` e fora do manifesto; `escuta_humana_ok` só vira `true` por decisão do José.
 
-1. **Rodar na máquina do José** (não depende deste ambiente): `bash tools/audio/rodar_local.sh ~/masters ~/audiobooks-tratados` (confere dependências, recusa saída dentro do Git, roda `inspecionar` + `preparar`; nada é enviado) — equivale ao §2, com os 4 arquivos numa pasta local fora do Git. O José devolve o `relatorio.md`/`relatorio.json`
-   e a pasta `amostras/` (trechos de ~25 s, pequenos; os derivados completos não precisam voltar). **Este é o caminho mais curto.**
-2. **Liberar a rede do ambiente para o Drive:** no menu do ambiente na barra de título da sessão ▸ *Edit* ▸ *Network access*: nível mais amplo **ou** adicionar
-   `drive.google.com`, `drive.usercontent.google.com` e `*.googleusercontent.com` aos domínios permitidos; e em cada arquivo do Drive ▸ Compartilhar ▸
-   *Qualquer pessoa com o link* (leitor). Depois o José diz aqui que liberou; **a sessão ainda precisará ser testada** (não está provado que o download funcione).
-3. **Anexar os arquivos ao chat.** Pode haver limite de tamanho do anexo; se recusar, usar o caminho 1 ou 2.
-
-Opcional e muito útil em qualquer caminho: uma **transcrição** (`.txt`) de cada áudio, ou os minutos em que cada tema aparece.
-Os originais nunca são alterados. Enquanto os arquivos não chegam, **o processamento real fica parado**; o restante (runbook, testes, contrato) segue independente.
-
-## 1-B. Pipeline REAL em lote (`processar_masters.py`) — pasta direta, ZIP opcional
-
-**Tentativa de baixar os 4 M4A do Drive nesta sessão do Claude (registro):** operação `download_file_content` do conector Google Drive nos 4 IDs
-(36.758.530 / 33.468.886 / 22.662.090 / 15.722.673 B) → erro `File too large for download, over limit of 10 MB`; a API do Drive com o token do ambiente → HTTP 401.
-Não há operação de download bruto no conector, os arquivos não são públicos (e as permissões **não** foram alteradas). Nenhum controle foi contornado. Por isso o processamento real roda **na máquina do José**:
-
-**Windows (um comando, PowerShell, a partir da raiz do repositório):**
-```powershell
-powershell -ExecutionPolicy Bypass -File tools\audio\rodar_local.ps1 -Pasta "C:\Users\SEU_USUARIO\Downloads\audiobooks"
-```
-Baixe antes a pasta do Drive (ou os 4 arquivos) para essa pasta; os nomes com ` (1)` são aceitos (o nome lógico ignora o sufixo, o nome original fica no relatório).
-O script cria um venv fora do repositório, instala as dependências, baixa o modelo whisper-small (≈ 640 MB, release do GitHub) se faltar e roda tudo. **Não testado em Windows** (só em Linux).
-
-**Linux/macOS ou manual:**
-```bash
-pip install sherpa-onnx imageio-ffmpeg pystoi soundfile numpy scipy
-curl -L -o whisper.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-small.tar.bz2 && tar xjf whisper.tar.bz2
-python3 tools/audio/processar_masters.py --pasta ~/audiobooks --trabalho ~/audiobooks-trabalho --modelo ./sherpa-onnx-whisper-small   # --zip é opcional; --pasta pode repetir
-```
-Regras da lista de entrada: arquivos de subpastas diferentes entram na **mesma lista**; mesmo nome com conteúdo diferente ⇒ erro (nunca sobrescreve); cópia idêntica ⇒ deduplicada e registrada;
-cada execução usa uma pasta nova `execucao-<UTC>/` (resíduos antigos não entram); entrada vazia ⇒ erro claro; `--janela`/`--passo` precisam ser > 0; `--completo` transcreve tudo (padrão = amostragem, rotulada **TRANSCRIÇÃO AMOSTRADA**, nunca integral).
-Etapas: inventário (nome original, caminho, tamanho, SHA-256) → inspeção (codec/duração/canais/bitrate/faststart) → derivado **só com benefício demonstrável** (reencoda se > 30 MiB, não AAC-LC, não mono ou > 96 kb/s; senão reaproveita/remux faststart sem perda) com amostras →
-ASR local → vínculo **pelo conteúdo** (TF-IDF contra os 10 blocos, com minutagem e termos distintivos). Saídas: `RELATORIO-REAL.md` (cada áudio → derivados → relatório), `vinculos-evidencia.json`, `vinculos.json` (RASCUNHO: `escuta_humana_ok` **sempre false**), `tratados/` (derivados + `amostras/`), `transcricoes/`.
-O ASR erra termos médicos: vale como evidência de **tema**. Dúvida ⇒ `REVISÃO HUMANA NECESSÁRIA` e fora do manifesto. Em seguida: escuta humana das amostras → `montar_manifesto.py` → `verificar_upload.py` (§4–§5). Masters e derivados ficam fora do Git.
-
-## 2. Quando os arquivos existirem (ferramenta já na `main`)
+## 2. Ferramenta unitária (referência; o atalho do §1 já faz tudo isto)
 
 ```bash
 python3 tools/audio/preparar_audiobooks.py inspecionar --origem ~/masters            # duração, codec, canais, bitrate, faststart (só lê)
-python3 tools/audio/preparar_audiobooks.py preparar    --origem ~/masters --saida ~/audiobooks-tratados   # FORA do repositório
+python3 tools/audio/preparar_audiobooks.py preparar    --origem ~/masters --saida ~/audiobooks-tratados-NOVA   # pasta NOVA/vazia, FORA do repositório e separada da entrada (nada é apagado)
 ```
-Por master: SHA-256 antes/depois (o script aborta se o master mudar), AAC-LC **mono** a **48** e **64 kbps** com faststart, e no `relatorio.md/json`:
+Por master: SHA-256 antes/depois (o script aborta se o master mudar); derivado **só com benefício** (reencoda se > 30 MiB, não AAC-LC, não mono ou > 96 kb/s: AAC-LC **mono** a **48** e **64 kbps** com faststart; senão reaproveita/remux sem perda), e no `relatorio.md/json`:
 duração, tamanho, decodificação sem erro, Δ duração, loudness (LUFS) e pico, **STOI a 1×** e **STOI a 2× e 2,5×** (master e cópia aceleradas igual, sem mudar o tom).
 E em `amostras/` (fora do Git): 3 trechos de ~25 s por master — a **referência do master**, cada cópia (48 e 64 kbps) a **1×, 2× e 2,5×** — para a escuta humana (a 2×/2,5× o trecho de 25 s cobre 50/62 s de conteúdo).
-**Recomendação:** 48 kbps só se passar o STOI (1× ≥ 0,95; 2×/2,5× ≥ 0,90 — **limiar provisório**, a calibrar), o faststart e o pico; senão 64 kbps.
+**Recomendação:** o menor bitrate que passa o STOI (1× ≥ 0,95; 2×/2,5× ≥ 0,90 — **limiar provisório**, a calibrar), o faststart, o pico e o limite de 30 MiB. **Se nenhuma passar, o relatório diz «NÃO APROVADA»** (e `montar_manifesto` recusa sem `kbps` explícito do José depois de ouvir).
 STOI é objetivo: **a escuta humana a 1×, 2× e 2,5× decide** (`escuta_humana_pendente` sempre `true`).
 
 ## 3. Vínculo com o bloco — pelo CONTEÚDO
@@ -255,3 +216,11 @@ Pré-requisito: preview ativo com **um** áudio aprovado. Aparelhos: iPad (Safar
 | 12 | Trocar de matéria e sair da conta | pausa, cards somem; outra conta no mesmo aparelho não herda a posição |
 
 Registrar por aparelho: modelo/OS/navegador, resultado (✅/❌) por linha e capturas. **Nada disto foi executado.**
+
+---
+
+## Histórico de tentativas (NÃO repetir; só registro)
+
+* **Conector do Drive (`download_file_content`)** nos 4 IDs → `File too large for download, over limit of 10 MB` (arquivos de 15,7 a 36,8 MB); `read_file_content` não suporta áudio; não há download bruto.
+* **API do Drive com o token do ambiente** → HTTP 401. `drive.google.com`/`drive.usercontent.google.com` sem resposta na rede da sessão. Os arquivos não são públicos e as permissões **não foram alteradas**; nenhum controle de acesso foi contornado.
+* Inventários antigos citavam arquivos de 26–61 MB (versões anteriores dos masters); valem os tamanhos da tabela do §1.
