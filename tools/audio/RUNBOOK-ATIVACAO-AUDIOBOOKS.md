@@ -38,19 +38,30 @@ Três caminhos, **um basta** (em ordem de preferência):
 Opcional e muito útil em qualquer caminho: uma **transcrição** (`.txt`) de cada áudio, ou os minutos em que cada tema aparece.
 Os originais nunca são alterados. Enquanto os arquivos não chegam, **o processamento real fica parado**; o restante (runbook, testes, contrato) segue independente.
 
-## 1-B. Pipeline REAL a partir do ZIP dos 4 masters (`processar_zip.py`)
+## 1-B. Pipeline REAL em lote (`processar_masters.py`) — pasta direta, ZIP opcional
 
-Com o `audiobooks_semiologia2_masters.zip` acessível (nesta sessão ou na máquina do José), um comando faz tudo, **fora do repositório**:
+**Tentativa de baixar os 4 M4A do Drive nesta sessão do Claude (registro):** operação `download_file_content` do conector Google Drive nos 4 IDs
+(36.758.530 / 33.468.886 / 22.662.090 / 15.722.673 B) → erro `File too large for download, over limit of 10 MB`; a API do Drive com o token do ambiente → HTTP 401.
+Não há operação de download bruto no conector, os arquivos não são públicos (e as permissões **não** foram alteradas). Nenhum controle foi contornado. Por isso o processamento real roda **na máquina do José**:
+
+**Windows (um comando, PowerShell, a partir da raiz do repositório):**
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\audio\rodar_local.ps1 -Pasta "C:\Users\SEU_USUARIO\Downloads\audiobooks"
+```
+Baixe antes a pasta do Drive (ou os 4 arquivos) para essa pasta; os nomes com ` (1)` são aceitos (o nome lógico ignora o sufixo, o nome original fica no relatório).
+O script cria um venv fora do repositório, instala as dependências, baixa o modelo whisper-small (≈ 640 MB, release do GitHub) se faltar e roda tudo. **Não testado em Windows** (só em Linux).
+
+**Linux/macOS ou manual:**
 ```bash
 pip install sherpa-onnx imageio-ffmpeg pystoi soundfile numpy scipy
-# modelo de ASR (espanhol) — release do GitHub, ≈ 640 MB (small) ou ≈ 207 MB (base):
 curl -L -o whisper.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-small.tar.bz2 && tar xjf whisper.tar.bz2
-python3 tools/audio/processar_zip.py --zip ~/audiobooks_semiologia2_masters.zip --trabalho ~/audiobooks-trabalho --modelo ./sherpa-onnx-whisper-small
+python3 tools/audio/processar_masters.py --pasta ~/audiobooks --trabalho ~/audiobooks-trabalho --modelo ./sherpa-onnx-whisper-small   # --zip é opcional; --pasta pode repetir
 ```
-Etapas: extrai o zip (recusa caminho fora da pasta) e confere os 4 nomes + SHA-256 → inspeciona (codec/duração/canais/bitrate/faststart) → `preparar` (AAC-LC mono 48/64 kbps, faststart, STOI 1×/2×/2,5×, amostras) →
-`transcrever` (ASR local em janelas de 28 s a cada 120 s) → vínculo **pelo conteúdo** (TF-IDF contra os 10 blocos, texto inteiro + blocos de 5 min). Saídas em `~/audiobooks-trabalho`: `RELATORIO-REAL.md`,
-`vinculos-evidencia.json`, `vinculos.json` (RASCUNHO: `vinculo_confirmado` só true com evidência forte e consistente; `escuta_humana_ok` **sempre false**), `tratados/` (derivados + `amostras/`), `transcricoes/`.
-O ASR erra termos médicos: vale como evidência de **tema**. Dúvida ⇒ `REVISÃO HUMANA NECESSÁRIA` e fora do manifesto. Em seguida: escuta humana das amostras → `montar_manifesto.py` → `verificar_upload.py` (§4–§5).
+Regras da lista de entrada: arquivos de subpastas diferentes entram na **mesma lista**; mesmo nome com conteúdo diferente ⇒ erro (nunca sobrescreve); cópia idêntica ⇒ deduplicada e registrada;
+cada execução usa uma pasta nova `execucao-<UTC>/` (resíduos antigos não entram); entrada vazia ⇒ erro claro; `--janela`/`--passo` precisam ser > 0; `--completo` transcreve tudo (padrão = amostragem, rotulada **TRANSCRIÇÃO AMOSTRADA**, nunca integral).
+Etapas: inventário (nome original, caminho, tamanho, SHA-256) → inspeção (codec/duração/canais/bitrate/faststart) → derivado **só com benefício demonstrável** (reencoda se > 30 MiB, não AAC-LC, não mono ou > 96 kb/s; senão reaproveita/remux faststart sem perda) com amostras →
+ASR local → vínculo **pelo conteúdo** (TF-IDF contra os 10 blocos, com minutagem e termos distintivos). Saídas: `RELATORIO-REAL.md` (cada áudio → derivados → relatório), `vinculos-evidencia.json`, `vinculos.json` (RASCUNHO: `escuta_humana_ok` **sempre false**), `tratados/` (derivados + `amostras/`), `transcricoes/`.
+O ASR erra termos médicos: vale como evidência de **tema**. Dúvida ⇒ `REVISÃO HUMANA NECESSÁRIA` e fora do manifesto. Em seguida: escuta humana das amostras → `montar_manifesto.py` → `verificar_upload.py` (§4–§5). Masters e derivados ficam fora do Git.
 
 ## 2. Quando os arquivos existirem (ferramenta já na `main`)
 

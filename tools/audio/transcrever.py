@@ -30,7 +30,16 @@ def carregar(modelo, threads):
                                                       language='es', task='transcribe', num_threads=threads)
 
 
+def positivo(txt):
+    v = float(txt)
+    if not (v > 0):
+        raise argparse.ArgumentTypeError(f'precisa ser > 0 (recebi {txt})')
+    return v
+
+
 def janelas(dur, janela, passo):
+    if not (janela > 0 and passo > 0):
+        raise ValueError(f'janela e passo precisam ser positivos (janela={janela}, passo={passo})')
     ini, out = 0.0, []
     while ini < dur - 3:
         out.append((ini, min(janela, dur - ini)))
@@ -54,25 +63,42 @@ def transcrever_master(rec, caminho, janela, passo, max_janelas=0):
     return info, res
 
 
+def cobertura(info, res, janela):
+    """Fração do áudio realmente transcrita (as janelas amostradas NÃO são o áudio integral)."""
+    dur = info['duracao_s'] or 0
+    coberto = sum(min(x['fim_s'] - x['inicio_s'], janela) for x in res)
+    return round(100 * coberto / dur, 1) if dur else 0.0
+
+
+def escreve_transcricao(saida, entrada, info, res, janela, passo):
+    base = entrada['id']
+    cob = cobertura(info, res, janela)
+    with open(os.path.join(saida, base + '.janelas.json'), 'w', encoding='utf-8') as f:
+        json.dump({'id': base, 'master': entrada['nome_original'], 'sha256_master': entrada['sha256'], 'duracao_s': info['duracao_s'], 'janela_s': janela, 'passo_s': passo,
+                   'cobertura_pct': cob, 'amostrada': cob < 99.0, 'aviso': None if cob >= 99.0 else f'TRANSCRIÇÃO AMOSTRADA: {cob} % do áudio; não é a transcrição integral',
+                   'janelas': res}, f, ensure_ascii=False, indent=1)
+    with open(os.path.join(saida, base + '.transcricao.txt'), 'w', encoding='utf-8') as f:
+        f.write('\n'.join(x['texto'] for x in res if x['texto']) + '\n')
+    return cob
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--origem', required=True); ap.add_argument('--saida', required=True); ap.add_argument('--modelo', required=True)
-    ap.add_argument('--janela', type=float, default=28.0); ap.add_argument('--passo', type=float, default=120.0)
+    ap.add_argument('--janela', type=positivo, default=28.0); ap.add_argument('--passo', type=positivo, default=120.0, help='segundos entre inícios de janela; = --janela transcreve o áudio INTEIRO')
     ap.add_argument('--threads', type=int, default=4); ap.add_argument('--max-janelas', type=int, default=0)
     a = ap.parse_args(argv)
     if P.dentro_do_repo(a.saida):
         sys.exit('RECUSADO: a saída está dentro de um repositório git (transcrições de áudio não entram no Git).')
+    entradas = P.descobrir(a.origem)
+    P.saida_limpa(a.saida, False)
     os.makedirs(a.saida, exist_ok=True)
     rec = carregar(os.path.expanduser(a.modelo), a.threads)
-    for p in P.lista_masters(os.path.expanduser(a.origem)):
+    for e in entradas:
         t0 = time.time()
-        info, res = transcrever_master(rec, p, a.janela, a.passo, a.max_janelas)
-        base = P.slug_arquivo(os.path.basename(p))
-        with open(os.path.join(a.saida, base + '.janelas.json'), 'w', encoding='utf-8') as f:
-            json.dump({'master': os.path.basename(p), 'duracao_s': info['duracao_s'], 'janela_s': a.janela, 'passo_s': a.passo, 'janelas': res}, f, ensure_ascii=False, indent=1)
-        with open(os.path.join(a.saida, base + '.transcricao.txt'), 'w', encoding='utf-8') as f:
-            f.write('\n'.join(x['texto'] for x in res if x['texto']) + '\n')
-        print(f"{os.path.basename(p)}: {P.fmt_dur(info['duracao_s'])} · {len(res)} janelas · {round(time.time() - t0)} s")
+        info, res = transcrever_master(rec, e['caminho'], a.janela, a.passo, a.max_janelas)
+        escreve_transcricao(a.saida, e, info, res, a.janela, a.passo)
+        print(f"{e['nome_original']}: {P.fmt_dur(info['duracao_s'])} · {len(res)} janelas · {round(time.time() - t0)} s")
     return 0
 
 

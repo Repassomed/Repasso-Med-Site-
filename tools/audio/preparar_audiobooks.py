@@ -25,6 +25,8 @@ STOI_MIN = 0.95                     # limiar objetivo para escolher o menor bitr
 STOI_MIN_VEL = 0.90                 # limiar PROVISÓRIO a 2×/2,5× (STOI cai ao acelerar; calibrar com a escuta humana dos masters reais)
 VELOCIDADES = (2.0, 2.5)            # velocidades do player além de 1× em que a inteligibilidade é medida
 EXT = ('.m4a', '.mp4', '.aac', '.wav', '.mp3', '.flac', '.ogg')
+LIMITE_BYTES = 30 * 1024 * 1024     # limite do bucket (migration) — o derivado publicado não pode passar disto
+BITRATE_FALA_MAX = 96               # kb/s: um AAC-LC mono de fala acima disto tem benefício demonstrável em ser reduzido
 
 
 def _ffmpeg():
@@ -195,6 +197,60 @@ def lista_masters(origem):
     return sorted(os.path.join(origem, f) for f in os.listdir(origem) if f.lower().endswith(EXT) and not f.startswith('.'))
 
 
+def nome_logico(nome):
+    """Nome sem o « (1)» que o Drive/SO acrescenta a cópias: `Semio_EPOC (1).m4a` → `Semio_EPOC.m4a`. Só para CONFERIR/rastrear; nunca decide o vínculo."""
+    return re.sub(r'\s*\(\d+\)(?=\.[^.]+$)', '', nome)
+
+
+def descobrir(origens, recursivo=True):
+    """Lista ÚNICA de entradas (uma ou mais pastas, em qualquer profundidade). Cada entrada: caminho, relpath, nome_original, nome_logico, tamanho, sha256, id estável
+    (`<slug>-<sha8>`: une master ↔ derivados ↔ transcrição ↔ relatório). Erros claros: entrada vazia, mesmo nome com conteúdo DIFERENTE (nunca sobrescreve em silêncio);
+    duplicata byte-idêntica é registrada e ignorada."""
+    if isinstance(origens, str):
+        origens = [origens]
+    achados = []
+    for o in origens:
+        o = os.path.abspath(os.path.expanduser(o))
+        if not os.path.isdir(o):
+            sys.exit(f'ERRO: a pasta de entrada não existe: {o}')
+        for raiz, dirs, arqs in os.walk(o):
+            dirs[:] = sorted(d for d in dirs if not d.startswith('.'))
+            for f in sorted(arqs):
+                if f.lower().endswith(EXT) and not f.startswith('.'):
+                    achados.append((os.path.join(raiz, f), os.path.relpath(os.path.join(raiz, f), o)))
+            if not recursivo:
+                break
+    if not achados:
+        sys.exit('ERRO: nenhum arquivo de áudio (' + ', '.join(EXT) + ') encontrado na entrada: ' + ', '.join(map(str, origens)))
+    por_nome, vistos_sha, entradas = {}, {}, []
+    for caminho, rel in achados:
+        sha = sha256(caminho); nome = os.path.basename(caminho)
+        if sha in vistos_sha:
+            vistos_sha[sha]['duplicatas_identicas'].append(rel); continue
+        if nome in por_nome:
+            sys.exit(f'ERRO: dois arquivos com o MESMO nome e conteúdo DIFERENTE (não vou sobrescrever em silêncio): {por_nome[nome]["relpath"]} e {rel}')
+        e = {'caminho': caminho, 'relpath': rel, 'nome_original': nome, 'nome_logico': nome_logico(nome), 'tamanho': os.path.getsize(caminho), 'sha256': sha,
+             'id': f'{slug_arquivo(nome_logico(nome))}-{sha[:8]}', 'duplicatas_identicas': []}
+        por_nome[nome] = e; vistos_sha[sha] = e; entradas.append(e)
+    return entradas
+
+
+def saida_limpa(pasta, limpar=False):
+    """Resíduo de execução anterior não entra no lote: a pasta de saída tem de estar vazia (ou ser limpa com --limpar, só dos artefatos conhecidos)."""
+    if not os.path.isdir(pasta) or not os.listdir(pasta):
+        return
+    if not limpar:
+        sys.exit(f'ERRO: a pasta de saída NÃO está vazia ({pasta}). Use uma pasta nova (recomendado) ou --limpar para apagar só os artefatos desta ferramenta (derivados .m4a, amostras/, relatorio.*).')
+    for f in os.listdir(pasta):
+        c = os.path.join(pasta, f)
+        if os.path.isdir(c) and f == 'amostras':
+            shutil.rmtree(c)
+        elif os.path.isfile(c) and (f.endswith('.m4a') or f in ('relatorio.json', 'relatorio.md')):
+            os.remove(c)
+    if os.listdir(pasta):
+        sys.exit(f'ERRO: sobraram arquivos desconhecidos em {pasta}; escolha outra pasta de saída.')
+
+
 def slug_arquivo(nome):
     s = unicodedata.normalize('NFKD', os.path.splitext(nome)[0]).encode('ascii', 'ignore').decode().lower()
     return re.sub(r'[^a-z0-9]+', '-', s).strip('-')[:60] or 'audio'
@@ -259,19 +315,56 @@ def gera_amostras(master, copias, dur, base, pasta, n, janela, vels, ar):
     return out
 
 
+def decidir_derivado(info, tamanho, tem_faststart):
+    """Só reencoda quando há BENEFÍCIO demonstrável (o áudio já foi comprimido pelo autor: evitar nova perda).
+    reaproveitar: AAC-LC mono ≤ 96 kb/s, ≤ 30 MiB e com faststart → cópia idêntica; remux: o mesmo sem faststart → só move o moov (sem perda);
+    reencodar: fora do limite do bucket, não AAC-LC, não mono, ou bitrate de fala > 96 kb/s."""
+    ok_formato = info.get('codec') == 'aac' and info.get('perfil') == 'LC' and info.get('canais') == 1
+    br = info.get('bitrate_kbps') or 0
+    if ok_formato and tamanho <= LIMITE_BYTES and 0 < br <= BITRATE_FALA_MAX:
+        return ('reaproveitar' if tem_faststart else 'remux-faststart'), 'já é AAC-LC mono ≤ %d kb/s e cabe em 30 MiB: sem nova perda' % BITRATE_FALA_MAX
+    motivos = []
+    if tamanho > LIMITE_BYTES: motivos.append(f'{tamanho} B > 30 MiB (limite do bucket)')
+    if info.get('codec') != 'aac' or info.get('perfil') != 'LC': motivos.append(f"codec {info.get('codec')}/{info.get('perfil')} ≠ AAC-LC")
+    if info.get('canais') != 1: motivos.append(f"canais={info.get('canais')} ≠ mono")
+    if br > BITRATE_FALA_MAX: motivos.append(f'{br} kb/s > {BITRATE_FALA_MAX} (fala)')
+    return 'reencodar', '; '.join(motivos) or 'bitrate desconhecido'
+
+
+def remux_faststart(src, dst):
+    r = subprocess.run([ff(), '-y', '-hide_banner', '-loglevel', 'error', '-nostdin', '-i', src, '-vn', '-map', '0:a:0', '-map_metadata', '-1', '-c:a', 'copy', '-movflags', '+faststart', dst], capture_output=True, text=True)
+    if r.returncode != 0:
+        raise RuntimeError(r.stderr[:300])
+
+
 def cmd_preparar(a):
     if dentro_do_repo(a.saida):
         sys.exit('RECUSADO: a saída está dentro de um repositório git. Masters e cópias NÃO entram no Git; use uma pasta fora do repositório.')
+    saida_limpa(a.saida, getattr(a, 'limpar', False))
     os.makedirs(a.saida, exist_ok=True)
+    entradas = getattr(a, 'entradas', None) or descobrir(a.origem)
     relatorio = {'perfis_kbps': list(PERFIS), 'stoi_min': a.stoi_min, 'ar_hz': a.ar, 'itens': [], 'nota': 'STOI/loudness são objetivos; a escuta humana é obrigatória antes de publicar.'}
     vels = [float(x) for x in a.velocidades.split(',') if x.strip()]
     relatorio['velocidades'] = [f'{v:g}x' for v in vels]; relatorio['stoi_min_vel'] = a.stoi_min_vel
-    for p in lista_masters(a.origem):
-        h0 = sha256(p); mt0 = os.stat(p).st_mtime_ns
+    for ent in entradas:
+        p = ent['caminho']; h0 = sha256(p); mt0 = os.stat(p).st_mtime_ns
+        if h0 != ent['sha256']:
+            sys.exit(f'ERRO: o arquivo mudou entre a descoberta e o processamento: {p}')
         info = probe(p)
-        item = {'master': os.path.basename(p), 'sha256_master': h0, 'master_info': info, 'tamanho_master_mb': round(os.path.getsize(p) / 1048576, 2), 'copias': [], 'escuta_humana_pendente': True}
-        base = slug_arquivo(os.path.basename(p))
-        for kb in PERFIS:
+        item = {'id': ent['id'], 'relpath': ent['relpath'], 'nome_logico': ent['nome_logico'], 'duplicatas_identicas': ent['duplicatas_identicas'], 'master': os.path.basename(p), 'sha256_master': h0, 'master_info': info, 'tamanho_master_mb': round(os.path.getsize(p) / 1048576, 2), 'copias': [], 'escuta_humana_pendente': True}
+        base = ent['id']
+        acao, motivo_acao = decidir_derivado(info, os.path.getsize(p), faststart(p)) if getattr(a, 'politica', 'auto') == 'auto' else ('reencodar', 'política forçada')
+        item['acao_derivado'] = {'acao': acao, 'motivo': motivo_acao}
+        if acao in ('reaproveitar', 'remux-faststart'):
+            dst = os.path.join(a.saida, f'{base}.original-aac.m4a')
+            if acao == 'reaproveitar': shutil.copyfile(p, dst)
+            else: remux_faststart(p, dst)
+            ok, err = decodifica_ok(dst); ci = probe(dst)
+            c = {'arquivo': os.path.basename(dst), 'kbps_alvo': int(round(info.get('bitrate_kbps') or 0)), 'origem': acao, 'tamanho_mb': round(os.path.getsize(dst) / 1048576, 2), 'info': ci,
+                 'faststart': faststart(dst), 'decodifica_sem_erros': ok, 'erro': err, 'delta_duracao_s': round((ci['duracao_s'] or 0) - (info['duracao_s'] or 0), 3) if info['duracao_s'] else None,
+                 'loudness': loudness(dst), 'stoi': {'media': 1.0, 'minimo': 1.0, 'janelas': 0, 'nota': 'áudio idêntico ao master (sem recodificação)'}, 'stoi_velocidades': {}}
+            item['copias'].append(c)
+        for kb in (PERFIS if acao == 'reencodar' else ()):
             dst = os.path.join(a.saida, f'{base}.{kb}k.m4a')
             codifica(p, dst, kb, a.ar)
             ok, err = decodifica_ok(dst)
@@ -288,13 +381,15 @@ def cmd_preparar(a):
         item['master_loudness'] = loudness(p)
         # recomendação objetiva: o menor bitrate que passa o limiar (média e pior janela) e não clipa
         rec = None
-        for c in item['copias']:
+        if acao != 'reencodar':
+            rec = item['copias'][0]['kbps_alvo']
+        for c in (item['copias'] if acao == 'reencodar' else []):
             s = c['stoi']
             if c['decodifica_sem_erros'] and c['faststart'] and s['media'] is not None and s['media'] >= a.stoi_min and s['minimo'] >= a.stoi_min - 0.03 and (c['loudness']['pico_dbfs'] is None or c['loudness']['pico_dbfs'] < -0.1) \
                     and all(sv['media'] is None or sv['media'] >= a.stoi_min_vel for sv in c['stoi_velocidades'].values()):
                 rec = c['kbps_alvo']; break
         item['recomendado_kbps'] = rec if rec else max(PERFIS)
-        item['recomendacao_motivo'] = 'menor bitrate que passa STOI (1× e velocidades)/faststart/pico' if rec else 'nenhum passou o limiar: manter o maior e ouvir antes'
+        item['recomendacao_motivo'] = (motivo_acao if acao != 'reencodar' else ('menor bitrate que passa STOI (1× e velocidades)/faststart/pico' if rec else 'nenhum passou o limiar: manter o maior e ouvir antes'))
         h1 = sha256(p)
         item['master_intacto'] = (h0 == h1 and mt0 == os.stat(p).st_mtime_ns)
         if not item['master_intacto']:
@@ -386,7 +481,7 @@ def main(argv=None):
     s = sp.add_parser('preparar'); s.add_argument('--origem', required=True); s.add_argument('--saida', required=True)
     s.add_argument('--ar', type=int, default=32000); s.add_argument('--stoi-min', type=float, default=STOI_MIN, dest='stoi_min'); s.add_argument('--janelas', type=int, default=10)
     s.add_argument('--velocidades', default=','.join(f'{v:g}' for v in VELOCIDADES), help='velocidades extra para medir STOI (vazio = só 1×)')
-    s.add_argument('--janelas-vel', type=int, default=5, dest='janelas_vel'); s.add_argument('--amostras', type=int, default=3, help='trechos para escuta por master (0 = nenhum)'); s.add_argument('--janela-amostra', type=float, default=25.0, dest='janela_amostra'); s.add_argument('--stoi-min-vel', type=float, default=STOI_MIN_VEL, dest='stoi_min_vel'); s.set_defaults(f=cmd_preparar)
+    s.add_argument('--janelas-vel', type=int, default=5, dest='janelas_vel'); s.add_argument('--amostras', type=int, default=3, help='trechos para escuta por master (0 = nenhum)'); s.add_argument('--janela-amostra', type=float, default=25.0, dest='janela_amostra'); s.add_argument('--limpar', action='store_true'); s.add_argument('--politica', choices=('auto', 'reencodar'), default='auto'); s.add_argument('--stoi-min-vel', type=float, default=STOI_MIN_VEL, dest='stoi_min_vel'); s.set_defaults(f=cmd_preparar)
     s = sp.add_parser('vincular'); s.add_argument('--transcricao', required=True); s.add_argument('--materia', required=True); s.set_defaults(f=cmd_vincular)
     a = ap.parse_args(argv)
     return a.f(a)
