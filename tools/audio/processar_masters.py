@@ -106,12 +106,12 @@ def copia_recomendada(it):
     return next(c for c in it['copias'] if c['arquivo'] == it['recomendado_arquivo'])
 
 
-def verifica_ambiente(modelo, materia):
+def verifica_ambiente(modelo, materia, com_modelo=True):
     """Problemas que impedem o processamento (lista vazia = ok). Roda ANTES de qualquer trabalho pesado; não altera nada."""
     erros = []
     if sys.version_info < (3, 10):
         erros.append(f'Python {sys.version_info.major}.{sys.version_info.minor} é antigo: é preciso Python 3.10 ou mais novo')
-    for m in ('numpy', 'scipy', 'soundfile', 'pystoi', 'sherpa_onnx'):
+    for m in (('numpy', 'scipy', 'soundfile', 'pystoi') + (('sherpa_onnx',) if com_modelo else ())):
         try:
             importlib.import_module(m)
         except Exception as e:
@@ -120,7 +120,8 @@ def verifica_ambiente(modelo, materia):
         P.ff()
     except BaseException as e:
         erros.append(f'ffmpeg indisponível ({e}) — pip install imageio-ffmpeg ou ffmpeg no PATH')
-    erros += T.verifica_modelo(os.path.expanduser(modelo))
+    if com_modelo:
+        erros += T.verifica_modelo(os.path.expanduser(modelo))
     if not os.path.isfile(materia):
         erros.append(f'arquivo da matéria não encontrado: {materia} — este fluxo precisa do checkout do repositório (ou indique outro caminho com --materia); a matéria é privada e não vai no pacote')
     return erros
@@ -128,14 +129,18 @@ def verifica_ambiente(modelo, materia):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--pasta', action='append'); ap.add_argument('--zip'); ap.add_argument('--trabalho'); ap.add_argument('--modelo', required=True)
+    ap.add_argument('--pasta', action='append'); ap.add_argument('--zip'); ap.add_argument('--trabalho'); ap.add_argument('--modelo', help='pasta do modelo de transcrição (só com transcrição)')
+    ap.add_argument('--sem-transcricao', action='store_true', help='CAMINHO CURTO: não transcreve (sem modelo de 640 MB); o vínculo com o bloco é decidido pela escuta humana do José')
     ap.add_argument('--materia', default=MATERIA, help='semiologia-ii.html do checkout do repositório (só LIDO; a matéria é privada)')
     ap.add_argument('--verificar-ambiente', action='store_true', help='só confere Python/dependências/ffmpeg/modelo/matéria e sai (0 = ok)')
     ap.add_argument('--janela', type=T.positivo, default=28.0); ap.add_argument('--passo', type=T.positivo, default=120.0)
     ap.add_argument('--completo', action='store_true', help='transcreve o áudio INTEIRO (passo = janela); bem mais lento')
     ap.add_argument('--max-janelas', type=int, default=0)
     a = ap.parse_args(argv)
-    erros = verifica_ambiente(a.modelo, a.materia)
+    com_modelo = not a.sem_transcricao
+    if com_modelo and not a.modelo:
+        sys.exit('ERRO: informe --modelo (transcrição) ou use --sem-transcricao (o vínculo vira escuta humana).')
+    erros = verifica_ambiente(a.modelo or '', a.materia, com_modelo)
     if a.verificar_ambiente:
         for e in erros:
             print('PROBLEMA:', e)
@@ -175,12 +180,12 @@ def main(argv=None):
     print('== inspeção ==')
     for e in entradas:
         i = P.probe(e['caminho']); print(' ', e['nome_original'], f"{e['tamanho']} B · {P.fmt_dur(i['duracao_s'])} · {i['codec']} {i['perfil']} · {i['taxa_hz']} Hz · {i['layout']} · {i['bitrate_kbps']} kb/s · faststart={P.faststart(e['caminho'])}")
-    rec = T.carregar(os.path.expanduser(a.modelo), 4)                  # falha cedo se o modelo não carrega
+    rec = T.carregar(os.path.expanduser(a.modelo), 4) if com_modelo else None      # falha cedo se o modelo não carrega
     print('== preparar ==')
     rel = P.cmd_preparar(argparse.Namespace(
         origem=None, entradas=entradas, saida=saida, ar=32000, stoi_min=P.STOI_MIN, janelas=10, velocidades=','.join(f'{v:g}' for v in P.VELOCIDADES), janelas_vel=5, amostras=3, janela_amostra=25.0,
         stoi_min_vel=P.STOI_MIN_VEL, politica='auto'))
-    print('== transcrever ==')
+    print('== transcrever ==' if com_modelo else '== vínculo: sem transcrição (decidido pela sua escuta) ==')
     blocos = P.blocos_da_materia(a.materia); tit = titulos_blocos(a.materia)
     por_id = {i['id']: i for i in rel['itens']}
     os.makedirs(trans)
@@ -191,9 +196,13 @@ def main(argv=None):
     for ordem, e in enumerate(entradas, 1):
         it = por_id[e['id']]                                                         # master ↔ relatório ↔ derivados ↔ transcrição: pelo id (slug+sha8)
         assert it['sha256_master'] == e['sha256']
-        info, jan = T.transcrever_master(rec, e['caminho'], a.janela, passo, a.max_janelas)
-        cob = T.escreve_transcricao(trans, e, info, jan, a.janela, passo)
-        amostrada = cob['temporal_pct'] < 99.0
+        if com_modelo:
+            info, jan = T.transcrever_master(rec, e['caminho'], a.janela, passo, a.max_janelas)
+            cob = T.escreve_transcricao(trans, e, info, jan, a.janela, passo)
+        else:                                                                           # sem transcrição: nada é inventado, o vínculo é da escuta humana
+            info, jan = P.probe(e['caminho']), []
+            cob = {'temporal_pct': 0.0, 'com_texto_pct': 0.0, 'sem_texto_s': 0.0, 'janelas_sem_texto': 0}
+        amostrada = com_modelo and cob['temporal_pct'] < 99.0
         inteiro, votos, melhor, trechos, achados, todo = evidencia(jan, blocos)
         total = sum(votos.values()); forte = bool(melhor) and total >= 3 and votos.get(melhor, 0) / total >= 0.6
         evid[e['id']] = {'arquivo': e['nome_original'], 'sha256': e['sha256'], 'duracao_s': info['duracao_s'], 'cobertura_transcricao_pct': cob['temporal_pct'], 'cobertura_com_texto_pct': cob['com_texto_pct'],
@@ -204,25 +213,29 @@ def main(argv=None):
         st = 'aprovada nos critérios objetivos' if it['recomendado_aprovado'] else '**NÃO APROVADA (nenhuma cópia passou)**'
         mi = it['master_info']
         linhas.append(f"| {e['nome_original']} | `{e['sha256'][:12]}…` | {e['tamanho']} B | {P.fmt_dur(info['duracao_s'])} | {mi.get('codec')} {mi.get('perfil')} {mi.get('layout')} {mi.get('bitrate_kbps')} kb/s | {it['acao_derivado']['acao']} | "
-                      f"`{copia['arquivo']}` · {copia['tamanho_mb']} MB · {copia['info'].get('bitrate_kbps')} kb/s · {st} | {cob['temporal_pct']} % / {cob['com_texto_pct']} %{' (AMOSTRADA)' if amostrada else ''} | "
-                      f"{(melhor + ' — ' + tit.get(melhor, '')) if melhor else '**REVISÃO HUMANA NECESSÁRIA**'}{' (consistente)' if forte else ''} | {votos} | {CAND.get(e['nome_logico'])} |")
+                      f"`{copia['arquivo']}` · {copia['tamanho_mb']} MB · {copia['info'].get('bitrate_kbps')} kb/s · {st} | {(str(cob['temporal_pct']) + ' % / ' + str(cob['com_texto_pct']) + ' %' + (' (AMOSTRADA)' if amostrada else '')) if com_modelo else 'sem transcrição'} | "
+                      + (f"{(melhor + ' — ' + tit.get(melhor, '')) if melhor else '**REVISÃO HUMANA NECESSÁRIA**'}{' (consistente)' if forte else ''} | {votos} | {CAND.get(e['nome_logico'])} |" if com_modelo
+                       else f"**ESCUTA DO JOSÉ** | — | {CAND.get(e['nome_logico'])} (só candidato pelo nome) |"))
         alt = it['alternativas']
         pend = ['escuta humana pendente (1×, 2× e 2,5×; limiar STOI de velocidade é provisório)']
         if not it['recomendado_aprovado']:
             pend.insert(0, 'NENHUMA cópia passou os critérios objetivos — não aprovar; ouvir as amostras antes de decidir')
+        if not com_modelo:
+            pend.append('sem transcrição: o bloco de cada áudio é decidido pela SUA escuta (o nome do arquivo é só candidato)')
         if amostrada:
             pend.append(f"transcrição AMOSTRADA ({cob['temporal_pct']} % do tempo) — o vínculo é evidência de tema, não leitura integral")
-        if cob['janelas_sem_texto']:
+        if com_modelo and cob['janelas_sem_texto']:
             pend.append(f"{cob['janelas_sem_texto']} janela(s) sem texto reconhecido ({cob['sem_texto_s']} s): silêncio ou fala não reconhecida")
-        if not forte:
+        if not forte and com_modelo:
             pend.append('vínculo NÃO consistente: REVISÃO HUMANA NECESSÁRIA')
         secoes += [f"### {e['nome_original']}", '', f"- Derivado recomendado: `{copia['arquivo']}` — {copia['tamanho_mb']} MB, {copia['info'].get('bitrate_kbps')} kb/s reais (alvo {copia['kbps_alvo']}) — {st}.",
                    f"- Motivo: {it['recomendacao_motivo']}.",
                    '- Alternativas: ' + ('; '.join(f"`{x['arquivo']}` ({x['kbps']} kbps, {x['tamanho_mb']} MB) — " + ('aprovada' if x['aprovada'] else 'reprovada: ' + ', '.join(x['reprovada_por'])) for x in alt) if alt else 'nenhuma (cópia única)') + '.',
-                   '- Pendências: ' + '; '.join(pend) + '.', '']
+                   '- Pendências: ' + '; '.join(pend) + '.',
+                   f"- Depois de OUVIR as amostras (só você roda isto): `python tools/audio/aprovar_vinculos.py --execucao \"{exec_dir}\" --audio {e['id']} --bloco {CAND.get(e['nome_logico'], 's2-bNN')} --escutei`" + (' (este áudio tem dois blocos candidatos: s2-b01 respiratório × s2-b06 cardíaco — o que você ouvir decide)' if e['nome_logico'] == 'Semio_-_Motivo_de_Consulta.m4a' else ''), '']
         rascunho.append({'id': e['id'], 'master': e['nome_original'], 'sha256_master': e['sha256'], 'audio_id': 'PROPUESTA-' + e['id'], 'block_id': melhor or 'CONFIRMAR', 'theme': tit.get(melhor, 'PROPUESTA'),
                          'title': 'PROPUESTA', 'order': ordem, 'version': 'v1', 'kbps': it['recomendado_kbps'] if it['recomendado_aprovado'] else None, 'vinculo_confirmado': bool(forte), 'confirmado_por': 'transcricao', 'escuta_humana_ok': False})
-        print(e['nome_original'], '→', melhor, '| consistente' if forte else '| REVISÃO HUMANA', '| cobertura', cob['temporal_pct'], '% (com texto', cob['com_texto_pct'], '%)')
+        print(e['nome_original'], '→', melhor if com_modelo else '(escuta humana)', ('| consistente' if forte else '| REVISÃO HUMANA') if com_modelo else '', ('| cobertura %s %% (com texto %s %%)' % (cob['temporal_pct'], cob['com_texto_pct'])) if com_modelo else '')
     with open(os.path.join(exec_dir, 'vinculos-evidencia.json'), 'w', encoding='utf-8') as f:
         json.dump(evid, f, ensure_ascii=False, indent=1)
     with open(os.path.join(exec_dir, 'vinculos.json'), 'w', encoding='utf-8') as f:

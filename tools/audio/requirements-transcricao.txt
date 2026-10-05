@@ -1,0 +1,2 @@
+# Só com -ComTranscricao (propõe o bloco pelo conteúdo; o modelo whisper-small, ≈ 640 MB, não é pacote pip)
+sherpa-onnx

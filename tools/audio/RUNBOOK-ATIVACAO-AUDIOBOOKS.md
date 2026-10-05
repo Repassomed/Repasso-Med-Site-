@@ -98,7 +98,7 @@ autorização; produção só depois do ensaio em preview/projeto de teste. **Pa
    ```
 2. **Conferir os arquivos ANTES de subir** (local, não envia nada): `python3 tools/audio/verificar_upload.py --manifesto ~/audiobooks-tratados/manifesto/manifesto.json --pasta ~/audiobooks-tratados --plano ~/audiobooks-tratados/manifesto/plano-upload.md`
    — por item: derivado existe (e não é master), AAC-LC mono, **faststart**, decodifica limpo, ≤ 30 MB, duração = a do manifesto (± 1,5 s), `path` = `semiologia-ii/<audio_id>.m4a`; imprime o SHA-256. Só com `APROVADO` segue o upload.
-   **Upload dos derivados** (painel do Supabase) no bucket `audiobooks`, **exatamente** nos `path` do `plano-upload.md` (`semiologia-ii/<audio_id>.m4a`), Content-Type `audio/mp4`. Masters **nunca** sobem.
+   **Upload dos derivados:** `tools\audio\enviar_local.ps1 -Enviar` (README §1, passo 5; confere bucket, tamanho e a negação da URL pública) **ou** o painel do Supabase, no bucket `audiobooks`, **exatamente** nos `path` do `plano-upload.md` (`semiologia-ii/<audio_id>.m4a`), Content-Type `audio/mp4`. Masters **nunca** sobem.
 3. **Variáveis do Netlify** com escopo **só «Deploy previews»** no ensaio: `RM_PILOT_AUDIO_UIDS` = UID do José (**só ele**) e `RM_AUDIO_MANIFEST` = conteúdo de `manifesto.json`.
    (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` já existem.) **Novo deploy de preview** e esperar terminar (a variável só vale no próximo build).
 4. **Validação do servidor contra o preview** (só lê; o JWT vai por variável de ambiente e nunca é impresso):
