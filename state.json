@@ -2372,6 +2372,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:427.",
       "task_id": "ferramentas-lapiz-toolbox",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "56df645b588ca06497070eccc44aebb9a8c78cbc",
+      "component": "guard",
+      "error_id": "ERR-883744DC3D",
+      "error_type": "hard-fail",
+      "fingerprint": "883744dc3d60e7371cb2",
+      "first_seen": "2026-10-05T00:21:56.244016+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "d301354e839e435c898fed14d7d9a538",
+      "issue_sync_updated_at": "2026-10-05T00:21:56.244016+00:00",
+      "last_evidence_hash": "925b0aeb2a97fd421dad",
+      "last_seen": "2026-10-05T00:21:56.244016+00:00",
+      "occurrence_count": 1,
+      "pr_number": 441,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "37247173853",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:441.",
+      "task_id": "pr:441",
+      "worker_id": null
     }
   ]
 }
