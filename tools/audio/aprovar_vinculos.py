@@ -47,7 +47,7 @@ def main(argv=None):
     audio_id = a.audio_id or f'{a.bloco}-{base}'
     if not ID_RE.match(audio_id):
         print('ERRO: audio_id inválido (letras, números, ponto, hífen, sublinhado; até 80).'); return 2
-    ordem = a.ordem or it.get('order')
+    ordem = a.ordem or int(re.search(r'b(\d+)$', a.bloco).group(1))              # padrão: o número do bloco (s2-b03 → 3); dois áudios no mesmo bloco pedem --ordem
     for o in v:
         if o is not it and (o.get('audio_id') == audio_id or (o.get('vinculo_confirmado') and o.get('order') == ordem)):
             print(f"ERRO: audio_id ou ordem já usados por {o['id']}. Use --audio-id/--ordem."); return 2

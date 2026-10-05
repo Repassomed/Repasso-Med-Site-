@@ -13,6 +13,7 @@ param(
   [switch]$ComAmostras                                    # inclui os trechos de escuta no pacote de retorno
 )
 $ErrorActionPreference = 'Stop'
+$env:PYTHONUTF8 = '1'; $env:PYTHONIOENCODING = 'utf-8'      # console do Windows: nomes e símbolos acentuados sem erro de codificação
 $ProgressPreference = 'SilentlyContinue'
 
 function Falha([string]$Msg) {
@@ -127,7 +128,7 @@ try {
   Nativo $Py $ArgsRet 'geração do pacote de retorno'
   Write-Host ''
   Write-Host "Pronto. Resultados: $($Exec.FullName)" -ForegroundColor Green
-  Write-Host "Próximo: ouça tratados\amostras\ (1x, 2x e 2,5x), leia RELATORIO-REAL.md e, para cada áudio, rode o comando 'aprovar_vinculos' que o relatório mostra. Depois: enviar_local.ps1. Nada foi enviado; escuta_humana_ok continua false."
+  Write-Host "Próximo: ouça tratados\amostras\ (1x, 2x e 2,5x), leia RELATORIO-REAL.md e, para cada áudio, rode o comando 'aprovar_local.ps1' que o relatório mostra. Depois: enviar_local.ps1. Nada foi enviado; escuta_humana_ok continua false."
   exit 0
 }
 catch { Falha $_.Exception.Message }

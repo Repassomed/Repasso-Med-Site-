@@ -240,8 +240,9 @@ def _real(p):
 
 
 def _dentro(filho, pai):
-    """True se `filho` é `pai` ou está dentro dele (caminhos já resolvidos; não segue nomes parecidos: /a/b ≠ /a/bc)."""
-    return filho == pai or filho.startswith(pai.rstrip(os.sep) + os.sep)
+    """True se `filho` é `pai` ou está dentro dele (caminhos já resolvidos; /a/b ≠ /a/bc). No Windows a comparação ignora maiúsculas/minúsculas (C:\\Users = c:\\users)."""
+    f, p = os.path.normcase(filho), os.path.normcase(pai)
+    return f == p or f.startswith(p.rstrip(os.sep) + os.sep)
 
 
 def valida_saida(saida, origens=(), arquivos=()):

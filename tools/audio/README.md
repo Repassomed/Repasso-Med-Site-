@@ -18,7 +18,11 @@ Cria o bucket **privado** `audiobooks` (30 MiB, só M4A) e a barreira RESTRICTIV
    powershell -ExecutionPolicy Bypass -File tools\audio\rodar_local.ps1 -Pasta "C:\Users\VOCE\Downloads\Audiobooks"     # ou  -Zip "C:\...\Audiobooks.zip"
    ```
    Converte **só quando há benefício** (acima de 30 MiB, não AAC-LC, não mono ou > 96 kb/s); senão reaproveita o arquivo sem perda. Gera derivados + **amostras de escuta** (trechos de ≈ 25 s do master e de cada cópia a 1×, 2× e 2,5×) + `RELATORIO-REAL.md` (tamanho, bitrate, STOI, recomendação por áudio).
-4. **Ouça as amostras** (`execucao-…\tratados\amostras\`) e rode, **para cada áudio**, a linha `aprovar_vinculos` que o relatório mostra (`--bloco s2-bNN` = o bloco que você ouviu; `--escutei` = sua aprovação; se o relatório disser «NÃO APROVADA» acrescente `--kbps 64` depois de ouvir).
+4. **Ouça as amostras** (`execucao-…\tratados\amostras\`) e, **para cada áudio**, rode **um** comando (a linha pronta está no `RELATORIO-REAL.md`):
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File tools\audio\aprovar_local.ps1 -Audio epoc -Bloco s2-b03 -Escutei
+   ```
+   `-Audio` = o id (ou parte do nome) do relatório · `-Bloco` = o bloco que você **ouviu** · `-Escutei` = a sua aprovação (sem ele só grava a proposta). Se o relatório disser «NÃO APROVADA», acrescente `-Kbps 64` depois de ouvir. Dois áudios no mesmo bloco: acrescente `-Ordem 2`.
    Só esse comando marca `escuta_humana_ok`; nada é automático.
 5. **Comando 2 — conferir e enviar:**
    ```powershell
@@ -60,7 +64,7 @@ python3 -m unittest discover -s tools/audio -p "test_*.py"   # testes (master si
   cópia idêntica = deduplicada e registrada; execução isolada `execucao-<UTC>/`; entrada vazia = erro claro; `--janela`/`--passo` > 0. **Nunca apaga nada** (não existe mais `--limpar`): a saída tem de ser pasta nova/vazia e não pode se sobrepor às entradas.
 * **Derivado só com benefício:** reencoda se > 30 MiB (limite do bucket), não AAC-LC, não mono ou > 96 kb/s; senão reaproveita ou remux com faststart (sem perda). O relatório mostra o derivado **recomendado** (não o primeiro), o motivo, tamanho/bitrate reais, alternativas e, se nenhuma passar os critérios, **NÃO APROVADA**.
 * **transcrever.py:** ASR local (Whisper small, espanhol). Por padrão **amostrada** (rotulada); `--completo` transcreve tudo. Cobertura = **união** das janelas (sem dupla contagem) e, separada, a cobertura **com texto** reconhecido.
-* **aprovar_vinculos.py / publicar_lote.py / enviar_storage.py:** aprovação humana por áudio → manifesto → conferência → upload ao bucket privado (dry-run por padrão; chave só por variável de ambiente; sem sobrescrever; confere tamanho e a negação da URL pública). Reaproveitam montar_manifesto e verificar_upload.
+* **aprovar_local.ps1 (→ aprovar_vinculos.py) / publicar_lote.py / enviar_storage.py:** aprovação humana por áudio → manifesto → conferência → upload ao bucket privado (dry-run por padrão; chave só por variável de ambiente; sem sobrescrever; confere tamanho e a negação da URL pública). Reaproveitam montar_manifesto e verificar_upload.
 * **empacotar_retorno.py:** ZIP pequeno de retorno (lista fixa de arquivos; nunca masters/derivados). **empacotar_pacote.py:** gera o pacote de scripts (§3).
 * **montar_manifesto.py / verificar_upload.py:** etapas posteriores (manifesto candidato e conferência antes do upload); ficam no checkout, dependem do site; não enviam nada.
 

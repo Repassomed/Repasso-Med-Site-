@@ -53,7 +53,7 @@ def json_de(dados):
 def confere_bucket(base, chave):
     st, d = chamar(f'{base}/storage/v1/bucket/{BUCKET}', chave)
     if st == 404 or (st == 400 and b'not found' in d.lower()):
-        return ['o bucket "audiobooks" NÃO existe: aplique antes a migration 20260930_01_audiobooks_bucket_privado.sql (SQL Editor do Supabase)']
+        return ['o bucket "audiobooks" NÃO existe NESTE projeto (' + base.split('//')[1].split('.')[0] + '). Se você já aplicou a migration, provavelmente foi em OUTRO projeto: confira o "Reference ID" (Project Settings ▸ General) e passe a URL certa (-Url https://<ref>.supabase.co). Só se for este o projeto, aplique a migration 20260930_01_audiobooks_bucket_privado.sql']
     if st != 200:
         return [f'não consegui ler o bucket (HTTP {st}); confira a URL e a chave service_role']
     b = json_de(d) or {}

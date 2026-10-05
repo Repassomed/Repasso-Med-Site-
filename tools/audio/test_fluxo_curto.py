@@ -52,7 +52,7 @@ class Fluxo(unittest.TestCase):
         v = json.load(open(os.path.join(self.ex, 'vinculos.json'), encoding='utf-8'))
         self.assertEqual(len(v), 2); self.assertTrue(all(x['vinculo_confirmado'] is False and x['escuta_humana_ok'] is False and x['block_id'] == 'CONFIRMAR' for x in v))
         rel = open(os.path.join(self.ex, 'RELATORIO-REAL.md'), encoding='utf-8').read()
-        self.assertIn('ESCUTA DO JOSÉ', rel); self.assertIn('aprovar_vinculos.py', rel); self.assertIn('sem transcrição', rel)
+        self.assertIn('ESCUTA DO JOSÉ', rel); self.assertIn('aprovar_local.ps1', rel); self.assertIn('sem transcrição', rel)
         self.assertEqual(os.listdir(os.path.join(self.ex, 'transcricoes')), [])                                              # nada transcrito
         self.assertEqual(self.antes, {f: P.sha256(os.path.join(self.aud, f)) for f in os.listdir(self.aud)})                 # masters intactos
         with self.assertRaises(SystemExit) as c: quieto(Z.main, ['--pasta', self.aud, '--trabalho', os.path.join(self.tmp, 't2')])           # sem --modelo e sem --sem-transcricao: pede um dos dois
@@ -79,6 +79,13 @@ class Fluxo(unittest.TestCase):
         self.assertNotIn(TE.CHAVE, out + open(os.path.join(self.ex, 'enviado.json'), encoding='utf-8').read())
         self.assertEqual(self.antes, {f: P.sha256(os.path.join(self.aud, f)) for f in os.listdir(self.aud)})                 # masters nunca sobem nem mudam
 
+    def test_ordem_padrao_e_o_numero_do_bloco_e_conflito_pede_ordem(self):
+        self.assertEqual(quieto(A.main, ['--execucao', self.ex, '--audio', 'epoc', '--bloco', 's2-b03', '--escutei'])[0], 0)
+        v = {x['master']: x for x in json.load(open(os.path.join(self.ex, 'vinculos.json'), encoding='utf-8'))}
+        self.assertEqual(v['Semio_EPOC (1).m4a']['order'], 3)
+        rc, out = quieto(A.main, ['--execucao', self.ex, '--audio', 'pleual', '--bloco', 's2-b03', '--escutei', '--audio-id', 'outro'])    # mesmo bloco ⇒ mesma ordem padrão
+        self.assertEqual(rc, 2); self.assertIn('--ordem', out)
+
     def test_aprovar_recusa_bloco_inexistente_audio_ambiguo_e_ordem_repetida(self):
         i = self.ids()
         self.assertEqual(quieto(A.main, ['--execucao', self.ex, '--audio', i['Semio_EPOC (1).m4a'], '--bloco', 's2-b99', '--escutei'])[0], 2)
@@ -89,6 +96,20 @@ class Fluxo(unittest.TestCase):
 
 
 class ScriptsWindows(unittest.TestCase):
+    def test_comparacao_de_caminhos_ignora_caixa_como_no_windows(self):
+        real = P.os.path.normcase
+        try:
+            P.os.path.normcase = lambda p: p.lower()                                                    # simula o normcase do Windows
+            self.assertTrue(P._dentro('C:/Users/Jose/Downloads/Audiobooks/sub', 'c:/users/jose/downloads/audiobooks'))
+            self.assertFalse(P._dentro('C:/Users/Jose/Downloads/Audiobooks2', 'c:/users/jose/downloads/audiobooks'))
+        finally:
+            P.os.path.normcase = real
+
+    def test_aprovar_local_e_utf8_em_todos(self):
+        t = self.ler('aprovar_local.ps1')
+        self.assertIn('--escutei', t); self.assertIn('$LASTEXITCODE', t); self.assertIn('[switch]$Escutei', t)
+        for n in ('aprovar_local.ps1', 'rodar_local.ps1', 'enviar_local.ps1'): self.assertIn("PYTHONUTF8", self.ler(n), n)
+
     def ler(self, nome):
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), nome), 'rb') as f: b = f.read()
         self.assertTrue(b.startswith(b'\xef\xbb\xbf'), nome + ': PowerShell 5.1 só lê acentos em UTF-8 com BOM')

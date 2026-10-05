@@ -12,6 +12,7 @@ param(
   [switch]$Substituir                                      # só se quiser SOBRESCREVER um objeto existente de tamanho diferente
 )
 $ErrorActionPreference = 'Stop'
+$env:PYTHONUTF8 = '1'; $env:PYTHONIOENCODING = 'utf-8'      # console do Windows: nomes e símbolos acentuados sem erro de codificação
 
 function Falha([string]$Msg) {
   Write-Host ''
@@ -43,6 +44,7 @@ try {
 
   Write-Host "Execução: $Execucao"
   Write-Host "Projeto Supabase: $Url"
+  Write-Host "(confira: é o MESMO projeto onde você aplicou a migration do bucket e o que o Netlify usa em SUPABASE_URL. Outro projeto? use -Url https://<ref>.supabase.co)"
   $ArgsPy = @($Lote, '--execucao', $Execucao, '--url', $Url)
   if ($Enviar) {
     $ArgsPy += '--enviar'
