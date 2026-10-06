@@ -17,7 +17,7 @@ Os quatro `.m4a` **comprimidos** estão na pasta **Audiobooks** do Drive (id `1A
 | C | `Semio - 3 Sindrome Parenquimatoso (1).m4a` | 15.722.673 B | `s2-b04` |
 | D | `Semio_-_4_sindrome_pleual (1).m4a` | 22.662.090 B | `s2-b05` |
 
-A e B passam de 30 MiB (limite do bucket `audiobooks`): terão de ser reencodados; C e D, se já forem AAC-LC mono ≤ 96 kb/s, são reaproveitados sem perda.
+Com o limite do bucket em **40 MiB** (migration `20261006_01`) os quatro cabem **como estão** (maior: 36.758.530 B). **Caminho decidido para o piloto:** `PILOTO-SEMIO2-PAINEL.md` (upload pelo painel, sem converter, sem Python). As ferramentas abaixo ficam para conversão de exceção e para as próximas matérias.
 
 **Fluxo:** baixar a pasta do Drive **em lote** (zip, pelo navegador; nada fica público, nenhuma permissão muda) → extrair se quiser (o ZIP é opcional) → rodar **um comando** → revisar `RELATORIO-REAL.md` e as amostras → devolver o ZIP de retorno.
 **O passo a passo completo e o comando estão no [README](README.md) §1** (guia único). O pacote opcional de scripts está no README §3. O Claude **não** consegue baixar estes arquivos no ambiente da sessão (ver histórico no fim deste documento); por isso o processamento é local.
@@ -30,10 +30,10 @@ Depois do processamento: escuta humana → `montar_manifesto.py` → `verificar_
 python3 tools/audio/preparar_audiobooks.py inspecionar --origem ~/masters            # duração, codec, canais, bitrate, faststart (só lê)
 python3 tools/audio/preparar_audiobooks.py preparar    --origem ~/masters --saida ~/audiobooks-tratados-NOVA   # pasta NOVA/vazia, FORA do repositório e separada da entrada (nada é apagado)
 ```
-Por master: SHA-256 antes/depois (o script aborta se o master mudar); derivado **só com benefício** (reencoda se > 30 MiB, não AAC-LC, não mono ou > 96 kb/s: AAC-LC **mono** a **48** e **64 kbps** com faststart; senão reaproveita/remux sem perda), e no `relatorio.md/json`:
+Por master: SHA-256 antes/depois (o script aborta se o master mudar); derivado **só com benefício** (reencoda se > 40 MiB, não AAC-LC, não mono ou > 96 kb/s: AAC-LC **mono** a **48** e **64 kbps** com faststart; senão reaproveita/remux sem perda), e no `relatorio.md/json`:
 duração, tamanho, decodificação sem erro, Δ duração, loudness (LUFS) e pico, **STOI a 1×** e **STOI a 2× e 2,5×** (master e cópia aceleradas igual, sem mudar o tom).
 E em `amostras/` (fora do Git): 3 trechos de ~25 s por master — a **referência do master**, cada cópia (48 e 64 kbps) a **1×, 2× e 2,5×** — para a escuta humana (a 2×/2,5× o trecho de 25 s cobre 50/62 s de conteúdo).
-**Recomendação:** o menor bitrate que passa o STOI (1× ≥ 0,95; 2×/2,5× ≥ 0,90 — **limiar provisório**, a calibrar), o faststart, o pico e o limite de 30 MiB. **Se nenhuma passar, o relatório diz «NÃO APROVADA»** (e `montar_manifesto` recusa sem `kbps` explícito do José depois de ouvir).
+**Recomendação:** o menor bitrate que passa o STOI (1× ≥ 0,95; 2×/2,5× ≥ 0,90 — **limiar provisório**, a calibrar), o faststart, o pico e o limite de 40 MiB. **Se nenhuma passar, o relatório diz «NÃO APROVADA»** (e `montar_manifesto` recusa sem `kbps` explícito do José depois de ouvir).
 STOI é objetivo: **a escuta humana a 1×, 2× e 2,5× decide** (`escuta_humana_pendente` sempre `true`).
 
 ## 3. Vínculo com o bloco — pelo CONTEÚDO
@@ -71,7 +71,7 @@ Com o `relatorio.json` e um `vinculos.json` (um objeto por áudio: `master`, `au
 python3 tools/audio/montar_manifesto.py --relatorio ~/audiobooks-tratados/relatorio.json --vinculos ~/audiobooks-tratados/vinculos.json --saida ~/audiobooks-tratados/manifesto
 ```
 Gera **fora do Git** `manifesto.json` (valor candidato da variável) e `plano-upload.md` (arquivo derivado → `path` no bucket). **Falha fechada:** sem vínculo
-confirmado + escuta OK, bloco inexistente, `audio_id`/`order` repetido, cópia > 30 MB, sem faststart/decodificação limpa, > ~3,8 KB, ou item recusado pelo
+confirmado + escuta OK, bloco inexistente, `audio_id`/`order` repetido, cópia > 40 MiB, sem faststart/decodificação limpa, > ~3,8 KB, ou item recusado pelo
 validador do motor/leitor do servidor ⇒ nada é gerado. **Não define a variável.** Forma (valores ilustrativos; `duration` e `order` reais vêm do relatório):
 ```json
 {"semiologia-ii":[{"audio_id":"<id>","block_id":"s2-bNN","theme":"<tema>","title":"<título>","duration":<segundos>,"order":<n>,"version":"v1","path":"semiologia-ii/<audio_id>.m4a","ready":true}]}
@@ -89,7 +89,7 @@ autorização; produção só depois do ensaio em preview/projeto de teste. **Pa
 1. **Ensaio no Supabase de TESTE** (exige a sua autorização — pode ter custo; **não** criado). Aplicar `.../supabase/migrations/20260930_01_audiobooks_bucket_privado.sql` e conferir:
    ```sql
    select id, public, file_size_limit, allowed_mime_types from storage.buckets where id = 'audiobooks';
-   -- esperado: public=false · file_size_limit=31457280 (30 MB) · allowed_mime_types={audio/mp4,audio/x-m4a}
+   -- esperado: public=false · file_size_limit=41943040 (40 MiB, após 20261006_01; 31457280 antes dela) · allowed_mime_types={audio/mp4,audio/x-m4a}
    select policyname, permissive, roles, cmd from pg_policies
     where schemaname='storage' and tablename='objects' and policyname='audiobooks_deny_direct_access';
    -- esperado: 1 linha · permissive=RESTRICTIVE · roles={anon,authenticated} · cmd=ALL
@@ -97,7 +97,7 @@ autorização; produção só depois do ensaio em preview/projeto de teste. **Pa
    -- esperado: 0 linhas (nenhuma policy permissiva própria)
    ```
 2. **Conferir os arquivos ANTES de subir** (local, não envia nada): `python3 tools/audio/verificar_upload.py --manifesto ~/audiobooks-tratados/manifesto/manifesto.json --pasta ~/audiobooks-tratados --plano ~/audiobooks-tratados/manifesto/plano-upload.md`
-   — por item: derivado existe (e não é master), AAC-LC mono, **faststart**, decodifica limpo, ≤ 30 MB, duração = a do manifesto (± 1,5 s), `path` = `semiologia-ii/<audio_id>.m4a`; imprime o SHA-256. Só com `APROVADO` segue o upload.
+   — por item: derivado existe (e não é master), AAC-LC mono, **faststart**, decodifica limpo, ≤ 40 MiB, duração = a do manifesto (± 1,5 s), `path` = `semiologia-ii/<audio_id>.m4a`; imprime o SHA-256. Só com `APROVADO` segue o upload.
    **Upload dos derivados:** `tools\audio\enviar_local.ps1 -Enviar` (README §1, passo 5; confere bucket, tamanho e a negação da URL pública) **ou** o painel do Supabase, no bucket `audiobooks`, **exatamente** nos `path` do `plano-upload.md` (`semiologia-ii/<audio_id>.m4a`), Content-Type `audio/mp4`. Masters **nunca** sobem.
 3. **Variáveis do Netlify** com escopo **só «Deploy previews»** no ensaio: `RM_PILOT_AUDIO_UIDS` = UID do José (**só ele**) e `RM_AUDIO_MANIFEST` = conteúdo de `manifesto.json`.
    (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` já existem.) **Novo deploy de preview** e esperar terminar (a variável só vale no próximo build).
@@ -105,7 +105,7 @@ autorização; produção só depois do ensaio em preview/projeto de teste. **Pa
    ```bash
    export RM_BASE=https://deploy-preview-<N>--<site>.netlify.app
    RM_TOKEN=<jwt do José>  RM_AUDIO_ID=<audio_id> node tools/qa/audio-server/smoke-remote.cjs on --save-src /tmp/src-<audio_id>.txt
-       # ⇒ manifesto só com os 8 campos · URL do bucket privado (rota sign) · TTL ≤ 10 min · Range 206 ESTRITO (0-1, meio do arquivo, até o fim) · Content-Type de áudio · ≤ 30 MB
+       # ⇒ manifesto só com os 8 campos · URL do bucket privado (rota sign) · TTL ≤ 10 min · Range 206 ESTRITO (0-1, meio do arquivo, até o fim) · Content-Type de áudio · ≤ 40 MiB
    RM_TOKEN=<jwt de OUTRA conta> node tools/qa/audio-server/smoke-remote.cjs deny      # outra conta: manifesto vazio + 404 uniforme
    node tools/qa/audio-server/smoke-remote.cjs deny                                       # sem token
    # ≥ 10 min depois do primeiro comando (a idade é conferida pelo arquivo guardado):
@@ -179,7 +179,7 @@ node tools/qa/browser-qa/audio/audio.test.cjs && node tools/qa/audio-server/serv
 
 | Item | Valor | Observação |
 |---|---|---|
-| Bucket | `audiobooks` | privado: `public=false`, `file_size_limit=31457280` (30 MB), `allowed_mime_types={audio/mp4,audio/x-m4a}` |
+| Bucket | `audiobooks` | privado: `public=false`, `file_size_limit=41943040` (40 MiB; 31457280 antes de `20261006_01`), `allowed_mime_types={audio/mp4,audio/x-m4a}` |
 | Policy | `audiobooks_deny_direct_access` | RESTRICTIVE, `for all to anon, authenticated`, nega o bucket; nenhuma policy permissiva criada |
 | Migration | `supabase/migrations/20260930_01_audiobooks_bucket_privado.sql` (rollback `..._rollback.sql`) | já na `main` (#419) |
 | URL assinada | 600 s (10 min) | `get-audio-url`, `no-store` |

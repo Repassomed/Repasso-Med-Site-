@@ -14,7 +14,7 @@ def gera(dst, dur=12, freq=300):
 
 class Falso:
     def __init__(self):
-        self.bucket = {'id': 'audiobooks', 'public': False, 'file_size_limit': 31457280, 'allowed_mime_types': ['audio/mp4', 'audio/x-m4a']}
+        self.bucket = {'id': 'audiobooks', 'public': False, 'file_size_limit': 41943040, 'allowed_mime_types': ['audio/mp4', 'audio/x-m4a']}
         self.existe = True; self.objs = {}; self.log = []; self.publica_abre = False; self.falha_upload = set(); self.corta = False
         o = self
 
@@ -103,9 +103,9 @@ class T(unittest.TestCase):
         cod, out = self.roda('--enviar', '--substituir'); self.assertEqual(cod, 0); self.assertGreater(len(self.g.objs['semiologia-ii/a1.m4a']), 1000)
 
     def test_bucket_publico_ou_limite_errado_ou_inexistente_nada_sobe(self):
-        for mexe, frase in ((lambda g: g.bucket.update(public=True), 'PÚBLICO'), (lambda g: g.bucket.update(file_size_limit=52428800), 'limite do bucket'),
+        for mexe, frase in ((lambda g: g.bucket.update(public=True), 'PÚBLICO'), (lambda g: g.bucket.update(file_size_limit=52428800), 'limite do bucket'), (lambda g: g.bucket.update(file_size_limit=31457280), 'esperado 41943040'),
                             (lambda g: g.bucket.update(allowed_mime_types=None), 'tipos permitidos'), (lambda g: setattr(g, 'existe', False), 'NÃO existe')):
-            self.g.bucket.update(public=False, file_size_limit=31457280, allowed_mime_types=['audio/mp4', 'audio/x-m4a']); self.g.existe = True; mexe(self.g)
+            self.g.bucket.update(public=False, file_size_limit=41943040, allowed_mime_types=['audio/mp4', 'audio/x-m4a']); self.g.existe = True; mexe(self.g)
             cod, out = self.roda('--enviar'); self.assertEqual(cod, 1, frase); self.assertIn(frase, out); self.assertEqual(self.posts_de_upload(), []); self.assertEqual(self.g.objs, {})
 
     def test_sem_chave_recusa_e_chave_nunca_por_argumento(self):

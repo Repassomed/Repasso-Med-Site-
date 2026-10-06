@@ -136,6 +136,7 @@ def main(argv=None):
     ap.add_argument('--janela', type=T.positivo, default=28.0); ap.add_argument('--passo', type=T.positivo, default=120.0)
     ap.add_argument('--completo', action='store_true', help='transcreve o áudio INTEIRO (passo = janela); bem mais lento')
     ap.add_argument('--max-janelas', type=int, default=0)
+    ap.add_argument('--original-aac', action='store_true', help='aceita AAC-LC COMO ESTÁ (qualquer canais/bitrate) se couber em 40 MiB; só reencoda o que não for AAC-LC ou passar do limite')
     a = ap.parse_args(argv)
     com_modelo = not a.sem_transcricao
     if com_modelo and not a.modelo:
@@ -184,7 +185,7 @@ def main(argv=None):
     print('== preparar ==')
     rel = P.cmd_preparar(argparse.Namespace(
         origem=None, entradas=entradas, saida=saida, ar=32000, stoi_min=P.STOI_MIN, janelas=10, velocidades=','.join(f'{v:g}' for v in P.VELOCIDADES), janelas_vel=5, amostras=3, janela_amostra=25.0,
-        stoi_min_vel=P.STOI_MIN_VEL, politica='auto'))
+        stoi_min_vel=P.STOI_MIN_VEL, politica=('original-aac' if a.original_aac else 'auto')))
     print('== transcrever ==' if com_modelo else '== vínculo: sem transcrição (decidido pela sua escuta) ==')
     blocos = P.blocos_da_materia(a.materia); tit = titulos_blocos(a.materia)
     por_id = {i['id']: i for i in rel['itens']}

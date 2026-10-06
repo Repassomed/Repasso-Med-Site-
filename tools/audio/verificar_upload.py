@@ -5,13 +5,13 @@
       --plano ~/audiobooks-tratados/manifesto/plano-upload.md
 
 Para cada item do manifesto confere, no arquivo derivado correspondente (nome em `plano-upload.md`): existe e NÃO é um master; AAC-LC mono; faststart; decodifica sem erro;
-tamanho ≤ 30 MB (limite do bucket); duração = a do manifesto (± 1,5 s); o `path` é `semiologia-ii/<audio_id>.m4a`. Falha FECHADA: qualquer divergência ⇒ código 1 e nada é aprovado.
+tamanho ≤ 40 MiB (limite do bucket); duração = a do manifesto (± 1,5 s); o `path` é `semiologia-ii/<audio_id>.m4a`. Falha FECHADA: qualquer divergência ⇒ código 1 e nada é aprovado.
 Imprime SHA-256 de cada derivado (para o upload e para o registro). Sai com 0 só se TODOS os itens passarem."""
 import argparse, json, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import preparar_audiobooks as P
 
-LIMITE = 30 * 1024 * 1024
+LIMITE = 40 * 1024 * 1024               # limite do bucket (migration 20261006_01)
 
 
 def ler_plano(caminho):
@@ -25,7 +25,7 @@ def ler_plano(caminho):
     return m
 
 
-def verificar(manifesto, pasta, plano):
+def verificar(manifesto, pasta, plano, aceitar_original=False):
     itens = manifesto.get('semiologia-ii') or []
     erros, ok, linhas = [], [], []
     if not itens:
@@ -44,8 +44,8 @@ def verificar(manifesto, pasta, plano):
         info = P.probe(f)
         if info.get('codec') != 'aac' or info.get('perfil') != 'LC':
             erros.append(pre + f"codec/perfil {info.get('codec')}/{info.get('perfil')} (esperado aac/LC)")
-        if info.get('canais') != 1:
-            erros.append(pre + f"canais={info.get('canais')} (esperado mono)")
+        if info.get('canais') != 1 and not aceitar_original:
+            erros.append(pre + f"canais={info.get('canais')} (esperado mono; use --aceitar-original para o piloto com os .m4a já comprimidos)")
         if not P.faststart(f):
             erros.append(pre + 'sem faststart (moov depois de mdat): o Safari/iOS não busca posição')
         dec, err = P.decodifica_ok(f)
@@ -53,7 +53,7 @@ def verificar(manifesto, pasta, plano):
             erros.append(pre + 'não decodifica sem erro: ' + err)
         tam = os.path.getsize(f)
         if tam > LIMITE:
-            erros.append(pre + f'{tam} B passa de 30 MB (limite do bucket)')
+            erros.append(pre + f'{tam} B passa de 40 MiB (limite do bucket)')
         dur = info.get('duracao_s')
         if dur is None or abs(dur - it.get('duration', -999)) > 1.5:
             erros.append(pre + f"duração do arquivo {dur} s ≠ manifesto {it.get('duration')} s")
@@ -67,12 +67,13 @@ def verificar(manifesto, pasta, plano):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--manifesto', required=True); ap.add_argument('--pasta', required=True); ap.add_argument('--plano', required=True)
+    ap.add_argument('--aceitar-original', action='store_true', help='AAC-LC como está (não exige mono); continua exigindo AAC-LC, faststart, decodificação limpa e ≤ 40 MiB')
     a = ap.parse_args(argv)
     if P.dentro_do_repo(a.pasta):
         print('RECUSADO: a pasta dos derivados está dentro de um repositório git (áudio não entra no Git).'); return 1
     with open(a.manifesto, encoding='utf-8') as f:
         man = json.load(f)
-    erros, ok, linhas = verificar(man, a.pasta, ler_plano(a.plano))
+    erros, ok, linhas = verificar(man, a.pasta, ler_plano(a.plano), a.aceitar_original)
     for ln in linhas:
         print('  ' + ln)
     if erros:

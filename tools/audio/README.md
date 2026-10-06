@@ -6,10 +6,12 @@ Piloto restrito: José × Semiología II. Nada aqui publica, envia ao Storage, m
 <!-- FLUXO-JOSE:INICIO -->
 ## 1. Fluxo do José — do ZIP do Drive ao Storage (caminho curto; nada é entregue ao Claude)
 
+> **Piloto de Semiología II (decidido):** os 4 `.m4a` já comprimidos sobem **como estão, pelo painel do Supabase**, sem Git/Python/Node — siga `PILOTO-SEMIO2-PAINEL.md`. O fluxo abaixo (conversão local + envio por script) fica para **exceção de conversão** de um arquivo e para as **próximas matérias**.
+
 Os 4 áudios comprimidos (`.m4a`) estão na pasta **Audiobooks** do Drive: <https://drive.google.com/drive/folders/1APjpeMTDGrBzytbZSKcsxi704PniIEmT>. **Nada precisa ser público.** Os masters nunca são alterados nem sobem.
 
 **Uma vez só (antes do primeiro envio) — 1 clique:** no Supabase (projeto do site) ▸ **SQL Editor** ▸ colar o conteúdo de `Repasso-Med-Site--main/Atual - Copia/supabase/migrations/20260930_01_audiobooks_bucket_privado.sql` ▸ **Run**.
-Cria o bucket **privado** `audiobooks` (30 MiB, só M4A) e a barreira RESTRICTIVE; falha fechada, reversível (`..._rollback.sql`). Hoje o bucket **ainda não existe** no projeto.
+Cria o bucket **privado** `audiobooks` e a barreira RESTRICTIVE; falha fechada, reversível (`..._rollback.sql`). **Já aplicada** no projeto do site (06/10). O limite de 30 MiB dela foi elevado a **40 MiB** pela migration `20261006_01_audiobooks_limite_40mib.sql` (ver `PILOTO-SEMIO2-PAINEL.md`).
 
 1. **Baixe a pasta do Drive** (botão direito ▸ *Fazer download* ▸ vem como `.zip`). Pode extrair ou deixar o `.zip`. Nomes com ` (1)` são aceitos.
 2. **Pré-requisitos (uma vez):** Python 3.10+ (python.org, *Add to PATH*), **Node.js LTS** (nodejs.org; usado só na conferência) e **Git**.
@@ -22,7 +24,7 @@ Cria o bucket **privado** `audiobooks` (30 MiB, só M4A) e a barreira RESTRICTIV
    ```powershell
    powershell -ExecutionPolicy Bypass -File tools\audio\rodar_local.ps1 -Pasta "C:\Users\VOCE\Downloads\Audiobooks"     # ou  -Zip "C:\...\Audiobooks.zip"
    ```
-   Converte **só quando há benefício** (acima de 30 MiB, não AAC-LC, não mono ou > 96 kb/s); senão reaproveita o arquivo sem perda. Gera derivados + **amostras de escuta** (trechos de ≈ 25 s do master e de cada cópia a 1×, 2× e 2,5×) + `RELATORIO-REAL.md` (tamanho, bitrate, STOI, recomendação por áudio).
+   Converte **só quando há benefício** (acima de 40 MiB, não AAC-LC, não mono ou > 96 kb/s); senão reaproveita o arquivo sem perda. Gera derivados + **amostras de escuta** (trechos de ≈ 25 s do master e de cada cópia a 1×, 2× e 2,5×) + `RELATORIO-REAL.md` (tamanho, bitrate, STOI, recomendação por áudio).
 4. **Ouça as amostras** (`execucao-…\tratados\amostras\`) e, **para cada áudio**, rode **um** comando (a linha pronta está no `RELATORIO-REAL.md`):
    ```powershell
    powershell -ExecutionPolicy Bypass -File tools\audio\aprovar_local.ps1 -Audio epoc -Bloco s2-b03 -Escutei
@@ -60,14 +62,14 @@ python3 -m unittest discover -s tools/audio -p "test_*.py"   # testes (master si
   Confere por SHA-256 + mtime que o **master não mudou**. Escreve `relatorio.json` e `relatorio.md` (tamanho/duração antes e depois).
 * **STOI em velocidade:** além de 1×, mede 2× e 2,5× (master e cópia aceleradas igual, sem mudar o tom; `--velocidades`, `--janelas-vel`, `--stoi-min-vel`, limiar provisório 0,90).
 * **montar_manifesto.py:** gera (fora do Git) o JSON candidato de `RM_AUDIO_MANIFEST` + plano de upload, só com vínculo confirmado e escuta OK; não define variável. Ver `RUNBOOK-ATIVACAO-AUDIOBOOKS.md`.
-* **verificar_upload.py:** última conferência dos derivados contra o manifesto candidato, antes do upload (faststart, mono AAC-LC, ≤ 30 MB, duração, `path`); não envia nada.
+* **verificar_upload.py:** última conferência dos derivados contra o manifesto candidato, antes do upload (faststart, mono AAC-LC — ou AAC-LC como está com `--aceitar-original` —, ≤ 40 MiB, duração, `path`); não envia nada.
 * **vincular:** sugere o bloco por **conteúdo** (cosseno TF-IDF entre a transcrição e o texto de cada `section#s2-bNN`); **não recebe nome
   nem número de arquivo**. Resultado `candidato` só com nota ≥ 0,15 e margem ≥ 0,04; senão `indeterminado`. A transcrição vem de um ASR
   rodado fora deste ambiente (Whisper local, p.ex.) — ou da escuta do José.
 
 * **processar_masters.py** (chamado pelo atalho): `--pasta` (repetível) e/ou `--zip` (opcional), `--trabalho`, `--modelo`, `--materia`, `--completo`, `--verificar-ambiente`. Lista **única** entre subpastas; mesmo nome com conteúdo diferente = erro (nunca sobrescreve);
   cópia idêntica = deduplicada e registrada; execução isolada `execucao-<UTC>/`; entrada vazia = erro claro; `--janela`/`--passo` > 0. **Nunca apaga nada** (não existe mais `--limpar`): a saída tem de ser pasta nova/vazia e não pode se sobrepor às entradas.
-* **Derivado só com benefício:** reencoda se > 30 MiB (limite do bucket), não AAC-LC, não mono ou > 96 kb/s; senão reaproveita ou remux com faststart (sem perda). O relatório mostra o derivado **recomendado** (não o primeiro), o motivo, tamanho/bitrate reais, alternativas e, se nenhuma passar os critérios, **NÃO APROVADA**.
+* **Derivado só com benefício:** reencoda se > 40 MiB (limite do bucket), não AAC-LC, não mono ou > 96 kb/s (com `--original-aac`: só se não for AAC-LC ou passar do limite); senão reaproveita ou remux com faststart (sem perda). O relatório mostra o derivado **recomendado** (não o primeiro), o motivo, tamanho/bitrate reais, alternativas e, se nenhuma passar os critérios, **NÃO APROVADA**.
 * **transcrever.py:** ASR local (Whisper small, espanhol). Por padrão **amostrada** (rotulada); `--completo` transcreve tudo. Cobertura = **união** das janelas (sem dupla contagem) e, separada, a cobertura **com texto** reconhecido.
 * **aprovar_local.ps1 (→ aprovar_vinculos.py) / publicar_lote.py / enviar_storage.py:** aprovação humana por áudio → manifesto → conferência → upload ao bucket privado (dry-run por padrão; chave só por variável de ambiente; sem sobrescrever; confere tamanho e a negação da URL pública). Reaproveitam montar_manifesto e verificar_upload.
 * **empacotar_retorno.py:** ZIP pequeno de retorno (lista fixa de arquivos; nunca masters/derivados). **empacotar_pacote.py:** gera o pacote de scripts (§3).
@@ -87,10 +89,10 @@ python3 -m unittest discover -s tools/audio -p "test_*.py"   # testes (master si
 
 | Item | Valor |
 |---|---|
-| Limite por arquivo no bucket `audiobooks` | **30 MiB** (31.457.280 B), só M4A (`audio/mp4`, `audio/x-m4a`), bucket privado — definido pela migration (ainda **não aplicada**; hoje o projeto só tem os buckets `aportes` e `flyers`) |
+| Limite por arquivo no bucket `audiobooks` | **40 MiB** (41.943.040 B) após `20261006_01` (hoje **30 MiB** até você rodar essa migration), só M4A (`audio/mp4`, `audio/x-m4a`), bucket privado; deve ficar abaixo do limite global do Free (50 MB) |
 | Plano do Supabase (organização «Nerdicine») | **Free** (lido pelo conector): ≈ 1 GB de Storage, ≈ 5 GB/mês de egress (dividido com Auth/DB), limite global de 50 MB por arquivo |
 | Tamanho dos derivados (medido em fala, 24 s) | AAC-LC mono 32 kHz: 48 kbps ≈ **21 MB/hora** (STOI 1× 0,988) · 64 kbps ≈ 29 MB/hora (0,995) · 32 kbps ≈ 14,5 MB/hora (0,975). Referência 128 kbps estéreo ≈ 55 MB/hora. A 48 kbps cabem ≈ 4,4 h em 30 MiB; a 64 kbps ≈ 3,3 h |
-| Piloto (4 áudios, 108,6 MB de masters) | derivados ≤ 30 MiB cada (teto 120 MiB = ≈ 12 % do 1 GB); se os masters forem 128 kbps estéreo, ≈ 40 MB no total. **Custo: zero no Free.** |
+| Piloto (4 áudios, 108,6 MB de masters) | **como estão** (sem converter): 108,6 MB ≈ 11 % do 1 GB de Storage (maior arquivo 36,76 MB ≤ 40 MiB). **Custo: zero no Free** (ver `PILOTO-SEMIO2-PAINEL.md`) |
 | Egress | ≈ o tamanho do arquivo por reprodução completa (Range, URL de 10 min, `preload="none"`). Piloto com 1 usuário: desprezível. Escala: 100 alunos × 4 áudios × 14 MB ≈ 5,6 GB por «rodada» — **passa do Free**; o plano Pro (a confirmar: ≈ US$ 25/mês, ≈ 100 GB de Storage, ≈ 250 GB de egress) é decisão sua **antes** de abrir a mais usuários |
 | GitHub Actions / servidores | **nenhum**: a conversão roda no seu Windows; o Netlify só assina URLs |
 

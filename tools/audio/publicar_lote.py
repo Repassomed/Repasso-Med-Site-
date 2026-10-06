@@ -16,7 +16,7 @@ import enviar_storage as E
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--execucao', required=True); ap.add_argument('--url', required=True)
-    ap.add_argument('--enviar', action='store_true'); ap.add_argument('--substituir', action='store_true')
+    ap.add_argument('--enviar', action='store_true'); ap.add_argument('--substituir', action='store_true'); ap.add_argument('--aceitar-original', action='store_true')
     a = ap.parse_args(argv)
     ex = os.path.abspath(os.path.expanduser(a.execucao))
     rel, vinc, tratados, man = os.path.join(ex, 'tratados', 'relatorio.json'), os.path.join(ex, 'vinculos.json'), os.path.join(ex, 'tratados'), os.path.join(ex, 'manifesto')
@@ -30,6 +30,7 @@ def main(argv=None):
     args = ['--manifesto', os.path.join(man, 'manifesto.json'), '--plano', os.path.join(man, 'plano-upload.md'), '--pasta', tratados, '--url', a.url]
     if a.enviar: args.append('--enviar')
     if a.substituir: args.append('--substituir')
+    if a.aceitar_original: args.append('--aceitar-original')
     rc = E.main(args)
     if rc == 0:
         print(f"\nManifesto candidato: {os.path.join(man, 'manifesto.json')}\n" + ('Próximo (seu, no Netlify): definir RM_AUDIO_MANIFEST com o conteúdo desse arquivo e RM_PILOT_AUDIO_UIDS com o seu UID; novo deploy; depois o teste real no navegador.'
