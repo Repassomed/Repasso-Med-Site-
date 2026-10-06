@@ -5,3 +5,4 @@ baixadas à parte só para a captura. A caixa «Marcador/Goma» flutuante é a t
 
 - `antes/` — abertura (início) como estava no HEAD d637ee5 (cabeçalho global + abas + faixa com 2 logos, ≈ 176 px).
 - `antes-depois_desktop-1440.webp` · `antes-depois_celular-390.webp` — antes × depois da entrada compacta (≈ 138 px, 1 logo; a faixa mostra a marca só quando gruda).
+- `antes-depois-sair/` — celular 390 e 320: o botão flutuante verde «Sair» cobria tabela, post-it e controles da caneta (ANTES, HEAD d72b750); agora o mesmo controle fica na faixa fixa (DEPOIS). Todas as capturas `celular-390_*` e `celular-320_*` são do estado final.

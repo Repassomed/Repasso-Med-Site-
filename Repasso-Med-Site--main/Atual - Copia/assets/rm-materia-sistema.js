@@ -373,6 +373,19 @@
     });
     band.insertBefore(pills, chip || q1(band, '.rm-l2-mat'));
     S.pills = pills;
+    /* «Sair»: o botão flutuante do site (#logout-fab, canto inferior direito) cobria a leitura no celular. No piloto ele fica oculto (CSS) e o MESMO
+       controle passa a viver na faixa fixa: este botão só delega o clique ao original (o handler de logout do site não muda). */
+    var fab = document.getElementById('logout-fab');
+    if (fab) {
+      var out = ui('button', 'rm-sis-out', { type: 'button', 'aria-label': 'Salir de la cuenta', title: 'Salir' });
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('width', '18'); svg.setAttribute('height', '18'); svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '1.9'); svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round'); svg.setAttribute('aria-hidden', 'true');
+      var pth = document.createElementNS('http://www.w3.org/2000/svg', 'path'); pth.setAttribute('d', 'M10 5H5v14h5M15 8l4 4-4 4M19 12H9'); svg.appendChild(pth);
+      var lb = el('span'); lb.textContent = (fab.textContent || 'Sair').trim();
+      out.appendChild(svg); out.appendChild(lb);
+      band.appendChild(out);
+    }
     refletir();
   }
 
@@ -449,6 +462,8 @@
       if (sec) ir(sec.el);
       return;
     }
+    var so = t.closest('.rm-sis-out');
+    if (so) { var f = document.getElementById('logout-fab'); if (f) f.click(); return; }
     var p = t.closest('.rm-sis-pill');
     if (p) {
       var r = S.recursos[+p.getAttribute('data-rm-res')];

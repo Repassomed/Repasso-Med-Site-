@@ -222,6 +222,65 @@ const ok = (c, m) => { total++; if (!c) { falhas++; console.log('  ✗ ' + m); }
     ok(g.errs.length === 0, '0 erros JS');
     await g.ctx.close(); }
 
+  console.log('\n===== 9 · «Sair» não cobre a leitura (celular 320/390 e desktop), rolando a página real');
+  for (const [w, h] of [[320, 640], [390, 844], [768, 1024], [1440, 900]]) {
+    const g = await abrir(w, h, { layout: true, visual: true });
+    const m = await g.p.evaluate(async () => {
+      const esp = ms => new Promise(o => setTimeout(o, ms)); const r = { cobre: [], paradas: 0, saiu: 0 };
+      let chamou = 0; const fab = document.getElementById('logout-fab'); fab.onclick = () => { chamou++; };
+      const vis = e => !!e && getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0;
+      r.fabOculto = !vis(fab);
+      const out = document.querySelector('.rm-sis-out'), band = document.getElementById('rm-l2-band');
+      const ro = out.getBoundingClientRect(), rb = band.getBoundingClientRect();
+      r.noBand = vis(out) && ro.left >= rb.left && ro.right <= rb.right + 0.5 && ro.top >= rb.top && ro.bottom <= rb.bottom + 0.5 && ro.width >= 44 && ro.height >= 44;
+      r.cabe = ro.right <= innerWidth + 0.5 && ro.left >= 0;
+      /* alvos de leitura em várias paradas: nenhum elemento FIXO visível (fora a faixa, a gaveta fechada, a toolbox/caneta e o toast) cobre texto, célula, post-it ou nota */
+      const alvos = ['#s2-b01 .rm-sis-tabtag', '#s2-b01 .key-box', '#s2-b04 .rm-postit', '#s2-b04 .s2-quiz-card', '#s2-b05 table', '#s2-b01 .s2-margin'];
+      const PERMITE = '#rm-l2-band,.rm-l2-side,.rm-l2-backdrop,.rm2-box,.rm2-notes,.rm2-diag,.rm-tools,.rm-tools-r,.rm-toast,#rm-l2-player,.rm-l2-player,#rm2-ink,#rm-gl-note';
+      for (const sel of alvos) {
+        const el = document.querySelector(sel); if (!el) continue;
+        window.RMLayout.irPara(el); await esp(1700); r.paradas++;
+        const fixos = [...document.querySelectorAll('body *')].filter(e => { const cs = getComputedStyle(e); return cs.position === 'fixed' && cs.display !== 'none' && cs.visibility !== 'hidden' && e.getBoundingClientRect().width > 0 && !e.matches(PERMITE) && !e.closest(PERMITE); });
+        for (const f of fixos) {
+          const b = f.getBoundingClientRect();
+          if (b.bottom > 0 && b.top < innerHeight) r.cobre.push(sel + ' ← ' + (f.id || f.className || f.tagName) + ' @' + Math.round(b.left) + ',' + Math.round(b.top) + ' ' + Math.round(b.width) + '×' + Math.round(b.height));
+        }
+      }
+      out.click(); await esp(100); r.chamou = chamou;
+      return r;
+    });
+    ok(m.fabOculto, `${w}×${h}: o botão flutuante verde (#logout-fab) não aparece mais sobre a leitura`);
+    ok(m.noBand && m.cabe, `${w}×${h}: «Sair» está dentro da faixa fixa, inteiro na tela, alvo ≥ 44×44 px`);
+    ok(m.chamou === 1, `${w}×${h}: «Sair» delega o clique ao controle original (logout do site, 1 chamada)`);
+    ok(m.cobre.length === 0, `${w}×${h}: nenhum elemento fixo cobre tabela/nota/post-it/pergunta em ${m.paradas} paradas de rolagem` + (m.cobre.length ? ' · ' + m.cobre.slice(0, 3).join(' | ') : ''));
+    ok(g.errs.length === 0, `${w}×${h}: 0 erros JS`);
+    await g.ctx.close();
+  }
+
+  console.log('\n===== 10 · «Sair» com a gaveta do índice e a caneta armada (celular 390)');
+  { const g = await abrir(390, 844, { layout: true, visual: true });
+    const r = await g.p.evaluate(async () => {
+      const esp = ms => new Promise(o => setTimeout(o, ms)); const o = {};
+      document.querySelector('.rm-l2-hamb').click(); await esp(500);
+      const side = document.getElementById('rm-l2-side'), out = document.querySelector('.rm-sis-out');
+      const ro = out.getBoundingClientRect(), rs = side.getBoundingClientRect();
+      o.gavetaAberta = side.classList.contains('is-open'); o.semSobrepor = ro.left >= rs.right - 1 || ro.right <= rs.left + 1 || ro.top >= rs.bottom || ro.bottom <= rs.top;
+      o.sairVisivelComGaveta = !!document.elementFromPoint(ro.left + ro.width / 2, ro.top + ro.height / 2) && document.elementFromPoint(ro.left + ro.width / 2, ro.top + ro.height / 2).closest('.rm-sis-out') !== null;
+      document.querySelector('.rm-l2-close').click(); await esp(400);
+      window.RMLayout.irPara(document.querySelector('#s2-b04 .rm-postit') || document.querySelector('#s2-b04 table')); await esp(1700);
+      window.RMToolsV2.escolherFerramenta('pen'); await esp(700);
+      const box = document.querySelector('.rm2-box'); const bb = box && box.getBoundingClientRect();
+      o.toolbox = !!box && getComputedStyle(box).display !== 'none';
+      o.toolboxFora = !bb || bb.right <= ro.left + 1 || bb.left >= ro.right - 1 || bb.top >= ro.bottom + 1 || bb.bottom <= ro.top - 1;   // a toolbox da caneta não colide com «Sair»
+      o.toolboxNaTela = !bb || (bb.left >= 0 && bb.right <= innerWidth + 1 && bb.top >= 0 && bb.bottom <= innerHeight + 1);
+      window.RMToolsV2.escolherFerramenta('none');
+      return o;
+    });
+    ok(r.gavetaAberta && r.semSobrepor, 'gaveta do índice abre e não se sobrepõe a «Sair»' + (r.sairVisivelComGaveta ? '' : ' (a gaveta passa por cima do botão enquanto aberta: esperado, o backdrop fecha ao tocar)'));
+    ok(r.toolbox && r.toolboxFora && r.toolboxNaTela, 'caneta armada: toolbox visível, inteira na tela e sem colidir com «Sair»');
+    ok(g.errs.length === 0, '0 erros JS');
+    await g.ctx.close(); }
+
   console.log('\n===== 6 · geometria');
   for (const [w, h] of [[320, 640], [390, 844], [768, 1024], [1024, 768], [1440, 900]]) {
     const g = await abrir(w, h, { layout: true, visual: true });

@@ -11,8 +11,8 @@ Só a conta piloto, só em `semiologia-ii`. É uma CAMADA sobre o Layout V2:
 3. falha fechada: sem `visual`, erro de rede ou erro de `attach()` ⇒ nada do sistema entra (o layout fica como estava).
 
 **`visual` é negado por padrão.** Só vale para quem tem `layout` **e** está em `RM_PILOT_VISUAL_UIDS` (lista própria, obrigatória: variável
-ausente ou vazia ⇒ ninguém vê o tema; ele **não** herda a lista do layout). Para ativar: definir no Netlify
-`RM_PILOT_VISUAL_UIDS=<UID de José>` (o UID nunca entra no repositório). Kill switch só do tema: remover/esvaziar a variável (o Layout V2 continua).
+ausente ou vazia ⇒ ninguém vê o tema; ele **não** herda a lista do layout). Para ver o tema **depois do merge**: configurar no Netlify
+`RM_PILOT_VISUAL_UIDS=<UID de José>` (o UID nunca entra no repositório). Sem a variável, o tema fica desligado e o site/Layout V2 seguem como hoje. Kill switch só do tema: remover/esvaziar a variável (o Layout V2 continua).
 Teste: `tools/qa/browser-qa/layout/pilot-flags.test.cjs`.
 
 ## Arquivos
@@ -44,3 +44,8 @@ Preguntas = só dos blocos (o banco geral repete as mesmas: não se soma). Infog
 ## Contrato com o conteúdo
 Em conteúdo só entram atributos `data-rm-cap/-tipo/-cmp/-cc/-label/-n/-tema` e a classe `rm-sis-s` na aba (todos removidos no `detach`).
 Toda UI derivada leva `[data-rm-ui]` (fora do índice de marca-texto e das âncoras da tinta) e nunca cria `p/li/h1–h5/table/figure/blockquote`.
+
+## «Sair» (logout) no piloto
+O botão flutuante verde do site (`#logout-fab`, canto inferior direito) cobria a leitura no celular. No piloto ele fica oculto (CSS) e o mesmo controle
+passa a viver na faixa fixa (`.rm-sis-out`, alvo ≥ 44 px, só ícone abaixo de 480 px); o clique é **delegado** ao `#logout-fab` original, que continua no DOM.
+Fora do piloto nada muda. Teste: `sistema.test.cjs` §9–10 (320/390/768/1440, 6 paradas de rolagem, gaveta do índice, caneta armada).

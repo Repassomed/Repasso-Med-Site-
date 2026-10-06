@@ -194,6 +194,19 @@ html.rm-sis[data-rm-stuck] .rm-l2-band .rm-l2-logo { height: 36px; width: 36px; 
   html.rm-sis.rm-l2 .main-tabs { height: var(--rm-tabs-h); }
 }
 
+/* «Sair» (logout): o botão flutuante verde do site cobria texto, tabela e post-it no celular. No piloto ele sai do canto inferior e o mesmo controle
+   fica na faixa fixa (sempre visível, alvo ≥ 44 px, sem cobrir nada). O clique é delegado ao #logout-fab original (continua no DOM, só oculto). */
+html.rm-sis #logout-fab { display: none !important; }
+html.rm-sis .rm-sis-out {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 0 0 auto; min-width: 44px; min-height: 44px; padding: 0 12px; margin-left: 2px;
+  border: 1.5px solid rgba(255, 255, 255, .45); border-radius: 99px; background: transparent; color: #fff; font: 700 12.5px var(--rm-f-ui); cursor: pointer;
+}
+html.rm-sis .rm-sis-out:hover { background: rgba(255, 255, 255, .14); }
+html.rm-sis .rm-l2-band button.rm-sis-out:focus-visible { outline: 3px solid var(--rm-gold); outline-offset: 2px; }
+@media (max-width: 479.98px) { html.rm-sis .rm-sis-out { padding: 0; width: 44px; } html.rm-sis .rm-sis-out span { display: none; } }
+/* espaço ao fim da leitura: a última linha nunca fica rente à borda da janela */
+html.rm-sis #materias-container { padding-bottom: calc(var(--rm-player-h, 0px) + var(--rm-safe-b, 0px) + 28px); }
+
 /* ---------------------------------------------------------------------
    6 · C-02 · índice lateral L1-COLOR (superfície mais clara da família do tema)
    --------------------------------------------------------------------- */
