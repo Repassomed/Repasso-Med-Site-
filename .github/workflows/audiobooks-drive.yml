@@ -1,0 +1,83 @@
+name: Processar audiobooks
+
+# Botão MANUAL (Actions ▸ "Processar audiobooks" ▸ Run workflow). Somente áudio: sem chamadas pagas a modelos, sem merge, sem Storage/Supabase, sem acesso de alunos.
+# Esta é a ETAPA 1: provar o TRANSPORTE dos áudios do Drive privado (download completo pela API oficial + conferência de tamanho e checksum). Nada é convertido nem publicado.
+#
+# Segurança:
+#  - só dispara manualmente, e só roda a partir da `main` (código já revisado e mesclado); o ambiente `audiobooks-drive` deve limitar as branches a `main`;
+#  - autenticação por Workload Identity Federation (OIDC do GitHub -> conta de serviço dedicada, só leitura da pasta); nenhuma chave de longa duração; nenhum token do ambiente Claude;
+#  - os logs e artefatos deste repositório PÚBLICO são públicos: por isso só saem daqui o RELATÓRIO (nomes, tamanhos, checksums, resultado) — os áudios ficam em diretório
+#    temporário do runner, fora do checkout, e nunca são enviados a artefato algum;
+#  - só biblioteca padrão do Python e ações oficiais (checkout, upload-artifact); nenhuma ação de terceiros recebe credencial.
+# Configuração (uma vez): tools/audio/CONFIGURAR-DRIVE-ACTIONS.md. Sem os segredos o resultado é «AGUARDANDO CONFIGURAÇÃO» (job vermelho de propósito: nada foi provado).
+
+on:
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: "O que fazer"
+        type: choice
+        options:
+          - provar-download
+        default: provar-download
+      quantidade_esperada:
+        description: "Quantidade mínima de áudios na pasta (os 4 M4A atuais)"
+        type: string
+        default: "4"
+
+permissions: {}
+
+concurrency:
+  group: audiobooks-drive
+  cancel-in-progress: false
+
+jobs:
+  transporte:
+    name: Provar download em lote do Drive
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: audiobooks-drive
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Recusar fora da main
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Este workflow só roda a partir da main (recebi $GITHUB_REF)."
+            exit 1
+          fi
+
+      - name: Checkout (só tools/audio)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tools/audio
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Baixar a pasta do Drive em lote e conferir tamanho e checksum
+        env:
+          RM_GDRIVE_WIF_PROVIDER: ${{ secrets.GDRIVE_WIF_PROVIDER }}
+          RM_GDRIVE_SERVICE_ACCOUNT: ${{ secrets.GDRIVE_SERVICE_ACCOUNT }}
+          QUANTIDADE: ${{ inputs.quantidade_esperada }}
+        run: |
+          set -euo pipefail
+          case "$QUANTIDADE" in ''|*[!0-9]*) echo "::error::quantidade_esperada precisa ser um número inteiro"; exit 2;; esac
+          python3 tools/audio/drive_baixar.py \
+            --saida "$RUNNER_TEMP/rm-audio" \
+            --relatorio "$RUNNER_TEMP/rm-relatorio" \
+            --esperados "$QUANTIDADE"
+
+      - name: Relatório do transporte (sem áudio)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-transporte-${{ github.run_id }}
+          path: ${{ runner.temp }}/rm-relatorio
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Apagar os áudios do runner
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/rm-audio"
