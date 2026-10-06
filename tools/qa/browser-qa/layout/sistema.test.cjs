@@ -281,6 +281,93 @@ const ok = (c, m) => { total++; if (!c) { falhas++; console.log('  ✗ ' + m); }
     ok(g.errs.length === 0, '0 erros JS');
     await g.ctx.close(); }
 
+  console.log('\n===== 11 · ferramentas de estudio no celular: maleta/trilho não cobrem a leitura (fechada e aberta), com toque e escrita real');
+  for (const [w, h] of [[320, 640], [390, 844]]) {
+    const g = await abrir(w, h, { layout: true, visual: true }); const p = g.p;
+    const vis = (sel) => p.evaluate(s => { const e = document.querySelector(s); return !!e && getComputedStyle(e).display !== 'none' && getComputedStyle(e).visibility !== 'hidden' && e.getBoundingClientRect().width > 0; }, sel);
+    /* FECHADA: nada flutuante da caneta sobre a leitura; o controle está na faixa */
+    await p.evaluate(async () => { window.RMLayout.irPara(document.querySelector('#s2-b01 .rm-sis-tabtag')); await new Promise(o => setTimeout(o, 1700)); });
+    ok(!(await vis('#rm2-fab')) && !(await vis('.rm2-box')), `${w}×${h}: caneta FECHADA — a maleta flutuante e o trilho não aparecem sobre a tabela`);
+    const bt = await p.evaluate(() => { const b = document.querySelector('.rm-sis-tools'), r = b && b.getBoundingClientRect(), bd = document.getElementById('rm-l2-band').getBoundingClientRect();
+      return { dentro: !!b && r.width >= 44 && r.height >= 44 && r.left >= 0 && r.right <= innerWidth + .5 && r.top >= bd.top && r.bottom <= bd.bottom + .5, sair: (() => { const o = document.querySelector('.rm-sis-out').getBoundingClientRect(); return o.left >= r.right - 1 || o.right <= r.left + 1; })() }; });
+    ok(bt.dentro && bt.sair, `${w}×${h}: botão «Herramientas» na faixa fixa (≥ 44 px, inteiro na tela, sem tocar em «Sair»)`);
+    /* ABRIR por toque */
+    await p.tap('.rm-sis-tools'); await p.waitForTimeout(500);
+    const ab = await p.evaluate(() => { const bx = document.querySelector('.rm2-box'), pn = document.getElementById('rm2-panel'), r = pn.getBoundingClientRect(), band = document.getElementById('rm-l2-band').getBoundingClientRect();
+      return { open: bx.classList.contains('open'), vis: getComputedStyle(pn).display !== 'none', esq: r.left >= -0.5, dir: r.right <= innerWidth + 0.5, enc: Math.abs(r.bottom - innerHeight) <= 1, h: Math.round(r.height), dock: getComputedStyle(document.documentElement).getPropertyValue('--rm-dock-h').trim(), livre: Math.round(r.top - band.bottom), exp: document.querySelector('.rm-sis-tools').getAttribute('aria-expanded') }; });
+    ok(ab.open && ab.vis && ab.esq && ab.dir && ab.enc, `${w}×${h}: toque em «Herramientas» abre a barra encostada embaixo, inteira na largura (altura ${ab.h}px)`);
+    ok(parseInt(ab.dock) === ab.h && ab.exp === 'true', `${w}×${h}: espaço reservado --rm-dock-h = ${ab.dock} = altura da barra; aria-expanded=true`);
+    ok(ab.livre >= 300 || ab.livre >= Math.round(h * 0.45), `${w}×${h}: sobra ${ab.livre}px de leitura entre a faixa e a barra`);
+    /* leitura com a barra aberta: o fim do documento rola até ficar ACIMA da barra, e post-it/tabela passam inteiros pela área livre */
+    const leit = await p.evaluate(async () => {
+      const esp = ms => new Promise(o => setTimeout(o, ms)), r = {}; const dock = document.getElementById('rm2-panel').getBoundingClientRect();
+      const ult = document.querySelector('#s2-flashcards') || document.querySelector('#materias-container .rm-sis-s > section:last-of-type');
+      window.scrollTo(0, document.documentElement.scrollHeight); await esp(900); window.scrollTo(0, document.documentElement.scrollHeight); await esp(500);
+      const fim = [...ult.querySelectorAll('*')].filter(e => e.getBoundingClientRect().height > 0).pop(); const rf = (document.querySelector('#materias-container').getBoundingClientRect());
+      r.fimAcima = rf.bottom - innerHeight + 0 <= 1 || document.documentElement.scrollHeight - window.pageYOffset - innerHeight <= 2;
+      r.reserva = parseInt(getComputedStyle(document.getElementById('materias-container')).paddingBottom) >= Math.round(dock.height) + 20;
+      for (const sel of ['#s2-b04 .rm-postit', '#s2-b01 table']) {
+        const el = document.querySelector(sel); window.RMLayout.irPara(el); await esp(1700);
+        const b = el.getBoundingClientRect(), band = document.getElementById('rm-l2-band').getBoundingClientRect(), dk = document.getElementById('rm2-panel').getBoundingClientRect();
+        r[sel] = { topoLivre: b.top >= band.bottom - 2, naoSobDock: Math.min(b.bottom, innerHeight) <= dk.top + 1 || b.bottom > dk.top };   // rola: o que está sob a barra sobe com a rolagem
+        const meio = el.querySelector('p, td'); const rm = meio.getBoundingClientRect();
+        const topEl = document.elementFromPoint(Math.min(innerWidth - 6, rm.left + 12), Math.min(dk.top - 8, Math.max(band.bottom + 8, rm.top + 8)));
+        r[sel].leituraLivre = !!topEl && !topEl.closest('.rm2-box,.rm2-panel') ;
+      }
+      window.scrollTo(0, 0); return r; });
+    ok(leit.reserva, `${w}×${h}: barra aberta — espaço reservado ao fim da página (padding-bottom ≥ altura da barra + 20 px): a última linha rola para cima da barra`);
+    ok(leit['#s2-b04 .rm-postit'].leituraLivre && leit['#s2-b01 table'].leituraLivre, `${w}×${h}: barra aberta — post-it e tabela são legíveis na área livre (nenhum elemento da caneta por cima do texto)`);
+    /* TOQUES nos controles + ESCRITA REAL: lápis → cor → grossura → traço → goma → desfazer → fechar */
+    await p.evaluate(async () => { window.scrollTo(0, 0); await new Promise(o => setTimeout(o, 300)); window.RMLayout.irPara([...document.querySelectorAll('#s2-b04 p')].filter(x => !x.closest('[data-rm-ui]') && x.textContent.length > 150)[2]); await new Promise(o => setTimeout(o, 1800)); });
+    await p.tap('.rm2-btn[data-t="pen"]'); await p.waitForTimeout(300);
+    await p.tap('.rm2-sw[data-pc="blue"]'); await p.tap('.rm2-w[data-pw="thick"]'); await p.waitForTimeout(250);
+    const est = await p.evaluate(() => ({ tool: window.RMToolsV2.estado && window.RMToolsV2.estado.tool, cor: document.querySelector('.rm2-sw[data-pc="blue"]').getAttribute('aria-checked'), gr: document.querySelector('.rm2-w[data-pw="thick"]').getAttribute('aria-checked'), armado: document.querySelector('.rm-sis-tools').classList.contains('is-armed'), dock: Math.round(document.getElementById('rm2-panel').getBoundingClientRect().height) }));
+    ok(est.tool === 'pen' && est.cor === 'true' && est.gr === 'true', `${w}×${h}: toques — lápis armado, cor azul e grossura «grueso» marcados`);
+    ok(est.armado, `${w}×${h}: o botão da faixa mostra «armado» (anel dourado)`);
+    const esc = await p.evaluate(async () => {
+      const esp = ms => new Promise(o => setTimeout(o, ms));
+      const alvo = [...document.querySelectorAll('#s2-b04 p')].filter(x => !x.closest('[data-rm-ui]') && x.textContent.length > 150)[2];
+      const b = alvo.getBoundingClientRect(), band = document.getElementById('rm-l2-band').getBoundingClientRect(), dk = document.getElementById('rm2-panel').getBoundingClientRect();
+      const y0 = Math.max(b.top, band.bottom + 8) + 14; const x0 = b.left + 20;
+      const fire = (ty, x, y, bt) => alvo.dispatchEvent(new PointerEvent(ty, { pointerType: 'pen', pointerId: 11, isPrimary: true, clientX: x, clientY: y, buttons: bt, bubbles: true, cancelable: true, pressure: bt ? .5 : 0 }));
+      fire('pointerover', x0, y0, 0); fire('pointerdown', x0, y0, 1);
+      for (let i = 1; i <= 16; i++) { fire('pointermove', x0 + i * 7, y0 + (i % 4) * 3, 1); await esp(14); }
+      fire('pointerup', x0 + 112, y0 + 6, 0); await esp(1000);
+      const svg = document.querySelector('#rm2-ink svg[data-anchor]'); const r = { svgs: document.querySelectorAll('#rm2-ink svg[data-anchor]').length, paths: document.querySelectorAll('#rm2-ink svg[data-anchor] path').length };
+      r.anchor = svg && svg.getAttribute('data-anchor'); r.cor = svg && (svg.querySelector('path') || {}).getAttribute && svg.querySelector('path').getAttribute('class');
+      r.writes = (window.__writes || []).filter(x => /user_ink_strokes/.test(x)).join(',');
+      r.sobDock = y0 > dk.top;                                      // o traço foi feito na área livre, não sob a barra
+      return r; });
+    ok(esc.svgs >= 1 && esc.paths >= 1 && /ink-blue/.test(esc.cor || ''), `${w}×${h}: ESCRITA — traço azul desenhado (${esc.paths} path, âncora ${esc.anchor})`);
+    ok(/insert:user_ink_strokes/.test(esc.writes) && !esc.sobDock, `${w}×${h}: PERSISTÊNCIA — o motor da V2 gravou o traço (${esc.writes})`);
+    await p.tap('.rm2-btn[data-t="eraser"]'); await p.waitForTimeout(300);
+    const gm = await p.evaluate(async () => {
+      const esp = ms => new Promise(o => setTimeout(o, ms)), r = { tool: window.RMToolsV2.estado && window.RMToolsV2.estado.tool };
+      const path = document.querySelector('#rm2-ink svg[data-anchor] path'), pr = path.getBoundingClientRect();
+      const x = pr.left + pr.width / 2, y = pr.top + pr.height / 2, alvo = document.elementFromPoint(x, y) || document.body;
+      const fire = (ty, bt) => alvo.dispatchEvent(new PointerEvent(ty, { pointerType: 'pen', pointerId: 12, isPrimary: true, clientX: x, clientY: y, buttons: bt, bubbles: true, cancelable: true, pressure: bt ? .5 : 0 }));
+      fire('pointerover', 0); fire('pointerdown', 1); await esp(60); for (let i = 0; i < 6; i++) { alvo.dispatchEvent(new PointerEvent('pointermove', { pointerType: 'pen', pointerId: 12, isPrimary: true, clientX: x + (i - 3) * 6, clientY: y, buttons: 1, bubbles: true, cancelable: true, pressure: .5 })); await esp(30); } fire('pointerup', 0); await esp(900);
+      r.restam = document.querySelectorAll('#rm2-ink svg[data-anchor] path').length; r.writes = (window.__writes || []).filter(x => /user_ink_strokes/.test(x)).join(',');
+      return r; });
+    ok(gm.tool === 'eraser' && gm.restam === 0 && /delete:user_ink_strokes/.test(gm.writes), `${w}×${h}: GOMA — toque arma a goma, apagou o traço e o motor registrou a remoção (${gm.writes})`);
+    await p.waitForTimeout(1500);                                  // depois da escrita com a stylus a V2 ignora toques de dedo por instantes (rejeição de palma): comportamento original
+    await p.tap('.rm-sis-tools'); await p.waitForTimeout(500);
+    const fe1 = await p.evaluate(() => ({ tool: window.RMToolsV2.estado && window.RMToolsV2.estado.tool, aberta: getComputedStyle(document.querySelector('.rm2-box')).display !== 'none', armado: document.querySelector('.rm-sis-tools').classList.contains('is-armed') }));
+    ok(fe1.tool === 'none' && !fe1.armado, `${w}×${h}: 1.º toque em «Herramientas» com a goma armada DESARMA (regra original da V2: o FAB desarma a ferramenta protegida)`);
+    await p.tap('.rm-sis-tools'); await p.waitForTimeout(500);
+    const fe = await p.evaluate(() => ({ vis: getComputedStyle(document.querySelector('.rm2-box')).display !== 'none', dock: getComputedStyle(document.documentElement).getPropertyValue('--rm-dock-h').trim(), exp: document.querySelector('.rm-sis-tools').getAttribute('aria-expanded') }));
+    ok(!fe.vis && parseInt(fe.dock) === 0 && fe.exp === 'false', `${w}×${h}: 2.º toque fecha a barra (reserva ${fe.dock}, aria-expanded=false)`);
+    await p.tap('.rm-sis-tools'); await p.waitForTimeout(400); await p.tap('.rm-sis-tools'); await p.waitForTimeout(400);
+    const idx = await p.evaluate(() => { document.querySelector('.rm-l2-hamb').click(); return new Promise(o => setTimeout(() => { const s = document.getElementById('rm-l2-side'); const ok1 = s.classList.contains('is-open'); document.querySelector('.rm-l2-close').click(); setTimeout(() => o(ok1), 300); }, 500)); });
+    ok(idx, `${w}×${h}: índice (gaveta) continua abrindo/fechando com a caneta presente · «Sair» segue na faixa`);
+    ok(g.errs.length === 0, `${w}×${h}: 0 erros JS`);
+    await g.ctx.close();
+  }
+  { const g = await abrir(768, 1024, { layout: true, visual: true });
+    const t = await g.p.evaluate(() => ({ trilho: getComputedStyle(document.querySelector('.rm2-fab')).display !== 'none', btFaixa: getComputedStyle(document.querySelector('.rm-sis-tools')).display !== 'none' }));
+    ok(t.trilho && !t.btFaixa, '768×1024: sem mudança — a maleta/trilho originais seguem (a raia direita já é reservada pelo layout); botão extra da faixa oculto');
+    await g.ctx.close(); }
+
   console.log('\n===== 6 · geometria');
   for (const [w, h] of [[320, 640], [390, 844], [768, 1024], [1024, 768], [1440, 900]]) {
     const g = await abrir(w, h, { layout: true, visual: true });

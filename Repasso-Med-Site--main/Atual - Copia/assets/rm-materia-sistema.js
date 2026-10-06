@@ -389,6 +389,49 @@
     refletir();
   }
 
+  /* Ferramentas de estudio (lápis/marcador/goma): no celular o botão-maleta flutuante e o trilho vertical da V2 ficavam SOBRE tabelas e notas.
+     Só no piloto e só < 768 px (CSS): o botão da maleta vira um botão da faixa fixa (este) que DELEGA o clique ao #rm2-fab original, e a toolbox
+     abre como uma barra horizontal encostada embaixo (dock) com espaço reservado (--rm-dock-h) — o motor da caneta (traço, goma, gravação,
+     âncoras, estado armado) não é tocado: só posição/forma por CSS e este espelho de estado (aria-expanded / «armado»). */
+  var ICO_TOOLS = 'M4 8h16v11H4zM9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M4 13h16';
+  function ferramentas() {
+    function ligar() {
+      if (!S) return true;
+      if (S.tools) return true;
+      var fab = document.getElementById('rm2-fab'), box = fab && fab.closest('.rm2-box');
+      if (!fab || !box) return false;
+      var b = ui('button', 'rm-sis-tools', { type: 'button', 'aria-label': 'Herramientas de estudio: lápiz, marcador y goma', title: 'Herramientas de estudio', 'aria-expanded': 'false', 'aria-controls': 'rm2-panel' });
+      var sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('width', '20'); sv.setAttribute('height', '20'); sv.setAttribute('fill', 'none'); sv.setAttribute('stroke', 'currentColor');
+      sv.setAttribute('stroke-width', '1.9'); sv.setAttribute('stroke-linecap', 'round'); sv.setAttribute('stroke-linejoin', 'round'); sv.setAttribute('aria-hidden', 'true');
+      var pt = document.createElementNS('http://www.w3.org/2000/svg', 'path'); pt.setAttribute('d', ICO_TOOLS); sv.appendChild(pt); b.appendChild(sv);
+      var out = q1(S.band, '.rm-sis-out'); S.band.insertBefore(b, out || null);
+      S.tools = b;
+      var sync = function () {
+        if (!S) return;
+        var open = box.classList.contains('open');
+        b.setAttribute('aria-expanded', String(open)); b.classList.toggle('is-open', open); b.classList.toggle('is-armed', fab.classList.contains('armed'));
+        var h = (open && getComputedStyle(box).display !== 'none') ? Math.round(box.getBoundingClientRect().height) : 0;
+        ROOT.style.setProperty('--rm-dock-h', h + 'px');
+      };
+      S.toolsSync = sync;
+      try { S.toolsMO = new MutationObserver(sync); S.toolsMO.observe(box, { attributes: true, attributeFilter: ['class'] }); S.toolsMO.observe(fab, { attributes: true, attributeFilter: ['class', 'aria-expanded'] }); } catch (e) {}
+      try { if (window.ResizeObserver) { S.toolsRO = new ResizeObserver(sync); S.toolsRO.observe(box); } } catch (e) {}
+      window.addEventListener('resize', sync);
+      /* A V2 minimiza a toolbox em qualquer pointerdown FORA dela e depois o clique reabriria (o botão da faixa não está dentro de .rm2-box):
+         com o dedo, tocar para FECHAR fecharia e reabriria. Este botão é o próprio FAB espelhado, então o pointerdown dele não conta como «fora». */
+      S.toolsPtr = function (e) { var t = e.target; if (t && t.closest && t.closest('.rm-sis-tools')) e.stopPropagation(); };
+      window.addEventListener('pointerdown', S.toolsPtr, true);
+      sync();
+      return true;
+    }
+    if (ligar()) return;
+    try {                                            // a toolbox da V2 é montada depois da aba: espera ela aparecer
+      S.toolsWait = new MutationObserver(function () { if (ligar()) { try { S.toolsWait.disconnect(); } catch (e) {} } });
+      S.toolsWait.observe(document.body, { childList: true });
+    } catch (e) {}
+  }
+
   /* «Inicio · índice de la materia» · «Bloque 04 · Síndrome Parenquimatoso» · «Modo · Preguntas» */
   function etiquetaPosicion() {
     if (!S || !S.pos) return;
@@ -462,6 +505,8 @@
       if (sec) ir(sec.el);
       return;
     }
+    var st2 = t.closest('.rm-sis-tools');
+    if (st2) { var fb = document.getElementById('rm2-fab'); if (fb) fb.click(); return; }
     var so = t.closest('.rm-sis-out');
     if (so) { var f = document.getElementById('logout-fab'); if (f) f.click(); return; }
     var p = t.closest('.rm-sis-pill');
@@ -529,6 +574,7 @@
       });
       if (S.lateral) S.mo.observe(S.lateral, { attributes: true, subtree: true, attributeFilter: ['aria-current'] });
     } catch (e) {}
+    ferramentas();
     refletir();
     if (window.RMLayout.pedirReposicao) window.RMLayout.pedirReposicao();    // as alturas mudaram: a tinta acompanha (API pública, coalescida)
     remedir();
@@ -546,6 +592,8 @@
     try { window.removeEventListener('scroll', S.h.stuck); window.removeEventListener('resize', S.h.stuck); } catch (e) {}
     ROOT.removeAttribute('data-rm-stuck');
     try { if (S.mo) S.mo.disconnect(); } catch (e) {}
+    try { if (S.toolsMO) S.toolsMO.disconnect(); if (S.toolsRO) S.toolsRO.disconnect(); if (S.toolsWait) S.toolsWait.disconnect(); window.removeEventListener('resize', S.toolsSync); if (S.toolsPtr) window.removeEventListener('pointerdown', S.toolsPtr, true); } catch (e) {}
+    ROOT.style.removeProperty('--rm-dock-h');
     NODOS.forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });
     ATRS.forEach(function (a) { try { a.e.removeAttribute(a.k); } catch (e) {} });
     TEXTOS.slice().reverse().forEach(function (x) { try { x.e.textContent = x.t; } catch (e) {} });

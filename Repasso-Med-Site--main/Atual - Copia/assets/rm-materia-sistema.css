@@ -208,6 +208,51 @@ html.rm-sis .rm-l2-band button.rm-sis-out:focus-visible { outline: 3px solid var
 html.rm-sis #materias-container { padding-bottom: calc(var(--rm-player-h, 0px) + var(--rm-safe-b, 0px) + 28px); }
 
 /* ---------------------------------------------------------------------
+   5-C · FERRAMENTAS DE ESTUDIO no celular (< 768 px, só no piloto)
+   A maleta flutuante (#rm2-fab) e o trilho vertical da V2 ficavam SOBRE tabelas e notas. Aqui: (1) o controle vira um botão da faixa fixa
+   (.rm-sis-tools, delega o clique ao #rm2-fab, que continua no DOM — oculto); (2) a toolbox abre como uma BARRA horizontal encostada embaixo
+   (dock), rolável de lado, com espaço reservado ao fim da leitura (--rm-dock-h, medido pelo JS). Só apresentação: o motor da caneta
+   (traço, goma, gravação, âncoras, estado armado, a rotina de abrir/fechar) é o original.
+   --------------------------------------------------------------------- */
+html.rm-sis .rm-sis-tools {
+  display: none; align-items: center; justify-content: center; flex: 0 0 auto; width: 44px; min-width: 44px; min-height: 44px; padding: 0; margin-left: 2px;
+  border: 1.5px solid rgba(255, 255, 255, .45); border-radius: 99px; background: transparent; color: #fff; cursor: pointer;
+}
+html.rm-sis .rm-sis-tools:hover { background: rgba(255, 255, 255, .14); }
+html.rm-sis .rm-sis-tools.is-open { background: rgba(255, 255, 255, .2); }
+html.rm-sis .rm-sis-tools.is-armed { border-color: var(--rm-gold); box-shadow: 0 0 0 2px rgba(233, 185, 73, .35); color: var(--rm-gold); }
+html.rm-sis .rm-l2-band button.rm-sis-tools:focus-visible { outline: 3px solid var(--rm-gold); outline-offset: 2px; }
+@media (max-width: 767.98px) {
+  html.rm-sis .rm-sis-tools { display: inline-flex; }
+  html.rm-sis.rm-l2 .rm2-fab { display: none !important; }                                   /* a maleta flutuante sai da leitura */
+  html.rm-sis.rm-l2 .rm2-box {
+    top: auto; transform: none; left: 0; right: 0; width: auto; display: none; gap: 0;
+    bottom: calc(var(--rm-player-h, 0px) + var(--rm-safe-b, 0px));
+  }
+  html.rm-sis.rm-l2 .rm2-box.open { display: block; }
+  html.rm-sis.rm-l2 .rm2-panel {
+    flex-direction: row; align-items: center; justify-content: flex-start; gap: 4px; width: 100%; max-width: none; box-sizing: border-box;
+    padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px)); max-height: none; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;
+    border-radius: 16px 16px 0 0; border-width: 1px 0 0; border-color: rgba(16, 36, 61, .16);
+    background: var(--rm-paper); box-shadow: 0 -10px 24px -14px rgba(8, 23, 38, .45);
+    scrollbar-width: none;
+  }
+  html.rm-sis.rm-l2 .rm2-panel::-webkit-scrollbar { display: none; }
+  html.rm-sis.rm-l2 .rm2-panel .rm2-btn { flex: 0 0 44px; width: 44px; height: 44px; }
+  html.rm-sis.rm-l2 .rm2-panel .rm2-sub { flex-direction: row; padding: 0 4px; gap: 5px; flex: 0 0 auto; }
+  html.rm-sis.rm-l2 .rm2-panel .rm2-sub .rm2-sub { padding: 0; }
+  html.rm-sis.rm-l2 .rm2-panel .rm2-sw { width: 28px; height: 28px; flex: 0 0 28px; }
+  html.rm-sis.rm-l2 .rm2-panel .rm2-w { width: 32px; height: 28px; flex: 0 0 32px; }
+  html.rm-sis.rm-l2 .rm2-panel .rm2-sep { width: 1px; height: 28px; margin: 0 4px; flex: 0 0 1px; }
+  html.rm-sis.rm-l2 .rm2-btn.on::before { left: 11px; top: auto; bottom: -3px; width: 22px; height: 3px; }   /* marca dourada de «ativo» passa para baixo do ícone */
+  /* mensagens passageiras («Lápiz activo…») sobem para cima do dock em vez de cobrir a leitura por baixo dele */
+  html.rm-sis.rm-l2 .rm-toast { bottom: calc(var(--rm-dock-h, 0px) + var(--rm-player-h, 0px) + var(--rm-safe-b, 0px) + 14px); }
+  /* espaço reservado: com o dock aberto a última linha da página rola até ficar acima dele */
+  html.rm-sis #materias-container { padding-bottom: calc(var(--rm-player-h, 0px) + var(--rm-safe-b, 0px) + var(--rm-dock-h, 0px) + 28px); }
+}
+@media (max-width: 440px) { html.rm-sis .rm-l2-band .rm-l2-mat { display: none; } }          /* «Materias» (voltar ao topo) = «Volver arriba» da gaveta; abre espaço para as ferramentas */
+
+/* ---------------------------------------------------------------------
    6 · C-02 · índice lateral L1-COLOR (superfície mais clara da família do tema)
    --------------------------------------------------------------------- */
 html.rm-sis .rm-l2-side {

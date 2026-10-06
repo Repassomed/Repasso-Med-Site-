@@ -49,3 +49,11 @@ Toda UI derivada leva `[data-rm-ui]` (fora do índice de marca-texto e das ânco
 O botão flutuante verde do site (`#logout-fab`, canto inferior direito) cobria a leitura no celular. No piloto ele fica oculto (CSS) e o mesmo controle
 passa a viver na faixa fixa (`.rm-sis-out`, alvo ≥ 44 px, só ícone abaixo de 480 px); o clique é **delegado** ao `#logout-fab` original, que continua no DOM.
 Fora do piloto nada muda. Teste: `sistema.test.cjs` §9–10 (320/390/768/1440, 6 paradas de rolagem, gaveta do índice, caneta armada).
+
+## Ferramentas de estudio (caneta) no celular (< 768 px, só no piloto)
+A maleta flutuante (`#rm2-fab`) e o trilho vertical da V2 ficavam sobre tabelas e notas. No piloto, abaixo de 768 px: o controle vira o botão «Herramientas»
+da faixa fixa (`.rm-sis-tools`, ≥ 44 px, anel dourado quando há ferramenta armada), que **delega o clique ao `#rm2-fab` original** (oculto); a toolbox abre como uma
+**barra horizontal encostada embaixo** (rolável de lado) e o conteúdo ganha espaço reservado (`--rm-dock-h`, medido pelo JS). O motor da caneta (traço, goma, gravação,
+âncoras, estado armado, abrir/fechar) é o original e não foi alterado; o botão da faixa só impede que o próprio toque seja tratado como «clique fora» (que minimizaria
+a toolbox e a reabriria em seguida). Em ≤ 440 px o botão «Materias» (voltar ao topo) sai da faixa para dar espaço — «Volver arriba» continua na gaveta do índice.
+Em ≥ 768 px nada muda (a raia direita já é reservada pelo layout).
