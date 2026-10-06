@@ -1,0 +1,26 @@
+{
+ "nota": "Inventário esperado da pasta Audiobooks (metadado do Drive informado pelo José em 2026-10-04); só serve para sinalizar divergência, nunca decide o vínculo nem bloqueia o download.",
+ "pasta_id": "1APjpeMTDGrBzytbZSKcsxi704PniIEmT",
+ "arquivos": [
+  {
+   "id": "1ldluwCY0teiGg-d_rqdyDI1U7K2yiALJ",
+   "nome": "Semio_-_Motivo_de_Consulta (1).m4a",
+   "tamanho": 36758530
+  },
+  {
+   "id": "1xZIVJrBH-JSLH406_uqMq4Qp6G3-UaqJ",
+   "nome": "Semio_EPOC (1).m4a",
+   "tamanho": 33468886
+  },
+  {
+   "id": "13yER40lrDlfGb32iYdWPlsQXqMEiacOz",
+   "nome": "Semio - 3 Sindrome Parenquimatoso (1).m4a",
+   "tamanho": 15722673
+  },
+  {
+   "id": "1P16U2hOWRVmVrQiyJKrsnVXYrBWe5TZB",
+   "nome": "Semio_-_4_sindrome_pleual (1).m4a",
+   "tamanho": 22662090
+  }
+ ]
+}
