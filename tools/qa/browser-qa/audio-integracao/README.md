@@ -83,3 +83,8 @@ Contra o boot final da #430 (que passou a vigiar matéria/logout desde o início
 (o layout nunca cai) e logout com o áudio ativo (tudo some, 0 erros). O gancho só chama `start()` se, depois da carga do boot, a aba ainda é a mesma, `RMLayout` existe **e o slot `#rm-l2-player` ainda existe** (o `detach`/logout o remove).
 Mutações: sem a guarda de corrida → reprova; sem o `stop()` → reprova; sem a checagem do slot → reprova (`start()` depois do logout). **Não afirma nada sobre o player/áudio em hardware.**
 **Cache:** `/assets/*` cacheia 7 dias; mudou o `rm-pilot.js` ⇒ sobe `VER` nele **e** a tag `?v=` do `rm-pilot.js` no `index.html` (1 linha). Versão atual `2026100202` (a `2026100201` já foi vista em preview).
+
+## `piloto-quatro.test.cjs` — QA do piloto final (34 verificações)
+`NODE_PATH=$(npm root -g) RM_B1_DIR=<assets> node tools/qa/browser-qa/audio-integracao/piloto-quatro.test.cjs` — manifesto com os **4 itens reais** do piloto (ids/caminhos em `tools/audio/PILOTO-SEMIO2-PAINEL.md`), arquivo de **≈ 36,75 MB** (o maior do piloto) com Range:
+4 cards nos blocos certos (nenhum em `s2-b06`), tocar/pausar/barra ao meio (Range ≈ 18 MB)/±15 s/velocidades, celular 390×844 com toque, arbitragem com a ausculta real, outra conta/sem sessão/token falso sem nada, manifesto **sem path/URL/bucket**, acesso direto ao bucket recusado (URL pública, assinada sem token/forjada/expirada).
+O áudio é mp3 (o Chromium do Playwright não decodifica AAC): o M4A real só se confirma no aparelho do José.

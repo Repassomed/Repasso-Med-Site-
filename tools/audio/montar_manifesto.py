@@ -17,7 +17,7 @@ import argparse, json, os, re, shutil, subprocess, sys
 RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 SITE = os.path.join(RAIZ, 'Repasso-Med-Site--main', 'Atual - Copia')
 MATERIA = os.path.join(SITE, 'netlify', 'functions', 'materias-privadas', 'semiologia-ii.html')
-LIMITE_BYTES = 30 * 1024 * 1024          # o mesmo limite do bucket (migration)
+LIMITE_BYTES = 40 * 1024 * 1024          # o mesmo limite do bucket (migration 20261006_01)
 LIMITE_ENV = 3800                         # variáveis de função do Netlify somam ~4 KB
 CAMPOS = ['audio_id', 'block_id', 'theme', 'title', 'duration', 'order', 'version', 'path', 'ready']
 
@@ -78,7 +78,7 @@ def montar(relatorio, vinculos, blocos):
         if not dur or dur <= 0:
             erros.append(f'{n}: duração da cópia ausente no relatório'); continue
         if c['tamanho_mb'] * 1048576 > LIMITE_BYTES:
-            erros.append(f'{n}: cópia de {c["tamanho_mb"]} MB passa de 30 MB (limite do bucket)')
+            erros.append(f'{n}: cópia de {c["tamanho_mb"]} MB passa de 40 MiB (limite do bucket)')
         if v.get('audio_id') in vistos_id: erros.append(f"{n}: audio_id repetido {v.get('audio_id')}")
         if v.get('order') in vistos_ord: erros.append(f"{n}: order repetido {v.get('order')}")
         vistos_id.add(v.get('audio_id')); vistos_ord.add(v.get('order'))

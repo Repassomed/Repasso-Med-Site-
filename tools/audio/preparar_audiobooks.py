@@ -25,7 +25,7 @@ STOI_MIN = 0.95                     # limiar objetivo para escolher o menor bitr
 STOI_MIN_VEL = 0.90                 # limiar PROVISÓRIO a 2×/2,5× (STOI cai ao acelerar; calibrar com a escuta humana dos masters reais)
 VELOCIDADES = (2.0, 2.5)            # velocidades do player além de 1× em que a inteligibilidade é medida
 EXT = ('.m4a', '.mp4', '.aac', '.wav', '.mp3', '.flac', '.ogg')
-LIMITE_BYTES = 30 * 1024 * 1024     # limite do bucket (migration) — o derivado publicado não pode passar disto
+LIMITE_BYTES = 40 * 1024 * 1024     # limite do bucket (migration 20261006_01: 40 MiB = 41.943.040 B) — o derivado publicado não pode passar disto
 BITRATE_FALA_MAX = 96               # kb/s: um AAC-LC mono de fala acima disto tem benefício demonstrável em ser reduzido
 
 
@@ -328,19 +328,24 @@ def gera_amostras(master, copias, dur, base, pasta, n, janela, vels, ar):
     return out
 
 
-def decidir_derivado(info, tamanho, tem_faststart):
+def decidir_derivado(info, tamanho, tem_faststart, politica='auto'):
     """Só reencoda quando há BENEFÍCIO demonstrável (o áudio já foi comprimido pelo autor: evitar nova perda).
-    reaproveitar: AAC-LC mono ≤ 96 kb/s, ≤ 30 MiB e com faststart → cópia idêntica; remux: o mesmo sem faststart → só move o moov (sem perda);
-    reencodar: fora do limite do bucket, não AAC-LC, não mono, ou bitrate de fala > 96 kb/s."""
-    ok_formato = info.get('codec') == 'aac' and info.get('perfil') == 'LC' and info.get('canais') == 1
+    reaproveitar: AAC-LC mono ≤ 96 kb/s, ≤ 40 MiB e com faststart → cópia idêntica; remux: o mesmo sem faststart → só move o moov (sem perda);
+    reencodar: fora do limite do bucket, não AAC-LC, não mono, ou bitrate de fala > 96 kb/s.
+    politica='original-aac' (piloto com os .m4a já comprimidos): aceita AAC-LC COMO ESTÁ (canais e bitrate do autor) desde que caiba no bucket; só reencoda o que não for AAC-LC ou passar do limite."""
+    aac_lc = info.get('codec') == 'aac' and info.get('perfil') == 'LC'
     br = info.get('bitrate_kbps') or 0
-    if ok_formato and tamanho <= LIMITE_BYTES and 0 < br <= BITRATE_FALA_MAX:
-        return ('reaproveitar' if tem_faststart else 'remux-faststart'), 'já é AAC-LC mono ≤ %d kb/s e cabe em 30 MiB: sem nova perda' % BITRATE_FALA_MAX
+    if politica == 'original-aac' and aac_lc and tamanho <= LIMITE_BYTES:
+        return ('reaproveitar' if tem_faststart else 'remux-faststart'), 'política original-aac: AAC-LC aceito como está (canais/bitrate do autor) e cabe em 40 MiB: sem nova perda'
+    ok_formato = aac_lc and info.get('canais') == 1
+    if politica != 'original-aac' and ok_formato and tamanho <= LIMITE_BYTES and 0 < br <= BITRATE_FALA_MAX:
+        return ('reaproveitar' if tem_faststart else 'remux-faststart'), 'já é AAC-LC mono ≤ %d kb/s e cabe em 40 MiB: sem nova perda' % BITRATE_FALA_MAX
     motivos = []
-    if tamanho > LIMITE_BYTES: motivos.append(f'{tamanho} B > 30 MiB (limite do bucket)')
-    if info.get('codec') != 'aac' or info.get('perfil') != 'LC': motivos.append(f"codec {info.get('codec')}/{info.get('perfil')} ≠ AAC-LC")
-    if info.get('canais') != 1: motivos.append(f"canais={info.get('canais')} ≠ mono")
-    if br > BITRATE_FALA_MAX: motivos.append(f'{br} kb/s > {BITRATE_FALA_MAX} (fala)')
+    if tamanho > LIMITE_BYTES: motivos.append(f'{tamanho} B > 40 MiB (limite do bucket)')
+    if not aac_lc: motivos.append(f"codec {info.get('codec')}/{info.get('perfil')} ≠ AAC-LC")
+    if politica != 'original-aac':
+        if info.get('canais') != 1: motivos.append(f"canais={info.get('canais')} ≠ mono")
+        if br > BITRATE_FALA_MAX: motivos.append(f'{br} kb/s > {BITRATE_FALA_MAX} (fala)')
     return 'reencodar', '; '.join(motivos) or 'bitrate desconhecido'
 
 
@@ -358,7 +363,7 @@ def criterios_copia(c, a, reencodado=True):
     if not c['faststart']:
         f.append('sem faststart')
     if c['tamanho_mb'] * 1048576 > LIMITE_BYTES:
-        f.append('acima de 30 MiB (limite do bucket)')
+        f.append('acima de 40 MiB (limite do bucket)')
     if reencodado:
         s = c['stoi']
         if s['media'] is None or s['media'] < a.stoi_min:
@@ -388,7 +393,7 @@ def cmd_preparar(a):
         info = probe(p)
         item = {'id': ent['id'], 'relpath': ent['relpath'], 'nome_logico': ent['nome_logico'], 'duplicatas_identicas': ent['duplicatas_identicas'], 'master': os.path.basename(p), 'sha256_master': h0, 'master_info': info, 'tamanho_master_mb': round(os.path.getsize(p) / 1048576, 2), 'copias': [], 'escuta_humana_pendente': True}
         base = ent['id']
-        acao, motivo_acao = decidir_derivado(info, os.path.getsize(p), faststart(p)) if getattr(a, 'politica', 'auto') == 'auto' else ('reencodar', 'política forçada')
+        acao, motivo_acao = decidir_derivado(info, os.path.getsize(p), faststart(p), getattr(a, 'politica', 'auto')) if getattr(a, 'politica', 'auto') in ('auto', 'original-aac') else ('reencodar', 'política forçada')
         item['acao_derivado'] = {'acao': acao, 'motivo': motivo_acao}
         if acao in ('reaproveitar', 'remux-faststart'):
             dst = os.path.join(a.saida, f'{base}.original-aac.m4a')
@@ -526,7 +531,7 @@ def main(argv=None):
     s = sp.add_parser('preparar'); s.add_argument('--origem', required=True); s.add_argument('--saida', required=True)
     s.add_argument('--ar', type=int, default=32000); s.add_argument('--stoi-min', type=float, default=STOI_MIN, dest='stoi_min'); s.add_argument('--janelas', type=int, default=10)
     s.add_argument('--velocidades', default=','.join(f'{v:g}' for v in VELOCIDADES), help='velocidades extra para medir STOI (vazio = só 1×)')
-    s.add_argument('--janelas-vel', type=int, default=5, dest='janelas_vel'); s.add_argument('--amostras', type=int, default=3, help='trechos para escuta por master (0 = nenhum)'); s.add_argument('--janela-amostra', type=float, default=25.0, dest='janela_amostra'); s.add_argument('--politica', choices=('auto', 'reencodar'), default='auto'); s.add_argument('--stoi-min-vel', type=float, default=STOI_MIN_VEL, dest='stoi_min_vel'); s.set_defaults(f=cmd_preparar)
+    s.add_argument('--janelas-vel', type=int, default=5, dest='janelas_vel'); s.add_argument('--amostras', type=int, default=3, help='trechos para escuta por master (0 = nenhum)'); s.add_argument('--janela-amostra', type=float, default=25.0, dest='janela_amostra'); s.add_argument('--politica', choices=('auto', 'reencodar', 'original-aac'), default='auto'); s.add_argument('--stoi-min-vel', type=float, default=STOI_MIN_VEL, dest='stoi_min_vel'); s.set_defaults(f=cmd_preparar)
     s = sp.add_parser('vincular'); s.add_argument('--transcricao', required=True); s.add_argument('--materia', required=True); s.set_defaults(f=cmd_vincular)
     a = ap.parse_args(argv)
     return a.f(a)

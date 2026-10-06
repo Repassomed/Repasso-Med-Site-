@@ -51,9 +51,11 @@ class T(unittest.TestCase):
         v = tudo(); v[0]['master'] = 'nao-existe.m4a'; self.assertTrue(M.montar(rel(), v, BLOCOS)[0])
         self.assertTrue(M.montar(rel(), [], BLOCOS)[0])
 
-    def test_cobre_30mb_decodificacao_faststart_e_duracao(self):
-        r = rel(); r['itens'][0]['copias'][0]['tamanho_mb'] = 31
-        self.assertTrue(any('30 MB' in x for x in M.montar(r, tudo(), BLOCOS)[0]))
+    def test_cobre_40mib_decodificacao_faststart_e_duracao(self):
+        r = rel(); r['itens'][0]['copias'][0]['tamanho_mb'] = 41
+        self.assertTrue(any('40 MiB' in x for x in M.montar(r, tudo(), BLOCOS)[0]))
+        r = rel(); r['itens'][0]['copias'][0]['tamanho_mb'] = 36.8                      # o maior dos quatro .m4a do piloto (36.758.530 B) cabe
+        self.assertFalse(any('MiB' in x for x in M.montar(r, tudo(), BLOCOS)[0]))
         r = rel(); r['itens'][0]['copias'][0]['faststart'] = False
         self.assertTrue(M.montar(r, tudo(), BLOCOS)[0])
         r = rel(); r['itens'][0]['copias'][0]['info']['duracao_s'] = None

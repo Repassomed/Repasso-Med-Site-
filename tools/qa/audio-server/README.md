@@ -33,7 +33,7 @@ navegador ──(JWT, audio_id)──► get-audio-url ─► URL assinada 10 mi
 
 1. **Masters → cópias M4A tratadas** (inspeção + 48 × 64 kbps + faststart) e conferir pela escuta o vínculo bloco↔áudio.
 2. **Aplicar** `supabase/migrations/20260930_01_audiobooks_bucket_privado.sql`. É **idempotente e corretiva**: deixa SEMPRE o bucket
-   `audiobooks` com `public=false`, 30 MB e só `audio/mp4`/`audio/x-m4a` (mesmo que ele já exista público ou com limite/MIME antigos)
+   `audiobooks` com `public=false`, 30 MB e só `audio/mp4`/`audio/x-m4a` (depois, `20261006_01` eleva o limite a 40 MiB) (mesmo que ele já exista público ou com limite/MIME antigos)
    e instala **uma** policy **RESTRICTIVE** (`audiobooks_deny_direct_access`, `for all to anon, authenticated`, `using` e `with check`
    `bucket_id is distinct from 'audiobooks'`). No Postgres, acesso exige passar em ≥1 policy permissiva **e em todas as restritivas**:
    assim nenhuma policy permissiva — hoje (`using (true)`, `bucket_id is not null`, `bucket_id = bucket_id`, `bucket_id <> 'x'`, INSERT/UPDATE/DELETE

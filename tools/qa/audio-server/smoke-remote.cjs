@@ -54,7 +54,7 @@ async function range(url, faixa) {
       const r = await range(negado.j.src);
       ok(r.s === 206 && /^bytes 0-1\/\d+$/.test(r.cr) && r.n === 2, 'Range 206 estrito: `bytes=0-1` ⇒ HTTP 206, Content-Range `bytes 0-1/N` e exatamente 2 bytes (200 = o Safari/iOS NÃO consegue buscar posição)', `HTTP ${r.s} ${r.cr} ${r.n} B`);
       const total = Number((/\/(\d+)$/.exec(r.cr) || [])[1] || 0);
-      ok(total > 0 && total <= 31457280, 'tamanho do objeto conhecido e ≤ 30 MB (limite do bucket)', total + ' B');
+      ok(total > 0 && total <= 41943040, 'tamanho do objeto conhecido e ≤ 40 MiB (limite do bucket)', total + ' B');
       if (total > 6000) {
         const m = await range(negado.j.src, 'bytes=2000-2999');
         ok(m.s === 206 && m.cr === `bytes 2000-2999/${total}` && m.n === 1000, 'Range no MEIO do arquivo (busca de posição): 206, Content-Range correto e 1000 bytes', `HTTP ${m.s} ${m.cr} ${m.n} B`);

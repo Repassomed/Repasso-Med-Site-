@@ -4,9 +4,9 @@
   python3 tools/audio/enviar_storage.py --manifesto M/manifesto.json --plano M/plano-upload.md --pasta ~/trabalho/execucao-X/tratados --url https://<ref>.supabase.co            # DRY-RUN (padrão)
   RM_SUPABASE_SERVICE_KEY=... python3 tools/audio/enviar_storage.py ...mesmos argumentos... --enviar                                                                 # envia de verdade
 
-Reaproveita `verificar_upload.verificar` (AAC-LC mono, faststart, decodifica, ≤ 30 MiB, duração = manifesto, path = <matéria>/<audio_id>.m4a): sem APROVADO, nada sobe.
+Reaproveita `verificar_upload.verificar` (AAC-LC mono, faststart, decodifica, ≤ 40 MiB, duração = manifesto, path = <matéria>/<audio_id>.m4a): sem APROVADO, nada sobe.
 A chave `service_role` vem SÓ da variável de ambiente RM_SUPABASE_SERVICE_KEY (nunca por argumento, arquivo ou log); fica na memória do processo. Antes de enviar confere o bucket
-(privado, 30 MiB, só M4A) — se a migration não foi aplicada ou o bucket está diferente, aborta sem enviar. Não sobrescreve: objeto existente com o mesmo tamanho = «já enviado»; com tamanho
+(privado, 40 MiB, só M4A) — se a migration não foi aplicada ou o bucket está diferente, aborta sem enviar. Não sobrescreve: objeto existente com o mesmo tamanho = «já enviado»; com tamanho
 diferente = erro (use --substituir de propósito). Depois de cada envio confere o tamanho no Storage e que a URL PÚBLICA do objeto NÃO abre. Escreve `enviado.json` (sem chave) ao lado da pasta dos derivados.
 Enviar ao Storage NÃO publica: o áudio só aparece para alguém depois que `RM_AUDIO_MANIFEST` + `RM_PILOT_AUDIO_UIDS` forem definidos no Netlify (decisão separada).
 Sai com 0 só se TUDO passar; 2 = recusa de segurança/uso; 1 = falha.
@@ -18,7 +18,7 @@ import preparar_audiobooks as P
 import verificar_upload as V
 
 BUCKET = 'audiobooks'
-LIMITE = 31457280
+LIMITE = 41943040                                       # 40 MiB (migration 20261006_01)
 MIMES = ['audio/mp4', 'audio/x-m4a']
 RE_URL = re.compile(r'^https://[a-z0-9]{20}\.supabase\.co$')
 RE_PATH = re.compile(r'^[a-z0-9][a-z0-9._/-]{0,200}$', re.I)
@@ -61,7 +61,7 @@ def confere_bucket(base, chave):
     if b.get('public') is not False:
         e.append('o bucket está PÚBLICO (public != false): não envio áudio algum')
     if b.get('file_size_limit') != LIMITE:
-        e.append(f"limite do bucket = {b.get('file_size_limit')} (esperado {LIMITE} = 30 MiB)")
+        e.append(f"limite do bucket = {b.get('file_size_limit')} (esperado {LIMITE} = 40 MiB)")
     if sorted(b.get('allowed_mime_types') or []) != sorted(MIMES):
         e.append(f"tipos permitidos = {b.get('allowed_mime_types')} (esperado {MIMES})")
     return e
@@ -81,7 +81,7 @@ def tamanho_no_storage(base, chave, path):
 def enviar_um(base, chave, path, arquivo, substituir):
     tam = os.path.getsize(arquivo)
     with open(arquivo, 'rb') as f:
-        corpo = f.read()                                                  # ≤ 30 MiB: cabe na memória
+        corpo = f.read()                                                  # ≤ 40 MiB: cabe na memória
     h = {'Content-Type': 'audio/mp4', 'Content-Length': str(tam), 'x-upsert': 'true' if substituir else 'false', 'Cache-Control': 'max-age=3600'}
     st, d = chamar(f'{base}/storage/v1/object/{BUCKET}/' + '/'.join(urllib.parse.quote(p) for p in path.split('/')), chave, 'POST', corpo, h)
     if st not in (200, 201):
@@ -93,6 +93,7 @@ def main(argv=None):
     ap.add_argument('--manifesto', required=True); ap.add_argument('--plano', required=True); ap.add_argument('--pasta', required=True)
     ap.add_argument('--url', required=True, help='URL do projeto Supabase (https://<ref>.supabase.co)')
     ap.add_argument('--enviar', action='store_true', help='envia de verdade (sem isto é só conferência)')
+    ap.add_argument('--aceitar-original', action='store_true', help='AAC-LC como está (não exige mono)')
     ap.add_argument('--substituir', action='store_true', help='permite sobrescrever objeto existente com tamanho diferente (deliberado)')
     a = ap.parse_args(argv)
     base = a.url.rstrip('/')
@@ -105,7 +106,7 @@ def main(argv=None):
         print('RECUSADO: defina RM_SUPABASE_SERVICE_KEY (a service_role; digitada só no seu terminal, nunca no chat). Nada foi enviado.'); return 2
     with open(a.manifesto, encoding='utf-8') as f:
         man = json.load(f)
-    erros, ok, linhas = V.verificar(man, a.pasta, V.ler_plano(a.plano))
+    erros, ok, linhas = V.verificar(man, a.pasta, V.ler_plano(a.plano), a.aceitar_original)
     for ln in linhas:
         print('  ' + ln)
     if erros:
@@ -118,7 +119,7 @@ def main(argv=None):
         e = confere_bucket(base, chave)
         if e:
             print('BUCKET NÃO ESTÁ COMO O ESPERADO (nada enviado):'); [print(' - ' + x) for x in e]; return 1
-        print('bucket "audiobooks": privado, 30 MiB, só M4A — ok.')
+        print('bucket "audiobooks": privado, 40 MiB, só M4A — ok.')
     else:
         print('(sem chave: o bucket não foi consultado)')
     if not a.enviar:

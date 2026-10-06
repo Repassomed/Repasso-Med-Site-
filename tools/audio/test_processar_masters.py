@@ -197,7 +197,14 @@ class Lote(unittest.TestCase):
         ok = {'codec': 'aac', 'perfil': 'LC', 'canais': 1, 'bitrate_kbps': 64}
         self.assertEqual(P.decidir_derivado(ok, 10_000_000, True)[0], 'reaproveitar')
         self.assertEqual(P.decidir_derivado(ok, 10_000_000, False)[0], 'remux-faststart')
-        a, m = P.decidir_derivado(ok, 36_758_530, True); self.assertEqual(a, 'reencodar'); self.assertIn('30 MiB', m)       # 36,7 MB passa do limite do bucket
+        self.assertEqual(P.decidir_derivado(ok, 36_758_530, True)[0], 'reaproveitar')                                   # 36,76 MB (o maior do piloto) cabe nos 40 MiB do bucket
+        a, m = P.decidir_derivado(ok, 41_943_041, True); self.assertEqual(a, 'reencodar'); self.assertIn('40 MiB', m)     # 1 byte acima do limite do bucket
+        est = dict(ok, canais=2, bitrate_kbps=128)                                                                       # AAC-LC estéreo 128 kb/s, como o piloto pode trazer
+        self.assertEqual(P.decidir_derivado(est, 36_758_530, True)[0], 'reencodar')                                      # política padrão: fala = mono ≤ 96 kb/s
+        self.assertEqual(P.decidir_derivado(est, 36_758_530, True, 'original-aac')[0], 'reaproveitar')                   # piloto: aceita o AAC-LC como está
+        self.assertEqual(P.decidir_derivado(est, 36_758_530, False, 'original-aac')[0], 'remux-faststart')               # sem faststart: só move o moov (sem perda)
+        self.assertEqual(P.decidir_derivado(est, 41_943_041, True, 'original-aac')[0], 'reencodar')                      # acima do limite: reencoda mesmo assim
+        self.assertEqual(P.decidir_derivado(dict(est, codec='alac', perfil=None), 1_000_000, True, 'original-aac')[0], 'reencodar')   # ALAC/MP3 etc. não são aceitos como estão
         self.assertEqual(P.decidir_derivado(dict(ok, canais=2), 1_000_000, True)[0], 'reencodar')
         self.assertEqual(P.decidir_derivado(dict(ok, bitrate_kbps=128), 1_000_000, True)[0], 'reencodar')
         self.assertEqual(P.decidir_derivado(dict(ok, codec='mp3'), 1_000_000, True)[0], 'reencodar')
@@ -247,7 +254,7 @@ class Recomendacao(unittest.TestCase):
         self.assertEqual(P.criterios_copia(self.cp('a', 48), a), [])
         self.assertTrue(any('STOI 1×' in x for x in P.criterios_copia(self.cp('a', 48, stoi=0.5), a)))
         self.assertTrue(any('faststart' in x for x in P.criterios_copia(self.cp('a', 48, fs=False), a)))
-        self.assertTrue(any('30 MiB' in x for x in P.criterios_copia(self.cp('a', 64, mb=31.0), a)))
+        self.assertTrue(any('40 MiB' in x for x in P.criterios_copia(self.cp('a', 64, mb=41.0), a)))
         self.assertTrue(any('velocidade' in x for x in P.criterios_copia(self.cp('a', 48, vel=0.5), a)))
         self.assertTrue(any('clipping' in x for x in P.criterios_copia(self.cp('a', 48, pico=0.0), a)))
 

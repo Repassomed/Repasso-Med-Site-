@@ -9,6 +9,8 @@ const ROOT = path.resolve(__dirname, '..', '..', '..');
 const MIG = path.join(ROOT, 'Repasso-Med-Site--main', 'Atual - Copia', 'supabase', 'migrations');
 const UP = path.join(MIG, '20260930_01_audiobooks_bucket_privado.sql');
 const DOWN = path.join(MIG, '20260930_01_audiobooks_bucket_privado_rollback.sql');
+const LIM = path.join(MIG, '20261006_01_audiobooks_limite_40mib.sql');
+const LIM_DOWN = path.join(MIG, '20261006_01_audiobooks_limite_40mib_rollback.sql');
 const PGBIN = process.env.RM_PGBIN || '/usr/lib/postgresql/16/bin';
 const DATA = '/tmp/rm-pgtest-data', SOCK = '/tmp/rm-pgtest-sock', PORT = '54331';
 
@@ -310,6 +312,43 @@ try {
     ok(estado(db) === '' && N_BARREIRA(db) === 0, 'só o audiobooks e a barreira saíram');
   }
 
+  sec('Limite 40 MiB (20261006_01): muda SÓ file_size_limit do audiobooks; falha fechada; reversível');
+  {
+    const E40 = 'audiobooks|audiobooks|false|41943040|{audio/mp4,audio/x-m4a}';
+    const db = novoDb(); psql(db, null, UP);
+    comObjetos(db);
+    const o0 = OUTROS(db), j0 = OBJ_OUTROS(db), p0 = POL(db), pol0 = q(db, `select md5(string_agg(policyname||permissive||cmd||roles::text||coalesce(qual,'')||coalesce(with_check,''), ';' order by policyname)) from pg_policies where schemaname='storage'`);
+    ok(estado(db) === ESPERADO, 'partida: bucket a 30 MiB (migration 20260930 aplicada)');
+    let r = psql(db, null, LIM); ok(r.ok, 'a migration do limite roda sem erro', r.err);
+    ok(estado(db) === E40, 'bucket: privado, 40 MiB (41943040), só audio/mp4 e audio/x-m4a', estado(db));
+    ok(OUTROS(db) === o0 && OBJ_OUTROS(db) === j0 && POL(db) === p0, 'nenhum outro bucket, objeto ou policy mudou');
+    ok(q(db, `select md5(string_agg(policyname||permissive||cmd||roles::text||coalesce(qual,'')||coalesce(with_check,''), ';' order by policyname)) from pg_policies where schemaname='storage'`) === pol0 && N_BARREIRA(db) === 1, 'a barreira RESTRICTIVE continua igual (todas as policies byte a byte iguais)');
+    ok(contar(db, 'anon') === '0' && contar(db, 'authenticated') === '0', 'anon e authenticated continuam sem enxergar nenhum objeto do audiobooks');
+    ok(!como(db, 'anon', `insert into storage.objects (bucket_id,name) values ('audiobooks','h.m4a')`).ok && !como(db, 'authenticated', `insert into storage.objects (bucket_id,name) values ('audiobooks','h.m4a')`).ok, 'anon e authenticated continuam sem poder gravar no audiobooks');
+    ok(psql(db, null, LIM).ok && estado(db) === E40, 'idempotente: rodar de novo mantém 40 MiB');
+    ok(psql(db, null, UP).ok && estado(db) === ESPERADO, 'AVISO verificado: reexecutar a migration 20260930 volta o limite a 30 MiB (por isso a ordem importa)');
+    ok(psql(db, null, LIM).ok && estado(db) === E40, '...e a do limite o devolve a 40 MiB');
+    ok(psql(db, null, LIM_DOWN).ok && estado(db) === ESPERADO, 'rollback devolve SÓ o limite a 30 MiB');
+    ok(OUTROS(db) === o0 && OBJ_OUTROS(db) === j0 && POL(db) === p0 && N_BARREIRA(db) === 1, 'após o rollback: nada mais mudou');
+    psql(db, null, LIM);
+    q(db, `update storage.objects set metadata = '{"size": 36758530}'::jsonb where bucket_id='audiobooks' and name='semiologia-ii/a.m4a'`);
+    r = psql(db, null, LIM_DOWN);
+    ok(!r.ok && /objeto\(s\) do bucket têm mais de 30 MiB/.test(r.err) && estado(db) === E40, 'rollback ABORTA se já há objeto maior que 30 MiB (nada alterado)', r.err);
+  }
+  {
+    const casos = [
+      ['sem o bucket', novoDb(), /não existe/],
+      ['bucket PÚBLICO', novoDb(`insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) values ('audiobooks','audiobooks',true,31457280,array['audio/mp4','audio/x-m4a'])`), /PÚBLICO/],
+      ['MIME diferente', novoDb(`insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) values ('audiobooks','audiobooks',false,31457280,array['audio/mp4'])`), /tipos permitidos/],
+      ['limite inesperado (50 MiB)', novoDb(`insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) values ('audiobooks','audiobooks',false,52428800,array['audio/mp4','audio/x-m4a'])`), /limite atual inesperado/],
+      ['sem a barreira', novoDb(`insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) values ('audiobooks','audiobooks',false,31457280,array['audio/mp4','audio/x-m4a'])`), /barreira/],
+    ];
+    for (const [nome, db, re] of casos) {
+      const o0 = OUTROS(db), antes = estado(db), r = psql(db, null, LIM);
+      ok(!r.ok && re.test(r.err), `falha fechada: ${nome}`, r.err); ok(estado(db) === antes && OUTROS(db) === o0, `falha fechada (${nome}): nada foi alterado`);
+    }
+  }
+
   sec('Texto das migrations (guarda estática)');
   {
     const up = fs.readFileSync(UP, 'utf8'), down = fs.readFileSync(DOWN, 'utf8');
@@ -321,6 +360,10 @@ try {
     ok((upc.match(/drop\s+policy/gi) || []).length === 1 && /drop policy if exists audiobooks_deny_direct_access on storage\.objects/i.test(upc), 'a migration só apaga a própria barreira (nome exato)');
     ok(/delete\s+from\s+storage\.buckets\s+where\s+id\s*=\s*'audiobooks'/i.test(downc) && !/delete\s+from\s+storage\.objects/i.test(downc), 'o rollback tem um DELETE real, só do bucket audiobooks, e nunca apaga objetos');
     ok((downc.match(/drop\s+policy/gi) || []).length === 1 && /drop policy if exists audiobooks_deny_direct_access on storage\.objects/i.test(downc), 'o rollback só remove a policy própria, pelo nome exato');
+    { const lim = fs.readFileSync(LIM, 'utf8').replace(/--.*$/gm, ''), limd = fs.readFileSync(LIM_DOWN, 'utf8').replace(/--.*$/gm, '');
+      ok((lim.match(/update\s+storage\.buckets/gi) || []).length === 1 && /set\s+file_size_limit\s*=\s*41943040\s+where\s+id\s*=\s*'audiobooks'/i.test(lim), 'a migration do limite tem UM update, só file_size_limit, só do audiobooks');
+      ok(!/create\s+policy|drop\s+policy|insert\s+into|delete\s+from|grant\s|alter\s+table|public\s*=\s*true|storage\.objects\s+set/i.test(lim.replace(/from storage\.objects/gi, '')) && !/\b(aportes|publico|flyers)\b/i.test(lim + limd), 'não cria/apaga policy, não insere, não torna nada público e não nomeia outro bucket');
+      ok((limd.match(/update\s+storage\.buckets/gi) || []).length === 1 && /set\s+file_size_limit\s*=\s*31457280\s+where\s+id\s*=\s*'audiobooks'/i.test(limd) && !/delete\s+from/i.test(limd), 'o rollback do limite tem UM update só do audiobooks (31457280) e nenhum delete'); }
     ok(!/^\s*--\s*delete/im.test(down) && !/storage\.buckets[^;]*\b(aportes|publico)\b/i.test(upc + downc), 'DELETE não comentado; nenhum outro bucket é nomeado');
   }
 } catch (e) { koN++; falhas.push('EXCEÇÃO: ' + (e && e.stack || e)); console.log('  ✗ EXCEÇÃO', e); }
