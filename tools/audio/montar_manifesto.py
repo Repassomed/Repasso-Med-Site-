@@ -49,20 +49,25 @@ def validar_com_o_servidor(itens):
 def montar(relatorio, vinculos, blocos):
     erros, itens, plano = [], [], []
     por_master = {i['master']: i for i in relatorio.get('itens', [])}
+    por_id = {i['id']: i for i in relatorio.get('itens', []) if i.get('id')}
     vistos_id, vistos_ord = set(), set()
     if not vinculos:
         erros.append('nenhum vínculo informado')
     for v in vinculos:
         n = v.get('master', '?')
-        rel = por_master.get(n)
+        rel = por_id.get(v.get('id')) or por_master.get(n)
         if rel is None:
             erros.append(f'{n}: master não consta no relatorio.json'); continue
+        if v.get('sha256_master') and rel.get('sha256_master') != v['sha256_master']:
+            erros.append(f'{n}: SHA-256 do master no vinculos.json ≠ o do relatório (outro arquivo?)'); continue
         if v.get('vinculo_confirmado') is not True or v.get('confirmado_por') not in ('escuta', 'transcricao'):
             erros.append(f'{n}: vínculo NÃO confirmado pelo conteúdo (vinculo_confirmado=true e confirmado_por=escuta|transcricao)')
         if v.get('escuta_humana_ok') is not True:
             erros.append(f'{n}: escuta humana da cópia não aprovada (escuta_humana_ok=true)')
         if v.get('block_id') not in blocos:
             erros.append(f"{n}: block_id {v.get('block_id')!r} não existe na matéria")
+        if not v.get('kbps') and rel.get('recomendado_aprovado') is False:
+            erros.append(f'{n}: nenhuma cópia passou os critérios objetivos; informe "kbps" explicitamente só depois de ouvir as amostras'); continue
         kb = v.get('kbps') or rel.get('recomendado_kbps')
         c = next((x for x in rel['copias'] if x['kbps_alvo'] == kb), None)
         if c is None:

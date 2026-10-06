@@ -90,7 +90,7 @@ class T(unittest.TestCase):
     def test_rodar_local_recusa_saida_dentro_do_repositorio(self):
         import subprocess
         sh = os.path.join(os.path.dirname(__file__), 'rodar_local.sh')
-        r = subprocess.run(['bash', sh, '/tmp', os.path.join(M.RAIZ, 'saida-x')], capture_output=True, text=True)
+        r = subprocess.run(['bash', sh, '/tmp', os.path.join(M.RAIZ, 'saida-x'), '/tmp/modelo-x'], capture_output=True, text=True)
         self.assertEqual(r.returncode, 2); self.assertIn('RECUSADO', r.stdout)
         self.assertFalse(os.path.exists(os.path.join(M.RAIZ, 'saida-x')))
 

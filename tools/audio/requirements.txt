@@ -1,0 +1,7 @@
+# Dependências do processamento local dos audiobooks (Python 3.10+). O modelo de transcrição NÃO é um pacote pip (ver LEIAME).
+sherpa-onnx
+imageio-ffmpeg
+pystoi
+soundfile
+numpy
+scipy
