@@ -9,7 +9,7 @@
    «0 px com 0 paths» (ou com a âncora fora da janela) = TESTE INVÁLIDO, que reprova — nunca passa. */
 const { serve } = require('./serve.cjs');
 const JOSE = 'd4d215d3-36dd-4efb-8869-bdea5376c648';                    // UID do piloto (público no código da V2: BETA_UIDS)
-const FLAGS = { slug: 'semiologia-ii', layout: true, audio: false, pen: false };
+const FLAGS = { slug: 'semiologia-ii', layout: true, audio: false, pen: false, visual: !!process.env.RM_VISUAL };   // RM_VISUAL=1: roda os testes de tinta COM o sistema visual ligado
 const MAX = +(process.env.RM_DRIFT_MAX || 2);                            // tolerância de alinhamento (px)
 const SEED = 's2-b10,s2-banco';
 

@@ -850,6 +850,10 @@
     setAsset: function (slot, spec) { ASSETS[slot] = spec || null; renderArte(slot); },
     assentarTinta: assentarTinta,                            // usado por rm-modes.js ao voltar à Página completa
     pedirReposicao: function () { reposicionarTinta(); },    // idem: único caminho até RMToolsV2.reposicionar (coalescido, nunca durante o contato da caneta)
+    /* Para o sistema visual de matérias (rm-materia-sistema.js): reaproveita o MESMO salto (geração/cancelamento) e os recursos reais da capa.
+       Só leitura/salto; nada de tinta, caneta, âncora ou geometria. */
+    irPara: function (alvo) { irPara(alvo); },
+    recursos: function () { return S && S.capaRes ? S.capaRes.slice() : []; },
     /* só leitura, para teste/diagnóstico */
     _dock: decidirDock, _cartaoTeorico: cartaoTeorico,
     _estado: function () { return S ? { tab: S.tab && S.tab.id, blocos: S.blocos.length, drawer: S.drawer, lmode: ROOT.getAttribute('data-rm-lmode'), dock: ROOT.getAttribute('data-rm-dock') } : null; }

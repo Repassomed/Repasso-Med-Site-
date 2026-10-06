@@ -1,0 +1,59 @@
+{
+  "version": "1.0",
+  "status": "diseño · no producción",
+  "constantes": {
+    "header": { "bg": "#13314F", "borderBottom": "3px solid #E9B949", "height": { "desktop": 60, "mobile": 54 } },
+    "papel": "#FFFDF8",
+    "tinta": { "texto": "#172C45", "titulo": "#10243D", "secundario": "#55657A" },
+    "tipografia": {
+      "titulos": "Fraunces 700 (materia 62–82px · bloque 42–44px · h3 itálica 720 31–35px)",
+      "cuerpo": "Literata 20px / 530 / 1.64 (celular 18px)",
+      "negrita": "760, sin color",
+      "tabla": "Literata 16.5px / 480 · cabecera 15px / 700",
+      "rotulos": "JetBrains Mono 10–12px / 700, tracking .12–.16em",
+      "manuscrita": "Caveat — SOLO en 'Mi nota'"
+    },
+    "recursos": { "infografias": "#2F6FB0", "preguntas": "#C8922A", "flashcards": "#6B57C2", "auscultacion": "#A2456E", "audiobooks": "#5C6B7A" },
+    "notasP4": {
+      "datoClave": { "bg": "#EEF6F2", "borde": "#BFD9CC", "etiqueta": "#2F7D6A" },
+      "noConfundir": { "bg": "#EEF1F8", "borde": "#C6D0E4", "etiqueta": "#13314F" },
+      "alerta": { "bg": "#FDF0ED", "borde": "#E7C2BA", "barra": "#C0392B" },
+      "miNota": { "bg": "#FFE27A", "etiqueta": "#13314F" }
+    },
+    "pregunta": { "correcta": "#2F7D6A", "incorrecta": "#C0392B", "origenExamen": { "bg": "#13314F", "fg": "#E9B949" } },
+    "tablaReglas": { "cabecera": "tono fuerte de la familia", "primeraColumna": "tinta 14%", "cebra": "tinta 7%", "borde": "tinta 40%", "comparativa": "columna de criterios #13314F + 1 tono por categoría con nombre" }
+  },
+  "materias": {
+    "semiologia-ii": {
+      "estado": "aprobada (piloto)",
+      "superficie": "#D3E5DC", "lateral": "#E8F3EE", "borde": "#A7CBBA", "acento": "#2F8F74", "marcador": "#E9B949",
+      "paleta": ["#2F6FB0", "#2F8F74", "#D49A1E", "#6B57C2", "#E0694E", "#C9487F"],
+      "agrupaPor": "Unidad I · II · III", "asignatura": "faja azul-marino con número dorado",
+      "etiquetaRadio": "7px", "vineta": "círculo", "ilustracion": "acuarela anatómica + tinta azul-marino"
+    },
+    "anatomia-patologica-ii": {
+      "estado": "propuesta",
+      "superficie": "#EADDE3", "lateral": "#F7EFF3", "borde": "#D9BFCB", "acento": "#A33A69", "marcador": "#E7A6C2",
+      "paleta": ["#C9487F", "#B0456F", "#D16A8F", "#6B57C2", "#5645A6", "#2F6FB0"],
+      "agrupaPor": "Parcial 1 → paleta[0..2] (eosina) · Parcial 2 → paleta[3..4] (hematoxilina) · Final → paleta[5]",
+      "asignatura": "etiqueta de portaobjetos (extremo esmerilado rayado + número)",
+      "etiquetaRadio": "3px", "vineta": "campo de microscopio (círculo + anillo)", "ilustracion": "pieza macroscópica + corte H&E, acuarela realista, sin texto"
+    },
+    "farmacologia-ii": {
+      "estado": "propuesta · sin archivo fuente de Farmacología II en el repositorio",
+      "superficie": "#DCE6EE", "lateral": "#EEF3F8", "borde": "#B7C9D9", "acento": "#1F6FA8", "marcador": "#9CC6F0",
+      "paleta": ["#1F6FA8", "#2F8F74", "#D49A1E", "#E0694E", "#6B57C2", "#C9487F"],
+      "agrupaPor": "clase de fármaco (cada clase = 1 color, constante en toda la materia)",
+      "asignatura": "cápsula (mitad color de la clase, mitad blanca)",
+      "etiquetaRadio": "99px", "vineta": "cuadrado redondeado 26px (blíster)", "ilustracion": "mecanismo molecular / receptor / órgano diana, acuarela + línea"
+    },
+    "neurologia": {
+      "estado": "propuesta · contenido real pendiente (neurologia.html)",
+      "superficie": "#DEDCEB", "lateral": "#F0EFF7", "borde": "#C3BFDB", "acento": "#4B3FA0", "marcador": "#B9B0EC",
+      "paleta": ["#4B3FA0", "#2E8FA3", "#6B57C2", "#C9487F", "#D49A1E", "#2F6FB0"],
+      "agrupaPor": "nivel anatómico (corteza · tronco y pares · médula · nervio y unión NM · sueño/coma)",
+      "asignatura": "nodo-neurona (número en círculo con anillo + axón con terminal)",
+      "etiquetaRadio": "50%", "vineta": "círculo con anillo doble", "ilustracion": "neuroanatomía (vista ventral/coronal), vías en color, sin rótulos"
+    }
+  }
+}

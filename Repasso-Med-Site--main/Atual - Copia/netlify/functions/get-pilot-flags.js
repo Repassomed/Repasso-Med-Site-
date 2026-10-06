@@ -3,16 +3,25 @@
    Layout V2 · Fase B1 — GATE DO PILOTO (servidor)
 
    O que faz
-     Recebe o JWT do aluno logado e responde, para UMA matéria, três
-     flags independentes: { layout, audio, pen }. Hoje só `layout` é
-     consumido (Fase B1); `audio` e `pen` existem para manter o contrato
-     das fases seguintes e ficam `false` enquanto a variável de ambiente
-     própria não for preenchida.
+     Recebe o JWT do aluno logado e responde, para UMA matéria, flags
+     independentes: { layout, audio, pen, visual }. `layout` (Fase B1) e
+     `visual` (sistema visual de matérias: tema aprovado de Semiología II,
+     rm-materia-sistema.js) são consumidos hoje; `audio` e `pen` existem
+     para manter o contrato das fases seguintes e ficam `false` enquanto a
+     variável de ambiente própria não for preenchida.
+
+     `visual` é uma CAMADA SOBRE o Layout V2: só vale para quem também tem
+     `layout`. Variável própria RM_PILOT_VISUAL_UIDS:
+       · não definida → segue `layout` (a conta do piloto já vê o tema);
+       · definida     → só os UIDs da lista (use um valor que não case com
+                        nenhum UID, ex. «-», para apagar SÓ o visual novo
+                        sem tirar o Layout V2 — kill switch do tema).
 
    Quem é piloto
      Decidido por UID AUTENTICADO, lido de variáveis de ambiente do
      Netlify (o UID NUNCA entra no repositório):
-       RM_PILOT_LAYOUT_UIDS · RM_PILOT_AUDIO_UIDS · RM_PILOT_PEN_UIDS
+       RM_PILOT_LAYOUT_UIDS · RM_PILOT_AUDIO_UIDS · RM_PILOT_PEN_UIDS ·
+       RM_PILOT_VISUAL_UIDS (opcional, ver acima)
      (lista separada por vírgula). Não usa profiles.is_admin, não usa
      e-mail, não usa study_tools_beta, não usa BETA_UIDS da caneta.
      A matéria do piloto é fixa no código: semiologia-ii.
@@ -50,12 +59,13 @@ function resp(flags, reason) {
       slug: PILOT_SLUG,
       layout: !!flags.layout,
       audio:  !!flags.audio,
-      pen:    !!flags.pen
+      pen:    !!flags.pen,
+      visual: !!flags.visual
     })
   };
 }
 
-const NEGADO = { layout: false, audio: false, pen: false };
+const NEGADO = { layout: false, audio: false, pen: false, visual: false };
 
 exports.handler = async function (event) {
   try {
@@ -73,6 +83,8 @@ exports.handler = async function (event) {
     const uidsLayout = lista(process.env.RM_PILOT_LAYOUT_UIDS);
     const uidsAudio  = lista(process.env.RM_PILOT_AUDIO_UIDS);
     const uidsPen    = lista(process.env.RM_PILOT_PEN_UIDS);
+    const visualDef  = process.env.RM_PILOT_VISUAL_UIDS !== undefined;     // definida (mesmo vazia) = lista própria; ausente = segue `layout`
+    const uidsVisual = lista(process.env.RM_PILOT_VISUAL_UIDS);
     if (!uidsLayout.length && !uidsAudio.length && !uidsPen.length) return resp(NEGADO, 'denied');
 
     // quem é o dono do token: só o Supabase sabe (nunca confiar no cliente)
@@ -89,6 +101,7 @@ exports.handler = async function (event) {
       audio:  uidsAudio.indexOf(uid) !== -1,
       pen:    uidsPen.indexOf(uid) !== -1
     };
+    flags.visual = flags.layout && (visualDef ? uidsVisual.indexOf(uid) !== -1 : true);   // camada sobre o Layout V2: nunca sem `layout`
     return resp(flags, flags.layout || flags.audio || flags.pen ? 'pilot' : 'denied');
   } catch (e) {
     // nada de detalhe no corpo; o log fica só no servidor

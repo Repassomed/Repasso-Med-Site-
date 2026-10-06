@@ -22,17 +22,20 @@
        por UID autenticado) dentro do boot, que falha FECHADO — sem manifesto
        autorizado nada aparece, nada é baixado e nenhum rm-audio.js/css carrega.
        Mesmo gate do Layout: só semiologia-ii e só com `layout === true`.
+     · SISTEMA VISUAL (ligação, nada mais): DEPOIS de o Layout V2 anexar com sucesso e SÓ se o servidor também respondeu `visual === true`,
+       carrega rm-materia-sistema.css/js e chama RMSistema.attach(); ao desativar, RMSistema.detach(). Falha FECHADA: sem `visual`, ou
+       qualquer erro, a matéria fica exatamente como o Layout V2 já a deixava (o sistema nunca derruba o layout). Aqui não há UID nem lista.
    ===================================================================== */
 (function () {
   'use strict';
   if (window.RMPilot) return;                         // idempotente
 
   var SLUG = 'semiologia-ii';                         // piloto: uma matéria só
-  var VER  = '2026100202';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
+  var VER  = '2026100601';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
   var BASE = 'assets/';
   var COOLDOWN_MS = 30000;                            // depois de uma falha, não insistir
 
-  var st = { flags: null, asking: null, lastFail: 0, loading: null, loaded: false };
+  var st = { flags: null, asking: null, lastFail: 0, loading: null, loaded: false, sisLoading: null };
 
   function tabAtiva() {
     return document.querySelector('#materias-container > .tab-content.active[id^="tab-"]');
@@ -72,7 +75,7 @@
         return r.json();
       }).then(function (j) {
         var ok = !!(j && j.slug === SLUG && j.layout === true);
-        st.flags = { layout: ok };
+        st.flags = { layout: ok, visual: ok && j.visual === true };
         return st.flags;
       });
     }).catch(function () {
@@ -113,7 +116,27 @@
     return st.loading;
   }
 
+  /* Sistema visual: módulo + CSS próprios, carregados uma vez, SÓ depois do layout e SÓ com `visual`. Falha ⇒ nada muda (o layout fica). */
+  function carregarSistema() {
+    if (window.RMSistema) return Promise.resolve(true);
+    if (st.sisLoading) return st.sisLoading;
+    st.sisLoading = css(BASE + 'rm-materia-sistema.css?v=' + VER)
+      .then(function () { return js(BASE + 'rm-materia-sistema.js?v=' + VER); })
+      .then(function () { return !!window.RMSistema; })
+      .catch(function () { return false; })
+      .then(function (r) { st.sisLoading = null; return r; });
+    return st.sisLoading;
+  }
+  function ligarSistema(n, tab) {
+    return carregarSistema().then(function (ok) {
+      if (!ok || n !== emVoo || tabAtiva() !== tab || !window.RMLayout || !window.RMSistema) return;
+      try { window.RMSistema.attach(tab, SLUG); }
+      catch (e) { try { window.RMSistema.detach(); } catch (e2) {} }       // o layout fica; só o tema sai
+    });
+  }
+
   function desativar() {
+    try { if (window.RMSistema) window.RMSistema.detach(); } catch (e) {}      // primeiro o tema (só atributos/UI própria), depois o áudio, por fim o shell
     try { if (window.RMAudioBoot) window.RMAudioBoot.stop(); } catch (e) {}      // primeiro o áudio (pausa, guarda a posição, destrói), depois o shell
     try { if (st.loaded && window.RMLayout) window.RMLayout.detach(); } catch (e) {}
   }
@@ -142,6 +165,7 @@
         if (!ok || n !== emVoo || tabAtiva() !== tab) return;
         try { window.RMLayout.attach(tab); }
         catch (e) { try { window.RMLayout.detach(); } catch (e2) {} return; }   // qualquer erro: volta ao normal (e SEM áudio)
+        if (f.visual) ligarSistema(n, tab);
         ligarAudio(n, tab);
       });
     });
