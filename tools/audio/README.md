@@ -12,7 +12,12 @@ Os 4 áudios comprimidos (`.m4a`) estão na pasta **Audiobooks** do Drive: <http
 Cria o bucket **privado** `audiobooks` (30 MiB, só M4A) e a barreira RESTRICTIVE; falha fechada, reversível (`..._rollback.sql`). Hoje o bucket **ainda não existe** no projeto.
 
 1. **Baixe a pasta do Drive** (botão direito ▸ *Fazer download* ▸ vem como `.zip`). Pode extrair ou deixar o `.zip`. Nomes com ` (1)` são aceitos.
-2. **Pré-requisitos:** Python 3.10+ (python.org, *Add to PATH*) e o **checkout atualizado** do repositório (`git pull`; precisa da matéria para listar os blocos).
+2. **Pré-requisitos (uma vez):** Python 3.10+ (python.org, *Add to PATH*), **Node.js LTS** (nodejs.org; usado só na conferência) e **Git**.
+   **Obter os scripts** (clone parcial, ≈ 2 MB, só o que o fluxo usa — scripts, a matéria para listar os blocos e o validador do servidor):
+   ```powershell
+   git clone --depth 1 --filter=blob:none --sparse --branch claude/audiobooks-publicar-storage https://github.com/Repassomed/Repasso-Med-Site-.git "$env:USERPROFILE\repasso-audio"; cd "$env:USERPROFILE\repasso-audio"; git sparse-checkout set --no-cone "/tools/audio/" "/Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html" "/Repasso-Med-Site--main/Atual - Copia/netlify/functions/_audio/" "/Repasso-Med-Site--main/Atual - Copia/assets/rm-audio.js"
+   ```
+   Para atualizar depois: `cd "$env:USERPROFILE\repasso-audio"; git pull`. Todos os comandos abaixo rodam a partir dessa pasta.
 3. **Comando 1 — converter (se preciso) e gerar amostras** (PowerShell, na raiz do checkout; ≈ minutos, sem modelo de transcrição):
    ```powershell
    powershell -ExecutionPolicy Bypass -File tools\audio\rodar_local.ps1 -Pasta "C:\Users\VOCE\Downloads\Audiobooks"     # ou  -Zip "C:\...\Audiobooks.zip"

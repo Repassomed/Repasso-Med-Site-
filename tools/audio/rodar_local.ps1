@@ -85,6 +85,8 @@ try {
     Nativo $Py @('-m', 'pip', 'install', '--quiet', '--disable-pip-version-check', '-r', $ReqT) 'instalação das dependências de transcrição (pip)'
   }
 
+  if (-not (Get-Command node -ErrorAction SilentlyContinue)) { Write-Host 'AVISO: Node.js não encontrado. Esta etapa funciona sem ele, mas o passo de CONFERÊNCIA (enviar_local.ps1) precisa: instale o Node.js LTS (nodejs.org) antes dele.' -ForegroundColor Yellow }
+
   # 4) modelo de transcrição (só com -ComTranscricao; ≈ 640 MB, uma vez só)
   $Modelo = Join-Path $TrabalhoAbs 'sherpa-onnx-whisper-small'
   $Proc = Join-Path $Aqui 'processar_masters.py'
