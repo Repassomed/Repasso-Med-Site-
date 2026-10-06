@@ -4,25 +4,41 @@
 Piloto restrito: José × Semiología II. Nada aqui publica, envia ao Storage, mexe no Supabase ou libera alunos.
 
 <!-- FLUXO-JOSE:INICIO -->
-## 1. Fluxo do José (instruções atuais)
+## 1. Fluxo do José — do ZIP do Drive ao Storage (caminho curto; nada é entregue ao Claude)
 
-Os 4 áudios comprimidos (`.m4a`) estão na pasta **Audiobooks** do Drive: <https://drive.google.com/drive/folders/1APjpeMTDGrBzytbZSKcsxi704PniIEmT>
-(Motivo de Consulta, EPOC, Síndrome Parenquimatoso, Síndrome Pleural — 15,7 a 36,8 MB cada). **Nada precisa ser público nem enviado um a um pelo chat.**
+Os 4 áudios comprimidos (`.m4a`) estão na pasta **Audiobooks** do Drive: <https://drive.google.com/drive/folders/1APjpeMTDGrBzytbZSKcsxi704PniIEmT>. **Nada precisa ser público.** Os masters nunca são alterados nem sobem.
 
-1. **Baixe a pasta inteira em lote** no navegador (Drive ▸ botão direito na pasta ▸ *Fazer download*): vem como `.zip`. Pode extrair para uma pasta (ex.: `C:\Users\VOCE\Downloads\Audiobooks`) **ou deixar o `.zip`** — o ZIP é opcional. Nomes com ` (1)` são aceitos.
-2. **Pré-requisitos (uma vez):** Python 3.10+ (python.org, marcando *Add to PATH*) · espaço livre para o modelo de transcrição (≈ 640 MB baixados uma vez) e o ambiente Python · o **checkout do repositório** (ou só o arquivo `semiologia-ii.html`; ver §3).
-3. **Um comando** (PowerShell, na raiz do checkout; troque os caminhos):
+**Uma vez só (antes do primeiro envio) — 1 clique:** no Supabase (projeto do site) ▸ **SQL Editor** ▸ colar o conteúdo de `Repasso-Med-Site--main/Atual - Copia/supabase/migrations/20260930_01_audiobooks_bucket_privado.sql` ▸ **Run**.
+Cria o bucket **privado** `audiobooks` (30 MiB, só M4A) e a barreira RESTRICTIVE; falha fechada, reversível (`..._rollback.sql`). Hoje o bucket **ainda não existe** no projeto.
+
+1. **Baixe a pasta do Drive** (botão direito ▸ *Fazer download* ▸ vem como `.zip`). Pode extrair ou deixar o `.zip`. Nomes com ` (1)` são aceitos.
+2. **Pré-requisitos (uma vez):** Python 3.10+ (python.org, *Add to PATH*), **Node.js LTS** (nodejs.org; usado só na conferência) e **Git**.
+   **Obter os scripts** (clone parcial, ≈ 2 MB, só o que o fluxo usa — scripts, a matéria para listar os blocos e o validador do servidor):
    ```powershell
-   powershell -ExecutionPolicy Bypass -File tools\audio\rodar_local.ps1 -Pasta "C:\Users\VOCE\Downloads\Audiobooks"
-   # ou, sem extrair, direto do ZIP baixado:   ... -Zip "C:\Users\VOCE\Downloads\Audiobooks-20260101.zip"     (-Pasta e -Zip podem ser usados juntos)
-   # fora do checkout (pacote): acrescente  -Materia "C:\caminho\semiologia-ii.html"
+   git clone --depth 1 --filter=blob:none --sparse --branch claude/audiobooks-publicar-storage https://github.com/Repassomed/Repasso-Med-Site-.git "$env:USERPROFILE\repasso-audio"; cd "$env:USERPROFILE\repasso-audio"; git sparse-checkout set --no-cone "/tools/audio/" "/Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html" "/Repasso-Med-Site--main/Atual - Copia/netlify/functions/_audio/" "/Repasso-Med-Site--main/Atual - Copia/assets/rm-audio.js"
    ```
-   O script cria o ambiente Python, instala as dependências, baixa o modelo (1ª vez), confere tudo e processa. **Para na primeira falha** (código ≠ 0) e diz como retomar: corrigir e rodar o **mesmo comando** (o que já está pronto é reaproveitado; cada execução usa uma pasta nova `execucao-<UTC>/`). Só escreve «Pronto» depois de conferir as saídas.
-   Linux/macOS: `bash tools/audio/rodar_local.sh <pasta-dos-m4a> <pasta-de-trabalho> <pasta-do-modelo>`.
-4. **Revise** `execucao-…\RELATORIO-REAL.md` (por áudio: derivado recomendado e motivo, tamanho/bitrate, alternativas, pendências, vínculo proposto com minutagem) e **ouça** `execucao-…\tratados\amostras\` a 1×, 2× e 2,5×.
-5. **Devolva** o `execucao-…-retorno.zip` (criado ao lado da pasta; relatórios, vínculos, inventário e transcrições; **sem áudio**). Com os trechos de escuta: acrescente `-ComAmostras` (ou rode `python tools\audio\empacotar_retorno.py --execucao <pasta> --com-amostras`). O tamanho real é impresso ao final.
+   Para atualizar depois: `cd "$env:USERPROFILE\repasso-audio"; git pull`. Todos os comandos abaixo rodam a partir dessa pasta.
+3. **Comando 1 — converter (se preciso) e gerar amostras** (PowerShell, na raiz do checkout; ≈ minutos, sem modelo de transcrição):
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File tools\audio\rodar_local.ps1 -Pasta "C:\Users\VOCE\Downloads\Audiobooks"     # ou  -Zip "C:\...\Audiobooks.zip"
+   ```
+   Converte **só quando há benefício** (acima de 30 MiB, não AAC-LC, não mono ou > 96 kb/s); senão reaproveita o arquivo sem perda. Gera derivados + **amostras de escuta** (trechos de ≈ 25 s do master e de cada cópia a 1×, 2× e 2,5×) + `RELATORIO-REAL.md` (tamanho, bitrate, STOI, recomendação por áudio).
+4. **Ouça as amostras** (`execucao-…\tratados\amostras\`) e, **para cada áudio**, rode **um** comando (a linha pronta está no `RELATORIO-REAL.md`):
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File tools\audio\aprovar_local.ps1 -Audio epoc -Bloco s2-b03 -Escutei
+   ```
+   `-Audio` = o id (ou parte do nome) do relatório · `-Bloco` = o bloco que você **ouviu** · `-Escutei` = a sua aprovação (sem ele só grava a proposta). Se o relatório disser «NÃO APROVADA», acrescente `-Kbps 64` depois de ouvir. Dois áudios no mesmo bloco: acrescente `-Ordem 2`.
+   Só esse comando marca `escuta_humana_ok`; nada é automático.
+5. **Comando 2 — conferir e enviar:**
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File tools\audio\enviar_local.ps1            # conferência (dry-run): monta o manifesto e confere os arquivos
+   powershell -ExecutionPolicy Bypass -File tools\audio\enviar_local.ps1 -Enviar    # envia ao bucket privado
+   ```
+   O `-Enviar` pede **uma vez**, oculta, a chave `service_role` (Supabase ▸ Project Settings ▸ API ▸ *service_role* ▸ Reveal). Ela fica só na memória do processo; **nunca** no chat, em arquivo ou em log. Confere bucket (privado/30 MiB/M4A), tamanho após o envio e que a URL pública do objeto **não** abre; não sobrescreve.
+6. **Publicar para você (passo separado, seu):** no Netlify definir `RM_AUDIO_MANIFEST` (conteúdo de `execucao-…\manifesto\manifesto.json`) e `RM_PILOT_AUDIO_UIDS` (seu UID) e fazer novo deploy. Enviar ao Storage **não** publica: sem essas variáveis ninguém vê nada.
 
-Status: o fluxo foi validado em **Linux** (testes automatizados + PowerShell 7 em Linux com áudios sintéticos). **Não foi testado em Windows** nem com os 4 áudios reais; `escuta_humana_ok` é sempre `false` até você ouvir e decidir.
+**Transcrição é opcional** (`-ComTranscricao`: baixa o modelo de ≈ 640 MB e propõe o bloco pelo conteúdo); o padrão decide o bloco pela sua escuta. Se algo falhar, os scripts param com a mensagem do motivo; rode o mesmo comando de novo.
+Status: validado em **Linux** (testes automatizados + PowerShell 7 em Linux, áudios **sintéticos**, Storage **falso**). **Não foi testado em Windows**, nem com os 4 áudios reais, nem contra o Supabase real.
 <!-- FLUXO-JOSE:FIM -->
 
 ## 2. Ferramentas
@@ -53,16 +69,34 @@ python3 -m unittest discover -s tools/audio -p "test_*.py"   # testes (master si
   cópia idêntica = deduplicada e registrada; execução isolada `execucao-<UTC>/`; entrada vazia = erro claro; `--janela`/`--passo` > 0. **Nunca apaga nada** (não existe mais `--limpar`): a saída tem de ser pasta nova/vazia e não pode se sobrepor às entradas.
 * **Derivado só com benefício:** reencoda se > 30 MiB (limite do bucket), não AAC-LC, não mono ou > 96 kb/s; senão reaproveita ou remux com faststart (sem perda). O relatório mostra o derivado **recomendado** (não o primeiro), o motivo, tamanho/bitrate reais, alternativas e, se nenhuma passar os critérios, **NÃO APROVADA**.
 * **transcrever.py:** ASR local (Whisper small, espanhol). Por padrão **amostrada** (rotulada); `--completo` transcreve tudo. Cobertura = **união** das janelas (sem dupla contagem) e, separada, a cobertura **com texto** reconhecido.
+* **aprovar_local.ps1 (→ aprovar_vinculos.py) / publicar_lote.py / enviar_storage.py:** aprovação humana por áudio → manifesto → conferência → upload ao bucket privado (dry-run por padrão; chave só por variável de ambiente; sem sobrescrever; confere tamanho e a negação da URL pública). Reaproveitam montar_manifesto e verificar_upload.
 * **empacotar_retorno.py:** ZIP pequeno de retorno (lista fixa de arquivos; nunca masters/derivados). **empacotar_pacote.py:** gera o pacote de scripts (§3).
 * **montar_manifesto.py / verificar_upload.py:** etapas posteriores (manifesto candidato e conferência antes do upload); ficam no checkout, dependem do site; não enviam nada.
 
-## 3. Pacote para levar (opcional)
+## 3. Pacote de scripts (opcional, só processamento)
 
-`python tools/audio/empacotar_pacote.py --saida ~/repasso-audiobooks-local.zip` gera um ZIP pequeno com os scripts, `requirements.txt` e o `LEIAME.md` (este §1). **Não contém áudios, credenciais, o modelo de transcrição nem a matéria.**
-O processamento precisa do arquivo da matéria (`semiologia-ii.html`, privado) para vincular por conteúdo: com o **checkout** (`git clone`/`git pull` do branch) ele é achado sozinho; sem checkout, copie só esse arquivo e passe `-Materia`. As etapas posteriores (`montar_manifesto`, `verificar_upload`) exigem o checkout e não vão no pacote.
-Se tiver o checkout, **o pacote é desnecessário**: rode o atalho direto dele.
+`python tools/audio/empacotar_pacote.py --saida ~/repasso-audiobooks-local.zip` gera um ZIP pequeno (scripts, requirements, LEIAME) **sem** áudios, credenciais, modelo nem matéria. Serve só ao **processamento** (comando 1);
+`aprovar_vinculos`, `montar_manifesto` e o envio dependem do **checkout** (matéria e validadores do servidor), então o caminho recomendado é rodar tudo do checkout atualizado e dispensar o pacote.
 
 ## 4. Limites (honestos)
 * STOI/loudness **não substituem a escuta humana** (`escuta_humana_pendente` sempre `true`).
 * Os testes usam um **master sintético** (sinal que imita voz); provam o pipeline, **não** a inteligibilidade de voz real.
 * Os quatro masters reais **ainda não foram processados, ouvidos nem aprovados**; nenhuma duração/bitrate/vínculo real é afirmado aqui.
+
+## 5. Custo e limites previstos (confira no painel; valores do plano Free conforme meu conhecimento, não verificados na documentação)
+
+| Item | Valor |
+|---|---|
+| Limite por arquivo no bucket `audiobooks` | **30 MiB** (31.457.280 B), só M4A (`audio/mp4`, `audio/x-m4a`), bucket privado — definido pela migration (ainda **não aplicada**; hoje o projeto só tem os buckets `aportes` e `flyers`) |
+| Plano do Supabase (organização «Nerdicine») | **Free** (lido pelo conector): ≈ 1 GB de Storage, ≈ 5 GB/mês de egress (dividido com Auth/DB), limite global de 50 MB por arquivo |
+| Tamanho dos derivados (medido em fala, 24 s) | AAC-LC mono 32 kHz: 48 kbps ≈ **21 MB/hora** (STOI 1× 0,988) · 64 kbps ≈ 29 MB/hora (0,995) · 32 kbps ≈ 14,5 MB/hora (0,975). Referência 128 kbps estéreo ≈ 55 MB/hora. A 48 kbps cabem ≈ 4,4 h em 30 MiB; a 64 kbps ≈ 3,3 h |
+| Piloto (4 áudios, 108,6 MB de masters) | derivados ≤ 30 MiB cada (teto 120 MiB = ≈ 12 % do 1 GB); se os masters forem 128 kbps estéreo, ≈ 40 MB no total. **Custo: zero no Free.** |
+| Egress | ≈ o tamanho do arquivo por reprodução completa (Range, URL de 10 min, `preload="none"`). Piloto com 1 usuário: desprezível. Escala: 100 alunos × 4 áudios × 14 MB ≈ 5,6 GB por «rodada» — **passa do Free**; o plano Pro (a confirmar: ≈ US$ 25/mês, ≈ 100 GB de Storage, ≈ 250 GB de egress) é decisão sua **antes** de abrir a mais usuários |
+| GitHub Actions / servidores | **nenhum**: a conversão roda no seu Windows; o Netlify só assina URLs |
+
+O STOI a 2×/2,5× **não discrimina** perfis em amostras tão curtas (valores não monotônicos): quem decide o perfil é a sua escuta das amostras. Os números acima vêm de um trecho de fala **em inglês** de 24 s (proxy, não os seus áudios); os reais serão medidos pelo comando 1.
+
+## 6. Para repetir nas outras matérias
+
+`processar_masters`/`rodar_local` e `enviar_storage` já são independentes da matéria (derivados, amostras, envio por `path`). **Hoje o piloto é só `semiologia-ii`:** o servidor (`netlify/functions/_audio/lib.js`, `PILOT_SLUG`), `montar_manifesto.py`/`verificar_upload.py` (prefixo `semiologia-ii/`, blocos da matéria) e o player (restrito ao seu UID) precisam de uma PR própria
+para aceitar outro `subject_slug` — **não feita aqui**. Depois do piloto validado, repetir = mesmo ZIP → comando 1 → aprovar → comando 2, trocando matéria e prefixo.

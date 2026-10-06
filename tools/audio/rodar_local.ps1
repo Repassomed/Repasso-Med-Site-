@@ -1,17 +1,19 @@
 ﻿# Processa os masters em lote NA MÁQUINA DO JOSÉ (Windows PowerShell 5.1+ / 7). Um comando:
 #   powershell -ExecutionPolicy Bypass -File tools\audio\rodar_local.ps1 -Pasta "C:\Users\VOCE\Downloads\Audiobooks"
 # Só LÊ os masters. Tudo é gerado FORA do repositório (padrão: %USERPROFILE%\audiobooks-trabalho). Nada é enviado a lugar nenhum.
-# Para a primeira falha e sai com código ≠ 0. Para retomar: corrija o que a mensagem diz e rode O MESMO comando (venv e modelo já prontos são reaproveitados; cada execução usa pasta nova).
+# Caminho curto (padrão): converte só se preciso + gera amostras de escuta; SEM transcrição (sem modelo de 640 MB). Para a primeira falha e sai com código ≠ 0. Para retomar: corrija o que a mensagem diz e rode O MESMO comando (venv e modelo já prontos são reaproveitados; cada execução usa pasta nova).
 # STATUS: escrito e revisado, mas NÃO FOI TESTADO em Windows (só validado em Linux). Se algo falhar, copie a mensagem de erro.
 param(
   [string[]]$Pasta = @(),                                 # pasta(s) com os .m4a (subpastas entram; pode repetir)
   [string]$Zip = '',                                      # OPCIONAL: a pasta do Drive baixada como .zip (extrai sozinho, em lugar seguro, na execução); use -Pasta e/ou -Zip
   [string]$Trabalho = (Join-Path $env:USERPROFILE 'audiobooks-trabalho'),
   [string]$Materia = '',                                  # semiologia-ii.html do checkout (padrão: o do checkout onde este script está)
-  [switch]$Completo,                                      # transcreve o áudio inteiro (bem mais lento)
+  [switch]$ComTranscricao,                                # OPCIONAL: transcreve (baixa o modelo de ≈ 640 MB) para propor o bloco pelo conteúdo; padrão = SEM transcrição (você decide o bloco ouvindo)
+  [switch]$Completo,                                      # (com -ComTranscricao) transcreve o áudio inteiro, bem mais lento
   [switch]$ComAmostras                                    # inclui os trechos de escuta no pacote de retorno
 )
 $ErrorActionPreference = 'Stop'
+$env:PYTHONUTF8 = '1'; $env:PYTHONIOENCODING = 'utf-8'      # console do Windows: nomes e símbolos acentuados sem erro de codificação
 $ProgressPreference = 'SilentlyContinue'
 
 function Falha([string]$Msg) {
@@ -77,32 +79,44 @@ try {
   $Req = Join-Path $Aqui 'requirements.txt'
   if (-not (Test-Path -LiteralPath $Req)) { Falha "falta requirements.txt ao lado deste script ($Aqui)." }
   Nativo $Py @('-m', 'pip', 'install', '--quiet', '--disable-pip-version-check', '-r', $Req) 'instalação das dependências (pip)'
+  if ($ComTranscricao) {
+    $ReqT = Join-Path $Aqui 'requirements-transcricao.txt'
+    if (-not (Test-Path -LiteralPath $ReqT)) { Falha "falta requirements-transcricao.txt ao lado deste script ($Aqui)." }
+    Nativo $Py @('-m', 'pip', 'install', '--quiet', '--disable-pip-version-check', '-r', $ReqT) 'instalação das dependências de transcrição (pip)'
+  }
 
-  # 4) modelo de transcrição (≈ 640 MB, uma vez só)
+  if (-not (Get-Command node -ErrorAction SilentlyContinue)) { Write-Host 'AVISO: Node.js não encontrado. Esta etapa funciona sem ele, mas o passo de CONFERÊNCIA (enviar_local.ps1) precisa: instale o Node.js LTS (nodejs.org) antes dele.' -ForegroundColor Yellow }
+
+  # 4) modelo de transcrição (só com -ComTranscricao; ≈ 640 MB, uma vez só)
   $Modelo = Join-Path $TrabalhoAbs 'sherpa-onnx-whisper-small'
   $Proc = Join-Path $Aqui 'processar_masters.py'
   if (-not (Test-Path -LiteralPath $Proc)) { Falha "falta processar_masters.py ao lado deste script ($Aqui)." }
-  & $Py $Proc --verificar-ambiente --modelo $Modelo --materia $Materia *> $null
-  $modeloOk = ($LASTEXITCODE -eq 0)
-  if (-not $modeloOk -and -not (Test-Path -LiteralPath (Join-Path $Modelo 'small-tokens.txt'))) {
-    Write-Host '== 3/5 baixando o modelo de transcrição (≈ 640 MB, só na primeira vez) =='
-    $Tar = Join-Path $TrabalhoAbs 'whisper-small.tar.bz2'
-    if (-not (Get-Command tar -ErrorAction SilentlyContinue)) { Falha 'tar.exe não encontrado (vem com o Windows 10/11 recentes). Extraia manualmente o modelo em -Trabalho.' }
-    try { Invoke-WebRequest -Uri 'https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-small.tar.bz2' -OutFile $Tar -UseBasicParsing }
-    catch { Falha "download do modelo: $($_.Exception.Message)" }
-    if ((Get-Item -LiteralPath $Tar).Length -lt 100MB) { Remove-Item -LiteralPath $Tar -Force; Falha 'o download do modelo veio incompleto (< 100 MB); tente de novo.' }
-    Nativo 'tar' @('-xjf', $Tar, '-C', $TrabalhoAbs) 'extração do modelo (tar)'
+  if ($ComTranscricao) {
+    & $Py $Proc --verificar-ambiente --modelo $Modelo --materia $Materia *> $null
+    $modeloOk = ($LASTEXITCODE -eq 0)
+    if (-not $modeloOk -and -not (Test-Path -LiteralPath (Join-Path $Modelo 'small-tokens.txt'))) {
+      Write-Host '== 3/5 baixando o modelo de transcrição (≈ 640 MB, só na primeira vez) =='
+      $Tar = Join-Path $TrabalhoAbs 'whisper-small.tar.bz2'
+      if (-not (Get-Command tar -ErrorAction SilentlyContinue)) { Falha 'tar.exe não encontrado (vem com o Windows 10/11 recentes). Extraia manualmente o modelo em -Trabalho.' }
+      try { Invoke-WebRequest -Uri 'https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-small.tar.bz2' -OutFile $Tar -UseBasicParsing }
+      catch { Falha "download do modelo: $($_.Exception.Message)" }
+      if ((Get-Item -LiteralPath $Tar).Length -lt 100MB) { Remove-Item -LiteralPath $Tar -Force; Falha 'o download do modelo veio incompleto (< 100 MB); tente de novo.' }
+      Nativo 'tar' @('-xjf', $Tar, '-C', $TrabalhoAbs) 'extração do modelo (tar)'
+    }
+    Write-Host '== 4/5 conferindo ambiente (Python, dependências, ffmpeg, modelo íntegro, matéria) =='
+    Nativo $Py @($Proc, '--verificar-ambiente', '--modelo', $Modelo, '--materia', $Materia) 'verificação do ambiente/modelo'
+  } else {
+    Write-Host '== 4/5 conferindo ambiente (Python, dependências, ffmpeg, matéria; sem transcrição) =='
+    Nativo $Py @($Proc, '--verificar-ambiente', '--sem-transcricao', '--materia', $Materia) 'verificação do ambiente'
   }
-  Write-Host '== 4/5 conferindo ambiente (Python, dependências, ffmpeg, modelo íntegro, matéria) =='
-  Nativo $Py @($Proc, '--verificar-ambiente', '--modelo', $Modelo, '--materia', $Materia) 'verificação do ambiente/modelo'
 
   # 5) processamento
-  Write-Host '== 5/5 processando (pode levar bastante tempo; o modelo roda na CPU) =='
+  Write-Host '== 5/5 processando (conversão + amostras; com -ComTranscricao pode levar bastante tempo, o modelo roda na CPU) =='
   $ArgsPy = @($Proc)
   foreach ($p in $Pasta) { $ArgsPy += @('--pasta', $p) }
   if ($Zip) { $ArgsPy += @('--zip', $Zip) }
-  $ArgsPy += @('--trabalho', $TrabalhoAbs, '--modelo', $Modelo, '--materia', $Materia)
-  if ($Completo) { $ArgsPy += '--completo' }
+  $ArgsPy += @('--trabalho', $TrabalhoAbs, '--materia', $Materia)
+  if ($ComTranscricao) { $ArgsPy += @('--modelo', $Modelo); if ($Completo) { $ArgsPy += '--completo' } } else { $ArgsPy += '--sem-transcricao' }
   Nativo $Py $ArgsPy 'processamento dos áudios'
 
   # só diz "Pronto" depois de CONFERIR as saídas
@@ -116,7 +130,7 @@ try {
   Nativo $Py $ArgsRet 'geração do pacote de retorno'
   Write-Host ''
   Write-Host "Pronto. Resultados: $($Exec.FullName)" -ForegroundColor Green
-  Write-Host "Leia RELATORIO-REAL.md, ouça tratados\amostras\ e devolva o ZIP '*-retorno.zip' que está ao lado dessa pasta (sem masters, sem derivados). Nada foi enviado; escuta_humana_ok continua false."
+  Write-Host "Próximo: ouça tratados\amostras\ (1x, 2x e 2,5x), leia RELATORIO-REAL.md e, para cada áudio, rode o comando 'aprovar_local.ps1' que o relatório mostra. Depois: enviar_local.ps1. Nada foi enviado; escuta_humana_ok continua false."
   exit 0
 }
 catch { Falha $_.Exception.Message }

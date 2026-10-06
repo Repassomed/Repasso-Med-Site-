@@ -30,6 +30,15 @@ class T(unittest.TestCase):
         self.assertTrue(all(i['ready'] is True and i['path'] == f"semiologia-ii/{i['audio_id']}.m4a" and i['duration'] == 300 for i in itens))
         self.assertNotIn('http', json.dumps(itens)); self.assertNotIn('token', json.dumps(itens).lower())
 
+    def test_sem_node_erro_claro_e_nada_gerado(self):
+        real = M.shutil.which
+        try:
+            M.shutil.which = lambda n: None
+            e, itens, plano = M.montar(rel(), tudo(), BLOCOS)
+        finally:
+            M.shutil.which = real
+        self.assertTrue(any('Node.js não encontrado' in x for x in e)); self.assertFalse(any('recusou' in x for x in e))
+
     def test_sem_confirmacao_nao_gera(self):
         for kw in ({'vinculo_confirmado': False}, {'confirmado_por': 'nome-do-arquivo'}, {'escuta_humana_ok': False}):
             e, itens, _ = M.montar(rel(), tudo(**kw), BLOCOS)

@@ -12,7 +12,7 @@ vinculos.json = lista de objetos (um por áudio):
    "order": 3, "version": "v1", "kbps": 48,                       # kbps opcional: sem ele usa o recomendado do relatório
    "vinculo_confirmado": true, "confirmado_por": "escuta"|"transcricao", "escuta_humana_ok": true}
 """
-import argparse, json, os, re, subprocess, sys
+import argparse, json, os, re, shutil, subprocess, sys
 
 RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 SITE = os.path.join(RAIZ, 'Repasso-Med-Site--main', 'Atual - Copia')
@@ -91,6 +91,8 @@ def montar(relatorio, vinculos, blocos):
         env = json.dumps({'semiologia-ii': itens}, ensure_ascii=False, separators=(',', ':'))
         if len(env.encode('utf-8')) > LIMITE_ENV:
             erros.append(f'manifesto com {len(env.encode("utf-8"))} bytes passa do limite seguro de {LIMITE_ENV} (variável do Netlify)')
+        elif shutil.which('node') is None:
+            erros.append('Node.js não encontrado: ele roda o MESMO leitor do servidor para validar o manifesto. Instale o Node.js LTS (nodejs.org), reabra o PowerShell e rode de novo; nada foi enviado.')
         elif validar_com_o_servidor(itens) != len(itens):
             erros.append('o leitor do servidor/validador do motor recusou algum item (campo inválido, texto parecido com URL/arquivo etc.)')
     return erros, itens, plano

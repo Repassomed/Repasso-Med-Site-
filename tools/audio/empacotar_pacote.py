@@ -14,7 +14,7 @@ sys.path.insert(0, AQUI)
 import preparar_audiobooks as P
 
 RAIZ_ZIP = 'repasso-audiobooks-local'
-ARQUIVOS = ['processar_masters.py', 'preparar_audiobooks.py', 'transcrever.py', 'empacotar_retorno.py', 'rodar_local.ps1', 'rodar_local.sh', 'requirements.txt']
+ARQUIVOS = ['processar_masters.py', 'preparar_audiobooks.py', 'transcrever.py', 'empacotar_retorno.py', 'rodar_local.ps1', 'rodar_local.sh', 'requirements.txt', 'requirements-transcricao.txt']
 PROIBIDOS = ('.m4a', '.mp3', '.wav', '.onnx', '.html', '.env', '.pem', '.key')
 SEGREDO = re.compile(r'(eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}|sb_secret_[A-Za-z0-9_-]{10,}|service_role\s*[:=]\s*[\'"]?[A-Za-z0-9._-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{20,})')
 

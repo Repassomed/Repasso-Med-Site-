@@ -1,5 +1,4 @@
-# Dependências do processamento local dos audiobooks (Python 3.10+). O modelo de transcrição NÃO é um pacote pip (ver LEIAME).
-sherpa-onnx
+# Conversão e amostras de escuta (Python 3.10+). Transcrição é opcional: requirements-transcricao.txt (+ modelo, ver README).
 imageio-ffmpeg
 pystoi
 soundfile
