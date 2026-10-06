@@ -359,14 +359,20 @@ var RepassoMed = (function(){
     if (m){ var t = m.textContent.replace(/^[\s—–-]+/, '').trim(); if (t) return t.replace(/BLOCO/gi,'BLOQUE').replace(/UNIDADE/gi,'UNIDAD'); }
     return 'Tema';
   }
+  /* O número do cabeçalho é a posição do bloco na sequência de estudo. Um
+     cierre não é um bloco a mais: numerá-lo faz o aluno procurar um «bloque 20»
+     que não existe. Ele mantém o cabeçalho (para não perder o kicker), mas sem
+     número. */
   function decorateBlock(block, index){
     if (block.dataset.rmBlock) return;
     block.dataset.rmBlock = '1';
     var h2 = block.querySelector('h2');
     if (!h2) return;
+    var role = (block.dataset.rmRole || '').toLowerCase();
+    var semNumero = (role === 'review' || role === 'cierre');
     var head = document.createElement('div');
-    head.className = 'rm-block-head';
-    head.innerHTML = '<span class="rm-block-num">' + pad(index) + '</span>' +
+    head.className = 'rm-block-head' + (semNumero ? ' rm-block-head-sem-num' : '');
+    head.innerHTML = (semNumero ? '' : '<span class="rm-block-num">' + pad(index) + '</span>') +
                      '<span class="rm-block-kicker">' + kickerFromBlock(block) + '</span>';
     h2.parentNode.insertBefore(head, h2);
   }
@@ -402,8 +408,13 @@ var RepassoMed = (function(){
   };
   /* Qual seção é qual: pelo id (a regra do padrão) e, em segundo lugar,
      por palavra do título. Bloco comum não entra aqui — leva o número. */
-  function tocIcon(id, label){
+  function tocIcon(id, label, role){
     var s = (id + ' ' + label).toLowerCase();
+    role = (role || '').toLowerCase();
+    /* ADITIVO: só o papel declarado é novo. Sem ele, a heurística abaixo é a
+       de origin/main, inalterada. */
+    if (role === 'review' || role === 'cierre')                    return TOC_ICONS.brujula;
+    if (role === 'bank')                                           return TOC_ICONS.banco;
     if (/^(banco|prova|simulado|revisao|cuestionario|examen)/.test(id) ||
         /banco de preguntas|banco general|simulacro/.test(s))      return TOC_ICONS.banco;
     if (/flashcard|mazo|tarjeta|ruleta/.test(s))                   return TOC_ICONS.mazo;
@@ -468,7 +479,7 @@ var RepassoMed = (function(){
       var h2 = b.querySelector('h2');
       if (!h2 || !b.id) return;
       var label = h2.textContent.replace(RE_EMOJI, '').replace(/\s+/g, ' ').trim();
-      var ico   = tocIcon(b.id, label);
+      var ico   = tocIcon(b.id, label, b.dataset && b.dataset.rmRole);
       var chip  = ico ? svgIcon(ico) : pad(++n);
       var sub   = kickerFromBlock(b).replace(RE_EMOJI, '').trim();
       var subs  = subtitulos(b);
@@ -520,8 +531,19 @@ var RepassoMed = (function(){
 
   function markRevisao(scope){
     var sections = Array.prototype.slice.call(scope.querySelectorAll(':scope > section'));
+    /* ADITIVO: o papel declarado no HTML (data-rm-role) decide primeiro. Só
+       isso é novo. Quando a seção não declara papel — que é o caso de todas as
+       matérias antigas — vale exatamente a heurística histórica abaixo, letra
+       por letra, para não reclassificar nada que já estava certo.
+       O «revisaoneu» de Neurología é um cierre: tem tabelas e um algoritmo,
+       nenhuma pergunta. Ele sai do banco porque DECLARA data-rm-role="review",
+       não porque o motor deixou de reconhecer as revisões antigas. */
     var isBank = function(s){
       if (!s.id) return false;
+      var role = (s.dataset && s.dataset.rmRole || '').toLowerCase();
+      if (role === 'review' || role === 'cierre') return false;
+      if (role === 'bank') return true;
+      /* ↓ heurística legada, idêntica à de origin/main ↓ */
       if (/^(prova|simulado|revisao|cuestionario|banco)/i.test(s.id)) return true;
       var h2 = s.querySelector('h2');
       return h2 && /banco de quest|prova oficial|avalia|revis|simulado/i.test(h2.textContent);
