@@ -56,11 +56,12 @@ html.rm-sis {
   --rm-p4-note-bg: #FFE27A;
   --rm-ok: #2F7D6A; --rm-ko: #C0392B;
   /* medidas */
-  --rm-hdr-h: 60px;                                     /* faixa (o layout mede o offsetHeight real) */
+  --rm-hdr-h: 56px;                                     /* faixa (o layout mede o offsetHeight real) */
+  --rm-top-h: 44px; --rm-tabs-h: 38px;                  /* cabeçalho GLOBAL do site, compacto só no piloto */
   --rm-sheet-max: 1000px;
   --rm-measure: 780px;
 }
-@media (max-width: 699.98px) { html.rm-sis { --rm-hdr-h: 54px; } }
+@media (max-width: 699.98px) { html.rm-sis { --rm-hdr-h: 52px; --rm-top-h: 42px; --rm-tabs-h: 38px; } }
 
 /* ---------------------------------------------------------------------
    2 · TEMA POR MATÉRIA — só variáveis
@@ -168,6 +169,30 @@ html.rm-sis .rm-sis-pill.is-on { background: var(--rm-gold); color: var(--rm-nav
 @media (max-width: 1099.98px) { html.rm-sis .rm-sis-brand, html.rm-sis .rm-sis-sep { display: none; } }
 @media (max-width: 559.98px) { html.rm-sis .rm-sis-brand, html.rm-sis .rm-sis-sep { display: none; } html.rm-sis .rm-l2-name b { font-size: 13.5px; } }
 html.rm-sis .rm-l2-band button:focus-visible { outline: 3px solid var(--rm-gold); }
+
+
+/* ---------------------------------------------------------------------
+   5-A · ENTRADA COMPACTA (só no piloto): cabeçalho global + abas + faixa da matéria numa pilha curta, com UMA logo
+   O cabeçalho global (marca, «Caja de sugerencias», usuário) e as abas de matérias continuam ali e funcionam (mesmos botões, mesmos ids);
+   só ficam mais baixos. A logo/marca da faixa só aparece quando ela GRUDA no topo (html[data-rm-stuck]) — enquanto o cabeçalho global
+   está à vista, a marca já está nele: nada de duas logos. A faixa continua sendo o único elemento fixo (sticky).
+   --------------------------------------------------------------------- */
+html.rm-sis.rm-l2 .rm-topbar { height: var(--rm-top-h); padding: 0 16px; gap: 10px; }
+html.rm-sis.rm-l2 .rm-topbar img { height: 30px; }
+html.rm-sis.rm-l2 .rm-brand-word b { font-size: 1.02rem; }
+html.rm-sis.rm-l2 .rm-brand-word small { font-size: .52rem; margin-top: .15rem; }
+html.rm-sis.rm-l2 .main-tabs { height: var(--rm-tabs-h); }
+html.rm-sis.rm-l2 .main-tabs-inner { gap: .1rem; }
+html.rm-sis.rm-l2 .main-tab { padding-top: .35rem; padding-bottom: .35rem; font-size: .84rem; }
+html.rm-sis:not([data-rm-stuck]) .rm-l2-band .rm-l2-logo,
+html.rm-sis:not([data-rm-stuck]) .rm-l2-band .rm-sis-brand,
+html.rm-sis:not([data-rm-stuck]) .rm-l2-band .rm-sis-sep { display: none; }
+html.rm-sis[data-rm-stuck] .rm-l2-band .rm-l2-logo { height: 36px; width: 36px; }
+@media (max-width: 699.98px) {
+  html.rm-sis.rm-l2 .rm-topbar { padding: 0 12px; }
+  html.rm-sis.rm-l2 .rm-topbar img { height: 28px; }
+  html.rm-sis.rm-l2 .main-tabs { height: var(--rm-tabs-h); }
+}
 
 /* ---------------------------------------------------------------------
    6 · C-02 · índice lateral L1-COLOR (superfície mais clara da família do tema)

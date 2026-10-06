@@ -30,7 +30,7 @@ const ok = (c, m) => { total++; if (!c) { falhas++; console.log('  ✗ ' + m); }
     p.on('request', r => { if (/rm-materia-sistema/.test(r.url())) pedidos.push(r.url()); });
     await p.route('**/get-pilot-flags*', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(Object.assign({ slug: 'semiologia-ii' }, flags)) }));
     await p.route('https://fonts.googleapis.com/**', r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
-    await p.goto(`${base}/p.html?slug=semiologia-ii&tab=semio2&uid=u1&wait=1500`);
+    await p.goto(`${base}/p.html?slug=semiologia-ii&tab=semio2&uid=d4d215d3-36dd-4efb-8869-bdea5376c648&wait=1500`);
     await p.waitForFunction('window.__ready===true'); await p.waitForTimeout(1200);
     return { p, ctx, errs, pedidos };
   }
@@ -130,9 +130,15 @@ const ok = (c, m) => { total++; if (!c) { falhas++; console.log('  ✗ ' + m); }
     const pill = [...document.querySelectorAll('.rm-sis-pill')].find(x => x.textContent === 'Preguntas'); window.scrollTo(0, 0); await esp(400); pill.click(); await esp(2500);
     const q = document.querySelector('#s2-b01 .quiz-item'); const t = q.getBoundingClientRect().top; r.pill = t > 0 && t < innerHeight;
     r.pos = document.querySelector('.rm-l2-name small').textContent;
+    window.scrollTo(0, 0); await esp(400);
+    const ln = document.querySelector('.rm-l2-block-link[data-target="s2-b07"]'); if (ln.offsetParent === null) { const tg = document.querySelector('.rm-l2-tree-toggle'); if (tg) tg.click(); }
+    ln.click(); await esp(2500);
+    r.lateral = Math.abs(document.getElementById('s2-b07').getBoundingClientRect().top - (document.getElementById('rm-l2-band').offsetHeight + 16)) < 60;
+    r.numLat = ln.querySelector('i').textContent;
     return r;
   });
   ok(nav.card, 'cartão do índice da matéria salta ao bloco (mesmo irPara do layout)');
+  ok(nav.lateral && nav.numLat === '07', `índice lateral: «07» salta ao bloque 07 (numeração do conteúdo: ${nav.numLat})`);
   ok(nav.pill, `pílula «Preguntas» da faixa salta à 1.ª pergunta (posição: «${nav.pos}»)`);
 
   ok(f.errs.length === 0, '0 erros JS (' + f.errs.length + ')');
@@ -150,6 +156,71 @@ const ok = (c, m) => { total++; if (!c) { falhas++; console.log('  ✗ ' + m); }
   ok(JSON.stringify(det.secs) === JSON.stringify(ref.secs) && det.ids === ref.ids && JSON.stringify(det.n) === JSON.stringify(ref.n), 'conteúdo igual ao do layout puro');
   ok(d.errs.length === 0, '0 erros JS (' + d.errs.length + ')');
   await d.ctx.close();
+
+
+  console.log('\n===== 7 · entrada compacta (cabeçalho global + abas + faixa) e controles globais');
+  for (const [w, h, maxTotal] of [[1440, 900, 150], [390, 844, 140]]) {
+    const g = await abrir(w, h, { layout: true, visual: true });
+    const m = await g.p.evaluate(async () => {
+      const esp = ms => new Promise(o => setTimeout(o, ms)); const R = s => { const e = document.querySelector(s); return e && e.getBoundingClientRect(); };
+      const vis = e => !!e && getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0;
+      const r = {};
+      const band = document.getElementById('rm-l2-band').getBoundingClientRect();
+      r.alturaTopo = Math.round(band.bottom);                                   // cabeçalho global + abas + faixa, antes de rolar
+      r.logosVisiveisNoTopo = [...document.querySelectorAll('.rm-topbar img, .rm-l2-band .rm-l2-logo, #materias-container .rm-l2-cover img.logo')].filter(vis).length;
+      r.marcaFaixaOculta = !vis(document.querySelector('.rm-l2-band .rm-sis-brand'));
+      r.globais = { sug: vis(document.getElementById('rm-sug-top')), tabs: [...document.querySelectorAll('.main-tab')].filter(vis).length, user: !!document.getElementById('rm-user'), topbar: vis(document.getElementById('rm-topbar')) };
+      window.scrollTo(0, 1200); await esp(500);
+      const b2 = document.getElementById('rm-l2-band').getBoundingClientRect();
+      r.faixaGruda = Math.round(b2.top) === 0;                                   // sticky: a faixa fica no topo ao rolar
+      r.stuck = document.documentElement.hasAttribute('data-rm-stuck');
+      r.logoGrudada = vis(document.querySelector('.rm-l2-band .rm-l2-logo'));
+      r.logosGrudado = [...document.querySelectorAll('.rm-topbar img, .rm-l2-band .rm-l2-logo')].filter(e => { const b = e.getBoundingClientRect(); return b.bottom > 0 && b.top < innerHeight && vis(e); }).length;
+      window.scrollTo(0, 0); await esp(500);
+      r.voltou = !document.documentElement.hasAttribute('data-rm-stuck');
+      document.getElementById('rm-sug-top').click(); await esp(400);
+      r.sugAbre = !!document.getElementById('rm-sug') && getComputedStyle(document.getElementById('rm-sug')).display !== 'none';
+      return r;
+    });
+    ok(m.alturaTopo <= maxTotal, `${w}×${h}: entrada compacta — faixa termina em ${m.alturaTopo}px (≤ ${maxTotal}; antes ≈ 176)`);
+    ok(m.logosVisiveisNoTopo === 1 && m.marcaFaixaOculta, `${w}×${h}: UMA logo no topo (cabeçalho global); marca da faixa oculta enquanto o global está à vista`);
+    ok(m.globais.topbar && m.globais.sug && m.globais.tabs >= 1 && m.globais.user, `${w}×${h}: controles globais preservados (marca, Caja de sugerencias, usuário, ${m.globais.tabs} abas)`);
+    ok(m.faixaGruda && m.stuck && m.logoGrudada && m.logosGrudado === 1, `${w}×${h}: ao rolar a faixa gruda no topo (sticky) e passa a mostrar a logo — 1 logo à vista`);
+    ok(m.voltou, `${w}×${h}: ao voltar ao topo a marca da faixa some de novo`);
+    ok(m.sugAbre, `${w}×${h}: «Caja de sugerencias» global continua abrindo a gaveta`);
+    ok(g.errs.length === 0, `${w}×${h}: 0 erros JS`);
+    await g.ctx.close();
+  }
+
+  console.log('\n===== 8 · caneta com o sistema ligado (traço de stylus real, âncora e persistência)');
+  { const g = await abrir(1440, 900, { layout: true, visual: true });
+    const t = await g.p.evaluate(async () => {
+      const esp = ms => new Promise(o => setTimeout(o, ms)); const r = { pen: false };
+      const sec = document.getElementById('s2-b04');
+      const alvo = [...sec.querySelectorAll('p')].filter(p => !p.closest('[data-rm-ui]') && p.textContent.length > 150)[2];
+      window.RMLayout.irPara(alvo); await esp(1800);
+      if (window.RMToolsV2.estado && window.RMToolsV2.estado.tool !== 'pen') window.RMToolsV2.escolherFerramenta('pen'); await esp(300);
+      r.tool = window.RMToolsV2.estado && window.RMToolsV2.estado.tool;
+      const b = alvo.getBoundingClientRect();
+      const fire = (ty, x, y, bt) => alvo.dispatchEvent(new PointerEvent(ty, { pointerType: 'pen', pointerId: 9, isPrimary: true, clientX: x, clientY: y, buttons: bt, bubbles: true, cancelable: true, pressure: bt ? .5 : 0 }));
+      fire('pointerover', b.left + 40, b.top + 14, 0); fire('pointerdown', b.left + 40, b.top + 14, 1);
+      for (let i = 1; i <= 18; i++) { fire('pointermove', b.left + 40 + i * 8, b.top + 14 + (i % 4) * 3, 1); await esp(14); }
+      fire('pointerup', b.left + 190, b.top + 20, 0); await esp(900);
+      const svgs = [...document.querySelectorAll('#rm2-ink svg[data-anchor]')];
+      r.svgs = svgs.length; r.paths = svgs.reduce((a, s) => a + s.querySelectorAll('path').length, 0);
+      const an = svgs[0] && svgs[0].getAttribute('data-anchor'); r.anchor = an;
+      if (an) { const [sid, i] = an.split('>'); const lista = [...document.getElementById(sid).querySelectorAll('p,li,h2,h3,h4,h5,table,figure,blockquote')].filter(n => !n.closest('[data-rm-ui]'));
+        r.ancora = lista[+i] === alvo; }
+      r.writes = (window.__writes || []).filter(w => /user_ink_strokes/.test(w)).join(',');
+      window.RMToolsV2.escolherFerramenta('none');
+      return r;
+    });
+    ok(t.tool === 'pen', 'caneta armada (ferramenta = ' + t.tool + ')');
+    ok(t.svgs >= 1 && t.paths >= 1, `traço desenhado (${t.svgs} grupo, ${t.paths} path)`);
+    ok(t.ancora === true, `âncora ${t.anchor} aponta exatamente para o parágrafo escrito (índice igual ao do layout puro)`);
+    ok(/insert:user_ink_strokes/.test(t.writes), 'traço persistido pelo motor da V2 (insert user_ink_strokes — a escrita é do motor original, o sistema não grava nada)');
+    ok(g.errs.length === 0, '0 erros JS');
+    await g.ctx.close(); }
 
   console.log('\n===== 6 · geometria');
   for (const [w, h] of [[320, 640], [390, 844], [768, 1024], [1024, 768], [1440, 900]]) {

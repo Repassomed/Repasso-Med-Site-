@@ -10,8 +10,10 @@ Só a conta piloto, só em `semiologia-ii`. É uma CAMADA sobre o Layout V2:
 2. com `layout` anexa o Layout V2 (como antes); **só se também `visual === true`** carrega `rm-materia-sistema.css/js`;
 3. falha fechada: sem `visual`, erro de rede ou erro de `attach()` ⇒ nada do sistema entra (o layout fica como estava).
 
-`visual` segue `layout`, a menos que exista `RM_PILOT_VISUAL_UIDS` (lista de UIDs). Kill switch só do tema:
-`RM_PILOT_VISUAL_UIDS=-` (nenhum UID casa) — o Layout V2 continua. Kill switch total: esvaziar as variáveis do piloto.
+**`visual` é negado por padrão.** Só vale para quem tem `layout` **e** está em `RM_PILOT_VISUAL_UIDS` (lista própria, obrigatória: variável
+ausente ou vazia ⇒ ninguém vê o tema; ele **não** herda a lista do layout). Para ativar: definir no Netlify
+`RM_PILOT_VISUAL_UIDS=<UID de José>` (o UID nunca entra no repositório). Kill switch só do tema: remover/esvaziar a variável (o Layout V2 continua).
+Teste: `tools/qa/browser-qa/layout/pilot-flags.test.cjs`.
 
 ## Arquivos
 | arquivo | papel |
@@ -19,7 +21,7 @@ Só a conta piloto, só em `semiologia-ii`. É uma CAMADA sobre o Layout V2:
 | `assets/rm-materia-sistema.css` | tokens + tema + 8 componentes; toda regra começa em `html.rm-sis` |
 | `assets/rm-materia-sistema.js` | lê dados reais do DOM, marca capítulos, monta a UI derivada (`[data-rm-ui]`), `attach/detach` |
 | `assets/img/semio2/vig/vb-00…10.webp` | vinhetas/medalhões aprovados (recortes de infografías, 480 px, WebP) |
-| `tools/qa/browser-qa/layout/sistema.test.cjs` | 48 verificações (falha fechada, conteúdo intacto, contagens, detach, funções, geometria) |
+| `tools/qa/browser-qa/layout/sistema.test.cjs` · `pilot-flags.test.cjs` | falha fechada, conteúdo intacto, contagens, detach, funções, geometria, cabeçalho compacto · gate do servidor |
 | `tools/qa/browser-qa/layout/capturas-sistema.cjs` | capturas desktop/tablet/celular |
 
 ## Estrutura do CSS

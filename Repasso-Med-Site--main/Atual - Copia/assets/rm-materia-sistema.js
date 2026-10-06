@@ -487,6 +487,19 @@
 
     S.h.click = aoClicar;
     document.addEventListener('click', S.h.click);
+    /* faixa grudada no topo? (o cabeçalho global já saiu da tela) → só então ela mostra a marca */
+    S.h.stuck = function () {
+      if (!S || S.stuckPend) return;
+      S.stuckPend = true;
+      requestAnimationFrame(function () {
+        if (!S) return; S.stuckPend = false;
+        var g = S.band.getBoundingClientRect().top <= 1;
+        if (g) ROOT.setAttribute('data-rm-stuck', ''); else ROOT.removeAttribute('data-rm-stuck');
+      });
+    };
+    window.addEventListener('scroll', S.h.stuck, { passive: true });
+    window.addEventListener('resize', S.h.stuck);
+    S.h.stuck();
     window.RMModes.onChange(function () { refletir(); });
     /* posição atual (scroll-spy do próprio layout marca aria-current na lateral): só observa */
     try {
@@ -503,12 +516,20 @@
     } catch (e) {}
     refletir();
     if (window.RMLayout.pedirReposicao) window.RMLayout.pedirReposicao();    // as alturas mudaram: a tinta acompanha (API pública, coalescida)
+    remedir();
+  }
+
+  /* as alturas do cabeçalho mudaram (compacto): pede ao layout que meça a faixa de novo (o handler de resize dele só mede) */
+  function remedir() {
+    requestAnimationFrame(function () { try { window.dispatchEvent(new Event('resize')); } catch (e) {} });
   }
 
   function detach() {
     if (!S) { try { ROOT.classList.remove('rm-sis'); ROOT.removeAttribute('data-rm-tema'); } catch (e) {} return; }
     var tab = S.tab;
     try { document.removeEventListener('click', S.h.click); } catch (e) {}
+    try { window.removeEventListener('scroll', S.h.stuck); window.removeEventListener('resize', S.h.stuck); } catch (e) {}
+    ROOT.removeAttribute('data-rm-stuck');
     try { if (S.mo) S.mo.disconnect(); } catch (e) {}
     NODOS.forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });
     ATRS.forEach(function (a) { try { a.e.removeAttribute(a.k); } catch (e) {} });
@@ -518,6 +539,7 @@
     ROOT.classList.remove('rm-sis'); ROOT.removeAttribute('data-rm-tema');
     S = null;
     try { if (window.RMLayout && window.RMLayout.pedirReposicao) window.RMLayout.pedirReposicao(); } catch (e) {}
+    remedir();
   }
 
   window.RMSistema = {
