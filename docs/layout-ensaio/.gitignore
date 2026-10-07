@@ -1,0 +1,4 @@
+# JSON completos por matéria (gerados por ensaio.cjs): NÃO versionados. A evidência essencial vai em resultado-compacto.json (compactar.cjs).
+resultados/
+resultados-corr/
+*.parcial.json
