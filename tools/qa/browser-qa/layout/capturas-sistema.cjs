@@ -35,6 +35,8 @@ const CENAS = {
       await p.route('**/__fonts/**', r => r.fulfill({ status: 200, contentType: 'font/woff2', body: fs.readFileSync(FD + path.basename(new URL(r.request().url()).pathname)) }));
     }
     await p.goto(`${base}/p.html?slug=semiologia-ii&tab=semio2&uid=d4d215d3-36dd-4efb-8869-bdea5376c648&wait=1800`); await p.waitForFunction('window.__ready===true'); await p.waitForTimeout(1800);
+    await p.evaluate(() => { if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo()) window.RMNav.detach(); });     // estas cenas são da leitura CONTÍNUA (PR #446); a navegação por bloco tem capturas-navegacion.cjs
+    await p.waitForTimeout(300);
     await p.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); });
     for (const [nome, sel, off, nth] of cfg.lista) {
       const f = path.join(OUT, `${dev.replace('celular320', 'celular')}-${cfg.w}_${nome}.png`);

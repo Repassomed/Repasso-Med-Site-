@@ -21,7 +21,7 @@ const SITE = path.resolve(__dirname, '../../../../Repasso-Med-Site--main/Atual -
 /* ---------- medidas no navegador ---------- */
 const GEO = () => {
   const R = (e) => { if (!e) return null; const b = e.getBoundingClientRect(); return { l: +b.left.toFixed(1), t: +b.top.toFixed(1), r: +b.right.toFixed(1), b: +b.bottom.toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1) }; };
-  const vis = (e) => !!e && e.offsetParent !== null && getComputedStyle(e).visibility !== 'hidden' && e.getBoundingClientRect().width > 0;
+  const vis = (e) => { if (!e) return false; const c = getComputedStyle(e); return (e.offsetParent !== null || c.position === 'fixed') && c.display !== 'none' && c.visibility !== 'hidden' && e.getBoundingClientRect().width > 0; };
   const q = (s) => document.querySelector(s), H = document.documentElement;
   const aud = q('.rm-audio'), slot = q('#rm-l2-player'), x = q('.rm-sis-aud-x');
   const dk = q('.rm2-box.open'), dkOn = !!dk && getComputedStyle(dk).display !== 'none';
@@ -35,13 +35,22 @@ const GEO = () => {
     vw: H.clientWidth, vh: innerHeight, sw: H.scrollWidth, dock: H.getAttribute('data-rm-dock'), lmode: H.getAttribute('data-rm-lmode'), force: H.getAttribute('data-rm-dock-force'),
     ph: parseFloat(H.style.getPropertyValue('--rm-player-h')), ah: parseFloat(H.style.getPropertyValue('--rm-audio-h')), tema: H.classList.contains('rm-sis'),
     n: document.querySelectorAll('.rm-audio').length, nSlot: document.querySelectorAll('#rm-l2-player').length,
-    aud: aud && !aud.hidden ? R(aud) : null, mode: aud && aud.getAttribute('data-mode'), estado: aud && aud.getAttribute('data-state'), rotulo: cs, slotPen: !!slot && slot.hasAttribute('data-rm-pen'), slotX: !!slot && slot.hasAttribute('data-rm-sis-x'),
+    aud: aud && !aud.hidden && vis(aud) ? R(aud) : null, mode: aud && aud.getAttribute('data-mode'), estado: aud && aud.getAttribute('data-state'), rotulo: cs, slotPen: !!slot && slot.hasAttribute('data-rm-pen'), slotX: !!slot && slot.hasAttribute('data-rm-sis-x'),
     xBtn: vis(x) ? R(x) : null, xExiste: !!x, xExp: x && x.getAttribute('aria-expanded'), ctl, side: R(side), scroll: R(sc), foot: R(foot), band: R(band),
     dock_: dkOn ? R(dk) : null, ultima: last ? R(last) : null, prog: slot ? slot.style.getPropertyValue('--rm-sis-prog') : '',
     cardAtr: H.hasAttribute('data-rm-aud-card'), tools: H.getAttribute('data-rm-tools')
   };
 };
 const geo = (page) => page.evaluate(GEO);
+/* o quadrado/card do alto à direita NÃO cobre nenhum conteúdo visível da folha (texto, tabela, figura, post-it) */
+const SOBRE_TEXTO = () => {
+  const a = document.querySelector('.rm-audio'), x = document.querySelector('.rm-sis-aud-x');
+  const vis = (e) => { if (!e) return null; const c = getComputedStyle(e), r = e.getBoundingClientRect(); return c.display !== 'none' && r.width > 0 ? r : null; };
+  const caixa = vis(a) || vis(x); if (!caixa) return [];
+  const sel = '#tab-semio2 p, #tab-semio2 li, #tab-semio2 h2, #tab-semio2 h3, #tab-semio2 h4, #tab-semio2 table, #tab-semio2 figure, #tab-semio2 .rm-postit';
+  return [...document.querySelectorAll(sel)].filter(e => { if (e.closest('[data-rm-ui]')) return false; const r = e.getBoundingClientRect(); if (r.width === 0 || r.height === 0) return false;
+    return Math.min(r.right, caixa.right) - Math.max(r.left, caixa.left) > 1 && Math.min(r.bottom, caixa.bottom) - Math.max(r.top, caixa.top) > 1; }).map(e => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().left) + ',' + Math.round(e.getBoundingClientRect().top) + ',' + Math.round(e.getBoundingClientRect().right) + ' · ' + e.textContent.slice(0, 24));
+};
 const inter = (a, b) => !!a && !!b && Math.min(a.r, b.r) - Math.max(a.l, b.l) > 0.5 && Math.min(a.b, b.b) - Math.max(a.t, b.t) > 0.5;
 const motor = L.motor;
 
@@ -110,38 +119,48 @@ async function armar(page, mov, t) { await abrirToolbox(page, mov); await tocarU
     const i0 = css.lastIndexOf('/*', css.indexOf('5-D · PLAYER DO AUDIOBOOK')), i1 = css.lastIndexOf('/*', css.indexOf('6 · C-02'));
     ok(i0 > 0 && i1 > i0, 'bloco 5-D encontrado');
     const bloco = css.slice(i0, i1).replace(/\/\*[\s\S]*?\*\//g, '');
-    const seletores = []; bloco.replace(/([^{}]+)\{/g, (m, s) => { s = s.trim(); if (!s || /^@/.test(s) || /^\d+%$/.test(s)) return m; s.split(/,(?![^(]*\))/).forEach(x => seletores.push(x.trim())); return m; });
-    const permitido = /^html\.rm-sis(\.rm-l2)?(\[[^\]]+\])*\s+(#rm-l2-player|\.rm-sis-aud-x|\.rm-l2-side-scroll|\.rm2-box|\.rm2-panel)/;
+    const seletores = []; bloco.replace(/([^{}]+)\{/g, (m, s) => { s = s.trim(); if (!s || /^@/.test(s) || /^\d+%$/.test(s) || /^(from|to)$/.test(s)) return m; s.split(/,(?![^(]*\))/).forEach(x => seletores.push(x.trim())); return m; });
+    const permitido = /^html\.rm-sis(\.rm-l2)?(\[[^\]]+\]|:not\([^)]*\))*\s+(#rm-l2-player|\.rm-sis-aud-x|\.rm-l2-side-scroll|\.rm2-box|\.rm2-panel)|^html\.rm-sis\[data-rm-aud-col\] #materias-container$/;
     const fora = seletores.filter(s => !permitido.test(s));
     ok(seletores.length > 40 && fora.length === 0, `${seletores.length} seletores, todos sob html.rm-sis e restritos ao player/lateral/toolbox`, fora.slice(0, 4));
     ok(!/audio-player|\baudio\b[^_-]|<audio|\.sound|rmfc|quiz|figure|table/.test(seletores.join(' ').replace(/rm-audio/g, '')), 'nenhum seletor menciona auscultação (audio-player / audio), perguntas, flashcards, figuras ou tabelas');
   }
 
   /* =============================== B · desktop (lateral docked) =============================== */
+  /* Desenho do adendo da #453: disco de vinil quase quadrado no ALTO À DIREITA (não mais na lateral esquerda).
+     A  ≥ 1430 px: abre já expandido numa COLUNA reservada à direita (a folha se recentra; o texto mantém a medida);
+     B  < 1430 px: recolhido num quadrado 56×56 no canto (nada se move); o aluno expande sob demanda. */
+  const estiloDisco = (page) => page.evaluate(() => { const t = document.querySelector('.rm-audio [data-a="toggle"]'), b = getComputedStyle(t, '::before'), c = getComputedStyle(t); return { an: b.animationName, rd: c.borderRadius, w: t.getBoundingClientRect().width, h: t.getBoundingClientRect().height, estado: document.querySelector('.rm-audio').getAttribute('data-state') }; });
   for (const [w, h] of [[1440, 900], [1545, 665]]) {
-    sec(`B · desktop ${w}×${h}: card compacto dentro da lateral colorida`);
+    sec(`B · desktop ${w}×${h} (A): disco quase quadrado no alto à direita, em coluna própria; a folha mantém a medida do texto`);
     const { ctx, page, errs, reqs } = await abrir({ w, h });
     const antes = await geo(page);
+    const folhaAntes = await page.evaluate(() => { const c = document.querySelector('#tab-semio2 section.container'), p = c.querySelector('p'); return { w: Math.round(c.getBoundingClientRect().width), pw: Math.round(p.getBoundingClientRect().width), pr: getComputedStyle(document.getElementById('materias-container')).paddingRight }; });
     ok(antes.aud === null && antes.nSlot === 1, 'antes de tocar: o slot existe e o player está fechado (nada ocupa a tela)');
+    ok(reqs.media === 0 && await page.evaluate(() => !document.querySelector('.rm-audio__art, .rm-audio img, #rm-l2-player img, #rm-l2-player [style*="url("]')), 'antes do play: nenhuma mídia/arte do disco carregada (o disco é CSS puro)', reqs);
     await L.tocar(page, 's2-b01-motivo'); await page.waitForTimeout(700);
     let g = await geo(page);
     ok(g.lmode === 'docked' && g.force === 'side' && g.dock === 'side' && g.mode === 'lateral', 'lateral docked: o tema pediu «side» e o motor entrou em modo lateral', { lmode: g.lmode, force: g.force, dock: g.dock, mode: g.mode });
-    ok(g.ph === 0, '--rm-player-h = 0 (a medição do motor publica 0 no modo lateral: nada é reservado nem empurrado)', g.ph);
+    ok(g.ph === 0, '--rm-player-h = 0 (a medição do motor publica 0 no modo lateral: nada é reservado embaixo)', g.ph);
     ok(g.n === 1 && g.nSlot === 1, 'player único (1 .rm-audio, 1 #rm-l2-player)');
-    ok(g.aud && g.aud.l >= 0 && g.aud.r <= g.side.r && g.aud.w <= 264 && g.aud.h <= 200, `card DENTRO da lateral: ${g.aud.w}×${g.aud.h} em x ${g.aud.l}–${g.aud.r} (lateral ${g.side.r})`, g.aud);
-    ok(g.aud.t >= g.band.b && g.aud.b <= g.foot.t - 2, 'card entre a faixa e o rodapé da lateral («Volver arriba»/«Sugerencias» não ficam cobertos)', { aud: g.aud, foot: g.foot });
-    ok(g.scroll.b <= g.aud.t + 1, `a lista do índice termina ACIMA do card (nada do índice fica por trás): lista até ${g.scroll.b}, card desde ${g.aud.t}`);
-    ok(g.scroll.h >= 120, `a lista da lateral continua utilizável (${g.scroll.h} px de altura)`);
-    const folha = await page.evaluate(() => { const c = document.querySelector('#tab-semio2 section.container'); const b = c.getBoundingClientRect(); return { l: b.left }; });
-    ok(g.aud.r <= folha.l, 'o card não invade a folha de leitura (a folha começa depois da lateral)', { cardR: g.aud.r, folhaL: folha.l });
+    const col = await page.evaluate(() => document.documentElement.hasAttribute('data-rm-aud-col'));
+    ok(col && g.slotX, 'A: abre já EXPANDIDO e reserva a coluna direita (data-rm-aud-col)', { col, x: g.slotX });
+    ok(g.aud && g.aud.w >= 196 && g.aud.w <= 212 && g.aud.h <= 250 && g.aud.w / g.aud.h >= 0.8, `card QUASE QUADRADO (${g.aud.w}×${g.aud.h}, razão ${(g.aud.w / g.aud.h).toFixed(2)})`, g.aud);
+    ok(g.aud.t >= g.band.b + 4 && g.aud.t <= g.band.b + 24 && g.aud.r <= g.vw && g.aud.l > g.side.r, `no ALTO À DIREITA: topo ${g.aud.t} (faixa até ${g.band.b}), x ${g.aud.l}–${g.aud.r} de ${g.vw}; à direita da lateral (${g.side.r})`, g.aud);
+    const folha = await page.evaluate(() => { const c = document.querySelector('#tab-semio2 section.container'), p = c.querySelector('p'); const r = c.getBoundingClientRect(); return { l: r.left, r: r.right, w: Math.round(r.width), pw: Math.round(p.getBoundingClientRect().width), pr: getComputedStyle(document.getElementById('materias-container')).paddingRight }; });
+    ok(folha.r <= g.aud.l + 0.5, `a folha termina (${folha.r}) antes do card (${g.aud.l}): nenhum texto por baixo`, { folha, aud: g.aud });
+    ok(folha.pw >= Math.min(780, folhaAntes.pw) - 2, `a MEDIDA do texto se mantém (parágrafo ${folhaAntes.pw} → ${folha.pw} px; folha ${folhaAntes.w} → ${folha.w} px)`, { folhaAntes, folha });
     ok(Math.abs(g.ah - g.aud.h) <= 1, `--rm-audio-h = altura do card (${g.ah} ≈ ${g.aud.h})`);
     ok(/Reproduciendo/.test(g.rotulo), `estado visível: ${g.rotulo}`);
     const hit = await page.evaluate(() => { const a = document.querySelector('.rm-audio').getBoundingClientRect(); const e = document.elementFromPoint(a.left + a.width / 2, a.top + a.height / 2); return !!e && !!e.closest('.rm-audio'); });
     ok(hit, 'o centro do card recebe o toque (nada o cobre)');
     const c = g.ctl;
-    ok(['toggle', 'back', 'fwd', 'restart', 'close', 'rate'].every(k => c[k] && c[k].w >= 43.5 && c[k].h >= 43.5), 'play/pausa, −15, +15, reiniciar, velocidade e fechar: alvos ≥ 44×44', Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v && [v.w, v.h]])));
+    ok(['toggle', 'back', 'fwd', 'restart', 'close', 'rate'].every(k => c[k] && c[k].w >= 43.5 && c[k].h >= 43.5), 'play/pausa (disco), −15, +15, reiniciar, velocidade e fechar: alvos ≥ 44×44', Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v && [v.w, v.h]])));
     ok(c.seek && c.seek.h >= 43.5 && c.seek.w > 150, `barra de posição: ${c.seek && c.seek.w}×${c.seek && c.seek.h} (altura ≥ 44)`);
     ok(c.title && c.time, 'título e progresso (m:ss / m:ss) visíveis');
+    const d = await estiloDisco(page);
+    ok(Math.abs(d.w - d.h) < 1 && d.w >= 64 && /50%|9999|999/.test(d.rd), `o botão play/pausa é o DISCO (${d.w}×${d.h}, raio ${d.rd})`, d);
+    ok(d.estado === 'playing' && /vinyl/.test(d.an), `o disco GIRA só tocando (animação «${d.an}» com estado ${d.estado})`, d);
     const rot = await page.evaluate(() => ({
       reg: document.querySelector('.rm-audio').getAttribute('aria-label'), slot: document.getElementById('rm-l2-player').getAttribute('aria-label'),
       l: [...document.querySelectorAll('.rm-audio [aria-label]')].map(e => e.getAttribute('aria-label')), titulo: document.querySelector('.rm-audio__title').textContent
@@ -152,8 +171,10 @@ async function armar(page, mov, t) { await abrirToolbox(page, mov); await tocarU
     /* ----- funções ----- */
     await page.click('[data-a="toggle"]'); await page.waitForTimeout(500);
     let m = await motor(page); const p0 = m.position;
-    ok(m.state === 'paused', 'pausa pelo botão do card'); g = await geo(page);
+    ok(m.state === 'paused', 'pausa pelo disco'); g = await geo(page);
     ok(/En pausa/.test(g.rotulo), `estado visível na pausa: ${g.rotulo}`);
+    const d2 = await estiloDisco(page);
+    ok(d2.estado === 'paused' && d2.an === 'none', `em pausa o disco PARA (animação «${d2.an}»)`, d2);
     ok(g.ph === 0 && g.aud, 'em pausa o card continua visível e --rm-player-h continua 0');
     await page.click('[data-a="fwd"]'); await page.waitForTimeout(300); m = await motor(page);
     ok(Math.abs(m.position - (p0 + 15)) < 1.5, `+15 s: ${p0.toFixed(1)} → ${m.position.toFixed(1)}`);
@@ -168,26 +189,31 @@ async function armar(page, mov, t) { await abrirToolbox(page, mov); await tocarU
     ok((await motor(page)).rate === 1.5, 'velocidade 1,5×');
     await page.selectOption('.rm-audio__rate', '1'); await page.waitForTimeout(200);
     await page.click('[data-a="toggle"]'); await page.waitForTimeout(700);
-    ok((await motor(page)).state === 'playing', 'play pelo botão do card');
-    /* ----- caneta armada: o card desktop NÃO encolhe ----- */
+    ok((await motor(page)).state === 'playing', 'play pelo disco');
+    /* prefers-reduced-motion: o disco não gira */
+    await page.emulateMedia({ reducedMotion: 'reduce' }); await page.waitForTimeout(200);
+    const dr = await estiloDisco(page); ok(dr.estado === 'playing' && dr.an === 'none', `prefers-reduced-motion: tocando, mas o disco não gira (animação «${dr.an}»)`, dr);
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    /* ----- caneta armada: o card NÃO encolhe e não toca a toolbox ----- */
     await page.evaluate(() => window.RMLayout.irPara(document.querySelector('#s2-b04 .rm-postit'))); await page.waitForTimeout(1500);
     await page.click('#rm2-fab'); await page.waitForTimeout(500); await page.click('.rm2-btn[data-t="pen"]'); await page.waitForTimeout(600);
     g = await geo(page);
     ok(g.slotPen, 'caneta armada (slot recebe data-rm-pen do boot)');
-    ok(['back', 'fwd', 'rate', 'seek', 'restart', 'toggle', 'close'].every(k => g.ctl[k] && g.ctl[k].h >= 43.5), 'com a caneta armada o card da lateral continua COMPLETO (seek, ±15, velocidade, reiniciar)');
+    ok(['back', 'fwd', 'rate', 'seek', 'restart', 'toggle', 'close'].every(k => g.ctl[k] && g.ctl[k].h >= 43.5), 'com a caneta armada o card continua COMPLETO (seek, ±15, velocidade, reiniciar)');
     const tb = await page.evaluate(() => { const r = document.querySelector('.rm2-box').getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; });
-    ok(!inter({ l: g.aud.l, t: g.aud.t, r: g.aud.r, b: g.aud.b }, tb), 'o card não toca a toolbox da direita');
+    ok(!inter({ l: g.aud.l, t: g.aud.t, r: g.aud.r, b: g.aud.b }, tb), 'o card não toca a toolbox da direita', { aud: g.aud, tb });
     m = await motor(page); ok(m.state === 'playing', 'o áudio segue tocando com a caneta armada');
     await fecharToolbox(page, false);
     /* ----- fim da página ----- */
     await L.irAoFim(page); g = await geo(page);
-    ok(g.ultima.b <= g.vh + 0.5 && g.ultima.b > g.vh - 160, `fim da página: a última folha termina em ${g.ultima.b} (janela ${g.vh}) — nada por cima (o card está na lateral)`);
+    ok(g.ultima.b <= g.vh + 0.5 && g.ultima.b > g.vh - 160, `fim da página: a última folha termina em ${g.ultima.b} (janela ${g.vh}) — nada por cima (o card está na coluna da direita)`);
     /* ----- pausa → fecha → retoma ----- */
     await page.click('[data-a="toggle"]'); await page.waitForTimeout(400); const pPausa = (await motor(page)).position;
     await page.click('.rm-audio__close'); await page.waitForTimeout(500);
     g = await geo(page); m = await motor(page);
-    ok(g.aud === null && m.open === false && g.ph === 0 && !g.cardAtr, 'fechar (×): o card some, --rm-player-h = 0 e a reserva da lateral é desfeita');
-    ok(await page.evaluate(() => document.querySelector('.rm-l2-side-scroll').style.marginBottom === '' && getComputedStyle(document.querySelector('.rm-l2-side-scroll')).marginBottom === '0px'), 'a lista da lateral volta a ocupar o espaço todo');
+    const dep = await page.evaluate(() => ({ col: document.documentElement.hasAttribute('data-rm-aud-col'), aud: document.documentElement.hasAttribute('data-rm-aud'), pr: getComputedStyle(document.getElementById('materias-container')).paddingRight }));
+    ok(g.aud === null && m.open === false && g.ph === 0 && !g.cardAtr, 'fechar (×): o card some e --rm-player-h = 0');
+    ok(!dep.col && !dep.aud && dep.pr === folhaAntes.pr, `a coluna reservada é desfeita (padding-right ${dep.pr} = ${folhaAntes.pr})`, dep);
     await page.evaluate(() => document.querySelector('.rm-audio-card[data-audio-id="s2-b01-motivo"]').scrollIntoView({ block: 'center' })); await page.waitForTimeout(400);
     const rotCard = await page.evaluate(() => document.querySelector('.rm-audio-card[data-audio-id="s2-b01-motivo"] button').textContent);
     ok(/^Continuar · \d+:\d\d$/.test(rotCard), `o card do bloco oferece «${rotCard}» (posição guardada)`);
@@ -198,27 +224,63 @@ async function armar(page, mov, t) { await abrirToolbox(page, mov); await tocarU
     ok(errs.length === 0, `${w}: 0 erros JS`, errs);
     await ctx.close();
   }
-  sec('B2 · janelas baixas/estreitas com a lateral docked (1545×665, 1280×720, 1200×700, 1440×560): card inteiro e a lateral ainda mostra o índice');
+
+  sec('B1 · desktop 1280×720 (B): quadrado 56×56 recolhido no canto — a folha NÃO se move; expande sob demanda e reserva a coluna só então');
+  {
+    const { ctx, page, errs } = await abrir({ w: 1280, h: 720 });
+    const folha0 = await page.evaluate(() => { const c = document.querySelector('#tab-semio2 section.container'); return { w: Math.round(c.getBoundingClientRect().width), l: Math.round(c.getBoundingClientRect().left), pw: Math.round(c.querySelector('p').getBoundingClientRect().width) }; });
+    await L.tocar(page, 's2-b01-motivo'); await page.waitForTimeout(800);
+    let g = await geo(page);
+    const f1 = await page.evaluate(() => { const c = document.querySelector('#tab-semio2 section.container'); return { w: Math.round(c.getBoundingClientRect().width), l: Math.round(c.getBoundingClientRect().left), col: document.documentElement.hasAttribute('data-rm-aud-col') }; });
+    ok(g.mode === 'lateral' && g.ph === 0 && g.aud === null, 'tocando e recolhido: sem card (o áudio segue no motor), --rm-player-h = 0', { mode: g.mode, ph: g.ph, aud: g.aud });
+    ok(g.xBtn && g.xBtn.w === 56 && g.xBtn.h === 56 && g.xBtn.r <= g.vw && g.xBtn.t >= g.band.b, `quadrado ${g.xBtn && g.xBtn.w}×${g.xBtn && g.xBtn.h} no canto superior direito (x ${g.xBtn && g.xBtn.l}, y ${g.xBtn && g.xBtn.t})`, g.xBtn);
+    ok(!f1.col && f1.w === folha0.w && f1.l === folha0.l, `a folha de leitura NÃO se mexe (${folha0.w} px → ${f1.w} px; esquerda ${folha0.l} → ${f1.l})`, { folha0, f1 });
+    ok(g.xExp === 'false' && /Abrir el reproductor/.test(await page.evaluate(() => document.querySelector('.rm-sis-aud-x').getAttribute('aria-label'))), 'botão com aria-expanded=false e rótulo «Abrir el reproductor: título · estado»');
+    ok(await page.evaluate(() => document.documentElement.getAttribute('data-rm-aud-state')) === 'playing', 'o quadrado reflete o estado (tocando)');
+    await page.click('.rm-sis-aud-x'); await page.waitForTimeout(700); g = await geo(page);
+    const f2 = await page.evaluate(() => { const c = document.querySelector('#tab-semio2 section.container'); return { w: Math.round(c.getBoundingClientRect().width), r: c.getBoundingClientRect().right, pw: Math.round(c.querySelector('p').getBoundingClientRect().width), col: document.documentElement.hasAttribute('data-rm-aud-col') }; });
+    ok(g.aud && g.aud.w <= 212 && g.aud.h <= 250 && g.xExp === 'true', `expandido sob demanda: card ${g.aud && g.aud.w}×${g.aud && g.aud.h}, aria-expanded=true`, g.aud);
+    ok(f2.col && f2.r <= g.aud.l + 0.5, `a coluna é reservada só agora e nada de texto fica por baixo (folha ${f2.w} px, termina em ${f2.r}; card em ${g.aud.l})`, { f2, aud: g.aud });
+    ok(['toggle', 'back', 'fwd', 'restart', 'close', 'rate'].every(k => g.ctl[k] && g.ctl[k].w >= 43.5 && g.ctl[k].h >= 43.5) && g.ctl.seek.h >= 43.5, 'controles do card expandido ≥ 44 px');
+    await page.click('.rm-sis-aud-x'); await page.waitForTimeout(700); g = await geo(page);
+    const f3 = await page.evaluate(() => Math.round(document.querySelector('#tab-semio2 section.container').getBoundingClientRect().width));
+    ok(g.aud === null && g.xExp === 'false' && f3 === folha0.w, 'recolher devolve a folha à largura original', { f3, folha0 });
+    ok((await motor(page)).state === 'playing', 'expandir/recolher não interrompe o áudio');
+    /* toolbox aberta e caneta armada com o quadrado: nenhuma sobreposição */
+    await page.click('#rm2-fab'); await page.waitForTimeout(500); await page.click('.rm2-btn[data-t="pen"]'); await page.waitForTimeout(600);
+    g = await geo(page);
+    const tb = await page.evaluate(() => { const r = document.querySelector('.rm2-box').getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; });
+    ok(!inter({ l: g.xBtn.l, t: g.xBtn.t, r: g.xBtn.r, b: g.xBtn.b }, tb), 'caneta armada com a toolbox aberta: o quadrado não toca a toolbox (o painel começa abaixo dele)', { x: g.xBtn, tb });
+    { const h = await page.evaluate(SOBRE_TEXTO); ok(h.length === 0, 'o quadrado (no canto, na raia da direita) não cobre texto, tabela, figura nem post-it', h); }
+    ok((await motor(page)).state === 'playing', 'a caneta armada não pausa o áudio');
+    await fecharToolbox(page, false);
+    ok(errs.length === 0, 'B1: 0 erros JS', errs);
+    await ctx.close();
+  }
+  sec('B2 · janelas baixas/estreitas com a lateral docked (1545×665, 1280×720, 1200×700, 1440×560): sempre inteiro na janela, sem tocar toolbox/lateral');
   for (const [w, h] of [[1545, 665], [1280, 720], [1200, 700], [1440, 560]]) {
     const { ctx, page } = await abrir({ w, h });
-    await L.tocar(page, 's2-b01-motivo'); await page.waitForTimeout(600); const g = await geo(page);
-    ok(g.mode === 'lateral' && g.ph === 0 && g.aud.l >= 0 && g.aud.r <= g.side.r, `${w}×${h}: card na lateral (--rm-player-h = ${g.ph}), ${g.aud.w}×${g.aud.h}`, { mode: g.mode, aud: g.aud });
-    ok(g.aud.t >= g.band.b + 4 && g.aud.b <= g.foot.t - 2, `${w}×${h}: card inteiro dentro da janela (topo ${g.aud.t}, base ${g.aud.b}, janela ${g.vh}) e acima do rodapé da lateral`);
-    ok(g.scroll.h >= 130 && g.scroll.b <= g.aud.t + 1, `${w}×${h}: a lista do índice tem ${g.scroll.h} px (rola) e termina acima do card`);
-    ok(h > 760 || g.aud.h <= 125, `${w}×${h}: em janela baixa o card é compacto (${g.aud.h} px)`);
+    await L.tocar(page, 's2-b01-motivo'); await page.waitForTimeout(600); let g = await geo(page);
+    const caixa = g.aud || g.xBtn;
+    ok(g.mode === 'lateral' && g.ph === 0 && caixa && caixa.l > g.side.r && caixa.r <= g.vw && caixa.t >= g.band.b && caixa.b <= g.vh, `${w}×${h}: ${g.aud ? 'card' : 'quadrado'} ${caixa.w}×${caixa.h} inteiro no alto à direita (--rm-player-h = ${g.ph})`, { mode: g.mode, caixa });
+    await page.click('#rm2-fab'); await page.waitForTimeout(500); await page.click('.rm2-btn[data-t="pen"]'); await page.waitForTimeout(500); g = await geo(page);
+    const tb = await page.evaluate(() => { const r = document.querySelector('.rm2-box').getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; });
+    const c2 = g.aud || g.xBtn;
+    ok(!inter({ l: c2.l, t: c2.t, r: c2.r, b: c2.b }, tb), `${w}×${h}: com a caneta armada e a toolbox aberta, nada se sobrepõe`, { c2, tb });
+    { const hh = await page.evaluate(SOBRE_TEXTO); ok(hh.length === 0, `${w}×${h}: o disco/quadrado não cobre texto, tabela, figura nem post-it`, hh); }
     await ctx.close();
   }
 
-  sec('B3 · janela baixíssima (≤ 539 px de altura): sem card na lateral — barra compacta; ao crescer a janela o card volta');
+  sec('B3 · janela baixíssima (≤ 539 px de altura): sem card no alto — barra compacta embaixo; ao crescer a janela o disco volta ao canto');
   {
     const { ctx, page, errs } = await abrir({ w: 1440, h: 500 });
     await L.tocar(page, 's2-b01-motivo'); await page.waitForTimeout(900);
     let g = await geo(page);
-    ok(!g.force && g.dock === 'bottom' && g.mode === 'bottom' && g.aud.h <= 90 && g.aud.w <= 640.5, `1440×500: barra compacta ${g.aud && g.aud.w}×${g.aud && g.aud.h} (a lateral não comporta card + índice)`, { force: g.force, dock: g.dock, mode: g.mode, aud: g.aud });
+    ok(!g.force && g.dock === 'bottom' && g.mode === 'bottom' && g.aud.h <= 90 && g.aud.w <= 640.5, `1440×500: barra compacta ${g.aud && g.aud.w}×${g.aud && g.aud.h} (o card do alto não cabe com folga)`, { force: g.force, dock: g.dock, mode: g.mode, aud: g.aud });
     ok(Math.abs(g.ph - g.aud.h) <= 1, `--rm-player-h = altura medida (${g.ph})`);
     await page.setViewportSize({ width: 1440, height: 760 }); await page.waitForTimeout(1200); g = await geo(page);
-    ok(g.force === 'side' && g.dock === 'side' && g.mode === 'lateral' && g.ph === 0, 'janela cresce para 760: o card volta à lateral e --rm-player-h = 0', { force: g.force, dock: g.dock, mode: g.mode, ph: g.ph });
-    ok(g.aud && g.aud.r <= g.side.r && g.aud.b <= g.foot.t - 2, 'card dentro da lateral, acima do rodapé dela');
+    ok(g.force === 'side' && g.dock === 'side' && g.mode === 'lateral' && g.ph === 0, 'janela cresce para 760: o player vai para o alto à direita e --rm-player-h = 0', { force: g.force, dock: g.dock, mode: g.mode, ph: g.ph });
+    ok((g.aud || g.xBtn) && (g.aud || g.xBtn).r <= g.vw && (g.aud || g.xBtn).t >= g.band.b, 'disco/quadrado inteiro no canto superior direito');
     await page.setViewportSize({ width: 1440, height: 500 }); await page.waitForTimeout(1200); g = await geo(page);
     ok(!g.force && g.mode === 'bottom' && Math.abs(g.ph - g.aud.h) <= 1, 'janela volta a 500: barra compacta de novo e --rm-player-h acompanha');
     ok((await motor(page)).state === 'playing', 'o áudio não parou nas trocas de forma');

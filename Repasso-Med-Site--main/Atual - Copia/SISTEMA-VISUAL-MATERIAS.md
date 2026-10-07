@@ -20,9 +20,11 @@ Teste: `tools/qa/browser-qa/layout/pilot-flags.test.cjs`.
 |---|---|
 | `assets/rm-materia-sistema.css` | tokens + tema + 8 componentes; toda regra começa em `html.rm-sis` |
 | `assets/rm-materia-sistema.js` | lê dados reais do DOM, marca capítulos, monta a UI derivada (`[data-rm-ui]`), `attach/detach` |
+| `assets/rm-materia-nav.js` | **navegação por índice geral · bloco · modos isolados** (issue #453) — `window.RMNav`; só existe com o tema; `attach/detach` |
 | `assets/img/semio2/vig/vb-00…10.webp` | vinhetas/medalhões aprovados (recortes de infografías, 480 px, WebP) |
 | `tools/qa/browser-qa/layout/sistema.test.cjs` · `pilot-flags.test.cjs` | falha fechada, conteúdo intacto, contagens, detach, funções, geometria, cabeçalho compacto · gate do servidor |
 | `tools/qa/browser-qa/layout/capturas-sistema.cjs` | capturas desktop/tablet/celular |
+| `tools/qa/browser-qa/layout/nav-sistema.test.cjs` · `capturas-navegacion.cjs` | navegação, modos, caneta, áudio, geometria · capturas antes/depois e A × B do player |
 
 ## Estrutura do CSS
 `1 constantes` (header, papel, tipografias, recursos C3, notas P4, correto/incorreto) · `2 tema` (só variáveis:
@@ -58,20 +60,55 @@ da faixa fixa (`.rm-sis-tools`, ≥ 44 px, anel dourado quando há ferramenta ar
 a toolbox e a reabriria em seguida). Em ≤ 440 px o botão «Materias» (voltar ao topo) sai da faixa para dar espaço — «Volver arriba» continua na gaveta do índice.
 Em ≥ 768 px nada muda (a raia direita já é reservada pelo layout).
 
+## Navegação por índice geral, bloco e modos isolados (issue #453)
+Só aparência/navegação — **os nós da matéria não saem do lugar**: cada `section` original, os IDs, `block_id`, anotações, highlights, post-its, traços e o estado das questões
+ficam onde estão; o que muda é **qual parte está visível** (atributos no `<html>` e `display:none` por CSS ⇒ o conteúdo oculto sai do foco e da leitura de tela).
+
+| estado (`html[data-rm-nav]`) | o que aparece | URL |
+|---|---|---|
+| `index` | capa + recursos + **índice geral** em cards por unidade (título curto + descrição + contagens lidas do DOM; altura uniforme). Nenhum bloco abaixo. | sem hash |
+| `block` | **só o bloco escolhido** + «Índice general» (topo) e `Bloque anterior · Volver al índice general · Bloque siguiente` (fim) | `#s2-b03` · `#s2-b03-s2` (subtítulo) |
+| `modeidx` | índice de blocos **que têm aquele recurso**, com contagens reais (`N preguntas · 17 de examen · 11 complementarias`, `N infografías`, `N tarjetas`, `N audiolibro`, `N sonidos`) | `#modo/preguntas` |
+| `modeblk` | **só o recurso daquele tipo naquele bloco**, com `Anterior · modo`, `Volver a modo`, `Siguiente · modo` (só entre blocos que têm o recurso) | `#modo/preguntas/s2-b03` |
+
+- **Uma fonte de estado:** `RMModes` (já existente) ganhou o eixo `block` (+ `nav`); `RMNav` só desenha e cuida de histórico/rolagem/foco. Back/Forward restauram estado e rolagem
+  (`history.scrollRestoration = 'manual'` enquanto a navegação está ligada; devolvido no `detach`). Hashes com `=` (tokens de recuperação) não são tocados.
+- **Lateral:** no alto, «Índice general» (volta à abertura de qualquer lugar; teclado e link direto) e logo abaixo os modos (grade compacta de 2 colunas, alvos ≥ 44 px): **Infografías · Preguntas · Flashcards · Audiolibros · Auscultación**
+  (um modo só existe se há recurso real). **Audiolibros** depende de card real criado pelo manifesto autorizado (`.rm-audio-card`): sem card, sem modo/cartão/pílula/chip — e quando os cards chegam
+  de forma assíncrona tudo aparece sozinho (chip «Audiolibro» na árvore só nos blocos com card; nunca se expõe bucket, URL assinada ou caminho). A seção final «Revisión reunida» da lateral
+  (atalhos Banco/Todos flashcards) foi retirada **só da lateral**: Banco General e «Flashcards de todos los bloques» seguem no conteúdo e agora são cards do índice geral / do modo Flashcards.
+- **Preguntas:** com metadado real (`.quiz-tag.basada`) cada bloco ganha os grupos «Basadas en preguntas de examen» / «Complementarias» (filtro por chips; o estado respondido da questão
+  não se perde); sem metadado completo não há grupo inventado. O Banco General entra como revisão geral, **fora** da soma por bloco.
+- **Flashcards:** lançador de cada bloco + «Todos los flashcards»; nenhum card/ID é duplicado. **Audiolibros:** o mesmo card/motor/player (posição guardada, um áudio por vez; trocar de bloco **não** para o áudio,
+  sair da matéria/logout para). **Auscultación:** por bloco, com a arbitragem original (tocar um `<audio>` da matéria pausa o audiobook).
+- **Caneta:** os SVGs de traço ficam `display:none` em toda tela em que a leitura contínua não está à vista (índice geral, índices e páginas de modo) e, no bloco, só o do bloco aberto aparece; voltam (mesma âncora, mesmo traço, sem nova escrita) ao reabrir o bloco; a navegação pede o reposicionamento pela API pública do layout. Modos isolados continuam
+  desarmando a ferramenta (comportamento já existente do V2).
+- **Ritmo dos subtítulos** (valores recomendados): `h3` com filete de 1 px (`rgba(16,36,61,.11)`), 46 px acima + 28 px de respiro (34 px no 1.º); `h4` 34 px acima; no celular 38/22 e 28 px; tabelas e post-its com `break-inside: avoid`; **sem** quebra de página forçada.
+- **Tema desligado / outra matéria / outra conta:** nada disto existe (`RMNav` nem é carregado; o `detach` do tema desfaz classes, atributos, nós, estilos e a restauração de rolagem). Kill switch: `RM_PILOT_VISUAL_UIDS`.
+- **Tradução do rótulo:** a interface do piloto está em castelhano; os links são «Bloque anterior / Bloque siguiente / Volver al índice general» (no texto da issue, «Próximo bloque»).
+
 ## Player do audiobook no piloto (só apresentação)
 O motor de áudio (`rm-audio.js`, boot, manifesto, URLs assinadas, bucket, M4A) **não foi tocado**. O DOM do player (`#rm-l2-player`, `.rm-audio__*`, `data-a`, aria-labels)
 e a medição automática de `--rm-player-h` / `--rm-audio-h` são os originais; o tema só muda CSS e espelha estado (atributos no `<html>`/slot) para o CSS.
 
+**Card de entrada por bloco** (`.rm-audio-card`, destacado, paleta navy/dourado da matéria): disco de vinil no lugar do ícone, título real do manifesto, duração e «Escuchar / Continuar · m:ss». Só existe onde o manifesto autorizado criou o card.
+
+**Player ativo = disco de vinil**, compacto e quase quadrado (o botão play/pausa **é** o disco; só gira tocando e respeita `prefers-reduced-motion`; CSS puro — nenhuma mídia/arte é carregada antes do play).
+
 | onde | apresentação | `--rm-player-h` |
 |---|---|---|
-| desktop ≥ 1200 px (lateral docked) | **card compacto dentro da lateral colorida** (título, estado «Reproduciendo»/«En pausa», progresso, seek, ±15, velocidade, reiniciar, fechar). Em janelas baixas (≤ 760 px) o card é ainda mais curto; abaixo de 540 px de altura a lateral não comporta card + índice e o player volta à barra compacta. A lista do índice termina acima dele. | **0** (modo `lateral` do motor): nada atravessa a folha |
-| celular < 640 px | **barra de 1 linha** (play/pausa · título + tempo · ±15 · fechar; barra fina de progresso na borda). Botão «ampliar» → card completo (seek, velocidade, reiniciar). | = altura medida (≈ 60 px; antes 135) |
-| celular com a **toolbox aberta** | o player fica recolhido (sem «ampliar») e o dock da toolbox assenta **encima** dele | idem |
-| celular com a **caneta/borracha armada** | **chip** (título + play/pausa + fechar); o áudio nunca pausa | ≈ 52 px |
-| tablet / trilho (640–1199 px; ou lateral minimizada) | **uma linha compacta** (≤ 640 px de largura, ≈ 64 px) com todos os controles | = altura medida |
+| desktop (lateral docked) **≥ 1430 px** — opção **A** | **card 204×231 no ALTO À DIREITA**, numa coluna reservada (a folha se recentra; a medida do texto — 780 px — se mantém). Abre já expandido. | **0** (modo `lateral` do motor) |
+| desktop (lateral docked) **< 1430 px** — opção **B** | **quadrado 56×56 recolhido** no canto superior direito (a folha não se mexe); toque → expande o card (e só então reserva a coluna). Com a toolbox aberta, o painel dela passa a começar abaixo do quadrado (e o que não couber rola dentro do painel, como já fazia a V2). | **0** |
+| desktop com altura < 540 px | a lateral/canto não comporta: barra compacta embaixo (como antes) | = altura medida |
+| celular < 640 px | **barra pequena embaixo** (disco · título + tempo · ±15 · fechar); «ampliar» → card completo (seek, velocidade, reiniciar) | = altura medida (≈ 60 px) |
+| celular com a toolbox aberta / caneta armada | recolhido (barra/chip); o áudio nunca pausa | ≈ 52–60 px |
+| tablet / trilho (640–1199 px) | uma linha compacta (≤ 640 px) com todos os controles | = altura medida |
 
-Como o card entra na lateral sem mexer no motor: o tema põe `data-rm-dock-force="side"` no `<html>`; o `rm-layout.js` (único ponto tocado, 3 linhas em `aplicarModo`) só honra o pedido
-com a lateral docked e decide `data-rm-dock="side"`; o motor já sabia desenhar o modo «lateral» (e publica `--rm-player-h: 0`). Em trilho/gaveta vale a decisão original (barra embaixo).
+**A × B (medido, 1440 e 1280 px — `capturas-sistema/navegacion/player-ab/MEDIDAS-PLAYER.md`):** a coluna fixa só preserva a medida do texto quando sobra espaço (≥ 1430 px). Abaixo disso a coluna
+reduziria a folha (1280 px: 949 → 733 px; parágrafo 780 → 649 px) — por isso o híbrido: **A onde cabe, B onde não cabe** (expansão sob demanda).
+
+Como o player vai para o alto à direita sem mexer no motor: o tema põe `data-rm-dock-force="side"` no `<html>`; o `rm-layout.js` (ponto já tocado na #446, 3 linhas em `aplicarModo`) só honra o pedido
+com a lateral docked e decide `data-rm-dock="side"`; o motor já sabia desenhar o modo «lateral» (e publica `--rm-player-h: 0`); o CSS do tema o posiciona `fixed` no alto à direita. Em trilho/gaveta vale a decisão original (barra embaixo).
 O botão «ampliar» (`.rm-sis-aud-x`, UI derivada) é filho do slot; ao mudar de forma o tema pede `refreshLayout()` (API pública do motor, via `RMAudioBoot._engine()`) para que o motor re-meça a altura.
 Alvos de toque ≥ 44 px em todos os controles (inclusive a altura do seek). Tudo parte de `html.rm-sis #rm-l2-player …` — **nenhum** seletor alcança a auscultação (os `<audio>` da matéria); isso é checado por teste estático.
 Tema desligado ⇒ o player original, exatamente como hoje. Trocar de matéria ou sair da conta (`SIGNED_OUT`, inclusive pelo «Sair» da faixa) continua parando o áudio e desfazendo tudo.

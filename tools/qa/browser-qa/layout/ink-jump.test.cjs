@@ -11,6 +11,9 @@
 const L = require('./lib-ink.cjs');
 const { ok, info, okTinta, medir, ate, abrir, blocosIds, clicarBloco, trazerTinta } = L;
 
+/* Com RM_VISUAL=1 a navegação por bloco (rm-materia-nav.js, #453) fica LIGADA nos cenários 1 e 1b (saltos e revisitas de bloco: a tinta semeada tem de se alinhar com
+   um bloco por vez). Os cenários 2 (modo isolado → Página completa) e das imagens medem a leitura CONTÍNUA do V2 e rodam sem a navegação (RMNav.detach()). */
+const semNav = (page) => page.evaluate(() => { if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo()) window.RMNav.detach(); }).then(() => page.waitForTimeout(300));
 (async () => {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
   const srv = await L.serve(); const base = 'http://127.0.0.1:' + srv.address().port;
@@ -52,6 +55,7 @@ const { ok, info, okTinta, medir, ate, abrir, blocosIds, clicarBloco, trazerTint
 
     console.log('  -- 2 · volta da Página completa (modo isolado → completa) em posição profunda');
     { const { page, errs } = await abrir(br, base, w, h);
+      await semNav(page);
       const ids = await blocosIds(page);
       await clicarBloco(page, w, 's2-b10'); await page.waitForTimeout(700); await trazerTinta(page, 's2-b10'); await page.waitForTimeout(500);
       okTinta((await ate(page)).m, 'antes de sair: tinta visível e alinhada na posição profunda');
@@ -81,6 +85,7 @@ const { ok, info, okTinta, medir, ate, abrir, blocosIds, clicarBloco, trazerTint
   console.log('\n===== imagens carregando DEPOIS do salto (imagem SINTÉTICA sem width/height; a Semiología II real não tem <img>) =====');
   { const w = 1440, h = 900;
     const { page, errs } = await abrir(br, base, w, h, { atrasoImg: 1200 });
+    await semNav(page);
     /* 1 <img> sem width/height no FIM de s2-tablas (seção SEM tinta, logo acima de s2-banco, onde há tinta). Ao saltar para
        s2-banco o fim de s2-tablas fica a poucos px da janela, portanto é renderizado; a imagem termina de carregar 1,2 s depois
        e a seção cresce 500 px: o traço de s2-banco (já renderizado, sem mudar de tamanho) desce 500 px. (Imagem em seção que o

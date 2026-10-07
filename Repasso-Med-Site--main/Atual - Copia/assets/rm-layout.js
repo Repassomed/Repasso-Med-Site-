@@ -585,18 +585,10 @@
     sc.appendChild(tree);
 
     /* modos de estudo — só os que existem; vazios na B1 */
-    var disp = window.RMModes.disponiveis();
     var modosBox = ui('div', 'rm-l2-modes');
     var fimBox = ui('div', 'rm-l2-modes rm-l2-modes-end');
     var btnsModo = {};
-    if (disp.some(function (m) { return !m.fim; })) {
-      var sep = ui('div', 'rm-l2-sep'); sep.textContent = 'Modos de estudio'; modosBox.appendChild(sep);
-    }
-    disp.forEach(function (m) {
-      var b = item(m.icon, m.label, 'is-mode', { 'data-view': m.id });
-      btnsModo[m.id] = b; (m.fim ? fimBox : modosBox).appendChild(b);
-    });
-    if (fimBox.firstChild) { var sep2 = ui('div', 'rm-l2-sep'); sep2.textContent = 'Revisión reunida'; fimBox.insertBefore(sep2, fimBox.firstChild); }
+    preencherModos(modosBox, fimBox, btnsModo);
     sc.appendChild(modosBox); sc.appendChild(fimBox);
 
     /* rodapé: voltar ao topo + sugerencias (os flutuantes antigos ficam ocultos no piloto) */
@@ -606,7 +598,32 @@
     foot.appendChild(top); foot.appendChild(sug); side.appendChild(foot);
 
     btnsModo.full = full;
-    return { side: side, railBtn: railBtn, close: close, tree: tree, tog: tog, tl: tl, linhas: linhas, btns: btnsModo, full: full, top: top, sug: sug };
+    return { side: side, railBtn: railBtn, close: close, tree: tree, tog: tog, tl: tl, linhas: linhas, btns: btnsModo, full: full, top: top, sug: sug,
+             modosBox: modosBox, fimBox: fimBox };
+  }
+
+  /* Preenche (ou refaz) as caixas de modos a partir de RMModes.disponiveis(). Os botões antigos saem; `btns.full` (o item «Página completa»)
+     não é tocado. A «Revisión reunida» só existe quando há modos «de fim» (a navegação por bloco os retira: banco e flashcards gerais viram blocos). */
+  function preencherModos(modosBox, fimBox, btns) {
+    var disp = window.RMModes.disponiveis();
+    Object.keys(btns).forEach(function (k) { if (k !== 'full') delete btns[k]; });
+    while (modosBox.firstChild) modosBox.removeChild(modosBox.firstChild);
+    while (fimBox.firstChild) fimBox.removeChild(fimBox.firstChild);
+    if (disp.some(function (m) { return !m.fim; })) {
+      var sep = ui('div', 'rm-l2-sep'); sep.textContent = 'Modos de estudio'; modosBox.appendChild(sep);
+    }
+    disp.forEach(function (m) {
+      var b = item(m.icon, m.label, 'is-mode', { 'data-view': m.id });
+      btns[m.id] = b; (m.fim ? fimBox : modosBox).appendChild(b);
+    });
+    if (fimBox.firstChild) { var sep2 = ui('div', 'rm-l2-sep'); sep2.textContent = 'Revisión reunida'; fimBox.insertBefore(sep2, fimBox.firstChild); }
+  }
+  /* Releitura dos modos (recurso que passou a existir/deixou de existir — ex.: cards de audiolibro que chegam depois do manifesto). */
+  function atualizarModos() {
+    if (!S || !S.lat) return;
+    window.RMModes.detectar(S.tab);
+    preencherModos(S.lat.modosBox, S.lat.fimBox, S.lat.btns);
+    refletirModo();
   }
 
   /* ------------------------- painel vazio dos modos --------------------- */
@@ -653,7 +670,10 @@
     S.spyPend = false;
     if (window.RMModes.view !== 'full') return;
     var lim = hdrH() + 80, atual = null;
-    for (var i = 0; i < S.blocos.length; i++) {
+    if (window.RMModes.nav) {                          // navegação por bloco: só UM bloco tem caixa; o atual é o do store (null = índice geral)
+      var bid = window.RMModes.block;
+      for (var k = 0; k < S.blocos.length; k++) if (S.blocos[k].id === bid) atual = S.blocos[k];
+    } else for (var i = 0; i < S.blocos.length; i++) {
       var r = S.blocos[i].sec.getBoundingClientRect();
       if (r.top <= lim) atual = S.blocos[i]; else break;
     }
@@ -858,6 +878,9 @@
        Só leitura/salto; nada de tinta, caneta, âncora ou geometria. */
     irPara: function (alvo) { irPara(alvo); },
     recursos: function () { return S && S.capaRes ? S.capaRes.slice() : []; },
+    atualizarModos: atualizarModos,                          // navegação por bloco: refaz os botões de modo (audiolibros chegam depois do manifesto)
+    blocos: function () { return S ? S.blocos.map(function (b) { return { id: b.id, n: b.n, label: b.label, small: b.small, sec: b.sec, subs: b.subs.slice() }; }) : []; },
+    hdrH: hdrH,
     /* só leitura, para teste/diagnóstico */
     _dock: decidirDock, _cartaoTeorico: cartaoTeorico,
     _estado: function () { return S ? { tab: S.tab && S.tab.id, blocos: S.blocos.length, drawer: S.drawer, lmode: ROOT.getAttribute('data-rm-lmode'), dock: ROOT.getAttribute('data-rm-dock') } : null; }

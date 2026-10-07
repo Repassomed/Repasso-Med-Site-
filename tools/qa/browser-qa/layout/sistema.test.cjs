@@ -23,7 +23,9 @@ const ok = (c, m) => { total++; if (!c) { falhas++; console.log('  ✗ ' + m); }
   const srv = await serve(); const base = 'http://127.0.0.1:' + srv.address().port;
   const br = await chromium.launch();
 
-  async function abrir(w, h, flags) {
+  /* `nav`: este arquivo prova o TEMA em leitura contínua (como na PR #446). A navegação por bloco (rm-materia-nav.js) tem o seu próprio teste
+     (nav-sistema.test.cjs); aqui ela é desligada com RMNav.detach() — o que também prova que o tema funciona sem ela. */
+  async function abrir(w, h, flags, nav) {
     const ctx = await br.newContext({ viewport: { width: w, height: h }, hasTouch: w < 900 });
     const p = await ctx.newPage(); const errs = [], pedidos = [];
     p.on('pageerror', e => errs.push(String(e).slice(0, 160)));
@@ -32,6 +34,7 @@ const ok = (c, m) => { total++; if (!c) { falhas++; console.log('  ✗ ' + m); }
     await p.route('https://fonts.googleapis.com/**', r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
     await p.goto(`${base}/p.html?slug=semiologia-ii&tab=semio2&uid=d4d215d3-36dd-4efb-8869-bdea5376c648&wait=1500`);
     await p.waitForFunction('window.__ready===true'); await p.waitForTimeout(1200);
+    if (!nav) { await p.evaluate(() => { if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo()) window.RMNav.detach(); }); await p.waitForTimeout(300); }
     return { p, ctx, errs, pedidos };
   }
 
@@ -176,7 +179,7 @@ const ok = (c, m) => { total++; if (!c) { falhas++; console.log('  ✗ ' + m); }
       r.stuck = document.documentElement.hasAttribute('data-rm-stuck');
       r.logoGrudada = vis(document.querySelector('.rm-l2-band .rm-l2-logo'));
       r.logosGrudado = [...document.querySelectorAll('.rm-topbar img, .rm-l2-band .rm-l2-logo')].filter(e => { const b = e.getBoundingClientRect(); return b.bottom > 0 && b.top < innerHeight && vis(e); }).length;
-      window.scrollTo(0, 0); await esp(500);
+      window.scrollTo(0, 0); for (let i = 0; i < 30 && window.scrollY > 0; i++) await esp(100); await esp(400);     // o scroll-behavior do site é «smooth»: espera chegar ao topo (a duração varia com a carga)
       r.voltou = !document.documentElement.hasAttribute('data-rm-stuck');
       document.getElementById('rm-sug-top').click(); await esp(400);
       r.sugAbre = !!document.getElementById('rm-sug') && getComputedStyle(document.getElementById('rm-sug')).display !== 'none';
