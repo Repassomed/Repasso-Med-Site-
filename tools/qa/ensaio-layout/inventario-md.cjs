@@ -5,7 +5,7 @@ const L = require('./lib.cjs');
 const DIR = path.join(L.REPO, 'docs/layout-ensaio');
 const inv = JSON.parse(fs.readFileSync(path.join(DIR, 'inventario.json'), 'utf8'));
 
-const { agregadora, fcUnicos, qUnicos, declaradas } = require('./derivar.cjs');
+const { agregadora, fcUnicos, qUnicos } = require('./derivar.cjs');
 const SN = (b) => b ? 'SIM' : 'NÃO';
 
 const L1 = [];
@@ -52,7 +52,7 @@ w(`| Escritas ao Supabase | ${tot(m => (m.escritas || []).length)} |`);
 w('');
 w('## 3 · Tabela por matéria');
 w('');
-w('Legenda: **Banco** = a matéria tem seção de Banco geral; **cópia** = como as questões do Banco casam com as do corpo (por `id` ou por enunciado). **ID q.** = quantas questões têm `id` próprio. **Áudio** = elementos `<audio>` no DOM de hoje (ausculta de Semiología), **não** audiobook.');
+w('Legenda: **Banco** = a matéria tem seção de Banco geral **reconhecida pelo nome do id** (heurística do piloto; o validador `contrato.cjs`, regra R4, detecta o Banco também por conteúdo e acrescenta Farmacología II, Embriología e Histología I, cujo Banco tem outro nome); **cópia** = como as questões do Banco casam com as do corpo (por `id` ou por enunciado). **ID q.** = quantas questões têm `id` próprio. **Áudio** = elementos `<audio>` no DOM de hoje (ausculta de Semiología), **não** audiobook.');
 w('');
 w('| Matéria (slug) | Arquivo | Seções | Blocos (índice) | q. DOM | q. distintas (enun. / +opc.) | q. Banco | Banco? | cópia | ID q. | Flashcards DOM / distintos | Figuras | Vídeos | Áudio |');
 w('|---|---|--:|--:|--:|--:|--:|:-:|:-:|--:|--:|--:|--:|--:|');
@@ -78,29 +78,16 @@ mats.forEach(m => {
 w('');
 w('**Audiobook = NÃO em todas as 27**: o único manifesto autorizado hoje é o do piloto (Semiología II, via `get-audio-manifest`, atrás do flag `audio`). O inventário **não** consulta manifesto, não simula áudio e não lê Supabase. Os `<audio>` de Semiología e Semiología II são a **ausculta** (cards de sons clínicos), um recurso diferente do audiobook.');
 w('');
-w('## 5 · Contagens declaradas à mão × contagens medidas (deriva)');
+w('## 5 · Contagens declaradas à mão × contagem canônica (veredito em CONFORMIDADE.md · R5)');
 w('');
-w('O texto da portada de cada matéria declara números («179 preguntas», «335 flashcards», «34 infografías»…). O quadro compara cada número declarado com o que o DOM realmente tem. **Esses números são editados à mão hoje** — é o ponto central do contrato (checkpoint C).');
+w('O texto da portada de cada matéria declara números («179 preguntas», «335 flashcards», «34 infografías»…), editados à mão. **Este inventário só mede; o veredito não está aqui.** Uma versão anterior desta seção (e da regra R5 do validador) dava «coincide» quando o número igualava *qualquer* contagem candidata, inclusive o total do DOM com cópias; isso foi **removido** porque aprovava por coincidência. A comparação correta é feita por `contrato.cjs` (regra **R5**): cada número declarado na portada contra a contagem **canônica** do recurso correspondente (itens distintos, fora das seções agregadoras). Ver `CONFORMIDADE.md`, quadro «R5».');
 w('');
-w('| Matéria | Escopo (seção) | Declarado | Casa com | Medido (alternativas) | Situação |');
-w('|---|---|---|---|---|---|');
-let nOk = 0, nDeriva = 0, nbOk = 0, nbDiv = 0;
-mats.forEach(m => {
-  const ds = declaradas(m);
-  const gl = ds.filter(d => d.esc === 'global'), bl = ds.filter(d => d.esc === 'bloco');
-  if (!ds.length) { w(`| ${m.title} | — | — | — | — | INDETERMINADO (nenhuma contagem reconhecível) |`); return; }
-  gl.forEach(d => {
-    const alt = Object.entries(d.ops).map(([k, v]) => `${k}=${v}`).join(' · ');
-    if (d.casa.length) { nOk++; w(`| ${m.title} | portada \`${d.sec}\` | ${d.n} ${d.rec} | ${d.casa.join(', ')} | ${alt} | ✔ coincide |`); }
-    else { nDeriva++; w(`| ${m.title} | portada \`${d.sec}\` | ${d.n} ${d.rec} | — | ${alt} | ✖ **NÃO coincide** |`); }
-  });
-  if (bl.length) {
-    const ok = bl.filter(d => d.casa.length), div = bl.filter(d => !d.casa.length); nbOk += ok.length; nbDiv += div.length;
-    w(`| ${m.title} | blocos | ${bl.length} declarações | ${ok.length} coincidem | ${div.slice(0, 6).map(d => `\`${d.sec}\`: ${d.n} ${d.rec} × ${Object.values(d.ops)[0]}`).join('; ')}${div.length > 6 ? '; …' : ''} | ${div.length ? '✖ **' + div.length + ' divergem** (semântica da frase a confirmar)' : '✔ todas coincidem'} |`);
-  }
-});
-w('');
-w(`Resumo: portadas — ${nOk} declarações coincidem, **${nDeriva} não coincidem**; blocos — ${nbOk} coincidem, **${nbDiv} divergem** (a frase do bloco nem sempre usa o mesmo critério do DOM: «7 videos» pode contar iframes, «preguntas» pode somar o bloco e a prova). Para as divergências (deriva real ou critério editorial diferente — revisão humana; o contrato do checkpoint C elimina o número manual).`);
+try {
+  const cf = JSON.parse(fs.readFileSync(path.join(DIR, 'conformidade.json'), 'utf8'));
+  const ds = cf.materias.flatMap(o => (o.detalhe.R5.det.itens || []).filter(i => i.estado !== 'fora-do-contrato'));
+  const ok = ds.filter(i => i.estado === 'ok').length, dv = ds.filter(i => i.estado === 'diverge').length, ind = ds.filter(i => i.estado === 'indeterminado').length, so = ds.filter(i => i.soCoincideComDOM).length;
+  w(`Resumo de R5 (conformidade.json): ${ds.length} números declarados na portada com recurso verificável · **${ok} iguais ao canônico** · **${dv} divergem** (${so} deles coincidem apenas com o total do DOM duplicado) · **${ind} indeterminados** (sem marcador nem convenção para contar).`);
+} catch (e) { w('(Rode `contrato.cjs` para gerar o resumo de R5.)'); }
 w('');
 w('## 6 · Particularidades que afetam o novo layout');
 w('');

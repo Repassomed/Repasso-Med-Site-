@@ -43,5 +43,6 @@ NODE_PATH=$(npm root -g) node tools/qa/ensaio-layout/inventario.cjs             
 NODE_PATH=$(npm root -g) node tools/qa/ensaio-layout/ensaio.cjs <slug> [--rapido]  # «como está»
 NODE_PATH=$(npm root -g) node tools/qa/ensaio-layout/ensaio.cjs <slug> --corr      # «com correção» (C1/C2/C3 em memória)
 node tools/qa/ensaio-layout/compactar.cjs          # resultados completos (não versionados) → resultado-compacto.json (versionado)
-node tools/qa/ensaio-layout/contrato.cjs && node tools/qa/ensaio-layout/matriz.cjs
+node tools/qa/ensaio-layout/contrato.teste.cjs     # casos negativos de R4/R5/R9 (precisam FALHAR)
+node tools/qa/ensaio-layout/contrato.cjs && node tools/qa/ensaio-layout/inventario-md.cjs && node tools/qa/ensaio-layout/matriz.cjs
 ```

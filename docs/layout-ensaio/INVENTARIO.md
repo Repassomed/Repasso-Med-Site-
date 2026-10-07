@@ -36,7 +36,7 @@ Os 3 arquivos órfãos **não são matérias ativas** e ficam fora do ensaio (n�
 
 ## 3 · Tabela por matéria
 
-Legenda: **Banco** = a matéria tem seção de Banco geral; **cópia** = como as questões do Banco casam com as do corpo (por `id` ou por enunciado). **ID q.** = quantas questões têm `id` próprio. **Áudio** = elementos `<audio>` no DOM de hoje (ausculta de Semiología), **não** audiobook.
+Legenda: **Banco** = a matéria tem seção de Banco geral **reconhecida pelo nome do id** (heurística do piloto; o validador `contrato.cjs`, regra R4, detecta o Banco também por conteúdo e acrescenta Farmacología II, Embriología e Histología I, cujo Banco tem outro nome); **cópia** = como as questões do Banco casam com as do corpo (por `id` ou por enunciado). **ID q.** = quantas questões têm `id` próprio. **Áudio** = elementos `<audio>` no DOM de hoje (ausculta de Semiología), **não** audiobook.
 
 | Matéria (slug) | Arquivo | Seções | Blocos (índice) | q. DOM | q. distintas (enun. / +opc.) | q. Banco | Banco? | cópia | ID q. | Flashcards DOM / distintos | Figuras | Vídeos | Áudio |
 |---|---|--:|--:|--:|--:|--:|:-:|:-:|--:|--:|--:|--:|--:|
@@ -104,70 +104,11 @@ Critério: **SIM** = presente e medido no DOM; **NÃO** = ausente (contagem 0 no
 
 **Audiobook = NÃO em todas as 27**: o único manifesto autorizado hoje é o do piloto (Semiología II, via `get-audio-manifest`, atrás do flag `audio`). O inventário **não** consulta manifesto, não simula áudio e não lê Supabase. Os `<audio>` de Semiología e Semiología II são a **ausculta** (cards de sons clínicos), um recurso diferente do audiobook.
 
-## 5 · Contagens declaradas à mão × contagens medidas (deriva)
+## 5 · Contagens declaradas à mão × contagem canônica (veredito em CONFORMIDADE.md · R5)
 
-O texto da portada de cada matéria declara números («179 preguntas», «335 flashcards», «34 infografías»…). O quadro compara cada número declarado com o que o DOM realmente tem. **Esses números são editados à mão hoje** — é o ponto central do contrato (checkpoint C).
+O texto da portada de cada matéria declara números («179 preguntas», «335 flashcards», «34 infografías»…), editados à mão. **Este inventário só mede; o veredito não está aqui.** Uma versão anterior desta seção (e da regra R5 do validador) dava «coincide» quando o número igualava *qualquer* contagem candidata, inclusive o total do DOM com cópias; isso foi **removido** porque aprovava por coincidência. A comparação correta é feita por `contrato.cjs` (regra **R5**): cada número declarado na portada contra a contagem **canônica** do recurso correspondente (itens distintos, fora das seções agregadoras). Ver `CONFORMIDADE.md`, quadro «R5».
 
-| Matéria | Escopo (seção) | Declarado | Casa com | Medido (alternativas) | Situação |
-|---|---|---|---|---|---|
-| Anatopatologia I | blocos | 1 declarações | 0 coincidem | `introduccion`: 4 preguntas × 13 | ✖ **1 divergem** (semântica da frase a confirmar) |
-| Anatopatologia Práctica | — | — | — | — | INDETERMINADO (nenhuma contagem reconhecível) |
-| Fisiopatologia I | blocos | 1 declarações | 1 coincidem |  | ✔ todas coincidem |
-| Imagenología | blocos | 1 declarações | 0 coincidem | `analise-imagen`: 3 preguntas × 0 | ✖ **1 divergem** (semântica da frase a confirmar) |
-| Semiología I | blocos | 2 declarações | 0 coincidem | `ectoscopia`: 7 videos × 8; `torax-resp`: 4 videos × 7 | ✖ **2 divergem** (semântica da frase a confirmar) |
-| Farmacología I | blocos | 4 declarações | 0 coincidem | `colinergicos`: 4 videos × 5; `adren-agon-antag`: 2 videos × 3; `opioides`: 2 videos × 3; `anestesicos`: 4 videos × 5 | ✖ **4 divergem** (semântica da frase a confirmar) |
-| Medicina Familiar | blocos | 1 declarações | 0 coincidem | `apgar`: 5 preguntas × 8 | ✖ **1 divergem** (semântica da frase a confirmar) |
-| Semiología II | blocos | 15 declarações | 1 coincidem | `s2-b06`: 3 preguntas × 6; `s2-banco`: 17 preguntas × 120; `s2-banco`: 9 preguntas × 120; `s2-banco`: 28 preguntas × 120; `s2-banco`: 12 preguntas × 120; `s2-banco`: 16 preguntas × 120; … | ✖ **14 divergem** (semântica da frase a confirmar) |
-| Farmacología II | blocos | 1 declarações | 1 coincidem |  | ✔ todas coincidem |
-| Embriología | blocos | 1 declarações | 1 coincidem |  | ✔ todas coincidem |
-| Biología | portada `bio00` | 39 infografias | figuras c/ legenda | figuras c/ legenda=39 | ✔ coincide |
-| Biología | blocos | 13 declarações | 1 coincidem | `bancobio`: 5 preguntas × 123; `bancobio`: 6 preguntas × 123; `bancobio`: 12 preguntas × 123; `bancobio`: 9 preguntas × 123; `bancobio`: 7 preguntas × 123; `bancobio`: 8 preguntas × 123; … | ✖ **12 divergem** (semântica da frase a confirmar) |
-| Histología I | blocos | 2 declarações | 1 coincidem | `histo-imgnote`: 36 infografias × 0 | ✖ **1 divergem** (semântica da frase a confirmar) |
-| Histología I Práctica | portada `hp00` | 12 bloques | — | blocos numerados (id …bNN)=0 · blocos do índice=16 · seções=17 | ✖ **NÃO coincide** |
-| Histología I Práctica | portada `hp00` | 3 preguntas | — | distintas(enun.)=106 · distintas(enun.+opc.)=106 · corpo=106 · DOM total=212 | ✖ **NÃO coincide** |
-| Histología I Práctica | blocos | 2 declarações | 1 coincidem | `hp-imgnote`: 36 infografias × 0 | ✖ **1 divergem** (semântica da frase a confirmar) |
-| Histología II Práctica | blocos | 5 declarações | 1 coincidem | `h2pb11`: 4 preguntas × 15; `h2pbanco`: 44 preguntas × 289; `h2pbanco`: 161 preguntas × 289; `h2pbanco`: 84 preguntas × 289 | ✖ **4 divergem** (semântica da frase a confirmar) |
-| Histología II | portada `h2portada` | 75 preguntas | — | distintas(enun.)=225 · distintas(enun.+opc.)=226 · corpo=226 · DOM total=452 | ✖ **NÃO coincide** |
-| Histología II | blocos | 16 declarações | 0 coincidem | `h2b01`: 75 preguntas × 16; `h2b02`: 75 preguntas × 16; `h2b03`: 75 preguntas × 16; `h2b04`: 75 preguntas × 16; `h2b05`: 75 preguntas × 18; `h2b06`: 75 preguntas × 18; … | ✖ **16 divergem** (semântica da frase a confirmar) |
-| Anatomía I | blocos | 38 declarações | 33 coincidem | `a1b06`: 38 preguntas × 18; `a1b07`: 42 preguntas × 17; `a1b18`: 3 preguntas × 10; `a1b18`: 2 preguntas × 10; `bancoa1`: 13 preguntas × 459 | ✖ **5 divergem** (semântica da frase a confirmar) |
-| Anatopatologia II | blocos | 7 declarações | 1 coincidem | `bancoap2`: 33 preguntas × 152; `bancoap2`: 25 preguntas × 152; `bancoap2`: 20 preguntas × 152; `bancoap2`: 15 preguntas × 152; `bancoap2`: 14 preguntas × 152; `bancoap2`: 16 preguntas × 152 | ✖ **6 divergem** (semântica da frase a confirmar) |
-| Anatopatologia II Práctica | blocos | 2 declarações | 1 coincidem | `ap2pbanco`: 155 flashcards × 0 | ✖ **1 divergem** (semântica da frase a confirmar) |
-| Medicina Legal | blocos | 9 declarações | 1 coincidem | `bancomedleg`: 14 preguntas × 235; `bancomedleg`: 15 preguntas × 235; `bancomedleg`: 25 preguntas × 235; `bancomedleg`: 12 preguntas × 235; `bancomedleg`: 13 preguntas × 235; `bancomedleg`: 18 preguntas × 235; … | ✖ **8 divergem** (semântica da frase a confirmar) |
-| Fisiopatologia II | portada `fp2portada` | 14 bloques | blocos numerados (id …bNN) | blocos numerados (id …bNN)=14 · blocos do índice=16 · seções=17 | ✔ coincide |
-| Fisiopatologia II | portada `fp2portada` | 319 preguntas | distintas(enun.), distintas(enun.+opc.), corpo | distintas(enun.)=319 · distintas(enun.+opc.)=319 · corpo=319 · DOM total=638 | ✔ coincide |
-| Fisiopatologia II | portada `fp2portada` | 619 flashcards | distintos | distintos=619 · DOM total=1857 | ✔ coincide |
-| Fisiopatologia II | portada `fp2portada` | 33 infografias | figuras c/ legenda | figuras c/ legenda=33 | ✔ coincide |
-| Fisiopatologia II | blocos | 10 declarações | 10 coincidem |  | ✔ todas coincidem |
-| Toxicología | portada `toxportada` | 16 bloques | blocos numerados (id …bNN) | blocos numerados (id …bNN)=16 · blocos do índice=19 · seções=19 | ✔ coincide |
-| Toxicología | portada `toxportada` | 349 preguntas | distintas(enun.), distintas(enun.+opc.), corpo | distintas(enun.)=349 · distintas(enun.+opc.)=349 · corpo=349 · DOM total=698 | ✔ coincide |
-| Toxicología | portada `toxportada` | 472 flashcards | distintos | distintos=472 · DOM total=1416 | ✔ coincide |
-| Toxicología | blocos | 9 declarações | 1 coincidem | `bancotox`: 25 preguntas × 349; `bancotox`: 28 preguntas × 349; `bancotox`: 23 preguntas × 349; `bancotox`: 26 preguntas × 349; `bancotox`: 19 preguntas × 349; `bancotox`: 22 preguntas × 349; … | ✖ **8 divergem** (semântica da frase a confirmar) |
-| Dermatología | portada `dermportada` | 13 bloques | blocos numerados (id …bNN) | blocos numerados (id …bNN)=13 · blocos do índice=15 · seções=15 | ✔ coincide |
-| Dermatología | portada `dermportada` | 120 preguntas | distintas(enun.), distintas(enun.+opc.), corpo, DOM total | distintas(enun.)=120 · distintas(enun.+opc.)=120 · corpo=120 · DOM total=120 | ✔ coincide |
-| Dermatología | portada `dermportada` | 294 flashcards | — | distintos=293 · DOM total=482 | ✖ **NÃO coincide** |
-| Dermatología | blocos | 4 declarações | 3 coincidem | `dermb02`: 7 preguntas × 27 | ✖ **1 divergem** (semântica da frase a confirmar) |
-| Guaraní | — | — | — | — | INDETERMINADO (nenhuma contagem reconhecível) |
-| Ortopedia y Traumatología | portada `otportada` | 17 bloques | blocos numerados (id …bNN) | blocos numerados (id …bNN)=17 · blocos do índice=20 · seções=20 | ✔ coincide |
-| Ortopedia y Traumatología | portada `otportada` | 457 preguntas | distintas(enun.+opc.), corpo | distintas(enun.)=455 · distintas(enun.+opc.)=457 · corpo=457 · DOM total=914 | ✔ coincide |
-| Ortopedia y Traumatología | portada `otportada` | 432 flashcards | — | distintos=429 · DOM total=1296 | ✖ **NÃO coincide** |
-| Ortopedia y Traumatología | blocos | 19 declarações | 17 coincidem | `bancoorto`: 29 preguntas × 457; `bancoorto`: 17 preguntas × 457 | ✖ **2 divergem** (semântica da frase a confirmar) |
-| Oftalmología | portada `ofportada` | 9 bloques | blocos numerados (id …bNN) | blocos numerados (id …bNN)=9 · blocos do índice=12 · seções=12 | ✔ coincide |
-| Oftalmología | portada `ofportada` | 139 preguntas | distintas(enun.), distintas(enun.+opc.), corpo | distintas(enun.)=139 · distintas(enun.+opc.)=139 · corpo=139 · DOM total=278 | ✔ coincide |
-| Oftalmología | portada `ofportada` | 267 flashcards | distintos | distintos=267 · DOM total=801 | ✔ coincide |
-| Oftalmología | portada `ofportada` | 27 infografias | figuras c/ legenda | figuras c/ legenda=27 | ✔ coincide |
-| Oftalmología | blocos | 13 declarações | 10 coincidem | `bancooft`: 267 flashcards × 0; `bancooft`: 19 preguntas × 139; `bancooft`: 15 preguntas × 139 | ✖ **3 divergem** (semântica da frase a confirmar) |
-| Neurología | portada `neuportada` | 19 bloques | blocos numerados (id …bNN) | blocos numerados (id …bNN)=19 · blocos do índice=22 · seções=22 | ✔ coincide |
-| Neurología | portada `neuportada` | 34 infografias | figuras c/ legenda | figuras c/ legenda=34 | ✔ coincide |
-| Neurología | portada `neuportada` | 179 preguntas | distintas(enun.), distintas(enun.+opc.), corpo | distintas(enun.)=179 · distintas(enun.+opc.)=179 · corpo=179 · DOM total=358 | ✔ coincide |
-| Neurología | portada `neuportada` | 335 flashcards | distintos | distintos=335 · DOM total=670 | ✔ coincide |
-| Neurología | blocos | 28 declarações | 6 coincidem | `neub01`: 7 preguntas × 8; `neub03`: 5 preguntas × 9; `neub04`: 9 preguntas × 11; `neub05`: 2 videos × 3; `neub05`: 15 preguntas × 19; `neub06`: 7 preguntas × 9; … | ✖ **22 divergem** (semântica da frase a confirmar) |
-| Anestesiología | portada `aneportada` | 15 bloques | blocos numerados (id …bNN) | blocos numerados (id …bNN)=15 · blocos do índice=18 · seções=18 | ✔ coincide |
-| Anestesiología | portada `aneportada` | 177 preguntas | distintas(enun.), distintas(enun.+opc.), corpo | distintas(enun.)=177 · distintas(enun.+opc.)=177 · corpo=177 · DOM total=354 | ✔ coincide |
-| Anestesiología | portada `aneportada` | 232 flashcards | distintos | distintos=232 · DOM total=464 | ✔ coincide |
-| Anestesiología | portada `aneportada` | 19 infografias | figuras c/ legenda | figuras c/ legenda=19 | ✔ coincide |
-| Anestesiología | blocos | 21 declarações | 16 coincidem | `bancoane`: 232 flashcards × 0; `bancoane`: 10 preguntas × 177; `bancoane`: 12 preguntas × 177; `bancoane`: 11 preguntas × 177; `bancoane`: 14 preguntas × 177 | ✖ **5 divergem** (semântica da frase a confirmar) |
-
-Resumo: portadas — 24 declarações coincidem, **5 não coincidem**; blocos — 107 coincidem, **118 divergem** (a frase do bloco nem sempre usa o mesmo critério do DOM: «7 videos» pode contar iframes, «preguntas» pode somar o bloco e a prova). Para as divergências (deriva real ou critério editorial diferente — revisão humana; o contrato do checkpoint C elimina o número manual).
+Resumo de R5 (conformidade.json): 39 números declarados na portada com recurso verificável · **28 iguais ao canônico** · **7 divergem** (4 deles coincidem apenas com o total do DOM duplicado) · **4 indeterminados** (sem marcador nem convenção para contar).
 
 ## 6 · Particularidades que afetam o novo layout
 

@@ -1,0 +1,44 @@
+caso                                                                                         regra esperado nova   antiga resultado
+R4-controle                                                                                  R4    PASSA    PASSA  PASSA  ✔ 
+    ↳ 2 cópias ligadas (2 por marcador, 0 por convenção de id), 0 órfãs
+R4-N1 · 3 cópias, só 1 com data-rm-copia-de (as outras sem vínculo)                          R4    FALHA    FALHA  PASSA  ✔ 
+    ↳ 2/3 cópias sem vínculo (nem data-rm-copia-de nem bq-↔q-) · 2 canônicas sem cópia no Banco
+R4-N2 · cópia aponta para questão inexistente                                                R4    FALHA    FALHA  PASSA  ✔ 
+    ↳ 1 apontam para questão inexistente · 1 canônicas sem cópia no Banco
+R4-N3 · cópia com texto diferente da canônica                                                R4    FALHA    FALHA  PASSA  ✔ 
+    ↳ 1 diferem do texto da canônica
+R4-N4 · duas cópias da MESMA canônica                                                        R4    FALHA    FALHA  PASSA  ✔ 
+    ↳ 1 cópias repetidas da mesma canônica · 1 canônicas sem cópia no Banco
+R4-N5 · canônica sem cópia no Banco (espelho quebrado)                                       R4    FALHA    FALHA  PASSA  ✔ 
+    ↳ 1 canônicas sem cópia no Banco
+R4-N6 · cópia que casa só por enunciado (sem id nem marcador)                                R4    FALHA    FALHA  FALHA  ✔ 
+    ↳ 1/1 cópias sem vínculo (nem data-rm-copia-de nem bq-↔q-) · 1 canônicas sem id (vínculo impossível)
+R9-controle                                                                                  R9    PASSA    PASSA  PASSA  ✔ 
+R9-N1 · UMA seção sem data-rm-role (as outras têm)                                           R9    FALHA    FALHA  PASSA  ✔ 
+    ↳ 1/4 seções sem data-rm-role
+R9-N2 · bloco sem data-rm-n                                                                  R9    FALHA    FALHA  PASSA  ✔ 
+    ↳ 1 blocos sem data-rm-n
+R9-N3 · agregadora sem data-rm-agrega (há marcador em outra seção)                           R9    FALHA    FALHA  PASSA  ✔ 
+    ↳ 1 agregadoras sem data-rm-agrega do tipo dos itens
+R9-N4 · UMA pergunta canônica sem data-rm-q (as outras têm)                                  R9    FALHA    FALHA  PASSA  ✔ 
+    ↳ 1/2 perguntas canônicas sem data-rm-q = id
+R9-N5 · UMA cópia do Banco sem data-rm-copia-de (as outras têm)                              R9    FALHA    FALHA  PASSA  ✔ 
+    ↳ 1/2 cópias de pergunta sem data-rm-copia-de
+R9-N6 · vídeo sem data-rm-video                                                              R9    FALHA    FALHA  PASSA  ✔ 
+    ↳ 1/1 vídeos sem data-rm-video
+R5-controle (2 preguntas · 2 flashcards)                                                     R5    PASSA    PASSA  PASSA  ✔ 
+R5-N1 · capa diz 4 preguntas = TOTAL DO DOM duplicado (2 canônicas + 2 cópias)               R5    FALHA    FALHA  PASSA  ✔ 
+    ↳ portada: 4 preguntas × canônico 2 (= total do DOM com cópias)
+R5-N2 · capa diz 4 flashcards = TOTAL DO DOM duplicado (2 canônicos + 2 cópias)              R5    FALHA    FALHA  PASSA  ✔ 
+    ↳ portada: 4 flashcards × canônico 2 (= total do DOM com cópias)
+R5-N3 · capa diz 1 pregunta (nem canônico nem DOM)                                           R5    FALHA    FALHA  FALHA  ✔ 
+    ↳ portada: 1 preguntas × canônico 2
+R5-N4 · capa diz 4 infografías = figuras do bloco + as repetidas na agregadora               R5    FALHA    FALHA  PASSA  ✔ 
+    ↳ portada: 4 infografias × canônico 2 (= total do DOM com cópias)
+R5-N6 · número declarado no HERO (section.hero sem id) = total do DOM duplicado              R5    FALHA    FALHA  PASSA  ✔ 
+    ↳ portada: 4 preguntas × canônico 2 (= total do DOM com cópias)
+R5-controle-hero (2 preguntas no hero)                                                       R5    PASSA    PASSA  PASSA  ✔ 
+R5-N5 · capa diz 2 bloques e a matéria não tem marcador nem convenção …bNN (indeterminado)   R5    FALHA    FALHA  PASSA  ✔ 
+    ↳ portada: 2 bloques × canônico ? (indeterminado)
+
+18 casos negativos (todos precisam FALHAR na regra nova): 18 falharam ✔ · 4 controles positivos: 4 passaram ✔ · 13 casos em que a regra ANTIGA passava indevidamente

@@ -7,7 +7,7 @@
 
 O inventário real das 27 matérias (`INVENTARIO.md`) e o ensaio visual (`MATRIZ.md`) mostram três fontes de erro de contagem, todas **editoriais, não do layout**:
 
-1. **Os números aparecem escritos à mão** na portada («179 preguntas», «335 flashcards», «34 infografías»…). 5 de 29 declarações de portada já não coincidem com o conteúdo.
+1. **Os números aparecem escritos à mão** na portada («179 preguntas», «335 flashcards», «34 infografías»…). Medido com a regra R5 (cada número da portada × contagem **canônica** do recurso): de 39 números declarados com recurso verificável, 28 batem, **7 divergem** (4 deles só coincidem com o total do DOM com cópias) e 4 são **indeterminados** (a matéria não tem marcador nem convenção para contar os blocos).
 2. **O DOM soma cópias.** Cada matéria guarda os mesmos itens duas vezes (no bloco e no banco geral / "revisión" / "mazo" / "cierre"): 10 098 `.quiz-item` no DOM para 5 361–5 605 questões distintas; 17 735 `.flashcard` para 7 043 distintos.
 3. **A cópia é reconhecida pelo `id` da seção** (`/banco|flashcards/i`), e os ids das 27 matérias não seguem convenção. Onde o id não casa (`revisaoneu`, `anecierre`, `dermcierre`, `toxcierre`, `oftcierre`, `h2pmazo`, `mazognrl`, `revisaofp2`…), a capa mostraria o dobro ou o triplo.
 
@@ -58,7 +58,7 @@ Todos são atributos novos; o site atual os ignora, então podem entrar matéria
 Regras:
 - `data-rm-role` / `data-rm-n` / `data-rm-unidad` substituem a dedução por regex de id e a numeração por ordem. O módulo continua aceitando a convenção antiga (`-bNN`) como *fallback* para as matérias ainda não marcadas.
 - `data-rm-agrega` declara uma seção como **agregadora**: ela é leitura geral e fica fora de qualquer soma por bloco.
-- `data-rm-copia-de` liga a cópia à canônica. Sem isso, o par corpo×banco só pode ser casado por enunciado (hoje é o caso de 14 matérias; só 3 casam por `id`, 9 não têm banco geral e Medicina Familiar tem 25 questões do banco sem par no corpo) e a contagem exata fica INDETERMINADA.
+- `data-rm-copia-de` liga a cópia à canônica. Sem isso, o par corpo×banco só pode ser casado por enunciado (medido por R4, cópia a cópia: 21 das 27 matérias têm Banco geral; **só 3** — Neurología, Oftalmología, Anestesiología — têm vínculo verificável, e por convenção de id `bq-`↔`q-`, **0 por marcador**; 18 têm Banco sem vínculo, inclusive Medicina Familiar, com 26 cópias para 64 canônicas e 25 questões do banco sem par no corpo) e a contagem exata fica INDETERMINADA.
 - `id` de questão: formato `q-<prefixo><NNN>` com prefixo da matéria; **imutável** (outros sistemas ancoram nele: relatórios, correções de gabarito, exames).
 - Âncoras da caneta (`seção>índice`) **não mudam** com estes atributos: nenhum nó é criado, movido ou removido.
 
@@ -108,7 +108,7 @@ Casos de borda (já medidos nas 27 matérias; ver `INVENTARIO.md §6`):
 2. **Dar o id estável** (`q-<prefixo><NNN>` para perguntas; `data-rm-fc`, `data-rm-video`, `data-rm-aus` nos demais).
 3. **Fazer a cópia física no Banco General / «revisión» / «mazo» / «cierre»** quando a matéria tiver (perguntas: com `data-rm-copia-de="<id do bloco>"`), mantendo corpo e Banco **espelhados**, como hoje. **Matéria sem banco geral não ganha um por isso** (8-A.3).
 4. **Conferir o número escrito na portada** (e nos textos «N preguntas/flashcards/infografías/videos» dos blocos): atualizar à mão ou adotar `data-rm-count`.
-5. **Rodar o validador do contrato** (`inventario.cjs <slug>` e depois `contrato.cjs <slug> --parcial`): falha se faltar id, se houver cópia sem canônica, se a portada divergir do derivado, se houver id duplicado ou mídia quebrada.
+5. **Rodar o validador do contrato** (`contrato.cjs <slug>`, que lê o HTML da matéria; não precisa do inventário): falha **item a item** — id ou marcador faltando em qualquer seção/pergunta/cópia, cópia sem vínculo com canônica existente e de texto igual, número da portada diferente da contagem canônica, id duplicado, mídia quebrada. `contrato.teste.cjs` prova que R4, R5 e R9 falham nos casos negativos.
 6. **Rodar o ensaio** (`ensaio.cjs <slug> --rapido`): 390 e 1440, índice, blocos, modos, ausência, teclado, Back, um traço de caneta **simulado**, sem escrita no banco.
 7. **QA existentes** do repositório (Guard, annotation-safety, 4 larguras) como hoje.
 8. **PR** com a matriz do recurso (o que entrou, onde, contagem derivada antes→depois).
@@ -124,8 +124,20 @@ Passos 1–2, 5–9 iguais; os passos 3 e 4 desaparecem (a agregadora é vista; 
 - O módulo lê o marcador **ou** a convenção antiga: remover um marcador nunca derruba a navegação, só volta ao fallback.
 - Layout novo continua atrás de `rm-pilot.js` + flags; desligar o flag basta para voltar à leitura contínua. Nenhum dado de aluno (tinta, notas, grifos) é tocado por qualquer passo acima.
 
-## 8 · Estado atual de conformidade
+## 8 · O que cada regra do validador confere (item a item)
 
-`CONFORMIDADE.md` (gerado por `contrato.cjs`) mostra, por matéria, quais regras do contrato já são cumpridas pelo conteúdo de hoje e quais exigem edição editorial. **Nenhuma matéria tem os marcadores `data-rm-*` ainda** (esperado: o contrato é uma proposta). O ensaio com os marcadores *gerados em memória* (variante «com correção») mostra o resultado esperado depois da adoção da **Fase 1**; os descritores/temas que o ensaio infere do conteúdo são **hipótese técnica** para exercitar os componentes, **não** a identidade visual aprovada de nenhuma matéria.
+`contrato.cjs` extrai um modelo por item do HTML real (`modelo.cjs`) e aplica `regras.cjs`. As três regras abaixo foram **endurecidas** depois da auditoria da PR #459 (ver `MUDANCAS-VALIDADOR.md`); antes, bastava existir *um* marcador no arquivo, ou um número coincidir com *qualquer* contagem, para aprovar a matéria inteira.
+
+| Regra | Confere | Falha quando |
+|---|---|---|
+| **R4** | **cada cópia** de pergunta nas agregadoras do Banco | (a) sem vínculo (`data-rm-copia-de` ou, na Fase 1, `bq-X`↔`q-X`); (b) alvo inexistente, ou que é outra cópia, ou a própria cópia; (c) duas cópias da mesma canônica; (d) enunciado/alternativas diferentes da canônica; (e) canônica sem id (vínculo impossível); (f) canônica sem cópia no Banco (espelho quebrado). Matéria sem Banco: N/A (passa) |
+| **R5** | **cada número** declarado na capa (seção de portada **e** hero/banner sem id) | o número ≠ contagem **canônica** do recurso (itens distintos fora das agregadoras; identidade = `id`/`data-rm-fc`, senão texto). Igualar o total do DOM com cópias **não** conta; recurso sem como contar (p.ex. «bloques» sem marcador nem `…bNN`) = **indeterminado = falha**. «Esquemas» está fora do contrato (não verificável) |
+| **R9** | **cada seção e item aplicável** | seção sem `data-rm-role` (guia/bloque/repaso); bloco sem `data-rm-n`; bloco sem `data-rm-unidad` igual ao marcador «UNIDAD X»; agregadora sem `data-rm-agrega` do tipo dos seus itens ou com role ≠ repaso; pergunta canônica sem `data-rm-q` = id; cópia de pergunta/flashcard sem `data-rm-copia-de` (flashcard: apontando para `data-rm-fc` existente); flashcard canônico sem `data-rm-fc` único; vídeo sem `data-rm-video`; ausculta sem `data-rm-aus` |
+
+**Limites do validador (declarados):** (1) a *agregadora* é inferida por conteúdo (seção cujos itens, ≥ 90%, estão em outra maior ou posterior) + o marcador + a heurística de id do piloto; é uma hipótese técnica até haver `data-rm-agrega` em todas. (2) R5 trata todo número junto de uma palavra de recurso na capa como afirmação sobre a **matéria inteira**; frase que descreve só um subconjunto («Banco de preguntas: 170») diverge e deve ser reescrita ou escopada com `data-rm-count`. (3) A identidade de flashcard sem `data-rm-fc` é frente+verso; de pergunta sem id, enunciado+alternativas; homônimos só se distinguem com id. (4) Números dentro dos blocos («13 preguntas · 7 complementarias») **não** são verificados por R5. (5) O validador lê HTML estático: não executa JavaScript, não vê o que os módulos criam em tempo de execução.
+
+## 9 · Estado atual de conformidade
+
+`CONFORMIDADE.md` (gerado por `contrato.cjs`) mostra, por matéria, quais regras do contrato já são cumpridas pelo conteúdo de hoje e quais exigem edição editorial. **Nenhuma matéria tem os marcadores `data-rm-*` ainda** (esperado: o contrato é uma proposta; R9 = 0/27 por construção, agora medido seção a seção e item a item). O ensaio com os marcadores *gerados em memória* (variante «com correção») mostra o resultado esperado depois da adoção da **Fase 1**; os descritores/temas que o ensaio infere do conteúdo são **hipótese técnica** para exercitar os componentes, **não** a identidade visual aprovada de nenhuma matéria.
 
 > **Limite do teste de caneta:** o «caneta PASSA» da matriz usou **um traço sintético** (eventos `PointerEvent` do tipo `pen`) no Chromium, contra um Supabase simulado. Prova que o traço se ancora, que some fora do bloco e que navegar não grava. **Não** verifica o atraso, a perda de traço, a persistência real nem as regressões da #456 (Claude 2).
