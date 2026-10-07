@@ -8,7 +8,7 @@
 O inventário real das 27 matérias (`INVENTARIO.md`) e o ensaio visual (`MATRIZ.md`) mostram três fontes de erro de contagem, todas **editoriais, não do layout**:
 
 1. **Os números aparecem escritos à mão** na portada («179 preguntas», «335 flashcards», «34 infografías»…). Medido com a regra R5 (cada número da portada × contagem **canônica** do recurso): de 39 números declarados com recurso verificável, 28 batem, **7 divergem** (4 deles só coincidem com o total do DOM com cópias) e 4 são **indeterminados** (a matéria não tem marcador nem convenção para contar os blocos).
-2. **O DOM soma cópias.** Cada matéria guarda os mesmos itens duas vezes (no bloco e no banco geral / "revisión" / "mazo" / "cierre"): 10 098 `.quiz-item` no DOM para 5 361–5 605 questões distintas; 17 735 `.flashcard` para 7 043 distintos.
+2. **O DOM soma cópias.** Cada matéria guarda os mesmos itens duas vezes (no bloco e no banco geral / "revisión" / "mazo" / "cierre"): 10 106 `.quiz-item` no DOM para 5 365–5 609 questões distintas; 17 735 `.flashcard` para 7 043 distintos.
 3. **A cópia é reconhecida pelo `id` da seção** (`/banco|flashcards/i`), e os ids das 27 matérias não seguem convenção. Onde o id não casa (`revisaoneu`, `anecierre`, `dermcierre`, `toxcierre`, `oftcierre`, `h2pmazo`, `mazognrl`, `revisaofp2`…), a capa mostraria o dobro ou o triplo.
 
 **Regra-mãe (alvo):** *um recurso tem uma fonte da verdade; toda contagem é derivada dela; nenhuma pessoa digita um número que o conteúdo já determina.*

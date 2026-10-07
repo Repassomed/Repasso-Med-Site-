@@ -21,8 +21,8 @@ Os 3 arquivos órfãos **não são matérias ativas** e ficam fora do ensaio (n�
 |---|---:|
 | Blocos no índice (`.rm-menu`) | 434 |
 | Seções `<section id>` | 450 |
-| Questões `.quiz-item` no DOM (somando cópias) | 10098 |
-| Questões **distintas** (por enunciado · por enunciado+opções) | 5361 · 5605 |
+| Questões `.quiz-item` no DOM (somando cópias) | 10106 |
+| Questões **distintas** (por enunciado · por enunciado+opções) | 5365 · 5609 |
 | Flashcards `.flashcard` no DOM (somando cópias) | 17735 |
 | Flashcards **distintos** (pela frente) | 7043 |
 | Figuras com legenda | 1440 |
@@ -56,7 +56,7 @@ Legenda: **Banco** = a matéria tem seção de Banco geral **reconhecida pelo no
 | Histología II Práctica (`histologia-ii-practica`) | `histologia-ii-practica.html` | 20 | 19 | 578 | **289** | 289 | SIM | por enunciado | 0/578 | 1233 / **404** | 281 | 0 (0 iframe) | 0 |
 | Histología II (`histologia-ii`) | `histologia-ii.html` | 17 | 16 | 452 | **225** / 226 | 226 | SIM | por enunciado | 0/452 | 906 / **302** | 47 | 0 (0 iframe) | 0 |
 | Anatomía I (`anatomia-i`) | `anatomia-i.html` | 37 | 35 | 918 | **457** / 459 | 459 | SIM | por enunciado | 0/918 | 1646 / **820** | 121 | 0 (0 iframe) | 0 |
-| Anatopatologia II (`anatomia-patologica-ii`) | `anatomia-patologica-ii.html` | 12 | 10 | 304 | **152** | 152 | SIM | por enunciado | 0/304 | 480 / **153** | 43 | 0 (0 iframe) | 0 |
+| Anatopatologia II (`anatomia-patologica-ii`) | `anatomia-patologica-ii.html` | 12 | 10 | 312 | **156** | 156 | SIM | por enunciado | 0/312 | 480 / **153** | 43 | 0 (0 iframe) | 0 |
 | Anatopatologia II Práctica (`anatomia-patologica-ii-practica`) | `anatomia-patologica-ii-practica.html` | 11 | 10 | 224 | **109** / 112 | 112 | SIM | por enunciado | 0/224 | 465 / **146** | 104 | 0 (0 iframe) | 0 |
 | Medicina Legal (`medicina-legal`) | `medicina-legal.html` | 21 | 20 | 470 | **235** | 235 | SIM | por enunciado | 0/470 | 1122 / **365** | 56 | 0 (0 iframe) | 0 |
 | Fisiopatologia II (`fisiopatologia-ii`) | `fisiopatologia-ii.html` | 17 | 16 | 638 | **319** | 319 | SIM | por enunciado | 638/638 | 1857 / **619** | 33 | 0 (0 iframe) | 0 |
@@ -90,7 +90,7 @@ Critério: **SIM** = presente e medido no DOM; **NÃO** = ausente (contagem 0 no
 | Histología II Práctica | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=20; menu=19 (sem item: h2pportada); q=578 DOM/289 distintas (agregadora h2pbanco); fc=1233 DOM/404 distintos (agregadora h2pmazo); fig=281; vid=0; audio=0 |
 | Histología II | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=17; menu=16 (sem item: h2portada); q=452 DOM/225 distintas (agregadora bancoh2); fc=906 DOM/302 distintos (agregadora bancofch2); fig=47; vid=0; audio=0 |
 | Anatomía I | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=37; menu=35 (sem item: a1b00,a1notas); q=918 DOM/457 distintas (agregadora bancoa1); fc=1646 DOM/820 distintos (agregadora bancofca1); fig=121; vid=0; audio=0 |
-| Anatopatologia II | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=12; menu=10 (sem item: ap2intro,ap2biblio); q=304 DOM/152 distintas (agregadora bancoap2); fc=480 DOM/153 distintos (agregadora bancofcap2); fig=43; vid=0; audio=0 |
+| Anatopatologia II | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=12; menu=10 (sem item: ap2intro,ap2biblio); q=312 DOM/156 distintas (agregadora bancoap2); fc=480 DOM/153 distintos (agregadora bancofcap2); fig=43; vid=0; audio=0 |
 | Anatopatologia II Práctica | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=11; menu=10 (sem item: ap2pportada); q=224 DOM/109 distintas (agregadora ap2pbanco); fc=465 DOM/146 distintos (agregadora ap2pmazo); fig=104; vid=0; audio=0 |
 | Medicina Legal | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=21; menu=20 (sem item: medlegb00); q=470 DOM/235 distintas (agregadora bancomedleg); fc=1122 DOM/365 distintos (agregadora bancofcmedleg); fig=56; vid=0; audio=0 |
 | Fisiopatologia II | SIM | SIM | SIM | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=17; menu=16 (sem item: fp2portada); q=638 DOM/319 distintas (agregadora bancofp2); fc=1857 DOM/619 distintos (agregadora revisaofp2); fig=33; vid=0; audio=0 |
@@ -128,7 +128,7 @@ Resumo de R5 (conformidade.json): 39 números declarados na portada com recurso 
 - **Histología II Práctica** (`histologia-ii-practica`): seção(ões) sem item de índice: `h2pportada` · flashcards: seção agregadora `h2pmazo` repete os dos blocos (DOM 1233; distintos 404) · questões: seção `h2pbanco` repete as dos blocos (DOM 578; distintas 289) · nenhuma questão tem `id`.
 - **Histología II** (`histologia-ii`): seção(ões) sem item de índice: `h2portada` · flashcards: seção agregadora `bancofch2` repete os dos blocos (DOM 906; distintos 302) · questões: seção `bancoh2` repete as dos blocos (DOM 452; distintas 225) · nenhuma questão tem `id`.
 - **Anatomía I** (`anatomia-i`): seção(ões) sem item de índice: `a1b00`, `a1notas` · flashcards: seção agregadora `bancofca1` repete os dos blocos (DOM 1646; distintos 820) · questões: seção `bancoa1` repete as dos blocos (DOM 918; distintas 457) · nenhuma questão tem `id`.
-- **Anatopatologia II** (`anatomia-patologica-ii`): seção(ões) sem item de índice: `ap2intro`, `ap2biblio` · flashcards: seção agregadora `bancofcap2` repete os dos blocos (DOM 480; distintos 153) · questões: seção `bancoap2` repete as dos blocos (DOM 304; distintas 152) · nenhuma questão tem `id`.
+- **Anatopatologia II** (`anatomia-patologica-ii`): seção(ões) sem item de índice: `ap2intro`, `ap2biblio` · flashcards: seção agregadora `bancofcap2` repete os dos blocos (DOM 480; distintos 153) · questões: seção `bancoap2` repete as dos blocos (DOM 312; distintas 156) · nenhuma questão tem `id`.
 - **Anatopatologia II Práctica** (`anatomia-patologica-ii-practica`): seção(ões) sem item de índice: `ap2pportada` · flashcards: seção agregadora `ap2pmazo` repete os dos blocos (DOM 465; distintos 146) · questões: seção `ap2pbanco` repete as dos blocos (DOM 224; distintas 109) · nenhuma questão tem `id`.
 - **Medicina Legal** (`medicina-legal`): seção(ões) sem item de índice: `medlegb00` · flashcards: seção agregadora `bancofcmedleg` repete os dos blocos (DOM 1122; distintos 365) · questões: seção `bancomedleg` repete as dos blocos (DOM 470; distintas 235) · nenhuma questão tem `id`.
 - **Fisiopatologia II** (`fisiopatologia-ii`): seção(ões) sem item de índice: `fp2portada` · flashcards: seção agregadora `revisaofp2` repete os dos blocos (DOM 1857; distintos 619) · questões: seção `bancofp2` repete as dos blocos (DOM 638; distintas 319).

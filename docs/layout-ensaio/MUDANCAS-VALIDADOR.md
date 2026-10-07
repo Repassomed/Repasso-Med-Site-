@@ -37,3 +37,7 @@ Resumo de R5: 39 números declarados na capa com recurso verificável → 28 igu
 ## 5 · O que NÃO mudou
 
 O ensaio visual (`MATRIZ.md`: 0/27 PASSA «como está», 15/27 «com correção», 12 falhas restantes) **não depende** do validador do contrato e permanece idêntico. O teste de caneta continua **sintético** (traço simulado no Chromium, Supabase simulado; não é teste físico nem mede atraso/perda reais, nem a #456). Os temas e descritores das 26 matérias sem tema próprio continuam **hipótese técnica inferida do conteúdo**, não identidade visual aprovada.
+
+## 6 · Sincronização com a `main` (#458)
+
+Antes da reexecução final a branch recebeu a `main` atual (merge da #458, que alterou só `anatomia-patologica-ii.html`: +4 perguntas em corpo e Banco, 152 → 156). Efeito medido: totais do inventário 10 098 → **10 106** perguntas no DOM e 5 361–5 605 → **5 365–5 609** distintas; Anatopatologia II repetiu os mesmos veredictos (R1 ✖, R2 ✖, R3 ✔, R4 ✖, R5 ✔, R9 ✖), e o ensaio visual dessa matéria foi reexecutado nas duas variantes sem mudar o veredito (continua ❌ «como está» e ❌ «com correção», pelo mesmo motivo: repetição de cartões entre blocos). Nenhum arquivo de matéria foi alterado por esta PR.

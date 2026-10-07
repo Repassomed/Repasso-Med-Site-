@@ -82,7 +82,7 @@
 | Histología II Práctica | 289 | 0 | 0 | 289 | 0 | 0 | 0 | 289 | 0 | ✖ |
 | Histología II | 226 | 0 | 0 | 226 | 0 | 0 | 0 | 226 | 0 | ✖ |
 | Anatomía I | 459 | 0 | 0 | 459 | 0 | 0 | 0 | 459 | 0 | ✖ |
-| Anatopatologia II | 152 | 0 | 0 | 152 | 0 | 0 | 0 | 152 | 0 | ✖ |
+| Anatopatologia II | 156 | 0 | 0 | 156 | 0 | 0 | 0 | 156 | 0 | ✖ |
 | Anatopatologia II Práctica | 112 | 0 | 0 | 112 | 0 | 0 | 0 | 112 | 0 | ✖ |
 | Medicina Legal | 235 | 0 | 0 | 235 | 0 | 0 | 0 | 235 | 0 | ✖ |
 | Fisiopatologia II | 319 | 0 | 0 | 319 | 0 | 0 | 0 | 0 | 319 | ✖ |
@@ -171,7 +171,7 @@ O vínculo por convenção de id (`bq-X` ↔ `q-X`) só vale se o alvo existe co
 | Histología II Práctica | 20/20 | 2 | 289/289 | 289/289 | 411/411 | 822/822 | 0/0 | ✖ |
 | Histología II | 17/17 | 2 | 226/226 | 226/226 | 302/302 | 604/604 | 0/0 | ✖ |
 | Anatomía I | 37/37 | 2 | 459/459 | 459/459 | 823/823 | 823/823 | 0/0 | ✖ |
-| Anatopatologia II | 12/12 | 2 | 152/152 | 152/152 | 160/160 | 320/320 | 0/0 | ✖ |
+| Anatopatologia II | 12/12 | 2 | 156/156 | 156/156 | 160/160 | 320/320 | 0/0 | ✖ |
 | Anatopatologia II Práctica | 11/11 | 2 | 112/112 | 112/112 | 155/155 | 310/310 | 0/0 | ✖ |
 | Medicina Legal | 21/21 | 2 | 235/235 | 235/235 | 374/374 | 748/748 | 0/0 | ✖ |
 | Fisiopatologia II | 17/17 | 2 | 319/319 | 319/319 | 619/619 | 1238/1238 | 0/0 | ✖ |
@@ -201,7 +201,7 @@ O vínculo por convenção de id (`bq-X` ↔ `q-X`) só vale se o alvo existe co
 - **Histología II Práctica**: R1: sem <h2>: h2pportada · R2: 578/578 questões sem id · R3: agregadora não reconhecida: h2pmazo
 - **Histología II**: R1: sem <h2>: h2portada · R2: 452/452 questões sem id
 - **Anatomía I**: R1: sem <h2>: a1b00 · R2: 918/918 questões sem id
-- **Anatopatologia II**: R1: sem <h2>: ap2intro, ap2biblio · R2: 304/304 questões sem id
+- **Anatopatologia II**: R1: sem <h2>: ap2intro, ap2biblio · R2: 312/312 questões sem id
 - **Anatopatologia II Práctica**: R1: sem <h2>: ap2pportada · R2: 224/224 questões sem id · R3: agregadora não reconhecida: ap2pmazo
 - **Medicina Legal**: R1: sem <h2>: medlegb00 · R2: 470/470 questões sem id
 - **Fisiopatologia II**: R1: sem <h2>: fp2portada · R3: agregadora não reconhecida: revisaofp2
