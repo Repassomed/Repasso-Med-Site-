@@ -5,6 +5,12 @@ Legenda: **PASSA** = todas as verificações da área passaram nas 4 larguras (3
 
 Duas variantes do MESMO ensaio: **«como está»** (módulos reais do piloto, só com o patch mínimo de slug em memória) e **«com correção»** (acrescenta C1/C2, o patch proposto para as agregadoras, também só em memória). O disco nunca é alterado.
 
+## Avisos de leitura (obrigatórios)
+
+1. **«Caneta PASSA» = um traço SIMULADO.** O teste dispara eventos `PointerEvent` sintéticos do tipo `pen` num Chromium, contra um Supabase simulado. Prova ancoragem, ocultação fora do bloco e que navegar não grava. **Não verifica o atraso nem a perda de traço reais, a persistência real, nem qualquer regressão da #456 (Claude 2).**
+2. **Temas e descritores das 26 matérias sem tema próprio são HIPÓTESE TÉCNICA.** O ensaio os infere do conteúdo (blocos, unidades, agregadoras) e aplica a paleta do piloto só para exercitar os componentes. **Não são a identidade visual aprovada de nenhuma matéria** (decisão editorial G0/José). Só Semiología II usa o tema real.
+3. **PASSA/FALHA descrevem o ensaio, não uma liberação.** Nada foi ativado; nenhuma matéria está aprovada para o layout novo por constar aqui.
+
 ## 1 · Resumo
 
 | Variante | PASSA | FALHA | BLOQUEADO | Sem dados |
@@ -27,13 +33,13 @@ Duas variantes do MESMO ensaio: **«como está»** (módulos reais do piloto, s�
 | Teclado/Back | 27 | 0 | 27 | 0 |
 | Scroll | 27 | 0 | 27 | 0 |
 | Responsivo | 27 | 0 | 27 | 0 |
-| Caneta | 27 | 0 | 27 | 0 |
+| Caneta (traço simulado) | 27 | 0 | 27 | 0 |
 | Integridade | 27 | 0 | 27 | 0 |
 | Áudio | 27 | 0 | 27 | 0 |
 
 ## 2 · Matriz por matéria («como está»)
 
-| Semestre | Matéria | Veredito | Ativa | Índice | Blocos | Modos | Ausentes | Contagens | Teclado/Back | Scroll | Responsivo | Caneta | Integridade | Áudio | Audiolibro |
+| Semestre | Matéria | Veredito | Ativa | Índice | Blocos | Modos | Ausentes | Contagens | Teclado/Back | Scroll | Responsivo | Caneta (traço simulado) | Integridade | Áudio | Audiolibro |
 |--:|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 | 5 | Anatopatologia I (`anatomia-patologica`) | ❌ FALHA | ✅ | ❌ 8 | ❌ 8 | ❌ 4 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🟨 |
 | 5 | Anatopatologia Práctica (`anatomia-patologica-practica`) | ❌ FALHA | ✅ | ❌ 8 | ❌ 4 | ❌ 4 | ✅ | ❌ 4 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🟨 |
@@ -67,7 +73,7 @@ Em «❌ N», N é o número de verificações que falharam (somando as 4 largur
 
 ## 3 · Matriz «com correção proposta»
 
-| Semestre | Matéria | Veredito | Ativa | Índice | Blocos | Modos | Ausentes | Contagens | Teclado/Back | Scroll | Responsivo | Caneta | Integridade | Áudio |
+| Semestre | Matéria | Veredito | Ativa | Índice | Blocos | Modos | Ausentes | Contagens | Teclado/Back | Scroll | Responsivo | Caneta (traço simulado) | Integridade | Áudio |
 |--:|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 | 5 | Anatopatologia I | ❌ FALHA | ✅ | ✅ | ❌ 4 | ❌ 4 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | 5 | Anatopatologia Práctica | ❌ FALHA | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ 4 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -160,7 +166,7 @@ Em «❌ N», N é o número de verificações que falharam (somando as 4 largur
   - Correção: C3.
 - **contagens/capa-preguntas** · larguras 390/768/1024/1440 · escopo: conteudo · não resolvida pela correção
   - Medido: capa «Preguntas» não soma cópias: distintas 211–274; capa mostra 332; DOM tem 332 → `{"capa":332,"distintas":[211,274],"dom":332,"agregadoras":[]}`
-  - Causa: Os perguntas se repetem entre seções que não são cópia integral (p.ex. a seção de prova repete parte dos blocos) e não há `id` estável: o DOM soma duplicatas e a contagem exata é INDETERMINADA.
+  - Causa: As perguntas se repetem entre seções que não são cópia integral (p.ex. a seção de prova repete parte dos blocos) e não há `id` estável: o DOM soma duplicatas e a contagem exata é INDETERMINADA.
   - Correção: Contrato §1–§3: id canônico por item + `data-rm-copia-de`; decisão editorial sobre as repetições (8-A.1 do MANUTENCAO-DIDATICA).
   - Resíduo mesmo com a correção: capa «Preguntas» não soma cópias: distintas 211–274; capa mostra 332; DOM tem 332 → `{"capa":332,"distintas":[211,274],"dom":332,"agregadoras":[]}` (o que sobra é conteúdo repetido entre blocos ou itens só na agregadora: decisão editorial)
 - **blocos/sem-residuo-bloco** · larguras 390/768/1024/1440 · escopo: modulo · resolvida pela correção proposta
@@ -200,7 +206,7 @@ Em «❌ N», N é o número de verificações que falharam (somando as 4 largur
   - Correção: C3.
 - **contagens/capa-preguntas** · larguras 390/768/1024/1440 · escopo: conteudo · não resolvida pela correção
   - Medido: capa «Preguntas» não soma cópias: distintas 143–182; capa mostra 220; DOM tem 220 → `{"capa":220,"distintas":[143,182],"dom":220,"agregadoras":[]}`
-  - Causa: Os perguntas se repetem entre seções que não são cópia integral (p.ex. a seção de prova repete parte dos blocos) e não há `id` estável: o DOM soma duplicatas e a contagem exata é INDETERMINADA.
+  - Causa: As perguntas se repetem entre seções que não são cópia integral (p.ex. a seção de prova repete parte dos blocos) e não há `id` estável: o DOM soma duplicatas e a contagem exata é INDETERMINADA.
   - Correção: Contrato §1–§3: id canônico por item + `data-rm-copia-de`; decisão editorial sobre as repetições (8-A.1 do MANUTENCAO-DIDATICA).
   - Resíduo mesmo com a correção: capa «Preguntas» não soma cópias: distintas 143–182; capa mostra 220; DOM tem 220 → `{"capa":220,"distintas":[143,182],"dom":220,"agregadoras":[]}` (o que sobra é conteúdo repetido entre blocos ou itens só na agregadora: decisão editorial)
 - **blocos/sem-residuo-bloco** · larguras 390/768/1024/1440 · escopo: modulo · resolvida pela correção proposta
@@ -225,7 +231,7 @@ Em «❌ N», N é o número de verificações que falharam (somando as 4 largur
   - Correção: C3.
 - **contagens/capa-preguntas** · larguras 390/768/1024/1440 · escopo: conteudo · não resolvida pela correção
   - Medido: capa «Preguntas» não soma cópias: distintas 166–176; capa mostra 191; DOM tem 191 → `{"capa":191,"distintas":[166,176],"dom":191,"agregadoras":[]}`
-  - Causa: Os perguntas se repetem entre seções que não são cópia integral (p.ex. a seção de prova repete parte dos blocos) e não há `id` estável: o DOM soma duplicatas e a contagem exata é INDETERMINADA.
+  - Causa: As perguntas se repetem entre seções que não são cópia integral (p.ex. a seção de prova repete parte dos blocos) e não há `id` estável: o DOM soma duplicatas e a contagem exata é INDETERMINADA.
   - Correção: Contrato §1–§3: id canônico por item + `data-rm-copia-de`; decisão editorial sobre as repetições (8-A.1 do MANUTENCAO-DIDATICA).
   - Resíduo mesmo com a correção: capa «Preguntas» não soma cópias: distintas 166–176; capa mostra 191; DOM tem 191 → `{"capa":191,"distintas":[166,176],"dom":191,"agregadoras":[]}` (o que sobra é conteúdo repetido entre blocos ou itens só na agregadora: decisão editorial)
 - **contagens/capa-flashcards-omitidos** · larguras 390/768/1024/1440 · escopo: conteudo · não resolvida pela correção
@@ -292,7 +298,7 @@ Em «❌ N», N é o número de verificações que falharam (somando as 4 largur
   - Correção: C3.
 - **contagens/capa-preguntas** · larguras 390/768/1024/1440 · escopo: modulo · resolvida pela correção proposta
   - Medido: capa «Preguntas» não soma cópias: distintas 214–214; capa mostra 428; DOM tem 428 → `{"capa":428,"distintas":[214,214],"dom":428,"agregadoras":["f2b15"]}`
-  - Causa: A seção agregadora (f2b15) repete os perguntas dos blocos e o módulo a soma, porque o id não casa a heurística `/banco|flashcards/i` (rm-materia-nav.js:90, rm-layout.js:472).
+  - Causa: A seção agregadora (f2b15) repete as perguntas dos blocos e o módulo a soma, porque o id não casa a heurística `/banco|flashcards/i` (rm-materia-nav.js:90, rm-layout.js:472).
   - Correção: C1/C2: o módulo passa a aceitar `data-rm-agrega` (o descritor/HTML o declara). Verificado na variante «com correção».
 - **contagens/capa-flashcards** · larguras 390/768/1024/1440 · escopo: modulo · resolvida pela correção proposta
   - Medido: capa «Flashcards» não soma cópias: distintos 292; capa mostra 876; DOM tem 876 → `{"capa":876,"distintos":292,"dom":876,"agregadoras":["f2b16"]}`
@@ -323,7 +329,7 @@ Em «❌ N», N é o número de verificações que falharam (somando as 4 largur
   - Correção: C3.
 - **contagens/capa-preguntas** · larguras 390/768/1024/1440 · escopo: modulo · resolvida pela correção proposta
   - Medido: capa «Preguntas» não soma cópias: distintas 107–107; capa mostra 214; DOM tem 214 → `{"capa":214,"distintas":[107,107],"dom":214,"agregadoras":["emb14"]}`
-  - Causa: A seção agregadora (emb14) repete os perguntas dos blocos e o módulo a soma, porque o id não casa a heurística `/banco|flashcards/i` (rm-materia-nav.js:90, rm-layout.js:472).
+  - Causa: A seção agregadora (emb14) repete as perguntas dos blocos e o módulo a soma, porque o id não casa a heurística `/banco|flashcards/i` (rm-materia-nav.js:90, rm-layout.js:472).
   - Correção: C1/C2: o módulo passa a aceitar `data-rm-agrega` (o descritor/HTML o declara). Verificado na variante «com correção».
 - **contagens/capa-flashcards** · larguras 390/768/1024/1440 · escopo: modulo · resolvida pela correção proposta
   - Medido: capa «Flashcards» não soma cópias: distintos 145; capa mostra 298; DOM tem 298 → `{"capa":298,"distintos":145,"dom":298,"agregadoras":["emb15"]}`
@@ -357,7 +363,7 @@ Em «❌ N», N é o número de verificações que falharam (somando as 4 largur
 
 - **contagens/capa-preguntas** · larguras 390/768/1024/1440 · escopo: modulo · resolvida pela correção proposta
   - Medido: capa «Preguntas» não soma cópias: distintas 150–150; capa mostra 300; DOM tem 300 → `{"capa":300,"distintas":[150,150],"dom":300,"agregadoras":["histo13"]}`
-  - Causa: A seção agregadora (histo13) repete os perguntas dos blocos e o módulo a soma, porque o id não casa a heurística `/banco|flashcards/i` (rm-materia-nav.js:90, rm-layout.js:472).
+  - Causa: A seção agregadora (histo13) repete as perguntas dos blocos e o módulo a soma, porque o id não casa a heurística `/banco|flashcards/i` (rm-materia-nav.js:90, rm-layout.js:472).
   - Correção: C1/C2: o módulo passa a aceitar `data-rm-agrega` (o descritor/HTML o declara). Verificado na variante «com correção».
 - **contagens/capa-flashcards** · larguras 390/768/1024/1440 · escopo: modulo · não resolvida pela correção
   - Medido: capa «Flashcards» não soma cópias: distintos 184; capa mostra 396; DOM tem 396 → `{"capa":396,"distintos":184,"dom":396,"agregadoras":["histo14"]}`
@@ -627,8 +633,33 @@ Em «❌ N», N é o número de verificações que falharam (somando as 4 largur
 ## 7 · Bloqueios e pendências (não resolvidos nesta PR)
 
 - **Integração dos patches** (`PATCHES-PARA-INTEGRACAO.md`): tocam arquivos reservados (`rm-layout.js`, `rm-materia-nav.js`, `rm-materia-sistema.js/css`, `rm-audio-boot.js`, `rm-pilot.js`). Só depois da PR da caneta (#456) e com auditoria própria.
-- **Descritor/tema por matéria**: hoje existe só o de Semiología II. O ensaio gera um descritor genérico a partir do conteúdo (paleta e vinhetas do piloto, sem identidade própria por matéria). A identidade visual de cada matéria é decisão editorial (G0), fora desta PR.
+- **Descritor/tema por matéria**: hoje existe só o de Semiología II. Os 26 descritores do ensaio são **hipótese técnica inferida do conteúdo** (paleta e vinhetas do piloto), **não identidade visual aprovada**. Aprovar identidade, unidades e numeração de cada matéria é decisão editorial (G0/José), fora desta PR.
 - **Audiolibro**: sem manifesto autorizado nenhuma matéria pode ter card real; nada a testar além da ausência.
 - **Conteúdo**: `<h2>` ausente em seções de portada/guia, ids de questão ausentes, agregadoras sem marcador e números de portada divergentes estão em `CONFORMIDADE.md` — são edições editoriais por matéria, não feitas aqui.
 
-Gerado a partir de 27 resultados «como está» e 27 «com correção» em `docs/layout-ensaio/resultados*/`.
+## 8 · As 12 falhas que restam mesmo com a correção proposta (C1/C2/C3)
+
+Todas são **conteúdo repetido/ausente ou comportamento do módulo que a correção proposta não cobre**. Nenhuma foi editada nesta PR. Dono = quem decide: **José/editorial** (conteúdo) ou **integração** (módulo, depois da #456).
+
+| Matéria | Verificação (larguras) | Medido com a correção | Causa | Dono | Próxima ação |
+|---|---|---|---|---|---|
+| Anatopatologia I (`anatomia-patologica`) | `blocos/pager-cadeia` (390/768/1024/1440) | 1 página(s) com recurso extra; ex.: "analise-guia" | Seção interior sem `<h2>` (ex.: guía no meio do conteúdo) quebra a cadeia Anterior/Próximo: o aluno não consegue seguir lendo e só volta pelo índice. | José + integração | Dar `<h2>` à seção ou aplicar C4 (título de reserva) |
+| Anatopatologia I (`anatomia-patologica`) | `modos/paginas-preguntas` (390/768/1024/1440) | 1 página(s) com recurso extra; ex.: {"id":"adaptacion","secs":["adaptacion"],"vis":{"figuras":1,"pregs":27,"fc":0,"ab":0,"aus":0,"tablas":0,"figFo | Uma figura (p.ex. «Cómo leer…») dentro do contêiner `.quiz-section` continua visível no modo Preguntas: o isolamento esconde por caminho de contêiner, não por nó. | Integração (após #456) | Patch C6 (isolar por nó) ou mover a figura «Cómo leer…» para fora de `.quiz-section` |
+| Anatopatologia Práctica (`anatomia-patologica-practica`) | `contagens/capa-flashcards` (390/768/1024/1440) | capa 161 × distintos 92 | Mesmo com a agregadora excluída, os blocos repetem entre si 69+ itens (mesma frente/enunciado em mais de um bloco) e não há `id` canônico para distinguir cópia de homônimo. | José / editorial | Decidir o que fazer com flashcards repetidos entre blocos (ids canônicos); depois reconferir a capa |
+| Fisiopatologia I (`fisiopatologia`) | `contagens/capa-preguntas` (390/768/1024/1440) | capa 332 × distintas 211–274 | Mesmo com a agregadora excluída, os blocos repetem entre si 58+ itens (mesma frente/enunciado em mais de um bloco) e não há `id` canônico para distinguir cópia de homônimo. | José / editorial | Decidir sobre as questões repetidas entre blocos e a seção de prova (8-A.1); id canônico por questão |
+| Fisiopatologia I (`fisiopatologia`) | `modos/paginas-preguntas` (1440) | 3 página(s) com recurso extra; ex.: {"id":"hemorragia","secs":["hemorragia"],"vis":{"figuras":1,"pregs":6,"fc":0,"ab":0,"aus":0,"tablas":0,"figFor | Uma figura (p.ex. «Cómo leer…») dentro do contêiner `.quiz-section` continua visível no modo Preguntas: o isolamento esconde por caminho de contêiner, não por nó. | Integração (após #456) | Patch C6 (isolar por nó) ou mover a figura «Cómo leer…» para fora de `.quiz-section` |
+| Semiología I (`semiologia`) | `contagens/capa-preguntas` (390/768/1024/1440) | capa 220 × distintas 143–182 | Mesmo com a agregadora excluída, os blocos repetem entre si 38+ itens (mesma frente/enunciado em mais de um bloco) e não há `id` canônico para distinguir cópia de homônimo. | José / editorial | Decidir sobre as questões repetidas entre blocos e a seção de prova (8-A.1); id canônico por questão |
+| Semiología I (`semiologia`) | `modos/paginas-preguntas` (1440) | 3 página(s) com recurso extra; ex.: {"id":"historia-clinica","secs":["historia-clinica"],"vis":{"figuras":1,"pregs":6,"fc":0,"ab":0,"aus":0,"tabla | Uma figura (p.ex. «Cómo leer…») dentro do contêiner `.quiz-section` continua visível no modo Preguntas: o isolamento esconde por caminho de contêiner, não por nó. | Integração (após #456) | Patch C6 (isolar por nó) ou mover a figura «Cómo leer…» para fora de `.quiz-section` |
+| Farmacología I (`farmacologia`) | `contagens/capa-preguntas` (390/768/1024/1440) | capa 191 × distintas 166–176 | Mesmo com a agregadora excluída, os blocos repetem entre si 15+ itens (mesma frente/enunciado em mais de um bloco) e não há `id` canônico para distinguir cópia de homônimo. | José / editorial | Decidir sobre as questões repetidas entre blocos e a seção de prova (8-A.1); id canônico por questão |
+| Farmacología I (`farmacologia`) | `contagens/capa-flashcards-omitidos` (390/768/1024/1440) | capa 200 × distintos 216 | Há cartões que existem só na seção de revisão geral (agregadora) e não nos blocos: o aluno os encontra em «todos», mas a capa/modo por bloco não os conta. | José / editorial | Levar o cartão ao bloco que o ensina ou descartá-lo; reconferir |
+| Farmacología I (`farmacologia`) | `modos/paginas-preguntas` (390/768/1024/1440) | 1 página(s) com recurso extra; ex.: {"id":"pk","secs":["pk"],"vis":{"figuras":1,"pregs":16,"fc":0,"ab":0,"aus":0,"tablas":0,"figFora":1},"real":16 | Uma figura (p.ex. «Cómo leer…») dentro do contêiner `.quiz-section` continua visível no modo Preguntas: o isolamento esconde por caminho de contêiner, não por nó. | Integração (após #456) | Patch C6 (isolar por nó) ou mover a figura «Cómo leer…» para fora de `.quiz-section` |
+| Medicina Familiar (`medicina-familiar`) | `contagens/capa-preguntas-omitidas` (390/768/1024/1440) | capa 64 × distintas 89 | Há questões só no banco geral (sem par no corpo) que a capa por bloco não conta. | José / editorial | Levar a questão ao bloco (8-A.3) ou descartá-la |
+| Medicina Familiar (`medicina-familiar`) | `contagens/capa-flashcards-omitidos` (390/768/1024/1440) | capa 82 × distintos 95 | Há cartões que existem só na seção de revisão geral (agregadora) e não nos blocos: o aluno os encontra em «todos», mas a capa/modo por bloco não os conta. | José / editorial | Levar o cartão ao bloco que o ensina ou descartá-lo; reconferir |
+| Semiología II (`semiologia-ii`) | `contagens/capa-flashcards-omitidos` (390/768/1024/1440) | capa 172 × distintos 184 | Há cartões que existem só na seção de revisão geral (agregadora) e não nos blocos: o aluno os encontra em «todos», mas a capa/modo por bloco não os conta. | José / editorial | Levar o cartão ao bloco que o ensina ou descartá-lo; reconferir |
+| Histología I (`histologia-i`) | `contagens/capa-flashcards` (390/768/1024/1440) | capa 198 × distintos 184 | Mesmo com a agregadora excluída, os blocos repetem entre si 14+ itens (mesma frente/enunciado em mais de um bloco) e não há `id` canônico para distinguir cópia de homônimo. | José / editorial | Decidir o que fazer com flashcards repetidos entre blocos (ids canônicos); depois reconferir a capa |
+| Histología I Práctica (`histologia-i-practica`) | `contagens/capa-flashcards` (390/768/1024/1440) | capa 126 × distintos 115 | Mesmo com a agregadora excluída, os blocos repetem entre si 11+ itens (mesma frente/enunciado em mais de um bloco) e não há `id` canônico para distinguir cópia de homônimo. | José / editorial | Decidir o que fazer com flashcards repetidos entre blocos (ids canônicos); depois reconferir a capa |
+| Anatopatologia II (`anatomia-patologica-ii`) | `contagens/capa-flashcards` (390/768/1024/1440) | capa 160 × distintos 153 | Mesmo com a agregadora excluída, os blocos repetem entre si 7+ itens (mesma frente/enunciado em mais de um bloco) e não há `id` canônico para distinguir cópia de homônimo. | José / editorial | Decidir o que fazer com flashcards repetidos entre blocos (ids canônicos); depois reconferir a capa |
+| Anatopatologia II Práctica (`anatomia-patologica-ii-practica`) | `contagens/capa-flashcards` (390/768/1024/1440) | capa 155 × distintos 146 | Mesmo com a agregadora excluída, os blocos repetem entre si 9+ itens (mesma frente/enunciado em mais de um bloco) e não há `id` canônico para distinguir cópia de homônimo. | José / editorial | Decidir o que fazer com flashcards repetidos entre blocos (ids canônicos); depois reconferir a capa |
+| Guaraní (`guarani`) | `contagens/capa-flashcards` (390/768/1024/1440) | capa 298 × distintos 286 | Mesmo com a agregadora excluída, os blocos repetem entre si 12+ itens (mesma frente/enunciado em mais de um bloco) e não há `id` canônico para distinguir cópia de homônimo. | José / editorial | Decidir o que fazer com flashcards repetidos entre blocos (ids canônicos); depois reconferir a capa |
+
+Gerado a partir de 27 resultados «como está» e 27 «com correção» em `docs/layout-ensaio/resultado-compacto.json` (os JSON completos por matéria não são versionados: ensaio.cjs os regenera).

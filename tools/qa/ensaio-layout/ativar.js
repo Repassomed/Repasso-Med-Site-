@@ -18,7 +18,7 @@
   function pad(n) { return (n < 10 ? '0' : '') + n; }
   function limpo(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
 
-  /* ---- tema gerado a partir do DOM real da matéria (o que um descritor/derivador por matéria faria) ----
+  /* ---- tema gerado a partir do DOM real da matéria: HIPÓTESE TÉCNICA para ensaiar os componentes, NÃO a identidade visual aprovada de nenhuma matéria ----
      Classificação POR CONTEÚDO, não por convenção de id (os ids das 27 matérias não seguem `<slug>-bNN`):
        · agregadora (revisão/banco/mazo/cierre) = seção cujos itens (questões ou flashcards) já existem em OUTRAS seções e que carrega ≥ 50% do total distinto → repaso (B/F);
        · guia = 1.ª seção sem questões/flashcards/…bNN; tablas = seção só de tabelas sem questões;
@@ -66,7 +66,7 @@
     var amostra = base.clasificar('x-b01'); var tipoBloque = amostra.tipo;   /* o piloto escreve o tipo como o módulo real espera: confere antes de gerar */
     var clas = function (id) { var c = tipo[id] || { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null }; var o = Object.assign({}, c); if (o.tipo === 'bloque') o.tipo = tipoBloque; return o; };
     var tema = Object.assign({}, base, { unidades: unidades, medallones: [], clasificar: clas });
-    E.temaGerado = { unidades: Object.keys(unidades), numeracao: todosNum ? 'id' : 'ordem', secciones: secs.map(function (s) { var c = clas(s.id); return { id: s.id, tipo: c.tipo, n: c.n }; }) };
+    E.temaGerado = { natureza: 'hipotese-tecnica', aviso: 'descritor inferido do conteudo para ensaiar componentes; NAO e identidade visual aprovada da materia', unidades: Object.keys(unidades), numeracao: todosNum ? 'id' : 'ordem', secciones: secs.map(function (s) { var c = clas(s.id); return { id: s.id, tipo: c.tipo, n: c.n }; }) };
     return tema;
   }
 

@@ -91,6 +91,7 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
       try {
       r = await L.abrir(br, base, m, { w: W, h: ALT[W], modo: 'nav', corr: CORR });
       const p = r.page; const E = await p.evaluate(() => window.__ens);
+      if (!R.descritor) R.descritor = E.temaGerado ? { natureza: 'hipotese-tecnica', aviso: 'descritor inferido do conteúdo para ensaiar componentes; não é a identidade visual aprovada da matéria', numeracao: E.temaGerado.numeracao, unidades: E.temaGerado.unidades } : { natureza: 'tema-real-do-piloto' };
       const nBlocos = secs.length;
       /* ---------- BOOT ---------- */
       chk('boot', W, 'etapas', E.etapas.attach_layout && E.etapas.attach_tema && E.etapas.attach_nav, 'Layout V2 + tema + navegação ativaram', E);
@@ -296,7 +297,7 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
         }, alvoBloco.id);
         if (w1.semAlvo || w1.semFerramenta) bloq('caneta', W, 'traco', w1.semAlvo ? 'nenhum parágrafo longo no bloco para ancorar o traço' : 'RMToolsV2 sem ferramenta no harness');
         else {
-          chk('caneta', W, 'traco-ancorado', w1.tool === 'pen' && w1.paths >= 1 && new RegExp('^' + alvoBloco.id + '>').test(w1.anchor || ''), `traço desenhado e ancorado em ${alvoBloco.id} (${w1.anchor})`, w1);
+          chk('caneta', W, 'traco-ancorado', w1.tool === 'pen' && w1.paths >= 1 && new RegExp('^' + alvoBloco.id + '>').test(w1.anchor || ''), `traço SIMULADO (PointerEvent «pen» sintético, Chromium, Supabase simulado) desenhado e ancorado em ${alvoBloco.id} (${w1.anchor}); não mede atraso nem perda de traço reais (#456)`, w1);
           const escA = await p.evaluate(() => (window.__writes || []).length);
           const vis = () => p.evaluate(() => [...document.querySelectorAll('#rm2-ink svg[data-anchor]')].map(s => { const c = getComputedStyle(s), r = s.getBoundingClientRect(); return { a: s.getAttribute('data-anchor'), disp: c.display, w: Math.round(r.width) * Math.round(r.height) }; }));
           const outro = ids.find(x => x !== alvoBloco.id && !REUNE.test(x));
@@ -305,14 +306,14 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
             if (spec.mode === 'preguntas' && !esperados.preguntas.length) continue;
             await go(p, spec, 1100); const v = await vis(); leaks.push(...v.filter(s => s.disp !== 'none' || s.w > 0).map(s => ({ spec: spec.view, ...s })));
           }
-          chk('caneta', W, 'traco-nao-vaza', leaks.length === 0, 'em outro bloco, índice e modos o traço fica oculto (display:none, sem caixa)', leaks.slice(0, 4));
+          chk('caneta', W, 'traco-nao-vaza', leaks.length === 0, '(traço simulado) em outro bloco, índice e modos o traço fica oculto (display:none, sem caixa)', leaks.slice(0, 4));
           await go(p, { view: 'block', block: alvoBloco.id }, 1500);
           const volta = await p.evaluate(async (a) => { const [sid, ix] = a.split('>'); const lista = [...document.getElementById(sid).querySelectorAll('p,li,h2,h3,h4,h5,table,figure,blockquote')].filter(n => !n.closest('[data-rm-ui]')); const par = lista[+ix]; window.RMLayout.irPara(par); await new Promise(o => setTimeout(o, 1400));
             const sv = document.querySelector(`#rm2-ink svg[data-anchor="${a}"]`); if (!sv) return { sem: true }; const c = getComputedStyle(sv), r = sv.getBoundingClientRect(), pr = par.getBoundingClientRect();
             return { disp: c.display, dx: Math.abs(r.left - pr.left), dy: Math.abs(r.top - pr.top), dw: Math.abs(r.width - pr.width), d: [...sv.querySelectorAll('path')].map(x => x.getAttribute('d')).join('|') }; }, w1.anchor);
-          chk('caneta', W, 'traco-volta', !volta.sem && volta.disp !== 'none' && volta.dx <= 4 && volta.dy <= 4 && volta.dw <= 4 && volta.d === w1.d, 'de volta ao bloco o MESMO traço reaparece sobre o parágrafo âncora (Δ ≤ 4 px)', volta);
+          chk('caneta', W, 'traco-volta', !volta.sem && volta.disp !== 'none' && volta.dx <= 4 && volta.dy <= 4 && volta.dw <= 4 && volta.d === w1.d, '(traço simulado) de volta ao bloco o MESMO traço reaparece sobre o parágrafo âncora (Δ ≤ 4 px)', volta);
           const escB = await p.evaluate(() => (window.__writes || []).length);
-          chk('caneta', W, 'navegar-nao-grava', escA === escB, 'trocar de bloco/modo/índice não faz nenhuma escrita (só o motor da V2 grava o traço)', { antes: escA, depois: escB });
+          chk('caneta', W, 'navegar-nao-grava', escA === escB, '(traço simulado) trocar de bloco/modo/índice não faz nenhuma escrita (só o motor da V2 grava o traço)', { antes: escA, depois: escB });
           await p.evaluate(() => window.RMToolsV2.escolherFerramenta('none'));
         }
         /* integridade dos nós originais (IDs e contagens) frente ao controle */

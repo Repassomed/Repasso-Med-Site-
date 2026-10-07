@@ -111,4 +111,11 @@ async function abrir(br, base, mat, { w = 1440, h = 900, modo = 'nav', touch = w
   return { ctx, page, errs, falhasRede, externas };
 }
 
-module.exports = { REPO, ROOT, MAT, lerCatalogo, lerFiles, reconciliar, ADAPTACOES, servir, abrir };
+/* JSON versionável: o cabeçalho numa linha e UM ITEM DA LISTA POR LINHA (diff e revisão legíveis, sem pretty-print de milhares de linhas). */
+function jsonLinhas(obj, chaveLista) {
+  const lista = obj[chaveLista]; const resto = Object.assign({}, obj); delete resto[chaveLista];
+  const cab = JSON.stringify(resto).slice(0, -1);
+  return cab + (Object.keys(resto).length ? ',' : '') + JSON.stringify(chaveLista) + ':[\n' + lista.map(x => JSON.stringify(x)).join(',\n') + '\n]}\n';
+}
+
+module.exports = { jsonLinhas, REPO, ROOT, MAT, lerCatalogo, lerFiles, reconciliar, ADAPTACOES, servir, abrir };

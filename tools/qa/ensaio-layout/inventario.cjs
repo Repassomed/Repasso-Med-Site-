@@ -130,6 +130,6 @@ function existe(rel) {
   }
   await br.close(); srv.close();
   fs.mkdirSync(OUT, { recursive: true });
-  fs.writeFileSync(path.join(OUT, filtro.length ? 'inventario.parcial.json' : 'inventario.json'), JSON.stringify(out, null, 1));
+  fs.writeFileSync(path.join(OUT, filtro.length ? 'inventario.parcial.json' : 'inventario.json'), L.jsonLinhas(out, 'materias'));
   console.log('ok →', path.join(OUT, filtro.length ? 'inventario.parcial.json' : 'inventario.json'));
 })();

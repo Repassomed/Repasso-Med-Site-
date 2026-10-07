@@ -48,6 +48,12 @@
 | Neurología | ✔ | ✔ | ✖ | ✔ | ✔ | ✔ | ✔ | ✔ | ✖ | agregadora não reconhecida: revisaoneu |
 | Anestesiología | ✔ | ✔ | ✖ | ✔ | ✔ | ✔ | ✔ | ✔ | ✖ | agregadora não reconhecida: anecierre |
 
+## Formato de `audio_id` (código real × contrato)
+
+- Servidor `_audio/lib.js:35`: `/^[a-z0-9][a-z0-9._-]{0,79}$/i`
+- Motor `assets/rm-audio.js:118`: `/^[a-z0-9][a-z0-9._-]{0,79}$/i`
+- Documentado no contrato: ✔ idêntico · servidor = motor: ✔
+
 ## Totais
 
 | Regra | Matérias que cumprem (de 27) |

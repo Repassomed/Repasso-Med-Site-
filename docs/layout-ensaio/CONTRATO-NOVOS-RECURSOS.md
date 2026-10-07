@@ -11,20 +11,32 @@ O inventário real das 27 matérias (`INVENTARIO.md`) e o ensaio visual (`MATRIZ
 2. **O DOM soma cópias.** Cada matéria guarda os mesmos itens duas vezes (no bloco e no banco geral / "revisión" / "mazo" / "cierre"): 10 098 `.quiz-item` no DOM para 5 361–5 605 questões distintas; 17 735 `.flashcard` para 7 043 distintos.
 3. **A cópia é reconhecida pelo `id` da seção** (`/banco|flashcards/i`), e os ids das 27 matérias não seguem convenção. Onde o id não casa (`revisaoneu`, `anecierre`, `dermcierre`, `toxcierre`, `oftcierre`, `h2pmazo`, `mazognrl`, `revisaofp2`…), a capa mostraria o dobro ou o triplo.
 
-**Regra-mãe:** *um recurso tem uma fonte da verdade; toda contagem é derivada dela; nenhuma pessoa digita um número que o conteúdo já determina.*
+**Regra-mãe (alvo):** *um recurso tem uma fonte da verdade; toda contagem é derivada dela; nenhuma pessoa digita um número que o conteúdo já determina.*
+
+### Duas fases — leia antes de qualquer seção
+
+| | **Fase 1 · marcar e validar** (o que esta proposta entrega) | **Fase 2 · agregadora vira vista** (futura, PR e auditoria próprias) |
+|---|---|---|
+| Conteúdo das matérias | **não muda de estrutura**: só entram atributos `data-rm-*` | a agregadora (banco geral, «revisión», «mazo», «cierre») deixa de guardar cópias |
+| Pergunta nova | escrever no bloco **e fazer a cópia física no Banco General** (nas matérias que têm banco), com `data-rm-copia-de`; corpo e Banco continuam espelhados à mão, como hoje (8-A.3) | escrever **uma vez**, no bloco |
+| Número da portada | **continua sendo conferido por pessoa**: o validador acusa a divergência, e quem edita corrige o número (ou adota `data-rm-count`, edição de conteúdo por matéria) | sempre derivado |
+| Contagem de capa/índice/modos | derivada pelo módulo dos ids canônicos fora de agregadoras (depende de C1/C2/C5 e dos marcadores) | idem |
+| Âncoras da caneta/notas | **intactas** (nenhum nó muda) | exigem **migração segura** das âncoras (mapa antigo→novo, prova de que nenhum traço/nota/grifo se perde) |
+
+**A promessa «escreva só uma vez no bloco» pertence exclusivamente à Fase 2.** Na Fase 1 o fluxo editorial de hoje (bloco + cópia no Banco + conferência do número) **continua obrigatório**; o ganho da Fase 1 é que o validador e o módulo deixam de depender de regex de id e de número digitado sem conferência.
 
 ## 1 · Uma fonte da verdade por recurso
 
 | Recurso | Fonte da verdade (onde se escreve) | O que é derivado (nunca digitado) | Cópias permitidas |
 |---|---|---|---|
-| **Pergunta** | o `.quiz-item` **dentro do bloco que a ensina**, com `id` estável (`q-<prefixo><NNN>`) | contagem do bloco, da capa, do modo Preguntas, grupos «Basada en preguntas de examen» / «Complementaria» (da etiqueta real), texto «N preguntas» | a cópia no banco geral leva `data-rm-copia-de="<id da canônica>"` e **não entra** em nenhuma soma |
+| **Pergunta** | o `.quiz-item` **dentro do bloco que a ensina**, com `id` estável (`q-<prefixo><NNN>`) | contagem do bloco, da capa, do modo Preguntas, grupos «Basada en preguntas de examen» / «Complementaria» (da etiqueta real); texto «N preguntas» só na Fase 2 | **Fase 1:** a cópia física no Banco General é obrigatória (nas matérias com banco) e leva `data-rm-copia-de="<id da canônica>"`; **não entra** em nenhuma soma. **Fase 2:** deixa de existir |
 | **Infografía** | `<figure>` com `<figcaption>` e `<img>` (ou `.s2-photo[role=img]`) dentro do bloco | contagem do bloco/capa/modo Infografías | nenhuma |
-| **Flashcard** | `.flashcard` (`.fc-front`/`.fc-back`) dentro do bloco, com `data-rm-fc="<id>"` | contagem do bloco/capa/modo Flashcards | a seção «revisión/mazo/cierre» (agregadora) **não é fonte**: é vista sobre os blocos (§4) |
+| **Flashcard** | `.flashcard` (`.fc-front`/`.fc-back`) dentro do bloco, com `data-rm-fc="<id>"` | contagem do bloco/capa/modo Flashcards | **Fase 1:** a seção «revisión/mazo/cierre» continua guardando cópias, marcada `data-rm-agrega`, e **não é fonte**. **Fase 2:** vira vista sobre os blocos (§4) |
 | **Videoclase** | `details.video-collapsible[data-rm-video="<id>"]` dentro do bloco | contagem do bloco/capa; número «N videos» | nenhuma |
 | **Ausculta** (sons clínicos) | `.audio-player[data-rm-aus="<id>"]` com arquivo local existente | contagem «N sonidos», modo Auscultación | nenhuma |
 | **Audiolibro** | **exclusivamente** o manifesto autenticado (`get-audio-manifest`) | existência do card, contagem, chips, modo Audiolibros | nenhuma: não existe no HTML da matéria |
 
-Consequência: **adicionar um recurso = escrever o recurso no bloco.** Capa, índice, modos, lateral, chips e o texto «N …» da portada se atualizam sozinhos.
+Consequência **na Fase 2**: adicionar um recurso = escrever o recurso no bloco; capa, índice, modos, lateral, chips e o texto «N …» da portada se atualizam sozinhos. **Na Fase 1** valem as colunas «Fonte da verdade» e «Derivado» para capa, índice, modos, lateral e chips, mas a cópia física no Banco/«revisión» e a conferência do número escrito na portada seguem sendo passos humanos (ver §6).
 
 ## 2 · Marcadores mínimos no HTML da matéria (aditivos e retrocompatíveis)
 
@@ -61,26 +73,26 @@ contagem(recurso, escopo) = |{ ids canônicos distintos do recurso
 - **Escopo bloco:** cartão do índice, cabeçalho do bloco, índice do modo.
 - **Escopo matéria:** capa, lateral, texto da portada.
 - Fonte de leitura no navegador: o módulo (`RMSistema`/`RMNav`) já lê o DOM; passa a ler **o conjunto de ids canônicos** em vez de contar nós.
-- **Texto da portada:** o número escrito à mão vira `<span data-rm-count="quiz|fc|fig|bloques|video"></span>`; o módulo preenche. O HTML estático guarda o último valor apenas como *fallback* sem JavaScript; o validador (§6) falha se o fallback divergir do derivado, então ninguém precisa recalcular nada.
+- **Texto da portada (Fase 1):** o número continua escrito no HTML e **a pessoa que edita o confere**; `contrato.cjs` (regra R5) falha se ele divergir do derivado, e a correção é manual. Opcionalmente a matéria adota `<span data-rm-count="quiz|fc|fig|bloques|video">N</span>` (edição de conteúdo, matéria a matéria): o módulo preenche o valor derivado e o `N` estático fica só como fallback sem JavaScript, ainda validado por R5. **Fase 2:** o placeholder é o padrão e o número deixa de ser digitado.
 - **Audiolibros:** `contagem = nº de cards criados a partir do manifesto`. Nunca de texto.
 
 Casos de borda (já medidos nas 27 matérias; ver `INVENTARIO.md §6`):
 - flashcards soltos numa seção agregadora que **não** estão nos blocos (Semiología II: 12 em `s2-banco`) → o validador acusa «item só na agregadora»; a decisão (levar ao bloco ou descartar) é editorial.
 - homônimos: duas perguntas distintas com o mesmo enunciado genérico só se distinguem pelo `id`. Por isso o `id` é obrigatório.
 
-## 4 · Agregadoras: de cópia para vista (opcional, fase 2)
+## 4 · Agregadoras: Fase 1 (marcar) × Fase 2 (vista)
 
-Fase 1 (esta proposta): **marcar** (`data-rm-agrega`), sem mudar conteúdo. Resolve a contagem e a navegação.
+**Fase 1 (esta proposta):** **marcar** (`data-rm-agrega`) e ligar cópias (`data-rm-copia-de`), **sem mudar a estrutura do conteúdo**. Resolve a contagem e a navegação, mas **não elimina a duplicação nem o trabalho de espelhar o Banco**.
 
-Fase 2 (PR separada, só se José quiser): a agregadora deixa de guardar cópias e passa a ser uma **vista** gerada em tempo de execução a partir dos blocos. Elimina a duplicação (≈ 4 700 questões e ≈ 10 700 flashcards repetidos no DOM), reduz o tamanho das matérias e remove o risco de as cópias divergirem. **Risco:** as âncoras de tinta/notas são `seção>índice`; migrar exige mapa de âncoras antigo→novo e prova de que nenhum traço/nota/grifo se perde. Por isso não é proposto sem a PR da caneta fechada e uma auditoria própria.
+**Fase 2 (futura; só se José quiser; PR separada com auditoria própria):** a agregadora deixa de guardar cópias e passa a ser uma **vista** gerada em tempo de execução a partir dos blocos. Elimina a duplicação (≈ 4 700 questões e ≈ 10 700 flashcards repetidos no DOM), reduz o tamanho das matérias e remove o risco de as cópias divergirem. **Pré-condição obrigatória:** migração segura das âncoras. As âncoras de tinta, notas e grifos são `seção>índice`; apagar as cópias muda os índices. É preciso um mapa antigo→novo, a prova (com dados reais, não simulados) de que nenhum traço/nota/grifo se perde ou se desloca, e a PR da caneta (#456) fechada. Só depois disso vale a promessa de escrever uma vez.
 
 ## 5 · Audiolibro, ausculta e vídeo
 
 **Audiolibro (regra dura):**
 1. O card só existe se o manifesto autenticado devolver `{audio_id, block_id}` e `block_id` existir como seção no DOM da matéria.
-2. `audio_id` casa com `^[a-z0-9][a-z0-9-]{1,63}$`; o card carrega `data-rm-audio-id` e `data-rm-block-id`; o módulo **não** cria card para id desconhecido nem para bloco inexistente.
+2. **Formato validado hoje (fonte: o código, não esta proposta):** `audio_id`, `block_id` e `subject_slug` casam com **`/^[a-z0-9][a-z0-9._-]{0,79}$/i`** (1 a 80 caracteres, letras ASCII sem distinção de caixa, dígitos, ponto, sublinhado e hífen; começa por letra ou dígito). A mesma expressão está em `netlify/functions/_audio/lib.js:35` (`ID_RE`) e em `assets/rm-audio.js:118` (`ID_RE`, usada por `validateItem`); `contrato.cjs` falha se as duas divergirem entre si ou desta documentação. Além do formato, o validador rejeita: campo fora dos 8 públicos (`audio_id, subject_slug, block_id, theme, title, duration, order, version`; no servidor ainda `path` e `ready`), valor que pareça URL/caminho/token/arquivo, `duration` fora de 1–21600 s e `order` não inteiro fora de 0–9999. Convenção editorial (opcional, **dentro** do formato): `<sigla>-<bloco>-<NN>`, p.ex. `semio2-b01-03`. O card real criado pelo motor (`rm-audio-boot.js`) traz `data-audio-id="<audio_id>"` e é inserido na seção `section#<block_id>`; o módulo **não** cria card para id fora do formato, id desconhecido nem bloco inexistente.
 3. Nenhuma URL assinada, bucket ou caminho de arquivo aparece no DOM antes do clique em «Reproducir»; a URL é pedida na hora, curta, e descartada ao sair da matéria/logout.
-4. Autorização por **flag + lista de matérias liberadas no servidor** (`get-pilot-flags` / `get-audio-manifest`). Falha = fechado: sem manifesto, nada aparece (lateral, capa, pílula, chip, player).
+4. Autorização por **flag + lista de matérias liberadas no servidor** (`get-pilot-flags` / `get-audio-manifest`). Falha = fechado: sem manifesto, nada aparece (lateral, capa, pílula, chip, player). **Hoje o servidor só lê o manifesto do slug do piloto** (`_audio/lib.js`, `PILOT_SLUG`; `rm-audio-boot.js:38-39` também): liberar outra matéria exige patch de servidor e de cliente (A4/A6 em `PATCHES-PARA-INTEGRACAO.md`), fora desta PR.
 5. O ensaio **nunca simula áudio** sem manifesto autorizado: ele só prova a ausência (`audio/sem-manifesto-sem-audiolibro` e `audio/sem-requisicao-audio` PASSAM nas 27 matérias).
 6. Cada audiolibro novo passa por: fonte autorizada por José → manifesto → card real → QA do piloto (motor de áudio) → só então o flag da matéria.
 
@@ -90,13 +102,21 @@ Fase 2 (PR separada, só se José quiser): a agregadora deixa de guardar cópias
 
 ## 6 · Como publicar um recurso novo (passo a passo)
 
-1. **Escrever no bloco** (fonte da verdade). Pergunta: seguir 8-A do `MANUTENCAO-DIDATICA-REPASSO-MED.md` (duplicata, cobertura, rótulo «Basada en preguntas de examen» só com prova real). Infografía/flashcard/vídeo: padrão visual da matéria.
-2. **Dar o id estável** e, se houver cópia no banco, `data-rm-copia-de`.
-3. **Rodar o validador do contrato** (`tools/qa/ensaio-layout/contrato.cjs <slug>`): falha se faltar id, se houver cópia sem canônica, se a portada divergir do derivado, se houver id duplicado ou mídia quebrada.
-4. **Rodar o ensaio** (`tools/qa/ensaio-layout/ensaio.cjs <slug> --rapido`): 390 e 1440, índice, blocos, modos, ausência, teclado, Back, caneta, sem escrita no banco.
-5. **QA existentes** do repositório (Guard, annotation-safety, 4 larguras) como hoje.
-6. **PR** com a matriz do recurso (o que entrou, onde, contagem derivada antes→depois).
-7. **Sem tocar flags.** Ativação do layout novo numa matéria é decisão separada, com auditoria própria.
+### Fase 1 (a que vale enquanto a Fase 2 não existir)
+
+1. **Escrever no bloco** que ensina o assunto (fonte da verdade). Pergunta: seguir 8-A do `MANUTENCAO-DIDATICA-REPASSO-MED.md` (duplicata, cobertura, rótulo «Basada en preguntas de examen» só com prova real). Infografía/flashcard/vídeo: padrão visual da matéria.
+2. **Dar o id estável** (`q-<prefixo><NNN>` para perguntas; `data-rm-fc`, `data-rm-video`, `data-rm-aus` nos demais).
+3. **Fazer a cópia física no Banco General / «revisión» / «mazo» / «cierre»** quando a matéria tiver (perguntas: com `data-rm-copia-de="<id do bloco>"`), mantendo corpo e Banco **espelhados**, como hoje. **Matéria sem banco geral não ganha um por isso** (8-A.3).
+4. **Conferir o número escrito na portada** (e nos textos «N preguntas/flashcards/infografías/videos» dos blocos): atualizar à mão ou adotar `data-rm-count`.
+5. **Rodar o validador do contrato** (`inventario.cjs <slug>` e depois `contrato.cjs <slug> --parcial`): falha se faltar id, se houver cópia sem canônica, se a portada divergir do derivado, se houver id duplicado ou mídia quebrada.
+6. **Rodar o ensaio** (`ensaio.cjs <slug> --rapido`): 390 e 1440, índice, blocos, modos, ausência, teclado, Back, um traço de caneta **simulado**, sem escrita no banco.
+7. **QA existentes** do repositório (Guard, annotation-safety, 4 larguras) como hoje.
+8. **PR** com a matriz do recurso (o que entrou, onde, contagem derivada antes→depois).
+9. **Sem tocar flags.** Ativação do layout novo numa matéria é decisão separada, com auditoria própria.
+
+### Fase 2 (futura)
+
+Passos 1–2, 5–9 iguais; os passos 3 e 4 desaparecem (a agregadora é vista; o número é derivado). **Só começa depois da migração segura das âncoras (§4).**
 
 ## 7 · Rollback
 
@@ -106,4 +126,6 @@ Fase 2 (PR separada, só se José quiser): a agregadora deixa de guardar cópias
 
 ## 8 · Estado atual de conformidade
 
-`CONFORMIDADE.md` (gerado por `contrato.cjs`) mostra, por matéria, quais regras do contrato já são cumpridas pelo conteúdo de hoje e quais exigem edição editorial. **Nenhuma matéria tem os marcadores `data-rm-*` ainda** (esperado: o contrato é uma proposta). O ensaio com os marcadores *gerados em memória* (variante «com correção») mostra o resultado esperado depois da adoção.
+`CONFORMIDADE.md` (gerado por `contrato.cjs`) mostra, por matéria, quais regras do contrato já são cumpridas pelo conteúdo de hoje e quais exigem edição editorial. **Nenhuma matéria tem os marcadores `data-rm-*` ainda** (esperado: o contrato é uma proposta). O ensaio com os marcadores *gerados em memória* (variante «com correção») mostra o resultado esperado depois da adoção da **Fase 1**; os descritores/temas que o ensaio infere do conteúdo são **hipótese técnica** para exercitar os componentes, **não** a identidade visual aprovada de nenhuma matéria.
+
+> **Limite do teste de caneta:** o «caneta PASSA» da matriz usou **um traço sintético** (eventos `PointerEvent` do tipo `pen`) no Chromium, contra um Supabase simulado. Prova que o traço se ancora, que some fora do bloco e que navegar não grava. **Não** verifica o atraso, a perda de traço, a persistência real nem as regressões da #456 (Claude 2).

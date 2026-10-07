@@ -23,6 +23,15 @@ const REGRAS = {
   R9: 'marcadores data-rm-* do contrato presentes (role, agrega, copia-de)'
 };
 
+/* ---- formato de audio_id: o código real (servidor e motor) e o contrato documentado não podem divergir ---- */
+const ASSETS = path.join(L.ROOT, 'assets'), FN = path.join(L.ROOT, 'netlify/functions');
+const idRe = (f, nome) => { const m = new RegExp('(?:const|var)\\s+' + nome + '\\s*=\\s*(/\\^[^\\n]*?/[a-z]*);').exec(fs.readFileSync(f, 'utf8')); return m && m[1]; };
+const ID_SERVIDOR = idRe(path.join(FN, '_audio/lib.js'), 'ID_RE'), ID_MOTOR = idRe(path.join(ASSETS, 'rm-audio.js'), 'ID_RE');
+const docContrato = fs.readFileSync(path.join(DIR, 'CONTRATO-NOVOS-RECURSOS.md'), 'utf8');
+const AUDIO_ID = { servidor: ID_SERVIDOR, motor: ID_MOTOR, igualEntreSi: !!ID_SERVIDOR && ID_SERVIDOR === ID_MOTOR, documentado: !!ID_SERVIDOR && docContrato.includes('`' + ID_SERVIDOR + '`') || docContrato.includes('**`' + ID_SERVIDOR + '`**') };
+const audioOk = AUDIO_ID.igualEntreSi && AUDIO_ID.documentado;
+console.log('audio_id:', ID_SERVIDOR, audioOk ? '✔ servidor = motor = contrato' : '✖ DIVERGE (servidor ' + ID_SERVIDOR + ' · motor ' + ID_MOTOR + ' · documentado ' + AUDIO_ID.documentado + ')');
+
 const out = [];
 for (const m of inv.materias.filter(x => !filtro.length || filtro.includes(x.slug))) {
   const html = fs.readFileSync(path.join(L.MAT, m.arquivo.nome), 'utf8');
@@ -51,7 +60,7 @@ for (const m of inv.materias.filter(x => !filtro.length || filtro.includes(x.slu
 }
 
 const nFalha = out.reduce((a, o) => a + Object.values(o.regras).filter(v => !v).length, 0);
-fs.writeFileSync(path.join(DIR, parcial ? 'conformidade.parcial.json' : 'conformidade.json'), JSON.stringify({ gerado_em: new Date().toISOString(), regras: REGRAS, materias: out }, null, 1));
+fs.writeFileSync(path.join(DIR, parcial ? 'conformidade.parcial.json' : 'conformidade.json'), L.jsonLinhas({ gerado_em: new Date().toISOString(), regras: REGRAS, audio_id: AUDIO_ID, materias: out }, 'materias'));
 
 if (!parcial && !filtro.length) {
   const L1 = [];
@@ -74,6 +83,7 @@ if (!parcial && !filtro.length) {
     L1.push(`| ${o.title} | ${c('R1')} | ${c('R2')} | ${c('R3')} | ${c('R4')} | ${c('R5')} | ${c('R6')} | ${c('R7')} | ${c('R8')} | ${c('R9')} | ${obs.join(' · ').slice(0, 300)} |`);
   });
   const tot = k => out.filter(o => o.regras[k]).length;
+  L1.push('', '## Formato de `audio_id` (código real × contrato)', '', `- Servidor \`_audio/lib.js:35\`: \`${ID_SERVIDOR}\``, `- Motor \`assets/rm-audio.js:118\`: \`${ID_MOTOR}\``, `- Documentado no contrato: ${AUDIO_ID.documentado ? '✔ idêntico' : '✖ diverge'} · servidor = motor: ${AUDIO_ID.igualEntreSi ? '✔' : '✖'}`);
   L1.push('', '## Totais', '', '| Regra | Matérias que cumprem (de ' + out.length + ') |', '|---|--:|');
   Object.keys(REGRAS).forEach(k => L1.push(`| ${k} | ${tot(k)} |`));
   L1.push('', 'R9 (marcadores `data-rm-*`) é 0 por construção: o contrato é uma proposta e nenhuma matéria foi editada. R3 mede se a **heurística atual do piloto** já reconheceria as agregadoras; onde ✖, o módulo contaria o dobro ou o triplo.');
@@ -82,4 +92,4 @@ if (!parcial && !filtro.length) {
 } else {
   out.forEach(o => console.log(o.slug, Object.entries(o.regras).map(([k, v]) => k + (v ? '✔' : '✖')).join(' ')));
 }
-process.exit(filtro.length && nFalha ? 1 : 0);
+process.exit(!audioOk || (filtro.length && nFalha) ? 1 : 0);
