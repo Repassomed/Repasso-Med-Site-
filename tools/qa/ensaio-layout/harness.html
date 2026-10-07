@@ -1,0 +1,24 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="stylesheet" href="assets/styles.css"><!--INDEX_STYLE--><title>ensaio-layout</title></head><body>
+<!--INDEX_TOP-->
+<div class="main-tabs" id="main-tabs"><div class="main-tabs-inner" id="main-tabs-inner"></div></div>
+<div id="materias-container"></div>
+<button id="logout-fab" type="button">Salir</button>
+<script>
+/* Harness do ENSAIO (issue #457). Supabase simulado: tinta/destaques vazios; QUALQUER escrita é registrada e reprova o ensaio. */
+const P = new URLSearchParams(location.search);
+window.__writes = []; window.__errs = [];
+window.addEventListener('error', e => window.__errs.push(String(e.message)));
+window.addEventListener('unhandledrejection', e => window.__errs.push('rej:' + e.reason));
+window.RM_CATALOGO = /*CATALOGO*/[];
+function chain(t){ const o = {}; ['select','eq','order','limit','single','maybeSingle','in'].forEach(m => o[m] = () => o); o.range = function(a){ o._from = a; return o };
+  ['insert','update','delete','upsert'].forEach(m => o[m] = function(a){ window.__writes.push(m + ':' + t); return o });
+  o.then = function(res){ return Promise.resolve({ data: [], error: null }).then(res) }; return o }
+window.RM_SB = { auth: { getSession: async () => ({ data: { session: { access_token: 'tok-ensaio', user: { id: 'u-ensaio' } } } }), getUser: async () => ({ data: { user: { id: 'u-ensaio' } } }), onAuthStateChange(){ return { data: { subscription: { unsubscribe(){} } } } } }, from: chain, rpc: async () => ({ data: null, error: null }) };
+window._sb = window.RM_SB;
+</script>
+<script src="assets/app-core.js"></script>
+<script src="assets/rm-tools.js"></script>
+<script src="assets/rm-tools-v2.js"></script>
+<script src="ativar.js"></script>
+</body></html>
