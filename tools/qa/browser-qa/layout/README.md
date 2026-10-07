@@ -201,8 +201,22 @@ inline da regra antiga, não a `.rm2-box` real nem o CSS do Layout; o teste do C
 ## Assets de arte (ChatGPT → José → integração)
 Especificação completa em [`ASSETS-CHATGPT.md`](ASSETS-CHATGPT.md): hoje 1 slot (`hero`), entregue em 2 resoluções.
 
+## Navegação por bloco + modos isolados (issue #453) — `nav-sistema.test.cjs` e `capturas-navegacion.cjs`
+`rm-materia-nav.js` (`window.RMNav`) sobre o `RMModes` (eixo `block`): índice geral · um bloco por vez · modos Infografías/Preguntas/Flashcards/Audiolibros/Auscultación com índice de blocos e só o recurso do tipo.
+```
+export NODE_PATH=$(npm root -g)   # ou RM_PLAYWRIGHT=/caminho/do/modulo ; precisa de ffmpeg (ou RM_FFMPEG)
+node tools/qa/browser-qa/layout/nav-sistema.test.cjs
+RM_FONTS_DIR=<pasta com local.css> node tools/qa/browser-qa/layout/capturas-navegacion.cjs <pasta-de-saída> [--so=nav|mobile|ab]
+```
+Prova (A–H): tema desligado = leitura contínua e nada da navegação · abertura (capa, 5 recursos, 14 cards com contagens = DOM, sem «Revisión reunida», modos no alto da lateral, nós/IDs idênticos aos da página sem o tema, nada de URL/bucket no DOM) ·
+um bloco por vez (card, lateral, árvore, pager, extremos, Back/Forward, hash, deep link na carga, teclado, foco, oculto = `display:none`) · modos (índice só com blocos que têm o recurso, contagens reais, 1 página «modo+bloco» por recurso sem páginas vazias,
+grupos de Preguntas só com metadado real e estado da questão preservado, Flashcards + «todos» sem duplicar, Audiolibros só com card real — inclusive manifesto tardio e deep link adiado) · caneta (traço persiste, bloco oculto esconde o SVG, volta ancorado, 0 escritas na navegação) ·
+áudio (6 trocas sem parar, 1 mídia, sair da matéria/logout para) · 320/390/768/1024/1440 e zoom 200 % (sem overflow/sobreposição, pager acima do player) · detach limpo. `lib-player.cjs` abre com a navegação **desligada** por padrão (`nav:false`) para os testes de geometria/tema/player,
+que medem a leitura contínua; `nav:true` liga. `ink-jump.test.cjs` com `RM_VISUAL=1` roda os saltos/revisitas de bloco COM a navegação e os cenários de leitura contínua sem ela.
+`capturas-navegacion.cjs` gera antes (leitura contínua) × depois e a comparação A × B do player com `MEDIDAS-PLAYER.md`. Emulação de toque, não aparelho real.
+
 ## Player do audiobook no tema do piloto — `player-sistema.test.cjs` e `capturas-player.cjs`
-Card dentro da lateral colorida (desktop ≥ 1200 px), barra compacta (celular/tablet/trilho), convivência com a toolbox aberta e com a caneta armada. **Motor de áudio REAL**
+**(Atualizado na #453: disco de vinil quase quadrado no ALTO À DIREITA — A coluna reservada ≥ 1430 px · B quadrado recolhido que expande; ver `SISTEMA-VISUAL-MATERIAS.md`.)** Na #446 era um card dentro da lateral colorida (desktop ≥ 1200 px); barra compacta (celular/tablet/trilho), convivência com a toolbox aberta e com a caneta armada. **Motor de áudio REAL**
 (rm-audio-boot → rm-audio/store/provider, mp3 gerado com ffmpeg); só o servidor (gate, manifesto, URL assinada, mídia) é simulado — `lib-player.cjs`.
 ```
 export NODE_PATH=$(npm root -g)   # ou RM_PLAYWRIGHT=/caminho/do/modulo ; precisa de ffmpeg (ou RM_FFMPEG)

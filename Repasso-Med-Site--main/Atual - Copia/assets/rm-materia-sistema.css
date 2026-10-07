@@ -333,34 +333,88 @@ html.rm-sis #rm-l2-player .rm-audio__seek::-moz-range-track { height: 6px; borde
 html.rm-sis #rm-l2-player .rm-audio__seek::-moz-range-progress { height: 6px; border-radius: 99px; background: var(--rm-gold); }
 html.rm-sis #rm-l2-player .rm-audio__seek::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 3px solid var(--rm-gold); box-shadow: 0 1px 4px rgba(0, 0, 0, .45); }
 
-/* ---- CARD (desktop docked: dentro da lateral; celular ampliado: largura toda) ---- */
-html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"],
-html.rm-sis #rm-l2-player[data-rm-sis-x] .rm-audio[data-mode="bottom"] {
-  grid-template-columns: repeat(5, minmax(44px, 1fr)); padding: 10px 8px 8px; border-radius: 16px;
-  grid-template-areas: "st st st tm tm" "ti ti ti ti cl" "sk sk sk sk sk" "rs bk pl fw rt";
+/* ---- VINIL (adendo do José, issue #453) --------------------------------------------------------------------------------------------------
+   O botão play/pausa original ([data-a="toggle"]) É o disco: grooves em CSS puro (nenhuma imagem, nenhuma mídia extra antes de tocar), etiqueta dourada
+   com o ▶/❚❚ do próprio botão. O disco gira devagar SÓ enquanto toca (e só sem prefers-reduced-motion): gira o ::before, não o glifo. */
+html.rm-sis #rm-l2-player .rm-audio { --disc: 44px; }
+html.rm-sis #rm-l2-player .rm-audio__main {
+  position: relative; isolation: isolate; width: var(--disc); height: var(--disc); min-width: 0; padding: 0; border-radius: 50%; overflow: hidden;
+  border: 0; background: #0d1218; color: var(--rm-navy); font-size: calc(var(--disc) * .26); line-height: 1; z-index: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .12), 0 8px 16px -8px rgba(0, 0, 0, .7);
 }
-html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__close,
-html.rm-sis #rm-l2-player[data-rm-sis-x] .rm-audio[data-mode="bottom"] .rm-audio__close { align-self: start; margin-top: -2px; }
-/* com a caneta armada o chip antigo (rm-audio.css) esconde ±15/velocidade; no card da lateral não há o que proteger (não cobre a leitura): fica completo */
+html.rm-sis #rm-l2-player .rm-audio__main::before {                  /* sulcos + brilho (gira) */
+  content: ""; position: absolute; inset: 0; z-index: -2; border-radius: 50%;
+  background:
+    conic-gradient(from 25deg, rgba(255, 255, 255, 0) 0 8%, rgba(255, 255, 255, .22) 14%, rgba(255, 255, 255, 0) 26% 56%, rgba(255, 255, 255, .16) 64%, rgba(255, 255, 255, 0) 76%),
+    repeating-radial-gradient(circle at 50% 50%, #0b0f14 0 1.6px, #1d252f 1.6px 2.8px);
+}
+html.rm-sis #rm-l2-player .rm-audio__main::after {                   /* etiqueta dourada (fixa) */
+  content: ""; position: absolute; left: 50%; top: 50%; z-index: -1; width: 46%; height: 46%; transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, var(--rm-navy) 0 7%, var(--rm-gold) 8% 100%); box-shadow: 0 0 0 2px rgba(0, 0, 0, .35);
+}
+html.rm-sis #rm-l2-player .rm-audio__main:hover { background: #0d1218; filter: brightness(1.12); }
+@media (prefers-reduced-motion: no-preference) {
+  html.rm-sis #rm-l2-player .rm-audio[data-state="playing"] .rm-audio__main::before { animation: rm-sis-vinyl 5.2s linear infinite; }
+}
+@keyframes rm-sis-vinyl { to { transform: rotate(360deg); } }
+
+/* ---- DESKTOP (lateral docked): player quase QUADRADO no alto à direita, na coluna reservada (A) ou como quadrado pequeno que expande (B) ----
+   O motor entra em modo «lateral» (rm-layout recebe data-rm-dock-force="side") e publica --rm-player-h = 0: o motor não reserva nada;
+   a coluna é reservada aqui (padding-right do contêiner) SÓ enquanto o card está expandido. */
+html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] {
+  --disc: 76px; grid-template-columns: repeat(4, minmax(44px, 1fr)); column-gap: 2px; row-gap: 0; padding: 8px 8px 8px; border-radius: 18px;
+  grid-template-areas: "xx dk dk cl" "st st st st" "ti ti ti ti" "sk sk sk sk" "tm tm tm tm" "rs bk fw rt";
+}
+html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__main { grid-area: dk; justify-self: center; align-self: center; margin: 0 0 2px; }
+html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__close { align-self: start; justify-self: end; margin: 0; width: 44px; min-width: 44px; }
+html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"]::before { justify-self: center; padding-left: 15px; }
+html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__title { -webkit-line-clamp: 2; line-clamp: 2; font-size: 12.5px; text-align: center; min-height: 2.6em; }
+html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__meta { align-items: center; }
+html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__time { justify-self: center; margin: -8px 0 4px; }
+html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__seek { margin: -8px 0 4px; }
+html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__btn, html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__rate { min-width: 0; }
+/* com a caneta armada o chip antigo (rm-audio.css) esconde ±15/velocidade; no card do alto à direita não há o que proteger: fica completo */
 html.rm-sis #rm-l2-player[data-rm-pen] .rm-audio[data-mode="lateral"] .rm-audio__rate,
 html.rm-sis #rm-l2-player[data-rm-pen] .rm-audio[data-mode="lateral"] [data-a="restart"],
 html.rm-sis #rm-l2-player[data-rm-pen] .rm-audio[data-mode="lateral"] [data-a="back"],
 html.rm-sis #rm-l2-player[data-rm-pen] .rm-audio[data-mode="lateral"] [data-a="fwd"] { display: block; }
-/* janela baixa (≤ 760 px de altura): o card encurta (tempo ao lado do estado, título em 1 linha, × sobreposto à faixa do título) para a lista do índice continuar útil */
-@media (max-height: 760px) {
-  html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] {
-    padding: 8px 8px 6px; row-gap: 0; grid-template-areas: "st st tm tm cl" "ti ti ti ti cl" "sk sk sk sk sk" "rs bk pl fw rt";
-  }
-  html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__title { -webkit-line-clamp: 1; line-clamp: 1; font-size: 13px; }
-  html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__close { align-self: start; margin: -12px -4px -14px 0; }
-  html.rm-sis #rm-l2-player .rm-audio[data-mode="lateral"] .rm-audio__seek { margin: -12px 0 -10px; }
-}
 html.rm-sis[data-rm-lmode="docked"] #rm-l2-player .rm-audio[data-layout="b1"][data-mode="lateral"] {
-  position: fixed; left: 6px; right: auto; top: auto; width: calc(var(--rm-left-w, 264px) - 12px); max-width: none;
-  bottom: calc(var(--rm-sis-foot-h, 100px) + 8px); z-index: 2;
+  position: fixed; top: calc(var(--rm-band-bottom, 52px) + 12px); right: calc(var(--rm-right-w, 67px) + 8px); left: auto; bottom: auto; width: 204px; max-width: none; z-index: 2;
 }
-/* a lista da lateral termina ACIMA do card (a altura vem do motor: --rm-audio-h): nada do índice fica por trás dele */
-html.rm-sis[data-rm-aud-card] .rm-l2-side-scroll { margin-bottom: calc(var(--rm-audio-h, 0px) + 16px); }
+/* B: recolhido (padrão onde a coluna estreitaria a leitura) o card some e o botão quadrado (UI derivada) fica no canto direito */
+html.rm-sis[data-rm-lmode="docked"] #rm-l2-player:not([data-rm-sis-x]) .rm-audio[data-mode="lateral"] { display: none; }
+/* coluna reservada enquanto o card está expandido: a folha se recentra no que sobra (a largura do texto — 780 px — só encolhe abaixo de ~1415 px) */
+html.rm-sis[data-rm-aud-col] #materias-container { padding-right: calc(var(--rm-right-w, 67px) + 216px); padding-left: calc(var(--rm-left-w, 264px) + 12px); }
+
+/* ---- botão quadrado «disco» (UI derivada, filho do slot): recolhido no desktop; no celular é o «ampliar» da barra ---- */
+html.rm-sis[data-rm-lmode="docked"] #rm-l2-player[data-rm-audio="open"] .rm-sis-aud-x { display: inline-flex; }
+html.rm-sis[data-rm-lmode="docked"] #rm-l2-player .rm-sis-aud-x {
+  position: fixed; top: calc(var(--rm-band-bottom, 52px) + 10px); right: 8px; left: auto; bottom: auto; width: 56px; height: 56px; min-width: 56px; padding: 0; z-index: 2;
+  border-radius: 14px; background: var(--rm-navy); color: var(--rm-gold); box-shadow: 0 12px 22px -12px rgba(8, 23, 38, .8), inset 0 0 0 1px rgba(255, 255, 255, .1);
+}
+html.rm-sis[data-rm-lmode="docked"] #rm-l2-player .rm-sis-aud-x svg { display: none; }
+/* toolbox aberta com o quadrado recolhido no canto: o painel (centrado na raia da direita) passa a começar ABAIXO do quadrado e o que não couber rola por dentro do painel
+   (já é assim na V2: sombras de rolagem) — o quadrado nunca cobre a toolbox, e nada sai da raia, onde não há texto */
+html.rm-sis[data-rm-lmode="docked"][data-rm-tools][data-rm-aud="open"]:not([data-rm-aud-col]) .rm2-box { top: calc(var(--rm-band-bottom, 52px) + 76px); transform: none; }
+html.rm-sis[data-rm-lmode="docked"][data-rm-tools][data-rm-aud="open"]:not([data-rm-aud-col]) .rm2-panel { max-height: calc(100vh - var(--rm-band-bottom, 52px) - 76px - 52px - 9px - 12px); }
+
+html.rm-sis[data-rm-lmode="docked"] #rm-l2-player .rm-sis-aud-x::before {          /* o disco do botão (gira só tocando) */
+  content: ""; width: 42px; height: 42px; border-radius: 50%; display: block;
+  background:
+    radial-gradient(circle at 50% 50%, var(--rm-navy) 0 4px, var(--rm-gold) 5px 10px, transparent 10.6px),
+    conic-gradient(from 25deg, rgba(255, 255, 255, 0) 0 8%, rgba(255, 255, 255, .22) 14%, rgba(255, 255, 255, 0) 26% 56%, rgba(255, 255, 255, .16) 64%, rgba(255, 255, 255, 0) 76%),
+    repeating-radial-gradient(circle at 50% 50%, #0b0f14 0 1.6px, #1d252f 1.6px 2.8px);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .14);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html.rm-sis[data-rm-lmode="docked"][data-rm-aud-state="playing"] #rm-l2-player:not([data-rm-sis-x]) .rm-sis-aud-x::before { animation: rm-sis-vinyl 5.2s linear infinite; }
+}
+/* expandido: o botão vira «recolher» (chevron pequeno no canto do card) */
+html.rm-sis[data-rm-lmode="docked"] #rm-l2-player[data-rm-sis-x] .rm-sis-aud-x {
+  top: calc(var(--rm-band-bottom, 52px) + 12px + 6px); right: calc(var(--rm-right-w, 67px) + 8px + 204px - 8px - 44px); width: 44px; height: 44px; min-width: 44px; border-radius: 12px; background: transparent; box-shadow: none; z-index: 3;
+}
+html.rm-sis[data-rm-lmode="docked"] #rm-l2-player[data-rm-sis-x] .rm-sis-aud-x::before { display: none; }
+html.rm-sis[data-rm-lmode="docked"] #rm-l2-player[data-rm-sis-x] .rm-sis-aud-x svg { display: block; transform: rotate(0deg); }
 
 /* ---- celular/tablet estreito (< 640 px): barra de 1 linha ---- */
 @media (max-width: 639.98px) {
@@ -1095,3 +1149,199 @@ html.rm-sis #materias-container .rm-sis-s section.container .flashcard .fc-back 
 @media (prefers-reduced-motion: reduce) {
   html.rm-sis .rm-sis-card, html.rm-sis .rm-l2-rescard { transition: none; }
 }
+
+/* =====================================================================
+   15 · NAVEGAÇÃO POR ÍNDICE GERAL · BLOCO · MODOS (issue #453) — rm-materia-nav.js
+   Estados em <html data-rm-nav>: index · block · modeidx · modeblk (+ data-rm-nav-mode). As vistas não escolhidas ficam display:none
+   (fora da árvore de acessibilidade e do foco); nenhum nó é movido. O mesmo vale para o isolamento por tipo (data-rm-off).
+   ===================================================================== */
+/* abertura: capa + recursos + índice geral; os blocos NÃO continuam logo abaixo */
+html.rm-nav.rm-sis[data-rm-nav="index"] #materias-container > .tab-content.active > section[id],
+html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > section[id]:not([data-rm-nav-cur]) { display: none !important; }
+html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > .rm-l2-cover,
+html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > .s2-hero { display: none !important; }
+/* o legado (rm-layout.css) esconde TUDO nos modos isolados; aqui o bloco do modo, a migalha e o pager reaparecem (mais específico) */
+html.rm-nav.rm-sis[data-rm-nav="modeblk"][data-rm-view]:not([data-rm-view="full"]) #materias-container > .tab-content.active > section[data-rm-nav-cur] { display: block !important; }
+html.rm-nav.rm-sis[data-rm-nav="modeblk"][data-rm-view]:not([data-rm-view="full"]) #materias-container > .tab-content.active > .rm-nav-crumb { display: flex !important; }
+html.rm-nav.rm-sis[data-rm-nav="modeblk"][data-rm-view]:not([data-rm-view="full"]) #materias-container > .tab-content.active > .rm-nav-pager { display: grid !important; }
+html.rm-nav.rm-sis[data-rm-nav="modeblk"] .rm-l2-mode-root { display: none !important; }
+/* seção geral (banco / flashcards gerais) aberta de dentro de um modo: leitura completa daquela seção */
+html.rm-nav [data-rm-off] { display: none !important; }
+html.rm-nav .rm-l2-modes-end { display: none !important; }                     /* «Revisión reunida» (duplicada) sai da lateral */
+html.rm-nav[data-rm-view]:not([data-rm-view="full"]) .rm-l2-tree { display: block; }   /* a árvore de blocos segue navegável nos modos */
+html.rm-nav.rm-sis .rm-l2-mode-root .rm-l2-empty { display: none; }
+html.rm-nav.rm-sis[data-rm-nav="modeidx"][data-rm-view]:not([data-rm-view="full"]) .rm-l2-mode-root { max-width: min(var(--rm-sheet-max), 100%); padding: 22px clamp(14px, 3vw, 28px) 56px; }
+html.rm-nav.rm-sis .rm-l2-mode-root, html.rm-nav.rm-sis .rm-nav-crumb, html.rm-nav.rm-sis .rm-nav-pager { font-family: var(--rm-f-ui); }
+html.rm-nav.rm-sis .rm-nav-crumb[hidden], html.rm-nav.rm-sis .rm-nav-pager a[hidden], html.rm-nav.rm-sis .rm-nav-crumb [hidden] { display: none !important; }
+
+/* ---- migalha do bloco / modo ---- */
+html.rm-nav.rm-sis .rm-nav-crumb {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; box-sizing: border-box; width: 100%; max-width: var(--rm-sheet-max);
+  margin: 18px auto 0; padding: 0 2px;
+}
+html.rm-nav.rm-sis .rm-nav-back, html.rm-nav.rm-sis .rm-nav-full {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px 0 10px; box-sizing: border-box; border-radius: 99px;
+  background: #fff; border: 1px solid var(--rm-side-card, #D3E6DC); color: var(--rm-navy); font: 700 13px var(--rm-f-ui); text-decoration: none; cursor: pointer;
+}
+html.rm-nav.rm-sis .rm-nav-full { padding: 0 10px 0 14px; }
+html.rm-nav.rm-sis .rm-nav-back:hover, html.rm-nav.rm-sis .rm-nav-full:hover { border-color: var(--cap, var(--rm-accent)); box-shadow: 0 8px 14px -12px rgba(16, 36, 61, .6); }
+html.rm-nav.rm-sis .rm-nav-here {
+  flex: 1 1 14rem; min-width: 0; font: 700 11px/1.35 var(--rm-f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--cap, var(--rm-accent-d)); outline: none;
+}
+html.rm-nav.rm-sis .rm-nav-here:focus, html.rm-nav.rm-sis .rm-nav-here:focus-visible, html.rm-nav.rm-sis .rm-nav-mh h2:focus, html.rm-nav.rm-sis .rm-nav-mh h2:focus-visible,
+html.rm-nav.rm-sis .rm-l2-cover-title:focus, html.rm-nav.rm-sis .rm-l2-cover-title:focus-visible { outline: none !important; box-shadow: none !important; }   /* alvo de foco programático (não interativo) */
+html.rm-nav.rm-sis .rm-nav-filtro { flex: 1 0 100%; display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 0 2px; }
+html.rm-nav.rm-sis .rm-nav-chipf {
+  min-height: 44px; padding: 0 14px; border-radius: 99px; border: 1.5px solid var(--cap, var(--rm-navy)); background: #fff; color: var(--rm-navy); cursor: pointer;
+  font: 700 12.5px var(--rm-f-ui);
+}
+html.rm-nav.rm-sis .rm-nav-chipf b { margin-left: 4px; font: 700 11px var(--rm-f-mono); color: var(--cap, var(--rm-accent-d)); }
+html.rm-nav.rm-sis .rm-nav-chipf[aria-pressed="true"] { background: var(--cap, var(--rm-navy)); color: var(--cap-tag, #fff); }
+html.rm-nav.rm-sis .rm-nav-chipf[aria-pressed="true"] b { color: inherit; }
+
+/* ---- pager: Bloque anterior · Volver al índice general · Bloque siguiente ---- */
+html.rm-nav.rm-sis .rm-nav-pager {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: stretch; gap: 10px; box-sizing: border-box; width: 100%; max-width: var(--rm-sheet-max);
+  margin: 26px auto 8px; padding: 18px 0 0; border-top: 1px solid var(--rm-rule, rgba(16, 36, 61, .14));
+}
+html.rm-nav.rm-sis .rm-nav-pager a {
+  display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 14px; box-sizing: border-box; border-radius: 14px; background: #fff; text-decoration: none; cursor: pointer;
+  border: 1px solid var(--rm-side-card, #D3E6DC); color: var(--rm-title);
+}
+html.rm-nav.rm-sis .rm-nav-pager a:hover { border-color: var(--cap, var(--rm-accent)); box-shadow: 0 10px 16px -14px rgba(16, 36, 61, .6); }
+html.rm-nav.rm-sis .rm-nav-prev { border-left: 4px solid var(--cap, var(--rm-accent)) !important; }
+html.rm-nav.rm-sis .rm-nav-next { justify-content: flex-end; text-align: right; border-right: 4px solid var(--cap, var(--rm-accent)) !important; }
+html.rm-nav.rm-sis .rm-nav-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+html.rm-nav.rm-sis .rm-nav-tx small { font: 700 9.5px var(--rm-f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--rm-tx2); }
+html.rm-nav.rm-sis .rm-nav-tx b { font: 650 15px/1.25 var(--rm-f-title); color: var(--rm-title); overflow-wrap: anywhere; }
+html.rm-nav.rm-sis .rm-nav-idx { justify-content: center; background: var(--rm-navy) !important; color: #fff !important; border-color: var(--rm-navy) !important; font: 700 13px var(--rm-f-ui); }
+html.rm-nav.rm-sis .rm-nav-idx svg { color: var(--rm-gold); }
+html.rm-nav.rm-sis .rm-nav-pager a:focus-visible, html.rm-nav.rm-sis .rm-nav-crumb a:focus-visible, html.rm-nav.rm-sis .rm-nav-chipf:focus-visible,
+html.rm-nav.rm-sis .rm-nav-mh a:focus-visible { outline: 3px solid var(--rm-gold); outline-offset: 2px; }
+@media (max-width: 640px) {
+  html.rm-nav.rm-sis .rm-nav-pager { grid-template-columns: 1fr 1fr; padding: 18px 12px 0; }
+  html.rm-nav.rm-sis .rm-nav-crumb { padding: 0 12px; }
+  html.rm-nav.rm-sis .rm-nav-idx { grid-column: 1 / -1; order: 3; }
+  html.rm-nav.rm-sis .rm-nav-tx b { font-size: 14px; }
+}
+@media (max-width: 400px) {
+  html.rm-nav.rm-sis .rm-nav-pager { grid-template-columns: 1fr; }
+  html.rm-nav.rm-sis .rm-nav-next { justify-content: flex-start; text-align: left; }
+}
+/* o fim da leitura deixa espaço para o pager respirar acima do player/toolbox */
+html.rm-nav.rm-sis .rm-nav-pager { scroll-margin-bottom: 24px; }
+
+/* ---- índice de blocos de um modo ---- */
+html.rm-nav.rm-sis .rm-nav-modeidx { display: flex; flex-direction: column; gap: 18px; }
+html.rm-nav.rm-sis .rm-nav-mh { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+html.rm-nav.rm-sis .rm-nav-mh h2 { margin: 6px 0 0; font: 700 clamp(1.8rem, 4vw, 2.4rem)/1.1 var(--rm-f-title); letter-spacing: -.02em; color: var(--rm-title); outline: none; }
+html.rm-nav.rm-sis .rm-nav-mh p { margin: 0; max-width: 46rem; font: 400 14.5px/1.5 var(--rm-f-ui); color: var(--rm-tx2); }
+html.rm-nav.rm-sis .rm-nav-modeidx[data-mode="infografias"] .rm-nav-mh h2 { color: var(--rm-res-fig); }
+html.rm-nav.rm-sis .rm-nav-modeidx[data-mode="preguntas"] .rm-nav-mh h2 { color: var(--rm-res-quiz-d); }
+html.rm-nav.rm-sis .rm-nav-modeidx[data-mode="flashcards"] .rm-nav-mh h2 { color: var(--rm-res-fc-d); }
+html.rm-nav.rm-sis .rm-nav-modeidx[data-mode="auscultacion"] .rm-nav-mh h2 { color: var(--rm-res-aus-d); }
+html.rm-nav.rm-sis .rm-nav-modeidx[data-mode="audiobooks"] .rm-nav-mh h2 { color: var(--rm-res-ab); }
+html.rm-nav.rm-sis .rm-nav-modeidx .rm-sis-card { text-decoration: none; }
+html.rm-nav.rm-sis .rm-nav-card-x { display: block; margin-top: 2px; font: 600 10.5px var(--rm-f-ui); font-style: normal; color: var(--cap, var(--rm-accent-d)); }
+
+/* ---- Audiolibros: recurso da capa / pílula / chip / modo ---- */
+html.rm-sis { --rm-res-ab: #13314F; --rm-res-ab-d: #13314F; --rm-res-ab-t: #EEF2F7; }
+html.rm-sis .rm-l2-rescard--ab { --rc: var(--rm-res-ab); --rc-d: var(--rm-res-ab-d); --rc-t: var(--rm-res-ab-t); }
+html.rm-sis .rm-l2-chip-r.t-ab { border-left-color: var(--rm-res-ab); }
+html.rm-sis .rm-l2-item[data-view="audiobooks"] svg { color: var(--rm-res-ab); }
+
+
+/* modos de estudio no ALTO da lateral (abaixo de «Índice general»): grade compacta de 2 colunas; no trilho (só ícones) seguem em coluna */
+html.rm-nav.rm-sis:not([data-rm-lmode="rail"]) #rm-l2-side .rm-l2-modes:not(.rm-l2-modes-end) { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0 6px; }
+html.rm-nav.rm-sis:not([data-rm-lmode="rail"]) #rm-l2-side .rm-l2-modes:not(.rm-l2-modes-end) .rm-l2-sep { grid-column: 1 / -1; margin: 6px 0 0; }
+html.rm-nav.rm-sis:not([data-rm-lmode="rail"]) #rm-l2-side .rm-l2-modes:not(.rm-l2-modes-end) .rm-l2-item { min-height: 44px; padding: 6px 8px; gap: 6px; font-size: 12.5px; min-width: 0; }
+html.rm-nav.rm-sis:not([data-rm-lmode="rail"]) #rm-l2-side .rm-l2-modes:not(.rm-l2-modes-end) .rm-l2-item .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html.rm-nav.rm-sis:not([data-rm-lmode="rail"]) #rm-l2-side .rm-l2-modes:not(.rm-l2-modes-end) .rm-l2-item:last-of-type:nth-of-type(odd) { grid-column: 1 / -1; }
+
+/* ---- ritmo dos subtítulos (issue #453 · item 6): respiro + divisória leve entre subtítulos e entre blocos, sem quebra de página ----
+   h3 (seção do bloco): filete de 1 px + 26 px de respiro; h4 (§): 32 px acima / 14 abaixo; nada de page-break; tabelas/post-its não se partem. */
+html.rm-sis #materias-container .rm-sis-s section.container > h3:not(.rm-h3-quiz):not(.rm-h3-fc) {
+  margin-top: 46px; padding-top: 28px; border-top: 1px solid rgba(16, 36, 61, .11);
+}
+html.rm-sis #materias-container .rm-sis-s section.container > h3:first-of-type:not(.rm-h3-quiz):not(.rm-h3-fc) { margin-top: 34px; }
+html.rm-sis #materias-container .rm-sis-s section.container > h4 { margin-top: 34px; }
+html.rm-sis #materias-container .rm-sis-s section.container table, html.rm-sis #materias-container .rm-sis-s section.container .rm-postit { break-inside: avoid; }
+html.rm-nav.rm-sis #materias-container .rm-sis-s > section.container[data-rm-nav-cur] { margin-top: 18px; }
+@media (max-width: 640px) {
+  html.rm-sis #materias-container .rm-sis-s section.container > h3:not(.rm-h3-quiz):not(.rm-h3-fc) { margin-top: 38px; padding-top: 22px; }
+  html.rm-sis #materias-container .rm-sis-s section.container > h4 { margin-top: 28px; }
+}
+@media (prefers-reduced-motion: no-preference) { html.rm-nav.rm-sis .rm-nav-pager a, html.rm-nav.rm-sis .rm-nav-back { transition: box-shadow .15s ease, border-color .15s ease; } }
+
+/* =====================================================================
+   16 · CARD DE ENTRADA DO AUDIOBOOK (adendo do José, issue #453)
+   O card é UI derivada do boot (rm-audio-boot.js: .rm-audio-card, data-audio-id, botão «Escuchar/Continuar/Pausar»); aqui só muda a aparência:
+   peça editorial navy + ouro com um DISCO DE VINIL em CSS puro (nenhuma imagem/mídia extra antes de tocar), separada do título e da prosa.
+   O disco gira devagar só enquanto toca (e só sem prefers-reduced-motion).
+   ===================================================================== */
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card {
+  position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; align-items: center; gap: 4px 20px;
+  box-sizing: border-box; max-width: none; margin: 26px 0 34px; padding: 18px 22px 18px 18px;
+  border: 0; border-radius: 22px; color: #fff; font-family: var(--rm-f-ui);
+  background: radial-gradient(120% 140% at 0% 0%, #1D4A73 0%, rgba(29, 74, 115, 0) 55%), linear-gradient(115deg, #0E2237, #13314F 58%, #1A3F63);
+  box-shadow: 0 26px 40px -26px rgba(8, 23, 38, .9), 0 0 0 1px rgba(255, 255, 255, .06) inset;
+}
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card::before {              /* filete dourado + sulcos suaves ao fundo (decoração) */
+  content: ""; position: absolute; z-index: -1; right: -70px; top: 50%; width: 220px; height: 220px; transform: translateY(-50%); border-radius: 50%; opacity: .5;
+  background: repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, .0) 0 5px, rgba(255, 255, 255, .06) 5px 6px);
+}
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card::after {
+  content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; border-radius: 0 4px 4px 0; background: var(--rm-gold);
+}
+/* o ícone original vira o disco (o SVG dos fones fica na etiqueta dourada; o disco gira por ::before) */
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card__ico {
+  position: relative; isolation: isolate; width: 84px; height: 84px; border-radius: 50%; background: none; color: var(--rm-navy);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .1), 0 14px 22px -12px rgba(0, 0, 0, .8);
+}
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card__ico::before {
+  content: ""; position: absolute; inset: 0; z-index: -2; border-radius: 50%;
+  background:
+    conic-gradient(from 25deg, rgba(255, 255, 255, 0) 0 8%, rgba(255, 255, 255, .24) 14%, rgba(255, 255, 255, 0) 26% 56%, rgba(255, 255, 255, .17) 64%, rgba(255, 255, 255, 0) 76%),
+    repeating-radial-gradient(circle at 50% 50%, #0b0f14 0 1.7px, #1d252f 1.7px 3px);
+}
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card__ico::after {
+  content: ""; position: absolute; left: 50%; top: 50%; z-index: -1; width: 44%; height: 44%; transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, var(--rm-navy) 0 6%, var(--rm-gold) 7% 100%); box-shadow: 0 0 0 2px rgba(0, 0, 0, .35);
+}
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card__ico svg { position: relative; width: 17px; height: 17px; margin-top: 10px; }
+@media (prefers-reduced-motion: no-preference) {
+  html.rm-sis #materias-container .rm-sis-s .rm-audio-card[data-state="playing"] .rm-audio-card__ico::before { animation: rm-sis-vinyl 5.2s linear infinite; }
+}
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card__txt { gap: 4px; min-width: 0; }
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card__kicker { font: 700 10px var(--rm-f-mono); letter-spacing: .16em; color: var(--rm-gold); text-transform: uppercase; }
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card__title { font: 650 clamp(1.15rem, 2.4vw, 1.4rem)/1.2 var(--rm-f-title); color: #fff; letter-spacing: -.01em; }
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card__btn {
+  min-height: 48px; padding: 0 22px; border-radius: 99px; border: 0; background: var(--rm-gold); color: var(--rm-navy); font: 800 14px var(--rm-f-ui); letter-spacing: .01em;
+  box-shadow: 0 12px 20px -12px rgba(0, 0, 0, .8);
+}
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card__btn:hover { filter: none; background: #F2C85F; }
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card__btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card[data-state="playing"] { box-shadow: 0 26px 40px -26px rgba(8, 23, 38, .9), 0 0 0 2px rgba(94, 220, 158, .55) inset; }
+html.rm-sis #materias-container .rm-sis-s .rm-audio-card[data-state="error"] { box-shadow: 0 26px 40px -26px rgba(8, 23, 38, .9), 0 0 0 2px rgba(255, 180, 171, .7) inset; }
+@media (max-width: 560px) {
+  html.rm-sis #materias-container .rm-sis-s .rm-audio-card { grid-template-columns: 72px minmax(0, 1fr); gap: 10px 14px; padding: 16px 16px 16px 14px; margin: 22px 0 26px; }
+  html.rm-sis #materias-container .rm-sis-s .rm-audio-card__ico { width: 68px; height: 68px; }
+  html.rm-sis #materias-container .rm-sis-s .rm-audio-card__btn { grid-column: 1 / -1; width: 100%; flex: 1 1 100%; }
+}
+
+/* ---- grade do índice geral (issue #453 · item 5): unidades separadas, cartões de altura/alinhamento consistentes, descrição breve + contagens em chips ---- */
+html.rm-sis .rm-sis-idx-g { gap: 12px; }
+html.rm-sis .rm-sis-idx .rm-sis-ulab { padding: 14px 0 0; gap: 10px; border-top: 0; }
+html.rm-sis .rm-sis-idx-g + .rm-sis-idx-g { margin-top: 12px; }
+html.rm-sis .rm-sis-idx .rm-sis-ulab b { position: relative; padding-left: 16px; font-size: 11px; color: var(--rm-title); }
+html.rm-sis .rm-sis-idx .rm-sis-ulab b::before { content: ""; position: absolute; left: 0; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; background: var(--ulab, var(--rm-accent)); }
+html.rm-sis .rm-sis-idx .rm-sis-ulab em { font: 600 11px var(--rm-f-ui); font-style: normal; color: var(--rm-tx2); white-space: nowrap; }
+html.rm-sis .rm-sis-idx-grid { grid-auto-rows: 1fr; align-items: stretch; }
+html.rm-sis .rm-sis-idx-grid .rm-sis-card { align-items: flex-start; min-height: 112px; }
+html.rm-sis .rm-sis-card-t { align-self: stretch; }
+html.rm-sis .rm-sis-card-t b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+html.rm-sis .rm-sis-card-d { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font: 400 12.5px/1.35 var(--rm-f-ui); color: var(--rm-tx2); }
+html.rm-sis .rm-sis-card-m { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; padding-top: 4px; }
+html.rm-sis .rm-sis-card-k { display: inline-flex; align-items: baseline; gap: 3px; padding: 2px 8px; border-radius: 99px; background: rgba(255, 255, 255, .7); font: 500 11px var(--rm-f-ui); color: var(--rm-tx2); white-space: nowrap; }
+html.rm-sis .rm-sis-card-k b { font: 700 11px var(--rm-f-mono); color: var(--cap, var(--rm-title)); }
+@media (max-width: 640px) { html.rm-sis .rm-sis-idx-grid { grid-auto-rows: auto; } html.rm-sis .rm-sis-idx-grid .rm-sis-card { min-height: 0; } }

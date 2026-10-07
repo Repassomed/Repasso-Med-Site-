@@ -21,8 +21,17 @@
        transição continua sendo a atual, na mesma aba) pede ao layout que
        reposicione a tinta e devolve a rolagem; senão é NO-OP.
 
+   NAVEGAÇÃO POR BLOCO (piloto com o tema, issue #453) — `RMModes.setNav(true)`
+     O MESMO store ganha um segundo eixo, `block` (id da seção ou null), sem outra fonte de verdade:
+       view=full  + block=null  → índice geral (abertura)        view=full  + block=id → leitura de UM bloco
+       view=<modo> + block=null → índice de blocos do modo        view=<modo> + block=id → só o recurso daquele tipo naquele bloco
+     Só vale com `setNav(true)` (feito por rm-materia-nav.js, só no piloto com o tema). Sem ele nada disto existe: block fica null,
+     os modos «de fim» (banco / todos-flashcards) e o painel vazio seguem como na B1. Com ele: os modos «de fim» saem da lista
+     (o banco geral e os flashcards gerais viram blocos de leitura), Audiobooks passa a existir onde há card real e os rótulos
+     seguem o vocabulário da issue (Preguntas, Flashcards, Audiolibros).
+
    O que a B1 NÃO faz (vem depois)
-     · conteúdo dos modos isolados (B3) — hoje é um painel vazio;
+     · conteúdo dos modos isolados (B3) — hoje é um painel vazio (a navegação por bloco o preenche, só no piloto com o tema);
      · bloquear criação/escrita de anotação (B2: annotationsAllowed +
        gateWrite). Na B1 isso é garantido só por construção: fora da
        Página completa o conteúdo e a toolbox estão ocultos.
@@ -37,17 +46,19 @@
   /* Ordem fixa dos modos isolados na lateral. `detect` decide se o recurso
      existe DE VERDADE na matéria — senão o acesso nem aparece. */
   var MODOS = [
-    { id: 'infografias',   label: 'Infografías',            icon: 'img',
+    { id: 'infografias',   label: 'Infografías',            icon: 'img', navLabel: 'Infografías',
       detect: function (t) { return !!t.querySelector('section[id] figure img, section[id] .s2-photo[role="img"], section[id] img.rmc-photo'); } },
-    { id: 'preguntas',     label: 'Preguntas por bloque',   icon: 'q',
+    { id: 'preguntas',     label: 'Preguntas por bloque',   icon: 'q', navLabel: 'Preguntas',
       detect: function (t) { return !!t.querySelector('section[id] .quiz-item'); } },
-    { id: 'flashcards',    label: 'Flashcards por bloque',  icon: 'cards',
+    { id: 'flashcards',    label: 'Flashcards por bloque',  icon: 'cards', navLabel: 'Flashcards',
       detect: function (t) { return !!t.querySelector('section[id] .flashcard'); } },
-    { id: 'audiobooks',    label: 'Audiobooks',             icon: 'phones',
-      detect: function () { return false; } },                 // B1: sem motor nem manifesto ⇒ sem acesso
+    { id: 'audiobooks',    label: 'Audiobooks',             icon: 'phones', navLabel: 'Audiolibros',
+      /* B1: sem motor nem manifesto ⇒ sem acesso. Com a navegação por bloco: só se o manifesto AUTORIZADO criou um card real
+         (`.rm-audio-card`, feito por rm-audio-boot.js) num bloco — recurso ausente = acesso ausente. Nunca lê URL nem manifesto. */
+      detect: function (t) { return st.nav && !!t.querySelector('section[id] .rm-audio-card'); } },
     { id: 'videos',        label: 'Videos',                 icon: 'play',
       detect: function (t) { return !!t.querySelector('section[id] details.video-collapsible'); } },
-    { id: 'auscultacion',  label: 'Auscultación',           icon: 'wave',
+    { id: 'auscultacion',  label: 'Auscultación',           icon: 'wave', navLabel: 'Auscultación',
       detect: function (t) { return !!t.querySelector('section[id] audio'); } },
     { id: 'banco',         label: 'Banco de preguntas',     icon: 'bank',   fim: true,
       detect: function (t) { return !!t.querySelector('section[id*="banco"]'); } },
@@ -61,7 +72,7 @@
      (a volta à Página completa espera o layout assentar) guarda a geração e a aba em que nasceu e, depois da espera,
      só age se ainda for a transição ATUAL, na MESMA aba, ainda anexado, ainda na Página completa. Senão: NO-OP.
      `volta` = a volta à Página completa que ainda não devolveu a rolagem (guarda a posição de saída original). */
-  var st = { view: 'full', tab: null, scrollY: 0, ouvintes: [], disponiveis: [], gen: 0, volta: null };
+  var st = { view: 'full', block: null, nav: false, tab: null, scrollY: 0, ouvintes: [], disponiveis: [], gen: 0, volta: null };
 
   function abaViva(t) { return !!t && t.isConnected !== false && (!t.classList || t.classList.contains('active')); }
   function atual(tok, tab) {
@@ -77,13 +88,16 @@
   /* Só os modos cujos recursos existem na aba. */
   function detectar(tab) {
     st.disponiveis = MODOS.filter(function (m) {
+      if (st.nav && m.fim) return false;                     // navegação por bloco: banco geral / todos os flashcards são blocos de leitura, não modos
       try { return !!tab && m.detect(tab); } catch (e) { return false; }
     });
     return st.disponiveis;
   }
 
-  function emitir(prev) {
-    st.ouvintes.slice().forEach(function (fn) { try { fn(st.view, prev); } catch (e) {} });
+  /* `info` (3.º argumento dos ouvintes): { block, prevBlock } — o eixo de bloco da navegação; ouvintes antigos ignoram. */
+  function emitir(prev, prevBlock) {
+    var info = { block: st.block, prevBlock: prevBlock === undefined ? st.block : prevBlock };
+    st.ouvintes.slice().forEach(function (fn) { try { fn(st.view, prev, info); } catch (e) {} });
   }
 
   function desarmarFerramentas() {
@@ -123,9 +137,17 @@
     var alvo = porId(next);
     if (!alvo) return false;
     if (next !== 'full' && st.disponiveis.indexOf(alvo) === -1) return false;   // recurso ausente
-    if (next === st.view) return true;
-    var prev = st.view;
+    var nb = (st.nav && opts && opts.block) ? String(opts.block) : null;          // eixo de bloco: só com a navegação por bloco
+    if (next === st.view) {
+      if (nb === st.block) return true;
+      /* mesma vista, outro bloco (ou volta ao índice): troca síncrona do bloco; a geração avança (pedidos pendentes perdem a vez) */
+      var pb = st.block; st.block = nb; ++st.gen;
+      emitir(st.view, pb);
+      return true;
+    }
+    var prev = st.view, prevBlock = st.block;
     var tok = ++st.gen;                     // toda troca efetiva invalida o que estava pendente
+    st.block = nb;
 
     if (prev === 'full') {                  // saindo da Página completa
       /* se a volta anterior ainda não devolveu a rolagem, a posição atual (≈ topo do modo isolado) NÃO é a do aluno:
@@ -136,7 +158,7 @@
     }
     st.view = next;
     ROOT.setAttribute('data-rm-view', next);
-    emitir(prev);
+    emitir(prev, prevBlock);
 
     if (next === 'full') {                  // voltando: layout assenta → tinta → rolagem
       st.volta = { tok: tok };
@@ -147,9 +169,25 @@
     return true;
   }
 
+  /* Liga/desliga a navegação por bloco (só rm-materia-nav.js chama; só no piloto com o tema). Troca os rótulos dos modos e a lista de
+     disponíveis; volta ao estado inicial (índice geral). Desligar devolve TUDO como a B1 (rótulos, modos de fim, painel vazio). */
+  function setNav(on) {
+    on = !!on;
+    if (st.nav === on) return;
+    st.nav = on; st.block = null; st.gen++; st.volta = null;
+    MODOS.forEach(function (m) {
+      if (!m.navLabel) return;
+      if (on) { m._label0 = m.label; m.label = m.navLabel; } else if (m._label0 !== undefined) { m.label = m._label0; delete m._label0; }
+    });
+    if (on) ROOT.classList.add('rm-nav'); else ROOT.classList.remove('rm-nav');
+    st.view = 'full'; ROOT.setAttribute('data-rm-view', 'full');
+    detectar(st.tab);
+  }
+
   function attach(tab) {
     st.gen++; st.volta = null;
     st.tab = tab;
+    st.block = null;
     st.view = 'full';
     ROOT.setAttribute('data-rm-view', 'full');
     detectar(tab);
@@ -157,7 +195,9 @@
 
   function detach() {
     st.gen++; st.volta = null;              // callbacks de transições anteriores viram NO-OP
+    if (st.nav) setNav(false);
     st.tab = null;
+    st.block = null;
     st.view = 'full';
     ROOT.removeAttribute('data-rm-view');
     st.ouvintes = [];
@@ -174,6 +214,9 @@
     disponiveis: function () { return st.disponiveis.slice(); },
     requestView: requestView,
     get view() { return st.view; },
+    get block() { return st.block; },       // eixo de bloco (null fora da navegação por bloco)
+    get nav() { return st.nav; },
+    setNav: setNav,
     get gen() { return st.gen; },           // só leitura (testes/diagnóstico)
     isFull: function () { return st.view === 'full'; },
     onChange: function (fn) { if (typeof fn === 'function') st.ouvintes.push(fn); }

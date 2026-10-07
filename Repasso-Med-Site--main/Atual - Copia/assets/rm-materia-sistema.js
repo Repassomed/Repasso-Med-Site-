@@ -159,6 +159,18 @@
     if (n.au)  a.push(plural(n.au, 'sonido', 'sonidos'));
     return a.join(' · ');
   }
+  /* o mesmo, em itens [número, rótulo] (chips do cartão do índice geral) */
+  function metaItens(n) {
+    var a = [];
+    if (n.q)   a.push([n.q, n.q === 1 ? 'pregunta' : 'preguntas']);
+    if (n.fc)  a.push([n.fc, n.fc === 1 ? 'tarjeta' : 'tarjetas']);
+    if (n.fig) a.push([n.fig, n.fig === 1 ? 'infografía' : 'infografías']);
+    if (n.tb)  a.push([n.tb, n.tb === 1 ? 'tabla' : 'tablas']);
+    if (n.au)  a.push([n.au, n.au === 1 ? 'sonido' : 'sonidos']);
+    return a;
+  }
+  /* descrição breve REAL do bloco: o complemento entre parênteses do título («Síndrome Infeccioso (traqueobronquitis y bronquitis)») */
+  function descCorta(t) { var m = /\(([^)]+)\)\s*$/.exec(limpo(t)); return m ? limpo(m[1]) : ''; }
   /* rótulo da etiqueta do bloco (C-03): «UNIDAD I» nos blocos; o resto do marcador real nos demais */
   function rotuloTag(s) {
     if (s.c.tipo === 'bloque') return s.unidad ? 'UNIDAD ' + s.unidad : 'BLOQUE';
@@ -327,24 +339,33 @@
       ((guia.length || repaso.length) ? ' · más punto de partida, compendio y banco' : '');
     cab.appendChild(sub); box.appendChild(cab);
 
-    function grupo(rot, nombre, lista) {
+    function grupo(rot, nombre, lista, cor) {
       if (!lista.length) return;
       var g = el('div', 'rm-sis-idx-g');
       var l = el('div', 'rm-sis-ulab'); var b = el('b'); b.textContent = rot; l.appendChild(b);
       if (nombre) { var s = el('span'); s.textContent = nombre; l.appendChild(s); }
-      l.appendChild(el('i')); g.appendChild(l);
+      l.appendChild(el('i'));
+      var qn = el('em'); qn.textContent = plural(lista.length, 'bloque', 'bloques'); l.appendChild(qn);
+      if (cor) l.style.setProperty('--ulab', cor);
+      g.appendChild(l);
       var grid = el('div', 'rm-sis-idx-grid');
       lista.forEach(function (s) {
         var a = el('a', 'rm-sis-card', { href: '#' + s.id, 'data-rm-go': s.id, 'data-rm-cap': String(s.c.cap) });
         var n = el('span', 'rm-sis-card-n'); n.textContent = s.c.n; a.appendChild(n);
         var tx = el('span', 'rm-sis-card-t'); var tt = el('b'); tt.textContent = curto(s.titulo); tx.appendChild(tt);
-        var m = metaTexto(s.n); if (m) { var mm = el('i'); mm.textContent = m; tx.appendChild(mm); }
+        var ds = descCorta(s.titulo); if (ds) { var dd = el('span', 'rm-sis-card-d'); dd.textContent = ds; tx.appendChild(dd); }
+        var itens = metaItens(s.n);
+        if (itens.length) {
+          var mm = el('span', 'rm-sis-card-m');
+          itens.forEach(function (it) { var k = el('span', 'rm-sis-card-k'); var nb = el('b'); nb.textContent = String(it[0]); k.appendChild(nb); k.appendChild(document.createTextNode(' ' + it[1])); mm.appendChild(k); });
+          tx.appendChild(mm);
+        }
         a.appendChild(tx); grid.appendChild(a);
       });
       g.appendChild(grid); box.appendChild(g);
     }
     grupo('PUNTO DE PARTIDA', '', guia);
-    ordem.forEach(function (u) { var d = tema.unidades[u]; grupo('UNIDAD ' + u, d ? d.nombre : '', unidades[u]); });
+    ordem.forEach(function (u) { var d = tema.unidades[u]; grupo('UNIDAD ' + u, d ? d.nombre : '', unidades[u], d ? d.color : ''); });
     grupo('REPASO', 'Compendio y banco', repaso);
     cp.appendChild(box);
   }
@@ -443,6 +464,7 @@
           armada (chip) ou a toolbox aberta, o player fica recolhido e a altura é re-medida pelo próprio motor (refreshLayout, API pública).
      Tudo é desfeito no detach; sem o tema nada disto existe. */
   var ICO_CHEV = 'M6 14l6-6 6 6';
+  var COL_MIN = 1430;               // largura a partir da qual a coluna direita (216 px) cabe sem estreitar o texto (780 px) — medido: 264 lateral + 12 respiro + 88 (padding da folha) + 780 + 67 toolbox + 216
   var ALT_CARD = 540;               // abaixo disto (px de altura) a lateral não comporta o card + o índice: o player volta à barra compacta embaixo
   function refrescarPlayer() {
     var p = S && S.pl; if (!p || p.rf) return;
@@ -453,7 +475,7 @@
   }
   function player() {
     var slot = document.getElementById('rm-l2-player'); if (!slot) return;
-    var P = S.pl = { slot: slot, x: false, eff: false, rf: 0, force: (window.innerHeight || 0) >= ALT_CARD, narrow: window.matchMedia ? window.matchMedia('(max-width: 639.98px)') : null };
+    var P = S.pl = { slot: slot, x: false, eff: false, col: false, open: false, rf: 0, force: (window.innerHeight || 0) >= ALT_CARD, narrow: window.matchMedia ? window.matchMedia('(max-width: 639.98px)') : null };
     if (P.force) ROOT.setAttribute('data-rm-dock-force', 'side');
     var b = ui('button', 'rm-sis-aud-x', { type: 'button', 'aria-expanded': 'false', 'aria-controls': 'rm-l2-player', 'aria-label': 'Ampliar el reproductor: posición y velocidad', title: 'Ampliar el reproductor' });
     var sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -464,25 +486,32 @@
     P.sync = function () {
       if (!S || S.pl !== P) return;
       var open = slot.getAttribute('data-rm-audio') === 'open', pen = slot.hasAttribute('data-rm-pen'), aud = q1(slot, '.rm-audio');
-      var modo = aud && aud.getAttribute('data-mode');
+      var modo = aud && aud.getAttribute('data-mode'), estado = aud ? (aud.getAttribute('data-state') || '') : '';
       if (open) ROOT.setAttribute('data-rm-aud', 'open'); else ROOT.removeAttribute('data-rm-aud');
-      var card = open && modo === 'lateral' && ROOT.getAttribute('data-rm-lmode') === 'docked';
-      if (card) ROOT.setAttribute('data-rm-aud-card', ''); else ROOT.removeAttribute('data-rm-aud-card');
+      if (open && estado) ROOT.setAttribute('data-rm-aud-state', estado); else ROOT.removeAttribute('data-rm-aud-state');
+      var lateral = open && modo === 'lateral' && ROOT.getAttribute('data-rm-lmode') === 'docked';
       var sk = q1(slot, '.rm-audio__seek'), mx = sk ? +sk.max : 0, pc = mx > 0 ? Math.max(0, Math.min(100, (+sk.value / mx) * 100)) : 0;
       slot.style.setProperty('--rm-sis-prog', pc.toFixed(1) + '%');
-      var foot = q1(S.lateral || document, '.rm-l2-side-foot'), fh = foot ? Math.round(foot.getBoundingClientRect().height) : 0;
-      if (fh && ROOT.style.getPropertyValue('--rm-sis-foot-h') !== fh + 'px') ROOT.style.setProperty('--rm-sis-foot-h', fh + 'px');
-      var quer = (window.innerHeight || 0) >= ALT_CARD;                // janela baixíssima: sem card na lateral (o layout reavalia o dock com o resize)
+      var quer = (window.innerHeight || 0) >= ALT_CARD;                // janela baixíssima: sem card no alto à direita (o layout reavalia o dock com o resize)
       if (quer !== P.force) { P.force = quer; if (quer) ROOT.setAttribute('data-rm-dock-force', 'side'); else ROOT.removeAttribute('data-rm-dock-force'); remedir(); }
-      if (!open) P.x = false;
-      var eff = !!(open && P.x && P.narrow && P.narrow.matches && modo === 'bottom' && !pen && !ROOT.hasAttribute('data-rm-tools'));
+      /* abre já EXPANDIDO onde a coluna direita cabe sem estreitar a folha (A); senão fica no quadrado pequeno (B) e o aluno expande */
+      if (open && !P.open) { P.open = true; if (lateral && (document.documentElement.clientWidth || window.innerWidth) >= COL_MIN) P.x = true; }
+      if (!open) { P.open = false; P.x = false; }
+      var eff = !!(open && P.x && ((P.narrow && P.narrow.matches && modo === 'bottom' && !pen && !ROOT.hasAttribute('data-rm-tools')) || lateral));
+      var col = !!(eff && lateral);                                     // coluna reservada à direita só com o card expandido no desktop
+      if (col !== P.col) {
+        P.col = col;
+        if (col) ROOT.setAttribute('data-rm-aud-col', ''); else ROOT.removeAttribute('data-rm-aud-col');
+        try { if (window.RMLayout && window.RMLayout.pedirReposicao) window.RMLayout.pedirReposicao(); } catch (x) {}   // a folha se deslocou: a tinta acompanha (API pública, coalescida)
+      }
       if (eff !== P.eff) {
         P.eff = eff;
         if (eff) slot.setAttribute('data-rm-sis-x', ''); else slot.removeAttribute('data-rm-sis-x');
-        b.setAttribute('aria-expanded', String(eff));
-        b.setAttribute('aria-label', eff ? 'Reducir el reproductor' : 'Ampliar el reproductor: posición y velocidad'); b.title = eff ? 'Reducir el reproductor' : 'Ampliar el reproductor';
         refrescarPlayer();                                // a altura mudou: o motor re-mede e republica --rm-player-h
       }
+      var tit = (q1(slot, '.rm-audio__title') || {}).textContent || '', est = { playing: 'reproduciendo', paused: 'en pausa', loading: 'cargando', error: 'sin conexión' }[estado] || '';
+      var rotulo = lateral ? (eff ? 'Reducir el reproductor' : 'Abrir el reproductor: ' + tit + (est ? ' · ' + est : '')) : (eff ? 'Reducir el reproductor' : 'Ampliar el reproductor: posición y velocidad');
+      b.setAttribute('aria-expanded', String(eff)); b.setAttribute('aria-label', rotulo); b.title = rotulo;
     };
     P.inp = function (e) { if (e.target && e.target.classList && e.target.classList.contains('rm-audio__seek')) P.sync(); };
     slot.addEventListener('input', P.inp, true);
@@ -499,13 +528,14 @@
     try { if (P.mo) P.mo.disconnect(); if (P.rf) cancelAnimationFrame(P.rf); } catch (e) {}
     try { P.slot.removeEventListener('input', P.inp, true); window.removeEventListener('resize', P.sync); if (P.narrow && P.narrow.removeEventListener) P.narrow.removeEventListener('change', P.sync); } catch (e) {}
     try { P.slot.removeAttribute('data-rm-sis-x'); P.slot.style.removeProperty('--rm-sis-prog'); } catch (e) {}
-    ['data-rm-dock-force', 'data-rm-aud', 'data-rm-aud-card'].forEach(function (a) { ROOT.removeAttribute(a); });
+    ['data-rm-dock-force', 'data-rm-aud', 'data-rm-aud-card', 'data-rm-aud-col', 'data-rm-aud-state'].forEach(function (a) { ROOT.removeAttribute(a); });
     ROOT.style.removeProperty('--rm-sis-foot-h');
   }
 
   /* «Inicio · índice de la materia» · «Bloque 04 · Síndrome Parenquimatoso» · «Modo · Preguntas» */
   function etiquetaPosicion() {
     if (!S || !S.pos) return;
+    if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo()) { var en = window.RMNav.etiqueta(); if (en) { S.pos.textContent = en; return; } }
     var v = window.RMModes && window.RMModes.view, m = v && v !== 'full' ? window.RMModes.porId(v) : null;
     var s = '';
     if (m) s = 'Modo · ' + m.label;
@@ -520,6 +550,7 @@
   function refletir() {
     if (!S || !S.pills) return;
     var v = window.RMModes && window.RMModes.view, k = v === 'full' ? 'res' : VISTA_K[v];
+    if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo() && v === 'audiobooks') k = 'ab';
     qa(S.pills, '.rm-sis-pill').forEach(function (p) {
       var on = !!k && p.getAttribute('data-rm-k') === k;
       p.classList.toggle('is-on', on);
@@ -563,6 +594,7 @@
   /* ------------------------------ eventos ------------------------------ */
   function ir(alvo) {
     if (!alvo || !window.RMLayout || typeof window.RMLayout.irPara !== 'function') return;
+    if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo()) { window.RMNav.irParaAlvo(alvo); return; }   // navegação por bloco: abre SÓ o bloco do alvo
     if (window.RMModes && window.RMModes.view !== 'full') {
       window.RMModes.requestView('full', { restaurar: false, depois: function () { window.RMLayout.irPara(alvo); } });
     } else window.RMLayout.irPara(alvo);
@@ -584,6 +616,11 @@
     if (so) { var f = document.getElementById('logout-fab'); if (f) f.click(); return; }
     var p = t.closest('.rm-sis-pill');
     if (p) {
+      if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo()) {            // navegação por bloco: a pílula abre o modo / o índice geral
+        var kk = p.getAttribute('data-rm-k');
+        if (kk === 'res') window.RMNav.abrirIndice(); else window.RMNav.abrirModo(kk);
+        return;
+      }
       var r = S.recursos[+p.getAttribute('data-rm-res')];
       if (r && r.alvo && r.alvo.isConnected !== false) ir(r.alvo);
     }
@@ -660,6 +697,7 @@
   }
 
   function detach() {
+    try { if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo()) window.RMNav.detach(); } catch (e) {}   // a navegação por bloco depende do tema: sai antes
     if (!S) { try { ROOT.classList.remove('rm-sis'); ROOT.removeAttribute('data-rm-tema'); } catch (e) {} return; }
     var tab = S.tab;
     try { document.removeEventListener('click', S.h.click); } catch (e) {}
@@ -684,6 +722,8 @@
     attach: attach,
     detach: function () { detach(); },
     TEMAS: TEMAS,
+    secciones: function () { return S ? S.secs.slice() : []; },          // só leitura (a navegação por bloco lê as seções classificadas)
+    refletir: function () { refletir(); },
     _estado: function () { return S ? { slug: S.slug, secciones: S.secs.length, recursos: S.recursos.length } : null; }
   };
 })();
