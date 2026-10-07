@@ -369,7 +369,11 @@
     var left =m === 'docked' ? 264 : (m === 'rail' ? 64 : 0);
     /* dock do futuro player: pelo espaço efetivamente livre à direita do cartão de texto
        (as variáveis de lateral já estão aplicadas; a leitura abaixo força o layout). */
-    ROOT.setAttribute('data-rm-dock', decidirDock(ROOT.clientWidth || w, left, cartaoMedido(), ROOT.getAttribute('data-rm-dock')));
+    var dk = decidirDock(ROOT.clientWidth || w, left, cartaoMedido(), ROOT.getAttribute('data-rm-dock'));
+    /* Um tema pode hospedar o player num card DENTRO da lateral docked (264 px, com folga de sobra): ele pede `data-rm-dock-force="side"`.
+       Só vale com a lateral docked; em trilho/gaveta continua a decisão acima (barra inferior). O motor do player não muda: só lê o dock. */
+    if (m === 'docked' && ROOT.getAttribute('data-rm-dock-force') === 'side') dk = 'side';
+    ROOT.setAttribute('data-rm-dock', dk);
     if (m === 'docked' && S.drawer) fecharDrawer(true);          // não faz sentido drawer com a lateral aberta
     if (S.railBtn) {
       var min = ls('rm.l2.rail') === 'min';
@@ -833,7 +837,7 @@
        só zera o estado; a classe rm-l2 sai e o conteúdo reaparece sozinho. */
     desligar();
     [S.band, S.ph, S.side, S.backdrop, S.rootEl, S.player, S.capa].forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });
-    ['data-rm-lmode', 'data-rm-dock', 'data-rm-drawer', 'data-rm-cover'].forEach(function (a) { ROOT.removeAttribute(a); });
+    ['data-rm-lmode', 'data-rm-dock', 'data-rm-dock-force', 'data-rm-drawer', 'data-rm-cover'].forEach(function (a) { ROOT.removeAttribute(a); });
     ROOT.style.removeProperty('--rm-band-bottom'); ROOT.style.removeProperty('--rm-band-top');
     ROOT.classList.remove('rm-l2');
     try { window.RMModes.detach(); } catch (e) {}
@@ -850,6 +854,10 @@
     setAsset: function (slot, spec) { ASSETS[slot] = spec || null; renderArte(slot); },
     assentarTinta: assentarTinta,                            // usado por rm-modes.js ao voltar à Página completa
     pedirReposicao: function () { reposicionarTinta(); },    // idem: único caminho até RMToolsV2.reposicionar (coalescido, nunca durante o contato da caneta)
+    /* Para o sistema visual de matérias (rm-materia-sistema.js): reaproveita o MESMO salto (geração/cancelamento) e os recursos reais da capa.
+       Só leitura/salto; nada de tinta, caneta, âncora ou geometria. */
+    irPara: function (alvo) { irPara(alvo); },
+    recursos: function () { return S && S.capaRes ? S.capaRes.slice() : []; },
     /* só leitura, para teste/diagnóstico */
     _dock: decidirDock, _cartaoTeorico: cartaoTeorico,
     _estado: function () { return S ? { tab: S.tab && S.tab.id, blocos: S.blocos.length, drawer: S.drawer, lmode: ROOT.getAttribute('data-rm-lmode'), dock: ROOT.getAttribute('data-rm-dock') } : null; }
