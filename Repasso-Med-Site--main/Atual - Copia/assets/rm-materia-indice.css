@@ -1,5 +1,5 @@
 /* =====================================================================
-   REPASSO MED · rm-materia-indice.css — índice CENTRAL expansível (issue #460) · PROTÓTIPO ISOLADO (nada o carrega ainda)
+   REPASSO MED · rm-materia-indice.css — índice CENTRAL expansível (issue #460) · carregado pelo rm-pilot.js só com layout+visual do servidor (PR #462)
    Só vale com o tema do piloto ligado (html.rm-sis). Usa os tokens e as variáveis de capítulo do rm-materia-sistema.css (--cap*, --rm-*).
    Linguagem: caderno médico premium — o card acionado «abre» uma página do caderno ligada a ele por aba/cor/borda; minicards leves
    (não repetem o peso dos cards de bloco); expansão curta (220 ms), sem giro/bounce/parallax; prefers-reduced-motion = instantâneo.
@@ -48,6 +48,9 @@ html.rm-sis .rm-ix-box {
   background-size: 100% 32px; background-position: 0 6px;
   box-shadow: 0 16px 28px -22px rgba(16, 36, 61, .55);
 }
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+  html.rm-sis .rm-ix-box { background-image: linear-gradient(to bottom, transparent 31px, color-mix(in srgb, var(--cap-line) 55%, transparent) 31px); }   /* pautas ainda mais sutis onde color-mix existe */
+}
 html.rm-sis .rm-ix-box::before { content: ""; position: absolute; top: 0; bottom: 0; left: clamp(8px, 1.6vw, 15px); width: 1px; background: var(--cap-edge); opacity: .7; pointer-events: none; }
 
 html.rm-sis .rm-ix-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin: 0 0 16px; }
@@ -80,33 +83,39 @@ html.rm-sis .rm-ix-mk {
 html.rm-sis .rm-ix-mk.is-ico { font-size: 16px; line-height: 1; }
 html.rm-sis .rm-ix-tt { min-width: 0; overflow-wrap: anywhere; }
 
-/* H4 (nível 2): linhas discretas sob o H3 a que pertencem */
-html.rm-sis .rm-ix-kids { list-style: none; margin: 0 0 0 20px; padding: 0 0 0 12px; border-left: 2px solid var(--cap-edge); display: flex; flex-direction: column; gap: 0; }
+/* H3 com H4: o grupo vira uma «ficha» discreta (fundo levíssimo + borda fina); o H3 é o minicard de cima e cada H4 é um minicard menor, recuado, dentro dela */
+html.rm-sis .rm-ix-grp.has-kids { gap: 6px; padding: 6px; border: 1px solid var(--cap-line); border-radius: 13px; background: rgba(255, 255, 255, .55); }
+html.rm-sis .rm-ix-kids { list-style: none; margin: 0 0 0 14px; padding: 0 0 0 10px; border-left: 2px solid var(--cap-edge); display: flex; flex-direction: column; gap: 6px; }
 html.rm-sis .rm-ix-kids > li { margin: 0; padding: 0; }
 html.rm-sis .rm-ix-kids > li[hidden] { display: none; }
 html.rm-sis button.rm-ix-kid {
-  appearance: none; -webkit-appearance: none; margin: 0; width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 8px; text-align: left; cursor: pointer;
-  background: transparent; border: 0; border-radius: 8px; font: 500 14px/1.3 var(--rm-f-body); color: var(--rm-tx3);
+  appearance: none; -webkit-appearance: none; margin: 0; width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 6px 12px 6px 9px; text-align: left; cursor: pointer;
+  background: var(--rm-white); border: 1px solid var(--cap-line); border-radius: 9px; font: 500 14px/1.3 var(--rm-f-body); color: var(--rm-tx3); transition: border-color .15s, background .15s, color .15s;
 }
-html.rm-sis button.rm-ix-kid::before { content: "§"; flex: 0 0 auto; color: var(--cap); font-weight: 800; }
-html.rm-sis button.rm-ix-kid:hover { background: var(--cap-tint); color: var(--rm-title); }
+html.rm-sis button.rm-ix-kid::before {
+  content: "§"; flex: 0 0 20px; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px; background: var(--cap-tint); color: var(--cap-strong, var(--rm-navy));
+  font: 700 11px var(--rm-f-title);
+}
+html.rm-sis button.rm-ix-kid:hover { border-color: var(--cap); background: var(--cap-tint); color: var(--rm-title); }
+html.rm-sis button.rm-ix-kid:active { transform: translateY(1px); }
 html.rm-sis .rm-ix-kt { min-width: 0; overflow-wrap: anywhere; }
 html.rm-sis button.rm-ix-more {
-  appearance: none; -webkit-appearance: none; margin: 2px 0 0 20px; align-self: flex-start; min-height: 44px; padding: 0 14px; cursor: pointer; background: transparent;
-  border: 1px dashed var(--cap-edge); border-radius: 8px; font: 650 12.5px var(--rm-f-ui); color: var(--cap-strong, var(--rm-navy));
+  appearance: none; -webkit-appearance: none; margin: 0 0 0 14px; align-self: flex-start; min-height: 44px; padding: 0 14px; cursor: pointer; background: transparent;
+  border: 1px dashed var(--cap-edge); border-radius: 9px; font: 650 12.5px var(--rm-f-ui); color: var(--cap-strong, var(--rm-navy));
 }
 html.rm-sis button.rm-ix-more:hover { background: var(--cap-tint); }
 
 @media (max-width: 480px) {
   html.rm-sis .rm-ix-box { padding: 14px 12px 16px 16px; border-radius: 12px; }
   html.rm-sis .rm-ix-start { width: 100%; justify-content: center; }
-  html.rm-sis .rm-ix-kids { margin-left: 14px; }
-  html.rm-sis button.rm-ix-more { margin-left: 14px; }
+  html.rm-sis .rm-ix-kids { margin-left: 8px; padding-left: 8px; }
+  html.rm-sis button.rm-ix-more { margin-left: 8px; }
+  html.rm-sis .rm-ix-grp.has-kids { padding: 5px; }
 }
 
 /* movimento reduzido: abertura/fechamento instantâneos, sem deslocamento */
 @media (prefers-reduced-motion: reduce) {
-  html.rm-sis .rm-ix-panel, html.rm-sis .rm-ix-chev, html.rm-sis button.rm-ix-card, html.rm-sis .rm-ix-start, html.rm-sis button.rm-ix-sub { transition: none !important; }
-  html.rm-sis .rm-ix-start:hover, html.rm-sis button.rm-ix-sub:active { transform: none; }
+  html.rm-sis .rm-ix-panel, html.rm-sis .rm-ix-chev, html.rm-sis button.rm-ix-card, html.rm-sis .rm-ix-start, html.rm-sis button.rm-ix-sub, html.rm-sis button.rm-ix-kid { transition: none !important; }
+  html.rm-sis .rm-ix-start:hover, html.rm-sis button.rm-ix-sub:active, html.rm-sis button.rm-ix-kid:active { transform: none; }
 }
 html.rm-sis .rm-ix-panel.is-sem-anim { transition: none !important; }

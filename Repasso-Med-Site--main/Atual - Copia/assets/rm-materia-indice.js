@@ -1,7 +1,8 @@
 /* =====================================================================
    REPASSO MED · rm-materia-indice.js — índice CENTRAL expansível por bloco e subtítulo (issue #460)
-   PROTÓTIPO ISOLADO: nenhum arquivo do site carrega este módulo. A integração (um css()+js() e um attach depois de RMNav.attach em rm-pilot.js)
-   está em docs/indice-expansivel-460/PATCH-INTEGRACAO-rm-pilot.diff e só entra depois da PR da caneta (#456).
+   LIGADO AO PILOTO (PR #462): rm-pilot.js carrega este módulo depois da navegação por bloco (rm-materia-nav.js) e chama attach() só quando o servidor
+   liberou layout + visual para Semiología II (mesmo portão do tema). Qualquer falha (módulo ausente, attach que lança) ⇒ detach() e os cards voltam a ser
+   os <a> de antes, que abrem o bloco direto. Sem esse attach, o arquivo não faz nada: window.RMIndice só define funções. Rollback: docs/indice-expansivel-460/README.md.
 
    O que faz (só no índice de abertura da matéria, atrás do mesmo portão do piloto: exige RMSistema + RMNav ativos):
      · o card central de um BLOCO deixa de abrir o bloco na hora: ele EXPANDE ali mesmo, num painel ligado ao card (aba/cor/borda);
@@ -15,7 +16,7 @@
        cabeçalhos de pergunta/flashcard, cabeçalhos repetidos (SUB_FORA, a mesma regra do app-core), e tudo que está dentro de contêineres
        (post-it, cartões, detalhes, quiz, tabelas…). H4 entra como filho do H3 anterior (hierarquia).
      · Só usa APIs públicas já existentes: RMSistema.secciones(), RMNav.ativo()/go()/irParaAlvo(). Não toca RMModes/RMLayout/áudio/caneta.
-     · Acessibilidade: o card vira <button> real com aria-expanded/aria-controls; Enter/Espaço; Esc fecha e devolve o foco; alvos ≥ 44 px;
+     · Acessibilidade: o card vira <button> real com aria-expanded e, enquanto o painel existe no DOM, aria-controls (nunca aponta para um id ausente); Enter/Espaço; Esc fecha e devolve o foco; alvos ≥ 44 px;
        prefers-reduced-motion = abertura/fechamento instantâneos.
      · Reversível: detach() devolve os <a> originais e remove tudo o que criou.
    ===================================================================== */
@@ -106,7 +107,7 @@
     var lab = el('p', 'rm-ix-lab'); lab.textContent = T.ir; dentro.appendChild(lab);
     var ol = el('ol', 'rm-ix-list');
     c.subs.forEach(function (g, i) {
-      var li = el('li', 'rm-ix-grp');
+      var li = el('li', g.kids.length ? 'rm-ix-grp has-kids' : 'rm-ix-grp');
       var b = el('button', 'rm-ix-sub', { type: 'button' });
       var mk = el('span', 'rm-ix-mk', { 'aria-hidden': 'true' }); mk.textContent = g.icon || g.num || String(i + 1); if (g.icon) mk.className += ' is-ico'; b.appendChild(mk);
       var tt = el('span', 'rm-ix-tt'); tt.textContent = g.txt; b.appendChild(tt);
@@ -189,6 +190,7 @@
     N.aberto = c;
     c.btn.setAttribute('aria-expanded', 'true'); c.btn.setAttribute('data-rm-open', '');
     colocar(c);
+    c.btn.setAttribute('aria-controls', c.painelId);                 // o painel já está no DOM
     var P = c.painel, reduz = movimentoReduzido();
     if (reduz) { P.classList.add('is-open'); P.classList.add('is-sem-anim'); }
     else { void P.offsetHeight; requestAnimationFrame(function () { if (N && N.aberto === c) P.classList.add('is-open'); }); }
@@ -203,7 +205,7 @@
     var reduz = movimentoReduzido();
     if (o.ancora) ancorar(o.ancora, reduz ? 40 : DUR + 60);
     P.classList.remove('is-open');
-    var tirar = function () { if (P.parentNode && !(N && N.aberto === c)) { var g = P.parentNode; g.removeChild(P); soltarGrade(g); } };
+    var tirar = function () { if (P.parentNode && !(N && N.aberto === c)) { c.btn.removeAttribute('aria-controls'); var g = P.parentNode; g.removeChild(P); soltarGrade(g); } };
     if (reduz) tirar(); else setTimeout(tirar, DUR + 40);
     if (o.foco) { try { c.btn.focus({ preventScroll: true }); } catch (e) { c.btn.focus(); } }
   }
@@ -248,7 +250,7 @@
       var subs = subtitulosDe(s.el); if (!subs.length) return;                             // bloco sem subtítulos reais: card segue abrindo direto
       var btn = ui('button', 'rm-sis-card rm-ix-card', { type: 'button', 'aria-expanded': 'false', 'data-rm-go': s.id });
       var cap = orig.getAttribute('data-rm-cap') || ''; if (cap) btn.setAttribute('data-rm-cap', cap);
-      var painelId = 'rm-ix-p-' + (++SEQ); btn.setAttribute('aria-controls', painelId);
+      var painelId = 'rm-ix-p-' + (++SEQ);                    // aria-controls só existe enquanto o painel está no DOM (abrir/fechar)
       while (orig.firstChild) btn.appendChild(orig.firstChild);
       var ch = el('span', 'rm-ix-chev', { 'aria-hidden': 'true' }); ch.appendChild(svgCaret()); btn.appendChild(ch);
       var b = btn.querySelector('.rm-sis-card-t b'), n = btn.querySelector('.rm-sis-card-n');

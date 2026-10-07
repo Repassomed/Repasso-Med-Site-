@@ -179,7 +179,7 @@ const abre = async (W, H, opts = {}) => {
     chk(`${tag}·card-visivel`, g.cardTop >= g.hdr - 2 && g.cardBottom <= g.vh + 2, `${tag}: o card acionado continua inteiro na tela (top=${g.cardTop}, header=${g.hdr})`, g);
     chk(`${tag}·colunas`, cfg.w <= 640 ? g.cols === 1 : g.cols >= 1, `${tag}: minicards em ${g.cols} coluna(s)`, g);
     const hit = await p.evaluate(async () => {
-      const bs = [...document.querySelectorAll('.rm-ix-start, .rm-ix-sub')]; const falhas = [];
+      const bs = [...document.querySelectorAll('.rm-ix-start, .rm-ix-sub, .rm-ix-kid:not([hidden]), .rm-ix-more')].filter(x => x.offsetParent !== null); const falhas = [];
       for (const b of bs) { b.scrollIntoView({ block: 'center' }); await new Promise(r => requestAnimationFrame(r)); const r = b.getBoundingClientRect(); const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); if (!(el && b.contains(el))) falhas.push((b.textContent || '').trim().slice(0, 30) + ' ← ' + (el ? (el.id || el.className || el.tagName) : 'null')); }
       return falhas;
     });
@@ -340,6 +340,58 @@ const abre = async (W, H, opts = {}) => {
     }, { a: w1.anchor });
     chk('traco-volta-igual', !volta.sem && volta.disp !== 'none' && volta.dx <= 4 && volta.dy <= 4 && volta.dw <= 4 && volta.d === w1.d, 'ao voltar ao bloco pelo índice expansível o MESMO traço reaparece sobre a âncora (Δ ≤ 4 px)', volta);
     chk('navegar-nao-grava', volta.esc === w1.esc, 'expandir, escolher e voltar não fizeram nenhuma escrita nova', { antes: w1.esc, depois: volta.esc });
+    await ctx.close();
+  }
+
+  /* ================= 10 · H4 como minicards dentro do grupo do H3 · aria-controls ================= */
+  S('10 · H4 = minicard discreto dentro da ficha do H3 (≥ 44 px, hierarquia) · aria-controls sempre aponta para painel existente');
+  for (const [W, H] of [[1440, 900], [390, 844]]) {
+    const { ctx, page: p, errs } = await abre(W, H, { touch: W < 900 });
+    const ariaOk = () => p.evaluate(() => {
+      const bs = [...document.querySelectorAll('button.rm-ix-card')], ruins = [];
+      bs.forEach(b => { const c = b.getAttribute('aria-controls'); if (c && !document.getElementById(c)) ruins.push(b.getAttribute('data-rm-go') + '→' + c); });
+      const mais = [...document.querySelectorAll('.rm-ix-more')].filter(m => !document.getElementById(m.getAttribute('aria-controls'))).length;
+      return { n: bs.length, ruins, mais, comCtl: bs.filter(b => b.hasAttribute('aria-controls')).map(b => b.getAttribute('data-rm-go')), abertos: bs.filter(b => b.getAttribute('aria-expanded') === 'true').map(b => b.getAttribute('data-rm-go')) };
+    });
+    let a = await ariaOk();
+    chk(`aria-fechado-${W}`, a.n === 10 && a.ruins.length === 0 && a.comCtl.length === 0, `${W}px: com tudo recolhido nenhum botão tem aria-controls (não há painel para apontar)`, a);
+    await clicaCarta(p, 's2-b03', W < 900); a = await ariaOk();
+    chk(`aria-aberto-${W}`, a.ruins.length === 0 && a.comCtl.join() === 's2-b03' && a.mais === 0, `${W}px: expandido, só o botão aberto tem aria-controls e o painel existe`, a);
+    await clicaCarta(p, 's2-b02', W < 900); await p.waitForTimeout(500); a = await ariaOk();
+    chk(`aria-troca-${W}`, a.ruins.length === 0 && a.comCtl.join() === 's2-b02' && a.abertos.join() === 's2-b02', `${W}px: ao trocar de card o anterior perde o aria-controls (painel removido)`, a);
+    await fechaTudo(p); await p.waitForTimeout(400); a = await ariaOk();
+    chk(`aria-recolhido-${W}`, a.ruins.length === 0 && a.comCtl.length === 0, `${W}px: depois de recolher, nenhum aria-controls pendente`, a);
+    await clicaCarta(p, 's2-b03', W < 900);
+    const m = await p.evaluate(() => {
+      const g = [...document.querySelectorAll('.rm-ix-grp.has-kids')][0]; if (!g) return null;
+      const h3 = g.querySelector(':scope > .rm-ix-sub'), kids = [...g.querySelectorAll('.rm-ix-kids > li:not([hidden]) .rm-ix-kid')], gr = g.getBoundingClientRect(), hr = h3.getBoundingClientRect();
+      const cs = kids[0] && getComputedStyle(kids[0]);
+      const sub = x => x.getBoundingClientRect();
+      return {
+        grupos: document.querySelectorAll('.rm-ix-grp.has-kids').length, semKids: document.querySelectorAll('.rm-ix-grp:not(.has-kids)').length, nKids: kids.length,
+        dentro: kids.every(k => { const r = sub(k); return r.left >= gr.left - 0.5 && r.right <= gr.right + 0.5 && r.top >= gr.top - 0.5 && r.bottom <= gr.bottom + 0.5; }),
+        alvos: kids.map(k => Math.round(sub(k).height)), minH: Math.min(...kids.map(k => sub(k).height)),
+        recuo: Math.round(sub(kids[0]).left - hr.left), menor: kids.every(k => sub(k).width < hr.width),
+        minicard: !!cs && parseFloat(cs.borderTopWidth) >= 1 && parseFloat(cs.borderTopLeftRadius) >= 6 && cs.backgroundColor !== 'rgba(0, 0, 0, 0)',
+        fonteH3: parseFloat(getComputedStyle(h3).fontSize), fonteH4: parseFloat(cs.fontSize), pesoH3: +getComputedStyle(h3).fontWeight, pesoH4: +cs.fontWeight,
+        mais: [...document.querySelectorAll('.rm-ix-more')].map(x => ({ t: x.textContent, h: Math.round(x.getBoundingClientRect().height) })), ocultos: document.querySelectorAll('.rm-ix-kids > li[hidden]').length,
+        ordemDom: [...g.children].map(x => x.className.split(' ')[0]).join()
+      };
+    });
+    chk(`h4-existe-${W}`, m && m.grupos >= 1 && m.nKids >= 1, `${W}px: bloco 03 tem fichas de H3 com H4`, m);
+    if (m) {
+      chk(`h4-minicard-${W}`, m.minicard, `${W}px: cada H4 é um minicard (borda, raio, fundo próprio)`, m);
+      chk(`h4-dentro-${W}`, m.dentro, `${W}px: os minicards H4 ficam DENTRO da ficha do seu H3`, m);
+      chk(`h4-toque-${W}`, m.minH >= 44, `${W}px: alvo dos H4 ≥ 44 px (mín. ${m.minH})`, m.alvos);
+      chk(`h4-hierarquia-${W}`, m.recuo >= 10 && m.menor && m.fonteH4 < m.fonteH3 && m.pesoH4 < m.pesoH3, `${W}px: hierarquia clara (H4 recuado ${m.recuo}px, mais estreito, ${m.fonteH4}px/${m.pesoH4} contra ${m.fonteH3}px/${m.pesoH3})`, m);
+      chk(`h4-quatro-${W}`, m.nKids <= 4 * m.grupos && m.mais.length >= 1 && m.mais.every(x => /^Ver \d+ temas? más$/.test(x.t) && x.h >= 44), `${W}px: só os 4 primeiros H4 por grupo + «Ver N temas más» (≥ 44 px)`, m);
+    }
+    await p.screenshot({ path: path.join(OUT, 'capturas', `depois-${W}px-h4-minicards.png`) });
+    await p.evaluate(() => document.querySelector('.rm-ix-more').click()); await p.waitForTimeout(250);
+    const abertoMais = await p.evaluate(() => { const m = document.querySelector('.rm-ix-more'), ul = document.getElementById(m.getAttribute('aria-controls')); return { exp: m.getAttribute('aria-expanded'), vis: [...ul.children].filter(l => !l.hidden).length, tot: ul.children.length, txt: m.textContent }; });
+    chk(`h4-ver-mais-${W}`, abertoMais.exp === 'true' && abertoMais.vis === abertoMais.tot && abertoMais.txt === 'Ver menos', `${W}px: «Ver N temas más» revela todos os H4 do grupo e vira «Ver menos»`, abertoMais);
+    if (W < 900) { chk(`h4-sem-overflow-${W}`, (await est(p)).sw <= (await est(p)).vw + 1, `${W}px: sem overflow com todos os H4`, await est(p)); }
+    chk(`h4-erros-${W}`, errs.length === 0, `${W}px: 0 erros JS`, errs);
     await ctx.close();
   }
 
