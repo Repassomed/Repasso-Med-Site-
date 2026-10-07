@@ -8,11 +8,14 @@
      D  MODOS: índice de blocos com contagens reais → só o recurso daquele tipo naquele bloco; Preguntas por grupo (só com metadado real) sem perder o estado;
         Flashcards (+ «todos», sem duplicar); Audiolibros só com card real (manifesto, inclusive tardio); Ausculta; troca de modo e volta; nenhuma página vazia;
      E  CANETA: traço persiste (e volta) ao trocar de bloco; blocos ocultos escondem os traços; ferramenta segue armada;
+        REGRESSÃO atualizarTinta: bloco 04 → índice geral → índice de Preguntas → Preguntas do bloco 03 → bloco 04 — nenhum SVG com display ≠ none/caixa/pixel nas telas intermediárias, mesmo traço na âncora, 0 escritas;
      F  ÁUDIO: continua tocando ao navegar; um áudio por vez; sair da matéria/logout para;
      G  GEOMETRIA 320 · 390 · 768 · 1024 · 1440 · zoom 200%: sem overflow, sem sobreposição, última linha acima do player;
      H  detach limpo.
    Uso:  RM_PLAYWRIGHT=... node tools/qa/browser-qa/layout/nav-sistema.test.cjs                                                                                                     */
 const L = require('./lib-player.cjs');
+const path = require('path'), fs = require('fs');
+const OUT_EVID = process.env.RM_EVID_DIR ? path.resolve(process.env.RM_EVID_DIR) : require('os').tmpdir(); try { fs.mkdirSync(OUT_EVID, { recursive: true }); } catch (e) {}
 let n = 0, ko = 0;
 const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x) : ''); } return !!c; };
 const sec = (t) => console.log('\n▸ ' + t);
@@ -341,6 +344,49 @@ const jsonGo = (s) => { try { return JSON.parse(s); } catch (e) { return null; }
     ok(v.filter(s => /^s2-b04/.test(s.a)).length >= 1 && v.filter(s => /^s2-b04/.test(s.a)).every(s => s.d !== 'none' && s.w && s.p >= 1), 'volta ao bloco 04: o MESMO traço reaparece ancorado (sem novo insert)', v);
     const wr1 = await page.evaluate(() => (window.__writes || []).filter(w => /user_ink_strokes/.test(w)).join(','));
     ok(wr1 === wr0, 'trocar de bloco não gravou nada (0 escritas novas)', { wr0, wr1 });
+    /* ---- REGRESSÃO (atualizarTinta): índice geral → índice de Preguntas → Preguntas do bloco 03 → volta ao bloco 04, com o MESMO traço feito pela caneta real.
+       Estrito: em CADA tela intermediária nenhum SVG de traço pode estar com display ≠ none (computado), nem ter caixa, nem pintar um único pixel; na volta o traço
+       reaparece na âncora certa (retângulo do parágrafo âncora) com os mesmos paths; e a navegação não faz NENHUMA escrita nem requisição de escrita. ---- */
+    {
+      const reqsEsc = []; const onReq = (r) => { if (!/^(GET|HEAD|OPTIONS)$/.test(r.method())) reqsEsc.push(r.method() + ' ' + r.url().slice(0, 80)); }; page.on('request', onReq);
+      const escritas = () => page.evaluate(() => (window.__writes || []).slice());
+      const todasAntes = await escritas();
+      const ancora = await page.evaluate(() => { const sv = document.querySelector('#rm2-ink svg[data-anchor^="s2-b04>"]'); return { a: sv.getAttribute('data-anchor'), d: [...sv.querySelectorAll('path')].map(x => x.getAttribute('d')).join('|') }; });
+      const estado = () => page.evaluate(() => {
+        const root = document.getElementById('rm2-ink');
+        return { nav: document.documentElement.getAttribute('data-rm-nav'), rootDisp: root ? getComputedStyle(root).display : null,
+          svgs: [...document.querySelectorAll('#rm2-ink svg[data-anchor]')].map(sv => { const c = getComputedStyle(sv), r = sv.getBoundingClientRect(); return { a: sv.getAttribute('data-anchor'), disp: c.display, vis: c.visibility, caixa: Math.round(r.width) * Math.round(r.height) }; }) };
+      });
+      /* o traço NÃO pinta nada: captura normal × captura com #rm2-ink escondido têm os mesmos pixels */
+      const semPintura = async () => {
+        const a = await page.screenshot(); await page.evaluate(() => { document.getElementById('rm2-ink').style.setProperty('display', 'none', 'important'); });
+        const b = await page.screenshot(); await page.evaluate(() => { document.getElementById('rm2-ink').style.removeProperty('display'); });
+        const a2 = await page.screenshot(); return Buffer.compare(a, b) === 0 || Buffer.compare(a2, b) === 0;
+      };
+      const etapas = [['índice geral', { view: 'index' }], ['índice de Preguntas', { view: 'modeidx', mode: 'preguntas' }], ['Preguntas do bloco 03', { view: 'modeblk', mode: 'preguntas', block: 's2-b03' }]];
+      for (const [nome, spec] of etapas) {
+        await go(page, spec, 1500); const e = await estado();
+        const vazamento = e.svgs.filter(x => x.disp !== 'none' || x.caixa > 0);
+        ok(e.svgs.length >= 1 && vazamento.length === 0, `${nome}: nenhum traço flutua (getComputedStyle: todos display:none e sem caixa)`, { nav: e.nav, rootDisp: e.rootDisp, vazamento });
+        ok(await semPintura(), `${nome}: visualmente nada de traço (a captura é idêntica com #rm2-ink escondido)`);
+        await page.screenshot({ path: path.join(OUT_EVID, 'tinta-' + (etapas.findIndex(x => x[0] === nome) + 1) + '-' + nome.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.png') });
+      }
+      await go(page, { view: 'block', block: 's2-b04' }, 1700);
+      const volta = await page.evaluate(async (anc) => {
+        const [sid, ix] = anc.a.split('>'); const lista = [...document.getElementById(sid).querySelectorAll('p,li,h2,h3,h4,h5,table,figure,blockquote')].filter(n => !n.closest('[data-rm-ui]')); const par = lista[+ix];
+        window.RMLayout.irPara(par); await new Promise(o => setTimeout(o, 1600));
+        const sv = document.querySelector(`#rm2-ink svg[data-anchor="${anc.a}"]`), c = getComputedStyle(sv), r = sv.getBoundingClientRect(), pr = par.getBoundingClientRect();
+        return { n: document.querySelectorAll('#rm2-ink svg[data-anchor]').length, disp: c.display, vis: c.visibility, dx: Math.abs(r.left - pr.left), dy: Math.abs(r.top - pr.top), dw: Math.abs(r.width - pr.width), dh: Math.abs(r.height - pr.height),
+          d: [...sv.querySelectorAll('path')].map(x => x.getAttribute('d')).join('|') };
+      }, ancora);
+      ok(volta.n === 1 && volta.disp !== 'none' && volta.vis === 'visible', 'volta ao bloco 04: o traço reaparece (1 SVG, visível)', volta);
+      ok(volta.dx <= 4 && volta.dy <= 4 && volta.dw <= 4 && volta.dh <= 4, `…na âncora correta ${ancora.a}: o SVG coincide com o parágrafo âncora (Δx ${volta.dx.toFixed(1)} · Δy ${volta.dy.toFixed(1)} · Δw ${volta.dw.toFixed(1)} · Δh ${volta.dh.toFixed(1)} px)`, volta);
+      ok(volta.d === ancora.d && volta.d.length > 10, '…e é o MESMO traço (mesmos paths, não um novo)');
+      const todasDepois = await escritas(); page.off('request', onReq);
+      ok(JSON.stringify(todasDepois) === JSON.stringify(todasAntes), `a navegação não grava nada no banco (${todasAntes.length} escritas antes = ${todasDepois.length} depois)`, { todasAntes, todasDepois });
+      ok(reqsEsc.length === 0, 'nenhuma requisição de escrita (POST/PATCH/PUT/DELETE) durante a navegação', reqsEsc);
+      await page.screenshot({ path: path.join(OUT_EVID, 'tinta-bloque-04-volta.png') });
+    }
     /* modo (preguntas) e volta */
     await go(page, { view: 'modeblk', mode: 'preguntas', block: 's2-b03' }, 1300);
     ok((await vis()).every(s => s.d === 'none' || !s.w), 'em modo isolado (blocos 03/preguntas) o traço do 04 não aparece');

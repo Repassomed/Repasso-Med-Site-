@@ -81,7 +81,7 @@ ficam onde estão; o que muda é **qual parte está visível** (atributos no `<h
   não se perde); sem metadado completo não há grupo inventado. O Banco General entra como revisão geral, **fora** da soma por bloco.
 - **Flashcards:** lançador de cada bloco + «Todos los flashcards»; nenhum card/ID é duplicado. **Audiolibros:** o mesmo card/motor/player (posição guardada, um áudio por vez; trocar de bloco **não** para o áudio,
   sair da matéria/logout para). **Auscultación:** por bloco, com a arbitragem original (tocar um `<audio>` da matéria pausa o audiobook).
-- **Caneta:** os SVGs de traço dos blocos ocultos ficam ocultos e voltam (mesma âncora, sem nova escrita) ao reabrir o bloco; a navegação pede o reposicionamento pela API pública do layout. Modos isolados continuam
+- **Caneta:** os SVGs de traço ficam `display:none` em toda tela em que a leitura contínua não está à vista (índice geral, índices e páginas de modo) e, no bloco, só o do bloco aberto aparece; voltam (mesma âncora, mesmo traço, sem nova escrita) ao reabrir o bloco; a navegação pede o reposicionamento pela API pública do layout. Modos isolados continuam
   desarmando a ferramenta (comportamento já existente do V2).
 - **Ritmo dos subtítulos** (valores recomendados): `h3` com filete de 1 px (`rgba(16,36,61,.11)`), 46 px acima + 28 px de respiro (34 px no 1.º); `h4` 34 px acima; no celular 38/22 e 28 px; tabelas e post-its com `break-inside: avoid`; **sem** quebra de página forçada.
 - **Tema desligado / outra matéria / outra conta:** nada disto existe (`RMNav` nem é carregado; o `detach` do tema desfaz classes, atributos, nós, estilos e a restauração de rolagem). Kill switch: `RM_PILOT_VISUAL_UIDS`.

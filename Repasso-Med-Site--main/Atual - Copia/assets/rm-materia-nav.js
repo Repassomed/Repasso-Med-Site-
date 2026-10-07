@@ -371,11 +371,15 @@
 
   /* tinta: só os traços do bloco visível aparecem (a camada é uma só, global; os SVG de blocos ocultos ficariam num canto) */
   function atualizarTinta(e) {
-    var regra = '';
-    if (e.view === 'block' || e.view === 'modeblk') {
-      var id = e.block, a = String(id).replace(/"/g, '');
+    /* Os SVGs de traço (#rm2-ink) são da V2 e ficam ancorados a nós que a navegação oculta. A regra é por ESTADO, nunca vazia:
+       · block   → só os do bloco aberto aparecem (os de qualquer outro bloco: display:none);
+       · index · modeidx · modeblk → nenhum aparece (a leitura contínua não está à vista; em modo isolado a V2 já esconde a raiz #rm2-ink, e aqui o SVG também
+         fica display:none em vez de depender só dela). Os nós/IDs/paths não são tocados: ao reabrir o bloco o MESMO SVG volta ancorado e a V2 reposiciona (pedirReposicao). */
+    var regra;
+    if (e.view === 'block') {
+      var a = String(e.block).replace(/"/g, '');
       regra = 'html.rm-nav[data-rm-nav="block"] #rm2-ink svg[data-anchor]:not([data-anchor="' + a + '"]):not([data-anchor^="' + a + '>"]) { display: none !important; }';
-    }
+    } else regra = 'html.rm-nav:not([data-rm-nav="block"]) #rm2-ink svg[data-anchor] { display: none !important; }';
     if (!N.ink) { N.ink = el('style', '', { id: 'rm-nav-ink' }); document.head.appendChild(N.ink); }
     N.ink.textContent = regra;
   }
