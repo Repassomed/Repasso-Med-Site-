@@ -428,10 +428,20 @@
       var pt = document.createElementNS('http://www.w3.org/2000/svg', 'path'); pt.setAttribute('d', ICO_TOOLS); sv.appendChild(pt); b.appendChild(sv);
       var out = q1(S.band, '.rm-sis-out'); S.band.insertBefore(b, out || null);
       S.tools = b;
-      var sync = function () {
+      /* O espelho da toolbox NÃO pode forçar layout enquanto o aluno escreve. A V2 chama `refletir()` (que reescreve `aria-expanded`/classes do FAB mesmo com o valor igual)
+         a cada traço — e o MutationObserver dispara a cada reescrita. Antes, cada disparo lia `getComputedStyle(box).display` + `getBoundingClientRect()` com o documento «sujo»
+         (traço novo + classes do corpo) = estilo + layout síncronos de ~16 mil nós no pointerup (medido: ~80 ms a 4× de CPU; #456). Agora: (1) só reage quando o ESTADO
+         (aberta/armada) realmente mudou; (2) a altura do dock (`--rm-dock-h`) só é lida quando a caixa muda de tamanho (ResizeObserver: o layout já está pronto) ou na janela
+         (resize) — nunca por reescrita de atributo igual. */
+      var GEO = {};
+      var sync = function (rec) {
         if (!S) return;
-        var open = box.classList.contains('open');
-        b.setAttribute('aria-expanded', String(open)); b.classList.toggle('is-open', open); b.classList.toggle('is-armed', fab.classList.contains('armed'));
+        var open = box.classList.contains('open'), armed = fab.classList.contains('armed');
+        var geo = rec === GEO;                                              // ResizeObserver/resize chamam com a geometria como pedido explícito
+        var mudou = open !== S.tOpen || armed !== S.tArmed;
+        if (!mudou && !geo && S.tOpen !== undefined) return;                 // reescrita do mesmo valor: nada a fazer, nada a medir
+        S.tOpen = open; S.tArmed = armed;
+        b.setAttribute('aria-expanded', String(open)); b.classList.toggle('is-open', open); b.classList.toggle('is-armed', armed);
         var h = (open && getComputedStyle(box).display !== 'none') ? Math.round(box.getBoundingClientRect().height) : 0;
         ROOT.style.setProperty('--rm-dock-h', h + 'px');
         if (open) ROOT.setAttribute('data-rm-tools', 'open'); else ROOT.removeAttribute('data-rm-tools');      // o player recolhe enquanto a toolbox está aberta
@@ -439,8 +449,8 @@
       };
       S.toolsSync = sync;
       try { S.toolsMO = new MutationObserver(sync); S.toolsMO.observe(box, { attributes: true, attributeFilter: ['class'] }); S.toolsMO.observe(fab, { attributes: true, attributeFilter: ['class', 'aria-expanded'] }); } catch (e) {}
-      try { if (window.ResizeObserver) { S.toolsRO = new ResizeObserver(sync); S.toolsRO.observe(box); } } catch (e) {}
-      window.addEventListener('resize', sync);
+      try { if (window.ResizeObserver) { S.toolsRO = new ResizeObserver(function () { sync(GEO); }); S.toolsRO.observe(box); } } catch (e) {}
+      S.toolsGeo = function () { sync(GEO); }; window.addEventListener('resize', S.toolsGeo);
       /* A V2 minimiza a toolbox em qualquer pointerdown FORA dela e depois o clique reabriria (o botão da faixa não está dentro de .rm2-box):
          com o dedo, tocar para FECHAR fecharia e reabriria. Este botão é o próprio FAB espelhado, então o pointerdown dele não conta como «fora». */
       S.toolsPtr = function (e) { var t = e.target; if (t && t.closest && t.closest('.rm-sis-tools')) e.stopPropagation(); };
@@ -704,7 +714,7 @@
     try { window.removeEventListener('scroll', S.h.stuck); window.removeEventListener('resize', S.h.stuck); } catch (e) {}
     ROOT.removeAttribute('data-rm-stuck');
     try { if (S.mo) S.mo.disconnect(); } catch (e) {}
-    try { if (S.toolsMO) S.toolsMO.disconnect(); if (S.toolsRO) S.toolsRO.disconnect(); if (S.toolsWait) S.toolsWait.disconnect(); window.removeEventListener('resize', S.toolsSync); if (S.toolsPtr) window.removeEventListener('pointerdown', S.toolsPtr, true); } catch (e) {}
+    try { if (S.toolsMO) S.toolsMO.disconnect(); if (S.toolsRO) S.toolsRO.disconnect(); if (S.toolsWait) S.toolsWait.disconnect(); window.removeEventListener('resize', S.toolsGeo); if (S.toolsPtr) window.removeEventListener('pointerdown', S.toolsPtr, true); } catch (e) {}
     ROOT.style.removeProperty('--rm-dock-h'); ROOT.removeAttribute('data-rm-tools');
     try { if (S.pl) soltarPlayer(S.pl); } catch (e) {}
     NODOS.forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });

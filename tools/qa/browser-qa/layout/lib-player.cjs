@@ -37,8 +37,8 @@ function gerarMidia() {
 /* abre a matéria com o tema + áudio. opts: {visual:true, w, h, touch, scale, manifesto:true, nav:false, hash:'', atrasoManifesto:0}
    `nav:false` (padrão) desliga a NAVEGAÇÃO POR BLOCO (RMNav.detach()) logo após a carga: os testes de geometria/tema/player medem a leitura contínua, como na PR #446;
    a navegação tem o seu próprio teste (nav-sistema.test.cjs, `nav:true`). `hash` abre a página com um deep link; `atrasoManifesto` (ms) segura o manifesto (cards assíncronos). */
-async function abrir(br, base, midia, { w, h, visual = true, touch = w < 900, scale = 1, manifesto = true, uid = JOSE, railMin = false, nav = false, hash = '', atrasoManifesto = 0 } = {}) {
-  const ctx = await br.newContext({ viewport: { width: w, height: h }, hasTouch: touch, isMobile: false, deviceScaleFactor: scale });
+async function abrir(br, base, midia, { w, h, visual = true, touch = w < 900, scale = 1, manifesto = true, uid = JOSE, railMin = false, nav = false, hash = '', atrasoManifesto = 0, layout = true, isMobile = false, seedmany = 0, initScript = null } = {}) {
+  const ctx = await br.newContext({ viewport: { width: w, height: h }, hasTouch: touch, isMobile, deviceScaleFactor: scale });
   const page = await ctx.newPage(); const errs = [], reqs = { manifest: 0, url: 0, media: 0 };
   page.on('pageerror', e => errs.push(String(e).slice(0, 160)));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|net::ERR/.test(m.text())) errs.push('c:' + m.text().slice(0, 140)); });
@@ -56,7 +56,8 @@ async function abrir(br, base, midia, { w, h, visual = true, touch = w < 900, sc
     window.__media = []; const op = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () { if (!window.__media.includes(this)) window.__media.push(this); return op.apply(this, arguments); };
   }, [SUPA, uid, railMin]);
-  await page.route('**/get-pilot-flags*', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ slug: 'semiologia-ii', layout: true, visual, audio: true }) }));
+  if (initScript) await page.addInitScript(initScript);
+  await page.route('**/get-pilot-flags*', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ slug: 'semiologia-ii', layout, visual: layout && visual, audio: layout && true }) }));
   await page.route('**/get-audio-manifest*', async r => { reqs.manifest++; if (atrasoManifesto) await new Promise(o => setTimeout(o, atrasoManifesto)); r.fulfill(manifesto ? { status: 200, contentType: 'application/json', body: JSON.stringify({ items: ITENS }) } : { status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) }); });
   await page.route('**/get-audio-url*', r => {
     reqs.url++; const id = new URL(r.request().url()).searchParams.get('audio_id');
@@ -76,7 +77,7 @@ async function abrir(br, base, midia, { w, h, visual = true, touch = w < 900, sc
     await page.route('https://fonts.googleapis.com/**', r => r.fulfill({ status: 200, contentType: 'text/css', body: fs.readFileSync(fd + 'local.css', 'utf8') }));
     await page.route('**/__fonts/**', r => r.fulfill({ status: 200, contentType: 'font/woff2', body: fs.readFileSync(fd + path.basename(new URL(r.request().url()).pathname)) }));
   }
-  await page.goto(`${base}/p.html?slug=semiologia-ii&tab=semio2&uid=${uid}&wait=1800${hash}`, { timeout: 120000 });
+  await page.goto(`${base}/p.html?slug=semiologia-ii&tab=semio2&uid=${uid}&wait=1800${seedmany ? '&seedmany=' + seedmany : ''}${hash}`, { timeout: 120000 });
   await page.waitForFunction('window.__ready===true', { timeout: 120000 });
   await page.waitForTimeout(2200);
   if (!nav) { await page.evaluate(() => { if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo()) window.RMNav.detach(); }); await page.waitForTimeout(300); }

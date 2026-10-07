@@ -113,3 +113,10 @@ O botão «ampliar» (`.rm-sis-aud-x`, UI derivada) é filho do slot; ao mudar d
 Alvos de toque ≥ 44 px em todos os controles (inclusive a altura do seek). Tudo parte de `html.rm-sis #rm-l2-player …` — **nenhum** seletor alcança a auscultação (os `<audio>` da matéria); isso é checado por teste estático.
 Tema desligado ⇒ o player original, exatamente como hoje. Trocar de matéria ou sair da conta (`SIGNED_OUT`, inclusive pelo «Sair» da faixa) continua parando o áudio e desfazendo tudo.
 Testes: `tools/qa/browser-qa/layout/player-sistema.test.cjs` (motor de áudio REAL; só o servidor é simulado) · capturas: `capturas-player.cjs`.
+
+## Caneta no novo layout — custo na thread principal (issue #456)
+Regra de desempenho do piloto: **escrever com a caneta não pode custar mais que no layout antigo.** O que vale para qualquer código do tema/player daqui em diante:
+- Nada do tema lê layout (`getComputedStyle`, `getBoundingClientRect`, `offsetHeight`…) em resposta a atributos/classes que a V2 reescreve **a cada traço** (`aria-expanded` do FAB, `rm2-pen-down`, `rm2-drawing`). O espelho da toolbox (`ferramentas()` em `rm-materia-sistema.js`) só mede quando abriu/fechou/armou de verdade ou quando a geometria mudou (ResizeObserver da caixa, `resize`).
+- Seletores `:has()` em CSS compartilhado só com combinadores de **filho** (`> …`) ancorados no slot — um `:has()` com descendente varre o documento inteiro a cada mutação do `<body>` (traço, tick do player 4×/s). Vale para os dois fallbacks de reserva de `rm-audio.css`.
+- Animações do tema só de `transform`/`opacity` (compositor). `rm-sis-aud-dot` animava `background-size` e repintava o player na thread principal enquanto o áudio tocava.
+Medição e prova: `tools/qa/browser-qa/layout/pen-bench.cjs` + `caneta-novo-layout.test.cjs` (ver `README.md` da pasta). Números antes/depois: `capturas-sistema/caneta-456/`.
