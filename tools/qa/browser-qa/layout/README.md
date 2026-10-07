@@ -200,3 +200,16 @@ inline da regra antiga, não a `.rm2-box` real nem o CSS do Layout; o teste do C
 
 ## Assets de arte (ChatGPT → José → integração)
 Especificação completa em [`ASSETS-CHATGPT.md`](ASSETS-CHATGPT.md): hoje 1 slot (`hero`), entregue em 2 resoluções.
+
+## Player do audiobook no tema do piloto — `player-sistema.test.cjs` e `capturas-player.cjs`
+Card dentro da lateral colorida (desktop ≥ 1200 px), barra compacta (celular/tablet/trilho), convivência com a toolbox aberta e com a caneta armada. **Motor de áudio REAL**
+(rm-audio-boot → rm-audio/store/provider, mp3 gerado com ffmpeg); só o servidor (gate, manifesto, URL assinada, mídia) é simulado — `lib-player.cjs`.
+```
+export NODE_PATH=$(npm root -g)   # ou RM_PLAYWRIGHT=/caminho/do/modulo ; precisa de ffmpeg (ou RM_FFMPEG)
+node tools/qa/browser-qa/layout/player-sistema.test.cjs
+RM_FONTS_DIR=<pasta com local.css> node tools/qa/browser-qa/layout/capturas-player.cjs <pasta-de-saída> [--sem-tema] [--so=390,1440]
+```
+Prova (A–F): tema desligado = player original · CSS do player só sob `html.rm-sis #rm-l2-player …` (nada alcança a auscultação) · desktop 1440 e 1545×665 (card na lateral, `--rm-player-h` = 0, lista do índice
+acima do card, controles ≥ 44 px, seek/±15/velocidade/play/progresso/retomada, aria-labels originais) · celular 320/390 (barra ≤ 64 px, `--rm-player-h` = altura medida, tabela/post-it/auscultação sem cobertura por
+hit-test, fim da página legível, card ampliado por TOQUE, toolbox aberta, caneta armada com ESCRITA enquanto o áudio toca, borracha) · tablet 768 e trilho · 6 `<audio>` de ausculta intactos e exclusivos com o audiobook ·
+trocar de matéria e `SIGNED_OUT` (inclusive pelo «Sair» da faixa) param o áudio e desfazem o tema. Capturas: `capturas-sistema/player/`. Emulação de toque, não aparelho real.
