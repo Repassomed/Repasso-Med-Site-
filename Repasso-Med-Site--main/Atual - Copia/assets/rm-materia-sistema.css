@@ -288,7 +288,7 @@ html.rm-sis #rm-l2-player .rm-audio[data-state="error"]::before { content: "Sin 
 @media (prefers-reduced-motion: no-preference) {
   html.rm-sis #rm-l2-player .rm-audio[data-state="playing"]::before { animation: rm-sis-aud-dot 1.6s ease-in-out infinite; }
 }
-@keyframes rm-sis-aud-dot { 50% { background-size: 80% 80%; opacity: .78; } }
+@keyframes rm-sis-aud-dot { 50% { opacity: .78; } }     /* só opacidade (compositor): animar background-size repinta o player na thread principal a cada quadro enquanto o áudio toca — e a caneta compete com ela (#456) */
 /* barra de progresso fina na borda (modos compactos): usa --rm-sis-prog (espelho do aria-valuetext do motor) */
 html.rm-sis #rm-l2-player .rm-audio::after {
   content: ""; display: none; position: absolute; left: 0; top: 0; height: 3px; width: 100%; pointer-events: none;
