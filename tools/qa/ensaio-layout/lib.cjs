@@ -50,11 +50,16 @@ const ADAPTACOES = [
   { id: 'A1', arquivo: 'assets/rm-layout.js', motivo: 'o Layout V2 guarda o slug do piloto numa constante; o ensaio injeta o slug da matéria ensaiada',
     de: "var SLUG = 'semiologia-ii';", para: "var SLUG = (window.__RM_ENSAIO && window.__RM_ENSAIO.slug) || 'semiologia-ii';" },
   { id: 'A2', arquivo: 'assets/rm-materia-sistema.css', motivo: 'o tema (paleta, superfície, lateral) existe só para semiologia-ii; o ensaio aplica a MESMA paleta a qualquer slug (testa os componentes, não a identidade de cada matéria)',
-    de: 'html.rm-sis[data-rm-tema="semiologia-ii"] {', para: 'html.rm-sis[data-rm-tema] {' }
+    de: 'html.rm-sis[data-rm-tema="semiologia-ii"] {', para: 'html.rm-sis[data-rm-tema] {' },
+  /* ---- correções (só com ?corr=1): provam que o patch proposto resolve a falha medida; o disco continua intacto ---- */
+  { id: 'C1', grupo: 'correcao', arquivo: 'assets/rm-materia-nav.js', motivo: 'seção agregadora (cópia da revisão/banco) reconhecida pelo ID (/banco|flashcards/) — falha em 16 matérias; passa a valer também o marcador data-rm-agrega',
+    de: 'var REUNE = /banco|flashcards/i;', para: "var REUNE = { test: function (id) { var e = document.getElementById(id); return /banco|flashcards/i.test(id) || !!(e && e.hasAttribute('data-rm-agrega')); } };" },
+  { id: 'C2', grupo: 'correcao', arquivo: 'assets/rm-layout.js', motivo: 'mesma heurística por ID no Layout V2 (contagem de recursos da capa/lateral)',
+    de: 'var RES_REUNE = /banco|flashcards/i;', para: "var RES_REUNE = { test: function (id) { var e = document.getElementById(id); return /banco|flashcards/i.test(id) || !!(e && e.hasAttribute('data-rm-agrega')); } };" }
 ];
-function adaptar(arquivoRel, src, usadas) {
+function adaptar(arquivoRel, src, usadas, corr) {
   let out = src;
-  ADAPTACOES.filter(a => a.arquivo === arquivoRel).forEach(a => {
+  ADAPTACOES.filter(a => a.arquivo === arquivoRel && (a.grupo !== 'correcao' || corr)).forEach(a => {
     if (out.includes(a.de)) { out = out.replace(a.de, a.para); usadas && usadas.add(a.id); }
     else if (usadas) usadas.add(a.id + ':NAO-ENCONTRADA');   // o módulo mudou: o ensaio avisa em vez de rodar com patch falso
   });
@@ -82,7 +87,8 @@ function servir({ usadas = new Set(), pedidos = [] } = {}) {
       if (!(f.startsWith(ROOT)) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.statusCode = 404; return r.end(); }
       r.setHeader('content-type', MIME[path.extname(f)] || 'application/octet-stream');
       const rel = path.relative(ROOT, f).replace(/\\/g, '/');
-      if (ADAPTACOES.some(a => a.arquivo === rel)) return r.end(adaptar(rel, fs.readFileSync(f, 'utf8'), usadas));
+      const corr = /(^|&)corr=1(&|$)/.test(q.url.split('?')[1] || '');
+      if (ADAPTACOES.some(a => a.arquivo === rel)) return r.end(adaptar(rel, fs.readFileSync(f, 'utf8'), usadas, corr));
       r.end(fs.readFileSync(f));
     }).listen(0, '127.0.0.1', () => res(srv));
   });
@@ -90,7 +96,7 @@ function servir({ usadas = new Set(), pedidos = [] } = {}) {
 
 /* ---------------- abertura de uma matéria no navegador ---------------- */
 /* opts: { w, h, modo: 'controle'|'layout'|'tema'|'nav', touch, scale, hash, esperar } */
-async function abrir(br, base, mat, { w = 1440, h = 900, modo = 'nav', touch = w < 900, scale = 1, hash = '', espera = 1500 } = {}) {
+async function abrir(br, base, mat, { w = 1440, h = 900, modo = 'nav', touch = w < 900, scale = 1, hash = '', espera = 1500, corr = false } = {}) {
   const ctx = await br.newContext({ viewport: { width: w, height: h }, hasTouch: touch, isMobile: false, deviceScaleFactor: scale });
   const page = await ctx.newPage(); const errs = [], falhasRede = [], externas = [];
   page.on('pageerror', e => errs.push(String(e).slice(0, 200)));
@@ -98,7 +104,7 @@ async function abrir(br, base, mat, { w = 1440, h = 900, modo = 'nav', touch = w
   page.on('requestfailed', r => falhasRede.push(r.url().slice(0, 140)));
   await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => { externas.push(r.request().url().slice(0, 140)); r.abort(); });   // zero rede externa
   await page.addInitScript(([slug, modoX]) => { window.__RM_ENSAIO = { slug, modo: modoX }; }, [mat.slug, modo]);
-  await page.goto(`${base}/p.html?slug=${mat.slug}&tab=${mat.tab}&modo=${modo}&wait=${espera}${hash}`, { timeout: 120000 });
+  await page.goto(`${base}/p.html?slug=${mat.slug}&tab=${mat.tab}&modo=${modo}&wait=${espera}${corr ? '&corr=1' : ''}${hash}`, { timeout: 120000 });
   await page.waitForFunction('window.__ready===true', { timeout: 120000 });
   await page.waitForTimeout(600);
   await page.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); });

@@ -14,7 +14,9 @@ window.RM_CATALOGO = /*CATALOGO*/[];
 function chain(t){ const o = {}; ['select','eq','order','limit','single','maybeSingle','in'].forEach(m => o[m] = () => o); o.range = function(a){ o._from = a; return o };
   ['insert','update','delete','upsert'].forEach(m => o[m] = function(a){ window.__writes.push(m + ':' + t); return o });
   o.then = function(res){ return Promise.resolve({ data: [], error: null }).then(res) }; return o }
-window.RM_SB = { auth: { getSession: async () => ({ data: { session: { access_token: 'tok-ensaio', user: { id: 'u-ensaio' } } } }), getUser: async () => ({ data: { user: { id: 'u-ensaio' } } }), onAuthStateChange(){ return { data: { subscription: { unsubscribe(){} } } } } }, from: chain, rpc: async () => ({ data: null, error: null }) };
+/* UID de TESTER da V2 (constante pública no rm-tools-v2.js) só para o motor da caneta montar no harness; sessão 100% simulada, nenhuma credencial */
+const UID = P.get('uid') || 'd4d215d3-36dd-4efb-8869-bdea5376c648';
+window.RM_SB = { auth: { getSession: async () => ({ data: { session: { access_token: 'tok-ensaio', user: { id: UID } } } }), getUser: async () => ({ data: { user: { id: UID } } }), onAuthStateChange(){ return { data: { subscription: { unsubscribe(){} } } } } }, from: chain, rpc: async () => ({ data: null, error: null }) };
 window._sb = window.RM_SB;
 </script>
 <script src="assets/app-core.js"></script>
