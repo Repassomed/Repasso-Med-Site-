@@ -12,23 +12,34 @@ const AREAS = ['boot', 'indice', 'blocos', 'modos', 'ausentes', 'contagens', 'te
 const ROT = { boot: 'Ativa', indice: 'Índice', blocos: 'Blocos', modos: 'Modos', ausentes: 'Ausentes', contagens: 'Contagens', teclado: 'Teclado/Back', scroll: 'Scroll', responsivo: 'Responsivo', caneta: 'Caneta', integridade: 'Integridade', audio: 'Áudio' };
 
 /* Causa e correção por tipo de verificação que falha. escopo: conteudo (editorial, fora desta PR) · modulo (arquivo reservado: patch documentado) · ensaio. */
+const dupl = (c, rec) => (c.dados && c.dados.agregadoras && c.dados.agregadoras.length)
+  ? { escopo: 'modulo', causa: `A seção agregadora (${c.dados.agregadoras.join(', ')}) repete os ${rec} dos blocos e o módulo a soma, porque o id não casa a heurística \`/banco|flashcards/i\` (rm-materia-nav.js:90, rm-layout.js:472).`, fix: 'C1/C2: o módulo passa a aceitar `data-rm-agrega` (o descritor/HTML o declara). Verificado na variante «com correção».' }
+  : { escopo: 'conteudo', causa: `Os ${rec} se repetem entre seções que não são cópia integral (p.ex. a seção de prova repete parte dos blocos) e não há \`id\` estável: o DOM soma duplicatas e a contagem exata é INDETERMINADA.`, fix: 'Contrato §1–§3: id canônico por item + `data-rm-copia-de`; decisão editorial sobre as repetições (8-A.1 do MANUTENCAO-DIDATICA).' };
 const CAUSAS = {
-  'contagens/capa-flashcards': { escopo: 'modulo', causa: 'Há seção agregadora (cópia dos flashcards dos blocos) cujo id não casa a heurística `/banco|flashcards/i` de rm-materia-nav.js:90 e rm-layout.js:472; a capa soma o DOM, que repete os itens.', fix: 'C1/C2: o módulo passa a aceitar `data-rm-agrega` (e o descritor da matéria o põe). Verificado na variante «com correção».' },
-  'contagens/capa-preguntas': { escopo: 'modulo', causa: 'Idem para perguntas: a seção do banco/revisão duplica as questões dos blocos e entra na soma da capa.', fix: 'C1/C2 (marcador `data-rm-agrega`).' },
-  'contagens/capa-infografias': { escopo: 'conteudo', causa: 'O número de infografías da capa difere das figuras com legenda do inventário (figuras duplicadas ou fora de `<figure>`).', fix: 'Revisão editorial das figuras; contrato exige `<figure>` + legenda + imagem.' },
-  'modos/indice-flashcards': { escopo: 'modulo', causa: 'A agregadora de flashcards não reconhecida aparece como se fosse um «bloco» no índice do modo Flashcards.', fix: 'C1/C2.' },
-  'modos/indice-preguntas': { escopo: 'modulo', causa: 'A agregadora de perguntas não reconhecida aparece como «bloco» no índice do modo Preguntas.', fix: 'C1/C2.' },
-  'indice/toda-secao-tem-card': { escopo: 'modulo', causa: 'Seção de tipo desconhecido para o módulo não ganha card no índice e fica inalcançável na navegação por bloco.', fix: 'Descritor da matéria com `data-rm-role` em toda seção (contrato §2).' },
-  'teclado/proximo-anterior-indice': { escopo: 'conteudo', causa: 'Seção vizinha sem `<h2>`: o módulo esconde o link Anterior/Próximo quando o título do vizinho é vazio (rm-materia-nav.js `preencherLink`), deixando beco sem saída.', fix: 'Dar `<h2>` à seção (conteúdo) ou o módulo usar o rótulo do marcador/id como título de reserva (patch C3 documentado).' },
-  'blocos/pager': { escopo: 'conteudo', causa: 'Idem: vizinho sem `<h2>` não vira link no pager.', fix: 'Idem.' },
-  'teclado/enter-proximo': { escopo: 'conteudo', causa: 'Idem: não há botão «Bloque siguiente» visível no meio do conteúdo.', fix: 'Idem.' },
-  'responsivo/blocos-sem-overflow': { escopo: 'conteudo', causa: 'Elemento do conteúdo da matéria passa da largura da viewport (tabela/figura sem contêiner rolável).', fix: 'Envolver em contêiner com rolagem própria (conteúdo da matéria); o layout novo não introduz o problema se o controle também sofre (ver dados).' },
-  'indice/sem-overflow': { escopo: 'conteudo', causa: 'Overflow horizontal já no índice.', fix: 'Ver dados.' },
-  'boot/etapas': { escopo: 'modulo', causa: 'Uma etapa do layout/tema/navegação não ativou nesta matéria.', fix: 'Ver dados.' },
-  'boot/erros-js': { escopo: 'modulo', causa: 'Erro de JavaScript ao ativar o layout.', fix: 'Ver dados.' },
-  'ensaio/interrompido': { escopo: 'ensaio', causa: 'O ensaio desta largura foi interrompido por exceção.', fix: 'Ver dados; reexecutar.' }
+  'contagens/capa-flashcards': c => dupl(c, 'flashcards'),
+  'contagens/capa-preguntas': c => dupl(c, 'perguntas'),
+  'contagens/capa-flashcards-omitidos': () => ({ escopo: 'conteudo', causa: 'Há cartões que existem só na seção de revisão geral (agregadora) e não nos blocos: o aluno os encontra em «todos», mas a capa/modo por bloco não os conta.', fix: 'Editorial: levar o cartão ao bloco que o ensina ou descartá-lo (contrato §3, caso de borda).' }),
+  'contagens/capa-preguntas-omitidas': () => ({ escopo: 'conteudo', causa: 'Há questões só no banco geral (sem par no corpo) que a capa por bloco não conta.', fix: 'Editorial: levar a questão ao bloco que ensina o assunto (8-A.3) ou descartá-la; contrato §1.' }),
+  'contagens/capa-infografias': () => ({ escopo: 'conteudo', causa: 'A contagem da capa difere das figuras com legenda fora das agregadoras (figura sem `<figcaption>`/`<img>` ou dentro de material-slide/med-image).', fix: 'Revisão editorial das figuras; contrato exige `<figure>` + legenda + imagem.' }),
+  'modos/indice-flashcards': () => ({ escopo: 'modulo', causa: 'A agregadora de flashcards não reconhecida aparece como «bloco» no índice do modo Flashcards.', fix: 'C1/C2.' }),
+  'modos/indice-preguntas': () => ({ escopo: 'modulo', causa: 'A agregadora de perguntas não reconhecida aparece como «bloco» no índice do modo Preguntas.', fix: 'C1/C2.' }),
+  'indice/toda-secao-tem-card': () => ({ escopo: 'modulo', causa: 'Seção de tipo desconhecido para o módulo não ganha card no índice e fica inalcançável na navegação por bloco.', fix: 'Descritor da matéria com `data-rm-role` em toda seção (contrato §2).' }),
+  'indice/sem-residuo': () => ({ escopo: 'modulo', causa: 'O conteúdo original que não é `section[id]` (hero, banner de revisão) continua visível abaixo do índice: o módulo só isola `section[id]`.', fix: 'C3 (CSS/módulo: ocultar filhos da aba que não são section[id]/UI fora da leitura contínua). Verificado na variante «com correção».' }),
+  'blocos/sem-residuo-bloco': () => ({ escopo: 'modulo', causa: 'Idem: o hero/banner original aparece acima/abaixo do bloco aberto.', fix: 'C3.' }),
+  'indice/indice-e-o-fim': () => ({ escopo: 'modulo', causa: 'Sobra conteúdo original depois do índice (hero, banner, rodapé).', fix: 'C3.' }),
+  'blocos/pager': () => ({ escopo: 'modulo+conteudo', causa: 'Vizinho sem `<h2>`: `preencherLink` (rm-materia-nav.js:437) esconde o link quando o título é vazio.', fix: 'C4: título de reserva (marcador/«Bloque NN»); ou dar `<h2>` à seção.' }),
+  'blocos/pager-cadeia': () => ({ escopo: 'modulo+conteudo', causa: 'Seção interior sem `<h2>` (ex.: guía no meio do conteúdo) quebra a cadeia Anterior/Próximo: o aluno não consegue seguir lendo e só volta pelo índice.', fix: 'C4 (título de reserva) ou `<h2>` na seção.' }),
+  'teclado/proximo-anterior-indice': () => ({ escopo: 'modulo+conteudo', causa: 'No meio do conteúdo falta Anterior/Próximo visível porque o vizinho não tem `<h2>`.', fix: 'C4.' }),
+  'teclado/enter-proximo': () => ({ escopo: 'modulo+conteudo', causa: 'Idem: sem botão «Bloque siguiente» visível.', fix: 'C4.' }),
+  'modos/paginas-preguntas': () => ({ escopo: 'modulo', causa: 'Uma figura (p.ex. «Cómo leer…») dentro do contêiner `.quiz-section` continua visível no modo Preguntas: o isolamento esconde por caminho de contêiner, não por nó.', fix: 'C6 (não aplicado): isolar por nó e tratar `figure` interna do contêiner de questões como recurso do bloco.' }),
+  'modos/paginas-infografias': () => ({ escopo: 'modulo', causa: 'No modo Infografías a página mostra recursos que não são infografia ou contagem diferente da real.', fix: 'Ver dados.' }),
+  'responsivo/blocos-sem-overflow': () => ({ escopo: 'conteudo', causa: 'Elemento do conteúdo passa da largura da viewport (tabela/figura sem contêiner rolável).', fix: 'Contêiner com rolagem própria no conteúdo; confrontar com o controle (ver dados).' }),
+  'indice/sem-overflow': () => ({ escopo: 'conteudo', causa: 'Overflow horizontal já no índice.', fix: 'Ver dados.' }),
+  'boot/etapas': () => ({ escopo: 'modulo', causa: 'Uma etapa do layout/tema/navegação não ativou nesta matéria.', fix: 'Ver dados.' }),
+  'boot/erros-js': () => ({ escopo: 'modulo', causa: 'Erro de JavaScript ao ativar o layout.', fix: 'Ver dados.' }),
+  'ensaio/interrompido': () => ({ escopo: 'ensaio', causa: 'O ensaio desta largura foi interrompido por exceção.', fix: 'Ver dados; reexecutar.' })
 };
-const causaDe = (c) => CAUSAS[c.area + '/' + c.id] || { escopo: 'ver dados', causa: c.msg, fix: 'Analisar `dados` no JSON.' };
+const causaDe = (c) => (CAUSAS[c.area + '/' + c.id] || (() => ({ escopo: 'ver dados', causa: c.msg, fix: 'Analisar `dados` no JSON.' })))(c);
 
 function ler(dir) { const d = path.join(DIR, dir); if (!fs.existsSync(d)) return {}; return Object.fromEntries(fs.readdirSync(d).filter(f => f.endsWith('.json')).map(f => [f.replace('.json', ''), JSON.parse(fs.readFileSync(path.join(d, f), 'utf8'))])); }
 const A = ler('resultados'), C = ler('resultados-corr');
@@ -78,6 +89,12 @@ w(`| Com correção proposta (C1/C2) | ${cnt('corr', 'PASSA')} | ${cnt('corr', '
 w('');
 w('**Audiolibro: BLOQUEADO nas 27 matérias, por regra**: não há manifesto autorizado fora do piloto, e o ensaio não simula áudio. O que o ensaio prova é a **ausência** (card, player, chip, capa, pílula, lateral e requisição de manifesto/áudio: PASSA nas 27). Em Semiología II o audiolibro real é coberto pelo teste do próprio piloto (#453).');
 w('');
+w('### Por área (de 27 matérias)');
+w('');
+w('| Área | PASSA hoje | FALHA hoje | PASSA com correção | FALHA com correção |');
+w('|---|--:|--:|--:|--:|');
+AREAS.forEach(a => { const h = k => linhas.filter(l => l.areas[a].e === k).length, c = k => linhas.filter(l => l.areasCorr[a].e === k).length; w(`| ${ROT[a]} | ${h('PASSA')} | ${h('FALHA')} | ${c('PASSA')} | ${c('FALHA')} |`); });
+w('');
 w('## 2 · Matriz por matéria («como está»)');
 w('');
 w('| Semestre | Matéria | Veredito | ' + AREAS.map(a => ROT[a]).join(' | ') + ' | Audiolibro |');
@@ -111,6 +128,8 @@ linhas.forEach(l => {
     w(`  - Medido: ${fs_[0].msg}${fs_[0].dados !== undefined ? ' → `' + JSON.stringify(fs_[0].dados).slice(0, 260).replace(/`/g, "'") + '`' : ''}`);
     w(`  - Causa: ${cz.causa}`);
     w(`  - Correção: ${cz.fix}`);
+    const resto = l.falhasCorr.find(x => x.area + '/' + x.id === k);
+    if (resto) w(`  - Resíduo mesmo com a correção: ${resto.msg}${resto.dados !== undefined ? ' → \`' + JSON.stringify(resto.dados).slice(0, 200).replace(/`/g, "'") + '\`' : ''} (o que sobra é conteúdo repetido entre blocos ou itens só na agregadora: decisão editorial)`);
     grupos[k] = (grupos[k] || []).concat(l.slug);
   });
   w('');
@@ -121,7 +140,7 @@ w('| Verificação | Matérias | Escopo | Resolvida pela correção proposta? |'
 w('|---|--:|---|---|');
 Object.entries(grupos).sort((x, y) => y[1].length - x[1].length).forEach(([k, ss]) => {
   const ainda = ss.filter(s => (linhas.find(l => l.slug === s).falhasCorr || []).some(x => x.area + '/' + x.id === k)).length;
-  w(`| \`${k}\` | ${[...new Set(ss)].length} | ${causaDe({ area: k.split('/')[0], id: k.split('/')[1], msg: '' }).escopo} | ${ainda === 0 ? 'sim, em todas' : 'não em ' + ainda + ' matéria(s)'} |`);
+  w(`| \`${k}\` | ${[...new Set(ss)].length} | ${causaDe(linhas.flatMap(l => l.falhas).find(f => f.area + '/' + f.id === k)).escopo} | ${ainda === 0 ? 'sim, em todas' : 'não em ' + ainda + ' matéria(s)'} |`);
 });
 w('');
 w('## 6 · Risco por grupo (semestre)');

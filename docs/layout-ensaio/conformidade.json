@@ -1,5 +1,5 @@
 {
- "gerado_em": "2026-10-07T15:33:58.361Z",
+ "gerado_em": "2026-10-07T16:46:17.853Z",
  "regras": {
   "R1": "toda seção tem título (<h2>): o card do índice e os botões Anterior/Próximo dependem dele",
   "R2": "toda questão tem id estável (q-<prefixo><NNN>)",
