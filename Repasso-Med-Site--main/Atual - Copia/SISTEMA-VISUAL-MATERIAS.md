@@ -57,3 +57,22 @@ da faixa fixa (`.rm-sis-tools`, ≥ 44 px, anel dourado quando há ferramenta ar
 âncoras, estado armado, abrir/fechar) é o original e não foi alterado; o botão da faixa só impede que o próprio toque seja tratado como «clique fora» (que minimizaria
 a toolbox e a reabriria em seguida). Em ≤ 440 px o botão «Materias» (voltar ao topo) sai da faixa para dar espaço — «Volver arriba» continua na gaveta do índice.
 Em ≥ 768 px nada muda (a raia direita já é reservada pelo layout).
+
+## Player do audiobook no piloto (só apresentação)
+O motor de áudio (`rm-audio.js`, boot, manifesto, URLs assinadas, bucket, M4A) **não foi tocado**. O DOM do player (`#rm-l2-player`, `.rm-audio__*`, `data-a`, aria-labels)
+e a medição automática de `--rm-player-h` / `--rm-audio-h` são os originais; o tema só muda CSS e espelha estado (atributos no `<html>`/slot) para o CSS.
+
+| onde | apresentação | `--rm-player-h` |
+|---|---|---|
+| desktop ≥ 1200 px (lateral docked) | **card compacto dentro da lateral colorida** (título, estado «Reproduciendo»/«En pausa», progresso, seek, ±15, velocidade, reiniciar, fechar). Em janelas baixas (≤ 760 px) o card é ainda mais curto; abaixo de 540 px de altura a lateral não comporta card + índice e o player volta à barra compacta. A lista do índice termina acima dele. | **0** (modo `lateral` do motor): nada atravessa a folha |
+| celular < 640 px | **barra de 1 linha** (play/pausa · título + tempo · ±15 · fechar; barra fina de progresso na borda). Botão «ampliar» → card completo (seek, velocidade, reiniciar). | = altura medida (≈ 60 px; antes 135) |
+| celular com a **toolbox aberta** | o player fica recolhido (sem «ampliar») e o dock da toolbox assenta **encima** dele | idem |
+| celular com a **caneta/borracha armada** | **chip** (título + play/pausa + fechar); o áudio nunca pausa | ≈ 52 px |
+| tablet / trilho (640–1199 px; ou lateral minimizada) | **uma linha compacta** (≤ 640 px de largura, ≈ 64 px) com todos os controles | = altura medida |
+
+Como o card entra na lateral sem mexer no motor: o tema põe `data-rm-dock-force="side"` no `<html>`; o `rm-layout.js` (único ponto tocado, 3 linhas em `aplicarModo`) só honra o pedido
+com a lateral docked e decide `data-rm-dock="side"`; o motor já sabia desenhar o modo «lateral» (e publica `--rm-player-h: 0`). Em trilho/gaveta vale a decisão original (barra embaixo).
+O botão «ampliar» (`.rm-sis-aud-x`, UI derivada) é filho do slot; ao mudar de forma o tema pede `refreshLayout()` (API pública do motor, via `RMAudioBoot._engine()`) para que o motor re-meça a altura.
+Alvos de toque ≥ 44 px em todos os controles (inclusive a altura do seek). Tudo parte de `html.rm-sis #rm-l2-player …` — **nenhum** seletor alcança a auscultação (os `<audio>` da matéria); isso é checado por teste estático.
+Tema desligado ⇒ o player original, exatamente como hoje. Trocar de matéria ou sair da conta (`SIGNED_OUT`, inclusive pelo «Sair» da faixa) continua parando o áudio e desfazendo tudo.
+Testes: `tools/qa/browser-qa/layout/player-sistema.test.cjs` (motor de áudio REAL; só o servidor é simulado) · capturas: `capturas-player.cjs`.

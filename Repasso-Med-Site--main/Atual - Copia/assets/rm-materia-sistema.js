@@ -413,6 +413,8 @@
         b.setAttribute('aria-expanded', String(open)); b.classList.toggle('is-open', open); b.classList.toggle('is-armed', fab.classList.contains('armed'));
         var h = (open && getComputedStyle(box).display !== 'none') ? Math.round(box.getBoundingClientRect().height) : 0;
         ROOT.style.setProperty('--rm-dock-h', h + 'px');
+        if (open) ROOT.setAttribute('data-rm-tools', 'open'); else ROOT.removeAttribute('data-rm-tools');      // o player recolhe enquanto a toolbox está aberta
+        if (S.pl && S.pl.sync) S.pl.sync();
       };
       S.toolsSync = sync;
       try { S.toolsMO = new MutationObserver(sync); S.toolsMO.observe(box, { attributes: true, attributeFilter: ['class'] }); S.toolsMO.observe(fab, { attributes: true, attributeFilter: ['class', 'aria-expanded'] }); } catch (e) {}
@@ -430,6 +432,75 @@
       S.toolsWait = new MutationObserver(function () { if (ligar()) { try { S.toolsWait.disconnect(); } catch (e) {} } });
       S.toolsWait.observe(document.body, { childList: true });
     } catch (e) {}
+  }
+
+  /* ------------------------------- player do audiobook (só apresentação) -------------------------------
+     O motor (rm-audio.js), o boot, o manifesto, as URLs assinadas e a mídia NÃO são tocados. O que existe aqui:
+       1. pede ao layout que hospede o player numa CARD dentro da lateral docked (`data-rm-dock-force="side"`; o motor entra em «lateral»
+          e publica --rm-player-h = 0, então nada atravessa a folha de leitura) — fora da lateral docked vale a decisão original (barra embaixo);
+       2. espelha estado do motor em atributos do <html>/slot (aberto, card na lateral, altura do rodapé da lateral, progresso 0–100 %) só para o CSS;
+       3. no celular estreito, um botão «ampliar/reduzir» (UI derivada, filho do slot) alterna barra de 1 linha ↔ card completo; com a caneta
+          armada (chip) ou a toolbox aberta, o player fica recolhido e a altura é re-medida pelo próprio motor (refreshLayout, API pública).
+     Tudo é desfeito no detach; sem o tema nada disto existe. */
+  var ICO_CHEV = 'M6 14l6-6 6 6';
+  var ALT_CARD = 540;               // abaixo disto (px de altura) a lateral não comporta o card + o índice: o player volta à barra compacta embaixo
+  function refrescarPlayer() {
+    var p = S && S.pl; if (!p || p.rf) return;
+    p.rf = requestAnimationFrame(function () {
+      p.rf = 0;
+      try { var e = window.RMAudioBoot && window.RMAudioBoot._engine && window.RMAudioBoot._engine(); if (e && e.refreshLayout) e.refreshLayout(); } catch (x) {}
+    });
+  }
+  function player() {
+    var slot = document.getElementById('rm-l2-player'); if (!slot) return;
+    var P = S.pl = { slot: slot, x: false, eff: false, rf: 0, force: (window.innerHeight || 0) >= ALT_CARD, narrow: window.matchMedia ? window.matchMedia('(max-width: 639.98px)') : null };
+    if (P.force) ROOT.setAttribute('data-rm-dock-force', 'side');
+    var b = ui('button', 'rm-sis-aud-x', { type: 'button', 'aria-expanded': 'false', 'aria-controls': 'rm-l2-player', 'aria-label': 'Ampliar el reproductor: posición y velocidad', title: 'Ampliar el reproductor' });
+    var sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('width', '22'); sv.setAttribute('height', '22'); sv.setAttribute('fill', 'none'); sv.setAttribute('stroke', 'currentColor');
+    sv.setAttribute('stroke-width', '2.4'); sv.setAttribute('stroke-linecap', 'round'); sv.setAttribute('stroke-linejoin', 'round'); sv.setAttribute('aria-hidden', 'true');
+    var pt = document.createElementNS('http://www.w3.org/2000/svg', 'path'); pt.setAttribute('d', ICO_CHEV); sv.appendChild(pt); b.appendChild(sv);
+    slot.appendChild(b); P.btn = b;
+    P.sync = function () {
+      if (!S || S.pl !== P) return;
+      var open = slot.getAttribute('data-rm-audio') === 'open', pen = slot.hasAttribute('data-rm-pen'), aud = q1(slot, '.rm-audio');
+      var modo = aud && aud.getAttribute('data-mode');
+      if (open) ROOT.setAttribute('data-rm-aud', 'open'); else ROOT.removeAttribute('data-rm-aud');
+      var card = open && modo === 'lateral' && ROOT.getAttribute('data-rm-lmode') === 'docked';
+      if (card) ROOT.setAttribute('data-rm-aud-card', ''); else ROOT.removeAttribute('data-rm-aud-card');
+      var sk = q1(slot, '.rm-audio__seek'), mx = sk ? +sk.max : 0, pc = mx > 0 ? Math.max(0, Math.min(100, (+sk.value / mx) * 100)) : 0;
+      slot.style.setProperty('--rm-sis-prog', pc.toFixed(1) + '%');
+      var foot = q1(S.lateral || document, '.rm-l2-side-foot'), fh = foot ? Math.round(foot.getBoundingClientRect().height) : 0;
+      if (fh && ROOT.style.getPropertyValue('--rm-sis-foot-h') !== fh + 'px') ROOT.style.setProperty('--rm-sis-foot-h', fh + 'px');
+      var quer = (window.innerHeight || 0) >= ALT_CARD;                // janela baixíssima: sem card na lateral (o layout reavalia o dock com o resize)
+      if (quer !== P.force) { P.force = quer; if (quer) ROOT.setAttribute('data-rm-dock-force', 'side'); else ROOT.removeAttribute('data-rm-dock-force'); remedir(); }
+      if (!open) P.x = false;
+      var eff = !!(open && P.x && P.narrow && P.narrow.matches && modo === 'bottom' && !pen && !ROOT.hasAttribute('data-rm-tools'));
+      if (eff !== P.eff) {
+        P.eff = eff;
+        if (eff) slot.setAttribute('data-rm-sis-x', ''); else slot.removeAttribute('data-rm-sis-x');
+        b.setAttribute('aria-expanded', String(eff));
+        b.setAttribute('aria-label', eff ? 'Reducir el reproductor' : 'Ampliar el reproductor: posición y velocidad'); b.title = eff ? 'Reducir el reproductor' : 'Ampliar el reproductor';
+        refrescarPlayer();                                // a altura mudou: o motor re-mede e republica --rm-player-h
+      }
+    };
+    P.inp = function (e) { if (e.target && e.target.classList && e.target.classList.contains('rm-audio__seek')) P.sync(); };
+    slot.addEventListener('input', P.inp, true);
+    try {
+      P.mo = new MutationObserver(P.sync);
+      P.mo.observe(slot, { attributes: true, subtree: true, childList: true, attributeFilter: ['data-rm-audio', 'data-rm-pen', 'data-mode', 'data-state', 'aria-valuetext'] });
+    } catch (e) {}
+    if (P.narrow && P.narrow.addEventListener) P.narrow.addEventListener('change', P.sync);
+    window.addEventListener('resize', P.sync);
+    P.sync();
+    refrescarPlayer();                                     // se o motor já montou antes do tema, re-mede com o CSS do tema
+  }
+  function soltarPlayer(P) {
+    try { if (P.mo) P.mo.disconnect(); if (P.rf) cancelAnimationFrame(P.rf); } catch (e) {}
+    try { P.slot.removeEventListener('input', P.inp, true); window.removeEventListener('resize', P.sync); if (P.narrow && P.narrow.removeEventListener) P.narrow.removeEventListener('change', P.sync); } catch (e) {}
+    try { P.slot.removeAttribute('data-rm-sis-x'); P.slot.style.removeProperty('--rm-sis-prog'); } catch (e) {}
+    ['data-rm-dock-force', 'data-rm-aud', 'data-rm-aud-card'].forEach(function (a) { ROOT.removeAttribute(a); });
+    ROOT.style.removeProperty('--rm-sis-foot-h');
   }
 
   /* «Inicio · índice de la materia» · «Bloque 04 · Síndrome Parenquimatoso» · «Modo · Preguntas» */
@@ -505,6 +576,8 @@
       if (sec) ir(sec.el);
       return;
     }
+    var ax = t.closest('.rm-sis-aud-x');
+    if (ax) { if (S.pl) { S.pl.x = !S.pl.x; S.pl.sync(); } return; }
     var st2 = t.closest('.rm-sis-tools');
     if (st2) { var fb = document.getElementById('rm2-fab'); if (fb) fb.click(); return; }
     var so = t.closest('.rm-sis-out');
@@ -575,6 +648,7 @@
       if (S.lateral) S.mo.observe(S.lateral, { attributes: true, subtree: true, attributeFilter: ['aria-current'] });
     } catch (e) {}
     ferramentas();
+    player();
     refletir();
     if (window.RMLayout.pedirReposicao) window.RMLayout.pedirReposicao();    // as alturas mudaram: a tinta acompanha (API pública, coalescida)
     remedir();
@@ -593,7 +667,8 @@
     ROOT.removeAttribute('data-rm-stuck');
     try { if (S.mo) S.mo.disconnect(); } catch (e) {}
     try { if (S.toolsMO) S.toolsMO.disconnect(); if (S.toolsRO) S.toolsRO.disconnect(); if (S.toolsWait) S.toolsWait.disconnect(); window.removeEventListener('resize', S.toolsSync); if (S.toolsPtr) window.removeEventListener('pointerdown', S.toolsPtr, true); } catch (e) {}
-    ROOT.style.removeProperty('--rm-dock-h');
+    ROOT.style.removeProperty('--rm-dock-h'); ROOT.removeAttribute('data-rm-tools');
+    try { if (S.pl) soltarPlayer(S.pl); } catch (e) {}
     NODOS.forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });
     ATRS.forEach(function (a) { try { a.e.removeAttribute(a.k); } catch (e) {} });
     TEXTOS.slice().reverse().forEach(function (x) { try { x.e.textContent = x.t; } catch (e) {} });

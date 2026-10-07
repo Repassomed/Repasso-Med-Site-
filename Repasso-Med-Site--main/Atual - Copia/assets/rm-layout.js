@@ -369,7 +369,11 @@
     var left =m === 'docked' ? 264 : (m === 'rail' ? 64 : 0);
     /* dock do futuro player: pelo espaço efetivamente livre à direita do cartão de texto
        (as variáveis de lateral já estão aplicadas; a leitura abaixo força o layout). */
-    ROOT.setAttribute('data-rm-dock', decidirDock(ROOT.clientWidth || w, left, cartaoMedido(), ROOT.getAttribute('data-rm-dock')));
+    var dk = decidirDock(ROOT.clientWidth || w, left, cartaoMedido(), ROOT.getAttribute('data-rm-dock'));
+    /* Um tema pode hospedar o player num card DENTRO da lateral docked (264 px, com folga de sobra): ele pede `data-rm-dock-force="side"`.
+       Só vale com a lateral docked; em trilho/gaveta continua a decisão acima (barra inferior). O motor do player não muda: só lê o dock. */
+    if (m === 'docked' && ROOT.getAttribute('data-rm-dock-force') === 'side') dk = 'side';
+    ROOT.setAttribute('data-rm-dock', dk);
     if (m === 'docked' && S.drawer) fecharDrawer(true);          // não faz sentido drawer com a lateral aberta
     if (S.railBtn) {
       var min = ls('rm.l2.rail') === 'min';
@@ -833,7 +837,7 @@
        só zera o estado; a classe rm-l2 sai e o conteúdo reaparece sozinho. */
     desligar();
     [S.band, S.ph, S.side, S.backdrop, S.rootEl, S.player, S.capa].forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });
-    ['data-rm-lmode', 'data-rm-dock', 'data-rm-drawer', 'data-rm-cover'].forEach(function (a) { ROOT.removeAttribute(a); });
+    ['data-rm-lmode', 'data-rm-dock', 'data-rm-dock-force', 'data-rm-drawer', 'data-rm-cover'].forEach(function (a) { ROOT.removeAttribute(a); });
     ROOT.style.removeProperty('--rm-band-bottom'); ROOT.style.removeProperty('--rm-band-top');
     ROOT.classList.remove('rm-l2');
     try { window.RMModes.detach(); } catch (e) {}

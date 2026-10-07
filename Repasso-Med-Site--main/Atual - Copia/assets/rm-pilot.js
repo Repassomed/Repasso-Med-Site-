@@ -31,7 +31,7 @@
   if (window.RMPilot) return;                         // idempotente
 
   var SLUG = 'semiologia-ii';                         // piloto: uma matéria só
-  var VER  = '2026100601';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
+  var VER  = '2026100701';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
   var BASE = 'assets/';
   var COOLDOWN_MS = 30000;                            // depois de uma falha, não insistir
 
