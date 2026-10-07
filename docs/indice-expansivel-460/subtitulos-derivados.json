@@ -1,0 +1,118 @@
+[
+ {
+  "bloco": "s2-b01",
+  "h3": 6,
+  "h4": 8,
+  "titulos": [
+   "💨 Tos",
+   "🤧 Expectoración",
+   "🌬 Disnea",
+   "🩸 Hemoptisis",
+   "⚡ Dolor torácico",
+   "💙 Cianosis"
+  ]
+ },
+ {
+  "bloco": "s2-b02",
+  "h3": 2,
+  "h4": 4,
+  "titulos": [
+   "💨 Traqueobronquitis / Bronquitis aguda",
+   " Examen físico de la bronquitis aguda (inspección · palpación · percusión · auscultación)"
+  ]
+ },
+ {
+  "bloco": "s2-b03",
+  "h3": 2,
+  "h4": 17,
+  "titulos": [
+   "🔄 Asma bronquial",
+   "🚬 EPOC (Enfermedad Pulmonar Obstructiva Crónica)"
+  ]
+ },
+ {
+  "bloco": "s2-b04",
+  "h3": 3,
+  "h4": 9,
+  "titulos": [
+   " Síndrome de condensación: etiopatogenia",
+   "🦠 Neumonía: clasificación según su adquisición",
+   " Escore CURB-65 / CRB-65"
+  ]
+ },
+ {
+  "bloco": "s2-b05",
+  "h3": 3,
+  "h4": 12,
+  "titulos": [
+   "💧 Derrame pleural",
+   "🌫 Neumotórax",
+   " La tabla que une la Unidad I — los 3 síndromes"
+  ]
+ },
+ {
+  "bloco": "s2-b06",
+  "h3": 7,
+  "h4": 1,
+  "titulos": [
+   "💥 Dolor torácico",
+   "🌬 Disnea cardíaca",
+   "💓 Palpitaciones",
+   "😵 Síncope",
+   "🦵 Edema",
+   "💙 Cianosis",
+   " Examen físico cardiovascular (inspección · palpación · percusión · auscultación)"
+  ]
+ },
+ {
+  "bloco": "s2-b07",
+  "h3": 6,
+  "h4": 0,
+  "titulos": [
+   " IC izquierda vs. derecha vs. global",
+   " Estadios en el desarrollo de la IC (A–D)",
+   " Grados funcionales (NYHA)",
+   " Criterios clínicos de Framingham",
+   " Factores de riesgo y desencadenantes de la IC",
+   " Métodos diagnósticos"
+  ]
+ },
+ {
+  "bloco": "s2-b08",
+  "h3": 5,
+  "h4": 2,
+  "titulos": [
+   " Clasificación (primaria vs. secundaria)",
+   " Técnica de medición y escala de Korotkoff",
+   " Consecuencias sobre los órganos blanco",
+   " Factores de riesgo (modificables vs. no modificables)",
+   " Examen físico del hipertenso"
+  ]
+ },
+ {
+  "bloco": "s2-b09",
+  "h3": 5,
+  "h4": 1,
+  "titulos": [
+   " Utilidad diagnóstica del ECG",
+   "⚡ Sistema de conducción",
+   "📈 Ondas, complejos, segmentos e intervalos",
+   "🔌 Derivaciones (12 en el ECG de rutina)",
+   "🧭 Localización de las paredes (qué derivaciones miran cada cara)"
+  ]
+ },
+ {
+  "bloco": "s2-b10",
+  "h3": 7,
+  "h4": 1,
+  "titulos": [
+   " Etiología y factores",
+   " Factores de riesgo y desencadenantes (gastritis/úlcera)",
+   " Clasificación",
+   " Manifestaciones clínicas",
+   " Úlcera péptica",
+   " Examen físico",
+   " Métodos diagnósticos"
+  ]
+ }
+]

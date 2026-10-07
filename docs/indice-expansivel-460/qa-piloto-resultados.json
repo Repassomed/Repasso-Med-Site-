@@ -1,0 +1,314 @@
+{
+ "quando": "2026-10-07",
+ "total": 51,
+ "ok": 51,
+ "falhas": [],
+ "checks": [
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "liga",
+   "ok": true,
+   "msg": "flags layout+visual → 10 botões expansíveis, 4 links diretos (guía/tablas/banco/flashcards)"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "pede-modulo",
+   "ok": true,
+   "msg": "só então baixa o CSS e o JS do módulo"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "sem-erro-A",
+   "ok": true,
+   "msg": "sem erros de página/console"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-visual-off",
+   "ok": true,
+   "msg": "visual-off: o módulo nem é baixado (0 requisições), 0 botões, 0 painéis"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-visual-off-erros",
+   "ok": true,
+   "msg": "visual-off: sem erros"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-layout-off",
+   "ok": true,
+   "msg": "layout-off: o módulo nem é baixado (0 requisições), 0 botões, 0 painéis"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-layout-off-sem-tema",
+   "ok": true,
+   "msg": "layout-off: sem tema/índice"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-layout-off-erros",
+   "ok": true,
+   "msg": "layout-off: sem erros"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-slug-errado",
+   "ok": true,
+   "msg": "slug-errado: o módulo nem é baixado (0 requisições), 0 botões, 0 painéis"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-slug-errado-sem-tema",
+   "ok": true,
+   "msg": "slug-errado: sem tema/índice"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-slug-errado-erros",
+   "ok": true,
+   "msg": "slug-errado: sem erros"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-http500",
+   "ok": true,
+   "msg": "http500: o módulo nem é baixado (0 requisições), 0 botões, 0 painéis"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-http500-sem-tema",
+   "ok": true,
+   "msg": "http500: sem tema/índice"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-http500-erros",
+   "ok": true,
+   "msg": "http500: sem erros"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-vazio",
+   "ok": true,
+   "msg": "vazio: o módulo nem é baixado (0 requisições), 0 botões, 0 painéis"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-vazio-sem-tema",
+   "ok": true,
+   "msg": "vazio: sem tema/índice"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "off-vazio-erros",
+   "ok": true,
+   "msg": "vazio: sem erros"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "outra-materia",
+   "ok": true,
+   "msg": "Biología (flags “ligadas” pelo mock): nenhum pedido de flags, nenhum módulo, nenhum botão"
+  },
+  {
+   "secao": "A · portão: só liga com layout + visual vindos do servidor, só em Semiología II",
+   "id": "outra-materia-erros",
+   "ok": true,
+   "msg": "Biología sem erros"
+  },
+  {
+   "secao": "A2 · rollback: rm-pilot.js original ⇒ nenhum módulo, cards abrem o bloco direto",
+   "id": "rollback-sem-modulo",
+   "ok": true,
+   "msg": "pilot original: tema+navegação intactos, 14 <a>, 0 requisições ao módulo"
+  },
+  {
+   "secao": "A2 · rollback: rm-pilot.js original ⇒ nenhum módulo, cards abrem o bloco direto",
+   "id": "rollback-abre-direto",
+   "ok": true,
+   "msg": "card abre o bloco direto"
+  },
+  {
+   "secao": "B · falhas: módulo 404, attach que lança — o aluno continua abrindo o bloco direto",
+   "id": "js-404-cards-links",
+   "ok": true,
+   "msg": "js-404: tema e navegação ficam, 14 cards seguem como <a> (sem botões)"
+  },
+  {
+   "secao": "B · falhas: módulo 404, attach que lança — o aluno continua abrindo o bloco direto",
+   "id": "js-404-abre-direto",
+   "ok": true,
+   "msg": "js-404: clicar no card abre o bloco direto (comportamento atual)"
+  },
+  {
+   "secao": "B · falhas: módulo 404, attach que lança — o aluno continua abrindo o bloco direto",
+   "id": "js-404-erros",
+   "ok": true,
+   "msg": "js-404: sem erros inesperados"
+  },
+  {
+   "secao": "B · falhas: módulo 404, attach que lança — o aluno continua abrindo o bloco direto",
+   "id": "css-404-cards-links",
+   "ok": true,
+   "msg": "css-404: tema e navegação ficam, 14 cards seguem como <a> (sem botões)"
+  },
+  {
+   "secao": "B · falhas: módulo 404, attach que lança — o aluno continua abrindo o bloco direto",
+   "id": "css-404-abre-direto",
+   "ok": true,
+   "msg": "css-404: clicar no card abre o bloco direto (comportamento atual)"
+  },
+  {
+   "secao": "B · falhas: módulo 404, attach que lança — o aluno continua abrindo o bloco direto",
+   "id": "css-404-erros",
+   "ok": true,
+   "msg": "css-404: sem erros inesperados"
+  },
+  {
+   "secao": "B · falhas: módulo 404, attach que lança — o aluno continua abrindo o bloco direto",
+   "id": "attach-lanca-cards-links",
+   "ok": true,
+   "msg": "attach-lanca: tema e navegação ficam, 14 cards seguem como <a> (sem botões)"
+  },
+  {
+   "secao": "B · falhas: módulo 404, attach que lança — o aluno continua abrindo o bloco direto",
+   "id": "attach-lanca-abre-direto",
+   "ok": true,
+   "msg": "attach-lanca: clicar no card abre o bloco direto (comportamento atual)"
+  },
+  {
+   "secao": "B · falhas: módulo 404, attach que lança — o aluno continua abrindo o bloco direto",
+   "id": "attach-lanca-detach",
+   "ok": true,
+   "msg": "o pilot chama RMIndice.detach() quando o attach lança"
+  },
+  {
+   "secao": "B · falhas: módulo 404, attach que lança — o aluno continua abrindo o bloco direto",
+   "id": "attach-lanca-erros",
+   "ok": true,
+   "msg": "attach-lanca: sem erros inesperados"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "card-audio-390",
+   "ok": true,
+   "msg": "o card de áudio do bloco 01 existe (manifesto simulado)"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "tocando-390",
+   "ok": true,
+   "msg": "áudio em reprodução (WAV simulado)"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "player-visivel-390",
+   "ok": true,
+   "msg": "barra do player visível durante o índice"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "ultima-sub-livre-390",
+   "ok": true,
+   "msg": "última minicard do painel (bloco s2-b10) fica acima da barra do player ao rolar até o fim"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "nao-cobre-390",
+   "ok": true,
+   "msg": "nenhum elemento flutuante do player cobre painel, minicards ou cards do índice"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "audio-segue-390",
+   "ok": true,
+   "msg": "escolher subtítulo abre o bloco e o áudio segue tocando"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "erros-390",
+   "ok": true,
+   "msg": "sem erros"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "card-audio-1440",
+   "ok": true,
+   "msg": "o card de áudio do bloco 01 existe (manifesto simulado)"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "tocando-1440",
+   "ok": true,
+   "msg": "áudio em reprodução (WAV simulado)"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "player-visivel-1440",
+   "ok": true,
+   "msg": "card/botão do player visível à direita durante o índice"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "ultima-sub-livre-1440",
+   "ok": true,
+   "msg": "última minicard do painel (bloco s2-b10) fica acima da barra do player ao rolar até o fim"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "nao-cobre-1440",
+   "ok": true,
+   "msg": "nenhum elemento flutuante do player cobre painel, minicards ou cards do índice"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "audio-segue-1440",
+   "ok": true,
+   "msg": "escolher subtítulo abre o bloco e o áudio segue tocando"
+  },
+  {
+   "secao": "C · player de áudio: o painel e a última fileira não ficam sob o player; o áudio continua",
+   "id": "erros-1440",
+   "ok": true,
+   "msg": "sem erros"
+  },
+  {
+   "secao": "D · caneta V2 real: tinta semeada do «banco» continua alinhada depois de entrar pelo subtítulo",
+   "id": "tinta-oculta-indice",
+   "ok": true,
+   "msg": "no índice a tinta fica oculta"
+  },
+  {
+   "secao": "D · caneta V2 real: tinta semeada do «banco» continua alinhada depois de entrar pelo subtítulo",
+   "id": "b10-tem-subs",
+   "ok": true,
+   "msg": "bloco 10 tem subtítulos no painel"
+  },
+  {
+   "secao": "D · caneta V2 real: tinta semeada do «banco» continua alinhada depois de entrar pelo subtítulo",
+   "id": "abriu-b10",
+   "ok": true,
+   "msg": "abre só o bloco 10"
+  },
+  {
+   "secao": "D · caneta V2 real: tinta semeada do «banco» continua alinhada depois de entrar pelo subtítulo",
+   "id": "tinta-alinhada",
+   "ok": true,
+   "msg": "desvio 0 px (≤ 2)"
+  },
+  {
+   "secao": "D · caneta V2 real: tinta semeada do «banco» continua alinhada depois de entrar pelo subtítulo",
+   "id": "sem-escrita",
+   "ok": true,
+   "msg": "navegar/expandir/abrir não grava nada (0 escritas)"
+  },
+  {
+   "secao": "D · caneta V2 real: tinta semeada do «banco» continua alinhada depois de entrar pelo subtítulo",
+   "id": "erros-D",
+   "ok": true,
+   "msg": "sem erros"
+  }
+ ]
+}
