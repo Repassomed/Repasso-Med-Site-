@@ -135,11 +135,12 @@ const GEO = () => [...document.querySelectorAll('#materias-container .container>
     await page.evaluate(P.NOTAS);
     const r = await page.evaluate(async () => {
       const el = window.__notas.find(e => getComputedStyle(e).float === 'right'), band = document.querySelector('.rm-l2-band'); if (!band) return { semBanda: true };
-      const hb = band.getBoundingClientRect().bottom, t0 = el.getBoundingClientRect().top + scrollY; scrollTo(0, t0 - hb / 2); await new Promise(r => setTimeout(r, 350)); scrollTo(0, t0 - hb / 2); await new Promise(r => setTimeout(r, 350));
-      const nr = el.getBoundingClientRect(), x = nr.left + nr.width / 2, y = Math.max(2, Math.min(hb - 4, nr.top + 6)), sob = nr.top < hb - 6, topo = document.elementFromPoint(x, y);
-      return { sob, hb: Math.round(hb), noteTop: Math.round(nr.top), topo: topo && (band.contains(topo) ? 'faixa' : topo.tagName + '.' + topo.className), z: getComputedStyle(band).zIndex };
+      for (let k = 0; k < 5; k++) { const bb = band.getBoundingClientRect().bottom; scrollBy(0, el.getBoundingClientRect().top - (bb - 20)); await new Promise(r => setTimeout(r, 300)); }      // topo do post-it 20 px ACIMA da borda inferior da faixa (esses 20 px ficam sob a faixa)
+      const br = band.getBoundingClientRect(), nr = el.getBoundingClientRect(), x = nr.left + nr.width / 2, y0 = Math.max(br.top + 4, nr.top + 2), y1 = Math.min(br.bottom - 4, nr.bottom - 2), y = (y0 + y1) / 2;
+      const sob = y1 - y0 > 8, topo = sob ? document.elementFromPoint(x, y) : null;      // há região onde o post-it e a faixa se sobrepõem
+      return { sob, hb: Math.round(br.bottom), bt: Math.round(br.top), noteTop: Math.round(nr.top), topo: topo && (band.contains(topo) ? 'faixa' : topo.tagName + '.' + topo.className), z: getComputedStyle(band).zIndex };
     });
-    ok(!r.semBanda && r.sob && r.topo === 'faixa', `${w}: com o post-it rolado POR BAIXO da faixa (topo do post-it ${r.noteTop}px < faixa ${r.hb}px) o toque cai na faixa (z ${r.z})`, r);
+    ok(!r.semBanda && r.sob && r.topo === 'faixa', `${w}: com o post-it rolado POR BAIXO da faixa (post-it a partir de ${r.noteTop}px, faixa ${r.bt}–${r.hb}px) o toque cai na faixa (z ${r.z})`, r);
     const l = await page.evaluate(() => { const side = document.querySelector('.rm-l2-side'); if (!side || getComputedStyle(side).display === 'none') return { semLateral: true }; const sr = side.getBoundingClientRect(), n = [...document.querySelectorAll('#materias-container .rmc-margin')].filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.right > sr.left && r.left < sr.right; }); return { z: getComputedStyle(side).zIndex, w: Math.round(sr.width), sobrepostos: n.length }; });
     ok(l.semLateral || (l.sobrepostos === 0 && +l.z >= 360), `${w}: nenhum post-it lateral se sobrepõe à lateral do V2 (${l.semLateral ? 'lateral oculta nesta largura' : 'lateral ' + l.w + ' px, z ' + l.z})`, l);
     await ctx.close();
