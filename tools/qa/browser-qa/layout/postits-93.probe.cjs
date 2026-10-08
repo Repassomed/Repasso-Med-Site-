@@ -5,7 +5,7 @@
      · registra QUEM cobre (tag.classe, position, z-index, pai com contexto de empilhamento) e se a caixa sai da janela (clipping lateral);
    Para o glossário (#rm-gl-note, abre ao tocar num termo .rmc-gl/.em-gl/…): clica em até N termos por matéria, em 3 posições de rolagem, e confere visibilidade, recorte e cobertura.
    Também registra overflow horizontal da página.
-   Uso:  RM_PLAYWRIGHT=... node postits-93.probe.cjs [--slugs=a,b] [--w=390,768,1024,1440] [--json=saida.json] [--gl=3] [--nota=N (amostra por matéria; padrão 8)] [--soPende=1] [--ndjson=arquivo (grava cada resultado ao terminar)] [--capturas=pasta (grava A/B dos casos cobertos)] [--layout=0|1 (Layout V2 com lateral/índice)] [--visual=0|1 (tema do piloto)]
+   Uso:  RM_PLAYWRIGHT=... node postits-93.probe.cjs [--slugs=a,b] [--w=390,768,1024,1440] [--json=saida.json] [--gl=3] [--nota=N (amostra por matéria; padrão 8)] [--soPende=1] [--ndjson=arquivo (grava cada resultado ao terminar)] [--capturas=pasta (grava A/B dos casos cobertos)] [--antes=1 (neutraliza a regra da #93 = comportamento da main)] [--layout=0|1 (Layout V2 com lateral/índice)] [--visual=0|1 (tema do piloto)]
    Só leitura: 0 escrita, 0 rede externa. Emulação do Chromium. */
 const fs = require('fs'), path = require('path');
 const { serve, ROOT } = require('./serve.cjs');
@@ -82,9 +82,9 @@ async function pixel(page, kind, idx, dir, nome) {
   await page.evaluate(() => { const n = document.querySelector('.__iso'); document.querySelectorAll('body *').forEach(e => { const p = getComputedStyle(e).position; if ((p === 'fixed' || p === 'sticky') && !e.contains(n) && !n.contains(e)) e.setAttribute('data-__fx', '1'); });
     /* um post-it lateral (float) que pinta sobre a área VAZIA de um bloco largo é o desenho original (o texto do bloco contorna): não conta como «cobertura» do bloco */
     document.querySelectorAll('#materias-container .rmc-margin').forEach(e => { if (!e.contains(n) && !n.contains(e)) e.setAttribute('data-__fx', '1'); }); });
-  const A = await page.screenshot({ clip: box, animations: 'disabled' });
+  const A = await page.screenshot({ clip: box, animations: 'disabled', timeout: 120000 });
   await page.evaluate(() => document.documentElement.classList.add('__isoon'));
-  const B = await page.screenshot({ clip: box, animations: 'disabled' });
+  const B = await page.screenshot({ clip: box, animations: 'disabled', timeout: 120000 });
   await page.evaluate(() => { document.documentElement.classList.remove('__isoon'); document.querySelectorAll('.__iso').forEach(e => e.classList.remove('__iso')); document.querySelectorAll('[data-__fx]').forEach(e => e.removeAttribute('data-__fx')); });
   const frac = await page.evaluate(async ([a, b]) => {
     const load = u => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = u; });
@@ -105,9 +105,10 @@ async function abrirMateria(br, base, slug, tab, w, h, flags = {}) {
   page.on('pageerror', e => errs.push(String(e).slice(0, 140)));
   await page.route('**/get-pilot-flags*', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ slug, layout: !!flags.layout, visual: !!flags.visual, audio: false }) }));
   await page.route('https://**', r => r.abort());
-  await page.goto(`${base}/p.html?slug=${slug}&tab=${tab}&uid=u-probe&wait=1500`, { timeout: 120000 });
+  await page.goto(`${base}/p.html?slug=${slug}&tab=${tab}&uid=${flags.uid || 'u-probe'}&wait=1500${flags.seedmany ? '&seedmany=' + flags.seedmany : ''}`, { timeout: 120000 });
   await page.waitForFunction('window.__ready===true', { timeout: 120000 });
   await page.waitForTimeout(600);
+  if (flags.antes) await page.addStyleTag({ content: '#materias-container .rm-cuaderno .container>:has(>.rmc-margin){z-index:1!important}' });      // ANTES = a main (o filho com post-it segue isolado em z:1)
   await page.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; });
   /* «aquece» a página: percorre tudo uma vez, como quem lê, para que as seções com content-visibility:auto guardem o tamanho real (contain-intrinsic-size: auto). Sem isso a 1.ª medição de um post-it
      numa seção que ainda não foi renderizada vê a geometria estimada (e o elemento «cobre» ou «é coberto» por um artefato de layout, não por um defeito que o aluno veja). */
@@ -169,7 +170,7 @@ module.exports = { catalogo, sondar, abrirMateria, NOTAS, AMOSTRA, ROLAR, pixel 
 
 if (require.main === module) (async () => {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
-  const only = arg('slugs', '') ? arg('slugs', '').split(',') : null, ws = arg('w', '390,768,1024,1440').split(',').map(Number), o = { gl: arg('gl', '3'), dir: arg('capturas', ''), soPende: arg('soPende', '0') === '1', nota: arg('nota', '8'), maxPende: arg('maxPende', '24'), flags: { layout: arg('layout', '0') === '1', visual: arg('visual', '0') === '1' } };
+  const only = arg('slugs', '') ? arg('slugs', '').split(',') : null, ws = arg('w', '390,768,1024,1440').split(',').map(Number), o = { gl: arg('gl', '3'), dir: arg('capturas', ''), soPende: arg('soPende', '0') === '1', nota: arg('nota', '8'), maxPende: arg('maxPende', '24'), flags: { layout: arg('layout', '0') === '1', visual: arg('visual', '0') === '1', antes: arg('antes', '0') === '1' } };
   const cat = catalogo(only); const srv = await serve(); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch(); const out = [];
   for (const c of cat) for (const w of ws) {
     let r; try { r = await sondar(br, base, c, w, o); } catch (e) { r = { slug: c.slug, w, erro: String(e).slice(0, 200) }; }

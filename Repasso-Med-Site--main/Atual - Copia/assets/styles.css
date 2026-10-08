@@ -1334,12 +1334,14 @@ footer strong { color:var(--gold-soft); }
        flutuantes, então não passa por cima de nenhum controle nem modal. */
     z-index:2;}
   /* Issue #93 (2.ª parte) · el z:2 de arriba solo vale cuando el post-it es hijo DIRECTO de `.container`. Cuando vive DENTRO de un hijo (`.rmc-detalle`, `.pk-step`,
-     `.analysis-card`, `figure`…) ese hijo ya es un contexto de apilamiento propio (`.container>*` → position:relative + z-index:1), y el z:2 queda ENCERRADO en él:
+     `.analysis-card`…) ese hijo ya es un contexto de apilamiento propio (`.container>*` → position:relative + z-index:1), y el z:2 queda ENCERRADO en él:
      si el post-it es más alto que su contenedor (cuelga por debajo), el hermano siguiente — también z:1, más tarde en el DOM — pinta ENCIMA de todo el contexto
-     y lo tapa (medido: Dermatología 5 notas, Fisiopatología II 14, Farmacología 1…). El hijo que contiene un post-it deja de ser contexto (z-index:auto; sigue
-     position:relative, no cambia ninguna caja ni el flujo): el post-it (z:2) compite con los hermanos (z:1) en el contexto de la sección y gana, igual que cuando es hijo directo.
+     y lo tapa (medido: Dermatología 5 notas, Farmacología 1). El hijo que contiene un post-it deja de ser contexto (z-index:auto; sigue position:relative, no cambia
+     ninguna caja ni el flujo): el post-it (z:2) compite con los hermanos (z:1) en el contexto de la sección y gana, igual que cuando es hijo directo.
+     `:has(> …)` con combinador de HIJO (contrato de rendimiento de la #456: nada de `:has()` por descendiente en CSS compartido): el navegador solo mira los hijos directos de
+     cada hijo de `.container`. Cubre todos los casos medidos (el post-it es hijo directo del bloque: .rmc-detalle/.pk-step/.analysis-card/.ap-add/.quiz-section…).
      Sigue muy por debajo de topbar (300), pestañas (220), índice (360) y herramientas flotantes. Solo pantalla ancha (donde el post-it flota). */
-  #materias-container .rm-cuaderno .container>:has(.rmc-margin){z-index:auto;}
+  #materias-container .rm-cuaderno .container>:has(>.rmc-margin){z-index:auto;}
   /* los bloques anchos nunca conviven con el post-it: lo dejan pasar primero */
   #materias-container .rm-cuaderno .rmc-scroll,#materias-container .rm-cuaderno figure.rmc-fig,#materias-container .rm-cuaderno .illustration,
   #materias-container .rm-cuaderno .rmc-exam,#materias-container .rm-cuaderno .quiz-section,#materias-container .rm-cuaderno .key-box,

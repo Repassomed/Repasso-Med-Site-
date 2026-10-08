@@ -1,5 +1,5 @@
 /* Capturas ANTES × DEPOIS da issue #93 (post-its laterais encobertos). Matéria REAL, mesma página, mesma rolagem: «antes» = o filho com post-it segue como contexto de apilamiento
-   (`.container>:has(.rmc-margin){z-index:1!important}`, o que a main faz); «depois» = a regra da correção. Como a geometria é idêntica nos dois estados (provado em postits-encobertos.test.cjs),
+   (`.container>:has(>.rmc-margin){z-index:1!important}`, o que a main faz); «depois» = a regra da correção. Como a geometria é idêntica nos dois estados (provado em postits-encobertos.test.cjs),
    a única diferença entre as duas capturas é a ordem de pintura. Grava <pasta>/<slug>_<largura>_n<i>_{antes,depois}.png (recorte da janela centrado no post-it, com 40 px de margem).
    Uso:  RM_PLAYWRIGHT=... node capturas-93.cjs <pasta-de-saída> [--casos=dermatologia:4,dermatologia:12,farmacologia:..,oftalmologia:..] [--w=1440,1024] */
 const fs = require('fs'), path = require('path');
@@ -7,7 +7,7 @@ const { serve } = require('./serve.cjs');
 const P = require('./postits-93.probe.cjs');
 const out = process.argv[2]; if (!out) { console.error('uso: capturas-93.cjs <pasta>'); process.exit(2); }
 const arg = (k, d) => { const a = process.argv.find(x => x.startsWith('--' + k + '=')); return a ? a.slice(k.length + 3) : d; };
-const OLD = '#materias-container .rm-cuaderno .container>:has(.rmc-margin){z-index:1!important}';
+const OLD = '#materias-container .rm-cuaderno .container>:has(>.rmc-margin){z-index:1!important}';
 (async () => {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
   fs.mkdirSync(out, { recursive: true });

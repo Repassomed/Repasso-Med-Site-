@@ -3,7 +3,7 @@
      1. `.rmc-margin` (post-it lateral, float:right ≥ 920 px) DENTRO de um filho de `.container` (`.rmc-detalle`, `.pk-step`, `.analysis-card`, `figure`…): `.container>*` dá a cada filho
         position:relative + z-index:1 ⇒ o filho é um contexto de apilamiento e o z-index:2 do post-it fica ENCERRADO nele. Se o post-it é mais alto que o pai (cuelga), o IRMÃO SEGUINTE
         (z:1, depois no DOM) pinta POR CIMA do contexto inteiro e o corta/oculta (Dermatología 5 notas, Fisiopatología II 14, Farmacología 1, Guaraní, Oftalmología, Toxicología…).
-        Correção: `.container>:has(.rmc-margin){z-index:auto}` (≥ 920 px) — o filho deixa de ser contexto; o post-it (z:2) ganha dos irmãos (z:1) no contexto da seção.
+        Correção: `.container>:has(>.rmc-margin){z-index:auto}` (≥ 920 px) — o filho deixa de ser contexto; o post-it (z:2) ganha dos irmãos (z:1) no contexto da seção.
      2. glossário `#rm-gl-note` (post-it do termo): sem defeito — popover (top layer) com fallback position:fixed; provado abaixo (dentro da janela, sem recorte, por cima de tudo).
    O que se prova:
      A  estático: a regra nova existe só em ≥ 920 px, o float segue z-index:2 (nenhum z-index arbitrário novo), o glossário segue popover + fallback;
@@ -25,7 +25,7 @@ const APP = fs.readFileSync(path.join(ROOT, 'assets/app-core.js'), 'utf8');
 const ANINHADOS = ['dermatologia', 'fisiopatologia-ii', 'farmacologia', 'guarani', 'oftalmologia', 'toxicologia', 'medicina-familiar'];
 const cat = (slugs) => P.catalogo(slugs);
 const altura = (w) => w < 600 ? 844 : w < 1000 ? 1024 : 900;
-const OLD = '#materias-container .rm-cuaderno .container>:has(.rmc-margin){z-index:1!important}';            // = o que a main faz hoje (o filho com post-it segue isolado)
+const OLD = '#materias-container .rm-cuaderno .container>:has(>.rmc-margin){z-index:1!important}';            // = o que a main faz hoje (o filho com post-it segue isolado)
 
 /* retângulos de todos os filhos de .container e de todos os post-its (geometria) */
 const GEO = () => [...document.querySelectorAll('#materias-container .container>*, #materias-container .rmc-margin')].map(e => { const r = e.getBoundingClientRect(); return [Math.round(r.left * 10), Math.round((r.top + scrollY) * 10), Math.round(r.width * 10), Math.round(r.height * 10)].join(','); });
@@ -40,21 +40,26 @@ const GEO = () => [...document.querySelectorAll('#materias-container .container>
     const m = /@media\(min-width:920px\)\{([\s\S]*?)\n\}\n@media\(max-width:919px\)/.exec(CSS);
     ok(m, 'bloco @media(min-width:920px) do post-it lateral encontrado');
     const bloco = m ? m[1] : '';
-    ok(/\.container>:has\(\.rmc-margin\)\{z-index:auto;\}/.test(bloco), 'a regra do filho-com-post-it (z-index:auto) vive DENTRO do @media(min-width:920px) (onde o post-it flutua)');
+    ok(/\.container>:has\(>\.rmc-margin\)\{z-index:auto;\}/.test(bloco), 'a regra do filho-com-post-it (z-index:auto) vive DENTRO do @media(min-width:920px) (onde o post-it flutua) e usa :has(> …) — combinador de FILHO');
     ok(/\.rmc-margin\{float:right;[\s\S]*?z-index:2;\}/.test(bloco), 'o float segue z-index:2 (a correção não cria z-index novo/arbitrário)');
     const zs = [...CSS.matchAll(/\.rmc-margin[^{}]*\{[^}]*z-index:\s*(-?\d+)/g)].map(x => +x[1]);
     ok(zs.every(z => z <= 2), 'nenhuma regra de .rmc-margin com z-index > 2', zs);
+    const semCom = CSS.replace(/\/\*[\s\S]*?\*\//g, '');
+    const has = [...semCom.matchAll(/:has\(\s*([^)]{0,3})/g)].map(m => m[1].trim());
+    ok(has.length === 1 && has.every(a => a.startsWith('>')), `contrato de desempenho da #456: o único :has() de styles.css usa combinador de FILHO (> …), nenhum :has() por descendente (${has.length} ocorrência)`, has);
     ok(/\.container>\*\{position:relative;z-index:1;\}/.test(CSS), 'a regra global `.container>*{position:relative;z-index:1}` ficou INTACTA (a correção é cirúrgica)');
     ok(/#rm-gl-note\{position:fixed;z-index:2147483000/.test(APP) && /setAttribute\('popover','manual'\)/.test(APP) && /showPopover/.test(APP), 'glossário: popover manual (top layer) + fallback position:fixed — não foi tocado');
   }
 
   /* =============================== B · antes × depois na mesma página =============================== */
   sec('B · antes × depois NA MESMA PÁGINA (regra ativa × regra neutralizada), pixel e geometria');
-  for (const slug of ['dermatologia', 'fisiopatologia-ii']) {
+  for (const slug of ['dermatologia', 'farmacologia', 'fisiopatologia-ii']) {
     const c = cat([slug])[0]; const { ctx, page, errs } = await P.abrirMateria(br, base, c.slug, c.tab, 1440, 900, {});
     const lista = await page.evaluate(P.NOTAS);
     const pende = await page.evaluate(() => window.__notas.map((e, i) => { const a = e.getBoundingClientRect(), b = e.parentElement.getBoundingClientRect(); return a.bottom > b.bottom + 1 ? i : -1; }).filter(i => i >= 0));
-    ok(pende.length >= 3, `${slug}: ${pende.length} post-its laterais cuelgam abaixo do contêiner (o caso do defeito)`, pende);
+    const prof = await page.evaluate(ps => ps.map(i => { let d = 0, n = window.__notas[i]; while (n && !(n.parentElement && n.parentElement.matches('.container,.container-wide'))) { n = n.parentElement; d++; } return d; }), pende);
+    ok(prof.length > 0 && prof.every(d => d === 1), `${slug}: TODOS os post-its que cuelgam são filhos DIRETOS de um bloco que é filho de .container (profundidade 1) — o seletor :has(> .rmc-margin) cobre o conjunto medido`, prof);
+    ok(pende.length >= 1, `${slug}: ${pende.length} post-its laterais cuelgam abaixo do contêiner (o caso do defeito)`, pende);
     const medir = async (rot) => { const o = []; for (const i of pende.slice(0, 6)) { let v = null; for (let k = 0; k < 4; k++) { await page.evaluate(P.ROLAR, [i, 'centro']); await page.waitForTimeout(220); v = await P.pixel(page, 'nota', i); await page.waitForTimeout(100); const v2 = await P.pixel(page, 'nota', i); if (v === v2) break; v = v2; } o.push(v); } return o; };
     const snap = async () => { await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(400); return page.evaluate(GEO); };         // mesma rolagem (topo) nos dois estados: content-visibility só renderiza o que está na janela
     const geoDepois = await snap(), pxDepois = await medir('depois');
@@ -62,7 +67,7 @@ const GEO = () => [...document.querySelectorAll('#materias-container .container>
     const st = await page.addStyleTag({ content: OLD });
     await page.waitForTimeout(300);
     const geoAntes = await snap(), pxAntes = await medir('antes');
-    if (slug === 'dermatologia') ok(pxAntes.some(v => v > 5), `${slug}: ANTES (z-index:1 como na main) — o teste ENXERGA o defeito: ${pxAntes.filter(v => v > 5).length}/${pxAntes.length} cobertos (${pxAntes.map(v => v + '%').join(' ')})`, pxAntes);
+    if (slug !== 'fisiopatologia-ii') ok(pxAntes.some(v => v > 5), `${slug}: ANTES (z-index:1 como na main) — o teste ENXERGA o defeito: ${pxAntes.filter(v => v > 5).length}/${pxAntes.length} cobertos (${pxAntes.map(v => v + '%').join(' ')})`, pxAntes);
     else console.log(`    · ${slug}: ANTES (z-index:1): ${pxAntes.filter(v => v > 5).length}/${pxAntes.length} cobertos por pixel (${pxAntes.map(v => v + '%').join(' ')}) — informativo (os irmãos seguintes só têm texto que contorna o post-it)`);
     ok(geoAntes.length === geoDepois.length && geoAntes.every((g, k) => g === geoDepois[k]), `${slug}: a geometria é IDÊNTICA nos dois estados (${geoDepois.length} caixas: filhos de .container + post-its) — a correção não move nada`, { n: geoDepois.length });
     ok(errs.length === 0, `${slug}: 0 erros JS`, errs);

@@ -1,0 +1,15 @@
+
+dermatologia · CPU 4× · 150 traços salvos · 3 rodadas × 4 traços por estado · ferramenta=pen · elementos que a regra casa: filho=5 desc=5
+  sem   pointerup proc 26.3 ms · dur 88 · move p95 null · tinta p95 15.9 · tarefas longas 2 · pior quadro 66.7 · estilo/quadro 0.4 ms · recálculos 362 · perdidos 0/4308 · micro: classe-body 7.52 ms/mut · nó-parágrafo 0 ms/mut
+  filho pointerup proc 25.4 ms · dur 88 · move p95 null · tinta p95 16 · tarefas longas 2 · pior quadro 66.6 · estilo/quadro 0.4 ms · recálculos 362 · perdidos 0/4308 · micro: classe-body 7.92 ms/mut · nó-parágrafo 0 ms/mut
+  desc  pointerup proc 26.7 ms · dur 96 · move p95 null · tinta p95 16 · tarefas longas 2 · pior quadro 66.7 · estilo/quadro 0.4 ms · recálculos 362 · perdidos 0/4308 · micro: classe-body 8.26 ms/mut · nó-parágrafo 0 ms/mut
+
+fisiopatologia-ii · CPU 4× · 150 traços salvos · 3 rodadas × 4 traços por estado · ferramenta=pen · elementos que a regra casa: filho=43 desc=43
+  sem   pointerup proc 101.6 ms · dur 256 · move p95 null · tinta p95 14.9 · tarefas longas 2 · pior quadro 233.3 · estilo/quadro 0.6 ms · recálculos 362 · perdidos 0/4308 · micro: classe-body 15.81 ms/mut · nó-parágrafo 0 ms/mut
+  filho pointerup proc 103.5 ms · dur 256 · move p95 null · tinta p95 14.8 · tarefas longas 2 · pior quadro 233.3 · estilo/quadro 0.6 ms · recálculos 362 · perdidos 0/4308 · micro: classe-body 16.17 ms/mut · nó-parágrafo 0 ms/mut
+  desc  pointerup proc 102.7 ms · dur 256 · move p95 null · tinta p95 14.8 · tarefas longas 2 · pior quadro 233.4 · estilo/quadro 0.7 ms · recálculos 362 · perdidos 0/4308 · micro: classe-body 17.11 ms/mut · nó-parágrafo 0 ms/mut
+
+semiologia-ii-novo · CPU 4× · 150 traços salvos · 3 rodadas × 4 traços por estado · ferramenta=pen · elementos que a regra casa: filho=0 desc=1
+  sem   pointerup proc 35.4 ms · dur 104 · move p95 null · tinta p95 15.2 · tarefas longas 2 · pior quadro 83.4 · estilo/quadro 0.5 ms · recálculos 363 · perdidos 0/4308 · micro: classe-body 11.83 ms/mut · nó-parágrafo 0 ms/mut
+  filho pointerup proc 37.7 ms · dur 112 · move p95 null · tinta p95 15.2 · tarefas longas 2 · pior quadro 83.4 · estilo/quadro 0.5 ms · recálculos 363 · perdidos 0/4308 · micro: classe-body 11.72 ms/mut · nó-parágrafo 0 ms/mut
+  desc  pointerup proc 38 ms · dur 120 · move p95 null · tinta p95 15.2 · tarefas longas 2 · pior quadro 99.9 · estilo/quadro 0.5 ms · recálculos 363 · perdidos 0/4308 · micro: classe-body 11.68 ms/mut · nó-parágrafo 0 ms/mut
