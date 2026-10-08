@@ -227,3 +227,17 @@ Prova (A–F): tema desligado = player original · CSS do player só sob `html.r
 acima do card, controles ≥ 44 px, seek/±15/velocidade/play/progresso/retomada, aria-labels originais) · celular 320/390 (barra ≤ 64 px, `--rm-player-h` = altura medida, tabela/post-it/auscultação sem cobertura por
 hit-test, fim da página legível, card ampliado por TOQUE, toolbox aberta, caneta armada com ESCRITA enquanto o áudio toca, borracha) · tablet 768 e trilho · 6 `<audio>` de ausculta intactos e exclusivos com o audiobook ·
 trocar de matéria e `SIGNED_OUT` (inclusive pelo «Sair» da faixa) param o áudio e desfazem o tema. Capturas: `capturas-sistema/player/`. Emulação de toque, não aparelho real.
+
+## Post-its/notas laterais encobertos (issue #93) — `postits-93.probe.cjs`, `postits-encobertos.test.cjs`, `capturas-93.cjs`
+Bug global: em algumas matérias o post-it lateral (`.rmc-margin`, `float:right` ≥ 920 px) aparece cortado/oculto pelo bloco seguinte. `postits-93.probe.cjs` **mede** (não deduz) em todas as matérias reais de `netlify/functions/materias-privadas/` a 390/768/1024/1440:
+para cada post-it (`.rmc-margin` e os legados `*-postit`) em 3 posições de rolagem, compara **por pixel** a região visível «como está» com a mesma região mostrando só o post-it (blocos de 8 px; UI fixa/grudada some nas duas) — o aluno só vê o que PINTA, então um irmão que só tem texto contornando o float não conta;
+também registra o hit-test (quem está por cima), recorte lateral, overflow horizontal, UI fixa sobreposta e, no glossário (`#rm-gl-note`), abertura em 3 posições (dentro da janela, sem recorte, por cima de tudo). A página é «aquecida» antes (rolagem completa) porque `content-visibility:auto` só dá a geometria real depois da 1.ª renderização.
+```
+export NODE_PATH=$(npm root -g)   # ou RM_PLAYWRIGHT=/caminho/do/modulo
+node tools/qa/browser-qa/layout/postits-93.probe.cjs [--slugs=a,b] [--w=390,768,1024,1440] [--nota=6] [--gl=2] [--layout=1 (Layout V2)] [--capturas=pasta] [--ndjson=arquivo]
+node tools/qa/browser-qa/layout/postits-encobertos.test.cjs
+RM_PLAYWRIGHT=... node tools/qa/browser-qa/layout/capturas-93.cjs <pasta-de-saída> [--slugs=dermatologia,farmacologia,oftalmologia] [--w=1440,1024]
+```
+**Causa:** `.container>*{position:relative;z-index:1}` faz de cada filho de `.container` um contexto de apilamiento; o `z-index:2` do post-it (correção da #370) só vale quando o post-it é filho DIRETO. Dentro de `.rmc-detalle`/`.pk-step`/`.analysis-card`/`figure` ele fica encerrado no contexto do pai e, se cuelga abaixo do pai, o irmão seguinte (z:1, depois no DOM) pinta POR CIMA e o corta.
+**Correção:** `#materias-container .rm-cuaderno .container>:has(.rmc-margin){z-index:auto}` em `@media(min-width:920px)` (`assets/styles.css`): o filho com post-it deixa de ser contexto; nenhuma caixa se move (geometria idêntica, provada no teste). Glossário: sem defeito (popover top layer + fallback fixed, testados com e sem Popover API).
+O teste prova antes×depois NA MESMA PÁGINA (regra neutralizada × ativa), geometria idêntica, 0 cobertos em 7 matérias × 1024/1440 (legado e V2), 390/768 sem cobertura/overflow, glossário em 4 larguras com e sem popover, e a faixa/lateral do V2 por cima do post-it. Emulação do Chromium.
