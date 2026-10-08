@@ -1,0 +1,34 @@
+{
+ "ref": "origin/main",
+ "quando": "2026-10-08",
+ "celular": {
+  "antigo": {
+   "n": 3,
+   "entregaP95": 19.5,
+   "quadroMed": 18,
+   "quadroP95": 16.8,
+   "quadroMax": 166.7,
+   "mais50": 2,
+   "tarefasLongas": 2,
+   "tarefasLongasMax": 166,
+   "tintaP95": 14.6,
+   "perdidos": 0,
+   "maxDistPx": 0.7,
+   "tracos": 1
+  },
+  "novo": {
+   "n": 3,
+   "entregaP95": 15.9,
+   "quadroMed": 17.7,
+   "quadroP95": 16.8,
+   "quadroMax": 183.3,
+   "mais50": 2,
+   "tarefasLongas": 2,
+   "tarefasLongasMax": 192,
+   "tintaP95": 13.6,
+   "perdidos": 0,
+   "maxDistPx": 0.7,
+   "tracos": 1
+  }
+ }
+}
