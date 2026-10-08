@@ -96,7 +96,7 @@ function servir({ usadas = new Set(), pedidos = [] } = {}) {
 
 /* ---------------- abertura de uma matéria no navegador ---------------- */
 /* opts: { w, h, modo: 'controle'|'layout'|'tema'|'nav', touch, scale, hash, esperar } */
-async function abrir(br, base, mat, { w = 1440, h = 900, modo = 'nav', touch = w < 900, scale = 1, hash = '', espera = 1500, corr = false } = {}) {
+async function abrir(br, base, mat, { w = 1440, h = 900, modo = 'nav', touch = w < 900, scale = 1, hash = '', espera = 1500, corr = false, ix = false, extra = '' } = {}) {
   const ctx = await br.newContext({ viewport: { width: w, height: h }, hasTouch: touch, isMobile: false, deviceScaleFactor: scale });
   const page = await ctx.newPage(); const errs = [], falhasRede = [], externas = [];
   page.on('pageerror', e => errs.push(String(e).slice(0, 200)));
@@ -104,7 +104,7 @@ async function abrir(br, base, mat, { w = 1440, h = 900, modo = 'nav', touch = w
   page.on('requestfailed', r => falhasRede.push(r.url().slice(0, 140)));
   await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => { externas.push(r.request().url().slice(0, 140)); r.abort(); });   // zero rede externa
   await page.addInitScript(([slug, modoX]) => { window.__RM_ENSAIO = { slug, modo: modoX }; }, [mat.slug, modo]);
-  await page.goto(`${base}/p.html?slug=${mat.slug}&tab=${mat.tab}&modo=${modo}&wait=${espera}${corr ? '&corr=1' : ''}${hash}`, { timeout: 120000 });
+  await page.goto(`${base}/p.html?slug=${mat.slug}&tab=${mat.tab}&modo=${modo}&wait=${espera}${corr ? '&corr=1' : ''}${ix ? '&ix=1' : ''}${extra}${hash}`, { timeout: 120000 });
   await page.waitForFunction('window.__ready===true', { timeout: 120000 });
   await page.waitForTimeout(600);
   await page.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); });
