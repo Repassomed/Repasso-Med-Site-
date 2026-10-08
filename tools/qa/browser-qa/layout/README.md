@@ -241,3 +241,17 @@ RM_PLAYWRIGHT=... node tools/qa/browser-qa/layout/capturas-93.cjs <pasta-de-saí
 **Causa:** `.container>*{position:relative;z-index:1}` faz de cada filho de `.container` um contexto de apilamiento; o `z-index:2` do post-it (correção da #370) só vale quando o post-it é filho DIRETO. Dentro de `.rmc-detalle`/`.pk-step`/`.analysis-card`/`figure` ele fica encerrado no contexto do pai e, se cuelga abaixo do pai, o irmão seguinte (z:1, depois no DOM) pinta POR CIMA e o corta.
 **Correção:** `#materias-container .rm-cuaderno .container>:has(.rmc-margin){z-index:auto}` em `@media(min-width:920px)` (`assets/styles.css`): o filho com post-it deixa de ser contexto; nenhuma caixa se move (geometria idêntica, provada no teste). Glossário: sem defeito (popover top layer + fallback fixed, testados com e sem Popover API).
 O teste prova antes×depois NA MESMA PÁGINA (regra neutralizada × ativa), geometria idêntica, 0 cobertos em 7 matérias × 1024/1440 (legado e V2), 390/768 sem cobertura/overflow, glossário em 4 larguras com e sem popover, e a faixa/lateral do V2 por cima do post-it. Emulação do Chromium.
+## Caneta no novo layout (issue #456) — `caneta-novo-layout.test.cjs` e `pen-bench.cjs`
+José relatou: no layout novo a caneta «atrasa e às vezes perde partes do traço»; no antigo funcionava melhor. `pen-bench.cjs` MEDE o gesto na pipeline real do Chromium
+(CDP `Input.dispatchMouseEvent` com `pointerType:'pen'` → pointerdown/move/up reais) em três configurações — `antigo` (layout:false) · `layout` (Layout V2 sem tema) · `novo` (V2 + tema + navegação) —
+com Event Timing API, `longtask`, quadros rAF, `Performance.getMetrics` (script/estilo/layout por quadro), CPU 1×/4×, traços «frios» e «quentes», e distância de cada ponto enviado à polilinha gravada (pontos perdidos).
+```
+export NODE_PATH=$(npm root -g)   # ou RM_PLAYWRIGHT=/caminho/do/modulo ; precisa de ffmpeg (ou RM_FFMPEG)
+node tools/qa/browser-qa/layout/pen-bench.cjs --cfg=antigo,layout,novo --gesto=rapido,tabela,postit,toolbox,player --n=2 --tracos=6 --seedmany=150 --throttle=4 [--mobile=1 --scale=2 --w=390 --h=844] [--json=saida.json]
+node tools/qa/browser-qa/layout/caneta-novo-layout.test.cjs
+```
+Causas medidas e corrigidas (detalhe e números em `capturas-sistema/caneta-456/`): (1) o espelho da toolbox em `rm-materia-sistema.js` forçava estilo+layout a cada reescrita de `aria-expanded` do FAB (a V2 reescreve a cada traço) ·
+(2) `:has()` de `rm-audio.css` varria o documento inteiro a cada mutação do `<body>` com o player lateral · (3) o ponto pulsante animava `background-size`. O teste prova: A estático (só `:has(> …)` de filho; keyframe só de opacidade) ·
+B zero leituras de layout/escritas de `--rm-dock-h` pelo tema durante os traços (desktop e celular) e o espelho da toolbox continua certo · C fidelidade antigo×layout×novo em parágrafo/tabela/post-it, rápido e longo, rajada sem esperar ack a 4× de CPU, 0 pontos perdidos, âncora e gravação ·
+D áudio tocando durante a escrita · E troca de bloco sem duplicar nem gravar · F mouse desenha/dedo não · G 390/768/1024/1440 · H custo do tick do player. Validado por mutação: no código anterior (`main`) falham A e B (7 verificações).
+Limites: emulação do Chromium, sem stylus físico; interrupções próprias de aparelho (pointercancel por palm rejection/pan do SO) não são reproduzíveis aqui.

@@ -191,10 +191,13 @@
    Só no fallback (sem B1). Com o B1 quem reserva é o próprio B1, via
    `--rm-player-h` (padding-bottom do #materias-container): reservar aqui
    também contaria o espaço duas vezes. */
-html:not([data-rm-dock]) body:has(.rm-audio[data-mode="bottom"]:not([hidden])) {
+/* `:has()` só com combinadores de FILHO (> #rm-l2-player > .rm-audio: o slot é filho direto do <body>, rm-layout.js, e o player é filho direto do slot): o Chromium só olha dois
+   níveis, em vez de varrer o documento inteiro a cada mutação do <body> (traço da caneta, classes rm2-pen-down/rm2-drawing, tick do player). Sem a âncora, com o player em modo lateral o :has() NUNCA casa
+   e a varredura (~16 mil nós) repete a cada mutação — medido na #456: ~3,5 ms por mutação a 4× de CPU. Mesma semântica de antes. */
+html:not([data-rm-dock]) body:has(> #rm-l2-player > .rm-audio[data-mode="bottom"]:not([hidden])) {
   padding-bottom: var(--rm-audio-h, 0px);
 }
-html:not([data-rm-dock]):has(.rm-audio[data-mode="bottom"]:not([hidden])) {
+html:not([data-rm-dock]):has(> body > #rm-l2-player > .rm-audio[data-mode="bottom"]:not([hidden])) {
   scroll-padding-bottom: var(--rm-audio-h, 0px);
 }
 
