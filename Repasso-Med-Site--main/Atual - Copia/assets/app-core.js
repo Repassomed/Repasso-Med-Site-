@@ -125,7 +125,7 @@ var RepassoMed = (function(){
       var body = raw.replace(/^\s*[a-eA-E]\s*[\)\.\-:]\s*/, '');
       li.dataset.option = letter;
       li.setAttribute('onclick', 'checkAnswer(this)');
-      li.innerHTML = '<span class="opt-letter">' + letter.toUpperCase() + ')</span> ' + body;
+      li.innerHTML = '<span class="opt-letter">' + letter.toUpperCase() + ')</span><span class="opt-text">' + body + '</span>';
     });
     ul.classList.add('interactive-options');
     item.classList.add('interactive');
