@@ -130,7 +130,8 @@ const jsonGo = (s) => { try { return JSON.parse(s); } catch (e) { return null; }
   sec('C · um bloco por vez: card · lateral · árvore · Anterior/Próximo/Índice · deep links · Back/Forward · teclado · foco');
   {
     const { ctx, page, errs } = await A();
-    await page.evaluate(() => document.querySelector('.rm-sis-card[data-rm-go="s2-b03"]').click()); await page.waitForTimeout(1500);
+    /* issue #460: o card de bloco passa a ser um botão que EXPANDE; abrir o bloco é o comando «Empezar por el inicio del bloque» (sem o módulo, o card ainda é um <a> que abre direto) */
+    await page.evaluate(() => { const c = document.querySelector('.rm-sis-card[data-rm-go="s2-b03"]'); c.click(); if (c.classList.contains('rm-ix-card')) setTimeout(() => document.querySelector('.rm-ix-start').click(), 500); }); await page.waitForTimeout(2000);
     let i = await info(page);
     ok(i.nav === 'block' && i.secs.join() === 's2-b03' && i.hash === '#s2-b03', 'clique no card abre SÓ o bloco 03 (#s2-b03)', { nav: i.nav, secs: i.secs, hash: i.hash });
     ok(i.pager.length === 3 && /^Bloque anterior/.test(i.pager[0]) && /^Volver al índice general$/.test(i.pager[1]) && /^Bloque siguiente/.test(i.pager[2]), 'Bloque anterior · Volver al índice general · Bloque siguiente', i.pager);

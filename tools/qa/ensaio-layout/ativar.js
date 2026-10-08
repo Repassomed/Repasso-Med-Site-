@@ -96,6 +96,11 @@
     if (MODO === 'tema') return;
     try { if (window.RMNav) { window.RMNav.attach(tab, SLUG); E.etapas.attach_nav = true; } else E.erros.push('nav:sem-RMNav'); }
     catch (e) { E.erros.push('nav:' + (e && e.message)); try { window.RMNav.detach(); } catch (e2) {} }
+    /* issue #460: índice central expansível (protótipo isolado), só com ?ix=1 e só depois de a navegação por bloco ter ativado */
+    if (P.get('ix') === '1' && E.etapas.attach_nav) {
+      try { await css('assets/rm-materia-indice.css?v=' + VER); await js('assets/rm-materia-indice.js?v=' + VER); E.etapas.carga_indice = !!window.RMIndice; window.RMIndice.attach(tab, SLUG); E.etapas.attach_indice = true; }
+      catch (e) { E.erros.push('indice:' + (e && e.message)); try { window.RMIndice && window.RMIndice.detach(); } catch (e2) {} }
+    }
   }
 
   window.openMateria = async function (slug, tab) {

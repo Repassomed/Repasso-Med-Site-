@@ -31,7 +31,7 @@
   if (window.RMPilot) return;                         // idempotente
 
   var SLUG = 'semiologia-ii';                         // piloto: uma matéria só
-  var VER  = '2026100801';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
+  var VER  = '2026100802';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
   var BASE = 'assets/';
   var COOLDOWN_MS = 30000;                            // depois de uma falha, não insistir
 
@@ -123,6 +123,9 @@
     st.sisLoading = css(BASE + 'rm-materia-sistema.css?v=' + VER)
       .then(function () { return js(BASE + 'rm-materia-sistema.js?v=' + VER); })
       .then(function () { return js(BASE + 'rm-materia-nav.js?v=' + VER); })                  // navegação por índice geral · bloco · modos (issue #453); mesmo portão do tema
+      .then(function () {                                                                       // índice central expansível (issue #460): opcional, nunca derruba o tema/a navegação
+        return css(BASE + 'rm-materia-indice.css?v=' + VER).then(function () { return js(BASE + 'rm-materia-indice.js?v=' + VER); }).catch(function () {});
+      })
       .then(function () { return !!window.RMSistema; })
       .catch(function () { return false; })
       .then(function (r) { st.sisLoading = null; return r; });
@@ -135,11 +138,13 @@
       catch (e) { try { window.RMSistema.detach(); } catch (e2) {} return; }       // o layout fica; só o tema sai
       if (!window.RMNav) return;
       try { window.RMNav.attach(tab, SLUG); }
-      catch (e3) { try { window.RMNav.detach(); } catch (e4) {} }                  // falha na navegação: o tema e o layout ficam como estavam (rolagem contínua)
+      catch (e3) { try { window.RMNav.detach(); } catch (e4) {} return; }          // falha na navegação: o tema e o layout ficam como estavam (rolagem contínua)
+      if (window.RMIndice) { try { window.RMIndice.attach(tab, SLUG); } catch (e5) { try { window.RMIndice.detach(); } catch (e6) {} } }   // falha no índice expansível: os cards voltam a abrir o bloco direto
     });
   }
 
   function desativar() {
+    try { if (window.RMIndice) window.RMIndice.detach(); } catch (e) {}         // o índice expansível sai antes da navegação por bloco
     try { if (window.RMNav) window.RMNav.detach(); } catch (e) {}              // primeiro a navegação por bloco, depois o tema (só atributos/UI própria), o áudio e por fim o shell
     try { if (window.RMSistema) window.RMSistema.detach(); } catch (e) {}
     try { if (window.RMAudioBoot) window.RMAudioBoot.stop(); } catch (e) {}      // primeiro o áudio (pausa, guarda a posição, destrói), depois o shell
