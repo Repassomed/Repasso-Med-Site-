@@ -2472,6 +2472,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:462.",
       "task_id": "pr:462",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "95343fe20116927522800d0dbcd1470094ca90f8",
+      "component": "guard",
+      "error_id": "ERR-771982FA65",
+      "error_type": "hard-fail",
+      "fingerprint": "771982fa65d8b84ae051",
+      "first_seen": "2026-10-08T02:56:58.565937+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "f171b6b6454444f8b423b8114c65fa37",
+      "issue_sync_updated_at": "2026-10-08T02:56:58.565937+00:00",
+      "last_evidence_hash": "4dc4e4d8a1e1def4bd3c",
+      "last_seen": "2026-10-08T02:56:58.565937+00:00",
+      "occurrence_count": 1,
+      "pr_number": 465,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "37720268525",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:465.",
+      "task_id": "reauditoria #67 (corre\u00e7\u00e3o de m\u00e9todo) \u2014 mat\u00e9ria Anatom\u00eda Patol\u00f3gica II Pr\u00e1ctica",
+      "worker_id": null
     }
   ]
 }
