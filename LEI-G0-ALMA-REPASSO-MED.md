@@ -262,3 +262,27 @@ Ela existe para impedir que um conteúdo correto se torne genérico.
 **Frase-guia da G0:**
 
 > **O Repasso Med deve parecer menos uma IA organizando Medicina e mais alguém que realmente entendeu a matéria ensinando outro estudante — com simplicidade, direção, identidade e profundidade.**
+
+---
+
+## 13. Ensinar do zero com profundidade — reforma editorial verificável
+
+Uma explicação cientificamente correta, mas que deixa o iniciante sem entender o raciocínio, é motivo legítimo de revisão. A manutenção não se limita a corrigir erros factuais ou acrescentar lacunas. Pode reformular, fundir repetições, reorganizar e substituir prosa por recursos didáticos quando isso melhorar a compreensão, respeitando os contratos técnicos abaixo.
+
+- Explicar o pré-requisito indispensável, definir o termo médico no contexto e ligar causa, mecanismo e consequência. Não exigir que o aluno já saiba justamente o que o trecho pretende ensinar.
+- Usar castelhano simples, natural e adulto. Ensinar desde a base não significa infantilizar nem retirar exceções, critérios, detalhes discriminadores ou profundidade exigida pelas fontes.
+- Escolher o formato pela função: prosa para conduzir mecanismos; tabela para comparar; sequência ou fluxo para processos. Não converter tudo em tabelas, nem impor o mesmo roteiro a todos os blocos.
+- Eliminar repetições sem apagar retomadas que realmente ajudem a aplicar ou diferenciar conceitos. Crescimento de texto e quantidade de cards não são indicadores de qualidade.
+- Manter estratégias de prova, perfis de docente, prioridades editoriais e critérios internos nos documentos de coordenação. A página ensina Medicina; rótulos honestos de origem das questões continuam sujeitos à lei de questões.
+
+### Evidência mínima de uma revisão
+
+No relatório/PR, apresentar pelo menos três trechos representativos antes/depois por matéria revisada (ou todos, se o escopo tiver menos de três): qual dificuldade de compreensão existia, como foi resolvida e quais conceitos, exceções e vínculos com fontes foram preservados. Incluir um trecho de mecanismo e uma comparação quando existirem no escopo. Não escolher somente os melhores exemplos: indicar também problemas que permaneceram.
+
+Cruzar a cobertura anterior e posterior por conceitos; uma contagem de palavras não demonstra preservação de profundidade. A revisão semântica exigida pelas demais leis continua obrigatória; se não foi executada, registrar a limitação sem substituí-la por guard verde.
+
+### Liberdade editorial com preservação das anotações
+
+Preservar IDs, âncoras, ligações internas, questões/banco, highlights, notas e traços existentes. Reorganizações podem alterar índices de parágrafos/listas usados pela caneta, mesmo mantendo IDs principais. Testar a recuperação de dados existentes nos trechos afetados; não concluir segurança apenas porque nenhum highlight foi encontrado.
+
+Se uma mudança depender de compatibilidade ou migração ainda não demonstrada, deixar esse trecho pendente com motivo e solução proposta, sem apagar dados do aluno nem congelar toda a matéria. A autorização de melhorar a didática não autoriza migração destrutiva ou reescrita integral por um molde genérico.
