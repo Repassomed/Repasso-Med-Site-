@@ -86,7 +86,7 @@ A tinta usa `secção>índice` sobre `p,li,h2,h3,h4,h5,table,figure,blockquote` 
 | Contagens declaradas («214 comentadas», 133/81 etc.) | ✅ inalteradas |
 | Letras do gabarito | ✅ 40/49/46/44 (maior corrida 4) |
 | Render dos cartões E2/E4 e do painel E1 (Chromium, CSS do site) | ✅ capturas conferidas; rótulos sem maiúscula grega ambígua |
-| Guard local (`tools.qa.guard`) | ver PR |
+| Guard local (`tools.qa.guard`, execução local = informativa) | ✅ sem falhas; 🟡 avisos: `gabarito-alterado` (2 grupos: #188, #192 — ver §8), `contagens` («214» declarado vs 428 itens contados com os espelhos do banco: o texto conta questões únicas; não mudou), `registro-tarefas` (tarefa neurologia alheia a este PR) |
 | Playwright do quiz (reveal/shuffle) e flashcards | ⚠️ **não executado** nesta rodada (verificação textual/estrutural apenas) |
 | Revisão semântica (cada edição E1–E10 verificada contra Goodman & Gilman/ACC-AHA/ESC na etapa 1) | ✅ |
 | Parecer G0 do especialista didático (Anthropic) | ⏳ **pendente** — Guard verde não aprova a G0 |
@@ -95,7 +95,8 @@ A tinta usa `secção>índice` sobre `p,li,h2,h3,h4,h5,table,figure,blockquote` 
 
 1. **E1** altera um dado que a cátedra ensina («DHP: NO»): mantive a regra da cátedra para o quadro agudo e qualifiquei o alcance. José deve confirmar que concorda com o recorte (nifedipino de ação curta vs. amlodipino).
 2. **Neutralização G0 (commit `30b8ef81`)** — se José preferir manter alguma frase de estratégia, o commit reverte limpo.
-3. **#114 × #133**; decisão de `data-rm-content-rev` para permitir a fusão de repetições.
+3. **Duas trocas de letra (#188 e #192, ambas em b13):** a resposta científica não mudou (transposição de duas alternativas, explicações remapeadas, bloco e banco iguais), mas o Guard as sinaliza como «gabarito alterado» e a Lei 6 exige aceite humano explícito.
+3b. **#114 × #133**; decisão de `data-rm-content-rev` para permitir a fusão de repetições.
 4. 34 % das corretas ainda são únicas mais longas (acaso ≈ 25–30 %): resíduo deliberado (originais preservados) — ver questões §3.
 5. Parecer didático da G0 sobre os trechos E2/E4 (tom e simplicidade).
 
