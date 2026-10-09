@@ -2757,7 +2757,7 @@
       ],
       "dependencias": [],
       "branch": "claude/farmacologia-ii-revisao-completa",
-      "pr": null,
+      "pr": 474,
       "commit": null,
       "issue": 67,
       "notas": "Reserva registrada antes de editar. Não toca biologia.html (#471 reservada ao Claude 1, na fila para depois) nem CSS/JS global. #464 permanece pausada. Matriz de fontes, perfil de provas e relatórios em coordination/source-packs/farmacologia-ii-revisao-2026-10-*.md (documentação, fora do HTML do aluno)."
