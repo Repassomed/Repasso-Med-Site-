@@ -1,6 +1,6 @@
 # Inventário real das matérias ativas · Checkpoint A · issue #457
 
-> Gerado por `tools/qa/ensaio-layout/inventario.cjs` em 2026-10-07. **Somente leitura**: nenhuma matéria, flag, UID ou arquivo de produção foi alterado; zero escritas no Supabase (simulado); zero rede externa.
+> Gerado por `tools/qa/ensaio-layout/inventario.cjs` em 2026-10-10. **Somente leitura**: nenhuma matéria, flag, UID ou arquivo de produção foi alterado; zero escritas no Supabase (simulado); zero rede externa.
 > Medido no navegador, com o `app-core.js` real, **sem nada do layout novo** (a matéria como o site a serve hoje). Fonte do catálogo: `const CATALOGO` (index.html) × `FILES` (get-materia.js) × `netlify/functions/materias-privadas/`.
 
 ## 1 · Reconciliação do catálogo (#366)
@@ -25,7 +25,7 @@ Os 3 arquivos órfãos **não são matérias ativas** e ficam fora do ensaio (n�
 | Questões **distintas** (por enunciado · por enunciado+opções) | 5365 · 5609 |
 | Flashcards `.flashcard` no DOM (somando cópias) | 17735 |
 | Flashcards **distintos** (pela frente) | 7043 |
-| Figuras com legenda | 1440 |
+| Figuras com legenda | 1441 |
 | Videoclases (`details.video-collapsible`) | 48 |
 | Elementos `<audio>` (ausculta) | 12 |
 | IDs duplicados | 0 |
@@ -57,7 +57,7 @@ Legenda: **Banco** = a matéria tem seção de Banco geral **reconhecida pelo no
 | Histología II (`histologia-ii`) | `histologia-ii.html` | 17 | 16 | 452 | **225** / 226 | 226 | SIM | por enunciado | 0/452 | 906 / **302** | 47 | 0 (0 iframe) | 0 |
 | Anatomía I (`anatomia-i`) | `anatomia-i.html` | 37 | 35 | 918 | **457** / 459 | 459 | SIM | por enunciado | 0/918 | 1646 / **820** | 121 | 0 (0 iframe) | 0 |
 | Anatopatologia II (`anatomia-patologica-ii`) | `anatomia-patologica-ii.html` | 12 | 10 | 312 | **156** | 156 | SIM | por enunciado | 0/312 | 480 / **153** | 43 | 0 (0 iframe) | 0 |
-| Anatopatologia II Práctica (`anatomia-patologica-ii-practica`) | `anatomia-patologica-ii-practica.html` | 11 | 10 | 224 | **109** / 112 | 112 | SIM | por enunciado | 0/224 | 465 / **146** | 104 | 0 (0 iframe) | 0 |
+| Anatopatologia II Práctica (`anatomia-patologica-ii-practica`) | `anatomia-patologica-ii-practica.html` | 11 | 10 | 224 | **109** / 112 | 112 | SIM | por enunciado | 0/224 | 465 / **146** | 105 | 0 (0 iframe) | 0 |
 | Medicina Legal (`medicina-legal`) | `medicina-legal.html` | 21 | 20 | 470 | **235** | 235 | SIM | por enunciado | 0/470 | 1122 / **365** | 56 | 0 (0 iframe) | 0 |
 | Fisiopatologia II (`fisiopatologia-ii`) | `fisiopatologia-ii.html` | 17 | 16 | 638 | **319** | 319 | SIM | por enunciado | 638/638 | 1857 / **619** | 33 | 0 (0 iframe) | 0 |
 | Toxicología (`toxicologia`) | `toxicologia.html` | 19 | 19 | 698 | **349** | 349 | SIM | por enunciado | 698/698 | 1416 / **472** | 45 | 0 (0 iframe) | 0 |
@@ -91,7 +91,7 @@ Critério: **SIM** = presente e medido no DOM; **NÃO** = ausente (contagem 0 no
 | Histología II | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=17; menu=16 (sem item: h2portada); q=452 DOM/225 distintas (agregadora bancoh2); fc=906 DOM/302 distintos (agregadora bancofch2); fig=47; vid=0; audio=0 |
 | Anatomía I | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=37; menu=35 (sem item: a1b00,a1notas); q=918 DOM/457 distintas (agregadora bancoa1); fc=1646 DOM/820 distintos (agregadora bancofca1); fig=121; vid=0; audio=0 |
 | Anatopatologia II | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=12; menu=10 (sem item: ap2intro,ap2biblio); q=312 DOM/156 distintas (agregadora bancoap2); fc=480 DOM/153 distintos (agregadora bancofcap2); fig=43; vid=0; audio=0 |
-| Anatopatologia II Práctica | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=11; menu=10 (sem item: ap2pportada); q=224 DOM/109 distintas (agregadora ap2pbanco); fc=465 DOM/146 distintos (agregadora ap2pmazo); fig=104; vid=0; audio=0 |
+| Anatopatologia II Práctica | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=11; menu=10 (sem item: ap2pportada); q=224 DOM/109 distintas (agregadora ap2pbanco); fc=465 DOM/146 distintos (agregadora ap2pmazo); fig=105; vid=0; audio=0 |
 | Medicina Legal | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=21; menu=20 (sem item: medlegb00); q=470 DOM/235 distintas (agregadora bancomedleg); fc=1122 DOM/365 distintos (agregadora bancofcmedleg); fig=56; vid=0; audio=0 |
 | Fisiopatologia II | SIM | SIM | SIM | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=17; menu=16 (sem item: fp2portada); q=638 DOM/319 distintas (agregadora bancofp2); fc=1857 DOM/619 distintos (agregadora revisaofp2); fig=33; vid=0; audio=0 |
 | Toxicología | SIM | SIM | SIM | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=19; menu=19; q=698 DOM/349 distintas (agregadora bancotox); fc=1416 DOM/472 distintos (agregadora toxcierre); fig=45; vid=0; audio=0 |
