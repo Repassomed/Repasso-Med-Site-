@@ -138,6 +138,84 @@ usada em #455/AP2, repetida para confirmar se o resultado mudou.
   único slide. **Pendência elevada de prioridade** (antes "não confiável
   sem releitura", agora "confirmado no slide, decisão pendente").
 
+## Rodada AP6 — concorrentes plausíveis, fidelidade ao exame real, divergência Crohn/granulomas
+
+Terceira rodada sobre os mesmos 8 distratores corrigidos em AP5. O auditor
+apontou que remover a frase autodenunciante não bastou em 3 casos: a
+alternativa sobrevivente ficava fácil de eliminar por lógica/senso comum,
+sem exigir conhecimento real da matéria.
+
+### Concorrentes redesenhados (corpo+Banco, 2× cada)
+
+| Questão | Alt. | Problema | Novo texto |
+|---|---|---|---|
+| Eritroplasia oral | d | "cura sola en pocas semanas, sin dejar cicatriz" contradiz a própria pergunta (pede razão de ser MAIS grave; curar-se só sozinha seria razão para ser MENOS grave — eliminável por lógica, sem saber a matéria) | "se localiza casi siempre en el suelo de la boca, la zona de peor pronóstico del carcinoma oral" — afirmação clínica real mas não é o critério que define a maior gravidade (esse é o % de displasia já presente) |
+| MALT/t(11;18) | c | "adenocarcinoma mal clasificado, no un linfoma verdadero" contradiz a premissa do próprio enunciado, que já afirma ser um linfoma MALT — eliminável só relendo o enunciado | "transformación a linfoma difuso de células B grandes, de peor pronóstico" — interpretação clínica plausível e errada (a t(11;18) não é marcador de transformação, é o contrário: doença de baixo grau resistente à erradicação) |
+| Adenoma hepático × HNF | a | "células en anillo de sello" é um achado exoticamente reconhecível como gástrico (adenocarcinoma difuso) — eliminável por não "parecer" fígado, sem saber o diferencial real | "atipia citológica marcada, con pérdida de la arquitectura trabecular" — exige saber que o adenoma hepatocelular é classicamente brando (atipia marcada orientaria a carcinoma hepatocelular) |
+| Adenoma hepático × HNF | b | "producción de mucina... con tinción de PAS" também soa estranho num hepatócito, eliminável sem conhecimento específico | "proliferación de conductillos biliares reactivos en los tabiques fibrosos" — achado hepático real, mas é da HNF, não do adenoma (atribuição invertida, exige saber qual lesão tem qual achado) |
+| Adenoma hepático × HNF | c | "granulomas no caseosos" na HNF também soa exótico/fora de lugar | "cicatriz central fibrosa con tabiques septales irradiados" — é a marca macroscópica clássica da HNF, aqui atribuída (de propósito, de forma errada) ao adenoma — mesmo truque de atribuição invertida que o estilo de prova desta cátedra já usa em outras questões (ver "Evidências de padrão docente" acima) |
+
+Em todos os 5 pontos a explicação (`<div class="answer">`) foi reescrita
+para explicar por que cada nova alternativa está errada, mantendo a
+identificação da doença correta fora do texto da opção.
+
+### Fidelidade a provas reais — o que foi reconstruído
+
+Busquei as 3 questões rotuladas "Basada en preguntas de examen" entre as
+tocadas nesta PR (eritroplasia, localización CEC oral, linfoma MALT 30%)
+nos dois arquivos-fonte de exame disponíveis: `Provas_P1_Resolvidas_AP2.pdf`
+(92 questões reconstruídas em #455) e
+`01_F61DBCA78F50_Perguntas e Respostas Provas Chamorro 2026.pdf`. Resultado:
+
+- **Nenhuma das 3 existe no formato de 4 alternativas na prova real.** O
+  formato real, nos dois arquivos, é "citar"/"completar" (resposta curta,
+  sem distratores): "¿Por qué la eritroplasia... qué porcentaje...? ≈90%",
+  "Localización más frecuente del carcinoma epidermoide oral: Superficie
+  ventral de la lengua", relacionado a "Los linfomas MALT... asociados a
+  Gastritis por H. pylori" / "linfócitos B" (não T).
+- Isso **confirma** que o fato central e a resposta certa de cada questão
+  vêm de prova real e legível (90% de displasia na eritroplasia; localização
+  ventral da língua/suelo de la boca; origem em linfócitos B e associação a
+  H. pylori no MALT) — mas **os 4 distratores de cada MCQ sempre foram uma
+  construção editorial**, necessária para converter um formato de resposta
+  curta em múltipla escolha para o site. Não existe alternativa real "
+  perdida" nesta rodada nem em nenhuma anterior — não havia alternativas
+  no original para preservar. Nenhuma questão nova foi reclassificada;
+  mantido o rótulo "Basada en preguntas de examen" (correto para o núcleo
+  da questão, não para o texto literal dos distratores, que nunca existiu).
+
+### Divergência Crohn/granulomas — delimitada com fonte, não alterada
+
+Busca na literatura (Google/PubMed/BMJ/WJG, via WebSearch) sobre a
+frequência de granulomas não caseosos na enfermedad de Crohn:
+
+- Revisão de estudos aponta faixa de **21–60%** dos pacientes, variando
+  com a intensidade de amostragem de biópsias (menos biópsias → taxa menor).
+- Coorte de 188 pacientes recém-diagnosticados: granulomas em **37%**
+  (69/188), 25% já na apresentação inicial — perto do "~35%" do slide.
+- Outro estudo (347 pacientes, biópsias múltiplas): granulomas em
+  **40–50%** dos casos — perto do "40-60%" do site.
+- Estudo de 2005 (56 pacientes novos): **44,6%** (25/56).
+- Peças cirúrgicas (10.456 pacientes): só **9%** — mostra que a taxa
+  também depende de biópsia vs. peça operatória, não só da edição do livro.
+
+**Conclusão: os dois números — "~35%" do slide oficial e "40–60%" do
+site — são ambos defensáveis pela literatura real**, refletindo variação
+natural entre estudos/edições e intensidade de amostragem, não um erro do
+site. Por isso **o número e o gabarito NÃO foram alterados** nesta rodada —
+trocar um por suposição, quando ambos têm sustentação científica real,
+violaria a instrução explícita de não trocar número/gabarito sem
+confirmação. Pendência rebaixada de "requer decisão humana sobre qual
+está certo" para "ambos cientificamente aceitáveis — decisão de José é só
+estilística (seguir o número do slide desta cátedra específica ou manter
+o Robbins-style atual), não uma correção de erro".
+
+Fontes consultadas (resultados de busca, não o texto integral do Robbins,
+que não é indexado publicamente): revisão em wjgnet.com
+(doi 10.3748/wjg.v11.i20.3118); estudo em gut.bmj.com/content/54/2/215;
+estudo em jcp.bmj.com/content/48/4/335; outros resultados agregados via
+PubMed/BMJ listados pela busca.
+
 ## Limitações reais
 
 - **Slide 7 (Px hepáticas) é ilegível** — nenhum conteúdo verificado em
