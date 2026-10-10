@@ -87,17 +87,69 @@ par Virchow/Krukenberg sem dizer por quê; **não realizado nesta rodada**
 para não arriscar prosa apressada — fica como pendência para revisão
 dedicada.
 
+## Rodada AP5 — releitura dos slides 4/5/7/8 (pós-checkpoint, imagens/OCR)
+
+Nova tentativa de leitura dos 4 slides ainda pendentes, pedida explicitamente
+pelo auditor para depois do checkpoint de correção de distratores. Tentativa
+de baixar os PDFs originais para extrair imagem por página falhou — os 4
+arquivos excedem o limite de 10 MB da ferramenta de download disponível
+nesta sessão (22,6 MB / 16,1 MB / 47,4 MB / 27,3 MB para os slides 4/5/7/8
+respectivamente), e não há nesta sessão um caminho alternativo com
+credencial para baixar o PDF bruto da API do Drive por fora dessa
+ferramenta. Releitura feita então pela mesma via de extração de texto já
+usada em #455/AP2, repetida para confirmar se o resultado mudou.
+
+- **Slide 7 (Px hepáticas) continua ilegível** — releitura confirma 0/40
+  páginas com texto recuperável (cada página retorna só o marcador "Page
+  N", sem conteúdo). Resultado idêntico ao de #455. **Sem caminho técnico
+  nesta sessão para extrair imagem/OCR de um PDF &gt;10 MB** — permanece
+  pendência total, não auditado, sem cobertura inventada.
+- **Slide 4 (Borrmann)** — releitura confirma o mesmo conteúdo já registrado
+  (classificação tipos I-IV); nada novo além do que já estava na tabela
+  acima.
+- **Slide 8 (Hashimoto)** — releitura trouxe mais detalhe do mesmo
+  mecanismo já anotado (transportador de yoduro, TPO, troglobulina,
+  linfócitos TH1 CD4+/CD8+ citotóxicos, macrófagos ativados, via Fas/FasL)
+  mas sem achado que mude a decisão editorial anterior de manter o resumo
+  do site mais simples ("autoinmune: anti-TPO/antitiroglobulina"). Nenhuma
+  pendência nova.
+- **Slide 5 (Crohn×CU) — agora bem mais legível**, revelou a tabela
+  comparativa completa Crohn vs. colitis ulcerosa (inflamación transmural
+  vs. limitada à mucosa/submucosa; úlceras profundas "como hechas con un
+  cuchillo" vs. superficiais de base ancha; lesões salteadas vs. difusas;
+  fibrose marcada vs. leve/ausente; estenose sim vs. infrequente; serosite
+  marcada vs. ausente; parede espessa vs. fina; fístulas/fissuras sim vs.
+  não; malabsorção de grasas/vitaminas sim vs. não; recidiva pós-cirúrgica
+  frequente vs. não; megacólon tóxico não vs. sim). A maior parte já está
+  coberta no site (fístula/estenose vs. megacólon tóxico, malabsorção
+  ileal adicionada na rodada AP4, etc.).
+  **Achado que reabre uma pendência já registrada:** a linha "Granulomas"
+  do slide agora está legível com confiança e diz **"Si (~35%)"** para a
+  enfermedad de Crohn — não mais um OCR picotado sem valor. O site
+  publica **"40–60%"** em 3 ocorrências (corpo+Banco, 2 questões
+  diferentes), número que já estava no resumo antes desta auditoria e é
+  usado como resposta certa de uma questão "Basada en preguntas de
+  examen". Isso é uma divergência numérica real entre o slide oficial da
+  cátedra e o que o site publica — mas **não foi alterada nesta rodada**:
+  trocar um número que sustenta o gabarito de uma questão de prova exige
+  confirmação científica adicional (ambos os números — ~35% e 40-60% —
+  aparecem em diferentes edições da literatura-base de patologia) e
+  decisão humana (Lei 6 do Guard), não correção automática a partir de um
+  único slide. **Pendência elevada de prioridade** (antes "não confiável
+  sem releitura", agora "confirmado no slide, decisão pendente").
+
 ## Limitações reais
 
-- **Slide 7 (Px hepáticas) é ilegível** — nenhum conteúdo verificado. Não
-  tratar como auditado.
+- **Slide 7 (Px hepáticas) é ilegível** — nenhum conteúdo verificado em
+  nenhuma das duas tentativas (#455 e AP5). Não tratar como auditado.
 - **Slides 4 e 8 vieram majoritariamente ilegíveis** (OCR picotado); só
   foram recuperados com confiança a classificação de Borrmann (slide 4) e
-  um diagrama parcial do mecanismo de Hashimoto (slide 8). O resto desses
-  dois slides não foi auditado.
-- **Slide 5** foi o mais legível dos 4, mas ainda com ruído disperso — não
-  há garantia de que faltem outras seções do mesmo arquivo além da tabela
-  Crohn×CU.
+  o mecanismo de Hashimoto (slide 8, mais detalhado na releitura AP5, sem
+  mudar a decisão editorial). O resto desses dois slides não foi auditado.
+- **Slide 5** ficou bem mais legível na releitura AP5 e revelou a tabela
+  comparativa Crohn×CU completa — ver seção acima. Ainda assim não há
+  garantia de que faltem outras seções do mesmo arquivo além dessa
+  tabela.
 - Os 6 PDFs de anotações são anotações de aluno, não a fala literal da
   cátedra — têm pelo menos 2 inconsistências científicas internas (gene
   "P63" vs "RAS"; "transformación maligna muy frecuente" da EUP), ambas
@@ -116,8 +168,13 @@ células ECL). Lacunas reais e verificáveis, em ordem de prioridade:
 
 1. Hierarquia Virchow+Krukenberg > outros 3 sinais metastásicos — evidência
    direta de ênfase da cátedra, não refletida no site. **Pendente.**
-2. Granulomas no Crohn: 40–60% no site vs. ~35% no slide oficial (OCR
-   degradado, não confiável sem releitura). **Pendente.**
+2. Granulomas no Crohn: 40–60% no site vs. ~35% no slide oficial — **releitura
+   AP5 confirmou o número do slide com OCR legível** (não mais degradado).
+   Divergência real entre fonte oficial da cátedra e o texto publicado,
+   mas o número publicado sustenta o gabarito de uma questão de prova;
+   troca exige confirmação contra literatura-base e decisão humana, não
+   foi alterada autonomamente. **Pendente — prioridade elevada nesta
+   rodada.**
 3. Risco de 2º tumor primário e metástases a distância do CEC oral — número
    não verificado na literatura-base. **Pendente.**
 4. Corpos de Russell / 40% diferenciação plasmocítica no MALT gástrico —
