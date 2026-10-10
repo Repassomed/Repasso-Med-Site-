@@ -2075,22 +2075,23 @@
       "area": "materia",
       "materia": "fisiopatologia-ii",
       "arquivos": [
-        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html"
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html",
+        "coordination/source-packs/fisiopatologia-ii-issue101-*.md"
       ],
       "objetivo": "Usar o source pack compartilhado da Issue #101 para alinhar o resumo ao padrão real de cobrança: Crohn/colitis, VHB, Dubin-Johnson/bilirrubina, pancreatitis, úlcera gástrica/estresse, distúrbios motores esofágicos e incontinência. Aplicar Lei G0 e Lei 8-A. Preservar conteúdo correto e distinguir cátedra de prova reconstruída.",
       "fonte": "Issue #101 · Drive Fisiopatología II · source pack v1",
-      "agente": null,
-      "estado": "READY",
+      "agente": "Claude 2",
+      "estado": "IN-PROGRESS",
       "prioridade_declarada": "P1",
       "capabilities_required": [
         "conteudo"
       ],
       "dependencias": [],
-      "branch": "runner/fisiopatologia-ii-issue101-r3-sourcepack",
+      "branch": "claude/fisiopatologia-ii-issue101",
       "pr": null,
       "commit": null,
       "issue": 101,
-      "notas": "Nova tentativa canônica após #142/#152. Não reutilizar r1/r2. O pack v1 inclui prova reconstruída + evidência dos slides atualizados e lista fotos ainda não extraídas. Não afirmar cobertura das fotos. Resultado NEEDS-AUDIT; dois auditores recebem o mesmo pack; sem merge/deploy.",
+      "notas": "Nova tentativa canônica após #142/#152. Não reutilizar r1/r2. O pack v1 inclui prova reconstruída + evidência dos slides atualizados e lista fotos ainda não extraídas. Não afirmar cobertura das fotos. Resultado NEEDS-AUDIT; dois auditores recebem o mesmo pack; sem merge/deploy. | 10/10/2026: Claude 2 assumiu em sessão supervisionada por José (branch claude/fisiopatologia-ii-issue101, PR separada da #474). Fotos 19/09 e 21/09 extraídas do Drive (OCR do Google Drive) — ver source pack v2. Sem merge.",
       "automation_enabled": true,
       "bridge_enabled": true,
       "risk_level": "MEDIO",
