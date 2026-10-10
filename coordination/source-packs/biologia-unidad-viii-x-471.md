@@ -120,8 +120,11 @@ unidade.
 | Diferenças varón (2 espermatocitos II iguales) vs. mujer (ovocito II + 1er cuerpo polar, desigual) | ✅ incorporado |
 | Meiosis II completa | ✅ incorporado |
 | 6 diferencias mitosis vs. meiosis (tabela comparativa já pronta no slide) | ✅ incorporado |
-| Fecundación: 10 fases (penetración corona radiada → reacción acrosómica → denudación → penetración membrana pelúcida → fusión → bloqueo de polispermia → reasunción meiosis II → pronúcleos → singamia → anfimixis) | ⏳ pendente — próximo checkpoint |
-| Aneuploidías: no disyunción meiótica/mitótica, monosomía/trisomía, mosaicismo | ⏳ pendente — próximo checkpoint |
+| Fecundación: 10 fases (penetración corona radiada → reacción acrosómica → denudación → penetración membrana pelúcida → fusión → bloqueo de polispermia → reasunción meiosis II → pronúcleos → singamia → anfimixis) | ✅ incorporado (checkpoint 3/3) |
+| Aneuploidías: no disyunción meiótica/mitótica, monosomía/trisomía, mosaicismo | ✅ incorporado (checkpoint 3/3) |
+
+**UNIDAD X está completa.** Todos os eixos do slide (ciclo celular,
+meiosis, fecundación, aneuploidías) foram incorporados ao Bloque 16.
 
 **Por que não incorporar tudo em uma só rodada:** UNIDAD X por si só
 cobre três grandes eixos (ciclo celular, meiosis completa em 8 subfases,
@@ -341,17 +344,70 @@ de Ciclo celular — 100% aditivo:
   `user_notes` para `subject_slug ilike '%biolog%'`, reconfirmado.
 - Commit `c70930c3`, push para `claude/biologia-unidad-viii-x-471`.
 
+## Checkpoint 3/3 — Fecundación + Aneuploidías (UNIDAD X completa)
+
+Fonte relida na íntegra via Google Drive (`Unidad X.pdf`, páginas 10-14,
+extração nativa com PyMuPDF — PDF exportado de .pptx, texto não
+escaneado) para garantir fidelidade textual, em vez de confiar na
+memória da sessão. Conteúdo adicionado ao mesmo Bloque 16, 100% aditivo:
+
+- **Fecundación**: 10 fases na ordem exata do slide — penetración de la
+  corona radiada (hialuronidasa + hiperactivación) → reacción acrosómica
+  → denudación → penetración de la membrana pelúcida (acrosina) → fusión
+  → bloqueo de la polispermia (reacción cortical) → reasunción de la
+  meiosis II (o ovocito II fecundado se converte direto em célula huevo,
+  não chega a formar um "óvulo livre") → formación de los pronúcleos →
+  singamia → anfimixis.
+- **Aneuploidías**: no disyunción (meiótica ou mitótica) como causa;
+  gameto aneuploide + gameto normal → cigoto monosómico (falta 1
+  cromosoma) ou trisómico (sobra 1); no disyunción mitótica pós-cigótica
+  → mosaicismo.
+- **8 preguntas complementarias** (MCQ + V/F) + **14 flashcards**,
+  cobrindo as 10 fases e os 2 tipos de aneuploidia — revisadas contra
+  autodenúncia/distratores exóticos (grep, mesmo padrão já usado nos
+  checkpoints anteriores): nenhum achado.
+- Espelhadas no mesmo card "Bloque 16" do Banco general (renomeado
+  "Ciclo celular, meiosis y fecundación") e no mesmo h3 "Bloque 16" das
+  Flashcards generales — as 3 cópias idênticas, confirmado via grep.
+- Contadores atualizados: banco geral 152→**160** preguntas (103 série
+  principal + 49→**57** prática adicional); flashcards 191→**205**;
+  cabeçalho do arquivo passa a citar "fecundación y aneuploidías".
+
+### Verificação
+
+- **HTML**: `b`/`strong`/div/ul/li/p/section/table/tr/td/th/details/
+  summary/h2/h3/h4/ol todos pareados. Um desbalanceamento de `</b>`↔
+  `<strong>` foi introduzido por um erro de digitação nesta mesma rodada
+  (`<strong>membrana pelúcida</b>`) — detectado pelo Guard (🔴 vermelho
+  na primeira execução) e **corrigido antes do push final**; a execução
+  seguinte do Guard confirmou zero desbalanceamentos novos.
+- **Espelho**: `quiz-item` = 320 (= 160×2); `flashcard` = 410 (= 205×2).
+- **Guard** (`--base origin/main --head HEAD`): 🟡 passou com avisos
+  informativos esperados (escopo/registro-tarefas/guard-integridade);
+  banco-geral 160=160, gabaritos válidos, nenhum arquivo crítico
+  alterado, 1 desbalanceamento de HTML pré-existente (herdado, não
+  introduzido nesta rodada — confirmado contra `origin/main`).
+- **Annotation-safety**: 0/0/0 em `user_highlights`/`user_ink_strokes`/
+  `user_notes` para `subject_slug ilike '%biolog%'`, reconfirmado.
+- Commit `c2cd9bde` (após correção do typo HTML), push para
+  `claude/biologia-unidad-viii-x-471`.
+
+**Com este checkpoint, a UNIDAD X está completa** (ciclo celular,
+meiosis, fecundación, aneuploidías) e a Issue #471 fica cumprida na
+íntegra para Biología, respeitando sempre a instrução de não renumerar
+blocos existentes.
+
 ## Pendências explícitas
 
-1. **Fecundación + Aneuploidías** (UNIDAD X, últimos 2 eixos) — fonte já
-   lida na íntegra (`Unidad X.pdf`), incorporação fica para o próximo
-   checkpoint desta mesma issue.
-2. **Renumeração VIII→IX→X**: a Issue #471 pede explicitamente não
+1. **Renumeração VIII→IX→X**: a Issue #471 pede explicitamente não
    renumerar o Bloque 14 (UNIDAD IX) sem combinar primeiro na #67, porque
    a ordem didática correta seria VIII→IX→X mas a ordem de descoberta/
    adição foi IX→VIII→(X). Mantidos os blocos na ordem em que foram
    adicionados (14=IX, 15=VIII, 16=X), sem renumerar nada existente.
    Decisão de reordenar — se desejada — fica para José/Issue #67.
-3. ~~**Merge da #469**~~ — **resolvido**: a #469 mesclou em
+2. ~~**Merge da #469**~~ — **resolvido**: a #469 mesclou em
    `2026-10-10T21:49:58Z`; a base da #478 já foi retargetada para `main`
    e a branch resincronizada sem conflitos (ver seção acima).
+3. **Nenhuma pendência de conteúdo restante para esta issue.** PR #478
+   permanece em draft, aguardando auditoria humana/ChatGPT antes de
+   qualquer decisão de merge.
