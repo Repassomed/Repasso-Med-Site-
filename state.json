@@ -2522,6 +2522,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:474.",
       "task_id": "pr:474",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "5253831b3c267938c4f05d4627ecb356fc0d3d27",
+      "component": "guard",
+      "error_id": "ERR-48FCECF7A3",
+      "error_type": "hard-fail",
+      "fingerprint": "48fcecf7a35ae6808fd7",
+      "first_seen": "2026-10-10T16:32:38.125364+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "01d802fdf2254a12aaaa3e9371f39690",
+      "issue_sync_updated_at": "2026-10-10T16:32:38.125364+00:00",
+      "last_evidence_hash": "176143e4c8055c87cdaf",
+      "last_seen": "2026-10-10T16:32:38.125364+00:00",
+      "occurrence_count": 1,
+      "pr_number": 476,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "38068013308",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:476.",
+      "task_id": "coordination/AUDITORIA-2026-10-09-EDITORIAL-E-PILOTO.md \u2192 aloca\u00e7\u00e3o \"Claude 1 \u2192 Anatomopatologia II\" (sem id formal em `coordination/tasks.json`)",
+      "worker_id": null
     }
   ]
 }
