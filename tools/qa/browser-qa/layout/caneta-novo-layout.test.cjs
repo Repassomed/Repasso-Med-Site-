@@ -95,11 +95,13 @@ const pontoNoAlvo = (page, x, y) => page.evaluate(([x, y]) => { const e = docume
     ok(!e1.open && e1.tools === null && (e1.dock === '0px' || e1.dock === ''), `${w}×${h}: toolbox FECHADA ⇒ data-rm-tools ausente e --rm-dock-h = 0`, e1);
     await page.click(toggle, { force: true }); await page.waitForTimeout(600);
     e1 = await page.evaluate(() => { const b = document.querySelector('.rm2-box'); return { tools: document.documentElement.getAttribute('data-rm-tools'), dock: parseFloat(document.documentElement.style.getPropertyValue('--rm-dock-h')), h: Math.round(b.getBoundingClientRect().height), open: b.classList.contains('open'), exp: document.querySelector('.rm-sis-tools') && document.querySelector('.rm-sis-tools').getAttribute('aria-expanded') }; });
-    ok(e1.open && e1.tools === 'open' && Math.abs(e1.dock - e1.h) <= 1 && (!mob || e1.exp === 'true'), `${w}×${h}: toolbox ABERTA ⇒ data-rm-tools=open, --rm-dock-h = altura da caixa (${e1.dock} ≈ ${e1.h})${mob ? ', botão da faixa aria-expanded=true' : ''}`, e1);
+    /* #456 P0: --rm-dock-h só existe < 768 px (o CSS só o usa lá) — acima disso NÃO se escreve na raiz (cada mudança reaplicava o estilo da página inteira a cada ida e volta de modo) */
+    const dockEsperado = (dock, h) => mob ? Math.abs(dock - h) <= 1 : (!dock || dock === 0);
+    ok(e1.open && e1.tools === 'open' && dockEsperado(e1.dock, e1.h) && (!mob || e1.exp === 'true'), `${w}×${h}: toolbox ABERTA ⇒ data-rm-tools=open, --rm-dock-h ${mob ? '= altura da caixa' : '= 0 (sem dock fora do celular)'} (${e1.dock} · caixa ${e1.h})${mob ? ', botão da faixa aria-expanded=true' : ''}`, e1);
     /* a altura do dock acompanha a caixa quando ela muda de tamanho com o painel aberto (ResizeObserver) — sem depender de mudança de estado */
     const h0 = e1.h; await page.evaluate(() => { const b = document.querySelector('.rm2-box'); b.style.minHeight = (b.getBoundingClientRect().height + 40) + 'px'; }); await page.waitForTimeout(500);
     const e2 = await page.evaluate(() => ({ dock: parseFloat(document.documentElement.style.getPropertyValue('--rm-dock-h')), h: Math.round(document.querySelector('.rm2-box').getBoundingClientRect().height) }));
-    ok(e2.h > h0 && Math.abs(e2.dock - e2.h) <= 1, `${w}×${h}: a caixa cresceu com o painel aberto ⇒ --rm-dock-h acompanha (${h0} → ${e2.h}; dock ${e2.dock})`, e2);
+    ok(e2.h > h0 && dockEsperado(e2.dock, e2.h), `${w}×${h}: a caixa cresceu com o painel aberto ⇒ ${mob ? '--rm-dock-h acompanha' : '--rm-dock-h segue 0 (sem dock)'} (${h0} → ${e2.h}; dock ${e2.dock})`, e2);
     ok(errs.length === 0, `${w}×${h}: 0 erros JS`, errs);
     await ctx.close();
   }

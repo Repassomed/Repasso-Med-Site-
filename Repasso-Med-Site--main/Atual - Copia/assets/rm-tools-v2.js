@@ -40,11 +40,13 @@
 
   /* Falha FECHADA: qualquer erro devolve false, e o aluno fica com a
      experiência antiga. Nunca o contrário. */
+  var buildAbertaAntes = false;                          // para avisar o build uma vez por abertura da caixa (refletir)
+  var acessoVia = '';                                   // como o acesso à V2 foi concedido a ESTA conta (só o rótulo, nunca o UID): diagnóstico do piloto (#456)
   async function hasStudyToolsV2Access(uid) {
     if (ROLLOUT === 'off') return false;
     if (!uid) return false;
-    if (ROLLOUT === 'all') return true;
-    if (BETA_UIDS.indexOf(uid) !== -1) return true;
+    if (ROLLOUT === 'all') { acessoVia = 'todos'; return true; }
+    if (BETA_UIDS.indexOf(uid) !== -1) { acessoVia = 'lista beta no código'; return true; }
     /* A tabela é aditiva: permite juntar testers sem novo deploy.
        Não pode ser escrita pelo cliente (não há policy de INSERT). */
     try {
@@ -53,7 +55,8 @@
       var r = await s.from('study_tools_beta')
         .select('enabled').eq('user_id', uid).maybeSingle();
       if (r.error) return false;
-      return !!(r.data && r.data.enabled);
+      if (r.data && r.data.enabled) { acessoVia = 'tabela study_tools_beta'; return true; }
+      return false;
     } catch (e) { return false; }
   }
 
@@ -73,8 +76,14 @@
   var JOSE_UID = 'd4d215d3-36dd-4efb-8869-bdea5376c648';
   var PILOT_SLUGS = ['semiologia-ii'];
 
+  /* Segundo testador (#456): o piloto físico NÃO depende só de um UID fixo no código. Vale também para quem o SERVIDOR liberou (`get-pilot-flags` → `pen:true`, lista
+     RM_PILOT_PEN_UIDS do Netlify, lida por rm-pilot.js; nenhum UID no repositório). Só refinamentos do piloto físico, só em Semiología II — não dá acesso à V2 (isso segue sendo
+     BETA_UIDS / study_tools_beta) e não liga a caneta para ninguém além de quem já a tem. Falha fechada: sem RMPilot, sem resposta ou negado ⇒ false. */
+  function penLiberadaPeloServidor() {
+    try { return !!(window.RMPilot && typeof window.RMPilot.penLiberada === 'function' && window.RMPilot.penLiberada()); } catch (e) { return false; }
+  }
   function pilotoPermitido() {
-    return st.uid === JOSE_UID && PILOT_SLUGS.indexOf(slugDoTab(abaAtiva())) !== -1;
+    return (st.uid === JOSE_UID || penLiberadaPeloServidor()) && PILOT_SLUGS.indexOf(slugDoTab(abaAtiva())) !== -1;
   }
 
   /* Ponto de extensão único para a decisão de produto já registada nas
@@ -288,6 +297,8 @@
 
   function diagTouchAction() {
     try {
+      /* piloto: a proteção de toque é a guarda (elemento próprio); ler getComputedStyle(contêiner) aqui forçava o estilo da árvore inteira no meio do pointerdown (#456) */
+      if (document.body.classList.contains('rm2-pilot-guard')) return penState.active ? 'guarda:ativa' : 'guarda:inativa';
       var el = document.getElementById('materias-container');
       if (!el) return null;
       var cs = getComputedStyle(el);
@@ -359,6 +370,127 @@
   }
 
   /* ================================================================== */
+  /* 2b-bis · RENDIMIENTO — opt-in (#456 P0), SÓ com o painel aberto      */
+  /* ================================================================== */
+
+  /* O defeito da caneta no tablet real escapou ao emulador: os números que importam (quanto demora o pointerdown, quando aparece o primeiro quadro, quantas vezes o
+     navegador deixou a thread principal parada durante o traço, quantos pointercancel/lostpointercapture) só o aparelho de verdade sabe. Isto mede isso no próprio
+     aparelho — SÓ enquanto o painel de diagnóstico estiver ABERTO (o aluno o abre de propósito, pelo botão do painel de ferramentas; fecha = para e apaga tudo).
+     Guarda APENAS NÚMEROS (milissegundos e contagens): nenhum texto da matéria, nenhuma coordenada, nenhuma nota, nenhum UID/e-mail, nada em localStorage, nada para o servidor. */
+  var BUILD_456 = '2026-10-09·456c';
+  var perf = null;                          // null = desligado (custo zero nos handlers: um `if`)
+  var perfOuvinteModos = false;
+  var semGuardaTeste = false;               // A/B do reteste físico: ligado = o piloto usa a regra LEGADA (touch-action no contêiner) em vez da guarda; só memória, some ao recarregar
+
+  function perfLigar() {
+    if (perf) return;
+    perf = { desde: Date.now(), tracos: [], atual: null, trans: [], lt: 0, ltMax: 0, ltSoma: 0, po: null, raf: 0 };
+    try {
+      if (window.PerformanceObserver) {
+        perf.po = new PerformanceObserver(function (l) {
+          if (!perf) return;
+          l.getEntries().forEach(function (x) { perf.lt++; perf.ltSoma += x.duration; if (x.duration > perf.ltMax) perf.ltMax = x.duration; });
+          diagVPedirRender();
+        });
+        perf.po.observe({ entryTypes: ['longtask'] });
+      }
+    } catch (e) { perf.po = null; }
+    /* troca de bloco/modo: do aviso da troca (RMModes.onChange, mesma tarefa em que o DOM muda) até o 2.º quadro pintado — é o «congelamento» que o aluno sente */
+    try {
+      if (!perfOuvinteModos && window.RMModes && typeof window.RMModes.onChange === 'function') {
+        perfOuvinteModos = true;
+        window.RMModes.onChange(function (view, prev, info) {
+          if (!perf) return;
+          var t0 = performance.now(), rotulo = String(view) + (info && info.block ? '·bloco' : ''), p = perf;
+          requestAnimationFrame(function () { requestAnimationFrame(function () {
+            if (perf !== p) return;
+            p.trans.push({ quando: Date.now(), de: String(prev), para: rotulo, ms: Math.round(performance.now() - t0), toolbox: !!(box && box.classList.contains('open')), tool: st.tool });
+            if (p.trans.length > 12) p.trans.shift();
+            diagVPedirRender();
+          }); });
+        });
+      }
+    } catch (e) {}
+  }
+
+  function perfDesligar() {
+    if (!perf) return;
+    try { if (perf.po) perf.po.disconnect(); } catch (e) {}
+    if (perf.raf) { try { cancelAnimationFrame(perf.raf); } catch (e) {} }
+    perf = null;
+  }
+
+  /* quadro a quadro DURANTE o traço: maior intervalo entre quadros e quantos passaram de 33/50 ms (o «arrasto» da tinta) */
+  function perfQuadro(t) {
+    var a = perf && perf.atual; if (!a) return;
+    if (a.ultQuadro) { var d = t - a.ultQuadro; a.quadros++; if (d > a.quadroMax) a.quadroMax = d; if (d > 33.4) a.q33++; if (d > 50) a.q50++; }
+    a.ultQuadro = t;
+    perf.raf = requestAnimationFrame(perfQuadro);
+  }
+
+  function perfDown(e, t0, lag) {
+    if (!perf) return;
+    var agora = performance.now();
+    var a = perf.atual = {
+      tipo: e.pointerType, downMs: agora - t0, lagDown: lag, moves: 0, lagMax: 0, lag50: 0, coalMax: 0, quadros: 0, quadroMax: 0, q33: 0, q50: 0, ultQuadro: 0, primeiraTinta: null,
+      upMs: null, fim: 'em curso', pontos: 0, scrollDelta: 0, scrollY0: Math.round(window.pageYOffset)
+    };
+    var p = perf;
+    requestAnimationFrame(function () { if (perf === p && p.atual === a && a.primeiraTinta === null) a.primeiraTinta = performance.now() - e.timeStamp; });   // 1.º quadro depois do toque
+    if (perf.raf) { try { cancelAnimationFrame(perf.raf); } catch (x) {} }
+    perf.raf = requestAnimationFrame(perfQuadro);
+  }
+
+  function perfMove(e) {
+    var a = perf && perf.atual; if (!a || !traco || e.pointerId !== traco.pid) return;
+    var lag = performance.now() - e.timeStamp;
+    a.moves++; if (lag > a.lagMax) a.lagMax = lag; if (lag > 50) a.lag50++;
+    try { if (e.getCoalescedEvents) { var n = e.getCoalescedEvents().length; if (n > a.coalMax) a.coalMax = n; } } catch (x) {}
+  }
+
+  function perfFimTraco(fim, upMs, pontos) {
+    var a = perf && perf.atual; if (!a) return;
+    a.fim = fim; a.upMs = upMs; a.pontos = pontos || 0;
+    try { a.scrollDelta = Math.abs(Math.round(window.pageYOffset) - a.scrollY0); } catch (x) {}      // uma leitura só, no fim (ler a rolagem a cada move forçaria layout e distorceria a medida)
+    perf.tracos.push(a); if (perf.tracos.length > 8) perf.tracos.shift();
+    perf.atual = null;
+    if (perf.raf) { try { cancelAnimationFrame(perf.raf); } catch (x) {} perf.raf = 0; }
+    diagVPedirRender();
+  }
+
+  function perfNum(v, c) { return v == null || v !== v ? '–' : String(Math.round(v * (c ? 10 : 1)) / (c ? 10 : 1)); }
+
+  function perfLinhas() {
+    var L = [];
+    L.push('build=' + BUILD_456 + ' · guarda=' + (document.body.classList.contains('rm2-pilot-guard') ? 'sim' : 'não') + ' · toolbox=' + (box && box.classList.contains('open') ? 'aberta' : 'fechada') + ' · ferramenta=' + st.tool);
+    var fl = null; try { fl = window.RMPilot && window.RMPilot._estado && window.RMPilot._estado().flags; } catch (e) {}
+    L.push('acesso à V2: ' + (acessoVia || '?') + ' · piloto físico: ' + (pilotoPermitido() ? (st.uid === JOSE_UID ? 'sim (conta do piloto no código)' : 'sim (servidor: pen)') : 'não') + ' · flags do servidor: layout=' + (fl ? String(!!fl.layout) : '?') + ' visual=' + (fl ? String(!!fl.visual) : '?') + ' pen=' + (fl ? String(!!fl.pen) : '?') + ' · teste sem guarda: ' + (semGuardaTeste ? 'LIGADO (regra legada)' : 'desligado'));
+    if (!perf) return L;
+    L.push('tarefas longas (≥50 ms): ' + perf.lt + ' · máx ' + perfNum(perf.ltMax) + ' ms · soma ' + perfNum(perf.ltSoma) + ' ms · desde ' + Math.round((Date.now() - perf.desde) / 1000) + ' s');
+    var t = perf.tracos;
+    if (!t.length) L.push('traços: nenhum ainda — escreva com a caneta (algumas letras e palavras)');
+    t.forEach(function (a, i) {
+      L.push('traço ' + (i + 1) + ' [' + a.tipo + '] pointerdown ' + perfNum(a.downMs, 1) + ' ms (fila ' + perfNum(a.lagDown) + ') · 1.º quadro ' + perfNum(a.primeiraTinta) + ' ms · moves ' + a.moves +
+        ' (agrup. máx ' + a.coalMax + ') · fila máx ' + perfNum(a.lagMax) + ' ms (>50: ' + a.lag50 + ') · quadros máx ' + perfNum(a.quadroMax) + ' ms (>33: ' + a.q33 + ', >50: ' + a.q50 + ') · pointerup ' + perfNum(a.upMs, 1) +
+        ' ms · pontos ' + a.pontos + ' · rolagem ' + a.scrollDelta + ' px · fim=' + a.fim);
+    });
+    L.push('pointercancel: ' + (perf.pc || 0) + ' · captura perdida no meio do traço: ' + (perf.lpc || 0));
+    if (!perf.trans.length) L.push('trocas de bloco/modo: nenhuma ainda — troque de bloco e de modo com a caixa aberta');
+    perf.trans.forEach(function (x, i) { L.push('troca ' + (i + 1) + ': ' + x.de + ' → ' + x.para + ' · até o 2.º quadro ' + x.ms + ' ms · toolbox ' + (x.toolbox ? 'aberta' : 'fechada') + ' · ferramenta ' + x.tool); });
+    return L;
+  }
+
+  function perfCopiar() {
+    var txt = 'REPASSO MED · diagnóstico de rendimiento (#456) — solo números\n' + perfLinhas().join('\n');
+    try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(txt).then(function () { toast('Resumen copiado'); }, function () { perfCopiarFallback(txt); }); return; } } catch (e) {}
+    perfCopiarFallback(txt);
+  }
+  function perfCopiarFallback(txt) {
+    try { var ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('Resumen copiado'); }
+    catch (e) { toast('No se pudo copiar', true); }
+  }
+
+  /* ================================================================== */
   /* 2c · PAINEL DE DIAGNÓSTICO VISUAL — SÓ PILOTO, SÓ EM MEMÓRIA        */
   /* ================================================================== */
 
@@ -426,6 +558,9 @@
         '<span>scrollY=<b>' + Math.round(window.pageYOffset) + '</b></span>' +
         '<span>eventos=<b>' + diag.length + '</b></span>';
     }
+    var bg = diagVCaixa.querySelector('[data-d="guarda"]'); if (bg) bg.textContent = 'Sin guarda: ' + (semGuardaTeste ? 'sí' : 'no');
+    var pf = diagVCaixa.querySelector('.rm2-diag-p');
+    if (pf) pf.innerHTML = perfLinhas().map(function (l) { return '<div>' + dEsc(l) + '</div>'; }).join('');
     if (corpo) {
       if (!diag.length) {
         corpo.innerHTML = '<div class="rm2-diag-v">Sin eventos todavía. Escribí en la materia.</div>';
@@ -438,12 +573,13 @@
   }
 
   function diagVPedirRender() {
-    if (diagVRaf || !diagAberto()) return;
+    if (diagVRaf || !diagAberto() || traco) return;       // com traço em curso não se redesenha o painel (distorceria a medida do próprio traço); perfFimTraco() pede o render no fim
     diagVRaf = requestAnimationFrame(function () { diagVRaf = 0; diagVRender(); });
   }
 
   function limparDiag() {
     diag.length = 0;
+    if (perf) { perf.tracos = []; perf.atual = null; perf.trans = []; perf.lt = 0; perf.ltMax = 0; perf.ltSoma = 0; perf.pc = 0; perf.lpc = 0; }
     diagVRender();
   }
 
@@ -457,16 +593,23 @@
     diagVCaixa.innerHTML =
       '<div class="rm2-diag-h">' +
         '<b>Diagnóstico del lápiz</b>' +
+        '<button type="button" data-d="guarda">Sin guarda: no</button>' +
+        '<button type="button" data-d="copy">Copiar resumen</button>' +
         '<button type="button" data-d="clear">Limpiar</button>' +
         '<button type="button" data-d="close" aria-label="Cerrar">×</button>' +
       '</div>' +
       '<div class="rm2-diag-s"></div>' +
+      '<div class="rm2-diag-p"></div>' +
       '<div class="rm2-diag-b"></div>';
     diagVCaixa.addEventListener('click', function (e) {
       var b = e.target.closest('button[data-d]'); if (!b) return;
-      if (b.getAttribute('data-d') === 'clear') limparDiag(); else fecharDiag();
+      var dd = b.getAttribute('data-d');
+      if (dd === 'clear') limparDiag(); else if (dd === 'copy') perfCopiar();
+      else if (dd === 'guarda') { semGuardaTeste = !semGuardaTeste; refletir(); }
+      else fecharDiag();
     });
     document.body.appendChild(diagVCaixa);
+    perfLigar();                                // opt-in: só mede enquanto o painel está aberto
     diagVRender();
     refletir();
   }
@@ -479,6 +622,7 @@
     if (diagVCaixa && diagVCaixa.parentNode) diagVCaixa.parentNode.removeChild(diagVCaixa);
     diagVCaixa = null;
     if (diagVRaf) { cancelAnimationFrame(diagVRaf); diagVRaf = 0; }
+    perfDesligar();                             // fechar o painel para e apaga as medidas
   }
 
   function fecharDiag() {
@@ -596,9 +740,19 @@ body.rm2-t-pen #materias-container{
    diferente (mesmo toque, não um toque seguinte). Mantida por ainda
    ajudar o caso da palma seguinte; NÃO é o mecanismo que protege o traço
    da própria stylus — isso é ligarAdaptadorTouchStylus(). */
-body.rm2-t-pen.rm2-pen-down #materias-container{
+body.rm2-t-pen.rm2-pen-down:not(.rm2-pilot-guard) #materias-container{
   touch-action:none;
 }
+/* PILOTO (#456 P0): a regra acima custa uma RECALCULAÇÃO DE ESTILO DA ÁRVORE INTEIRA a cada contacto da caneta — touch-action efectivo é herdado, então mudá-lo em
+   #materias-container reaplica o estilo a todos os descendentes (medido: 12–23 ms a 1× de CPU em CADA pointerdown e em CADA pointerup, ≈ 1 500 a 10 500 elementos; a 6–10× de
+   um tablet é 100–200 ms por letra, duas vezes — o «atraso» e o traço que sai tarde). Dentro do piloto físico a mesma proteção (toques SEGUINTES e separados — a palma — não
+   fazem pan enquanto a stylus está em baixo) é dada por UM elemento sem filhos: a «guarda» só existe (display) e só intercepta durante o contacto — em repouso é display:none, sem camada nem sobreposição —, com touch-action:none, abaixo de toda a UI
+   (faixa 340, lateral 360, toolbox/player/gaveta ≥ 99989) e acima do conteúdo e da tinta (60). Fora do piloto nada muda: segue a regra legada. */
+#rm2-penguard{
+  display:none; position:fixed; left:0; top:0; right:0; bottom:0; z-index:300;
+  pointer-events:none; touch-action:none; background:transparent;
+}
+body.rm2-pilot-guard.rm2-pen-down #rm2-penguard{ display:block; pointer-events:auto; }
 body.rm2-t-eraser #materias-container,
 body.rm2-t-highlight #materias-container{
   touch-action:none;
@@ -852,6 +1006,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   color:#9fb8d2;
 }
 .rm2-diag-s b{ color:#ffd77a; font-weight:700; }
+.rm2-diag-p{ padding:6px 10px; border-bottom:1px solid #22405f; flex:0 0 auto; max-height:22vh; overflow:auto; color:#cfe3f7; font-size:11px; }
+.rm2-diag-p div{ padding:1px 0; word-break:break-word; }
 .rm2-diag-b{ overflow:auto; padding:4px 0 8px; flex:1 1 auto; -webkit-overflow-scrolling:touch; }
 .rm2-diag-r{ padding:5px 10px; border-bottom:1px solid rgba(34,64,95,.55); }
 .rm2-diag-r b{ display:block; color:#8fd3ff; font-weight:700; }
@@ -1606,9 +1762,12 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     for (var id in stylusTouches) limparTouchAdaptador(id, motivo || 'reconciliar');
   }
 
+  var adaptadorLigado = false;
   function ligarAdaptadorTouchStylus() {
+    if (adaptadorLigado) return;
     if (typeof window.TouchEvent === 'undefined') return;   // sem Touch Events: sem adaptador, sem afirmar sucesso
-    if (st.uid !== JOSE_UID) return;                         // blocker de auditoria: só a conta física do José chega a registar estes listeners — nunca outro BETA_UID nem study_tools_beta
+    if (st.uid !== JOSE_UID && !penLiberadaPeloServidor()) return;   // blocker de auditoria: só a conta física do José — ou quem o servidor liberou com `pen:true` (#456) — chega a registar estes listeners; nunca outro BETA_UID nem study_tools_beta
+    adaptadorLigado = true;
     document.addEventListener('touchstart', onTouchStartAdaptador, { passive: false });
     document.addEventListener('touchmove', onTouchMoveAdaptador, { passive: false });
     document.addEventListener('touchend', onTouchFimAdaptador, { passive: true });
@@ -1639,10 +1798,16 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   }
 
   function onDown(e) {
+    if (!perf) { onDownImpl(e); return; }                          // diagnóstico desligado: custo zero
+    var t0 = performance.now(), lag = t0 - e.timeStamp;
+    try { onDownImpl(e); } finally { if (traco && traco.pid === e.pointerId) perfDown(e, t0, lag); }
+  }
+
+  function onDownImpl(e) {
     if (st.tool !== 'pen' && st.tool !== 'eraser') return;
     diagLog('pointerdown', e);
     if (lbAberto()) { diagLog('reject:lightbox', e); return; }     // zoom aberto: caneta suspensa
-    if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes,.rm-tools,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug')) {
+    if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes,.rm2-diag,.rm-tools,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug')) {   // .rm2-diag: com a caneta armada, tocar nos botões do diagnóstico com a PONTA não pode começar um traço por baixo do painel (#456)
       diagLog('reject:ui', e); return;
     }
     if (gestoMorto()) abortarTraco();                   // traço órfão não bloqueia o seguinte
@@ -1873,6 +2038,12 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   }
 
   function onUp(e) {
+    if (!perf || !perf.atual) { onUpImpl(e); return; }
+    var t0 = performance.now(), a = perf.atual, ok = !!(traco && e && e.pointerId === traco.pid), np = traco ? traco.pts.length : 0;
+    try { onUpImpl(e); } finally { if (ok) perfFimTraco('up', performance.now() - t0, np); }
+  }
+
+  function onUpImpl(e) {
     diagLog('pointerup', e);
     /* Contacto limpo AQUI, por pointerId, independente de existir traço —
        se a âncora tivesse falhado no onDown, `traco` seria null mas o
@@ -1927,6 +2098,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
      feito. Continua defensivo, de propósito: o objectivo foi eliminar o
      cancelamento INDEVIDO, não disfarçar o verdadeiro. */
   function onCancel(e) {
+    if (perf) { perf.pc = (perf.pc || 0) + 1; if (perf.atual && traco && e && e.pointerId === traco.pid) perfFimTraco('POINTERCANCEL', null, traco.pts.length); }
     diagLog('pointercancel', e);
     if (e && e.pointerType === 'pen' && pilotoPermitido() && penState.active && e.pointerId === penState.pid) penEmContacto(false);
     if (apagando) { terminarApagar(); return; }
@@ -2876,6 +3048,9 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         'title="Herramientas de estudio" aria-label="Herramientas de estudio">' + ico(I.tools) + '</button>';
 
     document.body.appendChild(box);
+    if (!document.getElementById('rm2-penguard')) {                    // guarda de toque do piloto físico (ver CSS #rm2-penguard): sem filhos, inerte fora do contacto
+      var guarda = document.createElement('div'); guarda.id = 'rm2-penguard'; guarda.setAttribute('aria-hidden', 'true'); document.body.appendChild(guarda);
+    }
 
     /* ------------------------------------------------------------------
        O FAB é a saída explícita de uma ferramenta de desenho PROTEGIDA
@@ -3062,12 +3237,19 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       bd.setAttribute('aria-expanded', String(diagAberto()));
     }
     if (!permitido && diagAberto()) fecharDiagSemRefletir();
+    else if (diagAberto()) diagVPedirRender();
     var u = box.querySelector('[data-a="undo"]');
     if (u) u.disabled = !st.undo.length;
 
     /* o estado da ferramenta não é só cor: vai também para o body, para
        o cursor e para a goma destacarem as marcações (§31) */
     var b = document.body;
+    b.classList.toggle('rm2-pilot-guard', permitido && !semGuardaTeste);
+    /* identificação VISÍVEL do build, só para quem está no piloto físico em Semiología II (José / pen:true): prova de qual versão do arquivo o aparelho carregou.
+       Um aviso passageiro (.rm-toast, o mesmo do «Trazo deshecho ✓») ao ABRIR a caixa — nada fixo sobre a leitura (regra do tema: nenhum elemento fixo cobre texto, tabela ou post-it). */
+    var abertaAgora = box.classList.contains('open');
+    if (permitido && abertaAgora && !buildAbertaAntes && !diagAberto()) toast('caneta #456 · build ' + BUILD_456);
+    buildAbertaAntes = abertaAgora;
     b.classList.toggle('rm2-t-highlight', st.tool === 'highlight');
     b.classList.toggle('rm2-t-pen', st.tool === 'pen');
     b.classList.toggle('rm2-t-eraser', st.tool === 'eraser');
@@ -3333,13 +3515,15 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        PRÓPRIO contacto de stylus; não desenha nada. Ver comentário grande
        junto de `ligarAdaptadorTouchStylus()`. */
     ligarAdaptadorTouchStylus();
+    /* a flag `pen` do servidor chega DEPOIS do mount (rm-pilot.js só pergunta quando Semiología II está ativa): registra o adaptador e reflete o piloto nesse momento */
+    window.addEventListener('rm-pilot-flags', function () { ligarAdaptadorTouchStylus(); refletir(); });
     document.addEventListener('pointermove', function (e) {
       /* Sinal de "pen por perto" para a rejeição de palma — inclui o
          HOVER (pointerType 'pen', buttons 0) quando o hardware/browser o
          expõe, não só o contacto real; ver §7 do encargo. */
       if (e.pointerType === 'pen') registarPen(e);
       if (st.tool === 'pen' && e.pointerType === 'touch') { onTouchMoveComCanetaArmada(e); return; }
-      if (traco) onMove(e); else if (apagando) onMoveApagar(e);
+      if (traco) { if (perf) perfMove(e); onMove(e); } else if (apagando) onMoveApagar(e);
     }, { passive: false });
     document.addEventListener('pointerup', onUp, { passive: true });
     document.addEventListener('pointercancel', onCancel, { passive: true });
@@ -3358,6 +3542,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        dispositivo desaparece, e nesses casos NÃO há pointerup nenhum. */
     document.addEventListener('lostpointercapture', function (e) {
       diagLog('lostpointercapture', e);
+      if (perf && perf.atual && traco && e && e.pointerId === traco.pid) { perf.lpc = (perf.lpc || 0) + 1; perfFimTraco('LOSTCAPTURE', null, traco.pts.length); }   // só conta a captura perdida NO MEIO do traço (a normal, depois do pointerup, não)
       if (e && e.pointerType === 'pen' && pilotoPermitido() && penState.active && e.pointerId === penState.pid) penEmContacto(false);
       if (traco && e.pointerId === traco.pid) abortarTraco();
       else if (apagando && e.pointerId === apagando.pid) terminarApagar();
@@ -3508,6 +3693,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
     window.RMToolsV2 = {
       estado: st,
+      build: BUILD_456,
       rollout: ROLLOUT,
       escolherFerramenta: escolherFerramenta,
       desfazer: desfazer,
@@ -3539,6 +3725,9 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         anchorDe: anchorDe,
         anchorPorPonto: anchorPorPonto,
         pilotoPermitido: pilotoPermitido,
+        adaptadorLigado: function () { return adaptadorLigado; },
+        perf: function () { return perf; },
+        perfLinhas: perfLinhas,
         activeViewPermitido: activeViewPermitido,
         anotarPermitido: anotarPermitido,
         temTraco: function () { return !!traco; },
