@@ -22,6 +22,48 @@ branch da #469 (`claude/biologia-nucleo-interfasico-67`), não da `main`.
 Quando a #469 for mesclada de fato, esta branch deve ser resincronizada
 antes de qualquer merge independente — exatamente como a #471 já previa.
 
+## Atualização — #469 mesclada, correções científicas de ciclo celular/receptores
+
+A **PR #469 foi mesclada** em `main` (confirmado via API: `merged: true`,
+`merged_at: 2026-10-10T21:49:58Z`). A branch desta PR foi resincronizada:
+`git merge origin/main`, sem conflitos; Guard reexecutado com
+`--base main --head HEAD` (agora a `main` real): 🟡 sem vermelho, banco-
+geral 144=144. **Base da PR #478 retargetada de
+`claude/biologia-nucleo-interfasico-67` para `main`** no GitHub.
+
+Antes dessa sincronização, o auditor apontou 2 erros científicos no
+Bloque 16 (Ciclo celular) e no Bloque 15 (Señalización), corrigidos em
+todos os lugares (resumo, key-box, pergunta+gabarito+explicação em
+corpo e Banco general, flashcards em corpo e Flashcards general):
+
+### 1. APC/C (ciclosoma) não degrada cohesinas diretamente
+
+Versão anterior: "degrada tanto a la ciclina M como a las cohesinas".
+**Mecanismo real**: o APC/C marca para degradação a <strong>ciclina
+M</strong> (desarma o MPF) e a <strong>securina</strong>. A securina, até
+então, mantém inibida a enzima <strong>separasa</strong>; ao se degradar,
+a separasa fica livre e é ela — não o APC/C — que corta as
+<strong>cohesinas</strong>, liberando as cromátidas irmãs. Também
+corrigido "se forma na anáfase" → "se activa na transição
+metafase-anáfase" (o complexo já existe antes do ciclo; o que muda é
+sua ativação por Cdc20, não detalhada por estar fora do nível
+introdutório do curso).
+
+### 2. Nem todo receptor esteroideo fica no citosol ligado a hsp90
+
+Versão anterior generalizava "cortisol, aldosterona, testosterona,
+progesterona, estrógenos" como um bloco único, todos citosólicos em
+repouso. **Corrigido**: o receptor de <strong>glucocorticoides
+(cortisol)</strong> é o exemplo clássico desse padrão (citosólico, hsp90,
+transloca ao ativar-se); o receptor de <strong>estrógenos</strong>, em
+contraste, pode estar predominantemente <strong>nuclear mesmo sem o
+ligante</strong> — a distribuição citosol/núcleo em repouso varia
+segundo o receptor esteroideo específico, não é regra única do grupo.
+
+Nenhuma correção alterou gabarito pré-existente — apenas precisão
+científica do mecanismo/generalização. QA: HTML balanceado;
+`quiz-item`=288, `flashcard`=356 (ambos inalterados nesta rodada).
+
 ## Fontes lidas
 
 Ambas localizadas na pasta Drive "Biología/Slides" e lidas **na
