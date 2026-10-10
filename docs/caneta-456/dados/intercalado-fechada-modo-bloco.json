@@ -1,0 +1,6 @@
+{
+  "nota": "toolbox FECHADA, modo → bloco, CPU 4×, 2.º quadro (ms). Processos alternados antes/depois (3 rodadas × 2 repetições) para separar ruído de ordem de execução do efeito real. Script: tools/qa/caneta-456 (ev.cjs equivalente via troca.cjs/medir.cjs); valores brutos.",
+  "antes_origin_main": [453, 513, 463, 586, 425, 398],
+  "depois_arvore_de_trabalho": [490, 524, 441, 402, 426, 524],
+  "media": { "antes": 473, "depois": 468 }
+}
