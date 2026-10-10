@@ -133,6 +133,95 @@ alterada.
   reconfirmado nesta rodada. Edição 100% aditiva de todo modo (zero texto
   preexistente tocado).
 
+## Rodada de correção científica (PR #478, antes de prosseguir à UNIDAD X)
+
+O auditor apontou 3 erros/imprecisões científicas no Bloque 15, introduzidas
+por seguir a redação do slide da cátedra sem verificação independente
+suficiente. Corrigidas nesta rodada, com fonte:
+
+### 1. Receptor de hormona esteroidea ≠ receptor de hormona tiroidea/retinoico/vit. D
+
+O slide da cátedra agrupa "hormonas tiroideas, vitamina D, ácido retinoico"
+junto con las hormonas esteroideas como si todos usaran el mismo mecanismo
+(citosólico, chaperona hsp90, translocación al núcleo al activarse). **Essa
+simplificação diverge da literatura**: é a clássica distinção entre
+receptores nucleares **Tipo I** (esteroideos: GR, MR, AR, PR, ER —
+citosólicos en reposo, hsp90, translocan al núcleo) y **Tipo II** (TR, RAR,
+VDR — ya residen en el núcleo, unidos constitutivamente al ADN incluso sin
+hormona, actuando como represores; la hormona cambia correpresor por
+coactivador en lugar de causar translocación).
+
+**Divergência registrada:** o slide da cátedra (e a primeira versão deste
+bloque, que o seguiu) não faz essa distinção. A literatura de biologia
+molecular/celular (receptores nucleares tipo I vs. tipo II, conceito bem
+estabelecido) sim. Mantida a ciência correta; ensinada a distinção
+explicitamente no resumo, sem acusar a cátedra de erro — apenas registrando
+que o material original simplifica onde a distinção importa.
+
+**Corrigido em:** resumo explicado (h4 reescrito em dois itens separados),
+key-box "Lo esencial", a pergunta que testava "hormona tiroidea + hsp90"
+(reformulada para testar diretamente a distinção correta, corpo e Banco
+general) e os flashcards (1 card dividido em 2, corpo e Flashcards
+general).
+
+### 2. PI3-K/Akt: ativação ≠ interrupção
+
+A primeira versão dizia genericamente que a via PI3-K "está vinculada a la
+muerte celular", sem distinguir se isso valia para sua ativação ou para
+sua interrupção. **A literatura é clara**: a ativação de PI3-K→Akt
+promove **supervivência celular** (Akt fosforila BAD e bloqueia a
+maquinaria apoptótica — Datta et al., *Cell* 1997; revisado em
+PMC2954966); é a **interrupção/perda** da via (ex.: inibição por
+wortmannin, perda de PTEN) que leva à apoptose. Essa distinção **já
+estava correta** na linha original do slide sobre G13/Gi ("la
+interrupción de esta vía conduce a la muerte celular"), mas foi perdida
+na seção de "las tres señales de la vía tirosina quinasa", onde ficou
+sem o qualificador.
+
+**Corrigido em:** a frase da PI3-K na seção "tres señales"; a explicação
+da questão RAS-MAPK (corpo e Banco general); o key-box; a linha da
+tabela de proteína G; o flashcard "Proteína G".
+
+### 3. "G13/Gi → PI3-K" agrupava dois mecanismos distintos
+
+O slide diz "el receptor activa a una proteína G, variedad G13 o Gi"
+antes de descrever a ativação da PI3-K — tratando as duas variedades
+como equivalentes. **A literatura de transdução de sinal não sustenta
+esse agrupamento**: está bem documentado que **Gi** ativa PI3-Kγ através
+de seu complexo **βγ** (mecanismo estrutural detalhado, ex. Suire et al.
+2012; estruturas crio-EM 2021/2024), enquanto **G12/G13** têm como via
+clássica a ativação de **RhoGEFs → Rho** (reorganização do
+citoesqueleto de actina) — uma via distinta, não a PI3-K. Não encontrei
+literatura sólida que sustente G13→PI3-K como via primária/clássica.
+
+**Divergência registrada:** mantido o agrupamento do slide seria repetir
+um erro sem base na literatura corrente de sinalização por proteína G.
+Corrigida a tabela "vías de la proteína G" (Gi→PI3-K/Akt como linha
+própria; G12/G13→RhoGEF→Rho como linha separada), o key-box e o
+flashcard "Proteína G".
+
+### Verificação (nesta correção)
+
+- HTML balanceado; `quiz-item` = 278 (inalterado, mesma 1 pergunta
+  reformulada); `flashcard` = 334 (= 167×2, +1 card distinto pela
+  divisão do card de receptores citosólicos).
+- Nenhuma alternativa nova é autodenunciante nem "exótica" (checado por
+  grep, seguindo o padrão já estabelecido na auditoria de Anatomía
+  Patológica II nesta mesma sessão — PR #476).
+- Annotation-safety reconfirmada: 0 highlights/ink-strokes/notes para
+  Biología.
+- Guard (`--base claude/biologia-nucleo-interfasico-67 --head HEAD`): 🟡
+  sem vermelho, banco-geral 139=139, gabaritos válidos.
+
+### Pendência: sincronizar com `main` após o merge da #469
+
+A #469 **continua sem merge** no momento desta correção (verificado de
+novo via API: `state: open`, `merged: false`). Enquanto isso não
+acontecer, a PR #478 permanece baseada na branch da #469, como já estava.
+Quando a #469 mesclar, resincronizar a branch desta PR contra a `main`
+atualizada antes de qualquer decisão de merge independente — ação
+registrada aqui para não se perder.
+
 ## Pendências explícitas
 
 1. **UNIDAD X completa** (ciclo celular, meiosis, fecundación, aneuploidías)
