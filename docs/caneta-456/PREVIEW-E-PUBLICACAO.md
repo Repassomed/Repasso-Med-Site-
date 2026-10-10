@@ -53,7 +53,7 @@ Resposta objetiva à pergunta da auditoria: **a 2.ª conta já tem a V2 pelo cam
 **Reversão (demonstrada, sem deploy de código novo):**
 1. *Corte imediato de um comportamento:* no próprio aparelho, o botão **«Sin guarda: sí»** do painel volta à regra de toque antiga (A/B ao vivo, testado).
 2. *Netlify, 1 clique:* **Deploys ▸ (deploy anterior à publicação) ▸ Publish deploy** — o Netlify volta ao build anterior sem rebuild.
-3. *Git:* `git revert -m 1 <commit de merge>` na `main`. **Simulado em worktree descartável**: `origin/main` + merge do #470 (`a4a9a9c8`) + `revert -m 1` ⇒ **a árvore resultante é idêntica à da `main` original** (`ea217ef8…` = `ea217ef8…`). Nenhuma migração, nenhum dado novo; traços gravados continuam válidos (mesmo formato).
+3. *Git:* `git revert -m 1 <commit de merge>` na `main`. **Simulado em worktree descartável**: `origin/main` + merge do #470 (head `5e5265c2`; no site mexe só em 5 arquivos: `rm-tools-v2.js`, `rm-materia-sistema.js`, `rm-pilot.js`, `index.html`, `SISTEMA-VISUAL-MATERIAS.md`) + `revert -m 1` ⇒ **a árvore resultante é idêntica à da `main` original** (`ea217ef8…` = `ea217ef8…`). Nenhuma migração, nenhum dado novo; traços gravados continuam válidos (mesmo formato).
 4. *Reduzir o alcance sem deploy:* esvaziar `RM_PILOT_PEN_UIDS` (o piloto físico some para a 2.ª conta) ou `RM_PILOT_VISUAL_UIDS` (o tema sai); a V2 de José/da 2.ª conta permanece como hoje.
 
 **Passos propostos (todos dependem de ordem expressa de José; o Claude não os executa):**
