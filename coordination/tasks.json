@@ -2106,8 +2106,11 @@
       "materia": "fisiopatologia-ii",
       "arquivos": [
         "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html",
-        "coordination/source-packs/fisiopatologia-ii-issue101-fotos-v2.md",
-        "coordination/source-packs/fisiopatologia-ii-issue101-relatorio-v1.md"
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/fisio2/bloco-10-02-hiponatremia-adh-cerebro-v2.webp",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/fisio2/bloco-11-02-hipopotassemia-v2.webp",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/fisio2/bloco-11-03-hiperpotassemia-v2.webp",
+        "coordination/source-packs/fisiopatologia-ii-issue101-*.md",
+        "tools/qa/browser-qa/fisiopatologia-ii-2026-10/**"
       ],
       "objetivo": "Checkpoint 1 da issue #101 executado em sessão supervisionada por José: extrair as fotos de prova do Drive (19/09 e 21/09), reconciliar item a item com o site (Lei 8-A) e neutralizar a voz de estratégia de prova (G0) sem alterar a sequência de elementos ancoráveis. Comparação com os 6 decks atuais, redução de densidade e infográficos ficam para checkpoints seguintes.",
       "fonte": "Issue #101 · Drive Fisiopatología II > Questões · source pack v1/v2",
@@ -2122,7 +2125,7 @@
       "pr": null,
       "commit": null,
       "issue": 101,
-      "notas": "Registro próprio (não amplia a reserva de fisiopatologia-ii-issue101-r3-sourcepack, que permanece como está e é a tarefa canônica do worker automático; este checkpoint a executa manualmente a pedido de José, sem merge). Resultado NEEDS-AUDIT."
+      "notas": "Registro próprio (não amplia a reserva de fisiopatologia-ii-issue101-r3-sourcepack, que permanece como está e é a tarefa canônica do worker automático; este checkpoint a executa manualmente a pedido de José, sem merge). Resultado NEEDS-AUDIT. | Checkpoint 2 (10/10/2026): infográficos (SVG + 3 rasters -v2), remapeamento de grifos e harness de QA da matéria."
     },
     {
       "id": "toxicologia-provas-issue102-r2-sourcepack",
