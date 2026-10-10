@@ -1,0 +1,44 @@
+[
+ {
+  "slug": "dermatologia",
+  "w": 1440,
+  "nota": 4,
+  "coberturaAntesPct": 43.01,
+  "coberturaDepoisPct": 0
+ },
+ {
+  "slug": "dermatologia",
+  "w": 1440,
+  "nota": 12,
+  "coberturaAntesPct": 83.98,
+  "coberturaDepoisPct": 0
+ },
+ {
+  "slug": "dermatologia",
+  "w": 1024,
+  "nota": 4,
+  "coberturaAntesPct": 41.4,
+  "coberturaDepoisPct": 0
+ },
+ {
+  "slug": "dermatologia",
+  "w": 1024,
+  "nota": 12,
+  "coberturaAntesPct": 83.92,
+  "coberturaDepoisPct": 0
+ },
+ {
+  "slug": "farmacologia",
+  "w": 1440,
+  "nota": 17,
+  "coberturaAntesPct": 23.33,
+  "coberturaDepoisPct": 0
+ },
+ {
+  "slug": "farmacologia",
+  "w": 1024,
+  "nota": 17,
+  "coberturaAntesPct": 23.33,
+  "coberturaDepoisPct": 0
+ }
+]
