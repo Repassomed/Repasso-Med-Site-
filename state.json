@@ -2547,6 +2547,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:476.",
       "task_id": "coordination/AUDITORIA-2026-10-09-EDITORIAL-E-PILOTO.md \u2192 aloca\u00e7\u00e3o \"Claude 1 \u2192 Anatomopatologia II\" (sem id formal em `coordination/tasks.json`)",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "80edd535b9d72aef35e938de056b3eeaa5d7469f",
+      "component": "guard",
+      "error_id": "ERR-E91ADE2D4F",
+      "error_type": "hard-fail",
+      "fingerprint": "e91ade2d4f21e75b6751",
+      "first_seen": "2026-10-10T21:15:40.048901+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "f262103a83154c6db2d75b615f588aa4",
+      "issue_sync_updated_at": "2026-10-10T21:15:40.048901+00:00",
+      "last_evidence_hash": "a37bf74344a26aeccc50",
+      "last_seen": "2026-10-10T21:15:40.048901+00:00",
+      "occurrence_count": 1,
+      "pr_number": 478,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "38086548797",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:478.",
+      "task_id": "Issue [#471](https://github.com/Repassomed/Repasso-Med-Site-/issues/471) \u2014 \"P1 \u00b7 Biolog\u00eda \u2014 integrar UNIDAD VIII e UNIDAD X sem conflito com #469\".",
+      "worker_id": null
     }
   ]
 }
