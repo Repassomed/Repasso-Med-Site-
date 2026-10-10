@@ -107,21 +107,21 @@ Todos os itens do slide foram incorporados — **nenhum item do slide VIII
 ficou de fora** desta rodada; não há pendência de cobertura para esta
 unidade.
 
-## Matriz — UNIDAD X (lida, incorporação pendente para o próximo checkpoint)
+## Matriz — UNIDAD X
 
-| Item do slide | Observação |
+| Item do slide | Status |
 |---|---|
-| Ciclo celular: interfase (G1/S/G2 con duración), control por ciclinas G1/M + CDK (cdk2/cdc2) | Extenso — fica para a próxima rodada |
-| Fase S: CDK2 (complejo SPF) → replicación del ADN | idem |
-| Fase M: MPF (ciclina M + CDC2) → desarme de actina, huso mitótico, lámina nuclear, condensación de cromatina | idem |
-| Degradación de MPF en anafase (ciclosoma/APC) | idem |
-| Inductores mitogénicos: somatomedina, factores de crecimiento, factores hemopoyéticos (IL-2, GM-CSF, eritropoyetina) | idem |
-| Meiosis I: profase (preleptonema→leptonema→cigonema→paquinema→diplonema→diacinesis), prometafase/metafase/anafase/telofase I | idem — bloco didaticamente denso, merece seção própria |
-| Diferenças varón (2 espermatocitos II iguales) vs. mujer (ovocito II + 1er cuerpo polar, desigual) | idem |
-| Meiosis II completa | idem |
-| 6 diferencias mitosis vs. meiosis (tabela comparativa já pronta no slide) | idem |
-| Fecundación: 10 fases (penetración corona radiada → reacción acrosómica → denudación → penetración membrana pelúcida → fusión → bloqueo de polispermia → reasunción meiosis II → pronúcleos → singamia → anfimixis) | idem |
-| Aneuploidías: no disyunción meiótica/mitótica, monosomía/trisomía, mosaicismo | idem |
+| Ciclo celular: interfase (G1/S/G2 con duración), control por ciclinas G1/M + CDK (cdk2/cdc2) | ✅ incorporado (checkpoint Ciclo celular) |
+| Fase S: CDK2 (complejo SPF) → replicación del ADN | ✅ incorporado |
+| Fase M: MPF (ciclina M + CDC2) → desarme de actina, huso mitótico, lámina nuclear, condensación de cromatina | ✅ incorporado |
+| Degradación do MPF na transição metafase-anafase (ciclosoma/APC/C → securina → separasa → cohesinas) | ✅ incorporado, com correção científica (ver seção de correções abaixo) |
+| Inductores mitogénicos: somatomedina, factores de crecimiento, factores hemopoyéticos (IL-2, GM-CSF, eritropoyetina) | ✅ incorporado |
+| Meiosis I: profase (preleptonema→leptonema→cigonema→paquinema→diplonema→diacinesis), prometafase/metafase/anafase/telofase I | ✅ incorporado (checkpoint Meiosis) |
+| Diferenças varón (2 espermatocitos II iguales) vs. mujer (ovocito II + 1er cuerpo polar, desigual) | ✅ incorporado |
+| Meiosis II completa | ✅ incorporado |
+| 6 diferencias mitosis vs. meiosis (tabela comparativa já pronta no slide) | ✅ incorporado |
+| Fecundación: 10 fases (penetración corona radiada → reacción acrosómica → denudación → penetración membrana pelúcida → fusión → bloqueo de polispermia → reasunción meiosis II → pronúcleos → singamia → anfimixis) | ⏳ pendente — próximo checkpoint |
+| Aneuploidías: no disyunción meiótica/mitótica, monosomía/trisomía, mosaicismo | ⏳ pendente — próximo checkpoint |
 
 **Por que não incorporar tudo em uma só rodada:** UNIDAD X por si só
 cobre três grandes eixos (ciclo celular, meiosis completa em 8 subfases,
@@ -264,17 +264,94 @@ Quando a #469 mesclar, resincronizar a branch desta PR contra a `main`
 atualizada antes de qualquer decisão de merge independente — ação
 registrada aqui para não se perder.
 
+## Checkpoint — Ciclo celular + Meiosis incorporados (Bloque 16, base já em `main`)
+
+Com a #469 mesclada e a base da #478 já retargetada para `main` (ver seção
+acima), prosseguiu-se a UNIDAD X pelo checkpoint de **Ciclo celular +
+Meiosis**, aproveitando a mesma rodada para corrigir dois erros científicos
+adicionais apontados pelo auditor, agora no próprio Bloque 16:
+
+### Correção 1 — APC/C não degrada cohesinas diretamente
+
+Reafirmação/reforço da correção já registrada na rodada anterior (que havia
+sido aplicada no Bloque 15/vias de proteína G): o texto do Bloque 16 também
+precisou do mesmo ajuste. Mecanismo ensinado agora: o **APC/C** marca para
+degradação a **ciclina M** (desarma o MPF) e a **securina**; a securina
+mantinha inibida a **separasa** — ao se degradar, a separasa fica livre e é
+ela, não o APC/C, que corta as **cohesinas**. Também corrigido "se forma na
+anáfase" → "se activa na transição metafase-anáfase" (o complexo existe
+antes; o que muda é a ativação). Aplicado em: prosa do resumo, key-box
+"Lo esencial", 1 pergunta MCQ (pergunta + gabarito + explicação, corpo e
+Banco general) e 1 flashcard (bloco e Flashcards general).
+
+### Correção 2 — nem todo receptor esteroideo é citosólico/hsp90 por padrão
+
+No Bloque 15, a explicação original generalizava "cortisol, aldosterona,
+testosterona, progesterona, estrógenos" como um bloco único, todos
+citosólicos em repouso. Corrigido para separar o exemplo canônico
+(**receptor de glucocorticoides/cortisol**: citosólico, hsp90, transloca ao
+ativar-se) do contraexemplo do **receptor de estrógenos**, que pode estar
+predominantemente **nuclear mesmo sem o ligante** — a distribuição
+citosol/núcleo em repouso varia segundo o receptor esteroideo específico,
+não é regra única do grupo. Aplicado em: prosa, key-box, explicação da
+questão correspondente e flashcard (bloco e geral).
+
+### O que foi adicionado — Meiosis (novo conteúdo, UNIDAD X)
+
+Inserido dentro do próprio Bloque 16 (`id="bio16"`), depois da prosa/key-box
+de Ciclo celular — 100% aditivo:
+
+- Postit "Desde cero" + mapa de 4 píldoras (Profase I / Meiosis I / Meiosis
+  II / Resultado).
+- Resumen explicado: as 6 subfases da profase I (preleptonema → leptonema →
+  cigonema [complejo sinaptonémico] → paquinema [crossing over] →
+  diplonema [quiasmas] → diacinesis); resto da meiosis I (prometafase →
+  telofase I); tabela varón vs. mujer (reparto igual vs. desigual); meiosis
+  II (mecanicamente igual a uma mitose); tabela de 6 diferenças mitosis vs.
+  meiosis.
+- Key-box "Lo esencial (meiosis)".
+- **8 preguntas complementarias** (MCQ + V/F), cobrindo cigonema/paquinema,
+  diplonema/quiasmas, orientação dos cinetocoros em metafase I, anafase I
+  vs. anafase II, assimetria varón/mujer e comparação mitosis/meiosis —
+  revisadas contra autodenúncia/distratores exóticos (grep, mesmo padrão
+  da auditoria de AP2 nesta sessão): nenhum achado.
+- **13 flashcards** cobrindo a mesma amplitude.
+- Espelhadas em corpo + Banco general (mesmo card "Bloque 16", renomeado
+  "Ciclo celular y meiosis") + Flashcards generales (mesmo h3 "Bloque 16",
+  renomeado) — as 3 cópias idênticas, confirmado via grep/diff manual.
+- Contadores atualizados: banco geral 144→**152** preguntas (103 série
+  principal + 41→**49** prática adicional); flashcards 178→**191**;
+  comentário de cabeçalho do arquivo passa a citar "meiosis".
+
+### Verificação (este checkpoint)
+
+- **HTML**: todos os pares (div/ul/li/p/section/table/tr/td/th/details/
+  summary/h2/h3/h4/ol) balanceados.
+- **Espelho**: `quiz-item` = 304 (= 152×2); `flashcard` = 382 (= 191×2).
+- **Guard** (`--base origin/main --head HEAD`, já com a #469 mesclada):
+  🟡 passou com avisos — escopo não declarado na descrição da PR (não
+  verificável localmente), 1 item de registro de tarefas não relacionado
+  (`neurologia-p0-fechamento-2026`), 1 desbalanceamento de HTML
+  **pré-existente** (herdado, não introduzido nesta rodada). Banco-geral
+  152=152, gabaritos válidos, nenhum arquivo crítico tocado, nenhum
+  segredo. 42 linhas sinalizadas para conferência humana de conteúdo
+  médico (Lei 6) — esperado, dado que alteram número/gabarito/afirmação
+  terapêutica.
+- **Annotation-safety**: 0/0/0 em `user_highlights`/`user_ink_strokes`/
+  `user_notes` para `subject_slug ilike '%biolog%'`, reconfirmado.
+- Commit `c70930c3`, push para `claude/biologia-unidad-viii-x-471`.
+
 ## Pendências explícitas
 
-1. **UNIDAD X completa** (ciclo celular, meiosis, fecundación, aneuploidías)
-   — fonte já lida na íntegra, incorporação fica para o próximo checkpoint
-   desta mesma issue.
+1. **Fecundación + Aneuploidías** (UNIDAD X, últimos 2 eixos) — fonte já
+   lida na íntegra (`Unidad X.pdf`), incorporação fica para o próximo
+   checkpoint desta mesma issue.
 2. **Renumeração VIII→IX→X**: a Issue #471 pede explicitamente não
    renumerar o Bloque 14 (UNIDAD IX) sem combinar primeiro na #67, porque
    a ordem didática correta seria VIII→IX→X mas a ordem de descoberta/
    adição foi IX→VIII→(X). Mantidos os blocos na ordem em que foram
-   adicionados (14=IX, 15=VIII, e futuramente 16=X), sem renumerar nada
-   existente. Decisão de reordenar — se desejada — fica para José/Issue #67.
-3. **Merge da #469**: quando ocorrer, esta branch precisa ser
-   resincronizada contra a nova `main` antes de qualquer decisão de merge
-   independente, como a própria #471 já previa.
+   adicionados (14=IX, 15=VIII, 16=X), sem renumerar nada existente.
+   Decisão de reordenar — se desejada — fica para José/Issue #67.
+3. ~~**Merge da #469**~~ — **resolvido**: a #469 mesclou em
+   `2026-10-10T21:49:58Z`; a base da #478 já foi retargetada para `main`
+   e a branch resincronizada sem conflitos (ver seção acima).
