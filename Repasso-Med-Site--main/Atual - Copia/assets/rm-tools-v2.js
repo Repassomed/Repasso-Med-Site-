@@ -40,11 +40,13 @@
 
   /* Falha FECHADA: qualquer erro devolve false, e o aluno fica com a
      experiência antiga. Nunca o contrário. */
+  var buildAbertaAntes = false;                          // para avisar o build uma vez por abertura da caixa (refletir)
+  var acessoVia = '';                                   // como o acesso à V2 foi concedido a ESTA conta (só o rótulo, nunca o UID): diagnóstico do piloto (#456)
   async function hasStudyToolsV2Access(uid) {
     if (ROLLOUT === 'off') return false;
     if (!uid) return false;
-    if (ROLLOUT === 'all') return true;
-    if (BETA_UIDS.indexOf(uid) !== -1) return true;
+    if (ROLLOUT === 'all') { acessoVia = 'todos'; return true; }
+    if (BETA_UIDS.indexOf(uid) !== -1) { acessoVia = 'lista beta no código'; return true; }
     /* A tabela é aditiva: permite juntar testers sem novo deploy.
        Não pode ser escrita pelo cliente (não há policy de INSERT). */
     try {
@@ -53,7 +55,8 @@
       var r = await s.from('study_tools_beta')
         .select('enabled').eq('user_id', uid).maybeSingle();
       if (r.error) return false;
-      return !!(r.data && r.data.enabled);
+      if (r.data && r.data.enabled) { acessoVia = 'tabela study_tools_beta'; return true; }
+      return false;
     } catch (e) { return false; }
   }
 
@@ -374,9 +377,10 @@
      navegador deixou a thread principal parada durante o traço, quantos pointercancel/lostpointercapture) só o aparelho de verdade sabe. Isto mede isso no próprio
      aparelho — SÓ enquanto o painel de diagnóstico estiver ABERTO (o aluno o abre de propósito, pelo botão do painel de ferramentas; fecha = para e apaga tudo).
      Guarda APENAS NÚMEROS (milissegundos e contagens): nenhum texto da matéria, nenhuma coordenada, nenhuma nota, nenhum UID/e-mail, nada em localStorage, nada para o servidor. */
-  var BUILD_456 = '2026-10-08·456';
+  var BUILD_456 = '2026-10-09·456c';
   var perf = null;                          // null = desligado (custo zero nos handlers: um `if`)
   var perfOuvinteModos = false;
+  var semGuardaTeste = false;               // A/B do reteste físico: ligado = o piloto usa a regra LEGADA (touch-action no contêiner) em vez da guarda; só memória, some ao recarregar
 
   function perfLigar() {
     if (perf) return;
@@ -459,6 +463,8 @@
   function perfLinhas() {
     var L = [];
     L.push('build=' + BUILD_456 + ' · guarda=' + (document.body.classList.contains('rm2-pilot-guard') ? 'sim' : 'não') + ' · toolbox=' + (box && box.classList.contains('open') ? 'aberta' : 'fechada') + ' · ferramenta=' + st.tool);
+    var fl = null; try { fl = window.RMPilot && window.RMPilot._estado && window.RMPilot._estado().flags; } catch (e) {}
+    L.push('acesso à V2: ' + (acessoVia || '?') + ' · piloto físico: ' + (pilotoPermitido() ? (st.uid === JOSE_UID ? 'sim (conta do piloto no código)' : 'sim (servidor: pen)') : 'não') + ' · flags do servidor: layout=' + (fl ? String(!!fl.layout) : '?') + ' visual=' + (fl ? String(!!fl.visual) : '?') + ' pen=' + (fl ? String(!!fl.pen) : '?') + ' · teste sem guarda: ' + (semGuardaTeste ? 'LIGADO (regra legada)' : 'desligado'));
     if (!perf) return L;
     L.push('tarefas longas (≥50 ms): ' + perf.lt + ' · máx ' + perfNum(perf.ltMax) + ' ms · soma ' + perfNum(perf.ltSoma) + ' ms · desde ' + Math.round((Date.now() - perf.desde) / 1000) + ' s');
     var t = perf.tracos;
@@ -552,6 +558,7 @@
         '<span>scrollY=<b>' + Math.round(window.pageYOffset) + '</b></span>' +
         '<span>eventos=<b>' + diag.length + '</b></span>';
     }
+    var bg = diagVCaixa.querySelector('[data-d="guarda"]'); if (bg) bg.textContent = 'Sin guarda: ' + (semGuardaTeste ? 'sí' : 'no');
     var pf = diagVCaixa.querySelector('.rm2-diag-p');
     if (pf) pf.innerHTML = perfLinhas().map(function (l) { return '<div>' + dEsc(l) + '</div>'; }).join('');
     if (corpo) {
@@ -586,6 +593,7 @@
     diagVCaixa.innerHTML =
       '<div class="rm2-diag-h">' +
         '<b>Diagnóstico del lápiz</b>' +
+        '<button type="button" data-d="guarda">Sin guarda: no</button>' +
         '<button type="button" data-d="copy">Copiar resumen</button>' +
         '<button type="button" data-d="clear">Limpiar</button>' +
         '<button type="button" data-d="close" aria-label="Cerrar">×</button>' +
@@ -596,7 +604,9 @@
     diagVCaixa.addEventListener('click', function (e) {
       var b = e.target.closest('button[data-d]'); if (!b) return;
       var dd = b.getAttribute('data-d');
-      if (dd === 'clear') limparDiag(); else if (dd === 'copy') perfCopiar(); else fecharDiag();
+      if (dd === 'clear') limparDiag(); else if (dd === 'copy') perfCopiar();
+      else if (dd === 'guarda') { semGuardaTeste = !semGuardaTeste; refletir(); }
+      else fecharDiag();
     });
     document.body.appendChild(diagVCaixa);
     perfLigar();                                // opt-in: só mede enquanto o painel está aberto
@@ -1797,7 +1807,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (st.tool !== 'pen' && st.tool !== 'eraser') return;
     diagLog('pointerdown', e);
     if (lbAberto()) { diagLog('reject:lightbox', e); return; }     // zoom aberto: caneta suspensa
-    if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes,.rm-tools,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug')) {
+    if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes,.rm2-diag,.rm-tools,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug')) {   // .rm2-diag: com a caneta armada, tocar nos botões do diagnóstico com a PONTA não pode começar um traço por baixo do painel (#456)
       diagLog('reject:ui', e); return;
     }
     if (gestoMorto()) abortarTraco();                   // traço órfão não bloqueia o seguinte
@@ -3227,13 +3237,19 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       bd.setAttribute('aria-expanded', String(diagAberto()));
     }
     if (!permitido && diagAberto()) fecharDiagSemRefletir();
+    else if (diagAberto()) diagVPedirRender();
     var u = box.querySelector('[data-a="undo"]');
     if (u) u.disabled = !st.undo.length;
 
     /* o estado da ferramenta não é só cor: vai também para o body, para
        o cursor e para a goma destacarem as marcações (§31) */
     var b = document.body;
-    b.classList.toggle('rm2-pilot-guard', permitido);                    // piloto físico: guarda de toque em vez de touch-action no contêiner (ver CSS #rm2-penguard)
+    b.classList.toggle('rm2-pilot-guard', permitido && !semGuardaTeste);
+    /* identificação VISÍVEL do build, só para quem está no piloto físico em Semiología II (José / pen:true): prova de qual versão do arquivo o aparelho carregou.
+       Um aviso passageiro (.rm-toast, o mesmo do «Trazo deshecho ✓») ao ABRIR a caixa — nada fixo sobre a leitura (regra do tema: nenhum elemento fixo cobre texto, tabela ou post-it). */
+    var abertaAgora = box.classList.contains('open');
+    if (permitido && abertaAgora && !buildAbertaAntes && !diagAberto()) toast('caneta #456 · build ' + BUILD_456);
+    buildAbertaAntes = abertaAgora;
     b.classList.toggle('rm2-t-highlight', st.tool === 'highlight');
     b.classList.toggle('rm2-t-pen', st.tool === 'pen');
     b.classList.toggle('rm2-t-eraser', st.tool === 'eraser');

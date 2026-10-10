@@ -230,6 +230,56 @@ const taEfetivo = (p, x, y) => p.evaluate(([x, y]) => { let e = document.element
     await ctx.close();
   }
 
+  /* ============ H · build visível, A/B «sin guarda», acesso: aluno comum não vê nada ============ */
+  sec('H · build visível só no piloto · A/B «Sin guarda» · diagnóstico mostra o acesso/flags · aluno comum: nada monta');
+  {
+    const { ctx, page, errs } = await abrir(br, base, midia, 'novo', { w: 1024, h: 768, touch: true });
+    await page.waitForTimeout(500);
+    const semFixo = await page.evaluate(() => !document.getElementById('rm2-build'));
+    const botaoCaixa = await page.evaluate(() => { const t = document.querySelector('.rm-sis-tools'); return t && getComputedStyle(t).display !== 'none' ? '.rm-sis-tools' : '#rm2-fab'; });
+    await page.click(botaoCaixa, { force: true }); await page.waitForTimeout(250);
+    const toast = await page.evaluate(() => { const t = document.querySelector('.rm-toast'); return t && t.classList.contains('on') ? t.textContent : null; });
+    ok(semFixo && toast === 'caneta #456 · build 2026-10-09·456c', 'ao ABRIR a caixa o piloto vê o build num aviso passageiro (.rm-toast) e NENHUM elemento fixo novo fica sobre a leitura: ' + toast, { semFixo, toast });
+    await page.click(botaoCaixa, { force: true }); await page.waitForTimeout(250);
+    await B.prepararAlvo(page, 'novo', 'paragrafo', true);
+    await page.evaluate(() => window.RMToolsV2.abrirDiag()); await page.waitForTimeout(300);
+    const d1 = await page.evaluate(() => ({ btn: (document.querySelector('.rm2-diag [data-d="guarda"]') || {}).textContent, linhas: window.RMToolsV2._test.perfLinhas().slice(0, 2).join(' | '), classe: document.body.classList.contains('rm2-pilot-guard') }));
+    ok(d1.btn === 'Sin guarda: no' && d1.classe, 'com o painel aberto o botão «Sin guarda» começa desligado e a guarda está ativa', d1);
+    ok(/build=2026-10-09·456c/.test(d1.linhas) && /acesso à V2: lista beta no código/.test(d1.linhas) && /piloto físico: sim \(conta do piloto no código\)/.test(d1.linhas) && /flags do servidor: layout=true visual=true pen=false/.test(d1.linhas) && !/d4d215d3|448e4d63/.test(d1.linhas), 'o diagnóstico informa build, via de acesso e flags (sem UID)', d1.linhas);
+    const nTr0 = await page.evaluate(() => document.querySelectorAll('#rm2-ink path[data-ink]').length);
+    await page.click('.rm2-diag [data-d="guarda"]'); await page.waitForTimeout(250);
+    ok(await page.evaluate(n => document.querySelectorAll('#rm2-ink path[data-ink]').length === n && !window.RMToolsV2._test.temTraco(), nTr0), 'com o lápis armado, tocar o botão do painel NÃO começa um traço por baixo dele');
+    const d2 = await page.evaluate(() => ({ btn: document.querySelector('.rm2-diag [data-d="guarda"]').textContent, classe: document.body.classList.contains('rm2-pilot-guard'), linhas: window.RMToolsV2._test.perfLinhas().join(' | ') }));
+    ok(d2.btn === 'Sin guarda: sí' && !d2.classe && /teste sem guarda: LIGADO/.test(d2.linhas), '«Sin guarda: sí» desliga a guarda (regra legada) e o painel informa', d2);
+    const r = await B.prepararAlvo(page, 'novo', 'paragrafo', false).catch(() => null);
+    const { send } = await cdpPen(ctx, page); const pts = B.gesto('rapido', r || await page.evaluate(() => { const b = window.__alvoEl.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }));
+    await page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen'));
+    await send('mouseMoved', pts[0][0], pts[0][1], { buttons: 0 }); await send('mousePressed', pts[0][0], pts[0][1], { button: 'left', buttons: 1, clickCount: 1, force: .5 });
+    for (let k = 1; k < 6; k++) { await send('mouseMoved', pts[k][0], pts[k][1], { button: 'left', buttons: 1, force: .5 }); await page.waitForTimeout(8); }
+    const leg = await page.evaluate(() => ({ down: document.body.classList.contains('rm2-pen-down'), ta: getComputedStyle(document.getElementById('materias-container')).touchAction, guarda: getComputedStyle(document.getElementById('rm2-penguard')).display }));
+    ok(leg.down && leg.ta === 'none' && leg.guarda === 'none', 'sem guarda: durante o contato vale a regra LEGADA (touch-action:none no contêiner) e a guarda não aparece', leg);
+    await send('mouseReleased', pts[5][0], pts[5][1], { button: 'left', buttons: 0, clickCount: 1 }); await page.waitForTimeout(300);
+    await page.click('.rm2-diag [data-d="guarda"]'); await page.waitForTimeout(200);
+    ok(await page.evaluate(() => document.body.classList.contains('rm2-pilot-guard')), 'ligar de novo restaura a guarda');
+    await page.evaluate(() => window.RMToolsV2.fecharDiag()); await page.waitForTimeout(200);
+    ok(errs.length === 0, '0 erros JS', errs);
+    await ctx.close();
+  }
+  for (const [rot, uid, pen, chipEsp] of [['2.º testador (lista beta do código) SEM pen', BETA2, false, false], ['2.º testador COM pen:true do servidor', BETA2, true, true], ['aluno comum (UID qualquer, fora de qualquer lista)', '11111111-2222-4333-8444-555555555555', true, false]]) {
+    const { ctx, page, errs } = await abrir(br, base, midia, 'novo', { w: 1024, h: 768, touch: true, uid, pen });
+    await page.waitForTimeout(600);
+    const g = await page.evaluate(() => ({ v2: !!window.RMToolsV2, montado: !!document.querySelector('.rm2-box'), guardaEl: !!document.getElementById('rm2-penguard'), build: window.RMToolsV2 && window.RMToolsV2.build, piloto: window.RMToolsV2 ? window.RMToolsV2._test.pilotoPermitido() : false }));
+    if (rot.startsWith('aluno comum')) ok(!g.v2 || (!g.montado && !g.guardaEl), `${rot}: a V2 NÃO monta (nenhuma toolbox nem guarda) mesmo que o servidor devolvesse pen:true — o acesso à caneta continua só pela lista beta`, g);
+    else {
+      const bt = await page.evaluate(() => { const t = document.querySelector('.rm-sis-tools'); return t && getComputedStyle(t).display !== 'none' ? '.rm-sis-tools' : '#rm2-fab'; });
+      await page.click(bt, { force: true }); await page.waitForTimeout(250);
+      const toast = await page.evaluate(() => { const t = document.querySelector('.rm-toast'); return t && t.classList.contains('on') && /build/.test(t.textContent) ? t.textContent : null; });
+      ok(g.montado && !!toast === chipEsp && g.piloto === chipEsp, `${rot}: toolbox ${g.montado ? 'monta' : 'não monta'}; aviso do build ao abrir a caixa ${chipEsp ? 'aparece' : 'ausente'} (medido ${toast}); piloto físico=${chipEsp}`, { g, toast });
+    }
+    ok(errs.length === 0, `${rot}: 0 erros JS`, errs);
+    await ctx.close();
+  }
+
   await br.close(); srv.close();
   console.log(`\ncaneta-456: ${n - ko}/${n} verificações OK` + (ko ? ` — ${ko} FALHAS` : ''));
   process.exit(ko ? 1 : 0);
