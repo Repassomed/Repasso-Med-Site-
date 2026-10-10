@@ -22,13 +22,16 @@
 | `67ef6a55` | **rastreabilidade do Guard**: 4 pontes `data-guard-previous-stem-sha1` (ticagrelor, bismuto; bloco + banco) e remoção dos 2 marcadores HSD2 obsoletos |
 | `fb128de8` | correções achadas pelo teste real de quiz: #192 (explicação com letras antigas), #105, #43/#180 |
 | `a0c457de` | ajustes do parecer G0 independente: E1 como «Complemento de la literatura», hiponatremia, Mg²⁺, ENaC, nitroglicerina, «conviene» 59→30, 9 questões |
+| `2c5c4f48` | **R2:** alternativas e cartões novos **neutros em altura** (tinta ancorada à seção / Banco); acréscimos E1–E10 encurtados |
+| `1b137b3c` | **R2:** explicações **aditivas** — 32 cabeçalhos e fragmentos originais restaurados (com a letra nova em #188/#192) |
+| `bcd870f4`, `10191e2f` | **R2:** duplicata #114 × #133 resolvida (#114 vira V/F de mecanismo, #133 canônica) + contadores declarados do banco (132/82; bloco 07: 4/7) |
 | docs/QA | matriz de fontes, auditoria de questões, QA de navegador, erratum da auditoria geral, harness `tools/qa/browser-qa/farmaco2-2026-10/` |
 
 ### 2.1 Lacunas incorporadas (E1–E10)
 
 | id | onde | o que entrou |
 |---|---|---|
-| E1 | b05 §9 (painel + tabela + comparação) | **correção científica**: mantém «Conforme la cátedra: NO» e acrescenta, como *Complemento de la literatura*, que o excesso de mortalidade é do nifedipino de ação curta e que o amlodipino (ação prolongada) não é «como toda DHP» |
+| E1 | b05 §9 (painel + tabela + comparação) | **correção científica**: painel com o título original e «Conforme la cátedra: NO»; a nuance entra **na própria frase** («en la literatura, sobre todo con el nifedipino de acción corta») e na célula do amlodipino («como grupo, “NO” en IAM reciente y angina inestable; el exceso de mortalidad es de las de acción corta, no del amlodipino») |
 | E2 | b05 §3.1 | três cartões que *explicam* o que separa angina instável / IAM sem ↑ST / IAM com ↑ST (antes só havia a figura) — corrige o erro da anotação (IAMSEST com «↑ persistente do ST») |
 | E3 | b05 §7.7 | nitroglicerina SL/IV na angina instável com dor persistente |
 | E4 | b01 §6.5 | cartões «quem aprieta / quem afloja» → por que α antes de β (dúvida do aluno) |
@@ -43,7 +46,8 @@
 
 **① E1 — painel de dihidropiridinas (b05 §9).**
 *Antes:* «🚫 Dihidropiridinas · nifedipino y amlodipino — Conforme la cátedra: NO. … Aumentan la mortalidad en IAM reciente y en angina inestable» e, na tabela, «Amlodipino: Como toda dihidropiridina, aumenta la mortalidad en IAM reciente y angina inestable».
-*Depois:* a frase da cátedra fica **como estava** e entra um complemento no mesmo parágrafo: «*Complemento de la literatura:* ese exceso de mortalidad se demostró con el nifedipino de acción corta. El amlodipino, de acción prolongada, no lo mostró y se acepta en la angina estable o vasoespástica, pero no es de primera línea en el cuadro agudo»; tabela: «La cátedra lo agrupa con las DHP: «NO» en IAM reciente y angina inestable; el exceso de mortalidade se describió con las de acción corta, no con él». *(Uma primeira versão reescrevia a posição da cátedra; o parecer G0 apontou e foi corrigida.)*
+*Depois (rodada 2):* título e «Conforme la cátedra: NO» **idênticos aos originais**; o marcador fica «· **Aumentan la mortalidad** en IAM reciente y en angina inestable *(en la literatura, sobre todo con el nifedipino de acción corta)*»; célula do amlodipino: «Como grupo, «NO» en IAM reciente y angina inestable; el exceso de mortalidad es de las de acción corta, no del amlodipino»; comparação: «Neutro / DHP corta ↑ mortalidad».
+*Fontes conferidas:* meta-análise de Furberg & Psaty (Circulation 1995: nifedipino de liberação imediata, RR 1,16 global e dose-dependente, 2,83 a 80 mg/dia); TRENT (neutro); SPRINT II (mais mortalidade precoce no braço nifedipino IR); bula norte-americana do nifedipino (advertência contra a forma IR em IAM/SCA); CAMELOT (amlodipino reduz eventos em DAC estável) e PRAISE-2 (mortalidade neutra na IC). *Não citei* diretriz de SCA (classe III/“harm”) porque não consegui verificá-la nesta sessão. O texto, portanto, **não** afirma que o amlodipino é “seguro” no IAM: só que o excesso de mortalidade documentado é da DHP de ação curta.
 
 **② E4 — feocromocitoma (b01 §6.5).**
 *Antes:* só a regra e a frase «se apaga la vasodilatación β₂… queda la vasoconstricción α sin oposición» (supõe que o leitor sabe que *bloquear* tira o que o receptor fazia).
@@ -73,18 +77,17 @@
 Invariante estrutural (necessário, **não suficiente**): a sequência dos elementos que ancoram a tinta (`p,li,h2–h5,table,figure,blockquote`) é idêntica à de `origin/main` nas 17 seções; 44 ids iguais; só `div` novos (cartões `f2-chain`) e uma `<tr>` dentro de uma tabela existente.
 **Medição real** (motor do site em Chromium; detalhes e método em `…-qa-navegador-v1.md`):
 
-* **Grifos:** frases inalteradas recuperam **597/597** (nível 1) e controles **296/296**, **0 em posição errada**; frases reescritas (336 registros) **não** voltam (316 não recuperadas, 20 por correspondência tolerante, nenhuma em lugar errado). Pesa **3,7 %** das frases da matéria.
-* **Tinta em elemento (`seção>índice`):** 81 % das âncoras com texto e caixa idênticos → alinhamento **exato**; 19 % reescritas → o traço fica no parágrafo certo, mas reescalado (Δaltura mediana 0–24 px, p90 22–69 px, máx. ~180–205 px).
-* **Tinta ancorada à seção** (enunciados `div.quiz-question`, figuras): **deslocamento real** — mediana 120–334 px, p90 289–809 px, máx. 346–957 px conforme a largura; o banco geral (f2b15) é o pior (+1,5 mil px a 1024 px; +9 mil px no celular).
-* `data-rm-content-rev` **não** foi aplicado (orfanaria também os traços que hoje se alinham).
+* **Grifos (rodada 2):** frases inalteradas recuperam **599/599** (nível 1) e controles **314/314**, **0 em posição errada**; frases reescritas (290 registros) **não** voltam (286 não recuperadas, 4 por correspondência tolerante, nenhuma em lugar errado). Pesa **3,2 %** das frases da matéria (antes 3,7 %); em janelas de 6 palavras, 2,54 % (antes 2,94 %). As **alternativas de quiz não são grifáveis** (o motor as ignora). A lista frase a frase das originais que deixaram de existir está em `…-rastreio-v1.md`.
+* **Tinta em elemento (`seção>índice`):** 80,7 % das âncoras com texto e caixa idênticos → alinhamento **exato**; 19,3 % reescritas → o traço fica no parágrafo certo, mas reescalado (Δaltura mediana 0–24 px, p90 22–69 px, máx. 90–141 px).
+* **Tinta ancorada à seção** (enunciados `div.quiz-question`, figuras): enunciados — mediana/p90/máx. (px) 390 px: 168/716/937 · 768: 13/48/96 · 1024: 28/131/171 · 1440: 34/140/192 (antes: mediana 117–334, p90 236–809, máx. 310–957); figuras 1024: 16/63/93 (antes 39/115/218). Δ de altura do banco (f2b15): **1024 −317 px**, 768 −154, 1440 −207 (antes +1 488 a 1024) — mas **390 px (celular) ainda +3 116 px** (antes +8 970): limite remanescente.
+* `data-rm-content-rev` **não** foi aplicado e **não é proposto como solução**: orfanaria também os traços que hoje se alinham.
 
-Risco para a tinta: **MÉDIO** (não zero), concentrado em (i) traços sobre enunciados/figuras, sobretudo no banco, e (ii) grifos/traços sobre frases reescritas. Decisão do José: aceitar, ou aplicar `data-rm-content-rev` só em f2b15.
+Risco para a tinta: **BAIXO–MÉDIO** (não zero), concentrado em (i) traços sobre enunciados no **Banco em celular (390 px)** e (ii) grifos/traços sobre as ≈ 3 % de frases reescritas por necessidade científica ou da G0. Sem acesso aos dados reais dos alunos (leitura no Supabase negada; não contornada): os números são simulações com o motor real.
 
 ## 6 · O que **não** foi feito (e por quê)
 
 * **Fusão de repetições por remoção de parágrafos.** A mesma ideia aparece até quatro vezes (cálcio asa×tiazida em figura, trap, macete, f2-row e tabela; «lo esencial en cinco líneas», mapa e flashcards). Remover/fundir parágrafos **desloca a tinta** e exigiria `data-rm-content-rev` (decisão do José). Sem solução demonstrada, ficou só o corte *dentro* dos parágrafos (frases de estratégia). Proposta para José decidir: fundir cálcio (b02) e os cinco-linhas de b01/b02/b03 em uma nova revisão de conteúdo.
 * **Reorganização de comparações em tabelas novas** — mesmo motivo; preferi `div.f2-chain` (fora do seletor da tinta).
-* **Duplicata #114 × #133 (misoprostol, V/F, blocos 06 e 09)** — registrada, não apagada (8-A.9).
 * **Erros das anotações** (8) não incorporados — registro em `…-fontes-v1.md` §3 para José orientar os alunos.
 
 ## 7 · QA técnico e semântico
@@ -95,12 +98,12 @@ Risco para a tinta: **MÉDIO** (não zero), concentrado em (i) traços sobre enu
 | SUB_SEL por seção = `origin/main`; 44 ids na mesma ordem | ✅ |
 | Bloco ↔ banco (214 pares) | ✅ 0 divergências (também no teste de navegador) |
 | Contagens (428 quiz-items, 876 flashcards, 79 SVG, 64 img) | ✅ iguais à main |
-| **Guard local** `--base origin/main` | ✅ **PASSOU COM AVISOS**. *Correção:* na rodada anterior eu li só o fim da saída e **afirmei que não havia falhas; havia 2 (HARD FAIL)** — `questoes-removidas` (4 enunciados ampliados sem ponte) e `rename-enunciado-invalido` (marcadores HSD2 obsoletos). Corrigidos no `67ef6a55`. Avisos restantes: `enunciado-renomeado` (as 4 pontes), `gabarito-alterado` (#188, #192), `contagens` («214» declarado × 428 contados com espelhos — **pré-existente**), `registro-tarefas` (tarefa de Neurologia alheia) |
+| **Guard local** `--base origin/main` | ✅ **PASSOU COM AVISOS**. *Correção:* na rodada anterior eu li só o fim da saída e **afirmei que não havia falhas; havia 2 (HARD FAIL)** — `questoes-removidas` (4 enunciados ampliados sem ponte) e `rename-enunciado-invalido` (marcadores HSD2 obsoletos). Corrigidos no `67ef6a55`. Avisos restantes: `enunciado-renomeado` (as pontes: ticagrelor, bismuto e #114 — 6 itens com os espelhos), `gabarito-alterado` (#188, #192), `contagens` («214» declarado × 428 contados com espelhos — **pré-existente**), `registro-tarefas` (tarefa de Neurologia alheia) |
 | Guard na `main` com uma alteração trivial no arquivo | 🔴 **já reprovava** (marcadores HSD2 da PR #386 obsoletos): defeito latente da main, resolvido aqui |
 | **Quiz em navegador**: 358 MCQ (cliques certo/errado), 28 V/F, 42 abertas | ✅ 0 falhas duras (base e nova) |
 | **Flashcards em navegador**: 29 mazos, 876 cartas (percorrer, girar, barajar, fechar) | ✅ 29/29 |
 | Transposições #188 (b→c) e #192 (b→d): opções, explicações, espelhos | ✅ conferido; **#192 tinha um defeito real, corrigido** |
-| Grifos e tinta nos trechos reescritos | ✅ medidos — ver §5 (risco MÉDIO, não zero) |
+| Grifos e tinta nos trechos reescritos | ✅ medidos — ver §5 (risco BAIXO–MÉDIO, não zero) |
 | **Parecer G0 independente** (revisor separado, G0 e 8-A.6/8-A.7 lidas) | ✅ feito: *aprova com ajustes* nos 3 grupos; ajustes aplicados em `a0c457de` (2 bloqueantes de questões — #59 e #168 — e 2 de ciência — hiponatremia e E1 — resolvidos); ver abaixo |
 | Playwright de caneta física / sincronização Supabase | ❌ fora de escopo (nada foi tocado) |
 
@@ -108,15 +111,16 @@ Risco para a tinta: **MÉDIO** (não zero), concentrado em (i) traços sobre enu
 
 ## 8 · Precisa de revisão humana
 
-1. **Risco de tinta MÉDIO (§5):** decidir se se aplica `data-rm-content-rev` ao banco geral (f2b15) — ou se se aceita o desvio medido.
+1. **Risco de tinta BAIXO–MÉDIO (§5):** o desvio remanescente é o do Banco em 390 px (+3 116 px) e as ≈ 3 % de frases reescritas; aceitar ou orientar nova redução. Sem `data-rm-content-rev`.
 2. **Duas trocas de letra (#188, #192, b13):** resposta científica igual; o Guard exige aceite humano explícito (Lei 6).
 3. **E1** mantém a regra da cátedra («DHP: NO») e acrescenta a nuance como complemento da literatura; confirmar que concorda com o texto.
 4. **Neutralização G0** (commit `30b8ef81`): reversível isoladamente.
-5. **#114 × #133** (misoprostol): duplicata registrada, não removida.
+5. **#114 × #133** (misoprostol): resolvida — #133 canônica; #114 reformulada como V/F de mecanismo e **reclassificada** «complementaria» (contadores 132/82 atualizados). Confirmar o juízo.
 6. **Fusão de repetições** (exigiria `data-rm-content-rev`): não feita.
 7. **Marcador HSD2**: removi os 2 `data-guard-previous-stem-sha1` obsoletos da PR #386 — confirmar que não há pareamento de auditoria externo que dependa deles.
-8. 34 % das corretas ainda são a única mais longa (acaso ≈ 25–30 %); resíduo deliberado (originais preservados).
+8. Corretas únicas mais longas: 111 → **34 de 179 (19 %)** — ligeiramente abaixo do acaso (≈ 25 %); não há pista de tamanho em nenhum sentido.
+9. **Fonte externa de #188:** a bula FDA do aspart prevê 5–10 min **antes** da refeição; a janela «até 20 min depois» é da cátedra e a pergunta diz «según la cátedra».
 
 ## 9 · Parecer final
 
-**PARCIAL → bom, com risco de tinta MÉDIO declarado.** Ganhos: uma correção científica real (sem reescrever a posição da cátedra), respostas às três dúvidas dos alunos, mecanismos que faltavam, banco mais equilibrado (111 → 61 corretas únicas mais longas de 179; razão média 1,69 → 1,07), voz G0 restaurada, e **QA real**: quiz, flashcards, grifos e tinta medidos em navegador, com dois defeitos meus achados e corrigidos (#192; Guard). Limites: a tinta ancorada à seção e as frases reescritas **se deslocam/ não voltam**; a fusão de repetições ficou de fora; a caneta física e o Supabase não foram testados. **Não recomendo merge** antes de nova auditoria e da sua decisão sobre os itens acima.
+**PARCIAL → bom, com risco de tinta BAIXO–MÉDIO declarado.** Ganhos: uma correção científica real (sem reescrever a posição da cátedra), respostas às três dúvidas dos alunos, mecanismos que faltavam, banco mais equilibrado (111 → 34 corretas únicas mais longas de 179; razão média 1,69 → 1,01) e **neutro em altura** em 768–1440 px, voz G0 restaurada, e **QA real**: quiz, flashcards, grifos e tinta medidos em navegador, com dois defeitos meus achados e corrigidos (#192; Guard). Limites: a tinta ancorada à seção e as frases reescritas **se deslocam/ não voltam**; a fusão de repetições ficou de fora; a caneta física e o Supabase não foram testados. **Não recomendo merge** antes de nova auditoria e da sua decisão sobre os itens acima.

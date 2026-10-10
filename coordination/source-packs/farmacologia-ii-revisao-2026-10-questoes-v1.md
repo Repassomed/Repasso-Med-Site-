@@ -38,16 +38,18 @@ Classificação por cobertura de 3-gramas do enunciado e das alternativas contra
 | classe | n | revisadas | corretas únicas mais longas antes → depois | razão média correta/outras antes → depois |
 |---|---|---|---|---|
 | O (originais) | 9 | **0** (preservadas) | 2 → 2 | 1,16 → 1,16 |
-| P | 17 | 2 | 7 → 6 | 1,35 → 1,16 |
-| R | 72 | 34 | 40 → 26 | 1,53 → 1,07 |
-| C | 81 | 61 | 62 → 27 | 1,95 → 1,03 |
-| **total** | **179** | **97** | **111 (62 %) → 61 (34 %)** | **1,69 → 1,07** (mediana 1,49 → 1,06) |
+| P | 17 | 2 | 7 → 5 | 1,35 → 1,13 |
+| R | 72 | 34 | 40 → 15 | 1,53 → 1,02 |
+| C | 81 | 61 | 62 → 12 | 1,95 → 0,96 |
+| **total** | **179** | **97** | **111 (62 %) → 34 (19 %)** | **1,69 → 1,01** (mediana 1,49 → 0,97) |
 
-Razão ≥ 1,3: 103 → 17 · razão ≥ 1,5: 89 → 8 · empates de «mais longa» 6 → 11 · em palavras 99 → 42 · «baseadas en examen» (98): 49 → 34.
+Razão ≥ 1,3: 103 → 15 · razão ≥ 1,5: 89 → 8 · empates de «mais longa» 6 → 7 · em palavras 99 → 29 · «baseadas en examen» (98): 49 → 22.
 
-Por bloco (corretas únicas mais longas antes → depois / n): b01 14→9/22 · b02 9→5/14 · b03 6→2/18 · b04 3→1/8 · b05 10→5/14 · b06 7→2/9 · b07 7→3/11 · b08 5→3/10 · b09 9→6/10 · b10 8→4/8 · b11 9→7/10 · b12 8→5/15 · b13 8→4/12 · b14 8→5/18.
+> **Nota de método (rodada 2).** O valor «61 (34 %)» que constava aqui era de uma versão anterior. Na rodada 2 as alternativas foram reescritas para **não mudar a altura do bloco** (a tinta ancorada à seção depende disso), o que equilibrou ainda mais os tamanhos. Medido por `verify.py`/`gendoc.py` no head atual: **34 de 179 (19 %)**. Isso fica um pouco **abaixo** dos ~25 % que o acaso daria; a leitura é a de ausência de pista de tamanho — não há ganho em escolher a mais longa nem a mais curta. Se o revisor preferir a distribuição «ao acaso», basta realongar 10–12 itens; não foi feito para não reabrir a altura do banco.
 
-**Honestidade sobre o resíduo.** 34 % ainda é maior que os ~25–30 % que o acaso daria; o resíduo vem de (i) 9 literais da prova + 15 parciais + 38 reconstruídas **deliberadamente intactas** (já equilibradas, ou com qualificadores necessários) (a lei manda preservar a forma real de cobrança — 8-A.5/8-A.9), (ii) alternativas cuja resposta correta **precisa** de qualificadores (dose, mecanismo + consequência) e que não se podem encurtar sem perder ciência. Nesses casos o desequilíbrio de tamanho foi reduzido (razão mediana ~1,05), mas não eliminado.
+Por bloco (corretas únicas mais longas antes → depois / n): b01 14→6/22 · b02 9→4/14 · b03 6→2/18 · b04 3→2/8 · b05 10→2/14 · b06 7→2/9 · b07 7→3/11 · b08 5→0/10 · b09 9→2/10 · b10 8→1/8 · b11 9→2/10 · b12 8→2/15 · b13 8→2/12 · b14 8→4/18.
+
+**Honestidade sobre o resíduo.** Depois da rodada 2 o resíduo de «correta mais longa» é de 34 itens (19 %): vêm principalmente de 9 literais da prova + 15 parciais + reconstruídas **deliberadamente intactas** (a lei manda preservar a forma real de cobrança — 8-A.5/8-A.9) e de alternativas cuja resposta correta **precisa** de qualificadores (dose, mecanismo + consequência) que não se podem encurtar sem perder ciência.
 
 ## 4 · O que mudou nas 97 MCQ revisadas
 
@@ -55,7 +57,7 @@ Por bloco (corretas únicas mais longas antes → depois / n): b01 14→9/22 · 
 * **Distrator forte + detalhe discriminante** (8-A.6): em cada questão revisada ficou definido um segundo competidor plausível e o **detalhe** que o aluno precisa compreender para separá-lo da correta (tabela §6). Uma única melhor resposta em todas.
 * **Absolutos artificiais** («exclusivamente», «solo», «sin excepción», «Ningún…») neutralizados nos distratores onde faziam de pista.
 * **Explicações:** o parágrafo «Las otras» passou a refutar cada distrator pelo seu detalhe (incluindo os que antes só diziam «es falso»); onde não havia o parágrafo, anexou-se **dentro do último `<p>` existente** (um `<p>` novo deslocaria a tinta — ver §8).
-* **Letras (8-A.7):** antes a/b/c/d = 40/51/45/43; depois 40/49/46/44. Só **2 itens** mudaram de letra (transposição com remapeamento das explicações, o mesmo em bloco e banco). São eles: **#188** (b13, análogo de insulina que se aplica após a refeição: b→c; aspart ↔ NPH) e **#192** (b13, regra 15-15: b→d; «15 g de glucose» ↔ «comida completa»). O Guard os marca como `gabarito-alterado` (Lei 6): a resposta **científica** é a mesma, mudou só a posição; **precisa de aceite humano explícito**. Maior corrida: 4. Nenhuma reordenação alterou resposta científica.
+* **Letras (8-A.7):** antes a/b/c/d = 40/51/45/43; depois 40/49/46/44. Só **2 itens** mudaram de letra (transposição com remapeamento das explicações, o mesmo em bloco e banco). São eles: **#188** (b13, análogo de insulina que se aplica após a refeição: b→c; aspart ↔ NPH) e **#192** (b13, regra 15-15: b→d; «15 g de glucose» ↔ «comida completa»). O Guard os marca como `gabarito-alterado` (Lei 6): a resposta **científica** é a mesma, mudou só a posição; **precisa de aceite humano explícito** — a conferência com fonte está em §4-B. Maior corrida: 4. Nenhuma reordenação alterou resposta científica.
 * **Sincronia bloco ↔ banco: 0 divergências** (214 pares comparados por rótulo + alternativas + resposta).
 * **Contagens declaradas** no texto (214 comentadas; 133 basadas en exámenes / 81 complementarias etc.) **não mudaram**: nenhuma questão foi criada, removida nem fundida.
 
@@ -68,9 +70,27 @@ Por bloco (corretas únicas mais longas antes → depois / n): b01 14→9/22 · 
 * **Parecer G0 (revisor independente)** — corrigidos: **#59** (opção b dizia «revierte al suspenderlo», contradizendo a explicação; opção d recuperou «al bloquear la angiotensina II»; refutação reescrita: o IECA não é tubulotóxico, a queda é hemodinâmica e reversível), **#168** (distrator c ganhara «deshidratación», precaução legítima com metformina → trocado; distratores equilibrados), **#25** (existem α₂ pós-sinápticos; clonidina/metildopa atuam no tronco encefálico), **#91** (a refutação de d reconhece que a contraindicação é real e dá o motivo certo), **#175** (distrator c fraco → inversão do conceito), **#167** (DM1 sem absoluto; refutação de c sobre insuficiência renal), **#178** (refutação do mecanismo de d), **#160** («la TSH no es útil al inicio»), **#128** (teofilina com efeito antiinflamatório leve).
 * **Refutação por letra:** explicações que nomeiam os 3 distratores — **104 → 151 de 179** (nas 97 revisadas: 45 → 92).
 
+### 4-B · Conferência das duas trocas de letra (#188 e #192) — fonte, explicação, espelho
+
+| item | o que a questão cobra | resposta científica | letra antes → depois | fonte | explicação / espelho |
+|---|---|---|---|---|---|
+| **#188** (b13) | qual insulina de ação rápida pode ser aplicada **após** a refeição quando o paciente não sabe quanto vai comer | **análogo ultrarrápido (aspart)** — o resumo b13 ensina «15 min antes de comer **até 20 min depois**» para o aspart; a regular exige antecipação (30 min antes) | b → **c** (transposição com a alternativa que agora é b) | Resumo da cátedra (tabela b13 + bullet do aspart). **Ressalva de fonte externa:** a bula FDA do aspart (NovoLog) recomenda 5–10 min **antes** da refeição e não prevê aplicação depois; a janela «até 20 min depois» é a da cátedra/ material de ensino. Por isso a explicação diz «según la cátedra» e o texto de ensino não foi alargado | cabeçalho original restaurado com a letra nova; «Las otras» remapeado (NPH e glargina são basais, a regular exige antecipação); bloco e banco idênticos |
+| **#192** (b13) | paciente consciente com hipoglicemia por insulina e glicemia capilar baixa: conduta | **15 g de glicose de absorção rápida** e repetir a medição em 15 min (regra 15-15); gordura retrasa a absorção; glucagón só se não pode engolir | b → **d** | Resumo b13 (regra 15-15) e conduta padrão de hipoglicemia (ADA Standards of Care: 15–20 g de glicose, repetir em 15 min) | removido o parágrafo antigo que citava as letras antigas; cabeçalho = alternativa nova; bloco e banco idênticos |
+
+As letras só mudaram para (i) desfazer a pista de tamanho/posição e (ii) manter a distribuição a/b/c/d em 40/49/46/44, sem tocar na resposta científica. **Pedido de aceite humano explícito** (Lei 6).
+
+### 4-C · Duplicata #114 × #133 (misoprostol) — decisão e execução
+
+* **Diagnóstico (8-A.1):** os dois itens eram o **mesmo** V/F — o mesmo enunciado da prova, em blocos diferentes (b06 AINE e b09 antiulcerosos). Um aluno que acertou um acertava o outro; **duplicata semântica exata**.
+* **Canônica (8-A.1-B):** **#133** (b09) — é onde o resumo desenvolve o misoprostol (fundamento PGE₂/PGI₂, metabólito, diarreia como efeito adverso) e o enunciado está na forma real de cobrança. Fica intacta, com o rótulo «basada en examen».
+* **#114 (b06) reformulada, mesmo lugar e mesma posição:** V/F de **mecanismo** — «Cuando un AINE inhibe la COX-1, la mucosa gástrica pierde PGE₂; el misoprostol… previene la úlcera porque repone esa señal (más moco, bicarbonato y flujo mucoso) y no porque neutralice el ácido» → **Verdadero**. O resumo b06 já ensinava ↓COX-1 → ↓PGE₂ gástrica → ↓moco/bicarbonato/fluxo e «el misoprostol repone lo que el AINE quitó» (8-A.2: resumo ensina → questão cobra). Acrescenta valor avaliativo: quem só decorou «análogo de PGE₁ + contraindicado no embarazo» pode errar o mecanismo.
+* **Rótulo (8-A.4):** a versão nova **deixa de ser «basada en examen»** e passa a «Pregunta complementaria · verdadero o falso». Por isso os contadores declarados do banco foram atualizados (8-A.10): 133 → **132** basadas · 81 → **82** complementarias; bloco 07 (AINE) 5/6 → **4/7**. Conferido contra as tags reais: 132/82.
+* **Guard:** ponte `data-guard-previous-stem-sha1="c8d15445…"` no item do bloco e no espelho do banco (mesma seção, sem id, resposta V/F não tem letra).
+* **Limite:** a seção em que #114 está ainda se chama «Preguntas basadas en exámenes · Bloque 07»; o item novo aparece ali com o rótulo «complementaria». Não foi movido para não deslocar âncoras de tinta.
+
 ## 5 · Achados que **não** foram alterados (para decisão humana)
 
-1. **#114 e #133** (blocos distintos) cobrem o mesmo raciocínio e são **duplicata semântica** (8-A.1). Não foram removidas: a lei 8-A.9 proíbe apagar sem decisão e a escolha da canônica (8-A.1-B) pede juízo de José. Recomendo manter a mais completa e reformular a outra para outro ângulo.
+1. ~~**#114 e #133** duplicata~~ → **resolvido na rodada 2** (§4-C): #133 canônica, #114 reformulada (mecanismo). Nada foi apagado.
 2. Cabeçalhos de seção «Preguntas basadas en exámenes · Bloque NN» e o contador do banco («N basadas en exámenes · M complementarias») foram **mantidos**: são rótulos de proveniência honestos (8-A.4), não estratégia.
 3. As questões marcadas O/P foram mantidas mesmo quando a correta é a mais longa.
 
