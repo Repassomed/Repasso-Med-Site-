@@ -29,7 +29,9 @@ Extração estática dos `.quiz-item` com pelo menos três alternativas de `ul.o
 | Matéria | MCQ analisadas | Correta única mais longa (caracteres) | Correta única mais longa (palavras) | Rotuladas baseadas em exame | Destas, correta única mais longa (caracteres) |
 |---|---:|---:|---:|---:|---:|
 | Anatomopatologia II | 138 | 105 | 100 | 91 | 67 |
-| Farmacologia II | 347 | 215 | 192 | 185 | 91 |
+| Farmacologia II ¹ | 347 | 215 | 192 | 185 | 91 |
+
+> **¹ Errata (2026-10-10, Claude 2 · PR #474).** A linha de Farmacologia II acima **duplicou espelhos do banco por diferenças de espaços** (a deduplicação comparava enunciado + alternativas sem normalizar espaços, então a cópia do banco e a do bloco contaram como itens distintos). Conferência independente atual, com espaços normalizados e espelhos fora: **179 MCQ únicas** (não 347); correta única mais longa em caracteres **111 (62 %)** (não 215); em palavras **99** (não 192); rotuladas «baseadas en examen» **98** (não 185), das quais **49** com a correta única mais longa (não 91). Depois da revisão do PR #474: 179 / **60** (34 %) / 41 / 98 / 34. O problema de viés de tamanho existia, mas era cerca de **metade** do que a triagem sugeria. A linha de Anatomopatologia II **não foi reconferida** aqui: aplicar a mesma normalização antes de usar esses números.
 
 Esses números são sinais de auditoria, não diagnóstico automático de cada questão. Incluem diferenças mínimas de tamanho. Não provaram a qualidade de todas as alternativas nem a fidelidade de origem; exigem revisão semântica por bloco e distinção entre originais preservadas e alternativas geradas.
 
