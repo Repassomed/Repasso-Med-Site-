@@ -7,7 +7,7 @@ const REL='Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-priva
 const NEW=path.join(ROOT,REL);
 let ORIG=process.env.RM_ORIG_HTML;
 if(!ORIG){ ORIG=path.join(os.tmpdir(),'farmacologia-ii.orig.html'); fs.writeFileSync(ORIG,cp.execFileSync('git',['show',(process.env.RM_BASE_REF||'origin/main')+':'+REL],{cwd:ROOT,maxBuffer:1<<28})); }
-const MAT={orig:ORIG,new:NEW};
+const MAT={orig:ORIG,new:process.env.RM_NEW_HTML||NEW};
 const MIME={'.html':'text/html; charset=utf-8','.js':'application/javascript','.css':'text/css','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.json':'application/json','.woff2':'font/woff2'};
 function start(){return new Promise(ok=>{
  const s=http.createServer((req,res)=>{

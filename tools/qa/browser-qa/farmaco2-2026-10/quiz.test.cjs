@@ -24,6 +24,9 @@ const norm=s=>s.replace(/\s+/g,' ').replace(/^[a-d]\)\s*/i,'').replace(/[\s.。]
       r.strongLetter=st?st.textContent.trim()[0].toLowerCase():null; r.strongText=st?n(st.textContent):null;
       const k='abcd'.indexOf(r.correct); r.optAtCorrect=r.opts[k];
       r.strongMatchesOpt=(r.strongText===r.optAtCorrect)||(r.optAtCorrect&&r.strongText&&(r.optAtCorrect.startsWith(r.strongText)||r.strongText.startsWith(r.optAtCorrect)));
+      const W=t=>new Set((t.toLowerCase().match(/[\p{L}\p{N}₁₂]{4,}/gu)||[]));
+      const J=(a,b)=>{const A=W(a),B=W(b);let i=0;A.forEach(x=>{if(B.has(x))i++;});return i/Math.max(1,A.size+B.size-i);};
+      r.simPorOpcion=r.opts.map(o=>+J(r.strongText||'',o).toFixed(2)); r.argmaxSim='abcd'[r.simPorOpcion.indexOf(Math.max(...r.simPorOpcion))];
       const t=ans.textContent.replace(/\s+/g,' '); const m=/Las otras:(.*)$/.exec(t);
       r.otrasRef=m?[...m[1].matchAll(/\(([a-d])\)/g)].map(x=>x[1]):null;
     }
@@ -34,6 +37,7 @@ const norm=s=>s.replace(/\s+/g,' ').replace(/^[a-d]\)\s*/i,'').replace(/[\s.。]
  for(const x of A.filter(x=>x.kind==='mcq')){
    if(x.nOpts!==4||x.letters!=='abcd') F('opciones',x);
    if(x.correct!==x.strongLetter) F('data-correct≠strong',x);
+   if(x.simPorOpcion&&Math.max(...x.simPorOpcion)>0&&x.argmaxSim!==x.correct&&x.simPorOpcion['abcd'.indexOf(x.argmaxSim)]>x.simPorOpcion['abcd'.indexOf(x.correct)]) AV('encabezado se parece más a otra opción (heurística; revisar a mano)',{i:x.i,sec:x.sec,stem:x.stem,correct:x.correct,argmax:x.argmaxSim,sims:x.simPorOpcion});
    if(!x.strongMatchesOpt) AV('encabezado de la explicación parafrasea la opción',{i:x.i,sec:x.sec,stem:x.stem,strong:x.strongText,opt:x.optAtCorrect,correct:x.correct});
    if(x.otrasRef&&x.otrasRef.includes(x.correct)) AV('«Las otras» menciona la letra correcta (revisar a mano)',{i:x.i,sec:x.sec,stem:x.stem,correct:x.correct,ref:x.otrasRef});
  }
