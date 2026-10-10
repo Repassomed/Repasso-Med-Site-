@@ -1,4 +1,4 @@
-# #456 · Reprovação da caneta no iPad (build `2026-10-09·456c`) — causas, correção (build `2026-10-10·456d`), provas e limites
+# #456 · Reprovação da caneta no iPad (build `2026-10-09·456c`) — causas, correção (build `2026-10-10·456e`), provas e limites
 
 > Estado: 🔵 **AGUARDANDO AUDITORIA** · PR em draft · **sem merge, sem publicação** · a **#456 continua aberta**: testes sintéticos verdes **não** a encerram — o critério é o reteste físico do José (`PASSO-FINAL-JOSE.md`).
 > Escopo: **só o piloto físico** (`pilotoPermitido()`: José, ou quem o servidor liberou com `pen:true`, e só em Semiología II). Fora dele nada muda (secção G do teste).
@@ -43,6 +43,33 @@ O vídeo (30 s) tem o painel «Diagnóstico del lápiz» aberto. Os recortes est
 
 A causa 5 explica, sozinha, «escrita falhando **e** rolagem travando» ao mesmo tempo. O vídeo não basta para provar que aconteceu no aparelho: o `pointerup` perdido é do navegador. O build 456d conta e mostra isso no diagnóstico (`contato/traço órfão recuperado: N`).
 
+## 3-bis · Auditoria da #479: pointerup perdido, caneta levantada, só os dedos (build 456e)
+
+**Reproduzido no 456d.** Sequência: traço iniciado → `pointerup` perdido → `touchend` da stylus (a caneta saiu) → só dedos.
+- A guarda continuava ativa.
+- O dedo rolava **0 px** e a pinça não mudava o zoom (escala 1).
+- O traço não era gravado.
+- A recuperação só vinha com o próximo toque da caneta.
+
+**Correção: `penSaiu()`.** Fecha o contacto como um `pointerup` faria, mas só com evidência do próprio navegador de que a ponta saiu:
+
+| evidência | de onde | quando age |
+|---|---|---|
+| `stylus-touchend` | o `touchend`/`touchcancel` da stylus registada | no **quadro seguinte**, e só se o `pointerup` do MESMO `pointerId` não tiver chegado. Um fim normal com `touchend` antes do `pointerup` não é órfão (secção M). |
+| `toque-sem-stylus` | qualquer `touchstart`/`touchmove`/fim de dedo cuja lista `e.touches` (a do navegador) não tem stylus nenhuma | na hora; **só onde o navegador classifica os toques** (`touchType` presente) |
+| `caneta-sem-contato` | `pointermove`/`pointerout` da caneta com `buttons=0` **e** pressão 0 (a ponta pairando ou saindo) | na hora |
+
+**Rejeição da palma preservada.** Com a stylus **ainda** na lista do navegador, nada solta a guarda: o toque da palma tem `touchstart`/`touchmove` suprimidos, e a guarda continua depois que a palma sai (variante «apoiada»). Nenhum temporizador corta letra: só sinais do navegador, e o quadro de espera do `touchend` só confirma a ausência do `pointerup`.
+
+**Resultado (`ipad.test.cjs`, secções K, L e M).** Lápis e goma × diagnóstico fechado e aberto × evidência (`touchend`, toques, hover):
+- a guarda sai **sem** novo toque da caneta;
+- o dedo rola 260 px ou mais e a pinça dá zoom;
+- o traço interrompido é gravado **uma vez** e volta igual depois de recarregar (mesmo id, 1 desenhado);
+- a goma apaga e vira 1 desfazer;
+- o diagnóstico conta a recuperação e diz por qual evidência.
+
+Variante «apoiada»: a guarda fica e a palma é suprimida. Sem `touchType` (Chromium), nada é concluído às cegas (secção L).
+
 ## 4 · Hipóteses NÃO demonstradas (registradas, sem mudança especulativa)
 - **`pinch-zoom` no WebKit.**
   - Se o motor não aceitar a palavra `pinch-zoom`, a declaração do lápis inteira cai e o conteúdo volta a `auto`.
@@ -77,7 +104,8 @@ A causa 5 explica, sozinha, «escrita falhando **e** rolagem travando» ao mesmo
    - `ambiente:` com o `touch-action` aplicado, a aceitação de `pinch-zoom`, o zoom visual e os ouvintes;
    - quadros da rolagem;
    - órfãos recuperados.
-8. **Build `2026-10-10·456d`** (aviso ao abrir a caixa e 1.ª linha do diagnóstico).
+8. **A caneta saiu sem `pointerup` (auditoria da #479, build 456e).** A guarda sai assim que o navegador PROVA que a ponta já não está no vidro, sem esperar um novo toque da caneta e sem temporizador. O traço é gravado uma vez e a goma termina, como num `pointerup`. Ver §3-bis.
+9. **Build `2026-10-10·456e`** (aviso ao abrir a caixa e 1.ª linha do diagnóstico).
 
 Preservados: algoritmo do traço, simplificação, coordenadas e âncoras (`anchor_id`), gravação, tinta salva, grifos, notas, desfazer, regras de palma por pontuação (não mexi em constantes nem temporizadores), marcador.
 
@@ -91,7 +119,9 @@ Preservados: algoritmo do traço, simplificação, coordenadas e âncoras (`anch
   - escrever 2, apagar 1 e **recarregar** (mesmo id, âncora e pontos, sem duplicar);
   - fora do piloto sem mudança;
   - ouvintes; órfão; caminho WebKit (J).
-- Contra a `main`: **14 falhas**, e a secção J aborta porque o hook de teste não existe lá (`dados/ipad-antes-main.txt`). Com esta PR: **82/82** (`dados/ipad-depois-456d.txt`).
+- Contra a `main`: **14 falhas**, e a secção J aborta porque o hook de teste não existe lá (`dados/ipad-antes-main.txt`).
+- Contra o build 456d (primeira revisão desta PR): **141/197, 56 falhas**, todas nas variantes «caneta saiu sem `pointerup`» da secção K (`dados/ipad-antes-456d.txt`). A variante «apoiada» e o fim normal (M) passam também no 456d.
+- Com o build 456e: **197/197** (`dados/ipad-depois-456e.txt`).
 - `tools/qa/caneta-ipad-456/rolagem.cjs`: rolagem com o dedo por layout × ferramenta. Com a goma: **0 px na `main`** e **311–313 px com esta PR**, nos três layouts. Sem ferramenta e com o lápis: 285–315 px antes e depois. Nenhum recálculo da árvore inteira durante a rolagem (`dados/rolagem-*.json`).
 - Regressão do piloto rerodada com o código final, todas verdes: `caneta-456` 138/138 · `sistema` 124 · `layout` 535 · `player-sistema` 275 · `player-toolbox` 495 · `race` 140 · `ink-jump` 54 · `cover` 198 · `nav-sistema` 216 · `pilot-flags` 10 · #460 isolado 167 e piloto real 51.
 - `caneta-novo-layout` dá 89/91: as 2 falhas «post-it» conhecidas, idênticas à `main` (`docs/caneta-456/POSTIT-FALHAS-PREEXISTENTES.md`).
@@ -101,7 +131,10 @@ Preservados: algoritmo do traço, simplificação, coordenadas e âncoras (`anch
 - `Touch.touchType` não existe no Chromium: o adaptador do iPad foi provado com `TouchEvent` sintético.
 - A ordem real de `pointerdown`/`touchstart` no WebKit, o reconhecimento de gesto do sistema e a rejeição de palma do iPadOS **não** são reproduzidos.
 - O zoom do Safari (viewport visual) foi verificado só pela emulação do Chromium: 0,9 px de desvio a 1,6×.
-- A recuperação do contacto órfão depende de um novo toque da **caneta**. Sem ele, só blur, troca de app ou troca de matéria soltam a guarda. Não usei temporizador.
+- **Onde o navegador não classifica os toques** (sem `touchType`, como no Chromium) e a caneta não manda mais nenhum evento, um dedo sozinho **não** é tomado como prova de que a caneta saiu. Nesse caso a guarda só sai com o próximo toque da caneta, blur, troca de app ou troca de matéria (secção L).
+  - No iPad o WebKit classifica (`direct`/`stylus`); é lá que valem as evidências de §3-bis.
+- **Quando a única evidência é o próprio dedo** (a stylus não mandou `touchend` nem passou por cima da tela), o primeiro toque do dedo solta a guarda. Esse primeiro gesto pode não rolar: o navegador decide o `touch-action` no início do toque, quando a guarda ainda estava lá. O gesto seguinte rola e pinça normalmente.
+  - Com `touchend` ou com a caneta pairando, a guarda já saiu antes do dedo, então o primeiro gesto rola.
 - O marcador (`touch-action:none` com o marcador armado) não foi alterado. Fora do escopo desta reprovação.
 
 ## 8 · Rollback

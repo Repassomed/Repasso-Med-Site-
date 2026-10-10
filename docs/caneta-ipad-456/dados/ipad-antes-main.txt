@@ -1,4 +1,4 @@
-# contra a main ebc53dcd (RM_ASSETS_REF=origin/main) — 14 falhas; a secção J aborta (o hook _test.stylusTouchesN não existe na main)
+# contra a main ebc53dcd (RM_ASSETS_REF=origin/main) — 14 falhas; aborta na secção J (o hook _test.stylusTouchesN não existe na main), por isso K/L/M não chegam a rodar
 ▸ A1 · goma em REPOUSO (piloto): o dedo rola e a pinça vale; a goma não trava a navegação
     ✗ FALHA: goma armada: touch-action do conteúdo ≠ none (medido «none») → "none"
     ✗ FALHA: goma armada: pan nos 2 eixos e pinça permitidos ao dedo («none») → "none"
@@ -16,7 +16,7 @@
     ✓ 0 erros JS
 ▸ A4 · diagnóstico: pointercancel separado por caneta / toque (navegação · palma) / gesto ativo
     ✗ FALHA: contagem separada: caneta=0, toque≥1, no meio do gesto=0 (1) → 1
-    ✗ FALHA: o resumo mostra os cancelamentos separados por tipo → "build=2026-10-09·456c · guarda=sim · toolbox=aberta · ferramenta=pen | acesso à V2: lista beta no código · piloto físico: sim (conta do piloto no código) · flags do servidor: layout=true visual=true pen=false · teste sem guarda: desligado | tarefas longas (≥50 ms): 0 · máx 0 ms · soma 0 ms · desde 2 s | traço 1 [pen] pointerdown 3.8 ms (fila 1) · 1.º quadro 16 ms · moves 39 (agrup. máx 1) · fila m"
+    ✗ FALHA: o resumo mostra os cancelamentos separados por tipo → "build=2026-10-09·456c · guarda=sim · toolbox=aberta · ferramenta=pen | acesso à V2: lista beta no código · piloto físico: sim (conta do piloto no código) · flags do servidor: layout=true visual=true pen=false · teste sem guarda: desligado | tarefas longas (≥50 ms): 0 · máx 0 ms · soma 0 ms · desde 2 s | traço 1 [pen] pointerdown 3.6 ms (fila 1) · 1.º quadro 16 ms · moves 39 (agrup. máx 1) · fila m"
     ✓ 0 erros JS
 ▸ A5 · tarefas longas: «indisponível» onde o navegador não informa (Safari) — nunca um zero falso
     ✗ FALHA: sem suporte a longtask: «tarefas longas (≥50 ms): 0 · máx 0 ms · soma 0 ms · desde 0 s» → "tarefas longas (≥50 ms): 0 · máx 0 ms · soma 0 ms · desde 0 s"
@@ -55,7 +55,7 @@
 ▸ E · interrupção no meio do traço (perda de foco / app em segundo plano) e retorno
     ✓ blur: antes, traço em curso e guarda ativa
     ✓ blur: a interrupção fecha o gesto e solta a guarda (sem página presa)
-    ✓ blur: ao voltar, o dedo rola (Δ=266 px)
+    ✓ blur: ao voltar, o dedo rola (Δ=254 px)
     ✓ blur: ao voltar, a caneta escreve (0 → 1)
     ✓ blur: 0 erros JS
     ✓ visibilitychange: antes, traço em curso e guarda ativa

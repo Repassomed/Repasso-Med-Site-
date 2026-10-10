@@ -388,7 +388,7 @@ const paragrafoDireto = (page) => page.evaluate(async () => {
       el.dispatchEvent(ev('pointerdown', 0)); for (let i = 1; i <= 12; i++) el.dispatchEvent(ev('pointermove', i * 6));
     }, [r.x + 40, r.y + 60]);
     const a = await estado(page);
-    await traco(page, c, zigue(r.x + 30, r.y + 18));
+    { const z = zigue(r.x + 30, r.y + 18); await penDown(c, z[0]); for (let k = 1; k < z.length; k++) { await penMove(c, z[k]); await page.waitForTimeout(4); } await penUp(c, z[z.length - 1]); await page.waitForTimeout(450); }   // sem hover antes: o próprio pointerdown novo é a evidência
     const b = await estado(page), n1 = await nTracos(page);
     ok(a.traco && a.penContact, 'antes: há um traço/contato órfão em aberto (pointerId 77)', a);
     ok(n1 === n0 + 2, `a caneta nova escreve (não é recusada) e o traço órfão é gravado, não perdido (${n0} → ${n1})`, { n0, n1 });
@@ -440,6 +440,115 @@ const paragrafoDireto = (page) => page.evaluate(async () => {
       ok(r.podada, `${f}: stylus sem touchend é podada pela lista do navegador (e.touches) e não segura a rolagem`, r);
     }
     ok(!res.semFerramenta.ligado && !res.semFerramenta.stylusStart, 'sem ferramenta: nenhum ouvinte, nada suprimido', res.semFerramenta);
+    ok(errs.length === 0, '0 erros JS', errs); await ctx.close();
+  }
+
+  /* ===================== K · pointerup PERDIDO e a caneta LEVANTADA: só os dedos (rolar e pinça) — auditoria da #479 ===================== */
+  sec('K · traço → pointerup perdido → caneta levantada → SÓ dedos: a guarda sai pela evidência do navegador; com a stylus apoiada a palma segue rejeitada');
+  /* caneta do iPad simulada como o WebKit a entrega: TouchEvent com touchType='stylus' + PointerEvent pen; o pointerup NÃO é enviado */
+  const iniciarSemUp = (page, x, y, comprimento) => page.evaluate(([x, y, comp]) => {
+    const el = document.elementFromPoint(x, y);
+    const s = new Touch({ identifier: 88, target: el, clientX: x, clientY: y }); Object.defineProperty(s, 'touchType', { value: 'stylus' });
+    el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, cancelable: true, touches: [s], targetTouches: [s], changedTouches: [s] }));
+    const ev = (t, dx) => new PointerEvent(t, { bubbles: true, cancelable: true, pointerType: 'pen', pointerId: 88, isPrimary: true, buttons: 1, clientX: x + dx, clientY: y + (dx % 2 ? 6 : 0), pressure: .5 });
+    el.dispatchEvent(ev('pointerdown', 0)); for (let i = 1; i <= comp; i++) el.dispatchEvent(ev('pointermove', i * 6));
+    window.__qaStylus = s; window.__qaStylusEl = el;
+  }, [x, y, comprimento]);
+  const evidencia = (page, tipo) => page.evaluate((tipo) => {
+    const s = window.__qaStylus, el = window.__qaStylusEl;
+    const dedo = () => { const d = new Touch({ identifier: 90, target: el, clientX: 200, clientY: 300 }); Object.defineProperty(d, 'touchType', { value: 'direct' }); return d; };
+    if (tipo === 'touchend') el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [s] }));
+    if (tipo === 'toques') { const d = dedo(); el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, cancelable: true, touches: [d], targetTouches: [d], changedTouches: [d] })); el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [d] })); }
+    if (tipo === 'hover') el.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerType: 'pen', pointerId: 89, buttons: 0, pressure: 0, clientX: 210, clientY: 310 }));
+    if (tipo === 'apoiada') { const d = dedo(); el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, cancelable: true, touches: [s, d], targetTouches: [s, d], changedTouches: [d] })); el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [s], targetTouches: [s], changedTouches: [d] })); }
+  }, tipo);
+  const pinca = async (page, c) => {
+    const s0 = await page.evaluate(() => visualViewport.scale);
+    await c.touch('touchStart', [{ x: 470, y: 420, id: 61 }, { x: 560, y: 420, id: 62 }]);
+    for (let i = 1; i <= 8; i++) { await c.touch('touchMove', [{ x: 470 - 12 * i, y: 420, id: 61 }, { x: 560 + 12 * i, y: 420, id: 62 }]); await page.waitForTimeout(16); }
+    await c.touch('touchEnd', []); await page.waitForTimeout(500);
+    const s1 = await page.evaluate(() => visualViewport.scale);
+    await c.cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1 }); await page.waitForTimeout(250);
+    return { s0: +s0.toFixed(2), s1: +s1.toFixed(2) };
+  };
+  for (const diagAberto of [false, true]) for (const ferr of ['pen', 'eraser']) for (const ev of ['touchend', 'toques', 'hover', 'apoiada']) {
+    const rot = `${ferr === 'pen' ? 'lápis' : 'goma'} · diag ${diagAberto ? 'aberto' : 'fechado'} · ${ev}`;
+    const { ctx, page, errs } = await abrir(br, base, midia, {});
+    const r = await paragrafo(page); const c = await cdpDe(ctx, page);
+    let alvoGoma = null;
+    if (ferr === 'eraser') { const z = zigue(r.x + 30, r.y + 60, 100); await traco(page, c, z); alvoGoma = z; await page.evaluate(() => window.RMToolsV2.escolherFerramenta('eraser')); await page.waitForTimeout(250); }
+    if (diagAberto) { await page.evaluate(() => window.RMToolsV2.abrirDiag()); await page.waitForTimeout(200); }
+    const n0 = await nTracos(page), undo0 = await page.evaluate(() => window.RMToolsV2.estado.undo.length);
+    await iniciarSemUp(page, alvoGoma ? alvoGoma[0][0] : r.x + 40, alvoGoma ? alvoGoma[0][1] + 4 : r.y + 20, 14);
+    const durante = await estado(page);
+    await evidencia(page, ev); await page.waitForTimeout(120);               // um quadro basta para a evidência do touchend
+    const depois = await estado(page);
+    /* (na variante «apoiada» a rolagem é conferida com toques sintéticos: um toque REAL do Chromium não traria a stylus sintética em e.touches) */
+    let y0 = 0, y1 = 0, pz = null, palmaBloqueada = null;
+    if (ev === 'apoiada') palmaBloqueada = await page.evaluate(() => { const s = window.__qaStylus, el = window.__qaStylusEl; const d = new Touch({ identifier: 92, target: el, clientX: 250, clientY: 320 }); Object.defineProperty(d, 'touchType', { value: 'direct' }); const st = new TouchEvent('touchstart', { bubbles: true, cancelable: true, touches: [s, d], targetTouches: [s, d], changedTouches: [d] }); el.dispatchEvent(st); const mv = new TouchEvent('touchmove', { bubbles: true, cancelable: true, touches: [s, d], targetTouches: [s, d], changedTouches: [d] }); el.dispatchEvent(mv); el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [s], targetTouches: [s], changedTouches: [d] })); return st.defaultPrevented && mv.defaultPrevented; });
+    else { y0 = await page.evaluate(() => scrollY); await dedoRola(page, c, 520, 600, 260); y1 = await page.evaluate(() => scrollY); pz = await pinca(page, c); }
+    const n1 = await nTracos(page), undo1 = await page.evaluate(() => window.RMToolsV2.estado.undo.length);
+    ok(durante.penContact && durante.guarda === 'block' && (ferr === 'pen' ? durante.traco : true), `${rot}: durante o contato a guarda está ativa`, durante);
+    if (ev === 'apoiada') {
+      ok(depois.penContact && depois.guarda === 'block', `${rot}: com a stylus AINDA na lista de toques do navegador, a guarda fica (palma rejeitada)`, depois);
+      ok(palmaBloqueada === true, `${rot}: o toque da palma (com a stylus apoiada) tem o gesto nativo suprimido — touchstart e touchmove com preventDefault`, palmaBloqueada);
+      const aindaGuarda = await estado(page);
+      ok(aindaGuarda.penContact && aindaGuarda.guarda === 'block', `${rot}: e a guarda continua depois da palma soltar`, aindaGuarda);
+      await page.evaluate(() => { const s = window.__qaStylus; window.__qaStylusEl.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'pen', pointerId: 88, buttons: 0, pressure: 0 })); window.__qaStylusEl.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [s] })); });
+      await page.waitForTimeout(150);
+      const fim = await estado(page);
+      ok(!fim.penContact && fim.guarda === 'none', `${rot}: o pointerup normal encerra o contato`, fim);
+    } else {
+      ok(!depois.penContact && depois.guarda === 'none' && !depois.traco, `${rot}: a caneta saiu ⇒ guarda solta SEM novo toque da caneta`, depois);
+      ok(y1 - y0 >= 80, `${rot}: só o dedo rola a página (Δ=${Math.round(y1 - y0)} px)`);
+      ok(pz.s1 > pz.s0 + 0.2, `${rot}: a pinça com 2 dedos dá zoom (escala ${pz.s0} → ${pz.s1})`, pz);
+      if (ferr === 'pen') ok(n1 === n0 + 1 && depois.strokes === 1, `${rot}: o traço interrompido é GRAVADO uma vez (${n0} → ${n1}; salvos ${depois.strokes})`, { n0, n1, depois });
+      else ok(n1 === n0 - 1 && undo1 === undo0 + 1, `${rot}: a goma apagou o traço e virou 1 desfazer (${n0} → ${n1}; desfazer ${undo0} → ${undo1})`, { n0, n1, undo0, undo1 });
+      if (diagAberto) { const l = await page.evaluate(() => window.RMToolsV2._test.perfLinhas().join(' | ')); ok(/órfão recuperado: [1-9]/.test(l) && l.indexOf(ev === 'touchend' ? 'stylus-touchend' : ev === 'toques' ? 'toque-sem-stylus' : 'caneta-sem-contato') !== -1, `${rot}: o diagnóstico conta a recuperação e diz por qual evidência`, l.match(/órfão recuperado[^|]*/) && l.match(/órfão recuperado[^|]*/)[0]); }
+    }
+    if (ferr === 'pen' && ev === 'touchend') {                               // recarregar: o traço recuperado volta UMA vez
+      await page.waitForTimeout(500);
+      const antes = await page.evaluate(() => (window.RMToolsV2.estado.strokes['semiologia-ii'] || []).map(x => x.id).join(','));
+      await page.reload(); await page.waitForFunction('window.__ready===true', null, { timeout: 120000 }); await page.waitForTimeout(3500);
+      await page.evaluate(() => { if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo()) window.RMNav.detach(); }); await page.waitForTimeout(800);
+      const depoisRel = await page.evaluate(() => ({ ids: (window.RMToolsV2.estado.strokes['semiologia-ii'] || []).map(x => x.id).join(','), desenhados: document.querySelectorAll('#rm2-ink path[data-ink]').length }));
+      ok(antes && depoisRel.ids === antes && depoisRel.desenhados === 1, `${rot}: depois de recarregar, o traço recuperado volta 1 vez (mesmo id; ${depoisRel.desenhados} desenhado)`, { antes, depoisRel });
+    }
+    ok(errs.length === 0, `${rot}: 0 erros JS`, errs); await ctx.close();
+  }
+
+  /* ===================== M · fim NORMAL com o touchend antes do pointerup: não é órfão ===================== */
+  sec('M · fim normal em que o touchend da stylus chega ANTES do pointerup: 1 traço gravado, nenhum órfão contado (diag aberto)');
+  for (const ferr of ['pen', 'eraser']) {
+    const { ctx, page, errs } = await abrir(br, base, midia, {});
+    const r = await paragrafo(page); const c = await cdpDe(ctx, page);
+    let z = null;
+    if (ferr === 'eraser') { z = zigue(r.x + 30, r.y + 60, 100); await traco(page, c, z); await page.evaluate(() => window.RMToolsV2.escolherFerramenta('eraser')); await page.waitForTimeout(250); }
+    await page.evaluate(() => window.RMToolsV2.abrirDiag()); await page.waitForTimeout(200);
+    const n0 = await nTracos(page);
+    await iniciarSemUp(page, z ? z[0][0] : r.x + 40, z ? z[0][1] + 4 : r.y + 20, 14);
+    await page.evaluate(() => { const s = window.__qaStylus, el = window.__qaStylusEl; el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [s] })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'pen', pointerId: 88, buttons: 0, pressure: 0 })); });
+    await page.waitForTimeout(250);
+    const e = await estado(page), n1 = await nTracos(page);
+    const orf = await page.evaluate(() => window.RMToolsV2._test.perf().orfaos);
+    ok(!e.penContact && e.guarda === 'none' && !e.traco, `${ferr}: contato encerrado pelo pointerup`, e);
+    ok(ferr === 'pen' ? n1 === n0 + 1 && e.strokes === 1 : n1 === n0 - 1, `${ferr}: ${ferr === 'pen' ? '1 traço gravado (sem duplicar)' : 'traço apagado'} (${n0} → ${n1})`, { n0, n1, e });
+    ok(orf === 0, `${ferr}: nenhum «órfão» contado num fim normal (${orf})`, orf);
+    ok(errs.length === 0, `${ferr}: 0 erros JS`, errs); await ctx.close();
+  }
+
+  /* ===================== L · Chromium sem touchType: sem evidência, sem conclusão ===================== */
+  sec('L · onde o navegador não classifica os toques (sem touchType), um dedo sozinho NÃO é prova de que a caneta saiu (nada é concluído às cegas)');
+  {
+    const { ctx, page, errs } = await abrir(br, base, midia, {});
+    const r = await paragrafo(page); const c = await cdpDe(ctx, page);
+    await page.evaluate(([x, y]) => { const el = document.elementFromPoint(x, y); const ev = (t, dx) => new PointerEvent(t, { bubbles: true, cancelable: true, pointerType: 'pen', pointerId: 91, isPrimary: true, buttons: 1, clientX: x + dx, clientY: y, pressure: .5 }); el.dispatchEvent(ev('pointerdown', 0)); for (let i = 1; i <= 8; i++) el.dispatchEvent(ev('pointermove', i * 6)); }, [r.x + 40, r.y + 20]);
+    await dedoRola(page, c, 520, 600, 260);                                   // toque REAL do Chromium: sem touchType
+    const e = await estado(page);
+    ok(e.penContact && e.guarda === 'block', 'sem touchType o contato da caneta é mantido (a palma não é liberada por suposição)', e);
+    await penDown(c, [r.x + 60, r.y + 40]); await penUp(c, [r.x + 80, r.y + 40]); await page.waitForTimeout(400);   // a recuperação de sempre: o próximo toque da caneta
+    const e2 = await estado(page);
+    ok(!e2.penContact && e2.guarda === 'none', 'o próximo toque da caneta continua soltando a guarda', e2);
     ok(errs.length === 0, '0 erros JS', errs); await ctx.close();
   }
 

@@ -1,10 +1,10 @@
-# PASSO FINAL — reteste no iPad do build `2026-10-10·456d` (#456) · ≤ 3 minutos
+# PASSO FINAL — reteste no iPad do build `2026-10-10·456e` (#456) · ≤ 3 minutos
 
 Mesmo iPad, mesma caneta, sua conta. **Só vale depois que esta PR estiver publicada** (merge/publicação é decisão sua).
 
 ## 0 · Confirmar o build (15 s)
 1. Atualize a página e entre em **Semiología II**.
-2. Toque na maleta **Herramientas**: deve aparecer o aviso **`caneta #456 · build 2026-10-10·456d`**. Se não aparecer, feche a aba, abra de novo e confira outra vez. Se continuar sem aviso, **pare e avise**.
+2. Toque na maleta **Herramientas**: deve aparecer o aviso **`caneta #456 · build 2026-10-10·456e`**. Se não aparecer, feche a aba, abra de novo e confira outra vez. Se continuar sem aviso, **pare e avise**.
 3. Último ícone («Diagnóstico del lápiz») → painel aberto. Confira a linha **`ambiente:`**:
    - `touch-action do conteúdo=…`
    - `«pinch-zoom» aceito pelo motor=…`
@@ -41,6 +41,13 @@ Mesmo iPad, mesma caneta, sua conta. **Só vale depois que esta PR estiver publi
 2. Escreva de novo, ampliado.
    - Esperado: a tinta sai exatamente sob a ponta, e o traço anterior continua no mesmo lugar do texto.
 3. Volte ao zoom normal.
+
+## 4-bis · Caneta solta, só os dedos (15 s)
+1. Comece uma palavra com o lápis e, no meio, **levante a caneta e pouse-a na mesa**.
+2. Agora **só com os dedos**: role a página e faça pinça.
+   - Esperado: rola e dá zoom. Se o primeiro toque não rolar, o segundo tem de rolar; anote qual.
+3. O pedaço escrito ficou salvo (confira depois de recarregar, no §5).
+4. Repita com a **goma**.
 
 ## 5 · Trocas, interrupção e persistência (40 s)
 1. Troque lápis → goma → marcador → lápis.

@@ -240,13 +240,13 @@ const taEfetivo = (p, x, y) => p.evaluate(([x, y]) => { let e = document.element
     const botaoCaixa = await page.evaluate(() => { const t = document.querySelector('.rm-sis-tools'); return t && getComputedStyle(t).display !== 'none' ? '.rm-sis-tools' : '#rm2-fab'; });
     await page.click(botaoCaixa, { force: true }); await page.waitForTimeout(250);
     const toast = await page.evaluate(() => { const t = document.querySelector('.rm-toast'); return t && t.classList.contains('on') ? t.textContent : null; });
-    ok(semFixo && toast === 'caneta #456 · build 2026-10-10·456d', 'ao ABRIR a caixa o piloto vê o build num aviso passageiro (.rm-toast) e NENHUM elemento fixo novo fica sobre a leitura: ' + toast, { semFixo, toast });
+    ok(semFixo && toast === 'caneta #456 · build 2026-10-10·456e', 'ao ABRIR a caixa o piloto vê o build num aviso passageiro (.rm-toast) e NENHUM elemento fixo novo fica sobre a leitura: ' + toast, { semFixo, toast });
     await page.click(botaoCaixa, { force: true }); await page.waitForTimeout(250);
     await B.prepararAlvo(page, 'novo', 'paragrafo', true);
     await page.evaluate(() => window.RMToolsV2.abrirDiag()); await page.waitForTimeout(300);
     const d1 = await page.evaluate(() => ({ btn: (document.querySelector('.rm2-diag [data-d="guarda"]') || {}).textContent, linhas: window.RMToolsV2._test.perfLinhas().slice(0, 2).join(' | '), classe: document.body.classList.contains('rm2-pilot-guard') }));
     ok(d1.btn === 'Sin guarda: no' && d1.classe, 'com o painel aberto o botão «Sin guarda» começa desligado e a guarda está ativa', d1);
-    ok(/build=2026-10-10·456d/.test(d1.linhas) && /acesso à V2: lista beta no código/.test(d1.linhas) && /piloto físico: sim \(conta do piloto no código\)/.test(d1.linhas) && /flags do servidor: layout=true visual=true pen=false/.test(d1.linhas) && !/d4d215d3|448e4d63/.test(d1.linhas), 'o diagnóstico informa build, via de acesso e flags (sem UID)', d1.linhas);
+    ok(/build=2026-10-10·456e/.test(d1.linhas) && /acesso à V2: lista beta no código/.test(d1.linhas) && /piloto físico: sim \(conta do piloto no código\)/.test(d1.linhas) && /flags do servidor: layout=true visual=true pen=false/.test(d1.linhas) && !/d4d215d3|448e4d63/.test(d1.linhas), 'o diagnóstico informa build, via de acesso e flags (sem UID)', d1.linhas);
     const nTr0 = await page.evaluate(() => document.querySelectorAll('#rm2-ink path[data-ink]').length);
     await page.click('.rm2-diag [data-d="guarda"]'); await page.waitForTimeout(250);
     ok(await page.evaluate(n => document.querySelectorAll('#rm2-ink path[data-ink]').length === n && !window.RMToolsV2._test.temTraco(), nTr0), 'com o lápis armado, tocar o botão do painel NÃO começa um traço por baixo dele');
