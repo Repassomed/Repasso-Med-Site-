@@ -4,8 +4,9 @@
      Cátedra de Biología · Universidad Central del Paraguay
      Material de la Lic. Biól. Dayssy Franco (slides + prácticos + provas)
      Contenido P1: Organización molecular de la célula, membranas,
-     citoesqueleto, matriz extracelular, organelos, mitocondria y
-     núcleo interfásico.
+     citoesqueleto, matriz extracelular, organelos, mitocondria,
+     núcleo interfásico y comunicación intercelular/señalización
+     celular.
      Aditivo · mismo motor (app-core.js) · castellano
      =================================================================== -->
 <style id="tab-bio-style">
@@ -2541,12 +2542,193 @@
   </div>
 </section>
 
+<section class="container" id="bio15">
+  <div class="section-marker"><span class="section-marker-num">— BLOQUE 15 · UNIDAD VIII</span></div>
+  <h2>🔌 Comunicación intercelular y señalización celular</h2>
+
+  <div class="bio-postit">
+    <h4><span>🔌</span>Desde cero: las células no actúan solas</h4>
+    <p>Ninguna célula decide por sí sola cuándo crecer, dividirse o morir: lo hace en respuesta a <strong>señales químicas</strong> que le llegan desde afuera. A esa señal se la llama <strong>inductor</strong> o <strong>ligando</strong>, porque induce un cambio en la actividad de la célula que la recibe. La célula que fabrica y libera el inductor es la <strong>célula inductora</strong>; la que lo recibe es la <strong>célula inducida</strong>, también llamada <strong>blanco</strong> o <strong>diana</strong>.</p>
+    <p>Para que el inductor haga efecto, tiene que unirse a una proteína específica de la célula blanco: el <strong>receptor</strong>. Y según dónde esté ese receptor — en el citosol o en la membrana — la cadena de reacciones que sigue es completamente distinta. Ese es el eje de todo este bloque.</p>
+  </div>
+
+  <div class="bio-flow">
+    <div class="bio-pill"><span class="e">🩸</span><b>Endócrina</b><small>hormona · por la sangre</small></div>
+    <div class="bio-pill"><span class="e">🏘️</span><b>Paracrina</b><small>citoquina · vecinas</small></div>
+    <div class="bio-pill"><span class="e">🔁</span><b>Autocrina</b><small>autocoide · sobre sí misma</small></div>
+    <div class="bio-pill"><span class="e">⚡</span><b>Sináptica</b><small>neurotransmisor · espacio sináptico</small></div>
+  </div>
+  <p class="bio-cap">Las cuatro formas en que una célula inductora puede alcanzar a su célula blanco.</p>
+
+  <div class="analysis-card">
+    <h3>📚 Resumen explicado (desde cero)</h3><aside class="rmc-margin"><b class="t">Anotación al margen</b><p>No confundas el <b>tipo de señalización</b> (cómo viaja el inductor) con el <b>tipo de receptor</b> (dónde y cómo actúa una vez que llega). Son dos clasificaciones independientes: una hormona esteroidea viaja por señalización <b>endócrina</b> pero actúa sobre un receptor <b>citosólico</b>; el NO viaja por señalización <b>paracrina</b> y también actúa sobre un receptor citosólico.</p></aside>
+
+    <h4 style="margin-top:0">Las cuatro formas de comunicación celular</h4>
+    <p>Lo que cambia entre ellas es la <strong>distancia</strong> que recorre el inductor y <strong>quién</strong> es su célula blanco:</p>
+    <div class="bio-scroll">
+    <table>
+      <thead><tr><th>Tipo</th><th>¿A dónde llega el inductor?</th><th>Nombre del inductor</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Endócrina</strong></td><td>Se libera a la sangre y recorre <strong>todo el cuerpo</strong> hasta su célula blanco</td><td><strong>Hormona</strong></td></tr>
+        <tr><td><strong>Paracrina</strong></td><td>Se libera al medio extracelular (MEC) para influir sobre <strong>células vecinas</strong></td><td><strong>Citoquina</strong></td></tr>
+        <tr><td><strong>Autocrina</strong></td><td>Se libera al MEC y actúa sobre células vecinas similares <strong>e incluso sobre la propia célula que lo liberó</strong></td><td><strong>Autocoide</strong></td></tr>
+        <tr><td><strong>Sináptica</strong></td><td>Se libera por el axón y difunde por el <strong>espacio sináptico</strong> hasta la célula blanco</td><td><strong>Neurotransmisor</strong></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h4>El receptor: tres propiedades que explican cómo funciona</h4>
+    <p>Para activar o inhibir a la célula blanco, el inductor tiene que unirse a su receptor con gran especificidad. Esa unión tiene tres características:</p>
+    <ul>
+      <li><strong>Adaptación inducida:</strong> hay una adaptación estructural recíproca entre el inductor y el receptor — cada uno "encaja" con el otro.</li>
+      <li><strong>Saturabilidad:</strong> el número de receptores en cada célula es limitado, así que llega un punto en que agregar más inductor ya no aumenta la respuesta.</li>
+      <li><strong>Reversibilidad:</strong> la unión inductor-receptor <strong>no es permanente</strong> — el complejo se disocia un tiempo después de formarse. Si no se disociara, la célula no podría volver a su estado de reposo ni responder a un nuevo estímulo.</li>
+    </ul>
+
+    <h4>Dos grandes caminos, según dónde está el receptor</h4>
+    <p>La interacción inductor-receptor es apenas el primer paso de una cadena de reacciones. El camino que sigue esa cadena depende de la ubicación del receptor:</p>
+    <div class="bio-steps">
+      <div class="bio-step"><span class="n">1</span><b>Receptores citosólicos</b><p>Para inductores que atraviesan la membrana: hormonas esteroideas, hormonas tiroideas, vitamina D, ácido retinoico, y el óxido nítrico (NO).</p></div>
+      <div class="bio-step"><span class="n">2</span><b>Receptores de membrana</b><p>Para inductores que NO atraviesan la membrana: adquieren actividad enzimática propia, activan una enzima aparte, o activan una proteína G.</p></div>
+    </div>
+
+    <h4>Receptores citosólicos: la vía de las hormonas esteroideas</h4>
+    <p>El receptor citosólico tiene cuatro dominios: uno que se une al inductor, uno flexible que se dobla como una bisagra, uno que se une a la secuencia reguladora del gen y uno que activa al gen.</p>
+    <p>Mientras <strong>no</strong> hay inductor presente, el receptor queda en el citosol, unido a la chaperona <strong>hsp90</strong>, que lo mantiene encorvado (su dominio flexible doblado). Cuando la sustancia inductora — por ejemplo una hormona tiroidea — se une al receptor, éste se endereza, se libera de la hsp90, ingresa al núcleo y se une a la secuencia reguladora del gen, activando (o reprimiendo) su transcripción.</p>
+
+    <h4>El caso especial del óxido nítrico (NO)</h4>
+    <p>El NO no activa un gen: reacciona con una enzima citosólica, la <strong>guanilato ciclasa</strong>, que al activarse convierte GTP en <strong>GMPc</strong> (segundo mensajero). Es el ejemplo clásico de señalización paracrina con receptor citosólico:</p>
+    <ul>
+      <li>Una señal — por ejemplo <strong>acetilcolina</strong> liberada por un terminal axónico — estimula a la célula <strong>endotelial</strong> del vaso sanguíneo.</li>
+      <li>La célula endotelial activa la enzima <strong>óxido nítrico sintasa</strong>, que fabrica NO a partir del aminoácido <strong>arginina</strong>.</li>
+      <li>El NO difunde (paracrina) hasta la célula <strong>muscular lisa</strong> vecina del vaso, activa su guanilato ciclasa citosólica, sube el GMPc y se produce <strong>relajación del músculo liso y vasodilatación</strong>.</li>
+    </ul>
+
+    <h4>Receptores de membrana que adquieren actividad enzimática</h4>
+    <p>Cada receptor de membrana tiene un dominio externo (recibe al inductor), uno transmembranoso y uno citosólico. Cuando el inductor se une al dominio externo, el dominio citosólico cambia de una de estas formas:</p>
+    <div class="bio-scroll">
+    <table>
+      <thead><tr><th>Actividad del dominio citosólico</th><th>Ejemplo / inductor</th><th>Qué desencadena</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Guanilato ciclasa</strong></td><td>Péptido natriurético auricular (ANP), de las aurículas cardíacas</td><td>GTP→GMPc→quinasa G→excreción renal de Na⁺ y relajación del músculo liso vascular→<strong>↓ presión arterial</strong></td></tr>
+        <tr><td><strong>Serina-treonina quinasa</strong></td><td>Familia TGF-β</td><td>Fosforila a la proteína citosólica <strong>Smad</strong>, que entra al núcleo y activa genes que regulan la proliferación y diferenciación celular</td></tr>
+        <tr><td><strong>Tirosina quinasa</strong></td><td>Factores de crecimiento: EGF, FGF, PDGF, HGF, NGF, insulina/IGF</td><td>Tres vías posibles (RAS, PLC-γ, PI3-K) — ver abajo</td></tr>
+        <tr><td><strong>Activa tirosina quinasa independiente del receptor</strong></td><td>Hormona de crecimiento, prolactina, eritropoyetina, citoquinas, antígenos</td><td>Vía <strong>JAK-STAT</strong> — ver abajo</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h4>Las tres señales de la vía tirosina quinasa</h4>
+    <p>Cuando el inductor reúne a las dos subunidades del receptor, se fosforilan tirosinas de su dominio citosólico, lo que puede disparar tres tipos de señal:</p>
+    <ul>
+      <li><strong>Proteína RAS</strong> (una GTPasa, activada por GTP e inactivada por GDP): RAS-GTP activa a la quinasa <strong>Raf</strong>, que fosforila a <strong>MEK</strong>, que fosforila a <strong>ERK</strong> (las tres son MAP quinasas). ERK termina regulando genes que controlan el <strong>crecimiento y la diferenciación celular</strong>.</li>
+      <li><strong>Fosfolipasa C-γ (PLC-γ):</strong> participa en la respuesta celular general.</li>
+      <li><strong>Fosfatidilinositol 3-quinasa (PI3-K):</strong> esta vía está vinculada a la <strong>muerte celular</strong>.</li>
+    </ul>
+
+    <h4>Tirosina quinasa independiente del receptor: la vía JAK-STAT</h4>
+    <p>Algunos inductores (hormona de crecimiento, prolactina, eritropoyetina, citoquinas, antígenos) activan receptores sin actividad enzimática propia. En su lugar:</p>
+    <ol style="margin:0 0 .6rem 1.1rem;padding:0">
+      <li>El inductor reúne a las subunidades del receptor.</li>
+      <li>Eso atrae a la tirosina quinasa <strong>JAK</strong> (Janus Kinase), que se fosforila a sí misma y se activa.</li>
+      <li>JAK fosforila al dominio citosólico del receptor, que atrae a proteínas citosólicas <strong>STAT</strong>.</li>
+      <li>JAK fosforila también a las STAT, que se dimerizan e ingresan al núcleo para activar genes.</li>
+    </ol>
+    <p>Es la vía por la que, por ejemplo, la <strong>prolactina</strong> induce la producción de leche en la glándula mamaria.</p>
+
+    <h4>Receptores acoplados a proteína G</h4>
+    <p>Son receptores que cruzan siete veces la bicapa lipídica. En su cara citosólica interactúan con la <strong>proteína G</strong>, que tiene tres subunidades (α, β, γ): con <strong>GDP</strong> la proteína está <strong>inactiva</strong>; cuando el GDP es reemplazado por <strong>GTP</strong>, se <strong>activa</strong>. Sus proteínas desensibilizantes son las quinasas (la inhiben) y las arrestinas (la bloquean).</p>
+    <p>Según la variedad de proteína G, se disparan distintas vías:</p>
+    <div class="bio-scroll">
+    <table>
+      <thead><tr><th>Variedad</th><th>Enzima que activa</th><th>Segundo(s) mensajero(s) y efecto</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Gs</strong></td><td>Adenilato ciclasa (AC)</td><td>Forma <strong>AMPc</strong> a partir de ATP → activa la quinasa A → respuesta celular</td></tr>
+        <tr><td><strong>Gq</strong></td><td>Fosfolipasa C-β (PLC-β)</td><td>Transforma PIP2 en <strong>IP3</strong> + <strong>DAG</strong>. El IP3 abre canales del REL y libera Ca²⁺, que se une a la <strong>calmodulina</strong> y activa la CaM-quinasa; el DAG activa la quinasa C. Ambas ramas producen la respuesta celular</td></tr>
+        <tr><td><strong>G13 / Gi</strong></td><td>Fosfatidilinositol 3-quinasa (PI3-K)</td><td>Agrega un fosfato al PIP2, formando PIP3; la <strong>interrupción</strong> de esta vía conduce a la <strong>muerte celular</strong></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="key-box exam">
+    <strong>Lo esencial:</strong> la célula <strong>inductora</strong> libera un <strong>inductor/ligando</strong> que actúa sobre la célula <strong>inducida/blanco</strong>; según la distancia: <strong>endócrina</strong> (hormona, por la sangre), <strong>paracrina</strong> (citoquina, vecinas), <strong>autocrina</strong> (autocoide, incluso sobre sí misma) o <strong>sináptica</strong> (neurotransmisor, espacio sináptico). El receptor es <strong>específico, saturable y reversible</strong>. Los <strong>receptores citosólicos</strong> (hormonas esteroideas/tiroideas, vitamina D, ácido retinoico) usan la chaperona <strong>hsp90</strong> y, al activarse, van al núcleo; el <strong>NO</strong> es la excepción — activa la <strong>guanilato ciclasa citosólica</strong> → GMPc → vasodilatación. Los <strong>receptores de membrana</strong> adquieren actividad <strong>guanilato ciclasa</strong> (ANP, ↓PA), <strong>serina-treonina quinasa</strong> (TGF-β→Smad), <strong>tirosina quinasa</strong> (factores de crecimiento→RAS-Raf-MEK-ERK / PLC-γ / PI3-K) o activan <strong>JAK-STAT</strong> (hormona de crecimiento, prolactina, eritropoyetina); o bien activan a la <strong>proteína G</strong> (GDP=inactiva, GTP=activa): <strong>Gs→AMPc→PKA</strong>, <strong>Gq→IP3/DAG→Ca²⁺-calmodulina/PKC</strong>, <strong>G13-Gi→PI3-K</strong> (su interrupción → muerte celular).
+  </div>
+
+  <div class="quiz-section"><h3>📝 Preguntas de práctica — Señalización celular</h3>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Una célula secreta un inductor a la sangre, que recorre el cuerpo hasta alcanzar una célula blanco distante. ¿Qué tipo de señalización es, y cómo se llama ese inductor?</p>
+    <ul class="options"><li>a) Paracrina; citoquina</li><li>b) Autocrina; autocoide</li><li>c) Endócrina; hormona</li><li>d) Sináptica; neurotransmisor</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Endócrina; hormona.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La señalización endócrina es la única en la que el inductor viaja por la sangre a todo el cuerpo; en ese caso se lo llama hormona. La paracrina y la autocrina actúan localmente por el MEC, y la sináptica cruza solo el espacio sináptico.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La reversibilidad de la unión inductor-receptor significa que, una vez formado, el complejo nunca se disocia.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>FALSO.</strong></p><p><span class="answer-tag expl">📝 Por qué</span> Es justo lo opuesto: reversibilidad significa que el complejo <strong>sí</strong> se disocia, tiempo después de formarse. Si no se disociara nunca, la célula no podría volver a su estado de reposo ni responder a un nuevo estímulo.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Mientras no hay hormona tiroidea presente, ¿en qué estado se encuentra su receptor citosólico?</p>
+    <ul class="options"><li>a) Ya dentro del núcleo, unido a la secuencia reguladora del gen</li><li>b) En el citosol, unido a la chaperona hsp90, con su dominio flexible encorvado</li><li>c) Degradado por el proteasoma</li><li>d) Secretado al espacio extracelular junto con la hormona</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) En el citosol, unido a la chaperona hsp90, con su dominio flexible encorvado.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Recién cuando la hormona se une al receptor, éste se endereza, se libera de la hsp90 e ingresa al núcleo. Antes de eso, el receptor no está inactivo ni degradado: está en el citosol, "guardado" por la chaperona.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El óxido nítrico (NO), liberado por la célula endotelial, induce la relajación del músculo liso vascular activando directamente a una enzima citosólica llamada:</p>
+    <ul class="options"><li>a) Adenilato ciclasa</li><li>b) Fosfolipasa C-β</li><li>c) Guanilato ciclasa</li><li>d) Tirosina quinasa</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Guanilato ciclasa.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es el caso especial de receptor citosólico: el NO no activa un gen, sino una enzima citosólica —la guanilato ciclasa— que convierte GTP en GMPc y así produce vasodilatación.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>El GMPc, generado al activarse la guanilato ciclasa, funciona como un segundo mensajero.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> El GMPc transmite la señal dentro de la célula (activa la quinasa G), igual que el AMPc o el IP3/DAG en otras vías — todos son segundos mensajeros.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La vía RAS-Raf-MEK-ERK, activada por receptores con actividad tirosina quinasa (como los de los factores de crecimiento), regula principalmente:</p>
+    <ul class="options"><li>a) La apoptosis exclusivamente, sin otra función</li><li>b) El crecimiento y la diferenciación celular</li><li>c) El bloqueo permanente de la síntesis de ADN</li><li>d) La inactivación irreversible del propio receptor</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) El crecimiento y la diferenciación celular.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> RAS-GTP activa Raf, que fosforila a MEK, que fosforila a ERK; esta última regula genes que controlan crecimiento y diferenciación. La muerte celular está más asociada a la vía de la PI3-K, no a esta.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Un receptor acoplado a una proteína G variedad Gq activa a la fosfolipasa C-β, que transforma el PIP2 de la membrana en dos segundos mensajeros. ¿Cuáles son, y qué hace cada uno?</p>
+    <ul class="options"><li>a) AMPc, que activa la quinasa A; y GMPc, que activa la quinasa G</li><li>b) IP3, que libera Ca²⁺ del retículo endoplasmático liso; y DAG, que activa la quinasa C</li><li>c) ATP, que fosforila proteínas; y ADP, que las desfosforila</li><li>d) GTP y GDP, activando e inactivando a la propia proteína Gq</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) IP3, que libera Ca²⁺ del retículo endoplasmático liso; y DAG, que activa la quinasa C.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es la vía de la Gq: PLC-β corta el PIP2 en IP3 + DAG. El IP3 abre canales del REL y libera Ca²⁺ (que se une a calmodulina y activa la CaM-quinasa); el DAG, que queda en la membrana, activa la quinasa C. El AMPc/GMPc (a) corresponde a otras vías (Gs y guanilato ciclasa).</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La hormona de crecimiento y la eritropoyetina activan receptores de membrana sin actividad enzimática propia, que reclutan a una tirosina quinasa independiente del receptor. Esa vía se llama:</p>
+    <ul class="options"><li>a) Vía de Smad</li><li>b) Vía de Ras-Raf-MEK-ERK</li><li>c) Vía JAK-STAT</li><li>d) Vía de la fosfolipasa C-γ</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Vía JAK-STAT.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> JAK (Janus Kinase) se activa al reunirse las subunidades del receptor, fosforila al propio receptor y a las proteínas STAT, que se dimerizan e ingresan al núcleo. Smad es la vía de la serina-treonina quinasa (TGF-β), y Ras-Raf-MEK-ERK/PLC-γ son de la tirosina quinasa del propio receptor, no de una quinasa independiente.</p></div>
+  </div>
+  </div>
+
+  <h3>🎴 Flashcards del bloque — Señalización celular</h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Inductor / ligando</b></div><div class="fc-back">Sustancia que induce un cambio en la actividad de la célula blanco al unirse a su receptor.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Célula inductora vs. inducida</b></div><div class="fc-back">Inductora: libera el inductor. Inducida/blanco/diana: lo recibe.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización endócrina</b></div><div class="fc-back">Inductor = hormona. Viaja por la sangre a células blanco distantes.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización paracrina</b></div><div class="fc-back">Inductor = citoquina. Actúa sobre células vecinas vía el MEC.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización autocrina</b></div><div class="fc-back">Inductor = autocoide. Actúa sobre vecinas similares e incluso sobre sí misma.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización sináptica</b></div><div class="fc-back">Inductor = neurotransmisor. Cruza el espacio sináptico.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Propiedades del receptor</b></div><div class="fc-back">Adaptación inducida, saturabilidad (número limitado) y reversibilidad (la unión se disocia).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Receptores citosólicos</b></div><div class="fc-back">Hormonas esteroideas/tiroideas, vitamina D, ácido retinoico. Chaperona hsp90 mientras no hay inductor.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Óxido nítrico (NO)</b></div><div class="fc-back">Activa guanilato ciclasa citosólica → GMPc → relajación del músculo liso vascular (vasodilatación).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Guanilato ciclasa de membrana</b></div><div class="fc-back">Receptor del ANP → GMPc → excreción de Na⁺ y relajación vascular → ↓ presión arterial.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Serina-treonina quinasa</b></div><div class="fc-back">Familia TGF-β; activa Smad; regula proliferación y diferenciación celular.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Tirosina quinasa</b></div><div class="fc-back">Factores de crecimiento (EGF, FGF, PDGF, NGF, insulina/IGF). Vías RAS-MAPK, PLC-γ, PI3-K.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Proteína G</b></div><div class="fc-back">Heterotrimérica (α,β,γ); GDP=inactiva, GTP=activa. Gs→AMPc; Gq→IP3/DAG; Gi/G13→PI3-K.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Vía JAK-STAT</b></div><div class="fc-back">Tirosina quinasa independiente del receptor. Hormona de crecimiento, prolactina, eritropoyetina, citoquinas.</div></div>
+  </div>
+</section>
+
 
 <!-- ================= BANCO GENERAL DE PREGUNTAS ================= -->
 <section class="container" id="bancobio">
   <div class="section-marker"><span class="section-marker-num">— REPASO GENERAL · SIMULACRO</span></div>
   <h2>🎯 Banco general de preguntas</h2>
-  <p>Reúne las <strong>131 preguntas</strong> de los 14 bloques (<strong>90 en la serie principal</strong> de cada bloque + 41 de práctica adicional), agrupadas por bloque en tarjetas desplegables. Tocá cada bloque para abrir sus preguntas. Cada bloque conserva además su propio banco.</p>
+  <p>Reúne las <strong>139 preguntas</strong> de los 15 bloques (<strong>98 en la serie principal</strong> de cada bloque + 41 de práctica adicional), agrupadas por bloque en tarjetas desplegables. Tocá cada bloque para abrir sus preguntas. Cada bloque conserva además su propio banco.</p>
   <details class="bio-quiz-card">
     <summary>📝 Bloque 01 · 🔬 Introducción a la Biología celular <span class="bio-qbadge">5 preguntas</span><span class="bio-chev">▸</span></summary>
     <div class="bio-quiz-body"><div class="quiz-section">
@@ -3371,13 +3553,64 @@
   </div>
     </div></div>
   </details>
+  <details class="bio-quiz-card">
+    <summary>📝 Bloque 15 · 🔌 Comunicación intercelular y señalización celular <span class="bio-qbadge">8 preguntas</span><span class="bio-chev">▸</span></summary>
+    <div class="bio-quiz-body"><div class="quiz-section">
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Una célula secreta un inductor a la sangre, que recorre el cuerpo hasta alcanzar una célula blanco distante. ¿Qué tipo de señalización es, y cómo se llama ese inductor?</p>
+    <ul class="options"><li>a) Paracrina; citoquina</li><li>b) Autocrina; autocoide</li><li>c) Endócrina; hormona</li><li>d) Sináptica; neurotransmisor</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Endócrina; hormona.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La señalización endócrina es la única en la que el inductor viaja por la sangre a todo el cuerpo; en ese caso se lo llama hormona. La paracrina y la autocrina actúan localmente por el MEC, y la sináptica cruza solo el espacio sináptico.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La reversibilidad de la unión inductor-receptor significa que, una vez formado, el complejo nunca se disocia.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>FALSO.</strong></p><p><span class="answer-tag expl">📝 Por qué</span> Es justo lo opuesto: reversibilidad significa que el complejo <strong>sí</strong> se disocia, tiempo después de formarse. Si no se disociara nunca, la célula no podría volver a su estado de reposo ni responder a un nuevo estímulo.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Mientras no hay hormona tiroidea presente, ¿en qué estado se encuentra su receptor citosólico?</p>
+    <ul class="options"><li>a) Ya dentro del núcleo, unido a la secuencia reguladora del gen</li><li>b) En el citosol, unido a la chaperona hsp90, con su dominio flexible encorvado</li><li>c) Degradado por el proteasoma</li><li>d) Secretado al espacio extracelular junto con la hormona</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) En el citosol, unido a la chaperona hsp90, con su dominio flexible encorvado.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Recién cuando la hormona se une al receptor, éste se endereza, se libera de la hsp90 e ingresa al núcleo. Antes de eso, el receptor no está inactivo ni degradado: está en el citosol, "guardado" por la chaperona.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El óxido nítrico (NO), liberado por la célula endotelial, induce la relajación del músculo liso vascular activando directamente a una enzima citosólica llamada:</p>
+    <ul class="options"><li>a) Adenilato ciclasa</li><li>b) Fosfolipasa C-β</li><li>c) Guanilato ciclasa</li><li>d) Tirosina quinasa</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Guanilato ciclasa.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es el caso especial de receptor citosólico: el NO no activa un gen, sino una enzima citosólica —la guanilato ciclasa— que convierte GTP en GMPc y así produce vasodilatación.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>El GMPc, generado al activarse la guanilato ciclasa, funciona como un segundo mensajero.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> El GMPc transmite la señal dentro de la célula (activa la quinasa G), igual que el AMPc o el IP3/DAG en otras vías — todos son segundos mensajeros.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La vía RAS-Raf-MEK-ERK, activada por receptores con actividad tirosina quinasa (como los de los factores de crecimiento), regula principalmente:</p>
+    <ul class="options"><li>a) La apoptosis exclusivamente, sin otra función</li><li>b) El crecimiento y la diferenciación celular</li><li>c) El bloqueo permanente de la síntesis de ADN</li><li>d) La inactivación irreversible del propio receptor</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) El crecimiento y la diferenciación celular.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> RAS-GTP activa Raf, que fosforila a MEK, que fosforila a ERK; esta última regula genes que controlan crecimiento y diferenciación. La muerte celular está más asociada a la vía de la PI3-K, no a esta.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Un receptor acoplado a una proteína G variedad Gq activa a la fosfolipasa C-β, que transforma el PIP2 de la membrana en dos segundos mensajeros. ¿Cuáles son, y qué hace cada uno?</p>
+    <ul class="options"><li>a) AMPc, que activa la quinasa A; y GMPc, que activa la quinasa G</li><li>b) IP3, que libera Ca²⁺ del retículo endoplasmático liso; y DAG, que activa la quinasa C</li><li>c) ATP, que fosforila proteínas; y ADP, que las desfosforila</li><li>d) GTP y GDP, activando e inactivando a la propia proteína Gq</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) IP3, que libera Ca²⁺ del retículo endoplasmático liso; y DAG, que activa la quinasa C.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es la vía de la Gq: PLC-β corta el PIP2 en IP3 + DAG. El IP3 abre canales del REL y libera Ca²⁺ (que se une a calmodulina y activa la CaM-quinasa); el DAG, que queda en la membrana, activa la quinasa C. El AMPc/GMPc (a) corresponde a otras vías (Gs y guanilato ciclasa).</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La hormona de crecimiento y la eritropoyetina activan receptores de membrana sin actividad enzimática propia, que reclutan a una tirosina quinasa independiente del receptor. Esa vía se llama:</p>
+    <ul class="options"><li>a) Vía de Smad</li><li>b) Vía de Ras-Raf-MEK-ERK</li><li>c) Vía JAK-STAT</li><li>d) Vía de la fosfolipasa C-γ</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Vía JAK-STAT.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> JAK (Janus Kinase) se activa al reunirse las subunidades del receptor, fosforila al propio receptor y a las proteínas STAT, que se dimerizan e ingresan al núcleo. Smad es la vía de la serina-treonina quinasa (TGF-β), y Ras-Raf-MEK-ERK/PLC-γ son de la tirosina quinasa del propio receptor, no de una quinasa independiente.</p></div>
+  </div>
+    </div></div>
+  </details>
 </section>
 
 <!-- ================= FLASHCARDS GENERALES ================= -->
 <section class="container" id="bio-flashcards">
   <div class="section-marker"><span class="section-marker-num">— FLASHCARDS · TODOS LOS BLOQUES</span></div>
   <h2>🎴 Flashcards de todos los bloques</h2>
-  <p>Mazo completo reunido al final: las <strong>152 tarjetas</strong> de los 14 bloques juntas para repaso intensivo. Tocá cada tarjeta para girarla. (Cada bloque conserva además sus propios flashcards.)</p>
+  <p>Mazo completo reunido al final: las <strong>166 tarjetas</strong> de los 15 bloques juntas para repaso intensivo. Tocá cada tarjeta para girarla. (Cada bloque conserva además sus propios flashcards.)</p>
   <h3>Bloque 01 · 🔬 Introducción a la Biología celular <span style="font-weight:400;font-size:.8em;color:#7a8a7e">(7 flashcards)</span></h3>
   <div class="fc-grid">
     <div class="flashcard"><div class="fc-front"><b>Componentes inorgánicos</b></div><div class="fc-back">Agua y minerales (sales).</div></div>
@@ -3571,6 +3804,24 @@
     <div class="flashcard"><div class="fc-front"><b>Cuerpo de Barr</b></div><div class="fc-back">Heterocromatina facultativa; uno de los dos cromosomas X de la mujer, compactado.</div></div>
     <div class="flashcard"><div class="fc-front"><b>Cariotipo humano</b></div><div class="fc-back">46 cromosomas = 23 pares (22 pares de autosomas + 1 par sexual XX/XY).</div></div>
     <div class="flashcard"><div class="fc-front"><b>Bandeado G</b></div><div class="fc-back">Tripsina + Giemsa; bandas oscuras ricas en A-T.</div></div>
+  </div>
+
+  <h3>Bloque 15 · 🔌 Comunicación intercelular y señalización celular <span style="font-weight:400;font-size:.8em;color:#7a8a7e">(14 flashcards)</span></h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Inductor / ligando</b></div><div class="fc-back">Sustancia que induce un cambio en la actividad de la célula blanco al unirse a su receptor.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Célula inductora vs. inducida</b></div><div class="fc-back">Inductora: libera el inductor. Inducida/blanco/diana: lo recibe.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización endócrina</b></div><div class="fc-back">Inductor = hormona. Viaja por la sangre a células blanco distantes.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización paracrina</b></div><div class="fc-back">Inductor = citoquina. Actúa sobre células vecinas vía el MEC.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización autocrina</b></div><div class="fc-back">Inductor = autocoide. Actúa sobre vecinas similares e incluso sobre sí misma.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización sináptica</b></div><div class="fc-back">Inductor = neurotransmisor. Cruza el espacio sináptico.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Propiedades del receptor</b></div><div class="fc-back">Adaptación inducida, saturabilidad (número limitado) y reversibilidad (la unión se disocia).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Receptores citosólicos</b></div><div class="fc-back">Hormonas esteroideas/tiroideas, vitamina D, ácido retinoico. Chaperona hsp90 mientras no hay inductor.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Óxido nítrico (NO)</b></div><div class="fc-back">Activa guanilato ciclasa citosólica → GMPc → relajación del músculo liso vascular (vasodilatación).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Guanilato ciclasa de membrana</b></div><div class="fc-back">Receptor del ANP → GMPc → excreción de Na⁺ y relajación vascular → ↓ presión arterial.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Serina-treonina quinasa</b></div><div class="fc-back">Familia TGF-β; activa Smad; regula proliferación y diferenciación celular.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Tirosina quinasa</b></div><div class="fc-back">Factores de crecimiento (EGF, FGF, PDGF, NGF, insulina/IGF). Vías RAS-MAPK, PLC-γ, PI3-K.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Proteína G</b></div><div class="fc-back">Heterotrimérica (α,β,γ); GDP=inactiva, GTP=activa. Gs→AMPc; Gq→IP3/DAG; Gi/G13→PI3-K.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Vía JAK-STAT</b></div><div class="fc-back">Tirosina quinasa independiente del receptor. Hormona de crecimiento, prolactina, eritropoyetina, citoquinas.</div></div>
   </div>
 </section>
 
