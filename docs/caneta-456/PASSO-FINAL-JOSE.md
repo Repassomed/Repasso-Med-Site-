@@ -13,6 +13,7 @@ Mesmo aparelho, mesma caneta, sua conta de sempre. **Nada a instalar, sem consol
 2. **Apoie a mão/palma na tela** enquanto escreve (como escreve de verdade): a página **não** pode rolar nem pular.
 3. Escreva uma palavra numa **tabela** e outra num **post-it**.
 4. **Dê play no audiobook** (cartão «Audiobook · …» no bloco; só existe se o áudio estiver ativo para a sua conta) e escreva mais uma palavra com o áudio tocando — o áudio **não** deve pausar nem o traço atrasar.
+   - **Se o card «Audiobook» não aparecer, anote «áudio: não executado» e siga:** não é falha da caneta (a cadeia do áudio depende do Netlify/vínculo — ver `docs/layout-ensaio/AUDIOBOOKS-ESTADO-OPERACIONAL.md` §0).
    - Atraso entre a ponta e a tinta? Alguma letra torta ou com pedaço faltando (começo, meio, fim)?
 
 ## 2. Rolar, apagar, desfazer (40 s)

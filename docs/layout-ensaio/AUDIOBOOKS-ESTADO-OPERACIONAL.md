@@ -2,12 +2,28 @@
 
 > **Código mergeado não comprova serviço funcionando.** Este documento separa o que foi **verificado agora** do que **só está no código/runbook** e do que **ninguém verificou**. Nenhuma variável, bucket, objeto, função ou flag foi alterado (Supabase: só `select`). Nenhum rollout.
 
+## 0 · Lista curta — o que realmente depende de José (atualização de 10/10)
+
+Tudo o que dava para conferir **em leitura** foi conferido (§1). Falta só isto, e **só José** (ou quem administra Netlify/Supabase) consegue:
+
+1. **Netlify, escopo de produção:** `RM_AUDIO_MANIFEST` existe (4 itens `ready:true`) e `RM_PILOT_AUDIO_UIDS` tem a conta de José. *(Existir basta; não colar valores no chat.)*
+2. **Netlify:** `SUPABASE_SERVICE_ROLE_KEY` presente e as funções `get-audio-manifest` / `get-audio-url` aparecem na lista de Functions do deploy publicado, com deploy **posterior** às variáveis.
+3. **Ouvir e confirmar o vínculo:** «Motivo de Consulta» é do `s2-b01` (respiratório) ou do `s2-b06` (cardíaco)? Hoje o arquivo subiu como `s2-b01-…` sem registro de escuta.
+4. **Rodar o `smoke-remote.cjs on/deny/expirada` contra o site publicado** (precisa do JWT de José, que o Claude não recebe) **ou** simplesmente abrir Semiología II e ver se o card «Audiobook» aparece e toca.
+5. **iPad/Safari e Android/Chrome:** tocar 1 áudio com Range/seek (único ponto que só aparelho real prova).
+
+**Regra para o teste da caneta:** se o card de audiobook **não aparecer**, a parte «com áudio» do `PASSO-FINAL-JOSE.md` fica **«não executada»** e **não** conta como falha da caneta. A primeira causa a checar é a lista acima (itens 1–2), nunca o código da caneta.
+
 ## 1 · Verificado hoje (Supabase, leitura)
 
 | Item | Resultado | Como |
 |---|---|---|
 | Bucket `audiobooks` existe e é **privado** | `public=false` (confirmado) | `select … from storage.buckets` |
 | Policy `audiobooks_deny_direct_access` | **RESTRICTIVE**, roles `{anon, authenticated}`, cmd `ALL` | `pg_policies` |
+| Limite e tipos do bucket | `file_size_limit = 41943040` (40 MiB, migration `20261006_01` aplicada) · `allowed_mime_types = {audio/mp4, audio/x-m4a}` | `storage.buckets` |
+| Policies permissivas próprias do bucket | **0** (só a RESTRICTIVE acima) | `pg_policies` (runbook §5, passo 1) |
+| Acesso direto com a chave anônima (`/object/…`, `/object/public/…`) | **não verificável daqui**: o ambiente do Claude não alcança `*.supabase.co` (conexão recusada). Pela policy RESTRICTIVE esperado 400/401/403/404 — fica na lista curta (item 4) | `curl` (sem resposta) |
+| Workflow «Processar audiobooks» (Drive → runner) | 2 execuções manuais em 05/10, ambas `failure` («AGUARDANDO CONFIGURAÇÃO» por desenho). **Irrelevante para o piloto**: os 4 arquivos subiram pelo painel do Supabase, não por esse workflow | Actions |
 | Objetos no bucket | **4**, todos `audio/x-m4a`, subidos em 2026-10-06 | `storage.objects` |
 | `semiologia-ii/s2-b01-motivo-consulta.m4a` | 36 758 530 B | idem — mesmo tamanho do arquivo do Drive |
 | `semiologia-ii/s2-b03-epoc.m4a` | 33 468 886 B | idem |
