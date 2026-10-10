@@ -16,7 +16,7 @@ A triagem inicial falava em «215/347 corretas como única alternativa mais long
 | … dos quais completar / V-F / casos de resposta aberta (fora do critério de tamanho) | 35 |
 | rótulo «Basada en preguntas de examen» / «Pregunta complementaria» (214 itens de bloco) | 133 / 81 — entre as 179 MCQ: 98 / 81 |
 
-O 347 da triagem não bate com nenhuma contagem única do arquivo (a soma bloco+banco de MCQ dá 358); por isso a auditoria usa **179 MCQ únicas** e trata o banco como espelho (8-A.6-C). Nenhuma MCQ ficou sem passar pelo auditor.
+**Causa do 347 (errata, ver `coordination/AUDITORIA-2026-10-09-EDITORIAL-E-PILOTO.md`):** a triagem duplicou os espelhos do banco por diferenças de espaços na deduplicação (a soma bloco+banco de MCQ dá 358; 347 é um valor intermediário de espelhos contados duas vezes). Conferência independente atual: **179 MCQ únicas**, correta única mais longa **111** (não 215). O auditor trata o banco como espelho (8-A.6-C). Nenhuma MCQ ficou sem passar pelo auditor.
 
 ## 2 · Provas disponíveis e padrão da matéria/docente
 
@@ -40,12 +40,12 @@ Classificação por cobertura de 3-gramas do enunciado e das alternativas contra
 | O (originais) | 9 | **0** (preservadas) | 2 → 2 | 1,16 → 1,16 |
 | P | 17 | 2 | 7 → 6 | 1,35 → 1,16 |
 | R | 72 | 34 | 40 → 26 | 1,53 → 1,07 |
-| C | 81 | 61 | 62 → 26 | 1,95 → 1,03 |
-| **total** | **179** | **97** | **111 (62 %) → 60 (34 %)** | **1,69 → 1,07** (mediana 1,49 → 1,05) |
+| C | 81 | 61 | 62 → 27 | 1,95 → 1,03 |
+| **total** | **179** | **97** | **111 (62 %) → 61 (34 %)** | **1,69 → 1,07** (mediana 1,49 → 1,06) |
 
-Razão ≥ 1,3: 103 → 17 · razão ≥ 1,5: 89 → 8 · empates de «mais longa» 6 → 10.
+Razão ≥ 1,3: 103 → 17 · razão ≥ 1,5: 89 → 8 · empates de «mais longa» 6 → 11 · em palavras 99 → 42 · «baseadas en examen» (98): 49 → 34.
 
-Por bloco (corretas únicas mais longas antes → depois / n): b01 14→9/22 · b02 9→5/14 · b03 6→2/18 · b04 3→1/8 · b05 10→4/14 · b06 7→2/9 · b07 7→3/11 · b08 5→3/10 · b09 9→6/10 · b10 8→4/8 · b11 9→6/10 · b12 8→6/15 · b13 8→4/12 · b14 8→5/18.
+Por bloco (corretas únicas mais longas antes → depois / n): b01 14→9/22 · b02 9→5/14 · b03 6→2/18 · b04 3→1/8 · b05 10→5/14 · b06 7→2/9 · b07 7→3/11 · b08 5→3/10 · b09 9→6/10 · b10 8→4/8 · b11 9→7/10 · b12 8→5/15 · b13 8→4/12 · b14 8→5/18.
 
 **Honestidade sobre o resíduo.** 34 % ainda é maior que os ~25–30 % que o acaso daria; o resíduo vem de (i) 9 literais da prova + 15 parciais + 38 reconstruídas **deliberadamente intactas** (já equilibradas, ou com qualificadores necessários) (a lei manda preservar a forma real de cobrança — 8-A.5/8-A.9), (ii) alternativas cuja resposta correta **precisa** de qualificadores (dose, mecanismo + consequência) e que não se podem encurtar sem perder ciência. Nesses casos o desequilíbrio de tamanho foi reduzido (razão mediana ~1,05), mas não eliminado.
 
@@ -58,6 +58,15 @@ Por bloco (corretas únicas mais longas antes → depois / n): b01 14→9/22 · 
 * **Letras (8-A.7):** antes a/b/c/d = 40/51/45/43; depois 40/49/46/44. Só **2 itens** mudaram de letra (transposição com remapeamento das explicações, o mesmo em bloco e banco). São eles: **#188** (b13, análogo de insulina que se aplica após a refeição: b→c; aspart ↔ NPH) e **#192** (b13, regra 15-15: b→d; «15 g de glucose» ↔ «comida completa»). O Guard os marca como `gabarito-alterado` (Lei 6): a resposta **científica** é a mesma, mudou só a posição; **precisa de aceite humano explícito**. Maior corrida: 4. Nenhuma reordenação alterou resposta científica.
 * **Sincronia bloco ↔ banco: 0 divergências** (214 pares comparados por rótulo + alternativas + resposta).
 * **Contagens declaradas** no texto (214 comentadas; 133 basadas en exámenes / 81 complementarias etc.) **não mudaram**: nenhuma questão foi criada, removida nem fundida.
+
+
+### 4-A · Correções feitas depois do teste de navegador e do parecer G0 independente (2026-10-10)
+
+* **#192 (transposição b→d)** — o teste real mostrou que o parágrafo antigo, com as letras **antigas**, continuava antes do novo «Las otras» (dizia «(d) la grasa retrasa…» com d = a correta). Removido; bloco e banco iguais. **#188 (b→c)** conferido: opções, explicação («(b) y (d) NPH y glargina…») e espelho corretos.
+* **#105** — «(c)» duplicado; **#43 e #180** — o `<strong>` da explicação passou a repetir o texto da alternativa encurtada.
+* **Pontes de enunciado do Guard (4 itens: ticagrelor e fezes negras com bismuto, bloco + banco):** receberam `data-guard-previous-stem-sha1` com o sha1 do enunciado anterior (mesma seção e mesmo gabarito). Os 2 marcadores antigos de `q/bq-f2-hsd2-renal` (PR #386) foram removidos: a `main` já tem o id e a ponte virou inválida — **uma alteração trivial no arquivo na `main` já reprovava o Guard por isso**.
+* **Parecer G0 (revisor independente)** — corrigidos: **#59** (opção b dizia «revierte al suspenderlo», contradizendo a explicação; opção d recuperou «al bloquear la angiotensina II»; refutação reescrita: o IECA não é tubulotóxico, a queda é hemodinâmica e reversível), **#168** (distrator c ganhara «deshidratación», precaução legítima com metformina → trocado; distratores equilibrados), **#25** (existem α₂ pós-sinápticos; clonidina/metildopa atuam no tronco encefálico), **#91** (a refutação de d reconhece que a contraindicação é real e dá o motivo certo), **#175** (distrator c fraco → inversão do conceito), **#167** (DM1 sem absoluto; refutação de c sobre insuficiência renal), **#178** (refutação do mecanismo de d), **#160** («la TSH no es útil al inicio»), **#128** (teofilina com efeito antiinflamatório leve).
+* **Refutação por letra:** explicações que nomeiam os 3 distratores — **104 → 151 de 179** (nas 97 revisadas: 45 → 92).
 
 ## 5 · Achados que **não** foram alterados (para decisão humana)
 
@@ -87,7 +96,7 @@ Colunas: idx (índice entre os 214 itens de bloco) · bloco · classe · letra d
 | 43 | b02 | R | a→a | 1.68→1.03 | Un hipertenso recibe hidroclorotiazida, losartán y espironolactona. ¿C… | b | cuántos fármacos retienen K⁺ (2 de 3) frente a «la tiazida manda» |
 | 44 | b03 | R | d→d | 1.49→0.92 | Un paciente de 50 años con hipertensión y disfunción ventricular izqui… | c | aliskireno sin evidencia vs ARA-II con evidencia en disfunción ventricular |
 | 50 | b03 | R | a→a | 1.46→0.91 | Sobre el diazóxido, es correcto afirmar:… | b | canales de K⁺ (diazóxido) frente a óxido nítrico (nitroprusiato) |
-| 59 | b03 | R | d→d | 2.79→1.11 | Un hipertenso de 70 años, fumador, con soplo abdominal, inicia enalapr… | c | arteriola eferente (angiotensina II) frente a aferente/bradicinina |
+| 59 | b03 | R | d→d | 2.79→1.38 | Un hipertenso de 70 años, fumador, con soplo abdominal, inicia enalapr… | c | arteriola eferente (angiotensina II) frente a aferente/bradicinina |
 | 60 | b03 | C | d→d | 2.52→1.06 | Paciente hipertenso que inicia enalapril. A la semana, la creatinina s… | b | umbral ≈ 30 % (hemodinámico) frente a nefrotoxicidad |
 | 61 | b03 | C | b→b | 0.69→0.99 | ¿Cuál de las siguientes afirmaciones sobre los ARA-II es incorrecta ?… | c | ARA-II sí interfieren con la aldosterona: la diferencia con el IECA es la bradicinina, no el potasio |
 | 63 | b03 | C | b→b | 2.05→1.09 | Hipertenso con fibrilación auricular de respuesta rápida y estreñimien… | a | DHP (vaso) vs no-DHP (nodo AV) |
@@ -101,7 +110,7 @@ Colunas: idx (índice entre os 214 itens de bloco) · bloco · classe · letra d
 | 83 | b05 | R | c→c | 1.09→1.02 | 📈 Relacione correctamente el estadio de la cardiopatía isquémica con e… | a | T–ST–Q con los tiempos |
 | 88 | b05 | C | b→b | 1.58→0.9 | ⏳ Paciente con angina estable que usa parche de nitroglicerina las 24 … | a | la tolerancia no se vence subiendo la dosis |
 | 89 | b05 | C | c→c | 2.17→1.11 | 🧪 Paciente con angina estable y cirrosis hepática Child B que necesita… | b | ISDN depende del hígado (primer paso) frente a ISMN sin primer paso |
-| 91 | b05 | C | a→a | 1.64→0.9 | 🚫 Paciente con angina vasoespástica documentada, hipertenso, que llega… | b | β-bloqueante = antianginoso de esfuerzo, pero contraindicado en el espasmo |
+| 91 | b05 | C | a→a | 1.64→1.13 | 🚫 Paciente con angina vasoespástica documentada, hipertenso, que llega… | b | β-bloqueante = antianginoso de esfuerzo, pero contraindicado en el espasmo |
 | 92 | b05 | C | d→d | 1.94→1.04 | 💊 ¿Por qué la nitroglicerina se administra por vía sublingual y no en … | a | primer paso hepático, no degradación ácida |
 | 93 | b05 | C | d→d | 2.87→1.15 | 🩸 ¿Qué explica el fenómeno de «robo coronario» producido por vasodilat… | b | vasodilatación del territorio sano (no vasoconstricción de la arteria enferma) |
 | 104 | b07 | C | b→b | 2.86→1.05 | 📉 Paciente con artritis reumatoide que recibe prednisona 30 mg/día des… | a | cuadro addisoniano (hipotensión, hipoglucemia) frente a recaída de la artritis |
@@ -140,15 +149,15 @@ Colunas: idx (índice entre os 214 itens de bloco) · bloco · classe · letra d
 | 154 | b10 | C | b→b | 1.56→1.07 | 🛡️ ¿Cuál anticuerpo es el marcador con mayor rendimiento para la tiroi… | a | TRAb = Graves; anti-TPO = Hashimoto |
 | 157 | b11 | R | d→d | 3.55→1.43 | 🔀 ¿Cuál es la diferencia entre tirotoxicosis e hipertiroidismo?… | b | la tirotoxicosis es el término amplio (efecto tisular); el hipertiroidismo, un subtipo |
 | 158 | b11 | R | b→b | 2.15→1.15 | ⚠️ Paciente en tratamiento con metimazol que presenta fiebre y dolor d… | a | fiebre + odinofagia = agranulocitosis hasta demostrar lo contrario |
-| 160 | b11 | R | d→d | 2.47→1.02 | 🔬 ¿Cómo se realiza el seguimiento de un paciente que inicia metimazol?… | a | la TSH tarda en recuperarse tras supresión prolongada |
+| 160 | b11 | R | d→d | 2.47→1.17 | 🔬 ¿Cómo se realiza el seguimiento de un paciente que inicia metimazol?… | a | la TSH tarda en recuperarse tras supresión prolongada |
 | 161 | b11 | R | a→a | 2.26→1.14 | 👁️ ¿Cuáles son las tres manifestaciones principales de la enfermedad d… | b | bocio difuso (Graves) frente a nodular |
 | 162 | b11 | C | a→a | 2.5→1.09 | 🤰 Embarazada de 9 semanas con enfermedad de Graves recién diagnosticad… | b | teratogenicidad del metimazol en el 1.er trimestre |
 | 163 | b11 | C | d→d | 2.42→1.22 | ☢️ Paciente con Graves, bocio pequeño y oftalmopatía moderada a grave … | a | oftalmopatía moderada-grave contraindica el radioyodo |
 | 164 | b11 | C | b→b | 3.62→1.28 | ⏳ Paciente con Graves que completó 18 meses de metimazol con TSH, T4L … | a | prolongar > 18 meses no aumenta la remisión |
-| 167 | b12 | R | b→b | 2.08→1.22 | ⭐ Respecto de la metformina, señale la afirmación correcta :… | a | secretagogo (SUR1) frente a antihiperglucemiante |
-| 168 | b12 | R | a→a | 2.36→1.26 | ⚗️ ¿Cuál es el mecanismo por el que la metformina puede producir acido… | c | la gluconeogénesis consume lactato: frenarla lo acumula |
+| 167 | b12 | R | b→b | 2.08→1.16 | ⭐ Respecto de la metformina, señale la afirmación correcta :… | a | secretagogo (SUR1) frente a antihiperglucemiante |
+| 168 | b12 | R | a→a | 2.36→1.06 | ⚗️ ¿Cuál es el mecanismo por el que la metformina puede producir acido… | c | la gluconeogénesis consume lactato: frenarla lo acumula |
 | 169 | b12 | P | d→d | 3.43→1.33 | 🔑 El mecanismo de acción de las sulfonilureas consiste en:… | b | canal de K⁺-ATP (SUR1) frente a DPP-4 |
-| 175 | b12 | C | d→d | 2.93→1.33 | ⏱️ ¿Cuál es la diferencia farmacológica fundamental entre las glinidas… | b | ambas actúan sobre SUR1 de la célula β; difieren en dependencia de glucosa y duración |
+| 175 | b12 | C | d→d | 2.93→1.1 | ⏱️ ¿Cuál es la diferencia farmacológica fundamental entre las glinidas… | b | ambas actúan sobre SUR1 de la célula β; difieren en dependencia de glucosa y duración |
 | 176 | b12 | C | c→c | 1.45→1.13 | 🧬 Paciente con DM2 e insuficiencia cardíaca clase II. ¿Qué grupo debe … | d | metformina está contraindicada en ICC grave pero por acidosis láctica, no por el peso |
 | 177 | b12 | C | b→b | 3.2→1.21 | 🍬 Paciente que toma acarbosa y glibenclamida presenta hipoglucemia sin… | a | la acarbosa bloquea la enzima que desdobla la sacarosa |
 | 178 | b12 | C | a→a | 2.65→1.01 | 🔗 Un paciente en tratamiento con glibenclamida inicia hidroclorotiazid… | b | tiazida sube la glucemia (no baja); el desplazamiento proteico es de salicilatos |
@@ -173,7 +182,7 @@ Colunas: idx (índice entre os 214 itens de bloco) · bloco · classe · letra d
 
 * Proveniência por 3-gramas é heurística; sem acesso ao PDF escaneado «Belem.pdf», parte do rótulo «Basada en preguntas de examen» não pôde ser reconferida contra a imagem.
 * O perfil de prova (§2) descreve **formatos e estilo de enunciado**; não infere frequência temática.
-* Não rodei a suíte de navegador sobre o quiz (reveal/shuffle) nesta etapa; a verificação foi **textual/estrutural** (HTML, 214 pares, letras, SUB_SEL). Ver relatório final.
+* Teste de navegador do quiz **executado** (358 MCQ, 28 V/F, 42 abertas, 29 mazos): ver `…-qa-navegador-v1.md`.
 
 ## 8 · Annotation-safety aplicada nas questões
 

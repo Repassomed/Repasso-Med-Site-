@@ -1,0 +1,24 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/assets/styles.css"><title>qa</title></head><body>
+<div class="main-tabs" id="main-tabs"><div class="main-tabs-inner" id="main-tabs-inner"><button class="main-tab active" data-tab="farmaco2">Farmacología II</button></div></div>
+<div id="materias-container"></div>
+<script>
+const P=new URLSearchParams(location.search); window.__errs=[];
+window.addEventListener('error',e=>window.__errs.push(String(e.message)));
+window.addEventListener('unhandledrejection',e=>window.__errs.push('rej:'+(e.reason&&e.reason.message||e.reason)));
+window.RM_CATALOGO=[{slug:'farmacologia-ii',tab:'farmaco2',title:'Farmacología II',sub:''}];
+</script>
+<script src="/assets/app-core.js"></script>
+<script src="/assets/rm-tools.js"></script>
+<script src="/assets/rm-tools-v2.js"></script>
+<script>
+(async()=>{
+  const t=await (await fetch('/m/'+(P.get('v')||'new')+'.html')).text();
+  const doc=new DOMParser().parseFromString(t,'text/html');
+  const node=document.importNode(doc.querySelector('[id^="tab-"]'),true);
+  document.getElementById('materias-container').appendChild(node);
+  window.__preEnhance=document.querySelectorAll('.quiz-item').length;
+  RepassoMed.enhanceAll(); switchTab('farmaco2');
+  await new Promise(r=>setTimeout(r,1200)); window.__ready=true;
+})();
+</script></body></html>

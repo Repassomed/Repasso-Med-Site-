@@ -2745,7 +2745,10 @@
       "area": "materia",
       "materia": "farmacologia-ii",
       "arquivos": [
-        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/farmacologia-ii.html"
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/farmacologia-ii.html",
+        "coordination/source-packs/farmacologia-ii-revisao-2026-10-*.md",
+        "coordination/AUDITORIA-2026-10-09-EDITORIAL-E-PILOTO.md",
+        "tools/qa/browser-qa/farmaco2-2026-10/**"
       ],
       "objetivo": "Revisão completa de Farmacología II em três etapas: (1) fontes — matriz fonte/página → conceito → trecho atual → decisão → destino para os oito PDFs de anotações do Drive (já ensinado / incorporado agora / duplicado / não verificável); (2) questões — perfil comprovado de prova (8-A.6-A), auditoria de todas as MCQ contadas uma vez (8-A.6-C; triagem inicial 215/347 corretas como única mais longa), letras (8-A.7), uma melhor resposta + um distrator forte, preservação das originais completas, sincronia bloco↔banco; (3) editorial — mecanismos desde a base em castelhano simples e humano, fusão de repetições, tabelas onde ajudam, ≥3 trechos antes/depois, annotation-safety. Sem CSS/JS global. Resultado NEEDS-AUDIT; sem merge nem publicação.",
       "fonte": "Pedido de José (prioridade 2026-10-09) · coordination/AUDITORIA-2026-10-09-EDITORIAL-E-PILOTO.md · leis G0 §13 e 8-A.6-A/B/C (#473)",
