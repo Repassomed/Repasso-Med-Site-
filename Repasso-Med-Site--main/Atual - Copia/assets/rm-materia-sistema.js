@@ -442,8 +442,17 @@
         if (!mudou && !geo && S.tOpen !== undefined) return;                 // reescrita do mesmo valor: nada a fazer, nada a medir
         S.tOpen = open; S.tArmed = armed;
         b.setAttribute('aria-expanded', String(open)); b.classList.toggle('is-open', open); b.classList.toggle('is-armed', armed);
-        var h = (open && getComputedStyle(box).display !== 'none') ? Math.round(box.getBoundingClientRect().height) : 0;
-        ROOT.style.setProperty('--rm-dock-h', h + 'px');
+        /* `--rm-dock-h` é variável da RAIZ (herdada): cada MUDANÇA de valor reaplica o estilo da árvore inteira (medido na #456: ~120 ms a 4× de CPU, 1 600 elementos). Por isso:
+           (1) só existe dock < 768 px (o CSS só usa a variável lá): em tablet/desktop não se escreve nada; (2) toolbox ABERTA mas oculta pela VISTA (modo isolado, lightbox: display:none)
+           mantém a última altura em vez de ir a 0 e voltar — antes, TODA ida e volta a um modo com a toolbox aberta custava duas recalculações completas e a «travada» do aluno;
+           (3) só escreve quando o valor muda. */
+        var estreito = false; try { estreito = !!(window.matchMedia && window.matchMedia('(max-width: 767.98px)').matches); } catch (e) {}
+        var h;
+        if (!estreito || !open) h = 0;
+        else if (getComputedStyle(box).display !== 'none') h = Math.round(box.getBoundingClientRect().height);
+        else h = S.dockH || 0;
+        S.dockH = h;
+        if (h !== S.dockEscrito) { ROOT.style.setProperty('--rm-dock-h', h + 'px'); S.dockEscrito = h; }
         if (open) ROOT.setAttribute('data-rm-tools', 'open'); else ROOT.removeAttribute('data-rm-tools');      // o player recolhe enquanto a toolbox está aberta
         if (S.pl && S.pl.sync) S.pl.sync();
       };

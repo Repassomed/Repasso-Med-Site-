@@ -1,0 +1,166 @@
+{
+ "ref": "(árvore de trabalho)",
+ "quando": "2026-10-08",
+ "porTraco": {
+  "antigo": {
+   "n": 3,
+   "down": {
+    "estiloMs": 9,
+    "estiloMax": 1.6,
+    "elementos": 64,
+    "layoutMs": 2.7
+   },
+   "up": {
+    "estiloMs": 13.1,
+    "estiloMax": 1.6,
+    "elementos": 74,
+    "layoutMs": 2.7
+   }
+  },
+  "novo": {
+   "n": 3,
+   "down": {
+    "estiloMs": 2.6,
+    "estiloMax": 1,
+    "elementos": 55,
+    "layoutMs": 0.8
+   },
+   "up": {
+    "estiloMs": 1.9,
+    "estiloMax": 1.1,
+    "elementos": 65,
+    "layoutMs": 0.3
+   }
+  }
+ },
+ "escrita": {
+  "antigo/rapido": {
+   "n": 3,
+   "entregaP95": 14.1,
+   "quadroMed": 16.7,
+   "quadroP95": 16.7,
+   "quadroMax": 33.3,
+   "mais50": 0,
+   "tarefasLongas": 0,
+   "tarefasLongasMax": 0,
+   "tintaP95": 16,
+   "perdidos": 0,
+   "maxDistPx": 0.7,
+   "tracos": 1
+  },
+  "antigo/longo": {
+   "n": 3,
+   "entregaP95": 14.2,
+   "quadroMed": 16.9,
+   "quadroP95": 16.7,
+   "quadroMax": 33.3,
+   "mais50": 0,
+   "tarefasLongas": 0,
+   "tarefasLongasMax": 0,
+   "tintaP95": 16,
+   "perdidos": 0,
+   "maxDistPx": 0.7,
+   "tracos": 1
+  },
+  "novo/rapido": {
+   "n": 3,
+   "entregaP95": 13.5,
+   "quadroMed": 16.7,
+   "quadroP95": 16.8,
+   "quadroMax": 33.4,
+   "mais50": 0,
+   "tarefasLongas": 0,
+   "tarefasLongasMax": 0,
+   "tintaP95": 15.3,
+   "perdidos": 0,
+   "maxDistPx": 0.7,
+   "tracos": 1
+  },
+  "novo/longo": {
+   "n": 3,
+   "entregaP95": 14.1,
+   "quadroMed": 16.7,
+   "quadroP95": 16.7,
+   "quadroMax": 33.3,
+   "mais50": 0,
+   "tarefasLongas": 0,
+   "tarefasLongasMax": 0,
+   "tintaP95": 15.3,
+   "perdidos": 0,
+   "maxDistPx": 0.6,
+   "tracos": 1
+  }
+ },
+ "trocas": {
+  "aberta+armado+traco": {
+   "estado": "aberta",
+   "reps": 10,
+   "modoIda": {
+    "mediana": 192,
+    "min": 165,
+    "max": 238,
+    "tarefasLongasSoma": 188,
+    "tarefasLongasMax": 157,
+    "cpuMs": 277
+   },
+   "modoVolta": {
+    "mediana": 301,
+    "min": 260,
+    "max": 322,
+    "tarefasLongasSoma": 262,
+    "tarefasLongasMax": 278,
+    "cpuMs": 442
+   },
+   "blocoBloco": {
+    "mediana": 262,
+    "min": 211,
+    "max": 316,
+    "tarefasLongasSoma": 216,
+    "tarefasLongasMax": 271,
+    "cpuMs": 358
+   },
+   "estiloGrandes": {
+    "passesPorIdaVolta": 1,
+    "elementosPorIdaVolta": 3858,
+    "msPorIdaVolta": 52.7
+   },
+   "tracosDepois": 1,
+   "toolboxAbertaDepois": true
+  },
+  "fechada": {
+   "estado": "fechada",
+   "reps": 10,
+   "modoIda": {
+    "mediana": 168,
+    "min": 152,
+    "max": 182,
+    "tarefasLongasSoma": 166,
+    "tarefasLongasMax": 139,
+    "cpuMs": 289
+   },
+   "modoVolta": {
+    "mediana": 519,
+    "min": 315,
+    "max": 597,
+    "tarefasLongasSoma": 478,
+    "tarefasLongasMax": 566,
+    "cpuMs": 629
+   },
+   "blocoBloco": {
+    "mediana": 266,
+    "min": 231,
+    "max": 337,
+    "tarefasLongasSoma": 242,
+    "tarefasLongasMax": 284,
+    "cpuMs": 396
+   },
+   "estiloGrandes": {
+    "passesPorIdaVolta": 1,
+    "elementosPorIdaVolta": 3627,
+    "msPorIdaVolta": 50.7
+   },
+   "tracosDepois": 1,
+   "toolboxAbertaDepois": false
+  }
+ }
+}

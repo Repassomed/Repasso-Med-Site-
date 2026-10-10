@@ -1,0 +1,34 @@
+{
+ "ref": "(árvore de trabalho)",
+ "quando": "2026-10-08",
+ "celular": {
+  "antigo": {
+   "n": 3,
+   "entregaP95": 15.5,
+   "quadroMed": 17.1,
+   "quadroP95": 16.8,
+   "quadroMax": 50.1,
+   "mais50": 1,
+   "tarefasLongas": 1,
+   "tarefasLongasMax": 52,
+   "tintaP95": 14.9,
+   "perdidos": 0,
+   "maxDistPx": 0.7,
+   "tracos": 1
+  },
+  "novo": {
+   "n": 3,
+   "entregaP95": 14.5,
+   "quadroMed": 16.8,
+   "quadroP95": 16.8,
+   "quadroMax": 33.4,
+   "mais50": 0,
+   "tarefasLongas": 0,
+   "tarefasLongasMax": 0,
+   "tintaP95": 16,
+   "perdidos": 0,
+   "maxDistPx": 0.7,
+   "tracos": 1
+  }
+ }
+}
