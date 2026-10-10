@@ -1,0 +1,89 @@
+# contra a main ebc53dcd (RM_ASSETS_REF=origin/main) — 14 falhas; a secção J aborta (o hook _test.stylusTouchesN não existe na main)
+▸ A1 · goma em REPOUSO (piloto): o dedo rola e a pinça vale; a goma não trava a navegação
+    ✗ FALHA: goma armada: touch-action do conteúdo ≠ none (medido «none») → "none"
+    ✗ FALHA: goma armada: pan nos 2 eixos e pinça permitidos ao dedo («none») → "none"
+    ✗ FALHA: goma armada: o dedo rola a página (Δ=0 px) → {"y0":1915,"y1":1915}
+    ✓ 0 erros JS
+▸ A2 · goma armada: o DEDO navega e NÃO apaga por acidente (só a ponta da caneta/rato apaga)
+    ✗ FALHA: um toque de dedo em cima do traço com a goma armada não apaga (1 → 0) → {"n0":1,"n1":0}
+    ✗ FALHA: a ponta da caneta apaga o mesmo traço (0 → 0) → {"n1":0,"n2":0}
+    ✓ a ponta da goma apaga uma marcação (grifo) — achada por baixo da guarda (["qa-hl-1"])
+    ✓ 0 erros JS
+▸ A3 · 2.º contato (palma) DURANTE o gesto da goma com a caneta: o gesto continua (pointerId conferido) e vira 1 só desfazer
+    ✓ a caneta-goma apagou o 1.º traço ao encostar (2 → 1)
+    ✗ FALHA: depois da palma (touch de OUTRO pointerId soltando) o MESMO gesto seguiu e apagou o 2.º traço (2 → 1) → {"n0":2,"n1":1,"n2":1,"meio":{"apagando":false}}
+    ✗ FALHA: um gesto = um desfazer com os 2 traços ({"len":3,"tipo":"del","inks":1}) → {"len":3,"tipo":"del","inks":1}
+    ✓ 0 erros JS
+▸ A4 · diagnóstico: pointercancel separado por caneta / toque (navegação · palma) / gesto ativo
+    ✗ FALHA: contagem separada: caneta=0, toque≥1, no meio do gesto=0 (1) → 1
+    ✗ FALHA: o resumo mostra os cancelamentos separados por tipo → "build=2026-10-09·456c · guarda=sim · toolbox=aberta · ferramenta=pen | acesso à V2: lista beta no código · piloto físico: sim (conta do piloto no código) · flags do servidor: layout=true visual=true pen=false · teste sem guarda: desligado | tarefas longas (≥50 ms): 0 · máx 0 ms · soma 0 ms · desde 2 s | traço 1 [pen] pointerdown 3.8 ms (fila 1) · 1.º quadro 16 ms · moves 39 (agrup. máx 1) · fila m"
+    ✓ 0 erros JS
+▸ A5 · tarefas longas: «indisponível» onde o navegador não informa (Safari) — nunca um zero falso
+    ✗ FALHA: sem suporte a longtask: «tarefas longas (≥50 ms): 0 · máx 0 ms · soma 0 ms · desde 0 s» → "tarefas longas (≥50 ms): 0 · máx 0 ms · soma 0 ms · desde 0 s"
+    ✓ 0 erros JS
+    ✓ com suporte (Chromium): número medido «tarefas longas (≥50 ms): 0 · máx 0 ms · soma 0 ms · desde 0 s»
+    ✓ 0 erros JS
+▸ B · palma ANTES, DURANTE e DEPOIS da escrita (diagnóstico fechado e aberto)
+    ✓ diag fechado · palma ANTES: o traço nasceu e foi gravado (0 → 1)
+    ✓ diag fechado · palma ANTES: a página não rolou (Δ=0 px)
+    ✓ diag fechado · palma ANTES: tinta alinhada à ponta (desvio 0 px)
+    ✓ diag fechado · palma DURANTE: 1 só traço, não interrompido (1 → 2)
+    ✓ diag fechado · palma DURANTE: a página não rolou (Δ=0 px)
+    ✓ diag fechado · palma DURANTE: o traço tem a 2.ª metade e está alinhado (desvio 0 px, 40 pontos)
+    ✓ diag fechado · estado limpo depois (sem traço/contato/guarda/rm2-drawing)
+    ✓ diag fechado · palma DEPOIS: o dedo volta a rolar (Δ=327 px)
+    ✓ diag fechado · 0 erros JS
+    ✓ diag aberto · palma ANTES: o traço nasceu e foi gravado (0 → 1)
+    ✓ diag aberto · palma ANTES: a página não rolou (Δ=0 px)
+    ✓ diag aberto · palma ANTES: tinta alinhada à ponta (desvio 0 px)
+    ✓ diag aberto · palma DURANTE: 1 só traço, não interrompido (1 → 2)
+    ✓ diag aberto · palma DURANTE: a página não rolou (Δ=0 px)
+    ✓ diag aberto · palma DURANTE: o traço tem a 2.ª metade e está alinhado (desvio 0 px, 40 pontos)
+    ✓ diag aberto · estado limpo depois (sem traço/contato/guarda/rm2-drawing)
+    ✓ diag aberto · palma DEPOIS: o dedo volta a rolar (Δ=332 px)
+    ✓ diag aberto · 0 erros JS
+▸ C · escrever → rolar → zoom (pinça, escala 1,6) → escrever: tinta alinhada à ponta, traço antigo preso ao texto
+    ✓ sem zoom: desvio tinta × ponta 0 px
+    ✓ com zoom 1.6: desvio tinta × ponta 0.9 px (40 pontos)
+    ✓ o traço antigo segue preso ao seu parágrafo depois de rolar e dar zoom (Δx 0, Δy 0)
+    ✓ 0 erros JS
+▸ D · troca de ferramenta, de bloco e de modo: nenhum estado sobra e a escrita volta
+    ✓ goma → marcador → nenhuma → lápis: estado limpo
+    ✓ troca de bloco e de modo: estado limpo
+    ✓ depois das trocas a caneta volta a escrever (1 → 2)
+    ✓ 0 erros JS
+▸ E · interrupção no meio do traço (perda de foco / app em segundo plano) e retorno
+    ✓ blur: antes, traço em curso e guarda ativa
+    ✓ blur: a interrupção fecha o gesto e solta a guarda (sem página presa)
+    ✓ blur: ao voltar, o dedo rola (Δ=266 px)
+    ✓ blur: ao voltar, a caneta escreve (0 → 1)
+    ✓ blur: 0 erros JS
+    ✓ visibilitychange: antes, traço em curso e guarda ativa
+    ✓ visibilitychange: a interrupção fecha o gesto e solta a guarda (sem página presa)
+    ✓ visibilitychange: ao voltar, o dedo rola (Δ=251 px)
+    ✓ visibilitychange: ao voltar, a caneta escreve (0 → 1)
+    ✓ visibilitychange: 0 erros JS
+▸ F · escrever 2, apagar 1, recarregar: volta exatamente o que ficou (mesma âncora, mesmos pontos)
+    ✓ 1 traço salvo volta igual (id, âncora e pontos) — antes 1, depois 1
+    ✓ e é desenhado 1 vez (sem duplicar): 1
+    ✓ 0 erros JS
+▸ G · fora do piloto físico (beta legado sem pen do servidor): goma e lápis como antes
+    ✓ pilotoPermitido=false para o beta legado sem pen
+    ✓ lápis fora do piloto: regra de sempre «pan-x pan-y pinch-zoom» (o Chromium a serializa como «manipulation»)
+    ✓ goma fora do piloto: regra de sempre («none»)
+    ✓ fora do piloto o adaptador de toque não é registrado
+    ✓ 0 erros JS
+▸ H · ouvintes de toque NÃO passivos no documento: só enquanto lápis/goma estão armados (sem ferramenta, a rolagem não espera o JS)
+    ✓ lápis armado (piloto): 2 ouvintes não-passivos (touchstart/touchmove) — medido 2
+    ✗ FALHA: sem ferramenta: 0 ouvintes não-passivos de toque no documento — medido 2 
+    ✓ goma armada (piloto): 2 ouvintes não-passivos — medido 2
+    ✓ 0 erros JS
+▸ I · traço/contato ÓRFÃO (o navegador perdeu o pointerup de um contato anterior da caneta): a escrita nova não é recusada e o que já foi escrito é gravado
+    ✓ antes: há um traço/contato órfão em aberto (pointerId 77)
+    ✗ FALHA: a caneta nova escreve (não é recusada) e o traço órfão é gravado, não perdido (0 → 1) → {"n0":0,"n1":1}
+    ✗ FALHA: depois: nenhum contato/traço pendurado, guarda inerte → {"tool":"pen","traco":true,"penContact":true,"guarda":"block","drawing":true,"strokes":0}
+    ✗ FALHA: e o dedo rola (Δ=0 px) 
+    ✓ 0 erros JS
+▸ J · adaptador de Touch Events (iPad): stylus suprime o próprio pan; com ela em contato a palma também; stylus sem touchend é podada
+page.evaluate: TypeError: T.stylusTouchesN is not a function
+    at /home/user/Repasso-Med-Site-/tools/qa/caneta-ipad-456/ipad.test.cjs:406:28

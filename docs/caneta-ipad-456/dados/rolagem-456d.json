@@ -1,0 +1,110 @@
+[
+ {
+  "cfg": "antigo",
+  "tool": "none",
+  "y0": 2400,
+  "max": 183220,
+  "rolou": 308,
+  "recalculos": 88,
+  "recalculosArvore": 0,
+  "maiorElementos": 13,
+  "msEstiloArvore": 0,
+  "layouts": 24
+ },
+ {
+  "cfg": "antigo",
+  "tool": "pen",
+  "y0": 2400,
+  "max": 183220,
+  "rolou": 311,
+  "recalculos": 90,
+  "recalculosArvore": 0,
+  "maiorElementos": 13,
+  "msEstiloArvore": 0,
+  "layouts": 45
+ },
+ {
+  "cfg": "antigo",
+  "tool": "eraser",
+  "y0": 2400,
+  "max": 183220,
+  "rolou": 312,
+  "recalculos": 89,
+  "recalculosArvore": 0,
+  "maiorElementos": 13,
+  "msEstiloArvore": 0,
+  "layouts": 45
+ },
+ {
+  "cfg": "layout",
+  "tool": "none",
+  "y0": 2400,
+  "max": 183618,
+  "rolou": 307,
+  "recalculos": 88,
+  "recalculosArvore": 0,
+  "maiorElementos": 13,
+  "msEstiloArvore": 0,
+  "layouts": 27
+ },
+ {
+  "cfg": "layout",
+  "tool": "pen",
+  "y0": 2400,
+  "max": 183618,
+  "rolou": 313,
+  "recalculos": 88,
+  "recalculosArvore": 0,
+  "maiorElementos": 13,
+  "msEstiloArvore": 0,
+  "layouts": 45
+ },
+ {
+  "cfg": "layout",
+  "tool": "eraser",
+  "y0": 2400,
+  "max": 183618,
+  "rolou": 311,
+  "recalculos": 87,
+  "recalculosArvore": 0,
+  "maiorElementos": 13,
+  "msEstiloArvore": 0,
+  "layouts": 44
+ },
+ {
+  "cfg": "novo",
+  "tool": "none",
+  "y0": 557,
+  "max": 1670,
+  "rolou": 309,
+  "recalculos": 0,
+  "recalculosArvore": 0,
+  "maiorElementos": 0,
+  "msEstiloArvore": 0,
+  "layouts": 0
+ },
+ {
+  "cfg": "novo",
+  "tool": "pen",
+  "y0": 557,
+  "max": 1670,
+  "rolou": 315,
+  "recalculos": 0,
+  "recalculosArvore": 0,
+  "maiorElementos": 0,
+  "msEstiloArvore": 0,
+  "layouts": 0
+ },
+ {
+  "cfg": "novo",
+  "tool": "eraser",
+  "y0": 557,
+  "max": 1670,
+  "rolou": 313,
+  "recalculos": 0,
+  "recalculosArvore": 0,
+  "maiorElementos": 0,
+  "msEstiloArvore": 0,
+  "layouts": 0
+ }
+]

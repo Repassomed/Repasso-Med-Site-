@@ -194,7 +194,7 @@ const taEfetivo = (p, x, y) => p.evaluate(([x, y]) => { let e = document.element
     const lin = await page.evaluate(() => window.RMToolsV2._test.perfLinhas ? window.RMToolsV2._test.perfLinhas() : []);
     const txt = lin.join('\n');
     ok(/traço 1 \[pen\] pointerdown [\d.]+ ms/.test(txt) && /traço 2/.test(txt), 'mostra tempo de pointerdown, 1.º quadro, fila, quadros e pointerup de cada traço', lin.slice(0, 4));
-    ok(/pointercancel: \d+/.test(txt) && /captura perdida/.test(txt), 'mostra contagem de pointercancel e de captura perdida', lin);
+    ok(/pointercancel: caneta \d+/.test(txt) && /captura perdida/.test(txt), 'mostra contagem de pointercancel e de captura perdida', lin);
     ok(/troca 1: .* até o 2\.º quadro \d+ ms/.test(txt), 'mostra o tempo das trocas de modo/bloco até o 2.º quadro', lin.filter(l => /^troca/.test(l)));
     ok(!/<[a-z\/]|https?:|@/i.test(txt), 'o resumo não carrega HTML, URL nem e-mail', txt.slice(0, 200));
     const palavras = await page.evaluate(() => { const sec = document.getElementById('s2-b04'); return [...sec.querySelectorAll('p')].slice(0, 6).map(p => p.textContent.trim().split(/\s+/).slice(0, 4).join(' ')).filter(x => x.length > 12); });
@@ -214,9 +214,10 @@ const taEfetivo = (p, x, y) => p.evaluate(([x, y]) => { let e = document.element
   for (const [rot, uid, pen, esperado] of [['José (UID da V2, pen ausente)', L.JOSE, false, true], ['2.º testador beta, pen:true do servidor', BETA2, true, true], ['2.º testador beta, pen:false', BETA2, false, false]]) {
     const { ctx, page, errs } = await abrir(br, base, midia, 'novo', { w: 1024, h: 768, touch: true, uid, pen });
     await page.waitForTimeout(500);
+    await page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); await page.waitForTimeout(200);     // #456 iPad: os ouvintes de toque só existem com lápis/goma armados
     const g = await page.evaluate(() => ({ piloto: window.RMToolsV2._test.pilotoPermitido(), adaptador: window.RMToolsV2._test.adaptadorLigado ? window.RMToolsV2._test.adaptadorLigado() : null, flag: window.RMPilot && window.RMPilot.penLiberada && window.RMPilot.penLiberada(), classe: document.body.classList.contains('rm2-pilot-guard'), diagBtn: !!document.querySelector('.rm2-btn[data-a="diag"]:not(.rm2-piloto-off)') }));
     ok(g.piloto === esperado, `${rot}: pilotoPermitido=${esperado} (medido ${g.piloto})`, g);
-    ok(g.adaptador === esperado, `${rot}: adaptador de Touch Events ${esperado ? 'registrado' : 'NÃO registrado'} (medido ${g.adaptador})`, g);
+    ok(g.adaptador === esperado, `${rot}: adaptador de Touch Events (lápis armado) ${esperado ? 'registrado' : 'NÃO registrado'} (medido ${g.adaptador})`, g);
     ok(g.classe === esperado && g.diagBtn === esperado, `${rot}: guarda de toque e botão do diagnóstico ${esperado ? 'ativos' : 'ausentes'}`, g);
     ok(g.flag === pen, `${rot}: RMPilot.penLiberada()=${pen} (só reflete a resposta do servidor)`, g);
     ok(errs.length === 0, `${rot}: 0 erros JS`, errs);
@@ -239,13 +240,13 @@ const taEfetivo = (p, x, y) => p.evaluate(([x, y]) => { let e = document.element
     const botaoCaixa = await page.evaluate(() => { const t = document.querySelector('.rm-sis-tools'); return t && getComputedStyle(t).display !== 'none' ? '.rm-sis-tools' : '#rm2-fab'; });
     await page.click(botaoCaixa, { force: true }); await page.waitForTimeout(250);
     const toast = await page.evaluate(() => { const t = document.querySelector('.rm-toast'); return t && t.classList.contains('on') ? t.textContent : null; });
-    ok(semFixo && toast === 'caneta #456 · build 2026-10-09·456c', 'ao ABRIR a caixa o piloto vê o build num aviso passageiro (.rm-toast) e NENHUM elemento fixo novo fica sobre a leitura: ' + toast, { semFixo, toast });
+    ok(semFixo && toast === 'caneta #456 · build 2026-10-10·456d', 'ao ABRIR a caixa o piloto vê o build num aviso passageiro (.rm-toast) e NENHUM elemento fixo novo fica sobre a leitura: ' + toast, { semFixo, toast });
     await page.click(botaoCaixa, { force: true }); await page.waitForTimeout(250);
     await B.prepararAlvo(page, 'novo', 'paragrafo', true);
     await page.evaluate(() => window.RMToolsV2.abrirDiag()); await page.waitForTimeout(300);
     const d1 = await page.evaluate(() => ({ btn: (document.querySelector('.rm2-diag [data-d="guarda"]') || {}).textContent, linhas: window.RMToolsV2._test.perfLinhas().slice(0, 2).join(' | '), classe: document.body.classList.contains('rm2-pilot-guard') }));
     ok(d1.btn === 'Sin guarda: no' && d1.classe, 'com o painel aberto o botão «Sin guarda» começa desligado e a guarda está ativa', d1);
-    ok(/build=2026-10-09·456c/.test(d1.linhas) && /acesso à V2: lista beta no código/.test(d1.linhas) && /piloto físico: sim \(conta do piloto no código\)/.test(d1.linhas) && /flags do servidor: layout=true visual=true pen=false/.test(d1.linhas) && !/d4d215d3|448e4d63/.test(d1.linhas), 'o diagnóstico informa build, via de acesso e flags (sem UID)', d1.linhas);
+    ok(/build=2026-10-10·456d/.test(d1.linhas) && /acesso à V2: lista beta no código/.test(d1.linhas) && /piloto físico: sim \(conta do piloto no código\)/.test(d1.linhas) && /flags do servidor: layout=true visual=true pen=false/.test(d1.linhas) && !/d4d215d3|448e4d63/.test(d1.linhas), 'o diagnóstico informa build, via de acesso e flags (sem UID)', d1.linhas);
     const nTr0 = await page.evaluate(() => document.querySelectorAll('#rm2-ink path[data-ink]').length);
     await page.click('.rm2-diag [data-d="guarda"]'); await page.waitForTimeout(250);
     ok(await page.evaluate(n => document.querySelectorAll('#rm2-ink path[data-ink]').length === n && !window.RMToolsV2._test.temTraco(), nTr0), 'com o lápis armado, tocar o botão do painel NÃO começa um traço por baixo dele');

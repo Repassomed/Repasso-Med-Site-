@@ -377,16 +377,20 @@
      navegador deixou a thread principal parada durante o traço, quantos pointercancel/lostpointercapture) só o aparelho de verdade sabe. Isto mede isso no próprio
      aparelho — SÓ enquanto o painel de diagnóstico estiver ABERTO (o aluno o abre de propósito, pelo botão do painel de ferramentas; fecha = para e apaga tudo).
      Guarda APENAS NÚMEROS (milissegundos e contagens): nenhum texto da matéria, nenhuma coordenada, nenhuma nota, nenhum UID/e-mail, nada em localStorage, nada para o servidor. */
-  var BUILD_456 = '2026-10-09·456c';
+  var BUILD_456 = '2026-10-10·456d';
   var perf = null;                          // null = desligado (custo zero nos handlers: um `if`)
   var perfOuvinteModos = false;
   var semGuardaTeste = false;               // A/B do reteste físico: ligado = o piloto usa a regra LEGADA (touch-action no contêiner) em vez da guarda; só memória, some ao recarregar
 
   function perfLigar() {
     if (perf) return;
-    perf = { desde: Date.now(), tracos: [], atual: null, trans: [], lt: 0, ltMax: 0, ltSoma: 0, po: null, raf: 0 };
+    perf = { desde: Date.now(), tracos: [], atual: null, trans: [], lt: 0, ltMax: 0, ltSoma: 0, po: null, raf: 0, pc: novoContadorCancel(), lpc: 0, orfaos: 0, toques: { palma: 0, nav: 0 }, rol: novoContadorRolagem(), ltSuportado: false };
+    /* tarefas longas: só o Chromium informa («longtask»). Onde o navegador não informa (Safari/iPadOS) o painel diz «indisponível» —
+       um zero ali seria lido como «nenhuma travada» sem nada ter sido medido (#456, achado do auditor). */
+    try { var tipos = window.PerformanceObserver && PerformanceObserver.supportedEntryTypes; perf.ltSuportado = !!(tipos && tipos.indexOf('longtask') !== -1); } catch (e) { perf.ltSuportado = false; }
+    window.addEventListener('scroll', perfRolagem, { passive: true });
     try {
-      if (window.PerformanceObserver) {
+      if (window.PerformanceObserver && perf.ltSuportado) {
         perf.po = new PerformanceObserver(function (l) {
           if (!perf) return;
           l.getEntries().forEach(function (x) { perf.lt++; perf.ltSoma += x.duration; if (x.duration > perf.ltMax) perf.ltMax = x.duration; });
@@ -413,8 +417,38 @@
     } catch (e) {}
   }
 
+  function novoContadorCancel() { return { caneta: 0, toque: 0, outro: 0, gesto: 0, nav: 0, palma: 0 }; }
+  function novoContadorRolagem() { return { quadros: 0, max: 0, q50: 0, ult: 0, prev: 0, raf: 0 }; }
+
+  /* pointercancel separado por ORIGEM (#456, achado do auditor: a soma única misturava a palma, o dedo que rola e a própria caneta).
+     «toque · navegação» é o esperado: o navegador cancela o ponteiro do dedo quando assume a rolagem. O que importa para a escrita é
+     «caneta» e «no meio do gesto» (cancelamento do ponteiro que estava a desenhar/apagar). Chamado na CAPTURA, antes da limpeza do toque. */
+  function perfContarCancel(e) {
+    var c = perf && perf.pc; if (!c || !e) return;
+    if (e.pointerType === 'pen') c.caneta++; else if (e.pointerType === 'touch') c.toque++; else c.outro++;
+    if ((traco && e.pointerId === traco.pid) || (apagando && e.pointerId === apagando.pid)) c.gesto++;
+    if (e.pointerType === 'touch') { if (touchPalm[e.pointerId]) c.palma++; else c.nav++; }
+  }
+
+  /* quadros DURANTE a rolagem (com ou sem ferramenta): o maior intervalo e quantos passaram de 50 ms — mede a «rolagem travando» no
+     próprio aparelho, que o emulador não reproduz. Só com o painel aberto; para sozinho 250 ms depois do último evento de scroll. */
+  function perfRolagem() {
+    var r = perf && perf.rol; if (!r) return;
+    r.ult = performance.now();
+    if (!r.raf) { r.prev = 0; r.raf = requestAnimationFrame(perfRolQuadro); }
+  }
+  function perfRolQuadro(t) {
+    var r = perf && perf.rol; if (!r) return;
+    if (r.prev) { var d = t - r.prev; r.quadros++; if (d > r.max) r.max = d; if (d > 50) r.q50++; }
+    r.prev = t;
+    if (t - r.ult > 250) { r.raf = 0; r.prev = 0; diagVPedirRender(); return; }
+    r.raf = requestAnimationFrame(perfRolQuadro);
+  }
+
   function perfDesligar() {
     if (!perf) return;
+    window.removeEventListener('scroll', perfRolagem, { passive: true });
+    if (perf.rol && perf.rol.raf) { try { cancelAnimationFrame(perf.rol.raf); } catch (e) {} }
     try { if (perf.po) perf.po.disconnect(); } catch (e) {}
     if (perf.raf) { try { cancelAnimationFrame(perf.raf); } catch (e) {} }
     perf = null;
@@ -458,6 +492,17 @@
     diagVPedirRender();
   }
 
+  /* o que o aparelho REALMENTE aplicou (#456 iPad): sem isto não há como saber, do outro lado, se o valor de touch-action foi aceite
+     pelo motor, qual o zoom visual e se os ouvintes de toque estão de pé. Lido só no render do painel (nunca durante um traço). */
+  function perfAmbiente() {
+    var ta = '?', pz = '?', esc = '?';
+    try { pz = (window.CSS && CSS.supports) ? (CSS.supports('touch-action', 'pan-x pan-y pinch-zoom') ? 'sim' : 'não') : '?'; } catch (e) {}
+    try { var c = document.getElementById('materias-container'); if (c) ta = getComputedStyle(c).touchAction || '?'; } catch (e) {}
+    try { if (window.visualViewport) esc = (Math.round(visualViewport.scale * 100) / 100).toFixed(2); } catch (e) {}
+    var nS = 0; for (var k in stylusTouches) if (stylusTouches.hasOwnProperty(k)) nS++;
+    return 'ambiente: touch-action do conteúdo=' + ta + ' · «pinch-zoom» aceito pelo motor=' + pz + ' · zoom visual=' + esc + ' · ouvintes de toque=' + (adaptadorLigado ? 'ligados' : 'desligados') + ' (stylus em contato: ' + nS + ')';
+  }
+
   function perfNum(v, c) { return v == null || v !== v ? '–' : String(Math.round(v * (c ? 10 : 1)) / (c ? 10 : 1)); }
 
   function perfLinhas() {
@@ -466,7 +511,11 @@
     var fl = null; try { fl = window.RMPilot && window.RMPilot._estado && window.RMPilot._estado().flags; } catch (e) {}
     L.push('acesso à V2: ' + (acessoVia || '?') + ' · piloto físico: ' + (pilotoPermitido() ? (st.uid === JOSE_UID ? 'sim (conta do piloto no código)' : 'sim (servidor: pen)') : 'não') + ' · flags do servidor: layout=' + (fl ? String(!!fl.layout) : '?') + ' visual=' + (fl ? String(!!fl.visual) : '?') + ' pen=' + (fl ? String(!!fl.pen) : '?') + ' · teste sem guarda: ' + (semGuardaTeste ? 'LIGADO (regra legada)' : 'desligado'));
     if (!perf) return L;
-    L.push('tarefas longas (≥50 ms): ' + perf.lt + ' · máx ' + perfNum(perf.ltMax) + ' ms · soma ' + perfNum(perf.ltSoma) + ' ms · desde ' + Math.round((Date.now() - perf.desde) / 1000) + ' s');
+    L.push(perfAmbiente());
+    if (perf.ltSuportado) L.push('tarefas longas (≥50 ms): ' + perf.lt + ' · máx ' + perfNum(perf.ltMax) + ' ms · soma ' + perfNum(perf.ltSoma) + ' ms · desde ' + Math.round((Date.now() - perf.desde) / 1000) + ' s');
+    else L.push('tarefas longas: indisponível neste navegador (não informa «longtask») — use «quadros máx» de cada traço e da rolagem · desde ' + Math.round((Date.now() - perf.desde) / 1000) + ' s');
+    var ro = perf.rol;
+    L.push(ro.quadros ? ('rolagem: ' + ro.quadros + ' quadros · maior intervalo ' + perfNum(ro.max) + ' ms · >50 ms: ' + ro.q50) : 'rolagem: nenhuma ainda — role a página com o dedo (com e sem ferramenta)');
     var t = perf.tracos;
     if (!t.length) L.push('traços: nenhum ainda — escreva com a caneta (algumas letras e palavras)');
     t.forEach(function (a, i) {
@@ -474,7 +523,9 @@
         ' (agrup. máx ' + a.coalMax + ') · fila máx ' + perfNum(a.lagMax) + ' ms (>50: ' + a.lag50 + ') · quadros máx ' + perfNum(a.quadroMax) + ' ms (>33: ' + a.q33 + ', >50: ' + a.q50 + ') · pointerup ' + perfNum(a.upMs, 1) +
         ' ms · pontos ' + a.pontos + ' · rolagem ' + a.scrollDelta + ' px · fim=' + a.fim);
     });
-    L.push('pointercancel: ' + (perf.pc || 0) + ' · captura perdida no meio do traço: ' + (perf.lpc || 0));
+    var pc = perf.pc || novoContadorCancel();
+    L.push('pointercancel: caneta ' + pc.caneta + ' (no meio do gesto ' + pc.gesto + ') · toque ' + pc.toque + ' (navegação ' + pc.nav + ' — esperado quando o navegador assume a rolagem · palma ' + pc.palma + ')' + (pc.outro ? ' · outro ' + pc.outro : '') +
+      ' · captura perdida no meio do traço: ' + (perf.lpc || 0) + ' · contato/traço órfão recuperado: ' + (perf.orfaos || 0) + ' · toques: palma ' + perf.toques.palma + ' / navegação ' + perf.toques.nav);
     if (!perf.trans.length) L.push('trocas de bloco/modo: nenhuma ainda — troque de bloco e de modo com a caixa aberta');
     perf.trans.forEach(function (x, i) { L.push('troca ' + (i + 1) + ': ' + x.de + ' → ' + x.para + ' · até o 2.º quadro ' + x.ms + ' ms · toolbox ' + (x.toolbox ? 'aberta' : 'fechada') + ' · ferramenta ' + x.tool); });
     return L;
@@ -579,7 +630,7 @@
 
   function limparDiag() {
     diag.length = 0;
-    if (perf) { perf.tracos = []; perf.atual = null; perf.trans = []; perf.lt = 0; perf.ltMax = 0; perf.ltSoma = 0; perf.pc = 0; perf.lpc = 0; }
+    if (perf) { perf.tracos = []; perf.atual = null; perf.trans = []; perf.lt = 0; perf.ltMax = 0; perf.ltSoma = 0; perf.pc = novoContadorCancel(); perf.lpc = 0; perf.orfaos = 0; perf.toques = { palma: 0, nav: 0 }; perf.rol = novoContadorRolagem(); }
     diagVRender();
   }
 
@@ -757,6 +808,22 @@ body.rm2-t-eraser #materias-container,
 body.rm2-t-highlight #materias-container{
   touch-action:none;
   overscroll-behavior:contain;
+}
+/* PILOTO FÍSICO (#456, reprovação no iPad de 10/10, build 456c). Duas regras de cima falhavam ali:
+   1) GOMA: «touch-action:none» durante TODA a seleção da goma — em repouso, sem contacto nenhum — tirava do dedo a rolagem e a pinça
+      na matéria inteira (medido no Chromium: 0 px rolados com a goma armada nos três layouts). No piloto a goma passa a seguir a mesma
+      política do lápis: o dedo navega (pan + pinça), só a ponta (caneta/rato) apaga, e a palma é tratada pela guarda durante o contacto.
+   2) LÁPIS: «pan-x pan-y pinch-zoom» é escrito aqui como «manipulation» — mesmo significado (pan nos 2 eixos + pinça, sem toque
+      duplo para zoom), mas a única forma desse valor que todos os motores aceitam; uma declaração com palavra-chave desconhecida é
+      descartada INTEIRA e o contêiner volta a «auto» (toque duplo dá zoom). O diagnóstico mostra o que o aparelho aplicou.
+   Fora do piloto (outras contas beta/matérias) nada muda: as regras de cima continuam valendo. */
+body.rm2-pilot.rm2-t-pen #materias-container,
+body.rm2-pilot.rm2-t-eraser #materias-container{
+  touch-action:manipulation;
+  overscroll-behavior:contain;
+}
+body.rm2-pilot.rm2-t-eraser.rm2-pen-down:not(.rm2-pilot-guard) #materias-container{
+  touch-action:none;
 }
 
 /* Defesa em profundidade contra selecção nativa durante lápis/goma.
@@ -1569,7 +1636,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   function tratarComoPalma(e, motivos, jaClassificado) {
     touchPalm[e.pointerId] = { motivos: motivos };
     delete touchNav[e.pointerId];
-    if (!jaClassificado) diagLog('touch-palm', e, { classificacao: 'palm', razao: motivos.join('+') });
+    if (!jaClassificado) { diagLog('touch-palm', e, { classificacao: 'palm', razao: motivos.join('+') }); if (perf) perf.toques.palma++; }
     /* nunca cria traço, nunca apaga, nunca troca ferramenta — o pointerId se
        limita a existir até ao seu up/cancel. Suprime-se o gesto nativo só
        quando o evento é cancelable: nada de preventDefault às cegas. */
@@ -1633,6 +1700,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (r.pontos >= PALM_LIMIAR && evidenciaDirectaDePalma(r.motivos)) { tratarComoPalma(e, r.motivos, false); return; }
     touchNav[e.pointerId] = { x0: e.clientX, y0: e.clientY, xUlt: e.clientX, yUlt: e.clientY, t0: Date.now() };
     diagLog('touch-nav', e, { classificacao: 'navigation', razao: 'score-sem-evidencia-directa:' + r.pontos + ':' + r.motivos.join('+') });
+    if (perf) perf.toques.nav++;
     setTimeout(function () { reconsiderarNavegacao(e.pointerId); }, PALM_SETTLE_MS);
   }
 
@@ -1698,7 +1766,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   var stylusTouches = {};   // Touch.identifier -> { x0, y0, scrollY0, scrollX0, maxDeltaScroll }
 
   function touchAdapterElegivel(touch) {
-    if (!pilotoPermitido() || st.tool !== 'pen') return false;
+    if (!pilotoPermitido() || (st.tool !== 'pen' && st.tool !== 'eraser')) return false;   // goma também (#456 iPad): a ponta que apaga não pode rolar a página
     if (touch.touchType !== 'stylus') return false;
     if (lbAberto()) return false;
     var alvo = touch.target;
@@ -1708,6 +1776,14 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   }
 
   function onTouchStartAdaptador(e) {
+    podarStylus(e.touches);
+    /* PALMA com a stylus JÁ em contacto (#456 iPad): um toque novo enquanto há stylus registada aqui é palma pela mesma regra de
+       sempre («pen-ativa») — suprime-se o gesto nativo dele no próprio touchstart, que é o que o WebKit respeita. */
+    if (algumaStylus()) {
+      var outro = false;
+      for (var j = 0; j < e.changedTouches.length; j++) if (e.changedTouches[j].touchType !== 'stylus') outro = true;
+      if (outro && e.cancelable) { e.preventDefault(); diagLog('touch-adapter-palma', null, { motivo: 'stylus-em-contato' }); }
+    }
     for (var i = 0; i < e.changedTouches.length; i++) {
       var t = e.changedTouches[i];
       if (!touchAdapterElegivel(t)) continue;
@@ -1723,8 +1799,19 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     }
   }
 
+  function algumaStylus() { for (var k in stylusTouches) if (stylusTouches.hasOwnProperty(k)) return true; return false; }
+  /* a lista do PRÓPRIO navegador (`e.touches`) diz que contactos ainda existem: uma stylus registada aqui que já não está nela perdeu o
+     touchend — sai do registo, para nunca segurar a rolagem do dedo (o touchmove abaixo suprime o pan enquanto houver stylus). */
+  function podarStylus(lista) {
+    if (!lista) return;
+    var vivos = {};
+    for (var i = 0; i < lista.length; i++) vivos[lista[i].identifier] = true;
+    for (var k in stylusTouches) if (stylusTouches.hasOwnProperty(k) && !vivos[k]) limparTouchAdaptador(k, 'sem-touchend');
+  }
+
   function onTouchMoveAdaptador(e) {
-    var algumNosso = false;
+    podarStylus(e.touches);
+    var algumNosso = algumaStylus();   // com a stylus em contacto, NENHUM toque da mesma sequência faz pan (a palma que já estava encostada antes também não)
     for (var i = 0; i < e.changedTouches.length; i++) {
       var t = e.changedTouches[i];
       var reg = stylusTouches[t.identifier];
@@ -1773,6 +1860,22 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     document.addEventListener('touchend', onTouchFimAdaptador, { passive: true });
     document.addEventListener('touchcancel', onTouchFimAdaptador, { passive: true });
   }
+  function desligarAdaptadorTouchStylus() {
+    if (!adaptadorLigado) return;
+    adaptadorLigado = false;
+    document.removeEventListener('touchstart', onTouchStartAdaptador, { passive: false });
+    document.removeEventListener('touchmove', onTouchMoveAdaptador, { passive: false });
+    document.removeEventListener('touchend', onTouchFimAdaptador, { passive: true });
+    document.removeEventListener('touchcancel', onTouchFimAdaptador, { passive: true });
+    limparTodosOsTouchesAdaptador('desligado');
+  }
+  /* #456 iPad: ouvintes de toque NÃO passivos no documento obrigam o navegador a esperar o JS antes de rolar CADA toque da página —
+     inclusive sem ferramenta nenhuma, só lendo. Eles só servem enquanto a ponta pode escrever/apagar: ficam registados apenas com
+     lápis ou goma ARMADOS no piloto físico, e saem no instante em que a ferramenta é desarmada ou o piloto deixa de valer. */
+  function sincronizarAdaptador() {
+    if (pilotoPermitido() && (st.tool === 'pen' || st.tool === 'eraser')) ligarAdaptadorTouchStylus();
+    else desligarAdaptadorTouchStylus();
+  }
 
   /* O browser liberta a captura sozinho no pointerup/pointercancel, mas
      libertá-la explicitamente deixa o estado limpo mesmo nos caminhos que
@@ -1784,6 +1887,13 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         el.releasePointerCapture(pid);
       }
     } catch (err) {}
+  }
+
+  /* Com o LÁPIS armado o dedo nunca desenha — é navegação ou palma (sempre foi assim). Com a GOMA, fora do piloto, o dedo apaga
+     (comportamento de sempre, preservado); DENTRO do piloto físico (#456, reprovação no iPad) o dedo também só navega: a goma
+     apaga pela ponta (caneta/rato), e um toque para rolar em cima de um traço deixa de o apagar por acidente. */
+  function dedoSoNavega() {
+    return st.tool === 'pen' || (st.tool === 'eraser' && pilotoPermitido());
   }
 
   function ehPonteiroDeDesenho(e) {
@@ -1819,7 +1929,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        "2.º ponteiro" de propósito — um toque de palma ou de scroll nunca
        deve competir com essa guarda nem bloquear o próximo traço real. A
        goma mantém-se inalterada: continua a aceitar o dedo mais abaixo. */
-    if (st.tool === 'pen' && e.pointerType === 'touch') {
+    if (e.pointerType === 'touch' && dedoSoNavega()) {
       rotearToqueComCanetaArmada(e);
       return;
     }
@@ -1835,7 +1945,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        — byte a byte, sem nenhuma mudança para esses utilizadores. A GOMA
        nunca entra em `pilotoFisico` (não fazia parte do bug reportado;
        `anchorDe` dela continua exactamente como sempre, sem fallback). */
-    var pilotoFisico = st.tool === 'pen' && pilotoPermitido();
+    var pilotoFisico = (st.tool === 'pen' || st.tool === 'eraser') && pilotoPermitido();   // #456 iPad: a goma pela ponta tem o mesmo contacto/guarda/palma do lápis
 
     /* CONTACTO FÍSICO da stylus — marcado AQUI, antes de qualquer
        resolução de âncora ou de qualquer outra guarda, porque tem de
@@ -1865,12 +1975,18 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        clique de RATO (botão esquerdo OU direito, antes mesmo da rejeição
        de botão mais abaixo) com o lápis seleccionado marcava «contacto
        físico da stylus» para um evento que nunca foi stylus nenhuma. */
+    /* #456 iPad: com um contacto anterior ainda marcado, a GUARDA está por cima da página — o toque novo da caneta cai NELA (fora de
+       #materias-container). Sem contá-la aqui, a recuperação abaixo nunca corria e a guarda ficava presa: nem a caneta escrevia
+       (reject:stroke-active) nem o dedo rolava (touch-action:none na tela toda). Reproduzido no Chromium (tools/qa/caneta-ipad-456, secção I). */
     if (pilotoFisico && e.pointerType === 'pen' &&
-        e.target && e.target.closest && e.target.closest('#materias-container')) {
-      if (!penState.active || penState.pid === e.pointerId) {
-        penEmContacto(true, e.pointerId);
-        registarPen(e);
-      }
+        e.target && e.target.closest && (e.target.closest('#materias-container') || e.target.id === 'rm2-penguard')) {
+      /* Só existe UMA ponta física: um pointerdown de caneta é sempre o contacto actual. Se o anterior não chegou a fechar (pointerup
+         perdido pelo navegador), ele não pode continuar a segurar a guarda nem a recusar a escrita nova (#456 iPad, limpeza de estado). */
+      if (traco && traco.tipo === 'pen' && traco.pid !== e.pointerId) { diagLog('pen-traco-orfao', e, { pidAnterior: traco.pid }); if (perf) perf.orfaos = (perf.orfaos || 0) + 1; var orf = traco; traco = null; concluirTraco(orf, null); }   // grava o que já foi escrito
+      if (apagando && apagando.tipo === 'pen' && apagando.pid !== e.pointerId) { diagLog('pen-goma-orfa', e, { pidAnterior: apagando.pid }); if (perf) perf.orfaos = (perf.orfaos || 0) + 1; terminarApagar(); }
+      if (penState.active && penState.pid !== e.pointerId) diagLog('pen-contato-orfao', e, { pidAnterior: penState.pid });
+      penEmContacto(true, e.pointerId);
+      registarPen(e);
       if (e.cancelable) e.preventDefault();
     }
 
@@ -2054,9 +2170,23 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        já basta. `pilotoPermitido()` reavaliado aqui de propósito: é o
        mesmo portão do início do gesto, não um estado novo. */
     if (e && e.pointerType === 'pen' && pilotoPermitido() && penState.active && e.pointerId === penState.pid) penEmContacto(false);
-    if (apagando) { terminarApagar(); return; }
+    if (apagando) { if (outroPonteiroNaGoma(e)) return; terminarApagar(); return; }
     if (!traco || (e && e.pointerId !== traco.pid)) return;
     var t = traco; traco = null;
+    concluirTraco(t, e);
+  }
+
+  /* #456 iPad (achado confirmado pelo auditor): um pointerup/pointercancel de OUTRO ponteiro (a palma, um dedo) encerrava o gesto
+     da goma que a caneta estava a fazer — reprodução isolada: toque de outro pointerId solta ⇒ apagando=null a meio. No piloto
+     o gesto da goma só termina pelo SEU ponteiro (ou por uma interrupção global: blur, troca de matéria…, que chamam
+     terminarApagar() directamente). Fora do piloto, o comportamento de sempre. */
+  function outroPonteiroNaGoma(e) {
+    return !!(e && apagando && apagando.pid != null && e.pointerId !== apagando.pid && pilotoPermitido());
+  }
+
+  /* Fecha e grava um traço (corpo do antigo onUpImpl): usado pelo pointerup do próprio ponteiro e, no piloto, quando chega o
+     pointerdown de uma caneta NOVA e o traço anterior ficou sem pointerup (a ponta é uma só). */
+  function concluirTraco(t, e) {
     /* Flush (§16): não há nada para "consumir" do RAF — a captura de
        pontos é síncrona no onMove (§13), por isso `t.pts` já tem tudo.
        Cancela-se o frame pendente só para não desenhar, à toa, num traço
@@ -2098,10 +2228,10 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
      feito. Continua defensivo, de propósito: o objectivo foi eliminar o
      cancelamento INDEVIDO, não disfarçar o verdadeiro. */
   function onCancel(e) {
-    if (perf) { perf.pc = (perf.pc || 0) + 1; if (perf.atual && traco && e && e.pointerId === traco.pid) perfFimTraco('POINTERCANCEL', null, traco.pts.length); }
+    if (perf && perf.atual && traco && e && e.pointerId === traco.pid) perfFimTraco('POINTERCANCEL', null, traco.pts.length);   // a contagem por origem é feita na captura (perfContarCancel)
     diagLog('pointercancel', e);
     if (e && e.pointerType === 'pen' && pilotoPermitido() && penState.active && e.pointerId === penState.pid) penEmContacto(false);
-    if (apagando) { terminarApagar(); return; }
+    if (apagando) { if (outroPonteiroNaGoma(e)) return; terminarApagar(); return; }
     if (!traco || (e && e.pointerId !== traco.pid)) return;
     abortarTraco();
   }
@@ -2330,6 +2460,9 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     /* 2 · marcações — a camada de tinta é pointer-events:none, por isso o
        elementFromPoint devolve mesmo o texto que está por baixo */
     var el = document.elementFromPoint(e.clientX, e.clientY);
+    /* piloto: com a ponta da goma em contacto a guarda de toque (#rm2-penguard) está por cima do texto e seria o «elemento no ponto»;
+       olha-se o que está por baixo dela (#456 iPad). Sem guarda visível, nada muda. */
+    if (el && el.id === 'rm2-penguard' && document.elementsFromPoint) { var pilha = document.elementsFromPoint(e.clientX, e.clientY); el = null; for (var q = 0; q < pilha.length; q++) if (pilha[q].id !== 'rm2-penguard') { el = pilha[q]; break; } }
     var sp = el && el.closest && el.closest('.rm-hl');
     if (sp && tab.contains(sp)) apagarMarcaNoGesto(sp, slug);
   }
@@ -3245,6 +3378,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        o cursor e para a goma destacarem as marcações (§31) */
     var b = document.body;
     b.classList.toggle('rm2-pilot-guard', permitido && !semGuardaTeste);
+    b.classList.toggle('rm2-pilot', permitido);                       // política de toque do piloto físico (CSS «PILOTO FÍSICO (#456, reprovação no iPad…)») — independente do A/B da guarda
+    sincronizarAdaptador();
     /* identificação VISÍVEL do build, só para quem está no piloto físico em Semiología II (José / pen:true): prova de qual versão do arquivo o aparelho carregou.
        Um aviso passageiro (.rm-toast, o mesmo do «Trazo deshecho ✓») ao ABRIR a caixa — nada fixo sobre a leitura (regra do tema: nenhum elemento fixo cobre texto, tabela ou post-it). */
     var abertaAgora = box.classList.contains('open');
@@ -3514,15 +3649,15 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        físico, só identifica e tenta suprimir a navegação nativa do
        PRÓPRIO contacto de stylus; não desenha nada. Ver comentário grande
        junto de `ligarAdaptadorTouchStylus()`. */
-    ligarAdaptadorTouchStylus();
-    /* a flag `pen` do servidor chega DEPOIS do mount (rm-pilot.js só pergunta quando Semiología II está ativa): registra o adaptador e reflete o piloto nesse momento */
-    window.addEventListener('rm-pilot-flags', function () { ligarAdaptadorTouchStylus(); refletir(); });
+    sincronizarAdaptador();
+    /* a flag `pen` do servidor chega DEPOIS do mount (rm-pilot.js só pergunta quando Semiología II está ativa): reflete o piloto nesse momento (refletir() sincroniza o adaptador) */
+    window.addEventListener('rm-pilot-flags', function () { refletir(); });
     document.addEventListener('pointermove', function (e) {
       /* Sinal de "pen por perto" para a rejeição de palma — inclui o
          HOVER (pointerType 'pen', buttons 0) quando o hardware/browser o
          expõe, não só o contacto real; ver §7 do encargo. */
       if (e.pointerType === 'pen') registarPen(e);
-      if (st.tool === 'pen' && e.pointerType === 'touch') { onTouchMoveComCanetaArmada(e); return; }
+      if (e.pointerType === 'touch' && dedoSoNavega()) { onTouchMoveComCanetaArmada(e); return; }
       if (traco) { if (perf) perfMove(e); onMove(e); } else if (apagando) onMoveApagar(e);
     }, { passive: false });
     document.addEventListener('pointerup', onUp, { passive: true });
@@ -3534,6 +3669,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (e.pointerType === 'touch') limparToqueRoteado(e.pointerId);
     }, true);
     document.addEventListener('pointercancel', function (e) {
+      if (perf) perfContarCancel(e);                     // antes da limpeza: precisa saber se o toque era palma ou navegação
       if (e.pointerType === 'touch') limparToqueRoteado(e.pointerId);
     }, true);
     window.addEventListener('blur', function () { reconciliarGesto('blur'); });
@@ -3731,6 +3867,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         activeViewPermitido: activeViewPermitido,
         anotarPermitido: anotarPermitido,
         temTraco: function () { return !!traco; },
+        apagandoInfo: function () { return apagando ? { pid: apagando.pid, tipo: apagando.tipo, inks: apagando.inks.length } : null; },
+        stylusTouchesN: function () { var n = 0; for (var k in stylusTouches) if (stylusTouches.hasOwnProperty(k)) n++; return n; },
         tracoInfo: function () {
           return traco ? { pid: traco.pid, tipo: traco.tipo, nPontos: traco.pts.length, rafPending: traco.rafPending } : null;
         },
