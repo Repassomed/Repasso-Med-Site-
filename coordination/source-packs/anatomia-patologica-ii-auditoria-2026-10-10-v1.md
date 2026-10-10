@@ -128,3 +128,88 @@ células ECL). Lacunas reais e verificáveis, em ordem de prioridade:
 Nenhuma incoerência científica foi encontrada no site; as únicas
 incoerências estão nas fontes de anotação do aluno, e o site corretamente
 não as reproduz.
+
+## Rodada AP5 — autodenúncia residual (verificação manual real, não scan)
+
+Uma rodada anterior desta mesma PR (#476) declarou "zero autodenúncias
+restantes" com base em varredura por regex. O auditor comprovou, por
+leitura direta do HTML publicado, que essa declaração estava errada: cinco
+casos continuavam no `HEAD` então vigente (`2e8ab551`). O regex falhava em
+três frentes — variações de frase ("como ocurre en" vs. o padrão buscado
+"como en"), pistas implícitas sem palavra-gatilho nenhuma ("menos expuesta
+al carcinógeno", "poco contacto con el carcinógeno") e construções
+introduzidas pela própria rodada anterior ao tentar corrigir outro ponto
+("algo que esta translocación no refleja").
+
+Nesta rodada (AP5), o método mudou: leitura manual, linha a linha, do
+`git diff` completo entre a base da PR e o `HEAD` (1343 linhas, as duas
+cópias — corpo e Banco geral — de cada questão alterada), sem apoio de
+regex para decidir o que é ou não autodenúncia. Resultado:
+
+### Os 5 casos apontados pelo auditor (confirmados e corrigidos)
+
+| # | Questão | Alternativa | Frase removida | Correção |
+|---|---|---|---|---|
+| 1 | Eritroplasia oral | c | "como ocurre en el síndrome de Plummer-Vinson" | "con palidez de la mucosa y queilitis angular concomitante" |
+| 2 | Localización CEC oral | a | "menos expuesta al carcinógeno estancado" | "sobre la mucosa masticatoria queratinizada" |
+| 2 | Localización CEC oral | c | "poco contacto con el carcinógeno" | "cerca de los conductos de salida de las glándulas salivales menores" |
+| 3 | Linfoma MALT/t(11;18) | b | "algo que esta translocación no refleja" | "con compromiso ganglionar mediastínico asociado" |
+| 4 | Adenoma hepático × HNF | c | "algo que no forma parte de esta lesión" | "con histiocitos epitelioides, intercalados en el parénquima de la HNF" |
+| 5 | Graves × carcinoma papilar | b | "un hallazgo del carcinoma papilar" | "en el estroma folicular" |
+| 5 | Graves × carcinoma papilar | c | "otro rasgo del carcinoma papilar" | "en las células foliculares" |
+
+Em todos os 7 pontos, a identificação da doença correta (Plummer-Vinson,
+localização real do CEC oral, MALT, HNF, carcinoma papilar) já estava ou
+permanece exclusivamente na explicação (`<div class="answer">`), nunca na
+alternativa.
+
+### Casos adicionais encontrados pela leitura manual (não citados pelo auditor)
+
+A leitura integral revelou três questões adicionais com o mesmo padrão,
+que o regex da rodada anterior também não detectou:
+
+| # | Questão | Alternativa(s) | Problema | Correção |
+|---|---|---|---|---|
+| 6 | Colangiocarcinoma — etiología | a, b, d | as três nomeavam explicitamente a doença "dona" do fator de risco: "los mismos factores del adenoma hepático" (a), "los factores clásicos del carcinoma hepatocelular" (b), "ambos del carcinoma hepatocelular" (d) | a) "en una mujer joven sin hepatopatía de base"; b) "de larga data... con sobrecarga férrica hepática"; d) "ambiental... e infección crónica por el virus de la hepatitis B" |
+| 7 | Linfoma MALT (30% / origem) | b | dentro de uma questão sobre o próprio MALT, a alternativa (b) confirmava o traço diagnóstico do MALT ("sin las lesiones linfoepiteliales que sí tiene el MALT") — autodenúncia cruzada dentro do mesmo item | "con centros germinales conservados y sin atipia citológica" (descreve hiperplasia linfoide reativa, um diferencial real, sem citar o traço do MALT) |
+| 8 | Carcinoma medular × MEN 2 | a, c | a) se autocontradizia com o próprio enunciado do caso ("tumores bilaterales y multifocales" vs. opção dizendo "de curso habitualmente unifocal"); c) declarava a própria razão de estar errada ("que no se origina en células C") | a) "sin necesidad de estudio genético ni de los familiares" (consequência clínica errada, sem contradizer o enunciado); c) "no diagnosticado previamente" (plausível sem entregar a resposta) |
+
+Em todos os 8 pontos a explicação (`<div class="answer">`) já continha ou
+passou a conter a identificação correta; nenhuma alternativa foi reduzida
+a uma opção implausível — cada uma recebeu um detalhe clínico/histológico
+real e do mesmo registro, mantendo um distrator forte.
+
+### Verificação real executada (não apenas declarada)
+
+- **Leitura manual completa** do diff cumulativo da PR (1343 linhas, duas
+  cópias por questão — corpo e Banco) linha a linha, sem regex, cobrindo
+  toda matéria alterada desde a base da PR.
+- **Gabaritos**: nenhum alterado; apenas reordenação/reescrita de
+  distratores (Lei 8-A.7/8-A.9).
+- **Espelho corpo×Banco**: `Edit … replace_all` aplicado às 8 correções —
+  confirmado por grep que cada frase nova aparece exatamente 2× (corpo +
+  Banco) e cada frase antiga, 0×.
+- **Highlights (motor real)**: reexecutado `rm-tools.js` (`indexar` →
+  `escolher` → `rangeDe`) contra as 375 marcações reais dos blocos
+  ap2b01–04. Resultado: **0 quebradas** por esta rodada, 1 deslocamento de
+  posição inofensivo (ainda resolve corretamente), 2 já quebradas antes
+  desta rodada (pré-existentes, documentadas em rodada anterior).
+- **Tinta/notas**: sem registros para `anatomia-patologica-ii` em
+  `user_ink_strokes`/`user_notes` (0 linhas) — sem risco por ausência de
+  dado, confirmado em rodada anterior e não alterado nesta.
+- **HTML**: tags balanceadas (div/ul/li/p/span/button/strong/i/b, todas
+  pareadas) após a edição.
+- **Guard** (`python3 -m tools.qa.guard --repo . --base main --head HEAD`,
+  com `main` local sincronizado a `origin/main`): 🟡 passou com avisos
+  informativos esperados (escopo sem task declarado, origem do Guard
+  "desconhecida" por execução local, task do registro sem arquivos
+  declarados) — nenhum alerta de autodenúncia, gabarito, espelho ou HTML.
+  Regras do Guard não foram alteradas.
+
+### Pendências que seguem sem solução nesta rodada
+
+Os slides 4, 5, 7 e 8 (ver seção "Limitações reais" acima) continuam
+parcial/totalmente ilegíveis. Esta rodada não tentou nova extração —
+isso é o próximo passo, feito em sequência a este checkpoint, com
+imagens/OCR quando necessário, sem inventar cobertura de material
+ilegível.
