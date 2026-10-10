@@ -417,9 +417,15 @@ body[data-tab="fisio"] .key-box.robbins::before { content:"📘 PORTH/GUYTON"; }
 
 /* MCQ interativa */
 .interactive-options { list-style:none; padding:0; margin:1rem 0; }
-.interactive-options li { cursor:pointer; user-select:none; padding:.72rem 1rem; margin:.42rem 0; background:var(--bg-soft); border:2px solid transparent; border-radius:9px; font-size:.96rem; transition:all .18s ease; display:flex; align-items:flex-start; gap:.7rem; line-height:1.4; }
+.interactive-options li { cursor:pointer; user-select:none; padding:.72rem 1rem; margin:.42rem 0; background:var(--bg-soft); border:2px solid transparent; border-radius:9px; font-size:.96rem; transition:all .18s ease; display:flex; flex-wrap:wrap; align-items:flex-start; gap:.3rem .7rem; line-height:1.4; }
 .interactive-options li:hover { background:var(--paper); border-color:var(--accent-soft); transform:translateX(3px); box-shadow:var(--shadow); }
 .opt-letter { font-family:var(--font-mono); font-weight:700; color:var(--accent); background:var(--paper); padding:.05rem .55rem; border-radius:6px; min-width:1.7rem; text-align:center; flex-shrink:0; }
+/* texto da alternativa num item de flex próprio: evita que <b>/<i> dentro do
+   texto virem itens de flex soltos ao lado da bolinha da letra (causava
+   overflow horizontal quando a alternativa tinha uma palavra em negrito/
+   itálico e era comprida — #467). `min-width:0` anula o `auto` padrão do
+   flexbox, que impedia este item de encolher/quebrar linha. */
+.opt-text { flex:1 1 0%; min-width:0; overflow-wrap:anywhere; }
 .quiz-item.answered .interactive-options li { cursor:default; pointer-events:none; }
 .interactive-options li.correct { background:linear-gradient(90deg, rgba(47,125,79,.18), rgba(47,125,79,.06)); border-color:var(--snake); font-weight:600; animation:pulseCorrect .5s ease; }
 .interactive-options li.correct .opt-letter { background:var(--snake); color:#fff; }
