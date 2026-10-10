@@ -3,6 +3,21 @@
 > **Nada foi ativado.** Layout global **não** está autorizado: depende de ordem expressa de José. Este documento só reconcilia o que `MATRIZ.md` (#457/#459) deixou aberto com o que mudou na `main` depois dele. Nenhum arquivo reservado foi tocado; o ensaio **não foi reexecutado** nesta atualização (os números abaixo são os já versionados).
 > **Ensaio técnico ≠ aprovação das 27 matérias.** `PASSA` na matriz significa "o componente funcionou no Chromium com um tema hipotético", não "a matéria está pronta, revisada ou com identidade aprovada".
 
+## 0 · Reexecução pós-#470 (10/10, `main` `ebc53dcd`) — resultado
+
+Ensaio completo (inventário, "como está" e "com correção" nas 27 matérias × 390/768/1024/1440, contrato R1–R9 e matriz) reexecutado **sobre a `main` que já contém #460/#462/#470**. Somente leitura/ensaio: nenhuma flag, UID, matéria ou arquivo de produção alterado; zero escritas no Supabase (simulado); áudio não simulado.
+
+| | 07/10 (#459) | 10/10 (pós-#470) |
+|---|---|---|
+| "Como está": PASSA / FALHA / BLOQUEADO | 0 / 27 / 0 | **0 / 27 / 0** |
+| "Com correção" (C1/C2): PASSA / FALHA | 15 / 12 | **15 / 12** (as mesmas 12 falhas de `MATRIZ.md` §8) |
+| Contrato R1…R9 (matérias que cumprem) | 13 · 6 · 14 · 9 · 20 · 27 · 27 · 27 · 0 | **idêntico** |
+| Caneta (traço simulado) / Integridade / Teclado-Back / Scroll / Responsivo / Áudio (ausência) | 27 / 27 | **27 / 27** |
+
+**Leitura honesta:** a matriz **não mudou**. O #470 não altera esse veredito (nem para melhor nem para pior); o ensaio só varia em dados de conteúdo (ex.: +1 figura com legenda na Anatopatologia II Práctica, vinda da #465; tempos). `MATRIZ.md` e `CONFORMIDADE.md` saíram byte a byte iguais, apenas os JSON versionados trazem a nova data/medição. Isto confirma que o ensaio **não substitui** o teste físico: o traço é sintético e a caneta física depende do resultado de José.
+
+**Bloqueios reais atuais (nenhum novo):** (1) teste físico do build `2026-10-09·456c` (José); (2) patches A1–A6 não aplicados (arquivos reservados; linhas a reconferir depois do #470 mesclado); (3) 12 falhas de conteúdo/integração (§8 da matriz); (4) R9 = 0/27 (nenhum marcador `data-rm-*` aplicado); (5) identidade visual das 26 matérias sem tema próprio (decisão de José); (6) audiobooks: ver `AUDIOBOOKS-ESTADO-OPERACIONAL.md` §0.
+
 ## 1 · O que já está na `main` e muda a leitura da matriz
 
 | Mudança | Onde | Efeito sobre o ensaio global |
