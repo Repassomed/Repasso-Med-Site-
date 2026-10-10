@@ -5,8 +5,8 @@
      Material de la Lic. Biól. Dayssy Franco (slides + prácticos + provas)
      Contenido P1: Organización molecular de la célula, membranas,
      citoesqueleto, matriz extracelular, organelos, mitocondria,
-     núcleo interfásico y comunicación intercelular/señalización
-     celular.
+     núcleo interfásico, comunicación intercelular/señalización
+     celular y ciclo celular.
      Aditivo · mismo motor (app-core.js) · castellano
      =================================================================== -->
 <style id="tab-bio-style">
@@ -2729,12 +2729,119 @@
   </div>
 </section>
 
+<section class="container" id="bio16">
+  <div class="section-marker"><span class="section-marker-num">— BLOQUE 16 · UNIDAD X</span></div>
+  <h2>🧬 Ciclo celular</h2>
+
+  <div class="bio-postit">
+    <h4><span>🧬</span>Desde cero: la célula tiene que decidir cuándo dividirse</h4>
+    <p>La capacidad de reproducirse es una propiedad fundamental de la célula — incluso en un organismo adulto que ya dejó de crecer, hay tejidos que siguen renovándose. El <strong>ciclo celular</strong> es la secuencia de eventos que culmina cuando el material celular, ya duplicado, se reparte entre dos células hijas. Tiene dos grandes períodos: la <strong>interfase</strong> (donde la célula crece y duplica su ADN) y la <strong>división celular</strong> (mitosis o meiosis).</p>
+  </div>
+
+  <div class="bio-flow">
+    <div class="bio-pill"><span class="e">⏳</span><b>G1</b><small>5 h · sin síntesis de ADN</small></div>
+    <div class="bio-pill"><span class="e">🧬</span><b>S</b><small>7 h · duplica el ADN</small></div>
+    <div class="bio-pill"><span class="e">⚙️</span><b>G2</b><small>3 h · prepara la mitosis</small></div>
+    <div class="bio-pill"><span class="e">➗</span><b>M</b><small>mitosis · reparte lo duplicado</small></div>
+  </div>
+  <p class="bio-cap">Las cuatro fases de un ciclo celular típico, con la duración aproximada de cada una de la interfase.</p>
+
+  <div class="analysis-card">
+    <h3>📚 Resumen explicado (desde cero)</h3>
+
+    <h4 style="margin-top:0">La interfase: tres fases antes de dividirse</h4>
+    <ul>
+      <li><strong>G1</strong> (≈5 h): la célula tiene la cantidad diploide normal de ADN. <strong>No</strong> hay síntesis de ADN. Si esta fase se prolonga mucho y la célula se retira del ciclo, deja de llamarse G1 y pasa a llamarse <strong>G0</strong> (quiescencia).</li>
+      <li><strong>S</strong> (≈7 h): ocurre la <strong>síntesis de ADN</strong>. Las moléculas de ADN ya duplicadas se llaman <strong>cromátidas</strong>.</li>
+      <li><strong>G2</strong> (≈3 h): va desde el final de S hasta el inicio de la mitosis. La célula ya tiene el <strong>doble</strong> de ADN que la diploide normal. Tampoco hay síntesis de ADN en esta fase.</li>
+    </ul>
+
+    <h4>El control del ciclo: ciclinas y quinasas dependientes de ciclina (CDK)</h4>
+    <p>Antes de terminar G1 hay un momento en que la célula "decide" dividirse: el <strong>punto de arranque</strong> o control G1. Ese control depende de dos tipos de moléculas que trabajan en pareja:</p>
+    <ul>
+      <li><strong>Ciclinas:</strong> su concentración sube y baja en cada ciclo (síntesis creciente seguida de degradación rápida). Hay <strong>ciclinas G1</strong> y <strong>ciclinas M</strong>.</li>
+      <li><strong>Quinasas dependientes de ciclina (CDK):</strong> se activan al asociarse con su ciclina, y entonces fosforilan a las proteínas responsables de la división. Las dos CDK clásicas son <strong>cdk2</strong> y <strong>cdc2</strong> (también llamada CDC2).</li>
+    </ul>
+    <div class="bio-steps">
+      <div class="bio-step"><span class="n">1</span><b>Fase S</b><p>La ciclina G1 activa a la <strong>CDK2</strong>, formando el complejo <strong>SPF</strong> (factor promotor de la síntesis). Dispara una cadena de fosforilaciones que termina activando a las moléculas responsables de <strong>replicar el ADN</strong>.</p></div>
+      <div class="bio-step"><span class="n">2</span><b>Fase M</b><p>La ciclina M, que empieza a sintetizarse ya en G2 (antes de que desaparezca la ciclina G1), se une a la <strong>CDC2</strong> cuando alcanza cierto umbral. Juntas forman el <strong>MPF</strong> (factor promotor de la fase M).</p></div>
+    </div>
+    <p>La activación del MPF dispara varias fosforilaciones con consecuencias muy concretas:</p>
+    <ul>
+      <li>Se <strong>desintegra la red de actina</strong>: la célula pierde el contacto con sus vecinas y con la matriz extracelular, y se vuelve esférica.</li>
+      <li>Se <strong>desarman los microtúbulos citoplasmáticos</strong> y, con esas mismas subunidades, se forma el <strong>huso mitótico</strong>.</li>
+      <li>Se <strong>disgrega la lámina nuclear</strong>, y con ella la carioteca.</li>
+      <li>Cambia la asociación de la histona <strong>H1</strong> con el ADN, lo que aumenta el enrollamiento de la cromatina y ayuda a <strong>condensar los cromosomas</strong>.</li>
+    </ul>
+    <p>El MPF se desarma al comienzo de la <strong>anafase</strong>, cuando se forma un complejo proteico llamado <strong>ciclosoma</strong> (o complejo promotor de la anafase, APC), que degrada tanto a la <strong>ciclina M</strong> como a las <strong>cohesinas</strong> que mantenían unidas a las cromátidas hermanas.</p>
+
+    <h4>Qué induce a una célula a proliferar</h4>
+    <p>Las células que entran en mitosis casi siempre lo hacen por estímulo de sustancias inductoras externas — de células vecinas (señalización <strong>paracrina</strong>) o de grupos celulares distantes (señalización <strong>endócrina</strong>). Esas sustancias actúan justo en el punto de arranque, promoviendo la síntesis de la ciclina G1. Algunos ejemplos:</p>
+    <ul>
+      <li><strong>Somatomedina:</strong> estimula la proliferación de las células cartilaginosas durante el crecimiento óseo. Se sintetiza en el <strong>hígado</strong>, en respuesta a la hormona de crecimiento hipofisaria.</li>
+      <li><strong>Factores de crecimiento</strong> (fibroblástico, epidérmico, derivado de plaquetas, de hepatocitos, nervioso, del endotelio vascular): casi todos actúan por secreción <strong>paracrina</strong>, sobre células vecinas a su origen.</li>
+      <li><strong>Factores hemopoyéticos:</strong> cada uno estimula la proliferación de un tipo celular sanguíneo particular. La <strong>interleucina 2 (IL-2)</strong> estimula a los linfocitos T; el <strong>GM-CSF</strong> a los progenitores de granulocitos y macrófagos (ambos por secreción <strong>paracrina</strong>); la <strong>eritropoyetina</strong>, en cambio, se origina en el riñón y llega a la médula ósea por la sangre — es secreción <strong>endócrina</strong> — para estimular la proliferación de los glóbulos rojos.</li>
+    </ul>
+  </div>
+
+  <div class="key-box exam">
+    <strong>Lo esencial:</strong> el ciclo celular tiene <strong>interfase</strong> (G1 5h sin síntesis de ADN, S 7h con síntesis de ADN, G2 3h con el doble de ADN) y <strong>división</strong>. G1 prolongada → <strong>G0</strong>. El control depende de <strong>ciclinas</strong> (G1 y M) + <strong>CDK</strong> (cdk2, cdc2): ciclina G1+cdk2 = <strong>SPF</strong> → replica el ADN en fase S; ciclina M+cdc2 = <strong>MPF</strong> → desarma actina/microtúbulos (forma el huso)/lámina nuclear, condensa la cromatina (vía H1). El <strong>ciclosoma (APC)</strong> degrada la ciclina M y las cohesinas al inicio de la anafase, desarmando el MPF. La proliferación se induce por señales <strong>paracrinas</strong> (factores de crecimiento, IL-2, GM-CSF) o <strong>endócrinas</strong> (somatomedina, eritropoyetina), actuando en el <strong>punto de arranque</strong> de G1.
+  </div>
+
+  <div class="quiz-section"><h3>📝 Preguntas de práctica — Ciclo celular</h3>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Una célula permanece mucho tiempo sin dividirse, sin que ocurra síntesis de ADN. ¿Cómo se llama ese estado prolongado de G1?</p>
+    <ul class="options"><li>a) Fase S</li><li>b) Fase G2</li><li>c) Fase G0</li><li>d) Fase M</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Fase G0.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Cuando G1 se prolonga mucho y la célula se retira del ciclo, pasa a llamarse G0 — sigue sin haber síntesis de ADN, como en G1, pero ahora de forma indefinida.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿Qué complejo activa la CDK2 durante la fase S, y qué dispara su activación?</p>
+    <ul class="options"><li>a) El complejo MPF, que dispara la condensación de la cromatina</li><li>b) El complejo SPF (ciclina G1 + CDK2), que dispara la replicación del ADN</li><li>c) El ciclosoma, que degrada las cohesinas</li><li>d) El complejo de la lámina nuclear, que desarma la carioteca</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) El complejo SPF (ciclina G1 + CDK2), que dispara la replicación del ADN.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La ciclina G1 se une a la CDK2 formando el SPF (factor promotor de la síntesis), que fosforila en cadena hasta activar las moléculas que replican el ADN. El MPF (a) es el complejo de la fase M, no de la S.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La activación del MPF durante la fase M provoca la desintegración de la red de actina y el desarme de los microtúbulos citoplasmáticos para formar el huso mitótico.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Son dos de las consecuencias clásicas de activar el MPF: la célula pierde el contacto con sus vecinas (se desarma la actina) y reorganiza sus microtúbulos en el huso mitótico.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El ciclosoma (complejo promotor de la anafase, APC) actúa al comienzo de la anafase. ¿Qué dos cosas degrada, y qué efecto tiene esa degradación?</p>
+    <ul class="options"><li>a) Degrada al ADN replicado y a la lámina nuclear, impidiendo la citocinesis</li><li>b) Degrada a la ciclina M y a las cohesinas, lo que desarma el MPF y libera a las cromátidas hermanas para separarse</li><li>c) Degrada a la CDK2 y al SPF, deteniendo la fase S de forma permanente</li><li>d) Degrada a los microtúbulos del huso, impidiendo que los cromosomas se muevan</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Degrada a la ciclina M y a las cohesinas, lo que desarma el MPF y libera a las cromátidas hermanas para separarse.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Sin ciclina M el MPF se desarma; sin cohesinas, las cromátidas hermanas —que estaban pegadas entre sí— quedan libres para ser traccionadas a polos opuestos. Es lo que permite que la anafase avance.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La eritropoyetina, sintetizada en el riñón, estimula la proliferación de los precursores de glóbulos rojos en la médula ósea. ¿Qué tipo de señalización es esta, y por qué?</p>
+    <ul class="options"><li>a) Paracrina, porque actúa solo sobre células vecinas al riñón</li><li>b) Autocrina, porque el riñón también produce glóbulos rojos</li><li>c) Endócrina, porque viaja por la sangre desde el riñón hasta la médula ósea, un órgano distante</li><li>d) Sináptica, porque depende de terminales nerviosas renales</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Endócrina, porque viaja por la sangre desde el riñón hasta la médula ósea, un órgano distante.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> A diferencia de los factores de crecimiento (que actúan en general por secreción paracrina, sobre vecinas), la eritropoyetina se libera a la sangre y alcanza un órgano distante — el criterio clásico de señalización endócrina.</p></div>
+  </div>
+  </div>
+
+  <h3>🎴 Flashcards del bloque — Ciclo celular</h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Interfase</b></div><div class="fc-back">G1 (5h, sin síntesis de ADN) → S (7h, síntesis de ADN, forma cromátidas) → G2 (3h, ADN duplicado).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>G0</b></div><div class="fc-back">G1 prolongada indefinidamente; la célula se retira del ciclo.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Punto de arranque</b></div><div class="fc-back">Momento en G1 donde la célula "decide" dividirse; ahí actúan los inductores de proliferación.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Ciclinas y CDK</b></div><div class="fc-back">Ciclinas (G1, M) + quinasas dependientes de ciclina (cdk2, cdc2). Se activan en pareja.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>SPF</b></div><div class="fc-back">Ciclina G1 + CDK2. Activa la replicación del ADN en fase S.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>MPF</b></div><div class="fc-back">Ciclina M + CDC2. Dispara los cambios de la fase M (actina, huso, lámina nuclear, cromatina).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Efectos del MPF</b></div><div class="fc-back">Desintegra actina (célula esférica), desarma microtúbulos (forma el huso), disgrega la lámina nuclear, condensa cromatina (vía H1).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Ciclosoma / APC</b></div><div class="fc-back">Al inicio de la anafase, degrada ciclina M y cohesinas — desarma el MPF y libera las cromátidas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Somatomedina</b></div><div class="fc-back">Hígado (por GH hipofisaria) → estimula proliferación cartilaginosa. Señalización endócrina.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Factores de crecimiento</b></div><div class="fc-back">Fibroblástico, epidérmico, de plaquetas, hepatocitos, nervioso, endotelial. Mayoría paracrina.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Factores hemopoyéticos</b></div><div class="fc-back">IL-2→linfocitos T; GM-CSF→granulocitos/macrófagos (paracrinos); eritropoyetina→glóbulos rojos (endócrina, renal).</div></div>
+  </div>
+</section>
+
 
 <!-- ================= BANCO GENERAL DE PREGUNTAS ================= -->
 <section class="container" id="bancobio">
   <div class="section-marker"><span class="section-marker-num">— REPASO GENERAL · SIMULACRO</span></div>
   <h2>🎯 Banco general de preguntas</h2>
-  <p>Reúne las <strong>139 preguntas</strong> de los 15 bloques (<strong>98 en la serie principal</strong> de cada bloque + 41 de práctica adicional), agrupadas por bloque en tarjetas desplegables. Tocá cada bloque para abrir sus preguntas. Cada bloque conserva además su propio banco.</p>
+  <p>Reúne las <strong>144 preguntas</strong> de los 16 bloques (<strong>103 en la serie principal</strong> de cada bloque + 41 de práctica adicional), agrupadas por bloque en tarjetas desplegables. Tocá cada bloque para abrir sus preguntas. Cada bloque conserva además su propio banco.</p>
   <details class="bio-quiz-card">
     <summary>📝 Bloque 01 · 🔬 Introducción a la Biología celular <span class="bio-qbadge">5 preguntas</span><span class="bio-chev">▸</span></summary>
     <div class="bio-quiz-body"><div class="quiz-section">
@@ -3610,13 +3717,47 @@
   </div>
     </div></div>
   </details>
+  <details class="bio-quiz-card">
+    <summary>📝 Bloque 16 · 🧬 Ciclo celular <span class="bio-qbadge">5 preguntas</span><span class="bio-chev">▸</span></summary>
+    <div class="bio-quiz-body"><div class="quiz-section">
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Una célula permanece mucho tiempo sin dividirse, sin que ocurra síntesis de ADN. ¿Cómo se llama ese estado prolongado de G1?</p>
+    <ul class="options"><li>a) Fase S</li><li>b) Fase G2</li><li>c) Fase G0</li><li>d) Fase M</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Fase G0.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Cuando G1 se prolonga mucho y la célula se retira del ciclo, pasa a llamarse G0 — sigue sin haber síntesis de ADN, como en G1, pero ahora de forma indefinida.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿Qué complejo activa la CDK2 durante la fase S, y qué dispara su activación?</p>
+    <ul class="options"><li>a) El complejo MPF, que dispara la condensación de la cromatina</li><li>b) El complejo SPF (ciclina G1 + CDK2), que dispara la replicación del ADN</li><li>c) El ciclosoma, que degrada las cohesinas</li><li>d) El complejo de la lámina nuclear, que desarma la carioteca</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) El complejo SPF (ciclina G1 + CDK2), que dispara la replicación del ADN.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La ciclina G1 se une a la CDK2 formando el SPF (factor promotor de la síntesis), que fosforila en cadena hasta activar las moléculas que replican el ADN. El MPF (a) es el complejo de la fase M, no de la S.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La activación del MPF durante la fase M provoca la desintegración de la red de actina y el desarme de los microtúbulos citoplasmáticos para formar el huso mitótico.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Son dos de las consecuencias clásicas de activar el MPF: la célula pierde el contacto con sus vecinas (se desarma la actina) y reorganiza sus microtúbulos en el huso mitótico.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El ciclosoma (complejo promotor de la anafase, APC) actúa al comienzo de la anafase. ¿Qué dos cosas degrada, y qué efecto tiene esa degradación?</p>
+    <ul class="options"><li>a) Degrada al ADN replicado y a la lámina nuclear, impidiendo la citocinesis</li><li>b) Degrada a la ciclina M y a las cohesinas, lo que desarma el MPF y libera a las cromátidas hermanas para separarse</li><li>c) Degrada a la CDK2 y al SPF, deteniendo la fase S de forma permanente</li><li>d) Degrada a los microtúbulos del huso, impidiendo que los cromosomas se muevan</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Degrada a la ciclina M y a las cohesinas, lo que desarma el MPF y libera a las cromátidas hermanas para separarse.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Sin ciclina M el MPF se desarma; sin cohesinas, las cromátidas hermanas —que estaban pegadas entre sí— quedan libres para ser traccionadas a polos opuestos. Es lo que permite que la anafase avance.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La eritropoyetina, sintetizada en el riñón, estimula la proliferación de los precursores de glóbulos rojos en la médula ósea. ¿Qué tipo de señalización es esta, y por qué?</p>
+    <ul class="options"><li>a) Paracrina, porque actúa solo sobre células vecinas al riñón</li><li>b) Autocrina, porque el riñón también produce glóbulos rojos</li><li>c) Endócrina, porque viaja por la sangre desde el riñón hasta la médula ósea, un órgano distante</li><li>d) Sináptica, porque depende de terminales nerviosas renales</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Endócrina, porque viaja por la sangre desde el riñón hasta la médula ósea, un órgano distante.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> A diferencia de los factores de crecimiento (que actúan en general por secreción paracrina, sobre vecinas), la eritropoyetina se libera a la sangre y alcanza un órgano distante — el criterio clásico de señalización endócrina.</p></div>
+  </div>
+    </div></div>
+  </details>
 </section>
 
 <!-- ================= FLASHCARDS GENERALES ================= -->
 <section class="container" id="bio-flashcards">
   <div class="section-marker"><span class="section-marker-num">— FLASHCARDS · TODOS LOS BLOQUES</span></div>
   <h2>🎴 Flashcards de todos los bloques</h2>
-  <p>Mazo completo reunido al final: las <strong>167 tarjetas</strong> de los 15 bloques juntas para repaso intensivo. Tocá cada tarjeta para girarla. (Cada bloque conserva además sus propios flashcards.)</p>
+  <p>Mazo completo reunido al final: las <strong>178 tarjetas</strong> de los 16 bloques juntas para repaso intensivo. Tocá cada tarjeta para girarla. (Cada bloque conserva además sus propios flashcards.)</p>
   <h3>Bloque 01 · 🔬 Introducción a la Biología celular <span style="font-weight:400;font-size:.8em;color:#7a8a7e">(7 flashcards)</span></h3>
   <div class="fc-grid">
     <div class="flashcard"><div class="fc-front"><b>Componentes inorgánicos</b></div><div class="fc-back">Agua y minerales (sales).</div></div>
@@ -3829,6 +3970,21 @@
     <div class="flashcard"><div class="fc-front"><b>Tirosina quinasa</b></div><div class="fc-back">Factores de crecimiento (EGF, FGF, PDGF, NGF, insulina/IGF). Vías RAS-MAPK, PLC-γ, PI3-K.</div></div>
     <div class="flashcard"><div class="fc-front"><b>Proteína G</b></div><div class="fc-back">Heterotrimérica (α,β,γ); GDP=inactiva, GTP=activa. Gs→AMPc; Gq→IP3/DAG; Gi→PI3-K/Akt (supervivencia); G12/G13→Rho (citoesqueleto).</div></div>
     <div class="flashcard"><div class="fc-front"><b>Vía JAK-STAT</b></div><div class="fc-back">Tirosina quinasa independiente del receptor. Hormona de crecimiento, prolactina, eritropoyetina, citoquinas.</div></div>
+  </div>
+
+  <h3>Bloque 16 · 🧬 Ciclo celular <span style="font-weight:400;font-size:.8em;color:#7a8a7e">(11 flashcards)</span></h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Interfase</b></div><div class="fc-back">G1 (5h, sin síntesis de ADN) → S (7h, síntesis de ADN, forma cromátidas) → G2 (3h, ADN duplicado).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>G0</b></div><div class="fc-back">G1 prolongada indefinidamente; la célula se retira del ciclo.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Punto de arranque</b></div><div class="fc-back">Momento en G1 donde la célula "decide" dividirse; ahí actúan los inductores de proliferación.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Ciclinas y CDK</b></div><div class="fc-back">Ciclinas (G1, M) + quinasas dependientes de ciclina (cdk2, cdc2). Se activan en pareja.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>SPF</b></div><div class="fc-back">Ciclina G1 + CDK2. Activa la replicación del ADN en fase S.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>MPF</b></div><div class="fc-back">Ciclina M + CDC2. Dispara los cambios de la fase M (actina, huso, lámina nuclear, cromatina).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Efectos del MPF</b></div><div class="fc-back">Desintegra actina (célula esférica), desarma microtúbulos (forma el huso), disgrega la lámina nuclear, condensa cromatina (vía H1).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Ciclosoma / APC</b></div><div class="fc-back">Al inicio de la anafase, degrada ciclina M y cohesinas — desarma el MPF y libera las cromátidas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Somatomedina</b></div><div class="fc-back">Hígado (por GH hipofisaria) → estimula proliferación cartilaginosa. Señalización endócrina.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Factores de crecimiento</b></div><div class="fc-back">Fibroblástico, epidérmico, de plaquetas, hepatocitos, nervioso, endotelial. Mayoría paracrina.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Factores hemopoyéticos</b></div><div class="fc-back">IL-2→linfocitos T; GM-CSF→granulocitos/macrófagos (paracrinos); eritropoyetina→glóbulos rojos (endócrina, renal).</div></div>
   </div>
 </section>
 
