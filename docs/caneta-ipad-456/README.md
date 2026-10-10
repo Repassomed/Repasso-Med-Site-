@@ -91,9 +91,10 @@ Preservados: algoritmo do traço, simplificação, coordenadas e âncoras (`anch
   - escrever 2, apagar 1 e **recarregar** (mesmo id, âncora e pontos, sem duplicar);
   - fora do piloto sem mudança;
   - ouvintes; órfão; caminho WebKit (J).
-- Contra a `main`: **12 falhas** (`dados/ipad-antes-main.txt`, versão sem as secções I e J). Com esta PR: ver o corpo da PR (número final).
-- `tools/qa/caneta-ipad-456/rolagem.cjs`: rolagem com o dedo por layout × ferramenta (px rolados, recálculos da árvore).
-- Regressão do piloto rerodada com o código final (números no corpo da PR): `caneta-456`, `sistema`, `layout`, `player-*`, `race`, `ink-jump`, `cover`, `nav-sistema`, `pilot-flags`, #460, `caneta-novo-layout`. Neste último ficam as 2 falhas «post-it» conhecidas e idênticas à `main`.
+- Contra a `main`: **14 falhas**, e a secção J aborta porque o hook de teste não existe lá (`dados/ipad-antes-main.txt`). Com esta PR: **82/82** (`dados/ipad-depois-456d.txt`).
+- `tools/qa/caneta-ipad-456/rolagem.cjs`: rolagem com o dedo por layout × ferramenta. Com a goma: **0 px na `main`** e **311–313 px com esta PR**, nos três layouts. Sem ferramenta e com o lápis: 285–315 px antes e depois. Nenhum recálculo da árvore inteira durante a rolagem (`dados/rolagem-*.json`).
+- Regressão do piloto rerodada com o código final, todas verdes: `caneta-456` 138/138 · `sistema` 124 · `layout` 535 · `player-sistema` 275 · `player-toolbox` 495 · `race` 140 · `ink-jump` 54 · `cover` 198 · `nav-sistema` 216 · `pilot-flags` 10 · #460 isolado 167 e piloto real 51.
+- `caneta-novo-layout` dá 89/91: as 2 falhas «post-it» conhecidas, idênticas à `main` (`docs/caneta-456/POSTIT-FALHAS-PREEXISTENTES.md`).
 
 ## 7 · Limites (declarados)
 - **Só Chromium/Playwright.** Não há Safari/iPadOS nem Apple Pencil neste ambiente. Caneta via CDP `pointerType:'pen'`, palma via toque CDP com raio grande, zoom via `Emulation.setPageScaleFactor`.

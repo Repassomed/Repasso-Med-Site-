@@ -1,7 +1,8 @@
+# build 2026-10-10·456d (esta PR)
 ▸ A1 · goma em REPOUSO (piloto): o dedo rola e a pinça vale; a goma não trava a navegação
     ✓ goma armada: touch-action do conteúdo ≠ none (medido «manipulation»)
     ✓ goma armada: pan nos 2 eixos e pinça permitidos ao dedo («manipulation»)
-    ✓ goma armada: o dedo rola a página (Δ=325 px)
+    ✓ goma armada: o dedo rola a página (Δ=313 px)
     ✓ 0 erros JS
 ▸ A2 · goma armada: o DEDO navega e NÃO apaga por acidente (só a ponta da caneta/rato apaga)
     ✓ um toque de dedo em cima do traço com a goma armada não apaga (1 → 1)
@@ -30,7 +31,7 @@
     ✓ diag fechado · palma DURANTE: a página não rolou (Δ=0 px)
     ✓ diag fechado · palma DURANTE: o traço tem a 2.ª metade e está alinhado (desvio 0 px, 40 pontos)
     ✓ diag fechado · estado limpo depois (sem traço/contato/guarda/rm2-drawing)
-    ✓ diag fechado · palma DEPOIS: o dedo volta a rolar (Δ=319 px)
+    ✓ diag fechado · palma DEPOIS: o dedo volta a rolar (Δ=325 px)
     ✓ diag fechado · 0 erros JS
     ✓ diag aberto · palma ANTES: o traço nasceu e foi gravado (0 → 1)
     ✓ diag aberto · palma ANTES: a página não rolou (Δ=0 px)
@@ -39,7 +40,7 @@
     ✓ diag aberto · palma DURANTE: a página não rolou (Δ=0 px)
     ✓ diag aberto · palma DURANTE: o traço tem a 2.ª metade e está alinhado (desvio 0 px, 40 pontos)
     ✓ diag aberto · estado limpo depois (sem traço/contato/guarda/rm2-drawing)
-    ✓ diag aberto · palma DEPOIS: o dedo volta a rolar (Δ=322 px)
+    ✓ diag aberto · palma DEPOIS: o dedo volta a rolar (Δ=337 px)
     ✓ diag aberto · 0 erros JS
 ▸ C · escrever → rolar → zoom (pinça, escala 1,6) → escrever: tinta alinhada à ponta, traço antigo preso ao texto
     ✓ sem zoom: desvio tinta × ponta 0 px
@@ -54,12 +55,12 @@
 ▸ E · interrupção no meio do traço (perda de foco / app em segundo plano) e retorno
     ✓ blur: antes, traço em curso e guarda ativa
     ✓ blur: a interrupção fecha o gesto e solta a guarda (sem página presa)
-    ✓ blur: ao voltar, o dedo rola (Δ=205 px)
+    ✓ blur: ao voltar, o dedo rola (Δ=257 px)
     ✓ blur: ao voltar, a caneta escreve (0 → 1)
     ✓ blur: 0 erros JS
     ✓ visibilitychange: antes, traço em curso e guarda ativa
     ✓ visibilitychange: a interrupção fecha o gesto e solta a guarda (sem página presa)
-    ✓ visibilitychange: ao voltar, o dedo rola (Δ=259 px)
+    ✓ visibilitychange: ao voltar, o dedo rola (Δ=253 px)
     ✓ visibilitychange: ao voltar, a caneta escreve (0 → 1)
     ✓ visibilitychange: 0 erros JS
 ▸ F · escrever 2, apagar 1, recarregar: volta exatamente o que ficou (mesma âncora, mesmos pontos)
@@ -83,4 +84,15 @@
     ✓ depois: nenhum contato/traço pendurado, guarda inerte
     ✓ e o dedo rola (Δ=265 px)
     ✓ 0 erros JS
-caneta-ipad-456: 72/72 verificações OK
+▸ J · adaptador de Touch Events (iPad): stylus suprime o próprio pan; com ela em contato a palma também; stylus sem touchend é podada
+    ✓ pen: a stylus suprime o próprio pan (touchstart/touchmove com preventDefault)
+    ✓ pen: com a stylus em contato, o toque da palma também não faz pan
+    ✓ pen: a stylus levantou ⇒ o dedo volta a rolar (sem preventDefault)
+    ✓ pen: stylus sem touchend é podada pela lista do navegador (e.touches) e não segura a rolagem
+    ✓ eraser: a stylus suprime o próprio pan (touchstart/touchmove com preventDefault)
+    ✓ eraser: com a stylus em contato, o toque da palma também não faz pan
+    ✓ eraser: a stylus levantou ⇒ o dedo volta a rolar (sem preventDefault)
+    ✓ eraser: stylus sem touchend é podada pela lista do navegador (e.touches) e não segura a rolagem
+    ✓ sem ferramenta: nenhum ouvinte, nada suprimido
+    ✓ 0 erros JS
+caneta-ipad-456: 82/82 verificações OK
