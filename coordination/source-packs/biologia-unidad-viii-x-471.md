@@ -515,6 +515,81 @@ real a preservar literalmente):
 - Annotation-safety: 0/0/0, reconfirmado.
 - Commit `3c92769e`, push para `claude/biologia-unidad-viii-x-471`.
 
+## Rodada de correção — distratores elimináveis por lógica e linguagem absolutista
+
+Feedback do José após a rodada anterior: a distribuição de letras e o
+viés de tamanho melhoraram, mas parte das alternativas ainda era
+eliminável **sem conhecimento da matéria** — por lógica (contradizer o
+próprio enunciado, números estruturalmente impossíveis) ou por palavras
+absolutas ("siempre", "nunca", "por completo", "exclusivamente",
+"irreversible", "permanente") que sinalizam "provavelmente errado" por
+heurística geral de prova, não por biologia.
+
+Priorizadas as 7 questões citadas pelo José, mais a questão do ovocito I
+(pedido explícito) e mais 4 itens secundários achados na revarredura
+completa das 22 questões. Nenhuma das 11 restantes (1, 3, 5, 6, 7, 8, 11,
+12, 13, 17) precisou de alteração.
+
+| # | Tema | Problema | Correção |
+|---|------|----------|----------|
+| 2 | Receptor tiroideo | "nunca" (c), "por completo"/"inmediatamente" (d) | b/c/d reescritas como quase-acertos: papéis invertidos, ambas citosólicas com velocidade de liberação diferente, mecanismo alternativo por segundo mensageiro |
+| 9 | APC/C | "por completo" (b), "permanente e irreversible" (c) | b passa a dizer que o APC/C degrada as cohesinas diretamente (erro conceitual plausível, já teste da distinção ensinada); c troca para ciclina G1/complexo SPF, erro de fase |
+| 10 | Eritropoyetina | "exclusivamente" (a) | a/b/c reescritas com mecanismos celulares específicos e plausíveis (endotélio tubular, autorreceptor, quimiorreceptor hipóxico) em vez de generalidades abertas |
+| 14 | Anáfases I/II | "siempre" (a, c) contradizia abertamente a distinção ensinada | a/c reescritas como confusões conceituais reais (achar que ambas separam homólogos completos, ou que o centrómero se divide igual nas duas) |
+| 15 | Ovocito I (enunciado) | "dos espermatocitos II iguales" sem especificar que a igualdade é de tamanho, não genética | enunciado passa a dizer "iguales **en tamaño**" |
+| 15 | Ovocito I (opção d) | "cuatro óvulos" — estruturalmente impossível (uma única divisão meiótica produz no máximo 2 produtos), eliminável sem saber o conteúdo | opção d trocada por "dos cuerpos polares de igual tamaño, sin que se forme ningún ovocito II" |
+| 16 | Productos de la meiosis | "solo 1 espermátide/1 óvulo" eliminável pela regra geral "meiose = 4 produtos", sem exigir a nuance feminina | c/d trocadas por contagens numéricas próximas (4/2 e 4/3) que exigem saber exatamente a assimetria feminina |
+| 20 | Conclusión de la meiosis II | as 3 alternativas erradas (a, c, d) contradiziam abertamente a premissa do próprio enunciado (que a meiose II se completa durante a fecundación) | a/c/d reescritas mantendo o fato do enunciado intacto e errando apenas na explicação terminológica/causal (nome convencional, ordem dos eventos, convenção da cátedra) |
+| 21 | Singamia | "se degradan... solo el ADN materno" (d) — eliminável por conhecimento geral de herança biparental, externo ao tema específico | d trocada por um erro específico de embriologia (programa genético de só um pronúcleo se ativa) |
+| 4 | Ciclo celular/receptor (secundário) | "exclusivamente" (a), "permanente" (c), "irreversible" (d) | reescritas como quase-acertos específicos (apoptosis como função principal, bloqueio transitório na fase S, fosforilação que amplifica o sinal) |
+| 18 | Reacción acrosómica (secundário) | "por completo" (b) | removida a palavra, sentido científico mantido |
+| 19 | Fecundación (secundário) | "completa e inmediata" (a) | troca por reivindicação de timing específica e plausível (fusão antes da penetração) |
+| 22 | Aberraciones cromosómicas (secundário) | "por completo"/"extenso" (c) | troca por "afecta a un segmento específico", mantendo o erro de classificação que a questão testa |
+
+### Critérios aplicados a cada distrator reescrito
+
+1. Nenhuma palavra absolutista ("siempre"/"nunca"/"por completo"/
+   "exclusivamente"/"irreversible"/"permanente") nas alternativas erradas
+   novas.
+2. Nenhuma alternativa contradiz abertamente a premissa do próprio
+   enunciado.
+3. Nenhuma alternativa é estruturalmente impossível (ex.: mais produtos
+   do que uma divisão celular permite).
+4. Nenhuma alternativa é eliminável por conhecimento geral externo ao
+   tema específico da questão (ex.: herança biparental básica).
+5. Cada alternativa errada nova é um "quase-acerto": troca papéis,
+   mistura um fato real com uma classificação errada, ou propõe um
+   mecanismo específico plausível — exige saber a matéria para rejeitar.
+
+### Verificação
+
+- Gabaritos e letras corretas **inalterados** — só a redação das
+  alternativas erradas (e, na questão 15, parte do enunciado) mudou.
+- `quiz-item` = 320 — inalterado (edição só de texto).
+- HTML balanceado (`div`/`ul`/`li`/`p`/`section`/`table`/`tr`/`td`/`th`/
+  `details`/`summary`/`h2`/`h3`/`h4`/`ol`/`strong`/`b` — todos os pares
+  batendo).
+- Explicações (incl. referências cruzadas por letra, ex. "la acrosina
+  (b)", "el MPF (a)") revisadas uma a uma — nenhuma posição de letra foi
+  movida nesta rodada, então nenhuma referência ficou inconsistente;
+  conferido também que a explicação de cada item continua reforçando a
+  ciência correta e rebatendo especificamente os novos distratores
+  (ex.: MCQ 9 — "El APC/C no corta nada directamente" já desmonta o novo
+  distrator b).
+- Espelho corpo↔Banco general: mantido byte-idêntico (todas as edições
+  com `replace_all`, 2 ocorrências cada).
+- Guard (`--base origin/main --head claude/biologia-unidad-viii-x-471`):
+  🟡 PASSOU COM AVISOS — banco-geral 160=160, gabaritos válidos, 1
+  desbalanceamento de HTML pré-existente (herdado, não introduzido),
+  avisos de escopo/registro-tarefas (mesmo padrão das rodadas
+  anteriores, não específico desta).
+- Annotation-safety (Supabase, `subject_slug ilike '%biolog%'`):
+  `user_highlights` = 0, `user_ink_strokes` = 0, `user_notes` = 0 —
+  reconfirmado.
+- Commit `0789d72e`, push para `claude/biologia-unidad-viii-x-471`.
+- PR #476 (Anatomía Patológica II) **não foi tocada** nesta rodada,
+  conforme instrução explícita.
+
 ## Pendências explícitas
 
 1. **Renumeração VIII→IX→X**: a Issue #471 pede explicitamente não
@@ -527,5 +602,5 @@ real a preservar literalmente):
    `2026-10-10T21:49:58Z`; a base da #478 já foi retargetada para `main`
    e a branch resincronizada sem conflitos (ver seção acima).
 3. **Nenhuma pendência de conteúdo restante para esta issue.** PR #478
-   permanece em draft, aguardando auditoria humana/ChatGPT antes de
-   qualquer decisão de merge.
+   permanece em draft, aguardando nova auditoria do José após esta
+   rodada de correção de distratores.
