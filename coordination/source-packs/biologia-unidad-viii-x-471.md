@@ -590,6 +590,43 @@ completa das 22 questões. Nenhuma das 11 restantes (1, 3, 5, 6, 7, 8, 11,
 - PR #476 (Anatomía Patológica II) **não foi tocada** nesta rodada,
   conforme instrução explícita.
 
+## Rodada de correção — pista de linguagem residual (conclusión de la meiosis II)
+
+Após o checkpoint anterior, o José apontou que o distrator (d) daquela
+mesma questão — "Porque la cátedra prefiere, por convención, llamar
+'pronúcleo' a ambos núcleos haploides desde este punto, sin relación con
+el momento de la fecundación" — ainda carregava uma pista de linguagem:
+atribuir a nomenclatura a uma "preferência da cátedra" sem relação com a
+biologia é reconhecível como "provavelmente errado" sem saber a matéria,
+mesmo sem palavra absolutista.
+
+**Correção**: (d) trocada por um erro conceitual específico e plausível —
+confundir o momento em que o núcleo materno passa a se chamar pronúcleo
+(ao completar a meiosis II, conforme a própria questão descreve) com um
+evento posterior e distinto (a singamia). Nova redação: "Porque el
+núcleo materno solo pasa a llamarse pronúcleo cuando ocurre la singamia,
+no en el momento en que termina la meiosis II."
+
+Esse erro exige saber a sequência real de eventos (meiosis II completa →
+pronúcleo imediatamente, antes da singamia) para ser rejeitado — não há
+mais tell editorial nem palavra absolutista.
+
+### Verificação
+- Gabarito (b) e letras **inalterados**.
+- A explicação já existente ("...pasa directo a ser el pronúcleo
+  femenino...") continua refutando especificamente o novo distrator,
+  sem necessidade de edição.
+- `quiz-item` = 320, HTML balanceado (todos os pares batendo).
+- Espelho corpo↔Banco general: byte-idêntico (`replace_all`, 2
+  ocorrências).
+- Guard (`--base origin/main --head claude/biologia-unidad-viii-x-471`):
+  🟡 PASSOU COM AVISOS — mesmo padrão das rodadas anteriores (banco-geral
+  160=160, gabaritos válidos, 1 desbalanceamento de HTML pré-existente
+  herdado).
+- Annotation-safety: 0/0/0, reconfirmado.
+- Commit `3ae7417a`, push para `claude/biologia-unidad-viii-x-471`.
+- PR #476 (Anatomía Patológica II) **não foi tocada** nesta rodada.
+
 ## Pendências explícitas
 
 1. **Renumeração VIII→IX→X**: a Issue #471 pede explicitamente não
@@ -602,5 +639,4 @@ completa das 22 questões. Nenhuma das 11 restantes (1, 3, 5, 6, 7, 8, 11,
    `2026-10-10T21:49:58Z`; a base da #478 já foi retargetada para `main`
    e a branch resincronizada sem conflitos (ver seção acima).
 3. **Nenhuma pendência de conteúdo restante para esta issue.** PR #478
-   permanece em draft, aguardando nova auditoria do José após esta
-   rodada de correção de distratores.
+   permanece em draft, pronta para a auditoria de merge do José.
