@@ -2572,6 +2572,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:478.",
       "task_id": "Issue [#471](https://github.com/Repassomed/Repasso-Med-Site-/issues/471) \u2014 \"P1 \u00b7 Biolog\u00eda \u2014 integrar UNIDAD VIII e UNIDAD X sem conflito com #469\".",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "e10ce7fb216c7d71506df9b155c4cadb817d4bc3",
+      "component": "guard",
+      "error_id": "ERR-715ED99CDD",
+      "error_type": "hard-fail",
+      "fingerprint": "715ed99cdd8d3f7ada59",
+      "first_seen": "2026-10-11T03:13:53.784676+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "86d32c96940d4ad284f131cdb550e764",
+      "issue_sync_updated_at": "2026-10-11T03:13:53.784676+00:00",
+      "last_evidence_hash": "1e86f7a87aa64324208d",
+      "last_seen": "2026-10-11T03:13:53.784676+00:00",
+      "occurrence_count": 1,
+      "pr_number": 482,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "38107663781",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:482.",
+      "task_id": "Issue [#213](https://github.com/Repassomed/Repasso-Med-Site-/issues/213) \u2014 \"Bioestad\u00edstica \u2014 recuperar/corrigir 27 assets ausentes sem misturar com a PR #196\".",
+      "worker_id": null
     }
   ]
 }
