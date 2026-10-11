@@ -46,23 +46,33 @@ Método: para cada elemento da base simula-se um traço no seu centro, «grava-s
 
 | | 390 px | 768 | 1024 | 1440 |
 |---|---|---|---|---|
-| texto **e** caixa idênticos (alinhamento exato, 0 px) | 4 134 (80,7 %) | 4 134 | 4 134 | 4 134 |
+| texto **e** caixa idênticos (alinhamento exato, 0 px) | 4 206 (82,1 %) | 4 206 | 4 206 | 4 206 |
 | mesmo texto, caixa diferente | **0** | 0 | 0 | 0 |
-| texto reescrito | 989 (19,3 %) | 989 | 989 | 989 |
-| · variação de altura Δh, mediana / p90 / máx. (px) | 24 / 69 / 141 | 0 / 22 / 90 | 0 / 22 / 90 | 0 / 22 / 90 |
+| texto reescrito | 917 (17,9 %) | 917 | 917 | 917 |
+| · variação de altura Δh, mediana / p90 / máx. (px) | 24 / 71 / 141 | 0 / 22 / 90 | 0 / 22 / 90 | 0 / 22 / 90 |
 
 Ou seja: **traço em parágrafo não editado cai exatamente onde estava**. Em parágrafo reescrito o traço continua no parágrafo certo, mas a forma é reescalada: no desktop o desvio vertical típico é 0–22 px (1 linha), no celular até ~140 px no pior parágrafo.
 
-**3.2 Âncoras de seção (traço sobre enunciado de questão ou figura).** Aqui o traço é normalizado pela **seção inteira**: qualquer edição que mude a altura da seção desloca o traço proporcionalmente à posição dele. Medido (px, distância entre o ponto regravado e o conteúdo), **antes da rodada 2 → depois**:
+**3.2 Âncoras de seção (traço sobre enunciado de questão ou figura).** Aqui o traço é normalizado pela **seção inteira**: qualquer edição que mude a altura da seção desloca o traço proporcionalmente à posição dele. Medido (px, distância entre o ponto regravado e o conteúdo), **antes da rodada 2 → depois da rodada 2 → depois da rodada 3** (alternativas misturadas por altura real, §3.3):
 
 | alvo | 390 px | 768 | 1024 | 1440 |
 |---|---|---|---|---|
 | enunciados `.quiz-question` — mediana / p90 / máx. **antes** | 334 / 809 / 957 | 142 / 236 / 310 | 120 / 289 / 346 | 117 / 283 / 407 |
-| enunciados `.quiz-question` — mediana / p90 / máx. **depois** | 168 / 716 / 937 | 13 / 48 / 96 | 28 / 131 / 171 | 34 / 140 / 192 |
+| enunciados `.quiz-question` — mediana / p90 / máx. **depois (rodada 2)** | 168 / 716 / 937 | 13 / 48 / 96 | 28 / 131 / 171 | 34 / 140 / 192 |
+| enunciados `.quiz-question` — mediana / p90 / máx. **depois (rodada 3)** | **58 / 131 / 279** | 30 / 73 / 108 | 28 / 68 / 101 | 35 / 73 / 124 |
 | figuras e ilustrações (269) **antes** | 165 / 428 / 647 | 95 / 165 / 227 | 39 / 115 / 218 | 45 / 139 / 218 |
-| figuras e ilustrações (269) **depois** | 63 / 227 / 396 | 22 / 68 / 111 | 16 / 63 / 93 | 18 / 76 / 97 |
+| figuras e ilustrações (269) **depois (rodada 2)** | 63 / 227 / 396 | 22 / 68 / 111 | 16 / 63 / 93 | 18 / 76 / 97 |
+| figuras e ilustrações (269) **depois (rodada 3)** | 34 / 163 / 246 | 17 / 76 / 144 | 15 / 84 / 102 | 18 / 78 / 112 |
 
 Δ de altura das seções (px, **depois**): 1024 → b01 +88 · b02 +67 · b03 +47 · b05 +125 · b07 +71 · **b15 (banco) −317** · demais −111 a +23 (antes: b05 +702, b01 +554, **banco +1 488**). 768 → banco −154. 1440 → banco −207. **390 px (celular) → banco +3 116** (antes +8 970): é o limite remanescente — alternativas que quebram em mais linhas numa coluna estreita; a causa é que os distratores novos e equilibrados têm comprimento parecido com o da correta, em vez de ficarem curtos. As alternativas novas foram dimensionadas por largura (tetos calibrados de caracteres por linha) e distribuídas entre as 97 questões (A/B + difusão de erro) para neutralizar a altura em 768–1440; em 390 não há neutralização completa.
+
+**3.3 Rodada 3 — celular (390 px) no Banco.** Pedido: «resolva o deslocamento de tinta no celular». Método: o Δ de tinta de seção de cada âncora é `v·ΔH_total − cum(y)`; só a **não-linearidade** da deriva acumulada importa. Mediu-se a altura **real** (Chromium, CSS do site) de cada alternativa em 4 larguras, em até 3 variantes — **A** (a da rodada 2), **B** (A encurtada) e **O** (texto original da `main`) — e um recozimento simulado escolheu, por questão, a variante de cada alternativa que mantém a deriva acumulada do Banco quase linear, com penalidade para **não** usar o texto original (O=2,0; B=0,6) e restrições de 8-A.6 (correta nunca a única mais longa de forma sistemática; razão correta/distratores 0,78–1,25). Resultado: **51 das 97 questões** receberam alternativas A/B/O misturadas (**letras da correta inalteradas**, enunciados inalterados, bloco e banco idênticos); nas 204 alternativas dessas 51 questões: 138 ficaram como na rodada 2 (A), **38 voltaram a ser literalmente o texto original** (O) e 28 foram encurtadas (B). Efeito colateral útil: âncoras de elemento com alinhamento exato passaram de 4 134 → **4 206**.
+
+Medida final (`ink.test.cjs`, 4 larguras): **banco (b15) Δ altura 390 px: +1 144** (rodada 2: +3 116; origem: +8 970) · 768: −769 · 1024: −580 · 1440: −580. Enunciados no celular: mediana 168 → **58 px**, p90 716 → **131 px**, máx. 937 → **279 px** (o modelo previu máx. 157; a diferença vem de interações de quebra de linha que o modelo linear não vê). Custo: em 768 px a mediana subiu de 13 para 30 px (p90 48 → 73) e o máximo em 1440 caiu 192 → 124. O celular **não chegou a zero** (o Banco ainda cresce +1 144 px em 390) — o remanescente vem do restante das mudanças da seção (explicações e cartões), que não foram tocadas nesta rodada.
+
+Único ajuste de explicação exigido pela mistura: **#43 (d)** — a alternativa passou a dizer apenas «las tiazidas aumentan la excreción de calcio», então a refutação deixou de falar de dois erros («y el losartán no modifica la calciuria»).
+
+Testes depois da mistura: quiz **0 falhas duras** (428 itens, 358 MCQ, 214/214 pares sem divergência, 876 cartas); grifos — frases não alteradas **599/599** (nível 1), controles **322/322**, **0 mal colocados**; verificação estática — SUB_SEL e ids idênticos (44 ids), letras corretas a/b/c/d = 40/49/46/44, correta única mais longa 35 (20 %).
 
 **Conclusão:** o risco **continua não sendo zero**, mas a rodada 2 o reduziu de forma mensurável. Texto não alterado: alinhamento/recuperação exatos. Traços ancorados à seção: no desktop/tablet o pior caso foi de ~346–407 px para ≤ 192 px (mediana ≤ 34 px; 768: mediana 13 px); no celular o banco geral ainda desloca traços de enunciado (mediana 168 px, p90 716 px). Como o aluno desenha onde estuda — nos blocos, onde o Δ de seção é ≤ 125 px em 1024 — o efeito esperado está concentrado em traços feitos no Banco, em celular.
 **Não foi tocado `data-rm-content-rev`**, e não é proposto como solução: ele orfanaria também os 81 % de traços que hoje se alinham exatamente (decisão explícita do José). 
@@ -73,4 +83,4 @@ Ou seja: **traço em parágrafo não editado cai exatamente onde estava**. Em pa
 * **Dados reais de tinta/grifos dos alunos não foram consultados**: uma tentativa de leitura no Supabase foi negada pelo sistema de permissões e não foi contornada. Os números acima são **simulados** com o motor real sobre a matéria; não dizem quantos traços reais existem nem onde.
 * A medida de tinta modela a **matemática** do motor (normalização por caixa), não o gesto de caneta em tablet real.
 * `anchorDe` foi transcrita; qualquer mudança futura em `rm-tools-v2.js` exige repetir a medida.
-* Em 390 px o banco geral ainda cresce ≈ 3 100 px (ver 3.2).
+* Em 390 px o banco geral ainda cresce ≈ 1 140 px (ver 3.2–3.3), contra 3 116 px na rodada 2; o desvio dos enunciados é de mediana 58 px e p90 131 px (máx. 279 px).

@@ -79,7 +79,7 @@ Invariante estrutural (necessário, **não suficiente**): a sequência dos eleme
 
 * **Grifos (rodada 2):** frases inalteradas recuperam **599/599** (nível 1) e controles **314/314**, **0 em posição errada**; frases reescritas (290 registros) **não** voltam (286 não recuperadas, 4 por correspondência tolerante, nenhuma em lugar errado). Pesa **3,2 %** das frases da matéria (antes 3,7 %); em janelas de 6 palavras, 2,54 % (antes 2,94 %). As **alternativas de quiz não são grifáveis** (o motor as ignora). A lista frase a frase das originais que deixaram de existir está em `…-rastreio-v1.md`.
 * **Tinta em elemento (`seção>índice`):** 80,7 % das âncoras com texto e caixa idênticos → alinhamento **exato**; 19,3 % reescritas → o traço fica no parágrafo certo, mas reescalado (Δaltura mediana 0–24 px, p90 22–69 px, máx. 90–141 px).
-* **Tinta ancorada à seção** (enunciados `div.quiz-question`, figuras): enunciados — mediana/p90/máx. (px) 390 px: 168/716/937 · 768: 13/48/96 · 1024: 28/131/171 · 1440: 34/140/192 (antes: mediana 117–334, p90 236–809, máx. 310–957); figuras 1024: 16/63/93 (antes 39/115/218). Δ de altura do banco (f2b15): **1024 −317 px**, 768 −154, 1440 −207 (antes +1 488 a 1024) — mas **390 px (celular) ainda +3 116 px** (antes +8 970): limite remanescente.
+* **Tinta ancorada à seção** (enunciados `div.quiz-question`, figuras): enunciados — mediana/p90/máx. (px), rodada 3: 390 px: **58/131/279** (rodada 2: 168/716/937) · 768: 30/73/108 · 1024: 28/68/101 · 1440: 35/73/124 (origem: mediana 117–334, p90 236–809, máx. 310–957); figuras 390: 34/163/246. Δ de altura do banco (f2b15): 1024 −580 px, 768 −769, 1440 −580 e **390 px (celular) +1 144 px** (rodada 2: +3 116; origem: +8 970). Mistura de alternativas A/B/O em 51 questões (§3.3 do QA).
 * `data-rm-content-rev` **não** foi aplicado e **não é proposto como solução**: orfanaria também os traços que hoje se alinham.
 
 Risco para a tinta: **BAIXO–MÉDIO** (não zero), concentrado em (i) traços sobre enunciados no **Banco em celular (390 px)** e (ii) grifos/traços sobre as ≈ 3 % de frases reescritas por necessidade científica ou da G0. Sem acesso aos dados reais dos alunos (leitura no Supabase negada; não contornada): os números são simulações com o motor real.
@@ -111,7 +111,7 @@ Risco para a tinta: **BAIXO–MÉDIO** (não zero), concentrado em (i) traços s
 
 ## 8 · Precisa de revisão humana
 
-1. **Risco de tinta BAIXO–MÉDIO (§5):** o desvio remanescente é o do Banco em 390 px (+3 116 px) e as ≈ 3 % de frases reescritas; aceitar ou orientar nova redução. Sem `data-rm-content-rev`.
+1. **Risco de tinta BAIXO–MÉDIO (§5):** o desvio remanescente é o do Banco em 390 px (+1 144 px; enunciados p90 131 px) e as ≈ 3 % de frases reescritas; aceitar ou orientar nova redução. Sem `data-rm-content-rev`.
 2. **Duas trocas de letra (#188, #192, b13):** resposta científica igual; o Guard exige aceite humano explícito (Lei 6).
 3. **E1** mantém a regra da cátedra («DHP: NO») e acrescenta a nuance como complemento da literatura; confirmar que concorda com o texto.
 4. **Neutralização G0** (commit `30b8ef81`): reversível isoladamente.
