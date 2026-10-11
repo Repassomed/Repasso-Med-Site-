@@ -14,12 +14,12 @@ const ROT = { boot: 'Ativa', indice: 'Índice', blocos: 'Blocos', modos: 'Modos'
 /* Causa e correção por tipo de verificação que falha. escopo: conteudo (editorial, fora desta PR) · modulo (arquivo reservado: patch documentado) · ensaio. */
 const dupl = (c, rec, art = 'os') => (c.dados && c.dados.agregadoras && c.dados.agregadoras.length)
   ? { escopo: 'modulo', causa: `A seção agregadora (${c.dados.agregadoras.join(', ')}) repete ${art} ${rec} dos blocos e o módulo a soma, porque o id não casa a heurística \`/banco|flashcards/i\` (rm-materia-nav.js:90, rm-layout.js:472).`, fix: 'C1/C2: o módulo passa a aceitar `data-rm-agrega` (o descritor/HTML o declara). Verificado na variante «com correção».' }
-  : { escopo: 'conteudo', causa: `${art[0].toUpperCase() + art.slice(1)} ${rec} se repetem entre seções que não são cópia integral (p.ex. a seção de prova repete parte dos blocos) e não há \`id\` estável: o DOM soma duplicatas e a contagem exata é INDETERMINADA.`, fix: 'C5 (verificado na variante «com correção»): a capa conta itens DISTINTOS. Continua editorial: id canônico por item + `data-rm-copia-de` e decidir as repetições (8-A.1 do MANUTENCAO-DIDATICA).' };
+  : { escopo: 'modulo+conteudo', causa: `${art[0].toUpperCase() + art.slice(1)} ${rec} se repetem entre seções que não são cópia integral (p.ex. a seção de prova repete parte dos blocos) e não há \`id\` estável: o DOM soma duplicatas e a contagem exata é INDETERMINADA.`, fix: 'C5 (verificado na variante «com correção»): a capa conta itens DISTINTOS. Continua editorial: id canônico por item + `data-rm-copia-de` e decidir as repetições (8-A.1 do MANUTENCAO-DIDATICA).' };
 const CAUSAS = {
   'contagens/capa-flashcards': c => dupl(c, 'flashcards'),
   'contagens/capa-preguntas': c => dupl(c, 'perguntas', 'as'),
-  'contagens/capa-flashcards-omitidos': () => ({ escopo: 'conteudo', causa: 'Há cartões que existem só na seção de revisão geral (agregadora) e não nos blocos: o aluno os encontra em «todos», mas a capa/modo por bloco não os conta.', fix: 'C5 (verificado na variante «com correção») passa a contá-los. Continua editorial: levar o cartão ao bloco que o ensina ou descartá-lo (contrato §3).' }),
-  'contagens/capa-preguntas-omitidas': () => ({ escopo: 'conteudo', causa: 'Há questões só no banco geral (sem par no corpo) que a capa por bloco não conta.', fix: 'C5 (verificado na variante «com correção») passa a contá-las. Continua editorial: levar a questão ao bloco que ensina o assunto (8-A.3) ou descartá-la.' }),
+  'contagens/capa-flashcards-omitidos': () => ({ escopo: 'modulo+conteudo', causa: 'Há cartões que existem só na seção de revisão geral (agregadora) e não nos blocos: o aluno os encontra em «todos», mas a capa/modo por bloco não os conta.', fix: 'C5 (verificado na variante «com correção») passa a contá-los. Continua editorial: levar o cartão ao bloco que o ensina ou descartá-lo (contrato §3).' }),
+  'contagens/capa-preguntas-omitidas': () => ({ escopo: 'modulo+conteudo', causa: 'Há questões só no banco geral (sem par no corpo) que a capa por bloco não conta.', fix: 'C5 (verificado na variante «com correção») passa a contá-las. Continua editorial: levar a questão ao bloco que ensina o assunto (8-A.3) ou descartá-la.' }),
   'contagens/capa-infografias': () => ({ escopo: 'conteudo', causa: 'A contagem da capa difere das figuras com legenda fora das agregadoras (figura sem `<figcaption>`/`<img>` ou dentro de material-slide/med-image).', fix: 'Revisão editorial das figuras; contrato exige `<figure>` + legenda + imagem.' }),
   'modos/indice-flashcards': () => ({ escopo: 'modulo', causa: 'A agregadora de flashcards não reconhecida aparece como «bloco» no índice do modo Flashcards.', fix: 'C1/C2.' }),
   'modos/indice-preguntas': () => ({ escopo: 'modulo', causa: 'A agregadora de perguntas não reconhecida aparece como «bloco» no índice do modo Preguntas.', fix: 'C1/C2.' }),
@@ -72,8 +72,8 @@ const linhas = slugs.map(s => {
 
 const M = []; const w = s => M.push(s);
 const cnt = (k, v) => linhas.filter(l => l[k] === v).length;
-w('# Matriz PASSA / FALHA / BLOQUEADO por matéria · Checkpoint D · issue #457', '');
-w('> **Nada foi ativado em produção.** Flags, UID, slug do piloto, `index.html`, `rm-*.js/css`, `get-materia.js` e todas as matérias estão intactos. Zero escritas no Supabase (sessão simulada), zero áudio simulado. **AGUARDANDO AUDITORIA CHATGPT.**');
+w('# Matriz PASSA / FALHA / BLOQUEADO por matéria · issue #457 (2.ª rodada, 11/10, `main` `d51cd1f4` com a caneta #479 aprovada)', '');
+w('> **Nada foi ativado em produção.** Flags, UID, slug do piloto, `index.html`, `rm-*.js/css`, `get-materia.js` e todas as matérias estão intactos. Zero escritas no Supabase (sessão simulada), nenhum áudio tocado. Nada para mergear sem auditoria.');
 w('');
 w('Legenda: **PASSA** = todas as verificações da área passaram nas 4 larguras (390 · 768 · 1024 · 1440) · **FALHA** = alguma falhou e é reproduzível (causa e correção abaixo) · **BLOQUEADO** = não dá para verificar sem algo que este ensaio não pode fazer (p.ex. audiolibro sem manifesto autorizado).');
 w('');
@@ -92,7 +92,7 @@ w('|---|--:|--:|--:|--:|');
 w(`| Como está | ${cnt('hoje', 'PASSA')} | ${cnt('hoje', 'FALHA')} | ${cnt('hoje', 'BLOQUEADO')} | ${cnt('hoje', 'SEM DADOS')} |`);
 w(`| Com correção proposta (C1–C8) | ${cnt('corr', 'PASSA')} | ${cnt('corr', 'FALHA')} | ${cnt('corr', 'BLOQUEADO')} | ${cnt('corr', 'SEM DADOS')} |`);
 w('');
-w('**Audiolibro: BLOQUEADO nas 27 matérias, por regra**: não há manifesto autorizado fora do piloto, e o ensaio não simula áudio. O que o ensaio prova é a **ausência** (card, player, chip, capa, pílula, lateral e requisição de manifesto/áudio: PASSA nas 27). Em Semiología II o audiolibro real é coberto pelo teste do próprio piloto (#453).');
+w('**Audiolibro:** aqui (sem o boot de áudio) o ensaio prova a **ausência** nas 27 (card, player, chip, capa, pílula, lateral e requisição: PASSA). A **presença correta** — o `rm-audio-boot.js` real cria cards só nos blocos do manifesto (simulado) da Semiología II e fecha sem pedir manifesto nas outras 26 — está em `INTERACAO.md`. Áudio real (manifesto e URL assinada do servidor) continua dependendo do piloto/José (`AUDIOBOOKS-ESTADO-OPERACIONAL.md`).');
 w('');
 w('### Por área (de 27 matérias)');
 w('');
@@ -163,16 +163,17 @@ w('## 7 · Bloqueios e pendências (não resolvidos nesta PR)');
 w('');
 w('- **Integração dos patches** (`PATCHES-PARA-INTEGRACAO.md`): tocam módulos do piloto e áreas críticas (`rm-layout.js`, `rm-materia-nav.js`, `rm-materia-sistema.js/css`, `rm-tools-v2.js`, `rm-audio-boot.js`, `rm-pilot.js`, funções do Netlify). A caneta (#456) já foi aprovada no piloto; a integração segue em PR própria, auditada, sem ativar nenhuma matéria.');
 w('- **Descritor/tema por matéria**: hoje existe só o de Semiología II. Os 26 descritores do ensaio são **hipótese técnica inferida do conteúdo** (paleta e vinhetas do piloto), **não identidade visual aprovada**. Aprovar identidade, unidades e numeração de cada matéria é decisão editorial (G0/José), fora desta PR.');
-w('- **Audiolibro**: sem manifesto autorizado nenhuma matéria pode ter card real; nada a testar além da ausência.');
+w('- **Audiolibro**: fora do piloto não há manifesto autorizado (A4/A6 não aplicados): nenhuma matéria pode ter card real; a presença/ausência correta do código atual está provada em `INTERACAO.md`.');
 w('- **Conteúdo**: `<h2>` ausente em seções de portada/guia, ids de questão ausentes, agregadoras sem marcador e números de portada divergentes estão em `CONFORMIDADE.md` — são edições editoriais por matéria, não feitas aqui.');
 w('');
 const restantes = linhas.filter(l => l.corr !== 'PASSA');
-w('## 8 · As ' + restantes.length + ' falhas que restam mesmo com a correção proposta (C1–C8)');
+w('## 8 · ' + (restantes.length ? 'As ' + restantes.length + ' falhas que restam' : 'Falhas que restam') + ' mesmo com a correção proposta (C1–C8)');
 w('');
-w('Todas são **conteúdo repetido/ausente ou comportamento do módulo que a correção proposta não cobre**. Nenhuma foi editada nesta PR. Dono = quem decide: **José/editorial** (conteúdo) ou **integração** (módulo, depois da #456).');
+if (!restantes.length) w('**Nenhuma.** Com C1–C8 em memória as 27 matérias passam em todas as áreas nas 4 larguras. Isso não dispensa as decisões editoriais que C5/C6 apenas contornam (repetições entre blocos, itens só no banco, infografía dentro do contêiner de questões): ver `PENDENCIAS-ENSAIO-GLOBAL.md`.');
+else { w('Todas são **conteúdo repetido/ausente ou comportamento do módulo que a correção proposta não cobre**. Nenhuma foi editada nesta PR. Dono = quem decide: **José/editorial** (conteúdo) ou **integração** (módulo).');
 w('');
 w('| Matéria | Verificação (larguras) | Medido com a correção | Causa | Dono | Próxima ação |');
-w('|---|---|---|---|---|---|');
+w('|---|---|---|---|---|---|'); }
 const DONO = { conteudo: 'José / editorial', modulo: 'Integração (após #456)', 'modulo+conteudo': 'José + integração', ensaio: 'Claude 4' };
 const ACAO = { 'contagens/capa-flashcards': 'Decidir o que fazer com flashcards repetidos entre blocos (ids canônicos); depois reconferir a capa', 'contagens/capa-preguntas': 'Decidir sobre as questões repetidas entre blocos e a seção de prova (8-A.1); id canônico por questão', 'contagens/capa-flashcards-omitidos': 'Levar o cartão ao bloco que o ensina ou descartá-lo; reconferir', 'contagens/capa-preguntas-omitidas': 'Levar a questão ao bloco (8-A.3) ou descartá-la', 'modos/paginas-flashcards': 'Patch C7', 'modos/paginas-preguntas': 'Patch C6 ou mover a figura «Cómo leer…» para fora de `.quiz-section`', 'blocos/pager-cadeia': 'Dar `<h2>` à seção ou aplicar C4 (título de reserva)' };
 restantes.forEach(l => {

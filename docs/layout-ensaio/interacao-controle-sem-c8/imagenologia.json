@@ -1,4 +1,4 @@
-{"variante":"interacao-com-correcao","slug":"imagenologia","title":"Imagenología","larguras":[768,1440],"gerado_em":"2026-10-11T02:32:44.486Z","adaptacoes":["A1","A2","A7","C1","C2","C4","C5a","C5b","C5c","C6","C7"],"segundos":71,"checks":[
+{"variante":"interacao-com-correcao","slug":"imagenologia","title":"Imagenología","larguras":[768,1440],"gerado_em":"2026-10-11T03:02:40.928Z","adaptacoes":["A1","A2","A7","C1","C2","C4","C5a","C5b","C5c","C6","C7"],"segundos":71,"checks":[
 {"area":"boot","w":768,"id":"etapas","estado":"PASSA","prova":"dom","msg":"Layout V2 + tema + navegação (+ boot do áudio) ativaram sem erro"},
 {"area":"audio","w":768,"id":"ausencia-fora-do-piloto","estado":"PASSA","prova":"dom","msg":"fora do piloto o rm-audio-boot.js REAL fecha no portão da aba: nenhum card, capa, lateral nem pedido de manifesto"},
 {"area":"caneta","w":768,"id":"piloto-fisico-ligado","estado":"PASSA","prova":"dom","msg":"o comportamento aprovado no piloto (guarda de palma, adaptador de toque) liga nesta matéria"},

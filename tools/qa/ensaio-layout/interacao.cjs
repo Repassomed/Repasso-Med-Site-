@@ -7,11 +7,12 @@
    Supabase simulado com persistência em sessionStorage (`?persist=1`); audiobook = rm-audio-boot.js REAL + manifesto SIMULADO só da Semiología II.
    LIMITE: isto é Chromium/Linux. Não é Safari/iPadOS nem Apple Pencil — ver docs/layout-ensaio/INTERACAO.md («o que só o aparelho prova»).
    Saída: docs/layout-ensaio/interacao/<slug>.json
-   Uso: NODE_PATH=$(npm root -g) node tools/qa/ensaio-layout/interacao.cjs [slug ...] [--rapido]   (--rapido: só 1024 e 390) */
+   Uso: NODE_PATH=$(npm root -g) node tools/qa/ensaio-layout/interacao.cjs [slug ...] [--rapido] [--so-tabela]   (--rapido: só 1024 e 390; --so-tabela: só a tabela larga, mesclada no resultado já gravado)
+   Ambiente: RM_LARGURAS=768,1440 · RM_ENSAIO_SEM=C8 (desliga adaptações) · RM_ENSAIO_REF=<commit> (assets de outro commit: controle negativo) */
 'use strict';
 const fs = require('fs'), path = require('path');
 const L = require('./lib.cjs');
-const args = process.argv.slice(2), RAPIDO = args.includes('--rapido'), filtro = args.filter(a => !a.startsWith('--'));
+const args = process.argv.slice(2), RAPIDO = args.includes('--rapido'), SO_TABELA = args.includes('--so-tabela'), filtro = args.filter(a => !a.startsWith('--'));
 const LARGURAS = process.env.RM_LARGURAS ? process.env.RM_LARGURAS.split(',').map(Number) : (RAPIDO ? [1024, 390] : [390, 768, 1024, 1440]);
 const ALT = { 390: 844, 768: 1024, 1024: 768, 1440: 900 };
 const OUT = path.join(L.REPO, 'docs/layout-ensaio/interacao');
@@ -98,11 +99,40 @@ async function abrirDetalhes(page, sel) {
 
 /* parágrafo-alvo: o 1.º <p> longo do bloco (fora de questão/flashcard/tabela/UI), centrado na tela */
 const PREP = (bid, ord) => {
-  const ps = [...document.getElementById(bid).querySelectorAll('p')].filter(x => !x.closest('[data-rm-ui],.quiz-item,.flashcard,table,.rmfc-launch,details:not([open])') && x.textContent.trim().length > 140 && x.getBoundingClientRect().width > 200);
+  const ps = [...document.getElementById(bid).querySelectorAll('p')].filter(x => !x.closest('[data-rm-ui],.quiz-item,.flashcard,table,.rmfc-launch,details:not([open])') && x.textContent.trim().length > 140 && x.getBoundingClientRect().width > 200 && x.getBoundingClientRect().height >= 40);   // ≥ 36 px (SUB_MIN_H do motor): abaixo disso o traço ancora na seção, por desenho
   const p = ps[ord || 0]; if (!p) return null; window.__alvoP = p;
   p.scrollIntoView({ block: 'center' });
   const r = p.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height, n: ps.length };
 };
+
+/* TABELA COM ROLAGEM PRÓPRIA (risco real em 390 px): com a caneta armada o DEDO ainda rola a tabela na horizontal. Percorre os blocos até achar uma
+   tabela mais larga que o seu contêiner rolável (na largura medida); se a matéria não tem nenhuma, não há verificação (n/a). */
+async function checarTabela(p, c, W, chk, go, secs) {
+  let tb = null;
+  for (const s of secs.filter(x => !REUNE.test(x.id) && x.tb > 0)) {
+    await go({ view: 'block', block: s.id }, 380);
+    tb = await p.evaluate(id => {
+      const sec = document.getElementById(id); document.querySelectorAll('[data-ens-tb]').forEach(e => e.removeAttribute('data-ens-tb'));
+      const cx = [...sec.querySelectorAll('*')].find(e => { if (e.closest('[data-rm-ui],.quiz-item,.flashcard,.rmfc-launch,details:not([open])')) return false; const o = getComputedStyle(e).overflowX; return (o === 'auto' || o === 'scroll') && e.scrollWidth > e.clientWidth + 30 && e.querySelector('table') && e.getBoundingClientRect().height > 0; });
+      if (!cx) return null; cx.setAttribute('data-ens-tb', ''); return { sec: id };
+    }, s.id);
+    if (tb) break;
+  }
+  if (!tb) return;
+  await ferramenta(p, 'pen');
+  const g = await p.evaluate(() => { const e = document.querySelector('[data-ens-tb]'); e.scrollIntoView({ block: 'center' }); e.scrollLeft = 0; const r = e.getBoundingClientRect(); const y = Math.min(Math.max(r.top + 40, 140), Math.min(r.bottom - 20, innerHeight - 40)); return { x: r.left + Math.min(r.width, innerWidth) / 2, y, vis: r.height > 0 && y > r.top && y < r.bottom }; });
+  await p.waitForTimeout(350);
+  if (g.vis) {
+    const n0 = (await paths(p)).length;
+    await c.touch('touchStart', [{ x: g.x + 60, y: g.y, id: 21 }]);
+    for (let i = 1; i <= 12; i++) { await c.touch('touchMove', [{ x: g.x + 60 - i * 14, y: g.y, id: 21 }]); await p.waitForTimeout(16); }
+    await c.touch('touchEnd', []); await p.waitForTimeout(500);
+    const rt = await p.evaluate(() => ({ sl: document.querySelector('[data-ens-tb]').scrollLeft, px: Math.round(scrollX) }));
+    const n1 = (await paths(p)).length;
+    chk('rolagem', W, 'tabela-rola-com-lapis', rt.sl > 20 && rt.px === 0 && n1 === n0, `lápis armado: o dedo rola a tabela larga na horizontal (scrollLeft ${rt.sl}), a página não desliza e nada é desenhado (bloco ${tb.sec})`, 'cdp', { rt, n0, n1, sec: tb.sec });
+  }
+  await ferramenta(p, 'none');
+}
 
 (async () => {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
@@ -128,6 +158,7 @@ const PREP = (bid, ord) => {
         r = await L.abrir(br, base, m, { w: W, h: ALT[W], modo: 'nav', corr: true, touch: true, extra: '&persist=1&audio=1', initScript: REGISTRO });   // contexto novo = sessionStorage vazio
         const { page: p, ctx } = r; const c = await cdpDe(ctx, p);
         const go = async (spec, ms = 700) => { await p.evaluate(s => window.RMNav.go(s), spec); await p.waitForTimeout(ms); };
+        if (SO_TABELA) { await checarTabela(p, c, W, chk, go, secs); await r.ctx.close(); process.stdout.write(W + ' '); continue; }   // só a tabela (mescla no JSON existente)
         const E = await p.evaluate(() => window.__ens);
         chk('boot', W, 'etapas', E.etapas.attach_layout && E.etapas.attach_tema && E.etapas.attach_nav && !E.erros.length, 'Layout V2 + tema + navegação (+ boot do áudio) ativaram sem erro', 'dom', E);
 
@@ -179,7 +210,7 @@ const PREP = (bid, ord) => {
           else chk('pinca', W, 'pinca-com-lapis', pz.s1 > pz.s0 + 0.05, `lápis armado: pinça de dois dedos dá zoom (escala ${pz.s0} → ${pz.s1})`, 'cdp', pz);
 
           /* escrever com zoom: a tinta sai sob a ponta e o traço antigo continua preso ao parágrafo */
-          const anc0 = await ancoraDe(p, novo.a);
+          await p.waitForTimeout(450); const anc0 = await ancoraDe(p, novo.a);   // assenta: transição de hover (0,2 s) + reflow debounced
           await c.cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1.6 }); await p.waitForTimeout(450);
           await p.evaluate(() => window.__alvoP.scrollIntoView({ block: 'center' })); await p.waitForTimeout(400);
           const rz = await p.evaluate(() => { const e = window.__alvoP.getBoundingClientRect(); return { x: e.left, y: e.top, w: e.width, h: e.height, vx: visualViewport.offsetLeft, vy: visualViewport.offsetTop, s: visualViewport.scale, vw: visualViewport.width, vh: visualViewport.height }; });
@@ -254,28 +285,7 @@ const PREP = (bid, ord) => {
           chk('persistencia', W, 'recarregar-grifos', hlDepois === hlAntes && hlAntes > 0, `recarregar: os ${hlAntes} grifos voltam`, 'simulado', { hlAntes, hlDepois });
         }
 
-        /* ---------- TABELA COM ROLAGEM PRÓPRIA (risco real em 390 px): com a caneta armada o DEDO ainda rola a tabela na horizontal ---------- */
-        const tb = await p.evaluate(() => {
-          const t = document.querySelector('#materias-container > .tab-content');
-          const cx = [...t.querySelectorAll('section[id] *')].find(e => { if (e.closest('[data-rm-ui],.quiz-item,.flashcard,.rmfc-launch')) return false; const o = getComputedStyle(e).overflowX; return (o === 'auto' || o === 'scroll') && e.scrollWidth > e.clientWidth + 30 && e.querySelector('table'); });
-          if (!cx) return null; cx.setAttribute('data-ens-tb', ''); return { sec: cx.closest('section[id]').id };
-        });
-        if (tb) {
-          await ferramenta(p, 'pen');
-          await go({ view: 'block', block: tb.sec }, 1000);
-          const g = await p.evaluate(() => { const e = document.querySelector('[data-ens-tb]'); e.scrollIntoView({ block: 'center' }); e.scrollLeft = 0; const r = e.getBoundingClientRect(); const y = Math.min(Math.max(r.top + 40, 140), Math.min(r.bottom - 20, innerHeight - 40)); return { x: r.left + Math.min(r.width, innerWidth) / 2, y, vis: r.height > 0 && y > r.top && y < r.bottom }; });
-          await p.waitForTimeout(350);
-          if (g.vis) {
-            const n0 = (await paths(p)).length;
-            await c.touch('touchStart', [{ x: g.x + 60, y: g.y, id: 21 }]);
-            for (let i = 1; i <= 12; i++) { await c.touch('touchMove', [{ x: g.x + 60 - i * 14, y: g.y, id: 21 }]); await p.waitForTimeout(16); }
-            await c.touch('touchEnd', []); await p.waitForTimeout(500);
-            const rt = await p.evaluate(() => ({ sl: document.querySelector('[data-ens-tb]').scrollLeft, px: Math.round(scrollX) }));
-            const n1 = (await paths(p)).length;
-            chk('rolagem', W, 'tabela-rola-com-lapis', rt.sl > 20 && rt.px === 0 && n1 === n0, `lápis armado: o dedo rola a tabela larga na horizontal (scrollLeft ${rt.sl}), a página não desliza e nada é desenhado (bloco ${tb.sec})`, 'cdp', { rt, n0, n1, sec: tb.sec });
-          }
-          await ferramenta(p, 'none');
-        }
+        await checarTabela(p, c, W, chk, go, secs);
 
         /* ---------- QUESTÕES ---------- */
         if (blocoQuiz) {
@@ -335,6 +345,11 @@ const PREP = (bid, ord) => {
     R.adaptacoes = [...usadas].sort(); R.segundos = Math.round((Date.now() - t0) / 1000);
     const f = R.checks.filter(c => c.estado === 'FALHA').length, b = R.checks.filter(c => c.estado === 'BLOQUEADO').length;
     console.log(`→ ${R.checks.length} verificações · ${f} FALHA · ${b} BLOQUEADO · ${R.segundos}s`);
+    if (SO_TABELA) {   // mescla: troca só as verificações da tabela no resultado completo já gravado
+      const f0 = path.join(OUT, m.slug + '.json'); if (!fs.existsSync(f0)) { console.log('  (sem resultado completo para mesclar)'); continue; }
+      const R0 = JSON.parse(fs.readFileSync(f0, 'utf8')); R0.checks = R0.checks.filter(c => c.id !== 'tabela-rola-com-lapis').concat(R.checks.filter(c => c.id === 'tabela-rola-com-lapis' || c.area === 'ensaio'));
+      R0.tabela_mesclada_em = new Date().toISOString(); fs.writeFileSync(f0, L.jsonLinhas(R0, 'checks')); continue;
+    }
     fs.writeFileSync(path.join(OUT, m.slug + '.json'), L.jsonLinhas(R, 'checks'));
   }
   await br.close(); srv.close();
