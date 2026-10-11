@@ -459,6 +459,62 @@ fecundación em curso que force a precisão terminológica.
   reconfirmado.
 - Commit `1d4600ec`, push para `claude/biologia-unidad-viii-x-471`.
 
+## Rodada de correção — viés das 22 MCQ novas (gabarito e tamanho de alternativa)
+
+Auditoria sobre as 22 MCQ únicas adicionadas nesta PR (Bloques 15/16)
+encontrou dois vieses detectáveis sem precisar de conhecimento da
+matéria:
+
+- **14 das 22** tinham a alternativa correta como a única mais longa
+  do grupo (em alguns casos, dramaticamente: 166 vs. 57 caracteres,
+  157 vs. 56, 132 vs. 33).
+- **14 gabaritos caíam na letra "b"**, 7 em "c", 1 em "a" e **nenhum em
+  "d"** — padrão previsível o suficiente para ser explorado sem saber
+  a matéria (Lei 8-A.7).
+
+### O que foi feito
+
+Revisada questão por questão (nenhuma das 22 está rotulada "Basada en
+examen" — todas são "Pregunta complementaria", então não havia questão
+real a preservar literalmente):
+
+- **Gabarito redistribuído**: a=6, b=6, c=5, d=5, numa sequência sem
+  ciclo nem rotação previsível.
+- **Viés de tamanho**: eliminado nos casos graves e reduzido a uma
+  variação residual leve (máximo 19%, a maioria sob 10%) nos demais —
+  deixou de ser um padrão de "a mais longa é sempre a certa". Alcançado
+  por reescrita/alongamento dos distratores (preservando seu sentido
+  científico) e, em alguns casos, encurtamento moderado da alternativa
+  correta sem perder a substância.
+- **Distratores próximos/plausíveis** mantidos ou reforçados onde
+  cabia — ex.: AMPc/GMPc como par confusível clássico com IP3/DAG;
+  hialuronidasa vs. acrosina (ambas enzimas reais da fecundación, em
+  fases diferentes); anáfase I vs. anáfase II; cigonema vs. paquinema;
+  e, na questão do ciclosoma, um distrator que reproduz deliberadamente
+  o erro conceitual real já corrigido nesta mesma PR (APC/C "corta"
+  cohesinas diretamente) — serve como teste da própria distinção.
+- **Nenhuma resposta científica foi alterada** — apenas a posição e a
+  redação das alternativas. Onde a explicação fazia referência à letra
+  antiga de um distrator (ex.: "la acrosina (a)"), a referência foi
+  atualizada para a nova posição.
+- Espelhado identicamente no Banco general — as cópias já eram
+  byte-idênticas ao corpo nesta matéria, e assim permaneceram.
+
+### Verificação
+
+- `quiz-item` = 320, `flashcard` = 410 — inalterados (só texto de
+  alternativas mudou, nenhuma questão criada/removida).
+- HTML balanceado (`b`/`strong` inclusos).
+- Nenhuma alternativa com linguagem absolutista ("siempre"/"nunca"/
+  "100%") ficou na opção correta — confirmado por varredura; onde esses
+  termos aparecem, estão nos distratores (overgeneralizações erradas),
+  o que é desenho legítimo, não um vazamento de gabarito.
+- Guard (`--base origin/main --head claude/biologia-unidad-viii-x-471`):
+  🟡 sem vermelho, banco-geral 160=160, gabaritos válidos, 1
+  desbalanceamento de HTML pré-existente (herdado).
+- Annotation-safety: 0/0/0, reconfirmado.
+- Commit `3c92769e`, push para `claude/biologia-unidad-viii-x-471`.
+
 ## Pendências explícitas
 
 1. **Renumeração VIII→IX→X**: a Issue #471 pede explicitamente não
