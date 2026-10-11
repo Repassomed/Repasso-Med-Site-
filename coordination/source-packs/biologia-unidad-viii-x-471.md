@@ -397,6 +397,68 @@ meiosis, fecundación, aneuploidías) e a Issue #471 fica cumprida na
 íntegra para Biología, respeitando sempre a instrução de não renumerar
 blocos existentes.
 
+## Rodada de correção científica (pós-checkpoint 3/3) — metáfase/anáfase I, conclusão da meiose II, no disyunción, señalización
+
+Quatro achados do auditor nesta rodada, corrigidos em todos os lugares
+(resumo, key-box, questão+gabarito+explicação em corpo e Banco general,
+flashcards em bloco e Flashcards general):
+
+1. **Metáfase I → anáfase I** (já corrigido numa rodada anterior a esta
+   seção do arquivo — ver histórico de commits; registrado aqui por
+   completude): o key-box "Lo esencial (meiosis)" dizia que os
+   homólogos se separam na metáfase I. Corrigido para anáfase I; a
+   metáfase I apenas alinha os bivalentes.
+
+2. **"Dos espermatocitos II idénticos"**: a explicação e o flashcard
+   afirmavam que os dois espermatocitos II resultantes da meiose I são
+   idênticos. Fisicamente o reparto de citoplasma é igual, mas
+   geneticamente **não são idênticos**: o crossing over (paquinema) e a
+   segregação ao azar dos homólogos recombinados garantem que cada um
+   recebe uma combinação distinta de alelos. Corrigido para "iguales en
+   tamaño pero no idénticos genéticamente", com a razão explicitada.
+
+3. **No disyunción — escopo incompleto**: a explicação de aneuploidías
+   só mencionava "falla al separar homólogos", o que descreve apenas a
+   não disjunção da **meiose I**. Ampliado para cobrir também a falha
+   de separação das **cromátides irmãs na meiose II** e numa **divisão
+   mitótica** (pré- ou pós-cigótica). Reescritos o h4, o parágrafo
+   introdutório, a tabela (nova coluna "Qué no se separa" + linha
+   própria para meiose II, antes ausente) e os textos correspondentes
+   no key-box e no flashcard "Aneuploidía".
+
+4. **"Solo los esteroideos lo hacen así"**: frase no bio-cap de
+   receptores citosólicos (Bloque 15) que contradizia, duas frases
+   antes, no mesmo parágrafo, a explicação de que o receptor de
+   estrógenos é uma excepción dentro do próprio grupo esteroideo (pode
+   ser predominantemente nuclear mesmo sem ligante). Removida a
+   generalização; reescrito para reforçar que nem todo o grupo
+   esteroideo segue o padrão hsp90/translocação, e que o grupo
+   tiroideo/retinoico/vitamina D tampouco o segue.
+
+**Padronização do uso de "óvulo":** a introdução do bloco de
+Fecundación e o flashcard correspondente diziam "fertilización del
+óvulo por el espermatozoide", o que contradizia a precisão já
+estabelecida no checkpoint anterior (de que a meiose II só se completa
+*durante* a fecundación, sem um óvulo livre formado antes dela).
+Ajustado para "fertilización del ovocito II", com nota explícita de
+que não há um "óvulo" já formado antes da fecundación. O uso de
+"óvulo" no bloco de Meiosis (sem contexto de fecundación) foi mantido
+sem alteração — ali a simplificação é válida, porque não há
+fecundación em curso que force a precisão terminológica.
+
+### Verificação (esta rodada)
+
+- HTML balanceado (`b`/`strong` incluídos; a tabela de aneuploidías
+  ganhou uma coluna e uma linha, `tr`/`td`/`th` seguem pareados).
+- Espelho: `quiz-item` = 320, `flashcard` = 410 — **inalterados**, pois
+  nenhuma questão/flashcard foi criada ou removida, só texto corrigido.
+- Guard (`--base origin/main --head HEAD`): 🟡 sem vermelho, banco-geral
+  160=160, gabaritos válidos, 1 desbalanceamento de HTML pré-existente
+  (herdado, não introduzido nesta rodada).
+- Annotation-safety: 0/0/0 para `subject_slug ilike '%biolog%'`,
+  reconfirmado.
+- Commit `1d4600ec`, push para `claude/biologia-unidad-viii-x-471`.
+
 ## Pendências explícitas
 
 1. **Renumeração VIII→IX→X**: a Issue #471 pede explicitamente não
