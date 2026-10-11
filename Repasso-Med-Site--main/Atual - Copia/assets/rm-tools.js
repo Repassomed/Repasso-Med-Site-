@@ -1649,9 +1649,9 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     normalizar: normalizar,
     ocorrencias: ocorrencias,
     rangeDe: rangeDe,
-    /* resolvedor em níveis (exacto → tolerante → glossário). A V2 ainda
-       chama `escolher` directamente no seu `repintar`; fica exposto para
-       poder passar a usá-lo sem duplicar nada. */
+    /* resolvedor em níveis (exacto → tolerante → glossário). Usado por
+       `aplicarHighlights` aqui mesmo e pelo `repintar` da V2 (undo de
+       apagar uma marcação) — ver assets/rm-tools-v2.js. */
     resolverAncora: resolverAncora,
     projectarSolto: projectarSolto,
     faixaNoIndice: faixaNoIndice,
