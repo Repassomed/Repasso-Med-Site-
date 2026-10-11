@@ -4,7 +4,7 @@
    nenhuma volta para outro elemento. Não usa dados de alunos. */
 const OUT = n => require('path').join(process.env.RM_OUT || require('os').tmpdir(), n);
 const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright'); const { start } = require('./server.cjs'); const fs = require('fs');
-const { buildPairs, remapRecord } = require('./remap-highlights.cjs');
+const { buildPairs, remapRecord, secNorms, locateAll } = require('./remap-highlights.cjs');
 const SUB = 'p,li,h2,h3,h4,h5,table,figure,blockquote';
 (async () => {
   const { s, base } = await start(); const b = await chromium.launch({ ...(process.env.RM_CHROMIUM ? { executablePath: process.env.RM_CHROMIUM } : {}) });
@@ -45,7 +45,7 @@ const SUB = 'p,li,h2,h3,h4,h5,table,figure,blockquote';
     return res;
   }
   const antes = await resolve(recs);
-  const remap = recs.map(h => remapRecord(h, pairs)); const depois = await resolve(remap.map(r => r.rec));
+  const norms = await secNorms(pn); const loc = await locateAll(po, recs); console.log('marcações NÃO localizadas na matéria antiga:', loc.filter(v => v == null).length); const remap = recs.map((h, i) => remapRecord(h, pairs, norms, loc[i])); const depois = await resolve(remap.map(r => r.rec));
   const st = {};
   recs.forEach((h, i) => {
     const key = h.kind + '|' + h.tipo; const t = st[key] = st[key] || { n: 0, tocadas: 0, antes: 0, depois: 0, depois_lugar_errado: 0, depois_nivel2: 0 };
@@ -55,6 +55,9 @@ const SUB = 'p,li,h2,h3,h4,h5,table,figure,blockquote';
   console.log(JSON.stringify(st, null, 1));
   const falhas = recs.map((h, i) => ({ h, r: remap[i], d: depois[i] })).filter(x => x.h.kind === 'tocado' && !x.d.nivel).slice(0, 25);
   console.log('exemplos que ainda não voltam:', falhas.length); falhas.slice(0, 8).forEach(x => console.log(' -', x.h.block_id, x.h.tipo, '|', x.h.exact_text.slice(0, 90)));
+  const erros = recs.map((h, i) => ({ h, r: remap[i], d: depois[i] })).filter(x => (x.d.nivel && x.d.elIdx !== x.h.elIdx) || (x.h.kind === 'control' && !x.d.nivel));
+  console.log('casos de lugar errado / controle perdido:', erros.length);
+  erros.forEach(x => console.log(' !', x.h.kind, x.h.block_id, 'el', x.h.elIdx, '→', x.d.elIdx, '|', x.h.exact_text.slice(0, 80), '=>', (x.r.rec.exact_text || '').slice(0, 80)));
   fs.writeFileSync(OUT('hl-remap-result.json'), JSON.stringify({ st, pairs: Object.values(pairs).reduce((n, a) => n + a.length, 0) }, null, 1));
   await b.close(); s.close();
 })();
