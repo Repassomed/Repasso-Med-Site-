@@ -158,6 +158,8 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
 
       /* ---------- BLOCOS ---------- */
       const alvos = ids.slice();   // todas as seções
+      /* título EFETIVO de cada seção = o que o módulo usa no pager (h2 ou, com C4, o título de reserva) — medido na página, não no inventário */
+      const titP = Object.fromEntries(await p.evaluate(() => ((window.RMSistema && RMSistema.secciones && RMSistema.secciones()) || []).map(s => [s.id, !!s.titulo])));
       const amostra = (W === 1440 && !RAPIDO) ? alvos : [alvos[0], alvos[Math.floor(alvos.length / 2)], alvos[alvos.length - 1], ...secs.filter(s => s.tb >= 3).slice(0, 1).map(s => s.id)].filter((x, k, a) => x && a.indexOf(x) === k);
       let residuoBloco = [], falhaBloco = [], semFoco = [], pagerErr = [], vazios = [], ovfBloco = [];
       for (const id of amostra) {
@@ -168,7 +170,7 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
         if (b.foco && b.foco.oculto) semFoco.push(id);
         if (b.residuo.length && !residuoBloco.length) residuoBloco = b.residuo;
         const prevHid = b.pager[0] ? b.pager[0].hid : null, nextHid = b.pager[2] ? b.pager[2].hid : null;
-        const tit = j => !!(secs[j] && secs[j].h2);
+        const tit = j => !!(secs[j] && (titP[secs[j].id] !== undefined ? titP[secs[j].id] : secs[j].h2));
         const pr = (k > 0 && tit(k - 1)) === (prevHid === false), nx = (k < ids.length - 1 && tit(k + 1)) === (nextHid === false);
         if (b.pager.length !== 3 || !pr || !nx) pagerErr.push({ id, k, pager: b.pager });
         const alt = await p.evaluate(i2 => { const s = document.getElementById(i2); const r = s.getBoundingClientRect(); return Math.round(r.height); }, id);
@@ -177,8 +179,8 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
       }
       chk('blocos', W, 'abre-so-o-bloco', falhaBloco.length === 0, `${amostra.length} bloco(s) testados: cada um abre SÓ ele (visível, hash, estado)`, falhaBloco.slice(0, 6));
       chk('blocos', W, 'pager', pagerErr.length === 0, 'Anterior/Índice/Próximo corretos (sem anterior no 1.º, sem próximo no último)', pagerErr.slice(0, 4));
-      const interioresSemTitulo = secs.map((x, j) => ({ id: x.id, j })).filter(x => x.j > 0 && x.j < secs.length - 1 && !secs[x.j].h2).map(x => x.id);
-      chk('blocos', W, 'pager-cadeia', interioresSemTitulo.length === 0, 'nenhuma seção interior sem <h2>: ela quebra a cadeia Anterior/Próximo (o módulo esconde o link do vizinho sem título e o aluno fica sem saída)', interioresSemTitulo);
+      const interioresSemTitulo = secs.map((x, j) => ({ id: x.id, j })).filter(x => x.j > 0 && x.j < secs.length - 1 && !(titP[x.id] !== undefined ? titP[x.id] : secs[x.j].h2)).map(x => x.id);
+      chk('blocos', W, 'pager-cadeia', interioresSemTitulo.length === 0, 'nenhuma seção interior sem título efetivo no módulo: ela quebra a cadeia Anterior/Próximo (o módulo esconde o link do vizinho sem título e o aluno fica sem saída)', interioresSemTitulo);
       chk('blocos', W, 'foco-visivel', semFoco.length === 0, 'foco nunca fica em conteúdo oculto', semFoco);
       chk('blocos', W, 'sem-residuo-bloco', residuoBloco.length === 0, 'na leitura de um bloco nada do conteúdo original (hero, banner) aparece fora dele', residuoBloco.slice(0, 3));
       chk('blocos', W, 'nao-vazio', vazios.length === 0, 'nenhum bloco abre vazio', vazios);

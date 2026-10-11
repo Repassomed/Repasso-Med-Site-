@@ -101,6 +101,12 @@
       try { await css('assets/rm-materia-indice.css?v=' + VER); await js('assets/rm-materia-indice.js?v=' + VER); E.etapas.carga_indice = !!window.RMIndice; window.RMIndice.attach(tab, SLUG); E.etapas.attach_indice = true; }
       catch (e) { E.erros.push('indice:' + (e && e.message)); try { window.RMIndice && window.RMIndice.detach(); } catch (e2) {} }
     }
+    /* audiobook (só com ?audio=1): carrega o rm-audio-boot.js REAL como o rm-pilot.js faz depois do layout. Os portões do módulo decidem:
+       fora da aba do piloto ele nem pede o manifesto; no piloto o servidor do ensaio responde um manifesto SIMULADO (lib.cjs). Nada é tocado. */
+    if (P.get('audio') === '1' && E.etapas.attach_nav) {
+      try { await js('assets/rm-audio-boot.js?v=' + VER); E.etapas.audio_boot = !!window.RMAudioBoot; E.etapas.audio_start = !!(await window.RMAudioBoot.start()); }
+      catch (e) { E.erros.push('audio:' + (e && e.message)); }
+    }
   }
 
   window.openMateria = async function (slug, tab) {

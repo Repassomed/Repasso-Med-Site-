@@ -55,7 +55,20 @@ const ADAPTACOES = [
   { id: 'C1', grupo: 'correcao', arquivo: 'assets/rm-materia-nav.js', motivo: 'seção agregadora (cópia da revisão/banco) reconhecida pelo ID (/banco|flashcards/) — falha em 16 matérias; passa a valer também o marcador data-rm-agrega',
     de: 'var REUNE = /banco|flashcards/i;', para: "var REUNE = { test: function (id) { var e = document.getElementById(id); return /banco|flashcards/i.test(id) || !!(e && e.hasAttribute('data-rm-agrega')); } };" },
   { id: 'C2', grupo: 'correcao', arquivo: 'assets/rm-layout.js', motivo: 'mesma heurística por ID no Layout V2 (contagem de recursos da capa/lateral)',
-    de: 'var RES_REUNE = /banco|flashcards/i;', para: "var RES_REUNE = { test: function (id) { var e = document.getElementById(id); return /banco|flashcards/i.test(id) || !!(e && e.hasAttribute('data-rm-agrega')); } };" }
+    de: 'var RES_REUNE = /banco|flashcards/i;', para: "var RES_REUNE = { test: function (id) { var e = document.getElementById(id); return /banco|flashcards/i.test(id) || !!(e && e.hasAttribute('data-rm-agrega')); } };" },
+  /* ---- 2.ª rodada (11/10, main com #479) ---- */
+  { id: 'A7', arquivo: 'assets/rm-tools-v2.js', motivo: 'o comportamento físico da caneta (guarda de palma, adaptador de toque, touch-action da goma) só liga para os slugs de PILOT_SLUGS; o ensaio inclui o slug ensaiado para medir a caneta APROVADA no piloto em cada matéria (a liberação real continua sendo do servidor: flag pen por slug, patch A5)',
+    de: "var PILOT_SLUGS = ['semiologia-ii'];", para: "var PILOT_SLUGS = ['semiologia-ii'].concat(window.__RM_ENSAIO && window.__RM_ENSAIO.slug ? [window.__RM_ENSAIO.slug] : []);" },
+  { id: 'C4', grupo: 'correcao', arquivo: 'assets/rm-materia-sistema.js', motivo: 'seção sem <h2> direto (ex.: guia com título em <div class=\"rm-guide-h2\">) fica sem título: o pager esconde o vizinho e quebra a cadeia Anterior/Próximo; título de reserva = 1.º cabeçalho visual da seção, depois o marcador',
+    de: 'titulo: limpo(h2 && h2.textContent), h2: h2, mk: mk,', para: "titulo: limpo(h2 && h2.textContent) || limpo((q1(sec, ':scope > [class$=\"-h2\"], :scope > h3, :scope > .analysis-card > h3') || {}).textContent) || marcador, h2: h2, mk: mk," },
+  { id: 'C5a', grupo: 'correcao', arquivo: 'assets/rm-layout.js', motivo: 'capa «Preguntas» soma questões repetidas entre blocos e omite as que só existem no banco: passa a contar questões DISTINTAS (enunciado + alternativas) em toda a matéria, banco incluído',
+    de: "sub: qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas')", para: "sub: (function (n) { return n + (n === 1 ? ' pregunta' : ' preguntas'); })(distintosDaMateria(bl, '.quiz-item', '.quiz-question', '.options, .tf-buttons'))" },
+  { id: 'C5b', grupo: 'correcao', arquivo: 'assets/rm-layout.js', motivo: 'idem para «Flashcards»: cartões DISTINTOS pela frente, em toda a matéria (revisão geral incluída)',
+    de: "sub: fc.length + (fc.length === 1 ? ' tarjeta' : ' tarjetas')", para: "sub: (function (n) { return n + (n === 1 ? ' tarjeta' : ' tarjetas'); })(distintosDaMateria(bl, '.flashcard', '.fc-front', null))" },
+  { id: 'C5c', grupo: 'correcao', arquivo: 'assets/rm-layout.js', motivo: 'função auxiliar de C5a/C5b (normalização = a do inventário do ensaio)',
+    de: '  function recursosDaMateria(tab, bl) {', para: "  function distintosDaMateria(bl, sel, cab, extra) {\n    var vistos = {}, n = 0, nz = function (t) { return String(t || '').replace(/\\s+/g, ' ').trim().toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim(); };\n    bl.forEach(function (b) { Array.prototype.forEach.call(b.sec.querySelectorAll(sel), function (x) { var h = x.querySelector(cab), k = nz((h || x).textContent); if (extra) k += '|' + nz((x.querySelector(extra) || x).textContent); if (!vistos[k]) { vistos[k] = 1; n++; } }); });\n    return n;\n  }\n  function recursosDaMateria(tab, bl) {" },
+  { id: 'C6', grupo: 'correcao', arquivo: 'assets/rm-materia-nav.js', motivo: 'infografía (e a nota que a explica) colocada no INÍCIO de .quiz-section aparece no modo Preguntas; o isolamento passa a esconder o que vem antes do 1.º título/questão do grupo',
+    de: '    N.isolado = { sec: s.el, mode: e.mode };', para: "    if (e.mode === 'preguntas') qa(s.el, '.quiz-section').forEach(function (g) { for (var c = g.firstElementChild; c && !(c.tagName === 'H3' || c.tagName === 'H4' || /quiz-item/.test(c.className || '') || q1(c, '.quiz-item')); c = c.nextElementSibling) c.setAttribute('data-rm-off', ''); });\n    N.isolado = { sec: s.el, mode: e.mode };" }
 ];
 function adaptar(arquivoRel, src, usadas, corr) {
   let out = src;
@@ -65,6 +78,12 @@ function adaptar(arquivoRel, src, usadas, corr) {
   });
   return out;
 }
+
+/* ---------------- manifesto simulado de audiobook (só Semiología II, 2 blocos: presença onde há, ausência onde não há) ---------------- */
+const MANIFESTO_SIMULADO = [
+  { audio_id: 'ens-s2-b01', subject_slug: 'semiologia-ii', block_id: 's2-b01', theme: 'Semiología II', title: 'Ensaio · bloque 01', duration: 300, order: 1, version: 'v1' },
+  { audio_id: 'ens-s2-b03', subject_slug: 'semiologia-ii', block_id: 's2-b03', theme: 'Semiología II', title: 'Ensaio · bloque 03', duration: 420, order: 2, version: 'v1' }
+];
 
 /* ---------------- servidor local ---------------- */
 function compor() {
@@ -76,34 +95,46 @@ function compor() {
   return h.replace('<!--INDEX_STYLE-->', style).replace('<!--INDEX_TOP-->', top).replace('/*CATALOGO*/[]', JSON.stringify(cat));
 }
 
+/* RM_ENSAIO_REF=<ref git> (só para CONTROLE NEGATIVO): serve os assets/ desse ref em vez do disco — prova que a bateria reprova uma versão sabidamente ruim */
+const REF = process.env.RM_ENSAIO_REF || '';
+function lerAsset(f) {
+  const rel = path.relative(REPO, f).replace(/\\/g, '/');
+  if (REF && /\/assets\//.test(rel)) { try { return require('child_process').execFileSync('git', ['show', REF + ':' + rel], { cwd: REPO, maxBuffer: 64 << 20 }); } catch (e) { /* inexistente no ref: usa o disco */ } }
+  return fs.readFileSync(f);
+}
 function servir({ usadas = new Set(), pedidos = [] } = {}) {
   return new Promise(res => {
     const srv = http.createServer((q, r) => {
       const u = decodeURIComponent(q.url.split('?')[0]);
       pedidos.push(u);
       if (u === '/p.html') { r.setHeader('content-type', MIME['.html']); return r.end(compor()); }
+      if (u === '/.netlify/functions/get-audio-manifest') {   // manifesto SIMULADO (só responde ao slug do piloto; o ensaio mede presença/ausência, nunca toca áudio real)
+        const slug = new URL(q.url, 'http://x').searchParams.get('slug'); r.setHeader('content-type', MIME['.json']);
+        return r.end(JSON.stringify({ items: slug === 'semiologia-ii' ? MANIFESTO_SIMULADO : [] }));
+      }
       if (u === '/ativar.js') { r.setHeader('content-type', MIME['.js']); return r.end(fs.readFileSync(path.join(__dirname, 'ativar.js'))); }
       const f = u.startsWith('/m/') ? path.join(MAT, u.slice(3)) : path.join(ROOT, u);
       if (!(f.startsWith(ROOT)) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.statusCode = 404; return r.end(); }
       r.setHeader('content-type', MIME[path.extname(f)] || 'application/octet-stream');
       const rel = path.relative(ROOT, f).replace(/\\/g, '/');
       const corr = /(^|&)corr=1(&|$)/.test(q.url.split('?')[1] || '');
-      if (ADAPTACOES.some(a => a.arquivo === rel)) return r.end(adaptar(rel, fs.readFileSync(f, 'utf8'), usadas, corr));
-      r.end(fs.readFileSync(f));
+      if (ADAPTACOES.some(a => a.arquivo === rel)) return r.end(adaptar(rel, lerAsset(f).toString('utf8'), usadas, corr));
+      r.end(lerAsset(f));
     }).listen(0, '127.0.0.1', () => res(srv));
   });
 }
 
 /* ---------------- abertura de uma matéria no navegador ---------------- */
 /* opts: { w, h, modo: 'controle'|'layout'|'tema'|'nav', touch, scale, hash, esperar } */
-async function abrir(br, base, mat, { w = 1440, h = 900, modo = 'nav', touch = w < 900, scale = 1, hash = '', espera = 1500, corr = false, ix = false, extra = '' } = {}) {
-  const ctx = await br.newContext({ viewport: { width: w, height: h }, hasTouch: touch, isMobile: false, deviceScaleFactor: scale });
+async function abrir(br, base, mat, { w = 1440, h = 900, modo = 'nav', touch = w < 900, scale = 1, hash = '', espera = 1500, corr = false, ix = false, extra = '', initScript = null, mobile = false } = {}) {
+  const ctx = await br.newContext({ viewport: { width: w, height: h }, hasTouch: touch, isMobile: mobile, deviceScaleFactor: scale });
   const page = await ctx.newPage(); const errs = [], falhasRede = [], externas = [];
   page.on('pageerror', e => errs.push(String(e).slice(0, 200)));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|net::ERR/.test(m.text())) errs.push('c:' + m.text().slice(0, 160)); });
   page.on('requestfailed', r => falhasRede.push(r.url().slice(0, 140)));
   await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => { externas.push(r.request().url().slice(0, 140)); r.abort(); });   // zero rede externa
   await page.addInitScript(([slug, modoX]) => { window.__RM_ENSAIO = { slug, modo: modoX }; }, [mat.slug, modo]);
+  if (initScript) await page.addInitScript(initScript);
   await page.goto(`${base}/p.html?slug=${mat.slug}&tab=${mat.tab}&modo=${modo}&wait=${espera}${corr ? '&corr=1' : ''}${ix ? '&ix=1' : ''}${extra}${hash}`, { timeout: 120000 });
   await page.waitForFunction('window.__ready===true', { timeout: 120000 });
   await page.waitForTimeout(600);
@@ -118,4 +149,4 @@ function jsonLinhas(obj, chaveLista) {
   return cab + (Object.keys(resto).length ? ',' : '') + JSON.stringify(chaveLista) + ':[\n' + lista.map(x => JSON.stringify(x)).join(',\n') + '\n]}\n';
 }
 
-module.exports = { jsonLinhas, REPO, ROOT, MAT, lerCatalogo, lerFiles, reconciliar, ADAPTACOES, servir, abrir };
+module.exports = { MANIFESTO_SIMULADO, jsonLinhas, REPO, ROOT, MAT, lerCatalogo, lerFiles, reconciliar, ADAPTACOES, servir, abrir };
