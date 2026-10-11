@@ -1,0 +1,38 @@
+# main d51cd1f4 (build 2026-10-10·456e) — verificação pós-merge
+▸ U1 · lápis: escrever 2 → Deshacer → recarregar (diag fechado)
+    ✓ Deshacer remove só o último traço (2 → 1; 1 desenhado)
+    ✓ o banco (simulado) fica só com o 1.º traço (1)
+    ✓ recarregar: volta só o 1.º, 1 vez
+    ✓ 0 erros JS
+▸ U2 · goma: apagar 1 → Deshacer → recarregar (diag fechado)
+    ✓ apagou 1 e o Deshacer restaurou o mesmo desenho (âncora e pontos iguais; 2 desenhados)
+    ✓ recarregar: os 2 voltam, sem duplicar (banco 2)
+    ✓ 0 erros JS
+▸ U3 · goma com a PALMA no meio do gesto: 2 apagados → 1 Deshacer restaura os 2 → recarregar (diag fechado)
+    ✓ palma não cortou o gesto (2 apagados) e 1 Deshacer restaurou os 2
+    ✓ recarregar: os 2 voltam, sem duplicar
+    ✓ 0 erros JS
+▸ U4 · pointerup perdido → caneta levantada (touchend da stylus) → Deshacer → recarregar (diag fechado)
+    ✓ o traço interrompido foi gravado e a guarda saiu (2 traços)
+    ✓ Deshacer remove o traço recuperado (o último), não o anterior
+    ✓ recarregar: fica só o 1.º
+    ✓ 0 erros JS
+▸ U1 · lápis: escrever 2 → Deshacer → recarregar (diag aberto)
+    ✓ Deshacer remove só o último traço (2 → 1; 1 desenhado)
+    ✓ o banco (simulado) fica só com o 1.º traço (1)
+    ✓ recarregar: volta só o 1.º, 1 vez
+    ✓ 0 erros JS
+▸ U2 · goma: apagar 1 → Deshacer → recarregar (diag aberto)
+    ✓ apagou 1 e o Deshacer restaurou o mesmo desenho (âncora e pontos iguais; 2 desenhados)
+    ✓ recarregar: os 2 voltam, sem duplicar (banco 2)
+    ✓ 0 erros JS
+▸ U3 · goma com a PALMA no meio do gesto: 2 apagados → 1 Deshacer restaura os 2 → recarregar (diag aberto)
+    ✓ palma não cortou o gesto (2 apagados) e 1 Deshacer restaurou os 2
+    ✓ recarregar: os 2 voltam, sem duplicar
+    ✓ 0 erros JS
+▸ U4 · pointerup perdido → caneta levantada (touchend da stylus) → Deshacer → recarregar (diag aberto)
+    ✓ o traço interrompido foi gravado e a guarda saiu (2 traços)
+    ✓ Deshacer remove o traço recuperado (o último), não o anterior
+    ✓ recarregar: fica só o 1.º
+    ✓ 0 erros JS
+caneta-desfazer-456: 28/28 verificações OK
