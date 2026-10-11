@@ -83,8 +83,8 @@ Tabela completa antes → depois (texto sem tags):
 | Sequência `SUB_SEL` por seção = `origin/main`; 733 ids na mesma ordem | ✅ 0 seções alteradas |
 | Quiz em navegador: 558 MCQ (clique certo/errado), V/F, abertas, gêmeos bloco↔banco (319 pares) | ✅ **0 falhas duras**, 0 avisos |
 | Flashcards: 16 mazos / 1 857 cartas | ✅ |
-| Grifos (motor real): texto não alterado em elementos tocados | ✅ 110/110 recuperados; controles 660/660; **0 em lugar errado** |
-| Grifos sobre as frases reescritas (96 registros) | ⚠️ **não voltam** (esperado: é o texto que a G0 manda trocar) |
+| Grifos (motor real, marcações **simuladas**): texto não alterado em elementos tocados | ✅ 110/110 recuperados; controles 660/660; **0 em lugar errado** (simulado) |
+| Grifos sobre as frases reescritas (96 registros **simulados**) | ⚠️ **não voltam** sem remapeamento; **grifos reais: preservação NÃO comprovada** |
 | Tinta em elemento (4 larguras: 390, 768, 1024, 1440): âncoras com texto e caixa idênticos | ✅ 8 323 de 8 399 (99,1 %); as 76 reescritas ficam no parágrafo, Δh ≤ 28,5 px |
 | Tinta ancorada à seção (figuras): mediana 0 px, p90 ≤ 16 px, máx. ≤ 28,5 px | ✅ |
 | Δ de altura do banco geral | ✅ 0 px |
@@ -112,13 +112,15 @@ Tabela completa antes → depois (texto sem tags):
 
 **Rasters (33 `.webp`) — revisados um a um à vista.** Três continham «**CLAVES DE EXAMEN**» (`bloco-10-02`, `bloco-11-02`, `bloco-11-03`): o rótulo foi refeito para «CLAVES PARA RECORDAR» (fundo repintado, mesma cor/tamanho de letra) e salvo como **`…-v2.webp`** — arquivo novo porque o Netlify cacheia `/assets/img/**` por muito tempo; o `src` no HTML foi trocado e os originais ficam (não apaguei asset). **Não alterei** os rasters que dizem «ALTO RENDIMIENTO» (`bloco-01-01`, `03-03`, `05-03`, `07-01`, `07-02`, `08-01`, `09-03`): é jargão de prioridade, não cita prova nem cátedra; se José quiser, troco pelo mesmo processo. As insígnias «BLOQUE 10/11» dos rasters `bloco-10-*`/`bloco-11-*` (a ordem de leitura é 13/14) continuam explicadas por uma nota no texto.
 
-## 7 · Grifos: como preservar ou recuperar os 96 afetados
+## 7 · Grifos: os 96 afetados — **o que está e o que NÃO está provado**
+
+> **Estado (correção da rodada 3):** a preservação dos grifos **reais** dos alunos **não está comprovada**. Tudo o que foi medido usa marcações **simuladas**, fabricadas por mim a partir do próprio texto da matéria no formato que o motor grava. Isso prova que a ferramenta consegue casar texto antigo → novo; **não prova** que os grifos de alunos reais voltarão, nem que ainda fazem sentido depois da troca. Enquanto ninguém rodar o remapeamento sobre uma exportação real **e** escrever o resultado no banco (o que não fiz e não faço sem autorização), **os grifos feitos sobre as 52 frases reescritas deixam de ser pintados** (continuam guardados no banco, nada é apagado; o aluno pode marcar de novo).
 
 **Diagnóstico:** o motor (`rm-tools.js`, nível 1: texto exato dentro da seção; nível 2: ignora pontuação/maiúsculas/acentos, exige contexto) **não** recupera um trecho cujas palavras mudaram — é por desenho («melhor não pintar do que pintar no lugar errado»). Sem mexer no motor (JS global é proibido) e sem ocultar texto, há dois caminhos: (1) mudar menos texto — já feito: só 52 frases, dentro de parágrafos, e a ciência intacta; (2) **remapear os registros** guardados.
 
 **Ferramenta nova** — `tools/qa/browser-qa/fisiopatologia-ii-2026-10/remap-highlights.cjs`: compara a matéria antiga (`origin/main`) e a nova **no próprio motor do site**, pareia os elementos por índice, diferencia por palavras e reescreve `exact_text/prefix/suffix` das marcações (nunca encolhe nem muda de lugar; recalcula os 40 caracteres de contexto). Entrada/saída = JSON; **não toca em Supabase nem em dados de aluno** — quem tem a exportação (José) a roda, confere o relatório e só então atualiza os registros.
 
-**Demonstração (marcações sintéticas, 4 692, motor real):**
+**Prova de conceito com marcações SINTÉTICAS (4 692, motor real) — não é evidência sobre grifos de alunos:**
 
 | grupo | sem remapear | **com remapear** | no lugar errado |
 |---|---|---|---|
@@ -126,7 +128,7 @@ Tabela completa antes → depois (texto sem tags):
 | janelas de 5 palavras de elementos alterados (1 096) | 865 | **1 096 (100 %)** | 0 |
 | controles intactos (3 428) | 3 428 | 3 428 | 0 |
 
-(Dois itens «mal colocado»/não recuperado nos testes são alternativas de quiz — `li` de opção, que o motor não indexa e nenhum aluno consegue grifar.) Medido no teste de recuperação tradicional (frases inteiras, sem remapear): texto intacto 121/121 e controles 654/654 voltam; as 103 frases reescritas só voltam **depois** do remapeamento. **Limite honesto:** os números são sintéticos; não consultei dados reais (acesso ao Supabase negado e não contornado). O remapeamento precisa rodar com o head final (cada novo texto muda os pares).
+(Dois itens «mal colocado»/não recuperado nos testes são alternativas de quiz — `li` de opção, que o motor não indexa e nenhum aluno consegue grifar.) Medido no teste de recuperação tradicional (frases inteiras, sem remapear): texto intacto 121/121 e controles 654/654 voltam; as 103 frases reescritas só voltam **depois** do remapeamento. **Limites (o que a simulação não cobre):** (1) as marcações são geradas **a partir do texto atual**, sempre dentro de um único elemento, com contexto de 40 caracteres perfeito — marcas reais podem ter sido feitas sobre texto que já mudou em edições anteriores, cobrir dois elementos, cortar palavra ao meio ou colidir com outra ocorrência; (2) «100 %» mede só que o motor volta a **encontrar** o trecho novo, não que o aluno **ainda queira** grifar o trecho trocado; (3) o formato dos registros reais (campos, versões antigas, notas e glossário) não foi inspecionado — uma leitura no Supabase foi negada e **não foi contornada**; (4) aplicar o remapeamento significa **escrever** em `user_highlights`, fora do escopo e proibido nesta tarefa; (5) cada novo texto altera os pares, então o remapeamento só vale rodado com o head final. **Antes de qualquer uso real:** rodar sobre exportação real, conferir uma amostra por humano e só então decidir a escrita (decisão do José).
 
 ## 8 · Slides atuais, complementar, densidade
 
@@ -144,7 +146,7 @@ Detalhe em `fisiopatologia-ii-issue101-slides-v1.md`: 132 fatos dos 6 decks veri
 | Quiz: 558 MCQ (clique certo/errado), V/F, abertas, 319 pares bloco↔banco | ✅ 0 falhas duras, 0 avisos |
 | Flashcards: 16 mazos / 1 857 cartas | ✅ |
 | Grifos sem remapear: texto intacto 121/121, controles 654/654, 0 em lugar errado; reescritas 103 não voltam | ✅/⚠️ |
-| Grifos **com** remapear (sintético) | ✅ 100 %, 0 em lugar errado |
+| Grifos **com** remapear (prova de conceito **sintética**) | 🧪 100 % das marcas simuladas, 0 em lugar errado — **não comprova preservação de grifos reais** |
 | Tinta em elemento (390/768/1024/1440): âncoras idênticas | ✅ 8 310 de 8 399 (98,9 %); as 89 reescritas ficam no parágrafo (Δh ≤ 28,5 px em ≥ 768; ≤ 118 px a 390) |
 | Tinta de seção (figuras): mediana ≤ 3,7 px; p90 ≤ 26 px; máx. ≤ 49 px | ✅ |
 | Δ de altura do Banco geral | ✅ −24 / −25 / −24 / −2 px (390/768/1024/1440) — uma linha |

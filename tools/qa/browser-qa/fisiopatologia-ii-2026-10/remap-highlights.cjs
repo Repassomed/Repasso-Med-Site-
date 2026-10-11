@@ -1,4 +1,6 @@
 /* Remapeamento de marcações (grifos) depois de uma revisão de texto — PR #481.
+   ATENÇÃO: foi testado SÓ com marcações sintéticas. Não há prova de que reproduza o que cada aluno marcou; use a saída apenas para conferência humana
+   antes de qualquer escrita (que esta ferramenta não faz).
    Sem login e sem Supabase: trabalha sobre um JSON de marcações exportado por quem tem acesso (José) e
    devolve outro JSON com o texto atualizado. Nada é escrito em lugar nenhum.
 
