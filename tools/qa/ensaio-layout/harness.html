@@ -43,6 +43,6 @@ window._sb = window.RM_SB;
 </script>
 <script src="assets/app-core.js"></script>
 <script src="assets/rm-tools.js"></script>
-<script src="assets/rm-tools-v2.js"></script>
+<script>/* o motor da caneta recebe ?corr=1 como os módulos do layout (as correções C8 dele só valem na variante «com correção») */ document.write('<script src="assets/rm-tools-v2.js' + (P.get('corr') === '1' ? '?corr=1' : '') + '"><\/script>');</script>
 <script src="ativar.js"></script>
 </body></html>

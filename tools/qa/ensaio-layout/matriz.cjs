@@ -32,6 +32,7 @@ const CAUSAS = {
   'teclado/proximo-anterior-indice': () => ({ escopo: 'modulo+conteudo', causa: 'No meio do conteúdo falta Anterior/Próximo visível porque o vizinho não tem `<h2>`.', fix: 'C4.' }),
   'teclado/enter-proximo': () => ({ escopo: 'modulo+conteudo', causa: 'Idem: sem botão «Bloque siguiente» visível.', fix: 'C4.' }),
   'modos/paginas-preguntas': () => ({ escopo: 'modulo', causa: 'Uma figura (p.ex. «Cómo leer…») dentro do contêiner `.quiz-section` continua visível no modo Preguntas: o isolamento esconde por caminho de contêiner, não por nó.', fix: 'C6 (verificado na variante «com correção»): no modo Preguntas o isolamento esconde o que vem antes do 1.º título/questão de cada `.quiz-section`. Editorial (melhor): levar a infografía para o resumo, antes das questões (G0: o resumo ensina, a questão cobra).' }),
+  'modos/paginas-flashcards': () => ({ escopo: 'modulo', causa: 'O lançador do mazo («Jugar») está dentro de `<details>` fechado e o isolamento do modo esconde o `<summary>` (só mantém o lançador e o caminho até ele): a página do modo mostra o bloco sem nada que o aluno possa abrir.', fix: 'C7 (verificado na variante «com correção»): o `<summary>` de um `<details>` do caminho fica visível; o aluno abre com um toque.' }),
   'modos/paginas-infografias': () => ({ escopo: 'modulo', causa: 'No modo Infografías a página mostra recursos que não são infografia ou contagem diferente da real.', fix: 'Ver dados.' }),
   'responsivo/blocos-sem-overflow': () => ({ escopo: 'conteudo', causa: 'Elemento do conteúdo passa da largura da viewport (tabela/figura sem contêiner rolável).', fix: 'Contêiner com rolagem própria no conteúdo; confrontar com o controle (ver dados).' }),
   'indice/sem-overflow': () => ({ escopo: 'conteudo', causa: 'Overflow horizontal já no índice.', fix: 'Ver dados.' }),
@@ -76,7 +77,7 @@ w('> **Nada foi ativado em produção.** Flags, UID, slug do piloto, `index.html
 w('');
 w('Legenda: **PASSA** = todas as verificações da área passaram nas 4 larguras (390 · 768 · 1024 · 1440) · **FALHA** = alguma falhou e é reproduzível (causa e correção abaixo) · **BLOQUEADO** = não dá para verificar sem algo que este ensaio não pode fazer (p.ex. audiolibro sem manifesto autorizado).');
 w('');
-w('Duas variantes do MESMO ensaio: **«como está»** (módulos reais do piloto, só com o patch mínimo de slug em memória: A1/A2/A7) e **«com correção»** (acrescenta C1–C6, os patches propostos em `PATCHES-PARA-INTEGRACAO.md`, também só em memória). O disco nunca é alterado. O **uso** (caneta real por CDP, palma, goma, pinça, recarregar, questões, flashcards, audiobook) está na matriz irmã `INTERACAO.md`.');
+w('Duas variantes do MESMO ensaio: **«como está»** (módulos reais do piloto, só com o patch mínimo de slug em memória: A1/A2/A7) e **«com correção»** (acrescenta C1–C8, os patches propostos em `PATCHES-PARA-INTEGRACAO.md`, também só em memória). O disco nunca é alterado. O **uso** (caneta real por CDP, palma, goma, pinça, recarregar, questões, flashcards, audiobook) está na matriz irmã `INTERACAO.md`.');
 w('');
 w('## Avisos de leitura (obrigatórios)');
 w('');
@@ -89,7 +90,7 @@ w('');
 w('| Variante | PASSA | FALHA | BLOQUEADO | Sem dados |');
 w('|---|--:|--:|--:|--:|');
 w(`| Como está | ${cnt('hoje', 'PASSA')} | ${cnt('hoje', 'FALHA')} | ${cnt('hoje', 'BLOQUEADO')} | ${cnt('hoje', 'SEM DADOS')} |`);
-w(`| Com correção proposta (C1–C6) | ${cnt('corr', 'PASSA')} | ${cnt('corr', 'FALHA')} | ${cnt('corr', 'BLOQUEADO')} | ${cnt('corr', 'SEM DADOS')} |`);
+w(`| Com correção proposta (C1–C8) | ${cnt('corr', 'PASSA')} | ${cnt('corr', 'FALHA')} | ${cnt('corr', 'BLOQUEADO')} | ${cnt('corr', 'SEM DADOS')} |`);
 w('');
 w('**Audiolibro: BLOQUEADO nas 27 matérias, por regra**: não há manifesto autorizado fora do piloto, e o ensaio não simula áudio. O que o ensaio prova é a **ausência** (card, player, chip, capa, pílula, lateral e requisição de manifesto/áudio: PASSA nas 27). Em Semiología II o audiolibro real é coberto pelo teste do próprio piloto (#453).');
 w('');
@@ -166,14 +167,14 @@ w('- **Audiolibro**: sem manifesto autorizado nenhuma matéria pode ter card rea
 w('- **Conteúdo**: `<h2>` ausente em seções de portada/guia, ids de questão ausentes, agregadoras sem marcador e números de portada divergentes estão em `CONFORMIDADE.md` — são edições editoriais por matéria, não feitas aqui.');
 w('');
 const restantes = linhas.filter(l => l.corr !== 'PASSA');
-w('## 8 · As ' + restantes.length + ' falhas que restam mesmo com a correção proposta (C1–C6)');
+w('## 8 · As ' + restantes.length + ' falhas que restam mesmo com a correção proposta (C1–C8)');
 w('');
 w('Todas são **conteúdo repetido/ausente ou comportamento do módulo que a correção proposta não cobre**. Nenhuma foi editada nesta PR. Dono = quem decide: **José/editorial** (conteúdo) ou **integração** (módulo, depois da #456).');
 w('');
 w('| Matéria | Verificação (larguras) | Medido com a correção | Causa | Dono | Próxima ação |');
 w('|---|---|---|---|---|---|');
 const DONO = { conteudo: 'José / editorial', modulo: 'Integração (após #456)', 'modulo+conteudo': 'José + integração', ensaio: 'Claude 4' };
-const ACAO = { 'contagens/capa-flashcards': 'Decidir o que fazer com flashcards repetidos entre blocos (ids canônicos); depois reconferir a capa', 'contagens/capa-preguntas': 'Decidir sobre as questões repetidas entre blocos e a seção de prova (8-A.1); id canônico por questão', 'contagens/capa-flashcards-omitidos': 'Levar o cartão ao bloco que o ensina ou descartá-lo; reconferir', 'contagens/capa-preguntas-omitidas': 'Levar a questão ao bloco (8-A.3) ou descartá-la', 'modos/paginas-preguntas': 'Patch C6 ou mover a figura «Cómo leer…» para fora de `.quiz-section`', 'blocos/pager-cadeia': 'Dar `<h2>` à seção ou aplicar C4 (título de reserva)' };
+const ACAO = { 'contagens/capa-flashcards': 'Decidir o que fazer com flashcards repetidos entre blocos (ids canônicos); depois reconferir a capa', 'contagens/capa-preguntas': 'Decidir sobre as questões repetidas entre blocos e a seção de prova (8-A.1); id canônico por questão', 'contagens/capa-flashcards-omitidos': 'Levar o cartão ao bloco que o ensina ou descartá-lo; reconferir', 'contagens/capa-preguntas-omitidas': 'Levar a questão ao bloco (8-A.3) ou descartá-la', 'modos/paginas-flashcards': 'Patch C7', 'modos/paginas-preguntas': 'Patch C6 ou mover a figura «Cómo leer…» para fora de `.quiz-section`', 'blocos/pager-cadeia': 'Dar `<h2>` à seção ou aplicar C4 (título de reserva)' };
 restantes.forEach(l => {
   const por = {}; l.falhasCorr.forEach(f => { const k = f.area + '/' + f.id; (por[k] = por[k] || []).push(f); });
   Object.entries(por).forEach(([k, fs_]) => {

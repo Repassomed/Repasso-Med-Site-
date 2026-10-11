@@ -10,7 +10,7 @@ const ROT = { boot: 'Ativa', audio: 'Audiobook', caneta: 'Caneta', palma: 'Palma
 const ATIVAS = L.reconciliar().ativas;
 const ler = d => { const p = path.join(DIR, d); return fs.existsSync(p) ? fs.readdirSync(p).filter(f => f.endsWith('.json')).map(f => JSON.parse(fs.readFileSync(path.join(p, f), 'utf8'))) : []; };
 const RES = Object.fromEntries(ler('interacao').map(R => [R.slug, R]));
-const CTL = ler('interacao-controle-456c');
+const CTL = ler('interacao-controle-456c'), CTL8 = ler('interacao-controle-sem-c8');
 
 const resumo = R => {
   const porArea = {};
@@ -23,7 +23,7 @@ const ver = l => l.semDados ? 'SEM DADOS' : (l.falhas.length ? 'FALHA' : (l.bloq
 
 const M = []; const w = (...s) => M.push(...s);
 w('# Matriz de interação · 27 matérias × 390 / 768 / 1024 / 1440 · #457/#459 (2.ª rodada, `main` com a #479)', '');
-w('> **Nada foi ativado.** Flags, contas liberadas, `PILOT_SLUGS`, slug do piloto e publicação continuam como na `main`. O ensaio roda num servidor local com os arquivos REAIS da `main` e aplica, **em memória**, os patches da integração proposta (A1/A2/A7 + C1–C6, ver `PATCHES-PARA-INTEGRACAO.md`). Supabase e manifesto de áudio são **simulados**; zero rede externa.', '');
+w('> **Nada foi ativado.** Flags, contas liberadas, `PILOT_SLUGS`, slug do piloto e publicação continuam como na `main`. O ensaio roda num servidor local com os arquivos REAIS da `main` e aplica, **em memória**, os patches da integração proposta (A1/A2/A7 + C1–C8, ver `PATCHES-PARA-INTEGRACAO.md`). Supabase e manifesto de áudio são **simulados**; zero rede externa.', '');
 w('Esta bateria (`tools/qa/ensaio-layout/interacao.cjs`) complementa a `MATRIZ.md` (layout, índice, modos, contagens): aqui se mede o **uso** — escrever, apoiar a palma, rolar, dar zoom, apagar, desfazer, grifar, trocar de bloco/modo, recarregar, responder questão, abrir flashcards e a presença/ausência de audiobook.', '');
 w('Legenda: ✅ todas as verificações da área passaram nas larguras medidas · ❌ N = N verificações falharam · 🟨 N = N verificações não puderam ser medidas neste ambiente (ver «Bloqueios») · n/a = a matéria não tem o recurso (p.ex. sem tabela larga).', '');
 const cnt = v => linhas.filter(l => ver(l) === v).length;
@@ -50,6 +50,10 @@ w('Mesma bateria, mesmos arquivos, mas com os `assets/` servidos da `main` `ebc5
 w('| Matéria | Largura | Verificação | Medido |', '|---|--:|---|---|');
 CTL.forEach(R => R.checks.filter(c => c.estado === 'FALHA' && c.area !== 'ensaio').forEach(c => w(`| ${R.slug} | ${c.w} | \`${c.area}/${c.id}\` | ${JSON.stringify(c.dados || '').slice(0, 120).replace(/\|/g, '/')} |`)));
 w('', 'São exatamente os sintomas do vídeo de José (o dedo apagava traços com a goma armada e a goma travava a rolagem). Com a `main` atual (`456e`, aprovada) as mesmas verificações passam. Isso mostra que a bateria **distingue** a versão ruim da boa — não prova sozinha o aparelho físico (§6).', '');
+w('**Sem a correção C8** (`RM_ENSAIO_SEM=C8a,C8b`, versionado em `interacao-controle-sem-c8/`): a tinta escrita dentro de um cartão com `:hover { transform }` fica fora do lugar quando o cartão desce.', '');
+w('| Matéria | Largura | Verificação | Medido |', '|---|--:|---|---|');
+CTL8.forEach(R => R.checks.filter(c => c.estado === 'FALHA' && c.area !== 'ensaio').forEach(c => w(`| ${R.slug} | ${c.w} | \`${c.area}/${c.id}\` | ${JSON.stringify(c.dados || '').slice(0, 160).replace(/\|/g, '/')} |`)));
+w('');
 w('## 6 · O que o teste sintético comprova × o que só o aparelho físico prova', '');
 w('| Tema | O ensaio comprova (Chromium, eventos CDP confiáveis) | Exige aparelho físico (iPad + Apple Pencil, Safari) |', '|---|---|---|');
 [

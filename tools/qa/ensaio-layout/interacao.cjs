@@ -1,7 +1,7 @@
 /* ENSAIO DE INTERAÇÃO nas 27 matérias (#457/#459, 2.ª rodada, main com a caneta aprovada no piloto — #479).
    O que esta bateria acrescenta ao `ensaio.cjs` (que mede layout/índice/modos): o USO — caneta, palma, goma, rolagem, pinça, grifo, troca de bloco/modo,
    recuperação dos traços depois de recarregar, questões, flashcards e presença/ausência de audiobook — em 390 · 768 · 1024 · 1440.
-   Estado ensaiado = o da INTEGRAÇÃO PROPOSTA: A1/A2/A7 + correções C1–C6 em memória (`?corr=1`), como em resultados-corr. O disco nunca é alterado.
+   Estado ensaiado = o da INTEGRAÇÃO PROPOSTA: A1/A2/A7 + correções C1–C8 em memória (`?corr=1`), como em resultados-corr. O disco nunca é alterado.
    Entrada: caneta = CDP Input.dispatchMouseEvent pointerType 'pen' (eventos confiáveis, a mesma via do hardware no Chromium); dedo/palma = CDP
    Input.dispatchTouchEvent (palma = raio grande); pinça = dois toques CDP; zoom de escrita = Emulation.setPageScaleFactor; grifo = mouse real.
    Supabase simulado com persistência em sessionStorage (`?persist=1`); audiobook = rm-audio-boot.js REAL + manifesto SIMULADO só da Semiología II.
@@ -12,7 +12,7 @@
 const fs = require('fs'), path = require('path');
 const L = require('./lib.cjs');
 const args = process.argv.slice(2), RAPIDO = args.includes('--rapido'), filtro = args.filter(a => !a.startsWith('--'));
-const LARGURAS = RAPIDO ? [1024, 390] : [390, 768, 1024, 1440];
+const LARGURAS = process.env.RM_LARGURAS ? process.env.RM_LARGURAS.split(',').map(Number) : (RAPIDO ? [1024, 390] : [390, 768, 1024, 1440]);
 const ALT = { 390: 844, 768: 1024, 1024: 768, 1440: 900 };
 const OUT = path.join(L.REPO, 'docs/layout-ensaio/interacao');
 const inv = JSON.parse(fs.readFileSync(path.join(L.REPO, 'docs/layout-ensaio/inventario.json'), 'utf8'));
@@ -39,6 +39,15 @@ async function traco(page, c, pts, meio) {
   for (let k = 1; k < pts.length; k++) { if (meio && k === Math.floor(pts.length / 2)) await meio(); await penMove(c, pts[k]); await page.waitForTimeout(4); }
   await penUp(c, pts[pts.length - 1]); await page.waitForTimeout(500);
 }
+/* calibra CDP → clientX/Y com dois hovers de caneta (o mapeamento do CDP sob zoom muda com a largura no Chromium): devolve f(clientX, clientY) → [x, y] do CDP */
+async function calibrar(page, c) {
+  await page.evaluate(() => { window.__cal = []; window.__calF = e => { if (e.pointerType === 'pen') window.__cal.push([e.clientX, e.clientY]); }; document.addEventListener('pointermove', window.__calF, true); });
+  await hover(c, [100, 100]); await page.waitForTimeout(60); await hover(c, [300, 260]); await page.waitForTimeout(60);
+  const cal = await page.evaluate(() => { document.removeEventListener('pointermove', window.__calF, true); return window.__cal.slice(-2); });
+  if (cal.length < 2) return null;
+  const ax = (cal[1][0] - cal[0][0]) / 200, bx = cal[0][0] - ax * 100, ay = (cal[1][1] - cal[0][1]) / 160, by = cal[0][1] - ay * 100;
+  return { f: (x, y) => [(x - bx) / ax, (y - by) / ay], ax: +ax.toFixed(3), ay: +ay.toFixed(3), bx: +bx.toFixed(1), by: +by.toFixed(1) };
+}
 const zigue = (x, y, w = 140, h = 14, n = 30) => Array.from({ length: n }, (_, i) => [x + (w * i) / (n - 1), y + (i % 2 ? h : 0)]);
 const dedoRola = async (page, c, x, y0, dist, id = 9, raio) => {
   const pt = y => Object.assign({ x, y, id }, raio ? { radiusX: raio, radiusY: raio, force: 1 } : {});
@@ -57,13 +66,15 @@ async function pinca(page, c, cx, cy) {
   return { s0: +s0.toFixed(2), s1: +s1.toFixed(2) };
 }
 const paths = page => page.evaluate(() => [...document.querySelectorAll('#rm2-ink path[data-ink]')].map(p => ({ id: p.getAttribute('data-ink'), a: p.closest('svg').getAttribute('data-anchor'), d: p.getAttribute('d'), vis: getComputedStyle(p.closest('svg')).display !== 'none' && p.closest('svg').getBoundingClientRect().width > 0 })));
-const alinhamento = page => page.evaluate(() => {
-  const ps = [...document.querySelectorAll('#rm2-ink path[data-ink]')]; const p = ps[ps.length - 1]; if (!p) return null;
+/* o traço NOVO é o id que não existia antes (a ordem do DOM segue a âncora, não a criação) */
+const novoId = (antes, depois) => { const a = new Set(antes.map(x => x.id)); const n = depois.filter(x => !a.has(x.id)); return n.length === 1 ? n[0] : null; };
+const alinhamento = (page, id) => page.evaluate(id2 => {
+  const p = document.querySelector(`#rm2-ink path[data-ink="${id2}"]`); if (!p) return null;
   const r = p.getBoundingClientRect(), pts = window.__penPts || []; if (!pts.length) return null;
   const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]);
   const pe = { l: Math.min(...xs), r: Math.max(...xs), t: Math.min(...ys), b: Math.max(...ys) }, tin = { l: r.left + scrollX, r: r.right + scrollX, t: r.top + scrollY, b: r.bottom + scrollY };
   return { desvio: +Math.max(Math.abs(pe.l - tin.l), Math.abs(pe.r - tin.r), Math.abs(pe.t - tin.t), Math.abs(pe.b - tin.b)).toFixed(1), n: pts.length, escala: +visualViewport.scale.toFixed(2) };
-});
+}, id);
 /* desvio do SVG do traço em relação ao nó âncora (o traço «preso» ao parágrafo) */
 const ancoraDe = (page, a) => page.evaluate(a2 => {
   const sv = document.querySelector(`#rm2-ink svg[data-anchor="${a2}"]`); if (!sv) return null;
@@ -75,6 +86,15 @@ const ancoraDe = (page, a) => page.evaluate(a2 => {
 const ferramenta = (page, t) => page.evaluate(x => window.RMToolsV2.escolherFerramenta(x), t).then(() => page.waitForTimeout(250));
 const sy = page => page.evaluate(() => Math.round(scrollY));
 const escritas = page => page.evaluate(() => (window.__writes || []).slice());
+/* como o aluno: se o alvo está dentro de <details> fechado, toca o <summary> (de fora para dentro). Devolve false se algum summary não está alcançável. */
+async function abrirDetalhes(page, sel) {
+  for (let k = 0; k < 4; k++) {
+    const s = await page.evaluate(sel2 => { const x = document.querySelector(sel2); const d = x && x.parentElement && x.parentElement.closest('details:not([open])'); if (!d) return 'ok'; let top = d; for (let p = d.parentElement && d.parentElement.closest('details:not([open])'); p; p = p.parentElement && p.parentElement.closest('details:not([open])')) top = p; const sm = top.querySelector(':scope > summary'); if (!sm || sm.closest('[data-rm-off]') || !(sm.checkVisibility ? sm.checkVisibility({ checkVisibilityCSS: true }) : sm.offsetParent)) return 'summary-oculto'; document.querySelectorAll('[data-ens-sm]').forEach(e => e.removeAttribute('data-ens-sm')); sm.setAttribute('data-ens-sm', ''); sm.scrollIntoView({ block: 'center' }); return 'abrir'; }, sel);
+    if (s === 'ok') return true; if (s !== 'abrir') return false;
+    await page.click('[data-ens-sm]', { timeout: 5000 }); await page.waitForTimeout(350);
+  }
+  return false;
+}
 
 /* parágrafo-alvo: o 1.º <p> longo do bloco (fora de questão/flashcard/tabela/UI), centrado na tela */
 const PREP = (bid, ord) => {
@@ -129,22 +149,21 @@ const PREP = (bid, ord) => {
           await ferramenta(p, 'pen');
           const pil = await p.evaluate(() => ({ pilot: document.body.classList.contains('rm2-pilot-guard'), guard: !!document.getElementById('rm2-penguard'), adapt: window.RMToolsV2._test.adaptadorLigado && window.RMToolsV2._test.adaptadorLigado() }));
           chk('caneta', W, 'piloto-fisico-ligado', pil.pilot && pil.guard, 'o comportamento aprovado no piloto (guarda de palma, adaptador de toque) liga nesta matéria', 'dom', pil);
-          const n0 = (await paths(p)).length;
+          const P0 = await paths(p), n0 = P0.length;
           const w0 = (await escritas(p)).length;
           const pts1 = zigue(A.x + 20, A.y + Math.min(14, A.h / 3), Math.min(160, A.w - 40));
           await traco(p, c, pts1);
-          const P1 = await paths(p), al1 = await alinhamento(p);
-          const novo = P1[P1.length - 1];
+          const P1 = await paths(p), novo = novoId(P0, P1), al1 = novo && await alinhamento(p, novo.id);
           chk('caneta', W, 'escreve', P1.length === n0 + 1 && novo && novo.a.startsWith(alvo + '>') && al1 && al1.desvio <= 6, `caneta (CDP «pen»): 1 traço novo, ancorado em ${alvo}, tinta sob a ponta (desvio ${al1 && al1.desvio} px)`, 'cdp', { n0, n: P1.length, novo: novo && novo.a, al1 });
           const w1 = await escritas(p);
           chk('caneta', W, 'grava', w1.slice(w0).filter(x => x === 'insert:user_ink_strokes').length === 1, 'o traço é gravado uma vez (Supabase simulado)', 'simulado', w1.slice(w0));
 
           /* palma apoiada DURANTE o traço: não corta, não rola */
-          const y0 = await sy(p); const n1 = (await paths(p)).length;
+          const y0 = await sy(p); const P1b = await paths(p), n1 = P1b.length;
           const pts2 = zigue(A.x + 20, A.y + Math.min(14, A.h / 3) + 4, Math.min(160, A.w - 40));
           await traco(p, c, pts2, async () => { await c.touch('touchStart', [{ x: Math.min(W - 30, A.x + A.w * 0.7), y: Math.min(ALT[W] - 30, A.y + 160), radiusX: 38, radiusY: 38, force: 1, id: 31 }]); for (let i = 1; i <= 4; i++) { await c.touch('touchMove', [{ x: Math.min(W - 30, A.x + A.w * 0.7), y: Math.min(ALT[W] - 30, A.y + 160) - i * 12, radiusX: 38, radiusY: 38, force: 1, id: 31 }]); await p.waitForTimeout(10); } });
           await c.touch('touchEnd', []); await p.waitForTimeout(300);
-          const P2 = await paths(p), al2 = await alinhamento(p), y1 = await sy(p);
+          const P2 = await paths(p), nv2 = novoId(P1b, P2), al2 = nv2 && await alinhamento(p, nv2.id), y1 = await sy(p);
           chk('palma', W, 'palma-durante-traco', P2.length === n1 + 1 && Math.abs(y1 - y0) <= 2 && al2 && al2.desvio <= 6 && al2.n >= pts2.length - 1, `palma apoiada e arrastada no meio do traço: 1 traço inteiro (${al2 && al2.n} pontos), página parada (Δy ${y1 - y0}), tinta sob a ponta`, 'cdp', { n1, n: P2.length, y0, y1, al2 });
 
           /* dedo com o lápis armado e a caneta fora da tela: rola, não desenha */
@@ -164,12 +183,19 @@ const PREP = (bid, ord) => {
           await c.cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1.6 }); await p.waitForTimeout(450);
           await p.evaluate(() => window.__alvoP.scrollIntoView({ block: 'center' })); await p.waitForTimeout(400);
           const rz = await p.evaluate(() => { const e = window.__alvoP.getBoundingClientRect(); return { x: e.left, y: e.top, w: e.width, h: e.height, vx: visualViewport.offsetLeft, vy: visualViewport.offsetTop, s: visualViewport.scale, vw: visualViewport.width, vh: visualViewport.height }; });
-          const vis = (x, y) => [(x - rz.vx) * rz.s, (y - rz.vy) * rz.s];
+          const cal = await calibrar(p, c); const vis = cal ? cal.f : (x, y) => [(x - rz.vx) * rz.s, (y - rz.vy) * rz.s];
           const x0z = Math.max(rz.x + 10, rz.vx + 10), y0z = Math.min(Math.max(rz.y + 6, rz.vy + 10), rz.vy + rz.vh - 30);
+          const Pz0 = await paths(p);
           await traco(p, c, zigue(x0z, y0z, Math.min(80, rz.vw - 30), 8, 20).map(q => vis(q[0], q[1])));
-          const alz = await alinhamento(p), anc1 = await ancoraDe(p, novo.a);
-          chk('pinca', W, 'escreve-com-zoom', alz && alz.escala === 1.6 && alz.desvio <= 6, `com zoom ${alz && alz.escala}: tinta sob a ponta (desvio ${alz && alz.desvio} px)`, 'cdp', { alz, rz });
-          chk('pinca', W, 'traco-antigo-preso', anc0 && anc1 && Math.abs(anc1.dx - anc0.dx) <= 1 && Math.abs(anc1.dy - anc0.dy) <= 1, 'depois de rolar e dar zoom o traço anterior continua preso ao parágrafo (Δ ≤ 1 px)', 'cdp', { anc0, anc1 });
+          const Pz1 = await paths(p), nvz = novoId(Pz0, Pz1), alz = nvz && await alinhamento(p, nvz.id);
+          const dgz = alz ? null : await p.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return { alvo: e && (e.tagName + '.' + String(e.className).slice(0, 40) + '#' + e.id), pen: (window.__penPts || []).length, pt0: (window.__penPts || [])[0], fim: (window.__penPts || []).slice(-1)[0] }; }, [x0z, y0z]);
+          const novosZ = Pz1.filter(x => !Pz0.some(y => y.id === x.id)).map(x => x.a);
+          let anc1 = await ancoraDe(p, novo.a); const precisa = a => !(anc0 && a && Math.abs(a.dx - anc0.dx) <= 1 && Math.abs(a.dy - anc0.dy) <= 1);
+          let reconv = null; if (precisa(anc1)) { await p.waitForTimeout(1200); const a2 = await ancoraDe(p, novo.a); reconv = { antes: anc1, depois1200ms: a2 }; anc1 = a2;
+            if (precisa(a2)) { await p.evaluate(() => window.RMToolsV2.reposicionar && window.RMToolsV2.reposicionar()); await p.waitForTimeout(400); reconv.depoisReposicionar = await ancoraDe(p, novo.a); reconv.escala = await p.evaluate(() => visualViewport.scale); } }   // reflow (imagem carregando): a V2 reposiciona por observador; registra se só convergiu depois
+          chk('pinca', W, 'escreve-com-zoom', alz && alz.escala === 1.6 && alz.desvio <= 6, `com zoom ${alz && alz.escala}: tinta sob a ponta (desvio ${alz && alz.desvio} px)`, 'cdp', { alz, rz, cal: cal && { ax: cal.ax, ay: cal.ay, bx: cal.bx, by: cal.by }, novosZ, dgz });
+          chk('pinca', W, 'traco-antigo-preso', !precisa(anc1), 'depois de rolar e dar zoom o traço anterior continua preso ao parágrafo (Δ ≤ 1 px' + (reconv ? '; só depois do reposicionamento por reflow, ver dados' : '') + ')', 'cdp', { anc0, anc1, reconv });
+          if (reconv && !precisa(anc1)) R.notas = (R.notas || []).concat([{ w: W, nota: 'traço antigo deslocado ' + JSON.stringify(reconv.antes) + ' logo após o zoom; reposicionado em ≤ 1,2 s (reflow do conteúdo)' }]);
           await c.cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1 }); await p.waitForTimeout(350);
 
           /* GOMA: dedo não apaga, dedo rola, ponta apaga; Deshacer devolve */
@@ -256,6 +282,7 @@ const PREP = (bid, ord) => {
           await go({ view: 'modeblk', mode: 'preguntas', block: blocoQuiz.id }, 900);
           const q = await p.evaluate(id => { const it = [...document.getElementById(id).querySelectorAll('.quiz-item')].find(x => !x.closest('[data-rm-off]') && x.getBoundingClientRect().height > 0); if (!it) return null; it.scrollIntoView({ block: 'center' }); it.setAttribute('data-ens-q', ''); const o = it.querySelector('.options li, li[data-option], .tf-buttons button'); if (o) { o.setAttribute('data-ens-o', ''); return { ok: true }; } const rv = it.querySelector('.reveal-btn'); if (rv) { rv.setAttribute('data-ens-o', ''); return { aberta: true }; } return { semOpcao: true }; }, blocoQuiz.id);
           if (!q || q.semOpcao) bloq('questoes', W, 'responder', 'a 1.ª questão visível não tem alternativa nem «Ver respuesta»');
+          else if (!(await abrirDetalhes(p, '[data-ens-o]'))) chk('questoes', W, 'responder', false, 'modo Preguntas: a questão está dentro de um <details> fechado cujo <summary> o modo escondeu', 'cdp', { bloco: blocoQuiz.id });
           else if (q.aberta) {   /* questão aberta (CITAR/MARCAR): «Ver respuesta» mostra a resposta */
             await p.waitForTimeout(300); await p.click('[data-ens-o]'); await p.waitForTimeout(900);
             const ra = await p.evaluate(() => { const a = document.querySelector('[data-ens-q] .answer'); return { vis: !!a && getComputedStyle(a).display !== 'none' && a.getBoundingClientRect().height > 0 }; });
@@ -272,7 +299,15 @@ const PREP = (bid, ord) => {
           const okL = await p.evaluate(id => { const b = [...document.getElementById(id).querySelectorAll('.rmfc-launch .rmfc-play')].find(x => x.getBoundingClientRect().height > 0); if (!b) return false; b.scrollIntoView({ block: 'center' }); b.setAttribute('data-ens-fc', ''); return true; }, blocoFc.id);
           if (!okL) chk('flashcards', W, 'abre-gira-fecha', false, 'modo Flashcards: há botão «Jugar» visível no bloco', 'dom', { bloco: blocoFc.id });
           else {
-            await p.waitForTimeout(250); await p.click('[data-ens-fc]'); await p.waitForTimeout(500);
+            await p.waitForTimeout(250);
+            const alcanca = await abrirDetalhes(p, '[data-ens-fc]');
+            if (!alcanca) chk('flashcards', W, 'mazo-alcancavel', false, 'modo Flashcards: o «Jugar» está dentro de um <details> fechado cujo <summary> o modo escondeu — o aluno não consegue abrir o mazo', 'cdp', { bloco: blocoFc.id });
+            else try { await p.evaluate(() => document.querySelector('[data-ens-fc]').scrollIntoView({ block: 'center' })); await p.waitForTimeout(200); await p.click('[data-ens-fc]', { timeout: 6000 }); } catch (e) {
+              const dg = await p.evaluate(() => { const x = document.querySelector('[data-ens-fc]'); const r = x.getBoundingClientRect(); const anc = []; for (let e2 = x; e2 && e2 !== document.body; e2 = e2.parentElement) { const cs = getComputedStyle(e2); if (cs.display === 'none' || cs.visibility !== 'visible' || +cs.opacity === 0 || e2.hasAttribute('data-rm-off')) anc.push((e2.tagName + '.' + e2.className).slice(0, 60) + ' d=' + cs.display + ' v=' + cs.visibility + ' o=' + cs.opacity); } const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return { r: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)], anc, topo: top && (top.tagName + '.' + top.className + '#' + top.id).slice(0, 80), body: document.body.className }; });
+              throw new Error('«Jugar» não clicável: ' + JSON.stringify(dg));
+            }
+            if (alcanca) {
+            await p.waitForTimeout(500);
             const o1 = await p.evaluate(() => { const o = document.querySelector('.rmfc-overlay'); return !!o && o.classList.contains('show'); });
             if (o1) { await p.click('.rmfc-overlay .rmfc-card'); await p.waitForTimeout(500); }
             const g1 = await p.evaluate(() => !!document.querySelector('.rmfc-overlay .rmfc-inner.flipped'));
@@ -280,6 +315,7 @@ const PREP = (bid, ord) => {
             const o2 = await p.evaluate(() => { const o = document.querySelector('.rmfc-overlay'); return !!o && o.classList.contains('show'); });
             if (o2) { await p.click('.rmfc-overlay [data-a="close"]'); await p.waitForTimeout(300); }
             chk('flashcards', W, 'abre-gira-fecha', o1 && g1, 'modo Flashcards: «Jugar» abre o mazo, tocar a carta gira e Esc/✕ fecha', 'cdp', { o1, g1, o2 });
+            }
           }
         }
         /* ---------- fecho: erros e escritas ---------- */

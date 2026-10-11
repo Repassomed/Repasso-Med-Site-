@@ -20,13 +20,15 @@ const INV = Object.fromEntries(inv.materias.map(m => [m.slug, m]));
 const INFO = () => {
   const H = document.documentElement, tab = document.querySelector('#materias-container > .tab-content');
   const vis = e => { const r = e.getBoundingClientRect(); return getComputedStyle(e).display !== 'none' && r.width > 0 && r.height > 0; };
+  /* ALCANÇÁVEL = o aluno vê, ou abre com um toque: dentro de <details> fechado só conta se o <summary> desse details for alcançável (caixa > 0 não basta: o conteúdo de um details fechado tem caixa mas não é pintado) */
+  const alc = e => { if (!vis(e)) return false; if (!e.checkVisibility || e.checkVisibility({ checkVisibilityCSS: true })) return true; const d = e.parentElement && e.parentElement.closest('details:not([open])'); const s = d && d.querySelector(':scope > summary'); return !!(s && s !== e && !s.closest('[data-rm-off]') && alc(s)); };
   const secs = [...tab.querySelectorAll(':scope > section[id]')].filter(vis).map(s => s.id);
   const a = document.activeElement;
   const ehInfo = f => !!(f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image'));   // a MESMA definição do módulo
   const sel = { figuras: 'figure', pregs: '.quiz-item', fc: '.rmfc-launch', ab: '.rm-audio-card', aus: '.audio-player', tablas: 'table' };
-  const cont = {}; Object.keys(sel).forEach(k => { cont[k] = [...tab.querySelectorAll(sel[k])].filter(e => (k === 'ab' || k === 'fc' || !e.closest('[data-rm-ui]')) && !(k === 'tablas' && e.closest('.quiz-item, .flashcard')) && (k !== 'figuras' || ehInfo(e)) && vis(e)).length; });
+  const cont = {}; Object.keys(sel).forEach(k => { cont[k] = [...tab.querySelectorAll(sel[k])].filter(e => (k === 'ab' || k === 'fc' || !e.closest('[data-rm-ui]')) && !(k === 'tablas' && e.closest('.quiz-item, .flashcard')) && (k !== 'figuras' || ehInfo(e)) && alc(e)).length; });
   const cards = [...document.querySelectorAll('.rm-nav-modeidx .rm-sis-card, .rm-sis-idx .rm-sis-card')].filter(vis).map(c => ({ go: c.getAttribute('data-go') || null, rm: c.dataset.rmGo || null, t: c.textContent.replace(/\s+/g, ' ').trim() }));
-  cont.figFora = [...tab.querySelectorAll('figure')].filter(e => !e.closest('[data-rm-ui],.quiz-item,.flashcard') && ehInfo(e) && vis(e)).length;
+  cont.figFora = [...tab.querySelectorAll('figure')].filter(e => !e.closest('[data-rm-ui],.quiz-item,.flashcard') && ehInfo(e) && alc(e)).length;
   return {
     nav: H.getAttribute('data-rm-nav'), mode: H.getAttribute('data-rm-nav-mode'), hash: location.hash, secs, cont, cards,
     st: window.RMNav && window.RMNav.ativo() ? window.RMNav.estado() : null,
