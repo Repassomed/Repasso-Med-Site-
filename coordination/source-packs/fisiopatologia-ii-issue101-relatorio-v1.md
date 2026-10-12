@@ -93,7 +93,7 @@ Tabela completa antes → depois (texto sem tags):
 
 * **Não feitos nesta etapa (objetivos do #101):** comparação do resumo com os **6 decks atuais da cátedra** e marcação de «complementar» (objetivos 8–9); **redução de densidade/prosa** (10); **infográficos/resumões** (12); abrir o ZIP de 4,5 MB; confirmar a proveniência do banco de 19/09.
 * A **única questão nova** (`b13q19`) está pronta mas **não aplicada** por custo de tinta no banco (1 357 âncoras): decisão do José (ver `…-fotos-v2.md` §5).
-* Sem acesso aos dados reais de tinta/grifos dos alunos; caneta física e sincronização não testadas; o parecer didático G0 independente ainda não foi pedido para esta matéria.
+* Grifos reais lidos em consulta somente leitura (47/47 sobrevivem — §7-C); **não há nenhum traço de tinta real** desta matéria; caneta física e sincronização não testadas; o parecer didático G0 independente ainda não foi pedido para esta matéria.
 
 ## 5 · Precisa de revisão humana
 
@@ -114,6 +114,8 @@ Tabela completa antes → depois (texto sem tags):
 
 ## 7 · Grifos: os 96 afetados — **o que está e o que NÃO está provado**
 
+> **Atualização de 12/10:** com a consulta somente leitura dos registros reais (§7-C), **47 de 47 grifos reais sobrevivem** sem remapeamento — nenhum cai nas 52 frases reescritas. O texto abaixo é o estado anterior (só marcações simuladas) e vale como risco para grifos **futuros**.
+>
 > **Estado (correção da rodada 3):** a preservação dos grifos **reais** dos alunos **não está comprovada**. Tudo o que foi medido usa marcações **simuladas**, fabricadas por mim a partir do próprio texto da matéria no formato que o motor grava. Isso prova que a ferramenta consegue casar texto antigo → novo; **não prova** que os grifos de alunos reais voltarão, nem que ainda fazem sentido depois da troca. Enquanto ninguém rodar o remapeamento sobre uma exportação real **e** escrever o resultado no banco (o que não fiz e não faço sem autorização), **os grifos feitos sobre as 52 frases reescritas deixam de ser pintados** (continuam guardados no banco, nada é apagado; o aluno pode marcar de novo).
 
 **Diagnóstico:** o motor (`rm-tools.js`, nível 1: texto exato dentro da seção; nível 2: ignora pontuação/maiúsculas/acentos, exige contexto) **não** recupera um trecho cujas palavras mudaram — é por desenho («melhor não pintar do que pintar no lugar errado»). Sem mexer no motor (JS global é proibido) e sem ocultar texto, há dois caminhos: (1) mudar menos texto — já feito: só 52 frases, dentro de parágrafos, e a ciência intacta; (2) **remapear os registros** guardados.
@@ -134,6 +136,31 @@ Tabela completa antes → depois (texto sem tags):
 
 ### 7-B · Protocolo de preservação e livro-razão (rodada 5)
 Antes de reescrever mais frases: aditivo primeiro; toda substituição entra no livro-razão (`hl-ledger.cjs`; portão com código 1); migração real só em 5 passos e **só com você** (exportar + backup → simulação a seco → conferência pelo motor → amostra humana → escrita). Livro-razão hoje (sintético): 79 frases em risco, 79 verificadas, 0 sem remap. Detalhe: `fisiopatologia-ii-issue101-anotacoes-v1.md` §3 e `farmacologia-ii-revisao-2026-10-protocolo-grifos-v1.md` (PR #474). **Enquanto houver grifos reais que possam sumir, não peço merge.**
+
+
+### 7-C · Grifos REAIS — consulta somente leitura (12/10/2026)
+Método: `SELECT block_id, exact_text, prefix, suffix, occurrence FROM user_highlights WHERE subject_slug = 'fisiopatologia-ii'` (sem `user_id`; nenhuma escrita; os registros ficam fora do repositório). Cada registro é resolvido pelo **motor real** (`RMTools.resolverAncora`) na matéria **antiga** (controle: se não resolve na `main`, não conta) e na **nova**, e comparado no mesmo elemento (`hl-real.cjs`).
+
+| registros reais | resolvem na `main` (controle) | **sobrevivem na versão nova sem remap** | só com remap | perdidos |
+|---:|---:|---:|---:|---:|
+| 47 (fp2b01: 42 · fp2b02: 4 · fp2b12: 1) | 47 | **47** | 0 | 0 |
+
+Leitura: **hoje nenhum dos 47 grifos reais cobre as 52 frases reescritas** (elas estão em outros blocos); o texto novo não derruba nenhum deles. Este é o resultado que faltava na rodada 3 (ali só havia marcas simuladas). Limites: (1) são os registros que existiam no momento da consulta — qualquer aluno pode grifar uma das 52 frases (ou as outras) **antes do merge**; por isso o `hl-real.cjs` deve ser **rodado de novo logo antes do merge**, e o livro-razão (79 frases, 79 verificadas) continua a ser a rede de segurança; (2) a tabela de traços de tinta (`user_ink_strokes`) não tem nenhum traço desta matéria; (3) a consulta cobre a tabela do projeto do site; não há como saber se algum aluno guarda grifos só no navegador (`localStorage`).
+
+### 7-D · Tinta em posição REAL depois das edições (12/10)
+Harness da #474 portado (`real-ink.test.cjs`, caneta real emulada por CDP, servidor simulado em memória, 0 escritas): 100 traços por largura desenhados na `main` e repintados na versão do checkpoint 2 (`ed08884e`) e no head atual.
+
+| largura | âncoras (elemento / seção) | todos: p50 / p90 / máx. (px) | no mesmo item | Banco/seção (n) p50 / máx. | blocos p90 / máx. |
+|---|---|---|---|---|---|
+| 390 | 97 / 3 | 0,1 / 0,1 / 72,1 | 95 de 100 (base: 97) | — (0 alvos) | 26,3 / 72,1 |
+| 768 | 95 / 5 | 0 / 0,3 / 12,7 | 99 de 100 (base: 99) | 4,2 / 12,7 (4) | 0,3 / 1,8 |
+| 1024 | 89 / 11 | 0 / 2 / 14,1 | 100 de 100 | 8 / 14,1 (8) | 0,1 / 3,5 |
+| 1440 | 92 / 8 | 0 / 0,1 / 2,9 | 100 de 100 | 1,8 / 2,9 (7) | 0,1 / 0,3 |
+
+Leitura: as 4 adições do checkpoint 3 **não mudam** nada em relação ao checkpoint 2 (390, 768 e 1440 idênticos; 1024: p90 0,5 → 2 px, máx. igual). O desvio máximo (72 px a 390) vem das reescritas do checkpoint 1, em blocos; 5 dos 100 traços caem em outro item a 390 px (3 já na base: ruído do teste). Os traços ancorados à seção no Banco ficam a ≤ 14 px. Limite: o Banco desta matéria tem poucos enunciados ancoráveis por seção (4–8 por largura nesta amostra).
+
+### 7-E · Acréscimos e seus espelhos
+As 4 adições (Crohn: absceso/fístula/perforación libre; espasmo difuso: causa na literatura; sialosis: terminologia; ranitidina: retirada em 2020) estão em **parágrafos de teoria** e não têm cópia no Banco nem nos mazos (bloco ↔ banco: 319 pares, 0 divergências). Há reapresentações que **mantêm de propósito** a definição da cátedra: tabela «Sialosis = inflamação das glândulas salivais», alternativa d) e explicação do quiz, e mazo «Los siete términos del esófago» (3 cópias idênticas); a explicação do quiz de espasmo difuso repete «degeneración de los axones del plexo de Auerbach» (a teoria agora diz explicitamente que é a explicação da cátedra). Não os alterei: a ressalva fica no ponto onde o termo é ensinado e mexer nas cópias criaria divergência com o que o aluno será cobrado.
 
 ## 8 · Slides atuais, complementar, densidade
 

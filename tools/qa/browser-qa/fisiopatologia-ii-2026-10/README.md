@@ -10,6 +10,8 @@ node $H/hl.test.cjs                             # recuperação de grifos SEM re
 W=390,768,1024,1440 node $H/ink.test.cjs        # alinhamento da tinta por largura
 node $H/hl-remap.test.cjs                       # grifos SINTÉTICOS COM remapeamento (prova de conceito: NÃO comprova preservação de grifos reais)
 node $H/remap-highlights.cjs --in marcas.json --out marcas.remap.json   # remapeia uma exportação real (quem a tem roda; não escreve em lugar nenhum)
+node $H/hl-real.cjs --in registros.json --out relatorio.json   # GRIFOS REAIS (consulta somente leitura feita por fora; registros SEM user_id, fora do repositório): quantos sobrevivem na matéria nova sem remap
+RM_MID_REF=ed08884e node $H/real-ink.test.cjs   # TINTA EM POSIÇÃO REAL: caneta de verdade (rm-tools-v2) desenha na base e mede-se onde os traços caem na versão nova (alvos: bancofp2 × blocos); RM_MID_REF = commit intermediário opcional
 ```
 Variáveis: `RM_BASE_REF`, `RM_ORIG_HTML`, `RM_NEW_HTML`, `RM_CHROMIUM`, `RM_PLAYWRIGHT`, `RM_OUT`.
 `remap-highlights.cjs` pareia os elementos ancoráveis por índice (a sequência tem de ser idêntica nas duas versões) e usa `RMTools.indexar` para obter o mesmo texto normalizado que o motor usa; rodar com o **head final**.
