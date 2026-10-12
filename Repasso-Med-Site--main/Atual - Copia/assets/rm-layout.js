@@ -36,7 +36,8 @@
   if (window.RMLayout) return;
 
   var ROOT = document.documentElement;
-  var SLUG = 'semiologia-ii';
+  var SLUG = 'semiologia-ii';     // matéria-padrão (o piloto): attach(tab) sem slug continua exatamente como antes
+  var slugAtual = SLUG;           // a matéria em que o layout está montado (attach(tab, slug)); nenhuma matéria se liga por aqui: quem decide é o rm-pilot.js + servidor
   var W_DOCK = 1200;              // ≥ → lateral docked (264)
   var W_RAIL = 768;               // ≥ → trilho de ícones (64); < → só drawer
   var TEXT_COL = 880;             // .container do site
@@ -99,8 +100,8 @@
 
   function catalogo() {
     var c = window.RM_CATALOGO || [];
-    for (var i = 0; i < c.length; i++) if (c[i].slug === SLUG) return c[i];
-    return { title: 'Semiología II', sub: '' };
+    for (var i = 0; i < c.length; i++) if (c[i].slug === slugAtual) return c[i];
+    return { title: slugAtual === SLUG ? 'Semiología II' : '', sub: '' };
   }
 
   /* ------------------- leitura (só leitura) do índice ------------------ */
@@ -466,10 +467,32 @@
   }
 
   /* Recursos da matéria para a capa: SÓ o que existe, com contagem derivada do DOM (nada inventado).
-     Banco geral e «Todos los flashcards» reúnem as MESMAS entidades dos blocos: ficam fora da contagem (senão contaria duas vezes).
+     Banco geral e «Todos los flashcards» reúnem as MESMAS entidades dos blocos: não viram alvo de salto, e Preguntas/Flashcards contam itens
+     DISTINTOS (a cópia não conta duas vezes; o item que só existe no banco conta uma vez — ver distintosDaMateria).
      Infografía = <figure> com legenda e imagem; radiografias/diapositivas (.material-slide) e fotos soltas NÃO são infográficos.
      Cada cartão salta, na Página completa, para a primeira ocorrência (irPara: geração/cancelamento já existentes). */
-  var RES_REUNE = /banco|flashcards/i;
+  /* Seção que REÚNE os itens dos blocos (banco geral, «todos los flashcards», revisão, mazo, cierre…): pelo id (convenção do piloto) OU pelo
+     marcador `data-rm-agrega` que a matéria declara (os ids das outras matérias não seguem a convenção: revisaoneu, toxcierre, mazognrl…). */
+  var RES_REUNE = { test: function (id) { var e = document.getElementById(id); return /banco|flashcards/i.test(id) || !!(e && e.hasAttribute('data-rm-agrega')); } };
+  /* Contagem da capa = itens DISTINTOS da matéria inteira, banco/revisão incluídos: o mesmo item repetido em dois blocos (ou copiado no banco)
+     conta uma vez, e o item que só existe no banco também conta (o aluno o encontra). Questão = enunciado + CONJUNTO das alternativas
+     (sem ordem e sem o rótulo «A)»/«1)»: a cópia do banco com alternativas reordenadas é a MESMA questão); flashcard = a frente. */
+  function distintosDaMateria(bl, sel, cab, alts) {
+    var vistos = {}, n = 0;
+    var nz = function (t) { return String(t || '').replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim(); };
+    bl.forEach(function (b) {
+      Array.prototype.forEach.call(b.sec.querySelectorAll(sel), function (x) {
+        var h = x.querySelector(cab), k = nz((h || x).textContent);
+        if (alts) {
+          var o = x.querySelector(alts);
+          var it = o ? Array.prototype.map.call(o.querySelectorAll('li,button'), function (y) { return nz(String(y.textContent).replace(/^\s*(?:[A-Ea-e]|\d{1,2})[).]\s*/, '')); }) : [];
+          k += '|' + (it.length ? it.sort().join('|') : nz((o || x).textContent));
+        }
+        if (!vistos[k]) { vistos[k] = 1; n++; }
+      });
+    });
+    return n;
+  }
   function recursosDaMateria(tab, bl) {
     var secs = bl.filter(function (b) { return !RES_REUNE.test(b.id); }).map(function (b) { return b.sec; });
     var todos = function (sel) { var o = []; secs.forEach(function (sc) { Array.prototype.forEach.call(sc.querySelectorAll(sel), function (n) { o.push(n); }); }); return o; };
@@ -480,9 +503,11 @@
     });
     if (figs.length) out.push({ k: 'fig', icon: 'img', t: 'Infografías', sub: figs.length + (figs.length === 1 ? ' infografía' : ' infografías'), alvo: figs[0] });
     var qs = todos('.quiz-item');
-    if (qs.length) out.push({ k: 'quiz', icon: 'q', t: 'Preguntas', sub: qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas'), alvo: qs[0].closest('.quiz-section') || qs[0] });
+    var nq = qs.length ? distintosDaMateria(bl, '.quiz-item', '.quiz-question', '.options, .tf-buttons') : 0;
+    if (qs.length) out.push({ k: 'quiz', icon: 'q', t: 'Preguntas', sub: nq + (nq === 1 ? ' pregunta' : ' preguntas'), alvo: qs[0].closest('.quiz-section') || qs[0] });
     var fc = todos('.flashcard');
-    if (fc.length) out.push({ k: 'fc', icon: 'cards', t: 'Flashcards', sub: fc.length + (fc.length === 1 ? ' tarjeta' : ' tarjetas'), alvo: lancadorFc(fc[0]) });
+    var nf = fc.length ? distintosDaMateria(bl, '.flashcard', '.fc-front', null) : 0;
+    if (fc.length) out.push({ k: 'fc', icon: 'cards', t: 'Flashcards', sub: nf + (nf === 1 ? ' tarjeta' : ' tarjetas'), alvo: lancadorFc(fc[0]) });
     var au = todos('audio');
     if (au.length) out.push({ k: 'aud', icon: 'wave', t: 'Auscultación', sub: au.length + (au.length === 1 ? ' sonido' : ' sonidos'), alvo: au[0].closest('.audio-player') || au[0] });
     var vd = todos('details.video-collapsible');
@@ -804,9 +829,10 @@
   }
 
   /* ------------------------------- attach -------------------------------- */
-  function attach(tab) {
+  function attach(tab, slug) {
     if (S && S.tab === tab) return;
     if (S) detach();
+    slugAtual = (typeof slug === 'string' && slug) ? slug : SLUG;
     novaGeracao();
     var cat = catalogo();
     var bl = blocos(tab);
