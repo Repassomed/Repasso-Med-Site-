@@ -1164,11 +1164,15 @@ html.rm-nav.rm-sis[data-rm-nav="index"] #materias-container > .tab-content.activ
 html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > section[id]:not([data-rm-nav-cur]) { display: none !important; }
 html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > .rm-l2-cover,
 html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > .s2-hero { display: none !important; }
-/* conteúdo original solto FORA de section[id] (hero, banner «Revisión general», avisos): o isolamento só alcança section[id], então ele
-   ficava visível abaixo do índice geral e acima de cada bloco (ensaio #457: 23 matérias; no piloto, o .s2-hero no índice). Na navegação
-   por índice/bloco/modos ele sai de cena (o índice novo, a capa e a UI derivada têm [data-rm-ui] e ficam); ao desmontar a navegação
-   (detach: data-rm-nav sai) e sem o layout, tudo continua como sempre. */
-html.rm-nav.rm-sis[data-rm-nav] #materias-container > .tab-content.active > *:not(section[id]):not(footer):not(style):not(script):not(link):not([data-rm-ui]) { display: none !important; }
+/* conteúdo original solto FORA de section[id] (classificado por rm-materia-sistema.js → data-rm-solto; nenhum nó é movido):
+   · abertura (antes da 1.ª seção: hero com a apresentação da matéria) e conteudo (tem questões/figuras/tabelas fora de uma seção com id)
+     ficam no ÍNDICE GERAL (a «Página completa» da navegação) e saem dos blocos e modos — antes apareciam acima/abaixo de CADA bloco;
+   · anexo (entre seções, logo antes de uma: p.ex. o banner «Repaso General» que o app-core cria antes do banco) aparece SÓ junto do
+     bloco que apresenta (data-rm-anexo-cur) e sai do índice geral;
+   · sem a navegação montada (detach: data-rm-nav sai) ou sem o layout, nada disto vale: tudo continua como sempre.
+   Ferramentas, sugestões e o menu antigo não são classificados (seguem as regras de sempre). */
+html.rm-nav.rm-sis[data-rm-nav]:not([data-rm-nav="index"]) #materias-container > .tab-content.active > [data-rm-solto]:not([data-rm-anexo-cur]) { display: none !important; }
+html.rm-nav.rm-sis[data-rm-nav="index"] #materias-container > .tab-content.active > [data-rm-solto="anexo"] { display: none !important; }
 /* o legado (rm-layout.css) esconde TUDO nos modos isolados; aqui o bloco do modo, a migalha e o pager reaparecem (mais específico) */
 html.rm-nav.rm-sis[data-rm-nav="modeblk"][data-rm-view]:not([data-rm-view="full"]) #materias-container > .tab-content.active > section[data-rm-nav-cur] { display: block !important; }
 html.rm-nav.rm-sis[data-rm-nav="modeblk"][data-rm-view]:not([data-rm-view="full"]) #materias-container > .tab-content.active > .rm-nav-crumb { display: flex !important; }

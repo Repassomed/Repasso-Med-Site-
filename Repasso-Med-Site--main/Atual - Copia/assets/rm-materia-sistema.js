@@ -133,6 +133,43 @@
     });
   }
 
+  /* Conteúdo original solto FORA de section[id] (só atributos, desfeitos no detach; o CSS «15» decide o que aparece em cada vista):
+     abertura = antes da 1.ª seção · fecho = depois da última · anexo = entre seções, logo antes de uma (data-rm-anexo-de = id dela) ·
+     conteudo = qualquer um que traga questão, flashcard, figura, tabela, áudio, vídeo ou iframe (nunca escondido no índice geral).
+     Ferramentas, sugestões e o menu antigo do app-core ficam de fora: já têm regras próprias. */
+  var SOLTO_IGNORA = /^(FOOTER|STYLE|SCRIPT|LINK|TEMPLATE)$/;
+  function classificarSoltos(tab) {
+    var kids = Array.prototype.slice.call(tab.children), out = [];
+    var ehSec = function (e) { return e.tagName === 'SECTION' && !!e.id; };
+    var idx = kids.map(function (e, i) { return ehSec(e) ? i : -1; }).filter(function (i) { return i >= 0; });
+    if (!idx.length) return out;
+    var ini = idx[0], fim = idx[idx.length - 1];
+    kids.forEach(function (e, i) {
+      if (ehSec(e) || SOLTO_IGNORA.test(e.tagName) || e.hasAttribute('data-rm-ui')) return;
+      if (e.matches && e.matches('.rm-tools, .rm-sug-fab, .rm-menu')) return;
+      var tipo, de = null;
+      if (q1(e, '.quiz-item, .flashcard, figure, table, audio, video, iframe')) tipo = 'conteudo';
+      else if (i < ini) tipo = 'abertura';
+      else if (i > fim) tipo = 'fecho';
+      else {
+        var n = e.nextElementSibling; while (n && !ehSec(n) && !(n.tagName === 'SECTION')) n = n.nextElementSibling;
+        if (n && ehSec(n)) { tipo = 'anexo'; de = n.id; } else tipo = 'conteudo';
+      }
+      sa(e, 'data-rm-solto', tipo); if (de) sa(e, 'data-rm-anexo-de', de);
+      out.push({ e: e, tipo: tipo, de: de });
+    });
+    return out;
+  }
+  /* o anexo acompanha o seu bloco: visível quando aquele bloco é o atual (bloco ou modo+bloco) */
+  function refletirAnexos() {
+    if (!S || !S.soltos) return;
+    S.soltos.forEach(function (x) {
+      if (x.tipo !== 'anexo') return;
+      var sec = document.getElementById(x.de), cur = !!(sec && sec.hasAttribute('data-rm-nav-cur'));
+      if (cur) x.e.setAttribute('data-rm-anexo-cur', ''); else x.e.removeAttribute('data-rm-anexo-cur');   // muda a cada navegação: limpo no detach
+    });
+  }
+
   function lerSecoes(tab, tema) {
     var out = [];
     qa(tab, ':scope > section[id]').forEach(function (sec) {
@@ -569,6 +606,7 @@
   }
   var VISTA_K = { infografias: 'fig', preguntas: 'quiz', flashcards: 'fc', auscultacion: 'aud' };
   function refletir() {
+    refletirAnexos();
     if (!S || !S.pills) return;
     var v = window.RMModes && window.RMModes.view, k = v === 'full' ? 'res' : VISTA_K[v];
     if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo() && v === 'audiobooks') k = 'ab';
@@ -660,6 +698,7 @@
     S = { tab: tab, tema: tema, slug: slug || 'semiologia-ii', capa: capa, band: band, atual: null, h: {} };
     S.cat = (window.RM_CATALOGO || []).filter(function (c) { return c.slug === S.slug; })[0] || {};
     S.secs = lerSecoes(tab, tema);
+    S.soltos = classificarSoltos(tab);
     if (!S.secs.length) throw new Error('sin secciones');
     S.recursos = (window.RMLayout.recursos && window.RMLayout.recursos()) || [];
     S.datos = dadosCapa();
@@ -721,6 +760,7 @@
     try { if (window.RMNav && window.RMNav.ativo && window.RMNav.ativo()) window.RMNav.detach(); } catch (e) {}   // a navegação por bloco depende do tema: sai antes
     if (!S) { try { ROOT.classList.remove('rm-sis'); ROOT.removeAttribute('data-rm-tema'); } catch (e) {} return; }
     var tab = S.tab;
+    try { (S.soltos || []).forEach(function (x) { x.e.removeAttribute('data-rm-anexo-cur'); }); } catch (e) {}
     try { document.removeEventListener('click', S.h.click); } catch (e) {}
     try { window.removeEventListener('scroll', S.h.stuck); window.removeEventListener('resize', S.h.stuck); } catch (e) {}
     ROOT.removeAttribute('data-rm-stuck');
@@ -750,7 +790,8 @@
       if (!tema || typeof tema.clasificar !== 'function') return false;
       TEMAS[slug] = tema; return true;
     },
-    secciones: function () { return S ? S.secs.slice() : []; },          // só leitura (a navegação por bloco lê as seções classificadas)
+    secciones: function () { return S ? S.secs.slice() : []; },
+    soltos: function () { return S && S.soltos ? S.soltos.map(function (x) { return { tipo: x.tipo, de: x.de, tag: x.e.tagName, cls: String(x.e.className || '').split(' ')[0] }; }) : []; },   // só leitura (testes/diagnóstico)          // só leitura (a navegação por bloco lê as seções classificadas)
     refletir: function () { refletir(); },
     _estado: function () { return S ? { slug: S.slug, secciones: S.secs.length, recursos: S.recursos.length } : null; }
   };
