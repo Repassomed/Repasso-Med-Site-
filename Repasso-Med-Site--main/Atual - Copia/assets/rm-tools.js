@@ -74,12 +74,12 @@
     return envolto;
   }
 
-  /* aviso discreto, canto inferior — nunca alert(). `onClick` é opcional
-     (ver avisarPendentes()): quando presente, o aviso fica tocável e
-     fica mais tempo na tela — o resto dos avisos (sem onClick) continua
-     exactamente como antes (não intercepta toque, desaparece em 2.2s). */
+  /* aviso discreto, canto inferior — nunca alert(). Sempre efêmero (2.2s);
+     para avisos que o aluno precisa poder achar de novo mais tarde (ex.
+     marcas pendentes), ver badgePendentes() — esse é persistente, não um
+     toast. */
   var toastEl = null, toastT = null;
-  function toast(msg, erro, onClick) {
+  function toast(msg, erro) {
     if (!toastEl) {
       toastEl = document.createElement('div');
       toastEl.className = 'rm-toast';
@@ -89,11 +89,9 @@
     }
     toastEl.textContent = msg;
     toastEl.classList.toggle('err', !!erro);
-    toastEl.classList.toggle('acionavel', !!onClick);
-    toastEl.onclick = onClick || null;
     toastEl.classList.add('on');
     clearTimeout(toastT);
-    toastT = setTimeout(function () { toastEl.classList.remove('on'); }, onClick ? 6000 : 2200);
+    toastT = setTimeout(function () { toastEl.classList.remove('on'); }, 2200);
   }
 
   /* ---------------------------------------------------------------- */
@@ -209,10 +207,24 @@ body.rm-marking #materias-container{ cursor:text; }
 }
 .rm-toast.on{ opacity:1; transform:translate(-50%,0); }
 .rm-toast.err{ background:#a3271c; }
-/* marca(s) pendente(s) no carregamento: aviso tocável (caminho de
-   revisão) — ver avisarPendentes() em rm-tools.js */
-.rm-toast.acionavel{ pointer-events:auto; cursor:pointer; }
-.rm-toast.acionavel:hover{ filter:brightness(1.12); }
+
+/* caminho de revisão PERSISTENTE para marca(s) pendente(s) — nunca some
+   sozinho (diferente do .rm-toast acima); só quando a aba trocar para
+   uma sem pendências ou tudo for resolvido. Canto inferior ESQUERDO:
+   .rm-resume (retomar matéria) usa o direito, .rm2-box (caneta) usa a
+   borda direita no meio — sem colisão. Ver badgePendentes() em
+   rm-tools.js. */
+.rm-pendentes-badge{
+  position:fixed; left:14px; bottom:18px; z-index:99989;
+  display:none; align-items:center; gap:.4rem; border:none; cursor:pointer;
+  background:#8a5a12; color:#fff; border-radius:999px;
+  padding:.55rem 1rem; font:700 .78rem/1.15 var(--font-ui, Inter, sans-serif);
+  max-width:min(320px, calc(100vw - 28px)); text-align:left;
+  box-shadow:0 10px 26px rgba(8,23,38,.28);
+}
+.rm-pendentes-badge.on{ display:block; }
+.rm-pendentes-badge:hover{ filter:brightness(1.1); }
+.rm-pendentes-badge:focus-visible{ outline:3px solid #FFC233; outline-offset:2px; }
 
 /* breve realce ao rolar até o bloco de uma marca pendente — nunca pinta
    nada permanente, só chama a atenção por alguns segundos */
@@ -875,46 +887,91 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
 
   /* breve destaque visual (sem pintar nada permanente) para guiar o
      olhar do aluno até o bloco de uma marca pendente, quando ele toca
-     no aviso — ver avisarPendentes() */
+     no caminho de revisão — ver badgePendentes() */
   function flashBloco(bloco) {
     if (!bloco) return;
+    /* nunca mais de um bloco realçado ao mesmo tempo — evita que um
+       toque rápido no botão deixe o realce anterior ainda visível
+       enquanto o novo já apareceu */
+    document.querySelectorAll('.rm-flash-revisao').forEach(function (el) { el.classList.remove('rm-flash-revisao'); });
     bloco.classList.add('rm-flash-revisao');
     setTimeout(function () { bloco.classList.remove('rm-flash-revisao'); }, 2600);
   }
 
-  /* Caminho de revisão (§ rodada 6): quando uma ou mais marcas ficam
-     pendentes no carregamento normal da página — o texto do bloco
-     mudou demais para resolverAncora confirmar a posição com segurança
-     — o aluno precisa SABER disso agora, não só o console (que ele
-     nunca vê). O aviso é visível (toast tocável, não um alerta que
-     bloqueia) e tocar nele rola e realça o primeiro bloco afetado — o
-     aluno vê exatamente onde revisar/re-marcar manualmente. Nada é
-     escrito no banco aqui: a marca pendente já estava lá antes, e
-     continua lá, intacta, independentemente de o aluno tocar ou não
-     no aviso. */
-  function avisarPendentes(tabEl, r) {
-    if (!r || !r.perdidas) return;
-    var primeiro = r.blocosPerdidos && r.blocosPerdidos[0];
-    var msg = r.perdidas === 1
-      ? 'Una marca no se pudo ubicar — el texto cambió. Sigue guardada.'
-      : r.perdidas + ' marcas no se pudieron ubicar — el texto cambió. Siguen guardadas.';
-    if (primeiro) msg += ' Tocá para revisar.';
-    toast(msg, false, primeiro ? function () {
-      var bloco = tabEl.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(primeiro) : primeiro));
-      if (bloco) { bloco.scrollIntoView({ behavior: 'smooth', block: 'center' }); flashBloco(bloco); }
-    } : null);
+  /* Caminho de revisão (rodada 6, endurecido na rodada 7): quando uma ou
+     mais marcas ficam pendentes — o texto do bloco mudou demais para
+     resolverAncora confirmar a posição com segurança — o aluno precisa
+     de um jeito de achar isso de novo sempre que quiser, não só no
+     instante do carregamento, e de passar por TODOS os blocos afetados,
+     não só o primeiro. Por isso é um elemento PERSISTENTE (nunca some
+     sozinho; só quando a aba trocar para uma sem pendências, ou quando
+     tudo for resolvido), não um toast que desaparece em segundos — e
+     cada toque avança para o próximo bloco pendente, voltando ao
+     primeiro depois do último (cíclico). Nada é escrito no banco aqui:
+     a marca pendente já estava lá antes, e continua lá, intacta,
+     independentemente de o aluno tocar ou não. */
+  var elBadgePendentes = null;
+  var estadoBadgePendentes = { tabEl: null, blocos: [], cursor: 0 };
+
+  function badgePendentes() {
+    if (!elBadgePendentes) {
+      elBadgePendentes = document.createElement('button');
+      elBadgePendentes.type = 'button';
+      elBadgePendentes.className = 'rm-pendentes-badge';
+      elBadgePendentes.setAttribute('aria-live', 'polite');
+      elBadgePendentes.addEventListener('click', function () {
+        var est = estadoBadgePendentes;
+        if (!est.tabEl || !est.blocos.length) return;
+        var bid = est.blocos[est.cursor % est.blocos.length];
+        var bloco = est.tabEl.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(bid) : bid));
+        if (bloco) { bloco.scrollIntoView({ behavior: 'smooth', block: 'center' }); flashBloco(bloco); }
+        est.cursor = (est.cursor + 1) % est.blocos.length;
+        atualizarTextoBadge();
+      });
+      document.body.appendChild(elBadgePendentes);
+    }
+    return elBadgePendentes;
+  }
+
+  function atualizarTextoBadge() {
+    var est = estadoBadgePendentes, n = est.blocos.length;
+    if (!n) return;
+    var rotulo = n === 1 ? 'marca pendiente' : 'marcas pendientes';
+    var pos = n > 1 ? ' · tocá para ver ' + (est.cursor + 1) + '/' + n : ' · tocá para revisar';
+    badgePendentes().textContent = '📌 ' + n + ' ' + rotulo + pos;
+  }
+
+  /* Chamada a cada sincronização de aba (carregamento inicial e cada
+     troca de matéria — ver `window.switchTab` mais abaixo). `r` pode
+     faltar (matéria sem grifo nenhum): nesse caso o badge só é
+     escondido, nunca criado à toa. */
+  function atualizarBadgePendentes(tabEl, r) {
+    /* `prepararTodas()` sincroniza TODAS as abas no carregamento, cada
+       uma de forma assíncrona (carregarHighlights é `async`) — sem este
+       guard, a aba que resolvesse por último "ganharia" o badge global,
+       mesmo que não fosse a aba que o aluno está vendo. O badge só pode
+       refletir a aba ATIVA agora; a sincronização das outras continua
+       normalmente (pinta o que resolve), só não atualiza este aviso. */
+    if (tabEl !== abaAtiva()) return;
+    var blocos = (r && r.blocosPerdidos) || [];
+    if (!blocos.length) {
+      if (elBadgePendentes) elBadgePendentes.classList.remove('on');
+      estadoBadgePendentes = { tabEl: null, blocos: [], cursor: 0 };
+      return;
+    }
+    estadoBadgePendentes = { tabEl: tabEl, blocos: blocos, cursor: 0 };
+    atualizarTextoBadge();
+    badgePendentes().classList.add('on');
   }
 
   async function sincronizarAba(tabEl) {
     var slug = slugDoTab(tabEl);
     if (!slug) return;
     var lista = await carregarHighlights(slug);
-    if (!lista.length) return;
+    if (!lista.length) { atualizarBadgePendentes(tabEl, null); return; }
     var r = aplicarHighlights(tabEl, lista);
-    if (r.perdidas) {
-      console.info('[rm-tools] ' + r.perdidas + ' marcação(ões) não localizada(s) com segurança em ' + slug + ' — mantidas no banco, não desenhadas.');
-      avisarPendentes(tabEl, r);
-    }
+    if (r.perdidas) console.info('[rm-tools] ' + r.perdidas + ' marcação(ões) não localizada(s) com segurança em ' + slug + ' — mantidas no banco, não desenhadas.');
+    atualizarBadgePendentes(tabEl, r);
   }
 
   /* ---------------------------------------------------------------- */
@@ -1788,9 +1845,9 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     carregarHighlights: carregarHighlights,
     /* exposto para teste real (QA) e para a V2, que pode querer o mesmo
        caminho de revisão em algum fluxo próprio no futuro — ver
-       avisarPendentes() e `blocosPerdidos` no retorno. */
+       atualizarBadgePendentes() e `blocosPerdidos` no retorno. */
     aplicarHighlights: aplicarHighlights,
-    avisarPendentes: avisarPendentes,
+    atualizarBadgePendentes: atualizarBadgePendentes,
     medirBarra: medirBarra,
     fecharLB: fecharLB,
     /* a classe de aberto é 'on' (ver abrirLB/fecharLB); aceita-se também

@@ -227,10 +227,70 @@ as rodadas 2-3 fecharam (um único candidato sem nenhum contexto batendo
    Nenhuma escrita acontece: a marca pendente continua exatamente como
    estava no banco, e nada é lido/gravado para construir o aviso (os
    dados já estavam carregados em memória por `aplicarHighlights()`).
-   `test_aviso_pendente.cjs` (novo) prova as três propriedades juntas,
-   num Chromium real com rede bloqueada: o bloco pendente não tem seu
-   HTML alterado; o aviso aparece, é tocável e tem o texto certo; tocar
-   nele rola a página e aplica o realce no bloco certo.
+   `test_aviso_pendente.cjs` (rodada 6) provou as três propriedades
+   chamando `aplicarHighlights()`/`avisarPendentes()` manualmente — o
+   que, como a rodada 7 mostrou, escondia um bug real.
+
+**Rodada 7** — três problemas apontados na própria solução da rodada 6,
+todos reais:
+
+1. **O aviso desaparecia sozinho em 6s** e **só apontava para o primeiro
+   bloco** — insuficiente quando há mais de uma marca pendente, ou
+   quando o aluno não está olhando a tela no instante exato. Substituído
+   por `badgePendentes()`: um elemento PERSISTENTE (não um toast),
+   canto inferior esquerdo (`.rm-resume` usa o direito, a caixa da
+   caneta usa a borda direita no meio — sem colisão), que só desaparece
+   quando a aba ativa deixa de ter pendências. Cada toque avança para o
+   PRÓXIMO bloco pendente (cíclico — depois do último volta ao
+   primeiro), cobrindo todos eles, não só o primeiro. `toast()` voltou
+   à assinatura original de 2 parâmetros (o `onClick` da rodada 6 não
+   tinha mais nenhum chamador).
+2. **O teste chamava `aplicarHighlights()`/`avisarPendentes()` manualmente**,
+   nunca o fluxo real de carregamento — e isso escondia um bug de
+   verdade. `test_fluxo_real_pendentes.cjs` (novo, substitui
+   `test_aviso_pendente.cjs`) dispara `window.RMTools.prepararTodas()`
+   (o mesmo que `iniciar()` chama no carregamento real da página) e
+   `window.switchTab(tab)` (a MESMA função que o site usa para trocar
+   de matéria, embrulhada por `rm-tools.js`) — os grifos são injetados
+   pré-populando `estado.porSlug`/`estado.carregado` (o cache que
+   `carregarHighlights()` já consulta antes de tentar o Supabase),
+   nunca uma chamada interna direta. **Esse teste real pegou um bug que
+   o teste manual da rodada 6 não podia pegar**: `prepararTodas()`
+   sincroniza TODAS as abas no carregamento, cada uma de forma
+   assíncrona — sem um guard, a aba que resolvesse por último "ganhava"
+   o badge global, mesmo sem ser a aba que o aluno está vendo.
+   Corrigido: `atualizarBadgePendentes()` só atualiza o aviso quando
+   `tabEl === abaAtiva()`. Um segundo bug menor do mesmo teste real: dois
+   toques rápidos podiam deixar DOIS blocos com `.rm-flash-revisao` ao
+   mesmo tempo (o realce antigo ainda não tinha sumido); `flashBloco()`
+   agora remove o realce de qualquer bloco antes de aplicar um novo.
+3. **A regressão de Farmacología II (`f2b02`, `. 🎯`) foi reinvestigada**
+   sem forçar nada: mesmo resultado da rodada 6 — `prefix`/`suffix`
+   gravados em português, conteúdo atual em espanhol, 1 candidato
+   literal sem isca mas sem contexto confirmável. Continua sem posição
+   segura demonstrável; continua pendente, com o caminho de revisão
+   persistente cobrindo exatamente este caso.
+
+Suite completa re-executada: 241 near/far + 52 adversarial + caso de
+bloco inteiro — inalterados. Comparação real (2.195 grifos, 25
+elegíveis corrigidas): **ainda 1 regressão** (o mesmo grifo de
+Farmacología II) — `EXIT=1` mantido intencionalmente, como pedido,
+enquanto ela não tiver uma resolução aprovada por José.
+
+**Piloto da caneta:** as suítes formais (`tools/qa/caneta-456/
+caneta-456.test.cjs`, `tools/qa/caneta-ipad-456/ipad.test.cjs`,
+`tools/qa/ink-audit/*`) exigem infraestrutura não disponível nesta
+sessão (ffmpeg bloqueado por rede — usado pelo harness do player de
+áudio que essas suítes sempre montam; banco Postgres isolado + bundle
+UMD do Supabase para o `ink-audit`). Verificado em alternativa: `rm-
+tools-v2.js` (onde vive toda a lógica da caneta/piloto) **não foi
+tocado nesta rodada nem em nenhuma anterior desta PR fora de
+`repintar()`**; `toast()` voltou à assinatura de 2 parâmetros que a V2
+sempre usou (`function toast(m, err) { ... t.toast(m, err); }` em
+`rm-tools-v2.js`, confirmado por grep — nenhum call-site passa um
+terceiro argumento); e nenhuma referência a `aplicarHighlights`,
+`atualizarBadgePendentes` ou `badgePendentes` existe em `rm-tools-v2.js`
+(confirmado por grep — zero acoplamento novo).
 
 ## O que o pipeline faz
 
