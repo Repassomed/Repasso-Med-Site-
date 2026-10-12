@@ -21,10 +21,26 @@
  *          occurrence, color, id
  *   from user_highlights;
  *
+ * Critério de REPROVAÇÃO (rodada 5): o script sai com código 1 se
+ *   (a) faltar o HTML de QUALQUER matéria verificada (inclusive as
+ *       passadas via --also-check, mesmo com zero grifos) — um arquivo
+ *       ausente não pode ser silenciosamente pulado, porque mascara o
+ *       verdadeiro estado da comparação; ou
+ *   (b) QUALQUER grifo que resolve hoje na `main` deixar de resolver
+ *       com o rm-tools.js da PR (regressão real).
+ *
  * Uso:
  *   NODE_PATH="$(npm root -g)" node compare_real_highlights_main_vs_pr.cjs \
  *     <rm-tools-main.js> <rm-tools-pr.js> <highlights.json> <dir-das-materias> \
- *     [--json saida.json]
+ *     [--json saida.json] [--also-check slugA,slugB] [--group slug:rotulo,...]
+ *
+ * --also-check: matérias a verificar (existência do HTML + regressão,
+ *   que aqui só pode ser 0 porque não há grifo) mesmo sem nenhum grifo
+ *   no export — para confirmar que um "zero grifos" é genuíno e não um
+ *   arquivo ausente escondido atrás da ausência de dados.
+ * --group: rótulo livre por matéria (ex. "25-elegivel",
+ *   "excluida-subtotal", "reforma-dedicada"), só para organizar o
+ *   relatório — não afeta a reprovação.
  */
 const fs = require('fs');
 const path = require('path');
@@ -67,12 +83,30 @@ async function runOn(page, html, highlights) {
   }, { html, highlights });
 }
 
+function parseListFlag(flag) {
+  const i = process.argv.indexOf(flag);
+  if (i < 0) return [];
+  return (process.argv[i + 1] || '').split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+function parseGroupFlag() {
+  const pairs = parseListFlag('--group');
+  const map = {};
+  for (const p of pairs) {
+    const [slug, rotulo] = p.split(':');
+    if (slug) map[slug.trim()] = (rotulo || '').trim();
+  }
+  return map;
+}
+
 async function main() {
   const [mainPath, prPath, highlightsPath, subjectsDir] = process.argv.slice(2);
   const jsonOutIdx = process.argv.indexOf('--json');
   const jsonOut = jsonOutIdx >= 0 ? process.argv[jsonOutIdx + 1] : null;
+  const alsoCheck = parseListFlag('--also-check');
+  const groups = parseGroupFlag();
   if (!mainPath || !prPath || !highlightsPath || !subjectsDir) {
-    console.error('uso: node compare_real_highlights_main_vs_pr.cjs <rm-tools-main.js> <rm-tools-pr.js> <highlights.json> <dir-das-materias> [--json saida.json]');
+    console.error('uso: node compare_real_highlights_main_vs_pr.cjs <rm-tools-main.js> <rm-tools-pr.js> <highlights.json> <dir-das-materias> [--json saida.json] [--also-check slugA,slugB] [--group slugA:rotulo,slugB:rotulo]');
     process.exit(2);
   }
 
@@ -83,6 +117,7 @@ async function main() {
 
   const bySubject = {};
   for (const h of allHighlights) (bySubject[h.subject_slug] = bySubject[h.subject_slug] || []).push(h);
+  for (const slug of alsoCheck) if (!bySubject[slug]) bySubject[slug] = [];
 
   const browser = await chromium.launch();
   const pageMain = await loadPage(browser, mainSrc);
@@ -91,11 +126,18 @@ async function main() {
   const report = [];
   let totalMain = 0, totalPr = 0, totalAll = 0;
   const regressions = [];
+  const htmlFaltando = [];
 
   for (const slug of Object.keys(bySubject).sort()) {
     const highlights = bySubject[slug];
+    const rotulo = groups[slug] || '';
     const htmlPath = path.join(subjectsDir, slug + '.html');
-    if (!fs.existsSync(htmlPath)) { console.error('AVISO: arquivo não encontrado para', slug); continue; }
+    if (!fs.existsSync(htmlPath)) {
+      htmlFaltando.push(slug);
+      report.push({ slug, rotulo, total: highlights.length, okMain: null, okPr: null, erro: 'HTML-ausente' });
+      console.error(`${slug.padEnd(24)} <<< HTML AUSENTE em ${htmlPath}`);
+      continue;
+    }
     const html = fs.readFileSync(htmlPath, 'utf-8');
 
     const resMain = await runOn(pageMain, html, highlights);
@@ -117,24 +159,26 @@ async function main() {
     }
 
     totalMain += okMain; totalPr += okPr; totalAll += highlights.length;
-    report.push({ slug, total: highlights.length, okMain, okPr, regressoes: okMain - okPr });
-    console.log(`${slug.padEnd(24)} total=${String(highlights.length).padStart(4)}  main=${String(okMain).padStart(4)}  pr=${String(okPr).padStart(4)}  ${okMain === okPr ? '' : '<<< DIFERENÇA'}`);
+    report.push({ slug, rotulo, total: highlights.length, okMain, okPr, regressoes: okMain - okPr });
+    console.log(`${slug.padEnd(24)} ${rotulo.padEnd(18)} total=${String(highlights.length).padStart(4)}  main=${String(okMain).padStart(4)}  pr=${String(okPr).padStart(4)}  ${okMain === okPr ? '' : '<<< DIFERENÇA'}`);
   }
 
   await browser.close();
 
-  console.log('\n--- TOTAL ---');
+  console.log('\n--- TOTAL (todas as matérias verificadas) ---');
   console.log(`grifos reais: ${totalAll}`);
   console.log(`resolvem hoje na main: ${totalMain}`);
   console.log(`resolveriam com a PR:   ${totalPr}`);
   console.log(`regressões (resolvia e deixaria de resolver): ${regressions.length}`);
+  console.log(`HTML ausente: ${htmlFaltando.length}${htmlFaltando.length ? ' (' + htmlFaltando.join(', ') + ')' : ''}`);
 
   if (jsonOut) {
-    fs.writeFileSync(jsonOut, JSON.stringify({ report, totalAll, totalMain, totalPr, regressions }, null, 2));
+    fs.writeFileSync(jsonOut, JSON.stringify({ report, totalAll, totalMain, totalPr, regressions, htmlFaltando }, null, 2));
     console.log('\nSalvo em ' + jsonOut);
   }
 
-  process.exit(regressions.length > 0 ? 1 : 0);
+  const failed = regressions.length > 0 || htmlFaltando.length > 0;
+  process.exit(failed ? 1 : 0);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

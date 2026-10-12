@@ -131,6 +131,57 @@ estrutural não coberto, corrigido nesta rodada. Detalhes:
    ocorreu, logo nenhuma escrita em `user_highlights` ou qualquer outro
    dado de aluno.
 
+**Rodada 5** — a rodada 4 excluiu Farmacología II e Fisiopatología II da
+comparação real porque já têm teste dedicado com diff real (#474/#481).
+Essa exclusão deixou uma pergunta sem resposta: será que, nessas duas
+matérias especificamente — as únicas em reforma ATIVA agora mesmo —
+algum grifo real se comporta diferente? `escolher()` é compartilhado por
+todas, então vale checar. `compare_real_highlights_main_vs_pr.cjs` ganhou
+dois recursos novos:
+
+- **`--also-check slugA,slugB`** — verifica a existência do HTML e roda
+  a comparação mesmo para matérias sem nenhum grifo no export (prova que
+  "zero grifos" é genuíno, não um arquivo que faltou e foi pulado em
+  silêncio).
+- **Critério de reprovação mais estrito**: o script agora sai com código
+  1 se faltar o HTML de QUALQUER matéria verificada, **ou** se qualquer
+  grifo que resolve na `main` deixar de resolver com a PR — sem exceção,
+  mesmo que a diferença tenha explicação.
+
+Rodando as 2.195 grifos reais de TODAS as matérias (incluindo
+Farmacología II e Fisiopatología II, mais `bioestadistica` e
+`imagenologia` via `--also-check`, confirmando 0 grifos genuínos nas
+duas, não arquivo ausente):
+
+| grupo | total | main | PR | regressões |
+|---|---|---|---|---|
+| 25 matérias elegíveis (subtotal de implantação — exclui `imagenologia` e `bioestadistica`, ambas com 0 grifos) | 1.910 | 1.873 | 1.873 | 0 |
+| `imagenologia` (está entre as 25, mas excluída do subtotal: 0 grifos ainda) | 0 | 0 | 0 | 0 |
+| `bioestadistica` (não roteada em `get-materia.js` — Issue #213 encerrada sem merge, por isso nem conta como uma das 25) | 0 | 0 | 0 | 0 |
+| Farmacología II + Fisiopatología II (fora das 25, reforma dedicada #474/#481) | 285 | 284 | 283 | **1** |
+| **TOTAL GERAL** | **2.195** | **2.157** | **2.156** | **1** |
+
+A única regressão (`EXIT=1` — o script reprova, como deve) é um grifo em
+Farmacología II (`block_id=f2b02`, `exact_text=". 🎯"`). Investigado a
+fundo: o `prefix`/`suffix` GRAVADOS no banco estão em **português**
+("...um desses três fatores" / "...Os quatro locais onde um
+medicament..."), mas o conteúdo ATUAL do bloco está em **espanhol**
+("...una de las tres—" / "...Los cuatro sitios donde un fármaco...") —
+confirmado por `git log` no arquivo: o histórico mostra a transição de
+mensagens de commit em português para espanhol ao longo do tempo.
+Continua havendo só **1 candidato literal** (`. 🎯` não duplicou, não há
+isca), mas como o contexto gravado não bate em NADA com o atual (nem os
+últimos/primeiros 12 caracteres), `notaDeContexto` dá 0 e `escolher()`
+corretamente recusa — a `main` só pinta porque nunca checa contexto para
+candidato único. **Isto não é um bug desta PR**: é o mesmo "nunca
+adivinhar" que já se mede nos 139 casos `far` de Farmacología II (onde a
+maioria também fica pendente de propósito) — este grifo específico é
+só uma amostra real desse mesmo fenômeno, a primeira vez capturada fora
+do corpus sintético de `build_cases.py`. Não há correção de código a
+fazer aqui: forçar esse caso a resolver reabriria exatamente o risco que
+as rodadas 2-3 fecharam (um único candidato sem nenhum contexto batendo
+é indistinguível de uma colisão genuína).
+
 ## O que o pipeline faz
 
 1. `extract_pairs.py` — lê um `git diff <base> <head> -- matéria.html` pelo
