@@ -67,8 +67,12 @@ html.rm-sis {
    2 · TEMA POR MATÉRIA — só variáveis
    Semiología II (aprovada) · agrupa por Unidad I · II · III · asignatura = faixa azul-marino com número dourado
    Para outra matéria: copiar este bloco, trocar o slug e as cores (ver GUIA-SISTEMA.md · «Crear el tema»).
+   O seletor sem valor (`[data-rm-tema]`) faz destas cores a BASE TÉCNICA de qualquer matéria que ainda não tenha bloco próprio:
+   a identidade de cada matéria é decisão editorial e entra num bloco `[data-rm-tema="<slug>"]` escrito DEPOIS deste (mesma
+   especificidade ⇒ o que vem depois vence). Para Semiología II nada muda. Nenhuma matéria é ligada por CSS.
    --------------------------------------------------------------------- */
-html.rm-sis[data-rm-tema="semiologia-ii"] {
+html.rm-sis[data-rm-tema="semiologia-ii"],
+html.rm-sis[data-rm-tema] {
   --rm-surface: #D3E5DC; --rm-side: #E8F3EE; --rm-side-edge: #A7CBBA; --rm-side-card: #CBE0D5; --rm-side-rule: #B9D6C8;
   --rm-accent: #2F8F74; --rm-accent-d: #1F5E4F; --rm-marker: #E9B949;
   --rm-tag-radius: 7px; --rm-vig-radius: 50%;
@@ -1160,6 +1164,10 @@ html.rm-nav.rm-sis[data-rm-nav="index"] #materias-container > .tab-content.activ
 html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > section[id]:not([data-rm-nav-cur]) { display: none !important; }
 html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > .rm-l2-cover,
 html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > .s2-hero { display: none !important; }
+/* conteúdo original solto FORA de section[id] (hero, banner «Revisión general», avisos): o isolamento só alcança section[id], então ele
+   ficava visível abaixo do índice geral e acima de cada bloco (ensaio #457: 23 matérias; no piloto, o .s2-hero no índice). Na navegação
+   por índice/bloco/modos ele sai de cena; na Página completa (sem data-rm-nav) e sem o layout, tudo continua como sempre. */
+html.rm-nav.rm-sis[data-rm-nav] #materias-container > .tab-content.active > *:not(section[id]):not(footer):not(style):not(script):not(link):not([data-rm-ui]) { display: none !important; }
 /* o legado (rm-layout.css) esconde TUDO nos modos isolados; aqui o bloco do modo, a migalha e o pager reaparecem (mais específico) */
 html.rm-nav.rm-sis[data-rm-nav="modeblk"][data-rm-view]:not([data-rm-view="full"]) #materias-container > .tab-content.active > section[data-rm-nav-cur] { display: block !important; }
 html.rm-nav.rm-sis[data-rm-nav="modeblk"][data-rm-view]:not([data-rm-view="full"]) #materias-container > .tab-content.active > .rm-nav-crumb { display: flex !important; }

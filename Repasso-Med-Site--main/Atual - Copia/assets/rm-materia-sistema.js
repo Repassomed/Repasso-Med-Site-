@@ -141,7 +141,9 @@
       var marcador = limpo(mk && mk.textContent).replace(/^[—\-–\s]+/, '');
       var u = /UNIDAD\s+([IVX]+)/i.exec(marcador);
       out.push({
-        id: id, el: sec, c: c, titulo: limpo(h2 && h2.textContent), h2: h2, mk: mk,
+        /* título de reserva: seção sem <h2> direto (p.ex. guia com o título em <div class="rm-guide-h2">) ficava sem título e a
+           navegação escondia o vizinho no Anterior/Próximo (cadeia quebrada). Usa o 1.º cabeçalho visual da seção, depois o marcador. */
+        id: id, el: sec, c: c, titulo: limpo(h2 && h2.textContent) || limpo((q1(sec, ':scope > [class$="-h2"], :scope > h3, :scope > .analysis-card > h3') || {}).textContent) || marcador, h2: h2, mk: mk,
         marcador: marcador, unidad: u ? u[1].toUpperCase() : '',
         n: { q: qa(sec, '.quiz-item').length, fc: qa(sec, '.flashcard').length, fig: figuras(sec).length,
              tb: qa(sec, 'table').length, au: qa(sec, 'audio').length }
@@ -741,6 +743,13 @@
     attach: attach,
     detach: function () { detach(); },
     TEMAS: TEMAS,
+    /* registra o descritor de UMA matéria (unidades, numeração, classificação das seções). Não liga nada: o layout só monta numa matéria
+       quando o rm-pilot.js (servidor) manda. Não sobrescreve um tema existente (o do piloto é aprovado) e recusa descritor sem clasificar(). */
+    registrarTema: function (slug, tema) {
+      if (typeof slug !== 'string' || !/^[a-z0-9][a-z0-9-]{0,60}$/.test(slug) || TEMAS[slug]) return false;
+      if (!tema || typeof tema.clasificar !== 'function') return false;
+      TEMAS[slug] = tema; return true;
+    },
     secciones: function () { return S ? S.secs.slice() : []; },          // só leitura (a navegação por bloco lê as seções classificadas)
     refletir: function () { refletir(); },
     _estado: function () { return S ? { slug: S.slug, secciones: S.secs.length, recursos: S.recursos.length } : null; }
