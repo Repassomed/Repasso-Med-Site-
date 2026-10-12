@@ -95,7 +95,11 @@ async function abrirCapa(br, base, w, h, o = {}) {
     const blocos = [...tab.querySelectorAll(':scope > section[id]')].filter(sc => !/banco|flashcards/i.test(sc.id));
     const n = (sel) => blocos.reduce((a, sc) => a + sc.querySelectorAll(sel).length, 0);
     const figs = blocos.reduce((a, sc) => a + [...sc.querySelectorAll('figure')].filter(f => f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image')).length, 0);
-    return { fig: figs, quiz: n('.quiz-item'), fc: n('.flashcard'), aud: n('audio'), vid: n('details.video-collapsible'), quizTodas: tab.querySelectorAll('.quiz-item').length, fcTodas: tab.querySelectorAll('.flashcard').length, slides: tab.querySelectorAll('.material-slide').length };
+    /* #457 (C5): Preguntas/Flashcards = itens DISTINTOS da matéria inteira (banco/compêndio incluídos: o item que só existe lá também conta;
+       a cópia não conta duas vezes). Questão = enunciado + CONJUNTO das alternativas (sem ordem nem rótulo); flashcard = frente. */
+    const nz = t => String(t || '').replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim();
+    const dist = (sel, cab, alts) => new Set([...tab.querySelectorAll(':scope > section[id] ' + sel)].map(x => { let k = nz((x.querySelector(cab) || x).textContent); if (alts) { const o = x.querySelector(alts); const it = o ? [...o.querySelectorAll('li,button')].map(y => nz(String(y.textContent).replace(/^\s*(?:[A-Ea-e]|\d{1,2})[).]\s*/, ''))) : []; k += '|' + (it.length ? it.sort().join('|') : nz((o || x).textContent)); } return k; })).size;
+    return { fig: figs, quiz: dist('.quiz-item', '.quiz-question', '.options, .tf-buttons'), fc: dist('.flashcard', '.fc-front', null), quizBlocos: n('.quiz-item'), fcBlocos: n('.flashcard'), aud: n('audio'), vid: n('details.video-collapsible'), quizTodas: tab.querySelectorAll('.quiz-item').length, fcTodas: tab.querySelectorAll('.flashcard').length, slides: tab.querySelectorAll('.material-slide').length };
   };
   for (const [w, h] of [[1440, 900], [390, 844]]) {
     const f = await abrirCapa(br, base, w, h); const p = f.page;
@@ -105,8 +109,8 @@ async function abrirCapa(br, base, w, h, o = {}) {
     ok(ks === 'res,fig,quiz,fc,aud', `${w}: cartões = só os recursos que EXISTEM, nesta ordem (${ks}); sem «Videos» (0 vídeos na matéria)`);
     const num = (c) => +(c.s.match(/\d+/) || [NaN])[0];
     ok(num(cards[1]) === V.fig && V.fig === 34, `${w}: Infografías = ${num(cards[1])} (34 <figure> com legenda; as ${V.slides} diapositivas NÃO entram)`);
-    ok(num(cards[2]) === V.quiz && V.quiz < V.quizTodas, `${w}: Preguntas = ${num(cards[2])} só dos blocos (não ${V.quizTodas}: o banco geral repete as mesmas)`);
-    ok(num(cards[3]) === V.fc && V.fc < V.fcTodas, `${w}: Flashcards = ${num(cards[3])} só dos blocos (não ${V.fcTodas}: o compêndio repete as mesmas)`);
+    ok(num(cards[2]) === V.quiz && V.quiz < V.quizTodas, `${w}: Preguntas = ${num(cards[2])} distintas (não ${V.quizTodas}: o banco geral repete as mesmas; ${V.quizBlocos} nos blocos)`);
+    ok(num(cards[3]) === V.fc && V.fc < V.fcTodas && V.fc >= V.fcBlocos, `${w}: Flashcards = ${num(cards[3])} distintos (não ${V.fcTodas}: o compêndio repete as mesmas; ${V.fcBlocos} nos blocos + os que só existem no banco)`);
     ok(num(cards[4]) === V.aud, `${w}: Auscultación = ${num(cards[4])} sonidos (os <audio> da matéria)`);
     ok(cards.every(c => c.id === 0 && c.ui && c.nome && c.nome.indexOf(c.t) === 0), `${w}: sem ids, [data-rm-ui], nome acessível «Título: contagem» em todos`);
     /* cada cartão salta para a primeira ocorrência (alinhada abaixo da faixa) */
