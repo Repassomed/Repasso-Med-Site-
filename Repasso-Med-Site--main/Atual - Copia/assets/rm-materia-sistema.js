@@ -790,8 +790,8 @@
       if (!tema || typeof tema.clasificar !== 'function') return false;
       TEMAS[slug] = tema; return true;
     },
-    secciones: function () { return S ? S.secs.slice() : []; },
-    soltos: function () { return S && S.soltos ? S.soltos.map(function (x) { return { tipo: x.tipo, de: x.de, tag: x.e.tagName, cls: String(x.e.className || '').split(' ')[0] }; }) : []; },   // só leitura (testes/diagnóstico)          // só leitura (a navegação por bloco lê as seções classificadas)
+    secciones: function () { return S ? S.secs.slice() : []; },          // só leitura (a navegação por bloco lê as seções classificadas)
+    soltos: function () { return S && S.soltos ? S.soltos.map(function (x) { return { tipo: x.tipo, de: x.de, tag: x.e.tagName, cls: String(x.e.className || '').split(' ')[0] }; }) : []; },   // só leitura (testes/diagnóstico)
     refletir: function () { refletir(); },
     _estado: function () { return S ? { slug: S.slug, secciones: S.secs.length, recursos: S.recursos.length } : null; }
   };
