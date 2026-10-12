@@ -14,7 +14,7 @@ Pedido de José (12/10): integrar layout e navegação em PRs pequenas, sem ativ
 | Repassomed/Repasso-Med-Site#488 | `rm-materia-nav.js` | C1, C6, C7 | ✅ |
 | Repassomed/Repasso-Med-Site#489 | `rm-audio-boot.js`, `_audio/lib.js` (+ testes) | A4, A6 | ✅ (aviso: função do servidor, olho humano) |
 
-**Ensaio com o código das três PRs de layout juntas** (`RM_ENSAIO_REF=3ee1ce1b`, variante «com correção»; o ensaio reconhece cada correção no código e **deixa de simulá-la**):
+**Ensaio com o código das três PRs de layout juntas** (`RM_ENSAIO_REF=3ee1ce1b` = merge local de #486 + #487 + #488 sobre a `main` `9cff8ca0` — para reproduzir, mescle as três e aponte para o resultado; variante «com correção»; o ensaio reconhece cada correção no código e **deixa de simulá-la**):
 
 | | Resultado |
 |---|---|
