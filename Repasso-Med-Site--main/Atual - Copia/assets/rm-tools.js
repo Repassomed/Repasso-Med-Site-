@@ -431,21 +431,50 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     return out;
   }
 
+  /* Pontua um candidato pelo contexto gravado: 2 se prefixo/sufixo bate
+     à letra, 1 se bate só nos últimos/primeiros 12 caracteres, 0 se não
+     bate nada. Só soma o lado que o registo tem — um registo sem
+     `suffix`, por exemplo, nunca é penalizado por isso. */
+  function notaDeContexto(norm, i, h) {
+    var pre = norm.slice(Math.max(0, i - (h.prefix || '').length), i);
+    var suf = norm.slice(i + h.exact_text.length, i + h.exact_text.length + (h.suffix || '').length);
+    var nota = 0;
+    if (h.prefix) nota += (pre === h.prefix) ? 2 : (pre.slice(-12) === h.prefix.slice(-12) ? 1 : 0);
+    if (h.suffix) nota += (suf === h.suffix) ? 2 : (suf.slice(0, 12) === h.suffix.slice(0, 12) ? 1 : 0);
+    return nota;
+  }
+
   /* Escolhe a ocorrência certa usando o contexto. Na dúvida devolve -1:
      nunca marcar texto errado (§17). */
   function escolher(norm, h) {
     var cands = ocorrencias(norm, h.exact_text);
     if (!cands.length) return -1;
-    if (cands.length === 1) return cands[0];
+
+    if (cands.length === 1) {
+      /* Um candidato só não dispensa o contexto quando há contexto
+         gravado para checar. Antes, um candidato único era sempre
+         aceito às cegas — e esse é exatamente o buraco que faz uma
+         marcação reaparecer na frase ERRADA: se a frase original foi
+         reescrita e uma cópia idêntica e nunca tocada do mesmo trecho
+         sobrevive em outro lugar do bloco (um texto de template
+         repetido, por exemplo), ela vira a única ocorrência literal — e
+         nada impedia que fosse aceita sem olhar se o que está ao redor
+         dela tem QUALQUER relação com o que foi gravado. Com registo
+         sem prefix/suffix (dado antigo, ou alvo colado no início/fim do
+         bloco) não há nada para checar: mantém o comportamento de
+         sempre, aceita. Com contexto gravado, exige pelo menos um lado
+         batendo — o mesmo padrão que o nível 2/3 (`contextoSolto`) já
+         aplica mesmo a candidato único desde b0c4a73d; aqui estava
+         faltando. */
+      var i0 = cands[0];
+      if (!h.prefix && !h.suffix) return i0;
+      return notaDeContexto(norm, i0, h) > 0 ? i0 : -1;
+    }
 
     var melhor = -1, melhorNota = -1, empate = false;
     for (var k = 0; k < cands.length; k++) {
       var i = cands[k];
-      var pre = norm.slice(Math.max(0, i - (h.prefix || '').length), i);
-      var suf = norm.slice(i + h.exact_text.length, i + h.exact_text.length + (h.suffix || '').length);
-      var nota = 0;
-      if (h.prefix) nota += (pre === h.prefix) ? 2 : (pre.slice(-12) === h.prefix.slice(-12) ? 1 : 0);
-      if (h.suffix) nota += (suf === h.suffix) ? 2 : (suf.slice(0, 12) === h.suffix.slice(0, 12) ? 1 : 0);
+      var nota = notaDeContexto(norm, i, h);
       if (nota > melhorNota) { melhorNota = nota; melhor = i; empate = false; }
       else if (nota === melhorNota) { empate = true; }
     }
@@ -465,7 +494,21 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
           h.occurrence != null && cands[h.occurrence] != null) return cands[h.occurrence];
       return -1;
     }
-    if (melhorNota <= 0) return -1;     // contexto não bate com nada: não arrisca
+    /* Com mais de um candidato literal, havia ambiguidade real — e é
+       exactamente aí que uma pontuação fraca (nota 1: só os últimos/
+       primeiros 12 caracteres bateram, por coincidência) não é prova
+       suficiente para decidir sozinha. Dois parágrafos sobre assuntos
+       diferentes podem partilhar uma vírgula e uma palavra comum nesses
+       12 caracteres sem teren nada a ver um com o outro — e foi
+       exactamente isso que o teste adversarial (ver
+       tools/qa/browser-qa/grifos-reforma/) apanhou: um candidato ganhava
+       por ser "o menos pior" entre dois maus, e a marca reaparecia na
+       frase errada. Por isso, quando há ambiguidade de verdade, só se
+       aceita um vencedor com nota >= 2 — pelo menos um lado batendo à
+       LETRA. Sem ambiguidade (um candidato só, tratado acima) a certeza
+       de ser a única ocorrência literal já é prova suficiente por si,
+       e nota > 0 continua a bastar ali. */
+    if (melhorNota < 2) return -1;
     return melhor;
   }
 

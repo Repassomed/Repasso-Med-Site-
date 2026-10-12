@@ -6,13 +6,31 @@ revisão de matéria), se as marcações dos alunos (`user_highlights`, os
 não sobrevivem, se ficam **pendentes de revisão** (guardadas no banco, só
 não desenhadas) em vez de aparecerem **no lugar errado**.
 
-Nasceu da retomada da PR #66 (`fix/highlights-ancoragem-segura`) para cobrir
-o único ponto que ela próprio documentou e deixou pendente: a V2
-(`assets/rm-tools-v2.js`) ainda chamava `escolher()` directamente no seu
-`repintar()` (o redesenho ao desfazer um apagar de marcação), sem usar o
-`resolverAncora()` em três níveis que `aplicarHighlights()` (em
-`rm-tools.js`) já usa desde a retomada de 30/09. Corrigido: `repintar()`
-agora usa `resolverAncora()`, exatamente como o resto do motor.
+Nasceu da retomada da PR #66 (`fix/highlights-ancoragem-segura`). Duas
+rodadas:
+
+**Rodada 1** — cobriu o único ponto que a própria retomada de 30/09
+documentou e deixou pendente: a V2 (`assets/rm-tools-v2.js`) ainda chamava
+`escolher()` directamente no seu `repintar()` (o redesenho ao desfazer um
+apagar de marcação), sem usar o `resolverAncora()` em três níveis que
+`aplicarHighlights()` (em `rm-tools.js`) já usa. Corrigido: `repintar()`
+agora usa `resolverAncora()`.
+
+**Rodada 2** — o teste adversarial da rodada 1 achou um jeito real de uma
+marcação reaparecer na **frase errada**: quando o texto literal de um
+destaque é reescrito e uma cópia idêntica (nunca tocada) sobrevive em
+outro lugar do MESMO bloco — um texto de template repetido, por exemplo —
+`escolher()` aceitava essa cópia às cegas, porque virava a única
+ocorrência literal e um candidato único nunca era checado contra o
+contexto gravado. Corrigido em `escolher()`: um candidato único só é
+aceito sem checar contexto quando **não há contexto gravado** (preserva
+compatibilidade total com dados antigos); havendo `prefix`/`suffix`
+gravados, exige que pelo menos um lado bata, mesmo com um candidato só.
+E quando há **mais de um** candidato literal (ambiguidade real), um
+vencedor não-empatado só é aceito com pelo menos um lado batendo **à
+letra** (não mais um match fraco de 12 caracteres por coincidência — foi
+exatamente esse tipo de "vitória por default" que o teste adversarial
+pegou numa primeira rodada de correção).
 
 ## O que o pipeline faz
 
@@ -27,12 +45,20 @@ agora usa `resolverAncora()`, exatamente como o resto do motor.
    sobreviveu intacto — isso testaria o quê?), com prefixo/sufixo de 40
    caracteres, do mesmo jeito que `marcarRange()` grava de verdade. Monta
    também um conjunto adversarial **dentro de um único bloco**: uma frase
-   isca com o mesmo texto, nunca editada, ao lado da frase que é editada.
+   isca que embute o MESMO texto do destaque, nunca editada, com um
+   contexto local genuinamente diferente (vem de outra frase do corpus,
+   não é só um prefixo decorativo colado na frente do mesmo texto — essa
+   foi a falha da primeira versão deste script, corrigida depois de o
+   resultado inicial não bater com a inspeção manual).
 3. `run.cjs` — abre um Chromium real, carrega o `rm-tools.js` real (sem
    mock nenhum na lógica de ancoragem), e compara dois caminhos para cada
-   caso: `indexar()+escolher()` direto (o que a V2 fazia antes) contra
-   `resolverAncora()` (o que ela usa agora). Critério de aprovação: nunca
-   pintar fora do bloco ou fora do texto novo.
+   caso: `indexar()+escolher()` direto (o que a V2 fazia antes da rodada 1)
+   contra `resolverAncora()` (o que ela usa agora). No conjunto
+   adversarial, verifica onde a marcação pintada realmente caiu no DOM
+   (`Node.contains()`, não comparação de texto — um texto curto pode
+   coincidir em mais de um lugar e dar falso positivo num `includes()`).
+   Critério de aprovação: nunca pintar fora do bloco, fora do texto novo,
+   ou na frase-isca errada.
 
 ## Como rodar
 
@@ -67,22 +93,40 @@ pintada em lugar errado nos 241 casos. A maioria das frases `near`/`far`
 desta amostra são reescritas de conteúdo de verdade (G0, correção
 científica), não apenas pontuação — por isso o ganho absoluto é modesto:
 o sistema está certo em recusar e deixar pendente a maioria delas, exatamente
-como pede a regra "nunca adivinhar".
+como pede a regra "nunca adivinhar". **Esta PR não resolve grifos sobre
+frases totalmente reescritas** — essas ficam corretamente pendentes, por
+desenho; não há como recuperar com segurança o que mudou de sentido.
 
-### Achado do teste adversarial (não é regressão desta correção)
+### Teste adversarial — marcação na frase errada
 
-O conjunto adversarial-dentro-do-bloco (50 casos) constrói, de propósito,
-o cenário mais hostil possível: uma frase-isca contém o texto **idêntico,
-nunca editado**, no mesmo bloco da frase que é editada. Resultado: 50/50
-"erraram" — pintaram a isca — **nos dois caminhos, sem nenhuma diferença
-entre o antigo e o corrigido** (coluna de paridade: 50/50). Isso não é uma
-regressão desta PR: é uma característica já existente de `escolher()`
-("1 candidato → aceita", comportamento documentado desde a própria PR #66
-como o comportamento ANTIGO da `main`, nunca alterado) — quando o texto
-literal do destaque sobra como **única** ocorrência no bloco depois da
-edição (porque a instância real foi reescrita e uma cópia idêntica
-sobrevive em outro lugar do mesmo bloco), o nível 1 aceita sem checar
-contexto, porque até agora nunca foi preciso desambiguar um candidato
-único. Decidir se vale a pena endurecer essa regra (exigir contexto mesmo
-com um candidato só) é uma mudança de desenho maior, fora do escopo desta
-correção — fica registada aqui, não escondida, para quem decidir revisitá-la.
+Conjunto de 50 casos dentro de um único bloco: uma frase-isca com o MESMO
+texto do destaque, nunca editada, com contexto local genuinamente
+diferente (de outra frase do corpus), ao lado da frase real que é
+editada.
+
+| | antes da rodada 2 | depois da rodada 2 |
+|---|---|---|
+| pintou a isca errada | 50/50 | **2/50** |
+
+Os **2 casos restantes** são registros com `prefix` **e** `suffix`
+totalmente vazios — nenhum contexto gravado para checar. Por desenho (e
+por exigência explícita de compatibilidade com os dados reais já
+gravados — ver PR #66, "compatibilidade total"), um candidato único sem
+nenhum contexto gravado continua sendo aceito, porque não há nada contra
+o que verificá-lo e `escolher` exige correspondência literal exacta de
+qualquer forma. Inspecionado manualmente: os 2 casos vêm de linhas HTML
+que são, sozinhas, `<p>` inteiros muito curtos (um título de caixa de
+armadilha) — ao isolar essa única linha como "bloco" de teste, o prefixo
+e o sufixo saem vazios; no arquivo real, a mesma linha vive dentro de uma
+seção bem maior, com texto real antes e depois (confirmado por inspeção
+do diff original), então na produção real o registro teria contexto de
+verdade para checar. Isto é uma limitação honesta do desenho do teste
+(linha isolada vira bloco artificial), não uma prova de risco real
+— mas fica registrada, não escondida, como PR #66 e as correções
+seguintes sempre fizeram.
+
+**Paridade com o comportamento antigo:** dos 50 casos, 49 continuam
+idênticos entre o caminho antigo e o corrigido; o único que muda é uma
+melhoria genuína (nível 2 recupera corretamente a frase certa onde o
+caminho antigo não recuperava nada) — nenhuma regressão introduzida pela
+rodada 2.

@@ -60,7 +60,20 @@ async function main() {
       return sec;
     }
 
-    function repintarOld(bloco, h) {
+    /* `marcos` é uma lista opcional de { el, label } — quando passada, o
+       resultado inclui `landedIn` com o label do elemento que REALMENTE
+       contém o span pintado no DOM (closest(), não um match de texto, que
+       pode dar falso positivo se a mesma frase existir em mais de um
+       lugar). */
+    function landedLabel(sp, marcos) {
+      if (!sp || !marcos) return null;
+      for (const m of marcos) {
+        if (m.el.contains(sp)) return m.label;
+      }
+      return null;
+    }
+
+    function repintarOld(bloco, h, marcos) {
       const idx = window.RMTools.indexar(bloco);
       const i = window.RMTools.escolher(idx.norm, h);
       if (i < 0) return { ok: false };
@@ -70,11 +83,12 @@ async function main() {
       if (!window.RMTools.pintar(r, h.color, tmpId)) return { ok: false };
       const sp = bloco.querySelector('.rm-hl[data-hl="' + tmpId + '"]');
       const txt = sp ? sp.textContent : null;
+      const landedIn = landedLabel(sp, marcos);
       window.RMTools.despintar(tmpId, bloco);
-      return { ok: true, nivel: 1, text: txt };
+      return { ok: true, nivel: 1, text: txt, landedIn };
     }
 
-    function repintarFixed(bloco, h) {
+    function repintarFixed(bloco, h, marcos) {
       const a = window.RMTools.resolverAncora(bloco, h);
       if (!a) return { ok: false };
       const r = window.RMTools.rangeDe(a.idx, a.ini, a.fim);
@@ -83,8 +97,9 @@ async function main() {
       if (!window.RMTools.pintar(r, h.color, tmpId, a.nivel === 3)) return { ok: false };
       const sp = bloco.querySelector('.rm-hl[data-hl="' + tmpId + '"]');
       const txt = sp ? sp.textContent : null;
+      const landedIn = landedLabel(sp, marcos);
       window.RMTools.despintar(tmpId, bloco);
-      return { ok: true, nivel: a.nivel, text: txt };
+      return { ok: true, nivel: a.nivel, text: txt, landedIn };
     }
 
     for (const c of cases) {
@@ -123,21 +138,15 @@ async function main() {
       const h = { id: c.id, block_id: blockId, exact_text: c.exact_text, prefix: c.prefix, suffix: c.suffix, occurrence: 0, color: 'red' };
       pMain.textContent = c.new_text;
 
-      const oldWay = repintarOld(sec, h);
-      const fixedWay = repintarFixed(sec, h);
-      let landedInDecoy = false, landedInMain = false;
-      if (fixedWay.ok) {
-        landedInDecoy = pDecoy.textContent.includes(fixedWay.text);
-        landedInMain = pMain.textContent.includes(fixedWay.text);
-      }
-      let oldLandedInDecoy = false, oldLandedInMain = false;
-      if (oldWay.ok) {
-        oldLandedInDecoy = pDecoy.textContent.includes(oldWay.text);
-        oldLandedInMain = pMain.textContent.includes(oldWay.text);
-      }
+      const marcos = [{ el: pDecoy, label: 'decoy' }, { el: pMain, label: 'main' }];
+      const oldWay = repintarOld(sec, h, marcos);
+      const fixedWay = repintarFixed(sec, h, marcos);
       advResults.push({
-        id: c.id, ok: fixedWay.ok, nivel: fixedWay.nivel || null, landedInMain, landedInDecoy,
-        oldOk: oldWay.ok, oldLandedInMain, oldLandedInDecoy,
+        id: c.id,
+        ok: fixedWay.ok, nivel: fixedWay.nivel || null,
+        landedInMain: fixedWay.landedIn === 'main', landedInDecoy: fixedWay.landedIn === 'decoy',
+        oldOk: oldWay.ok,
+        oldLandedInMain: oldWay.landedIn === 'main', oldLandedInDecoy: oldWay.landedIn === 'decoy',
       });
     }
 
