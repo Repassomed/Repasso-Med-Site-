@@ -70,6 +70,36 @@
     return tema;
   }
 
+  /* C3 simulada = cópia da semântica do #487 (rm-materia-sistema.js classificarSoltos/refletirAnexos + 2 regras do .css): o que está fora de
+     section[id] é classificado; 'abertura'/'fecho'/'conteudo' ficam no índice geral, 'anexo' acompanha o bloco seguinte, nada útil some */
+  function simularC3(tab) {
+    var kids = Array.prototype.slice.call(tab.children), soltos = [];
+    var ehSec = function (e) { return e.tagName === 'SECTION' && !!e.id; };
+    var idx = kids.map(function (e, i) { return ehSec(e) ? i : -1; }).filter(function (i) { return i >= 0; });
+    if (!idx.length) return;
+    var ini = idx[0], fim = idx[idx.length - 1];
+    kids.forEach(function (e, i) {
+      if (ehSec(e) || /^(FOOTER|STYLE|SCRIPT|LINK|TEMPLATE)$/.test(e.tagName) || e.hasAttribute('data-rm-ui')) return;
+      if (e.matches('.rm-tools, .rm-sug-fab, .rm-menu')) return;
+      var tipo, de = null;
+      if (e.querySelector('.quiz-item, .flashcard, figure, table, audio, video, iframe')) tipo = 'conteudo';
+      else if (i < ini) tipo = 'abertura'; else if (i > fim) tipo = 'fecho';
+      else { var n = e.nextElementSibling; while (n && n.tagName !== 'SECTION') n = n.nextElementSibling; if (n && ehSec(n)) { tipo = 'anexo'; de = n.id; } else tipo = 'conteudo'; }
+      e.setAttribute('data-rm-solto', tipo); if (de) e.setAttribute('data-rm-anexo-de', de);
+      soltos.push({ e: e, tipo: tipo, de: de });
+    });
+    var st = document.createElement('style'); st.setAttribute('data-ensaio-c3', '');
+    st.textContent = 'html.rm-nav.rm-sis[data-rm-nav]:not([data-rm-nav="index"]) #materias-container > .tab-content.active > [data-rm-solto]:not([data-rm-anexo-cur]) { display: none !important; }\n' +
+      'html.rm-nav.rm-sis[data-rm-nav="index"] #materias-container > .tab-content.active > [data-rm-solto="anexo"] { display: none !important; }';
+    document.head.appendChild(st);
+    E.etapas.c3_simulada = soltos.map(function (x) { return x.tipo; }).join(',') || 'nenhum';
+    var orig = window.RMSistema.refletir;
+    window.RMSistema.refletir = function () {
+      soltos.forEach(function (x) { if (x.tipo !== 'anexo') return; var s = document.getElementById(x.de); if (s && s.hasAttribute('data-rm-nav-cur')) x.e.setAttribute('data-rm-anexo-cur', ''); else x.e.removeAttribute('data-rm-anexo-cur'); });
+      return orig.apply(this, arguments);
+    };
+  }
+
   async function ativar() {
     var tab = document.getElementById('tab-' + TAB);
     if (!tab) { E.erros.push('sem-aba'); return; }
@@ -80,11 +110,6 @@
       E.etapas.carga_layout = !!(window.RMModes && window.RMLayout);
       window.RMLayout.attach(tab, SLUG); E.etapas.attach_layout = true;   /* o 2.º argumento é ignorado pelo código da main; com a integração (A1) o layout monta na matéria certa */
     } catch (e) { E.erros.push('layout:' + (e && e.message)); try { window.RMLayout.detach(); } catch (e2) {} return; }
-    if (CORR && P.get('c3') !== '0') {   /* C3 (só na variante «com correção»): o hero/banner do conteúdo original fica fora de section[id] e o módulo só isola section[id] → oculta-os fora da leitura contínua */
-      var st = document.createElement('style'); st.setAttribute('data-ensaio-c3', '');
-      st.textContent = 'html.rm-nav[data-rm-nav] #' + tab.id + ' > *:not(section[id]):not(footer):not(style):not(script):not(link):not([data-rm-ui]) { display: none !important; }';
-      document.head.appendChild(st);
-    }
     if (MODO === 'layout') return;
     try {
       await css('assets/rm-materia-sistema.css?v=' + VER); await js('assets/rm-materia-sistema.js?v=' + VER);
@@ -92,6 +117,7 @@
       E.etapas.carga_tema = !!window.RMSistema;
       if (SLUG !== 'semiologia-ii') { var tg = gerarTema(tab, SLUG); if (window.RMSistema.registrarTema) window.RMSistema.registrarTema(SLUG, tg); else window.RMSistema.TEMAS[SLUG] = tg; }   /* A3: API de registro quando existir */
       window.RMSistema.attach(tab, SLUG); E.etapas.attach_tema = true;
+      if (CORR && P.get('c3') !== '0') simularC3(tab);   /* C3 (#487) simulada só quando o CSS servido ainda não a traz (lib.cjs → &c3=0) */
     } catch (e) { E.erros.push('tema:' + (e && e.message)); try { window.RMSistema.detach(); } catch (e2) {} return; }
     if (MODO === 'tema') return;
     try { if (window.RMNav) { window.RMNav.attach(tab, SLUG); E.etapas.attach_nav = true; } else E.erros.push('nav:sem-RMNav'); }

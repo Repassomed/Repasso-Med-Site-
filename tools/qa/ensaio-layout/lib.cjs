@@ -109,8 +109,8 @@ function lerAsset(f) {
   if (REF && /\/assets\//.test(rel)) { try { return require('child_process').execFileSync('git', ['show', REF + ':' + rel], { cwd: REPO, maxBuffer: 64 << 20 }); } catch (e) { /* inexistente no ref: usa o disco */ } }
   return fs.readFileSync(f);
 }
-/* C3 (conteúdo solto fora de section[id] escondido na navegação) é CSS: quando o rm-materia-sistema.css servido já traz a regra, o ativador não injeta a sua */
-const C3_NO_CODIGO = (() => { try { return /tab-content\.active > \*:not\(section\[id\]\)/.test(lerAsset(path.join(ROOT, 'assets/rm-materia-sistema.css')).toString()); } catch (e) { return false; } })();
+/* C3 (conteúdo solto fora de section[id], #487): quando o rm-materia-sistema.css servido já traz a regra por classe (data-rm-solto), o ativador não simula a sua */
+const C3_NO_CODIGO = (() => { try { return /\[data-rm-solto\]/.test(lerAsset(path.join(ROOT, 'assets/rm-materia-sistema.css')).toString()); } catch (e) { return false; } })();
 function servir({ usadas = new Set(), pedidos = [] } = {}) {
   if (C3_NO_CODIGO) usadas.add('C3:NO-CODIGO');
   return new Promise(res => {
