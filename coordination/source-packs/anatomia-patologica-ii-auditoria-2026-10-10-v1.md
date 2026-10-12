@@ -348,3 +348,147 @@ parcial/totalmente ilegíveis. Esta rodada não tentou nova extração —
 isso é o próximo passo, feito em sequência a este checkpoint, com
 imagens/OCR quando necessário, sem inventar cobertura de material
 ilegível.
+
+## FECHAMENTO — pendências dos 6 PDFs de anotações (verificado contra o HEAD atual)
+
+Declaração final, por PDF, do que entrou nesta auditoria, do que já
+existia no site antes dela e do que ficou de fora com motivo. Reconferido
+contra o `HEAD` atual da PR (`c549e8d0`) por `grep` direto no HTML
+publicado — não apenas repetindo o que as rodadas anteriores
+registraram.
+
+### 1. Cavidade oral.pdf (15 páginas, lido na íntegra)
+
+- **Já existia:** causas/latência/fatores de reativação de aftas e
+  herpes; as 3 formas clínicas da candidiasis e qual exige biópsia;
+  percentuais de displasia de leucoplasia/eritroplasia; carcinoma
+  epidermoide como 95% dos cânceres orais; xerostomia/Sjögren,
+  sialoadenitis viral×bacteriana, mecanismo da mucocele; neoplasias
+  salivales (regra de risco inversamente proporcional ao tamanho da
+  glândula + % por glândula); achados histológicos do adenoma pleomorfo;
+  tumor de Warthin (multifocalidade, bilateralidade, tabagismo).
+- **Entrou nesta rodada (PR #476):** o mecanismo completo da via
+  HPV-16 do carcinoma epidermoide oral — **E6** (degrada p53) somado ao
+  **E7** que já estava (inativa RB) — confirmado presente no HEAD atual
+  (`<b>E7</b> inactiva RB → sube p16; la <b>E6</b> degrada p53...`).
+- **Ficou de fora, com motivo:**
+  - Risco de 2º tumor primário (~35% dos sobreviventes) — número existe
+    só na anotação do aluno; não verificado contra literatura-base com
+    essa precisão antes de publicar um percentual. Confirmado ausente no
+    HEAD atual.
+  - Metástase a distância do CEC oral (ganglios mediastínicos, pulmões,
+    fígado, ossos) — o site cobre só os ganglios cervicais (primeira
+    estação). Mesmo motivo: não verificado contra fonte-base adicional.
+  - Tabela benignos×malignos por tipo específico de neoplasia salival —
+    parcial: a regra geral e os percentuais por glândula já estão no
+    site em texto corrido; falta só o formato de tabela detalhada por
+    tipo histológico específico, que o PDF também não traz pronta (está
+    disperso no texto da anotação).
+
+### 2. patologias do esofago.pdf (9 páginas, lido na íntegra)
+
+- **Já existia (cobertura completa, nenhuma lacuna encontrada):** tríade
+  da acalasia e suas formas primária/secundária (Chagas, VHS-1, Sjögren,
+  tireoidopatia autoimune — o site inclusive amplia com o mecanismo
+  NO/VIP, que o PDF não detalha); Mallory-Weiss como 10% das HDA;
+  esofagitis infecciosa (VHS em sacabocado, CMV no fundo, Candida com
+  PAS/metenamina de plata); a tríade microscópica "tema de examen" da
+  esofagitis por refluxo, com números e ordem idênticos; perfil
+  demográfico, segmentos e progressão do esôfago de Barrett.
+- **Entrou:** nada — a cobertura já estava completa desde a PR #458.
+- **Ficou de fora:** nenhuma lacuna registrada para este PDF.
+
+### 3. Patologias do estomago.pdf (4 páginas, lido na íntegra)
+
+- **Já existia:** diferença erosão×úlcera (profundidade até a muscular
+  da mucosa); úlceras de estrés (Curling, Cushing); H. pylori (90% no
+  antro, fatores de virulência, tinções diagnósticas); gastritis
+  autoinmune (anticorpos anti-céls. parietais e fator intrínseco,
+  hiperplasia de células endócrinas, déficit de B12, hipocloridria).
+- **Entrou:** nada.
+- **Ficou de fora, corretamente (não é lacuna, é acerto):** a anotação
+  do aluno descreve "transformación maligna (muy frecuente)" como
+  complicação da úlcera péptica — afirmação cientificamente imprecisa
+  (úlcera péptica benigna não se transforma com frequência); o site não
+  reproduz essa imprecisão da fonte.
+
+### 4. Tumores gastricos.pdf (2 páginas, lido na íntegra)
+
+- **Já existia:** as 6 marcações explícitas "tema de examen" do PDF —
+  lesões precursoras (displasia/adenoma), CDH1/E-caderina no tipo
+  difuso, classificação de Lauren, achado micro/macroscópico do tipo
+  difuso, classificação de Borrmann, profundidade de invasão + extensão
+  linfonodal como os indicadores prognósticos mais fortes.
+- **Entrou:** nada nesta rodada.
+- **Ficou de fora, com motivo:**
+  - Hierarquia Virchow+Krukenberg acima dos outros 3 sinais metastásicos
+    — o PDF marca explicitamente "tema de examen los dos primeros
+    principalmente", evidência direta de ênfase da cátedra; o site
+    apresenta os 5 sinais com peso editorial igual (confirmado no HEAD
+    atual: Virchow segue listado junto dos outros, sem destaque
+    diferenciado). Motivo de não corrigir agora: dar esse destaque sem
+    dizer ao aluno "isto cai mais" (G0 §6, prioridade didática
+    silenciosa) exige prosa cuidadosa — um ajuste apressado arrisca
+    ficar explícito demais sobre estratégia de prova; fica para revisão
+    dedicada, não para esta rodada de auditoria.
+  - Corpos de Russell / 40% de diferenciação plasmocítica no linfoma
+    MALT gástrico — confirmado ausente no HEAD atual. Detalhe
+    histológico avançado, de baixa prioridade didática frente ao volume
+    de conteúdo central do bloco.
+
+### 5. perguntas questões.pdf (3 páginas, lido na íntegra)
+
+- **Já existia:** a seção "Perguntas que caíram em prova" lista 11
+  perguntas literais da cátedra — todas as 11 já tinham equivalente no
+  banco de questões do site antes desta auditoria, confirmando alta
+  fidelidade prévia.
+- **Entrou:** a questão 30 (proteínas inativadas/expressas pelo HPV-16)
+  estava parcial (só E7); completada nesta rodada com **E6** — mesmo
+  achado da via do carcinoma oral documentado no item 1 acima, duas
+  fontes convergindo no mesmo ponto.
+- **Ficou de fora, corretamente:** a questão 29 do PDF ("Cita los genes
+  afectados... Resposta: P53 y P63") contradiz a própria fonte-base
+  (Resumo P1.pdf/Cavidade oral.pdf, que apontam TP53/RAS como correto)
+  — é um erro da anotação do aluno, corretamente não incorporado ao
+  site.
+
+### 6. Resumo P1.pdf (4 páginas, lido na íntegra)
+
+- **Já existia:** os 16 pontos de "PUNTOS IMPORTANTES PARA EL EXAMEN"
+  do bloco estômago — cada um, individualmente, já estava coberto em
+  algum lugar do site.
+- **Entrou:** nada novo em conteúdo.
+- **Ficou de fora:** nenhuma lacuna de conteúdo — só uma observação
+  estrutural, não uma pendência: os 16 pontos estão dispersos pelo texto
+  corrido em vez de concentrados numa única lista/caixa de revisão.
+  Decisão editorial (manter a estrutura atual ou concentrar os pontos)
+  fica para José, não é correção de erro.
+
+### Nota — os 4 slides oficiais (fora do escopo desta declaração, mas do mesmo levantamento)
+
+Os slides 4 (Borrmann) e 8 (Hashimoto) foram lidos com conteúdo parcial
+confiável, sem achado que mude decisão editorial. O slide 5 (Crohn×CU)
+revelou a divergência real e não resolvida dos granulomas (~35% no
+slide vs. 40–60% publicado — ambos defensáveis pela literatura,
+delimitado mas não alterado por não haver base para apontar qual está
+"errado"; decisão de José é estilística, não correção de erro). O
+slide 7 (Px hepáticas) segue **ilegível em todas as tentativas** (0/40
+páginas com texto recuperável) — não tratado como auditado, sem
+cobertura inventada.
+
+### Conclusão do fechamento
+
+As 6 fontes de anotação foram lidas na íntegra (nenhuma truncada) e
+cruzadas item a item com o HTML publicado. Nenhuma incoerência
+científica do site foi encontrada nesta auditoria — as únicas
+incoerências detectadas estavam nas próprias anotações do aluno (P53/P63
+trocado por RAS/TP53; "transformación maligna muy frecuente" da úlcera
+péptica), e em ambos os casos o site corretamente não as reproduziu.
+Dos itens que ficaram de fora, nenhum é um erro do site: são lacunas de
+verificação (números sem confirmação em literatura-base), decisões
+editoriais válidas (nível de detalhe do mecanismo de Hashimoto,
+estrutura do Resumo P1), ou uma decisão de ênfase didática deliberadamente
+não tomada nesta rodada para não arriscar prosa apressada (Virchow/
+Krukenberg). A auditoria dos 6 PDFs está **fechada**; a pendência aberta
+que resta é do universo dos slides oficiais (granulomas no Crohn, slide
+7 ilegível), não dos 6 PDFs de anotação.
