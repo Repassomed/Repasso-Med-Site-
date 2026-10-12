@@ -3,6 +3,32 @@
 > **Nada foi ativado.** Layout global **não** está autorizado: depende de ordem expressa de José. Este documento só reconcilia o que `MATRIZ.md` (#457/#459) deixou aberto com o que mudou na `main` depois dele. Nenhum arquivo reservado foi tocado; o ensaio **não foi reexecutado** nesta atualização (os números abaixo são os já versionados).
 > **Ensaio técnico ≠ aprovação das 27 matérias.** `PASSA` na matriz significa "o componente funcionou no Chromium com um tema hipotético", não "a matéria está pronta, revisada ou com identidade aprovada".
 
+## 0-C · Integração em PRs pequenas (12/10) — o que o código real já entrega
+
+Pedido de José (12/10): integrar layout e navegação em PRs pequenas, sem ativação global; áudio por matéria aos poucos; **não mexer no motor da caneta enquanto Claude 1 trabalha na #484**.
+
+| PR | Arquivos | Correções | Guard |
+|---|---|---|---|
+| Repassomed/Repasso-Med-Site#486 | `rm-layout.js` (+ `cover`/`sistema` test na regra nova) | A1, C2, C5 | ✅ |
+| Repassomed/Repasso-Med-Site#487 | `rm-materia-sistema.js/.css` | A2, A3, C3, C4 | ✅ |
+| Repassomed/Repasso-Med-Site#488 | `rm-materia-nav.js` | C1, C6, C7 | ✅ |
+| Repassomed/Repasso-Med-Site#489 | `rm-audio-boot.js`, `_audio/lib.js` (+ testes) | A4, A6 | ✅ (aviso: função do servidor, olho humano) |
+
+**Ensaio com o código das três PRs de layout juntas** (`RM_ENSAIO_REF=3ee1ce1b`, variante «com correção»; o ensaio reconhece cada correção no código e **deixa de simulá-la**):
+
+| | Resultado |
+|---|---|
+| Correções de layout vindas do código real | **A1, A2, C1–C7: todas** (`NO-CODIGO` nas 27 matérias) |
+| Ainda simuladas | A7 e C8 (motor da caneta — adiados até a #484) e o marcador `data-rm-agrega` que o **descritor** de cada matéria vai declarar (passo 8 de `PATCHES` §D) |
+| 25 elegíveis × 4 larguras | **25 / 25 PASSA** (6 200 verificações nas 27 do catálogo, 0 falha) |
+| Uso (`interacao.cjs`) com o mesmo código | **25 / 25 PASSA** (2 484 verificações nas 27, 0 falha, 0 bloqueio; caneta CDP, palma, rolagem, pinça, zoom, goma, Deshacer, grifo, troca de bloco/modo, recarregar, questões, flashcards, audiobook) |
+
+**Suítes do piloto** (na `main` e no código das 3 PRs juntas): idênticas, exceto a contagem nova da capa (testes atualizados na #486). `caneta-novo-layout` 89/91 nas duas (as mesmas 2 falhas de tolerância do post-it, pré-existentes, #464).
+
+**Áudio (#489):** servidor 19/19 e navegador 15/15 (testes novos; os dois reprovam contra a `main`); suíte do áudio do piloto igual à `main` (integração 294/294, servidor 97/97).
+
+**O que continua faltando para uma matéria funcionar no site** (nenhum passo executado): merge das PRs → caneta A7/C8 e versão dos módulos depois da #484 → ativação por matéria (A5, decisão de José) → descritor aprovado da matéria → liberar só para a conta de José → roteiro físico de 3 min.
+
 ## 0-B · 2.ª rodada (11/10, `main` `d51cd1f4`: caneta `456e` aprovada por José no iPad)
 
 Retomada a partir das **12 matérias que ainda falhavam** com C1–C3 (não do zero; 11 delas são elegíveis — a 12.ª é o piloto). Tudo em ambiente isolado (servidor local, arquivos reais da `main`, patches em memória, Supabase e manifesto de áudio simulados, zero rede externa). **Nenhuma flag, conta liberada, `PILOT_SLUGS` ou publicação foi alterada; nenhum arquivo do site foi editado.**

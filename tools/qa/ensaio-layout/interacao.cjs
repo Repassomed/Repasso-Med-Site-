@@ -15,7 +15,7 @@ const L = require('./lib.cjs');
 const args = process.argv.slice(2), RAPIDO = args.includes('--rapido'), SO_TABELA = args.includes('--so-tabela'), filtro = args.filter(a => !a.startsWith('--'));
 const LARGURAS = process.env.RM_LARGURAS ? process.env.RM_LARGURAS.split(',').map(Number) : (RAPIDO ? [1024, 390] : [390, 768, 1024, 1440]);
 const ALT = { 390: 844, 768: 1024, 1024: 768, 1440: 900 };
-const OUT = path.join(L.REPO, 'docs/layout-ensaio/interacao');
+const OUT = process.env.RM_ENSAIO_OUT ? path.resolve(process.env.RM_ENSAIO_OUT) : path.join(L.REPO, 'docs/layout-ensaio/interacao');   // RM_ENSAIO_OUT: validação de PR sem sobrescrever o resultado
 const inv = JSON.parse(fs.readFileSync(path.join(L.REPO, 'docs/layout-ensaio/inventario.json'), 'utf8'));
 const INV = Object.fromEntries(inv.materias.map(m => [m.slug, m]));
 const REUNE = /banco|flashcards/i;
