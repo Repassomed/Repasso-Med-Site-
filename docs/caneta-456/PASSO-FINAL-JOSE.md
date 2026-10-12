@@ -1,5 +1,8 @@
 # PASSO FINAL — José repete a caneta no aparelho real (#456 P0) · ≤ 3 minutos
 
+> ⚠️ **Substituído** (10/10): o build 456c foi reprovado no iPad. O roteiro atual é `docs/caneta-ipad-456/PASSO-FINAL-JOSE.md` (build `2026-10-10·456d`).
+
+
 Mesmo aparelho, mesma caneta, sua conta de sempre. **Nada a instalar, sem console.**
 **Este roteiro só vale depois que a versão nova estiver publicada** (ver `PREVIEW-E-PUBLICACAO.md`): testar a `main` sem o #470 não prova nada sobre ele. A identificação do build é o primeiro passo — se não bater, **pare**.
 
