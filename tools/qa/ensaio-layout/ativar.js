@@ -78,9 +78,9 @@
       if (MODO !== 'layout' && SLUG !== 'semiologia-ii') classificarPorConteudo(tab);
       await css('assets/rm-layout.css?v=' + VER); await js('assets/rm-modes.js?v=' + VER); await js('assets/rm-layout.js?v=' + VER);
       E.etapas.carga_layout = !!(window.RMModes && window.RMLayout);
-      window.RMLayout.attach(tab); E.etapas.attach_layout = true;
+      window.RMLayout.attach(tab, SLUG); E.etapas.attach_layout = true;   /* o 2.º argumento é ignorado pelo código da main; com a integração (A1) o layout monta na matéria certa */
     } catch (e) { E.erros.push('layout:' + (e && e.message)); try { window.RMLayout.detach(); } catch (e2) {} return; }
-    if (CORR) {   /* C3 (só na variante «com correção»): o hero/banner do conteúdo original fica fora de section[id] e o módulo só isola section[id] → oculta-os fora da leitura contínua */
+    if (CORR && P.get('c3') !== '0') {   /* C3 (só na variante «com correção»): o hero/banner do conteúdo original fica fora de section[id] e o módulo só isola section[id] → oculta-os fora da leitura contínua */
       var st = document.createElement('style'); st.setAttribute('data-ensaio-c3', '');
       st.textContent = 'html.rm-nav[data-rm-nav] #' + tab.id + ' > *:not(section[id]):not(footer):not(style):not(script):not(link):not([data-rm-ui]) { display: none !important; }';
       document.head.appendChild(st);
@@ -90,7 +90,7 @@
       await css('assets/rm-materia-sistema.css?v=' + VER); await js('assets/rm-materia-sistema.js?v=' + VER);
       if (MODO === 'nav') await js('assets/rm-materia-nav.js?v=' + VER);
       E.etapas.carga_tema = !!window.RMSistema;
-      if (SLUG !== 'semiologia-ii') window.RMSistema.TEMAS[SLUG] = gerarTema(tab, SLUG);
+      if (SLUG !== 'semiologia-ii') { var tg = gerarTema(tab, SLUG); if (window.RMSistema.registrarTema) window.RMSistema.registrarTema(SLUG, tg); else window.RMSistema.TEMAS[SLUG] = tg; }   /* A3: API de registro quando existir */
       window.RMSistema.attach(tab, SLUG); E.etapas.attach_tema = true;
     } catch (e) { E.erros.push('tema:' + (e && e.message)); try { window.RMSistema.detach(); } catch (e2) {} return; }
     if (MODO === 'tema') return;

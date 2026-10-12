@@ -5,14 +5,19 @@
 
 ## 0-B · 2.ª rodada (11/10, `main` `d51cd1f4`: caneta `456e` aprovada por José no iPad)
 
-Retomada a partir das **12 matérias que ainda falhavam** com C1–C3 (não do zero). Tudo em ambiente isolado (servidor local, arquivos reais da `main`, patches em memória, Supabase e manifesto de áudio simulados, zero rede externa). **Nenhuma flag, conta liberada, `PILOT_SLUGS` ou publicação foi alterada; nenhum arquivo do site foi editado.**
+Retomada a partir das **12 matérias que ainda falhavam** com C1–C3 (não do zero; 11 delas são elegíveis — a 12.ª é o piloto). Tudo em ambiente isolado (servidor local, arquivos reais da `main`, patches em memória, Supabase e manifesto de áudio simulados, zero rede externa). **Nenhuma flag, conta liberada, `PILOT_SLUGS` ou publicação foi alterada; nenhum arquivo do site foi editado.**
 
-| | 10/10 (pós-#470) | **11/10 (pós-#479)** |
-|---|---|---|
-| Layout «como está» (A1/A2/A7): PASSA / FALHA | 0 / 27 | **0 / 27** (esperado: os patches não estão no código) |
-| Layout «com correção»: PASSA / FALHA | 15 / 12 (C1–C3) | **27 / 0** (C1–C8) |
-| Uso — `INTERACAO.md` (caneta CDP, palma, rolagem, pinça, goma, Deshacer, grifo, troca de bloco/modo, recarregar, questões, flashcards, audiobook) | não existia | **27 / 0** nas 4 larguras |
-| Contrato R1…R9 | 13 · 6 · 14 · 9 · 20 · 27 · 27 · 27 · 0 | **idêntico** (nenhum marcador editorial aplicado) |
+**Escopo (decisão de José, 12/10): 25 matérias elegíveis.** Do catálogo de 27 saem Imagenología (fora da integração; segue medida só como referência) e Semiología II (o piloto, que **já funciona no site**). Bioestadística nem está no catálogo (arquivo sem rota; #213 encerrada) e não é ensaiada.
+
+| Grupo | No site hoje | Ensaio «como está» | **Ensaio com correções simuladas (C1–C8, só em memória)** | Uso (`INTERACAO.md`, simulado) |
+|---|---|---|---|---|
+| **25 elegíveis** | **não funciona** (layout só roda no piloto) | 0 / 25 | **25 / 25** (em 10/10 com C1–C3: 14 / 25) | **25 / 25** nas 4 larguras |
+| Semiología II (piloto) | **já funciona** (contas liberadas; caneta `456e` aprovada) | FALHA: 2 defeitos já presentes no piloto (hero abaixo do índice; capa omite 12 flashcards) | PASSA | PASSA |
+| Imagenología (fora) | não funciona | FALHA | PASSA (referência) | PASSA (referência) |
+
+Contrato R1…R9 (27 do catálogo): **idêntico** a 10/10 — 13 · 6 · 14 · 9 · 20 · 27 · 27 · 27 · 0 (nenhum marcador editorial aplicado).
+
+> **«Passou com correções simuladas» ≠ «já funciona no site».** Nenhum patch C1–C8 está no código publicado. As PRs de integração (§0-C) mudam isso por partes, sem ligar nenhuma matéria.
 
 ### O que fechou as 12 falhas (todas reproduzidas e resolvidas no ensaio, em memória)
 
@@ -48,7 +53,7 @@ Retomada a partir das **12 matérias que ainda falhavam** com C1–C3 (não do z
 | # | Risco | Peso | Mitigação |
 |---|---|---|---|
 | 1 | Chromium ≠ Safari/iPadOS + Apple Pencil (latência, `touchType`, rejeição de palma do sistema, Scribble, hover do Pencil) | **alto** | roteiro físico de ≤ 3 min **por matéria liberada**, uma de cada vez (`INTERACAO.md` §6) |
-| 2 | A7 e C8 mexem no motor da caneta já aprovado | médio | PR própria; repetir a bateria iPad (#456) e um reteste físico curto na Semiología II antes de qualquer outra matéria |
+| 2 | A7 e C8 mexem no motor da caneta já aprovado | médio | **adiados**: Claude 1 trabalha no motor na #484; A7/C8 entram depois, em PR própria, com a bateria iPad (#456) e um reteste físico curto na Semiología II |
 | 3 | Matérias muito grandes (Fisio II 1857 flashcards, Med. Legal 1122) — custo da camada de tinta/isolamento não medido em aparelho | médio | medir no aparelho ao liberar; o ensaio só prova que funciona |
 | 4 | C5 muda números da capa (ex.: Semiología II Flashcards 172 → 184; Medicina Familiar Preguntas 64 → 90) | baixo | avisar José; os números passam a ser o que o aluno encontra |
 | 5 | C5/C6 escondem problemas editoriais (repetições, itens só no banco, infografía dentro das questões) | médio | fila editorial G0 + 8-A por matéria; nunca em massa |

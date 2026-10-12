@@ -22,12 +22,20 @@ const cel = (l, a) => { if (l.semDados) return '—'; const x = l.porArea[a]; if
 const ver = l => l.semDados ? 'SEM DADOS' : (l.falhas.length ? 'FALHA' : (l.bloqueios.length ? 'PASSA*' : 'PASSA'));
 
 const M = []; const w = (...s) => M.push(...s);
-w('# Matriz de interação · 27 matérias × 390 / 768 / 1024 / 1440 · #457/#459 (2.ª rodada, `main` com a #479)', '');
+w('# Matriz de interação · 25 elegíveis + piloto + Imagenología (referência) × 390 / 768 / 1024 / 1440 · #457/#459', '');
 w('> **Nada foi ativado.** Flags, contas liberadas, `PILOT_SLUGS`, slug do piloto e publicação continuam como na `main`. O ensaio roda num servidor local com os arquivos REAIS da `main` e aplica, **em memória**, os patches da integração proposta (A1/A2/A7 + C1–C8, ver `PATCHES-PARA-INTEGRACAO.md`). Supabase e manifesto de áudio são **simulados**; zero rede externa.', '');
 w('Esta bateria (`tools/qa/ensaio-layout/interacao.cjs`) complementa a `MATRIZ.md` (layout, índice, modos, contagens): aqui se mede o **uso** — escrever, apoiar a palma, rolar, dar zoom, apagar, desfazer, grifar, trocar de bloco/modo, recarregar, responder questão, abrir flashcards e a presença/ausência de audiobook.', '');
 w('Legenda: ✅ todas as verificações da área passaram nas larguras medidas · ❌ N = N verificações falharam · 🟨 N = N verificações não puderam ser medidas neste ambiente (ver «Bloqueios») · n/a = a matéria não tem o recurso (p.ex. sem tabela larga).', '');
 const cnt = v => linhas.filter(l => ver(l) === v).length;
-w('## 1 · Resumo', '');
+const ELEG = linhas.filter(l => L.grupoDe(l.slug) === 'elegivel'), cntE = v => ELEG.filter(l => ver(l) === v).length;
+w('## 0 · Já funciona no site × passou só com correções simuladas', '');
+w('**Tudo nesta matriz roda com as correções simuladas** (A1/A2/A7 + C1–C8 na memória do servidor de teste). Por isso «PASSA» aqui **não** quer dizer que funciona no site.', '');
+w('| Grupo | Matérias | No site hoje | Nesta bateria |', '|---|---|---|---|');
+w(`| Piloto | Semiología II | **já funciona no site** (contas liberadas); a caneta \`456e\` foi aprovada por José no iPad (#456) | ${ver(linhas.find(l => l.slug === L.ELEGIBILIDADE.piloto))} |`);
+w(`| **Elegíveis** | ${ELEG.length} | **não funciona no site** (layout novo só roda no piloto; motor da caneta física só liga no piloto) | **passou com correções simuladas: ${cntE('PASSA')} / ${ELEG.length}** · falha: ${cntE('FALHA')} |`);
+Object.entries(L.ELEGIBILIDADE.fora).forEach(([sl, mot]) => { const l = linhas.find(x => x.slug === sl); w(`| Fora | ${l ? l.title : 'Bioestadística'} | fora | ${mot}${l ? ' · referência: ' + ver(l) : ''} |`); });
+w('');
+w('## 1 · Resumo (27 do catálogo)', '');
 w('| PASSA | PASSA com bloqueio declarado | FALHA | Sem dados |', '|--:|--:|--:|--:|', `| ${cnt('PASSA')} | ${cnt('PASSA*')} | ${cnt('FALHA')} | ${cnt('SEM DADOS')} |`, '');
 w('| Área | Matérias ✅ | ❌ | 🟨 | n/a |', '|---|--:|--:|--:|--:|');
 AREAS.forEach(a => { const k = x => linhas.filter(l => !l.semDados && cel(l, a).startsWith(x)).length; w(`| ${ROT[a]} | ${k('✅')} | ${k('❌')} | ${k('🟨')} | ${k('n/a')} |`); });
@@ -35,8 +43,8 @@ const tabs = Object.values(RES).map(R => R.checks.filter(c => c.id === 'tabela-r
 w('', `Tabela larga com rolagem própria (dedo rola a tabela com o lápis armado): medida em ${tabs.length} matérias, ${tabs.reduce((a, x) => a + x.length, 0)} verificações (só nas larguras em que a tabela é mais larga que o contêiner); nas demais não há tabela assim. Total de verificações de interação: ${Object.values(RES).reduce((a, R) => a + R.checks.length, 0)}.`);
 w('');
 w('## 2 · Matriz por matéria', '');
-w('| Matéria | Veredito | ' + AREAS.map(a => ROT[a]).join(' | ') + ' | Verificações |', '|---|:-:|' + AREAS.map(() => ':-:').join('|') + '|--:|');
-linhas.forEach(l => w(`| ${l.title} (\`${l.slug}\`) | ${ver(l)} | ` + AREAS.map(a => cel(l, a)).join(' | ') + ` | ${l.semDados ? '—' : l.total} |`));
+w('| Matéria | Grupo | Veredito (simulado) | ' + AREAS.map(a => ROT[a]).join(' | ') + ' | Verificações |', '|---|:-:|:-:|' + AREAS.map(() => ':-:').join('|') + '|--:|');
+linhas.forEach(l => w(`| ${l.title} (\`${l.slug}\`) | ${{ piloto: '✅ piloto (já no site)', elegivel: '🧪 elegível (só simulado)', fora: '⛔ fora' }[L.grupoDe(l.slug)]} | ${ver(l)} | ` + AREAS.map(a => cel(l, a)).join(' | ') + ` | ${l.semDados ? '—' : l.total} |`));
 w('');
 const fal = linhas.filter(l => !l.semDados && l.falhas.length);
 w('## 3 · Falhas reproduzíveis', '');
@@ -74,5 +82,5 @@ w('| Tema | O ensaio comprova (Chromium, eventos CDP confiáveis) | Exige aparel
 w('', '**Conclusão honesta:** o ensaio prova que a caneta aprovada no piloto **convive** com o layout e o conteúdo real de cada matéria no Chromium. Não substitui um teste físico por matéria; recomenda-se repetir o roteiro físico de ≤ 3 min (`docs/caneta-ipad-456/PASSO-FINAL-JOSE.md`) **em cada matéria liberada**, uma por vez.', '');
 w(`Gerado de ${Object.keys(RES).length} resultados em \`docs/layout-ensaio/interacao/\` (não versionados; \`interacao.cjs\` os regenera) → evidência compacta em \`interacao-compacto.json\`.`);
 fs.writeFileSync(path.join(DIR, 'INTERACAO.md'), M.join('\n') + '\n');
-fs.writeFileSync(path.join(DIR, 'interacao-compacto.json'), L.jsonLinhas({ gerado_em: new Date().toISOString(), nota: 'Uma linha por matéria: contagem por área; falhas e bloqueios com a evidência. Reproduzir: interacao.cjs.', materias: linhas }, 'materias'));
+fs.writeFileSync(path.join(DIR, 'interacao-compacto.json'), L.jsonLinhas({ gerado_em: new Date().toISOString(), nota: 'Uma linha por matéria: contagem por área; falhas e bloqueios com a evidência. Reproduzir: interacao.cjs.', materias: linhas.map(l => Object.assign({ grupo: L.grupoDe(l.slug) }, l)) }, 'materias'));
 console.log('INTERACAO.md', linhas.length, 'matérias', JSON.stringify({ PASSA: cnt('PASSA'), PASSAx: cnt('PASSA*'), FALHA: cnt('FALHA'), SD: cnt('SEM DADOS') }));

@@ -8,7 +8,7 @@
 const fs = require('fs'), path = require('path');
 const L = require('./lib.cjs');
 const args0 = process.argv.slice(2);
-const OUT = path.join(L.REPO, 'docs/layout-ensaio/' + (args0.includes('--corr') ? 'resultados-corr' : 'resultados'));
+const OUT = process.env.RM_ENSAIO_OUT ? path.resolve(process.env.RM_ENSAIO_OUT) : path.join(L.REPO, 'docs/layout-ensaio/' + (args0.includes('--corr') ? 'resultados-corr' : 'resultados'));   // RM_ENSAIO_OUT: validação de PR sem sobrescrever o resultado versionado
 const SHOTS = process.env.RM_EVID_DIR ? path.resolve(process.env.RM_EVID_DIR) : null;
 const args = process.argv.slice(2), RAPIDO = args.includes('--rapido'), CORR = args.includes('--corr'), filtro = args.filter(a => !a.startsWith('--'));
 const LARGURAS = RAPIDO ? [1440, 390] : [390, 768, 1024, 1440];
