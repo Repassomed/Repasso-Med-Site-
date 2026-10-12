@@ -13,6 +13,7 @@ W=390,768,1024,1440 node tools/qa/browser-qa/farmaco2-2026-10/ink.test.cjs   # a
 node tools/qa/browser-qa/farmaco2-2026-10/real-ink.test.cjs     # TINTA EM POSIÇÃO REAL: caneta de verdade (rm-tools-v2) desenha na base, os traços voltam na versão nova e mede-se onde caem (RM_MID_REF=<commit> compara com uma versão intermediária; NBANCO/NBLOCOS = nº de alvos)
 node tools/qa/browser-qa/farmaco2-2026-10/hl-remap.test.cjs     # grifos SINTÉTICOS com e sem remapeamento (prova de conceito: NÃO comprova preservação de grifos reais)
 node tools/qa/browser-qa/farmaco2-2026-10/remap-highlights.cjs --in marcas.json --out marcas.remap.json   # remapeia uma exportação real (quem a tem roda; não escreve em lugar nenhum; conferência humana antes de qualquer escrita)
+node tools/qa/browser-qa/farmaco2-2026-10/hl-real.cjs --in registros.json --out relatorio.json   # GRIFOS REAIS (consulta somente leitura feita por fora; registros SEM user_id, fora do repositório): quantos sobrevivem na matéria nova sem remap, quantos só com remap, quantos se perdem
 ```
 Variáveis: `RM_BASE_REF` (padrão `origin/main`), `RM_ORIG_HTML` (arquivo da base), `RM_CHROMIUM` (executável), `RM_PLAYWRIGHT`, `RM_OUT`, `RM_DUMP_ROWS=1`.
 

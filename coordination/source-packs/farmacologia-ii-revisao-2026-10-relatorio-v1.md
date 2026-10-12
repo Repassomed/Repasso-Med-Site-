@@ -33,7 +33,7 @@
 |---|---|---|
 | E1 | b05 §9 (painel + tabela + comparação) | **correção científica**: painel com o título original e «Conforme la cátedra: NO»; a nuance entra **na própria frase** («en la literatura, sobre todo con el nifedipino de acción corta») e na célula do amlodipino («como grupo, “NO” en IAM reciente y angina inestable; el exceso de mortalidad es de las de acción corta, no del amlodipino») |
 | E2 | b05 §3.1 | três cartões que *explicam* o que separa angina instável / IAM sem ↑ST / IAM com ↑ST (antes só havia a figura) — corrige o erro da anotação (IAMSEST com «↑ persistente do ST») |
-| E3 | b05 §7.7 | nitroglicerina SL/IV na angina instável com dor persistente |
+| E3 | b05 §7.7 | nitroglicerina SL/IV na angina instável com dor persistente — **RETIRADA nesta rodada (12/10)**: a frase caía dentro de um grifo real de 5 itens; fica pendente para depois da migração autorizada (protocolo de grifos, «Validação com registros REAIS») |
 | E4 | b01 §6.5 | cartões «quem aprieta / quem afloja» → por que α antes de β (dúvida do aluno) |
 | E5 | b02 §9 | mecanismo da hipercalcemia da tiazida (NCC → Na⁺ intracelular ↓ → trocador Na⁺/Ca²⁺ + canal apical) |
 | E6 | b02 §10 | poupadores retêm K⁺ e H⁺ e **reduzem a perda de Mg²⁺** (a anotação dizia «Ca²⁺ e Cl⁻», que não se sustenta) |
@@ -82,7 +82,7 @@ Invariante estrutural (necessário, **não suficiente**): a sequência dos eleme
 * **Tinta ancorada à seção** (enunciados `div.quiz-question`, figuras): enunciados — mediana/p90/máx. (px), rodada 3: 390 px: **58/131/279** (rodada 2: 168/716/937) · 768: 30/73/108 · 1024: 28/68/101 · 1440: 35/73/124 (origem: mediana 117–334, p90 236–809, máx. 310–957); figuras 390: 34/163/246. Δ de altura do banco (f2b15): 1024 −580 px, 768 −769, 1440 −580 e **390 px (celular) +1 144 px** (rodada 2: +3 116; origem: +8 970). Mistura de alternativas A/B/O em 51 questões (§3.3 do QA).
 * `data-rm-content-rev` **não** foi aplicado e **não é proposto como solução**: orfanaria também os traços que hoje se alinham.
 
-Risco para a tinta: **BAIXO–MÉDIO** (não zero), concentrado em (i) traços sobre enunciados no **Banco em celular (390 px)** e (ii) grifos/traços sobre as ≈ 3 % de frases reescritas por necessidade científica ou da G0. Sem acesso aos dados reais dos alunos (leitura no Supabase negada; não contornada): os números são simulações com o motor real.
+Risco para a tinta: **BAIXO–MÉDIO** (não zero), concentrado em (i) traços sobre enunciados no **Banco em celular (390 px)** e (ii) grifos/traços sobre as ≈ 3 % de frases reescritas por necessidade científica ou da G0. Os números de tinta são simulações com o motor real (caneta real emulada, servidor simulado); os **grifos reais** foram lidos em consulta somente leitura em 12/10 (238 registros): 237 sobrevivem sem remapeamento na versão atual (protocolo, «Validação com registros REAIS»); há 1 traço de tinta real nesta matéria, sem efeito estatístico.
 
 ## 6 · O que **não** foi feito (e por quê)
 

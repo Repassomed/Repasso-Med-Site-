@@ -2,6 +2,8 @@
 
 > Documento interno. Pareia cada frase da `origin/main` que deixou de existir com a frase mais próxima do mesmo elemento na PR #474. Serve para conferência humana: nada aqui é publicado ao aluno.
 
+> **Atualização de 12/10:** os registros de f2b01 e f2b05 que correspondem aos 12 pontos cobertos por grifos reais (protocolo de grifos, «Validação com registros REAIS») voltaram ao texto literal da `main` no commit `e9334c1f`; as linhas do rastreio sobre eles descrevem a versão neutra anterior (a que `git revert e9334c1f` restaura). As contagens abaixo são as da lista gerada em 3990cbff.
+
 Método: elementos `SUB_SEL` pareados por índice dentro de cada `section[id]` (a sequência é idêntica à da main); frases ≥ 25 caracteres; «preservada» = a frase aparece literalmente no texto novo do mesmo elemento.
 
 **Frases originais em elementos alterados:** 1354 · **não preservadas literalmente:** 646
