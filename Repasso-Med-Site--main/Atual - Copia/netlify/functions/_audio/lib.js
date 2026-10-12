@@ -5,8 +5,10 @@
 
    O que garante
      · Autorização NO SERVIDOR por UID autenticado (JWT → /auth/v1/user) contra
-       a variável RM_PILOT_AUDIO_UIDS + matéria fixa `semiologia-ii`. Nunca só
-       is_admin, e-mail ou a beta antiga. O UID não entra no repositório.
+       a variável RM_PILOT_AUDIO_UIDS + matéria AUTORIZADA (RM_AUDIO_SLUGS, lista
+       separada por vírgula; ausente ⇒ só `semiologia-ii`, o comportamento de
+       sempre). Nunca só is_admin, e-mail ou a beta antiga. O UID não entra no
+       repositório.
      · O cliente nunca escolhe caminho/bucket: só `audio_id`, que tem de estar
        no manifesto PRONTO (ready) do servidor. O caminho do objeto nunca sai
        daqui.
@@ -20,12 +22,17 @@
      Vem da variável de ambiente RM_AUDIO_MANIFEST (JSON) — NÃO do repositório
      (a pasta publicada é a raiz: qualquer arquivo versionado vira URL). Formato:
        { "semiologia-ii": [ { audio_id, block_id, theme, title, duration, order,
-                               version, path, ready } ] }
+                               version, path, ready } ],
+         "<outra-materia>": [ … ] }
+     Áudio por matéria, aos poucos: (1) os itens da matéria entram no manifesto com
+     `ready:false` (nada aparece); (2) arquivo subido ⇒ `ready:true`; (3) a matéria
+     entra em RM_AUDIO_SLUGS. Só então o servidor devolve os itens daquela matéria —
+     e o card só aparece onde o layout já está ativo. Cada passo se desfaz sozinho.
      `path` (objeto no bucket) só existe no servidor. `ready:false` ou item
      inválido ⇒ não existe para o cliente (recurso ausente = acesso ausente).
      Sem variável ⇒ manifesto vazio ⇒ nenhum áudio.
 
-   Kill switch: esvaziar RM_PILOT_AUDIO_UIDS (ou RM_AUDIO_MANIFEST).
+   Kill switch: esvaziar RM_PILOT_AUDIO_UIDS (ou RM_AUDIO_MANIFEST); por matéria: tirá-la de RM_AUDIO_SLUGS.
    ===================================================================== */
 'use strict';
 
@@ -33,10 +40,16 @@ const PILOT_SLUG = 'semiologia-ii';
 const BUCKET = 'audiobooks';
 const TTL_S = 600;                       // URL assinada: 10 min (o motor reautoriza sem perder o ponto)
 const ID_RE = /^[a-z0-9][a-z0-9._-]{0,79}$/i;
+const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,60}$/;     // slug de matéria (o mesmo formato do catálogo)
 const PATH_RE = /^[a-z0-9][a-z0-9._\/-]{0,200}$/i;   // sem `..`, sem `//`, sem `?`/`#`
 
 function lista(v) {
   return String(v || '').split(',').map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean);
+}
+/* Matérias com áudio autorizado. Sem a variável: só o piloto (comportamento de sempre). Lista vazia explícita (" ") = nenhuma. */
+function slugsAutorizados(env) {
+  if (env.RM_AUDIO_SLUGS === undefined || env.RM_AUDIO_SLUGS === null) return [PILOT_SLUG];
+  return lista(env.RM_AUDIO_SLUGS).filter(function (s) { return SLUG_RE.test(s); });
 }
 
 /* Campos públicos de um item (os mesmos 8 do validador do motor, rm-audio.js). */
@@ -46,17 +59,19 @@ function urlSegura(p) {
   return typeof p === 'string' && PATH_RE.test(p) && p.indexOf('..') < 0 && p.indexOf('//') < 0 && p.charAt(p.length - 1) !== '/';
 }
 
-/* Lê e valida o manifesto da variável. Devolve só itens prontos e bem formados. */
-function lerManifesto(raw, validateItem) {
+/* Lê e valida o manifesto da variável PARA UMA MATÉRIA. Devolve só itens prontos e bem formados. */
+function lerManifesto(raw, validateItem, slug) {
+  slug = slug || PILOT_SLUG;
+  if (!SLUG_RE.test(slug)) return [];
   let j;
   try { j = JSON.parse(String(raw || '')); } catch (e) { return []; }
-  const arr = j && Array.isArray(j[PILOT_SLUG]) ? j[PILOT_SLUG] : [];
+  const arr = j && Object.prototype.hasOwnProperty.call(j, slug) && Array.isArray(j[slug]) ? j[slug] : [];
   const vistos = {}, out = [];
   arr.forEach(function (it) {
     if (!it || typeof it !== 'object' || it.ready !== true || !urlSegura(it.path)) return;
     /* campo desconhecido (p.ex. `url`, `token`) = manifesto mal formado: o item não existe (falha fechada) */
     if (Object.keys(it).some(function (k) { return PUBLIC_KEYS.indexOf(k) < 0 && k !== 'path' && k !== 'ready'; })) return;
-    const pub = { subject_slug: PILOT_SLUG };
+    const pub = { subject_slug: slug };
     PUBLIC_KEYS.forEach(function (k) { if (k !== 'subject_slug') pub[k] = it[k]; });
     const v = validateItem(pub);                    // mesmas regras do motor: recusa URL, caminho, token, etc.
     if (!v.ok || vistos[v.item.audio_id]) return;
@@ -95,22 +110,24 @@ function criar(cfg) {
     const uids = lista(env.RM_PILOT_AUDIO_UIDS);
     if (!uids.length) return null;
     const qs = (event && event.queryStringParameters) || {};
-    if (String(qs.slug || '') !== PILOT_SLUG) return null;
+    const slug = String(qs.slug || '').toLowerCase();
+    if (!SLUG_RE.test(slug) || slugsAutorizados(env).indexOf(slug) === -1) return null;   // matéria fora da lista = negado (mesma resposta)
     const t = token(event);
     if (!t) return null;
     const r = await doFetch(url + '/auth/v1/user', { headers: { apikey: anon, Authorization: 'Bearer ' + t } });
     if (!r || !r.ok) return null;
     const u = await r.json();
     const uid = u && typeof u.id === 'string' ? u.id.trim().toLowerCase() : '';
-    return uid && uids.indexOf(uid) !== -1 ? uid : null;
+    return uid && uids.indexOf(uid) !== -1 ? { uid: uid, slug: slug } : null;
   }
 
   async function manifesto(event) {
     try {
       if (event && event.httpMethod && event.httpMethod !== 'GET') return NEGA_MANIFESTO();
-      if (!(await autorizar(event))) return NEGA_MANIFESTO();
-      const itens = lerManifesto(env.RM_AUDIO_MANIFEST, validateItem).map(function (x) { return x.pub; });
-      return json(200, { slug: PILOT_SLUG, items: itens });
+      const a = await autorizar(event);
+      if (!a) return NEGA_MANIFESTO();
+      const itens = lerManifesto(env.RM_AUDIO_MANIFEST, validateItem, a.slug).map(function (x) { return x.pub; });
+      return json(200, { slug: a.slug, items: itens });
     } catch (e) {
       console.error('get-audio-manifest', e && e.name);
       return NEGA_MANIFESTO();
@@ -125,8 +142,9 @@ function criar(cfg) {
       const qs = (event && event.queryStringParameters) || {};
       const id = String(qs.audio_id || '');
       if (!ID_RE.test(id)) return NEGA_URL();
-      if (!(await autorizar(event))) return NEGA_URL();
-      const item = lerManifesto(env.RM_AUDIO_MANIFEST, validateItem).filter(function (x) { return x.pub.audio_id === id; })[0];
+      const a = await autorizar(event);
+      if (!a) return NEGA_URL();
+      const item = lerManifesto(env.RM_AUDIO_MANIFEST, validateItem, a.slug).filter(function (x) { return x.pub.audio_id === id; })[0];
       if (!item) return NEGA_URL();                        // o cliente nunca escolhe o caminho: só o audio_id do manifesto
       const base = env.SUPABASE_URL + '/storage/v1';
       const caminho = item.path.split('/').map(encodeURIComponent).join('/');
@@ -150,4 +168,4 @@ function criar(cfg) {
   return { manifesto: manifesto, assinar: assinar };
 }
 
-module.exports = { criar, lerManifesto, PILOT_SLUG, BUCKET, TTL_S };
+module.exports = { criar, lerManifesto, slugsAutorizados, PILOT_SLUG, BUCKET, TTL_S };
