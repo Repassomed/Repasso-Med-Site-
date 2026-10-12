@@ -13,15 +13,18 @@ Isolado do site: **não é carregado por nenhuma página**, não altera arquivos
 | `contrato.teste.cjs` | **casos negativos** que provam que R4, R5 e R9 falham quando devem (e que a regra antiga passava); saída em `docs/layout-ensaio/contrato.teste.saida.txt` |
 | `compactar.cjs` | junta os JSON completos por matéria (`resultados*/`, **não versionados**) em `resultado-compacto.json` (versionado, uma linha por matéria) |
 | `matriz.cjs` | checkpoint D: `MATRIZ.md` (PASSA / FALHA / BLOQUEADO), lê só o resultado compacto |
+| `soltos.cjs` · `soltos-md.cjs` | #487: cada filho da aba fora de `section[id]` (hero, banner «Repaso General · Simulacro», seção sem id…) → classe e visibilidade no índice geral, em outro bloco, no bloco dele e sem navegação; mede a `main` e o código de uma PR (`RM_ENSAIO_REF`) e compara → `CONTEUDO-SOLTO.md` + `conteudo-solto.json` |
 | `interacao.cjs` · `interacao-md.cjs` | 2.ª rodada (#457/#459 pós-#479): **uso** por matéria × 390/768/1024/1440 — caneta (CDP «pen»), palma, rolagem com lápis/goma, tabela larga, pinça, escrever com zoom, goma + Deshacer, grifo, troca de bloco/modo, recarregar, questões, flashcards, audiobook → `INTERACAO.md` + `interacao-compacto.json` |
 
-Documentos: `docs/layout-ensaio/{INVENTARIO,MATRIZ,INTERACAO,CONFORMIDADE,CONTRATO-NOVOS-RECURSOS,PATCHES-PARA-INTEGRACAO,PENDENCIAS-ENSAIO-GLOBAL}.md`.
+Documentos: `docs/layout-ensaio/{INVENTARIO,MATRIZ,INTERACAO,CONFORMIDADE,CONTRATO-NOVOS-RECURSOS,PATCHES-PARA-INTEGRACAO,PENDENCIAS-ENSAIO-GLOBAL,CONTEUDO-SOLTO}.md`. A lista exata das matérias e a conta 27 = piloto + Imagenología + 25 elegíveis estão em `MATRIZ.md` §0-A (geradas do catálogo).
 
 ```bash
 export NODE_PATH=$(npm root -g)
 node tools/qa/ensaio-layout/inventario.cjs && node tools/qa/ensaio-layout/inventario-md.cjs
 node tools/qa/ensaio-layout/ensaio.cjs [slug …] [--rapido] [--corr]
 node tools/qa/ensaio-layout/interacao.cjs [slug …] [--rapido] && node tools/qa/ensaio-layout/interacao-md.cjs
+RM_ENSAIO_REF=<commit> node tools/qa/ensaio-layout/ensaio.cjs --corr     # serve assets/ daquele commit (PR ainda não mesclada); o resultado grava o ref
+node tools/qa/ensaio-layout/soltos.cjs main.json && RM_ENSAIO_REF=<commit> node tools/qa/ensaio-layout/soltos.cjs pr.json && node tools/qa/ensaio-layout/soltos-md.cjs main.json pr.json
 node tools/qa/ensaio-layout/compactar.cjs && node tools/qa/ensaio-layout/contrato.teste.cjs && node tools/qa/ensaio-layout/contrato.cjs && node tools/qa/ensaio-layout/inventario-md.cjs && node tools/qa/ensaio-layout/matriz.cjs
 ```
 

@@ -1,7 +1,28 @@
-# Pendências do ensaio global do layout novo — atualização de 2026-10-11 (2.ª rodada do ensaio)
+# Pendências do ensaio global do layout novo — atualizações de 2026-10-11 (2.ª rodada) e 2026-10-12 (§0-C, §0-D: rodada com o código das PRs de integração)
 
-> **Nada foi ativado.** Layout global **não** está autorizado: depende de ordem expressa de José. Este documento só reconcilia o que `MATRIZ.md` (#457/#459) deixou aberto com o que mudou na `main` depois dele. Nenhum arquivo reservado foi tocado; o ensaio **não foi reexecutado** nesta atualização (os números abaixo são os já versionados).
+> **Nada foi ativado.** Layout global **não** está autorizado: depende de ordem expressa de José. Este documento só reconcilia o que `MATRIZ.md` (#457/#459) deixou aberto com o que mudou na `main` depois dele. Nenhum arquivo reservado foi tocado; os números de cada seção são os da rodada indicada nela (a mais recente é a §0-D).
 > **Ensaio técnico ≠ aprovação das 27 matérias.** `PASSA` na matriz significa "o componente funcionou no Chromium com um tema hipotético", não "a matéria está pronta, revisada ou com identidade aprovada".
+
+## 0-D · #487 refeita (conteúdo solto) + ensaio com #486/#488 já na `main` (12/10)
+
+**Lista exata e conta:** `MATRIZ.md` §0-A (gerada do catálogo × `get-materia` × arquivos). **27 ativas = 1 piloto (`semiologia-ii`) + 1 fora (`imagenologia`) + 25 elegíveis.**
+Bioestadística, a 2.ª excluída, **não é uma das 27** (`bioestadistica.html` sem rota, #213); `anatomiapatologica-ii.html` e `anatomiapatologica-ii-practica.html` são cópias órfãs, não matérias. Todo «25/25» abaixo é sobre essas 25 — **o piloto fica fora da conta**.
+
+**C3 refeita na #487.** A 1.ª versão escondia tudo o que fica fora de `section[id]` com a navegação montada. O inventário (`CONTEUDO-SOLTO.md`, ferramenta `soltos.cjs`) mostrou o que isso tiraria do aluno: o hero de 9 matérias e o da Semiología II na «Página completa» (índice geral), o banner «Repaso General · Simulacro» de 19 e uma `<section class="container">` **sem id com 20 questões** na Anatomía Patológica Práctica, que ficaria inalcançável. Agora o código **classifica**: abertura/fecho/conteúdo ficam no índice geral, o anexo (banner) só com o bloco dele; nada vaza mais para os blocos (na `main` o hero, o banner e a seção sem id aparecem em **todos** os blocos). Piloto: sem mudança.
+
+| Rodada (`main` `f5a434c2` = #486 + #488 mescladas) | Matérias | Verificações | Falhas |
+|---|---|---|---|
+| Layout **como está** (só `main`, sem simulação) | 27 | 6 200 (elegíveis 5 724) | 280 — **as 25 elegíveis falham**: resíduo fora de `section[id]` (C3), cadeia Anterior/Próximo (C4) e agregadoras sem descritor (`data-rm-agrega`); o piloto falha só em `indice/sem-residuo` |
+| Layout **com correção** (`RM_ENSAIO_REF=5cc04ddf` = `main` + #487) | 27 | 6 384 (elegíveis 5 896) | **0 — 25/25 elegíveis** (+ piloto e Imagenología como referência) |
+| Uso (`interacao.cjs`, mesmo ref; caneta CDP, palma, rolagem, tabela larga, pinça, goma, grifo, troca de bloco/modo, recarregar, questões, flashcards, audiobook) | 27 | 2 529 (elegíveis 2 344) | **0 — 25/25 elegíveis**, 0 bloqueio |
+| Checks novos do conteúdo solto | 27 | `preserva-conteudo-solto` 108 · `anexo-com-seu-bloco` 76 (19 matérias) | 0 |
+| Controle negativo: a 1.ª versão da #487 (`89bc63f5`, regra que escondia tudo) | AP Práctica | 124 | **2 — `preserva-conteudo-solto` «0 de 2 visíveis»** (hero + seção sem id com 20 questões): o check pega exatamente o defeito |
+
+Origem das correções nessa rodada: **já na `main`** A1, C1, C2, C5, C6, C7 · **PR aberta #487** A2, A3, C3, C4 · **simuladas** A7/C8 (caneta, aguardam a #484) e o descritor de tema por matéria (hipótese técnica). `e9ae75d2` (ponta atual da #487) difere de `5cc04ddf` só por um comentário.
+
+Incidente da rodada: na mescla da tabela larga (`--so-tabela`) o Chromium caiu em `fisiopatologia-ii` e as 8 seguintes receberam «interrompido» (exceção `browser has been closed`, 0 s). Reexecutadas só essas 8: 21 verificações, 0 falha (45 no total, 19 matérias, igual à rodada anterior). A mescla agora marca a exceção (`de: 'so-tabela'`) e a troca na próxima mescla em vez de acumulá-la.
+
+**Suítes do piloto no branch da #487:** `sistema` 124/124 · `nav-sistema` 216/216 · `cover` 198/198 · `layout` 535/535 · **novo** `soltos.test` 16/16.
 
 ## 0-C · Integração em PRs pequenas (12/10) — o que o código real já entrega
 
@@ -9,9 +30,9 @@ Pedido de José (12/10): integrar layout e navegação em PRs pequenas, sem ativ
 
 | PR | Arquivos | Correções | Guard |
 |---|---|---|---|
-| Repassomed/Repasso-Med-Site#486 | `rm-layout.js` (+ `cover`/`sistema` test na regra nova) | A1, C2, C5 | ✅ |
+| Repassomed/Repasso-Med-Site#486 | `rm-layout.js` (+ `cover`/`sistema` test na regra nova) | A1, C2, C5 | ✅ · mesclada |
 | Repassomed/Repasso-Med-Site#487 | `rm-materia-sistema.js/.css` | A2, A3, C3, C4 | ✅ |
-| Repassomed/Repasso-Med-Site#488 | `rm-materia-nav.js` | C1, C6, C7 | ✅ |
+| Repassomed/Repasso-Med-Site#488 | `rm-materia-nav.js` | C1, C6, C7 | ✅ · mesclada |
 | Repassomed/Repasso-Med-Site#489 | `rm-audio-boot.js`, `_audio/lib.js` (+ testes) | A4, A6 | ✅ (aviso: função do servidor, olho humano) |
 
 **Ensaio com o código das três PRs de layout juntas** (`RM_ENSAIO_REF=3ee1ce1b` = merge local de #486 + #487 + #488 sobre a `main` `9cff8ca0` — para reproduzir, mescle as três e aponte para o resultado; variante «com correção»; o ensaio reconhece cada correção no código e **deixa de simulá-la**):

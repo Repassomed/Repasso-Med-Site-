@@ -143,7 +143,7 @@ async function checarTabela(p, c, W, chk, go, secs) {
   fs.mkdirSync(OUT, { recursive: true });
   for (const m of lista) {
     const t0 = Date.now(), I = INV[m.slug];
-    const R = { variante: 'interacao-com-correcao', slug: m.slug, title: m.title, larguras: LARGURAS, checks: [], gerado_em: new Date().toISOString() };
+    const R = { variante: 'interacao-com-correcao', ref: process.env.RM_ENSAIO_REF || null, slug: m.slug, title: m.title, larguras: LARGURAS, checks: [], gerado_em: new Date().toISOString() };
     /* prova: 'cdp' = evento de entrada confiável do Chromium · 'dom' = estado/DOM · 'simulado' = depende de serviço simulado (Supabase/manifesto) */
     const chk = (area, w, id, cond, msg, prova, dados) => { const e = { area, w, id, estado: cond ? 'PASSA' : 'FALHA', prova, msg }; if (!cond && dados !== undefined) e.dados = dados; R.checks.push(e); return !!cond; };
     const bloq = (area, w, id, msg) => R.checks.push({ area, w, id, estado: 'BLOQUEADO', msg });
@@ -347,7 +347,7 @@ async function checarTabela(p, c, W, chk, go, secs) {
     console.log(`→ ${R.checks.length} verificações · ${f} FALHA · ${b} BLOQUEADO · ${R.segundos}s`);
     if (SO_TABELA) {   // mescla: troca só as verificações da tabela no resultado completo já gravado
       const f0 = path.join(OUT, m.slug + '.json'); if (!fs.existsSync(f0)) { console.log('  (sem resultado completo para mesclar)'); continue; }
-      const R0 = JSON.parse(fs.readFileSync(f0, 'utf8')); R0.checks = R0.checks.filter(c => c.id !== 'tabela-rola-com-lapis').concat(R.checks.filter(c => c.id === 'tabela-rola-com-lapis' || c.area === 'ensaio'));
+      const R0 = JSON.parse(fs.readFileSync(f0, 'utf8')); R0.checks = R0.checks.filter(c => c.id !== 'tabela-rola-com-lapis' && c.de !== 'so-tabela').concat(R.checks.filter(c => c.id === 'tabela-rola-com-lapis' || c.area === 'ensaio').map(c => c.area === 'ensaio' ? Object.assign({ de: 'so-tabela' }, c) : c));   // exceção de uma mescla anterior sai na próxima
       R0.tabela_mesclada_em = new Date().toISOString(); fs.writeFileSync(f0, L.jsonLinhas(R0, 'checks')); continue;
     }
     fs.writeFileSync(path.join(OUT, m.slug + '.json'), L.jsonLinhas(R, 'checks'));

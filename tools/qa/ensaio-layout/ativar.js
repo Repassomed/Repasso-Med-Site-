@@ -93,6 +93,7 @@
       'html.rm-nav.rm-sis[data-rm-nav="index"] #materias-container > .tab-content.active > [data-rm-solto="anexo"] { display: none !important; }';
     document.head.appendChild(st);
     E.etapas.c3_simulada = soltos.map(function (x) { return x.tipo; }).join(',') || 'nenhum';
+    if (!window.RMSistema.soltos) window.RMSistema.soltos = function () { return soltos.map(function (x) { return { tipo: x.tipo, de: x.de }; }); };
     var orig = window.RMSistema.refletir;
     window.RMSistema.refletir = function () {
       soltos.forEach(function (x) { if (x.tipo !== 'anexo') return; var s = document.getElementById(x.de); if (s && s.hasAttribute('data-rm-nav-cur')) x.e.setAttribute('data-rm-anexo-cur', ''); else x.e.removeAttribute('data-rm-anexo-cur'); });

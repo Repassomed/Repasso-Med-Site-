@@ -39,6 +39,7 @@ const INFO = () => {
        (data-rm-solto, #487) ficam por desenho; num bloco só o anexo daquele bloco (data-rm-anexo-cur) */
     residuo: [...tab.children].filter(e => !e.hasAttribute('data-rm-ui') && !/^(STYLE|SCRIPT|LINK|FOOTER)$/.test(e.tagName) && !(e.tagName === 'SECTION' && e.id) && vis(e) && e.getBoundingClientRect().height > 40
       && !(H.getAttribute('data-rm-nav') === 'index' && /^(abertura|fecho|conteudo)$/.test(e.getAttribute('data-rm-solto') || '')) && !e.hasAttribute('data-rm-anexo-cur')).map(e => e.tagName + '.' + String(e.className).slice(0, 30) + '#' + e.id + ' h=' + Math.round(e.getBoundingClientRect().height)),
+    classifica: !!(window.RMSistema && window.RMSistema.soltos),
     soltos: [...tab.children].filter(e => e.hasAttribute('data-rm-solto')).map(e => ({ k: e.tagName + '.' + String(e.className).split(' ')[0], t: e.getAttribute('data-rm-solto'), de: e.getAttribute('data-rm-anexo-de'), vis: vis(e) && e.getBoundingClientRect().height > 0, util: e.tagName !== 'NAV' && (!!e.querySelector('.quiz-item,.flashcard,figure,table,audio,video,iframe') || e.textContent.replace(/\s+/g, ' ').trim().length > 200) })),   // NAV: o menu da matéria é substituído pela navegação do layout (já na main), não é conteúdo
     sw: H.scrollWidth, vw: H.clientWidth, sy: Math.round(scrollY), sh: H.scrollHeight
   };
@@ -71,7 +72,7 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
   const br = await chromium.launch();
   fs.mkdirSync(OUT, { recursive: true });
   for (const m of lista) {
-    const t0 = Date.now(); const I = INV[m.slug]; const R = { variante: CORR ? 'com-correcao' : 'como-esta', slug: m.slug, title: m.title, tab: m.tab, larguras: LARGURAS, checks: [], notas: [], gerado_em: new Date().toISOString() };
+    const t0 = Date.now(); const I = INV[m.slug]; const R = { variante: CORR ? 'com-correcao' : 'como-esta', ref: process.env.RM_ENSAIO_REF || null, slug: m.slug, title: m.title, tab: m.tab, larguras: LARGURAS, checks: [], notas: [], gerado_em: new Date().toISOString() };
     const chk = (area, w, id, cond, msg, dados) => { const e = { area, w, id, estado: cond ? 'PASSA' : 'FALHA', msg }; if (!cond && dados !== undefined) e.dados = dados; R.checks.push(e); return !!cond; };
     const bloq = (area, w, id, msg) => R.checks.push({ area, w, id, estado: 'BLOQUEADO', msg });
     const info = p => p.evaluate(INFO);
@@ -130,7 +131,7 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
       });
       chk('indice', W, 'sem-residuo', i.residuo.length === 0, 'nada do conteúdo original solto fica visível abaixo do índice geral, exceto o que foi preservado de propósito (apresentação/conteúdo classificados)', i.residuo);
       /* #487: nada útil some — todo filho solto com conteúdo (questão/figura/tabela… ou texto > 200) visível na matéria sem layout fica visível no índice geral (ou acompanha o seu bloco, se for anexo) */
-      if (i.soltos.length || ctl.soltosUteis) {
+      if (i.classifica || i.soltos.length) {   // só onde o código servido classifica (#487 ou a simulação C3); na main o resíduo é medido por sem-residuo
         const pres = i.soltos.filter(x => x.util && x.t !== 'anexo');
         chk('indice', W, 'preserva-conteudo-solto', pres.filter(x => x.vis).length >= ctl.soltosUteisNaoAnexo && pres.every(x => x.vis), `índice geral preserva o conteúdo solto útil (${pres.filter(x => x.vis).length} de ${ctl.soltosUteisNaoAnexo} visíveis na matéria sem layout)`, { soltos: i.soltos, ctl: ctl.soltosUteisNaoAnexo });
         if (i.soltos.some(x => x.t === 'conteudo')) R.notas.push('conteudo-fora-de-bloco:' + i.soltos.filter(x => x.t === 'conteudo').map(x => x.k).join(','));

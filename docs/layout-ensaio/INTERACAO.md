@@ -1,19 +1,19 @@
 # Matriz de interação · 25 elegíveis + piloto + Imagenología (referência) × 390 / 768 / 1024 / 1440 · #457/#459
 
-> **Nada foi ativado.** Flags, contas liberadas, `PILOT_SLUGS`, slug do piloto e publicação continuam como na `main`. O ensaio roda num servidor local com os arquivos REAIS da `main` e aplica, **em memória**, os patches da integração proposta (A1/A2/A7 + C1–C8, ver `PATCHES-PARA-INTEGRACAO.md`). Supabase e manifesto de áudio são **simulados**; zero rede externa.
+> **Nada foi ativado.** Flags, contas liberadas, `PILOT_SLUGS`, slug do piloto e publicação continuam como na `main`. O ensaio roda num servidor local com os arquivos REAIS e a integração proposta (ver `PATCHES-PARA-INTEGRACAO.md`) — já na `main`: A1, C1, C2, C5a, C5b, C5c, C6, C7 · PR aberta (`5cc04ddf`): A2, C3, C4 · simulada em memória: A7, C8. Supabase e manifesto de áudio são **simulados**; zero rede externa.
 
 Esta bateria (`tools/qa/ensaio-layout/interacao.cjs`) complementa a `MATRIZ.md` (layout, índice, modos, contagens): aqui se mede o **uso** — escrever, apoiar a palma, rolar, dar zoom, apagar, desfazer, grifar, trocar de bloco/modo, recarregar, responder questão, abrir flashcards e a presença/ausência de audiobook.
 
 Legenda: ✅ todas as verificações da área passaram nas larguras medidas · ❌ N = N verificações falharam · 🟨 N = N verificações não puderam ser medidas neste ambiente (ver «Bloqueios») · n/a = a matéria não tem o recurso (p.ex. sem tabela larga).
 
-## 0 · Já funciona no site × passou só com correções simuladas
+## 0 · Já funciona no site × passou só no ensaio
 
-**Tudo nesta matriz roda com as correções simuladas** (A1/A2/A7 + C1–C8 na memória do servidor de teste). Por isso «PASSA» aqui **não** quer dizer que funciona no site.
+**Tudo nesta matriz roda com a integração proposta** — já na `main`: A1, C1, C2, C5a, C5b, C5c, C6, C7 · PR aberta (`5cc04ddf`): A2, C3, C4 · simulada em memória: A7, C8. A lista exata das 25 elegíveis e a conta 27 = piloto + Imagenología + 25 estão em `MATRIZ.md` §0-A. «PASSA» aqui **não** quer dizer que funciona no site.
 
 | Grupo | Matérias | No site hoje | Nesta bateria |
 |---|---|---|---|
 | Piloto | Semiología II | **já funciona no site** (contas liberadas); a caneta `456e` foi aprovada por José no iPad (#456) | PASSA |
-| **Elegíveis** | 25 | **não funciona no site** (layout novo só roda no piloto; motor da caneta física só liga no piloto) | **passou com correções simuladas: 25 / 25** · falha: 0 |
+| **Elegíveis** | 25 | **não funciona no site** (layout novo só roda no piloto; motor da caneta física só liga no piloto) | **passou com a integração proposta: 25 / 25** · falha: 0 |
 | Fora | Imagenología | fora | fora da integração por decisão de José (12/10); continua medida só como referência · referência: PASSA |
 | Fora | Bioestadística | fora | arquivo sem rota no catálogo (#213 encerrada sem merge): não é matéria ativa, não é ensaiada |
 
@@ -42,35 +42,35 @@ Tabela larga com rolagem própria (dedo rola a tabela com o lápis armado): medi
 
 ## 2 · Matriz por matéria
 
-| Matéria | Grupo | Veredito (simulado) | Ativa | Audiobook | Caneta | Palma | Rolagem | Pinça/zoom | Goma | Grifo | Troca bloco/modo | Recarregar | Questões | Flashcards | Verificações |
+| Matéria | Grupo | Veredito (ensaio) | Ativa | Audiobook | Caneta | Palma | Rolagem | Pinça/zoom | Goma | Grifo | Troca bloco/modo | Recarregar | Questões | Flashcards | Verificações |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|--:|
-| Anatopatologia I (`anatomia-patologica`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
-| Anatopatologia Práctica (`anatomia-patologica-practica`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
-| Fisiopatologia I (`fisiopatologia`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
+| Anatopatologia I (`anatomia-patologica`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
+| Anatopatologia Práctica (`anatomia-patologica-practica`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
+| Fisiopatologia I (`fisiopatologia`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
 | Imagenología (`imagenologia`) | ⛔ fora | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
-| Semiología I (`semiologia`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
-| Farmacología I (`farmacologia`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
-| Medicina Familiar (`medicina-familiar`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
+| Semiología I (`semiologia`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
+| Farmacología I (`farmacologia`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
+| Medicina Familiar (`medicina-familiar`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
 | Semiología II (`semiologia-ii`) | ✅ piloto (já no site) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
-| Farmacología II (`farmacologia-ii`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
-| Embriología (`embriologia`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 94 |
-| Biología (`biologia`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
-| Histología I (`histologia-i`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 94 |
-| Histología I Práctica (`histologia-i-practica`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 94 |
-| Histología II Práctica (`histologia-ii-practica`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 94 |
-| Histología II (`histologia-ii`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
-| Anatomía I (`anatomia-i`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
-| Anatopatologia II (`anatomia-patologica-ii`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
-| Anatopatologia II Práctica (`anatomia-patologica-ii-practica`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
-| Medicina Legal (`medicina-legal`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
-| Fisiopatologia II (`fisiopatologia-ii`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
-| Toxicología (`toxicologia`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 94 |
-| Dermatología (`dermatologia`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
-| Guaraní (`guarani`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
-| Ortopedia y Traumatología (`ortopedia`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
-| Oftalmología (`oftalmologia`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
-| Neurología (`neurologia`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
-| Anestesiología (`anestesiologia`) | 🧪 elegível (só simulado) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
+| Farmacología II (`farmacologia-ii`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
+| Embriología (`embriologia`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 94 |
+| Biología (`biologia`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
+| Histología I (`histologia-i`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 94 |
+| Histología I Práctica (`histologia-i-practica`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 94 |
+| Histología II Práctica (`histologia-ii-practica`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 94 |
+| Histología II (`histologia-ii`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
+| Anatomía I (`anatomia-i`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
+| Anatopatologia II (`anatomia-patologica-ii`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
+| Anatopatologia II Práctica (`anatomia-patologica-ii-practica`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
+| Medicina Legal (`medicina-legal`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 92 |
+| Fisiopatologia II (`fisiopatologia-ii`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
+| Toxicología (`toxicologia`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 94 |
+| Dermatología (`dermatologia`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
+| Guaraní (`guarani`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
+| Ortopedia y Traumatología (`ortopedia`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
+| Oftalmología (`oftalmologia`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 93 |
+| Neurología (`neurologia`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
+| Anestesiología (`anestesiologia`) | 🧪 elegível (só no ensaio) | PASSA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 96 |
 
 ## 3 · Falhas reproduzíveis
 

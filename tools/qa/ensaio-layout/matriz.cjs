@@ -24,8 +24,8 @@ const CAUSAS = {
   'modos/indice-flashcards': () => ({ escopo: 'modulo', causa: 'A agregadora de flashcards não reconhecida aparece como «bloco» no índice do modo Flashcards.', fix: 'C1/C2.' }),
   'modos/indice-preguntas': () => ({ escopo: 'modulo', causa: 'A agregadora de perguntas não reconhecida aparece como «bloco» no índice do modo Preguntas.', fix: 'C1/C2.' }),
   'indice/toda-secao-tem-card': () => ({ escopo: 'modulo', causa: 'Seção de tipo desconhecido para o módulo não ganha card no índice e fica inalcançável na navegação por bloco.', fix: 'Descritor da matéria com `data-rm-role` em toda seção (contrato §2).' }),
-  'indice/sem-residuo': () => ({ escopo: 'modulo', causa: 'O conteúdo original que não é `section[id]` (hero, banner de revisão) continua visível abaixo do índice: o módulo só isola `section[id]`.', fix: 'C3 (CSS/módulo: ocultar filhos da aba que não são section[id]/UI fora da leitura contínua). Verificado na variante «com correção».' }),
-  'blocos/sem-residuo-bloco': () => ({ escopo: 'modulo', causa: 'Idem: o hero/banner original aparece acima/abaixo do bloco aberto.', fix: 'C3.' }),
+  'indice/sem-residuo': () => ({ escopo: 'modulo', causa: 'O conteúdo original que não é `section[id]` (hero, banner de revisão) continua visível abaixo do índice: o módulo só isola `section[id]`.', fix: 'C3 (#487: classifica cada filho solto — abertura/fecho/conteúdo ficam no índice geral, anexo só com o seu bloco; nada útil some — ver CONTEUDO-SOLTO.md). Verificado na variante «com correção».' }),
+  'blocos/sem-residuo-bloco': () => ({ escopo: 'modulo', causa: 'Idem: o hero/banner/seção sem id original aparece acima/abaixo do bloco aberto.', fix: 'C3.' }),
   'indice/indice-e-o-fim': () => ({ escopo: 'modulo', causa: 'Sobra conteúdo original depois do índice (hero, banner, rodapé).', fix: 'C3.' }),
   'blocos/pager': () => ({ escopo: 'modulo+conteudo', causa: 'Vizinho sem `<h2>`: `preencherLink` (rm-materia-nav.js:437) esconde o link quando o título é vazio.', fix: 'C4 (aplicado em memória na variante «com correção»): título de reserva = 1.º cabeçalho visual da seção, depois o marcador; ou dar `<h2>` à seção.' }),
   'blocos/pager-cadeia': () => ({ escopo: 'modulo+conteudo', causa: 'Seção interior sem `<h2>` (ex.: guía no meio do conteúdo) quebra a cadeia Anterior/Próximo: o aluno não consegue seguir lendo e só volta pelo índice.', fix: 'C4 (título de reserva, verificado na variante «com correção») ou `<h2>` na seção.' }),
@@ -87,22 +87,70 @@ w('3. **PASSA/FALHA descrevem o ensaio, não uma liberação.** Nada foi ativado
 w('');
 const ELEG = linhas.filter(l => L.grupoDe(l.slug) === 'elegivel'), cntE = (k, v) => ELEG.filter(l => l[k] === v).length;
 const PIL = linhas.find(l => l.slug === L.ELEGIBILIDADE.piloto);
-w('## 0 · Já funciona no site × passou só com correções simuladas');
+/* origem de cada correção na variante «com correção»: já na main (disco) · numa PR aberta (RM_ENSAIO_REF) · ainda simulada em memória */
+const CORR_JS = fs.readdirSync(path.join(DIR, 'resultados-corr')).filter(f => f.endsWith('.json')).map(f => JSON.parse(fs.readFileSync(path.join(DIR, 'resultados-corr', f))));
+const REFS = [...new Set(CORR_JS.map(j => j.ref || null))];
+const ids = new Set(); CORR_JS.forEach(j => (j.adaptacoes || []).forEach(a => ids.add(a)));
+const noDisco = id => { if (id === 'C3') return /\[data-rm-solto\]/.test(fs.readFileSync(path.join(L.ROOT, 'assets/rm-materia-sistema.css'), 'utf8'));
+  const a = L.ADAPTACOES.find(x => x.id === id); return !!(a && a.marca && fs.readFileSync(path.join(L.ROOT, a.arquivo), 'utf8').includes(a.marca)); };
+const ORIG = { main: [], pr: [], sim: [], falta: [] };
+[...new Set([...ids].map(a => a.split(':')[0]))].sort().forEach(id => {
+  if (ids.has(id + ':NAO-ENCONTRADA')) ORIG.falta.push(id);
+  else if (ids.has(id + ':NO-CODIGO')) (noDisco(id) ? ORIG.main : ORIG.pr).push(id);
+  else ORIG.sim.push(id);
+});
+const A3 = { main: /registrarTema/.test(fs.readFileSync(path.join(L.ROOT, 'assets/rm-materia-sistema.js'), 'utf8')) };
+const refTxt = REFS.filter(Boolean).map(r => '`' + String(r).slice(0, 8) + '`').join(', ');
+const lista = ids => ids.length ? ids.join(', ') : '—';
+
+/* ---- §0-A · lista exata e reconciliação da contagem ---- */
+const REC = L.reconciliar();
+const porGrupo = g => REC.ativas.filter(a => L.grupoDe(a.slug) === g);
+w('## 0-A · Quais são as matérias (lista exata e contagem)');
+w('');
+w(`Fonte: catálogo do site (\`RM_CATALOGO\` em \`index.html\`) × \`FILES\` de \`netlify/functions/get-materia.js\` × arquivos em \`materias/\` (\`lib.cjs → reconciliar()\`, lido do disco nesta geração).`);
+w('');
+w('| # | slug | arquivo | matéria | grupo |');
+w('|--:|---|---|---|---|');
+REC.ativas.forEach((a, i) => w(`| ${i + 1} | \`${a.slug}\` | \`${a.arquivo}\` | ${a.title} | ${{ piloto: 'piloto (já no site)', elegivel: 'elegível', fora: 'fora (decisão de José)' }[L.grupoDe(a.slug)]} |`));
+w('');
+w('| Conta | n | slugs |');
+w('|---|--:|---|');
+w(`| Matérias ativas (catálogo **e** \`get-materia\` **e** arquivo) | **${REC.ativas.length}** | — (lista acima) |`);
+w(`| − piloto | ${porGrupo('piloto').length} | ${porGrupo('piloto').map(a => '`' + a.slug + '`').join(', ')} |`);
+w(`| − fora, entre as ativas | ${porGrupo('fora').length} | ${porGrupo('fora').map(a => '`' + a.slug + '`').join(', ')} |`);
+w(`| **= elegíveis** | **${porGrupo('elegivel').length}** | as linhas «elegível» acima |`);
+w(`| Fora, **não** ativa (arquivo sem rota) | ${Object.keys(L.ELEGIBILIDADE.fora).filter(s => !REC.ativas.some(a => a.slug === s)).length} | ${Object.keys(L.ELEGIBILIDADE.fora).filter(s => !REC.ativas.some(a => a.slug === s)).map(s => '`' + s + '`').join(', ')} — não está no catálogo nem no \`get-materia\`; não conta nas ${REC.ativas.length} |`);
+w(`| Arquivos órfãos em \`materias/\` (não são matérias) | ${REC.arquivosOrfaos.length} | ${REC.arquivosOrfaos.map(f => '`' + f + '`').join(', ')} |`);
+w(`| Só no catálogo / só no \`get-materia\` / arquivo faltando | ${REC.soNoCatalogo.length} / ${REC.soNoGetMateria.length} / ${REC.arquivosFaltando.length} | ${[].concat(REC.soNoCatalogo, REC.soNoGetMateria, REC.arquivosFaltando).join(', ') || '—'} |`);
+w('');
+w(`**Reconciliação:** ${REC.ativas.length} ativas = ${porGrupo('piloto').length} piloto + ${porGrupo('fora').length} fora (Imagenología) + **${porGrupo('elegivel').length} elegíveis**. Bioestadística é a 2.ª excluída, mas **não está entre as ${REC.ativas.length}** (\`bioestadistica.html\` existe só como arquivo, sem rota: #213 encerrada sem merge). Por isso «${porGrupo('elegivel').length}/${porGrupo('elegivel').length}» abaixo é sempre sobre esta lista de ${porGrupo('elegivel').length} e **nunca inclui o piloto**. A #484 escreve «25 elegíveis = tudo exceto Bioestadística/Imagenología»: essa frase só fecha em 25 se o piloto estiver dentro e Bioestadística fosse uma das ativas. O conjunto deste ensaio é o da tabela acima (piloto à parte).`);
+w('');
+w('## 0 · Já funciona no site × passou só no ensaio');
 w('');
 w('| Grupo | Matérias | Situação **no site hoje** | Situação **no ensaio** |');
 w('|---|---|---|---|');
 w(`| Piloto | Semiología II | **já funciona no site** (layout, navegação e caneta \`456e\` aprovada no iPad), só para as contas liberadas | como está: ${sim[PIL.hoje]} — defeitos que **já existem no piloto publicado**: ${[...new Set(PIL.falhas.map(f => '\`' + f.area + '/' + f.id + '\`'))].join(', ') || 'nenhum'} · com correção: ${sim[PIL.corr]} (as correções mudam esses detalhes no piloto: ver \`PATCHES-PARA-INTEGRACAO.md\`) |`);
-w(`| **Elegíveis** | ${ELEG.length} matérias | **não funciona no site**: o layout novo não roda fora do piloto (módulos presos ao slug; nenhuma flag liberada) | como está: ${cntE('hoje', 'PASSA')} PASSA / ${cntE('hoje', 'FALHA')} FALHA · **com correções simuladas (C1–C8, em memória): ${cntE('corr', 'PASSA')} PASSA / ${cntE('corr', 'FALHA')} FALHA** |`);
+w(`| **Elegíveis** | ${ELEG.length} matérias (§0-A) | **não funciona no site**: nenhuma matéria além do piloto é ligada (flags e contas intactas) | como está: ${cntE('hoje', 'PASSA')} PASSA / ${cntE('hoje', 'FALHA')} FALHA · **com correção: ${cntE('corr', 'PASSA')} PASSA / ${cntE('corr', 'FALHA')} FALHA** (origem de cada correção logo abaixo) |`);
 Object.entries(L.ELEGIBILIDADE.fora).forEach(([sl, mot]) => { const l = linhas.find(x => x.slug === sl); w(`| Fora | ${l ? l.title : 'Bioestadística'} (\`${sl}\`) | fora | ${mot}${l ? ` · medida como referência: com correção ${sim[l.corr]}` : ''} |`); });
 w('');
-w('**«PASSA com correção» quer dizer: passou no Chromium com patches aplicados só na memória do servidor de teste.** Nenhum desses patches está no código publicado. Nada passa a funcionar no site até as PRs de integração serem mescladas **e** o servidor liberar a matéria, uma de cada vez.');
+w('**De onde vem cada correção na variante «com correção»** (lido de `adaptacoes` dos resultados e do código no disco):');
+w('');
+w('| Origem | Correções | O que isso quer dizer |');
+w('|---|---|---|');
+w(`| **já na main** | ${lista(ORIG.main)}${A3.main ? ', A3' : ''} | código mesclado (#486, #488…): vale para o site assim que uma matéria for ligada |`);
+w(`| **PR aberta** (servida por \`RM_ENSAIO_REF\` = ${refTxt || '—'}) | ${lista(ORIG.pr)}${A3.main ? '' : ', A3'} | código real, mas **ainda não mesclado** (#487): só vale depois do merge |`);
+w(`| **simulada em memória** | ${lista(ORIG.sim)} + descritor de tema por matéria | A7/C8 = caneta (aguardam a #484, não mexemos no motor); o descritor é hipótese técnica, não identidade aprovada |`);
+if (ORIG.falta.length) w(`| ⚠️ patch não encontrado | ${lista(ORIG.falta)} | o módulo mudou e a simulação não se aplicou: resultado não confiável para essas correções |`);
+w('');
+w('**«PASSA com correção» quer dizer: passou no Chromium com o código acima** — parte já na main, parte numa PR aberta, a caneta simulada. Nada passa a funcionar no site até as PRs de integração serem mescladas **e** o servidor liberar a matéria, uma de cada vez.');
 w('');
 w('## 1 · Resumo (27 do catálogo; ver §0 para o grupo de cada uma)');
 w('');
 w('| Variante | Elegíveis PASSA | Elegíveis FALHA | Todas PASSA | Todas FALHA | BLOQUEADO | Sem dados |');
 w('|---|--:|--:|--:|--:|--:|--:|');
 w(`| Como está | ${cntE('hoje', 'PASSA')} | ${cntE('hoje', 'FALHA')} | ${cnt('hoje', 'PASSA')} | ${cnt('hoje', 'FALHA')} | ${cnt('hoje', 'BLOQUEADO')} | ${cnt('hoje', 'SEM DADOS')} |`);
-w(`| Com correções simuladas (C1–C8) | ${cntE('corr', 'PASSA')} | ${cntE('corr', 'FALHA')} | ${cnt('corr', 'PASSA')} | ${cnt('corr', 'FALHA')} | ${cnt('corr', 'BLOQUEADO')} | ${cnt('corr', 'SEM DADOS')} |`);
+w(`| Com correção (origem em §0) | ${cntE('corr', 'PASSA')} | ${cntE('corr', 'FALHA')} | ${cnt('corr', 'PASSA')} | ${cnt('corr', 'FALHA')} | ${cnt('corr', 'BLOQUEADO')} | ${cnt('corr', 'SEM DADOS')} |`);
 w('');
 w('**Audiolibro:** aqui (sem o boot de áudio) o ensaio prova a **ausência** nas 27 (card, player, chip, capa, pílula, lateral e requisição: PASSA). A **presença correta** — o `rm-audio-boot.js` real cria cards só nos blocos do manifesto (simulado) da Semiología II e fecha sem pedir manifesto nas outras 26 — está em `INTERACAO.md`. Áudio real (manifesto e URL assinada do servidor) continua dependendo do piloto/José (`AUDIOBOOKS-ESTADO-OPERACIONAL.md`).');
 w('');
@@ -123,12 +171,12 @@ linhas.forEach(l => {
 w('');
 w('Em «❌ N», N é o número de verificações que falharam (somando as 4 larguras).');
 w('');
-w('## 3 · Matriz «com correções simuladas» (patches só em memória; não é o site)');
+w('## 3 · Matriz «com correção» (código das PRs de integração + caneta simulada; origem em §0; não é o site)');
 w('');
-w('| Semestre | Matéria | Situação no site | Veredito com correções simuladas | ' + AREAS.map(a => ROT[a]).join(' | ') + ' |');
+w('| Semestre | Matéria | Situação no site | Veredito com correção | ' + AREAS.map(a => ROT[a]).join(' | ') + ' |');
 w('|--:|---|:-:|:-:|' + AREAS.map(() => ':-:').join('|') + '|');
 linhas.forEach(l => {
-  w(`| ${l.sem} | ${l.title} | ${{ piloto: '✅ já funciona (piloto)', elegivel: '🧪 não (só simulado)', fora: '⛔ fora' }[L.grupoDe(l.slug)]} | ${sim[l.corr]} | ` + AREAS.map(a => { const c = l.areasCorr[a]; return c.e === 'FALHA' ? `❌ ${c.n}` : ic[c.e]; }).join(' | ') + ' |');
+  w(`| ${l.sem} | ${l.title} | ${{ piloto: '✅ já funciona (piloto)', elegivel: '🧪 não (só no ensaio)', fora: '⛔ fora' }[L.grupoDe(l.slug)]} | ${sim[l.corr]} | ` + AREAS.map(a => { const c = l.areasCorr[a]; return c.e === 'FALHA' ? `❌ ${c.n}` : ic[c.e]; }).join(' | ') + ' |');
 });
 w('');
 w('## 4 · Falhas reproduzíveis por matéria (causa e correção)');
