@@ -70,6 +70,67 @@ corrigidos:
    aplicava desde `b0c4a73d`; agora o nível 1 (`escolher`) é consistente
    com ela.
 
+**Rodada 4** — a rodada 3 endureceu `escolher()` o suficiente para abrir
+uma pergunta nova e legítima: será que algum grifo REAL de aluno dependia
+do "aceita às cegas" removido para continuar visível, mesmo em texto que
+nunca mudou? Resposta, com dados reais (consulta somente leitura ao
+Supabase, nunca escrita): **não, hoje não** — mas existia um caso
+estrutural não coberto, corrigido nesta rodada. Detalhes:
+
+1. **Comparação real `main` × PR, 25 matérias elegíveis.** Consulta
+   `select subject_slug, block_id, exact_text, prefix, suffix,
+   occurrence, color, id from user_highlights where subject_slug not in
+   ('farmacologia-ii','fisiopatologia-ii')` (essas duas já têm teste
+   dedicado com diff real das PRs #474/#481) devolveu **1.910 grifos
+   reais** em 14 das 25 matérias elegíveis (as outras 11 não têm grifo
+   nenhum ainda). `compare_real_highlights_main_vs_pr.cjs` (novo) roda o
+   `rm-tools.js` da `main` (nunca mesclou nada desta PR — `escolher()`
+   ainda aceita qualquer candidato único às cegas, sem checar contexto
+   nenhum) e o da PR contra o HTML REAL e NÃO MODIFICADO de cada matéria
+   (controle positivo: texto inalterado desde a criação do grifo) —
+   mesmo que `rm-tools.js` mude, o conteúdo da matéria não muda com esta
+   PR. Resultado: **1.873/1.910 resolvem igual nos dois** (main e PR
+   idênticos, matéria por matéria); os 37 restantes já não resolviam
+   nem na `main` (conteúdo mudou desde a criação do grifo por outro
+   motivo, confirmado manualmente num caso de `histologia-ii`: a palavra
+   "endocárdio" não existe mais no arquivo) — **zero regressão**.
+2. **Por quê zero?** A mesma consulta confirmou **0/1.910** grifos reais
+   com `prefix` **e** `suffix` vazios ao mesmo tempo — a única condição
+   em que a rodada 3 muda o comportamento do nível 1. `marcarRange()`
+   sempre grava os dois (até 40 caracteres), então essa condição só
+   acontece quando o grifo cobre o bloco INTEIRO (começa e termina com o
+   bloco) — um caso raro que nenhum grifo real atinge hoje.
+3. **Mas o caso existe estruturalmente, e merece solução — não só
+   constatação.** Um teste sintético isolado (`test_full_block_edge_case.cjs`,
+   novo) prova a regressão em abstrato: um grifo cobrindo um bloco curto
+   por completo, em texto **nunca editado**, resolvia na `main` e ficava
+   pendente na PR (rodada 3) — mesmo sem NADA ter mudado. Corrigido em
+   `escolher()`: quando `h.exact_text.length === norm.length` (o grifo É
+   o bloco inteiro), aceita sem exigir contexto — não é uma reabertura do
+   buraco da rodada 2, é uma exceção estreita e **comprovável por
+   comprimento**: uma segunda cópia do bloco inteiro dentro do próprio
+   bloco exigiria `norm` conter uma cópia de si mesma mais uma sobra, o
+   que nenhum texto pode fazer. O mesmo teste sintético confirma que a
+   exceção não reabre risco nenhum: se a edição reescreve o parágrafo
+   original **e** acrescenta um decoy com o texto antigo verbatim,
+   `norm` passa a ter mais conteúdo que o decoy sozinho, a condição de
+   comprimento deixa de bater, cai no caminho normal (exige contexto) e
+   fica pendente — nunca pinta no decoy. **Achado extra, não corrigido
+   por esta PR porque é comportamento pré-existente da `main`:** o mesmo
+   teste mostra que a `main`, hoje, PINTA NO DECOY nesse cenário exato
+   (bloco-inteiro + reescrita + decoy) — um risco real, silencioso, já em
+   produção, que esta PR elimina de passagem ao corrigir `escolher()`.
+4. **Carregamento e desfazer com amostra real.** `test_carregamento_desfazer.cjs`
+   voltou a rodar (sem mudança, 4 variantes da rodada 3 seguem pendentes,
+   nunca na isca). Além disso, uma amostra real das 3 maiores matérias
+   (oftalmologia 858, anatomia-patologica-ii 377, medicina-legal 260 —
+   1.495 grifos) foi testada duas vezes de forma independente (simulando
+   carregamento e, depois, desfazer): 1.484/1.495 resolvem nos dois
+   caminhos, **0 divergências** entre eles. Página com
+   `page.route('**/*', route => route.abort())` — nenhuma chamada de rede
+   ocorreu, logo nenhuma escrita em `user_highlights` ou qualquer outro
+   dado de aluno.
+
 ## O que o pipeline faz
 
 1. `extract_pairs.py` — lê um `git diff <base> <head> -- matéria.html` pelo
@@ -106,6 +167,17 @@ corrigidos:
    "registro antigo sem prefixo/sufixo" (contexto forçado vazio) para
    testar a nova política de `escolher()` contra um cenário real de
    colisão dentro do bloco, não um artefato de teste.
+5. `compare_real_highlights_main_vs_pr.cjs` (rodada 4) — toma um export
+   (consulta SELECT, só leitura) de `user_highlights` e compara, para
+   cada grifo real, quantos resolvem com o `rm-tools.js` da `main` contra
+   quantos resolveriam com o desta PR, usando o HTML REAL e NÃO
+   MODIFICADO de cada matéria — controle positivo em escala real, não
+   sintético.
+6. `test_full_block_edge_case.cjs` (rodada 4) — isola o único caso
+   estrutural em que `prefix` e `suffix` saem vazios (grifo = bloco
+   inteiro) e prova as três propriedades que importam: resolve sem
+   edição, fica pendente com edição, nunca pinta num decoy mesmo que a
+   edição acrescente um.
 
 ## Como rodar
 

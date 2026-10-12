@@ -473,7 +473,25 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
          segura, e a marcação fica no banco sem ser pintada em vez de
          arriscar. Com contexto gravado, exige pelo menos um lado
          batendo — o mesmo padrão que o nível 2/3 (`contextoSolto`) já
-         aplica mesmo a candidato único desde b0c4a73d. */
+         aplica mesmo a candidato único desde b0c4a73d.
+
+         Uma exceção, estreita e comprovável (não uma reabertura do
+         buraco acima): quando o próprio texto marcado é o bloco INTEIRO
+         (começa em 0 e tem o mesmo tamanho de `norm`), `prefix`/`suffix`
+         saem vazios não por falta de dado, mas porque não EXISTE nada
+         antes nem depois a gravar — e aí a "cópia idêntica sobrevivendo
+         em outro lugar do bloco" é matematicamente impossível: uma
+         segunda ocorrência do bloco inteiro dentro do próprio bloco
+         exigiria `norm` conter uma cópia de si mesmo mais uma sobra, o
+         que nenhum texto pode fazer. `ocorrencias` já garante
+         `cands.length === 1` aqui; sobra só confirmar que não há como
+         esse candidato ser outra coisa senão o bloco todo. Sem essa
+         exceção, qualquer grifo que cubra um bloco curto por completo
+         (um parágrafo inteiro marcado, por exemplo) fica pendente para
+         sempre, mesmo que o texto nunca mude — confirmado com os 1.910
+         grifos reais das 25 matérias elegíveis (nenhum bate neste caso
+         hoje) e com um caso sintético isolado. */
+      if (h.exact_text.length === norm.length) return cands[0];
       return notaDeContexto(norm, cands[0], h) > 0 ? cands[0] : -1;
     }
 
