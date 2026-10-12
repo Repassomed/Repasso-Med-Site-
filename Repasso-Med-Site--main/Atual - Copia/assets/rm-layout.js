@@ -467,7 +467,8 @@
   }
 
   /* Recursos da matéria para a capa: SÓ o que existe, com contagem derivada do DOM (nada inventado).
-     Banco geral e «Todos los flashcards» reúnem as MESMAS entidades dos blocos: ficam fora da contagem (senão contaria duas vezes).
+     Banco geral e «Todos los flashcards» reúnem as MESMAS entidades dos blocos: não viram alvo de salto, e Preguntas/Flashcards contam itens
+     DISTINTOS (a cópia não conta duas vezes; o item que só existe no banco conta uma vez — ver distintosDaMateria).
      Infografía = <figure> com legenda e imagem; radiografias/diapositivas (.material-slide) e fotos soltas NÃO são infográficos.
      Cada cartão salta, na Página completa, para a primeira ocorrência (irPara: geração/cancelamento já existentes). */
   /* Seção que REÚNE os itens dos blocos (banco geral, «todos los flashcards», revisão, mazo, cierre…): pelo id (convenção do piloto) OU pelo
