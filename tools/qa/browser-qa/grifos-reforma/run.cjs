@@ -181,7 +181,12 @@ async function main() {
   console.log(`  pintou no texto-isca (decoy) errado: ${advWrong}/${adv.length} — ver nota no README`);
   console.log(`  paridade OLD vs FIXED (prova que não é regressão desta correção): ${advParity}/${adv.length}`);
 
-  const failed = near.badText > 0 || far.badText > 0 || advParity !== adv.length;
+  /* `advWrong` É o critério, sozinho: qualquer pintura na isca reprova,
+     mesmo que o caminho antigo errasse exatamente da mesma forma (a
+     paridade prova "não é regressão desta correção", não prova "está
+     seguro") — um bug real desta mesma suite deixava passar 2/50 porque
+     só olhava para `advParity`, nunca para `advWrong` diretamente. */
+  const failed = near.badText > 0 || far.badText > 0 || advWrong > 0;
 
   if (jsonOut) {
     fs.writeFileSync(jsonOut, JSON.stringify({ results: out.results, advResults: out.advResults, summary: { near, far, advOk, advWrong, advParity } }, null, 2));

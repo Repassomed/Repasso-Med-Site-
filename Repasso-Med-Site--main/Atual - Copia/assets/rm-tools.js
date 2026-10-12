@@ -451,24 +451,30 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     if (!cands.length) return -1;
 
     if (cands.length === 1) {
-      /* Um candidato só não dispensa o contexto quando há contexto
-         gravado para checar. Antes, um candidato único era sempre
-         aceito às cegas — e esse é exatamente o buraco que faz uma
-         marcação reaparecer na frase ERRADA: se a frase original foi
-         reescrita e uma cópia idêntica e nunca tocada do mesmo trecho
-         sobrevive em outro lugar do bloco (um texto de template
-         repetido, por exemplo), ela vira a única ocorrência literal — e
-         nada impedia que fosse aceita sem olhar se o que está ao redor
-         dela tem QUALQUER relação com o que foi gravado. Com registo
-         sem prefix/suffix (dado antigo, ou alvo colado no início/fim do
-         bloco) não há nada para checar: mantém o comportamento de
-         sempre, aceita. Com contexto gravado, exige pelo menos um lado
+      /* Um candidato só não dispensa o contexto. Antes, um candidato
+         único era sempre aceito às cegas — e esse é exatamente o
+         buraco que faz uma marcação reaparecer na frase ERRADA: se a
+         frase original foi reescrita e uma cópia idêntica e nunca
+         tocada do mesmo trecho sobrevive em outro lugar do bloco (um
+         texto de template repetido, por exemplo), ela vira a única
+         ocorrência literal — e nada impedia que fosse aceita sem olhar
+         se o que está ao redor dela tem QUALQUER relação com o que foi
+         gravado.
+
+         Um registo SEM prefix/suffix gravado (alvo colado no início ou
+         no fim do bloco) não é um caso especial que dispensa a checagem
+         — é o caso em que a checagem NUNCA pode confirmar nada: a
+         "unicidade" de um candidato só prova que ele é o único hoje,
+         nunca que ele sempre foi. Exactamente a mesma incerteza do
+         candidato de uma frase reescrita cuja cópia intacta sobrou em
+         outro lugar — sem como distinguir "sempre foi único" de "virou
+         único porque o vizinho mudou". Por isso devolve -1 (pendente)
+         também aqui: sem contexto para confirmar, a posição não é
+         segura, e a marcação fica no banco sem ser pintada em vez de
+         arriscar. Com contexto gravado, exige pelo menos um lado
          batendo — o mesmo padrão que o nível 2/3 (`contextoSolto`) já
-         aplica mesmo a candidato único desde b0c4a73d; aqui estava
-         faltando. */
-      var i0 = cands[0];
-      if (!h.prefix && !h.suffix) return i0;
-      return notaDeContexto(norm, i0, h) > 0 ? i0 : -1;
+         aplica mesmo a candidato único desde b0c4a73d. */
+      return notaDeContexto(norm, cands[0], h) > 0 ? cands[0] : -1;
     }
 
     var melhor = -1, melhorNota = -1, empate = false;

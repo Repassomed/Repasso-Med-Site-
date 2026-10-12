@@ -32,6 +32,44 @@ letra** (não mais um match fraco de 12 caracteres por coincidência — foi
 exatamente esse tipo de "vitória por default" que o teste adversarial
 pegou numa primeira rodada de correção).
 
+**Rodada 3** — dois problemas descobertos na própria rodada 2, ambos
+corrigidos:
+
+1. **O critério de falha de `run.cjs` não olhava para `advWrong`.**
+   `failed` era calculado só com `near.badText`, `far.badText` e
+   `advParity !== adv.length` — nunca com `advWrong` diretamente. Quando o
+   caminho antigo e o corrigido erram **da mesma forma** (paridade total),
+   `advParity` não acusa nada, e os 2/50 casos que pintavam a isca errada
+   passavam como sucesso. Corrigido: `failed` agora inclui `advWrong > 0`
+   sem condição nenhuma — qualquer pintura na isca reprova, com ou sem
+   paridade com o comportamento antigo (paridade prova só "não é regressão
+   desta correção específica", nunca "está seguro").
+2. **A exceção "sem contexto gravado, aceita às cegas" da rodada 2 era o
+   próprio risco, não uma mitigação.** Os 2 casos residuais da rodada 2
+   foram reconstruídos usando a SEÇÃO REAL da matéria (não mais uma linha
+   HTML isolada tratada como bloco falso — essa isolação é que fazia
+   prefix/suffix saírem vazios por acidente de metodologia, não porque o
+   registro real seria assim): `advC-041` vem do bloco `f2b07` (caixa-
+   trampa da fludrocortisona) e `advC-047` vem do bloco `f2b02` (título
+   "Los dos grupos..."), ambos extraídos de
+   `farmacologia-ii.html` na base real da PR #474 (commit `2f12e73e`),
+   com o texto real que existe de verdade antes/depois da frase marcada —
+   ver `rebuild_adversarial_real.cjs`. Rodados os dois casos reconstruídos
+   contra o `rm-tools.js` **da própria rodada 2** (antes desta correção):
+   as 2 variantes com prefix/suffix vazios (`advC-041b`/`advC-047b` —
+   simulando um registro antigo sem contexto gravado) pintam a isca
+   errada, confirmando com texto real (não mais uma hipótese de "artefato
+   de teste") que a exceção da rodada 2 era um risco real de produção, não
+   um caso artificial. Corrigido em `escolher()`: a exceção foi removida —
+   um candidato único **sempre** precisa de `notaDeContexto(...) > 0` para
+   ser aceito, contexto gravado ou não. Um registro sem `prefix`/`suffix`
+   não tem como provar que a sua "unicidade" de hoje é a mesma de quando
+   foi criado (pode ter se tornado único porque um gêmeo em outro lugar do
+   bloco foi editado) — por isso fica **pendente**, nunca pintado às
+   ciegas. Essa é a mesma política que o nível 2/3 (`contextoSolto`) já
+   aplicava desde `b0c4a73d`; agora o nível 1 (`escolher`) é consistente
+   com ela.
+
 ## O que o pipeline faz
 
 1. `extract_pairs.py` — lê um `git diff <base> <head> -- matéria.html` pelo
@@ -58,7 +96,16 @@ pegou numa primeira rodada de correção).
    (`Node.contains()`, não comparação de texto — um texto curto pode
    coincidir em mais de um lugar e dar falso positivo num `includes()`).
    Critério de aprovação: nunca pintar fora do bloco, fora do texto novo,
-   ou na frase-isca errada.
+   ou na frase-isca errada — `advWrong > 0` reprova por si só (rodada 3),
+   independente de paridade com o comportamento antigo.
+4. `rebuild_adversarial_real.cjs` (rodada 3) — substitui os dois casos
+   adversariais que a rodada 2 isolou como linha HTML curta por uma versão
+   construída sobre a SEÇÃO REAL da matéria (bloco completo, extraído por
+   `git show` do commit-base da PR #474), com prefix/suffix REAIS
+   computados pelo `indexar()` verdadeiro — e gera também a variante
+   "registro antigo sem prefixo/sufixo" (contexto forçado vazio) para
+   testar a nova política de `escolher()` contra um cenário real de
+   colisão dentro do bloco, não um artefato de teste.
 
 ## Como rodar
 
@@ -68,10 +115,18 @@ export NODE_PATH="$(npm root -g)"   # onde o pacote `playwright` (Node) está in
 git diff <base> <head> -- caminho/da/materia.html \
   | python3 extract_pairs.py > /tmp/pairs.json
 python3 build_cases.py /tmp/pairs.json /tmp/cases.json
+
+# substitui os dois casos adversariais `advC-041`/`advC-047` de /tmp/cases.json
+# pela versão reconstruída com a seção real (ver rodada 3) antes de rodar —
+# node rebuild_adversarial_real.cjs "<rm-tools.js>" > /tmp/adversarial_real.json
+# e fundir manualmente (ou via script) em /tmp/cases.json["adversarial"]
+
 node run.cjs /tmp/cases.json "../../../../Repasso-Med-Site--main/Atual - Copia/assets/rm-tools.js" --json /tmp/resultado.json
 ```
 
-Sai `0` se nada pintou fora do lugar; `1` se algo pintou errado.
+Sai `0` se nada pintou fora do lugar; `1` se algo pintou errado (inclui
+qualquer pintura na isca do conjunto adversarial, mesmo com paridade total
+em relação ao comportamento antigo — ver rodada 3).
 
 ## Resultado de referência (validação desta correção)
 
@@ -104,29 +159,60 @@ texto do destaque, nunca editada, com contexto local genuinamente
 diferente (de outra frase do corpus), ao lado da frase real que é
 editada.
 
-| | antes da rodada 2 | depois da rodada 2 |
-|---|---|---|
-| pintou a isca errada | 50/50 | **2/50** |
+| | antes da rodada 2 | depois da rodada 2 | depois da rodada 3 |
+|---|---|---|---|
+| pintou a isca errada | 50/50 | 2/50 | **0/52** |
 
-Os **2 casos restantes** são registros com `prefix` **e** `suffix`
-totalmente vazios — nenhum contexto gravado para checar. Por desenho (e
-por exigência explícita de compatibilidade com os dados reais já
-gravados — ver PR #66, "compatibilidade total"), um candidato único sem
-nenhum contexto gravado continua sendo aceito, porque não há nada contra
-o que verificá-lo e `escolher` exige correspondência literal exacta de
-qualquer forma. Inspecionado manualmente: os 2 casos vêm de linhas HTML
-que são, sozinhas, `<p>` inteiros muito curtos (um título de caixa de
-armadilha) — ao isolar essa única linha como "bloco" de teste, o prefixo
-e o sufixo saem vazios; no arquivo real, a mesma linha vive dentro de uma
-seção bem maior, com texto real antes e depois (confirmado por inspeção
-do diff original), então na produção real o registro teria contexto de
-verdade para checar. Isto é uma limitação honesta do desenho do teste
-(linha isolada vira bloco artificial), não uma prova de risco real
-— mas fica registrada, não escondida, como PR #66 e as correções
-seguintes sempre fizeram.
+Os 2 casos residuais da rodada 2 (`advC-041`, `advC-047`) eram registros
+com `prefix` **e** `suffix` vazios porque a linha HTML isolada usada como
+"bloco" de teste virava, sozinha, o bloco inteiro — um artefato de
+metodologia, não uma prova de que a situação fosse rara na produção. A
+rodada 3 trocou os dois pela SEÇÃO REAL da matéria (`f2b07`/`f2b02` de
+`farmacologia-ii.html`, commit-base da PR #474 — ver
+`rebuild_adversarial_real.cjs`), com prefix/suffix REAIS computados pelo
+`indexar()` verdadeiro, **e** uma segunda variante de cada (`advC-041b`,
+`advC-047b`) com prefix/suffix forçados vazios para simular um registro
+antigo sem contexto gravado — 52 casos no total (48 do corpus original +
+4 da reconstrução real).
 
-**Paridade com o comportamento antigo:** dos 50 casos, 49 continuam
+Rodando essas 4 variantes contra o `rm-tools.js` **da própria rodada 2**
+(antes da correção desta rodada): as 2 variantes sem contexto
+(`advC-041b`/`advC-047b`) pintam a isca errada — confirmando com texto
+real, não mais uma hipótese, que a exceção "sem contexto, aceita às
+cegas" da rodada 2 era um risco genuíno de produção. Depois da correção
+da rodada 3 (a exceção removida de `escolher()`), as 4 variantes —
+com contexto real e sem contexto — ficam **pendentes** (nenhuma pintura,
+nem na isca nem na frase certa): sem como confirmar a posição com
+segurança, a marca fica no banco sem ser desenhada em vez de arriscar.
+Isso é o comportamento correto e esperado, não uma perda — a frase real
+foi editada pela PR #474 e deixou de existir literalmente; o único
+candidato que sobra é a isca, e negar-se a pintar nela é exatamente o
+"nunca adivinhar" que esta suite inteira existe para garantir.
+
+**Paridade com o comportamento antigo:** dos 52 casos, 51 continuam
 idênticos entre o caminho antigo e o corrigido; o único que muda é uma
 melhoria genuína (nível 2 recupera corretamente a frase certa onde o
 caminho antigo não recuperava nada) — nenhuma regressão introduzida pela
-rodada 2.
+rodada 3 nos 48 casos originais.
+
+### Carregamento e desfazer, isolados (rodada 3)
+
+Além do `resolverAncora()` genérico acima, os dois pontos de entrada reais
+foram exercitados explicitamente por `test_carregamento_desfazer.cjs`
+contra as 4 variantes reconstruídas (`advC-041`/`advC-041b`/`advC-047`/
+`advC-047b`): a sequência de `aplicarHighlights()` (carregamento —
+`resolverAncora → rangeDe → pintar` por destaque, dentro do bloco já
+localizado por `block_id`) e a mesma sequência que `repintar()` da V2
+chama no desfazer de um apagar (confirmada idêntica byte a byte ao código
+fonte real). Em nenhuma das 8 combinações (4 casos × carregamento/
+desfazer) algo pintou na isca — e a página rodou com
+`page.route('**/*', route => route.abort())`, provando que nenhuma
+chamada de rede (logo, nenhuma escrita em `user_highlights` ou qualquer
+outro dado de aluno) acontece nesse caminho: `resolverAncora`, `rangeDe`,
+`pintar` e `aplicarHighlights` nunca chamam `sb()`/Supabase — confirmado
+por leitura do código-fonte, não só pelo bloqueio de rede.
+
+```bash
+node rebuild_adversarial_real.cjs "<rm-tools.js>" > /tmp/adversarial_real.json
+node test_carregamento_desfazer.cjs "<rm-tools.js>" /tmp/adversarial_real.json
+```
