@@ -347,10 +347,15 @@
         c.setAttribute('data-rm-off', '');
       });
     })(s.el);
-    /* Preguntas: o que vem ANTES do 1.º título/questão de cada .quiz-section não é questão (p.ex. a infografía «Cómo leer…» e a nota que a
-       acompanha, guardadas no início do contêiner de questões). Continua no bloco e no modo Infografías; aqui sai de cena. */
+    /* Preguntas: a infografía guardada no INÍCIO do contêiner de questões (p.ex. «Cómo leer…») e a nota que a acompanha não são questão.
+       Só elas saem (antes do 1.º título/questão do grupo); subtítulos e instruções do grupo ficam. Continuam no bloco e no modo Infografías. */
     if (e.mode === 'preguntas') qa(s.el, '.quiz-section').forEach(function (g) {
-      for (var c = g.firstElementChild; c && !(c.tagName === 'H3' || c.tagName === 'H4' || /quiz-item/.test(c.className || '') || q1(c, '.quiz-item')); c = c.nextElementSibling) c.setAttribute('data-rm-off', '');
+      var antFig = false;
+      for (var c = g.firstElementChild; c && !(c.tagName === 'H3' || c.tagName === 'H4' || /quiz-item/.test(c.className || '') || q1(c, '.quiz-item')); c = c.nextElementSibling) {
+        var ehFig = c.tagName === 'FIGURE' || !!q1(c, 'figure'), ehNota = antFig && /(^|\s)rmc-note(\s|$)/.test(c.className || '');
+        if (ehFig || ehNota) c.setAttribute('data-rm-off', '');
+        antFig = ehFig;
+      }
     });
     N.isolado = { sec: s.el, mode: e.mode };
     if (e.mode === 'preguntas') filtrarPreguntas(N.filtro || 'todas');
