@@ -74,9 +74,12 @@
     return envolto;
   }
 
-  /* aviso discreto, canto inferior — nunca alert() */
+  /* aviso discreto, canto inferior — nunca alert(). `onClick` é opcional
+     (ver avisarPendentes()): quando presente, o aviso fica tocável e
+     fica mais tempo na tela — o resto dos avisos (sem onClick) continua
+     exactamente como antes (não intercepta toque, desaparece em 2.2s). */
   var toastEl = null, toastT = null;
-  function toast(msg, erro) {
+  function toast(msg, erro, onClick) {
     if (!toastEl) {
       toastEl = document.createElement('div');
       toastEl.className = 'rm-toast';
@@ -86,9 +89,11 @@
     }
     toastEl.textContent = msg;
     toastEl.classList.toggle('err', !!erro);
+    toastEl.classList.toggle('acionavel', !!onClick);
+    toastEl.onclick = onClick || null;
     toastEl.classList.add('on');
     clearTimeout(toastT);
-    toastT = setTimeout(function () { toastEl.classList.remove('on'); }, 2200);
+    toastT = setTimeout(function () { toastEl.classList.remove('on'); }, onClick ? 6000 : 2200);
   }
 
   /* ---------------------------------------------------------------- */
@@ -204,6 +209,21 @@ body.rm-marking #materias-container{ cursor:text; }
 }
 .rm-toast.on{ opacity:1; transform:translate(-50%,0); }
 .rm-toast.err{ background:#a3271c; }
+/* marca(s) pendente(s) no carregamento: aviso tocável (caminho de
+   revisão) — ver avisarPendentes() em rm-tools.js */
+.rm-toast.acionavel{ pointer-events:auto; cursor:pointer; }
+.rm-toast.acionavel:hover{ filter:brightness(1.12); }
+
+/* breve realce ao rolar até o bloco de uma marca pendente — nunca pinta
+   nada permanente, só chama a atenção por alguns segundos */
+@keyframes rm-flash-revisao{
+  0%,100%{ outline-color:transparent; background-color:transparent; }
+  20%,60%{ outline-color:rgba(230,126,34,.85); background-color:rgba(230,126,34,.08); }
+}
+.rm-flash-revisao{
+  outline:3px solid transparent; outline-offset:4px; border-radius:6px;
+  animation:rm-flash-revisao 1.3s ease-in-out 2;
+}
 
 /* ---------- card «continuar de onde paraste» ---------- */
 .rm-resume{
@@ -829,26 +849,60 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
 
   /* Desenha no DOM as marcações de uma aba já carregada (§22) */
   function aplicarHighlights(tabEl, lista) {
-    if (!tabEl || !lista || !lista.length) return { ok: 0, perdidas: 0 };
+    if (!tabEl || !lista || !lista.length) return { ok: 0, perdidas: 0, blocosPerdidos: [] };
     var porBloco = {};
     lista.forEach(function (h) { (porBloco[h.block_id] = porBloco[h.block_id] || []).push(h); });
 
     var ok = 0, perdidas = 0, porNivel = { 1: 0, 2: 0, 3: 0 };
+    var blocosPerdidos = [], vistoPerdido = {};
+    function marcarPerdido(bid) { if (!vistoPerdido[bid]) { vistoPerdido[bid] = true; blocosPerdidos.push(bid); } }
     Object.keys(porBloco).forEach(function (bid) {
       var bloco = tabEl.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(bid) : bid));
       /* o bloco deixou de existir: não se vai procurar noutro sítio */
-      if (!bloco) { perdidas += porBloco[bid].length; return; }
+      if (!bloco) { perdidas += porBloco[bid].length; marcarPerdido(bid); return; }
       porBloco[bid].forEach(function (h) {
         if (tabEl.querySelector('.rm-hl[data-hl="' + CSS.escape(String(h.id)) + '"]')) { ok++; return; }
         /* reindexa a cada marca: o DOM muda ao pintar a anterior */
         var a = resolverAncora(bloco, h);
-        if (!a) { perdidas++; return; }
+        if (!a) { perdidas++; marcarPerdido(bid); return; }
         var r = rangeDe(a.idx, a.ini, a.fim);
-        if (!r) { perdidas++; return; }
-        if (pintar(r, h.color, h.id, a.nivel === 3)) { ok++; porNivel[a.nivel]++; } else perdidas++;
+        if (!r) { perdidas++; marcarPerdido(bid); return; }
+        if (pintar(r, h.color, h.id, a.nivel === 3)) { ok++; porNivel[a.nivel]++; } else { perdidas++; marcarPerdido(bid); }
       });
     });
-    return { ok: ok, perdidas: perdidas, porNivel: porNivel };
+    return { ok: ok, perdidas: perdidas, porNivel: porNivel, blocosPerdidos: blocosPerdidos };
+  }
+
+  /* breve destaque visual (sem pintar nada permanente) para guiar o
+     olhar do aluno até o bloco de uma marca pendente, quando ele toca
+     no aviso — ver avisarPendentes() */
+  function flashBloco(bloco) {
+    if (!bloco) return;
+    bloco.classList.add('rm-flash-revisao');
+    setTimeout(function () { bloco.classList.remove('rm-flash-revisao'); }, 2600);
+  }
+
+  /* Caminho de revisão (§ rodada 6): quando uma ou mais marcas ficam
+     pendentes no carregamento normal da página — o texto do bloco
+     mudou demais para resolverAncora confirmar a posição com segurança
+     — o aluno precisa SABER disso agora, não só o console (que ele
+     nunca vê). O aviso é visível (toast tocável, não um alerta que
+     bloqueia) e tocar nele rola e realça o primeiro bloco afetado — o
+     aluno vê exatamente onde revisar/re-marcar manualmente. Nada é
+     escrito no banco aqui: a marca pendente já estava lá antes, e
+     continua lá, intacta, independentemente de o aluno tocar ou não
+     no aviso. */
+  function avisarPendentes(tabEl, r) {
+    if (!r || !r.perdidas) return;
+    var primeiro = r.blocosPerdidos && r.blocosPerdidos[0];
+    var msg = r.perdidas === 1
+      ? 'Una marca no se pudo ubicar — el texto cambió. Sigue guardada.'
+      : r.perdidas + ' marcas no se pudieron ubicar — el texto cambió. Siguen guardadas.';
+    if (primeiro) msg += ' Tocá para revisar.';
+    toast(msg, false, primeiro ? function () {
+      var bloco = tabEl.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(primeiro) : primeiro));
+      if (bloco) { bloco.scrollIntoView({ behavior: 'smooth', block: 'center' }); flashBloco(bloco); }
+    } : null);
   }
 
   async function sincronizarAba(tabEl) {
@@ -857,7 +911,10 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     var lista = await carregarHighlights(slug);
     if (!lista.length) return;
     var r = aplicarHighlights(tabEl, lista);
-    if (r.perdidas) console.info('[rm-tools] ' + r.perdidas + ' marcação(ões) não localizada(s) com segurança em ' + slug + ' — mantidas no banco, não desenhadas.');
+    if (r.perdidas) {
+      console.info('[rm-tools] ' + r.perdidas + ' marcação(ões) não localizada(s) com segurança em ' + slug + ' — mantidas no banco, não desenhadas.');
+      avisarPendentes(tabEl, r);
+    }
   }
 
   /* ---------------------------------------------------------------- */
@@ -1729,6 +1786,11 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     dentroDoSkip: dentroDoSkip,
     apagarHighlight: apagar,
     carregarHighlights: carregarHighlights,
+    /* exposto para teste real (QA) e para a V2, que pode querer o mesmo
+       caminho de revisão em algum fluxo próprio no futuro — ver
+       avisarPendentes() e `blocosPerdidos` no retorno. */
+    aplicarHighlights: aplicarHighlights,
+    avisarPendentes: avisarPendentes,
     medirBarra: medirBarra,
     fecharLB: fecharLB,
     /* a classe de aberto é 'on' (ver abrirLB/fecharLB); aceita-se também

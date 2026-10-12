@@ -182,6 +182,56 @@ fazer aqui: forçar esse caso a resolver reabriria exatamente o risco que
 as rodadas 2-3 fecharam (um único candidato sem nenhum contexto batendo
 é indistinguível de uma colisão genuína).
 
+**Rodada 6** — duas correções sobre a rodada 5:
+
+1. **Classificação errada.** Farmacología II e Fisiopatología II **fazem
+   parte das 25 matérias elegíveis** — a rodada 5 as tinha posto numa
+   categoria separada ("reforma dedicada", fora dos 25) só porque também
+   têm teste com diff real das PRs #474/#481; isso é um teste A MAIS, não
+   um motivo para excluí-las da proteção geral que esta PR dá a TODAS as
+   matérias. As duas matérias de fato excluídas das 25 são
+   **Bioestadística** (não roteada em `get-materia.js` — Issue #213
+   encerrada sem merge) e **Imagenología** (sem grifo nenhum ainda,
+   confirmado por `--also-check`, não uma exclusão por reforma). Com a
+   classificação corrigida, o subtotal das 25 elegíveis passa a INCLUIR
+   a regressão de Farmacología II:
+
+   | grupo | total | main | PR | regressões |
+   |---|---|---|---|---|
+   | 25 elegíveis (corrigido — inclui Farmacología II/Fisiopatología II; exclui só Bioestadística/Imagenología) | 2.195 | 2.157 | 2.156 | **1** |
+
+   `EXIT=1` enquanto a regressão existir — por desenho, não é um bug a
+   escondido atrás de um subtotal mais estreito.
+
+2. **Caminho de revisão para a marca pendente.** O pedido explícito era:
+   não force essa pintura por coincidência (confirmado impossível de
+   provar seguro — ver rodada 5); em vez disso, torne a marca pendente
+   **visível para o aluno no carregamento**, com um jeito de revisar.
+   Até aqui, uma marca pendente só gerava `console.info` — nenhum aluno
+   olha o console. Corrigido em `rm-tools.js`:
+   - `aplicarHighlights()` agora também devolve `blocosPerdidos` (os
+     `block_id` únicos que tiveram ao menos uma marca não localizada).
+   - `toast()` ganhou um terceiro parâmetro opcional (`onClick`): quando
+     presente, o aviso fica tocável (`pointer-events:auto`, classe
+     `.acionavel`) e dura 6s em vez de 2.2s; sem ele, nenhum dos outros
+     avisos do site muda de comportamento.
+   - `avisarPendentes(tabEl, r)` (nova) monta a mensagem ("N marca(s) no
+     se pudo(pudieron) ubicar — el texto cambió. Sigue(n) guardada(s).
+     Tocá para revisar.") e, ao tocar, rola e realça por ~2,6s
+     (`.rm-flash-revisao`, um contorno temporário — nunca pinta nada
+     permanente) o primeiro bloco afetado.
+   - `sincronizarAba()` chama `avisarPendentes()` sempre que `perdidas > 0`,
+     no carregamento normal da página — não só no desfazer de um apagar
+     (que já tinha seu próprio toast desde a PR original).
+
+   Nenhuma escrita acontece: a marca pendente continua exatamente como
+   estava no banco, e nada é lido/gravado para construir o aviso (os
+   dados já estavam carregados em memória por `aplicarHighlights()`).
+   `test_aviso_pendente.cjs` (novo) prova as três propriedades juntas,
+   num Chromium real com rede bloqueada: o bloco pendente não tem seu
+   HTML alterado; o aviso aparece, é tocável e tem o texto certo; tocar
+   nele rola a página e aplica o realce no bloco certo.
+
 ## O que o pipeline faz
 
 1. `extract_pairs.py` — lê um `git diff <base> <head> -- matéria.html` pelo
