@@ -127,7 +127,7 @@ Testes da versão final: quiz **0 falhas duras** (428 itens, 358 MCQ, 214/214 pa
 | 1440 | 0 / 10,5 / 10,5 · 19 de 19 | 0 / 10,5 / 10,5 · 12 de 12 | **48 / 78 / 99 · 20 de 41** | 30 / 76 / 95 · 20 de 28 |
 
 \* um alvo de bloco que a página não chegou a renderizar a 390 px (presente também na base: 7 449 px); sem ele o máximo é 33 px.
-**Leitura.** Traço preso ao **elemento** (parágrafo, alternativa, tabela): praticamente exato — mediana 0, p90 ≤ 16 px, sempre na mesma questão no Banco. Traço preso à **seção** (ponteiro fora de `p/li/table`, como o enunciado): é o que sobra — deslocamento de ~1 linha (18–72 px de mediana) e, no pior caso, 139 px; no Banco, 8 de 41 (390 px), 6 de 44 (768), 14 de 41 (1024) e 21 de 41 (1440) caem em outra questão ou fora de uma. Não é zero e **não depende de migração**: não há como corrigir sem `data-rm-content-rev` (rejeitado) ou sem congelar a altura do Banco.
+**Leitura.** Traço preso ao **elemento** (parágrafo, alternativa, tabela): no Banco praticamente exato — mediana 0, p90 ≤ 16 px, sempre na mesma questão; nos blocos, p90 ≤ 10,5 px a partir de 768 px e, a 390 px, mediana 16,5 px e p90 233 px (13 de 14 na mesma questão). Traço preso à **seção** (ponteiro fora de `p/li/table`, como o enunciado): é o que sobra — deslocamento de ~1 linha (18–72 px de mediana) e, no pior caso, 139 px; no Banco, 8 de 41 (390 px), 6 de 44 (768), 14 de 41 (1024) e 21 de 41 (1440) caem em outra questão ou fora de uma. Não é zero e **não depende de migração**: não há como corrigir sem `data-rm-content-rev` (rejeitado) ou sem congelar a altura do Banco.
 
 **Não foi tocado `data-rm-content-rev`**, e não é proposto como solução: ele orfanaria também os 81 % de traços que hoje se alinham exatamente (decisão explícita do José). 
 
