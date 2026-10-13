@@ -23,3 +23,17 @@ Sem leitura de dados de alunos. Os 4 acréscimos são **aditivos** (a frase anti
 
 ## 3 · Grifos — livro-razão desta matéria (sintético)
 `hl-ledger.cjs`: **79** frases da `main` deixaram de existir literalmente (inclui o espelho do Banco; SVG e figuras não entram); **79** voltam pelo motor real no mesmo elemento depois do remapeamento; **0** sem remap. É prova de conceito com marcações sintéticas — **não** comprova a preservação de grifos reais. Protocolo completo (aditivo primeiro, livro-razão, portão, migração em 5 passos só com você): `farmacologia-ii-revisao-2026-10-protocolo-grifos-v1.md` (PR #474). Os 4 acréscimos desta rodada não adicionam nenhuma frase em risco.
+
+## 4 · Conferência de 13/10: cada acréscimo está na matéria certa e os espelhos continuam coerentes
+A pasta *Anotações* do Drive continua com os mesmos **4 PDFs** (nenhum arquivo novo ou alterado desde 02/10). Localização de cada acréscimo no HTML (busca pela frase, por `section[id]`):
+
+| acréscimo | PDF de origem | seção | matéria certa? | cópia no Banco / revisão |
+|---|---|---|---|---|
+| sialosis: terminologia (sialoadenosis × sialoadenitis) | esofago | fp2b01 (bolha de glossário) | sim | a **definição da cátedra** («inflamação das glândulas salivais») segue na tabela dos 7 termos, na alternativa d) e no mazo «Los siete términos del esófago» (3 cópias idênticas) — **de propósito**, a ressalva fica onde o termo é ensinado |
+| espasmo difuso: causa na literatura | esofago | fp2b01 | sim | a explicação do quiz repete «degeneración de los axones del plexo de Auerbach» (cátedra) — coerente com a teoria, que agora diz que é a explicação da cátedra |
+| ranitidina retirada em 2020 | Reflujo | fp2b02 (anti-H₂) | sim | mazos e quiz citam ranitidina como anti-H₂, sem contradição |
+| Crohn: abscesso / fístula / perfuração livre | intestino | fp2b12 (EII) | sim | sem cópia |
+| Pancreatites | Pacreatites | — (sem acréscimo; fp2b04 já cobria tudo) | — | — |
+| *(deck 05 Hepatitis)* ginecomastia e vello na cirrose avançada | slides | fp2b03 (hepatitis) | sim | sem cópia |
+
+Bloco ↔ Banco: 319 pares comparados no navegador, **0 divergências**; `SUB_SEL` e os 733 ids idênticos à `main`; nenhum gabarito alterado nesta matéria.
