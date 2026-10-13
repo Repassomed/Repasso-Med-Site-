@@ -147,17 +147,17 @@ Método: `SELECT block_id, exact_text, prefix, suffix, occurrence FROM user_high
 
 Leitura: **hoje nenhum dos 47 grifos reais cobre as 52 frases reescritas** (elas estão em outros blocos); o texto novo não derruba nenhum deles. Este é o resultado que faltava na rodada 3 (ali só havia marcas simuladas). Limites: (1) são os registros que existiam no momento da consulta — qualquer aluno pode grifar uma das 52 frases (ou as outras) **antes do merge**; por isso o `hl-real.cjs` deve ser **rodado de novo logo antes do merge**, e o livro-razão (79 frases, 79 verificadas) continua a ser a rede de segurança; (2) a tabela de traços de tinta (`user_ink_strokes`) não tem nenhum traço desta matéria; (3) a consulta cobre a tabela do projeto do site; não há como saber se algum aluno guarda grifos só no navegador (`localStorage`).
 
-### 7-D · Tinta em posição REAL depois das edições (12/10)
-Harness da #474 portado (`real-ink.test.cjs`, caneta real emulada por CDP, servidor simulado em memória, 0 escritas): 100 traços por largura desenhados na `main` e repintados na versão do checkpoint 2 (`ed08884e`) e no head atual.
+### 7-D · Tinta em posição REAL depois das edições (head final, 13/10)
+Harness da #474 portado (`real-ink.test.cjs`, caneta real emulada por CDP, servidor simulado em memória, 0 escritas), depois do merge da `main` atual: 100 traços por largura desenhados na `main` e repintados no checkpoint 2 (`c9a9da09`) e no head final. Desvio em px (p50 / p90 / máx.) e traços que continuam **no mesmo item**, separando o que está preso ao **elemento** do que está preso à **seção**:
 
-| largura | âncoras (elemento / seção) | todos: p50 / p90 / máx. (px) | no mesmo item | Banco/seção (n) p50 / máx. | blocos p90 / máx. |
-|---|---|---|---|---|---|
-| 390 | 97 / 3 | 0,1 / 0,1 / 72,1 | 95 de 100 (base: 97) | — (0 alvos) | 26,3 / 72,1 |
-| 768 | 95 / 5 | 0 / 0,3 / 12,7 | 99 de 100 (base: 99) | 4,2 / 12,7 (4) | 0,3 / 1,8 |
-| 1024 | 89 / 11 | 0 / 2 / 14,1 | 100 de 100 | 8 / 14,1 (8) | 0,1 / 3,5 |
-| 1440 | 92 / 8 | 0 / 0,1 / 2,9 | 100 de 100 | 1,8 / 2,9 (7) | 0,1 / 0,3 |
+| largura | ELEMENTO · Banco | ELEMENTO · blocos | SEÇÃO · Banco | SEÇÃO · blocos |
+|---|---|---|---|---|
+| 390 | 0,1 / 0,1 / 0,1 · 57 de 60 | 0,1 / 5,5 / 68,5 · 35 de 37 | — (0 alvos) | 16,5 / 72 / 72 · 3 de 3 |
+| 768 | 0 / 0,3 / 0,3 · 55 de 56 | 0 / 0,3 / 0,3 · 39 de 39 | 4,2 / 12,7 / 12,7 · 4 de 4 | 1,8 · 1 de 1 |
+| 1024 | 0 / 0 / 0,1 · 52 de 52 | 0 / 0 / 0,1 · 37 de 37 | 2,2 / 3,2 / 3,2 · 8 de 8 | 2,9 / 3,5 / 3,5 · 3 de 3 |
+| 1440 | 0 / 0 / 0,1 · 53 de 53 | 0 / 0 / 0,1 · 39 de 39 | 1,8 / 2,8 / 2,8 · 7 de 7 | 0,3 · 1 de 1 |
 
-Leitura: as 4 adições do checkpoint 3 **não mudam** nada em relação ao checkpoint 2 (390, 768 e 1440 idênticos; 1024: p90 0,5 → 2 px, máx. igual). O desvio máximo (72 px a 390) vem das reescritas do checkpoint 1, em blocos; 5 dos 100 traços caem em outro item a 390 px (3 já na base: ruído do teste). Os traços ancorados à seção no Banco ficam a ≤ 14 px. Limite: o Banco desta matéria tem poucos enunciados ancoráveis por seção (4–8 por largura nesta amostra).
+Leitura: o checkpoint 3 (anotações, ajustes do parecer G0 e b13q09) **não** move tinta em relação ao checkpoint 2 (390/768/1440 idênticos; no Banco/seção a 1024 px o desvio até **diminuiu**, mediana 8 → 2,2 px). O único desvio relevante é do checkpoint 1: 68 px num traço de bloco a 390 px (o item mudou de altura por uma reescrita de voz). 3 de 60 traços de elemento no Banco a 390 px caem fora do item (a base também erra 3 de 100: ruído do teste). Os traços presos à **seção** são poucos nesta matéria (4–8 por largura no Banco) e ficam a ≤ 13 px.
 
 ### 7-E · Acréscimos e seus espelhos
 As 4 adições (Crohn: absceso/fístula/perforación libre; espasmo difuso: causa na literatura; sialosis: terminologia; ranitidina: retirada em 2020) estão em **parágrafos de teoria** e não têm cópia no Banco nem nos mazos (bloco ↔ banco: 319 pares, 0 divergências). Há reapresentações que **mantêm de propósito** a definição da cátedra: tabela «Sialosis = inflamação das glândulas salivais», alternativa d) e explicação do quiz, e mazo «Los siete términos del esófago» (3 cópias idênticas); a explicação do quiz de espasmo difuso repete «degeneración de los axones del plexo de Auerbach» (a teoria agora diz explicitamente que é a explicação da cátedra). Não os alterei: a ressalva fica no ponto onde o termo é ensinado e mexer nas cópias criaria divergência com o que o aluno será cobrado.
