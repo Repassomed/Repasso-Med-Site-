@@ -87,7 +87,9 @@
   }
 
   /* ------------------------------ recursos reais ------------------------------ */
-  var REUNE = /banco|flashcards/i;                  // banco geral / todos os flashcards: as MESMAS entidades dos blocos (fora das contagens)
+  /* banco geral / todos os flashcards / revisão: as MESMAS entidades dos blocos (fora das contagens e sem isolar). Pelo id (convenção do
+     piloto) OU pelo marcador `data-rm-agrega` que a matéria declara — os ids das outras matérias não seguem a convenção. */
+  var REUNE = { test: function (id) { var e = document.getElementById(id); return /banco|flashcards/i.test(id) || !!(e && e.hasAttribute('data-rm-agrega')); } };
   function ehInfografia(f) {
     return !!(q1(f, 'figcaption') && q1(f, 'img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image'));
   }
@@ -338,10 +340,23 @@
     (function visitar(pai) {
       Array.prototype.forEach.call(pai.children, function (c) {
         if (keep.indexOf(c) !== -1) return;
+        /* o <summary> de um <details> que está no caminho do recurso fica: sem ele, o recurso dentro do <details> fechado não tem como ser
+           aberto (Anatomía I: caixas «Preguntas · Bloque NN»; Anatopatología Práctica: «Flashcards del bloque») */
+        if (c.tagName === 'SUMMARY' && pai.tagName === 'DETAILS' && path.indexOf(pai) !== -1) return;
         if (path.indexOf(c) !== -1) { visitar(c); return; }
         c.setAttribute('data-rm-off', '');
       });
     })(s.el);
+    /* Preguntas: a infografía guardada no INÍCIO do contêiner de questões (p.ex. «Cómo leer…») e a nota que a acompanha não são questão.
+       Só elas saem (antes do 1.º título/questão do grupo); subtítulos e instruções do grupo ficam. Continuam no bloco e no modo Infografías. */
+    if (e.mode === 'preguntas') qa(s.el, '.quiz-section').forEach(function (g) {
+      var antFig = false;
+      for (var c = g.firstElementChild; c && !(c.tagName === 'H3' || c.tagName === 'H4' || /quiz-item/.test(c.className || '') || q1(c, '.quiz-item')); c = c.nextElementSibling) {
+        var ehFig = c.tagName === 'FIGURE' || !!q1(c, 'figure'), ehNota = antFig && /(^|\s)rmc-note(\s|$)/.test(c.className || '');
+        if (ehFig || ehNota) c.setAttribute('data-rm-off', '');
+        antFig = ehFig;
+      }
+    });
     N.isolado = { sec: s.el, mode: e.mode };
     if (e.mode === 'preguntas') filtrarPreguntas(N.filtro || 'todas');
   }
