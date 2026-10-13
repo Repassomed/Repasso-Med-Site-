@@ -93,8 +93,8 @@
   }
 
   /* Pedido mínimo do manifesto, ANTES de carregar qualquer arquivo de áudio. Só o servidor decide. */
-  function manifestoCru(token) {
-    return root.fetch(FN + '/get-audio-manifest?slug=' + encodeURIComponent(alvo.slug), {
+  function manifestoCru(token, slug) {
+    return root.fetch(FN + '/get-audio-manifest?slug=' + encodeURIComponent(slug), {
       method: 'GET', headers: { Authorization: 'Bearer ' + token }, cache: 'no-store', credentials: 'omit'
     }).then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); })
       .then(function (j) { return j && Array.isArray(j.items) ? j.items : []; });
@@ -256,20 +256,26 @@
   /* ------------------------------- start ------------------------------- */
   function start(opts) {
     opts = opts || {};
-    if (st) return st.promise;
     var a = resolverAlvo(opts);
     if (!a) return Promise.resolve(false);                                         // matéria/aba inválida ⇒ nada (falha fechada)
-    alvo = a;
+    if (st && st.alvo.slug === a.slug && st.alvo.tabId === a.tabId) return st.promise;   // idempotente na MESMA matéria (o piloto, como sempre)
     var tab = tabAtiva();
-    if (!tab || tab.id !== alvo.tabId || !root.RMLayout || !d().querySelector(SLOT) || !root.fetch || !root.MutationObserver) return Promise.resolve(false);
+    if (!tab || tab.id !== a.tabId || !root.RMLayout || !d().querySelector(SLOT) || !root.fetch || !root.MutationObserver) return Promise.resolve(false);   // a aba pedida não é a ativa: nada muda (nem a instância atual)
+    if (st) {
+      /* outra matéria, já com a aba dela ativa, antes de a troca ter sido observada: a instância anterior encerra AGORA (pausa, guarda,
+         remove) — nunca devolve a promessa dela para a matéria nova nem deixa cards/áudio de uma matéria na outra */
+      st.encerrando = true; try { st.engine && st.engine.handle('subject-change'); } catch (e) { /* ignore */ }
+      stop();
+    }
+    alvo = a;
     var base = opts.base || BASE, ver = opts.ver || meuVer, q = ver ? '?v=' + ver : '';
-    var mine = { engine: null, cards: [], itens: {}, mo: [], sub: null, caneta: false, ultimoCard: null };
+    var mine = { alvo: a, engine: null, cards: [], itens: {}, mo: [], sub: null, caneta: false, ultimoCard: null };   // alvo PRÓPRIO: respostas atrasadas nunca leem o de outra instância
     st = mine;
     vigiar();
     mine.promise = sessao().then(function (se) {
       if (!se || st !== mine) throw new Error('sin sesión');
       mine.uid = se.uid;
-      return manifestoCru(se.token);
+      return manifestoCru(se.token, mine.alvo.slug);
     }).then(function (crus) {
       if (st !== mine || !crus.length) throw new Error('sin audiolibros');          // recurso ausente = acesso ausente
       return css(base + 'rm-audio.css' + q)
@@ -282,13 +288,13 @@
       var man = root.RMAudio.validateManifest(crus);                              // o motor recusa tudo o que não for só metadado
       if (!man.items.length) throw new Error('manifiesto vacío');
       var supa = typeof root.SUPABASE_URL === 'string' ? root.SUPABASE_URL : (typeof SUPABASE_URL === 'string' ? SUPABASE_URL : '');   // eslint-disable-line no-undef
-      var provider = root.RMAudioProvider.create({ slug: alvo.slug, getToken: function () { return sessao().then(function (x) { return x && x.token; }); } });
+      var provider = root.RMAudioProvider.create({ slug: mine.alvo.slug, getToken: function () { return sessao().then(function (x) { return x && x.token; }); } });
       mine.engine = root.RMAudio.create({
         provider: provider, userKey: mine.uid,
         allowSource: root.RMAudioProvider.allowSource(supa),
         positionStore: root.RMAudioStore.local(mine.uid)
       });
-      man.items = man.items.filter(function (it) { return it.subject_slug === alvo.slug; });   // item de OUTRA matéria nunca vira card aqui
+      man.items = man.items.filter(function (it) { return it.subject_slug === mine.alvo.slug; });   // item de OUTRA matéria nunca vira card aqui
       if (!man.items.length) throw new Error('sin audiolibros de esta materia');
       man.items.forEach(function (it) { mine.itens[it.audio_id] = it; });
       if (!mine.engine.loadMetadata(man.items).ok) throw new Error('metadatos inválidos');
