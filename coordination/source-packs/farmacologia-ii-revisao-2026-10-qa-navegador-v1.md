@@ -117,6 +117,18 @@ Testes da versão final: quiz **0 falhas duras** (428 itens, 358 MCQ, 214/214 pa
 **Conclusão:** o risco **continua não sendo zero**, mas a rodada 2 o reduziu de forma mensurável. Texto não alterado: alinhamento/recuperação exatos. Traços ancorados à seção (teste de posição real, §3.4): mediana 18–72 px e máx. ≤ 139 px no Banco em todas as larguras (rodada 2: até 892 px no celular); permanece a troca de questão vizinha em parte dos traços de enunciado. Como o aluno desenha onde estuda — nos blocos, onde o Δ de seção é ≤ 125 px em 1024 — o efeito esperado está concentrado em traços feitos no Banco, em celular.
 *Repetição em `e9334c1f` (12/10, depois de devolver ao texto literal os pontos cobertos por grifos reais):* o teste de posição real foi refeito (100 traços por largura, base × `3990cbff` × head). Banco/seção ficou **idêntico** à linha «final» da tabela (390: 72/114/139 · 33 de 41; 768: 18/48/59 · 38 de 44; 1024: 32/53/69 · 27 de 41; 1440: 48/78/99 · 20 de 41). Blocos: p90 de 70,3 → 75,3 px (1024) e 66,0 → 73,6 px (1440); 390 e 768 iguais — as frases restauradas têm altura ligeiramente diferente das neutras; nenhum traço mudou de questão por causa disso. O único traço de tinta real da matéria está ancorado à seção da portada (f2b00), cuja altura varia ≤ 28 px a 390 px e 0 nas outras larguras.
 
+*Head final (13/10, depois do merge da `main` atual: a caneta continua `rm-tools-v2.js` sem mudança).* `real-ink.test.cjs`, 100 traços reais por largura desenhados na `main`, repintados em `e9334c1f` (anterior) e no head final — Banco e blocos **iguais** entre os dois (os acréscimos E3 e o ajuste do #188 não movem tinta além do que está abaixo). Desvio da tinta em px (p50 / p90 / máx.) e traços que continuam **no mesmo item** (questão):
+
+| largura | presos ao **ELEMENTO** · Banco | presos ao ELEMENTO · blocos | presos à **SEÇÃO** · Banco | presos à SEÇÃO · blocos |
+|---|---|---|---|---|
+| 390 | 0 / 16 / 33 · 19 de 19 | 16,5 / 233 / 6 673* · 13 de 14 | **72 / 114 / 139 · 33 de 41** | 66 / 130 / 175 · 21 de 26 |
+| 768 | 0 / 16 / 16 · 16 de 16 | 0 / 10,5 / 10,5 · 11 de 11 | **18 / 48 / 59 · 38 de 44** | 39 / 99 / 107 · 14 de 29 |
+| 1024 | 0 / 10,5 / 10,5 · 19 de 19 | 0 / 10,5 / 10,5 · 10 de 10 | **32 / 53 / 69 · 27 de 41** | 26 / 77 / 88 · 20 de 30 |
+| 1440 | 0 / 10,5 / 10,5 · 19 de 19 | 0 / 10,5 / 10,5 · 12 de 12 | **48 / 78 / 99 · 20 de 41** | 30 / 76 / 95 · 20 de 28 |
+
+\* um alvo de bloco que a página não chegou a renderizar a 390 px (presente também na base: 7 449 px); sem ele o máximo é 33 px.
+**Leitura.** Traço preso ao **elemento** (parágrafo, alternativa, tabela): praticamente exato — mediana 0, p90 ≤ 16 px, sempre na mesma questão no Banco. Traço preso à **seção** (ponteiro fora de `p/li/table`, como o enunciado): é o que sobra — deslocamento de ~1 linha (18–72 px de mediana) e, no pior caso, 139 px; no Banco, 8 de 41 (390 px), 6 de 44 (768), 14 de 41 (1024) e 21 de 41 (1440) caem em outra questão ou fora de uma. Não é zero e **não depende de migração**: não há como corrigir sem `data-rm-content-rev` (rejeitado) ou sem congelar a altura do Banco.
+
 **Não foi tocado `data-rm-content-rev`**, e não é proposto como solução: ele orfanaria também os 81 % de traços que hoje se alinham exatamente (decisão explícita do José). 
 
 ## 4 · Limites do QA

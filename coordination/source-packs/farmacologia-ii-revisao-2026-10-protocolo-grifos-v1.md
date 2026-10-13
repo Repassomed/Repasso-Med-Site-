@@ -60,7 +60,28 @@ Nada daqui foi reescrito nesta versão; cada ponto volta a ser **literal** à `m
 
 **Conflito G0 × grifo real (decisão de José).** Em 11 dos 12 pontos o texto literal é justamente a voz de estratégia de prova que a G0 manda retirar. Esta versão **escolhe não perder grifos de alunos** e deixa essas frases como estão (a PR volta a ter, nesses 11 pontos, o texto da `main`). A versão com voz neutra continua disponível: está **toda** num único commit separado e reversível (`git revert e9334c1f`), para aplicar **depois** de os passos 1–5 acima, autorizados por você. Os outros 2 pontos eram acréscimos científicos e foram tratados assim:
 - «DHP corta» na tabela: dispensável — a ressalva «sobre todo con el nifedipino de acción corta» já está no parágrafo das dihidropiridinas; a célula volta literal.
-- «Si el dolor persiste se añade nitroglicerina SL o IV (salvo hipotensión o sildenafilo en las últimas 24 h)» (angina inestável): **retirada desta PR** — não há onde pôr a frase sem quebrar um grifo real (a lista, o resumo «cinco líneas» e as legendas estão todos grifados). Fica como pendência para depois da migração; não é erro do texto atual, só um matiz a mais.
+- «Si el dolor persiste se añade nitroglicerina SL o IV…» (angina inestável, E3): saiu da lista de indicações (grifada) e **voltou em 13/10 no pé da lâmina «Nitratos: mecanismo, elección y seguridad»**, painel 3 («elección por objetivo»), que nenhum dos 238 grifos reais cobre (`hl-real.cjs`: continua 237/238). É a lacuna comprovada na anotação *Antiangionoso.pdf*; a frase nova é aditiva e não toca texto existente.
 
 ### Limite
 Os 238 registros são os que existiam na tabela no momento da consulta; um aluno pode grifar **qualquer** frase depois. A lista acima protege os grifos existentes; a proteção geral continua a ser o livro-razão + a regra «aditivo primeiro».
+
+## Reconsulta de 13/10 (somente leitura) e o que o aluno vê quando uma marca fica pendente
+**Reconsulta.** `user_highlights` de Farmacología II e Fisiopatología II consultadas de novo com um *hash* por registro (bloco + texto + prefixo + sufixo + ocorrência; nenhuma coluna de usuário): **238 e 47 registros, os mesmos de 12/10, 0 criados depois**. Resolvidos pelo motor real contra a `main` atual e contra o head da PR:
+
+| matéria | registros | resolvem na `main` (controle) | **sobrevivem no head da PR** | pendentes | por quê |
+|---|---:|---:|---:|---:|---|
+| Farmacología II (#474) | 238 | 237 | **237** | 0 | o 238.º é um grifo em português («O órgão que controla o sódio é o rim…») que já não resolve na `main`; com o motor da PR #484 há um segundo, «. 🎯» em f2b02 (prefixo/sufixo em português), também sem posição segura **na `main`** — não é efeito desta PR |
+| Fisiopatología II (#481) | 47 | 47 | **47** | 0 | — |
+
+Com o motor da PR #484 (`escolher()` exige contexto): Farmacología II 236 sobrevivem + 2 que já eram pendentes na `main`; Fisiopatología II 47/47. **Nenhuma escrita, nenhum remapeamento.**
+
+**Exposição a grifos NOVOS (`hl-pendente.cjs`).** Pior caso: se alguém grifasse *cada uma* das frases reescritas, o motor da `main` pinta 4 de 218 (Farmacología II) e 0 de 79 (Fisiopatología II); as demais ficam guardadas no banco, **invisíveis e sem aviso** (só um `console.info`). Isso é o mesmo comportamento de hoje para qualquer texto editado.
+
+**Com a PR #484 (ainda *draft*, não mesclada).** `aplicarHighlights()` passa a devolver `blocosPerdidos` e `atualizarBadgePendentes()` mostra um botão fixo no canto inferior esquerdo, medido no navegador:
+* texto: «📌 *N* marcas pendientes · tocá para ver 1/*N*» (ou «· tocá para revisar» se N = 1). **N conta BLOCOS com marca pendente, não marcas**: no pior caso hipotético, 17 em Farmacología II e 16 em Fisiopatología II;
+* é **persistente** (continua visível 3 s depois; só some ao trocar para uma matéria sem pendências); acompanha só a aba ativa;
+* cada toque rola até o próximo bloco pendente, realça-o por ~2,6 s (um só por vez) e avança o contador (cíclico);
+* o registro **não é alterado** (comparado antes/depois) e nada é escrito no banco.
+Limites que não prometem recuperação: o aviso leva ao **bloco**, não à frase; a marca **não reaparece** — o aluno precisa marcar de novo; sem a #484 mesclada não há aviso nenhum. Recomendação de ordem: #484 antes (ou junto) de #474/#481. As duas PRs são seguras para os grifos **existentes** sem a #484 e sem migração.
+
+**Frases reescritas que sobram (todas documentadas):** Farmacología II — 218 no ledger (A 122 voz de prova · B 78 explicações/alternativas de questões revisadas · C 16 correções de conteúdo · D 2); Fisiopatología II — 79 (voz de prova). Em nenhum caso a reescrita é só de estilo: A/D são a voz que a G0 manda retirar, B/C são correção científica ou defeito de questão. Onde um grifo real existia, a frase original foi mantida (12 pontos em Farmacología II).

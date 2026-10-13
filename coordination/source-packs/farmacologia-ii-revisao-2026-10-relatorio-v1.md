@@ -33,7 +33,7 @@
 |---|---|---|
 | E1 | b05 §9 (painel + tabela + comparação) | **correção científica**: painel com o título original e «Conforme la cátedra: NO»; a nuance entra **na própria frase** («en la literatura, sobre todo con el nifedipino de acción corta») e na célula do amlodipino («como grupo, “NO” en IAM reciente y angina inestable; el exceso de mortalidad es de las de acción corta, no del amlodipino») |
 | E2 | b05 §3.1 | três cartões que *explicam* o que separa angina instável / IAM sem ↑ST / IAM com ↑ST (antes só havia a figura) — corrige o erro da anotação (IAMSEST com «↑ persistente do ST») |
-| E3 | b05 §7.7 | nitroglicerina SL/IV na angina instável com dor persistente — **RETIRADA nesta rodada (12/10)**: a frase caía dentro de um grifo real de 5 itens; fica pendente para depois da migração autorizada (protocolo de grifos, «Validação com registros REAIS») |
+| E3 | b05 §7.7 (lâmina de nitratos) | nitroglicerina SL/IV na angina instável com dor persistente — em 12/10 saiu da lista de indicações (grifada) e em **13/10 voltou no pé da lâmina de nitratos, fora de qualquer grifo real** |
 | E4 | b01 §6.5 | cartões «quem aprieta / quem afloja» → por que α antes de β (dúvida do aluno) |
 | E5 | b02 §9 | mecanismo da hipercalcemia da tiazida (NCC → Na⁺ intracelular ↓ → trocador Na⁺/Ca²⁺ + canal apical) |
 | E6 | b02 §10 | poupadores retêm K⁺ e H⁺ e **reduzem a perda de Mg²⁺** (a anotação dizia «Ca²⁺ e Cl⁻», que não se sustenta) |
@@ -119,7 +119,7 @@ Risco para a tinta: **BAIXO–MÉDIO** (não zero), concentrado em (i) traços s
 6. **Fusão de repetições** (exigiria `data-rm-content-rev`): não feita.
 7. **Marcador HSD2**: removi os 2 `data-guard-previous-stem-sha1` obsoletos da PR #386 — confirmar que não há pareamento de auditoria externo que dependa deles.
 8. Corretas únicas mais longas: 111 → **34 de 179 (19 %)** — ligeiramente abaixo do acaso (≈ 25 %); não há pista de tamanho em nenhum sentido.
-9. **Fonte externa de #188:** a bula FDA do aspart prevê 5–10 min **antes** da refeição; a janela «até 20 min depois» é da cátedra e a pergunta diz «según la cátedra».
+9. ~~**Fonte externa de #188**~~ → **fechada em 13/10:** a ficha europea de NovoRapid (EMA/CIMA) indica «inmediatamente antes de las comidas» e, se preciso, depois; a bula FDA do NovoLog prevê 5–10 min antes; Fiasp e glulisina têm janela posterior. A pergunta diz «según la cátedra» e a explicação traz as três fichas e a referência do curso. Resta apenas o aceite formal da troca de letra (Lei 6), que é seu.
 
 ## 9 · Parecer final
 

@@ -14,6 +14,7 @@ node tools/qa/browser-qa/farmaco2-2026-10/real-ink.test.cjs     # TINTA EM POSI�
 node tools/qa/browser-qa/farmaco2-2026-10/hl-remap.test.cjs     # grifos SINTÉTICOS com e sem remapeamento (prova de conceito: NÃO comprova preservação de grifos reais)
 node tools/qa/browser-qa/farmaco2-2026-10/remap-highlights.cjs --in marcas.json --out marcas.remap.json   # remapeia uma exportação real (quem a tem roda; não escreve em lugar nenhum; conferência humana antes de qualquer escrita)
 node tools/qa/browser-qa/farmaco2-2026-10/hl-real.cjs --in registros.json --out relatorio.json   # GRIFOS REAIS (consulta somente leitura feita por fora; registros SEM user_id, fora do repositório): quantos sobrevivem na matéria nova sem remap, quantos só com remap, quantos se perdem
+node tools/qa/browser-qa/farmaco2-2026-10/hl-pendente.cjs --out relatorio.json   # O QUE O ALUNO VÊ com um grifo NOVO sobre uma frase reescrita: pintam/pendentes/blocos e, se os assets tiverem o caminho de revisão da PR #484, o aviso «📌 N marcas pendientes» (rodar de um worktree da #484 com RM_ORIG_HTML/RM_NEW_HTML)
 ```
 Variáveis: `RM_BASE_REF` (padrão `origin/main`), `RM_ORIG_HTML` (arquivo da base), `RM_CHROMIUM` (executável), `RM_PLAYWRIGHT`, `RM_OUT`, `RM_DUMP_ROWS=1`.
 
