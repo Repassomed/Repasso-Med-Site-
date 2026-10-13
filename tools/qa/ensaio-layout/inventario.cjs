@@ -80,7 +80,9 @@ const INV = () => {
     });
     return out;
   }
-  const normqo = q => normq(q) + '|' + limpo((q.querySelector('.options, .tf-buttons') || q).textContent).toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ');
+  /* enunciado + CONJUNTO de alternativas (sem ordem, sem a letra): a cópia do banco com alternativas reordenadas (8-A.7) é a MESMA questão */
+  const nzo = t => limpo(t).toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim();
+  const normqo = q => { const o = q.querySelector('.options, .tf-buttons'); const it = o ? [...o.querySelectorAll('li,button')].map(y => nzo(String(y.textContent).replace(/^\s*(?:[A-Ea-e]|\d{1,2})[).]\s*/, ''))) : []; return normq(q) + '|' + (it.length ? it.sort().join('|') : nzo((o || q).textContent)); };
   const quizComOpc = new Set(secs.flatMap(s => [...s.querySelectorAll('.quiz-item')].map(normqo))).size;
   const unicos = { quizComOpc, quiz: dist(qPorSec), fc: dist(fPorSec), copiasQuiz: copias(qPorSec), copiasFc: copias(fPorSec) };
   const flashLaunch = tab.querySelectorAll('.rmfc-launch').length;
