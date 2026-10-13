@@ -2776,6 +2776,12 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        caminho que aplicarHighlights já usa) sem ninguém fingir que ela
        apareceu na tela agora. */
     var pintada = repintar(tab, copia);
+    /* o toast de "pendiente de ubicar" abaixo desaparece sozinho; sem
+       isto, depois dele sumir não haveria como o aluno achar de novo
+       este bloco — ACRESCENTA (nunca substitui: outras marcas da mesma
+       aba já podem estar pendentes) ao mesmo badge persistente que
+       aplicarHighlights() usa no carregamento normal. */
+    if (!pintada) { try { RT().adicionarPendente(tab, copia.block_id); } catch (e) {} }
     if (!silencioso) {
       toast(pintada ? 'Marca restaurada ✓' : 'Marca restaurada, pendiente de ubicar (el texto cambió)');
     }

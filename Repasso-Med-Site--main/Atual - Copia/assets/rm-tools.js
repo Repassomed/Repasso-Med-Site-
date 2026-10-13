@@ -911,7 +911,7 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
      a marca pendente já estava lá antes, e continua lá, intacta,
      independentemente de o aluno tocar ou não. */
   var elBadgePendentes = null;
-  var estadoBadgePendentes = { tabEl: null, blocos: [], cursor: 0 };
+  var estadoBadgePendentes = { tabEl: null, blocos: [], cursor: 0, totalMarcas: 0 };
 
   function badgePendentes() {
     if (!elBadgePendentes) {
@@ -933,12 +933,20 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     return elBadgePendentes;
   }
 
+  /* `est.totalMarcas` (quantas MARCAS de verdade, de `r.perdidas`) nunca
+     pode ser confundido com `est.blocos.length` (quantos BLOCOS
+     distintos têm pelo menos uma) — um bloco pode ter mais de uma marca
+     pendente (confirmado com dados reais: `f2b02` de Farmacología II tem
+     2). O título sempre conta MARCAS (a palavra que ele usa); o "x/y" do
+     toque conta BLOCOS, porque é por bloco que se navega — visitar um
+     bloco com 2 marcas pendentes mostra as 2, não preciso de um
+     navegador por marca individual dentro do bloco. */
   function atualizarTextoBadge() {
-    var est = estadoBadgePendentes, n = est.blocos.length;
-    if (!n) return;
-    var rotulo = n === 1 ? 'marca pendiente' : 'marcas pendientes';
-    var pos = n > 1 ? ' · tocá para ver ' + (est.cursor + 1) + '/' + n : ' · tocá para revisar';
-    badgePendentes().textContent = '📌 ' + n + ' ' + rotulo + pos;
+    var est = estadoBadgePendentes, nMarcas = est.totalMarcas, nBlocos = est.blocos.length;
+    if (!nMarcas || !nBlocos) return;
+    var rotulo = nMarcas === 1 ? 'marca pendiente' : 'marcas pendientes';
+    var pos = nBlocos > 1 ? ' · tocá para ver bloque ' + (est.cursor + 1) + '/' + nBlocos : ' · tocá para revisar';
+    badgePendentes().textContent = '📌 ' + nMarcas + ' ' + rotulo + pos;
   }
 
   /* Chamada a cada sincronização de aba (carregamento inicial e cada
@@ -956,10 +964,28 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     var blocos = (r && r.blocosPerdidos) || [];
     if (!blocos.length) {
       if (elBadgePendentes) elBadgePendentes.classList.remove('on');
-      estadoBadgePendentes = { tabEl: null, blocos: [], cursor: 0 };
+      estadoBadgePendentes = { tabEl: null, blocos: [], cursor: 0, totalMarcas: 0 };
       return;
     }
-    estadoBadgePendentes = { tabEl: tabEl, blocos: blocos, cursor: 0 };
+    estadoBadgePendentes = { tabEl: tabEl, blocos: blocos, cursor: 0, totalMarcas: r.perdidas };
+    atualizarTextoBadge();
+    badgePendentes().classList.add('on');
+  }
+
+  /* Caminho de revisão para o DESFAZER (§ rodada 8): `restaurarHighlight`
+     da V2 (undo de um apagar) já reinsere o registro no banco e tenta
+     repintar com `resolverAncora`; quando não consegue, até aqui só
+     existia um toast avulso ("pendiente de ubicar") — que desaparece e
+     não deixa como reencontrar o bloco depois. Chamado por essa mesma
+     função quando a pintura falha, para ACRESCENTAR (nunca substituir —
+     outras marcas da mesma aba já podem estar pendentes) a marca ao
+     mesmo badge persistente que o carregamento usa. */
+  function adicionarPendente(tabEl, blockId) {
+    if (tabEl !== abaAtiva()) return;
+    var est = estadoBadgePendentes;
+    if (est.tabEl !== tabEl) est = estadoBadgePendentes = { tabEl: tabEl, blocos: [], cursor: 0, totalMarcas: 0 };
+    if (est.blocos.indexOf(blockId) === -1) est.blocos.push(blockId);
+    est.totalMarcas++;
     atualizarTextoBadge();
     badgePendentes().classList.add('on');
   }
@@ -1848,6 +1874,7 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
        atualizarBadgePendentes() e `blocosPerdidos` no retorno. */
     aplicarHighlights: aplicarHighlights,
     atualizarBadgePendentes: atualizarBadgePendentes,
+    adicionarPendente: adicionarPendente,
     medirBarra: medirBarra,
     fecharLB: fecharLB,
     /* a classe de aberto é 'on' (ver abrirLB/fecharLB); aceita-se também
