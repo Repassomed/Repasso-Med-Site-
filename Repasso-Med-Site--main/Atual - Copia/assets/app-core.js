@@ -125,7 +125,11 @@ var RepassoMed = (function(){
       var body = raw.replace(/^\s*[a-eA-E]\s*[\)\.\-:]\s*/, '');
       li.dataset.option = letter;
       li.setAttribute('onclick', 'checkAnswer(this)');
-      li.innerHTML = '<span class="opt-letter">' + letter.toUpperCase() + ')</span> ' + body;
+      /* o espaço literal entre os dois spans preserva o textContent
+         "A) texto" (não "A)texto") — grifos/tinta de alunos e leitores
+         de tela dependem do texto renderizado, não só do espaçamento
+         visual que o `gap` do flexbox já dava (#472, auditoria). */
+      li.innerHTML = '<span class="opt-letter">' + letter.toUpperCase() + ')</span> <span class="opt-text">' + body + '</span>';
     });
     ul.classList.add('interactive-options');
     item.classList.add('interactive');

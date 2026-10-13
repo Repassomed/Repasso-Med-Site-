@@ -4,7 +4,9 @@
      Cátedra de Biología · Universidad Central del Paraguay
      Material de la Lic. Biól. Dayssy Franco (slides + prácticos + provas)
      Contenido P1: Organización molecular de la célula, membranas,
-     citoesqueleto, matriz extracelular, organelos y mitocondria.
+     citoesqueleto, matriz extracelular, organelos, mitocondria,
+     núcleo interfásico, comunicación intercelular/señalización
+     celular, ciclo celular, meiosis, fecundación y aneuploidías.
      Aditivo · mismo motor (app-core.js) · castellano
      =================================================================== -->
 <style id="tab-bio-style">
@@ -2374,11 +2376,735 @@
 </section>
 
 
+<!-- =========================================================================
+     BLOQUE 14 · NÚCLEO INTERFÁSICO
+     ========================================================================= -->
+<section class="container" id="bio14">
+  <div class="section-marker"><span class="section-marker-num">— BLOQUE 14 · UNIDAD IX</span></div>
+  <h2>🪐 Núcleo interfásico</h2>
+
+  <div class="bio-postit">
+    <h4><span>🪐</span>Desde cero: la "oficina central" de la célula</h4>
+    <p>El <strong>núcleo</strong> es el organelo que guarda el <strong>ADN</strong> y decide qué proteínas se fabrican. Está presente en casi todas las células eucariotas y ocupa alrededor del <strong>10% del volumen celular</strong>. Dos excepciones: el ADN mitocondrial vive fuera de él, y algunas células eucariotas pierden el núcleo al madurar — el caso clásico son los <strong>glóbulos rojos maduros</strong> de los mamíferos.</p>
+    <p>No es una caja cerrada: tiene una <strong>doble membrana</strong> perforada por miles de poros, porque el núcleo necesita estar en comunicación constante con el citosol (manda ARN hacia afuera, recibe proteínas desde afuera).</p>
+  </div>
+
+  <div class="bio-flow">
+    <div class="bio-pill"><span class="e">🧱</span><b>Carioteca</b><small>doble membrana + lámina</small></div>
+    <div class="bio-pill"><span class="e">🚪</span><b>Complejo del poro</b><small>aduana del núcleo</small></div>
+    <div class="bio-pill"><span class="e">🧬</span><b>Cromatina</b><small>ADN + histonas</small></div>
+    <div class="bio-pill"><span class="e">⚙️</span><b>Nucléolo</b><small>fábrica de ribosomas</small></div>
+  </div>
+  <p class="bio-cap">Las cuatro piezas del núcleo interfásico y lo que hace cada una.</p>
+
+  <div class="analysis-card">
+    <h3>📚 Resumen explicado (desde cero)</h3><aside class="rmc-margin"><b class="t">Anotación al margen</b><p>La <b>lámina nuclear</b> está hecha de <b>laminofilamentos</b> — el mismo filamento intermedio que ya viste en el citoesqueleto, aquí sosteniendo la membrana interna.</p><p>El poro deja pasar libre lo chico (iones, moléculas pequeñas) y controla lo grande (proteínas, ARN).</p></aside>
+
+    <h4 style="margin-top:0">La carioteca: una envoltura con dos membranas</h4>
+    <p>El núcleo no tiene una sola membrana, sino dos, concéntricas, con un espacio entre ellas:</p>
+    <ul>
+      <li><strong>Membrana nuclear externa:</strong> se continúa directamente con el <strong>retículo endoplasmático</strong> y, como él, suele estar tachonada de <strong>ribosomas</strong>. Las proteínas que esos ribosomas fabrican quedan en la propia membrana o pasan al espacio de en medio.</li>
+      <li><strong>Espacio perinuclear:</strong> el espacio entre las dos membranas; se comunica con la luz del retículo endoplasmático — es, en los hechos, una prolongación de esa cavidad.</li>
+      <li><strong>Membrana nuclear interna:</strong> por su cara interna está sostenida por la <strong>lámina nuclear</strong>, una malla de <strong>laminofilamentos</strong> entrecruzados. Esta lámina es la que le da forma (casi siempre esférica) y resistencia mecánica a todo el conjunto.</li>
+    </ul>
+
+    <h4>El complejo del poro: la aduana del núcleo</h4>
+    <p>La carioteca está perforada por <strong>3.000 a 4.000 poros</strong>. Cada uno no es un simple agujero: es una estructura de proteínas llamadas <strong>nucleoporinas</strong>, organizadas en columnas, proteínas de anclaje, proteínas radiales y fibrillas que se proyectan hacia ambos lados.</p>
+    <p>El complejo mide unos <strong>30 nm de alto y 100 nm de diámetro</strong>, pero su orificio funcional es mucho más chico (9 a 25 nm) porque una parte de las nucleoporinas — las que tienen repeticiones de <strong>fenilalanina-glicina (FG)</strong> — forman una malla que estrecha el paso.</p>
+    <div class="bio-scroll">
+    <table>
+      <thead><tr><th>¿Qué pasa?</th><th>¿Cómo cruza el poro?</th></tr></thead>
+      <tbody>
+        <tr><td>Iones y moléculas pequeñas</td><td><strong>Pasivamente</strong>, por difusión simple, sin gasto de energía</td></tr>
+        <tr><td>Proteínas y la mayoría del ARN no-mensajero (ARNt, ARNr, ARN pequeños)</td><td>Se unen a <strong>receptores de transporte</strong> (<strong>importinas</strong> para entrar, <strong>exportinas</strong> para salir) que reconocen una señal en la propia carga. Esos receptores cruzan el canal interactuando con las <strong>nucleoporinas FG</strong>, y la dirección del transporte depende del gradiente de la GTPasa <strong>Ran</strong> (Ran-GTP alto dentro del núcleo, bajo en el citosol)</td></tr>
+        <tr><td>La mayor parte del <strong>ARN mensajero</strong></td><td>Sale unido al heterodímero <strong>NXF1-NXT1</strong>, que también interactúa con las nucleoporinas FG pero <strong>no depende del gradiente de Ran</strong> — es la principal excepción a la regla de arriba</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>Por esos mismos poros entran, desde el citosol — por este mecanismo de receptores de transporte —, las proteínas que el núcleo necesita (ADN y ARN polimerasas, proteínas reguladoras de genes, proteínas que se asocian a los ARNr en el nucléolo) y sale el ARN ya procesado — la mayor parte del ARNm por NXF1-NXT1, y el resto (ARNt, ARNr, ARN pequeños) por exportinas dependientes de Ran.</p>
+
+    <h4>El compartimento nuclear: cromatina, ARN y proteínas</h4>
+    <p>Dentro de la carioteca, disperso en la <strong>matriz nuclear o nucleoplasma</strong>, está todo lo que el núcleo necesita para cumplir su función:</p>
+    <ul>
+      <li><strong>Cromosomas:</strong> en el ser humano son 46; cada uno es una molécula de <strong>ADN</strong> asociada a <strong>histonas</strong> y a proteínas no histónicas. Ese complejo de ADN + proteínas es la <strong>cromatina</strong> — la cromatina es, literalmente, el material del que están hechos los cromosomas, no una cosa distinta. El ADN es el que guarda la información genética, y es prácticamente idéntico en todas las células del cuerpo.</li>
+      <li><strong>ARN:</strong> mensajero, ribosómico, de transferencia y ARN pequeños. La inmensa mayoría se sintetiza en el núcleo al transcribirse los genes nucleares, y sale por los poros recién después de procesarse — la excepción es el pequeño ARN que se transcribe dentro de la propia mitocondria, a partir de su ADN circular.</li>
+      <li><strong>Proteínas diversas:</strong> las que regulan genes, las que procesan al ARN, las que se combinan con el ARNr en el nucléolo, además de ADN y ARN polimerasas. Ninguna de ellas se fabrica dentro del núcleo — todas vienen del citosol y entran por los poros.</li>
+    </ul>
+
+    <h4>La cromatina: cómo se empaqueta el ADN</h4>
+    <p>Cada cromosoma humano puede tener entre <strong>50 y 250 millones de pares de bases</strong> de ADN — una molécula larguísima que jamás entraría en el núcleo si estuviera estirada. Por eso se empaqueta en niveles sucesivos:</p>
+    <div class="bio-steps">
+      <div class="bio-step"><span class="n">1</span><b>Nucleosoma</b><p>El ADN se enrolla sobre un grupo de <strong>histonas</strong> (proteínas básicas, ricas en lisina y arginina, que se unen con fuerza al ADN cargado negativamente).</p></div>
+      <div class="bio-step"><span class="n">2</span><b>Cromatosoma</b><p>Cuando el nucleosoma se asocia además con la histona <strong>H1</strong>, se lo llama cromatosoma.</p></div>
+      <div class="bio-step"><span class="n">3</span><b>Solenoide</b><p>Según el <strong>modelo clásico</strong> (el que suele enseñarse, aunque hoy se discute si así es exactamente en la célula viva), los cromatosomas se enrollan sobre sí mismos en una estructura helicoidal, el <strong>solenoide</strong>, con <strong>6 nucleosomas por vuelta</strong>.</p></div>
+      <div class="bio-step"><span class="n">4</span><b>Cromatina condensada</b><p>El solenoide se pliega todavía más, hasta llegar a la cromatina que se distingue al microscopio.</p></div>
+    </div>
+
+    <h4>Eucromatina y heterocromatina</h4>
+    <p>No toda la cromatina está igual de compactada, y ese grado de compactación tiene un significado funcional directo:</p>
+    <div class="bio-scroll">
+    <table>
+      <thead><tr><th></th><th>Compactación</th><th>¿Se transcribe?</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Eucromatina</strong></td><td>Menos compacta</td><td><strong>Sí</strong> — ADN activo</td></tr>
+        <tr><td><strong>Heterocromatina</strong></td><td>Condensada</td><td><strong>No</strong> — ADN inactivo</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>La heterocromatina puede ser <strong>constitutiva</strong> (siempre condensada, en todas las células — como los centrómeros y los telómeros) o <strong>facultativa</strong> (condensada en algunos tipos celulares o etapas, pero eucromatina en otros). El ejemplo clásico de heterocromatina facultativa es uno de los dos cromosomas X de la mujer, que queda totalmente compactado y forma la <strong>cromatina sexual o cuerpo de Barr</strong>.</p>
+
+    <h4>El cromosoma: centrómero, telómeros y orígenes de replicación</h4>
+    <ul>
+      <li><strong>Centrómero:</strong> la constricción primaria del cromosoma. Es donde se organiza el reparto a las células hijas durante la división celular.</li>
+      <li><strong>Telómeros:</strong> los dos extremos del cromosoma. El ADN telomérico se dobla sobre sí mismo y queda protegido por un capuchón de proteínas.</li>
+      <li><strong>Orígenes de replicación:</strong> puntos repartidos a lo largo del cromosoma donde arranca la duplicación del ADN. El término <strong>ARS</strong> ("secuencia de replicación autónoma") viene de la genética de levaduras, donde esos orígenes sí responden a una secuencia consenso simple; en los cromosomas humanos los orígenes existen igual — y son muchos más —, pero no están definidos por una secuencia tan simple ni tan conservada.</li>
+    </ul>
+    <p>El ADN del cromosoma combina secuencias <strong>únicas</strong> (la mayoría de los genes) con secuencias <strong>repetidas</strong> — repetidas en tándem, una detrás de la otra (satélites, microsatélites, minisatélites), o repetidas y dispersas por distintos puntos del cromosoma (elementos SINE y LINE).</p>
+
+    <h4>El cariotipo</h4>
+    <p>Cuando los cromosomas llegan a su máximo grado de condensación — en la <strong>metafase</strong> — pueden fotografiarse, aislarse y ordenarse. Ese conjunto ordenado es el <strong>cariotipo</strong>.</p>
+    <p>En el ser humano son <strong>46 cromosomas</strong>, agrupados en <strong>23 pares</strong>: 22 pares iguales en el hombre y en la mujer, llamados <strong>autosomas</strong>, más un <strong>par sexual</strong> (XX en la mujer, XY en el varón). Según su tamaño y la posición del centrómero se clasifican en metacéntricos, submetacéntricos y acrocéntricos.</p>
+    <p>Para ver detalles estructurales más finos se usan <strong>técnicas de bandeado</strong>: bandeado G (tripsina + Giemsa, bandas oscuras ricas en A-T), bandeado Q (quinacrina, con microscopio de fluorescencia), bandeado R (calor antes del Giemsa, patrón inverso al G, rico en G-C) y bandeado C (tiñe específicamente la heterocromatina constitutiva de los centrómeros).</p>
+
+    <h4>El nucléolo: la fábrica de ribosomas</h4>
+    <p>Es la región del núcleo donde están los <strong>genes de los ARN ribosómicos (ARNr)</strong> y donde ese ARNr recién transcripto empieza a juntarse con proteínas. El resultado — las subunidades del ribosoma — sale del núcleo y se termina de ensamblar en el citosol.</p>
+  </div>
+
+  <div class="key-box exam">
+    <strong>Lo esencial:</strong> la carioteca tiene <strong>dos membranas</strong> (la externa continúa con el RE; la interna está sostenida por la <strong>lámina nuclear</strong> de laminofilamentos); el <strong>espacio perinuclear</strong> es una prolongación de la luz del RE; el <strong>complejo del poro</strong> deja pasar libre lo chico (difusión) y regula lo grande mediante <strong>receptores de transporte</strong> por nucleoporinas FG — importinas/exportinas bajo el gradiente de <strong>Ran</strong> para proteínas y ARN no-mensajero, pero <strong>NXF1-NXT1</strong> (independiente de Ran) para la mayor parte del ARNm; la <strong>cromatina</strong> es ADN + histonas + proteínas no histónicas, empaquetada en niveles (<strong>nucleosoma → cromatosoma → solenoide</strong>, este último según el <strong>modelo clásico</strong>); <strong>eucromatina</strong> se transcribe, <strong>heterocromatina</strong> no (el <strong>cuerpo de Barr</strong> es heterocromatina facultativa); el <strong>cariotipo</strong> humano son <strong>46 cromosomas = 23 pares</strong> (<strong>22 pares de autosomas</strong> + 1 par sexual); el <strong>nucléolo</strong> fabrica las subunidades del ribosoma a partir de ARNr.
+  </div>
+
+  <div class="quiz-section"><h3>📝 Preguntas de práctica — Núcleo interfásico</h3>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La lámina nuclear, que sostiene a la membrana nuclear interna, está formada por:</p>
+    <ul class="options"><li>a) Microtúbulos</li><li>b) Filamentos de actina</li><li>c) Laminofilamentos (filamento intermedio)</li><li>d) Microfilamentos de miosina</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Laminofilamentos (filamento intermedio).</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Los laminofilamentos son el filamento intermedio típico de la envoltura nuclear; forman la lámina nuclear que da forma y resistencia al núcleo.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El espacio perinuclear, ubicado entre las dos membranas de la carioteca, se comunica directamente con:</p>
+    <ul class="options"><li>a) El aparato de Golgi</li><li>b) La luz del retículo endoplasmático</li><li>c) La matriz mitocondrial</li><li>d) El citosol, sin ninguna restricción</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) La luz del retículo endoplasmático.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La membrana nuclear externa se continúa con la membrana del RE, así que el espacio perinuclear es, en los hechos, una prolongación de la cavidad del RE.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La mayor parte del ARN mensajero sale del núcleo por el complejo del poro:</p>
+    <ul class="options"><li>a) Por difusión simple, igual que los iones</li><li>b) Unido al heterodímero NXF1-NXT1, sin depender del gradiente de Ran</li><li>c) Unido a una exportina, dependiente del gradiente de Ran</li><li>d) Solo durante la mitosis, cuando se disuelve la carioteca</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Unido al heterodímero NXF1-NXT1, sin depender del gradiente de Ran.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es la excepción más importante a la regla general: mientras que las proteínas y la mayoría del ARN no-mensajero (ARNt, ARNr, ARN pequeños) salen por exportinas que sí dependen del gradiente de Ran, la mayor parte del ARNm cruza el poro unido al heterodímero NXF1-NXT1, que interactúa con las nucleoporinas FG por una vía independiente de Ran.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La cromatina y los cromosomas son dos estructuras distintas, independientes entre sí.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>FALSO.</strong></p><p><span class="answer-tag expl">📝 Por qué</span> La cromatina es el material (ADN + histonas + proteínas no histónicas) del que están hechos los cromosomas — no son dos cosas distintas, sino el mismo complejo visto en distintos grados de condensación.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El nucléolo es la región del núcleo donde se concentran:</p>
+    <ul class="options"><li>a) Los genes del ARNr y el ARNr recién sintetizado</li><li>b) Las enzimas del Ciclo de Krebs</li><li>c) Los laminofilamentos de la lámina nuclear</li><li>d) El ADN mitocondrial</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) Los genes del ARNr y el ARNr recién sintetizado.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> En el nucléolo se transcriben los genes del ARN ribosómico y ese ARNr empieza a asociarse con proteínas para formar las subunidades del ribosoma.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El nivel de organización de la cromatina en el que un nucleosoma se asocia además con la histona H1 se llama:</p>
+    <ul class="options"><li>a) Solenoide</li><li>b) Cromatosoma</li><li>c) Heterocromatina</li><li>d) Cariotipo</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Cromatosoma.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Nucleosoma + histona H1 = cromatosoma. Según el modelo clásico, los cromatosomas se enrollan después formando el solenoide (6 nucleosomas por vuelta).</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El cuerpo de Barr, presente en una célula de mujer, es un ejemplo de:</p>
+    <ul class="options"><li>a) Eucromatina</li><li>b) Heterocromatina constitutiva</li><li>c) Heterocromatina facultativa</li><li>d) Nucléolo accesorio</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Heterocromatina facultativa.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es uno de los dos cromosomas X de la mujer, totalmente compactado. Facultativa porque en otros tipos celulares o etapas ese mismo cromosoma puede estar como eucromatina. La constitutiva (centrómeros, telómeros) siempre está condensada.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>El cariotipo humano normal tiene 46 cromosomas, organizados en 23 pares: 22 pares de autosomas y 1 par sexual.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> 22 pares de autosomas son iguales en ambos sexos; el par sexual es XX en la mujer y XY en el varón.</p></div>
+  </div>
+  </div>
+
+  <h3>🎴 Flashcards del bloque — Núcleo interfásico</h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Función del núcleo</b></div><div class="fc-back">Guardar el ADN y controlar qué proteínas se fabrican. ~10% del volumen celular.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Membrana nuclear externa</b></div><div class="fc-back">Se continúa con el retículo endoplasmático; tachonada de ribosomas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Membrana nuclear interna</b></div><div class="fc-back">Sostenida por la lámina nuclear (laminofilamentos).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Espacio perinuclear</b></div><div class="fc-back">Entre las dos membranas; se comunica con la luz del RE.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Complejo del poro</b></div><div class="fc-back">Nucleoporinas FG; deja pasar libre lo chico (difusión). Proteínas/ARN no-mensajero: importinas/exportinas + Ran. ARNm (mayoría): NXF1-NXT1, sin Ran.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Cromatina</b></div><div class="fc-back">ADN + histonas + proteínas no histónicas (46 cromosomas). Es el material del cromosoma.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Nucléolo</b></div><div class="fc-back">Genes del ARNr + ARNr recién sintetizado → subunidades del ribosoma.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué entra por el poro desde el citosol?</b></div><div class="fc-back">Proteínas: ADN/ARN polimerasas, reguladoras de genes, proteínas del nucléolo.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Nucleosoma</b></div><div class="fc-back">ADN enrollado sobre histonas (ricas en lisina/arginina).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Cromatosoma → Solenoide</b></div><div class="fc-back">Nucleosoma + histona H1 = cromatosoma. Solenoide (modelo clásico) = 6 nucleosomas por vuelta.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Eucromatina vs. heterocromatina</b></div><div class="fc-back">Eucromatina: menos compacta, se transcribe. Heterocromatina: condensada, no se transcribe.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Cuerpo de Barr</b></div><div class="fc-back">Heterocromatina facultativa; uno de los dos cromosomas X de la mujer, compactado.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Cariotipo humano</b></div><div class="fc-back">46 cromosomas = 23 pares (22 pares de autosomas + 1 par sexual XX/XY).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Bandeado G</b></div><div class="fc-back">Tripsina + Giemsa; bandas oscuras ricas en A-T.</div></div>
+  </div>
+</section>
+
+<section class="container" id="bio15">
+  <div class="section-marker"><span class="section-marker-num">— BLOQUE 15 · UNIDAD VIII</span></div>
+  <h2>🔌 Comunicación intercelular y señalización celular</h2>
+
+  <div class="bio-postit">
+    <h4><span>🔌</span>Desde cero: las células no actúan solas</h4>
+    <p>Ninguna célula decide por sí sola cuándo crecer, dividirse o morir: lo hace en respuesta a <strong>señales químicas</strong> que le llegan desde afuera. A esa señal se la llama <strong>inductor</strong> o <strong>ligando</strong>, porque induce un cambio en la actividad de la célula que la recibe. La célula que fabrica y libera el inductor es la <strong>célula inductora</strong>; la que lo recibe es la <strong>célula inducida</strong>, también llamada <strong>blanco</strong> o <strong>diana</strong>.</p>
+    <p>Para que el inductor haga efecto, tiene que unirse a una proteína específica de la célula blanco: el <strong>receptor</strong>. Y según dónde esté ese receptor — en el citosol o en la membrana — la cadena de reacciones que sigue es completamente distinta. Ese es el eje de todo este bloque.</p>
+  </div>
+
+  <div class="bio-flow">
+    <div class="bio-pill"><span class="e">🩸</span><b>Endócrina</b><small>hormona · por la sangre</small></div>
+    <div class="bio-pill"><span class="e">🏘️</span><b>Paracrina</b><small>citoquina · vecinas</small></div>
+    <div class="bio-pill"><span class="e">🔁</span><b>Autocrina</b><small>autocoide · sobre sí misma</small></div>
+    <div class="bio-pill"><span class="e">⚡</span><b>Sináptica</b><small>neurotransmisor · espacio sináptico</small></div>
+  </div>
+  <p class="bio-cap">Las cuatro formas en que una célula inductora puede alcanzar a su célula blanco.</p>
+
+  <div class="analysis-card">
+    <h3>📚 Resumen explicado (desde cero)</h3><aside class="rmc-margin"><b class="t">Anotación al margen</b><p>No confundas el <b>tipo de señalización</b> (cómo viaja el inductor) con el <b>tipo de receptor</b> (dónde y cómo actúa una vez que llega). Son dos clasificaciones independientes: una hormona esteroidea viaja por señalización <b>endócrina</b> pero actúa sobre un receptor <b>citosólico</b>; el NO viaja por señalización <b>paracrina</b> y también actúa sobre un receptor citosólico.</p></aside>
+
+    <h4 style="margin-top:0">Las cuatro formas de comunicación celular</h4>
+    <p>Lo que cambia entre ellas es la <strong>distancia</strong> que recorre el inductor y <strong>quién</strong> es su célula blanco:</p>
+    <div class="bio-scroll">
+    <table>
+      <thead><tr><th>Tipo</th><th>¿A dónde llega el inductor?</th><th>Nombre del inductor</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Endócrina</strong></td><td>Se libera a la sangre y recorre <strong>todo el cuerpo</strong> hasta su célula blanco</td><td><strong>Hormona</strong></td></tr>
+        <tr><td><strong>Paracrina</strong></td><td>Se libera al medio extracelular (MEC) para influir sobre <strong>células vecinas</strong></td><td><strong>Citoquina</strong></td></tr>
+        <tr><td><strong>Autocrina</strong></td><td>Se libera al MEC y actúa sobre células vecinas similares <strong>e incluso sobre la propia célula que lo liberó</strong></td><td><strong>Autocoide</strong></td></tr>
+        <tr><td><strong>Sináptica</strong></td><td>Se libera por el axón y difunde por el <strong>espacio sináptico</strong> hasta la célula blanco</td><td><strong>Neurotransmisor</strong></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h4>El receptor: tres propiedades que explican cómo funciona</h4>
+    <p>Para activar o inhibir a la célula blanco, el inductor tiene que unirse a su receptor con gran especificidad. Esa unión tiene tres características:</p>
+    <ul>
+      <li><strong>Adaptación inducida:</strong> hay una adaptación estructural recíproca entre el inductor y el receptor — cada uno "encaja" con el otro.</li>
+      <li><strong>Saturabilidad:</strong> el número de receptores en cada célula es limitado, así que llega un punto en que agregar más inductor ya no aumenta la respuesta.</li>
+      <li><strong>Reversibilidad:</strong> la unión inductor-receptor <strong>no es permanente</strong> — el complejo se disocia un tiempo después de formarse. Si no se disociara, la célula no podría volver a su estado de reposo ni responder a un nuevo estímulo.</li>
+    </ul>
+
+    <h4>Dos grandes caminos, según dónde está el receptor</h4>
+    <p>La interacción inductor-receptor es apenas el primer paso de una cadena de reacciones. El camino que sigue esa cadena depende de la ubicación del receptor:</p>
+    <div class="bio-steps">
+      <div class="bio-step"><span class="n">1</span><b>Receptores citosólicos</b><p>Para inductores que atraviesan la membrana: hormonas esteroideas, hormonas tiroideas, vitamina D, ácido retinoico, y el óxido nítrico (NO).</p></div>
+      <div class="bio-step"><span class="n">2</span><b>Receptores de membrana</b><p>Para inductores que NO atraviesan la membrana: adquieren actividad enzimática propia, activan una enzima aparte, o activan una proteína G.</p></div>
+    </div>
+
+    <h4>Receptores citosólicos: dos mecanismos distintos, no uno solo</h4>
+    <p>No todos los inductores que atraviesan la membrana usan el mismo mecanismo. Hay que separar dos grupos, porque se diferencian justo en el punto que más se confunde — <strong>dónde</strong> está el receptor mientras no hay hormona:</p>
+    <ul>
+      <li><strong>Receptores de hormonas esteroideas:</strong> tienen cuatro dominios — uno que se une al inductor, uno flexible que se dobla como una bisagra, uno que se une a la secuencia reguladora del gen y uno que activa al gen. El ejemplo clásico es el <strong>receptor de glucocorticoides</strong> (cortisol): mientras <strong>no</strong> hay hormona presente, este receptor queda predominantemente en el <strong>citosol</strong>, unido a la chaperona <strong>hsp90</strong>, que lo mantiene encorvado (su dominio flexible doblado). Cuando el cortisol se une, el receptor se endereza, se <strong>libera de la hsp90</strong> y recién <strong>entonces</strong> ingresa al núcleo. <strong>No todos los receptores esteroideos siguen exactamente este patrón</strong>: el <strong>receptor de estrógenos</strong>, por ejemplo, puede encontrarse predominantemente <strong>en el núcleo incluso sin la hormona unida</strong> — la distribución citosol/núcleo en reposo varía según cuál receptor esteroideo se trate, no es una regla única para todo el grupo.</li>
+      <li><strong>Receptores de hormonas tiroideas, ácido retinoico y vitamina D:</strong> a diferencia de los esteroideos, estos receptores <strong>ya están dentro del núcleo</strong> y <strong>ya están unidos al ADN</strong> (a la secuencia reguladora del gen) incluso sin la hormona — en ese estado "desnudo" suelen actuar como <strong>represores</strong>, asociados a correpresores. La hormona <strong>no</strong> los hace entrar al núcleo (ya estaban ahí): lo que hace es cambiar su conformación, de modo que cambian el correpresor por un <strong>coactivador</strong> y activan la transcripción.</li>
+    </ul>
+    <p class="bio-cap">⚠️ Este punto no es un detalle menor: es el criterio que distingue a los dos grupos, y una simplificación frecuente (incluso en algunos materiales de cátedra) es tratar a esteroideos, tiroideos, retinoico y vitamina D como si todos usaran hsp90 y se translocaran al núcleo del mismo modo. Como ya vimos, ni siquiera dentro del grupo esteroideo el patrón es uniforme (el receptor de estrógenos es la excepción) — mucho menos entre esteroideos y tiroideos/retinoico/vitamina D, que ni usan hsp90 ni translocan.</p>
+
+    <h4>El caso especial del óxido nítrico (NO)</h4>
+    <p>El NO no activa un gen: reacciona con una enzima citosólica, la <strong>guanilato ciclasa</strong>, que al activarse convierte GTP en <strong>GMPc</strong> (segundo mensajero). Es el ejemplo clásico de señalización paracrina con receptor citosólico:</p>
+    <ul>
+      <li>Una señal — por ejemplo <strong>acetilcolina</strong> liberada por un terminal axónico — estimula a la célula <strong>endotelial</strong> del vaso sanguíneo.</li>
+      <li>La célula endotelial activa la enzima <strong>óxido nítrico sintasa</strong>, que fabrica NO a partir del aminoácido <strong>arginina</strong>.</li>
+      <li>El NO difunde (paracrina) hasta la célula <strong>muscular lisa</strong> vecina del vaso, activa su guanilato ciclasa citosólica, sube el GMPc y se produce <strong>relajación del músculo liso y vasodilatación</strong>.</li>
+    </ul>
+
+    <h4>Receptores de membrana que adquieren actividad enzimática</h4>
+    <p>Cada receptor de membrana tiene un dominio externo (recibe al inductor), uno transmembranoso y uno citosólico. Cuando el inductor se une al dominio externo, el dominio citosólico cambia de una de estas formas:</p>
+    <div class="bio-scroll">
+    <table>
+      <thead><tr><th>Actividad del dominio citosólico</th><th>Ejemplo / inductor</th><th>Qué desencadena</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Guanilato ciclasa</strong></td><td>Péptido natriurético auricular (ANP), de las aurículas cardíacas</td><td>GTP→GMPc→quinasa G→excreción renal de Na⁺ y relajación del músculo liso vascular→<strong>↓ presión arterial</strong></td></tr>
+        <tr><td><strong>Serina-treonina quinasa</strong></td><td>Familia TGF-β</td><td>Fosforila a la proteína citosólica <strong>Smad</strong>, que entra al núcleo y activa genes que regulan la proliferación y diferenciación celular</td></tr>
+        <tr><td><strong>Tirosina quinasa</strong></td><td>Factores de crecimiento: EGF, FGF, PDGF, HGF, NGF, insulina/IGF</td><td>Tres vías posibles (RAS, PLC-γ, PI3-K) — ver abajo</td></tr>
+        <tr><td><strong>Activa tirosina quinasa independiente del receptor</strong></td><td>Hormona de crecimiento, prolactina, eritropoyetina, citoquinas, antígenos</td><td>Vía <strong>JAK-STAT</strong> — ver abajo</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h4>Las tres señales de la vía tirosina quinasa</h4>
+    <p>Cuando el inductor reúne a las dos subunidades del receptor, se fosforilan tirosinas de su dominio citosólico, lo que puede disparar tres tipos de señal:</p>
+    <ul>
+      <li><strong>Proteína RAS</strong> (una GTPasa, activada por GTP e inactivada por GDP): RAS-GTP activa a la quinasa <strong>Raf</strong>, que fosforila a <strong>MEK</strong>, que fosforila a <strong>ERK</strong> (las tres son MAP quinasas). ERK termina regulando genes que controlan el <strong>crecimiento y la diferenciación celular</strong>.</li>
+      <li><strong>Fosfolipasa C-γ (PLC-γ):</strong> participa en la respuesta celular general.</li>
+      <li><strong>Fosfatidilinositol 3-quinasa (PI3-K):</strong> activa a la proteína <strong>Akt (PKB)</strong>, que en general promueve la <strong>supervivencia celular</strong> al bloquear la maquinaria de la apoptosis. Es la <strong>interrupción</strong> de esta vía — no su activación — la que se asocia a la muerte celular.</li>
+    </ul>
+
+    <h4>Tirosina quinasa independiente del receptor: la vía JAK-STAT</h4>
+    <p>Algunos inductores (hormona de crecimiento, prolactina, eritropoyetina, citoquinas, antígenos) activan receptores sin actividad enzimática propia. En su lugar:</p>
+    <ol style="margin:0 0 .6rem 1.1rem;padding:0">
+      <li>El inductor reúne a las subunidades del receptor.</li>
+      <li>Eso atrae a la tirosina quinasa <strong>JAK</strong> (Janus Kinase), que se fosforila a sí misma y se activa.</li>
+      <li>JAK fosforila al dominio citosólico del receptor, que atrae a proteínas citosólicas <strong>STAT</strong>.</li>
+      <li>JAK fosforila también a las STAT, que se dimerizan e ingresan al núcleo para activar genes.</li>
+    </ol>
+    <p>Es la vía por la que, por ejemplo, la <strong>prolactina</strong> induce la producción de leche en la glándula mamaria.</p>
+
+    <h4>Receptores acoplados a proteína G</h4>
+    <p>Son receptores que cruzan siete veces la bicapa lipídica. En su cara citosólica interactúan con la <strong>proteína G</strong>, que tiene tres subunidades (α, β, γ): con <strong>GDP</strong> la proteína está <strong>inactiva</strong>; cuando el GDP es reemplazado por <strong>GTP</strong>, se <strong>activa</strong>. Sus proteínas desensibilizantes son las quinasas (la inhiben) y las arrestinas (la bloquean).</p>
+    <p>Según la variedad de proteína G, se disparan distintas vías:</p>
+    <div class="bio-scroll">
+    <table>
+      <thead><tr><th>Variedad</th><th>Enzima que activa</th><th>Segundo(s) mensajero(s) y efecto</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Gs</strong></td><td>Adenilato ciclasa (AC)</td><td>Forma <strong>AMPc</strong> a partir de ATP → activa la quinasa A → respuesta celular</td></tr>
+        <tr><td><strong>Gq</strong></td><td>Fosfolipasa C-β (PLC-β)</td><td>Transforma PIP2 en <strong>IP3</strong> + <strong>DAG</strong>. El IP3 abre canales del REL y libera Ca²⁺, que se une a la <strong>calmodulina</strong> y activa la CaM-quinasa; el DAG activa la quinasa C. Ambas ramas producen la respuesta celular</td></tr>
+        <tr><td><strong>Gi</strong></td><td>Fosfatidilinositol 3-quinasa (PI3-K), a través de su complejo βγ</td><td>Agrega un fosfato al PIP2 y forma PIP3, que activa a <strong>Akt</strong> y favorece la <strong>supervivencia celular</strong>; es la <strong>interrupción</strong> de esta vía la que se asocia a la muerte celular</td></tr>
+        <tr><td><strong>G12 / G13</strong></td><td>RhoGEF → proteína Rho (una GTPasa)</td><td>Reorganiza el citoesqueleto de actina y la forma celular — es una vía <strong>distinta</strong> de la PI3-K, aunque algunos materiales las agrupan</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="key-box exam">
+    <strong>Lo esencial:</strong> la célula <strong>inductora</strong> libera un <strong>inductor/ligando</strong> que actúa sobre la célula <strong>inducida/blanco</strong>; según la distancia: <strong>endócrina</strong> (hormona, por la sangre), <strong>paracrina</strong> (citoquina, vecinas), <strong>autocrina</strong> (autocoide, incluso sobre sí misma) o <strong>sináptica</strong> (neurotransmisor, espacio sináptico). El receptor es <strong>específico, saturable y reversible</strong>. Entre los <strong>receptores citosólicos</strong>: el de <strong>glucocorticoides</strong> (ejemplo clásico de receptor esteroideo) es citosólico en reposo (chaperona <strong>hsp90</strong>) y recién al activarse va al núcleo — pero no todos los receptores esteroideos siguen ese mismo patrón (el de <strong>estrógenos</strong>, por ejemplo, puede estar predominantemente en el núcleo incluso sin hormona); los de <strong>hormonas tiroideas/ácido retinoico/vitamina D</strong>, en cambio, <strong>ya están en el núcleo unidos al ADN</strong> incluso sin hormona (actuando como represores) — la hormona solo cambia correpresor por coactivador, no los hace entrar al núcleo; el <strong>NO</strong> activa la <strong>guanilato ciclasa citosólica</strong> → GMPc → vasodilatación. Los <strong>receptores de membrana</strong> adquieren actividad <strong>guanilato ciclasa</strong> (ANP, ↓PA), <strong>serina-treonina quinasa</strong> (TGF-β→Smad), <strong>tirosina quinasa</strong> (factores de crecimiento→RAS-Raf-MEK-ERK / PLC-γ / PI3-K→Akt, supervivencia) o activan <strong>JAK-STAT</strong> (hormona de crecimiento, prolactina, eritropoyetina); o bien activan a la <strong>proteína G</strong> (GDP=inactiva, GTP=activa): <strong>Gs→AMPc→PKA</strong>, <strong>Gq→IP3/DAG→Ca²⁺-calmodulina/PKC</strong>, <strong>Gi→PI3-K→Akt</strong> (supervivencia; su <strong>interrupción</strong> → muerte celular), <strong>G12/G13→Rho</strong> (citoesqueleto, vía distinta de la PI3-K).
+  </div>
+
+  <div class="quiz-section"><h3>📝 Preguntas de práctica — Señalización celular</h3>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Una célula secreta un inductor a la sangre, que recorre el cuerpo hasta alcanzar una célula blanco distante. ¿Qué tipo de señalización es, y cómo se llama ese inductor?</p>
+    <ul class="options"><li>a) Paracrina; citoquina</li><li>b) Autocrina; autocoide</li><li>c) Endócrina; hormona</li><li>d) Sináptica; neurotransmisor</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Endócrina; hormona.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La señalización endócrina es la única en la que el inductor viaja por la sangre a todo el cuerpo; en ese caso se lo llama hormona. La paracrina y la autocrina actúan localmente por el MEC, y la sináptica cruza solo el espacio sináptico.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La reversibilidad de la unión inductor-receptor significa que, una vez formado, el complejo nunca se disocia.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>FALSO.</strong></p><p><span class="answer-tag expl">📝 Por qué</span> Es justo lo opuesto: reversibilidad significa que el complejo <strong>sí</strong> se disocia, tiempo después de formarse. Si no se disociara nunca, la célula no podría volver a su estado de reposo ni responder a un nuevo estímulo.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿Qué distingue al receptor de las hormonas tiroideas del receptor de una hormona esteroidea como el cortisol?</p>
+    <ul class="options"><li>a) El receptor tiroideo ya está en el núcleo, unido al ADN incluso sin la hormona presente; el del cortisol, en cambio, es citosólico en reposo y entra al núcleo solo al activarse</li><li>b) El receptor del cortisol ya está en el núcleo, unido al ADN incluso sin la hormona; el tiroideo es citosólico en reposo y entra al núcleo recién al activarse</li><li>c) Ambos receptores permanecen en el citosol unidos a la chaperona hsp90 en reposo, aunque el tiroideo se libera de ella con mayor rapidez que el del cortisol</li><li>d) El receptor tiroideo depende de un segundo mensajero citosólico para activar la transcripción del gen, mientras que el del cortisol actúa de forma directa sobre el ADN</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) El receptor tiroideo ya está en el núcleo, unido al ADN incluso sin la hormona presente; el del cortisol, en cambio, es citosólico en reposo y entra al núcleo solo al activarse.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Son dos mecanismos distintos, aunque ambos sean "receptores citosólicos" en el esquema general. El de cortisol (esteroideo) está en el citosol unido a hsp90 y recién se libera y entra al núcleo cuando llega la hormona — es el ejemplo clásico de este patrón, pero no todos los receptores esteroideos lo siguen (el de estrógenos, por ejemplo, puede ser predominantemente nuclear incluso sin hormona). El tiroideo ya está en el núcleo unido al ADN incluso sin hormona, actuando como represor — la hormona solo cambia correpresor por coactivador, no lo hace "entrar" a ningún lado.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El óxido nítrico (NO), liberado por la célula endotelial, induce la relajación del músculo liso vascular activando directamente a una enzima citosólica llamada:</p>
+    <ul class="options"><li>a) Fosfolipasa C-β</li><li>b) Tirosina quinasa</li><li>c) Adenilato ciclasa</li><li>d) Guanilato ciclasa</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>d) Guanilato ciclasa.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es el caso especial de receptor citosólico: el NO no activa un gen, sino una enzima citosólica —la guanilato ciclasa— que convierte GTP en GMPc y así produce vasodilatación.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>El GMPc, generado al activarse la guanilato ciclasa, funciona como un segundo mensajero.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> El GMPc transmite la señal dentro de la célula (activa la quinasa G), igual que el AMPc o el IP3/DAG en otras vías — todos son segundos mensajeros.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La vía RAS-Raf-MEK-ERK, activada por receptores con actividad tirosina quinasa (como los de los factores de crecimiento), regula principalmente:</p>
+    <ul class="options"><li>a) La apoptosis, como su función principal en la mayoría de los tejidos</li><li>b) El crecimiento y la diferenciación celular</li><li>c) El bloqueo transitorio de la síntesis de ADN durante la fase S</li><li>d) La fosforilación del propio receptor, lo que amplifica aún más su señal</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) El crecimiento y la diferenciación celular.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> RAS-GTP activa Raf, que fosforila a MEK, que fosforila a ERK; esta última regula genes que controlan crecimiento y diferenciación. La vía de la PI3-K, en cambio, está más asociada a la <strong>supervivencia</strong> celular (vía Akt) — es su interrupción, no su activación, la que se asocia a la muerte celular.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Un receptor acoplado a una proteína G variedad Gq activa a la fosfolipasa C-β, que transforma el PIP2 de la membrana en dos segundos mensajeros. ¿Cuáles son, y qué hace cada uno?</p>
+    <ul class="options"><li>a) IP3, que libera Ca²⁺ del retículo endoplasmático liso; y DAG, que activa la quinasa C</li><li>b) AMPc, que activa a la proteína quinasa A; y GMPc, que activa a la proteína quinasa G</li><li>c) ATP, que fosforila diversas proteínas; y ADP, que las desfosforila nuevamente</li><li>d) GTP y GDP, que activan e inactivan alternadamente a la propia proteína Gq</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) IP3, que libera Ca²⁺ del retículo endoplasmático liso; y DAG, que activa la quinasa C.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es la vía de la Gq: PLC-β corta el PIP2 en IP3 + DAG. El IP3 abre canales del REL y libera Ca²⁺ (que se une a calmodulina y activa la CaM-quinasa); el DAG, que queda en la membrana, activa la quinasa C. El AMPc/GMPc (b) corresponde a otras vías (Gs y guanilato ciclasa).</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La hormona de crecimiento y la eritropoyetina activan receptores de membrana sin actividad enzimática propia, que reclutan a una tirosina quinasa independiente del receptor. Esa vía se llama:</p>
+    <ul class="options"><li>a) Vía de Smad</li><li>b) Vía de Ras-Raf-MEK-ERK</li><li>c) Vía JAK-STAT</li><li>d) Vía de la fosfolipasa C-γ</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Vía JAK-STAT.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> JAK (Janus Kinase) se activa al reunirse las subunidades del receptor, fosforila al propio receptor y a las proteínas STAT, que se dimerizan e ingresan al núcleo. Smad es la vía de la serina-treonina quinasa (TGF-β), y Ras-Raf-MEK-ERK/PLC-γ son de la tirosina quinasa del propio receptor, no de una quinasa independiente.</p></div>
+  </div>
+  </div>
+
+  <h3>🎴 Flashcards del bloque — Señalización celular</h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Inductor / ligando</b></div><div class="fc-back">Sustancia que induce un cambio en la actividad de la célula blanco al unirse a su receptor.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Célula inductora vs. inducida</b></div><div class="fc-back">Inductora: libera el inductor. Inducida/blanco/diana: lo recibe.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización endócrina</b></div><div class="fc-back">Inductor = hormona. Viaja por la sangre a células blanco distantes.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización paracrina</b></div><div class="fc-back">Inductor = citoquina. Actúa sobre células vecinas vía el MEC.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización autocrina</b></div><div class="fc-back">Inductor = autocoide. Actúa sobre vecinas similares e incluso sobre sí misma.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización sináptica</b></div><div class="fc-back">Inductor = neurotransmisor. Cruza el espacio sináptico.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Propiedades del receptor</b></div><div class="fc-back">Adaptación inducida, saturabilidad (número limitado) y reversibilidad (la unión se disocia).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Receptores de hormonas esteroideas</b></div><div class="fc-back">Ejemplo clásico: glucocorticoides (cortisol), citosólico en reposo, unido a hsp90 — se libera y recién entonces va al núcleo. No es la regla única: el de estrógenos puede ser predominantemente nuclear incluso sin hormona.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Receptores tiroideo/retinoico/vit. D</b></div><div class="fc-back">Ya están en el núcleo, unidos al ADN incluso sin hormona (represores). La hormona cambia correpresor por coactivador — no los hace "entrar" al núcleo.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Óxido nítrico (NO)</b></div><div class="fc-back">Activa guanilato ciclasa citosólica → GMPc → relajación del músculo liso vascular (vasodilatación).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Guanilato ciclasa de membrana</b></div><div class="fc-back">Receptor del ANP → GMPc → excreción de Na⁺ y relajación vascular → ↓ presión arterial.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Serina-treonina quinasa</b></div><div class="fc-back">Familia TGF-β; activa Smad; regula proliferación y diferenciación celular.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Tirosina quinasa</b></div><div class="fc-back">Factores de crecimiento (EGF, FGF, PDGF, NGF, insulina/IGF). Vías RAS-MAPK, PLC-γ, PI3-K.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Proteína G</b></div><div class="fc-back">Heterotrimérica (α,β,γ); GDP=inactiva, GTP=activa. Gs→AMPc; Gq→IP3/DAG; Gi→PI3-K/Akt (supervivencia); G12/G13→Rho (citoesqueleto).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Vía JAK-STAT</b></div><div class="fc-back">Tirosina quinasa independiente del receptor. Hormona de crecimiento, prolactina, eritropoyetina, citoquinas.</div></div>
+  </div>
+</section>
+
+<section class="container" id="bio16">
+  <div class="section-marker"><span class="section-marker-num">— BLOQUE 16 · UNIDAD X</span></div>
+  <h2>🧬 Ciclo celular</h2>
+
+  <div class="bio-postit">
+    <h4><span>🧬</span>Desde cero: la célula tiene que decidir cuándo dividirse</h4>
+    <p>La capacidad de reproducirse es una propiedad fundamental de la célula — incluso en un organismo adulto que ya dejó de crecer, hay tejidos que siguen renovándose. El <strong>ciclo celular</strong> es la secuencia de eventos que culmina cuando el material celular, ya duplicado, se reparte entre dos células hijas. Tiene dos grandes períodos: la <strong>interfase</strong> (donde la célula crece y duplica su ADN) y la <strong>división celular</strong> (mitosis o meiosis).</p>
+  </div>
+
+  <div class="bio-flow">
+    <div class="bio-pill"><span class="e">⏳</span><b>G1</b><small>5 h · sin síntesis de ADN</small></div>
+    <div class="bio-pill"><span class="e">🧬</span><b>S</b><small>7 h · duplica el ADN</small></div>
+    <div class="bio-pill"><span class="e">⚙️</span><b>G2</b><small>3 h · prepara la mitosis</small></div>
+    <div class="bio-pill"><span class="e">➗</span><b>M</b><small>mitosis · reparte lo duplicado</small></div>
+  </div>
+  <p class="bio-cap">Las cuatro fases de un ciclo celular típico, con la duración aproximada de cada una de la interfase.</p>
+
+  <div class="analysis-card">
+    <h3>📚 Resumen explicado (desde cero)</h3>
+
+    <h4 style="margin-top:0">La interfase: tres fases antes de dividirse</h4>
+    <ul>
+      <li><strong>G1</strong> (≈5 h): la célula tiene la cantidad diploide normal de ADN. <strong>No</strong> hay síntesis de ADN. Si esta fase se prolonga mucho y la célula se retira del ciclo, deja de llamarse G1 y pasa a llamarse <strong>G0</strong> (quiescencia).</li>
+      <li><strong>S</strong> (≈7 h): ocurre la <strong>síntesis de ADN</strong>. Las moléculas de ADN ya duplicadas se llaman <strong>cromátidas</strong>.</li>
+      <li><strong>G2</strong> (≈3 h): va desde el final de S hasta el inicio de la mitosis. La célula ya tiene el <strong>doble</strong> de ADN que la diploide normal. Tampoco hay síntesis de ADN en esta fase.</li>
+    </ul>
+
+    <h4>El control del ciclo: ciclinas y quinasas dependientes de ciclina (CDK)</h4>
+    <p>Antes de terminar G1 hay un momento en que la célula "decide" dividirse: el <strong>punto de arranque</strong> o control G1. Ese control depende de dos tipos de moléculas que trabajan en pareja:</p>
+    <ul>
+      <li><strong>Ciclinas:</strong> su concentración sube y baja en cada ciclo (síntesis creciente seguida de degradación rápida). Hay <strong>ciclinas G1</strong> y <strong>ciclinas M</strong>.</li>
+      <li><strong>Quinasas dependientes de ciclina (CDK):</strong> se activan al asociarse con su ciclina, y entonces fosforilan a las proteínas responsables de la división. Las dos CDK clásicas son <strong>cdk2</strong> y <strong>cdc2</strong> (también llamada CDC2).</li>
+    </ul>
+    <div class="bio-steps">
+      <div class="bio-step"><span class="n">1</span><b>Fase S</b><p>La ciclina G1 activa a la <strong>CDK2</strong>, formando el complejo <strong>SPF</strong> (factor promotor de la síntesis). Dispara una cadena de fosforilaciones que termina activando a las moléculas responsables de <strong>replicar el ADN</strong>.</p></div>
+      <div class="bio-step"><span class="n">2</span><b>Fase M</b><p>La ciclina M, que empieza a sintetizarse ya en G2 (antes de que desaparezca la ciclina G1), se une a la <strong>CDC2</strong> cuando alcanza cierto umbral. Juntas forman el <strong>MPF</strong> (factor promotor de la fase M).</p></div>
+    </div>
+    <p>La activación del MPF dispara varias fosforilaciones con consecuencias muy concretas:</p>
+    <ul>
+      <li>Se <strong>desintegra la red de actina</strong>: la célula pierde el contacto con sus vecinas y con la matriz extracelular, y se vuelve esférica.</li>
+      <li>Se <strong>desarman los microtúbulos citoplasmáticos</strong> y, con esas mismas subunidades, se forma el <strong>huso mitótico</strong>.</li>
+      <li>Se <strong>disgrega la lámina nuclear</strong>, y con ella la carioteca.</li>
+      <li>Cambia la asociación de la histona <strong>H1</strong> con el ADN, lo que aumenta el enrollamiento de la cromatina y ayuda a <strong>condensar los cromosomas</strong>.</li>
+    </ul>
+    <p>El MPF se desarma cuando se activa el <strong>ciclosoma</strong> (o complejo promotor de la anafase, <strong>APC/C</strong>), en la transición de metafase a anafase. El APC/C no corta nada directamente: marca para <strong>degradación</strong> a dos proteínas, la <strong>ciclina M</strong> (lo que inactiva al MPF) y la <strong>securina</strong>. La securina es la que, hasta ese momento, mantenía inhibida a la enzima <strong>separasa</strong>; al degradarse la securina, la separasa queda libre y es <strong>ella</strong> — no el APC/C — la que corta las <strong>cohesinas</strong> que mantenían pegadas a las cromátidas hermanas, permitiendo que se separen.</p>
+
+    <h4>Qué induce a una célula a proliferar</h4>
+    <p>Las células que entran en mitosis casi siempre lo hacen por estímulo de sustancias inductoras externas — de células vecinas (señalización <strong>paracrina</strong>) o de grupos celulares distantes (señalización <strong>endócrina</strong>). Esas sustancias actúan justo en el punto de arranque, promoviendo la síntesis de la ciclina G1. Algunos ejemplos:</p>
+    <ul>
+      <li><strong>Somatomedina:</strong> estimula la proliferación de las células cartilaginosas durante el crecimiento óseo. Se sintetiza en el <strong>hígado</strong>, en respuesta a la hormona de crecimiento hipofisaria.</li>
+      <li><strong>Factores de crecimiento</strong> (fibroblástico, epidérmico, derivado de plaquetas, de hepatocitos, nervioso, del endotelio vascular): casi todos actúan por secreción <strong>paracrina</strong>, sobre células vecinas a su origen.</li>
+      <li><strong>Factores hemopoyéticos:</strong> cada uno estimula la proliferación de un tipo celular sanguíneo particular. La <strong>interleucina 2 (IL-2)</strong> estimula a los linfocitos T; el <strong>GM-CSF</strong> a los progenitores de granulocitos y macrófagos (ambos por secreción <strong>paracrina</strong>); la <strong>eritropoyetina</strong>, en cambio, se origina en el riñón y llega a la médula ósea por la sangre — es secreción <strong>endócrina</strong> — para estimular la proliferación de los glóbulos rojos.</li>
+    </ul>
+  </div>
+
+  <div class="key-box exam">
+    <strong>Lo esencial:</strong> el ciclo celular tiene <strong>interfase</strong> (G1 5h sin síntesis de ADN, S 7h con síntesis de ADN, G2 3h con el doble de ADN) y <strong>división</strong>. G1 prolongada → <strong>G0</strong>. El control depende de <strong>ciclinas</strong> (G1 y M) + <strong>CDK</strong> (cdk2, cdc2): ciclina G1+cdk2 = <strong>SPF</strong> → replica el ADN en fase S; ciclina M+cdc2 = <strong>MPF</strong> → desarma actina/microtúbulos (forma el huso)/lámina nuclear, condensa la cromatina (vía H1). El <strong>ciclosoma (APC/C)</strong>, activo en la transición metafase-anafase, marca para degradación a la <strong>ciclina M</strong> (desarma el MPF) y a la <strong>securina</strong> — lo que libera a la <strong>separasa</strong>, que es la que corta las cohesinas. La proliferación se induce por señales <strong>paracrinas</strong> (factores de crecimiento, IL-2, GM-CSF) o <strong>endócrinas</strong> (somatomedina, eritropoyetina), actuando en el <strong>punto de arranque</strong> de G1.
+  </div>
+
+  <h2>🧫 Meiosis</h2>
+
+  <div class="bio-postit">
+    <h4><span>🧫</span>Desde cero: la división que fabrica gametos</h4>
+    <p>La <strong>meiosis</strong> es exclusiva de los organismos que se reproducen sexualmente, y su resultado son los <strong>gametos</strong> (espermatozoides y óvulos). A diferencia de la mitosis, en la meiosis ocurren tres eventos que no tienen equivalente mitótico: la <strong>reducción a la mitad</strong> del número de cromosomas, la <strong>recombinación genética</strong> (intercambio de segmentos entre cromosomas homólogos) y la <strong>segregación al azar</strong> de los cromosomas homólogos paterno y materno.</p>
+    <p>La meiosis son <strong>dos divisiones sucesivas</strong> (meiosis I y meiosis II), pero el ADN se replica <strong>una sola vez</strong>, antes de la meiosis I. Por eso el resultado final tiene la <strong>mitad</strong> del ADN de la célula original.</p>
+  </div>
+
+  <div class="bio-flow">
+    <div class="bio-pill"><span class="e">🧷</span><b>Profase I</b><small>muy larga · aquí se recombina</small></div>
+    <div class="bio-pill"><span class="e">➗</span><b>Meiosis I</b><small>separa homólogos</small></div>
+    <div class="bio-pill"><span class="e">➗</span><b>Meiosis II</b><small>separa cromátidas hermanas</small></div>
+    <div class="bio-pill"><span class="e">🔀</span><b>Resultado</b><small>4 células haploides</small></div>
+  </div>
+  <p class="bio-cap">La meiosis I separa cromosomas homólogos; la meiosis II separa cromátidas hermanas, igual que una mitosis.</p>
+
+  <div class="analysis-card">
+    <h3>📚 Resumen explicado (desde cero) — Meiosis</h3>
+
+    <h4 style="margin-top:0">Profase I: la fase larga, donde se recombinan los homólogos</h4>
+    <p>La profase de la meiosis I dura muchísimo más que cualquier profase mitótica, porque en ella los cromosomas homólogos se <strong>aparean</strong> y <strong>recombinan</strong>. Tiene seis subfases:</p>
+    <div class="bio-steps">
+      <div class="bio-step"><span class="n">1</span><b>Preleptonema</b><p>Equivale a la profase temprana de la mitosis. Cromosomas muy delgados, difíciles de observar.</p></div>
+      <div class="bio-step"><span class="n">2</span><b>Leptonema</b><p>El núcleo aumenta de tamaño y los cromosomas se vuelven visibles. Aunque ya duplicaron su ADN (tienen 2 cromátidas), <strong>parecen simples</strong>.</p></div>
+      <div class="bio-step"><span class="n">3</span><b>Cigonema</b><p>Los homólogos se <strong>aparean</strong>, formando entre ellos el <strong>complejo sinaptonémico (CS)</strong> — un armazón proteico que estabiliza el apareamiento y facilita la recombinación.</p></div>
+      <div class="bio-step"><span class="n">4</span><b>Paquinema</b><p>Los cromosomas se acortan y el apareamiento se completa. Aquí ocurre el evento más importante: el <strong>crossing over</strong> (recombinación genética — intercambio de segmentos de ADN entre cromátidas homólogas).</p></div>
+      <div class="bio-step"><span class="n">5</span><b>Diplonema</b><p>Los homólogos empiezan a separarse y el CS se desarma, pero quedan conectados en los <strong>quiasmas</strong> — los puntos donde ocurrió el intercambio.</p></div>
+      <div class="bio-step"><span class="n">6</span><b>Diacinesis</b><p>La cromatina se condensa de nuevo, las tétradas se distribuyen por el núcleo y el nucléolo desaparece.</p></div>
+    </div>
+
+    <h4>El resto de la meiosis I</h4>
+    <ul>
+      <li><strong>Prometafase I:</strong> condensación máxima; desaparece la carioteca; los microtúbulos del huso se conectan a los cinetocoros.</li>
+      <li><strong>Metafase I:</strong> los <strong>bivalentes</strong> (pares de homólogos, todavía unidos por quiasmas) se alinean en el ecuador. Los dos cinetocoros de cada cromosoma "miran" hacia el <strong>mismo polo</strong> — a diferencia de la mitosis.</li>
+      <li><strong>Anafase I:</strong> los cinetocoros opuestos traccionan, y los <strong>homólogos de cada bivalente se separan</strong> entre sí (no las cromátidas hermanas, que siguen juntas).</li>
+      <li><strong>Telofase I:</strong> los grupos haploides de cromosomas llegan a los polos y se forma una envoltura nuclear alrededor de cada uno.</li>
+    </ul>
+    <p>Entre la meiosis I y la meiosis II hay una <strong>interfase muy corta</strong>, sin replicación de ADN.</p>
+
+    <h4>Diferencia entre el varón y la mujer en meiosis I</h4>
+    <div class="bio-scroll">
+    <table>
+      <thead><tr><th></th><th>Resultado de la meiosis I</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Varón</strong></td><td>2 células iguales: <strong>espermatocitos II</strong></td></tr>
+        <tr><td><strong>Mujer</strong></td><td>Reparto <strong>desigual</strong> del citoplasma del ovocito I: un <strong>ovocito II</strong> (grande) y el primer <strong>cuerpo polar</strong> (chico)</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h4>Meiosis II: igual que una mitosis, pero con un juego haploide</h4>
+    <ul>
+      <li><strong>Profase II:</strong> muy breve — reaparecen las fibras del huso y desaparece la envoltura nuclear.</li>
+      <li><strong>Metafase II:</strong> los cromosomas van al plano ecuatorial; los cinetocoros se conectan como en una mitosis (cada uno apuntando a un polo distinto).</li>
+      <li><strong>Anafase II:</strong> el <strong>centrómero se divide</strong> y las <strong>cromátidas hermanas</strong> se separan y van a polos opuestos.</li>
+      <li><strong>Telofase II:</strong> cada polo recibe un juego haploide de cromátidas (que ya se llaman cromosomas); se forma la envoltura nuclear y el citoplasma se divide, terminando la meiosis.</li>
+    </ul>
+    <p>En el varón, la meiosis II de los dos espermatocitos II da <strong>4 espermátides</strong> (que luego se diferencian en espermatozoides) — es decir, <strong>4 espermatozoides por cada espermatocito I</strong>. En la mujer, la meiosis II del ovocito II da <strong>1 óvulo</strong> y el segundo cuerpo polar — <strong>1 solo óvulo por cada ovocito I</strong>.</p>
+
+    <h4>Mitosis vs. meiosis: seis diferencias</h4>
+    <div class="bio-scroll">
+    <table>
+      <thead><tr><th>Criterio</th><th>Mitosis</th><th>Meiosis</th></tr></thead>
+      <tbody>
+        <tr><td>Tipo de célula</td><td>Somáticas</td><td>Sexuales (gametos)</td></tr>
+        <tr><td>Replicación y división</td><td>1 replicación → 1 división; hijas diploides, mismo ADN que la madre</td><td>1 replicación → <strong>2</strong> divisiones; 4 células haploides, mitad del ADN</td></tr>
+        <tr><td>Fases S y G2</td><td>S normal, seguida de G2</td><td>S más larga; G2 corta o ausente</td></tr>
+        <tr><td>Comportamiento de los cromosomas</td><td>Cada cromosoma es independiente</td><td>Los homólogos se <strong>aparean y recombinan</strong> en la primera división</td></tr>
+        <tr><td>Duración</td><td>Corta (~1 h)</td><td>Larga (varón: ~24 días; mujer: varios años)</td></tr>
+        <tr><td>Material genético</td><td>Permanece constante</td><td>Genera <strong>variabilidad genética</strong></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="key-box exam">
+    <strong>Lo esencial (meiosis):</strong> la meiosis reduce el número de cromosomas a la mitad, recombina ADN entre homólogos y los segrega al azar — con <strong>una sola replicación</strong> y <strong>dos divisiones</strong>. La <strong>profase I</strong> (preleptonema→leptonema→<strong>cigonema</strong> [complejo sinaptonémico]→<strong>paquinema</strong> [crossing over]→<strong>diplonema</strong> [quiasmas]→diacinesis) es donde ocurre la recombinación. En <strong>anafase I</strong> se separan los <strong>homólogos</strong> (bivalentes); en <strong>anafase II</strong> se separan las <strong>cromátidas hermanas</strong>, igual que en una mitosis. Varón: espermatocito I → 2 espermatocitos II → <strong>4 espermátides/espermatozoides</strong>. Mujer: ovocito I → ovocito II + cuerpo polar → <strong>1 óvulo</strong> + 2.º cuerpo polar (reparto desigual). Frente a la mitosis: meiosis tiene 2 divisiones (no 1), dura mucho más, aparea/recombina homólogos y genera variabilidad genética.
+  </div>
+
+  <div class="quiz-section"><h3>📝 Preguntas de práctica — Ciclo celular</h3>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Una célula permanece mucho tiempo sin dividirse, sin que ocurra síntesis de ADN. ¿Cómo se llama ese estado prolongado de G1?</p>
+    <ul class="options"><li>a) Fase S</li><li>b) Fase M</li><li>c) Fase G2</li><li>d) Fase G0</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>d) Fase G0.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Cuando G1 se prolonga mucho y la célula se retira del ciclo, pasa a llamarse G0 — sigue sin haber síntesis de ADN, como en G1, pero ahora de forma indefinida.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿Qué complejo activa la CDK2 durante la fase S, y qué dispara su activación?</p>
+    <ul class="options"><li>a) El complejo MPF, que dispara la condensación de la cromatina en esa misma fase</li><li>b) El complejo SPF (ciclina G1 + CDK2), que dispara la replicación del ADN</li><li>c) El ciclosoma (APC/C), que marca a la securina para su degradación en ese momento</li><li>d) El complejo de la lámina nuclear, que directamente desarma a la carioteca</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) El complejo SPF (ciclina G1 + CDK2), que dispara la replicación del ADN.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La ciclina G1 se une a la CDK2 formando el SPF (factor promotor de la síntesis), que fosforila en cadena hasta activar las moléculas que replican el ADN. El MPF (a) es el complejo de la fase M, no de la S.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La activación del MPF durante la fase M provoca la desintegración de la red de actina y el desarme de los microtúbulos citoplasmáticos para formar el huso mitótico.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Son dos de las consecuencias clásicas de activar el MPF: la célula pierde el contacto con sus vecinas (se desarma la actina) y reorganiza sus microtúbulos en el huso mitótico.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El ciclosoma (APC/C) se activa en la transición de metafase a anafase. ¿Qué dos proteínas marca para degradación, y qué efecto tiene esa degradación sobre las cromátidas hermanas?</p>
+    <ul class="options"><li>a) Degrada a la ciclina M y a la securina; esto libera a la separasa, que es la que corta las cohesinas y separa las cromátidas</li><li>b) Degrada directamente a las cohesinas que mantienen unidas a las cromátidas hermanas, sin necesidad de ningún paso intermedio</li><li>c) Degrada a la ciclina G1 y al complejo SPF, deteniendo la actividad de la CDK2 en esta transición</li><li>d) Degrada a los microtúbulos que forman el huso mitótico, impidiendo que los cromosomas completen su desplazamiento hacia los polos</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) Degrada a la ciclina M y a la securina; esto libera a la separasa, que es la que corta las cohesinas y separa las cromátidas.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> El APC/C no corta nada directamente: degrada la ciclina M (lo que desarma el MPF) y la securina. Mientras la securina está intacta, mantiene inhibida a la separasa; al degradarse, la separasa queda libre y es ella la que corta las cohesinas que mantenían pegadas a las cromátidas hermanas. Es ese paso —no el APC/C en sí— el que permite que la anafase avance.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La eritropoyetina, sintetizada en el riñón, estimula la proliferación de los precursores de glóbulos rojos en la médula ósea. ¿Qué tipo de señalización es esta, y por qué?</p>
+    <ul class="options"><li>a) Paracrina, porque las células endoteliales vecinas a los túbulos renales son las primeras en responder a su liberación</li><li>b) Autocrina, porque las propias células productoras de eritropoyetina expresan receptores para ella en su membrana</li><li>c) Sináptica, porque su liberación depende de la estimulación de quimiorreceptores renales sensibles a la hipoxia</li><li>d) Endócrina, porque viaja por la sangre hasta un órgano distante, la médula ósea</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>d) Endócrina, porque viaja por la sangre hasta un órgano distante, la médula ósea.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> A diferencia de los factores de crecimiento (que actúan en general por secreción paracrina, sobre vecinas), la eritropoyetina se libera a la sangre y alcanza un órgano distante — el criterio clásico de señalización endócrina.</p></div>
+  </div>
+  </div>
+
+  <h3>🎴 Flashcards del bloque — Ciclo celular</h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Interfase</b></div><div class="fc-back">G1 (5h, sin síntesis de ADN) → S (7h, síntesis de ADN, forma cromátidas) → G2 (3h, ADN duplicado).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>G0</b></div><div class="fc-back">G1 prolongada indefinidamente; la célula se retira del ciclo.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Punto de arranque</b></div><div class="fc-back">Momento en G1 donde la célula "decide" dividirse; ahí actúan los inductores de proliferación.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Ciclinas y CDK</b></div><div class="fc-back">Ciclinas (G1, M) + quinasas dependientes de ciclina (cdk2, cdc2). Se activan en pareja.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>SPF</b></div><div class="fc-back">Ciclina G1 + CDK2. Activa la replicación del ADN en fase S.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>MPF</b></div><div class="fc-back">Ciclina M + CDC2. Dispara los cambios de la fase M (actina, huso, lámina nuclear, cromatina).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Efectos del MPF</b></div><div class="fc-back">Desintegra actina (célula esférica), desarma microtúbulos (forma el huso), disgrega la lámina nuclear, condensa cromatina (vía H1).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Ciclosoma / APC-C</b></div><div class="fc-back">Activo en metafase→anafase. Degrada ciclina M (desarma MPF) y securina (libera a la separasa). La separasa — no el APC/C — corta las cohesinas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Somatomedina</b></div><div class="fc-back">Hígado (por GH hipofisaria) → estimula proliferación cartilaginosa. Señalización endócrina.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Factores de crecimiento</b></div><div class="fc-back">Fibroblástico, epidérmico, de plaquetas, hepatocitos, nervioso, endotelial. Mayoría paracrina.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Factores hemopoyéticos</b></div><div class="fc-back">IL-2→linfocitos T; GM-CSF→granulocitos/macrófagos (paracrinos); eritropoyetina→glóbulos rojos (endócrina, renal).</div></div>
+  </div>
+
+  <div class="quiz-section"><h3>📝 Preguntas de práctica — Meiosis</h3>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿En qué subfase de la profase I los cromosomas homólogos se aparean y forman entre ellos el complejo sinaptonémico?</p>
+    <ul class="options"><li>a) Leptonema</li><li>b) Diplonema</li><li>c) Cigonema</li><li>d) Paquinema</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Cigonema.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> "Cigo-" remite a unión: en el cigonema los homólogos se aparean y el complejo sinaptonémico estabiliza ese apareamiento. En leptonema los cromosomas recién se hacen visibles (y aún parecen simples); el paquinema es donde ocurre el crossing over, no el apareamiento inicial.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El crossing over — el intercambio de segmentos de ADN entre cromátidas homólogas — ocurre característicamente en:</p>
+    <ul class="options"><li>a) Paquinema</li><li>b) Preleptonema</li><li>c) Diacinesis</li><li>d) Cigonema</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) Paquinema.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> El cigonema (d) solo aparea; es en el <strong>paquinema</strong>, con el apareamiento ya completo y los cromosomas acortados, donde se produce la recombinación genética propiamente dicha.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>En diplonema, el complejo sinaptonémico se desarma y los homólogos comienzan a separarse, pero quedan conectados en los quiasmas, los puntos donde ocurrió el crossing over.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Los quiasmas son la marca visible, bajo el microscopio, de dónde hubo recombinación en el paquinema — y son los que mantienen unidos a los homólogos hasta que se separan recién en la anafase I.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>En la metafase I, los dos cinetocoros de cada cromosoma de un bivalente se orientan:</p>
+    <ul class="options"><li>a) Hacia polos opuestos, igual que ocurre en una mitosis normal</li><li>b) Hacia el mismo polo, a diferencia de lo que ocurre en la mitosis</li><li>c) Perpendiculares entre sí, respecto del eje longitudinal del huso</li><li>d) No llegan a conectarse con el huso mitótico en esta fase</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Hacia el mismo polo, a diferencia de lo que ocurre en la mitosis.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es la diferencia clave con la mitosis (y con la meiosis II): en metafase I, ambos cinetocoros de un mismo cromosoma homólogo apuntan al <strong>mismo polo</strong>, para que en anafase I se separen los homólogos completos y no las cromátidas hermanas.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿Qué se separa en la anafase I y qué se separa en la anafase II?</p>
+    <ul class="options"><li>a) En la anafase I se separan los cromosomas homólogos, y en la anafase II se separan los homólogos restantes de cada bivalente</li><li>b) En anafase I se separan las cromátidas hermanas; en anafase II, los homólogos</li><li>c) En la anafase I el centrómero de cada cromosoma se divide, igual que ocurre después en la anafase II</li><li>d) En anafase I se separan los homólogos de cada bivalente; en anafase II, las cromátidas hermanas</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>d) En anafase I se separan los homólogos de cada bivalente; en anafase II, las cromátidas hermanas.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La anafase I es exclusiva de la meiosis: separa cromosomas homólogos completos (cada uno con sus 2 cromátidas todavía unidas). La anafase II es mecánicamente igual a una anafase mitótica: el centrómero se divide y las cromátidas hermanas se separan.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>En el varón, la meiosis I de un espermatocito I da origen a dos espermatocitos II iguales en tamaño. En la mujer, la meiosis I de un ovocito I da origen a:</p>
+    <ul class="options"><li>a) Dos ovocitos II exactamente iguales, igual que ocurre con los espermatocitos II</li><li>b) Un único ovocito II, sin que se forme ningún cuerpo polar en el proceso</li><li>c) Un ovocito II grande y un cuerpo polar pequeño, por reparto desigual del citoplasma</li><li>d) Dos cuerpos polares de igual tamaño, sin que se forme ningún ovocito II</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Un ovocito II grande y un cuerpo polar pequeño, por reparto desigual del citoplasma.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> A diferencia del varón (reparto igual, 2 espermatocitos II <strong>iguales en tamaño pero no idénticos genéticamente</strong> — el crossing over y la segregación al azar de la profase I hacen que cada uno reciba una combinación distinta de alelos), en la mujer el citoplasma se reparte de forma <strong>desigual</strong>: casi todo queda en el ovocito II, y el cuerpo polar recibe muy poco citoplasma (con una cantidad de ADN equivalente, pero igual de distinta genéticamente).</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Al final de toda la meiosis, cada espermatocito I da origen a ________; cada ovocito I da origen a ________.</p>
+    <ul class="options"><li>a) 4 espermátides en total / 4 óvulos en total, igual que en el varón</li><li>b) 4 espermátides en total / 1 solo óvulo, más los cuerpos polares correspondientes</li><li>c) 4 espermátides / 2 óvulos, por la única división meiótica desigual que ocurre en la mujer</li><li>d) 4 espermátides / 3 óvulos, descartando solamente el primer cuerpo polar</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) 4 espermátides en total / 1 solo óvulo, más los cuerpos polares correspondientes.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> El varón conserva todo el citoplasma repartido en partes iguales en las 4 células resultantes. La mujer concentra casi todo el citoplasma en una sola célula fértil (el óvulo), descartando el resto como cuerpos polares — por eso de un ovocito I sale un solo óvulo, no cuatro.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>A diferencia de la mitosis, en la meiosis los cromosomas homólogos se aparean y recombinan genéticamente durante la primera división.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> En la mitosis cada cromosoma se comporta de forma independiente; en la meiosis, los homólogos se aparean y recombinan en la profase I, lo que genera variabilidad genética — algo que la mitosis no produce.</p></div>
+  </div>
+  </div>
+
+  <h3>🎴 Flashcards del bloque — Meiosis</h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Meiosis: tres eventos únicos</b></div><div class="fc-back">Reducción a la mitad del n.º de cromosomas, recombinación genética (crossing over) y segregación al azar de homólogos. Una sola replicación, dos divisiones.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Profase I — Leptonema</b></div><div class="fc-back">Cromosomas visibles por primera vez; ya duplicados (2 cromátidas) pero parecen simples.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Profase I — Cigonema</b></div><div class="fc-back">Los homólogos se aparean y forman el complejo sinaptonémico (CS), que estabiliza el apareamiento.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Profase I — Paquinema</b></div><div class="fc-back">Apareamiento completo. Ocurre el crossing over: intercambio de segmentos de ADN entre cromátidas homólogas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Profase I — Diplonema</b></div><div class="fc-back">El CS se desarma; los homólogos quedan unidos solo por los quiasmas (marcas del crossing over).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Profase I — Diacinesis</b></div><div class="fc-back">Máxima condensación; tétradas distribuidas por el núcleo; desaparece el nucléolo.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Metafase I</b></div><div class="fc-back">Bivalentes alineados en el ecuador. Los 2 cinetocoros de cada homólogo miran al mismo polo (≠ mitosis).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Anafase I</b></div><div class="fc-back">Se separan los homólogos de cada bivalente (no las cromátidas hermanas, que siguen juntas).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Meiosis II</b></div><div class="fc-back">Mecánicamente igual a una mitosis: en anafase II el centrómero se divide y se separan las cromátidas hermanas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Varón — resultado meiosis I</b></div><div class="fc-back">Reparto igual: 2 espermatocitos II de igual tamaño por espermatocito I (no idénticos genéticamente: cada uno recibe una combinación distinta de alelos recombinados).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Mujer — resultado meiosis I</b></div><div class="fc-back">Reparto desigual: 1 ovocito II (grande) + 1.er cuerpo polar (chico) por ovocito I.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Resultado final de la meiosis</b></div><div class="fc-back">Varón: 4 espermátides/espermatozoides por espermatocito I. Mujer: 1 óvulo (+ 2 cuerpos polares) por ovocito I.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Mitosis vs. meiosis</b></div><div class="fc-back">Meiosis: 2 divisiones (no 1), dura mucho más, aparea/recombina homólogos, genera variabilidad genética; produce gametos haploides, no células somáticas diploides.</div></div>
+  </div>
+
+  <h2>👶 Fecundación y aneuploidías</h2>
+
+  <div class="bio-postit">
+    <h4><span>👶</span>Desde cero: cuando dos gametos se vuelven una sola célula</h4>
+    <p>La <strong>fecundación</strong> es la fertilización del <strong>ovocito II</strong> por el espermatozoide, para formar una <strong>célula huevo o cigoto</strong>. Empieza cuando no más de cien espermatozoides completamente diferenciados llegan al <strong>tercio externo de la trompa de Falopio</strong> y entran en contacto con las células foliculares que envuelven al ovocito II. De ahí hasta la formación del cigoto hay <strong>10 fases</strong> encadenadas. (No se habla de fertilizar un "óvulo" ya formado: como se ve en la fase 7, la meiosis II del ovocito II recién se completa cuando la fecundación ya está en curso.)</p>
+  </div>
+
+  <div class="bio-flow">
+    <div class="bio-pill"><span class="e">🧫</span><b>Reconocimiento</b><small>corona radiada → reacción acrosómica → denudación</small></div>
+    <div class="bio-pill"><span class="e">🎯</span><b>Penetración</b><small>membrana pelúcida → fusión</small></div>
+    <div class="bio-pill"><span class="e">🛡️</span><b>Activación</b><small>bloqueo de polispermia → reasunción meiosis II</small></div>
+    <div class="bio-pill"><span class="e">🧬</span><b>Unión genética</b><small>pronúcleos → singamia → anfimixis</small></div>
+  </div>
+  <p class="bio-cap">Las 10 fases de la fecundación agrupadas en cuatro grandes momentos.</p>
+
+  <div class="analysis-card">
+    <h3>📚 Resumen explicado (desde cero) — Fecundación</h3>
+
+    <h4 style="margin-top:0">Las 10 fases de la fecundación</h4>
+    <div class="bio-steps">
+      <div class="bio-step"><span class="n">1</span><b>Penetración de la corona radiada</b><p>Cada espermatozoide avanza entre las células foliculares usando dos mecanismos: libera <strong>hialuronidasa</strong> (digiere el ácido hialurónico que actúa de cemento intercelular) y usa movimientos de <strong>hiperactivación</strong> para impulsarse.</p></div>
+      <div class="bio-step"><span class="n">2</span><b>Reacción acrosómica</b><p>Al contactar la <strong>membrana pelúcida</strong>, se desencadenan múltiples áreas de fusión entre la membrana externa del acrosoma y la membrana plasmática del espermatozoide.</p></div>
+      <div class="bio-step"><span class="n">3</span><b>Denudación</b><p>La corona radiada se desprende del ovocito II.</p></div>
+      <div class="bio-step"><span class="n">4</span><b>Penetración de la membrana pelúcida</b><p>La <strong>acrosina</strong> (liberada en la reacción acrosómica) hidroliza la membrana pelúcida y abre un túnel de trayectoria diagonal, con ayuda de la hiperactivación.</p></div>
+      <div class="bio-step"><span class="n">5</span><b>Fusión</b><p>Las membranas de ambos gametos se fusionan: se establece continuidad citoplasmática y el contenido del espermatozoide se incorpora al ovocito II.</p></div>
+      <div class="bio-step"><span class="n">6</span><b>Bloqueo de la polispermia</b><p>La <strong>reacción cortical</strong> — exocitosis de enzimas hidrolíticas de los gránulos corticales — modifica la estructura del ovocito para que solo un espermatozoide logre fusionarse.</p></div>
+      <div class="bio-step"><span class="n">7</span><b>Reasunción de la meiosis II</b><p>El ovocito II —detenido en metafase II desde la ovulación— reanuda y <strong>completa</strong> la meiosis II recién al ser fecundado. Esa división sí se termina: produce el <strong>segundo cuerpo polar</strong> (que se descarta) y el núcleo haploide materno. Como la fecundación ya está en curso, ese núcleo no se llama "óvulo libre": pasa directo a ser el <strong>pronúcleo femenino</strong> (próximo paso), dentro de una célula que ya se denomina <strong>célula huevo</strong>.</p></div>
+      <div class="bio-step"><span class="n">8</span><b>Formación de los pronúcleos</b><p>El núcleo haploide del espermatozoide y el núcleo materno liberado en el paso anterior pasan a llamarse <strong>pronúcleo masculino</strong> y <strong>pronúcleo femenino</strong>; ambos se dirigen al centro de la célula, donde desarrollan sus cromosomas y replican su ADN.</p></div>
+      <div class="bio-step"><span class="n">9</span><b>Singamia</b><p>Los pronúcleos se colocan muy próximos, en el centro de la célula huevo, y pierden sus cariotecas.</p></div>
+      <div class="bio-step"><span class="n">10</span><b>Anfimixis</b><p>Los cromosomas se condensan de nuevo y se ubican en el plano ecuatorial, igual que en una metafase mitótica común.</p></div>
+    </div>
+
+    <h4>Aneuploidías: cuando falla la separación cromosómica (no disyunción)</h4>
+    <p>Una <strong>aneuploidía</strong> es la ganancia o pérdida de uno o más cromosomas, de modo que el conjunto deja de estar equilibrado. Se produce por una falla en la separación de los cromosomas — <strong>no disyunción</strong> — durante una división celular. Puede fallar la separación de los <strong>homólogos en la meiosis I</strong>, la de las <strong>cromátidas hermanas en la meiosis II</strong>, o la de las cromátidas hermanas en una <strong>división mitótica</strong> (antes de que se formen los gametos, o después de la fecundación, ya en el cigoto).</p>
+    <div class="bio-scroll">
+    <table>
+      <thead><tr><th>Tipo de no disyunción</th><th>Qué no se separa</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Meiótica I</strong></td><td>Homólogos</td><td>Gameto aneuploide + gameto normal → cigoto aneuploide: falta un cromosoma → <strong>monosómico</strong>; sobra un cromosoma → <strong>trisómico</strong></td></tr>
+        <tr><td><strong>Meiótica II</strong></td><td>Cromátidas hermanas</td><td>Mismo resultado: gameto aneuploide + gameto normal → cigoto monosómico o trisómico</td></tr>
+        <tr><td><strong>Mitótica</strong>, en la división que precede a la formación de los gametos</td><td>Cromátidas hermanas</td><td>Mismos efectos que la no disyunción meiótica</td></tr>
+        <tr><td><strong>Mitótica</strong>, en células derivadas de la división del cigoto (postcigótica)</td><td>Cromátidas hermanas</td><td><strong>Mosaicismo</strong>: individuo con líneas celulares somáticas de cariotipos diferentes</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="key-box exam">
+    <strong>Lo esencial (fecundación y aneuploidías):</strong> la fecundación tiene <strong>10 fases</strong> — penetración de la corona radiada (hialuronidasa + hiperactivación) → reacción acrosómica → denudación → penetración de la membrana pelúcida (acrosina) → fusión → bloqueo de la polispermia (reacción cortical) → reasunción de la meiosis II (se completa: da el 2.º cuerpo polar y el núcleo materno, que pasa a pronúcleo femenino sin llegar a llamarse "óvulo", porque la fecundación ya está en curso) → formación de pronúcleos → singamia (pierden cariotecas) → anfimixis (como una metafase mitótica). Las <strong>aneuploidías</strong> surgen por <strong>no disyunción</strong> — falla al separar homólogos en <strong>meiosis I</strong>, cromátidas hermanas en <strong>meiosis II</strong>, o cromátidas hermanas en una <strong>mitosis</strong> (pre- o postcigótica): falta un cromosoma → <strong>monosomía</strong>; sobra uno → <strong>trisomía</strong>. No disyunción mitótica <strong>postcigótica</strong> → <strong>mosaicismo</strong>.
+  </div>
+
+  <div class="quiz-section"><h3>📝 Preguntas de práctica — Fecundación y aneuploidías</h3>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿Qué enzima libera el espermatozoide para digerir el ácido hialurónico que actúa como cemento intercelular entre las células de la corona radiada?</p>
+    <ul class="options"><li>a) Hialuronidasa</li><li>b) Acrosina</li><li>c) Catalasa</li><li>d) Fosfolipasa</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) Hialuronidasa.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La hialuronidasa actúa en la primera fase, digiriendo el cemento intercelular de la corona radiada. La acrosina (b) actúa después, sobre la membrana pelúcida.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La reacción acrosómica ocurre cuando el espermatozoide:</p>
+    <ul class="options"><li>a) Entra en contacto con la membrana pelúcida, liberando el contenido del acrosoma</li><li>b) Atraviesa la membrana pelúcida hasta alcanzar el citoplasma del ovocito</li><li>c) Se fusiona directamente con la membrana plasmática del ovocito II, sin pasos previos</li><li>d) Reanuda inmediatamente la meiosis II que el ovocito II tenía detenida</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) Entra en contacto con la membrana pelúcida, liberando el contenido del acrosoma.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es la fase previa a atravesar la membrana pelúcida (b): el contacto con ella dispara la reacción acrosómica, que libera el contenido del acrosoma, incluida la acrosina.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La acrosina, liberada durante la reacción acrosómica, es la enzima responsable de hidrolizar la membrana pelúcida y abrir un túnel de trayectoria diagonal para el paso del espermatozoide.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La acrosina actúa después de la hialuronidasa, en la fase de penetración de la membrana pelúcida, abriendo paso con ayuda de los movimientos de hiperactivación.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El bloqueo de la polispermia depende de la "reacción cortical", que consiste en:</p>
+    <ul class="options"><li>a) La fusión de las membranas de ambos gametos, antes de que ocurra la penetración</li><li>b) La reanudación de la meiosis II por parte del ovocito</li><li>c) La exocitosis de enzimas de los gránulos corticales del ovocito</li><li>d) La condensación de los cromosomas que ocurre durante la anfimixis</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) La exocitosis de enzimas de los gránulos corticales del ovocito.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Esa exocitosis modifica la estructura del ovocito para impedir que más de un espermatozoide se fusione con él — el mecanismo que garantiza que solo un espermatozoide fecunde al ovocito.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Al ser fecundado, el ovocito II reanuda y completa la meiosis II. ¿Por qué no se dice que este proceso forma un "óvulo" libre e independiente?</p>
+    <ul class="options"><li>a) Porque, aunque la meiosis II se completa, el núcleo materno conserva por convención el nombre de "ovocito II" durante toda la existencia de la célula huevo</li><li>b) Porque, al completarse la meiosis II, el núcleo materno pasa a pronúcleo femenino: la fecundación ya está en curso</li><li>c) Porque el segundo cuerpo polar se fusiona con el núcleo materno antes de que cualquiera de los dos reciba un nombre propio</li><li>d) Porque el núcleo materno solo pasa a llamarse pronúcleo cuando ocurre la singamia, no en el momento en que termina la meiosis II</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Porque, al completarse la meiosis II, el núcleo materno pasa a pronúcleo femenino: la fecundación ya está en curso.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La meiosis II se completa igual que siempre, dando el segundo cuerpo polar y el núcleo haploide materno. La diferencia es terminológica: como la fecundación ya empezó antes de que esa división terminara, ese núcleo no se llama "óvulo" — pasa directo a ser el pronúcleo femenino, dentro de una célula que ya se llama célula huevo (cigoto).</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>En la singamia, los pronúcleos masculino y femenino:</p>
+    <ul class="options"><li>a) Se fusionan de inmediato entre sí, formando ya un único núcleo diploide</li><li>b) Se colocan muy próximos en el centro de la célula huevo y pierden sus cariotecas</li><li>c) Permanecen en polos opuestos de la célula huevo hasta la primera división mitótica</li><li>d) Se mantienen separados dentro del citoplasma, y solo se activa el programa genético del pronúcleo que completó antes su maduración</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Se colocan muy próximos en el centro de la célula huevo y pierden sus cariotecas.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Perder la carioteca es el paso previo a la anfimixis, donde los cromosomas de ambos pronúcleos se condensan juntos en el plano ecuatorial — todavía no hay un núcleo único fusionado en la singamia.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Un recién nacido tiene un cromosoma extra (trisomía), porque uno de los gametos que lo originó recibió dos copias de un cromosoma homólogo en lugar de una. ¿Qué mecanismo explica esto?</p>
+    <ul class="options"><li>a) Mosaicismo, producido por una no disyunción mitótica ocurrida después de la fecundación</li><li>b) Una translocación cromosómica de tipo balanceada entre dos cromosomas distintos</li><li>c) Una deleción que afecta a un segmento específico de un cromosoma</li><li>d) No disyunción meiótica, que originó un gameto aneuploide con un cromosoma de más</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>d) No disyunción meiótica, que originó un gameto aneuploide con un cromosoma de más.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Cuando el gameto aneuploide (con un cromosoma extra) se une a un gameto normal, el cigoto resulta trisómico. El mosaicismo (a) es otro mecanismo distinto, que no afecta a todas las células del individuo por igual.</p></div>
+  </div>
+  <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>El mosaicismo (un individuo con líneas celulares somáticas de cariotipos diferentes) se origina por no disyunción mitótica en células derivadas de la división del cigoto, no por no disyunción en la meiosis que formó los gametos.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Si la no disyunción mitótica ocurriera antes de formarse los gametos, el efecto sería igual al de la no disyunción meiótica (todas las células del individuo serían aneuploides). El mosaicismo exige que la falla sea posterior, ya en células derivadas del cigoto ya formado.</p></div>
+  </div>
+  </div>
+
+  <h3>🎴 Flashcards del bloque — Fecundación y aneuploidías</h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Fecundación</b></div><div class="fc-back">Fertilización del ovocito II por el espermatozoide → célula huevo (cigoto). No hay un "óvulo" ya formado: la meiosis II recién se completa durante el proceso. Comienza en el tercio externo de la trompa de Falopio.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>1. Penetración corona radiada</b></div><div class="fc-back">Hialuronidasa (digiere el cemento intercelular) + movimientos de hiperactivación.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>2. Reacción acrosómica</b></div><div class="fc-back">Al contactar la membrana pelúcida: fusión entre la membrana del acrosoma y la membrana plasmática del espermatozoide.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>3. Denudación</b></div><div class="fc-back">Desprendimiento de la corona radiada del ovocito II.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>4. Penetración membrana pelúcida</b></div><div class="fc-back">La acrosina hidroliza la membrana pelúcida y abre un túnel diagonal.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>5. Fusión</b></div><div class="fc-back">Continuidad citoplasmática entre gametos; se incorpora el contenido del espermatozoide al ovocito II.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>6. Bloqueo de la polispermia</b></div><div class="fc-back">Reacción cortical: exocitosis de enzimas de los gránulos corticales, evita que otro espermatozoide se fusione.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>7. Reasunción meiosis II</b></div><div class="fc-back">El ovocito II reanuda y completa la meiosis II: da el 2.º cuerpo polar y el núcleo materno, que pasa directo a pronúcleo femenino (no "óvulo", porque la fecundación ya está en curso).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>8. Formación de pronúcleos</b></div><div class="fc-back">Núcleo haploide del espermatozoide + núcleo materno (de la meiosis II ya completada) → pronúcleo masculino/femenino; replican su ADN.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>9. Singamia</b></div><div class="fc-back">Pronúcleos se acercan en el centro de la célula huevo y pierden sus cariotecas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>10. Anfimixis</b></div><div class="fc-back">Los cromosomas se condensan y se alinean en el plano ecuatorial, como una metafase mitótica.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Aneuploidía</b></div><div class="fc-back">Ganancia o pérdida de cromosomas por no disyunción: falla al separar homólogos (meiosis I), cromátidas hermanas (meiosis II) o cromátidas hermanas en una mitosis (pre- o postcigótica).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>No disyunción meiótica</b></div><div class="fc-back">Gameto aneuploide + gameto normal → cigoto monosómico (falta 1 cromosoma) o trisómico (sobra 1).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Mosaicismo</b></div><div class="fc-back">No disyunción mitótica en células ya derivadas del cigoto → líneas celulares somáticas con cariotipos diferentes.</div></div>
+  </div>
+</section>
+
+
 <!-- ================= BANCO GENERAL DE PREGUNTAS ================= -->
 <section class="container" id="bancobio">
   <div class="section-marker"><span class="section-marker-num">— REPASO GENERAL · SIMULACRO</span></div>
   <h2>🎯 Banco general de preguntas</h2>
-  <p>Reúne las <strong>123 preguntas</strong> de los 13 bloques (<strong>82 en la serie principal</strong> de cada bloque + 41 de práctica adicional), agrupadas por bloque en tarjetas desplegables. Tocá cada bloque para abrir sus preguntas. Cada bloque conserva además su propio banco.</p>
+  <p>Reúne las <strong>160 preguntas</strong> de los 16 bloques (<strong>103 en la serie principal</strong> de cada bloque + 57 de práctica adicional), agrupadas por bloque en tarjetas desplegables. Tocá cada bloque para abrir sus preguntas. Cada bloque conserva además su propio banco.</p>
   <details class="bio-quiz-card">
     <summary>📝 Bloque 01 · 🔬 Introducción a la Biología celular <span class="bio-qbadge">5 preguntas</span><span class="bio-chev">▸</span></summary>
     <div class="bio-quiz-body"><div class="quiz-section">
@@ -3152,13 +3878,241 @@
   </div>
     </div></div>
   </details>
+  <details class="bio-quiz-card">
+    <summary>📝 Bloque 14 · 🪐 Núcleo interfásico <span class="bio-qbadge">8 preguntas</span><span class="bio-chev">▸</span></summary>
+    <div class="bio-quiz-body"><div class="quiz-section">
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La lámina nuclear, que sostiene a la membrana nuclear interna, está formada por:</p>
+    <ul class="options"><li>a) Microtúbulos</li><li>b) Filamentos de actina</li><li>c) Laminofilamentos (filamento intermedio)</li><li>d) Microfilamentos de miosina</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Laminofilamentos (filamento intermedio).</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Los laminofilamentos son el filamento intermedio típico de la envoltura nuclear; forman la lámina nuclear que da forma y resistencia al núcleo.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El espacio perinuclear, ubicado entre las dos membranas de la carioteca, se comunica directamente con:</p>
+    <ul class="options"><li>a) El aparato de Golgi</li><li>b) La luz del retículo endoplasmático</li><li>c) La matriz mitocondrial</li><li>d) El citosol, sin ninguna restricción</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) La luz del retículo endoplasmático.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La membrana nuclear externa se continúa con la membrana del RE, así que el espacio perinuclear es, en los hechos, una prolongación de la cavidad del RE.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La mayor parte del ARN mensajero sale del núcleo por el complejo del poro:</p>
+    <ul class="options"><li>a) Por difusión simple, igual que los iones</li><li>b) Unido al heterodímero NXF1-NXT1, sin depender del gradiente de Ran</li><li>c) Unido a una exportina, dependiente del gradiente de Ran</li><li>d) Solo durante la mitosis, cuando se disuelve la carioteca</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Unido al heterodímero NXF1-NXT1, sin depender del gradiente de Ran.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es la excepción más importante a la regla general: mientras que las proteínas y la mayoría del ARN no-mensajero (ARNt, ARNr, ARN pequeños) salen por exportinas que sí dependen del gradiente de Ran, la mayor parte del ARNm cruza el poro unido al heterodímero NXF1-NXT1, que interactúa con las nucleoporinas FG por una vía independiente de Ran.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La cromatina y los cromosomas son dos estructuras distintas, independientes entre sí.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>FALSO.</strong></p><p><span class="answer-tag expl">📝 Por qué</span> La cromatina es el material (ADN + histonas + proteínas no histónicas) del que están hechos los cromosomas — no son dos cosas distintas, sino el mismo complejo visto en distintos grados de condensación.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El nucléolo es la región del núcleo donde se concentran:</p>
+    <ul class="options"><li>a) Los genes del ARNr y el ARNr recién sintetizado</li><li>b) Las enzimas del Ciclo de Krebs</li><li>c) Los laminofilamentos de la lámina nuclear</li><li>d) El ADN mitocondrial</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) Los genes del ARNr y el ARNr recién sintetizado.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> En el nucléolo se transcriben los genes del ARN ribosómico y ese ARNr empieza a asociarse con proteínas para formar las subunidades del ribosoma.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El nivel de organización de la cromatina en el que un nucleosoma se asocia además con la histona H1 se llama:</p>
+    <ul class="options"><li>a) Solenoide</li><li>b) Cromatosoma</li><li>c) Heterocromatina</li><li>d) Cariotipo</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Cromatosoma.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Nucleosoma + histona H1 = cromatosoma. Según el modelo clásico, los cromatosomas se enrollan después formando el solenoide (6 nucleosomas por vuelta).</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El cuerpo de Barr, presente en una célula de mujer, es un ejemplo de:</p>
+    <ul class="options"><li>a) Eucromatina</li><li>b) Heterocromatina constitutiva</li><li>c) Heterocromatina facultativa</li><li>d) Nucléolo accesorio</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Heterocromatina facultativa.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es uno de los dos cromosomas X de la mujer, totalmente compactado. Facultativa porque en otros tipos celulares o etapas ese mismo cromosoma puede estar como eucromatina. La constitutiva (centrómeros, telómeros) siempre está condensada.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>El cariotipo humano normal tiene 46 cromosomas, organizados en 23 pares: 22 pares de autosomas y 1 par sexual.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> 22 pares de autosomas son iguales en ambos sexos; el par sexual es XX en la mujer y XY en el varón.</p></div>
+  </div>
+    </div></div>
+  </details>
+  <details class="bio-quiz-card">
+    <summary>📝 Bloque 15 · 🔌 Comunicación intercelular y señalización celular <span class="bio-qbadge">8 preguntas</span><span class="bio-chev">▸</span></summary>
+    <div class="bio-quiz-body"><div class="quiz-section">
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Una célula secreta un inductor a la sangre, que recorre el cuerpo hasta alcanzar una célula blanco distante. ¿Qué tipo de señalización es, y cómo se llama ese inductor?</p>
+    <ul class="options"><li>a) Paracrina; citoquina</li><li>b) Autocrina; autocoide</li><li>c) Endócrina; hormona</li><li>d) Sináptica; neurotransmisor</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Endócrina; hormona.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La señalización endócrina es la única en la que el inductor viaja por la sangre a todo el cuerpo; en ese caso se lo llama hormona. La paracrina y la autocrina actúan localmente por el MEC, y la sináptica cruza solo el espacio sináptico.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La reversibilidad de la unión inductor-receptor significa que, una vez formado, el complejo nunca se disocia.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, false)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, false)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>FALSO.</strong></p><p><span class="answer-tag expl">📝 Por qué</span> Es justo lo opuesto: reversibilidad significa que el complejo <strong>sí</strong> se disocia, tiempo después de formarse. Si no se disociara nunca, la célula no podría volver a su estado de reposo ni responder a un nuevo estímulo.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿Qué distingue al receptor de las hormonas tiroideas del receptor de una hormona esteroidea como el cortisol?</p>
+    <ul class="options"><li>a) El receptor tiroideo ya está en el núcleo, unido al ADN incluso sin la hormona presente; el del cortisol, en cambio, es citosólico en reposo y entra al núcleo solo al activarse</li><li>b) El receptor del cortisol ya está en el núcleo, unido al ADN incluso sin la hormona; el tiroideo es citosólico en reposo y entra al núcleo recién al activarse</li><li>c) Ambos receptores permanecen en el citosol unidos a la chaperona hsp90 en reposo, aunque el tiroideo se libera de ella con mayor rapidez que el del cortisol</li><li>d) El receptor tiroideo depende de un segundo mensajero citosólico para activar la transcripción del gen, mientras que el del cortisol actúa de forma directa sobre el ADN</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) El receptor tiroideo ya está en el núcleo, unido al ADN incluso sin la hormona presente; el del cortisol, en cambio, es citosólico en reposo y entra al núcleo solo al activarse.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Son dos mecanismos distintos, aunque ambos sean "receptores citosólicos" en el esquema general. El de cortisol (esteroideo) está en el citosol unido a hsp90 y recién se libera y entra al núcleo cuando llega la hormona — es el ejemplo clásico de este patrón, pero no todos los receptores esteroideos lo siguen (el de estrógenos, por ejemplo, puede ser predominantemente nuclear incluso sin hormona). El tiroideo ya está en el núcleo unido al ADN incluso sin hormona, actuando como represor — la hormona solo cambia correpresor por coactivador, no lo hace "entrar" a ningún lado.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El óxido nítrico (NO), liberado por la célula endotelial, induce la relajación del músculo liso vascular activando directamente a una enzima citosólica llamada:</p>
+    <ul class="options"><li>a) Fosfolipasa C-β</li><li>b) Tirosina quinasa</li><li>c) Adenilato ciclasa</li><li>d) Guanilato ciclasa</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>d) Guanilato ciclasa.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es el caso especial de receptor citosólico: el NO no activa un gen, sino una enzima citosólica —la guanilato ciclasa— que convierte GTP en GMPc y así produce vasodilatación.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>El GMPc, generado al activarse la guanilato ciclasa, funciona como un segundo mensajero.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> El GMPc transmite la señal dentro de la célula (activa la quinasa G), igual que el AMPc o el IP3/DAG en otras vías — todos son segundos mensajeros.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La vía RAS-Raf-MEK-ERK, activada por receptores con actividad tirosina quinasa (como los de los factores de crecimiento), regula principalmente:</p>
+    <ul class="options"><li>a) La apoptosis, como su función principal en la mayoría de los tejidos</li><li>b) El crecimiento y la diferenciación celular</li><li>c) El bloqueo transitorio de la síntesis de ADN durante la fase S</li><li>d) La fosforilación del propio receptor, lo que amplifica aún más su señal</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) El crecimiento y la diferenciación celular.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> RAS-GTP activa Raf, que fosforila a MEK, que fosforila a ERK; esta última regula genes que controlan crecimiento y diferenciación. La vía de la PI3-K, en cambio, está más asociada a la <strong>supervivencia</strong> celular (vía Akt) — es su interrupción, no su activación, la que se asocia a la muerte celular.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Un receptor acoplado a una proteína G variedad Gq activa a la fosfolipasa C-β, que transforma el PIP2 de la membrana en dos segundos mensajeros. ¿Cuáles son, y qué hace cada uno?</p>
+    <ul class="options"><li>a) IP3, que libera Ca²⁺ del retículo endoplasmático liso; y DAG, que activa la quinasa C</li><li>b) AMPc, que activa a la proteína quinasa A; y GMPc, que activa a la proteína quinasa G</li><li>c) ATP, que fosforila diversas proteínas; y ADP, que las desfosforila nuevamente</li><li>d) GTP y GDP, que activan e inactivan alternadamente a la propia proteína Gq</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) IP3, que libera Ca²⁺ del retículo endoplasmático liso; y DAG, que activa la quinasa C.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es la vía de la Gq: PLC-β corta el PIP2 en IP3 + DAG. El IP3 abre canales del REL y libera Ca²⁺ (que se une a calmodulina y activa la CaM-quinasa); el DAG, que queda en la membrana, activa la quinasa C. El AMPc/GMPc (b) corresponde a otras vías (Gs y guanilato ciclasa).</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La hormona de crecimiento y la eritropoyetina activan receptores de membrana sin actividad enzimática propia, que reclutan a una tirosina quinasa independiente del receptor. Esa vía se llama:</p>
+    <ul class="options"><li>a) Vía de Smad</li><li>b) Vía de Ras-Raf-MEK-ERK</li><li>c) Vía JAK-STAT</li><li>d) Vía de la fosfolipasa C-γ</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Vía JAK-STAT.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> JAK (Janus Kinase) se activa al reunirse las subunidades del receptor, fosforila al propio receptor y a las proteínas STAT, que se dimerizan e ingresan al núcleo. Smad es la vía de la serina-treonina quinasa (TGF-β), y Ras-Raf-MEK-ERK/PLC-γ son de la tirosina quinasa del propio receptor, no de una quinasa independiente.</p></div>
+  </div>
+    </div></div>
+  </details>
+  <details class="bio-quiz-card">
+    <summary>📝 Bloque 16 · 🧬 Ciclo celular, meiosis y fecundación <span class="bio-qbadge">21 preguntas</span><span class="bio-chev">▸</span></summary>
+    <div class="bio-quiz-body"><div class="quiz-section">
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Una célula permanece mucho tiempo sin dividirse, sin que ocurra síntesis de ADN. ¿Cómo se llama ese estado prolongado de G1?</p>
+    <ul class="options"><li>a) Fase S</li><li>b) Fase M</li><li>c) Fase G2</li><li>d) Fase G0</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>d) Fase G0.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Cuando G1 se prolonga mucho y la célula se retira del ciclo, pasa a llamarse G0 — sigue sin haber síntesis de ADN, como en G1, pero ahora de forma indefinida.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿Qué complejo activa la CDK2 durante la fase S, y qué dispara su activación?</p>
+    <ul class="options"><li>a) El complejo MPF, que dispara la condensación de la cromatina en esa misma fase</li><li>b) El complejo SPF (ciclina G1 + CDK2), que dispara la replicación del ADN</li><li>c) El ciclosoma (APC/C), que marca a la securina para su degradación en ese momento</li><li>d) El complejo de la lámina nuclear, que directamente desarma a la carioteca</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) El complejo SPF (ciclina G1 + CDK2), que dispara la replicación del ADN.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La ciclina G1 se une a la CDK2 formando el SPF (factor promotor de la síntesis), que fosforila en cadena hasta activar las moléculas que replican el ADN. El MPF (a) es el complejo de la fase M, no de la S.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La activación del MPF durante la fase M provoca la desintegración de la red de actina y el desarme de los microtúbulos citoplasmáticos para formar el huso mitótico.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Son dos de las consecuencias clásicas de activar el MPF: la célula pierde el contacto con sus vecinas (se desarma la actina) y reorganiza sus microtúbulos en el huso mitótico.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El ciclosoma (APC/C) se activa en la transición de metafase a anafase. ¿Qué dos proteínas marca para degradación, y qué efecto tiene esa degradación sobre las cromátidas hermanas?</p>
+    <ul class="options"><li>a) Degrada a la ciclina M y a la securina; esto libera a la separasa, que es la que corta las cohesinas y separa las cromátidas</li><li>b) Degrada directamente a las cohesinas que mantienen unidas a las cromátidas hermanas, sin necesidad de ningún paso intermedio</li><li>c) Degrada a la ciclina G1 y al complejo SPF, deteniendo la actividad de la CDK2 en esta transición</li><li>d) Degrada a los microtúbulos que forman el huso mitótico, impidiendo que los cromosomas completen su desplazamiento hacia los polos</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) Degrada a la ciclina M y a la securina; esto libera a la separasa, que es la que corta las cohesinas y separa las cromátidas.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> El APC/C no corta nada directamente: degrada la ciclina M (lo que desarma el MPF) y la securina. Mientras la securina está intacta, mantiene inhibida a la separasa; al degradarse, la separasa queda libre y es ella la que corta las cohesinas que mantenían pegadas a las cromátidas hermanas. Es ese paso —no el APC/C en sí— el que permite que la anafase avance.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La eritropoyetina, sintetizada en el riñón, estimula la proliferación de los precursores de glóbulos rojos en la médula ósea. ¿Qué tipo de señalización es esta, y por qué?</p>
+    <ul class="options"><li>a) Paracrina, porque las células endoteliales vecinas a los túbulos renales son las primeras en responder a su liberación</li><li>b) Autocrina, porque las propias células productoras de eritropoyetina expresan receptores para ella en su membrana</li><li>c) Sináptica, porque su liberación depende de la estimulación de quimiorreceptores renales sensibles a la hipoxia</li><li>d) Endócrina, porque viaja por la sangre hasta un órgano distante, la médula ósea</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>d) Endócrina, porque viaja por la sangre hasta un órgano distante, la médula ósea.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> A diferencia de los factores de crecimiento (que actúan en general por secreción paracrina, sobre vecinas), la eritropoyetina se libera a la sangre y alcanza un órgano distante — el criterio clásico de señalización endócrina.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿En qué subfase de la profase I los cromosomas homólogos se aparean y forman entre ellos el complejo sinaptonémico?</p>
+    <ul class="options"><li>a) Leptonema</li><li>b) Diplonema</li><li>c) Cigonema</li><li>d) Paquinema</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Cigonema.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> "Cigo-" remite a unión: en el cigonema los homólogos se aparean y el complejo sinaptonémico estabiliza ese apareamiento. En leptonema los cromosomas recién se hacen visibles (y aún parecen simples); el paquinema es donde ocurre el crossing over, no el apareamiento inicial.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El crossing over — el intercambio de segmentos de ADN entre cromátidas homólogas — ocurre característicamente en:</p>
+    <ul class="options"><li>a) Paquinema</li><li>b) Preleptonema</li><li>c) Diacinesis</li><li>d) Cigonema</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) Paquinema.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> El cigonema (d) solo aparea; es en el <strong>paquinema</strong>, con el apareamiento ya completo y los cromosomas acortados, donde se produce la recombinación genética propiamente dicha.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>En diplonema, el complejo sinaptonémico se desarma y los homólogos comienzan a separarse, pero quedan conectados en los quiasmas, los puntos donde ocurrió el crossing over.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Los quiasmas son la marca visible, bajo el microscopio, de dónde hubo recombinación en el paquinema — y son los que mantienen unidos a los homólogos hasta que se separan recién en la anafase I.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>En la metafase I, los dos cinetocoros de cada cromosoma de un bivalente se orientan:</p>
+    <ul class="options"><li>a) Hacia polos opuestos, igual que ocurre en una mitosis normal</li><li>b) Hacia el mismo polo, a diferencia de lo que ocurre en la mitosis</li><li>c) Perpendiculares entre sí, respecto del eje longitudinal del huso</li><li>d) No llegan a conectarse con el huso mitótico en esta fase</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Hacia el mismo polo, a diferencia de lo que ocurre en la mitosis.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es la diferencia clave con la mitosis (y con la meiosis II): en metafase I, ambos cinetocoros de un mismo cromosoma homólogo apuntan al <strong>mismo polo</strong>, para que en anafase I se separen los homólogos completos y no las cromátidas hermanas.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿Qué se separa en la anafase I y qué se separa en la anafase II?</p>
+    <ul class="options"><li>a) En la anafase I se separan los cromosomas homólogos, y en la anafase II se separan los homólogos restantes de cada bivalente</li><li>b) En anafase I se separan las cromátidas hermanas; en anafase II, los homólogos</li><li>c) En la anafase I el centrómero de cada cromosoma se divide, igual que ocurre después en la anafase II</li><li>d) En anafase I se separan los homólogos de cada bivalente; en anafase II, las cromátidas hermanas</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>d) En anafase I se separan los homólogos de cada bivalente; en anafase II, las cromátidas hermanas.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La anafase I es exclusiva de la meiosis: separa cromosomas homólogos completos (cada uno con sus 2 cromátidas todavía unidas). La anafase II es mecánicamente igual a una anafase mitótica: el centrómero se divide y las cromátidas hermanas se separan.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>En el varón, la meiosis I de un espermatocito I da origen a dos espermatocitos II iguales en tamaño. En la mujer, la meiosis I de un ovocito I da origen a:</p>
+    <ul class="options"><li>a) Dos ovocitos II exactamente iguales, igual que ocurre con los espermatocitos II</li><li>b) Un único ovocito II, sin que se forme ningún cuerpo polar en el proceso</li><li>c) Un ovocito II grande y un cuerpo polar pequeño, por reparto desigual del citoplasma</li><li>d) Dos cuerpos polares de igual tamaño, sin que se forme ningún ovocito II</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) Un ovocito II grande y un cuerpo polar pequeño, por reparto desigual del citoplasma.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> A diferencia del varón (reparto igual, 2 espermatocitos II <strong>iguales en tamaño pero no idénticos genéticamente</strong> — el crossing over y la segregación al azar de la profase I hacen que cada uno reciba una combinación distinta de alelos), en la mujer el citoplasma se reparte de forma <strong>desigual</strong>: casi todo queda en el ovocito II, y el cuerpo polar recibe muy poco citoplasma (con una cantidad de ADN equivalente, pero igual de distinta genéticamente).</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Al final de toda la meiosis, cada espermatocito I da origen a ________; cada ovocito I da origen a ________.</p>
+    <ul class="options"><li>a) 4 espermátides en total / 4 óvulos en total, igual que en el varón</li><li>b) 4 espermátides en total / 1 solo óvulo, más los cuerpos polares correspondientes</li><li>c) 4 espermátides / 2 óvulos, por la única división meiótica desigual que ocurre en la mujer</li><li>d) 4 espermátides / 3 óvulos, descartando solamente el primer cuerpo polar</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) 4 espermátides en total / 1 solo óvulo, más los cuerpos polares correspondientes.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> El varón conserva todo el citoplasma repartido en partes iguales en las 4 células resultantes. La mujer concentra casi todo el citoplasma en una sola célula fértil (el óvulo), descartando el resto como cuerpos polares — por eso de un ovocito I sale un solo óvulo, no cuatro.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>A diferencia de la mitosis, en la meiosis los cromosomas homólogos se aparean y recombinan genéticamente durante la primera división.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> En la mitosis cada cromosoma se comporta de forma independiente; en la meiosis, los homólogos se aparean y recombinan en la profase I, lo que genera variabilidad genética — algo que la mitosis no produce.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>¿Qué enzima libera el espermatozoide para digerir el ácido hialurónico que actúa como cemento intercelular entre las células de la corona radiada?</p>
+    <ul class="options"><li>a) Hialuronidasa</li><li>b) Acrosina</li><li>c) Catalasa</li><li>d) Fosfolipasa</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) Hialuronidasa.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La hialuronidasa actúa en la primera fase, digiriendo el cemento intercelular de la corona radiada. La acrosina (b) actúa después, sobre la membrana pelúcida.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>La reacción acrosómica ocurre cuando el espermatozoide:</p>
+    <ul class="options"><li>a) Entra en contacto con la membrana pelúcida, liberando el contenido del acrosoma</li><li>b) Atraviesa la membrana pelúcida hasta alcanzar el citoplasma del ovocito</li><li>c) Se fusiona directamente con la membrana plasmática del ovocito II, sin pasos previos</li><li>d) Reanuda inmediatamente la meiosis II que el ovocito II tenía detenida</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>a) Entra en contacto con la membrana pelúcida, liberando el contenido del acrosoma.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Es la fase previa a atravesar la membrana pelúcida (b): el contacto con ella dispara la reacción acrosómica, que libera el contenido del acrosoma, incluida la acrosina.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>La acrosina, liberada durante la reacción acrosómica, es la enzima responsable de hidrolizar la membrana pelúcida y abrir un túnel de trayectoria diagonal para el paso del espermatozoide.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La acrosina actúa después de la hialuronidasa, en la fase de penetración de la membrana pelúcida, abriendo paso con ayuda de los movimientos de hiperactivación.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>El bloqueo de la polispermia depende de la "reacción cortical", que consiste en:</p>
+    <ul class="options"><li>a) La fusión de las membranas de ambos gametos, antes de que ocurra la penetración</li><li>b) La reanudación de la meiosis II por parte del ovocito</li><li>c) La exocitosis de enzimas de los gránulos corticales del ovocito</li><li>d) La condensación de los cromosomas que ocurre durante la anfimixis</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>c) La exocitosis de enzimas de los gránulos corticales del ovocito.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Esa exocitosis modifica la estructura del ovocito para impedir que más de un espermatozoide se fusione con él — el mecanismo que garantiza que solo un espermatozoide fecunde al ovocito.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Al ser fecundado, el ovocito II reanuda y completa la meiosis II. ¿Por qué no se dice que este proceso forma un "óvulo" libre e independiente?</p>
+    <ul class="options"><li>a) Porque, aunque la meiosis II se completa, el núcleo materno conserva por convención el nombre de "ovocito II" durante toda la existencia de la célula huevo</li><li>b) Porque, al completarse la meiosis II, el núcleo materno pasa a pronúcleo femenino: la fecundación ya está en curso</li><li>c) Porque el segundo cuerpo polar se fusiona con el núcleo materno antes de que cualquiera de los dos reciba un nombre propio</li><li>d) Porque el núcleo materno solo pasa a llamarse pronúcleo cuando ocurre la singamia, no en el momento en que termina la meiosis II</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Porque, al completarse la meiosis II, el núcleo materno pasa a pronúcleo femenino: la fecundación ya está en curso.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> La meiosis II se completa igual que siempre, dando el segundo cuerpo polar y el núcleo haploide materno. La diferencia es terminológica: como la fecundación ya empezó antes de que esa división terminara, ese núcleo no se llama "óvulo" — pasa directo a ser el pronúcleo femenino, dentro de una célula que ya se llama célula huevo (cigoto).</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>En la singamia, los pronúcleos masculino y femenino:</p>
+    <ul class="options"><li>a) Se fusionan de inmediato entre sí, formando ya un único núcleo diploide</li><li>b) Se colocan muy próximos en el centro de la célula huevo y pierden sus cariotecas</li><li>c) Permanecen en polos opuestos de la célula huevo hasta la primera división mitótica</li><li>d) Se mantienen separados dentro del citoplasma, y solo se activa el programa genético del pronúcleo que completó antes su maduración</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>b) Se colocan muy próximos en el centro de la célula huevo y pierden sus cariotecas.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Perder la carioteca es el paso previo a la anfimixis, donde los cromosomas de ambos pronúcleos se condensan juntos en el plano ecuatorial — todavía no hay un núcleo único fusionado en la singamia.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag mcq">MCQ</span>Un recién nacido tiene un cromosoma extra (trisomía), porque uno de los gametos que lo originó recibió dos copias de un cromosoma homólogo en lugar de una. ¿Qué mecanismo explica esto?</p>
+    <ul class="options"><li>a) Mosaicismo, producido por una no disyunción mitótica ocurrida después de la fecundación</li><li>b) Una translocación cromosómica de tipo balanceada entre dos cromosomas distintos</li><li>c) Una deleción que afecta a un segmento específico de un cromosoma</li><li>d) No disyunción meiótica, que originó un gameto aneuploide con un cromosoma de más</li></ul>
+    <button class="reveal-btn" onclick="toggleAnswer(this)">Ver respuesta</button>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>d) No disyunción meiótica, que originó un gameto aneuploide con un cromosoma de más.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Cuando el gameto aneuploide (con un cromosoma extra) se une a un gameto normal, el cigoto resulta trisómico. El mosaicismo (a) es otro mecanismo distinto, que no afecta a todas las células del individuo por igual.</p></div>
+  </div>
+    <div class="quiz-item">
+    <p class="quiz-question"><span class="quiz-tag variante">Pregunta complementaria</span><span class="quiz-tag vf">V/F</span>El mosaicismo (un individuo con líneas celulares somáticas de cariotipos diferentes) se origina por no disyunción mitótica en células derivadas de la división del cigoto, no por no disyunción en la meiosis que formó los gametos.</p>
+    <div class="tf-buttons"><button class="tf-btn" data-tf="V" onclick="checkTF(this, true)">VERDADERO</button><button class="tf-btn" data-tf="F" onclick="checkTF(this, true)">FALSO</button></div>
+    <div class="answer"><p><span class="answer-tag">✓ Respuesta</span> <strong>VERDADERO.</strong></p><p><span class="answer-tag zero">📚 Desde cero</span> Si la no disyunción mitótica ocurriera antes de formarse los gametos, el efecto sería igual al de la no disyunción meiótica (todas las células del individuo serían aneuploides). El mosaicismo exige que la falla sea posterior, ya en células derivadas del cigoto ya formado.</p></div>
+  </div>
+    </div></div>
+  </details>
 </section>
 
 <!-- ================= FLASHCARDS GENERALES ================= -->
 <section class="container" id="bio-flashcards">
   <div class="section-marker"><span class="section-marker-num">— FLASHCARDS · TODOS LOS BLOQUES</span></div>
   <h2>🎴 Flashcards de todos los bloques</h2>
-  <p>Mazo completo reunido al final: las <strong>138 tarjetas</strong> de los 13 bloques juntas para repaso intensivo. Tocá cada tarjeta para girarla. (Cada bloque conserva además sus propios flashcards.)</p>
+  <p>Mazo completo reunido al final: las <strong>205 tarjetas</strong> de los 16 bloques juntas para repaso intensivo. Tocá cada tarjeta para girarla. (Cada bloque conserva además sus propios flashcards.)</p>
   <h3>Bloque 01 · 🔬 Introducción a la Biología celular <span style="font-weight:400;font-size:.8em;color:#7a8a7e">(7 flashcards)</span></h3>
   <div class="fc-grid">
     <div class="flashcard"><div class="fc-front"><b>Componentes inorgánicos</b></div><div class="fc-back">Agua y minerales (sales).</div></div>
@@ -3335,6 +4289,84 @@
     <div class="flashcard"><div class="fc-front"><b>Succinato deshidrogenasa</b></div><div class="fc-back">Única enzima del Krebs en la MMI (complejo II de la cadena).</div></div>
     <div class="flashcard"><div class="fc-front"><b>Cardiolipina</b></div><div class="fc-back">Fosfolípido característico de la MMI.</div></div>
     <div class="flashcard"><div class="fc-front"><b>Origen</b></div><div class="fc-back">Teoría endosimbiótica; ADN propio; fisión binaria; herencia materna.</div></div>
+  </div>
+  <h3>Bloque 14 · 🪐 Núcleo interfásico <span style="font-weight:400;font-size:.8em;color:#7a8a7e">(14 flashcards)</span></h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Función del núcleo</b></div><div class="fc-back">Guardar el ADN y controlar qué proteínas se fabrican. ~10% del volumen celular.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Membrana nuclear externa</b></div><div class="fc-back">Se continúa con el retículo endoplasmático; tachonada de ribosomas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Membrana nuclear interna</b></div><div class="fc-back">Sostenida por la lámina nuclear (laminofilamentos).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Espacio perinuclear</b></div><div class="fc-back">Entre las dos membranas; se comunica con la luz del RE.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Complejo del poro</b></div><div class="fc-back">Nucleoporinas FG; deja pasar libre lo chico (difusión). Proteínas/ARN no-mensajero: importinas/exportinas + Ran. ARNm (mayoría): NXF1-NXT1, sin Ran.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Cromatina</b></div><div class="fc-back">ADN + histonas + proteínas no histónicas (46 cromosomas). Es el material del cromosoma.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Nucléolo</b></div><div class="fc-back">Genes del ARNr + ARNr recién sintetizado → subunidades del ribosoma.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>¿Qué entra por el poro desde el citosol?</b></div><div class="fc-back">Proteínas: ADN/ARN polimerasas, reguladoras de genes, proteínas del nucléolo.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Nucleosoma</b></div><div class="fc-back">ADN enrollado sobre histonas (ricas en lisina/arginina).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Cromatosoma → Solenoide</b></div><div class="fc-back">Nucleosoma + histona H1 = cromatosoma. Solenoide (modelo clásico) = 6 nucleosomas por vuelta.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Eucromatina vs. heterocromatina</b></div><div class="fc-back">Eucromatina: menos compacta, se transcribe. Heterocromatina: condensada, no se transcribe.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Cuerpo de Barr</b></div><div class="fc-back">Heterocromatina facultativa; uno de los dos cromosomas X de la mujer, compactado.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Cariotipo humano</b></div><div class="fc-back">46 cromosomas = 23 pares (22 pares de autosomas + 1 par sexual XX/XY).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Bandeado G</b></div><div class="fc-back">Tripsina + Giemsa; bandas oscuras ricas en A-T.</div></div>
+  </div>
+
+  <h3>Bloque 15 · 🔌 Comunicación intercelular y señalización celular <span style="font-weight:400;font-size:.8em;color:#7a8a7e">(15 flashcards)</span></h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Inductor / ligando</b></div><div class="fc-back">Sustancia que induce un cambio en la actividad de la célula blanco al unirse a su receptor.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Célula inductora vs. inducida</b></div><div class="fc-back">Inductora: libera el inductor. Inducida/blanco/diana: lo recibe.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización endócrina</b></div><div class="fc-back">Inductor = hormona. Viaja por la sangre a células blanco distantes.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización paracrina</b></div><div class="fc-back">Inductor = citoquina. Actúa sobre células vecinas vía el MEC.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización autocrina</b></div><div class="fc-back">Inductor = autocoide. Actúa sobre vecinas similares e incluso sobre sí misma.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Señalización sináptica</b></div><div class="fc-back">Inductor = neurotransmisor. Cruza el espacio sináptico.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Propiedades del receptor</b></div><div class="fc-back">Adaptación inducida, saturabilidad (número limitado) y reversibilidad (la unión se disocia).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Receptores de hormonas esteroideas</b></div><div class="fc-back">Ejemplo clásico: glucocorticoides (cortisol), citosólico en reposo, unido a hsp90 — se libera y recién entonces va al núcleo. No es la regla única: el de estrógenos puede ser predominantemente nuclear incluso sin hormona.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Receptores tiroideo/retinoico/vit. D</b></div><div class="fc-back">Ya están en el núcleo, unidos al ADN incluso sin hormona (represores). La hormona cambia correpresor por coactivador — no los hace "entrar" al núcleo.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Óxido nítrico (NO)</b></div><div class="fc-back">Activa guanilato ciclasa citosólica → GMPc → relajación del músculo liso vascular (vasodilatación).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Guanilato ciclasa de membrana</b></div><div class="fc-back">Receptor del ANP → GMPc → excreción de Na⁺ y relajación vascular → ↓ presión arterial.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Serina-treonina quinasa</b></div><div class="fc-back">Familia TGF-β; activa Smad; regula proliferación y diferenciación celular.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Tirosina quinasa</b></div><div class="fc-back">Factores de crecimiento (EGF, FGF, PDGF, NGF, insulina/IGF). Vías RAS-MAPK, PLC-γ, PI3-K.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Proteína G</b></div><div class="fc-back">Heterotrimérica (α,β,γ); GDP=inactiva, GTP=activa. Gs→AMPc; Gq→IP3/DAG; Gi→PI3-K/Akt (supervivencia); G12/G13→Rho (citoesqueleto).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Vía JAK-STAT</b></div><div class="fc-back">Tirosina quinasa independiente del receptor. Hormona de crecimiento, prolactina, eritropoyetina, citoquinas.</div></div>
+  </div>
+
+  <h3>Bloque 16 · 🧬 Ciclo celular, meiosis y fecundación <span style="font-weight:400;font-size:.8em;color:#7a8a7e">(38 flashcards)</span></h3>
+  <div class="fc-grid">
+    <div class="flashcard"><div class="fc-front"><b>Interfase</b></div><div class="fc-back">G1 (5h, sin síntesis de ADN) → S (7h, síntesis de ADN, forma cromátidas) → G2 (3h, ADN duplicado).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>G0</b></div><div class="fc-back">G1 prolongada indefinidamente; la célula se retira del ciclo.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Punto de arranque</b></div><div class="fc-back">Momento en G1 donde la célula "decide" dividirse; ahí actúan los inductores de proliferación.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Ciclinas y CDK</b></div><div class="fc-back">Ciclinas (G1, M) + quinasas dependientes de ciclina (cdk2, cdc2). Se activan en pareja.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>SPF</b></div><div class="fc-back">Ciclina G1 + CDK2. Activa la replicación del ADN en fase S.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>MPF</b></div><div class="fc-back">Ciclina M + CDC2. Dispara los cambios de la fase M (actina, huso, lámina nuclear, cromatina).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Efectos del MPF</b></div><div class="fc-back">Desintegra actina (célula esférica), desarma microtúbulos (forma el huso), disgrega la lámina nuclear, condensa cromatina (vía H1).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Ciclosoma / APC-C</b></div><div class="fc-back">Activo en metafase→anafase. Degrada ciclina M (desarma MPF) y securina (libera a la separasa). La separasa — no el APC/C — corta las cohesinas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Somatomedina</b></div><div class="fc-back">Hígado (por GH hipofisaria) → estimula proliferación cartilaginosa. Señalización endócrina.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Factores de crecimiento</b></div><div class="fc-back">Fibroblástico, epidérmico, de plaquetas, hepatocitos, nervioso, endotelial. Mayoría paracrina.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Factores hemopoyéticos</b></div><div class="fc-back">IL-2→linfocitos T; GM-CSF→granulocitos/macrófagos (paracrinos); eritropoyetina→glóbulos rojos (endócrina, renal).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Meiosis: tres eventos únicos</b></div><div class="fc-back">Reducción a la mitad del n.º de cromosomas, recombinación genética (crossing over) y segregación al azar de homólogos. Una sola replicación, dos divisiones.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Profase I — Leptonema</b></div><div class="fc-back">Cromosomas visibles por primera vez; ya duplicados (2 cromátidas) pero parecen simples.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Profase I — Cigonema</b></div><div class="fc-back">Los homólogos se aparean y forman el complejo sinaptonémico (CS), que estabiliza el apareamiento.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Profase I — Paquinema</b></div><div class="fc-back">Apareamiento completo. Ocurre el crossing over: intercambio de segmentos de ADN entre cromátidas homólogas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Profase I — Diplonema</b></div><div class="fc-back">El CS se desarma; los homólogos quedan unidos solo por los quiasmas (marcas del crossing over).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Profase I — Diacinesis</b></div><div class="fc-back">Máxima condensación; tétradas distribuidas por el núcleo; desaparece el nucléolo.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Metafase I</b></div><div class="fc-back">Bivalentes alineados en el ecuador. Los 2 cinetocoros de cada homólogo miran al mismo polo (≠ mitosis).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Anafase I</b></div><div class="fc-back">Se separan los homólogos de cada bivalente (no las cromátidas hermanas, que siguen juntas).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Meiosis II</b></div><div class="fc-back">Mecánicamente igual a una mitosis: en anafase II el centrómero se divide y se separan las cromátidas hermanas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Varón — resultado meiosis I</b></div><div class="fc-back">Reparto igual: 2 espermatocitos II de igual tamaño por espermatocito I (no idénticos genéticamente: cada uno recibe una combinación distinta de alelos recombinados).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Mujer — resultado meiosis I</b></div><div class="fc-back">Reparto desigual: 1 ovocito II (grande) + 1.er cuerpo polar (chico) por ovocito I.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Resultado final de la meiosis</b></div><div class="fc-back">Varón: 4 espermátides/espermatozoides por espermatocito I. Mujer: 1 óvulo (+ 2 cuerpos polares) por ovocito I.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Mitosis vs. meiosis</b></div><div class="fc-back">Meiosis: 2 divisiones (no 1), dura mucho más, aparea/recombina homólogos, genera variabilidad genética; produce gametos haploides, no células somáticas diploides.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Fecundación</b></div><div class="fc-back">Fertilización del ovocito II por el espermatozoide → célula huevo (cigoto). No hay un "óvulo" ya formado: la meiosis II recién se completa durante el proceso. Comienza en el tercio externo de la trompa de Falopio.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>1. Penetración corona radiada</b></div><div class="fc-back">Hialuronidasa (digiere el cemento intercelular) + movimientos de hiperactivación.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>2. Reacción acrosómica</b></div><div class="fc-back">Al contactar la membrana pelúcida: fusión entre la membrana del acrosoma y la membrana plasmática del espermatozoide.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>3. Denudación</b></div><div class="fc-back">Desprendimiento de la corona radiada del ovocito II.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>4. Penetración membrana pelúcida</b></div><div class="fc-back">La acrosina hidroliza la membrana pelúcida y abre un túnel diagonal.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>5. Fusión</b></div><div class="fc-back">Continuidad citoplasmática entre gametos; se incorpora el contenido del espermatozoide al ovocito II.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>6. Bloqueo de la polispermia</b></div><div class="fc-back">Reacción cortical: exocitosis de enzimas de los gránulos corticales, evita que otro espermatozoide se fusione.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>7. Reasunción meiosis II</b></div><div class="fc-back">El ovocito II reanuda y completa la meiosis II: da el 2.º cuerpo polar y el núcleo materno, que pasa directo a pronúcleo femenino (no "óvulo", porque la fecundación ya está en curso).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>8. Formación de pronúcleos</b></div><div class="fc-back">Núcleo haploide del espermatozoide + núcleo materno (de la meiosis II ya completada) → pronúcleo masculino/femenino; replican su ADN.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>9. Singamia</b></div><div class="fc-back">Pronúcleos se acercan en el centro de la célula huevo y pierden sus cariotecas.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>10. Anfimixis</b></div><div class="fc-back">Los cromosomas se condensan y se alinean en el plano ecuatorial, como una metafase mitótica.</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Aneuploidía</b></div><div class="fc-back">Ganancia o pérdida de cromosomas por no disyunción: falla al separar homólogos (meiosis I), cromátidas hermanas (meiosis II) o cromátidas hermanas en una mitosis (pre- o postcigótica).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>No disyunción meiótica</b></div><div class="fc-back">Gameto aneuploide + gameto normal → cigoto monosómico (falta 1 cromosoma) o trisómico (sobra 1).</div></div>
+    <div class="flashcard"><div class="fc-front"><b>Mosaicismo</b></div><div class="fc-back">No disyunción mitótica en células ya derivadas del cigoto → líneas celulares somáticas con cariotipos diferentes.</div></div>
   </div>
 </section>
 

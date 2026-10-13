@@ -31,7 +31,7 @@
   if (window.RMPilot) return;                         // idempotente
 
   var SLUG = 'semiologia-ii';                         // piloto: uma matéria só
-  var VER  = '2026100802';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
+  var VER  = '2026100803';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
   var BASE = 'assets/';
   var COOLDOWN_MS = 30000;                            // depois de uma falha, não insistir
 
@@ -75,7 +75,10 @@
         return r.json();
       }).then(function (j) {
         var ok = !!(j && j.slug === SLUG && j.layout === true);
-        st.flags = { layout: ok, visual: ok && j.visual === true };
+        /* `pen` (RM_PILOT_PEN_UIDS, decidido no servidor por UID autenticado) só vale para a caneta FÍSICA do piloto em Semiología II (rm-tools-v2.js: refinamentos do piloto físico).
+           Não libera a V2 nem a caneta para ninguém: quem não tem acesso beta continua sem ela. Independente de `layout`. */
+        st.flags = { layout: ok, visual: ok && j.visual === true, pen: !!(j && j.slug === SLUG && j.pen === true) };
+        try { window.dispatchEvent(new Event('rm-pilot-flags')); } catch (e) {}
         return st.flags;
       });
     }).catch(function () {
@@ -199,6 +202,8 @@
   window.RMPilot = {
     slug: SLUG,
     avaliar: avaliar,
+    /* `true` só depois de o servidor ter respondido `pen:true` para ESTE usuário em Semiología II (cache da página; falha de transporte/negado = false). Leitura pura: sem UID, sem rede. */
+    penLiberada: function () { return !!(st.flags && st.flags.pen === true); },
     /* só para teste/diagnóstico: não expõe UID nem lista */
     _estado: function () { return { flags: st.flags, loaded: st.loaded }; }
   };

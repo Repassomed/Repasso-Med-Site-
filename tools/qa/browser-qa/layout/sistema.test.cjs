@@ -9,7 +9,7 @@
      2 · CONTEÚDO INTACTO — ids/âncoras, contagens (quiz-item, flashcard, audio, table, figure) e o TEXTO de cada seção
          (sem a UI derivada) são idênticos com o sistema ligado; a UI derivada tem [data-rm-ui] e não cria p/li/h2–h5/table/figure
          (o que alteraria o índice de âncoras da tinta/marca-texto).
-     3 · DADOS REAIS — contagens da capa, do índice e das metas dos blocos = o que o DOM tem (120 · 172 · 34 · 6; nada digitado).
+     3 · DADOS REAIS — contagens da capa, do índice e das metas dos blocos = o que o DOM tem (120 · 184 distintos · 34 · 6; nada digitado).
      4 · DETACH LIMPO — depois de RMSistema.detach() não sobra classe, atributo data-rm-*, nó nem texto trocado.
      5 · FUNÇÕES — revelar resposta, V/F, giro/abertura do baralho, glossário, áudio presente, salto do índice, pílulas da faixa.
      6 · GEOMETRIA — 0 overflow horizontal em 320/390/768/1024/1440, sem erro JS. */
@@ -87,15 +87,18 @@ const ok = (c, m) => { total++; if (!c) { falhas++; console.log('  ✗ ' + m); }
     const cartao = {}; g('.rm-l2-rescard').forEach(c => { cartao[c.getAttribute('aria-label').split(':')[0]] = c.getAttribute('data-rm-n'); });
     const soBlocos = [...tab.querySelectorAll(':scope > section[id]')].filter(s => !/banco|flashcards/.test(s.id));
     const q = soBlocos.reduce((a, s) => a + s.querySelectorAll('.quiz-item').length, 0), fc = soBlocos.reduce((a, s) => a + s.querySelectorAll('.flashcard').length, 0);
+    /* #457 (C5): a capa conta flashcards DISTINTOS da matéria inteira — inclui os 12 que só existem em s2-banco (antes ficavam de fora: 172) */
+    const nz = t => String(t || '').replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim();
+    const fcDist = new Set([...tab.querySelectorAll(':scope > section[id] .flashcard')].map(x => nz((x.querySelector('.fc-front') || x).textContent))).size;
     const metas = [...g('.rm-sis-meta')].map(m => m.textContent);
     const b4 = tab.querySelector('#s2-b04'), m4 = b4.querySelector('.rm-sis-meta').textContent;
     const esperado4 = [b4.querySelectorAll('.quiz-item').length + ' preguntas', b4.querySelectorAll('.flashcard').length + ' tarjetas'];
     const cards = [...g('.rm-sis-card')].length, tags = [...g('.rm-sis-tag')].map(t => t.textContent.replace(/\s+/g, ' '));
     const badges = [...g('.s2-quiz-card[data-rm-n]')].map(d => d.getAttribute('data-rm-n') + '=' + d.querySelectorAll('.quiz-item').length);
-    return { cartao, q, fc, metas: metas.length, m4, esperado4, cards, tags, badgesOk: [...g('.s2-quiz-card[data-rm-n]')].every(d => d.getAttribute('data-rm-n').startsWith(d.querySelectorAll('.quiz-item').length + ' ')), nb: badges.length };
+    return { cartao, q, fc, fcDist, metas: metas.length, m4, esperado4, cards, tags, badgesOk: [...g('.s2-quiz-card[data-rm-n]')].every(d => d.getAttribute('data-rm-n').startsWith(d.querySelectorAll('.quiz-item').length + ' ')), nb: badges.length };
   });
   ok(dados.cartao['Preguntas'] === '120' && +dados.q === 120, `cartão Preguntas = ${dados.cartao['Preguntas']} = ${dados.q} quiz-item dos blocos (o banco geral repete as mesmas: não soma)`);
-  ok(dados.cartao['Flashcards'] === '172' && +dados.fc === 172, `cartão Flashcards = ${dados.cartao['Flashcards']} = ${dados.fc}`);
+  ok(dados.cartao['Flashcards'] === '184' && +dados.fcDist === 184 && +dados.fc === 172, `cartão Flashcards = ${dados.cartao['Flashcards']} = ${dados.fcDist} distintos (${dados.fc} nos blocos + os que só existem no banco; #457 C5)`);
   ok(dados.cartao['Infografías'] === '34' && dados.cartao['Auscultación'] === '6', `cartões Infografías = ${dados.cartao['Infografías']} · Auscultación = ${dados.cartao['Auscultación']}`);
   ok(dados.metas === 14 && dados.esperado4.every(e => dados.m4.indexOf(e) !== -1), `meta dos 14 títulos lida do DOM (bloque 04: «${dados.m4}»)`);
   ok(dados.cards === 14 && dados.tags.length === 14, '14 cartões no índice da matéria · 14 etiquetas de bloco · numeração do conteúdo: ' + dados.tags.slice(0, 3).join(' | '));
