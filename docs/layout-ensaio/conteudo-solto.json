@@ -1,0 +1,1228 @@
+{
+ "antes": {
+  "ref": "disco",
+  "gerado_em": "2026-10-12T07:03:32.732Z"
+ },
+ "depois": {
+  "ref": "e9ae75d219d2a4b834148629e2965603b5ff5f23",
+  "gerado_em": "2026-10-12T07:03:32.685Z"
+ },
+ "linhas": [
+  {
+   "slug": "anatomia-patologica",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 49,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "anatomia-patologica",
+   "grupo": "elegivel",
+   "k": "NAV.nav",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 93,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "anatomia-patologica",
+   "grupo": "elegivel",
+   "k": "SECTION.hero",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 476,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": true,
+    "outro": false,
+    "seu": null,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "anatomia-patologica",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "banco-oficiales-anato",
+   "quiz": 0,
+   "txt": 186,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "anatomia-patologica-practica",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 53,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "anatomia-patologica-practica",
+   "grupo": "elegivel",
+   "k": "NAV.nav",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 232,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "anatomia-patologica-practica",
+   "grupo": "elegivel",
+   "k": "SECTION.hero",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 457,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": true,
+    "outro": false,
+    "seu": null,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "anatomia-patologica-practica",
+   "grupo": "elegivel",
+   "k": "SECTION.container",
+   "classe": "conteudo",
+   "de": null,
+   "quiz": 20,
+   "txt": 7869,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": true,
+    "outro": false,
+    "seu": null,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "fisiopatologia",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 49,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "fisiopatologia",
+   "grupo": "elegivel",
+   "k": "NAV.nav",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 183,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "fisiopatologia",
+   "grupo": "elegivel",
+   "k": "SECTION.hero",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 578,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": true,
+    "outro": false,
+    "seu": null,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "fisiopatologia",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "prova-fisio",
+   "quiz": 0,
+   "txt": 186,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "imagenologia",
+   "grupo": "fora",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 35,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "imagenologia",
+   "grupo": "fora",
+   "k": "NAV.nav",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 173,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "imagenologia",
+   "grupo": "fora",
+   "k": "SECTION.hero",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 419,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": true,
+    "outro": false,
+    "seu": null,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "imagenologia",
+   "grupo": "fora",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "prova-imagen",
+   "quiz": 0,
+   "txt": 195,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "semiologia",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 37,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "semiologia",
+   "grupo": "elegivel",
+   "k": "NAV.nav",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 164,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "semiologia",
+   "grupo": "elegivel",
+   "k": "SECTION.hero",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 653,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": true,
+    "outro": false,
+    "seu": null,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "semiologia",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "prova-semio",
+   "quiz": 0,
+   "txt": 186,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "farmacologia",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 47,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "farmacologia",
+   "grupo": "elegivel",
+   "k": "NAV.nav",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 100,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "farmacologia",
+   "grupo": "elegivel",
+   "k": "SECTION.hero",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 516,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": true,
+    "outro": false,
+    "seu": null,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "farmacologia",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "cuestionario1",
+   "quiz": 0,
+   "txt": 186,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "medicina-familiar",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 50,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "medicina-familiar",
+   "grupo": "elegivel",
+   "k": "NAV.nav",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 94,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "medicina-familiar",
+   "grupo": "elegivel",
+   "k": "SECTION.hero",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 575,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": true,
+    "outro": false,
+    "seu": null,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "medicina-familiar",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "banco-medfam",
+   "quiz": 0,
+   "txt": 184,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "semiologia-ii",
+   "grupo": "piloto",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 46,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "semiologia-ii",
+   "grupo": "piloto",
+   "k": "SECTION.s2-hero",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 591,
+   "main": {
+    "idx": true,
+    "bloco": false
+   },
+   "novo": {
+    "idx": true,
+    "outro": false,
+    "seu": null,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "farmacologia-ii",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 48,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "farmacologia-ii",
+   "grupo": "elegivel",
+   "k": "SECTION.hero",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 500,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": true,
+    "outro": false,
+    "seu": null,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "embriologia",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 35,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "embriologia",
+   "grupo": "elegivel",
+   "k": "SECTION.hero",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 515,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": true,
+    "outro": false,
+    "seu": null,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "biologia",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 41,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "biologia",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "bancobio",
+   "quiz": 0,
+   "txt": 186,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "histologia-i",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 33,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "histologia-i-practica",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 41,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "histologia-i-practica",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "bancolam",
+   "quiz": 0,
+   "txt": 186,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "histologia-ii-practica",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 53,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "histologia-ii",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 54,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "histologia-ii",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "bancoh2",
+   "quiz": 0,
+   "txt": 198,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "anatomia-i",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 43,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "anatomia-i",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "bancoa1",
+   "quiz": 0,
+   "txt": 186,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "anatomia-patologica-ii",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 46,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "anatomia-patologica-ii",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "bancoap2",
+   "quiz": 0,
+   "txt": 198,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "anatomia-patologica-ii-practica",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 63,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "medicina-legal",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 50,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "medicina-legal",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "bancomedleg",
+   "quiz": 0,
+   "txt": 198,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "fisiopatologia-ii",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 54,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "fisiopatologia-ii",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "bancofp2",
+   "quiz": 0,
+   "txt": 197,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "toxicologia",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 50,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "toxicologia",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "bancotox",
+   "quiz": 0,
+   "txt": 198,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "dermatologia",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 53,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "guarani",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 63,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "guarani",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "bancognrl",
+   "quiz": 0,
+   "txt": 198,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "ortopedia",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 65,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "ortopedia",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "bancoorto",
+   "quiz": 0,
+   "txt": 198,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "oftalmologia",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 51,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "oftalmologia",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "bancooft",
+   "quiz": 0,
+   "txt": 186,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "neurologia",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 52,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "neurologia",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "banconeu",
+   "quiz": 0,
+   "txt": 197,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  },
+  {
+   "slug": "anestesiologia",
+   "grupo": "elegivel",
+   "k": "HEADER.rm-subject-head",
+   "classe": "abertura",
+   "de": null,
+   "quiz": 0,
+   "txt": 56,
+   "main": {
+    "idx": false,
+    "bloco": false
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": null,
+    "semNav": false
+   }
+  },
+  {
+   "slug": "anestesiologia",
+   "grupo": "elegivel",
+   "k": "DIV.rm-revisao-banner#revisao-geral",
+   "classe": "anexo",
+   "de": "aneb15",
+   "quiz": 0,
+   "txt": 186,
+   "main": {
+    "idx": true,
+    "bloco": true
+   },
+   "novo": {
+    "idx": false,
+    "outro": false,
+    "seu": true,
+    "semNav": true
+   }
+  }
+ ]
+}
