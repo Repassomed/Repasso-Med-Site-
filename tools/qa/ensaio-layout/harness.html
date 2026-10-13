@@ -40,6 +40,8 @@ function chain(t){ if (PERSIST_T.includes(t)) return chainPersist(t); const o = 
 const UID = P.get('uid') || 'd4d215d3-36dd-4efb-8869-bdea5376c648';
 window.RM_SB = { auth: { getSession: async () => ({ data: { session: { access_token: 'tok-ensaio', user: { id: UID } } } }), getUser: async () => ({ data: { user: { id: UID } } }), onAuthStateChange(){ return { data: { subscription: { unsubscribe(){} } } } } }, from: chain, rpc: async () => ({ data: null, error: null }) };
 window._sb = window.RM_SB;
+/* A5 SIMULADO (só com a A7 real no código servido): a resposta do servidor «caneta liberada nesta matéria». O motor da caneta não é alterado. */
+if (P.get('a5') === '1') window.RMPilot = { penLiberada: () => false, slugsCaneta: () => [P.get('slug')], _estado: () => ({ flags: { layout: true, visual: true, pen: false } }) };
 </script>
 <script src="assets/app-core.js"></script>
 <script src="assets/rm-tools.js"></script>
