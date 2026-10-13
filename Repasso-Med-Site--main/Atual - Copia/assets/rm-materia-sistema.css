@@ -67,8 +67,12 @@ html.rm-sis {
    2 · TEMA POR MATÉRIA — só variáveis
    Semiología II (aprovada) · agrupa por Unidad I · II · III · asignatura = faixa azul-marino com número dourado
    Para outra matéria: copiar este bloco, trocar o slug e as cores (ver GUIA-SISTEMA.md · «Crear el tema»).
+   O seletor sem valor (`[data-rm-tema]`) faz destas cores a BASE TÉCNICA de qualquer matéria que ainda não tenha bloco próprio:
+   a identidade de cada matéria é decisão editorial e entra num bloco `[data-rm-tema="<slug>"]` escrito DEPOIS deste (mesma
+   especificidade ⇒ o que vem depois vence). Para Semiología II nada muda. Nenhuma matéria é ligada por CSS.
    --------------------------------------------------------------------- */
-html.rm-sis[data-rm-tema="semiologia-ii"] {
+html.rm-sis[data-rm-tema="semiologia-ii"],
+html.rm-sis[data-rm-tema] {
   --rm-surface: #D3E5DC; --rm-side: #E8F3EE; --rm-side-edge: #A7CBBA; --rm-side-card: #CBE0D5; --rm-side-rule: #B9D6C8;
   --rm-accent: #2F8F74; --rm-accent-d: #1F5E4F; --rm-marker: #E9B949;
   --rm-tag-radius: 7px; --rm-vig-radius: 50%;
@@ -1160,6 +1164,15 @@ html.rm-nav.rm-sis[data-rm-nav="index"] #materias-container > .tab-content.activ
 html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > section[id]:not([data-rm-nav-cur]) { display: none !important; }
 html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > .rm-l2-cover,
 html.rm-nav.rm-sis[data-rm-nav="block"] #materias-container > .tab-content.active > .s2-hero { display: none !important; }
+/* conteúdo original solto FORA de section[id] (classificado por rm-materia-sistema.js → data-rm-solto; nenhum nó é movido):
+   · abertura (antes da 1.ª seção: hero com a apresentação da matéria) e conteudo (tem questões/figuras/tabelas fora de uma seção com id)
+     ficam no ÍNDICE GERAL (a «Página completa» da navegação) e saem dos blocos e modos — antes apareciam acima/abaixo de CADA bloco;
+   · anexo (entre seções, logo antes de uma: p.ex. o banner «Repaso General» que o app-core cria antes do banco) aparece SÓ junto do
+     bloco que apresenta (data-rm-anexo-cur) e sai do índice geral;
+   · sem a navegação montada (detach: data-rm-nav sai) ou sem o layout, nada disto vale: tudo continua como sempre.
+   Ferramentas, sugestões e o menu antigo não são classificados (seguem as regras de sempre). */
+html.rm-nav.rm-sis[data-rm-nav]:not([data-rm-nav="index"]) #materias-container > .tab-content.active > [data-rm-solto]:not([data-rm-anexo-cur]) { display: none !important; }
+html.rm-nav.rm-sis[data-rm-nav="index"] #materias-container > .tab-content.active > [data-rm-solto="anexo"] { display: none !important; }
 /* o legado (rm-layout.css) esconde TUDO nos modos isolados; aqui o bloco do modo, a migalha e o pager reaparecem (mais específico) */
 html.rm-nav.rm-sis[data-rm-nav="modeblk"][data-rm-view]:not([data-rm-view="full"]) #materias-container > .tab-content.active > section[data-rm-nav-cur] { display: block !important; }
 html.rm-nav.rm-sis[data-rm-nav="modeblk"][data-rm-view]:not([data-rm-view="full"]) #materias-container > .tab-content.active > .rm-nav-crumb { display: flex !important; }
