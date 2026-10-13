@@ -88,3 +88,9 @@ Mutações: sem a guarda de corrida → reprova; sem o `stop()` → reprova; sem
 `NODE_PATH=$(npm root -g) RM_B1_DIR=<assets> node tools/qa/browser-qa/audio-integracao/piloto-quatro.test.cjs` — manifesto com os **4 itens reais** do piloto (ids/caminhos em `tools/audio/PILOTO-SEMIO2-PAINEL.md`), arquivo de **≈ 36,75 MB** (o maior do piloto) com Range:
 4 cards nos blocos certos (nenhum em `s2-b06`), tocar/pausar/barra ao meio (Range ≈ 18 MB)/±15 s/velocidades, celular 390×844 com toque, arbitragem com a ausculta real, outra conta/sem sessão/token falso sem nada, manifesto **sem path/URL/bucket**, acesso direto ao bucket recusado (URL pública, assinada sem token/forjada/expirada).
 O áudio é mp3 (o Chromium do Playwright não decodifica AAC): o M4A real só se confirma no aparelho do José.
+
+## `ciclo.test.cjs` — ciclo completo do áudio por matéria (#489, 34 verificações)
+`NODE_PATH=$(npm root -g) node tools/qa/browser-qa/audio-integracao/ciclo.test.cjs` — numa **única página**, sem recarregar, a troca de matéria feita como o site faz (aba ativa muda → o boot observa e para → `start()` na nova):
+piloto toca → parar → outra matéria autorizada e pronta toca → parar → volta ao piloto («Continuar» com a posição guardada) e toca; matéria autorizada **sem** áudio pronto e matéria **não** autorizada (com manifesto pronto no servidor) ⇒ nenhum card, nenhuma URL;
+**respostas atrasadas**: manifesto do piloto que chega depois da troca, URL assinada do piloto que chega depois da troca (não toca, não pede mídia), troca + `start()` no **mesmo instante** (a matéria nova recebe o seu card; `start()` para uma aba que não é a ativa não derruba quem está aberto). Sem a correção do boot desta PR, o caso do mesmo instante reprova (2 falhas).
+

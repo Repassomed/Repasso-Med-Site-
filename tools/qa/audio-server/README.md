@@ -72,7 +72,8 @@ tudo continua como antes (só Semiología II).
 - **Nunca cruza matérias:** um `audio_id` só é assinado se estiver no manifesto da matéria pedida; o cliente também descarta item com `subject_slug` de outra matéria.
 - **Reverter uma matéria:** tirá-la de `RM_AUDIO_SLUGS` (ou voltar o item para `ready:false`) + novo deploy. `RM_AUDIO_SLUGS` vazio desliga todas, inclusive o piloto.
 - **Cliente:** `RMAudioBoot.start()` sem argumentos = piloto (como hoje); `start({ slug, tab })` = outra matéria. Quem chama é o `rm-pilot.js`, que **hoje só conhece Semiología II** — ligar outra matéria é o passo de ativação (A5), fora desta PR.
-- Testes: `node tools/qa/audio-server/por-materia.test.cjs` (servidor, 19 verificações) e `node tools/qa/browser-qa/audio-integracao/por-materia.test.cjs` (navegador, 15).
+- **Autorização = UID **e** slug:** o UID tem de estar em `RM_PILOT_AUDIO_UIDS` **e** o slug pedido (comparado exatamente, sem normalizar maiúsculas, como na `main`) em `RM_AUDIO_SLUGS`; faltando qualquer um, a mesma negação.
+- Testes: `node tools/qa/audio-server/por-materia.test.cjs` (servidor, 36 verificações: matriz UID × slug; o mesmo `audio_id` em duas matérias assina o objeto da matéria pedida; sem `RM_AUDIO_SLUGS` toda matéria do manifesto é negada menos o piloto; **diferencial byte a byte contra a `lib.js` da `main`** — 54 combinações de ambiente × pedido × função, `RM_BASE_REF` troca a referência), `node tools/qa/browser-qa/audio-integracao/por-materia.test.cjs` (navegador, 15) e `node tools/qa/browser-qa/audio-integracao/ciclo.test.cjs` (navegador, 34: ciclo completo numa página só e respostas de rede atrasadas).
 
 ## Desativar — o que é imediato e o que não é
 
