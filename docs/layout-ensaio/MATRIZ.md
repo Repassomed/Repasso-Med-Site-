@@ -71,8 +71,8 @@ Fonte: catálogo do site (`RM_CATALOGO` em `index.html`) × `FILES` de `netlify/
 | Origem | Correções | O que isso quer dizer |
 |---|---|---|
 | **já na main** | A1, C1, C2, C5a, C5b, C5c, C6, C7 | código mesclado (#486, #488…): vale para o site assim que uma matéria for ligada |
-| **PR aberta** (servida por `RM_ENSAIO_REF` = `5cc04ddf`) | A2, C3, C4, A3 | código real, mas **ainda não mesclado** (#487): só vale depois do merge |
-| **simulada em memória** | A7, C8 + descritor de tema por matéria | A7/C8 = caneta (aguardam a #484, não mexemos no motor); o descritor é hipótese técnica, não identidade aprovada |
+| **PR aberta** (servida por `RM_ENSAIO_REF` = — (rodada só com a main)) | — | código real, mas **ainda não mesclado**: só vale depois do merge |
+| **simulada em memória** | A2, A3, A7, C3, C4, C8 + descritor de tema por matéria | ainda **não** estão no código da rodada: A2/A3/C3/C4 = #487 · A7/C8 = PR pós-#484 · A5 = resposta do servidor (ativação por matéria) · o descritor é hipótese técnica, não identidade aprovada |
 
 **«PASSA com correção» quer dizer: passou no Chromium com o código acima** — parte já na main, parte numa PR aberta, a caneta simulada. Nada passa a funcionar no site até as PRs de integração serem mescladas **e** o servidor liberar a matéria, uma de cada vez.
 

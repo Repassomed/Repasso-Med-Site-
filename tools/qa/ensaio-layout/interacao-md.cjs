@@ -30,6 +30,8 @@ const noDisco = id => { if (id === 'C3') return /\[data-rm-solto\]/.test(fs.read
   const a = L.ADAPTACOES.find(x => x.id === id); return !!(a && a.marca && fs.readFileSync(path.join(L.ROOT, a.arquivo), 'utf8').includes(a.marca)); };
 const ORIG = { main: [], pr: [], sim: [] };
 [...new Set([...ids].map(a => a.split(':')[0]))].sort().forEach(id => { if (ids.has(id + ':NO-CODIGO')) (noDisco(id) ? ORIG.main : ORIG.pr).push(id); else if (!ids.has(id + ':NAO-ENCONTRADA')) ORIG.sim.push(id); });
+[['A3', /registrarTema/.test(fs.readFileSync(path.join(L.ROOT, 'assets/rm-materia-sistema.js'), 'utf8'))], ['C3', noDisco('C3')]].forEach(([id, naMain]) => { if (ORIG.main.includes(id) || ORIG.pr.includes(id) || ORIG.sim.includes(id)) return; (naMain ? ORIG.main : (REFS.length ? ORIG.pr : ORIG.sim)).push(id); });
+['main', 'pr', 'sim'].forEach(k => ORIG[k].sort());
 const origTxt = `já na \`main\`: ${ORIG.main.join(', ') || '—'} · PR aberta${REFS.length ? ' (' + REFS.join(', ') + ')' : ''}: ${ORIG.pr.join(', ') || '—'} · simulada em memória: ${ORIG.sim.join(', ') || '—'}`;
 w('> **Nada foi ativado.** Flags, contas liberadas, `PILOT_SLUGS`, slug do piloto e publicação continuam como na `main`. O ensaio roda num servidor local com os arquivos REAIS e a integração proposta (ver `PATCHES-PARA-INTEGRACAO.md`) — ' + origTxt + '. Supabase e manifesto de áudio são **simulados**; zero rede externa.', '');
 w('Esta bateria (`tools/qa/ensaio-layout/interacao.cjs`) complementa a `MATRIZ.md` (layout, índice, modos, contagens): aqui se mede o **uso** — escrever, apoiar a palma, rolar, dar zoom, apagar, desfazer, grifar, trocar de bloco/modo, recarregar, responder questão, abrir flashcards e a presença/ausência de audiobook.', '');
