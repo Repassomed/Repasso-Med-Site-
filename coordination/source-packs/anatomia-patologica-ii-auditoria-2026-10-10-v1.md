@@ -471,24 +471,106 @@ confiável, sem achado que mude decisão editorial. O slide 5 (Crohn×CU)
 revelou a divergência real e não resolvida dos granulomas (~35% no
 slide vs. 40–60% publicado — ambos defensáveis pela literatura,
 delimitado mas não alterado por não haver base para apontar qual está
-"errado"; decisão de José é estilística, não correção de erro). O
-slide 7 (Px hepáticas) segue **ilegível em todas as tentativas** (0/40
-páginas com texto recuperável) — não tratado como auditado, sem
-cobertura inventada.
+"errado"; decisão de José é estilística, não correção de erro).
+
+## Rodada AP7 — slide 7 (Px hepáticas) finalmente lido, via fonte alternativa autorizada
+
+O PDF original do slide 7 na pasta "Anatopatologia II/Slides" (47,4 MB,
+`id=1aBY9pV68h1IKOto-2MLK7hJYzCwN2AOi`) segue **tecnicamente ilegível
+nesta sessão**: excede o limite de 10 MB da ferramenta de download
+disponível, e a extração de texto do Drive devolve 0/40 páginas com
+conteúdo (só marcadores "Page N" — confirmado de novo nesta rodada,
+idêntico a #455/AP5).
+
+Nesta rodada, encontrada uma **cópia alternativa legítima do mesmo
+material** no Drive: `Clase 7 - Patologías hepáticas - Nódulos y
+tumores.pptx.PDF` (`id=1392I-s2Bs8g0INrOBVlZnS3M0WqeO0sN`, 15,6 MB,
+pasta "Slides" dentro da estrutura de aulas da cátedra — mesma docente,
+Eliana Chamorro, mesma disciplina e unidade declaradas no cabeçalho:
+"ANATOMÍA PATOLÓGICA II · Patologías del tracto digestivo, hepático,
+pancreático y vías biliares · Patologías del hígado"). É o mesmo
+arquivo-fonte (apresentação `.pptx` exportada para PDF com camada de
+texto real, ao contrário do PDF escaneado da pasta de auditoria, que não
+tem texto recuperável) — **não é uma fonte substituta nem de segunda
+mão**, é a mesma aula em outro export. 41 páginas, texto íntegro
+recuperado via `read_file_content` (sem necessidade de imagem/OCR,
+porque esta cópia já tem camada de texto).
+
+### Comparação ponto a ponto com o bloco publicado (🫀 Nódulos y tumores hepáticos)
+
+A cobertura geral é **muito alta**: toda a estrutura das 3 famílias
+(hiperplasias nodulares, neoplasias benignas, neoplasias malignas), a
+tabela de HNF/hemangioma/adenoma, a progressão lesão crônica→cirrose→
+nódulo displásico→CHC com a ressalva do VHB sem cirrose, a morfologia do
+CHC (trabéculas, tinte verdoso, AFP, variante fibrolamelar), e o mapa do
+colangiocarcinoma (CEP, quistes do colédoco, Clonorchis, Klatskin, BilIN)
+já estavam corretos e completos — nenhuma incoerência científica
+encontrada.
+
+Dois achados comprovados, corrigidos nesta rodada (preservando grifos e
+Banco — ver verificação abaixo):
+
+1. **Origens das metástases hepáticas incompletas.** O slide lista
+   explicitamente "destaca en frecuencia las del colon, mama, pulmón y
+   **páncreas**"; o site publicava só "colon, pulmón y mama", sem
+   pâncreas. Corrigido nas 9 ocorrências (prosa, tabela de prioridade,
+   pergunta + resposta no corpo e no Banco, flashcard nas 3 cópias:
+   corpo + 2× em Flashcards generales).
+2. **Hepatoblastoma ausente.** O slide nomeia explicitamente:
+   "Hepatoblastoma es el tumor hepático más frecuente en la primera
+   infancia" — essa entidade não aparecia em nenhum lugar do bloco.
+   Adicionada uma frase breve logo na abertura da seção de CHC,
+   esclarecendo que o CHC é o mais frequente *no adulto* e que na
+   primeira infância o mais frequente é outro tumor, distinto e sem
+   associação com cirrose. Sem criar questão/flashcard nova — entidade
+   de baixa prioridade didática para uma matéria de patologia do
+   adulto, o próprio slide também a trata em uma única linha.
+
+Dois pontos avaliados e **não alterados**, por não serem erro
+comprovado, apenas diferença de quais exemplos válidos citar:
+- *Hiperplasia nodular regenerativa*: o slide cita VIH e doenças
+  reumatológicas (LES) como associações; o site cita fármacos e artrite
+  reumatoide. Ambos os conjuntos são descritos na literatura (Robbins)
+  como associações válidas dessa entidade — não há erro a corrigir, só
+  exemplos diferentes dentro do mesmo espectro aceito.
+- Detalhes moleculares mais avançados do slide (subtipos do adenoma por
+  mutação, % de mutações β-catenina/p53 no CHC, graduação de nódulos
+  displásicos, fatores secundários de risco do CHC e do
+  colangiocarcinoma) foram deliberadamente mantidos fora, por serem
+  nível de detalhe que o próprio slide também trata como secundário
+  (sem marcação de "tema de examen"), e para não forçar densidade
+  adicional sem ganho didático comprovado (G0 §6).
+
+### Verificação desta rodada
+
+- Guard: 🟡 mesmo padrão de sempre (sem vermelho) — assets 43/43,
+  banco-geral 156=156, gabaritos válidos, HTML equilibrado.
+- Banco General: corpo e banco continuam com as mesmas 156 perguntas,
+  byte a byte, após a edição.
+- Highlights reais: os 377 grifos reais de `anatomia-patologica-ii`
+  (reexportação read-only) testados com o motor real
+  (`window.RMTools.resolverAncora`) antes e depois desta edição — **0
+  quebrados**, os mesmos 374/377 continuam resolvendo exatamente como
+  antes.
 
 ### Conclusão do fechamento
 
 As 6 fontes de anotação foram lidas na íntegra (nenhuma truncada) e
-cruzadas item a item com o HTML publicado. Nenhuma incoerência
-científica do site foi encontrada nesta auditoria — as únicas
-incoerências detectadas estavam nas próprias anotações do aluno (P53/P63
-trocado por RAS/TP53; "transformación maligna muy frecuente" da úlcera
-péptica), e em ambos os casos o site corretamente não as reproduziu.
-Dos itens que ficaram de fora, nenhum é um erro do site: são lacunas de
-verificação (números sem confirmação em literatura-base), decisões
-editoriais válidas (nível de detalhe do mecanismo de Hashimoto,
-estrutura do Resumo P1), ou uma decisão de ênfase didática deliberadamente
-não tomada nesta rodada para não arriscar prosa apressada (Virchow/
-Krukenberg). A auditoria dos 6 PDFs está **fechada**; a pendência aberta
-que resta é do universo dos slides oficiais (granulomas no Crohn, slide
-7 ilegível), não dos 6 PDFs de anotação.
+cruzadas item a item com o HTML publicado. O slide oficial 7, que
+seguia ilegível desde #455, foi finalmente lido via uma cópia alternativa
+legítima do mesmo material na pasta de aulas da cátedra — 2 lacunas
+comprovadas corrigidas (metástases sem pâncreas, hepatoblastoma ausente).
+Nenhuma outra incoerência científica do site foi encontrada nesta
+auditoria — as únicas incoerências detectadas estavam nas próprias
+anotações do aluno (P53/P63 trocado por RAS/TP53; "transformación
+maligna muy frecuente" da úlcera péptica), e em ambos os casos o site
+corretamente não as reproduziu. Dos itens que ficaram de fora, nenhum é
+um erro do site: são lacunas de verificação (números sem confirmação em
+literatura-base), decisões editoriais válidas (nível de detalhe do
+mecanismo de Hashimoto, estrutura do Resumo P1, detalhe molecular do
+slide 7), ou uma decisão de ênfase didática deliberadamente não tomada
+nesta rodada para não arriscar prosa apressada (Virchow/Krukenberg). A
+auditoria dos 6 PDFs **e** do slide 7 está **fechada**; a única
+pendência aberta que resta do universo dos slides oficiais é a
+divergência de granulomas no Crohn (slide 5 vs. site — ambos
+defensáveis, decisão estilística de José).
