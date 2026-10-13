@@ -186,7 +186,7 @@ Detalhe em `fisiopatologia-ii-issue101-slides-v1.md`: 132 fatos dos 6 decks veri
 | Grifos **com** remapear (prova de conceito **sintética**) | 🧪 100 % das marcas simuladas, 0 em lugar errado — **não comprova preservação de grifos reais** |
 | Tinta em elemento (390/768/1024/1440): âncoras idênticas | ✅ 8 310 de 8 399 (98,9 %); as 89 reescritas ficam no parágrafo (Δh ≤ 28,5 px em ≥ 768; ≤ 118 px a 390) |
 | Tinta de seção (figuras): mediana ≤ 3,7 px; p90 ≤ 26 px; máx. ≤ 49 px | ✅ |
-| Δ de altura do Banco geral | ✅ −24 / −25 / −24 / −2 px (390/768/1024/1440) — uma linha |
+| Δ de altura do Banco geral | ✅ −24 / −25 / −2 / −2 px (390/768/1024/1440; 13/10, depois do ajuste de b13q09) — uma linha |
 | Guard local | ver PR |
 
 ## 11 · Ainda precisa de revisão humana / não feito
