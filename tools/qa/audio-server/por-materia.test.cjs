@@ -89,6 +89,68 @@ const forma = r => JSON.stringify({ s: r.statusCode, h: r.headers, b: r.body });
     const outro = mk({ RM_AUDIO_SLUGS: 'neurologia' }).h;
     ok(forma(await outro.manifesto({ httpMethod: 'GET', headers: { authorization: 'Bearer tok-other' }, queryStringParameters: { slug: 'neurologia' } })) === NEG_M, 'UID fora da lista continua negado em qualquer matéria');
   }
+  sec('Autorização = UID E slug pedido (as duas condições, sempre no servidor)');
+  {
+    const { h } = mk({ RM_AUDIO_SLUGS: 'semiologia-ii,neurologia' });
+    const pede = (tok, slug) => h.manifesto({ httpMethod: 'GET', headers: { authorization: 'Bearer ' + tok }, queryStringParameters: { slug } });
+    const casos = [['tok-jose', 'neurologia', true], ['tok-jose', 'semiologia-ii', true], ['tok-jose', 'toxicologia', false],
+                   ['tok-other', 'neurologia', false], ['tok-other', 'semiologia-ii', false], ['tok-falso', 'neurologia', false]];
+    for (const [tok, slug, sim] of casos) {
+      const r = await pede(tok, slug), j = JSON.parse(r.body);
+      ok(sim ? (r.statusCode === 200 && j.slug === slug && j.items.length > 0) : forma(r) === NEG_M, `${tok} × ${slug} → ${sim ? 'autorizado' : 'a MESMA negação'}`, j);
+    }
+    const u = await h.assinar({ httpMethod: 'GET', headers: { authorization: 'Bearer tok-other' }, queryStringParameters: { slug: 'neurologia', audio_id: 'neu-b01' } });
+    ok(forma(u) === NEG_U, 'URL: UID fora da lista negado mesmo com slug autorizado e audio_id pronto');
+  }
+
+  sec('O audio_id é buscado SÓ no manifesto da matéria pedida');
+  {
+    /* o mesmo audio_id em duas matérias, com objetos diferentes: a URL assinada sai sempre do objeto da matéria pedida */
+    const DUP = { 'semiologia-ii': [it('comum', 's2-b01', 1, true, 'semiologia-ii/comum.m4a')], 'neurologia': [it('comum', 'neub01', 1, true, 'neurologia/comum.m4a')], 'toxicologia': [it('so-tox', 'toxb01', 1, true)] };
+    const { h, fetch } = mk({ RM_AUDIO_SLUGS: 'semiologia-ii,neurologia,toxicologia', RM_AUDIO_MANIFEST: JSON.stringify(DUP) });
+    const a1 = JSON.parse((await h.assinar(ev('semiologia-ii', { audio_id: 'comum' }))).body), a2 = JSON.parse((await h.assinar(ev('neurologia', { audio_id: 'comum' }))).body);
+    ok(/\/audiobooks\/semiologia-ii\/comum\.m4a\?/.test(a1.src) && /\/audiobooks\/neurologia\/comum\.m4a\?/.test(a2.src), 'audio_id repetido: cada matéria assina o SEU objeto', { a1: a1.src, a2: a2.src });
+    ok(forma(await h.assinar(ev('neurologia', { audio_id: 'so-tox' }))) === NEG_U && forma(await h.assinar(ev('semiologia-ii', { audio_id: 'so-tox' }))) === NEG_U, 'audio_id que só existe em toxicologia: negado como neurologia e como semiologia-ii');
+    const assinados = fetch.calls.filter(c => /\/object\/sign\//.test(c.url)).map(c => c.url.split('/audiobooks/')[1]);
+    ok(JSON.stringify(assinados) === JSON.stringify(['semiologia-ii/comum.m4a', 'neurologia/comum.m4a']), 'Storage só recebeu os 2 pedidos legítimos', assinados);
+  }
+
+  sec('Sem RM_AUDIO_SLUGS: só Semiología II, para TODA matéria do manifesto');
+  {
+    const TODAS = Object.assign({}, MANIFESTO, { 'biologia': [it('bio-b01', 'bio01', 1, true)], 'imagenologia': [it('img-b01', 'img01', 1, true)] });
+    delete TODAS.__proto__;
+    const { h } = mk({ RM_AUDIO_MANIFEST: JSON.stringify(TODAS) });
+    for (const slug of Object.keys(TODAS)) {
+      const r = await h.manifesto(ev(slug));
+      ok(slug === 'semiologia-ii' ? JSON.parse(r.body).items.length === 1 : forma(r) === NEG_M, `${slug}: ${slug === 'semiologia-ii' ? 'liberado (piloto)' : 'negado'}`);
+    }
+    ok(forma(await h.manifesto(ev('Semiologia-II'))) === NEG_M && forma(await h.manifesto({ httpMethod: 'GET', headers: { authorization: 'Bearer tok-jose' }, queryStringParameters: {} })) === NEG_M, 'slug com maiúsculas ou ausente: negado, exatamente como na main');
+  }
+
+  sec('Piloto idêntico à main (diferencial: mesmas respostas da lib.js da main e desta PR, sem RM_AUDIO_SLUGS)');
+  {
+    let base = null;
+    try {
+      const cp = require('child_process'), os = require('os'), fs = require('fs');
+      const rel = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/_audio/lib.js';
+      const src = cp.execFileSync('git', ['show', (process.env.RM_BASE_REF || 'origin/main') + ':' + rel], { cwd: ROOT, encoding: 'utf8' });
+      const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'rm-lib-main-')), 'lib.js'); fs.writeFileSync(f, src); base = require(f);
+    } catch (e) { console.log('  · sem git/origin/main: diferencial não rodou'); }
+    if (base) {
+      const ENVS = [{}, { RM_AUDIO_MANIFEST: JSON.stringify({ 'semiologia-ii': MANIFESTO['semiologia-ii'], neurologia: MANIFESTO.neurologia }) }, { RM_PILOT_AUDIO_UIDS: '' }];
+      const EVS = [ev('semiologia-ii'), ev('neurologia'), ev('Semiologia-II'), ev('semiologia-ii', { audio_id: 's2-b01-motivo' }), ev('semiologia-ii', { audio_id: 'neu-b01' }), ev('neurologia', { audio_id: 'neu-b01' }),
+                   { httpMethod: 'GET', headers: { authorization: 'Bearer tok-other' }, queryStringParameters: { slug: 'semiologia-ii' } }, { httpMethod: 'POST', headers: { authorization: 'Bearer tok-jose' }, queryStringParameters: { slug: 'semiologia-ii' } },
+                   { httpMethod: 'GET', headers: {}, queryStringParameters: { slug: 'semiologia-ii', audio_id: 's2-b01-motivo' } }];
+      let iguais = 0, dif = [];
+      for (const e0 of ENVS) for (const e of EVS) for (const fn of ['manifesto', 'assinar']) {
+        const env = Object.assign({}, ENV, e0), mkH = lib => lib.criar({ env, fetch: mkFetch(), validateItem: RMAudio.validateItem, now: () => 1e12 });
+        const x = forma(await mkH(base)[fn](e)), y = forma(await mkH(require(path.join(SITE, 'netlify', 'functions', '_audio', 'lib.js')))[fn](e));
+        if (x === y) iguais++; else dif.push({ fn, ev: e.queryStringParameters, x, y });
+      }
+      ok(dif.length === 0, `${iguais} combinações (ambiente × pedido × função): respostas byte a byte iguais às da main`, dif.slice(0, 3));
+    }
+  }
+
   console.error = oe;
   console.log(`\n${okN} verificações OK · ${koN} falhas`);
   process.exit(koN ? 1 : 0);

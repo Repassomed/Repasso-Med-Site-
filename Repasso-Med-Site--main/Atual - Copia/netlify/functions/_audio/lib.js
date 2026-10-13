@@ -110,7 +110,7 @@ function criar(cfg) {
     const uids = lista(env.RM_PILOT_AUDIO_UIDS);
     if (!uids.length) return null;
     const qs = (event && event.queryStringParameters) || {};
-    const slug = String(qs.slug || '').toLowerCase();
+    const slug = String(qs.slug || '');                                              // exato, como sempre (sem normalizar maiúsculas)
     if (!SLUG_RE.test(slug) || slugsAutorizados(env).indexOf(slug) === -1) return null;   // matéria fora da lista = negado (mesma resposta)
     const t = token(event);
     if (!t) return null;
