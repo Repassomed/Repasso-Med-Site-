@@ -76,7 +76,7 @@
 | Semiología II | 120 | 0 | 0 | 120 | 0 | 0 | 0 | 120 | 0 | ✖ |
 | Farmacología II | 214 | 0 | 1 | 213 | 0 | 0 | 0 | 213 | 0 | ✖ |
 | Embriología | 107 | 0 | 0 | 107 | 0 | 0 | 0 | 107 | 0 | ✖ |
-| Biología | 123 | 0 | 0 | 123 | 0 | 0 | 0 | 123 | 0 | ✖ |
+| Biología | 160 | 0 | 0 | 160 | 0 | 0 | 0 | 160 | 0 | ✖ |
 | Histología I | 150 | 0 | 0 | 150 | 0 | 0 | 0 | 150 | 0 | ✖ |
 | Histología I Práctica | 106 | 0 | 0 | 106 | 0 | 0 | 0 | 106 | 0 | ✖ |
 | Histología II Práctica | 289 | 0 | 0 | 289 | 0 | 0 | 0 | 289 | 0 | ✖ |
@@ -165,7 +165,7 @@ O vínculo por convenção de id (`bq-X` ↔ `q-X`) só vale se o alvo existe co
 | Semiología II | 14/14 | 2 | 120/120 | 120/120 | 172/172 | 194/194 | 0/0 | ✖ |
 | Farmacología II | 17/17 | 2 | 214/214 | 214/214 | 292/292 | 584/584 | 9/9 | ✖ |
 | Embriología | 16/16 | 2 | 107/107 | 107/107 | 149/149 | 149/149 | 3/3 | ✖ |
-| Biología | 16/16 | 2 | 123/123 | 123/123 | 138/138 | 138/138 | 0/0 | ✖ |
+| Biología | 19/19 | 2 | 160/160 | 160/160 | 205/205 | 205/205 | 0/0 | ✖ |
 | Histología I | 16/16 | 2 | 150/150 | 150/150 | 198/198 | 198/198 | 4/4 | ✖ |
 | Histología I Práctica | 17/17 | 3 | 106/106 | 106/106 | 126/126 | 160/160 | 0/0 | ✖ |
 | Histología II Práctica | 20/20 | 2 | 289/289 | 289/289 | 411/411 | 822/822 | 0/0 | ✖ |
@@ -195,7 +195,7 @@ O vínculo por convenção de id (`bq-X` ↔ `q-X`) só vale se o alvo existe co
 - **Semiología II**: R2: 240/240 questões sem id
 - **Farmacología II**: R1: sem <h2>: f2b00 · R2: 426/428 questões sem id · R3: agregadora não reconhecida: f2b15, f2b16
 - **Embriología**: R1: sem <h2>: emb00 · R2: 214/214 questões sem id · R3: agregadora não reconhecida: emb14, emb15
-- **Biología**: R1: sem <h2>: bio00 · R2: 246/246 questões sem id
+- **Biología**: R1: sem <h2>: bio00 · R2: 320/320 questões sem id
 - **Histología I**: R1: sem <h2>: histo00 · R2: 300/300 questões sem id · R3: agregadora não reconhecida: histo13, histo14
 - **Histología I Práctica**: R1: sem <h2>: hp00 · R2: 212/212 questões sem id
 - **Histología II Práctica**: R1: sem <h2>: h2pportada · R2: 578/578 questões sem id · R3: agregadora não reconhecida: h2pmazo

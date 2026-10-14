@@ -8,7 +8,7 @@
 const fs = require('fs'), path = require('path');
 const L = require('./lib.cjs');
 const args0 = process.argv.slice(2);
-const OUT = path.join(L.REPO, 'docs/layout-ensaio/' + (args0.includes('--corr') ? 'resultados-corr' : 'resultados'));
+const OUT = process.env.RM_ENSAIO_OUT ? path.resolve(process.env.RM_ENSAIO_OUT) : path.join(L.REPO, 'docs/layout-ensaio/' + (args0.includes('--corr') ? 'resultados-corr' : 'resultados'));   // RM_ENSAIO_OUT: validação de PR sem sobrescrever o resultado versionado
 const SHOTS = process.env.RM_EVID_DIR ? path.resolve(process.env.RM_EVID_DIR) : null;
 const args = process.argv.slice(2), RAPIDO = args.includes('--rapido'), CORR = args.includes('--corr'), filtro = args.filter(a => !a.startsWith('--'));
 const LARGURAS = RAPIDO ? [1440, 390] : [390, 768, 1024, 1440];
@@ -20,20 +20,27 @@ const INV = Object.fromEntries(inv.materias.map(m => [m.slug, m]));
 const INFO = () => {
   const H = document.documentElement, tab = document.querySelector('#materias-container > .tab-content');
   const vis = e => { const r = e.getBoundingClientRect(); return getComputedStyle(e).display !== 'none' && r.width > 0 && r.height > 0; };
+  /* ALCANÇÁVEL = o aluno vê, ou abre com um toque: dentro de <details> fechado só conta se o <summary> desse details for alcançável (caixa > 0 não basta: o conteúdo de um details fechado tem caixa mas não é pintado) */
+  const alc = e => { if (!vis(e)) return false; if (!e.checkVisibility || e.checkVisibility({ checkVisibilityCSS: true })) return true; const d = e.parentElement && e.parentElement.closest('details:not([open])'); const s = d && d.querySelector(':scope > summary'); return !!(s && s !== e && !s.closest('[data-rm-off]') && alc(s)); };
   const secs = [...tab.querySelectorAll(':scope > section[id]')].filter(vis).map(s => s.id);
   const a = document.activeElement;
   const ehInfo = f => !!(f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image'));   // a MESMA definição do módulo
   const sel = { figuras: 'figure', pregs: '.quiz-item', fc: '.rmfc-launch', ab: '.rm-audio-card', aus: '.audio-player', tablas: 'table' };
-  const cont = {}; Object.keys(sel).forEach(k => { cont[k] = [...tab.querySelectorAll(sel[k])].filter(e => (k === 'ab' || k === 'fc' || !e.closest('[data-rm-ui]')) && !(k === 'tablas' && e.closest('.quiz-item, .flashcard')) && (k !== 'figuras' || ehInfo(e)) && vis(e)).length; });
+  const cont = {}; Object.keys(sel).forEach(k => { cont[k] = [...tab.querySelectorAll(sel[k])].filter(e => (k === 'ab' || k === 'fc' || !e.closest('[data-rm-ui]')) && !(k === 'tablas' && e.closest('.quiz-item, .flashcard')) && (k !== 'figuras' || ehInfo(e)) && alc(e)).length; });
   const cards = [...document.querySelectorAll('.rm-nav-modeidx .rm-sis-card, .rm-sis-idx .rm-sis-card')].filter(vis).map(c => ({ go: c.getAttribute('data-go') || null, rm: c.dataset.rmGo || null, t: c.textContent.replace(/\s+/g, ' ').trim() }));
-  cont.figFora = [...tab.querySelectorAll('figure')].filter(e => !e.closest('[data-rm-ui],.quiz-item,.flashcard') && ehInfo(e) && vis(e)).length;
+  cont.figFora = [...tab.querySelectorAll('figure')].filter(e => !e.closest('[data-rm-ui],.quiz-item,.flashcard') && ehInfo(e) && alc(e)).length;
   return {
     nav: H.getAttribute('data-rm-nav'), mode: H.getAttribute('data-rm-nav-mode'), hash: location.hash, secs, cont, cards,
     st: window.RMNav && window.RMNav.ativo() ? window.RMNav.estado() : null,
     pager: [...document.querySelectorAll('.rm-nav-pager a')].map(x => ({ t: x.textContent.replace(/\s+/g, ' ').trim(), hid: x.hidden || !vis(x) })),
     chips: [...document.querySelectorAll('.rm-nav-chipf')].map(c => c.textContent.replace(/\s+/g, ' ').trim()),
     foco: a && a !== document.body ? { tag: a.tagName, oculto: !!a.closest('[data-rm-off]') || (a.offsetParent === null && getComputedStyle(a).position !== 'fixed') } : null,
-    residuo: [...tab.children].filter(e => !e.hasAttribute('data-rm-ui') && !/^(STYLE|SCRIPT|LINK|FOOTER)$/.test(e.tagName) && !(e.tagName === 'SECTION' && e.id) && vis(e) && e.getBoundingClientRect().height > 40).map(e => e.tagName + '.' + String(e.className).slice(0, 30) + '#' + e.id + ' h=' + Math.round(e.getBoundingClientRect().height)),
+    /* resíduo = conteúdo original solto visível que NÃO foi preservado de propósito: no índice geral a abertura/fecho/conteúdo classificados
+       (data-rm-solto, #487) ficam por desenho; num bloco só o anexo daquele bloco (data-rm-anexo-cur) */
+    residuo: [...tab.children].filter(e => !e.hasAttribute('data-rm-ui') && !/^(STYLE|SCRIPT|LINK|FOOTER)$/.test(e.tagName) && !(e.tagName === 'SECTION' && e.id) && vis(e) && e.getBoundingClientRect().height > 40
+      && !(H.getAttribute('data-rm-nav') === 'index' && /^(abertura|fecho|conteudo)$/.test(e.getAttribute('data-rm-solto') || '')) && !e.hasAttribute('data-rm-anexo-cur')).map(e => e.tagName + '.' + String(e.className).slice(0, 30) + '#' + e.id + ' h=' + Math.round(e.getBoundingClientRect().height)),
+    classifica: !!(window.RMSistema && window.RMSistema.soltos),
+    soltos: [...tab.children].filter(e => e.hasAttribute('data-rm-solto')).map(e => ({ k: e.tagName + '.' + String(e.className).split(' ')[0], t: e.getAttribute('data-rm-solto'), de: e.getAttribute('data-rm-anexo-de'), vis: vis(e) && e.getBoundingClientRect().height > 0, util: e.tagName !== 'NAV' && (!!e.querySelector('.quiz-item,.flashcard,figure,table,audio,video,iframe') || e.textContent.replace(/\s+/g, ' ').trim().length > 200) })),   // NAV: o menu da matéria é substituído pela navegação do layout (já na main), não é conteúdo
     sw: H.scrollWidth, vw: H.clientWidth, sy: Math.round(scrollY), sh: H.scrollHeight
   };
 };
@@ -65,7 +72,7 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
   const br = await chromium.launch();
   fs.mkdirSync(OUT, { recursive: true });
   for (const m of lista) {
-    const t0 = Date.now(); const I = INV[m.slug]; const R = { variante: CORR ? 'com-correcao' : 'como-esta', slug: m.slug, title: m.title, tab: m.tab, larguras: LARGURAS, checks: [], notas: [], gerado_em: new Date().toISOString() };
+    const t0 = Date.now(); const I = INV[m.slug]; const R = { variante: CORR ? 'com-correcao' : 'como-esta', ref: process.env.RM_ENSAIO_REF || null, slug: m.slug, title: m.title, tab: m.tab, larguras: LARGURAS, checks: [], notas: [], gerado_em: new Date().toISOString() };
     const chk = (area, w, id, cond, msg, dados) => { const e = { area, w, id, estado: cond ? 'PASSA' : 'FALHA', msg }; if (!cond && dados !== undefined) e.dados = dados; R.checks.push(e); return !!cond; };
     const bloq = (area, w, id, msg) => R.checks.push({ area, w, id, estado: 'BLOQUEADO', msg });
     const info = p => p.evaluate(INFO);
@@ -83,7 +90,12 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
     let ctl;
     { const r = await L.abrir(br, base, m, { w: 1440, h: 900, modo: 'controle', espera: 600 });
       ctl = await r.page.evaluate(() => { const t = document.querySelector('#materias-container > .tab-content'); const ids = [...t.querySelectorAll('[id]')].filter(e => !e.closest('[data-rm-ui]') && !/^rm/.test(e.id)).map(e => e.id).sort();
-        return { ids: ids.join(','), nIds: ids.length, quiz: t.querySelectorAll('.quiz-item').length, fc: t.querySelectorAll('.flashcard').length, tab: t.querySelectorAll('table').length, aud: t.querySelectorAll('audio').length, secs: t.querySelectorAll(':scope > section[id]').length, sw: document.documentElement.scrollWidth, vw: document.documentElement.clientWidth }; });
+        const kids = [...t.children], ehSec = e => e.tagName === 'SECTION' && !!e.id, ix = kids.map((e, k) => ehSec(e) ? k : -1).filter(k => k >= 0);
+        const util = e => e.tagName !== 'NAV' && (!!e.querySelector('.quiz-item,.flashcard,figure,table,audio,video,iframe') || e.textContent.replace(/\s+/g, ' ').trim().length > 200);
+        const visC = e => getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().height > 0;
+        const soltosUteisNaoAnexo = kids.filter((e, k) => !ehSec(e) && !/^(FOOTER|STYLE|SCRIPT|LINK|TEMPLATE)$/.test(e.tagName) && !e.hasAttribute('data-rm-ui') && !(e.matches && e.matches('.rm-tools,.rm-sug-fab,.rm-menu')) && visC(e) && util(e)
+          && (e.querySelector('.quiz-item,.flashcard,figure,table,audio,video,iframe') || k < ix[0] || k > ix[ix.length - 1])).length;
+        return { soltosUteisNaoAnexo, ids: ids.join(','), nIds: ids.length, quiz: t.querySelectorAll('.quiz-item').length, fc: t.querySelectorAll('.flashcard').length, tab: t.querySelectorAll('table').length, aud: t.querySelectorAll('audio').length, secs: t.querySelectorAll(':scope > section[id]').length, sw: document.documentElement.scrollWidth, vw: document.documentElement.clientWidth }; });
       await r.ctx.close(); }
 
     for (const W of LARGURAS) {
@@ -112,12 +124,19 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
       chk('indice', W, 'card-sem-secao', cardsFora.length === 0, 'nenhum card aponta para seção inexistente', cardsFora);
       const geo = await p.evaluate(() => { const vis = e => { const r = e.getBoundingClientRect(); return getComputedStyle(e).display !== 'none' && r.width > 0; };
         const cards = [...document.querySelectorAll('.rm-sis-card')], last = cards[cards.length - 1], gr = last && last.getBoundingClientRect();
-        return { grid: !!document.querySelector('.rm-sis-idx') && vis(document.querySelector('.rm-sis-idx')), fim: gr ? Math.round(gr.bottom + scrollY) : 0, sh: document.documentElement.scrollHeight,
+        const pres = [...document.querySelectorAll('#materias-container > .tab-content.active > [data-rm-solto]')].filter(e => /^(abertura|fecho|conteudo)$/.test(e.getAttribute('data-rm-solto')) && vis(e)).map(e => e.getBoundingClientRect().bottom + scrollY);
+        return { grid: !!document.querySelector('.rm-sis-idx') && vis(document.querySelector('.rm-sis-idx')), fim: Math.round(Math.max(gr ? gr.bottom + scrollY : 0, ...pres)), sh: document.documentElement.scrollHeight,
           cover: [...document.querySelectorAll('.rm-l2-rescard')].filter(vis).map(c => ({ k: (/rm-l2-rescard--(\w+)/.exec(c.className) || [])[1], n: c.dataset.rmN === undefined ? null : +c.dataset.rmN })),
           unid: [...document.querySelectorAll('.rm-sis-idx [class*=ulab], .rm-sis-idx .rm-sis-un')].length };
       });
-      chk('indice', W, 'sem-residuo', i.residuo.length === 0, 'nada do conteúdo original (hero, banner de revisão…) fica visível abaixo do índice geral', i.residuo);
-      chk('indice', W, 'indice-e-o-fim', geo.grid && geo.sh - geo.fim < Math.max(520, ALT[W] * 0.7), `o índice geral é o fim da página (sobram ${geo.sh - geo.fim}px)`, geo);
+      chk('indice', W, 'sem-residuo', i.residuo.length === 0, 'nada do conteúdo original solto fica visível abaixo do índice geral, exceto o que foi preservado de propósito (apresentação/conteúdo classificados)', i.residuo);
+      /* #487: nada útil some — todo filho solto com conteúdo (questão/figura/tabela… ou texto > 200) visível na matéria sem layout fica visível no índice geral (ou acompanha o seu bloco, se for anexo) */
+      if (i.classifica || i.soltos.length) {   // só onde o código servido classifica (#487 ou a simulação C3); na main o resíduo é medido por sem-residuo
+        const pres = i.soltos.filter(x => x.util && x.t !== 'anexo');
+        chk('indice', W, 'preserva-conteudo-solto', pres.filter(x => x.vis).length >= ctl.soltosUteisNaoAnexo && pres.every(x => x.vis), `índice geral preserva o conteúdo solto útil (${pres.filter(x => x.vis).length} de ${ctl.soltosUteisNaoAnexo} visíveis na matéria sem layout)`, { soltos: i.soltos, ctl: ctl.soltosUteisNaoAnexo });
+        if (i.soltos.some(x => x.t === 'conteudo')) R.notas.push('conteudo-fora-de-bloco:' + i.soltos.filter(x => x.t === 'conteudo').map(x => x.k).join(','));
+      }
+      chk('indice', W, 'indice-e-o-fim', geo.grid && geo.sh - geo.fim < Math.max(520, ALT[W] * 0.7), `o índice geral (com a apresentação/conteúdo preservados) é o fim da página (sobram ${geo.sh - geo.fim}px)`, geo);
       /* capa: totais = itens DISTINTOS (nunca somar a cópia da revisão/banco) */
       const cv = Object.fromEntries(geo.cover.map(c => [c.k, c.n]));
       const distFig = secs.filter(x => !REUNE.test(x.id) && !agregInv.has(x.id)).reduce((a, x) => a + x.fig, 0),  qMin = I.unicos.quiz, qMax = I.unicos.quizComOpc, fMin = I.unicos.fc;
@@ -158,8 +177,10 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
 
       /* ---------- BLOCOS ---------- */
       const alvos = ids.slice();   // todas as seções
+      /* título EFETIVO de cada seção = o que o módulo usa no pager (h2 ou, com C4, o título de reserva) — medido na página, não no inventário */
+      const titP = Object.fromEntries(await p.evaluate(() => ((window.RMSistema && RMSistema.secciones && RMSistema.secciones()) || []).map(s => [s.id, !!s.titulo])));
       const amostra = (W === 1440 && !RAPIDO) ? alvos : [alvos[0], alvos[Math.floor(alvos.length / 2)], alvos[alvos.length - 1], ...secs.filter(s => s.tb >= 3).slice(0, 1).map(s => s.id)].filter((x, k, a) => x && a.indexOf(x) === k);
-      let residuoBloco = [], falhaBloco = [], semFoco = [], pagerErr = [], vazios = [], ovfBloco = [];
+      let residuoBloco = [], falhaBloco = [], semFoco = [], pagerErr = [], vazios = [], ovfBloco = [], anexoErr = [];
       for (const id of amostra) {
         await go(p, { view: 'block', block: id }, 420); const b = await info(p);
         const k = ids.indexOf(id);
@@ -167,8 +188,9 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
         if (!okSec) falhaBloco.push({ id, secs: b.secs, hash: b.hash, nav: b.nav });
         if (b.foco && b.foco.oculto) semFoco.push(id);
         if (b.residuo.length && !residuoBloco.length) residuoBloco = b.residuo;
+        b.soltos.filter(x => x.t === 'anexo').forEach(x => { if ((x.de === id) !== x.vis) anexoErr.push({ bloco: id, anexo: x.k, de: x.de, vis: x.vis }); });
         const prevHid = b.pager[0] ? b.pager[0].hid : null, nextHid = b.pager[2] ? b.pager[2].hid : null;
-        const tit = j => !!(secs[j] && secs[j].h2);
+        const tit = j => !!(secs[j] && (titP[secs[j].id] !== undefined ? titP[secs[j].id] : secs[j].h2));
         const pr = (k > 0 && tit(k - 1)) === (prevHid === false), nx = (k < ids.length - 1 && tit(k + 1)) === (nextHid === false);
         if (b.pager.length !== 3 || !pr || !nx) pagerErr.push({ id, k, pager: b.pager });
         const alt = await p.evaluate(i2 => { const s = document.getElementById(i2); const r = s.getBoundingClientRect(); return Math.round(r.height); }, id);
@@ -177,9 +199,10 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
       }
       chk('blocos', W, 'abre-so-o-bloco', falhaBloco.length === 0, `${amostra.length} bloco(s) testados: cada um abre SÓ ele (visível, hash, estado)`, falhaBloco.slice(0, 6));
       chk('blocos', W, 'pager', pagerErr.length === 0, 'Anterior/Índice/Próximo corretos (sem anterior no 1.º, sem próximo no último)', pagerErr.slice(0, 4));
-      const interioresSemTitulo = secs.map((x, j) => ({ id: x.id, j })).filter(x => x.j > 0 && x.j < secs.length - 1 && !secs[x.j].h2).map(x => x.id);
-      chk('blocos', W, 'pager-cadeia', interioresSemTitulo.length === 0, 'nenhuma seção interior sem <h2>: ela quebra a cadeia Anterior/Próximo (o módulo esconde o link do vizinho sem título e o aluno fica sem saída)', interioresSemTitulo);
+      const interioresSemTitulo = secs.map((x, j) => ({ id: x.id, j })).filter(x => x.j > 0 && x.j < secs.length - 1 && !(titP[x.id] !== undefined ? titP[x.id] : secs[x.j].h2)).map(x => x.id);
+      chk('blocos', W, 'pager-cadeia', interioresSemTitulo.length === 0, 'nenhuma seção interior sem título efetivo no módulo: ela quebra a cadeia Anterior/Próximo (o módulo esconde o link do vizinho sem título e o aluno fica sem saída)', interioresSemTitulo);
       chk('blocos', W, 'foco-visivel', semFoco.length === 0, 'foco nunca fica em conteúdo oculto', semFoco);
+      if (i.soltos.some(x => x.t === 'anexo')) chk('blocos', W, 'anexo-com-seu-bloco', anexoErr.length === 0, 'o anexo (p.ex. banner «Repaso General») aparece só quando o bloco que ele apresenta está aberto', anexoErr.slice(0, 4));
       chk('blocos', W, 'sem-residuo-bloco', residuoBloco.length === 0, 'na leitura de um bloco nada do conteúdo original (hero, banner) aparece fora dele', residuoBloco.slice(0, 3));
       chk('blocos', W, 'nao-vazio', vazios.length === 0, 'nenhum bloco abre vazio', vazios);
       chk('responsivo', W, 'blocos-sem-overflow', ovfBloco.length === 0, `blocos sem rolagem horizontal (${amostra.length} testados)`, ovfBloco.slice(0, 4));
