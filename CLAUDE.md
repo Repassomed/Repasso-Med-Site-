@@ -51,6 +51,8 @@ Quando houver duas soluções igualmente corretas, preferir a que ensina melhor,
 
 O especialista didático via Anthropic deve fiscalizar explicitamente a G0 nas tarefas de conteúdo. Guard verde, sozinho, não aprova a G0.
 
+Na revisão editorial de cada matéria, aplicar também a **G0 §13** (ensinar do zero com profundidade e evidência antes/depois) e **8-A.6-A/B/C** de `MANUTENCAO-DIDATICA-REPASSO-MED.md` (perfil comprovado de prova por matéria/docente, dificuldade sem provas e auditoria de pistas nas alternativas). Esses critérios são internos: não publicar estratégias editoriais ou perfis de professor na página do aluno.
+
 ## 2-B. LEI DE ATUALIZAÇÃO CONTÍNUA
 
 Sempre que entrarem **novas anotações de aula, novos materiais da cátedra, slides, correções ou fontes complementares** para uma matéria já existente, ler e obedecer:

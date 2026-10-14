@@ -1561,6 +1561,75 @@ PROIBIDO:
 
 A dificuldade vem de DISTRAÇÃO PLAUSÍVEL, não de ambiguidade.
 
+8-A.6-A Perfil comprovado de prova por matéria e docente
+
+Quando existirem provas reais, analisar seu conjunto antes de reconstruir
+alternativas ou criar questões complementares. Registrar internamente:
+fonte/página, matéria, docente e período quando comprovados, formato do
+enunciado, número/estrutura das alternativas, demanda de raciocínio,
+contexto clínico, detalhe discriminador e grau de confiança da análise.
+
+Usar esse perfil como referência de estrutura e exigência cognitiva das
+questões geradas. Não transferir o padrão de Anatomopatologia para
+Farmacologia, misturar docentes sem identificar a origem, inferir tendência
+de uma questão isolada ou inventar a autoria de uma prova. Se a amostra for
+pequena, parcial ou ilegível, declarar a limitação e evitar conclusões fortes.
+
+Distinguir prova original legível, questão reconstruída e complementar.
+Preservar por padrão as alternativas originais completas, conforme 8-A.6;
+não reproduzir erros científicos, ambiguidades ou pistas de tamanho nas
+alternativas criadas só porque aparecem na fonte. Não completar uma prova
+ilegível como se o texto inventado fosse transcrição. Manter a matriz de
+rastreabilidade de 8-A.5 e as regras de rotulagem de origem existentes.
+
+O perfil é instrumento interno de construção e auditoria; não inserir na
+página do aluno comentários sobre estratégia editorial ou sobre como o
+professor costuma cobrar.
+
+8-A.6-B Matérias sem provas reais disponíveis
+
+Construir questões complementares em três níveis internos de dificuldade:
+- fácil: reconhecer ou recuperar um conceito essencial;
+- média: aplicar um mecanismo, interpretar um achado ou diferenciar
+  conceitos próximos;
+- difícil: integrar mecanismos ou etapas relevantes para resolver um caso.
+
+Priorizar média e difícil no conjunto (juntas, a maioria), mantendo perguntas
+fáceis úteis à consolidação. Não criar dificuldade por obscuridade, enunciado
+confuso, detalhes sem relevância ou duas respostas defensáveis. Aplicar a
+regra dos dois concorrentes plausíveis de 8-A.6 sempre que o conteúdo permitir.
+
+Essa classificação é uma estimativa editorial, não dificuldade psicométrica
+validada. Registrá-la internamente; não requer criar filtros, badges ou outra
+interface. Não inventar perfil de professor onde faltam provas e não alterar
+provas originais para cumprir uma proporção artificial de dificuldades.
+
+8-A.6-C Auditoria de pistas de resposta e qualidade dos distratores
+
+Auditar todas as MCQ da matéria, separando origem e blocos, e contar cada
+questão uma vez: cópias no banco geral não são novas observações. Conferir
+também a igualdade das cópias após qualquer correção.
+
+Medir antes/depois o tamanho das alternativas em palavras e caracteres,
+desconsiderando letras identificadoras e espaços de formatação. Informar
+quantas corretas são a única alternativa mais longa, quantos empates existem,
+denominadores e casos relevantes. Inspecionar também detalhamento exclusivo,
+concordância gramatical, termos absolutos artificiais, repetição do enunciado
+e distratores absurdos. Cruzar com a auditoria de letras de 8-A.7.
+
+Tamanho é um sinal para revisão semântica, não um teste automático de erro:
+diferença de um caractere não prova viés e não existe quota universal de
+comprimento. Uma concentração explorável de respostas mais longas exige
+investigação e correção das questões geradas que dão essa pista. Não encurtar
+o fato correto nem preencher alternativas com palavras inúteis para empatar.
+
+Para cada questão gerada/reconstruída revisada, identificar internamente a
+única melhor resposta, o distrator forte e o detalhe que o invalida. A
+explicação deve ensinar essa diferença, não apenas repetir o gabarito. A
+regra de explicação suficiente de 8-A.2 não autoriza omitir o elo causal que
+o iniciante precisa compreender. Auditar questões originais completas, mas
+tratar eventuais problemas conforme a preservação e as exceções de 8-A.6.
+
 8-A.7 Distribuição das letras corretas
 
 É proibido criar padrão previsível de gabarito.

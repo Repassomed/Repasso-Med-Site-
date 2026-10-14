@@ -215,6 +215,17 @@ grupos de Preguntas só com metadado real e estado da questão preservado, Flash
 que medem a leitura contínua; `nav:true` liga. `ink-jump.test.cjs` com `RM_VISUAL=1` roda os saltos/revisitas de bloco COM a navegação e os cenários de leitura contínua sem ela.
 `capturas-navegacion.cjs` gera antes (leitura contínua) × depois e a comparação A × B do player com `MEDIDAS-PLAYER.md`. Emulação de toque, não aparelho real.
 
+## Conteúdo fora de `section[id]` na navegação (#487) — `soltos.test.cjs`
+O `rm-materia-sistema.js` classifica cada filho da aba que não é `section[id]` (`data-rm-solto`): **abertura** (antes do 1.º bloco), **fecho** (depois do último), **conteudo**
+(tem questão/flashcard/figura/tabela/mídia, ou fica entre blocos sem um bloco logo depois) e **anexo** (texto entre blocos, `data-rm-anexo-de` = bloco seguinte, p.ex. o banner de revisão do `app-core.js`).
+Índice geral: abertura/conteúdo/fecho visíveis, anexo não. Bloco: só o anexo daquele bloco (`data-rm-anexo-cur`). Modo+bloco: o filtro do modo (já na main) mostra só o recurso.
+```
+export NODE_PATH=$(npm root -g)   # ou RM_PLAYWRIGHT=/caminho/do/modulo ; precisa de ffmpeg (ou RM_FFMPEG)
+node tools/qa/browser-qa/layout/soltos.test.cjs
+```
+Semiología II real + 3 nós de teste postos antes do attach (banner antes de `s2-b03`, seção sem id com questão, texto final) em 1440 e 390: classificação, índice geral, bloco, modo+bloco, outro bloco, volta e detach limpo.
+O ensaio das 27 matérias (`tools/qa/ensaio-layout`, PR #485) mede o mesmo em cada matéria real (`indice/preserva-conteudo-solto`, `blocos/anexo-com-seu-bloco`).
+
 ## Player do audiobook no tema do piloto — `player-sistema.test.cjs` e `capturas-player.cjs`
 **(Atualizado na #453: disco de vinil quase quadrado no ALTO À DIREITA — A coluna reservada ≥ 1430 px · B quadrado recolhido que expande; ver `SISTEMA-VISUAL-MATERIAS.md`.)** Na #446 era um card dentro da lateral colorida (desktop ≥ 1200 px); barra compacta (celular/tablet/trilho), convivência com a toolbox aberta e com a caneta armada. **Motor de áudio REAL**
 (rm-audio-boot → rm-audio/store/provider, mp3 gerado com ffmpeg); só o servidor (gate, manifesto, URL assinada, mídia) é simulado — `lib-player.cjs`.

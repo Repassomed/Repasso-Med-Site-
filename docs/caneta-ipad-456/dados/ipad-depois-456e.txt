@@ -1,0 +1,216 @@
+# build 2026-10-10·456e (esta revisão da PR #479)
+▸ A1 · goma em REPOUSO (piloto): o dedo rola e a pinça vale; a goma não trava a navegação
+    ✓ goma armada: touch-action do conteúdo ≠ none (medido «manipulation»)
+    ✓ goma armada: pan nos 2 eixos e pinça permitidos ao dedo («manipulation»)
+    ✓ goma armada: o dedo rola a página (Δ=322 px)
+    ✓ 0 erros JS
+▸ A2 · goma armada: o DEDO navega e NÃO apaga por acidente (só a ponta da caneta/rato apaga)
+    ✓ um toque de dedo em cima do traço com a goma armada não apaga (1 → 1)
+    ✓ a ponta da caneta apaga o mesmo traço (1 → 0)
+    ✓ a ponta da goma apaga uma marcação (grifo) — achada por baixo da guarda (["qa-hl-1"])
+    ✓ 0 erros JS
+▸ A3 · 2.º contato (palma) DURANTE o gesto da goma com a caneta: o gesto continua (pointerId conferido) e vira 1 só desfazer
+    ✓ a caneta-goma apagou o 1.º traço ao encostar (2 → 1)
+    ✓ depois da palma (touch de OUTRO pointerId soltando) o MESMO gesto seguiu e apagou o 2.º traço (2 → 0)
+    ✓ um gesto = um desfazer com os 2 traços ({"len":3,"tipo":"del","inks":2})
+    ✓ 0 erros JS
+▸ A4 · diagnóstico: pointercancel separado por caneta / toque (navegação · palma) / gesto ativo
+    ✓ contagem separada: caneta=0, toque≥1, no meio do gesto=0 ({"caneta":0,"toque":1,"outro":0,"gesto":0,"nav":1,"palma":0})
+    ✓ o resumo mostra os cancelamentos separados por tipo
+    ✓ 0 erros JS
+▸ A5 · tarefas longas: «indisponível» onde o navegador não informa (Safari) — nunca um zero falso
+    ✓ sem suporte a longtask: «tarefas longas: indisponível neste navegador (não informa «longtask») — use «quadros máx» de cada traço e da rolagem · desde 0 s»
+    ✓ 0 erros JS
+    ✓ com suporte (Chromium): número medido «tarefas longas (≥50 ms): 0 · máx 0 ms · soma 0 ms · desde 0 s»
+    ✓ 0 erros JS
+▸ B · palma ANTES, DURANTE e DEPOIS da escrita (diagnóstico fechado e aberto)
+    ✓ diag fechado · palma ANTES: o traço nasceu e foi gravado (0 → 1)
+    ✓ diag fechado · palma ANTES: a página não rolou (Δ=0 px)
+    ✓ diag fechado · palma ANTES: tinta alinhada à ponta (desvio 0 px)
+    ✓ diag fechado · palma DURANTE: 1 só traço, não interrompido (1 → 2)
+    ✓ diag fechado · palma DURANTE: a página não rolou (Δ=0 px)
+    ✓ diag fechado · palma DURANTE: o traço tem a 2.ª metade e está alinhado (desvio 0 px, 40 pontos)
+    ✓ diag fechado · estado limpo depois (sem traço/contato/guarda/rm2-drawing)
+    ✓ diag fechado · palma DEPOIS: o dedo volta a rolar (Δ=328 px)
+    ✓ diag fechado · 0 erros JS
+    ✓ diag aberto · palma ANTES: o traço nasceu e foi gravado (0 → 1)
+    ✓ diag aberto · palma ANTES: a página não rolou (Δ=0 px)
+    ✓ diag aberto · palma ANTES: tinta alinhada à ponta (desvio 0 px)
+    ✓ diag aberto · palma DURANTE: 1 só traço, não interrompido (1 → 2)
+    ✓ diag aberto · palma DURANTE: a página não rolou (Δ=0 px)
+    ✓ diag aberto · palma DURANTE: o traço tem a 2.ª metade e está alinhado (desvio 0 px, 40 pontos)
+    ✓ diag aberto · estado limpo depois (sem traço/contato/guarda/rm2-drawing)
+    ✓ diag aberto · palma DEPOIS: o dedo volta a rolar (Δ=335 px)
+    ✓ diag aberto · 0 erros JS
+▸ C · escrever → rolar → zoom (pinça, escala 1,6) → escrever: tinta alinhada à ponta, traço antigo preso ao texto
+    ✓ sem zoom: desvio tinta × ponta 0 px
+    ✓ com zoom 1.6: desvio tinta × ponta 0.9 px (40 pontos)
+    ✓ o traço antigo segue preso ao seu parágrafo depois de rolar e dar zoom (Δx 0, Δy 0)
+    ✓ 0 erros JS
+▸ D · troca de ferramenta, de bloco e de modo: nenhum estado sobra e a escrita volta
+    ✓ goma → marcador → nenhuma → lápis: estado limpo
+    ✓ troca de bloco e de modo: estado limpo
+    ✓ depois das trocas a caneta volta a escrever (1 → 2)
+    ✓ 0 erros JS
+▸ E · interrupção no meio do traço (perda de foco / app em segundo plano) e retorno
+    ✓ blur: antes, traço em curso e guarda ativa
+    ✓ blur: a interrupção fecha o gesto e solta a guarda (sem página presa)
+    ✓ blur: ao voltar, o dedo rola (Δ=261 px)
+    ✓ blur: ao voltar, a caneta escreve (0 → 1)
+    ✓ blur: 0 erros JS
+    ✓ visibilitychange: antes, traço em curso e guarda ativa
+    ✓ visibilitychange: a interrupção fecha o gesto e solta a guarda (sem página presa)
+    ✓ visibilitychange: ao voltar, o dedo rola (Δ=267 px)
+    ✓ visibilitychange: ao voltar, a caneta escreve (0 → 1)
+    ✓ visibilitychange: 0 erros JS
+▸ F · escrever 2, apagar 1, recarregar: volta exatamente o que ficou (mesma âncora, mesmos pontos)
+    ✓ 1 traço salvo volta igual (id, âncora e pontos) — antes 1, depois 1
+    ✓ e é desenhado 1 vez (sem duplicar): 1
+    ✓ 0 erros JS
+▸ G · fora do piloto físico (beta legado sem pen do servidor): goma e lápis como antes
+    ✓ pilotoPermitido=false para o beta legado sem pen
+    ✓ lápis fora do piloto: regra de sempre «pan-x pan-y pinch-zoom» (o Chromium a serializa como «manipulation»)
+    ✓ goma fora do piloto: regra de sempre («none»)
+    ✓ fora do piloto o adaptador de toque não é registrado
+    ✓ 0 erros JS
+▸ H · ouvintes de toque NÃO passivos no documento: só enquanto lápis/goma estão armados (sem ferramenta, a rolagem não espera o JS)
+    ✓ lápis armado (piloto): 2 ouvintes não-passivos (touchstart/touchmove) — medido 2
+    ✓ sem ferramenta: 0 ouvintes não-passivos de toque no documento — medido 0
+    ✓ goma armada (piloto): 2 ouvintes não-passivos — medido 2
+    ✓ 0 erros JS
+▸ I · traço/contato ÓRFÃO (o navegador perdeu o pointerup de um contato anterior da caneta): a escrita nova não é recusada e o que já foi escrito é gravado
+    ✓ antes: há um traço/contato órfão em aberto (pointerId 77)
+    ✓ a caneta nova escreve (não é recusada) e o traço órfão é gravado, não perdido (0 → 2)
+    ✓ depois: nenhum contato/traço pendurado, guarda inerte
+    ✓ e o dedo rola (Δ=247 px)
+    ✓ 0 erros JS
+▸ J · adaptador de Touch Events (iPad): stylus suprime o próprio pan; com ela em contato a palma também; stylus sem touchend é podada
+    ✓ pen: a stylus suprime o próprio pan (touchstart/touchmove com preventDefault)
+    ✓ pen: com a stylus em contato, o toque da palma também não faz pan
+    ✓ pen: a stylus levantou ⇒ o dedo volta a rolar (sem preventDefault)
+    ✓ pen: stylus sem touchend é podada pela lista do navegador (e.touches) e não segura a rolagem
+    ✓ eraser: a stylus suprime o próprio pan (touchstart/touchmove com preventDefault)
+    ✓ eraser: com a stylus em contato, o toque da palma também não faz pan
+    ✓ eraser: a stylus levantou ⇒ o dedo volta a rolar (sem preventDefault)
+    ✓ eraser: stylus sem touchend é podada pela lista do navegador (e.touches) e não segura a rolagem
+    ✓ sem ferramenta: nenhum ouvinte, nada suprimido
+    ✓ 0 erros JS
+▸ K · traço → pointerup perdido → caneta levantada → SÓ dedos: a guarda sai pela evidência do navegador; com a stylus apoiada a palma segue rejeitada
+    ✓ lápis · diag fechado · touchend: durante o contato a guarda está ativa
+    ✓ lápis · diag fechado · touchend: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ lápis · diag fechado · touchend: só o dedo rola a página (Δ=328 px)
+    ✓ lápis · diag fechado · touchend: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ lápis · diag fechado · touchend: o traço interrompido é GRAVADO uma vez (0 → 1; salvos 1)
+    ✓ lápis · diag fechado · touchend: depois de recarregar, o traço recuperado volta 1 vez (mesmo id; 1 desenhado)
+    ✓ lápis · diag fechado · touchend: 0 erros JS
+    ✓ lápis · diag fechado · toques: durante o contato a guarda está ativa
+    ✓ lápis · diag fechado · toques: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ lápis · diag fechado · toques: só o dedo rola a página (Δ=339 px)
+    ✓ lápis · diag fechado · toques: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ lápis · diag fechado · toques: o traço interrompido é GRAVADO uma vez (0 → 1; salvos 1)
+    ✓ lápis · diag fechado · toques: 0 erros JS
+    ✓ lápis · diag fechado · hover: durante o contato a guarda está ativa
+    ✓ lápis · diag fechado · hover: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ lápis · diag fechado · hover: só o dedo rola a página (Δ=345 px)
+    ✓ lápis · diag fechado · hover: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ lápis · diag fechado · hover: o traço interrompido é GRAVADO uma vez (0 → 1; salvos 1)
+    ✓ lápis · diag fechado · hover: 0 erros JS
+    ✓ lápis · diag fechado · apoiada: durante o contato a guarda está ativa
+    ✓ lápis · diag fechado · apoiada: com a stylus AINDA na lista de toques do navegador, a guarda fica (palma rejeitada)
+    ✓ lápis · diag fechado · apoiada: o toque da palma (com a stylus apoiada) tem o gesto nativo suprimido — touchstart e touchmove com preventDefault
+    ✓ lápis · diag fechado · apoiada: e a guarda continua depois da palma soltar
+    ✓ lápis · diag fechado · apoiada: o pointerup normal encerra o contato
+    ✓ lápis · diag fechado · apoiada: 0 erros JS
+    ✓ goma · diag fechado · touchend: durante o contato a guarda está ativa
+    ✓ goma · diag fechado · touchend: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ goma · diag fechado · touchend: só o dedo rola a página (Δ=328 px)
+    ✓ goma · diag fechado · touchend: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ goma · diag fechado · touchend: a goma apagou o traço e virou 1 desfazer (1 → 0; desfazer 1 → 2)
+    ✓ goma · diag fechado · touchend: 0 erros JS
+    ✓ goma · diag fechado · toques: durante o contato a guarda está ativa
+    ✓ goma · diag fechado · toques: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ goma · diag fechado · toques: só o dedo rola a página (Δ=315 px)
+    ✓ goma · diag fechado · toques: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ goma · diag fechado · toques: a goma apagou o traço e virou 1 desfazer (1 → 0; desfazer 1 → 2)
+    ✓ goma · diag fechado · toques: 0 erros JS
+    ✓ goma · diag fechado · hover: durante o contato a guarda está ativa
+    ✓ goma · diag fechado · hover: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ goma · diag fechado · hover: só o dedo rola a página (Δ=325 px)
+    ✓ goma · diag fechado · hover: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ goma · diag fechado · hover: a goma apagou o traço e virou 1 desfazer (1 → 0; desfazer 1 → 2)
+    ✓ goma · diag fechado · hover: 0 erros JS
+    ✓ goma · diag fechado · apoiada: durante o contato a guarda está ativa
+    ✓ goma · diag fechado · apoiada: com a stylus AINDA na lista de toques do navegador, a guarda fica (palma rejeitada)
+    ✓ goma · diag fechado · apoiada: o toque da palma (com a stylus apoiada) tem o gesto nativo suprimido — touchstart e touchmove com preventDefault
+    ✓ goma · diag fechado · apoiada: e a guarda continua depois da palma soltar
+    ✓ goma · diag fechado · apoiada: o pointerup normal encerra o contato
+    ✓ goma · diag fechado · apoiada: 0 erros JS
+    ✓ lápis · diag aberto · touchend: durante o contato a guarda está ativa
+    ✓ lápis · diag aberto · touchend: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ lápis · diag aberto · touchend: só o dedo rola a página (Δ=322 px)
+    ✓ lápis · diag aberto · touchend: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ lápis · diag aberto · touchend: o traço interrompido é GRAVADO uma vez (0 → 1; salvos 1)
+    ✓ lápis · diag aberto · touchend: o diagnóstico conta a recuperação e diz por qual evidência
+    ✓ lápis · diag aberto · touchend: depois de recarregar, o traço recuperado volta 1 vez (mesmo id; 1 desenhado)
+    ✓ lápis · diag aberto · touchend: 0 erros JS
+    ✓ lápis · diag aberto · toques: durante o contato a guarda está ativa
+    ✓ lápis · diag aberto · toques: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ lápis · diag aberto · toques: só o dedo rola a página (Δ=318 px)
+    ✓ lápis · diag aberto · toques: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ lápis · diag aberto · toques: o traço interrompido é GRAVADO uma vez (0 → 1; salvos 1)
+    ✓ lápis · diag aberto · toques: o diagnóstico conta a recuperação e diz por qual evidência
+    ✓ lápis · diag aberto · toques: 0 erros JS
+    ✓ lápis · diag aberto · hover: durante o contato a guarda está ativa
+    ✓ lápis · diag aberto · hover: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ lápis · diag aberto · hover: só o dedo rola a página (Δ=325 px)
+    ✓ lápis · diag aberto · hover: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ lápis · diag aberto · hover: o traço interrompido é GRAVADO uma vez (0 → 1; salvos 1)
+    ✓ lápis · diag aberto · hover: o diagnóstico conta a recuperação e diz por qual evidência
+    ✓ lápis · diag aberto · hover: 0 erros JS
+    ✓ lápis · diag aberto · apoiada: durante o contato a guarda está ativa
+    ✓ lápis · diag aberto · apoiada: com a stylus AINDA na lista de toques do navegador, a guarda fica (palma rejeitada)
+    ✓ lápis · diag aberto · apoiada: o toque da palma (com a stylus apoiada) tem o gesto nativo suprimido — touchstart e touchmove com preventDefault
+    ✓ lápis · diag aberto · apoiada: e a guarda continua depois da palma soltar
+    ✓ lápis · diag aberto · apoiada: o pointerup normal encerra o contato
+    ✓ lápis · diag aberto · apoiada: 0 erros JS
+    ✓ goma · diag aberto · touchend: durante o contato a guarda está ativa
+    ✓ goma · diag aberto · touchend: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ goma · diag aberto · touchend: só o dedo rola a página (Δ=320 px)
+    ✓ goma · diag aberto · touchend: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ goma · diag aberto · touchend: a goma apagou o traço e virou 1 desfazer (1 → 0; desfazer 1 → 2)
+    ✓ goma · diag aberto · touchend: o diagnóstico conta a recuperação e diz por qual evidência
+    ✓ goma · diag aberto · touchend: 0 erros JS
+    ✓ goma · diag aberto · toques: durante o contato a guarda está ativa
+    ✓ goma · diag aberto · toques: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ goma · diag aberto · toques: só o dedo rola a página (Δ=336 px)
+    ✓ goma · diag aberto · toques: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ goma · diag aberto · toques: a goma apagou o traço e virou 1 desfazer (1 → 0; desfazer 1 → 2)
+    ✓ goma · diag aberto · toques: o diagnóstico conta a recuperação e diz por qual evidência
+    ✓ goma · diag aberto · toques: 0 erros JS
+    ✓ goma · diag aberto · hover: durante o contato a guarda está ativa
+    ✓ goma · diag aberto · hover: a caneta saiu ⇒ guarda solta SEM novo toque da caneta
+    ✓ goma · diag aberto · hover: só o dedo rola a página (Δ=325 px)
+    ✓ goma · diag aberto · hover: a pinça com 2 dedos dá zoom (escala 1 → 4)
+    ✓ goma · diag aberto · hover: a goma apagou o traço e virou 1 desfazer (1 → 0; desfazer 1 → 2)
+    ✓ goma · diag aberto · hover: o diagnóstico conta a recuperação e diz por qual evidência
+    ✓ goma · diag aberto · hover: 0 erros JS
+    ✓ goma · diag aberto · apoiada: durante o contato a guarda está ativa
+    ✓ goma · diag aberto · apoiada: com a stylus AINDA na lista de toques do navegador, a guarda fica (palma rejeitada)
+    ✓ goma · diag aberto · apoiada: o toque da palma (com a stylus apoiada) tem o gesto nativo suprimido — touchstart e touchmove com preventDefault
+    ✓ goma · diag aberto · apoiada: e a guarda continua depois da palma soltar
+    ✓ goma · diag aberto · apoiada: o pointerup normal encerra o contato
+    ✓ goma · diag aberto · apoiada: 0 erros JS
+▸ M · fim normal em que o touchend da stylus chega ANTES do pointerup: 1 traço gravado, nenhum órfão contado (diag aberto)
+    ✓ pen: contato encerrado pelo pointerup
+    ✓ pen: 1 traço gravado (sem duplicar) (0 → 1)
+    ✓ pen: nenhum «órfão» contado num fim normal (0)
+    ✓ pen: 0 erros JS
+    ✓ eraser: contato encerrado pelo pointerup
+    ✓ eraser: traço apagado (1 → 0)
+    ✓ eraser: nenhum «órfão» contado num fim normal (0)
+    ✓ eraser: 0 erros JS
+▸ L · onde o navegador não classifica os toques (sem touchType), um dedo sozinho NÃO é prova de que a caneta saiu (nada é concluído às cegas)
+    ✓ sem touchType o contato da caneta é mantido (a palma não é liberada por suposição)
+    ✓ o próximo toque da caneta continua soltando a guarda
+    ✓ 0 erros JS
+caneta-ipad-456: 197/197 verificações OK
