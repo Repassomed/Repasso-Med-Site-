@@ -253,6 +253,19 @@ RM_PLAYWRIGHT=... node tools/qa/browser-qa/layout/caneta-has-93.cjs [--n=3] [--t
 **Causa:** `.container>*{position:relative;z-index:1}` faz de cada filho de `.container` um contexto de apilamiento; o `z-index:2` do post-it (correção da #370) só vale quando o post-it é filho DIRETO. Dentro de `.rmc-detalle`/`.pk-step`/`.analysis-card`/`figure` ele fica encerrado no contexto do pai e, se cuelga abaixo do pai, o irmão seguinte (z:1, depois no DOM) pinta POR CIMA e o corta.
 **Correção:** `#materias-container .rm-cuaderno .container>:has(>.rmc-margin){z-index:auto}` em `@media(min-width:920px)` (`assets/styles.css`): o filho com post-it deixa de ser contexto; nenhuma caixa se move (geometria idêntica, provada no teste). Glossário: sem defeito (popover top layer + fallback fixed, testados com e sem Popover API).
 `:has()` em CSS compartilhado só com combinador de FILHO (contrato da #456): o seletor é `:has(>.rmc-margin)`; a estrutura medida (post-it filho direto do bloco) é coberta por ele, e `caneta-has-93.cjs` mede que a escrita não piora (±ruído) com e sem a regra. O teste prova antes×depois NA MESMA PÁGINA (regra neutralizada × ativa), geometria idêntica, 0 cobertos em 7 matérias × 1024/1440 (legado e V2), 390/768 sem cobertura/overflow, glossário em 4 larguras com e sem popover, e a faixa/lateral do V2 por cima do post-it. Emulação do Chromium.
+
+### Post-it que aparece mas não recebe toque — `postit-toque.test.cjs`
+Caso funcional achado na QA da #366: quando o irmão que cobre a nota é **transparente**, a nota continua à vista (a captura por pixel acima não vê defeito), mas o toque/mouse cai no irmão —
+o texto não seleciona e o marcador não grifa. Medido na `main` em Dermatología (`dermb01–03`) e Oftalmología (`ofb09`). Matéria real pelo harness do ensaio (`tools/qa/ensaio-layout/lib.cjs`,
+modo `controle`: `styles.css` + `<style>`/topo do index + app-core + rm-tools/V2 reais; sessão simulada; escritas só registradas). Imagens carregadas antes de medir.
+```
+export NODE_PATH=$(npm root -g)
+node tools/qa/browser-qa/layout/postit-toque.test.cjs                                  # branch: tem de passar
+RM_ENSAIO_REF=origin/main node tools/qa/browser-qa/layout/postit-toque.test.cjs        # assets da main: tem de FALHAR (A/B/C)
+```
+Dermatología e Oftalmología × 1024/1440, na mesma página: **com a correção** — A · o centro de cada linha real de texto (`Range.getClientRects`) de toda `.rmc-margin` devolve a própria nota em `elementFromPoint` ·
+B · cada nota aninhada seleciona texto por arrasto real de mouse · C · o marcador real (`RMToolsV2` 'highlight') grifa cada nota aninhada e grava `insert:user_highlights` (simulado);
+**sem a correção** (regra neutralizada pelo mesmo override de `postits-encobertos.test.cjs`) — as notas conhecidas (`dermb02`, `ofb09`) falham A, B e C; 0 erros JS. Emulação do Chromium (mouse), sem toque físico.
 ## Caneta no novo layout (issue #456) — `caneta-novo-layout.test.cjs` e `pen-bench.cjs`
 José relatou: no layout novo a caneta «atrasa e às vezes perde partes do traço»; no antigo funcionava melhor. `pen-bench.cjs` MEDE o gesto na pipeline real do Chromium
 (CDP `Input.dispatchMouseEvent` com `pointerType:'pen'` → pointerdown/move/up reais) em três configurações — `antigo` (layout:false) · `layout` (Layout V2 sem tema) · `novo` (V2 + tema + navegação) —
