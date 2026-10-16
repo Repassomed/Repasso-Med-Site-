@@ -73,7 +73,7 @@ Subidos em 06/10/2026.
 
 | passo | quem | estado |
 |---|---|---|
-| Código que aceita áudio em qualquer matéria autorizada (sem ligar nada) | Claude 4 · PR #489 | 🟡 aberto, aguarda merge |
+| Código que aceita áudio em qualquer matéria autorizada (sem ligar nada) | Claude 4 · PR #489 | ✅ mesclado (16/10) |
 | Comprimir os 12 arquivos acima de 40 MiB e ouvir as amostras | José (script local) | ⬜ |
 | Ligar cada áudio ao bloco certo (pela escuta ou transcrição) | José + Claude | ⬜ |
 | Subir ao bucket `audiobooks` | José (script com a chave, nunca no chat) | ⬜ |
