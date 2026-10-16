@@ -1,6 +1,6 @@
 # Checklist das matérias
 
-**Última atualização:** 16/10/2026 · base `main` `d1ec8f0` · Claude coordenador.
+**Última atualização:** 16/10/2026 · base `main` `5d90b60` · coordenação ChatGPT.\n\n> **Situação após #484:** PRs #464, #489, #496, #497, #498 e #484 mescladas. A validação física dos grifos da #484 ainda depende do José. Abertas: #474, #481, #499, #500. PRs antigas #66, #80, #248, #253, #305 e #368 fechadas sem merge, com motivo registrado. A revisão científica relatada em #366 não é aprovação editorial integral; Biología requer correção pontual depois da #496.\n
 **Ordem do plano (decisão do José):** 1) manutenção + pente fino editorial (G0, didática do zero, vocabulário simples) e anotações → 2) layout global → 3) caneta para todos → 4) audiobooks para todos.
 
 ## Legenda
@@ -34,55 +34,55 @@
 | 13 | Histología II | 2 | ✅ | ⬜ 22 (inclui ranking «Lo que más cae en toda la materia») | ⬜ vídeo 07/10 e PDF de 718 MB não comparados | ⬜ 4 no Drive | ⬜ | ⬜ |
 | 14 | Histología II Práctica | 2 | ✅ (falta texto alternativo em 172 imagens) | ⬜ 10 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 15 | Anatomía I | 1 | ✅ | ⬜ 7 + 1 «Cómo estudiar esto…» (metadidática da #147) | ➖ vazio | ➖ | ⬜ | ⬜ |
-| 16 | Biología | 1 | 🟡 PR #496 | ✅ 0 | ➖ vazio | ➖ | ⬜ | ⬜ |
+| 16 | Biología | 1 | ✅ PR #496; ⬜ corrigir explicação científica nas duas cópias | ✅ 0 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 17 | Medicina Legal | 6 | ✅ | ⬜ 13 («lo más preguntado») | ➖ vazio | ➖ | ⬜ | ⬜ |
-| 18 | Anatomía Patológica II | 6 | ✅ (#458, #476) | ⬜ 5 | ✅ 6 PDFs (3 pendências menores) | ⬜ 3 no Drive | ⬜ | ⬜ |
+| 18 | Anatomía Patológica II | 6 | ✅ (#458, #476); 🟡 PR #499 em auditoria | ⬜ 5 | ✅ 6 PDFs (3 pendências na #499) | ⬜ 3 no Drive | ⬜ | ⬜ |
 | 19 | Anatomía Patológica II Práctica | 6 | ✅ | ✅ 0 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 20 | Fisiopatología II | 6 | 🟡 PR #481 | 🟡 24 (a PR troca 14 caixas; ficam ~10) | 🟡 4 PDFs na PR #481 | ⬜ 7 no Drive | ⬜ | ⬜ |
-| 21 | Toxicología | 7 | ✅ | ⬜ 24 | ➖ vazio | ➖ | ⬜ | ⬜ |
-| 22 | Dermatología | 7 | ✅ (post-it tapado: PR #464) | ⬜ 13 | ➖ vazio | ➖ | ⬜ | ⬜ |
+| 21 | Toxicología | 7 | ✅ rodada anterior; 🟡 #500 em auditoria integral | ⬜ revisar na #500 | ➖ vazio | ➖ | ⬜ | ⬜ |
+| 22 | Dermatología | 7 | ✅ #464 mesclada; 🧪 teste físico pendente | ⬜ 13 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 23 | Guaraní | 2 | ✅ | ⬜ 13 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 24 | Ortopedia y Traumatología | 7 | ✅ | ⬜ 24 + «Portada · cómo estudiar esta materia» | ➖ (aportes sem conteúdo) | ➖ | ⬜ | ⬜ |
-| 25 | Oftalmología | 7 | ✅ (post-it tapado: PR #464) | ⬜ 11 | ➖ (aporte de teste) | ➖ | ⬜ | ⬜ |
+| 25 | Oftalmología | 7 | ✅ #464 mesclada; 🧪 teste físico pendente | ⬜ 11 | ➖ (aporte de teste) | ➖ | ⬜ | ⬜ |
 | 26 | Neurología | 7 | ✅ | ⬜ 7 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 27 | Anestesiología | 7 | ✅ | ⬜ 18 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | — | Bioestadística | — | 🚫 sem rota no site | 🚫 | — | ➖ | 🚫 | 🚫 |
 
 ## Caixas «Lo que más cae» → «Puntos a dominar» (decisão do José, 16/10)
 
-Feito na PR #498 (🟡 espera merge). Só mudou o título e o subtítulo das caixas de prioridade e alguns textos das barras que falavam de prova. Barras, ordem, ids, questões e flashcards ficaram iguais. Nenhum grifo de aluno estava em cima desses textos (consulta só de leitura).
+Feito na PR #498 (✅ mesclada em 16/10). Só mudou o título e o subtítulo das caixas de prioridade e alguns textos das barras que falavam de prova. Barras, ordem, ids, questões e flashcards ficaram iguais. Nenhum grifo de aluno estava em cima desses textos (consulta só de leitura).
 
 | matéria | o que mudou | estado |
 |---|---|---|
-| Anestesiología | 15 caixas | 🟡 |
-| Dermatología | 13 caixas | 🟡 |
-| Guaraní | 13 subtítulos («banco de preguntas basadas en exámenes» saiu) | 🟡 |
-| Histología II | caixa geral + 13 caixas; 4 textos de barra | 🟡 |
-| Histología II Práctica | caixa geral + 16 subtítulos; 3 textos de barra; 1 linha das fontes | 🟡 |
-| Oftalmología | 9 caixas | 🟡 |
-| Ortopedia | 17 caixas | 🟡 |
-| Toxicología | 16 caixas (frases «el bloque más preguntado» etc. saíram) | 🟡 |
-| Semiología II | 10 caixas | 🟡 |
-| Anatomía Patológica II | etiqueta «◎ LO QUE MÁS CAE» | 🟡 |
-| Histología I | etiqueta «🎯 LO QUE MÁS CAE EN EXAMEN» | 🟡 |
-| Farmacología I | 2 frases no mapa inicial | 🟡 |
-| Fisiopatología I | 1 título de caixa | 🟡 |
-| Medicina Familiar | 2 títulos de caixa | 🟡 |
-| Farmacología II, Fisiopatología II, Biología | não mexi: estão nas PRs #474, #481, #496 | ➖ |
+| Anestesiología | 15 caixas | ✅ #498 |
+| Dermatología | 13 caixas | ✅ #498 |
+| Guaraní | 13 subtítulos («banco de preguntas basadas en exámenes» saiu) | ✅ #498 |
+| Histología II | caixa geral + 13 caixas; 4 textos de barra | ✅ #498 |
+| Histología II Práctica | caixa geral + 16 subtítulos; 3 textos de barra; 1 linha das fontes | ✅ #498 |
+| Oftalmología | 9 caixas | ✅ #498 |
+| Ortopedia | 17 caixas | ✅ #498 |
+| Toxicología | 16 caixas (frases «el bloque más preguntado» etc. saíram) | ✅ #498 |
+| Semiología II | 10 caixas | ✅ #498 |
+| Anatomía Patológica II | etiqueta «◎ LO QUE MÁS CAE» | ✅ #498 |
+| Histología I | etiqueta «🎯 LO QUE MÁS CAE EN EXAMEN» | ✅ #498 |
+| Farmacología I | 2 frases no mapa inicial | ✅ #498 |
+| Fisiopatología I | 1 título de caixa | ✅ #498 |
+| Medicina Familiar | 2 títulos de caixa | ✅ #498 |
+| Farmacología II e Fisiopatología II | continuam nas PRs #474 e #481 | 🟡 |\n| Biología | #496 mesclada; revisão científica posterior pendente | ⬜ |
 
 **O que ainda fica para o pente fino de cada matéria:** frases soltas no texto corrido («la más preguntada», «cae en examen»), as caixas «Cómo lo evalúa la cátedra» de Semiología II e a família «dónde concentrar el estudio» (Embriología, Histología I, Medicina Legal e outras). Essas pedem leitura humana, uma matéria por vez, porque algumas têm grifos de alunos em cima.
 
 ## Leitura honesta desta tabela
 
 - **«Pente fino ✅»** quer dizer: a rodada 2 da #366 (Claude 1, 13/10) revisou à mão e não achou erro científico nem pista de gabarito. **Não** quer dizer que a voz de prova foi limpa nem que a QA visual foi feita no navegador (só Dermatología, Guaraní e Oftalmología tiveram QA real).
-- **Voz de prova:** a rodada 2 marcou «sem defeito» em matérias que ainda têm caixas «Lo que más cae de este bloque · Frecuencia estimada…». O padrão visual antigo (`PADRAO-VISUAL-v4.md`, componente `rmc-exam`) criou essas caixas; a G0, que é mais nova e tem precedência, proíbe. **Decisão do José necessária** (ver parecer).
+- **Voz de prova:** a rodada 2 marcou «sem defeito» em matérias que ainda têm caixas «Lo que más cae de este bloque · Frecuencia estimada…». O padrão visual antigo (`PADRAO-VISUAL-v4.md`, componente `rmc-exam`) criou essas caixas; a G0, que é mais nova e tem precedência, proíbe. **Decisão já aplicada** nas caixas pela #498; faltam frases soltas e revisão humana por matéria.
 - **Layout, caneta e áudio:** o código para as 25 matérias elegíveis está quase todo mesclado, mas **nada está ligado** fora do piloto (Semiología II). Ligar exige decisão e teste do José.
 
 ## Fila de trabalho sugerida (pente fino editorial)
 
 | ordem | o que | matérias | quem sugiro |
 |---|---|---|---|
-| 1 | Fechar o que está aberto | Farmacología II (#474), Fisiopatología II (#481), Biología (#496) | José (merge) |
+| 1 | Fechar as PRs atuais após auditoria | Farmacología II (#474), Fisiopatología II (#481), AP II (#499), Toxicología (#500); correção de Biología já mesclada | Autores + coordenação; só José mescla |
 | 2 | Limpar voz de prova sem perder grifos (mesmo método da #474/#481) | 7.º sem.: Toxicología, Ortopedia, Anestesiología, Dermatología, Oftalmología, Neurología | 1 Claude por matéria |
 | 3 | Idem | Histología II, Guaraní, Medicina Legal, Semiología II, Embriología, Medicina Familiar, Farmacología I | idem |
 | 4 | Idem + metadidática | Anatomía I, AP I Práctica, AP I, AP II, Histología I/II Práctica, Fisiopatología I, Histología I | idem |
