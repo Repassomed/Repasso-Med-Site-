@@ -1,6 +1,6 @@
 # Checklist das matérias
 
-**Última atualização:** 15/10/2026 · base `main` `d1ec8f0` · Claude coordenador.
+**Última atualização:** 16/10/2026 · base `main` `d1ec8f0` · Claude coordenador.
 **Ordem do plano (decisão do José):** 1) manutenção + pente fino editorial (G0, didática do zero, vocabulário simples) e anotações → 2) layout global → 3) caneta para todos → 4) audiobooks para todos.
 
 ## Legenda
@@ -47,6 +47,30 @@
 | 26 | Neurología | 7 | ✅ | ⬜ 7 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 27 | Anestesiología | 7 | ✅ | ⬜ 18 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | — | Bioestadística | — | 🚫 sem rota no site | 🚫 | — | ➖ | 🚫 | 🚫 |
+
+## Caixas «Lo que más cae» → «Puntos a dominar» (decisão do José, 16/10)
+
+Feito na PR #498 (🟡 espera merge). Só mudou o título e o subtítulo das caixas de prioridade e alguns textos das barras que falavam de prova. Barras, ordem, ids, questões e flashcards ficaram iguais. Nenhum grifo de aluno estava em cima desses textos (consulta só de leitura).
+
+| matéria | o que mudou | estado |
+|---|---|---|
+| Anestesiología | 15 caixas | 🟡 |
+| Dermatología | 13 caixas | 🟡 |
+| Guaraní | 13 subtítulos («banco de preguntas basadas en exámenes» saiu) | 🟡 |
+| Histología II | caixa geral + 13 caixas; 4 textos de barra | 🟡 |
+| Histología II Práctica | caixa geral + 16 subtítulos; 3 textos de barra; 1 linha das fontes | 🟡 |
+| Oftalmología | 9 caixas | 🟡 |
+| Ortopedia | 17 caixas | 🟡 |
+| Toxicología | 16 caixas (frases «el bloque más preguntado» etc. saíram) | 🟡 |
+| Semiología II | 10 caixas | 🟡 |
+| Anatomía Patológica II | etiqueta «◎ LO QUE MÁS CAE» | 🟡 |
+| Histología I | etiqueta «🎯 LO QUE MÁS CAE EN EXAMEN» | 🟡 |
+| Farmacología I | 2 frases no mapa inicial | 🟡 |
+| Fisiopatología I | 1 título de caixa | 🟡 |
+| Medicina Familiar | 2 títulos de caixa | 🟡 |
+| Farmacología II, Fisiopatología II, Biología | não mexi: estão nas PRs #474, #481, #496 | ➖ |
+
+**O que ainda fica para o pente fino de cada matéria:** frases soltas no texto corrido («la más preguntada», «cae en examen»), as caixas «Cómo lo evalúa la cátedra» de Semiología II e a família «dónde concentrar el estudio» (Embriología, Histología I, Medicina Legal e outras). Essas pedem leitura humana, uma matéria por vez, porque algumas têm grifos de alunos em cima.
 
 ## Leitura honesta desta tabela
 
