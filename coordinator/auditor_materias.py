@@ -365,7 +365,7 @@ def alertas_automaticos(c: dict) -> list[str]:
     if c["metatexto"]["total"]:
         al.append(f"{c['metatexto']['total']} trecho(s) de metatexto «Cómo estudiar/usar»")
     if c["pregunta_oficial"]["total"]:
-        al.append(f"{c['pregunta_oficial']['total']} rótulo(s) «Pregunta oficial»: conferir comprovação (8-A.4)")
+        al.append(f"{c['pregunta_oficial']['total']} rótulo(s) «pregunta oficial»: conferir comprovação (8-A.4)")
     if c["ids_duplicados"]:
         al.append(f"IDs HTML duplicados: {', '.join(c['ids_duplicados'][:6])}")
     q = c["questoes_multipla"]
@@ -690,7 +690,7 @@ def md_materia(item: dict, rodada: str) -> str:
         L += ["", f"Questões de múltipla escolha: {q['total']} · letras {q['letras']} · "
                   f"correta é a única mais longa em {q['pct_correta_mais_longa']}% · "
                   f"imagens {chk['imagens']['total']} (sem texto alternativo: {chk['imagens']['sem_texto_alternativo']})"]
-        for titulo, chave in (("Voz de prova", "voz_de_prova"), ("Metatexto", "metatexto"), ("«Pregunta oficial»", "pregunta_oficial")):
+        for titulo, chave in (("Voz de prova", "voz_de_prova"), ("Metatexto", "metatexto"), ("Rótulo «pregunta oficial»", "pregunta_oficial")):
             if chk[chave]["exemplos"]:
                 L += ["", f"**{titulo} — exemplos:**"] + [f"- «…{e}…»" for e in chk[chave]["exemplos"]]
         L.append("")
