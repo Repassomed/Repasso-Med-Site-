@@ -12,7 +12,7 @@ definida. Tudo é código + testes para o José auditar:
 navegador ──(JWT)──► get-audio-manifest ─► metadados prontos (8 campos, sem URL/caminho)
 navegador ──(JWT, audio_id)──► get-audio-url ─► URL assinada 10 min do bucket privado `audiobooks`
                                    │  1) JWT → /auth/v1/user (Supabase decide quem é)
-                                   │  2) UID ∈ RM_PILOT_AUDIO_UIDS  e  slug = semiologia-ii
+                                   │  2) UID ∈ RM_PILOT_AUDIO_UIDS  e  slug ∈ RM_AUDIO_SLUGS (ausente ⇒ só semiologia-ii)
                                    │  3) audio_id ∈ manifesto PRONTO do servidor (caminho só existe lá)
                                    └  4) service_role (só no servidor) assina o objeto
 <audio> ──(Range/206)──► Supabase Storage (URL assinada expira em 10 min; o motor reautoriza sem perder o ponto)
@@ -56,6 +56,24 @@ navegador ──(JWT, audio_id)──► get-audio-url ─► URL assinada 10 mi
    RM_BASE=… RM_TOKEN=… RM_AUDIO_ID=… node tools/qa/audio-server/smoke-remote.cjs expirada --src /tmp/src.txt   # ≥ 10 min depois: URL antiga recusada + URL nova emitida
    ```
    O modo `on` exige **Range 206 estrito** (0-1, meio do arquivo e até o fim): um Storage que devolve 200 reprova (o Safari/iOS não conseguiria buscar posição). Roteiro completo: `tools/audio/RUNBOOK-ATIVACAO-AUDIOBOOKS.md`.
+
+## Áudio por matéria — novos arquivos entram aos poucos (#457; preparado, NÃO ativado)
+
+O manifesto já é um JSON por matéria. O servidor agora aceita outras matérias **só quando autorizadas**; sem mexer em nada,
+tudo continua como antes (só Semiología II).
+
+| Passo | O que fazer (no Netlify, sem mudar código) | O que o aluno vê |
+|---|---|---|
+| 1 | Acrescentar `"<slug>": [ … itens com ready:false … ]` em `RM_AUDIO_MANIFEST` | nada |
+| 2 | Subir o arquivo no bucket privado `audiobooks` e trocar o item para `ready:true` | nada (a matéria ainda não está autorizada) |
+| 3 | Acrescentar o slug em `RM_AUDIO_SLUGS` (ex.: `semiologia-ii,neurologia`) | **só** onde o layout novo já estiver ativo naquela matéria **e** para os UIDs de `RM_PILOT_AUDIO_UIDS`: um card no bloco de cada item pronto |
+
+- **Matéria sem áudio não mostra card:** sem itens prontos (ou sem a chave no manifesto) o servidor devolve lista vazia e o boot não cria nada — nem carrega o motor.
+- **Nunca cruza matérias:** um `audio_id` só é assinado se estiver no manifesto da matéria pedida; o cliente também descarta item com `subject_slug` de outra matéria.
+- **Reverter uma matéria:** tirá-la de `RM_AUDIO_SLUGS` (ou voltar o item para `ready:false`) + novo deploy. `RM_AUDIO_SLUGS` vazio desliga todas, inclusive o piloto.
+- **Cliente:** `RMAudioBoot.start()` sem argumentos = piloto (como hoje); `start({ slug, tab })` = outra matéria. Quem chama é o `rm-pilot.js`, que **hoje só conhece Semiología II** — ligar outra matéria é o passo de ativação (A5), fora desta PR.
+- **Autorização = UID **e** slug:** o UID tem de estar em `RM_PILOT_AUDIO_UIDS` **e** o slug pedido (comparado exatamente, sem normalizar maiúsculas, como na `main`) em `RM_AUDIO_SLUGS`; faltando qualquer um, a mesma negação.
+- Testes: `node tools/qa/audio-server/por-materia.test.cjs` (servidor, 36 verificações: matriz UID × slug; o mesmo `audio_id` em duas matérias assina o objeto da matéria pedida; sem `RM_AUDIO_SLUGS` toda matéria do manifesto é negada menos o piloto; **diferencial byte a byte contra a `lib.js` da `main`** — 54 combinações de ambiente × pedido × função, `RM_BASE_REF` troca a referência), `node tools/qa/browser-qa/audio-integracao/por-materia.test.cjs` (navegador, 15) e `node tools/qa/browser-qa/audio-integracao/ciclo.test.cjs` (navegador, 34: ciclo completo numa página só e respostas de rede atrasadas).
 
 ## Desativar — o que é imediato e o que não é
 
