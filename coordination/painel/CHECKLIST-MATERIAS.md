@@ -1,6 +1,9 @@
 # Checklist das matérias
 
-**Última atualização:** 16/10/2026 · base `main` `5d90b60` · coordenação ChatGPT.\n\n> **Situação após #484:** PRs #464, #489, #496, #497, #498 e #484 mescladas. A validação física dos grifos da #484 ainda depende do José. Abertas: #474, #481, #499, #500. PRs antigas #66, #80, #248, #253, #305 e #368 fechadas sem merge, com motivo registrado. A revisão científica relatada em #366 não é aprovação editorial integral; Biología requer correção pontual depois da #496. Os demais arquivos do painel trazem a fotografia anterior: em especial `AUDIOBOOKS-INVENTARIO.md` ainda chama #489 de aberta; ela já foi mesclada. Este cabeçalho prevalece até a próxima reconciliação documental.\n
+**Última atualização:** 16/10/2026 · base `main` `5d90b60` · coordenação ChatGPT.
+
+> **Situação após #484:** PRs #464, #489, #496, #497, #498 e #484 mescladas. A validação física dos grifos da #484 ainda depende do José. Abertas: #474, #481, #499, #500. PRs antigas #66, #80, #248, #253, #305 e #368 fechadas sem merge, com motivo registrado. A revisão científica relatada em #366 não é aprovação editorial integral; Biología requer correção pontual depois da #496. Os demais arquivos do painel trazem a fotografia anterior: em especial `AUDIOBOOKS-INVENTARIO.md` ainda chama #489 de aberta; ela já foi mesclada. Este cabeçalho prevalece até a próxima reconciliação documental.
+
 **Ordem do plano (decisão do José):** 1) manutenção + pente fino editorial (G0, didática do zero, vocabulário simples) e anotações → 2) layout global → 3) caneta para todos → 4) audiobooks para todos.
 
 ## Legenda
@@ -68,7 +71,8 @@ Feito na PR #498 (✅ mesclada em 16/10). Só mudou o título e o subtítulo das
 | Farmacología I | 2 frases no mapa inicial | ✅ #498 |
 | Fisiopatología I | 1 título de caixa | ✅ #498 |
 | Medicina Familiar | 2 títulos de caixa | ✅ #498 |
-| Farmacología II e Fisiopatología II | continuam nas PRs #474 e #481 | 🟡 |\n| Biología | #496 mesclada; revisão científica posterior pendente | ⬜ |
+| Farmacología II e Fisiopatología II | continuam nas PRs #474 e #481 | 🟡 |
+| Biología | #496 mesclada; revisão científica posterior pendente | ⬜ |
 
 **O que ainda fica para o pente fino de cada matéria:** frases soltas no texto corrido («la más preguntada», «cae en examen»), as caixas «Cómo lo evalúa la cátedra» de Semiología II e a família «dónde concentrar el estudio» (Embriología, Histología I, Medicina Legal e outras). Essas pedem leitura humana, uma matéria por vez, porque algumas têm grifos de alunos em cima.
 
