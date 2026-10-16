@@ -2697,6 +2697,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:489.",
       "task_id": "pr:489",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "3ff7d299fd50986f60bfb1e63d24872181dfc525",
+      "component": "guard",
+      "error_id": "ERR-78D2867841",
+      "error_type": "hard-fail",
+      "fingerprint": "78d28678417746d3cfba",
+      "first_seen": "2026-10-16T02:38:37.052732+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "c00512aa94fe4b6892dbfef71e41684b",
+      "issue_sync_updated_at": "2026-10-16T02:38:37.052732+00:00",
+      "last_evidence_hash": "b6b3c0ab1889b83f98ad",
+      "last_seen": "2026-10-16T02:38:37.052732+00:00",
+      "occurrence_count": 1,
+      "pr_number": 503,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "38841357732",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:503.",
+      "task_id": "sincronizar o painel de coordena\u00e7\u00e3o com os merges e a fila verificados em 16/10.",
+      "worker_id": null
     }
   ]
 }
