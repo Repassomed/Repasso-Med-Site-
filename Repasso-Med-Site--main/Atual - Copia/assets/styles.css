@@ -1408,6 +1408,16 @@ footer strong { color:var(--gold-soft); }
 /* --- título da matéria no topo da aba --- */
 #materias-container .rm-cuaderno > .rm-subject-head{
   margin:0 0 18px;padding:0 0 14px;border-bottom:2px solid var(--n-line,#DFD3B8);
+  /* «Arriba» e «Índice» (rm-tools.js / app-core.js) ficam fixos a 14 px da
+     borda e o título começava em x = 0: o botão tapava as primeiras letras
+     e o subtítulo. O texto agora começa depois do trilho (≈ 110 px) e, em
+     tela larga, alinha com a coluna do caderno (880 px + 2rem). O lado
+     direito faz o mesmo pelo trilho do marcador. */
+  padding-left:max(8rem, calc((100% - 880px) / 2 + 2rem));
+  padding-right:max(8rem, calc((100% - 880px) / 2 + 2rem));
+}
+@media (max-width:700px){   /* trilhos viram círculos de ~37 px a 10 px da borda */
+  #materias-container .rm-cuaderno > .rm-subject-head{ padding-left:3.75rem; padding-right:3.75rem; }
 }
 #materias-container .rm-cuaderno > .rm-subject-head h1{
   margin:0;font-family:var(--n-font-d,'Fraunces',Georgia,serif);

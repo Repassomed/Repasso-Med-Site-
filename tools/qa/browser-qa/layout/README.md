@@ -253,3 +253,18 @@ Causas medidas e corrigidas (detalhe e números em `capturas-sistema/caneta-456/
 B zero leituras de layout/escritas de `--rm-dock-h` pelo tema durante os traços (desktop e celular) e o espelho da toolbox continua certo · C fidelidade antigo×layout×novo em parágrafo/tabela/post-it, rápido e longo, rajada sem esperar ack a 4× de CPU, 0 pontos perdidos, âncora e gravação ·
 D áudio tocando durante a escrita · E troca de bloco sem duplicar nem gravar · F mouse desenha/dedo não · G 390/768/1024/1440 · H custo do tick do player. Validado por mutação: no código anterior (`main`) falham A e B (7 verificações).
 Limites: emulação do Chromium, sem stylus físico; interrupções próprias de aparelho (pointercancel por palm rejection/pan do SO) não são reproduzíveis aqui.
+
+## Selo do bloco e título da matéria — `selo-titulo.test.cjs`
+Dois defeitos globais reproduzidos com o `index.html` REAL (login pelo harness de `recovery/`, matéria servida pelo get-materia a partir do HTML privado):
+(1) o selo numérico do bloco (`.rm-block-num`, `app-core.js`) contava pela posição: a portada empurrava tudo («02» ao lado de «BLOQUE 01» em Anestesiología, Dermatología,
+Neurología, Oftalmología, Ortopedia e Toxicología), e o índice contava pela posição sem as especiais (Histología II Práctica «01» no Bloque 02; Semiología II, Anatopatología I e
+Imagenología um ou dois à frente); (2) o título da matéria (`.rm-subject-head`) começava em x = 0 e «Arriba»/«Índice», fixos a 14 px, tapavam as primeiras letras e o subtítulo em todas as larguras.
+**Correção:** `chipsDosBlocos()` dá a selo e índice o mesmo chip: o número que o marcador do bloco declara («BLOQUE NN»/«TEMA NN») → o ícone da seção especial → a ordem, se a
+matéria não numera nenhum bloco (senão «•»). No `styles.css`, o título ganha recuo lateral que livra os trilhos (8rem; 3.75rem ≤ 700 px) e, em tela larga, alinha com a coluna de 880 px.
+```
+export NODE_PATH=$(npm root -g) RM_SUPABASE_UMD=/caminho/supabase.js   # ver cabeçalho de recovery/harness.cjs
+node tools/qa/browser-qa/layout/selo-titulo.test.cjs
+RM_SITE_DIR=<export da main anterior>/Repasso-Med-Site--main/Atual\ -\ Copia node tools/qa/browser-qa/layout/selo-titulo.test.cjs   # controle: tem de FALHAR
+```
+A · 27 matérias × 1440: selo = chip do índice = número declarado · B · 6 matérias × 390/768/1024/1440: nenhum retângulo do texto do título/subtítulo cruza «Arriba», «Índice» ou o
+trilho da direita; sem overflow; 0 erros JS. Emulação do Chromium.
