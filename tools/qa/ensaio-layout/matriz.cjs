@@ -100,6 +100,9 @@ const ORIG = { main: [], pr: [], sim: [], falta: [] };
   else ORIG.sim.push(id);
 });
 const A3 = { main: /registrarTema/.test(fs.readFileSync(path.join(L.ROOT, 'assets/rm-materia-sistema.js'), 'utf8')) };
+/* A3 e C3 não passam por `adaptacoes` (o ativador os usa/simula direto): no disco = main; senão, PR (rodada com ref) ou simulada (sem ref) */
+[['A3', A3.main], ['C3', noDisco('C3')]].forEach(([id, naMain]) => { if (ORIG.main.includes(id) || ORIG.pr.includes(id) || ORIG.sim.includes(id)) return; (naMain ? ORIG.main : (REFS.some(Boolean) ? ORIG.pr : ORIG.sim)).push(id); });
+['main', 'pr', 'sim'].forEach(k => ORIG[k].sort());
 const refTxt = REFS.filter(Boolean).map(r => '`' + String(r).slice(0, 8) + '`').join(', ');
 const lista = ids => ids.length ? ids.join(', ') : '—';
 
@@ -138,9 +141,9 @@ w('**De onde vem cada correção na variante «com correção»** (lido de `adap
 w('');
 w('| Origem | Correções | O que isso quer dizer |');
 w('|---|---|---|');
-w(`| **já na main** | ${lista(ORIG.main)}${A3.main ? ', A3' : ''} | código mesclado (#486, #488…): vale para o site assim que uma matéria for ligada |`);
-w(`| **PR aberta** (servida por \`RM_ENSAIO_REF\` = ${refTxt || '—'}) | ${lista(ORIG.pr)}${A3.main ? '' : ', A3'} | código real, mas **ainda não mesclado** (#487): só vale depois do merge |`);
-w(`| **simulada em memória** | ${lista(ORIG.sim)} + descritor de tema por matéria | A7/C8 = caneta (aguardam a #484, não mexemos no motor); o descritor é hipótese técnica, não identidade aprovada |`);
+w(`| **já na main** | ${lista(ORIG.main)} | código mesclado (#486, #488…): vale para o site assim que uma matéria for ligada |`);
+w(`| **PR aberta** (servida por \`RM_ENSAIO_REF\` = ${refTxt || '— (rodada só com a main)'}) | ${lista(ORIG.pr)} | código real, mas **ainda não mesclado**: só vale depois do merge |`);
+w(`| **simulada em memória** | ${lista(ORIG.sim)} + descritor de tema por matéria | ainda **não** estão no código da rodada: A2/A3/C3/C4 = #487 · A7/C8 = PR pós-#484 · A5 = resposta do servidor (ativação por matéria) · o descritor é hipótese técnica, não identidade aprovada |`);
 if (ORIG.falta.length) w(`| ⚠️ patch não encontrado | ${lista(ORIG.falta)} | o módulo mudou e a simulação não se aplicou: resultado não confiável para essas correções |`);
 w('');
 w('**«PASSA com correção» quer dizer: passou no Chromium com o código acima** — parte já na main, parte numa PR aberta, a caneta simulada. Nada passa a funcionar no site até as PRs de integração serem mescladas **e** o servidor liberar a matéria, uma de cada vez.');

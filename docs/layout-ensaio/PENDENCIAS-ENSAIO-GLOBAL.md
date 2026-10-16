@@ -1,7 +1,28 @@
-# Pendências do ensaio global do layout novo — atualizações de 2026-10-11 (2.ª rodada) e 2026-10-12 (§0-C, §0-D: rodada com o código das PRs de integração)
+# Pendências do ensaio global do layout novo — atualizações de 2026-10-11 (2.ª rodada) e 2026-10-12/13 (§0-C, §0-D, §0-E: rodadas com o código das PRs de integração)
 
-> **Nada foi ativado.** Layout global **não** está autorizado: depende de ordem expressa de José. Este documento só reconcilia o que `MATRIZ.md` (#457/#459) deixou aberto com o que mudou na `main` depois dele. Nenhum arquivo reservado foi tocado; os números de cada seção são os da rodada indicada nela (a mais recente é a §0-D).
+> **Nada foi ativado.** Layout global **não** está autorizado: depende de ordem expressa de José. Este documento só reconcilia o que `MATRIZ.md` (#457/#459) deixou aberto com o que mudou na `main` depois dele. Nenhum arquivo reservado foi tocado; os números de cada seção são os da rodada indicada nela (a mais recente é a §0-E).
 > **Ensaio técnico ≠ aprovação das 27 matérias.** `PASSA` na matriz significa "o componente funcionou no Chromium com um tema hipotético", não "a matéria está pronta, revisada ou com identidade aprovada".
+
+## 0-E · Ensaio com o código efetivamente integrado + integração proposta (13/10)
+
+**Escopo:** 27 matérias ativas = 1 piloto (Semiología II) + 1 excluída (Imagenología, só referência) + **25 para expansão**. Bioestadística está excluída e não tem rota. 390/768/1024/1440. Por matéria: `STATUS-POR-MATERIA.md`.
+
+| Rodada | Código servido | Layout | Uso (caneta CDP, palma, rolagem, tabela larga, pinça, goma, grifo, troca de bloco/modo, recarregar, questões, flashcards, áudio) |
+|---|---|---|---|
+| **Como está** (sem simulação) | `main` `f5a434c2` (#486 + #488) | 6 200 verificações · 280 falhas · **0/25** expansão (resíduo fora de `section[id]`, cadeia Anterior/Próximo, agregadoras sem descritor) · piloto: `indice/sem-residuo` | — |
+| **Main + simulação do que falta** | `main` | 6 384 · **0 falha · 25/25** | 2 529 · **0 falha, 0 bloqueio · 25/25** (tabela larga: 45 em 19 matérias) |
+| **Integração proposta** | commit LOCAL `f7c06d68` = `main` + #487 + #489 + PR pós-#484 (A7/C8/versão) | 6 384 · **0 falha · 25/25** | 2 529 · **0 falha · 25/25** |
+
+| Origem das correções | Main de hoje | Integração proposta |
+|---|---|---|
+| **código real** | A1, C1, C2, C5, C6, C7 | A1, A2, A3, A7, C1–C8 (todas) |
+| **simulado** | A2, A3, C3, C4 (#487) · A7, C8 (pós-#484) · descritor | **só** A5 (a *resposta* do servidor «caneta liberada nesta matéria») e o descritor de cada matéria |
+
+- **Controle negativo da A7 real:** sem a resposta do servidor (`RM_ENSAIO_SEM=A5`), Neurología **não** liga a caneta física: 10 falhas esperadas. A A7 é inerte fora do piloto até a ativação por matéria.
+- **Descritores:** `DESCRITORES-PROPOSTA.md` traz a estrutura inferida das 26 matérias (25 + Imagenología) para José aprovar. A inferência trata como **bloco** 9 seções cujo título diz banco/revisão (Fisiopatología I, Semiología I, Farmacología I ×3, Medicina Familiar ×2, Neurología): só José decide. Nada disso vai para produção.
+- **Áudio:** nenhuma matéria além do piloto tem gravação autorizada ⇒ **nenhum card** nas 26 (correto). Áudio real no ensaio continua BLOQUEADO (sem manifesto real; 27 verificações declaradas).
+- **Físico:** nada acima é aparelho. O roteiro do piloto (`ROTEIRO-PILOTO-FISICO.md`: caneta, grifos, navegação, áudio) é **pré-requisito** de qualquer proposta de expansão. Pendente com José.
+- **Suítes de #489** (head `04476c96`): tudo verde. A exceção é `caneta-novo-layout` 89/91, as mesmas 2 falhas de post-it da `main` (conferido hoje).
 
 ## 0-D · #487 refeita (conteúdo solto) + ensaio com #486/#488 já na `main` (12/10)
 

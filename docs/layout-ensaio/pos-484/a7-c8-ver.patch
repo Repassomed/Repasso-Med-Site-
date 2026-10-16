@@ -1,0 +1,71 @@
+diff --git a/Repasso-Med-Site--main/Atual - Copia/assets/rm-pilot.js b/Repasso-Med-Site--main/Atual - Copia/assets/rm-pilot.js
+index 78ed9d4e..877820d2 100644
+--- a/Repasso-Med-Site--main/Atual - Copia/assets/rm-pilot.js	
++++ b/Repasso-Med-Site--main/Atual - Copia/assets/rm-pilot.js	
+@@ -31,7 +31,7 @@
+   if (window.RMPilot) return;                         // idempotente
+ 
+   var SLUG = 'semiologia-ii';                         // piloto: uma matéria só
+-  var VER  = '2026100803';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
++  var VER  = '2026101301';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
+   var BASE = 'assets/';
+   var COOLDOWN_MS = 30000;                            // depois de uma falha, não insistir
+ 
+diff --git a/Repasso-Med-Site--main/Atual - Copia/assets/rm-tools-v2.js b/Repasso-Med-Site--main/Atual - Copia/assets/rm-tools-v2.js
+index 247a826d..f997f396 100644
+--- a/Repasso-Med-Site--main/Atual - Copia/assets/rm-tools-v2.js	
++++ b/Repasso-Med-Site--main/Atual - Copia/assets/rm-tools-v2.js	
+@@ -82,8 +82,20 @@
+   function penLiberadaPeloServidor() {
+     try { return !!(window.RMPilot && typeof window.RMPilot.penLiberada === 'function' && window.RMPilot.penLiberada()); } catch (e) { return false; }
+   }
++  /* A7 (#457): em que matérias valem os refinamentos da caneta física. HOJE = só PILOT_SLUGS (Semiología II), exatamente como antes.
++     Quando o servidor passar a liberar a caneta por matéria (A5: get-pilot-flags devolve os slugs com `pen`), o rm-pilot.js expõe
++     `RMPilot.slugsCaneta()` e a lista vem de lá — nunca do código nem do navegador. Sem essa função, com erro ou com resposta que não
++     seja uma lista: PILOT_SLUGS (falha fechada no comportamento de hoje). A conta continua exigida (JOSE_UID ou `pen` do servidor). */
++  var SLUG_CANETA_RE = /^[a-z0-9][a-z0-9-]{0,60}$/;
++  function slugsCaneta() {
++    try {
++      var l = window.RMPilot && typeof window.RMPilot.slugsCaneta === 'function' ? window.RMPilot.slugsCaneta() : null;
++      if (Array.isArray(l)) return l.filter(function (s) { return typeof s === 'string' && SLUG_CANETA_RE.test(s); });
++    } catch (e) { /* ignore */ }
++    return PILOT_SLUGS;
++  }
+   function pilotoPermitido() {
+-    return (st.uid === JOSE_UID || penLiberadaPeloServidor()) && PILOT_SLUGS.indexOf(slugDoTab(abaAtiva())) !== -1;
++    return (st.uid === JOSE_UID || penLiberadaPeloServidor()) && slugsCaneta().indexOf(slugDoTab(abaAtiva())) !== -1;
+   }
+ 
+   /* Ponto de extensão único para a decisão de produto já registada nas
+@@ -3826,6 +3838,13 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
+       reconciliarGesto('orientationchange'); setTimeout(reposicionarTudo, 220);
+     });
+     document.addEventListener('visibilitychange', function () { if (!document.hidden) reflow(); });
++    /* C8 (#457): cartões com `:hover { transform: translateY(-3px) }` (styles.css: .pattern-card, .recep-card, .v-item…) sobem sob a
++       caneta que paira ou o dedo que toca. Transformar não muda o tamanho — o ResizeObserver não dispara — e a tinta ficava ~3 px fora
++       quando o cartão descia. Ao terminar uma transição de transform NO CONTEÚDO da matéria, a camada de tinta se reposiciona pelo
++       mesmo `reflow` (com debounce) dos outros ouvintes. Não mexe em estilo nenhum do conteúdo. */
++    document.addEventListener('transitionend', function (e) {
++      if (/transform|translate/.test(e.propertyName || '') && e.target && e.target.closest && e.target.closest('#materias-container')) reflow();
++    }, true);
+   }
+ 
+   /* ================================================================== */
+diff --git a/Repasso-Med-Site--main/Atual - Copia/index.html b/Repasso-Med-Site--main/Atual - Copia/index.html
+index e431a868..e238c872 100644
+--- a/Repasso-Med-Site--main/Atual - Copia/index.html	
++++ b/Repasso-Med-Site--main/Atual - Copia/index.html	
+@@ -894,11 +894,11 @@
+      5 cores, goma reversível, desfazer e «Minhas anotações». Aditivo: se o
+      utilizador não estiver na beta, este ficheiro não faz absolutamente
+      nada e a experiência actual fica intacta. -->
+-<script src="assets/rm-tools-v2.js?v=2026101101"></script>
++<script src="assets/rm-tools-v2.js?v=2026101301"></script>
+ <!-- Layout V2 · Fase B1 (piloto fechado): SÓ o portão. Pergunta ao servidor
+      apenas quando a matéria aberta é a do piloto; para quem não é piloto não
+      baixa nada além deste arquivo e a experiência atual fica intacta. -->
+-<script src="assets/rm-pilot.js?v=2026100803"></script>
++<script src="assets/rm-pilot.js?v=2026101301"></script>
+ 
+ <script>
+ /* =====================================================================

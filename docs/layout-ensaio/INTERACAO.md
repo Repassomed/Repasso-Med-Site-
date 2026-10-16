@@ -1,6 +1,6 @@
 # Matriz de interação · 25 elegíveis + piloto + Imagenología (referência) × 390 / 768 / 1024 / 1440 · #457/#459
 
-> **Nada foi ativado.** Flags, contas liberadas, `PILOT_SLUGS`, slug do piloto e publicação continuam como na `main`. O ensaio roda num servidor local com os arquivos REAIS e a integração proposta (ver `PATCHES-PARA-INTEGRACAO.md`) — já na `main`: A1, C1, C2, C5a, C5b, C5c, C6, C7 · PR aberta (`5cc04ddf`): A2, C3, C4 · simulada em memória: A7, C8. Supabase e manifesto de áudio são **simulados**; zero rede externa.
+> **Nada foi ativado.** Flags, contas liberadas, `PILOT_SLUGS`, slug do piloto e publicação continuam como na `main`. O ensaio roda num servidor local com os arquivos REAIS e a integração proposta (ver `PATCHES-PARA-INTEGRACAO.md`) — já na `main`: A1, C1, C2, C5a, C5b, C5c, C6, C7 · PR aberta: — · simulada em memória: A2, A3, A7, C3, C4, C8. Supabase e manifesto de áudio são **simulados**; zero rede externa.
 
 Esta bateria (`tools/qa/ensaio-layout/interacao.cjs`) complementa a `MATRIZ.md` (layout, índice, modos, contagens): aqui se mede o **uso** — escrever, apoiar a palma, rolar, dar zoom, apagar, desfazer, grifar, trocar de bloco/modo, recarregar, responder questão, abrir flashcards e a presença/ausência de audiobook.
 
@@ -8,7 +8,7 @@ Legenda: ✅ todas as verificações da área passaram nas larguras medidas · �
 
 ## 0 · Já funciona no site × passou só no ensaio
 
-**Tudo nesta matriz roda com a integração proposta** — já na `main`: A1, C1, C2, C5a, C5b, C5c, C6, C7 · PR aberta (`5cc04ddf`): A2, C3, C4 · simulada em memória: A7, C8. A lista exata das 25 elegíveis e a conta 27 = piloto + Imagenología + 25 estão em `MATRIZ.md` §0-A. «PASSA» aqui **não** quer dizer que funciona no site.
+**Tudo nesta matriz roda com a integração proposta** — já na `main`: A1, C1, C2, C5a, C5b, C5c, C6, C7 · PR aberta: — · simulada em memória: A2, A3, A7, C3, C4, C8. A lista exata das 25 elegíveis e a conta 27 = piloto + Imagenología + 25 estão em `MATRIZ.md` §0-A. «PASSA» aqui **não** quer dizer que funciona no site.
 
 | Grupo | Matérias | No site hoje | Nesta bateria |
 |---|---|---|---|

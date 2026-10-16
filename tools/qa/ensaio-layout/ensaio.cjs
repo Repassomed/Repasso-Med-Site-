@@ -103,7 +103,7 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
       try {
       r = await L.abrir(br, base, m, { w: W, h: ALT[W], modo: 'nav', corr: CORR });
       const p = r.page; const E = await p.evaluate(() => window.__ens);
-      if (!R.descritor) R.descritor = E.temaGerado ? { natureza: 'hipotese-tecnica', aviso: 'descritor inferido do conteúdo para ensaiar componentes; não é a identidade visual aprovada da matéria', numeracao: E.temaGerado.numeracao, unidades: E.temaGerado.unidades } : { natureza: 'tema-real-do-piloto' };
+      if (!R.descritor) R.descritor = E.temaGerado ? { natureza: 'hipotese-tecnica', aviso: 'descritor inferido do conteúdo para ensaiar componentes; não é a identidade visual aprovada da matéria', numeracao: E.temaGerado.numeracao, unidades: E.temaGerado.unidades, secciones: E.temaGerado.secciones } : { natureza: 'tema-real-do-piloto' };
       const nBlocos = secs.length;
       /* ---------- BOOT ---------- */
       chk('boot', W, 'etapas', E.etapas.attach_layout && E.etapas.attach_tema && E.etapas.attach_nav, 'Layout V2 + tema + navegação ativaram', E);
