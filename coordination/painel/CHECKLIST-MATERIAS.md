@@ -1,8 +1,8 @@
 # Checklist das matérias
 
-**Última atualização:** 16/10/2026 · base `main` `5d90b60` · coordenação ChatGPT.
+**Última atualização:** 16/10/2026 · coordenação ChatGPT; inspeção das aberturas dos HTML na `main` após #503.
 
-> **Situação após #484:** PRs #464, #489, #496, #497, #498 e #484 mescladas. A validação física dos grifos da #484 ainda depende do José. Abertas: #474, #481, #499, #500. PRs antigas #66, #80, #248, #253, #305 e #368 fechadas sem merge, com motivo registrado. A revisão científica relatada em #366 não é aprovação editorial integral; Biología requer correção pontual depois da #496. Os demais arquivos do painel trazem a fotografia anterior: em especial `AUDIOBOOKS-INVENTARIO.md` ainda chama #489 de aberta; ela já foi mesclada. Este cabeçalho prevalece até a próxima reconciliação documental.
+> **Estado confirmado:** #484 mesclada e testada pelo José no iPad em 16/10: criar, rever, recarregar e apagar grifos funcionou. #489 mesclada. #518 fechada sem merge: sugeria mesclar #474/#481 só porque não há conflito, sem auditoria editorial. Abertas de conteúdo: #474, #481, #499, #500 e PRs #501–#517 (exceto #503/#506), em revisão. **Não há aprovação de merge de conteúdo por este cabeçalho.** As PRs antigas #66, #80, #248, #253, #305 e #368 foram fechadas sem merge. A correção de Biología após #496 segue pendente. Inventários antigos devem ser lidos como fotografias até reconciliação.
 
 **Ordem do plano (decisão do José):** 1) manutenção + pente fino editorial (G0, didática do zero, vocabulário simples) e anotações → 2) layout global → 3) caneta para todos → 4) audiobooks para todos.
 
@@ -50,6 +50,41 @@
 | 26 | Neurología | 7 | ✅ | ⬜ 7 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 27 | Anestesiología | 7 | ✅ | ⬜ 18 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | — | Bioestadística | — | 🚫 sem rota no site | 🚫 | — | ➖ | 🚫 | 🚫 |
+
+## Abertura direta do conteúdo — decisão do José (16/10)
+
+**Regra:** as 26 matérias elegíveis devem abrir no primeiro conteúdo da disciplina. Tirar a apresentação do site, contagens de blocos/perguntas, propaganda, estratégia de prova, mapas do curso, fontes/bibliografia e instruções de como estudar antes da primeira aula. **Não apagar uma explicação científica útil:** integrá-la ao primeiro bloco apropriado, sem repetir. Preservar título, navegação, acessibilidade, ids, grifos, notas, tinta, questões e flashcards. Conferir Supabase somente leitura antes de reescrever texto grifado; testar navegação e primeiro bloco após a mudança. As referências necessárias devem continuar registradas no local editorial/técnico adequado, fora da abertura ao aluno. Cada autor deve incorporar essa limpeza à PR integral da própria matéria; não abrir 26 PRs pequenas adicionais.
+
+**Triagem feita:** leitura do início dos 26 arquivos HTML da `main`, não auditoria integral nem teste no navegador. Todos têm algum material anterior ao primeiro conteúdo que exige decisão. Alguns já ensinam conceitos na abertura; nesses casos, mover o ensino ao bloco 1 e remover apenas o invólucro. **Nenhuma matéria está liberada por esta triagem.** Imagenología e Bioestadística ficam fora porque José decidiu refazê-las.
+
+| Matéria | Início observado na `main` | Estado da limpeza |
+|---|---|---|
+| Anatomía I | cinco perguntas introdutórias e “Sobre las fuentes” antes do bloco 1 | ⬜ |
+| Biología | promessa da matéria, lista de fontes e imagens antes da aula | ⬜ |
+| Embriología | mapa de 13 blocos e “Sobre las fuentes” | ⬜ |
+| Histología I | portada; conceito e H&E úteis: integrar ao bloco 1 | ⬜ |
+| Histología I Práctica | atlas/roleta e método prévio: integrar método à primeira aula | ⬜ |
+| Histología II | roteiro de cinco passos e “qué evalúa”: mover ensino útil | ⬜ |
+| Histología II Práctica | roteiro e descrição da prova antes da primeira lâmina | ⬜ |
+| Anatomía Patológica I | hero promocional e contagens antes do bloco 1 | ⬜ |
+| AP I Práctica | hero, contagens e foco em exame antes do tema 1 | ⬜ |
+| Anatomía Patológica II | apresentação, fontes e aviso das questões antes do bloco 1 | ⬜ |
+| AP II Práctica | portada, roteiro e “qué te van a pedir” antes da lâmina | ⬜ |
+| Fisiopatología I | hero, contagens e mapa de unidades antes do bloco 1 | ⬜ |
+| Fisiopatología II | “Estado de la asignatura” e mapa de 14 blocos | ⬜ |
+| Farmacología I | hero e lista de temas/recursos antes do bloco 1 | ⬜ |
+| Farmacología II | métodos, ligações dos blocos e bibliografia antes da aula | ⬜ |
+| Semiología I | hero, recursos e unidades antes da introdução | ⬜ |
+| Semiología II | hero e “ponto de partida”; física útil vai ao bloco 1 | ⬜ |
+| Medicina Familiar | hero e “mapa da matéria” antes do primeiro tema | ⬜ |
+| Medicina Legal | apresentação e estratégia de prova antes do bloco 1 | ⬜ |
+| Guaraní | regra oral/nasal útil e bibliografia: mover regra ao bloco 1 | ⬜ |
+| Toxicología | portada, contagens e “hilo conductor” antes do bloco 1 | ⬜ |
+| Dermatología | portada, contagens e mapa dos blocos antes da aula | ⬜ |
+| Ortopedia y Traumatología | portada, contagens e “hilo conductor” antes da aula | ⬜ |
+| Oftalmología | portada, contagens e “eje clínico” antes da aula | ⬜ |
+| Neurología | portada, método geral e ideias úteis antes do bloco 1 | ⬜ |
+| Anestesiología | portada, contagens e “Cómo se razona” antes da aula | ⬜ |
 
 ## Caixas «Lo que más cae» → «Puntos a dominar» (decisão do José, 16/10)
 
