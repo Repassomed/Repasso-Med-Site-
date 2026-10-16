@@ -7,9 +7,6 @@ name: Auditor de Matérias (ChatGPT · só anota)
 # (NÃO MERGEAR). Manual: coordination/auditoria-api/README.md
 
 on:
-  # TEMPORÁRIO (teste antes do merge): removido no próximo commit.
-  push:
-    branches: [claude/auditor-openai-qkotzk]
   workflow_dispatch:
     inputs:
       modo:
@@ -51,7 +48,7 @@ jobs:
       - name: Checkout da main
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'push' && github.sha || github.event.repository.default_branch }}
+          ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
 
       - name: Python
@@ -77,7 +74,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           REPASSO_AUDITOR_MODEL: ${{ vars.REPASSO_AUDITOR_MODEL }}
           MODO: ${{ inputs.modo }}
-          MATERIAS: ${{ github.event_name == 'push' && 'medicina-familiar,dermatologia' || inputs.materias }}
+          MATERIAS: ${{ inputs.materias }}
           LIMITE: ${{ inputs.limite_usd }}
         run: |
           set -euo pipefail

@@ -284,7 +284,8 @@ VOZ_DE_PROVA = re.compile(
     r"lo que m[aá]s cae|lo m[aá]s preguntad|m[aá]s preguntad[oa]s?\b|"
     r"\bca(?:e|y[oó]|en) (?:en|siempre en) (?:el |la |los |las )?(?:examen|ex[aá]menes|prueba|parcial|final)|"
     r"tema de examen|cl[aá]sico de examen|pregunta (?:favorita|cl[aá]sica) del? (?:profesor|examen)|"
-    r"el profesor (?:cobra|pregunta|suele)|\bse cobr[aó]\b|cobrad[oa] en (?:el )?examen",
+    r"el profesor (?:cobra|pregunta|suele)|\bse cobr[aó]\b|cobrad[oa] en (?:el )?examen|"
+    r"\bque (?:a veces|suele|suelen|puede|pueden|siempre|m[aá]s) ca(?:e|en|er)\b",
     re.I,
 )
 METATEXTO = re.compile(r"c[oó]mo estudiar|c[oó]mo usar (?:esta|este|la|el) (?:materia|p[aá]gina|banco|gu[ií]a)", re.I)
