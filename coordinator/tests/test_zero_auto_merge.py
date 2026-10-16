@@ -278,6 +278,7 @@ CONTENTS_WRITE_PERMITIDO = {
     ("coordinator-auto-repair.yml", "repair"): "branch auto-repair/* + estado",
     ("repasso-quality-scan.yml", "scan"): "branch quality/global-site-findings + PR viva de painel",
     ("repasso-pr-cleanup-prep.yml", "prepare"): "branch quality/pr-cleanup-api + PR de relatório (só 2 arquivos em coordination/quality/)",
+    ("repasso-auditor-materias.yml", "auditar"): "branch auditoria/api-chatgpt + PR viva de relatório (só coordination/auditoria-api/)",
 }
 
 

@@ -1,0 +1,163 @@
+name: Auditor de Matérias (ChatGPT · só anota)
+
+# Rodada de manutenção: a API do ChatGPT lê as matérias, compara com a
+# RUBRICA e a LEI G0 e escreve um relatório por matéria. NUNCA corrige
+# matéria, nunca faz merge/deploy e nunca toca Supabase/Auth/pagamento.
+# O relatório vai para a branch auditoria/api-chatgpt e para uma PR viva
+# (NÃO MERGEAR). Manual: coordination/auditoria-api/README.md
+
+on:
+  # TEMPORÁRIO (teste antes do merge): removido no próximo commit.
+  push:
+    branches: [claude/auditor-openai-qkotzk]
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: "rapida = um pedaço de cada matéria (~US$3) · completa = tudo (~US$20) · so_verificacao = grátis, sem IA"
+        required: true
+        type: choice
+        default: rapida
+        options:
+          - rapida
+          - completa
+          - so_verificacao
+      materias:
+        description: "Opcional: só estas matérias (slugs separados por vírgula, ex.: dermatologia,neurologia). Vazio = todas"
+        required: false
+        type: string
+      limite_usd:
+        description: "Opcional: teto de gasto em dólares (vazio = 5 na rápida, 25 na completa)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repasso-auditor-materias
+  cancel-in-progress: false
+
+jobs:
+  auditar:
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      BRANCH_RELATORIO: auditoria/api-chatgpt
+      SAIDA: /tmp/auditor-saida
+    steps:
+      - name: Checkout da main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.sha || github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar cliente oficial da OpenAI
+        run: pip install -q -r coordinator/requirements.txt
+
+      - name: Recuperar o estado da rodada anterior (cursor do modo rápido)
+        run: |
+          set -euo pipefail
+          if git fetch -q origin "$BRANCH_RELATORIO" 2>/dev/null; then
+            git show "origin/$BRANCH_RELATORIO:coordination/auditoria-api/estado.json" > /tmp/auditor-estado.json 2>/dev/null || rm -f /tmp/auditor-estado.json
+          fi
+          ls -la /tmp/auditor-estado.json 2>/dev/null || echo "Primeira rodada: sem estado anterior."
+
+      # Só esta etapa recebe a chave. Os inputs entram por variável de
+      # ambiente, nunca interpolados direto no shell.
+      - name: Rodar o auditor (somente leitura das matérias)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REPASSO_AUDITOR_MODEL: ${{ vars.REPASSO_AUDITOR_MODEL }}
+          MODO: ${{ inputs.modo }}
+          MATERIAS: ${{ github.event_name == 'push' && 'medicina-familiar,dermatologia' || inputs.materias }}
+          LIMITE: ${{ inputs.limite_usd }}
+        run: |
+          set -euo pipefail
+          python3 -m coordinator.auditor_materias \
+            --modo "${MODO:-rapida}" \
+            --materias "${MATERIAS:-}" \
+            --limite-usd "${LIMITE:-}" \
+            --estado /tmp/auditor-estado.json \
+            --saida "$SAIDA"
+
+      - name: Publicar o relatório na branch e na PR da auditoria
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          RODADA="$(tr -d '[:space:]' < "$SAIDA/RODADA")"
+          case "$RODADA" in
+            [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]) ;;
+            *) echo "Nome de rodada inválido: $RODADA" >&2; exit 1 ;;
+          esac
+          git config user.name "repasso-auditor-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          WT=/tmp/auditor-branch
+          if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH_RELATORIO"; then
+            git worktree add -q -B "$BRANCH_RELATORIO" "$WT" "origin/$BRANCH_RELATORIO"
+            git -C "$WT" merge -q --no-edit "origin/$BASE"
+          else
+            git worktree add -q -b "$BRANCH_RELATORIO" "$WT" "origin/$BASE"
+          fi
+
+          DEST="$WT/coordination/auditoria-api"
+          mkdir -p "$DEST/rodadas/$RODADA"
+          cp -R "$SAIDA/rodada/." "$DEST/rodadas/$RODADA/"
+          cp "$SAIDA/estado.json" "$DEST/estado.json"
+          cp "$SAIDA/ULTIMA-RODADA.md" "$DEST/ULTIMA-RODADA.md"
+
+          cd "$WT"
+          git add coordination/auditoria-api/rodadas coordination/auditoria-api/estado.json coordination/auditoria-api/ULTIMA-RODADA.md
+          # Trava: a branch do relatório só pode diferir da main nos
+          # arquivos de relatório. Nada de matéria, código ou workflow.
+          FORA="$( { git diff --cached --name-only; git diff --name-only "origin/$BASE"...HEAD; } | sort -u \
+            | grep -v -E '^coordination/auditoria-api/(rodadas/|estado\.json$|ULTIMA-RODADA\.md$)' || true)"
+          if [ -n "$FORA" ]; then
+            echo "BLOQUEADO: o auditor tentou mexer fora do relatório:" >&2
+            echo "$FORA" >&2
+            exit 1
+          fi
+          git commit -q -m "auditoria: rodada $RODADA (ChatGPT, somente relatório)"
+          git push -q origin "HEAD:$BRANCH_RELATORIO"
+
+          CORPO=/tmp/auditor-pr-body.md
+          {
+            echo "**PR viva da auditoria automática (ChatGPT). NÃO MERGEAR.**"
+            echo
+            echo "- Só guarda relatórios em \`coordination/auditoria-api/\`. Nenhuma matéria é alterada aqui."
+            echo "- Cada rodada fica em \`coordination/auditoria-api/rodadas/<data>/\`. A mais recente está em [ULTIMA-RODADA.md](../blob/$BRANCH_RELATORIO/coordination/auditoria-api/ULTIMA-RODADA.md)."
+            echo "- Para corrigir: um Claude confere cada achado e abre uma PR separada por matéria (manual em \`coordination/auditoria-api/README.md\`)."
+            echo
+            echo "---"
+            echo
+            sed -n '1,/^## Achados P0/p' "$SAIDA/ULTIMA-RODADA.md" | sed '$d' | sed 's#(rodadas/#(../blob/'"$BRANCH_RELATORIO"'/coordination/auditoria-api/rodadas/#g'
+          } > "$CORPO"
+
+          PR="$(gh pr list --head "$BRANCH_RELATORIO" --base "$BASE" --state open --json number --jq '.[0].number // empty')"
+          if [ -z "$PR" ]; then
+            gh pr create --base "$BASE" --head "$BRANCH_RELATORIO" \
+              --title "[AUDITORIA API · ChatGPT] Relatórios de manutenção das matérias — NÃO MERGEAR" \
+              --body-file "$CORPO"
+          else
+            gh pr edit "$PR" --body-file "$CORPO"
+            gh pr comment "$PR" --body "Nova rodada \`$RODADA\` publicada. Resumo: coordination/auditoria-api/rodadas/$RODADA/RELATORIO.md"
+          fi
+
+      - name: Resumo na tela do GitHub
+        if: always()
+        run: |
+          if [ -f "$SAIDA/rodada/RELATORIO.md" ]; then
+            cat "$SAIDA/rodada/RELATORIO.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "O auditor não gerou relatório. Abra a etapa «Rodar o auditor» para ver o motivo." >> "$GITHUB_STEP_SUMMARY"
+          fi
