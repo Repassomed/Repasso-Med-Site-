@@ -1,0 +1,20 @@
+{
+ "versao": 1,
+ "atualizado": "2026-10-16T03:05:44Z",
+ "cursor": {
+  "medicina-familiar": 11,
+  "dermatologia": 3
+ },
+ "historico": [
+  {
+   "rodada": "2026-10-16-0305",
+   "modo": "rapida",
+   "usd": 0.2243,
+   "chamadas": 2,
+   "placar": {
+    "editorial": 1,
+    "grave": 1
+   }
+  }
+ ]
+}
