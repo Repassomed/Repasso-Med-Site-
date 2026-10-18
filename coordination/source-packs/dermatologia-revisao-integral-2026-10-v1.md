@@ -170,3 +170,20 @@ Confere: unidade pilossebácea; ordem hiperqueratinização → sebo/andrógenos
 
 ### Navegador (Chromium real, `app-core.js`/`rm-tools*.js`/`styles.css` da `main` de 18/10; sem Supabase, sem rede)
 390 e 1366 px, página nova × base: a página abre em «Bloque 01 · La piel por dentro»; `dermportada` oculta; 120 questões e 482 cartões iguais à base; 58 imagens, 0 sem `alt`, 0 quebradas; 6 de 6 respostas (múltipla escolha, V/F e abertas) abrem; 0 rolagem horizontal; 240 ids iguais; 0 erros de JS; 0 respostas HTTP 4xx/5xx. Captura do topo a 390 px conferida a olho. **Não testado:** iPad físico, caneta, áudio.
+
+## (xi) Bloco 06 (tiñas) — nova tentativa de 18/10 e o que fica SEM prova
+
+**Tentativa.** (1) Slides: a pasta de Dermatología tem Unidad I, Zooparasitosis, Piodermitis, Infecciones virales, Dermatitis, Candidiasis e Tumores; **nenhum trata de dermatofitosis** (busca no Drive por «Microsporum», «tiña», «dermatofit», «Wood» e por títulos «Micosis/Micología/Tiñas» não achou slide da cátedra). (2) Fitzpatrick Atlas (29 MB): a ferramenta do Drive devolve só as primeiras ~143 páginas em texto; o capítulo de tiñas (índice: tiña versicolor p. 638, negra 643, do pé 647, da mão 651, crural 653, do corpo 655, facial 657, incógnita 659, da cabeça 660, da barba 663) **não é legível aqui**; só o índice e a introdução (lâmpada de Wood) vêm. (3) Os documentos «Final» e «Questões P1» (bancos de perguntas feitos a partir de aulas, em português) não são slide da cátedra nem literatura-base; mesmo assim não tratam de nenhuma afirmação abaixo.
+
+**Confere com fonte permitida (Atlas, introdução):** a luz de Wood mostra fluorescência verde ou amarelada na base do cabelo em dermatofitose e vermelho-coral no eritrasma; tiña versicolor é hipomelanótica. (Slide `7. Candidiasis`, p. 32: versicolor «amarillo-anaranjado».)
+
+**Continuam SEM prova em fonte permitida (texto do aluno, no arquivo, não alterado nesta rodada):**
+1. «Verde manzana» = *Microsporum* na luz de Wood (o Atlas diz «verde o amarillento» para dermatofitose do cabelo, sem nomear gênero nem «maçã»).
+2. «As tiñas por *Trichophyton* não fluorescem» (generalização; o próprio Atlas, em outro capítulo de memória, cita *T. schoenleinii* fluorescente — não conferido aqui).
+3. «A tiña cruris respeita o escroto; a candidiasis não».
+4. «Querión: não se drena; dá alopecia cicatricial; tratar com antifúngico oral e às vezes corticoide».
+5. Forma «em mocassim» da tiña pedis e a descrição «três formas: interdigital, mocassim, vesiculosa».
+6. Tiña capitis: formas microspórica (placa única, pelos cortados) × tricofítica (pontos negros) e as respostas à luz de Wood da infografia.
+7. Doses/tempos de antifúngicos do bloco 06 (itraconazol, terbinafina, griseofulvina) — só apontamentos.
+
+**Consequência:** esta PR **não é uma revisão integral de Dermatología**; é revisão integral dos blocos conferidos nas fontes lidas (todos menos o 06) + limpeza de voz G0 no arquivo todo. A decisão de manter o bloco 06 como está (texto da `main`, já aceito antes) é do José.
