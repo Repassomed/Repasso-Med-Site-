@@ -179,11 +179,11 @@ Confere: unidade pilossebácea; ordem hiperqueratinização → sebo/andrógenos
 
 **Continuam SEM prova em fonte permitida (texto do aluno, no arquivo, não alterado nesta rodada):**
 1. «Verde manzana» = *Microsporum* na luz de Wood (o Atlas diz «verde o amarillento» para dermatofitose do cabelo, sem nomear gênero nem «maçã»).
-2. «As tiñas por *Trichophyton* não fluorescem» (generalização; o próprio Atlas, em outro capítulo de memória, cita *T. schoenleinii* fluorescente — não conferido aqui).
+2. «As tiñas por *Trichophyton* não fluorescem» (generalização; não conferida em fonte permitida — da literatura de memória há exceções, que NÃO foram verificadas aqui).
 3. «A tiña cruris respeita o escroto; a candidiasis não».
 4. «Querión: não se drena; dá alopecia cicatricial; tratar com antifúngico oral e às vezes corticoide».
 5. Forma «em mocassim» da tiña pedis e a descrição «três formas: interdigital, mocassim, vesiculosa».
 6. Tiña capitis: formas microspórica (placa única, pelos cortados) × tricofítica (pontos negros) e as respostas à luz de Wood da infografia.
 7. Doses/tempos de antifúngicos do bloco 06 (itraconazol, terbinafina, griseofulvina) — só apontamentos.
 
-**Consequência:** esta PR **não é uma revisão integral de Dermatología**; é revisão integral dos blocos conferidos nas fontes lidas (todos menos o 06) + limpeza de voz G0 no arquivo todo. A decisão de manter o bloco 06 como está (texto da `main`, já aceito antes) é do José.
+**Consequência:** esta PR **não é uma revisão integral de Dermatología**; é revisão integral dos blocos conferidos nas fontes lidas (todos menos o 06) + limpeza de voz G0 no arquivo todo. O bloco 06 fica como estava na `main` (a rodada só mexeu na voz das explicações e no tratamento da pitiríase versicolor, que confere com o slide); manter ou pedir fonte à docente é decisão do José.
