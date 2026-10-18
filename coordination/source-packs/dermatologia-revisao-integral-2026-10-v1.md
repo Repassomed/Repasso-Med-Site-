@@ -121,19 +121,52 @@ Auditoria de pistas (8-A.6-C): média das corretas ≈ 1,05× a média dos distr
 
 ## (viii) Pendências declaradas
 
-- **P1 · corte vesícula/ampolla (0,5 × 1 cm).** Os slides têm os dois. O texto agora explica; o cartão e o quadro continuam com 1 cm. *Proposta:* José escolhe um corte único com a docente; se for 0,5 cm, mudar cartão, tabela e alternativa da questão `q-derma02-01` de vesícula.
-- **P2 · tempo da dermatite alérgica de contato.** O slide (`5. Dermatitis.pdf`, tabela DCI × DCA) diz **12–72 h**; o site diz **48–72 h** em 8 linhas do arquivo (quadro, caixas, cartões, questão do colar). 48–72 h é o pico habitual, e a diferença para a irritativa (minutos–horas) continua válida. *Proposta:* confirmar com a cátedra e trocar para «12 a 72 horas (pico em 48–72)» numa só passada; não mexi porque exigiria alterar gabaritos de texto em várias questões.
+- **P1 · corte vesícula/ampolla (0,5 × 1 cm).** O slide tem os dois (`01. Dermato Unidad I`, p.20: «Vesicula <1 cm · Ampolla ≥1 cm»; p.30: «vesícula … menor o igual a 0,5 cm · ampolla … más de 0,5 cm»). A nota do quadro explica as duas leituras; **a partir de 18/10 o cartão e o resumo do bloco 02 também dizem que a definição escrita corta em 0,5 cm**. A tabela mantém 1 cm (é a do slide). *Pendente (decisão do José com a docente):* escolher um corte único; se for 0,5 cm, mudar tabela e legenda da figura.
+- **P2 · tempo da dermatite alérgica de contato — RESOLVIDO em 18/10.** O slide diz **12–72 h**; as 8 linhas do arquivo que diziam 48–72 h passaram a «12 a 72 horas» (quadro, resumo, caixas, cartões, questão). 48–96 h ficou só como leitura do *patch test* (confere com o slide).
 - **P3 · tratamento das outras formas de leishmaniose** (mucocutânea, difusa, visceral) e dos subtipos de miíase de ferida: só aparecem nos apontamentos do José, não em slide. Não acrescentei.
 - **P4 · doses.** Os acréscimos de tratamento dão fármaco e duração, sem doses pediátricas nem esquemas IV, de propósito (não crescer demais).
-- **P5 · blocos 06 (tiñas) e 08 (acné/rosácea)** sem slide no Drive: lidos, voz G0 revisada, **ciência não conferida** além do que a literatura geral sustenta.
+- **P5 · blocos 06 (tiñas) e 08 (acné/rosácea).** Bloco 08: **conferido contra o Fitzpatrick Atlas de Dermatología Clínica, 7.ª ed. (Drive, PDF com texto nas primeiras ~143 páginas: acné pp. 39–44 e rosácea pp. 45–51)** — ver (x). Bloco 06: **sem fonte legível** (os slides não têm tiñas e o capítulo de dermatofitosis do Atlas, pp. ~605–630, não vem na extração); só a frase de abertura do Atlas sobre a luz de Wood (fluorescência verde ou amarelada em dermatofitosis do cabelo e vermelho-coral no eritrasma) confere. **Continua NÃO conferido contra fonte:** Wood verde-maçã em *Microsporum*, «*Trichophyton* não fluoresce» (generalização: o *T. schoenleinii* fluoresce), tiña cruris respeita o escroto, querión não se drena, mocasín.
 - **P6 · fim da página.** `dermcierre` ainda mostra «Bibliografía», «Sobre el alcance de estos tres bloques» e «Sobre las imágenes» (inclui «Las 10 láminas son material propio…» e menciona Bolognia, fora do Drive). A regra de abertura direta só trata do início; decidir se esse bloco sai do aluno.
 - **P7 · subtítulo «Puntos a dominar… peso que cada tema tiene en la bibliografía»**: decisão do José na PR #498; mantido.
 - **P8 · cobertura (8-A.2) por amostra:** conferi que o conceito de cada questão está ensinado antes no bloco (lido bloco a bloco), mas não fiz tabela questão × parágrafo para as 120.
 
 ## (ix) O que NÃO foi conferido
 
-- Navegador: não abri a página; a abertura direta foi verificada só por leitura do HTML/JS (`app-core.js`, `styles.css`). José deve abrir o bloco 01 e o menu lateral.
-- Slides de leishmaniose e garrapatas (usei os apontamentos do José); Fitzpatrick (PDF sem texto legível); `Perguntas_Dermatologia_Respostas_Explicadas.pdf`, `Dermato Unidad I quiz.pdf` e as provas 2025.1/2025.2 do Drive (não abertos); bloco 06 e 08 (sem slide); literatura Bolognia.
+- iPad e navegador do José: o teste automatizado em Chromium (ver (x)) não substitui abrir no iPad.
+- Slides de leishmaniose e garrapatas (usei os apontamentos do José); Fitzpatrick Tomo 1 (PDF sem texto); Atlas de Fitzpatrick só nas primeiras ~143 páginas; `Perguntas_Dermatologia_Respostas_Explicadas.pdf`, `Dermato Unidad I quiz.pdf` e as provas 2025.1/2025.2 do Drive (não abertos); bloco 06 e 08 (sem slide); literatura Bolognia.
 - Texto dentro de imagens.
 - Doses e prazos de acitretina/isotretinoína (literatura, sem fonte legível).
 - Redundância fina entre as 120 questões (8-A.1): vi todas ao ler, não montei matriz de duplicatas.
+
+## (x) Conferência adicional de 18/10 (slides da cátedra, Atlas de Fitzpatrick e navegador)
+
+Fontes lidas por inteiro: `01. Dermato Unidad I`, `3. Piodermitis`, `4. Infecciones virales`, `5. Dermatitis`, `7. Candidiasis`, `8. Tumores de la piel`, `Dermatologia P1- apuntes clase` (apoio) e o Atlas de Fitzpatrick (páginas extraídas). Nenhuma fonte fora de cátedra e literatura-base; nenhuma API paga.
+
+### Os sete trechos acrescentados pela revisão anterior
+| trecho (bloco) | slide | veredito |
+|---|---|---|
+| Impétigo/erisipela/celulite (05): mupirocina 2 % 3×/dia 5–7 d; cefalexina/dicloxacilina; penicilina/amoxicilina; clindamicina; reposo e elevação | `3. Piodermitis`, tabelas de tratamento | **confere** (a frase «falta de respuesta» **não** estava no slide e foi trocada por «edema extenso», que o slide traz) |
+| Pitiríase versicolor (06): selênio 2,5 %, cetoconazol 2 %, azol oral, terbinafina oral não recomendada, profilaxia mensal | `7. Candidiasis` | **confere** (os tempos de aplicação do slide — 7–10 min × 7 d; 5 min × 3 d — não foram acrescentados) |
+| Eczema numular, líquen simples crônico, prurigo nodular (10) | `5. Dermatitis` e Atlas pp. 76–80 | **confere** |
+| Hemangioma (11): propranolol oral, timolol tópico | `8. Tumores` | **confere**; o slide cita obstrução «visual, respiratoria o auditiva»: **«audición» foi acrescentada**; «alimentación» fica sem apoio no slide (mantida, sinalizada) |
+| Basocelular e espinocelular (12) | `8. Tumores` | **confere**; «el más frecuente de todos los cánceres humanos» → «de los tumores malignos de la piel» (palavras do slide) |
+| Clark I–V e faixas de Breslow (13) | `8. Tumores` | **confere** (exato) |
+| Passos do melanoma, queratose actínica, granuloma piógeno, carbunco (12–13, 05, 11) | `8. Tumores`, `Unidad I`, `3. Piodermitis` | **confere** |
+
+### Medidas e tempos divergentes
+| item | slide | o que se fez |
+|---|---|---|
+| Dermatite alérgica de contato | `5. Dermatitis`: «retrasado (12–72 horas después del contacto)»; *patch test* 48 e 96 h | 8 linhas de «48–72 h» → «12–72 h». Leitura do *patch test* 48–96 h ficou |
+| Vesícula × ampolla | p.20 (1 cm) × p.30 (0,5 cm) | cartão e resumo do bloco 02 agora citam os dois cortes; tabela fica (decisão pendente) |
+| Wood na versicolor | `7. Candidiasis` p.32: «fluorescencia amarillo-anaranjada» | «amarillo-dorado o cobrizo» → «amarillo-anaranjado» (11 lugares; «dorado, cobrizo o amarillo-verdoso» só como variação de outros textos) |
+| Celulite sem febre | `3. Piodermitis`: celulite inicia com febre >38,5 °C | «a veces sin fiebre» → «la fiebre es menos brusca que en la erisipela» |
+| Exantema súbito | slide: febre alta 3–7 dias | «(típicamente 3)» retirado das duas frases |
+
+**Não alterado, só registrado (o slide não trata ou difere sem contradizer):** foliculite do jacuzzi «8–48 h»; Hurley II com «cirugía localizada» (o slide só traz cirurgia no estádio III); «prurido crónico > 6 semanas»; queratose seborreica «a partir dos 40»; perlas de queratina/pontes intercelulares do espinocelular (só nos apontamentos); «escarlatina» e «Hutchinson do zóster» (sem slide).
+
+### Bloco 08 (acné e rosácea) contra o Fitzpatrick Atlas
+Confere: unidade pilossebácea; ordem hiperqueratinização → sebo/andrógenos → *C. acnes* → inflamação; comedão aberto/fechado e «os comedões são necessários para o diagnóstico de qualquer acné»; erupção acneiforme sem comedões e monomorfa por fármacos (lítio, difenil-hidantoína/anticonvulsivantes, isoniazida, glicocorticoides, inibidores do fator de crescimento epidérmico); conglobata e fulminante (febre, mal-estar, artralgias); retinoide tópico, antibiótico oral (minociclina/doxiciclina) e isotretinoína; isotretinoína teratogênica e **nunca junto com tetraciclina (pseudotumor cerebral)**; rosácea de 30–50 anos, sem comedões, rubor com líquidos quentes, picante, álcool, sol e calor, telangiectasias; rinofima mais em homens; blefarofima; metronidazol, doxiciclina/minociclina, isotretinoína em casos graves.
+**Sem confirmação no Atlas (ficam como da cátedra):** «a isotretinoína atua nos quatro mecanismos» (o Atlas cita sebo e queratinização); ácido azelaico; os quatro subtipos de rosácea (o Atlas usa a classificação por estádios de Plewig-Kligman); protetor solar diário; «acné fulminans é o único com compromisso sistémico» (o Atlas traz o quadro sistémico, mas também a SAPHO).
+
+### Navegador (Chromium real, `app-core.js`/`rm-tools*.js`/`styles.css` da `main` de 18/10; sem Supabase, sem rede)
+390 e 1366 px, página nova × base: a página abre em «Bloque 01 · La piel por dentro»; `dermportada` oculta; 120 questões e 482 cartões iguais à base; 58 imagens, 0 sem `alt`, 0 quebradas; 6 de 6 respostas (múltipla escolha, V/F e abertas) abrem; 0 rolagem horizontal; 240 ids iguais; 0 erros de JS; 0 respostas HTTP 4xx/5xx. Captura do topo a 390 px conferida a olho. **Não testado:** iPad físico, caneta, áudio.
