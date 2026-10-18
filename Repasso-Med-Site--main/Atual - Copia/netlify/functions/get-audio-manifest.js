@@ -1,4 +1,4 @@
-/* REPASSO MED · get-audio-manifest — lista (só leitura) dos audiobooks PRONTOS da matéria do piloto
+/* REPASSO MED · get-audio-manifest — lista (só leitura) dos audiobooks PRONTOS de uma matéria AUTORIZADA (padrão: só o piloto)
    para o UID autorizado. Toda a lógica e as garantias estão em _audio/lib.js. */
 'use strict';
 const { criar } = require('./_audio/lib.js');

@@ -60,7 +60,7 @@ _ARQUIVOS_FONTE = [
 # `rev-parse --verify -q` para conseguir normalizar SHA curto/completo
 # antes de comparar contra o tip remoto, mas continua sendo só LEITURA.
 _ARQUIVOS_FONTE_GERAL = [
-    f for f in _ARQUIVOS_FONTE if f not in ("git_state.py", "runner_dispatch.py", "runner_resume.py", "agent_v2.py", "site_quality_scan.py")
+    f for f in _ARQUIVOS_FONTE if f not in ("git_state.py", "runner_dispatch.py", "runner_resume.py", "agent_v2.py", "site_quality_scan.py", "auditor_materias.py")
 ]
 
 _PADROES_PROIBIDOS = [
@@ -257,6 +257,26 @@ def test_site_quality_scan_is_read_only_and_confined() -> None:
     print("OK  test_site_quality_scan_is_read_only_and_confined")
 
 
+def test_auditor_materias_is_read_only_and_confined() -> None:
+    """O auditor de matérias via API pode LER matérias e leis, mas só
+    escreve dentro de --saida. Não ganha git, Supabase, merge nem processo
+    externo; quem publica o relatório é o workflow, numa branch própria."""
+    caminho = os.path.join(_pathsetup._COORDINATOR_ROOT, "auditor_materias.py")
+    with open(caminho, encoding="utf-8") as fh:
+        conteudo = fh.read()
+    proibidos = [p for p in _PADROES_PROIBIDOS if p[1] not in (
+        "caminho de arquivo de matéria", "caminho da raiz do site publicado")]
+    proibidos.append((re.compile(r"\bos\.system\s*\("), "shell externo"))
+    achados = [d for p, d in proibidos if p.search(conteudo)]
+    assert not achados, "auditor_materias.py: " + "; ".join(achados)
+    # Toda escrita passa por alvo(), que confina em --saida.
+    assert conteudo.count(".write_text(") == 6, conteudo.count(".write_text(")
+    assert conteudo.count('alvo(') == 7
+    assert "if base not in t.parents:" in conteudo
+    assert "open(" not in conteudo.replace("OpenAI", "")
+    print("OK  test_auditor_materias_is_read_only_and_confined")
+
+
 def test_main_only_writes_its_own_output_and_state_files() -> None:
     """__main__.py pode escrever arquivo (o resultado OBSERVE e o estado de
     dedup/ledger) — mas só isso. Confirma que os únicos `open(..., "w")` no
@@ -283,6 +303,7 @@ def main() -> int:
         test_runner_dispatch_never_force_pushes_or_merges,
         test_runner_resume_never_writes_to_git,
         test_site_quality_scan_is_read_only_and_confined,
+        test_auditor_materias_is_read_only_and_confined,
         test_main_only_writes_its_own_output_and_state_files,
     ]
     falhas = 0

@@ -363,14 +363,14 @@ var RepassoMed = (function(){
     if (m){ var t = m.textContent.replace(/^[\s—–-]+/, '').trim(); if (t) return t.replace(/BLOCO/gi,'BLOQUE').replace(/UNIDADE/gi,'UNIDAD'); }
     return 'Tema';
   }
-  function decorateBlock(block, index){
+  function decorateBlock(block, chip){
     if (block.dataset.rmBlock) return;
     block.dataset.rmBlock = '1';
     var h2 = block.querySelector('h2');
     if (!h2) return;
     var head = document.createElement('div');
     head.className = 'rm-block-head';
-    head.innerHTML = '<span class="rm-block-num">' + pad(index) + '</span>' +
+    head.innerHTML = '<span class="rm-block-num">' + chip + '</span>' +
                      '<span class="rm-block-kicker">' + kickerFromBlock(block) + '</span>';
     h2.parentNode.insertBefore(head, h2);
   }
@@ -464,16 +464,38 @@ var RepassoMed = (function(){
     return out;
   }
 
-  function buildTOC(blocks){
+  /* Número de cada seção — o MESMO no selo do bloco e no índice:
+     1) o que o próprio bloco declara no marcador («BLOQUE 07», «TEMA 03»);
+     2) seção especial (portada, banco, flashcards…) → o ícone dela;
+     3) matéria que não numera nenhum bloco → a ordem (01, 02…); matéria
+        que numera, mas não esta seção → «•» (sem inventar número).
+     Antes o selo contava pela posição (a portada empurrava tudo: «02» ao
+     lado de «BLOQUE 01») e o índice pela posição sem as especiais. */
+  function chipsDosBlocos(blocks){
+    var decl = blocks.map(function(b){
+      var m = /\b(?:BLOQUE|TEMA)\s*0*(\d+)/i.exec(kickerFromBlock(b));
+      return m ? Number(m[1]) : null;
+    });
+    var numera = decl.some(function(d){ return d !== null; }), n = 0;
+    return blocks.map(function(b, i){
+      if (decl[i] !== null) return { chip: pad(decl[i]), ico: null };
+      var h2  = b.querySelector('h2');
+      var ico = tocIcon(b.id, h2 ? h2.textContent.replace(RE_EMOJI, '').replace(/\s+/g, ' ').trim() : '');
+      if (ico) return { chip: svgIcon(ico), ico: ico };
+      return { chip: numera ? '•' : pad(++n), ico: null };
+    });
+  }
+
+  function buildTOC(blocks, chips){
     var nav = document.createElement('nav');
     nav.className = 'rm-menu';
-    var items = '', n = 0;
+    var items = '';
     blocks.forEach(function(b, i){
       var h2 = b.querySelector('h2');
       if (!h2 || !b.id) return;
       var label = h2.textContent.replace(RE_EMOJI, '').replace(/\s+/g, ' ').trim();
-      var ico   = tocIcon(b.id, label);
-      var chip  = ico ? svgIcon(ico) : pad(++n);
+      var ico   = chips[i].ico;
+      var chip  = chips[i].chip;
       var sub   = kickerFromBlock(b).replace(RE_EMOJI, '').trim();
       var subs  = subtitulos(b);
 
@@ -1886,10 +1908,11 @@ var RepassoMed = (function(){
 
     if (!blocks.length) return;
 
-    blocks.forEach(function(b, i){ decorateBlock(b, i + 1); });
+    var chips = chipsDosBlocos(blocks);
+    blocks.forEach(function(b, i){ decorateBlock(b, chips[i].chip); });
 
     // menu hambúrguer flutuante (um por matéria)
-    var nav = buildTOC(blocks);
+    var nav = buildTOC(blocks, chips);
     tabEl.insertBefore(nav, tabEl.firstChild);
     setupMenu(tabEl, nav);
     cardSugestoes(tabEl, nav);

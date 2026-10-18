@@ -54,6 +54,8 @@ async function iniciar(opts) {
     latManifest: 0,                // ms antes de responder ao manifesto (corridas: trocar de matéria/logout durante o carregamento)
     falha: { url: 0, manifest: 0, midia: 0 },   // próximas N respostas com erro
     lixo: false,                   // devolve bytes inválidos como se fosse áudio
+    outros: null,                  // áudio por matéria (#457): { '<slug>': [itens] } somados ao manifesto do piloto
+    slugs: undefined,              // RM_AUDIO_SLUGS do servidor (undefined = variável ausente = só o piloto)
     ligado: true, uids: 'uid-jose,d4d215d3-36dd-4efb-8869-bdea5376c648',
     manifesto: [
       { audio_id: 's2-b01-motivo', block_id: 's2-b01', theme: 'Motivo de consulta', title: 'Motivo de consulta', duration: 60, order: 1, version: 'v1', path: 'semiologia-ii/motivo.v1.mp3', ready: true },
@@ -78,7 +80,7 @@ async function iniciar(opts) {
     return { ok: false, status: 404, json: async () => ({}) };
   };
   const handlers = () => criar({
-    env: { SUPABASE_URL: S.base, SUPABASE_ANON_KEY: 'anon', SUPABASE_SERVICE_ROLE_KEY: 'svc', RM_PILOT_AUDIO_UIDS: S.ligado ? S.uids : '', RM_AUDIO_MANIFEST: S.ligado ? JSON.stringify({ 'semiologia-ii': S.manifesto }) : '' },
+    env: Object.assign({ SUPABASE_URL: S.base, SUPABASE_ANON_KEY: 'anon', SUPABASE_SERVICE_ROLE_KEY: 'svc', RM_PILOT_AUDIO_UIDS: S.ligado ? S.uids : '', RM_AUDIO_MANIFEST: S.ligado ? JSON.stringify(Object.assign({ 'semiologia-ii': S.manifesto }, S.outros || {})) : '' }, S.slugs !== undefined ? { RM_AUDIO_SLUGS: S.slugs } : {}),
     fetch: supaFetch, validateItem: RMAudio.validateItem
   });
 
