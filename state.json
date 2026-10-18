@@ -2872,6 +2872,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:529.",
       "task_id": "pr:529",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "693fedeaba388c729d130a57f7df062cff6ac571",
+      "component": "guard",
+      "error_id": "ERR-4B2D65165D",
+      "error_type": "hard-fail",
+      "fingerprint": "4b2d65165d71e1c2bcce",
+      "first_seen": "2026-10-18T22:14:20.785826+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "e79b9f9ecf2a45e2af2be8d91013ed09",
+      "issue_sync_updated_at": "2026-10-18T22:14:20.785826+00:00",
+      "last_evidence_hash": "85cf58169bde1f211c9d",
+      "last_seen": "2026-10-18T22:14:20.785826+00:00",
+      "occurrence_count": 1,
+      "pr_number": 481,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "39171248185",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:481.",
+      "task_id": "fisiopatologia-ii-issue101-c1-claude2",
+      "worker_id": null
     }
   ]
 }
