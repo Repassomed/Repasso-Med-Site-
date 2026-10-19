@@ -24,6 +24,7 @@ const split = t => t.split(/(?<=[.;:?!])\s+/).filter(x => x.length >= 25 && x.le
   const only = arg('sec', '') ? arg('sec').split(',') : null;
   const items = [];
   for (const sid of Object.keys(Lo)) { if (only && !only.includes(sid)) continue; Lo[sid].forEach((e, i) => {
+    if (!Ln[sid] || Lo[sid].length !== Ln[sid].length) return;   // seção com outra sequência (portada esvaziada): sem marcas possíveis
     if (e.opt) return; const nt = Ln[sid][i].t; if (e.t === nt) return;
     for (const f of split(e.t)) if (!nt.includes(f)) items.push({ sec: sid, el: i, sentence: f }); }); }
   const recs = await po.evaluate(({ items, SUB }) => {

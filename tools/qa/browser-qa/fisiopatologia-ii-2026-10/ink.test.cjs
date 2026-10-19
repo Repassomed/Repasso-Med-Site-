@@ -60,9 +60,9 @@ const COLLECT=`(SUB)=>{
      alturas_seccion:Object.fromEntries(Object.keys(data.orig.secs).map(k=>[k,+(data.new.secs[k].h-data.orig.secs[k].h).toFixed(1)]))};
    const cat={exacta:0,texto_igual_caja_distinta:0,texto_cambiado:0}; const cd=[];
    let tot=0;
-   for(const sid of Object.keys(data.orig_anch)){ const A=data.orig_anch[sid],B=data.new_anch[sid]; for(let i=0;i<A.subs.length;i++){ tot++; const same=A.txt[i]===B.txt[i]; const dh=B.subs[i].h-A.subs[i].h, dw=B.subs[i].w-A.subs[i].w;
+   for(const sid of Object.keys(data.orig_anch)){ const A=data.orig_anch[sid],B=data.new_anch[sid]; for(let i=0;i<Math.min(A.subs.length,B.subs.length);i++){   /* fp2portada foi esvaziada de propósito (16/10): pareia só o prefixo comum */ tot++; const same=A.txt[i]===B.txt[i]; const dh=B.subs[i].h-A.subs[i].h, dw=B.subs[i].w-A.subs[i].w;
        if(same&&Math.abs(dh)<=1&&Math.abs(dw)<=1) cat.exacta++; else if(same) {cat.texto_igual_caja_distinta++;} else {cat.texto_cambiado++; if(A.subs[i].h>=36||B.subs[i].h>=36) cd.push(Math.abs(dh));} } }
-   R[w].por_seccion={}; for(const sid of Object.keys(data.orig_anch)){const A=data.orig_anch[sid],B=data.new_anch[sid]; let ch=0,mx=0,sum=0; for(let i=0;i<A.subs.length;i++){ if(A.txt[i]!==B.txt[i]){ch++; const d=Math.abs(B.subs[i].h-A.subs[i].h); mx=Math.max(mx,d);} } R[w].por_seccion[sid]={anclas:A.subs.length,reescritas:ch,max_dh:+mx.toFixed(0),dH_seccion:+(B.sec.h-A.sec.h).toFixed(0),H_old:+A.sec.h.toFixed(0)}; }
+   R[w].por_seccion={}; for(const sid of Object.keys(data.orig_anch)){const A=data.orig_anch[sid],B=data.new_anch[sid]; let ch=0,mx=0,sum=0; for(let i=0;i<Math.min(A.subs.length,B.subs.length);i++){ if(A.txt[i]!==B.txt[i]){ch++; const d=Math.abs(B.subs[i].h-A.subs[i].h); mx=Math.max(mx,d);} } R[w].por_seccion[sid]={anclas:A.subs.length,reescritas:ch,max_dh:+mx.toFixed(0),dH_seccion:+(B.sec.h-A.sec.h).toFixed(0),H_old:+A.sec.h.toFixed(0)}; }
    R[w].anclas_sub={total:tot,...cat,texto_cambiado_dh_p50:q(cd,.5),texto_cambiado_dh_p90:q(cd,.9),texto_cambiado_dh_max:q(cd,1)};
    const stems=rows.filter(r=>/quiz-question/.test(r.cls)&&!r.anclaSub&&/DIV$/.test(r.cls)); R[w].stems_quiz=grp2(stems);
    const figs=rows.filter(r=>!r.anclaSub&&/(illustration|material-slide)/.test(r.cls)); R[w].figuras=grp2(figs);

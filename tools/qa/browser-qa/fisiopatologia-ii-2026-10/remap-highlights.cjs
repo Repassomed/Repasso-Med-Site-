@@ -37,10 +37,13 @@ function pairsOf(oldT, newT) {
   return merged.map(([i1, i2, j1, j2]) => ({ old: wa.slice(i1, i2).join(' '), new: wb.slice(j1, j2).join(' ') }));
 }
 const SUB = 'p,li,h2,h3,h4,h5,table,figure,blockquote';
+/* seções que podem ter outra sequência de elementos (a abertura direta de 16/10 esvaziou `fp2portada`, que nunca teve grifo nem traço); `RM_SEQ_DIFF=a,b` troca a lista */
+const SEQ_DIFF = (process.env.RM_SEQ_DIFF || 'fp2portada').split(',');
 const TEXTS = `(SUB)=>{const RT=window.RMTools,out={};document.querySelectorAll('section[id]').forEach(sec=>{out[sec.id]=[...sec.querySelectorAll(SUB)].map(e=>RT.indexar(e).norm);});return out;}`;
 async function buildPairs(pOld, pNew) {
   const A = await pOld.evaluate(eval(TEXTS), SUB), B = await pNew.evaluate(eval(TEXTS), SUB), by = {}, porEl = {};
   for (const sid of Object.keys(A)) {
+    if (B[sid] && A[sid].length !== B[sid].length && SEQ_DIFF.includes(sid)) { console.warn('aviso: sequência diferente em ' + sid + ' (esvaziada de propósito; sem marcas nem traços) — fora do remapeamento'); continue; }
     if (!B[sid] || A[sid].length !== B[sid].length) throw new Error('sequência diferente em ' + sid + ': o remapeamento por índice não se aplica');
     A[sid].forEach((t, i) => { if (t !== B[sid][i]) { const ps = pairsOf(t, B[sid][i]); (by[sid] = by[sid] || []).push(...ps); (porEl[sid] = porEl[sid] || {})[i] = ps.slice().sort((x, y) => y.old.length - x.old.length); } });
   }

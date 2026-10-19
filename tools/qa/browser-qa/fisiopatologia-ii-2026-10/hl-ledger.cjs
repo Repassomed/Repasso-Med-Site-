@@ -32,6 +32,7 @@ const VOZ = /pregunt|exam|prueba|c[aá]tedra (remarca|pide|cobra|insiste)|cae\b|
   const jac = (a, b) => { const A = new Set(a.toLowerCase().split(/\s+/)), B = new Set(b.toLowerCase().split(/\s+/)); let i = 0; A.forEach(w => { if (B.has(w)) i++; }); return i / (A.size + B.size - i || 1); };
   const items = [];   // frases em risco
   for (const sid of Object.keys(Lo)) Lo[sid].forEach((e, i) => {
+    if (!Ln[sid] || Lo[sid].length !== Ln[sid].length) return;   // seção com outra sequência (portada esvaziada de propósito)
     if (e.opt) return; const nt = Ln[sid][i].t; if (e.t === nt) return;
     for (const f of split(e.t)) { if (nt.includes(f)) continue;
       const cand = split(nt).concat([nt]); let best = '', bs = -1; cand.forEach(c => { const j = jac(f, c); if (j > bs) { bs = j; best = c; } });
