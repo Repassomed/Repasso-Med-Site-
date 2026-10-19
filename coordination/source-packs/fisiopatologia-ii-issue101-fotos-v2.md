@@ -126,3 +126,6 @@ Nenhuma duplicata foi inserida; nenhuma questão antiga foi removida.
 4. Proveniência do banco de 19/09 a confirmar por José.
 5. Comparação com os **6 decks atuais da cátedra**: feita no checkpoint 2 (`fisiopatologia-ii-issue101-slides-v1.md`).
 6. Infográficos/resumões fornecidos por José: não localizados na pasta Questões; integração depende de José indicar onde estão.
+
+## Reconferência de 19/10 (fechamento editorial)
+As 17 questões «basada en examen» continuam rotuladas assim e **nenhum gabarito mudou**. Três ganharam enunciado reformulado por ciência: **b02q28** (H⁺/K⁺-ATPase), **b03q30** («esencialmente irreversible»), **b14q16** (V/F sem «de inmediato»/«> 1000 mL»); **b12q19** (complementar, não de prova) ganhou dado discriminante (úlceras aftosas salteadas + granulomas). Reconstruções de prova e proveniência do banco de 19/09 continuam como em §3-§4 (decisão sua).

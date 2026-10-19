@@ -39,3 +39,6 @@ Leitura: **a matéria não tem excesso estrutural de prosa nem repetição relev
 
 * Só 6 decks (unidades I e II-vias urinárias); b05–b12 sem fonte de slides.
 * Verificação por termos distintivos: não substitui leitura pedagógica completa nem o parecer G0 independente (ainda não pedido para esta matéria).
+
+## Reconferência de 19/10
+A lacuna dos decks (ginecomastia/vello na cirrose avançada) continua em **fp2b03**; as 16 frases aditivas do fechamento editorial vêm do texto da própria matéria e da literatura de referência, não de slides novos. Decks de b05–b12: ainda sem fonte.

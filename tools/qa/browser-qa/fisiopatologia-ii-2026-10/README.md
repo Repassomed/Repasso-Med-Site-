@@ -10,6 +10,7 @@ node $H/hl.test.cjs                             # recuperação de grifos SEM re
 W=390,768,1024,1440 node $H/ink.test.cjs        # alinhamento da tinta por largura
 node $H/hl-remap.test.cjs                       # grifos SINTÉTICOS COM remapeamento (prova de conceito: NÃO comprova preservação de grifos reais)
 node $H/remap-highlights.cjs --in marcas.json --out marcas.remap.json   # remapeia uma exportação real (quem a tem roda; não escreve em lugar nenhum)
+node $H/svgfit.cjs                              # texto de SVG que mudou (orig × new) cabe na caixa? (getBBox real; sai com código 1 se estourar)
 node $H/hl-real.cjs --in registros.json --out relatorio.json   # GRIFOS REAIS (consulta somente leitura feita por fora; registros SEM user_id, fora do repositório): quantos sobrevivem na matéria nova sem remap
 RM_MID_REF=ed08884e node $H/real-ink.test.cjs   # TINTA EM POSIÇÃO REAL: caneta de verdade (rm-tools-v2) desenha na base e mede-se onde os traços caem na versão nova (alvos: bancofp2 × blocos); RM_MID_REF = commit intermediário opcional
 ```

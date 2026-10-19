@@ -37,3 +37,8 @@ A pasta *Anotações* do Drive continua com os mesmos **4 PDFs** (nenhum arquivo
 | *(deck 05 Hepatitis)* ginecomastia e vello na cirrose avançada | slides | fp2b03 (hepatitis) | sim | sem cópia |
 
 Bloco ↔ Banco: 319 pares comparados no navegador, **0 divergências**; `SUB_SEL` e os 733 ids idênticos à `main`; nenhum gabarito alterado nesta matéria.
+
+## 5 · Reconferência de 18–19/10 (fechamento editorial)
+* **Drive:** a pasta *Anotações* continua com os mesmos 4 PDFs (modificados em 02/10); nenhuma modificação em arquivos «Fisio…» desde 13/10 (busca por título e texto, sem corpo de arquivo aberto).
+* **Acréscimos:** os 4 continuam nas seções certas (sialosis, espasmo difuso, ranitidina, perfuração livre no Crohn) e nenhum caiu num grifo; o fechamento editorial acrescentou **16 frases aditivas** em parágrafos existentes (relatório §7-G) e corrigiu **b02 k170** («aparece sobre base de gastritis crónica» → «na forma por *H. pylori*»), (a úlcera por AINE não exige gastrite crónica).
+* **Questões:** nenhum gabarito mudou (0 em 279 MCQ + 36 V/F); bloco e Banco idênticos (319 pares, 0 divergências).
