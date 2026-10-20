@@ -48,8 +48,8 @@ const SUB='p,li,h2,h3,h4,h5,table,figure,blockquote';
  /* ¿el texto exacto sigue presente en el elemento nuevo? */
  const present=await pn.evaluate(({recs,SUB})=>{const RT=window.RMTools; const cache={}; return recs.map(h=>{const sec=document.getElementById(h.block_id); const k=h.block_id; cache[k]=cache[k]||RT.indexar(sec).norm; return cache[k].includes(h.exact_text);});},{recs,SUB});
  const stat={}; const bad=[];
- recs.forEach((h,i)=>{ const r=res[i], pres=present[i]; const key=`${h.kind}|${pres?'texto_intacto':'texto_reescrito'}`; stat[key]=stat[key]||{n:0,nivel1:0,nivel2:0,nivel3:0,no_recuperada:0,mal_colocada:0,texto_distinto:0};
-   const t=stat[key]; t.n++; if(!r.nivel){t.no_recuperada++; if(pres) bad.push({h:{...h,prefix:undefined,suffix:undefined},r});} else { t['nivel'+r.nivel]++; if(r.elIdx!==h.elIdx){t.mal_colocada++; bad.push({tipo:'mal_colocada',h:{...h,prefix:undefined,suffix:undefined},r});} if(!r.texto) t.texto_distinto++; } });
+ recs.forEach((h,i)=>{ const r=res[i], pres=present[i]; const key=`${h.kind}|${pres?'texto_intacto':'texto_reescrito'}`; stat[key]=stat[key]||{n:0,nivel1:0,nivel2:0,nivel3:0,no_recuperada:0,mal_colocada:0,mal_colocada_gemea_literal:0,texto_distinto:0};
+   const t=stat[key]; t.n++; if(!r.nivel){t.no_recuperada++; if(pres) bad.push({h:{...h,prefix:undefined,suffix:undefined},r});} else { t['nivel'+r.nivel]++; if(r.elIdx!==h.elIdx){t.mal_colocada++; /* nível 1 + texto idêntico noutro elemento = a MESMA frase existe literalmente em outro parágrafo (ex.: o parágrafo de teoria e a explicação da questão) e o motor a aceita pelo contexto; não é bug do motor nem das marcas reais: é duplicação de texto */ if(r.nivel===1&&r.texto) t.mal_colocada_gemea_literal++; bad.push({tipo:'mal_colocada',h:{...h,prefix:undefined,suffix:undefined},r});} if(!r.texto) t.texto_distinto++; } });
  console.log(JSON.stringify(stat,null,1)); console.log('casos a revisar',bad.length);
  fs.writeFileSync(OUT('hl-result.json'),JSON.stringify({stat,bad:bad.slice(0,60),tocados:touched.length,control:control.length,registros:recs.length},null,1));
  await b.close(); s.close();})();

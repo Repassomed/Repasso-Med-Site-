@@ -12,6 +12,7 @@ node $H/hl-remap.test.cjs                       # grifos SINTÉTICOS COM remapea
 node $H/remap-highlights.cjs --in marcas.json --out marcas.remap.json   # remapeia uma exportação real (quem a tem roda; não escreve em lugar nenhum)
 node $H/svgfit.cjs                              # texto de SVG que mudou (orig × new) cabe na caixa? (getBBox real; sai com código 1 se estourar)
 node $H/hl-real.cjs --in registros.json --out relatorio.json   # GRIFOS REAIS (consulta somente leitura feita por fora; registros SEM user_id, fora do repositório): quantos sobrevivem na matéria nova sem remap
+node $H/hl-ledger.cjs --reais registros.json   # livro-razão: frase reescrita SEM remap que toca um grifo REAL reprova; sem --reais é estrito (qualquer sem-remap reprova)
 RM_MID_REF=ed08884e node $H/real-ink.test.cjs   # TINTA EM POSIÇÃO REAL: caneta de verdade (rm-tools-v2) desenha na base e mede-se onde os traços caem na versão nova (alvos: bancofp2 × blocos); RM_MID_REF = commit intermediário opcional
 ```
 Variáveis: `RM_BASE_REF`, `RM_ORIG_HTML`, `RM_NEW_HTML`, `RM_CHROMIUM`, `RM_PLAYWRIGHT`, `RM_OUT`.
