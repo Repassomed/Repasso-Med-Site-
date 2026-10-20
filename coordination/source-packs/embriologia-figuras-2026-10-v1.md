@@ -7,3 +7,5 @@
 **Data do primeiro latido:** nenhuma das 39 imagens mostra «dia 21–22»; o texto, os SVG, a questão do coração (alternativa d), 3 cartões e a tabela semana a semana agora dizem «~dia 22, início da 4.ª semana», conforme a cátedra. 0 grifos de aluno na matéria (consulta somente leitura).
 
 **Não verificado:** conteúdo científico das imagens contra a cátedra (os slides de embriologia disponíveis são resumos de aluno e PDFs de questões; Langman/Moore não estão legíveis).
+
+**Conferência visual antes/depois (2026-10-21):** as 38 imagens novas foram comparadas lado a lado com as originais (recorte da região alterada). Em 5 figuras em que o rótulo ficava sobre um ícone (`b10_01`, `b10_03`, `b12_01`, `b13_02`, `b13_03`) a primeira troca tinha deixado rastros; refeita com reparo local de pixels, o ícone ficou intacto. As outras 33 trocas estão limpas. OCR final: 0 «examen/prueba/trampa». Restam pequenas manchas claras do reparo em `b10_03` e `b13_02`, sem perda de texto.
