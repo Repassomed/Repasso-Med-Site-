@@ -10,3 +10,5 @@
 **Não alterado de propósito:** «examen físico» em `b01_05` (é exame físico clínico, não prova) e «Seis preguntas que completan la ficha anatómica» em `b04_07` (pergunta de estudo, não voz de prova).
 
 **Não verificado:** o conteúdo anatômico das figuras contra a cátedra (só o rótulo foi tratado). O OCR pode perder texto muito pequeno; uma passada visual completa não foi feita nas 130.
+
+**Conferência visual antes/depois (2026-10-21):** as 25 imagens usadas foram comparadas lado a lado com os originais (recorte da região alterada). Uma troca estava errada e foi refeita: em `b06_02` o «Ojo:» novo cobria o começo de «costales…»; agora a linha inteira foi reescrita («Ojo: costales SÍ articulan; intercostales NO.»). As outras 24 trocas estão limpas; OCR final nos 25 arquivos: 0 «examen/prueba/trampa».
