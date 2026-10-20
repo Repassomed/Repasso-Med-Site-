@@ -5,7 +5,8 @@
      3. remap  : se não sobrevive, a ferramenta de remapeamento (offline) o recupera no mesmo elemento?
    Saída: contagens + lista das marcas que NÃO sobrevivem sem remapeamento (trecho curto) → são as «frases que precisam continuar intactas».
    Não escreve em lugar nenhum; o JSON de entrada fica fora do repositório.
-   Uso: node hl-real.cjs --in registros.json [--out relatorio.json]   (registros: [{b|block_id, e|exact_text, p|prefix, s|suffix, o|occurrence}]) */
+   --gate: PORTÃO PRÉ-MERGE — código de saída 1 se QUALQUER registro não sobreviver sem remapeamento no mesmo elemento (os `obsoleta-na-matéria-antiga` não contam: já não resolviam na `main`). Rodar com os registros de uma consulta SELECT feita no dia do merge: cobre os grifos criados entre a consulta anterior e o merge.
+   Uso: node hl-real.cjs --in registros.json [--out relatorio.json] [--gate]   (registros: [{b|block_id, e|exact_text, p|prefix, s|suffix, o|occurrence}]) */
 const fs = require('fs');
 const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
 const { start } = require('./server.cjs');
@@ -37,4 +38,5 @@ const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ?
   console.log('\nNão sobrevivem sem remapeamento (' + ruins.length + '):'); ruins.forEach(r => console.log(' -', r.status, '|', r.block_id, '|', r.trecho));
   const out = arg('out'); if (out) fs.writeFileSync(out, JSON.stringify({ resumo: cnt, porSec, rows }, null, 1));
   await br.close(); s.close();
+  if (process.argv.includes('--gate')) { const falhas = rows.filter(r => !/^(sobrevive-sem-remap|obsoleta-na-matéria-antiga)$/.test(r.status)); if (falhas.length) { console.error('PORTÃO REPROVADO: ' + falhas.length + ' grifo(s) real(is) não sobrevivem sem remapeamento — NÃO mesclar; restaurar a frase original ou migrar o grifo (decisão do José).'); process.exit(1); } console.log('PORTÃO OK: ' + rows.length + ' grifos reais conferidos, nenhum pintaria frase errada.'); }
 })().catch(e => { console.error(e); process.exit(2); });
