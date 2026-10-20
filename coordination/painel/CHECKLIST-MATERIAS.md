@@ -1,10 +1,10 @@
 # Checklist das matérias
 
-**Última atualização:** 16/10/2026 · coordenação ChatGPT; inspeção das aberturas dos HTML na `main` após #503.
+**Última atualização:** 19/10/2026 · coordenação ChatGPT; estado das PRs e checks consultado no GitHub. A tabela histórica de aberturas abaixo descreve a `main` na triagem de 16/10, não os PRs ainda abertos.
 
-> **Estado confirmado:** #484 mesclada e testada pelo José no iPad em 16/10: criar, rever, recarregar e apagar grifos funcionou. #489 mesclada. #518 fechada sem merge: sugeria mesclar #474/#481 só porque não há conflito, sem auditoria editorial. Abertas de conteúdo: #474, #481, #499, #500 e PRs #501–#517 (exceto #503/#506), em revisão. **Não há aprovação de merge de conteúdo por este cabeçalho.** As PRs antigas #66, #80, #248, #253, #305 e #368 foram fechadas sem merge. A correção de Biología após #496 segue pendente. Inventários antigos devem ser lidos como fotografias até reconciliação.
+> **Estado confirmado:** #484 mesclada e testada pelo José no iPad; #489 e #524 (Biología) mescladas. Abertas de conteúdo: #474, #481, #499–#517 (com exceções já mescladas/fechadas), #525–#530 e #532. Os Guard dos heads #474, #481, #499, #505, #529, #530 e #532 passaram, mas isso **não aprova ciência, imagens nem grifos futuros**. Nenhuma dessas PRs está liberada para merge neste painel. Só José mescla. #527/#530 e #528/#532 se sobrepõem e não devem ser mescladas juntas. As PRs antigas #66, #80, #248, #253, #305 e #368 foram fechadas sem merge.
 
-**Ordem do plano (decisão do José):** 1) manutenção + pente fino editorial (G0, didática do zero, vocabulário simples) e anotações → 2) layout global → 3) caneta para todos → 4) audiobooks para todos.
+**Ordem do plano (decisão mais recente do José):** 1) manutenção editorial, didática do zero, G0, questões e anotações, preservando grifos/tinta → 2) caneta para todos, após testes de dados → 3) layout por matéria com checkpoint e teste do José → 4) audiobooks. Imagenología e Bioestadística serão refeitas. Imagens em português podem permanecer; não retirar imagens por idioma ou por voz de prova: corrigir o rótulo/legenda. Retirada só por erro grave comprovado ou falta de direito de uso, com registro e substituição quando possível.
 
 ## Legenda
 
@@ -29,21 +29,21 @@
 | 5 | Semiología I | 5 | ✅ | ✅ 0 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 6 | Farmacología I | 5 | ✅ | ⬜ 5 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 7 | Medicina Familiar | 5 | ✅ | ⬜ 10 | ➖ vazio | ➖ | ⬜ | ⬜ |
-| 8 | Semiología II | 6 | ✅ | ⬜ 13 | ⬜ sem pasta de anotações no Drive | ✅ 4 (piloto) | ✅ piloto | ✅ piloto |
+| 8 | Semiología II | 6 | ✅; 🟡 #532 (blocos 02–10) | 🟡 #532; bloco 01 preservado por 24 traços | 🟡 3 PDFs relatados na #532; conferir após merge | ✅ 4 (piloto) | ✅ piloto | ✅ piloto |
 | 9 | Farmacología II | 6 | 🟡 PR #474 | 🟡 34 (a PR tira a maioria; 11 ficam por causa de grifos) | 🟡 8 PDFs na PR #474 | ⬜ 4 no Drive | ⬜ | ⬜ |
 | 10 | Embriología | 1 | ✅ | ⬜ 8 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 11 | Histología I | 1 | ✅ | ⬜ 4 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 12 | Histología I Práctica | 1 | ✅ (falta texto alternativo em 136 imagens) | ⬜ 2 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 13 | Histología II | 2 | ✅ | ⬜ 22 (inclui ranking «Lo que más cae en toda la materia») | ⬜ vídeo 07/10 e PDF de 718 MB não comparados | ⬜ 4 no Drive | ⬜ | ⬜ |
-| 14 | Histología II Práctica | 2 | ✅ (falta texto alternativo em 172 imagens) | ⬜ 10 | ➖ vazio | ➖ | ⬜ | ⬜ |
+| 14 | Histología II Práctica | 2 | ✅; 🟡 #530 com alt/imagens em revisão | 🟡 #530 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 15 | Anatomía I | 1 | ✅ | ⬜ 7 + 1 «Cómo estudiar esto…» (metadidática da #147) | ➖ vazio | ➖ | ⬜ | ⬜ |
-| 16 | Biología | 1 | ✅ PR #496; ⬜ corrigir explicação científica nas duas cópias | ✅ 0 | ➖ vazio | ➖ | ⬜ | ⬜ |
+| 16 | Biología | 1 | ✅ #496 e #524 mescladas | ✅ 0 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 17 | Medicina Legal | 6 | ✅ | ⬜ 13 («lo más preguntado») | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 18 | Anatomía Patológica II | 6 | ✅ (#458, #476); 🟡 PR #499 em auditoria | ⬜ 5 | ✅ 6 PDFs (3 pendências na #499) | ⬜ 3 no Drive | ⬜ | ⬜ |
-| 19 | Anatomía Patológica II Práctica | 6 | ✅ | ✅ 0 | ➖ vazio | ➖ | ⬜ | ⬜ |
+| 19 | Anatomía Patológica II Práctica | 6 | ✅; 🟡 #529 em auditoria de figuras/questões | ✅ 0 no texto; 🟡 18 infográficos na #529 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 20 | Fisiopatología II | 6 | 🟡 PR #481 | 🟡 24 (a PR troca 14 caixas; ficam ~10) | 🟡 4 PDFs na PR #481 | ⬜ 7 no Drive | ⬜ | ⬜ |
 | 21 | Toxicología | 7 | ✅ rodada anterior; 🟡 #500 em auditoria integral | ⬜ revisar na #500 | ➖ vazio | ➖ | ⬜ | ⬜ |
-| 22 | Dermatología | 7 | ✅ #464 mesclada; 🧪 teste físico pendente | ⬜ 13 | ➖ vazio | ➖ | ⬜ | ⬜ |
+| 22 | Dermatología | 7 | ✅ rodada anterior; 🟡 #505 (bloco 06 sem fonte legível) | 🟡 #505 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 23 | Guaraní | 2 | ✅ | ⬜ 13 | ➖ vazio | ➖ | ⬜ | ⬜ |
 | 24 | Ortopedia y Traumatología | 7 | ✅ | ⬜ 24 + «Portada · cómo estudiar esta materia» | ➖ (aportes sem conteúdo) | ➖ | ⬜ | ⬜ |
 | 25 | Oftalmología | 7 | ✅ #464 mesclada; 🧪 teste físico pendente | ⬜ 11 | ➖ (aporte de teste) | ➖ | ⬜ | ⬜ |
@@ -60,7 +60,7 @@
 | Matéria | Início observado na `main` | Estado da limpeza |
 |---|---|---|
 | Anatomía I | cinco perguntas introdutórias e “Sobre las fuentes” antes do bloco 1 | ⬜ |
-| Biología | promessa da matéria, lista de fontes e imagens antes da aula | ⬜ |
+| Biología | promessa da matéria, lista de fontes e imagens antes da aula | ✅ #524 |
 | Embriología | mapa de 13 blocos e “Sobre las fuentes” | ⬜ |
 | Histología I | portada; conceito e H&E úteis: integrar ao bloco 1 | ⬜ |
 | Histología I Práctica | atlas/roleta e método prévio: integrar método à primeira aula | ⬜ |
@@ -107,7 +107,7 @@ Feito na PR #498 (✅ mesclada em 16/10). Só mudou o título e o subtítulo das
 | Fisiopatología I | 1 título de caixa | ✅ #498 |
 | Medicina Familiar | 2 títulos de caixa | ✅ #498 |
 | Farmacología II e Fisiopatología II | continuam nas PRs #474 e #481 | 🟡 |
-| Biología | #496 mesclada; revisão científica posterior pendente | ⬜ |
+| Biología | #496 e #524 mescladas; correção científica concluída | ✅ |
 
 **O que ainda fica para o pente fino de cada matéria:** frases soltas no texto corrido («la más preguntada», «cae en examen»), as caixas «Cómo lo evalúa la cátedra» de Semiología II e a família «dónde concentrar el estudio» (Embriología, Histología I, Medicina Legal e outras). Essas pedem leitura humana, uma matéria por vez, porque algumas têm grifos de alunos em cima.
 
@@ -128,3 +128,20 @@ Feito na PR #498 (✅ mesclada em 16/10). Só mudou o título e o subtítulo das
 | 5 | Pendências menores de anotações | AP II (metástase a distância do CEC oral etc.) | 1 Claude |
 | 6 | Texto alternativo das imagens de conteúdo | Histología I/II Práctica, AP I Práctica | 1 Claude |
 | 7 | Refazer | Bioestadística, Imagenología | quando o José decidir |
+
+## Auditoria de coordenação — 19/10/2026
+
+Esta seção distingue trabalho feito **na branch** de trabalho já disponível na `main`. Guard verde e teste declarado pelo autor não substituem auditoria das fontes, das imagens e das marcações. Prévia Netlify das PRs aparece cancelada; teste físico do José será planejado por matéria com rollback do deploy anterior.
+
+| fila | PR | conclusão atual | próximo fechamento |
+|---|---|---|---|
+| Claude 1 | #499 AP II | 🔴 43 imagens retiradas da página; 26 nem foram conferidas. Viola a decisão do José de preservá-las. | Restaurar as imagens corretas e auditar uma a uma; só retirar com erro grave comprovado. |
+| Claude 1 | #501, #507–#513, #515–#516 | 🟡 aberturas/G0 em branches; revisão de ciência declarada parcial em vários casos. | Autocheck por matéria, grifos e imagens; não afirmar conclusão integral quando faltam fontes. |
+| Claude 2 | #474 Farmacología II | 🟡 abertura e questões revistas; 236/238 grifos atuais pintam (2 já obsoletos na main); 1 traço antigo na abertura já não pintava na main. | Resolver contradição preexistente salmeterol/formoterol com fonte permitida, decisões do cartão, consulta final de dados. |
+| Claude 2 | #481 Fisiopatología II | 🔴 grande revisão (277/319 itens); 47/47 grifos atuais preservados e 0 traços na consulta. Simulação aponta 211 frases sem remapeamento e 17 marcas hipotéticas no lugar errado; `hl-ledger.cjs` falha. | Corrigir a colocação errada e limitar risco para grifos criados antes do merge; consultar dados de novo no head final. Confirmar fonte para alterações de ciência. |
+| Claude 2 | #505 Dermatología | 🟡 abertura e G0 revistos; bloco 06 mantém sete grupos de afirmações da main sem fonte legível. | Documentar limite, localizar fonte permitida se disponível e não apresentar como revisão integral. |
+| Sessão modest-rubin-th2yir (número a confirmar) | #529 AP II Práctica | 🟡 18 infográficos corrigidos sem remoção; questão tabaco/álcool permanece complementar, sem alegar chave da prova não lida. | Conferir visualmente imagens finais, duplicação 07/05 e texto da questão; teste do José após decisão de merge. |
+| Sessão modest-rubin-th2yir (número a confirmar) | #530 Histología II Práctica | 🟡 legendas/imagens revistas; escala 600 µm da vesícula conferida visualmente inteira. Foto com marca d'água saiu da página; cinco fotos da amígdala permanecem. | Conferir direito de uso, imagens finais e 18 linhas médicas sinalizadas pelo Guard. #527 se sobrepõe. |
+| Sessão modest-rubin-th2yir (número a confirmar) | #532 Semiología II | 🟡 132 grifos e 26 traços consultados; bloco 01 preservado por 24 traços, voz G0 dele pendente. CURB-65 adaptado ao slide. | Resolver a explicação da ureia/unidade e proveniência da questão; planejar migração futura com backup sem escrita agora. #528 se sobrepõe. |
+
+**Regra de merge:** somente José; uma matéria por vez, depois de auditoria de ciência, dados e imagens. Português dentro das imagens não bloqueia. Guard verde significa apenas que os checks automáticos passaram. Atualizar este painel depois dos merges e registrar no inventário de anotações cada PDF efetivamente integrado.
