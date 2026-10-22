@@ -87,3 +87,35 @@ Blocos b05–b12 contra a cátedra (sem decks); a pielonefrite «dois de quatro�
 - Edições de texto desta etapa: fp2b01 (nota de fonte do Barrett), fp2b02 (ranitidina), fp2b03 (diretrizes HAV; corte AST/ALT > 2 identificado como regra de literatura), fp2b07 (AEIOU etc.), fp2b09 (limiares de urocultivo/leucócitos), fp2b10 (48 h), fp2b11 (> 5; tratamento etc.), fp2b13 ictericia (acolia «sem exceção»), fp2b14 vias urinárias (volumes ilustrativos 200 mL/450 mL e «meio litro» trocados por texto qualitativo). Ids, perguntas, letras, gabaritos, flashcards (1857), imagens (33) e contagens ficam iguais.
 - Verificação final: `hl-real --gate` 47/47 grifos reais «sobrevive-sem-remap»; nova consulta somente leitura ao Supabase (21/10): 47 grifos (b01 = 42, b02 = 4, b12 = 1), idêntico ao registrado; navegador 390/1366 px: 0 erros de JS, 638 quiz, 1857 flashcards, 33 imagens, 905 ids, revelar 8/8.
 - **Não validado (honesto):** tabelas dentro de figuras/slides em imagem (KDIGO G/A, limiares de urocultivo por coleta, valores de nomogramas) e o que depende dos livros-base (Porth, Robbins, Farreras) sem texto acessível.
+
+## (xiv) Lei de Atualização Contínua — rodada de 22/10 (slides 07–11 e «Fisiopato suprarenal.pdf»)
+
+**Fontes lidas por completo (texto extraível):** `07 - Unidad 2 Alteraciones de las vias urinarias`, `08 - Trastornos de la función glomerular`, `09 - Desequilibrio acido-base`, `10 - Diabetes`, `11 - Transtorno endocrino parte 1` (pasta «Slide atualizados», atualizadas em 22/10) e `Fisiopato suprarenal.pdf` (pasta Anotações, OneNote com várias linhas vazias «.»). **Não lido:** as figuras dos slides (o PDF de 5–8 MB não pôde ser aberto como imagem nesta sessão), logo os infográficos dos slides 08–11 **não foram avaliados visualmente**; só o texto extraído.
+
+Precedência aplicada: G0 > ciência/literatura-base/slide da cátedra > anotação (complemento). A anotação suprarenal é um resumo parcial do slide 11 (com erros de digitação e itens vazios): **não acrescentou nenhum fato ausente do slide**; só confirmou ênfases (aldosterona 3000×, DHEAS, três provas de cribado, 2 de 3 anormais, esquema do Addison).
+
+| fonte (slide/pág.) | bloco | achado | classificação | decisão | destino |
+|---|---|---|---|---|---|
+| 07 (todo) | fp2b14 | estrutura, nervios, pressões, obstrução, incontinência, DIAPPERS, 3 casos; errata «vesi-uterino» | **DUPLICADA** (já ensinada, inclusive a errata) | nenhuma edição | — |
+| 08 · GN pós-infecciosa | fp2b06 | início 7–12 dias após faringite/pele; ASO e anticorpos anti-estreptocócicos ↑, C3 ↓ | **COMPLEMENTAR** | 1 parágrafo com atribuição ao slide (a figura do bloco diz «semanas») | fp2b06 §2 |
+| 08 · Goodpasture | fp2b06 | gatilhos (influenza, solventes, fármacos, câncer); plasmaférese + corticoide + ciclofosfamida | **NOVA E RELEVANTE** | 1 parágrafo | fp2b06 tipo I |
+| 08 · etiologia | fp2b06 | hereditárias: síndrome de Alport (hematúria, surdez, olhos) | **COMPLEMENTAR** | 1 frase | fp2b06 §1 |
+| 08 · nefrótico | fp2b05 | colesterol > 300 mg/dL na definição (o bloco só tinha cortes genéricos 200/150) | **CONFLITANTE leve** (cátedra × figura) | valor da cátedra explicitado; 200/150 mantidos como cortes gerais | fp2b05 após a figura |
+| 08 · nefrótico | fp2b05 | retenção Na/H₂O: aldosterona ↑, simpático, fatores natriuréticos ↓; ↓ proteínas de ligação → ↑ fração livre dos fármacos | **NOVA E RELEVANTE** | 1 parágrafo | fp2b05 |
+| 08 · restante | fp2b05/06 | tríade, MCD/FSGS/membranosa, GNRP, matriz nefrótico × nefrítico, casos 1–2 | **DUPLICADA** | nenhuma edição | — |
+| 09 (todo) | **fp2b15 novo** | valores normais, ácidos/bases fortes e fracos, reação do tampão, pulmão × rim × digestivo, método (pH → culpado → MIRO), alcalose e acidose respiratórias | **NOVA E RELEVANTE** (a matéria não tinha o tema) | bloco completo + 11 questões + 16 cartões | fp2b15 |
+| 09 · causas metabólicas | fp2b15 | o slide **não** as desenvolve | **SEM FONTE** | declarado no bloco; não inventadas | fp2b15 (nota) |
+| 10 (todo) | **fp2b16 novo** | metabolismo posprandial/jejum, ilhota, DM1 × DM2, síndrome metabólica, critérios, pré-diabetes, rastreamento, metas, insulinas, esquemas, amanecer × Somogyi, fármacos orais, algoritmo | **NOVA E RELEVANTE** | bloco completo + 17 questões + 23 cartões | fp2b16 |
+| 10 × bloco do fígado | fp2b16 | cintura da síndrome metabólica: slide DM > 102/> 88 cm; bloco hepático ≥ 94/≥ 80 (população caucasiana) | **CONFLITANTE** | cada valor atribuído à sua fonte, com nota visível e cartão «Trampa» | fp2b16 |
+| 10 · metformina | fp2b16 | «creatinina > 1,5» como critério da cátedra | critério da cátedra | mantido com atribuição «slide»; **pendente** confirmar com a cátedra | fp2b16 |
+| 10 · Somogyi | fp2b16 | o slide só nomeia os dois fenômenos; a forma de separá-los (medir a glicemia de madrugada) é prática padrão, não está no slide | **COMPLEMENTAR (literatura geral)** | mantido como orientação curta, **marcada** neste registro | fp2b16 |
+| 11 + anotação | **fp2b17 novo** | zonas e hormônios, transporte, mineralocorticoides, eixo HHS, androgênios/DHEAS, insuficiência primária/secundária/terciária, Addison, crise (5 S), Cushing (formas, quadro, 3 provas, ACTH, tratamento), 3 casos | **NOVA E RELEVANTE** | bloco completo + 17 questões + 24 cartões | fp2b17 |
+| 11 · lista do Cushing | fp2b17 | «hipercalcemia: aumento de pigmentação…» e «cicatrização lenta: áreas de acantose» | **RECUSADA por erro de digitação** | hiperpigmentação (ACTH↑) corrigida em nota e cartão; acantose não incorporada | fp2b17 |
+| 11 · crise suprarrenal | fp2b17 | slide prefere dexametasona; o uso habitual é hidrocortisona (efeito mineralocorticoide) | **CONFLITANTE** | slide mantido e marcado numa nota («para confirmar com a cátedra»); **pendente** | fp2b17 |
+| 11 · caso 1 (A) | fp2b17 | a alternativa «confirma hipercorticismo» contradiz a regra do próprio slide (≥ 2 provas anormais) | **CONFLITANTE interno** | enunciado reescrito: «prova de cribado anormal; completar» | b17q10 |
+| 11 · secundária | fp2b17 | sem hiperpigmentação e aldosterona preservada | **DEDUÇÃO** das regras do slide (ACTH baixa; aldosterona por renina e K) | ensinada como dedução, não como citação | fp2b17 §5 |
+| anotação · «síndrome de motherhouse» | — | erro de digitação (Waterhouse-Friderichsen no slide) | **RECUSADA** | usado o nome do slide | — |
+
+**Contagens depois da rodada:** blocos 14 → **17**; perguntas 319 → **364** (MC 279 → 318; V/F 36 → 42; completar 4; basadas em exames 17 — as 45 novas são «complementares», 7 delas partem de casos de aula e levam o rótulo «Pregunta basada en material de la cátedra»); cartões 619 → **682** (e a mesma contagem na roleta); 93 ids novos (3 seções + 45 × 2); **0 ids, classes ou links removidos** em relação a 87516ddf; mirrors bloco↔banco idênticos.
+
+**Grifos e traços:** os blocos novos vêm depois de fp2b11 e antes do banco; nenhum bloco existente mudou de lugar. `hl-real --gate`: 47/47 «sobrevive-sem-remap» (inclui as frases novas em fp2b05/06). O harness agora tolera elementos inseridos (`alignElements`).

@@ -40,14 +40,29 @@ const SUB = 'p,li,h2,h3,h4,h5,table,figure,blockquote';
 /* seções que podem ter outra sequência de elementos (a abertura direta de 16/10 esvaziou `fp2portada`, que nunca teve grifo nem traço); `RM_SEQ_DIFF=a,b` troca a lista */
 const SEQ_DIFF = (process.env.RM_SEQ_DIFF || 'fp2portada').split(',');
 const TEXTS = `(SUB)=>{const RT=window.RMTools,out={};document.querySelectorAll('section[id]').forEach(sec=>{out[sec.id]=[...sec.querySelectorAll(SUB)].map(e=>RT.indexar(e).norm);});return out;}`;
+/* alinha os elementos ancoráveis antigos com os novos: primeiro por texto idêntico (LCS), depois, dentro de cada intervalo entre âncoras,
+   por semelhança de palavras (≥ 0,4) na ordem. Elementos NOVOS (inseridos) ficam sem par; elementos antigos sem par valem -1.
+   Com seções de mesmo tamanho e só edições de texto, o resultado é o mesmo pareamento por índice de antes. */
+function alignElements(A, B) {
+  if (A.length === B.length) return A.map((_, i) => i);      // mesmo tamanho: pareamento por índice (comportamento original)
+  const n = A.length, m = B.length, L = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = A[i] === B[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const map = new Array(n).fill(-1); let i = 0, j = 0, gi = 0, gj = 0;
+  const sim = (x, y) => { const a = new Set(x.split(' ')), b = y.split(' '); let c = 0; b.forEach(w => { if (a.has(w)) c++; }); return c / Math.max(a.size, b.length, 1); };
+  const fecha = (i2, j2) => { let q = gj; for (let k = gi; k < i2; k++) { if (i2 - gi === j2 - gj) { map[k] = gj + (k - gi); continue; } for (let r = q; r < j2; r++) if (sim(A[k], B[r]) >= 0.4) { map[k] = r; q = r + 1; break; } } };
+  while (i < n && j < m) { if (A[i] === B[j]) { fecha(i, j); map[i] = j; i++; j++; gi = i; gj = j; } else if (L[i + 1][j] >= L[i][j + 1]) i++; else j++; }
+  fecha(n, m); return map;
+}
 async function buildPairs(pOld, pNew) {
-  const A = await pOld.evaluate(eval(TEXTS), SUB), B = await pNew.evaluate(eval(TEXTS), SUB), by = {}, porEl = {};
+  const A = await pOld.evaluate(eval(TEXTS), SUB), B = await pNew.evaluate(eval(TEXTS), SUB), by = {}, porEl = {}, mapa = {};
   for (const sid of Object.keys(A)) {
     if (B[sid] && A[sid].length !== B[sid].length && SEQ_DIFF.includes(sid)) { console.warn('aviso: sequência diferente em ' + sid + ' (esvaziada de propósito; sem marcas nem traços) — fora do remapeamento'); continue; }
-    if (!B[sid] || A[sid].length !== B[sid].length) throw new Error('sequência diferente em ' + sid + ': o remapeamento por índice não se aplica');
-    A[sid].forEach((t, i) => { if (t !== B[sid][i]) { const ps = pairsOf(t, B[sid][i]); (by[sid] = by[sid] || []).push(...ps); (porEl[sid] = porEl[sid] || {})[i] = ps.slice().sort((x, y) => y.old.length - x.old.length); } });
+    if (!B[sid]) throw new Error('seção removida: ' + sid);
+    const al = alignElements(A[sid], B[sid]); mapa[sid] = al;          // índice antigo → índice novo (-1 = elemento reescrito por completo / removido)
+    A[sid].forEach((t, i) => { const j = al[i]; if (j >= 0 && t !== B[sid][j]) { const ps = pairsOf(t, B[sid][j]); (by[sid] = by[sid] || []).push(...ps); (porEl[sid] = porEl[sid] || {})[i] = ps.slice().sort((x, y) => y.old.length - x.old.length); } });
   }
   for (const sid in by) by[sid].sort((x, y) => y.old.length - x.old.length);   // o trecho mais específico primeiro
+  Object.defineProperty(by, '__map', { value: mapa });                          // alinhamento por seção: permite elementos NOVOS inseridos sem perder o pareamento dos antigos
   Object.defineProperty(by, '__el', { value: porEl });                          // pares POR ELEMENTO (índice SUB_SEL), usados quando se sabe onde a marcação estava
   return by;
 }

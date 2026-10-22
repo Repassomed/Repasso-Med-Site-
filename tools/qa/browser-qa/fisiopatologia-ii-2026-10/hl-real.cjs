@@ -26,9 +26,10 @@ const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ?
   const pairs = await buildPairs(po, pn), norms = await secNorms(pn), loc = await locateAll(po, raw);
   const remapped = raw.map((h, i) => remapRecord(h, pairs, norms, loc[i]));
   const remapRes = await resolve(pn, remapped.map(r => r.rec));
+  const elNovo = (h, a) => { const m = pairs.__map && pairs.__map[h.block_id]; return m && a.el >= 0 ? m[a.el] : a.el; };   // índice do mesmo elemento na matéria NOVA (alinhado)
   const rows = raw.map((h, i) => {
     const a = antiga[i], n = nova[i], r = remapRes[i];
-    const status = !a ? 'obsoleta-na-matéria-antiga' : (n && n.el === a.el && n.txt === a.txt ? 'sobrevive-sem-remap' : (n && n.el === a.el ? 'sobrevive-com-texto-diferente' : (n ? 'volta-em-outro-elemento' : (r && r.el === a.el ? 'recuperável-com-remap' : 'perdida'))));
+    const status = !a ? 'obsoleta-na-matéria-antiga' : (n && n.el === elNovo(h, a) && n.txt === a.txt ? 'sobrevive-sem-remap' : (n && n.el === elNovo(h, a) ? 'sobrevive-com-texto-diferente' : (n ? 'volta-em-outro-elemento' : (r && r.el === a.el ? 'recuperável-com-remap' : 'perdida'))));
     return { block_id: h.block_id, status, tocada: remapped[i].tocada, nivel_nova: n && n.nivel, trecho: (h.exact_text || '').slice(0, 90) };
   });
   const cnt = {}; rows.forEach(r => { cnt[r.status] = (cnt[r.status] || 0) + 1; });
