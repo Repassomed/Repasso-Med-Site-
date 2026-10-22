@@ -11,6 +11,7 @@ from . import (
     test_agent_v2,
     test_anthropic_client,
     test_audit_diff,
+    test_auditor_materias,
     test_auditor_technical_failure,
     test_anthropic_transport,
     test_auto_repair,
@@ -105,6 +106,8 @@ MODULOS = [
     test_openai_auditor,
     test_scheduler,
     test_site_quality_scan,
+    # Auditor de matérias via API (ChatGPT): só anota, nunca corrige.
+    test_auditor_materias,
     test_source_pack,
     # Issue #160: Intake da Inbox #88 → proposta tipada → PR administrativa
     # de coordination/tasks.json (nunca main, nunca merge/deploy).

@@ -11,7 +11,29 @@ window.__writes = []; window.__errs = [];
 window.addEventListener('error', e => window.__errs.push(String(e.message)));
 window.addEventListener('unhandledrejection', e => window.__errs.push('rej:' + e.reason));
 window.RM_CATALOGO = /*CATALOGO*/[];
-function chain(t){ const o = {}; ['select','eq','order','limit','single','maybeSingle','in'].forEach(m => o[m] = () => o); o.range = function(a){ o._from = a; return o };
+/* ?persist=1 (só a bateria de interação): tinta, grifos e notas persistem em sessionStorage — sobrevivem ao reload da MESMA aba, nunca saem da máquina.
+   Cada escrita continua registrada em window.__writes (a bateria confere que só estas três tabelas recebem escrita). */
+const PERSIST_T = P.get('persist') === '1' ? ['user_ink_strokes', 'user_highlights', 'user_notes'] : [];
+function chainPersist(t){
+  const K = 'ens.' + t, ler = () => { try { return JSON.parse(sessionStorage.getItem(K) || '[]'); } catch (e) { return []; } }, gravar = v => sessionStorage.setItem(K, JSON.stringify(v));
+  const o = { _op: 'select', _eq: {}, _from: 0, _single: false, _row: null };
+  o.select = () => o; o.order = () => o; o.limit = () => o; o.in = () => o;
+  o.insert = row => { o._op = 'insert'; o._row = row; return o; }; o.upsert = o.insert;
+  o.delete = () => { o._op = 'delete'; return o; }; o.update = row => { o._op = 'update'; o._row = row; return o; };
+  o.eq = (k, v) => { o._eq[k] = v; return o; }; o.range = a => { o._from = a; return o; };
+  o.single = () => { o._single = true; return o; }; o.maybeSingle = o.single;
+  const casa = x => Object.keys(o._eq).every(k => x[k] === undefined || x[k] === o._eq[k]);
+  o.then = (res, rej) => { let out; const rows = ler();
+    if (o._op === 'insert') { const r = Object.assign({ id: 'ens-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), created_at: new Date().toISOString() }, o._row);
+      if (rows.some(x => x.id === r.id)) out = { data: null, error: { code: '23505', message: 'duplicate key' } }; else { rows.push(r); gravar(rows); out = { data: { id: r.id }, error: null }; }
+      window.__writes.push('insert:' + t);
+    } else if (o._op === 'delete') { gravar(rows.filter(x => !casa(x))); out = { data: null, error: null }; window.__writes.push('delete:' + t);
+    } else if (o._op === 'update') { rows.forEach(x => { if (casa(x)) Object.assign(x, o._row); }); gravar(rows); out = { data: null, error: null }; window.__writes.push('update:' + t);
+    } else { const f = rows.filter(casa); out = o._single ? { data: f[0] || null, error: null } : { data: o._from > 0 ? [] : f, error: null }; }
+    return Promise.resolve(out).then(res, rej); };
+  return o;
+}
+function chain(t){ if (PERSIST_T.includes(t)) return chainPersist(t); const o = {}; ['select','eq','order','limit','single','maybeSingle','in'].forEach(m => o[m] = () => o); o.range = function(a){ o._from = a; return o };
   ['insert','update','delete','upsert'].forEach(m => o[m] = function(a){ window.__writes.push(m + ':' + t); return o });
   o.then = function(res){ return Promise.resolve({ data: [], error: null }).then(res) }; return o }
 /* UID de TESTER da V2 (constante pública no rm-tools-v2.js) só para o motor da caneta montar no harness; sessão 100% simulada, nenhuma credencial */
@@ -21,6 +43,6 @@ window._sb = window.RM_SB;
 </script>
 <script src="assets/app-core.js"></script>
 <script src="assets/rm-tools.js"></script>
-<script src="assets/rm-tools-v2.js"></script>
+<script>/* o motor da caneta recebe ?corr=1 como os módulos do layout (as correções C8 dele só valem na variante «com correção») */ document.write('<script src="assets/rm-tools-v2.js' + (P.get('corr') === '1' ? '?corr=1' : '') + '"><\/script>');</script>
 <script src="ativar.js"></script>
 </body></html>
