@@ -5,6 +5,7 @@
      3. remap  : se não sobrevive, a ferramenta de remapeamento (offline) o recupera no mesmo elemento?
    Saída: contagens + lista das marcas que NÃO sobrevivem sem remapeamento (trecho curto) → são as «frases que precisam continuar intactas».
    Não escreve em lugar nenhum; o JSON de entrada fica fora do repositório.
+   --gate: PORTÃO PRÉ-MERGE — código de saída 1 se QUALQUER registro não sobreviver sem remapeamento no mesmo elemento (os `obsoleta-na-matéria-antiga` não contam: já não resolviam na `main`). Rodar com os registros de uma consulta SELECT feita no dia do merge: cobre os grifos criados entre a consulta anterior e o merge.
    Uso: node hl-real.cjs --in registros.json [--out relatorio.json]   (registros: [{b|block_id, e|exact_text, p|prefix, s|suffix, o|occurrence}]) */
 const fs = require('fs');
 const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
@@ -25,9 +26,10 @@ const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ?
   const pairs = await buildPairs(po, pn), norms = await secNorms(pn), loc = await locateAll(po, raw);
   const remapped = raw.map((h, i) => remapRecord(h, pairs, norms, loc[i]));
   const remapRes = await resolve(pn, remapped.map(r => r.rec));
+  const elNovo = (h, a) => { const m = pairs.__map && pairs.__map[h.block_id]; return m && a.el >= 0 ? m[a.el] : a.el; };   // índice do mesmo elemento na matéria NOVA (alinhado)
   const rows = raw.map((h, i) => {
     const a = antiga[i], n = nova[i], r = remapRes[i];
-    const status = !a ? 'obsoleta-na-matéria-antiga' : (n && n.el === a.el && n.txt === a.txt ? 'sobrevive-sem-remap' : (n && n.el === a.el ? 'sobrevive-com-texto-diferente' : (n ? 'volta-em-outro-elemento' : (r && r.el === a.el ? 'recuperável-com-remap' : 'perdida'))));
+    const status = !a ? 'obsoleta-na-matéria-antiga' : (n && n.el === elNovo(h, a) && n.txt === a.txt ? 'sobrevive-sem-remap' : (n && n.el === elNovo(h, a) ? 'sobrevive-com-texto-diferente' : (n ? 'volta-em-outro-elemento' : (r && r.el === a.el ? 'recuperável-com-remap' : 'perdida'))));
     return { block_id: h.block_id, status, tocada: remapped[i].tocada, nivel_nova: n && n.nivel, trecho: (h.exact_text || '').slice(0, 90) };
   });
   const cnt = {}; rows.forEach(r => { cnt[r.status] = (cnt[r.status] || 0) + 1; });
@@ -36,5 +38,6 @@ const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ?
   const ruins = rows.filter(r => !/^sobrevive-sem-remap$/.test(r.status));
   console.log('\nNão sobrevivem sem remapeamento (' + ruins.length + '):'); ruins.forEach(r => console.log(' -', r.status, '|', r.block_id, '|', r.trecho));
   const out = arg('out'); if (out) fs.writeFileSync(out, JSON.stringify({ resumo: cnt, porSec, rows }, null, 1));
+  if (process.argv.includes('--gate')) { const falhas = rows.filter(r => !/^(sobrevive-sem-remap|obsoleta-na-matéria-antiga)$/.test(r.status)); if (falhas.length) { console.error('PORTÃO REPROVADO: ' + falhas.length + ' grifo(s) real(is) não sobrevivem sem remapeamento — NÃO mesclar; restaurar a frase original ou migrar o grifo (decisão do José).'); process.exit(1); } console.log('PORTÃO OK: ' + rows.length + ' grifos reais conferidos, nenhum pintaria frase errada.'); }
   await br.close(); s.close();
 })().catch(e => { console.error(e); process.exit(2); });
