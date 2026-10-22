@@ -44,6 +44,7 @@ from . import (
     test_observe_real_path,
     test_observe_runner_wiring,
     test_openai_auditor,
+    test_openai_pausa_workflows,
     test_openai_transport,
     test_pilot_mode,
     test_redact,
@@ -104,6 +105,7 @@ MODULOS = [
     test_worker_registry_human_vs_api,
     test_openai_transport,
     test_openai_auditor,
+    test_openai_pausa_workflows,
     test_scheduler,
     test_site_quality_scan,
     # Auditor de matérias via API (ChatGPT): só anota, nunca corrige.
