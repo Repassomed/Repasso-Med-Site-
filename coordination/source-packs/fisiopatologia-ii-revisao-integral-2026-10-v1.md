@@ -119,3 +119,24 @@ Precedência aplicada: G0 > ciência/literatura-base/slide da cátedra > anotaç
 **Contagens depois da rodada:** blocos 14 → **17**; perguntas 319 → **364** (MC 279 → 318; V/F 36 → 42; completar 4; basadas em exames 17 — as 45 novas são «complementares», 7 delas partem de casos de aula e levam o rótulo «Pregunta basada en material de la cátedra»); cartões 619 → **682** (e a mesma contagem na roleta); 93 ids novos (3 seções + 45 × 2); **0 ids, classes ou links removidos** em relação a 87516ddf; mirrors bloco↔banco idênticos.
 
 **Grifos e traços:** os blocos novos vêm depois de fp2b11 e antes do banco; nenhum bloco existente mudou de lugar. `hl-real --gate`: 47/47 «sobrevive-sem-remap» (inclui as frases novas em fp2b05/06). O harness agora tolera elementos inseridos (`alignElements`).
+
+## (xv) Auditoria dos blocos novos contra os PDFs 07–11 e a anotação — fechamento de 22/10 (issue #543)
+
+Método: cada afirmação, número, questão (45) e cartão (63) dos blocos fp2b15/16/17 e dos acréscimos de fp2b05/06 foi conferida **contra o texto dos PDFs** `08`, `09`, `10`, `11` e `Fisiopato suprarenal.pdf`. As figuras desses PDFs **não** foram vistas (o conector do Drive derruba ao baixar arquivos de ~6 MB).
+
+**Retirado da página por não ter fonte permitida ou por divergir (resolvido antes de publicar):**
+
+| item | decisão |
+|---|---|
+| Crise suprarrenal: «dexametasona preferida» × «hidrocortisona primeiro» e «fludrocortisona se reduzir a dose» | **Removidos** (tratamento contestado, sem validação). A página diz só «reemplazo de glucocorticoides y mineralocorticoides, reposição de volume e glicose; o fármaco e a dose os define a equipe». Registro: o slide 11 cita dexametasona ou hidrocortisona e prefere dexametasona. **Pendente:** confirmação da cátedra |
+| Hiperglicemia matinal: «medir a glicemia de madrugada; se baixa, é Somogyi» | **Removido** (não está no slide). Ficam as duas explicações do slide (amanhecer = manhã desprotegida; Somogyi = hipoglicemia de madrugada). Questão b16q13 reescrita para o que o slide diz; cartão e ponto de «Puntos a dominar» ajustados |
+| «Bicarbonato é base fraca, **por isso** amortece» | Reescrito sem causalidade («é a base que participa do sistema tampão») |
+| b17q13 (caso 2): «tumor ectópico não costuma responder ao CRH» | Reescrito: «ACTH ectópica se estuda com dexametasona em doses altas; a resposta ao CRH do caso aponta à hipófise» |
+| b17q17: distrator «excesso de ACTH» era parcialmente verdadeiro no Addison | Trocado por «excesso de cortisol; dexametasona» |
+| b15q09: distrator «asma grave» (hiperventila no início) | Trocado por «corpo estranho que obstrui a via aérea» |
+| Acréscimo do nefrótico: «risco de toxicidade com a mesma dose» | «a mesma dose pode ter mais efeito» |
+| Secundária: «sem desidratação grave» | Retirado; fica «sem a hiperpotassemia do Addison» e sem hiperpigmentação |
+
+**Conferido e mantido (critério da cátedra, atribuído ao slide):** metformina «não usar com creatinina > 1,5, ICC, cirrose descompensada»; glitazonas; sulfonilureia em IR; cintura 102/88 cm (e o bloco do fígado cita 94/80 cm, com nota nos dois lugares); provas de cribado do Cushing e cortes (100 µg/24 h, 1,8–2 µg/dL, 1,6 ng/mL; ACTH < 5 / > 15–20 / 5–20); tratamento do Cushing e do Addison crônico (hidrocortisona + fludrocortisona, DHEAS, brazalete).
+**Dedução das regras do slide, ensinada como dedução:** secundária sem hiperpigmentação e com aldosterona conservada. **Literatura geral (não está no slide):** POMC comum a ACTH e MSH (explica a hiperpigmentação) — mantida em uma frase.
+**Erratas do slide tratadas:** «hipercalcemia: aumento de pigmentação» (→ hiperpigmentação); alternativa «confirma» do caso 1 (contradiz a regra de 2 provas anormais); «acantose» na cicatrização (não incorporada); «síndrome de motherhouse» da anotação (→ Waterhouse-Friderichsen).
