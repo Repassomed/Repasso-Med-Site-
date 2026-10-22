@@ -253,3 +253,29 @@ Confere: unidade pilossebácea; ordem hiperqueratinização → sebo/andrógenos
 **Segue sem fonte permitida (para a cátedra ou o José):** (1) conduta de drenagem/incisão do querión (a figura 16 afirma «no incidir ni drenar»; o Atlas só descreve KOH, cultura e antimicóticos gerais); (2) «raspar sempre o borde» como regra; (3) «eccema marginado de Hebra»; (4) rótulo «verde manzana» da figura 01-09 (o Atlas diz «verdosa»); (5) padrões de `16-tina-capitis-patrones` além de ectotrix/endotrix/favus.
 
 **Contagens:** 120 questões, 482 cartões, 58 imagens, 240 ids — iguais à main; 0 grifos, 0 traços, 0 notas em `dermatologia` (SELECT somente leitura, 22/10).
+
+## (xvi) Fechamento de 22/10 (2.ª rodada) — «Trampa clásica», figuras e condutas sem fonte
+
+**1. Linguagem de estratégia de prova (varredura da página inteira).** Havia **85** parágrafos «⚠️ Trampa clásica» nas respostas das questões (blocos 01–13). Todos foram reescritos como **«🩺 Razonamiento clínico»**: o mesmo fato clínico, dito como explicação (por que a lesão/conduta é assim), sem «no confundir», «regla corta», «mnemotecnia», «los números que conviene tener sueltos». Nenhum fato foi trocado. Também mudaram: caixas «Segunda trampa…», «Las dos trampas de la luz de Wood», «La trampa clásica del bloque» (→ «La paradoja del bloque»), «La trampa de vocabulario más frecuente» (→ «Una confusión de vocabulario frecuente»), a legenda da barra «la trampa de vocabulario», e «lo único que hay que memorizar». Resultado: **0** ocorrências de «trampa» na página. Mantidos por serem rótulos de conteúdo, não de estratégia: «Error frecuente · bloque NN» (cartões), «Basada en preguntas de examen» (rótulo exigido pela 8-A.4).
+
+**2. Figuras — fonte → decisão → destino** (conferidas contra `Fitzpatrick_dermatofitoses_paginas_644-664.pdf`, relido por inteiro em 22/10, e os slides já citados):
+
+| figura | afirmação | fonte | decisão |
+|---|---|---|---|
+| 16 `tina-capitis-patrones` | ectotrix (Microsporum), endotrix (Trichophyton), pontos negros, querion, favus com escútulas, alopecia cicatrizal | Atlas pp. 623–626 | **CONFERE** |
+| 16 | «QUERION: NO INCIDIR NI DRENAR · tratar pronto» | **nenhuma fonte permitida** (o Atlas só dá KOH, cultura micológica e bacteriana e antimicóticos gerais; caso ilustrado: terbinafina oral 4 semanas) | **imagem editada**: recuadro trocado por «QUERION: confirmar con KOH y cultivo · antifúngico sistémico» |
+| 16 | «Champú antifúngico: reduce contagio, NO cura solo» | **nenhuma fonte permitida** | **imagem editada**: trocado por «Pelo y cuero cabelludo: la crema sola no llega al tallo del pelo» (regra do slide: pelo/unha → oral) |
+| 16 | «Toda tiña capitis requiere tratamiento sistémico»; «revisar convivientes y fómites» | regra do slide (pelo → oral); Atlas p. 608 (transmissão por fómites) | mantido |
+| 15 `dermatofitos-muestra` | KOH, cultura (10–14 dias), PAS mais sensível na unha, detrito proximal, corticoide → tiña incógnita, «confirmar antes de sistêmico e revisar interações» | Atlas pp. 608–609, 622 (itraconazol ↑ digoxina/ciclosporina) | **CONFERE** |
+| 17 `tinas-localizacion` | borda ativa, centro claro, tiña de barba (tópicos ineficazes → sistêmico), tiña incógnita, não usar corticoide só | Atlas pp. 618–626 | **CONFERE**; texto alternativo estava errado (descrevia outra figura) → corrigido |
+| 18 `pies-manos-unas` | formas do pé, «dos pies · una mano», padrões de onicomicose, KOH/cultivo/PAS | Atlas pp. 610–615, 609 | **CONFERE**. Dois recuadros sem fonte localizada (não alterados): «proximal: mayor riesgo en inmunodeprimidos» e «uña no es sinónimo de hongo: psoriasis y trauma pueden imitar» |
+| 19 `micosis-superficiales` | tiña negra (*H. werneckii*, mácula marrón-negra palmar/plantar, sem inflamação), piedra blanca (*Trichosporon*) | guia de estudo no Drive («Questões P1»/«Final»); índice do Fitzpatrick | **CONFERE** o diagnóstico; tratamento («corte/rasurado + antifúngico») e alerta de melanoma acral **sem fonte** → **imagem editada**: painel de tratamento diz que não está desenvolvido nas fontes; caixa vermelha trocada por «TIÑA NEGRA: mácula marrón-negra en palma o planta, sin inflamación». Texto alternativo e legenda estavam errados (descreviam versicolor) → corrigidos |
+| `bloco-01-09` | Wood, diascopia, dermatoscopia, KOH, biopsia | Atlas introdução; slides | **CONFERE** (já ajustado em 21/10) |
+
+As imagens 16 e 19 foram editadas só nos recuadros indicados (retoque de texto; nenhuma foto apagada ou trocada). As legendas «Sobre la figura» dizem o que mudou.
+
+**3. Texto da página.** Barra «Querión: confirmar con KOH antes de drenar» → «confirmar con KOH y cultivo; el tratamiento es antifúngico sistémico». O risco de alopecia cicatricial do querión **tem fonte** (Atlas p. 625: «cura dejando alopecia cicatrizal»; sem tratamento, sobretudo se sobreinfecta).
+
+**Segue sem fonte permitida (lista curta):** (a) conduta «não drenar» o querión como regra explícita (a página só diz que o tratamento descrito é antifúngico sistémico); (b) os dois recuadros da figura 18 acima; (c) piedra negra/*Piedraia hortae* e a dermatoscopia da tiña negra na figura 19 (sem texto acessível no Drive); (d) «eccema marginado de Hebra».
+
+**Dados reais (SELECT somente leitura, 22/10):** `dermatologia` 0 grifos, 0 traços, 0 notas.
