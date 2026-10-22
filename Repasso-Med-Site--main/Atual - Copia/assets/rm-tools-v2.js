@@ -2768,20 +2768,46 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     };
     remapear(rec.id, novoId);
     (RT().estado.porSlug[slug] = RT().estado.porSlug[slug] || []).push(copia);
-    repintar(tab, copia);
-    if (!silencioso) toast('Marca restaurada ✓');
+    /* O registo já está de volta no banco acima, independentemente do
+       resultado de repintar() — nenhum dado se perde aqui. O que pode
+       faltar é só a pintura: se o bloco mudou a ponto de nenhum dos três
+       níveis de resolverAncora se sentir seguro, a marca fica no estado
+       (e volta a ser tentada no próximo carregamento da aba, pelo mesmo
+       caminho que aplicarHighlights já usa) sem ninguém fingir que ela
+       apareceu na tela agora. */
+    var pintada = repintar(tab, copia);
+    /* o toast de "pendiente de ubicar" abaixo desaparece sozinho; sem
+       isto, depois dele sumir não haveria como o aluno achar de novo
+       este bloco — ACRESCENTA (nunca substitui: outras marcas da mesma
+       aba já podem estar pendentes) ao mesmo badge persistente que
+       aplicarHighlights() usa no carregamento normal. */
+    if (!pintada) { try { RT().adicionarPendente(tab, copia.block_id); } catch (e) {} }
+    if (!silencioso) {
+      toast(pintada ? 'Marca restaurada ✓' : 'Marca restaurada, pendiente de ubicar (el texto cambió)');
+    }
   }
 
-  /* Repinta UMA marcação usando as primitivas do motor antigo. */
+  /* Repinta UMA marcação ao desfazer um apagar (§8). Usa o mesmo resolvedor
+     em níveis (exacto -> tolerante -> glossário) que `aplicarHighlights`
+     já usa no carregamento normal da página — ver `resolverAncora` em
+     rm-tools.js. Antes chamava `escolher` directamente (nível 1 apenas):
+     se o texto do bloco tivesse mudado entre o apagar e o desfazer (uma
+     reforma editorial no meio do caminho), o desfazer reinseria a marca
+     no banco mas nunca a repintava — o aluno via "Marca restaurada ✓" sem
+     nada visível. Com `resolverAncora`, os mesmos três níveis (e a mesma
+     recusa em caso de dúvida — nunca pinta no sítio errado) se aplicam
+     aqui também. `nivel === 3` é passado a `pintar` porque, nesse nível, a
+     Range foi resolvida numa projecção onde um termo de glossário conta
+     como prosa — sem o aviso, a pintura abriria um buraco exactamente na
+     palavra marcada (ver o comentário de `pintar` em rm-tools.js). */
   function repintar(tab, h) {
     var bloco = tab.querySelector('#' + cssEsc(h.block_id));
     if (!bloco) return false;
-    var idx = RT().indexar(bloco);
-    var i = RT().escolher(idx.norm, h);
-    if (i < 0) return false;
-    var r = RT().rangeDe(idx, i, i + h.exact_text.length);
+    var a = RT().resolverAncora(bloco, h);
+    if (!a) return false;
+    var r = RT().rangeDe(a.idx, a.ini, a.fim);
     if (!r) return false;
-    return !!RT().pintar(r, h.color, h.id);
+    return !!RT().pintar(r, h.color, h.id, a.nivel === 3);
   }
 
   /* ================================================================== */

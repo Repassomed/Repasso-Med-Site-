@@ -1,0 +1,214 @@
+{
+ "o": {
+  "n": 3,
+  "tracos": 4,
+  "throttle": 1,
+  "seedmany": 150
+ },
+ "todos": [
+  {
+   "alvo": "dermatologia",
+   "estados": {
+    "sem": {
+     "tracos": 12,
+     "upProcMs": 6.1,
+     "upDurMs": 24,
+     "moveP95Ms": null,
+     "tintaP95Ms": 16.2,
+     "tarefasLongas": 0,
+     "quadroMaxMs": 16.8,
+     "estiloPorQuadroMs": 0.1,
+     "tarefaPorQuadroMs": 1.1,
+     "recalculosEstilo": 362,
+     "pontosPerdidos": 0,
+     "pontosEnviados": 4308
+    },
+    "filho": {
+     "tracos": 12,
+     "upProcMs": 6,
+     "upDurMs": 24,
+     "moveP95Ms": null,
+     "tintaP95Ms": 16.2,
+     "tarefasLongas": 0,
+     "quadroMaxMs": 16.8,
+     "estiloPorQuadroMs": 0.1,
+     "tarefaPorQuadroMs": 1.1,
+     "recalculosEstilo": 362,
+     "pontosPerdidos": 0,
+     "pontosEnviados": 4308
+    },
+    "desc": {
+     "tracos": 12,
+     "upProcMs": 5.5,
+     "upDurMs": 24,
+     "moveP95Ms": null,
+     "tintaP95Ms": 16.2,
+     "tarefasLongas": 0,
+     "quadroMaxMs": 16.8,
+     "estiloPorQuadroMs": 0.1,
+     "tarefaPorQuadroMs": 1.1,
+     "recalculosEstilo": 362,
+     "pontosPerdidos": 0,
+     "pontosEnviados": 4308
+    }
+   },
+   "elementosCasados": {
+    "sem": 5,
+    "filho": 5,
+    "desc": 5
+   },
+   "micro": {
+    "sem": {
+     "classeBodyMs": 7.97,
+     "noNoParagrafoMs": 0
+    },
+    "filho": {
+     "classeBodyMs": 7.92,
+     "noNoParagrafoMs": 0
+    },
+    "desc": {
+     "classeBodyMs": 8.6,
+     "noNoParagrafoMs": 0
+    }
+   },
+   "erros": 0,
+   "tool": "pen"
+  },
+  {
+   "alvo": "fisiopatologia-ii",
+   "estados": {
+    "sem": {
+     "tracos": 12,
+     "upProcMs": 22.8,
+     "upDurMs": 56,
+     "moveP95Ms": null,
+     "tintaP95Ms": 16,
+     "tarefasLongas": 1,
+     "quadroMaxMs": 33.4,
+     "estiloPorQuadroMs": 0.1,
+     "tarefaPorQuadroMs": 1.9,
+     "recalculosEstilo": 362,
+     "pontosPerdidos": 0,
+     "pontosEnviados": 4308
+    },
+    "filho": {
+     "tracos": 12,
+     "upProcMs": 22.7,
+     "upDurMs": 56,
+     "moveP95Ms": null,
+     "tintaP95Ms": 16,
+     "tarefasLongas": 1,
+     "quadroMaxMs": 33.3,
+     "estiloPorQuadroMs": 0.1,
+     "tarefaPorQuadroMs": 2,
+     "recalculosEstilo": 362,
+     "pontosPerdidos": 0,
+     "pontosEnviados": 4308
+    },
+    "desc": {
+     "tracos": 12,
+     "upProcMs": 22.4,
+     "upDurMs": 56,
+     "moveP95Ms": null,
+     "tintaP95Ms": 16,
+     "tarefasLongas": 1,
+     "quadroMaxMs": 33.3,
+     "estiloPorQuadroMs": 0.1,
+     "tarefaPorQuadroMs": 1.9,
+     "recalculosEstilo": 362,
+     "pontosPerdidos": 0,
+     "pontosEnviados": 4308
+    }
+   },
+   "elementosCasados": {
+    "sem": 43,
+    "filho": 43,
+    "desc": 43
+   },
+   "micro": {
+    "sem": {
+     "classeBodyMs": 15.87,
+     "noNoParagrafoMs": 0
+    },
+    "filho": {
+     "classeBodyMs": 16.66,
+     "noNoParagrafoMs": 0
+    },
+    "desc": {
+     "classeBodyMs": 17.73,
+     "noNoParagrafoMs": 0
+    }
+   },
+   "erros": 0,
+   "tool": "pen"
+  },
+  {
+   "alvo": "semiologia-ii-novo",
+   "estados": {
+    "sem": {
+     "tracos": 12,
+     "upProcMs": 7.7,
+     "upDurMs": 24,
+     "moveP95Ms": null,
+     "tintaP95Ms": 16,
+     "tarefasLongas": 0,
+     "quadroMaxMs": 16.8,
+     "estiloPorQuadroMs": 0.1,
+     "tarefaPorQuadroMs": 1.4,
+     "recalculosEstilo": 363,
+     "pontosPerdidos": 0,
+     "pontosEnviados": 4308
+    },
+    "filho": {
+     "tracos": 12,
+     "upProcMs": 7.9,
+     "upDurMs": 24,
+     "moveP95Ms": null,
+     "tintaP95Ms": 16,
+     "tarefasLongas": 0,
+     "quadroMaxMs": 16.8,
+     "estiloPorQuadroMs": 0.1,
+     "tarefaPorQuadroMs": 1.4,
+     "recalculosEstilo": 363,
+     "pontosPerdidos": 0,
+     "pontosEnviados": 4308
+    },
+    "desc": {
+     "tracos": 12,
+     "upProcMs": 7.6,
+     "upDurMs": 24,
+     "moveP95Ms": null,
+     "tintaP95Ms": 16,
+     "tarefasLongas": 0,
+     "quadroMaxMs": 16.8,
+     "estiloPorQuadroMs": 0.1,
+     "tarefaPorQuadroMs": 1.4,
+     "recalculosEstilo": 363,
+     "pontosPerdidos": 0,
+     "pontosEnviados": 4308
+    }
+   },
+   "elementosCasados": {
+    "sem": 0,
+    "filho": 0,
+    "desc": 1
+   },
+   "micro": {
+    "sem": {
+     "classeBodyMs": 11.5,
+     "noNoParagrafoMs": 0
+    },
+    "filho": {
+     "classeBodyMs": 11.52,
+     "noNoParagrafoMs": 0
+    },
+    "desc": {
+     "classeBodyMs": 12.22,
+     "noNoParagrafoMs": 0
+    }
+   },
+   "erros": 0,
+   "tool": "pen"
+  }
+ ]
+}

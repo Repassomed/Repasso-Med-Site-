@@ -215,6 +215,17 @@ grupos de Preguntas só com metadado real e estado da questão preservado, Flash
 que medem a leitura contínua; `nav:true` liga. `ink-jump.test.cjs` com `RM_VISUAL=1` roda os saltos/revisitas de bloco COM a navegação e os cenários de leitura contínua sem ela.
 `capturas-navegacion.cjs` gera antes (leitura contínua) × depois e a comparação A × B do player com `MEDIDAS-PLAYER.md`. Emulação de toque, não aparelho real.
 
+## Conteúdo fora de `section[id]` na navegação (#487) — `soltos.test.cjs`
+O `rm-materia-sistema.js` classifica cada filho da aba que não é `section[id]` (`data-rm-solto`): **abertura** (antes do 1.º bloco), **fecho** (depois do último), **conteudo**
+(tem questão/flashcard/figura/tabela/mídia, ou fica entre blocos sem um bloco logo depois) e **anexo** (texto entre blocos, `data-rm-anexo-de` = bloco seguinte, p.ex. o banner de revisão do `app-core.js`).
+Índice geral: abertura/conteúdo/fecho visíveis, anexo não. Bloco: só o anexo daquele bloco (`data-rm-anexo-cur`). Modo+bloco: o filtro do modo (já na main) mostra só o recurso.
+```
+export NODE_PATH=$(npm root -g)   # ou RM_PLAYWRIGHT=/caminho/do/modulo ; precisa de ffmpeg (ou RM_FFMPEG)
+node tools/qa/browser-qa/layout/soltos.test.cjs
+```
+Semiología II real + 3 nós de teste postos antes do attach (banner antes de `s2-b03`, seção sem id com questão, texto final) em 1440 e 390: classificação, índice geral, bloco, modo+bloco, outro bloco, volta e detach limpo.
+O ensaio das 27 matérias (`tools/qa/ensaio-layout`, PR #485) mede o mesmo em cada matéria real (`indice/preserva-conteudo-solto`, `blocos/anexo-com-seu-bloco`).
+
 ## Player do audiobook no tema do piloto — `player-sistema.test.cjs` e `capturas-player.cjs`
 **(Atualizado na #453: disco de vinil quase quadrado no ALTO À DIREITA — A coluna reservada ≥ 1430 px · B quadrado recolhido que expande; ver `SISTEMA-VISUAL-MATERIAS.md`.)** Na #446 era um card dentro da lateral colorida (desktop ≥ 1200 px); barra compacta (celular/tablet/trilho), convivência com a toolbox aberta e com a caneta armada. **Motor de áudio REAL**
 (rm-audio-boot → rm-audio/store/provider, mp3 gerado com ffmpeg); só o servidor (gate, manifesto, URL assinada, mídia) é simulado — `lib-player.cjs`.
@@ -228,6 +239,33 @@ acima do card, controles ≥ 44 px, seek/±15/velocidade/play/progresso/retomada
 hit-test, fim da página legível, card ampliado por TOQUE, toolbox aberta, caneta armada com ESCRITA enquanto o áudio toca, borracha) · tablet 768 e trilho · 6 `<audio>` de ausculta intactos e exclusivos com o audiobook ·
 trocar de matéria e `SIGNED_OUT` (inclusive pelo «Sair» da faixa) param o áudio e desfazem o tema. Capturas: `capturas-sistema/player/`. Emulação de toque, não aparelho real.
 
+## Post-its/notas laterais encobertos (issue #93) — `postits-93.probe.cjs`, `postits-encobertos.test.cjs`, `capturas-93.cjs`
+Bug global: em algumas matérias o post-it lateral (`.rmc-margin`, `float:right` ≥ 920 px) aparece cortado/oculto pelo bloco seguinte. `postits-93.probe.cjs` **mede** (não deduz) em todas as matérias reais de `netlify/functions/materias-privadas/` a 390/768/1024/1440:
+para cada post-it (`.rmc-margin` e os legados `*-postit`) em 3 posições de rolagem, compara **por pixel** a região visível «como está» com a mesma região mostrando só o post-it (blocos de 8 px; UI fixa/grudada some nas duas) — o aluno só vê o que PINTA, então um irmão que só tem texto contornando o float não conta;
+também registra o hit-test (quem está por cima), recorte lateral, overflow horizontal, UI fixa sobreposta e, no glossário (`#rm-gl-note`), abertura em 3 posições (dentro da janela, sem recorte, por cima de tudo). A página é «aquecida» antes (rolagem completa) porque `content-visibility:auto` só dá a geometria real depois da 1.ª renderização.
+```
+export NODE_PATH=$(npm root -g)   # ou RM_PLAYWRIGHT=/caminho/do/modulo
+node tools/qa/browser-qa/layout/postits-93.probe.cjs [--slugs=a,b] [--w=390,768,1024,1440] [--nota=6] [--gl=2] [--layout=1 (Layout V2)] [--capturas=pasta] [--ndjson=arquivo]
+node tools/qa/browser-qa/layout/postits-encobertos.test.cjs
+RM_PLAYWRIGHT=... node tools/qa/browser-qa/layout/capturas-93.cjs <pasta-de-saída> [--slugs=dermatologia,farmacologia,oftalmologia] [--w=1440,1024]
+RM_PLAYWRIGHT=... node tools/qa/browser-qa/layout/caneta-has-93.cjs [--n=3] [--tracos=4] [--throttle=4|1] [--alvos=dermatologia,fisiopatologia-ii,semiologia-ii-novo]   # custo da regra na escrita (sem × filho × descendente)
+```
+**Causa:** `.container>*{position:relative;z-index:1}` faz de cada filho de `.container` um contexto de apilamiento; o `z-index:2` do post-it (correção da #370) só vale quando o post-it é filho DIRETO. Dentro de `.rmc-detalle`/`.pk-step`/`.analysis-card`/`figure` ele fica encerrado no contexto do pai e, se cuelga abaixo do pai, o irmão seguinte (z:1, depois no DOM) pinta POR CIMA e o corta.
+**Correção:** `#materias-container .rm-cuaderno .container>:has(>.rmc-margin){z-index:auto}` em `@media(min-width:920px)` (`assets/styles.css`): o filho com post-it deixa de ser contexto; nenhuma caixa se move (geometria idêntica, provada no teste). Glossário: sem defeito (popover top layer + fallback fixed, testados com e sem Popover API).
+`:has()` em CSS compartilhado só com combinador de FILHO (contrato da #456): o seletor é `:has(>.rmc-margin)`; a estrutura medida (post-it filho direto do bloco) é coberta por ele, e `caneta-has-93.cjs` mede que a escrita não piora (±ruído) com e sem a regra. O teste prova antes×depois NA MESMA PÁGINA (regra neutralizada × ativa), geometria idêntica, 0 cobertos em 7 matérias × 1024/1440 (legado e V2), 390/768 sem cobertura/overflow, glossário em 4 larguras com e sem popover, e a faixa/lateral do V2 por cima do post-it. Emulação do Chromium.
+
+### Post-it que aparece mas não recebe toque — `postit-toque.test.cjs`
+Caso funcional achado na QA da #366: quando o irmão que cobre a nota é **transparente**, a nota continua à vista (a captura por pixel acima não vê defeito), mas o toque/mouse cai no irmão —
+o texto não seleciona e o marcador não grifa. Medido na `main` em Dermatología (`dermb01–03`) e Oftalmología (`ofb09`). Matéria real pelo harness do ensaio (`tools/qa/ensaio-layout/lib.cjs`,
+modo `controle`: `styles.css` + `<style>`/topo do index + app-core + rm-tools/V2 reais; sessão simulada; escritas só registradas). Imagens carregadas antes de medir.
+```
+export NODE_PATH=$(npm root -g)
+node tools/qa/browser-qa/layout/postit-toque.test.cjs                                  # branch: tem de passar
+RM_ENSAIO_REF=origin/main node tools/qa/browser-qa/layout/postit-toque.test.cjs        # assets da main: tem de FALHAR (A/B/C)
+```
+Dermatología e Oftalmología × 1024/1440, na mesma página: **com a correção** — A · o centro de cada linha real de texto (`Range.getClientRects`) de toda `.rmc-margin` devolve a própria nota em `elementFromPoint` ·
+B · cada nota aninhada seleciona texto por arrasto real de mouse · C · o marcador real (`RMToolsV2` 'highlight') grifa cada nota aninhada e grava `insert:user_highlights` (simulado);
+**sem a correção** (regra neutralizada pelo mesmo override de `postits-encobertos.test.cjs`) — as notas conhecidas (`dermb02`, `ofb09`) falham A, B e C; 0 erros JS. Emulação do Chromium (mouse), sem toque físico.
 ## Caneta no novo layout (issue #456) — `caneta-novo-layout.test.cjs` e `pen-bench.cjs`
 José relatou: no layout novo a caneta «atrasa e às vezes perde partes do traço»; no antigo funcionava melhor. `pen-bench.cjs` MEDE o gesto na pipeline real do Chromium
 (CDP `Input.dispatchMouseEvent` com `pointerType:'pen'` → pointerdown/move/up reais) em três configurações — `antigo` (layout:false) · `layout` (Layout V2 sem tema) · `novo` (V2 + tema + navegação) —
@@ -242,3 +280,18 @@ Causas medidas e corrigidas (detalhe e números em `capturas-sistema/caneta-456/
 B zero leituras de layout/escritas de `--rm-dock-h` pelo tema durante os traços (desktop e celular) e o espelho da toolbox continua certo · C fidelidade antigo×layout×novo em parágrafo/tabela/post-it, rápido e longo, rajada sem esperar ack a 4× de CPU, 0 pontos perdidos, âncora e gravação ·
 D áudio tocando durante a escrita · E troca de bloco sem duplicar nem gravar · F mouse desenha/dedo não · G 390/768/1024/1440 · H custo do tick do player. Validado por mutação: no código anterior (`main`) falham A e B (7 verificações).
 Limites: emulação do Chromium, sem stylus físico; interrupções próprias de aparelho (pointercancel por palm rejection/pan do SO) não são reproduzíveis aqui.
+
+## Selo do bloco e título da matéria — `selo-titulo.test.cjs`
+Dois defeitos globais reproduzidos com o `index.html` REAL (login pelo harness de `recovery/`, matéria servida pelo get-materia a partir do HTML privado):
+(1) o selo numérico do bloco (`.rm-block-num`, `app-core.js`) contava pela posição: a portada empurrava tudo («02» ao lado de «BLOQUE 01» em Anestesiología, Dermatología,
+Neurología, Oftalmología, Ortopedia e Toxicología), e o índice contava pela posição sem as especiais (Histología II Práctica «01» no Bloque 02; Semiología II, Anatopatología I e
+Imagenología um ou dois à frente); (2) o título da matéria (`.rm-subject-head`) começava em x = 0 e «Arriba»/«Índice», fixos a 14 px, tapavam as primeiras letras e o subtítulo em todas as larguras.
+**Correção:** `chipsDosBlocos()` dá a selo e índice o mesmo chip: o número que o marcador do bloco declara («BLOQUE NN»/«TEMA NN») → o ícone da seção especial → a ordem, se a
+matéria não numera nenhum bloco (senão «•»). No `styles.css`, o título ganha recuo lateral que livra os trilhos (8rem; 3.75rem ≤ 700 px) e, em tela larga, alinha com a coluna de 880 px.
+```
+export NODE_PATH=$(npm root -g) RM_SUPABASE_UMD=/caminho/supabase.js   # ver cabeçalho de recovery/harness.cjs
+node tools/qa/browser-qa/layout/selo-titulo.test.cjs
+RM_SITE_DIR=<export da main anterior>/Repasso-Med-Site--main/Atual\ -\ Copia node tools/qa/browser-qa/layout/selo-titulo.test.cjs   # controle: tem de FALHAR
+```
+A · 27 matérias × 1440: selo = chip do índice = número declarado · B · 6 matérias × 390/768/1024/1440: nenhum retângulo do texto do título/subtítulo cruza «Arriba», «Índice» ou o
+trilho da direita; sem overflow; 0 erros JS. Emulação do Chromium.

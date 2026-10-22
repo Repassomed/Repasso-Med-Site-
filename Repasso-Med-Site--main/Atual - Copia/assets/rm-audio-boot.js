@@ -7,7 +7,7 @@
    Sem isto nada de áudio existe no site: nem JS, nem CSS, nem pedido de rede.
 
    PORTÕES (todos falham FECHADOS; qualquer erro ⇒ stop() e a página fica como antes)
-     1. aba ativa = semiologia-ii (`#tab-semio2`);
+     1. aba ativa = a da matéria-alvo: padrão semiologia-ii (`#tab-semio2`); `start({ slug, tab })` para outra matéria (a aba vem do catálogo se faltar);
      2. Layout V2 ativo: existem `window.RMLayout` e o slot `#rm-l2-player`;
      3. sessão válida (token) e **manifesto do SERVIDOR** não vazio — o servidor decide por
         UID autenticado (RM_PILOT_AUDIO_UIDS); aqui não existe UID, e-mail nem lista;
@@ -35,8 +35,24 @@
   'use strict';
   if (root.RMAudioBoot) return;
 
-  var SLUG = 'semiologia-ii';
+  var SLUG = 'semiologia-ii';            // matéria-padrão (o piloto): start() sem argumentos continua exatamente como antes
   var TAB_ID = 'tab-semio2';
+  /* Matéria-alvo desta instância. start({ slug, tab }) aceita OUTRA matéria (áudio por matéria, entrando aos poucos), mas isto NÃO liga
+     nada: quem chama start() é o rm-pilot.js, só onde o layout já está ativo; e o card só nasce se o SERVIDOR devolver itens prontos
+     daquela matéria para o UID (manifesto + matérias autorizadas no servidor). Matéria sem áudio ⇒ manifesto vazio ⇒ nenhum card. */
+  var SLUG_RE = /^[a-z0-9][a-z0-9-]{0,60}$/;
+  var alvo = { slug: SLUG, tabId: TAB_ID };
+  function resolverAlvo(opts) {
+    if (!opts || (!opts.slug && !opts.tab)) return { slug: SLUG, tabId: TAB_ID };
+    var slug = String(opts.slug || ''), tab = String(opts.tab || '');
+    if (!SLUG_RE.test(slug)) return null;
+    if (!tab) {                                                    // aba a partir do catálogo real (o mesmo do index.html)
+      var cat = root.RM_CATALOGO || [];
+      for (var i = 0; i < cat.length; i++) if (cat[i] && cat[i].slug === slug) { tab = String(cat[i].tab || ''); break; }
+    }
+    if (!tab) return null;
+    return { slug: slug, tabId: /^tab-/.test(tab) ? tab : 'tab-' + tab };
+  }
   var SLOT = '#rm-l2-player';
   var BASE = 'assets/';
   var FN = '/.netlify/functions';
@@ -77,8 +93,8 @@
   }
 
   /* Pedido mínimo do manifesto, ANTES de carregar qualquer arquivo de áudio. Só o servidor decide. */
-  function manifestoCru(token) {
-    return root.fetch(FN + '/get-audio-manifest?slug=' + encodeURIComponent(SLUG), {
+  function manifestoCru(token, slug) {
+    return root.fetch(FN + '/get-audio-manifest?slug=' + encodeURIComponent(slug), {
       method: 'GET', headers: { Authorization: 'Bearer ' + token }, cache: 'no-store', credentials: 'omit'
     }).then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); })
       .then(function (j) { return j && Array.isArray(j.items) ? j.items : []; });
@@ -140,7 +156,7 @@
   }
 
   function inserirCards() {
-    var tab = d().getElementById(TAB_ID);
+    var tab = d().getElementById(alvo.tabId);
     Object.keys(st.itens).forEach(function (id) {
       var item = st.itens[id], sec = tab && tab.querySelector('section#' + (root.CSS && root.CSS.escape ? root.CSS.escape(item.block_id) : item.block_id));
       if (!sec) return;                                           // sem bloco = sem card (recurso ausente = acesso ausente)
@@ -160,14 +176,14 @@
   function reposicionarTinta() {
     try {
       var tab = tabAtiva();
-      if (!tab || tab.id !== TAB_ID) return;                     // outra matéria: nada a reposicionar
+      if (!tab || tab.id !== alvo.tabId) return;                 // outra matéria: nada a reposicionar
       var L = root.RMLayout;
       if (L && typeof L.pedirReposicao === 'function') L.pedirReposicao();
     } catch (e) { /* ignore */ }
   }
 
   function pausarNativos() {
-    var tab = d().getElementById(TAB_ID);
+    var tab = d().getElementById(alvo.tabId);
     if (!tab) return;
     Array.prototype.forEach.call(tab.querySelectorAll('audio, video'), function (m) { try { if (!m.paused) m.pause(); } catch (e) { /* ignore */ } });
   }
@@ -192,7 +208,7 @@
   function verificarVida() {
     if (!st) return;
     var tab = tabAtiva();
-    if (!tab || tab.id !== TAB_ID || !d().querySelector(SLOT) || !root.RMLayout) { st.encerrando = true; try { st.engine && st.engine.handle('subject-change'); } catch (e) { /* ignore */ } stop(); }
+    if (!tab || tab.id !== alvo.tabId || !d().querySelector(SLOT) || !root.RMLayout) { st.encerrando = true; try { st.engine && st.engine.handle('subject-change'); } catch (e) { /* ignore */ } stop(); }
   }
 
   /* Vigia a VIDA do boot desde o primeiro instante (antes de o manifesto chegar): trocar de matéria, o slot sumir ou SIGNED_OUT
@@ -240,17 +256,26 @@
   /* ------------------------------- start ------------------------------- */
   function start(opts) {
     opts = opts || {};
-    if (st) return st.promise;
+    var a = resolverAlvo(opts);
+    if (!a) return Promise.resolve(false);                                         // matéria/aba inválida ⇒ nada (falha fechada)
+    if (st && st.alvo.slug === a.slug && st.alvo.tabId === a.tabId) return st.promise;   // idempotente na MESMA matéria (o piloto, como sempre)
     var tab = tabAtiva();
-    if (!tab || tab.id !== TAB_ID || !root.RMLayout || !d().querySelector(SLOT) || !root.fetch || !root.MutationObserver) return Promise.resolve(false);
+    if (!tab || tab.id !== a.tabId || !root.RMLayout || !d().querySelector(SLOT) || !root.fetch || !root.MutationObserver) return Promise.resolve(false);   // a aba pedida não é a ativa: nada muda (nem a instância atual)
+    if (st) {
+      /* outra matéria, já com a aba dela ativa, antes de a troca ter sido observada: a instância anterior encerra AGORA (pausa, guarda,
+         remove) — nunca devolve a promessa dela para a matéria nova nem deixa cards/áudio de uma matéria na outra */
+      st.encerrando = true; try { st.engine && st.engine.handle('subject-change'); } catch (e) { /* ignore */ }
+      stop();
+    }
+    alvo = a;
     var base = opts.base || BASE, ver = opts.ver || meuVer, q = ver ? '?v=' + ver : '';
-    var mine = { engine: null, cards: [], itens: {}, mo: [], sub: null, caneta: false, ultimoCard: null };
+    var mine = { alvo: a, engine: null, cards: [], itens: {}, mo: [], sub: null, caneta: false, ultimoCard: null };   // alvo PRÓPRIO: respostas atrasadas nunca leem o de outra instância
     st = mine;
     vigiar();
     mine.promise = sessao().then(function (se) {
       if (!se || st !== mine) throw new Error('sin sesión');
       mine.uid = se.uid;
-      return manifestoCru(se.token);
+      return manifestoCru(se.token, mine.alvo.slug);
     }).then(function (crus) {
       if (st !== mine || !crus.length) throw new Error('sin audiolibros');          // recurso ausente = acesso ausente
       return css(base + 'rm-audio.css' + q)
@@ -263,12 +288,14 @@
       var man = root.RMAudio.validateManifest(crus);                              // o motor recusa tudo o que não for só metadado
       if (!man.items.length) throw new Error('manifiesto vacío');
       var supa = typeof root.SUPABASE_URL === 'string' ? root.SUPABASE_URL : (typeof SUPABASE_URL === 'string' ? SUPABASE_URL : '');   // eslint-disable-line no-undef
-      var provider = root.RMAudioProvider.create({ getToken: function () { return sessao().then(function (x) { return x && x.token; }); } });
+      var provider = root.RMAudioProvider.create({ slug: mine.alvo.slug, getToken: function () { return sessao().then(function (x) { return x && x.token; }); } });
       mine.engine = root.RMAudio.create({
         provider: provider, userKey: mine.uid,
         allowSource: root.RMAudioProvider.allowSource(supa),
         positionStore: root.RMAudioStore.local(mine.uid)
       });
+      man.items = man.items.filter(function (it) { return it.subject_slug === mine.alvo.slug; });   // item de OUTRA matéria nunca vira card aqui
+      if (!man.items.length) throw new Error('sin audiolibros de esta materia');
       man.items.forEach(function (it) { mine.itens[it.audio_id] = it; });
       if (!mine.engine.loadMetadata(man.items).ok) throw new Error('metadatos inválidos');
       if (!mine.engine.attach(SLOT)) throw new Error('sin slot');                  // falha fechada: slot ausente ⇒ nada
