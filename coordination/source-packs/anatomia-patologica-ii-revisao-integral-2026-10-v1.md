@@ -109,3 +109,21 @@
 - Crohn sem percentual também no SVG do mapa mental (bloco 05: «no es constante»), na pergunta («¿qué se puede decir del granuloma…?», ponte de enunciado nas 2 cópias) e na explicação (sem «un tercio»).
 - Linguagem de prioridade de prova retirada onde não há grifo: 48 rótulos «prioridad muy alta/alta/media» e as barras de peso (blocos 01–08), introduções «agrupados por prioridad», 5 aria-labels «clave de examen» e a frase «la cátedra… pregunta las dos». Mantidas por grifo: frases de b01 («cuando la cátedra pide «citá dos»…») e ap2intro. SELECT somente leitura antes: 0 grifos sobre o que foi trocado.
 - Fig 40: subtítulo da imagem passou de «…fibrosis e infección» para «Dolor, autoinmunidad y fibrosis», igual à legenda.
+
+## Validação das 20 renomeações de enunciado (10 questões × 2 cópias: bloco e banco) — 2026-10-22
+Cada uma tem ponte `data-guard-previous-stem-sha1` (Guard: 🟡 «enunciado-renomeado», sem 🔴). Resposta correta e letra não mudaram em nenhuma.
+
+| # | Mudança no enunciado | Fonte que a sustenta | Situação |
+|---|---|---|---|
+| 1 | Herpes labial: «más diagnóstico y explica la reactivación» → «característico» | Clase 1 (cavidade oral), sl. «Infecciones por VHS»: balonamento, inclusões intranucleares eosinófilas (acantólise); a reativação é outro slide | Conferida |
+| 2 | Candidíase: «con prótesis dental» → «inmunodeprimida» | Clase 1: fatores predisponentes = imunodepressão; ATB de amplo espectro também induzem; **prótese não consta** no slide. Exsudado fibrinopurulento = «gérmenes en un exudado fibrinopurulento» | Conferida (mais fiel que o original) |
+| 3 | Barrett: «probabilidad de progresar a adenocarcinoma» → «presencia de displasia» | Clase 2 (esôfago): «La presencia de displasia… se asocia con síntomas prolongados, segmento más largo, mayor edad del paciente y raza blanca» | Conferida (texto idêntico ao slide) |
+| 4 | CMV esofágico: úlcera «lineal grande» → «superficial» | **Sem slide**: o slide de esôfago não traz esofagites infecciosas; Robbins ilegível | **Sem fonte** (a resposta CMV vem das inclusões em endotélio/estroma; só o adjetivo da úlcera ficou menos específico) |
+| 5 | Crohn: «frecuencia aproximada del granuloma» → «qué se puede decir…» | Clase 5: 40–60 % no texto e ~35 % na tabela; página sem percentual (ver seção anterior) | Conferida; número pendente de docente |
+| 6 | CHC: retirada «en qué proporción de los casos» | Clase 7: «Se suele asociar a cirrosis (no es lesión premaligna)»; fatores: VHB, VHC, aflatoxina, álcool, hemocromatose. «>85 %» **não consta** | Conferida |
+| 7 | De Quervain: biópsia «granulomas…» → «células gigantes que engloban coloide»; curso «hipertiroidismo transitorio» | Clase 8 sl. 8–9 (revisado antes) | Conferida |
+| 8 | Carcinoma medular: retirada «hiperplasia de células C adyacente» | Clase 8 (RET/MEN 2); retirada do detalhe sem lastro | Conferida (menos afirmações) |
+| 9 | Anaplásico: retiradas «creció en pocas semanas», «mitosis atípicas y necrosis» | Clase 8; detalhes sem lastro retirados | Conferida (menos afirmações) |
+| 10 | Nódulo quente: retirado «suprime el resto del parénquima» | Clase 8; detalhe sem lastro retirado | Conferida (menos afirmações) |
+
+**36 figuras `anato2/*-rev.webp`:** conferidas em folhas de contato (sem corte nem sobreposição) e por OCR local (0 rótulos de prova). A **ciência dos desenhos** foi conferida só no nível dos rótulos contra os slides; fotos/histologia são ilustrações didáticas, não lâminas, e a página já diz isso. Fig 40: painel ⑤ = fase inicial de De Quervain (Clase 8 sl. 8–9).
