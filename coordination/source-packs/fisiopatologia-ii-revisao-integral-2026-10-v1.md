@@ -140,3 +140,21 @@ Método: cada afirmação, número, questão (45) e cartão (63) dos blocos fp2b
 **Conferido e mantido (critério da cátedra, atribuído ao slide):** metformina «não usar com creatinina > 1,5, ICC, cirrose descompensada»; glitazonas; sulfonilureia em IR; cintura 102/88 cm (e o bloco do fígado cita 94/80 cm, com nota nos dois lugares); provas de cribado do Cushing e cortes (100 µg/24 h, 1,8–2 µg/dL, 1,6 ng/mL; ACTH < 5 / > 15–20 / 5–20); tratamento do Cushing e do Addison crônico (hidrocortisona + fludrocortisona, DHEAS, brazalete).
 **Dedução das regras do slide, ensinada como dedução:** secundária sem hiperpigmentação e com aldosterona conservada. **Literatura geral (não está no slide):** POMC comum a ACTH e MSH (explica a hiperpigmentação) — mantida em uma frase.
 **Erratas do slide tratadas:** «hipercalcemia: aumento de pigmentação» (→ hiperpigmentação); alternativa «confirma» do caso 1 (contradiz a regra de 2 provas anormais); «acantose» na cicatrização (não incorporada); «síndrome de motherhouse» da anotação (→ Waterhouse-Friderichsen).
+
+## (xvi) Fechamento final de 22/10 — conferência visual dos PDFs e ajustes (issue #543)
+
+**Conferência visual (PDF baixado e renderizado localmente):**
+
+| PDF | tamanho | resultado |
+|---|---|---|
+| `11 - Transtorno endocrino parte 1` | 0,9 MB | **visto por inteiro (32 slides)**: anatomia da suprarrenal, esquema das zonas, eixo HHS/POMC, fotos de Addison e de Cushing, tabelas de texto e os 3 casos. O texto extraído coincide com o que se vê. Confirmado: slide 22 traz de fato «Hipercalcemia: aumento de pigmentação…» (errata) e o slide 19 cita «dexametasona o hidrocortisona» |
+| `08 - Trastornos de la función glomerular` | 5,7 MB | **visto por inteiro (39 slides)**: imunofluorescência granular (GN pós-infecciosa) e linear (anti-MBG), histologia de crescentes, tabelas comparativas nefrítico × nefrótico (slides 34–35), caixa do Alport, casos 1–2. Coincide com o texto extraído e com o que foi integrado em fp2b05/06 |
+| `09 - Desequilibrio acido-base` | 8,4 MB | **NÃO visto**: o conector do Drive derruba a conexão ao baixar arquivos acima de ~6 MB |
+| `10 - Diabetes` | 6,5 MB | **NÃO visto** (duas tentativas, mesma falha) |
+
+**O que fica sem conferência visual e como foi limitado:** nos slides 09 e 10 só há o texto extraído (inclui os rótulos de várias figuras). Foram usados **apenas valores e frases do texto verificável**: valores normais e MIRO (texto explícito), critérios diagnósticos, metas, síndrome metabólica, tabela de insulinas (início/pico/duração na ordem do texto) e fármacos. **Não conferidos visualmente:** setas e disposição dos esquemas do slide 09 (tampão, fluxos «Quien tiene la culpa»), os esquemas de metabolismo/receptor de insulina e as ilustrações das insulinas e dos esquemas do slide 10. A frase sobre IR/IRS foi reduzida ao que o slide mostra (receptor e substratos); nenhuma imagem foi criada, substituída ou recortada.
+
+**Ajustes desta rodada:**
+- «Para estudiar este tema, usá el valor del slide…» e equivalentes **removidos**. A cintura da síndrome metabólica agora explica a diferença entre materiais: o slide de diabetes dá 102/88 cm sem indicar população; o material do fígado dá 94/80 cm para população caucásica; são critérios de materiais distintos e não se misturam. Cartão «Trampa» reescrito no mesmo sentido.
+- **Crise suprarrenal × reposição crônica:** nova tabela comparativa (o que é, quando, o que se dá segundo o slide, medidas associadas) e nota «Lo que el slide no da» (sem doses nem vias; o esquema crônico não guia a crise). Subtítulo «Tratamiento de la enfermedad de Addison (reposición crónica)».
+- **Cortes do slide com contexto:** metformina (creatinina > 1,5 = corte do slide, não regra geral; nota «Cómo leer esta tabla»), cortes de cortisol/ACTH do Cushing (nota «Cómo leer los cortes» e «…los valores de ACTH»). Nenhum limite aparece como orientação clínica geral.
