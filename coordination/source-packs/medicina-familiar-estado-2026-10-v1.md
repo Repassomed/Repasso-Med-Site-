@@ -27,3 +27,23 @@ Fontes que resolveriam: McWhinney/Rakel (base do curso) ou os slides de crescime
 
 ## Contagem dos grifos (consulta SOMENTE LEITURA, 2026-10-20)
 **18 grifos no total para `medicina-familiar`, de 1 usuário: 17 em `aps` + 1 em `portada-medfam`** (a palavra «Longitudinalidad»). A frase anterior «todos em `aps` e 1 em `portada-medfam`» estava ambígua; o certo é 17 + 1. O teste no navegador agora usa **os 18**: antes da PR 18/18 pintados e a página abria em «El mapa de la materia»; depois **18/18 pintados, sem selo de marcas pendentes, e a página abre em «APS · Atención Primaria de Salud»**. (O teste anterior usava só 2 grifos representativos, 1 da portada e 1 de `aps`; por isso eu dizia «2/2».)
+
+## Revisão completa de leitura (2026-10-22, issue #543) — fonte → decisão → destino
+**Fontes lidas (Drive):** `Medicina familiar.pdf` (slides, OCR ruidoso), `mf_compressed.pdf`, `medicina familiar instruções.docx`. Nada novo para crescimento/desenvolvimento, McWhinney, Rakel ou curvas OMS.
+
+| Achado | Fonte | Decisão | Destino |
+|---|---|---|---|
+| Legendas de infográfico e fecho com voz de prova («donde la pregunta busca el error», «trampa» ×3, «cuando la pregunta insinúa», «resuelven la mayoría de las preguntas», «este material vio repetirse», «no entra en ninguna pregunta suelta») | G0 | Reescritas em voz neutra, sem mexer nos fatos | blocos aps, principios, familiograma, educación, cierre |
+| Nota de margem «línea cortada = conflicto o ruptura» contradizia as figuras da guia (distante = tracejada, conflito = zigzag, ruptura = linha cortada) e o cartão | figuras da própria página + slide «Relaciones interpersonales» (muy estrecha, conflictiva, cercana, distante, quiebre) | Nota: doble = muy unida; punteada = distante; zigzag = conflicto; cortada = ruptura | familiograma |
+| Slide «Tipos de familia» traz «familia adoptiva: hijos sin parentesco sanguíneo»; a página só dizia «de acogida» | `Medicina familiar.pdf` | Acrescentado «(também família adoptiva)» nas duas tabelas | familiograma |
+| Cartão «Formas de adquirir lazos familiares» duplicado (bloco e baralho geral) | — | Segundo cartão virou «Lazo por afinidad» (conteúdo já ensinado); contagem de cartões igual | 2 cópias |
+| Tabela de hitos: «18 m: no camina solo» parecia contradizer o limite de 15 m da marcha | texto da própria página | «No camina solo (ya pasó el límite de 15 meses)» | desarrollo |
+| Etapas da infância: escolar 7–10 × 6–10 × 6–11 em três tabelas | texto da página | Nota «(6–10 o 6–11 según la fuente)» | crecimiento |
+| Cartões/perguntas (pantallas, rendimiento escolar, anamnesis amplia, perímetro cefálico ~35 cm, primeiros dentes ~6 m, talla = edad×6+77) sem ensino prévio no resumo | os próprios cartões/perguntas | Dois parágrafos curtos nos resumos (mesmas afirmações, **sem fonte conferida**) | crecimiento, desarrollo |
+| Pergunta do banco «¿A qué edad… camina, dice palabras…?»: alternativa «Al año» também defensável | tabela de hitos da página | Enunciado → «camina con soltura, dice frases de dos palabras, … come solo con cuchara»; gabarito (b) e alternativas iguais; ponte `data-guard-previous-stem-sha1` | banco |
+| Bibliografia repetida (fim do bloco 07 e fecho) | — | Removida a do bloco 07; fica a do fecho | educación |
+| Ponte `data-guard-previous-stem-sha1` da questão do niño de 16 meses já está na main (ficou inválida contra a base) | Guard | Atributo removido; questão e resposta intactas | crecimiento |
+
+**Contagens antes×depois:** 90 itens de pergunta, 36 interativos, 65 «Ver respuesta», 177 cartões, 21 imagens (todas com `alt` descritivo), `data-correct` iguais. **Grifos:** 18 (17 `aps` + 1 `portada-medfam`) 18/18 antes e depois.
+
+**Continua sem fonte legível (não declarado verificado):** crescimento e desenvolvimento inteiros (pesos, fórmulas, talla 12 × 25 cm, fontanelas, hitos, índices), APGAR (só o título está no slide), crisis familiar e Doherty & Baird, educación para la salud, prevención cuaternaria (Jamoulle), cortes de Leavell e Clark, Pc 10–90 × 3–97, datos do ESF (600 famílias). Bibliografia lista Rakel, PROFAM, McWhinney e Smilkstein, que **não estão no Drive**.
