@@ -697,7 +697,11 @@ jobs:
           # chamada acontece é sempre coordinator/openai_config.py::
           # OpenAIAuditorConfig.gate(), checado de novo em código.
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          REPASSO_OPENAI_AUDITOR_ENABLED: ${{ vars.REPASSO_OPENAI_AUDITOR_ENABLED }}
+          # PAUSA DA AUDITORIA PAGA (decisão do José, 22/10/2026): a chamada automática à OpenAI fica
+          # DESLIGADA aqui, de forma fixa, sem depender da variável do repositório. Para religar, uma PR
+          # restaura `${{ vars.REPASSO_OPENAI_AUDITOR_ENABLED }}` (e a variável precisa estar "true").
+          # O Repasso Guard e o restante do Coordinator seguem como estavam.
+          REPASSO_OPENAI_AUDITOR_ENABLED: "false"
           REPASSO_OPENAI_AUDITOR_MODEL: ${{ vars.REPASSO_OPENAI_AUDITOR_MODEL }}
           REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL: ${{ vars.REPASSO_OPENAI_AUDITOR_HIGH_RISK_MODEL }}
           REPASSO_OPENAI_AUDITOR_BUDGET_USD: ${{ vars.REPASSO_OPENAI_AUDITOR_BUDGET_USD }}
