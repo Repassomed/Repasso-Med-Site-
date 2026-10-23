@@ -52,3 +52,15 @@ Arquivo: `Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privad
 3. O questionário de Generalidades não pôde ser lido; a atribuição «cuestionario de la cátedra» é a que já existia.
 4. Duas divergências de convenção ficam marcadas na página (artrodia multiaxial × não axial; 3+9 × 2+9 intercostais).
 5. Palavras de 2.ª pessoa em voseo («tocá», «fijate») são o padrão da matéria; não alteradas.
+
+## 6. Fechamento (2026-10-23, depois do merge da #555)
+
+**Convenções verificadas contra a cátedra**
+- **Artrodia = multiaxial:** `compilado primer parcial ANATOMIA 1.pdf`: «Artrodia o plana. Multiaxial» (as 6 articulações: 2 multiaxiais, 2 biaxiais, 2 uniaxiales). O texto do bloco 03 já explica «otros materiales la dan como no axial» e a figura `a1_b03_06` passou a dizer o mesmo. **Coerente.**
+- **Intercostais 3 + 9 e 6 + 6:** `anatomia 1.pdf` (repaso da cátedra): anteriores «6 primeras: torácica interna; 6 últimas: musculofrénica»; posteriores «3 primeras: intercostal suprema (tronco costocervical); 9 últimas: aorta torácica». **O resumo ainda misturava as duas formas de contar** (legenda «las dos primeras… de la 3.ª a la 11.ª», e a figura do passo 5 «7.º al 9.º; 10.º e 11.º sem anterior»). Corrigido: legenda e figura na convenção da cátedra, e um quadro «Dos formas de contar, una sola anatomía» explica a outra contagem (2 + 9; anteriores só até o 9.º) sem a chamar de erro. Figura `a1_b12_08-rev` (já retocada na #555) diz o mesmo.
+
+**Rótulos cortados registrados na #555 — corrigidos (figuras retocadas, nenhuma removida)**
+- `a1_b33_02_faringe`: etiqueta quebrada «Cans» → «Coanas»; caixa de inervação com título duplicado e texto fora da borda → texto compacto (plexo faríngeo X com XI e simpáticas; estilofaríngeo IX; sensibilidade V2/IX/X).
+- `a1_b28_01_plexo_conexiones`: frase cortada na borda → «Los nombres indican su posición respecto de la arteria».
+
+**Latarjet:** `Latarjet - Ruiz Liard … T1.pdf` (81 MB) e T2 (88 MB) existem no Drive, mas a leitura devolve **texto vazio**. Não consegui acessar. **Limite:** as duas convenções ficam verificadas só contra os decks da cátedra; o que «outros materiales» dizem (2 + 9; anteriores só até o 9.º) segue sem conferência no livro. Trecho necessário: Latarjet T1, capítulo de vasos da parede torácica (intercostais posteriores e anteriores), para confirmar de onde nascem as intercostais posteriores 1.ª e 2.ª e até que espaço a musculofrénica dá ramos anteriores.
