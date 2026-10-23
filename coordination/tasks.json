@@ -2820,6 +2820,29 @@
       "commit": null,
       "issue": 67,
       "notas": "Registro próprio (não amplia a reserva de dermatologia-questoes-issue112-r3, que permanece como está). Resultado NEEDS-AUDIT; sem merge por Claude 2. Alunos: 0 grifos, 0 traços, 0 notas (SELECT somente leitura, 23/10)."
+    },
+    {
+      "id": "anestesiologia-pente-fino-g0-claude2",
+      "titulo": "P1 — Anestesiología: pente fino G0 (voz de prova, «Error de examen» e «⚠️ Trampa»)",
+      "area": "materia",
+      "materia": "anestesiologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anestesiologia.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Anestesiología: 13 listas «Error de examen», rótulos «⚠️ Trampa», frases de enunciado/pregunta. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #504",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-anestesiologia",
+      "pr": 504,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 10 em anestesiologia (SELECT somente leitura), portão 10/10."
     }
   ]
 }
