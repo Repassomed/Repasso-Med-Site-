@@ -74,7 +74,10 @@
     return envolto;
   }
 
-  /* aviso discreto, canto inferior — nunca alert() */
+  /* aviso discreto, canto inferior — nunca alert(). Sempre efêmero (2.2s);
+     para avisos que o aluno precisa poder achar de novo mais tarde (ex.
+     marcas pendentes), ver badgePendentes() — esse é persistente, não um
+     toast. */
   var toastEl = null, toastT = null;
   function toast(msg, erro) {
     if (!toastEl) {
@@ -204,6 +207,35 @@ body.rm-marking #materias-container{ cursor:text; }
 }
 .rm-toast.on{ opacity:1; transform:translate(-50%,0); }
 .rm-toast.err{ background:#a3271c; }
+
+/* caminho de revisão PERSISTENTE para marca(s) pendente(s) — nunca some
+   sozinho (diferente do .rm-toast acima); só quando a aba trocar para
+   uma sem pendências ou tudo for resolvido. Canto inferior ESQUERDO:
+   .rm-resume (retomar matéria) usa o direito, .rm2-box (caneta) usa a
+   borda direita no meio — sem colisão. Ver badgePendentes() em
+   rm-tools.js. */
+.rm-pendentes-badge{
+  position:fixed; left:14px; bottom:18px; z-index:99989;
+  display:none; align-items:center; gap:.4rem; border:none; cursor:pointer;
+  background:#8a5a12; color:#fff; border-radius:999px;
+  padding:.55rem 1rem; font:700 .78rem/1.15 var(--font-ui, Inter, sans-serif);
+  max-width:min(320px, calc(100vw - 28px)); text-align:left;
+  box-shadow:0 10px 26px rgba(8,23,38,.28);
+}
+.rm-pendentes-badge.on{ display:block; }
+.rm-pendentes-badge:hover{ filter:brightness(1.1); }
+.rm-pendentes-badge:focus-visible{ outline:3px solid #FFC233; outline-offset:2px; }
+
+/* breve realce ao rolar até o bloco de uma marca pendente — nunca pinta
+   nada permanente, só chama a atenção por alguns segundos */
+@keyframes rm-flash-revisao{
+  0%,100%{ outline-color:transparent; background-color:transparent; }
+  20%,60%{ outline-color:rgba(230,126,34,.85); background-color:rgba(230,126,34,.08); }
+}
+.rm-flash-revisao{
+  outline:3px solid transparent; outline-offset:4px; border-radius:6px;
+  animation:rm-flash-revisao 1.3s ease-in-out 2;
+}
 
 /* ---------- card «continuar de onde paraste» ---------- */
 .rm-resume{
@@ -431,21 +463,74 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     return out;
   }
 
+  /* Pontua um candidato pelo contexto gravado: 2 se prefixo/sufixo bate
+     à letra, 1 se bate só nos últimos/primeiros 12 caracteres, 0 se não
+     bate nada. Só soma o lado que o registo tem — um registo sem
+     `suffix`, por exemplo, nunca é penalizado por isso. */
+  function notaDeContexto(norm, i, h) {
+    var pre = norm.slice(Math.max(0, i - (h.prefix || '').length), i);
+    var suf = norm.slice(i + h.exact_text.length, i + h.exact_text.length + (h.suffix || '').length);
+    var nota = 0;
+    if (h.prefix) nota += (pre === h.prefix) ? 2 : (pre.slice(-12) === h.prefix.slice(-12) ? 1 : 0);
+    if (h.suffix) nota += (suf === h.suffix) ? 2 : (suf.slice(0, 12) === h.suffix.slice(0, 12) ? 1 : 0);
+    return nota;
+  }
+
   /* Escolhe a ocorrência certa usando o contexto. Na dúvida devolve -1:
      nunca marcar texto errado (§17). */
   function escolher(norm, h) {
     var cands = ocorrencias(norm, h.exact_text);
     if (!cands.length) return -1;
-    if (cands.length === 1) return cands[0];
+
+    if (cands.length === 1) {
+      /* Um candidato só não dispensa o contexto. Antes, um candidato
+         único era sempre aceito às cegas — e esse é exatamente o
+         buraco que faz uma marcação reaparecer na frase ERRADA: se a
+         frase original foi reescrita e uma cópia idêntica e nunca
+         tocada do mesmo trecho sobrevive em outro lugar do bloco (um
+         texto de template repetido, por exemplo), ela vira a única
+         ocorrência literal — e nada impedia que fosse aceita sem olhar
+         se o que está ao redor dela tem QUALQUER relação com o que foi
+         gravado.
+
+         Um registo SEM prefix/suffix gravado (alvo colado no início ou
+         no fim do bloco) não é um caso especial que dispensa a checagem
+         — é o caso em que a checagem NUNCA pode confirmar nada: a
+         "unicidade" de um candidato só prova que ele é o único hoje,
+         nunca que ele sempre foi. Exactamente a mesma incerteza do
+         candidato de uma frase reescrita cuja cópia intacta sobrou em
+         outro lugar — sem como distinguir "sempre foi único" de "virou
+         único porque o vizinho mudou". Por isso devolve -1 (pendente)
+         também aqui: sem contexto para confirmar, a posição não é
+         segura, e a marcação fica no banco sem ser pintada em vez de
+         arriscar. Com contexto gravado, exige pelo menos um lado
+         batendo — o mesmo padrão que o nível 2/3 (`contextoSolto`) já
+         aplica mesmo a candidato único desde b0c4a73d.
+
+         Uma exceção, estreita e comprovável (não uma reabertura do
+         buraco acima): quando o próprio texto marcado é o bloco INTEIRO
+         (começa em 0 e tem o mesmo tamanho de `norm`), `prefix`/`suffix`
+         saem vazios não por falta de dado, mas porque não EXISTE nada
+         antes nem depois a gravar — e aí a "cópia idêntica sobrevivendo
+         em outro lugar do bloco" é matematicamente impossível: uma
+         segunda ocorrência do bloco inteiro dentro do próprio bloco
+         exigiria `norm` conter uma cópia de si mesmo mais uma sobra, o
+         que nenhum texto pode fazer. `ocorrencias` já garante
+         `cands.length === 1` aqui; sobra só confirmar que não há como
+         esse candidato ser outra coisa senão o bloco todo. Sem essa
+         exceção, qualquer grifo que cubra um bloco curto por completo
+         (um parágrafo inteiro marcado, por exemplo) fica pendente para
+         sempre, mesmo que o texto nunca mude — confirmado com os 1.910
+         grifos reais das 25 matérias elegíveis (nenhum bate neste caso
+         hoje) e com um caso sintético isolado. */
+      if (h.exact_text.length === norm.length) return cands[0];
+      return notaDeContexto(norm, cands[0], h) > 0 ? cands[0] : -1;
+    }
 
     var melhor = -1, melhorNota = -1, empate = false;
     for (var k = 0; k < cands.length; k++) {
       var i = cands[k];
-      var pre = norm.slice(Math.max(0, i - (h.prefix || '').length), i);
-      var suf = norm.slice(i + h.exact_text.length, i + h.exact_text.length + (h.suffix || '').length);
-      var nota = 0;
-      if (h.prefix) nota += (pre === h.prefix) ? 2 : (pre.slice(-12) === h.prefix.slice(-12) ? 1 : 0);
-      if (h.suffix) nota += (suf === h.suffix) ? 2 : (suf.slice(0, 12) === h.suffix.slice(0, 12) ? 1 : 0);
+      var nota = notaDeContexto(norm, i, h);
       if (nota > melhorNota) { melhorNota = nota; melhor = i; empate = false; }
       else if (nota === melhorNota) { empate = true; }
     }
@@ -465,7 +550,21 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
           h.occurrence != null && cands[h.occurrence] != null) return cands[h.occurrence];
       return -1;
     }
-    if (melhorNota <= 0) return -1;     // contexto não bate com nada: não arrisca
+    /* Com mais de um candidato literal, havia ambiguidade real — e é
+       exactamente aí que uma pontuação fraca (nota 1: só os últimos/
+       primeiros 12 caracteres bateram, por coincidência) não é prova
+       suficiente para decidir sozinha. Dois parágrafos sobre assuntos
+       diferentes podem partilhar uma vírgula e uma palavra comum nesses
+       12 caracteres sem teren nada a ver um com o outro — e foi
+       exactamente isso que o teste adversarial (ver
+       tools/qa/browser-qa/grifos-reforma/) apanhou: um candidato ganhava
+       por ser "o menos pior" entre dois maus, e a marca reaparecia na
+       frase errada. Por isso, quando há ambiguidade de verdade, só se
+       aceita um vencedor com nota >= 2 — pelo menos um lado batendo à
+       LETRA. Sem ambiguidade (um candidato só, tratado acima) a certeza
+       de ser a única ocorrência literal já é prova suficiente por si,
+       e nota > 0 continua a bastar ali. */
+    if (melhorNota < 2) return -1;
     return melhor;
   }
 
@@ -762,35 +861,143 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
 
   /* Desenha no DOM as marcações de uma aba já carregada (§22) */
   function aplicarHighlights(tabEl, lista) {
-    if (!tabEl || !lista || !lista.length) return { ok: 0, perdidas: 0 };
+    if (!tabEl || !lista || !lista.length) return { ok: 0, perdidas: 0, blocosPerdidos: [] };
     var porBloco = {};
     lista.forEach(function (h) { (porBloco[h.block_id] = porBloco[h.block_id] || []).push(h); });
 
     var ok = 0, perdidas = 0, porNivel = { 1: 0, 2: 0, 3: 0 };
+    var blocosPerdidos = [], vistoPerdido = {};
+    function marcarPerdido(bid) { if (!vistoPerdido[bid]) { vistoPerdido[bid] = true; blocosPerdidos.push(bid); } }
     Object.keys(porBloco).forEach(function (bid) {
       var bloco = tabEl.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(bid) : bid));
       /* o bloco deixou de existir: não se vai procurar noutro sítio */
-      if (!bloco) { perdidas += porBloco[bid].length; return; }
+      if (!bloco) { perdidas += porBloco[bid].length; marcarPerdido(bid); return; }
       porBloco[bid].forEach(function (h) {
         if (tabEl.querySelector('.rm-hl[data-hl="' + CSS.escape(String(h.id)) + '"]')) { ok++; return; }
         /* reindexa a cada marca: o DOM muda ao pintar a anterior */
         var a = resolverAncora(bloco, h);
-        if (!a) { perdidas++; return; }
+        if (!a) { perdidas++; marcarPerdido(bid); return; }
         var r = rangeDe(a.idx, a.ini, a.fim);
-        if (!r) { perdidas++; return; }
-        if (pintar(r, h.color, h.id, a.nivel === 3)) { ok++; porNivel[a.nivel]++; } else perdidas++;
+        if (!r) { perdidas++; marcarPerdido(bid); return; }
+        if (pintar(r, h.color, h.id, a.nivel === 3)) { ok++; porNivel[a.nivel]++; } else { perdidas++; marcarPerdido(bid); }
       });
     });
-    return { ok: ok, perdidas: perdidas, porNivel: porNivel };
+    return { ok: ok, perdidas: perdidas, porNivel: porNivel, blocosPerdidos: blocosPerdidos };
+  }
+
+  /* breve destaque visual (sem pintar nada permanente) para guiar o
+     olhar do aluno até o bloco de uma marca pendente, quando ele toca
+     no caminho de revisão — ver badgePendentes() */
+  function flashBloco(bloco) {
+    if (!bloco) return;
+    /* nunca mais de um bloco realçado ao mesmo tempo — evita que um
+       toque rápido no botão deixe o realce anterior ainda visível
+       enquanto o novo já apareceu */
+    document.querySelectorAll('.rm-flash-revisao').forEach(function (el) { el.classList.remove('rm-flash-revisao'); });
+    bloco.classList.add('rm-flash-revisao');
+    setTimeout(function () { bloco.classList.remove('rm-flash-revisao'); }, 2600);
+  }
+
+  /* Caminho de revisão (rodada 6, endurecido na rodada 7): quando uma ou
+     mais marcas ficam pendentes — o texto do bloco mudou demais para
+     resolverAncora confirmar a posição com segurança — o aluno precisa
+     de um jeito de achar isso de novo sempre que quiser, não só no
+     instante do carregamento, e de passar por TODOS os blocos afetados,
+     não só o primeiro. Por isso é um elemento PERSISTENTE (nunca some
+     sozinho; só quando a aba trocar para uma sem pendências, ou quando
+     tudo for resolvido), não um toast que desaparece em segundos — e
+     cada toque avança para o próximo bloco pendente, voltando ao
+     primeiro depois do último (cíclico). Nada é escrito no banco aqui:
+     a marca pendente já estava lá antes, e continua lá, intacta,
+     independentemente de o aluno tocar ou não. */
+  var elBadgePendentes = null;
+  var estadoBadgePendentes = { tabEl: null, blocos: [], cursor: 0, totalMarcas: 0 };
+
+  function badgePendentes() {
+    if (!elBadgePendentes) {
+      elBadgePendentes = document.createElement('button');
+      elBadgePendentes.type = 'button';
+      elBadgePendentes.className = 'rm-pendentes-badge';
+      elBadgePendentes.setAttribute('aria-live', 'polite');
+      elBadgePendentes.addEventListener('click', function () {
+        var est = estadoBadgePendentes;
+        if (!est.tabEl || !est.blocos.length) return;
+        var bid = est.blocos[est.cursor % est.blocos.length];
+        var bloco = est.tabEl.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(bid) : bid));
+        if (bloco) { bloco.scrollIntoView({ behavior: 'smooth', block: 'center' }); flashBloco(bloco); }
+        est.cursor = (est.cursor + 1) % est.blocos.length;
+        atualizarTextoBadge();
+      });
+      document.body.appendChild(elBadgePendentes);
+    }
+    return elBadgePendentes;
+  }
+
+  /* `est.totalMarcas` (quantas MARCAS de verdade, de `r.perdidas`) nunca
+     pode ser confundido com `est.blocos.length` (quantos BLOCOS
+     distintos têm pelo menos uma) — um bloco pode ter mais de uma marca
+     pendente (confirmado com dados reais: `f2b02` de Farmacología II tem
+     2). O título sempre conta MARCAS (a palavra que ele usa); o "x/y" do
+     toque conta BLOCOS, porque é por bloco que se navega — visitar um
+     bloco com 2 marcas pendentes mostra as 2, não preciso de um
+     navegador por marca individual dentro do bloco. */
+  function atualizarTextoBadge() {
+    var est = estadoBadgePendentes, nMarcas = est.totalMarcas, nBlocos = est.blocos.length;
+    if (!nMarcas || !nBlocos) return;
+    var rotulo = nMarcas === 1 ? 'marca pendiente' : 'marcas pendientes';
+    var pos = nBlocos > 1 ? ' · tocá para ver bloque ' + (est.cursor + 1) + '/' + nBlocos : ' · tocá para revisar';
+    badgePendentes().textContent = '📌 ' + nMarcas + ' ' + rotulo + pos;
+  }
+
+  /* Chamada a cada sincronização de aba (carregamento inicial e cada
+     troca de matéria — ver `window.switchTab` mais abaixo). `r` pode
+     faltar (matéria sem grifo nenhum): nesse caso o badge só é
+     escondido, nunca criado à toa. */
+  function atualizarBadgePendentes(tabEl, r) {
+    /* `prepararTodas()` sincroniza TODAS as abas no carregamento, cada
+       uma de forma assíncrona (carregarHighlights é `async`) — sem este
+       guard, a aba que resolvesse por último "ganharia" o badge global,
+       mesmo que não fosse a aba que o aluno está vendo. O badge só pode
+       refletir a aba ATIVA agora; a sincronização das outras continua
+       normalmente (pinta o que resolve), só não atualiza este aviso. */
+    if (tabEl !== abaAtiva()) return;
+    var blocos = (r && r.blocosPerdidos) || [];
+    if (!blocos.length) {
+      if (elBadgePendentes) elBadgePendentes.classList.remove('on');
+      estadoBadgePendentes = { tabEl: null, blocos: [], cursor: 0, totalMarcas: 0 };
+      return;
+    }
+    estadoBadgePendentes = { tabEl: tabEl, blocos: blocos, cursor: 0, totalMarcas: r.perdidas };
+    atualizarTextoBadge();
+    badgePendentes().classList.add('on');
+  }
+
+  /* Caminho de revisão para o DESFAZER (§ rodada 8): `restaurarHighlight`
+     da V2 (undo de um apagar) já reinsere o registro no banco e tenta
+     repintar com `resolverAncora`; quando não consegue, até aqui só
+     existia um toast avulso ("pendiente de ubicar") — que desaparece e
+     não deixa como reencontrar o bloco depois. Chamado por essa mesma
+     função quando a pintura falha, para ACRESCENTAR (nunca substituir —
+     outras marcas da mesma aba já podem estar pendentes) a marca ao
+     mesmo badge persistente que o carregamento usa. */
+  function adicionarPendente(tabEl, blockId) {
+    if (tabEl !== abaAtiva()) return;
+    var est = estadoBadgePendentes;
+    if (est.tabEl !== tabEl) est = estadoBadgePendentes = { tabEl: tabEl, blocos: [], cursor: 0, totalMarcas: 0 };
+    if (est.blocos.indexOf(blockId) === -1) est.blocos.push(blockId);
+    est.totalMarcas++;
+    atualizarTextoBadge();
+    badgePendentes().classList.add('on');
   }
 
   async function sincronizarAba(tabEl) {
     var slug = slugDoTab(tabEl);
     if (!slug) return;
     var lista = await carregarHighlights(slug);
-    if (!lista.length) return;
+    if (!lista.length) { atualizarBadgePendentes(tabEl, null); return; }
     var r = aplicarHighlights(tabEl, lista);
     if (r.perdidas) console.info('[rm-tools] ' + r.perdidas + ' marcação(ões) não localizada(s) com segurança em ' + slug + ' — mantidas no banco, não desenhadas.');
+    atualizarBadgePendentes(tabEl, r);
   }
 
   /* ---------------------------------------------------------------- */
@@ -1649,9 +1856,9 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     normalizar: normalizar,
     ocorrencias: ocorrencias,
     rangeDe: rangeDe,
-    /* resolvedor em níveis (exacto → tolerante → glossário). A V2 ainda
-       chama `escolher` directamente no seu `repintar`; fica exposto para
-       poder passar a usá-lo sem duplicar nada. */
+    /* resolvedor em níveis (exacto → tolerante → glossário). Usado por
+       `aplicarHighlights` aqui mesmo e pelo `repintar` da V2 (undo de
+       apagar uma marcação) — ver assets/rm-tools-v2.js. */
     resolverAncora: resolverAncora,
     projectarSolto: projectarSolto,
     faixaNoIndice: faixaNoIndice,
@@ -1662,6 +1869,12 @@ body.rm-lb-ready .hp-zoom > input:checked ~ .hp-lb{ display:none !important; }
     dentroDoSkip: dentroDoSkip,
     apagarHighlight: apagar,
     carregarHighlights: carregarHighlights,
+    /* exposto para teste real (QA) e para a V2, que pode querer o mesmo
+       caminho de revisão em algum fluxo próprio no futuro — ver
+       atualizarBadgePendentes() e `blocosPerdidos` no retorno. */
+    aplicarHighlights: aplicarHighlights,
+    atualizarBadgePendentes: atualizarBadgePendentes,
+    adicionarPendente: adicionarPendente,
     medirBarra: medirBarra,
     fecharLB: fecharLB,
     /* a classe de aberto é 'on' (ver abrirLB/fecharLB); aceita-se também
