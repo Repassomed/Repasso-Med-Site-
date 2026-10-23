@@ -300,6 +300,29 @@
       "notas": "Fases A–F concluídas. Ruleset 'Proteção da main' verificado ativo em 22/09/2026: PR obrigatório, non-fast-forward bloqueado e status check 'guard' obrigatório. Fase G (#105-G, esta rodada, NEEDS-AUDIT): checkpoint BLOCKED-LIMIT real passou a aplicar RunnerHeartbeat LIMIT de verdade e a executar handoff_exec.executar_handoff (G1); continuação api_runner passou a ser entregue ao Runner Dispatch com o mesmo config/registry/ledger/teto (G2); o portão passou a distinguir tarefa CANÔNICA de execution id derivado, por canonical explícito do código confiável, nunca por prefixo (G3); bootstrap CANARY-ONLY dos workers api-runner-canary-a/b atrás dos mesmos portões do Runner (G4); esses dois nomes (e só eles) aceitos no parser administrativo da Inbox #88, sem autocadastro (G5); RunnerTask materializada em coordinator/runner_tasks/ (G6); workflow do Runner preparando os workers e executando com --worker-id api-runner-canary-a (G7). Rodada G8 (auditoria independente do PR #118): o ownership operacional deixou de depender de coordination/tasks.json. coordinator/task_ownership.py monta uma visao operacional do TaskRecord que preserva id/area/arquivos/dependencias/prioridade do declarativo e so troca agente/estado pelo dono confirmado no Worker Registry (G8-A); com isso o canario vai do Stage 1 ao Stage 3 sem nenhuma edicao ou merge da main durante o fluxo, e os testes usam UM unico tasks.json do inicio ao fim. As continuacoes automaticas (handoff e retomada da Fase F) passaram a propagar a mesma allowlist de validacao da execucao inicial, a chave literal 'coordinator-suite' (G8-B). NENHUMA Variable foi ligada e nenhum canário real foi executado nesta PR. ANTES do canário real, José precisa: (1) ligar as Variables REPASSO_RUNNER_ENABLED/MODE/CANARY_TASK_ID; (2) opcionalmente declarar aqui, ANTES de comecar, estado IN-PROGRESS e agente 'api-runner-canary-a'. Depois que o canario comecar, NADA precisa ser alterado neste arquivo: o handoff A->B e a retomada da Fase F passaram a decidir ownership pelo Worker Registry (G8-A). Merge e publicação continuam sendo decisão exclusiva de José. Preparação administrativa única para o canário real em 22/09/2026: estado IN-PROGRESS e agente inicial api-runner-canary-a definidos ANTES da execução. A partir do início do canário, coordination/tasks.json permanece read-only durante A→B→C; ownership operacional é do Worker Registry. Primeira tentativa real (workflow run 35804397084) falhou de forma segura antes de commit/push porque test_cli_runner_wiring assumia ANTHROPIC_API_KEY ausente; o Runner marcou o claim original FAILED e não o reutiliza. R2 usa novo task_id/branch, preservando o claim histórico e corrigindo somente o isolamento do teste. R2 real (workflow run 35806044355) passou TODA a coordinator-suite, gerou patch com 1 chamada Anthropic e falhou seguro apenas no git commit por ausência de user.name/user.email no host GitHub Actions. R3 fixa identidade Git no próprio Runner; claim R2 permanece histórico e não é reutilizado. R3 real consumiu o claim sem checkpoint final; depois do #122 o preflight baseline passou, mas a reexecução foi BLOCKED pelo claim histórico. R3 fica preservado como histórico e não será reutilizado. Encerramento pós-canário em 23/09/2026: tentativa R3 preservada apenas como histórico; claim consumido, sem checkpoint final, definitivamente não reutilizável. Marcada DONE para sair da fila operacional."
     },
     {
+      "id": "medicina-legal-pente-fino-g0-claude2",
+      "titulo": "P1 — Medicina Legal: pente fino G0 (voz de prova e etiquetas «Trampa clásica»)",
+      "area": "materia",
+      "materia": "medicina-legal",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/medicina-legal.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Medicina Legal: 232 explicações «Trampa clásica» (×2 cópias), 13 caixas do bloco, frases de enunciado/opção, 'muy preguntado'. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #525",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-medicina-legal",
+      "pr": 525,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 260 em medicina-legal (SELECT somente leitura), portão 259/260 igual à main; 3 frases grifadas preservadas."
+    },
+    {
       "id": "semiologia-ii-fechamento-assets",
       "titulo": "Semiología II — concluir auditoria/merge dos assets do PR #78",
       "area": "assets",
@@ -595,6 +618,29 @@
       "issue": 103,
       "notas": "PR #109 mergeado após auditoria independente. 235 questões finais. Não deve retornar à fila salvo regressão/nova fonte.",
       "prioridade_declarada": "P0"
+    },
+    {
+      "id": "toxicologia-pente-fino-g0-claude2",
+      "titulo": "P1 — Toxicología: pente fino G0 (voz de prova e etiquetas «Trampa clásica»)",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Toxicología: 314 explicações «Trampa clásica» (×2 cópias), frases de enunciado/distractor, simulacro. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #500",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/cool-heisenberg-4dvama",
+      "pr": 500,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 0 em toxicologia (SELECT somente leitura)."
     },
     {
       "id": "semiologia-ii-b01-b04-provas",
@@ -941,6 +987,29 @@
       "policy_level": "D",
       "jose_authorized": true,
       "notas": "PR #145 auditado MERGE-READY e mergeado por José em 23/09/2026 (merge 7696b6993508255ab9004107e74a880ec1d48fab). Edição segura por AnchoredEdit para arquivos grandes liberada; limite de 20k, fail-closed, allowed_files, ledger global e sem merge/deploy automático preservados."
+    },
+    {
+      "id": "ortopedia-pente-fino-g0-claude2",
+      "titulo": "P1 — Ortopedia: pente fino G0 (voz de prova e etiquetas «Trampa clásica»)",
+      "area": "materia",
+      "materia": "ortopedia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/ortopedia.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Ortopedia: 259 explicações «Trampa clásica» (×2), caixas «La trampa clásica del bloque», 'perla de examen', distractor/enunciado. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #502",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-ortopedia",
+      "pr": 502,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 4 em ortopedia (SELECT somente leitura)."
     },
     {
       "id": "fisiopatologia-ii-issue101-r2",
@@ -1320,6 +1389,29 @@
       "notas": "Parent backlog. Wildcard não é executável pelo Worker Bridge; o Intake deve quebrar em tarefas por matéria/caminho exato antes da execução. Não reescrever globalmente em uma PR. Inventário ao vivo encontrou 10 arquivos com ocorrência real; microtarefas por arquivo exato foram registradas. O parent continua apenas como rastreador global, não executável."
     },
     {
+      "id": "anestesiologia-pente-fino-g0-claude2",
+      "titulo": "P1 — Anestesiología: pente fino G0 (voz de prova, «Error de examen» e «⚠️ Trampa»)",
+      "area": "materia",
+      "materia": "anestesiologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anestesiologia.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Anestesiología: 13 listas «Error de examen», rótulos «⚠️ Trampa», frases de enunciado/pregunta. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #504",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-anestesiologia",
+      "pr": 504,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 10 em anestesiologia (SELECT somente leitura), portão 10/10."
+    },
+    {
       "id": "semiologia-ii-visual-b05-b10",
       "titulo": "P2 — Semiología II: fechamento visual B05–B10",
       "area": "assets",
@@ -1644,6 +1736,29 @@
       "risk_level": "ALTO",
       "policy_level": "D",
       "jose_authorized": true
+    },
+    {
+      "id": "oftalmologia-pente-fino-g0-claude2",
+      "titulo": "P1 — Oftalmología: pente fino G0 (voz de prova e etiquetas «Trampa clásica»)",
+      "area": "materia",
+      "materia": "oftalmologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/oftalmologia.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Oftalmología: 90 explicações «Trampa clásica» (×2), 27 cartões, 7 caixas «La trampa clásica de este bloque», frases de enunciado. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #509",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-oftalmologia",
+      "pr": 509,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 858 em oftalmologia (SELECT somente leitura), portão 851/858 = main."
     },
     {
       "id": "infra-worker-bridge-resilient-queue-issue172",
@@ -2000,6 +2115,29 @@
       "risk_level": "ALTO",
       "policy_level": "D",
       "jose_authorized": true
+    },
+    {
+      "id": "neurologia-pente-fino-g0-claude2",
+      "titulo": "P1 — Neurología: pente fino G0 (voz de prova, «Trampa clásica» e bloco 19)",
+      "area": "materia",
+      "materia": "neurologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Neurología: 15 «Trampa clásica ·», caixas, 'regla de examen', bloco 19 (complemento por literatura) sem estratégia de prova, enunciado/ítem. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #514",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-neurologia",
+      "pr": 514,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 107 em neurologia (SELECT somente leitura), portão 107/107."
     },
     {
       "id": "infra-audit-needs-fix-feedback-loop",
@@ -2370,6 +2508,29 @@
       "source_pack_path": "coordination/source-packs/neurologia-p0-provas-q01-04-v1.md"
     },
     {
+      "id": "guarani-pente-fino-g0-claude2",
+      "titulo": "P1 — Guaraní: pente fino G0 (voz de prova, «Trampa clásica» e consignas)",
+      "area": "materia",
+      "materia": "guarani",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/guarani.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Guaraní: 64 explicações «Trampa clásica» (×2), caixas «La trampa clásica del bloque», distractor/enunciado/evaluación. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #517",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-guarani",
+      "pr": 517,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 0 em guarani (SELECT somente leitura)."
+    },
+    {
       "id": "neurologia-p0-provas-q05-07",
       "titulo": "P0 — Neurología 2/12: prova 25/09 · questões 5 a 7",
       "area": "materia",
@@ -2640,6 +2801,30 @@
       "question_report_required": true,
       "source_pack_required": true,
       "source_pack_path": "coordination/source-packs/neurologia-p0-qa-parte-1-v1.md"
+    },
+    {
+      "id": "histologia-ii-pente-fino-g0-claude2",
+      "titulo": "P1 — Histología II e Práctica: pente fino G0 (voz de prova e etiquetas «Trampa clásica»)",
+      "area": "materia",
+      "materia": "histologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/histologia-ii.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/histologia-ii-practica.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Histología II e Práctica: 90 etiquetas «Trampa clásica», caixas do bloco, enunciado/distractor em explicações, 3 frases da #527. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra de Histología II (sem fonte nova) · LEI-G0 §6 e §13 · PR #526",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-histologia-ii",
+      "pr": 526,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. Resultado NEEDS-AUDIT; sem merge por Claude 2. Grifos: 42 em histologia-ii (SELECT somente leitura), portão OK; 21 já pendentes antes (texto em português antigo)."
     },
     {
       "id": "neurologia-p0-qa-parte-2",
