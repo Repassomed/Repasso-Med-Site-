@@ -2100,6 +2100,34 @@
       "source_pack_path": "coordination/source-packs/fisiopatologia-ii-issue101-v1.md"
     },
     {
+      "id": "fisiopatologia-ii-issue101-c1-claude2",
+      "titulo": "P1 — Fisiopatología II (#101) · checkpoint 1: fotos de prova, reconciliação e voz G0",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/fisio2/bloco-10-02-hiponatremia-adh-cerebro-v2.webp",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/fisio2/bloco-11-02-hipopotassemia-v2.webp",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/fisio2/bloco-11-03-hiperpotassemia-v2.webp",
+        "coordination/source-packs/fisiopatologia-ii-issue101-*.md",
+        "tools/qa/browser-qa/fisiopatologia-ii-2026-10/**"
+      ],
+      "objetivo": "Checkpoint 1 da issue #101 executado em sessão supervisionada por José: extrair as fotos de prova do Drive (19/09 e 21/09), reconciliar item a item com o site (Lei 8-A) e neutralizar a voz de estratégia de prova (G0) sem alterar a sequência de elementos ancoráveis. Comparação com os 6 decks atuais, redução de densidade e infográficos ficam para checkpoints seguintes.",
+      "fonte": "Issue #101 · Drive Fisiopatología II > Questões · source pack v1/v2",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/fisiopatologia-ii-issue101",
+      "pr": null,
+      "commit": null,
+      "issue": 101,
+      "notas": "Registro próprio (não amplia a reserva de fisiopatologia-ii-issue101-r3-sourcepack, que permanece como está e é a tarefa canônica do worker automático; este checkpoint a executa manualmente a pedido de José, sem merge). Resultado NEEDS-AUDIT. | Checkpoint 2 (10/10/2026): infográficos (SVG + 3 rasters -v2), remapeamento de grifos e harness de QA da matéria."
+    },
+    {
       "id": "toxicologia-provas-issue102-r2-sourcepack",
       "titulo": "P1 — Toxicología: incorporar provas P1/P2 com source pack compartilhado",
       "area": "materia",
@@ -2764,6 +2792,34 @@
       "commit": null,
       "issue": 67,
       "notas": "Reserva registrada antes de editar. Não toca biologia.html (#471 reservada ao Claude 1, na fila para depois) nem CSS/JS global. #464 permanece pausada. Matriz de fontes, perfil de provas e relatórios em coordination/source-packs/farmacologia-ii-revisao-2026-10-*.md (documentação, fora do HTML do aluno)."
+    },
+    {
+      "id": "dermatologia-revisao-integral-2026-10-claude2",
+      "titulo": "P1 — Dermatología: abertura direta, voz G0, bloco 06 e figuras conferidos contra slides e Fitzpatrick",
+      "area": "materia",
+      "materia": "dermatologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/dermatologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/derma/16-tina-capitis-patrones.webp",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/derma/18-pies-manos-unas-dermatofitos.webp",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/derma/19-micosis-superficiales-piel-pelo.webp",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/derma/bloco-01-09-recursos-diagnosticos.webp",
+        "coordination/source-packs/dermatologia-revisao-integral-2026-10-v1.md"
+      ],
+      "objetivo": "Revisão de Dermatología: abertura direta no bloco 01, voz G0 nas respostas e cartões (0 «Trampa clásica»), bloco 06 (dermatofitoses) conferido contra o Fitzpatrick pp. 607–627, e figuras sem conduta clínica sem fonte permitida (retoque só dos recuadros; nenhuma imagem removida).",
+      "fonte": "Slides da cátedra (01. Dermato Unidad I; 7. Candidiasis) · Fitzpatrick (recorte pp. 607–627 e introdução) · guias de estudo do Drive · PR #505",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-dermatologia",
+      "pr": 505,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio (não amplia a reserva de dermatologia-questoes-issue112-r3, que permanece como está). Resultado NEEDS-AUDIT; sem merge por Claude 2. Alunos: 0 grifos, 0 traços, 0 notas (SELECT somente leitura, 23/10)."
     }
   ]
 }
