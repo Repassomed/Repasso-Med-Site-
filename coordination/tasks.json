@@ -2803,6 +2803,30 @@
       "source_pack_path": "coordination/source-packs/neurologia-p0-qa-parte-1-v1.md"
     },
     {
+      "id": "histologia-ii-pente-fino-g0-claude2",
+      "titulo": "P1 — Histología II e Práctica: pente fino G0 (voz de prova e etiquetas «Trampa clásica»)",
+      "area": "materia",
+      "materia": "histologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/histologia-ii.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/histologia-ii-practica.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Histología II e Práctica: 90 etiquetas «Trampa clásica», caixas do bloco, enunciado/distractor em explicações, 3 frases da #527. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra de Histología II (sem fonte nova) · LEI-G0 §6 e §13 · PR #526",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-histologia-ii",
+      "pr": 526,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. Resultado NEEDS-AUDIT; sem merge por Claude 2. Grifos: 42 em histologia-ii (SELECT somente leitura), portão OK; 21 já pendentes antes (texto em português antigo)."
+    },
+    {
       "id": "neurologia-p0-qa-parte-2",
       "titulo": "P0 — Neurología 10/12: QA parte 2 (neub04, neub11, neub12)",
       "area": "materia",
