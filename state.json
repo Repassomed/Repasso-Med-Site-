@@ -3097,6 +3097,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:517.",
       "task_id": "pr:517",
       "worker_id": null
+    },
+    {
+      "category": "workflow",
+      "commit_sha": null,
+      "component": "coordinator",
+      "error_id": "ERR-E9B546A229",
+      "error_type": "anthropic-ledger-failed",
+      "fingerprint": "e9b546a229ecf3562acf",
+      "first_seen": "2026-10-23T03:49:02.809413+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "423d0edbf440469bbdaef48d72383103",
+      "issue_sync_updated_at": "2026-10-23T03:49:02.809413+00:00",
+      "last_evidence_hash": "b68e8ccc1969384d163e",
+      "last_seen": "2026-10-23T03:49:02.809413+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "39896872428",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Ledger Anthropic falhou apos chamada paga no evento pr:517.",
+      "task_id": "pr:517",
+      "worker_id": null
     }
   ]
 }
