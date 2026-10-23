@@ -26,8 +26,8 @@ Arquivo: `Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privad
 | 4 | Bloco 26 não ensinava ramos da artéria ulnar/cubital, interóssea comum, recorrentes ulnares, nem a tabela dos arcos palmar superficial/profundo/dorsal, que o deck da cátedra ensina e as perguntas cobram | Tabela de ramos colaterais da cubital, quadro «cada arteria con su nervio» e tabela dos arcos. Contagens de digitais/metacarpianas atribuídas ao deck («el deck cuenta 4») | bloco 26 |
 | 5 | Bloco 20 sem bolsas serosas, fascículo arqueado (Cooper), irrigação/inervação por articulação | Tabela «Para completar» (deck da cátedra) + entrada no índice do bloco | bloco 20 |
 | 6 | Bloco 31 sem a divisão dos gânglios laterais (yugulodigástrico/yuguloomohioideo) nem as ramas da subclávia | Tabela de gânglios laterais; remissão ao bloco 12 para as ramas da subclávia (já ensinadas ali) | bloco 31 |
-| 7 | Figura `a1_b03_06`: rótulo «NO AXIAL*» contradizia o texto (a cátedra: artrodia = multiaxial; outros materiais dizem não axial) | **Retocada**: «MULTIAXIAL*» + nota «otros materiales la dan como no axial» | assets/img/anato1 |
-| 8 | Figura `a1_b12_08-rev`: caixa «Corrección del resumen antiguo: posteriores = 2 + 9 … no doce pares» contradizia o texto («3 + 9 posteriores, 6 + 6 anteriores», a convenção da cátedra) | **Retocada**: «Convención de la cátedra: 3 + 9 posteriores y 6 + 6 anteriores. Este esquema muestra el reparto de la anatomía descriptiva: 2 + 9 y anteriores sólo en los espacios 1–9» | assets/img/anato1 |
+| 7 | Figura `a1_b03_06`: rótulo «NO AXIAL*» contradizia o texto (a cátedra: artrodia = multiaxial) | **Retocada**: «MULTIAXIAL», sem asterisco nem nota sobre outros materiais (sem fonte verificável) | assets/img/anato1 |
+| 8 | Figura `a1_b12_08-rev`: o painel lateral e a caixa inferior davam 2 + 9 e anteriores só até o 9.º espaço, contra o texto (3 + 9 posteriores, 6 + 6 anteriores, convenção da cátedra) | **Retocada**: painel e caixa só com a convenção da cátedra (posteriores 1–3 / 4–11 / subcostal; anteriores 6 primeiras / 6 últimas) | assets/img/anato1 |
 
 ## 3. Verificações feitas
 
@@ -50,5 +50,19 @@ Arquivo: `Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privad
 1. **Tórax (blocos 05–17) e membro inferior/superior além dos decks listados:** confrontados só por sonda de termos com o compilado e o «anatomia 1.pdf»; sem leitura linha a linha de Latarjet.
 2. Perguntas do bloco 08 sobre nível do hiato da VCI (VT8) seguem a cátedra; uma opção de questionário a dá a VT9 (já explicado no texto).
 3. O questionário de Generalidades não pôde ser lido; a atribuição «cuestionario de la cátedra» é a que já existia.
-4. Duas divergências de convenção ficam marcadas na página (artrodia multiaxial × não axial; 3+9 × 2+9 intercostais).
+4. Convenções: só a da cátedra aparece na página (artrodia multiaxial; 3 + 9 posteriores e 6 + 6 anteriores). Não há mais menção a «otros materiales».
 5. Palavras de 2.ª pessoa em voseo («tocá», «fijate») são o padrão da matéria; não alteradas.
+
+## 6. Fechamento (2026-10-23, depois do merge da #555)
+
+**Convenções verificadas contra a cátedra**
+- **Artrodia = multiaxial:** `compilado primer parcial ANATOMIA 1.pdf`: «Artrodia o plana. Multiaxial». Texto do bloco 03 e figura `a1_b03_06` ficam só com essa convenção.
+- **Intercostais 3 + 9 e 6 + 6:** `anatomia 1.pdf` (repaso da cátedra): anteriores «6 primeras: torácica interna; 6 últimas: musculofrénica»; posteriores «3 primeras: intercostal suprema (tronco costocervical); 9 últimas: aorta torácica». Legenda, SVG e figura `a1_b12_08-rev` ficam na convenção da cátedra.
+
+**Retirado nesta correção (revisão do coordenador):** a explicação de uma «segunda forma de contar» (2 + 9; anteriores só até o 9.º espaço; «otros materiales dicen organismo / no axial»). Não havia trecho verificável de livro-base: Latarjet T1/T2 (81 MB e 88 MB) abrem com **texto vazio**. Removidos a caixa «Dos formas de contar», a frase da legenda, o texto do SVG, as notas das duas figuras e as menções soltas a «otros materiales». Nada foi declarado validado além dos decks.
+
+**Rótulos cortados registrados na #555 — corrigidos (figuras retocadas, nenhuma removida)**
+- `a1_b33_02_faringe`: «Cans» → «Coanas»; caixa de inervação compactada.
+- `a1_b28_01_plexo_conexiones`: frase cortada na borda corrigida.
+
+**Limite:** o que outros livros dizem sobre estas contagens segue sem conferência (Latarjet inacessível). Se José quiser mencionar outra convenção, é preciso o trecho de Latarjet T1, capítulo de vasos da parede torácica.
