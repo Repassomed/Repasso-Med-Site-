@@ -3122,6 +3122,31 @@
       "summary": "Ledger Anthropic falhou apos chamada paga no evento pr:517.",
       "task_id": "pr:517",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "af7c8b3c56b1b7ba8e79962336ecf774675a6cf6",
+      "component": "guard",
+      "error_id": "ERR-6F981D6ECE",
+      "error_type": "hard-fail",
+      "fingerprint": "6f981d6eceef4050481c",
+      "first_seen": "2026-10-23T04:24:34.307752+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "ff94f36ccfb7489587b9b57788df0e9d",
+      "issue_sync_updated_at": "2026-10-23T04:24:34.307752+00:00",
+      "last_evidence_hash": "a7b8fb3163b8a2f48fb0",
+      "last_seen": "2026-10-23T04:24:34.307752+00:00",
+      "occurrence_count": 1,
+      "pr_number": 557,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "39900010058",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:557.",
+      "task_id": "pedido de Jos\u00e9 \u2014 revis\u00e3o completa de Histolog\u00eda I Pr\u00e1ctica (in\u00edcio ao fim, auditoria de imagens); sem entrada em `coordination/tasks.json",
+      "worker_id": null
     }
   ]
 }
