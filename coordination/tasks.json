@@ -943,6 +943,29 @@
       "notas": "PR #145 auditado MERGE-READY e mergeado por José em 23/09/2026 (merge 7696b6993508255ab9004107e74a880ec1d48fab). Edição segura por AnchoredEdit para arquivos grandes liberada; limite de 20k, fail-closed, allowed_files, ledger global e sem merge/deploy automático preservados."
     },
     {
+      "id": "ortopedia-pente-fino-g0-claude2",
+      "titulo": "P1 — Ortopedia: pente fino G0 (voz de prova e etiquetas «Trampa clásica»)",
+      "area": "materia",
+      "materia": "ortopedia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/ortopedia.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Ortopedia: 259 explicações «Trampa clásica» (×2), caixas «La trampa clásica del bloque», 'perla de examen', distractor/enunciado. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #502",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-ortopedia",
+      "pr": 502,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 4 em ortopedia (SELECT somente leitura)."
+    },
+    {
       "id": "fisiopatologia-ii-issue101-r2",
       "titulo": "P1 — Fisiopatología II: retry pós-#145 das novas provas + fechamento editorial",
       "area": "materia",
@@ -2820,29 +2843,6 @@
       "commit": null,
       "issue": 67,
       "notas": "Registro próprio (não amplia a reserva de dermatologia-questoes-issue112-r3, que permanece como está). Resultado NEEDS-AUDIT; sem merge por Claude 2. Alunos: 0 grifos, 0 traços, 0 notas (SELECT somente leitura, 23/10)."
-    },
-    {
-      "id": "ortopedia-pente-fino-g0-claude2",
-      "titulo": "P1 — Ortopedia: pente fino G0 (voz de prova e etiquetas «Trampa clásica»)",
-      "area": "materia",
-      "materia": "ortopedia",
-      "arquivos": [
-        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/ortopedia.html"
-      ],
-      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Ortopedia: 259 explicações «Trampa clásica» (×2), caixas «La trampa clásica del bloque», 'perla de examen', distractor/enunciado. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
-      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #502",
-      "agente": "Claude 2",
-      "estado": "NEEDS-AUDIT",
-      "prioridade_declarada": "P1",
-      "capabilities_required": [
-        "conteudo"
-      ],
-      "dependencias": [],
-      "branch": "claude/pente-fino-g0-ortopedia",
-      "pr": 502,
-      "commit": null,
-      "issue": 67,
-      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 4 em ortopedia (SELECT somente leitura)."
     }
   ]
 }
