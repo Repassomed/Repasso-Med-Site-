@@ -8,8 +8,8 @@ Arquivo: `netlify/functions/materias-privadas/anatomia-patologica.html` (slug de
 
 | Fonte | Situação |
 |---|---|
-| Slides da cátedra de AP I (Dra. Chilavert) — `ilovepdf_merged_compressed.pdf`, pasta «Anatopatologia Praticas» | Lidos. Cobrem **só** epitelio, microscopio, definição/divisões da patologia, hipertrofia, atrofia, hiperplasia e metaplasia (Barrett/ERGE). **Não** têm lesão celular, necrose, apoptose, acumulações, inflamação nem neoplasias. |
-| Slides de Fisiopatología I (Dra. Fretez), `ilovepdf_merged_compressed.pdf`, pasta «Fisiopatologia» | Lidos. **Outra cátedra**; usados só como apoio complementar onde coincidem com um tema (tumefacção/bomba Na⁺/K⁺, tipos de necrose, apoptose, inflamação serosa/supurativa/apendicite). |
+| Slides da cátedra de AP I — `ilovepdf_merged_compressed.pdf`, pasta «Anatopatologia Praticas» | Lidos. Cobrem **só** epitelio, microscopio, definição/divisões da patologia, hipertrofia, atrofia, hiperplasia e metaplasia (Barrett/ERGE). **Não** têm lesão celular, necrose, apoptose, acumulações, inflamação nem neoplasias. |
+| Slides de Fisiopatología I, `ilovepdf_merged_compressed.pdf`, pasta «Fisiopatologia» | Lidos. **Outra cátedra**; usados só como apoio complementar onde coincidem com um tema (tumefacção/bomba Na⁺/K⁺, tipos de necrose, apoptose, inflamação serosa/supurativa/apendicite). |
 | Robbins 9.ª ed. e Harsh Mohan 6.ª ed. (pasta de literatura no Drive) | Existem, mas a ferramenta devolve texto vazio (440 MB / 147 MB). **Não consultados nesta rodada.** |
 | Resumos visuais derivados, texto atual do site | Não valem como fonte para mudar caso clínico. |
 
