@@ -304,3 +304,20 @@ As imagens 16 e 19 foram editadas só nos recuadros indicados (retoque de texto;
 **Abertura (bloco 01).** Retirada a orientação sobre ordem de estudo: título «Por qué esta materia se aprende al revés» → «La piel se lee: de la lesión al diagnóstico»; «Eso cambia el orden en que conviene estudiar…» → «De ahí una frase clásica que lo resume:»; «Por eso la anatomía va primero: no es un trámite…» → «Por eso la anatomía es la clave de lectura…»; «Por eso la inversión rinde tanto» → «describir bien la lesión rinde tanto»; cartão «La frase de Siemens» sem «Es el orden de estudio de toda la materia» (3 cópias). Nas 13 caixas «Puntos a dominar» saiu a linha «Orden basado en el contenido… y en el peso que cada tema tiene en la bibliografía» (estratégia editorial interna) → «Los puntos que sostienen el bloque.»
 
 **Dados reais (SELECT somente leitura, 23/10):** `dermatologia` 0 grifos, 0 traços, 0 notas.
+
+## (xviii) Fechamento de 23/10 (4.ª rodada) — afirmações sem fonte: fonte permitida ou conclusão retirada
+
+Critério aplicado: **só vale o que um slide da cátedra ou o Fitzpatrick (recorte pp. 607–627 / introdução) sustenta**. Um relato de caso tratado com antifúngico **não** comprova uma regra de conduta.
+
+| afirmação | fonte permitida? | decisão |
+|---|---|---|
+| Querión: «el drenaje no forma parte de ese manejo» (explicação da questão q-derma06-03) | **Não.** O Atlas p. 625 só descreve KOH, cultura micológica e bacteriana e antimicóticos gerais; o caso da fig. 26-45 («não respondeu a antibióticos orais», tratado com terbinafina oral) é um relato, não prova que drenar seja contraindicado nem que «não faça parte» | **conclusão retirada**: a frase agora diz só «El tratamiento descrito en la bibliografía es el antifúngico sistémico, una vez confirmado el diagnóstico». A questão continua com a resposta c) (confirmar com KOH e cultivo e tratar com antifúngico sistémico: sustentada pelo Atlas) e a explicação das alternativas a) e b) («dan por hecho que es un absceso bacteriano, sin confirmar, y no tratan el hongo») |
+| Querión: «no incidir ni drenar» (figura 16) e champú | não | já retirados da imagem em 22/10 |
+| Piedra negra: agente (*Piedraia hortae*), «nódulos duros y oscuros», «ascas con ascosporas pigmentadas» (fig. 19) | **Não** (os guias do Drive e o índice do Fitzpatrick citam tiña negra e piedra blanca/*Trichosporon*; o capítulo não está acessível: o PDF completo não baixa) | **retirados da imagem**: agente trocado por «Piedra negra»; «Nódulos oscuros adheridos al pelo» (só o que o nome já diz); micrografia legendada «Elementos fúngicos en la preparación». A **imagem foi mantida** |
+| Dermatoscopia da tiña negra («Estructuras filamentosas pigmentadas», cabeçalho «Dermoscopia») (fig. 19) | **Não** | **retirada**: cabeçalho «Lesión (piel)» e legenda «Mácula marrón-negra, sin inflamación» (guia do Drive: *H. werneckii* produz manchas marrom ou negras em palmas e plantas, sem inflamação) |
+| «Hifas pigmentadas» e «artroconidios y blastoconidios» (fig. 19) | não localizados em fonte permitida | trocados por «Hongo en el estrato córneo» e «Elementos fúngicos en la preparación» |
+| Alt e legenda da fig. 19 | — | coerentes com a imagem (tiña negra, piedra blanca/*Trichosporon*, piedra negra sem agente; lesão de piel e preparação com KOH) |
+
+**Seguem sem fonte permitida e fora do texto do aluno:** nada além do que foi neutralizado acima. Itens da lista anterior já resolvidos: «raspar el borde» (Atlas pp. 609 e 618), recuadros da fig. 18 (Atlas p. 609), «Hebra» retirado, Wood verdosa/amarillo-anaranjado.
+
+**Registro:** ESCOPO passa a declarar **Tarefa** (`dermatologia-revisao-integral-2026-10-claude2`, em `coordination/tasks.json`, estado NEEDS-AUDIT, sem colisão com `dermatologia-questoes-issue112-r3`).

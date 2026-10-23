@@ -2764,6 +2764,34 @@
       "commit": null,
       "issue": 67,
       "notas": "Reserva registrada antes de editar. Não toca biologia.html (#471 reservada ao Claude 1, na fila para depois) nem CSS/JS global. #464 permanece pausada. Matriz de fontes, perfil de provas e relatórios em coordination/source-packs/farmacologia-ii-revisao-2026-10-*.md (documentação, fora do HTML do aluno)."
+    },
+    {
+      "id": "dermatologia-revisao-integral-2026-10-claude2",
+      "titulo": "P1 — Dermatología: abertura direta, voz G0, bloco 06 e figuras conferidos contra slides e Fitzpatrick",
+      "area": "materia",
+      "materia": "dermatologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/dermatologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/derma/16-tina-capitis-patrones.webp",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/derma/18-pies-manos-unas-dermatofitos.webp",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/derma/19-micosis-superficiales-piel-pelo.webp",
+        "Repasso-Med-Site--main/Atual - Copia/assets/img/derma/bloco-01-09-recursos-diagnosticos.webp",
+        "coordination/source-packs/dermatologia-revisao-integral-2026-10-v1.md"
+      ],
+      "objetivo": "Revisão de Dermatología: abertura direta no bloco 01, voz G0 nas respostas e cartões (0 «Trampa clásica»), bloco 06 (dermatofitoses) conferido contra o Fitzpatrick pp. 607–627, e figuras sem conduta clínica sem fonte permitida (retoque só dos recuadros; nenhuma imagem removida).",
+      "fonte": "Slides da cátedra (01. Dermato Unidad I; 7. Candidiasis) · Fitzpatrick (recorte pp. 607–627 e introdução) · guias de estudo do Drive · PR #505",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-dermatologia",
+      "pr": 505,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio (não amplia a reserva de dermatologia-questoes-issue112-r3, que permanece como está). Resultado NEEDS-AUDIT; sem merge por Claude 2. Alunos: 0 grifos, 0 traços, 0 notas (SELECT somente leitura, 23/10)."
     }
   ]
 }
