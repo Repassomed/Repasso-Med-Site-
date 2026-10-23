@@ -193,3 +193,22 @@ Método: cada afirmação, número, questão (45) e cartão (63) dos blocos fp2b
 **Pendência editorial concreta (revisão separada, não resolvida nesta PR).** Os blocos antigos 1–14 têm **319 respostas com «⚠️ Trampa clásica»**, cada uma em duas cópias (corpo e Banco General) = **638 ocorrências**. Por bloco (corpo = banco): b01 29 · b02 29 · b03 30 · b04 31 · b05 16 · b06 22 · b07 20 · b08 22 · b09 21 · b10 21 · b11 20 · b12 23 · b13 18 · b14 17. Já estavam na `main`; reescrevê-las exige alterar as duas cópias de cada questão e checar grifos de aluno que caem nessas respostas (portão `hl-real --gate` a cada lote). Sugestão: 14 lotes (um por bloco), mesmo molde do bloco 15–17 («Razonamiento clínico»).
 
 **Dados reais (SELECT somente leitura, 23/10):** `fisiopatologia-ii` 47 grifos (hash −5215415932, idêntico), 0 traços, 0 notas; portão `hl-real --gate` 47/47 («PORTÃO OK»).
+
+## (xx) Fechamento editorial dos blocos 1–14 (23/10, 7.ª rodada) — 319 «Trampa clásica» → «Razonamiento clínico»
+
+**O que foi feito.** As 319 respostas dos blocos 1–14 que traziam «⚠️ Trampa clásica» foram **reescritas uma a uma** (não houve troca automática de rótulo): cada parágrafo agora explica o raciocínio clínico (por que a opção certa é certa e como se separa da vizinha), sem «trampa», «error clásico», «memorizá», «anclá» como estratégia de prova nem referência ao enunciado/alternativas como técnica. Cada texto foi escrito a partir da pergunta, da alternativa correta e da explicação já existente, **sem fato novo**. As duas cópias de cada questão (corpo e Banco General) receberam **exatamente o mesmo texto** (0 espelhos diferentes em 319 pares).
+
+**Contagens antes/depois:** «Trampa clásica» 638 → 0 (319 × 2); parágrafos `rmc-trap` com «Razonamiento clínico»: 45 × 2 (blocos 15–17) → 364 × 2 (blocos 1–17). Perguntas 728, cartões 2 046, ids 1 026, 33 imagens: **iguais**. Verificação de integridade contra o commit anterior: **só mudam os parágrafos `rmc-trap`**; resto das questões (enunciado, alternativas, gabarito, `onclick`) e o resto da página idênticos; ids e `src/href` idênticos.
+
+**Grifos — consulta somente leitura antes de qualquer mudança.** O SELECT de 23/10 deu **47 grifos, hash −5215415932 (igual ao de 22/10), 0 traços, 0 notas**; os 47 registros (`block_id`, `exact_text`, prefixo, sufixo, ocorrência) foram comparados com cada parágrafo antes de reescrevê-lo, e o portão `hl-real --gate` foi rodado a cada lote (14 lotes) e no commit final: **47/47 sobrevivem sem remapeamento, no mesmo elemento («PORTÃO OK»)**.
+
+**Frases grifadas mantidas intactas (lista de pendências identificada).** Duas questões têm grifo **dentro** do parágrafo; nelas só o rótulo mudou para «Razonamiento clínico» e o texto ficou idêntico (2 questões × 2 cópias):
+| questão | grifo(s) | frase não reescrita |
+|---|---|---|
+| b01q10 | «12 anuncia que la várice puede romperse» | «…La pregunta pide el primero.» (voz de pergunta) |
+| b01q14 | «escamoso ← displasia», «adenocarcinoma ← Barrett» | «…Cruzarlos es el error más repetido del bloque.» |
+Pendência: reescrever essas duas frases só depois de remapear os grifos (decisão do coordenador); não bloqueia a PR.
+
+**Ressalvas dos slides 09–11 para o aluno (conferido).** Critérios e tratamentos do slide aparecem como do slide, não como regra geral: metformina com creatinina > 1,5 («criterio de ese material»); cintura 102/88 × 94/80 cm; cortes de cortisol, ACTH e dexametasona do Cushing («Cómo leer los cortes/valores»); na crise suprarrenal a página mostra que o slide cita «dexametasona o hidrocortisona» e **prefere** a dexametasona e diz que isso é «criterio de ese material, no una regla general», sem dose nem via; glargina/detemir «pico no indicado en el slide». Ajuste desta rodada: no resumo do bloco 16, «Meta» e «Primer escalón» passam a dizer «del slide» / «del algoritmo del slide».
+
+**Limite das lâminas (inalterado, exato).** Não foram vistas as figuras dos slides 09 (8,4 MB) e 10 (6,5 MB): o Drive derruba o download (>6 MB) e o acesso direto pelo proxy dá 403. Dependem de figura: pico de glargina/detemir (agora «no indicado»); esquema IR/IRS; setas de anabolismo × catabolismo (slides 4–5); slides 6–12, 15–17, 27–28, 33 e 35 sem texto extraível; «infusão contínua = padrão ouro» (slide 33). Slide 09: nenhuma afirmação depende só do desenho. Slide 11 foi visto por inteiro.
