@@ -1,31 +1,27 @@
-# Medicina Familiar — lacunas de fonte retomadas (2026-10-22)
+# Medicina Familiar — lacunas de fonte retomadas (2026-10-23)
 
-**Nível:** correção pontual com fonte nova encontrada no Drive. **Não** é conclusão científica da matéria; a PR #548 também não foi.
+**Nível:** só registro. **Nenhuma alteração no HTML publicado.** A #548 não é conclusão científica da matéria e esta PR também não.
 
-## Fonte nova achada (não lida antes)
-Pasta geral de PDFs/imagens do Drive (`1oWZ2ITUFOqbh1R6nqdHgS3LeXegCj9Hu`), três resumos visuais de Medicina Familiar (arquivos `PHOTO-2026-06-28-20-59-44.jpg`, três ids diferentes):
-- **APGAR familiar · «Repaso final para examen»** (págs. 8, 10–13, 17–23 e 26 da cátedra)
-- **Intervención en crisis familiar** (págs. 15–30)
-- **Familiograma** (págs. 4, 6–18, 24–28 e 30)
-Tratados como **complemento de alta relevância** (resumo derivado da cátedra, OCR), não como fonte soberana.
+## O que foi conferido
+| Fonte | O que cobre sobre APGAR / classificação / crisis |
+|---|---|
+| `mf_compressed.pdf` (Dra. Gauto, 5.º sem.) | APS, 9 princípios, familiograma completo; **termina no título «Apgar familiar» (só um link), sem conteúdo** |
+| `Medicina familiar.pdf` (slides) | Princípios, tipos de família, familiograma. **Nada** de APGAR, de classificação funcional/disfuncional/patológica nem de crisis. Única menção: o familiograma identifica risco «Psicológicos (posibilidad de tener una funcionalidad inadecuada)» |
+| 3 resumos visuais `PHOTO-2026-06-28-20-59-44.jpg` (APGAR «Repaso final», Intervención en crisis, Familiograma) | Trazem o conteúdo, mas são resumos derivados, **sem os slides originais correspondentes**. Servem como **pista**, não como comprovação |
+| Literatura-base (Rakel, PROFAM, McWhinney, Smilkstein, Jamoulle) | Não está no Drive |
 
-## Fonte → achado → decisão → destino
-| Fonte | Achado | Decisão | Destino |
-|---|---|---|---|
-| APGAR | Funcionalidade = interagir de forma harmônica; requisitos: boa comunicação, respeito às diferenças, cuidado e proteção, papéis claros, solução adequada de problemas | Frase do bloco completada com «cuidado y protección» e «roles claros» | bloco apgar |
-| APGAR | Funções familiares incluem alimentaria e recreativa | 2 linhas na tabela de funções (descrição neutra, só o que o nome diz) | bloco apgar |
-| APGAR | Classificação funcional / disfuncional / **patológica** (patológica = alcohol, apuestas, juegos, abuso de fármacos, trastornos psicológicos/psiquiátricos; não confundir com enfermidade crônica como diabetes/HTA; atenção especializada) — **ausente da página** | Subseção nova + 3 cartões + 1 pergunta (bloco e banco, mesma redação, gabarito b) | bloco apgar, banco |
-| APGAR | Violência familiar listada como **sinal de disfunção**, não de patológica | Linha «Patológica» da tabela de crises deixa de incluir «violencia intrafamiliar» e remete a disfunção | bloco crisis |
-| APGAR | Componentes, pontuação 0–4 e cortes 17–20/13–16/10–12/≤9 | Coincidem com a página | — |
-| Crisis | 5 níveis de intervenção e seus conteúdos | Coincidem; nível 2 completado com «orientación familiar anticipatoria» e «controles de salud» | bloco crisis |
-| Crisis | Exemplos normativos incluem «duelo»; não normativos: embarazo no deseado, muerte inesperada, pérdida de trabajo, infidelidad | Não incorporado «duelo» (ambíguo frente a «muerte inesperada») | — |
-| Familiograma | Tipos de família, símbolos, 15–20 min, perguntas «tipo de família / paciente índice» | Já cobertos pela página | — |
+## Decisão
+Os acréscimos feitos numa tentativa anterior desta PR (subseção «familia funcional/disfuncional/patológica», 3 cartões, 1 pergunta no bloco e no banco, funções alimentaria/recreativa, ajuste do nível 2 e da linha «Patológica») **foram retirados por falta de fonte original**. `medicina-familiar.html` fica idêntico à main: 92 → **90** perguntas, **177** cartões, 21 imagens, ids e gabaritos iguais; 17 grifos em `aps` + 1 em `portada-medfam` intactos (SELECT somente leitura).
 
-**Contagens antes → depois:** perguntas 90 → 92, «Ver respuesta» 65 → 66, cartões 177 → 180. Imagens, ids e gabaritos existentes iguais. Grifos: consulta somente leitura — 17 em `aps` + 1 em `portada-medfam`; nenhum em `apgar`/`crisis`, nada afetado.
+## Pendência registrada (o que entraria se a fonte aparecer)
+| Ponto | Pista (resumo visual) | O que falta |
+|---|---|---|
+| Classificação da família quanto à funcionalidade (funcional / disfuncional / patológica) | funcional: resolve sem ajuda; disfuncional: não resolve sozinha, precisa de orientação/intervenção; patológica: adicções ou transtornos psicológicos/psiquiátricos, atenção especializada | Slide original da cátedra ou Rakel/PROFAM/Smilkstein com esse texto; gabarito da pergunta só depois da fonte |
+| Requisitos e sinais de funcionalidade; funções familiares (alimentaria, recreativa…) | listas no resumo | Mesma fonte |
+| Níveis de intervenção em crise (já presentes na página, atribuídos a Doherty & Baird) | resumo confirma os 5 níveis, sem autores | Fonte original e a autoria |
+| Linha «Patológica» das crises cita «violencia intrafamiliar»; o resumo trata violência como sinal de disfunção | divergência provável | Fonte original para decidir |
 
-## Continua SEM fonte (preciso)
-- Crescimento e desenvolvimento inteiros (pesos, fórmulas, estatura, fontanelas, marcos, índices, perímetro cefálico, dentição, telas, rendimento escolar) e as perguntas/cartões sobre eles.
-- Nome «Doherty & Baird» e a tabela de níveis como tal; Geyman/Duvall (etapas do ciclo vital); subtipos das crises não normativas.
-- Educación para la salud, prevención cuaternaria, Leavell e Clark, Pc 10–90 × 3–97.
-- Bibliografia (Rakel, PROFAM, McWhinney, Smilkstein, Jamoulle) fora do Drive; escala original 0–10 de Smilkstein.
-- Ambiguidade «Al año» na pergunta dos 2 anos e contradição 15 m × 18 m: pendentes.
+**Cuidado de linguagem para quando houver fonte:** adicções e transtornos psiquiátricos descrevem a condição de **uma pessoa**; o texto deve dizer que isso é um fator que **afeta** o funcionamento da família e que a classificação da família é avaliação clínica, não rótulo automático de todos os seus membros. Não usar «familia patológica» como diagnóstico definitivo.
+
+## Continua SEM fonte
+Crescimento e desenvolvimento inteiros e as perguntas/cartões sobre eles; APGAR (conteúdo); crisis familiar; educación para la salud; prevención cuaternaria; Leavell e Clark; Pc 10–90 × 3–97; bibliografia fora do Drive; «Al año» e 15 m × 18 m (pendentes).
