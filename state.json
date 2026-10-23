@@ -3047,6 +3047,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:509.",
       "task_id": "pr:509",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "6b3b527b5c1d9e586d86ffd7c084c7b62102114a",
+      "component": "guard",
+      "error_id": "ERR-EEC8F4C3FC",
+      "error_type": "hard-fail",
+      "fingerprint": "eec8f4c3fccde5eefd6a",
+      "first_seen": "2026-10-23T03:44:40.306078+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "5f519464ac1b477e96a5530fab63f16a",
+      "issue_sync_updated_at": "2026-10-23T03:44:40.306078+00:00",
+      "last_evidence_hash": "71e3fda47f6901fb3bea",
+      "last_seen": "2026-10-23T03:44:40.306078+00:00",
+      "occurrence_count": 1,
+      "pr_number": 514,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "39896507685",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:514.",
+      "task_id": "pr:514",
+      "worker_id": null
     }
   ]
 }
