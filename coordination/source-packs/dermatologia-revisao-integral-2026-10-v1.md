@@ -279,3 +279,28 @@ As imagens 16 e 19 foram editadas só nos recuadros indicados (retoque de texto;
 **Segue sem fonte permitida (lista curta):** (a) conduta «não drenar» o querión como regra explícita (a página só diz que o tratamento descrito é antifúngico sistémico); (b) os dois recuadros da figura 18 acima; (c) piedra negra/*Piedraia hortae* e a dermatoscopia da tiña negra na figura 19 (sem texto acessível no Drive); (d) «eccema marginado de Hebra».
 
 **Dados reais (SELECT somente leitura, 22/10):** `dermatologia` 0 grifos, 0 traços, 0 notas.
+
+## (xvii) Fechamento de 23/10 (3.ª rodada) — figuras 18 e 19, abertura e lista pendente
+
+**Imagem 19 (`micosis-superficiales`).** O painel «Tratamiento: no desarrollado en el material…» foi **retirado** (conversa sobre fonte não pertence à página do aluno). O painel agora traz só conteúdo útil e com fonte: «Tiña negra: *Hortaea werneckii* · Piedra blanca: *Trichosporon* · colonizam as capas mais externas, queratinizadas, de piel y pelo, con poca o ninguna inflamación» (guia de estudo do Drive «Questões P1»/«Final»; índice do Fitzpatrick). O rótulo «*Piedraia hortae*» virou «Piedra negra» (nome do agente sem fonte permitida). Legenda e texto alternativo reescritos sem nota de fonte.
+
+**Imagem 18 (`pies-manos-unas`) — os dois recuadros sem fonte**
+| recuadro | achado | decisão |
+|---|---|---|
+| «Proximal: mayor riesgo en inmunodeprimidos» | não consta no recorte do Fitzpatrick (pp. 607–627) nem nos slides | **trocado** por «Muestra de la cara inferior» (Atlas p. 609: na onicomicose subungueal proximal a amostra é a superfície inferior da placa) |
+| «Uña no es sinónimo de hongo: psoriasis y trauma pueden imitar onicomicosis» | não consta (o diferencial do Atlas nesse trecho é da tiña do pé) | **trocado** por «Confirmar antes de tratar la uña: KOH, cultivo o PAS (más sensible)» (Atlas p. 609: PAS/metenamina argéntica mais sensíveis que KOH/cultivo na DLSO) |
+
+**Imagem `bloco-01-09` (luz de Wood).** «Microsporum: verde manzana» → «verdosa» (Atlas p. 609/624: fluorescência verdosa; o rótulo «verde manzana» não tinha fonte) e «amarillo cobrizo» → «amarillo-anaranjado» (slide de pitiríase versicolor). Legenda sem a nota «Sobre los colores».
+
+**Imagem 16.** Legenda reescrita só com conteúdo (querión: KOH + cultura; antimicóticos sistêmicos; terbinafina 4 semanas no caso do Atlas; alopecia cicatrizal sem tratamento; crema não alcança o tallo do pelo).
+
+**Lista pendente anterior — resolução**
+1. *Conduta «no drenar» do querión:* **justificada** como o que a fonte descreve: Atlas p. 625 — o querión «não respondeu a antibióticos orais» e «se tratou satisfatoriamente com terbinafina oral»; o texto da página diz «el drenaje no forma parte de ese manejo» (afirma o que a fonte descreve, não uma proibição). Sem frase de proibição na página nem na imagem.
+2. *«Raspar sempre o borde»:* **justificada**: Atlas p. 618 (crescimento periférico, parte central indemne) + p. 609 (uso recente de creme dificulta o exame); a página diz «conviene» e não «siempre».
+3. *«Eccema marginado de Hebra»:* **retirado** do texto e do cartão (sem fonte permitida); o cartão passa a «Tiña cruris».
+4. *«Verde manzana» da figura 01-09:* corrigido (acima).
+5. *Piedra negra/*Piedraia hortae* e dermatoscopia da tiña negra (figura 19):* descrições morfológicas **sem fonte permitida localizável** (o Fitzpatrick completo não baixa >6 MB; o recorte não cobre esse capítulo); não há conduta clínica nelas; mantidas só as descrições visuais e o rótulo genérico. **Segue sem fonte.**
+
+**Abertura (bloco 01).** Retirada a orientação sobre ordem de estudo: título «Por qué esta materia se aprende al revés» → «La piel se lee: de la lesión al diagnóstico»; «Eso cambia el orden en que conviene estudiar…» → «De ahí una frase clásica que lo resume:»; «Por eso la anatomía va primero: no es un trámite…» → «Por eso la anatomía es la clave de lectura…»; «Por eso la inversión rinde tanto» → «describir bien la lesión rinde tanto»; cartão «La frase de Siemens» sem «Es el orden de estudio de toda la materia» (3 cópias). Nas 13 caixas «Puntos a dominar» saiu a linha «Orden basado en el contenido… y en el peso que cada tema tiene en la bibliografía» (estratégia editorial interna) → «Los puntos que sostienen el bloque.»
+
+**Dados reais (SELECT somente leitura, 23/10):** `dermatologia` 0 grifos, 0 traços, 0 notas.
