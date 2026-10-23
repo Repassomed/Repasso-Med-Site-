@@ -2820,6 +2820,29 @@
       "commit": null,
       "issue": 67,
       "notas": "Registro próprio (não amplia a reserva de dermatologia-questoes-issue112-r3, que permanece como está). Resultado NEEDS-AUDIT; sem merge por Claude 2. Alunos: 0 grifos, 0 traços, 0 notas (SELECT somente leitura, 23/10)."
+    },
+    {
+      "id": "medicina-legal-pente-fino-g0-claude2",
+      "titulo": "P1 — Medicina Legal: pente fino G0 (voz de prova e etiquetas «Trampa clásica»)",
+      "area": "materia",
+      "materia": "medicina-legal",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/medicina-legal.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Medicina Legal: 232 explicações «Trampa clásica» (×2 cópias), 13 caixas do bloco, frases de enunciado/opção, 'muy preguntado'. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #525",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/pente-fino-g0-medicina-legal",
+      "pr": 525,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 260 em medicina-legal (SELECT somente leitura), portão 259/260 igual à main; 3 frases grifadas preservadas."
     }
   ]
 }
