@@ -597,6 +597,29 @@
       "prioridade_declarada": "P0"
     },
     {
+      "id": "toxicologia-pente-fino-g0-claude2",
+      "titulo": "P1 — Toxicología: pente fino G0 (voz de prova e etiquetas «Trampa clásica»)",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+      ],
+      "objetivo": "Trocar voz de prova/estratégia de teste por explicação da matéria em Toxicología: 314 explicações «Trampa clásica» (×2 cópias), frases de enunciado/distractor, simulacro. Nenhuma imagem, questão, gabarito, id ou cartão removido.",
+      "fonte": "Conteúdo já existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13 · PR #500",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/cool-heisenberg-4dvama",
+      "pr": 500,
+      "commit": null,
+      "issue": 67,
+      "notas": "Registro próprio. NEEDS-AUDIT; sem merge por Claude 2. Grifos: 0 em toxicologia (SELECT somente leitura)."
+    },
+    {
       "id": "semiologia-ii-b01-b04-provas",
       "titulo": "Semiología II — exame de 17/09 nos bloques 01 a 04",
       "area": "materia",
