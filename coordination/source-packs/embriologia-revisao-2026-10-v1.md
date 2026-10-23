@@ -18,7 +18,7 @@ Arquivo: `Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privad
 |---|---|---|---|
 | 1 | Cobertura: nos blocos 01–13, as respostas de 62 perguntas de múltipla escolha avaliáveis têm o assunto ensinado antes no próprio bloco (teste lexical: 0 com cobertura baixa). As 107 do banco repetem as dos blocos | Sem mudança | — |
 | 2 | Opções de uma pergunta de prova com português e erro de digitação: «principalemente», «que es liberado», «dia 05» | «Estrógeno, liberado principalmente del día 5 al 14», «Progesterona, liberada principalmente del día 14 al 21», etc. (4 opções × bloco e banco). Resposta e letra iguais | pergunta «hormona del endometrio» (bloco 06 + banco) |
-| 3 | Tarjetas «Semana 7» duplicadas no bloco 11 e no banco (duas frases quase iguais) e uma dizia «se separan los dedos» enquanto a figura b11_02, o texto do bloco e a apostila dizem semana 7 = **começo** da apoptose interdigital, semana 8 = dedos separados | Mantida uma só tarjeta por lugar, com a redação precisa; tabela «semana 7» alinhada: «Empieza la separación de los dedos (…; terminan de separarse en la semana 8)» | bloco 11, banco de tarjetas |
+| 3 | Duas tarjetas «Semana 7» (bloco 11 e banco) quase iguais, e uma dizia «se separan los dedos» enquanto a figura b11_02, o texto do bloco e a apostila dizem semana 7 = **começo** da apoptose interdigital, semana 8 = dedos separados | Nenhuma tarjeta removida: a imprecisa foi reescrita («rayos digitales … escotaduras … empieza la apoptosis interdigital; terminan de separarse en la semana 8») e a outra ficou. Tabela «semana 7» alinhada | bloco 11, banco de tarjetas |
 | 4 | Frase «que es lo que pregunta el enunciado» (fala da prova) | «que es lo que pide el enunciado» (2 cópias) | bloco 01 + banco |
 | 5 | Rótulos «Basada en preguntas de examen»: são a etiqueta oficial da lei 8-A.4 | Mantidos | — |
 | 6 | **Figuras** (39 referenciadas; todas vistas uma a uma): títulos de cartões ilegíveis ou sobrepostos | **Retocadas** (nenhuma removida): `emb_b05_03` (3 títulos tachados), `emb_b06_01` (texto sobreposto «progesterona»/«Estrógeno»), `emb_b06_02` (títulos ilegíveis sobre a imagem), `emb_b07_02` (títulos de 4 pastilhas ilegíveis) | assets/img/embrio |
@@ -33,7 +33,7 @@ Arquivo: `Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privad
 | «Ver respuesta» | 202 | 202 |
 | Imagens referenciadas | 39 | 39 |
 | IDs | 18 | 18 |
-| Tarjetas | 298 | **296** (as duas duplicadas «Semana 7» do bloco 11 e do banco; o conteúdo continua numa tarjeta por lugar) |
+| Tarjetas | 298 | 298 (nenhuma removida; 2 reescritas) |
 | Banco espelhado | 107 = 107 perguntas; 149 = 149 tarjetas | igual |
 
 ## 4. Grifos
@@ -42,7 +42,7 @@ Consulta somente leitura ao Supabase: **0 grifos** para `embriologia` (nenhum al
 
 ## 5. Navegador (390 e 1280 px)
 
-39/39 imagens carregam, sem rolagem horizontal, «Ver respuesta» abre em 4/4 blocos testados (01, 05, 08, 11), 296 cartões, sem erros de JS.
+39/39 imagens carregam, sem rolagem horizontal, «Ver respuesta» abre em 4/4 blocos testados (01, 05, 08, 11), 298 cartões, sem erros de JS.
 
 ## 6. Observações das figuras (sem alteração)
 
