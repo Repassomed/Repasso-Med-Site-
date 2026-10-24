@@ -104,20 +104,28 @@ Tentativa de acesso: Robbins 9.ª ed. (440 MB) e Harsh Mohan 6.ª ed. (147 MB) d
 
 **Status de AP I:** revisão editorial. Não validada cientificamente. Segue bloqueada por falta de acesso ao texto de Robbins/Harsh Mohan.
 
-## Segunda rodada (2026-10-24) — fonte e slide → decisão → destino
+## Segunda rodada (2026-10-24, versão corrigida) — fonte e slide → decisão → destino
 
 Fonte realmente lida: PDF «ilovepdf_merged_compressed.pdf» (Drive, pasta Anatopatologia Praticas; docente M. Belén Chilavert, CT 5to, secciones A e D), camada de texto completa. Decks: «Introducción a la Anatomía Patológica» (slides 2–24), «Adaptaciones celulares» (hipertrofia/atrofia, slides 2–35) e «Adaptaciones celulares» (hiperplasia/metaplasia, slides 2–21).
 
-| Conteúdo da cátedra | Slide | Estado na página antes | Decisão | Destino |
+O conteúdo entrou **no trecho em que cada assunto é ensinado**, sem seção de «complementos». Onde havia grifo na frase, a frase **não foi alterada**: o dado novo entrou em parágrafo ou lista nova logo depois.
+
+| Conteúdo da cátedra | Slide | Estado antes | Decisão | Destino |
 |---|---|---|---|---|
-| Epitelio: definição, funções, classificação, epitelios especiais, endotelio, mesotelio, urotelio | Intro 3–15 | ausente (só havia menções soltas) | incorporado | `introduccion`, card «Epitelio», fim do bloco |
-| Microscópio óptico: sistema mecânico e óptico | Intro 16–21 | ausente | incorporado (tabela) | `introduccion`, card «Microscopio óptico» |
-| Divisões: AP general e especial | Intro 23 | ausente | incorporado | `introduccion`, card «Divisiones» |
-| Conceito de adaptação; hipertrofia; atrofia (causas, testículo/cérebro/rim, marasmo/caquexia) | Adapt. 2–35 | parcial | detalhes que faltavam incorporados | `adaptacion`, tabela «Complementos…» antes do banco |
-| Hiperplasia (centros germinais, papilomatose), próstata, endométrio, Barrett (texto do slide) | Adapt. (hiperplasia) 3–21 | parcial | detalhes que faltavam incorporados | idem |
-| Tinciones, métodos de estudo, lesão/necrose/apoptose/inflamação/neoplasia | — | — | **sem slide legível**: não validado, sem alteração | pendência mantida |
-| Pseudomonas × neutropenia; ion Na⁺ (enunciado); via de disseminação do tumor pulmonar/sarcomas | — | — | exigem Robbins/Harsh Mohan, que não abrem no Drive (texto vazio ou acima de 10 MB): **bloqueio registrado, ciência não validada, gabaritos intactos** | pendência mantida |
+| Divisões: AP general × especial | Intro 23 | ausente | incorporado em um parágrafo | `introduccion`, logo após a apresentação do bloco |
+| Epitelio: definição (avascular), funções, classificação, seudoestratificado, urotelio, endotelio (e exceção das vénulas de endotelio alto), mesotelio, exemplo do plano estratificado não queratinizado | Intro 3–15 | ausente | incorporado, de zero, antes de «Métodos de estudio»; ligado à metaplasia | `introduccion` |
+| Microscópio óptico: etimologia, sistema mecânico e óptico | Intro 16–21 | só havia «microscopía óptica» (variantes) | incorporado como tabela depois do quadro de IHQ e antes das tinciones | `introduccion` |
+| Adaptação é resposta normal a estímulo; também ocorrem cambios adaptativos anormales | Adapt. 3 | parcial | uma frase no parágrafo-base | `adaptacion` |
+| Hipertrofia: estímulo (demanda funcional, hormona, fator de crescimento) | Adapt. 5 | parcial | uma frase após as listas | `adaptacion` |
+| Hiperplasia: cessa ao desaparecer o estímulo; centros germinales | Hiperpl. 3–4 | ausente | incorporados | `adaptacion` |
+| Próstata (peso 2–4×, zona transicional/periuretral, aspecto, duas camadas) e endométrio (glândulas × estroma, causas, sangrados) | Hiperpl. 7–18 | só o nome e a causa | tabela comparativa | `adaptacion` |
+| Atrofia: «tamaño y número»; mama pós-lactação, timo; desuso, denervação, isquemia (atrofia cerebral senil), desnutrição (marasmo, caquexia), compressão; órgãos testículo/cérebro/rim | Adapt. 19–35 | parcial | detalhes incorporados após a lista; **sem alterar as frases grifadas** | `adaptacion` |
+| Metaplasia: «sustitución de una célula madura por otra célula madura»; exemplos Barrett e epitelio respiratorio; Barrett = mucosa cilíndrica de tipo gástrico com caliciformes de tipo intestinal, câncer sobretudo glandular | Hiperpl. 19–21 | parcial | definição da cátedra acrescentada; Barrett detalhado | `adaptacion` |
+| Mecanismo «reprogramação de células madre» (frase já existente na página) | **não consta nos slides** | afirmado como fato | reescrito: «explicação habitual do mecanismo; os slides descrevem o resultado e não desenvolvem o mecanismo». A frase gêmea da nota ao lado do mapa (em trecho com glossário) ficou como estava | `adaptacion` |
+| Esquema «estímulo → adaptações → displasia → neoplasia, com alterações genéticas e atipia» | Adapt. 4 (diagrama) | — | **não usado**: o diagrama não permite afirmar uma sequência com exatidão; nada sobre displasia foi acrescentado | — |
+| Tinciones, métodos de estudo, lesão/necrose/apoptose/inflamação/neoplasia | — | — | sem slide legível: não validado, sem alteração | pendência mantida |
+| Pseudomonas × neutropenia; íon Na⁺ (enunciado); via de disseminação do tumor pulmonar/sarcomas | — | — | exigem Robbins/Harsh Mohan, que não abrem no Drive (texto vazio ou acima de 10 MB): **bloqueio registrado, ciência não validada, gabaritos intactos** | pendência mantida |
 
-Cuidados: o conteúdo novo foi colocado depois do último trecho grifado de `introduccion` e antes do banco em `adaptacion`; nenhuma pergunta, alternativa, gabarito, id ou imagem foi tocada.
+Metadado: 22 marcas `data-guard-previous-stem-sha1` (pontes de renomeação já cumpridas, apontando para enunciados que já não existem na main) foram retiradas porque o Guard as reprovava como `rename-enunciado-invalido`. Nenhum texto de enunciado mudou.
 
-Testes: 60 grifos (consulta somente leitura ao Supabase) resolvidos com o `RMTools.resolverAncora` real, main × branch: 60/60 idênticos. Contagens iguais antes/depois: 718 questões, 176 `data-correct`, 297 flashcards, 31 imagens, 28 ids. Diff: 79 linhas adicionadas, 0 removidas. Navegador 390/1280 px sem erro de JavaScript; tabelas novas com rolagem própria, sem overflow novo (a largura de 412 px a 390 já existia na main).
+Testes: 60 grifos (consulta somente leitura ao Supabase) resolvidos com o `RMTools.resolverAncora` real, main × branch: 60/60 com o mesmo texto, nível e contexto anterior. Contagens iguais antes/depois: 718 questões, 176 `data-correct`, 297 flashcards, 31 imagens, 28 ids, 542 «Ver respuesta». Navegador 390/1280 px: 31/31 imagens, 3/3 respostas abrem, sem erro de JavaScript; a rolagem de 2 px no celular já existia na main.
