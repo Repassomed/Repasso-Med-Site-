@@ -3025,7 +3025,7 @@
       ],
       "dependencias": [],
       "branch": "claude/atualizacao-semiologia-ii-parcial2",
-      "pr": null,
+      "pr": 576,
       "commit": null,
       "issue": 543,
       "notas": "Sem merge por Claude 2. Grifos: 132 em semiologia-ii (SELECT somente leitura), todos em s2-guia, b01, b02, b03 e banco; nenhum nos blocos alterados (06, 07, 08)."
