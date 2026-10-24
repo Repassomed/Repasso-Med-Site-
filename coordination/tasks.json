@@ -3025,7 +3025,7 @@
       ],
       "dependencias": [],
       "branch": "claude/atualizacao-fisiopatologia-ii-parcial2",
-      "pr": null,
+      "pr": 575,
       "commit": null,
       "issue": 543,
       "notas": "Sem merge por Claude 2. Grifos: 47 em fisiopatologia-ii (SELECT somente leitura), portão 47/47."
