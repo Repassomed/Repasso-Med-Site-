@@ -3034,6 +3034,30 @@
       "commit": null,
       "issue": 67,
       "notas": "Registro próprio (não amplia a reserva de dermatologia-questoes-issue112-r3, que permanece como está). Resultado NEEDS-AUDIT; sem merge por Claude 2. Alunos: 0 grifos, 0 traços, 0 notas (SELECT somente leitura, 23/10)."
+    },
+    {
+      "id": "farmacologia-ii-parcial2-conferencia-slides-claude2",
+      "titulo": "P1 — Farmacología II: conferência da Parcial 2 contra os slides atualizados",
+      "area": "materia",
+      "materia": "farmacologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/farmacologia-ii.html",
+        "coordination/tasks.json"
+      ],
+      "objetivo": "Comparar blocos e subtítulos com os slides 03–06 da cátedra, achar questões que cobram algo não ensinado e corrigir só o que a fonte não sustenta. Nenhuma imagem, id, gabarito, questão ou cartão removido.",
+      "fonte": "Slides da cátedra de Farmacología II no Drive (antianginosos, antiagregantes, esteroides, sistema respiratório) · LEI-ATUALIZACAO-CONTINUA · LEI-G0",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/atualizacao-farmacologia-ii-parcial2",
+      "pr": 573,
+      "commit": null,
+      "issue": 543,
+      "notas": "Sem merge por Claude 2. Grifos: 240 em farmacologia-ii (SELECT somente leitura), portão OK."
     }
   ]
 }
