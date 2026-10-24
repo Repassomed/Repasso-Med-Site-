@@ -159,6 +159,35 @@
       "jose_authorized": false
     },
     {
+      "id": "pente-fino-didatica-final-claude2",
+      "titulo": "Conferência final de didática e voz G0 em sete matérias",
+      "area": "materia",
+      "materia": "varias",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/ortopedia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/histologia-ii.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anestesiologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/oftalmologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/guarani.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/histologia-ii-practica.html"
+      ],
+      "objetivo": "Corrigir problemas concretos de didática e voz G0 (vazamentos de português, «gabarito», rótulos que falam de prova) pós-merge",
+      "fonte": "Conteúdo existente da cátedra e literatura-base da própria página (sem fonte nova) · LEI-G0 §6 e §13",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/cool-heisenberg-4dvama",
+      "pr": 566,
+      "commit": null,
+      "issue": 543,
+      "notas": "Sem mudança de ciência, questões, gabaritos, IDs ou imagens. Leitura integral das 7 páginas; divergências de fonte declaradas no texto (Anestesiología Leopoldo 1857, Ortopedia osteomielite crónica, Histología camadas da arteria pequeña)."
+    },
+    {
       "id": "semiologia-ii-b05-b10-gaps",
       "titulo": "Semiología II — corrigir os gaps mapeados nos bloques 05 a 10",
       "area": "materia",
