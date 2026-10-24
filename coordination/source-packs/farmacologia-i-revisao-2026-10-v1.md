@@ -29,3 +29,21 @@ O restante dos blocos (SNA, placa motora, adrenérgicos, colinérgicos, AINEs, o
 1. Textos grifados com voz de prova («Cae: …», «muy preguntado», «lo que realmente se pregunta») **não editados** para não quebrar os grifos. Decisão de José.
 2. A explicação μ × κ da morfina e o critério de reação cruzada seguem sem validação por livro (os livros-base não abrem). Trecho necessário: farmacologia dos opioides (receptores) e alergia a β-lactâmicos em livro-base.
 3. Blocos de antibióticos, anestésicos, corticoides e SNA: coerência interna conferida, sem leitura linha a linha dos decks.
+
+## 5. Segunda rodada (2026-10-24) — fonte e página → decisão → destino
+
+**Livros.** Não existe nenhum livro de farmacologia no Drive (Goodman & Gilman, Katzung e outros não estão lá). Os únicos livros de patologia (Robbins 9.ª ed. e Harsh Mohan 6.ª ed.) não abrem: `read_file_content` devolve texto vazio, `download_file_content` recusa acima de 10 MB (e falha também com o PDF de 8 MB dos decks, por tamanho da resposta), `drive.google.com` está bloqueado no proxy e os livros não são indexados na busca de texto. Nenhum trecho de livro pôde ser lido.
+
+**Fonte lida:** `_P1_merged_compressed.pdf` (decks da cátedra de Farmacología I; texto extraído por completo, mas **fora de ordem** nos slides de opioides) e `REPASO GENERAL — FARMACOLOGÍA I.pdf` (cuestionario com gabarito).
+
+| Afirmação pendente | Fonte e slide | Decisão | Destino |
+|---|---|---|---|
+| **μ como receptor «principal» da morfina** | Deck, slide «Mecanismo de acción» da morfina (fragmentos: «Interactúa con afinidad variable por los receptores opioides… Tiene una gran afinidad por los receptores µ … baja afinidad … δ y κ y σ») e slide «Efectos resultantes… 1. Analgesia» (μ e κ). O texto extraído do slide está embaralhado e **não consegui ver a imagem** (PDF de 8 MB não baixa) | **Parcialmente sustentada**: só «gran afinidad por μ». Na tabela, a coluna «Acción de la morfina» agora diz «según el material de la cátedra, la morfina tiene gran afinidad por los receptores μ», em vez de «mecanismo predominante». A baixa afinidade por δ, κ e σ **não** foi acrescentada (leitura incerta e em tensão com a analgesia por κ do mesmo deck) | opioides (tabela) |
+| «El principal» no cartão μ e frases «μ explica lo central» | idem; o deck não ordena receptores por importância | **Mantidas como estavam** (texto de apoio, sem fonte); pendência | opioides, cartões |
+| **Reação cruzada: carbapenêmicos e monobactâmicos** | cuestionario item F (só anel betalactâmico, 1.ª geração); nenhum slide cita carbapenêmicos/monobactâmicos | **Não sustentada.** Mantida como estava (não apagada); pendência | banco |
+| **Cadeia R1 / cifra de 10 %** | nenhuma fonte lida | **Continua retirada**; retirada não é validação | banco |
+| **Classificação do meloxicam** | deck AINEs: celecoxib e meloxicam «bloqueadores selectivos de la COX-2» | Já corrigida na rodada anterior (#569); **verificada de novo** | — |
+| **Segundo mensageiro, succinilcolina, clonidina, SNA** | cuestionario 2 (itens A, C, G, H) | Coerentes; sem mudança | — |
+| **PK/PD (biodisponibilidade, primeiro passo, agonista × antagonista)** | deck, slides «Efecto de primer paso hepático y biodisponibilidad» e «Tipos de fármacos según su interacción con receptores» | Coerentes. O deck só define **agonista e antagonista** (não define agonista parcial, inverso nem antagonista competitivo; a página, em `pd`, os usa — bloco com grifos, **não editado**) | — |
+
+**Pendências que continuam bloqueadas (sem livro):** ordem de importância dos receptores opioides; carbapenêmicos/monobactâmicos e cadeia R1 na alergia; classificação de agonista parcial/inverso/competitivo (deck só traz agonista × antagonista); blocos de SNA além do cuestionario, anestésicos, cefalosporinas, macrólidos e aminoglicosídeos (sem deck legível).
