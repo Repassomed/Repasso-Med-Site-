@@ -2,33 +2,43 @@
 
 Arquivo: `Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia.html` (slug de grifos `fisiopatologia`).
 
-**Esta entrega é uma revisão editorial. Não é validação científica completa da matéria.**
+**Esta entrega é uma revisão editorial. Não é validação científica completa da matéria.** Na página visível ao aluno não aparece nome de docente (a menção «Dra. Vega» foi trocada por «material da cátedra»); nomes só ficam neste registro interno.
 
-## 1. Fontes acessíveis (Drive)
-| Fonte | Cobre | Situação |
+## 1. Fontes realmente lidas (Drive)
+| Fonte | Tipo | Cobre |
 |---|---|---|
-| `ilovepdf_merged_compressed.pdf` (pasta Fisiopatologia, Dra. Evelyn Fretez) | Unidad 1: adaptação, lesão, necrose, apoptose, inflamação, hemorragia | legível |
-| `06 - SISTEMA RESPIRATORIO.pdf` (Farmacología II, Dra. Vega) | Asma: mediadores da fase efetora (LTC4, LTD4, LTE4) | legível (trecho de busca) |
-| Semiología II: asma / EPOC (decks) | Asma e EPOC | só o trecho de busca |
-| Porth, Guyton, Robbins, Harrison (livros-base citados na página) | — | **não lidos**: leitura devolve texto vazio ou não foram abertos |
+| `ilovepdf_merged_compressed.pdf` (Fisiopatologia I, unidad 1, Dra. Evelyn Fretez) | slides da cátedra | adaptações, lesão, necrose, apoptose, inflamação (mediadores, leucotrienos, aguda/crônica), hemorragia (tipos, causas) |
+| `02 - Sindromes Obstructivos Asma EPOC.pdf` (Semiología II, Dras. Britez e Brizueña) | slides da cátedra (outra cadeira) | asma e EPOC: fenótipos, espirometria, controle, volume residual, hiperinsuflação, pink puffer × blue bloater |
+| `03 - Sindrome_Parenquimatoso_Pulmonar_SM_II.pdf` (Semiología II) | slides da cátedra (outra cadeira) | pneumonia: definição NAC × nosocomial, agentes, clínica, Rx, CURB-65 |
+| `06 - SISTEMA RESPIRATORIO.pdf` (Farmacología II) | slides da cátedra (outra cadeira) | mediadores do asma (LTC4, LTD4, LTE4) |
+| `08. shock`, `11. transtornos_coagulacao`, `6. edema`, `5. cicatrizacion_tisular` (pasta de resumos) | **resumos visuais** (procedência não confirmada; só pista) | choque, coagulação, edema, cicatrização |
+| Porth, Guyton, Robbins (9.ª ed., 440 MB), Harrison | livros-base | **não abrem** (texto vazio / arquivo grande) |
 
-Restante da página (choque, anemias, glóbulos brancos, coagulação, infecções respiratórias): **sem fonte lida linha a linha nesta rodada**.
+Sem fonte lida para a página: anemias, glóbulos brancos (leucemias, linfomas), bronquiectasias, infecções respiratórias altas, sepse/CID além do resumo visual.
 
-## 2. Achados → decisões → destino
-| # | Achado | Decisão | Destino |
+## 2. Temas pedidos → fonte lida → conclusão → mudança ou pendência
+| Tema | Fonte lida | Conclusão | Mudança / pendência |
 |---|---|---|---|
-| 1 | Voz de prova nas explicações: «¡TRAMPA!» ×8, «el enunciado …» ×9, «punto trampa frecuente» ×2, «distractor típico» ×2, «forma típica de la cátedra de evaluar» | Reescrito como conteúdo (sem alterar pergunta, alternativa ou gabarito) | banco, blocos de hemorragia, coagulação, choque, asma/EPOC |
-| 2 | Caixa «Trampas frecuentes en las preguntas» (estratégia de prova no banco) | Substituída por «Pares que se confunden con facilidad» (hemostasia, vias, neutropenia, hemofilia), só com dados já ensinados na página | prova-fisio |
-| 3 | Caixa «Según la cátedra × Según la literatura» (leucotrienos) citava artigo externo (Annu Rev Pathol 2025) | Mantida a distinção LTC4/LTD4/LTE4 × LTB4; fonte trocada para o deck de Farmacología II da cátedra, que lista LTC4, LTD4 e LTE4 na fase efetora do asma. A afirmação do LTB4 quimiotático segue a classe de inflamação da cátedra | inflamacion (bloco de leucotrienos) |
-| 4 | Parágrafo «Según la literatura — GINA 2026» (controle × gravidade do asma), sem fonte acessível | **Retirado**; fica a classificação da cátedra | asma-epoc |
-| 5 | Caixa «Fuente (literatura)» com 3 DOIs/PMC (hiperinsuflação, hipoxemia, hipercapnia) | **Caixa de citação retirada**; o parágrafo de fisiopatologia fica, sem validação por fonte acessível (pendência abaixo) | asma-epoc |
+| **Hiperinsuflação** (EPOC) | Semiología II (EPOC) | O material da cátedra confirma **hiperinsuflação radiológica** (hipertransparência, trama vascular reduzida, costelas e cúpulas retificadas, tórax em tonel) e que a **disnea acompanha o volume residual** (a maior VR, mais disnea), mais que o VEF₁. **Não** descreve o mecanismo «ar atrapado por expiração lenta + diafragma aplanado». | Parágrafo mantém o mecanismo e ganhou a frase do material de Semiología II. **Pendência:** o mecanismo de aprisionamento aéreo não tem trecho lido. Trecho necessário: Porth, capítulo de doenças pulmonares obstrutivas (DPOC), seção de fisiopatologia da hiperinsuflação. |
+| **V/Q** (hipoxemia) | Semiología II (EPOC); resumos | O material cita hipoxemia (precoce no blue bloater) e SatO₂ < 92 % → gasometria, mas **não menciona V/Q**. | Frase honesta na página: «A relação V/Q é a explicação fisiológica habitual…; o material da cátedra descreve a hipoxemia, mas não desenvolve esse mecanismo.» **Pendência:** Guyton, capítulo de relação ventilação–perfusão e hipoxemia. |
+| **Hipercapnia** | Semiología II (EPOC) | O material confirma que a **retenção de CO₂ é precoz no blue bloater (bronquitis) e tardia no pink puffer (enfisema)**. | Frase acrescentada. O mecanismo «se esgota o hiperventila, sube» não tem trecho lido (pendência Porth/Guyton). |
+| **Controle × gravidade do asma** (parágrafo «GINA 2026», retirado) | Semiología II (asma) | O material distingue **controle** (últimas 4 semanas; síntomas, limitación, despertares, medicación de alivio; **não controlada** se houve exacerbação no período) e classifica a **gravidade do obstrutivo por VEF₁** (leve ≥ 60 %, moderada 41–59 %, grave ≤ 40 %). | A caixa agora traz o que o material diz (substitui o parágrafo externo). A retirada do GINA **não valida** nem refuta o texto que havia. |
+| **Leucotrienos** | Fisiopatología I (inflamação) + Farmacología II | O deck de inflamação diz: **LTB4 potente quimiotático de neutrófilos; LTC4, LTD4, LTE4 broncoconstrição.** O de Farmacología II lista LTC4/D4/E4 na fase efetora do asma. | Citação do artigo de 2025 trocada por essas fontes. |
+| **Pneumonia** | Semiología II (pneumonia) | **Coerente:** Rx de tórax padrão-ouro, CURB-65, agentes típicos/atípicos, neumococo, consolidação × intersticial. **Diferente:** NAC no material = «antes de 48 h do ingreso ou depois de 7 días do egreso» (página: «14 días» em cuidados prolongados); nosocomial = «> 48 h do ingreso e < 7 días do egreso». | Acrescentei à página a formulação do material de Semiología II (ver abaixo). **Sem fonte lida:** «sexta causa de morte», percentagens da clínica (tos 90 %, expectoración 66 %…), tabela de agentes por comorbilidade, «disociación clínico-radiológica». |
+| Unidad 1 (adaptações, lesão, necrose, apoptose) | deck Fretez | Coerente (hipertrofia, hiperplasia, atrofia, metaplasia, Barrett, tumefação, mecanismos de lesão, tipos de necrose, vias de apoptose). Bloco `introduccion-fisio` não foi tocado | sem mudança |
+| Choque, coagulação, edema, cicatrização | resumos visuais (pista) | Coerente em grandes linhas (tipos de choque, vWF 70/25/<5 %, hemofilia A/B, ADAMTS13, Starling, granulação dias 3–5) | **Conferência apenas por amostragem e contra material de procedência não confirmada**; sem mudança |
+| Anemias, leucemias/linfomas, infecções respiratórias altas, bronquiectasias | — | **Sem fonte lida** | Pendência: trechos de Porth/Robbins por capítulo |
 
-## 3. Verificações
-- Contagens iguais à main: 332 «Ver respuesta», 39 imagens, 260 tarjetas; nenhuma pergunta, alternativa, gabarito, id ou imagem alterados (diff só em texto de explicação e nas caixas dos itens 2–5).
+## 3. Outras mudanças
+- Voz de prova em explicações: «¡TRAMPA!» ×8, «el enunciado…» ×9, «punto trampa», «distractor típico» reescritos como conteúdo. Caixa «Trampas frecuentes en las preguntas» → «Pares que se confunden con facilidad».
+- Retirada a caixa de DOIs «Fuente (literatura)» da EPOC; retirada **não é validação** do parágrafo.
+- Nome de docente removido da página visível.
+
+## 4. Verificações
+- Contagens iguais à main: 332 «Ver respuesta», 39 imagens, 260 tarjetas, 1158→1159 itens `<li>` (um item novo na caixa «Pares que se confunden»); nenhuma pergunta, alternativa, gabarito, id ou imagem alterados.
 - Grifos (Supabase, só leitura): 33 (introduccion-fisio 30, inflamacion 2, hemorragia 1). O bloco `introduccion-fisio` é byte a byte igual ao da main; nos outros dois, os trechos grifados continuam presentes e não foram editados.
-- Navegador (390 e 1280 px): sem erro de JS, 39/39 imagens, «Ver respuesta» abre. No celular, `overflowPx` = 131 no harness **igual ao da main** (não introduzido aqui).
+- Navegador (390 e 1280 px): sem erro de JS, 39/39 imagens, «Ver respuesta» abre; `overflowPx` 131 no celular **igual ao da main**.
 
-## 4. Pendências / revisão humana
-1. Textos grifados contêm voz de prova («Muy preguntado», «Cuando una pregunta te dé un dato suelto»); **não editados** para não quebrar os grifos de alunos. Decisão de José.
-2. Fisiopatología de hiperinsuflação, hipoxemia (V/Q) e hipercapnia na EPOC e a clasificação GINA de controle × gravidade: não validadas por fonte acessível (Robbins/Porth/Guyton não abrem). Trecho necessário: Porth, capítulo de doenças pulmonares obstrutivas.
-3. Choque, anemias, leucemias/linfomas, coagulação e infecções respiratórias: coerência interna conferida (resumo × pergunta × gabarito), sem conferência contra a fonte.
+## 5. Pendências / revisão humana
+1. Textos grifados contêm voz de prova («Muy preguntado», «Cuando una pregunta te dé un dato suelto»); **não editados** para não quebrar grifos de alunos. Decisão de José.
+2. Livros-base não abrem: mecanismo de hiperinsuflação, V/Q e hipercapnia, e tudo listado como «sem fonte lida» na seção 2.
