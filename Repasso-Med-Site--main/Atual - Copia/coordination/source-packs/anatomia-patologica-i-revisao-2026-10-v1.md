@@ -103,3 +103,21 @@ Tentativa de acesso: Robbins 9.ª ed. (440 MB) e Harsh Mohan 6.ª ed. (147 MB) d
 | **Disseminação: tumor pulmonar e sarcomas** | Resumo visual de neoplasias (pista): «Carcinomas suelen diseminarse primero por vía linfática… Sarcomas típicamente por vía hematógena; hígado y pulmones sitios frecuentes». **Nada sobre tumor de pulmão.** | A regra geral carcinoma → linfática / sarcoma → hematógena é idêntica no resumo, nas MCQs, no banco, nos cartões e na figura `ap1_b09_04`. A única pergunta que foge é a de completar «tumor pulmonar (y de los sarcomas)» e sua explicação («los sarcomas carecen de linfáticos…»). | **Mantida.** A parte «sarcomas» tem pista; a parte «tumor pulmonar» e a explicação do «sem linfáticos» **não têm fonte acessível**. Figura e demais itens não dizem nada sobre pulmão, então não há contradição interna. | Robbins 9.ª ed., capítulo de neoplasias, seção sobre disseminação (vias linfática e hematógena; página a localizar): a frase sobre **carcinomas** (via linfática, mas as vias não são exclusivas) e **sarcomas** (via hematógena), e qualquer menção ao **carcinoma pulmonar** (ambas as vias). Preciso do trecho para reformular ou retirar a pergunta de completar. |
 
 **Status de AP I:** revisão editorial. Não validada cientificamente. Segue bloqueada por falta de acesso ao texto de Robbins/Harsh Mohan.
+
+## Segunda rodada (2026-10-24) — fonte e slide → decisão → destino
+
+Fonte realmente lida: PDF «ilovepdf_merged_compressed.pdf» (Drive, pasta Anatopatologia Praticas; docente M. Belén Chilavert, CT 5to, secciones A e D), camada de texto completa. Decks: «Introducción a la Anatomía Patológica» (slides 2–24), «Adaptaciones celulares» (hipertrofia/atrofia, slides 2–35) e «Adaptaciones celulares» (hiperplasia/metaplasia, slides 2–21).
+
+| Conteúdo da cátedra | Slide | Estado na página antes | Decisão | Destino |
+|---|---|---|---|---|
+| Epitelio: definição, funções, classificação, epitelios especiais, endotelio, mesotelio, urotelio | Intro 3–15 | ausente (só havia menções soltas) | incorporado | `introduccion`, card «Epitelio», fim do bloco |
+| Microscópio óptico: sistema mecânico e óptico | Intro 16–21 | ausente | incorporado (tabela) | `introduccion`, card «Microscopio óptico» |
+| Divisões: AP general e especial | Intro 23 | ausente | incorporado | `introduccion`, card «Divisiones» |
+| Conceito de adaptação; hipertrofia; atrofia (causas, testículo/cérebro/rim, marasmo/caquexia) | Adapt. 2–35 | parcial | detalhes que faltavam incorporados | `adaptacion`, tabela «Complementos…» antes do banco |
+| Hiperplasia (centros germinais, papilomatose), próstata, endométrio, Barrett (texto do slide) | Adapt. (hiperplasia) 3–21 | parcial | detalhes que faltavam incorporados | idem |
+| Tinciones, métodos de estudo, lesão/necrose/apoptose/inflamação/neoplasia | — | — | **sem slide legível**: não validado, sem alteração | pendência mantida |
+| Pseudomonas × neutropenia; ion Na⁺ (enunciado); via de disseminação do tumor pulmonar/sarcomas | — | — | exigem Robbins/Harsh Mohan, que não abrem no Drive (texto vazio ou acima de 10 MB): **bloqueio registrado, ciência não validada, gabaritos intactos** | pendência mantida |
+
+Cuidados: o conteúdo novo foi colocado depois do último trecho grifado de `introduccion` e antes do banco em `adaptacion`; nenhuma pergunta, alternativa, gabarito, id ou imagem foi tocada.
+
+Testes: 60 grifos (consulta somente leitura ao Supabase) resolvidos com o `RMTools.resolverAncora` real, main × branch: 60/60 idênticos. Contagens iguais antes/depois: 718 questões, 176 `data-correct`, 297 flashcards, 31 imagens, 28 ids. Diff: 79 linhas adicionadas, 0 removidas. Navegador 390/1280 px sem erro de JavaScript; tabelas novas com rolagem própria, sem overflow novo (a largura de 412 px a 390 já existia na main).
