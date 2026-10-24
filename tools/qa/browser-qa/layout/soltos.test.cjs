@@ -1,10 +1,11 @@
 /* CONTEÚDO FORA DE section[id] na navegação por bloco (#487) — nada útil some, nada solto vaza para dentro de um bloco.
-   Semiología II REAL + shell real (rm-pilot → layout/tema/navegação) com 3 nós de teste postos ANTES do attach (o s2-hero é do próprio piloto):
+   Semiología II REAL + shell real (rm-pilot → layout/tema/navegação) com 4 nós de teste postos ANTES do attach (o `.s2-hero` próprio da Semiología II saiu em 4aed8200 — a abertura agora é posta pelo teste, como os outros):
+     · div  [hero]     apresentação da matéria antes da 1.ª seção (era o `.s2-hero`);
      · div  [anexo]    banner curto logo antes de s2-b03 (como o banner de revisão do app-core.js antes do 1.º bloco do banco);
      · section sem id  com uma .quiz-item, entre s2-b05 e s2-b06 (como a seção sem id da AP Práctica);
      · div  [fecho]    texto depois da última seção.
    O que se prova:
-     1  classificação: s2-hero=abertura · banner=anexo de s2-b03 · seção sem id=conteudo · texto final=fecho;
+     1  classificação: hero=abertura · banner=anexo de s2-b03 · seção sem id=conteudo · texto final=fecho;
      2  índice geral («Página completa» da navegação): abertura, conteúdo e fecho visíveis; o anexo não (ele acompanha o seu bloco);
      3  bloco s2-b03: só o anexo dele aparece; nada da abertura/conteúdo/fecho dentro do bloco. Em modo+bloco o filtro do modo (já na main)
         só mostra o recurso: o anexo é texto e fica fora, como antes;
@@ -20,6 +21,7 @@ const sec = (t) => console.log('\n▸ ' + t);
 const FIXTURE = () => {
   const pôr = () => {
     const tab = document.getElementById('tab-semio2'); if (!tab || tab.querySelector('[data-fx]')) return !!tab && !!tab.querySelector('[data-fx]');
+    const hero = document.createElement('div'); hero.setAttribute('data-fx', 'hero'); hero.className = 'fx-hero'; hero.textContent = 'Apresentación de la materia. '.repeat(10); tab.insertBefore(hero, tab.querySelector(':scope > section[id]'));
     const b03 = document.getElementById('s2-b03'), b06 = document.getElementById('s2-b06'), secs = tab.querySelectorAll(':scope > section[id]');
     if (!b03 || !b06 || secs.length < 10) return false;
     const an = document.createElement('div'); an.setAttribute('data-fx', 'anexo'); an.textContent = 'Repaso de este bloque'; tab.insertBefore(an, b03);
@@ -35,7 +37,7 @@ const FIXTURE = () => {
 const VIS = () => {
   const v = (e) => { if (!e) return null; const r = e.getBoundingClientRect(); return getComputedStyle(e).display !== 'none' && r.height > 0; };
   const q = (s) => document.querySelector('#tab-semio2 > ' + s);
-  return { hero: v(q('.s2-hero')), anexo: v(q('[data-fx="anexo"]')), conteudo: v(q('[data-fx="conteudo"]')), fecho: v(q('[data-fx="fecho"]')), nav: document.documentElement.getAttribute('data-rm-nav') };
+  return { hero: v(q('[data-fx="hero"]')), anexo: v(q('[data-fx="anexo"]')), conteudo: v(q('[data-fx="conteudo"]')), fecho: v(q('[data-fx="fecho"]')), nav: document.documentElement.getAttribute('data-rm-nav') };
 };
 const go = async (page, spec, ms = 1100) => { await page.evaluate(s => window.RMNav.go(s), spec); await page.waitForTimeout(ms); };
 
@@ -47,7 +49,7 @@ const go = async (page, spec, ms = 1100) => { await page.evaluate(s => window.RM
     sec(`${w}px`);
     const { ctx, page, errs } = await L.abrir(br, base, midia, { w, h, nav: true, initScript: FIXTURE });
     const cl = await page.evaluate(() => [...document.querySelectorAll('#tab-semio2 > [data-rm-solto]')].map(e => (e.getAttribute('data-fx') || e.className.split(' ')[0]) + '=' + e.getAttribute('data-rm-solto') + (e.hasAttribute('data-rm-anexo-de') ? '>' + e.getAttribute('data-rm-anexo-de') : '')).join(' '));
-    ok(/s2-hero=abertura/.test(cl) && /anexo=anexo>s2-b03/.test(cl) && /conteudo=conteudo(?!>)/.test(cl) && /fecho=fecho/.test(cl), 'classificação: hero=abertura · banner=anexo de s2-b03 · seção sem id=conteudo · texto final=fecho', cl);
+    ok(/hero=abertura/.test(cl) && /anexo=anexo>s2-b03/.test(cl) && /conteudo=conteudo(?!>)/.test(cl) && /fecho=fecho/.test(cl), 'classificação: hero=abertura · banner=anexo de s2-b03 · seção sem id=conteudo · texto final=fecho', cl);
 
     let x = await page.evaluate(VIS);
     ok(x.nav === 'index' && x.hero && x.conteudo && x.fecho && x.anexo === false, 'índice geral: apresentação, conteúdo sem bloco e texto final visíveis; o anexo espera o seu bloco', x);

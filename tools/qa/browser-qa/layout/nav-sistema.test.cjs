@@ -253,22 +253,25 @@ const jsonGo = (s) => { try { return JSON.parse(s); } catch (e) { return null; }
     /* Preguntas: grupos reais */
     const grp = await page.evaluate(() => ({ exam: document.querySelectorAll('#s2-b03 .quiz-item .quiz-tag.basada').length, tot: document.querySelectorAll('#s2-b03 .quiz-item').length }));
     i = await info(page);
-    ok(i.chips.length === 3 && /^Todas 28$/.test(i.chips[0]) && /examen 17$/.test(i.chips[1]) && /Complementarias 11$/.test(i.chips[2]) && grp.exam === 17, 'Preguntas b03: Todas 28 · Basadas en preguntas de examen 17 · Complementarias 11 (metadado real do DOM)', { chips: i.chips, grp });
+    /* as contagens saem do DOM real (rótulos .quiz-tag.basada): o conteúdo da Semiología II muda a cada revisão editorial (ex.: 138 → 64 rótulos «basada» em #532/#541) e números fixos faziam a suíte reprovar sem defeito de módulo */
+    const comp3 = grp.tot - grp.exam;
+    ok(grp.tot > 0 && grp.exam > 0 && comp3 > 0 && i.chips.length === 3 && new RegExp('^Todas ' + grp.tot + '$').test(i.chips[0]) && new RegExp('examen ' + grp.exam + '$').test(i.chips[1]) && new RegExp('Complementarias ' + comp3 + '$').test(i.chips[2]), `Preguntas b03: Todas ${grp.tot} · Basadas en preguntas de examen ${grp.exam} · Complementarias ${comp3} (metadado real do DOM)`, { chips: i.chips, grp });
     /* estado da questão preservado ao filtrar */
     await page.evaluate(() => { const q = document.querySelector('#s2-b03 .quiz-item'); q.querySelector('li[data-option]').click(); });
     await page.waitForTimeout(1500);
     const est0 = await page.evaluate(() => { const q = document.querySelector('#s2-b03 .quiz-item'); return { cls: q.className, htmlAns: q.querySelector('.answer') && getComputedStyle(q.querySelector('.answer')).display, sel: [...q.querySelectorAll('li')].map(l => l.className).join('|') }; });
     await page.click('.rm-nav-chipf[data-f="exam"]'); await page.waitForTimeout(500); i = await info(page);
-    ok(i.cont.pregs === 17, `filtro «Basadas en preguntas de examen» mostra 17 (${i.cont.pregs})`);
+    ok(i.cont.pregs === grp.exam, `filtro «Basadas en preguntas de examen» mostra ${grp.exam} (${i.cont.pregs})`);
     await page.click('.rm-nav-chipf[data-f="comp"]'); await page.waitForTimeout(500); i = await info(page);
-    ok(i.cont.pregs === 11, `filtro «Complementarias» mostra 11 (${i.cont.pregs})`);
+    ok(i.cont.pregs === comp3, `filtro «Complementarias» mostra ${comp3} (${i.cont.pregs})`);
     await page.click('.rm-nav-chipf[data-f="todas"]'); await page.waitForTimeout(500); i = await info(page);
     const est1 = await page.evaluate(() => { const q = document.querySelector('#s2-b03 .quiz-item'); return { cls: q.className, htmlAns: q.querySelector('.answer') && getComputedStyle(q.querySelector('.answer')).display, sel: [...q.querySelectorAll('li')].map(l => l.className).join('|') }; });
-    ok(i.cont.pregs === 28 && JSON.stringify(est0) === JSON.stringify(est1) && /correct|wrong|answered|selected/i.test(est0.sel + est0.cls), 'filtrar não perde o estado respondido da questão; «Todas» volta às 28', { est0, est1 });
+    ok(i.cont.pregs === grp.tot && JSON.stringify(est0) === JSON.stringify(est1) && /correct|wrong|answered|selected/i.test(est0.sel + est0.cls), `filtrar não perde o estado respondido da questão; «Todas» volta às ${grp.tot}`, { est0, est1 });
     const tags = await page.evaluate(() => ({ nTag: document.querySelectorAll('.quiz-tag.basada').length }));
     /* só agrupa onde a classificação existe: bloco/banco sem metadado completo não ganha chips */
     await go(page, { view: 'modeblk', mode: 'preguntas', block: 's2-b02' }); i = await info(page);
-    ok(i.chips.length === 0 || (i.chips.length === 3 && /examen 4$/.test(i.chips[1])), 'sem metadado completo não há grupos inventados (b02: ' + (i.chips.length ? '4 · 5' : 'sem chips') + ')', i.chips);
+    const g2 = await page.evaluate(() => ({ exam: document.querySelectorAll('#s2-b02 .quiz-item .quiz-tag.basada').length, comp: document.querySelectorAll('#s2-b02 .quiz-item .quiz-tag.complementaria, #s2-b02 .quiz-item .quiz-tag.comp').length, tot: document.querySelectorAll('#s2-b02 .quiz-item').length }));
+    ok(i.chips.length === 0 || (i.chips.length === 3 && new RegExp('^Todas ' + g2.tot + '$').test(i.chips[0]) && new RegExp('examen ' + g2.exam + '$').test(i.chips[1])), 'chips só aparecem se batem com o metadado do DOM; sem metadado completo não há grupos inventados (b02: ' + (i.chips.length ? g2.exam + ' · ' + (g2.tot - g2.exam) : 'sem chips') + ')', { chips: i.chips, g2 });
     /* Banco General: não entra duas vezes */
     await go(page, { view: 'modeidx', mode: 'preguntas' }); i = await info(page);
     const bancoCards = i.cards.filter(c => /banco/i.test(c.t));

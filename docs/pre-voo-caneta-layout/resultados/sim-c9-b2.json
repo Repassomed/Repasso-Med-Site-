@@ -1,0 +1,61 @@
+{
+"gerado": "2026-10-24",
+"nota": "ensaio.cjs --corr --rapido (1440+390) com RM_ENSAIO_INIT=tools/qa/pre-voo/sim-c9.js (C9: seções vazias e ocultas fora da lista de blocos; B2: título para ap2biblio) e inventário sem os 10 placeholders; só em memória",
+"materias": {
+"anatomia-i": {
+"passa": 125,
+"falha": 0,
+"bloqueado": 1
+},
+"anatomia-patologica-ii-practica": {
+"passa": 123,
+"falha": 0,
+"bloqueado": 1
+},
+"anatomia-patologica-ii": {
+"passa": 127,
+"falha": 0,
+"bloqueado": 1
+},
+"biologia": {
+"passa": 125,
+"falha": 0,
+"bloqueado": 1
+},
+"dermatologia": {
+"passa": 125,
+"falha": 0,
+"bloqueado": 1
+},
+"embriologia": {
+"passa": 125,
+"falha": 0,
+"bloqueado": 1
+},
+"farmacologia-ii": {
+"passa": 117,
+"falha": 0,
+"bloqueado": 1
+},
+"fisiopatologia-ii": {
+"passa": 127,
+"falha": 0,
+"bloqueado": 1
+},
+"histologia-i-practica": {
+"passa": 125,
+"falha": 0,
+"bloqueado": 1
+},
+"histologia-i": {
+"passa": 125,
+"falha": 0,
+"bloqueado": 1
+},
+"histologia-ii-practica": {
+"passa": 123,
+"falha": 0,
+"bloqueado": 1
+}
+}
+}

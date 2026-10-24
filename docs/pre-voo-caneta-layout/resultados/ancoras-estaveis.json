@@ -1,0 +1,4 @@
+{"gerado":"2026-10-24","corr":true,"ref":"disco","linhas":[
+{"slug":"dermatologia","grupo":"elegivel","w":1440,"estados":[{"nome":"indice-geral","falhas":0},{"nome":"bloco:dermportada","falhas":0},{"nome":"bloco:dermb07","falhas":0},{"nome":"bloco:dermcierre","falhas":0},{"nome":"modo:preguntas","falhas":0},{"nome":"modo:flashcards","falhas":0},{"nome":"modo:infografias","falhas":0},{"nome":"volta-ao-indice","falhas":0}],"falhas":[],"erro":null,"secoes":15,"elementos":1596,"errosJs":0,"estado":"PASSA"},
+{"slug":"dermatologia","grupo":"elegivel","w":390,"estados":[{"nome":"indice-geral","falhas":0},{"nome":"bloco:dermportada","falhas":0},{"nome":"bloco:dermb07","falhas":0},{"nome":"bloco:dermcierre","falhas":0},{"nome":"modo:preguntas","falhas":0},{"nome":"modo:flashcards","falhas":0},{"nome":"modo:infografias","falhas":0},{"nome":"volta-ao-indice","falhas":0}],"falhas":[],"erro":null,"secoes":15,"elementos":1596,"errosJs":0,"estado":"PASSA"}
+]}
