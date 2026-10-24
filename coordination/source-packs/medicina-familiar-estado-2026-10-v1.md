@@ -73,3 +73,18 @@ Fontes que resolveriam: McWhinney/Rakel (base do curso) ou os slides de crescime
 | **Bloco 06 (crecimiento/desarrollo), APGAR, crisis, educación para la salud, prevención cuaternaria** | nenhum slide ou livro disponível | **Bloqueado.** Sem mudança | — |
 
 **Pendências que continuam sem fonte:** tudo o que consta na linha «Lalonde…», no bloco 06 e nos blocos de APGAR, crise e educação; «≈10 % de derivação» (dedução da página a partir do 90 %); distinção «continuidad = información» (ver divergência acima).
+
+## Correção pedida pelo José (2026-10-24, após revisão da #577) — fonte e slide → decisão → destino
+
+Fonte relida: `mf_compressed.pdf` (slides «Los atributos básicos de la atención primaria», «Tabla 3. Pilares de la Medicina Familiar»). Nada novo foi buscado fora do Drive.
+
+| Ponto | Fonte | Decisão | Destino |
+|---|---|---|---|
+| **Integralidade, dois sentidos** | Atributo da APS: «capacidad de resolver la mayoría de los problemas de salud de la población atendida (…alrededor del 90 %)». Pilar da MF: «la persona es vista desde una perspectiva biopsicosocial, en el contexto de su familia y comunidad» | Ensinados os **dois sentidos como complementares** (capacidade resolutiva × mirada sobre a pessoa inteira); «90 %» deixa de ser a definição única. A frase «abanico promoción–prevención–curación–rehabilitación» saiu das explicações (não é a definição dos slides) | aps: tabela de atributos (linha de integralidade), parágrafo de «Ojo con dos palabras…», explicações das perguntas de atributos (2) |
+| **Continuidade × longitudinalidade** | Atributo da APS: longitudinalidade = seguimiento por los mismos profesionales. Pilar: «Continuidad: cuidado al individuo y sus familias a lo largo de su vida» | Tratadas como **dois nomes da mesma ideia, um em cada tabela**. Retirada em todos os lugares a definição «continuidad = información entre niveles», que não está nos slides; articular derivações fica com a **coordenação** | aps (tabela, parágrafo, explicações de 2 perguntas), popup de longitudinalidad (principios), legenda da infografia de longitudinalidad, quadro «cuatro confusiones», lista de erros comuns (cierre) |
+| Cartão «APS: resolve ~90 % e deriva ~10 %» (2 cópias) | os slides dão só a capacidade de resolver a maioria (~90 %) | «deriva ~10 %» é dedução da página: reescrito como «deriva el resto» | aps, cierre |
+| **Infografia `mf_b01_01_aps_puerta_entrada`** | A tarjeta «Atributos esenciales» da imagem diz «Integralidad: promoción, prevención, cura, rehabilitación y paliación» | **Imagem preservada** (pedido do José); a legenda avisa que esse abanico não é a definição dos slides. **Decisão do José:** substituir a imagem por uma versão fiel | aps |
+
+**Grifos:** 18/18 resolvem na `main` e na branch, com o mesmo texto e nível 1, e a posição foi conferida (contexto). A frase grifada «La longitudinalidad es el vínculo con la misma persona o equipo a lo largo de los años» coincide com os slides e foi mantida; o que a cercava («longitudinalidad no es continuidad… la continuidad es que la información no se corte») foi reescrito, e a frase passou a vir depois de «…se llama continuidad.» para o resolvedor manter o contexto. Nenhuma frase marcada impediu a correção.
+
+**Ainda sem fonte:** bloco 06, APGAR, crise familiar, educação para a saúde, prevenção cuaternaria; Lalonde, Alma-Ata 1978/OMS-UNICEF, Engel, McWhinney, Smilkstein, ecomapa; «600 familias (~3.500 personas)» do ESF e demais dados do modelo paraguaio não conferidos nos slides desta rodada.
