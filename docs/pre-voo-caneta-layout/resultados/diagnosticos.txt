@@ -1,0 +1,17 @@
+biologia (como está) {"secoes":19,"vazias_ocultas":["bio00"],"cartoes":19,"primeiro_cartao":"00"}
+biologia (sem placeholders) {"secoes":18,"vazias_ocultas":[],"cartoes":18,"primeiro_cartao":"01🔬 Introducción a la Biología celular5 preguntas"}
+dermatologia (como está) {"secoes":15,"vazias_ocultas":["dermportada"],"cartoes":15,"primeiro_cartao":"00"}
+dermatologia (sem placeholders) {"secoes":14,"vazias_ocultas":[],"cartoes":14,"primeiro_cartao":"01🧱 Bloque 01 · La piel por dentro12 preguntas30 "}
+dermatologia controle 300 ms {"fy":0.353,"alturaPx":140,"imgsPendentes":56}
+dermatologia controle 900 ms {"fy":0.353,"alturaPx":140,"imgsPendentes":56}
+dermatologia controle 2000 ms {"fy":0.353,"alturaPx":140,"imgsPendentes":56}
+dermatologia controle 5000 ms {"fy":0.353,"alturaPx":140,"imgsPendentes":56}
+após reposicionar() {"fy":0.3,"alturaPx":140,"imgsPendentes":56}
+dermatologia nav 300 ms {"fy":0.3,"alturaPx":164,"imgsPendentes":55}
+dermatologia nav 900 ms {"fy":0.3,"alturaPx":164,"imgsPendentes":55}
+dermatologia nav 2000 ms {"fy":0.3,"alturaPx":164,"imgsPendentes":55}
+dermatologia nav 5000 ms {"fy":0.3,"alturaPx":164,"imgsPendentes":55}
+após reposicionar() {"fy":0.3,"alturaPx":164,"imgsPendentes":55}
+{"scrollWidth":407,"clientWidth":390,"innerWidth":407,"svgForaDaViewport":[{"a":"s2-b04>75","right":407}]}
+com esses svg escondidos: {"scrollWidth":390,"innerWidth":390}
+âncora s2-b04>75 → { tag: 'TABLE', larguraPx: 560, contenedorRolavel: true }

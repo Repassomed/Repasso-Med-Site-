@@ -1,0 +1,407 @@
+{
+"_consulta": "somente leitura, 2026-10-24; âncoras e contagens agregadas, sem texto de aluno",
+"linhas": [
+{
+"k": "hl",
+"subject_slug": "anatomia-i",
+"ancora": "a1b05",
+"n": 1
+},
+{
+"k": "hl",
+"subject_slug": "anatomia-i",
+"ancora": "a1b09",
+"n": 5
+},
+{
+"k": "hl",
+"subject_slug": "anatomia-patologica",
+"ancora": "adaptacion",
+"n": 27
+},
+{
+"k": "hl",
+"subject_slug": "anatomia-patologica",
+"ancora": "introduccion",
+"n": 32
+},
+{
+"k": "hl",
+"subject_slug": "anatomia-patologica",
+"ancora": "lesion",
+"n": 1
+},
+{
+"k": "hl",
+"subject_slug": "anatomia-patologica-ii",
+"ancora": "ap2b01",
+"n": 291
+},
+{
+"k": "hl",
+"subject_slug": "anatomia-patologica-ii",
+"ancora": "ap2b02",
+"n": 1
+},
+{
+"k": "hl",
+"subject_slug": "anatomia-patologica-ii",
+"ancora": "ap2b03",
+"n": 74
+},
+{
+"k": "hl",
+"subject_slug": "anatomia-patologica-ii",
+"ancora": "ap2b04",
+"n": 9
+},
+{
+"k": "hl",
+"subject_slug": "anatomia-patologica-ii",
+"ancora": "ap2intro",
+"n": 2
+},
+{
+"k": "hl",
+"subject_slug": "anestesiologia",
+"ancora": "aneb01",
+"n": 10
+},
+{
+"k": "hl",
+"subject_slug": "farmacologia",
+"ancora": "pd",
+"n": 15
+},
+{
+"k": "hl",
+"subject_slug": "farmacologia",
+"ancora": "pk",
+"n": 5
+},
+{
+"k": "hl",
+"subject_slug": "farmacologia",
+"ancora": "sna",
+"n": 3
+},
+{
+"k": "hl",
+"subject_slug": "farmacologia-ii",
+"ancora": "f2b01",
+"n": 85
+},
+{
+"k": "hl",
+"subject_slug": "farmacologia-ii",
+"ancora": "f2b02",
+"n": 68
+},
+{
+"k": "hl",
+"subject_slug": "farmacologia-ii",
+"ancora": "f2b04",
+"n": 8
+},
+{
+"k": "hl",
+"subject_slug": "farmacologia-ii",
+"ancora": "f2b05",
+"n": 63
+},
+{
+"k": "hl",
+"subject_slug": "farmacologia-ii",
+"ancora": "f2b07",
+"n": 3
+},
+{
+"k": "hl",
+"subject_slug": "farmacologia-ii",
+"ancora": "f2b08",
+"n": 2
+},
+{
+"k": "hl",
+"subject_slug": "farmacologia-ii",
+"ancora": "f2b14",
+"n": 2
+},
+{
+"k": "hl",
+"subject_slug": "farmacologia-ii",
+"ancora": "f2b15",
+"n": 9
+},
+{
+"k": "hl",
+"subject_slug": "fisiopatologia",
+"ancora": "hemorragia",
+"n": 1
+},
+{
+"k": "hl",
+"subject_slug": "fisiopatologia",
+"ancora": "inflamacion",
+"n": 2
+},
+{
+"k": "hl",
+"subject_slug": "fisiopatologia",
+"ancora": "introduccion-fisio",
+"n": 30
+},
+{
+"k": "hl",
+"subject_slug": "fisiopatologia-ii",
+"ancora": "fp2b01",
+"n": 42
+},
+{
+"k": "hl",
+"subject_slug": "fisiopatologia-ii",
+"ancora": "fp2b02",
+"n": 4
+},
+{
+"k": "hl",
+"subject_slug": "fisiopatologia-ii",
+"ancora": "fp2b12",
+"n": 1
+},
+{
+"k": "hl",
+"subject_slug": "histologia-ii",
+"ancora": "h2b01",
+"n": 12
+},
+{
+"k": "hl",
+"subject_slug": "histologia-ii",
+"ancora": "h2b02",
+"n": 8
+},
+{
+"k": "hl",
+"subject_slug": "histologia-ii",
+"ancora": "h2b05",
+"n": 1
+},
+{
+"k": "hl",
+"subject_slug": "histologia-ii",
+"ancora": "h2b07",
+"n": 3
+},
+{
+"k": "hl",
+"subject_slug": "histologia-ii",
+"ancora": "h2b08",
+"n": 18
+},
+{
+"k": "hl",
+"subject_slug": "medicina-familiar",
+"ancora": "aps",
+"n": 17
+},
+{
+"k": "hl",
+"subject_slug": "medicina-familiar",
+"ancora": "portada-medfam",
+"n": 1
+},
+{
+"k": "hl",
+"subject_slug": "medicina-legal",
+"ancora": "medlegb01",
+"n": 56
+},
+{
+"k": "hl",
+"subject_slug": "medicina-legal",
+"ancora": "medlegb02",
+"n": 1
+},
+{
+"k": "hl",
+"subject_slug": "medicina-legal",
+"ancora": "medlegdocu",
+"n": 107
+},
+{
+"k": "hl",
+"subject_slug": "medicina-legal",
+"ancora": "medlegninez",
+"n": 96
+},
+{
+"k": "hl",
+"subject_slug": "neurologia",
+"ancora": "neub02",
+"n": 10
+},
+{
+"k": "hl",
+"subject_slug": "neurologia",
+"ancora": "neub03",
+"n": 29
+},
+{
+"k": "hl",
+"subject_slug": "neurologia",
+"ancora": "neub09",
+"n": 68
+},
+{
+"k": "hl",
+"subject_slug": "oftalmologia",
+"ancora": "ofb01",
+"n": 143
+},
+{
+"k": "hl",
+"subject_slug": "oftalmologia",
+"ancora": "ofb02",
+"n": 107
+},
+{
+"k": "hl",
+"subject_slug": "oftalmologia",
+"ancora": "ofb03",
+"n": 83
+},
+{
+"k": "hl",
+"subject_slug": "oftalmologia",
+"ancora": "ofb04",
+"n": 88
+},
+{
+"k": "hl",
+"subject_slug": "oftalmologia",
+"ancora": "ofb05",
+"n": 124
+},
+{
+"k": "hl",
+"subject_slug": "oftalmologia",
+"ancora": "ofb06",
+"n": 154
+},
+{
+"k": "hl",
+"subject_slug": "oftalmologia",
+"ancora": "ofb07",
+"n": 90
+},
+{
+"k": "hl",
+"subject_slug": "oftalmologia",
+"ancora": "ofb08",
+"n": 27
+},
+{
+"k": "hl",
+"subject_slug": "oftalmologia",
+"ancora": "ofb09",
+"n": 42
+},
+{
+"k": "hl",
+"subject_slug": "ortopedia",
+"ancora": "otb01",
+"n": 3
+},
+{
+"k": "hl",
+"subject_slug": "ortopedia",
+"ancora": "otb02",
+"n": 1
+},
+{
+"k": "hl",
+"subject_slug": "semiologia",
+"ancora": "introduccion-semio",
+"n": 1
+},
+{
+"k": "hl",
+"subject_slug": "semiologia-ii",
+"ancora": "s2-b01",
+"n": 93
+},
+{
+"k": "hl",
+"subject_slug": "semiologia-ii",
+"ancora": "s2-b02",
+"n": 14
+},
+{
+"k": "hl",
+"subject_slug": "semiologia-ii",
+"ancora": "s2-b03",
+"n": 4
+},
+{
+"k": "hl",
+"subject_slug": "semiologia-ii",
+"ancora": "s2-banco",
+"n": 17
+},
+{
+"k": "hl",
+"subject_slug": "semiologia-ii",
+"ancora": "s2-guia",
+"n": 4
+},
+{
+"k": "ink",
+"subject_slug": "anestesiologia",
+"ancora": "aneb01",
+"n": 4
+},
+{
+"k": "ink",
+"subject_slug": "farmacologia-ii",
+"ancora": "f2b00",
+"n": 1
+},
+{
+"k": "ink",
+"subject_slug": "neurologia",
+"ancora": "neuportada",
+"n": 1
+},
+{
+"k": "ink",
+"subject_slug": "ortopedia",
+"ancora": "otb01>71",
+"n": 8
+},
+{
+"k": "ink",
+"subject_slug": "semiologia-ii",
+"ancora": "s2-b01",
+"n": 24
+},
+{
+"k": "ink",
+"subject_slug": "semiologia-ii",
+"ancora": "s2-b01>19",
+"n": 1
+},
+{
+"k": "ink",
+"subject_slug": "semiologia-ii",
+"ancora": "s2-b03>1",
+"n": 1
+},
+{
+"k": "note",
+"subject_slug": "medicina-legal",
+"ancora": "medlegb01",
+"n": 1
+}
+]
+}

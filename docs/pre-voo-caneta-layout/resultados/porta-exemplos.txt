@@ -1,0 +1,21 @@
+$ sh tools/qa/pre-voo/porta-da-materia.sh medicina-familiar
+PASSA  0-inventario-em-dia
+PASSA  0b-marcadores-no-html
+PASSA  1-ancoras-estaveis
+PASSA  2-ida-e-volta
+PASSA  3-layout-4-larguras
+PASSA  4-uso-caneta-modos
+PASSA  5-inventario-risco
+---
+PORTA ABERTA para medicina-familiar (isto NÃO liga nada: falta o roteiro físico de 3 min e a ordem de José)
+
+$ sh tools/qa/pre-voo/porta-da-materia.sh dermatologia
+PASSA  0-inventario-em-dia
+FALHA  0b-marcadores-no-html  (veja /tmp/porta-dermatologia-0b-marcadores-no-html.log)
+PASSA  1-ancoras-estaveis
+PASSA  2-ida-e-volta
+FALHA  3-layout-4-larguras  (ensaio dermatologia 390 768 1024 1440 → 236 verificações · 9 FALHA · 155s)
+PASSA  4-uso-caneta-modos
+PASSA  5-inventario-risco
+---
+PORTA FECHADA para dermatologia

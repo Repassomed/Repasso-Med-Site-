@@ -145,6 +145,9 @@ async function abrir(br, base, mat, { w = 1440, h = 900, modo = 'nav', touch = w
   await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => { externas.push(r.request().url().slice(0, 140)); r.abort(); });   // zero rede externa
   await page.addInitScript(([slug, modoX]) => { window.__RM_ENSAIO = { slug, modo: modoX }; }, [mat.slug, modo]);
   if (initScript) await page.addInitScript(initScript);
+  /* RM_ENSAIO_INIT=<arquivo.js> (pré-voo 24/10): injeta um script em TODA abertura do ensaio — serve para simular, só em memória, uma correção de módulo ou de matéria ainda não feita
+     (ex.: tools/qa/pre-voo/sim-c9.js) e medir se ela fecha os bloqueios. Sem a variável, nada muda. */
+  if (process.env.RM_ENSAIO_INIT) await page.addInitScript(fs.readFileSync(path.resolve(process.env.RM_ENSAIO_INIT), 'utf8'));
   await page.goto(`${base}/p.html?slug=${mat.slug}&tab=${mat.tab}&modo=${modo}&wait=${espera}${corr ? '&corr=1' : ''}${C3_NO_CODIGO ? '&c3=0' : ''}${ix ? '&ix=1' : ''}${extra}${hash}`, { timeout: 120000 });
   await page.waitForFunction('window.__ready===true', { timeout: 120000 });
   await page.waitForTimeout(600);
