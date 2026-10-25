@@ -1,0 +1,336 @@
+{
+ "rodada": "2026-10-16-0305",
+ "modo": "rapida",
+ "materias": {
+  "medicina-familiar": {
+   "slug": "medicina-familiar",
+   "nome": "Medicina Familiar",
+   "arquivo": "medicina-familiar.html",
+   "checagens": {
+    "voz_de_prova": {
+     "total": 13,
+     "exemplos": [
+      "los 5 principios de Alma-Ata. La franja inferior es la que se cobra en el examen: los determinantes interactúan entre sí, y por",
+      ".er nivel. ### 🧠 Modelo biomédico vs. modelo biopsicosocial cae en prueba La medicina familiar trabaja con el modelo biopsicosocial:",
+      "n una forma de mirar al paciente, no un órgano. - El #1 (el más preguntado): compromiso con la PERSONA, no con un cuerpo de conocimien",
+      "na forma de mirar al paciente. [FLASHCARD] Principio #1 (el más preguntado) ⇒ Compromiso con la PERSONA, no con un cuerpo de conocimie",
+      "r elección | La pareja decide no tener descendientes [CAJA] Cae en examen distinguir: extensa (varios parientes, varias generaciones"
+     ]
+    },
+    "metatexto": {
+     "total": 0,
+     "exemplos": []
+    },
+    "pregunta_oficial": {
+     "total": 0,
+     "exemplos": []
+    },
+    "ids_duplicados": [],
+    "imagens": {
+     "total": 21,
+     "sem_texto_alternativo": 0
+    },
+    "questoes_multipla": {
+     "total": 0,
+     "letras": {},
+     "maior_sequencia_mesma_letra": 0,
+     "correta_e_a_unica_mais_longa": 0,
+     "pct_correta_mais_longa": 0,
+     "alternativa_unica_em_destaque": 0
+    },
+    "caracteres_de_texto": 152028
+   },
+   "alertas": [
+    "13 frase(s) de «voz de prova» na página do aluno (G0 proíbe)"
+   ],
+   "status": "auditada",
+   "cobertura": {
+    "secoes_total": 14,
+    "secoes_lidas": [
+     "1–11"
+    ],
+    "pct_texto": 79
+   },
+   "veredito": "editorial",
+   "resumo": "O trecho ensina os conceitos centrais com muitos exemplos, casos e conexões entre APS, família, crescimento e prevenção. Há boa preocupação em explicar diferenças que costumam confundir, mas o conteúdo repete muito os mesmos dados em resumos, caixas, questões e flashcards. Existem também alguns pontos científicos e de consistência que precisam ser revistos, especialmente no crescimento e na simbologia do genograma.",
+   "pontos_fortes": [
+    "Explica bem as diferenças entre longitudinalidade, continuidade e coordenação",
+    "Usa casos clínicos e perguntas que reforçam grande parte do conteúdo ensinado",
+    "Expõe de forma transparente o conflito entre a cátedra e a literatura sobre a talla no primeiro ano"
+   ],
+   "notas": {
+    "ciencia": "erro",
+    "g0_alma": "parcial",
+    "ensina_do_zero": "sim",
+    "densidade": "excessiva",
+    "repeticao": "alta",
+    "castelhano": "bom",
+    "questoes": "problemas"
+   },
+   "achados": [
+    {
+     "gravidade": "P1",
+     "tipo": "questoes",
+     "onde": "crecimiento — Preguntas complementarias",
+     "trecho": "Para 2–6 años: (edad en años × 2) + 8,5. A los 16 meses (~1,3 años) se usa el tramo correspondiente",
+     "trecho_confere": true,
+     "problema": "A própria matéria afirma que entre 12 meses e 2 anos não há fórmula própria e que os tramos não se tocam, mas a resposta estende arbitrariamente a fórmula de 2–6 anos para 16 meses.",
+     "sugestao": "Retirar o cálculo como resposta aplicável a 16 meses e deixar claro que, nessa faixa, a avaliação deve se basear na curva de crescimento.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P1",
+     "tipo": "ciencia",
+     "onde": "crecimiento — Índices antropométricos y curvas",
+     "trecho": "| < 2 años | Peso/Edad (P/E) y Talla/Edad (T/E)\n| > 2 años | Peso/Talla (P/T)",
+     "trecho_confere": true,
+     "problema": "A tabela apresenta os índices como se peso/talla começasse apenas após 2 anos e como se bastassem dois índices antes dessa idade. Isso não corresponde ao uso antropométrico pediátrico atual das curvas OMS, que inclui relação peso-comprimento/altura e IMC por idade conforme a idade e o objetivo clínico.",
+     "sugestao": "Revisar a tabela com a fonte adotada e distinguir os índices usados para crescimento linear, baixo peso, excesso de peso e avaliação nutricional.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P1",
+     "tipo": "questoes",
+     "onde": "apgar — Preguntas complementarias",
+     "trecho": "✓ Respuesta La Adaptación (y también Participación/Recursos).",
+     "trecho_confere": true,
+     "problema": "A pergunta pede um único componente bem desenvolvido, mas a resposta reconhece três componentes defensáveis. Assim, a questão fica ambígua.",
+     "sugestao": "Fazer o caso descrever um componente específico ou transformar a pergunta em item de múltiplos componentes.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P1",
+     "tipo": "consistencia",
+     "onde": "familiograma — simbologia e flashcards",
+     "trecho": "Línea doble = relación estrecha; línea cortada = conflicto o ruptura.",
+     "trecho_confere": true,
+     "problema": "A simbologia das relações é apresentada de modos diferentes no trecho: depois, a relação conflitante aparece como zigzag e a linha dupla como relação muito unida. Como as questões cobram os símbolos, a falta de padronização pode induzir erro.",
+     "sugestao": "Escolher uma convenção de genograma, atribuí-la à fonte adotada e manter os mesmos símbolos em texto, guia, imagens, flashcards e questões.",
+     "certeza": "media"
+    },
+    {
+     "gravidade": "P2",
+     "tipo": "consistencia",
+     "onde": "crisis — Tipos de crisis familiares",
+     "trecho": "Subtipos de las no\n[GLOSARIO] normativas?Tocá de nuevo para cerrarCrisis esperables del ciclo vital familiar: casamiento, nacimiento de un hijo, escolarización, nido vacío, jubilación.",
+     "trecho_confere": true,
+     "problema": "O glossário aberto após “no normativas” define crises normativas, invertendo o conceito no próprio ponto em que o texto introduz os subtipos das não normativas.",
+     "sugestao": "Corrigir o conteúdo e o vínculo desse glossário para que correspondam a crises não normativas.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P2",
+     "tipo": "ciencia",
+     "onde": "educacion — El cuarto nivel: prevención cuaternaria",
+     "trecho": "El médico de familia es el único que ve a la persona a lo largo del tiempo y con todos sus problemas a la vez.",
+     "trecho_confere": true,
+     "problema": "A afirmação de exclusividade é incorreta: outros profissionais e especialidades também podem acompanhar pessoas longitudinalmente e integrar problemas. A Medicina Familiar tem vocação e posição privilegiadas para isso, mas não é a única.",
+     "sugestao": "Trocar a ideia de exclusividade por uma formulação que destaque o papel privilegiado da Medicina Familiar na coordenação e no cuidado longitudinal.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P2",
+     "tipo": "densidade",
+     "onde": "familiograma, apgar, crisis, crecimiento e desarrollo",
+     "trecho": "### 🎯 Puntos para memorizar",
+     "trecho_confere": true,
+     "problema": "Em vários blocos, os mesmos conceitos reaparecem em pontos para memorizar, resumo, caixas, infografias, questões, respostas e flashcards. A repetição torna o trecho longo e dificulta identificar o que cada recurso acrescenta de novo.",
+     "sugestao": "Manter retomadas que diferenciam ou aplicam conceitos, mas cortar duplicações literais e dar uma função distinta a resumo, caixa, questão e flashcard.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P2",
+     "tipo": "metatexto",
+     "onde": "familiograma — guía completa ilustrada",
+     "trecho": "Índice: ① ¿Qué es y para qué sirve · ② Tipos de familia · ③ Símbolos básicos · ④ Hijos y eventos · ⑤ Relaciones interpersonales · ⑥ Ejemplos resueltos · ❓ Preguntas que pueden caer",
+     "trecho_confere": true,
+     "problema": "O rótulo anuncia o que pode cair, levando para a página do aluno uma estratégia explícita de prova. Além disso, a mesma seção repete quase todo o conteúdo já apresentado acima.",
+     "sugestao": "Remover a referência explícita à cobrança e reorganizar o guia para complementar o bloco anterior, sem duplicar seus conceitos e listas.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P3",
+     "tipo": "consistencia",
+     "onde": "portada-medfam — Bloque por bloque",
+     "trecho": "| 06 · Crecimiento | Es cuantitativo: se mide y se grafica, y lo que decide es la trayectoria |\n| 06 · Desarrollo | Es cualitativo: se observa lo que el niño logra hacer, y se juzga por edad límite |",
+     "trecho_confere": false,
+     "problema": "A portada anuncia oito blocos, mas numera crescimento e desenvolvimento ambos como bloco 06. Isso pode confundir a navegação e a referência cruzada dos blocos.",
+     "sugestao": "Padronizar a numeração dos blocos na portada e nos títulos das seções.",
+     "certeza": "alta"
+    }
+   ]
+  },
+  "dermatologia": {
+   "slug": "dermatologia",
+   "nome": "Dermatología",
+   "arquivo": "dermatologia.html",
+   "checagens": {
+    "voz_de_prova": {
+     "total": 0,
+     "exemplos": []
+    },
+    "metatexto": {
+     "total": 0,
+     "exemplos": []
+    },
+    "pregunta_oficial": {
+     "total": 0,
+     "exemplos": []
+    },
+    "ids_duplicados": [],
+    "imagens": {
+     "total": 58,
+     "sem_texto_alternativo": 0
+    },
+    "questoes_multipla": {
+     "total": 101,
+     "letras": {
+      "a": 26,
+      "b": 30,
+      "c": 24,
+      "d": 21
+     },
+     "maior_sequencia_mesma_letra": 3,
+     "correta_e_a_unica_mais_longa": 36,
+     "pct_correta_mais_longa": 36,
+     "alternativa_unica_em_destaque": 0
+    },
+    "caracteres_de_texto": 376365
+   },
+   "alertas": [],
+   "status": "auditada",
+   "cobertura": {
+    "secoes_total": 15,
+    "secoes_lidas": [
+     "1–3"
+    ],
+    "pct_texto": 31
+   },
+   "veredito": "grave",
+   "resumo": "O trecho ensina dermatologia com boa sequência: parte da anatomia, passa pela morfologia das lesões e usa mecanismos para explicar os achados. Há boa cobertura com tabelas, imagens, questões e flashcards, mas uma questão contradiz explicitamente a classificação ensinada e há alguns erros científicos importantes em bolhas e no sinal de Nikolsky. Também aparecem vários comentários diretos sobre prova, que não devem ficar na página do aluno.",
+   "pontos_fortes": [
+    "Explica bem a relação entre profundidade da lesão, aspecto clínico e cicatriz",
+    "Usa comparações úteis, como placa em meseta e nódulo em iceberg",
+    "As questões em geral reforçam conteúdos ensinados antes"
+   ],
+   "notas": {
+    "ciencia": "erro",
+    "g0_alma": "parcial",
+    "ensina_do_zero": "sim",
+    "densidade": "densa",
+    "repeticao": "media",
+    "castelhano": "bom",
+    "questoes": "problemas"
+   },
+   "achados": [
+    {
+     "gravidade": "P0",
+     "tipo": "questoes",
+     "onde": "dermb02 · q-derma02-01",
+     "trecho": "La cátedra usa el corte de 0,5 cm: hasta ahí, vesícula; por encima, ampolla.",
+     "trecho_confere": true,
+     "problema": "O gabarito afirma que a cátedra usa corte de 0,5 cm, mas a tabela anterior da própria matéria define vesícula como < 1 cm e ampolla como ≥ 1 cm. A questão cobra uma resposta incompatível com o resumo e com os flashcards.",
+     "sugestao": "Conferir a fonte da cátedra e unificar o corte em tabela, texto, questão, resposta e flashcards. Ajustar o gabarito da questão ao critério escolhido.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P1",
+     "tipo": "ciencia",
+     "onde": "dermb02 · Signo de Nikolsky / q-derma21",
+     "trecho": "Un Nikolsky positivo —la epidermis se desprende al frotar la piel sana vecina— indica que la cohesión entre queratinocitos está rota, es decir un despegue intraepidérmico por acantólisis. Aparece en el pénfigo, el síndrome de la piel escaldada estafilocócica y la necrólisis epidérmica tóxica.",
+     "trecho_confere": true,
+     "problema": "O texto transforma Nikolsky positivo em sinônimo de acantólise. Isso não vale para todas as doenças citadas: na NET há necrose epidérmica extensa, e na SSSS a clivagem decorre da toxina estafilocócica, não de acantólise autoimune como no pênfigo.",
+     "sugestao": "Separar o sinal do mecanismo: explicar que o Nikolsky positivo indica fragilidade/desprendimento epidérmico e diferenciar o mecanismo do pênfigo, da SSSS e da NET.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P1",
+     "tipo": "ciencia",
+     "onde": "dermb02 · q-derma02-10",
+     "trecho": "En el pénfigo vulgar hay IgG circulante contra la desmogleína 3: al bloquearla, las células pierden cohesión y se separan —eso es la acantólisis—.",
+     "trecho_confere": true,
+     "problema": "A explicação apresenta a desmogleína 3 como único alvo do pênfigo vulgar. Há formas mucocutâneas com anticorpos contra desmogleína 1 e 3; a associação exclusiva com Dsg3 simplifica demais o mecanismo.",
+     "sugestao": "Diferenciar a forma predominantemente mucosa, relacionada a Dsg3, da forma mucocutânea, em que Dsg1 também pode estar envolvida.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P1",
+     "tipo": "ciencia",
+     "onde": "dermb02 · Cómo se mira: describir antes de diagnosticar",
+     "trecho": "una alerta roja sobre la lesión nueva o cambiante, asimétrica o con sangrado espontáneo, que obliga a dermatoscopia y biopsia.",
+     "trecho_confere": true,
+     "problema": "A frase torna dermatoscopia e biópsia obrigatórias para toda lesão nova, mutável, assimétrica ou com sangramento. Esses achados exigem avaliação clínica prioritária, mas a indicação de biópsia depende da suspeita e da avaliação especializada.",
+     "sugestao": "Trocar a obrigação universal por orientação de avaliação dermatológica e indicar que dermatoscopia e biópsia são definidas conforme a suspeita clínica.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P2",
+     "tipo": "voz_de_prova",
+     "onde": "dermb01 · Las cuatro células, con el dato que la figura no trae",
+     "trecho": "Un dato que sorprende y que a veces cae: la cantidad de melanocitos es prácticamente la misma en todas las etnias.",
+     "trecho_confere": true,
+     "problema": "A página fala diretamente sobre o que \"cae\". Esse tipo de orientação de prova é proibido no texto do aluno e aparece também em outros trechos com \"se pregunta\" e \"evaluación\".",
+     "sugestao": "Remover as referências explícitas à cobrança e manter a prioridade didática por meio da clareza e dos destaques do conteúdo.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P2",
+     "tipo": "consistencia",
+     "onde": "dermb02 · Lesiones secundarias",
+     "trecho": "Cómo leer la figura: las tres bandas están dibujadas a la altura real del despegue. Lo que hay que llevarse es la cadena completa: altura → tipo de ampolla → signo de Nikolsky → enfermedad.",
+     "trecho_confere": true,
+     "problema": "O texto descreve uma figura sobre altura de despegamento e ampollas, mas a imagem seguinte é sobre lesões secundárias e profundidade de erosão, úlcera e cicatriz. Parece texto deslocado de outra figura.",
+     "sugestao": "Revisar a posição desse bloco e alinhá-lo à imagem correta, ou substituir a orientação pela leitura da figura de lesões secundárias.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P2",
+     "tipo": "html",
+     "onde": "dermb02 · La forma, la disposición y las maniobras con nombre propio",
+     "trecho": "| Anular | Activo: rojo, elevado, con escama\n| Distinto: más claro, casi sano | Tiña del cuerpo\n| Numular | Igual que el centro",
+     "trecho_confere": true,
+     "problema": "A tabela de anular versus numular está com células quebradas em linhas diferentes. Assim, a relação entre borda, centro e exemplo pode renderizar ou ser lida de forma errada.",
+     "sugestao": "Revisar a estrutura da tabela para que cada padrão ocupe uma linha completa, com as colunas Borde, Centro e Ejemplo.",
+     "certeza": "alta"
+    },
+    {
+     "gravidade": "P2",
+     "tipo": "consistencia",
+     "onde": "dermb02 · Lesiones primarias: líquido, edema y vasos",
+     "trecho": "- Pústula — pus. Y cuidado: pus no siempre significa infección. La psoriasis pustulosa es estéril. Cura sin cicatriz.",
+     "trecho_confere": true,
+     "problema": "A afirmação de que pústula cura sem cicatriz é absoluta. Pústulas superficiais em geral não deixam cicatriz, mas pústulas profundas, especialmente foliculares, podem cicatrizar.",
+     "sugestao": "Qualificar a afirmação para pústulas superficiais e mencionar que profundidade e doença de base modificam o risco de cicatriz.",
+     "certeza": "alta"
+    }
+   ]
+  }
+ },
+ "chamadas": [
+  {
+   "slug": "medicina-familiar",
+   "pedaco": 1,
+   "input_tokens": 36815,
+   "output_tokens": 2922
+  },
+  {
+   "slug": "dermatologia",
+   "pedaco": 1,
+   "input_tokens": 37845,
+   "output_tokens": 3327
+  }
+ ],
+ "custo": {
+  "modelo": "gpt-5.6-terra",
+  "chamadas": 2,
+  "input_tokens": 74660,
+  "output_tokens": 6249,
+  "usd": 0.2243,
+  "limite_usd": 5.0,
+  "nota": "valor calculado pelo preço cheio; o cache automático da OpenAI pode deixar a fatura real menor"
+ },
+ "cursor": {
+  "medicina-familiar": 11,
+  "dermatologia": 3
+ }
+}
