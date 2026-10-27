@@ -79,7 +79,7 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
     const go = async (p, spec, ms = 600) => { await p.evaluate(s => window.RMNav.go(s), spec); await p.waitForTimeout(ms); };
     process.stdout.write(`ensaio ${m.slug} `);
     /* oráculo por seção: o inventário (controle) */
-    const secs = I.secoes, ids = secs.map(s => s.id);
+    const secs = I.secoes.filter(s => !(s.ancoras === 0 && !s.quiz && !s.fc && !s.fig && !s.tb && !s.img && !s.aud && !s.vid)), ids = secs.map(s => s.id);   // C9: placeholder de âncora (seção vazia e oculta) não é bloco
     const ehAgreg = id => REUNE.test(id) || [...I.unicos.copiasQuiz, ...I.unicos.copiasFc].some(c => c.id === id && c.itens >= 0.5 * Math.max(I.unicos.quiz, I.unicos.fc));
     const agregInv = new Set([...I.unicos.copiasQuiz, ...I.unicos.copiasFc].filter(c => c.itens >= 0.5 * Math.min(I.unicos.quiz || 1e9, I.unicos.fc || 1e9) && /./.test(c.id)).map(c => c.id));
     const temRec = { fig: s => s.fig, quiz: s => s.quiz, fc: s => s.fc, aud: s => s.aud, ab: () => 0 };
@@ -351,7 +351,7 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
       if (W === 1440) {
         const det = await p.evaluate(() => { try { window.RMNav.detach(); window.RMSistema.detach(); window.RMLayout.detach(); } catch (e) { return { err: String(e) }; }
           const H = document.documentElement, t = document.querySelector('#materias-container > .tab-content');
-          return { attr: H.hasAttribute('data-rm-nav'), cls: /rm-sis|rm-nav/.test(H.className), ui: document.querySelectorAll('[data-rm-ui]').length, off: document.querySelectorAll('[data-rm-off]').length, secs: [...t.querySelectorAll(':scope > section[id]')].filter(s => getComputedStyle(s).display !== 'none').length, tot: t.querySelectorAll(':scope > section[id]').length }; });
+          return { attr: H.hasAttribute('data-rm-nav'), cls: /rm-sis|rm-nav/.test(H.className), ui: document.querySelectorAll('[data-rm-ui]').length, off: document.querySelectorAll('[data-rm-off]').length, secs: [...t.querySelectorAll(':scope > section[id]')].filter(s => getComputedStyle(s).display !== 'none').length, tot: t.querySelectorAll(':scope > section[id]:not([hidden]:empty)').length }; });
         chk('integridade', W, 'detach-limpo', !det.err && !det.attr && !det.cls && det.off === 0 && det.secs === det.tot, 'detach: tudo volta ao estado original (todas as seções visíveis, sem atributos/UI do layout)', det);
       }
       await r.ctx.close();

@@ -148,7 +148,7 @@ async function checarTabela(p, c, W, chk, go, secs) {
     const chk = (area, w, id, cond, msg, prova, dados) => { const e = { area, w, id, estado: cond ? 'PASSA' : 'FALHA', prova, msg }; if (!cond && dados !== undefined) e.dados = dados; R.checks.push(e); return !!cond; };
     const bloq = (area, w, id, msg) => R.checks.push({ area, w, id, estado: 'BLOQUEADO', msg });
     process.stdout.write(`interação ${m.slug} `);
-    const secs = I.secoes, ids = secs.map(s => s.id);
+    const secs = I.secoes.filter(s => !(s.ancoras === 0 && !s.quiz && !s.fc && !s.fig && !s.tb && !s.img && !s.aud && !s.vid)), ids = secs.map(s => s.id);   // C9: placeholder de âncora não é bloco
     const cand = secs.filter(s => !REUNE.test(s.id) && s.ancoras > 12 && s.quiz < s.ancoras);
     const alvo = (cand[0] || secs[1] || secs[0]).id, outro = ids.find(x => x !== alvo && !REUNE.test(x)) || ids[0];
     const blocoQuiz = secs.find(s => s.quiz > 0 && !REUNE.test(s.id)), blocoFc = secs.find(s => s.fc > 0 && !REUNE.test(s.id));
