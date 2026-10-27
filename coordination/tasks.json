@@ -3031,6 +3031,30 @@
       "notas": "Sem merge por Claude 2. Grifos: 240 em farmacologia-ii (SELECT somente leitura), portão OK."
     },
     {
+      "id": "fisiopatologia-ii-parcial2-conferencia-slides-claude2",
+      "titulo": "P1 — Fisiopatología II: conferência da Parcial 2 contra slides e anotações",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html",
+        "coordination/tasks.json"
+      ],
+      "objetivo": "Conferir blocos 08–14 e 15–17 (renal, medio interno, ácido-base, diabetes, suprarrenal) contra os slides 07–11, a anotação da suprarrenal e o próprio corpo de cada bloco; corrigir só o que a fonte ou a ordem não sustentam. Nenhuma imagem, id, gabarito, questão ou cartão removido.",
+      "fonte": "Slides da cátedra de Fisiopatología II no Drive (07 vías urinarias, 08 función glomerular, 09 ácido-base, 10 diabetes, 11 trastorno endocrino, suprarrenal) · LEI-ATUALIZACAO-CONTINUA · LEI-G0",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/atualizacao-fisiopatologia-ii-parcial2",
+      "pr": 575,
+      "commit": null,
+      "issue": 543,
+      "notas": "Sem merge por Claude 2. Grifos: 47 em fisiopatologia-ii (SELECT somente leitura), portão 47/47."
+    },
+    {
       "id": "semiologia-ii-parcial2-conferencia-slides-claude2",
       "titulo": "P1 — Semiología II: conferência dos blocos 06–09 contra os slides atualizados",
       "area": "materia",
