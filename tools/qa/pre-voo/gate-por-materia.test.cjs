@@ -42,7 +42,7 @@ async function abrirCena(br, base, m, { env, uid = UID, candidatas }) {
   await page.addInitScript(([slug]) => { window.__RM_ENSAIO = { slug, modo: 'controle' }; }, [m.slug]);
   return { ctx, page, pedidos, errs, m, base };
 }
-const url = (c, ex = '') => `${c.base}/p.html?slug=${c.m.slug}&tab=${c.m.tab}&modo=controle&wait=1500&persist=1${ex}`;
+const url = (c, ex = '') => `${c.base}/p.html?slug=${c.m.slug}&tab=${c.m.tab}&modo=controle&wait=1500&persist=1&pilotreal=1${ex}`;
 async function carregar(c) { await c.page.goto(url(c), { timeout: 120000 }); await c.page.waitForFunction('window.__ready===true', { timeout: 120000 }); await c.page.waitForTimeout(700); }
 async function ligarPiloto(c) {
   await c.page.addScriptTag({ url: '/assets/rm-pilot.js?v=teste' }); await c.page.waitForTimeout(2500);
@@ -62,7 +62,8 @@ async function cena(br, base, m, cfg, rotulo, esperaLayout, extra) {
     const dif = D.comparar(ref, dep, 'cena').filter(x => x.tipo !== 'erro-js');
     ok(dif.length === 0 && ref.grifos.length > 0 && ref.tracos.length > 0, `${rotulo}: ${ref.grifos.length} grifos, ${ref.tracos.length} traços e ${ref.notas.length} nota(s) idênticos, sem escrita no banco`, dif.slice(0, 3));
     ok(c.errs.length === 0, `${rotulo}: 0 erros JS`, c.errs);
-    const out = { r1, pedidos: c.pedidos.slice(), ref };
+    const a7 = await c.page.evaluate(async () => { const t = await (await fetch('assets/rm-tools-v2.js')).text(); return { a7: /function penLiberadaPeloServidor\(slug\)/.test(t), perm: window.RMToolsV2 && window.RMToolsV2._test ? window.RMToolsV2._test.pilotoPermitido() : null }; });
+    const out = { r1, pedidos: c.pedidos.slice(), ref, a7 };
     if (extra) await extra(c, out, env);
     return out;
   } finally { await c.ctx.close(); }
@@ -102,6 +103,8 @@ async function cena(br, base, m, cfg, rotulo, esperaLayout, extra) {
       await c.page.reload(); await c.page.waitForFunction('window.__ready===true'); await c.page.waitForTimeout(700);
       const r2 = await ligarPiloto(c);
       ok(r2.layout === false, 'depois de tirar o slug e recarregar: layout NÃO montado (volta à versão anterior)', r2);
+      const p2 = await c.page.evaluate(() => window.RMToolsV2 && window.RMToolsV2._test ? window.RMToolsV2._test.pilotoPermitido() : null);
+      if (o.a7.a7) ok(p2 === false, 'A7 presente: depois de tirar o slug a caneta física também desliga', p2);
       const volta = await c.page.evaluate(D.MEDIR);
       const dif = D.comparar(o.ref, volta, 'volta').filter(x => x.tipo !== 'erro-js');
       ok(dif.length === 0, `na volta: ${volta.grifos.length} grifos, ${volta.tracos.length} traços e ${volta.notas.length} nota(s) idênticos aos do início`, dif.slice(0, 3));
@@ -110,11 +113,13 @@ async function cena(br, base, m, cfg, rotulo, esperaLayout, extra) {
   sec('8 · caneta física por matéria; áudio só no piloto');
   { await cena(br, base, M(A), { env: Object.assign({}, LAY, { RM_LAYOUT_SLUGS: A, RM_PEN_SLUGS: A, RM_PILOT_PEN_UIDS: UID, RM_PILOT_AUDIO_UIDS: UID }), candidatas: [PIL, A] }, 'dermatologia (pen liberada)', true, async (c, o) => {
       ok(o.r1.pen === true, 'RMPilot.penLiberada(dermatologia) = true', o.r1.flags);
+      if (o.a7.a7) ok(o.a7.perm === true, 'A7 presente: a caneta física liga em dermatologia (servidor real → rm-pilot real → rm-tools-v2 real)', o.a7); else console.log('    · A7 ausente neste código: elo servidor→caneta física não exercitado (testado na rodada conjunta)');
       const f = await servidor({ RM_PILOT_LAYOUT_UIDS: UID, RM_LAYOUT_SLUGS: A, RM_PEN_SLUGS: A, RM_PILOT_PEN_UIDS: UID, RM_PILOT_AUDIO_UIDS: UID }, UID, A, 'tok');
       ok(JSON.parse(f.body).audio === false, 'áudio negado fora do piloto mesmo com UID na lista de áudio', JSON.parse(f.body));
     });
     await cena(br, base, M(B), { env: Object.assign({}, LAY, { RM_LAYOUT_SLUGS: A + ',' + B, RM_PEN_SLUGS: A, RM_PILOT_PEN_UIDS: UID }), candidatas: [PIL, A, B] }, 'biologia (layout sim, pen não)', true, async (c, o) => {
       ok(o.r1.pen === false, 'RMPilot.penLiberada(biologia) = false (slug fora de RM_PEN_SLUGS)', o.r1.flags);
+      if (o.a7.a7) ok(o.a7.perm === false, 'A7 presente: a caneta física NÃO liga em biologia, mesmo com a conta fixa do código (JOSE_UID)', o.a7);
     }); }
 
   sec('9 · o piloto segue como antes: UID na lista basta, sem variável de matéria');
