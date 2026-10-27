@@ -79,11 +79,23 @@
   /* Segundo testador (#456): o piloto físico NÃO depende só de um UID fixo no código. Vale também para quem o SERVIDOR liberou (`get-pilot-flags` → `pen:true`, lista
      RM_PILOT_PEN_UIDS do Netlify, lida por rm-pilot.js; nenhum UID no repositório). Só refinamentos do piloto físico, só em Semiología II — não dá acesso à V2 (isso segue sendo
      BETA_UIDS / study_tools_beta) e não liga a caneta para ninguém além de quem já a tem. Falha fechada: sem RMPilot, sem resposta ou negado ⇒ false. */
-  function penLiberadaPeloServidor() {
-    try { return !!(window.RMPilot && typeof window.RMPilot.penLiberada === 'function' && window.RMPilot.penLiberada()); } catch (e) { return false; }
+  /* A7 (pré-voo 24/10) · a caneta FÍSICA vale POR MATÉRIA. `penLiberadaPeloServidor(slug)` pergunta ao rm-pilot.js se o servidor liberou `pen` para ESTE slug
+     (get-pilot-flags: UID em RM_PILOT_PEN_UIDS E slug em RM_PEN_SLUGS). Sem argumento = a matéria aberta. Falha fechada em tudo: sem RMPilot, sem resposta, negado,
+     ou um RMPilot ANTIGO (sem `candidatas`, isto é, sem a A5) — esse ignoraria o slug e devolveria a resposta do piloto, então para outra matéria vale false. */
+  function penLiberadaPeloServidor(slug) {
+    try {
+      var P = window.RMPilot;
+      if (!P || typeof P.penLiberada !== 'function') return false;
+      slug = slug || slugDoTab(abaAtiva()) || PILOT_SLUGS[0];
+      if (PILOT_SLUGS.indexOf(slug) === -1 && typeof P.candidatas !== 'function') return false;
+      return !!P.penLiberada(slug);
+    } catch (e) { return false; }
   }
   function pilotoPermitido() {
-    return (st.uid === JOSE_UID || penLiberadaPeloServidor()) && PILOT_SLUGS.indexOf(slugDoTab(abaAtiva())) !== -1;
+    var slug = slugDoTab(abaAtiva());
+    if (!slug) return false;
+    if (PILOT_SLUGS.indexOf(slug) !== -1) return st.uid === JOSE_UID || penLiberadaPeloServidor(slug);   // piloto: exatamente como antes
+    return penLiberadaPeloServidor(slug);                                                                  // outra matéria: SÓ com a liberação do servidor PARA ELA; a conta fixa do código não basta
   }
 
   /* Ponto de extensão único para a decisão de produto já registada nas
