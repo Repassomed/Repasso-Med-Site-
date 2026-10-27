@@ -3832,6 +3832,23 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       reconciliarGesto('orientationchange'); setTimeout(reposicionarTudo, 220);
     });
     document.addEventListener('visibilitychange', function () { if (!document.hidden) reflow(); });
+
+    /* C8 (pré-voo 24/10) · transições que deslocam o conteúdo. Cartões com `:hover { transform: translateY(-3px) }` (globais em styles.css: .pattern-card, .recep-card,
+       .video-grid-2 .v-item…) sobem sob a caneta que paira ou o dedo que toca; a tinta é posicionada contra a caixa levantada e, quando o cartão desce, ficava ~3 px fora
+       até a próxima medida (resize/ResizeObserver não veem um `transform`). Ao FIM de uma transição de propriedade que mexe na geometria, reposiciona-se uma vez (debounce).
+       Nunca no meio de um traço: se há traço em curso, tenta de novo 250 ms depois. Sem traço gravado ⇒ custo zero (reposicionarTudo percorre só as camadas existentes). */
+    var GEOMETRICA = /^(transform|translate|scale|rotate|margin|padding|top|left|right|bottom|inset|height|width|min-|max-|gap|line-height|font-size)/;
+    var reflowTransicao = debounce(function () {
+      if (traco) { setTimeout(reflowTransicao, 250); return; }
+      reposicionarTudo();
+    }, 80);
+    function aoFimDaTransicao(e) {
+      if (!e || !GEOMETRICA.test(e.propertyName || 'transform')) return;
+      var t = e.target; if (!t || !t.closest || t.closest('#rm2-ink,.rm2-box,.rm2-notes,.rm2-diag')) return;
+      for (var k in svgPorAnchor) { if (svgPorAnchor.hasOwnProperty(k)) { reflowTransicao(); return; } }   // só se há tinta desenhada
+    }
+    document.addEventListener('transitionend', aoFimDaTransicao, true);
+    document.addEventListener('transitioncancel', aoFimDaTransicao, true);
   }
 
   /* ================================================================== */
