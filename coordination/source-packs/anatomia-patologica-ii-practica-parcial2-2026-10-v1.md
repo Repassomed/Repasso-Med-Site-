@@ -22,7 +22,7 @@ Datos de alumnos (consulta solo de lectura, Supabase, 2026-10-24): `user_highlig
 |---|---|---|---|---|---|
 | 08 | Cirrosis hepática | Ficha P2 (págs. 2–3); PDF «07» (págs. 1–8 del unido) | Esquema manuscrito (definición, causas, fisiopatología), 2 vistas del laminario, micros anotadas, 2 macro, caso de 56 años con 4 preguntas y respuestas | Ficha, 5 vistas micro, 2 macro, caso, 12 preguntas, 19 tarjetas | «Fibrina» de los apuntes = colágeno (ver §4). Tamaño de nódulos y estadio no se juzgan en el campo microscópico |
 | 09 | Carcinoma hepatocelular | Ficha P2 (págs. 4–5); PDF «08» | Esquema (factores de riesgo, patrones), macros, micros anotadas, caso de 62 años con preguntas | Ficha, 5 vistas micro, 2 macro, caso, 12 preguntas, 19 tarjetas | Invasión vascular descrita, no demostrada por las imágenes. Falta la pregunta 3 numerada en el original (se usó el contenido de la respuesta 3) |
-| 10 | Duodenitis crónica | Ficha P2 (págs. 6–7, imagen única); PDF «09» | Esquema, micros anotadas (erosión, Brunner, lámina propia), caso de 42 años con 3 preguntas | Ficha, 4 vistas, caso, 12 preguntas, 16 tarjetas | Ficha dice «diagnóstico presuntivo». Atrofia de vellosidades y plasmocitos no se resuelven a este aumento |
+| 10 | Duodenitis crónica | Ficha P2 (págs. 6–7, imagen única); PDF «09» | Esquema, micros anotadas (erosión, Brunner, lámina propia), caso de 42 años con 3 preguntas | Ficha, 4 vistas, caso, 12 preguntas, 16 tarjetas | La diapositiva «09» dice «diagnóstico presuntivo»; la ficha del laminario (pág. 6) anota solo «Duodenitis crónica». Atrofia de vellosidades y plasmocitos no se resuelven a este aumento |
 | 11 | Enfermedad de Crohn | Ficha P2 (págs. 8–9, imagen única); PDF «10» | Esquemas largos (distribución, macro, micro, clínica, extraintestinales), endoscopías, figuras de atlas, caso de 26 años con 4 preguntas | Ficha, 4 vistas, caso, 12 preguntas, 18 tarjetas | Granulomas y células de Paneth no se ven a bajo aumento. Se omitieron endoscopías y figuras de atlas (origen no indicado) |
 | 12 | Apendicitis aguda | Ficha P2 (págs. 10–11); PDF «11» | Esquema (fisiopatología, 4 grados, micro 4 puntos), micros anotadas, macros diminutas | Ficha, 7 vistas, 12 preguntas, 17 tarjetas | **Sin caso ni preguntas en la fuente.** Macros demasiado pequeñas (&lt; 270 px), omitidas. No se puede graduar con el laminario |
 | 13 | Adenocarcinoma de colon **no mucinoso** | Ficha P2 (págs. 12–13); PDF «12» | Esquema (etiología, clasificación, macro, micro), macros, enema, micros anotadas | Ficha, 3 vistas micro, 2 macro, enema, 12 preguntas, 11 tarjetas | **Sin caso ni preguntas en la fuente.** Necrosis intraglandular e invasión no se resuelven a bajo aumento |
@@ -131,5 +131,21 @@ Navegador (390 px y 1280 px, servidor local con el CSS real del sitio y `app-cor
 - Leídos de nuevo los nueve bloques (08–16): voz G0, límites de cada lámina (lo que la imagen no demuestra queda dicho en el bloque), 108 preguntas y 133 tarjetas contra lo que cada bloque enseña antes. Brechas de cobertura cerradas con texto de la fuente (no por suposición).
 - Correcciones: «Trampa» → «Error frecuente»; frases de fuente («la ficha describe»); texto de bloque 08 con redacción rota corregida; frase del bloque 09 que era inferencia sin fuente retirada.
 - P1 intacta: solo inserciones, la nota «Cómo seguir» y seis atributos de metadato retirados.
-- **Auditoría independiente de ciencia (Claude 2): no recibida** (sin comentarios, reseñas ni mensajes). Nada se corrigió por ese motivo; si llega, solo entra lo que tenga fuente comprobada.
+- Auditoría independiente de ciencia (Claude 2): recibida después como comentario de la PR; ver §9.
 - Pruebas: 108/108 preguntas responden y puntúan (390 y 1280 px), 19 mazos con 133 tarjetas, 314/314 imágenes, 0 px de desborde, sin errores JS; Guard local verde.
+
+## 9. Auditoría independiente de ciencia (Claude 2) · nueve hallazgos
+
+| # | Hallazgo | Resolución |
+|---|---|---|
+| 1 | Letras de las 90 MCQ (a=31, b=40, c=11, d=8) | **Resuelto.** Solo se reordenaron las alternativas (la correcta cambia de lugar, el contenido no), en el bloque y en el banco, con la misma explicación reescrita con las letras nuevas. Ahora a=22, b=22, c=22, d=24; máxima racha 2; sin «abcd» ni «dcba»; sin ciclos. IDs y orden de preguntas intactos. |
+| 2 | «Presuntivo» atribuido a la ficha | **Resuelto.** Se atribuye a la diapositiva «09»; la ficha del laminario solo dice «Duodenitis crónica». Texto, V/F, tabla y tarjetas corregidos. |
+| 3 | Islotes («por eso destacan», «grupos de células pálidas rodeados de fibrosis») | **Resuelto.** Queda solo la frase literal de la ficha («aumentados de tamaño»); retirada la explicación sin fuente en texto, tabla, pregunta, tarjeta y error frecuente. |
+| 4 | Pregunta «en esta lámina» sobre el tejido que reemplaza al parénquima | **Resuelto.** Reformulada «según la ficha», sin anclar en la imagen. |
+| 5 | Restos pálidos = necrosis intraluminal | **Resuelto.** Pasa a hipótesis («podrían corresponder»); la pregunta sobre el «aspecto» del contenido (sin fuente) se sustituyó por una sobre el orden de la descripción de la ficha. |
+| 6 | Hepatitis B y C en la lista de causas de cirrosis | **Resuelto.** La diapositiva «07» dice «hepatitis viral» (tipo B); texto, alternativa y tarjeta ajustados. El «C» se conserva solo como factor de riesgo del CHC (deck «08»). |
+| 7 | Criptas «se ramifican y cambian de dirección» en la vista 1 de Crohn | **Resuelto.** Pasa a hipótesis; el límite del bloque queda coherente. |
+| 8 | Datos correctos pero sin fuente (hemangioma/AFP, Paneth, moco de Brunner, erosión) | **Resuelto.** Cada uno queda marcado como dato de histología/literatura general que no figura en la ficha; ninguno sostiene una pregunta. |
+| 9 | Lenguaje «cómo escribir la respuesta» (G0) | **Resuelto.** Encabezado «La ficha completa · órgano, proceso y diagnóstico»; «se escribe»/«consigna» retirados de las cajas, preguntas, V/F y tarjetas; el contenido queda como enseñanza de lo que la ficha dice. |
+
+Límite que sigue: los nueve fueron aplicados contra el texto citado en la auditoría; la paginación de los PDFs compactados y la origen de las 43 imágenes siguen sin comparar con los originales de Drive.
