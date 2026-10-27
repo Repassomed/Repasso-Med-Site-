@@ -125,3 +125,11 @@ Navegador (390 px y 1280 px, servidor local con el CSS real del sitio y `app-cor
 - Origen de las fotos macroscópicas y del enema: no indicado en la fuente.
 - Pancreatitis crónica y adenocarcinoma de páncreas: sin diapositivas; falta material para etiología, clínica y estadificación.
 - Casos clínicos para apendicitis, colon mucinoso y no mucinoso, páncreas: no existen en la carpeta.
+
+## 8. Revisión final (27/10/2026)
+
+- Leídos de nuevo los nueve bloques (08–16): voz G0, límites de cada lámina (lo que la imagen no demuestra queda dicho en el bloque), 108 preguntas y 133 tarjetas contra lo que cada bloque enseña antes. Brechas de cobertura cerradas con texto de la fuente (no por suposición).
+- Correcciones: «Trampa» → «Error frecuente»; frases de fuente («la ficha describe»); texto de bloque 08 con redacción rota corregida; frase del bloque 09 que era inferencia sin fuente retirada.
+- P1 intacta: solo inserciones, la nota «Cómo seguir» y seis atributos de metadato retirados.
+- **Auditoría independiente de ciencia (Claude 2): no recibida** (sin comentarios, reseñas ni mensajes). Nada se corrigió por ese motivo; si llega, solo entra lo que tenga fuente comprobada.
+- Pruebas: 108/108 preguntas responden y puntúan (390 y 1280 px), 19 mazos con 133 tarjetas, 314/314 imágenes, 0 px de desborde, sin errores JS; Guard local verde.
