@@ -2890,6 +2890,29 @@
       "source_pack_path": "coordination/source-packs/neurologia-p0-qa-parte-2-v1.md"
     },
     {
+      "id": "inventario-toxicologia-2026-10",
+      "titulo": "Toxicología: regenerar inventário de layout (porta da matéria)",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "docs/layout-ensaio/inventario.json"
+      ],
+      "objetivo": "Atualizar a entrada de toxicologia em docs/layout-ensaio/inventario.json depois da #594",
+      "fonte": "Medição no navegador pelo próprio tools/qa/ensaio-layout/inventario.cjs toxicologia; sem fonte médica",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/inventario-toxicologia-2026-10",
+      "pr": 605,
+      "commit": null,
+      "issue": 543,
+      "notas": "Só a entrada de toxicologia mudou; conteúdo médico intocado. Sem merge por Claude 2."
+    },
+    {
       "id": "neurologia-p0-qa-parte-3",
       "titulo": "P0 — Neurología 11/12: QA parte 3 (neub13, neub16, neub17)",
       "area": "materia",
