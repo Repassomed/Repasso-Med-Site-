@@ -3197,6 +3197,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:595.",
       "task_id": "pr:595",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "ebed90645a9079700523b9d1fd7c022ebf0041c4",
+      "component": "guard",
+      "error_id": "ERR-FFAAC166DC",
+      "error_type": "hard-fail",
+      "fingerprint": "ffaac166dcc72517cf30",
+      "first_seen": "2026-10-28T20:28:52.901554+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "93aee90946f94cdf9990653589ee4831",
+      "issue_sync_updated_at": "2026-10-28T20:28:52.901554+00:00",
+      "last_evidence_hash": "a2aeca052c5fd010f29e",
+      "last_seen": "2026-10-28T20:28:52.901554+00:00",
+      "occurrence_count": 1,
+      "pr_number": 597,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "40763254875",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:597.",
+      "task_id": "prontid\u00e3o do layout (docs/pre-voo-caneta-layout/RESULTADOS.md \u00a75 e diagn\u00f3stico B2) + auditoria da Parcial 2 de Anatom\u00eda Patol\u00f3gica II Pr\u00e1ctica (#580); issue #543; sem entrada nova em `coordination/tasks.json` (evita conflito com a #595)",
+      "worker_id": null
     }
   ]
 }
