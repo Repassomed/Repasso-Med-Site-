@@ -3,7 +3,7 @@
 | Arquivo | Para quê |
 |---|---|
 | [`PLANO.md`](PLANO.md) | **O plano**: estado real, inventário das 25 matérias elegíveis, riscos para grifos/notas/traços, testes, sequência matéria por matéria, volta à versão anterior, decisões de José |
-| [`RESULTADOS.md`](RESULTADOS.md) | O que cada teste mediu na `main` `a9a2aa35` (24/10/2026) |
+| [`RESULTADOS.md`](RESULTADOS.md) | O que cada teste mediu na `main` `99f67b80` (28/10/2026; dados vivos: consulta de 24/10) |
 | `dados-vivos.json` · `dados-vivos-ancoras.json` | Contagens **agregadas** (slug, âncora, quantidade) de uma consulta **somente leitura** ao banco; nenhum texto de aluno, nenhum UID |
 | `resultados/` | JSON de cada execução (uma linha por matéria × largura) e o inventário de risco |
 

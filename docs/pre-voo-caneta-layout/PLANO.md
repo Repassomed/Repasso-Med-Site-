@@ -1,7 +1,7 @@
 # Pré-voo da caneta e do layout global — plano e testes
 
 > **Nada foi ativado.** Nenhuma flag, lista de UID, `PILOT_SLUGS`, `ROLLOUT`, variável do Netlify, matéria, migração ou módulo de produção foi alterado por este trabalho. Tudo aqui é **leitura + teste isolado** (Supabase simulado no navegador; consulta real ao banco **somente leitura**). Quem decide ativar é José, uma matéria por vez.
-> Base medida: `main` `a9a2aa35` (24/10/2026). Os documentos de 12/10 (`docs/layout-ensaio/`) foram **reexecutados** sobre ela, porque desde então entraram ~40 PRs de conteúdo.
+> Base medida: `main` `99f67b80` (bateria COMPLETA reexecutada em 28/10/2026; `confere-numeros.py` garante que este texto, o `RESULTADOS.md` e os JSON concordam). A `main` andou depois para `4f2835ed` (só `semiologia-ii.html`, 10 linhas, #576): reconferidos inventário, teste 1 e teste 2 dessa matéria — em dia, 2/2 e 2/2 PASSA. A P2 da Anatopatologia II Práctica (#580) **ainda não entrou na main**: conferida em merge local, ver `resultados/ap2-practica-com-580.txt` (sem bloqueio novo) e refazer quando entrar. Os documentos de 12/10 (`docs/layout-ensaio/`) foram **reexecutados** sobre ela, porque desde então entraram ~40 PRs de conteúdo.
 
 ## 0 · Veredito em seis linhas
 
@@ -34,13 +34,13 @@ Colunas: *sub-âncoras* = quantos `p,li,h2-h5,table,figure,blockquote` a secçã
 
 | # | matéria (slug) | grupo | seções | sub-âncoras (total · em questões/cartões) | repet. | grifos·traços·notas hoje (alunos) | reflow tardio (img·tab) | alertas |
 |--:|---|---|--:|---|--:|---|---|---|
-| 1 | Anatopatologia I (`anatomia-patologica`) | elegivel | 15 | 4336 · 3666/0 | 17 | 60 (7) · 0 (0) · 0 | 31·34 | — |
+| 1 | Anatopatologia I (`anatomia-patologica`) | elegivel | 15 | 4367 · 3666/0 | 17 | 60 (7) · 0 (0) · 0 | 31·37 | — |
 | 2 | Anatopatologia Práctica (`anatomia-patologica-practica`) | elegivel | 12 | 1026 · 516/0 | 1 | 0 (0) · 0 (0) · 0 | 53·13 | — |
-| 3 | Fisiopatologia I (`fisiopatologia`) | elegivel | 14 | 2969 · 2009/0 | 0 | 33 (1) · 0 (0) · 0 | 39·35 | — |
+| 3 | Fisiopatologia I (`fisiopatologia`) | elegivel | 14 | 2974 · 2009/0 | 0 | 33 (1) · 0 (0) · 0 | 39·35 | — |
 | 4 | Imagenología (`imagenologia`) | fora | 12 | 1116 · 771/0 | 2 | 0 (0) · 0 (0) · 0 | 40·20 | — |
 | 5 | Semiología I (`semiologia`) | elegivel | 11 | 2312 · 1524/0 | 2 | 1 (1) · 0 (0) · 0 | 75·56 | — |
 | 6 | Farmacología I (`farmacologia`) | elegivel | 21 | 1684 · 1133/0 | 3 | 23 (2) · 0 (0) · 0 | 72·31 | — |
-| 7 | Medicina Familiar (`medicina-familiar`) | elegivel | 12 | 855 · 502/0 | 0 | 18 (1) · 0 (0) · 0 | 21·17 | — |
+| 7 | Medicina Familiar (`medicina-familiar`) | elegivel | 12 | 858 · 502/0 | 0 | 18 (1) · 0 (0) · 0 | 21·17 | — |
 | 8 | Semiología II (`semiologia-ii`) | piloto | 14 | 2633 · 1242/0 | 0 | 132 (7) · 26 (1) · 0 | 0·106 | — |
 | 9 | Farmacología II (`farmacologia-ii`) | elegivel | 17 | 5114 · 2778/0 | 0 | 240 (12) · 1 (1) · 0 | 64·56 | placeholder oculto f2b00 (B1) |
 | 10 | Embriología (`embriologia`) | elegivel | 16 | 1921 · 1284/0 | 40 | 0 (0) · 0 (0) · 0 | 39·13 | placeholder oculto emb00 (B1) |
@@ -134,7 +134,7 @@ Tudo roda de uma pasta limpa do repositório, com `export NODE_PATH=$(npm root -
 
 `tools/qa/ensaio-layout/` (inventário medido, ensaio visual 4 larguras, interação com caneta CDP/palma/goma/pinça/recarregar, contrato R1–R9, conteúdo solto), `tools/qa/browser-qa/layout/*.test.cjs`, `tools/qa/caneta-456/`, `tools/qa/caneta-ipad-456/`, `tools/qa/ink-audit/`, `tools/qa/browser-qa/grifos-reforma/`, Guard (`tools/qa/guard`).
 
-### 4.2b · Linha de base medida na `main` `a9a2aa35` (`rodar-base.sh`, máquina sem outra carga)
+### 4.2b · Linha de base medida na `main` `99f67b80` (`rodar-base.sh`, máquina sem outra carga)
 
 | Suíte | Resultado | Observação |
 |---|---|---|
@@ -166,7 +166,7 @@ Tudo roda de uma pasta limpa do repositório, com `export NODE_PATH=$(npm root -
 
 **Regra geral:** uma matéria por vez no início; só passa à seguinte depois de 24 h sem incidente e roteiro físico aprovado. Cada passo tem **quem decide**, **o que se roda** e **como volta**. Nenhum passo cria tabela, coluna, política RLS, conta, pagamento ou permissão nova.
 
-### Etapa 0 — pré-requisitos de código (PRs pequenas, **cada uma aprovada por José**; nenhuma liga matéria)
+### Etapa 0 — pré-requisitos de código (PRs pequenas, **cada uma aprovada por José**; nenhuma liga matéria) — **já preparadas, abertas e sem merge:** A5 → PR #582 · A7, C8 e C9 → PRs seguintes (links no Cartão da #581)
 
 | PR | Conteúdo | Trava de aceite | Volta |
 |---|---|---|---|

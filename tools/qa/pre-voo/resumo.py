@@ -47,7 +47,7 @@ def ordem(slugs): return sorted(slugs, key=lambda s: ({'piloto': 0, 'elegível':
 
 
 P = []
-P.append('# Resultados do pré-voo — `main` `a9a2aa35`, 24/10/2026\n')
+P.append('# Resultados do pré-voo — `main` `99f67b80`, 28/10/2026\n')
 P.append('> Gerado por `tools/qa/pre-voo/resumo.py` a partir dos JSON em `docs/pre-voo-caneta-layout/resultados/` e dos logs desta execução. **Nada aqui ativa nada.** Chromium/Linux, Supabase simulado, zero rede externa. «PASSA» = passou no ensaio; **não** = liberado.\n')
 
 # 1 · âncoras

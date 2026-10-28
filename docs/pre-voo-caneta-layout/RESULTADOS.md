@@ -1,17 +1,17 @@
-# Resultados do pré-voo — `main` `a9a2aa35`, 24/10/2026
+# Resultados do pré-voo — `main` `99f67b80`, 28/10/2026
 
 > Gerado por `tools/qa/pre-voo/resumo.py` a partir dos JSON em `docs/pre-voo-caneta-layout/resultados/` e dos logs desta execução. **Nada aqui ativa nada.** Chromium/Linux, Supabase simulado, zero rede externa. «PASSA» = passou no ensaio; **não** = liberado.
 
 ## 1 · Teste 1 — as âncoras dos traços sobrevivem à troca de layout (`ancoras-estaveis.cjs`)
 
-**2 medidas** (matéria × largura 1440/390) · **2 PASSA · 0 FALHA** · 16 estados comparados (índice geral, 3 blocos, 3 modos, volta) · 1596 sub-âncoras (soma das 27 matérias, em 1440) comparadas uma a uma, por posição.
+**54 medidas** (matéria × largura 1440/390) · **54 PASSA · 0 FALHA** · 432 estados comparados (índice geral, 3 blocos, 3 modos, volta) · 103939 sub-âncoras (soma das 27 matérias, em 1440) comparadas uma a uma, por posição.
 
 
 Controle negativo (um `<p>` inserido de propósito): 3/3 medidas reprovaram — o teste **enxerga** o defeito.
 
 ## 2 · Teste 2 — ida e volta de grifos, traços e notas (`ida-e-volta.cjs`)
 
-**2 medidas** · **2 PASSA · 0 FALHA** · 20 grifos, 12 traços e 2 notas gravados e relidos em 3 fases (controle → layout novo → volta ao controle); 0 escrita no banco nas fases de leitura.
+**54 medidas** · **54 PASSA · 0 FALHA** · 396 grifos, 322 traços e 54 notas gravados e relidos em 3 fases (controle → layout novo → volta ao controle); 0 escrita no banco nas fases de leitura.
 
 
 Controle negativo: 3/3 reprovaram.
@@ -169,10 +169,10 @@ cover                saída=0  cover: 198/198 verificações OK
 soltos               saída=0  16 verificações OK · 0 falhas
 race                 saída=0  race: 140/140 verificações OK
 ink-jump             saída=0  ink-jump: 54/54 verificações OK
-caneta-novo-layout   saída=1  caneta-novo-layout: 90/91 verificações OK — 1 FALHAS
-caneta-456           saída=1  caneta-456: 136/138 verificações OK — 2 FALHAS
-caneta-ipad-456      saída=0  caneta-ipad-456: 197/197 verificações OK
-suítes com saída ≠ 0: 2 (compare com a lista de falhas CONHECIDAS no plano — caneta-novo-layout tem 2 de tolerância do post-it, #464)
+caneta-novo-layout saída=1 caneta-novo-layout: 90/91 verificações OK — 1 FALHAS
+caneta-456 saída=1 caneta-456: 136/138 verificações OK — 2 FALHAS
+caneta-ipad-456 saída=0 caneta-ipad-456: 197/197 verificações OK
+FIM
 ```
 
 ## 8 · A porta em ação (`porta-da-materia.sh`, exemplos reais)
