@@ -875,6 +875,9 @@ body.rm-lb-open #rm2-ink{ visibility:hidden; }
 #rm2-ink{
   position:absolute; left:0; top:0; width:100%; height:0;
   pointer-events:none; z-index:60;
+  /* R14 (pré-voo): a camada nunca alarga a página. Traço em tabela larga com rolagem própria era normalizado pela caixa INTEIRA da tabela (560 px dentro de 390) e o svg
+     (overflow:visible) passava da viewport ⇒ scrollWidth 407 > 390 e o navegador móvel afastava a página. clip só no eixo X (o eixo Y segue visível: traços saem do parágrafo). */
+  overflow-x:clip;
 }
 #rm2-ink svg{ position:absolute; overflow:visible; pointer-events:none; }
 #rm2-ink path{ fill:none; stroke-linecap:round; stroke-linejoin:round; }
@@ -1300,6 +1303,21 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     el.style.top = b.y + 'px';
     el.style.width = b.w + 'px';
     el.style.height = b.h + 'px';
+    /* R14 · âncora dentro de um contêiner com ROLAGEM HORIZONTAL PRÓPRIA (tabela larga em .rmc-scroll/.s2-scroll): o traço só pode aparecer na parte do contêiner que está à vista.
+       clip-path em X pelo retângulo do contêiner (Y com folga: o traço pode sair do parágrafo). O svg acompanha a rolagem do contêiner (ouvinte de scroll abaixo). */
+    var sc = rolavelH(sec), cp = '';
+    if (sc) {
+      var r = sc.getBoundingClientRect(), esq = Math.max(0, r.left - (b.x - window.pageXOffset)), dir = Math.max(0, (b.x - window.pageXOffset + b.w) - r.right);
+      cp = 'inset(-9999px ' + dir + 'px -9999px ' + esq + 'px)';
+    }
+    if (el.style.clipPath !== cp) el.style.clipPath = cp;
+  }
+  function rolavelH(el) {
+    for (var p = el.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) {
+      var ox = getComputedStyle(p).overflowX;
+      if ((ox === 'auto' || ox === 'scroll') && p.scrollWidth > p.clientWidth + 1) return p;
+    }
+    return null;
   }
 
   /* Só as âncoras que REALMENTE têm traços são observadas — nunca a
@@ -3859,6 +3877,15 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       var t = e.target; if (!t || !t.closest || t.closest('#rm2-ink,.rm2-box,.rm2-notes,.rm2-diag')) return;
       for (var k in svgPorAnchor) { if (svgPorAnchor.hasOwnProperty(k)) { reflowTransicao(); return; } }   // só se há tinta desenhada
     }
+    /* R14 · rolagem horizontal DENTRO de um contêiner (tabela larga): o svg acompanha o conteúdo. `scroll` não borbulha ⇒ captura; um reposicionamento por quadro. */
+    var quadroScroll = 0;
+    document.addEventListener('scroll', function (e) {
+      var t = e.target; if (!t || t === document || !t.nodeType || t.nodeType !== 1 || quadroScroll) return;
+      if (t.closest && t.closest('#rm2-ink,.rm2-box,.rm2-notes,.rm2-diag')) return;
+      var tem = false; for (var k in svgPorAnchor) { if (svgPorAnchor.hasOwnProperty(k)) { tem = true; break; } }
+      if (!tem || traco) return;
+      quadroScroll = requestAnimationFrame(function () { quadroScroll = 0; reposicionarTudo(); });
+    }, true);
     document.addEventListener('transitionend', aoFimDaTransicao, true);
     document.addEventListener('transitioncancel', aoFimDaTransicao, true);
   }
