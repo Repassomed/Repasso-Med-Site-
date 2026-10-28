@@ -1099,6 +1099,30 @@
       ]
     },
     {
+      "id": "rastreo-anotaciones-semio2-fisio2-2026-10",
+      "titulo": "Rastreio individual: 3 PDFs de Anotações de Semiología II e Fisiopato suprarenal",
+      "area": "materia",
+      "materia": "semiologia-ii + fisiopatologia-ii",
+      "arquivos": [
+        "coordination/source-packs/semiologia-ii-anotaciones-rastreo-2026-10-v1.md",
+        "coordination/source-packs/fisiopatologia-ii-suprarrenal-rastreo-2026-10-v1.md"
+      ],
+      "objetivo": "Registrar fonte → achado → decisão → destino de cada PDF; entregar ao coordenador (não edita coordination/painel/)",
+      "fonte": "Drive: Semiologia II › Anotaçoes (3 PDFs) e Fisiopatologia II › Anotações › Fisiopato suprarenal.pdf; slides da cátedra já no Drive (03 - Sindrome Parenquimatoso, 03 - Sindrome de Condensacion, Anatomía I Pulmones) · LEI-ATUALIZACAO-CONTINUA",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/semiologia-ii-rastreo-anotaciones-2026-10",
+      "pr": 603,
+      "commit": null,
+      "issue": 543,
+      "notas": "Só documentação; nenhum arquivo de matéria alterado. Sem merge por Claude 2."
+    },
+    {
       "area": "materia",
       "materia": "semiologia-ii",
       "arquivos": [
