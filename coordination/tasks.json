@@ -3272,6 +3272,37 @@
       "commit": null,
       "issue": 543,
       "notas": "Substitui as PRs #586–#591."
+    },
+    {
+      "id": "prontidao-layout-agrega-2026-10",
+      "titulo": "Prontidão do layout: marcadores data-rm-agrega em 9 matérias",
+      "area": "materia",
+      "materia": "nove-materias",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/farmacologia-ii.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/dermatologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/guarani.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/oftalmologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anestesiologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/histologia-ii-practica.html"
+      ],
+      "objetivo": "Declarar data-rm-agrega nas 10 seções agregadoras (f2b15, f2b16, revisaofp2, toxcierre, dermcierre, mazognrl, revisaoneu, oftcierre, anecierre, h2pmazo); nada é ligado para alunos",
+      "fonte": "docs/pre-voo-caneta-layout/RESULTADOS.md §5 recalculado sobre a main 288580e4 com tools/qa/pre-voo/marcadores-agrega.cjs; sem fonte médica",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/prontidao-layout-agrega-2026-10",
+      "pr": 595,
+      "commit": null,
+      "issue": 543,
+      "notas": "Só o atributo data-rm-agrega nas 10 seções; nenhum texto, id, imagem, questão ou cartão mudou. Em guarani.html também saíram 12 atributos data-guard-previous-stem-sha1 (6 questões × corpo e banco) cuja ponte já foi consumida na #566 (hashes casam só com o estado anterior a 8788ca1a; nenhum casa com a main atual). Sem merge por Claude 2. Bloqueio real fora do escopo: a porta de toxicologia fica FECHADA (etapas 3 e 4) porque docs/layout-ensaio/inventario.json está velho em toxportada (12 âncoras; hoje 0, vazia e hidden desde a #594) e toxb01 (335; hoje 337). Com o inventário regenerado só em cópia local, a porta abre. Regenerar o inventário não foi feito aqui."
     }
   ]
 }

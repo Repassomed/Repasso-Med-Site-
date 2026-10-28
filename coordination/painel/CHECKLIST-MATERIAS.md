@@ -1,5 +1,22 @@
 # Checklist das matérias
 
+> ⚠️ **ESTADO ATUAL (28/10/2026): a tabela abaixo é histórica (19/10). Não use os símbolos e a lista de PRs antigas como autorização de merge.** #474, #481, #499, #532, #580, #593, #594, #595 e #597 foram mescladas. O painel PDF a PDF atualizado está em [ANOTACOES-DRIVE.md](ANOTACOES-DRIVE.md). O próximo passo é implantação controlada, **matéria por matéria**, com conteúdo e dados dos alunos testados por Claude antes da ativação. José só mescla e faz a checagem visual curta da matéria ativada.
+
+| Estado agora | Item | Próxima ação |
+|---|---|---|
+| ✅ | AP II Práctica P2 (#580); últimas revisões editoriais (#594/#595/#597); portas de layout/caneta com flags (#593) | Preservar a `main` e os dados existentes. |
+| ⏳ | Medicina Familiar, 1.ª candidata de implantação (#599 aberta) | Claude 4: atualizar com a main, corrigir ESCOPO/Guard e retirar dados de grifos reais do teste **e do histórico da branch**; comprovar flags do Netlify antes de merge. Até lá: 🔴 não mesclar #599. |
+| ⬜ | Toxicología não passa no pré-voo de layout | Claude 2: regenerar `docs/layout-ensaio/inventario.json` depois da limpeza editorial e repetir porta; isto bloqueia **só Toxicología**. |
+| ⬜ | Rastreio individual de 3 PDFs de Semiología II, 1 suprarrenal e 2 decisões de AP II | Conferência curta e documental em [ANOTACOES-DRIVE.md](ANOTACOES-DRIVE.md), sem alegar lacuna de conteúdo antes da checagem. |
+| ⬜ | Cada próxima matéria | Claude proprietário roda porta, confere grifos/caneta e entrega Cartão de Merge; Claude 4 liga primeiro layout e depois caneta por flags, uma matéria por vez, com volta preparada; José confere no aparelho. |
+| ⬜ depois | Audiobooks: compressão, bucket e ativação | Trabalhar após layout/caneta; infográficos, Imagenología e Bioestadística também ficam para fase posterior por decisão de José. |
+
+**Qualidade editorial:** várias revisões foram mescladas; isto **não prova perfeição das 27**. Limites conhecidos: algumas frases G0 protegidas por grifos reais, fontes/figuras não acessíveis em revisões pontuais, conferência incompleta das imagens originais de AP II Práctica P2. Esses itens exigem rastreio específico, não impedem a implantação nas demais matérias. Imagens em português ou de Medicina Legal e infográficos de Medicina Familiar não são bloqueio por decisão de José.
+
+---
+
+## Histórico de 19/10 (não usar como estado atual)
+
 **Última atualização:** 19/10/2026 · coordenação ChatGPT; estado das PRs e checks consultado no GitHub. A tabela histórica de aberturas abaixo descreve a `main` na triagem de 16/10, não os PRs ainda abertos.
 
 > **Estado confirmado:** #484 mesclada e testada pelo José no iPad; #489 e #524 (Biología) mescladas. Abertas de conteúdo: #474, #481, #499–#517 (com exceções já mescladas/fechadas), #525–#530 e #532. Os Guard dos heads #474, #481, #499, #505, #529, #530 e #532 passaram, mas isso **não aprova ciência, imagens nem grifos futuros**. Nenhuma dessas PRs está liberada para merge neste painel. Só José mescla. #527/#530 e #528/#532 se sobrepõem e não devem ser mescladas juntas. As PRs antigas #66, #80, #248, #253, #305 e #368 foram fechadas sem merge.
