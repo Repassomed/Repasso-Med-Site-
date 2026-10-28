@@ -1,0 +1,14 @@
+Reconferência do inventário com a P2 da Anatopatologia II Práctica (PR #580, ABERTA — ainda não entrou na main em 27/10/2026).
+Método: worktree de scratch = cabeça da #580 (e5ec4fb0) + merge da main 99f67b80; inventario.cjs regenerado; ferramentas do pré-voo rodadas só para esta matéria. Nada foi gravado na main nem na #580.
+
+inventario-fresco.py (depois de regenerar)        : 27 matérias, inventário velho em 0
+seções                                             : 11 → 20  (ap2pb08…ap2pb16 novos)
+sub-âncoras                                        : 2 341 → 4 182
+imagens                                            : 180 → 314
+placeholder oculto                                 : ap2pportada continua (B1)
+agregadoras a declarar (data-rm-agrega)            : ap2pbanco (220 q), ap2pmazo (576 fc) — o banco ganhou a seção «Parcial 2» dentro de ap2pbanco
+teste 1 (âncoras estáveis, 1440 + 390)             : 2/2 PASSA
+teste 2 (ida e volta, 1440 + 390)                  : 2/2 PASSA (6 grifos, 6 traços, 1 nota por medida)
+ensaio --corr --rapido                             : 124 verificações · 5 FALHA = exatamente as de B1 (abre-so-o-bloco ×2, nao-vazio ×2, detach-limpo ×1); nenhuma nova
+dados de alunos nessa matéria (leitura)            : 0 grifos, 0 traços, 0 notas
+Conclusão: a P2 não muda o veredito; aumenta a matéria em 78 % e não traz bloqueio novo. Refazer esta conferência quando a #580 entrar.

@@ -1,0 +1,80 @@
+{
+ "_consulta": "somente leitura ao Supabase (projeto ltizbamvskcgigmqobfo) em 2026-10-24; contagens agregadas por matéria, sem texto de aluno; study_tools_beta = 2 linhas (2 habilitadas)",
+ "por_materia": {
+  "oftalmologia": {
+   "hl": 858,
+   "hl_users": 3
+  },
+  "anatomia-patologica-ii": {
+   "hl": 377,
+   "hl_users": 9
+  },
+  "medicina-legal": {
+   "hl": 260,
+   "hl_users": 1,
+   "notes": 1
+  },
+  "farmacologia-ii": {
+   "hl": 240,
+   "hl_users": 12,
+   "ink": 1,
+   "ink_users": 1
+  },
+  "semiologia-ii": {
+   "hl": 132,
+   "hl_users": 7,
+   "ink": 26,
+   "ink_users": 1
+  },
+  "neurologia": {
+   "hl": 107,
+   "hl_users": 1,
+   "ink": 1,
+   "ink_users": 1
+  },
+  "anatomia-patologica": {
+   "hl": 60,
+   "hl_users": 7
+  },
+  "fisiopatologia-ii": {
+   "hl": 47,
+   "hl_users": 5
+  },
+  "histologia-ii": {
+   "hl": 42,
+   "hl_users": 1
+  },
+  "fisiopatologia": {
+   "hl": 33,
+   "hl_users": 1
+  },
+  "farmacologia": {
+   "hl": 23,
+   "hl_users": 2
+  },
+  "medicina-familiar": {
+   "hl": 18,
+   "hl_users": 1
+  },
+  "anestesiologia": {
+   "hl": 10,
+   "hl_users": 1,
+   "ink": 4,
+   "ink_users": 1
+  },
+  "anatomia-i": {
+   "hl": 6,
+   "hl_users": 2
+  },
+  "ortopedia": {
+   "hl": 4,
+   "hl_users": 1,
+   "ink": 8,
+   "ink_users": 1
+  },
+  "semiologia": {
+   "hl": 1,
+   "hl_users": 1
+  }
+ }
+}
