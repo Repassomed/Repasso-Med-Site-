@@ -1,0 +1,1388 @@
+{
+"gerado": "2026-10-28",
+"base": "ab60b1b3",
+"nota": "ensaio.cjs (como-esta: 4 larguras; com-correcao: --rapido 1440+390) e interacao.cjs --rapido (1024+390), main atual; itens = FALHA/BLOQUEADO com as larguras",
+"como_esta": {
+"anatomia-i": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 191,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"anatomia-patologica-ii-practica": {
+"passa": 227,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 151,
+"itens": {
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"anatomia-patologica-ii": {
+"passa": 235,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 143,
+"itens": {
+"FALHA blocos/pager-cadeia": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"anatomia-patologica-practica": {
+"passa": 227,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 135,
+"itens": {
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"anatomia-patologica": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 139,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"anestesiologia": {
+"passa": 231,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 148,
+"itens": {
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"biologia": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 147,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"dermatologia": {
+"passa": 231,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 149,
+"itens": {
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"embriologia": {
+"passa": 227,
+"falha": 8,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 150,
+"itens": {
+"FALHA modos/indice-preguntas": [
+390,
+768,
+1024,
+1440
+],
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"farmacologia-ii": {
+"passa": 211,
+"falha": 8,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 145,
+"itens": {
+"FALHA modos/indice-preguntas": [
+390,
+768,
+1024,
+1440
+],
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"farmacologia": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 150,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"fisiopatologia-ii": {
+"passa": 235,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 165,
+"itens": {
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"fisiopatologia": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 140,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"guarani": {
+"passa": 235,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 153,
+"itens": {
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"histologia-i-practica": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 141,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"histologia-i": {
+"passa": 227,
+"falha": 8,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 148,
+"itens": {
+"FALHA modos/indice-preguntas": [
+390,
+768,
+1024,
+1440
+],
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"histologia-ii-practica": {
+"passa": 227,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 154,
+"itens": {
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"histologia-ii": {
+"passa": 239,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 154,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"imagenologia": {
+"passa": 239,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 138,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"medicina-familiar": {
+"passa": 219,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 120,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"medicina-legal": {
+"passa": 239,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 162,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"neurologia": {
+"passa": 231,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 158,
+"itens": {
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"oftalmologia": {
+"passa": 231,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 137,
+"itens": {
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"ortopedia": {
+"passa": 239,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 165,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"semiologia-ii": {
+"passa": 247,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 152,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"semiologia": {
+"passa": 247,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 141,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"toxicologia": {
+"passa": 235,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 162,
+"itens": {
+"FALHA modos/indice-flashcards": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+}
+},
+"com_correcao": {
+"anatomia-i": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 191,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"anatomia-patologica-ii-practica": {
+"passa": 231,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 151,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"anatomia-patologica-ii": {
+"passa": 235,
+"falha": 4,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 143,
+"itens": {
+"FALHA blocos/pager-cadeia": [
+390,
+768,
+1024,
+1440
+],
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"anatomia-patologica-practica": {
+"passa": 231,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 134,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"anatomia-patologica": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 139,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"anestesiologia": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 147,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"biologia": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 147,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"dermatologia": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 149,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"embriologia": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 150,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"farmacologia-ii": {
+"passa": 219,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 144,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"farmacologia": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 150,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"fisiopatologia-ii": {
+"passa": 239,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 164,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"fisiopatologia": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 140,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"guarani": {
+"passa": 239,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 153,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"histologia-i-practica": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 141,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"histologia-i": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 148,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"histologia-ii-practica": {
+"passa": 231,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 154,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"histologia-ii": {
+"passa": 239,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 153,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"imagenologia": {
+"passa": 239,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 138,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"medicina-familiar": {
+"passa": 219,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 121,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"medicina-legal": {
+"passa": 239,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 162,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"neurologia": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 158,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"oftalmologia": {
+"passa": 235,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 136,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"ortopedia": {
+"passa": 239,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 165,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"semiologia-ii": {
+"passa": 247,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 152,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"semiologia": {
+"passa": 247,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 141,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+},
+"toxicologia": {
+"passa": 239,
+"falha": 0,
+"bloqueado": 1,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 161,
+"itens": {
+"BLOQUEADO audio/audiolibro-real": [
+"todas"
+]
+}
+}
+},
+"uso": {
+"anatomia-i": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 155,
+"itens": {}
+},
+"anatomia-patologica-ii-practica": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 157,
+"itens": {}
+},
+"anatomia-patologica-ii": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 149,
+"itens": {}
+},
+"anatomia-patologica-practica": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 149,
+"itens": {}
+},
+"anatomia-patologica": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 156,
+"itens": {}
+},
+"anestesiologia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 150,
+"itens": {}
+},
+"biologia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 151,
+"itens": {}
+},
+"dermatologia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 155,
+"itens": {}
+},
+"embriologia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 148,
+"itens": {}
+},
+"farmacologia-ii": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 150,
+"itens": {}
+},
+"farmacologia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 164,
+"itens": {}
+},
+"fisiopatologia-ii": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 164,
+"itens": {}
+},
+"fisiopatologia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 156,
+"itens": {}
+},
+"guarani": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 155,
+"itens": {}
+},
+"histologia-i-practica": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 152,
+"itens": {}
+},
+"histologia-i": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 154,
+"itens": {}
+},
+"histologia-ii-practica": {
+"passa": 93,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 166,
+"itens": {}
+},
+"histologia-ii": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 158,
+"itens": {}
+},
+"imagenologia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 151,
+"itens": {}
+},
+"medicina-familiar": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 152,
+"itens": {}
+},
+"medicina-legal": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 141,
+"itens": {}
+},
+"neurologia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 161,
+"itens": {}
+},
+"oftalmologia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 152,
+"itens": {}
+},
+"ortopedia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 161,
+"itens": {}
+},
+"semiologia-ii": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 154,
+"itens": {}
+},
+"semiologia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 155,
+"itens": {}
+},
+"toxicologia": {
+"passa": 92,
+"falha": 0,
+"bloqueado": 0,
+"larguras": [
+390,
+768,
+1024,
+1440
+],
+"segundos": 160,
+"itens": {}
+}
+}
+}

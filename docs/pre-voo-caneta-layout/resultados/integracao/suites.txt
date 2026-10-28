@@ -1,0 +1,20 @@
+pilot-flags saída=0 22/22 verificações OK
+gate-por-materia saída=0 gate-por-materia: 48/48 verificações OK
+caneta-por-materia saída=0 caneta-por-materia: 34/34 verificações OK
+tinta-hover saída=0 tinta-hover: 10/10 verificações OK
+tinta-tabela-larga saída=0 tinta-tabela-larga: 24/24 verificações OK
+secoes-vazias saída=0 secoes-vazias: 95/95 verificações OK
+FIM
+pilot-flags          saída=0  22/22 verificações OK
+layout               saída=0  535 verificações OK · 0 falhas
+sistema              saída=0  124/124 verificações OK
+nav-sistema          saída=0  216 verificações OK · 0 falhas
+cover                saída=0  cover: 198/198 verificações OK
+soltos               saída=0  16 verificações OK · 0 falhas
+race                 saída=0  race: 140/140 verificações OK
+ink-jump             saída=0  ink-jump: 54/54 verificações OK
+caneta-novo-layout   saída=0  caneta-novo-layout: 91/91 verificações OK
+caneta-456           saída=1  caneta-456: 136/138 verificações OK — 2 FALHAS
+caneta-ipad-456      saída=0  caneta-ipad-456: 197/197 verificações OK
+suítes com saída ≠ 0: 1 (compare com a lista de falhas CONHECIDAS no plano — caneta-novo-layout tem 2 de tolerância do post-it, #464)
+FIM

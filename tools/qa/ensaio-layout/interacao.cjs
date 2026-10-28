@@ -19,7 +19,9 @@ const OUT = process.env.RM_ENSAIO_OUT ? path.resolve(process.env.RM_ENSAIO_OUT) 
 const inv = JSON.parse(fs.readFileSync(path.join(L.REPO, 'docs/layout-ensaio/inventario.json'), 'utf8'));
 const INV = Object.fromEntries(inv.materias.map(m => [m.slug, m]));
 const REUNE = /banco|flashcards/i;
-const TABELAS_OK = /^(insert|delete|update):(user_ink_strokes|user_highlights|user_notes)$/;
+/* user_study_progress: o PROGRESSO DE LEITURA do motor legado (rm-tools.js, `salvarProgresso`) — só grava depois de gesto real de rolagem (roda/toque/tecla) e existe igual na main sem nenhuma das correções
+   do pré-voo (reproduzido na main d1f1ba2d, Histología II Práctica a 768 px). Não é escrita do layout nem da caneta; o teste só quer provar que o layout/caneta não gravam NADA além das anotações. */
+const TABELAS_OK = /^((insert|delete|update):(user_ink_strokes|user_highlights|user_notes)|upsert:user_study_progress)$/;
 
 /* registra as coordenadas que a PÁGINA recebe da caneta (px de página): é contra isso que se mede o alinhamento da tinta */
 const REGISTRO = `(() => { window.__penPts = [];
