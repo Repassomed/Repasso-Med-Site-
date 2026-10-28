@@ -107,6 +107,13 @@
   /* ------------------- leitura (só leitura) do índice ------------------ */
   /* O app-core já monta o índice do bloco (`.rm-menu`). Aqui só se LÊ
      esse índice; nada dele é movido nem alterado. */
+  /* C9 (pré-voo 24/10) · PLACEHOLDER DE ÂNCORA: `<section id="…" hidden></section>` vazio que as revisões de conteúdo deixam no lugar de uma abertura removida, só para o id continuar
+     existindo (os grifos, notas e traços já gravados apontam para ele). Não é conteúdo: não vira bloco, cartão de índice, item da lateral nem passo do Anterior/Próximo. FICA NO DOM
+     (a âncora é justamente o motivo de existir) — a regra aqui só impede que a navegação o liste. */
+  function ehPlaceholder(sec) {
+    return !!(sec && sec.hasAttribute && sec.hasAttribute('hidden') && !(sec.textContent || '').trim() && !sec.querySelector('img,svg,table,figure,video,audio,iframe,.quiz-item,.flashcard'));
+  }
+
   function blocos(tab) {
     var out = [], itens = tab.querySelectorAll('.rm-menu .rm-menu-item');
     Array.prototype.forEach.call(itens, function (it, i) {
@@ -114,7 +121,7 @@
       if (!a) return;
       var id = a.getAttribute('data-target');
       var sec = tab.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(id) : id));
-      if (!sec) return;
+      if (!sec || ehPlaceholder(sec)) return;
       var b = a.querySelector('.rm-menu-tx b'), sm = a.querySelector('.rm-menu-tx small');
       var subs = [];
       Array.prototype.forEach.call(it.querySelectorAll('.rm-menu-subs a.rm-idx-sub:not(.is-top)'), function (s) {
@@ -127,6 +134,7 @@
     if (out.length) return out;
     /* plano B: sem `.rm-menu` (nunca deveria), usa os <h2> dos blocos */
     Array.prototype.forEach.call(tab.querySelectorAll(':scope > section[id]'), function (sec, i) {
+      if (ehPlaceholder(sec)) return;
       var h = sec.querySelector('h2'); if (!h) return;
       out.push({ id: sec.id, n: i + 1, label: h.textContent.replace(/\s+/g, ' ').trim(), small: '', subs: [], sec: sec, recursos: recursosDe(sec) });
     });

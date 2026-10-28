@@ -35,7 +35,7 @@
      (get-pilot-flags) só concede se o slug estiver nas listas RM_LAYOUT_SLUGS/RM_VISUAL_SLUGS/RM_PEN_SLUGS E o UID nas listas RM_PILOT_*_UIDS.
      Hoje só o piloto ⇒ nenhuma requisição, nenhum módulo extra e nenhuma mudança em qualquer outra matéria. */
   var CANDIDATAS = ['semiologia-ii'];
-  var VER  = '2026102701';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
+  var VER  = '2026102801';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
   var BASE = 'assets/';
   var COOLDOWN_MS = 30000;                            // depois de uma falha, não insistir
 
