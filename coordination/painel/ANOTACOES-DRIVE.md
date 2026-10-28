@@ -19,7 +19,7 @@ Drive: `Biblioteca › 6 semestre › Farmacologia II › Anotações`. [PR #474
 
 | PDF | Estado na main | Decisão → destino |
 |---|---|---|
-| [\`Resumen_Clases_Farmacologia.pdf\`](https://drive.google.com/file/d/1rwBXwpoLLvQbG9i9g1wWMcY1qwdAWPo3/view) | ⬜ novo; **não integrado** | Recebido em 28/10. Resumo de transcrições de quatro aulas (29/09, 05/10, 19/10, 27/10: corticoides e asma/EPOC). Claude 2 deve comparar item a item com site e slides, validar ciência e registrar decisão/destino. O PDF diz “Prohibido Compartir”: uso apenas para conferência interna; **não reproduzir sua redação ou páginas no site**. |
+| [Resumen_Clases_Farmacologia.pdf](https://drive.google.com/file/d/1rwBXwpoLLvQbG9i9g1wWMcY1qwdAWPo3/view) | ⬜ novo; **não integrado** | Recebido em 28/10. Resumo de transcrições de quatro aulas (29/09, 05/10, 19/10, 27/10: corticoides e asma/EPOC). Claude 2 deve comparar item a item com site e slides, validar ciência e registrar decisão/destino. O PDF diz “Prohibido Compartir”: uso apenas para conferência interna; **não reproduzir sua redação ou páginas no site**. |
 | `SRAA.pdf` | ✅ integrado | E7 → bloco b03; “bradicinina = hiper-K⁺” rejeitado. |
 | `antihipertensivos.pdf` | ➖ já coberto | Bloco b02 já ensinava os pontos aproveitáveis. |
 | `Diureticos.pdf` | ✅ integrado | E5–E6 → b02; percentual de alça sem confirmação não entrou. |
