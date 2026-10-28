@@ -3106,6 +3106,29 @@
       "commit": null,
       "issue": 543,
       "notas": "Sem merge por Claude 2. Grifos: 132 em semiologia-ii (SELECT somente leitura), todos em s2-guia, b01, b02, b03 e banco; nenhum nos blocos alterados (06, 07, 08)."
+    },
+    {
+      "id": "cierre-final-semiologia-ii-2026-10",
+      "titulo": "semiologia-ii: fechamento final da rodada pré nova era",
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "objetivo": "Integrar líquido pleural e tratamento do derrame (slides 28/10) e tirar voz de enunciado",
+      "fonte": "Slides e anotações da cátedra no Drive já usados nas PRs anteriores; Práctica 05 - Derrame Pleural (28/10) para Semiología II · LEI-G0 §6 e §13 · PR #588",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/cierre-semiologia-ii-2026-10",
+      "pr": 588,
+      "commit": null,
+      "issue": 543,
+      "notas": "Grifos/traços consultados somente leitura; Guard, verify e navegador (390/820/1366) feitos pela Claude 2."
     }
   ]
 }
