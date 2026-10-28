@@ -3302,7 +3302,7 @@
       "pr": 595,
       "commit": null,
       "issue": 543,
-      "notas": "Só atributo data-rm-agrega nas seções; sem alterar texto, ids, imagens, questões ou cartões. Sem merge por Claude 2."
+      "notas": "Só o atributo data-rm-agrega nas 10 seções; nenhum texto, id, imagem, questão ou cartão mudou. Em guarani.html também saíram 12 atributos data-guard-previous-stem-sha1 (6 questões × corpo e banco) cuja ponte já foi consumida na #566 (hashes casam só com o estado anterior a 8788ca1a; nenhum casa com a main atual). Sem merge por Claude 2."
     }
   ]
 }
