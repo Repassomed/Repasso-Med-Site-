@@ -3222,6 +3222,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:597.",
       "task_id": "prontid\u00e3o do layout (docs/pre-voo-caneta-layout/RESULTADOS.md \u00a75 e diagn\u00f3stico B2) + auditoria da Parcial 2 de Anatom\u00eda Patol\u00f3gica II Pr\u00e1ctica (#580); issue #543; sem entrada nova em `coordination/tasks.json` (evita conflito com a #595)",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "f71c2c3f23abca41e4d2b49a2041845ff75b69a2",
+      "component": "guard",
+      "error_id": "ERR-E2478F0F14",
+      "error_type": "hard-fail",
+      "fingerprint": "e2478f0f1491502d46fa",
+      "first_seen": "2026-10-28T21:38:43.304251+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "0556812e40e34305acc88822b4955214",
+      "issue_sync_updated_at": "2026-10-28T21:38:43.304251+00:00",
+      "last_evidence_hash": "660bb752634091f220db",
+      "last_seen": "2026-10-28T21:38:43.304251+00:00",
+      "occurrence_count": 1,
+      "pr_number": 600,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "40773484985",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:600.",
+      "task_id": "corrigir o painel de anota\u00e7\u00f5es e destacar o estado atual para iniciar a implanta\u00e7\u00e3o por mat\u00e9ria.",
+      "worker_id": null
     }
   ]
 }
