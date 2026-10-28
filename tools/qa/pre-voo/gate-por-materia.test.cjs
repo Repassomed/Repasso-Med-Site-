@@ -38,7 +38,7 @@ async function abrirCena(br, base, m, { env, uid = UID, candidatas }) {
   page.on('pageerror', e => errs.push(String(e).slice(0, 160)));
   await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => r.abort());
   await page.route('**/get-pilot-flags*', async r => { const slug = new URL(r.request().url()).searchParams.get('slug'); pedidos.push(slug); const resp = await servidor(env.atual(), uid, slug, 'tok'); r.fulfill({ status: resp.statusCode, headers: resp.headers, body: resp.body }); });
-  await page.route('**/assets/rm-pilot.js*', r => r.fulfill({ status: 200, contentType: 'text/javascript', body: PILOT_JS.replace("var CANDIDATAS = ['semiologia-ii'];", 'var CANDIDATAS = ' + JSON.stringify(candidatas) + ';') }));
+  await page.route('**/assets/rm-pilot.js*', r => r.fulfill({ status: 200, contentType: 'text/javascript', body: PILOT_JS.replace(/var CANDIDATAS = \[[^\]]*\];/, 'var CANDIDATAS = ' + JSON.stringify(candidatas) + ';') }));
   await page.addInitScript(([slug]) => { window.__RM_ENSAIO = { slug, modo: 'controle' }; }, [m.slug]);
   return { ctx, page, pedidos, errs, m, base };
 }
