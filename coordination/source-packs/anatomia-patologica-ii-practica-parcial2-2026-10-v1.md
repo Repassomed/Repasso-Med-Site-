@@ -149,3 +149,21 @@ Navegador (390 px y 1280 px, servidor local con el CSS real del sitio y `app-cor
 | 9 | Lenguaje «cómo escribir la respuesta» (G0) | **Resuelto.** Encabezado «La ficha completa · órgano, proceso y diagnóstico»; «se escribe»/«consigna» retirados de las cajas, preguntas, V/F y tarjetas; el contenido queda como enseñanza de lo que la ficha dice. |
 
 Límite que sigue: los nueve fueron aplicados contra el texto citado en la auditoría; la paginación de los PDFs compactados y la origen de las 43 imágenes siguen sin comparar con los originales de Drive.
+
+## 10. Auditoría contra los PDFs originales del Drive (28/10/2026)
+
+**Cómo se leyó.** El conector del Drive entrega solo la **capa de texto** de los originales (`Láminas Anatopato 6D - P2.pdf`, 49,8 MB; `07`–`12`, 7–17 MB). Las imágenes y la paginación de los originales **no** se pudieron abrir (el conector no baja archivos grandes y `drive.google.com` directo está bloqueado). Por eso esta auditoría **valida el texto** y **no valida** la correspondencia imagen ↔ página del original.
+
+| Fuente (original, capa de texto) | Hallazgo | Decisión | Destino |
+|---|---|---|---|
+| Laminario P2 págs. 2, 4, 6, 8, 10, 12, 14, 16, 18 (las 9 fichas) | Las 9 fichas (órgano, proceso, descripción, diagnóstico) coinciden palabra por palabra con las cajas «La ficha completa» de los bloques 08–16. Las págs. 3, 5, 7, 9, 11, 13, 15, 17, 19 son la plantilla en blanco | Sin cambio | `ap2pb08`–`ap2pb16` |
+| `07 - Cirrosis hepatica.pdf` | Caso (56 años, 80 g/día, bilirrubina 3,8, albúmina 2,4, INR 1,8, AST/ALT 98/45, plaquetas 85.000), micronodular < 3 mm, Masson y célula de Ito coinciden. La diapositiva dice «Hepatitis Viral» (con una «B» suelta) y «FIBRINA» | Sin cambio (ya tratado: «hepatitis viral», fibrina → colágeno) | `ap2pb08` |
+| `08 - Carcinoma hepatocelular.pdf` | Factores de riesgo (VHB y VHC, cirrosis, alcohol, hígado graso, aflatoxina B1, hemocromatosis, α1-antitripsina, Wilson), patrones trabecular, pseudoglandular y compacto, caso (62 años, AFP 850, 4,5 cm, wash-in/wash-out) coinciden | Sin cambio | `ap2pb09` |
+| `09 - Duodenitis cronica.pdf` | Diapositiva: «Diagnóstico presuntivo: Duodenitis Crónica»; ficha del laminario sin «presuntivo». Caso (42 años, LIE < 25/100) y claves coinciden | Sin cambio (atribución ya corregida) | `ap2pb10` |
+| `10 - Enf crohn.pdf` | Orden de frecuencia (íleon terminal, ciego, delgado, colon, recto), 20 % debut en FID, granulomas en 50–60 %, caso (26 años) y claves coinciden | Sin cambio | `ap2pb11` |
+| `11 - Apendicitis aguda.pdf` | Cuatro formas macroscópicas, cuatro hallazgos microscópicos, neutrófilos en la muscular como signo principal y ficha coinciden | Sin cambio | `ap2pb12` |
+| `12 - Adenocarcinoma de colon.pdf` | 95 %, 70–80 %, 10–15 %, > 50 %, genes, lesiones predisponentes, derecho/izquierdo y las dos fichas coinciden | Sin cambio | `ap2pb13`, `ap2pb14` |
+| Páncreas (pancreatitis crónica, adenocarcinoma) | **Solo** las fichas del laminario (págs. 16 y 18); no hay diapositivas ni caso | Sin cambio (los bloques 15–16 no agregan causas, clínica ni estadificación) | `ap2pb15`, `ap2pb16` |
+| Las 43 imágenes (texto alternativo, leyendas, uso) | Ninguna imagen usada en preguntas o tarjetas (21 de 43) lleva rótulo ni pie que dé el diagnóstico. Las dos con texto propio (`p2-colon-nomucinoso-macro-estenosante`: «STENOSING / INFILTRATING»; `p2-colon-nomucinoso-enema`: pie de figura) están **solo en la galería de enseñanza**. Un alt de tarjeta decía «cordones **tumorales**» (`p2-chc-pseudoglandular`) | **Corregido** el alt (3 usos): «cordones de células». Ninguna imagen retirada | `ap2pb09` |
+
+**Lo que NO se pudo comprobar con el original (queda sin prueba):** que cada una de las 43 imágenes corresponda a la página y al diagnóstico del PDF original; la paginación «PDF numerado, pág. N»; la procedencia de las fotos macroscópicas y del enema; el contenido manuscrito o escaneado sin capa de texto. La comparación visual de imágenes sigue pendiente y **no se declara concluida**.
