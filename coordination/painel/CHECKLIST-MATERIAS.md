@@ -15,6 +15,8 @@
 
 ---
 
+## Histórico de 19/10 (não usar como estado atual)
+
 **Última atualização:** 19/10/2026 · coordenação ChatGPT; estado das PRs e checks consultado no GitHub. A tabela histórica de aberturas abaixo descreve a `main` na triagem de 16/10, não os PRs ainda abertos.
 
 > **Estado confirmado:** #484 mesclada e testada pelo José no iPad; #489 e #524 (Biología) mescladas. Abertas de conteúdo: #474, #481, #499–#517 (com exceções já mescladas/fechadas), #525–#530 e #532. Os Guard dos heads #474, #481, #499, #505, #529, #530 e #532 passaram, mas isso **não aprova ciência, imagens nem grifos futuros**. Nenhuma dessas PRs está liberada para merge neste painel. Só José mescla. #527/#530 e #528/#532 se sobrepõem e não devem ser mescladas juntas. As PRs antigas #66, #80, #248, #253, #305 e #368 foram fechadas sem merge.
