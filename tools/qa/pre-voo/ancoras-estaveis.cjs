@@ -95,9 +95,10 @@ function comparar(ref, cur) {
     process.stdout.write('\n');
   }
   await br.close(); srv.close();
-  const saida = { gerado: new Date().toISOString().slice(0, 10), corr: CORR, ref: process.env.RM_ENSAIO_REF || 'disco', linhas };
-  fs.writeFileSync(path.join(OUT, NEG ? 'ancoras-estaveis.negativo.json' : 'ancoras-estaveis.json'), L.jsonLinhas(saida, 'linhas'));
-  console.log(`\n${linhas.length} medidas · ${nFalha} com FALHA → ${path.relative(L.REPO, path.join(OUT, NEG ? 'ancoras-estaveis.negativo.json' : 'ancoras-estaveis.json'))}`);
+  const saida = { gerado: new Date().toISOString().slice(0, 10), corr: CORR, ref: process.env.RM_ENSAIO_REF || 'disco', commit: require('child_process').execSync('git rev-parse --short HEAD', { cwd: L.REPO }).toString().trim(), parcial: filtro.length > 0, materias: mats.length, linhas };
+  const nomeArq = (NEG ? 'ancoras-estaveis.negativo' : 'ancoras-estaveis') + (filtro.length && !process.env.RM_PREVOO_OUT ? '.parcial' : '') + '.json';   // rodada com filtro de matéria NUNCA sobrescreve a bateria completa
+  fs.writeFileSync(path.join(OUT, nomeArq), L.jsonLinhas(saida, 'linhas'));
+  console.log(`\n${linhas.length} medidas · ${nFalha} com FALHA → ${path.relative(L.REPO, path.join(OUT, nomeArq))}`);
   if (NEG) { const detectou = linhas.every(r => r.estado === 'FALHA'); console.log(detectou ? 'controle negativo: o teste REPROVOU o defeito inserido (como deve)' : 'controle negativo: o teste NÃO enxergou o defeito inserido'); process.exit(detectou ? 0 : 1); }
   process.exit(nFalha ? 1 : 0);
 })();

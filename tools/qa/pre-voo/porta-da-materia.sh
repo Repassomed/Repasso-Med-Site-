@@ -4,6 +4,7 @@
 # Saída: uma linha por etapa (PASSA/FALHA) e o código de saída 1 se QUALQUER uma falhar. Somente leitura (Supabase simulado, zero rede externa, nenhuma flag tocada).
 SLUG="$1"; [ -z "$SLUG" ] && { echo "uso: porta-da-materia.sh <slug>"; exit 2; }
 MODO="${2:---corr}"; R=0
+export RM_PREVOO_OUT="/tmp/porta-$SLUG-pv"   # a porta de UMA matéria nunca escreve nos resultados versionados
 # ensaio.cjs e interacao.cjs saem com código 0 mesmo quando há FALHA: a decisão sai do resumo impresso («… → N verificações · M FALHA»)
 passo_ensaio() { nome="$1"; shift; "$@" > "/tmp/porta-$SLUG-$nome.log" 2>&1; if grep -Eq "→ [0-9]+ verificações · 0 FALHA" "/tmp/porta-$SLUG-$nome.log"; then echo "PASSA  $nome"; else echo "FALHA  $nome  ($(grep -E "→ [0-9]+ verificações" "/tmp/porta-$SLUG-$nome.log" | tail -1 | cut -c1-110))"; R=1; fi; }
 passo() { nome="$1"; shift; if "$@" > "/tmp/porta-$SLUG-$nome.log" 2>&1; then echo "PASSA  $nome"; else echo "FALHA  $nome  (veja /tmp/porta-$SLUG-$nome.log)"; R=1; fi; }
