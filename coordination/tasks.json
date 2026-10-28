@@ -3106,6 +3106,172 @@
       "commit": null,
       "issue": 543,
       "notas": "Sem merge por Claude 2. Grifos: 132 em semiologia-ii (SELECT somente leitura), todos em s2-guia, b01, b02, b03 e banco; nenhum nos blocos alterados (06, 07, 08)."
+    },
+    {
+      "id": "cierre-final-farmacologia-ii-2026-10",
+      "titulo": "farmacologia-ii: fechamento final da rodada pré nova era",
+      "area": "materia",
+      "materia": "farmacologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/farmacologia-ii.html"
+      ],
+      "objetivo": "Etiquetas «Trampa» e voz de enunciado viram explicação da matéria",
+      "fonte": "Sem fonte médica nova nesta matéria: só voz G0 (LEI-G0 §6 e §13) sobre conteúdo já existente. Slides 03–06 já integrados em PR anteriores.",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/cierre-final-seis-materias-2026-10",
+      "pr": 594,
+      "commit": null,
+      "issue": 543,
+      "notas": "Sem merge por Claude 2. Grifos/traços consultados somente leitura; Guard, verify e navegador (390/820/1366) feitos pela Claude 2 sobre a main 06e9d076."
+    },
+    {
+      "id": "cierre-final-fisiopatologia-ii-2026-10",
+      "titulo": "fisiopatologia-ii: fechamento final da rodada pré nova era",
+      "area": "materia",
+      "materia": "fisiopatologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html"
+      ],
+      "objetivo": "Etiquetas «Trampa» e voz de enunciado/distractor viram explicação da matéria",
+      "fonte": "Sem fonte médica nova nesta matéria: só voz G0 (LEI-G0 §6 e §13) sobre conteúdo já existente. Slides 07–11 e suprarrenal já integrados em PR anteriores.",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/cierre-final-seis-materias-2026-10",
+      "pr": 594,
+      "commit": null,
+      "issue": 543,
+      "notas": "Sem merge por Claude 2. Grifos/traços consultados somente leitura; Guard, verify e navegador (390/820/1366) feitos pela Claude 2 sobre a main 06e9d076."
+    },
+    {
+      "id": "cierre-final-semiologia-ii-2026-10",
+      "titulo": "semiologia-ii: fechamento final da rodada pré nova era",
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "objetivo": "Bloco 05: líquido pleural e tratamento do derrame + voz de enunciado",
+      "fonte": "Drive: Semiología II · Práctica «05 - Derrame Pleural.pptx» (modificado em 28/10/2026) · LEI-ATUALIZACAO-CONTINUA · LEI-G0",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/cierre-final-seis-materias-2026-10",
+      "pr": 594,
+      "commit": null,
+      "issue": 543,
+      "notas": "Sem merge por Claude 2. Grifos/traços consultados somente leitura; Guard, verify e navegador (390/820/1366) feitos pela Claude 2 sobre a main 06e9d076. Limites do slide: não traz respostas para os 13 casos clínicos das Prácticas de 28/10; nenhuma resposta foi inventada."
+    },
+    {
+      "id": "cierre-final-toxicologia-2026-10",
+      "titulo": "toxicologia: fechamento final da rodada pré nova era",
+      "area": "materia",
+      "materia": "toxicologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html"
+      ],
+      "objetivo": "Abertura direta no conteúdo e frases de peso/orden",
+      "fonte": "Sem fonte médica nova nesta matéria: só voz G0 (LEI-G0 §6 e §13) sobre conteúdo já existente. Regra de abertura direta (decisão do José, 16/10).",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/cierre-final-seis-materias-2026-10",
+      "pr": 594,
+      "commit": null,
+      "issue": 543,
+      "notas": "Sem merge por Claude 2. Grifos/traços consultados somente leitura; Guard, verify e navegador (390/820/1366) feitos pela Claude 2 sobre a main 06e9d076."
+    },
+    {
+      "id": "cierre-final-dermatologia-2026-10",
+      "titulo": "dermatologia: fechamento final da rodada pré nova era",
+      "area": "materia",
+      "materia": "dermatologia",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/dermatologia.html"
+      ],
+      "objetivo": "Último título de figura com voz G0",
+      "fonte": "Sem fonte médica nova nesta matéria: só voz G0 (LEI-G0 §6 e §13) sobre conteúdo já existente.",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/cierre-final-seis-materias-2026-10",
+      "pr": 594,
+      "commit": null,
+      "issue": 543,
+      "notas": "Sem merge por Claude 2. Grifos/traços consultados somente leitura; Guard, verify e navegador (390/820/1366) feitos pela Claude 2 sobre a main 06e9d076."
+    },
+    {
+      "id": "cierre-final-medicina-legal-2026-10",
+      "titulo": "medicina-legal: fechamento final da rodada pré nova era",
+      "area": "materia",
+      "materia": "medicina-legal",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/medicina-legal.html"
+      ],
+      "objetivo": "Frases de peso/orden e atalhos de pergunta viram conteúdo",
+      "fonte": "Sem fonte médica nova nesta matéria: só voz G0 (LEI-G0 §6 e §13) sobre conteúdo já existente.",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/cierre-final-seis-materias-2026-10",
+      "pr": 594,
+      "commit": null,
+      "issue": 543,
+      "notas": "Sem merge por Claude 2. Grifos/traços consultados somente leitura; Guard, verify e navegador (390/820/1366) feitos pela Claude 2 sobre a main 06e9d076."
+    },
+    {
+      "id": "cierre-final-seis-materias-2026-10",
+      "titulo": "Entrega única de fechamento: Farmacología II, Fisiopatología II, Semiología II, Toxicología, Dermatología, Medicina Legal",
+      "area": "materia",
+      "materia": "seis-materias",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/farmacologia-ii.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/dermatologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/medicina-legal.html"
+      ],
+      "objetivo": "Reúne #586–#591 sem conflito em tasks.json",
+      "fonte": "Ver as seis entradas por matéria (cada uma com a sua fonte).",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/cierre-final-seis-materias-2026-10",
+      "pr": 594,
+      "commit": null,
+      "issue": 543,
+      "notas": "Substitui as PRs #586–#591."
     }
   ]
 }
