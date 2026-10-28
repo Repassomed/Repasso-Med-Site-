@@ -3272,6 +3272,37 @@
       "commit": null,
       "issue": 543,
       "notas": "Substitui as PRs #586–#591."
+    },
+    {
+      "id": "prontidao-layout-agrega-2026-10",
+      "titulo": "Prontidão do layout: marcadores data-rm-agrega em 9 matérias",
+      "area": "materia",
+      "materia": "nove-materias",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/farmacologia-ii.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/fisiopatologia-ii.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/toxicologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/dermatologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/guarani.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/oftalmologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anestesiologia.html",
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/histologia-ii-practica.html"
+      ],
+      "objetivo": "Declarar data-rm-agrega nas 10 seções agregadoras (f2b15, f2b16, revisaofp2, toxcierre, dermcierre, mazognrl, revisaoneu, oftcierre, anecierre, h2pmazo); nada é ligado para alunos",
+      "fonte": "docs/pre-voo-caneta-layout/RESULTADOS.md §5 recalculado sobre a main 288580e4 com tools/qa/pre-voo/marcadores-agrega.cjs; sem fonte médica",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/prontidao-layout-agrega-2026-10",
+      "pr": 595,
+      "commit": null,
+      "issue": 543,
+      "notas": "Só atributo data-rm-agrega nas seções; sem alterar texto, ids, imagens, questões ou cartões. Sem merge por Claude 2."
     }
   ]
 }
