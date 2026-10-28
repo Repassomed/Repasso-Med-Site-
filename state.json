@@ -3247,6 +3247,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:600.",
       "task_id": "corrigir o painel de anota\u00e7\u00f5es e destacar o estado atual para iniciar a implanta\u00e7\u00e3o por mat\u00e9ria.",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "426f0f82fe4413e4b4fba7ed7e9cdce0209b3fa4",
+      "component": "guard",
+      "error_id": "ERR-FC09491CA2",
+      "error_type": "hard-fail",
+      "fingerprint": "fc09491ca2721ea45282",
+      "first_seen": "2026-10-28T21:39:53.184053+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "e00d8b641dbe40ec8e0267a9f0ef080e",
+      "issue_sync_updated_at": "2026-10-28T21:39:53.184053+00:00",
+      "last_evidence_hash": "3f8a44d64c5117ccdd69",
+      "last_seen": "2026-10-28T21:39:53.184053+00:00",
+      "occurrence_count": 1,
+      "pr_number": 600,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "40773661038",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:600.",
+      "task_id": "atualizar registro de anota\u00e7\u00f5es e estado atual.",
+      "worker_id": null
     }
   ]
 }
