@@ -1,6 +1,6 @@
 # Registro de anotações do Drive → site
 
-**Conferido em 28/10/2026.** Fonte: pastas do Drive e PRs mescladas na `main`. Lei: [LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md](../../LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md). Esta conferência verifica o inventário e a rastreabilidade documental; **não é uma releitura independente dos 22 PDFs nem uma certificação de perfeição médica**.
+**Conferido em 28/10/2026; atualizar após cada merge e novo PDF.** Fonte: pastas do Drive e PRs mescladas na `main`. Lei: [LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md](../../LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md). Esta conferência verifica o inventário e a rastreabilidade documental; **não é uma releitura independente dos 22 PDFs nem uma certificação de perfeição médica**.
 
 **Total encontrado nas quatro pastas de Anotações:** 22 PDFs = Farmacología II 8 + Fisiopatología II 5 + Anatomía Patológica II 6 + Semiología II 3. Nenhum desses 22 está sem registro de leitura/comparação nas PRs abaixo. Uma anotação pode ter sido comparada e **não** copiada porque já estava ensinada, estava errada ou não tinha base. Em Semiología II ainda falta recuperar a decisão específica de cada um dos três PDFs; veja a pendência.
 
