@@ -1965,6 +1965,29 @@
       "jose_authorized": true
     },
     {
+      "id": "semiologia-ii-neumonia-slides-2026-10",
+      "titulo": "Semiología II: neumonía — complicación más frecuente y lóbulos",
+      "area": "materia",
+      "materia": "semiologia-ii",
+      "arquivos": [
+        "Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/semiologia-ii.html"
+      ],
+      "objetivo": "Integrar dois pontos com fonte em slide da cátedra que faltavam no bloco 04",
+      "fonte": "Drive: 03 - Sindrome_Parenquimatoso_Pulmonar_SM_II.pdf e 03 - Sindrome de Condensacion.pdf (complicação mais frequente: derrame pleural); Anatomía I PULMONES.pdf (3 lóbulos D, 2 E) · LEI-ATUALIZACAO-CONTINUA · LEI-G0",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/semiologia-ii-neumonia-slides-2026-10",
+      "pr": 604,
+      "commit": null,
+      "issue": 543,
+      "notas": "Grifos/traços/notas: nenhum em s2-b04; consulta somente leitura sem conflitos. Sem merge por Claude 2."
+    },
+    {
       "id": "cleanup-como-estudar-embriologia",
       "titulo": "P1 ALTA — Embriología: remover bloco metadidático “Como estudar”",
       "area": "materia",
