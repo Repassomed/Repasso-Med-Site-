@@ -18,6 +18,19 @@
      Kill switch só do tema: esvaziar/remover RM_PILOT_VISUAL_UIDS (o Layout V2
      continua).
 
+   Matéria por matéria (A5, pré-voo 24/10)
+     A matéria do piloto continua fixa no código (semiologia-ii) e se comporta
+     EXATAMENTE como antes. Qualquer outra matéria só é considerada se o slug
+     estiver na lista da flag correspondente — três variáveis de ambiente, TODAS
+     ausentes/vazias por padrão (⇒ nenhuma outra matéria, nenhum aluno):
+       RM_LAYOUT_SLUGS (layout) · RM_VISUAL_SLUGS (tema; exige descriptor aprovado)
+       · RM_PEN_SLUGS (caneta física).
+     Duas chaves ao mesmo tempo: o UID (listas RM_PILOT_*_UIDS, como hoje) E o slug.
+     Áudio continua só no piloto. Não existe «todos»: liberar para alunos exige
+     decisão futura e explícita (nenhum curinga é aceito).
+     Falha FECHADA e corpo idêntico em qualquer negação (inclusive slug fora da lista).
+     Kill switch por matéria: tirar o slug da variável. Geral: esvaziar as variáveis.
+
    Quem é piloto
      Decidido por UID AUTENTICADO, lido de variáveis de ambiente do
      Netlify (o UID NUNCA entra no repositório):
@@ -48,7 +61,11 @@ function lista(v) {
     .filter(Boolean);
 }
 
-function resp(flags, reason) {
+/* slug aceito no formato do catálogo; listas por flag lidas do ambiente (curinga NÃO existe) */
+const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,60}$/;
+function listaSlugs(v) { return lista(v).filter(function (x) { return SLUG_RE.test(x); }); }
+
+function resp(flags, reason, slugOk) {
   return {
     statusCode: 200,
     headers: {
@@ -57,7 +74,7 @@ function resp(flags, reason) {
       'X-RM-Reason': reason || 'denied'
     },
     body: JSON.stringify({
-      slug: PILOT_SLUG,
+      slug: slugOk || PILOT_SLUG,   // negação: sempre o slug do piloto (corpo idêntico, não revela se a matéria existe na lista)
       layout: !!flags.layout,
       audio:  !!flags.audio,
       pen:    !!flags.pen,
@@ -74,7 +91,12 @@ exports.handler = async function (event) {
 
     const qs   = (event && event.queryStringParameters) || {};
     const slug = String(qs.slug || '');
-    if (slug !== PILOT_SLUG) return resp(NEGADO, 'denied');
+    const ehPiloto = slug === PILOT_SLUG;
+    const slugsLayout = listaSlugs(process.env.RM_LAYOUT_SLUGS);
+    const slugsVisual = listaSlugs(process.env.RM_VISUAL_SLUGS);
+    const slugsPen    = listaSlugs(process.env.RM_PEN_SLUGS);
+    // outra matéria: precisa estar em ALGUMA das listas por matéria; fora delas, negado sem sequer olhar o token
+    if (!ehPiloto && !(SLUG_RE.test(slug) && (slugsLayout.indexOf(slug) !== -1 || slugsPen.indexOf(slug) !== -1))) return resp(NEGADO, 'denied');
 
     const h     = (event && event.headers) || {};
     const auth  = h.authorization || h.Authorization || '';
@@ -97,12 +119,13 @@ exports.handler = async function (event) {
     if (!uid) return resp(NEGADO, 'denied');
 
     const flags = {
-      layout: uidsLayout.indexOf(uid) !== -1,
-      audio:  uidsAudio.indexOf(uid) !== -1,
-      pen:    uidsPen.indexOf(uid) !== -1
+      layout: uidsLayout.indexOf(uid) !== -1 && (ehPiloto || slugsLayout.indexOf(slug) !== -1),
+      audio:  ehPiloto && uidsAudio.indexOf(uid) !== -1,                         // áudio: só o piloto
+      pen:    uidsPen.indexOf(uid) !== -1 && (ehPiloto || slugsPen.indexOf(slug) !== -1)
     };
-    flags.visual = flags.layout && uidsVisual.indexOf(uid) !== -1;   // negado por padrão: lista própria obrigatória; camada sobre o Layout V2 (nunca sem `layout`)
-    return resp(flags, flags.layout || flags.audio || flags.pen ? 'pilot' : 'denied');
+    flags.visual = flags.layout && uidsVisual.indexOf(uid) !== -1 && (ehPiloto || slugsVisual.indexOf(slug) !== -1);   // negado por padrão: lista própria obrigatória; camada sobre o Layout V2 (nunca sem `layout`)
+    const algum = flags.layout || flags.audio || flags.pen;
+    return resp(algum ? flags : NEGADO, algum ? 'pilot' : 'denied', algum ? slug : null);
   } catch (e) {
     // nada de detalhe no corpo; o log fica só no servidor
     console.error('get-pilot-flags', e && e.message);
