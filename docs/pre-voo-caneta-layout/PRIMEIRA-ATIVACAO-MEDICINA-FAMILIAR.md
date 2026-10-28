@@ -4,6 +4,19 @@
 >
 > **⚠ BLOQUEIO — estado real das variáveis NÃO verificado.** Esta sessão não tem acesso ao Netlify (sem CLI, token nem conector; o site público é inacessível do ambiente de testes). Por isso **não se afirma** que `RM_LAYOUT_SLUGS` e `RM_PEN_SLUGS` estão vazias nem que `medicina-familiar` não está nelas hoje. Os testes provam o comportamento do código **com** o ambiente simulado (variáveis vazias ⇒ negado); a produção só se confirma com a **conferência prévia de José, abaixo (§2-A)**, antes do merge.
 
+## 0 · Roteiro de José (só o que depende de você; os testes de engenharia já foram feitos e não se repetem)
+
+| # | Ação (Netlify → *Site configuration → Environment variables*) | Prova / critério | Se falhar |
+|---|---|---|---|
+| **1** | **Conferir, antes do merge:** `RM_LAYOUT_SLUGS`, `RM_PEN_SLUGS` e `RM_VISUAL_SLUGS` **não** podem conter `medicina-familiar` (não existir ou vazias). Olhar só nomes e vazio/preenchido; não copiar valores. | as três sem o slug | tirar o slug da que o tiver **antes** do passo 2 |
+| **2** | **Merge da #599 com tudo desligado.** Não criar nenhuma variável. Esperar o deploy. | Medicina Familiar abre **igual a hoje** (layout antigo). | `git revert` do merge (L4 abaixo) |
+| **3** | **Só layout, só sua conta:** conferir que a sua conta está em `RM_PILOT_LAYOUT_UIDS` (toda conta dessa lista verá o layout nessa matéria); criar `RM_LAYOUT_SLUGS` = `medicina-familiar`; **Trigger deploy**. **Não** criar `RM_PEN_SLUGS`, `RM_VISUAL_SLUGS` nem tocar em áudio. | — | — |
+| **4** | **iPad, 3 min** (aba nova ou *sem cache*): layout novo aparece; abrir 3 blocos pelo índice e voltar; rolar uma tabela larga na horizontal (a página **não** alarga); marcar 1 trecho em `aps` e recarregar (persiste). Aluno comum: abrir a matéria em outra conta/aba anônima e ver o layout **antigo**. | tudo ok | passo 5 |
+| **5** | **Observar e voltar se preciso:** observar 24 h. Parar se algo do §5 acontecer. **Voltar (L1):** apagar `medicina-familiar` de `RM_LAYOUT_SLUGS` + **Trigger deploy**; recarregar o iPad. | layout antigo de volta, grifos/traços/notas intactos (testado) | L3/L4 |
+| **6** | **Caneta, separada, só depois do 5 ok:** criar `RM_PEN_SLUGS` = `medicina-familiar` e pôr a sua conta em `RM_PILOT_PEN_UIDS`; deploy. iPad: desenhar com a Pencil num parágrafo e numa tabela, recarregar, o traço volta no lugar. Voltar: tirar o slug de `RM_PEN_SLUGS` + deploy (L2). | — | L2 |
+
+Eu (Claude) não altero nenhuma variável; a conferência dos passos 1 e 3 é sua porque esta sessão não acessa o Netlify.
+
 ## 1 · O que muda ao mesclar (e o que não muda)
 
 | | Antes | Depois do merge, **se** as variáveis de matéria estiverem vazias (a confirmar, §2-A) |
