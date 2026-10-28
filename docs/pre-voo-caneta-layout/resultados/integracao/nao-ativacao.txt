@@ -1,0 +1,27 @@
+
+▸ E1 · produção hoje: só listas de UID, NENHUMA variável de matéria — 27 matérias
+    ✓ piloto (Semiología II): continua recebendo layout, 1 requisição (comportamento de hoje preservado)
+    ✓ nenhuma das outras 26 matérias montou layout
+    ✓ nenhuma delas fez requisição ao servidor (CANDIDATAS fecha antes)
+    ✓ caneta física (pilotoPermitido / penLiberada) = false em todas elas, mesmo com a conta fixa do código
+    ✓ grifos, traços e notas gravados antes: idênticos em todas; 0 erros JS
+
+▸ E2 · kill switch geral: nenhuma conta nas listas de UID
+    ✓ layout do piloto desligado
+
+▸ E3 · segunda fechadura aberta, primeira fechada (variável preenchida, matéria fora das CANDIDATAS)
+    ✓ dermatologia: sem layout, sem requisição, sem caneta física mesmo com a variável preenchida
+    ✓ dermatologia: dados do aluno intactos
+    ✓ biologia: sem layout, sem requisição, sem caneta física mesmo com a variável preenchida
+    ✓ biologia: dados do aluno intactos
+    ✓ ortopedia: sem layout, sem requisição, sem caneta física mesmo com a variável preenchida
+    ✓ ortopedia: dados do aluno intactos
+
+▸ E4 · estático
+    ✓ CANDIDATAS = só semiologia-ii
+    ✓ a função do servidor não aceita curinga
+    ✓ netlify.toml não define nenhuma dessas variáveis
+    ✓ nenhum arquivo de configuração do repositório atribui as variáveis de matéria
+    ✓ ROLLOUT da V2 continua 'beta' (beta)
+
+nao-ativacao: 17/17 verificações OK

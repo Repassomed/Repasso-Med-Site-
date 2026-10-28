@@ -30,12 +30,16 @@
   'use strict';
   if (window.RMPilot) return;                         // idempotente
 
-  var SLUG = 'semiologia-ii';                         // piloto: uma matéria só
-  var VER  = '2026100803';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
+  var SLUG = 'semiologia-ii';                         // piloto (áudio e compatibilidade: sem argumento, tudo se refere a ele)
+  /* A5 · matérias que podem PERGUNTAR ao servidor. Fechadura 1 de 2: só entra aqui, por PR, quem já passou a «porta» do pré-voo. Fechadura 2: o servidor
+     (get-pilot-flags) só concede se o slug estiver nas listas RM_LAYOUT_SLUGS/RM_VISUAL_SLUGS/RM_PEN_SLUGS E o UID nas listas RM_PILOT_*_UIDS.
+     Hoje só o piloto ⇒ nenhuma requisição, nenhum módulo extra e nenhuma mudança em qualquer outra matéria. */
+  var CANDIDATAS = ['semiologia-ii'];
+  var VER  = '2026102801';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
   var BASE = 'assets/';
   var COOLDOWN_MS = 30000;                            // depois de uma falha, não insistir
 
-  var st = { flags: null, asking: null, lastFail: 0, loading: null, loaded: false, sisLoading: null };
+  var st = { flags: null, porSlug: {}, asking: {}, lastFail: 0, loading: null, loaded: false, sisLoading: null, slugAtual: null };
 
   function tabAtiva() {
     return document.querySelector('#materias-container > .tab-content.active[id^="tab-"]');
@@ -60,13 +64,13 @@
   /* Resposta definitiva (true OU false vinda do servidor) fica em cache na
      página; falha de transporte NÃO vira cache (tenta de novo depois do
      cooldown). Logout recarrega a página (site já faz isso). */
-  function pedir() {
-    if (st.flags) return Promise.resolve(st.flags);
-    if (st.asking) return st.asking;
+  function pedir(slug) {
+    if (st.porSlug[slug]) return Promise.resolve(st.porSlug[slug]);
+    if (st.asking[slug]) return st.asking[slug];
     if (Date.now() - st.lastFail < COOLDOWN_MS) return Promise.resolve({ layout: false });
-    st.asking = token().then(function (t) {
+    st.asking[slug] = token().then(function (t) {
       if (!t) { st.lastFail = Date.now(); return { layout: false }; }
-      return fetch('/.netlify/functions/get-pilot-flags?slug=' + encodeURIComponent(SLUG), {
+      return fetch('/.netlify/functions/get-pilot-flags?slug=' + encodeURIComponent(slug), {
         headers: { Authorization: 'Bearer ' + t },
         cache: 'no-store',
         credentials: 'omit'
@@ -74,18 +78,19 @@
         if (!r.ok) throw new Error('http');
         return r.json();
       }).then(function (j) {
-        var ok = !!(j && j.slug === SLUG && j.layout === true);
-        /* `pen` (RM_PILOT_PEN_UIDS, decidido no servidor por UID autenticado) só vale para a caneta FÍSICA do piloto em Semiología II (rm-tools-v2.js: refinamentos do piloto físico).
+        var ok = !!(j && j.slug === slug && j.layout === true);
+        /* `pen` (decidido no servidor por UID autenticado E por matéria) só vale para a caneta FÍSICA da matéria que o servidor nomeou (rm-tools-v2.js: refinamentos do piloto físico).
            Não libera a V2 nem a caneta para ninguém: quem não tem acesso beta continua sem ela. Independente de `layout`. */
-        st.flags = { layout: ok, visual: ok && j.visual === true, pen: !!(j && j.slug === SLUG && j.pen === true) };
+        var f = { layout: ok, visual: ok && j.visual === true, pen: !!(j && j.slug === slug && j.pen === true) };
+        st.porSlug[slug] = f; st.flags = f;
         try { window.dispatchEvent(new Event('rm-pilot-flags')); } catch (e) {}
-        return st.flags;
+        return f;
       });
     }).catch(function () {
       st.lastFail = Date.now();
       return { layout: false };
-    }).then(function (f) { st.asking = null; return f; });
-    return st.asking;
+    }).then(function (f) { st.asking[slug] = null; return f; });
+    return st.asking[slug];
   }
 
   function css(href) {
@@ -114,7 +119,7 @@
       .then(function () { return js(BASE + 'rm-modes.js?v=' + VER); })
       .then(function () { return js(BASE + 'rm-layout.js?v=' + VER); })
       .then(function () { st.loaded = !!(window.RMModes && window.RMLayout); return st.loaded; })
-      .catch(function () { st.flags = { layout: false }; return false; })   // falha fechada
+      .catch(function () { st.porSlug[st.slugAtual] = { layout: false }; return false; })   // falha fechada
       .then(function (r) { st.loading = null; return r; });
     return st.loading;
   }
@@ -134,15 +139,15 @@
       .then(function (r) { st.sisLoading = null; return r; });
     return st.sisLoading;
   }
-  function ligarSistema(n, tab) {
+  function ligarSistema(n, tab, slug) {
     return carregarSistema().then(function (ok) {
       if (!ok || n !== emVoo || tabAtiva() !== tab || !window.RMLayout || !window.RMSistema) return;
-      try { window.RMSistema.attach(tab, SLUG); }
+      try { window.RMSistema.attach(tab, slug); }
       catch (e) { try { window.RMSistema.detach(); } catch (e2) {} return; }       // o layout fica; só o tema sai
       if (!window.RMNav) return;
-      try { window.RMNav.attach(tab, SLUG); }
+      try { window.RMNav.attach(tab, slug); }
       catch (e3) { try { window.RMNav.detach(); } catch (e4) {} return; }          // falha na navegação: o tema e o layout ficam como estavam (rolagem contínua)
-      if (window.RMIndice) { try { window.RMIndice.attach(tab, SLUG); } catch (e5) { try { window.RMIndice.detach(); } catch (e6) {} } }   // falha no índice expansível: os cards voltam a abrir o bloco direto
+      if (window.RMIndice) { try { window.RMIndice.attach(tab, slug); } catch (e5) { try { window.RMIndice.detach(); } catch (e6) {} } }   // falha no índice expansível: os cards voltam a abrir o bloco direto
     });
   }
 
@@ -170,16 +175,18 @@
   var emVoo = 0;
   function avaliar() {
     var tab = tabAtiva();
-    if (!tab || slugDe(tab) !== SLUG) { desativar(); return; }   // outra matéria: nada a fazer
+    var slug = slugDe(tab);
+    if (!tab || CANDIDATAS.indexOf(slug) === -1) { st.slugAtual = null; desativar(); return; }   // matéria sem a fechadura 1: nada a fazer, nenhuma requisição
+    st.slugAtual = slug;
     var n = ++emVoo;
-    pedir().then(function (f) {
+    pedir(slug).then(function (f) {
       if (n !== emVoo || tabAtiva() !== tab || !f.layout) return;
       return carregar().then(function (ok) {
         if (!ok || n !== emVoo || tabAtiva() !== tab) return;
-        try { window.RMLayout.attach(tab); }
+        try { window.RMLayout.attach(tab, slug); }
         catch (e) { try { window.RMLayout.detach(); } catch (e2) {} return; }   // qualquer erro: volta ao normal (e SEM áudio)
-        if (f.visual) ligarSistema(n, tab);
-        ligarAudio(n, tab);
+        if (f.visual) ligarSistema(n, tab, slug);
+        if (slug === SLUG) ligarAudio(n, tab);                                   // áudio: só o piloto (A6 ainda não libera outras matérias)
       });
     });
   }
@@ -203,9 +210,11 @@
     slug: SLUG,
     avaliar: avaliar,
     /* `true` só depois de o servidor ter respondido `pen:true` para ESTE usuário em Semiología II (cache da página; falha de transporte/negado = false). Leitura pura: sem UID, sem rede. */
-    penLiberada: function () { return !!(st.flags && st.flags.pen === true); },
+    penLiberada: function (slug) { var f = st.porSlug[slug || SLUG]; return !!(f && f.pen === true); },
+    /* matérias que podem perguntar ao servidor (fechadura 1; leitura pura, para teste/diagnóstico) */
+    candidatas: function () { return CANDIDATAS.slice(); },
     /* só para teste/diagnóstico: não expõe UID nem lista */
-    _estado: function () { return { flags: st.flags, loaded: st.loaded }; }
+    _estado: function () { return { flags: st.flags, porSlug: st.porSlug, loaded: st.loaded }; }
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar);

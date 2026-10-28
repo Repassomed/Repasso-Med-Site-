@@ -11,6 +11,9 @@
   var CORR = P.get('corr') === '1';
   var VER = 'ensaio' + (CORR ? '&corr=1' : '');
   window.__ens = { slug: SLUG, tab: TAB, modo: MODO, etapas: {}, erros: [], temaGerado: null };
+  /* A7 real no código: a caneta física é por matéria e só liga com a liberação do servidor. O ensaio SIMULA essa liberação para a matéria ensaiada (um RMPilot mínimo com o contrato da A5:
+     candidatas() + penLiberada(slug)); quando o rm-pilot.js real for carregado (testes de gate), ele substitui este. */
+  if (!window.RMPilot && P.get('pilotreal') !== '1') window.RMPilot = { slug: 'semiologia-ii', candidatas: function () { return []; }, penLiberada: function (s) { return !s || s === SLUG || s === 'semiologia-ii'; }, _ensaio: true };
   var E = window.__ens;
 
   function css(href) { return new Promise(function (ok, ko) { var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; l.onload = ok; l.onerror = function () { ko(new Error('css ' + href)); }; document.head.appendChild(l); }); }

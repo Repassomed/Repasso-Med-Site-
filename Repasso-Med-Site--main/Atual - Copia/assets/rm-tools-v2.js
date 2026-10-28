@@ -79,11 +79,23 @@
   /* Segundo testador (#456): o piloto físico NÃO depende só de um UID fixo no código. Vale também para quem o SERVIDOR liberou (`get-pilot-flags` → `pen:true`, lista
      RM_PILOT_PEN_UIDS do Netlify, lida por rm-pilot.js; nenhum UID no repositório). Só refinamentos do piloto físico, só em Semiología II — não dá acesso à V2 (isso segue sendo
      BETA_UIDS / study_tools_beta) e não liga a caneta para ninguém além de quem já a tem. Falha fechada: sem RMPilot, sem resposta ou negado ⇒ false. */
-  function penLiberadaPeloServidor() {
-    try { return !!(window.RMPilot && typeof window.RMPilot.penLiberada === 'function' && window.RMPilot.penLiberada()); } catch (e) { return false; }
+  /* A7 (pré-voo 24/10) · a caneta FÍSICA vale POR MATÉRIA. `penLiberadaPeloServidor(slug)` pergunta ao rm-pilot.js se o servidor liberou `pen` para ESTE slug
+     (get-pilot-flags: UID em RM_PILOT_PEN_UIDS E slug em RM_PEN_SLUGS). Sem argumento = a matéria aberta. Falha fechada em tudo: sem RMPilot, sem resposta, negado,
+     ou um RMPilot ANTIGO (sem `candidatas`, isto é, sem a A5) — esse ignoraria o slug e devolveria a resposta do piloto, então para outra matéria vale false. */
+  function penLiberadaPeloServidor(slug) {
+    try {
+      var P = window.RMPilot;
+      if (!P || typeof P.penLiberada !== 'function') return false;
+      slug = slug || slugDoTab(abaAtiva()) || PILOT_SLUGS[0];
+      if (PILOT_SLUGS.indexOf(slug) === -1 && typeof P.candidatas !== 'function') return false;
+      return !!P.penLiberada(slug);
+    } catch (e) { return false; }
   }
   function pilotoPermitido() {
-    return (st.uid === JOSE_UID || penLiberadaPeloServidor()) && PILOT_SLUGS.indexOf(slugDoTab(abaAtiva())) !== -1;
+    var slug = slugDoTab(abaAtiva());
+    if (!slug) return false;
+    if (PILOT_SLUGS.indexOf(slug) !== -1) return st.uid === JOSE_UID || penLiberadaPeloServidor(slug);   // piloto: exatamente como antes
+    return penLiberadaPeloServidor(slug);                                                                  // outra matéria: SÓ com a liberação do servidor PARA ELA; a conta fixa do código não basta
   }
 
   /* Ponto de extensão único para a decisão de produto já registada nas
@@ -863,6 +875,9 @@ body.rm-lb-open #rm2-ink{ visibility:hidden; }
 #rm2-ink{
   position:absolute; left:0; top:0; width:100%; height:0;
   pointer-events:none; z-index:60;
+  /* R14 (pré-voo): a camada nunca alarga a página. Traço em tabela larga com rolagem própria era normalizado pela caixa INTEIRA da tabela (560 px dentro de 390) e o svg
+     (overflow:visible) passava da viewport ⇒ scrollWidth 407 > 390 e o navegador móvel afastava a página. clip só no eixo X (o eixo Y segue visível: traços saem do parágrafo). */
+  overflow-x:clip;
 }
 #rm2-ink svg{ position:absolute; overflow:visible; pointer-events:none; }
 #rm2-ink path{ fill:none; stroke-linecap:round; stroke-linejoin:round; }
@@ -1288,6 +1303,21 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     el.style.top = b.y + 'px';
     el.style.width = b.w + 'px';
     el.style.height = b.h + 'px';
+    /* R14 · âncora dentro de um contêiner com ROLAGEM HORIZONTAL PRÓPRIA (tabela larga em .rmc-scroll/.s2-scroll): o traço só pode aparecer na parte do contêiner que está à vista.
+       clip-path em X pelo retângulo do contêiner (Y com folga: o traço pode sair do parágrafo). O svg acompanha a rolagem do contêiner (ouvinte de scroll abaixo). */
+    var sc = rolavelH(sec), cp = '';
+    if (sc) {
+      var r = sc.getBoundingClientRect(), esq = Math.max(0, r.left - (b.x - window.pageXOffset)), dir = Math.max(0, (b.x - window.pageXOffset + b.w) - r.right);
+      cp = 'inset(-9999px ' + dir + 'px -9999px ' + esq + 'px)';
+    }
+    if (el.style.clipPath !== cp) el.style.clipPath = cp;
+  }
+  function rolavelH(el) {
+    for (var p = el.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) {
+      var ox = getComputedStyle(p).overflowX;
+      if ((ox === 'auto' || ox === 'scroll') && p.scrollWidth > p.clientWidth + 1) return p;
+    }
+    return null;
   }
 
   /* Só as âncoras que REALMENTE têm traços são observadas — nunca a
@@ -3832,6 +3862,32 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       reconciliarGesto('orientationchange'); setTimeout(reposicionarTudo, 220);
     });
     document.addEventListener('visibilitychange', function () { if (!document.hidden) reflow(); });
+
+    /* C8 (pré-voo 24/10) · transições que deslocam o conteúdo. Cartões com `:hover { transform: translateY(-3px) }` (globais em styles.css: .pattern-card, .recep-card,
+       .video-grid-2 .v-item…) sobem sob a caneta que paira ou o dedo que toca; a tinta é posicionada contra a caixa levantada e, quando o cartão desce, ficava ~3 px fora
+       até a próxima medida (resize/ResizeObserver não veem um `transform`). Ao FIM de uma transição de propriedade que mexe na geometria, reposiciona-se uma vez (debounce).
+       Nunca no meio de um traço: se há traço em curso, tenta de novo 250 ms depois. Sem traço gravado ⇒ custo zero (reposicionarTudo percorre só as camadas existentes). */
+    var GEOMETRICA = /^(transform|translate|scale|rotate|margin|padding|top|left|right|bottom|inset|height|width|min-|max-|gap|line-height|font-size)/;
+    var reflowTransicao = debounce(function () {
+      if (traco) { setTimeout(reflowTransicao, 250); return; }
+      reposicionarTudo();
+    }, 80);
+    function aoFimDaTransicao(e) {
+      if (!e || !GEOMETRICA.test(e.propertyName || 'transform')) return;
+      var t = e.target; if (!t || !t.closest || t.closest('#rm2-ink,.rm2-box,.rm2-notes,.rm2-diag')) return;
+      for (var k in svgPorAnchor) { if (svgPorAnchor.hasOwnProperty(k)) { reflowTransicao(); return; } }   // só se há tinta desenhada
+    }
+    /* R14 · rolagem horizontal DENTRO de um contêiner (tabela larga): o svg acompanha o conteúdo. `scroll` não borbulha ⇒ captura; um reposicionamento por quadro. */
+    var quadroScroll = 0;
+    document.addEventListener('scroll', function (e) {
+      var t = e.target; if (!t || t === document || !t.nodeType || t.nodeType !== 1 || quadroScroll) return;
+      if (t.closest && t.closest('#rm2-ink,.rm2-box,.rm2-notes,.rm2-diag')) return;
+      var tem = false; for (var k in svgPorAnchor) { if (svgPorAnchor.hasOwnProperty(k)) { tem = true; break; } }
+      if (!tem || traco) return;
+      quadroScroll = requestAnimationFrame(function () { quadroScroll = 0; reposicionarTudo(); });
+    }, true);
+    document.addEventListener('transitionend', aoFimDaTransicao, true);
+    document.addEventListener('transitioncancel', aoFimDaTransicao, true);
   }
 
   /* ================================================================== */

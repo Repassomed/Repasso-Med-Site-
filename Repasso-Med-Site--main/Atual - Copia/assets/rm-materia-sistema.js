@@ -170,9 +170,17 @@
     });
   }
 
+  /* C9 (pré-voo 24/10) · PLACEHOLDER DE ÂNCORA: `<section id="…" hidden></section>` vazio que as revisões de conteúdo deixam no lugar de uma abertura removida, só para o id continuar
+     existindo (os grifos, notas e traços já gravados apontam para ele). Não é conteúdo: não vira bloco, cartão de índice, item da lateral nem passo do Anterior/Próximo. FICA NO DOM
+     (a âncora é justamente o motivo de existir) — a regra aqui só impede que a navegação o liste. */
+  function ehPlaceholder(sec) {
+    return !!(sec && sec.hasAttribute && sec.hasAttribute('hidden') && !(sec.textContent || '').trim() && !sec.querySelector('img,svg,table,figure,video,audio,iframe,.quiz-item,.flashcard'));
+  }
+
   function lerSecoes(tab, tema) {
     var out = [];
     qa(tab, ':scope > section[id]').forEach(function (sec) {
+      if (ehPlaceholder(sec)) return;
       var id = sec.id, c = tema.clasificar(id);
       var h2 = q1(sec, ':scope > h2'), mk = q1(sec, ':scope > .section-marker');
       var marcador = limpo(mk && mk.textContent).replace(/^[—\-–\s]+/, '');
