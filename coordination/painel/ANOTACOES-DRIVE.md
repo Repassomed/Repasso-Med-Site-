@@ -2,7 +2,7 @@
 
 **Conferido em 28/10/2026; atualizar após cada merge e novo PDF.** Fonte: pastas do Drive e PRs mescladas na `main`. Lei: [LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md](../../LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md). Esta conferência verifica o inventário e a rastreabilidade documental; **não é uma releitura independente dos 22 PDFs já analisados nem uma certificação de perfeição médica**.
 
-**Total encontrado nas quatro pastas de Anotações:** **23 PDFs = Farmacología II 9 + Fisiopatología II 5 + Anatomía Patológica II 6 + Semiología II 3**. Os 22 PDFs anteriores têm registro de leitura/comparação nas PRs abaixo; o PDF novo de Farmacología II, recebido em 28/10, está **⬜ pendente**. Uma anotação pode ter sido comparada e **não** copiada porque já estava ensinada, estava errada ou não tinha base. Em Semiología II ainda falta recuperar a decisão específica de cada um dos três PDFs; veja a pendência.
+**Total encontrado nas quatro pastas de Anotações:** **23 PDFs = Farmacología II 9 + Fisiopatología II 5 + Anatomía Patológica II 6 + Semiología II 3**. Os 22 PDFs anteriores têm registro de leitura/comparação nas PRs abaixo; o PDF novo de Farmacología II, recebido em 28/10, está **⬜ pendente**. Uma anotação pode ter sido comparada e **não** copiada porque já estava ensinada, estava errada ou não tinha base. O rastreio individual de Semiología II e do PDF suprarrenal foi concluído nas PRs #603 e #604, mescladas; a conferência usou a camada de texto dos PDFs, sem ler imagens internas.
 
 ## Legenda
 
@@ -41,7 +41,7 @@ Drive: `Biblioteca › 6 semestre › Fisiopatologia II › Anotações`. [PR #4
 | `Fisiopato - Reflujo.pdf` | ✅ integrado | Nota sobre ranitidina/anti-H₂ → fp2b02; erros de pepsina/B12 e hérnia não entraram. |
 | `Fisiopato - Pacreatites.pdf` | ➖ já coberto | fp2b04 já cobria a nota; final “pancreatitis crónica” não tinha conteúdo. |
 | `Fisiopato - intestino.pdf` | ✅ integrado | Abscesso, fístula e perfuração livre no Crohn → fp2b12. |
-| `Fisiopato suprarenal.pdf` | ✅ integração seletiva declarada | Confrontado com slides 09–11 e blocos 15–17 na #481; falta uma linha fonte → achado → decisão → destino exclusiva para este quinto PDF no source pack. |
+| `Fisiopato suprarenal.pdf` | ➖ já coberto | Rastreio item a item na [#603](https://github.com/Repassomed/Repasso-Med-Site-/pull/603), mesclada: itens legíveis do PDF já estavam em fp2b17; campos em branco não acrescentam conteúdo. Imagens internas não conferidas. |
 
 **Limite das fontes:** a #481 não conferiu visualmente todas as figuras dos slides 09–10; essa lacuna é dos slides, não significa PDF de anotações sem leitura.
 
@@ -62,15 +62,15 @@ Drive: `Biblioteca › 6 semestre › Anatomia Patologica II › Anotações`. [
 
 ## Semiología II — 3 PDFs
 
-Drive: `Biblioteca › 6 semestre › Semiologia II › Anotaçoes `. A afirmação antiga de “não existe pasta” estava **errada**. [PR #532](https://github.com/Repassomed/Repasso-Med-Site-/pull/532), mesclada em 22/10, declara leitura integral dos três PDFs, além de cinco PDFs de Material atual e provas. Relata integração seletiva de asma, EPOC, pleural e diferencial radiológico e rejeição de erros e estratégia de prova. O **resumo atual da PR não atribui cada alteração a um destes três PDFs individualmente**; parte do conteúdo veio de Material atual.
+Drive: `Biblioteca › 6 semestre › Semiologia II › Anotaçoes `. A afirmação antiga de “não existe pasta” estava errada. A [#532](https://github.com/Repassomed/Repasso-Med-Site-/pull/532) registrou a leitura do conjunto; a [#603](https://github.com/Repassomed/Repasso-Med-Site-/pull/603) fez o rastreio **por PDF** e a [#604](https://github.com/Repassomed/Repasso-Med-Site-/pull/604) integrou dois pontos validados por slides. Todas mescladas. Rastreio detalhado: `coordination/source-packs/semiologia-ii-anotaciones-rastreo-2026-10-v1.md`. **Limite:** texto dos PDFs conferido; imagens internas não inspecionadas.
 
-| PDF | Estado na main | O que está comprovado / falta |
+| PDF | Estado na main | Decisão → destino |
 |---|---|---|
-| `Actividade de repasso Semio.pdf` | 🟠 comparado, rastreio incompleto | #532 o classifica como revisão, não prova; falta fonte → achado → decisão → bloco deste PDF. |
-| `Motivo de consulta Semio.pdf` | 🟠 comparado, rastreio incompleto | Leitura atestada em #532; falta decisão e destino por PDF. |
-| `Revisao P1 semio.pdf` | 🟠 comparado, rastreio incompleto | #532 o classifica como revisão, não prova; falta decisão e destino por PDF. |
+| `Actividade de repasso Semio.pdf` | ➖ já coberto/erros descartados | Respostas do aluno e casos cotejados com b01–b04; regra da exacerbação da asma já estava na #532. Imprecisões de casos não copiadas. Não é prova original. |
+| `Motivo de consulta Semio.pdf` | ✅ integração seletiva | Derrame pleural como complicação mais frequente da pneumonia → b04 na #604; demais pontos em b01–b05 ou rejeitados quando incorretos/sem base. |
+| `Revisao P1 semio.pdf` | ✅ integração parcial | Explicação dos 3 lobos direitos e 2 esquerdos → b04 e espelho do banco na #604, confirmada por slide de Anatomía I. Erro “pleura de 3 capas” rejeitado. Não é prova original. |
 
-**Pendência concreta de rastreio:** Claude 2 deve reconciliar estes três PDFs, o quinto PDF suprarrenal e dois pontos de AP II (Virchow/Krukenberg e tabela salivar) com as versões na `main`; registrar cada achado e conclusão sem modificar matéria por suposição. Isso é conferência de documentação, não prova de lacuna no aluno.
+O conteúdo de **Material atual** sobre pleura e diferencial radiológico é outra fonte: a #603 não o atribui retroativamente a estes três PDFs.
 
 ## Fora destas pastas / decisões de prioridade
 
