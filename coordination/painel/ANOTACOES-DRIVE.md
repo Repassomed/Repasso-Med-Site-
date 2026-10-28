@@ -1,8 +1,8 @@
 # Registro de anotações do Drive → site
 
-**Conferido em 28/10/2026; atualizar após cada merge e novo PDF.** Fonte: pastas do Drive e PRs mescladas na `main`. Lei: [LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md](../../LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md). Esta conferência verifica o inventário e a rastreabilidade documental; **não é uma releitura independente dos 22 PDFs nem uma certificação de perfeição médica**.
+**Conferido em 28/10/2026; atualizar após cada merge e novo PDF.** Fonte: pastas do Drive e PRs mescladas na `main`. Lei: [LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md](../../LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md). Esta conferência verifica o inventário e a rastreabilidade documental; **não é uma releitura independente dos 22 PDFs já analisados nem uma certificação de perfeição médica**.
 
-**Total encontrado nas quatro pastas de Anotações:** 22 PDFs = Farmacología II 8 + Fisiopatología II 5 + Anatomía Patológica II 6 + Semiología II 3. Nenhum desses 22 está sem registro de leitura/comparação nas PRs abaixo. Uma anotação pode ter sido comparada e **não** copiada porque já estava ensinada, estava errada ou não tinha base. Em Semiología II ainda falta recuperar a decisão específica de cada um dos três PDFs; veja a pendência.
+**Total encontrado nas quatro pastas de Anotações:** **23 PDFs = Farmacología II 9 + Fisiopatología II 5 + Anatomía Patológica II 6 + Semiología II 3**. Os 22 PDFs anteriores têm registro de leitura/comparação nas PRs abaixo; o PDF novo de Farmacología II, recebido em 28/10, está **⬜ pendente**. Uma anotação pode ter sido comparada e **não** copiada porque já estava ensinada, estava errada ou não tinha base. Em Semiología II ainda falta recuperar a decisão específica de cada um dos três PDFs; veja a pendência.
 
 ## Legenda
 
@@ -13,12 +13,13 @@
 | 🟠 comparado, rastreio incompleto | PR mesclada atesta leitura e integração seletiva do conjunto; falta demonstrar a decisão e o destino de **cada** PDF. Não equivale a afirmar que seu conteúdo inteiro entrou. |
 | ⬜ novo | Ainda não comparado. Registrar assim quando José colocar outro arquivo. |
 
-## Farmacología II — 8 PDFs
+## Farmacología II — 9 PDFs
 
 Drive: `Biblioteca › 6 semestre › Farmacologia II › Anotações`. [PR #474](https://github.com/Repassomed/Repasso-Med-Site-/pull/474) mesclada em 22/10. Evidência detalhada: `coordination/source-packs/farmacologia-ii-revisao-2026-10-anotacoes-v1.md` (E1–E10). A indicação de E1 “espera aceite” no registro antigo perdeu validade após o fechamento e merge da #474.
 
 | PDF | Estado na main | Decisão → destino |
 |---|---|---|
+| [\`Resumen_Clases_Farmacologia.pdf\`](https://drive.google.com/file/d/1rwBXwpoLLvQbG9i9g1wWMcY1qwdAWPo3/view) | ⬜ novo; **não integrado** | Recebido em 28/10. Resumo de transcrições de quatro aulas (29/09, 05/10, 19/10, 27/10: corticoides e asma/EPOC). Claude 2 deve comparar item a item com site e slides, validar ciência e registrar decisão/destino. O PDF diz “Prohibido Compartir”: uso apenas para conferência interna; **não reproduzir sua redação ou páginas no site**. |
 | `SRAA.pdf` | ✅ integrado | E7 → bloco b03; “bradicinina = hiper-K⁺” rejeitado. |
 | `antihipertensivos.pdf` | ➖ já coberto | Bloco b02 já ensinava os pontos aproveitáveis. |
 | `Diureticos.pdf` | ✅ integrado | E5–E6 → b02; percentual de alça sem confirmação não entrou. |
