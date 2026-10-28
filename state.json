@@ -3172,6 +3172,31 @@
       "summary": "Ledger Anthropic falhou apos chamada paga no evento pr:591.",
       "task_id": "pr:591",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "c303df9167617cca96ccb9dc0c66b1a4f7837cff",
+      "component": "guard",
+      "error_id": "ERR-4170D7494D",
+      "error_type": "hard-fail",
+      "fingerprint": "4170d7494da002972630",
+      "first_seen": "2026-10-28T19:33:00.068664+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "a9be28832a8d4800bcdbdc384a6fa8e8",
+      "issue_sync_updated_at": "2026-10-28T19:33:00.068664+00:00",
+      "last_evidence_hash": "20ad2d14000758729a1b",
+      "last_seen": "2026-10-28T19:33:00.068664+00:00",
+      "occurrence_count": 1,
+      "pr_number": 595,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "40755031287",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:595.",
+      "task_id": "pr:595",
+      "worker_id": null
     }
   ]
 }
