@@ -3272,6 +3272,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:600.",
       "task_id": "atualizar registro de anota\u00e7\u00f5es e estado atual.",
       "worker_id": null
+    },
+    {
+      "category": "workflow",
+      "commit_sha": null,
+      "component": "coordinator",
+      "error_id": "ERR-4CF96A1ECD",
+      "error_type": "anthropic-ledger-failed",
+      "fingerprint": "4cf96a1ecd0c2eacbac1",
+      "first_seen": "2026-10-28T22:06:20.704830+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "44cf1b4ccb4c4800a9c04248aec500b2",
+      "issue_sync_updated_at": "2026-10-28T22:06:20.704830+00:00",
+      "last_evidence_hash": "b68e8ccc1969384d163e",
+      "last_seen": "2026-10-28T22:06:20.704830+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "40777193269",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Ledger Anthropic falhou apos chamada paga no evento pr:604.",
+      "task_id": "pr:604",
+      "worker_id": null
     }
   ]
 }
