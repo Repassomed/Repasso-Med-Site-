@@ -3302,7 +3302,7 @@
       "pr": 595,
       "commit": null,
       "issue": 543,
-      "notas": "Só o atributo data-rm-agrega nas 10 seções; nenhum texto, id, imagem, questão ou cartão mudou. Em guarani.html também saíram 12 atributos data-guard-previous-stem-sha1 (6 questões × corpo e banco) cuja ponte já foi consumida na #566 (hashes casam só com o estado anterior a 8788ca1a; nenhum casa com a main atual). Sem merge por Claude 2."
+      "notas": "Só o atributo data-rm-agrega nas 10 seções; nenhum texto, id, imagem, questão ou cartão mudou. Em guarani.html também saíram 12 atributos data-guard-previous-stem-sha1 (6 questões × corpo e banco) cuja ponte já foi consumida na #566 (hashes casam só com o estado anterior a 8788ca1a; nenhum casa com a main atual). Sem merge por Claude 2. Bloqueio real fora do escopo: a porta de toxicologia fica FECHADA (etapas 3 e 4) porque docs/layout-ensaio/inventario.json está velho em toxportada (12 âncoras; hoje 0, vazia e hidden desde a #594) e toxb01 (335; hoje 337). Com o inventário regenerado só em cópia local, a porta abre. Regenerar o inventário não foi feito aqui."
     }
   ]
 }
