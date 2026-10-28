@@ -1,13 +1,13 @@
 # Checklist das matérias
 
-> ⚠️ **ESTADO ATUAL (28/10/2026): a tabela abaixo é histórica (19/10). Não use os símbolos e a lista de PRs antigas como autorização de merge.** #474, #481, #499, #532, #580, #593, #594, #595 e #597 foram mescladas. O painel PDF a PDF atualizado está em [ANOTACOES-DRIVE.md](ANOTACOES-DRIVE.md). O próximo passo é implantação controlada, **matéria por matéria**, com conteúdo e dados dos alunos testados por Claude antes da ativação. José só mescla e faz a checagem visual curta da matéria ativada.
+> ⚠️ **ESTADO ATUAL (28/10/2026): a tabela abaixo é histórica (19/10). Não use os símbolos e a lista de PRs antigas como autorização de merge.** #474, #481, #499, #532, #580, #593, #594, #595, #597, #603, #604 e #605 foram mescladas. O painel PDF a PDF atualizado está em [ANOTACOES-DRIVE.md](ANOTACOES-DRIVE.md). O próximo passo é implantação controlada, **matéria por matéria**, com conteúdo e dados dos alunos testados por Claude antes da ativação. José só mescla e faz a checagem visual curta da matéria ativada.
 
 | Estado agora | Item | Próxima ação |
 |---|---|---|
 | ✅ | AP II Práctica P2 (#580); últimas revisões editoriais (#594/#595/#597); portas de layout/caneta com flags (#593) | Preservar a `main` e os dados existentes. |
-| ⏳ | Medicina Familiar, 1.ª candidata de implantação (#599 aberta) | Claude 4: atualizar com a main, corrigir ESCOPO/Guard e retirar dados de grifos reais do teste **e do histórico da branch**; comprovar flags do Netlify antes de merge. Até lá: 🔴 não mesclar #599. |
-| ⬜ | Toxicología não passa no pré-voo de layout | Claude 2: regenerar `docs/layout-ensaio/inventario.json` depois da limpeza editorial e repetir porta; isto bloqueia **só Toxicología**. |
-| ⬜ | Rastreio individual de 3 PDFs de Semiología II, 1 suprarrenal e 2 decisões de AP II | Conferência curta e documental em [ANOTACOES-DRIVE.md](ANOTACOES-DRIVE.md), sem alegar lacuna de conteúdo antes da checagem. |
+| ⏳ | Medicina Familiar, 1.ª candidata de implantação (#599 aberta) | Claude 4 refez a branch sem dados reais, Guard passou. Antes do merge, José confere se `RM_LAYOUT_SLUGS`, `RM_PEN_SLUGS` e `RM_VISUAL_SLUGS` não contêm `medicina-familiar`; sem essa conferência, não mesclar. |
+| ✅ | Toxicología: inventário de layout atualizado na #605 | Pré-voo passou 7/7; ainda não há ativação para alunos. |
+| ✅/⬜ | Rastreio dos 3 PDFs de Semiología II e 1 suprarrenal concluído (#603/#604); 2 decisões de AP II ainda por conferir | Ver [ANOTACOES-DRIVE.md](ANOTACOES-DRIVE.md). Novo PDF de Farmacología II recebido em 28/10: ⬜ comparar segundo a lei antes de implantação nessa matéria. |
 | ⬜ | Cada próxima matéria | Claude proprietário roda porta, confere grifos/caneta e entrega Cartão de Merge; Claude 4 liga primeiro layout e depois caneta por flags, uma matéria por vez, com volta preparada; José confere no aparelho. |
 | ⬜ depois | Audiobooks: compressão, bucket e ativação | Trabalhar após layout/caneta; infográficos, Imagenología e Bioestadística também ficam para fase posterior por decisão de José. |
 
