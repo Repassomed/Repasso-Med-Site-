@@ -1,17 +1,17 @@
 # Checklist das matérias
 
-> ⚠️ **ESTADO ATUAL (28/10/2026): a tabela abaixo é histórica (19/10). Não use os símbolos e a lista de PRs antigas como autorização de merge.** #474, #481, #499, #532, #580, #593, #594, #595, #597, #603, #604 e #605 foram mescladas. O painel PDF a PDF atualizado está em [ANOTACOES-DRIVE.md](ANOTACOES-DRIVE.md). O próximo passo é implantação controlada, **matéria por matéria**, com conteúdo e dados dos alunos testados por Claude antes da ativação. José só mescla e faz a checagem visual curta da matéria ativada.
+> ⚠️ **ESTADO ATUAL (30/10/2026): a tabela abaixo é histórica (19/10). Não use os símbolos e a lista de PRs antigas como autorização de merge.** #474, #481, #499, #532, #580, #593, #594, #595, #597, #603, #604, #605, #599, #608 e #609 foram mescladas. O painel PDF a PDF atualizado está em [ANOTACOES-DRIVE.md](ANOTACOES-DRIVE.md). O próximo passo é implantação controlada, **matéria por matéria**, com conteúdo e dados dos alunos testados por Claude antes da ativação. José só mescla e faz a checagem visual curta da matéria ativada.
 
 | Estado agora | Item | Próxima ação |
 |---|---|---|
 | ✅ | AP II Práctica P2 (#580); últimas revisões editoriais (#594/#595/#597); portas de layout/caneta com flags (#593) | Preservar a `main` e os dados existentes. |
-| ⏳ | Medicina Familiar, 1.ª candidata de implantação (#599 aberta) | Claude 4 refez a branch sem dados reais, Guard passou. Antes do merge, José confere se `RM_LAYOUT_SLUGS`, `RM_PEN_SLUGS` e `RM_VISUAL_SLUGS` não contêm `medicina-familiar`; sem essa conferência, não mesclar. |
+| ⏳ | Medicina Familiar: 1.ª fechadura mesclada (#599); ativação real ainda não comprovada no painel | Claude 4 verifica flags reais de Netlify e conduz **layout → teste físico → caneta**, em etapas com volta pronta. Mesclar #599 não prova que as flags estejam desligadas ou ligadas. |
 | ✅ | Toxicología: inventário de layout atualizado na #605 | Pré-voo passou 7/7; ainda não há ativação para alunos. |
-| ✅/⬜ | Rastreio dos 3 PDFs de Semiología II e 1 suprarrenal concluído (#603/#604); 2 decisões de AP II ainda por conferir | Ver [ANOTACOES-DRIVE.md](ANOTACOES-DRIVE.md). Novo PDF de Farmacología II recebido em 28/10: ⬜ comparar segundo a lei antes de implantação nessa matéria. |
+| ✅ | 23 PDFs das quatro pastas registrados; novo PDF de Farmacología II (#608) e decisões de AP II (#609) fechados | Ver [ANOTACOES-DRIVE.md](ANOTACOES-DRIVE.md). Novos PDFs futuros entram primeiro como ⬜. |
 | ⬜ | Cada próxima matéria | Claude proprietário roda porta, confere grifos/caneta e entrega Cartão de Merge; Claude 4 liga primeiro layout e depois caneta por flags, uma matéria por vez, com volta preparada; José confere no aparelho. |
 | ⬜ depois | Audiobooks: compressão, bucket e ativação | Trabalhar após layout/caneta; infográficos, Imagenología e Bioestadística também ficam para fase posterior por decisão de José. |
 
-**Qualidade editorial:** várias revisões foram mescladas; isto **não prova perfeição das 27**. Limites conhecidos: algumas frases G0 protegidas por grifos reais, fontes/figuras não acessíveis em revisões pontuais, conferência incompleta das imagens originais de AP II Práctica P2. Esses itens exigem rastreio específico, não impedem a implantação nas demais matérias. Imagens em português ou de Medicina Legal e infográficos de Medicina Familiar não são bloqueio por decisão de José.
+**Qualidade editorial:** várias revisões foram mescladas; isto **não prova perfeição das 27**. Limites conhecidos: algumas frases G0 protegidas por grifos reais, fontes/figuras não acessíveis em revisões pontuais, conferência visual incompleta das 43 imagens originais de AP II Práctica P2 (texto oficial conferido na #597; sem imagem retirada). Esses itens exigem rastreio específico, não impedem a implantação nas demais matérias. Imagens em português ou de Medicina Legal e infográficos de Medicina Familiar não são bloqueio por decisão de José.
 
 ---
 
