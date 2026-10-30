@@ -127,3 +127,19 @@ Cada uma tem ponte `data-guard-previous-stem-sha1` (Guard: 🟡 «enunciado-reno
 | 10 | Nódulo quente: retirado «suprime el resto del parénquima» | Clase 8; detalhe sem lastro retirado | Conferida (menos afirmações) |
 
 **36 figuras `anato2/*-rev.webp`:** conferidas em folhas de contato (sem corte nem sobreposição) e por OCR local (0 rótulos de prova). A **ciência dos desenhos** foi conferida só no nível dos rótulos contra os slides; fotos/histologia são ilustrações didáticas, não lâminas, e a página já diz isso. Fig 40: painel ⑤ = fase inicial de De Quervain (Clase 8 sl. 8–9).
+
+## Fechamento 30/10/2026 · tabela salivar e Virchow/Krukenberg (AP II teórica)
+
+Fontes lidas na íntegra pelo conector do Drive (capa de texto): `Cavidade oral.pdf` (anotação), `Tumores gastricos.pdf` (anotação) e **`Clase 1 - Patologías de la cavidad oral.pptx.PDF`** (slides da cátedra, diapositivas «Neoplasias» e «Adenoma pleomorfo»).
+
+| Fonte → trecho | Estado antes | Decisão | Destino |
+|---|---|---|---|
+| Slide «Neoplasias» + `Cavidade oral` p.3: % de malignidade por glândula (parótida 15–30, submandibular 40, menores/sublingual 70–90) | Ausente; a regra «inversamente proporcional ao tamanho» já era ensinada sem números (o registro de 10/10 dizia «% no site»: errado) | **Integrado** em uma linha, para quantificar a regra já ensinada | `ap2b01`, quadro de margem |
+| Slide «Adenoma pleomorfo»: «carcinoma ex adenoma pleomorfo o tumor mixto maligno; malignizan con incidencia que aumenta con el tiempo» (+ anotação «Carcinoma o adenocarcinoma?») | **Ausente**; é a informação importante que faltava | **Integrado** | `ap2b01`, mesmo quadro |
+| Slide «Clasificación histopatológica y prevalencia» (tabela de 10 tipos com %) | Ausente | **Não integrado** por decisão editorial: tabela maior que o texto ensinado; sem ganho de raciocínio | — |
+| Slides/anotação: CEC oral aumenta em <40 anos sem fatores de risco; pleomorfo 60 % dos tumores da parótida; mucoepidermoide 15 % (60–70 % na parótida); tamanhos 6/8 cm; fibroma na linha de mordida | Ausentes | **Não integrados** (detalhes menores, sem pergunta nem lacuna de raciocínio); registrados aqui como lacunas conhecidas | — |
+| `Tumores gastricos` p.1: «Virchow e Krukenberg: tema de examen os dois primeiros» | Presente: tabela dos 5 epônimos, dica «os dois gânglios são esquerdos / os dois peritoneais descem», caixa «Dos epónimos para reconocer de inmediato» (texto do material da cátedra, sem frase de prova) e uma pergunta | **Sem mudança** (já resolvido; ênfase expressa pelo desenho, sem «a cátedra cobra») | `ap2b04` |
+
+**Grifos (SELECT somente leitura, 30/10):** `ap2b01` 291 grifos de 6 usuários, `ap2b02` 1, `ap2b03` 74, `ap2b04` 10, `ap2intro` 2; notas 0; traços 0. Teste com o resolvedor real (`RMTools.resolverAncora`) sobre os 291 de `ap2b01`, antes e depois da inserção: **0 mudam** (nível e contexto idênticos); 1 já não resolvia antes (preexistente). Escolhi a posição depois do texto de ensino (um só quadro de margem) porque ao lado de «Regla de bolsillo» 1 grifo mudava. Nenhum texto grifado foi tocado.
+
+**Limites:** o quadro não tem pergunta própria (acréscimo de ensino, não de cobrança). Os itens «sem lastro nos slides» da #499 (Virchow izquierdo, Krukenberg bilateral, CD20, etc.) continuam como estão: sem fonte para corrigir.
