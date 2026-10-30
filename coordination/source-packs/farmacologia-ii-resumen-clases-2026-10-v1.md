@@ -11,7 +11,7 @@ Fonte nova: Drive `Biblioteca › 6 semestre › Farmacologia II › Anotações
 
 ## Resultado
 
-**Quase tudo já estava ensinado** nos blocos `f2b07` (corticoides) e `f2b08` (respiratório), integrados a partir dos mesmos slides. **Dois acréscimos pequenos** foram integrados no `f2b07`, ambos apoiados no slide 05; o resto é cobertura, conflito de números (a página segue o slide), erro da transcrição ou conteúdo sem fonte.
+**Quase tudo já estava ensinado** nos blocos `f2b07` (corticoides) e `f2b08` (respiratório), integrados a partir dos mesmos slides. **Dois acréscimos pequenos e prudentes** foram integrados no `f2b07`, ambos apoiados no slide 05; o resto é cobertura, conflito de números (a página segue o slide), erro da transcrição ou conteúdo sem fonte.
 
 ## 29/09 · corticoides
 
@@ -34,12 +34,12 @@ Fonte nova: Drive `Biblioteca › 6 semestre › Farmacologia II › Anotações
 
 | Tema | Bloco atual | Estado | Decisão / destino |
 |---|---|---|---|
-| Efeito permissivo (glicocorticoide aumenta a resposta a catecolaminas e angiotensina II) e hipertensão | f2b07 tinha a ideia («favorecem a reatividade a catecolaminas e à angiotensina II») **sem o nome** | **Novo (vocabulário)** | **Integrado** em `f2b07`, bloco «Cardiovasculares»: a mesma frase passa a nomear o **efeito permissivo** e explica em palavras próprias que o corticoide não contrai o vaso sozinho, mas faz os vasoconstritores responderem mais. Fonte: slide 05 («favorecem sua reatividade a catecolaminas e outras substâncias pressoras (angiotensina II)»). A explicação por «mais receptores α₁/AT₁» do PDF **não** foi escrita (não está no slide) |
+| Efeito permissivo (glicocorticoide aumenta a resposta a catecolaminas e angiotensina II) e hipertensão | f2b07 tinha a ideia («favorecem a reatividade a catecolaminas e à angiotensina II») **sem o nome** | **Novo (vocabulário)** | **Integrado** em `f2b07`, bloco «Cardiovasculares»: a mesma frase passa a nomear o **efeito permissivo** (nome usado na aula e na farmacologia geral; o slide não traz o termo) para a mesma ideia do slide: maior resposta dos vasos a catecolaminas e angiotensina II. **Não** se afirma que o corticoide «não contrai o vaso sozinho» nem outro mecanismo: o slide não o sustenta. Fonte: slide 05 («favorecem sua reatividade a catecolaminas e outras substâncias pressoras (angiotensina II)»). A explicação por «mais receptores α₁/AT₁» do PDF **não** foi escrita (não está no slide) |
 | Hipertensão por mineralocorticoide (Na⁺/água, volume) | f2b07 | Coberto | — |
 | Lipólise e redistribuição de gordura; catabolismo muscular; piel | f2b07 | Coberto | — |
 | Ciclo «gordura abdominal → TNF → resistência à insulina → apetite» | f2b07 (só «aumentam o apetito») | **Sem fonte** (só transcrição; o slide só diz que aumentam apetite e ingestão) | Não incorporado |
 | Osteoporose: mecanismo (↓Ca intestinal, ↑excreção renal → hiperparatireoidismo → osteoclastos; ↓/apoptose de osteoblastos e osteócitos; ↓GH/IGF-1) | f2b07 (4 mecanismos) | Coberto; confere com o slide 05 | — |
-| Osteoporose: manejo | f2b07 **não dizia** | **Novo** | **Integrado** (1 frase): «Según la cátedra, la osteoporosis esteroidea debe tratarse con vitamina D». Fonte: slide 05 («osteoporosis, que debe ser tratada con vitamina D»). O PDF acrescenta suplemento de **cálcio** e **exercício de baixo impacto**: **não incorporados** (só na transcrição; o slide só cita vitamina D) |
+| Osteoporose: manejo | f2b07 **não dizia** | **Novo** | **Integrado** (1 frase, formulação prudente): «La cátedra menciona la vitamina D como parte del manejo de la osteoporosis esteroidea». O slide cita a vitamina D na lista de efeitos («osteoporosis, que debe ser tratada con vitamina D»); a frase da página **não** a apresenta como tratamento completo. O PDF acrescenta suplemento de **cálcio** e **exercício de baixo impacto**: **não incorporados** (só na transcrição; o slide só cita vitamina D) |
 | Potências relativas (hidrocortisona 1/1; dexametasona 25/0; fludrocortisona 10/125) | f2b07 (tabela e «macete») | Coberto; confere com o slide (tabela 46-3) | — |
 | Supressão do eixo; «dose suprafisiológica» | f2b07 | Coberto | — |
 | Pele, imunidade, SNC, crescimento | f2b07 | Coberto | — |
