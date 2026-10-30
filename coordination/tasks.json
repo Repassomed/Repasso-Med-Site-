@@ -3420,6 +3420,29 @@
       "commit": null,
       "issue": 543,
       "notas": "Só relatório (nenhuma página alterada); sem flags, sem arquivos do Claude 4, sem painel. Sem merge por Claude 2."
+    },
+    {
+      "id": "prontidao-nova-era-9-materias-2026-10",
+      "titulo": "Prontidão para a Nova Era: 9 matérias restantes",
+      "area": "materia",
+      "materia": "ortopedia + anestesiologia + dermatologia + oftalmologia + neurologia + guarani + medicina-legal + histologia-ii + histologia-ii-practica",
+      "arquivos": [
+        "coordination/source-packs/prontidao-nova-era-9-materias-2026-10-v1.md"
+      ],
+      "objetivo": "Registrar porta, estrutura, dados reais de alunos e classificação de 9 matérias para implantação",
+      "fonte": "tools/qa/pre-voo/porta-da-materia.sh; SELECT somente leitura; sem fonte médica nova",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/prontidao-9-materias-2026-10",
+      "pr": 617,
+      "commit": null,
+      "issue": 543,
+      "notas": "Só relatório; sem flags, sem arquivos do Claude 4, sem painel. Sem merge por Claude 2."
     }
   ]
 }
