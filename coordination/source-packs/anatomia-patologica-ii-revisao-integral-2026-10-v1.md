@@ -127,3 +127,17 @@ Cada uma tem ponte `data-guard-previous-stem-sha1` (Guard: 🟡 «enunciado-reno
 | 10 | Nódulo quente: retirado «suprime el resto del parénquima» | Clase 8; detalhe sem lastro retirado | Conferida (menos afirmações) |
 
 **36 figuras `anato2/*-rev.webp`:** conferidas em folhas de contato (sem corte nem sobreposição) e por OCR local (0 rótulos de prova). A **ciência dos desenhos** foi conferida só no nível dos rótulos contra os slides; fotos/histologia são ilustrações didáticas, não lâminas, e a página já diz isso. Fig 40: painel ⑤ = fase inicial de De Quervain (Clase 8 sl. 8–9).
+
+## Fechamento 30/10/2026 · tabela salivar e Virchow/Krukenberg (AP II teórica)
+
+Fontes lidas na íntegra pelo conector do Drive (capa de texto): `Cavidade oral.pdf` (anotação), `Tumores gastricos.pdf` (anotação) e **`Clase 1 - Patologías de la cavidad oral.pptx.PDF`** (slides da cátedra, diapositivas «Neoplasias» e «Adenoma pleomorfo»).
+
+| Fonte → trecho | Estado antes | Decisão | Destino |
+|---|---|---|---|
+| Slide «Neoplasias» + `Cavidade oral` p.3: parótida 65–80 % / 15–30 % de malignidade; submandibular 10 % / 40 %; glândulas menores e sublingual: resto / 70–90 % | **Ausente** do HTML (o registro de 10/10 dizia «% por glândula no site»: estava errado; o «70–90» só aparecia numa explicação de questão, retirada em 6b6fb39f) | **Integrado**, igual ao slide, num quadro de margem | `ap2b01`, depois da seção «Neoplasias de las glándulas salivales» |
+| Slide «Clasificación histopatológica y prevalencia»: pleomorfo 50, Warthin 5, oncocitoma 2, cistoadenoma 2, células basais 2 / mucoepidermoide 15, acinares 6, adenoca NEOM 6, adenoide cístico 4, tumor misto maligno 3 (slide seguinte: «carcinoma ex adenoma pleomorfo o tumor mixto maligno») | Ausente | **Integrado**; «tumor mixto maligno» escrito como «carcinoma ex adenoma pleomorfo (tumor mixto)», como o slide o define | `ap2b01` |
+| `Tumores gastricos` p.1: «Virchow e Krukenberg: tema de examen os dois primeiros» | Presente: tabela dos 5 epônimos, dica «os dois gânglios são esquerdos / os dois peritoneais descem», caixa «Dos epónimos para reconocer de inmediato» (texto do material da cátedra, sem frase de prova) e uma pergunta | **Sem mudança** (já resolvido; ênfase expressa pelo desenho, sem «a cátedra cobra») | `ap2b04` |
+
+**Grifos (SELECT somente leitura, 30/10):** `ap2b01` 291 grifos de 6 usuários, `ap2b02` 1, `ap2b03` 74, `ap2b04` 10, `ap2intro` 2; notas 0; traços 0. Teste com o resolvedor real (`RMTools.resolverAncora`) sobre os 291 de `ap2b01`, antes e depois da inserção: **0 mudam** (nível e contexto idênticos); 1 já não resolvia antes (preexistente). Escolhi a posição depois do texto de ensino porque ao lado de «Regla de bolsillo» 1 grifo mudava. Nenhum texto grifado foi tocado.
+
+**Limites:** o quadro não tem pergunta própria (acréscimo de ensino, não de cobrança). Os itens «sem lastro nos slides» da #499 (Virchow izquierdo, Krukenberg bilateral, CD20, etc.) continuam como estão: sem fonte para corrigir.
