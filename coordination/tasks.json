@@ -3439,7 +3439,7 @@
       ],
       "dependencias": [],
       "branch": "claude/prontidao-9-materias-2026-10",
-      "pr": 0,
+      "pr": 617,
       "commit": null,
       "issue": 543,
       "notas": "Só relatório; sem flags, sem arquivos do Claude 4, sem painel. Sem merge por Claude 2."
