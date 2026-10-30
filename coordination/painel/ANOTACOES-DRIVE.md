@@ -1,8 +1,8 @@
 # Registro de anotações do Drive → site
 
-**Conferido em 28/10/2026; atualizar após cada merge e novo PDF.** Fonte: pastas do Drive e PRs mescladas na `main`. Lei: [LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md](../../LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md). Esta conferência verifica o inventário e a rastreabilidade documental; **não é uma releitura independente dos 22 PDFs já analisados nem uma certificação de perfeição médica**.
+**Conferido em 30/10/2026; atualizar após cada merge e novo PDF.** Fonte: pastas do Drive e PRs mescladas na `main`. Lei: [LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md](../../LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md). Esta conferência verifica o inventário e a rastreabilidade documental; **não é uma releitura independente dos 23 PDFs nem uma certificação de perfeição médica**.
 
-**Total encontrado nas quatro pastas de Anotações:** **23 PDFs = Farmacología II 9 + Fisiopatología II 5 + Anatomía Patológica II 6 + Semiología II 3**. Os 22 PDFs anteriores têm registro de leitura/comparação nas PRs abaixo; o PDF novo de Farmacología II, recebido em 28/10, está **⬜ pendente**. Uma anotação pode ter sido comparada e **não** copiada porque já estava ensinada, estava errada ou não tinha base. O rastreio individual de Semiología II e do PDF suprarrenal foi concluído nas PRs #603 e #604, mescladas; a conferência usou a camada de texto dos PDFs, sem ler imagens internas.
+**Total encontrado nas quatro pastas de Anotações:** **23 PDFs = Farmacología II 9 + Fisiopatología II 5 + Anatomía Patológica II 6 + Semiología II 3**. Todos os 23 PDFs têm registro de leitura/comparação em PRs mescladas. O PDF novo de Farmacología II, recebido em 28/10, foi fechado na #608: dois pontos integrados seletivamente, o resto coberto, rejeitado ou sem fonte. Uma anotação pode ter sido comparada e **não** copiada porque já estava ensinada, estava errada ou não tinha base. O rastreio individual de Semiología II e do PDF suprarrenal foi concluído nas PRs #603 e #604, mescladas; a conferência usou a camada de texto dos PDFs, sem ler imagens internas.
 
 ## Legenda
 
@@ -19,7 +19,7 @@ Drive: `Biblioteca › 6 semestre › Farmacologia II › Anotações`. [PR #474
 
 | PDF | Estado na main | Decisão → destino |
 |---|---|---|
-| [Resumen_Clases_Farmacologia.pdf](https://drive.google.com/file/d/1rwBXwpoLLvQbG9i9g1wWMcY1qwdAWPo3/view) | ⬜ novo; **não integrado** | Recebido em 28/10. Resumo de transcrições de quatro aulas (29/09, 05/10, 19/10, 27/10: corticoides e asma/EPOC). Claude 2 deve comparar item a item com site e slides, validar ciência e registrar decisão/destino. O PDF diz “Prohibido Compartir”: uso apenas para conferência interna; **não reproduzir sua redação ou páginas no site**. |
+| [Resumen_Clases_Farmacologia.pdf](https://drive.google.com/file/d/1rwBXwpoLLvQbG9i9g1wWMcY1qwdAWPo3/view) | ✅ integração seletiva [#608](https://github.com/Repassomed/Repasso-Med-Site-/pull/608) | Quatro aulas (29/09, 05/10, 19/10, 27/10) cotejadas com f2b07–08 e slides 05–06. Entraram em f2b07 o nome **efecto permisivo** e menção prudente à vitamina D no manejo da osteoporose. Restante já coberto, conflitante ou sem fonte: ver `coordination/source-packs/farmacologia-ii-resumen-clases-2026-10-v1.md`. PDF de uso interno com aviso “Prohibido Compartir”: redação e páginas não reproduzidas. |
 | `SRAA.pdf` | ✅ integrado | E7 → bloco b03; “bradicinina = hiper-K⁺” rejeitado. |
 | `antihipertensivos.pdf` | ➖ já coberto | Bloco b02 já ensinava os pontos aproveitáveis. |
 | `Diureticos.pdf` | ✅ integrado | E5–E6 → b02; percentual de alça sem confirmação não entrou. |
@@ -51,10 +51,10 @@ Drive: `Biblioteca › 6 semestre › Anatomia Patologica II › Anotações`. [
 
 | PDF | Estado na main | Decisão → destino |
 |---|---|---|
-| `Cavidade oral.pdf` | ✅ integrado | HPV-16 (#476); metástase a distância e risco de segundo primário (#499) → AP II b01. Tabela de tumores salivares: confirmar no registro de fonte antes de declarar integração. |
+| `Cavidade oral.pdf` | ✅ integrado | HPV-16 (#476); metástase a distância e risco de segundo primário (#499) → AP II b01. #609 integrou em b01 os percentuais de malignidade por glândula e a transformação do adenoma pleomorfo; a tabela extensa de frequência por tipo ficou fora por decisão editorial. |
 | `patologias do esofago.pdf` | ➖ já coberto | Bloco de esôfago conferido na #458; sem ganho identificado no painel anterior. |
 | `Patologias do estomago.pdf` | ➖ já coberto/descartado | Já coberto; transformação “muito frequente” de úlcera não entrou por erro. |
-| `Tumores gastricos.pdf` | ✅ integração parcial | MALT 40%/Russell entrou na #499. A maior ênfase em Virchow/Krukenberg consta do painel antigo; **a descrição da #499 não comprova seu destino**, requer checagem pontual no HTML/source pack. |
+| `Tumores gastricos.pdf` | ✅ integração parcial | MALT 40%/Russell entrou na #499. #609 confirmou que Virchow/Krukenberg já estavam em b04 (tabela de epônimos, destaque e pergunta), sem nova alteração. |
 | `perguntas questões.pdf` | ✅ já correspondia às questões | 11/11 equivalentes; Q30 completada na #476; “P53 y P63” de Q29 rejeitado. |
 | `Resumo P1.pdf` | ➖ já coberto | 16 pontos já no site, conforme auditoria antiga. |
 
