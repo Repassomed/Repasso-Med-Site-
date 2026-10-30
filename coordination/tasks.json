@@ -3397,6 +3397,29 @@
       "commit": null,
       "issue": 543,
       "notas": "Grifos: 240 (hash 9d6fec3d…), 1 traço (f2b00), 0 notas; portão OK. Redação do PDF não copiada. Sem merge por Claude 2."
+    },
+    {
+      "id": "prontidao-nova-era-4-materias-2026-10",
+      "titulo": "Prontidão para a Nova Era: Farmacología II, Fisiopatología II, Semiología II e Toxicología",
+      "area": "materia",
+      "materia": "farmacologia-ii + fisiopatologia-ii + semiologia-ii + toxicologia",
+      "arquivos": [
+        "coordination/source-packs/prontidao-nova-era-4-materias-2026-10-v1.md"
+      ],
+      "objetivo": "Registrar a evidência da porta, dos dados de alunos e dos testes das 4 matérias, com classificação e ordem para implantação",
+      "fonte": "tools/qa/pre-voo/porta-da-materia.sh; SELECT somente leitura em user_highlights, user_ink_strokes e user_notes; sem fonte médica nova",
+      "agente": "Claude 2",
+      "estado": "NEEDS-AUDIT",
+      "prioridade_declarada": "P1",
+      "capabilities_required": [
+        "conteudo"
+      ],
+      "dependencias": [],
+      "branch": "claude/prontidao-nova-era-4-materias-2026-10",
+      "pr": 612,
+      "commit": null,
+      "issue": 543,
+      "notas": "Só relatório (nenhuma página alterada); sem flags, sem arquivos do Claude 4, sem painel. Sem merge por Claude 2."
     }
   ]
 }
