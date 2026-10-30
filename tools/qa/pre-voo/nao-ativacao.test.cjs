@@ -16,6 +16,8 @@ const D = require('./lib-dados.cjs');
 const FN = path.join(L.ROOT, 'netlify/functions/get-pilot-flags.js');
 const PILOT_JS = fs.readFileSync(path.join(L.ROOT, 'assets/rm-pilot.js'), 'utf8');
 const UID = D.UID, PIL = 'semiologia-ii';
+const CANDIDATAS_ESPERADAS = ['semiologia-ii', 'medicina-familiar'];   // 1.ª fechadura: piloto + a matéria da primeira implantação controlada (que só PERGUNTA)
+const PRIMEIRA = 'medicina-familiar';
 const RAPIDO = process.argv.includes('--rapido');
 let n = 0, ko = 0;
 const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x) : ''); } return !!c; };
@@ -57,9 +59,10 @@ async function matéria(br, base, m, env, rot) {
   for (const m of mats) {
     const r = await matéria(br, base, m, TODAS_UIDS, 'E1');
     if (m.slug === PIL) { ok(r.est.layout === true && r.pedidos.length === 1, 'piloto (Semiología II): continua recebendo layout, 1 requisição (comportamento de hoje preservado)', r); continue; }
+    if (m.slug === PRIMEIRA) { ok(r.est.layout === false && r.pedidos.length === 1 && r.est.perm !== true && r.est.pen === false, 'Medicina Familiar (candidata, 2.ª fechadura FECHADA): pergunta 1 vez, o servidor nega, sem layout e sem caneta física', r); difs += r.dif.length; errsN += r.errs.length; continue; }
     if (r.est.layout) aberto.push(m.slug); if (r.pedidos.length) reqFora.push(m.slug); if (r.est.perm || r.est.pen) penFora.push(m.slug); difs += r.dif.length; errsN += r.errs.length;
   }
-  ok(aberto.length === 0, `nenhuma das outras ${mats.length - 1} matérias montou layout`, aberto);
+  ok(aberto.length === 0, `nenhuma das outras ${mats.length - 2 + (mats.some(x => x.slug === PRIMEIRA) ? 0 : 1)} matérias (fora piloto e Medicina Familiar) montou layout`, aberto);
   ok(reqFora.length === 0, 'nenhuma delas fez requisição ao servidor (CANDIDATAS fecha antes)', reqFora);
   ok(penFora.length === 0, 'caneta física (pilotoPermitido / penLiberada) = false em todas elas, mesmo com a conta fixa do código', penFora);
   ok(difs === 0 && errsN === 0, 'grifos, traços e notas gravados antes: idênticos em todas; 0 erros JS', { difs, errsN });
@@ -75,7 +78,7 @@ async function matéria(br, base, m, env, rot) {
   }
 
   console.log('\n▸ E4 · estático');
-  { const cand = /var CANDIDATAS = \[([^\]]*)\]/.exec(PILOT_JS); ok(cand && cand[1].replace(/['"\s]/g, '') === PIL, 'CANDIDATAS = só semiologia-ii', cand && cand[1]);
+  { const cand = /var CANDIDATAS = \[([^\]]*)\]/.exec(PILOT_JS); ok(cand && cand[1].replace(/['"\s]/g, '').split(',').sort().join() === CANDIDATAS_ESPERADAS.slice().sort().join(), 'CANDIDATAS = piloto + Medicina Familiar (nada além)', cand && cand[1]);
     const fn = fs.readFileSync(FN, 'utf8'); ok(!/['"]\*['"]|'all'|'todas'/.test(fn.replace(/\/\*[\s\S]*?\*\//g, '')), 'a função do servidor não aceita curinga');
     const toml = fs.readFileSync(path.join(L.ROOT, 'netlify.toml'), 'utf8'); ok(!/RM_(LAYOUT|VISUAL|PEN)_SLUGS|RM_PILOT_/.test(toml), 'netlify.toml não define nenhuma dessas variáveis');
     const todos = require('child_process').execSync(`grep -rIlE "RM_(LAYOUT|VISUAL|PEN)_SLUGS\\s*[=:]" "${L.ROOT}" --include=*.toml --include=*.json --include=*.env* --include=*.yml || true`).toString().trim(); ok(todos === '', 'nenhum arquivo de configuração do repositório atribui as variáveis de matéria', todos);
