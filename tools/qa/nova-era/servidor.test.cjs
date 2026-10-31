@@ -69,6 +69,10 @@ const NEG = { layout: false, pen: false, visual: false, audio: false };
   { const c = base({}, { env: Object.assign({}, ENV_JOSE, { RM_LAYOUT_SLUGS: MF }) });
     const j = await chamar(c, 'JOSE', MF); const a = await chamar(c, 'ALUNO', MF); ok(j.layout && !j.pen && !a.layout, 'RM_LAYOUT_SLUGS=medicina-familiar liga só a conta de teste; o aluno comum não', [f(j), f(a)]); }
 
+  sec('10-B · curinga nas variáveis antigas não libera nada');
+  for (const w of ['*', 'all', 'todas']) { const c = base({}, { env: Object.assign({}, ENV_JOSE, { RM_LAYOUT_SLUGS: w, RM_PEN_SLUGS: w, RM_VISUAL_SLUGS: w }) });
+    const j = await chamar(c, 'JOSE', MF); const a = await chamar(c, 'ALUNO', MF); ok(JSON.stringify(f(j)) === JSON.stringify(NEG) && JSON.stringify(f(a)) === JSON.stringify(NEG), `RM_*_SLUGS=${w}: ninguém`, [f(j), f(a)]); }
+
   sec('11 · somente leitura');
   { const c = base(T('all', 'all')); await chamar(c, 'ALUNO', MF); await chamar(c, 'SEM', MF);
     ok(c.chamadas.every(x => x.startsWith('GET ')), 'toda chamada ao banco é GET (' + c.chamadas.length + ' chamadas)', c.chamadas);

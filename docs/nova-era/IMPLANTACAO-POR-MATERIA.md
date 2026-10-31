@@ -68,4 +68,11 @@ Outras matérias (sem requisição), Semiología II (piloto), login, compras e a
 
 ## 7 · Testes (somente simulação; nada de aluno real lido ou gravado)
 
-RESULTADOS_TESTES
+| Teste | Resultado |
+|---|---|
+| `tools/qa/nova-era/servidor.test.cjs` (função real `get-pilot-flags`, banco simulado): tudo `off` por padrão; `preview` só contas de teste; `all` só aluno COM acesso; layout × caneta × tema separados; outra matéria; piloto inalterado; áudio nunca; curingas; corpo idêntico; só GET | **48/48** |
+| `tools/qa/nova-era/navegador.test.cjs` (matéria real, `rm-pilot.js` + função + `rm-tools-v2.js` reais, 390 e 1440 px): padrão desligado · prévia · só layout · só caneta · as duas · **volta** · sem acesso · outra matéria · troca de aba · José em outra matéria · piloto · tabela ausente · tema sem descritor — com **grifos, notas e traços idênticos**, **atualização da página**, 0 erro JS, 0 escrita indevida | **96/96** |
+| Controles negativos (o teste reprova o defeito): V2 sem o modo por matéria · `all` sem checar acesso · `preview` aberto a todos · sem o portão `anotarPermitido` · ferramentas antigas não devolvidas | **todos reprovam** (2 a 9 falhas cada) |
+| Regressão: `gate-por-materia` 48/48 · `medfam-implantacao` 87/87 · `medfam-grifos-sinteticos` 24/24 · `nao-ativacao` 18/18 · porta de Medicina Familiar ABERTA 7/7 · `pilot-flags` 22 · `layout` 535 · `sistema` 124 · `nav-sistema` 216 · `cover` 198 · `soltos` 16 · `race` 140 · `ink-jump` 54 · `caneta-ipad-456` 197/197 | passam |
+| `caneta-456` 136/138 (post-it a 390 px, #464) e `caneta-novo-layout` **87/91** (4 casos de post-it: «1 traço novo, 0 pontos perdidos, desvio máx. 1,7 px») | **iguais com o `rm-tools-v2.js` da `main`** (testado trocando o arquivo): não vêm desta PR; a segunda estava 91/91 em 28–30/10 e passou a 87/91 na `main` `191fc730` — a investigar à parte |
+
