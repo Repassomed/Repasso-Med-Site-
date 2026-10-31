@@ -76,3 +76,15 @@ Outras matérias (sem requisição), Semiología II (piloto), login, compras e a
 | Regressão: `gate-por-materia` 48/48 · `medfam-implantacao` 87/87 · `medfam-grifos-sinteticos` 24/24 · `nao-ativacao` 18/18 · porta de Medicina Familiar ABERTA 7/7 · `pilot-flags` 22 · `layout` 535 · `sistema` 124 · `nav-sistema` 216 · `cover` 198 · `soltos` 16 · `race` 140 · `ink-jump` 54 · `caneta-ipad-456` 197/197 | passam |
 | `caneta-456` 136/138 (post-it a 390 px, #464) e `caneta-novo-layout` **87/91** (4 casos de post-it: «1 traço novo, 0 pontos perdidos, desvio máx. 1,7 px») | **iguais com o `rm-tools-v2.js` da `main`** (testado trocando o arquivo): não vêm desta PR; a segunda estava 91/91 em 28–30/10 e passou a 87/91 na `main` `191fc730` — a investigar à parte |
 
+## 8 · Relação com a conferência independente da #618
+
+A #618 (Claude 1, auditor) testa o mecanismo **por variáveis** (`--publico NOME=valor`). Esta PR liberou os alunos por **tabela de estágios**, então quatro resultados do `auditoria-implantacao-publica.test.cjs` rodado sem adaptação **são diferenças de desenho, não defeitos**:
+
+| Fase do auditor | Resultado aqui | Por quê |
+|---|---|---|
+| S2 / S3b (alunos recebem layout e caneta) | falham quando o teste usa só variáveis | o `all` vem da tabela `rm_materia_rollout`; o equivalente passa em `tools/qa/nova-era/servidor.test.cjs` (§3–4) e `navegador.test.cjs` (cenas 2–5) |
+| S5 («só faz `GET /auth/v1/user`») | falha | a função também **lê** `rm_materia_rollout` e `my_active_subjects` (item 3.1 do auditor: decidir pela compra); continua só `GET`, nenhuma escrita (provado: `servidor.test.cjs` §11) |
+| C («não lê compras») | falha | por pedido de José a função consulta **a view de acesso** (`my_active_subjects`, a mesma do `get-materia`), nunca o conteúdo; `get-materia.js` não foi tocado |
+| G (versão de cache sobe) | **corrigido** nesta PR | `rm-pilot.js` `VER` e a tag do `index.html` subiram para `2026103001` (junto de `rm-tools-v2.js?v=2026103001`) |
+
+Pedido ao auditor: adaptar S2/S3b/S5/C ao modo «tabela de estágios» (a PR traz os cenários equivalentes prontos).
