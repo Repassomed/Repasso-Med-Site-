@@ -104,6 +104,7 @@
      nas demais ela fica invisível e inerte (nenhuma ferramenta arma, nenhuma leitura/escrita de traço ou nota) e o marcador/goma legados voltam a funcionar.
      Falha fechada: matéria sem nome, sem resposta ou negada ⇒ false. NUNCA use `penLiberadaPeloServidor('')`: sem slug ela cai no piloto. */
   function v2NaAba() {
+    if (bloqueado) return false;
     if (!st.escopo) return true;
     var sl = slugDoTab(abaAtiva());
     return !!sl && penLiberadaPeloServidor(sl);
@@ -155,7 +156,9 @@
   /* ================================================================== */
 
   function RT() { return window.RMTools || null; }
-  function sb() { var t = RT(); return t ? t.sb() : null; }
+  /* Nova Era · TROCA DE CONTA na mesma página: depois de `bloqueado`, NENHUM caminho da V2 chega ao banco (todo acesso passa por aqui) nem desenha. A página é recarregada em seguida. */
+  var bloqueado = false;
+  function sb() { if (bloqueado) return null; var t = RT(); return t ? t.sb() : null; }
   function abaAtiva() { var t = RT(); return t ? t.abaAtiva() : null; }
   function slugDoTab(el) { var t = RT(); return t ? t.slugDoTab(el) : ''; }
   function toast(m, err) { var t = RT(); if (t) t.toast(m, err); }
@@ -3954,10 +3957,11 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (!t || !t.userId || !t.onAbaPronta) return;       // rm-tools antigo: não faz nada
     aTentar = true;
     try {
-      var uid = uidDaSessao || await t.userId();
+      var uid = uidDaSessao || await uidSessaoAgora() || await t.userId();   // a sessão ATUAL primeiro: RMTools.userId() guarda cache e pode devolver a conta anterior
       if (!uid) return;                                  // ainda sem sessão: espera-se o evento de auth
       if (semAcesso[uid]) return;                        // já se perguntou por este uid: não repetir
       var ok = await hasStudyToolsV2Access(uid);
+      uidBase = uid;
       if (!ok) { semAcesso[uid] = true; armarEscopo(t, uid); return; }   // ← quem não é tester sai aqui, uma vez só (Nova Era: fica à espera de a matéria aberta ser liberada pelo servidor)
       if (montado) return;                               // outra tentativa chegou primeiro
       montado = true;
@@ -3970,6 +3974,33 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   /* Nova Era · aluno comum (fora da beta): NADA é montado até o servidor liberar a caneta (`pen:true`) para a matéria da aba ativa. Só então a V2 monta, em modo
      de escopo por matéria (st.escopo). Escuta o rm-pilot.js (evento `rm-pilot-flags`) e a troca de aba; nunca pergunta nada ao servidor por conta própria. */
   var escopoArmado = false;
+  var uidBase = null;       // a conta com que ESTA página iniciou a V2 / armou o escopo; outra conta na mesma página ⇒ contaMudou()
+  /* uid da sessão de agora (leitura local do Supabase Auth; sem rede). Nunca o cache do RMTools. */
+  async function uidSessaoAgora() {
+    try {
+      var s = RT() && RT().sb && RT().sb(); if (!s || !s.auth || typeof s.auth.getSession !== 'function') return null;
+      var r = await s.auth.getSession();
+      return (r && r.data && r.data.session && r.data.session.user && r.data.session.user.id) || null;
+    } catch (e) { return null; }
+  }
+  /* Nova Era · outra conta (ou saída) na MESMA página. Se a V2 já estava de pé: bloqueia na hora (nada lê, grava nem desenha com a conta anterior) e recarrega a página,
+     o único jeito de não sobrar grifo, traço, nota ou cache da conta anterior. Se não estava: só esquece a conta anterior e deixa a nova decidir do zero. */
+  var recarregarPagina = function () { try { location.reload(); } catch (e) {} };
+  function contaMudou(evt, uidNovo) {
+    var tinhaEstado = montado;
+    if (tinhaEstado) {
+      bloqueado = true;
+      try { reconciliarGesto('troca-de-conta'); } catch (e) {}
+      try { st.tool = 'none'; st.open = false; st.undo.length = 0; st.strokes = {}; st.carregado = {}; st.notasAbertas = false; } catch (e2) {}
+      try { Object.keys(pendentes).forEach(function (id) { clearTimeout(pendentes[id]); delete pendentes[id]; }); Object.keys(flushers).forEach(function (id) { delete flushers[id]; }); } catch (e3) {}
+      try { limparCamada(); if (drawer) drawer.classList.remove('on'); } catch (e4) {}
+      try { window.RM_STUDY_V2_ACTIVE = false; document.body.classList.remove('rm-v2'); document.body.classList.add('rm2-fora'); } catch (e5) {}
+      setTimeout(recarregarPagina, 0);
+      return;
+    }
+    uidBase = null; semAcesso = {};
+    if (uidNovo && evt !== 'SIGNED_OUT') tentar(uidNovo);
+  }
   function armarEscopo(t, uid) {
     if (escopoArmado) return;
     escopoArmado = true;
@@ -3979,7 +4010,11 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (!sl || !penLiberadaPeloServidor(sl)) return;
       aTentar = true;
       (async function () {
-        try { if (montado) return; montado = true; st.escopo = true; acessoVia = 'servidor (caneta por matéria)'; await montarTudo(t, uid); }
+        try {
+          var fresco = await uidSessaoAgora();                         // a conta de AGORA, não a de quando o escopo foi armado
+          if (!fresco || (uidBase && fresco !== uidBase)) { if (fresco) contaMudou('SIGNED_IN', fresco); return; }
+          if (montado) return; montado = true; st.escopo = true; acessoVia = 'servidor (caneta por matéria)'; await montarTudo(t, fresco);
+        }
         finally { aTentar = false; }
       })().catch(function (e) { console.warn('[rm2] escopo', e); });
     };
@@ -4064,6 +4099,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         anchorPorPonto: anchorPorPonto,
         pilotoPermitido: pilotoPermitido,
         v2NaAba: v2NaAba,
+        bloqueado: function () { return bloqueado; },
+        trocarRecarregar: function (fn) { recarregarPagina = fn; },
         escopo: function () { return !!st.escopo; },
         adaptadorLigado: function () { return adaptadorLigado; },
         perf: function () { return perf; },
@@ -4121,7 +4158,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     try {
       s.auth.onAuthStateChange(function (evt, sessao) {
         var uid = sessao && sessao.user && sessao.user.id;
-        if (evt === 'SIGNED_OUT') return;   // o site recarrega no logout; nada a desmontar
+        /* Nova Era: o site recarrega no logout, mas a sessão também muda por outra aba / sessão derrubada. Qualquer saída ou conta diferente da que iniciou a V2 passa por contaMudou(). */
+        if (evt === 'SIGNED_OUT' || (uid && uidBase && uid !== uidBase)) { contaMudou(evt, uid); return; }
         if (uid) tentar(uid);
       });
       subscrito = true;

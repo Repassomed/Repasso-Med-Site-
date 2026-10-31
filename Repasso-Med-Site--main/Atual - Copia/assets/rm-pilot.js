@@ -39,7 +39,7 @@
   var BASE = 'assets/';
   var COOLDOWN_MS = 30000;                            // depois de uma falha, não insistir
 
-  var st = { flags: null, porSlug: {}, asking: {}, lastFail: 0, loading: null, loaded: false, sisLoading: null, slugAtual: null };
+  var st = { flags: null, porSlug: {}, asking: {}, lastFail: 0, loading: null, loaded: false, sisLoading: null, slugAtual: null, uidBase: null, epoca: 0 };
 
   function tabAtiva() {
     return document.querySelector('#materias-container > .tab-content.active[id^="tab-"]');
@@ -68,8 +68,12 @@
     if (st.porSlug[slug]) return Promise.resolve(st.porSlug[slug]);
     if (st.asking[slug]) return st.asking[slug];
     if (Date.now() - st.lastFail < COOLDOWN_MS) return Promise.resolve({ layout: false });
+    var epoca = st.epoca;                              // se a conta mudar enquanto a resposta voa, ela é descartada
     st.asking[slug] = token().then(function (t) {
       if (!t) { st.lastFail = Date.now(); return { layout: false }; }
+      var u = uidDoToken(t);                           // defesa extra: o token de AGORA é de outra conta que a das respostas em cache?
+      if (u && st.uidBase && u !== st.uidBase) { contaMudou(u); return { layout: false }; }
+      if (u && !st.uidBase) st.uidBase = u;
       return fetch('/.netlify/functions/get-pilot-flags?slug=' + encodeURIComponent(slug), {
         headers: { Authorization: 'Bearer ' + t },
         cache: 'no-store',
@@ -78,6 +82,7 @@
         if (!r.ok) throw new Error('http');
         return r.json();
       }).then(function (j) {
+        if (epoca !== st.epoca) return { layout: false };   // outra conta entrou no meio: esta resposta não vale para ela
         var ok = !!(j && j.slug === slug && j.layout === true);
         /* `pen` (decidido no servidor por UID autenticado E por matéria) só vale para a caneta FÍSICA da matéria que o servidor nomeou (rm-tools-v2.js: refinamentos do piloto físico).
            Não libera a V2 nem a caneta para ninguém: quem não tem acesso beta continua sem ela. Independente de `layout`. */
@@ -89,8 +94,38 @@
     }).catch(function () {
       st.lastFail = Date.now();
       return { layout: false };
-    }).then(function (f) { st.asking[slug] = null; return f; });
+    }).then(function (f) { if (epoca === st.epoca) st.asking[slug] = null; return f; });
     return st.asking[slug];
+  }
+
+  /* Nova Era · TROCA DE CONTA na mesma página. As respostas do servidor ficam em cache POR PÁGINA; se outra conta entrar (ou a atual sair) sem recarregar, o cache da anterior NUNCA pode valer
+     para a nova. Tudo é descartado na hora (layout/tema/áudio saem) e, se algo já tinha sido ligado, a página recarrega para não sobrar nada da conta anterior. */
+  function uidDoToken(t) {
+    try { var b = String(t).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); var j = JSON.parse(atob(b + '==='.slice((b.length + 3) % 4))); return typeof j.sub === 'string' ? j.sub : null; }
+    catch (e) { return null; }
+  }
+  var recarregar = function () { try { location.reload(); } catch (e) {} };
+  function contaMudou(uidNovo) {
+    var tinha = st.loaded || Object.keys(st.porSlug).some(function (k) { var f = st.porSlug[k]; return !!(f && (f.layout || f.pen || f.visual)); });   // só recarrega se algo FOI ligado (resposta «não» em cache não precisa)
+    st.epoca++; st.porSlug = {}; st.flags = null; st.asking = {}; st.lastFail = 0; st.uidBase = uidNovo || null; emVoo++;
+    desativar();
+    if (tinha) setTimeout(recarregar, 0);
+    else if (uidNovo) setTimeout(avaliar, 0);
+  }
+  function ouvirConta() {
+    var s = window.RM_SB || window._sb;
+    if (!s || !s.auth || typeof s.auth.onAuthStateChange !== 'function') return false;
+    try {
+      s.auth.onAuthStateChange(function (evt, sess) {
+        var uid = (sess && sess.user && sess.user.id) || null;
+        if (evt === 'SIGNED_OUT') { contaMudou(null); return; }
+        if (uid && st.uidBase && uid !== st.uidBase) { contaMudou(uid); return; }
+        if (uid && !st.uidBase) st.uidBase = uid;
+      });
+      /* a conta de AGORA é a base de comparação (o evento inicial pode não chegar) */
+      try { s.auth.getSession().then(function (r) { var u = r && r.data && r.data.session && r.data.session.user && r.data.session.user.id; if (u && !st.uidBase) st.uidBase = u; }, function () {}); } catch (e2) {}
+      return true;
+    } catch (e) { return false; }
   }
 
   function css(href) {
@@ -204,6 +239,7 @@
       window.RMTools.onAbaPronta(function () { setTimeout(avaliar, 0); });
     }
     setTimeout(avaliar, 0);
+    if (!ouvirConta()) { var n = 0, tm = setInterval(function () { n++; if (ouvirConta() || n >= 40) clearInterval(tm); }, 150); }   // o cliente Supabase nasce depois deste arquivo
   }
 
   window.RMPilot = {
@@ -214,7 +250,9 @@
     /* matérias que podem perguntar ao servidor (fechadura 1; leitura pura, para teste/diagnóstico) */
     candidatas: function () { return CANDIDATAS.slice(); },
     /* só para teste/diagnóstico: não expõe UID nem lista */
-    _estado: function () { return { flags: st.flags, porSlug: st.porSlug, loaded: st.loaded }; }
+    _estado: function () { return { flags: st.flags, porSlug: st.porSlug, loaded: st.loaded }; },
+    /* só para teste: troca a função que recarrega a página */
+    _trocarRecarregar: function (fn) { recarregar = fn; }
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar);

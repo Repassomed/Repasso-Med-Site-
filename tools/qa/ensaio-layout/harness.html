@@ -38,7 +38,9 @@ function chain(t){ if (PERSIST_T.includes(t)) return chainPersist(t); const o = 
   o.then = function(res){ return Promise.resolve({ data: [], error: null }).then(res) }; return o }
 /* UID de TESTER da V2 (constante pública no rm-tools-v2.js) só para o motor da caneta montar no harness; sessão 100% simulada, nenhuma credencial */
 const UID = P.get('uid') || 'd4d215d3-36dd-4efb-8869-bdea5376c648';
-window.RM_SB = { auth: { getSession: async () => ({ data: { session: { access_token: 'tok-ensaio', user: { id: UID } } } }), getUser: async () => ({ data: { user: { id: UID } } }), onAuthStateChange(){ return { data: { subscription: { unsubscribe(){} } } } } }, from: chain, rpc: async () => ({ data: null, error: null }) };
+/* __uidAtual: o teste de TROCA DE CONTA muda a sessão simulada sem recarregar a página; __authCbs: quem assinou onAuthStateChange (o teste emite SIGNED_IN/SIGNED_OUT) */
+window.__authCbs = [];
+window.RM_SB = { auth: { getSession: async () => ({ data: { session: { access_token: 'tok-ensaio', user: { id: window.__uidAtual || UID } } } }), getUser: async () => ({ data: { user: { id: window.__uidAtual || UID } } }), onAuthStateChange(cb){ window.__authCbs.push(cb); return { data: { subscription: { unsubscribe(){} } } } } }, from: chain, rpc: async () => ({ data: null, error: null }) };
 window._sb = window.RM_SB;
 </script>
 <script src="assets/app-core.js"></script>

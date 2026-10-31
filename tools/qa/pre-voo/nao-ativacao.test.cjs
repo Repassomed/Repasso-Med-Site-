@@ -25,7 +25,7 @@ const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; co
 async function servidor(env, slug) {
   for (const k of ['RM_PILOT_LAYOUT_UIDS', 'RM_PILOT_AUDIO_UIDS', 'RM_PILOT_PEN_UIDS', 'RM_PILOT_VISUAL_UIDS', 'RM_LAYOUT_SLUGS', 'RM_VISUAL_SLUGS', 'RM_PEN_SLUGS']) delete process.env[k];
   Object.assign(process.env, { SUPABASE_URL: 'https://x.invalid', SUPABASE_ANON_KEY: 'anon' }, env);
-  global.fetch = async () => ({ ok: true, json: async () => ({ id: UID }) });
+  global.fetch = require('../nova-era/fetch-sim.cjs').fetchLegado(UID);   // Nova Era: «slug na variável» é traduzido para a linha `preview` da tabela (ver fetch-sim.cjs)
   delete require.cache[FN];
   return require(FN).handler({ queryStringParameters: { slug }, headers: { authorization: 'Bearer tok' } });
 }

@@ -10,7 +10,7 @@ const JOSE = 'aaaaaaaa-0000-4000-8000-000000000001', OUTRO = 'bbbbbbbb-0000-4000
 async function chamar(env, uid, { slug = 'semiologia-ii', token = 'tok' } = {}) {
   for (const k of ['RM_PILOT_LAYOUT_UIDS', 'RM_PILOT_AUDIO_UIDS', 'RM_PILOT_PEN_UIDS', 'RM_PILOT_VISUAL_UIDS', 'RM_LAYOUT_SLUGS', 'RM_VISUAL_SLUGS', 'RM_PEN_SLUGS']) delete process.env[k];
   Object.assign(process.env, { SUPABASE_URL: 'https://x.invalid', SUPABASE_ANON_KEY: 'anon' }, env);
-  global.fetch = async () => ({ ok: !!uid, json: async () => ({ id: uid }) });
+  global.fetch = require('../../nova-era/fetch-sim.cjs').fetchLegado(uid);   // Nova Era: «slug na variável» é traduzido para a linha `preview` da tabela
   delete require.cache[FN];
   const r = await require(FN).handler({ queryStringParameters: { slug }, headers: token ? { authorization: 'Bearer ' + token } : {} });
   return JSON.parse(r.body);

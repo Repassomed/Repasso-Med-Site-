@@ -65,9 +65,16 @@ const NEG = { layout: false, pen: false, visual: false, audio: false };
     const dup = await chamar(base(T('all', 'all'), { linhasExtra: true }), 'ALUNO', MF); ok(JSON.stringify(f(dup)) === JSON.stringify(NEG), 'tabela devolvendo 2 linhas para o mesmo slug: nada', f(dup));
     const estranho = await chamar(base({ [MF]: { layout_stage: 'ALL', pen_stage: 'todos', visual_stage: '*' } }), 'ALUNO', MF); ok(JSON.stringify(f(estranho)) === JSON.stringify(NEG), 'valores fora do vocabulário (ALL, todos, *): nada', f(estranho)); }
 
-  sec('10 · compatibilidade: as variáveis de matéria antigas (prévia por ambiente) seguem valendo só para as contas de teste');
-  { const c = base({}, { env: Object.assign({}, ENV_JOSE, { RM_LAYOUT_SLUGS: MF }) });
-    const j = await chamar(c, 'JOSE', MF); const a = await chamar(c, 'ALUNO', MF); ok(j.layout && !j.pen && !a.layout, 'RM_LAYOUT_SLUGS=medicina-familiar liga só a conta de teste; o aluno comum não', [f(j), f(a)]); }
+  sec('10 · matéria DESLIGADA: nenhuma configuração antiga do Netlify a liga (nem para José, nem para aluno)');
+  { const antigas = { RM_LAYOUT_SLUGS: MF, RM_PEN_SLUGS: MF, RM_VISUAL_SLUGS: MF };
+    for (const [nome, tabela] of [['linha off', T('off', 'off')], ['sem linha', {}], ['tabela inexistente', null]]) {
+      const c = base(tabela, { env: Object.assign({}, ENV_JOSE, antigas) });
+      const j = await chamar(c, 'JOSE', MF); const a = await chamar(c, 'ALUNO', MF);
+      ok(JSON.stringify(f(j)) === JSON.stringify(NEG) && JSON.stringify(f(a)) === JSON.stringify(NEG), `${nome} + RM_*_SLUGS=medicina-familiar + José nas listas: NINGUÉM recebe nada`, [f(j), f(a)]); }
+    const c2 = base(T('preview', 'off'), { env: Object.assign({}, ENV_JOSE, antigas) });
+    const j2 = await chamar(c2, 'JOSE', MF); ok(j2.layout && !j2.pen && !j2.visual, 'layout=preview, caneta=off: a variável antiga RM_PEN_SLUGS NÃO liga a caneta (a linha manda)', f(j2));
+    const c3 = base(T('off', 'off'), { env: Object.assign({}, ENV_JOSE, antigas, { RM_PILOT_AUDIO_UIDS: U.JOSE + ',' + U.ALUNO }) });
+    const a3 = await chamar(c3, 'ALUNO', MF); ok(JSON.stringify(f(a3)) === JSON.stringify(NEG), 'aluno comum com tudo antigo ligado e linha off: nada', f(a3)); }
 
   sec('10-B · curinga nas variáveis antigas não libera nada');
   for (const w of ['*', 'all', 'todas']) { const c = base({}, { env: Object.assign({}, ENV_JOSE, { RM_LAYOUT_SLUGS: w, RM_PEN_SLUGS: w, RM_VISUAL_SLUGS: w }) });

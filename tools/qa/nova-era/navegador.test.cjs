@@ -230,6 +230,66 @@ const fecha = c => c.ctx.close().catch(() => {});
       ok(m.layout && !sis.rmSis && !sis.tema, 'layout montado; sem tema (não há descritor) e sem estrago', [m.layout, sis]);
       ok(mesmosDados(c.ref, m) && c.errs.length === 0 && semEscritaIndevida(m).length === 0, 'dados idênticos; 0 erro JS', [m.escritas, c.errs]);
       await fecha(c); }
+
+    if (W === 1440) { sec('13-estático · a identificação vem da sessão de AGORA, nunca do cache do RMTools');
+      const src = require('fs').readFileSync(require('path').join(L.ROOT, 'assets/rm-tools-v2.js'), 'utf8');
+      ok(/var uid = uidDaSessao \|\| await uidSessaoAgora\(\) \|\| await t\.userId\(\);/.test(src), 'iniciar(): sessão atual antes do cache do RMTools (userId())');
+      ok(/var fresco = await uidSessaoAgora\(\);[\s\S]{0,500}await montarTudo\(t, fresco\)/.test(src), 'montagem por matéria: usa o uid fresco da sessão, não o de quando o escopo foi armado');
+      ok(/function sb\(\) \{ if \(bloqueado\) return null;/.test(src), 'sb(): depois do bloqueio nenhum acesso ao banco passa pela V2'); }
+    sec(t + '13 · TROCA DE CONTA na mesma aba: a caneta e o layout nunca usam identificação nem dados da conta anterior');
+    const emitir = (c, evt, uid) => c.page.evaluate(([e, u]) => { window.__uidAtual = u || null; (window.__authCbs || []).forEach(cb => { try { cb(e, u ? { user: { id: u } } : null); } catch (x) {} }); }, [evt, uid]);
+    const contarRecargas = c => c.page.evaluate(() => window.__recargas || 0);
+    const armarContador = async c => { await c.page.evaluate(() => { window.__recargas = 0; const f = () => { window.__recargas++; }; if (window.RMToolsV2 && window.RMToolsV2._test.trocarRecarregar) window.RMToolsV2._test.trocarRecarregar(f); if (window.RMPilot && window.RMPilot._trocarRecarregar) window.RMPilot._trocarRecarregar(f); }); };
+    { /* 13a · caneta DE JOSE (beta) montada; entra OUTRA conta sem recarregar */
+      const c = { persona: 'JOSE', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c); await armarContador(c);
+      ok(m.v2 && m.layout, '13a · antes: José com V2 e layout montados', m);
+      await c.page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen'));
+      await c.page.evaluate(() => { window.__writes.length = 0; });
+      c.persona = 'ALUNO'; await emitir(c, 'SIGNED_IN', S.U.ALUNO); await c.page.waitForTimeout(500);
+      const m2 = await c.page.evaluate(() => ({ bloq: window.RMToolsV2._test.bloqueado(), ferr: window.RMToolsV2.estado.tool, tracos: document.querySelectorAll('#rm2-ink path[data-ink]').length, caixa: (() => { const b = document.querySelector('.rm2-box'); return !!b && getComputedStyle(b).display !== 'none'; })(), layout: !!document.querySelector('.rm-l2, #rm-l2-side, .rm-l2-band'), cache: Object.keys(window.RMPilot._estado().porSlug).length, esc: (window.__writes || []).slice() }));
+      ok(m2.bloq && m2.ferr === 'none' && m2.tracos === 0 && !m2.caixa, '13a · outra conta entrou: caneta BLOQUEADA, ferramenta desarmada, tinta da conta anterior apagada, caixa escondida', m2);
+      ok(!m2.layout && m2.cache === 0, '13a · layout da conta anterior retirado e cache de liberações descartado', m2);
+      ok(await contarRecargas(c) >= 1, '13a · a página é recarregada (nada da conta anterior sobra)', await contarRecargas(c));
+      await c.page.evaluate(() => { window.RMToolsV2.escolherFerramenta('pen'); window.RMToolsV2.escolherFerramenta('highlight'); });
+      const riscou = await riscar(c).catch(() => false); const m3 = await c.page.evaluate(MEDIR2);
+      ok(m3.ferramenta === 'none' && m3.escritas.length === 0 && m2.esc.length === 0, '13a · depois do bloqueio: não arma, não desenha e NÃO escreve no banco com a conta anterior', [m3.ferramenta, m3.escritas, m2.esc]);
+      await fecha(c); }
+    { /* 13b · aluno com caneta POR MATÉRIA montada; a sessão é encerrada */
+      const c = { persona: 'ALUNO', w: W, cena: mkCena(T('off', 'all')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c); await armarContador(c); ok(m.escopo && m.caixa, '13b · antes: aluno com a caneta da matéria', m);
+      await c.page.evaluate(() => { window.__writes.length = 0; });
+      await emitir(c, 'SIGNED_OUT', null); await c.page.waitForTimeout(500);
+      const m2 = await c.page.evaluate(() => ({ bloq: window.RMToolsV2._test.bloqueado(), ferr: window.RMToolsV2.estado.tool, caixa: (() => { const b = document.querySelector('.rm2-box'); return !!b && getComputedStyle(b).display !== 'none'; })(), flagV1: window.RM_STUDY_V2_ACTIVE === true, esc: (window.__writes || []).slice() }));
+      ok(m2.bloq && !m2.caixa && m2.ferr === 'none' && !m2.flagV1 && m2.esc.length === 0, '13b · SIGNED_OUT: caneta bloqueada e escondida, sem escrita', m2);
+      ok(await contarRecargas(c) >= 1, '13b · a página é recarregada', await contarRecargas(c));
+      await fecha(c); }
+    { /* 13c · liberações em cache da conta A NÃO valem para a conta B (sem a V2 montada) */
+      const c = { persona: 'JOSE', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c); await armarContador(c);
+      ok(m.layout, '13c · José (conta A) com o layout em prévia', m.layout);
+      await c.page.evaluate(() => { window.RMToolsV2 = undefined; });   // simula «V2 não montada»: só o carregador de liberações está em jogo
+      const pedidosAntes = c.pedidos.length;
+      c.persona = 'ALUNO'; await emitir(c, 'SIGNED_IN', S.U.ALUNO); await c.page.waitForTimeout(800);
+      const est = await c.page.evaluate(() => ({ cache: Object.keys(window.RMPilot._estado().porSlug).length, layout: !!document.querySelector('.rm-l2, #rm-l2-side, .rm-l2-band'), pen: window.RMPilot.penLiberada('medicina-familiar') }));
+      ok(est.cache === 0 && !est.layout && !est.pen, '13c · conta B (aluno): layout da conta A retirado, cache vazio, caneta não liberada', est);
+      ok(await contarRecargas(c) >= 1, '13c · como algo já estava ligado, a página recarrega', await contarRecargas(c));
+      await fecha(c); }
+    { /* 13d · nada estava ligado (cadastro/recuperação): sair e entrar NÃO recarrega nem bloqueia nada */
+      const c = { persona: 'ALUNO', w: W, cena: mkCena(T('off', 'off')) }; await abrirPersona(br, base, M(MF), c); await carregar(c);
+      await c.page.evaluate(() => { window.__recargas = 0; });
+      await c.page.addScriptTag({ url: '/assets/rm-pilot.js?v=teste' }); await c.page.waitForTimeout(300);
+      await c.page.evaluate(() => { window.RMPilot._trocarRecarregar(() => { window.__recargas++; }); });
+      await emitir(c, 'SIGNED_OUT', null); await c.page.waitForTimeout(400);
+      ok(await contarRecargas(c) === 0, '13d · SIGNED_OUT sem nada ligado: nenhuma recarga (não atrapalha cadastro nem recuperação de senha)', await contarRecargas(c));
+      await fecha(c); }
+    { /* 13e · V2 ainda não montada (aluno comum, caneta off) e entra outra conta: o uid usado é o da sessão de AGORA */
+      const c = { persona: 'ALUNO', w: W, cena: mkCena(T('off', 'off')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c); ok(!m.v2, '13e · aluno: V2 não montada', m.v2);
+      c.persona = 'JOSE'; await emitir(c, 'SIGNED_IN', S.U.JOSE); await c.page.waitForTimeout(1500);
+      const st2 = await c.page.evaluate(() => window.RMToolsV2 ? { montou: true, uid: window.RMToolsV2.estado.uid, bloq: window.RMToolsV2._test.bloqueado() } : { montou: false });
+      ok(!st2.montou || (st2.uid === S.U.JOSE && !st2.bloq), '13e · se a V2 montar para a conta nova, é com a identificação da conta NOVA (nunca a anterior)', st2);
+      await fecha(c); }
   }
   await br.close(); srv.close();
   console.log(`\nnova-era/navegador: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`);

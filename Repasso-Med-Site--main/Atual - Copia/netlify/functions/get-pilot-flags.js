@@ -18,22 +18,22 @@
      Kill switch só do tema: esvaziar/remover RM_PILOT_VISUAL_UIDS (o Layout V2
      continua).
 
-   Matéria por matéria (A5, pré-voo 24/10)
+   [SUPERADO PELA NOVA ERA — ver o bloco seguinte] Matéria por matéria (A5, pré-voo 24/10)
      A matéria do piloto continua fixa no código (semiologia-ii) e se comporta
      EXATAMENTE como antes. Qualquer outra matéria só é considerada se o slug
      estiver na lista da flag correspondente — três variáveis de ambiente, TODAS
      ausentes/vazias por padrão (⇒ nenhuma outra matéria, nenhum aluno):
        RM_LAYOUT_SLUGS (layout) · RM_VISUAL_SLUGS (tema; exige descriptor aprovado)
        · RM_PEN_SLUGS (caneta física).
-     Duas chaves ao mesmo tempo: o UID (listas RM_PILOT_*_UIDS, como hoje) E o slug.
+     (As variáveis RM_LAYOUT_SLUGS / RM_VISUAL_SLUGS / RM_PEN_SLUGS acima NÃO são mais lidas: ficam ignoradas, mesmo se existirem no Netlify.)
      Áudio continua só no piloto. Não existe «todos»: liberar para alunos exige
      decisão futura e explícita (nenhum curinga é aceito).
      Falha FECHADA e corpo idêntico em qualquer negação (inclusive slug fora da lista).
      Kill switch por matéria: tirar o slug da variável. Geral: esvaziar as variáveis.
 
    NOVA ERA · DUAS ETAPAS POR MATÉRIA (layout, caneta e tema, cada um separado)
-     Além das listas acima (que seguem valendo como PRÉVIA, só para a conta de
-     quem testa), cada matéria tem uma linha na tabela public.rm_materia_rollout
+     Além das listas acima (usadas como PRÉVIA, só para a conta de
+     quem testa, e só quando a linha da matéria está em `preview` ou `all`), cada matéria tem uma linha na tabela public.rm_materia_rollout
      (slug, layout_stage, pen_stage, visual_stage), cada coluna com um destes valores:
        off      ninguém (padrão; linha ausente = off)
        preview  só as contas das listas RM_PILOT_*_UIDS (José) — «ver e aprovar no iPad»
@@ -78,9 +78,8 @@ function lista(v) {
     .filter(Boolean);
 }
 
-/* slug aceito no formato do catálogo; listas por flag lidas do ambiente (curinga NÃO existe) */
+/* slug aceito no formato do catálogo (curinga NÃO existe) */
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,60}$/;
-function listaSlugs(v) { return lista(v).filter(function (x) { return SLUG_RE.test(x); }); }
 
 const ESTAGIOS = ['off', 'preview', 'all'];
 
@@ -171,19 +170,19 @@ exports.handler = async function (event) {
       };
       flags.visual = flags.layout && uidsVisual.indexOf(uid) !== -1;
     } else {
-      const slugsLayout = listaSlugs(process.env.RM_LAYOUT_SLUGS);                // PRÉVIA por ambiente (legado das fases A5/A7): continua valendo
-      const slugsVisual = listaSlugs(process.env.RM_VISUAL_SLUGS);
-      const slugsPen    = listaSlugs(process.env.RM_PEN_SLUGS);
+      // NOVA ERA: fora do piloto a ÚNICA fonte de verdade é a linha da matéria em rm_materia_rollout. As variáveis antigas RM_LAYOUT_SLUGS / RM_VISUAL_SLUGS /
+      // RM_PEN_SLUGS (fases A5/A7) NÃO são mais lidas aqui: matéria `off` (ou sem linha, ou tabela ausente) fica desligada para TODOS, inclusive contas de teste,
+      // mesmo que alguma dessas variáveis ainda exista no Netlify.
       const est = await lerEstagios(slug, token);
       let acesso = null;                                                          // consultado no máximo uma vez, e só se algum estágio for `all`
-      const pode = async function (estagio, uids, slugsEnv) {
-        const naPrevia = uids.indexOf(uid) !== -1;                                // as contas de teste (José) enxergam em `preview` e também em `all`
-        if (naPrevia && (estagio !== 'off' || slugsEnv.indexOf(slug) !== -1)) return true;
+      const pode = async function (estagio, uids) {
+        if (estagio !== 'preview' && estagio !== 'all') return false;             // off / valor estranho ⇒ ninguém
+        if (uids.indexOf(uid) !== -1) return true;                                // contas de teste (José): veem em `preview` e também em `all`
         if (estagio === 'all') { if (acesso === null) acesso = await temAcesso(slug, token); return acesso; }   // todos os alunos COM acesso à matéria
         return false;
       };
-      flags = { layout: await pode(est.layout, uidsLayout, slugsLayout), audio: false, pen: await pode(est.pen, uidsPen, slugsPen) };
-      flags.visual = flags.layout && await pode(est.visual, uidsVisual, slugsVisual);   // camada sobre o Layout V2: nunca sem `layout`
+      flags = { layout: await pode(est.layout, uidsLayout), audio: false, pen: await pode(est.pen, uidsPen) };
+      flags.visual = flags.layout && await pode(est.visual, uidsVisual);          // camada sobre o Layout V2: nunca sem `layout`
     }
     const algum = flags.layout || flags.audio || flags.pen;
     return resp(algum ? flags : NEGADO, algum ? 'pilot' : 'denied', algum ? slug : null);
