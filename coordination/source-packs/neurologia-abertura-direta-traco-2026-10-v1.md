@@ -1,47 +1,22 @@
-# Neurología · abertura direta, sem migração de dados (par da #619)
+# Neurología · abertura direta com migração do traço (par da #619) — EXCEÇÃO TEMPORÁRIA, NÃO MESCLAR
 
-## O problema
+## Impedimento (por que ficou fora da #619)
 
-`neuportada` guarda 1 traço de aluno (id `1dece18a-29b8-4c80-8b08-57bec9f95ce0`, 21 pontos, 14/set), ancorado à **seção inteira** (`anchor_id = neuportada`; pontos = fração da caixa dessa seção). Esvaziar e esconder a seção faria o traço sumir da tela; reancorá-lo no banco exigiria `UPDATE` em `user_ink_strokes`, que Claude 2 não faz e que José não deveria precisar fazer.
+`neuportada` tem **1 traço** (id `1dece18a-29b8-4c80-8b08-57bec9f95ce0`, 21 pontos, 14/set), com `anchor_id = neuportada` (a seção inteira). A portada passa a ficar `hidden`; sem migração o traço seguiria no banco mas invisível. O traço cai sobre a tabela «Cuatro unidades» (a 1440 px: x≈485–502 px e y de −33 a 220 px, medidos a partir do canto da tabela; vai do cabeçalho até a linha II). Mudar `anchor_id` e `points` exige **escrever** em `user_ink_strokes`, e Claude 2 só lê. A migração abaixo é para quem tem escrita.
 
-## A saída (nenhuma escrita no banco)
+## Solução
 
-O app acha a âncora com `querySelector('#neuportada')` (qualquer elemento, não só `section`) e desenha o traço sobre a caixa dele. Então:
+- `neuportada` fica vazia e `hidden` (id mantido). Sai: hero, «Estado de la asignatura» (contagens), nota de fontes/auditoria das infografias, «Lo que la cátedra pidió manejar» (mapa e ressalvas de fonte) e a última linha da tabela («Banco · Repaso»).
+- Vai para `neub01` (antes de «Resumen explicado»): «El método de toda la materia», o recorrido (com a ordem manifestación → … → abordaje), «las tres ideas», a tabela das quatro unidades + complemento, a anotação ao margem e «Sobre los nombres propios». Glossários `rmc-gl` intactos.
+- A tabela passa a ser o elemento `neub01>14`. O traço é reancorado nela, com os pontos recalculados para que fiquem **nos mesmos pixels** em relação à tabela.
 
-- a seção `neuportada` deixa de existir como bloco; o **mesmo id** passa para um elemento vazio, invisível e sem clique (`span`, `aria-hidden`, `pointer-events:none`), dentro de um contêiner relativo que envolve a tabela das unidades em `neub01`;
-- a caixa desse elemento foi calculada em percentagens do contêiner para reproduzir, na tela larga, exatamente a posição antiga do traço sobre a tabela; o mesmo traço, sem tocar nos pontos nem no `anchor_id`;
-- o ensino útil da portada (método, três ideias, tabela das unidades, nomes próprios) está no começo de `neub01`; saíram hero, contagens, fontes/auditoria e o mapa «Lo que la cátedra pidió manejar».
+## Provas
 
-## Testes (app real do repositório, Supabase simulado com o traço real semeado)
-
-Posição do traço medida a partir do canto da tabela das unidades (px; x, y, largura × altura):
-
-| Tela | Antes (seção `neuportada`) | Depois (âncora na tabela) |
-|---|---|---|
-| 1440 | 485, −33, 17 × 253 | **485, −33, 17 × 253** (idêntico) |
-| 1024 | — | 485, −33, 17 × 253 |
-| 768 | 306, 63, 11 × 309 | 358, −26, 13 × 340 |
-| 390 | 190, 280, 7 × 406 | 186, −16, 7 × 460 |
-
-- Em tela larga o traço fica no mesmo pixel e continua sobre o cabeçalho e as linhas I–II da tabela.
-- Em tela estreita muda em relação a **hoje**: hoje a caixa da seção inteira esticava o traço sem relação com o texto (a 390 px ele cai nas linhas II–IV); agora ele acompanha a tabela em todas as larguras e fica sobre o mesmo trecho que na tela larga. É a única diferença visível e é uma correção, mas **é uma mudança** e precisa do olho de José.
-- Sem rolagem horizontal nova (`scrollWidth` = largura da tela em 390/768/1440).
-- Grifos reais (107 registros): 107/107 sem remapeamento (medido com a seção presente numa cópia de teste, porque o conferidor `hl-real` recusa seções removidas; nenhum grifo está em `neuportada`).
-- `verify`: ids, quiz, fc, respostas, links e data-attrs iguais; só mudam as classes do hero removido e a do contêiner novo.
-- Primeiro conteúdo: a primeira seção do bloco é `neub01`; o índice não lista mais a portada.
-- Traço novo: com o traço antigo carregado, desenhar com a caneta sobre a tabela (1440 e 390) cria um traço novo em `neub01>14` e o antigo continua em `neuportada`; a âncora invisível não rouba o toque.
-- Porta de layout/caneta (7 etapas, inclui ida e volta): **7/7 PASSA**. Inventário regenerado (0 velhos).
-
-## Riscos que continuam
-
-1. É uma âncora de truque: se alguém mexer na tabela (ou nas percentagens) o traço sai do lugar. Há um comentário no HTML avisando.
-2. O conferidor manual `hl-real` não aceita a seção removida (só é usado à mão; não roda em CI).
-3. O traço nunca é apagado nem alterado no banco; no pior caso fica invisível.
-
-## Se José preferir o caminho sem truque
-
-Reancorar o traço no banco para `neub01>14` (a tabela) com pontos recalculados é a alternativa limpa, mas exige `UPDATE` por quem tem escrita. Não é necessária com esta PR.
-
+- Navegador, 1440 px: pontos do traço relativos ao canto da tabela, antes (seção `neuportada`) × depois (`neub01>14` com os pontos novos): **desvio máximo 0 px em x e 0 px em y**; o texto sob o traço é o mesmo (cabeçalho e linhas I–II).
+- `verify.py`: ids, quiz, fc, respostas, links e data-attrs iguais; só diferem as classes `ov`/`rmc-hero` (hero removido).
+- Grifos reais (gate, 107): 107/107 sem remapeamento. Primeiro conteúdo: `neuportada` com `display:none`, primeira seção visível = `neub01`.
+- Porta (7 etapas): 7/7 PASSA. Inventário regenerado (`inventario-fresco`: 0 velhos).
+- Limite: a prova é a 1440 px (onde há tabela larga sem rolagem); em telas estreitas a tabela é mais alta que larga e o traço, antes esticado pela seção, passa a esticar com a tabela, o que é mais fiel ao texto.
 
 ## Alternativa testada sem migração, e por que foi recusada (revisão da #620)
 
@@ -63,4 +38,26 @@ O que reprovou nos checks do próprio repositório:
 - Com o id numa `<section>` aninhada, o Guard passaria, mas `inventario-fresco.py` falha (21 seções no inventário do navegador × 22 no HTML) e só fecharia editando o inventário à mão, o que seria forçar.
 - Em tela estreita a posição do traço muda em relação a hoje (acompanha a tabela).
 
-**Decisão:** não há solução segura sem migração do dado que passe nos checks. Neurología fica como **exceção temporária** (portada visível, como na main) até José autorizar uma das duas saídas: (a) o `UPDATE` de reancoragem abaixo, junto com o merge desta PR; ou (b) uma mudança no Guard/inventário (código global, fora do escopo) para aceitar a âncora invisível.
+**Decisão:** não há solução segura sem migração do dado que passe nos checks. Neurología fica como **exceção temporária** (portada visível, como na main) até José autorizar uma das duas saídas: (a) o `UPDATE` de reancoragem no fim deste relatório, junto com o merge desta PR; ou (b) uma mudança no Guard/inventário (código global, fora do escopo) para aceitar a âncora invisível.
+
+
+## Ordem de execução
+
+1. Mesclar esta PR e rodar o `UPDATE` juntos (se só a PR entrar, o traço não se perde: fica no banco, invisível, até o `UPDATE`).
+2. Conferir no navegador o traço junto à tabela das unidades no bloco 01.
+3. Se precisar desfazer: reverter a PR e rodar a reversão.
+
+## SQL (não executado)
+
+```sql
+-- MIGRAÇÃO (executar por pessoa com escrita; NÃO executada por Claude 2). Mesclar a PR e rodar isto juntos.
+-- Traço 1dece18a… : de `neuportada` (seção inteira) para `neub01>14` (a tabela «Cuatro unidades»), mesmos pixels a 1440 px.
+update public.user_ink_strokes
+   set anchor_id = 'neub01>14', points = '[[0.64396, -0.04963], [0.6455, 0.00501], [0.6455, -0.00835], [0.64332, 0.0478], [0.64332, 0.07148], [0.64396, 0.039], [0.64332, 0.17908], [0.64177, 0.1894], [0.64332, 0.14812], [0.64332, 0.17908], [0.62571, 0.28546], [0.62571, 0.28971], [0.62648, 0.28091], [0.62648, 0.29715], [0.63226, 0.3237], [0.63162, 0.33114], [0.62943, 0.3325], [0.63226, 0.32962], [0.63085, 0.3325], [0.62352, 0.33402], [0.62571, 0.33402]]'::jsonb
+ where id = '1dece18a-29b8-4c80-8b08-57bec9f95ce0' and subject_slug = 'neurologia' and anchor_id = 'neuportada';
+
+-- REVERSÃO (só se a PR for revertida)
+update public.user_ink_strokes
+   set anchor_id = 'neuportada', points = '[[0.54602, 0.34729], [0.54716, 0.35415], [0.54716, 0.35248], [0.54545, 0.35953], [0.54545, 0.3625], [0.54602, 0.35842], [0.54545, 0.37603], [0.54432, 0.37733], [0.54545, 0.37214], [0.54545, 0.37603], [0.53182, 0.38939], [0.53182, 0.38994], [0.53239, 0.38883], [0.53239, 0.39087], [0.53693, 0.39421], [0.53636, 0.39514], [0.53466, 0.39532], [0.53693, 0.39495], [0.5358, 0.39532], [0.53011, 0.39551], [0.53182, 0.39551]]'::jsonb
+ where id = '1dece18a-29b8-4c80-8b08-57bec9f95ce0' and subject_slug = 'neurologia' and anchor_id = 'neub01>14';
+```
