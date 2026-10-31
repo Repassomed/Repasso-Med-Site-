@@ -41,3 +41,26 @@ Posição do traço medida a partir do canto da tabela das unidades (px; x, y, l
 ## Se José preferir o caminho sem truque
 
 Reancorar o traço no banco para `neub01>14` (a tabela) com pontos recalculados é a alternativa limpa, mas exige `UPDATE` por quem tem escrita. Não é necessária com esta PR.
+
+
+## Alternativa testada sem migração, e por que foi recusada (revisão da #620)
+
+Pedido: abrir Neurología pelo conteúdo **sem** escrever no banco, sem esconder nem deslocar o traço. Tentei dar o id `neuportada` a um elemento invisível sobre a tabela das unidades em `neub01` (o app acha a âncora por `querySelector('#neuportada')`).
+
+O que funcionou, medido no app real com o traço semeado:
+
+| Tela | Antes | Depois |
+|---|---|---|
+| 1440 / 1024 | 485, −33, 17 × 253 (px a partir do canto da tabela) | idêntico |
+| 768 | 306, 63, 11 × 309 | 358, −26, 13 × 340 |
+| 390 | 190, 280, 7 × 406 | 186, −16, 7 × 460 |
+
+Grifos 107/107, traço novo sobre a tabela criado em `neub01>14` sem roubo de toque, sem rolagem horizontal nova, porta 7/7 (variante `span`).
+
+O que reprovou nos checks do próprio repositório:
+
+- **Guard** (🔴 `block-ids`): «block_id de seção removido: neuportada. As marcações do aluno são ancoradas por block_id.» Com o id num `span`, a seção deixa de existir e o Guard bloqueia.
+- Com o id numa `<section>` aninhada, o Guard passaria, mas `inventario-fresco.py` falha (21 seções no inventário do navegador × 22 no HTML) e só fecharia editando o inventário à mão, o que seria forçar.
+- Em tela estreita a posição do traço muda em relação a hoje (acompanha a tabela).
+
+**Decisão:** não há solução segura sem migração do dado que passe nos checks. Neurología fica como **exceção temporária** (portada visível, como na main) até José autorizar uma das duas saídas: (a) o `UPDATE` de reancoragem abaixo, junto com o merge desta PR; ou (b) uma mudança no Guard/inventário (código global, fora do escopo) para aceitar a âncora invisível.
