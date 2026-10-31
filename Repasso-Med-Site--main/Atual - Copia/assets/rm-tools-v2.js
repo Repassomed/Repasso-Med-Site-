@@ -98,6 +98,17 @@
     return penLiberadaPeloServidor(slug);                                                                  // outra matéria: SÓ com a liberação do servidor PARA ELA; a conta fixa do código não basta
   }
 
+  /* NOVA ERA · caneta POR MATÉRIA para o aluno comum (get-pilot-flags → `pen:true`, estágio `all` da matéria na tabela rm_materia_rollout).
+     `st.escopo` é falso para quem já é da beta (BETA_UIDS / study_tools_beta): a V2 vale em TODA matéria, exatamente como antes, e esta função devolve sempre true.
+     Para o aluno comum a V2 só é MONTADA depois de o servidor liberar a matéria aberta e, depois de montada, só VALE na aba cuja matéria o servidor liberou:
+     nas demais ela fica invisível e inerte (nenhuma ferramenta arma, nenhuma leitura/escrita de traço ou nota) e o marcador/goma legados voltam a funcionar.
+     Falha fechada: matéria sem nome, sem resposta ou negada ⇒ false. NUNCA use `penLiberadaPeloServidor('')`: sem slug ela cai no piloto. */
+  function v2NaAba() {
+    if (!st.escopo) return true;
+    var sl = slugDoTab(abaAtiva());
+    return !!sl && penLiberadaPeloServidor(sl);
+  }
+
   /* Ponto de extensão único para a decisão de produto já registada nas
      #64/#66/#67 — caneta, marca-texto livre e highlight textual SOMENTE
      na "Página completa", nunca em modos isolados (infográfico solo,
@@ -136,7 +147,7 @@
      completa. Compor com `pilotoPermitido()` aqui quebraria o desenho
      para todo mundo que não é o José — por isso NÃO FAZER ISSO. */
   function anotarPermitido() {
-    return activeViewPermitido();
+    return v2NaAba() && activeViewPermitido();
   }
 
   /* ================================================================== */
@@ -186,7 +197,9 @@
     strokes: {},                        // slug -> [rec]
     carregado: {},                      // slug -> true
     undo: [],                           // pilha de operações inversas
-    notasAbertas: false
+    notasAbertas: false,
+    escopo: false,                      // Nova Era: V2 montada SÓ para a(s) matéria(s) que o servidor liberou ao aluno comum (ver v2NaAba)
+    escopoOn: null                      // último estado aplicado por aplicarEscopo() (detecta a transição entre abas)
   };
   if (HL_CORES.indexOf(st.hlColor) === -1) st.hlColor = 'yellow';
   if (PEN_CORES.indexOf(st.penColor) === -1) st.penColor = 'black';
@@ -870,6 +883,13 @@ body.rm2-t-pen .rm2-notes, body.rm2-t-eraser .rm2-notes{
 body.rm-lb-open .rm2-box,
 body.rm-lb-open .rm2-notes{ display:none !important; }
 body.rm-lb-open #rm2-ink{ visibility:hidden; }
+
+/* Nova Era · aluno comum com a caneta liberada SÓ em algumas matérias: nas outras a V2 não aparece (o marcador/goma antigos voltam). */
+body.rm2-fora .rm2-box,
+body.rm2-fora .rm2-notes,
+body.rm2-fora .rm2-diag,
+body.rm2-fora #rm2-ink{ display:none !important; }
+body.rm2-escopo.rm-v2 #materias-container .rm-tools-r{ display:none !important; }
 
 /* ---------- camada de tinta ----------------------------------------- */
 #rm2-ink{
@@ -3138,6 +3158,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     var slug = slugDoTab(tabEl);
     if (!slug) return;
     limparCamada();
+    if (!v2NaAba()) return;               // Nova Era: matéria sem a caneta liberada para este aluno ⇒ nem lê traços
     /* achado B: reenvia DELETEs pendentes ANTES de buscar os traços —
        se corresse depois (ou só em paralelo), um traço cujo DELETE
        falhou anteriormente seria lido de volta do banco e desenhado de
@@ -3421,7 +3442,30 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (t === 'eraser') toast('Goma activa · tocá una marca o un trazo');
   }
 
+  /* Nova Era (só com st.escopo): liga/desliga a V2 conforme a matéria da aba ativa. Na transição para «fora»: desarma a ferramenta, fecha notas, apaga a camada de tinta
+     e devolve ao motor antigo o marcador/goma (RM_STUDY_V2_ACTIVE=false ⇒ rm-tools.js volta a tratá-los). Na volta: relê os traços da matéria. Idempotente. */
+  function aplicarEscopo() {
+    if (!st.escopo) return;
+    var on = v2NaAba(), b = document.body;
+    if (st.escopoOn === on) return;
+    st.escopoOn = on;
+    window.RM_STUDY_V2_ACTIVE = on;
+    b.classList.toggle('rm-v2', on);
+    b.classList.toggle('rm2-fora', !on);
+    if (!on) {
+      try { reconciliarGesto('escopo'); } catch (e) {}
+      try { if (st.tool !== 'none') escolherFerramenta('none'); } catch (e2) {}
+      try { if (st.notasAbertas) fecharNotas(); } catch (e3) {}
+      try { limparCamada(); } catch (e4) {}
+      st.undo.length = 0;                 // a pilha era da matéria anterior: desfazer não pode mexer em outra
+      st.open = false;
+    } else {
+      var ativa = abaAtiva(); if (ativa) sincronizarAba(ativa);
+    }
+  }
+
   function refletir() {
+    aplicarEscopo();
     if (!box) return;
     /* INVARIANTE: enquanto a goma estiver armada — sempre — ou o lápis
        estiver armado DENTRO do piloto físico, o painel fica aberto —
@@ -3542,6 +3586,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   }
 
   async function abrirNotas() {
+    if (!v2NaAba()) return;
     montarDrawer();
     st.notasAbertas = true;
     drawer.classList.add('on');
@@ -3624,6 +3669,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   }
 
   async function novaNota() {
+    if (!v2NaAba()) return;
     var s = sb(); if (!s || !st.uid) { toast('Iniciá sesión para guardar apuntes.', true); return; }
     var tab = abaAtiva(); var slug = slugDoTab(tab);
     var sec = blocoVisivel(tab);
@@ -3912,7 +3958,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (!uid) return;                                  // ainda sem sessão: espera-se o evento de auth
       if (semAcesso[uid]) return;                        // já se perguntou por este uid: não repetir
       var ok = await hasStudyToolsV2Access(uid);
-      if (!ok) { semAcesso[uid] = true; return; }        // ← quem não é tester sai aqui, uma vez só
+      if (!ok) { semAcesso[uid] = true; armarEscopo(t, uid); return; }   // ← quem não é tester sai aqui, uma vez só (Nova Era: fica à espera de a matéria aberta ser liberada pelo servidor)
       if (montado) return;                               // outra tentativa chegou primeiro
       montado = true;
       await montarTudo(t, uid);
@@ -3921,10 +3967,31 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     }
   }
 
+  /* Nova Era · aluno comum (fora da beta): NADA é montado até o servidor liberar a caneta (`pen:true`) para a matéria da aba ativa. Só então a V2 monta, em modo
+     de escopo por matéria (st.escopo). Escuta o rm-pilot.js (evento `rm-pilot-flags`) e a troca de aba; nunca pergunta nada ao servidor por conta própria. */
+  var escopoArmado = false;
+  function armarEscopo(t, uid) {
+    if (escopoArmado) return;
+    escopoArmado = true;
+    var tentarEscopo = function () {
+      if (montado || aTentar) return;
+      var sl = slugDoTab(abaAtiva());
+      if (!sl || !penLiberadaPeloServidor(sl)) return;
+      aTentar = true;
+      (async function () {
+        try { if (montado) return; montado = true; st.escopo = true; acessoVia = 'servidor (caneta por matéria)'; await montarTudo(t, uid); }
+        finally { aTentar = false; }
+      })().catch(function (e) { console.warn('[rm2] escopo', e); });
+    };
+    window.addEventListener('rm-pilot-flags', tentarEscopo);
+    t.onAbaPronta(function () { setTimeout(tentarEscopo, 0); });
+    tentarEscopo();
+  }
+
   async function montarTudo(t, uid) {
     st.uid = uid;
-    window.RM_STUDY_V2_ACTIVE = true;
-    document.body.classList.add('rm-v2');
+    if (st.escopo) document.body.classList.add('rm2-escopo');          // a coluna legada fica no DOM (volta nas outras matérias); só é escondida onde a V2 vale
+    else { window.RM_STUDY_V2_ACTIVE = true; document.body.classList.add('rm-v2'); }
 
     injectCSS();
     montar();
@@ -3932,7 +3999,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
     /* a coluna direita legada pode já ter sido montada antes de sabermos
        que este utilizador é tester: remove-se, e só dela */
-    document.querySelectorAll('#materias-container .rm-tools-r').forEach(function (el) {
+    if (!st.escopo) document.querySelectorAll('#materias-container .rm-tools-r').forEach(function (el) {
       if (el.parentNode) el.parentNode.removeChild(el);
     });
     if (t.medirBarra) t.medirBarra();
@@ -3996,6 +4063,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
         anchorDe: anchorDe,
         anchorPorPonto: anchorPorPonto,
         pilotoPermitido: pilotoPermitido,
+        v2NaAba: v2NaAba,
+        escopo: function () { return !!st.escopo; },
         adaptadorLigado: function () { return adaptadorLigado; },
         perf: function () { return perf; },
         perfLinhas: perfLinhas,

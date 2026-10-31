@@ -1,0 +1,237 @@
+/* NOVA ERA · NAVEGADOR — a matéria REAL no harness, o rm-pilot.js REAL, a função get-pilot-flags REAL e o rm-tools-v2.js REAL; Supabase e rede simulados (zero rede externa).
+   «Banco» = sessionStorage da própria aba (harness ?persist=1): NADA de aluno real é lido ou gravado; qualquer escrita fora das 3 tabelas de anotação reprova.
+   Personas: JOSE (conta de teste, beta da V2 e nas listas de prévia) · ALUNO (aluno comum com acesso à matéria) · SEM (aluno comum sem acesso).
+   Cenas: padrão desligado · prévia (etapa 1) · layout para todos · caneta para todos · as duas · volta ao layout anterior · sem acesso · outra matéria · troca de aba · José em outra matéria · piloto.
+   Uso: NODE_PATH=$(npm root -g) node tools/qa/nova-era/navegador.test.cjs [--rapido] */
+'use strict';
+const { chromium } = require('playwright');
+const L = require('../ensaio-layout/lib.cjs');
+const D = require('../pre-voo/lib-dados.cjs');
+const S = require('./lib-servidor.cjs');
+S.U.JOSE = D.UID;                                       // o harness usa o UID de tester público do código para o motor da caneta montar (beta)
+const RAPIDO = process.argv.includes('--rapido');
+let n = 0, ko = 0;
+const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 400) : ''); } return !!c; };
+const sec = t => console.log('\n▸ ' + t);
+const MF = 'medicina-familiar';
+const envJose = () => ({ RM_PILOT_LAYOUT_UIDS: S.U.JOSE, RM_PILOT_PEN_UIDS: S.U.JOSE, RM_PILOT_VISUAL_UIDS: S.U.JOSE });
+const T = (l, p, v) => ({ [MF]: { layout_stage: l, pen_stage: p, visual_stage: v || 'off' } });
+const ACESSOS = () => ({ [S.U.ALUNO]: [MF, 'dermatologia'], [S.U.OUTRO]: ['dermatologia'] });
+const mkCena = (tabela, extra) => Object.assign({ env: envJose(), tabela, acessos: ACESSOS() }, extra || {});
+
+/* ---- dentro da página ---- */
+const MEDIR2 = () => {
+  const lerN = k => { try { return JSON.parse(sessionStorage.getItem('ens.' + k) || '[]'); } catch (e) { return []; } };
+  const vis = el => { if (!el) return false; const cs = getComputedStyle(el), r = el.getBoundingClientRect(); return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.height > 0; };
+  const V2 = window.RMToolsV2;
+  return {
+    linhas: { grifos: lerN('user_highlights').length, tracos: lerN('user_ink_strokes').length, notas: lerN('user_notes').length },
+    pintados: new Set([...document.querySelectorAll('#materias-container .rm-hl')].map(x => x.getAttribute('data-hl'))).size,
+    tracosDesenhados: document.querySelectorAll('#rm2-ink path[data-ink]').length,
+    layout: !!document.querySelector('.rm-l2, #rm-l2-side, .rm-l2-band'),
+    v2: !!V2, escopo: !!(V2 && V2._test.escopo && V2._test.escopo()), v2NaAba: V2 && V2._test.v2NaAba ? V2._test.v2NaAba() : null,
+    caixa: vis(document.querySelector('.rm2-box')), legada: [...document.querySelectorAll('.rm-tools-r')].some(vis),
+    corpoV2: document.body.classList.contains('rm-v2'), flagV1: window.RM_STUDY_V2_ACTIVE === true,
+    ferramenta: V2 ? V2.estado.tool : null, piloto: V2 ? V2._test.pilotoPermitido() : null,
+    escritas: (window.__writes || []).slice(), erros: (window.__errs || []).slice(0, 3)
+  };
+};
+const SEMEAR2 = ({ slug, uid }) => {
+  const tab = document.querySelector('#materias-container > .tab-content');
+  const SUB = 'p,li,h2,h3,h4,h5,table,figure,blockquote';
+  const secs = [...tab.querySelectorAll(':scope > section[id]')].filter(s => !/banco|flashcards|repaso|simulacro/i.test(s.id));
+  const alvos = [];
+  for (const s of secs) { const ps = [...s.querySelectorAll('p')].filter(p => !p.closest('[data-rm-ui],.quiz-item,.flashcard,details:not([open]),table,figure') && p.textContent.trim().length > 110); if (ps.length) alvos.push({ s, p: ps[Math.min(1, ps.length - 1)] }); }
+  const esc = alvos.slice(0, 4);
+  const ink = esc.map((a, i) => ({ id: 'nova-ink-' + i, user_id: uid, subject_slug: slug, anchor_id: a.s.id + '>' + [...a.s.querySelectorAll(SUB)].indexOf(a.p), color: 'black', width: 'medium', created_at: new Date(Date.now() - 86400000 + i).toISOString(), points: [[0.08, 0.30], [0.30, 0.45], [0.55, 0.28], [0.80, 0.50], [0.95, 0.35]] }));
+  sessionStorage.setItem('ens.user_ink_strokes', JSON.stringify(ink));
+  sessionStorage.setItem('ens.user_notes', JSON.stringify([{ id: 'nova-nota-1', user_id: uid, subject_slug: slug, anchor_id: esc[0].s.id, anchor_label: 'Nota de teste', title: 'Título', body: 'Corpo da nota', updated_at: new Date(Date.now() - 3600000).toISOString() }]));
+  return { alvos: esc.length };
+};
+const MARCAR = async () => {
+  const tab = document.querySelector('#materias-container > .tab-content'); let feitos = 0;
+  const secs = [...tab.querySelectorAll(':scope > section[id]')].filter(s => !/banco|flashcards|repaso|simulacro/i.test(s.id));
+  for (const s of secs) { if (feitos >= 3) break;
+    const p = [...s.querySelectorAll('p')].find(p => !p.closest('[data-rm-ui],.quiz-item,.flashcard,details:not([open]),table,figure') && p.textContent.trim().length > 110); if (!p) continue;
+    const w = document.createTreeWalker(p, NodeFilter.SHOW_TEXT); let tn, ac = null; while ((tn = w.nextNode())) { if (tn.textContent.trim().length >= 70) { ac = tn; break; } } if (!ac) continue;
+    const ini = ac.textContent.indexOf(ac.textContent.trim()) + 12, r = document.createRange(); r.setStart(ac, ini); r.setEnd(ac, ini + 28);
+    if (await window.RMTools.marcarRange(r, 'yellow')) feitos++; }
+  return feitos;
+};
+
+/* ---- fora da página ---- */
+async function abrirPersona(br, base, mat, c) {
+  c.ctx = await br.newContext({ viewport: { width: c.w, height: c.w < 600 ? 844 : 900 }, hasTouch: c.w < 600 });
+  c.page = await c.ctx.newPage(); c.pedidos = []; c.errs = [];
+  c.page.on('pageerror', e => c.errs.push(String(e).slice(0, 160)));
+  await c.page.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => r.abort());
+  await c.page.route('**/get-pilot-flags*', async r => { const slug = new URL(r.request().url()).searchParams.get('slug'); c.pedidos.push(slug); const o = await S.chamar(c.cena, c.persona, slug); r.fulfill({ status: o._status, contentType: 'application/json', body: o._corpo }); });
+  await c.page.addInitScript(([slug]) => { window.__RM_ENSAIO = { slug, modo: 'controle' }; }, [mat.slug]);
+  c.base = base; c.mat = mat;
+}
+const url = c => `${c.base}/p.html?slug=${c.mat.slug}&tab=${c.mat.tab}&modo=controle&wait=1500&persist=1&pilotreal=1&uid=${S.U[c.persona]}`;
+async function carregar(c) { await c.page.goto(url(c), { timeout: 120000 }); await c.page.waitForFunction('window.__ready===true', { timeout: 120000 }); await c.page.waitForTimeout(700); }
+async function ligar(c, espera = 2500) { await c.page.addScriptTag({ url: '/assets/rm-pilot.js?v=teste' }); await c.page.waitForTimeout(espera); return c.page.evaluate(MEDIR2); }
+async function recarregar(c) { await c.page.reload({ timeout: 120000 }); await c.page.waitForFunction('window.__ready===true', { timeout: 120000 }); await c.page.waitForTimeout(700); return ligar(c); }
+/* abre, semeia (grifos pelo motor V1 real + traços/nota nas linhas do «banco»), recarrega no CONTROLE e mede a linha de base */
+async function preparar(br, base, mat, c) {
+  await abrirPersona(br, base, mat, c); await carregar(c);
+  c.semeado = { grifos: await c.page.evaluate(MARCAR), ...(await c.page.evaluate(SEMEAR2, { slug: mat.slug, uid: S.U[c.persona] })) };
+  await c.page.waitForTimeout(400); await carregar(c);
+  c.ref = await c.page.evaluate(MEDIR2);
+}
+const semEscritaIndevida = m => m.escritas.filter(e => !/user_(highlights|ink_strokes|notes)$/.test(e));
+const mesmosDados = (a, b) => JSON.stringify(a.linhas) === JSON.stringify(b.linhas);
+async function riscar(c, seletor = 'p') {   // um traço com o lápis (mouse) sobre o primeiro parágrafo visível
+  const box = await c.page.evaluate(() => { const ps = [...document.querySelectorAll('#materias-container > .tab-content.active p')].filter(p => p.textContent.trim().length > 100 && p.checkVisibility && p.checkVisibility() && !p.closest('table,[data-rm-ui]')); const p = ps[0]; if (!p) return null; p.scrollIntoView({ block: 'center' }); const r = p.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
+  if (!box) return false; await c.page.waitForTimeout(300);
+  const b = await c.page.evaluate(() => { const ps = [...document.querySelectorAll('#materias-container > .tab-content.active p')].filter(p => p.textContent.trim().length > 100 && p.checkVisibility && p.checkVisibility() && !p.closest('table,[data-rm-ui]')); const r = ps[0].getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
+  const y = b.y + Math.min(b.h / 2, 40), x0 = b.x + 8;
+  await c.page.mouse.move(x0, y); await c.page.mouse.down();
+  for (let i = 1; i <= 14; i++) await c.page.mouse.move(x0 + i * Math.min(18, (b.w - 20) / 14), y + (i % 2 ? 6 : -6), { steps: 1 });
+  await c.page.mouse.up(); await c.page.waitForTimeout(900); return true;
+}
+const fecha = c => c.ctx.close().catch(() => {});
+
+(async () => {
+  const rec = L.reconciliar(); const M = s => rec.ativas.find(x => x.slug === s);
+  const srv = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
+  for (const W of (RAPIDO ? [1440] : [1440, 390])) {
+    const t = `[${W}px] `;
+
+    sec(t + '0 · começa DESLIGADO: tabela em off ⇒ aluno e José veem a matéria como hoje');
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('off', 'off')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c);
+      ok(c.pedidos.length === 1 && c.pedidos[0] === MF, 'o aluno só PERGUNTA (1 requisição) e a resposta é «não»', c.pedidos);
+      ok(!m.layout && !m.v2 && !m.corpoV2 && !m.flagV1, 'aluno: sem layout novo, sem V2, sem classes da V2', m);
+      ok(m.legada, 'aluno: marcador/goma antigos continuam à vista', m.legada);
+      ok(mesmosDados(c.ref, m) && m.pintados === c.ref.pintados && m.pintados >= 1, `aluno: ${m.pintados} grifos pintados e ${m.linhas.tracos} traços/${m.linhas.notas} nota gravados, idênticos`, [c.ref.linhas, m.linhas]);
+      ok(semEscritaIndevida(m).length === 0 && m.erros.length === 0 && c.errs.length === 0, 'aluno: 0 erro JS e nenhuma escrita indevida', [m.escritas, m.erros, c.errs]);
+      await fecha(c); }
+    { const c = { persona: 'JOSE', w: W, cena: mkCena(T('off', 'off')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c);
+      ok(!m.layout && m.v2 && !m.escopo && m.caixa && !m.piloto, 'José (beta): V2 de sempre, sem layout, sem refinamento do piloto físico em Medicina Familiar', m);
+      ok(mesmosDados(c.ref, m) && m.tracosDesenhados === c.ref.tracosDesenhados, 'José: dados idênticos', [c.ref.linhas, m.linhas]);
+      await fecha(c); }
+
+    sec(t + '1 · ETAPA 1 (prévia): só José vê; o aluno continua sem nada');
+    { const c = { persona: 'JOSE', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c);
+      ok(m.layout && m.v2 && !m.escopo && m.piloto === true, 'José: layout novo e caneta física da matéria liberados', m);
+      ok(mesmosDados(c.ref, m) && m.pintados === c.ref.pintados && m.tracosDesenhados === c.ref.tracosDesenhados, `José: ${m.pintados} grifos, ${m.tracosDesenhados} traços desenhados e ${m.linhas.notas} nota idênticos`, [c.ref, m]);
+      ok(semEscritaIndevida(m).length === 0 && c.errs.length === 0, 'José: 0 erro JS, nenhuma escrita indevida', [m.escritas, c.errs]);
+      const r2 = await recarregar(c); ok(r2.layout && mesmosDados(c.ref, r2) && r2.tracosDesenhados === c.ref.tracosDesenhados, 'José: depois de ATUALIZAR a página, tudo igual', r2);
+      await fecha(c); }
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c);
+      ok(!m.layout && !m.v2 && m.legada && mesmosDados(c.ref, m), 'aluno COM acesso na prévia: nada muda (layout antigo, ferramentas antigas, dados idênticos)', m);
+      await fecha(c); }
+
+    sec(t + '2 · ETAPA 2 só do LAYOUT: aluno com acesso vê o layout novo, SEM a caneta nova');
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('all', 'off')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c);
+      ok(m.layout, 'aluno: layout novo montado', m);
+      ok(!m.v2 && !m.caixa && m.legada && !m.corpoV2, 'aluno: nenhuma ferramenta nova (sem V2); marcador/goma antigos à vista', m);
+      ok(mesmosDados(c.ref, m) && m.pintados === c.ref.pintados, `aluno: ${m.pintados} grifos pintados; ${m.linhas.tracos} traços e ${m.linhas.notas} nota continuam gravados`, [c.ref, m]);
+      ok(semEscritaIndevida(m).length === 0 && m.escritas.length === 0 && c.errs.length === 0, 'aluno: abrir não escreve nada no banco; 0 erro JS', [m.escritas, c.errs]);
+      const r2 = await recarregar(c); ok(r2.layout && !r2.v2 && mesmosDados(c.ref, r2), 'aluno: depois de ATUALIZAR a página, igual', r2);
+      await fecha(c); }
+
+    sec(t + '3 · ETAPA 2 só da CANETA: aluno com acesso ganha a caneta nesta matéria, SEM o layout novo');
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('off', 'all')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c);
+      ok(!m.layout, 'aluno: layout antigo (a caneta não depende do layout)', m);
+      ok(m.v2 && m.escopo && m.caixa && m.corpoV2 && m.flagV1 && !m.legada, 'aluno: V2 montada em modo «por matéria»; caixa de ferramentas à vista; coluna antiga escondida', m);
+      ok(m.piloto === true, 'aluno: refinamentos físicos da caneta (palma/toque) valem nesta matéria', m.piloto);
+      ok(mesmosDados(c.ref, m) && m.tracosDesenhados === c.ref.linhas.tracos && m.pintados === c.ref.pintados, `aluno: ${m.tracosDesenhados} traços desenhados, ${m.pintados} grifos e ${m.linhas.notas} nota, idênticos`, [c.ref, m]);
+      await c.page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); const arm = await c.page.evaluate(() => window.RMToolsV2.estado.tool);
+      ok(arm === 'pen', 'aluno: consegue armar a caneta', arm);
+      const desenhou = await riscar(c); const m2 = await c.page.evaluate(MEDIR2);
+      ok(desenhou && m2.escritas.filter(e => e === 'insert:user_ink_strokes').length === 1, 'aluno: 1 traço novo gravado (só user_ink_strokes)', m2.escritas);
+      ok(semEscritaIndevida(m2).length === 0 && c.errs.length === 0, 'aluno: nenhuma escrita fora das anotações; 0 erro JS', [m2.escritas, c.errs]);
+      const r2 = await recarregar(c);
+      ok(r2.escopo && r2.linhas.tracos === c.ref.linhas.tracos + 1 && r2.tracosDesenhados === c.ref.linhas.tracos + 1, 'aluno: depois de ATUALIZAR a página, o traço novo volta e os antigos continuam', [r2.linhas, r2.tracosDesenhados]);
+      await fecha(c); }
+
+    sec(t + '4 · layout E caneta liberados para o aluno');
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('all', 'all')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c);
+      ok(m.layout && m.v2 && m.escopo && m.caixa && !m.legada, 'aluno: layout novo + caneta por matéria', m);
+      ok(mesmosDados(c.ref, m) && m.tracosDesenhados === c.ref.linhas.tracos && m.pintados === c.ref.pintados, `aluno: ${m.pintados} grifos, ${m.tracosDesenhados} traços e ${m.linhas.notas} nota idênticos`, [c.ref, m]);
+      ok(semEscritaIndevida(m).length === 0 && m.escritas.length === 0 && c.errs.length === 0, 'aluno: abrir não escreve nada; 0 erro JS', [m.escritas, c.errs]);
+      sec(t + '5 · VOLTA ao layout anterior (estágios → off): mesmos dados, ferramentas antigas');
+      c.cena.tabela = T('off', 'off');
+      const v = await recarregar(c);
+      ok(!v.layout && !v.v2 && !v.corpoV2 && !v.flagV1 && v.legada, 'depois da volta: layout antigo, sem V2, marcador/goma antigos à vista', v);
+      ok(mesmosDados(c.ref, v) && v.pintados === c.ref.pintados, `depois da volta: os ${v.linhas.tracos} traços e a nota continuam GRAVADOS e os ${v.pintados} grifos pintados`, [c.ref, v]);
+      ok(semEscritaIndevida(v).length === 0 && v.escritas.length === 0, 'a volta não escreve nada', v.escritas);
+      c.cena.tabela = T('all', 'all'); const ida = await recarregar(c);
+      ok(ida.layout && ida.escopo && ida.tracosDesenhados === c.ref.linhas.tracos && mesmosDados(c.ref, ida), 'e ligando de novo, tudo volta igual (ida e volta)', ida);
+      await fecha(c); }
+
+    sec(t + '6 · usuário SEM acesso à matéria (estágios all)');
+    { const c = { persona: 'SEM', w: W, cena: mkCena(T('all', 'all')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c);
+      ok(!m.layout && !m.v2 && m.legada && mesmosDados(c.ref, m), 'sem acesso: nada de layout novo nem caneta nova', m);
+      await fecha(c); }
+
+    sec(t + '7 · OUTRA matéria com Medicina Familiar em all');
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('all', 'all')) }; await preparar(br, base, M('dermatologia'), c);
+      const m = await ligar(c);
+      ok(c.pedidos.length === 0, 'dermatologia: o site nem pergunta ao servidor', c.pedidos);
+      ok(!m.layout && !m.v2 && m.legada && !m.corpoV2 && mesmosDados(c.ref, m) && m.pintados === c.ref.pintados, 'dermatologia: como hoje (layout antigo, ferramentas antigas, dados idênticos)', m);
+      await fecha(c); }
+
+    sec(t + '8 · aluno com a caneta SÓ em Medicina Familiar troca de matéria e volta');
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('off', 'all')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c); ok(m.escopo && m.caixa, 'começa em Medicina Familiar com a caneta', m);
+      await c.page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen'));
+      const tabDerma = M('dermatologia').tab;
+      await c.page.evaluate((tb) => { const t = document.createElement('div'); t.className = 'tab-content'; t.id = 'tab-' + tb; t.innerHTML = '<section id="dd-b01" class="container"><h2>Bloque de otra materia</h2><p>' + 'Texto de prueba de otra materia que no tiene la lapicera nueva. '.repeat(10) + '</p></section>'; document.getElementById('materias-container').appendChild(t); window.switchTab(tb); }, tabDerma);
+      await c.page.waitForTimeout(900);
+      const f = await c.page.evaluate(MEDIR2);
+      ok(!f.v2NaAba && !f.caixa && !f.corpoV2 && !f.flagV1 && f.ferramenta === 'none', 'em OUTRA matéria: V2 invisível e inerte, ferramenta desarmada, sinal da V2 desligado (o marcador/goma antigos voltam a valer)', f);
+      await c.page.evaluate(() => { window.__writes.length = 0; window.RMToolsV2.escolherFerramenta('pen'); window.RMToolsV2.escolherFerramenta('highlight'); });
+      const f2 = await c.page.evaluate(MEDIR2); ok(f2.ferramenta === 'none', 'em OUTRA matéria: não consegue armar caneta nem marcador V2', f2.ferramenta);
+      const riscou = await riscar(c); const f3 = await c.page.evaluate(MEDIR2);
+      ok(riscou && f3.escritas.length === 0 && f3.tracosDesenhados === 0, 'em OUTRA matéria: arrastar o mouse/lápis não desenha nem grava nada', f3.escritas);
+      await c.page.evaluate((mf) => window.switchTab(mf), M(MF).tab); await c.page.waitForTimeout(900);
+      const b = await c.page.evaluate(MEDIR2);
+      ok(b.v2NaAba && b.caixa && b.corpoV2 && b.flagV1 && b.tracosDesenhados === c.ref.linhas.tracos, 'de volta a Medicina Familiar: a caneta volta e os traços reaparecem', b);
+      ok(c.errs.length === 0, '0 erro JS', c.errs);
+      await fecha(c); }
+
+    sec(t + '9 · José (beta de sempre) em outra matéria: NADA mudou para ele');
+    { const c = { persona: 'JOSE', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c); ok(m.v2 && !m.escopo, 'José: V2 global (não é «por matéria»)', m);
+      const tabDerma = M('dermatologia').tab;
+      await c.page.evaluate((tb) => { const t = document.createElement('div'); t.className = 'tab-content'; t.id = 'tab-' + tb; t.innerHTML = '<section id="dd-b01" class="container"><p>' + 'Texto de prueba de otra materia. '.repeat(10) + '</p></section>'; document.getElementById('materias-container').appendChild(t); window.switchTab(tb); }, tabDerma);
+      await c.page.waitForTimeout(700); await c.page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen'));
+      const f = await c.page.evaluate(MEDIR2); ok(f.v2NaAba && f.ferramenta === 'pen' && f.caixa && f.piloto === false, 'José em outra matéria: continua podendo armar a caneta (como hoje), sem os refinamentos físicos', f);
+      await fecha(c); }
+
+    sec(t + '10 · piloto Semiología II: aluno comum continua sem nada, mesmo com a tabela em all');
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(Object.assign(T('off', 'off'), { 'semiologia-ii': { layout_stage: 'all', pen_stage: 'all', visual_stage: 'all' } }), { acessos: { [S.U.ALUNO]: ['semiologia-ii'] } }) };
+      await preparar(br, base, M('semiologia-ii'), c); const m = await ligar(c);
+      ok(!m.layout && !m.v2 && mesmosDados(c.ref, m), 'Semiología II: aluno comum sem layout novo e sem caneta nova', m);
+      await fecha(c); }
+    { const c = { persona: 'JOSE', w: W, cena: mkCena({}) }; await preparar(br, base, M('semiologia-ii'), c); const m = await ligar(c);
+      ok(m.layout && m.v2 && m.piloto === true && mesmosDados(c.ref, m), 'Semiología II: José segue com layout e caneta do piloto, dados idênticos', m);
+      await fecha(c); }
+
+    sec(t + '11 · falha da tabela de estágios ⇒ desligado');
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(null) }; await preparar(br, base, M(MF), c); const m = await ligar(c);
+      ok(!m.layout && !m.v2 && m.legada && mesmosDados(c.ref, m), 'tabela inexistente: tudo como hoje', m); await fecha(c); }
+
+    sec(t + '12 · tema visual em all numa matéria SEM descritor aprovado: o layout fica, o tema simplesmente não entra');
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('all', 'off', 'all')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c); await c.page.waitForTimeout(1500);
+      const sis = await c.page.evaluate(() => ({ rmSis: document.documentElement.classList.contains('rm-sis'), tema: document.documentElement.getAttribute('data-rm-tema') }));
+      ok(m.layout && !sis.rmSis && !sis.tema, 'layout montado; sem tema (não há descritor) e sem estrago', [m.layout, sis]);
+      ok(mesmosDados(c.ref, m) && c.errs.length === 0 && semEscritaIndevida(m).length === 0, 'dados idênticos; 0 erro JS', [m.escritas, c.errs]);
+      await fecha(c); }
+  }
+  await br.close(); srv.close();
+  console.log(`\nnova-era/navegador: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`);
+  process.exit(ko ? 1 : 0);
+})().catch(e => { console.error(e); process.exit(2); });
