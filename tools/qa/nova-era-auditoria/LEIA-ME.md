@@ -6,3 +6,5 @@ Cada script recebe a RAIZ de uma árvore (worktree) do repositório já com `too
 - `legado.audit.cjs <raiz-PR>`: aluno com a caneta só em Medicina Familiar abre OUTRA matéria depois (HTML real de Dermatología): marcador/goma antigos existem?
 - `fidelidade.audit.cjs <raiz-PR>`: distância máxima do traço do aluno em MF sobre parágrafo, tabela e post-it.
 Uso: `NODE_PATH=$(npm root -g) node tools/qa/nova-era-auditoria/<script> <args>`. Somente leitura; nenhum dado real.
+- `ordem-real.audit.cjs <raiz-PR>`: ORDEM REAL de abertura, sem aba falsa: MF (caneta liberada ao aluno) → Dermatología (HTML real; fetch → appendChild → enhanceAll → switchTab, como `openTab` do index.html). Confere coluna antiga, marcador (UI + insert), borracha (UI + delete), ausência da V2; de volta a MF: caixa V2, caneta (1 insert), traços/nota preservados. Tem o CONTROLE «tudo off».
+- `tardia.audit.cjs <raiz-PR>`: resposta ATRASADA de `hasStudyToolsV2Access` (linha em `study_tools_beta`, 2,5 s) com troca de conta durante a espera; com controle (A confirmada antes da troca ⇒ bloqueia e recarrega).
