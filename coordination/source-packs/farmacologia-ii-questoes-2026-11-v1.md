@@ -1,6 +1,6 @@
 # Farmacología II · pasta de questões (arquivos de 01/11/2026) · integração pela 8-A
 
-> **ESTADO: PARCIAL — NÃO MESCLAR.** Dois PDFs (56,8 MB e 22,5 MB) não puderam ser baixados como arquivo bruto neste ambiente (erros exatos em §1-B). Nenhuma página deles foi examinada em imagem; nada foi inventado.
+> **ESTADO: PARCIAL — NÃO MESCLAR.** Das 9 cópias `LEITURA_` dos dois PDFs grandes, 5 foram baixadas e examinadas (Compilado págs. 1–21 e 24; Questões págs. 1–28). As 4 restantes (Compilado págs. 22–23 e 25–27; Questões págs. 29–42 e 43–55) **não puderam ser baixadas** (§1-C); delas só há texto OCR do Drive, sem conferência de imagem. Nada foi inventado.
 
 Fonte: Drive → pasta de questões de Farmacología II (id `1Ov8nvljchyD5EyLI4hSk8iXlNbrlGMIS`): 11 arquivos de 01/11 + o arquivo mais antigo da pasta (referência de repetições).
 Base: `main` em `fb9b3f45` (inclui #623). Nenhum layout, caneta, áudio, arquivo global, Supabase ou flag foi tocado. Único arquivo de conteúdo alterado: `farmacologia-ii.html` (+ este registro + `docs/layout-ensaio/inventario.json`).
@@ -16,19 +16,16 @@ Nas decisões: **INCLUÍDA** (questão nova), **JÁ EXISTENTE** (conceito e raci
 | 1 | `farmaco p2.pdf` | 2,45 MB | 5 | recordação de aluno da prova de 10/11/2025, com respostas | imagens das 5 páginas | lido inteiro |
 | 2 | `Simulado farmaco II - 2ª parcial.pdf` | 3,96 MB | 4 | **simulado** (15 MCQ com gabarito comentado) | texto | lido inteiro |
 | 3 | `1. Questionário Antihipertensivos.pdf` | 177 KB | 6 | **questionário de terceiros** (resumomedicina.py, Uanderson Alves) | texto | lido inteiro |
-| 4 | **`Provas Compilado farmaco.pdf`** | **56.815.528 bytes (56,8 MB)** | **não foi possível contar** | provável compilado de fotos de provas | download recusado (limite 10 MB do conector); extração de texto do Drive vazia (só imagem) | **NÃO VERIFICADO** |
+| 4 | `Provas Compilado farmaco.pdf` | 56.815.528 bytes (56,8 MB) | 27 | fotos da prova P1 + cópias + anotações de aluno | 6 cópias `LEITURA_` (§1-C): págs. 1–21 e 24 baixadas e examinadas; **págs. 22–23 e 25–27 só OCR** | **PARCIAL** |
 | 5 | `Tabelas Farmaco Final.pdf` | 127 KB | 3 | tabelas-resumo, sem questões | texto | lido inteiro: 0 questões |
-| 6 | **`Questoes P1 P2 Farmaco_251206_172249.pdf`** | **22.496.018 bytes (22,5 MB)** | **não foi possível contar** | colagem de recordações P1/P2, cópias de outros arquivos, atividade e perguntas curtas | download recusado (limite 10 MB); só o texto OCR do Drive (≈89 mil caracteres, sem paginação) | **PARCIAL**: nenhuma página conferida em imagem |
+| 6 | `Questoes P1 P2 Farmaco_251206_172249.pdf` | 22.496.018 bytes (22,5 MB) | 55 | recordações P1/P2, cópias de outros arquivos, perguntas curtas, casos | 3 cópias `LEITURA_`: págs. 1–28 baixadas e examinadas; **págs. 29–55 só OCR** | **PARCIAL** |
 | 7 | `prova farmaco.pdf` | 1,66 MB | 5 | foto da «Prova de Farmacologia – Revisão» (Belén, Turma D, Fila 2) | imagens | lido; = arquivo 9 |
 | 8 | `questoes farmaco.pdf` | 857 KB | 3 | «Farmacologia II – Dra Belen»: 10 MCQ sem gabarito + 6 abertas | imagens | lido inteiro |
 | 9 | `Fármaco – Belén, Turma D, Fila 2 (1).pdf` | 119 KB | 5 | revisão com respostas (12 MCQ + 3 completar + 3 V/F + 2 discursivas) | texto | lido inteiro |
 | 10 | `2. Questionário Antianginosos.pdf` | 203 KB | 7 | **questionário de terceiros** (mesmo autor) | texto | lido inteiro (gabaritos comentados) |
 | 11 | `Simulado P2 Corticoides + Farmacologia Respiratória.pdf` | 169 KB | 6 | **simulado** («Dra. Verónica Vega», 20 MCQ + 8 abertas + 4 casos) | texto | lido inteiro |
 
-**Não conseguiu verificar (José precisa comprimir ou dividir):**
-1. `Provas Compilado farmaco.pdf` — 56.815.528 bytes (56,8 MB) — páginas: **não foi possível contar**; 100 % das páginas sem verificação. Nenhuma questão, resposta ou decisão foi inventada para este arquivo.
-2. `Questoes P1 P2 Farmaco_251206_172249.pdf` — 22.496.018 bytes (22,5 MB) — páginas: **não foi possível contar**; só o texto OCR foi lido (§4); nenhuma página conferida visualmente; recomenda-se comprimir para conferir imagens, tabelas e a resposta correta de cada item.
-3. `Provas Compilado` e a referência (arquivo 0): a referência foi lida só em texto OCR (6,5 MB; páginas não contadas).
+**Não conferido em imagem:** Compilado págs. 22–23 e 25–27; Questões págs. 29–55; arquivo de referência (6,5 MB, só OCR). Detalhe em §1-C e §7.
 
 ### 1-B. Nova tentativa de baixar os dois PDFs brutos (2.ª rodada) — erros exatos
 Ambiente: sessão em nuvem, saída HTTPS por proxy; sem credencial do Google Drive (`gcloud auth list` → «No credentialed accounts»); o token de ambiente disponível é do `gcloud`/GitHub e **não foi usado** para o Drive (não foi concedido para isso).
@@ -44,6 +41,21 @@ Como não houve download, não foi possível dividir uma cópia local. Os origin
 
 **3.ª rodada (01/11, após o pedido de exame visual):** a pasta do Drive foi listada de novo (`parentId = 1Ov8nvljchyD5EyLI4hSk8iXlNbrlGMIS`): **não há arquivo novo** (nenhuma cópia dividida ou comprimida; busca por `createdTime > 2026-11-01T22:00:00Z` retornou vazio). `download_file_content` dos dois ids repetiu o mesmo erro («File too large for download, over limit of 10 MB…»). `read_file_content` de `Provas Compilado farmaco.pdf` devolveu `fileContent: ""` (PDF só de imagem; nenhuma página legível por texto). O proxy do ambiente nega `drive.google.com` (política de rede); não foi contornado.
 **Páginas não examinadas:** `Provas Compilado farmaco.pdf` — todas (total de páginas desconhecido); `Questoes P1 P2 Farmaco_251206_172249.pdf` — todas em imagem (total desconhecido; só o texto OCR sem paginação).
+
+### 1-C. Cópias `LEITURA_` (4.ª rodada): o que foi baixado e examinado
+Pasta `1Ov8nvljchyD5EyLI4hSk8iXlNbrlGMIS`; 9 arquivos `LEITURA_` (nomes = faixa de páginas do original). O conector cai com respostas acima de ≈ 6 MB: `The connection to MCP server "Google_Drive" was closed because a message from the server was too large or could not be parsed`.
+| Cópia (faixa no original) | Tamanho | Download | Como foi lido |
+|---|---|---|---|
+| `LEITURA_Provas_Compilado_farmaco_pag_01-07.pdf` (págs. 1–7) | 4,3 MB | OK | págs. 1–4 **em imagem** (fotos da prova); 5–7 texto nativo + imagem de fundo |
+| `LEITURA_Provas_Compilado_farmaco_pag_08-14.pdf` (8–14) | 5,8 MB | OK | págs. 10–12 **em imagem**; 14 em imagem; 8, 9 e 13 texto nativo |
+| `LEITURA_Provas_Compilado_farmaco_pag_15-21.pdf` (15–21) | 5,3 MB | OK | págs. 15–16 em imagem; 17–21 texto nativo |
+| `LEITURA_Provas_Compilado_farmaco_pag_24-24.pdf` (24) | 3,9 MB | OK | texto nativo |
+| `LEITURA_Provas_Compilado_farmaco_pag_22-23.pdf` (22–23) | 8,2 MB | **FALHOU**: conexão do conector fechada (acima) | só texto OCR do Drive (`read_file_content`) |
+| `LEITURA_Provas_Compilado_farmaco_pag_25-27.pdf` (25–27) | 8,6 MB | **não baixado** (limite já observado) | só texto OCR do Drive |
+| `LEITURA_Questoes_P1_P2_Farmaco_pag_01-28.pdf` (1–28) | 1,8 MB | OK | págs. 1–7 **em imagem** (capturas de tela); 8–20 texto nativo (cópias dos arquivos 1, 8 e 9); 21 e 26 em imagem; 22–25, 27–28 texto nativo |
+| `LEITURA_Questoes_P1_P2_Farmaco_pag_29-42.pdf` (29–42) | 7,3 MB | **FALHOU**: conexão fechada (2×) | só texto OCR do Drive |
+| `LEITURA_Questoes_P1_P2_Farmaco_pag_43-55.pdf` (43–55) | 8,3 MB | **FALHOU**: conexão fechada (1×; tentado junto com o anterior) | só texto OCR do Drive |
+Total do Compilado: 27 págs. (a pág. 13 é uma folha em branco). Total das Questões: 55 págs.
 
 **Rótulos (8-A.4):** nenhum arquivo desta pasta prova por si só que um item é de prova oficial (os de 01/11 são simulados, questionários, tabelas ou recordações de aluno). Por isso **as 13 questões novas levam «Pregunta complementaria»**. As questões já existentes mantêm o rótulo que tinham.
 
@@ -116,28 +128,37 @@ Q1 glicocorticoides anti-inflamatórios/imunossupressores → JÁ `f2b07#04`, `#
 ### Arquivo 3 · `1. Questionário Antihipertensivos.pdf` (6 pp.; questionário de terceiros)
 Q1 PA = DC × RVP → conceito ensinado no resumo, sem questão direta de fórmula: NÃO INCLUÍDA (valor avaliativo baixo; coberto por `f2b03#22`) · Q2 diuréticos de alça → JÁ `f2b02#01`, `#04`, `#12` · Q3 tiazídicos → JÁ `f2b02#03`, `#14`, `#15` · Q4 poupadores de K⁺ → JÁ `f2b02#06`, `#10`, `#13` · Q5 β vasodilatadores → JÁ `f2b01#03`, `#12`, `#13` · Q6 α₂ centrais → JÁ `f2b03#04`, `#23` · Q7 calcioantagonistas → JÁ `f2b03#05`, `#06`, `#10`, `#12`, `#20` · Q8 IECA → JÁ `f2b03#01`, `#02`, `#17`, `#21` · Q9 ARA-II → JÁ `f2b03#13`, `#18` · Q10 vasodilatadores diretos → JÁ `f2b03#07`, `#09`, `#19` · Q11 situações especiais → JÁ `f2b02#08`, `f2b03#15`, `#19` · Q12 α₁ → JÁ `f2b01#06`, `#19`, `#25`, `#26` · Q13 prazosina → JÁ `f2b01#21` · Q14 ergóticos → JÁ `f2b01#07` · Q15 β não seletivos → JÁ `f2b01#05`, `#18` · Q16 β cardiosseletivos → JÁ `f2b01#14`, `#15`; **o item pede «duas corretas»** (A e C): sem resposta única → não incluída · Q17 β de 3.ª geração → JÁ `f2b01#03`, `#12`, `#13` · Q18 efeitos adversos dos β → JÁ `f2b01#01`, `#18` · Q19 aplicações dos β → JÁ `f2b01#15`, `#16`, `f2b11#02`. Observações de qualidade do arquivo (não copiadas): grafia «Nevibolol»; Q13 D afirma que a prazosina «não é dependente de ação central» de forma confusa. Rótulo: complementar (nenhuma incluída).
 
-### Arquivo 4 · `Provas Compilado farmaco.pdf` (56,8 MB)
-**NÃO VERIFICADO** (ver §1). Nenhum item registrado.
+### Arquivo 4 · `Provas Compilado farmaco.pdf` (56,8 MB, 27 págs.)
+| Págs. | Conteúdo (conferido) | Itens → decisão |
+|---|---|---|
+| 1–4 | **Fotos da folha de prova** «Marca la respuesta correcta» (Universidad Central del Paraguay; respostas marcadas à mão): Q1 digoxina (mecanismo), Q2 β-bloqueadores EXCETO, Q3 quinidina (classe), Q4 edema de pés/BCC, Q5 princípio II da IC sistólica, Q6 verapamilo, Q7 losartán, Q8 diltiazem (classe IV), Q9 HCTZ, Q10 amiodarona (K⁺), Q11 carvedilol, Q12 parear princípios I–V, Q13 V/F IECA pró-drogas, Q14 V/F nebivolol, Q15 V/F celiprolol, Q16 cite β-bloqueadores na IC, Q17 classificação dos anti-hipertensivos, Q18 explique β-bloqueadores na ICC | **Prova P1 comprovada pela foto.** Todos JÁ EXISTENTES: `f2b14#08`, `f2b01#10`, `f2b14#02`, `f2b03#05`, `f2b14#12`, `f2b03#06`, `f2b02#11`, `f2b14#19`, `f2b02#03`, `f2b14#06`, `f2b01#03`, `f2b14#14`, `f2b03#21`, `f2b01#12`, `f2b01#04`/`#13`, `f2b01#15`, `f2b02#11`, `f2b01#16`. Nenhuma questão nova |
+| 5–9 | cópia digital da revisão Belén (arquivo 9): 20 itens | JÁ EXISTENTES (ver arquivos 7 e 9) |
+| 10–12 | «GABARITO P1 FARMACOLOGIA FILA 1» (cópia digital com anotações manuscritas, imagem conferida): 11 itens com chave, 3 completar, 3 V/F, 3 «cite» | JÁ EXISTENTES (`f2b01#10`, `f2b02#01`, `f2b04#05`, `f2b03#05`, `f2b01#03`, `f2b03#04`, `f2b14#01`, `f2b03#11`, `f2b04#02`, `f2b02#08`, `f2b01#11`, `f2b05#10`, `f2b04#04`, `f2b01#12`, `f2b01#13`, `f2b05#11`, `f2b01#14`, `f2b03#15`). Recordação de aluno com chave: não prova a redação oficial |
+| 13 | folha em branco | — |
+| 14–21, 24 | «RESUMO FARMACOLOGIA II – PRIMERA PARCIAL» (anotações de aluno; nenhuma pergunta) | sem questões; não aproveitado |
+| 22–23, 25–27 | notas de caderno (antianginosos, antiagregantes, antiarrítmicos, digoxina) — **só texto OCR**; pág. 27 tem escrita à mão não legível por OCR | **imagem NÃO conferida** (cópias não baixadas, §1-C). O texto OCR não contém perguntas |
 
 ### Arquivo 5 · `Tabelas Farmaco Final.pdf` (3 pp.)
 Tabelas-resumo de farmacologia (autor Fábio Gorgônio, 07/12/2025). **Sem questões**; nada a incluir. Não deve ser apresentada como prova.
 
-### Arquivo 6 · `Questoes P1 P2 Farmaco_251206_172249.pdf` (22,5 MB) — só OCR, sem conferência visual
-| Seção do texto OCR | Conteúdo | Decisão |
+### Arquivo 6 · `Questoes P1 P2 Farmaco_251206_172249.pdf` (22,5 MB, 55 págs.)
+| Págs. | Conteúdo | Decisão |
 |---|---|---|
-| A | recordações de P1/P2 (turmas B, C, 6A, 6G; Fila 1/2), listas de tópicos | tópicos de cardio/AINE/endócrino: JÁ EXISTENTES (blocos 01–05, 06–07, 10–14); sem gabarito conferível: PENDENTE onde falta resposta |
-| B | cópia de `farmaco p2` | ver arquivo 1 |
-| C | cópia de `questoes farmaco` | ver arquivo 8 |
-| D | cópia da revisão da Belén (Fila 2) | ver arquivo 9 |
-| E, I | variantes de «PROVA» | repetem itens de B–D: JÁ EXISTENTES |
-| F | «ATIVIDAD»: 15 MCQ + caso de angina | cardio JÁ EXISTENTE (bloco 05, `f2b05#01`–`#18`); itens sem gabarito: PENDENTE |
-| G | diazóxido | JÁ EXISTENTE `f2b03#07` |
-| H | «PROVA 2»: IECA contraindicado, signo de la cubeta, abciximab, α-bloqueio, atenolol (rebote), propafenona, efeitos da furosemida, nitratos incorreta, carvedilol, classe IA, Prinzmetal | JÁ EXISTENTES: `f2b03#03`, `f2b14#09`, `f2b04#01`, `f2b01#06`, `#01`, `f2b14#01`, `f2b02#02`/`#04`, `f2b05#03`, `f2b01#03`, `f2b14#02`/`#04`, `f2b05#05` |
-| J | notas OCR | sem questões utilizáveis |
-| K | perguntas curtas 1–78 (sucralfato, H₂, antileucotrienos, esquema H. pylori, efeitos dos glicocorticoides, IBP, fludrocortisona V/F, omalizumab, xantinas, misoprostol, Addison, 11β-HSD, omeprazol–clopidogrel…) | JÁ EXISTENTES quando há questão (ver arquivos 1, 2, 11); lacunas viraram N3–N5, N10–N13; Addison/11β-HSD: JÁ `f2b07#10`, `#14` |
-| L | casos de hipotireoidismo 1–4 | JÁ EXISTENTES `f2b10#07`–`#11` |
-
-A conferência página a página (imagens, tabelas e a resposta correta de cada item) **ficou pendente** até José comprimir o arquivo.
+| 1–2 | «GABARITO P1 TURMA B – FARMACOLOGIA FILA 1» (captura de tela, imagem conferida): 9 MCQ com chave + 2 abertas + completar + V/F (nebivolol, celiprolol, AAS) + «cite» | JÁ EXISTENTES (como Compilado págs. 10–12) |
+| 3 | recordações P1 Belén Turma B Fila 2 (lista de tópicos) e «tríada de Bezold-Jarisch» | JÁ EXISTENTE `f2b05#10`; sem enunciado: nada a incluir |
+| 4 | recordações Belén Turma D Fila 2 (20 itens) e Turma C Fila 1 (glucocorticoides: indicações, osso, Cushing, mineralocorticoide) | JÁ EXISTENTES (`f2b07#01`–`#09`, `f2b01`–`f2b05`) |
+| 5 | recordações P2 Turma C Fila 1: broncodilatadores, SABA, roflumilast, **omalizumab**, IBP, caso omeprazol–clopidogrel (CYP2C19), esquema H. pylori, misoprostol, **bismuto bactericida**, β₂ de ação longa, anticolinérgicos, indicações dos glucocorticoides; Turma 6A Fila 1: **sucralfato (mecanismo, meio ácido pH<4, efeitos citoprotetores)**, prednisona/AMPc, ACMO, bismuto, fludrocortisona, adenosina 1, H₂ | tópicos cobertos por questões existentes ou por **N3, N10, N12, N13**; confirma que esses temas apareceram no P2, mas **só como lista de tópicos (sem enunciado)**: por isso as questões novas seguem «Pregunta complementaria» |
+| 6 | Turma 6A (cont.): tto de asma, osso; completar (mediadores anticolinérgico, roflumilast); «cite» esquema H. pylori, anticolinérgicos, indicações dos IBP; efeitos adversos do sucralfato; «Examen en línea FARMACO II» (5 V/F e MCQ com ✅) e «Outro examen» (α-metildopa, carvedilol) | `Examen en línea` e `Outro examen`: JÁ EXISTENTES (`f2b01#12`, `f2b02#02`, `f2b03#04`, `f2b05#09`, `f2b14#06`, `f2b01#03`). Efeitos adversos do sucralfato: **PENDENTE** (ver abaixo) |
+| 7 | «Lacuna»: inibição da pepsina; receptor CysLT₁; enzima do zileutón (5-LOX); anti-H₂; enzima do corticoide inalado (fosfolipase A₂); «cita»: efeitos adversos do sucralfato, 3 glucocorticoides de ação intermédia, hipertensão por prednisona, perda de músculo, omalizumab, H. pylori; Belén 6G: conversor cortisol→cortisona, antiinflamatório para asma/EPOC, mecanismo das xantinas, efeitos adversos dos IBP | **N7, N12, N3, N10, N11** cobrem os pontos de lacuna e IBP; JÁ EXISTENTES: 11β-HSD `f2b07#14`, roflumilast `f2b08#01`, xantinas `f2b08#04`, PLA₂ `f2b06#02`, perda de músculo `f2b07#09`, hipertensão `f2b07#01` |
+| 8–12 | cópia digital de `farmaco p2.pdf` (arquivo 1, págs. 1–5) | ver arquivo 1 |
+| 13–15 | cópia de `questoes farmaco.pdf` (arquivo 8) | ver arquivo 8 |
+| 16–20, 21–23 | cópia da revisão Belén (arquivo 9) e variante «PROVA» | ver arquivos 7 e 9 |
+| 24–25 | 15 MCQ (cirrose/TFG, BCC, vasodilatadores, hiperpotassemia, enalapril/tos, verapamilo, β₁-seletivo, asma e β-bloqueadores, clonidina) | JÁ EXISTENTES: `f2b02#05`, `f2b03#10`, `f2b03#09`, `f2b02#06`, `f2b03#02`, `f2b03#06`, `f2b01#08`, `f2b01#05` (β-bloqueadores e asma); «simpaticomimético β₁ seletivo: metoprolol» é pergunta mal formulada (metoprolol é bloqueador): não aproveitada. O item 6 tem alternativas duas vezes defensáveis (espironolactona × torsemida com TFG<30): não aproveitado |
+| 26–27 | caso clínico de angina (5 passos) e variante «PROVA» (diazóxido, β-bloqueadores, AINE tocolítico, edema, clonidina, classe Ia…) | JÁ EXISTENTES `f2b05#01`, `#02`, `#06`, `f2b03#07`, `f2b01#05`, `f2b06#01`, `f2b03#05`, `f2b01#08`, `f2b14#02` |
+| 28 | «PROVA 2» (IECA, cubeta, abciximab, α-bloqueio, atenolol, propafenona, furosemida, nitratos, carvedilol, classe IA, Prinzmetal) | JÁ EXISTENTES (ver arquivo 6 seção H abaixo) |
+| 29–42 (**só OCR**) | «PROVA 2» (continuação: enalapril/tos, sotalol, prazosina, diuréticos de alça, dihidropiridínicos V/F, furosemida, adrenalina, β-bloqueadores, ergotamina, celiprolol, diuréticos, classe III, nitratos × sildenafilo), anotações de aula (sucralfato, bismuto, H₂, teofilina/diafragma, magnésio, corticoides), 14 perguntas curtas (sucralfato, H₂, LABA/LAMA, H. pylori, xantinas, glucocorticoides, IBP, magnésio, fludrocortisona) | JÁ EXISTENTES ou cobertos por N-itens. **Imagem das págs. 29–42 NÃO conferida** |
+| 43–55 (**só OCR**) | perguntas curtas 15–78 (fludrocortisona, omalizumab, bismuto, Addison, teofilina, cimetidina, antileucotrienos, glucocorticoides, anticolinérgicos, roflumilast, H. pylori, IBP, misoprostol, sucralfato, transcortina, PLA₂, magnésio, 11β-HSD, omeprazol–clopidogrel…) e os 4 casos de hipotireoidismo da Dra. Vega | JÁ EXISTENTES (`f2b07`, `f2b08`, `f2b09`, `f2b10#07`–`#11`) ou N-itens. **Erro do arquivo, não copiado:** item 42 diz que, com clopidogrel, «se prefere omeprazol»; a página (cátedra) ensina pantoprazol (`f2b09#07`). **Imagem das págs. 43–55 NÃO conferida** |
+**Pendente por falta de slide:** efeitos adversos do sucralfato (estreñimiento, boca seca, malestar abdominal, citados nas págs. 6–7 e 29–42): o resumo do bloco 09 só diz «la incidencia y gravedad de los efectos adversos de los citoprotectores es baja». Pela 8-A.2 não se pergunta o que o resumo não ensinou; precisa do slide da cátedra e de uma revisão do bloco antes.
 
 ### Arquivos 7 e 9 · Belén, Turma D, Fila 2 (`prova farmaco.pdf` 5 pp. = `Fármaco – Belén … Fila 2 (1).pdf` 5 pp.)
 Q1 tiazídicos → JÁ `f2b02#03` · Q2 digoxina → JÁ `f2b14#08` · Q3 Prinzmetal → JÁ `f2b05#05` · Q4 DHP e edema → JÁ `f2b03#05` · Q5 α-metildopa → JÁ `f2b03#04` · Q6 classe Ib → JÁ `f2b14#03` · Q7 alça (incorreta) → JÁ `f2b02#04` · Q8 celiprolol → JÁ `f2b01#04` · Q9 amiodarona → JÁ `f2b14#07` · Q10 ticagrelor → JÁ `f2b04#02` · Q11 nebivolol → JÁ `f2b01#12` · Q12 verapamilo → JÁ `f2b03#06`, `f2b14#11` · Completar 13 → JÁ `f2b02#10` · Completar 14 (HPB) → JÁ `f2b01#11`, `#19` · Completar 15 (sildenafil) → JÁ `f2b05#08` · V/F 16 nitratos → JÁ `f2b05#09` · V/F 17 AAS → JÁ `f2b04#04` · V/F 18 DHP × não DHP → JÁ `f2b03#12` · Discursiva 19 → JÁ `f2b02#09` · Discursiva 20 → JÁ `f2b01#14`. Os itens de 7 e 9 são o mesmo conteúdo. A própria revisão não prova ser prova oficial: nada foi reclassificado.
@@ -191,8 +212,8 @@ Usada para checar repetições: os itens de prova real que reaparecem nos arquiv
 - **Migração de dados: nenhuma necessária.**
 
 ## 7. Pendências reais
-1. `Provas Compilado farmaco.pdf` (56,8 MB): não verificado. Comprimir/dividir.
-2. `Questoes P1 P2` (22,5 MB): só OCR; conferir as imagens e os itens sem gabarito.
-3. Referência (6,5 MB): só OCR.
-4. Rótulos: itens de `farmaco p2.pdf` (recordação de 10/11/2025) já estavam no site como «de examen» (`f2b07#01`–`#03`, `f2b08#07`) por decisão anterior; os novos dela (N2–N5, N9, N12) ficaram como complementares até José confirmar a origem.
-5. Divergência de conteúdo no arquivo 10 (bradicardia × Bezold-Jarisch) e a explicação do misoprostol no arquivo 1: não copiadas.
+1. **Imagem não conferida**, por falha do download (§1-C): `LEITURA_Provas_Compilado_farmaco_pag_22-23.pdf` (8,2 MB; págs. 22–23), `…_pag_25-27.pdf` (8,6 MB; págs. 25–27), `LEITURA_Questoes_P1_P2_Farmaco_pag_29-42.pdf` (7,3 MB; págs. 29–42) e `…_pag_43-55.pdf` (8,3 MB; págs. 43–55). Para destravar: recortes de até ~4 MB (por ex. 2–3 páginas) com a faixa no nome.
+2. Itens de texto só por OCR nessas 4 faixas: nenhum item novo foi tirado delas.
+3. Rótulos: **nenhuma das 13 questões novas é questão literal de prova** (as listas de tópicos das págs. 5–7 de Questões confirmam os temas, não os enunciados); seguem «Pregunta complementaria». As questões antigas rotuladas como «de examen» a partir de `farmaco p2.pdf` (`f2b07#01`–`#03`, `f2b08#07`) não foram alteradas; a foto de prova (Compilado págs. 1–4) comprova apenas o P1 de cardio.
+4. Efeitos adversos do sucralfato: pendente de slide (§4, arquivo 6).
+5. Divergências de conteúdo não copiadas: bradicardia × Bezold-Jarisch (arquivo 10), explicação do misoprostol (arquivo 1), omeprazol «preferido» com clopidogrel (arquivo 6, pág. 43–55).
