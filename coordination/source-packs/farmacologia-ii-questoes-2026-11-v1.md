@@ -1,4 +1,6 @@
-# Farmacología II · pasta de questões (arquivos de 01/11/2026) · integração pela 8-A · versão final
+# Farmacología II · pasta de questões (arquivos de 01/11/2026) · integração pela 8-A
+
+> **ESTADO: PARCIAL — NÃO MESCLAR.** Dois PDFs (56,8 MB e 22,5 MB) não puderam ser baixados como arquivo bruto neste ambiente (erros exatos em §1-B). Nenhuma página deles foi examinada em imagem; nada foi inventado.
 
 Fonte: Drive → pasta de questões de Farmacología II (id `1Ov8nvljchyD5EyLI4hSk8iXlNbrlGMIS`): 11 arquivos de 01/11 + o arquivo mais antigo da pasta (referência de repetições).
 Base: `main` em `fb9b3f45` (inclui #623). Nenhum layout, caneta, áudio, arquivo global, Supabase ou flag foi tocado. Único arquivo de conteúdo alterado: `farmacologia-ii.html` (+ este registro + `docs/layout-ensaio/inventario.json`).
@@ -27,6 +29,18 @@ Nas decisões: **INCLUÍDA** (questão nova), **JÁ EXISTENTE** (conceito e raci
 1. `Provas Compilado farmaco.pdf` — 56.815.528 bytes (56,8 MB) — páginas: **não foi possível contar**; 100 % das páginas sem verificação. Nenhuma questão, resposta ou decisão foi inventada para este arquivo.
 2. `Questoes P1 P2 Farmaco_251206_172249.pdf` — 22.496.018 bytes (22,5 MB) — páginas: **não foi possível contar**; só o texto OCR foi lido (§4); nenhuma página conferida visualmente; recomenda-se comprimir para conferir imagens, tabelas e a resposta correta de cada item.
 3. `Provas Compilado` e a referência (arquivo 0): a referência foi lida só em texto OCR (6,5 MB; páginas não contadas).
+
+### 1-B. Nova tentativa de baixar os dois PDFs brutos (2.ª rodada) — erros exatos
+Ambiente: sessão em nuvem, saída HTTPS por proxy; sem credencial do Google Drive (`gcloud auth list` → «No credentialed accounts»); o token de ambiente disponível é do `gcloud`/GitHub e **não foi usado** para o Drive (não foi concedido para isso).
+| Arquivo (id) | Tentativa | Resultado exato |
+|---|---|---|
+| `Questoes P1 P2 Farmaco_251206_172249.pdf` (`13Re9_Bhlz7I87HY2CQeSuCO0jRkQyIWn`, 22.496.018 bytes) | conector Drive `download_file_content` | `File too large for download, over limit of 10 MB. For downloading larger files, use the standard Google Drive API. See https://developers.google.com/workspace/drive/api/guides/manage-downloads#curl` |
+| idem | `curl https://drive.google.com/uc?export=download&id=…` | `curl: (56) CONNECT tunnel failed, response 403` (host `drive.google.com` bloqueado pela política de rede do ambiente) |
+| idem | `curl https://www.googleapis.com/drive/v3/files/<id>?alt=media` (sem credencial) | HTTP `403` |
+| `Provas Compilado farmaco.pdf` (`1B33uMV2aNLv3U6zSBb9DIZlMi62mrvnq`, 56.815.528 bytes) | conector Drive `download_file_content` | mesmo erro: `File too large for download, over limit of 10 MB. …` |
+| idem | `curl` ao Drive | mesmo bloqueio (`CONNECT tunnel failed, response 403` / HTTP `403`) |
+Como não houve download, não foi possível dividir uma cópia local. Os originais no Drive **não foram alterados** (só leitura).
+**Para destravar (José):** dividir ou comprimir os dois PDFs em partes de até ~9 MB (por exemplo, páginas 1–N, N+1–M) e salvá-los como cópias novas na mesma pasta; ou liberar `drive.google.com`/`www.googleapis.com` na rede do ambiente **e** fornecer uma credencial de leitura do Drive.
 
 **Rótulos (8-A.4):** nenhum arquivo desta pasta prova por si só que um item é de prova oficial (os de 01/11 são simulados, questionários, tabelas ou recordações de aluno). Por isso **as 13 questões novas levam «Pregunta complementaria»**. As questões já existentes mantêm o rótulo que tinham.
 
