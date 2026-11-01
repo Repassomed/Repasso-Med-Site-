@@ -1,5 +1,8 @@
 # Primeira implantação controlada · Medicina Familiar
 
+> **⚠ SUPERADO (30/10/2026) pela Nova Era por matéria.** O roteiro por **variáveis do Netlify** (`RM_LAYOUT_SLUGS`, `RM_PEN_SLUGS`, listas de conta) abaixo só serve a **contas de teste**; ele **não leva o layout nem a caneta aos alunos**. O caminho vigente é o de `docs/nova-era/IMPLANTACAO-POR-MATERIA.md` (estágios `off → preview → all` por matéria, em SQL, sem deploy para voltar). Mantido aqui como registro da 1.ª fechadura (#599) e dos testes de volta.
+
+
 > **Esta PR não liga nada por si:** ela só coloca `medicina-familiar` em `CANDIDATAS` (1.ª fechadura: o navegador passa a *perguntar* ao servidor). Quem libera é o servidor (2.ª fechadura: variáveis do Netlify). Nenhuma variável do Netlify, flag, `ROLLOUT` ou conteúdo de matéria foi alterado aqui.
 >
 > **⚠ BLOQUEIO — estado real das variáveis NÃO verificado.** Esta sessão não tem acesso ao Netlify (sem CLI, token nem conector; o site público é inacessível do ambiente de testes). Por isso **não se afirma** que `RM_LAYOUT_SLUGS` e `RM_PEN_SLUGS` estão vazias nem que `medicina-familiar` não está nelas hoje. Os testes provam o comportamento do código **com** o ambiente simulado (variáveis vazias ⇒ negado); a produção só se confirma com a **conferência prévia de José, abaixo (§2-A)**, antes do merge.
