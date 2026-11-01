@@ -344,6 +344,77 @@ const fecha = c => c.ctx.close().catch(() => {});
       ok(m.layout && e.v2 && e.uid === S.U.JOSE && p === true && !e.bloq, '14e · Semiología II: a conta do piloto entra durante a espera de A e tem layout + caneta do piloto com a identificação DELA', [m.layout, e, p]);
       ok(e.escritas.length === 0 && e.erros.length === 0, '14e · sem escrita e sem erro JS', e);
       await fecha(c); }
+
+    /* ---------- 15 · ORDEM REAL DE ABERTURA (sem aba falsa): Medicina Familiar com a caneta → Dermatología, aberta como o index.html abre (openTab) ---------- */
+    sec(t + '15 · aluno com a caneta em Medicina Familiar abre Dermatología (HTML real, pelo caminho do openTab): marcador e borracha antigos funcionam; ao voltar, a caneta de MF funciona');
+    for (const [rot15, tab15, esperaV2] of [['CONTROLE · tudo off', T('off', 'off'), false], ['caneta=all em MF', T('off', 'all'), true], ['layout+caneta=all em MF', T('all', 'all'), true]]) {
+      const c = { persona: 'ALUNO', w: W, cena: mkCena(tab15) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c); ok(!!m.escopo === esperaV2 && !!m.caixa === esperaV2, `15 [${rot15}] · em MF antes de abrir Dermatología: ${esperaV2 ? 'V2 por matéria à vista' : 'sem V2 (controle)'}`, m);
+      const antes = await c.page.evaluate(MEDIR2);
+      const abrirComoOSite = (slugTab) => c.page.evaluate(async (dt) => {   // MESMA ordem do openTab: fetch → anexar → enhanceAll → switchTab
+        const html = await (await fetch('/m/dermatologia.html')).text(); const doc = new DOMParser().parseFromString(html, 'text/html');
+        let el = doc.getElementById('tab-' + dt); if (!el) { el = document.createElement('div'); el.className = 'tab-content'; el.id = 'tab-' + dt; el.innerHTML = doc.body.innerHTML; }
+        document.getElementById('materias-container').appendChild(document.importNode(el, true));
+        window.RepassoMed.enhanceAll(); window.switchTab(dt); await new Promise(o => setTimeout(o, 1800));
+        const tab = document.getElementById('tab-' + dt); const vis = e => { if (!e) return false; const cs = getComputedStyle(e), b = e.getBoundingClientRect(); return cs.display !== 'none' && cs.visibility !== 'hidden' && b.width > 0; };
+        return { coluna: vis(tab.querySelector('.rm-tools-r')), marcador: vis(tab.querySelector('.rm-tools-r .rm-mark')), borracha: vis(tab.querySelector('.rm-tools-r .rm-erase')), caixaV2: vis(document.querySelector('.rm2-box')), flagV2: window.RM_STUDY_V2_ACTIVE === true }; }, slugTab);
+      const d = await abrirComoOSite(M('dermatologia').tab);
+      ok(d.coluna && d.marcador && d.borracha, `15 [${rot15}] · Dermatología (aberta depois de MF): coluna antiga, marcador e borracha à vista`, d);
+      ok(!d.caixaV2 && !d.flagV2, `15 [${rot15}] · Dermatología: caixa V2 escondida e sinal da V2 desligado`, d);
+      await c.page.evaluate(() => { window.__writes.length = 0; });
+      const g = await c.page.evaluate(async (dt) => { const tab = document.getElementById('tab-' + dt); tab.querySelector('.rm-tools-r .rm-mark').click(); await new Promise(o => setTimeout(o, 300)); const ligado = tab.querySelector('.rm-tools-r .rm-mark').classList.contains('on');
+        const p = [...tab.querySelectorAll('section p')].find(p => p.textContent.length > 120 && p.checkVisibility && p.checkVisibility() && !p.closest('table,[data-rm-ui],.quiz-item')); const w = document.createTreeWalker(p, NodeFilter.SHOW_TEXT); let tn; while ((tn = w.nextNode())) { if (tn.textContent.length >= 50) break; }
+        const r = document.createRange(); r.setStart(tn, 3); r.setEnd(tn, 33); const feito = await window.RMTools.marcarRange(r, 'yellow'); await new Promise(o => setTimeout(o, 500)); return { ligado, feito, pintados: tab.querySelectorAll('.rm-hl').length }; }, M('dermatologia').tab).catch(er => ({ ligado: false, feito: false, pintados: 0, erro: String(er).slice(0, 90) }));
+      const w1 = await c.page.evaluate(() => window.__writes.slice());
+      ok(g.ligado && g.feito && g.pintados >= 1 && w1.filter(x => x === 'insert:user_highlights').length === 1, `15 [${rot15}] · marcador: ativa pela interface e CRIA o grifo (1 insert em user_highlights)`, [g, w1]);
+      const e15 = await c.page.evaluate(async (dt) => { const tab = document.getElementById('tab-' + dt); tab.querySelector('.rm-tools-r .rm-mark').click(); tab.querySelector('.rm-tools-r .rm-erase').click(); await new Promise(o => setTimeout(o, 300)); const ligada = tab.querySelector('.rm-tools-r .rm-erase').classList.contains('on'); const h = tab.querySelector('.rm-hl'); if (h) h.click(); await new Promise(o => setTimeout(o, 700)); return { ligada, restam: tab.querySelectorAll('.rm-hl').length }; }, M('dermatologia').tab).catch(er => ({ ligada: false, restam: -1, erro: String(er).slice(0, 90) }));
+      const w2 = await c.page.evaluate(() => window.__writes.slice());
+      ok(e15.ligada && e15.restam === 0 && w2.some(x => x === 'delete:user_highlights'), `15 [${rot15}] · borracha: ativa pela interface e APAGA o grifo (delete em user_highlights)`, [e15, w2]);
+      ok(semEscritaIndevida({ escritas: w2 }).length === 0 && !w2.some(x => /user_ink_strokes|user_notes/.test(x)), `15 [${rot15}] · em Dermatología só user_highlights foi tocado: traços e notas de MF intactos`, w2);
+      await c.page.evaluate((mf) => window.switchTab(mf), M(MF).tab); await c.page.waitForTimeout(1200);
+      const mf = await c.page.evaluate(MEDIR2);
+      ok(esperaV2 ? (mf.caixa && mf.flagV1 && mf.tracosDesenhados === antes.tracosDesenhados) : (!mf.caixa && mf.legada), `15 [${rot15}] · de volta a MF: ${esperaV2 ? 'caixa V2 e os ' + antes.tracosDesenhados + ' traços voltam' : 'sem V2, ferramentas antigas'}`, mf);
+      if (esperaV2) {
+        await c.page.evaluate(() => { window.__writes.length = 0; window.RMToolsV2.escolherFerramenta('pen'); }); const ok15 = await riscar(c); const f15 = await c.page.evaluate(MEDIR2);
+        ok(ok15 && f15.escritas.filter(x => x === 'insert:user_ink_strokes').length === 1 && semEscritaIndevida(f15).length === 0, `15 [${rot15}] · de volta a MF: a caneta funciona (1 insert em user_ink_strokes)`, f15.escritas);
+        ok(f15.linhas.tracos === antes.linhas.tracos + 1 && f15.linhas.notas === antes.linhas.notas && f15.linhas.grifos === antes.linhas.grifos, `15 [${rot15}] · dados de MF preservados: ${antes.linhas.tracos} traços + 1 novo, ${antes.linhas.notas} nota, ${antes.linhas.grifos} grifos`, [antes.linhas, f15.linhas]); }
+      ok(c.errs.length === 0, `15 [${rot15}] · 0 erro JS`, c.errs); await fecha(c); }
+
+    /* ---------- 16 · RESPOSTA ATRASADA de hasStudyToolsV2Access: segura a resposta da conta A, troca de conta, só então libera ---------- */
+    if (W === 1440) { sec(t + '16 · a conta A sai enquanto hasStudyToolsV2Access ainda verifica o acesso de A: a resposta atrasada NÃO monta a ferramenta com a identificação de A para B');
+      const UA = S.U.ALUNO, UB = S.U.SEM;
+      const abrir16 = async (bBeta) => {
+        const c = { persona: 'ALUNO', w: W, cena: mkCena(T('off', 'off')) }; await abrirPersona(br, base, M(MF), c);
+        await c.page.addInitScript(([UA, UB, bBeta]) => {
+          window.__seguras = []; window.__reqBeta = [];
+          let _sb; Object.defineProperty(window, 'RM_SB', { configurable: true, get() { return _sb; }, set(v) {
+            const from0 = v.from; v.from = function (tb) {
+              if (tb !== 'study_tools_beta') return from0.apply(this, arguments);
+              let alvo = null; const q = { select() { return q; }, eq(k, val) { alvo = val; return q; }, limit() { return q; }, single() { return q; }, maybeSingle() {
+                window.__reqBeta.push(alvo);
+                if (alvo === UA) return new Promise(res => window.__seguras.push(() => res({ data: { enabled: true }, error: null })));   // A: a resposta fica RETIDA até o teste liberar
+                return Promise.resolve({ data: (bBeta && alvo === UB) ? { enabled: true } : null, error: null }); }, then(res) { return q.maybeSingle().then(res); } }; return q; };
+            _sb = v; } });
+          Object.defineProperty(window, '_sb', { configurable: true, get() { return window.RM_SB; }, set() {} });
+        }, [UA, UB, bBeta]);
+        await carregar(c); await c.page.addScriptTag({ url: '/assets/rm-pilot.js?v=teste' }); await c.page.waitForTimeout(1200);
+        return c; };
+      const estado16 = c => c.page.evaluate(() => ({ montou: !!window.RMToolsV2, uid: window.RMToolsV2 ? window.RMToolsV2.estado.uid : null, bloq: window.RMToolsV2 && window.RMToolsV2._test.bloqueado ? window.RMToolsV2._test.bloqueado() : null, caixa: (() => { const b = document.querySelector('.rm2-box'); return !!b && getComputedStyle(b).display !== 'none'; })(), pedidos: window.__reqBeta.slice(), seguras: window.__seguras.length, escritas: (window.__writes || []).slice() }));
+      { const c = await abrir16(false); const a = await estado16(c);
+        ok(a.seguras === 1 && !a.montou, '16a · CONTROLE do teste: a verificação de A está retida e nada montou ainda', a);
+        await c.page.evaluate(() => window.__seguras.splice(0).forEach(f => f())); await c.page.waitForTimeout(1500); const b = await estado16(c);
+        ok(b.montou && b.uid === UA && b.caixa, '16a · CONTROLE: sem troca de conta, liberar a resposta de A monta a V2 com A (o mecanismo do teste funciona)', b); await fecha(c); }
+      { const c = await abrir16(false); await armarContador(c); c.persona = 'SEM';
+        await emitir(c, 'SIGNED_IN', UB); await c.page.waitForTimeout(500);
+        await c.page.evaluate(() => window.__seguras.splice(0).forEach(f => f())); await c.page.waitForTimeout(2000); const r = await estado16(c);
+        ok(!r.montou || (r.uid === UB && !r.bloq), '16b · conta B (sem acesso) entrou ANTES de a resposta de A ser liberada: a V2 não monta com a identificação de A', r);
+        ok(!r.caixa && r.escritas.length === 0, '16b · nenhuma caixa de ferramentas nem escrita no banco para B', r); await fecha(c); }
+      { const c = await abrir16(true); c.persona = 'SEM'; await emitir(c, 'SIGNED_IN', UB); await c.page.waitForTimeout(500);
+        await c.page.evaluate(() => window.__seguras.splice(0).forEach(f => f())); await c.page.waitForTimeout(2200); const r = await estado16(c);
+        ok(r.montou && r.uid === UB && r.pedidos.includes(UB), '16c · se B tem acesso à V2, a verificação RECOMEÇA com B e a V2 monta com a identificação de B (nunca A)', r); await fecha(c); }
+      { const c = await abrir16(false); c.persona = 'SEM'; await emitir(c, 'SIGNED_OUT', null); await c.page.waitForTimeout(500);
+        await c.page.evaluate(() => window.__seguras.splice(0).forEach(f => f())); await c.page.waitForTimeout(1800); const r = await estado16(c);
+        ok(!r.montou && !r.caixa, '16d · a conta A sai (SIGNED_OUT) com a verificação em voo: a resposta atrasada não monta nada', r); await fecha(c); } }
   }
   await br.close(); srv.close();
   console.log(`\nnova-era/navegador: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`);

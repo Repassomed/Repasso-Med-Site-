@@ -3979,6 +3979,23 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     }
   }
 
+  /* Nova Era · ORDEM REAL DE ABERTURA. O site abre cada matéria com openTab: baixa o HTML, anexa, chama RepassoMed.enhanceAll() e SÓ DEPOIS troca de aba. Quando o aluno
+     está em Medicina Familiar (V2 ligada, RM_STUDY_V2_ACTIVE=true) e abre Dermatología pela primeira vez, o rm-tools.js monta a barra da nova aba com a V2 «ativa» e NÃO cria a
+     coluna antiga (marcador/goma, linha `if (!v2Ativa())` de montarBarra): ao sair de Medicina Familiar a V2 desliga e a aba ficaria sem nenhuma ferramenta. Aqui, só no modo por
+     matéria, o enhanceAll roda com o sinal desligado (como na primeira abertura de Medicina Familiar) e o sinal volta ao que era. A coluna fica no DOM; o CSS só a esconde onde a V2 vale. */
+  var legadoEnvolvido = false;
+  function legadoNasProximasMaterias() {
+    var R = window.RepassoMed; if (legadoEnvolvido || !R || typeof R.enhanceAll !== 'function') return;
+    legadoEnvolvido = true;
+    var orig = R.enhanceAll;
+    R.enhanceAll = function () {
+      var antes = window.RM_STUDY_V2_ACTIVE;
+      window.RM_STUDY_V2_ACTIVE = false;
+      try { return orig.apply(this, arguments); }
+      finally { window.RM_STUDY_V2_ACTIVE = antes; }
+    };
+  }
+
   /* Nova Era · aluno comum (fora da beta): NADA é montado até o servidor liberar a caneta (`pen:true`) para a matéria da aba ativa. Só então a V2 monta, em modo
      de escopo por matéria (st.escopo). Escuta o rm-pilot.js (evento `rm-pilot-flags`) e a troca de aba; nunca pergunta nada ao servidor por conta própria. */
   var escopoArmado = false;
@@ -4038,7 +4055,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   async function montarTudo(t, uid) {
     st.uid = uid;
-    if (st.escopo) document.body.classList.add('rm2-escopo');          // a coluna legada fica no DOM (volta nas outras matérias); só é escondida onde a V2 vale
+    if (st.escopo) { document.body.classList.add('rm2-escopo'); legadoNasProximasMaterias(); }   // a coluna legada fica no DOM (volta nas outras matérias); só é escondida onde a V2 vale
     else { window.RM_STUDY_V2_ACTIVE = true; document.body.classList.add('rm-v2'); }
 
     injectCSS();
