@@ -1,6 +1,6 @@
 /* NOVA ERA · NAVEGADOR — a matéria REAL no harness, o rm-pilot.js REAL, a função get-pilot-flags REAL e o rm-tools-v2.js REAL; Supabase e rede simulados (zero rede externa).
    «Banco» = sessionStorage da própria aba (harness ?persist=1): NADA de aluno real é lido ou gravado; qualquer escrita fora das 3 tabelas de anotação reprova.
-   Personas: JOSE (conta de teste, beta da V2 e nas listas de prévia) · ALUNO (aluno comum com acesso à matéria) · SEM (aluno comum sem acesso).
+   Personas: JOSE (administrador, beta da V2 e nas listas do piloto) · TESTER2 (2.º testador do piloto: nas listas, NÃO administrador) · ALUNO (aluno comum com acesso à matéria) · SEM (aluno comum sem acesso).
    Cenas: padrão desligado · prévia (etapa 1) · layout para todos · caneta para todos · as duas · volta ao layout anterior · sem acesso · outra matéria · troca de aba · José em outra matéria · piloto.
    Uso: NODE_PATH=$(npm root -g) node tools/qa/nova-era/navegador.test.cjs [--rapido] */
 'use strict';
@@ -14,7 +14,8 @@ let n = 0, ko = 0;
 const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 400) : ''); } return !!c; };
 const sec = t => console.log('\n▸ ' + t);
 const MF = 'medicina-familiar';
-const envJose = () => ({ RM_PILOT_LAYOUT_UIDS: S.U.JOSE, RM_PILOT_PEN_UIDS: S.U.JOSE, RM_PILOT_VISUAL_UIDS: S.U.JOSE });
+/* listas realistas do Netlify: José E o 2.º testador do piloto (que NÃO é administrador e NÃO pode ver a prévia de Medicina Familiar) */
+const envJose = () => ({ RM_PILOT_LAYOUT_UIDS: S.U.JOSE + ',' + S.U.TESTER2, RM_PILOT_PEN_UIDS: S.U.JOSE + ',' + S.U.TESTER2, RM_PILOT_VISUAL_UIDS: S.U.JOSE + ',' + S.U.TESTER2 });
 const T = (l, p, v) => ({ [MF]: { layout_stage: l, pen_stage: p, visual_stage: v || 'off' } });
 const ACESSOS = () => ({ [S.U.ALUNO]: [MF, 'dermatologia'], [S.U.OUTRO]: ['dermatologia'] });
 const mkCena = (tabela, extra) => Object.assign({ env: envJose(), tabela, acessos: ACESSOS() }, extra || {});
@@ -115,7 +116,7 @@ const fecha = c => c.ctx.close().catch(() => {});
       ok(mesmosDados(c.ref, m) && m.tracosDesenhados === c.ref.tracosDesenhados, 'José: dados idênticos', [c.ref.linhas, m.linhas]);
       await fecha(c); }
 
-    sec(t + '1 · ETAPA 1 (prévia): só José vê; o aluno continua sem nada');
+    sec(t + '1 · ETAPA 1 (prévia = só administrador): só José vê; o aluno e o 2.º testador continuam sem nada');
     { const c = { persona: 'JOSE', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
       const m = await ligar(c);
       ok(m.layout && m.v2 && !m.escopo && m.piloto === true, 'José: layout novo e caneta física da matéria liberados', m);
@@ -126,6 +127,11 @@ const fecha = c => c.ctx.close().catch(() => {});
     { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
       const m = await ligar(c);
       ok(!m.layout && !m.v2 && m.legada && mesmosDados(c.ref, m), 'aluno COM acesso na prévia: nada muda (layout antigo, ferramentas antigas, dados idênticos)', m);
+      await fecha(c); }
+
+    { const c = { persona: 'TESTER2', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c);
+      ok(!m.layout && !m.v2 && m.legada && mesmosDados(c.ref, m), 'prévia: o 2.º testador (nas listas, NÃO administrador) NÃO vê o layout novo nem a caneta nova em Medicina Familiar', m);
       await fecha(c); }
 
     sec(t + '2 · ETAPA 2 só do LAYOUT: aluno com acesso vê o layout novo, SEM a caneta nova');

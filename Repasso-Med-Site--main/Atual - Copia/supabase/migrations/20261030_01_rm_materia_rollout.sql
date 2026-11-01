@@ -7,11 +7,12 @@
 --
 -- O que faz: cria public.rm_materia_rollout — UMA linha por matéria, três colunas independentes
 -- (layout, caneta, tema), cada uma com UM destes valores:
---     off      ninguém                      (padrão)
---     preview  só as contas de teste        (listas RM_PILOT_*_UIDS do Netlify — José)
---     all      todos os alunos que JÁ TÊM acesso à matéria (view my_active_subjects)
+--     off      desligado para TODOS, inclusive administrador   (padrão)
+--     preview  SÓ administradores (profiles.is_admin; hoje 1 conta: José) — não usa listas do Netlify
+--     all      os alunos que JÁ TÊM acesso à matéria (view my_active_subjects) E o administrador
 -- Linha ausente = tudo `off`. Tabela ausente (esta migração não rodou) = tudo `off` (a função
 -- get-pilot-flags falha fechada). Não existe «todas as matérias»: é uma linha por matéria.
+-- Semiología II (piloto) NÃO usa esta tabela: continua pelas listas RM_PILOT_*_UIDS do Netlify.
 --
 -- Quem lê: o aluno logado (policy de SELECT; os estágios não são segredo e nenhum UID mora aqui).
 -- Quem escreve: SÓ o painel SQL do Supabase (role postgres/service). Não há policy de
@@ -31,7 +32,7 @@ create table if not exists public.rm_materia_rollout (
 );
 
 comment on table public.rm_materia_rollout is
-  'Nova Era: estágio de liberação por matéria (layout, caneta, tema). off | preview (contas de teste) | all (alunos com acesso). Escrita só pelo painel SQL.';
+  'Nova Era: estágio de liberação por matéria (layout, caneta, tema). off (ninguém) | preview (só administrador) | all (alunos com acesso + administrador). Escrita só pelo painel SQL.';
 
 alter table public.rm_materia_rollout enable row level security;
 
@@ -52,7 +53,7 @@ on conflict (slug) do nothing;
 -- ---------------------------------------------------------------------
 -- COMO USAR (copiar e colar no SQL Editor; trocar o slug quando houver outra matéria)
 --   ver o estado:         select slug, layout_stage, pen_stage, visual_stage, atualizado_em from public.rm_materia_rollout order by slug;
---   1) só José vê:        update public.rm_materia_rollout set layout_stage='preview', atualizado_em=now() where slug='medicina-familiar';
+--   1) só o administrador (José) vê:      update public.rm_materia_rollout set layout_stage='preview', atualizado_em=now() where slug='medicina-familiar';
 --   2) todos veem:        update public.rm_materia_rollout set layout_stage='all',     atualizado_em=now() where slug='medicina-familiar';
 --   3) caneta, separado:  update public.rm_materia_rollout set pen_stage='preview' ... depois ='all'
 --   VOLTAR (imediato):    update public.rm_materia_rollout set layout_stage='off', pen_stage='off', visual_stage='off', atualizado_em=now() where slug='medicina-familiar';

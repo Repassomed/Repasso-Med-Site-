@@ -1,71 +1,55 @@
 /* =====================================================================
    REPASSO MED · netlify/functions/get-pilot-flags.js
-   Layout V2 · Fase B1 — GATE DO PILOTO (servidor)
+   Nova Era — LIBERAÇÃO POR MATÉRIA (servidor)
 
    O que faz
-     Recebe o JWT do aluno logado e responde, para UMA matéria, flags
-     independentes: { layout, audio, pen, visual }. `layout` (Fase B1) e
-     `visual` (sistema visual de matérias: tema aprovado de Semiología II,
-     rm-materia-sistema.js) são consumidos hoje; `audio` e `pen` existem
-     para manter o contrato das fases seguintes e ficam `false` enquanto a
-     variável de ambiente própria não for preenchida.
+     Recebe o JWT do aluno logado e responde, para UMA matéria, quatro flags
+     independentes: { layout, audio, pen, visual }.
+       layout  Layout V2 (rm-layout.js)        pen    caneta V2 da matéria
+       visual  tema da matéria (camada SOBRE o layout; exige descritor aprovado)
+       audio   audiolivro — SÓ no piloto (Semiología II); nunca em outra matéria
 
-     `visual` é uma CAMADA SOBRE o Layout V2 e é NEGADO POR PADRÃO: só vale
-     para quem tem `layout` E está em RM_PILOT_VISUAL_UIDS (lista própria,
-     obrigatória). Variável ausente ou vazia ⇒ `visual:false` para todos —
-     o tema NÃO herda automaticamente a lista do layout, para que quem vê o
-     novo visual seja sempre uma decisão explícita por UID.
-     Kill switch só do tema: esvaziar/remover RM_PILOT_VISUAL_UIDS (o Layout V2
-     continua).
+   Duas regras, e só duas
 
-   [SUPERADO PELA NOVA ERA — ver o bloco seguinte] Matéria por matéria (A5, pré-voo 24/10)
-     A matéria do piloto continua fixa no código (semiologia-ii) e se comporta
-     EXATAMENTE como antes. Qualquer outra matéria só é considerada se o slug
-     estiver na lista da flag correspondente — três variáveis de ambiente, TODAS
-     ausentes/vazias por padrão (⇒ nenhuma outra matéria, nenhum aluno):
-       RM_LAYOUT_SLUGS (layout) · RM_VISUAL_SLUGS (tema; exige descriptor aprovado)
-       · RM_PEN_SLUGS (caneta física).
-     (As variáveis RM_LAYOUT_SLUGS / RM_VISUAL_SLUGS / RM_PEN_SLUGS acima NÃO são mais lidas: ficam ignoradas, mesmo se existirem no Netlify.)
-     Áudio continua só no piloto. Não existe «todos»: liberar para alunos exige
-     decisão futura e explícita (nenhum curinga é aceito).
-     Falha FECHADA e corpo idêntico em qualquer negação (inclusive slug fora da lista).
-     Kill switch por matéria: tirar o slug da variável. Geral: esvaziar as variáveis.
+     1) SEMIOLOGÍA II (PILOTO) — como sempre foi
+        Fixo no código (semiologia-ii). Decidido por UID autenticado, listas de
+        variáveis de ambiente do Netlify (o UID NUNCA entra no repositório):
+          RM_PILOT_LAYOUT_UIDS · RM_PILOT_AUDIO_UIDS · RM_PILOT_PEN_UIDS ·
+          RM_PILOT_VISUAL_UIDS (obrigatória para o tema)
+        Estas listas valem SÓ para o piloto. A tabela de estágios é ignorada nele.
 
-   NOVA ERA · DUAS ETAPAS POR MATÉRIA (layout, caneta e tema, cada um separado)
-     Além das listas acima (usadas como PRÉVIA, só para a conta de
-     quem testa, e só quando a linha da matéria está em `preview` ou `all`), cada matéria tem uma linha na tabela public.rm_materia_rollout
-     (slug, layout_stage, pen_stage, visual_stage), cada coluna com um destes valores:
-       off      ninguém (padrão; linha ausente = off)
-       preview  só as contas das listas RM_PILOT_*_UIDS (José) — «ver e aprovar no iPad»
-       all      TODOS os alunos que JÁ TÊM ACESSO àquela matéria (a mesma view
-                my_active_subjects que o get-materia usa: dono + validade)
-     Aluno sem acesso, matéria fora da tabela, tabela inexistente, coluna com valor
-     estranho, erro de rede: tudo `false` (falha fechada, corpo idêntico). Nenhum
-     curinga: cada matéria é uma linha, cada flag uma coluna. Layout e caneta são
-     independentes (um pode estar em `all` e o outro em `off`). `visual` só existe
-     por cima de `layout` (nunca sozinho). Áudio continua só no piloto.
-     Voltar: `update public.rm_materia_rollout set layout_stage='off' where slug='…'`
-     (vale na próxima abertura da matéria; sem deploy). A tabela é de LEITURA para o
-     aluno (RLS) e só o painel SQL a altera; este arquivo só lê, com o token do aluno.
+     2) QUALQUER OUTRA MATÉRIA — tabela public.rm_materia_rollout
+        Uma linha por matéria (slug, layout_stage, pen_stage, visual_stage); cada
+        coluna vale um destes estágios:
+          off      desligado para TODOS, inclusive administrador (padrão; linha
+                   ausente, tabela ausente ou valor estranho = off)
+          preview  SÓ ADMINISTRADOR (profiles.is_admin da própria conta; hoje 1
+                   conta: José) — «ver e aprovar no iPad»
+          all      os ALUNOS QUE JÁ TÊM ACESSO àquela matéria (a mesma view
+                   my_active_subjects que o get-materia usa: dono + validade)
+                   E o administrador
+        Fora do piloto NADA mais liga uma matéria: as listas RM_PILOT_*_UIDS e as
+        variáveis antigas RM_LAYOUT_SLUGS / RM_VISUAL_SLUGS / RM_PEN_SLUGS (fases
+        A5/A7) NÃO são lidas, mesmo que existam no Netlify. Layout e caneta são
+        independentes (um em `all` e o outro em `off`). `visual` só existe por cima
+        de `layout`. Não existe curinga nem «todas as matérias»: cada matéria é uma
+        linha, cada flag uma coluna.
 
-   Quem é piloto
-     Decidido por UID AUTENTICADO, lido de variáveis de ambiente do
-     Netlify (o UID NUNCA entra no repositório):
-       RM_PILOT_LAYOUT_UIDS · RM_PILOT_AUDIO_UIDS · RM_PILOT_PEN_UIDS ·
-       RM_PILOT_VISUAL_UIDS (obrigatória para o tema, ver acima)
-     (lista separada por vírgula). Não usa profiles.is_admin, não usa
-     e-mail, não usa study_tools_beta, não usa BETA_UIDS da caneta.
-     A matéria do piloto é fixa no código: semiologia-ii.
+   Voltar
+     update public.rm_materia_rollout set layout_stage='off', pen_stage='off',
+       visual_stage='off' where slug='…';   — vale na próxima abertura da matéria;
+     sem deploy. A tabela é de LEITURA para o aluno (RLS); só o painel SQL a altera.
 
    FALHA FECHADA
-     Qualquer erro (sem variável, sem token, token inválido, Supabase
-     fora do ar, UID fora da lista, outra matéria) devolve as três flags
-     em false com HTTP 200 e corpo idêntico — não revela se o UID existe
-     nem qual foi o motivo. O cliente trata "false" como "experiência
-     atual, sem nenhuma mudança".
+     Qualquer erro (sem variável, sem token, token inválido, Supabase fora do ar,
+     tabela ausente, linha ausente, valor estranho, aluno sem acesso, conta não
+     administradora em `preview`, slug inválido) devolve as flags em false com
+     HTTP 200 e corpo idêntico — não revela se a matéria existe nem o motivo. O
+     cliente trata «false» como «experiência atual, sem nenhuma mudança».
 
-   Não grava nada, em lugar nenhum. Só lê /auth/v1/user.
-   Kill switch: esvaziar as variáveis de ambiente.
+   Somente leitura: nunca grava. Chamadas (todas GET, com o token da própria
+   conta): /auth/v1/user, rm_materia_rollout, my_active_subjects e a PRÓPRIA linha
+   de profiles (política profiles_self_select: id = auth.uid()).
    ===================================================================== */
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -107,6 +91,18 @@ async function temAcesso(slug, token) {
     if (!r.ok) return false;
     const rows = await r.json();
     return Array.isArray(rows) && rows.length > 0;
+  } catch (e) { return false; }
+}
+
+/* o dono do token é administrador? Leitura da PRÓPRIA linha de profiles (RLS profiles_self_select), com o token do aluno. Qualquer erro ⇒ false. */
+async function souAdmin(uid, token) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + encodeURIComponent(uid) + '&select=is_admin&limit=1', {
+      headers: { apikey: ANON_KEY, Authorization: 'Bearer ' + token }
+    });
+    if (!r.ok) return false;
+    const rows = await r.json();
+    return Array.isArray(rows) && rows.length === 1 && !!rows[0] && rows[0].is_admin === true;
   } catch (e) { return false; }
 }
 
@@ -174,15 +170,16 @@ exports.handler = async function (event) {
       // RM_PEN_SLUGS (fases A5/A7) NÃO são mais lidas aqui: matéria `off` (ou sem linha, ou tabela ausente) fica desligada para TODOS, inclusive contas de teste,
       // mesmo que alguma dessas variáveis ainda exista no Netlify.
       const est = await lerEstagios(slug, token);
-      let acesso = null;                                                          // consultado no máximo uma vez, e só se algum estágio for `all`
-      const pode = async function (estagio, uids) {
+      let acesso = null, admin = null;                                            // cada consulta no máximo uma vez, e só quando um estágio a exige
+      const ehAdmin = async function () { if (admin === null) admin = await souAdmin(uid, token); return admin; };
+      const pode = async function (estagio) {
         if (estagio !== 'preview' && estagio !== 'all') return false;             // off / valor estranho ⇒ ninguém
-        if (uids.indexOf(uid) !== -1) return true;                                // contas de teste (José): veem em `preview` e também em `all`
-        if (estagio === 'all') { if (acesso === null) acesso = await temAcesso(slug, token); return acesso; }   // todos os alunos COM acesso à matéria
-        return false;
+        if (estagio === 'preview') return ehAdmin();                              // PRÉVIA = administrador (hoje, 1 conta: José). NÃO depende das listas RM_PILOT_*_UIDS (que servem também a outros testadores do piloto)
+        if (acesso === null) acesso = await temAcesso(slug, token);               // `all`: todos os alunos COM acesso à matéria…
+        return acesso || ehAdmin();                                               // …e o administrador continua vendo, mesmo sem ter a matéria comprada
       };
-      flags = { layout: await pode(est.layout, uidsLayout), audio: false, pen: await pode(est.pen, uidsPen) };
-      flags.visual = flags.layout && await pode(est.visual, uidsVisual);          // camada sobre o Layout V2: nunca sem `layout`
+      flags = { layout: await pode(est.layout), audio: false, pen: await pode(est.pen) };
+      flags.visual = flags.layout && await pode(est.visual);                      // camada sobre o Layout V2: nunca sem `layout`
     }
     const algum = flags.layout || flags.audio || flags.pen;
     return resp(algum ? flags : NEGADO, algum ? 'pilot' : 'denied', algum ? slug : null);
