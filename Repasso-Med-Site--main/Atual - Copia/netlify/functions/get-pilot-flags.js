@@ -18,18 +18,35 @@
      Kill switch só do tema: esvaziar/remover RM_PILOT_VISUAL_UIDS (o Layout V2
      continua).
 
-   Matéria por matéria (A5, pré-voo 24/10)
+   [SUPERADO PELA NOVA ERA — ver o bloco seguinte] Matéria por matéria (A5, pré-voo 24/10)
      A matéria do piloto continua fixa no código (semiologia-ii) e se comporta
      EXATAMENTE como antes. Qualquer outra matéria só é considerada se o slug
      estiver na lista da flag correspondente — três variáveis de ambiente, TODAS
      ausentes/vazias por padrão (⇒ nenhuma outra matéria, nenhum aluno):
        RM_LAYOUT_SLUGS (layout) · RM_VISUAL_SLUGS (tema; exige descriptor aprovado)
        · RM_PEN_SLUGS (caneta física).
-     Duas chaves ao mesmo tempo: o UID (listas RM_PILOT_*_UIDS, como hoje) E o slug.
+     (As variáveis RM_LAYOUT_SLUGS / RM_VISUAL_SLUGS / RM_PEN_SLUGS acima NÃO são mais lidas: ficam ignoradas, mesmo se existirem no Netlify.)
      Áudio continua só no piloto. Não existe «todos»: liberar para alunos exige
      decisão futura e explícita (nenhum curinga é aceito).
      Falha FECHADA e corpo idêntico em qualquer negação (inclusive slug fora da lista).
      Kill switch por matéria: tirar o slug da variável. Geral: esvaziar as variáveis.
+
+   NOVA ERA · DUAS ETAPAS POR MATÉRIA (layout, caneta e tema, cada um separado)
+     Além das listas acima (usadas como PRÉVIA, só para a conta de
+     quem testa, e só quando a linha da matéria está em `preview` ou `all`), cada matéria tem uma linha na tabela public.rm_materia_rollout
+     (slug, layout_stage, pen_stage, visual_stage), cada coluna com um destes valores:
+       off      ninguém (padrão; linha ausente = off)
+       preview  só as contas das listas RM_PILOT_*_UIDS (José) — «ver e aprovar no iPad»
+       all      TODOS os alunos que JÁ TÊM ACESSO àquela matéria (a mesma view
+                my_active_subjects que o get-materia usa: dono + validade)
+     Aluno sem acesso, matéria fora da tabela, tabela inexistente, coluna com valor
+     estranho, erro de rede: tudo `false` (falha fechada, corpo idêntico). Nenhum
+     curinga: cada matéria é uma linha, cada flag uma coluna. Layout e caneta são
+     independentes (um pode estar em `all` e o outro em `off`). `visual` só existe
+     por cima de `layout` (nunca sozinho). Áudio continua só no piloto.
+     Voltar: `update public.rm_materia_rollout set layout_stage='off' where slug='…'`
+     (vale na próxima abertura da matéria; sem deploy). A tabela é de LEITURA para o
+     aluno (RLS) e só o painel SQL a altera; este arquivo só lê, com o token do aluno.
 
    Quem é piloto
      Decidido por UID AUTENTICADO, lido de variáveis de ambiente do
@@ -61,9 +78,37 @@ function lista(v) {
     .filter(Boolean);
 }
 
-/* slug aceito no formato do catálogo; listas por flag lidas do ambiente (curinga NÃO existe) */
+/* slug aceito no formato do catálogo (curinga NÃO existe) */
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,60}$/;
-function listaSlugs(v) { return lista(v).filter(function (x) { return SLUG_RE.test(x); }); }
+
+const ESTAGIOS = ['off', 'preview', 'all'];
+
+/* estágios da matéria, lidos com o TOKEN DO ALUNO (RLS de leitura). Qualquer erro, linha ausente ou valor estranho ⇒ 'off'. */
+async function lerEstagios(slug, token) {
+  const off = { layout: 'off', pen: 'off', visual: 'off' };
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rm_materia_rollout?slug=eq.' + encodeURIComponent(slug) + '&select=layout_stage,pen_stage,visual_stage&limit=1', {
+      headers: { apikey: ANON_KEY, Authorization: 'Bearer ' + token }
+    });
+    if (!r.ok) return off;
+    const rows = await r.json();
+    if (!Array.isArray(rows) || rows.length !== 1 || !rows[0]) return off;
+    const v = function (x) { return ESTAGIOS.indexOf(x) !== -1 ? x : 'off'; };
+    return { layout: v(rows[0].layout_stage), pen: v(rows[0].pen_stage), visual: v(rows[0].visual_stage) };
+  } catch (e) { return off; }
+}
+
+/* o aluno TEM esta matéria liberada e dentro da validade? Mesma view e mesma pergunta do get-materia.js. */
+async function temAcesso(slug, token) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/my_active_subjects?subject_slug=eq.' + encodeURIComponent(slug) + '&select=subject_slug', {
+      headers: { apikey: ANON_KEY, Authorization: 'Bearer ' + token }
+    });
+    if (!r.ok) return false;
+    const rows = await r.json();
+    return Array.isArray(rows) && rows.length > 0;
+  } catch (e) { return false; }
+}
 
 function resp(flags, reason, slugOk) {
   return {
@@ -92,11 +137,7 @@ exports.handler = async function (event) {
     const qs   = (event && event.queryStringParameters) || {};
     const slug = String(qs.slug || '');
     const ehPiloto = slug === PILOT_SLUG;
-    const slugsLayout = listaSlugs(process.env.RM_LAYOUT_SLUGS);
-    const slugsVisual = listaSlugs(process.env.RM_VISUAL_SLUGS);
-    const slugsPen    = listaSlugs(process.env.RM_PEN_SLUGS);
-    // outra matéria: precisa estar em ALGUMA das listas por matéria; fora delas, negado sem sequer olhar o token
-    if (!ehPiloto && !(SLUG_RE.test(slug) && (slugsLayout.indexOf(slug) !== -1 || slugsPen.indexOf(slug) !== -1))) return resp(NEGADO, 'denied');
+    if (!ehPiloto && !SLUG_RE.test(slug)) return resp(NEGADO, 'denied');
 
     const h     = (event && event.headers) || {};
     const auth  = h.authorization || h.Authorization || '';
@@ -107,7 +148,8 @@ exports.handler = async function (event) {
     const uidsAudio  = lista(process.env.RM_PILOT_AUDIO_UIDS);
     const uidsPen    = lista(process.env.RM_PILOT_PEN_UIDS);
     const uidsVisual = lista(process.env.RM_PILOT_VISUAL_UIDS);
-    if (!uidsLayout.length && !uidsAudio.length && !uidsPen.length) return resp(NEGADO, 'denied');
+    // piloto: sem nenhuma lista de conta não há o que decidir (como sempre foi). Outras matérias podem estar em `all` sem lista alguma.
+    if (ehPiloto && !uidsLayout.length && !uidsAudio.length && !uidsPen.length) return resp(NEGADO, 'denied');
 
     // quem é o dono do token: só o Supabase sabe (nunca confiar no cliente)
     const r = await fetch(SUPABASE_URL + '/auth/v1/user', {
@@ -118,12 +160,30 @@ exports.handler = async function (event) {
     const uid = u && typeof u.id === 'string' ? u.id.trim().toLowerCase() : '';
     if (!uid) return resp(NEGADO, 'denied');
 
-    const flags = {
-      layout: uidsLayout.indexOf(uid) !== -1 && (ehPiloto || slugsLayout.indexOf(slug) !== -1),
-      audio:  ehPiloto && uidsAudio.indexOf(uid) !== -1,                         // áudio: só o piloto
-      pen:    uidsPen.indexOf(uid) !== -1 && (ehPiloto || slugsPen.indexOf(slug) !== -1)
-    };
-    flags.visual = flags.layout && uidsVisual.indexOf(uid) !== -1 && (ehPiloto || slugsVisual.indexOf(slug) !== -1);   // negado por padrão: lista própria obrigatória; camada sobre o Layout V2 (nunca sem `layout`)
+    let flags;
+    if (ehPiloto) {
+      // Semiología II: EXATAMENTE como antes (listas de conta; a tabela de estágios não se aplica ao piloto)
+      flags = {
+        layout: uidsLayout.indexOf(uid) !== -1,
+        audio:  uidsAudio.indexOf(uid) !== -1,                                    // áudio: só o piloto
+        pen:    uidsPen.indexOf(uid) !== -1
+      };
+      flags.visual = flags.layout && uidsVisual.indexOf(uid) !== -1;
+    } else {
+      // NOVA ERA: fora do piloto a ÚNICA fonte de verdade é a linha da matéria em rm_materia_rollout. As variáveis antigas RM_LAYOUT_SLUGS / RM_VISUAL_SLUGS /
+      // RM_PEN_SLUGS (fases A5/A7) NÃO são mais lidas aqui: matéria `off` (ou sem linha, ou tabela ausente) fica desligada para TODOS, inclusive contas de teste,
+      // mesmo que alguma dessas variáveis ainda exista no Netlify.
+      const est = await lerEstagios(slug, token);
+      let acesso = null;                                                          // consultado no máximo uma vez, e só se algum estágio for `all`
+      const pode = async function (estagio, uids) {
+        if (estagio !== 'preview' && estagio !== 'all') return false;             // off / valor estranho ⇒ ninguém
+        if (uids.indexOf(uid) !== -1) return true;                                // contas de teste (José): veem em `preview` e também em `all`
+        if (estagio === 'all') { if (acesso === null) acesso = await temAcesso(slug, token); return acesso; }   // todos os alunos COM acesso à matéria
+        return false;
+      };
+      flags = { layout: await pode(est.layout, uidsLayout), audio: false, pen: await pode(est.pen, uidsPen) };
+      flags.visual = flags.layout && await pode(est.visual, uidsVisual);          // camada sobre o Layout V2: nunca sem `layout`
+    }
     const algum = flags.layout || flags.audio || flags.pen;
     return resp(algum ? flags : NEGADO, algum ? 'pilot' : 'denied', algum ? slug : null);
   } catch (e) {

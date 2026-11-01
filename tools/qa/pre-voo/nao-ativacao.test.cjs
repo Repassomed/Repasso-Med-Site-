@@ -25,7 +25,7 @@ const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; co
 async function servidor(env, slug) {
   for (const k of ['RM_PILOT_LAYOUT_UIDS', 'RM_PILOT_AUDIO_UIDS', 'RM_PILOT_PEN_UIDS', 'RM_PILOT_VISUAL_UIDS', 'RM_LAYOUT_SLUGS', 'RM_VISUAL_SLUGS', 'RM_PEN_SLUGS']) delete process.env[k];
   Object.assign(process.env, { SUPABASE_URL: 'https://x.invalid', SUPABASE_ANON_KEY: 'anon' }, env);
-  global.fetch = async () => ({ ok: true, json: async () => ({ id: UID }) });
+  global.fetch = require('../nova-era/fetch-sim.cjs').fetchLegado(UID);   // Nova Era: «slug na variável» é traduzido para a linha `preview` da tabela (ver fetch-sim.cjs)
   delete require.cache[FN];
   return require(FN).handler({ queryStringParameters: { slug }, headers: { authorization: 'Bearer tok' } });
 }
@@ -79,7 +79,7 @@ async function matéria(br, base, m, env, rot) {
 
   console.log('\n▸ E4 · estático');
   { const cand = /var CANDIDATAS = \[([^\]]*)\]/.exec(PILOT_JS); ok(cand && cand[1].replace(/['"\s]/g, '').split(',').sort().join() === CANDIDATAS_ESPERADAS.slice().sort().join(), 'CANDIDATAS = piloto + Medicina Familiar (nada além)', cand && cand[1]);
-    const fn = fs.readFileSync(FN, 'utf8'); ok(!/['"]\*['"]|'all'|'todas'/.test(fn.replace(/\/\*[\s\S]*?\*\//g, '')), 'a função do servidor não aceita curinga');
+    const fn = fs.readFileSync(FN, 'utf8'); const semComentarios = fn.replace(/\/\*[\s\S]*?\*\//g, ''); ok(!/['"]\*['"]|'todas'|'todos'/.test(semComentarios) && !/slugs\w*\.indexOf\('all'\)|slug === 'all'/.test(semComentarios), 'a função do servidor não aceita curinga (Nova Era: «all» existe só como estágio de UMA matéria, nunca como slug)');
     const toml = fs.readFileSync(path.join(L.ROOT, 'netlify.toml'), 'utf8'); ok(!/RM_(LAYOUT|VISUAL|PEN)_SLUGS|RM_PILOT_/.test(toml), 'netlify.toml não define nenhuma dessas variáveis');
     const todos = require('child_process').execSync(`grep -rIlE "RM_(LAYOUT|VISUAL|PEN)_SLUGS\\s*[=:]" "${L.ROOT}" --include=*.toml --include=*.json --include=*.env* --include=*.yml || true`).toString().trim(); ok(todos === '', 'nenhum arquivo de configuração do repositório atribui as variáveis de matéria', todos);
     for (const r of [ROLL_V2()]) ok(r.rollout === 'beta', `ROLLOUT da V2 continua 'beta' (${r.rollout})`); }
