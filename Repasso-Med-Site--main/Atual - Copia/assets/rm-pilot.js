@@ -109,7 +109,9 @@
     var tinha = st.loaded || Object.keys(st.porSlug).some(function (k) { var f = st.porSlug[k]; return !!(f && (f.layout || f.pen || f.visual)); });   // só recarrega se algo FOI ligado (resposta «não» em cache não precisa)
     st.epoca++; st.porSlug = {}; st.flags = null; st.asking = {}; st.lastFail = 0; st.uidBase = uidNovo || null; emVoo++;
     desativar();
-    if (tinha) setTimeout(recarregar, 0);
+    /* SAÍDA não recarrega (o site decide: logout recarrega; sessão derrubada mostra «Sesión cerrada» com um botão). A próxima ENTRADA recarrega se algo tinha sido ligado. */
+    if (uidNovo && (tinha || st.recarregarAoEntrar)) { st.recarregarAoEntrar = false; setTimeout(recarregar, 0); }
+    else if (!uidNovo && tinha) st.recarregarAoEntrar = true;
     else if (uidNovo) setTimeout(avaliar, 0);
   }
   function ouvirConta() {
@@ -119,7 +121,7 @@
       s.auth.onAuthStateChange(function (evt, sess) {
         var uid = (sess && sess.user && sess.user.id) || null;
         if (evt === 'SIGNED_OUT') { contaMudou(null); return; }
-        if (uid && st.uidBase && uid !== st.uidBase) { contaMudou(uid); return; }
+        if (uid && (st.recarregarAoEntrar || (st.uidBase && uid !== st.uidBase))) { contaMudou(uid); return; }
         if (uid && !st.uidBase) st.uidBase = uid;
       });
       /* a conta de AGORA é a base de comparação (o evento inicial pode não chegar) */

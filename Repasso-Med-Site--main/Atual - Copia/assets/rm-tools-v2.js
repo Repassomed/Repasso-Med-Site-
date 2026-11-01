@@ -4003,7 +4003,9 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       try { Object.keys(pendentes).forEach(function (id) { clearTimeout(pendentes[id]); delete pendentes[id]; }); Object.keys(flushers).forEach(function (id) { delete flushers[id]; }); } catch (e3) {}
       try { limparCamada(); if (drawer) drawer.classList.remove('on'); } catch (e4) {}
       try { window.RM_STUDY_V2_ACTIVE = false; document.body.classList.remove('rm-v2'); document.body.classList.add('rm2-fora'); } catch (e5) {}
-      setTimeout(recarregarPagina, 0);
+      /* SAÍDA (SIGNED_OUT): só bloqueia — o site decide o que mostrar (recarrega no logout; na sessão derrubada mostra «Sesión cerrada» com um botão). Recarregar aqui esconderia esse aviso.
+         ENTRADA de uma conta (SIGNED_IN, qualquer uid) numa página já bloqueada ou com outra conta: recarrega, para não sobrar nada da conta anterior. */
+      if (evt !== 'SIGNED_OUT') setTimeout(recarregarPagina, 0);
       return;
     }
     epoca++; aTentar = false;                          // qualquer tentativa em voo (consulta de acesso da conta anterior) passa a ser velha e é descartada
@@ -4170,7 +4172,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       s.auth.onAuthStateChange(function (evt, sessao) {
         var uid = sessao && sessao.user && sessao.user.id;
         /* Nova Era: o site recarrega no logout, mas a sessão também muda por outra aba / sessão derrubada. Qualquer saída ou conta diferente da que iniciou a V2 passa por contaMudou(). */
-        if (evt === 'SIGNED_OUT' || (uid && uidBase && uid !== uidBase)) { contaMudou(evt, uid); return; }
+        if (evt === 'SIGNED_OUT' || (uid && uidBase && uid !== uidBase) || (uid && bloqueado)) { contaMudou(evt, uid); return; }
         if (uid) tentar(uid);
       });
       subscrito = true;

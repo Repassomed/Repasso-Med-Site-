@@ -263,7 +263,18 @@ const fecha = c => c.ctx.close().catch(() => {});
       await emitir(c, 'SIGNED_OUT', null); await c.page.waitForTimeout(500);
       const m2 = await c.page.evaluate(() => ({ bloq: window.RMToolsV2._test.bloqueado(), ferr: window.RMToolsV2.estado.tool, caixa: (() => { const b = document.querySelector('.rm2-box'); return !!b && getComputedStyle(b).display !== 'none'; })(), flagV1: window.RM_STUDY_V2_ACTIVE === true, esc: (window.__writes || []).slice() }));
       ok(m2.bloq && !m2.caixa && m2.ferr === 'none' && !m2.flagV1 && m2.esc.length === 0, '13b · SIGNED_OUT: caneta bloqueada e escondida, sem escrita', m2);
-      ok(await contarRecargas(c) >= 1, '13b · a página é recarregada', await contarRecargas(c));
+      ok(await contarRecargas(c) === 0, '13b · SIGNED_OUT NÃO recarrega a página (o site mostra «Sesión cerrada» ou recarrega por conta própria; recarregar aqui esconderia o aviso)', await contarRecargas(c));
+      c.persona = 'ALUNO'; await emitir(c, 'SIGNED_IN', S.U.ALUNO); await c.page.waitForTimeout(500);
+      ok(await contarRecargas(c) >= 1, '13b · a próxima ENTRADA numa página que ficou bloqueada recarrega (nada da conta anterior sobra)', await contarRecargas(c));
+      await fecha(c); }
+    { /* 13f · layout ligado, sessão derrubada (SIGNED_OUT): layout sai, cache zera, SEM recarga; a entrada seguinte recarrega */
+      const c = { persona: 'JOSE', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c); await armarContador(c); ok(m.layout, '13f · antes: layout em prévia para José', m.layout);
+      await emitir(c, 'SIGNED_OUT', null); await c.page.waitForTimeout(600);
+      const o = await c.page.evaluate(() => ({ cache: Object.keys(window.RMPilot._estado().porSlug).length, layout: !!document.querySelector('.rm-l2, #rm-l2-side, .rm-l2-band'), recargas: window.__recargas || 0 }));
+      ok(o.cache === 0 && !o.layout && o.recargas === 0, '13f · SIGNED_OUT: layout retirado, liberações descartadas e nenhuma recarga (a tela «Sesión cerrada» do site continua visível)', o);
+      c.persona = 'OUTRO'; await emitir(c, 'SIGNED_IN', S.U.OUTRO); await c.page.waitForTimeout(500);
+      ok(await contarRecargas(c) >= 1, '13f · a entrada seguinte recarrega (a matéria na tela era da conta anterior)', await contarRecargas(c));
       await fecha(c); }
     { /* 13c · liberações em cache da conta A NÃO valem para a conta B (sem a V2 montada) */
       const c = { persona: 'JOSE', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
