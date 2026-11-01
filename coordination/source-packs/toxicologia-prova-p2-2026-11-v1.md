@@ -1,66 +1,75 @@
-# Toxicología · Prova P2 (nuevo PDF de 31/oct/2026) · integración según 8-A
+# Toxicología · Prova P2 (nuevo PDF de 31/oct/2026) · integración según 8-A · versión final
 
 Fuente: Drive → Site Repasso Med → Biblioteca → 7 semestre → Toxicologia (Dr Bellon) → Provas → `Prova P2.pdf` (id `1nc5_pkHG2mSbZArIfT8AtUeGm1Kr32kp`, 16 páginas).
-Base: `main` en `dd15dbc7` (#619 mesclada). Nada de layout, caneta, audio, archivos globales ni #622 fue tocado.
+Base: `main` con #622 incluida (`30636848`). Nada de layout, caneta, audio ni archivos globales fue tocado.
 
 ## 1. Inventario de la fuente (8-A.5-B)
 
 | Páginas | Qué es | Legibilidad | Observación |
 |---|---|---|---|
-| 3, 4, 5, 8 | Fotos de la «Evaluación Prueba Parcial Teórica» (versiones A y B, Qs 1–5). La p. 4 trae las respuestas resaltadas en amarillo | CLARA (p. 4, 8) · PARCIAL (p. 3, 5: baja resolución) | las marcas amarillas coinciden con la clave de la página |
-| 6, 7 | Versión C (Qs 6–17, con 3 preguntas abiertas) | PARCIAL (foto oblicua, baja resolución) | en la Q14 no se lee si el enunciado pide la correcta o la incorrecta |
+| 3, 4, 5, 8 | Fotos de la «Evaluación Prueba Parcial Teórica» (versiones A y B, Qs 1–5). La p. 4 trae respuestas resaltadas en amarillo | CLARA (p. 4, 8) · PARCIAL (p. 3, 5: baja resolución) | las marcas amarillas coinciden con la clave de la página |
+| 6, 7 | Versión C (Qs 6–17, con 3 preguntas abiertas) | PARCIAL (foto oblicua, baja resolución). La Q13 y la Q14 de la p. 7 se releyeron ampliadas | la Q14 dice literalmente «marque la alternativa **correcta**» |
 | 1, 2, 9, 10 | Versión D (Qs 6–17). Las pp. 1 y 2 son la misma hoja que 10 y 9, con marcas rojas | CLARA (9, 10) · CLARA con tachaduras (1, 2) | las tachaduras no se interpretaron |
-| 11–16 | Transcripción mecanografiada «Toxicologia p2 · Gabriel Rueda» (preguntas abiertas con respuestas del estudiante, mezcla de portugués y español) | CLARA | **fuente auxiliar**, no prueba independiente; no prueba por sí sola que cada pregunta fuera de examen |
+| 11–16 | Transcripción mecanografiada «Toxicologia p2 · Gabriel Rueda» (preguntas abiertas con respuestas del estudiante, portugués y español mezclados) | CLARA | **fuente auxiliar**, no prueba independiente |
 
-Rótulos: las preguntas con foto de la prueba (versiones A–D) llevan «Basada en preguntas de examen»; las que salen sólo de la transcripción llevan **«Pregunta complementaria»**, porque la transcripción no demuestra que hayan sido preguntas de examen.
+Rótulos: las preguntas que salen sólo de la transcripción llevan **«Pregunta complementaria»**; ninguna pregunta de esta PR se presenta como de examen.
 
 ## 2. Resultado
 
-El PDF cubre casi por completo lo que la página ya tenía (las versiones A–D son otras fotos de las mismas pruebas que originaron q-b07q01…q-b07q09, q-b08q01…q-b08q03 y otras). De 84 ítems del PDF: **7 incluidos** (en **4 preguntas nuevas**), **71 descartados por repetición** y **6 pendientes**. Ninguna pregunta existente fue reformulada ni unida: no apareció una versión del PDF mejor que la ya presente (8-A.1-B); por eso «unida a existente» = 0.
+El PDF cubre casi por completo lo que la página ya tenía (las versiones A–D son otras fotos de las mismas pruebas). De **84 ítems**: **2 incluidos** (en **2 preguntas nuevas**), **72 descartados por repetición** y **10 pendientes**. Ninguna pregunta existente fue reformulada ni unida (8-A.1-B): «unida a existente» = 0.
 
-| | Antes | Después |
+| | Antes (`main`) | Después |
 |---|---|---|
-| Preguntas en los bloques | 349 | **353** (+4) |
-| Preguntas en el banco general (espejo) | 349 | **353** |
-| Total de ítems `quiz-item` | 698 | **706** |
-| «Basada en preguntas de examen» (cuerpo) | 90 (86 de opción múltiple + 4 V/F) | **92** |
+| Preguntas en los bloques | 349 | **351** (+2) |
+| Preguntas en el banco general (espejo) | 349 | **351** |
+| Total de ítems `quiz-item` | 698 | **702** |
+| «Basada en preguntas de examen» (cuerpo) | 90 (86 + 4 V/F) | **90** (sin cambios) |
 | «Pregunta complementaria» (cuerpo) | 259 | **261** |
-| Bloque 04 / 07 / 08 | 23 / 22 / 24 | **25 / 23 / 25** |
-| Flashcards | 1416 | 1416 (sin cambios) |
+| Bloque 04 / 07 / 08 | 23 / 22 / 24 | **24 / 23 / 24** |
+| Flashcards | 1416 | 1416 |
 | IDs antiguos de preguntas | 698 | 698 presentes y sin cambios en enunciado, alternativas, clave ni explicación |
 | Divergencias cuerpo × banco | 0 | 0 |
 
-Contagens declaradas actualizadas: encabezado de cada bloque («Veinticinco preguntas», «Veintitrés», «Veinticinco»), subtítulos del banco «(25 preguntas)», «(23…)», «(25…)» y la cabecera del banco (353 preguntas, 318 de opción múltiple, 35 V/F).
+Contagens declaradas actualizadas: encabezados de los bloques 04 («Veinticuatro preguntas») y 07 («Veintitrés»); el bloque 08 no cambia; subtítulos del banco «(24 preguntas)» y «(23 preguntas)»; cabecera del banco: 351 preguntas, 316 de opción múltiple, 35 V/F. Inventario del layout: 702 preguntas, 1416 flashcards.
 
 ## 3. Lo que entró
 
-| Pregunta nueva | Bloque | Rótulo | Origen | Cobertura previa en el resumen (8-A.2) |
+| Pregunta nueva | Bloque | Rótulo | Origen | Cobertura previa (8-A.2) |
 |---|---|---|---|---|
-| `q-b04q24` acetona: afirmaciones ciertas, excepto (la falsa: «trastornos endocrinos, páncreas y tiroides») | 04 | Examen | p. 7 Q13 (+ transcripción D2, D3) | ya enseñado: vida media 20–30 h, vapores laborales, depresión del SNC, estupor. La alternativa falsa es falsa por ausencia (el slide no describe efectos endocrinos) |
-| `q-b04q25` cómo se diagnostica la intoxicación por acetona y qué se monitoriza | 04 | Complementaria | transcripción D5 | **faltaba**: se añadió el párrafo «Acetona: cómo se confirma» (historia clínica; acetona en orina y sangre; creatinina, gasometría, glucemia, electrolitos, función hepática), de la Clase 4.1 de la cátedra |
+| `q-b04q24` cómo se diagnostica la intoxicación por acetona y qué se monitoriza | 04 | Complementaria | transcripción D5 | **faltaba**: se añadió el párrafo «Acetona: cómo se confirma» (historia clínica; acetona en orina y sangre; creatinina, gasometría, glucemia, electrolitos, función hepática), de la Clase 4.1 de la cátedra |
 | `q-b07q23` compromiso sistémico del accidente botrópico (latencia de ~30 min, coagulopatía hasta la incoagulabilidad) | 07 | Complementaria | transcripción T8 | ya enseñado (tarjeta «El destructor» y tabla «Lo sistémico») |
-| `q-b08q25` grupos de riesgo del escorpión amarillo (la incorrecta: «niños mayores de 10 años») | 08 | Examen | p. 7 Q14 (+ transcripción E8) | ya enseñado (tabla del escorpión: niños pequeños, ancianos, alérgicos, enfermos crónicos, zonas endémicas) |
 
-Las cuatro entran al final de su bloque y, con el mismo texto y `-bk` en el id, al final de la sección del bloque en el banco. Claves nuevas: d, c, a, b (la distribución global queda a 80 / 80 / 79 / 79, sin patrón).
+Las dos entran al final de su bloque y, con el mismo texto y `-bk` en el id, al final de la sección del bloque en el banco. Claves: c y a. Distribución global del cuerpo: a 80 · b 79 · c 79 · d 78 · V/F 35.
 
-## 4. Divergencias registradas (sin corregir en silencio)
+## 4. Retiradas en esta versión final (revisión de la #623)
+
+La primera versión incluía otras dos preguntas, **retiradas del bloque y del banco**:
+
+- **Q14 de la p. 7 (grupos de riesgo del escorpión).** La foto ampliada dice «marque la alternativa **correcta**» con las opciones Ancianos · Niños mayores de 10 años · (cortada) · Personas que presentan comorbilidades. Según el slide (Clase 8) tres de ellas son grupos de riesgo y «niños mayores de 10 años» no lo es (el slide dice «niños pequeños»): no hay respuesta única y la clave no figura en la foto. La versión anterior la reformulaba como «incorrecta» y la presentaba como de examen; eso no es fiel a 8-A.4/8-A.5-B. No existe una versión con respuesta única que sea fiel a la prueba → **pendiente**.
+- **Q13 de la p. 7 (acetona, «excepto»).** La opción d («trastornos endocrinos importantes, páncreas y tiroides») sólo sería la falsa si la cátedra o la literatura base lo afirmaran. El slide (Clase 4.1) no la menciona, pero la ausencia no prueba falsedad (y el mismo slide manda monitorizar glucemia y gasometría). Además la opción b («vía principal de intoxicación», sin «laboral») es verdadera sólo en el ámbito laboral, y la foto no trae clave (la flecha sobre c es una marca del estudiante). Sin fuente permitida que sostenga una única respuesta → **pendiente**.
+
+Consecuencias: las ítems de la transcripción relacionados (E8 grupos de riesgo, D3 toxicocinética) pasan a **pendiente / decisión editorial** (el resumo ya los enseña; sería posible una pregunta complementaria con redacción propia, que no se añadió), y D2 (riesgo de la acetona) queda como repetición de q-b04q02, q-b04q15 y q-b04q24.
+
+## 5. Divergencias registradas (sin corregir en silencio)
 
 - **Q9 de la versión C (p. 6):** la opción «uso de antibióticos de forma profiláctica» y la opción «incisión» serían ambas falsas según la página; se conserva `q-b07q08`, que no tiene esa ambigüedad.
-- **Compresa en la picadura de araña marrón:** el slide dice «compresa tibia» en la lista de conducta y «compresas frías» en el tratamiento leve. La página sigue «frías» y el slide queda como divergencia interna de la cátedra.
-- **Taturana (transcripción E14–E15):** «compresa fría, mantener elevada, no aplicar crema» y «2 a 10 ampollas, primeras 12 horas» no coinciden con el slide (no frotar ni aplicar pomadas; 5 / 10 / 20 ampollas; «lo antes posible»). La página sigue el slide.
-- **q-b04q24 alternativa b:** el original (foto parcial) dice «vía principal de intoxicación»; se añadió «en el ámbito laboral» porque el slide dice «vía principal de intoxicación laboral» y en el hogar lo habitual es la ingesta.
-- **q-b08q25:** enunciado parcialmente reconstruido («incorrecta»), no es transcripción literal.
+- **Compresa en la picadura de araña marrón:** el slide dice «compresa tibia» en la lista de conducta y «compresas frías» en el tratamiento leve; la página sigue «frías».
+- **Taturana (transcripción E14–E15):** «compresa fría, mantener elevada, no aplicar crema» y «2 a 10 ampollas, primeras 12 horas» no coinciden con el slide (no frotar ni pomadas; 5 / 10 / 20 ampollas; «lo antes posible»). La página sigue el slide.
 
-## 5. Pendientes (no se inventó respuesta)
+## 6. Pendientes (no se inventó respuesta) — 10
 
-1. p. 10 Q17 (V/F): el enunciado no nombra el agente; no se puede determinar la respuesta.
-2. Transcripción A2′ «araña con forma de violín»: sin respaldo en los slides ni en la página.
-3. Transcripción A6 «cuadro clínico de la araña marrón»: respuesta incoherente.
-4. Transcripción E15 «indicación del suero antilonómico»: diverge del slide.
-5. Transcripción D1′ «primera causa de muerte de 1 a 4 años»: sin fuente en los slides.
-6. Transcripción H2 «hipnosedante de elección en crisis convulsiva»: contradice la página y no se sabe qué pidió la prueba.
+1. p. 7 Q13 (acetona «excepto»): ver §4.
+2. p. 7 Q14 (grupos de riesgo): ver §4.
+3. p. 10 Q17 (V/F): el enunciado no nombra el agente.
+4. Transcripción A2′ «araña con forma de violín»: sin respaldo en los slides ni en la página.
+5. Transcripción A6 «cuadro clínico de la araña marrón»: respuesta incoherente.
+6. Transcripción E8 «grupos de riesgo del escorpión»: decisión editorial.
+7. Transcripción E15 «indicación del suero antilonómico»: diverge del slide.
+8. Transcripción D1′ «primera causa de muerte de 1 a 4 años»: sin fuente en los slides.
+9. Transcripción D3 «toxicocinética de la acetona»: decisión editorial (ninguna pregunta evalúa la vida media).
+10. Transcripción H2 «hipnosedante de elección en crisis convulsiva»: contradice la página.
 
-## 6. Matriz página × pregunta del PDF → destino y decisión
+## 7. Matriz página × pregunta del PDF → destino y decisión
 
 | Página | Item do PDF | Decisão | Destino / motivo |
 |---|---|---|---|
@@ -85,8 +94,8 @@ Las cuatro entran al final de su bloque y, con el mismo texto y `-bk` en el id, 
 | 6 | Q10 intoxicación por benzodiacepinas (clonazepam): qué indicar | Descartada por repetição | duplicata exata de q-b16q01 |
 | 6 | Q11 pruebas de laboratorio, excepto (perfil lipídico) | Descartada por repetição | duplicata semântica de q-b07q03 |
 | 7 | Q12 niño con pila botón en vías respiratorias: conducta | Descartada por repetição | duplicata exata de q-b04q04 |
-| 7 | Q13 acetona: afirmaciones ciertas, excepto (vida media / vapores / SNC / trastornos endocrinos) | Incluída | q-b04q24 (cuerpo del bloque 04 + banco), «Basada en preguntas de examen»; alternativa b ajustada (se añade «en el ámbito laboral») para evitar ambigüedad |
-| 7 | Q14 grupos de riesgo del escorpión amarillo (la foto no permite leer con seguridad si pide la correcta o la incorrecta) | Incluída | q-b08q25 (cuerpo del bloque 08 + banco), «Basada en preguntas de examen»; enunciado PARCIALMENTE RECONSTRUIDO como «incorrecta» (tres de las cuatro opciones son grupos de riesgo según el slide, así que sólo ese enunciado admite una respuesta única) |
+| 7 | Q13 acetona: afirmaciones ciertas, excepto (vida media / vapores / SNC / trastornos endocrinos) | Pendente | RETIRADA de la PR. (1) la foto se lee bien («son ciertas… excepto») pero no trae clave: la flecha sobre la opción c es una marca del estudiante, no una corrección; (2) la opción d («trastornos endocrinos importantes (páncreas y tiroides)») sólo sería falsa si la cátedra o la literatura base lo dijeran: el slide (Clase 4.1) no la menciona y, además, manda monitorizar glucemia y gasometría, de modo que la ausencia en el slide no prueba falsedad; (3) la opción b («vía principal de intoxicación», sin «laboral») es verdadera sólo en el ámbito laboral. No hay fuente permitida que sostenga una única respuesta |
+| 7 | Q14 grupos de riesgo del escorpión amarillo (lectura de la foto ampliada: «marque la alternativa correcta»; a. Ancianos · b. Niños mayores de 10 años · c. (cortada) · d. Personas que presentan comorbilidades) | Pendente | RETIRADA de la PR (la versión anterior la reformulaba como «incorrecta» y la presentaba como de examen). Tal como está escrita, pide la «correcta», pero según el slide (Clase 8) al menos tres de las cuatro opciones son grupos de riesgo (ancianos, alérgicos, enfermedades preexistentes), y «niños mayores de 10 años» no lo es (el slide dice «niños pequeños»): no hay respuesta única y la clave de la prueba no figura en la foto. No existe una versión fiel con respuesta única |
 | 7 | Q15 intoxicación por cloro inhalatoria: conducta (pregunta abierta) | Descartada por repetição | q-b04q01 |
 | 7 | Q16 conducta ante picadura de araña marrón (abierta; respuesta manuscrita ilegible) | Descartada por repetição | q-b08q06 y q-b08q01 |
 | 7 | Q17 conducta ante accidente con taturanas (abierta) | Descartada por repetição | q-b08q17 |
@@ -125,7 +134,7 @@ Las cuatro entran al final de su bloque y, con el mismo texto y `-bk` en el id, 
 | 13 | A7 conducta tras picadura de araña marrón | Descartada por repetição | q-b08q06 y resumo. Divergencia del slide: «compresa tibia» en la conducta y «compresas frías» en el tratamiento leve; la página sigue «frías» (tratamiento) sin cambios |
 | 13 | A6′ qué NO hacer (torniquete) | Descartada por repetição | resumo del bloque 08 y q-b07q18 |
 | 13 | A7′ tratamiento de la caranguejeira | Descartada por repetição | q-b08q02 |
-| 13 | E8 grupos de riesgo del escorpión amarillo | Incluída | q-b08q25 (junto con la Q14 de la p. 7) |
+| 13 | E8 grupos de riesgo del escorpión amarillo (pregunta abierta de la transcripción) | Pendente | el resumo ya enseña los cinco grupos (tabla del bloque 08). Una pregunta complementaria con redacción propia sería posible, pero se deja a decisión de José: no se añadió para no presentar como de examen algo que no lo es |
 | 13 | E9 síntomas del escorpión amarillo | Descartada por repetição | q-b08q23 y q-b08q08 |
 | 13 | E10 cómo se administra el suero antiescorpiónico | Descartada por repetição | q-b08q10 ya incluye 15 gotas/min o 50 mL/h durante 1 h, misma dosis, renovable 2 veces cada 5 h |
 | 13 | E11 prevención del escorpión amarillo | Descartada por repetição | q-b08q18 (regla de las cuatro A) y resumo |
@@ -135,10 +144,10 @@ Las cuatro entran al final de su bloque y, con el mismo texto y `-bk` en el id, 
 | 14 | E15 indicación del suero antilonómico («2 a 10 ampollas», «primeras 12 horas») | Pendente | divergencia con el slide (5 / 10 / 20 ampollas según gravedad, «lo antes posible»; q-b08q14). No se incorporó; revisar con la cátedra si José quiere |
 | 14 | D1 cómo prevenir accidentes domésticos | Descartada por repetição | q-b04q12, q-b04q16, q-b04q17 |
 | 14 | D1′ primera causa de muerte en niños de 1 a 4 años: accidentes domésticos | Pendente | no está en los slides de la cátedra (Clases 4.1 y 4.2) ni en la página; falta fuente |
-| 14 | D2 riesgo de la acetona | Incluída | q-b04q24 (junto con la Q13 de la p. 7) |
-| 14 | D3 toxicocinética de la acetona | Incluída | q-b04q24 (opción a) y resumo ya existente (absorción, excreción sin transformar, 20 a 30 h) |
+| 14 | D2 riesgo de la acetona | Descartada por repetição | q-b04q02, q-b04q15, q-b04q24 y resumo del bloque 04 |
+| 14 | D3 toxicocinética de la acetona (absorción rápida, excreción sin transformar, vida media 20–30 h) | Pendente | el resumo ya lo enseña y q-b04q02 menciona la excreción sin transformar, pero ninguna pregunta evalúa la vida media; podría ser una pregunta complementaria (slide Clase 4.1). Queda a decisión de José: no se añadió tras retirar la Q13 |
 | 14 | D4 síntoma clásico de la acetona (aliento dulzón) | Descartada por repetição | q-b04q02 |
-| 14 | D5 diagnóstico de la intoxicación por acetona | Incluída | q-b04q25 + párrafo nuevo «Acetona: cómo se confirma» en el bloque 04 (slide Clase 4.1) |
+| 14 | D5 diagnóstico de la intoxicación por acetona | Incluída | q-b04q24 + párrafo nuevo «Acetona: cómo se confirma» en el bloque 04 (slide Clase 4.1) |
 | 14 | D6 dónde se encuentra el yodo | Descartada por repetição | q-b04q03 y resumo |
 | 15 | D7 síntomas de la intoxicación por cloro | Descartada por repetição | resumo del bloque 04 (lista ya enseñada); las preguntas del bloque evalúan la conducta |
 | 15 | D8 ingestión de cloro y no puede deglutir a la hora: conducta | Descartada por repetição | q-b04q06 |
@@ -149,21 +158,20 @@ Las cuatro entran al final de su bloque y, con el mismo texto y `-bk` en el id, 
 | 15 | H2 hipnosedante de elección en crisis convulsiva (la transcripción dice barbitúricos) | Pendente | la transcripción contradice lo que enseña la página (benzodiacepinas con uso en convulsiones; barbitúricos con acción anticonvulsivante) y no se sabe qué pidió la prueba; no se incorporó |
 | 15–16 | H3 antídoto de las benzodiacepinas (flumazenilo) | Descartada por repetição | q-b16q01, q-b16q08, q-b16q17 |
 
-## 7. Alumnos y datos (consulta de solo lectura al Supabase antes de editar)
+## 8. Alumnos y datos (consulta de solo lectura al Supabase)
 
-`user_highlights`, `user_notes` y `user_ink_strokes` con `subject_slug='toxicologia'`: **0 filas**. No hay grifos, notas ni trazos que proteger. El único texto ya existente que se tocó fue una inserción (párrafo nuevo en el bloque 04, antes de «Conducta ante ingesta de acetona»); no se modificó ni se movió ninguna oración, figura ni ID anterior.
+`user_highlights`, `user_notes` y `user_ink_strokes` con `subject_slug='toxicologia'`: **0 filas**. No hay grifos, notas ni trazos que proteger. El único texto ya existente que se tocó fue una inserción (párrafo nuevo en el bloque 04, antes de «Conducta ante ingesta de acetona»).
 
-## 8. Pruebas
+## 9. Pruebas (versión final)
 
-- `verify` contra la `main`: ids (solo los 8 nuevos), claves de las preguntas viejas, flashcards, clases, enlaces y atributos de datos iguales; 0 respuestas viejas alteradas.
-- Preservación: 698 ids antiguos presentes; enunciado, alternativas, clave y explicación idénticos; banco antiguo conservado (multiconjunto); espejo cuerpo × banco = 0 divergencias; flashcards 1416 = 1416.
-- Navegador (1440 y 390 px): las 4 preguntas nuevas, en el cuerpo y en el banco (8 copias), tienen 4 alternativas; al tocar una incorrecta se marca «wrong» y la correcta se marca «correct» según la clave; el botón «Ver respuesta» muestra el gabarito esperado; 0 errores de JavaScript.
-- Porta de layout/caneta (7 etapas, con ida y vuelta de grifos/trazos/nota sembrados): 7/7. Inventario del layout regenerado (706 preguntas, 1416 flashcards; 0 desactualizados).
+- `verify` contra la `main`: ids nuevos = 4 (`q-b04q24`, `q-b07q23` y sus copias `-bk`); claves de las preguntas viejas, flashcards, clases, enlaces y atributos iguales.
+- Preservación: 698 ids antiguos presentes; enunciado, alternativas, clave y explicación idénticos; banco antiguo conservado (multiconjunto); espejo cuerpo × banco = **0 divergencias** (351 = 351); flashcards 1416 = 1416.
+- Navegador (1440 y 390 px): las 2 preguntas nuevas, en cuerpo y banco (4 copias), tienen 4 alternativas; al tocar una incorrecta se marca «wrong» y la correcta «correct» según la clave; 0 errores de JavaScript.
+- Porta de layout/caneta (7 etapas): 7/7. Inventario regenerado (702 preguntas, 1416 flashcards; 0 desactualizados).
 - Guard local: ver la PR.
 
-## 9. Limitaciones
+## 10. Limitaciones
 
-- Las fotos de las pp. 3, 5, 6 y 7 son de baja resolución; las alternativas se leyeron con la mejor lectura posible y se contrastaron con el resumo y los slides. La Q14 (p. 7) quedó parcialmente reconstruida (ver §4).
-- La transcripción de las pp. 11–16 es fuente auxiliar; por eso sus preguntas nuevas llevan rótulo «complementaria».
-- Revisión semántica G0: la hice yo (voz, fio condutor, sin estrategia de prueba en la página); no sustituye una auditoría independiente.
-
+- Las fotos de las pp. 3, 5, 6 y 7 son de baja resolución; las alternativas se leyeron con la mejor lectura posible.
+- La transcripción de las pp. 11–16 es fuente auxiliar; por eso sus preguntas llevan rótulo «complementaria».
+- Revisión semántica G0 hecha por mí; no sustituye una auditoría independiente.
