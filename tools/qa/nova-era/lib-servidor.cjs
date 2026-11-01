@@ -1,6 +1,6 @@
 /* NOVA ERA · utilitário de teste: a função REAL get-pilot-flags.js com o Supabase SIMULADO (zero rede, nenhuma escrita).
    Personas (UIDs sintéticos; nenhum UID real entra aqui):
-     JOSE      conta de teste: está nas listas RM_PILOT_*_UIDS (prévia)
+     JOSE      administrador (profiles.is_admin) e dono das listas RM_PILOT_*_UIDS do piloto; é quem vê a prévia
      ALUNO     aluno comum COM acesso à matéria em teste
      SEM       aluno comum SEM acesso à matéria
    cena = { admins: [uids administradores; padrão só JOSE], erroProfiles: bool, tabela: { slug: { layout_stage, pen_stage, visual_stage } } | null (tabela inexistente), acessos: { uid: [slugs] }, env: {...}, erroTabela: bool }
@@ -11,7 +11,7 @@ const ROOT = path.resolve(__dirname, '../../..', 'Repasso-Med-Site--main/Atual -
 const FN = path.join(ROOT, 'netlify/functions/get-pilot-flags.js');
 const U = { JOSE: 'aaaaaaaa-0000-4000-8000-000000000001', ALUNO: 'bbbbbbbb-0000-4000-8000-000000000002', SEM: 'cccccccc-0000-4000-8000-000000000003', OUTRO: 'dddddddd-0000-4000-8000-000000000004', TESTER2: 'eeeeeeee-0000-4000-8000-000000000005' };   // TESTER2 = outro testador do piloto: está nas listas RM_PILOT_*_UIDS, mas NÃO é administrador
 const ENVS = ['RM_PILOT_LAYOUT_UIDS', 'RM_PILOT_AUDIO_UIDS', 'RM_PILOT_PEN_UIDS', 'RM_PILOT_VISUAL_UIDS', 'RM_LAYOUT_SLUGS', 'RM_VISUAL_SLUGS', 'RM_PEN_SLUGS'];
-const ENV_JOSE = { RM_PILOT_LAYOUT_UIDS: U.JOSE, RM_PILOT_PEN_UIDS: U.JOSE, RM_PILOT_VISUAL_UIDS: U.JOSE };   // as listas de TESTE só têm a conta de José (nunca os alunos)
+const ENV_JOSE = { RM_PILOT_LAYOUT_UIDS: U.JOSE, RM_PILOT_PEN_UIDS: U.JOSE, RM_PILOT_VISUAL_UIDS: U.JOSE };   // listas do PILOTO (Semiología II): só José; a prévia das outras matérias não usa listas, usa administrador
 
 async function chamar(cena, persona, slug, { semToken = false, tokenRuim = false } = {}) {
   for (const k of ENVS) delete process.env[k];

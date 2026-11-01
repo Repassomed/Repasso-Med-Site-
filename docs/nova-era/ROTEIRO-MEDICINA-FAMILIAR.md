@@ -1,6 +1,6 @@
 # Medicina Familiar · roteiro curto (criar desligado → só layout para José → voltar)
 
-> Tudo no **Supabase → SQL Editor**. Nada no Netlify. Nada aqui foi executado: são os comandos para você rodar, na ordem. Pré-requisito: a #622 e a PR da «prévia só do administrador» já mescladas e com deploy.
+> Tudo no **Supabase → SQL Editor**. Nada no Netlify. Nada aqui foi executado: são os comandos para você rodar, na ordem. Pré-requisito: a #622 e a #624 (prévia só do administrador) já mescladas e com deploy. Regra: `off` desliga para todos; `preview` é só administrador (hoje, só você); `all` libera só os alunos com acesso à matéria e o administrador.
 
 **0 · Conferir que só você é administrador** (somente leitura; deve listar 1 linha, a sua):
 ```sql

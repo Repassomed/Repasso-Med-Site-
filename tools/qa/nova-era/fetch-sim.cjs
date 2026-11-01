@@ -1,6 +1,6 @@
 /* Supabase SIMULADO para as suítes ANTIGAS do piloto (A5/A7), que ativavam uma matéria por «slug na variável + UID na lista».
    Desde a Nova Era o servidor NÃO lê mais RM_LAYOUT_SLUGS / RM_VISUAL_SLUGS / RM_PEN_SLUGS (a linha da matéria em rm_materia_rollout é a única fonte). Para essas suítes continuarem
-   exercitando a MESMA lógica de duas chaves (matéria liberada + conta de teste), este simulador traduz, SÓ NO TESTE, «slug listado em RM_*_SLUGS» para uma linha `preview` da tabela.
+   exercitando a MESMA lógica de duas chaves (matéria liberada + conta de teste), este simulador traduz, SÓ NO TESTE, «slug listado em RM_*_SLUGS» para uma linha `preview` da tabela e «conta nas listas RM_PILOT_*_UIDS» para «administrador».
    Matéria não listada ⇒ linha `off`. Ninguém tem acesso comprado (my_active_subjects vazio), então `all` nunca é exercitado aqui (isso é do nova-era/servidor.test.cjs). */
 'use strict';
 exports.fetchLegado = function (uid, { authOk = true } = {}) {

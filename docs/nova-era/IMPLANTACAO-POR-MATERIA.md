@@ -18,7 +18,7 @@ Como são botões separados: layout pode estar em `all` e caneta em `off` (ou o 
 
 | # | Achado | Efeito | Solução |
 |---|---|---|---|
-| 1 | O servidor só liberava por **listas de contas de teste** (`RM_PILOT_LAYOUT_UIDS`, `RM_PILOT_PEN_UIDS`) | impossível chegar a um aluno sem colocar cada um nas listas | listas ficam como **etapa 1 (`preview`)**; a etapa 2 (`all`) libera por **acesso à matéria**, sem listar aluno nenhum |
+| 1 | O servidor só liberava por **listas de contas de teste** (`RM_PILOT_LAYOUT_UIDS`, `RM_PILOT_PEN_UIDS`) | impossível chegar a um aluno sem colocar cada um nas listas | as listas ficam **só para o piloto (Semiología II)**; fora dele a etapa 1 (`preview`) é **só administrador** e a etapa 2 (`all`) libera por **acesso à matéria**, sem listar aluno nenhum |
 | 2 | A caneta (V2) só montava para `BETA_UIDS`/`study_tools_beta`, **globalmente** (qualquer matéria) | liberar a caneta a um aluno a daria em todas as matérias | a V2 passa a ter o **modo «por matéria»**: o aluno comum só a recebe quando o servidor libera a matéria aberta; nas outras ela fica **invisível e inerte** e o marcador/goma antigos continuam |
 | 3 | `penLiberada()` só valia para refinamentos físicos, sem montar a V2 | caneta «liberada» não aparecia | o mesmo `pen:true` agora também monta a V2 (por matéria) |
 | 4 | O tema visual exige descritor aprovado por matéria; Medicina Familiar não tem | ligar o tema numa matéria sem descritor | continua **por cima do layout** e com botão próprio; sem descritor, o tema lança erro interno **capturado**: o layout fica, o tema não entra (testado) |
@@ -28,7 +28,7 @@ Como são botões separados: layout pode estar em `all` e caneta em `off` (ou o 
 ## 3 · Como funciona (caminho completo)
 
 1. O site só **pergunta** ao servidor para as matérias da lista `CANDIDATAS` de `assets/rm-pilot.js` (1.ª fechadura, por PR: hoje Semiología II e **Medicina Familiar**). Outras matérias: zero requisição.
-2. `get-pilot-flags` (servidor) valida o token do aluno, lê a linha da matéria em `rm_materia_rollout` e decide cada botão: `preview` ⇒ só contas de teste; `all` ⇒ aluno com acesso. Qualquer erro, linha ausente, tabela ausente ou valor estranho ⇒ **tudo `false`** (corpo idêntico, não revela o motivo). **Só lê.**
+2. `get-pilot-flags` (servidor) valida o token do aluno, lê a linha da matéria em `rm_materia_rollout` e decide cada botão: `off` ⇒ ninguém; `preview` ⇒ **só administrador** (`profiles.is_admin` da própria conta); `all` ⇒ **aluno com acesso e administrador**. Qualquer erro, linha ausente, tabela ausente ou valor estranho ⇒ **tudo `false`** (corpo idêntico, não revela o motivo). **Só lê.**
 3. `rm-pilot.js`: `layout:true` ⇒ monta o Layout V2; `visual:true` ⇒ tema (se houver descritor); `pen:true` avisa o `rm-tools-v2.js`.
 4. `rm-tools-v2.js`: beta de sempre ⇒ **idêntico a hoje**. Aluno comum ⇒ só monta com `pen:true` da matéria aberta, em modo por matéria; ao trocar para outra matéria, a V2 **some e desarma** (sem ler nem gravar traços/notas) e as ferramentas antigas voltam.
 5. Semiología II (piloto) **não muda**: continua pelas listas de conta, e a tabela é ignorada para ela.
@@ -52,7 +52,7 @@ Como são botões separados: layout pode estar em `all` e caneta em `off` (ou o 
 `update public.rm_materia_rollout set layout_stage='off', pen_stage='off', visual_stage='off', atualizado_em=now() where slug='medicina-familiar';`
 Quem já estava com a página aberta troca ao recarregar. Os dados do aluno (grifos, notas, traços) **não são tocados** em nenhuma etapa nem na volta.
 
-**Se o passo 1 não mostrar nada no iPad:** a sua conta pode não estar em `RM_PILOT_LAYOUT_UIDS` (Netlify). Se você testou Semiología II com o layout novo, já está.
+**Se o passo 1 não mostrar nada no iPad:** confira que a conta aberta no iPad é a administradora (`select u.email from public.profiles p join auth.users u on u.id = p.id where p.is_admin = true;` deve listar só você) e recarregue sem cache. Não há nada para ajustar no Netlify.
 
 ## 5 · O que não muda
 
@@ -71,8 +71,8 @@ Outras matérias (sem requisição), Semiología II (piloto), login, compras e a
 
 | Teste | Resultado |
 |---|---|
-| `tools/qa/nova-era/servidor.test.cjs` (função real `get-pilot-flags`, banco simulado): tudo `off` por padrão; `preview` só contas de teste; `all` só aluno COM acesso; layout × caneta × tema; outra matéria; piloto; áudio nunca; curingas; **configuração antiga do Netlify não liga matéria desligada**; corpo idêntico; só GET | **52/52** |
-| `tools/qa/nova-era/navegador.test.cjs` (matéria real, `rm-pilot.js` + função + `rm-tools-v2.js` reais, 390 e 1440 px): padrão desligado · prévia · só layout · só caneta · as duas · **volta** · sem acesso · outra matéria · troca de aba · José em outra matéria · piloto · tabela ausente · tema sem descritor · **troca de conta na mesma aba** — com grifos, notas e traços idênticos, atualização da página, 0 erro JS, 0 escrita indevida | **153/153** |
+| `tools/qa/nova-era/servidor.test.cjs` (função real `get-pilot-flags`, banco simulado): tudo `off` por padrão; `preview` só administrador; `all` só aluno COM acesso e administrador; layout × caneta × tema; outra matéria; piloto; áudio nunca; curingas; **configuração antiga do Netlify não liga matéria desligada**; corpo idêntico; só GET | **52/52** |
+| `tools/qa/nova-era/navegador.test.cjs` (matéria real, `rm-pilot.js` + função + `rm-tools-v2.js` reais, 390 e 1440 px): padrão desligado · prévia (só administrador; o 2.º testador não vê) · só layout · só caneta · as duas · **volta** · sem acesso · outra matéria · troca de aba · José em outra matéria · piloto · tabela ausente · tema sem descritor · **troca de conta na mesma aba** — com grifos, notas e traços idênticos, atualização da página, 0 erro JS, 0 escrita indevida | **153/153** |
 | Controles negativos (o teste reprova o defeito inserido) | V2 sem modo por matéria · `all` sem checar acesso · `preview` aberto · sem o portão `anotarPermitido` · ferramentas antigas não devolvidas · **V2 ignora a troca de conta** · **pilot guarda o cache da conta anterior** · **variável antiga volta a ligar**: todos reprovam |
 | Regressão (suítes antigas adaptadas por `fetch-sim.cjs`, que traduz «slug na variável» para uma linha `preview`) | `pilot-flags` 22 · `gate-por-materia` 48 · `medfam-implantacao` 87 · `medfam-grifos-sinteticos` 24 · `nao-ativacao` 18 · porta de Medicina Familiar ABERTA 7/7 · `layout` 535 · `sistema` 124 · `nav-sistema` 216 · `cover` 198 · `soltos` 16 · `race` 140 · `ink-jump` 54 · `caneta-ipad-456` 197 |
 | `caneta-456` e `caneta-novo-layout` | ver §9 (3): falhas de **tolerância absoluta do teste** em traços sobre post-it grande; **mesmo resultado no código de 30/10 (`9d59a061`) rodado nesta máquina** — ou seja, deriva do ambiente de teste, não desta PR |
@@ -115,3 +115,7 @@ Pedido ao auditor: adaptar S1–S5 e C ao modo «tabela de estágios» (a PR tra
 ## 11 · A prévia é só do administrador (corrigido antes da ativação)
 
 *Achado (leitura do banco, sem alterar nada):* existe **1** administrador (`profiles.is_admin`) — a conta de José — e **2** contas habilitadas na caneta V2 (`study_tools_beta`): José e um segundo testador **que não é administrador**. As listas `RM_PILOT_LAYOUT_UIDS` / `RM_PILOT_PEN_UIDS` / `RM_PILOT_VISUAL_UIDS` ficam no Netlify (não consultáveis daqui) e **servem também ao piloto de Semiología II**, onde o segundo testador participa; portanto era provável que ele estivesse nelas e, com a regra anterior, veria a prévia de Medicina Familiar. *Correção:* fora do piloto, `preview` vale **só para administrador** (leitura da própria linha de `profiles`, com o token da conta; erro ⇒ ninguém). As listas continuam valendo **apenas** para Semiología II. *Prova:* `servidor.test.cjs` §2-B (o 2.º testador nas três listas não vê nada; José vê mesmo com as listas vazias; sem administrador no banco ou erro no perfil ⇒ ninguém; Semiología II intacta para os dois testadores) e `navegador.test.cjs` (cena do 2.º testador), mais o mutante «prévia por lista» reprovado.
+
+**Leitura da política de `profiles` (somente leitura, catálogo do banco, 1/11/2026):** RLS ativo. Há 4 políticas de `SELECT`, todas permissivas (somam-se): `profiles_self_select` e `profiles_select_own` (`id = auth.uid()`), `profiles_select` (`id = auth.uid() OR is_admin()`) e `profiles_select_admin` (`is_admin()`). Logo, **uma conta comum lê apenas o próprio perfil**; quem é administrador pode ler todos (por isso a função consulta `?id=eq.<uid da própria conta>` e só aceita **exatamente uma** linha com `is_admin = true`). `anon` tem o privilégio de tabela, mas nenhuma política o libera (`auth.uid()` nulo e `is_admin()` falso ⇒ nenhuma linha). `is_admin()` é `SECURITY DEFINER` e lê `profiles.is_admin` da própria conta. Nenhuma escrita é feita por esta função.
+
+**Regra final, igual no código, na migração e neste documento:** fora de Semiología II — `off` desliga para todos (inclusive administrador); `preview` é só administrador; `all` libera somente os alunos com acesso à matéria e o administrador; layout, caneta e tema são colunas independentes; as listas `RM_PILOT_*_UIDS` valem só para Semiología II.

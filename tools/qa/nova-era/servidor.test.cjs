@@ -7,7 +7,7 @@ const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; co
 const sec = t => console.log('\n▸ ' + t);
 const MF = 'medicina-familiar', DERM = 'dermatologia', PIL = 'semiologia-ii';
 const T = (l, p, v) => ({ [MF]: { layout_stage: l, pen_stage: p, visual_stage: v || 'off' } });
-const ACESSOS = { [U.ALUNO]: [MF], [U.OUTRO]: [DERM], [U.JOSE]: [] /* José nem precisa ter comprado: a prévia é por conta */ };
+const ACESSOS = { [U.ALUNO]: [MF], [U.OUTRO]: [DERM], [U.JOSE]: [] /* José nem precisa ter comprado: o administrador vê em preview e em all */ };
 const ENV_DOIS = { RM_PILOT_LAYOUT_UIDS: U.JOSE + ',' + U.TESTER2, RM_PILOT_PEN_UIDS: U.JOSE + ',' + U.TESTER2, RM_PILOT_VISUAL_UIDS: U.JOSE + ',' + U.TESTER2 };   // o 2.º testador do piloto está nas listas, mas não é administrador
 const base = (tabela, extra) => Object.assign({ env: ENV_JOSE, tabela, acessos: ACESSOS }, extra || {});
 const f = (r) => ({ layout: r.layout, pen: r.pen, visual: r.visual, audio: r.audio });
@@ -19,7 +19,7 @@ const NEG = { layout: false, pen: false, visual: false, audio: false };
     for (const p of ['JOSE', 'ALUNO', 'SEM']) { const r = await chamar(cena, p, MF); ok(JSON.stringify(f(r)) === JSON.stringify(NEG), `${nome} · ${p}: tudo false`, f(r)); }
   }
 
-  sec('2 · ETAPA 1 (preview): só as contas de teste; o aluno comum continua sem nada');
+  sec('2 · ETAPA 1 (preview): só o administrador; o aluno comum continua sem nada');
   { const c = base(T('preview', 'preview'));
     const j = await chamar(c, 'JOSE', MF); ok(j.layout && j.pen && !j.visual && !j.audio, 'José: layout e caneta liberados, tema e áudio não', f(j));
     const a = await chamar(c, 'ALUNO', MF); ok(JSON.stringify(f(a)) === JSON.stringify(NEG), 'aluno COM acesso: nada', f(a));
