@@ -8,6 +8,7 @@ const sec = t => console.log('\n▸ ' + t);
 const MF = 'medicina-familiar', DERM = 'dermatologia', PIL = 'semiologia-ii';
 const T = (l, p, v) => ({ [MF]: { layout_stage: l, pen_stage: p, visual_stage: v || 'off' } });
 const ACESSOS = { [U.ALUNO]: [MF], [U.OUTRO]: [DERM], [U.JOSE]: [] /* José nem precisa ter comprado: a prévia é por conta */ };
+const ENV_DOIS = { RM_PILOT_LAYOUT_UIDS: U.JOSE + ',' + U.TESTER2, RM_PILOT_PEN_UIDS: U.JOSE + ',' + U.TESTER2, RM_PILOT_VISUAL_UIDS: U.JOSE + ',' + U.TESTER2 };   // o 2.º testador do piloto está nas listas, mas não é administrador
 const base = (tabela, extra) => Object.assign({ env: ENV_JOSE, tabela, acessos: ACESSOS }, extra || {});
 const f = (r) => ({ layout: r.layout, pen: r.pen, visual: r.visual, audio: r.audio });
 const NEG = { layout: false, pen: false, visual: false, audio: false };
@@ -23,6 +24,19 @@ const NEG = { layout: false, pen: false, visual: false, audio: false };
     const j = await chamar(c, 'JOSE', MF); ok(j.layout && j.pen && !j.visual && !j.audio, 'José: layout e caneta liberados, tema e áudio não', f(j));
     const a = await chamar(c, 'ALUNO', MF); ok(JSON.stringify(f(a)) === JSON.stringify(NEG), 'aluno COM acesso: nada', f(a));
     const s = await chamar(c, 'SEM', MF); ok(JSON.stringify(f(s)) === JSON.stringify(NEG), 'aluno sem acesso: nada', f(s)); }
+
+  sec('2-B · a PRÉVIA é só do ADMINISTRADOR: estar nas listas RM_PILOT_*_UIDS não basta, e o administrador não precisa delas');
+  { const c = base(T('preview', 'preview'), { env: ENV_DOIS });
+    const t2 = await chamar(c, 'TESTER2', MF); ok(JSON.stringify(f(t2)) === JSON.stringify(NEG), '2.º testador (nas três listas, NÃO administrador): nada em Medicina Familiar', f(t2));
+    const j = await chamar(c, 'JOSE', MF); ok(j.layout && j.pen, 'José (administrador): layout e caneta em prévia', f(j));
+    const sem = base(T('preview', 'preview'), { env: {} });   // nenhuma lista de conta no Netlify
+    const j2 = await chamar(sem, 'JOSE', MF); ok(j2.layout && j2.pen, 'José vê a prévia mesmo com as listas vazias (a prévia não depende de variável)', f(j2));
+    const adm2 = base(T('preview', 'preview'), { env: ENV_DOIS, admins: [] });
+    const j3 = await chamar(adm2, 'JOSE', MF); ok(JSON.stringify(f(j3)) === JSON.stringify(NEG), 'sem nenhum administrador no banco: a prévia não aparece para ninguém', f(j3));
+    const errp = base(T('preview', 'preview'), { env: ENV_DOIS, erroProfiles: true });
+    const j4 = await chamar(errp, 'JOSE', MF); ok(JSON.stringify(f(j4)) === JSON.stringify(NEG), 'erro ao consultar o perfil: falha fechada (ninguém)', f(j4));
+    const al = base(T('preview', 'preview'), { env: ENV_DOIS, admins: [U.JOSE, U.ALUNO] });
+    const a2 = await chamar(al, 'ALUNO', MF); ok(a2.layout, 'controle: se uma conta VIRAR administradora no banco, passa a ver a prévia (a regra é «administrador», e hoje há 1)', f(a2)); }
 
   sec('3 · ETAPA 2 (all): todos os alunos que JÁ TÊM acesso; quem não tem, não');
   { const c = base(T('all', 'all'));
@@ -51,6 +65,10 @@ const NEG = { layout: false, pen: false, visual: false, audio: false };
   { const c = base(Object.assign({ [PIL]: { layout_stage: 'all', pen_stage: 'all', visual_stage: 'all' } }, {}), { env: Object.assign({}, ENV_JOSE, { RM_PILOT_AUDIO_UIDS: U.JOSE }), acessos: { [U.ALUNO]: [PIL] } });
     const j = await chamar(c, 'JOSE', PIL); ok(j.layout && j.pen && j.audio && j.visual, 'José no piloto: layout, caneta, áudio e tema (listas)', f(j));
     const a = await chamar(c, 'ALUNO', PIL); ok(JSON.stringify(f(a)) === JSON.stringify(NEG), 'aluno comum no piloto: nada, mesmo com a tabela em all (a tabela é ignorada no piloto)', f(a)); }
+
+  sec('7-B · o 2.º testador continua no piloto (Semiología II) pelas listas, como antes');
+  { const c = base({}, { env: ENV_DOIS, acessos: {} });
+    const t2 = await chamar(c, 'TESTER2', PIL); ok(t2.layout && t2.pen, 'Semiología II: 2.º testador segue com layout e caneta do piloto (listas)', f(t2)); }
 
   sec('8 · áudio nunca fora do piloto');
   { const c = base(T('all', 'all'), { env: Object.assign({}, ENV_JOSE, { RM_PILOT_AUDIO_UIDS: U.JOSE + ',' + U.ALUNO }) });
@@ -83,8 +101,8 @@ const NEG = { layout: false, pen: false, visual: false, audio: false };
   sec('11 · somente leitura');
   { const c = base(T('all', 'all')); await chamar(c, 'ALUNO', MF); await chamar(c, 'SEM', MF);
     ok(c.chamadas.every(x => x.startsWith('GET ')), 'toda chamada ao banco é GET (' + c.chamadas.length + ' chamadas)', c.chamadas);
-    ok(c.chamadas.every(x => /\/auth\/v1\/user|\/rest\/v1\/(rm_materia_rollout|my_active_subjects)$/.test(x.split(' ')[1])), 'só toca em auth/user, rm_materia_rollout e my_active_subjects', [...new Set(c.chamadas)]);
-    const off = base(T('off', 'off')); await chamar(off, 'ALUNO', MF); ok(!off.chamadas.some(x => /my_active_subjects/.test(x)), 'estágios off: nem consulta o acesso do aluno', off.chamadas); }
+    ok(c.chamadas.every(x => /\/auth\/v1\/user|\/rest\/v1\/(rm_materia_rollout|my_active_subjects|profiles)$/.test(x.split(' ')[1])), 'só toca em auth/user, rm_materia_rollout, my_active_subjects e a PRÓPRIA linha de profiles', [...new Set(c.chamadas)]);
+    const off = base(T('off', 'off')); await chamar(off, 'ALUNO', MF); ok(!off.chamadas.some(x => /my_active_subjects|profiles/.test(x)), 'estágios off: nem consulta o acesso nem o perfil', off.chamadas); }
 
   console.log(`\nnova-era/servidor: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`);
   process.exit(ko ? 1 : 0);

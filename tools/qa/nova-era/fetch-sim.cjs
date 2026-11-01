@@ -12,6 +12,10 @@ exports.fetchLegado = function (uid, { authOk = true } = {}) {
       const em = k => String(process.env[k] || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean).indexOf(slug) !== -1;
       return { ok: true, status: 200, json: async () => [{ slug, layout_stage: em('RM_LAYOUT_SLUGS') ? 'preview' : 'off', pen_stage: em('RM_PEN_SLUGS') ? 'preview' : 'off', visual_stage: em('RM_VISUAL_SLUGS') ? 'preview' : 'off' }] };
     }
+    if (u.includes('/rest/v1/profiles')) {   // legado: «conta nas listas RM_PILOT_*_UIDS» vira «administrador» (a prévia agora é por administrador)
+      const em = ['RM_PILOT_LAYOUT_UIDS', 'RM_PILOT_PEN_UIDS', 'RM_PILOT_VISUAL_UIDS'].some(k => String(process.env[k] || '').split(',').map(s => s.trim().toLowerCase()).indexOf(String(uid).toLowerCase()) !== -1);
+      return { ok: true, status: 200, json: async () => [{ is_admin: em }] };
+    }
     return { ok: true, status: 200, json: async () => [] };
   };
 };

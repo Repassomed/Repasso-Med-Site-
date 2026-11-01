@@ -36,7 +36,7 @@
      quem testa, e só quando a linha da matéria está em `preview` ou `all`), cada matéria tem uma linha na tabela public.rm_materia_rollout
      (slug, layout_stage, pen_stage, visual_stage), cada coluna com um destes valores:
        off      ninguém (padrão; linha ausente = off)
-       preview  só as contas das listas RM_PILOT_*_UIDS (José) — «ver e aprovar no iPad»
+       preview  só ADMINISTRADORES (profiles.is_admin; hoje 1 conta: José) — «ver e aprovar no iPad». As listas RM_PILOT_*_UIDS valem só para o PILOTO (Semiología II)
        all      TODOS os alunos que JÁ TÊM ACESSO àquela matéria (a mesma view
                 my_active_subjects que o get-materia usa: dono + validade)
      Aluno sem acesso, matéria fora da tabela, tabela inexistente, coluna com valor
@@ -110,6 +110,18 @@ async function temAcesso(slug, token) {
   } catch (e) { return false; }
 }
 
+/* o dono do token é administrador? Leitura da PRÓPRIA linha de profiles (RLS profiles_self_select), com o token do aluno. Qualquer erro ⇒ false. */
+async function souAdmin(uid, token) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + encodeURIComponent(uid) + '&select=is_admin&limit=1', {
+      headers: { apikey: ANON_KEY, Authorization: 'Bearer ' + token }
+    });
+    if (!r.ok) return false;
+    const rows = await r.json();
+    return Array.isArray(rows) && rows.length === 1 && !!rows[0] && rows[0].is_admin === true;
+  } catch (e) { return false; }
+}
+
 function resp(flags, reason, slugOk) {
   return {
     statusCode: 200,
@@ -174,15 +186,16 @@ exports.handler = async function (event) {
       // RM_PEN_SLUGS (fases A5/A7) NÃO são mais lidas aqui: matéria `off` (ou sem linha, ou tabela ausente) fica desligada para TODOS, inclusive contas de teste,
       // mesmo que alguma dessas variáveis ainda exista no Netlify.
       const est = await lerEstagios(slug, token);
-      let acesso = null;                                                          // consultado no máximo uma vez, e só se algum estágio for `all`
-      const pode = async function (estagio, uids) {
+      let acesso = null, admin = null;                                            // cada consulta no máximo uma vez, e só quando um estágio a exige
+      const ehAdmin = async function () { if (admin === null) admin = await souAdmin(uid, token); return admin; };
+      const pode = async function (estagio) {
         if (estagio !== 'preview' && estagio !== 'all') return false;             // off / valor estranho ⇒ ninguém
-        if (uids.indexOf(uid) !== -1) return true;                                // contas de teste (José): veem em `preview` e também em `all`
-        if (estagio === 'all') { if (acesso === null) acesso = await temAcesso(slug, token); return acesso; }   // todos os alunos COM acesso à matéria
-        return false;
+        if (estagio === 'preview') return ehAdmin();                              // PRÉVIA = administrador (hoje, 1 conta: José). NÃO depende das listas RM_PILOT_*_UIDS (que servem também a outros testadores do piloto)
+        if (acesso === null) acesso = await temAcesso(slug, token);               // `all`: todos os alunos COM acesso à matéria…
+        return acesso || ehAdmin();                                               // …e o administrador continua vendo, mesmo sem ter a matéria comprada
       };
-      flags = { layout: await pode(est.layout, uidsLayout), audio: false, pen: await pode(est.pen, uidsPen) };
-      flags.visual = flags.layout && await pode(est.visual, uidsVisual);          // camada sobre o Layout V2: nunca sem `layout`
+      flags = { layout: await pode(est.layout), audio: false, pen: await pode(est.pen) };
+      flags.visual = flags.layout && await pode(est.visual);                      // camada sobre o Layout V2: nunca sem `layout`
     }
     const algum = flags.layout || flags.audio || flags.pen;
     return resp(algum ? flags : NEGADO, algum ? 'pilot' : 'denied', algum ? slug : null);

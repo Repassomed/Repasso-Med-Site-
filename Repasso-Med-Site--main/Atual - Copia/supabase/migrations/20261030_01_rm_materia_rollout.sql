@@ -8,7 +8,7 @@
 -- O que faz: cria public.rm_materia_rollout — UMA linha por matéria, três colunas independentes
 -- (layout, caneta, tema), cada uma com UM destes valores:
 --     off      ninguém                      (padrão)
---     preview  só as contas de teste        (listas RM_PILOT_*_UIDS do Netlify — José)
+--     preview  só administradores           (profiles.is_admin — hoje só José; não usa listas do Netlify)
 --     all      todos os alunos que JÁ TÊM acesso à matéria (view my_active_subjects)
 -- Linha ausente = tudo `off`. Tabela ausente (esta migração não rodou) = tudo `off` (a função
 -- get-pilot-flags falha fechada). Não existe «todas as matérias»: é uma linha por matéria.

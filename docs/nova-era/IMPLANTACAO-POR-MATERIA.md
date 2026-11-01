@@ -9,7 +9,7 @@ Cada matéria tem **uma linha** numa tabelinha do Supabase (`rm_materia_rollout`
 | Posição | Quem enxerga |
 |---|---|
 | `off` | ninguém (padrão) |
-| `preview` | **só a conta de José** (as contas de teste que já existem no Netlify) — é a etapa «José vê e aprova no iPad» |
+| `preview` | **só administradores** (`profiles.is_admin`; hoje **1 conta: José**) — é a etapa «José vê e aprova no iPad». **Não depende** das listas `RM_PILOT_*_UIDS` do Netlify (que servem também a outros testadores do piloto) |
 | `all` | **todos os alunos que já têm acesso àquela matéria** (mesma regra de acesso do site: matéria comprada e dentro da validade) |
 
 Como são botões separados: layout pode estar em `all` e caneta em `off` (ou o contrário). Aluno **sem acesso** não recebe nada. **Outra matéria** não é afetada (cada uma é uma linha). **Não existe** botão «todas as matérias».
@@ -111,3 +111,7 @@ Pedido ao auditor: adaptar S1–S5 e C ao modo «tabela de estágios» (a PR tra
 *Correção (`rm-tools-v2.js`):* (a) a conta é registrada **antes** de esperar; (b) cada tentativa tem uma **época**; qualquer troca de conta ou saída (`contaMudou`) sobe a época e libera a trava, então a resposta tardia da conta anterior é **descartada** sem montar nada, e a conta nova decide do zero; (c) depois da consulta a sessão é relida (`uidSessaoAgora()`): se trocou sem o evento ter chegado, a tentativa se refaz para a conta de agora; (d) o mesmo vale para a montagem «por matéria».
 
 *Prova (`navegador.test.cjs`, cena 14, a resposta da consulta é **segurada** e só liberada depois da troca):* 14a A (na tabela de beta) → entra B (beta pelo código): só B monta, 1 caixa, 0 escrita; 14b A → entra B **sem** V2: a resposta «sim» de A **não** monta nada para B; 14c **saída** durante a espera: nada monta e não há recarga; 14d sessão trocada sem evento: monta a de B; 14e Semiología II: a conta do piloto entra durante a espera de A e tem layout + caneta do piloto com a identificação dela. Controles negativos: código anterior (8 falhas), sem a checagem de época (2), sem registrar a conta antes e sem invalidar a tentativa (3) — todos reprovam.
+
+## 11 · A prévia é só do administrador (corrigido antes da ativação)
+
+*Achado (leitura do banco, sem alterar nada):* existe **1** administrador (`profiles.is_admin`) — a conta de José — e **2** contas habilitadas na caneta V2 (`study_tools_beta`): José e um segundo testador **que não é administrador**. As listas `RM_PILOT_LAYOUT_UIDS` / `RM_PILOT_PEN_UIDS` / `RM_PILOT_VISUAL_UIDS` ficam no Netlify (não consultáveis daqui) e **servem também ao piloto de Semiología II**, onde o segundo testador participa; portanto era provável que ele estivesse nelas e, com a regra anterior, veria a prévia de Medicina Familiar. *Correção:* fora do piloto, `preview` vale **só para administrador** (leitura da própria linha de `profiles`, com o token da conta; erro ⇒ ninguém). As listas continuam valendo **apenas** para Semiología II. *Prova:* `servidor.test.cjs` §2-B (o 2.º testador nas três listas não vê nada; José vê mesmo com as listas vazias; sem administrador no banco ou erro no perfil ⇒ ninguém; Semiología II intacta para os dois testadores) e `navegador.test.cjs` (cena do 2.º testador), mais o mutante «prévia por lista» reprovado.

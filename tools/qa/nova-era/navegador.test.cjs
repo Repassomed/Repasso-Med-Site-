@@ -14,7 +14,8 @@ let n = 0, ko = 0;
 const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 400) : ''); } return !!c; };
 const sec = t => console.log('\n▸ ' + t);
 const MF = 'medicina-familiar';
-const envJose = () => ({ RM_PILOT_LAYOUT_UIDS: S.U.JOSE, RM_PILOT_PEN_UIDS: S.U.JOSE, RM_PILOT_VISUAL_UIDS: S.U.JOSE });
+/* listas realistas do Netlify: José E o 2.º testador do piloto (que NÃO é administrador e NÃO pode ver a prévia de Medicina Familiar) */
+const envJose = () => ({ RM_PILOT_LAYOUT_UIDS: S.U.JOSE + ',' + S.U.TESTER2, RM_PILOT_PEN_UIDS: S.U.JOSE + ',' + S.U.TESTER2, RM_PILOT_VISUAL_UIDS: S.U.JOSE + ',' + S.U.TESTER2 });
 const T = (l, p, v) => ({ [MF]: { layout_stage: l, pen_stage: p, visual_stage: v || 'off' } });
 const ACESSOS = () => ({ [S.U.ALUNO]: [MF, 'dermatologia'], [S.U.OUTRO]: ['dermatologia'] });
 const mkCena = (tabela, extra) => Object.assign({ env: envJose(), tabela, acessos: ACESSOS() }, extra || {});
@@ -126,6 +127,11 @@ const fecha = c => c.ctx.close().catch(() => {});
     { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
       const m = await ligar(c);
       ok(!m.layout && !m.v2 && m.legada && mesmosDados(c.ref, m), 'aluno COM acesso na prévia: nada muda (layout antigo, ferramentas antigas, dados idênticos)', m);
+      await fecha(c); }
+
+    { const c = { persona: 'TESTER2', w: W, cena: mkCena(T('preview', 'preview')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c);
+      ok(!m.layout && !m.v2 && m.legada && mesmosDados(c.ref, m), 'prévia: o 2.º testador (nas listas, NÃO administrador) NÃO vê o layout novo nem a caneta nova em Medicina Familiar', m);
       await fecha(c); }
 
     sec(t + '2 · ETAPA 2 só do LAYOUT: aluno com acesso vê o layout novo, SEM a caneta nova');
