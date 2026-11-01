@@ -42,6 +42,9 @@ Ambiente: sessão em nuvem, saída HTTPS por proxy; sem credencial do Google Dri
 Como não houve download, não foi possível dividir uma cópia local. Os originais no Drive **não foram alterados** (só leitura).
 **Para destravar (José):** dividir ou comprimir os dois PDFs em partes de até ~9 MB (por exemplo, páginas 1–N, N+1–M) e salvá-los como cópias novas na mesma pasta; ou liberar `drive.google.com`/`www.googleapis.com` na rede do ambiente **e** fornecer uma credencial de leitura do Drive.
 
+**3.ª rodada (01/11, após o pedido de exame visual):** a pasta do Drive foi listada de novo (`parentId = 1Ov8nvljchyD5EyLI4hSk8iXlNbrlGMIS`): **não há arquivo novo** (nenhuma cópia dividida ou comprimida; busca por `createdTime > 2026-11-01T22:00:00Z` retornou vazio). `download_file_content` dos dois ids repetiu o mesmo erro («File too large for download, over limit of 10 MB…»). `read_file_content` de `Provas Compilado farmaco.pdf` devolveu `fileContent: ""` (PDF só de imagem; nenhuma página legível por texto). O proxy do ambiente nega `drive.google.com` (política de rede); não foi contornado.
+**Páginas não examinadas:** `Provas Compilado farmaco.pdf` — todas (total de páginas desconhecido); `Questoes P1 P2 Farmaco_251206_172249.pdf` — todas em imagem (total desconhecido; só o texto OCR sem paginação).
+
 **Rótulos (8-A.4):** nenhum arquivo desta pasta prova por si só que um item é de prova oficial (os de 01/11 são simulados, questionários, tabelas ou recordações de aluno). Por isso **as 13 questões novas levam «Pregunta complementaria»**. As questões já existentes mantêm o rótulo que tinham.
 
 ## 2. Resultado
