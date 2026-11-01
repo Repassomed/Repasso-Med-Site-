@@ -3945,6 +3945,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
 
   var montado = false;      // a V2 já está de pé: nunca montar segunda vez
   var aTentar = false;      // já há uma tentativa em voo: não correr duas em paralelo
+  var epoca = 0;            // Nova Era: sobe a cada tentativa e a cada troca de conta; uma tentativa com época velha NUNCA monta nada
   var semAcesso = {};       // uid -> true: já se perguntou e a resposta foi não
 
 
@@ -3956,18 +3957,25 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     var t = RT();
     if (!t || !t.userId || !t.onAbaPronta) return;       // rm-tools antigo: não faz nada
     aTentar = true;
+    var ep = ++epoca;                                    // Nova Era: se outra conta entrar (ou esta sair) ENQUANTO a consulta de acesso voa, esta tentativa fica velha e nada é montado com ela
+    var refazer = null;
     try {
       var uid = uidDaSessao || await uidSessaoAgora() || await t.userId();   // a sessão ATUAL primeiro: RMTools.userId() guarda cache e pode devolver a conta anterior
       if (!uid) return;                                  // ainda sem sessão: espera-se o evento de auth
+      if (ep !== epoca) return;                          // mudou a conta enquanto se descobria o uid
       if (semAcesso[uid]) return;                        // já se perguntou por este uid: não repetir
+      uidBase = uid;                                     // ANTES de esperar: um evento de outra conta durante a consulta é reconhecido como troca (contaMudou), não ignorado
       var ok = await hasStudyToolsV2Access(uid);
-      uidBase = uid;
+      if (ep !== epoca) { acessoVia = ''; return; }      // outra conta entrou/saiu durante a consulta: a resposta é da conta ANTERIOR e é descartada
+      var agora = await uidSessaoAgora();                // e a sessão pode ter trocado sem o evento ter chegado ainda
+      if (agora && agora !== uid) { acessoVia = ''; refazer = agora; return; }
       if (!ok) { semAcesso[uid] = true; armarEscopo(t, uid); return; }   // ← quem não é tester sai aqui, uma vez só (Nova Era: fica à espera de a matéria aberta ser liberada pelo servidor)
       if (montado) return;                               // outra tentativa chegou primeiro
       montado = true;
       await montarTudo(t, uid);
     } finally {
-      aTentar = false;
+      if (ep === epoca) aTentar = false;                 // se a época mudou, contaMudou() já liberou e talvez já haja uma tentativa NOVA em curso: não mexer nela
+      if (refazer) { uidBase = null; semAcesso = {}; setTimeout(function () { tentar(refazer); }, 0); }
     }
   }
 
@@ -3998,7 +4006,8 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       setTimeout(recarregarPagina, 0);
       return;
     }
-    uidBase = null; semAcesso = {};
+    epoca++; aTentar = false;                          // qualquer tentativa em voo (consulta de acesso da conta anterior) passa a ser velha e é descartada
+    uidBase = null; semAcesso = {}; acessoVia = '';
     if (uidNovo && evt !== 'SIGNED_OUT') tentar(uidNovo);
   }
   function armarEscopo(t, uid) {
@@ -4009,13 +4018,15 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       var sl = slugDoTab(abaAtiva());
       if (!sl || !penLiberadaPeloServidor(sl)) return;
       aTentar = true;
+      var ep = ++epoca;
       (async function () {
         try {
           var fresco = await uidSessaoAgora();                         // a conta de AGORA, não a de quando o escopo foi armado
+          if (ep !== epoca) return;                                    // a conta mudou durante a leitura da sessão
           if (!fresco || (uidBase && fresco !== uidBase)) { if (fresco) contaMudou('SIGNED_IN', fresco); return; }
           if (montado) return; montado = true; st.escopo = true; acessoVia = 'servidor (caneta por matéria)'; await montarTudo(t, fresco);
         }
-        finally { aTentar = false; }
+        finally { if (ep === epoca) aTentar = false; }
       })().catch(function (e) { console.warn('[rm2] escopo', e); });
     };
     window.addEventListener('rm-pilot-flags', tentarEscopo);

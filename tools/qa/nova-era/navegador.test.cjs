@@ -67,6 +67,7 @@ async function abrirPersona(br, base, mat, c) {
   await c.page.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => r.abort());
   await c.page.route('**/get-pilot-flags*', async r => { const slug = new URL(r.request().url()).searchParams.get('slug'); c.pedidos.push(slug); const o = await S.chamar(c.cena, c.persona, slug); r.fulfill({ status: o._status, contentType: 'application/json', body: o._corpo }); });
   await c.page.addInitScript(([slug]) => { window.__RM_ENSAIO = { slug, modo: 'controle' }; }, [mat.slug]);
+  if (c.init) await c.page.addInitScript(c.init[0], c.init[1]);
   c.base = base; c.mat = mat;
 }
 const url = c => `${c.base}/p.html?slug=${c.mat.slug}&tab=${c.mat.tab}&modo=controle&wait=1500&persist=1&pilotreal=1&uid=${S.U[c.persona]}`;
@@ -289,6 +290,48 @@ const fecha = c => c.ctx.close().catch(() => {});
       c.persona = 'JOSE'; await emitir(c, 'SIGNED_IN', S.U.JOSE); await c.page.waitForTimeout(1500);
       const st2 = await c.page.evaluate(() => window.RMToolsV2 ? { montou: true, uid: window.RMToolsV2.estado.uid, bloq: window.RMToolsV2._test.bloqueado() } : { montou: false });
       ok(!st2.montou || (st2.uid === S.U.JOSE && !st2.bloq), '13e · se a V2 montar para a conta nova, é com a identificação da conta NOVA (nunca a anterior)', st2);
+      await fecha(c); }
+
+    sec(t + '14 · troca de conta ENQUANTO a consulta de acesso à V2 (study_tools_beta) ainda voa');
+    /* a consulta da conta A fica SEGURA (Promise) até o teste liberar; a conta A está na tabela de beta (se a resposta dela valesse, montaria a V2 com a identificação de A) */
+    const SEGURAR = ([rows]) => { window.__betaRows = rows; window.__betaHold = new Promise(r => { window.__liberarBeta = r; }); };
+    const iniciarEspera = async (slug, extra) => { const c = Object.assign({ persona: 'ALUNO', w: W, cena: mkCena(T('off', 'off')), init: [SEGURAR, [{ [S.U.ALUNO]: { enabled: true } }]] }, extra || {});
+      await abrirPersona(br, base, M(slug), c); await carregar(c); await c.page.waitForTimeout(500);
+      c.antes = await c.page.evaluate(() => ({ consultas: (window.__betaPedidos || []).slice(), v2: !!window.RMToolsV2 })); return c; };
+    const liberarEspera = async c => { await c.page.evaluate(() => window.__liberarBeta()); await c.page.waitForTimeout(900); };
+    const estadoV2 = c => c.page.evaluate(() => ({ v2: !!window.RMToolsV2, uid: window.RMToolsV2 ? window.RMToolsV2.estado.uid : null, bloq: window.RMToolsV2 ? window.RMToolsV2._test.bloqueado() : null, caixas: document.querySelectorAll('.rm2-box').length, corpoV2: document.body.classList.contains('rm-v2'), flagV1: window.RM_STUDY_V2_ACTIVE === true, escopo: !!(window.RMToolsV2 && window.RMToolsV2._test.escopo && window.RMToolsV2._test.escopo()), escritas: (window.__writes || []).slice(), erros: (window.__errs || []).slice(0, 3), recargas: window.__recargas || 0 }));
+    { /* 14a · A (na tabela de beta, consulta segura) → entra B (beta pelo código) → a resposta de A chega: NADA de A é montado */
+      const c = await iniciarEspera(MF);
+      ok(c.antes.consultas.includes(S.U.ALUNO) && !c.antes.v2, '14a · a consulta da conta A está em voo e nada foi montado ainda', c.antes);
+      await armarContador(c); c.persona = 'JOSE'; await emitir(c, 'SIGNED_IN', S.U.JOSE); await c.page.waitForTimeout(900);
+      const antesDeLiberar = await estadoV2(c);
+      ok(antesDeLiberar.v2 && antesDeLiberar.uid === S.U.JOSE && !antesDeLiberar.escopo, '14a · conta B entrou: a V2 monta para B (identificação de B), enquanto a consulta de A segue segurada', antesDeLiberar);
+      await liberarEspera(c); const depois = await estadoV2(c);
+      ok(depois.uid === S.U.JOSE && depois.caixas === 1 && !depois.bloq && depois.escritas.length === 0 && depois.erros.length === 0, '14a · a resposta tardia de A é descartada: continua só B, 1 caixa, 0 escrita, 0 erro', depois);
+      await fecha(c); }
+    { /* 14b · A (na tabela) → entra B (aluno comum SEM beta) → a resposta de A chega: a V2 NÃO monta para ninguém */
+      const c = await iniciarEspera(MF); await armarContador(c);
+      c.persona = 'OUTRO'; await emitir(c, 'SIGNED_IN', S.U.OUTRO); await c.page.waitForTimeout(600);
+      await liberarEspera(c); const e = await estadoV2(c); const legada = await c.page.evaluate(() => [...document.querySelectorAll('.rm-tools-r')].some(x => { const r = x.getBoundingClientRect(); return getComputedStyle(x).display !== 'none' && r.width > 0; }));
+      ok(!e.v2 && e.caixas === 0 && !e.corpoV2 && !e.flagV1, '14b · conta B sem V2: a resposta «sim» da conta A NÃO monta a ferramenta para B', e);
+      ok(legada && e.recargas === 0 && e.escritas.length === 0, '14b · B segue com as ferramentas antigas, sem recarga indevida e sem escrita', [legada, e.recargas, e.escritas]);
+      await fecha(c); }
+    { /* 14c · SAÍDA da conta durante a espera */
+      const c = await iniciarEspera(MF); await armarContador(c);
+      await emitir(c, 'SIGNED_OUT', null); await c.page.waitForTimeout(500); await liberarEspera(c); const e = await estadoV2(c);
+      ok(!e.v2 && e.caixas === 0 && !e.corpoV2 && e.escritas.length === 0 && e.recargas === 0, '14c · SIGNED_OUT durante a consulta: nada é montado quando a resposta chega (e não há recarga, pois nada estava ligado)', e);
+      await fecha(c); }
+    { /* 14d · a sessão trocou SEM o evento ter chegado: a tentativa percebe pela sessão de agora e refaz para B */
+      const c = await iniciarEspera(MF); await armarContador(c);
+      await c.page.evaluate(([u]) => { window.__uidAtual = u; }, [S.U.JOSE]); await liberarEspera(c); const e = await estadoV2(c);
+      ok(e.v2 && e.uid === S.U.JOSE && !e.escopo && e.caixas === 1, '14d · sessão trocada sem evento: a V2 que monta é a de B (identificação de B), nunca a de A', e);
+      await fecha(c); }
+    { /* 14e · Semiología II (piloto) preservada: B = conta do piloto entra durante a espera de A */
+      const c = await iniciarEspera('semiologia-ii', { cena: mkCena({}) }); await armarContador(c);
+      c.persona = 'JOSE'; await emitir(c, 'SIGNED_IN', S.U.JOSE); await c.page.waitForTimeout(700);
+      const m = await ligar(c, 3000); await liberarEspera(c); const e = await estadoV2(c); const p = await c.page.evaluate(() => window.RMToolsV2 ? window.RMToolsV2._test.pilotoPermitido() : null);
+      ok(m.layout && e.v2 && e.uid === S.U.JOSE && p === true && !e.bloq, '14e · Semiología II: a conta do piloto entra durante a espera de A e tem layout + caneta do piloto com a identificação DELA', [m.layout, e, p]);
+      ok(e.escritas.length === 0 && e.erros.length === 0, '14e · sem escrita e sem erro JS', e);
       await fecha(c); }
   }
   await br.close(); srv.close();

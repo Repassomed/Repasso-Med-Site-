@@ -33,7 +33,10 @@ function chainPersist(t){
     return Promise.resolve(out).then(res, rej); };
   return o;
 }
-function chain(t){ if (PERSIST_T.includes(t)) return chainPersist(t); const o = {}; ['select','eq','order','limit','single','maybeSingle','in'].forEach(m => o[m] = () => o); o.range = function(a){ o._from = a; return o };
+/* study_tools_beta (quem recebe a V2): linhas em window.__betaRows[uid] = {enabled:true}; window.__betaHold (uma Promise) SEGURA a resposta — o teste de troca de conta durante a consulta de acesso a libera depois. window.__betaPedidos registra os uids consultados. */
+function chainBeta(){ const o = { _eq: {} }; ['select','order','limit','in','range'].forEach(m => o[m] = () => o); o.eq = (k, v) => { o._eq[k] = v; return o; }; o.single = o.maybeSingle = () => o;
+  o.then = (res, rej) => { const uid = o._eq.user_id; (window.__betaPedidos = window.__betaPedidos || []).push(uid); return (window.__betaHold || Promise.resolve()).then(() => ({ data: (window.__betaRows || {})[uid] || null, error: null })).then(res, rej); }; return o; }
+function chain(t){ if (t === 'study_tools_beta') return chainBeta(); if (PERSIST_T.includes(t)) return chainPersist(t); const o = {}; ['select','eq','order','limit','single','maybeSingle','in'].forEach(m => o[m] = () => o); o.range = function(a){ o._from = a; return o };
   ['insert','update','delete','upsert'].forEach(m => o[m] = function(a){ window.__writes.push(m + ':' + t); return o });
   o.then = function(res){ return Promise.resolve({ data: [], error: null }).then(res) }; return o }
 /* UID de TESTER da V2 (constante pública no rm-tools-v2.js) só para o motor da caneta montar no harness; sessão 100% simulada, nenhuma credencial */
