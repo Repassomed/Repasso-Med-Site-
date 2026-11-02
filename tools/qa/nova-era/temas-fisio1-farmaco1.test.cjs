@@ -1,7 +1,6 @@
-/* Nova Era · temas visuais de Fisiopatología I e Farmacología I (assets/temas/rm-tema-<slug>.js/.css) × as matérias REAIS.
+/* Nova Era · temas visuais de Fisiopatología I e Farmacología I (descritores inline em rm-materia-sistema.js/.css) × as matérias REAIS.
    Teste ISOLADO: monta o layout e o sistema visual REAIS (rm-layout, rm-materia-sistema, rm-materia-nav, rm-materia-indice) e registra
-   o descritor de cada matéria pela interface pública `RMSistema.registrarTema`, carregando os arquivos como o rm-pilot.js vai carregar.
-   NÃO usa rm-pilot.js (a lista CANDIDATAS é do Claude 4): a ligação final fica para a integração. Supabase simulado; 0 rede real, 0 escrita.
+   os descritores de Fisiopatología I e Farmacología I (já em `RMSistema.TEMAS`) sem passar pelo rm-pilot.js (o fluxo com o rm-pilot está em integracao-fisio1-farmaco1.test.cjs). Supabase simulado; 0 rede real, 0 escrita.
 
    Uso:  export NODE_PATH=$(npm root -g)   # ou RM_PLAYWRIGHT=/caminho/do/modulo
          node tools/qa/nova-era/temas-fisio1-farmaco1.test.cjs            (RM_SHOTS=/pasta salva capturas)
@@ -71,7 +70,6 @@ const MATERIAS = [
     await css('assets/rm-materia-indice.css'); await js('assets/rm-materia-indice.js');
     const tabEl = document.getElementById('tab-' + tab);
     window.__snapAntes = null;
-    if (comTema) { await css('assets/temas/rm-tema-' + slug + '.css'); await js('assets/temas/rm-tema-' + slug + '.js'); }
     let erro = '';
     try { window.RMLayout.attach(tabEl, slug); } catch (e) { erro = 'layout:' + e.message; }
     window.__pre = new WeakSet(tabEl.querySelectorAll('p,li,h2,h3,h4,h5,table,figure,blockquote'));   /* nós âncora-like que existem ANTES de o sistema montar */
@@ -99,25 +97,18 @@ const MATERIAS = [
     const ref = await f0.p.evaluate(SNAP, m.tab);
     await f0.ctx.close();
 
-    console.log('\n===== 8 · falha fechada (sem os arquivos do tema)');
-    const fx = await abrir(m, 1440, 900);
-    const er = await fx.p.evaluate(MONTAR, { slug: m.slug, tab: m.tab, titulo: m.titulo, comTema: false });
-    const sx = await fx.p.evaluate(() => ({ sis: document.documentElement.classList.contains('rm-sis'), l2: document.documentElement.classList.contains('rm-l2'), api: !!(window.RMSistema && window.RMSistema._estado && window.RMSistema._estado()) }));
-    ok(/sin tema/.test(er), 'sem descritor: o módulo lança «sin tema» (' + er + ')');
-    ok(!sx.sis && !sx.api, 'sem descritor: o tema NÃO fica aplicado');
-    ok(fx.errs.length === 0, 'sem descritor: 0 erros JS não tratados');
-    await fx.ctx.close();
-
     console.log('\n===== 1–3 · registro · classificação · unidades');
     const f = await abrir(m, 1440, 900); const p = f.p;
     const err = await p.evaluate(MONTAR, { slug: m.slug, tab: m.tab, titulo: m.titulo, comTema: true });
     ok(err === '', 'layout + tema + navegação + índice montam sem erro' + (err ? ' · ' + err : ''));
-    const reg = await p.evaluate(slug => ({ rt: !!(window.RM_TEMAS && window.RM_TEMAS[slug] && typeof window.RM_TEMAS[slug].clasificar === 'function'), tem: !!(window.RMSistema.TEMAS[slug]), de2: (function () { try { return window.RMSistema.registrarTema(slug, window.RM_TEMAS[slug]); } catch (e) { return 'erro'; } })() }), m.slug);
-    ok(reg.rt === true && reg.tem === true, 'o descritor ficou em RM_TEMAS[slug] e RMSistema.registrarTema o aceitou (slug em TEMAS)');
+    const reg = await p.evaluate(slug => ({ rt: typeof window.RMSistema.TEMAS[slug].clasificar === 'function', tem: !!(window.RMSistema.TEMAS[slug]), de2: (function () { try { return window.RMSistema.registrarTema(slug, Object.assign({}, window.RMSistema.TEMAS[slug])); } catch (e) { return 'erro'; } })() }), m.slug);
+    ok(reg.rt === true && reg.tem === true, 'o descritor está em RMSistema.TEMAS[slug] (inline, com clasificar)');
     ok(reg.de2 === false, 'um segundo registro é recusado (não sobrescreve)');
     const on = await p.evaluate(() => ({ sis: document.documentElement.classList.contains('rm-sis'), tema: document.documentElement.getAttribute('data-rm-tema'), est: window.RMSistema._estado() }));
     ok(on.sis && on.tema === m.slug && on.est && on.est.secciones === m.secoes, `tema aplicado: ${on.tema} · ${on.est && on.est.secciones} seções (esperado ${m.secoes})`);
 
+    const dup = await p.evaluate(() => [...document.querySelectorAll('.rm-sis-card-t b, .rm-l2-block-link span')].map(e => (e.matches('.rm-l2-block-link span') ? 'menu:' : 'card:') + e.textContent.trim()).map(t => t.replace(/^(menu|card):/, (x) => x)).filter(t => /^\d{1,2}\s*[·.:–-]\s/.test(t)));
+    ok(dup.length === 0, 'sem número repetido nos títulos do índice/menu (a insígnia já mostra o número) · ' + m.slug + ' ' + JSON.stringify(dup.slice(0, 4)));
     const cls = await p.evaluate(() => [...document.querySelectorAll('#materias-container section[id]')].map(s => ({ id: s.id, tipo: s.getAttribute('data-rm-tipo'), cap: s.getAttribute('data-rm-cap'), tag: (s.querySelector('.rm-sis-tag b') || {}).textContent || null, tagTxt: (s.querySelector('.rm-sis-tag span') || {}).textContent || null })));
     const errosCls = [];
     Object.keys(m.esperado).forEach(id => {
@@ -260,32 +251,6 @@ const MATERIAS = [
     }
   }
 
-
-  console.log('\n########## carregamento em qualquer ordem (o carregador da base lê RM_TEMAS)');
-  for (const m of MATERIAS) {
-    const f = await abrir(m, 1440, 900);
-    const r = await f.p.evaluate(async ({ slug, tab, titulo }) => {
-      const css = h => new Promise((ok, ko) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = h; l.onload = () => ok(); l.onerror = () => ko(new Error('css')); document.head.appendChild(l); });
-      const js = s => new Promise((ok, ko) => { const e = document.createElement('script'); e.src = s; e.async = false; e.onload = () => ok(); e.onerror = () => ko(new Error('js')); document.head.appendChild(e); });
-      (window.RM_CATALOGO = window.RM_CATALOGO || []).push({ slug, tab, title: titulo, sub: '' });
-      await js('assets/temas/rm-tema-' + slug + '.js');                       /* tema ANTES de o sistema existir */
-      const antes = { rt: !!(window.RM_TEMAS && window.RM_TEMAS[slug]), sis: !!window.RMSistema };
-      await css('assets/rm-layout.css'); await js('assets/rm-modes.js'); await js('assets/rm-layout.js');
-      await css('assets/rm-materia-sistema.css'); await js('assets/rm-materia-sistema.js'); await js('assets/rm-materia-nav.js');
-      await css('assets/temas/rm-tema-' + slug + '.css');                     /* CSS ANTES do bloco-base nao importa: o seletor repete [data-rm-tema] */
-      const semReg = !window.RMSistema.TEMAS[slug];
-      const reg = window.RMSistema.registrarTema(slug, window.RM_TEMAS[slug]);   /* o que o carregador da base faz */
-      const tabEl = document.getElementById('tab-' + tab); let erro = '';
-      try { window.RMLayout.attach(tabEl, slug); window.RMSistema.attach(tabEl, slug); window.RMNav.attach(tabEl, slug); } catch (e) { erro = e.message; }
-      await new Promise(r => setTimeout(r, 400));
-      const acento = getComputedStyle(document.documentElement).getPropertyValue('--rm-accent').trim();
-      return { antes, semReg, reg, erro, acento, tema: document.documentElement.getAttribute('data-rm-tema') };
-    }, { slug: m.slug, tab: m.tab, titulo: m.titulo });
-    ok(r.antes.rt && !r.antes.sis && r.semReg === true && r.reg === true && r.erro === '' && r.tema === m.slug, `${m.slug}: tema carregado antes do sistema fica em RM_TEMAS, é registrado depois e monta sem erro`);
-    ok(r.acento === (m.slug === 'fisiopatologia' ? '#A8493A' : '#4B5FA8'), `${m.slug}: a cor própria da matéria vence a base mesmo com o CSS do tema carregado antes (${r.acento})`);
-    ok(f.errs.length === 0, `${m.slug}: 0 erros`);
-    await f.ctx.close();
-  }
 
   await br.close(); srv.close();
   console.log(`\n${falhas === 0 ? 'TUDO OK' : 'FALHAS'}: ${total - falhas}/${total}`);

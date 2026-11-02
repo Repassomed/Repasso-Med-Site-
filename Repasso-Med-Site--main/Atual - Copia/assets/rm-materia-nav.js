@@ -62,7 +62,7 @@
   function q1(r, sel) { return r.querySelector(sel); }
   function qa(r, sel) { return Array.prototype.slice.call(r.querySelectorAll(sel)); }
   function limpo(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
-  function curto(t) { return limpo(t).replace(/\s*\(.*\)\s*$/, ''); }
+  function curto(t) { return limpo(t).replace(/^\d{1,2}\s*[·.:–-]\s+/, '').replace(/\s*\(.*\)\s*$/, ''); }   // o número do título («09 · AINEs») já aparece na insígnia: não repetir
   function plural(n, um, varios) { return n + ' ' + (n === 1 ? um : varios); }
   function esc(s) { return (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/[^\w-]/g, '\\$&'); }
   function raf2(fn) { requestAnimationFrame(function () { requestAnimationFrame(fn); }); }

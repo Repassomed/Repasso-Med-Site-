@@ -1,10 +1,6 @@
 /* Nova Era · Fisiopatología I e Farmacología I · fluxo COMPLETO (rm-pilot → layout → tema → navegação → caneta V2 → marcações) em Chromium real.
-   «LIGAÇÃO SIMULADA»: a lista CANDIDATAS e o carregamento dos arquivos de tema (assets/temas/rm-tema-<slug>.js/.css) ainda não existem no rm-pilot.js da main
-   (arquivo global do Claude 4). Este teste serve um rm-pilot.js em memória com exatamente essas duas mudanças (o disco não é tocado):
-     1. CANDIDATAS += ['fisiopatologia', 'farmacologia']
-     2. antes de RMSistema.attach(tab, slug): carrega assets/temas/rm-tema-<slug>.css e .js
-   Quando o Claude 4 integrar de verdade, os dois `ok('ligação simulada…')` abaixo passam a dizer «no código» e o resto continua igual.
-   Supabase simulado (harness-ink); gate do piloto simulado por page.route; 0 rede real; 0 escrita real. Conta administradora de teste.
+   LIGAÇÃO REAL: usa o rm-pilot.js, rm-materia-sistema.js/.css e rm-materia-nav.js do repositório, sem nenhuma simulação do carregador (os temas estão em RMSistema.TEMAS).
+   Supabase simulado (harness-ink); gate do piloto (get-pilot-flags) simulado por page.route; 0 rede real; 0 escrita real. Conta administradora de teste.
    Uso: export NODE_PATH=$(npm root -g); node tools/qa/nova-era/integracao-fisio1-farmaco1.test.cjs [--rapido]   (RM_SHOTS=/pasta salva capturas)
    Prova, por matéria e largura (320·360·390 · 768·1024 · 1440):
      A  fluxo real: layout + tema da matéria + navegação + caneta V2 ligados pelo rm-pilot; 0 erro JS.
@@ -31,22 +27,14 @@ const MATERIAS = [
 const SO = process.env.RM_SO || '';
 const LARG = process.env.RM_LARG ? process.env.RM_LARG.split(',').map(x => x.split('x').map(Number)) : RAPIDO ? [[390, 844], [1440, 900]] : [[320, 640], [360, 740], [390, 844], [768, 1024], [1024, 768], [1440, 900]];
 
-/* rm-pilot.js em memória com a LIGAÇÃO SIMULADA (o arquivo em disco não é tocado) */
-function pilotSimulado(slugs) {
-  let s = fs.readFileSync(path.join(ROOT, 'assets/rm-pilot.js'), 'utf8'); const aplicado = {};
-  const a = /var CANDIDATAS = \[([^\]]*)\];/.exec(s);
-  if (a && !slugs.every(x => a[1].includes("'" + x + "'"))) { s = s.replace(a[0], a[0].replace(/\];$/, ', ' + slugs.map(x => "'" + x + "'").join(', ') + '];')); aplicado.candidatas = 'SIMULADA'; } else aplicado.candidatas = a ? 'NO-CODIGO' : 'NAO-ENCONTRADA';
-  const t = "return carregarSistema().then(function (ok) {";
-  if (/assets\/temas\/rm-tema-|rm-tema-' \+ slug/.test(s)) aplicado.tema = 'NO-CODIGO';
-  else if (s.includes(t)) { s = s.replace(t, "return carregarSistema().then(function (ok) { return window.__carregarTemaTeste(slug).then(function () { return ok; }); }).then(function (ok) {"); aplicado.tema = 'SIMULADA'; } else aplicado.tema = 'NAO-ENCONTRADA';
-  return { src: s, aplicado };
-}
-
 (async () => {
   const srv = await serve(); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
-  const pil = pilotSimulado(MATERIAS.map(m => m.slug));
-  console.log('ligação no rm-pilot.js:', JSON.stringify(pil.aplicado));
-  ok(pil.aplicado.candidatas !== 'NAO-ENCONTRADA' && pil.aplicado.tema !== 'NAO-ENCONTRADA', 'o rm-pilot.js da main tem os pontos de ligação esperados (CANDIDATAS e ligarSistema); ligação ' + JSON.stringify(pil.aplicado));
+  const pilSrc = fs.readFileSync(path.join(ROOT, 'assets/rm-pilot.js'), 'utf8');
+  const cand = /var CANDIDATAS = \[([^\]]*)\];/.exec(pilSrc);
+  ok(cand && MATERIAS.every(m => cand[1].includes("'" + m.slug + "'")), 'rm-pilot.js: CANDIDATAS contém fisiopatologia e farmacologia (ligação no código, sem simulação)', cand && cand[1]);
+  const sisSrc = fs.readFileSync(path.join(ROOT, 'assets/rm-materia-sistema.js'), 'utf8');
+  ok(MATERIAS.every(m => new RegExp("'" + m.slug + "': \{").test(sisSrc)), 'rm-materia-sistema.js: TEMAS tem os dois descritores inline (mesmo padrão de Medicina Familiar)');
+  ok(!fs.existsSync(path.join(ROOT, 'assets/temas')), 'não há segunda fonte do tema (assets/temas removido)');
 
   async function abrir(m, w, h, { fluxo = true, hl = null, seed = '' } = {}) {
     const ctx = await br.newContext({ viewport: { width: w, height: h }, hasTouch: w < 900, isMobile: false });
@@ -57,14 +45,8 @@ function pilotSimulado(slugs) {
       let v; Object.defineProperty(window, 'RM_SB', { configurable: true, get() { return v; }, set(x) { if (x && x.auth) { x.auth.getSession = async () => ({ data: { session: { access_token: 'tok-test', user: { id } } } }); } v = x; } });
       let cat; Object.defineProperty(window, 'RM_CATALOGO', { configurable: true, get() { return cat; }, set(x) { cat = x; if (Array.isArray(x) && !x.some(c => c.slug === slug)) x.push({ slug, tab, title: titulo, sub: '' }); } });
       if (hlRows) window.__HL = hlRows;
-      window.__carregarTemaTeste = function (s) {
-        const css = h => new Promise(o => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = h; l.onload = () => o(); l.onerror = () => o(); document.head.appendChild(l); });
-        const js = u => new Promise(o => { const e = document.createElement('script'); e.src = u; e.async = false; e.onload = () => o(); e.onerror = () => o(); document.head.appendChild(e); });
-        return css('assets/temas/rm-tema-' + s + '.css').then(() => js('assets/temas/rm-tema-' + s + '.js')).then(() => { try { if (window.RM_TEMAS && window.RM_TEMAS[s] && window.RMSistema && !window.RMSistema.TEMAS[s]) window.RMSistema.registrarTema(s, window.RM_TEMAS[s]); } catch (e) {} });
-      };
     }, [JOSE, m.slug, m.tab, m.titulo, hl]);
     await p.route('**/get-pilot-flags*', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ slug: m.slug, layout: fluxo, visual: fluxo, audio: false, pen: fluxo }) }));
-    await p.route('**/assets/rm-pilot.js*', r => r.fulfill({ status: 200, contentType: 'text/javascript', body: pil.src }));
     await p.route('https://fonts.googleapis.com/**', r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
     await p.route(/youtube(-nocookie)?\.com|ytimg\.com/, r => r.fulfill({ status: 200, contentType: 'text/html', body: '' }));
     await p.goto(`${base}/p.html?slug=${m.slug}&tab=${m.tab}&uid=${JOSE}&wait=1800${seed ? '&seed=' + seed : ''}`, { timeout: 90000 });
