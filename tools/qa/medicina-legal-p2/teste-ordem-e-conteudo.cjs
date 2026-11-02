@@ -23,12 +23,14 @@ const res = []; const ok = (w, modo, nome, c, det) => { res.push({ ok: !!c }); c
       const cont = Object.fromEntries(['medlegb03', 'medlegb04', 'medlegb10', 'medlegb05', 'medlegb06'].map(i => { const s = document.getElementById(i); return [i, [s.querySelectorAll('.quiz-item').length, s.querySelectorAll('.flashcard').length]]; }));
       const banco = [...document.querySelectorAll('#bancomedleg h3.ml-bank-sub')].map(h => h.textContent.replace(/\s+/g, ' ').trim().slice(0, 28));
       const stats = [...document.querySelectorAll('#bancomedleg .ml-bank-stats span, #bancofcmedleg .ml-bank-stats span')].map(s => s.textContent);
-      return { ids: secs.map(s => s.id), marc, h3, cont, banco, stats, nq: document.querySelectorAll('#bancomedleg .quiz-item').length, nfm: document.querySelectorAll('#bancofcmedleg .fc-grid:not([data-shuffle]) .flashcard').length };
+      const q8 = [...document.querySelectorAll('#medlegb03 .quiz-item')].find(x => x.textContent.includes('Respecto de la muerte súbita')); const txt = document.getElementById('medlegb04').textContent + document.getElementById('medlegb10').textContent;
+      return { q8tag: q8 && q8.querySelector('.quiz-tag').textContent, sinCifras: !/6 meses|unos 6 meses/.test(txt) && !/hacen falta unos 15 kg/.test(txt), nexamen: document.querySelectorAll('#bancomedleg .quiz-tag.oficial:not(.vf)').length, ids: secs.map(s => s.id), marc, h3, cont, banco, stats, nq: document.querySelectorAll('#bancomedleg .quiz-item').length, nfm: document.querySelectorAll('#bancofcmedleg .fc-grid:not([data-shuffle]) .flashcard').length };
     });
     ok(W, modo, 'ordem das 21 seções', JSON.stringify(D.ids) === JSON.stringify(ESPERADO), D.ids.join(' '));
     ok(W, modo, 'marcadores BLOQUE 08→12', MARC.every(([i, t]) => (D.marc[i] || '').startsWith('— ' + t)), D.marc);
     ok(W, modo, 'contagens por bloco (preguntas, flashcards)', Object.entries(QF).every(([i, c]) => JSON.stringify(D.cont[i]) === JSON.stringify(c)), D.cont);
     ok(W, modo, 'banco: 244 preguntas, grupos em ordem 01→17; mazo 389', D.nq === 244 && D.nfm === 389 && D.banco.map(x => x.slice(0, 9)).join() === Array.from({ length: 17 }, (_, i) => 'Bloque ' + String(i + 1).padStart(2, '0')).join(), { nq: D.nq, nfm: D.nfm, stats: D.stats });
+    ok(W, modo, 'pregunta 8: complementaria (sin prueba de examen); sin cifras retiradas', D.q8tag === 'Pregunta complementaria' && D.sinCifras, { q8: D.q8tag, sinCifras: D.sinCifras });
     ok(W, modo, 'numeração dos subtítulos h3 contínua (bloque 10 e 12)', D.h3.medlegb10.join() === '1 · ,2 · ,3 · ,4 · ,5 · ,6 · ,7 · ' && D.h3.medlegb06.join() === '1 · ,2 · ,3 · ,4 · ', D.h3);
     if (modo === 'controle') {
       // imagens dos blocos 08–12 carregam
