@@ -1,0 +1,17 @@
+/* REPASSO MED · rm-tema-histologia-i.css — identidade visual da Nova Era para esta matéria.
+   Histología I · hematoxilina (violeta) y plano de corte.
+   ARQUIVO GERADO por tools/qa/nova-era-temas/gerar-css.py (não editar à mão: altere o gerador).
+   SÓ variáveis --rm-* dentro de `html.rm-sis[data-rm-tema="…"]`; nenhuma regra toca conteúdo, ids ou dados do aluno.
+   O seletor repete [data-rm-tema] para vencer o bloco-base de rm-materia-sistema.css em qualquer ordem de carga.
+   Notas P4 e cartões de recursos NÃO mudam com a matéria (regra do sistema): não são redefinidos aqui. */
+html.rm-sis[data-rm-tema="histologia-i"][data-rm-tema] {
+  --rm-surface: #E0DBF0; --rm-side: #EFECF8; --rm-side-edge: #B9B0DC; --rm-side-card: #DCD6EF; --rm-side-rule: #CBC3E6;
+  --rm-accent: #5B4FA8; --rm-accent-d: #3A307A; --rm-marker: #E9B949;
+  --rm-tag-radius: 11px; --rm-vig-radius: 16px; --rm-vig-ring: #CFC6EA;
+  --rm-pal-1: #6A55B8; --rm-pal-1-head: #574697; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #EDEBF6; --rm-pal-1-ffg: #282046; --rm-pal-1-zebra: #F9F8FC; --rm-pal-1-edge: #CCC5E7; --rm-pal-1-line: #E7E4F4; --rm-pal-1-strong: #423572; --rm-pal-1-tint: #F2F0F9; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #C2467A; --rm-pal-2-head: #9F3964; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F8E9EF; --rm-pal-2-ffg: #4A1B2E; --rm-pal-2-zebra: #FDF8FA; --rm-pal-2-edge: #EAC0D2; --rm-pal-2-line: #F5E1EA; --rm-pal-2-strong: #782B4C; --rm-pal-2-tint: #FAEEF3; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #2F6FB0; --rm-pal-3-head: #275B90; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #E6EEF6; --rm-pal-3-ffg: #122A43; --rm-pal-3-zebra: #F7F9FC; --rm-pal-3-edge: #B8CEE4; --rm-pal-3-line: #DEE8F2; --rm-pal-3-strong: #1D456D; --rm-pal-3-tint: #ECF2F8; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #2F8A86; --rm-pal-4-head: #27716E; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #E6F1F0; --rm-pal-4-ffg: #123433; --rm-pal-4-zebra: #F7FAFA; --rm-pal-4-edge: #B8D7D6; --rm-pal-4-line: #DEECEC; --rm-pal-4-strong: #1D5653; --rm-pal-4-tint: #ECF4F4; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #C48A1C; --rm-pal-5-head: #A17117; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F8F1E4; --rm-pal-5-ffg: #4A340B; --rm-pal-5-zebra: #FDFAF6; --rm-pal-5-edge: #EBD7B2; --rm-pal-5-line: #F6ECDB; --rm-pal-5-strong: #7A5611; --rm-pal-5-tint: #FAF4EB; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #D5603F; --rm-pal-6-head: #AF4F34; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAECE8; --rm-pal-6-ffg: #512418; --rm-pal-6-zebra: #FDF9F7; --rm-pal-6-edge: #F1C9BE; --rm-pal-6-line: #F8E6E0; --rm-pal-6-strong: #843C27; --rm-pal-6-tint: #FBF1EE; --rm-pal-6-tag: #fff;
+}
