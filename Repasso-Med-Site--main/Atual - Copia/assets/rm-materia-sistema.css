@@ -89,6 +89,20 @@ html.rm-sis[data-rm-tema] {
   --rm-pal-r: #8A7A55; --rm-pal-r-head: #13314F; --rm-pal-r-hfg: #fff; --rm-pal-r-first: #EEF1F5; --rm-pal-r-ffg: #13314F; --rm-pal-r-zebra: #F6F8FA; --rm-pal-r-edge: #DCD3BE; --rm-pal-r-line: #E2E7EE; --rm-pal-r-strong: #6B5D3A; --rm-pal-r-tint: #F4F1EA; --rm-pal-r-tag: #fff;
 }
 
+/* Medicina Familiar (Nova Era) · superfície areia quente, acento petróleo, agrupa por Unidad I · II · III (cada Unidad uma família de cor).
+   Bloco escrito DEPOIS da base técnica (mesma especificidade ⇒ vence). Asignatura = «aba de pasta familiar» (ver «8»). Sem ilustrações: viñeta = logo em quadrado arredondado. */
+html.rm-sis[data-rm-tema="medicina-familiar"] {
+  --rm-surface: #EFE3D1; --rm-side: #F8F0E4; --rm-side-edge: #DCC8A8; --rm-side-card: #EDE0CC; --rm-side-rule: #E2D1B6;
+  --rm-accent: #2A8789; --rm-accent-d: #1C6466; --rm-marker: #E9B949;
+  --rm-tag-radius: 10px; --rm-vig-radius: 20px; --rm-vig-ring: #DCC8A8;
+  --rm-pal-1: #2F6AA3; --rm-pal-1-head: #245384; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #E2ECF7; --rm-pal-1-ffg: #173A5E; --rm-pal-1-zebra: #F3F7FC; --rm-pal-1-edge: #B6CCE4; --rm-pal-1-line: #DAE5F1; --rm-pal-1-strong: #1D4A78; --rm-pal-1-tint: #E9F0F8; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #2A8789; --rm-pal-2-head: #1C6466; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #DFF0F0; --rm-pal-2-ffg: #124648; --rm-pal-2-zebra: #F2FAFA; --rm-pal-2-edge: #AFD6D6; --rm-pal-2-line: #D5ECEC; --rm-pal-2-strong: #145052; --rm-pal-2-tint: #E3F2F2; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #C98A1B; --rm-pal-3-head: #C98A1B; --rm-pal-3-hfg: #2A1E04; --rm-pal-3-first: #FBEFD3; --rm-pal-3-ffg: #5A3C06; --rm-pal-3-zebra: #FDF7EA; --rm-pal-3-edge: #E6CD8E; --rm-pal-3-line: #F2E4BB; --rm-pal-3-strong: #7A5408; --rm-pal-3-tint: #FBF1DA; --rm-pal-3-tag: #2A1E04;
+  --rm-pal-4: #9A6A22; --rm-pal-4-head: #7B531A; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #F3E8D3; --rm-pal-4-ffg: #4A3010; --rm-pal-4-zebra: #FAF6EE; --rm-pal-4-edge: #DDC7A0; --rm-pal-4-line: #EBDDC4; --rm-pal-4-strong: #5E4012; --rm-pal-4-tint: #F6ECDC; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #8F5AA3; --rm-pal-5-head: #744587; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #EEE4F3; --rm-pal-5-ffg: #432452; --rm-pal-5-zebra: #F8F3FA; --rm-pal-5-edge: #D3BDDD; --rm-pal-5-line: #E7DBEE; --rm-pal-5-strong: #5C3170; --rm-pal-5-tint: #F1E9F5; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #3F8F4F; --rm-pal-6-head: #2C6C3A; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #E1F1E4; --rm-pal-6-ffg: #1B4526; --rm-pal-6-zebra: #F3FAF5; --rm-pal-6-edge: #B5D8BC; --rm-pal-6-line: #D7ECDB; --rm-pal-6-strong: #1F5530; --rm-pal-6-tint: #E6F3E8; --rm-pal-6-tag: #fff;
+}
+
 /* ---------------------------------------------------------------------
    3 · CAPÍTULO → variáveis locais (--cap-*). Qualquer componente dentro de [data-rm-cap] as herda.
    --------------------------------------------------------------------- */
@@ -601,6 +615,8 @@ html.rm-sis .rm-l2-cover {
   font-family: var(--rm-f-ui); color: var(--rm-title);
 }
 @media (min-width: 1000px) { html.rm-sis .rm-l2-cover { grid-template-columns: minmax(0, 1fr) 380px; } }
+/* tema sem medalhões: a capa usa a largura toda (sem coluna vazia à direita) */
+@media (min-width: 1000px) { html.rm-sis .rm-l2-cover[data-rm-sin-meds] { grid-template-columns: minmax(0, 1fr); } }
 html.rm-sis .rm-l2-cover > .rm-l2-res, html.rm-sis .rm-l2-cover > .rm-sis-label, html.rm-sis .rm-l2-cover > .rm-sis-idx { grid-column: 1 / -1; }
 html.rm-sis .rm-l2-cover-body { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 html.rm-sis .rm-l2-eyebrow { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin: 0; font: 400 14px var(--rm-f-ui); letter-spacing: 0; text-transform: none; color: var(--rm-tx2); }
@@ -735,6 +751,8 @@ html.rm-sis #materias-container .rm-sis-s section.container .rm-sis-tag {
   font: 400 11px var(--rm-f-mono); letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;
 }
 html.rm-sis #materias-container .rm-sis-s section.container .rm-sis-tag b { color: var(--rm-gold); font-weight: 700; }
+/* asignatura de Medicina Familiar: «aba de pasta familiar» (cantos de cima arredondados, número dourado) */
+html.rm-sis[data-rm-tema="medicina-familiar"] #materias-container .rm-sis-s section.container .rm-sis-tag { clip-path: none; border-radius: 10px 10px 0 0; padding: 0 16px 0 12px; height: 30px; }
 html.rm-sis #materias-container .rm-sis-s section.container > h2 {
   margin: 0; font: 700 clamp(1.9rem, 4.6vw, 2.75rem)/1.02 var(--rm-f-title); letter-spacing: -.025em; color: var(--rm-title); text-wrap: balance;
   max-width: none; padding: 0; border: 0; display: flow-root;
@@ -874,6 +892,9 @@ html.rm-sis #rm-gl-note {
 html.rm-sis #rm-gl-note b:first-child { font-family: var(--rm-f-title); color: #3B2E06; }
 html.rm-sis #rm-gl-note b { color: #3B2E06; } html.rm-sis #rm-gl-note em { color: #5A430A; }
 html.rm-sis #rm-gl-note .s2-gl-close { color: #7A5C06; font-family: var(--rm-f-mono); }
+
+/* glossário tocável do conteúdo (.rmc-gl, ex.: Medicina Familiar): o «?» é um <b> sobre círculo navy; a regra de negrito do resumo o pintava de navy (invisível) */
+html.rm-sis #materias-container .rm-sis-s .rmc-gl > b:not(.rmc-gl-close) { color: #fff; }
 
 /* ---------------------------------------------------------------------
    10 · C-05 · tabela TB2-A (aba «NN TABLA» + cabeçalho forte da família do capítulo)

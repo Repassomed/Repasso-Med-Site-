@@ -58,6 +58,19 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Medicina Familiar (Nova Era): ids de seção sem o padrão `<slug>-bNN`. Os 8 temas são blocos numerados na ORDEM do conteúdo (01–08); o marcador do conteúdo repete «TEMA 06»
+     em Crecimiento e Desarrollo, por isso a numeração do sistema vem da ordem real, não do texto do marcador. Cada Unidad compartilha uma família de cor (cap):
+     I azul/petróleo · II ámbar/ocre/ciruela · III verde. O resto (confusiones, banco, flashcards, cierre) é «repaso». */
+  var MF_ORDEM = ['aps', 'principios', 'familiograma', 'apgar', 'crisis', 'crecimiento', 'desarrollo', 'educacion'];
+  var MF_CAP   = { aps: 1, principios: 2, familiograma: 3, apgar: 4, crisis: 5, crecimiento: 6, desarrollo: 6, educacion: 6 };
+  var MF_REPASO = { 'portada-medfam': 'R', 'banco-medfam': 'B', 'flashcards-medfam': 'F', 'cierre-medfam': 'C' };
+  function clasificarMF(id) {
+    var i = MF_ORDEM.indexOf(id);
+    if (i >= 0) return { tipo: 'bloque', n: pad(i + 1), num: i + 1, cap: MF_CAP[id], vig: null };
+    if (MF_REPASO[id]) return { tipo: 'repaso', n: MF_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   var TEMAS = {
     'semiologia-ii': {
       vigDir: 'assets/img/semio2/vig/',
@@ -82,6 +95,25 @@
         aud:  'Escucha e identifica hallazgos'
       },
       clasificar: clasificar
+    },
+    'medicina-familiar': {
+      vigDir: null,                                       // sem viñetas ilustradas: cada bloque usa o logo oficial (rm-sis-vig--logo), em quadrado arredondado
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Atención primaria · Familia · Niño',          // subtítulo da capa (o do catálogo, «Flashcards · Resumen . Cuestiones», descreve o formato, não a matéria)
+      miga: ['Guía de estudio', 'Medicina Familiar'],
+      unidades: {
+        I:   { nombre: 'Atención primaria', color: '#2F6AA3' },
+        II:  { nombre: 'Familia',           color: '#C98A1B' },
+        III: { nombre: 'Niño y salud',      color: '#3F8F4F' }
+      },
+      medallones: [],                                     // sem ilustrações aprovadas ainda: a capa não leva medalhões
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloques',
+        aud:  'Escucha e identifica hallazgos'
+      },
+      clasificar: clasificarMF
     }
   };
 
@@ -301,10 +333,11 @@
     var h1 = q1(S.tab, '.s2-hero h1'), ov = q1(S.tab, '.s2-hero .ov');
     var em = h1 && q1(h1, 'em');
     var titulo = h1 ? limpo(Array.prototype.filter.call(h1.childNodes, function (n) { return n.nodeType === 3; }).map(function (n) { return n.textContent; }).join(' ')) : '';
+    var tm = (S && S.tema) || {};
     return {
       titulo: titulo || (window.RM_CATALOGO && S.cat && S.cat.title) || '',
-      sub: em ? limpo(em.textContent).replace(/\.$/, '') : '',
-      miga: ov ? limpo(ov.textContent).split('·').map(limpo).filter(Boolean) : []
+      sub: em ? limpo(em.textContent).replace(/\.$/, '') : (tm.sub || ''),              // matéria sem hero próprio (.s2-hero): o descritor do tema fornece subtítulo e migalhas
+      miga: ov ? limpo(ov.textContent).split('·').map(limpo).filter(Boolean) : (tm.miga || [])
     };
   }
 
@@ -348,6 +381,7 @@
       });
     }
     /* medalhões */
+    if (!(tema.medallones || []).length) sa(cp, 'data-rm-sin-meds', '1');       // tema sem medalhões (ainda sem ilustrações aprovadas): a capa usa a largura toda
     var me = ui('div', 'rm-sis-meds', { 'aria-hidden': 'true' });
     (tema.medallones || []).forEach(function (m) {
       var w = ui('div', 'rm-sis-med');
@@ -357,7 +391,7 @@
       var t = el('span'); t.textContent = m.t; w.appendChild(t);
       me.appendChild(w);
     });
-    cp.insertBefore(me, body ? body.nextSibling : cp.firstChild);
+    if (me.childNodes.length) cp.insertBefore(me, body ? body.nextSibling : cp.firstChild);
 
     indice(tema);
   }
