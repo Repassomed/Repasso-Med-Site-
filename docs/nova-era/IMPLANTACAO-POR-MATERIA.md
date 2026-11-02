@@ -21,7 +21,7 @@ Como são botões separados: layout pode estar em `all` e caneta em `off` (ou o 
 | 1 | O servidor só liberava por **listas de contas de teste** (`RM_PILOT_LAYOUT_UIDS`, `RM_PILOT_PEN_UIDS`) | impossível chegar a um aluno sem colocar cada um nas listas | as listas ficam **só para o piloto (Semiología II)**; fora dele a etapa 1 (`preview`) é **só administrador** e a etapa 2 (`all`) libera por **acesso à matéria**, sem listar aluno nenhum |
 | 2 | A caneta (V2) só montava para `BETA_UIDS`/`study_tools_beta`, **globalmente** (qualquer matéria) | liberar a caneta a um aluno a daria em todas as matérias | a V2 passa a ter o **modo «por matéria»**: o aluno comum só a recebe quando o servidor libera a matéria aberta; nas outras ela fica **invisível e inerte** e o marcador/goma antigos continuam |
 | 3 | `penLiberada()` só valia para refinamentos físicos, sem montar a V2 | caneta «liberada» não aparecia | o mesmo `pen:true` agora também monta a V2 (por matéria) |
-| 4 | O tema visual exige descritor aprovado por matéria; Medicina Familiar não tem | ligar o tema numa matéria sem descritor | continua **por cima do layout** e com botão próprio; sem descritor, o tema lança erro interno **capturado**: o layout fica, o tema não entra (testado) |
+| 4 | O tema visual (sistema visual de Semiología II) exige um descritor por matéria; Medicina Familiar não tinha | ligar o tema numa matéria sem descritor deixava só o Layout V2 (sem cores, títulos de bloco, cartões nem tabelas do sistema) | **Medicina Familiar agora tem tema próprio** (§12); a camada continua **por cima do layout**, com botão próprio (`visual_stage`) |
 | 5 | A resposta do servidor não consultava se o aluno **tem acesso** à matéria | não era possível liberar «para quem já tem acesso» | `get-pilot-flags` consulta `my_active_subjects` (a mesma view do `get-materia`) com o token do aluno |
 | 6 | Listas de variáveis do Netlify exigem **deploy** para mudar | «volta rápida» lenta | os estágios vivem no banco: **voltar = um `update`, sem deploy** (vale na próxima abertura da matéria) |
 
@@ -29,7 +29,7 @@ Como são botões separados: layout pode estar em `all` e caneta em `off` (ou o 
 
 1. O site só **pergunta** ao servidor para as matérias da lista `CANDIDATAS` de `assets/rm-pilot.js` (1.ª fechadura, por PR: hoje Semiología II e **Medicina Familiar**). Outras matérias: zero requisição.
 2. `get-pilot-flags` (servidor) valida o token do aluno, lê a linha da matéria em `rm_materia_rollout` e decide cada botão: `off` ⇒ ninguém; `preview` ⇒ **só administrador** (`profiles.is_admin` da própria conta); `all` ⇒ **aluno com acesso e administrador**. Qualquer erro, linha ausente, tabela ausente ou valor estranho ⇒ **tudo `false`** (corpo idêntico, não revela o motivo). **Só lê.**
-3. `rm-pilot.js`: `layout:true` ⇒ monta o Layout V2; `visual:true` ⇒ tema (se houver descritor); `pen:true` avisa o `rm-tools-v2.js`.
+3. `rm-pilot.js`: `layout:true` ⇒ monta o Layout V2; `visual:true` ⇒ tema da matéria (descritor em `rm-materia-sistema.js`; sem descritor, o layout fica e o tema não entra); `pen:true` avisa o `rm-tools-v2.js`.
 4. `rm-tools-v2.js`: beta de sempre ⇒ **idêntico a hoje**. Aluno comum ⇒ só monta com `pen:true` da matéria aberta, em modo por matéria; ao trocar para outra matéria, a V2 **some e desarma** (sem ler nem gravar traços/notas) e as ferramentas antigas voltam.
 5. Semiología II (piloto) **não muda**: continua pelas listas de conta, e a tabela é ignorada para ela.
 6. **Fora do piloto, as variáveis antigas `RM_LAYOUT_SLUGS` / `RM_PEN_SLUGS` / `RM_VISUAL_SLUGS` não são mais lidas.** Matéria `off` (ou sem linha, ou tabela ausente) fica desligada para todos, inclusive para as contas de teste, mesmo que alguma dessas variáveis ainda exista no Netlify.
@@ -64,7 +64,7 @@ Outras matérias (sem requisição), Semiología II (piloto), login, compras e a
 - **«Caneta para todos» = a caixa de ferramentas V2 inteira** (marcador V2, caneta, goma, desfazer, «Mis apuntes») naquela matéria. Se a ideia for liberar só parte, é uma decisão antes do passo 5.
 - A resposta do servidor é lida **uma vez por abertura da matéria**: depois de `all`, o aluno recebe ao abrir/recarregar; depois de `off`, idem. Sessões abertas não mudam sozinhas.
 - Cache de módulos do navegador: `rm-tools-v2.js` subiu para `?v=2026103001`.
-- Tema visual: não há descritor aprovado de Medicina Familiar; `visual_stage` fica `off`.
+- Tema visual de Medicina Familiar: paleta e agrupamento são decisão de design **proposta** nesta PR (§12); `visual_stage` liga junto com o layout na prévia do administrador.
 - Uma matéria nova só entra depois de **PR própria** que a coloque em `CANDIDATAS` (e a porta do pré-voo aberta).
 
 ## 7 · Testes (somente simulação; nada de aluno real lido ou gravado)
@@ -119,3 +119,7 @@ Pedido ao auditor: adaptar S1–S5 e C ao modo «tabela de estágios» (a PR tra
 **Leitura da política de `profiles` (somente leitura, catálogo do banco, 1/11/2026):** RLS ativo. Há 4 políticas de `SELECT`, todas permissivas (somam-se): `profiles_self_select` e `profiles_select_own` (`id = auth.uid()`), `profiles_select` (`id = auth.uid() OR is_admin()`) e `profiles_select_admin` (`is_admin()`). Logo, **uma conta comum lê apenas o próprio perfil**; quem é administrador pode ler todos (por isso a função consulta `?id=eq.<uid da própria conta>` e só aceita **exatamente uma** linha com `is_admin = true`). `anon` tem o privilégio de tabela, mas nenhuma política o libera (`auth.uid()` nulo e `is_admin()` falso ⇒ nenhuma linha). `is_admin()` é `SECURITY DEFINER` e lê `profiles.is_admin` da própria conta. Nenhuma escrita é feita por esta função.
 
 **Regra final, igual no código, na migração e neste documento:** fora de Semiología II — `off` desliga para todos (inclusive administrador); `preview` é só administrador; `all` libera somente os alunos com acesso à matéria e o administrador; layout, caneta e tema são colunas independentes; as listas `RM_PILOT_*_UIDS` valem só para Semiología II.
+
+## 12 · Medicina Familiar completa (tema próprio + caneta + layout) — o que entrou
+
+Ver `docs/nova-era/MEDICINA-FAMILIAR-COMPLETA.md` (tema, o que o tema esconde, capturas comparáveis com Semiología II, testes e limites) e `docs/nova-era/ROTEIRO-MEDICINA-FAMILIAR.md` (um único comando para a prévia do administrador e a volta). Próximas matérias: `docs/nova-era/PROXIMAS-MATERIAS-EM-GRUPOS.md`.
