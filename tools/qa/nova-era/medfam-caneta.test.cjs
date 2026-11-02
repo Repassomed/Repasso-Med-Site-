@@ -15,7 +15,7 @@ const ALVOS = { paragrafo: () => [...document.querySelectorAll('#aps p')].filter
 (async () => {
   const rec = L.reconciliar(); const m = rec.ativas.find(x => x.slug === SLUG); const srv = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
   const cena = { env: { RM_PILOT_LAYOUT_UIDS: S.U.JOSE, RM_PILOT_PEN_UIDS: S.U.JOSE, RM_PILOT_VISUAL_UIDS: S.U.JOSE }, acessos: {}, tabela: { [SLUG]: { layout_stage: 'preview', pen_stage: 'preview', visual_stage: 'preview' } } };
-  for (const W of (RAPIDO ? [1440] : [1440, 768, 390])) {
+  for (const W of (process.env.RM_LARGURAS ? process.env.RM_LARGURAS.split(',').map(Number) : RAPIDO ? [1440] : [1440, 768, 390])) {
     console.log(`\n▸ [${W}px] layout + tema + caneta · Medicina Familiar`);
     const ctx = await br.newContext({ viewport: { width: W, height: W < 500 ? 844 : 900 }, hasTouch: W < 900 }); const page = await ctx.newPage(); const errs = []; page.on('pageerror', e => errs.push(String(e).slice(0, 140)));
     await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => r.abort());
@@ -44,7 +44,7 @@ const ALVOS = { paragrafo: () => [...document.querySelectorAll('#aps p')].filter
     /* dedo com a caneta armada NÃO desenha */
     if (W < 900) {
       await page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); const n0 = await tracos();
-      const r = await page.evaluate(() => { const p = [...document.querySelectorAll('#aps p')].find(p => !p.closest('[data-rm-ui],table') && p.checkVisibility() && p.getBoundingClientRect().top > 150 && p.getBoundingClientRect().bottom < innerHeight - 60); const b = p.getBoundingClientRect(); return { x: b.left + 40, y: b.top + 12 }; });
+      const r = await page.evaluate(() => { const p = [...document.querySelectorAll('#aps p')].find(p => !p.closest('[data-rm-ui],table,.rmc-margin') && p.checkVisibility() && p.textContent.trim().length > 160); p.scrollIntoView({ block: 'center' }); const b = p.getBoundingClientRect(); return { x: b.left + 40, y: Math.max(160, Math.min(innerHeight - 100, b.top + 12)) }; }); await page.waitForTimeout(700);
       const cdp = await ctx.newCDPSession(page); const tp = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] });
       await tp('touchStart', r.x, r.y); for (let i = 1; i <= 8; i++) await tp('touchMove', r.x + i * 14, r.y + (i % 2 ? 4 : -4)); await tp('touchEnd', r.x + 112, r.y); await page.waitForTimeout(700); await cdp.detach().catch(() => {});
       ok((await tracos()) === n0, 'dedo com a caneta armada NÃO desenha (rola)', [n0, await tracos()]);

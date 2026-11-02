@@ -98,7 +98,7 @@ const fecha = c => c.ctx.close().catch(() => {});
 (async () => {
   const rec = L.reconciliar(); const M = s => rec.ativas.find(x => x.slug === s);
   const srv = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
-  for (const W of (RAPIDO ? [1440] : [1440, 390])) {
+  for (const W of (process.env.RM_LARGURAS ? process.env.RM_LARGURAS.split(',').map(Number) : RAPIDO ? [1440] : [1440, 390])) {
     const t = `[${W}px] `;
 
     sec(t + '0 · começa DESLIGADO: tabela em off ⇒ aluno e José veem a matéria como hoje');
@@ -250,7 +250,8 @@ const fecha = c => c.ctx.close().catch(() => {});
       ok(difPos.length === 0 && refPos.tracos.length >= 3, `17 · ${refPos.tracos.length} traços e ${refPos.grifos.length} grifos ficam na MESMA caixa e posição (≤ 0,02) depois do layout + tema (UI derivada não desloca âncora)`, difPos.slice(0, 3));
       const sis = await c.page.evaluate(() => ({ rmSis: document.documentElement.classList.contains('rm-sis'), tema: document.documentElement.getAttribute('data-rm-tema'), nav: document.documentElement.hasAttribute('data-rm-nav') }));
       ok(m.layout && sis.rmSis && sis.tema === 'medicina-familiar' && sis.nav, '17 · administrador: layout + tema próprio + navegação montados', [m.layout, sis]);
-      ok(m.v2 && m.caixa && m.piloto === true && !m.escopo, '17 · caneta V2 viva em Medicina Familiar com os refinamentos físicos (os mesmos do piloto)', m);
+      /* com o tema, no celular (< 700 px) a caixa de ferramentas vira o botão da faixa + dock embaixo (o MESMO comportamento aprovado em Semiología II): fica fechada até abrir */
+      ok(m.v2 && (m.caixa || W < 700) && m.piloto === true && !m.escopo, '17 · caneta V2 viva em Medicina Familiar com os refinamentos físicos (os mesmos do piloto)', m);
       ok(mesmosDados(c.ref, m) && m.pintados === c.ref.pintados, `17 · ${m.pintados} grifos pintados; ${m.linhas.tracos} traços e ${m.linhas.notas} nota gravados, idênticos`, [c.ref, m]);
       await c.page.evaluate(() => window.RMNav.go({ view: 'block', block: 'aps' })); await c.page.waitForTimeout(1800);   // a capa não tem parágrafo: abre o primeiro bloco
       await c.page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); await c.page.evaluate(() => { window.__writes.length = 0; });
@@ -268,7 +269,7 @@ const fecha = c => c.ctx.close().catch(() => {});
       await fecha(c); }
     { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('all', 'all', 'all')) }; await preparar(br, base, M(MF), c);
       const m = await ligar(c, 6500); const sis = await c.page.evaluate(() => document.documentElement.getAttribute('data-rm-tema'));
-      ok(m.layout && sis === 'medicina-familiar' && m.v2 && m.escopo && m.caixa, '17 · (só quando José liberar `all`) o aluno com acesso recebe layout + tema + caneta por matéria', [m.layout, sis, m.v2, m.escopo]);
+      ok(m.layout && sis === 'medicina-familiar' && m.v2 && m.escopo && (m.caixa || W < 700), '17 · (só quando José liberar `all`) o aluno com acesso recebe layout + tema + caneta por matéria', [m.layout, sis, m.v2, m.escopo]);
       ok(mesmosDados(c.ref, m) && m.pintados === c.ref.pintados && m.tracosDesenhados === c.ref.linhas.tracos, 'dados do aluno idênticos', [c.ref, m]); await fecha(c); }
 
     if (W === 1440) { sec('13-estático · a identificação vem da sessão de AGORA, nunca do cache do RMTools');
