@@ -40,6 +40,22 @@
 
 ---
 
+## AUTOAUDITORIA DO EXECUTOR
+
+- [ ] Revisei o diff final e o escopo; nenhum arquivo ou conteúdo foi alterado por acidente.
+- [ ] Conferi fontes permitidas, ciência e leis editoriais aplicáveis; registrei origem e destino do conteúdo novo.
+- [ ] Conferi duplicatas, ids, questões, gabaritos, flashcards e contagens quando aplicável.
+- [ ] Conferi preservação de grifos, notas e traços em somente leitura quando aplicável.
+- [ ] Executei os testes pertinentes e descrevi falhas, limites e pendências sem esconder nada.
+
+**Evidências e resultado da minha autoauditoria:**
+
+**O que não consegui verificar:**
+
+> O coordenador ChatGPT fará a auditoria independente depois desta entrega. Outro Claude não é revisor obrigatório. Só José dá merge.
+
+---
+
 ## 🟣 CARTÃO DE MERGE
 
 <!--
