@@ -90,9 +90,8 @@
   /* banco geral / todos os flashcards / revisão: as MESMAS entidades dos blocos (fora das contagens e sem isolar). Pelo id (convenção do
      piloto) OU pelo marcador `data-rm-agrega` que a matéria declara — os ids das outras matérias não seguem a convenção. */
   var REUNE = { test: function (id) { var e = document.getElementById(id); return /banco|flashcards/i.test(id) || !!(e && e.hasAttribute('data-rm-agrega')); } };
-  function ehInfografia(f) {
-    return !!(q1(f, 'figcaption') && q1(f, 'img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image'));
-  }
+  function ehInfografia(f) { return !!(window.RMModes && window.RMModes.ehInfografia && window.RMModes.ehInfografia(f)); }   // regra única (#631)
+  function infografiasDe(sec) { return window.RMModes && window.RMModes.infografias ? Array.prototype.slice.call(window.RMModes.infografias(sec)) : []; }
   function tagPregunta(item) {                      // proveniência REAL gravada pelo conteúdo (nunca inventada)
     var t = q1(item, '[class*="tag"]:not([data-rm-ui])');
     return limpo(t && t.textContent);
@@ -108,8 +107,8 @@
     infografias: {
       icon: 'img', un: 'infografía', pl: 'infografías', corto: 'Infografías',
       desc: 'Esquemas y mapas para repasar cada bloque con la vista.',
-      nodes: function (sec) { return qa(sec, 'figure').filter(ehInfografia); },
-      n: function (sec) { return qa(sec, 'figure').filter(ehInfografia).length; }
+      nodes: function (sec) { return infografiasDe(sec); },
+      n: function (sec) { return infografiasDe(sec).length; }
     },
     preguntas: {
       icon: 'q', un: 'pregunta', pl: 'preguntas', corto: 'Preguntas',
@@ -352,7 +351,7 @@
     if (e.mode === 'preguntas') qa(s.el, '.quiz-section').forEach(function (g) {
       var antFig = false;
       for (var c = g.firstElementChild; c && !(c.tagName === 'H3' || c.tagName === 'H4' || /quiz-item/.test(c.className || '') || q1(c, '.quiz-item')); c = c.nextElementSibling) {
-        var ehFig = c.tagName === 'FIGURE' || !!q1(c, 'figure'), ehNota = antFig && /(^|\s)rmc-note(\s|$)/.test(c.className || '');
+        var ehFig = c.tagName === 'FIGURE' || !!q1(c, 'figure') || ehInfografia(c) || infografiasDe(c).length > 0, ehNota = antFig && /(^|\s)rmc-note(\s|$)/.test(c.className || '');
         if (ehFig || ehNota) c.setAttribute('data-rm-off', '');
         antFig = ehFig;
       }
