@@ -62,8 +62,8 @@ const FOTO = `(function(){var q=function(s,r){return Array.prototype.slice.call(
       ok(m.slug, W, 'nenhuma escrita (Supabase simulado)', !E.w.length, E.w);
       const O = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, vw: document.documentElement.clientWidth }));
       ok(m.slug, W, 'sem rolagem horizontal', O.sw <= O.vw + 1, O);
-      const U = await p.evaluate(() => [...document.querySelectorAll('.rm-sis-ulab b')].map(b => b.textContent));
-      ok(m.slug, W, 'rótulos de grupo do índice sem «UNIDAD ·» (depende da base do Claude 4)', !U.some(t => /UNIDAD\s*·/.test(t)), U);
+      const U = await p.evaluate(() => [...document.querySelectorAll('.rm-sis-ulab b')].filter(b => b.getClientRects().length).map(b => b.textContent));
+      ok(m.slug, W, 'rótulos de grupo do índice visíveis sem «UNIDAD ·» nem «UNIDAD» vazio', !U.some(t => /^UNIDAD\s*(·)?\s*$/.test(t)), U);
       ok(m.slug, W, 'sem erro de página/console', !r.errs.length && !r.externas.filter(u => !/fonts\.(g|gs)/.test(u)).length, { errs: r.errs, ext: r.externas.length });
       if (SHOTS) {
         fs.mkdirSync(SHOTS, { recursive: true });

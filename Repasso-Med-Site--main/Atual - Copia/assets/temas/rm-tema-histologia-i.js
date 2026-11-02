@@ -15,7 +15,7 @@
       if (n === 14) return { tipo: 'repaso', n: 'F', num: -1, cap: 'r', vig: null };
       if (n === 0)  return { tipo: 'otro',   n: '·', num: -1, cap: 'g', vig: null };   // histo00: âncora vazia e oculta (placeholder)
     }
-    if (id === 'histo-imgnote') return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+    if (id === 'histo-imgnote') return { tipo: 'repaso', n: 'C', num: -1, cap: 'r', vig: null };   // bibliografía y créditos: fecha o repaso (como o «cierre» de Medicina Familiar)
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
   var tema = {

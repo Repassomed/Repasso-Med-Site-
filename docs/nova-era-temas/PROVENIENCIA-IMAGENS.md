@@ -1,6 +1,6 @@
 # Proveniência das 20 vinhetas da Nova Era (AP I Práctica · Histología I)
 
-Todas são **recortes quadrados (480×480 webp) de imagens que já fazem parte da própria matéria** (as mesmas que o aluno vê nos blocos). Nenhuma imagem externa, nenhuma gerada, nenhum original alterado: os arquivos novos ficam em `assets/img/<pasta>/vig/`. Recorte = centro (x, y) e lado, em fração da altura da imagem de origem. Revisão visual feita sobre folha de contato em 17/11/2026 (ver Cartão de Merge para limitações).
+Todas são **recortes quadrados (480×480 webp) de imagens que já fazem parte da própria matéria** (as mesmas que o aluno vê nos blocos). Nenhuma imagem externa, nenhuma gerada, nenhum original alterado: os arquivos novos ficam em `assets/img/<pasta>/vig/`. Recorte = centro (x, y) e lado, em fração da altura da imagem de origem. Revisão visual feita sobre folha de contato em 02/11/2026 (ver Cartão de Merge para limitações).
 
 ## AP I Práctica — `assets/img/anatoprat/vig/` (8)
 | Vinheta | Bloco | Origem (assets/img/anatoprat/) | Recorte (x, y, lado) |

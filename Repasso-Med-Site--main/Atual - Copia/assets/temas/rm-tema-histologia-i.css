@@ -15,3 +15,7 @@ html.rm-sis[data-rm-tema="histologia-i"][data-rm-tema] {
   --rm-pal-5: #C48A1C; --rm-pal-5-head: #A17117; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F8F1E4; --rm-pal-5-ffg: #4A340B; --rm-pal-5-zebra: #FDFAF6; --rm-pal-5-edge: #EBD7B2; --rm-pal-5-line: #F6ECDB; --rm-pal-5-strong: #7A5611; --rm-pal-5-tint: #FAF4EB; --rm-pal-5-tag: #fff;
   --rm-pal-6: #D5603F; --rm-pal-6-head: #AF4F34; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAECE8; --rm-pal-6-ffg: #512418; --rm-pal-6-zebra: #FDF9F7; --rm-pal-6-edge: #F1C9BE; --rm-pal-6-line: #F8E6E0; --rm-pal-6-strong: #843C27; --rm-pal-6-tint: #FBF1EE; --rm-pal-6-tag: #fff;
 }
+/* a matéria não tem «UNIDAD X» no marcador: o módulo rotularia o grupo único dos blocos como «UNIDAD ·». Esse rótulo (índice e menu lateral) não é mostrado;
+   o índice mostra «N bloques» e o grupo REPASO mantém o seu rótulo. Mesma solução já usada por Farmacología I. */
+html.rm-sis[data-rm-tema="histologia-i"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="histologia-i"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }

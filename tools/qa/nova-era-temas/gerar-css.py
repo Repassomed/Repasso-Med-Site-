@@ -47,7 +47,10 @@ for slug, t in TEMAS.items():
          f"  --rm-tag-radius: {t['tagr']}; --rm-vig-radius: {t['vigr']}; --rm-vig-ring: {t['ring']};"]
     for i, b in enumerate(t['pals'], 1): L.append(pal(i, b))
     L.append('}')
-    L.append('')
+    L += ['/* a matéria não tem «UNIDAD X» no marcador: o módulo rotularia o grupo único dos blocos como «UNIDAD ·». Esse rótulo (índice e menu lateral) não é mostrado;',
+          '   o índice mostra «N bloques» e o grupo REPASO mantém o seu rótulo. Mesma solução já usada por Farmacología I. */',
+          f'html.rm-sis[data-rm-tema="{slug}"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab {{ display: none; }}',
+          f'html.rm-sis[data-rm-tema="{slug}"] .rm-l2-tree-tools + .rm-sis-ulab--side {{ display: none; }}', '']
     p = os.path.join(ROOT, f'rm-tema-{slug}.css')
     open(p, 'w', encoding='utf8').write('\n'.join(L))
     print('escrito', os.path.normpath(p))

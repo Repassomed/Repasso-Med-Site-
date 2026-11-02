@@ -15,3 +15,7 @@ html.rm-sis[data-rm-tema="anatomia-patologica-practica"][data-rm-tema] {
   --rm-pal-5: #2F6FB0; --rm-pal-5-head: #275B90; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #E6EEF6; --rm-pal-5-ffg: #122A43; --rm-pal-5-zebra: #F7F9FC; --rm-pal-5-edge: #B8CEE4; --rm-pal-5-line: #DEE8F2; --rm-pal-5-strong: #1D456D; --rm-pal-5-tint: #ECF2F8; --rm-pal-5-tag: #fff;
   --rm-pal-6: #4C8F4F; --rm-pal-6-head: #3E7541; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #EAF2EA; --rm-pal-6-ffg: #1D361E; --rm-pal-6-zebra: #F8FBF8; --rm-pal-6-edge: #C2D9C3; --rm-pal-6-line: #E2EDE3; --rm-pal-6-strong: #2F5931; --rm-pal-6-tint: #EFF5EF; --rm-pal-6-tag: #fff;
 }
+/* a matéria não tem «UNIDAD X» no marcador: o módulo rotularia o grupo único dos blocos como «UNIDAD ·». Esse rótulo (índice e menu lateral) não é mostrado;
+   o índice mostra «N bloques» e o grupo REPASO mantém o seu rótulo. Mesma solução já usada por Farmacología I. */
+html.rm-sis[data-rm-tema="anatomia-patologica-practica"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="anatomia-patologica-practica"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
