@@ -9,3 +9,5 @@ html.rm-sis[data-rm-tema="farmacologia"][data-rm-tema] {
 html.rm-sis[data-rm-tema="farmacologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
 /* o mesmo no menu lateral: o rótulo de grupo único logo depois das ferramentas do índice («UNIDAD ») não é mostrado; REPASO fica */
 html.rm-sis[data-rm-tema="farmacologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+/* e nas telas de «modo» (Infografías · Preguntas · Flashcards · Videos), onde o 1.º grupo de blocos também ganharia «UNIDAD ·» */
+html.rm-sis[data-rm-tema="farmacologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
