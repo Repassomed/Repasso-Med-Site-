@@ -18,9 +18,10 @@ const L = require('../ensaio-layout/lib.cjs'); const D = require('../pre-voo/lib
 const RAPIDO = process.argv.includes('--rapido'); const SO = process.argv.slice(2).find(a => !a.startsWith('--')) || '';
 let n = 0, ko = 0; const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 420) : ''); } return !!c; };
 const MATERIAS = [
-  { slug: 'fisiopatologia', titulo: 'Fisiopatología I', hl: ['introduccion-fisio', 'inflamacion'], bloco: 'introduccion-fisio', bloco2: 'inflamacion', blocoQuiz: 'inflamacion', blocoImg: 'introduccion-fisio', fcSec: 'flashcards-fisio', modos: ['Infografías', 'Preguntas', 'Flashcards'] },
-  { slug: 'farmacologia', titulo: 'Farmacología I', hl: ['pk', 'pd'], bloco: 'pk', bloco2: 'pd', blocoQuiz: 'pk', blocoImg: 'pk', fcSec: 'flashcards-grales', modos: ['Infografías', 'Preguntas', 'Flashcards', 'Videos'] }
+  { slug: 'fisiopatologia', titulo: 'Fisiopatología I', hl: ['introduccion-fisio', 'inflamacion'], bloco: 'introduccion-fisio', bloco2: 'inflamacion', blocoQuiz: 'inflamacion', blocoImg: 'introduccion-fisio', fcSec: 'flashcards-fisio', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] },
+  { slug: 'farmacologia', titulo: 'Farmacología I', hl: ['pk', 'pd'], bloco: 'pk', bloco2: 'pd', blocoQuiz: 'pk', blocoImg: 'pk', fcSec: 'flashcards-grales', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards'], ['Videos', 'videos']] }
 ];
+if (process.env.RM_CONTROLE_NEGATIVO) MATERIAS[0].modos.push(['Videos', 'videos']);   /* controle negativo: Fisio I NÃO tem vídeos; pedir o modo tem de REPROVAR (modo ausente não conta como aprovado) */
 (async () => {
   const rec = L.reconciliar(); const srv = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
   const ENV = { RM_PILOT_LAYOUT_UIDS: S.U.JOSE, RM_PILOT_PEN_UIDS: S.U.JOSE, RM_PILOT_VISUAL_UIDS: S.U.JOSE };
@@ -78,18 +79,59 @@ const MATERIAS = [
       const hlAgora = await p.evaluate(() => [...document.querySelectorAll('#materias-container span.rm-hl')].map(e => e.textContent));
       ok(JSON.stringify(hlAgora) === JSON.stringify(hlRef), `6 · os ${hlRef.length} grifos ficam IGUAIS com o layout novo (mesmos spans, mesmo texto)`, [hlRef.length, hlAgora.length]);
 
-      /* 2 · navegação */
+      /* 2 · navegação ESTRITA: próximo → abre o bloco seguinte; «índice» → o índice volta a abrir; anterior → volta; nada «opcional» */
       await irBloco(p, m.bloco);
-      const v1 = await p.evaluate(() => { const e = window.RMNav.estado && RMNav.estado(); return e || null; });
-      const aberto = await p.evaluate(id => { const s = document.getElementById(id); return !!s && s.checkVisibility() && s.getBoundingClientRect().height > 200; }, m.bloco);
-      ok(aberto, `2 · RMNav.go abre o bloco «${m.bloco}» (visível)`, v1);
-      const prox = await p.evaluate(async () => { const b = document.querySelector('.rm-nav-pager [data-dir="next"], .rm-nav-next, [data-rm-next]'); if (!b) return 'sem-botão'; b.click(); await new Promise(r => setTimeout(r, 1500)); return 'ok'; });
-      ok(prox === 'ok' || prox === 'sem-botão', '2 · botão «bloque siguiente» (' + prox + ')');
+      const est0 = await p.evaluate(() => RMNav.estado());
+      ok(est0 && est0.view === 'block' && est0.block === m.bloco, `2 · RMNav.go abre o bloco «${m.bloco}»`, est0);
+      const nx = await p.evaluate(() => { const b = document.querySelector('.rm-nav-pager .rm-nav-next'); if (!b) return null; let g = null; try { g = JSON.parse(b.getAttribute('data-go')); } catch (e) {} return { go: g, vis: b.checkVisibility() }; });
+      ok(nx && nx.go && nx.go.view === 'block' && nx.go.block && nx.go.block !== m.bloco, '2 · o bloco «' + m.bloco + '» TEM botão «Bloque siguiente» com destino próprio', nx);
+      const proximo = nx && nx.go && nx.go.block;
+      if (proximo) {
+        await p.evaluate(() => { const b = document.querySelector('.rm-nav-pager .rm-nav-next'); b.scrollIntoView({ block: 'center' }); }); await p.waitForTimeout(300);
+        await p.locator('.rm-nav-pager .rm-nav-next').click(); await p.waitForTimeout(1700);
+        const e1 = await p.evaluate(([a, b]) => ({ est: RMNav.estado(), novo: (() => { const s = document.getElementById(b); return !!s && s.checkVisibility() && s.getBoundingClientRect().height > 100; })(), antigo: (() => { const s = document.getElementById(a); return !s || !s.checkVisibility() || s.getBoundingClientRect().height < 5; })() }), [m.bloco, proximo]);
+        ok(e1.est.view === 'block' && e1.est.block === proximo && e1.novo && e1.antigo, `2 · clicar em «siguiente» abre «${proximo}» (visível) e fecha «${m.bloco}»`, e1);
+        const pv = await p.evaluate(() => { const b = document.querySelector('.rm-nav-pager .rm-nav-prev'); let g = null; try { g = b && JSON.parse(b.getAttribute('data-go')); } catch (e) {} return g; });
+        ok(pv && pv.block === m.bloco, '2 · no bloco seguinte, «anterior» aponta de volta para «' + m.bloco + '»', pv);
+        await p.locator('.rm-nav-pager .rm-nav-idx').click(); await p.waitForTimeout(1500);
+        const ix = await p.evaluate(() => ({ est: RMNav.estado(), cards: document.querySelectorAll('.rm-sis-card').length, visiveis: [...document.querySelectorAll('.rm-sis-card')].filter(c => c.checkVisibility()).length }));
+        ok(ix.est.view === 'index' && ix.cards >= 10 && ix.visiveis >= 10, `2 · «Volver al índice general» reabre o índice (${ix.visiveis} cartões visíveis)`, ix);
+        const idx2 = await p.evaluate(async b => {
+          const c = document.querySelector('.rm-sis-card[data-rm-go="' + b + '"]'); if (!c) return { achou: false };
+          const expansivel = c.classList.contains('rm-ix-card'); c.scrollIntoView({ block: 'center' }); c.click(); await new Promise(r => setTimeout(r, 1000));
+          let comando = null; if (expansivel) { const st = document.querySelector('.rm-ix-panel .rm-ix-start'); comando = !!st && st.checkVisibility() && c.getAttribute('aria-expanded') === 'true'; if (st) { st.click(); await new Promise(r => setTimeout(r, 1800)); } } else await new Promise(r => setTimeout(r, 800));
+          const e = RMNav.estado(); const s2 = document.getElementById(b); return { achou: true, expansivel, comando, est: e, vis: !!s2 && s2.checkVisibility() && s2.getBoundingClientRect().height > 100 }; }, proximo);
+        ok(idx2.achou && (!idx2.expansivel || idx2.comando === true), '2 · o índice reaberto tem o cartão do bloco seguinte' + (idx2.expansivel ? ' (expansível: abre o painel com «Empezar por el inicio del bloque»)' : ' (link direto)'), idx2);
+        ok(idx2.achou && idx2.est.view === 'block' && idx2.est.block === proximo && idx2.vis, '2 · a partir do índice reaberto o bloco seguinte volta a abrir', idx2);
+      }
+
+      /* 2b · MODOS prometidos: cada um tem de APARECER (item de menu), ABRIR (índice do modo), listar blocos com a contagem certa e MOSTRAR só o recurso ao abrir um bloco */
       await p.evaluate(() => RMNav.go({ view: 'index' })); await p.waitForTimeout(900);
-      const idx = await p.evaluate(() => ({ cards: document.querySelectorAll('.rm-sis-card').length, cap: !!document.querySelector('.rm-sis-idx-h, .rm-sis-hero, .rm-sis-capa') }));
-      ok(idx.cards >= 10, '2 · o índice mostra os cartões dos blocos (' + idx.cards + ')', idx);
-      const mi = await p.evaluate(async modos => { const out = {}; for (const mo of modos) { const b = [...document.querySelectorAll('[data-rm-ui] button, [data-rm-ui] a')].find(e => e.textContent.trim().toLowerCase().startsWith(mo.toLowerCase().slice(0, 7)) && e.checkVisibility()); out[mo] = !!b; } return out; }, m.modos);
-      ok(Object.values(mi).some(Boolean), '2 · atalhos de modo (' + Object.keys(mi).filter(k => mi[k]).join(', ') + ')', mi);
+      for (const [rotulo, chave] of m.modos) {
+        const item = await p.evaluate(k => !!document.querySelector('.rm-l2-item[data-view="' + k + '"]'), chave);
+        ok(item, `2b · modo «${rotulo}» APARECE no menu (item data-view="${chave}")`);
+        if (!item) continue;
+        await p.evaluate(k => document.querySelector('.rm-l2-item[data-view="' + k + '"]').click(), chave); await p.waitForTimeout(1500);
+        const mi = await p.evaluate(() => { const e = RMNav.estado(); const box = document.querySelector('.rm-nav-modeidx'); const cards = box ? [...box.querySelectorAll('.rm-sis-card')] : []; return { est: e, h2: box && (box.querySelector('h2') || {}).textContent, resumo: box && (box.querySelector('.rm-nav-mh p') || {}).textContent, n: cards.length, vis: cards.filter(c => c.checkVisibility()).length }; });
+        ok(mi.est && mi.est.view === 'modeidx' && mi.est.mode === chave && mi.h2 === rotulo && mi.vis >= 1, `2b · «${rotulo}» ABRE: índice do modo com ${mi.vis} blocos (${(mi.resumo || '').slice(0, 60)})`, mi);
+        /* contagem de CADA cartão = contagem real do recurso no bloco; soma = total do cabeçalho */
+        const cont = await p.evaluate(k => { const R = RMNav._RES[k]; const box = document.querySelector('.rm-nav-modeidx'); let soma = 0, erros = []; const cards = [...box.querySelectorAll('.rm-sis-idx-grid .rm-sis-card')].filter(c => { try { return JSON.parse(c.getAttribute('data-go')).view === 'modeblk'; } catch (e) { return false; } });
+          cards.forEach(c => { const g = JSON.parse(c.getAttribute('data-go')); const real = R.n(document.getElementById(g.block)); const txt = (c.querySelector('i') || {}).textContent || ''; const nn = +((txt.match(/^(\d+)/) || [])[1]); soma += real; if (nn !== real || real < 1) erros.push([g.block, nn, real]); });
+          const tot = +(((box.querySelector('.rm-nav-mh p') || {}).textContent || '').match(/^(\d+)/) || [])[1]; return { cards: cards.length, soma, tot, erros }; }, chave);
+        ok(cont.cards >= 1 && cont.erros.length === 0 && cont.soma === cont.tot, `2b · «${rotulo}»: ${cont.cards} cartões, cada contagem = a do recurso real, soma ${cont.soma} = total do cabeçalho ${cont.tot}`, cont);
+        /* abre o 1.º bloco do modo: só o recurso fica à vista, na quantidade certa */
+        const blk = await p.evaluate(async k => { const R = RMNav._RES[k]; const c = [...document.querySelectorAll('.rm-nav-modeidx .rm-sis-idx-grid .rm-sis-card')].find(x => { try { return JSON.parse(x.getAttribute('data-go')).view === 'modeblk'; } catch (e) { return false; } }); const g = JSON.parse(c.getAttribute('data-go')); c.scrollIntoView({ block: 'center' }); c.click(); await new Promise(r => setTimeout(r, 1800));
+          const sec = document.getElementById(g.block); const e = RMNav.estado(); const vis = x => x.checkVisibility() && x.getBoundingClientRect().height > 0;
+          const nodes = R.nodes(sec); const nVis = nodes.filter(vis).length; const dentro = x => nodes.some(n => n.contains(x));
+          const itens = { infografias: 'figure', preguntas: '.quiz-item', flashcards: '.flashcard', videos: 'details.video-collapsible' }[k];
+          const recVis = [...sec.querySelectorAll(itens)].filter(x => vis(x) || (k === 'flashcards' && x.closest('.fc-grid') === null)).length;
+          const proseVis = [...sec.querySelectorAll(':scope > p, :scope > h3, :scope > table, :scope > ul')].filter(x => !x.closest('[data-rm-ui]') && !dentro(x) && vis(x)).length;
+          return { est: e, bloco: g.block, esperado: R.n(sec), nodes: nodes.length, nVis, recVis, proseVis, secVis: vis(sec) }; }, chave);
+        const contOk = chave === 'flashcards' ? blk.nVis >= 1 : (chave === 'videos' || chave === 'preguntas' ? blk.nVis >= 1 : blk.recVis === blk.esperado);
+        ok(blk.est.view === 'modeblk' && blk.est.mode === chave && blk.secVis && contOk && blk.proseVis === 0, `2b · «${rotulo}» no bloco «${blk.bloco}»: ${blk.esperado} ${chave} reais, ${blk.nVis}/${blk.nodes} à vista, texto corrido escondido (${blk.proseVis} parágrafos soltos visíveis)`, blk);
+        await p.evaluate(() => RMNav.go({ view: 'index' })); await p.waitForTimeout(700);
+      }
+      ok(m.modos.length === (m.slug === 'farmacologia' ? 4 : 3), '2b · todos os modos prometidos foram exercitados (' + m.modos.map(x => x[0]).join(', ') + ')');
 
       /* 3 · questões */
       await irBloco(p, m.blocoQuiz);
