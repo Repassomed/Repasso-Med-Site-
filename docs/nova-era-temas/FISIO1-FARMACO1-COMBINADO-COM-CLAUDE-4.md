@@ -1,26 +1,25 @@
-# Fisiopatología I e Farmacología I · o que combinar com o Claude 4 (arquivos globais)
+# Fisiopatología I e Farmacología I · como entram no carregador da Nova Era (e o que depende do Claude 4)
 
-**Data:** 02/11/2026 · **Autora:** Claude 2 · Não foi editado nenhum arquivo global. Este documento é o pedido exato; o canal (comentário na PR dele ou mensagem do José) é o que estiver aberto no dia.
+**Data:** 02/11/2026 · **Autora:** Claude 2 · **Branch:** `claude/nova-era-fisio1-farmaco1-2026-11`
 
-## 1 · Quem é quem (correção) e a convenção adotada
-- **Claude 4** (base da Nova Era: carregador `rm-pilot.js`, módulo do tema, tabela `rm_materia_rollout`): branches `claude/modest-rubin-th2yir-*` (ex.: `…-medfam-completa`, WIP de 02/11 02:50, não mesclada).
-- **Claude 1** (auditor): branches `claude/charming-maxwell-ah7nxj-*`. A branch `claude/charming-maxwell-ah7nxj-nova-era-ap1practica-histologia1` (temas de AP I Práctica e Histología I, 02/11) **é do Claude 1, não do Claude 4**. *(A versão anterior deste documento a atribuía ao Claude 4: erro corrigido.)*
+## 1 · Quem é quem
+- **Claude 4** (base da Nova Era: `rm-pilot.js`, módulo do tema, `rm_materia_rollout`): branches `claude/modest-rubin-th2yir-*`. Tarefa atual: **#631** (fechar a caixa de ferramentas ao navegar e modo Infografías), em `rm-layout.js`, `rm-modes.js`, `rm-materia-nav.js` e, se aplicável, `rm-materia-sistema.js`.
+- **Claude 1** (auditor): branches `claude/charming-maxwell-ah7nxj-*` (inclui `…ap1practica-histologia1` e `…medlegal-p2-628`; **não** são do Claude 4).
 - **Claude 2** (esta branch): Fisiopatología I e Farmacología I.
 
-**Convenção de arquivos:** o Claude 1 usa `assets/temas/rm-tema-<slug>.js` + `.css` com o descritor em `window.RM_TEMAS[slug]` (e `RMSistema.registrarTema` se o sistema já existe); adotei **o mesmo padrão** para não haver dois formatos: `assets/temas/rm-tema-fisiopatologia.*`, `assets/temas/rm-tema-farmacologia.*`, vinhetas em `assets/img/fisio/vig/` e `assets/img/farmaco/vig/`. O CSS usa `html.rm-sis[data-rm-tema="<slug>"][data-rm-tema]`.
+## 2 · Estado da base
+A **PR #627 (Medicina Familiar completa) já foi mesclada** na `main` (merge `259049b7`). Esta branch contém a `main` atual. O carregador do Claude 4 registra cada matéria **dentro** de `RMSistema.TEMAS` (`rm-materia-sistema.js`) com um bloco de variáveis em `rm-materia-sistema.css` e o slug em `CANDIDATAS` de `rm-pilot.js`. As duas matérias seguem **exatamente essa convenção** (os arquivos `assets/temas/*` que existiam em versões anteriores desta branch foram retirados: há uma só fonte).
 
-**O que o Claude 4 faz de diferente (WIP `medfam-completa`, lido em 02/11):** o tema de Medicina Familiar entra **dentro** de `rm-materia-sistema.js` (`TEMAS['medicina-familiar']` + `clasificarMF`) e um bloco de variáveis em `rm-materia-sistema.css`; aceita `vigDir: null`, `sub` e `miga` no descritor e marca `data-rm-sin-meds` quando não há medalhões; o documento `PROXIMAS-MATERIAS-EM-GRUPOS.md` põe **Fisiopatología I + Farmacología I como o grupo G1** (PR de preparação do grupo = código do tema + `CANDIDATAS` + testes + capturas) e prevê parametrizar por slug `navegador.test`, `medfam-caneta` e `capturas`. **Não existe ainda um carregador de arquivos de tema.** Por isso a integração tem duas formas equivalentes, a escolher por ele:
-  - **(a) carregador:** `rm-pilot.js` carrega `assets/temas/rm-tema-<slug>.css/.js` antes de `RMSistema.attach` (é o que `integracao-fisio1-farmaco1.test.cjs` simula em memória);
-  - **(b) inline:** copiar os dois descritores para `TEMAS` (o `clasificar` e os mapas são autocontidos; o CSS passa para `rm-materia-sistema.css`). Os dois descritores já seguem a mesma interface (`vigDir`, `logo`, `unidades`, `medallones`, `recursos`, `clasificar`).
+## 3 · O que esta PR toca em arquivos globais (mínimo)
+| Arquivo | Mudança | Risco de conflito com a #631 |
+|---|---|---|
+| `assets/rm-materia-sistema.js` | 2 funções de classificação + 2 entradas em `TEMAS` (bloco novo, depois de `medicina-familiar`); `curto()` sem o prefixo numérico; no menu lateral, o rótulo do bloco perde o prefixo numérico repetido (1 linha no laço que já decora a insígnia) | baixo: hunks separados; se a #631 mexer no laço do menu, resolver juntando |
+| `assets/rm-materia-sistema.css` | 2 blocos de identidade no fim do arquivo | nenhum (fim do arquivo) |
+| `assets/rm-materia-nav.js` | 1 linha: `curto()` sem o prefixo numérico | baixo (linha única) |
+| `assets/rm-pilot.js` | `CANDIDATAS` += 2 slugs; `VER` 2026110201 → 2026110202 | **se a #631 também subir `VER`, ficar com o maior valor** e igualar a tag do `index.html` |
+| `index.html` | só a tag `rm-pilot.js?v=` | idem |
+Não foram tocados: `rm-layout.js`, `rm-modes.js`, `rm-tools-v2.js`, `get-pilot-flags.js`, migrations.
 
-## 2 · Ligações que só ele pode fazer (arquivos globais dele)
-1. **`assets/rm-pilot.js`** (forma (a)): em `ligarSistema()`, antes de `RMSistema.attach(tab, slug)`, carregar `assets/temas/rm-tema-<slug>.css` e `.js` (falha fechada: sem eles o módulo lança «sin tema» e o layout fica) e, se `RM_TEMAS[slug]` existir e `TEMAS[slug]` não, chamar `RMSistema.registrarTema(slug, RM_TEMAS[slug])`. Incluir `'fisiopatologia'` e `'farmacologia'` em `CANDIDATAS`; subir `VER` e a tag do `index.html`.
-2. **Banco (`rm_materia_rollout`)**: linhas das duas matérias, tudo `off` (SQL do José; não executado aqui).
-3. **Correção dos números duplicados de Farmacología I** (`assets/rm-materia-sistema.js`/`rm-materia-nav.js`): os títulos do conteúdo já começam com o número («01 · Farmacocinética»); o módulo mostra o número também na etiqueta, então ele aparece duas vezes (etiqueta «01» + título «01 · …»; migalha «BLOQUE 10 · 10 · …»). Mudança mínima sugerida em `curto(t)` (e onde a migalha usa o título): remover o prefixo `^\d{1,2}\s*[·.\-–]\s*` quando for igual ao número da etiqueta (`s.c.n`). Não altera o conteúdo (só o texto da UI derivada).
-4. **Rótulo de grupo sem unidade** (opcional, melhora para todas as matérias sem «UNIDAD X»): quando nenhum bloco tem unidade, `indice()` e a lateral deveriam omitir o rótulo «UNIDAD ·». Hoje Farmacología I o oculta por CSS próprio (`rm-tema-farmacologia.css`); se ele corrigir no módulo, o CSS fica inofensivo.
-
-## 3 · O que já está pronto e testado do meu lado
-Ver `coordination/source-packs/nova-era-fisiopatologia-farmacologia-i-preparo-v1.md` §A (teste isolado 121/121).
-
-## 4 · Quando a base estiver pronta
-Rodo a bateria completa (porta, layout, navegação, caneta, vídeos, grifos, telas pequenas, tablet e computador), faço a autoauditoria e abro a PR completa com Cartão de Merge. Nada é ativado.
+## 4 · Dependências registradas
+1. **#631 (Claude 4):** ao entrar na `main`, sincronizar esta branch (`git merge origin/main`), resolver `VER`/tag e repetir `real-fisio1-farmaco1.test.cjs` + `visual-conteudo.test.cjs`. O modo **Infografías já aparece** nas duas matérias (as imagens são `figure` com `figcaption`: 39 em Fisio I e 52 em Farmaco I; testado). Se a #631 mudar a detecção/contagem, reconferir que os números e a navegação ida/volta continuam sem duplicatas.
+2. **Linhas em `rm_materia_rollout`:** SQL só do José, depois do merge e do deploy (`docs/nova-era/ROTEIRO-FISIO1-FARMACO1.md`). Nada foi executado.
