@@ -98,7 +98,7 @@ const fecha = c => c.ctx.close().catch(() => {});
 (async () => {
   const rec = L.reconciliar(); const M = s => rec.ativas.find(x => x.slug === s);
   const srv = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
-  for (const W of (RAPIDO ? [1440] : [1440, 390])) {
+  for (const W of (process.env.RM_LARGURAS ? process.env.RM_LARGURAS.split(',').map(Number) : RAPIDO ? [1440] : [1440, 390])) {
     const t = `[${W}px] `;
 
     sec(t + '0 · começa DESLIGADO: tabela em off ⇒ aluno e José veem a matéria como hoje');
@@ -230,13 +230,47 @@ const fecha = c => c.ctx.close().catch(() => {});
     { const c = { persona: 'ALUNO', w: W, cena: mkCena(null) }; await preparar(br, base, M(MF), c); const m = await ligar(c);
       ok(!m.layout && !m.v2 && m.legada && mesmosDados(c.ref, m), 'tabela inexistente: tudo como hoje', m); await fecha(c); }
 
-    sec(t + '12 · tema visual em all numa matéria SEM descritor aprovado: o layout fica, o tema simplesmente não entra');
+    sec(t + '12 · tema visual PRÓPRIO de Medicina Familiar (visual_stage): o layout fica e o tema entra, dados intactos');
     { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('all', 'off', 'all')) }; await preparar(br, base, M(MF), c);
-      const m = await ligar(c); await c.page.waitForTimeout(1500);
+      const m = await ligar(c, 6500);
       const sis = await c.page.evaluate(() => ({ rmSis: document.documentElement.classList.contains('rm-sis'), tema: document.documentElement.getAttribute('data-rm-tema') }));
-      ok(m.layout && !sis.rmSis && !sis.tema, 'layout montado; sem tema (não há descritor) e sem estrago', [m.layout, sis]);
-      ok(mesmosDados(c.ref, m) && c.errs.length === 0 && semEscritaIndevida(m).length === 0, 'dados idênticos; 0 erro JS', [m.escritas, c.errs]);
+      ok(m.layout && sis.rmSis && sis.tema === 'medicina-familiar', 'aluno com acesso (layout=all, tema=all): layout + tema próprio de Medicina Familiar', [m.layout, sis]);
+      ok(!m.v2 && m.legada, 'a caneta nova continua desligada (coluna antiga à vista)', m);
+      ok(mesmosDados(c.ref, m) && m.pintados === c.ref.pintados && c.errs.length === 0 && semEscritaIndevida(m).length === 0, 'dados idênticos; 0 erro JS', [m.escritas, c.errs]);
       await fecha(c); }
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('off', 'off', 'all')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c, 3000); const sis = await c.page.evaluate(() => document.documentElement.classList.contains('rm-sis'));
+      ok(!m.layout && !sis, 'tema=all sem layout: nada (o tema nunca entra sozinho)', [m.layout, sis]); await fecha(c); }
+
+    sec(t + '17 · PRÉVIA COMPLETA (layout + tema + caneta, só o administrador): funciona junto, preserva os dados e volta');
+    { const c = { persona: 'JOSE', w: W, cena: mkCena(T('preview', 'preview', 'preview')) }; await preparar(br, base, M(MF), c);
+      const refPos = await c.page.evaluate(D.MEDIR);   // posição de cada traço (fração da caixa do parágrafo que o recebe) ANTES do layout e do tema
+      const m = await ligar(c, 6500);
+      const posDep = await c.page.evaluate(D.MEDIR); const difPos = D.comparar(refPos, posDep, 'tema').filter(x => x.tipo !== 'erro-js');
+      ok(difPos.length === 0 && refPos.tracos.length >= 3, `17 · ${refPos.tracos.length} traços e ${refPos.grifos.length} grifos ficam na MESMA caixa e posição (≤ 0,02) depois do layout + tema (UI derivada não desloca âncora)`, difPos.slice(0, 3));
+      const sis = await c.page.evaluate(() => ({ rmSis: document.documentElement.classList.contains('rm-sis'), tema: document.documentElement.getAttribute('data-rm-tema'), nav: document.documentElement.hasAttribute('data-rm-nav') }));
+      ok(m.layout && sis.rmSis && sis.tema === 'medicina-familiar' && sis.nav, '17 · administrador: layout + tema próprio + navegação montados', [m.layout, sis]);
+      /* com o tema, no celular (< 700 px) a caixa de ferramentas vira o botão da faixa + dock embaixo (o MESMO comportamento aprovado em Semiología II): fica fechada até abrir */
+      ok(m.v2 && (m.caixa || W < 700) && m.piloto === true && !m.escopo, '17 · caneta V2 viva em Medicina Familiar com os refinamentos físicos (os mesmos do piloto)', m);
+      ok(mesmosDados(c.ref, m) && m.pintados === c.ref.pintados, `17 · ${m.pintados} grifos pintados; ${m.linhas.tracos} traços e ${m.linhas.notas} nota gravados, idênticos`, [c.ref, m]);
+      await c.page.evaluate(() => window.RMNav.go({ view: 'block', block: 'aps' })); await c.page.waitForTimeout(1800);   // a capa não tem parágrafo: abre o primeiro bloco
+      await c.page.evaluate(() => window.RMToolsV2.escolherFerramenta('pen')); await c.page.evaluate(() => { window.__writes.length = 0; });
+      const desenhou = await riscar(c); const m2 = await c.page.evaluate(MEDIR2);
+      ok(desenhou && m2.escritas.filter(e => e === 'insert:user_ink_strokes').length === 1 && semEscritaIndevida(m2).length === 0, '17 · com layout e tema ligados, o lápis desenha e grava 1 traço (só em user_ink_strokes)', m2.escritas);
+      const r2 = await recarregar(c); await c.page.waitForTimeout(3500); const m3 = await c.page.evaluate(MEDIR2);
+      ok(m3.layout && m3.linhas.tracos === c.ref.linhas.tracos + 1 && mesmosDados({ linhas: { grifos: c.ref.linhas.grifos, tracos: c.ref.linhas.tracos + 1, notas: c.ref.linhas.notas } }, m3), '17 · atualizar a página: tudo volta, inclusive o traço novo', [r2.linhas, m3.linhas]);
+      c.cena.tabela = T('off', 'off', 'off'); const v = await recarregar(c); await c.page.waitForTimeout(1500); const v2s = await c.page.evaluate(() => ({ rmSis: document.documentElement.classList.contains('rm-sis'), l: !!document.querySelector('.rm-l2, #rm-l2-side, .rm-l2-band') }));
+      ok(!v.layout && !v2s.rmSis && v.pintados === c.ref.pintados && v.linhas.tracos === c.ref.linhas.tracos + 1 && v.linhas.notas === c.ref.linhas.notas, '17 · VOLTA (off|off|off): layout, tema e caneta saem; os grifos, os traços (inclusive o novo) e a nota continuam gravados', [v, v2s]);
+      await fecha(c); }
+    for (const persona of ['ALUNO', 'TESTER2', 'SEM', 'OUTRO']) {
+      const c = { persona, w: W, cena: mkCena(T('preview', 'preview', 'preview')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c, 3500); const sis = await c.page.evaluate(() => document.documentElement.classList.contains('rm-sis'));
+      ok(!m.layout && !sis && !m.v2 && m.legada && mesmosDados(c.ref, m), `17 · acesso privado: ${persona} (aluno/testador sem ser administrador) NÃO vê layout, tema nem caneta nova`, [m.layout, sis, m.v2]);
+      await fecha(c); }
+    { const c = { persona: 'ALUNO', w: W, cena: mkCena(T('all', 'all', 'all')) }; await preparar(br, base, M(MF), c);
+      const m = await ligar(c, 6500); const sis = await c.page.evaluate(() => document.documentElement.getAttribute('data-rm-tema'));
+      ok(m.layout && sis === 'medicina-familiar' && m.v2 && m.escopo && (m.caixa || W < 700), '17 · (só quando José liberar `all`) o aluno com acesso recebe layout + tema + caneta por matéria', [m.layout, sis, m.v2, m.escopo]);
+      ok(mesmosDados(c.ref, m) && m.pintados === c.ref.pintados && m.tracosDesenhados === c.ref.linhas.tracos, 'dados do aluno idênticos', [c.ref, m]); await fecha(c); }
 
     if (W === 1440) { sec('13-estático · a identificação vem da sessão de AGORA, nunca do cache do RMTools');
       const src = require('fs').readFileSync(require('path').join(L.ROOT, 'assets/rm-tools-v2.js'), 'utf8');
