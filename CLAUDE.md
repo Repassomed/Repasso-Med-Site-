@@ -274,7 +274,7 @@ A partir de 01/11/2026, a revisão obrigatória tem **duas partes**, nesta ordem
 1. **Autoauditoria do agente executor:** antes de declarar a PR pronta, ele mesmo revisa o diff final, escopo, fontes permitidas, ciência, didática/G0, duplicatas, ids, questões/flashcards, contagens, grifos/notas/traços, regressões e testes pertinentes. Registra no Cartão de Merge o que verificou, os resultados, limites e pendências reais. Não apresenta PR parcial como pronta.
 2. **Auditoria independente do coordenador ChatGPT:** lê a entrega e as evidências, confere os pontos de risco e dá a recomendação clara ao José: mesclar, corrigir ou aguardar. O coordenador não substitui testes do executor nem afirma ter verificado algo que não conseguiu acessar.
 
-**Não exigir parecer rotineiro de outro Claude.** Outro agente só revisa se José pedir expressamente ou se o coordenador identificar uma necessidade concreta e explicar o motivo. José é o único que faz merge e publicação. Pedir teste manual ao José apenas quando for realmente crítico e depois de os testes do executor estarem concluídos; preferir uma conferência final do pacote completo, não pequenas liberações sucessivas.
+**Não exigir parecer rotineiro de outro Claude.** Outro agente só revisa se José pedir expressamente; a responsabilidade pela auditoria independente permanece com o coordenador ChatGPT. José é o único que faz merge e publicação. Pedir teste manual ao José apenas quando for realmente crítico e depois de os testes do executor estarem concluídos; preferir uma conferência final do pacote completo, não pequenas liberações sucessivas.
 
 ## 10. RELATÓRIO FINAL
 
