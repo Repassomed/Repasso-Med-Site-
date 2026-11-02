@@ -1,8 +1,8 @@
-/* rm-temas/fisiopatologia.css · identidade de cor de Fisiopatología I (só variáveis + 1 ajuste de rótulo).
-   Carregado DEPOIS de rm-materia-sistema.css (mesma especificidade ⇒ vence o que vem depois). Paleta de capítulos,
+/* temas/rm-tema-fisiopatologia.css · identidade de cor de Fisiopatología I (só variáveis + 1 ajuste de rótulo).
+   O seletor repete [data-rm-tema] para vencer o bloco-base de rm-materia-sistema.css em qualquer ordem de carga. Paleta de capítulos,
    guia e repaso: herdadas da base técnica do sistema. Nada aqui liga o tema: o seletor só vale com
    `html.rm-sis[data-rm-tema="fisiopatologia"]`, que o módulo põe ao montar. */
-html.rm-sis[data-rm-tema="fisiopatologia"] {
+html.rm-sis[data-rm-tema="fisiopatologia"][data-rm-tema] {
   --rm-surface: #EADFDA; --rm-side: #F5EDE9; --rm-side-edge: #D5BBB1; --rm-side-card: #E8D8D1; --rm-side-rule: #DCC7BE;
   --rm-accent: #A8493A; --rm-accent-d: #7A3025; --rm-marker: #E9B949;
 }

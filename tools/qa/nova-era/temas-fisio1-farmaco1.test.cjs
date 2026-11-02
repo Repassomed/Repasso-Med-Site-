@@ -1,4 +1,4 @@
-/* Nova Era · temas visuais de Fisiopatología I e Farmacología I (assets/rm-temas/*) × as matérias REAIS.
+/* Nova Era · temas visuais de Fisiopatología I e Farmacología I (assets/temas/rm-tema-<slug>.js/.css) × as matérias REAIS.
    Teste ISOLADO: monta o layout e o sistema visual REAIS (rm-layout, rm-materia-sistema, rm-materia-nav, rm-materia-indice) e registra
    o descritor de cada matéria pela interface pública `RMSistema.registrarTema`, carregando os arquivos como o rm-pilot.js vai carregar.
    NÃO usa rm-pilot.js (a lista CANDIDATAS é do Claude 4): a ligação final fica para a integração. Supabase simulado; 0 rede real, 0 escrita.
@@ -71,9 +71,10 @@ const MATERIAS = [
     await css('assets/rm-materia-indice.css'); await js('assets/rm-materia-indice.js');
     const tabEl = document.getElementById('tab-' + tab);
     window.__snapAntes = null;
-    if (comTema) { await css('assets/rm-temas/' + slug + '.css'); await js('assets/rm-temas/' + slug + '.js'); }
+    if (comTema) { await css('assets/temas/rm-tema-' + slug + '.css'); await js('assets/temas/rm-tema-' + slug + '.js'); }
     let erro = '';
     try { window.RMLayout.attach(tabEl, slug); } catch (e) { erro = 'layout:' + e.message; }
+    window.__pre = new WeakSet(tabEl.querySelectorAll('p,li,h2,h3,h4,h5,table,figure,blockquote'));   /* nós âncora-like que existem ANTES de o sistema montar */
     if (!erro) { try { window.RMSistema.attach(tabEl, slug); } catch (e) { erro = 'sistema:' + e.message; try { window.RMSistema.detach(); } catch (e2) {} } }
     if (!erro) { try { window.RMNav.attach(tabEl, slug); } catch (e) { erro = 'nav:' + e.message; } }
     if (!erro && window.RMIndice) { try { window.RMIndice.attach(tabEl, slug); } catch (e) { erro = 'indice:' + e.message; } }
@@ -111,8 +112,8 @@ const MATERIAS = [
     const f = await abrir(m, 1440, 900); const p = f.p;
     const err = await p.evaluate(MONTAR, { slug: m.slug, tab: m.tab, titulo: m.titulo, comTema: true });
     ok(err === '', 'layout + tema + navegação + índice montam sem erro' + (err ? ' · ' + err : ''));
-    const reg = await p.evaluate(slug => ({ reg: window.RMTemas && window.RMTemas[slug] && window.RMTemas[slug].registrado, tem: !!(window.RMSistema.TEMAS[slug]), de2: (function () { try { return window.RMSistema.registrarTema(slug, window.RMTemas[slug].tema); } catch (e) { return 'erro'; } })() }), m.slug);
-    ok(reg.reg === true && reg.tem === true, 'registrarTema aceitou o descritor e o slug entrou em TEMAS');
+    const reg = await p.evaluate(slug => ({ rt: !!(window.RM_TEMAS && window.RM_TEMAS[slug] && typeof window.RM_TEMAS[slug].clasificar === 'function'), tem: !!(window.RMSistema.TEMAS[slug]), de2: (function () { try { return window.RMSistema.registrarTema(slug, window.RM_TEMAS[slug]); } catch (e) { return 'erro'; } })() }), m.slug);
+    ok(reg.rt === true && reg.tem === true, 'o descritor ficou em RM_TEMAS[slug] e RMSistema.registrarTema o aceitou (slug em TEMAS)');
     ok(reg.de2 === false, 'um segundo registro é recusado (não sobrescreve)');
     const on = await p.evaluate(() => ({ sis: document.documentElement.classList.contains('rm-sis'), tema: document.documentElement.getAttribute('data-rm-tema'), est: window.RMSistema._estado() }));
     ok(on.sis && on.tema === m.slug && on.est && on.est.secciones === m.secoes, `tema aplicado: ${on.tema} · ${on.est && on.est.secciones} seções (esperado ${m.secoes})`);
@@ -166,8 +167,18 @@ const MATERIAS = [
     const difTxt = Object.keys(ref.secs).filter(k => ref.secs[k] !== com.secs[k]);
     ok(difTxt.length === 0, 'TEXTO de todas as seções idêntico sem a UI derivada' + (difTxt.length ? ' · difere: ' + difTxt.join(',') : ''));
     ok(com.anc === ref.anc, 'índice de âncoras (p/li/h2–h5/table/figure/blockquote por seção) idêntico: a UI derivada não desloca tinta nem marca-texto');
-    const uiTags = await p.evaluate(() => [...document.querySelectorAll('[data-rm-ui] p, [data-rm-ui] li, [data-rm-ui] h2, [data-rm-ui] h3, [data-rm-ui] h4, [data-rm-ui] h5, [data-rm-ui] table, [data-rm-ui] figure, [data-rm-ui] blockquote')].length);
-    ok(uiTags === 0 || true, 'UI derivada contada (' + uiTags + ' elementos âncora-like dentro de [data-rm-ui]; fora do índice por serem [data-rm-ui])');
+    const nov = await p.evaluate(tab => {
+      const t = document.getElementById('tab-' + tab); const sel = 'p,li,h2,h3,h4,h5,table,figure,blockquote';
+      const novos = [...t.querySelectorAll(sel)].filter(n => !window.__pre.has(n));
+      const fora = novos.filter(n => !n.closest('[data-rm-ui]'));
+      /* controle negativo: um <p> criado sem [data-rm-ui] TEM de ser pego por este mesmo critério */
+      const intruso = document.createElement('p'); intruso.textContent = 'x'; t.querySelector('section[id]').appendChild(intruso);
+      const pego = [...t.querySelectorAll(sel)].filter(n => !window.__pre.has(n) && !n.closest('[data-rm-ui]')).length;
+      intruso.remove();
+      return { novos: novos.length, fora: fora.map(n => n.tagName + '.' + String(n.className).slice(0, 20)), pego };
+    }, m.tab);
+    ok(nov.fora.length === 0, `todo nó âncora-like criado pelo sistema/navegação/índice está dentro de [data-rm-ui] (${nov.novos} criados, ${nov.fora.length} fora)` + (nov.fora.length ? ' · ' + nov.fora.slice(0, 4).join('|') : ''));
+    ok(nov.pego === 1, 'controle negativo: um <p> sem [data-rm-ui] seria apontado pelo mesmo critério');
 
     console.log('\n===== 6 · imagens');
     await p.evaluate(() => { document.querySelectorAll('img').forEach(i => { i.loading = 'eager'; if (i.dataset && i.dataset.src && !i.src) i.src = i.dataset.src; }); });
@@ -175,8 +186,16 @@ const MATERIAS = [
     const imgs = await p.evaluate(() => [...document.querySelectorAll('#materias-container img, .rm-sis-vig img, .rm-l2-cover img')].map(i => ({ s: (i.getAttribute('src') || '').slice(-50), ok: i.complete && i.naturalWidth > 0, ui: !!i.closest('[data-rm-ui]') })));
     const quebradas = imgs.filter(i => !i.ok);
     ok(imgs.length > 0 && quebradas.length === 0, `${imgs.length} imagens, 0 quebradas` + (quebradas.length ? ' · ' + quebradas.slice(0, 5).map(i => i.s).join('|') : ''));
-    const vigs = await p.evaluate(() => [...document.querySelectorAll('.rm-sis-vig img')].map(i => (i.getAttribute('src') || '')));
-    ok(vigs.length > 0 && vigs.every(s => s === 'assets/repasso-med-logo.png'), 'vinhetas = logotipo existente (' + vigs.length + '), sem arte inexistente');
+    const vig = await p.evaluate(() => ({
+      blocos: [...document.querySelectorAll('#materias-container section[id]')].map(sec => ({ id: sec.id, tipo: sec.getAttribute('data-rm-tipo'), src: ((sec.querySelector('.rm-sis-vig img') || {}).getAttribute || (() => null)).call(sec.querySelector('.rm-sis-vig img') || {}, 'src'), ok: !!(sec.querySelector('.rm-sis-vig img') && sec.querySelector('.rm-sis-vig img').complete && sec.querySelector('.rm-sis-vig img').naturalWidth > 0) })),
+      meds: [...document.querySelectorAll('.rm-sis-med img')].map(i => ({ s: i.getAttribute('src'), ok: i.complete && i.naturalWidth > 0 }))
+    }));
+    const pasta = m.slug === 'fisiopatologia' ? 'assets/img/fisio/vig/' : 'assets/img/farmaco/vig/';
+    const dosBlocos = vig.blocos.filter(b => b.tipo === 'bloque'), dosRepasos = vig.blocos.filter(b => b.tipo === 'repaso');
+    ok(dosBlocos.every(b => /^assets\/img\/(fisio|farmaco)\/vig\/vb-\d\d\.webp$/.test(b.src || '') && (b.src || '').startsWith(pasta) && b.ok), `${dosBlocos.length} blocos com a sua vinheta recortada do conteúdo (${pasta}), todas carregadas`);
+    ok(dosBlocos.every(b => Number((b.src.match(/vb-(\d\d)/) || [])[1]) === Number(m.esperado[b.id][1])), 'cada vinheta é a do número do seu bloco');
+    ok(dosRepasos.length > 0 && dosRepasos.every(b => b.src === 'assets/repasso-med-logo.png' && b.ok), `${dosRepasos.length} seções de revisão usam o logotipo existente`);
+    ok(vig.meds.length === 3 && vig.meds.every(x => x.ok && x.s.startsWith(pasta)), 'capa com 3 medalhões carregados: ' + JSON.stringify(vig.meds.map(x => x.s.split('/').pop())));
     ok(f.ruins.length === 0, '0 respostas HTTP ≥ 400' + (f.ruins.length ? ' · ' + f.ruins.slice(0, 4).join('|') : ''));
 
     if (SHOTS) {
@@ -239,6 +258,33 @@ const MATERIAS = [
       ok(g.errs.length === 0 && g.cons.length === 0, `${w}px: 0 erros ao abrir os blocos pesados` + (g.errs.concat(g.cons).length ? ' · ' + g.errs.concat(g.cons).slice(0, 3).join('|') : ''));
       await g.ctx.close();
     }
+  }
+
+
+  console.log('\n########## carregamento em qualquer ordem (o carregador da base lê RM_TEMAS)');
+  for (const m of MATERIAS) {
+    const f = await abrir(m, 1440, 900);
+    const r = await f.p.evaluate(async ({ slug, tab, titulo }) => {
+      const css = h => new Promise((ok, ko) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = h; l.onload = () => ok(); l.onerror = () => ko(new Error('css')); document.head.appendChild(l); });
+      const js = s => new Promise((ok, ko) => { const e = document.createElement('script'); e.src = s; e.async = false; e.onload = () => ok(); e.onerror = () => ko(new Error('js')); document.head.appendChild(e); });
+      (window.RM_CATALOGO = window.RM_CATALOGO || []).push({ slug, tab, title: titulo, sub: '' });
+      await js('assets/temas/rm-tema-' + slug + '.js');                       /* tema ANTES de o sistema existir */
+      const antes = { rt: !!(window.RM_TEMAS && window.RM_TEMAS[slug]), sis: !!window.RMSistema };
+      await css('assets/rm-layout.css'); await js('assets/rm-modes.js'); await js('assets/rm-layout.js');
+      await css('assets/rm-materia-sistema.css'); await js('assets/rm-materia-sistema.js'); await js('assets/rm-materia-nav.js');
+      await css('assets/temas/rm-tema-' + slug + '.css');                     /* CSS ANTES do bloco-base nao importa: o seletor repete [data-rm-tema] */
+      const semReg = !window.RMSistema.TEMAS[slug];
+      const reg = window.RMSistema.registrarTema(slug, window.RM_TEMAS[slug]);   /* o que o carregador da base faz */
+      const tabEl = document.getElementById('tab-' + tab); let erro = '';
+      try { window.RMLayout.attach(tabEl, slug); window.RMSistema.attach(tabEl, slug); window.RMNav.attach(tabEl, slug); } catch (e) { erro = e.message; }
+      await new Promise(r => setTimeout(r, 400));
+      const acento = getComputedStyle(document.documentElement).getPropertyValue('--rm-accent').trim();
+      return { antes, semReg, reg, erro, acento, tema: document.documentElement.getAttribute('data-rm-tema') };
+    }, { slug: m.slug, tab: m.tab, titulo: m.titulo });
+    ok(r.antes.rt && !r.antes.sis && r.semReg === true && r.reg === true && r.erro === '' && r.tema === m.slug, `${m.slug}: tema carregado antes do sistema fica em RM_TEMAS, é registrado depois e monta sem erro`);
+    ok(r.acento === (m.slug === 'fisiopatologia' ? '#A8493A' : '#4B5FA8'), `${m.slug}: a cor própria da matéria vence a base mesmo com o CSS do tema carregado antes (${r.acento})`);
+    ok(f.errs.length === 0, `${m.slug}: 0 erros`);
+    await f.ctx.close();
   }
 
   await br.close(); srv.close();

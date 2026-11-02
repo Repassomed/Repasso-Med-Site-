@@ -1,6 +1,6 @@
-/* rm-temas/farmacologia.css · identidade de cor de Farmacología I (só variáveis + rótulos sem unidade).
-   Carregado DEPOIS de rm-materia-sistema.css. Só vale com `html.rm-sis[data-rm-tema="farmacologia"]`. */
-html.rm-sis[data-rm-tema="farmacologia"] {
+/* temas/rm-tema-farmacologia.css · identidade de cor de Farmacología I (só variáveis + rótulos sem unidade).
+   O seletor repete [data-rm-tema] para vencer o bloco-base de rm-materia-sistema.css em qualquer ordem de carga. Só vale com `html.rm-sis[data-rm-tema="farmacologia"]`. */
+html.rm-sis[data-rm-tema="farmacologia"][data-rm-tema] {
   --rm-surface: #DEE3F1; --rm-side: #EDF0F8; --rm-side-edge: #B9C3DF; --rm-side-card: #D6DCEE; --rm-side-rule: #C7CEE7;
   --rm-accent: #4B5FA8; --rm-accent-d: #33427E; --rm-marker: #E9B949;
 }
