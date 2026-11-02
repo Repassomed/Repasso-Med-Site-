@@ -37,8 +37,8 @@ const FOTO = `(function(){var q=function(s,r){return Array.prototype.slice.call(
       document.addEventListener('DOMContentLoaded',function(){var l=document.createElement('link');l.rel='stylesheet';l.href='assets/temas/rm-tema-'+S+'.css';document.head.appendChild(l)});})();`;
     let ctrl;
     { const r = await L.abrir(br, base, m, { w: 1440, h: 900, modo: 'controle', espera: 600 }); ctrl = await r.page.evaluate(FOTO); await r.ctx.close(); }
-    for (const W of [1440, 390]) {
-      const r = await L.abrir(br, base, m, { w: W, h: W === 390 ? 844 : 900, modo: 'nav', initScript: init });
+    for (const W of [1440, 1024, 768, 390]) {
+      const r = await L.abrir(br, base, m, { w: W, h: ({ 390: 844, 768: 1024, 1024: 768, 1440: 900 })[W], modo: 'nav', initScript: init });
       const p = r.page;
       const E = await p.evaluate(() => ({ et: window.__ens.etapas, er: window.__ens.erros, gerado: window.__ens.temaGerado, w: window.__writes }));
       ok(m.slug, W, 'etapas (layout+tema+nav) sem erro', E.et.attach_layout && E.et.attach_tema && E.et.attach_nav && !E.er.length, E.er);
