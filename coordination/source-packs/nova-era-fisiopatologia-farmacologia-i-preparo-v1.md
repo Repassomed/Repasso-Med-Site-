@@ -1,7 +1,7 @@
 # Nova Era · Fisiopatología I e Farmacología I · preparo (branch, sem PR)
 
 **Data:** 02/11/2026 · **Base:** `main` `7c88fbd4` (com #624, #625 e #626) · **Autora:** Claude 2 · **Somente leitura:** nenhuma flag ativada; nenhum arquivo global do Claude 4 tocado (`assets/rm-pilot.js`, `assets/rm-materia-sistema.js/.css`, `assets/rm-tools-v2.js`, `index.html`, `netlify/functions/get-pilot-flags.js`, `supabase/migrations/**`); nenhum dado de aluno escrito.
-**Estado:** branch de preparo. **Não é PR.** A PR completa só sai depois que a base do Claude 4 estiver pronta (§6).
+**Estado:** branch de desenvolvimento (temas visuais e testes isolados prontos; falta só a ligação final, §7). **Não é PR.** A PR completa só sai depois que a base do Claude 4 estiver pronta (§6).
 
 ## 1 · Estrutura real (inventário em dia, `inventario-fresco.py` → 0 velhos)
 
@@ -66,3 +66,29 @@ Porta (7 etapas) refeita no dia por matéria · âncoras e ida e volta com grifo
 2. A integração por matéria exige editar `rm-pilot.js` (`CANDIDATAS` + `VER`), `index.html` (tag) e `rm-materia-sistema.js` (descritor): arquivos globais do Claude 4. Sem a base dele fechada, qualquer edição aqui conflita ou será refeita.
 3. Descritor/identidade visual: decisão de José (§3).
 Quando 1 e 2 estiverem resolvidos, a PR completa sai desta branch.
+
+## 7 · Avanço (02/11/2026): temas visuais das duas matérias e testes isolados
+
+**Arquivos novos (nenhum arquivo existente foi alterado):**
+- `assets/rm-temas/fisiopatologia.js` e `assets/rm-temas/farmacologia.js` — descritores registrados pela interface pública `RMSistema.registrarTema(slug, tema)`.
+- `assets/rm-temas/fisiopatologia.css` e `assets/rm-temas/farmacologia.css` — identidade de cor (só variáveis, escopo `html.rm-sis[data-rm-tema="<slug>"]`, carregados depois de `rm-materia-sistema.css`) e rótulos.
+- `tools/qa/nova-era/temas-fisio1-farmaco1.test.cjs` — teste isolado (monta layout, sistema, navegação e índice REAIS e carrega os temas como o `rm-pilot.js` vai carregar).
+
+**Decisões de classificação (pela função real da seção, sem pedir ao José):**
+| Matéria | Classificação |
+|---|---|
+| Fisiopatología I | 12 blocos numerados 01–12 na ordem do conteúdo (`bloque`); `prova-fisio` = repaso/banco (B); `flashcards-fisio` = repaso/cartões (F). **Unidades preservadas como estão no conteúdo:** 11 blocos «UNIDAD I» e `anemias` «UNIDAD II»; nomes «Unidad I» e «Unidad II» (os que o conteúdo dá; nenhum nome novo). |
+| Farmacología I | 17 blocos com a **numeração dos títulos** (01–17, não a ordem dos ids), incluindo as 3 seções «BASE» (SNA, receptores adrenérgicos e colinérgicos: ensino de base com título numerado ⇒ bloco); `farmacos-clave` = repaso/tabla (T); `cuestionario1` = repaso/práctica (P); `prova-farmaco` = banco (B); `flashcards-grales` = cartões (F). **Sem unidades** (o conteúdo não as tem): nenhuma foi criada; o CSS da matéria esconde só os rótulos «UNIDAD ·» que o módulo geraria para um grupo único. |
+
+**Arte decorativa:** não existem vinhetas nem medalhões aprovados para estas matérias (`assets/img/fisio/vig/`, `assets/img/farmaco/vig/`). Tratamento seguro aplicado: `vig: null` ⇒ o módulo usa o logotipo existente (`assets/repasso-med-logo.png`) como vinheta; `medallones: []`. Nenhuma imagem inexistente é referenciada (0 respostas ≥ 400, 0 imagens quebradas). **Necessidade registrada:** 12 vinhetas (Fisio I) e 17 (Farmaco I) de 480 px recortadas de infografías aprovadas + 1 a 3 medalhões de capa por matéria; quando existirem, basta preencher `vig`, `vigDir` e `medallones` nos descritores.
+
+**Resultados do teste isolado (`temas-fisio1-farmaco1.test.cjs`, 107/107):** registro aceito e segundo registro recusado · cada seção com tipo, número e capítulo esperados (14 e 21 seções) · 0 «otro» · rótulos de unidade (Fisio I: 11× e 1×; Farmaco I: nenhum visível) · ids, contagens (332/260/39/35 e 191/412/72/31, 23 iframes, 37 `details`), TEXTO e índice de âncoras idênticos com o tema ligado e depois de desligar · UI derivada sem p/li/h2–h5/table/figure · 53 e 93 imagens, 0 quebradas · 0 overflow horizontal em 390/768/1024/1440 · blocos pesados abertos (`asma-epoc`, `sna`, `adrenergicos`, `colinergicos`, `anestesicos`, `opioides`, `farmacos-clave`, `cuestionario1`, bancos e cartões) em 390 e 1440 px sem elemento fora da tela · falha fechada sem os arquivos do tema («sin tema», layout intacto) · 0 erro JS, 0 console.error, 0 requisição que não seja GET/HEAD.
+
+**Limitação conhecida do módulo (não corrigível sem editar `rm-materia-sistema.js`):** em Farmacología I os títulos do conteúdo já começam com o número («01 · Farmacocinética»); o módulo mostra o número também na etiqueta, então ele aparece duas vezes (etiqueta «01» + título «01 · …»; migalha «BLOQUE 10 · 10 · …»). É redundância visual, não erro; correção natural no módulo: omitir o prefixo numérico do título quando igual à etiqueta. Fica como pedido ao Claude 4.
+
+## 8 · O que falta para a integração final (e quem faz)
+
+Exatamente estas ligações, todas em arquivos globais do Claude 4 (não editados aqui):
+1. `assets/rm-pilot.js` → `carregarSistema()`/`ligarSistema()`: antes de `RMSistema.attach(tab, slug)`, carregar `assets/rm-temas/<slug>.css` e `assets/rm-temas/<slug>.js` (falha fechada: se faltarem, o módulo já lança «sin tema» e o layout fica) e, em `CANDIDATAS`, incluir `'fisiopatologia'` e `'farmacologia'`; subir `VER` e a tag do `index.html`.
+2. `netlify/functions/get-pilot-flags.js`/`supabase/migrations/**`: linhas `fisiopatologia` e `farmacologia` em `rm_materia_rollout` (tudo `off`) — SQL de José, não executado aqui.
+3. Depois: porta refeita no dia, `servidor.test.cjs`/`navegador.test.cjs` com as duas matérias, caneta por matéria (tabela larga, imagens pesadas, iframes), autoauditoria e PR completa. Nada é ativado.

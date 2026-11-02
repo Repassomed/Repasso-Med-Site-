@@ -1,0 +1,11 @@
+/* rm-temas/farmacologia.css · identidade de cor de Farmacología I (só variáveis + rótulos sem unidade).
+   Carregado DEPOIS de rm-materia-sistema.css. Só vale com `html.rm-sis[data-rm-tema="farmacologia"]`. */
+html.rm-sis[data-rm-tema="farmacologia"] {
+  --rm-surface: #DEE3F1; --rm-side: #EDF0F8; --rm-side-edge: #B9C3DF; --rm-side-card: #D6DCEE; --rm-side-rule: #C7CEE7;
+  --rm-accent: #4B5FA8; --rm-accent-d: #33427E; --rm-marker: #E9B949;
+}
+/* Farmacología I não tem unidades: o módulo, sem «UNIDAD X» no marcador, rotularia o grupo dos blocos como «UNIDAD ·».
+   Aqui esse rótulo de grupo único não é mostrado (o índice mostra «17 bloques · …» e o grupo REPASO continua com o seu rótulo). */
+html.rm-sis[data-rm-tema="farmacologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+/* o mesmo no menu lateral: o rótulo de grupo único logo depois das ferramentas do índice («UNIDAD ») não é mostrado; REPASO fica */
+html.rm-sis[data-rm-tema="farmacologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }

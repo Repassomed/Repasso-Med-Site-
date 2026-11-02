@@ -1,0 +1,11 @@
+/* rm-temas/fisiopatologia.css · identidade de cor de Fisiopatología I (só variáveis + 1 ajuste de rótulo).
+   Carregado DEPOIS de rm-materia-sistema.css (mesma especificidade ⇒ vence o que vem depois). Paleta de capítulos,
+   guia e repaso: herdadas da base técnica do sistema. Nada aqui liga o tema: o seletor só vale com
+   `html.rm-sis[data-rm-tema="fisiopatologia"]`, que o módulo põe ao montar. */
+html.rm-sis[data-rm-tema="fisiopatologia"] {
+  --rm-surface: #EADFDA; --rm-side: #F5EDE9; --rm-side-edge: #D5BBB1; --rm-side-card: #E8D8D1; --rm-side-rule: #DCC7BE;
+  --rm-accent: #A8493A; --rm-accent-d: #7A3025; --rm-marker: #E9B949;
+}
+/* o nome da unidade é o próprio rótulo («Unidad I»): o rótulo «UNIDAD I» já o diz, então o nome repetido não é mostrado
+   nos grupos do índice e do menu lateral (a legenda de cores da capa mantém o nome) */
+html.rm-sis[data-rm-tema="fisiopatologia"] .rm-sis-ulab > span { display: none; }
