@@ -1,6 +1,6 @@
 # Nova Era · Fisiopatología I e Farmacología I · implantação privada (sem ativar alunos)
 
-**Data:** 02/11/2026 · **Base:** `main` `259049b7` (já inclui a PR #627, Medicina Familiar, **mesclada**) · **Autora:** Claude 2 · **Branch:** `claude/nova-era-fisio1-farmaco1-2026-11`
+**Data:** 02/11/2026 · **Base:** `main` `d177474e` (já inclui a #627, Medicina Familiar, e a #633, ferramentas × navegação e modo Infografías, ambas **mescladas**) · **Autora:** Claude 2 · **Branch:** `claude/nova-era-fisio1-farmaco1-2026-11`
 **O que foi feito:** as duas matérias foram ligadas ao carregador real da Nova Era (`CANDIDATAS` + `TEMAS` inline + CSS), com 29 vinhetas recortadas de imagens do próprio conteúdo. Nenhum texto médico, id, imagem de conteúdo ou dado de aluno foi alterado. Nenhum SQL executado; nada ativado: sem linha em `rm_materia_rollout` as matérias abrem como hoje.
 
 ## 0 · Resumo
@@ -8,7 +8,7 @@
 |---|---|
 | Ligação | **real**: `rm-pilot.js` (CANDIDATAS) → `get-pilot-flags` (função real) → layout → tema (`TEMAS` inline) → navegação → índice → caneta V2 |
 | Testes | `real-fisio1-farmaco1.test.cjs` **230/230**; `integracao-fisio1-farmaco1.test.cjs` **271/271** (sem simulação do carregador); `temas-fisio1-farmaco1.test.cjs` **111/111**; `visual-conteudo` **30/30** e **44/44**; `servidor` 59/59; `navegador` 247/247 |
-| Depende de outros | **#631** (Claude 4, caixa de ferramentas/infográficos): sincronizar com a main quando entrar; **SQL do José** depois do merge (`docs/nova-era/ROTEIRO-FISIO1-FARMACO1.md`) |
+| Depende de outros | só o **SQL do José**, depois do merge e do deploy (`docs/nova-era/ROTEIRO-FISIO1-FARMACO1.md`). A #633 (Claude 4) já está na main e foi incorporada |
 
 ### A.1 Estrutura real (inventário em dia; `agrega-no-html.py` OK)
 | | Fisiopatología I (`fisiopatologia`) | Farmacología I (`farmacologia`) |
@@ -51,7 +51,8 @@ Limite: Chromium com `pointerType:'pen'` (CDP), não Safari/Apple Pencil; YouTub
 ### A.6 Resultados finais (preenchido ao fim da bateria)
 - Porta do pré-voo (`porta-da-materia.sh`): **ABERTA 7/7** em `fisiopatologia` e em `farmacologia` (inventário, marcadores, âncoras estáveis, ida e volta, layout em 4 larguras, caneta e modos, risco).
 - `nao-ativacao.test.cjs`: **20/20** (CANDIDATAS = piloto + Medicina Familiar + estas duas; as três candidatas só perguntam ao servidor e recebem «não»; nenhuma variável de matéria, nenhum curinga). Ajuste do teste: as duas novas candidatas entram na mesma regra de Medicina Familiar.
-- Guard: ver comentário da PR.
+- Guard: ver corpo da PR.
+- **Depois do merge da #633 (03/11)** — tudo sobre o commit mesclado: `infografias-regra` 48/48 (a regra nova não muda nenhuma outra matéria); `real-fisio1-farmaco1` 230/230; `temas` 111/111; `visual-conteudo` 30/30 e 44/44; `integracao` 271/271; `navegar-ferramentas` (caixa de ferramentas × navegação: dedo, mouse e caneta; lápis, goma, marcador e só caixa) 356/356 nas duas matérias novas + Medicina Familiar e 356/356 em Medicina Familiar + Semiología II; `infografias-modo` 123/123 (Medicina Familiar e Semiología II); `servidor` 59/59; `navegador` 247/247; `nao-ativacao` 20/20; porta 7/7 nas duas.
 
 ### A.7 Autoauditoria (CLAUDE.md §9)
 | Ponto | Resultado |
