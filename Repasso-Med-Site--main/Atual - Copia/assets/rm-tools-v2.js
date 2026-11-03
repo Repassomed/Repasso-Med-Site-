@@ -1845,12 +1845,35 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
   var TOUCH_ADAPTER_EXCLUIR = '.rm2-box,.rm2-notes,.rm2-diag,.rm-tools,.rm-tools-r,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug';
   var stylusTouches = {};   // Touch.identifier -> { x0, y0, scrollY0, scrollX0, maxDeltaScroll }
 
+  /* #631 · CONTROLES DE NAVEGAÇÃO da UI derivada (Layout V2 / navegação por bloco): Próximo, Anterior, Índice, cartões, modos, índice lateral.
+     Com a caneta/goma armada eles eram tratados como «matéria» (clique suprimido, contacto de caneta, possível traço sob o dedo): o 1.º toque
+     não navegava e era preciso desarmar antes. Agora o toque num deles NUNCA escreve nem é suprimido: fecha a caixa, desarma a ferramenta e
+     deixa a ação acontecer no MESMO toque. Fora dos controles (conteúdo, caixa de ferramentas, player de áudio, botão que abre a caixa) nada muda. */
+  var UI_CONTROLE_SEL = 'button, a[href], [role="button"], [role="tab"], summary';
+  var UI_NAO_NAVEGACAO_SEL = '.rm-sis-tools, .rm-sis-aud-x, #rm-l2-player, .rm-audio-card, .rm2-box, .rm2-notes, .rm2-diag, .rm-lb';
+  function controleDeNavegacao(alvo) {
+    try {
+      if (!alvo || !alvo.closest) return null;
+      var c = alvo.closest(UI_CONTROLE_SEL);
+      if (!c || !c.closest('[data-rm-ui]') || c.closest(UI_NAO_NAVEGACAO_SEL)) return null;
+      return c;
+    } catch (e) { return null; }
+  }
+  /* fecha a caixa e desarma a ferramenta (cancela o que estiver em curso pelo caminho já existente: não apaga traço nem grifo, não grava nada) */
+  function fecharParaNavegar() {
+    if (st.tool === 'none' && !st.open) return;
+    diagLog('fechar-para-navegar', null, { ferramenta: st.tool });
+    escolherFerramenta('none');
+    st.open = false; refletir();
+  }
+
   function touchAdapterElegivel(touch) {
     if (!pilotoPermitido() || (st.tool !== 'pen' && st.tool !== 'eraser')) return false;   // goma também (#456 iPad): a ponta que apaga não pode rolar a página
     if (touch.touchType !== 'stylus') return false;
     if (lbAberto()) return false;
     var alvo = touch.target;
     if (alvo && alvo.closest && alvo.closest(TOUCH_ADAPTER_EXCLUIR)) return false;
+    if (controleDeNavegacao(alvo)) return false;               // #631: o toque da stylus num controle de navegação não é suprimido (o clique tem de chegar)
     if (!alvo || !alvo.closest || !alvo.closest('#materias-container')) return false;
     return true;
   }
@@ -2025,6 +2048,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
     if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes,.rm2-diag,.rm-tools,.rm-lb,.rm-menu,.rm-sug-fab,#rm-sug')) {   // .rm2-diag: com a caneta armada, tocar nos botões do diagnóstico com a PONTA não pode começar um traço por baixo do painel (#456)
       diagLog('reject:ui', e); return;
     }
+    if (controleDeNavegacao(e.target)) { diagLog('reject:nav-ui', e); return; }   // #631: tocar num controle de navegação nunca começa traço nem marca contacto de caneta
     if (gestoMorto()) abortarTraco();                   // traço órfão não bloqueia o seguinte
 
     /* A CANETA, com dedo, nunca chega a criar traço nem a bloquear nada:
@@ -3783,7 +3807,11 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
        apagar em si é feito no gesto de ponteiro (apagarEm), não aqui; o
        traço, no onUp. Fora do piloto físico, o lápis não suprime clique
        — exactamente como antes desta correcção. */
+    /* #631 · o clique num controle de navegação fecha a caixa e desarma a ferramenta ANTES de qualquer outro tratador: em `window`/captura, registrado aqui (a V2 carrega antes dos módulos
+       da navegação), de modo que um módulo que trate o clique em `window`/captura e o encerre (cartões do índice expansível) não deixe a caixa aberta. Nada é suprimido: a ação segue no mesmo toque. */
+    window.addEventListener('click', function (e) { if (controleDeNavegacao(e.target)) fecharParaNavegar(); }, true);
     document.addEventListener('click', function (e) {
+      if (controleDeNavegacao(e.target)) return;                            // #631: controle de navegação nunca é suprimido (a caixa já foi fechada acima)
       if (!protegidoContraFecho()) return;
       if (e.target && e.target.closest && e.target.closest('.rm2-box,.rm2-notes')) return;
       if (e.target && e.target.closest && e.target.closest('#materias-container')) {
@@ -3869,6 +3897,7 @@ body.rm2-t-eraser #rm2-ink path{ opacity:.72; }
       if (!st.open || traco || apagando) return;
       if (e.target.closest && e.target.closest('.rm2-box,.rm2-notes')) return;
       if (protegidoContraFecho()) return;
+      if (controleDeNavegacao(e.target)) return;      // #631: quem fecha é o clique (junto com a ação). Fechar já no pointerdown mexia no layout (dock) e o controle fugia de baixo do dedo
       st.open = false; refletir();
     }, true);
 
