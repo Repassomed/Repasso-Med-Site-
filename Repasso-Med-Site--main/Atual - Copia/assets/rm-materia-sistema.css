@@ -103,6 +103,24 @@ html.rm-sis[data-rm-tema="medicina-familiar"] {
   --rm-pal-6: #3F8F4F; --rm-pal-6-head: #2C6C3A; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #E1F1E4; --rm-pal-6-ffg: #1B4526; --rm-pal-6-zebra: #F3FAF5; --rm-pal-6-edge: #B5D8BC; --rm-pal-6-line: #D7ECDB; --rm-pal-6-strong: #1F5530; --rm-pal-6-tint: #E6F3E8; --rm-pal-6-tag: #fff;
 }
 
+/* Embriología (Nova Era) · azul-aqua de líquido amniótico, vinheta em «ovo» orgânico; sem unidades no conteúdo.
+   Bloco escrito DEPOIS da base técnica (mesma especificidade ⇒ vence). Só variáveis --rm-* e regras de aparência; nada toca conteúdo, ids nem dados do aluno. */
+html.rm-sis[data-rm-tema="embriologia"] {
+  --rm-surface: #D8E9EE; --rm-side: #EAF4F7; --rm-side-edge: #A9CCD6; --rm-side-card: #CEE3E9; --rm-side-rule: #BBD7DF;
+  --rm-accent: #2F7FA6; --rm-accent-d: #1D5775; --rm-marker: #E9B949;
+  --rm-tag-radius: 9px; --rm-vig-radius: 46% 54% 50% 50% / 52% 48% 52% 48%; --rm-vig-ring: #BBD7DF;
+  --rm-pal-1: #2F7FA6; --rm-pal-1-head: #276888; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #E6F0F4; --rm-pal-1-ffg: #12303F; --rm-pal-1-zebra: #F7FAFB; --rm-pal-1-edge: #B8D3E1; --rm-pal-1-line: #DEEBF1; --rm-pal-1-strong: #1D4F67; --rm-pal-1-tint: #ECF3F7; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #C0526B; --rm-pal-2-head: #9D4358; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F7EAED; --rm-pal-2-ffg: #491F29; --rm-pal-2-zebra: #FCF8F9; --rm-pal-2-edge: #EAC4CD; --rm-pal-2-line: #F5E3E7; --rm-pal-2-strong: #773342; --rm-pal-2-tint: #F9EFF2; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #C48A1C; --rm-pal-3-head: #A17117; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #F8F1E4; --rm-pal-3-ffg: #4A340B; --rm-pal-3-zebra: #FDFAF6; --rm-pal-3-edge: #EBD7B2; --rm-pal-3-line: #F6ECDB; --rm-pal-3-strong: #7A5611; --rm-pal-3-tint: #FAF4EB; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #5E9B4F; --rm-pal-4-head: #4D7F41; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #ECF3EA; --rm-pal-4-ffg: #243B1E; --rm-pal-4-zebra: #F9FBF8; --rm-pal-4-edge: #C8DDC3; --rm-pal-4-line: #E5EFE3; --rm-pal-4-strong: #3A6031; --rm-pal-4-tint: #F1F6EF; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #8A5FB5; --rm-pal-5-head: #714E94; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F1ECF6; --rm-pal-5-ffg: #342445; --rm-pal-5-zebra: #FAF9FC; --rm-pal-5-edge: #D7C9E6; --rm-pal-5-line: #ECE5F3; --rm-pal-5-strong: #563B70; --rm-pal-5-tint: #F4F1F8; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #D9704B; --rm-pal-6-head: #B25C3E; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAEEE9; --rm-pal-6-ffg: #522B1C; --rm-pal-6-zebra: #FDF9F8; --rm-pal-6-edge: #F2CEC2; --rm-pal-6-line: #F9E8E2; --rm-pal-6-strong: #87452E; --rm-pal-6-tint: #FCF2EF; --rm-pal-6-tag: #fff;
+}
+/* Embriología não tem «UNIDAD X» no conteúdo: o módulo, sem unidade, rotularia o grupo dos blocos como «UNIDAD ·». Esse rótulo único (índice e menu lateral) não é mostrado;
+   o índice mostra «13 bloques» e o grupo REPASO mantém o seu rótulo. */
+html.rm-sis[data-rm-tema="embriologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="embriologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+
 /* ---------------------------------------------------------------------
    3 · CAPÍTULO → variáveis locais (--cap-*). Qualquer componente dentro de [data-rm-cap] as herda.
    --------------------------------------------------------------------- */

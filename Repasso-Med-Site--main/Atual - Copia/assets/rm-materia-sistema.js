@@ -71,6 +71,17 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Embriología (Nova Era): ids `emb01…emb13`; a numeração é a do id (= «BLOQUE NN»). Sem Unidades no conteúdo (o marcador é «BLOQUE NN · <tema>», Parcial 2 a partir do 08):
+     cada tema de estudo compartilha uma família de cor (cap). emb14 = banco geral, emb15 = flashcards gerais (repaso). */
+  var EM_CAP = { 1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 3, 7: 4, 8: 5, 9: 5, 10: 5, 11: 6, 12: 2, 13: 2 };
+  var EM_REPASO = { emb14: 'B', emb15: 'F' };
+  function clasificarEM(id) {
+    var m = /^emb(\d{2})$/.exec(id);
+    if (m && EM_CAP[+m[1]]) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: EM_CAP[n], vig: 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(EM_REPASO, id)) return { tipo: 'repaso', n: EM_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   var TEMAS = {
     'semiologia-ii': {
       vigDir: 'assets/img/semio2/vig/',
@@ -114,6 +125,24 @@
         aud:  'Escucha e identifica hallazgos'
       },
       clasificar: clasificarMF
+    },
+    'embriologia': {
+      vigDir: 'assets/img/embrio/vig/',                   // 13 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-EMBRIOLOGIA.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Del gameto al nacimiento',
+      miga: ['Guía de estudio', 'Embriología'],
+      unidades: {},                                       // o conteúdo não tem unidades: nenhuma é criada
+      medallones: [
+        { vig: 'vb-04', t: 'GAMETOS',       cap: 2, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-09', t: 'SEMANA DEL 2',  cap: 5, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-12', t: 'FETO',          cap: 2, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Esquemas y figuras por bloque',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarEM
     }
   };
 
