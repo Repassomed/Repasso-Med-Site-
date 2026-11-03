@@ -149,7 +149,7 @@
   }
   /* Recursos REAIS do bloco (só o que existe) + o primeiro alvo de cada tipo. */
   var TIPOS = [
-    { k: 'fig',  label: 'Figuras',    sel: 'figure img, .s2-photo[role="img"], img.rmc-photo', up: 'figure, .s2-photo' },
+    { k: 'fig',  label: 'Figuras',    achar: function (sec) { var l = window.RMModes && window.RMModes.infografias ? window.RMModes.infografias(sec) : []; return l[0] || null; } },   // regra única de infografia (#631): o cartão do bloco existe se e só se o modo tem o que mostrar
     { k: 'quiz', label: 'Preguntas',  sel: '.quiz-item', up: '.quiz-section, .quiz-item' },
     { k: 'fc',   label: 'Flashcards', sel: '.flashcard', up: '.fc-grid, .flashcard' },
     { k: 'aud',  label: 'Ausculta',   sel: 'audio', up: '.audio-player, audio' },
@@ -158,8 +158,8 @@
   function recursosDe(sec) {
     var r = [];
     TIPOS.forEach(function (t) {
-      var n = sec.querySelector(t.sel);
-      if (n) r.push({ k: t.k, label: t.label, alvo: t.k === 'fc' ? lancadorFc(n) : ((n.closest && n.closest(t.up)) || n) });
+      var n = t.achar ? t.achar(sec) : sec.querySelector(t.sel);
+      if (n) r.push({ k: t.k, label: t.label, alvo: t.achar ? n : (t.k === 'fc' ? lancadorFc(n) : ((n.closest && n.closest(t.up)) || n)) });
     });
     return r;
   }
@@ -477,7 +477,7 @@
   /* Recursos da matéria para a capa: SÓ o que existe, com contagem derivada do DOM (nada inventado).
      Banco geral e «Todos los flashcards» reúnem as MESMAS entidades dos blocos: não viram alvo de salto, e Preguntas/Flashcards contam itens
      DISTINTOS (a cópia não conta duas vezes; o item que só existe no banco conta uma vez — ver distintosDaMateria).
-     Infografía = <figure> com legenda e imagem; radiografias/diapositivas (.material-slide) e fotos soltas NÃO são infográficos.
+     Infografía = regra única de RMModes.ehInfografia (<figure> com legenda e imagem, ou .med-image marcada como infografía); radiografias/diapositivas (.material-slide) e fotos soltas NÃO são infográficos.
      Cada cartão salta, na Página completa, para a primeira ocorrência (irPara: geração/cancelamento já existentes). */
   /* Seção que REÚNE os itens dos blocos (banco geral, «todos los flashcards», revisão, mazo, cierre…): pelo id (convenção do piloto) OU pelo
      marcador `data-rm-agrega` que a matéria declara (os ids das outras matérias não seguem a convenção: revisaoneu, toxcierre, mazognrl…). */
@@ -506,9 +506,7 @@
     var todos = function (sel) { var o = []; secs.forEach(function (sc) { Array.prototype.forEach.call(sc.querySelectorAll(sel), function (n) { o.push(n); }); }); return o; };
     var out = [];
     if (bl[0]) out.push({ k: 'res', icon: 'index', t: 'Resumen', sub: 'Contenido completo', alvo: bl[0].sec });
-    var figs = todos('figure').filter(function (f) {
-      return f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image');
-    });
+    var figs = []; secs.forEach(function (sc) { (window.RMModes.infografias(sc)).forEach(function (n) { figs.push(n); }); });   // regra única (#631): figure com legenda OU .med-image marcada como infografia
     if (figs.length) out.push({ k: 'fig', icon: 'img', t: 'Infografías', sub: figs.length + (figs.length === 1 ? ' infografía' : ' infografías'), alvo: figs[0] });
     var qs = todos('.quiz-item');
     var nq = qs.length ? distintosDaMateria(bl, '.quiz-item', '.quiz-question', '.options, .tf-buttons') : 0;

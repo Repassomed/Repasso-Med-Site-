@@ -43,11 +43,41 @@
 
   var ROOT = document.documentElement;
 
+  /* ---------------------- INFOGRAFÍA: regra ÚNICA (#631) ----------------------
+     Uma só definição, usada pelo detector do modo (aqui), pelo cartão e pela contagem da capa e dos blocos (rm-layout.js), pela navegação e pelo
+     isolamento do modo (rm-materia-nav.js) e pelo sistema visual (rm-materia-sistema.js): os quatro SEMPRE concordam.
+       · <figure> com <figcaption> e imagem (o formato das matérias já no ar);
+       · <div class="med-image"> com imagem e <div class="med-image-caption"> que o conteúdo marca como infografía:
+         classe `mf-info`/`rm-info` OU etiqueta `.med-image-tag` que começa com «Infografía» (Medicina Familiar; vale para as próximas).
+       NÃO são infográficos: diapositivas e materiais de aula (.material-slide, etiqueta «DIAPOSITIVA…»), imagens de prova («IMAGEM DA PROVA»), radiografias
+       com legenda em <p class="med-image-caption"> (a legenda é irmã da foto, sem contêiner), figura sem legenda, foto solta (.s2-photo/img.rmc-photo fora de <figure>).
+     Só LÊ o DOM; nunca move, cria nem altera nada. */
+  function ehInfografia(el) {
+    try {
+      if (!el || el.nodeType !== 1 || (el.closest && el.closest('.material-slide'))) return false;
+      var cl = el.classList;
+      if (el.tagName === 'FIGURE') {
+        return !!(el.querySelector('figcaption') && el.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !el.closest('.med-image'));
+      }
+      if (cl && cl.contains('med-image')) {
+        if (el.parentElement && el.parentElement.closest('.med-image')) return false;
+        if (!el.querySelector('img') || !el.querySelector('.med-image-caption')) return false;
+        if (cl.contains('mf-info') || cl.contains('rm-info')) return true;
+        var tg = el.querySelector('.med-image-tag');
+        return !!(tg && /^\s*infograf/i.test(tg.textContent || ''));
+      }
+    } catch (e) {}
+    return false;
+  }
+  function infografias(raiz) {
+    return raiz && raiz.querySelectorAll ? Array.prototype.filter.call(raiz.querySelectorAll('figure, .med-image'), ehInfografia) : [];
+  }
+
   /* Ordem fixa dos modos isolados na lateral. `detect` decide se o recurso
      existe DE VERDADE na matéria — senão o acesso nem aparece. */
   var MODOS = [
     { id: 'infografias',   label: 'Infografías',            icon: 'img', navLabel: 'Infografías',
-      detect: function (t) { return !!t.querySelector('section[id] figure img, section[id] .s2-photo[role="img"], section[id] img.rmc-photo'); } },
+      detect: function (t) { return infografias(t).some(function (n) { return !!n.closest('section[id]'); }); } },
     { id: 'preguntas',     label: 'Preguntas por bloque',   icon: 'q', navLabel: 'Preguntas',
       detect: function (t) { return !!t.querySelector('section[id] .quiz-item'); } },
     { id: 'flashcards',    label: 'Flashcards por bloque',  icon: 'cards', navLabel: 'Flashcards',
@@ -219,6 +249,8 @@
     setNav: setNav,
     get gen() { return st.gen; },           // só leitura (testes/diagnóstico)
     isFull: function () { return st.view === 'full'; },
-    onChange: function (fn) { if (typeof fn === 'function') st.ouvintes.push(fn); }
+    onChange: function (fn) { if (typeof fn === 'function') st.ouvintes.push(fn); },
+    ehInfografia: ehInfografia,             // regra única de infografia (#631): detector, cartão, contagem e navegação usam esta
+    infografias: infografias
   };
 })();

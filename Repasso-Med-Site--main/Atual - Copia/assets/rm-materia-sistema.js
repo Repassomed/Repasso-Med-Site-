@@ -218,9 +218,7 @@
   /* Infografía = <figure> com legenda e imagem; radiografias/diapositivas e fotos soltas NÃO contam (mesma regra do Layout V2,
      para que a capa e o bloco nunca discordem). */
   function figuras(raiz) {
-    return qa(raiz, 'figure').filter(function (f) {
-      return q1(f, 'figcaption') && q1(f, 'img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image');
-    });
+    return window.RMModes && window.RMModes.infografias ? Array.prototype.slice.call(window.RMModes.infografias(raiz)) : [];   // regra única (#631)
   }
 
   /* Conteúdo original solto FORA de section[id] (só atributos, desfeitos no detach; o CSS «15» decide o que aparece em cada vista):
