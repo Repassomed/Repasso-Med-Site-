@@ -113,7 +113,7 @@
     preguntas: {
       icon: 'q', un: 'pregunta', pl: 'preguntas', corto: 'Preguntas',
       desc: 'Basadas en examen y complementarias, con resolución.',
-      nodes: function (sec) { var c = qa(sec, 'details.s2-quiz-card'); return c.length ? c : qa(sec, '.quiz-section'); },
+      nodes: function (sec) { var c = qa(sec, 'details.s2-quiz-card, details.a1-qbox'); return c.length ? c : qa(sec, '.quiz-section'); },   // Anatomía I guarda as perguntas na caixa recolhível details.a1-qbox
       n: function (sec) { return qa(sec, '.quiz-item').length; }
     },
     flashcards: {
@@ -164,7 +164,7 @@
   function lerSecs() {
     var base = (window.RMSistema && RMSistema.secciones && RMSistema.secciones()) || [];
     return base.map(function (s) {
-      return { id: s.id, el: s.el, c: s.c, titulo: s.titulo, unidad: s.unidad || '', n: s.n };
+      return { id: s.id, el: s.el, c: s.c, titulo: s.titulo, unidad: s.unidad || '', grupo: s.grupo || s.unidad || '', n: s.n };
     });
   }
   function secPorId(id) { for (var i = 0; i < N.secs.length; i++) if (N.secs[i].id === id) return N.secs[i]; return null; }
@@ -527,7 +527,7 @@
     var p = el('p'); p.textContent = plural(tot, m.un, m.pl) + ' en ' + plural(lista.length, 'bloque', 'bloques') + ' — elige un bloque. ' + m.desc; cab.appendChild(p);
     box.appendChild(cab);
     var por = {}, orden = [];
-    lista.forEach(function (s) { var u = s.c.tipo === 'bloque' ? (s.unidad || '·') : (s.c.tipo === 'guia' ? 'G' : 'R'); if (!por[u]) { por[u] = []; orden.push(u); } por[u].push(s); });
+    lista.forEach(function (s) { var u = s.c.tipo === 'bloque' ? (s.grupo || s.unidad || '·') : (s.c.tipo === 'guia' ? 'G' : 'R'); if (!por[u]) { por[u] = []; orden.push(u); } por[u].push(s); });
     var tema = (window.RMSistema && RMSistema.TEMAS && RMSistema.TEMAS[N.slug]) || {};
     orden.forEach(function (u) {
       var g = el('div', 'rm-sis-idx-g'); var l = el('div', 'rm-sis-ulab'); var b = el('b');

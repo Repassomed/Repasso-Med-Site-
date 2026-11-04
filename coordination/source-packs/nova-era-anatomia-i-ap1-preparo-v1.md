@@ -13,8 +13,15 @@
 - **Anatomía I** (`anatomia-i`): 33 blocos `a1b01`–`a1b33` num grupo só (sem unidades no conteúdo; o rótulo «UNIDAD» fica oculto como em Farmacología I), cor de capítulo por região; `bancoa1` = banco (B), `bancofca1` = cartões (F), `a1notas` = notas (N). `a1b00` (abertura) fica fora da lista de blocos.
 - **AP I** (`anatomia-patologica`): guia «Ideas clave» (`analise-guia`, 00); Unidad I (8: 01–06, 06A Calcificación, 06B Aterosclerosis), Unidad II (3: 07, 08, 08A Reparación), Unidad IV (09 Neoplasias); banco (B), flashcards (F). 06A/06B/08A: seções sem número no conteúdo; nomes de unidade propostos — **decisão de José**.
 
-## 2 · Dados dos alunos
-SELECT desta sessão **bloqueado**. Retrato de 24/10: Anatomía I 6 grifos (2 contas), AP I 60 grifos (7 contas), 0 traços, 0 notas. Nenhum texto de conteúdo mudou; grifos ancoram por trecho e os testes confirmam que os existentes (A1 blocos 05/09; AP I Introducción/Adaptación) continuam no lugar. O roteiro pede o SELECT a José antes da prévia.
+## 2 · Dados dos alunos (SELECT somente leitura, 04/11/2026, feito pelo Claude 4 — contagens, sem identificadores)
+| Matéria | Grifos | Contas | Traços | Notas |
+|---|---|---|---|---|
+| `anatomia-i` | 6 | 2 | 0 | 0 |
+| `anatomia-patologica` | 60 | 7 | 0 | 0 |
+| `fisiopatologia` (#632) | 33 | 1 | 0 | 0 |
+| `farmacologia` (#632) | 26 | 2 | 0 | 0 |
+
+`rm_materia_rollout` hoje: só `medicina-familiar` (`preview|preview|preview`); as outras quatro matérias não têm linha ⇒ `off` para todos. **Idêntico ao retrato de 24/10 / 02/11:** nenhum dado novo; 0 traços e 0 notas, então não há risco de índice de âncora (`seção>N`). O que cuidar: **não alterar o texto dos blocos com grifo** (grifos ancoram por trecho e contexto). Os testes confirmam que os grifos existentes (A1 blocos 05/09; AP I Introducción/Adaptación) continuam no mesmo trecho com o tema ligado.
 
 ## 3 · Correções feitas durante o preparo
 - Modo Preguntas de Anatomía I mostrava 0 itens (perguntas dentro de `details.a1-qbox` fechado): a navegação passa a usar a caixa.

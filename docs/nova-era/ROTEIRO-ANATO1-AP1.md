@@ -4,7 +4,7 @@
 
 ## 0 · Antes (só olhar)
 1. No Netlify → **Deploys**: a linha do topo (**Production: main**) mostra o commit da PR com status verde **Published**.
-2. (Recomendado, somente leitura) conferir quantos grifos, traços e notas existem hoje nas duas matérias. A sessão que preparou a PR **não conseguiu** fazer esta consulta (acesso ao banco bloqueado); o último retrato é de 24/10 (Anatomía I 6 grifos de 2 contas; AP I 60 grifos de 7 contas; 0 traços; 0 notas):
+2. (Somente leitura) conferir quantos grifos, traços e notas existem hoje nas duas matérias. **Retrato de 04/11/2026** (SELECT feito pelo Claude 4, só contagens): Anatomía I 6 grifos de 2 contas; AP I 60 grifos de 7 contas; 0 traços; 0 notas em ambas; nenhuma das duas tem linha em `rm_materia_rollout` (⇒ `off`). Para repetir o retrato no dia da prévia:
 ```sql
 select 'grifos' as tipo, subject_slug, count(*) as n, count(distinct user_id) as contas from public.user_highlights where subject_slug in ('anatomia-i','anatomia-patologica') group by 2
 union all select 'tracos', subject_slug, count(*), count(distinct user_id) from public.user_ink_strokes where subject_slug in ('anatomia-i','anatomia-patologica') group by 2
