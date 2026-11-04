@@ -1,6 +1,6 @@
 /* Issue #638 · Anatopatología II (teoría + práctica) · questões lembradas por José (04/11) + foto do gabarito.
    Teste ESTÁTICO (sem navegador, sem rede, sem Supabase): lê os dois HTML e a versão da main (git) e prova:
-   1 as 9 questões novas estão no bloco E no banco, idênticas (divergência bloco×banco = 0);
+   1 as 10 questões novas estão no bloco E no banco, idênticas (divergência bloco×banco = 0);
    2 contagens declaradas (banco, por bloco, práctica) batem com o conteúdo real;
    3 nada foi apagado: toda questão/flashcard da main continua presente (texto de enunciado) e os ids de seção são os mesmos;
    4 texto sob grifo (ap2b04, leitura do Supabase em 04/11) intacto e antes de qualquer trecho editado;
@@ -24,6 +24,7 @@ function runs(s) { let mx = 0, c = 0, p = ''; for (const ch of s) { c = ch === p
 const NUEVAS = [
   ['teo', 'ap2b07', 'Citá los dos tipos de mutaciones más frecuentes en el carcinoma hepatocelular.', 'oficial'],
   ['teo', 'ap2b07', 'Según la clasificación molecular del adenoma hepático', 'oficial'],
+  ['teo', 'ap2b07', 'se activan y se transforman en miofibroblastos', 'oficial'],
   ['teo', 'ap2b04', 'Citá dos patologías asociadas a los tumores carcinoides gástricos.', 'oficial'],
   ['teo', 'ap2b04', 'masa submucosa en la curvatura menor gástrica', 'oficial'],
   ['teo', 'ap2b04', 'islotes y trabéculas de células uniformes con cromatina', 'variante'],
@@ -32,7 +33,7 @@ const NUEVAS = [
   ['teo', 'ap2b05', 'Citá dos hallazgos macroscópicos de la colitis ulcerosa.', 'oficial'],
   ['teo', 'ap2b05', 'Citá dos complicaciones frecuentes de la enfermedad de Crohn.', 'oficial'],
 ];
-console.log('\n▸ 1 · as 9 questões novas: no bloco e no banco, idênticas');
+console.log('\n▸ 1 · as 10 questões novas: no bloco e no banco, idênticas');
 const bankSec = { teo: sec(now.teo, 'bancoap2') };
 for (const [k, sid, key, tag] of NUEVAS) {
   const blk = items(sec(now[k], sid)).filter(x => x.q.includes(key)), bank = items(bankSec[k]).filter(x => x.q.includes(key));
@@ -83,6 +84,7 @@ console.log('\n▸ 5 · cobertura: o bloco ensina antes o que a questão cobra')
   ok(has('ap2b07', 'activación de la β-catenina', 'inactivación de p53', '40%', '60%'), 'N1 mutações CHC: β-catenina ~40% e p53 ~60% já no bloco 07');
   ok(has('ap2b07', 'tres subtipos moleculares', 'HNF1-α', 'β-catenina', 'inflamatorio', 'el de mayor riesgo de malignidad'), 'N2 subtipos do adenoma: ensinados no bloco 07 (parágrafo novo, mínimo)');
   ok(has('ap2b04', 'tipo I aparece sobre gastritis atrófica autoinmunitaria', 'Zollinger-Ellison', 'hipergastrinemia'), 'N3 carcinoide gástrico: tipos I/II/III no bloco 04');
+  ok(has('ap2b07', 'células estrelladas hepáticas', 'colágeno tipo I y III', 'espacio de Disse'), 'N9 colágeno I/III das células estreladas: ensinado numa linha no bloco 07 (fonte: material oficial «07 - Cirrosis»)');
   ok(has('ap2b04', 'célula intersticial de Cajal', 'CD117'), 'N4 GIST → Cajal/CD117 no bloco 04');
   ok(has('ap2b04', 'célula ECL', 'sistema endocrino difuso') || has('ap2b04', 'célula ECL', 'neuroendocrino'), 'N5 carcinoide ← célula neuroendocrina/ECL no bloco 04');
   ok(has('ap2b05', 'uveítis', 'poliartritis migratoria', 'sacroilitis', 'espondilitis anquilosante'), 'N6 extraintestinais: uveíte, poliartrite migratória etc. no bloco 05');
@@ -96,15 +98,17 @@ for (const k of ['teo']) {
   const lst = t => { let all = []; for (const id of Object.keys({ teo: { ap2b01: 1, ap2b02: 1, ap2b03: 1, ap2b04: 1, ap2b05: 1, ap2b06: 1, ap2b07: 1, ap2b08: 1 }, pra: Object.fromEntries(Array.from({ length: 16 }, (_, i) => ['ap2pb' + String(i + 1).padStart(2, '0'), 1])) }[k])) all = all.concat(items(sec(t, id))); return letters(all); };
   const a = lst(old[k]), b = lst(now[k]); const cnt = s => ['a', 'b', 'c', 'd'].map(x => (s.match(new RegExp(x, 'g')) || []).length).join('/');
   console.log(`    ${k}: antes ${a.length} MCQ A/B/C/D=${cnt(a)} maior corrida ${runs(a)} · depois ${b.length} MCQ A/B/C/D=${cnt(b)} maior corrida ${runs(b)}`);
-  const g4 = s => (s.match(/(?=(abcd|dcba))/g) || []).length; ok(runs(b) <= Math.max(4, runs(a)) && g4(b) <= g4(a) && b.length === a.length + 3, `${k}: corrida máxima não piora e 4-gramas abcd/dcba não aumentam (antes ${g4(a)}, depois ${g4(b)}); +${b.length - a.length} MCQ`, { runs: runs(b), g4a: g4(a), g4b: g4(b) });
+  const g4 = s => (s.match(/(?=(abcd|dcba))/g) || []).length; ok(runs(b) <= Math.max(4, runs(a)) && g4(b) <= g4(a) && b.length === a.length + 4, `${k}: corrida máxima não piora e 4-gramas abcd/dcba não aumentam (antes ${g4(a)}, depois ${g4(b)}); +${b.length - a.length} MCQ`, { runs: runs(b), g4a: g4(a), g4b: g4(b) });
   const mx = Math.max(...cnt(b).split('/').map(Number)), mn = Math.min(...cnt(b).split('/').map(Number)); ok(mx - mn <= Math.ceil(b.length * 0.2), `${k}: nenhuma letra domina (máx ${mx} × mín ${mn})`);
 }
 console.log('\n▸ 8 · carcinoides: afirmações conferidas com o slide 4 (sem fonte externa)');
 {
   const T = now.teo, txt = strip(T);
-  ok(!/Tipo III<\/b>: esporádico, el más agresivo/.test(T) && !/tipo III<\/b> es <b>esporádico<\/b>, sin hipergastrinemia, y el más agresivo/.test(T) && !/el gástrico tipo III, agresivo/.test(T), 'carcinoide: retirada a afirmação sem lastro nos slides «tipo III, el más agresivo» (explicação, bloco, flashcard em bloco/banco/mazo)');
-  ok(/Según la cátedra, el factor pronóstico más importante de los carcinoides es su localización/.test(txt) && !/apendicular es benigno;/.test(txt), 'carcinoide: «localização = fator prognóstico mais importante» atribuída à cátedra, com as três localizações do slide; «apendicular benigno» não é mais categórico');
-  ok((T.match(/Según la cátedra, el factor pronóstico más importante/g) || []).length === 2, '  a explicação de ap2b04#7 está igual no bloco e no banco');
+  ok(!/el más agresivo/.test(strip(sec(T, 'ap2b04')).replace(/t\(11;18\)[^.]*\./g, '').replace(/curso más agresivo/g, '')) && !/Tipo III<\/b>: esporádico, el más agresivo/.test(T) && !/el gástrico tipo III, agresivo/.test(T) && !/más frecuente, benigno/.test(T) && !/el más frecuente y el más benigno/.test(T), 'carcinoide: sem «tipo III el más agresivo», «tipo I más frecuente/benigno» (sem lastro) — explicação, bloco e flashcards (bloco, banco, mazo)');
+  ok(!/resección es curativa|siempre son benignos|apendicular es benigno|se curan con la resección\.\s*<\/p>\s*<p class="ap2-trap">⚠️ <b>Error frecuente:<\/b> Según/.test(T) && !/tumores de esa localización son benignos/.test(T), 'carcinoide: nenhuma frase afirma que TODOS os tumores de uma localização são benignos ou curados pela ressecção');
+  ok((T.match(/La <b>localización<\/b> es el factor pronóstico más importante de los carcinoides, pero no decide cada caso/g) || []).length === 2 && /aunque no decide el comportamiento de cada tumor/.test(T), 'carcinoide: localização como fator mais importante QUALIFICADA («no decide cada caso»); explicação de ap2b04#7 igual no bloco e no banco; mesma ressalva na prosa do bloco');
+  ok(/no suelen ser agresivos/.test(T) && /resección suele ser suficiente/.test(T), 'carcinoide: ap2b04#7 usa «suelen» (apêndice incidental/indolente; ressecção suele ser suficiente)');
+  ok(!/Los slides de la cátedra|slides de la cátedra|la cátedra los presenta|no detallan la clasificación/.test(T), 'página do aluno SEM observação de bastidor («os slides detalham…», «a cátedra apresenta…»)');
 }
 console.log('\n▸ 7 · rótulos e honestidade');
 {
