@@ -27,8 +27,10 @@
 - Modo Preguntas de Anatomía I mostrava 0 itens (perguntas dentro de `details.a1-qbox` fechado): a navegação passa a usar a caixa.
 - Texto vazando em 320 px (`.a1-freq`, Anatomía I) e 390 px (`.compare`, AP I): quebra de linha só no tema da matéria.
 
-## 4 · Testes (sobre main + #632 simulada + pacote)
-integracao-anato1-ap1 241/241 · temas-anato1-ap1 112/112 · real-anato1-ap1 221/221 · visual-conteudo anatomia-i 76/76, anatomia-patologica 32/32 · porta 7/7 nas duas · nao-ativacao 22/22 · servidor 59/59 · navegador 247/247 · real-fisio1-farmaco1 (rápido) 158/158 · caneta: só as falhas antigas da main (`docs/nova-era/CANETA-FALHAS-ANTIGAS-2026-11.md`).
+## 4 · Testes (04/11/2026, sobre a main que já contém #632, #633 e #639 + este branch)
+temas-anato1-ap1 112/112 · real-anato1-ap1 221/221 · integracao-anato1-ap1 241/241 · visual-conteudo anatomia-i 76/76, anatomia-patologica 32/32 · porta 7/7 nas duas · navegar-ferramentas (6 matérias × 1440/768/390) 1068/1068 · infografias-regra 48/48, infografias-modo 123/123 · nao-ativacao 22/22 · servidor 59/59 · navegador 247/247 · Semiología II sem regressão (layout 535, sistema 124, nav-sistema 216, cover 198, soltos 16, race 140, ink-jump 54, caneta-ipad 197).
+Caneta e auditoria pública: **mesmas falhas da main pura, 0 novas** — `caneta-novo-layout` 87/91 (main 87/91 em 2 rodadas, 88/91 em outra; branch 87/91 em 3), `caneta-456` 136/138 (main 136/138), `auditoria-implantacao-publica` 22 falhas idênticas (supõe liberação por variáveis do Netlify). Detalhe em `docs/nova-era/CANETA-FALHAS-ANTIGAS-2026-11.md`.
+Observação de método: o `temas-anato1-ap1` falhou uma vez (110/112, vinhetas não carregadas a tempo) quando 4 fluxos de teste rodaram em paralelo; sozinho: 112/112.
 
 ## 5 · Achado editorial (não alterado)
 `a1notas` diz que as figuras são «SVG originales»; hoje são webp. Corrigir é decisão de conteúdo.
