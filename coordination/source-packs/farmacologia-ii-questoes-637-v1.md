@@ -7,7 +7,7 @@ Regras: CLAUDE.md, G0, `MANUTENCAO-DIDATICA-REPASSO-MED.md` §8-A. Supabase só 
 
 | Fonte | Uso | Limite |
 |---|---|---|
-| Relato de José (issue #637), 10 itens numerados 1–5 e 7–11 (**o item 6 não veio no relato**) | enunciados parciais; **não é gabarito oficial** | vários enunciados terminam em «…»; a alternativa certa de 1, 3 e 4 não foi informada |
+| Relato de José (issue #637), 10 itens, numerados 1–5 e 7–11 (**o número 6 não foi informado**; isso não prova que exista outra questão) | enunciados parciais; **não é gabarito oficial** | vários enunciados terminam em «…»; a alternativa certa de 1, 3 e 4 não foi informada |
 | `06 - SISTEMA RESPIRATORIO.pdf` (Drive `1nSKmR4r_Ee7L_Mo6iLSajfSPBw9E6iFH`, slide «SISTEMA_RESPIRATORIO 2026 actualizado», modificado 22/10) | texto lido integralmente hoje (`read_file_content`) | só texto extraído; figuras não conferidas como imagem |
 | `05 - Antiinflamatorios esteroideos.pdf` (Drive `1VW6csyenswiW9Yyik35H5KiUPFG0q3Gm`) | texto lido na rodada de 29/10 (registro `farmacologia-ii-resumen-clases-2026-10-v1.md`); a página de hoje não mudou desde 22/10 | idem |
 | Literatura base (Rang & Dale, Goodman, Katzung, Flórez…) | **não está no Drive** (busca por título retornou vazio, 04/11) | nada foi confirmado em livro; nada veio de fonte externa |
@@ -29,9 +29,9 @@ Critério de duplicata: o **conhecimento exigido**, não o texto. «Um aluno que
 | 9 | MgSO₄ na asma aguda grave | V/F «útil como broncodilatador adicional…» (indicação) | **RELACIONADA MAS DISTINTA → NOVA** (exige o mecanismo — ↓ Ca²⁺ citosólico — e descarta β₂/histamina/↑Ca²⁺) | **Inserida**; pedido «precisar contexto e evitar opção ambígua» atendido: a alternativa certa junta **indicação (niños y adultos, asma aguda grave) + mecanismo**; as erradas são uma só afirmação falsa cada |
 | 10 | Xantinas: efeito que melhora a força respiratória | bloco 08 · «Sobre las xantinas… INCORRECTA» (contratilidade do diafragma, centro respiratório, ação diurética) | **DUPLICATA SEMÂNTICA** (mesmo núcleo: contratilidade diafragmática) | Não inserida. O resumo já ensina o aclaramento mucociliar e os 6 efeitos |
 | 11 | Mineralocorticoide sintético na insuficiência suprarrenal («Gludrocortisona» = **fludrocortisona**) | bloco 07 · V/F «fludrocortisona… alta atividade mineralocorticoide» (+ V/F da HTA/alcalose hipopotassêmica) | **DUPLICATA SEMÂNTICA** | Não inserida. Grafia verificada no slide 05: *fludrocortisona* |
-| 6 | (não veio no relato) | — | — | **Pendência de José:** enviar o enunciado |
+| 6 | (número não informado no relato) | — | — | Apenas registrado: **não foi informado**. Nada indica que exista uma questão com esse número; se José quiser incluir algo, é só enviar |
 
-Resultado: **4 perguntas novas** (3 «Basada en preguntas de examen» —reconstruções do relato, não transcrições literais— e 1 «Pregunta complementaria»), **1 explicação enriquecida** (roflumilast), **6 duplicatas** registradas, **2 pendências** (item 6; gabarito original dos itens 1 e 3).
+Resultado: **4 perguntas novas** (3 «Basada en preguntas de examen» —reconstruções do relato, não transcrições literais— e 1 «Pregunta complementaria»), **1 explicação enriquecida** (roflumilast), **6 duplicatas** registradas, **1 pendência** (gabarito original dos itens 1 e 3); o número 6 não foi informado.
 
 ## 2 · Verificação de cada pergunta nova nos slides atuais (8-A.5, 8-A.6)
 
@@ -41,6 +41,11 @@ Resultado: **4 perguntas novas** (3 «Basada en preguntas de examen» —reconst
 | β₂ (tipo exame, letra **d**) | certa: ocupam β₂ → Gs–adenililciclase–cAMP–PKA; «indirectamente… inhibir mediadores de broncoconstricción en células inflamatorias. Ej mastocitos»; «inhibición de la liberación de mediadores (efecto antiinflamatorio agudo)». Falsas: M₃/histamina; leucotrienos (montelukast); PDE4 (roflumilast) | slide «Beta-adrenérgicos o simpaticomiméticos» |
 | MgSO₄ (tipo exame, letra **a**) | certa: «útil como broncodilatador adicional en niños y adultos con asma aguda grave… reduce las concentraciones citosólicas de Ca²⁺». Falsas: β₂ direto, ↑ histamina, ↑ Ca²⁺ | slide «Sulfato de magnesio» |
 | Asma por exercício (complementar, letra **c**) | certa: antileucotrienos = terapia complementar; «efectivos en la prevención del asma inducida por el ejercicio, con una eficacia similar a la de los LABA». Falsas: roflumilast («no es tratamiento habitual del asma»), ipratropio (broncodilatador), omalizumab (asma grave selecionada) | slides «Antileucotrienos» e «Otros antiinflamatorios y terapias dirigidas» |
+
+### 2.1 · Conferência final (04/11, 2.ª rodada): o que cada frase sustenta
+- **«Montelukast… requiere control de enzimas hepáticas»** → slide 06 («REACCIONES ADVERSAS»): *«ZILEUTÓN, ZAFIRLUKAST Y MONTELUKAST ESTÁN TODOS ASOCIADOS CON CASOS RAROS DE DISFUNCIÓN HEPÁTICA; POR TANTO, LAS ENZIMAS ASOCIADAS AL HÍGADO DEBEN SER MONITORIZADAS.»* **Sustentada**, mas a frase da pergunta era mais forte que o slide («requiere control»): foi reescrita nas duas cópias como «se asocia, como el zafirlukast y el zileutón, a casos raros de disfunción hepática: por eso el slide indica monitorizar las enzimas hepáticas». O mesmo dado, com a mesma redação do slide, foi alinhado no resumo e na pergunta existente do bloco 08 (mesmo id; «elevación de enzimas hepáticas» → «casos raros de disfunción hepática… se monitorizan las enzimas hepáticas»).
+- **Retirado das novas o que o slide 06 não diz:** «intravenoso» e «refractaria / no mejora con SABA y corticoide» (MgSO₄), «dosis bajas» (corticoide da pergunta do exercício) e «fenotipo alérgico» (omalizumab → «asma grave seleccionada», como o slide). O tono vagal passou a «puede ser el único elemento reversible de la obstrucción» (formulação do slide).
+- **Observação, não alterada (fora do escopo):** o resumo atual diz que o montelukast «se ha vinculado además a alteraciones neuropsiquiátricas»; essa frase **não consta do slide 06** (só hepática e Churg-Strauss). Fica para decisão de José.
 
 Letras certas das 4 novas: a · d · a · c (o banco tinha a 41, b 52, c 51, d 47: as novas aproximam o «a»; 8-A.7).
 
@@ -66,6 +71,5 @@ Já ensinados (sem mudança): β₂ → mastócito (mediadores), antileucotrieno
 (ver o corpo da PR: preenchidos ao fim da bateria)
 
 ## 7 · Pendências para José
-1. **Item 6** do relato: não chegou; enviar o enunciado (e alternativas, se lembrar).
-2. **Itens 1 e 3**: o relato não informa a resposta; se José lembrar qual era (item 1: «liberação de IL-10» ou «apoptose»? item 3: corticoide inalado ou antileucotrienos?), a pergunta correspondente pode ser ajustada.
-3. Literatura base fora do Drive: se José a disponibilizar, as explicações podem ser conferidas também no livro.
+1. **Itens 1 e 3**: o relato não informa a resposta; se José lembrar qual era (item 1: «liberação de IL-10» ou «apoptose»? item 3: corticoide inalado ou antileucotrienos?), a pergunta correspondente pode ser ajustada.
+2. Literatura base fora do Drive: se José a disponibilizar, as explicações podem ser conferidas também no livro.
