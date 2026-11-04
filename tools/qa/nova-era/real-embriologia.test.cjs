@@ -117,6 +117,9 @@ const MATERIAS = [
           cards.forEach(c => { const g = JSON.parse(c.getAttribute('data-go')); const real = R.n(document.getElementById(g.block)); const txt = (c.querySelector('i') || {}).textContent || ''; const nn = +((txt.match(/^(\d+)/) || [])[1]); soma += real; if (nn !== real || real < 1) erros.push([g.block, nn, real]); });
           const tot = +(((box.querySelector('.rm-nav-mh p') || {}).textContent || '').match(/^(\d+)/) || [])[1]; return { cards: cards.length, soma, tot, erros }; }, chave);
         ok(cont.cards >= 1 && cont.erros.length === 0 && cont.soma === cont.tot, `2b · «${rotulo}»: ${cont.cards} cartões, cada contagem = a do recurso real, soma ${cont.soma} = total do cabeçalho ${cont.tot}`, cont);
+        /* a capa e o modo contam o MESMO: o cartão da capa (data-rm-n) = soma do índice do modo (nada de 203 × 205) */
+        const capaN = await p.evaluate(k => { const e = document.querySelector('.rm-l2-rescard--' + k); return e ? +e.getAttribute('data-rm-n') : null; }, ({ infografias: 'fig', preguntas: 'quiz', flashcards: 'fc', videos: 'vid' })[chave]);
+        ok(capaN !== null && capaN === cont.tot, `2b · «${rotulo}»: contagem da CAPA (${capaN}) = total do modo (${cont.tot})`, { capaN, tot: cont.tot });
         /* abre o 1.º bloco do modo: só o recurso fica à vista, na quantidade certa */
         const blk = await p.evaluate(async k => { const R = RMNav._RES[k]; const c = [...document.querySelectorAll('.rm-nav-modeidx .rm-sis-idx-grid .rm-sis-card')].find(x => { try { return JSON.parse(x.getAttribute('data-go')).view === 'modeblk'; } catch (e) { return false; } }); const g = JSON.parse(c.getAttribute('data-go')); c.scrollIntoView({ block: 'center' }); c.click(); await new Promise(r => setTimeout(r, 1800));
           const sec = document.getElementById(g.block); const e = RMNav.estado(); const vis = x => x.checkVisibility() && x.getBoundingClientRect().height > 0;
