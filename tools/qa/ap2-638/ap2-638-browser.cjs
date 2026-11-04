@@ -1,4 +1,4 @@
-/* Issue #638 · Anatopatología II (teoría e práctica) — teste no navegador das 10 questões novas e do que foi ensinado/corrigido.
+/* Issue #638 · Anatopatología II (teoría) — teste no navegador das 9 questões novas e do que foi ensinado/corrigido.
    Local, somente leitura (harness do ensaio: Supabase simulado, zero rede externa). Modo «controle» (como o site serve hoje) e «nav» (layout novo, só em memória).
    Uso: NODE_PATH=$(npm root -g) node tools/qa/ap2-638/ap2-638-browser.cjs [--shots=<dir>] */
 'use strict';
@@ -11,14 +11,13 @@ const TEO = { slug: 'anatomia-patologica-ii', cont: { ap2b04: 18, ap2b05: 18, ap
     ['ap2b04', 'cromatina «en sal y pimienta» y cromogranina A positiva. ¿De qué tipo de célula', 'd'], ['ap2b05', 'Citá dos manifestaciones extraintestinales', 'poliartritis migratoria'], ['ap2b05', 'Citá dos hallazgos macroscópicos de la enfermedad de Crohn', 'pared intestinal engrosada'],
     ['ap2b05', 'Citá dos hallazgos macroscópicos de la colitis ulcerosa', 'seudopólipos'], ['ap2b05', 'Citá dos complicaciones frecuentes de la enfermedad de Crohn', 'anemia megaloblástica']],
   ensena: [['ap2b05', 'poliartritis migratoria'], ['ap2b05', 'anemia megaloblástica'], ['ap2b05', 'dañan la muscular propia'], ['ap2b05', 'no se engrosa'], ['ap2b07', 'tres subtipos moleculares']], banco: 'bancoap2', bancoStats: ['165 preguntas', '112 basadas en preguntas de examen', '53 variantes'] };
-const PRA = { slug: 'anatomia-patologica-ii-practica', cont: { ap2pb08: 13, ap2pbanco: 221 }, nuevas: [['ap2pb08', 'se encargan de la fibrosis de la cirrosis', 'a']], ensena: [['ap2pb08', 'tipo I y III']], banco: 'ap2pbanco', bancoStats: ['221 preguntas en el banco completo', '109 preguntas en el Parcial 2'] };
 (async () => {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
   const srv = await L.servir({}); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
-  for (const C of [TEO, PRA]) {
+  for (const C of [TEO]) {
     const m = L.reconciliar().ativas.find(x => x.slug === C.slug);
     for (const [modo, W] of [['controle', 1440], ['controle', 390], ['nav', 1440], ['nav', 768]]) {
-      const r = await L.abrir(br, base, m, { w: W, h: ({ 390: 844, 768: 1024, 1440: 900 })[W], modo, espera: 800 }); const p = r.page; const tag = C.slug.endsWith('practica') ? 'PRÁCTICA' : 'TEORÍA';
+      const r = await L.abrir(br, base, m, { w: W, h: ({ 390: 844, 768: 1024, 1440: 900 })[W], modo, espera: 800 }); const p = r.page; const tag = 'TEORÍA';
       const D = await p.evaluate(C => ({ cont: Object.fromEntries(Object.keys(C.cont).map(i => [i, document.getElementById(i) ? document.getElementById(i).querySelectorAll('.quiz-item').length : -1])), stats: (document.getElementById(C.banco).textContent || '').replace(/\s+/g, ' '),
         ensena: C.ensena.map(([id, f]) => (document.getElementById(id).textContent.replace(/\s+/g, ' ')).includes(f)) }), C);
       ok(W, modo, tag + ' · contagens de questões por seção (bloco/banco)', JSON.stringify(D.cont) === JSON.stringify(C.cont), D.cont);

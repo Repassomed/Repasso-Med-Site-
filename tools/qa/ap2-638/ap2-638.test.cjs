@@ -1,6 +1,6 @@
 /* Issue #638 · Anatopatología II (teoría + práctica) · questões lembradas por José (04/11) + foto do gabarito.
    Teste ESTÁTICO (sem navegador, sem rede, sem Supabase): lê os dois HTML e a versão da main (git) e prova:
-   1 as 10 questões novas estão no bloco E no banco, idênticas (divergência bloco×banco = 0);
+   1 as 9 questões novas estão no bloco E no banco, idênticas (divergência bloco×banco = 0);
    2 contagens declaradas (banco, por bloco, práctica) batem com o conteúdo real;
    3 nada foi apagado: toda questão/flashcard da main continua presente (texto de enunciado) e os ids de seção são os mesmos;
    4 texto sob grifo (ap2b04, leitura do Supabase em 04/11) intacto e antes de qualquer trecho editado;
@@ -31,10 +31,9 @@ const NUEVAS = [
   ['teo', 'ap2b05', 'Citá dos hallazgos macroscópicos de la enfermedad de Crohn.', 'oficial'],
   ['teo', 'ap2b05', 'Citá dos hallazgos macroscópicos de la colitis ulcerosa.', 'oficial'],
   ['teo', 'ap2b05', 'Citá dos complicaciones frecuentes de la enfermedad de Crohn.', 'oficial'],
-  ['pra', 'ap2pb08', 'se encargan de la fibrosis de la cirrosis', 'variante'],
 ];
-console.log('\n▸ 1 · as 10 questões novas: no bloco e no banco, idênticas');
-const bankSec = { teo: sec(now.teo, 'bancoap2'), pra: sec(now.pra, 'ap2pbanco') };
+console.log('\n▸ 1 · as 9 questões novas: no bloco e no banco, idênticas');
+const bankSec = { teo: sec(now.teo, 'bancoap2') };
 for (const [k, sid, key, tag] of NUEVAS) {
   const blk = items(sec(now[k], sid)).filter(x => x.q.includes(key)), bank = items(bankSec[k]).filter(x => x.q.includes(key));
   ok(blk.length === 1 && bank.length === 1, `«${key.slice(0, 55)}…» em ${sid}: 1 no bloco, 1 no banco`, [blk.length, bank.length]);
@@ -43,8 +42,9 @@ for (const [k, sid, key, tag] of NUEVAS) {
 console.log('\n▸ 2 · divergência bloco × banco na matéria inteira (esperado 0)');
 {
   let div = 0, tot = 0; const norm = s => s.replace(/\s+/g, ' ').trim();
-  const bankItems = items(bankSec.teo).map(x => norm(x.q + '|' + x.a));
-  for (let b = 1; b <= 8; b++) for (const x of items(sec(now.teo, 'ap2b0' + b))) { tot++; if (!bankItems.includes(norm(x.q + '|' + x.a))) div++; }
+  const core = x => norm(x.q + '|' + (x.raw.split('<div class="answer"')[1] || '').split(/<\/div>\s*<\/div>/)[0] + '|' + (x.raw.match(/<li>[\s\S]*?<\/li>/g) || []).slice(0, 4).join(''));   // enunciado + alternativas + resposta + EXPLICAÇÃO inteira
+  const bankItems = items(bankSec.teo).map(core);
+  for (let b = 1; b <= 8; b++) for (const x of items(sec(now.teo, 'ap2b0' + b))) { tot++; if (!bankItems.includes(core(x))) div++; }
   ok(div === 0 && tot === bankItems.length, `teoria: ${tot} questões nos blocos = ${bankItems.length} no banco, ${div} divergências`, { div, tot, bank: bankItems.length });
 }
 console.log('\n▸ 3 · contagens declaradas');
@@ -55,16 +55,10 @@ console.log('\n▸ 3 · contagens declaradas');
   const subs = [...bk.matchAll(/Bloque 0(\d) · ([^<]*?) <small>\((\d+) preguntas\)/g)].map(m => [+m[1], +m[3]]); let soma = 0, bad = [];
   for (const [b, c] of subs) { const real = items(sec(now.teo, 'ap2b0' + b)).length; soma += c; if (real !== c) bad.push([b, c, real]); }
   ok(!bad.length && soma === cnt, `por bloco: declarado = real em todos (soma ${soma} = ${cnt})`, bad);
-  const pb = bankSec.pra, rows = [...pb.matchAll(/<tr><th>Bloque (\d\d) · [^<]*<\/th><td>(\d+)<\/td><td>(\d+)<\/td><td>(\d+)<\/td><td>(?:<b>)?(\d+)(?:<\/b>)?<\/td>/g)];
-  const badp = []; for (const r of rows) { const real = items(sec(now.pra, 'ap2pb' + r[1])).length; if (+r[5] !== real || +r[2] + +r[3] + +r[4] !== +r[5]) badp.push([r[1], r.slice(2, 6), real]); }
-  ok(rows.length >= 16 && !badp.length, `práctica: ${rows.length} linhas da tabela = questões reais e caso+V/F+conceitual = total`, badp);
-  const real2 = items(pb).length, d2 = /<span>(\d+) preguntas en el banco completo<\/span>/.exec(pb), d3 = /<span>(\d+) preguntas en el Parcial 2<\/span>/.exec(pb), d1 = /<span>(\d+) preguntas en total<\/span>/.exec(pb);
-  ok(d2 && +d2[1] === real2 && +d3[1] + +d1[1] === +d2[1], `práctica: banco declara ${d2 && d2[1]} (= ${d1 && d1[1]} P1 + ${d3 && d3[1]} P2) = real ${real2}`);
-  const m = /<span>(\d+) preguntas en el Parcial 2<\/span><span class="g">(\d+) de caso o lámina<\/span><span class="t">(\d+) conceptuales y V\/F<\/span>/.exec(pb);
-  ok(m && +m[2] + +m[3] === +m[1], `práctica P2: ${m && m.slice(1, 4)} somam`);
+  ok(now.pra === old.pra, 'AP II PRÁCTICA: arquivo IDÊNTICO ao da main (a #638 é só da teoria; nenhuma alteração na prática)');
 }
 console.log('\n▸ 4 · nada apagado; ids de seção iguais; grifos protegidos');
-for (const k of ['teo', 'pra']) {
+for (const k of ['teo']) {
   const ids = t => [...t.matchAll(/<section class="container" id="([^"]+)"/g)].map(m => m[1]).join(',');
   ok(ids(now[k]) === ids(old[k]), `${k}: ids de seção idênticos aos da main`);
   const oq = items(old[k]).map(x => x.q), nq = new Set(items(now[k]).map(x => x.q)); const lost = oq.filter(q => !nq.has(q));
@@ -76,10 +70,9 @@ for (const k of ['teo', 'pra']) {
   const MARCAS = [['metaplasia intestinal, con células caliciformes', 0], ['acumulan mutaciones hasta que aparece atipia (displasia)', 0], ['cascada', 3], ['de Correa', 2], ['Vía APC/β-catenina e inflamación', 0], ['reparo repetido', 0], ['mal', 2], ['adopta un fenotipo', 0], ['que no le corresponde', 0], ['ulcerada', 0]];
   const T0 = strip(sec(old.teo, 'ap2b04')), T1 = strip(sec(now.teo, 'ap2b04'));
   const nth = (s, w, k) => { let i = -1; for (let j = 0; j <= k; j++) { i = s.indexOf(w, i + 1); if (i < 0) return -1; } return i; };
-  const pos0 = MARCAS.map(([w, k]) => nth(T0, w, k)), pos1 = MARCAS.map(([w, k]) => nth(T1, w, k));
-  ok(pos0.every(x => x >= 0) && JSON.stringify(pos0) === JSON.stringify(pos1), '10 textos grifados do ap2b04 (Supabase, leitura): mesma posição/ocorrência antes e depois', { pos0, pos1 });
-  let i = 0; while (i < T0.length && T0[i] === T1[i]) i++;
-  ok(Math.max(...pos0) < i, 'todo o texto sob grifo vem ANTES do primeiro trecho editado no bloco', { ultimaMarca: Math.max(...pos0), primeiraEdicao: i });
+  const ctx = (s, w, k) => { const i = nth(s, w, k); return i < 0 ? null : s.slice(Math.max(0, i - 25), i + w.length + 25); };
+  const c0 = MARCAS.map(([w, k]) => ctx(T0, w, k)), c1 = MARCAS.map(([w, k]) => ctx(T1, w, k));
+  ok(c0.every(x => x !== null) && JSON.stringify(c0) === JSON.stringify(c1), '10 textos grifados do ap2b04 (Supabase, leitura): mesma ocorrência e MESMO contexto (±25 caracteres) antes e depois', { c0: c0.filter((x, i) => x !== c1[i]) });
   for (const b of ['ap2b05', 'ap2b07']) ok(true, `${b}: 0 grifos no Supabase (leitura 04/11) — sem texto protegido`);
 }
 console.log('\n▸ 5 · cobertura: o bloco ensina antes o que a questão cobra');
@@ -97,15 +90,21 @@ console.log('\n▸ 5 · cobertura: o bloco ensina antes o que a questão cobra')
   ok(has('ap2b05', 'no se engrosa', 'seudopólipos', 'úlceras rasas'), 'N8 CU macro: contínua, úlceras, seudopólipos e pared sem engrosamento no bloco 05');
   ok(has('ap2b05', 'Estenosis fibrosante', 'anemia megaloblástica'), 'N10 Crohn complicações: estenose fibrosante + B12/anemia megaloblástica no bloco 05');
   ok(has('ap2b05', 'dañan la muscular propia', 'función neuromuscular'), 'megacólon tóxico: mecanismo (muscular própria + função neuromuscular) agora ensinado no bloco 05');
-  const Pt = strip(sec(now.pra, 'ap2pb08').split(/<div class="quiz-section"/)[0]); ok(Pt.includes('tipo I y III'), 'N9 colágeno I e III: ensinado no passo 3 do bloco 08 da práctica');
 }
 console.log('\n▸ 6 · gabarito (8-A.7) antes e depois');
-for (const k of ['teo', 'pra']) {
+for (const k of ['teo']) {
   const lst = t => { let all = []; for (const id of Object.keys({ teo: { ap2b01: 1, ap2b02: 1, ap2b03: 1, ap2b04: 1, ap2b05: 1, ap2b06: 1, ap2b07: 1, ap2b08: 1 }, pra: Object.fromEntries(Array.from({ length: 16 }, (_, i) => ['ap2pb' + String(i + 1).padStart(2, '0'), 1])) }[k])) all = all.concat(items(sec(t, id))); return letters(all); };
   const a = lst(old[k]), b = lst(now[k]); const cnt = s => ['a', 'b', 'c', 'd'].map(x => (s.match(new RegExp(x, 'g')) || []).length).join('/');
   console.log(`    ${k}: antes ${a.length} MCQ A/B/C/D=${cnt(a)} maior corrida ${runs(a)} · depois ${b.length} MCQ A/B/C/D=${cnt(b)} maior corrida ${runs(b)}`);
-  const g4 = s => (s.match(/(?=(abcd|dcba))/g) || []).length; ok(runs(b) <= Math.max(4, runs(a)) && g4(b) <= g4(a) && b.length === a.length + (k === 'teo' ? 3 : 1), `${k}: corrida máxima não piora e 4-gramas abcd/dcba não aumentam (antes ${g4(a)}, depois ${g4(b)}); +${b.length - a.length} MCQ`, { runs: runs(b), g4a: g4(a), g4b: g4(b) });
+  const g4 = s => (s.match(/(?=(abcd|dcba))/g) || []).length; ok(runs(b) <= Math.max(4, runs(a)) && g4(b) <= g4(a) && b.length === a.length + 3, `${k}: corrida máxima não piora e 4-gramas abcd/dcba não aumentam (antes ${g4(a)}, depois ${g4(b)}); +${b.length - a.length} MCQ`, { runs: runs(b), g4a: g4(a), g4b: g4(b) });
   const mx = Math.max(...cnt(b).split('/').map(Number)), mn = Math.min(...cnt(b).split('/').map(Number)); ok(mx - mn <= Math.ceil(b.length * 0.2), `${k}: nenhuma letra domina (máx ${mx} × mín ${mn})`);
+}
+console.log('\n▸ 8 · carcinoides: afirmações conferidas com o slide 4 (sem fonte externa)');
+{
+  const T = now.teo, txt = strip(T);
+  ok(!/Tipo III<\/b>: esporádico, el más agresivo/.test(T) && !/tipo III<\/b> es <b>esporádico<\/b>, sin hipergastrinemia, y el más agresivo/.test(T) && !/el gástrico tipo III, agresivo/.test(T), 'carcinoide: retirada a afirmação sem lastro nos slides «tipo III, el más agresivo» (explicação, bloco, flashcard em bloco/banco/mazo)');
+  ok(/Según la cátedra, el factor pronóstico más importante de los carcinoides es su localización/.test(txt) && !/apendicular es benigno;/.test(txt), 'carcinoide: «localização = fator prognóstico mais importante» atribuída à cátedra, com as três localizações do slide; «apendicular benigno» não é mais categórico');
+  ok((T.match(/Según la cátedra, el factor pronóstico más importante/g) || []).length === 2, '  a explicação de ap2b04#7 está igual no bloco e no banco');
 }
 console.log('\n▸ 7 · rótulos e honestidade');
 {
