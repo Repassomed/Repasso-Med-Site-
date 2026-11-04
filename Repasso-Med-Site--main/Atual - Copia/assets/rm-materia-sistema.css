@@ -1379,3 +1379,13 @@ html.rm-sis .rm-sis-card-m { display: flex; flex-wrap: wrap; gap: 4px; margin-to
 html.rm-sis .rm-sis-card-k { display: inline-flex; align-items: baseline; gap: 3px; padding: 2px 8px; border-radius: 99px; background: rgba(255, 255, 255, .7); font: 500 11px var(--rm-f-ui); color: var(--rm-tx2); white-space: nowrap; }
 html.rm-sis .rm-sis-card-k b { font: 700 11px var(--rm-f-mono); color: var(--cap, var(--rm-title)); }
 @media (max-width: 640px) { html.rm-sis .rm-sis-idx-grid { grid-auto-rows: auto; } html.rm-sis .rm-sis-idx-grid .rm-sis-card { min-height: 0; } }
+
+/* ===== Fisiopatología II (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="fisiopatologia-ii"]. ===== */
+html.rm-sis[data-rm-tema="fisiopatologia-ii"][data-rm-tema] {
+  --rm-surface: #D9E8EE; --rm-side: #EAF3F7; --rm-side-edge: #B3CFDB; --rm-side-card: #D2E3EA; --rm-side-rule: #C2D9E3;
+  --rm-accent: #2C7A99; --rm-accent-d: #1D5870; --rm-marker: #E9B949;
+}
+/* o conteúdo não tem unidades: o rótulo de grupo único «UNIDAD ·» não é mostrado (índice, lateral e telas de modo); o grupo REPASO mantém o seu */
+html.rm-sis[data-rm-tema="fisiopatologia-ii"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="fisiopatologia-ii"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="fisiopatologia-ii"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
