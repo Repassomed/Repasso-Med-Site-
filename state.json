@@ -3347,6 +3347,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:629.",
       "task_id": "- (issue #628)",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "a3404795f9816804df36eda92fc5371c4b39f03f",
+      "component": "guard",
+      "error_id": "ERR-7B8040E89C",
+      "error_type": "hard-fail",
+      "fingerprint": "7b8040e89c4652963096",
+      "first_seen": "2026-11-04T20:01:16.891854+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "48daf2a0a91c4ed7b56816b6868b8ec3",
+      "issue_sync_updated_at": "2026-11-04T20:01:16.891854+00:00",
+      "last_evidence_hash": "c083cf359531055b633f",
+      "last_seen": "2026-11-04T20:01:16.891854+00:00",
+      "occurrence_count": 1,
+      "pr_number": 634,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "41902298651",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:634.",
+      "task_id": "nova-era-anato1-ap1-2026-11",
+      "worker_id": null
     }
   ]
 }
