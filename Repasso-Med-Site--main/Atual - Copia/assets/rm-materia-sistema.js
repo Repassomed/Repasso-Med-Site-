@@ -94,6 +94,19 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Fisiopatología II (Nova Era): ids `fp2bNN` FORA da ordem do conteúdo (fp2b12 = «BLOQUE 03» EII, fp2b04 = «BLOQUE 04», fp2b03 = «BLOQUE 05», fp2b13 = «BLOQUE 06», fp2b14 = «BLOQUE 07»).
+     A numeração é a do MARCADOR («BLOQUE NN · ÁREA · TEMA») e a ordem do DOM já a respeita. Sem «UNIDAD X» no conteúdo (o marcador traz a ÁREA: digestivo, hígado, riñón…):
+     nenhuma unidade é criada. `fp2portada` (oculta, vazia) não é montada pelo módulo. Banco geral e mazo geral = repaso. Vinhetas: 9 recortes de infografías do próprio
+     conteúdo; os blocos sem região de ilustração limpa (03, 04, 06, 07, 12) e os 15–17 (sem figura) usam o logotipo (vig: null). */
+  var FP2_NUM = { fp2b01: 1, fp2b02: 2, fp2b12: 3, fp2b04: 4, fp2b03: 5, fp2b13: 6, fp2b14: 7, fp2b05: 8, fp2b06: 9, fp2b07: 10, fp2b08: 11, fp2b09: 12, fp2b10: 13, fp2b11: 14, fp2b15: 15, fp2b16: 16, fp2b17: 17 };
+  var FP2_SEMVIG = { 3: 1, 4: 1, 6: 1, 7: 1, 12: 1, 15: 1, 16: 1, 17: 1 };
+  var FP2_REPASO = { bancofp2: 'B', revisaofp2: 'F' };
+  function clasificarFP2(id) {
+    if (Object.prototype.hasOwnProperty.call(FP2_NUM, id)) { var n = FP2_NUM[id]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: FP2_SEMVIG[n] ? null : 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(FP2_REPASO, id)) return { tipo: 'repaso', n: FP2_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   var TEMAS = {
     'semiologia-ii': {
       vigDir: 'assets/img/semio2/vig/',
@@ -172,6 +185,22 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFA
+    },
+    'fisiopatologia-ii': {
+      vigDir: 'assets/img/fisio2/vig/',                   // 9 vinhetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-FISIO2.md)
+      logo: 'assets/repasso-med-logo.png',
+      unidades: {},                                       // o conteúdo não tem «UNIDAD X»: nenhuma unidade é criada
+      medallones: [
+        { vig: 'vb-01', t: 'ESÓFAGO', cap: 1, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-08', t: 'RIÑÓN',   cap: 2, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-05', t: 'HÍGADO',  cap: 5, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarFP2
     }
   };
 
