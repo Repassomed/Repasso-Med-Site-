@@ -16,9 +16,9 @@ const D = require('./lib-dados.cjs');
 const FN = path.join(L.ROOT, 'netlify/functions/get-pilot-flags.js');
 const PILOT_JS = fs.readFileSync(path.join(L.ROOT, 'assets/rm-pilot.js'), 'utf8');
 const UID = D.UID, PIL = 'semiologia-ii';
-const CANDIDATAS_ESPERADAS = ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia'];   // 1.ª fechadura: piloto + as matérias em implantação controlada (só PERGUNTAM ao servidor; a 2.ª fechadura, a tabela, decide)
+const CANDIDATAS_ESPERADAS = ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'farmacologia-ii'];   // 1.ª fechadura: piloto + as matérias em implantação controlada (só PERGUNTAM ao servidor; a 2.ª fechadura, a tabela, decide)
 const PRIMEIRA = 'medicina-familiar';
-const CAND_CONTROLADAS = ['medicina-familiar', 'fisiopatologia', 'farmacologia'];   // candidatas: só PERGUNTAM; a tabela (2.ª fechadura) está vazia ⇒ o servidor nega
+const CAND_CONTROLADAS = ['medicina-familiar', 'fisiopatologia', 'farmacologia', 'farmacologia-ii'];   // candidatas: só PERGUNTAM; a tabela (2.ª fechadura) está vazia ⇒ o servidor nega
 const RAPIDO = process.argv.includes('--rapido');
 let n = 0, ko = 0;
 const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x) : ''); } return !!c; };
@@ -79,7 +79,7 @@ async function matéria(br, base, m, env, rot) {
   }
 
   console.log('\n▸ E4 · estático');
-  { const cand = /var CANDIDATAS = \[([^\]]*)\]/.exec(PILOT_JS); ok(cand && cand[1].replace(/['"\s]/g, '').split(',').sort().join() === CANDIDATAS_ESPERADAS.slice().sort().join(), 'CANDIDATAS = piloto + Medicina Familiar + Fisiopatología I + Farmacología I (nada além)', cand && cand[1]);
+  { const cand = /var CANDIDATAS = \[([^\]]*)\]/.exec(PILOT_JS); ok(cand && cand[1].replace(/['"\s]/g, '').split(',').sort().join() === CANDIDATAS_ESPERADAS.slice().sort().join(), 'CANDIDATAS = piloto + Medicina Familiar + Fisiopatología I + Farmacología I + Farmacología II (nada além)', cand && cand[1]);
     const fn = fs.readFileSync(FN, 'utf8'); const semComentarios = fn.replace(/\/\*[\s\S]*?\*\//g, ''); ok(!/['"]\*['"]|'todas'|'todos'/.test(semComentarios) && !/slugs\w*\.indexOf\('all'\)|slug === 'all'/.test(semComentarios), 'a função do servidor não aceita curinga (Nova Era: «all» existe só como estágio de UMA matéria, nunca como slug)');
     const toml = fs.readFileSync(path.join(L.ROOT, 'netlify.toml'), 'utf8'); ok(!/RM_(LAYOUT|VISUAL|PEN)_SLUGS|RM_PILOT_/.test(toml), 'netlify.toml não define nenhuma dessas variáveis');
     const todos = require('child_process').execSync(`grep -rIlE "RM_(LAYOUT|VISUAL|PEN)_SLUGS\\s*[=:]" "${L.ROOT}" --include=*.toml --include=*.json --include=*.env* --include=*.yml || true`).toString().trim(); ok(todos === '', 'nenhum arquivo de configuração do repositório atribui as variáveis de matéria', todos);
