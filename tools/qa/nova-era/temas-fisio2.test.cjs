@@ -20,6 +20,7 @@ const MATERIAS = [{"slug": "fisiopatologia-ii", "tab": "fisio2", "titulo": "Fisi
     p.on('console', c => { if (c.type() === 'error') cons.push(c.text().slice(0, 160)); });
     p.on('response', r => { const u = r.url(); if (r.status() >= 400 && u.startsWith(base)) ruins.push(r.status() + ' ' + u.replace(base, '')); });
     p.on('request', r => { if (r.method() !== 'GET' && r.method() !== 'HEAD' && r.url().startsWith(base)) escritas.push(r.method() + ' ' + r.url()); });
+    await p.route('**/.netlify/functions/get-pilot-flags**', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ layout: false, pen: false, visual: false }) }));   /* isolado: o carregador só pergunta; aqui o servidor diz «não» */
     await p.route('https://fonts.googleapis.com/**', r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
     await p.route('https://www.youtube.com/**', r => r.fulfill({ status: 200, contentType: 'text/html', body: '' }));
     await p.route('https://www.youtube-nocookie.com/**', r => r.fulfill({ status: 200, contentType: 'text/html', body: '' }));

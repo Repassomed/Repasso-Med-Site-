@@ -174,14 +174,14 @@ if (process.env.RM_CONTROLE_NEGATIVO) MATERIAS[0].modos.push(MATERIAS[0].negativ
       /* 7 · caneta */
       await irBloco(p, m.bloco); await p.evaluate(B.INSTR);
       const ALVO = { paragrafo: id => { const s = document.getElementById(id); return [...s.querySelectorAll(':scope > p, :scope p')].filter(q => !q.closest('[data-rm-ui],table,.quiz-item,.flashcard,.rm-postit,.rmc-margin,.key-box') && q.textContent.trim().length > 160 && q.checkVisibility() && q.getBoundingClientRect().height > 60)[0]; },
-        tabela: id => { const s = document.getElementById(id); return [...s.querySelectorAll('table tbody tr, table')].filter(e => e.checkVisibility() && e.getBoundingClientRect().height > 20)[0]; } };
+        tabela: id => { const s = document.getElementById(id); const vis = e => e.checkVisibility() && e.getBoundingClientRect().height > 20; return [...s.querySelectorAll('table tbody tr')].filter(vis)[0] || [...s.querySelectorAll('table')].filter(vis)[0]; /* uma LINHA da tabela (a tabela inteira é maior que a tela de 390 px e fica sob a barra fixa) */ } };
       const ins = () => p.evaluate(() => (window.__writes || []).filter(w => w === 'insert:user_ink_strokes').length);
       const tracos = () => p.evaluate(() => document.querySelectorAll('#rm2-ink path[data-ink]').length);
       let temTabela = await p.evaluate(id => !!document.getElementById(id).querySelector('table'), m.bloco);
       for (const alvo of Object.keys(ALVO)) {
         if (alvo === 'tabela' && !temTabela) { console.log('    (bloco sem tabela: alvo «tabela» pulado)'); continue; }
         await p.evaluate(() => window.RMToolsV2.escolherFerramenta('pen'));
-        const pos = async () => p.evaluate(([fn, id]) => { const el = (new Function('return (' + fn + ')'))()(id); if (!el) return null; el.scrollIntoView({ block: 'center' }); const b = el.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height, sy: scrollY }; }, [ALVO[alvo].toString(), m.bloco]);
+        const pos = async () => p.evaluate(([fn, id]) => { const el = (new Function('return (' + fn + ')'))()(id); if (!el) return null; el.scrollIntoView({ block: 'center' }); const b = el.getBoundingClientRect(); const sc = el.closest('.rmc-scroll, .table-wrap, .tbl-wrap'); const sr = sc ? sc.getBoundingClientRect() : null; /* tabela larga dentro de rolagem horizontal: o gesto fica só na parte VISÍVEL (a caneta não desenha fora da tela) */ const l = Math.max(b.left, sr ? sr.left : 0, 0), r = Math.min(b.right, sr ? sr.right : innerWidth, innerWidth); return { x: l, y: b.top, w: Math.max(r - l, 1), h: b.height, sy: scrollY }; }, [ALVO[alvo].toString(), m.bloco]);
         let r2 = await pos(); if (!r2 || r2.h < 12) { ok(false, `7 · ${alvo}: alvo não encontrado/visível`, r2); continue; }
         for (let k = 0; k < 12; k++) { await p.waitForTimeout(250); const q2 = await pos(); const est = q2 && Math.abs(q2.y - r2.y) < 0.5 && Math.abs(q2.sy - r2.sy) < 0.5; r2 = q2; if (est) break; }
         const n0 = await tracos(), w0 = await ins(); const pts = B.gesto('rapido', r2);
