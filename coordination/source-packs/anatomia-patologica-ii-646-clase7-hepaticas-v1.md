@@ -1,4 +1,4 @@
-# Anatomía Patológica II (teoría) · #646/#647 · Clase 7 «Patologías hepáticas» · bloque 07 reconstruido
+# Anatomía Patológica II (teoría) · #646/#647 · bloque 07 reconstruido (Clase 7) + revisión de los demás bloques
 
 Fecha: 2026-11-06 · Base de trabajo: **PR #640** (`f896d072`, abierta, mismo archivo y mismo bloque) + `main` `7f329241` (merge sin conflicto) · Rama `claude/charming-maxwell-ah7nxj-ap2-646`.
 Esta PR **contiene** el trabajo de la #640 (no lo sobrescribe): sus 10 preguntas, sus correcciones de carcinoides y su ensino mínimo siguen intactos; solo se reemplaza la parte de enseñanza del bloque 07 y se **precisa 1 pregunta** (N9, ver §6). **Dependencia:** la #640 debe mergearse antes o junto con esta; si la #640 se cierra sin merge, esta PR la reemplaza por completo.
@@ -93,3 +93,48 @@ N9 («células estrelladas → colágeno»): el enunciado decía «depositan **e
 3. La clase tiene figuras de microscopía que no se copiaron al sitio; si José las quiere como imágenes, es una tarea aparte (derechos/peso).
 4. #640 sigue abierta: si José decide **no** mergearla, esta PR ya contiene todo; si la mergea primero, esta PR se actualiza sobre la main sin conflicto esperado (los cambios sobre el mismo bloque ya están integrados).
 5. PRs de layout #644/#645 abiertas: esta PR no toca layout, motor, caneta ni scripts globales (solo contenido + `inventario.json`).
+
+
+---
+
+# PARTE B · Revisión de los demás bloques (b01–b06 y b08) — pedido de continuación (#647)
+
+Método: (1) texto de los slides de cada bloque (los de la pasta Slides/Clases, ya leídos en la revisión #499 y releídos ahora), (2) comparación de secuencia, de hechos y de «voz de prueba» con el HTML real, (3) lectura de Supabase solo lectura **antes** de decidir qué se toca, (4) regla de protección: **todo bloque con grifos reales queda byte a byte intacto**, (5) no rehacer lo que ya estaba bien (los bloques ya traían «Desde cero», tablas, ilustraciones, «puntos a dominar» y flashcards).
+
+**Supabase (SELECT, 06/11/2026, `anatomia-patologica-ii`):** grifos `ap2b01` ×291 · `ap2b02` ×1 · `ap2b03` ×74 · `ap2b04` ×10 · `ap2intro` ×2; **`ap2b05`, `ap2b06`, `ap2b07`, `ap2b08`: 0 grifos**; notas y trazos de toda la materia: 0. Nada escrito.
+
+## Literatura base: intento de lectura y qué sigue sin confirmación
+Intentos realizados (todos fallaron por límites técnicos, no por falta de archivo):
+1. `read_file_content` sobre Robbins Cotran 9.ª (440 MB, `1usY4aHJ…`) → texto **vacío** (PDF sin capa de texto).
+2. `download_file_content` / lectura de recurso del Drive → **rechazado por tamaño** (límite de 10 MB) tanto en Robbins (440 MB) como en Harsh Mohan 6.ª (147 MB, `1V54jb4A…`).
+3. Descarga directa de Drive desde la máquina → **403 del proxy** (host no permitido).
+4. Búsqueda de texto completo en el Drive por frases de los capítulos → solo aparecen los slides (los libros no están indexados).
+5. **Farreras Rozman 19.ª** y **Harrison** (citados en los slides): no están en el Drive. El OCR local (RapidOCR) existe en la máquina, pero no hay forma de traer las páginas.
+
+**Para desbloquear (acción exacta de José):** subir al Drive, como PDF o fotos **de menos de 10 MB cada uno**, los capítulos citados en los slides: Robbins 9.ª — cap. 16 p. 728 (boca) · cap. 17 pp. 753 (esófago), 760 (estómago), 771 (tumores gástricos), 796 (EII), 804 (pólipos y CCR) · cap. 18 pp. 842–867 (hígado) · cap. 24 p. 1082 (tiroides); Harsh Mohan 6.ª cap. 21 p. 619 (hígado); Farreras 19.ª cap. 31 p. 263. Con eso se leen por OCR y se cierran las afirmaciones de abajo. Alternativa: habilitar a esta sesión una credencial de la API de Drive (descarga por rangos).
+
+**Afirmaciones que siguen SIN confirmación en fuente permitida (mantenidas; no se inventó nada):**
+- **b01:** afta en mucosa no queratinizada; latencia en ganglio trigémino; Tzanck (células multinucleadas, no distingue VHS-1/2); candidiasis hiperplásica «única con indicación de biopsia»; hifas/levaduras/fibrina/neutrófilos; condutas del adenoma pleomorfo; «menores ≈ 50 %».
+- **b02:** Boerhaave; divertículo de Zenker; tipos de hernia hiatal; atresia tipo C 84 %; «pico de pájaro»; protocolo de Seattle; esofagitis eosinofílica; «red wale markings»; «perlas de queratina/puentes intercelulares».
+- **b03:** mecanismo somatostatina/gastrina; terapia triple; test del aliento/ureasa; mecanismo vagal de Cushing; Curling; MEN1/diarrea en Zollinger-Ellison; hipoalbuminemia de Ménétrier; carcinoide tipo I. **Divergencia a decidir:** el slide dice que la erosión «no pasa la membrana basal»; el sitio (y 3 preguntas/flashcards) usa «no atraviesa la muscular de la mucosa». Texto y preguntas **protegidos por grifos**; alternativa segura: nota aclaratoria al final del bloque (sin tocar texto con tinta) cuando se confirme en Robbins.
+- **b04:** cascada de Correa como nombre y factores (sal/nitrosaminas); Virchow izquierdo; Krukenberg bilateral/anillo de sello; vías de diseminación; CD20, t(11;18), remisión ≈ 80 %; tipos I/II/III del carcinoide; DOG1, PDGFRA, imatinib; cáncer gástrico precoz.
+- **b05:** NOD2; p-ANCA/ASCA; tabaco como agravante/protector; vigilancia colonoscópica. (Granuloma: el deck «Clase 5» dice 40–60 %, el deck de la pasta Slides ≈ 35 %; el bloque evita el número: «una parte de los casos».)
+- **b06:** SMAD4/BMPR1A; intususcepción; «adenoma avanzado ≥ 10 mm»; BRAF → CIMP; Lynch/MLH1; asociación MSI-derecho/APC-izquierdo; «carcinoma = cruzar la muscular de la mucosa».
+- **b07/b08:** fibrolamelar; criterios nucleares del papilar distintos del «vidrio esmerilado» (superposición, surcos, pseudoinclusiones); «la PAAF estudia células, no la cápsula»; bocio coloide/multinodular como «ciclos de hiperplasia e involución».
+
+## Resumen por bloque
+| Bloque | Ya estaba adecuado | Qué cambió en esta PR | Pendiente / bloqueo | Fuentes | Pruebas |
+|---|---|---|---|---|---|
+| **01 · Boca y glándulas salivales** (`ap2b01`, 291 grifos) | Estructura «Desde cero» + 6 secciones en el orden del deck, tablas, 11 imágenes, síntesis y flashcards; ya revisado frente a los 42 slides en la #499 | **Nada** (byte a byte idéntico) | Restos de voz de prueba **bajo grifo** (10 menciones: «examen», «se pregunta», «cátedra», «parcial»): **bloqueado**: tocarlos destruye marcas de alumnos. Alternativa: migrar grifos con script de reubicación (propuesta; requiere escritura en producción, que no se ejecuta) y luego reescribir esas frases | `1 - Patologías de la cavidad oral.pdf`, `Clase 1` | prueba estática: sección idéntica a la #640 |
+| **02 · Esófago** (`ap2b02`, 1 grifo) | Orden del deck (acalasia → várices/desgarros → esofagitis → Barrett → cáncer), figuras, puntos a dominar, flashcards con mnemotecnias | **Nada** | Dejé fuera una frase de síntomas respiratorios por broncoaspiración en acalasia: aporte menor frente al riesgo de reanclar el grifo («con disfagia progresiva»). No confirmadas: ver lista | `2 - Patologías del esófago.pdf`, `Clase 2` | idéntico |
+| **03 · Estómago I** (`ap2b03`, 74 grifos) | Orden del deck, tabla gastropatía/gastritis, flashcards | **Nada** | 2 frases de voz de prueba bajo grifo («La regla de examen…», «Ése es el sello…»); divergencia erosión (ver arriba): **bloqueado por grifos** | `3 - Patologías del estómago.pdf` | idéntico |
+| **04 · Tumores gástricos** (`ap2b04`, 10 grifos) | Lauren/Borrmann/diseminación/no epiteliales, ya depurado en la #640 (carcinoides) | **Nada** | Ver lista de no confirmadas | `Clase 4 – Tumores` | idéntico |
+| **05 · EII** (sin grifos) | Mecanismo común, Crohn, CU, tabla comparativa final (ya cumple la función de síntesis), 4 ilustraciones | **+ epidemiología y teoría de la higiene; distribución 40/30/30 %; fisuras/trayectos y grasa serpiginosa; microscopía (neutrófilos, absceso críptico, metaplasias seudopilórica y de Paneth, persistencia y atrofia); colon → anemia ferropénica, delgado extenso → hipoalbuminemia y malabsorción, fisura anal; dedos en palillo de tambor, pericolangitis, riesgo de cáncer; CU: transición brusca, úlceras de base ancha, mucosa atrófica, microscopía, curso y desencadenantes. +1 pregunta y +2 flashcards.** Todo el texto anterior se conserva | Granuloma: dos versiones del deck discrepan (40–60 % vs ≈ 35 %); no se escribió el número | `Clase 5 – Patologías del intestino`, deck de Slides | estático 111/111 (b05: nada del texto anterior se perdió) |
+| **06 · Pólipos y CCR** (sin grifos) | Ya recorre todo el deck (clasificación, hiperplásico, inflamatorio, juvenil, Peutz-Jeghers, adenomas, PAF, vías moleculares, derecho vs izquierdo, desmoplasia), con 5 ilustraciones y confusiones | **Nada**: comparación con el deck sin lagunas materiales | Ver lista de no confirmadas | `6 - Patologias del Intestino - Pólipos.pdf` | idéntico |
+| **07 · Hígado** | — | **Reconstruido** (Parte A) | fibrolamelar | Clase 7 (2 versiones) + Clase 7 anterior + `07 - Cirrosis` | estático + navegador |
+| **08 · Tiroides** (sin grifos) | Anatomía previa, 4 tiroiditis, folicular/papilar/medular/anaplásico, figuras, confusiones | **Orden de la Clase 8** (tiroiditis → Graves → neoplasias → adenoma/folicular → papilar → anaplásico → medular); **nueva sección «Neoplasias tiroideas: el nódulo solitario»** (criterios clínicos, < 10 %, 10:1, PAAF, tabla de los 4 carcinomas con frecuencia, origen y genética); patogenia/clínica de Hashimoto, De Quervain, indolora y Riedel; cuadro completo de Graves; adenoma tóxico (TSHR/GNAS), adenoma y carcinoma folicular (yodo, 3:1, 40–60 años, fríos); papilar (edad, radiación, «vidrio esmerilado», ½ con ganglios); anaplásico (¼ con carcinoma previo, tipos de células) y medular (serotonina, ACTH, VIP, MEN-2A/2B y familiar). Retiradas 2 frases de voz de prueba («dato que hay que subrayar», «pregunta segura»). **+2 preguntas, +3 flashcards.** | Criterios nucleares extra del papilar sin confirmación | `Clase 8 – Patologías tiroideas` | estático 111/111; navegador 30/30; 40 términos de cobertura |
+
+**Exclusiones justificadas (b05/b08):** ninguna de contenido útil. Solo se cambió la redacción de 2 frases de voz de prueba en b08 y se reordenaron secciones (el texto se conserva: probado frase por frase).
+
+## Recuento final declarado (teoría)
+Banco **181** (114 examen · 67 variantes · 10 V/F): b05 = 19 · b07 = 29 · b08 = 17; mazo **177** tarjetas (bloques = mazo = ruleta). MCQ 154: A/B/C/D 39/39/38/38, corrida máxima 4 (preexistente), abcd/dcba 0. Imágenes y SVG: **idénticos**; ningún id de sección cambia; ninguna pregunta ni flashcard retirada.

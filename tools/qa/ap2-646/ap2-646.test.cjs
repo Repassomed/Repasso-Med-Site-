@@ -1,4 +1,4 @@
-/* Issue #646/#647 · Anatopatología II (teoría) · bloque 07 reconstruido sobre la nueva Clase 7 (Patologías hepáticas).
+/* Issue #646/#647 · Anatopatología II (teoría) · bloque 07 reconstruido sobre la nueva Clase 7 (Patologías hepáticas) + revisión de los demás bloques (b05 EII y b08 tiroides ajustados; b01–b04 y b06 intactos).
    Teste ESTÁTICO (sem navegador, rede nem Supabase): lê o HTML da teoria, a versão da PR #640 (base de trabalho) e a da main, e prova:
    1 estrutura: ids de seção iguais; o bloco 07 segue a sequência da aula nova (alcohol → cirrosis → hiperplasias → hemangioma → adenoma → malignos);
    2 nada apagado em relação à #640: questões (enunciado), flashcards (frente), imagens e SVG; demais blocos e a prática byte a byte iguais;
@@ -44,11 +44,11 @@ console.log('\n▸ 2 · nada apagado (comparação com a #640) e demais blocos i
   ok(new Set(lost).size === 1 && lost.every(q => q.includes('en el espacio de Disse, formando las bandas')), `questões da #640 (${oq.length}) continuam; 1 só mudou de enunciado (N9: retirado «en el espacio de Disse», que o slide atribui ao colágeno IV)`, lost);
   const fr = t => [...t.matchAll(/<div class="flashcard"><div class="fc-front"><b>([\s\S]*?)<\/b><\/div>/g)].map(m => m[1]);
   const ofr = fr(old), nfr = new Set(fr(now)); const lf = ofr.filter(x => !nfr.has(x));
-  ok(!lf.length && fr(now).length === fr(old).length + 36, `flashcards: ${fr(old).length} → ${fr(now).length} (+36 = 12 × 3 cópias: bloco, mazo, ruleta); nenhuma frente removida`, lf);
+  ok(!lf.length && fr(now).length === fr(old).length + 51, `flashcards: ${fr(old).length} → ${fr(now).length} (+51 = 17 × 3 cópias: bloco, mazo, ruleta; 12 do b07 + 2 do b05 + 3 do b08); nenhuma frente removida`, lf);
   const img = t => [...t.matchAll(/<img[^>]*src="([^"]+)"/g)].map(m => m[1]).sort().join('|');
   ok(img(now) === img(old) && img(now) === img(main), 'imagens: mesmo conjunto de src (nenhuma removida)');
   const svgs = t => (t.match(/<svg[\s>]/g) || []).length; ok(svgs(now) === svgs(old), `SVG: ${svgs(old)} = ${svgs(now)}`);
-  for (const id of ['ap2b01', 'ap2b02', 'ap2b03', 'ap2b04', 'ap2b05', 'ap2b06', 'ap2b08', 'ap2biblio', 'ap2intro', 'bancofcap2']) {
+  for (const id of ['ap2b01', 'ap2b02', 'ap2b03', 'ap2b04', 'ap2b06', 'ap2biblio', 'ap2intro', 'bancofcap2']) {
     if (id === 'bancofcap2') continue;
     ok(sec(now, id) === sec(old, id), `seção ${id} byte a byte idêntica à da #640`);
   }
@@ -69,7 +69,7 @@ const bank = sec(now, 'bancoap2');
   ok(dec && +dec[1] === cnt && +dec[2] === ofi && +dec[3] === va && +dec[4] === vf, `banco declara ${dec && dec.slice(1, 5)} = real ${[cnt, ofi, va, vf]}`, { dec: dec && dec.slice(1, 5), real: [cnt, ofi, va, vf] });
   const subs = [...bank.matchAll(/Bloque 0(\d) · ([^<]*?) <small>\((\d+) preguntas\)/g)].map(m => [+m[1], +m[3]]); let soma = 0, bad = [];
   for (const [b, c] of subs) { const real = items(sec(now, 'ap2b0' + b)).length; soma += c; if (real !== c) bad.push([b, c, real]); }
-  ok(!bad.length && soma === cnt && subs.find(x => x[0] === 7)[1] === 29, `por bloco: declarado = real (soma ${soma} = ${cnt}; bloco 07 = 29)`, bad);
+  ok(!bad.length && soma === cnt && subs.find(x => x[0] === 7)[1] === 29 && subs.find(x => x[0] === 5)[1] === 19 && subs.find(x => x[0] === 8)[1] === 17, `por bloco: declarado = real (soma ${soma} = ${cnt}; b05 = 19, b07 = 29, b08 = 17)`, bad);
   ok(/Bloque 07 · Patologías del hígado: alcohol, cirrosis y tumores/.test(bank), 'banco: título do grupo do bloco 07 atualizado');
   const cards = s => (s.match(/class="flashcard"/g) || []).length;
   const maz = sec(now, 'bancofcap2'), mi = maz.indexOf('🎲 Ruleta rusa'), mazo = maz.slice(0, mi), rul = maz.slice(mi);
@@ -147,7 +147,7 @@ console.log('\n▸ 6 · gabarito (8-A.7)');
   const a = lst(old), b = lst(now), cnt = s => ['a', 'b', 'c', 'd'].map(x => (s.match(new RegExp(x, 'g')) || []).length);
   const g4 = s => (s.match(/(?=(abcd|dcba))/g) || []).length;
   console.log(`    antes (#640) ${a.length} MCQ A/B/C/D=${cnt(a)} corrida ${runs(a)} · depois ${b.length} MCQ A/B/C/D=${cnt(b)} corrida ${runs(b)}`);
-  ok(!/\?/.test(b) && b.length === a.length + 9, `+9 MCQ novas (total ${b.length}); todas com letra legível`);
+  ok(!/\?/.test(b) && b.length === a.length + 12, `+12 MCQ novas (total ${b.length}: 9 do b07, 1 do b05, 2 do b08); todas com letra legível`);
   ok(runs(b) <= Math.max(4, runs(a)) && g4(b) <= g4(a), `corrida máxima ${runs(a)} → ${runs(b)}; 4-gramas abcd/dcba ${g4(a)} → ${g4(b)}`);
   ok(Math.max(...cnt(b)) - Math.min(...cnt(b)) <= Math.ceil(b.length * 0.08), 'nenhuma letra domina', cnt(b));
   const novas = b.slice(a.length - 0).length; const seq = lst(now).slice(0);
@@ -165,5 +165,27 @@ console.log('\n▸ 8 · marcações (Supabase leitura 06/11): ap2b07 sem grifos/
 {
   ok(sec(now, 'ap2b04') === sec(old, 'ap2b04') && sec(now, 'ap2b03') === sec(old, 'ap2b03') && sec(now, 'ap2b01') === sec(old, 'ap2b01') && sec(now, 'ap2b02') === sec(old, 'ap2b02') && sec(now, 'ap2intro') === sec(old, 'ap2intro'), 'ap2b01 (291), ap2b02 (1), ap2b03 (74), ap2b04 (10) e ap2intro (2) grifos: seções byte a byte idênticas, texto sob grifo intacto');
   ok(true, 'ap2b07: 0 grifos, 0 notas, 0 traços no Supabase (leitura 06/11): o bloco pôde ser reconstruído sem migração');
+}
+
+console.log('\n▸ 9 · revisão dos demais blocos: b05 (EII) e b08 (tiroides) ajustados; b01–b04 e b06 intactos');
+{
+  const sent = t => [...t.split(/<div class="quiz-section"/)[0].replace(/<svg[\s\S]*?<\/svg>/g, '').matchAll(/<(p|li|td|th|figcaption)[^>]*>([\s\S]*?)<\/\1>/g)].map(m => strip(m[2])).filter(x => x.length > 40);
+  const lostOf = (id, allowed) => { const nw = strip(teach(id)); return sent(sec(old, id)).filter(x => !nw.includes(x) && !allowed.some(a => x.includes(a))); };
+  const l5 = lostOf('ap2b05', ['Las dos afectan sobre todo a']);
+  ok(l5.length === 0, 'b05: todo o texto de ensino anterior continua (só acréscimos; 1 parágrafo ampliado com a epidemiologia)', l5.slice(0, 3));
+  const l8 = lostOf('ap2b08', ['dato que hay que subrayar', 'que es una pregunta segura', 'Puede ser multifocal y su macroscopía', 'Su diseminación es linfática', 'Aclaramiento nuclear tipo', 'Aparece en mayores de 65 años', 'Al microscopio: células fusiformes y gigantes', 'Marcador: calcitonina', 'o como tumor familiar', 'Con esa anatomía, la patología tiroidea', 'La tiroides falla de tres maneras']);
+  ok(l8.length === 0, 'b08: todo o texto anterior continua, salvo 2 frases de voz de prova trocadas e 9 frases ampliadas (listadas no source pack)', l8.slice(0, 3));
+  const h3 = id => [...teach(id).matchAll(/<h3>([^<]*)<\/h3>/g)].map(m => m[1]);
+  ok(JSON.stringify(h3('ap2b08')) === JSON.stringify(['1 · Tiroiditis: cómo diferenciarlas', '2 · Enfermedad de Graves y bocios', '3 · Neoplasias tiroideas: el nódulo solitario', '4 · Adenoma folicular frente a carcinoma folicular', '5 · Carcinoma papilar de tiroides', '6 · Carcinoma anaplásico y carcinoma medular']), 'b08: sequência da Clase 8 (tiroidites → Graves → neoplasias/nódulo solitário → adenoma/folicular → papilar → anaplásico → medular)', h3('ap2b08'));
+  const T8 = strip(teach('ap2b08')).toLowerCase(), T5 = strip(teach('ap2b05')).toLowerCase();
+  const c8 = ['coxsackie', 'infección respiratoria alta', 'tiroglobulina', 'peroxidasa tiroidea', 'apoptosis', '45 a 65 años', 'diabetes tipo 1', 'addison', 'igg4', 'eosinófilos', 'tríada clínica', 'exoftalmos', 'mixedema pretibial', '20 y los 40 años', 'más de 80 g', 'shigella', 'soplo', 'nódulo tiroideo solitario', 'menos del 10 %', '10 a 1', 'radioterapia previa', 'más del 85 %', '5–15 %', 'menos del 5 %', 'ret/ptc', 'ras', 'pi3k/akt', 'tshr', 'gnas', 'deficiencia de yodo', '25–40 %', '3 a 1', 'vidrio esmerilado', 'la mitad tiene metástasis', 'cuarta parte', 'osteoclástico', 'serotonina', 'acth', 'péptido intestinal vasoactivo', '50–60 años'];
+  const m8 = c8.filter(w => !T8.includes(w)); ok(!m8.length, 'b08: cobertura da Clase 8 completada (40 termos-chave das lacunas detectadas)', m8);
+  const c5 = ['adolescencia', 'raza blanca', 'teoría de la higiene', '40 %', '30 %', 'seudopilórica', 'paneth', 'persisten', 'pérdida total de criptas', 'grasa serpiginosa', 'anemia ferropénica', 'hipoalbuminemia', 'fisura anal', 'dedos en palillo de tambor', 'pericolangitis', 'transición entre el colon enfermo y el sano es brusca', 'úlceras extensas de base ancha', 'plana y lisa', 'pérdida de células caliciformes', 'casi normal', 'enteritis infecciosa'];
+  const m5 = c5.filter(w => !T5.includes(w)); ok(!m5.length, 'b05: cobertura da Clase 5 completada (21 termos-chave das lacunas detectadas)', m5);
+  const NV = [['ap2b05', 'En la enfermedad de Crohn con afectación extensa del intestino delgado', ['hipoalbuminemia', 'malabsorción', 'anemia ferropénica'], T5], ['ap2b08', 'Ante un nódulo tiroideo solitario, ¿qué dato clínico aumenta', ['radioterapia previa', 'caliente', 'menos del 10 %'], T8], ['ap2b08', 'En un adenoma tóxico («nódulo caliente»)', ['tshr', 'gnas', 'no es precursor'], T8]];
+  for (const [id, key, ws, T] of NV) { const a = items(sec(now, id)).filter(x => x.q.includes(key)), b = items(bank).filter(x => x.q.includes(key)); ok(a.length === 1 && b.length === 1 && a[0].raw === b[0].raw, `${id}: «${key.slice(0, 50)}…» 1 no bloco, 1 no banco, idênticas`); ok(ws.every(w => T.includes(w) || strip(teach(id)).toLowerCase().includes(w)), `   ensinado antes no bloco: ${ws.join(' · ')}`); ok(a[0].tag === 'variante', '   rótulo «Pregunta complementaria»'); }
+  ok(items(sec(now, 'ap2b05')).length === 19 && items(sec(now, 'ap2b08')).length === 17, 'b05 = 19 e b08 = 17 questões');
+  ok(!/dato que hay que subrayar|pregunta segura/.test(teach('ap2b08')), 'b08 sem voz de prova remanescente');
+  ok(sec(now, 'ap2b06') === sec(old, 'ap2b06') && sec(now, 'ap2b01') === sec(old, 'ap2b01'), 'b01 (291 grifos) e b06 byte a byte idênticos: sem alteração');
 }
 console.log(`\nap2-646: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`); process.exit(ko ? 1 : 0);
