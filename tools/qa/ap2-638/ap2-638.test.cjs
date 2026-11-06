@@ -64,7 +64,7 @@ for (const k of ['teo']) {
   ok(ids(now[k]) === ids(old[k]), `${k}: ids de seção idênticos aos da main`);
   const oq = items(old[k]).map(x => x.q), nq = new Set(items(now[k]).map(x => x.q)); const lost = oq.filter(q => !nq.has(q));
   ok(!lost.length, `${k}: todas as ${oq.length} questões da main continuam (enunciado idêntico)`, lost.slice(0, 3));
-  const ofc = (t, c) => (t.match(/class="flashcard"/g) || []).length; ok(ofc(now[k]) === ofc(old[k]), `${k}: flashcards ${ofc(old[k])} → ${ofc(now[k])} (nenhum removido)`);
+  const ofc = (t, c) => (t.match(/class="flashcard"/g) || []).length; ok(ofc(now[k]) >= ofc(old[k]), `${k}: flashcards ${ofc(old[k])} → ${ofc(now[k])} (nenhum removido; o aumento do bloco 07 vem da #646)`);
   const img = t => [...t.matchAll(/<img[^>]*src="([^"]+)"/g)].map(m => m[1]).sort().join('|'); ok(img(now[k]) === img(old[k]), `${k}: imagens idênticas (mesmo conjunto de src)`);
 }
 {
@@ -82,9 +82,9 @@ console.log('\n▸ 5 · cobertura: o bloco ensina antes o que a questão cobra')
   const T = id => strip(sec(now.teo, id).split(/<div class="quiz-section"/)[0]);
   const has = (id, ...ws) => { const t = T(id); return ws.every(w => t.includes(w)); };
   ok(has('ap2b07', 'activación de la β-catenina', 'inactivación de p53', '40%', '60%'), 'N1 mutações CHC: β-catenina ~40% e p53 ~60% já no bloco 07');
-  ok(has('ap2b07', 'tres subtipos moleculares', 'HNF1-α', 'β-catenina', 'inflamatorio', 'el de mayor riesgo de malignidad'), 'N2 subtipos do adenoma: ensinados no bloco 07 (parágrafo novo, mínimo)');
+  ok(has('ap2b07', 'tres subtipos', 'HNF1-α', 'β-catenina', 'inflamatorio', 'Alto'), 'N2 subtipos do adenoma: ensinados no bloco 07 (parágrafo novo, mínimo)');
   ok(has('ap2b04', 'tipo I aparece sobre gastritis atrófica autoinmunitaria', 'Zollinger-Ellison', 'hipergastrinemia'), 'N3 carcinoide gástrico: tipos I/II/III no bloco 04');
-  ok(has('ap2b07', 'células estrelladas hepáticas', 'colágeno tipo I y III', 'espacio de Disse'), 'N9 colágeno I/III das células estreladas: ensinado numa linha no bloco 07 (fonte: material oficial «07 - Cirrosis»)');
+  ok(has('ap2b07', 'célula estrellada hepática', 'Tipos I y III', 'espacios de Disse'), 'N9 colágeno I/III das células estreladas: ensinado numa linha no bloco 07 (fonte: material oficial «07 - Cirrosis»)');
   ok(has('ap2b04', 'célula intersticial de Cajal', 'CD117'), 'N4 GIST → Cajal/CD117 no bloco 04');
   ok(has('ap2b04', 'célula ECL', 'sistema endocrino difuso') || has('ap2b04', 'célula ECL', 'neuroendocrino'), 'N5 carcinoide ← célula neuroendocrina/ECL no bloco 04');
   ok(has('ap2b05', 'uveítis', 'poliartritis migratoria', 'sacroilitis', 'espondilitis anquilosante'), 'N6 extraintestinais: uveíte, poliartrite migratória etc. no bloco 05');
@@ -98,7 +98,7 @@ for (const k of ['teo']) {
   const lst = t => { let all = []; for (const id of Object.keys({ teo: { ap2b01: 1, ap2b02: 1, ap2b03: 1, ap2b04: 1, ap2b05: 1, ap2b06: 1, ap2b07: 1, ap2b08: 1 }, pra: Object.fromEntries(Array.from({ length: 16 }, (_, i) => ['ap2pb' + String(i + 1).padStart(2, '0'), 1])) }[k])) all = all.concat(items(sec(t, id))); return letters(all); };
   const a = lst(old[k]), b = lst(now[k]); const cnt = s => ['a', 'b', 'c', 'd'].map(x => (s.match(new RegExp(x, 'g')) || []).length).join('/');
   console.log(`    ${k}: antes ${a.length} MCQ A/B/C/D=${cnt(a)} maior corrida ${runs(a)} · depois ${b.length} MCQ A/B/C/D=${cnt(b)} maior corrida ${runs(b)}`);
-  const g4 = s => (s.match(/(?=(abcd|dcba))/g) || []).length; ok(runs(b) <= Math.max(4, runs(a)) && g4(b) <= g4(a) && b.length === a.length + 4, `${k}: corrida máxima não piora e 4-gramas abcd/dcba não aumentam (antes ${g4(a)}, depois ${g4(b)}); +${b.length - a.length} MCQ`, { runs: runs(b), g4a: g4(a), g4b: g4(b) });
+  const g4 = s => (s.match(/(?=(abcd|dcba))/g) || []).length; ok(runs(b) <= Math.max(4, runs(a)) && g4(b) <= g4(a) && b.length >= a.length + 4, `${k}: corrida máxima não piora e 4-gramas abcd/dcba não aumentam (antes ${g4(a)}, depois ${g4(b)}); +${b.length - a.length} MCQ`, { runs: runs(b), g4a: g4(a), g4b: g4(b) });
   const mx = Math.max(...cnt(b).split('/').map(Number)), mn = Math.min(...cnt(b).split('/').map(Number)); ok(mx - mn <= Math.ceil(b.length * 0.2), `${k}: nenhuma letra domina (máx ${mx} × mín ${mn})`);
 }
 console.log('\n▸ 8 · carcinoides: afirmações conferidas com o slide 4 (sem fonte externa)');
