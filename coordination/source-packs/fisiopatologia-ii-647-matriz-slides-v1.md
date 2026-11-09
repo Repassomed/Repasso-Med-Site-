@@ -35,6 +35,33 @@ Ordem dos blocos: segue a dos decks (01→13) com os cinco blocos sem deck inter
 | `fp2b18` | subtítulo «Hipotiroidismo congénito transitorio» (exceso de yodo/antitiroideos → TSH alta, T baja/normal, temporal) | deck 12, slide 30 |
 Nada foi removido ou movido; perguntas (806), flashcards (2181), SVG (77), imagens (33) e tabelas (82) idênticos à #643. Fisio II tem 47 grifos reais (somente leitura, 06/11) em `fp2b01` ×42, `fp2b02` ×4, `fp2b12` ×1; esses três blocos ficam **byte a byte idênticos**; os blocos editados não têm grifos; 0 traços; 0 notas.
 
+## 3-B · Revisão didática (#647) — resultado por bloco
+
+Critérios: desde cero · mecanismo · comparação · síntese. «Bom» = já cumpria, preservado sem tocar. «+» = camada nova inserida **antes de «Puntos a dominar»**, sem tocar em perguntas, flashcards, imagens, IDs nem texto existente.
+
+| Bloco | Estado | O que se fez |
+|---|---|---|
+| 01 esófago · 02 estómago · 03 EII (fp2b12) | Bom | Intocados (têm os 47 grifos reais de alunos; idênticos byte a byte) |
+| 04 páncreas · 05 hígado · 06 ictericia · 07 vías urinarias · 09 nefrítico · 10 IRA · 11 ERC · 12 ITU · 13 Na · 14 K | Bom | Já tinham cartões «desde cero», mecanismo, tabelas e «Puntos a dominar»; sem mudança |
+| 05 nefrótico (fp2b05) · 06 nefrítico (fp2b06) | Bom + 1 frase cada | «nefrosis lipoide» e «enfermedad de Berger» (slide) |
+| 15 ácido-base (fp2b15) | + | Seção 6: logaritmo do pH, acidose/alcalose metabólicas ligadas aos blocos 02/14/16, compensação, 2 exemplos de gasometria com valores **inventados e rotulados** |
+| 16 diabetes (fp2b16) | + | Seção 8: cadeia sinal→sintomas→complicações, analogia basal/prandial, quadro amanecer × Somogyi |
+| 17 suprarrenal (fp2b17) | + | Seção 8: espelho Addison × Cushing, diagnóstico em 3 perguntas, por que a retirada brusca é perigosa |
+| 18 tiroides (fp2b18) | + 1 subseção do slide | Seção 10: leitura do laboratório TSH/T4 livre, bocio por TSH, hormona→sintoma |
+| 19 SNA/consciência (fp2b19) | + | Seção 7: quadro coma × mutismo acinético × cautiverio, analogia interruptor/tela, como se arma o Glasgow |
+
+**Fontes e limites.** Tudo o que vem do slide continua no texto original. As camadas novas são **raciocínio fisiopatológico/conhecimento geral** e levam o aviso visível «Apoyo de la página, no del slide». Nenhum livro-texto foi aberto nesta sessão: não se afirma ter consultado Farreras, Harrison, Guyton nem outro; onde o conteúdo não pôde ser confirmado numa fonte, isso está no aviso. Os valores do Glasgow **não foram incluídos** (tabela do slide inacessível).
+
+**Supabase (leitura, 09/11).** `user_highlights` de Fisiopatología II: fp2b01 = 42, fp2b02 = 4, fp2b12 = 1; nenhum nos blocos editados. Risco para dados: nenhum.
+
+## 3-C · Slide 13 — o que não foi possível abrir
+
+Arquivo: `13 - Unidad 5. Alteraciones de la conciencia.pptx` (Drive id `1wHPoPPpHWtRlZ2t4EJDKoID_iT_2xJpu`, 27 101 529 bytes). Leitura de texto funciona; o download falha (limite de 10 MB da ferramenta; exportar como PDF também falha). Inacessíveis: **slides 3, 4, 8, 12, 15–18** (sem texto extraível), **23** (tabela de Glasgow), **26** (pupilas: heroína/atropina) e o conteúdo gráfico dos slides **6–7**. Para fechar: José exporta o deck em PDF < 10 MB ou envia as figuras; o caso do Glasgow segue «no se fija un puntaje total».
+
+## 3-D · Dependência da #645 (Nova Era)
+
+A #645 mapeia só até fp2b17 (`FP2_NUM`/`FP2_SEMVIG`, testes 17 blocos). **fp2b18 e fp2b19 existem desde a #643 e caem em «otro»** até a #645 ser atualizada (17→19 em tema/tests). Enquanto isso não acontecer, a Nova Era de Fisiopatología II **não está pronta**. Esta PR não toca nos arquivos da #645.
+
 ## 4 · Pendências reais (não resolvidas aqui, sem inventar)
 1. **Figuras**: o PPTX 13 (27 MB) não pôde ser baixado; só o texto foi lido. Slides 15–18 (figuras), **tabela de Glasgow (24)** e **reatividade pupilar (26: heroína/atropina)** não inspecionados; o caso do Glasgow segue «no se fija un puntaje total». As figuras dos demais decks não foram reinspecionadas nesta PR (a #643 inspecionou 07–12).
 2. **Acidose/alcalose metabólicas**: o slide 09 não as desenvolve; o bloco 15 diz isso. Ensinar causas e compensação exigiria literatura-base (Porth cap. 8, citado no slide) que **não está no Drive**; fica como decisão de José (complemento «da literatura» separado do slide).

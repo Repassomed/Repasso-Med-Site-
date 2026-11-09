@@ -25,10 +25,13 @@ console.log('\n▸ 2 · integridade contra a base ' + BASE);
 const oi = secIds(old), ni = secIds(now); ok(JSON.stringify(oi) === JSON.stringify(ni), `as ${oi.length} seções continuam, mesma ordem`);
 const idsAll = t => [...t.matchAll(/\sid="([^"]+)"/g)].map(m => m[1]); const nowIds = new Set(idsAll(now)); ok(idsAll(old).every(i => nowIds.has(i)), 'todos os ids da base continuam');
 const cnt = (t, re) => (t.match(re) || []).length;
-for (const [nome, re] of [['perguntas', /class="quiz-item"/g], ['flashcards', /class="flashcard"/g], ['SVG', /<svg/g], ['imagens <img>', /<img\b/g], ['tabelas', /<table\b/g]]) ok(cnt(old, re) === cnt(now, re), `${nome}: ${cnt(old, re)} = ${cnt(now, re)}`);
+for (const [nome, re] of [['perguntas', /class="quiz-item"/g], ['flashcards', /class="flashcard"/g], ['SVG', /<svg/g], ['imagens <img>', /<img\b/g], ]) ok(cnt(old, re) === cnt(now, re), `${nome}: ${cnt(old, re)} = ${cnt(now, re)}`);
+ok(cnt(now, /<table\b/g) - cnt(old, /<table\b/g) === 7, `tabelas: ${cnt(old, /<table\b/g)} + 7 (2+2+1+1+1 nos blocos 15–19) = ${cnt(now, /<table\b/g)}`);
 console.log('\n▸ 3 · grifos reais');
 for (const b of ['fp2b01', 'fp2b02', 'fp2b12']) ok(sec(old, b) === sec(now, b), `${b} (47 grifos reais, leitura 06/11) idêntico byte a byte`);
-const dif = ni.filter(i => sec(old, i) !== sec(now, i)); ok(JSON.stringify(dif) === JSON.stringify(['fp2b05', 'fp2b06', 'fp2b18']), 'só fp2b05, fp2b06 e fp2b18 mudaram (sem grifos reais)', dif);
+const dif = ni.filter(i => sec(old, i) !== sec(now, i)); ok(JSON.stringify(dif) === JSON.stringify(['fp2b05', 'fp2b06', 'fp2b15', 'fp2b16', 'fp2b17', 'fp2b18', 'fp2b19']), 'só fp2b05, 06, 15, 16, 17, 18 e 19 mudaram (nenhum tem grifos reais)', dif);
+console.log('\n▸ 3b · camadas didáticas dos blocos 15–19');
+for (const b of ['fp2b15', 'fp2b16', 'fp2b17', 'fp2b18', 'fp2b19']) { const a = sec(now, b), o = sec(old, b); ok(a.includes('Apoyo de la página, no del slide') && a.includes('En una frase.'), `${b}: camada nova marcada como apoio e com síntese`); ok(a.indexOf('Apoyo de la página') < a.indexOf('class="rmc-exam"'), `${b}: camada nova antes de «Puntos a dominar»`); ok(!o.includes('Apoyo de la página'), `${b}: base (#643) sem a camada`); }
 console.log('\n▸ 4 · as 3 inserções');
 ok(cnt(now, /nefrosis lipoide/g) === 1 && sec(now, 'fp2b05').includes('nefrosis lipoide'), '«nefrosis lipoide» (fp2b05), 1 vez');
 ok(cnt(now, /enfermedad de Berger/g) === 1 && sec(now, 'fp2b06').includes('enfermedad de Berger'), '«enfermedad de Berger» (fp2b06), 1 vez');
