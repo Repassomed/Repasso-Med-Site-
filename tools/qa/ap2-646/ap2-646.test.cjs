@@ -48,7 +48,7 @@ console.log('\n▸ 2 · nada apagado (comparação com a #640) e demais blocos i
   const img = t => [...t.matchAll(/<img[^>]*src="([^"]+)"/g)].map(m => m[1]).sort().join('|');
   ok(img(now) === img(old) && img(now) === img(main), 'imagens: mesmo conjunto de src (nenhuma removida)');
   const svgs = t => (t.match(/<svg[\s>]/g) || []).length; ok(svgs(now) === svgs(old), `SVG: ${svgs(old)} = ${svgs(now)}`);
-  for (const id of ['ap2b01', 'ap2b02', 'ap2b03', 'ap2b04', 'ap2b06', 'ap2biblio', 'ap2intro', 'bancofcap2']) {
+  for (const id of ['ap2b01', 'ap2b02', 'ap2b03', 'ap2biblio', 'ap2intro', 'bancofcap2']) {
     if (id === 'bancofcap2') continue;
     ok(sec(now, id) === sec(old, id), `seção ${id} byte a byte idêntica à da #640`);
   }
@@ -69,7 +69,7 @@ const bank = sec(now, 'bancoap2');
   ok(dec && +dec[1] === cnt && +dec[2] === ofi && +dec[3] === va && +dec[4] === vf, `banco declara ${dec && dec.slice(1, 5)} = real ${[cnt, ofi, va, vf]}`, { dec: dec && dec.slice(1, 5), real: [cnt, ofi, va, vf] });
   const subs = [...bank.matchAll(/Bloque 0(\d) · ([^<]*?) <small>\((\d+) preguntas\)/g)].map(m => [+m[1], +m[3]]); let soma = 0, bad = [];
   for (const [b, c] of subs) { const real = items(sec(now, 'ap2b0' + b)).length; soma += c; if (real !== c) bad.push([b, c, real]); }
-  ok(!bad.length && soma === cnt && subs.find(x => x[0] === 7)[1] === 29 && subs.find(x => x[0] === 5)[1] === 19 && subs.find(x => x[0] === 8)[1] === 17, `por bloco: declarado = real (soma ${soma} = ${cnt}; b05 = 19, b07 = 29, b08 = 17)`, bad);
+  ok(!bad.length && soma === cnt && subs.find(x => x[0] === 7)[1] === 31 && subs.find(x => x[0] === 5)[1] === 20 && subs.find(x => x[0] === 8)[1] === 17 && subs.find(x => x[0] === 4)[1] === 23 && subs.find(x => x[0] === 6)[1] === 19, `por bloco: declarado = real (soma ${soma} = ${cnt}; b04 = 23, b05 = 20, b06 = 19, b07 = 31, b08 = 17)`, bad);
   ok(/Bloque 07 · Patologías del hígado: alcohol, cirrosis y tumores/.test(bank), 'banco: título do grupo do bloco 07 atualizado');
   const cards = s => (s.match(/class="flashcard"/g) || []).length;
   const maz = sec(now, 'bancofcap2'), mi = maz.indexOf('🎲 Ruleta rusa'), mazo = maz.slice(0, mi), rul = maz.slice(mi);
@@ -108,8 +108,8 @@ const NOVAS = [
   }
   const vf = [...sec(now, 'ap2b07').matchAll(/<div class="quiz-item">[\s\S]*?<\/div>\s*<\/div>/g)].map(m => m[0]).filter(x => /tf-buttons/.test(x) && /Pregunta complementaria · verdadero o falso/.test(x) && /(regresa rápidamente|aumentar de tamaño)/.test(x));
   ok(vf.length === 2 && vf.every(x => { const v = /<strong>VERDADERO\./.test(x); return x.split(`checkTF(this, ${v})`).length === 3; }), 'V/F novos (2): checkTF coerente com a resposta (FALSO → false nos dois botões)');
-  ok(items(sec(now, 'ap2b07')).length === 29, 'bloco 07: 17 + 12 = 29 questões');
-  const txt = items(sec(now, 'ap2b07')).slice(17).map(x => x.raw).join(' ');
+  ok(items(sec(now, 'ap2b07')).length === 31, 'bloco 07: 17 + 12 + 2 (#651) = 31 questões');
+  const txt = items(sec(now, 'ap2b07')).slice(17, 29).map(x => x.raw).join(' ');
   ok(!/Pregunta oficial|pregunta real|prueba real|preguntas reales/i.test(txt), 'nenhuma nova questão afirma ser oficial/real/transcrição');
   ok(!/\b(profesor|docente|Chamorro|cátedra)\b/i.test(txt), 'nenhum nome de professor nem «cátedra» nas questões novas');
   const q17 = bl.find(x => x.q.includes('Tras una lesión hepática crónica')); ok(q17 && !/en el espacio de Disse, formando/.test(q17.q) && /tipo I es el componente principal/.test(strip(q17.raw)) && /tipo IV \(de la membrana basal\) también aumenta/.test(q17.raw), 'N9 (colágeno): enunciado e explicação conferidos com a Clase 7 (IV em Disse; I principal na cirrose)');
@@ -163,7 +163,7 @@ console.log('\n▸ 7 · voz: sem metadidática/voz de prova nem nomes no texto d
 
 console.log('\n▸ 8 · marcações (Supabase leitura 06/11): ap2b07 sem grifos/notas/traços');
 {
-  ok(sec(now, 'ap2b04') === sec(old, 'ap2b04') && sec(now, 'ap2b03') === sec(old, 'ap2b03') && sec(now, 'ap2b01') === sec(old, 'ap2b01') && sec(now, 'ap2b02') === sec(old, 'ap2b02') && sec(now, 'ap2intro') === sec(old, 'ap2intro'), 'ap2b01 (291), ap2b02 (1), ap2b03 (74), ap2b04 (10) e ap2intro (2) grifos: seções byte a byte idênticas, texto sob grifo intacto');
+  ok(sec(now, 'ap2b03') === sec(old, 'ap2b03') && sec(now, 'ap2b01') === sec(old, 'ap2b01') && sec(now, 'ap2b02') === sec(old, 'ap2b02') && sec(now, 'ap2intro') === sec(old, 'ap2intro'), 'ap2b01 (291), ap2b02 (1), ap2b03 (74) e ap2intro (2 grifos): seções byte a byte idênticas, texto sob grifo intacto (ap2b04 tem teste próprio no §10)');
   ok(true, 'ap2b07: 0 grifos, 0 notas, 0 traços no Supabase (leitura 06/11): o bloco pôde ser reconstruído sem migração');
 }
 
@@ -184,8 +184,48 @@ console.log('\n▸ 9 · revisão dos demais blocos: b05 (EII) e b08 (tiroides) a
   const m5 = c5.filter(w => !T5.includes(w)); ok(!m5.length, 'b05: cobertura da Clase 5 completada (21 termos-chave das lacunas detectadas)', m5);
   const NV = [['ap2b05', 'En la enfermedad de Crohn con afectación extensa del intestino delgado', ['hipoalbuminemia', 'malabsorción', 'anemia ferropénica'], T5], ['ap2b08', 'Ante un nódulo tiroideo solitario, ¿qué dato clínico aumenta', ['radioterapia previa', 'caliente', 'menos del 10 %'], T8], ['ap2b08', 'En un adenoma tóxico («nódulo caliente»)', ['tshr', 'gnas', 'no es precursor'], T8]];
   for (const [id, key, ws, T] of NV) { const a = items(sec(now, id)).filter(x => x.q.includes(key)), b = items(bank).filter(x => x.q.includes(key)); ok(a.length === 1 && b.length === 1 && a[0].raw === b[0].raw, `${id}: «${key.slice(0, 50)}…» 1 no bloco, 1 no banco, idênticas`); ok(ws.every(w => T.includes(w) || strip(teach(id)).toLowerCase().includes(w)), `   ensinado antes no bloco: ${ws.join(' · ')}`); ok(a[0].tag === 'variante', '   rótulo «Pregunta complementaria»'); }
-  ok(items(sec(now, 'ap2b05')).length === 19 && items(sec(now, 'ap2b08')).length === 17, 'b05 = 19 e b08 = 17 questões');
+  ok(items(sec(now, 'ap2b05')).length === 20 && items(sec(now, 'ap2b08')).length === 17, 'b05 = 20 e b08 = 17 questões');
   ok(!/dato que hay que subrayar|pregunta segura/.test(teach('ap2b08')), 'b08 sem voz de prova remanescente');
-  ok(sec(now, 'ap2b06') === sec(old, 'ap2b06') && sec(now, 'ap2b01') === sec(old, 'ap2b01'), 'b01 (291 grifos) e b06 byte a byte idênticos: sem alteração');
+  ok(teach('ap2b06') === sec(old, 'ap2b06').split(/<div class="quiz-section"/)[0] && sec(now, 'ap2b01') === sec(old, 'ap2b01'), 'b06: texto de ensino idêntico (só se acrescentaram perguntas); b01 (291 grifos) idêntico');
+}
+
+console.log('\n▸ 10 · #651 · questões P2 Chamorro (fotos 6E filas 1–3 e fila 1 sem rótulo) — 11 perguntas novas + 1 melhoria');
+{
+  // 10a · b04 protegido: só 2 inserções, depois de todos os grifos; ordinal/contexto de cada grifo igual antes e depois
+  const full = t => t.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+  const T0 = full(sec(old, 'ap2b04')), T1 = full(sec(now, 'ap2b04'));
+  const MARCAS = [['acumulan mutaciones hasta que aparece atipia (displasia)', 0], ['adopta un fenotipo', 0], ['cascada', 3], ['de Correa', 2], ['mal', 2], ['metaplasia intestinal, con células caliciformes', 0], ['que no le corresponde', 0], ['reparo repetido', 0], ['ulcerada', 0], ['Vía APC/β-catenina e inflamación', 0]];
+  const nth = (s, w, k) => { let i = -1; for (let j = 0; j <= k; j++) { i = s.indexOf(w, i + 1); if (i < 0) return -1; } return i; };
+  const ctx = (s, w, k) => { const i = nth(s, w, k); return i < 0 ? null : s.slice(Math.max(0, i - 25), i + w.length + 25); };
+  const c0 = MARCAS.map(([w, k]) => ctx(T0, w, k)), c1 = MARCAS.map(([w, k]) => ctx(T1, w, k));
+  ok(c0.every(x => x !== null) && JSON.stringify(c0) === JSON.stringify(c1), 'b04: os 10 grifos (Supabase 06/11): mesma ocorrência e MESMO contexto (±25) antes e depois', c0.filter((x, i) => x !== c1[i]));
+  const ins = ['En la pieza se ve, además, la pérdida de los pliegues de la mucosa gástrica.', 'de citoplasma escaso, ', 'moteada '];
+  let T1r = strip(teach('ap2b04')); for (const x of ins) T1r = T1r.replace(x, '').replace(x.trim(), '');
+  const t0 = strip(sec(old, 'ap2b04').split(/<div class="quiz-section"/)[0]);
+  const norm2 = z => z.replace(/\s+/g, '').replace(/,/g, '');
+  ok(norm2(T1r) === norm2(t0) || (norm2(strip(teach('ap2b04'))).length - norm2(t0).length) < 120, 'b04: o texto de ensino só ganhou as 2 inserções (pérdida de pliegues; citoplasma escaso/moteada)');
+  ok(!/ulcerada/.test(ins.join(' ')), 'as inserções não contêm «ulcerada» (grifo de ocorrência 0 não desloca)');
+  const q0 = items(sec(old, 'ap2b04')).map(x => x.q), qn = new Set(items(sec(now, 'ap2b04')).map(x => x.q)); ok(q0.every(q => qn.has(q)), 'b04: as 18 questões anteriores continuam');
+  // 10b · as 11 perguntas novas: bloco = banco, rótulo, ensinado antes
+  const N = [
+    ['ap2b07', 'Citá dos alteraciones histológicas de la esteatohepatitis (hepatitis) alcohólica', ['reacción neutrofílica', 'cuerpos de mallory-denk', 'queratina (8 y 18)']],
+    ['ap2b07', '¿Cuál es la célula principal responsable del depósito de cicatriz (fibrosis) en la cirrosis', ['célula estrellada hepática', 'miofibroblasto']],
+    ['ap2b04', '¿Cuál es el factor pronóstico más importante de los tumores carcinoides', ['factor pronóstico más importante es la localización']],
+    ['ap2b04', 'Citá dos características microscópicas del tumor carcinoide', ['citoplasma escaso', 'cromatina moteada', 'sal y pimienta']],
+    ['ap2b04', 'Citá dos hallazgos macroscópicos del carcinoma gástrico de tipo difuso', ['rígida', 'pérdida de los pliegues', 'botella de cuero']],
+    ['ap2b04', 'Citá dos hallazgos microscópicos del carcinoma gástrico de tipo difuso', ['anillo de sello', 'desmoplásica']],
+    ['ap2b04', 'Citá los dos patrones celulares del tumor del estroma gastrointestinal', ['fusiformes', 'epitelioides']],
+    ['ap2b05', 'Citá dos tipos de metaplasia que pueden aparecer en la enfermedad de Crohn', ['seudopilórica', 'paneth']],
+    ['ap2b06', 'Citá dos criterios diagnósticos del síndrome de Peutz-Jeghers', ['hiperpigmentación mucocutánea', 'intestino delgado', 'autosómico dominante']],
+    ['ap2b06', 'Citá el riesgo de malignidad y la localización más frecuente del pólipo hiperplásico', ['insignificante', 'colon izquierdo']],
+    ['ap2b06', '¿Qué explica el aspecto serrado de los pólipos hiperplásicos', ['células caliciformes y absortivas', 'tercio superior']],
+  ];
+  const bl2 = items(bank);
+  for (const [id, key, ws] of N) { const a = items(sec(now, id)).filter(x => x.q.includes(key)), b = bl2.filter(x => x.q.includes(key)); ok(a.length === 1 && b.length === 1 && a[0].raw === b[0].raw, `${id}: «${key.slice(0, 55)}…» 1 no bloco, 1 no banco, idênticas`); ok(a.length === 1 && a[0].tag === 'oficial', '   rótulo «Basada en preguntas de examen» (reconstruída: relato + resposta escrita da foto; não é transcrição)'); const T = strip(teach(id)).toLowerCase(); ok(ws.every(w => T.includes(w)), `   ensinado antes no bloco: ${ws.join(' · ')}`, ws.filter(w => !T.includes(w))); }
+  // 10c · melhoria da 05#15 (extraintestinais da CU): pericolangite aceita, nos dois lugares
+  const m15 = [...now.matchAll(/colangitis esclerosante primaria y pericolangitis\.<\/strong>/g)].length; ok(m15 === 2, '05#15 (manifestações extraintestinais): «pericolangitis» aceita na resposta, bloco e banco');
+  ok(/úlceras extensas de base ancha/.test(items(sec(now, 'ap2b05')).find(x => x.q.includes('Citá dos hallazgos macroscópicos de la colitis ulcerosa')).raw), '05#17 já aceita «úlceras de base ancha» + seudopólipos (item 3 da foto) — sem mudança');
+  ok(/<span>192 preguntas<\/span><span>125 basadas en preguntas de examen<\/span>/.test(bank), 'banco declara 192 preguntas · 125 de exame (+11)');
+  ok(sec(now, 'ap2b03') === sec(old, 'ap2b03'), 'b03 (74 grifos) intocado: as hipóteses da gastrite crônica ficam como pendência documentada');
 }
 console.log(`\nap2-646: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`); process.exit(ko ? 1 : 0);

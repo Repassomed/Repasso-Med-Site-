@@ -138,3 +138,59 @@ Intentos realizados (todos fallaron por límites técnicos, no por falta de arch
 
 ## Recuento final declarado (teoría)
 Banco **181** (114 examen · 67 variantes · 10 V/F): b05 = 19 · b07 = 29 · b08 = 17; mazo **177** tarjetas (bloques = mazo = ruleta). MCQ 154: A/B/C/D 39/39/38/38, corrida máxima 4 (preexistente), abcd/dcba 0. Imágenes y SVG: **idénticos**; ningún id de sección cambia; ninguna pregunta ni flashcard retirada.
+
+
+---
+
+# PARTE C · #651 · P2 Chamorro: gabaritos 6E (filas 1–3) y fila 1 sin rótulo — matriz y decisiones (09/11/2026)
+
+## C.1 Fuentes y lectura de las imágenes
+| Imagen | Id Drive | Qué es (leído a 2× y confirmado) |
+|---|---|---|
+| **Imagen 1** | `1qBuVnYkS48fPHHGZ9VhMXg1DyJlisEuG` | **6.º E · Fila 1, Fila 2 y Fila 3** (tres hojas; 11 respuestas escritas + letras de los ítems 12–17 por fila) |
+| **Imagen 2** | `1r6SwQguU0F9SUVAYNa4_dXNpUaMLPbFp` | **«Fila 1» sin rótulo de turno** (otra versión del examen; la issue habla de 6E/6G: **no se puede afirmar que sea 6G**; es distinta de la foto «6H filas 1 y 2» de la #638). 11 respuestas escritas + letras 12–17 |
+Relatos: issue **#651** (sin comentarios) y **#638**. Supabase: ver C.5. Fuentes de contenido: slides de la cátedra (Clase 4 tumores gástricos, 5 intestino, 6 pólipos, 7 hígado ×2); libros: **ilegibles** (ver Parte B).
+
+**Transcripción 6E.** Fila 1: 1 infiltrado de neutrófilos + cuerpo de Mallory-Denk · 2 atrofia difusa + metaplasia intestinal · 3 seudopólipos + úlceras de base ancha · 4 localización · 5 células estrelladas · 6 granuloma no caseificante · 7 pared rígida y engrosada + pérdida de pliegues · 8 célula en anillo de sello + desmoplasia · 9 displasia · 10 linfocitos T · 11 infección por *Helicobacter pylori* · letras 12 B · 13 C · 14 B · 15 A · 16 d · 17 d (18–20 tachados). **Fila 2:** 1 = células estrelladas · 2 = granuloma · 3 = localización · 4 = «ver 1 (fila 1)» · 5 = «ver 3 (fila 1)» · 6 = «ver 2 (fila 1)» · 7 = linfocitos T · 8 = *H. pylori* · 9 = displasia · 10 = «ver 7» · 11 = «ver 8» · letras 12 C · 13 B · 14 d · 15 A · 16 B · 17 C. **Fila 3:** 1 = «ver 7» · 2 = «ver 8» · 3 = «ver 3» · 4 = «ver 1» · 5 = «ver 2» · 6 = granuloma · 7 = localización · 8 = células estrelladas · 9 = *H. pylori* · 10 = displasia · 11 = linfocitos T · letras 12 d · 13 b · 14 c · 15 c · 16 A · 17 B. Las remisiones «ver N» **coinciden** con el contenido de la fila 1: son las mismas 11 preguntas reordenadas (verificado fila por fila).
+**Transcripción imagen 2 (fila 1).** 1 cromatina moteada + citoplasma escaso · 2 pólipos hamartomatosos en intestino delgado + hiperpigmentación mucocutánea · 3 metaplasia seudopilórica + de células de Paneth · 4 úlceras aftosas · 5 vellosa · 6 miofibroblasto · 7 nula/carece (riesgo) + colon izquierdo (localización) · 8 acumulación de células absortivas y caliciformes que dan aspecto serrado · 9 alfafetoproteína · 10 fusiformes + epitelioides · 11 pericolangitis + colangitis esclerosante primaria · letras 12 A · 13 d · 14 C · 15 B · 16 B · 17 A. (El «7» está tapado por la escritura; se lee por el contenido: riesgo y localización del hiperplásico.)
+**Regla de letras (8-A.5-A):** las letras 12–17 de las **cuatro** filas de estas dos imágenes se registran como dato estructural y **no se asocian a ninguna pregunta**: faltan enunciados y alternativas, y las filas barajan las opciones.
+
+## C.2 Matriz de las respuestas escritas
+«Existe» = ya estaba en la #648/#640/main (bloque y nº dentro del bloque; las preguntas no tienen id: se identifican por bloque + posición). «NUEVA» = agregada en esta entrega (rótulo «Basada en preguntas de examen»: enunciado **reconstruido** a partir del relato de José + la respuesta escrita; **no** es transcripción).
+| Ítem (imagen) | Pregunta | Existe / NUEVA | Bloque y nº | Respuesta específica esperada (gabarito de la profesora) | Pendiente / duda |
+|---|---|---|---|---|---|
+| 6E f1·1 (f2·4, f3·4) | Alteraciones histológicas de la hepatitis alcohólica | **NUEVA** | `ap2b07` #30 | infiltrado de neutrófilos + cuerpos de Mallory-Denk | — (ensinado en §1; antes solo había una MCQ sobre Mallory-Denk, #20, y no pedía «dos hallazgos») |
+| 6E f1·2 | Alteraciones epiteliales de la gastritis crónica | Existe parcial | `ap2b03` #22 (secuencia atrofia → metaplasia → displasia) y #9 | atrofia difusa + metaplasia intestinal | **PENDIENTE:** enunciado dudoso (relato: «alterações epiteliais, atrofia, metaplasia intestinal, células inflamatórias, anemia»; «difusa» sugiere la autoinmune). **b03 tiene 74 grifos** y no se tocó. Propuesta lista para cuando José confirme el enunciado: «Citá dos alteraciones epiteliales de la gastritis crónica» → atrofia (difusa en la autoinmune, multifocal en *H. pylori*) + metaplasia intestinal; ya está enseñado en b03 |
+| 6E f1·3 (f2·5, f3·3) | 2 hallazgos macroscópicos de la CU | Existe | `ap2b05` #17 | seudopólipos + úlceras de base ancha | La respuesta **ya acepta** ambos (y continuidad desde el recto, mucosa atrófica, pared sin engrosamiento) — sin cambio |
+| 6E f1·4 (f2·3, f3·7) «localización» | Factor pronóstico del carcinoide | **NUEVA** | `ap2b04` #19 | la localización (sin decidir cada caso) | Hipótesis fuerte (relato #638 nº 12 y #651), no certeza: «localización» también podría ser otra pregunta. Slide Clase 4 confirma «factor pronóstico más importante = localización» |
+| 6E f1·5 (f2·1, f3·8) · img2·6 | Célula principal de la cicatriz en la cirrosis / en qué se transforma | **NUEVA** | `ap2b07` #31 (+ #17 colágeno, #23 Kupffer) | células estrelladas → miofibroblasto | — (TGF-β, colágeno y puentes/nódulos ya cubiertos: #17, #23, #18) |
+| 6E f1·6 (f2·2, f3·6) | Hallazgo microscópico de Crohn | Existe | `ap2b05` #5 (granuloma no constante), #2, #14 | granuloma no caseificante | Enunciado original no conocido; contenido cubierto (no se duplica) |
+| 6E f1·7 (f2·10, f3·1) | Macroscopía del carcinoma gástrico difuso / linitis | **NUEVA** | `ap2b04` #21 | pared rígida y engrosada + pérdida de pliegues | Slide Clase 4: «aplanamiento difuso de las rugosidades y pared rígida y engrosada» + figura «pérdida de pliegues». Antes #2 (viñeta) no exigía los dos puntos |
+| 6E f1·8 (f2·11, f3·2) | Microscopía del difuso | **NUEVA** | `ap2b04` #22 | células en anillo de sello + desmoplasia | — |
+| 6E f1·9 (f2·9, f3·10) «displasia» | Lesión premaligna | Existe | `ap2b07` #10 (BilIN) y `ap2b03` #9/#22 (gastritis) | displasia | **Ambiguo**: puede referirse al colangiocarcinoma (como en la foto 6H de la #638) o a la gastritis; ambos están cubiertos |
+| 6E f1·10 (f2·7, f3·11) «linfocitos T» | Célula inflamatoria/efectora de la gastritis autoinmune | Existe (contenido) | `ap2b03` #6, #7 | linfocitos T (CD4+) | **PENDIENTE** (enunciado dudoso; b03 protegido) |
+| 6E f1·11 (f2·8, f3·9) | Causa de la gastritis crónica | Existe (contenido) | `ap2b03` #5, #16, #22 | infección por *H. pylori* | **PENDIENTE** (enunciado dudoso) |
+| Img2·1 | Microscopía del carcinoide | **NUEVA** | `ap2b04` #20 | cromatina moteada («sal y pimienta») + citoplasma escaso | Slide Clase 4: «citoplasma granular rosa escaso … cromatina moteada» ✔ |
+| Img2·2 | Criterios del Peutz-Jeghers | **NUEVA** | `ap2b06` #17 (+ #2 viñeta) | pólipos hamartomatosos en delgado + hiperpigmentación mucocutánea | el slide agrega «antecedentes familiares» (también aceptado) |
+| Img2·3 | Metaplasias de Crohn | **NUEVA** | `ap2b05` #20 | seudopilórica + células de Paneth | Slide Clase 5 ✔ (colon izquierdo) |
+| Img2·4 | Lesiones iniciales de Crohn | Existe | `ap2b05` #6 | úlceras aftosas | No se duplica |
+| Img2·5 «vellosa» | Pólipo velloso (relato) | **PENDIENTE** | `ap2b06` #8, #16 (contenido) | velloso | Enunciado desconocido; el bloque enseña que el factor que más se correlaciona con el riesgo es el **tamaño** y que el velloso lo acompaña: una pregunta «¿cuál tiene más riesgo?» chocaría con eso, por eso no se inventó |
+| Img2·7 | Hiperplásico: riesgo y localización | **NUEVA** | `ap2b06` #18 (+ #10 viñeta) | riesgo nulo/insignificante + colon izquierdo | Slide Clase 6 ✔ («carecen de potencial maligno»; «colon izquierdo (+++)») |
+| Img2·8 | Microscopía serrada del hiperplásico | **NUEVA** | `ap2b06` #19 | acumulación de células absortivas y caliciformes | Slide Clase 6 ✔ |
+| Img2·9 | Marcador del CHC | Existe | `ap2b07` #6 (y #15 mutaciones) | alfafetoproteína | — |
+| Img2·10 | Patrones celulares del GIST | **NUEVA** | `ap2b04` #23 (+ #17 célula de origen) | fusiformes + epitelioides | Slide Clase 4 ✔; «agravantes» del relato = tamaño, índice mitótico (enseñado) |
+| Img2·11 | Extraintestinales de la CU | Existe, **mejorada** | `ap2b05` #15 (y #9) | pericolangitis + colangitis esclerosante primaria | #15 ahora acepta también **pericolangitis** (bloque y banco) |
+
+## C.3 Relatos de la #651 sin ítem escrito en las fotos
+CHC 2 mutaciones y marcador → `ap2b07` #15 y #6 (existen) · Crohn distribución/pared, transmural, manifestaciones → `ap2b05` #16, #1/#14, #15 (existen); **fístula perianal**: cubierta como complicación en #14/#18, sin ítem en las fotos · CU megacolon → #4 · carcinoide 2 enfermedades → `ap2b04` #16 (existe) · colangiocarcinoma precursor y grado → `ap2b07` #10 · linfoma gástrico DD / MALT → `ap2b04` #5, #13, #14 · GIST CD117 célula → #17 · adenoma y anticonceptivo → `ap2b07` #2 · masa hepática con cicatriz central → `ap2b07` #3 · Lauren → `ap2b04` #1, #2 · **mujer 22 años con SOP** y **dolor cólico con abscesos crípticos**: **siguen PENDIENTES** (sin enunciado ni opciones).
+
+## C.4 Cambios y decisiones
+- **+11 preguntas** (todas abiertas, rótulo «Basada en preguntas de examen», en bloque **y** banco, idénticas): `ap2b07` +2 (29 → 31), `ap2b04` +5 (18 → 23), `ap2b05` +1 (19 → 20), `ap2b06` +3 (16 → 19). Banco **181 → 192** (exame 114 → **125**, variantes 67, V/F 10). Sin MCQ nuevas: la serie de letras (8-A.7) no cambia.
+- **Enseñanza previa mínima en b04 (protegido por grifos):** dos inserciones, ambas **respaldadas por la Clase 4**: «pérdida de los pliegues» (linitis) y «citoplasma escaso / cromatina moteada» (carcinoide). Se verificó por posición que los 10 grifos conservan **la misma ocurrencia y el mismo contexto**; las inserciones no contienen «ulcerada» (único grifo posterior a ellas).
+- **Mejora de 1 pregunta existente (8-A.1-B):** `ap2b05` #15 acepta «pericolangitis» (mismo lugar, bloque y banco).
+- **No duplicadas:** E3, E6, Img2·4, Img2·9 y Img2·11 ya estaban cubiertas.
+- **Divergencias con fuentes:** ninguna entre el gabarito de la profesora y los slides en los ítems agregados; las que quedan sin cotejo con libro son las de la Parte B. **Duda registrada:** identidad del ítem «localización» y de «displasia»/«linfocitos T»/*H. pylori* (enunciados no recuperables).
+- Sin flashcards nuevas (los 11 puntos ya están en flashcards o en el texto del bloque).
+
+## C.5 Supabase (solo lectura, 09/11/2026)
+Antes de modificar b04 se releyeron los 10 grifos (`ap2b04`): mismas marcas que el 06/11; notas y trazos de la materia: 0. Nada escrito.
