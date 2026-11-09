@@ -27,46 +27,56 @@ Limite: confere **presença do conteúdo**, não a qualidade didática nem as fi
 Blocos sem deck na pasta atualizada (mantidos como estão, já «desde cero»): `fp2b07` IRA, `fp2b08` ERC, `fp2b09` ITU, `fp2b10` Na, `fp2b11` K.
 Ordem dos blocos: segue a dos decks (01→13) com os cinco blocos sem deck intercalados na parte renal; nenhuma renumeração.
 
-## 3 · O que esta PR muda (3 inserções, todas do slide)
+## 3 · O que esta PR muda — ESTADO ÚNICO (09/11)
+Esta PR faz **duas** coisas: (a) 3 inserções que vêm do slide (tabela abaixo) e (b) uma seção didática nova em **cada** um dos blocos 15–19 (§3-B). Os blocos 15–19 **já receberam** a revisão didática; não há etapa pendente de reescrita. O que segue pendente está só no §4.
+
+### 3-A · As 3 inserções do slide
 | Bloco | Inserção | Origem |
 |---|---|---|
 | `fp2b05` | «El slide de la cátedra la llama también **nefrosis lipoide**…» (nefropatia por cambios mínimos) | deck 08, slide 30 |
 | `fp2b06` | «…la nombra como **enfermedad de Berger** (es el mismo cuadro)» (nefropatia por IgA) | deck 08, tabela nefrítico × nefrótico |
 | `fp2b18` | subtítulo «Hipotiroidismo congénito transitorio» (exceso de yodo/antitiroideos → TSH alta, T baja/normal, temporal) | deck 12, slide 30 |
-Nada foi removido ou movido; perguntas (806), flashcards (2181), SVG (77), imagens (33) e tabelas (82) idênticos à #643. Fisio II tem 47 grifos reais (somente leitura, 06/11) em `fp2b01` ×42, `fp2b02` ×4, `fp2b12` ×1; esses três blocos ficam **byte a byte idênticos**; os blocos editados não têm grifos; 0 traços; 0 notas.
+Nada foi removido ou movido; perguntas (806), flashcards (2181), SVG (77) e imagens (33) idênticos à #643; tabelas 82 → 89 (+7 nas seções do §3-B). Fisio II tem 47 grifos reais (somente leitura, 06/11) em `fp2b01` ×42, `fp2b02` ×4, `fp2b12` ×1; esses três blocos ficam **byte a byte idênticos**; os blocos editados não têm grifos; 0 traços; 0 notas.
 
 ## 3-B · Revisão didática (#647) — resultado por bloco
 
-Critérios: desde cero · mecanismo · comparação · síntese. «Bom» = já cumpria, preservado sem tocar. «+» = camada nova inserida **antes de «Puntos a dominar»**, sem tocar em perguntas, flashcards, imagens, IDs nem texto existente.
+«Bom» = já cumpria desde cero/mecanismo/comparação e foi preservado. «+» = seção nova **antes de «Puntos a dominar»**, escrita na voz do resumo (sem avisos de bastidor para o aluno), fechada com «En una frase». Perguntas, flashcards, imagens, IDs e texto existente não foram tocados.
 
 | Bloco | Estado | O que se fez |
 |---|---|---|
-| 01 esófago · 02 estómago · 03 EII (fp2b12) | Bom | Intocados (têm os 47 grifos reais de alunos; idênticos byte a byte) |
-| 04 páncreas · 05 hígado · 06 ictericia · 07 vías urinarias · 09 nefrítico · 10 IRA · 11 ERC · 12 ITU · 13 Na · 14 K | Bom | Já tinham cartões «desde cero», mecanismo, tabelas e «Puntos a dominar»; sem mudança |
-| 05 nefrótico (fp2b05) · 06 nefrítico (fp2b06) | Bom + 1 frase cada | «nefrosis lipoide» e «enfermedad de Berger» (slide) |
-| 15 ácido-base (fp2b15) | + | Seção 6: logaritmo do pH, acidose/alcalose metabólicas ligadas aos blocos 02/14/16, compensação, 2 exemplos de gasometria com valores **inventados e rotulados** |
-| 16 diabetes (fp2b16) | + | Seção 8: cadeia sinal→sintomas→complicações, analogia basal/prandial, quadro amanecer × Somogyi |
-| 17 suprarrenal (fp2b17) | + | Seção 8: espelho Addison × Cushing, diagnóstico em 3 perguntas, por que a retirada brusca é perigosa |
-| 18 tiroides (fp2b18) | + 1 subseção do slide | Seção 10: leitura do laboratório TSH/T4 livre, bocio por TSH, hormona→sintoma |
-| 19 SNA/consciência (fp2b19) | + | Seção 7: quadro coma × mutismo acinético × cautiverio, analogia interruptor/tela, como se arma o Glasgow |
+| 01 esófago · 02 estómago · 03 EII (fp2b12) | Bom | Intocados (47 grifos reais; idênticos byte a byte) |
+| 04 · 05 · 06 · 07 · 08 · 09 · 10 · 11 · 12 · 13 · 14 (fp2b04, 03, 13, 14, 05, 06, 07, 08, 09, 10, 11) | Bom | Sem mudança, salvo +1 frase do slide em 05 e 06 |
+| 15 ácido-base | + seção 6 | Logaritmo do pH; acidose/alcalose metabólicas ligadas aos blocos 02, 14 e 16; compensação; 2 exemplos de prática rotulados «valores de ejemplo». A nota antiga «Qué no desarrolla el slide» foi reescrita para apontar a seção 6 |
+| 16 diabetes | + seção 8 | Cadeia sinal → sintomas → complicações; basal/prandial; amanecer × Somogyi (sem conduta de dose) |
+| 17 suprarrenal | + seção 8 | Espelho Addison × Cushing; diagnóstico em 3 perguntas; retirada brusca de glucocorticoides |
+| 18 tiroides | + seção 10 (e 1 subtítulo do slide) | Leitura TSH/T4 livre (primário e tirotoxicose, com os casos do slide); bocio por TSH; hormona → sintoma |
+| 19 SNA/consciência | + seção 7 | Coma × mutismo acinético × cautiverio; interruptor/tela; como se arma o Glasgow, sem valores |
 
-**Fontes e limites.** Tudo o que vem do slide continua no texto original. As camadas novas são **raciocínio fisiopatológico/conhecimento geral** e levam o aviso visível «Apoyo de la página, no del slide». Nenhum livro-texto foi aberto nesta sessão: não se afirma ter consultado Farreras, Harrison, Guyton nem outro; onde o conteúdo não pôde ser confirmado numa fonte, isso está no aviso. Os valores do Glasgow **não foram incluídos** (tabela do slide inacessível).
+### Origem e grau de verificação das seções novas (relatório interno; NÃO vai à página do aluno)
 
-**Supabase (leitura, 09/11).** `user_highlights` de Fisiopatología II: fp2b01 = 42, fp2b02 = 4, fp2b12 = 1; nenhum nos blocos editados. Risco para dados: nenhum.
+| Afirmação | Origem | Verificação |
+|---|---|---|
+| Quadros de Addison/Cushing, cinco S, pruebas de cribado, eixo TRH–TSH, Graves, graus de consciência, mutismo acinético, cautiverio | Slides (decks 09–13, texto) | Reconferido contra o texto extraído dos slides |
+| pH logarítmico (0,3 de pH ≈ dobro de H⁺); causas de acidose/alcalose metabólica; compensação respiratória/renal e seu tempo; exemplos de gasometria | Conhecimento geral de fisiologia (o slide 09 não os desenvolve) | **NÃO confirmado em livro** (Porth/Guyton não estão no Drive nem foram abertos). Mantido por ser conteúdo padrão e coerente com MIRO; **revisão humana pendente** |
+| Cadeia glicemia → poliuria/polidipsia/polifagia/cetose; basal/prandial | Slide 10 (cetoacidosis, tipos de insulina) + fisiologia geral | Limiar renal da glicose não confirmado em livro; sem número na página |
+| Amanecer × Somogyi | Slide: «mañana desprotegida» e «hipoglucemia de madrugada» | A coluna «Qué la distingue» é dedução do próprio slide. **Retirada** a linha de conduta (reforçar/reduzir dose): não sustentada pelo slide |
+| Hipotiroidismo secundario/terciario | Eixo do slide | **Retirada** a linha numérica «TSH baja o normal»; fica só a consequência lógica (a orden no sale; não se espera TSH alta) |
+| Coma × mutismo × cautiverio | Slide 13 (texto) | Coluna ambígua «¿consciente?» retirada; **retirado** o parágrafo do «hilo común» com o trauma (não vinha do slide) |
+| Glasgow: 3 ítens e ≤ 8 | Slide 13 (texto) | Valores por resposta **não incluídos** (tabela em figura inacessível) |
 
 ## 3-C · Slide 13 — o que não foi possível abrir
 
-Arquivo: `13 - Unidad 5. Alteraciones de la conciencia.pptx` (Drive id `1wHPoPPpHWtRlZ2t4EJDKoID_iT_2xJpu`, 27 101 529 bytes). Leitura de texto funciona; o download falha (limite de 10 MB da ferramenta; exportar como PDF também falha). Inacessíveis: **slides 3, 4, 8, 12, 15–18** (sem texto extraível), **23** (tabela de Glasgow), **26** (pupilas: heroína/atropina) e o conteúdo gráfico dos slides **6–7**. Para fechar: José exporta o deck em PDF < 10 MB ou envia as figuras; o caso do Glasgow segue «no se fija un puntaje total».
+Arquivo: `13 - Unidad 5. Alteraciones de la conciencia.pptx` (Drive id `1wHPoPPpHWtRlZ2t4EJDKoID_iT_2xJpu`, 27 101 529 bytes). Leitura de texto funciona; o download falha (limite de 10 MB da ferramenta; exportar como PDF também falha). Inacessíveis: **slides 3, 4, 8, 12, 15–18** (sem texto extraível), **23** (tabela de Glasgow), **26** (pupilas: heroína/atropina) e o conteúdo gráfico dos slides **6–7**. **Nova tentativa (09/11):** o coordenador relatou ter aberto o arquivo pelo download do original; esta sessão repetiu `download_file_content` (mesmo fileId, sem `exportMimeType`) e recebeu «File too large for download, over limit of 10 MB»; a API pública do Drive responde 403 sem credencial e não há conta autenticada (`gcloud auth list` vazio). Bloqueio = ferramenta/credencial desta sessão, não o arquivo. Para fechar: José exporta o deck em PDF < 10 MB ou envia as figuras; o caso do Glasgow segue «no se fija un puntaje total».
 
 ## 3-D · Dependência da #645 (Nova Era)
 
 A #645 mapeia só até fp2b17 (`FP2_NUM`/`FP2_SEMVIG`, testes 17 blocos). **fp2b18 e fp2b19 existem desde a #643 e caem em «otro»** até a #645 ser atualizada (17→19 em tema/tests). Enquanto isso não acontecer, a Nova Era de Fisiopatología II **não está pronta**. Esta PR não toca nos arquivos da #645.
 
 ## 4 · Pendências reais (não resolvidas aqui, sem inventar)
-1. **Figuras**: o PPTX 13 (27 MB) não pôde ser baixado; só o texto foi lido. Slides 15–18 (figuras), **tabela de Glasgow (24)** e **reatividade pupilar (26: heroína/atropina)** não inspecionados; o caso do Glasgow segue «no se fija un puntaje total». As figuras dos demais decks não foram reinspecionadas nesta PR (a #643 inspecionou 07–12).
-2. **Acidose/alcalose metabólicas**: o slide 09 não as desenvolve; o bloco 15 diz isso. Ensinar causas e compensação exigiria literatura-base (Porth cap. 8, citado no slide) que **não está no Drive**; fica como decisão de José (complemento «da literatura» separado do slide).
+1. **Figuras**: o PPTX 13 (27 MB) não pôde ser baixado; só o texto foi lido. Slides 3, 4, 8, 12 e 15–18 (figuras), **tabela de Glasgow (slide 23 na numeração do texto extraído)** e **reatividade pupilar (26: heroína/atropina)** não inspecionados; o caso do Glasgow segue «no se fija un puntaje total». As figuras dos demais decks não foram reinspecionadas nesta PR (a #643 inspecionou 07–12).
+2. **Acidose/alcalose metabólicas**: o slide 09 não as desenvolve. A seção 6 do bloco 15 as ensina com conhecimento geral de fisiologia, **sem confirmação em livro** (Porth cap. 8, citado no slide, não está no Drive). **Revisão humana pendente** antes de considerar a seção como «da literatura».
 3. **Verificação científica só contra os slides**: valores da tireoide («Farreras») e demais números não foram confrontados com o livro (indisponível).
-4. **Didática**: a cobertura é de conteúdo. Blocos 15–19 são os mais telegráficos (tabelas, poucas frases longas); poderiam ganhar prosa/analogias, mas isso é reescrita editorial (G0 §13) que não foi feita aqui para não misturar com a #643 e sem fonte nova — recomendado como etapa própria, bloco a bloco.
+4. **Didática**: concluída nesta PR para 15–19 (§3-B). Pendente só a revisão humana das linhas marcadas como «não confirmado em livro» no §3-B.
 5. **Duplicata PPTX/PDF** do deck 07: lido o PDF (22/10); o PPTX (11/09) é versão anterior editável.
 6. **Questões/flashcards**: nenhum foi criado ou alterado nesta PR (8-A: ensino antes da questão; as 3 inserções são ensino extra, sem questão nova). Questões dos blocos 18/19 são da #643 (escritas a partir dos slides, não de prova).
 
