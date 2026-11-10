@@ -103,6 +103,22 @@ html.rm-sis[data-rm-tema="medicina-familiar"] {
   --rm-pal-6: #3F8F4F; --rm-pal-6-head: #2C6C3A; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #E1F1E4; --rm-pal-6-ffg: #1B4526; --rm-pal-6-zebra: #F3FAF5; --rm-pal-6-edge: #B5D8BC; --rm-pal-6-line: #D7ECDB; --rm-pal-6-strong: #1F5530; --rm-pal-6-tint: #E6F3E8; --rm-pal-6-tag: #fff;
 }
 
+/* Biología (Nova Era) · verde-lima de citoplasma, uma família de cor por unidad; vinheta redonda (célula).
+   Bloco escrito DEPOIS da base técnica (mesma especificidade ⇒ vence). Só variáveis --rm-* e regras de aparência; nada toca conteúdo, ids nem dados do aluno. */
+html.rm-sis[data-rm-tema="biologia"] {
+  --rm-surface: #E6ECCF; --rm-side: #F1F5E3; --rm-side-edge: #C0CC9B; --rm-side-card: #DFE7C6; --rm-side-rule: #CFD9AE;
+  --rm-accent: #5D8A2E; --rm-accent-d: #3E5F1D; --rm-marker: #E9B949;
+  --rm-tag-radius: 7px; --rm-vig-radius: 50%; --rm-vig-ring: #CBD6A8;
+  --rm-pal-1: #3F7FB5; --rm-pal-1-head: #346894; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #E8F0F6; --rm-pal-1-ffg: #183045; --rm-pal-1-zebra: #F7FAFC; --rm-pal-1-edge: #BED3E6; --rm-pal-1-line: #E0EBF3; --rm-pal-1-strong: #274F70; --rm-pal-1-tint: #EEF3F8; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #5D8A2E; --rm-pal-2-head: #4C7126; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #ECF1E6; --rm-pal-2-ffg: #233411; --rm-pal-2-zebra: #F9FAF7; --rm-pal-2-edge: #C8D7B8; --rm-pal-2-line: #E5ECDE; --rm-pal-2-strong: #3A561D; --rm-pal-2-tint: #F0F4EC; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #C48A1C; --rm-pal-3-head: #A17117; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #F8F1E4; --rm-pal-3-ffg: #4A340B; --rm-pal-3-zebra: #FDFAF6; --rm-pal-3-edge: #EBD7B2; --rm-pal-3-line: #F6ECDB; --rm-pal-3-strong: #7A5611; --rm-pal-3-tint: #FAF4EB; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #8A5FB5; --rm-pal-4-head: #714E94; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #F1ECF6; --rm-pal-4-ffg: #342445; --rm-pal-4-zebra: #FAF9FC; --rm-pal-4-edge: #D7C9E6; --rm-pal-4-line: #ECE5F3; --rm-pal-4-strong: #563B70; --rm-pal-4-tint: #F4F1F8; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #2A8C8C; --rm-pal-5-head: #227373; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #E5F1F1; --rm-pal-5-ffg: #103535; --rm-pal-5-zebra: #F6FAFA; --rm-pal-5-edge: #B7D8D8; --rm-pal-5-line: #DDEDED; --rm-pal-5-strong: #1A5757; --rm-pal-5-tint: #ECF5F5; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #C2553F; --rm-pal-6-head: #9F4634; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #F8EBE8; --rm-pal-6-ffg: #4A2018; --rm-pal-6-zebra: #FDF8F7; --rm-pal-6-edge: #EAC5BE; --rm-pal-6-line: #F5E4E0; --rm-pal-6-strong: #783527; --rm-pal-6-tint: #FAF0EE; --rm-pal-6-tag: #fff;
+}
+/* Biología: asignatura em pílula (célula) e, nas unidades, o nome da unidad ao lado do rótulo */
+html.rm-sis[data-rm-tema="biologia"] #materias-container .rm-sis-s section.container .rm-sis-tag { clip-path: none; border-radius: 999px; padding: 0 18px 0 14px; }
+
 /* ---------------------------------------------------------------------
    3 · CAPÍTULO → variáveis locais (--cap-*). Qualquer componente dentro de [data-rm-cap] as herda.
    --------------------------------------------------------------------- */
