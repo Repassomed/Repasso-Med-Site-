@@ -491,7 +491,6 @@
     bl.forEach(function (b) {
       Array.prototype.forEach.call(b.sec.querySelectorAll(sel), function (x) {
         var h = x.querySelector(cab), k = nz((h || x).textContent);
-        if (h) { var am = h.querySelector('[aria-label]'); if (am) k += '|' + nz(am.getAttribute('aria-label')); }   /* frente só com imagem (láminas): o texto da frente é igual em todas; o aria-label da imagem as distingue */
         if (alts) {
           var o = x.querySelector(alts);
           var it = o ? Array.prototype.map.call(o.querySelectorAll('li,button'), function (y) { return nz(String(y.textContent).replace(/^\s*(?:[A-Ea-e]|\d{1,2})[).]\s*/, '')); }) : [];

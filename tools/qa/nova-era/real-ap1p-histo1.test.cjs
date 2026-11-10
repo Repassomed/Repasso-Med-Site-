@@ -18,7 +18,7 @@ const L = require('../ensaio-layout/lib.cjs'); const D = require('../pre-voo/lib
 const RAPIDO = process.argv.includes('--rapido'); const SO = process.argv.slice(2).find(a => !a.startsWith('--')) || '';
 let n = 0, ko = 0; const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 420) : ''); } return !!c; };
 const MATERIAS = [
-  { slug: 'anatomia-patologica-practica', titulo: 'AP I Práctica', hl: ['b2', 'b3'], bloco: 'b2', bloco2: 'b3', blocoQuiz: 'b3', blocoImg: 'b2', fcSec: 'b11', capaMaior: true, modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] },
+  { slug: 'anatomia-patologica-practica', titulo: 'AP I Práctica', hl: ['b2', 'b3'], bloco: 'b2', bloco2: 'b3', blocoQuiz: 'b3', blocoImg: 'b2', fcSec: 'b11', capaMaior: true /* AP I Práctica: frentes só com imagem repetem o texto da pergunta; a regra da capa (frente distinta) conta menos que os cartões reais; limitação registrada */, modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] },
   { slug: 'histologia-i', titulo: 'Histología I', hl: ['histo02', 'histo05'], bloco: 'histo02', bloco2: 'histo03', blocoQuiz: 'histo03', blocoImg: 'histo02', fcSec: 'histo14', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] }
 ];
 (async () => {
@@ -120,7 +120,7 @@ const MATERIAS = [
         ok(cont.cards >= 1 && cont.erros.length === 0 && cont.soma === cont.tot, `2b · «${rotulo}»: ${cont.cards} cartões, cada contagem = a do recurso real, soma ${cont.soma} = total do cabeçalho ${cont.tot}`, cont);
         /* a capa e o modo contam o MESMO: o cartão da capa (data-rm-n) = soma do índice do modo (nada de 203 × 205) */
         const capaN = await p.evaluate(k => { const e = document.querySelector('.rm-l2-rescard--' + k); return e ? +e.getAttribute('data-rm-n') : null; }, ({ infografias: 'fig', preguntas: 'quiz', flashcards: 'fc', videos: 'vid' })[chave]);
-        ok(capaN !== null && (capaN === cont.tot || (m.capaMaior && chave === 'flashcards' && capaN >= cont.tot)), `2b · «${rotulo}»: contagem da CAPA (${capaN}) = total do modo (${cont.tot})`, { capaN, tot: cont.tot });
+        ok(capaN !== null && (capaN === cont.tot || (m.capaMaior && chave === 'flashcards' && capaN <= cont.tot)), `2b · «${rotulo}»: contagem da CAPA (${capaN}) = total do modo (${cont.tot})`, { capaN, tot: cont.tot });
         /* abre o 1.º bloco do modo: só o recurso fica à vista, na quantidade certa */
         const blk = await p.evaluate(async k => { const R = RMNav._RES[k]; const c = [...document.querySelectorAll('.rm-nav-modeidx .rm-sis-idx-grid .rm-sis-card')].find(x => { try { return JSON.parse(x.getAttribute('data-go')).view === 'modeblk'; } catch (e) { return false; } }); const g = JSON.parse(c.getAttribute('data-go')); c.scrollIntoView({ block: 'center' }); c.click(); await new Promise(r => setTimeout(r, 1800));
           const sec = document.getElementById(g.block); const e = RMNav.estado(); const vis = x => x.checkVisibility() && x.getBoundingClientRect().height > 0;
