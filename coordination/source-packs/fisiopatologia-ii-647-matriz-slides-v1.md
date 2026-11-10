@@ -50,7 +50,7 @@ Nada foi removido ou movido; perguntas (806), flashcards (2181), SVG (77) e imag
 | 16 diabetes | + seção 8 | Cadeia sinal → sintomas → complicações; basal/prandial; amanecer × Somogyi (sem conduta de dose) |
 | 17 suprarrenal | + seção 8 | Espelho Addison × Cushing; diagnóstico em 3 perguntas; retirada brusca de glucocorticoides |
 | 18 tiroides | + seção 10 (e 1 subtítulo do slide) | Leitura TSH/T4 livre (primário e tirotoxicose, com os casos do slide); bocio por TSH; hormona → sintoma |
-| 19 SNA/consciência | + seção 7 | Coma × mutismo acinético × cautiverio; interruptor/tela; como se arma o Glasgow, sem valores |
+| 19 SNA/consciência | + seções 7 e 8 + 3 inserções de figura | Coma × mutismo × cautiverio; interruptor/tela; Glasgow sem valores; **dos extratos do slide 13:** simpático órgão por órgão (4), quimiorreceptores e umbrais (7), RAS (12), pupilas heroína/atropina (26) |
 
 ### Origem e grau de verificação das seções novas (relatório interno; NÃO vai à página do aluno)
 
@@ -66,9 +66,27 @@ Nada foi removido ou movido; perguntas (806), flashcards (2181), SVG (77) e imag
 | Coma × mutismo × cautiverio | Slide 13 (texto) | Coluna ambígua «¿consciente?» retirada; **retirado** o parágrafo do «hilo común» com o trauma (não vinha do slide) |
 | Glasgow: 3 ítens e ≤ 8 | Slide 13 (texto) | Valores por resposta **não incluídos** (tabela em figura inacessível) |
 
-## 3-C · Slide 13 — o que não foi possível abrir
+## 3-C · Slide 13 — extratos visuais recebidos (10/11)
 
-Arquivo: `13 - Unidad 5. Alteraciones de la conciencia.pptx` (Drive id `1wHPoPPpHWtRlZ2t4EJDKoID_iT_2xJpu`, 27 101 529 bytes). Leitura de texto funciona; o download falha (limite de 10 MB da ferramenta; exportar como PDF também falha). Inacessíveis: **slides 3, 4, 8, 12, 15–18** (sem texto extraível), **23** (tabela de Glasgow), **26** (pupilas: heroína/atropina) e o conteúdo gráfico dos slides **6–7**. **Tentativas (09/11 e 10/11):** o coordenador relatou ter aberto o arquivo pelo download do original; esta sessão repetiu `download_file_content` (mesmo fileId, sem `exportMimeType`) e recebeu «File too large for download, over limit of 10 MB» nas duas datas (o download pelo conector não grava arquivo local; não há cópia do PPTX no repositório nem no disco); a API pública do Drive responde 403 sem credencial e não há conta autenticada (`gcloud auth list` vazio). Bloqueio = ferramenta/credencial desta sessão, não o arquivo. Para fechar: José exporta o deck em PDF < 10 MB ou envia as figuras; o caso do Glasgow segue «no se fija un puntaje total».
+Fonte: pasta «Slides atualizados», arquivos «Consciencia slide NN - extrato.pptx» (1 slide cada), enviados por José. Baixados pelo conector, convertidos em PDF/PNG e **vistos um a um**. A numeração confere com a do texto extraído do arquivo original (`13 - Unidad 5…pptx`, id 1wHPoPPpHWtRlZ2t4EJDKoID_iT_2xJpu), onde o número impresso vem **depois** do conteúdo do slide.
+
+| Extrato | O que mostra | Efeito no bloco 19 |
+|---|---|---|
+| 03 | Título «Fisiopatología del sistema nervios autónomo» | — |
+| 04 | Figura simpático × parasimpático: simpático dilata pupilas, aumenta latidos, dilata bronquios, diminui contrações do estômago e do intestino, estimula suprarrenais; parasimpático inerva glândula lagrimal, salivares, coração, pulmões, estômago, páncreas, intestino, colon, bexiga, íris (sem efeitos escritos) | **Novo** na seção 1: tabela «El simpático, órgano por órgano» |
+| 06 | Título «Como se regula la frecuencia respiratoria?» | — |
+| 07 | Figura: núcleos neumotáxico («neumotórax» no rótulo), respiratório ventral (inspiração e expiração) e dorsal (inspiração); rótulo «Mesencéfalo» com seta; quimiorreceptores (bulbo raquídeo, glosofaríngeo, vago, corpo carotídeo, corpos aórticos); gráfico PCO₂ × tempo com dois «umbral» | **Novo** na seção 2: quimiorreceptores e os dois umbrais. O rótulo «Mesencéfalo» **não foi transcrito** (a literatura geral situa o centro pneumotáxico na ponte; não confirmado em livro nesta sessão) |
+| 12 | Texto «dos estructuras» + figura do RAS e «Reticular formation» | Seção 3: frase sobre o RAS e suas projeções à córtex |
+| 15 | Graus de transtorno da consciência (texto igual ao já preparado) | Conferido, sem mudança |
+| 16, 17, 18 | Letargia, obnubilación, estupor: só imagens ilustrativas (foto/meme/desenho), sem conteúdo clínico | Nenhum |
+| 23 | «Grados de coma»: texto do Glasgow (igual ao preparado) + duas fotos decorativas (a cidade de Glasgow e um mapa com alfinetes). **Não há tabela** | Conferido; a tabela **não** está aqui |
+| 26 | «Reactividad pupilar en los pacientes en coma»: pares imagem–substância. Só «heroína» (olho de pupila pequena, papoula) e «atropina» (olho de pupila grande, planta) têm rótulo; hongos, cocaína, cannabis e álcool aparecem sem texto | **Novo** seção 8: heroína → miose, atropina → midríase; o resto **não** se afirma |
+
+**Ainda não vistos (pendência real):**
+1. **Slide 24 do arquivo original**: no texto extraído é um slide **sem texto**, entre o 23 («Grados de coma») e o 25 (caso do motociclista). É o candidato à tabela de Glasgow; **não veio entre os extratos**. Sem ele, a pontuação do caso segue «no se calcula un puntaje total» e nenhum valor de Glasgow entra na página.
+2. **Slide 08**: o extrato (8,2 MB) não pôde ser baixado (o conector fecha a conexão por tamanho). No texto, a seguir à figura do 7 vêm gráficos «PCO₂ / apnea / O₂» e a conclusão «el centro neumotáxico…»; já estão no bloco, mas **as figuras do 8 não foram vistas**.
+3. **Slide 19** («Coma», sem texto; provavelmente imagem ilustrativa como 16–18): não veio.
+Para fechar: extratos «Consciencia slide 24», «08» (comprimido) e «19».
 
 ## 3-D · Dependência da #645 (Nova Era)
 
@@ -85,7 +103,7 @@ Na página do aluno não restam «el slide…», «cátedra», «lámina», «Fa
 | 19 | «Qué falta» (α/β ilegíveis), «Una errata del slide» (neumotórax), «Qué no se afirma acá» (Glasgow, imagem não lida) | «Receptores adrenérgicos», «Ojo con el nombre», «El caso del motociclista» (sem puntaje total) | α/β não legíveis no texto do slide; a tabela de valores do Glasgow é imagem (slide 23) **não aberta**; teste da #642 ajustado para a nova frase |
 
 ## 4 · Pendências reais (não resolvidas aqui, sem inventar)
-1. **Figuras**: o PPTX 13 (27 MB) não pôde ser baixado; só o texto foi lido. Slides 3, 4, 8, 12 e 15–18 (figuras), **tabela de Glasgow (slide 23 na numeração do texto extraído)** e **reatividade pupilar (26: heroína/atropina)** não inspecionados; o caso do Glasgow segue «no se fija un puntaje total». As figuras dos demais decks não foram reinspecionadas nesta PR (a #643 inspecionou 07–12).
+1. **Figuras do deck 13**: os extratos 03, 04, 06, 07, 12, 15–18, 23 e 26 foram vistos (§3-C); **faltam o 24 (provável tabela de Glasgow), o 08 e o 19**. [Texto antigo: o PPTX 13 não pôde ser baixado.] Slides 3, 4, 8, 12 e 15–18 (figuras), **tabela de Glasgow (slide 23 na numeração do texto extraído)** e **reatividade pupilar (26: heroína/atropina)** não inspecionados; o caso do Glasgow segue «no se fija un puntaje total». As figuras dos demais decks não foram reinspecionadas nesta PR (a #643 inspecionou 07–12).
 2. **Acidose/alcalose metabólicas**: o slide 09 não as desenvolve. A seção 6 do bloco 15 as ensina com conhecimento geral de fisiologia, **sem confirmação em livro** (Porth cap. 8, citado no slide, não está no Drive). **Revisão humana pendente** antes de considerar a seção como «da literatura».
 3. **Verificação científica só contra os slides**: valores da tireoide («Farreras») e demais números não foram confrontados com o livro (indisponível).
 4. **Didática**: concluída nesta PR para 15–19 (§3-B). Pendente só a revisão humana das linhas marcadas como «não confirmado em livro» no §3-B.
