@@ -71,6 +71,17 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Biología (Nova Era): ids `bio01…bio16`; a numeração é a do id (= «BLOQUE NN» do conteúdo). Cada Unidad do marcador ganha uma família de cor (cap): I 1 · II 2 · VI 3 · IV–V 4 · III 5 · VII 6 · IX 1 · VIII 2 · X 3.
+     Bloques 14–16 não têm figuras ⇒ viñeta = logo. Banco e flashcards gerais = repaso. */
+  var BI_CAP = { 1: 1, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 3, 9: 4, 10: 5, 11: 5, 12: 6, 13: 6, 14: 1, 15: 2, 16: 3 };
+  var BI_REPASO = { bancobio: 'B', 'bio-flashcards': 'F' };
+  function clasificarBI(id) {
+    var m = /^bio(\d{2})$/.exec(id);
+    if (m && BI_CAP[+m[1]]) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: BI_CAP[n], vig: n <= 13 ? 'vb-' + pad(n) : null }; }
+    if (Object.prototype.hasOwnProperty.call(BI_REPASO, id)) return { tipo: 'repaso', n: BI_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* Fisiopatología I (Nova Era): ids sem o padrão `<slug>-bNN`; a numeração é a ORDEM real dos blocos do conteúdo (01–12). Unidad I = 11 blocos, Unidad II = anemias
      (rótulo vem do marcador «UNIDAD X» do conteúdo). Banco e flashcards gerais = repaso. */
   var FI_ORDEM = ['introduccion-fisio', 'inflamacion', 'hemorragia', 'cicatrizacion', 'edema', 'choque', 'anemias',
@@ -165,6 +176,35 @@
         aud:  'Escucha e identifica hallazgos'
       },
       clasificar: clasificarMF
+    },
+    'biologia': {
+      vigDir: 'assets/img/bio/vig/',                      // 13 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-BIOLOGIA.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Biomoléculas · Célula · Organelos',
+      miga: ['Guía de estudio', 'Biología'],
+      unidades: {                                         // as do conteúdo (marcador «UNIDAD X»); o nome vem dos títulos dos blocos
+        I:   { nombre: 'Introducción',               color: '#3F7FB5' },
+        II:  { nombre: 'Biomoléculas',               color: '#5D8A2E' },
+        III: { nombre: 'Membrana y transporte',      color: '#2A8C8C' },
+        IV:  { nombre: 'Citosol y citoesqueleto',    color: '#8A5FB5' },
+        VI:  { nombre: 'Matriz y uniones',           color: '#C48A1C' },
+        VII: { nombre: 'Organelos',                  color: '#C2553F' },
+        VIII:{ nombre: 'Comunicación celular',       color: '#5D8A2E' },
+        IX:  { nombre: 'Núcleo',                     color: '#3F7FB5' },
+        X:   { nombre: 'Ciclo celular',              color: '#C48A1C' }
+      },
+      medallones: [
+        { vig: 'vb-01', t: 'CÉLULA',        cap: 1, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-10', t: 'MEMBRANA',      cap: 5, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-13', t: 'MITOCONDRIA',   cap: 6, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Esquemas y figuras por bloque',
+        quiz: 'Preguntas de práctica por bloque',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarBI
+
     },
     'fisiopatologia': {
       vigDir: 'assets/img/fisio/vig/',                    // 12 vinhetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-FISIO1-FARMACO1.md)
@@ -336,7 +376,7 @@
       var id = sec.id, c = tema.clasificar(id);
       var h2 = q1(sec, ':scope > h2'), mk = q1(sec, ':scope > .section-marker');
       var marcador = limpo(mk && mk.textContent).replace(/^[—\-–\s]+/, '');
-      var u = /UNIDAD\s+([IVX]+)/i.exec(marcador);
+      var u = /UNIDAD(?:ES)?\s+([IVX]+)/i.exec(marcador);      /* «UNIDADES IV–V» (Biología, bloque 09) conta como a primeira */
       out.push({
         /* título de reserva: seção sem <h2> direto (p.ex. guia com o título em <div class="rm-guide-h2">) ficava sem título e a
            navegação escondia o vizinho no Anterior/Próximo (cadeia quebrada). Usa o 1.º cabeçalho visual da seção, depois o marcador. */
