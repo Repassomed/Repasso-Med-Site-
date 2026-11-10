@@ -224,3 +224,68 @@ Antes de modificar b04 (09/11) y de la ronda de b05/b06 (10/11) se releyó la ma
 - **Lectura prudente:** es una **formulación simplificada de la cátedra**, válida para el **hiperplásico típico** (pequeño, distal, serración solo en el tercio superior, sin displasia). **No** se extiende a la lesión serrada de aspecto parecido (el propio slide manda diferenciarla del adenoma sésil serrado, que sí tiene potencial maligno y predomina en el colon derecho), ni se presenta como garantía para cualquier lesión.
 - **Literatura base:** Robbins 9.ª (cap. 17 p. 804, citado en el slide) y Harsh Mohan **no son legibles** con las herramientas disponibles (ver Parte B): la afirmación **no pudo confirmarse ni matizarse con el libro**; queda sin confirmación en fuente permitida más allá del slide. No se agregaron cifras ni contextos tomados de memoria.
 - **Cambios:** la respuesta de `ap2b06` #18 pasó de «riesgo insignificante» a «**carece de potencial maligno** (riesgo nulo o insignificante en el hiperplásico típico)»; la explicación atribuye la frase a la cátedra y dice que es una regla práctica, no una garantía; el texto de b06 (celda del cuadro) dice «carece de potencial maligno (formulación de la cátedra, válida para el hiperplásico típico; no para … el sésil serrado)»; la flashcard «Hiperplásico vs. sésil serrado» (bloque, mazo y ruleta) pasó de «sin riesgo» a «sin potencial maligno (el típico)». El texto dentro de la ilustración SVG («distal, sin riesgo») y el pie de figura «riesgo muy bajo» no se tocaron (ya están acotados al caso típico). Sin grifos en b06: nada que migrar.
+
+
+---
+
+# PARTE D · Simulacro «P2 – 2/2026 (NO OFICIAL)» (PDF de la issue #651, 5 págs.) — matriz ítem por ítem
+
+**Fuente:** `1IpbVkmkQBBS4JS6IKW0M5zvJNEWkMf5m` (UCP, Anatomía Patológica II, Dra. Chamorro, secciones H/I). El propio documento se identifica como **«SIMULACRO DE ESTUDIO … (NO OFICIAL)»** con «reconstrucción de preguntas y respuestas + 20 preguntas inéditas de práctica». **Registro interno:** la fuente es un simulacro no oficial (no una prueba); **no se presenta como prueba oficial**. Por decisión de José, las preguntas del PDF que **aún no estaban** en el sitio reciben el rótulo «Basada en preguntas de examen»; ninguna pregunta del sitio menciona el simulacro ni se declara «oficial».
+**Numeración:** el PDF numera **1–38 y 40–51**: **no existe la pregunta 39** (se pasa de la 38 a la 40, sin hueco de contenido visible); **no se inventó** ninguna. Total: **50 ítems** (Sección I: 1–22 abiertas; II: 23–25 casos; III: 26–31 MCQ A–D; IV: 32–51 completar/citar).
+**Respuestas del simulacro:** no se tomaron como correctas por sí mismas; cada una se confrontó con los slides (Clase 4, 5 y 7 y la Clase 7 nueva). Resultado: **49 de 50 coinciden con los slides**; una sin respaldo en slides (ítem 41, p-ANCA, ver abajo) y un matiz (ítem 18). Errata del PDF: ítem 26, opción A dice «a localización de la masa».
+**Leyenda:** main = ya estaba en `main`; #640 = vino con la #640; #648 = acrescentada en la #648 en rondas anteriores; **NUEVA** = acrescentada en esta ronda. Las preguntas no tienen id: bloque + nº dentro del bloque.
+| Ítem PDF | Tema (respuesta del simulacro) | Estado | Bloque · nº | Motivo / nota |
+|---|---|---|---|---|
+| 1 | CHC: β-catenina + p53 | existe (#640) | b07 #15 | ya pedía las dos |
+| 2 | Crohn macro: segmentaria + pared engrosada | existe (#640) | b05 #16 | idem |
+| 3 | Carcinoide: gastritis atrófica autoinmune + ZES | existe (#640) | b04 #16 | idem |
+| 4 | BilIN-3 | existe (main) | b07 #10 | idem |
+| 5 | Megacolon tóxico | existe (main) | b05 #4 | idem |
+| 6 | MALT: lesiones linfoepiteliales | existe (main) | b04 #5 (c), #13 | la respuesta correcta nombra la lesión |
+| 7 | CU macro: úlceras de base ancha + seudopólipos | existe (#640), ajustada (#648) | b05 #17 | responde con esos dos puntos |
+| 8 | CU hepatobiliar: pericolangitis + CEP | existe (#640/#648) | b05 #15 (acepta pericolangitis/CEP), #9 (main, CEP) | enunciado «hepatobiliares» distinto, contenido cubierto: no duplicado |
+| 9 | Adenoma: anticonceptivos orales | existe (main) | b07 #2 | — |
+| 10 | GIST: células de Cajal | existe (#640) | b04 #17 | — |
+| 11 | Crohn: fístulas + fisuras (trayectos penetrantes/perianales) | **NUEVA** | b05 #21 | la #18 pedía otras complicaciones (íleon); stem distinto, sin duplicado |
+| 12 | Borrmann II | existe (main) | b04 #3 | formulada como «INCORRECTA» |
+| 13 | EII/Crohn: uveítis + poliartritis | existe (#640) | b05 #15 | — |
+| 14 | Child-Pugh: bilirrubina + ascitis | existe (#648) | b07 #26 | pide 2 de 5 parámetros |
+| 15 | Otros 2 parámetros: encefalopatía + protrombina | existe (#648) | b07 #26, #28 | misma pregunta (5 parámetros): duplicado semántico |
+| 16 | Colágeno tipo I | existe (#640) | b07 #17 | — |
+| 17 | E-cadherina (CDH1) | existe (main) | b04 #2 | la respuesta correcta incluye CDH1/E-cadherina |
+| 18 | Crohn: 3 hallazgos histopatológicos (transmural, granulomas, fisuras) | **NUEVA** | b05 #22 | **matiz:** el slide describe las fisuras en la morfología macroscópica; la respuesta acepta además abscesos crípticos y agregados linfoides |
+| 19 | Crohn ileal: B12/anemia megaloblástica + estenosis | existe (#640) | b05 #18 | — |
+| 20 | Carcinoide: célula neuroendocrina | existe (#640) | b04 #18 | — |
+| 21 | Gástrico intestinal: displasia | existe (main) | b03 #9, #22; b04 #8 | — |
+| 22 | Seudopólipos | existe (main) | b05 #12 | — |
+| 23 | Lauren intestinal (caso) | existe (main) | b04 #1 | — |
+| 24 | Adenoma β-catenina | existe (#640) | b07 #16 | — |
+| 25 | Difuso/linitis (caso) | existe (main) | b04 #2 | — |
+| 26 | Carcinoide: factor pronóstico = localización | existe (#648) | b04 #19 | — |
+| 27 | CU continua / Crohn segmentaria | existe (main) | b05 #1, #3 | duplicado semántico |
+| 28 | Cirrosis: ↓ protrombina = ↓ función sintética | existe (#648) | b07 #28, #25 | — |
+| 29 | Cirrosis establecida: puentes + nódulos | existe (#648) | b07 #18 | — |
+| 30 | Difuso (caso con H. pylori) | existe (main) | b04 #2 | — |
+| 31 | HNF (9 cm, cicatriz estrellada) | existe (main) | b07 #3 (+ #7 fibrolamelar) | — |
+| 32 | H. pylori: neutrófilos intraepiteliales + plasmáticas | existe (main) | b03 #16 | — |
+| 33 | Autoinmune: cuerpo y fondo / preserva antro | existe (main) | b03 #6 | — |
+| 34 | Carcinoide: sal y pimienta + cromogranina A | existe (#648) | b04 #20 | — |
+| 35 | GIST: KIT | existe (main) | b04 #6 | — |
+| 36 | GIST: tamaño + índice mitótico | **NUEVA** | b04 #24 | slide: «tamaño, índice mitótico y localización» |
+| 37 | Lauren intestinal: glándulas + crecimiento expansivo | **NUEVA** | b04 #25 | slide Clase 4 ✔ |
+| 38 | Crohn: íleon terminal | existe (main) | b05 #10 | — |
+| **39** | **no existe en el PDF** | — | — | no se inventó |
+| 40 | Crohn: absceso críptico | **NUEVA** | b05 #23 | slide Clase 5 ✔ |
+| 41 | CU: p-ANCA | **NUEVA** | b05 #24 | **sin respaldo en slides**; consistente con el texto previo del bloque y con la asociación clínica habitual, pero **no pudo confirmarse en literatura accesible** (Robbins ilegible): marcada «no confirma el diagnóstico»; a confirmar por José |
+| 42 | Crohn: tabaquismo | **NUEVA** | b05 #25 | slide Clase 5 ✔ («tabaquismo» entre los estímulos de reactivación) |
+| 43 | Estrelladas quiescentes: vitamina A | **NUEVA** | b07 #32 | Clase 7 nueva ✔ |
+| 44 | Alambre de gallinero | **NUEVA** | b07 #33 | Clase 7 nueva ✔ |
+| 45 | Esteatohepatitis: Mallory-Denk + balonamiento | existe (#648) | b07 #30 | — |
+| 46 | Micronodular | existe (#648) | b07 #24 | — |
+| 47 | HNR | existe (main) | b07 #4 | — |
+| 48 | Hemangioma: nódulo rojo-azulado esponjoso + canales con endotelio aplanado | **NUEVA** | b07 #34 | Clase 7 ✔ |
+| 49 | Adenoma: ausencia de tríadas portales | existe (main) | b07 #13 | — |
+| 50 | CHC: nódulos displásicos de alto grado | **NUEVA** | b07 #35 | Clase 7 nueva ✔ |
+| 51 | Klatskin | existe (main) | b07 #9 | — |
+
+**Totales:** 50 ítems → **11 NUEVAS**, 39 ya existían (de ellas 5 con ajuste previo), **0 pendientes** de contenido; 1 numeración ausente (39). **Cambios en el HTML:** +11 preguntas abiertas en bloque **y** banco (idénticas): b05 +5 (20 → 25), b04 +2 (23 → 25), b07 +4 (31 → 35); banco **192 → 203** (exame 125 → **136**); sin cambios en el texto de enseñanza (todo lo cobrado ya estaba enseñado) ni en flashcards. **Supabase (solo lectura, 12/11):** grifos `ap2b01` 291 · `ap2b02` 1 · `ap2b03` 74 · `ap2b04` 10 · `ap2intro` 2; blocos 05–08, notas y trazos: 0; los 10 textos de `ap2b04` iguales a los anteriores; las preguntas nuevas se agregaron después de todos los grifos del texto.
