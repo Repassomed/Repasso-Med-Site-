@@ -69,3 +69,20 @@ Os avisos sobre páginas não lidas **saíram da página do aluno** (legenda de 
 - `Fármaco II a y b bloq 2026.pdf` (34 MB, id `1z2TWYDGs…`): `download_file_content` → «File too large for download, over limit of 10 MB». `read_file_content` devolve o texto das 52 páginas, mas **sem** as páginas 7, 15, 21, 25, 44 e 45 (só imagem). `drive.google.com` → «CONNECT tunnel failed, response 403» (rede da sessão).
 - `01 - farmaco II-antihipertensivos 2026-2.pdf` (6,7 MB, id `1Aqqo-eG…`): `read_file_content` trunca em «Eficacia clínica de los I.E.C.A.»; `download_file_content` → «The connection to MCP server "Google_Drive" was closed because a message from the server was too large». A ferramenta disponível só devolve base64 em linha; não há variante que grave o original em arquivo.
 - Pendente de verificação: págs. 7, 15, 21, 25, 44, 45 do «a y b bloq»; trecho final do slide 01. **Como destravar:** salvar esses dois PDFs divididos em partes < 4 MB (ou fornecer as páginas como imagens no repositório/Drive), ou usar uma ferramenta que baixe o original para disco sem resposta em base64 (o coordenador relatou ter conseguido com outro arquivo; aqui o conector só expõe `download_file_content`).
+
+## 8 · 4.ª rodada (10/11) · tentativas de obter as páginas em imagem e o final do slide 01 — **resultado: NÃO obtido**
+O HTML da matéria **não mudou** nesta rodada (nada novo para integrar além do já lido). Ferramentas e meios tentados, com o resultado exato:
+| # | Meio | Alvo | Resultado |
+|---|---|---|---|
+| 1 | `mcp__Google_Drive__download_file_content` | «a y b bloq» (id `1z2TWYDGs…`, 34 786 905 B) | «File too large for download, over limit of 10 MB» (3 tentativas, em dias/rodadas diferentes) |
+| 2 | `mcp__Google_Drive__download_file_content` | slide 01 (id `1Aqqo-eG…`, 6 690 348 B) | «The connection to MCP server "Google_Drive" was closed because a message from the server was too large…» (4 tentativas, também com `exportMimeType: text/plain`) |
+| 3 | `mcp__Google_Drive__read_file_content` | ambos | texto sem as págs. 7, 15, 21, 25, 44, 45 do «a y b bloq» (só imagem); slide 01 truncado em «EVIDENCIA EN PR» |
+| 4 | `mcp__Google_Drive__get_file_metadata` / `search_files` com `snippetVerbosity: MAX_ALLOWED` | slide 01 | o snippet traz o mesmo texto truncado; nada além |
+| 5 | `curl https://drive.google.com/uc?export=download&id=…` (proxy da sessão) | «a y b bloq» | «CONNECT tunnel failed, response 403» |
+| 6 | `curl https://www.googleapis.com/drive/v3/files/<id>?alt=media` (sem credencial própria do Drive) | «a y b bloq» | HTTP 403; não usei o `CLOUDSDK_AUTH_ACCESS_TOKEN` do ambiente (é credencial de outra finalidade, fora do que foi autorizado para esta tarefa) |
+| 7 | `gcloud auth list` | — | «No credentialed accounts» |
+| 8 | Busca no Drive por cópias menores/partes (título «bloq», «antihipertensivos», «ergot»; arquivos modificados desde 09/11) | — | nenhuma parte dividida nem imagem das páginas; só os mesmos arquivos e anotações de alunos já comparadas em outubro |
+| 9 | Repositório (`origin/main` e branches): imagens/páginas dos slides | — | não há; `assets/img/farmaco2/*.webp` são infografias do site, **não** páginas dos slides |
+
+**Páginas que seguem inacessíveis:** «Fármaco II a y b bloq 2026» **págs. 7, 15, 21, 25, 44 e 45** (só imagem) e o **trecho do slide 01 depois de «Eficacia clínica de los I.E.C.A.»** (início do «Evidencia en pr…»). **A revisão da matéria NÃO está completa em relação a essas fontes.**
+**Para destravar (qualquer uma):** (a) PDFs divididos em partes < 4 MB no Drive; (b) as 6 páginas + o final do slide 01 como PNG/JPEG (a `read_file_content` lê imagens e faz OCR); (c) ferramenta que grave o original em disco sem resposta base64.
