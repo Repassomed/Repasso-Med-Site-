@@ -15,8 +15,8 @@
 | vb-14 | 14 Potasio | `fp2b11` | `bloco-11-01-potassio-homeostase.webp` (864×1821) | 30, 118, 150 |
 
 ## Blocos sem vinheta (logotipo existente) · necessidade de arte registrada
-- **03 EII** (`fp2b12`), **06 Ictericia** (`fp2b13`), **07 Vías urinarias** (`fp2b14`): a seção só tem figuras em SVG/quadros (nenhuma imagem raster); **15 Equilibrio ácido-base** (`fp2b15`), **16 Diabetes** (`fp2b16`) e **17 Suprarrenal** (`fp2b17`): não têm figura.
+- **03 EII** (`fp2b12`), **06 Ictericia** (`fp2b13`), **07 Vías urinarias** (`fp2b14`): a seção só tem figuras em SVG/quadros (nenhuma imagem raster); **18 Tiroides** (`fp2b18`) e **19 SNA/conciencia** (`fp2b19`) (conteúdo das #643/#650; figuras próprias em SVG, sem recorte raster), **15 Equilibrio ácido-base** (`fp2b15`), **16 Diabetes** (`fp2b16`) e **17 Suprarrenal** (`fp2b17`): não têm figura.
 - **04 Páncreas** (`fp2b04`) e **12 Infecciones urinarias** (`fp2b09`): a infografía do bloco só deixa regiões com rótulo na borda do recorte (testadas e descartadas).
 - **Seções de revisão** (`bancofp2`, `revisaofp2`): logotipo, como nas demais matérias.
-Todos usam o **logotipo oficial** (`assets/repasso-med-logo.png`), sem imagem quebrada. **Necessidade para o José/arte:** uma ilustração sem texto por bloco (8 blocos).
+Todos usam o **logotipo oficial** (`assets/repasso-med-logo.png`), sem imagem quebrada. **Necessidade para o José/arte:** uma ilustração sem texto por bloco (10 blocos).
 - `fp2portada` (oculta, vazia) não é montada pelo módulo.

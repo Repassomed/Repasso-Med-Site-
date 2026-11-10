@@ -15,7 +15,7 @@ on conflict (slug) do update
 Recarregue Fisiopatología II (sem cache). **Só a conta administradora** vê o layout novo, o tema próprio e a caneta; alunos e abas anônimas seguem com a versão atual. A prévia pode ficar ligada.
 
 ## 2 · O que José confere (3 minutos, conta administradora)
-1. Capa com o tema (azul-petróleo), medalhões e o índice com os **17 blocos numerados como no conteúdo** (o 03 é Enfermedad inflamatoria intestinal e o 05, Hígado, mesmo fora da ordem dos ids) + banco e mazo.
+1. Capa com o tema (azul-petróleo), medalhões e o índice com os **19 blocos numerados como no conteúdo** (o 03 é Enfermedad inflamatoria intestinal e o 05, Hígado, mesmo fora da ordem dos ids; o 18 é Tiroides e o 19, SNA y alteraciones de la conciencia) + banco e mazo. **Pré-requisito:** o conteúdo das #643/#650 (blocos 18 e 19) tem de estar na main antes deste passo; sem ele o índice mostra 17 blocos.
 2. Abre um bloco, passa para o seguinte, volta ao índice; entra nos modos **Infografías**, **Preguntas** e **Flashcards**.
 3. Responde uma pergunta, abre o jogo de flashcards (▶ Jugar).
 4. Confere que os grifos amarelos que já existem continuam no mesmo trecho.
