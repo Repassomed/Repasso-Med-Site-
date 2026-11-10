@@ -47,4 +47,13 @@ ok(/Heroína<\/b> \(opiáceo\)<\/td><td><b>Pequeña<\/b> \(miosis\)/.test(b19) &
 ok(/<b>4<\/b> espontáneamente[^]*<b>1<\/b> no responde/.test(b19) && /<b>6<\/b> cumple órdenes · <b>5<\/b> localiza el dolor · <b>4<\/b> sólo retira · <b>3<\/b> flexión anormal · <b>2<\/b> extensión anormal · <b>1<\/b> no responde/.test(b19) && /<b>5<\/b> orientado · <b>4<\/b> confuso · <b>3<\/b> palabras inapropiadas · <b>2<\/b> sonidos incomprensibles · <b>1<\/b> no responde/.test(b19) && /máxima<\/b> es de <b>15<\/b>[^]*mínima<\/b> de <b>3<\/b>/.test(b19), 'slide 24: tabela de Glasgow completa (ojos 4–1, motora 6–1, verbal 5–1; máx. 15, mín. 3)');
 ok(/decorticada<\/b> \(flexión anormal\)[^]*hemisferios cerebrales[^]*descerebrada<\/b> \(extensión anormal\)[^]*mesencéfalo/.test(b19), 'slide 24: posturas decorticada × descerebrada e suas lesões');
 ok(/entre 4 y 8/.test(b19) && /8 o menos: coma/.test(b19), 'caso do motociclista: faixa 4–8 (coma), sem inventar o motor exato');
+console.log('\n▸ 6 · coma vigil / estado apálico não são conscientes (correção da #643 mantida na #650)');
+{ const all = now.slice(now.indexOf('id="fp2b19"'), now.indexOf('id="bancofp2"')); const txt = all.replace(/<[^>]+>/g, '¦');
+  ok(!/coma vigil[^¦]{0,40}se describe como despierto y consciente|despierto y consciente pero[^¦]{0,12}¦?totalmente incapaz/i.test(txt), 'bloco 19: nenhuma frase diz que o coma vigil está «despierto y consciente»');
+  ok(/Coma vigil<\/b> \/ <b>estado apálico<\/b><\/td><td>Son cuadros de <b>vigilia sin conciencia<\/b>/.test(all), 'seção 5: coma vigil / estado apálico = vigilia sin conciencia');
+  ok(/No confundir con el coma vigil/.test(all) && /la conciencia está intacta/.test(all), 'seção 5: nota que o distingue do cautiverio (consciência intacta)');
+  ok(/<b>Coma<\/b><\/td><td>No se despierta con ningún estímulo: <b>no hay despertar ni respuesta consciente<\/b><\/td><td>Pueden existir <b>respuestas motoras o reflejas<\/b>/.test(all), 'seção 7: coma = sem despertar nem resposta consciente, com possíveis respostas motoras/reflexas');
+  ok(/Coma vigil<\/b> \/ estado apálico<\/td><td>Puede tener los <b>ojos abiertos<\/b>, pero <b>sin conciencia<\/b>/.test(all), 'seção 7: linha do coma vigil sem conciência');
+  const quiz = now.slice(now.indexOf('id="b19q01"'), now.indexOf('id="bancofp2"')).replace(/<[^>]+>/g, ' ');
+  ok(!/coma vigil[^.]{0,60}consciente|ap[aá]lico[^.]{0,60}consciente/i.test(quiz), 'perguntas e flashcards do bloco 19 não atribuem consciência ao coma vigil/apálico'); }
 console.log(`\nfisio2-647: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`); process.exit(ko ? 1 : 0);
