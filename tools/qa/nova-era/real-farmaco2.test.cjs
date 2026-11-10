@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
 const L = require('../ensaio-layout/lib.cjs'); const D = require('../pre-voo/lib-dados.cjs'); const S = require('./lib-servidor.cjs'); const B = require('../browser-qa/layout/pen-bench.cjs'); S.U.JOSE = D.UID;
 const RAPIDO = process.argv.includes('--rapido'); const SO = process.argv.slice(2).find(a => !a.startsWith('--')) || '';
 let n = 0, ko = 0; const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 420) : ''); } return !!c; };
-const MATERIAS = [{"slug": "farmacologia-ii", "titulo": "Farmacología II", "hl": ["f2b01", "f2b02"], "bloco": "f2b01", "bloco2": "f2b02", "blocoQuiz": "f2b01", "blocoImg": "f2b01", "fcSec": "f2b16", "modos": [["Preguntas", "preguntas"], ["Flashcards", "flashcards"], ["Videos", "videos"]], "nModos": 3, "semZoom": true, "negativo": ["Infografías", "infografias"]}];
+const MATERIAS = [{"slug": "farmacologia-ii", "titulo": "Farmacología II", "hl": ["f2b01", "f2b02"], "bloco": "f2b01", "bloco2": "f2b02", "blocoQuiz": "f2b01", "blocoImg": "f2b01", "fcSec": "f2b16", "modos": [["Infografías", "infografias"], ["Preguntas", "preguntas"], ["Flashcards", "flashcards"], ["Videos", "videos"]], "nModos": 4, "semZoom": true, "negativo": ["Auscultación", "auscultacion"]}];
 if (process.env.RM_CONTROLE_NEGATIVO) MATERIAS[0].modos.push(MATERIAS[0].negativo);   /* controle negativo: pedir um modo que a matéria NÃO oferece tem de REPROVAR (modo ausente não conta como aprovado) */
 (async () => {
   const rec = L.reconciliar(); const srv = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
@@ -120,7 +120,7 @@ if (process.env.RM_CONTROLE_NEGATIVO) MATERIAS[0].modos.push(MATERIAS[0].negativ
         const blk = await p.evaluate(async k => { const R = RMNav._RES[k]; const c = [...document.querySelectorAll('.rm-nav-modeidx .rm-sis-idx-grid .rm-sis-card')].find(x => { try { return JSON.parse(x.getAttribute('data-go')).view === 'modeblk'; } catch (e) { return false; } }); const g = JSON.parse(c.getAttribute('data-go')); c.scrollIntoView({ block: 'center' }); c.click(); await new Promise(r => setTimeout(r, 1800));
           const sec = document.getElementById(g.block); const e = RMNav.estado(); const vis = x => x.checkVisibility() && x.getBoundingClientRect().height > 0;
           const nodes = R.nodes(sec); const nVis = nodes.filter(vis).length; const dentro = x => nodes.some(n => n.contains(x));
-          const itens = { infografias: 'figure', preguntas: '.quiz-item', flashcards: '.flashcard', videos: 'details.video-collapsible' }[k];
+          const itens = { infografias: 'figure, .med-image, .material-slide', preguntas: '.quiz-item', flashcards: '.flashcard', videos: 'details.video-collapsible' }[k];
           const recVis = [...sec.querySelectorAll(itens)].filter(x => vis(x) || (k === 'flashcards' && x.closest('.fc-grid') === null)).length;
           const proseVis = [...sec.querySelectorAll(':scope > p, :scope > h3, :scope > table, :scope > ul')].filter(x => !x.closest('[data-rm-ui]') && !dentro(x) && vis(x)).length;
           return { est: e, bloco: g.block, esperado: R.n(sec), nodes: nodes.length, nVis, recVis, proseVis, secVis: vis(sec) }; }, chave);

@@ -10,7 +10,8 @@ function extrair(html) {
   const limpo = s => String(s || '').replace(/\s+/g, ' ').trim();
   const norm = s => limpo(s).toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim();
   const tab = doc.querySelector('.tab-content[id^="tab-"]') || doc.querySelector('[id^="tab-"]') || doc.body;
-  const ehInfo = f => !!(f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image'));
+  const ehSlideInfo = e => { try { if (!e.classList.contains('material-slide') || (e.parentElement && e.parentElement.closest('.material-slide'))) return false; const a = e.closest('.tab-content'); if (!a || a.id !== 'tab-farmaco2') return false; if (!e.querySelector('img') || !e.querySelector('.material-slide-caption')) return false; const h = e.querySelector('.material-slide-header'); return !(h && /^\s*(diapositiva|imagen de la prueba|imagem da prova)/i.test(h.textContent || '')); } catch (x) { return false; } };   // só as abas da lista de rm-modes.js (ABAS_INFO_EM_SLIDE): Farmacología II
+  const ehInfo = f => f.tagName === 'FIGURE' ? !!(f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image')) : ehSlideInfo(f);
   const secs = [...tab.querySelectorAll(':scope > section[id]')].map(s => {
     const h2 = s.querySelector(':scope > h2'), mk = s.querySelector(':scope > .section-marker');
     const u = /UNIDAD\s+([IVX]+)/i.exec(limpo(mk && mk.textContent));
@@ -26,7 +27,7 @@ function extrair(html) {
         fc: f.getAttribute('data-rm-fc'), copiaDe: f.getAttribute('data-rm-copia-de'),
         front: norm((f.querySelector('.fc-front') || f).textContent), back: norm((f.querySelector('.fc-back') || { textContent: '' }).textContent)
       })),
-      fig: [...s.querySelectorAll('figure')].filter(ehInfo).map(f => ({ chave: norm((f.querySelector('img') || {}).getAttribute ? (f.querySelector('img').getAttribute('src') || '') : '') + '|' + norm((f.querySelector('figcaption') || {}).textContent) })),
+      fig: [...s.querySelectorAll('figure, .material-slide')].filter(ehInfo).map(f => ({ chave: norm((f.querySelector('img') || {}).getAttribute ? (f.querySelector('img').getAttribute('src') || '') : '') + '|' + norm((f.querySelector('figcaption, .material-slide-caption') || {}).textContent) })),
       video: [...s.querySelectorAll('details.video-collapsible')].map(d => ({ id: d.getAttribute('data-rm-video'), chave: [...d.querySelectorAll('iframe')].map(i => i.getAttribute('src') || '').join(',') })),
       aus: [...s.querySelectorAll('.audio-player')].map(a => ({ id: a.getAttribute('data-rm-aus'), chave: (a.querySelector('audio') || { getAttribute: () => '' }).getAttribute('src') || '' }))
     };

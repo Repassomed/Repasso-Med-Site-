@@ -1,7 +1,7 @@
 /* #631 · REGRA ÚNICA DE INFOGRAFÍA (RMModes.ehInfografia / infografias) — sem Supabase, sem layout: o módulo REAL carregado sobre (1) casos sintéticos e (2) o HTML REAL das 30 matérias.
    (1) conta: <figure> com legenda e imagem · .med-image com imagem+legenda marcada (mf-info / rm-info / etiqueta «Infografía…») · NÃO conta: diapositiva, imagem de prova, radiografia com legenda em <p>,
        figura sem legenda, foto solta, figura dentro de slide, contêiner sem imagem, duplicata aninhada.
-   (2) Medicina Familiar: 21 infografías em 8 blocos (4·2·2·3·3·3·1·3). TODAS as outras matérias: bloco a bloco, o resultado é IDÊNTICO ao da regra antiga (nenhuma ganha, nenhuma perde).
+   (2) Medicina Familiar: 21 infografías em 8 blocos (4·2·2·3·3·3·1·3). Farmacología II: 64 infografías em <div class="material-slide"> (lista explícita de abas em rm-modes.js). TODAS as outras matérias: bloco a bloco, o resultado é IDÊNTICO ao da regra antiga (nenhuma ganha, nenhuma perde).
    Uso: NODE_PATH=$(npm root -g) node tools/qa/nova-era/infografias-regra.test.cjs */
 'use strict';
 const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
@@ -36,6 +36,21 @@ const ANTIGA = (sec) => [...sec.querySelectorAll('figure')].filter(f => f.queryS
     const got = await page.evaluate(h => { document.body.innerHTML = '<section id="s">' + h + '</section>'; const s = document.getElementById('s'); return { n: RMModes.infografias(s).length, d: RMModes.MODOS[0].detect(document.body) }; }, html);
     ok(got.n === esperado && got.d === !!esperado, `${nome}: ${esperado ? 'é' : 'NÃO é'} infografía (conta ${got.n}); detector do modo ${got.d ? 'liga' : 'não liga'}`, got);
   }
+  console.log('\n▸ infografías em <div class="material-slide"> (só nas abas da lista: Farmacología II)');
+  const SL = '<div class="material-slide"><div class="material-slide-header">Título</div><img src=a.webp><div class="material-slide-caption">c</div></div>';
+  const CASOS_SL = [
+    ['aba tab-farmaco2: slide com cabeçalho + imagem + legenda é infografía', 'tab-farmaco2', SL, 1],
+    ['outra aba (tab-semio2): o mesmo slide NÃO é infografía (regra antiga preservada)', 'tab-semio2', SL, 0],
+    ['aba tab-farmaco2: «DIAPOSITIVA…» no cabeçalho NÃO é infografía', 'tab-farmaco2', SL.replace('Título', 'DIAPOSITIVA 3'), 0],
+    ['aba tab-farmaco2: slide sem legenda NÃO é infografía', 'tab-farmaco2', SL.replace('<div class="material-slide-caption">c</div>', ''), 0],
+    ['aba tab-farmaco2: slide sem imagem NÃO é infografía', 'tab-farmaco2', SL.replace('<img src=a.webp>', ''), 0],
+    ['aba tab-farmaco2: slide aninhado em slide conta só o de fora', 'tab-farmaco2', SL.replace('<div class="material-slide-caption">c</div></div>', '<div class="material-slide-caption">c</div>' + SL + '</div>'), 1],
+    ['aba tab-farmaco2: figure dentro do slide continua NÃO contando (sem duplicar)', 'tab-farmaco2', '<div class="material-slide"><figure><img src=a.webp><figcaption>x</figcaption></figure></div>', 0],
+  ];
+  for (const [nome, aba, html, esperado] of CASOS_SL) {
+    const got = await page.evaluate(([a, h]) => { document.body.innerHTML = '<div class="tab-content" id="' + a + '"><section id="s">' + h + '</section></div>'; const s = document.getElementById('s'); return { n: RMModes.infografias(s).length, d: RMModes.MODOS[0].detect(document.body) }; }, [aba, html]);
+    ok(got.n === esperado && got.d === !!esperado, `${nome} (conta ${got.n}; modo ${got.d ? 'liga' : 'não liga'})`, got);
+  }
   console.log('\n▸ matérias reais (30 arquivos)');
   const arqs = fs.readdirSync(MAT).filter(f => f.endsWith('.html')).sort(); let iguais = 0;
   for (const f of arqs) {
@@ -45,6 +60,11 @@ const ANTIGA = (sec) => [...sec.querySelectorAll('figure')].filter(f => f.queryS
       const por = {}; r.out.filter(x => x.nova).forEach(x => por[x.id] = x.nova);
       const esperado = { aps: 4, principios: 2, familiograma: 2, apgar: 3, crisis: 3, crecimiento: 3, desarrollo: 1, educacion: 3 };
       ok(JSON.stringify(por) === JSON.stringify(esperado) && r.total === 21 && r.detect, 'Medicina Familiar: 21 infografías em 8 blocos (4·2·2·3·3·3·1·3) e o modo Infografías passa a existir', { por, total: r.total, detect: r.detect });
+    } else if (f === 'farmacologia-ii.html') {
+      const por = {}; r.out.filter(x => x.nova).forEach(x => por[x.id] = x.nova);
+      const esperado = { f2b01: 4, f2b02: 4, f2b03: 5, f2b04: 4, f2b05: 10, f2b07: 4, f2b06: 4, f2b08: 5, f2b09: 4, f2b10: 5, f2b11: 5, f2b12: 3, f2b13: 2, f2b14: 5 };
+      const antigas = r.out.filter(x => x.antiga).length;
+      ok(JSON.stringify(por) === JSON.stringify(esperado) && r.total === 64 && r.detect && antigas === 0, 'Farmacología II: 64 infografías (<div class="material-slide">) em 14 blocos e o modo Infografías passa a existir (a regra antiga contava 0)', { por, total: r.total, detect: r.detect, antigas });
     } else {
       const dif = r.out.filter(x => x.nova !== x.antiga); ok(dif.length === 0, `${f}: bloco a bloco idêntico à regra antiga (${r.total} infografías)`, dif.slice(0, 4)); if (!dif.length) iguais++;
     }

@@ -20,7 +20,7 @@
 | Marcadores de bloco do HTML | número do bloco = marcador; `clasificarFA2` lê id → tipo/n/num/cap |
 | 29 infografías do bloco (`assets/img/farmaco2/`) | 12 vinhetas 480×480 recortadas, sem texto nem restos de seta; proveniência em `docs/nova-era-temas/PROVENIENCIA-IMAGENS-FARMACO2.md` |
 | Blocos 12 e 14 (só diagramas/quadros de texto) | sem região limpa de ilustração ⇒ usam o logotipo (`vig: null`); arte pendente registrada |
-| `rm-modes.js` (`ehInfografia`, regra da #633) | ver dependência D1 |
+| `rm-modes.js` (`ehInfografia`, regra da #633) | lista explícita de abas (D1 resolvida) |
 
 ## 4 · Testes (resultado real, Chromium + `rm-pilot.js` e `get-pilot-flags` reais)
 | Teste | Resultado |
@@ -37,7 +37,7 @@
 **Achado e correção:** a 320 px o contador do divisor do banco (`.f2-bankdiv i`) saía da tela (já acontecia no layout antigo, pior). Corrigido só com CSS do tema (`flex-wrap`), sem tocar no HTML.
 
 ## 5 · Limites e dependências
-- **D1 (Claude 4):** o modo «Infografías» não aparece em Farmacología II porque as infografías desta matéria são `.material-slide` e a regra `ehInfografia` (#633) as exclui. Dentro de cada bloco as infografías aparecem e ampliam normalmente. Para o modo aparecer, `rm-modes.js` precisaria reconhecer `.material-slide` — arquivo do Claude 4; **não alterado aqui**.
+- **D1 resolvida (11/11):** as 64 infografías de Farmacología II são `<div class="material-slide">` (cabeçalho + imagem + legenda) e a regra `ehInfografia` (#633) as excluía, então o modo «Infografías» não aparecia. `rm-modes.js` ganhou uma **lista explícita de abas** (`ABAS_INFO_EM_SLIDE = { 'tab-farmaco2': 1 }`): só nelas um `.material-slide` com imagem e legenda (cabeçalho que não comece por «DIAPOSITIVA»/«imagen de la prueba») conta como infografía. As outras 29 matérias seguem IDÊNTICAS bloco a bloco (`infografias-regra` 55/55, 7 casos novos). Mudança mínima e aditiva em arquivo do Claude 4; se ele preferir outra regra (p. ex. classe `rm-info` no conteúdo), basta trocar a lista.
 - Vinhetas dos blocos 12 e 14: logotipo (arte pendente).
 - Chromium com caneta simulada por CDP, não Safari/Apple Pencil; YouTube bloqueado no teste (o iframe existe e tem dimensão). A conferência final no iPad é de José.
 - SQL de prévia: `docs/nova-era/ROTEIRO-FARMACO2.md` — **não executado**.

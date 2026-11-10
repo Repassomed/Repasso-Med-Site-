@@ -16,7 +16,7 @@ Recarregue Farmacología II (sem cache). **Só a conta administradora** vê o la
 
 ## 2 · O que José confere (3 minutos, conta administradora)
 1. Capa com o tema (ameixa/violeta), medalhões e o índice com os **14 blocos numerados como no conteúdo** (o 06 é Corticoides e o 07, AINE) + banco e mazo.
-2. Abre um bloco, passa para o seguinte, volta ao índice; entra nos modos **Preguntas**, **Flashcards** e **Videos**. *(O modo «Infografías» não aparece em Farmacología II: ver «Dependência» na PR; as infografías aparecem normalmente dentro de cada bloco.)*
+2. Abre um bloco, passa para o seguinte, volta ao índice; entra nos modos **Infografías** (64 infografías, 14 blocos), **Preguntas**, **Flashcards** e **Videos**.
 3. Responde uma pergunta, abre o jogo de flashcards (▶ Jugar), assiste a um vídeo.
 4. Confere que os grifos amarelos que já existem continuam no mesmo trecho.
 5. No iPad com a caneta: escreve em um parágrafo e em uma tabela; o traço fica onde escreveu e volta ao recarregar.
