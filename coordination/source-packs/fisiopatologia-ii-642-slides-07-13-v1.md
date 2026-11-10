@@ -76,3 +76,6 @@ Ordem: os decks existentes já seguem a sequência atual da professora; nada foi
 ## 8. Layout / Nova Era
 
 O Claude 2 prepara a Nova Era de Fisiopatología II; esta PR não toca motor, caneta, layout nem ativação. Depois do merge do conteúdo, a branch da Nova Era deve ser atualizada sobre esta versão final.
+
+## Corrección posterior (11/11) — coma vigil / estado apálico vs cautiverio
+La frase del deck 13 («coma vígil: despierto y consciente, pero totalmente incapaz de producir respuestas motoras»; «estado apálico: no responde a estímulo») describe en realidad el cuadro del síndrome de cautiverio, no el del coma vigil. En la página el coma vigil/estado apálico pasa a ser **vigilia sin conciencia** (ojos abiertos, sin conciencia de sí ni del entorno, con posibles movimientos reflejos o espontáneos sin intención) y se agrega una nota que lo distingue del cautiverio (consciente, se comunica con los ojos). **Fuente:** los slides dan el cautiverio (slide 22) y la frase ambigua; la distinción de coma vigil = vigilia sin conciencia es **conocimiento general** (término equivalente al estado vegetativo/apálico); **no se pudo confirmar en el libro base** (Porth, citado en el material, no está en el Drive). Preguntas y flashcards existentes no afirman conciencia para el coma vigil; no se tocaron.
