@@ -82,6 +82,29 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Fisiopatología I (Nova Era): ids sem o padrão `<slug>-bNN`; a numeração é a ORDEM real dos blocos do conteúdo (01–12). Unidad I = 11 blocos, Unidad II = anemias
+     (rótulo vem do marcador «UNIDAD X» do conteúdo). Banco e flashcards gerais = repaso. */
+  var FI_ORDEM = ['introduccion-fisio', 'inflamacion', 'hemorragia', 'cicatrizacion', 'edema', 'choque', 'anemias',
+                  'globulos-brancos', 'coagulacao', 'asma-epoc', 'infecciones-respiratorias', 'infecciones-pulmonares'];
+  var FI_REPASO = { 'prova-fisio': 'B', 'flashcards-fisio': 'F' };
+  function clasificarFI(id) {
+    var i = FI_ORDEM.indexOf(id);
+    if (i >= 0) return { tipo: 'bloque', n: pad(i + 1), num: i + 1, cap: (i % 6) + 1, vig: 'vb-' + pad(i + 1) };
+    if (FI_REPASO[id]) return { tipo: 'repaso', n: FI_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Farmacología I (Nova Era): ids sem número; a numeração é a dos TÍTULOS do conteúdo (01–17). As 3 seções «BASE» (SNA, adrenérgicos, colinérgicos) são ensino de base
+     com título numerado e funcionam como bloco. Sem unidades no conteúdo. Tabla, cuestionario, banco e flashcards = repaso. */
+  var FA_NUM = { pk: 1, pd: 2, sna: 3, 'placa-motora': 4, adrenergicos: 5, colinergicos: 6, 'adren-agon-antag': 7, 'beta-adrenergicos': 8, aines: 9,
+                 opioides: 10, corticoides: 11, antihistaminicos: 12, anestesicos: 13, penicilinas: 14, cefalosporinas: 15, macrolidos: 16, aminoglucosidos: 17 };
+  var FA_REPASO = { 'farmacos-clave': 'T', cuestionario1: 'P', 'prova-farmaco': 'B', 'flashcards-grales': 'F' };
+  function clasificarFA(id) {
+    if (Object.prototype.hasOwnProperty.call(FA_NUM, id)) { var n = FA_NUM[id]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(FA_REPASO, id)) return { tipo: 'repaso', n: FA_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   var TEMAS = {
     'semiologia-ii': {
       vigDir: 'assets/img/semio2/vig/',
@@ -143,6 +166,42 @@
         fc:   'Repaso activo por bloque'
       },
       clasificar: clasificarEM
+
+    },
+    'fisiopatologia': {
+      vigDir: 'assets/img/fisio/vig/',                    // 12 vinhetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-FISIO1-FARMACO1.md)
+      logo: 'assets/repasso-med-logo.png',
+      unidades: {                                         // as do conteúdo: 11 blocos «UNIDAD I» e anemias «UNIDAD II»
+        I:  { nombre: 'Unidad I',  color: '#B5604F' },
+        II: { nombre: 'Unidad II', color: '#4F7FA3' }
+      },
+      medallones: [
+        { vig: 'vb-01', t: 'LESIÓN CELULAR', cap: 1, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-07', t: 'ANEMIAS',        cap: 6, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-12', t: 'PULMÓN',         cap: 3, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarFI
+    },
+    'farmacologia': {
+      vigDir: 'assets/img/farmaco/vig/',                  // 17 vinhetas recortadas de infografías do próprio conteúdo
+      logo: 'assets/repasso-med-logo.png',
+      unidades: {},                                       // o conteúdo não tem unidades («BLOQUE NN» / «BASE»): nenhuma é criada
+      medallones: [
+        { vig: 'vb-01', t: 'FARMACOCINÉTICA', cap: 1, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-05', t: 'RECEPTORES',      cap: 5, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-13', t: 'ANESTÉSICOS',     cap: 1, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarFA
     }
   };
 
@@ -176,7 +235,7 @@
   function q1(r, sel) { return r.querySelector(sel); }
   function qa(r, sel) { return Array.prototype.slice.call(r.querySelectorAll(sel)); }
   function limpo(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
-  function curto(t) { return limpo(t).replace(/\s*\(.*\)\s*$/, ''); }
+  function curto(t) { return limpo(t).replace(/^\d{1,2}\s*[·.:–-]\s+/, '').replace(/\s*\(.*\)\s*$/, ''); }   // o número do título («09 · AINEs») já aparece na insígnia: não repetir
   function plural(n, um, varios) { return n + ' ' + (n === 1 ? um : varios); }
 
   function fonte() {
@@ -706,6 +765,7 @@
       var row = q1(tree, '.rm-l2-block[data-block="' + s.id + '"]'); if (!row) return;
       sa(row, 'data-rm-cap', String(s.c.cap));
       var i = q1(row, '.rm-l2-block-link i'); if (i) st(i, s.c.n);
+      var lb = q1(row, '.rm-l2-block-link span'); if (lb) { var lt = lb.textContent.replace(/^\d{1,2}\s*[·.:–-]\s+/, ''); if (lt && lt !== lb.textContent) st(lb, lt); }   // o número do título já está na insígnia
       var g = s.c.tipo === 'bloque' ? 'U' + s.unidad : (s.c.tipo === 'repaso' ? 'R' : 'G');
       if (g !== grupoAtual && s.c.tipo !== 'guia') {
         var lab = ui('div', 'rm-sis-ulab rm-sis-ulab--side');
