@@ -64,5 +64,5 @@ ok(has('fp2b05', 'células falciformes', 'grampositivos'), '08 glomerular: GESF/
 ok(has('fp2b16', 'glut-4', 'irs 1 a 4'), '10 diabetes: GLUT-4 na sinalização da insulina (fp2b16)');
 ok(has('fp2b18', 'trh', 'tsh', 'tbg', 'pendrina', 'tpo', 'tormenta tiroidea', 'mixedema', 'gq', 'gs', '0,4–4 µui/ml', '0,7–1,48', '50 mg de yodo', 'fibrilación auricular en el 10–15', 'oftalmopatía', 'hipotiroidismo congénito'.replace('hipotiroidismo congénito', 'congénito')), '12 endócrino 2: eixo, síntese, TBG, hipo/hipertiroidismo, Graves, mixedema, tormenta (fp2b18)');
 ok(has('fp2b19', 'hiperactividad simpática paroxística', 'neumotáxico', 'sistema reticular activador', 'síndrome confusional agudo', 'letargia', 'obnubilación', 'estupor', 'mutismo acinético', 'cautiverio', 'glasgow', '8 o menos'), '13 consciência/SNA: hiperatividade simpática, centro respiratório, conciência, graus, cativeiro, Glasgow (fp2b19)');
-ok(has('fp2b19', 'no se fija un puntaje total'), '13: o caso do Glasgow sem chave fica explicitamente PENDENTE (não se inventa a pontuação)');
+ok(has('fp2b19', 'no se calcula un puntaje total'), '13: o caso do Glasgow sem chave fica explicitamente PENDENTE (não se inventa a pontuação)');
 console.log(`\nfisio2-642: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`); process.exit(ko ? 1 : 0);

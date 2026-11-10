@@ -46,7 +46,7 @@ Nada foi removido ou movido; perguntas (806), flashcards (2181), SVG (77) e imag
 |---|---|---|
 | 01 esófago · 02 estómago · 03 EII (fp2b12) | Bom | Intocados (47 grifos reais; idênticos byte a byte) |
 | 04 · 05 · 06 · 07 · 08 · 09 · 10 · 11 · 12 · 13 · 14 (fp2b04, 03, 13, 14, 05, 06, 07, 08, 09, 10, 11) | Bom | Sem mudança, salvo +1 frase do slide em 05 e 06 |
-| 15 ácido-base | + seção 6 | Logaritmo do pH; acidose/alcalose metabólicas ligadas aos blocos 02, 14 e 16; compensação; 2 exemplos de prática rotulados «valores de ejemplo». A nota antiga «Qué no desarrolla el slide» foi reescrita para apontar a seção 6 |
+| 15 ácido-base | + seção 6 | Logaritmo do pH; acidose/alcalose metabólicas com a definição do slide e ligadas aos blocos 10, 11, 14, 16 e 17; 2 exemplos de prática («valores de ejemplo»). **Retirados** (10/11): compensação e seus tempos, vómitos/diuréticos como causas. Nota antiga «Qué no desarrolla el slide» reescrita |
 | 16 diabetes | + seção 8 | Cadeia sinal → sintomas → complicações; basal/prandial; amanecer × Somogyi (sem conduta de dose) |
 | 17 suprarrenal | + seção 8 | Espelho Addison × Cushing; diagnóstico em 3 perguntas; retirada brusca de glucocorticoides |
 | 18 tiroides | + seção 10 (e 1 subtítulo do slide) | Leitura TSH/T4 livre (primário e tirotoxicose, com os casos do slide); bocio por TSH; hormona → sintoma |
@@ -57,8 +57,10 @@ Nada foi removido ou movido; perguntas (806), flashcards (2181), SVG (77) e imag
 | Afirmação | Origem | Verificação |
 |---|---|---|
 | Quadros de Addison/Cushing, cinco S, pruebas de cribado, eixo TRH–TSH, Graves, graus de consciência, mutismo acinético, cautiverio | Slides (decks 09–13, texto) | Reconferido contra o texto extraído dos slides |
-| pH logarítmico (0,3 de pH ≈ dobro de H⁺); causas de acidose/alcalose metabólica; compensação respiratória/renal e seu tempo; exemplos de gasometria | Conhecimento geral de fisiologia (o slide 09 não os desenvolve) | **NÃO confirmado em livro** (Porth/Guyton não estão no Drive nem foram abertos). Mantido por ser conteúdo padrão e coerente com MIRO; **revisão humana pendente** |
-| Cadeia glicemia → poliuria/polidipsia/polifagia/cetose; basal/prandial | Slide 10 (cetoacidosis, tipos de insulina) + fisiologia geral | Limiar renal da glicose não confirmado em livro; sem número na página |
+| Definições metabólicas (aumento de H⁺/perda de HCO₃⁻ = acidose; aumento de HCO₃⁻/perda de H⁺ = alcalose); «o digestivo só perde bicarbonato, o rim regula»; MIRO; 4 combinações | Slide 09 (PDF `09 - Desequilibrio acido- base.pdf`, id 1ak5yxGdNMWNZsc0nz-ZLDsR3HP8vGfB8, texto relido em 10/11) | **Confirmado no slide** |
+| Causas citadas na seção 6: IRA/ERC (blocos 10–11), hiperpotasemia/ATR IV e hipopotasemia (bloco 14), cetoacidose (16), aldosterona em excesso (14 e 17) | Blocos da própria matéria (texto dos slides 06–08, 10) | Confirmado nos blocos citados, não no slide 09 |
+| pH logarítmico (0,3 de pH ≈ dobro de H⁺) | Aritmética (pH = −log[H⁺]) | Verificável matematicamente; **não** vem de livro |
+| Cadeia glicemia → poliuria/polidipsia/polifagia/cetose; basal/prandial | Slide 10 (cetoacidosis, tipos de insulina) + fisiologia geral | A passagem da glicose à urina e a poliuria osmótica **não** foram confirmadas em livro (sem número na página): revisão humana |
 | Amanecer × Somogyi | Slide: «mañana desprotegida» e «hipoglucemia de madrugada» | A coluna «Qué la distingue» é dedução do próprio slide. **Retirada** a linha de conduta (reforçar/reduzir dose): não sustentada pelo slide |
 | Hipotiroidismo secundario/terciario | Eixo do slide | **Retirada** a linha numérica «TSH baja o normal»; fica só a consequência lógica (a orden no sale; não se espera TSH alta) |
 | Coma × mutismo × cautiverio | Slide 13 (texto) | Coluna ambígua «¿consciente?» retirada; **retirado** o parágrafo do «hilo común» com o trauma (não vinha do slide) |
@@ -66,11 +68,21 @@ Nada foi removido ou movido; perguntas (806), flashcards (2181), SVG (77) e imag
 
 ## 3-C · Slide 13 — o que não foi possível abrir
 
-Arquivo: `13 - Unidad 5. Alteraciones de la conciencia.pptx` (Drive id `1wHPoPPpHWtRlZ2t4EJDKoID_iT_2xJpu`, 27 101 529 bytes). Leitura de texto funciona; o download falha (limite de 10 MB da ferramenta; exportar como PDF também falha). Inacessíveis: **slides 3, 4, 8, 12, 15–18** (sem texto extraível), **23** (tabela de Glasgow), **26** (pupilas: heroína/atropina) e o conteúdo gráfico dos slides **6–7**. **Nova tentativa (09/11):** o coordenador relatou ter aberto o arquivo pelo download do original; esta sessão repetiu `download_file_content` (mesmo fileId, sem `exportMimeType`) e recebeu «File too large for download, over limit of 10 MB»; a API pública do Drive responde 403 sem credencial e não há conta autenticada (`gcloud auth list` vazio). Bloqueio = ferramenta/credencial desta sessão, não o arquivo. Para fechar: José exporta o deck em PDF < 10 MB ou envia as figuras; o caso do Glasgow segue «no se fija un puntaje total».
+Arquivo: `13 - Unidad 5. Alteraciones de la conciencia.pptx` (Drive id `1wHPoPPpHWtRlZ2t4EJDKoID_iT_2xJpu`, 27 101 529 bytes). Leitura de texto funciona; o download falha (limite de 10 MB da ferramenta; exportar como PDF também falha). Inacessíveis: **slides 3, 4, 8, 12, 15–18** (sem texto extraível), **23** (tabela de Glasgow), **26** (pupilas: heroína/atropina) e o conteúdo gráfico dos slides **6–7**. **Tentativas (09/11 e 10/11):** o coordenador relatou ter aberto o arquivo pelo download do original; esta sessão repetiu `download_file_content` (mesmo fileId, sem `exportMimeType`) e recebeu «File too large for download, over limit of 10 MB» nas duas datas (o download pelo conector não grava arquivo local; não há cópia do PPTX no repositório nem no disco); a API pública do Drive responde 403 sem credencial e não há conta autenticada (`gcloud auth list` vazio). Bloqueio = ferramenta/credencial desta sessão, não o arquivo. Para fechar: José exporta o deck em PDF < 10 MB ou envia as figuras; o caso do Glasgow segue «no se fija un puntaje total».
 
 ## 3-D · Dependência da #645 (Nova Era)
 
 A #645 mapeia só até fp2b17 (`FP2_NUM`/`FP2_SEMVIG`, testes 17 blocos). **fp2b18 e fp2b19 existem desde a #643 e caem em «otro»** até a #645 ser atualizada (17→19 em tema/tests). Enquanto isso não acontecer, a Nova Era de Fisiopatología II **não está pronta**. Esta PR não toca nos arquivos da #645.
+
+### 3-E · Notas de bastidor da #643 reescritas (10/11)
+Na página do aluno não restam «el slide…», «cátedra», «lámina», «Farreras» nos blocos 15–19 (teste automático). O que dizia cada nota e para onde foi:
+
+| Bloco | Texto da #643 (resumo) | Na página agora | Informação interna |
+|---|---|---|---|
+| 16 | «Meta/algoritmo del slide»; «Dos cortes…el slide de diabetes no aclara la población»; «Cómo leer esta tabla…slide de la cátedra» | Mesma informação sem citar a fonte; 94/80 cm (fígado, caucasiana) × 102/88 cm (aqui) como critérios distintos | O slide de diabetes não indica a população do corte; não se usa um para corrigir o outro |
+| 17 | «Una aclaración de fuente», «Lo que el slide da y no da», «Una errata del slide» (hipercalcemia), «Cómo leer los cortes/ACTH» | «Dos formas de decir lo mismo», «Fármaco y dosis», «Ojo con la hipercalcemia», cortes orientativos | O slide nomeia dexametasona ou hidrocortisona sem dose/via; a lista do slide associa hipercalcemia à pigmentação (erro do slide) |
+| 18 | Legenda «valores…Farreras Rozman», «diagrama del slide de síntesis», «(así lo escribe el slide)», «Dato de los casos del slide» | «Valores de referencia», «Casos de referencia»; «gen A» sem a observação | O slide cita Farreras Rozman para os valores; grafia «gen A» é a do slide |
+| 19 | «Qué falta» (α/β ilegíveis), «Una errata del slide» (neumotórax), «Qué no se afirma acá» (Glasgow, imagem não lida) | «Receptores adrenérgicos», «Ojo con el nombre», «El caso del motociclista» (sem puntaje total) | α/β não legíveis no texto do slide; a tabela de valores do Glasgow é imagem (slide 23) **não aberta**; teste da #642 ajustado para a nova frase |
 
 ## 4 · Pendências reais (não resolvidas aqui, sem inventar)
 1. **Figuras**: o PPTX 13 (27 MB) não pôde ser baixado; só o texto foi lido. Slides 3, 4, 8, 12 e 15–18 (figuras), **tabela de Glasgow (slide 23 na numeração do texto extraído)** e **reatividade pupilar (26: heroína/atropina)** não inspecionados; o caso do Glasgow segue «no se fija un puntaje total». As figuras dos demais decks não foram reinspecionadas nesta PR (a #643 inspecionou 07–12).
