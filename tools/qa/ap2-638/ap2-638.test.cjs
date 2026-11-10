@@ -115,6 +115,6 @@ console.log('\n▸ 7 · rótulos e honestidade');
   const nuevoTxt = NUEVAS.map(([k, sid, key]) => items(sec(now[k], sid)).find(x => x.q.includes(key)).raw).join(' ');
   ok(!/Pregunta oficial|pregunta real|prueba real|preguntas reales/i.test(nuevoTxt), 'nenhuma nova questão afirma ser oficial/real/transcrição');
   ok(!/\b(professor|docente|Chamorro|el profesor)\b/i.test(nuevoTxt), 'nenhum nome de professor nem «el profesor cobra» nas novas questões');
-  ok(!/no se encuentran en las lesiones premalignas/.test(now.teo) && /en las lesiones premalignas, en cambio, <b>no suelen encontrarse/.test(sec(now.teo, 'ap2b07')), 'CHC: sem a afirmação absoluta sobre lesões premalignas nas explicações (bloco e banco); resposta β-catenina + p53 preservada e ensino matizado');
+  ok(!/no se encuentran en las lesiones premalignas/.test(now.teo) && !/lesiones premalignas/.test(sec(now.teo, 'ap2b07')), 'CHC: sem a afirmação absoluta sobre lesões premalignas nas explicações (bloco e banco); resposta β-catenina + p53 preservada e ensino sem a afirmação');
 }
 console.log(`\nap2-638: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`); process.exit(ko ? 1 : 0);
