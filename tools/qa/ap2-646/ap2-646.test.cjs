@@ -186,7 +186,8 @@ console.log('\n▸ 9 · revisão dos demais blocos: b05 (EII) e b08 (tiroides) a
   for (const [id, key, ws, T] of NV) { const a = items(sec(now, id)).filter(x => x.q.includes(key)), b = items(bank).filter(x => x.q.includes(key)); ok(a.length === 1 && b.length === 1 && a[0].raw === b[0].raw, `${id}: «${key.slice(0, 50)}…» 1 no bloco, 1 no banco, idênticas`); ok(ws.every(w => T.includes(w) || strip(teach(id)).toLowerCase().includes(w)), `   ensinado antes no bloco: ${ws.join(' · ')}`); ok(a[0].tag === 'variante', '   rótulo «Pregunta complementaria»'); }
   ok(items(sec(now, 'ap2b05')).length === 20 && items(sec(now, 'ap2b08')).length === 17, 'b05 = 20 e b08 = 17 questões');
   ok(!/dato que hay que subrayar|pregunta segura/.test(teach('ap2b08')), 'b08 sem voz de prova remanescente');
-  ok(teach('ap2b06') === sec(old, 'ap2b06').split(/<div class="quiz-section"/)[0] && sec(now, 'ap2b01') === sec(old, 'ap2b01'), 'b06: texto de ensino idêntico (só se acrescentaram perguntas); b01 (291 grifos) idêntico');
+  const NC = '<td><b>Carece de potencial maligno</b> (formulación de la cátedra, válida para el hiperplásico típico; no para la lesión serrada que se le parece, el sésil serrado). Es el más frecuente; &lt;5 mm, colon izquierdo</td>', OC = '<td><b>Insignificante</b>. Es el más frecuente; &lt;5 mm, colon izquierdo</td>';
+  ok(teach('ap2b06').replace(NC, OC) === sec(old, 'ap2b06').split(/<div class="quiz-section"/)[0] && sec(now, 'ap2b01') === sec(old, 'ap2b01'), 'b06: texto de ensino idêntico salvo a célula do hiperplásico («carece de potencial maligno», #651); b01 (291 grifos) idêntico');
 }
 
 console.log('\n▸ 10 · #651 · questões P2 Chamorro (fotos 6E filas 1–3 e fila 1 sem rótulo) — 11 perguntas novas + 1 melhoria');
@@ -217,7 +218,7 @@ console.log('\n▸ 10 · #651 · questões P2 Chamorro (fotos 6E filas 1–3 e f
     ['ap2b04', 'Citá los dos patrones celulares del tumor del estroma gastrointestinal', ['fusiformes', 'epitelioides']],
     ['ap2b05', 'Citá dos tipos de metaplasia que pueden aparecer en la enfermedad de Crohn', ['seudopilórica', 'paneth']],
     ['ap2b06', 'Citá dos criterios diagnósticos del síndrome de Peutz-Jeghers', ['hiperpigmentación mucocutánea', 'intestino delgado', 'autosómico dominante']],
-    ['ap2b06', 'Citá el riesgo de malignidad y la localización más frecuente del pólipo hiperplásico', ['insignificante', 'colon izquierdo']],
+    ['ap2b06', 'Citá el riesgo de malignidad y la localización más frecuente del pólipo hiperplásico', ['carece de potencial maligno', 'colon izquierdo', 'sésil serrado']],
     ['ap2b06', '¿Qué explica el aspecto serrado de los pólipos hiperplásicos', ['células caliciformes y absortivas', 'tercio superior']],
   ];
   const bl2 = items(bank);
@@ -227,5 +228,30 @@ console.log('\n▸ 10 · #651 · questões P2 Chamorro (fotos 6E filas 1–3 e f
   ok(/úlceras extensas de base ancha/.test(items(sec(now, 'ap2b05')).find(x => x.q.includes('Citá dos hallazgos macroscópicos de la colitis ulcerosa')).raw), '05#17 já aceita «úlceras de base ancha» + seudopólipos (item 3 da foto) — sem mudança');
   ok(/<span>192 preguntas<\/span><span>125 basadas en preguntas de examen<\/span>/.test(bank), 'banco declara 192 preguntas · 125 de exame (+11)');
   ok(sec(now, 'ap2b03') === sec(old, 'ap2b03'), 'b03 (74 grifos) intocado: as hipóteses da gastrite crônica ficam como pendência documentada');
+}
+
+console.log('\n▸ 11 · respostas abertas pedem os pontos específicos lembrados + hiperplásico sem absolutizar');
+{
+  const ans = key => { const a = items(sec(now, 'ap2b0' + key[0])).find(x => x.q.includes(key[1])); return a ? a.a.toLowerCase() : ''; };
+  const P = [
+    ['7', 'Citá dos alteraciones histológicas de la esteatohepatitis', ['neutrófilos', 'mallory-denk']],
+    ['7', 'célula principal responsable del depósito de cicatriz', ['estrellada', 'miofibroblasto']],
+    ['4', 'factor pronóstico más importante de los tumores carcinoides', ['localización']],
+    ['4', 'Citá dos características microscópicas del tumor carcinoide', ['moteada', 'citoplasma escaso']],
+    ['4', 'hallazgos macroscópicos del carcinoma gástrico de tipo difuso', ['rígida', 'pliegues']],
+    ['4', 'hallazgos microscópicos del carcinoma gástrico de tipo difuso', ['anillo de sello', 'desmoplasia']],
+    ['4', 'patrones celulares del tumor del estroma', ['fusiformes', 'epitelioides']],
+    ['5', 'tipos de metaplasia que pueden aparecer en la enfermedad de Crohn', ['seudopilórica', 'paneth']],
+    ['5', 'Citá dos hallazgos macroscópicos de la colitis ulcerosa', ['seudopólipos', 'base ancha']],
+    ['5', 'Citá dos manifestaciones extraintestinales', ['uveítis', 'poliartritis', 'pericolangitis', 'colangitis esclerosante']],
+    ['6', 'criterios diagnósticos del síndrome de Peutz-Jeghers', ['hamartomatosos', 'intestino delgado', 'hiperpigmentación']],
+    ['6', 'riesgo de malignidad y la localización más frecuente del pólipo hiperplásico', ['potencial maligno', 'colon izquierdo']],
+    ['6', 'aspecto serrado de los pólipos hiperplásicos', ['absortivas', 'caliciformes']],
+  ];
+  for (const [b, k, ws] of P) { const a = ans([b, k]); ok(a && ws.every(w => a.includes(w)), `b0${b} «${k.slice(0, 48)}…»: a resposta pede/aceita ${ws.join(' + ')}`, a.slice(0, 120)); }
+  const hip = items(sec(now, 'ap2b06')).find(x => x.q.includes('riesgo de malignidad y la localización más frecuente del pólipo hiperplásico'));
+  ok(/formulación de la cátedra/.test(hip.raw) && /no una garantía/.test(hip.raw) && /sésil serrado/.test(hip.raw) && /típico/.test(hip.a), 'hiperplásico: resposta e explicação registram a formulação da cátedra e a ressalva do sésil serrado (sem «risco nulo» como certeza)');
+  const t6 = strip(teach('ap2b06')); ok(/Carece de potencial maligno \(formulación de la cátedra/.test(t6) && !/Insignificante\./.test(t6), 'b06 (texto): «carece de potencial maligno» atribuído à cátedra e limitado ao hiperplásico típico');
+  ok(!/distal, sin riesgo\.\s*Sésil/.test(now.replace(/<[^>]+>/g, '')) , 'flashcard hiperplásico × sésil serrado (bloco, mazo, ruleta): «sin riesgo» → «sin potencial maligno (el típico)»');
 }
 console.log(`\nap2-646: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`); process.exit(ko ? 1 : 0);
