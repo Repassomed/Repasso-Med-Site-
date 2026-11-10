@@ -32,3 +32,8 @@ Ver o corpo da PR (resultados finais sobre a main atualizada).
 - **Pendência do conteúdo (não desta PR):** figuras do slide 13 (Glasgow, pupilas, slides 3–4, 8, 12, 15–18) não lidas; ver a matriz da #650.
 - Chromium com caneta simulada por CDP, não Safari/Apple Pencil. A conferência final no iPad é de José.
 - SQL de prévia: `docs/nova-era/ROTEIRO-FISIO2.md` — **não executado**.
+
+## 6 · Atualização 10/11 — `main`, ordem de merge e auditoria de publicação
+- Branch atualizada com a `main` `003d39a9` (merge limpo; só conteúdo de AP II entrou).
+- Ordem de merge e receita de conflitos com as PRs #634/#635/#636/#644: `docs/nova-era-temas/ORDEM-DE-MERGE-NOVA-ERA.md`.
+- `auditoria-implantacao-publica`: as 22 falhas eram do **teste** (ligava a matéria por variáveis que o servidor já não lê). Teste atualizado para a tabela `rm_materia_rollout`; resultado na PR.
