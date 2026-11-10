@@ -1,6 +1,6 @@
 # Farmacología II · issue #647 · mapa de cobertura dos slides e decisões (documento interno)
 
-**Atualizado:** 09/11/2026 (2.ª rodada, mesma PR #649) · **Agente:** Claude 2 · **Branch:** `claude/farmaco2-issue-647-2026-11` · **Base:** `main` `7f329241` · **PR de layout #644:** aberta, arquivos disjuntos; `temas`/`real`/`integracao-farmaco2` e `visual-conteudo` repetidos com este HTML.
+**Atualizado:** 10/11/2026 (3.ª rodada, mesma PR #649) · **Agente:** Claude 2 · **Branch:** `claude/farmaco2-issue-647-2026-11` · **Base:** `main` `7f329241` · **PR de layout #644:** aberta, arquivos disjuntos; `temas`/`real`/`integracao-farmaco2` e `visual-conteudo` repetidos com este HTML.
 Alvo único: `Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/farmacologia-ii.html`.
 
 ## 1 · Fontes (pasta Drive «Slides atualizados» de Farmacología II) e o que foi realmente lido
@@ -52,3 +52,20 @@ Solução proposta (sem apagar dados): exportar os grifos dessas seções, reesc
 - Diferença de texto contra `origin/main` (extração de texto, sem tags): **1 linha removida/alterada** (a expressão de b12 sem grifos); o resto é acréscimo (tabela de b07 e bloco de b01).
 - Pontos de inserção sem grifos: b07 (antes de 4.3; grifos de b07 estão na abertura) e b01 (antes de «9 · Cuadro de memorización»; SELECT: **0** grifos cujo prefixo/texto/sufixo contenha o trecho vizinho).
 - IDs, âncoras de seção e contagens (232 × 232, 29 mazos) inalterados; inventário em dia (porta 7/7).
+
+## 7 · 3.ª rodada (10/11) · revisão da tabela de bloqueadores/ergóticos e bloqueio de fontes
+**Literatura base:** nenhuma disponível (Drive sem Goodman & Gilman/Flórez/Rang com texto; confirmado de novo). Portanto cada afirmação da tabela de b01 só se sustenta **no slide** e passou a dizer isso («el slide indica…», «según el slide»). Revisão linha a linha contra o texto das págs. 17–20, 28, 32, 35, 50–51:
+| Afirmação | Slide | Ação |
+|---|---|---|
+| β₁ seletivos: «estos efectos no aparecen o son menores» | pág. 32 diz isso, mas pág. 26 diz que a cardioseletividade é «relativa y no absoluta» | **qualificado**: «menores o ausentes… pero la cardioselectividad es relativa y no absoluta»; retirada a ideia de ausência garantida |
+| Função renal dos β (agudo e crônico) | pág. 35: «en general… con independencia de la selectividad… con excepción del nadolol»; crônico: não cardioselectivos reduzem ligeramente; cardioselectivos «no suelen» afetar | **qualificado** («según el slide», «en general», «no suelen», «tendencias, no reglas absolutas»); não contrastado com literatura |
+| Prazosina «cada 8 h» | pág. 17 «debe administrarse cada 8 h» | atribuído ao slide («el slide indica…»); sem literatura para contrastar |
+| Doxazosina/terazosina «dosis única diaria»; t½ 10–18 h | pág. 18 «permite la prescripción en dosis única diaria»; «t½ de 10–18 h para la terazosina» | reescrito como «según el slide, permite…»; latência ligada a menos hipotensão postural «se ha relacionado» |
+| Ergotamina «> 55–60 años» | pág. 51 «como norma general, en personas mayores de 55-60 años» | marcada como orientação geral do slide, «no un límite fijo» |
+| Condução AV / período refratário | pág. 28 | mantido; «el slide señala» que contribui à eficácia antiarrítmica |
+Os avisos sobre páginas não lidas **saíram da página do aluno** (legenda de b01); ficam só aqui.
+
+**Bloqueio exato das fontes (testado em 10/11):**
+- `Fármaco II a y b bloq 2026.pdf` (34 MB, id `1z2TWYDGs…`): `download_file_content` → «File too large for download, over limit of 10 MB». `read_file_content` devolve o texto das 52 páginas, mas **sem** as páginas 7, 15, 21, 25, 44 e 45 (só imagem). `drive.google.com` → «CONNECT tunnel failed, response 403» (rede da sessão).
+- `01 - farmaco II-antihipertensivos 2026-2.pdf` (6,7 MB, id `1Aqqo-eG…`): `read_file_content` trunca em «Eficacia clínica de los I.E.C.A.»; `download_file_content` → «The connection to MCP server "Google_Drive" was closed because a message from the server was too large». A ferramenta disponível só devolve base64 em linha; não há variante que grave o original em arquivo.
+- Pendente de verificação: págs. 7, 15, 21, 25, 44, 45 do «a y b bloq»; trecho final do slide 01. **Como destravar:** salvar esses dois PDFs divididos em partes < 4 MB (ou fornecer as páginas como imagens no repositório/Drive), ou usar uma ferramenta que baixe o original para disco sem resposta em base64 (o coordenador relatou ter conseguido com outro arquivo; aqui o conector só expõe `download_file_content`).
