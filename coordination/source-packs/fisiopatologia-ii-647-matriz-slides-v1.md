@@ -50,7 +50,7 @@ Nada foi removido ou movido; perguntas (806), flashcards (2181), SVG (77) e imag
 | 16 diabetes | + seção 8 | Cadeia sinal → sintomas → complicações; basal/prandial; amanecer × Somogyi (sem conduta de dose) |
 | 17 suprarrenal | + seção 8 | Espelho Addison × Cushing; diagnóstico em 3 perguntas; retirada brusca de glucocorticoides |
 | 18 tiroides | + seção 10 (e 1 subtítulo do slide) | Leitura TSH/T4 livre (primário e tirotoxicose, com os casos do slide); bocio por TSH; hormona → sintoma |
-| 19 SNA/consciência | + seções 7 e 8 + 3 inserções de figura | Coma × mutismo × cautiverio; interruptor/tela; Glasgow sem valores; **dos extratos do slide 13:** simpático órgão por órgão (4), quimiorreceptores e umbrais (7), RAS (12), pupilas heroína/atropina (26) |
+| 19 SNA/consciência | + seções 7 e 8 + inserções de figura | Coma × mutismo × cautiverio; interruptor/tela; **tabela de Glasgow completa e caso do motociclista (slide 24)**; simpático órgão por órgão (4), quimiorreceptores e umbrais (7), RAS (12), pupilas heroína/atropina (26) |
 
 ### Origem e grau de verificação das seções novas (relatório interno; NÃO vai à página do aluno)
 
@@ -64,7 +64,7 @@ Nada foi removido ou movido; perguntas (806), flashcards (2181), SVG (77) e imag
 | Amanecer × Somogyi | Slide: «mañana desprotegida» e «hipoglucemia de madrugada» | A coluna «Qué la distingue» é dedução do próprio slide. **Retirada** a linha de conduta (reforçar/reduzir dose): não sustentada pelo slide |
 | Hipotiroidismo secundario/terciario | Eixo do slide | **Retirada** a linha numérica «TSH baja o normal»; fica só a consequência lógica (a orden no sale; não se espera TSH alta) |
 | Coma × mutismo × cautiverio | Slide 13 (texto) | Coluna ambígua «¿consciente?» retirada; **retirado** o parágrafo do «hilo común» com o trauma (não vinha do slide) |
-| Glasgow: 3 ítens e ≤ 8 | Slide 13 (texto) | Valores por resposta **não incluídos** (tabela em figura inacessível) |
+| Glasgow: 3 ítens, ≤ 8, tabela de valores, máx. 15 / mín. 3 | Slide 13 (texto) + extrato do slide 24 (imagem legível) | **Confirmado no slide.** O caso do motociclista é faixa 4–8 por leitura nossa de «gemido» e de «ligera tensión» |
 
 ## 3-C · Slide 13 — extratos visuais recebidos (10/11)
 
@@ -82,11 +82,15 @@ Fonte: pasta «Slides atualizados», arquivos «Consciencia slide NN - extrato.p
 | 23 | «Grados de coma»: texto do Glasgow (igual ao preparado) + duas fotos decorativas (a cidade de Glasgow e um mapa com alfinetes). **Não há tabela** | Conferido; a tabela **não** está aqui |
 | 26 | «Reactividad pupilar en los pacientes en coma»: pares imagem–substância. Só «heroína» (olho de pupila pequena, papoula) e «atropina» (olho de pupila grande, planta) têm rótulo; hongos, cocaína, cannabis e álcool aparecem sem texto | **Novo** seção 8: heroína → miose, atropina → midríase; o resto **não** se afirma |
 
-**Ainda não vistos (pendência real):**
-1. **Slide 24 do arquivo original**: no texto extraído é um slide **sem texto**, entre o 23 («Grados de coma») e o 25 (caso do motociclista). É o candidato à tabela de Glasgow; **não veio entre os extratos**. Sem ele, a pontuação do caso segue «no se calcula un puntaje total» e nenhum valor de Glasgow entra na página.
-2. **Slide 08**: o extrato (8,2 MB) não pôde ser baixado (o conector fecha a conexão por tamanho). No texto, a seguir à figura do 7 vêm gráficos «PCO₂ / apnea / O₂» e a conclusão «el centro neumotáxico…»; já estão no bloco, mas **as figuras do 8 não foram vistas**.
-3. **Slide 19** («Coma», sem texto; provavelmente imagem ilustrativa como 16–18): não veio.
-Para fechar: extratos «Consciencia slide 24», «08» (comprimido) e «19».
+### Extratos «leve final» recebidos depois (10/11) — vistos
+
+| Extrato | O que mostra | Efeito no bloco 19 |
+|---|---|---|
+| **24** | **Tabela de Glasgow legível** («Escala de coma de Glasgow»: abertura de olhos 4 espontáneamente · 3 a la voz · 2 al dolor · 1 no responde; resposta motora 6 cumple órdenes · 5 localiza el dolor · 4 sólo retira · 3 flexión anormal · 2 extensión anormal · 1 no responde; resposta verbal 5 orientado · 4 confuso · 3 palabras inapropiadas · 2 sonidos incomprensibles · 1 no responde; máxima 15, mínima 3) + figura das posturas decorticada (flexão anormal; lesão em hemisférios ou cápsula interna) e descerebrada (extensão anormal; lesão em mesencéfalo, tronco ou ponte) | **Novo** (seção 6): a tabela completa, as duas posturas e o caso do motociclista como **faixa**: olhos 1 + verbal 2 (gemido = sonidos incomprensibles, leitura nossa) + motora indefinida 1–5 → 4 a 8 = coma. **Não** se fixa um total único porque «ligera tensión de la mano» não define a resposta motora |
+| **19** | «Coma» com uma foto ilustrativa (pessoa caída no banheiro); sem conteúdo clínico | Nenhum |
+| **08** | Duas capturas de tela embutidas (neuroanatomia com «Mesencéfalo»; «Quimiorreceptores periféricos»: bulbo, glosofaríngeo, vago, corpo carotídeo, corpos aórticos) — **legíveis** apesar da compressão; rótulos «PCO₂ ↓ O₂ ↑», «PCO₂ ↑ O₂ ↓», «apnea»; eixo do gráfico | Nada novo além do já incorporado (quimiorreceptores, seção 2). **Limite:** o slide tem 22 traços de caneta (InkML) com os desenhos das curvas; meu extrator não os decodificou em curvas legíveis, e o LibreOffice não os desenha. As curvas **não** foram lidas |
+
+**Pendência real que resta do deck 13:** apenas as **curvas desenhadas à mão no slide 08** (PCO₂ × tempo, fases de apneia). O texto do slide 9 («En conclusión…») já está no bloco 19 e descreve o mesmo ciclo. Os demais slides do deck foram vistos.
 
 ## 3-D · Dependência da #645 (Nova Era)
 
@@ -100,10 +104,10 @@ Na página do aluno não restam «el slide…», «cátedra», «lámina», «Fa
 | 16 | «Meta/algoritmo del slide»; «Dos cortes…el slide de diabetes no aclara la población»; «Cómo leer esta tabla…slide de la cátedra» | Mesma informação sem citar a fonte; 94/80 cm (fígado, caucasiana) × 102/88 cm (aqui) como critérios distintos | O slide de diabetes não indica a população do corte; não se usa um para corrigir o outro |
 | 17 | «Una aclaración de fuente», «Lo que el slide da y no da», «Una errata del slide» (hipercalcemia), «Cómo leer los cortes/ACTH» | «Dos formas de decir lo mismo», «Fármaco y dosis», «Ojo con la hipercalcemia», cortes orientativos | O slide nomeia dexametasona ou hidrocortisona sem dose/via; a lista do slide associa hipercalcemia à pigmentação (erro do slide) |
 | 18 | Legenda «valores…Farreras Rozman», «diagrama del slide de síntesis», «(así lo escribe el slide)», «Dato de los casos del slide» | «Valores de referencia», «Casos de referencia»; «gen A» sem a observação | O slide cita Farreras Rozman para os valores; grafia «gen A» é a do slide |
-| 19 | «Qué falta» (α/β ilegíveis), «Una errata del slide» (neumotórax), «Qué no se afirma acá» (Glasgow, imagem não lida) | «Receptores adrenérgicos», «Ojo con el nombre», «El caso del motociclista» (sem puntaje total) | α/β não legíveis no texto do slide; a tabela de valores do Glasgow é imagem (slide 23) **não aberta**; teste da #642 ajustado para a nova frase |
+| 19 | «Qué falta» (α/β ilegíveis), «Una errata del slide» (neumotórax), «Qué no se afirma acá» (Glasgow, imagem não lida) | «Receptores adrenérgicos», «Ojo con el nombre», «El caso del motociclista» (sem puntaje total) | α/β não legíveis no texto do slide; a tabela de valores do Glasgow era uma imagem (slide 24), **agora vista e integrada (§3-C)**; teste da #642 ajustado para a nova frase |
 
 ## 4 · Pendências reais (não resolvidas aqui, sem inventar)
-1. **Figuras do deck 13**: os extratos 03, 04, 06, 07, 12, 15–18, 23 e 26 foram vistos (§3-C); **faltam o 24 (provável tabela de Glasgow), o 08 e o 19**. [Texto antigo: o PPTX 13 não pôde ser baixado.] Slides 3, 4, 8, 12 e 15–18 (figuras), **tabela de Glasgow (slide 23 na numeração do texto extraído)** e **reatividade pupilar (26: heroína/atropina)** não inspecionados; o caso do Glasgow segue «no se fija un puntaje total». As figuras dos demais decks não foram reinspecionadas nesta PR (a #643 inspecionou 07–12).
+1. **Figuras do deck 13**: todos os extratos (03, 04, 06, 07, 08, 12, 15–19, 23, 24 e 26) foram vistos (§3-C). Resta só a tinta manuscrita do slide 08 (curvas de PCO₂), não decodificada. Slides 3, 4, 8, 12 e 15–18 (figuras), **tabela de Glasgow (slide 23 na numeração do texto extraído)** e **reatividade pupilar (26: heroína/atropina)** não inspecionados; o caso do Glasgow segue «no se fija un puntaje total». As figuras dos demais decks não foram reinspecionadas nesta PR (a #643 inspecionou 07–12).
 2. **Acidose/alcalose metabólicas**: o slide 09 não as desenvolve. A seção 6 do bloco 15 as ensina com conhecimento geral de fisiologia, **sem confirmação em livro** (Porth cap. 8, citado no slide, não está no Drive). **Revisão humana pendente** antes de considerar a seção como «da literatura».
 3. **Verificação científica só contra os slides**: valores da tireoide («Farreras») e demais números não foram confrontados com o livro (indisponível).
 4. **Didática**: concluída nesta PR para 15–19 (§3-B). Pendente só a revisão humana das linhas marcadas como «não confirmado em livro» no §3-B.
