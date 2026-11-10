@@ -69,7 +69,7 @@ const bank = sec(now, 'bancoap2');
   ok(dec && +dec[1] === cnt && +dec[2] === ofi && +dec[3] === va && +dec[4] === vf, `banco declara ${dec && dec.slice(1, 5)} = real ${[cnt, ofi, va, vf]}`, { dec: dec && dec.slice(1, 5), real: [cnt, ofi, va, vf] });
   const subs = [...bank.matchAll(/Bloque 0(\d) · ([^<]*?) <small>\((\d+) preguntas\)/g)].map(m => [+m[1], +m[3]]); let soma = 0, bad = [];
   for (const [b, c] of subs) { const real = items(sec(now, 'ap2b0' + b)).length; soma += c; if (real !== c) bad.push([b, c, real]); }
-  ok(!bad.length && soma === cnt && subs.find(x => x[0] === 7)[1] === 35 && subs.find(x => x[0] === 5)[1] === 25 && subs.find(x => x[0] === 8)[1] === 17 && subs.find(x => x[0] === 4)[1] === 25 && subs.find(x => x[0] === 6)[1] === 19, `por bloco: declarado = real (soma ${soma} = ${cnt}; b04 = 25, b05 = 25, b06 = 19, b07 = 35, b08 = 17)`, bad);
+  ok(!bad.length && soma === cnt && subs.find(x => x[0] === 7)[1] === 35 && subs.find(x => x[0] === 5)[1] === 24 && subs.find(x => x[0] === 8)[1] === 17 && subs.find(x => x[0] === 4)[1] === 25 && subs.find(x => x[0] === 6)[1] === 19, `por bloco: declarado = real (soma ${soma} = ${cnt}; b04 = 25, b05 = 25, b06 = 19, b07 = 35, b08 = 17)`, bad);
   ok(/Bloque 07 · Patologías del hígado: alcohol, cirrosis y tumores/.test(bank), 'banco: título do grupo do bloco 07 atualizado');
   const cards = s => (s.match(/class="flashcard"/g) || []).length;
   const maz = sec(now, 'bancofcap2'), mi = maz.indexOf('🎲 Ruleta rusa'), mazo = maz.slice(0, mi), rul = maz.slice(mi);
@@ -184,7 +184,7 @@ console.log('\n▸ 9 · revisão dos demais blocos: b05 (EII) e b08 (tiroides) a
   const m5 = c5.filter(w => !T5.includes(w)); ok(!m5.length, 'b05: cobertura da Clase 5 completada (21 termos-chave das lacunas detectadas)', m5);
   const NV = [['ap2b05', 'En la enfermedad de Crohn con afectación extensa del intestino delgado', ['hipoalbuminemia', 'malabsorción', 'anemia ferropénica'], T5], ['ap2b08', 'Ante un nódulo tiroideo solitario, ¿qué dato clínico aumenta', ['radioterapia previa', 'caliente', 'menos del 10 %'], T8], ['ap2b08', 'En un adenoma tóxico («nódulo caliente»)', ['tshr', 'gnas', 'no es precursor'], T8]];
   for (const [id, key, ws, T] of NV) { const a = items(sec(now, id)).filter(x => x.q.includes(key)), b = items(bank).filter(x => x.q.includes(key)); ok(a.length === 1 && b.length === 1 && a[0].raw === b[0].raw, `${id}: «${key.slice(0, 50)}…» 1 no bloco, 1 no banco, idênticas`); ok(ws.every(w => T.includes(w) || strip(teach(id)).toLowerCase().includes(w)), `   ensinado antes no bloco: ${ws.join(' · ')}`); ok(a[0].tag === 'variante', '   rótulo «Pregunta complementaria»'); }
-  ok(items(sec(now, 'ap2b05')).length === 25 && items(sec(now, 'ap2b08')).length === 17, 'b05 = 25 e b08 = 17 questões');
+  ok(items(sec(now, 'ap2b05')).length === 24 && items(sec(now, 'ap2b08')).length === 17, 'b05 = 24 e b08 = 17 questões');
   ok(!/dato que hay que subrayar|pregunta segura/.test(teach('ap2b08')), 'b08 sem voz de prova remanescente');
   const NC = '<td><b>Carece de potencial maligno</b> (formulación de la cátedra, válida para el hiperplásico típico; no para la lesión serrada que se le parece, el sésil serrado). Es el más frecuente; &lt;5 mm, colon izquierdo</td>', OC = '<td><b>Insignificante</b>. Es el más frecuente; &lt;5 mm, colon izquierdo</td>';
   ok(teach('ap2b06').replace(NC, OC) === sec(old, 'ap2b06').split(/<div class="quiz-section"/)[0] && sec(now, 'ap2b01') === sec(old, 'ap2b01'), 'b06: texto de ensino idêntico salvo a célula do hiperplásico («carece de potencial maligno», #651); b01 (291 grifos) idêntico');
@@ -226,7 +226,7 @@ console.log('\n▸ 10 · #651 · questões P2 Chamorro (fotos 6E filas 1–3 e f
   // 10c · melhoria da 05#15 (extraintestinais da CU): pericolangite aceita, nos dois lugares
   const m15 = [...now.matchAll(/colangitis esclerosante primaria y pericolangitis\.<\/strong>/g)].length; ok(m15 === 2, '05#15 (manifestações extraintestinais): «pericolangitis» aceita na resposta, bloco e banco');
   ok(/úlceras extensas de base ancha/.test(items(sec(now, 'ap2b05')).find(x => x.q.includes('Citá dos hallazgos macroscópicos de la colitis ulcerosa')).raw), '05#17 já aceita «úlceras de base ancha» + seudopólipos (item 3 da foto) — sem mudança');
-  ok(/<span>203 preguntas<\/span><span>136 basadas en preguntas de examen<\/span>/.test(bank), 'banco declara 203 preguntas · 136 de exame (+11 do simulacro)');
+  ok(/<span>202 preguntas<\/span><span>135 basadas en preguntas de examen<\/span>/.test(bank), 'banco declara 202 preguntas · 135 de exame (+10 do simulacro; p-ANCA pendente)');
   ok(sec(now, 'ap2b03') === sec(old, 'ap2b03'), 'b03 (74 grifos) intocado: as hipóteses da gastrite crônica ficam como pendência documentada');
 }
 
@@ -255,13 +255,12 @@ console.log('\n▸ 11 · respostas abertas pedem os pontos específicos lembrado
   ok(!/distal, sin riesgo\.\s*Sésil/.test(now.replace(/<[^>]+>/g, '')) , 'flashcard hiperplásico × sésil serrado (bloco, mazo, ruleta): «sin riesgo» → «sin potencial maligno (el típico)»');
 }
 
-console.log('\n▸ 12 · simulacro P2 (PDF não oficial, 50 itens numerados 1–51 sem o 39): 11 perguntas novas, rótulo «Basada en preguntas de examen» (decisão de José)');
+console.log('\n▸ 12 · simulacro P2 (PDF não oficial, 50 itens numerados 1–51 sem o 39): 10 perguntas novas (p-ANCA pendente), rótulo «Basada en preguntas de examen» (decisão de José)');
 {
   const N = [
     ['ap2b05', 'Citá dos complicaciones de la enfermedad de Crohn relacionadas con los trayectos penetrantes', ['fístula', 'fisura anal', 'perforación']],
     ['ap2b05', 'Citá tres hallazgos histopatológicos característicos de la enfermedad de Crohn', ['transmural', 'granuloma', 'fisuras']],
     ['ap2b05', 'acumulación de neutrófilos en la luz de las criptas', ['absceso críptico', 'neutrófilos']],
-    ['ap2b05', '¿Qué autoanticuerpo suele asociarse a la colitis ulcerosa', ['p-anca', 'no confirman el diagnóstico']],
     ['ap2b05', 'qué hábito se asocia con mayor riesgo de reactivación', ['tabaquismo', 'reactivaciones']],
     ['ap2b04', 'Citá dos factores anatomopatológicos empleados para estimar el comportamiento pronóstico', ['tamaño', 'índice mitótico', 'localización']],
     ['ap2b04', 'Citá dos características morfológicas típicas del adenocarcinoma gástrico de tipo intestinal', ['glándulas bien definidas', 'crecimiento expansivo', 'exofítica']],
@@ -273,6 +272,8 @@ console.log('\n▸ 12 · simulacro P2 (PDF não oficial, 50 itens numerados 1–
   const bl3 = items(bank);
   for (const [id, key, ws] of N) { const a = items(sec(now, id)).filter(x => x.q.includes(key)), b = bl3.filter(x => x.q.includes(key)); ok(a.length === 1 && b.length === 1 && a[0].raw === b[0].raw, `${id}: «${key.slice(0, 55)}…» 1 no bloco, 1 no banco, idênticas`); ok(a.length === 1 && a[0].tag === 'oficial', '   rótulo «Basada en preguntas de examen» (fonte interna: simulacro NÃO OFICIAL; nenhuma é apresentada como prova oficial)'); const T = strip(teach(id)).toLowerCase(); ok(ws.every(w => T.includes(w)), `   ensinado antes no bloco: ${ws.join(' · ')}`, ws.filter(w => !T.includes(w))); }
   ok(!/simulacro|simulado|no oficial|PDF/i.test(N.map(([id, key]) => items(sec(now, id)).find(x => x.q.includes(key)).raw).join(' ')), 'nenhuma pergunta menciona o simulado nem se declara oficial (a origem fica só no registro interno)');
+  ok(!/autoanticuerpo suele asociarse/.test(now), 'p-ANCA: a pergunta (sem confirmação em slide/literatura acessível) saiu do bloco e do banco; fica pendente');
+  ok(!/premalignas<\/b>: aparecen con la transformación/.test(now) && !/no se encuentran en las lesiones premalignas/.test(now) && /en las lesiones premalignas, en cambio, <b>no suelen encontrarse/.test(sec(now, 'ap2b07')), 'CHC: a frase absoluta sai das explicações (bloco e banco) e fica uma única vez no ensino, atribuída à cátedra (Clase 7)');
   ok(!/ulcerada/.test('') , 'sem inserções no texto do b04 nesta rodada (só perguntas depois de todos os grifos)');
   ok(sec(now, 'ap2b04').split(/<div class="quiz-section"/)[0] === sec(old, 'ap2b04').split(/<div class="quiz-section"/)[0].replace('el estómago queda como una botella de cuero.</p>', 'el estómago queda como una botella de cuero. En la pieza se ve, además, la <b>pérdida de los pliegues</b> de la mucosa gástrica.</p>').replace('células uniformes en nidos y trabéculas con cromatina <b>«en sal y pimienta»</b>', 'células uniformes, de <b>citoplasma escaso</b>, en nidos y trabéculas con cromatina moteada <b>«en sal y pimienta»</b>'), 'b04: texto de ensino inalterado nesta rodada');
 }

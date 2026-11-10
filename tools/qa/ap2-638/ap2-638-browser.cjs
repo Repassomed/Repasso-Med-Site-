@@ -6,11 +6,11 @@ const fs = require('fs'), path = require('path');
 const L = require('../ensaio-layout/lib.cjs');
 const SHOTS = (process.argv.find(a => a.startsWith('--shots=')) || '').slice(8) || null;
 const res = []; const ok = (w, modo, nome, c, det) => { res.push({ ok: !!c }); console.log((c ? 'PASSA ' : 'FALHA ') + modo + ' @' + w + ' ' + nome + (det !== undefined && !c ? ' → ' + JSON.stringify(det).slice(0, 300) : '')); };
-const TEO = { slug: 'anatomia-patologica-ii', cont: { ap2b04: 25, ap2b05: 25, ap2b07: 35, bancoap2: 203 },
+const TEO = { slug: 'anatomia-patologica-ii', cont: { ap2b04: 25, ap2b05: 24, ap2b07: 35, bancoap2: 202 },
   nuevas: [['ap2b07', 'Citá los dos tipos de mutaciones más frecuentes', 'β-catenina'], ['ap2b07', 'clasificación molecular del adenoma hepático', 'b'], ['ap2b07', 'se activan y se transforman en miofibroblastos', 'c'], ['ap2b04', 'Citá dos patologías asociadas a los tumores carcinoides', 'Zollinger'], ['ap2b04', 'células fusiformes con inmunohistoquímica positiva para CD117', 'b'],
     ['ap2b04', 'cromatina «en sal y pimienta» y cromogranina A positiva. ¿De qué tipo de célula', 'd'], ['ap2b05', 'Citá dos manifestaciones extraintestinales', 'poliartritis migratoria'], ['ap2b05', 'Citá dos hallazgos macroscópicos de la enfermedad de Crohn', 'pared intestinal engrosada'],
     ['ap2b05', 'Citá dos hallazgos macroscópicos de la colitis ulcerosa', 'seudopólipos'], ['ap2b05', 'Citá dos complicaciones frecuentes de la enfermedad de Crohn', 'anemia megaloblástica']],
-  ensena: [['ap2b05', 'poliartritis migratoria'], ['ap2b05', 'anemia megaloblástica'], ['ap2b05', 'dañan la muscular propia'], ['ap2b05', 'no se engrosa'], ['ap2b07', 'tres subtipos'], ['ap2b07', 'Tipos I y III']], banco: 'bancoap2', bancoStats: ['203 preguntas', '136 basadas en preguntas de examen', '67 variantes'] };
+  ensena: [['ap2b05', 'poliartritis migratoria'], ['ap2b05', 'anemia megaloblástica'], ['ap2b05', 'dañan la muscular propia'], ['ap2b05', 'no se engrosa'], ['ap2b07', 'tres subtipos'], ['ap2b07', 'Tipos I y III']], banco: 'bancoap2', bancoStats: ['202 preguntas', '135 basadas en preguntas de examen', '67 variantes'] };
 (async () => {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
   const srv = await L.servir({}); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
