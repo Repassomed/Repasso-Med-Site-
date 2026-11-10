@@ -3,7 +3,7 @@
      A  padrão de produção (nenhuma variável de matéria): o cliente PERGUNTA, o servidor NEGA ⇒ sem layout, sem caneta física, dados idênticos;
      B  só a 1.ª chave (é o que esta PR faz): igual a A;   C  as duas chaves (RM_LAYOUT_SLUGS + RM_PILOT_LAYOUT_UIDS): layout monta, dados ANTES = DEPOIS;
      D  conta errada na lista: sem layout;   E  passo opcional da caneta física (RM_PEN_SLUGS + RM_PILOT_PEN_UIDS);
-     F  volta: tirar o slug ⇒ layout antigo e dados idênticos;   G  vizinhas (dermatologia, biologia) ficam sem requisição e sem layout com a variável de Medicina Familiar ligada.
+     F  volta: tirar o slug ⇒ layout antigo e dados idênticos;   G  vizinhas (dermatologia, neurologia) ficam sem requisição e sem layout com a variável de Medicina Familiar ligada.
    Uso: NODE_PATH=$(npm root -g) node tools/qa/pre-voo/medfam-implantacao.test.cjs [--rapido] */
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -107,7 +107,7 @@ async function cena(br, base, m, cfg, rotulo, esperaLayout, extra) {
         ok(dif.length === 0, `na volta: ${volta.grifos.length} grifos, ${volta.tracos.length} traços e ${volta.notas.length} nota(s) idênticos aos do início`, dif.slice(0, 3)); });
     }
     sec(t + 'G · vizinhas com a variável de Medicina Familiar ligada');
-    for (const v of ['dermatologia', 'biologia']) {
+    for (const v of ['dermatologia', 'neurologia']) {
       const o = await cena(br, base, M(v), { env: Object.assign({}, LAY, { RM_LAYOUT_SLUGS: MF, RM_PEN_SLUGS: MF, RM_PILOT_PEN_UIDS: UID }), candidatas: null }, t + v, false);
       ok(o.pedidos.length === 0, v + ': nenhuma requisição ao servidor (fora das CANDIDATAS)', o.pedidos); }
   }
