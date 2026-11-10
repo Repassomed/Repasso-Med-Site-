@@ -7,6 +7,21 @@ const ok = (c, m) => { total++; if (!c) { falhas++; console.log('  ✗ ' + m); }
 const SHOTS = process.env.RM_SHOTS || '';
 
 const MATERIAS = [{"slug": "fisiopatologia-ii", "tab": "fisio2", "titulo": "Fisiopatología II", "secoes": 19, "secoesDom": 20, "esperado": {"fp2b01": ["bloque", "01", "1"], "fp2b02": ["bloque", "02", "2"], "fp2b12": ["bloque", "03", "3"], "fp2b04": ["bloque", "04", "4"], "fp2b03": ["bloque", "05", "5"], "fp2b13": ["bloque", "06", "6"], "fp2b14": ["bloque", "07", "1"], "fp2b05": ["bloque", "08", "2"], "fp2b06": ["bloque", "09", "3"], "fp2b07": ["bloque", "10", "4"], "fp2b08": ["bloque", "11", "5"], "fp2b09": ["bloque", "12", "6"], "fp2b10": ["bloque", "13", "1"], "fp2b11": ["bloque", "14", "2"], "fp2b15": ["bloque", "15", "3"], "fp2b16": ["bloque", "16", "4"], "fp2b17": ["bloque", "17", "5"], "bancofp2": ["repaso", "B", "r"], "revisaofp2": ["repaso", "F", "r"]}, "otros": [], "nBlocos": 17, "pasta": "assets/img/fisio2/vig/", "semVig": ["fp2b12", "fp2b04", "fp2b13", "fp2b14", "fp2b09", "fp2b15", "fp2b16", "fp2b17"], "pesados": ["fp2b01", "fp2b02", "fp2b04", "fp2b03", "fp2b08", "fp2b10", "bancofp2", "revisaofp2"], "unidades": null}];
+/* Blocos 18 (tiroides) e 19 (SNA/conciencia) vêm das PRs de conteúdo #643/#650. O mapa do módulo já os reconhece; este teste exige 19 blocos quando o HTML os tem
+   e 17 quando ainda não (branch sem o conteúdo), para a PR da Nova Era não depender da ordem de merge. RM_EXIGE_19=1 força 19 (falha se o conteúdo faltar). */
+{
+  const htmlFp2 = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'Repasso-Med-Site--main', 'Atual - Copia', 'netlify', 'functions', 'materias-privadas', 'fisiopatologia-ii.html'), 'utf8');
+  const tem19 = /id="fp2b18"/.test(htmlFp2) && /id="fp2b19"/.test(htmlFp2);
+  if (process.env.RM_EXIGE_19 && !tem19) { console.log('RM_EXIGE_19: o HTML não tem fp2b18/fp2b19 (falta o conteúdo das #643/#650)'); process.exit(1); }
+  if (tem19) {
+    const m0 = MATERIAS[0];
+    m0.secoes += 2; m0.secoesDom += 2; m0.nBlocos = 19;
+    m0.esperado.fp2b18 = ['bloque', '18', '6']; m0.esperado.fp2b19 = ['bloque', '19', '1'];
+    m0.semVig = m0.semVig.concat(['fp2b18', 'fp2b19']);
+    m0.pesados = m0.pesados.concat(['fp2b18']);
+  }
+  console.log('Fisiopatología II · conteúdo com ' + (tem19 ? '19' : '17') + ' blocos');
+}
 
 (async () => {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
@@ -95,7 +110,7 @@ const MATERIAS = [{"slug": "fisiopatologia-ii", "tab": "fisio2", "titulo": "Fisi
     const titulos = await p.evaluate(() => [...document.querySelectorAll('#materias-container section[id]')].map(s => ({ id: s.id, h2: ((s.querySelector(':scope > h2') || {}).textContent || '').trim() })));
     if (m.numTitulos) {
       const dif = titulos.filter(t => m.esperado[t.id] && m.esperado[t.id][0] === 'bloque' && !t.h2.startsWith(m.esperado[t.id][1] + ' ·'));
-      ok(dif.length === 0, 'a numeração mostrada é a dos títulos do conteúdo («01 · …» a «17 · …»)' + (dif.length ? ' · ' + dif.map(d => d.id + ':' + d.h2.slice(0, 12)).join('|') : ''));
+      ok(dif.length === 0, 'a numeração mostrada é a dos títulos do conteúdo («01 · …» até o último bloco)' + (dif.length ? ' · ' + dif.map(d => d.id + ':' + d.h2.slice(0, 12)).join('|') : ''));
     }
 
     const rot = await p.evaluate(() => {

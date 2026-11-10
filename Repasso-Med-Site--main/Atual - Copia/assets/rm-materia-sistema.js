@@ -97,9 +97,10 @@
   /* Fisiopatología II (Nova Era): ids `fp2bNN` FORA da ordem do conteúdo (fp2b12 = «BLOQUE 03» EII, fp2b04 = «BLOQUE 04», fp2b03 = «BLOQUE 05», fp2b13 = «BLOQUE 06», fp2b14 = «BLOQUE 07»).
      A numeração é a do MARCADOR («BLOQUE NN · ÁREA · TEMA») e a ordem do DOM já a respeita. Sem «UNIDAD X» no conteúdo (o marcador traz a ÁREA: digestivo, hígado, riñón…):
      nenhuma unidade é criada. `fp2portada` (oculta, vazia) não é montada pelo módulo. Banco geral e mazo geral = repaso. Vinhetas: 9 recortes de infografías do próprio
-     conteúdo; os blocos sem região de ilustração limpa (03, 04, 06, 07, 12) e os 15–17 (sem figura) usam o logotipo (vig: null). */
-  var FP2_NUM = { fp2b01: 1, fp2b02: 2, fp2b12: 3, fp2b04: 4, fp2b03: 5, fp2b13: 6, fp2b14: 7, fp2b05: 8, fp2b06: 9, fp2b07: 10, fp2b08: 11, fp2b09: 12, fp2b10: 13, fp2b11: 14, fp2b15: 15, fp2b16: 16, fp2b17: 17 };
-  var FP2_SEMVIG = { 3: 1, 4: 1, 6: 1, 7: 1, 12: 1, 15: 1, 16: 1, 17: 1 };
+     conteúdo; os blocos sem região de ilustração limpa (03, 04, 06, 07, 12) e os 15–19 (sem região de ilustração limpa) usam o logotipo (vig: null).
+     Blocos 18 (fp2b18 · tiroides) e 19 (fp2b19 · SNA/conciencia) vêm das PRs de conteúdo #643/#650: o mapa os reconhece desde já; sem esses ids no HTML o módulo simplesmente não os encontra. */
+  var FP2_NUM = { fp2b01: 1, fp2b02: 2, fp2b12: 3, fp2b04: 4, fp2b03: 5, fp2b13: 6, fp2b14: 7, fp2b05: 8, fp2b06: 9, fp2b07: 10, fp2b08: 11, fp2b09: 12, fp2b10: 13, fp2b11: 14, fp2b15: 15, fp2b16: 16, fp2b17: 17, fp2b18: 18, fp2b19: 19 };
+  var FP2_SEMVIG = { 3: 1, 4: 1, 6: 1, 7: 1, 12: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1 };
   var FP2_REPASO = { bancofp2: 'B', revisaofp2: 'F' };
   function clasificarFP2(id) {
     if (Object.prototype.hasOwnProperty.call(FP2_NUM, id)) { var n = FP2_NUM[id]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: FP2_SEMVIG[n] ? null : 'vb-' + pad(n) }; }
