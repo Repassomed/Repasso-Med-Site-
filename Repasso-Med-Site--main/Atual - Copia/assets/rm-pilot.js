@@ -34,8 +34,8 @@
   /* A5 · matérias que podem PERGUNTAR ao servidor. Fechadura 1 de 2: só entra aqui, por PR, quem já passou a «porta» do pré-voo. Fechadura 2: o servidor
      (get-pilot-flags) só concede se o slug estiver nas listas RM_LAYOUT_SLUGS/RM_VISUAL_SLUGS/RM_PEN_SLUGS E o UID nas listas RM_PILOT_*_UIDS.
      Hoje o piloto e Medicina Familiar (esta só PERGUNTA: com as variáveis de matéria vazias o servidor nega e nada muda para ninguém) ⇒ nenhuma requisição, nenhum módulo extra e nenhuma mudança em qualquer outra matéria. */
-  var CANDIDATAS = ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia'];   // 1.ª fechadura da PRIMEIRA IMPLANTAÇÃO CONTROLADA (Medicina Familiar): só PERGUNTA ao servidor; quem libera é o servidor (2.ª fechadura, variáveis do Netlify, hoje vazias)
-  var VER  = '2026111002';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
+  var CANDIDATAS = ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-patologica-ii-practica'];   // 1.ª fechadura da PRIMEIRA IMPLANTAÇÃO CONTROLADA (Medicina Familiar): só PERGUNTA ao servidor; quem libera é o servidor (2.ª fechadura, variáveis do Netlify, hoje vazias)
+  var VER  = '2026111107';                            // cache-buster dos módulos (assets/* cacheia 7 dias: mudou um módulo ⇒ sobe a versão aqui e a tag do rm-pilot.js no index.html)
   var BASE = 'assets/';
   var COOLDOWN_MS = 30000;                            // depois de uma falha, não insistir
 

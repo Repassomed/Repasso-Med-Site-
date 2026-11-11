@@ -1433,3 +1433,12 @@ html.rm-sis[data-rm-tema="farmacologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis
 html.rm-sis[data-rm-tema="farmacologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
 /* e nas telas de «modo» (Infografías · Preguntas · Flashcards · Videos), onde o 1.º grupo de blocos também ganharia «UNIDAD ·» */
 html.rm-sis[data-rm-tema="farmacologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+
+/* ===== Anatomía Patológica II Práctica (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"]. ===== */
+html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"][data-rm-tema] {
+  --rm-surface: #E6DDF0; --rm-side: #F2EEF8; --rm-side-edge: #CFC0E0; --rm-side-card: #E3D8EF; --rm-side-rule: #D9CCE8;
+  --rm-accent: #6B3FA0; --rm-accent-d: #4A2A73; --rm-marker: #E9B949;
+}
+html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
