@@ -397,8 +397,6 @@
         fc:   'Reconocer la lámina de un vistazo'
       },
       clasificar: clasificarH2P
-
-    },
     },
     'anestesiologia': {
       vigDir: 'assets/img/ane/vig/',                      // 15 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-ANESTESIOLOGIA.md)
