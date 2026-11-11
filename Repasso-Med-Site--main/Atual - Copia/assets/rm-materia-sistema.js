@@ -116,6 +116,16 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Toxicología (Nova Era): toxb01…toxb16 = BLOQUE 01–16 (toxb16 sem figuras ⇒ viñeta = logo); bancotox = banco general, toxcierre = mazo general + ruleta + bibliografía (repaso); toxportada = âncora vazia.
+     O marcador do conteúdo é «UNIDAD 1…4» (algarismos arábicos): o leitor de unidades do módulo só entende romanos, então o grupo único é rotulado «UNIDAD ·» e esse rótulo é ocultado por CSS (limitação registrada). */
+  var TX_REPASO = { bancotox: 'B', toxcierre: 'F' };
+  function clasificarTX(id) {
+    var m = /^toxb(\d\d)$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 16) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: n <= 3 ? 1 : n <= 6 ? 2 : n <= 13 ? 3 : 4, vig: n === 16 ? null : 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(TX_REPASO, id)) return { tipo: 'repaso', n: TX_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   var TEMAS = {
     'semiologia-ii': {
       vigDir: 'assets/img/semio2/vig/',
@@ -242,6 +252,24 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFA
+    },
+    'toxicologia': {
+      vigDir: 'assets/img/tox/vig/',                      // 15 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-TOXICOLOGIA.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Toxidromes · Antídotos · Conducta',
+      miga: ['Guía de estudio', 'Toxicología'],
+      unidades: {},                                       // marcador «UNIDAD 1…4» (arábicos): não lido pelo módulo; grupo único sem rótulo (CSS)
+      medallones: [
+        { vig: 'vb-01', t: 'TOXICOLOGÍA', cap: 1, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-07', t: 'OFIDISMO',    cap: 3, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-14', t: 'METANOL',     cap: 4, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarTX
     }
   };
 
