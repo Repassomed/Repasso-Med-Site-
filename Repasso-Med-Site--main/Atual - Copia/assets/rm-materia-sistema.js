@@ -129,6 +129,33 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* AP I Práctica (Nova Era): ids `b1…b12` (b1–b9 = TEMA 01–09). Vinheta só em b2–b9 (b1 = logo). b10 laminario, b11 flashcards, b12 ruleta = repaso.
+     Sem «UNIDAD X» no conteúdo (rótulo único oculto por CSS). */
+  var AP1P_REPASO = { b10: 'L', b11: 'F', b12: 'R' };
+  function clasificarAP1P(id) {
+    var m = /^b(\d+)$/.exec(id);
+    if (m) {
+      var n = +m[1];
+      if (n >= 1 && n <= 9) return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: n >= 2 ? 'vb-' + pad(n) : null };
+      if (Object.prototype.hasOwnProperty.call(AP1P_REPASO, id)) return { tipo: 'repaso', n: AP1P_REPASO[id], num: -1, cap: 'r', vig: null };
+    }
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Histología I (Nova Era): histo01…histo12 = BLOQUE 01–12 (Parcial 1: 01–05 · Parcial 2: 06–12); histo13 banco general, histo14 flashcards, histo-imgnote bibliografía = repaso;
+     histo00 = âncora vazia (otro). */
+  function clasificarH1(id) {
+    var m = /^histo(\d+)$/.exec(id);
+    if (m) {
+      var n = +m[1];
+      if (n >= 1 && n <= 12) return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: 'vb-' + pad(n) };
+      if (n === 13) return { tipo: 'repaso', n: 'B', num: -1, cap: 'r', vig: null };
+      if (n === 14) return { tipo: 'repaso', n: 'F', num: -1, cap: 'r', vig: null };
+    }
+    if (id === 'histo-imgnote') return { tipo: 'repaso', n: 'C', num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   var TEMAS = {
     'semiologia-ii': {
       vigDir: 'assets/img/semio2/vig/',
@@ -271,6 +298,42 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFA2
+    },
+    'anatomia-patologica-practica': {
+      vigDir: 'assets/img/anatoprat/vig/',                // 8 viñetas (b2–b9) recortadas de láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP1P-HISTO1.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Láminas · Cortes · Reconocimiento',
+      miga: ['Guía de estudio', 'AP I Práctica'],
+      unidades: {},                                       // o conteúdo não tem «UNIDAD X»
+      medallones: [
+        { vig: 'vb-04', t: 'NECROSIS',     cap: 3, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-06', t: 'INFLAMACIÓN',  cap: 5, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-08', t: 'NEOPLASIA',    cap: 1, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Cortes y láminas por tema',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Reconocer la lámina de un vistazo'
+      },
+      clasificar: clasificarAP1P
+    },
+    'histologia-i': {
+      vigDir: 'assets/img/histo1/vig/',                   // 12 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP1P-HISTO1.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Los tejidos del cuerpo',
+      miga: ['Guía de estudio', 'Histología I'],
+      unidades: {},                                       // o marcador é «BLOQUE NN · PARCIAL N», não «UNIDAD X»
+      medallones: [
+        { vig: 'vb-02', t: 'EPITELIO',  cap: 2, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-07', t: 'HUESO',     cap: 1, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-12', t: 'NEURONA',   cap: 6, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por tejido',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Reconocer el tejido y su función'
+      },
+      clasificar: clasificarH1
     }
   };
 
