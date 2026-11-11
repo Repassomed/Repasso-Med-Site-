@@ -49,3 +49,9 @@ O `auditoria-implantacao-publica.test.cjs` ainda ligava a matéria pelas variáv
 Receita para cada PR que entra depois: atualizar sobre a `main`; `CANDIDATAS` e as listas dos testes = **união**; `VER` = maior = tag do `index.html`; `inventario.json` regenerado pela ferramenta; repetir `nao-ativacao`, `auditoria-implantacao-publica` e o `real-<matéria>`.
 
 **Esclarecimento da verificação que falhava no teste combinado de publicação** (11/11): era a checagem «não toca HTML de outra matéria» (seção G). Ela compara o diff contra a `main`; num merge **combinado** descartável com o conteúdo das #643/#650 ainda fora da `main`, o HTML de Fisiopatología II aparecia como alteração. Com #643/#650 já na `main` ela passa (189/189), e o teste continua barrando HTML de outras matérias. Não era defeito do servidor nem da #645.
+
+
+## Atualização 11/11 (noite) — `main` já com #635, #636, #643, #650 e #653
+- Na `main`: Biología (#635), Embriología (#636), AP I Práctica + Histología I (#653) e o conteúdo de Fisiopatología II (#643, #650).
+- **#645** (Fisiopatología II): a branch já foi atualizada sobre essa `main` por Claude 1 (`da6bc145`, «Merge main (#653)…»; antes `331942a4` com a #636); eu integrei por cima só este documento. `CANDIDATAS` na branch: `…, 'biologia', 'embriologia', 'fisiopatologia-ii', 'anatomia-patologica-practica', 'histologia-i'`.
+- Ainda abertas: **#634** (Anatomía I/AP I, Claude 2), **#644** (Farmacología II, Claude 2), **#645** (esta) e **#655** (Dermatología). Ordem sugerida: **#645 → #634 → #644 → #655** (cada uma atualiza sobre a `main` e resolve as listas por união; `VER` = maior = tag do `index.html`).
