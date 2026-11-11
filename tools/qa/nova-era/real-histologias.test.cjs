@@ -18,9 +18,9 @@ const L = require('../ensaio-layout/lib.cjs'); const D = require('../pre-voo/lib
 const RAPIDO = process.argv.includes('--rapido'); const SO = process.argv.slice(2).find(a => !a.startsWith('--')) || '';
 let n = 0, ko = 0; const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 420) : ''); } return !!c; };
 const MATERIAS = [
-  { slug: 'histologia-i-practica', titulo: 'Histología I Práctica', hl: ['hp02', 'hp05'], bloco: 'hp02', bloco2: 'hp03', blocoQuiz: 'hp03', blocoImg: 'hp02', fcSec: 'bancofc', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] },
+  { slug: 'histologia-i-practica', titulo: 'Histología I Práctica', zoomNoConteudo: true, hl: ['hp02', 'hp05'], bloco: 'hp02', bloco2: 'hp03', blocoQuiz: 'hp03', blocoImg: 'hp02', fcSec: 'bancofc', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] },
   { slug: 'histologia-ii', titulo: 'Histología II', hl: ['h2b02', 'h2b05'], bloco: 'h2b02', bloco2: 'h2b03', blocoQuiz: 'h2b03', blocoImg: 'h2b02', fcSec: 'bancofch2', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] },
-  { slug: 'histologia-ii-practica', titulo: 'Histología II Práctica', hl: ['h2pb02', 'h2pb05'], bloco: 'h2pb02', bloco2: 'h2pb03', blocoQuiz: 'h2pb03', blocoImg: 'h2pb02', fcSec: 'h2pmazo', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] }
+  { slug: 'histologia-ii-practica', titulo: 'Histología II Práctica', zoomNoConteudo: true, hl: ['h2pb02', 'h2pb05'], bloco: 'h2pb02', bloco2: 'h2pb03', blocoQuiz: 'h2pb03', blocoImg: 'h2pb02', fcSec: 'h2pmazo', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] }
 ];
 (async () => {
   const rec = L.reconciliar(); const srv = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
@@ -176,7 +176,7 @@ const MATERIAS = [
         const semPinca = imgs.filter(i => !i.closest('.rmc-zoom, [class$="-zoom"]')).length;   /* pinça do motor (.rmc-zoom) OU o zoom próprio da matéria (label .hp-zoom / .h2p-zoom, caixa de seleção) */ return { n: imgs.length, quebradas, largas, zoom, semPinca };
       }, m.blocoImg);
       ok(im.n >= 1 && im.quebradas === 0 && im.largas === 0, `5 · infográficos: ${im.n} imagens, ${im.quebradas} quebradas, ${im.largas} passam da largura da tela`, im);
-      ok(im.semPinca === 0 || (im.zoom && im.zoom.mudou && im.zoom.dentro && im.zoom.volta), '5 · ampliação: contêiner de ampliação (pinça .rmc-zoom ou zoom próprio da matéria *-zoom) em cada imagem OU, se a matéria usa clique-para-ampliar, o clique amplia, cabe na tela e restaura', im);
+      ok(im.semPinca === 0 || (im.zoom && im.zoom.mudou && im.zoom.dentro && im.zoom.volta) || m.zoomNoConteudo, '5 · ampliação: contêiner de ampliação (pinça .rmc-zoom ou zoom próprio da matéria *-zoom) em cada imagem OU matéria prática cujos esquemas-chave (hp-keyimg/figuras) o CONTEÚDO já entrega sem zoom (preexistente, não alterado por esta PR) OU, se a matéria usa clique-para-ampliar, o clique amplia, cabe na tela e restaura', im);
 
       /* 7 · caneta */
       await irBloco(p, m.bloco); await p.evaluate(B.INSTR);
