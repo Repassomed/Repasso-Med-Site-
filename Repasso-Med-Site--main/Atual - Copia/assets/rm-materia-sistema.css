@@ -1434,6 +1434,18 @@ html.rm-sis[data-rm-tema="farmacologia"] .rm-l2-tree-tools + .rm-sis-ulab--side 
 /* e nas telas de «modo» (Infografías · Preguntas · Flashcards · Videos), onde o 1.º grupo de blocos também ganharia «UNIDAD ·» */
 html.rm-sis[data-rm-tema="farmacologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
 
+/* ===== Farmacología II (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="farmacologia-ii"]. ===== */
+html.rm-sis[data-rm-tema="farmacologia-ii"][data-rm-tema] {
+  --rm-surface: #EADFEE; --rm-side: #F5EEF8; --rm-side-edge: #D3BFDC; --rm-side-card: #E7D8EC; --rm-side-rule: #DCCAE3;
+  --rm-accent: #8A3F9E; --rm-accent-d: #62286F; --rm-marker: #E9B949;
+}
+/* o conteúdo não tem unidades: o módulo, sem «UNIDAD X» no marcador, rotularia o grupo dos blocos como «UNIDAD ·». Esse rótulo de grupo único não é mostrado (índice, lateral e telas de modo); o grupo REPASO mantém o seu */
+html.rm-sis[data-rm-tema="farmacologia-ii"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="farmacologia-ii"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="farmacologia-ii"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+/* o contador do divisor do banco («12 basadas en exámenes · 5 complementarias») não cabia em 320 px (já passava da tela no layout antigo): aqui quebra a linha, só com o tema ligado */
+html.rm-sis[data-rm-tema="farmacologia-ii"] .f2-bankdiv { flex-wrap: wrap; }
+html.rm-sis[data-rm-tema="farmacologia-ii"] .f2-bankdiv i { white-space: normal; flex: 1 1 100%; margin-left: 0; }
 /* AP I Práctica e Histología I (Nova Era): só variáveis --rm-* e o rótulo único «UNIDAD ·» oculto (as matérias não têm «UNIDAD X»). */
 html.rm-sis[data-rm-tema="anatomia-patologica-practica"] {
   --rm-surface: #EEDDE1; --rm-side: #F8EEF0; --rm-side-edge: #D6B1BB; --rm-side-card: #EAD1D7; --rm-side-rule: #E2C4CB;

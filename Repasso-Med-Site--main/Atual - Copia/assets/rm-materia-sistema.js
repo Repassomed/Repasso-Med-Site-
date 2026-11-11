@@ -116,6 +116,19 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Farmacología II (Nova Era): ids `f2bNN` que NÃO seguem a ordem do conteúdo (f2b07 = «BLOQUE 06» corticoides, f2b06 = «BLOQUE 07» AINE; f2b14 = «BLOQUE 14» fecha a lista).
+     A numeração é a do MARCADOR («— BLOQUE NN · PARCIAL …»), e a ordem do DOM já a respeita. Sem «UNIDAD X» no conteúdo: nenhuma unidade é criada.
+     `f2b00` (introdução oculta) é «otro». Banco geral e mazo geral = repaso. Vinhetas: 12 recortes de infografías do próprio conteúdo; os blocos 12 e 14 não têm
+     trecho limpo (só texto/diagramas) e usam o logotipo (vig: null). */
+  var FA2_NUM = { f2b01: 1, f2b02: 2, f2b03: 3, f2b04: 4, f2b05: 5, f2b07: 6, f2b06: 7, f2b08: 8, f2b09: 9, f2b10: 10, f2b11: 11, f2b12: 12, f2b13: 13, f2b14: 14 };
+  var FA2_SEMVIG = { 12: 1, 14: 1 };
+  var FA2_REPASO = { f2b15: 'B', f2b16: 'F' };
+  function clasificarFA2(id) {
+    if (Object.prototype.hasOwnProperty.call(FA2_NUM, id)) { var n = FA2_NUM[id]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: FA2_SEMVIG[n] ? null : 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(FA2_REPASO, id)) return { tipo: 'repaso', n: FA2_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* AP I Práctica (Nova Era): ids `b1…b12` (b1–b9 = TEMA 01–09). Vinheta só em b2–b9 (b1 = logo). b10 laminario, b11 flashcards, b12 ruleta = repaso.
      Sem «UNIDAD X» no conteúdo (rótulo único oculto por CSS). */
   var AP1P_REPASO = { b10: 'L', b11: 'F', b12: 'R' };
@@ -297,6 +310,22 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFA
+    },
+    'farmacologia-ii': {
+      vigDir: 'assets/img/farmaco2/vig/',                 // 12 vinhetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-FARMACO2.md)
+      logo: 'assets/repasso-med-logo.png',
+      unidades: {},                                       // o conteúdo não tem «UNIDAD X» (só «PARCIAL 1 · 2 · FINAL» no marcador): nenhuma unidade é criada
+      medallones: [
+        { vig: 'vb-01', t: 'SISTEMA NERVIOSO', cap: 1, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-08', t: 'RESPIRATORIO',     cap: 2, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-11', t: 'TIROIDES',         cap: 5, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarFA2
     },
     'anatomia-patologica-practica': {
       vigDir: 'assets/img/anatoprat/vig/',                // 8 viñetas (b2–b9) recortadas de láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP1P-HISTO1.md)
