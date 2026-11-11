@@ -173,7 +173,7 @@ function arquivos() {
   /* CANDIDATAS e versão do cache */
   const pil = fs.readFileSync(path.join(ROOT, 'assets/rm-pilot.js'), 'utf8'), idx = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const cand = (pil.match(/var CANDIDATAS = \[([^\]]*)\]/) || [])[1]; const slugs = (cand || '').split(',').map(s => s.replace(/['"\s]/g, '')).filter(Boolean);
-  ok(slugs.every(s => ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-i', 'anatomia-patologica'].includes(s)), 'CANDIDATAS só tem semiologia-ii, medicina-familiar, fisiopatologia, farmacologia, biologia, embriologia, anatomia-i e anatomia-patologica', slugs);
+  ok(slugs.every(s => ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-i', 'anatomia-patologica', 'anatomia-patologica-practica', 'histologia-i'].includes(s)), 'CANDIDATAS só tem semiologia-ii, medicina-familiar, fisiopatologia, farmacologia, biologia, embriologia, anatomia-i e anatomia-patologica', slugs);
   const ver = (pil.match(/var VER\s*=\s*'(\d+)'/) || [])[1], tag = (idx.match(/rm-pilot\.js\?v=(\d+)/) || [])[1];
   ok(ver && tag && ver === tag, 'VER do rm-pilot.js = tag do index.html (cache de 7 dias invalida junto)', { ver, tag });
   let verBase = null; try { const b = cp.execFileSync('git', ['show', base + ':Repasso-Med-Site--main/Atual - Copia/assets/rm-pilot.js'], { cwd: REPO }).toString(); verBase = (b.match(/var VER\s*=\s*'(\d+)'/) || [])[1]; } catch (e) { /* sem base */ }
