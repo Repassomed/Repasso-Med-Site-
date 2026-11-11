@@ -67,7 +67,7 @@ const INV = () => {
   const semMenu = secs.map(s => s.id).filter(i => !menuAlvos.includes(i)), menuSemSecao = menuAlvos.filter(i => i && !secs.some(s => s.id === i));
   /* itens DISTINTOS e cópias: questão por enunciado, flashcard pela frente. Uma seção é «cópia» quando ≥90% dos seus itens existem em OUTRA seção. */
   const normq = q => limpo((q.querySelector('.quiz-question') || q).textContent).toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim();
-  const normf = f => { const fr = f.querySelector('.fc-front'); const am = fr && fr.querySelector('[aria-label]'); const nz = t => limpo(t).toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim(); return nz((fr || f).textContent) + (am ? '|' + nz(am.getAttribute('aria-label')) : ''); };   // frente só com imagem (láminas): o aria-label da imagem distingue as cartas, como na capa (rm-layout.js)
+  const normf = f => { const fr = f.querySelector('.fc-front'); const am = fr && fr.querySelector('[aria-label], img[src]'); const nz = t => limpo(t).toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim(); return nz((fr || f).textContent) + (am ? '|' + nz(am.getAttribute('aria-label') || am.getAttribute('src')) : ''); };   // frente só com imagem (láminas): o aria-label da imagem distingue as cartas, como na capa (rm-layout.js)
   const qPorSec = secs.map(s => [...s.querySelectorAll('.quiz-item')].map(normq)), fPorSec = secs.map(s => [...s.querySelectorAll('.flashcard')].map(normf));
   const dist = arr => new Set(arr.flat()).size;
   function copias(porSec) {
