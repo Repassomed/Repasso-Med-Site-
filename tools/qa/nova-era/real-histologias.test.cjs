@@ -173,10 +173,10 @@ const MATERIAS = [
         const quebradas = imgs.filter(i => i.complete && i.naturalWidth === 0).length; const largas = imgs.filter(i => i.getBoundingClientRect().right > innerWidth + 2 && i.checkVisibility()).length;
         const alvo = imgs.find(i => i.onclick || /toggle/.test(i.getAttribute('onclick') || '')); let zoom = null;
         if (alvo) { alvo.scrollIntoView({ block: 'center' }); await new Promise(r => setTimeout(r, 300)); const c0 = alvo.className; alvo.click(); await new Promise(r => setTimeout(r, 400)); const c1 = alvo.className; const b = alvo.getBoundingClientRect(); const dentro = b.right <= innerWidth + 2 && b.left >= -2; alvo.click(); await new Promise(r => setTimeout(r, 300)); zoom = { mudou: c0 !== c1, dentro, volta: alvo.className === c0 }; }
-        const semPinca = imgs.filter(i => !i.closest('.rmc-zoom')).length; return { n: imgs.length, quebradas, largas, zoom, semPinca };
+        const semPinca = imgs.filter(i => !i.closest('.rmc-zoom, [class$="-zoom"]')).length;   /* pinça do motor (.rmc-zoom) OU o zoom próprio da matéria (label .hp-zoom / .h2p-zoom, caixa de seleção) */ return { n: imgs.length, quebradas, largas, zoom, semPinca };
       }, m.blocoImg);
       ok(im.n >= 1 && im.quebradas === 0 && im.largas === 0, `5 · infográficos: ${im.n} imagens, ${im.quebradas} quebradas, ${im.largas} passam da largura da tela`, im);
-      ok(im.semPinca === 0 || (im.zoom && im.zoom.mudou && im.zoom.dentro && im.zoom.volta), '5 · ampliação: contêiner de pinça (.rmc-zoom) em cada infográfico OU, se a matéria usa clique-para-ampliar, o clique amplia, cabe na tela e restaura', im);
+      ok(im.semPinca === 0 || (im.zoom && im.zoom.mudou && im.zoom.dentro && im.zoom.volta), '5 · ampliação: contêiner de ampliação (pinça .rmc-zoom ou zoom próprio da matéria *-zoom) em cada imagem OU, se a matéria usa clique-para-ampliar, o clique amplia, cabe na tela e restaura', im);
 
       /* 7 · caneta */
       await irBloco(p, m.bloco); await p.evaluate(B.INSTR);

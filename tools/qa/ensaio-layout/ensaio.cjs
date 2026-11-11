@@ -80,8 +80,8 @@ const REUNE = /banco|flashcards/i;   // a MESMA heurística do rm-materia-nav.js
     process.stdout.write(`ensaio ${m.slug} `);
     /* oráculo por seção: o inventário (controle) */
     const secs = I.secoes.filter(s => !(s.ancoras === 0 && !s.quiz && !s.fc && !s.fig && !s.tb && !s.img && !s.aud && !s.vid)), ids = secs.map(s => s.id);   // C9: placeholder de âncora (seção vazia e oculta) não é bloco
-    const ehAgreg = id => REUNE.test(id) || [...I.unicos.copiasQuiz, ...I.unicos.copiasFc].some(c => c.id === id && c.itens >= 0.5 * Math.max(I.unicos.quiz, I.unicos.fc));
-    const agregInv = new Set([...I.unicos.copiasQuiz, ...I.unicos.copiasFc].filter(c => c.itens >= 0.5 * Math.min(I.unicos.quiz || 1e9, I.unicos.fc || 1e9) && /./.test(c.id)).map(c => c.id));
+    const ehAgreg = id => REUNE.test(id) || (I.unicos.declaradas || []).includes(id) || [...I.unicos.copiasQuiz, ...I.unicos.copiasFc].some(c => c.id === id && c.itens >= 0.5 * Math.max(I.unicos.quiz, I.unicos.fc));
+    const agregInv = new Set([...I.unicos.copiasQuiz, ...I.unicos.copiasFc].filter(c => c.itens >= 0.5 * Math.min(I.unicos.quiz || 1e9, I.unicos.fc || 1e9) && /./.test(c.id)).map(c => c.id).concat(I.unicos.declaradas || []));
     const temRec = { fig: s => s.fig, quiz: s => s.quiz, fc: s => s.fc, aud: s => s.aud, ab: () => 0 };
     const esperados = {};
     Object.entries(MODOS).forEach(([modo, d]) => { esperados[modo] = secs.filter(s => temRec[d.k](s) > 0 && !REUNE.test(s.id) && !agregInv.has(s.id)).map(s => s.id); });
