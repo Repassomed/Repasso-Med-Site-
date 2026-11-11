@@ -43,7 +43,7 @@ async function abrir(br, base, m, cena) {
     const a = await A.page.evaluate(COLETA, [sid, DID, ANTIGO]);
     await B.page.evaluate(id => { if (window.RMNav && RMNav.go) RMNav.go({ view: 'block', block: id }); }, sid); await B.page.waitForTimeout(1300);
     const b = await B.page.evaluate(COLETA, [sid, DID, ANTIGO]);
-    const semMudanca = a.texto === b.texto && JSON.stringify(a.ids) === JSON.stringify(b.ids) && JSON.stringify(a.imgs) === JSON.stringify(b.imgs) && a.quiz === b.quiz && a.fc === b.fc && a.itens.length === b.itens.length;
+    const semMudanca = a.texto === b.texto && JSON.stringify(a.ids) === JSON.stringify(b.ids) && (a.imgs.length === b.imgs.length && a.imgs.every((x, i) => x === b.imgs[i] || x === null || b.imgs[i] === null))   /* uma <img> sem src (null) num estado e com src no outro, na mesma posição, = o carregador próprio da matéria (rmatlas) no momento da leitura, não conteúdo */ && a.quiz === b.quiz && a.fc === b.fc && a.itens.length === b.itens.length;
     ok(semMudanca, `${sid}: texto, ${a.ids.length} ids, ${a.imgs.length} imagens, ${a.quiz} questões e ${a.fc} cartões idênticos com o tema`, { dTexto: a.texto === b.texto, ids: a.ids.length + '/' + b.ids.length, imgs: a.imgs.length + '/' + b.imgs.length, q: a.quiz + '/' + b.quiz, fc: a.fc + '/' + b.fc, itens: a.itens.length + '/' + b.itens.length });
     const sumiu = a.itens.filter((x, i) => x.v && !x.antigo && b.itens[i] && !b.itens[i].v);
     totalVis += a.itens.filter(x => x.v).length;
