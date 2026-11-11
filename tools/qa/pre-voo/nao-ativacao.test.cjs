@@ -16,9 +16,9 @@ const D = require('./lib-dados.cjs');
 const FN = path.join(L.ROOT, 'netlify/functions/get-pilot-flags.js');
 const PILOT_JS = fs.readFileSync(path.join(L.ROOT, 'assets/rm-pilot.js'), 'utf8');
 const UID = D.UID, PIL = 'semiologia-ii';
-const CANDIDATAS_ESPERADAS = ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-patologica-ii-practica'];   // 1.ª fechadura: piloto + as matérias em implantação controlada (só PERGUNTAM ao servidor; a 2.ª fechadura, a tabela, decide)
+const CANDIDATAS_ESPERADAS = ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-patologica-practica', 'histologia-i', 'anatomia-patologica-ii-practica'];   // 1.ª fechadura: piloto + as matérias em implantação controlada (só PERGUNTAM ao servidor; a 2.ª fechadura, a tabela, decide)
 const PRIMEIRA = 'medicina-familiar';
-const CAND_CONTROLADAS = ['medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-patologica-ii-practica'];   // candidatas: só PERGUNTAM; a tabela (2.ª fechadura) está vazia ⇒ o servidor nega
+const CAND_CONTROLADAS = ['medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-patologica-practica', 'histologia-i', 'anatomia-patologica-ii-practica'];   // candidatas: só PERGUNTAM; a tabela (2.ª fechadura) está vazia ⇒ o servidor nega
 const RAPIDO = process.argv.includes('--rapido');
 let n = 0, ko = 0;
 const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x) : ''); } return !!c; };
