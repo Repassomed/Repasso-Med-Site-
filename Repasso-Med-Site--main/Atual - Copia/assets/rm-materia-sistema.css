@@ -1434,6 +1434,15 @@ html.rm-sis[data-rm-tema="farmacologia"] .rm-l2-tree-tools + .rm-sis-ulab--side 
 /* e nas telas de «modo» (Infografías · Preguntas · Flashcards · Videos), onde o 1.º grupo de blocos também ganharia «UNIDAD ·» */
 html.rm-sis[data-rm-tema="farmacologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
 
+/* ===== Anatomía Patológica II (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="anatomia-patologica-ii"]. ===== */
+html.rm-sis[data-rm-tema="anatomia-patologica-ii"][data-rm-tema] {
+  --rm-surface: #EFDDE0; --rm-side: #F8EEF0; --rm-side-edge: #DDBFC5; --rm-side-card: #EBD6DA; --rm-side-rule: #E2CBD0;
+  --rm-accent: #9A3B4E; --rm-accent-d: #6D2536; --rm-marker: #E9B949;
+}
+/* sem unidades no conteúdo: o rótulo de grupo único «UNIDAD ·» não é mostrado (índice, lateral e telas de modo); REPASO mantém o seu */
+html.rm-sis[data-rm-tema="anatomia-patologica-ii"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="anatomia-patologica-ii"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="anatomia-patologica-ii"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
 /* AP I Práctica e Histología I (Nova Era): só variáveis --rm-* e o rótulo único «UNIDAD ·» oculto (as matérias não têm «UNIDAD X»). */
 html.rm-sis[data-rm-tema="anatomia-patologica-practica"] {
   --rm-surface: #EEDDE1; --rm-side: #F8EEF0; --rm-side-edge: #D6B1BB; --rm-side-card: #EAD1D7; --rm-side-rule: #E2C4CB;
