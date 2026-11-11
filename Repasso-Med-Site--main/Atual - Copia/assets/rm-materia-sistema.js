@@ -116,17 +116,6 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
-  /* Toxicología (Nova Era): ids `toxb01…toxb16` (numeração do id = «BLOQUE NN» do conteúdo); `toxportada` é âncora vazia (hidden) e não vira bloco.
-     Unidades do conteúdo em algarismo arábico («UNIDAD 1…4»): o tema liga `unidadArabe` e o rótulo segue o conteúdo. Banco e mazo geral = repaso. */
-  var TX_REPASO = { bancotox: 'B', toxcierre: 'F' };
-  var TX_VIG = { 1: 1, 2: 1, 8: 1, 9: 1, 10: 1, 12: 1, 13: 1, 14: 1, 15: 1 };   // blocos com viñeta limpa (sem texto); os demais usam o logotipo
-  function clasificarTX(id) {
-    var m = /^toxb(\d{2})$/.exec(id);
-    if (m && +m[1] >= 1 && +m[1] <= 16) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: TX_VIG[n] ? 'vb-' + pad(n) : null }; }
-    if (Object.prototype.hasOwnProperty.call(TX_REPASO, id)) return { tipo: 'repaso', n: TX_REPASO[id], num: -1, cap: 'r', vig: null };
-    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
-  }
-
   /* Guaraní (Nova Era): ids `gnb01…gnb13` (numeração do id = «BLOQUE NN»); `gn00` é âncora vazia (hidden). O conteúdo não tem «UNIDAD» (o marcador traz «PARCIAL 1/2»):
      nenhuma unidade é criada. Banco e mazo geral = repaso. */
   var GN_REPASO = { bancognrl: 'B', mazognrl: 'F' };
@@ -257,34 +246,8 @@
       clasificar: clasificarEM
 
     },
-    'toxicologia': {
-      vigDir: 'assets/img/toxico/vig/',                   // 9 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-TOXICO-GUARANI.md)
-      logo: 'assets/repasso-med-logo.png',
-      sub: 'Del toxidrome al antídoto',
-      miga: ['Guía de estudio', 'Toxicología'],
-      unidadArabe: true,
-      tituloSinBloque: true,                              // o <h2> repete «Bloque NN ·» que a insígnia já mostra                                  // o conteúdo numera as unidades com algarismo («UNIDAD 1»)
-      unidades: {                                         // as do conteúdo (marcador «UNIDAD N»); o nome resume os títulos dos blocos de cada uma
-        '1': { nombre: 'Fundamentos, descontaminación y depuración', color: '#4F7A28' },
-        '2': { nombre: 'Domésticos, plaguicidas y AINEs',            color: '#C07A1C' },
-        '3': { nombre: 'Animales, metales, plantas, gases y drogas', color: '#7A4E9E' },
-        '4': { nombre: 'Alcoholes y sedantes',                       color: '#B5473E' }
-      },
-      medallones: [
-        { vig: 'vb-10', t: 'PLANTAS',     cap: 4, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
-        { vig: 'vb-08', t: 'ARAÑAS',      cap: 2, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
-        { vig: 'vb-13', t: 'DEPRESORES',  cap: 1, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
-      ],
-      recursos: {
-        fig:  'Infografías por bloque',
-        quiz: 'Preguntas por bloque y banco general',
-        fc:   'Repaso activo por bloque'
-      },
-      clasificar: clasificarTX
-
-    },
     'guarani': {
-      vigDir: 'assets/img/guarani/vig/',                  // 11 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-TOXICO-GUARANI.md)
+      vigDir: 'assets/img/guarani/vig/',                  // 11 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-GUARANI.md)
       logo: 'assets/repasso-med-logo.png',
       sub: 'La lengua del paciente',
       miga: ['Guía de estudio', 'Guaraní'],
@@ -473,14 +436,10 @@
       var h2 = q1(sec, ':scope > h2'), mk = q1(sec, ':scope > .section-marker');
       var marcador = limpo(mk && mk.textContent).replace(/^[—\-–\s]+/, '');
       var u = /UNIDAD(?:ES)?\s+([IVX]+)/i.exec(marcador);      /* «UNIDADES IV–V» (Biología, bloque 09) conta como a primeira */
-      if (!u && tema.unidadArabe) u = /UNIDAD\s+(\d+)/i.exec(marcador);   /* Toxicología: «UNIDAD 1…4» em algarismo; só com o tema que liga isto (as outras matérias não mudam) */
-      var tit = limpo(h2 && h2.textContent) || limpo((q1(sec, ':scope > [class$="-h2"], :scope > h3, :scope > .analysis-card > h3') || {}).textContent) || marcador;
-      /* Toxicología: o <h2> traz «Bloque 01 · …» e a insígnia já mostra o número ⇒ o tema pode tirar só o prefixo «Bloque NN ·» (emoji fica). As outras matérias não mudam. */
-      if (tema.tituloSinBloque && c.tipo === 'bloque') tit = tit.replace(/^((?:\p{Extended_Pictographic}|\uFE0F|\u200D|\s)*)Bloque\s+\d{1,2}\s*[·.:–-]\s*/u, '$1');
       out.push({
         /* título de reserva: seção sem <h2> direto (p.ex. guia com o título em <div class="rm-guide-h2">) ficava sem título e a
            navegação escondia o vizinho no Anterior/Próximo (cadeia quebrada). Usa o 1.º cabeçalho visual da seção, depois o marcador. */
-        id: id, el: sec, c: c, titulo: tit, h2: h2, mk: mk,
+        id: id, el: sec, c: c, titulo: limpo(h2 && h2.textContent) || limpo((q1(sec, ':scope > [class$="-h2"], :scope > h3, :scope > .analysis-card > h3') || {}).textContent) || marcador, h2: h2, mk: mk,
         marcador: marcador, unidad: u ? u[1].toUpperCase() : '',
         n: { q: qa(sec, '.quiz-item').length, fc: qa(sec, '.flashcard').length, fig: figuras(sec).length,
              tb: qa(sec, 'table').length, au: qa(sec, 'audio').length }

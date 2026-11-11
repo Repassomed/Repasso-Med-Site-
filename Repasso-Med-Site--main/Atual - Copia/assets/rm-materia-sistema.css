@@ -137,20 +137,6 @@ html.rm-sis[data-rm-tema="embriologia"] {
 html.rm-sis[data-rm-tema="embriologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
 html.rm-sis[data-rm-tema="embriologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
 
-/* Toxicología (Nova Era) · verde-musgo de frasco de laboratorio com âmbar de etiqueta de advertência; 4 unidades do conteúdo («UNIDAD 1…4»).
-   Bloco escrito DEPOIS da base técnica (mesma especificidade ⇒ vence). Só variáveis --rm-* e regras de aparência; nada toca conteúdo, ids nem dados do aluno. */
-html.rm-sis[data-rm-tema="toxicologia"] {
-  --rm-surface: #E2E8D9; --rm-side: #F0F4EA; --rm-side-edge: #C3D0B1; --rm-side-card: #DAE3CE; --rm-side-rule: #CCD8BC;
-  --rm-accent: #4F7A28; --rm-accent-d: #34541A; --rm-marker: #E0A526;
-  --rm-tag-radius: 6px; --rm-vig-radius: 18px; --rm-vig-ring: #CCD8BC;
-  --rm-pal-1: #4F7A28; --rm-pal-1-head: #416421; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #EAEFE5; --rm-pal-1-ffg: #1E2E0F; --rm-pal-1-zebra: #FAFBF9; --rm-pal-1-edge: #C7D4BA; --rm-pal-1-line: #E3EADD; --rm-pal-1-strong: #334E1A; --rm-pal-1-tint: #F1F4EE; --rm-pal-1-tag: #fff;
-  --rm-pal-2: #C07A1C; --rm-pal-2-head: #9D6417; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F7EFE4; --rm-pal-2-ffg: #492E0B; --rm-pal-2-zebra: #FDFBF8; --rm-pal-2-edge: #EBD4B6; --rm-pal-2-line: #F5EADB; --rm-pal-2-strong: #7B4E12; --rm-pal-2-tint: #FAF4ED; --rm-pal-2-tag: #fff;
-  --rm-pal-3: #2F7F86; --rm-pal-3-head: #27686E; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #E6F0F0; --rm-pal-3-ffg: #123033; --rm-pal-3-zebra: #F9FBFB; --rm-pal-3-edge: #BCD6D8; --rm-pal-3-line: #DEEBEC; --rm-pal-3-strong: #1E5156; --rm-pal-3-tint: #EEF5F5; --rm-pal-3-tag: #fff;
-  --rm-pal-4: #B5473E; --rm-pal-4-head: #943A33; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #F6E9E8; --rm-pal-4-ffg: #451B18; --rm-pal-4-zebra: #FDF9F9; --rm-pal-4-edge: #E7C4C1; --rm-pal-4-line: #F3E2E0; --rm-pal-4-strong: #742D28; --rm-pal-4-tint: #F9F0F0; --rm-pal-4-tag: #fff;
-  --rm-pal-5: #7A4E9E; --rm-pal-5-head: #644082; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #EFEAF3; --rm-pal-5-ffg: #2E1E3C; --rm-pal-5-zebra: #FBFAFC; --rm-pal-5-edge: #D4C6E0; --rm-pal-5-line: #EAE3EF; --rm-pal-5-strong: #4E3265; --rm-pal-5-tint: #F4F1F7; --rm-pal-5-tag: #fff;
-  --rm-pal-6: #3F6E8C; --rm-pal-6-head: #345A73; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #E8EEF1; --rm-pal-6-ffg: #182A35; --rm-pal-6-zebra: #F9FBFC; --rm-pal-6-edge: #C2D1DA; --rm-pal-6-line: #E0E8ED; --rm-pal-6-strong: #28465A; --rm-pal-6-tint: #F0F3F6; --rm-pal-6-tag: #fff;
-}
-
 /* Guaraní (Nova Era) · terracota e vermelho de tecido com o azul da bandeira; sem unidades no conteúdo (marcador «PARCIAL 1/2»).
    Bloco escrito DEPOIS da base técnica (mesma especificidade ⇒ vence). Só variáveis --rm-* e regras de aparência; nada toca conteúdo, ids nem dados do aluno. */
 html.rm-sis[data-rm-tema="guarani"] {

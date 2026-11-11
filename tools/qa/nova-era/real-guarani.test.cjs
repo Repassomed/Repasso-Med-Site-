@@ -1,8 +1,8 @@
-/* Nova Era · Toxicología y Guaraní · LIGAÇÃO REAL (sem nenhuma simulação do carregador nem da decisão do servidor).
+/* Nova Era · Guaraní · LIGAÇÃO REAL (sem nenhuma simulação do carregador nem da decisão do servidor).
    Cadeia real: função netlify get-pilot-flags REAL (lib-servidor) → rm-pilot.js REAL (CANDIDATAS do repositório) → rm-layout → rm-materia-sistema (TEMAS inline) → rm-materia-nav
    → rm-materia-indice → rm-tools-v2 (caneta V2) → app-core (questões, flashcards, infográficos). Só o Supabase e a rede externa são simulados (harness, sessionStorage; 0 rede real, 0 escrita real).
    O mesmo mecanismo privado de Medicina Familiar: tabela `rm_materia_rollout` simulada em 'preview' (só administrador) — NADA é ativado para alunos.
-   Uso: NODE_PATH=$(npm root -g) node tools/qa/nova-era/real-toxicologia-guarani.test.cjs [--rapido] [slug]
+   Uso: NODE_PATH=$(npm root -g) node tools/qa/nova-era/real-guarani.test.cjs [--rapido] [slug]
    Prova, por matéria e largura (celular 390 · tablet 768 · computador 1440):
      0  servidor real: off ⇒ nada; preview ⇒ só administrador; all ⇒ só aluno COM acesso; sem acesso ⇒ nada (para as duas matérias).
      1  layout + tema + navegação + caneta V2 ligados pelo rm-pilot real, 0 erro JS.
@@ -18,7 +18,6 @@ const L = require('../ensaio-layout/lib.cjs'); const D = require('../pre-voo/lib
 const RAPIDO = process.argv.includes('--rapido'); const SO = process.argv.slice(2).find(a => !a.startsWith('--')) || '';
 let n = 0, ko = 0; const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 420) : ''); } return !!c; };
 const MATERIAS = [
-  { slug: 'toxicologia', titulo: 'Toxicología', hl: ['toxb02', 'toxb05'], bloco: 'toxb02', bloco2: 'toxb03', blocoQuiz: 'toxb03', blocoImg: 'toxb02', fcSec: 'toxcierre', pref: 'toxb', zoomSel: 'a.tx-lam-box[href]', zoomNome: 'link para a imagem inteira (a.tx-lam-box, «tocá para ampliar»)', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] },
   { slug: 'guarani', titulo: 'Guaraní', hl: ['gnb02', 'gnb05'], bloco: 'gnb02', bloco2: 'gnb03', blocoQuiz: 'gnb03', blocoImg: 'gnb02', fcSec: 'mazognrl', pref: 'gnb', zoomSel: '.rmc-zoom', zoomNome: 'contêiner de ampliação por pinça (.rmc-zoom)', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] }
 ];
 (async () => {
@@ -214,5 +213,5 @@ const MATERIAS = [
     }
   }
   await br.close(); srv.close();
-  console.log(`\nreal-toxicologia-guarani: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`); process.exit(ko ? 1 : 0);
+  console.log(`\nreal-guarani: ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHAS' : ''}`); process.exit(ko ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });
