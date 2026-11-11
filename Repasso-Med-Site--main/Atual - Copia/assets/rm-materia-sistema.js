@@ -82,6 +82,16 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Dermatología (Nova Era): ids `dermb01…dermb13` (a numeração é a do id = «Bloque NN» do conteúdo) + `dermcierre` (mazo general y ruleta = repaso). `dermportada` é a capa/abertura do conteúdo
+     (não é um bloco). O conteúdo não tem «UNIDAD X»: nenhuma unidade é criada. Sem ilustrações aprovadas ainda ⇒ cada bloco usa o logotipo (vig: null). Cada bloco ganha uma das 6 cores (cap). */
+  var DE_REPASO = { dermcierre: 'F' };
+  function clasificarDE(id) {
+    var m = /^dermb(\d{2})$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 13) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: null }; }
+    if (Object.prototype.hasOwnProperty.call(DE_REPASO, id)) return { tipo: 'repaso', n: DE_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* Embriología (Nova Era): ids `emb01…emb13`; a numeração é a do id (= «BLOQUE NN»). Sem Unidades no conteúdo (o marcador é «BLOQUE NN · <tema>», Parcial 2 a partir do 08):
      cada tema de estudo compartilha uma família de cor (cap). emb14 = banco geral, emb15 = flashcards gerais (repaso). */
   var EM_CAP = { 1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 3, 7: 4, 8: 5, 9: 5, 10: 5, 11: 6, 12: 2, 13: 2 };
@@ -297,6 +307,20 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFA
+    },
+    'dermatologia': {
+      vigDir: null,                                       // sem viñetas ilustradas: cada bloque usa o logo oficial (rm-sis-vig--logo)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Piel · Lesiones · Infecciones · Tumores',
+      miga: ['Guía de estudio', 'Dermatología'],
+      unidades: {},                                       // o conteúdo não tem «UNIDAD X»: nenhuma unidade é criada
+      medallones: [],                                     // sem ilustrações aprovadas ainda: a capa não leva medalhões
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarDE
     },
     'anatomia-patologica-practica': {
       vigDir: 'assets/img/anatoprat/vig/',                // 8 viñetas (b2–b9) recortadas de láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP1P-HISTO1.md)
