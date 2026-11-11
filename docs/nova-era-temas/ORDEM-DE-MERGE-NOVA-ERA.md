@@ -55,3 +55,7 @@ Receita para cada PR que entra depois: atualizar sobre a `main`; `CANDIDATAS` e 
 - Na `main`: Biología (#635), Embriología (#636), AP I Práctica + Histología I (#653) e o conteúdo de Fisiopatología II (#643, #650).
 - **#645** (Fisiopatología II): a branch já foi atualizada sobre essa `main` por Claude 1 (`da6bc145`, «Merge main (#653)…»; antes `331942a4` com a #636); eu integrei por cima só este documento. `CANDIDATAS` na branch: `…, 'biologia', 'embriologia', 'fisiopatologia-ii', 'anatomia-patologica-practica', 'histologia-i'`.
 - Ainda abertas: **#634** (Anatomía I/AP I, Claude 2), **#644** (Farmacología II, Claude 2), **#645** (esta) e **#655** (Dermatología). Ordem sugerida: **#645 → #634 → #644 → #655** (cada uma atualiza sobre a `main` e resolve as listas por união; `VER` = maior = tag do `index.html`).
+
+### Posição final 11/11 (noite)
+- `main` também com **#656** (Histología II e Práctica). #645 (`7b360453`) e #655 (`ab00b1a0`) já contêm essa `main`; Claude 1 atualizou antes as branches deles (preservado) e eu integrei por cima só o que faltava.
+- **O teste de publicação desta `main` ainda tem as 22 falhas antigas** (teste desatualizado); ele só fica correto quando a **#645** entra. Por isso a ordem sugerida é **#645 → #634 → #644 → #655**.
