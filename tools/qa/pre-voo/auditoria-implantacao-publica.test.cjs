@@ -56,7 +56,7 @@ const PRIVPEN = rol('preview', 'preview');
 const ENV_PUB = rol('all', 'off'), ENV_PEN = rol('all', 'all');          // liberação aos alunos com acesso: layout `all`; layout + caneta `all`
 
 async function servidor() {
-  const OUTRAS = ['dermatologia', 'semiologia-ii', 'anatomia-i'];
+  const OUTRAS = ['dermatologia', 'semiologia-ii', 'anatomia-i', 'ortopedia'].filter(s => s !== SLUG).slice(0, 3);   // nunca a própria matéria sob teste
   sec('S0 · padrão de produção (nenhuma variável): ninguém recebe nada, em nenhuma matéria');
   for (const [q, t] of [['José', 'tok-jose'], ['aluno', 'tok-aluno'], ['anônimo', null]]) {
     const o = await srv({}, t, SLUG); ok(ig(f(o), NEG), `${q} em ${SLUG}: tudo negado`, f(o)); }
@@ -212,6 +212,9 @@ async function navegador() {
   const L = require('../ensaio-layout/lib.cjs'), D = require('./lib-dados.cjs');
   const PILOT_JS = fs.readFileSync(path.join(ROOT, 'assets/rm-pilot.js'), 'utf8');
   const rec = L.reconciliar(); const M = s => rec.ativas.find(x => x.slug === s);
+  /* vizinhas FORA das CANDIDATAS: calculadas do rm-pilot.js real (outras PRs da Nova Era colocam dermatologia/anatomia-i nas CANDIDATAS; uma lista fixa quebraria ao juntar) */
+  const CAND_RM = ((PILOT_JS.match(/var CANDIDATAS = \[([^\]]*)\]/) || [])[1] || '').split(',').map(s => s.replace(/['"\s]/g, '')).filter(Boolean);
+  const VIZ_FORA = ['dermatologia', 'anatomia-i', 'ortopedia', 'oftalmologia', 'neurologia', 'anestesiologia'].filter(s => s !== SLUG && !CAND_RM.includes(s) && M(s)).slice(0, 2);
   const s0 = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + s0.address().port; const br = await chromium.launch();
   let LARG = 1440;
   async function cena(m, env, tok, rot, esperaLayout, esperaPen) {
@@ -289,7 +292,7 @@ async function navegador() {
     if (Object.keys(PENPUB).length) { sec(t + 'B3 · [PÚBLICO] caneta'); await cena(m, ENV_PEN, 'tok-aluno', t + 'aluno, layout+caneta', true, true); }
     sec(t + 'B4 · volta'); await cena(m, {}, 'tok-aluno', t + 'aluno, depois da volta', false, false);
     sec(t + 'B5 · vizinhas com a matéria liberada');
-    for (const v of ['dermatologia', 'anatomia-i']) { const o = await cena(M(v), ENV_PEN, 'tok-aluno', t + v + ' (aluno)', false, false); ok(o.pedidos.length === 0, v + ': nenhuma requisição ao servidor (fora das CANDIDATAS)', o.pedidos); }
+    for (const v of VIZ_FORA) { const o = await cena(M(v), ENV_PEN, 'tok-aluno', t + v + ' (aluno)', false, false); ok(o.pedidos.length === 0, v + ': nenhuma requisição ao servidor (fora das CANDIDATAS)', o.pedidos); }
   }
   await br.close(); s0.close();
 }
