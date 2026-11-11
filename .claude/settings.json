@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__supabase_leitura__execute_sql",
+      "mcp__supabase_leitura__list_tables"
+    ],
+    "ask": [
+      "mcp__supabase_leitura__apply_migration"
+    ]
+  }
+}
