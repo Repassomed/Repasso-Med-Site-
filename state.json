@@ -3397,6 +3397,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:653.",
       "task_id": "nova-era-ap1practica-histologia1-2026-11",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "c54336fcdd0675cb56e79aa6f3be6b5685c3da16",
+      "component": "guard",
+      "error_id": "ERR-73574E8639",
+      "error_type": "hard-fail",
+      "fingerprint": "73574e8639e72d0b615f",
+      "first_seen": "2026-11-11T18:52:30.128831+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "e1ed187e73ec4990a14b2db8942b915d",
+      "issue_sync_updated_at": "2026-11-11T18:52:30.128831+00:00",
+      "last_evidence_hash": "a68a6368ff56bfa16085",
+      "last_seen": "2026-11-11T18:52:30.128831+00:00",
+      "occurrence_count": 1,
+      "pr_number": 658,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "43081696386",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:658.",
+      "task_id": "preparar a Nova Era de Toxicolog\u00eda e Guaran\u00ed (pr\u00f3ximas mat\u00e9rias da fila), sem ativa\u00e7\u00e3o, sem SQL.",
+      "worker_id": null
     }
   ]
 }
