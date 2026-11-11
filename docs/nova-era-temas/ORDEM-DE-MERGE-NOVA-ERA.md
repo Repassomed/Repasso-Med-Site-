@@ -44,7 +44,7 @@ O `auditoria-implantacao-publica.test.cjs` ainda ligava a matéria pelas variáv
 | 3 | #634 | Anatomía I e AP I | Claude 2 | conflita com a `main` (rm-pilot, index, 2 testes) — **eles atualizam** | não rodei | — | 3.º |
 | 4 | #644 | Farmacología II | Claude 2 | conflita (rm-pilot, index, inventario.json, 2 testes) — **eles atualizam** | não rodei | — | 4.º |
 | 5 | #653 | AP I Práctica e Histología I | Claude 1 | conflita (rm-pilot, index, 2 testes) — **eles atualizam** | não rodei | — | 5.º |
-| 6 | nova | Dermatología | esta sessão | branch nova sobre a `main` (sem conflito com ela); conflita com as demais nas mesmas listas | real-dermatologia 118/118 · visual 32/32 · nao-ativação 22/22 · porta 7/7 · publicação (ver PR) | arte (logotipo); 1 front de flashcard repetido (ver PR) | 6.º |
+| 6 | #655 | Dermatología | esta sessão | branch nova sobre a `main` (sem conflito com ela); conflita com as demais nas mesmas listas | real-dermatologia 118/118 · visual 32/32 · nao-ativação 22/22 · porta 7/7 · publicação 189/189 (com o teste da #645) | arte (logotipo); 1 front de flashcard repetido; 1 grifo real em dermb04 (preservado) | 6.º |
 
 Receita para cada PR que entra depois: atualizar sobre a `main`; `CANDIDATAS` e as listas dos testes = **união**; `VER` = maior = tag do `index.html`; `inventario.json` regenerado pela ferramenta; repetir `nao-ativacao`, `auditoria-implantacao-publica` e o `real-<matéria>`.
 
