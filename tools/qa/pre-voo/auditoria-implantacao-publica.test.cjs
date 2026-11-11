@@ -173,7 +173,7 @@ function arquivos() {
   /* CANDIDATAS e versão do cache */
   const pil = fs.readFileSync(path.join(ROOT, 'assets/rm-pilot.js'), 'utf8'), idx = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const cand = (pil.match(/var CANDIDATAS = \[([^\]]*)\]/) || [])[1]; const slugs = (cand || '').split(',').map(s => s.replace(/['"\s]/g, '')).filter(Boolean);
-  ok(slugs.every(s => ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia'].includes(s)), 'CANDIDATAS só tem semiologia-ii, medicina-familiar, fisiopatologia, farmacologia e biologia', slugs);
+  ok(slugs.every(s => ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'dermatologia'].includes(s)), 'CANDIDATAS só tem semiologia-ii, medicina-familiar, fisiopatologia, farmacologia, biologia e dermatologia', slugs);
   const ver = (pil.match(/var VER\s*=\s*'(\d+)'/) || [])[1], tag = (idx.match(/rm-pilot\.js\?v=(\d+)/) || [])[1];
   ok(ver && tag && ver === tag, 'VER do rm-pilot.js = tag do index.html (cache de 7 dias invalida junto)', { ver, tag });
   let verBase = null; try { const b = cp.execFileSync('git', ['show', base + ':Repasso-Med-Site--main/Atual - Copia/assets/rm-pilot.js'], { cwd: REPO }).toString(); verBase = (b.match(/var VER\s*=\s*'(\d+)'/) || [])[1]; } catch (e) { /* sem base */ }
@@ -277,7 +277,7 @@ async function navegador() {
     if (Object.keys(PENPUB).length) { sec(t + 'B3 · [PÚBLICO] caneta'); await cena(m, ENV_PEN, 'tok-aluno', t + 'aluno, layout+caneta', true, true); }
     sec(t + 'B4 · volta'); await cena(m, {}, 'tok-aluno', t + 'aluno, depois da volta', false, false);
     sec(t + 'B5 · vizinhas com a matéria liberada');
-    for (const v of ['dermatologia', 'anatomia-i']) { const o = await cena(M(v), Object.keys(PEN_OU()).length ? ENV_PEN : ENV_PUB, 'tok-aluno', t + v + ' (aluno)', false, false); ok(o.pedidos.length === 0, v + ': nenhuma requisição ao servidor (fora das CANDIDATAS)', o.pedidos); }
+    for (const v of ['toxicologia', 'anatomia-i']) { const o = await cena(M(v), Object.keys(PEN_OU()).length ? ENV_PEN : ENV_PUB, 'tok-aluno', t + v + ' (aluno)', false, false); ok(o.pedidos.length === 0, v + ': nenhuma requisição ao servidor (fora das CANDIDATAS)', o.pedidos); }
   }
   await br.close(); s0.close();
 }

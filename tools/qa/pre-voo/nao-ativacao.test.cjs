@@ -16,9 +16,9 @@ const D = require('./lib-dados.cjs');
 const FN = path.join(L.ROOT, 'netlify/functions/get-pilot-flags.js');
 const PILOT_JS = fs.readFileSync(path.join(L.ROOT, 'assets/rm-pilot.js'), 'utf8');
 const UID = D.UID, PIL = 'semiologia-ii';
-const CANDIDATAS_ESPERADAS = ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia'];   // 1.ª fechadura: piloto + as matérias em implantação controlada (só PERGUNTAM ao servidor; a 2.ª fechadura, a tabela, decide)
+const CANDIDATAS_ESPERADAS = ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'dermatologia'];   // 1.ª fechadura: piloto + as matérias em implantação controlada (só PERGUNTAM ao servidor; a 2.ª fechadura, a tabela, decide)
 const PRIMEIRA = 'medicina-familiar';
-const CAND_CONTROLADAS = ['medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia'];   // candidatas: só PERGUNTAM; a tabela (2.ª fechadura) está vazia ⇒ o servidor nega
+const CAND_CONTROLADAS = ['medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'dermatologia'];   // candidatas: só PERGUNTAM; a tabela (2.ª fechadura) está vazia ⇒ o servidor nega
 const RAPIDO = process.argv.includes('--rapido');
 let n = 0, ko = 0;
 const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x) : ''); } return !!c; };
@@ -72,7 +72,7 @@ async function matéria(br, base, m, env, rot) {
   { const r = await matéria(br, base, rec.ativas.find(x => x.slug === PIL), {}, 'E2'); ok(r.est.layout === false, 'layout do piloto desligado', r.est); }
 
   console.log('\n▸ E3 · segunda fechadura aberta, primeira fechada (variável preenchida, matéria fora das CANDIDATAS)');
-  for (const s of RAPIDO ? ['dermatologia', 'imagenologia'] : ['dermatologia', 'imagenologia', 'ortopedia']) {
+  for (const s of RAPIDO ? ['toxicologia', 'imagenologia'] : ['toxicologia', 'imagenologia', 'ortopedia']) {
     const r = await matéria(br, base, rec.ativas.find(x => x.slug === s), Object.assign({}, TODAS_UIDS, { RM_LAYOUT_SLUGS: s, RM_PEN_SLUGS: s, RM_VISUAL_SLUGS: s }), 'E3');
     ok(r.est.layout === false && r.pedidos.length === 0 && r.est.perm !== true, `${s}: sem layout, sem requisição, sem caneta física mesmo com a variável preenchida`, r);
     ok(r.dif.length === 0, `${s}: dados do aluno intactos`, r.dif.slice(0, 2));
