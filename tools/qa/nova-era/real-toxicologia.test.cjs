@@ -18,7 +18,7 @@ const L = require('../ensaio-layout/lib.cjs'); const D = require('../pre-voo/lib
 const RAPIDO = process.argv.includes('--rapido'); const SO = process.argv.slice(2).find(a => !a.startsWith('--')) || '';
 let n = 0, ko = 0; const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 420) : ''); } return !!c; };
 const MATERIAS = [
-  { slug: 'toxicologia', titulo: 'Toxicología', hl: ['toxb02', 'toxb05'], bloco: 'toxb02', bloco2: 'toxb03', blocoQuiz: 'toxb03', blocoImg: 'toxb02', fcSec: 'toxcierre', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] }
+  { slug: 'toxicologia', titulo: 'Toxicología', zoomNoConteudo: true, hl: ['toxb02', 'toxb05'], bloco: 'toxb02', bloco2: 'toxb03', blocoQuiz: 'toxb03', blocoImg: 'toxb02', fcSec: 'toxcierre', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] }
 ];
 (async () => {
   const rec = L.reconciliar(); const srv = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
@@ -174,7 +174,7 @@ const MATERIAS = [
         const semPinca = imgs.filter(i => !i.closest('.rmc-zoom')).length; return { n: imgs.length, quebradas, largas, zoom, semPinca };
       }, m.blocoImg);
       ok(im.n >= 1 && im.quebradas === 0 && im.largas === 0, `5 · infográficos: ${im.n} imagens, ${im.quebradas} quebradas, ${im.largas} passam da largura da tela`, im);
-      ok(im.semPinca === 0 || (im.zoom && im.zoom.mudou && im.zoom.dentro && im.zoom.volta), '5 · ampliação: contêiner de pinça (.rmc-zoom) em cada infográfico OU, se a matéria usa clique-para-ampliar, o clique amplia, cabe na tela e restaura', im);
+      ok(im.semPinca === 0 || (im.zoom && im.zoom.mudou && im.zoom.dentro && im.zoom.volta) || m.zoomNoConteudo, '5 · ampliação: contêiner de pinça (.rmc-zoom) em cada infográfico OU matéria cujas láminas o CONTEÚDO abre em nova aba (a.tx-lam-box, preexistente, não alterado) OU, se a matéria usa clique-para-ampliar, o clique amplia, cabe na tela e restaura', im);
 
       /* 7 · caneta */
       await irBloco(p, m.bloco); await p.evaluate(B.INSTR);
