@@ -52,7 +52,7 @@ async function matéria(br, base, m, env, rot) {
 
 (async () => {
   const rec = L.reconciliar(); let mats = rec.ativas;
-  if (RAPIDO) mats = ['semiologia-ii', 'dermatologia', 'biologia', 'medicina-familiar', 'ortopedia', 'imagenologia'].map(s => rec.ativas.find(x => x.slug === s));
+  if (RAPIDO) mats = ['semiologia-ii', 'dermatologia', 'biologia', 'medicina-familiar', 'neurologia', 'imagenologia'].map(s => rec.ativas.find(x => x.slug === s));
   const srv = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
 
   console.log(`\n▸ E1 · produção hoje: só listas de UID, NENHUMA variável de matéria — ${mats.length} matérias`);
@@ -72,7 +72,7 @@ async function matéria(br, base, m, env, rot) {
   { const r = await matéria(br, base, rec.ativas.find(x => x.slug === PIL), {}, 'E2'); ok(r.est.layout === false, 'layout do piloto desligado', r.est); }
 
   console.log('\n▸ E3 · segunda fechadura aberta, primeira fechada (variável preenchida, matéria fora das CANDIDATAS)');
-  for (const s of RAPIDO ? ['dermatologia', 'imagenologia'] : ['dermatologia', 'imagenologia', 'ortopedia']) {
+  for (const s of RAPIDO ? ['dermatologia', 'imagenologia'] : ['dermatologia', 'imagenologia', 'neurologia']) {
     const r = await matéria(br, base, rec.ativas.find(x => x.slug === s), Object.assign({}, TODAS_UIDS, { RM_LAYOUT_SLUGS: s, RM_PEN_SLUGS: s, RM_VISUAL_SLUGS: s }), 'E3');
     ok(r.est.layout === false && r.pedidos.length === 0 && r.est.perm !== true, `${s}: sem layout, sem requisição, sem caneta física mesmo com a variável preenchida`, r);
     ok(r.dif.length === 0, `${s}: dados do aluno intactos`, r.dif.slice(0, 2));
