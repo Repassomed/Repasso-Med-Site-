@@ -171,6 +171,44 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Toxicología (Nova Era): toxb01…toxb16 = BLOQUE 01–16 (toxb16 sem figuras ⇒ viñeta = logo); bancotox = banco general, toxcierre = mazo general + ruleta + bibliografía (repaso); toxportada = âncora vazia.
+     O marcador do conteúdo é «UNIDAD 1…4» (algarismos arábicos): o leitor de unidades do módulo só entende romanos, então o grupo único é rotulado «UNIDAD ·» e esse rótulo é ocultado por CSS (limitação registrada). */
+  var TX_REPASO = { bancotox: 'B', toxcierre: 'F' };
+  function clasificarTX(id) {
+    var m = /^toxb(\d\d)$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 16) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: n <= 3 ? 1 : n <= 6 ? 2 : n <= 13 ? 3 : 4, vig: n === 16 ? null : 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(TX_REPASO, id)) return { tipo: 'repaso', n: TX_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Anestesiología (Nova Era): aneb01…aneb15 = BLOQUE 01–15 (Unidad I = 01–11, Unidad II = 12–15, do marcador real); bancoane = banco general, anecierre = cierre/mazo (repaso); aneportada = âncora vazia. */
+  var AN_REPASO = { bancoane: 'B', anecierre: 'F' };
+  function clasificarAN(id) {
+    var m = /^aneb(\d\d)$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 15) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: n <= 11 ? ((n - 1) % 6) + 1 : ((n - 12) % 3) + 4, vig: 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(AN_REPASO, id)) return { tipo: 'repaso', n: AN_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Ortopedia (Nova Era): otb01…otb17 = BLOQUE 01–17 (16 unidades romanas I–XVI do marcador real; viñeta só onde há figura: 01–06 e 12–17); bancoorto = banco general, bancofcorto = mazo general + ruleta + bibliografía (repaso); otportada = âncora vazia. */
+  var OR_VIG = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1 };
+  var OR_REPASO = { bancoorto: 'B', bancofcorto: 'F' };
+  function clasificarOR(id) {
+    var m = /^otb(\d\d)$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 17) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: OR_VIG[n] ? 'vb-' + pad(n) : null }; }
+    if (Object.prototype.hasOwnProperty.call(OR_REPASO, id)) return { tipo: 'repaso', n: OR_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Oftalmología (Nova Era): ofb01…ofb09 = BLOQUE 01–09 (Unidades I–V do marcador real; ofb09 sem figura ⇒ logo); bancooft = banco general, oftcierre = mazo general + ruleta + bibliografía (repaso); ofportada = âncora vazia. */
+  var OF_REPASO = { bancooft: 'B', oftcierre: 'F' };
+  function clasificarOF(id) {
+    var m = /^ofb(\d\d)$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 9) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: n === 9 ? null : 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(OF_REPASO, id)) return { tipo: 'repaso', n: OF_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   var TEMAS = {
     'semiologia-ii': {
       vigDir: 'assets/img/semio2/vig/',
@@ -388,6 +426,105 @@
         fc:   'Reconocer la lámina de un vistazo'
       },
       clasificar: clasificarH2P
+
+    },
+    'toxicologia': {
+      vigDir: 'assets/img/tox/vig/',                      // 15 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-TOXICOLOGIA.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Toxidromes · Antídotos · Conducta',
+      miga: ['Guía de estudio', 'Toxicología'],
+      unidades: {},                                       // marcador «UNIDAD 1…4» (arábicos): não lido pelo módulo; grupo único sem rótulo (CSS)
+      medallones: [
+        { vig: 'vb-01', t: 'TOXICOLOGÍA', cap: 1, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-07', t: 'OFIDISMO',    cap: 3, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-14', t: 'METANOL',     cap: 4, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarTX
+    },
+    'anestesiologia': {
+      vigDir: 'assets/img/ane/vig/',                      // 15 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-ANESTESIOLOGIA.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Evaluación · Vía aérea · Conducta',
+      miga: ['Guía de estudio', 'Anestesiología'],
+      unidades: {                                         // as do conteúdo (marcador «UNIDAD I/II»)
+        I:  { nombre: 'Fundamentos y evaluación', color: '#2F7FA6' },
+        II: { nombre: 'Vía aérea',                color: '#C0526B' }
+      },
+      medallones: [
+        { vig: 'vb-01', t: 'ANESTESIA',  cap: 1, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-05', t: 'MONITOREO',  cap: 5, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-13', t: 'VÍA AÉREA',  cap: 2, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarAN
+    },
+    'ortopedia': {
+      vigDir: 'assets/img/orto/vig/',                       // viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-ORTO-OFT.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Diagnóstico · Lesiones · Conducta',
+      miga: ['Guía de estudio', 'Ortopedia'],
+      unidades: {                                         // as do conteúdo (marcador «UNIDAD X»)
+        I: { nombre: 'Métodos de diagnóstico', color: '#3F7FB5' },
+        II: { nombre: 'Lesiones musculares y ligamentarias', color: '#5D8A2E' },
+        III: { nombre: 'Fracturas', color: '#C48A1C' },
+        IV: { nombre: 'Inmovilizaciones', color: '#8A5FB5' },
+        V: { nombre: 'Consolidación', color: '#2A8C8C' },
+        VI: { nombre: 'Complicaciones generales', color: '#C2553F' },
+        VII: { nombre: 'Rodilla y deporte', color: '#3F7FB5' },
+        VIII: { nombre: 'Fémur distal y rótula', color: '#5D8A2E' },
+        IX: { nombre: 'Tercera edad', color: '#C48A1C' },
+        X: { nombre: 'Infante', color: '#8A5FB5' },
+        XI: { nombre: 'Columna y médula', color: '#2A8C8C' },
+        XII: { nombre: 'Muñeca y mano', color: '#C2553F' },
+        XIII: { nombre: 'Infecciones', color: '#3F7FB5' },
+        XIV: { nombre: 'Tuberculosis', color: '#5D8A2E' },
+        XV: { nombre: 'Deformidades de columna', color: '#C48A1C' },
+        XVI: { nombre: 'Lumbalgia', color: '#8A5FB5' }
+      },
+      medallones: [
+        { vig: 'vb-01', t: 'DIAGNÓSTICO', cap: 1, tam: 178, ml: 0, mt: 0, rot: -3, z: 3 },
+        { vig: 'vb-04', t: 'FRACTURAS', cap: 3, tam: 150, ml: -26, mt: 60, rot: 2, z: 2 },
+        { vig: 'vb-12', t: 'COLUMNA', cap: 5, tam: 128, ml: -6, mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarOR
+    },
+    'oftalmologia': {
+      vigDir: 'assets/img/oft/vig/',                       // viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-ORTO-OFT.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'El ojo · Examen · Patología',
+      miga: ['Guía de estudio', 'Oftalmología'],
+      unidades: {                                         // as do conteúdo (marcador «UNIDAD X»)
+        I: { nombre: 'Anatomía y fisiología', color: '#3F7FB5' },
+        II: { nombre: 'Examen del ojo', color: '#5D8A2E' },
+        III: { nombre: 'Ojo rojo y catarata', color: '#C48A1C' },
+        IV: { nombre: 'Glaucoma', color: '#8A5FB5' },
+        V: { nombre: 'Retina', color: '#2A8C8C' }
+      },
+      medallones: [
+        { vig: 'vb-01', t: 'VÍA VISUAL', cap: 1, tam: 178, ml: 0, mt: 0, rot: -3, z: 3 },
+        { vig: 'vb-04', t: 'OJO ROJO', cap: 3, tam: 150, ml: -26, mt: 60, rot: 2, z: 2 },
+        { vig: 'vb-07', t: 'RETINA', cap: 5, tam: 128, ml: -6, mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarOF
     }
   };
 
