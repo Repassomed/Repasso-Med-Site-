@@ -59,3 +59,28 @@ Receita para cada PR que entra depois: atualizar sobre a `main`; `CANDIDATAS` e 
 ### Posição final 11/11 (noite)
 - `main` também com **#656** (Histología II e Práctica). #645 (`7b360453`) e #655 (`ab00b1a0`) já contêm essa `main`; Claude 1 atualizou antes as branches deles (preservado) e eu integrei por cima só o que faltava.
 - **O teste de publicação desta `main` ainda tem as 22 falhas antigas** (teste desatualizado); ele só fica correto quando a **#645** entra. Por isso a ordem sugerida é **#645 → #634 → #644 → #655**.
+
+
+## 14/11 — ORDEM ÚNICA e ensaio de integração (main `76bd0b02`)
+
+### Estado e ordem
+| Ordem | PR | Matéria | Quem | Estado na `main` atual | Testes (14/11) | Pendências |
+|---|---|---|---|---|---|---|
+| **1.º** | **#645** | Fisiopatología II (19 blocos) | esta sessão | limpa | tema 57 · real 109 · integração 119 · visual 46 · nao-ativ 28 · **publicação 189/189** · porta 7/7 | arte blocos 18–19 |
+| 2.º | **#634** | Anatomía I e AP I | Claude 2 | **conflito resolvido** (era rascunho; `52d1be5e`) | nao-ativ 29 · tema 112 · real 221 · integração 241 · visual 76 e 32 · portas abertas | caneta: falhas antigas registradas em `CANETA-FALHAS-ANTIGAS-2026-11.md` |
+| 3.º | **#644** | Farmacología II | Claude 2 | limpa (toca também `rm-modes.js`, oráculos do ensaio e `inventario.json`) | resultados de Claude 2 na PR (tema 55 · real 121 · integração 155 · visual 36 · infografias 55/201) | doses do conteúdo (#649) conferidas só com slides |
+| 4.º | **#657** | AP II | Claude 2 | limpa | tema 53 · real 106 · integração 119 · visual 26 (Claude 2); real 106 e tema 53 repetidos no ensaio | arte limpa blocos 3–4 |
+| 5.º | **#662** | AP II Práctica | Claude 2 | limpa (**era rascunho; finalizada**, `cb79ecd7`) | tema 51 · real **109/109** · integração 119 · visual 42 · nao-ativ 28 · porta aberta | — (ver abaixo) |
+| 6.º | **#655** | Dermatología | esta sessão | limpa | real 118 · visual 32 · nao-ativ 28 · porta 7/7 | front «Liquenificación» repetido; 1 grifo real em dermb04 |
+| 7.º | **#658** | Guaraní | Claude (thread Nova Era) | **conflito resolvido** (`d52b2282`) | nao-ativ 28 · real 118 · visual 34 · porta aberta | blocos 06 e 11 com logotipo |
+| 8.º–10.º | #660 · #663 · #664 | Toxicología · Anestesiología e Bioestadística · Ortopedia e Oftalmología | **Claude 1 (corrigindo; não toquei)** | conflitam só nas 4 listas, sobre o ensaio abaixo | a cargo de Claude 1 | entram por último, cada uma atualiza sobre a `main` |
+
+### #662 — a falha que a mantinha em rascunho
+«7 · tabela» a 390 px: desvio 2,03 px. Diagnóstico: a tabela do bloco 01 mede **1809 px** de altura numa tela de **844 px** (começa em y = −448), então o gesto de teste saía da tela e perdia 2 pontos (`DIAG` impresso). **Defeito do alvo do teste, não da caneta**: o parágrafo e a tabela passam em 1440/768, e `integracao-ap2p` (6 larguras, tabela, rápido/longo) passa 119/119. Correção: se a tabela é mais alta que 70 % da tela, o alvo é a 1.ª linha. Resultado: `real-ap2p` **109/109**.
+
+### Ensaio de integração (descartável, não publicado): `main` + #634 + #644 + #645 + #657 + #662 + #655 + #658, resolvido por união
+19 candidatas = 19 temas (sem duplicata, sem tema órfão); `VER` = tag; JS/CSS carregam. Testes no ensaio: `nao-ativacao` **35/35** · `auditoria-implantacao-publica` **189/189** · `temas` fisio2 57 · ap2 53 · ap2p 51 · anato/AP I 112 · `real` guarani 118 · dermatologia 118 · biologia 118 · fisio2 109 · histologias 354 · ap2 106 · farmaco2 121.
+**Achado que a ferramenta corrige:** ao juntar, a lista literal «vizinhas» do B5 (`['toxicologia','anatomia-i']`) reprova assim que `anatomia-i` vira candidata; vale a versão **calculada** (`VIZ_FORA`, desta PR). A auditoria só fica verde com ela.
+
+### Ferramenta de resolução
+`tools/qa/nova-era/uniao-nova-era.py <worktree>` (com `_uniao_listas.py` e `_dobra_temas.py`): dentro de um merge da `main`, resolve listas por união, `VER` = maior = tag, B5 = `VIZ_FORA`, e mantém os dois temas em `rm-materia-sistema.js/.css`. Depois: carregar o JS, `nao-ativacao`, `auditoria`, `real-<matéria>`.
