@@ -171,6 +171,25 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Toxicología (Nova Era): toxb01…toxb16 = BLOQUE 01–16 (toxb16 sem figuras ⇒ viñeta = logo); bancotox = banco general, toxcierre = mazo general + ruleta + bibliografía (repaso); toxportada = âncora vazia.
+     O marcador do conteúdo é «UNIDAD 1…4» (algarismos arábicos): o leitor de unidades do módulo só entende romanos, então o grupo único é rotulado «UNIDAD ·» e esse rótulo é ocultado por CSS (limitação registrada). */
+  var TX_REPASO = { bancotox: 'B', toxcierre: 'F' };
+  function clasificarTX(id) {
+    var m = /^toxb(\d\d)$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 16) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: n <= 3 ? 1 : n <= 6 ? 2 : n <= 13 ? 3 : 4, vig: n === 16 ? null : 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(TX_REPASO, id)) return { tipo: 'repaso', n: TX_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Anestesiología (Nova Era): aneb01…aneb15 = BLOQUE 01–15 (Unidad I = 01–11, Unidad II = 12–15, do marcador real); bancoane = banco general, anecierre = cierre/mazo (repaso); aneportada = âncora vazia. */
+  var AN_REPASO = { bancoane: 'B', anecierre: 'F' };
+  function clasificarAN(id) {
+    var m = /^aneb(\d\d)$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 15) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: n <= 11 ? ((n - 1) % 6) + 1 : ((n - 12) % 3) + 4, vig: 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(AN_REPASO, id)) return { tipo: 'repaso', n: AN_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* Ortopedia (Nova Era): otb01…otb17 = BLOQUE 01–17 (16 unidades romanas I–XVI do marcador real; viñeta só onde há figura: 01–06 e 12–17); bancoorto = banco general, bancofcorto = mazo general + ruleta + bibliografía (repaso); otportada = âncora vazia. */
   var OR_VIG = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1 };
   var OR_REPASO = { bancoorto: 'B', bancofcorto: 'F' };
@@ -407,6 +426,46 @@
         fc:   'Reconocer la lámina de un vistazo'
       },
       clasificar: clasificarH2P
+
+    },
+    'toxicologia': {
+      vigDir: 'assets/img/tox/vig/',                      // 15 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-TOXICOLOGIA.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Toxidromes · Antídotos · Conducta',
+      miga: ['Guía de estudio', 'Toxicología'],
+      unidades: {},                                       // marcador «UNIDAD 1…4» (arábicos): não lido pelo módulo; grupo único sem rótulo (CSS)
+      medallones: [
+        { vig: 'vb-01', t: 'TOXICOLOGÍA', cap: 1, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-07', t: 'OFIDISMO',    cap: 3, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-14', t: 'METANOL',     cap: 4, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarTX
+    },
+    'anestesiologia': {
+      vigDir: 'assets/img/ane/vig/',                      // 15 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-ANESTESIOLOGIA.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Evaluación · Vía aérea · Conducta',
+      miga: ['Guía de estudio', 'Anestesiología'],
+      unidades: {                                         // as do conteúdo (marcador «UNIDAD I/II»)
+        I:  { nombre: 'Fundamentos y evaluación', color: '#2F7FA6' },
+        II: { nombre: 'Vía aérea',                color: '#C0526B' }
+      },
+      medallones: [
+        { vig: 'vb-01', t: 'ANESTESIA',  cap: 1, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-05', t: 'MONITOREO',  cap: 5, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-13', t: 'VÍA AÉREA',  cap: 2, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarAN
     },
     'ortopedia': {
       vigDir: 'assets/img/orto/vig/',                       // viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-ORTO-OFT.md)
