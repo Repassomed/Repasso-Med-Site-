@@ -174,7 +174,10 @@ if (process.env.RM_CONTROLE_NEGATIVO) MATERIAS[0].modos.push(MATERIAS[0].negativ
       /* 7 · caneta */
       await irBloco(p, m.bloco); await p.evaluate(B.INSTR);
       const ALVO = { paragrafo: id => { const s = document.getElementById(id); return [...s.querySelectorAll(':scope > p, :scope p')].filter(q => !q.closest('[data-rm-ui],table,.quiz-item,.flashcard,.rm-postit,.rmc-margin,.key-box') && q.textContent.trim().length > 160 && q.checkVisibility() && q.getBoundingClientRect().height > 60)[0]; },
-        tabela: id => { const s = document.getElementById(id); return [...s.querySelectorAll('table tbody tr, table')].filter(e => e.checkVisibility() && e.getBoundingClientRect().height > 20)[0]; } };
+        /* Alvo da tabela: a tabela inteira, SALVO quando ela é mais alta que a tela (no celular 390 px a tabela do bloco 01 tem ~1800 px para 844 px de tela: o gesto saía da tela e perdia pontos,
+           desvio 2,03 px — defeito do alvo, não da caneta). Nesse caso o alvo é a 1.ª linha, que cabe na tela. */
+        tabela: id => { const s = document.getElementById(id); const c = [...s.querySelectorAll('table tbody tr, table')].filter(e => e.checkVisibility() && e.getBoundingClientRect().height > 20); const t = c[0];
+          if (t && t.tagName === 'TABLE' && t.getBoundingClientRect().height > innerHeight * 0.7) return c.find(e => e.tagName === 'TR') || t; return t; } };
       const ins = () => p.evaluate(() => (window.__writes || []).filter(w => w === 'insert:user_ink_strokes').length);
       const tracos = () => p.evaluate(() => document.querySelectorAll('#rm2-ink path[data-ink]').length);
       let temTabela = await p.evaluate(id => !!document.getElementById(id).querySelector('table'), m.bloco);
