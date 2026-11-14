@@ -137,6 +137,24 @@ html.rm-sis[data-rm-tema="embriologia"] {
 html.rm-sis[data-rm-tema="embriologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
 html.rm-sis[data-rm-tema="embriologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
 
+/* Guaraní (Nova Era) · terracota e vermelho de tecido com o azul da bandeira; sem unidades no conteúdo (marcador «PARCIAL 1/2»).
+   Bloco escrito DEPOIS da base técnica (mesma especificidade ⇒ vence). Só variáveis --rm-* e regras de aparência; nada toca conteúdo, ids nem dados do aluno. */
+html.rm-sis[data-rm-tema="guarani"] {
+  --rm-surface: #F0E3DA; --rm-side: #F8EFE9; --rm-side-edge: #DDC2B1; --rm-side-card: #ECDACE; --rm-side-rule: #E4CDBF;
+  --rm-accent: #B0413E; --rm-accent-d: #7E2B29; --rm-marker: #2E5FA8;
+  --rm-tag-radius: 999px; --rm-vig-radius: 50%; --rm-vig-ring: #E4CDBF;
+  --rm-pal-1: #B0413E; --rm-pal-1-head: #903533; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #F6E8E8; --rm-pal-1-ffg: #431918; --rm-pal-1-zebra: #FDF9F9; --rm-pal-1-edge: #E6C2C1; --rm-pal-1-line: #F2E1E0; --rm-pal-1-strong: #712A28; --rm-pal-1-tint: #F9F0F0; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #2E5FA8; --rm-pal-2-head: #264E8A; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #E6ECF5; --rm-pal-2-ffg: #112440; --rm-pal-2-zebra: #F9FAFC; --rm-pal-2-edge: #BCCCE3; --rm-pal-2-line: #DEE5F1; --rm-pal-2-strong: #1D3D6C; --rm-pal-2-tint: #EEF2F8; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #C98A2B; --rm-pal-3-head: #A57123; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #F9F1E6; --rm-pal-3-ffg: #4C3410; --rm-pal-3-zebra: #FDFBF9; --rm-pal-3-edge: #EEDABB; --rm-pal-3-line: #F6ECDD; --rm-pal-3-strong: #81581C; --rm-pal-3-tint: #FBF6EE; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #4E8A55; --rm-pal-4-head: #407146; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #EAF1EB; --rm-pal-4-ffg: #1E3420; --rm-pal-4-zebra: #FAFBFA; --rm-pal-4-edge: #C6DAC9; --rm-pal-4-line: #E3ECE4; --rm-pal-4-strong: #325836; --rm-pal-4-tint: #F1F6F1; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #8A4F8F; --rm-pal-5-head: #714175; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F1EAF2; --rm-pal-5-ffg: #341E36; --rm-pal-5-zebra: #FBFAFC; --rm-pal-5-edge: #DAC7DB; --rm-pal-5-line: #ECE3ED; --rm-pal-5-strong: #58335C; --rm-pal-5-tint: #F6F1F6; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #C46A3A; --rm-pal-6-head: #A15730; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #F8EDE7; --rm-pal-6-ffg: #4A2816; --rm-pal-6-zebra: #FDFBF9; --rm-pal-6-edge: #ECCFC0; --rm-pal-6-line: #F6E7DF; --rm-pal-6-strong: #7D4425; --rm-pal-6-tint: #FAF3EF; --rm-pal-6-tag: #fff;
+}
+/* Guaraní não tem «UNIDAD X» no conteúdo: o rótulo único «UNIDAD ·» do grupo de blocos (índice, menu lateral e telas de modo) não é mostrado; REPASO mantém o seu. */
+html.rm-sis[data-rm-tema="guarani"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="guarani"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="guarani"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+
 /* ---------------------------------------------------------------------
    3 · CAPÍTULO → variáveis locais (--cap-*). Qualquer componente dentro de [data-rm-cap] as herda.
    --------------------------------------------------------------------- */
