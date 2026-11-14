@@ -1434,6 +1434,23 @@ html.rm-sis[data-rm-tema="farmacologia"] .rm-l2-tree-tools + .rm-sis-ulab--side 
 /* e nas telas de «modo» (Infografías · Preguntas · Flashcards · Videos), onde o 1.º grupo de blocos também ganharia «UNIDAD ·» */
 html.rm-sis[data-rm-tema="farmacologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
 
+/* ===== Anatomía I e Anatomía Patológica I (Nova Era) · identidade de cor + rótulos sem repetição. Blocos DEPOIS da base técnica; só valem com html.rm-sis[data-rm-tema="<slug>"]. ===== */
+html.rm-sis[data-rm-tema="anatomia-i"][data-rm-tema] {
+  --rm-surface: #EDE7DA; --rm-side: #F7F3EA; --rm-side-edge: #D8CDB6; --rm-side-card: #ECE3D0; --rm-side-rule: #E0D6BF;
+  --rm-accent: #2C6E7A; --rm-accent-d: #1D4D56; --rm-marker: #E9B949;
+}
+/* Anatomía I não tem unidades: o módulo, sem «UNIDAD X» no marcador, rotularia o grupo único dos blocos como «UNIDAD ·». Esse rótulo não é mostrado
+   (índice geral, menu lateral e telas de modo); o grupo REPASO continua rotulado. */
+html.rm-sis[data-rm-tema="anatomia-i"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="anatomia-i"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="anatomia-i"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+/* quebra de texto em telas estreitas (320/390 px): só dentro do tema da matéria */
+html.rm-sis[data-rm-tema="anatomia-i"] .a1-freq { overflow-wrap: anywhere; word-break: break-word; max-width: 100%; }
+html.rm-sis[data-rm-tema="anatomia-patologica"][data-rm-tema] {
+  --rm-surface: #EADCE6; --rm-side: #F6EDF3; --rm-side-edge: #D2B5C9; --rm-side-card: #E7D3E0; --rm-side-rule: #DCC4D4;
+  --rm-accent: #8C3D7A; --rm-accent-d: #62295A; --rm-marker: #E9B949;
+}
+html.rm-sis[data-rm-tema="anatomia-patologica"] .compare { overflow-wrap: anywhere; word-break: break-word; max-width: 100%; }
 /* AP I Práctica e Histología I (Nova Era): só variáveis --rm-* e o rótulo único «UNIDAD ·» oculto (as matérias não têm «UNIDAD X»). */
 html.rm-sis[data-rm-tema="anatomia-patologica-practica"] {
   --rm-surface: #EEDDE1; --rm-side: #F8EEF0; --rm-side-edge: #D6B1BB; --rm-side-card: #EAD1D7; --rm-side-rule: #E2C4CB;

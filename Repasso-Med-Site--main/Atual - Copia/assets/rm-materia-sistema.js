@@ -116,6 +116,34 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Anatomía I (Nova Era): 33 blocos `a1b01`–`a1b33` num grupo só (o conteúdo não tem unidades); o número é o do marcador «BLOQUE NN». Cor de capítulo por REGIÃO:
+     1 generalidades (01–04) · 2 parede e diafragma do tórax (05–08) · 3 coração (09–11) · 4 vasos e vísceras do tórax (12–17) · 5 membro superior (18–28) · 6 pescoço (29–33).
+     `bancoa1` = banco (B), `bancofca1` = cartões (F), `a1notas` = notas das ilustrações (N). `a1b00` (abertura vazia e oculta) e `a1bXX` ficam como «otro». */
+  function clasificarA1(id) {
+    var m = /^a1b(\d\d)$/.exec(id);
+    if (m) {
+      var n = +m[1];
+      if (n >= 1 && n <= 33) return { tipo: 'bloque', n: pad(n), num: n, cap: n <= 4 ? 1 : n <= 8 ? 2 : n <= 11 ? 3 : n <= 17 ? 4 : n <= 28 ? 5 : 6, vig: 'vb-' + pad(n) };
+    }
+    if (id === 'bancoa1')   return { tipo: 'repaso', n: 'B', num: -1, cap: 'r', vig: null };
+    if (id === 'bancofca1') return { tipo: 'repaso', n: 'F', num: -1, cap: 'r', vig: null };
+    if (id === 'a1notas')   return { tipo: 'repaso', n: 'N', num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Anatomía Patológica I (Nova Era): a ORDEM do conteúdo (12 blocos). As 3 seções que o conteúdo deixa sem número nem unidade levam o número da seção anterior + letra
+     (06A Calcificación, 06B Aterosclerosis, 08A Reparación) e a etiqueta «BLOQUE». `analise-guia` = guia («Ideas clave», 00). Banco e flashcards gerais = repaso. */
+  var AP_ORDEM = [['introduccion', '01'], ['adaptacion', '02'], ['lesion', '03'], ['necrosis', '04'], ['apoptose', '05'], ['acumulacoes', '06'], ['calcificacion', '06A'], ['aterosclerosis', '06B'],
+                  ['inflamacao', '07'], ['inflamacion-cronica', '08'], ['reparacion', '08A'], ['neoplasias', '09']];
+  var AP_REPASO = { 'banco-oficiales-anato': 'B', 'flashcards-anato': 'F' };
+  var AP_UN = { calcificacion: 'I', aterosclerosis: 'I', reparacion: 'II' };   // seções sem marcador de unidade: AGRUPAM com o bloco anterior (a etiqueta delas segue «BLOQUE»)
+  function clasificarAP(id) {
+    for (var i = 0; i < AP_ORDEM.length; i++) if (AP_ORDEM[i][0] === id) return { tipo: 'bloque', n: AP_ORDEM[i][1], num: i + 1, cap: (i % 6) + 1, vig: 'vb-' + AP_ORDEM[i][1].toLowerCase(), un: AP_UN[id] || null };
+    if (id === 'analise-guia') return { tipo: 'guia', n: '00', num: 0, cap: 'g', vig: null };
+    if (Object.prototype.hasOwnProperty.call(AP_REPASO, id)) return { tipo: 'repaso', n: AP_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* AP I Práctica (Nova Era): ids `b1…b12` (b1–b9 = TEMA 01–09). Vinheta só em b2–b9 (b1 = logo). b10 laminario, b11 flashcards, b12 ruleta = repaso.
      Sem «UNIDAD X» no conteúdo (rótulo único oculto por CSS). */
   var AP1P_REPASO = { b10: 'L', b11: 'F', b12: 'R' };
@@ -297,6 +325,42 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFA
+    },
+    'anatomia-i': {
+      vigDir: 'assets/img/anato1/vig/',                   // 33 vinhetas 480×480 recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-ANATO1-AP1.md)
+      logo: 'assets/repasso-med-logo.png',
+      unidades: {},                                       // o conteúdo não tem unidades («BLOQUE NN · PARCIAL N»): nenhuma é criada
+      medallones: [
+        { vig: 'vb-05', t: 'TÓRAX',           cap: 2, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-19', t: 'MIEMBRO SUPERIOR', cap: 5, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-29', t: 'CUELLO',           cap: 6, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarA1
+    },
+    'anatomia-patologica': {
+      vigDir: 'assets/img/anato/vig/',                    // 12 vinhetas 480×480 recortadas de infografías do próprio conteúdo
+      logo: 'assets/repasso-med-logo.png',
+      unidades: {                                         // as do marcador real «UNIDAD I · II · IV» (nomes propostos: decisão de José)
+        I:  { nombre: 'Célula y lesión',          color: '#8C3D7A' },
+        II: { nombre: 'Inflamación y reparación', color: '#B5604F' },
+        IV: { nombre: 'Neoplasias',               color: '#4F7FA3' }
+      },
+      medallones: [
+        { vig: 'vb-04', t: 'NECROSIS',     cap: 4, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-07', t: 'INFLAMACIÓN',  cap: 3, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-09', t: 'NEOPLASIAS',   cap: 3, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarAP
     },
     'anatomia-patologica-practica': {
       vigDir: 'assets/img/anatoprat/vig/',                // 8 viñetas (b2–b9) recortadas de láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP1P-HISTO1.md)
@@ -493,7 +557,7 @@
         /* título de reserva: seção sem <h2> direto (p.ex. guia com o título em <div class="rm-guide-h2">) ficava sem título e a
            navegação escondia o vizinho no Anterior/Próximo (cadeia quebrada). Usa o 1.º cabeçalho visual da seção, depois o marcador. */
         id: id, el: sec, c: c, titulo: limpo(h2 && h2.textContent) || limpo((q1(sec, ':scope > [class$="-h2"], :scope > h3, :scope > .analysis-card > h3') || {}).textContent) || marcador, h2: h2, mk: mk,
-        marcador: marcador, unidad: u ? u[1].toUpperCase() : '',
+        marcador: marcador, unidad: u ? u[1].toUpperCase() : '', grupo: (u ? u[1].toUpperCase() : '') || c.un || '',   // `grupo` = onde a seção AGRUPA (unidade do marcador, ou a que o descritor manda via `un` para seção sem marcador); o rótulo continua só com a unidade do marcador
         n: { q: qa(sec, '.quiz-item').length, fc: qa(sec, '.flashcard').length, fig: figuras(sec).length,
              tb: qa(sec, 'table').length, au: qa(sec, 'audio').length }
       });
@@ -680,7 +744,7 @@
   function indice(tema) {
     var cp = S.capa, bloques = S.secs.filter(function (s) { return s.c.tipo === 'bloque'; });
     var unidades = {}, ordem = [];
-    bloques.forEach(function (s) { var u = s.unidad || '·'; if (!unidades[u]) { unidades[u] = []; ordem.push(u); } unidades[u].push(s); });
+    bloques.forEach(function (s) { var u = s.grupo || s.unidad || '·'; if (!unidades[u]) { unidades[u] = []; ordem.push(u); } unidades[u].push(s); });
     var guia = S.secs.filter(function (s) { return s.c.tipo === 'guia'; });
     var repaso = S.secs.filter(function (s) { return s.c.tipo === 'repaso'; });
 
@@ -952,12 +1016,12 @@
       sa(row, 'data-rm-cap', String(s.c.cap));
       var i = q1(row, '.rm-l2-block-link i'); if (i) st(i, s.c.n);
       var lb = q1(row, '.rm-l2-block-link span'); if (lb) { var lt = lb.textContent.replace(/^\d{1,2}\s*[·.:–-]\s+/, ''); if (lt && lt !== lb.textContent) st(lb, lt); }   // o número do título já está na insígnia
-      var g = s.c.tipo === 'bloque' ? 'U' + s.unidad : (s.c.tipo === 'repaso' ? 'R' : 'G');
+      var g = s.c.tipo === 'bloque' ? 'U' + (s.grupo || s.unidad) : (s.c.tipo === 'repaso' ? 'R' : 'G');
       if (g !== grupoAtual && s.c.tipo !== 'guia') {
         var lab = ui('div', 'rm-sis-ulab rm-sis-ulab--side');
         var bb = el('b'); var ss = el('span');
         if (g === 'R') { bb.textContent = 'REPASO'; ss.textContent = 'Compendio y banco'; }
-        else { var u = S.tema.unidades[s.unidad]; bb.textContent = 'UNIDAD ' + s.unidad; ss.textContent = u ? u.nombre : ''; }
+        else { var gu = s.grupo || s.unidad; var u = S.tema.unidades[gu]; bb.textContent = 'UNIDAD ' + gu; ss.textContent = u ? u.nombre : ''; }
         lab.appendChild(bb); lab.appendChild(ss); lab.appendChild(el('i'));
         tree.insertBefore(lab, row);
       }
