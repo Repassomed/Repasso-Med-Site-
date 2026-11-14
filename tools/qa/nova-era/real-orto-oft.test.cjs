@@ -17,6 +17,7 @@ const { chromium } = require('playwright');
 const L = require('../ensaio-layout/lib.cjs'); const D = require('../pre-voo/lib-dados.cjs'); const S = require('./lib-servidor.cjs'); const B = require('../browser-qa/layout/pen-bench.cjs'); S.U.JOSE = D.UID;
 const RAPIDO = process.argv.includes('--rapido'); const SO = process.argv.slice(2).find(a => !a.startsWith('--')) || '';
 let n = 0, ko = 0; const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 420) : ''); } return !!c; };
+const COR_TEMA = {"histologia-i-practica": ["#EADCEB", "#8E3F94"], "histologia-ii": ["#DCEBE3", "#2F8A6B"], "histologia-ii-practica": ["#EFDDDD", "#A33A3A"], "toxicologia": ["#E3EAD6", "#5C7F2A"], "anestesiologia": ["#D9E8EF", "#2F7FA6"], "ortopedia": ["#EADFD2", "#A0663A"], "oftalmologia": ["#DCE3F0", "#3E5FA8"], "anatomia-patologica-practica": ["#EEDDE1", "#A23A60"], "histologia-i": ["#E0DBF0", "#5B4FA8"]};
 const MATERIAS = [
   { slug: 'ortopedia', titulo: 'Ortopedia', hl: ['otb02', 'otb05'], bloco: 'otb02', bloco2: 'otb03', blocoQuiz: 'otb03', blocoImg: 'otb02', fcSec: 'bancofcorto', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] },
   { slug: 'oftalmologia', titulo: 'Oftalmología', hl: ['ofb02', 'ofb05'], bloco: 'ofb02', bloco2: 'ofb03', blocoQuiz: 'ofb03', blocoImg: 'ofb02', fcSec: 'oftcierre', modos: [['Infografías', 'infografias'], ['Preguntas', 'preguntas'], ['Flashcards', 'flashcards']] }
@@ -72,6 +73,8 @@ const MATERIAS = [
       const f = await mk(W, W < 500 ? 844 : W < 1000 ? 1024 : 900, { hl: rows, seed: m.bloco }); const p = f.page;
       const st = await p.evaluate(() => ({ sis: document.documentElement.classList.contains('rm-sis'), tema: document.documentElement.getAttribute('data-rm-tema'), l2: !!document.querySelector('.rm-l2, #rm-l2-side'), v2: !!window.RMToolsV2, nav: !!(window.RMNav && RMNav.go), piloto: window.RMToolsV2 && RMToolsV2._test.pilotoPermitido() }));
       ok(st.sis && st.tema === m.slug && st.l2 && st.v2 && st.nav && st.piloto === true, '1 · layout + tema da matéria + navegação + caneta V2 (refinamentos físicos) ligados pelo rm-pilot real', st);
+      { const cor = await p.evaluate(() => { const cs = getComputedStyle(document.documentElement); const g = k => cs.getPropertyValue(k).trim().toUpperCase(); return { surface: g('--rm-surface'), accent: g('--rm-accent'), pal6: g('--rm-pal-6'), pal1: g('--rm-pal-1') }; });
+        const esp = COR_TEMA[m.slug]; ok(!esp || (cor.surface === esp[0].toUpperCase() && cor.accent === esp[1].toUpperCase() && /^#[0-9A-F]{6}$/.test(cor.pal6) && /^#[0-9A-F]{6}$/.test(cor.pal1)), `1 · APARÊNCIA: o tema aplica as cores da matéria no navegador (superfície ${esp && esp[0]}, acento ${esp && esp[1]}, paletas 1 e 6 definidas)`, cor); }
       ok(f.gets.includes(m.slug), '1 · o rm-pilot perguntou ao servidor por esta matéria (CANDIDATAS do repositório)', f.gets);
 
       /* 6 · grifos */
