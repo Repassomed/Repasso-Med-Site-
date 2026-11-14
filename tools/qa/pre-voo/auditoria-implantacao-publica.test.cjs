@@ -1,6 +1,9 @@
 /* AUDITORIA INDEPENDENTE · IMPLANTAÇÃO PÚBLICA POR MATÉRIA (Medicina Familiar) — teste privado de José → liberação para os alunos da matéria → caneta na matéria → volta.
    NÃO altera código do site: carrega o get-pilot-flags.js REAL e o rm-pilot.js REAL da árvore em que roda, com Supabase simulado e zero rede externa.
-   Como o mecanismo de «liberação para alunos» pode ter variáveis novas, elas entram por parâmetro (nada é adivinhado):
+   ATUALIZADO (Nova Era): fora do piloto (Semiología II) a ÚNICA fonte é a linha da matéria em public.rm_materia_rollout (off | preview = só administrador | all = alunos com acesso).
+   O Supabase simulado devolve essa linha (`__ROLL` no ambiente de cada cena), o perfil de administrador (só a conta de José) e as matérias compradas. As variáveis antigas
+   RM_LAYOUT_SLUGS / RM_PEN_SLUGS NÃO ligam mais nada (o servidor real as ignora): o teste prova isso. Antes desta atualização o teste ligava a matéria por elas e dava 22 falhas na main.
+   Parâmetros antigos (--publico/--pen-publico) ficam só por compatibilidade e são ignorados:
      --publico  NOME=valor[,NOME2=valor2]   variáveis que LIBERAM O LAYOUT aos alunos da matéria (ex.: RM_LAYOUT_PUBLIC_SLUGS=medicina-familiar)
      --pen-publico NOME=valor[,…]           variáveis que liberam a CANETA aos alunos da matéria
      --slug medicina-familiar               matéria sob teste (padrão)
@@ -15,7 +18,7 @@ const par = s => Object.fromEntries((s || '').split(',').filter(Boolean).map(x =
 const SLUG = arg('--slug') || 'medicina-familiar', SO = process.argv.includes('--so-servidor');
 /* Sem --publico/--pen-publico, os cenários públicos NÃO são pulados: rodam com as únicas variáveis que a main conhece (lista de matérias + lista de contas). Como a main não tem modo «todos os alunos da matéria», o ESPERADO é FALHAR. */
 const PUB_INFORMADO = !!arg('--publico'), PENPUB_INFORMADO = !!arg('--pen-publico');
-const PUB = PUB_INFORMADO ? par(arg('--publico')) : { RM_LAYOUT_SLUGS: SLUG }, PENPUB = PENPUB_INFORMADO ? par(arg('--pen-publico')) : { RM_PEN_SLUGS: SLUG };
+const PUB = { __ROLL: 'layout_stage=all' }, PENPUB = { __ROLL: 'pen_stage=all' };      // marcadores: a liberação pública é a LINHA da tabela (ver ENV_PUB/ENV_PEN abaixo), não variáveis
 const ROOT = path.resolve(__dirname, '../../../Repasso-Med-Site--main/Atual - Copia');
 const REPO = path.resolve(__dirname, '../../..');
 const FN = path.join(ROOT, 'netlify/functions/get-pilot-flags.js');
@@ -28,11 +31,17 @@ const sec = t => { grupo = /PÚBLICO/.test(t) ? 'publico' : 'controle'; console.
 
 /* ---------- o servidor REAL, ambiente por cena, Supabase simulado; registra TODA chamada de rede ---------- */
 const CHAMADAS = [];
+const ACESSO = [ALUNO, ALUNO2];            // alunos que COMPRARAM a matéria sob teste (José é administrador e vê mesmo sem comprar)
 async function srv(env, token, slug) {
-  const lim = new Set([...VARS, ...Object.keys(PUB), ...Object.keys(PENPUB)]);
+  const lim = new Set([...VARS]);
   for (const k of lim) delete process.env[k];
-  Object.assign(process.env, { SUPABASE_URL: 'https://x.invalid', SUPABASE_ANON_KEY: 'anon' }, env);
-  global.fetch = async (u, o) => { CHAMADAS.push({ u: String(u), m: (o && o.method) || 'GET' }); const t = String(((o && o.headers) || {}).Authorization || '').replace(/^Bearer\s+/i, ''); return TOK[t] ? { ok: true, json: async () => ({ id: TOK[t] }) } : { ok: false, json: async () => ({}) }; };
+  const { __ROLL: ROLL, ...envVars } = env || {};
+  Object.assign(process.env, { SUPABASE_URL: 'https://x.invalid', SUPABASE_ANON_KEY: 'anon' }, envVars);
+  global.fetch = async (u, o) => { u = String(u); CHAMADAS.push({ u, m: (o && o.method) || 'GET' }); const t = String(((o && o.headers) || {}).Authorization || '').replace(/^Bearer\s+/i, '');
+    if (/\/rest\/v1\/rm_materia_rollout\?/.test(u)) { const sl = decodeURIComponent((/slug=eq\.([^&]+)/.exec(u) || [])[1] || ''); const row = ROLL && ROLL[sl]; return TOK[t] && row ? { ok: true, json: async () => [row] } : { ok: true, json: async () => [] }; }
+    if (/\/rest\/v1\/profiles\?/.test(u)) { const id = decodeURIComponent((/id=eq\.([^&]+)/.exec(u) || [])[1] || ''); return TOK[t] && TOK[t] === id ? { ok: true, json: async () => [{ is_admin: id === JOSE }] } : { ok: true, json: async () => [] }; }
+    if (/\/rest\/v1\/my_active_subjects\?/.test(u)) { const sl = decodeURIComponent((/subject_slug=eq\.([^&]+)/.exec(u) || [])[1] || ''); return TOK[t] && sl === SLUG && ACESSO.includes(TOK[t]) ? { ok: true, json: async () => [{ subject_slug: sl }] } : { ok: true, json: async () => [] }; }
+    return TOK[t] ? { ok: true, json: async () => ({ id: TOK[t] }) } : { ok: false, json: async () => ({}) }; };
   delete require.cache[FN];
   const r = await require(FN).handler({ queryStringParameters: { slug }, headers: token ? { authorization: 'Bearer ' + token } : {} });
   return { raw: r, j: JSON.parse(r.body) };
@@ -41,12 +50,13 @@ const f = o => ({ layout: !!o.j.layout, pen: !!o.j.pen, audio: !!o.j.audio, visu
 const NEG = { layout: false, pen: false, audio: false, visual: false };
 const ig = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
-const PRIV = { RM_PILOT_LAYOUT_UIDS: JOSE, RM_LAYOUT_SLUGS: SLUG };                       // teste privado: só a conta de José, só a matéria
-const PRIVPEN = Object.assign({}, PRIV, { RM_PILOT_PEN_UIDS: JOSE, RM_PEN_SLUGS: SLUG });
-const ENV_PUB = Object.assign({}, PRIV, PUB), ENV_PEN = Object.assign({}, ENV_PUB, PENPUB);
+const rol = (layout, pen) => ({ RM_PILOT_LAYOUT_UIDS: JOSE, __ROLL: { [SLUG]: { layout_stage: layout, pen_stage: pen, visual_stage: 'off' } } });
+const PRIV = rol('preview', 'off');                 // teste privado: linha da matéria em `preview` (só administrador = José); o piloto de Semiología II segue com a lista dele
+const PRIVPEN = rol('preview', 'preview');
+const ENV_PUB = rol('all', 'off'), ENV_PEN = rol('all', 'all');          // liberação aos alunos com acesso: layout `all`; layout + caneta `all`
 
 async function servidor() {
-  const OUTRAS = ['dermatologia', 'semiologia-ii', 'anatomia-i'];
+  const OUTRAS = ['dermatologia', 'semiologia-ii', 'anatomia-i', 'ortopedia'].filter(s => s !== SLUG).slice(0, 3);   // nunca a própria matéria sob teste
   sec('S0 · padrão de produção (nenhuma variável): ninguém recebe nada, em nenhuma matéria');
   for (const [q, t] of [['José', 'tok-jose'], ['aluno', 'tok-aluno'], ['anônimo', null]]) {
     const o = await srv({}, t, SLUG); ok(ig(f(o), NEG), `${q} em ${SLUG}: tudo negado`, f(o)); }
@@ -58,9 +68,9 @@ async function servidor() {
     ok(j.j.layout === true, 'José recebe o layout em ' + SLUG, f(j)); ok(j.j.pen === false, 'José NÃO recebe a caneta (outra chave)', f(j));
     ok(ig(f(a), NEG), 'um aluno comum NÃO recebe nada', f(a)); ok(ig(f(an), NEG), 'anônimo não recebe nada', f(an));
     for (const o of OUTRAS) { const r = await srv(PRIV, 'tok-jose', o), base = await srv({ RM_PILOT_LAYOUT_UIDS: JOSE }, 'tok-jose', o);
-      ok(ig(f(r), f(base)), `${o}: igual ao padrão (a variável de ${SLUG} não muda mais nenhuma matéria)`, { com: f(r), sem: f(base) }); } }
+      ok(ig(f(r), f(base)), `${o}: igual ao padrão (a linha de ${SLUG} não muda nenhuma outra matéria)`, { com: f(r), sem: f(base) }); } }
 
-  sec('S2 · [PÚBLICO] LIBERAÇÃO AOS ALUNOS da matéria' + (Object.keys(PUB).length ? ' (' + Object.keys(PUB).join(', ') + ')' : ''));
+  sec('S2 · [PÚBLICO] LIBERAÇÃO AOS ALUNOS da matéria (linha da matéria com layout_stage = all)');
   if (Object.keys(PUB).length) {
     const a = await srv(ENV_PUB, 'tok-aluno', SLUG), a2 = await srv(ENV_PUB, 'tok-aluno2', SLUG), j = await srv(ENV_PUB, 'tok-jose', SLUG), an = await srv(ENV_PUB, null, SLUG);
     ok(a.j.layout === true && a2.j.layout === true, 'dois alunos distintos (fora de qualquer lista de contas) recebem o layout em ' + SLUG, [f(a), f(a2)]);
@@ -77,25 +87,25 @@ async function servidor() {
   { const j = await srv(PRIVPEN, 'tok-jose', SLUG), a = await srv(PRIVPEN, 'tok-aluno', SLUG);
     ok(j.j.pen === true && j.j.layout === true, 'privado: José recebe layout + caneta em ' + SLUG, f(j)); ok(a.j.pen === false, 'privado: aluno não recebe caneta', f(a));
     ok(ig(f(await srv(PRIVPEN, 'tok-jose', 'dermatologia')), f(await srv({ RM_PILOT_LAYOUT_UIDS: JOSE, RM_PILOT_PEN_UIDS: JOSE }, 'tok-jose', 'dermatologia'))), 'caneta de ' + SLUG + ' não vaza para dermatologia'); }
-  sec('S3b · [PÚBLICO] CANETA aos alunos da matéria (' + Object.keys(PENPUB).join(', ') + ')' + (PENPUB_INFORMADO ? '' : ' — variáveis ASSUMIDAS: a main não tem modo público de caneta'));
+  sec('S3b · [PÚBLICO] CANETA aos alunos da matéria (linha da matéria com pen_stage = all)');
   if (Object.keys(PENPUB).length) {
     const a = await srv(ENV_PEN, 'tok-aluno', SLUG); ok(a.j.layout === true && a.j.pen === true, 'alunos recebem layout + caneta em ' + SLUG, f(a));
     for (const o of OUTRAS) { const r = await srv(ENV_PEN, 'tok-aluno', o); ok(r.j.pen === false && r.j.layout === false, `aluno em ${o}: sem layout e sem caneta`, f(r)); }
     const so = await srv(Object.assign({}, ENV_PUB), 'tok-aluno', SLUG); ok(so.j.pen === false, 'sem a chave da caneta o aluno fica só com o layout (caneta é um passo à parte)', f(so)); }
 
-  sec('S4 · VOLTA: retirar as variáveis da matéria devolve exatamente o padrão');
-  { for (const [nome, env] of [['tirar o slug de layout/caneta', { RM_PILOT_LAYOUT_UIDS: JOSE, RM_PILOT_PEN_UIDS: JOSE }], ['esvaziar tudo', {}]]) {
+  sec('S4 · VOLTA: pôr a linha da matéria em off (ou retirar tudo) devolve exatamente o padrão');
+  { for (const [nome, env] of [['linha da matéria em off', rol('off', 'off')], ['sem linha nenhuma', { RM_PILOT_LAYOUT_UIDS: JOSE, RM_PILOT_PEN_UIDS: JOSE }], ['esvaziar tudo', {}]]) {
       const todos = [];
       for (const t of ['tok-jose', 'tok-aluno', null]) todos.push(f(await srv(env, t, SLUG)));
       ok(todos.every(x => ig(x, NEG)), `${nome}: ${SLUG} volta a negar para José, aluno e anônimo`, todos); } }
 
   sec('S5 · curinga, fail-closed e ausência de escrita');
-  for (const cur of ['*', 'todas', 'all', 'true', '1']) { const r = await srv({ RM_PILOT_LAYOUT_UIDS: JOSE, RM_LAYOUT_SLUGS: cur }, 'tok-jose', SLUG); ok(r.j.layout === false, `curinga «${cur}» em RM_LAYOUT_SLUGS não libera ${SLUG}`, f(r)); }
+  for (const cur of ['*', 'todas', 'all', 'true', '1']) { const r = await srv({ RM_PILOT_LAYOUT_UIDS: JOSE, RM_LAYOUT_SLUGS: cur }, 'tok-jose', SLUG); ok(r.j.layout === false, `variável antiga RM_LAYOUT_SLUGS=«${cur}» (ainda no Netlify) NÃO liga ${SLUG}: só a linha da tabela liga`, f(r)); }
   { const r = await srv(ENV_PUB, 'tok-invalido', SLUG); ok(ig(f(r), NEG), 'token inválido: negado (fail-closed)', f(r)); }
   { global.fetch = async () => { throw new Error('rede'); }; delete require.cache[FN]; const r = await require(FN).handler({ queryStringParameters: { slug: SLUG }, headers: { authorization: 'Bearer tok-aluno' } }); ok(r.statusCode === 200 && ig(f({ j: JSON.parse(r.body) }), NEG), 'Supabase fora do ar: HTTP 200 e tudo negado', r); }
   { const r = await srv(ENV_PUB, 'tok-aluno', '../../etc/passwd'); ok(ig(f(r), NEG), 'slug malformado: negado', f(r)); }
   { CHAMADAS.length = 0; await srv(ENV_PEN, 'tok-aluno', SLUG); await srv(ENV_PEN, 'tok-jose', SLUG);
-    ok(CHAMADAS.length > 0 && CHAMADAS.every(c => /\/auth\/v1\/user$/.test(c.u) && c.m === 'GET'), 'a função só lê (GET /auth/v1/user): nenhuma escrita em lugar nenhum', CHAMADAS.slice(0, 4)); }
+    ok(CHAMADAS.length > 0 && CHAMADAS.every(c => c.m === 'GET' && /(\/auth\/v1\/user$|\/rest\/v1\/(rm_materia_rollout|my_active_subjects|profiles)\?)/.test(c.u)), 'a função só lê (GET: usuário, linha da matéria, acesso e o próprio perfil): nenhuma escrita em lugar nenhum', CHAMADAS.filter(c => c.m !== 'GET' || !/(\/auth\/v1\/user$|rm_materia_rollout|my_active_subjects|profiles)/.test(c.u)).slice(0, 4)); }
 }
 
 /* ---------- S6 · Semiología II como antes + «desligar» devolve SÓ a matéria ---------- */
@@ -125,8 +135,9 @@ async function conteudo() {
   const GM = path.join(ROOT, 'netlify/functions/get-materia.js'), CH = [];
   const CONTAS = { 'tok-sem': { uid: 'dddddddd-0000-4000-8000-0000000000d4', subs: [] }, 'tok-outra': { uid: ALUNO, subs: ['dermatologia'] }, 'tok-mf': { uid: ALUNO2, subs: [SLUG] }, 'tok-expirou': { uid: 'eeeeeeee-0000-4000-8000-0000000000e5', subs: [] } };
   const chamar = async (env, token, slug, falha) => {
-    for (const k of [...VARS, ...Object.keys(PUB), ...Object.keys(PENPUB)]) delete process.env[k];
-    Object.assign(process.env, { SUPABASE_URL: 'https://x.invalid', SUPABASE_ANON_KEY: 'anon' }, env);
+    for (const k of VARS) delete process.env[k];
+    const { __ROLL: _r, ...envVars } = env || {};
+    Object.assign(process.env, { SUPABASE_URL: 'https://x.invalid', SUPABASE_ANON_KEY: 'anon' }, envVars);
     global.fetch = async (u, o) => { u = String(u); CH.push({ u, m: (o && o.method) || 'GET' });
       const t = String(((o && o.headers) || {}).Authorization || '').replace(/^Bearer\s+/i, ''), c = CONTAS[t];
       if (falha === 'supabase-401') return { ok: false, status: 401, json: async () => ({}), text: async () => '' };
@@ -156,7 +167,8 @@ async function conteudo() {
     ok(CH.length > 0 && CH.every(c => c.m === 'GET' || /rpc\/is_admin$/.test(c.u)), 'a entrega só lê (GET + RPC is_admin): nenhuma escrita', CH.slice(0, 4)); }
   { const fm = fs.readFileSync(path.join(ROOT, 'netlify/functions/get-pilot-flags.js'), 'utf8'), sx = fs.readFileSync(GM, 'utf8');
     ok(!/get-pilot-flags|RM_PILOT|RM_LAYOUT|RM_PEN/.test(sx), 'get-materia.js não consulta nenhuma chave de layout/caneta (a decisão de conteúdo é independente)', {});
-    ok(!/my_active_subjects|materias-privadas/.test(fm), 'get-pilot-flags.js não lê compras nem conteúdo (só decide apresentação)', {}); }
+    const fmCod = fm.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');   // só código (comentários citam o get-materia)
+    ok(!/materias-privadas|get-materia/.test(fmCod) && !/method:\s*['"](POST|PATCH|PUT|DELETE)/i.test(fmCod), 'get-pilot-flags.js não lê o CONTEÚDO nem escreve (só decide apresentação; lê a linha da matéria, o acesso e o próprio perfil)', {}); }
 }
 
 function arquivos() {
@@ -173,7 +185,7 @@ function arquivos() {
   /* CANDIDATAS e versão do cache */
   const pil = fs.readFileSync(path.join(ROOT, 'assets/rm-pilot.js'), 'utf8'), idx = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const cand = (pil.match(/var CANDIDATAS = \[([^\]]*)\]/) || [])[1]; const slugs = (cand || '').split(',').map(s => s.replace(/['"\s]/g, '')).filter(Boolean);
-  ok(slugs.every(s => ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-patologica-practica', 'histologia-i', 'histologia-i-practica', 'histologia-ii', 'histologia-ii-practica'].includes(s)), 'CANDIDATAS só tem semiologia-ii, medicina-familiar, fisiopatologia, farmacologia, biologia, embriologia, AP I Práctica, Histología I, Histología I Práctica, Histología II e Histología II Práctica', slugs);
+  ok(slugs.every(s => ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-patologica-practica', 'histologia-i', 'histologia-i-practica', 'histologia-ii', 'histologia-ii-practica', 'fisiopatologia-ii'].includes(s)), 'CANDIDATAS só tem semiologia-ii, medicina-familiar, fisiopatologia, farmacologia, biologia, embriologia, AP I Práctica, Histología I, Histología I Práctica, Histología II e Histología II Práctica', slugs);
   const ver = (pil.match(/var VER\s*=\s*'(\d+)'/) || [])[1], tag = (idx.match(/rm-pilot\.js\?v=(\d+)/) || [])[1];
   ok(ver && tag && ver === tag, 'VER do rm-pilot.js = tag do index.html (cache de 7 dias invalida junto)', { ver, tag });
   let verBase = null; try { const b = cp.execFileSync('git', ['show', base + ':Repasso-Med-Site--main/Atual - Copia/assets/rm-pilot.js'], { cwd: REPO }).toString(); verBase = (b.match(/var VER\s*=\s*'(\d+)'/) || [])[1]; } catch (e) { /* sem base */ }
@@ -200,6 +212,9 @@ async function navegador() {
   const L = require('../ensaio-layout/lib.cjs'), D = require('./lib-dados.cjs');
   const PILOT_JS = fs.readFileSync(path.join(ROOT, 'assets/rm-pilot.js'), 'utf8');
   const rec = L.reconciliar(); const M = s => rec.ativas.find(x => x.slug === s);
+  /* vizinhas FORA das CANDIDATAS: calculadas do rm-pilot.js real (outras PRs da Nova Era colocam dermatologia/anatomia-i nas CANDIDATAS; uma lista fixa quebraria ao juntar) */
+  const CAND_RM = ((PILOT_JS.match(/var CANDIDATAS = \[([^\]]*)\]/) || [])[1] || '').split(',').map(s => s.replace(/['"\s]/g, '')).filter(Boolean);
+  const VIZ_FORA = ['dermatologia', 'anatomia-i', 'ortopedia', 'oftalmologia', 'neurologia', 'anestesiologia'].filter(s => s !== SLUG && !CAND_RM.includes(s) && M(s)).slice(0, 2);
   const s0 = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + s0.address().port; const br = await chromium.launch();
   let LARG = 1440;
   async function cena(m, env, tok, rot, esperaLayout, esperaPen) {
@@ -262,11 +277,11 @@ async function navegador() {
       ok(errs.length === 0, `${rot}: 0 erros JS`, errs);
     } finally { await ctx.close(); }
   }
-  const ENV_ALUNO = Object.keys(PENPUB).length ? ENV_PEN : ENV_PUB;
+  const ENV_ALUNO = ENV_PEN;
   sec('P0 · CONTROLE (acesso que já existe): conta tester + liberação privada de caneta — mostra que o desenho funciona neste ambiente');
   await penAluno('controle tester', PRIVPEN, 'tok-jose', D.UID, true);
   sec('P1 · [PÚBLICO] ALUNO COMUM (' + ALUNO.slice(0, 8) + '…, fora de BETA_UIDS e sem linha em study_tools_beta) com a liberação pública ligada: vê a ferramenta, desenha, salva, reencontra');
-  await penAluno('aluno comum', Object.keys(PENPUB).length ? ENV_PEN : ENV_PUB, 'tok-aluno', ALUNO, false);
+  await penAluno('aluno comum', ENV_PEN, 'tok-aluno', ALUNO, false);
   sec('P2 · Semiología II no navegador: aluno comum com a liberação de ' + SLUG + ' ligada NÃO ganha layout nem caneta lá');
   LARG = 1440; await cena(M('semiologia-ii'), ENV_ALUNO, 'tok-aluno', 'aluno em semiologia-ii', false, false);
   for (const W of [1440, 390]) {
@@ -277,7 +292,7 @@ async function navegador() {
     if (Object.keys(PENPUB).length) { sec(t + 'B3 · [PÚBLICO] caneta'); await cena(m, ENV_PEN, 'tok-aluno', t + 'aluno, layout+caneta', true, true); }
     sec(t + 'B4 · volta'); await cena(m, {}, 'tok-aluno', t + 'aluno, depois da volta', false, false);
     sec(t + 'B5 · vizinhas com a matéria liberada');
-    for (const v of ['dermatologia', 'anatomia-i']) { const o = await cena(M(v), Object.keys(PEN_OU()).length ? ENV_PEN : ENV_PUB, 'tok-aluno', t + v + ' (aluno)', false, false); ok(o.pedidos.length === 0, v + ': nenhuma requisição ao servidor (fora das CANDIDATAS)', o.pedidos); }
+    for (const v of VIZ_FORA) { const o = await cena(M(v), ENV_PEN, 'tok-aluno', t + v + ' (aluno)', false, false); ok(o.pedidos.length === 0, v + ': nenhuma requisição ao servidor (fora das CANDIDATAS)', o.pedidos); }
   }
   await br.close(); s0.close();
 }
@@ -287,7 +302,7 @@ const PEN_OU = () => PENPUB;
   await servidor(); await semiologiaEDesligar(); await conteudo(); arquivos(); if (!SO) await navegador();
   console.log('\n══ RESUMO ══');
   console.log(`  CONTROLE (comportamento atual, não prova implantação pública): ${G.controle[0] - G.controle[1]}/${G.controle[0]} OK`);
-  console.log(`  CENÁRIOS PÚBLICOS (liberação aos alunos da matéria + caneta do aluno comum): ${G.publico[0] - G.publico[1]}/${G.publico[0]} OK${PUB_INFORMADO || PENPUB_INFORMADO ? '' : ' — sem --publico/--pen-publico: na MAIN o esperado é FALHAR (não existe liberação pública)'}`);
+  console.log(`  CENÁRIOS PÚBLICOS (liberação aos alunos da matéria + caneta do aluno comum): ${G.publico[0] - G.publico[1]}/${G.publico[0]} OK`);
   console.log(`auditoria-implantacao-publica (${SLUG}): ${n - ko}/${n} verificações OK${ko ? ' — ' + ko + ' FALHA(S)' : ''}`);
   if (ko) console.log('Falhas:\n - ' + falhas.join('\n - '));
   process.exit(ko ? 1 : 0);
