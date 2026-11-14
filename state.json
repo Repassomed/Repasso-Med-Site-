@@ -3447,6 +3447,31 @@
       "summary": "Ledger Anthropic falhou apos chamada paga no evento pr:634.",
       "task_id": "pr:634",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "aadc12e975f5a51c189984bdc632241a4c14dd50",
+      "component": "guard",
+      "error_id": "ERR-2B24702963",
+      "error_type": "hard-fail",
+      "fingerprint": "2b24702963d887282754",
+      "first_seen": "2026-11-14T01:48:30.411965+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "3123c79116224c229ddf386dacdf0171",
+      "issue_sync_updated_at": "2026-11-14T01:48:30.411965+00:00",
+      "last_evidence_hash": "632134b1bb79ad0c5860",
+      "last_seen": "2026-11-14T01:48:30.411965+00:00",
+      "occurrence_count": 1,
+      "pr_number": 664,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "43542657340",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:664.",
+      "task_id": "nova-era-ortopedia-oftalmologia-2026-11",
+      "worker_id": null
     }
   ]
 }
