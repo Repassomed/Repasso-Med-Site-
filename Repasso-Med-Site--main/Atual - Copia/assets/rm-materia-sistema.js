@@ -264,6 +264,16 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Dermatología (Nova Era): ids `dermb01…dermb13` (a numeração é a do id = «Bloque NN» do conteúdo) + `dermcierre` (mazo general y ruleta = repaso). `dermportada` é a capa/abertura do conteúdo
+     (não é um bloco). O conteúdo não tem «UNIDAD X»: nenhuma unidade é criada. Sem ilustrações aprovadas ainda ⇒ cada bloco usa o logotipo (vig: null). Cada bloco ganha uma das 6 cores (cap). */
+  var DE_REPASO = { dermcierre: 'F' };
+  function clasificarDE(id) {
+    var m = /^dermb(\d{2})$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 13) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: null }; }
+    if (Object.prototype.hasOwnProperty.call(DE_REPASO, id)) return { tipo: 'repaso', n: DE_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   var TEMAS = {
     'semiologia-ii': {
       vigDir: 'assets/img/semio2/vig/',
@@ -648,6 +658,20 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFP2
+    },
+    'dermatologia': {
+      vigDir: null,                                       // sem viñetas ilustradas: cada bloque usa o logo oficial (rm-sis-vig--logo)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Piel · Lesiones · Infecciones · Tumores',
+      miga: ['Guía de estudio', 'Dermatología'],
+      unidades: {},                                       // o conteúdo não tem «UNIDAD X»: nenhuma unidade é criada
+      medallones: [],                                     // sem ilustrações aprovadas ainda: a capa não leva medalhões
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarDE
     }
   };
 
