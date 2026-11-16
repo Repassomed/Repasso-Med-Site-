@@ -23,7 +23,9 @@ const FERRAMENTAS = ['pen', 'eraser', 'highlight', 'caixa'];   // 'caixa' = nenh
     await page.goto(`${base}/p.html?slug=${SLUG}&tab=${m.tab}&modo=controle&wait=1500&persist=1&pilotreal=1&uid=${S.U.JOSE}`); await page.waitForFunction('window.__ready===true'); await page.waitForTimeout(500);
     await page.addScriptTag({ url: '/assets/rm-pilot.js?v=p' }); await page.waitForTimeout(6500);
     await page.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; });
-    const blocos = await page.evaluate(() => RMSistema.secciones().filter(s => s.c && s.c.tipo === 'bloque').map(s => s.id)); const [B1, B2] = blocos;
+    const blocos = await page.evaluate(() => RMSistema.secciones().filter(s => s.c && s.c.tipo === 'bloque').map(s => s.id)); const B1 = blocos[0];
+    /* «Próximo» vai à seção SEGUINTE na ordem real da matéria (pode ser a guia, p.ex. AP I: Introducción → «Ideas clave»); o teste espera exatamente essa */
+    const B2 = await page.evaluate(b1 => { const l = RMSistema.secciones().filter(s => s.c && (s.c.tipo === 'bloque' || s.c.tipo === 'guia')); const i = l.findIndex(s => s.id === b1); return l[i + 1].id; }, B1);
     const cdp = await ctx.newCDPSession(page);
     const estado = () => page.evaluate(() => { const e = RMNav.estado() || {}; const t = RMToolsV2.estado; return { view: e.view, block: e.block, mode: e.mode, tool: t.tool, open: t.open, tracos: document.querySelectorAll('#rm2-ink path[data-ink]').length, grifos: document.querySelectorAll('#materias-container .rm-hl').length, escritas: (window.__writes || []).filter(w => /^(insert|update|delete):user_(ink_strokes|highlights|notes)/.test(w)).length }; });
     const preparar = async (view, tool) => {
