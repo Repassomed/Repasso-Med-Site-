@@ -1,6 +1,6 @@
 # Registro de anotações do Drive → site
 
-**Conferido em 30/10/2026; atualizar após cada merge e novo PDF.** Fonte: pastas do Drive e PRs mescladas na `main`. Lei: [LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md](../../LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md). Esta conferência verifica o inventário e a rastreabilidade documental; **não é uma releitura independente dos 23 PDFs nem uma certificação de perfeição médica**.
+**Conferido em 30/10/2026; listagem do Drive reconferida em 17/11/2026 (23 PDFs, nenhum arquivo novo, nenhum sem linha).** Atualizar após cada merge e novo PDF. Fonte: pastas do Drive e PRs mescladas na `main`. Lei: [LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md](../../LEI-ATUALIZACAO-CONTINUA-REPASSO-MED.md). Esta conferência verifica o inventário e a rastreabilidade documental; **não é uma releitura independente dos 23 PDFs nem uma certificação de perfeição médica**.
 
 **Total encontrado nas quatro pastas de Anotações:** **23 PDFs = Farmacología II 9 + Fisiopatología II 5 + Anatomía Patológica II 6 + Semiología II 3**. Todos os 23 PDFs têm registro de leitura/comparação em PRs mescladas. O PDF novo de Farmacología II, recebido em 28/10, foi fechado na #608: dois pontos integrados seletivamente, o resto coberto, rejeitado ou sem fonte. Uma anotação pode ter sido comparada e **não** copiada porque já estava ensinada, estava errada ou não tinha base. O rastreio individual de Semiología II e do PDF suprarrenal foi concluído nas PRs #603 e #604, mescladas; a conferência usou a camada de texto dos PDFs, sem ler imagens internas.
 
