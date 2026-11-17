@@ -125,3 +125,25 @@ José disponibilizou 8 extratos (cópias de páginas dos slides originais, não 
 4. O mecanismo da lipoproteína lipasa dos α-bloqueantes (já não é afirmado) e o perfil lipídico (↓ LDL, ↓ VLDL, ↑ HDL: só segundo o slide).
 5. As mudanças de b07 (tabela por célula): conferidas visualmente com a pág. 21 do slide 05; **sem** confirmação no livro de origem (não identificado).
 **Como fechar:** José (ou a coordenação) colocar na pasta do Drive o capítulo correspondente do Goodman & Gilman 13.ª ed. (caps. 12, 25, 26, 28, 32) ou o livro adotado, em PDF dividido (< 10 MB por arquivo) ou como imagens; com isso as doses/indicações e a linha do pâncreas podem ser registradas com livro, edição e página.
+
+## 12 · 8.ª rodada (18/11) · revisão da apresentação ao aluno (sem divergências nem «qual slide adotar»)
+
+**Pedido:** integrar o conhecimento útil de forma direta e didática; o aluno não deve ver divergências entre slides nem instruções sobre qual adotar; conferir doses e afirmações com a literatura-base; onde não for possível, registrar o limite e evitar afirmação categórica.
+
+**Literatura-base (reconferida em 18/11):** busca no Drive por Goodman, Katzung, Flórez, Brunton, Rang e «Farmacologia Básica» → **nenhum arquivo**. Logo, **nenhuma dose nem afirmação desta PR foi confirmada em livro**; ficam conferidas só contra os slides lidos (texto e, para as páginas 7, 15, 21, 25, 34, 44 e 45, a imagem). Nenhuma fonte foi inventada.
+
+**O que mudou no texto do aluno (b01 e b07):**
+| Antes (relato das rodadas 1–7) | Agora |
+|---|---|
+| Título «Precisiones de los slides de la cátedra»; colunas «Precisión del slide», «Qué dice el slide»; frases «el slide indica/aclara/no indica»; legendas «Fuente: diapositivas…» e «Transcripción fiel…» | Título «Detalles que completan α, β y ergóticos»; colunas «Lo que conviene saber» / «Qué hay que saber»; **sem menção a slide, diapositiva ou fonte** no texto do aluno |
+| Linha «Páncreas · aclaración» que expunha a incoerência entre dois slides (α₂ × β₂) e dizia «no se adopta esa fila» | Linha **«Páncreas»** direta: α₂ reduz a liberação de insulina e a estimulação β a favorece, como na tabela da seção 4; **a linha β₂ «↓ insulina» não é mencionada** (não confirmável) |
+| α-bloqueantes e lipídios com a explicação da inconsistência do esquema | Frase direta: tendência a melhorar o perfil lipídico (↓ LDL/VLDL, ↑ HDL), efeito adicional, **mecanismo não detalhado** |
+| β-bloqueantes e potássio: «el slide no indica…» | Frase direta: a estimulação β favorece a entrada de K⁺ (β₂-agonistas → hipopotassemia); o que ocorre ao **bloquear** β «no se detalla aquí» |
+| Posologia «que figura en los slides» + legenda «otro slide da rangos distintos… no se han unificado» | Título **«Posología orientativa»** com aviso (varia com formulação, indicação e guia; orientação de estudo, não prescrição). **Faixas de manutenção que divergem entre slides** (prazosina, terazosina, nebivolol, propranolol, carvedilol, labetalol) **foram substituídas por «se ajusta según la respuesta/indicación»**; mantidas as doses iniciais e as faixas sem divergência (atenolol, metoprolol, bisoprolol, doxazosina). Legenda única: «los rangos varían según la fuente…» |
+| Prazosina «cada 8 h»; terazosina «t½ 10–18 h»; «el slide señala…» | «suele repartirse en varias tomas»; «vida media más longa» (sem número); verbos sem atribuição |
+| Tabela por célula (b07): rodapé «Fuente: página 21… Transcripción fiel…» e «el comentario de la diapositiva menciona el tercer componente del complemento» | Rodapé e menção ao complemento **removidos**; tabela e explicação do mecanismo mantidas |
+| Verbos categóricos («provoca», «no debe darse por garantizada…» ) | Mantidos só onde são claramente corretos (cardiosseletividade relativa); o resto em «suele / tiende / en general» |
+
+**Limites que ficam (registrados, não mostrados ao aluno):** (1) doses, indicações, ergotamina, β renal, tabela por célula e posologia continuam sem livro-base; (2) onde os slides divergem (faixas de manutenção; β₂ no pâncreas), **optou-se por omitir o dado** em vez de escolher um; (3) a explicação do mecanismo lipídico (lipoproteína lipase) segue ausente por inconsistência do esquema do slide.
+
+**Marcações:** só texto novo da própria PR foi alterado (nenhum trecho existente na `main`). Motor real do site: 406 grifos reais → **403 pintados (igual à `main`)**, 0 perdidos, 0 escritas. Quiz real: 464 itens, 0 falhas duras, espelho 232 × 232.
