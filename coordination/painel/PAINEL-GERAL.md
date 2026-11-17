@@ -68,4 +68,20 @@ Nova Era — **mesclada** = tema/vinhetas na `main`, **não ativada** (só `medi
 
 **Drive 17/11:** listagem direta das 4 pastas = 23 PDFs (9+5+6+3), **os mesmos já registrados em `ANOTACOES-DRIVE.md`; nenhum arquivo novo**. Reli os PDFs de 28/10 (Farmacología II) e suprarrenal só para confirmar o registro; as decisões continuam as das PRs #608 e #603.
 
+## Pendências de Anatomía Patológica II (conferidas em 17/11 contra os documentos do repositório)
+
+Fontes: `coordination/source-packs/anatomia-patologica-ii-auditoria-2026-10-10-v1.md` (seção FECHAMENTO), `…-646-clase7-hepaticas-v1.md` (partes C–E), `…-666-questoes-p2-v1.md` (PR #668) e `ANOTACOES-DRIVE.md`.
+
+| Pendência | Estado em 17/11 | Onde está registrada |
+|---|---|---|
+| **Granulomas no Crohn:** slide 5 dá «40–60 %» no texto e «~35 %» na tabela; o site mantém 40–60 % | **aberta** (decisão de José; os dois números aparecem no mesmo slide) | auditoria 10/10, FECHAMENTO |
+| **Pergunta de p-ANCA na colite ulcerosa** | **aberta**: não consta nos slides; Robbins ilegível; pergunta **não publicada** (#651, mantido na #668). O ensino e o flashcard de serologia (p-ANCA «más asociado, no confirma») seguem na main | #646 parte E; #668 |
+| **Gestação como fator de adenoma hepático** | **aberta**: o slide só cita anticoncepcionais e esteroides anabolizantes (#668) | #668 |
+| **Cifras do CHC** (β-catenina ≈ 40 %, p53 ≈ 60 %) e a frase «cirrosis… no es lesión premaligna» do slide | **ressalvadas** na #668 (apresentadas como aproximadas; frase absoluta retirada); **sem confirmação em livro-base** | #668 |
+| **Literatura-base** (Robbins 9.ª/10.ª, Farreras, Harsh Mohan) | **aberta**: Robbins e Harsh Mohan não cabem na leitura do Drive (> 10 MB); Farreras e Harrison não estão no Drive. Pedido a José: subir capítulos em PDF < 10 MB | #646 parte C |
+| Slides oficiais 4, 5, 7 e 8 ilegíveis (auditoria de 10/10) | **resolvida** para a Clase 7 (hepáticas, relida na #646); os demais constam como fechados no FECHAMENTO da auditoria | auditoria 10/10; #646 |
+| Virchow/Krukenberg com peso didático; metástase a distância do CEC oral; MALT 40 %/Russell | **resolvidas** (#499, #609) | `ANOTACOES-DRIVE.md` |
+| Frases «voz de prova» sob grifos reais (b01, b03, b04) | **protegidas** de propósito (migração de marcações planejada) | `CHECKLIST-MATERIAS.md` |
+| Um grifo de `ap2b01` («eritematosa») que **não pinta** | **aberta**, anterior a #668 (já não pintava na main); explicada na #668 | #668 |
+
 Estado atualizado em 17/11 à noite (inclui #668 e #669). Testes citados = últimos resultados registrados nas PRs/integração; os da bateria de 17/11 estão no relatório final.
