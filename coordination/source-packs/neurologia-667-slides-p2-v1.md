@@ -129,3 +129,9 @@ Grifos `neurologia`: `neub02` 10 · `neub03` 29 · `neub09` 68; trazos: 1 en `ne
 - El algoritmo y las tablas del cierre (`revisaoneu`) **no incluyen** los bloques 20–27.
 - La relación entre `neub19` y los bloques 22/23/25/26 queda como **aviso**, no como fusión (el 19 no se tocó para no reducir contenido).
 - No se tocó Nova Era ni se preparó Neurología para el layout nuevo.
+
+## Revisão de 19/11 (2) — profilaxia de TVP com HBPM (bloco 27)
+- O texto e a pergunta apresentavam «HBPM após 72 h se não há cirurgia» como conduta geral. Busca no Drive: **nenhuma literatura-base/diretriz de TEC**; só os slides.
+- **Prazo fixo retirado.** Agora: a profilaxia de TVP com HBPM tem indicação e momento **avaliados em cada paciente** (risco de sangramento, hematoma, cirurgia); o material não fixa prazo.
+- Pergunta (mesmo id; bloco e banco idênticos): a alternativa d agora é «profilaxia de TVP com HBPM, valorando risco de sangramento e momento de início» (medida que se usa, caso a caso); resposta correta segue sendo «corticoides». Letras corretas inalteradas.
+- Limite: o slide (figura «TCE Grave») cita o prazo; sem fonte adicional não foi possível confirmá-lo.
