@@ -84,3 +84,19 @@ Receita para cada PR que entra depois: atualizar sobre a `main`; `CANDIDATAS` e 
 
 ### Ferramenta de resolução
 `tools/qa/nova-era/uniao-nova-era.py <worktree>` (com `_uniao_listas.py` e `_dobra_temas.py`): dentro de um merge da `main`, resolve listas por união, `VER` = maior = tag, B5 = `VIZ_FORA`, e mantém os dois temas em `rm-materia-sistema.js/.css`. Depois: carregar o JS, `nao-ativacao`, `auditoria`, `real-<matéria>`.
+
+
+## 17/11 — `main` `b7568c01` (com #660, #663, #664): ordem final e ensaio de integração
+Na `main`: Toxicología, Anestesiología, Ortopedia e Oftalmología (Claude 1) além das anteriores. As sete PRs abaixo já contêm essa `main` (merges de 17/11 14:22–14:27, preservados) e foram **testadas nesses commits**.
+
+| Ordem | PR | Matéria | Commit testado | Testes (17/11) | O que falta |
+|---|---|---|---|---|---|
+| 1.º | #645 | Fisiopatología II (19 blocos) | `37b64150` | nao-ativ 32 · **publicação 189/189** · tema 57 · real 109 · integração 119 · visual 46 · porta | arte blocos 18–19 |
+| 2.º | #634 | Anatomía I e AP I | `80e6b308` | nao-ativ 33 · real 221 · tema 112 · portas | tirar do rascunho; caneta: falhas antigas registradas |
+| 3.º | #644 | Farmacología II | `09538257` | nao-ativ 32 · real 121 · infografias 55 · porta | doses (#649) só com slides |
+| 4.º | #657 | AP II | `2e8a5046` | nao-ativ 32 · real 106 · tema 53 · porta | arte limpa blocos 3–4 |
+| 5.º | #662 | AP II Práctica | `3d71a6ce` | nao-ativ 32 · real **109/109** (caneta em tabela corrigida) · tema 51 · porta | — |
+| 6.º | #655 | Dermatología | `c92eb8af` | nao-ativ 32 · real 118 · porta | front «Liquenificación» repetido; 1 grifo real em dermb04 |
+| 7.º | #658 | Guaraní | `346e3a6e` | nao-ativ 32 · real 118 · porta | blocos 06 e 11 com logotipo |
+
+**Ensaio (descartável, não publicado):** `main` + as 7 branches, resolvido por união com `uniao-nova-era.py`: 23 candidatas = 23 temas, sem duplicata, `VER` = tag. `nao-ativacao` 39/39 · `auditoria-implantacao-publica` 179/179 · tema fisio2 57 · anato/AP I 112 · ap2 53 · ap2p 51 · farmaco2 55 · real toxicologia 121 · anestesiologia 121 · orto-oft 242 · embriologia 133 · histologias 363 · AP I P/Histo I 233. A cada merge real, a PR seguinte atualiza sobre a `main` e repete a receita acima.
