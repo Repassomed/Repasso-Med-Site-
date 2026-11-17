@@ -52,8 +52,21 @@
        NÃO são infográficos: diapositivas e materiais de aula (.material-slide, etiqueta «DIAPOSITIVA…»), imagens de prova («IMAGEM DA PROVA»), radiografias
        com legenda em <p class="med-image-caption"> (a legenda é irmã da foto, sem contêiner), figura sem legenda, foto solta (.s2-photo/img.rmc-photo fora de <figure>).
      Só LÊ o DOM; nunca move, cria nem altera nada. */
+  /* Matérias cujas infografías próprias são <div class="material-slide"> (cabeçalho + imagem + legenda), e NÃO diapositivas da cátedra: lista explícita por aba,
+     para a regra não mudar em nenhuma outra matéria (as demais seguem excluindo .material-slide). Hoje: Farmacología II (`tab-farmaco2`, 64 infografías). */
+  var ABAS_INFO_EM_SLIDE = { 'tab-farmaco2': 1 };
+  function ehInfografiaEmSlide(el) {
+    try {
+      if (!el.classList.contains('material-slide') || (el.parentElement && el.parentElement.closest('.material-slide'))) return false;
+      var aba = el.closest && el.closest('.tab-content'); if (!aba || !ABAS_INFO_EM_SLIDE[aba.id]) return false;
+      if (!el.querySelector('img') || !el.querySelector('.material-slide-caption')) return false;
+      var h = el.querySelector('.material-slide-header');
+      return !(h && /^\s*(diapositiva|imagen de la prueba|imagem da prova)/i.test(h.textContent || ''));
+    } catch (e) { return false; }
+  }
   function ehInfografia(el) {
     try {
+      if (el && el.nodeType === 1 && el.classList && el.classList.contains('material-slide')) return ehInfografiaEmSlide(el);
       if (!el || el.nodeType !== 1 || (el.closest && el.closest('.material-slide'))) return false;
       var cl = el.classList;
       if (el.tagName === 'FIGURE') {
@@ -70,7 +83,7 @@
     return false;
   }
   function infografias(raiz) {
-    return raiz && raiz.querySelectorAll ? Array.prototype.filter.call(raiz.querySelectorAll('figure, .med-image'), ehInfografia) : [];
+    return raiz && raiz.querySelectorAll ? Array.prototype.filter.call(raiz.querySelectorAll('figure, .med-image, .material-slide'), ehInfografia) : [];
   }
 
   /* Ordem fixa dos modos isolados na lateral. `detect` decide se o recurso
