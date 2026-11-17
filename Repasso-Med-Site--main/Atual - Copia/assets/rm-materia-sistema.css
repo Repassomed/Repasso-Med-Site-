@@ -1449,6 +1449,34 @@ html.rm-sis[data-rm-tema="farmacologia"] .rm-l2-tree-tools + .rm-sis-ulab--side 
 /* e nas telas de «modo» (Infografías · Preguntas · Flashcards · Videos), onde o 1.º grupo de blocos também ganharia «UNIDAD ·» */
 html.rm-sis[data-rm-tema="farmacologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
 
+/* ===== Dermatología (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="dermatologia"]. ===== */
+html.rm-sis[data-rm-tema="dermatologia"][data-rm-tema] {
+  --rm-surface: #F3E4DC; --rm-side: #FAF0EA; --rm-side-edge: #E3C6B8; --rm-side-card: #F0DDD3; --rm-side-rule: #EBD3C7;
+  --rm-accent: #B5533C; --rm-accent-d: #8A3B28; --rm-marker: #E9B949;
+}
+/* o conteúdo não tem unidades: o rótulo de grupo único «UNIDAD ·» não é mostrado (índice, lateral e telas de modo); o grupo REPASO mantém o seu */
+html.rm-sis[data-rm-tema="dermatologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="dermatologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="dermatologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+
+/* ===== Anatomía Patológica II Práctica (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"]. ===== */
+html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"][data-rm-tema] {
+  --rm-surface: #E6DDF0; --rm-side: #F2EEF8; --rm-side-edge: #CFC0E0; --rm-side-card: #E3D8EF; --rm-side-rule: #D9CCE8;
+  --rm-accent: #6B3FA0; --rm-accent-d: #4A2A73; --rm-marker: #E9B949;
+}
+html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+
+/* ===== Anatomía Patológica II (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="anatomia-patologica-ii"]. ===== */
+html.rm-sis[data-rm-tema="anatomia-patologica-ii"][data-rm-tema] {
+  --rm-surface: #EFDDE0; --rm-side: #F8EEF0; --rm-side-edge: #DDBFC5; --rm-side-card: #EBD6DA; --rm-side-rule: #E2CBD0;
+  --rm-accent: #9A3B4E; --rm-accent-d: #6D2536; --rm-marker: #E9B949;
+}
+/* sem unidades no conteúdo: o rótulo de grupo único «UNIDAD ·» não é mostrado (índice, lateral e telas de modo); REPASO mantém o seu */
+html.rm-sis[data-rm-tema="anatomia-patologica-ii"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="anatomia-patologica-ii"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="anatomia-patologica-ii"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
 /* ===== Farmacología II (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="farmacologia-ii"]. ===== */
 html.rm-sis[data-rm-tema="farmacologia-ii"][data-rm-tema] {
   --rm-surface: #EADFEE; --rm-side: #F5EEF8; --rm-side-edge: #D3BFDC; --rm-side-card: #E7D8EC; --rm-side-rule: #DCCAE3;

@@ -82,6 +82,16 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Dermatología (Nova Era): ids `dermb01…dermb13` (a numeração é a do id = «Bloque NN» do conteúdo) + `dermcierre` (mazo general y ruleta = repaso). `dermportada` é a capa/abertura do conteúdo
+     (não é um bloco). O conteúdo não tem «UNIDAD X»: nenhuma unidade é criada. Sem ilustrações aprovadas ainda ⇒ cada bloco usa o logotipo (vig: null). Cada bloco ganha uma das 6 cores (cap). */
+  var DE_REPASO = { dermcierre: 'F' };
+  function clasificarDE(id) {
+    var m = /^dermb(\d{2})$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 13) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: null }; }
+    if (Object.prototype.hasOwnProperty.call(DE_REPASO, id)) return { tipo: 'repaso', n: DE_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* Embriología (Nova Era): ids `emb01…emb13`; a numeração é a do id (= «BLOQUE NN»). Sem Unidades no conteúdo (o marcador é «BLOQUE NN · <tema>», Parcial 2 a partir do 08):
      cada tema de estudo compartilha uma família de cor (cap). emb14 = banco geral, emb15 = flashcards gerais (repaso). */
   var EM_CAP = { 1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 3, 7: 4, 8: 5, 9: 5, 10: 5, 11: 6, 12: 2, 13: 2 };
@@ -124,6 +134,27 @@
     var m = /^gnb(\d{2})$/.exec(id);
     if (m && +m[1] >= 1 && +m[1] <= 13) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: GN_VIG[n] ? 'vb-' + pad(n) : null }; }
     if (Object.prototype.hasOwnProperty.call(GN_REPASO, id)) return { tipo: 'repaso', n: GN_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Anatomía Patológica II Práctica (Nova Era): 16 blocos `ap2pb01–ap2pb16` na ordem do conteúdo («BLOQUE NN · PARCIAL 1/2 · TEMA», sem «UNIDAD X»: nenhuma unidade é criada).
+     `ap2pbanco` (banco geral de láminas), `ap2pmazo` (mazo + ruleta) e `ap2pcierre` (tabela integradora, bibliografía e créditos) = repaso (B, F, C). Vinhetas: 16 recortes das láminas
+     (fotos de microscópio) do próprio conteúdo. */
+  var AP2P_REPASO = { ap2pbanco: 'B', ap2pmazo: 'F', ap2pcierre: 'C' };
+  function clasificarAP2P(id) {
+    var m = /^ap2pb(\d\d)$/.exec(id);
+    if (m) { var n = +m[1]; if (n >= 1 && n <= 16) return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(AP2P_REPASO, id)) return { tipo: 'repaso', n: AP2P_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Anatomía Patológica II (Nova Era): ids `ap2bNN` na ordem do conteúdo; o marcador é «BLOQUE NN · PARCIAL 1/2/FINAL · TEMA» (sem «UNIDAD X»: nenhuma unidade é criada).
+     Banco geral (`bancoap2`) e mazo geral (`bancofcap2`) = repaso. `ap2biblio` (bibliografia) e `ap2intro` (guarda os grifos da antiga introdução, sem título próprio) NÃO são blocos, mas o módulo monta todas as `section.container`: entram no grupo REPASO (R = bibliografía, S = subrayados anteriores) em vez de um grupo «otro» solto. */
+  var AP2_REPASO = { bancoap2: 'B', bancofcap2: 'F', ap2biblio: 'R', ap2intro: 'S' };
+  function clasificarAP2(id) {
+    var m = /^ap2b(\d\d)$/.exec(id);
+    if (m) { var n = +m[1]; if (n >= 1 && n <= 8) return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(AP2_REPASO, id)) return { tipo: 'repaso', n: AP2_REPASO[id], num: -1, cap: 'r', vig: null };
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
@@ -384,7 +415,38 @@
         fc:   'Repaso activo por bloque'
       },
       clasificar: clasificarGN
-
+    },
+    'anatomia-patologica-ii-practica': {
+      vigDir: 'assets/img/anatoprat2/vig/',               // 16 vinhetas recortadas das láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP2P.md)
+      logo: 'assets/repasso-med-logo.png',
+      unidades: {},                                       // o conteúdo não tem «UNIDAD X» (traz PARCIAL 1/2 no marcador): nenhuma unidade é criada
+      medallones: [
+        { vig: 'vb-05', t: 'GASTRITIS',   cap: 5, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-08', t: 'CIRROSIS',    cap: 2, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-11', t: 'CROHN',       cap: 5, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Láminas por bloque',
+        quiz: 'Preguntas de práctica por bloque',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarAP2P
+    },
+    'anatomia-patologica-ii': {
+      vigDir: 'assets/img/anato2/vig/',                   // 8 vinhetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP2.md)
+      logo: 'assets/repasso-med-logo.png',
+      unidades: {},                                       // o conteúdo não tem «UNIDAD X» (traz PARCIAL 1/2/FINAL no marcador): nenhuma unidade é criada
+      medallones: [
+        { vig: 'vb-03', t: 'ESTÓMAGO',  cap: 3, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-05', t: 'INTESTINO', cap: 5, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-07', t: 'HÍGADO',    cap: 1, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Preguntas de práctica por bloque',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarAP2
     },
     'fisiopatologia': {
       vigDir: 'assets/img/fisio/vig/',                    // 12 vinhetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-FISIO1-FARMACO1.md)
@@ -420,6 +482,20 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFA
+    },
+    'dermatologia': {
+      vigDir: null,                                       // sem viñetas ilustradas: cada bloque usa o logo oficial (rm-sis-vig--logo)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Piel · Lesiones · Infecciones · Tumores',
+      miga: ['Guía de estudio', 'Dermatología'],
+      unidades: {},                                       // o conteúdo não tem «UNIDAD X»: nenhuma unidade é criada
+      medallones: [],                                     // sem ilustrações aprovadas ainda: a capa não leva medalhões
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarDE
     },
     'farmacologia-ii': {
       vigDir: 'assets/img/farmaco2/vig/',                 // 12 vinhetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-FARMACO2.md)
