@@ -1,14 +1,14 @@
 /* #631 · MODO «INFOGRAFÍAS» NO NAVEGADOR (módulos REAIS: rm-modes, rm-layout, rm-materia-nav, rm-materia-sistema, rm-pilot). Conta administradora, Supabase simulado.
-   Medicina Familiar (21 infografías .med-image.mf-info em 8 blocos) e Semiología II (34 <figure> com legenda): o cartão da capa e o modo separado existem; a contagem do cartão = soma dos
+   Medicina Familiar (21 infografías .med-image.mf-info em 8 blocos), Semiología II (34 <figure> com legenda) e Farmacología II (64 <div class="material-slide"> em 14 blocos): o cartão da capa e o modo separado existem; a contagem do cartão = soma dos
    cartões por bloco = infografias realmente mostradas; cada bloco isola SÓ as suas infografias (sem duplicata, sem questão/tabela/texto de corpo); ida (Siguiente) e volta (Anterior), «Volver»
    e «Ver el bloque completo» funcionam; o texto e os ids da matéria são os mesmos antes e depois de navegar pelo modo.
    Uso: NODE_PATH=$(npm root -g) node tools/qa/nova-era/infografias-modo.test.cjs [slug…]   (RM_LARGURAS=390,768,1440) */
 'use strict';
 const { chromium } = require('playwright');
 const L = require('../ensaio-layout/lib.cjs'); const D = require('../pre-voo/lib-dados.cjs'); const S = require('./lib-servidor.cjs'); S.U.JOSE = D.UID;
-const SLUGS = process.argv.slice(2).length ? process.argv.slice(2) : ['medicina-familiar', 'semiologia-ii'];
+const SLUGS = process.argv.slice(2).length ? process.argv.slice(2) : ['medicina-familiar', 'semiologia-ii', 'farmacologia-ii'];
 const LARG = process.env.RM_LARGURAS ? process.env.RM_LARGURAS.split(',').map(Number) : [1440, 768, 390];
-const ESPERADO = { 'medicina-familiar': { total: 21, por: { aps: 4, principios: 2, familiograma: 2, apgar: 3, crisis: 3, crecimiento: 3, desarrollo: 1, educacion: 3 } }, 'semiologia-ii': { total: 34 } };
+const ESPERADO = { 'medicina-familiar': { total: 21, por: { aps: 4, principios: 2, familiograma: 2, apgar: 3, crisis: 3, crecimiento: 3, desarrollo: 1, educacion: 3 } }, 'semiologia-ii': { total: 34 }, 'farmacologia-ii': { total: 64, por: { f2b01: 4, f2b02: 4, f2b03: 5, f2b04: 4, f2b05: 10, f2b07: 4, f2b06: 4, f2b08: 5, f2b09: 4, f2b10: 5, f2b11: 5, f2b12: 3, f2b13: 2, f2b14: 5 } } };
 let n = 0, ko = 0; const ok = (c, m, x) => { n++; if (c) { if (process.env.VERBOSO) console.log('    ✓', m); } else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 400) : ''); } return !!c; };
 const FOTO = () => {   // texto + ids da matéria fora da UI derivada
   const tab = document.querySelector('#materias-container > .tab-content.active'); const w = document.createTreeWalker(tab, NodeFilter.SHOW_TEXT, { acceptNode: t => t.parentElement && !t.parentElement.closest('[data-rm-ui],script,style') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT }); const tx = []; let t; while ((t = w.nextNode())) tx.push(t.textContent);
