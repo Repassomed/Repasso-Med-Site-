@@ -35,7 +35,7 @@ Auditoria de duplicatas (8-A.1) comparando conceito, conhecimento, raciocínio e
 | Completar 4 | Misoprostol: gravidez / contração uterina | **JÁ EXISTIA** | b09#1 (V/F) + explicação de b06#5 |
 | Completar 5 | Fosfolipase A₂ | **JÁ EXISTIA** | b06#2 (MCQ) e glossário do b06 |
 
-Total: 19 recebidas (14 MCQ + 5 completar), 15 consideradas além da sem enunciado → **4 acrescentadas** (3 MCQ + 1 completar), 8 já existiam, 5 incorporadas a outra, 2 pendentes (MCQ 2 no trecho do corticoide; completar 2), 1 fora (MCQ 15). Nenhuma questão antiga foi alterada, removida ou renumerada.
+Total das 19 analisadas (14 MCQ + 5 completar; a MCQ 15 ficou fora): **4 acrescentadas** (MCQ 1, MCQ 4, MCQ 14, completar 1), **10 já existiam** (MCQ 2 no trecho do misoprostol, 3, 5, 8, 10, 11, 13 e completar 3, 4, 5), **4 incorporadas a outra** (MCQ 6, 7, 9, 12), **1 pendente** (completar 2; MCQ 2 tem também um trecho pendente). Nenhuma questão antiga foi alterada, removida ou renumerada.
 
 ## O que mudou no site
 
