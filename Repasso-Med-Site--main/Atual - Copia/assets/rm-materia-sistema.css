@@ -103,6 +103,40 @@ html.rm-sis[data-rm-tema="medicina-familiar"] {
   --rm-pal-6: #3F8F4F; --rm-pal-6-head: #2C6C3A; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #E1F1E4; --rm-pal-6-ffg: #1B4526; --rm-pal-6-zebra: #F3FAF5; --rm-pal-6-edge: #B5D8BC; --rm-pal-6-line: #D7ECDB; --rm-pal-6-strong: #1F5530; --rm-pal-6-tint: #E6F3E8; --rm-pal-6-tag: #fff;
 }
 
+/* Biología (Nova Era) · verde-lima de citoplasma, uma família de cor por unidad; vinheta redonda (célula).
+   Bloco escrito DEPOIS da base técnica (mesma especificidade ⇒ vence). Só variáveis --rm-* e regras de aparência; nada toca conteúdo, ids nem dados do aluno. */
+html.rm-sis[data-rm-tema="biologia"] {
+  --rm-surface: #E6ECCF; --rm-side: #F1F5E3; --rm-side-edge: #C0CC9B; --rm-side-card: #DFE7C6; --rm-side-rule: #CFD9AE;
+  --rm-accent: #5D8A2E; --rm-accent-d: #3E5F1D; --rm-marker: #E9B949;
+  --rm-tag-radius: 7px; --rm-vig-radius: 50%; --rm-vig-ring: #CBD6A8;
+  --rm-pal-1: #3F7FB5; --rm-pal-1-head: #346894; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #E8F0F6; --rm-pal-1-ffg: #183045; --rm-pal-1-zebra: #F7FAFC; --rm-pal-1-edge: #BED3E6; --rm-pal-1-line: #E0EBF3; --rm-pal-1-strong: #274F70; --rm-pal-1-tint: #EEF3F8; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #5D8A2E; --rm-pal-2-head: #4C7126; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #ECF1E6; --rm-pal-2-ffg: #233411; --rm-pal-2-zebra: #F9FAF7; --rm-pal-2-edge: #C8D7B8; --rm-pal-2-line: #E5ECDE; --rm-pal-2-strong: #3A561D; --rm-pal-2-tint: #F0F4EC; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #C48A1C; --rm-pal-3-head: #A17117; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #F8F1E4; --rm-pal-3-ffg: #4A340B; --rm-pal-3-zebra: #FDFAF6; --rm-pal-3-edge: #EBD7B2; --rm-pal-3-line: #F6ECDB; --rm-pal-3-strong: #7A5611; --rm-pal-3-tint: #FAF4EB; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #8A5FB5; --rm-pal-4-head: #714E94; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #F1ECF6; --rm-pal-4-ffg: #342445; --rm-pal-4-zebra: #FAF9FC; --rm-pal-4-edge: #D7C9E6; --rm-pal-4-line: #ECE5F3; --rm-pal-4-strong: #563B70; --rm-pal-4-tint: #F4F1F8; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #2A8C8C; --rm-pal-5-head: #227373; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #E5F1F1; --rm-pal-5-ffg: #103535; --rm-pal-5-zebra: #F6FAFA; --rm-pal-5-edge: #B7D8D8; --rm-pal-5-line: #DDEDED; --rm-pal-5-strong: #1A5757; --rm-pal-5-tint: #ECF5F5; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #C2553F; --rm-pal-6-head: #9F4634; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #F8EBE8; --rm-pal-6-ffg: #4A2018; --rm-pal-6-zebra: #FDF8F7; --rm-pal-6-edge: #EAC5BE; --rm-pal-6-line: #F5E4E0; --rm-pal-6-strong: #783527; --rm-pal-6-tint: #FAF0EE; --rm-pal-6-tag: #fff;
+}
+/* Biología: asignatura em pílula (célula) e, nas unidades, o nome da unidad ao lado do rótulo */
+html.rm-sis[data-rm-tema="biologia"] #materias-container .rm-sis-s section.container .rm-sis-tag { clip-path: none; border-radius: 999px; padding: 0 18px 0 14px; }
+
+/* Embriología (Nova Era) · azul-aqua de líquido amniótico, vinheta em «ovo» orgânico; sem unidades no conteúdo.
+   Bloco escrito DEPOIS da base técnica (mesma especificidade ⇒ vence). Só variáveis --rm-* e regras de aparência; nada toca conteúdo, ids nem dados do aluno. */
+html.rm-sis[data-rm-tema="embriologia"] {
+  --rm-surface: #D8E9EE; --rm-side: #EAF4F7; --rm-side-edge: #A9CCD6; --rm-side-card: #CEE3E9; --rm-side-rule: #BBD7DF;
+  --rm-accent: #2F7FA6; --rm-accent-d: #1D5775; --rm-marker: #E9B949;
+  --rm-tag-radius: 9px; --rm-vig-radius: 46% 54% 50% 50% / 52% 48% 52% 48%; --rm-vig-ring: #BBD7DF;
+  --rm-pal-1: #2F7FA6; --rm-pal-1-head: #276888; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #E6F0F4; --rm-pal-1-ffg: #12303F; --rm-pal-1-zebra: #F7FAFB; --rm-pal-1-edge: #B8D3E1; --rm-pal-1-line: #DEEBF1; --rm-pal-1-strong: #1D4F67; --rm-pal-1-tint: #ECF3F7; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #C0526B; --rm-pal-2-head: #9D4358; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F7EAED; --rm-pal-2-ffg: #491F29; --rm-pal-2-zebra: #FCF8F9; --rm-pal-2-edge: #EAC4CD; --rm-pal-2-line: #F5E3E7; --rm-pal-2-strong: #773342; --rm-pal-2-tint: #F9EFF2; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #C48A1C; --rm-pal-3-head: #A17117; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #F8F1E4; --rm-pal-3-ffg: #4A340B; --rm-pal-3-zebra: #FDFAF6; --rm-pal-3-edge: #EBD7B2; --rm-pal-3-line: #F6ECDB; --rm-pal-3-strong: #7A5611; --rm-pal-3-tint: #FAF4EB; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #5E9B4F; --rm-pal-4-head: #4D7F41; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #ECF3EA; --rm-pal-4-ffg: #243B1E; --rm-pal-4-zebra: #F9FBF8; --rm-pal-4-edge: #C8DDC3; --rm-pal-4-line: #E5EFE3; --rm-pal-4-strong: #3A6031; --rm-pal-4-tint: #F1F6EF; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #8A5FB5; --rm-pal-5-head: #714E94; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F1ECF6; --rm-pal-5-ffg: #342445; --rm-pal-5-zebra: #FAF9FC; --rm-pal-5-edge: #D7C9E6; --rm-pal-5-line: #ECE5F3; --rm-pal-5-strong: #563B70; --rm-pal-5-tint: #F4F1F8; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #D9704B; --rm-pal-6-head: #B25C3E; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAEEE9; --rm-pal-6-ffg: #522B1C; --rm-pal-6-zebra: #FDF9F8; --rm-pal-6-edge: #F2CEC2; --rm-pal-6-line: #F9E8E2; --rm-pal-6-strong: #87452E; --rm-pal-6-tint: #FCF2EF; --rm-pal-6-tag: #fff;
+}
+/* Embriología não tem «UNIDAD X» no conteúdo: o módulo, sem unidade, rotularia o grupo dos blocos como «UNIDAD ·». Esse rótulo único (índice e menu lateral) não é mostrado;
+   o índice mostra «13 bloques» e o grupo REPASO mantém o seu rótulo. */
+html.rm-sis[data-rm-tema="embriologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="embriologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+
 /* ---------------------------------------------------------------------
    3 · CAPÍTULO → variáveis locais (--cap-*). Qualquer componente dentro de [data-rm-cap] as herda.
    --------------------------------------------------------------------- */
@@ -187,7 +221,6 @@ html.rm-sis .rm-sis-pill.is-on { background: var(--rm-gold); color: var(--rm-nav
 @media (max-width: 1099.98px) { html.rm-sis .rm-sis-brand, html.rm-sis .rm-sis-sep { display: none; } }
 @media (max-width: 559.98px) { html.rm-sis .rm-sis-brand, html.rm-sis .rm-sis-sep { display: none; } html.rm-sis .rm-l2-name b { font-size: 13.5px; } }
 html.rm-sis .rm-l2-band button:focus-visible { outline: 3px solid var(--rm-gold); }
-
 
 /* ---------------------------------------------------------------------
    5-A · ENTRADA COMPACTA (só no piloto): cabeçalho global + abas + faixa da matéria numa pilha curta, com UMA logo
@@ -883,7 +916,6 @@ html.rm-sis #materias-container .rm-sis-s section.container .s2-gl > i b { font-
 html.rm-sis #materias-container .rm-sis-s section.container .s2-gl > i::after { border-bottom-color: var(--rm-p4-note-bg); }
 html.rm-sis #materias-container .rm-sis-s section.container .s2-gl > i .s2-gl-close { color: #7A5C06; }
 
-
 /* glossário: o post-it (#rm-gl-note, camada do app-core, fora da folha) usa o amarelo de «mi nota» */
 html.rm-sis #rm-gl-note {
   background: var(--rm-p4-note-bg); border: 1px solid #E2BE3C; border-radius: 3px 3px 12px 12px; color: #3B2E06;
@@ -1284,7 +1316,6 @@ html.rm-sis .rm-l2-rescard--ab { --rc: var(--rm-res-ab); --rc-d: var(--rm-res-ab
 html.rm-sis .rm-l2-chip-r.t-ab { border-left-color: var(--rm-res-ab); }
 html.rm-sis .rm-l2-item[data-view="audiobooks"] svg { color: var(--rm-res-ab); }
 
-
 /* modos de estudio no ALTO da lateral (abaixo de «Índice general»): grade compacta de 2 colunas; no trilho (só ícones) seguem em coluna */
 html.rm-nav.rm-sis:not([data-rm-lmode="rail"]) #rm-l2-side .rm-l2-modes:not(.rm-l2-modes-end) { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0 6px; }
 html.rm-nav.rm-sis:not([data-rm-lmode="rail"]) #rm-l2-side .rm-l2-modes:not(.rm-l2-modes-end) .rm-l2-sep { grid-column: 1 / -1; margin: 6px 0 0; }
@@ -1399,3 +1430,137 @@ html.rm-sis[data-rm-tema="farmacologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis
 html.rm-sis[data-rm-tema="farmacologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
 /* e nas telas de «modo» (Infografías · Preguntas · Flashcards · Videos), onde o 1.º grupo de blocos também ganharia «UNIDAD ·» */
 html.rm-sis[data-rm-tema="farmacologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+
+/* ===== Fisiopatología II (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="fisiopatologia-ii"]. ===== */
+html.rm-sis[data-rm-tema="fisiopatologia-ii"][data-rm-tema] {
+  --rm-surface: #D9E8EE; --rm-side: #EAF3F7; --rm-side-edge: #B3CFDB; --rm-side-card: #D2E3EA; --rm-side-rule: #C2D9E3;
+  --rm-accent: #2C7A99; --rm-accent-d: #1D5870; --rm-marker: #E9B949;
+}
+/* o conteúdo não tem unidades: o rótulo de grupo único «UNIDAD ·» não é mostrado (índice, lateral e telas de modo); o grupo REPASO mantém o seu */
+html.rm-sis[data-rm-tema="fisiopatologia-ii"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="fisiopatologia-ii"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="fisiopatologia-ii"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+/* AP I Práctica e Histología I (Nova Era): só variáveis --rm-* e o rótulo único «UNIDAD ·» oculto (as matérias não têm «UNIDAD X»). */
+html.rm-sis[data-rm-tema="anatomia-patologica-practica"] {
+  --rm-surface: #EEDDE1; --rm-side: #F8EEF0; --rm-side-edge: #D6B1BB; --rm-side-card: #EAD1D7; --rm-side-rule: #E2C4CB;
+  --rm-accent: #A23A60; --rm-accent-d: #6F2543; --rm-marker: #E9B949;
+  --rm-tag-radius: 4px; --rm-vig-radius: 50%; --rm-vig-ring: #E4C5CD;
+  --rm-pal-1: #B03A5B; --rm-pal-1-head: #90304B; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #F6E7EB; --rm-pal-1-ffg: #431623; --rm-pal-1-zebra: #FCF7F8; --rm-pal-1-edge: #E4BCC7; --rm-pal-1-line: #F2DFE5; --rm-pal-1-strong: #6D2438; --rm-pal-1-tint: #F8EDF0; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #5B4FA8; --rm-pal-2-head: #4B418A; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #EBEAF5; --rm-pal-2-ffg: #231E40; --rm-pal-2-zebra: #F8F8FC; --rm-pal-2-edge: #C7C3E1; --rm-pal-2-line: #E5E3F1; --rm-pal-2-strong: #383168; --rm-pal-2-tint: #F0EFF7; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #C48A1C; --rm-pal-3-head: #A17117; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #F8F1E4; --rm-pal-3-ffg: #4A340B; --rm-pal-3-zebra: #FDFAF6; --rm-pal-3-edge: #EBD7B2; --rm-pal-3-line: #F6ECDB; --rm-pal-3-strong: #7A5611; --rm-pal-3-tint: #FAF4EB; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #2F8A86; --rm-pal-4-head: #27716E; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #E6F1F0; --rm-pal-4-ffg: #123433; --rm-pal-4-zebra: #F7FAFA; --rm-pal-4-edge: #B8D7D6; --rm-pal-4-line: #DEECEC; --rm-pal-4-strong: #1D5653; --rm-pal-4-tint: #ECF4F4; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #2F6FB0; --rm-pal-5-head: #275B90; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #E6EEF6; --rm-pal-5-ffg: #122A43; --rm-pal-5-zebra: #F7F9FC; --rm-pal-5-edge: #B8CEE4; --rm-pal-5-line: #DEE8F2; --rm-pal-5-strong: #1D456D; --rm-pal-5-tint: #ECF2F8; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #4C8F4F; --rm-pal-6-head: #3E7541; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #EAF2EA; --rm-pal-6-ffg: #1D361E; --rm-pal-6-zebra: #F8FBF8; --rm-pal-6-edge: #C2D9C3; --rm-pal-6-line: #E2EDE3; --rm-pal-6-strong: #2F5931; --rm-pal-6-tint: #EFF5EF; --rm-pal-6-tag: #fff;
+}
+/* a matéria não tem «UNIDAD X» no marcador: o módulo rotularia o grupo único dos blocos como «UNIDAD ·». Esse rótulo (índice e menu lateral) não é mostrado;
+   o índice mostra «N bloques» e o grupo REPASO mantém o seu rótulo. Mesma solução já usada por Farmacología I. */
+html.rm-sis[data-rm-tema="anatomia-patologica-practica"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="anatomia-patologica-practica"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="histologia-i"] {
+  --rm-surface: #E0DBF0; --rm-side: #EFECF8; --rm-side-edge: #B9B0DC; --rm-side-card: #DCD6EF; --rm-side-rule: #CBC3E6;
+  --rm-accent: #5B4FA8; --rm-accent-d: #3A307A; --rm-marker: #E9B949;
+  --rm-tag-radius: 11px; --rm-vig-radius: 16px; --rm-vig-ring: #CFC6EA;
+  --rm-pal-1: #6A55B8; --rm-pal-1-head: #574697; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #EDEBF6; --rm-pal-1-ffg: #282046; --rm-pal-1-zebra: #F9F8FC; --rm-pal-1-edge: #CCC5E7; --rm-pal-1-line: #E7E4F4; --rm-pal-1-strong: #423572; --rm-pal-1-tint: #F2F0F9; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #C2467A; --rm-pal-2-head: #9F3964; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F8E9EF; --rm-pal-2-ffg: #4A1B2E; --rm-pal-2-zebra: #FDF8FA; --rm-pal-2-edge: #EAC0D2; --rm-pal-2-line: #F5E1EA; --rm-pal-2-strong: #782B4C; --rm-pal-2-tint: #FAEEF3; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #2F6FB0; --rm-pal-3-head: #275B90; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #E6EEF6; --rm-pal-3-ffg: #122A43; --rm-pal-3-zebra: #F7F9FC; --rm-pal-3-edge: #B8CEE4; --rm-pal-3-line: #DEE8F2; --rm-pal-3-strong: #1D456D; --rm-pal-3-tint: #ECF2F8; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #2F8A86; --rm-pal-4-head: #27716E; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #E6F1F0; --rm-pal-4-ffg: #123433; --rm-pal-4-zebra: #F7FAFA; --rm-pal-4-edge: #B8D7D6; --rm-pal-4-line: #DEECEC; --rm-pal-4-strong: #1D5653; --rm-pal-4-tint: #ECF4F4; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #C48A1C; --rm-pal-5-head: #A17117; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F8F1E4; --rm-pal-5-ffg: #4A340B; --rm-pal-5-zebra: #FDFAF6; --rm-pal-5-edge: #EBD7B2; --rm-pal-5-line: #F6ECDB; --rm-pal-5-strong: #7A5611; --rm-pal-5-tint: #FAF4EB; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #D5603F; --rm-pal-6-head: #AF4F34; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAECE8; --rm-pal-6-ffg: #512418; --rm-pal-6-zebra: #FDF9F7; --rm-pal-6-edge: #F1C9BE; --rm-pal-6-line: #F8E6E0; --rm-pal-6-strong: #843C27; --rm-pal-6-tint: #FBF1EE; --rm-pal-6-tag: #fff;
+}
+/* a matéria não tem «UNIDAD X» no marcador: o módulo rotularia o grupo único dos blocos como «UNIDAD ·». Esse rótulo (índice e menu lateral) não é mostrado;
+   o índice mostra «N bloques» e o grupo REPASO mantém o seu rótulo. Mesma solução já usada por Farmacología I. */
+html.rm-sis[data-rm-tema="histologia-i"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="histologia-i"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+
+/* Histología I Práctica, Histología II e Histología II Práctica (Nova Era): só variáveis --rm-* e o rótulo único «UNIDAD ·» oculto (nenhuma tem «UNIDAD X»). */
+html.rm-sis[data-rm-tema="histologia-i-practica"] {
+  --rm-surface: #EADCEB; --rm-side: #F5ECF5; --rm-side-edge: #CDB0CF; --rm-side-card: #E3CFE5; --rm-side-rule: #D9C0DB;
+  --rm-accent: #8E3F94; --rm-accent-d: #612A66; --rm-marker: #E9B949;
+  --rm-tag-radius: 6px; --rm-vig-radius: 50%; --rm-vig-ring: #DCC6DE;
+  --rm-pal-1: #6A55B8; --rm-pal-1-head: #574697; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #EDEBF6; --rm-pal-1-ffg: #282046; --rm-pal-1-zebra: #F9F8FC; --rm-pal-1-edge: #CCC5E7; --rm-pal-1-line: #E7E4F4; --rm-pal-1-strong: #423572; --rm-pal-1-tint: #F2F0F9; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #C2467A; --rm-pal-2-head: #9F3964; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F8E9EF; --rm-pal-2-ffg: #4A1B2E; --rm-pal-2-zebra: #FDF8FA; --rm-pal-2-edge: #EAC0D2; --rm-pal-2-line: #F5E1EA; --rm-pal-2-strong: #782B4C; --rm-pal-2-tint: #FAEEF3; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #2F6FB0; --rm-pal-3-head: #275B90; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #E6EEF6; --rm-pal-3-ffg: #122A43; --rm-pal-3-zebra: #F7F9FC; --rm-pal-3-edge: #B8CEE4; --rm-pal-3-line: #DEE8F2; --rm-pal-3-strong: #1D456D; --rm-pal-3-tint: #ECF2F8; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #2F8A86; --rm-pal-4-head: #27716E; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #E6F1F0; --rm-pal-4-ffg: #123433; --rm-pal-4-zebra: #F7FAFA; --rm-pal-4-edge: #B8D7D6; --rm-pal-4-line: #DEECEC; --rm-pal-4-strong: #1D5653; --rm-pal-4-tint: #ECF4F4; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #C48A1C; --rm-pal-5-head: #A17117; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F8F1E4; --rm-pal-5-ffg: #4A340B; --rm-pal-5-zebra: #FDFAF6; --rm-pal-5-edge: #EBD7B2; --rm-pal-5-line: #F6ECDB; --rm-pal-5-strong: #7A5611; --rm-pal-5-tint: #FAF4EB; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #D5603F; --rm-pal-6-head: #AF4F34; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAECE8; --rm-pal-6-ffg: #512418; --rm-pal-6-zebra: #FDF9F7; --rm-pal-6-edge: #F1C9BE; --rm-pal-6-line: #F8E6E0; --rm-pal-6-strong: #843C27; --rm-pal-6-tint: #FBF1EE; --rm-pal-6-tag: #fff;
+}
+html.rm-sis[data-rm-tema="histologia-i-practica"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="histologia-i-practica"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="histologia-ii"] {
+  --rm-surface: #DCEBE3; --rm-side: #ECF5F0; --rm-side-edge: #AFCDBD; --rm-side-card: #D2E5DA; --rm-side-rule: #C0D9CB;
+  --rm-accent: #2F8A6B; --rm-accent-d: #1F6049; --rm-marker: #E9B949;
+  --rm-tag-radius: 10px; --rm-vig-radius: 16px; --rm-vig-ring: #C4DCCF;
+  --rm-pal-1: #6A55B8; --rm-pal-1-head: #574697; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #EDEBF6; --rm-pal-1-ffg: #282046; --rm-pal-1-zebra: #F9F8FC; --rm-pal-1-edge: #CCC5E7; --rm-pal-1-line: #E7E4F4; --rm-pal-1-strong: #423572; --rm-pal-1-tint: #F2F0F9; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #C2467A; --rm-pal-2-head: #9F3964; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F8E9EF; --rm-pal-2-ffg: #4A1B2E; --rm-pal-2-zebra: #FDF8FA; --rm-pal-2-edge: #EAC0D2; --rm-pal-2-line: #F5E1EA; --rm-pal-2-strong: #782B4C; --rm-pal-2-tint: #FAEEF3; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #2F6FB0; --rm-pal-3-head: #275B90; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #E6EEF6; --rm-pal-3-ffg: #122A43; --rm-pal-3-zebra: #F7F9FC; --rm-pal-3-edge: #B8CEE4; --rm-pal-3-line: #DEE8F2; --rm-pal-3-strong: #1D456D; --rm-pal-3-tint: #ECF2F8; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #2F8A86; --rm-pal-4-head: #27716E; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #E6F1F0; --rm-pal-4-ffg: #123433; --rm-pal-4-zebra: #F7FAFA; --rm-pal-4-edge: #B8D7D6; --rm-pal-4-line: #DEECEC; --rm-pal-4-strong: #1D5653; --rm-pal-4-tint: #ECF4F4; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #C48A1C; --rm-pal-5-head: #A17117; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F8F1E4; --rm-pal-5-ffg: #4A340B; --rm-pal-5-zebra: #FDFAF6; --rm-pal-5-edge: #EBD7B2; --rm-pal-5-line: #F6ECDB; --rm-pal-5-strong: #7A5611; --rm-pal-5-tint: #FAF4EB; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #D5603F; --rm-pal-6-head: #AF4F34; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAECE8; --rm-pal-6-ffg: #512418; --rm-pal-6-zebra: #FDF9F7; --rm-pal-6-edge: #F1C9BE; --rm-pal-6-line: #F8E6E0; --rm-pal-6-strong: #843C27; --rm-pal-6-tint: #FBF1EE; --rm-pal-6-tag: #fff;
+}
+
+/* Toxicología (Nova Era): só variáveis --rm-* e o rótulo único «UNIDAD ·» oculto (o marcador «UNIDAD 1…4» usa algarismos arábicos). */
+html.rm-sis[data-rm-tema="toxicologia"] {
+  --rm-surface: #E3EAD6; --rm-side: #F0F4E7; --rm-side-edge: #BCCBA2; --rm-side-card: #DAE4C9; --rm-side-rule: #CCDAB5;
+  --rm-accent: #5C7F2A; --rm-accent-d: #3E571B; --rm-marker: #E9B949;
+  --rm-tag-radius: 5px; --rm-vig-radius: 12px; --rm-vig-ring: #CFDBB8;
+  --rm-pal-1: #6A55B8; --rm-pal-1-head: #574697; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #EDEBF6; --rm-pal-1-ffg: #282046; --rm-pal-1-zebra: #F9F8FC; --rm-pal-1-edge: #CCC5E7; --rm-pal-1-line: #E7E4F4; --rm-pal-1-strong: #423572; --rm-pal-1-tint: #F2F0F9; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #C2467A; --rm-pal-2-head: #9F3964; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F8E9EF; --rm-pal-2-ffg: #4A1B2E; --rm-pal-2-zebra: #FDF8FA; --rm-pal-2-edge: #EAC0D2; --rm-pal-2-line: #F5E1EA; --rm-pal-2-strong: #782B4C; --rm-pal-2-tint: #FAEEF3; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #2F6FB0; --rm-pal-3-head: #275B90; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #E6EEF6; --rm-pal-3-ffg: #122A43; --rm-pal-3-zebra: #F7F9FC; --rm-pal-3-edge: #B8CEE4; --rm-pal-3-line: #DEE8F2; --rm-pal-3-strong: #1D456D; --rm-pal-3-tint: #ECF2F8; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #2F8A86; --rm-pal-4-head: #27716E; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #E6F1F0; --rm-pal-4-ffg: #123433; --rm-pal-4-zebra: #F7FAFA; --rm-pal-4-edge: #B8D7D6; --rm-pal-4-line: #DEECEC; --rm-pal-4-strong: #1D5653; --rm-pal-4-tint: #ECF4F4; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #C48A1C; --rm-pal-5-head: #A17117; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F8F1E4; --rm-pal-5-ffg: #4A340B; --rm-pal-5-zebra: #FDFAF6; --rm-pal-5-edge: #EBD7B2; --rm-pal-5-line: #F6ECDB; --rm-pal-5-strong: #7A5611; --rm-pal-5-tint: #FAF4EB; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #D5603F; --rm-pal-6-head: #AF4F34; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAECE8; --rm-pal-6-ffg: #512418; --rm-pal-6-zebra: #FDF9F7; --rm-pal-6-edge: #F1C9BE; --rm-pal-6-line: #F8E6E0; --rm-pal-6-strong: #843C27; --rm-pal-6-tint: #FBF1EE; --rm-pal-6-tag: #fff;
+}
+html.rm-sis[data-rm-tema="toxicologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="toxicologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="histologia-ii"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="histologia-ii"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="histologia-ii-practica"] {
+  --rm-surface: #EFDDDD; --rm-side: #F8EEEE; --rm-side-edge: #D6B3B3; --rm-side-card: #EBD2D2; --rm-side-rule: #E2C4C4;
+  --rm-accent: #A33A3A; --rm-accent-d: #712525; --rm-marker: #E9B949;
+  --rm-tag-radius: 4px; --rm-vig-radius: 50%; --rm-vig-ring: #E4C6C6;
+  --rm-pal-1: #6A55B8; --rm-pal-1-head: #574697; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #EDEBF6; --rm-pal-1-ffg: #282046; --rm-pal-1-zebra: #F9F8FC; --rm-pal-1-edge: #CCC5E7; --rm-pal-1-line: #E7E4F4; --rm-pal-1-strong: #423572; --rm-pal-1-tint: #F2F0F9; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #C2467A; --rm-pal-2-head: #9F3964; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F8E9EF; --rm-pal-2-ffg: #4A1B2E; --rm-pal-2-zebra: #FDF8FA; --rm-pal-2-edge: #EAC0D2; --rm-pal-2-line: #F5E1EA; --rm-pal-2-strong: #782B4C; --rm-pal-2-tint: #FAEEF3; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #2F6FB0; --rm-pal-3-head: #275B90; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #E6EEF6; --rm-pal-3-ffg: #122A43; --rm-pal-3-zebra: #F7F9FC; --rm-pal-3-edge: #B8CEE4; --rm-pal-3-line: #DEE8F2; --rm-pal-3-strong: #1D456D; --rm-pal-3-tint: #ECF2F8; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #2F8A86; --rm-pal-4-head: #27716E; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #E6F1F0; --rm-pal-4-ffg: #123433; --rm-pal-4-zebra: #F7FAFA; --rm-pal-4-edge: #B8D7D6; --rm-pal-4-line: #DEECEC; --rm-pal-4-strong: #1D5653; --rm-pal-4-tint: #ECF4F4; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #C48A1C; --rm-pal-5-head: #A17117; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F8F1E4; --rm-pal-5-ffg: #4A340B; --rm-pal-5-zebra: #FDFAF6; --rm-pal-5-edge: #EBD7B2; --rm-pal-5-line: #F6ECDB; --rm-pal-5-strong: #7A5611; --rm-pal-5-tint: #FAF4EB; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #D5603F; --rm-pal-6-head: #AF4F34; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAECE8; --rm-pal-6-ffg: #512418; --rm-pal-6-zebra: #FDF9F7; --rm-pal-6-edge: #F1C9BE; --rm-pal-6-line: #F8E6E0; --rm-pal-6-strong: #843C27; --rm-pal-6-tint: #FBF1EE; --rm-pal-6-tag: #fff;
+}
+html.rm-sis[data-rm-tema="histologia-ii-practica"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="histologia-ii-practica"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+
+/* Anestesiología (Nova Era): só variáveis --rm-* (unidades I e II vêm do marcador real). */
+html.rm-sis[data-rm-tema="anestesiologia"] {
+  --rm-surface: #D9E8EF; --rm-side: #EAF3F7; --rm-side-edge: #A9C9D6; --rm-side-card: #CDE1EA; --rm-side-rule: #BAD5E0;
+  --rm-accent: #2F7FA6; --rm-accent-d: #1D5775; --rm-marker: #E9B949;
+  --rm-tag-radius: 8px; --rm-vig-radius: 14px; --rm-vig-ring: #BCD6E2;
+  --rm-pal-1: #6A55B8; --rm-pal-1-head: #574697; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #EDEBF6; --rm-pal-1-ffg: #282046; --rm-pal-1-zebra: #F9F8FC; --rm-pal-1-edge: #CCC5E7; --rm-pal-1-line: #E7E4F4; --rm-pal-1-strong: #423572; --rm-pal-1-tint: #F2F0F9; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #C2467A; --rm-pal-2-head: #9F3964; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F8E9EF; --rm-pal-2-ffg: #4A1B2E; --rm-pal-2-zebra: #FDF8FA; --rm-pal-2-edge: #EAC0D2; --rm-pal-2-line: #F5E1EA; --rm-pal-2-strong: #782B4C; --rm-pal-2-tint: #FAEEF3; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #2F6FB0; --rm-pal-3-head: #275B90; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #E6EEF6; --rm-pal-3-ffg: #122A43; --rm-pal-3-zebra: #F7F9FC; --rm-pal-3-edge: #B8CEE4; --rm-pal-3-line: #DEE8F2; --rm-pal-3-strong: #1D456D; --rm-pal-3-tint: #ECF2F8; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #2F8A86; --rm-pal-4-head: #27716E; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #E6F1F0; --rm-pal-4-ffg: #123433; --rm-pal-4-zebra: #F7FAFA; --rm-pal-4-edge: #B8D7D6; --rm-pal-4-line: #DEECEC; --rm-pal-4-strong: #1D5653; --rm-pal-4-tint: #ECF4F4; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #C48A1C; --rm-pal-5-head: #A17117; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F8F1E4; --rm-pal-5-ffg: #4A340B; --rm-pal-5-zebra: #FDFAF6; --rm-pal-5-edge: #EBD7B2; --rm-pal-5-line: #F6ECDB; --rm-pal-5-strong: #7A5611; --rm-pal-5-tint: #FAF4EB; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #D5603F; --rm-pal-6-head: #AF4F34; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAECE8; --rm-pal-6-ffg: #512418; --rm-pal-6-zebra: #FDF9F7; --rm-pal-6-edge: #F1C9BE; --rm-pal-6-line: #F8E6E0; --rm-pal-6-strong: #843C27; --rm-pal-6-tint: #FBF1EE; --rm-pal-6-tag: #fff;
+}
+
+html.rm-sis[data-rm-tema="ortopedia"] {
+  --rm-surface: #EADFD2; --rm-side: #F5EEE5; --rm-side-edge: #CDB9A1; --rm-side-card: #E3D3C0; --rm-side-rule: #D8C5AE;
+  --rm-accent: #A0663A; --rm-accent-d: #6E4325; --rm-marker: #E9B949;
+  --rm-tag-radius: 8px; --rm-vig-radius: 12px; --rm-vig-ring: #DDC9B2;
+  --rm-pal-1: #6A55B8; --rm-pal-1-head: #574697; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #EDEBF6; --rm-pal-1-ffg: #282046; --rm-pal-1-zebra: #F9F8FC; --rm-pal-1-edge: #CCC5E7; --rm-pal-1-line: #E7E4F4; --rm-pal-1-strong: #423572; --rm-pal-1-tint: #F2F0F9; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #C2467A; --rm-pal-2-head: #9F3964; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F8E9EF; --rm-pal-2-ffg: #4A1B2E; --rm-pal-2-zebra: #FDF8FA; --rm-pal-2-edge: #EAC0D2; --rm-pal-2-line: #F5E1EA; --rm-pal-2-strong: #782B4C; --rm-pal-2-tint: #FAEEF3; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #2F6FB0; --rm-pal-3-head: #275B90; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #E6EEF6; --rm-pal-3-ffg: #122A43; --rm-pal-3-zebra: #F7F9FC; --rm-pal-3-edge: #B8CEE4; --rm-pal-3-line: #DEE8F2; --rm-pal-3-strong: #1D456D; --rm-pal-3-tint: #ECF2F8; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #2F8A86; --rm-pal-4-head: #27716E; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #E6F1F0; --rm-pal-4-ffg: #123433; --rm-pal-4-zebra: #F7FAFA; --rm-pal-4-edge: #B8D7D6; --rm-pal-4-line: #DEECEC; --rm-pal-4-strong: #1D5653; --rm-pal-4-tint: #ECF4F4; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #C48A1C; --rm-pal-5-head: #A17117; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F8F1E4; --rm-pal-5-ffg: #4A340B; --rm-pal-5-zebra: #FDFAF6; --rm-pal-5-edge: #EBD7B2; --rm-pal-5-line: #F6ECDB; --rm-pal-5-strong: #7A5611; --rm-pal-5-tint: #FAF4EB; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #D5603F; --rm-pal-6-head: #AF4F34; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAECE8; --rm-pal-6-ffg: #512418; --rm-pal-6-zebra: #FDF9F7; --rm-pal-6-edge: #F1C9BE; --rm-pal-6-line: #F8E6E0; --rm-pal-6-strong: #843C27; --rm-pal-6-tint: #FBF1EE; --rm-pal-6-tag: #fff;
+}
+
+html.rm-sis[data-rm-tema="oftalmologia"] {
+  --rm-surface: #DCE3F0; --rm-side: #ECF0F8; --rm-side-edge: #AEBBD6; --rm-side-card: #D2DAEA; --rm-side-rule: #C1CCE2;
+  --rm-accent: #3E5FA8; --rm-accent-d: #2A407A; --rm-marker: #E9B949;
+  --rm-tag-radius: 10px; --rm-vig-radius: 50%; --rm-vig-ring: #C5CFE6;
+  --rm-pal-1: #6A55B8; --rm-pal-1-head: #574697; --rm-pal-1-hfg: #fff; --rm-pal-1-first: #EDEBF6; --rm-pal-1-ffg: #282046; --rm-pal-1-zebra: #F9F8FC; --rm-pal-1-edge: #CCC5E7; --rm-pal-1-line: #E7E4F4; --rm-pal-1-strong: #423572; --rm-pal-1-tint: #F2F0F9; --rm-pal-1-tag: #fff;
+  --rm-pal-2: #C2467A; --rm-pal-2-head: #9F3964; --rm-pal-2-hfg: #fff; --rm-pal-2-first: #F8E9EF; --rm-pal-2-ffg: #4A1B2E; --rm-pal-2-zebra: #FDF8FA; --rm-pal-2-edge: #EAC0D2; --rm-pal-2-line: #F5E1EA; --rm-pal-2-strong: #782B4C; --rm-pal-2-tint: #FAEEF3; --rm-pal-2-tag: #fff;
+  --rm-pal-3: #2F6FB0; --rm-pal-3-head: #275B90; --rm-pal-3-hfg: #fff; --rm-pal-3-first: #E6EEF6; --rm-pal-3-ffg: #122A43; --rm-pal-3-zebra: #F7F9FC; --rm-pal-3-edge: #B8CEE4; --rm-pal-3-line: #DEE8F2; --rm-pal-3-strong: #1D456D; --rm-pal-3-tint: #ECF2F8; --rm-pal-3-tag: #fff;
+  --rm-pal-4: #2F8A86; --rm-pal-4-head: #27716E; --rm-pal-4-hfg: #fff; --rm-pal-4-first: #E6F1F0; --rm-pal-4-ffg: #123433; --rm-pal-4-zebra: #F7FAFA; --rm-pal-4-edge: #B8D7D6; --rm-pal-4-line: #DEECEC; --rm-pal-4-strong: #1D5653; --rm-pal-4-tint: #ECF4F4; --rm-pal-4-tag: #fff;
+  --rm-pal-5: #C48A1C; --rm-pal-5-head: #A17117; --rm-pal-5-hfg: #fff; --rm-pal-5-first: #F8F1E4; --rm-pal-5-ffg: #4A340B; --rm-pal-5-zebra: #FDFAF6; --rm-pal-5-edge: #EBD7B2; --rm-pal-5-line: #F6ECDB; --rm-pal-5-strong: #7A5611; --rm-pal-5-tint: #FAF4EB; --rm-pal-5-tag: #fff;
+  --rm-pal-6: #D5603F; --rm-pal-6-head: #AF4F34; --rm-pal-6-hfg: #fff; --rm-pal-6-first: #FAECE8; --rm-pal-6-ffg: #512418; --rm-pal-6-zebra: #FDF9F7; --rm-pal-6-edge: #F1C9BE; --rm-pal-6-line: #F8E6E0; --rm-pal-6-strong: #843C27; --rm-pal-6-tint: #FBF1EE; --rm-pal-6-tag: #fff;
+}
