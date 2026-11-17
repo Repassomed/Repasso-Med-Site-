@@ -56,6 +56,23 @@ La carpeta tiene 16 archivos. Los números **1 a 8** (agosto–septiembre) ya es
 4. **Verificação:** busca no HTML inteiro por `0,9 mg`, `90 mg`, `10 % en bolo`, `rt-PA o tenecteplasa`, `0–24 h`, `0–4,5 h`, `185/110`, `Cada 10 min`, `1 semana menos`: **0 ocorrências**.
 5. **Limitação que permanece:** sem fonte de ictus no Drive, **nenhuma dose de trombolítico** está nos blocos; recomenda-se que José (ou a cátedra) forneça a guia que a disciplina adota se quiser dose no material.
 
+## Revisão de 19/11 — punção lombar (bloco 20) e «CRASH-2» (bloco 27)
+
+**1. Punção lombar diante de cefaleia, vômitos e papiledema.**
+- *O que o slide 9 diz* (texto lido): a PL tem risco de herniação quando há hipertensão endocraniana, mais frequente com lesão ocupante que em meningite, HSA e pseudotumor; **deve ser precedida de TAC/RMN** se há papiledema ou sinais fortes de HTE; e, em meningite, HSA e pseudotumor, a necessidade da amostra «justifica prescindir» da imagem prévia.
+- *Problema:* o resumo dizia «excepção: meningite, HSA e pseudotumor, onde a amostra não pode esperar» e uma pergunta/flashcard repetiam «justifica não esperar a imagem». Isso pode induzir a punção **automática** e sem avaliação de contraindicações.
+- *Literatura-base / fonte permitida:* **não há** (Drive da disciplina sem livro ou diretriz de neurologia/neuroinfecção). **Nenhuma pauta própria foi acrescentada** e nenhuma fonte inventada.
+- *Correção:* o texto passa a dizer que, com sinais de HTE, a regra é **imagem primeiro**; que em meningite, HSA ou pseudotumor o valor da amostra pode pesar mais que o risco e **por isso às vezes se adianta a punção**, mas **nunca de forma automática**: cada caso se valora (sinais de HTE, possibilidade de massa, contraindicações), «ante a dúvida, a imagem primeiro», decisão do equipe com a guia vigente (o material não fixa pauta). Sem lista de contraindicações própria.
+- *Peças alteradas (mesmo id, mesma letra correta):* tabela §1 do bloco 20, caixa «Lo esencial», síntese ponto 2, **pergunta «Un paciente con fiebre, rigidez de nuca…»** (bloco **e** banco; a alternativa «sem excepções» foi trocada por «punção automática… sem valorar nada», e a correta passa a ser a que exige valorar HTE e contraindicações) e **flashcard** (bloco e mazo geral). Busca no HTML: 0 ocorrências de «Excepción:», «no puede esperar», «prescindir de la imagen», «justifica no esperar», «salvo en».
+- *O que fica pendente:* que José/a cátedra indique a guia adotada se quiser uma pauta explícita (p. ex., para meningite bacteriana).
+
+**2. «CRASH-2» (TEC grave, bloco 27).**
+- *Slide 16 (figura «TCE Grave», lida):* «Corticoides: CONTRAINDICADOS (CRASH-2)». O nome do estudo **não pôde ser confirmado** em fonte permitida (e **o rótulo pode estar errado**: não há como verificá-lo aqui sem fonte).
+- *Decisão:* **retirada a referência ao estudo** do texto e da pergunta (bloco e banco). Fica «os corticoides não se recomendam no TEC grave (o material os assinala como contraindicados)» e a pergunta passou a «não se recomenda segundo o material de la cátedra»; a afirmação já não depende do nome do estudo.
+- *Limite:* a contraindicação dos corticoides no TEC grave vem **só do slide**, sem confirmação em livro.
+
+**3. Mantido:** a correção sobre alteplasa/tenecteplasa (sem doses, sem janela rígida, sem lista fechada de contraindicações).
+
 ## Doses, limiares e cifras: origem exata e o que NÃO está confirmado
 
 **Regra aplicada:** toda dose, limiar ou percentual dos blocos 20–27 vem **do texto ou da figura do slide indicado**; **nenhum foi confirmado em livro-base** (não há livro de Neurología na pasta e não abri nenhum). Nenhuma fonte foi inventada; onde o slide não dá número, o bloco não o dá.
@@ -76,7 +93,7 @@ La carpeta tiene 16 archivos. Los números **1 a 8** (agosto–septiembre) ya es
 | SGB: IgIV 0,4 g/kg × 5 d, PE 5 sessões, CVF < 20 mL/kg, proteínas > 0,45 g/L; EM: metilprednisolona 1 g × 3–5 d, PLEX 5–7, P100 > 100 ms; McDonald 2017 | `14..pdf` · texto e figura McDonald (renderizada e lida) | **não** |
 | Cefaleias: durações, O₂ 12–15 L/min, sumatriptano 6 mg SC, verapamil | `14..pdf` · texto | **não** |
 | TEC: 150–300/100 mil, 50–60 %, tabela de gravidade; hematomas; fístulas 70 % em 7–10 dias; critérios de TAC e de cirurgia | `15..pdf` e `16. TEC II.pdf` · texto e figuras (renderizadas e lidas) | **não** |
-| TEC grave: PIC < 22, glicemia 140–180, 36–37 °C, corticoides contraindicados (CRASH-2), levetiracetam × 7 d, PIC > 25 > 1 h | `16. TEC II.pdf` · figuras (renderizadas e lidas) | **não** |
+| TEC grave: PIC < 22, glicemia 140–180, 36–37 °C, corticoides «contraindicados» (o slide cita «CRASH-2»; **referência retirada do texto do aluno**, ver «Revisão 19/11»), levetiracetam × 7 d, PIC > 25 > 1 h | `16. TEC II.pdf` · figuras (renderizadas e lidas) | **não** |
 
 **Classificação que segue pendente:** a tabela de **«estado» de consciência** do slide 15 (confusão 14–15, letargo 12–13, obnubilação 9–11, estupor 6–8, coma ≤ 5). **Não foi incluída nos blocos, não há pergunta sobre ela e nenhuma fonte foi procurada ou inventada para ela**; ela difere de «coma ≤ 8» do bloco 18. Decisão de José/cátedra.
 
