@@ -3472,6 +3472,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:664.",
       "task_id": "nova-era-ortopedia-oftalmologia-2026-11",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "f87a23edcba3cf7fafa6c6cadb2ae43ba10c59ec",
+      "component": "guard",
+      "error_id": "ERR-B44B52D4F5",
+      "error_type": "hard-fail",
+      "fingerprint": "b44b52d4f59c67682e23",
+      "first_seen": "2026-11-17T18:07:39.942619+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "976783145658442887932455fbca84d6",
+      "issue_sync_updated_at": "2026-11-17T18:07:39.942619+00:00",
+      "last_evidence_hash": "f14349c201aaa60217b9",
+      "last_seen": "2026-11-17T18:07:39.942619+00:00",
+      "occurrence_count": 1,
+      "pr_number": 669,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "44144210760",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:669.",
+      "task_id": "neurologia-p2-667",
+      "worker_id": null
     }
   ]
 }
