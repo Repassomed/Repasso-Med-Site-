@@ -116,6 +116,20 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Fisiopatología II (Nova Era): ids `fp2bNN` FORA da ordem do conteúdo (fp2b12 = «BLOQUE 03» EII, fp2b04 = «BLOQUE 04», fp2b03 = «BLOQUE 05», fp2b13 = «BLOQUE 06», fp2b14 = «BLOQUE 07»).
+     A numeração é a do MARCADOR («BLOQUE NN · ÁREA · TEMA») e a ordem do DOM já a respeita. Sem «UNIDAD X» no conteúdo (o marcador traz a ÁREA: digestivo, hígado, riñón…):
+     nenhuma unidade é criada. `fp2portada` (oculta, vazia) não é montada pelo módulo. Banco geral e mazo geral = repaso. Vinhetas: 9 recortes de infografías do próprio
+     conteúdo; os blocos sem região de ilustração limpa (03, 04, 06, 07, 12) e os 15–19 (sem região de ilustração limpa) usam o logotipo (vig: null).
+     Blocos 18 (fp2b18 · tiroides) e 19 (fp2b19 · SNA/conciencia) vêm das PRs de conteúdo #643/#650: o mapa os reconhece desde já; sem esses ids no HTML o módulo simplesmente não os encontra. */
+  var FP2_NUM = { fp2b01: 1, fp2b02: 2, fp2b12: 3, fp2b04: 4, fp2b03: 5, fp2b13: 6, fp2b14: 7, fp2b05: 8, fp2b06: 9, fp2b07: 10, fp2b08: 11, fp2b09: 12, fp2b10: 13, fp2b11: 14, fp2b15: 15, fp2b16: 16, fp2b17: 17, fp2b18: 18, fp2b19: 19 };
+  var FP2_SEMVIG = { 3: 1, 4: 1, 6: 1, 7: 1, 12: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1 };
+  var FP2_REPASO = { bancofp2: 'B', revisaofp2: 'F' };
+  function clasificarFP2(id) {
+    if (Object.prototype.hasOwnProperty.call(FP2_NUM, id)) { var n = FP2_NUM[id]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: FP2_SEMVIG[n] ? null : 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(FP2_REPASO, id)) return { tipo: 'repaso', n: FP2_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* AP I Práctica (Nova Era): ids `b1…b12` (b1–b9 = TEMA 01–09). Vinheta só em b2–b9 (b1 = logo). b10 laminario, b11 flashcards, b12 ruleta = repaso.
      Sem «UNIDAD X» no conteúdo (rótulo único oculto por CSS). */
   var AP1P_REPASO = { b10: 'L', b11: 'F', b12: 'R' };
@@ -187,6 +201,25 @@
     var m = /^aneb(\d\d)$/.exec(id);
     if (m && +m[1] >= 1 && +m[1] <= 15) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: n <= 11 ? ((n - 1) % 6) + 1 : ((n - 12) % 3) + 4, vig: 'vb-' + pad(n) }; }
     if (Object.prototype.hasOwnProperty.call(AN_REPASO, id)) return { tipo: 'repaso', n: AN_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Ortopedia (Nova Era): otb01…otb17 = BLOQUE 01–17 (16 unidades romanas I–XVI do marcador real; viñeta só onde há figura: 01–06 e 12–17); bancoorto = banco general, bancofcorto = mazo general + ruleta + bibliografía (repaso); otportada = âncora vazia. */
+  var OR_VIG = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1 };
+  var OR_REPASO = { bancoorto: 'B', bancofcorto: 'F' };
+  function clasificarOR(id) {
+    var m = /^otb(\d\d)$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 17) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: OR_VIG[n] ? 'vb-' + pad(n) : null }; }
+    if (Object.prototype.hasOwnProperty.call(OR_REPASO, id)) return { tipo: 'repaso', n: OR_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Oftalmología (Nova Era): ofb01…ofb09 = BLOQUE 01–09 (Unidades I–V do marcador real; ofb09 sem figura ⇒ logo); bancooft = banco general, oftcierre = mazo general + ruleta + bibliografía (repaso); ofportada = âncora vazia. */
+  var OF_REPASO = { bancooft: 'B', oftcierre: 'F' };
+  function clasificarOF(id) {
+    var m = /^ofb(\d\d)$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 9) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: n === 9 ? null : 'vb-' + pad(n) }; }
+    if (Object.prototype.hasOwnProperty.call(OF_REPASO, id)) return { tipo: 'repaso', n: OF_REPASO[id], num: -1, cap: 'r', vig: null };
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
@@ -316,6 +349,22 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFA
+    },
+    'fisiopatologia-ii': {
+      vigDir: 'assets/img/fisio2/vig/',                   // 9 vinhetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-FISIO2.md)
+      logo: 'assets/repasso-med-logo.png',
+      unidades: {},                                       // o conteúdo não tem «UNIDAD X»: nenhuma unidade é criada
+      medallones: [
+        { vig: 'vb-01', t: 'ESÓFAGO', cap: 1, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-08', t: 'RIÑÓN',   cap: 2, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-05', t: 'HÍGADO',  cap: 5, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarFP2
     },
     'anatomia-patologica-practica': {
       vigDir: 'assets/img/anatoprat/vig/',                // 8 viñetas (b2–b9) recortadas de láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP1P-HISTO1.md)
@@ -447,6 +496,65 @@
         fc:   'Repaso activo por bloque'
       },
       clasificar: clasificarAN
+    },
+    'ortopedia': {
+      vigDir: 'assets/img/orto/vig/',                       // viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-ORTO-OFT.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Diagnóstico · Lesiones · Conducta',
+      miga: ['Guía de estudio', 'Ortopedia'],
+      unidades: {                                         // as do conteúdo (marcador «UNIDAD X»)
+        I: { nombre: 'Métodos de diagnóstico', color: '#3F7FB5' },
+        II: { nombre: 'Lesiones musculares y ligamentarias', color: '#5D8A2E' },
+        III: { nombre: 'Fracturas', color: '#C48A1C' },
+        IV: { nombre: 'Inmovilizaciones', color: '#8A5FB5' },
+        V: { nombre: 'Consolidación', color: '#2A8C8C' },
+        VI: { nombre: 'Complicaciones generales', color: '#C2553F' },
+        VII: { nombre: 'Rodilla y deporte', color: '#3F7FB5' },
+        VIII: { nombre: 'Fémur distal y rótula', color: '#5D8A2E' },
+        IX: { nombre: 'Tercera edad', color: '#C48A1C' },
+        X: { nombre: 'Infante', color: '#8A5FB5' },
+        XI: { nombre: 'Columna y médula', color: '#2A8C8C' },
+        XII: { nombre: 'Muñeca y mano', color: '#C2553F' },
+        XIII: { nombre: 'Infecciones', color: '#3F7FB5' },
+        XIV: { nombre: 'Tuberculosis', color: '#5D8A2E' },
+        XV: { nombre: 'Deformidades de columna', color: '#C48A1C' },
+        XVI: { nombre: 'Lumbalgia', color: '#8A5FB5' }
+      },
+      medallones: [
+        { vig: 'vb-01', t: 'DIAGNÓSTICO', cap: 1, tam: 178, ml: 0, mt: 0, rot: -3, z: 3 },
+        { vig: 'vb-04', t: 'FRACTURAS', cap: 3, tam: 150, ml: -26, mt: 60, rot: 2, z: 2 },
+        { vig: 'vb-12', t: 'COLUMNA', cap: 5, tam: 128, ml: -6, mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarOR
+    },
+    'oftalmologia': {
+      vigDir: 'assets/img/oft/vig/',                       // viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-ORTO-OFT.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'El ojo · Examen · Patología',
+      miga: ['Guía de estudio', 'Oftalmología'],
+      unidades: {                                         // as do conteúdo (marcador «UNIDAD X»)
+        I: { nombre: 'Anatomía y fisiología', color: '#3F7FB5' },
+        II: { nombre: 'Examen del ojo', color: '#5D8A2E' },
+        III: { nombre: 'Ojo rojo y catarata', color: '#C48A1C' },
+        IV: { nombre: 'Glaucoma', color: '#8A5FB5' },
+        V: { nombre: 'Retina', color: '#2A8C8C' }
+      },
+      medallones: [
+        { vig: 'vb-01', t: 'VÍA VISUAL', cap: 1, tam: 178, ml: 0, mt: 0, rot: -3, z: 3 },
+        { vig: 'vb-04', t: 'OJO ROJO', cap: 3, tam: 150, ml: -26, mt: 60, rot: 2, z: 2 },
+        { vig: 'vb-07', t: 'RETINA', cap: 5, tam: 128, ml: -6, mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Basadas en examen + complementarias',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarOF
     }
   };
 

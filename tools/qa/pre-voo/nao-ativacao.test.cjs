@@ -16,9 +16,9 @@ const D = require('./lib-dados.cjs');
 const FN = path.join(L.ROOT, 'netlify/functions/get-pilot-flags.js');
 const PILOT_JS = fs.readFileSync(path.join(L.ROOT, 'assets/rm-pilot.js'), 'utf8');
 const UID = D.UID, PIL = 'semiologia-ii';
-const CANDIDATAS_ESPERADAS = ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-patologica-practica', 'histologia-i', 'histologia-i-practica', 'histologia-ii', 'histologia-ii-practica', 'toxicologia', 'anestesiologia'];   // 1.ª fechadura: piloto + as matérias em implantação controlada (só PERGUNTAM ao servidor; a 2.ª fechadura, a tabela, decide)
+const CANDIDATAS_ESPERADAS = ['semiologia-ii', 'medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-patologica-practica', 'histologia-i', 'histologia-i-practica', 'histologia-ii', 'histologia-ii-practica', 'fisiopatologia-ii', 'toxicologia', 'anestesiologia', 'ortopedia', 'oftalmologia'];   // 1.ª fechadura: piloto + as matérias em implantação controlada (só PERGUNTAM ao servidor; a 2.ª fechadura, a tabela, decide)
 const PRIMEIRA = 'medicina-familiar';
-const CAND_CONTROLADAS = ['medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-patologica-practica', 'histologia-i', 'histologia-i-practica', 'histologia-ii', 'histologia-ii-practica', 'toxicologia', 'anestesiologia'];   // candidatas: só PERGUNTAM; a tabela (2.ª fechadura) está vazia ⇒ o servidor nega
+const CAND_CONTROLADAS = ['medicina-familiar', 'fisiopatologia', 'farmacologia', 'biologia', 'embriologia', 'anatomia-patologica-practica', 'histologia-i', 'histologia-i-practica', 'histologia-ii', 'histologia-ii-practica', 'fisiopatologia-ii', 'toxicologia', 'anestesiologia', 'ortopedia', 'oftalmologia'];   // candidatas: só PERGUNTAM; a tabela (2.ª fechadura) está vazia ⇒ o servidor nega
 const RAPIDO = process.argv.includes('--rapido');
 let n = 0, ko = 0;
 const ok = (c, m, x) => { n++; if (c) console.log('    ✓', m); else { ko++; console.log('    ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x) : ''); } return !!c; };
@@ -52,7 +52,7 @@ async function matéria(br, base, m, env, rot) {
 
 (async () => {
   const rec = L.reconciliar(); let mats = rec.ativas;
-  if (RAPIDO) mats = ['semiologia-ii', 'dermatologia', 'biologia', 'medicina-familiar', 'ortopedia', 'imagenologia'].map(s => rec.ativas.find(x => x.slug === s));
+  if (RAPIDO) mats = ['semiologia-ii', 'dermatologia', 'biologia', 'medicina-familiar', 'neurologia', 'imagenologia'].map(s => rec.ativas.find(x => x.slug === s));
   const srv = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
 
   console.log(`\n▸ E1 · produção hoje: só listas de UID, NENHUMA variável de matéria — ${mats.length} matérias`);
@@ -72,14 +72,14 @@ async function matéria(br, base, m, env, rot) {
   { const r = await matéria(br, base, rec.ativas.find(x => x.slug === PIL), {}, 'E2'); ok(r.est.layout === false, 'layout do piloto desligado', r.est); }
 
   console.log('\n▸ E3 · segunda fechadura aberta, primeira fechada (variável preenchida, matéria fora das CANDIDATAS)');
-  for (const s of RAPIDO ? ['dermatologia', 'imagenologia'] : ['dermatologia', 'imagenologia', 'ortopedia']) {
+  for (const s of RAPIDO ? ['dermatologia', 'imagenologia'] : ['dermatologia', 'imagenologia', 'neurologia']) {
     const r = await matéria(br, base, rec.ativas.find(x => x.slug === s), Object.assign({}, TODAS_UIDS, { RM_LAYOUT_SLUGS: s, RM_PEN_SLUGS: s, RM_VISUAL_SLUGS: s }), 'E3');
     ok(r.est.layout === false && r.pedidos.length === 0 && r.est.perm !== true, `${s}: sem layout, sem requisição, sem caneta física mesmo com a variável preenchida`, r);
     ok(r.dif.length === 0, `${s}: dados do aluno intactos`, r.dif.slice(0, 2));
   }
 
   console.log('\n▸ E4 · estático');
-  { const cand = /var CANDIDATAS = \[([^\]]*)\]/.exec(PILOT_JS); ok(cand && cand[1].replace(/['"\s]/g, '').split(',').sort().join() === CANDIDATAS_ESPERADAS.slice().sort().join(), 'CANDIDATAS = piloto + Medicina Familiar + Fisiopatología I + Farmacología I (nada além)', cand && cand[1]);
+  { const cand = /var CANDIDATAS = \[([^\]]*)\]/.exec(PILOT_JS); ok(cand && cand[1].replace(/['"\s]/g, '').split(',').sort().join() === CANDIDATAS_ESPERADAS.slice().sort().join(), 'CANDIDATAS = piloto + Medicina Familiar + Fisiopatología I + Farmacología I + Fisiopatología II (nada além)', cand && cand[1]);
     const fn = fs.readFileSync(FN, 'utf8'); const semComentarios = fn.replace(/\/\*[\s\S]*?\*\//g, ''); ok(!/['"]\*['"]|'todas'|'todos'/.test(semComentarios) && !/slugs\w*\.indexOf\('all'\)|slug === 'all'/.test(semComentarios), 'a função do servidor não aceita curinga (Nova Era: «all» existe só como estágio de UMA matéria, nunca como slug)');
     const toml = fs.readFileSync(path.join(L.ROOT, 'netlify.toml'), 'utf8'); ok(!/RM_(LAYOUT|VISUAL|PEN)_SLUGS|RM_PILOT_/.test(toml), 'netlify.toml não define nenhuma dessas variáveis');
     const todos = require('child_process').execSync(`grep -rIlE "RM_(LAYOUT|VISUAL|PEN)_SLUGS\\s*[=:]" "${L.ROOT}" --include=*.toml --include=*.json --include=*.env* --include=*.yml || true`).toString().trim(); ok(todos === '', 'nenhum arquivo de configuração do repositório atribui as variáveis de matéria', todos);
