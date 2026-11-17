@@ -72,7 +72,7 @@ async function matéria(br, base, m, env, rot) {
   { const r = await matéria(br, base, rec.ativas.find(x => x.slug === PIL), {}, 'E2'); ok(r.est.layout === false, 'layout do piloto desligado', r.est); }
 
   console.log('\n▸ E3 · segunda fechadura aberta, primeira fechada (variável preenchida, matéria fora das CANDIDATAS)');
-  for (const s of RAPIDO ? ['dermatologia', 'imagenologia', 'toxicologia'] : ['dermatologia', 'imagenologia', 'neurologia']) {
+  for (const s of RAPIDO ? ['neurologia', 'imagenologia'] : ['neurologia', 'imagenologia', 'medicina-legal']) {
     const r = await matéria(br, base, rec.ativas.find(x => x.slug === s), Object.assign({}, TODAS_UIDS, { RM_LAYOUT_SLUGS: s, RM_PEN_SLUGS: s, RM_VISUAL_SLUGS: s }), 'E3');
     ok(r.est.layout === false && r.pedidos.length === 0 && r.est.perm !== true, `${s}: sem layout, sem requisição, sem caneta física mesmo com a variável preenchida`, r);
     ok(r.dif.length === 0, `${s}: dados do aluno intactos`, r.dif.slice(0, 2));
