@@ -1,5 +1,7 @@
 # Checklist das matérias
 
+> 🔄 **17/11/2026: para o estado atual por matéria use [PAINEL-GERAL.md](PAINEL-GERAL.md).** Este checklist é histórico (19/10 e 30/10); as colunas «layout novo» e «caneta nova» abaixo **não refletem** as PRs de Nova Era mescladas desde então (Toxicología, Anestesiología, Ortopedia, Oftalmología, Fisiopatología II) nem o que está em PR aberto.
+
 > ⚠️ **ESTADO ATUAL (30/10/2026): a tabela abaixo é histórica (19/10). Não use os símbolos e a lista de PRs antigas como autorização de merge.** #474, #481, #499, #532, #580, #593, #594, #595, #597, #603, #604, #605, #599, #608 e #609 foram mescladas. O painel PDF a PDF atualizado está em [ANOTACOES-DRIVE.md](ANOTACOES-DRIVE.md). O próximo passo é implantação controlada, **matéria por matéria**, com conteúdo e dados dos alunos testados por Claude antes da ativação. José só mescla e faz a checagem visual curta da matéria ativada.
 
 | Estado agora | Item | Próxima ação |

@@ -69,7 +69,7 @@ const bank = sec(now, 'bancoap2');
   ok(dec && +dec[1] === cnt && +dec[2] === ofi && +dec[3] === va && +dec[4] === vf, `banco declara ${dec && dec.slice(1, 5)} = real ${[cnt, ofi, va, vf]}`, { dec: dec && dec.slice(1, 5), real: [cnt, ofi, va, vf] });
   const subs = [...bank.matchAll(/Bloque 0(\d) · ([^<]*?) <small>\((\d+) preguntas\)/g)].map(m => [+m[1], +m[3]]); let soma = 0, bad = [];
   for (const [b, c] of subs) { const real = items(sec(now, 'ap2b0' + b)).length; soma += c; if (real !== c) bad.push([b, c, real]); }
-  ok(!bad.length && soma === cnt && subs.find(x => x[0] === 7)[1] === 35 && subs.find(x => x[0] === 5)[1] === 24 && subs.find(x => x[0] === 8)[1] === 17 && subs.find(x => x[0] === 4)[1] === 25 && subs.find(x => x[0] === 6)[1] === 19, `por bloco: declarado = real (soma ${soma} = ${cnt}; b04 = 25, b05 = 25, b06 = 19, b07 = 35, b08 = 17)`, bad);
+  ok(!bad.length && soma === cnt && subs.find(x => x[0] === 7)[1] === 37 && subs.find(x => x[0] === 5)[1] === 24 && subs.find(x => x[0] === 8)[1] === 17 && subs.find(x => x[0] === 4)[1] === 25 && subs.find(x => x[0] === 6)[1] === 20, `por bloco: declarado = real (soma ${soma} = ${cnt}; b04 = 25, b05 = 25, b06 = 20, b07 = 37, b08 = 17)`, bad);
   ok(/Bloque 07 · Patologías del hígado: alcohol, cirrosis y tumores/.test(bank), 'banco: título do grupo do bloco 07 atualizado');
   const cards = s => (s.match(/class="flashcard"/g) || []).length;
   const maz = sec(now, 'bancofcap2'), mi = maz.indexOf('🎲 Ruleta rusa'), mazo = maz.slice(0, mi), rul = maz.slice(mi);
@@ -108,7 +108,7 @@ const NOVAS = [
   }
   const vf = [...sec(now, 'ap2b07').matchAll(/<div class="quiz-item">[\s\S]*?<\/div>\s*<\/div>/g)].map(m => m[0]).filter(x => /tf-buttons/.test(x) && /Pregunta complementaria · verdadero o falso/.test(x) && /(regresa rápidamente|aumentar de tamaño)/.test(x));
   ok(vf.length === 2 && vf.every(x => { const v = /<strong>VERDADERO\./.test(x); return x.split(`checkTF(this, ${v})`).length === 3; }), 'V/F novos (2): checkTF coerente com a resposta (FALSO → false nos dois botões)');
-  ok(items(sec(now, 'ap2b07')).length === 35, 'bloco 07: 17 + 12 + 2 (#651) + 4 (simulacro) = 35 questões');
+  ok(items(sec(now, 'ap2b07')).length === 37, 'bloco 07: 17 + 12 + 2 (#651) + 4 (simulacro) + 2 (#666: hemangioma crónico, ciclos del CHC) = 37 questões');
   const txt = items(sec(now, 'ap2b07')).slice(17, 29).map(x => x.raw).join(' ');
   ok(!/Pregunta oficial|pregunta real|prueba real|preguntas reales/i.test(txt), 'nenhuma nova questão afirma ser oficial/real/transcrição');
   ok(!/\b(profesor|docente|Chamorro|cátedra)\b/i.test(txt), 'nenhum nome de professor nem «cátedra» nas questões novas');
@@ -147,7 +147,7 @@ console.log('\n▸ 6 · gabarito (8-A.7)');
   const a = lst(old), b = lst(now), cnt = s => ['a', 'b', 'c', 'd'].map(x => (s.match(new RegExp(x, 'g')) || []).length);
   const g4 = s => (s.match(/(?=(abcd|dcba))/g) || []).length;
   console.log(`    antes (#640) ${a.length} MCQ A/B/C/D=${cnt(a)} corrida ${runs(a)} · depois ${b.length} MCQ A/B/C/D=${cnt(b)} corrida ${runs(b)}`);
-  ok(!/\?/.test(b) && b.length === a.length + 12, `+12 MCQ novas (total ${b.length}: 9 do b07, 1 do b05, 2 do b08); todas com letra legível`);
+  ok(!/\?/.test(b) && b.length === a.length + 15, `+15 MCQ novas (total ${b.length}: 9+2 do b07, 1 do b05, 2 do b08, 1 do b06 #666); todas com letra legível`);
   ok(runs(b) <= Math.max(4, runs(a)) && g4(b) <= g4(a), `corrida máxima ${runs(a)} → ${runs(b)}; 4-gramas abcd/dcba ${g4(a)} → ${g4(b)}`);
   ok(Math.max(...cnt(b)) - Math.min(...cnt(b)) <= Math.ceil(b.length * 0.08), 'nenhuma letra domina', cnt(b));
   const novas = b.slice(a.length - 0).length; const seq = lst(now).slice(0);
@@ -187,7 +187,8 @@ console.log('\n▸ 9 · revisão dos demais blocos: b05 (EII) e b08 (tiroides) a
   ok(items(sec(now, 'ap2b05')).length === 24 && items(sec(now, 'ap2b08')).length === 17, 'b05 = 24 e b08 = 17 questões');
   ok(!/dato que hay que subrayar|pregunta segura/.test(teach('ap2b08')), 'b08 sem voz de prova remanescente');
   const NC = '<td><b>Carece de potencial maligno</b> (formulación de la cátedra, válida para el hiperplásico típico; no para la lesión serrada que se le parece, el sésil serrado). Es el más frecuente; &lt;5 mm, colon izquierdo</td>', OC = '<td><b>Insignificante</b>. Es el más frecuente; &lt;5 mm, colon izquierdo</td>';
-  ok(teach('ap2b06').replace(NC, OC) === sec(old, 'ap2b06').split(/<div class="quiz-section"/)[0] && sec(now, 'ap2b01') === sec(old, 'ap2b01'), 'b06: texto de ensino idêntico salvo a célula do hiperplásico («carece de potencial maligno», #651); b01 (291 grifos) idêntico');
+  const PJN = 'Pólipos grandes en <b>intestino delgado</b>. Se presenta en promedio hacia los <b>11 años</b></td>', PJO = 'Pólipos grandes en <b>intestino delgado</b></td>';
+  ok(teach('ap2b06').replace(NC, OC).replace(PJN, PJO) === sec(old, 'ap2b06').split(/<div class="quiz-section"/)[0] && sec(now, 'ap2b01') === sec(old, 'ap2b01'), 'b06: texto de ensino idêntico salvo a célula do hiperplásico («carece de potencial maligno», #651) e a idade média do Peutz-Jeghers (11 anos, slide da cátedra, #666); b01 (291 grifos) idêntico');
 }
 
 console.log('\n▸ 10 · #651 · questões P2 Chamorro (fotos 6E filas 1–3 e fila 1 sem rótulo) — 11 perguntas novas + 1 melhoria');
@@ -226,7 +227,7 @@ console.log('\n▸ 10 · #651 · questões P2 Chamorro (fotos 6E filas 1–3 e f
   // 10c · melhoria da 05#15 (extraintestinais da CU): pericolangite aceita, nos dois lugares
   const m15 = [...now.matchAll(/colangitis esclerosante primaria y pericolangitis\.<\/strong>/g)].length; ok(m15 === 2, '05#15 (manifestações extraintestinais): «pericolangitis» aceita na resposta, bloco e banco');
   ok(/úlceras extensas de base ancha/.test(items(sec(now, 'ap2b05')).find(x => x.q.includes('Citá dos hallazgos macroscópicos de la colitis ulcerosa')).raw), '05#17 já aceita «úlceras de base ancha» + seudopólipos (item 3 da foto) — sem mudança');
-  ok(/<span>202 preguntas<\/span><span>135 basadas en preguntas de examen<\/span>/.test(bank), 'banco declara 202 preguntas · 135 de exame (+10 do simulacro; p-ANCA pendente)');
+  ok(/<span>205 preguntas<\/span><span>138 basadas en preguntas de examen<\/span>/.test(bank), 'banco declara 205 preguntas · 138 de exame (+10 do simulacro; p-ANCA pendente; +3 da #666)');
   ok(sec(now, 'ap2b03') === sec(old, 'ap2b03'), 'b03 (74 grifos) intocado: as hipóteses da gastrite crônica ficam como pendência documentada');
 }
 
