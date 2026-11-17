@@ -43,6 +43,43 @@ La carpeta tiene 16 archivos. Los números **1 a 8** (agosto–septiembre) ya es
 8. **Sin «voz de prueba».** No hay examen publicado de estos temas: las 54 preguntas son **«Pregunta complementaria»** o **«Verdadero o falso»**, nunca «Basada en preguntas de examen».
 9. **Contenido NO incluido:** imágenes de TAC/RMN (sin texto), la tabla NIHSS, «Alguna pregunta?…» (cierre del slide 16) y logos. **Verificación de las figuras:** páginas renderizadas y leídas una a una; los textos pequeños de la columna «TEC grave» y «cirugía» se leyeron a 110 dpi (legibles); donde una cifra era dudosa no se usó.
 
+## Doses, limiares e cifras: origem exata e o que NÃO está confirmado
+
+**Regra aplicada:** toda dose, limiar ou percentual dos blocos 20–27 vem **do texto ou da figura do slide indicado**; **nenhum foi confirmado em livro-base** (não há livro de Neurología na pasta e não abri nenhum). Nenhuma fonte foi inventada; onde o slide não dá número, o bloco não o dá.
+
+| Dado nos blocos | Slide (arquivo · onde) | Confirmação em livro |
+|---|---|---|
+| Fluxo 20 e 10 ml/100 g/min (penumbra) | `10..pdf` · texto, definição | **não** |
+| TOAST 30/20/25/5/30 % | `10..pdf` · texto | **não** |
+| NIHSS 1 / 2–5 / 6–15 / 16–20 / > 20 | `10..pdf` · texto (a imagem da tabela NIHSS **não** foi transcrita) | **não** |
+| Trombólise 0–4,5 h, 0,9 mg/kg (máx. 90 mg), 10 %+90 % em 60 min, TA > 185/110; trombectomia 0–24 h; door-to-needle < 60 min | `10..pdf` · figura «Ventana terapéutica» (renderizada e lida) | **não** |
+| Hematoma: 35/25/20/10/10 % e achados por localização; mortalidade protuberancial > 80 % | `10..pdf` · figura «Localización del hematoma» | **não** |
+| Causas do ACV hemorrágico 78/15/12/5/4 % (somam > 100 %) | `10..pdf` · texto | **não** |
+| HSA: 85 % aneurisma, mortalidade > 35 %, sentinela 10–43 %; resangrado 4 %/20 %, nimodipino 60 mg/4 h × 21 d, hiponatremia, cardiopulmonares | `10..pdf` · texto e figura «Complicaciones» | **não** |
+| PL: L4-L5, tubos, LCR 0–5 células, proteínas 20–45, glicose 45–80, < 40, 100–300/400 células | `9..pdf` · texto | **não** |
+| Epilepsia: ≥ 60 %, 5 min, 10 anos/5 anos, 2 anos, 30–40 %, fármacos e efeitos adversos | `11..pdf` · texto | **não** |
+| Parkinson, tétrada, levodopa, DBS | `12..pdf` · texto | **não** |
+| MMSE ≤ 23–24, MoCA < 26, Zarit > 55–56, tap test 30–50 mL, DCL 10–15 %/ano, 1,5–2 DE | `13..pdf` · texto | **não** |
+| SGB: IgIV 0,4 g/kg × 5 d, PE 5 sessões, CVF < 20 mL/kg, proteínas > 0,45 g/L; EM: metilprednisolona 1 g × 3–5 d, PLEX 5–7, P100 > 100 ms; McDonald 2017 | `14..pdf` · texto e figura McDonald (renderizada e lida) | **não** |
+| Cefaleias: durações, O₂ 12–15 L/min, sumatriptano 6 mg SC, verapamil | `14..pdf` · texto | **não** |
+| TEC: 150–300/100 mil, 50–60 %, tabela de gravidade; hematomas; fístulas 70 % em 7–10 dias; critérios de TAC e de cirurgia | `15..pdf` e `16. TEC II.pdf` · texto e figuras (renderizadas e lidas) | **não** |
+| TEC grave: PIC < 22, glicemia 140–180, 36–37 °C, corticoides contraindicados (CRASH-2), levetiracetam × 7 d, PIC > 25 > 1 h | `16. TEC II.pdf` · figuras (renderizadas e lidas) | **não** |
+
+**Classificação que segue pendente:** a tabela de **«estado» de consciência** do slide 15 (confusão 14–15, letargo 12–13, obnubilação 9–11, estupor 6–8, coma ≤ 5). **Não foi incluída nos blocos, não há pergunta sobre ela e nenhuma fonte foi procurada ou inventada para ela**; ela difere de «coma ≤ 8» do bloco 18. Decisão de José/cátedra.
+
+## Testes executados (registro)
+
+| Teste | Resultado (17/11, noite) |
+|---|---|
+| `tools/qa/neuro-667/neuro-667.test.cjs` (estático) | **238/238** |
+| `tools/qa/neuro-667/neuro-667-browser.cjs` (Chromium; controle 1440/390 e layout novo 768/1440) | **36/36** |
+| Porta do pré-voo `porta-da-materia.sh neurologia` | **ABERTA** (0-inventário, 0b-marcadores, 1-âncoras, 2-ida-e-volta, 3-layout 4 larguras, 4-uso/caneta, 5-inventário-risco) |
+| Guard local | sem reprovação; avisos conhecidos |
+
+## Figuras conferidas (registro)
+
+Renderizadas e lidas: `s09` (24 págs.; só imagens de TAC/RMN, sem texto), `s10` (26 págs.; ventana terapéutica, localização do hematoma, complicações da HSA, tabela comparativa), `s14` (27 págs.; McDonald 2017), `s15` (15 págs.; gravidade do TEC), `s16` (20 págs.; TEC grave, cirurgia de emergência, neuropsiquiátricas). **Não renderizadas:** `11..pdf`, `12..pdf`, `13..pdf` (texto). **Não transcrita:** imagem da escala NIHSS.
+
 ## Cambios en `neurologia.html`
 
 - 8 bloques nuevos (`neub20`–`neub27`; **tras la lectura de las figuras** se añadieron tablas y preguntas) entre `neub19` y `banconeu`, con la estructura del sitio (qué es / para qué importa, resumen desde cero, tablas, caja de lo esencial, síntesis, preguntas, flashcards).
