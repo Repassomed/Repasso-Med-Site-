@@ -162,3 +162,8 @@ José disponibilizou 8 extratos (cópias de páginas dos slides originais, não 
 - **Faixas que divergiam entre slides** (manutenção de prazosina, terazosina, propranolol, carvedilol, labetalol, nebivolol) já estavam fora desde a 8.ª rodada.
 
 **Testes desta rodada:** ver o corpo da PR.
+
+## 14. Revisão de 19/11 (2) — nebivolol
+- Busca no Drive (nebivolol, Goodman & Gilman, Katzung etc.): só slides, questionários de prova e resumos de alunos; **nenhum livro-base**. A dose de 5 mg (HTA) vinha da coluna única do slide e **não pôde ser confirmada em literatura-base**.
+- **Número retirado**; a linha diz «dose baixa, 1 vez ao dia, ajustar pela resposta; valor exato na ficha técnica». Legenda da tabela: nenhuma linha fixa número.
+- Pendência: confirmar a dose inicial do nebivolol em ficha técnica/guia adotada pela disciplina.
