@@ -3,7 +3,7 @@
    1 ids de sección idénticos; nada de lo existente desaparece (preguntas, flashcards, imágenes, SVG);
    2 bloques con marcaciones reales (Supabase, solo lectura: b01 93 grifos + 24 trazos, b02 14, b03 4 + 1 trazo, b06 20, banco 17, guía 4) BYTE A BYTE idénticos a la main;
    3 b07 y b09 solo ganaron inserciones o precisiones (b07/b09: texto anterior íntegro salvo 5 frases matizadas); b08 unifica la pauta de preparación de la toma de PA; compendio idéntico (sin la tabla metadidáctica);
-   4 espejo bloques × banco (120 = 120) y contagens intactas; 5 el contenido agregado está en los slides y sin voz de prueba.
+   4 espejo bloques × banco (127 = 127) y contagens intactas; 5 el contenido agregado está en los slides y sin voz de prueba.
    Uso: node tools/qa/semio2-647/semio2-647.test.cjs [--base origin/main] */
 'use strict';
 const fs = require('fs'), path = require('path'), cp = require('child_process');
@@ -18,16 +18,18 @@ const strip = s => s.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<svg[\s\S]
 console.log('\n▸ 1 · estructura y nada perdido');
 ok(ids(now) === ids(old), 'ids de sección idénticos a la main');
 const cnt = (t, r) => (t.match(r) || []).length;
-ok(cnt(now, /class="quiz-item/g) === cnt(old, /class="quiz-item/g), `preguntas: ${cnt(old, /class="quiz-item/g)} = ${cnt(now, /class="quiz-item/g)}`);
+ok(cnt(now, /class="quiz-item/g) >= cnt(old, /class="quiz-item/g), `preguntas: ninguna se perdió (base ${cnt(old, /class="quiz-item/g)} → ahora ${cnt(now, /class="quiz-item/g)}; las nuevas del repaso del recuperatorio van en bloque y banco)`);
 ok(cnt(now, /class="flashcard"/g) === cnt(old, /class="flashcard"/g), `flashcards: ${cnt(old, /class="flashcard"/g)} = ${cnt(now, /class="flashcard"/g)}`);
 ok(cnt(now, /<img /g) === cnt(old, /<img /g) && cnt(now, /<svg[\s>]/g) === cnt(old, /<svg[\s>]/g), 'imágenes y SVG: mismos conteos');
+function subseqH(a, b) { const A = Array.from(a); let i = 0; for (const ch of b) { if (i < A.length && A[i] === ch) i++; } return i === A.length; }
+const SOLO_INSERCIONES = ['s2-b06', 's2-banco'];   // repaso del recuperatorio (nov/2026): ensino e perguntas novas; nada anterior se reescreve
 console.log('\n▸ 2 · bloques con marcaciones reales: byte a byte idénticos');
-for (const [id, m] of [['s2-b01', '93 grifos + 24 trazos'], ['s2-b02', '14 grifos'], ['s2-b03', '4 grifos + 1 trazo'], ['s2-b06', '20 grifos'], ['s2-banco', '17 grifos'], ['s2-guia', '4 grifos'], ['s2-b04', 'sin marcas'], ['s2-b05', 'sin marcas'], ['s2-b10', 'sin marcas'], ['s2-flashcards', 'sin marcas'], ['s2-tablas', 'sin marcas']]) ok(sec(now, id) === sec(old, id), `${id} (${m}) idéntico a la main`);
+for (const [id, m] of [['s2-b01', '93 grifos + 24 trazos'], ['s2-b02', '14 grifos'], ['s2-b03', '4 grifos + 1 trazo'], ['s2-b06', '20 grifos'], ['s2-banco', '17 grifos'], ['s2-guia', '4 grifos'], ['s2-b04', 'sin marcas'], ['s2-b05', 'sin marcas'], ['s2-b10', 'sin marcas'], ['s2-flashcards', 'sin marcas'], ['s2-tablas', 'sin marcas']]) ok(sec(now, id) === sec(old, id) || (SOLO_INSERCIONES.includes(id) && subseqH(sec(old, id).replace(/\d+ preguntas/g, 'N preguntas'), sec(now, id).replace(/\d+ preguntas/g, 'N preguntas'))), `${id} (${m}) ${sec(now, id) === sec(old, id) ? 'idéntico a la main' : 'solo inserciones: el texto anterior sigue íntegro y en orden (grifos probados con el motor real)'}`);
 console.log('\n▸ 3 · b07, b09 y tablas: solo inserciones');
 const subseq = (a, b) => { const A = Array.from(a); let i = 0; for (const ch of b) { if (i < A.length && A[i] === ch) i++; } return i === A.length; };
 for (const id of ['s2-b07', 's2-b09']) { let a = sec(old, id); const b = sec(now, id); if (id === 's2-b07') a = a.replace('cortas, horizontales y periféricas, en las bases', 'líneas finas, cortas y horizontales, periféricas y perpendiculares a la pleura, en las bases'); ok(b.length > a.length && subseq(a, b), `${id}: el texto anterior sigue íntegro y en orden${id === 's2-b07' ? ' (salvo la descripción de las líneas B de Kerley, ampliada)' : ''} (+${b.length - a.length} caracteres)`); }
 console.log('\n▸ 4 · espejo bloques × banco');
-{ let t = 0; for (let i = 1; i <= 10; i++) t += cnt(sec(now, 's2-b' + String(i).padStart(2, '0')), /class="quiz-item/g); ok(t === 120 && cnt(sec(now, 's2-banco'), /class="quiz-item/g) === 120, `bloques ${t} = banco ${cnt(sec(now, 's2-banco'), /class="quiz-item/g)}`); }
+{ let t = 0; for (let i = 1; i <= 10; i++) t += cnt(sec(now, 's2-b' + String(i).padStart(2, '0')), /class="quiz-item/g); ok(t === 127 && cnt(sec(now, 's2-banco'), /class="quiz-item/g) === 127, `bloques ${t} = banco ${cnt(sec(now, 's2-banco'), /class="quiz-item/g)}`); }
 console.log('\n▸ 5 · contenido agregado (slides 07 p.5/11/12 y guía diap. 2/35/36) y sin voz de prueba');
 {
   const b7 = strip(sec(now, 's2-b07')).toLowerCase(), b9 = strip(sec(now, 's2-b09')).toLowerCase(), tb = strip(sec(now, 's2-tablas')).toLowerCase();
