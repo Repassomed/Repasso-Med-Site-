@@ -21,6 +21,8 @@
 | #657 | AP II | aberta | 6.º |
 | #662 (rascunho) | AP II Práctica | aberta; ver nota da caneta em tabela | 7.º |
 | #658 | Guaraní | aberta | 8.º |
+| #668 | AP II teoría (questões da issue #666) | aberta; 3 perguntas novas, 12 existentes, 2 pendentes (p-ANCA, gestação) | independente (só o HTML de AP II + testes) |
+| #669 | Neurología (blocos 20–27, issue #667) | aberta; 54 perguntas, 50 flashcards | independente da Nova Era |
 | #649 | Farmacología II (conteúdo, slides #647) | aberta; arquivos disjuntos da Nova Era; **literatura base não encontrada** | independente |
 | #652 | Semiología II (conteúdo, slides #647) | aberta, `mergeable: clean`; sem Argente/Harrison | independente |
 
@@ -48,7 +50,7 @@ Nova Era — **mesclada** = tema/vinhetas na `main`, **não ativada**; **em PR**
 | Anatomía I | G0 ✅; voz ⬜ 7 | vazio | **em PR #634** | não verificado |
 | Biología | G0 ✅ (#496, #524) | vazio | **mesclada** | real-biologia 118/118 |
 | Medicina Legal | G0 ✅; voz ⬜ 13 | vazio | **não preparada** | — |
-| Anatomía Patológica II | G0 ✅; 3 pendências das anotações | 6 PDFs, sem arquivo novo (17/11) | **em PR #657** | não verificado |
+| Anatomía Patológica II | G0 ✅; **#668** (questões da issue #666: +3, p-ANCA e gestação pendentes); 3 pendências das anotações | 6 PDFs, sem arquivo novo (17/11) | **em PR #657** | não verificado |
 | AP II Práctica | G0 ✅; figuras/questões em auditoria | vazio | **em PR #662** (rascunho) | real-ap2p: ver nota |
 | Fisiopatología II | G0 em #481 (histórico) | 5 PDFs, todos rastreados (suprarrenal na #603) | **em PR #645** | não verificado |
 | Toxicología | G0 ✅ | vazio | **mesclada** (#660) | real-toxicologia 121/121 |
@@ -56,10 +58,10 @@ Nova Era — **mesclada** = tema/vinhetas na `main`, **não ativada**; **em PR**
 | Guaraní | G0 ✅; voz ⬜ 13 | vazio | **em PR #658** | real-guarani (bateria) |
 | Ortopedia | G0 ✅; voz ⬜ 24 | sem conteúdo | **em PR #664** | real-orto-oft 242/242 |
 | Oftalmología | G0 ✅ (#464); teste físico pendente | aporte de teste | **em PR #664** | idem |
-| Neurología | G0 ✅; voz ⬜ 7 | vazio | **não preparada** (candidata ao próximo lote) | — |
+| Neurología | G0 ✅; voz ⬜ 7; **PR #669**: 8 blocos novos (20–27) com os slides de 17/11; figuras dos slides não vistas, sem livro-base | 16 slides no Drive (1–8 já nos blocos 01–18; **9–16 novos, em #669**) | **não preparada** | marcações (SELECT 17/11): grifos neub02 10, neub03 29, neub09 68; 1 traço na portada; notas 0; teste estático da #669 223/223 |
 | Anestesiología | G0 ✅; voz ⬜ 18 | vazio | **mesclada** (#663) | real-anestesiologia 121/121 |
 | Imagenología / Bioestadística | **fora desta etapa** | — | fora | — |
 
 **Drive 17/11:** listagem direta das 4 pastas = 23 PDFs (9+5+6+3), **os mesmos já registrados em `ANOTACOES-DRIVE.md`; nenhum arquivo novo**. Reli os PDFs de 28/10 (Farmacología II) e suprarrenal só para confirmar o registro; as decisões continuam as das PRs #608 e #603.
 
-Testes citados = últimos resultados registrados nas PRs/integração; os da bateria de 17/11 estão no relatório final.
+Estado atualizado em 17/11 à noite (inclui #668 e #669). Testes citados = últimos resultados registrados nas PRs/integração; os da bateria de 17/11 estão no relatório final.
