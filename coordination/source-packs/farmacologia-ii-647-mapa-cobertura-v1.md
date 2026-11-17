@@ -147,3 +147,18 @@ José disponibilizou 8 extratos (cópias de páginas dos slides originais, não 
 **Limites que ficam (registrados, não mostrados ao aluno):** (1) doses, indicações, ergotamina, β renal, tabela por célula e posologia continuam sem livro-base; (2) onde os slides divergem (faixas de manutenção; β₂ no pâncreas), **optou-se por omitir o dado** em vez de escolher um; (3) a explicação do mecanismo lipídico (lipoproteína lipase) segue ausente por inconsistência do esquema do slide.
 
 **Marcações:** só texto novo da própria PR foi alterado (nenhum trecho existente na `main`). Motor real do site: 406 grifos reais → **403 pintados (igual à `main`)**, 0 perdidos, 0 escritas. Quiz real: 464 itens, 0 falhas duras, espelho 232 × 232.
+
+## 13 · 9.ª rodada (19/11) · tabela de doses iniciais: indicação e formulação
+
+**Problema:** a tabela «Posología orientativa» mostrava **um só número** por fármaco mesmo quando a linha citava várias indicações (HTA, angina, arritmias, **insuficiência cardíaca**), o que pode confundir: a dose em insuficiência cardíaca costuma ser diferente da de hipertensão, e a formulação (p. ex., metoprolol **tartrato** de liberação imediata × **succinato** de liberação prolongada) também muda o esquema.
+
+**Conferência no material permitido:** os slides «a y b bloq 2026» (págs. 21 e 44, lidas como imagem) dão **uma coluna de dose por fármaco, sem separar por indicação**; **não há livro-base** (Goodman & Gilman etc. não estão no Drive; busca repetida em 18/11 sem resultado). Portanto **não foi possível confirmar a dose por indicação e formulação**.
+
+**Decisão:**
+- **Retirados os números** de dose inicial e de dose habitual/máxima de todas as linhas **com mais de uma indicação** (prazosina, doxazosina, terazosina, atenolol, metoprolol tartrato e succinato, bisoprolol, propranolol, carvedilol, labetalol).
+- **Mantido um único número** onde a linha tem **uma só indicação e uma só formulação**: nebivolol, «referência para HTA: 5 mg, 1 vez ao dia (dose inicial)».
+- **Mantida a explicação útil** num parágrafo novo («Formulación, indicación y dosis»): a dose depende de para quê e de qual formulação; liberação imediata × prolongada; regra geral de que em insuficiência cardíaca os β-bloqueantes começam mais baixo e sobem devagar, e de que a primeira dose dos α-bloqueantes é baixa pelo risco de hipotensão ortostática. A tabela ganhou a coluna **Formulación** (tomas por dia e liberação, **só o que os slides indicam**) e a coluna **Dosis** passou a dizer «depende de la indicación».
+- **Pendência registrada:** a «regra geral» de começar mais baixo na insuficiência cardíaca é **conhecimento qualitativo usual, não confirmado em material permitido**; foi escrita sem número e em tom de regra geral. Para voltar a pôr doses por indicação e formulação é preciso a **ficha técnica ou a guia** que a disciplina adota (pedido a José).
+- **Faixas que divergiam entre slides** (manutenção de prazosina, terazosina, propranolol, carvedilol, labetalol, nebivolol) já estavam fora desde a 8.ª rodada.
+
+**Testes desta rodada:** ver o corpo da PR.
