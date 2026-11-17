@@ -25,7 +25,7 @@ Numeração: **1–11** = corpo da issue; **C8–C16** = comentário de José (n
 | 4 | CU: anticorpos (p-ANCA) | **PENDENTE** | ensino e flashcard «Serología» já na main («p-ANCA más asociado, no confirma»); **sem pergunta** | decisão da #651 mantida: **não consta nos slides da cátedra** nem em fonte acessível (Robbins ilegível; a busca no Drive devolve só o próprio simulado e figuras do site). Pergunta não publicada. Quem decidir: José pode enviar o capítulo (<10 MB) ou o slide que cita ANCA. |
 | 5 | Células em anel de sinete / difuso (Lauren) | **EXISTENTE** | b04 · caso com CDH1 («Linitis plástica; pérdida del gen CDH1»), «Citá dos hallazgos microscópicos del tipo difuso» | — |
 | 6 | Fibrose hepática: TGF-β | **EXISTENTE** | b07 · «¿qué célula del sinusoide libera TNF y TGF-β…» (célula de Kupffer) + células estrelladas | slide Clase 7 («La producción de TNF y TGF-β por células de Kupffer activa las células estrelladas») |
-| 7 | Peutz-Jeghers: 11 anos / intestino delgado | **ADICIONADA** (+ ensino) | b06 + banco · «Respecto al síndrome de Peutz-Jeghers, ¿cuál… CORRECTA?» (c); ensino: b06, tabela de pólipos, célula do Peutz-Jeghers: «Se presenta en promedio hacia los 11 años» | slide da cátedra («media de 11 años»). Atribuída à cátedra («Según la cátedra…»). b06 não tem grifos. |
+| 7 | Peutz-Jeghers: 11 anos / intestino delgado | **ADICIONADA** (+ ensino) | b06 + banco · «Respecto al síndrome de Peutz-Jeghers, ¿qué afirmación describe bien la enfermedad?» (c); ensino: b06, tabela de pólipos, célula do Peutz-Jeghers: «Se presenta en promedio hacia los 11 años» | slide da cátedra («media de 11 años»). Atribuída à cátedra («Según la cátedra…»). b06 não tem grifos. |
 | 8 | Peutz-Jeghers: arborização de músculo liso | **EXISTENTE** | b06 · «Un adolescente de 14 años… manchas azul oscuro…» (b) | — |
 | 9 | Massa hepática em gestante → adenoma | **EXISTENTE (adenoma) + PENDENTE (gestação)** | b07 · «Una mujer de 32 años con uso prolongado de anticonceptivos orales… masa hepática de 6 cm con hemoperitoneo» (adenoma, rotura) | a gravidez como fator **não consta no slide** (só ACO e esteroides anabolizantes); massa isolada não confirma adenoma. Nenhuma afirmação sobre gravidez publicada. |
 | 10 | Pólipo juvenil: glândulas dilatadas com mucina | **EXISTENTE** | b06 · «Una niña de 3 años… rectorragia indolora…» (c) | — |
@@ -53,7 +53,21 @@ Placar: **3 adicionadas** (2, 7, C13) + 1 linha de ensino (7) · **12 existentes
 - Nenhuma pergunta, flashcard, imagem ou id removidos; flashcards não alterados.
 - Letras corretas das 3 novas: c, d, b (sem padrão com as vizinhas).
 
-## Marcações (Supabase só leitura, 17/11, sem dados pessoais)
+## Marcações — como funcionam, o que foi provado e o limite (atualizado 17/11, noite)
 
-Grifos `anatomia-patologica-ii`: `ap2b01` 291 · `ap2b02` 1 · `ap2b03` 74 · `ap2b04` 53 · `ap2b07` 1 (no texto de abertura, antes de todas as inserções) · `ap2intro` 2 · `bancoap2` 268; traços e notas: nenhum registro. `b06` e `b08`: 0.
-Verificação: para cada grifo localizável pelo contexto (prefixo+texto+sufixo), o mesmo contexto continua presente no bloco depois das inserções: **0 perdidos** (527 localizados). Limite do teste: ~163 grifos não puderam ser localizados nem no HTML original por este método simples (diferença de normalização); o aplicativo usa também `occurrence`, então a conferência visual de José no banco continua recomendada.
+Contagens por SELECT de leitura (17/11): grifos `ap2b01` 291 · `ap2b02` 1 · `ap2b03` 74 · `ap2b04` 53 · `ap2b07` 1 · `ap2intro` 2 · `bancoap2` 268; traços e notas: nenhum registro.
+
+**Como o site guarda um grifo:** não guarda posição fixa. Guarda o **texto marcado**, **40 caracteres antes e depois** (contexto) e a **ocorrência** (a n-ésima vez que o texto aparece no bloco). Ao abrir a página o motor (`rm-tools.js`, `resolverAncora`) procura o texto com o contexto e só pinta quando o contexto confere (regra de segurança: nunca pintar no lugar errado). Por isso uma pergunta nova só atrapalha um grifo se repetir **a mesma frase com o mesmo contexto** que um grifo existente.
+
+**Prova com o motor real:** os **690 grifos reais** de AP II (só texto marcado, prefixo, sufixo e ocorrência; **sem identificação de aluno**) foram recolocados numa página real (Chromium) **antes (HTML da main) e depois (este PR)**, com 0 escritas no banco:
+
+| HTML | grifos pintados |
+|---|---|
+| main | 689 de 690 |
+| este PR, 1.ª versão | 688 de 690 |
+| **este PR, versão final** | **689 de 690 (igual à main)** |
+
+- **O que a 1.ª versão errava:** uma pergunta nova repetia a frase «¿cuál de las siguientes afirmaciones es CORRECTA?» e o grifo da palavra **CORRECTA** (ocorrência 6 do banco, pergunta do linfoma MALT) deixou de pintar. **Corrigido** trocando o enunciado da pergunta nova («¿qué afirmación describe bien la enfermedad?»), no bloco e no banco.
+- **O 1 grifo que não pinta nem na main:** `ap2b01`, «eritematosa» (registro 123). Já não pintava antes; **não é causado por este PR**.
+- **Por que o teste anterior «não localizava ~163 grifos»:** comparava texto simples e não usava as regras do motor (espaços, símbolos, glossário clicável). O teste novo usa o motor do próprio site e **substitui aquele número**.
+- **Limite que continua:** sessão simulada (sem login real) e Chromium; não prova o comportamento no iPad/Safari. Conferir 2–3 grifos do banco num aparelho segue recomendado, mas **não há perda detectada**.
