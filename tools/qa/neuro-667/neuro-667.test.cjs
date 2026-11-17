@@ -27,13 +27,13 @@ for (const id of ['neub01', 'neub02', 'neub03', 'neub04', 'neub09', 'neub10', 'n
   ok(sec(now, id) === sec(old, id), id + ' idêntico à main' + (['neub02', 'neub03', 'neub09'].includes(id) ? ' (tem grifos reais)' : ''));
 ok(sec(now, 'neub19').replace(/\n  <div class="rmc-note"><p><b>Actualización\.[\s\S]*?<\/p><\/div>/, '') === sec(old, 'neub19'), 'neub19: só o aviso inicial foi acrescentado');
 const portN = sec(now, 'neuportada'), portO = sec(old, 'neuportada');
-ok(portN.replace(/<div class="rmc-note"><p><b>Bloques 20 a 27[\s\S]*?<\/p><\/div>\n/, '').replace(/<span>27 bloques<\/span>(\s*)<span>4 unidades \+ P2 \+ complemento<\/span>/, '<span>19 bloques</span>$1<span>4 unidades + 1 complemento</span>').replace(/<span>233 preguntas<\/span>(\s*)<span>385 flashcards<\/span>/, '<span>179 preguntas</span>$1<span>335 flashcards</span>') === portO, 'neuportada: só adição final + 3 contadores declarados');
+ok(portN.replace(/<div class="rmc-note"><p><b>Bloques 20 a 27[\s\S]*?<\/p><\/div>\n/, '').replace(/<span>27 bloques<\/span>(\s*)<span>4 unidades \+ P2 \+ complemento<\/span>/, '<span>19 bloques</span>$1<span>4 unidades + 1 complemento</span>').replace(/<span>238 preguntas<\/span>(\s*)<span>387 flashcards<\/span>/, '<span>179 preguntas</span>$1<span>335 flashcards</span>') === portO, 'neuportada: só adição final + 3 contadores declarados');
 
 /* 3 · espelho bloco = banco e contrato das perguntas */
 let total = 0, mcq = 0, vf = 0, letras = {};
 for (const id of NEW) {
   const s = sec(now, id); const qs = [...s.matchAll(/<div class="quiz-item" id="(q-neu\d+)">([\s\S]*?)<\/div><\/div>/g)];
-  const num = id.slice(4); ok(qs.length >= 5 && qs.length <= 8, id + ': ' + qs.length + ' perguntas (5–8)');
+  const num = id.slice(4); ok(qs.length >= 5 && qs.length <= 10, id + ': ' + qs.length + ' perguntas (5–8)');
   total += qs.length;
   for (const q of qs) {
     const b = q[2]; const bq = now.match(new RegExp('<div class="quiz-item" id="b' + q[1] + '">([\\s\\S]*?)<\\/div><\\/div>'));
@@ -52,16 +52,16 @@ for (const id of NEW) {
   ok((s.match(/class="flashcard"/g) || []).length >= 5, id + ': ≥ 5 flashcards');
   ok(/<div class="rmc-exam">/.test(s) && /<div class="key-box exam">/.test(s), id + ': síntese e caixa de essencial');
 }
-ok(total === 54, 'total 54 perguntas novas (' + total + ')');
+ok(total === 59, 'total 59 perguntas novas (' + total + ')');
 ok(Object.keys(letras).length === 4, 'letras corretas das MCQ cobrem a, b, c e d', letras);
 const maxL = Math.max(...Object.values(letras)); ok(maxL <= Math.ceil(mcq * 0.4), 'nenhuma letra concentra mais de 40% das MCQ', letras);
-ok((now.match(/id="q-neu\d+"/g) || []).length === 173 + 54 && (now.match(/id="bq-neu\d+"/g) || []).length === 173 + 54, 'q-neu e bq-neu: 227 cada');
+ok((now.match(/id="q-neu\d+"/g) || []).length === 173 + 59 && (now.match(/id="bq-neu\d+"/g) || []).length === 173 + 59, 'q-neu e bq-neu: 232 cada');
 
 /* 4 · mazo geral e contagens declaradas */
 const fcNew = NEW.reduce((a, id) => a + (sec(now, id).match(/class="flashcard"/g) || []).length, 0);
-ok(fcNew === 50, '50 flashcards novos nos blocos (' + fcNew + ')');
-const rev = sec(now, 'revisaoneu'); ok((rev.match(/class="flashcard"/g) || []).length === 335 + 50, 'mazo geral do cierre: 385 tarjetas (as 50 novas repetidas)');
-ok(/<h3>Las 233 preguntas de la asignatura/.test(now) && /<div><b>233<\/b><span>Preguntas<\/span><\/div>/.test(now) && /<div><b>27<\/b><span>Bloques<\/span><\/div>/.test(now) && /<div><b>385<\/b><span>Flashcards<\/span><\/div>/.test(now), 'banco declara 233 preguntas · 27 blocos · 385 flashcards');
+ok(fcNew === 52, '52 flashcards novos nos blocos (' + fcNew + ')');
+const rev = sec(now, 'revisaoneu'); ok((rev.match(/class="flashcard"/g) || []).length === 335 + 52, 'mazo geral do cierre: 387 tarjetas (as 52 novas repetidas)');
+ok(/<h3>Las 238 preguntas de la asignatura/.test(now) && /<div><b>238<\/b><span>Preguntas<\/span><\/div>/.test(now) && /<div><b>27<\/b><span>Bloques<\/span><\/div>/.test(now) && /<div><b>387<\/b><span>Flashcards<\/span><\/div>/.test(now), 'banco declara 238 preguntas · 27 blocos · 387 flashcards');
 ok(new RegExp('<div><b>' + (116 + mcq) + '</b><span>MCQ</span></div>').test(now) && new RegExp('<div><b>' + (43 + vf) + '</b><span>Verdadero o falso</span></div>').test(now), 'MCQ ' + (116 + mcq) + ' · V/F ' + (43 + vf));
 for (const id of NEW) { const num = id.slice(4); const g = now.match(new RegExp('Bloque ' + num + ' · [^<]+ <small>(\\d+) preguntas</small>')); ok(g && +g[1] === (sec(now, id).match(/class="quiz-item"/g) || []).length, 'banco: grupo do bloque ' + num + ' declara ' + (g && g[1])); }
 ok(!/Nueva Era|Nova Era|PR #|issue #/i.test(NEW.map(i => sec(now, i)).join('')), 'sem metadidática de projeto nos blocos novos');

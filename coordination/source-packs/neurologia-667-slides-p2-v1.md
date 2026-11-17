@@ -8,14 +8,14 @@ La carpeta tiene 16 archivos. Los números **1 a 8** (agosto–septiembre) ya es
 
 | # | Archivo (Id Drive) | Tamaño | Unidad · tema (portada del slide) | Lectura |
 |---|---|---|---|---|
-| 9 | `9..pdf` (`1Co5gyrQpJQYZV1r6vMFKQNXv2vgWSdw1`) | 1,0 MB | Unidad V · Exámenes complementarios | texto completo leído; figuras (TAC/RMN) **no vistas** |
-| 10 | `10..pdf` (`1KSGEJ44yQrnoIcOE-RV2y5TEIWHixl0X`) | 0,85 MB | Unidad VIII · Enfermedades cerebrovasculares | texto completo; imágenes y la tabla de «ventana terapéutica» **no legibles en el texto** |
+| 9 | `9..pdf` (`1Co5gyrQpJQYZV1r6vMFKQNXv2vgWSdw1`) | 1,0 MB | Unidad V · Exámenes complementarios | texto completo + **24 páginas vistas como imagen** (figuras TAC/RMN sin texto; nada que transcribir) |
+| 10 | `10..pdf` (`1KSGEJ44yQrnoIcOE-RV2y5TEIWHixl0X`) | 0,85 MB | Unidad VIII · Enfermedades cerebrovasculares | texto completo + **26 páginas vistas como imagen**: leídas y **incorporadas** la ventana terapéutica, la localización del hematoma y las complicaciones de la HSA; NIHSS (imagen de una sociedad médica) **no transcrita** |
 | 11 | `11..pdf` (`1HpNpyomYyinSjnm8GmTbVga385tyeuXH`) | 0,40 MB | Unidad VII · Epilepsia | texto completo |
 | 12 | `12..pdf` (`1VyFpm2f1_yEK3O8opxSK14tH_ObasjMG`) | 0,49 MB | Unidad VIII · Enfermedad de Parkinson | texto completo |
 | 13 | `13..pdf` (`10ZJtEEcWklPrJlshCbpzburUt963epst`) | 0,56 MB | Unidad IX · Trastornos cognitivos, demencias y alteraciones del comportamiento | texto completo |
-| 14 | `14..pdf` (`1HJfOnPvRMcLDO49kHoLYhmn0n_j5W9uf`) | 0,53 MB | Unidad X · Patologías periféricas y lesiones desmielinizantes (Guillain-Barré, esclerosis múltiple, cefaleas) | texto completo; imagen de los criterios de McDonald **no legible** |
-| 15 | `15..pdf` (`16Kt84-Nna4M-pINxuZ2mf6tEcCs0MZ0H`) | 0,54 MB | Unidades XIV-XV · Patologías traumáticas (TEC I) | texto completo; tabla de Glasgow (imagen) **no legible** |
-| 16 | `16. TEC II.pdf` (`1NsVTyls803HQs6GSeEVmsM_R2MccqYOH`) | 0,61 MB | Unidades XIV-XV · Abordaje y complicaciones del TEC | texto completo; «indicaciones quirúrgicas de emergencia» del TEC grave (imagen) **no legible** |
+| 14 | `14..pdf` (`1HJfOnPvRMcLDO49kHoLYhmn0n_j5W9uf`) | 0,53 MB | Unidad X · Patologías periféricas y lesiones desmielinizantes (Guillain-Barré, esclerosis múltiple, cefaleas) | texto completo + **27 páginas vistas como imagen**: tabla de McDonald 2017 **incorporada**; las fotos y el resto son texto ya leído |
+| 15 | `15..pdf` (`16Kt84-Nna4M-pINxuZ2mf6tEcCs0MZ0H`) | 0,54 MB | Unidades XIV-XV · Patologías traumáticas (TEC I) | texto completo + **15 páginas vistas como imagen**: tabla de gravedad (leve/moderado/grave) **incorporada** |
+| 16 | `16. TEC II.pdf` (`1NsVTyls803HQs6GSeEVmsM_R2MccqYOH`) | 0,61 MB | Unidades XIV-XV · Abordaje y complicaciones del TEC | texto completo + **20 páginas vistas como imagen**: TEC grave (3 columnas), cirugía de emergencia y complicaciones neuropsiquiátricas **incorporadas** |
 
 **Lo que NO se abrió:** ningún libro de Neurología (Harrison, Adams, Rowland, etc.); no hay libro-base en la carpeta. Todo lo que dicen los bloques viene del texto de los slides; las explicaciones de fisiología básica son de nivel de manual y se limitaron a lo necesario para entender el slide. Sin investigación externa.
 
@@ -33,21 +33,21 @@ La carpeta tiene 16 archivos. Los números **1 a 8** (agosto–septiembre) ya es
 
 ## Decisiones y divergencias que quedan registradas
 
-1. **Escala de Glasgow (slide 15).** El slide trae dos clasificaciones: la de gravedad (imagen no legible) y una tabla de «estado» (confusión 14–15, letargo 12–13, obnubilación 9–11, estupor 6–8, coma ≤ 5). Esa tabla **difiere** de la que enseña el bloque 01 (coma ≤ 8 / TEC leve–moderado–grave). **No se incluyó la tabla ni se preguntó sobre ella**; el bloque 27 remite al bloque 01. Pendiente: que José/cátedra aclare cuál vale.
+1. **Escala de Glasgow (slide 15).** Con la imagen vista: la tabla de **gravedad** (leve 13–15, moderado 9–12, grave ≤ 8, con pérdida de conciencia, amnesia, TAC, internación y mortalidad) **coincide** con el bloque 01 y se incorporó en el bloque 27. La tabla de **«estado»** (confusión 14–15 … coma ≤ 5) es otra clasificación y **no se incluyó ni se preguntó**; sigue pendiente aclarar con la cátedra si vale.
 2. **Subdural y suturas.** El slide dice que el epidural «no cruza suturas»; no dice nada del subdural: no se afirmó.
 3. **Cifras de causas del ACV hemorrágico** (78 %, 15 %, 12 %, 5 %, 4 %) suman más de 100 %; se citan «de la cátedra».
-4. **Slide 10, «ventana terapéutica».** El título aparece pero el contenido era una imagen: **no se escribió ninguna ventana en horas**. Pendiente.
+4. **Slide 10, figuras.** Vistas como imagen: se incorporaron **ventana terapéutica** (0–4,5 h trombólisis; 0–24 h trombectomía; door-to-needle < 60 min), **localización del hematoma** (putaminal 35 %, lobar 25 %, talámica 20 %, protuberancial 10 %, cerebelosa 10 %) y **complicaciones de la HSA por tiempo** (resangrado, vasoespasmo y nimodipino, hidrocefalia, hiponatremia, cardiopulmonares). La imagen de la **escala NIHSS** (de una sociedad médica, con la leyenda «trombólisis con puntaje > 4 y < 25») **no se transcribió**: no es texto de la cátedra y no se la usó para afirmar umbrales.
 5. **Slide 14, «prueba de la linfa oscilante»** es la prueba de la **luz oscilante** (swinging flashlight); se usó la forma habitual sin atribuir el error al slide.
 6. **Neuritis óptica: «primer brote en 25 % de casos, riesgo de EM 50 % a 15 años».** Cifras del slide; se incluyó solo el 25 %.
 7. **Dosis y esquemas** (IgIV 0,4 g/kg × 5 días, metilprednisolona 1 g × 3–5 días, tap test 30–50 mL, O₂ 12–15 L/min) vienen del slide; **no están confirmados en libro**.
 8. **Sin «voz de prueba».** No hay examen publicado de estos temas: las 54 preguntas son **«Pregunta complementaria»** o **«Verdadero o falso»**, nunca «Basada en preguntas de examen».
-9. **Contenido NO incluido** de los slides: figuras (TAC, RMN, tablas en imagen), «Alguna pregunta?…» (cierre del slide 16), la información de aspecto institucional (logos).
+9. **Contenido NO incluido:** imágenes de TAC/RMN (sin texto), la tabla NIHSS, «Alguna pregunta?…» (cierre del slide 16) y logos. **Verificación de las figuras:** páginas renderizadas y leídas una a una; los textos pequeños de la columna «TEC grave» y «cirugía» se leyeron a 110 dpi (legibles); donde una cifra era dudosa no se usó.
 
 ## Cambios en `neurologia.html`
 
-- 8 bloques nuevos (`neub20`–`neub27`) entre `neub19` y `banconeu`, con la estructura del sitio (qué es / para qué importa, resumen desde cero, tablas, caja de lo esencial, síntesis, preguntas, flashcards).
-- **54 preguntas** (38 MCQ + 16 V/F; ids `q-neu174`–`q-neu227`) en los bloques **y** en el banco (`bq-neu174`–`bq-neu227`, idénticas); **50 flashcards** en los bloques y en el mazo general del cierre.
-- Contadores declarados: 179 → **233** preguntas, 335 → **385** flashcards, 19 → **27** bloques; MCQ 116 → 154; V/F 43 → 59.
+- 8 bloques nuevos (`neub20`–`neub27`; **tras la lectura de las figuras** se añadieron tablas y preguntas) entre `neub19` y `banconeu`, con la estructura del sitio (qué es / para qué importa, resumen desde cero, tablas, caja de lo esencial, síntesis, preguntas, flashcards).
+- **59 preguntas** (43 MCQ + 16 V/F; ids `q-neu174`–`q-neu232`) en los bloques **y** en el banco (`bq-neu174`–`bq-neu232`, idénticas); **52 flashcards** en los bloques y en el mazo general del cierre.
+- Contadores declarados: 179 → **238** preguntas, 335 → **387** flashcards, 19 → **27** bloques; MCQ 116 → 159; V/F 43 → 59.
 - Avisos: `neub19` (aviso inicial: los slides ahora existen), portada (frase final), cierre `revisaoneu` (los bloques 20–27 no entran en sus tablas), cabecera del banco (preguntas complementarias).
 - **Nada se reordenó ni se renumeró; ningún id, pregunta, flashcard, imagen o texto existente se quitó.**
 
@@ -57,7 +57,7 @@ Grifos `neurologia`: `neub02` 10 · `neub03` 29 · `neub09` 68; trazos: 1 en `ne
 
 ## Pendientes / límites
 
-- Figuras de los 8 slides **no vistas**; posibles tablas e imágenes (TAC, McDonald, NIHSS, ventana terapéutica, Glasgow, cirugía del TEC grave) sin transcribir.
+- Figuras: vistas las páginas de los slides 9, 10, 14, 15 y 16 (como imagen); **pendientes** los slides 11, 12 y 13 (solo texto, sin figuras relevantes en la lectura de texto; no renderizados) y la tabla NIHSS (no transcrita).
 - Sin libro-base: dosis y umbrales sin conferencia bibliográfica.
 - El algoritmo y las tablas del cierre (`revisaoneu`) **no incluyen** los bloques 20–27.
 - La relación entre `neub19` y los bloques 22/23/25/26 queda como **aviso**, no como fusión (el 19 no se tocó para no reducir contenido).
