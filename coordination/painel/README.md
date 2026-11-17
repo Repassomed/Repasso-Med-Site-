@@ -4,6 +4,7 @@ Pasta única para não nos perdermos. Cada arquivo responde a uma pergunta:
 
 | arquivo | responde |
 |---|---|
+| `PAINEL-GERAL.md` | uma linha por matéria: manutenção, anotações, Nova Era (não preparada / em PR / mesclada / ativada) e testes, mais a ordem das PRs |
 | `CHECKLIST-MATERIAS.md` | em que pé está cada matéria (pente fino, voz de prova, anotações, áudio, layout, caneta) |
 | `ANOTACOES-DRIVE.md` | cada PDF de anotação do Drive: entrou no site ou não, onde, em qual PR |
 | `AUDIOBOOKS-INVENTARIO.md` | quantos áudios cada matéria tem, de quais temas, e quais já estão no ar |
