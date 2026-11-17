@@ -3497,6 +3497,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:669.",
       "task_id": "neurologia-p2-667",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "a16e027207ccc8a130f3f6e0be77bff12a2d4175",
+      "component": "guard",
+      "error_id": "ERR-0BF37DF01F",
+      "error_type": "hard-fail",
+      "fingerprint": "0bf37df01fa7ab6317a1",
+      "first_seen": "2026-11-17T18:07:54.625574+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "2d66bf641b644d1dbf08bb2d3123f3c3",
+      "issue_sync_updated_at": "2026-11-17T18:07:54.625574+00:00",
+      "last_evidence_hash": "32b1017cce792cc92418",
+      "last_seen": "2026-11-17T18:07:54.625574+00:00",
+      "occurrence_count": 1,
+      "pr_number": 670,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "44144296759",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:670.",
+      "task_id": "painel-geral-2026-11",
+      "worker_id": null
     }
   ]
 }
