@@ -6,7 +6,7 @@
 
 - **Matérias do 6.º semestre** = as pastas de `Site Repasso Med › Biblioteca › 6 semestre` no Drive (listagem direta em 18/11): **Farmacología II, Anatomía Patológica II, AP II Práctica, Fisiopatología II, Semiología II, Semiología II Práctica / Semiología práctica, Medicina Legal, Gestão e Saúde**. Imagenología e Bioestadística seguem **fora** (decisão de José). Neurología (7.º) não entra aqui.
 - **Fontes lidas:** `coordination/painel/*` (painel de 17/11, `ANOTACOES-DRIVE.md`, checklist histórico), `coordination/source-packs/*` das matérias, `docs/medicina-legal/P2-REGISTRO-FONTE-DESTINO-628.md`, `git log` da `main`, lista de PRs abertas e as **pastas de slides atualizados** no Drive (listagem por pasta: Fisiopatología II, AP II Práctica, AP II teoría, Medicina Legal, Gestão e Saúde, Semiologia II Prática e as pastas «Questões»), além de 2 fotos de anotações abertas por OCR.
-- **PRs abertas hoje:** #682 (Neurología, infográficos blocos 20–27: **fora do 6.º semestre; não tocada**), #655 (Dermatología), #658 (Guaraní), #662 (AP II Práctica, layout), #539 e #520 (antigas, fora de escopo). **Nenhuma PR de outro agente foi tocada**; o que as PRs de layout/caneta ainda precisam é trabalho do Claude 4.
+- **PRs abertas hoje:** #682 (Neurología, infográficos blocos 20–27: **fora do 6.º semestre; não tocada**), #655 (Dermatología), #658 (Guaraní), #662 (AP II Práctica, layout; **mesclada depois**, ver «Atualização de 19/11»), #539 e #520 (antigas, fora de escopo). **Nenhuma PR de outro agente foi tocada**; o que as PRs de layout/caneta ainda precisam é trabalho do Claude 4.
 - **Não verificado nesta rodada:** não reabri cada PDF/slide; **não** rodei testes de navegador nem SELECT no Supabase (as contagens de grifos abaixo vêm dos registros de 17/11); não listei a pasta de slides de Farmacología II nem a de Semiología II (os registros de 17/11 dizem «nenhum arquivo novo»); a listagem do Drive foi limitada a 40–60 itens por consulta (pastas com mais arquivos podem ter itens não vistos).
 
 ## 1 · Quadro-resumo (uma linha por matéria)
@@ -24,13 +24,13 @@
 ## 2 · Detalhe por matéria
 
 ### 2.1 AP II Práctica · **maior lacuna de conteúdo novo**
-- **Atualizado:** 16 láminas (`ap2pb01…16`: lengua, parótida, esófago/Barrett, gastritis, gástrico difuso/intestinal, cirrosis, CHC, duodenitis, Crohn, apendicitis, colon no mucinoso/mucinoso, pancreatitis crónica, adenocarcinoma de páncreas) + banco + mazo + cierre; P2 integrada na #580; layout em **#662 (aberta, rascunho; de Claude 4)**.
+- **Atualizado:** 16 láminas (`ap2pb01…16`: lengua, parótida, esófago/Barrett, gastritis, gástrico difuso/intestinal, cirrosis, CHC, duodenitis, Crohn, apendicitis, colon no mucinoso/mucinoso, pancreatitis crónica, adenocarcinoma de páncreas) + banco + mazo + cierre; P2 integrada na #580; layout em **#662 (mesclada em 19/11)**.
 - **Falta (Drive, `AP II Prática › Slides atualizados`, criados em 05/11):** `15 - Nefroblastoma_261015_110332 (1).pdf` (5,4 MB, id `1oD1MZ11EaV6CnFjY9FFBM1Unr8AM-2cX`) e `16 - Pielonefritis cronica_261015_104549 (1).pdf` (17 MB, id `1f5B9pYH6uPKtdneKZkWXBOWR1uuG9PxI`). Os PDFs `13 - Cancer de Pancreas` e `14 - Pancreatitis cronica` já correspondem a `ap2pb16` e `ap2pb15`.
 - **Prioridade p/ prova:** as láminas são a prova prática; duas láminas inteiras (renal) não existem no site.
 - **Próximo trabalho:** ler os 2 PDFs (texto + figuras), criar `ap2pb17`/`ap2pb18` no padrão das láminas, perguntas (lei 8-A) e espelho no banco, atualizar contadores e a cierre; **checar grifos por SELECT somente leitura** antes (o HTML é grande e tem alunos usando) e rodar a porta. Limite conhecido: 43 imagens originais grandes da P2 sem conferência visual completa (#580).
 
 ### 2.2 Semiología II (+ Práctica)
-- **Atualizado:** b01–b10 + tablas/banco/flashcards; #652 (b07 «examen físico en tres preguntas», b08 pauta de PA, b09 ritmo) e #676 (Repaso recuperatório: 12 perguntas conferidas com o PDF de 17/11). 120 perguntas = 120 no banco. 
+- **Atualizado:** b01–b10 + tablas/banco/flashcards; #652 (b07 «examen físico en tres preguntas», b08 pauta de PA, b09 ritmo) e #676 (Repaso recuperatório: 12 perguntas conferidas com o PDF de 17/11). **127 perguntas no bloco e 127 no banco** (banco geral declara «127 preguntas de los 10 bloques»; conferido na `main` `b5e1a4e6` em 19/11; a contagem de 120 que constava aqui era anterior à #676). 
 - **Falta / sem registro:** (a) **24 fotos manuscritas de 28/10** em `Semiologia II Pratica` (OCR funciona; ex.: «edema: grados de godet», «neumotórax: síndromes pleurales») — a tabela `ANOTACOES-DRIVE.md` só cobre 4 pastas «Anotações» e **não inclui esta pasta**; (b) livros Argente/Harrison ausentes do Drive.
 - **Prioridade p/ provas:** média-alta (anotações de aluno são pistas do que a turma estudou, **não** fonte soberana).
 - **Próximo trabalho:** registrar cada foto (arquivo → trecho → bloco → coberto/novo/erro → destino), integrar só o que agrega e **não** copiar erros dos alunos; grifos: b01 93 · b02 14 · b03 4 · b06 20 · banco 17 · guía 4 (17/11), então **evitar b01/b06 salvo necessidade**.
@@ -86,7 +86,7 @@
 
 | # | trabalho | fonte | resultado esperado | depende de | impacto / risco |
 |---|---|---|---|---|---|
-| 1 | **AP II Práctica: 2 láminas novas** (nefroblastoma, pielonefritis crónica) | Drive `AP II Prática › Slides atualizados` (ids acima) | `ap2pb17`/`ap2pb18` + perguntas + banco + cierre, porta aberta | SELECT de grifos (somente leitura); **não** mexer em #662 | **alto** / médio |
+| 1 | **AP II Práctica: 2 láminas novas** (nefroblastoma, pielonefritis crónica) — **em andamento na PR #689 (aberta em 19/11, não é minha; aguardar auditoria)** | Drive `AP II Prática › Slides atualizados` (ids acima) | `ap2pb17`/`ap2pb18` + perguntas + banco + cierre, porta aberta | SELECT de grifos (somente leitura); **não** mexer em #662 | **alto** / médio |
 | 2 | **Semiología II: registrar e comparar as 24 fotos de 28/10** | Drive `Semiologia II Pratica` (24 JPG) | tabela por arquivo + integração seletiva; linhas novas em `ANOTACOES-DRIVE.md` | evitar b01/b06 (grifos) | médio-alto / baixo |
 | 3 | **Pedir a José capítulos em PDF < 10 MB** | Robbins (hepático/GI), Goodman & Gilman (corticoides, respiratório, endócrino), Argente/Harrison, Porth cap. 8 | destrava **8 pendências** de 4 matérias | José | alto / nenhum |
 | 4 | Fechar pendências de AP II numa PR única | capítulos do item 3 | p-ANCA, gestação, Crohn, CHC resolvidos ou mantidos com ressalva | item 3 | alto / baixo |
@@ -95,7 +95,7 @@
 | 7 | Medicina Legal: cruzar `Examen`, `Prova`, `examen2` com o banco | Drive `Medicina Legal › Questões` | registro por pergunta (acrescentada/duplicada/pendente) | — | médio / baixo |
 | 8 | Decisões editoriais de José | §3 | parcial ML, critério de HTA, Crohn %, Gestão e Saúde | José | — |
 | 9 | Painel: atualizar após os merges de 17–18/11 | este documento (§5) | `PAINEL-GERAL.md` em dia | quem estiver com o painel | baixo |
-| — | **Nova Era (#655, #658, #662)** | painel | continua com o **Claude 4**; este documento não os altera | — | — |
+| — | **Nova Era (#655, #658; #662 já mesclada)** | painel | continua com o **Claude 4**; este documento não os altera | — | — |
 
 ## 5 · Linhas prontas para o painel (não aplicadas)
 - AP II Práctica: «**⬜ novo no Drive (05/11): 15 Nefroblastoma e 16 Pielonefritis crónica, sem lâmina no site**».
@@ -107,3 +107,22 @@
 - Cada «já atualizado» sai de PR **mesclada** (conferida em `git log origin/main`) ou de pack/registro citado; cada «falta» sai da listagem do Drive de 18/11 **cruzada** com busca no repositório (nefroblastoma, pielonefritis, `IMG-20261028`, «Gestão e Saúde»: 0 ocorrências).
 - Limites: listagem do Drive por consulta (paginação limitada); nenhuma comparação de conteúdo foi refeita; contagens de grifos e testes são **as registradas em 17/11**; a avaliação de «prioridade para provas» é **inferência a partir do tipo de material** (lâminas = prova prática; anotações de aluno = pista, não fonte), **não** informação de calendário de provas.
 - Nada foi mesclado, ativado ou escrito em banco; nenhum arquivo de outra PR foi tocado.
+
+## 7 · Atualização de 19/11 (correções e vínculo com a fila geral #686)
+**Correções ao texto de 18/11**
+- **Semiología II:** a contagem atual na `main` é **127 perguntas (127 no bloco e 127 no banco)**, não 120 (§2.2 já corrigido). Conferido por contagem dos itens `.quiz-item` do HTML (254 = 127 + 127) e pelo cabeçalho do banco.
+- **PRs:** #662 (AP II Práctica, layout) foi **mesclada**; surgiu a **#689** (AP II Práctica, blocos 17 e 18 do Final = as duas láminas pendentes do §2.1/§4 item 1). **#687** (Neurología, conferência 8-A.1-B) e **#682** (infográficos de Neurología) seguem abertas; #655, #658 (Nova Era), #539 e #520 inalteradas.
+- Neurología **fora** deste documento (7.º semestre); sua reconferência está na #687.
+
+**Como este documento se liga à fila geral de questões — issue [#686](https://github.com/Repassomed/Repasso-Med-Site-/issues/686)** («P1 · Conferência geral das questões de prova e versões mais completas por matéria»; aberta em 18/11; lei 8-A, especialmente 8-A.1-B; uma matéria por vez; José decide os merges). Pedido da #686 × estado do 6.º semestre:
+| Item da #686 | Estado (19/11) | Evidência / próximo passo |
+|---|---|---|
+| Neurología: reconferir #683, `q-neu135`, `q-neu131`, fotos e casos | **em PR #687** (aguarda auditoria) | pack `neurologia-8a1b-conferencia-v1.md` |
+| Farmacología II | **não feita nesta fila**; há reconstrução prévia de questões (#677) sem a comparação 8-A.1-B por item | abrir tarefa própria; usar `farmacologia-ii-questoes-reconstrucao-1911-v1.md` como base |
+| Anatomía Patológica II | **não feita**; simulado de 09–10/11 já conferido (#675) | idem; fechar antes as 4 pendências de fonte (§3) |
+| Fisiopatología II | **não feita** | pasta `Questões` (id `1tZo0KiljzAMY1jlVzTZoRimNpcOr8eGa`) por abrir |
+| Semiología II | **não feita**; 127 perguntas no site | pasta `Questões` (id `11P-gA_0jZ556kjzKz905AXMhCbStIxKE`) por abrir; PDF de 17/11 já conferido na #676 |
+| Medicina Legal | **não feita** (§2.6: cruzar `Examen`, `Prova`, `examen2`) | pasta `Questões` (id `1krKv7ElfW0w6kzc8Qha-exZOsJFNB_PN`) |
+| AP II Práctica / Gestão e Saúde | sem pasta de provas registrada; Gestão e Saúde sem matéria no site | decisão de José (§2.7) |
+| Demais matérias; Imagenología e Bioestadística | fora do 6.º semestre / **fora** até serem refeitas | — |
+**Ordem sugerida para a #686 no 6.º semestre** (prioridade de prova × impacto): 1) Medicina Legal (3 provas legíveis ainda sem registro por pergunta); 2) Semiología II (127 perguntas, 1 PDF já conferido); 3) Farmacología II; 4) Anatomía Patológica II; 5) Fisiopatología II. **Aprendizado da #687 a aplicar em cada uma:** incluir os ids de formato não numérico (ex.: `q-neu-2509-NN`) no buscador de duplicatas, comparar pelo raciocínio e não pelo tema, e preservar ids mesmo ao conciliar duplicatas. Este item **não** marca a #686 como concluída.
