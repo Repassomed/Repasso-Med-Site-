@@ -124,3 +124,24 @@ Método: leitura, de novo, dos slides `9..`–`16.` (Drive, Dra. Silvia Duarte) 
 | b20-01 / b20-02 | PL, LCR, estudos | CONFERE / EXTRA | Slide `9..`. **EXTRA:** antibióticos/glicemia/«glicose ≈ 60 %»; angio-TC/RM e radiografia (o slide traz angiografia e radiografia simples). |
 
 **Resumo para a auditoria:** 3 divergências (b25-02 síndrome clínica isolada; b27-02 PIC 20 × 22; b27-01 «coma ≤ 5»), 8 extras sem confirmação em fonte permitida (lista na tabela PENDENTE acima mais os desta), 3 trechos sem texto no slide. **Nada foi alterado nas imagens nesta revisão**; só a plasmaférese continua corrigida (19/11). Literatura-base de Neurología: continua **inexistente no Drive**.
+
+## Conflitos com a PR de questões de Neurología (#687, Claude 1) · conferência de 19/11
+
+Ensaio feito **só num worktree local descartável** (nada foi enviado à #687 nem alterado nos arquivos dela). Estado: main `b5e1a4e6`, #687 em `5c85b06c`, #682 em `56889bb3`.
+
+| Verificação | Resultado |
+|---|---|
+| Merge do HTML `neurologia.html` (#682 + #687) | **Automático, sem conflito.** As figuras ficam no fim dos blocos 20–27; a #687 mexe em perguntas e ensino de outros pontos. |
+| Prova de preservação | O HTML combinado, depois de remover só as 13 figuras, é **idêntico byte a byte** ao HTML da #687 (13 figuras, 522 itens de pergunta). |
+| `docs/layout-ensaio/inventario.json` | **Único conflito** (as duas PRs regravam a linha de `neurologia`). Receita: ficar com a versão da PR que entrar primeiro e regenerar só a linha com `tools/qa/ensaio-layout/inventario.cjs neurologia`. No combinado: **522 q · 774 fc**. |
+| `neu-8a1b.test.cjs` (da #687) no combinado | **2044/2044** |
+| `neu-glosario.test.cjs` com base = #687 | **434/434** |
+| `neu-questoes-1811.test.cjs` (da #683) no combinado | **67/79 — 12 falhas esperadas e herdadas da #687**: o teste fixa 254 perguntas, 168 MCQ/62 V/F e 16 enunciados distintos; a #687 passa para 261 e reformula/repurposa `q-neu233/234`. A própria #687 declara esse teste obsoleto. **Não vem das figuras** (filtro `FIG` ativo; na base da #683 a #682 dá 161/161). |
+
+**Ordem recomendada:** a que José mesclar primeiro vale; a segunda é atualizada sobre a main (HTML limpo + regenerar a linha do inventário). Se a #687 entrar antes, a #682 troca a base do `neu-glosario` e confirma de novo 434/434. Se a #682 entrar antes, a #687 só precisa resolver o inventário. O teste `neu-questoes-1811` deve ser atualizado ou aposentado por quem integrar a #687 (fora do escopo da #682).
+
+## Estado final das divergências (19/11)
+
+- **Provado e corrigido:** plasmaférese no SGB (b25-01) → 5 sessões em 2 semanas (slide).
+- **Não confirmado, imagem preservada:** McDonald 2024 (b25-02); PPC 60–70 mmHg e «sem hiperventilação profilática» (b27-02); PIC 22 × > 20 (b27-02); «coma ≤ 5» (b27-01); síndrome clínica isolada × slide (b25-02); antibióticos/glicemia (b20-01); D1/D2/pramipexol (b23-01); limiar de sobreuso (b26-01); «ILAE 2025» (b22-01); nomes TOAST (b21-01).
+- Motivo: não há livro, diretriz ou slide de Neurología no Drive que decida; a legenda «Ojo» é aviso ao aluno, **não** confirmação. Destrave: cátedra ou livro-base (<10 MB) para esses pontos.
