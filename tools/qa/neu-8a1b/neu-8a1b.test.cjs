@@ -1,4 +1,4 @@
-/* Neurología · revisión 8-A.1-B (19/11): duplicados retirados, preguntas reformuladas y nuevas. Estático. Base = main 1ea1021f. */
+/* Neurología · revisión 8-A.1-B (18/11): duplicados retirados, preguntas reformuladas y nuevas. Estático. Base = main 1ea1021f. */
 'use strict';
 const fs = require('fs'), cp = require('child_process'), path = require('path');
 const REPO = path.resolve(__dirname, '../../..');
@@ -8,11 +8,11 @@ const base = cp.execSync('git show 1ea1021f:"' + REL + '"', { cwd: REPO, maxBuff
 let ok = 0, bad = 0; const T = (c, m) => { if (c) { ok++; } else { bad++; console.log('  ✗ FALHA:', m); } };
 const items = h => { const o = {}; const re = /<div class="quiz-item" id="((?:q|bq)-neu[\d-]+)">/g; let m; while ((m = re.exec(h))) { const j = h.indexOf('</div></div>\n', m.index); o[m[1]] = h.slice(m.index, j + 13); } return o; };
 const A = items(base), B = items(cur);
-const REPURPOSED = ['233', '234'], NEWID = ['249', '250', '251', '252', '253', '254', '255'];
-const CHANGED = ['233', '234', '-2509-03', '090', '091', '134', '135', '181', '224'];
-const ids = Object.keys(B); T(ids.length === 522, '522 itens (261 + 261 espelhos): ' + ids.length);
+const KEEP = ['233', '234'], NEWID = ['249', '250', '251', '252', '253', '254', '255', '256', '257'];
+const CHANGED = ['-2509-03', '090', '091', '134', '135', '181', '224'];
+const ids = Object.keys(B); T(ids.length === 526, '526 itens (263 + 263 espelhos): ' + ids.length);
 for (const p of ['q', 'bq']) {
-  for (const r of REPURPOSED) { T(p + '-neu' + r in B, 'id preservado e funcional ' + p + '-neu' + r); T(/tf-btn/.test(B[p + '-neu' + r]), 'reaproveitado como V/F distinto ' + r); }
+  for (const r of KEEP) { T(p + '-neu' + r in B, 'id preservado ' + p + '-neu' + r); T(B[p + '-neu' + r] === A[p + '-neu' + r], 'identidade original intacta (byte a byte) ' + p + '-neu' + r); }
   for (const n of NEWID) T(p + '-neu' + n in B, 'nova ' + p + '-neu' + n);
 }
 const exp = new Set(); for (const p of ['q', 'bq']) { for (const c of CHANGED) exp.add(p + '-neu' + c); }
@@ -50,8 +50,10 @@ T(/<b>Distonía paroxística<\/b> y otros <b>movimientos anormales<\/b>/.test(cu
 T(/buen pronóstico si se drena a tiempo<\/b> —el parénquima/.test(cur), 'ensina: epidural pronóstico');
 T(!/con disfunción de la <b>médula espinal<\/b>/.test(B['q-neu-2509-03']), 'tijeras sem obrigatoriedade medular');
 T(/no publicó la clave|no publicó clave/.test(B['q-neu135']) && /selección según el tipo de crisis/.test(B['q-neu135']), 'q-neu135: clave não oficial declarada + slide');
-/* 233/234: já não duplicam as canônicas (enunciados e conceitos diferentes) */
-T(!/marcha «en tijeras»\./.test(B['q-neu233']) && /segador/.test(B['q-neu233']), '233 não repete q-neu-2509-03');
-T(!/neuralgia del trigémino/i.test(B['q-neu234']) && /Eaton-Lambert/.test(B['q-neu234']), '234 não repete q-neu-2509-05');
+/* reconstruções declaradas ao aluno */
+for (const n of ['251', '252', '255']) T(/Pregunta reconstruida/.test(B['q-neu' + n].slice(0, 1600)), 'nota de reconstrução no enunciado ' + n);
+for (const n of ['090', '181', '224', '253', '254']) T(/<i>Reconstruida:/.test(B['q-neu' + n]), 'nota de reconstrução na explicação ' + n);
+for (const n of ['249', '250', '256', '257']) T(/<i>(Clave no publicada|Enunciado)/.test(B['q-neu' + n]), 'nota de proveniência/clave ' + n);
+T(/Neurología|neurolog/i.test(cur), 'sanidade');
 console.log('neu-8a1b (estático): ' + ok + '/' + (ok + bad) + (bad ? ' — ' + bad + ' FALHAS' : ' OK')); process.exit(bad ? 1 : 0);
 
