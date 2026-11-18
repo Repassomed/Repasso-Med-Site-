@@ -3547,6 +3547,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:662.",
       "task_id": "nova-era-anatomia-patologica-ii-practica-2026-11",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "6967de32139fdd7d9c64370291bfe2917bc46b58",
+      "component": "guard",
+      "error_id": "ERR-CA13FB55BB",
+      "error_type": "hard-fail",
+      "fingerprint": "ca13fb55bb7f7c77dd52",
+      "first_seen": "2026-11-18T00:09:36.279150+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "fead030ecb3648d180d4b17ab5db5b8a",
+      "issue_sync_updated_at": "2026-11-18T00:09:36.279150+00:00",
+      "last_evidence_hash": "35a8280d00c405076a40",
+      "last_seen": "2026-11-18T00:09:36.279150+00:00",
+      "occurrence_count": 1,
+      "pr_number": 655,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "44205314812",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:655.",
+      "task_id": "nova-era-dermatologia-2026-11",
+      "worker_id": null
     }
   ]
 }
