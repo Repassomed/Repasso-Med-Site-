@@ -4,8 +4,7 @@
 const cp = require('child_process'), fs = require('fs'), path = require('path');
 const REPO = path.resolve(__dirname, '../../..');
 const F = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
-// depois do merge da #681 a main já tem as glosas: a base de comparação padrão passa a ser a main ANTES dela (4e2d732a)
-const BASE = process.argv[2] || '4e2d732a';
+const BASE = process.argv[2] || 'origin/main';   // a base pode já ter glosas (pós-#681): o teste tira as glosas dos DOIS lados antes de comparar o ensino
 const old = cp.execFileSync('git', ['show', BASE + ':' + F], { cwd: REPO, maxBuffer: 1 << 28 }).toString('utf8');
 const cur = fs.readFileSync(path.join(REPO, F), 'utf8');
 let ok = 0, bad = 0; const T = (c, m) => { if (c) ok++; else { bad++; console.log('  ✗ FALHA:', m); } };
@@ -44,7 +43,7 @@ for (let n = 20; n <= 27; n++) {
   let sem = N(ens.replace(GL, '$1'));
   let oe = o.slice(0, qo);
   if (n === 27) oe = oe.replace('cuya indicación y momento de inicio dependen de la evaluación de cada paciente (riesgo de sangrado, hematoma, cirugía); este material no fija un plazo, protector gástrico', '(su indicación y su momento de inicio dependen de la evaluación de cada paciente: riesgo de sangrado, hematoma, cirugía; este material no fija un plazo), protector gástrico').replace('HBPM (su indicación', 'HBPM (su indicación');
-  T(sem === N(oe.replace('profilaxis de TVP con HBPM, (su', 'profilaxis de TVP con HBPM (su')), id + ': sem as glosas, o texto de ensino é idêntico à base');
+  T(sem === N(oe.replace('profilaxis de TVP con HBPM, (su', 'profilaxis de TVP con HBPM (su').replace(GL, '$1')), id + ': sem as glosas (dos dois lados), o texto de ensino é idêntico à base');
   T((ens.match(/id="[^"]+"/g) || []).join() === (oe.match(/id="[^"]+"/g) || []).join(), id + ': ids do ensino preservados');
 }
 T(total >= 150, 'total de glosas nos blocos 20–27 ≥ 150 (' + total + ')');

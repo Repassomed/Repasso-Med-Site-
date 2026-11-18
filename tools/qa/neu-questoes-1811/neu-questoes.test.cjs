@@ -42,7 +42,9 @@ T(mcq === 9 && vf === 3 && def === 4, 'tipos: 9 MCQ + 3 V/F + 4 completar (' + [
 const maxL = Math.max(...Object.values(letras)); T(maxL / mcq <= 0.4, 'letras corretas sem padrão: ' + JSON.stringify(letras));
 // 3) ensino idêntico salvo acréscimos declarados
 const secIdx = (t, id) => t.indexOf('<section class="container" id="' + id + '"');
-const bloco = (t, id) => { const a = secIdx(t, id); return t.slice(a, t.indexOf('<section', a + 10)); };
+// PR #682: os 13 infográficos novos (resumo visual no fim dos blocos 20–27) não são ensino, pergunta nem flashcard; a presença exata deles é verificada em neu-glosario.test.cjs
+const FIG = /  <figure class="rmc-fig"><div class="rmc-zoom"><img class="rmc-photo" src="\/assets\/img\/neuro\/neuro-b2\d-0\d-[^"]*"[\s\S]*?<\/figure>\n/g;
+const bloco = (t, id) => { const a = secIdx(t, id); return t.slice(a, t.indexOf('<section', a + 10)).replace(FIG, ''); };
 const strip = h => h.replace(ITEM, '').replace(/\n{2,}/g, '\n'); // sem perguntas (e sem linhas em branco)
 const PL_ANCLA = '</p><h3>2 · Cuándo la punción lumbar es peligrosa</h3>';
 const PL_NUEVO = '</p><p><b>Cuándo se indica, en la práctica.</b> Ante la sospecha de una <b>infección del sistema nervioso</b> (meningitis, encefalitis); de una <b>hemorragia subaracnoidea</b> cuando la TAC es negativa; de una enfermedad <b>inflamatoria o desmielinizante</b> (Guillain-Barré, esclerosis múltiple); y con fines terapéuticos o de alivio en el pseudotumor cerebral y en la hidrocefalia de presión normal.</p><h3>2 · Cuándo la punción lumbar es peligrosa</h3>';
