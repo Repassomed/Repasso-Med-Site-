@@ -96,3 +96,31 @@ Merge da main `1ea1021f` (com #683: questões de Neurología, mais #677) **sem c
 **Releitura das fontes (19/11):** busca no Drive por material novo de Neurología desde 17/11 → só o exame «Examen Final Neurologia seccion A fila 1» e imagens soltas; **nenhum livro, diretriz ou slide novo**. Portanto os itens PENDENTES da tabela acima **continuam sem fonte para confirmar ou corrigir** (McDonald 2024; PPC 60–70 e hiperventilação; PIC 22 × 20; antibióticos/glicemia na PL; D1/D2/pramipexol; limiar de sobreuso; nota ILAE 2025; nomes TOAST). Nada foi alterado na imagem por falta de fonte; a legenda é só aviso.
 
 **Testes (19/11, branch sobre a main `1ea1021f`):** `neu-glosario.test` **434/434** (agora base-agnóstico: tira as glosas dos dois lados e continua exigindo os 13 infográficos exatos) · `neu-glosario-browser` **24/24** · `neu-questoes-1811.test` contra a main anterior à #683 (`7569a21e`) **161/161** (o filtro `FIG` ignora só as 13 figuras; contra a main atual o teste dá os mesmos 71/79 de uma cópia limpa, porque é de pré-merge) · `neu-questoes-browser` **12/12** · `nao-ativacao` **36/36** · porta `neurologia` **7/7 ABERTA**. `neuro-667-browser` **reprova igual numa cópia limpa da main** (contagens esperadas de 238 perguntas, defasadas após a #683) — não é desta PR.
+
+## Segunda revisão das imagens contra os slides (20/11) — divergências para a próxima auditoria
+
+Método: leitura, de novo, dos slides `9..`–`16.` (Drive, Dra. Silvia Duarte) e comparação **frase a frase com cada imagem** (só leitura; nenhum arquivo de `neurologia.html` foi tocado nesta revisão; o Claude 1 não tem nenhuma PR em Neurología). Classificação: **CONFERE** (está no slide), **EXTRA** (a figura traz algo que o slide não traz; não é erro), **DIVERGE** (o slide diz outra coisa) e **SEM TEXTO** (o slide tem a informação só em imagem não legível como texto).
+
+| Imagem | Trecho | Classe | Observação |
+|---|---|---|---|
+| b21-01 | NIHSS, TOAST (nomes), territórios | CONFERE / EXTRA | NIHSS e territórios iguais ao slide; TOAST: a figura usa «otra causa determinada/indeterminada», o slide «infrecuente/criptogénico» (+ percentuais). |
+| b21-01 | trombólise ≤ 4,5 h, trombectomia até 24 h, alteplase × tenecteplase | SEM TEXTO | O slide tem «Ventana Terapéutica» só como figura; o bloco já ensina esses valores. |
+| b21-02 | HIC × HSA, TC, xantocromia, Cushing | CONFERE | Slide `10..`. |
+| b21-02 | nimodipino, clip × coil, «sangue em cisternas» | SEM TEXTO / EXTRA | O slide só traz «Complicaciones» como figura. |
+| b22-01 | drogas e eventos adversos | CONFERE / EXTRA | Levetiracetam, carbamazepina (hiponatremia, rash), fenitoína, fenobarbital conferem. **EXTRA:** valproato «alto risco reprodutivo» (slide: hepatotoxicidade e tremor); carbamazepina «pode piorar ausências/mioclonias»; lamotrigina «titulação lenta» (slide: visão borrosa, rash). |
+| b22-01 | duração/pós-ictal das crises, 5 min, 10/5 anos, 2 anos | CONFERE | Slide `11..`. |
+| b23-01 | tétrada, levodopa, DBS, corea, tics | CONFERE | Slide `12..`. **EXTRA:** «quedas muito precoces fazem rever o diagnóstico», «sono REM» (slide: «trastorno del sueño»). |
+| b24-01 / b24-02 | memórias, praxias/gnosias, DCL, MMSE, MoCA, relógio, perfis, HPN, Zarit, quetiapina/clozapina | CONFERE | Slide `13..`. |
+| b25-01 | clínica, LCR, IgIV, CVF, Miller Fisher, anti-GQ1b/GM1 | CONFERE | Slide `14..`. **EXTRA:** quadro «PELIGRO: respiración y disautonomía» (o slide só diz «UCI si CVF < 20 mL/kg o progresión rápida»). Plasmaférese **corrigida** para 5 sessões em 2 semanas. |
+| b25-02 | formas clínicas | **DIVERGE** | A figura define **síndrome clínicamente aislado** como primeiro episódio e diz que **não** é sinónimo de «progresiva con recaídas»; o slide escreve «EM Progresivo con Recaídas: Primer episodio desmielinizante». A figura parece a leitura clínica correta; o slide parece conter um erro de rótulo. **Para decisão da cátedra.** |
+| b25-02 | faixa «McDonald 2024» | EXTRA (não verificado) | Slide só McDonald 2017. |
+| b25-02 | restante (neurite óptica, INO, Lhermitte, Uhthoff, metilprednisolona, PLEX, TME, ocrelizumab EMPP) | CONFERE | Slide `14..`. |
+| b26-01 | durações, O₂ 12–15 L/min, verapamilo, prednisona, aura < 60 min, pródromo/pósdromo | CONFERE | Slide `14..`. **EXTRA:** limiar «≥ 15 dias/mês» de sobreuso. |
+| b27-01 | Glasgow, HED × HSD, base de crânio, Cushing, LAD, fístulas de LCR | CONFERE | Slides `15..`/`16.`. **DIVERGE (menor):** a figura diz «coma não se define só por GCS ≤ 5»; o slide diz «Coma ≤ 5». |
+| b27-02 | HED > 30 mL; HSD > 10 mm / > 5 mm | CONFERE / EXTRA | O slide traz também HED «espessura > 15 mm ou desvio > 5 mm» (a figura só cita 30 mL). |
+| b27-02 | PIC > 22 mmHg | **DIVERGE** | Slide: hipertensão endocraniana = PIC **> 20 mmHg**. |
+| b27-02 | PPC = PAM − PIC, 60–70 mmHg; «sem hiperventilação profilática» | EXTRA (não verificado) | Fora dos slides. |
+| b27-02 | profilaxia de crises «não previne epilepsia tardia» | EXTRA | Slide: profilaxia «mayoritariamente en epilepsia temprana», fenitoína de referência. |
+| b20-01 / b20-02 | PL, LCR, estudos | CONFERE / EXTRA | Slide `9..`. **EXTRA:** antibióticos/glicemia/«glicose ≈ 60 %»; angio-TC/RM e radiografia (o slide traz angiografia e radiografia simples). |
+
+**Resumo para a auditoria:** 3 divergências (b25-02 síndrome clínica isolada; b27-02 PIC 20 × 22; b27-01 «coma ≤ 5»), 8 extras sem confirmação em fonte permitida (lista na tabela PENDENTE acima mais os desta), 3 trechos sem texto no slide. **Nada foi alterado nas imagens nesta revisão**; só a plasmaférese continua corrigida (19/11). Literatura-base de Neurología: continua **inexistente no Drive**.
