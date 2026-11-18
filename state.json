@@ -3622,6 +3622,31 @@
       "summary": "Ledger Anthropic falhou apos chamada paga no evento pr:658.",
       "task_id": "pr:658",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "8e1099eed3a13cd0fe0da30cda11c24b77b1ebe5",
+      "component": "guard",
+      "error_id": "ERR-A8EB33004B",
+      "error_type": "hard-fail",
+      "fingerprint": "a8eb33004bb65c7f823f",
+      "first_seen": "2026-11-18T19:38:09.408499+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "f281c45553f242c8ba34e3f5fa71bcbe",
+      "issue_sync_updated_at": "2026-11-18T19:38:09.408499+00:00",
+      "last_evidence_hash": "6a98bc5243ee94e8cceb",
+      "last_seen": "2026-11-18T19:38:09.408499+00:00",
+      "occurrence_count": 1,
+      "pr_number": 687,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "44382173759",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:687.",
+      "task_id": "neurologia-8a1b-conferencia",
+      "worker_id": null
     }
   ]
 }
