@@ -116,13 +116,13 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
-  /* Anatomía Patológica II Práctica (Nova Era): 16 blocos `ap2pb01–ap2pb16` na ordem do conteúdo («BLOQUE NN · PARCIAL 1/2 · TEMA», sem «UNIDAD X»: nenhuma unidade é criada).
-     `ap2pbanco` (banco geral de láminas), `ap2pmazo` (mazo + ruleta) e `ap2pcierre` (tabela integradora, bibliografía e créditos) = repaso (B, F, C). Vinhetas: 16 recortes das láminas
+  /* Anatomía Patológica II Práctica (Nova Era): 18 blocos `ap2pb01–ap2pb18` na ordem do conteúdo («BLOQUE NN · PARCIAL 1/2/FINAL · TEMA», sem «UNIDAD X»: nenhuma unidade é criada).
+     `ap2pbanco` (banco geral de láminas), `ap2pmazo` (mazo + ruleta) e `ap2pcierre` (tabela integradora, bibliografía e créditos) = repaso (B, F, C). Vinhetas: 18 recortes das láminas
      (fotos de microscópio) do próprio conteúdo. */
   var AP2P_REPASO = { ap2pbanco: 'B', ap2pmazo: 'F', ap2pcierre: 'C' };
   function clasificarAP2P(id) {
     var m = /^ap2pb(\d\d)$/.exec(id);
-    if (m) { var n = +m[1]; if (n >= 1 && n <= 16) return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: 'vb-' + pad(n) }; }
+    if (m) { var n = +m[1]; if (n >= 1 && n <= 18) return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: 'vb-' + pad(n) }; }
     if (Object.prototype.hasOwnProperty.call(AP2P_REPASO, id)) return { tipo: 'repaso', n: AP2P_REPASO[id], num: -1, cap: 'r', vig: null };
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
@@ -378,7 +378,7 @@
 
     },
     'anatomia-patologica-ii-practica': {
-      vigDir: 'assets/img/anatoprat2/vig/',               // 16 vinhetas recortadas das láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP2P.md)
+      vigDir: 'assets/img/anatoprat2/vig/',               // 18 vinhetas recortadas das láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP2P.md)
       logo: 'assets/repasso-med-logo.png',
       unidades: {},                                       // o conteúdo não tem «UNIDAD X» (traz PARCIAL 1/2 no marcador): nenhuma unidade é criada
       medallones: [
