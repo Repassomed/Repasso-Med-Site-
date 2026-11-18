@@ -88,3 +88,9 @@ NIHSS (1 · 2–5 · 6–15 · 16–20 · > 20, `10..pdf`); IgIV 0,4 g/kg × 5 d
 ## Sincronização com a #681 e o teste de glossário (19/11)
 
 A **#681 foi mesclada** (`71360104`). Esta branch foi atualizada sobre a main (`198a40ec`, também com #657 e #676) **sem conflito**; glossários (186 glosas) e 13 infográficos coexistem. O `neu-glosario.test.cjs` foi ajustado: (1) base de comparação padrão = a main **antes** da #681 (`4e2d732a`), porque a main atual já contém as glosas; (2) o filtro `FIG` só ignora figuras `rmc-fig` com `neuro-b2N-0N-…`, e **novas verificações exigem exatamente os 13 infográficos esperados, um número certo por bloco, só no fim do bloco depois dos flashcards** — qualquer outra diferença no ensino, nas perguntas ou nos flashcards continua reprovando. Resultado: **434/434** (418 originais + 16 novas).
+
+## Atualização sobre a main com a #683 (19/11)
+
+Merge da main `1ea1021f` (com #683: questões de Neurología, mais #677) **sem conflito no HTML**; único conflito: `inventario.json` (linha por matéria) → main + linha de `neurologia` regenerada (30 seções · **508 q** · 774 fc). Prova de preservação: o `neurologia.html` desta branch, **depois de remover só as 13 figuras, é idêntico byte a byte ao da main** (perguntas e espelhos da #683, 333 glosas, ids: 0 perdidos, 0 novos). Grifos/traços/notas: blocos 20–27 sem marcação; blocos 01–19 idênticos à main.
+
+**Releitura das fontes (19/11):** busca no Drive por material novo de Neurología desde 17/11 → só o exame «Examen Final Neurologia seccion A fila 1» e imagens soltas; **nenhum livro, diretriz ou slide novo**. Portanto os itens PENDENTES da tabela acima **continuam sem fonte para confirmar ou corrigir** (McDonald 2024; PPC 60–70 e hiperventilação; PIC 22 × 20; antibióticos/glicemia na PL; D1/D2/pramipexol; limiar de sobreuso; nota ILAE 2025; nomes TOAST). Nada foi alterado na imagem por falta de fonte; a legenda é só aviso.
