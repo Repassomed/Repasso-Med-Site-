@@ -56,3 +56,7 @@ Total das 19 analisadas (14 MCQ + 5 completar; a MCQ 15 ficou fora): **4 acresce
 - Reconstruções: não declarar como «questão oficial» (o rótulo usado é «Basada en preguntas de examen»).
 - Pendências: MCQ 2 (relação corticoide + AINE) e completar 2 (famotidina); precisam do enunciado original ou de fonte.
 - Sem literatura-base no Drive; bulas DailyMed não abertas.
+
+## Revisão de 18/11 — roflumilast (MCQ 14)
+- A explicação dizia que o aumento do AMPc «relaja el músculo liso», o que podia sugerir broncodilatação direta ou de resgate. **Retirado.** Agora: o AMPc sobe **dentro das células inflamatórias** e freia a resposta inflamatória; «fármaco antiinflamatorio: no se usa para abrir el bronquio ni como rescate»; via oral, 1×/dia, EPOC grave (FEV₁ < 50 %) com bronquite crônica e exacerbações frequentes, **em pacientes selecionados**, reduz exacerbações com pouco efeito em sintomas e função pulmonar (slide 06).
+- Espelho do banco atualizado igual (236 × 236, 0 divergências). No quadro «Inhibidores de PDE4» do bloco 08 foi **acrescentada uma frase final** (o texto existente da cátedra sobre «relajan el músculo liso» fica como está): «el beneficio clínico es antiinflamatorio… no es un broncodilatador ni se usa como rescate». Grifos: 403/406 = main.
