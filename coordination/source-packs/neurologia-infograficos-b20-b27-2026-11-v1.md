@@ -40,12 +40,14 @@ Conferido em 18/11: **nenhuma PR aberta nem ramo ativo** altera `neurologia.html
 
 ## Testes e Cartão de Merge
 
-| Teste | Resultado |
+| Teste (19/11, branch atualizada sobre a main `198a40ec`) | Resultado |
 |---|---|
-| `tools/qa/neuro-667/neuro-667-browser.cjs` (Chromium; blocos abrem, imagens sem quebra, sem rolagem horizontal, sem erro de console) | **OK** |
-| `tools/qa/neuro-667/neuro-667.test.cjs` | 236/238 — as 2 falhas («neub19: só o aviso inicial» e «neuportada: só adição final») **são idênticas numa cópia limpa da `main`**: comparam com uma base anterior à #667; não têm relação com esta PR |
-| `nao-ativacao.test.cjs` | **35/35** |
-| `porta-da-materia.sh neurologia` | **7/7 PASSA** (inventário regenerado: 476 q · 774 fc; âncoras, ida-e-volta, layout em 4 larguras, caneta/modos, risco) — «PORTA ABERTA», não liga nada |
+| `neu-glosario.test.cjs` (ajustado) | **434/434** (418 originais + 16 novas: exatamente os 13 infográficos esperados, nº por bloco e posição no fim) |
+| `neu-glosario-browser.cjs` (Chromium 1440/390) | **24/24** (glosas tocáveis com as figuras presentes) |
+| `neuro-667-browser.cjs` | **36/36** |
+| `neuro-667.test.cjs` | 2 «falhas» (neub19/neuportada) que **também ocorrem na main limpa**: teste de pré-merge da #667, sem relação com esta PR |
+| `nao-ativacao.test.cjs` | **36/36** |
+| `porta-da-materia.sh neurologia` | **7/7 PASSA** (inventário regenerado; âncoras, ida-e-volta, layout 4 larguras, caneta/modos, risco) — «PORTA ABERTA», não liga nada |
 
 **Limites:** a legibilidade foi conferida lendo cada arquivo original inteiro (1024×1536) e confirmando no navegador que carregam sem quebra; não repeti captura por captura no celular nem no iPad/Safari. Nos quadros de texto pequeno (imagens 8 e 13) o aluno precisa ampliar, como nas outras figuras do site.
 
@@ -53,8 +55,8 @@ Conferido em 18/11: **nenhuma PR aberta nem ramo ativo** altera `neurologia.html
 - **O que muda para o aluno:** 13 figuras de resumo visual ao fim dos blocos 20–27 de Neurología.
 - **O que NÃO muda:** texto, perguntas, flashcards, IDs, imagens existentes, grifos/traços/notas; nada é ativado.
 - **Risco:** BAIXO (acréscimos no fim dos blocos; reversível por commit). Peso: +6,1 MB de imagens (13 × ~0,47 MB, carregamento preguiçoso).
-- **Decisões para José:** manter ou retirar a figura b25-02 (faixa McDonald 2024 não verificada) e a b27-02 (PPC 60–70 não verificado); as legendas já avisam o aluno.
-- **Coordenação:** sem conflito com o Claude 1 hoje (nenhuma PR/ramo em `neurologia.html`).
+- **Pendentes (aguardam fonte; ver tabela PENDENTE abaixo):** faixa McDonald 2024 (b25-02), PPC 60–70 e PIC 22 × 20 (b27-02), e outros 5 trechos menores. **Corrigido:** plasmaférese (b25-01, 5 sessões em 2 semanas). Decisão de José: manter ou retirar b25-02 e b27-02.
+- **Coordenação:** #681 (Claude 1) já mesclada; sem conflito; glossários e figuras coexistem.
 
 
 ## Verificação dos pontos em dúvida (18/11, revisada em 19/11) — slides da cátedra e fontes disponíveis
