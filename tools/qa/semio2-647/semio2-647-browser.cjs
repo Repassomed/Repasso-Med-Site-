@@ -16,7 +16,7 @@ const res = []; const ok = (w, modo, nome, c, det) => { res.push({ ok: !!c }); c
         b7: ['El examen físico en tres preguntas', 'llenado capilar', 'pre-IC'].every(x => t('s2-b07').includes(x)), b9: ['¿es sinusal?', 'arritmia sinusal', 'electrodo de tierra'].every(x => t('s2-b09').includes(x)), b8: t('s2-b08').includes('5 minutos de reposo') && !/60 min|dos versiones/.test(t('s2-b08')), tb: !t('s2-tablas').includes('Cómo se construye una respuesta completa'),
         marks: { b01: q('s2-b01').querySelectorAll('.quiz-item').length, b09: q('s2-b09').querySelectorAll('.quiz-item').length },
         sw: document.documentElement.scrollWidth, vw: document.documentElement.clientWidth }; });
-    ok(W, modo, 'preguntas: 120 en los bloques = 120 en el banco', D.bl === 120 && D.banco === 120, D);
+    ok(W, modo, 'preguntas: 127 en los bloques = 127 en el banco', D.bl === 127 && D.banco === 127, D);
     ok(W, modo, 'flashcards del mazo general: 172 (sin cambios)', D.fc >= 172, D.fc);
     ok(W, modo, 'b07, b09 y b08 renderizados con el texto nuevo; compendio sin la tabla metadidáctica', D.b7 && D.b9 && D.b8 && D.tb, D);
     ok(W, modo, 'sin rolagem horizontal de la página', D.sw <= D.vw + 1, D);
