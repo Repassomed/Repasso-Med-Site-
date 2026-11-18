@@ -3572,6 +3572,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:655.",
       "task_id": "nova-era-dermatologia-2026-11",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "6c090c53452844b2901976d3d8ed58b0567369f2",
+      "component": "guard",
+      "error_id": "ERR-E02D2A9D0F",
+      "error_type": "hard-fail",
+      "fingerprint": "e02d2a9d0fa5e15beb27",
+      "first_seen": "2026-11-18T00:29:42.345967+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "cfade5d31dd445f99490b61ac65f3010",
+      "issue_sync_updated_at": "2026-11-18T00:29:42.345967+00:00",
+      "last_evidence_hash": "f9568c18b0dee0641a20",
+      "last_seen": "2026-11-18T00:29:42.345967+00:00",
+      "occurrence_count": 1,
+      "pr_number": 658,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "44208099199",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:658.",
+      "task_id": "preparar a Nova Era de Guaran\u00ed (pr\u00f3xima mat\u00e9ria da fila), sem ativa\u00e7\u00e3o, sem SQL.",
+      "worker_id": null
     }
   ]
 }
