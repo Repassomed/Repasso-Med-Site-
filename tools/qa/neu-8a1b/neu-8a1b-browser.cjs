@@ -11,7 +11,7 @@ let ok = 0, bad = 0; const T = (c, m) => { if (c) { ok++; console.log('  ✓', m
     const erros = []; r.page.on('pageerror', e => erros.push(String(e))); await r.page.waitForTimeout(2500);
     const res = await r.page.evaluate(() => {
       const out = { blocos: 0, banco: 0, mcq: 0, mcqOk: 0, vf: 0, vfOk: 0, def: 0, defOk: 0 };
-      for (const n of ['249','250','251','252','253','254','255','090','091','135','181','224']) {
+      for (const n of ['233','234','249','250','251','252','253','254','255','090','091','135','181','224']) {
         const id = 'q-neu' + n; const el = document.getElementById(id), eb = document.getElementById('b' + id);
         if (el) out.blocos++; if (eb) out.banco++;
         if (!el) continue; el.scrollIntoView({ block: 'center' });
@@ -29,9 +29,9 @@ let ok = 0, bad = 0; const T = (c, m) => { if (c) { ok++; console.log('  ✓', m
       }
       return out;
     });
-    T(['233','234'].every(n=>true) && res.blocos === 12 && res.banco === 12, '@' + w + ' as 12 existem no bloco e no banco (' + res.blocos + '/' + res.banco + ')');
+    T(res.blocos === 14 && res.banco === 14, '@' + w + ' as 14 existem no bloco e no banco (' + res.blocos + '/' + res.banco + ')');
     T(res.mcq === 11 && res.mcqOk === 11, '@' + w + ' 11 MCQ respondem (marcam correta/respondida): ' + res.mcqOk + '/' + res.mcq);
-    T(res.vf === 1 && res.vfOk === 1, '@' + w + ' 1 V/F responde: ' + res.vfOk + '/' + res.vf);
+    T(res.vf === 3 && res.vfOk === 3, '@' + w + ' 3 V/F respondem: ' + res.vfOk + '/' + res.vf);
     const sh = await r.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth); T(sh <= 1, '@' + w + ' sem rolagem horizontal (' + sh + ')');
     T(erros.length === 0, '@' + w + ' sem erro de página' + (erros[0] ? ': ' + erros[0] : ''));
     await r.page.context().close();
