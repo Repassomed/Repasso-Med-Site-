@@ -3672,6 +3672,31 @@
       "summary": "Ledger Anthropic falhou apos chamada paga no evento pr:682.",
       "task_id": "pr:682",
       "worker_id": null
+    },
+    {
+      "category": "workflow",
+      "commit_sha": null,
+      "component": "coordinator",
+      "error_id": "ERR-01EDB6799E",
+      "error_type": "anthropic-ledger-failed",
+      "fingerprint": "01edb6799e54395ac69e",
+      "first_seen": "2026-11-18T20:08:11.346933+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "5bda800bd255430aa0f04372478de8b1",
+      "issue_sync_updated_at": "2026-11-18T20:08:11.346933+00:00",
+      "last_evidence_hash": "54abceac20dc8227c498",
+      "last_seen": "2026-11-18T20:08:11.346933+00:00",
+      "occurrence_count": 1,
+      "pr_number": null,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "44387514397",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Ledger Anthropic falhou apos chamada paga no evento pr:655.",
+      "task_id": "pr:655",
+      "worker_id": null
     }
   ]
 }
