@@ -21,13 +21,13 @@ AP II Práctica tinha 16 blocos (Parcial 1: 01–07; Parcial 2: 08–16). **Nefr
 |---|---|---|
 | Ensino | fluxo; «desde cero» (restos nefrogénicos → WT1…); 3 componentes (tabela); macro/clínica/complicações das notas; caso (reescrito) | fluxo; «desde cero»; 6 termos da ficha (tabela); cáliz; contraste com glomerulonefrite crónica |
 | Imagens | `lam-6d-p2-nefroblastoma-01.webp` (lámina limpa) · `…-02-anotada.webp` (mesma lámina com os 3 rótulos da diapositiva, **desenhados por nós**) · `p2-nefroblastoma-componentes.webp` (micro de apoio, «PDF de apoio») | `lam-6d-p2-pielonefritis-01.webp` (lámina da cátedra) |
-| Perguntas | 12: 2 lámina, 2 caso (reescrito do caso da diapositiva), 3 reescritas dos MCQ da diapositiva (trifásico, anaplasia, WT1), 3 conceituais, 2 V/F | 12: 2 lámina, 1 caso/diferencial, 7 conceituais, 2 V/F |
+| Perguntas | 12: 2 lámina, 2 caso (reescrito do caso da diapositiva), 3 reescritas dos MCQ da diapositiva (trifásico, anaplasia, WT1), 3 conceituais, 2 V/F | 12: 2 lámina, 8 conceituais (inclui o contraste macroscópico com a glomerulonefrite), 2 V/F — **nenhum caso clínico**: o caso do PDF 16 é de glomerulonefrite |
 | Flashcards | 10 (3 com imagem) | 10 (1 com imagem) |
 | Banco | +12 (idênticas ao bloco) | +12 (idênticas) |
 | Mazo | deck do bloco 17 + nova ruleta «Final» (20 cartas) | deck do bloco 18 |
 | Cierre | +2 linhas na tabela, nota das imagens do Final, «Cómo seguir» e bibliografia | |
 
-**Contagens:** blocos 17 e 18 = 12 + 12 perguntas; banco 220 → **244** (112 + 108 + 24); flashcards declaradas 288 → **308**; letras corretas de cada bloco sem corrida (a c b d a d c b a c / a b c d b c a d b c, mais 2 V/F).
+**Contagens:** blocos 17 e 18 = 12 + 12 perguntas (banco: Final = 6 de caso/lámina + 4 V/F + 14 conceituais = 24); banco 220 → **244** (112 + 108 + 24); flashcards declaradas 288 → **308**; letras corretas de cada bloco sem corrida (a c b d a d c b a c / a b c d b c a d b c, mais 2 V/F).
 
 ## Decisões de lei (8-A, 8-A.4, fonte)
 
@@ -38,7 +38,7 @@ AP II Práctica tinha 16 blocos (Parcial 1: 01–07; Parcial 2: 08–16). **Nefr
 
 ## Pendentes e dúvidas
 
-1. **Figuras do PDF 16** (17 MB): não lidas. Rótulos de texto lidos (glomérulos hialinizados, atrofia tubular, folículo linfoide, cilindros hialinos, fibrose, tiroidização, escala 5 cm). O bloco 18 traz **uma** vista em vez de 2–3; quando José enviar o PDF em partes (<10 MB) ou os JPG, acrescentar vistas.
+1. **Figuras do PDF 16** (17 MB): **NÃO examinadas — limitação real, não resolvida.** Tentativas em 19–20/11: (a) `download_file_content` do Drive recusa arquivos > 10 MB; (b) acesso direto a `drive.google.com` pelo ambiente é bloqueado (403 do proxy); (c) um pedido de credencial de API do Drive foi **negado por José**; (d) a cópia «Láminas Final_merged_compressed.pdf» (12 MB) também passa de 10 MB. Só o texto do PDF (inclusive os rótulos das figuras) foi lido. Rótulos de texto lidos (glomérulos hialinizados, atrofia tubular, folículo linfoide, cilindros hialinos, fibrose, tiroidização, escala 5 cm). O bloco 18 traz **uma** vista em vez de 2–3; quando José enviar o PDF em partes (<10 MB) ou os JPG, acrescentar vistas.
 2. Caso/MCQ do PDF 16 (glomerulonefrite crónica): ver acima.
 3. Rótulos «Estromal/Blastemal/Epitelial» na vista 2: posições tiradas da diapositiva da cátedra (a nota manuscrita marca o epitelial com um círculo); estromal e blastemal são zonas, não pontos.
 4. «Pregunta... 118/78 mmHg algo alta para su percentil»: dado do caso da diapositiva, mantido como veio.
@@ -50,3 +50,11 @@ AP II Práctica tinha 16 blocos (Parcial 1: 01–07; Parcial 2: 08–16). **Nefr
 ## Marcações dos alunos (Supabase só SELECT, 19/11)
 
 AP II Práctica: **0 grifos, 0 traços, 0 notas** (nenhuma linha em `user_highlights`, `user_ink_strokes` nem `user_notes`). Os blocos novos entram **antes** do banco e as adições de banco, mazo e cierre ficam **no fim** de cada seção, então nenhum índice posicional existente se desloca.
+
+## Revisão de 20/11 (pedido de José)
+
+- **Separação de assuntos PDF 16:** o PDF mistura pielonefrite crónica (ficha, notas, rótulos das figuras) e, nas páginas finais, um **caso clínico + 3 MCQ + chave de glomerulonefrite crónica**. Conferido o bloco 18 contra essa divisão: ficha, notas, vista da lámina, tiroidização, formas, cáliz, glomérulos e vasos vêm só da parte de **pielonefrite**; a parte de **glomerulonefrite** aparece **somente** (i) na tabela de contraste do cierre/bloco, rotulada como glomerulonefrite crónica terminal (riñones pequeños, simétricos, granulares; glomérulos hialinizados) e (ii) em 1 pergunta de contraste macroscópico e 1 de riñón terminal granular, ambas dizendo qual diagnóstico é qual. **Corrigido:** a pergunta 3 do bloco 18 usava o paciente de 52 anos (HTA, creatinina 5,8) do caso de glomerulonefrite; foi **reescrita sem os dados desse paciente** e sem a etiqueta «Caso clínico». **Nenhuma imagem** foi atribuída à glomerulonefrite (nenhuma figura do PDF 16 foi examinada) e **nenhuma figura de glomerulonefrite** entrou no bloco.
+- **A lámina do bloco 18 vem do JPG «Pielonefritis Crónica .jpg»** (pasta «Anatopatologia Praticas»), não do PDF 16; a legenda descreve só o que se vê (túbulos dilatados com material rosado, infiltrado, fibrose, vaso de parede grossa) e diz «podrían corresponder». Não foi possível confirmar se é a mesma lámina do PDF 16.
+- **Nefroblastoma reconferido contra o PDF 15:** epidemiologia, genes (WT1/WT2/CTNNB1), síndromes, macroscopia, clínica (renina), complicações, os 3 componentes, caso e os 3 MCQ + chave (trifásico = B, anaplasia = C, WT1 = B) conferem. **Retirado** da explicação da pergunta 3 «o neuroblastoma… suele cruzar la línea media» (não consta do material).
+- **Funcionamento:** `quiz.test.cjs` do navegador (Chromium) sobre o HTML novo: 488 itens, 416 MCQ clicados certo/errado, V/F e abertas, 924 flashcards em 39 mazos, **0 falhas de interação** (a única «falha» é «sem gêmeo»: o teste é do banco de Farmacología II e não conhece o id do banco de AP II; o espelho foi conferido à parte: 244 × 244, 0 divergências).
+- **Cartão de Merge corrigido:** o conteúdo novo **chega aos alunos depois do merge e do deploy**, no layout atual, para quem já tem acesso à matéria (AP II Práctica já está no catálogo); **não depende** da Nova Era nem da tabela `rm_materia_rollout`. A não ativação vale só para o layout/tema/caneta V2.
