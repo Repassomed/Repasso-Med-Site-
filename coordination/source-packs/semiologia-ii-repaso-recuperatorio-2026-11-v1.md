@@ -89,3 +89,14 @@ Cartão:
 - Risco: baixo (conteúdo de uma matéria; não ativa nada; sem SQL, sem variáveis Netlify).
 - Reversão: reverter o commit.
 - Humano: (a) conferir com a cátedra o critério de HTA (pendência 2); (b) olhar 2–3 grifos de b06/banco em iPad/Safari (não testado).
+
+
+## Revisão de 18/11 (pedido de José sobre a #676)
+
+1. **Edema agudo de pulmão** (ensino do b07, explicação da pergunta no bloco e no banco): saiu «el pulmón deja de intercambiar gases» (absoluto). Agora: o líquido passa dos capilares aos alvéolos e, com os alvéolos molhados, o oxigênio passa pior para o sangue — daí a falta de ar e a queda da oxigenação. A explicação da pergunta passou de «la neumonía da fiebre…» para «lo habitual es…».
+2. **Anemia** (explicação da pergunta de hipertireoidismo, bloco e banco): saiu «no causa/no pérdida de peso». Agora: a anemia também pode dar palpitações, mas não explica por si só a combinação de perda de peso, calor e tremor; o hipotireoidismo «suele dar el cuadro contrario».
+3. **Exemplo de PA 134/86 × slides da cátedra** (`06 - Motivo de consulta cardio y HTA.pdf`, slides 18 e 21, lidos): o slide diz que a **AHA/ACC 2025 chama estadio 1 de 130–139 / 80–89** e que a **ESC 2024 mantém o diagnóstico de HTA em consultório com ≥140/90**. Não traz, no slide, o rótulo «presión elevada» da ESC. Por isso o exemplo agora só afirma o que o slide sustenta (estadio 1 na AHA/ACC; abaixo de 140/90 ainda não alcança o diagnóstico na ESC 2024) e remete à **Tabla 1 do próprio bloco** para o rótulo «presión arterial elevada». Corrigido também um erro de digitação («u PAD»).
+4. **Marcações:** nenhuma frase com grifo foi tocada; motor real repetido: 36 de 37 sobrevivem, 1 já obsoleto na main, 0 perdidos. IDs intactos.
+5. **Testes (repetidos depois dos ajustes):** semio2-647 24/24 · semio2-647-browser OK · nao-ativacao 35/35 · porta-da-materia semiologia-ii 7/7 (aberta).
+
+**Cartão de Merge (atualizado):** risco baixo; 0 SQL, 0 ativação, 0 variável Netlify; reversível. Humano: confirmar com a cátedra qual critério de HTA será cobrado; olhar 2–3 grifos de b06/banco em iPad/Safari (não testado).
