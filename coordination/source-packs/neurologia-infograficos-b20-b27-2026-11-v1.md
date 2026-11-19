@@ -145,3 +145,26 @@ Ensaio feito **só num worktree local descartável** (nada foi enviado à #687 n
 - **Provado e corrigido:** plasmaférese no SGB (b25-01) → 5 sessões em 2 semanas (slide).
 - **Não confirmado, imagem preservada:** McDonald 2024 (b25-02); PPC 60–70 mmHg e «sem hiperventilação profilática» (b27-02); PIC 22 × > 20 (b27-02); «coma ≤ 5» (b27-01); síndrome clínica isolada × slide (b25-02); antibióticos/glicemia (b20-01); D1/D2/pramipexol (b23-01); limiar de sobreuso (b26-01); «ILAE 2025» (b22-01); nomes TOAST (b21-01).
 - Motivo: não há livro, diretriz ou slide de Neurología no Drive que decida; a legenda «Ojo» é aviso ao aluno, **não** confirmação. Destrave: cátedra ou livro-base (<10 MB) para esses pontos.
+
+## Integração com a main atual (19/11, tarde) · main `da3bf79a`
+
+**Estado:** a #682 foi atualizada sobre a main com #693 (negrito), #696 (V/F), #695 e as PRs Nova Era. **Merge automático, sem conflito.** Prova de preservação (repetida): `neurologia.html` da #682 **menos as 13 figuras é idêntico byte a byte ao da main** (1 718 084 caracteres; 508 itens de pergunta; 13 figuras). Imagens existentes intactas; nenhuma figura nova de Drive foi baixada de novo.
+
+**Testes que passaram a reconhecer as figuras (só neste ramo):** `neu-vf.test.cjs` e `neu-negrito.test.cjs` (que comparam o HTML inteiro com uma base fixa) agora ignoram as 13 figuras `neuro-b2N-0N-…`, como já faziam `neu-glosario` e `neu-questoes`. A presença exata, o número por bloco e a posição das figuras continuam exigidos em `neu-glosario.test.cjs`.
+
+### Ensaio de integração com a #687 (Claude 1) — nada foi enviado à #687
+A #687 (head `cbf32796` no ensaio) **funde limpa com a main**. Entre #682 e #687 há conflitos **só em arquivos de teste e no inventário** (o HTML de Neurología funde sozinho):
+
+| Arquivo | Conflito | Resolução provada |
+|---|---|---|
+| `docs/layout-ensaio/inventario.json` | as duas regravam a linha de `neurologia` | ficar com a versão da PR que entrou primeiro e **regenerar só a linha** (`tools/qa/ensaio-layout/inventario.cjs neurologia`): no composto, **30 seções · 580 q · 774 fc** |
+| `neu-glosario.test.cjs` | 1 linha (comparação de ensino) | linha da #687 + `.replace(GL, '$1')` dos dois lados |
+| `neu-questoes-1811/neu-questoes.test.cjs` | a #687 removeu o trecho obsoleto | ficar com a versão da #687 |
+| `neu-vf/neu-vf.test.cjs` | a #687 mudou a leitura do HTML | versão da #687 + `.replace(FIG_682, '')` na leitura |
+
+**Composto (main + #687 + #682) em worktree descartável:** `neu-8a1b` **3755/3755** · `neu-glosario` **414/414** (inclui as 13 figuras no lugar certo) · `neu-vf` **581/581** · `neu-negrito` **1258/1258** · `neu-questoes-1811` **119/119**; 13 figuras e 580 itens de pergunta (290 × 2) no HTML combinado. (Testes de navegador: ver Cartão.)
+
+**Ordem sugerida:** a que José mesclar primeiro vale. Se a #687 entrar antes, a #682 é atualizada sobre a main com a receita acima (HTML limpo). Se a #682 entrar antes, a #687 resolve os mesmos 4 arquivos (a receita é a mesma). **Não alterei nenhum arquivo nem branch da #687.**
+
+### Divergências com os slides (estado inalterado)
+Nenhum slide, livro ou diretriz novo de Neurología no Drive desde 18/11 (busca por McDonald, PPC, Brain Trauma, ILAE: só as minhas próprias imagens). Continua **provado e corrigido apenas** a plasmaférese do SGB (b25-01, 5 sessões em 2 semanas). Continuam **não confirmados** (imagens preservadas): McDonald 2024; síndrome clínica isolada × slide (b25-02); PPC 60–70 e «sem hiperventilação profilática»; PIC 22 × > 20; «coma ≤ 5» (b27); antibióticos/glicemia na PL (b20-01); D1/D2/pramipexol (b23-01); limiar de sobreuso (b26-01); «ILAE 2025» (b22-01); nomes TOAST (b21-01). A legenda «Ojo» é aviso ao aluno, não confirmação.
