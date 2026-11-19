@@ -107,4 +107,8 @@ T(/marcha jacksoniana<\/b> empieza en una parte pequeña/.test(cur), 'ensina: ma
 T(/3 Hz<\/b> \(tres por segundo\)/.test(cur) && /síndrome de West<\/b>/.test(cur), 'ensina: 3 Hz e West');
 /* q-neu090: a resposta certa é a alternativa «Progresa en estadios N1, N2 y N3…», seja qual for a letra (hoje c) */
 for (const p of ['q', 'bq']) { const h = B[p + '-neu090'], L = corrOf(h), o = optsOf(h)['abcd'.indexOf(L)]; T(L === 'c' && /^Progresa en estadios N1, N2 y N3/.test(txt(o)) && txt((h.match(/<div class="answer"><p><strong>[a-d]\) ([\s\S]*?)<\/strong>/) || [])[1]) === txt(o) && /<p>a\) describe el <b>REM<\/b>|a\) describe el REM/.test(txt(h)) || /a\) describe el/.test(txt(h)), 'q-neu090: resposta certa = c) "Progresa en estadios N1, N2 y N3…" e a explicação concorda ' + p); }
+/* revisão final: TODA pergunta acrescentada (249–284) declara a origem/reconstrução e que não há clave oficial; as 262/264/269/270–282/284 declaram o slide; q-neu233/234 seguem presentes */
+for (let n = 249; n <= 284; n++) for (const p of ['q', 'bq']) { const h = B[p + '-neu' + n]; T(!!h && /<p><i>[^<]*(?:clave|Clave|Reconstruida|reconstruid|recordación|Enunciado)/.test(h), 'nota de origem/reconstrução em ' + p + '-neu' + n); }
+for (const n of ['262', '264', '269']) T(/se apoya en el slide de la cátedra/.test(B['q-neu' + n]) && /se apoya en el slide de la cátedra/.test(B['bq-neu' + n]), 'slide declarado q-neu' + n);
+for (const n of ['233', '234']) for (const p of ['q', 'bq']) T(!!B[p + '-neu' + n], 'duplicata preservada com o id ' + p + '-neu' + n);
 console.log('neu-8a1b (estático): ' + ok + '/' + (ok + bad) + (bad ? ' — ' + bad + ' FALHAS' : ' OK')); process.exit(bad ? 1 : 0);

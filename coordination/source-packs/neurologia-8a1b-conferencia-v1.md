@@ -252,3 +252,17 @@ Script de auditoria comparando `main` × branch, id a id (bloco **e** banco refl
 **Correção:** só o argumento de `checkTF` (nos dois botões de cada item, no bloco e no banco). Nenhum enunciado, veredito, explicação ou id foi alterado para isso.
 
 **Os demais V/F** (todos os 70 pares, 140 itens): teste estático (argumento × cabeçalho × explicação, dois botões iguais) e teste de navegador clicando em VERDADERO numa carga e em FALSO na outra, em 1440 e 390: o veredito certo recebe «correct», o clique errado recebe «wrong», o aviso diz CORRECTO/INCORRECTO conforme o clique e a explicação aparece. **0 defeitos além dos 10.**
+
+## 16 · Revisão final (19/11/2026, após o merge da #696)
+
+- **Base:** a `main` já tem o negrito removido (#693) e os 10 V/F corrigidos (#696); a #687 foi mesclada sobre ela sem conflito no `neurologia.html` (arquivo idêntico ao da #687; só os testes duplicados foram reconciliados, mantendo as versões da #687 que contam 290/192/70).
+- **`q-neu090`** (conferido de novo na versão final, bloco e banco): pergunta «característica correta do NREM»; a resposta certa é a alternativa **c)** «Progresa en estadios N1, N2 y N3, con tono parasimpático predominante y husos de sueño y complejos K en el N2»; a explicação abre por esse texto e as notas a), b), d) apontam para REM, N3 e REM. O Cartão passa a dizer **c)** (o «b)» era de uma versão intermediária).
+- **Duplicatas preservadas com seus ids:** `q-neu233` ≈ `q-neu-2509-03` e `q-neu234` ≈ `q-neu-2509-05` continuam no bloco e no banco; teste novo confere.
+- **Fonte de cada pergunta acrescentada (`q-neu249`–`284`), no bloco e no banco — todas declaram na própria explicação a origem e que não há clave oficial:**
+  - **Com apoio em slide da cátedra:** `262`, `264`, `269`, `270`–`282`, `284` (a nota agora o diz).
+  - **Resposta determinada pelo conteúdo ensinado no bloco, sem clave oficial:** `249`–`261` (fotos/docx/Notes de exames; a clave não foi publicada).
+  - **Reconstruídas de imagem de exame que não está no site:** `251`, `252`, `255` (nota acrescentada nesta rodada).
+  - **Só do compilado de alunos, sem slide e sem livro (insuficiente para dar por confirmada):** `263`, `265`, `266`, `267`, `268`, `283`. Ficam marcadas «falta confirmar com a literatura-base».
+- **Literatura-base:** não existe literatura-base de Neurologia no repositório nem no Drive; a revisão final usou os 16 slides.
+- **Alternativas reordenadas:** auditoria por script (id a id, resposta pelo texto da alternativa e notas seguindo a alternativa) sem divergência; as 88 reescritas foram lidas em pares; nenhuma depende de fonte além de slide/bloco.
+- **Pendências mantidas, sem inventar resposta:** 40 temas do compilado sem ensino (nenhum slide); 20 linhas de fonte truncada/contraditória; anosmia bilateral; apraxia ideatória; Kernig/Brudzinski; FRAA bulbar e rafe inibidor.
