@@ -8,7 +8,7 @@
 function extrair(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const limpo = s => String(s || '').replace(/\s+/g, ' ').trim();
-  const norm = s => limpo(s).toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim();
+  const norm = s => limpo(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
   const tab = doc.querySelector('.tab-content[id^="tab-"]') || doc.querySelector('[id^="tab-"]') || doc.body;
   const ehSlideInfo = e => { try { if (!e.classList.contains('material-slide') || (e.parentElement && e.parentElement.closest('.material-slide'))) return false; const a = e.closest('.tab-content'); if (!a || a.id !== 'tab-farmaco2') return false; if (!e.querySelector('img') || !e.querySelector('.material-slide-caption')) return false; const h = e.querySelector('.material-slide-header'); return !(h && /^\s*(diapositiva|imagen de la prueba|imagem da prova)/i.test(h.textContent || '')); } catch (x) { return false; } };   // só as abas da lista de rm-modes.js (ABAS_INFO_EM_SLIDE): Farmacología II
   const ehInfo = f => f.tagName === 'FIGURE' ? !!(f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image')) : ehSlideInfo(f);
