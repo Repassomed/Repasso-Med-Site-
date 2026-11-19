@@ -67,8 +67,8 @@ const INV = () => {
   const menuAlvos = [...tab.querySelectorAll('.rm-menu .rm-menu-item > a[data-target]')].map(a => a.getAttribute('data-target'));
   const semMenu = secs.map(s => s.id).filter(i => !menuAlvos.includes(i)), menuSemSecao = menuAlvos.filter(i => i && !secs.some(s => s.id === i));
   /* itens DISTINTOS e cópias: questão por enunciado, flashcard pela frente. Uma seção é «cópia» quando ≥90% dos seus itens existem em OUTRA seção. */
-  const normq = q => limpo((q.querySelector('.quiz-question') || q).textContent).toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim();
-  const normf = f => { const fr = f.querySelector('.fc-front'); const am = fr && fr.querySelector('[aria-label], img[src]'); const nz = t => limpo(t).toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim(); return nz((fr || f).textContent) + (am ? '|' + nz(am.getAttribute('aria-label') || am.getAttribute('src')) : ''); };   // frente só com imagem (láminas): o aria-label da imagem distingue as cartas, como na capa (rm-layout.js)
+  const normq = q => limpo((q.querySelector('.quiz-question') || q).textContent).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  const normf = f => { const fr = f.querySelector('.fc-front'); const am = fr && fr.querySelector('[aria-label], img[src]'); const nz = t => limpo(t).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); return nz((fr || f).textContent) + (am ? '|' + nz(am.getAttribute('aria-label') || am.getAttribute('src')) : ''); };   // frente só com imagem (láminas): o aria-label da imagem distingue as cartas, como na capa (rm-layout.js)
   const qPorSec = secs.map(s => [...s.querySelectorAll('.quiz-item')].map(normq)), fPorSec = secs.map(s => [...s.querySelectorAll('.flashcard')].map(normf));
   const dist = arr => new Set(arr.flat()).size;
   function copias(porSec) {
@@ -82,7 +82,7 @@ const INV = () => {
     return out;
   }
   /* enunciado + CONJUNTO de alternativas (sem ordem, sem a letra): a cópia do banco com alternativas reordenadas (8-A.7) é a MESMA questão */
-  const nzo = t => limpo(t).toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim();
+  const nzo = t => limpo(t).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
   const normqo = q => { const o = q.querySelector('.options, .tf-buttons'); const it = o ? [...o.querySelectorAll('li,button')].map(y => nzo(String(y.textContent).replace(/^\s*(?:[A-Ea-e]|\d{1,2})[).]\s*/, ''))) : []; return normq(q) + '|' + (it.length ? it.sort().join('|') : nzo((o || q).textContent)); };
   const quizComOpc = new Set(secs.flatMap(s => [...s.querySelectorAll('.quiz-item')].map(normqo))).size;
   const unicos = { quizComOpc, quiz: dist(qPorSec), fc: dist(fPorSec), copiasQuiz: copias(qPorSec), copiasFc: copias(fPorSec), declaradas: secs.filter(s => s.hasAttribute('data-rm-agrega')).map(s => s.id) };   // declaradas: seções que o próprio HTML marca como agregadoras (data-rm-agrega)

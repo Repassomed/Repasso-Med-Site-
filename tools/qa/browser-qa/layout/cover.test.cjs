@@ -97,7 +97,7 @@ async function abrirCapa(br, base, w, h, o = {}) {
     const figs = blocos.reduce((a, sc) => a + [...sc.querySelectorAll('figure')].filter(f => f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image')).length, 0);
     /* #457 (C5): Preguntas/Flashcards = itens DISTINTOS da matéria inteira (banco/compêndio incluídos: o item que só existe lá também conta;
        a cópia não conta duas vezes). Questão = enunciado + CONJUNTO das alternativas (sem ordem nem rótulo); flashcard = frente. */
-    const nz = t => String(t || '').replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim();
+    const nz = t => String(t || '').replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
     const dist = (sel, cab, alts) => new Set([...tab.querySelectorAll(':scope > section[id] ' + sel)].map(x => { let k = nz((x.querySelector(cab) || x).textContent); if (alts) { const o = x.querySelector(alts); const it = o ? [...o.querySelectorAll('li,button')].map(y => nz(String(y.textContent).replace(/^\s*(?:[A-Ea-e]|\d{1,2})[).]\s*/, ''))) : []; k += '|' + (it.length ? it.sort().join('|') : nz((o || x).textContent)); } return k; })).size;
     return { fig: figs, quiz: dist('.quiz-item', '.quiz-question', '.options, .tf-buttons'), fc: dist('.flashcard', '.fc-front', null), quizBlocos: n('.quiz-item'), fcBlocos: n('.flashcard'), aud: n('audio'), vid: n('details.video-collapsible'), quizTodas: tab.querySelectorAll('.quiz-item').length, fcTodas: tab.querySelectorAll('.flashcard').length, slides: tab.querySelectorAll('.material-slide').length };
   };
