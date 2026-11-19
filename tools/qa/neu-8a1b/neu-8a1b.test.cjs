@@ -14,11 +14,11 @@ const stemOf = h => txt((h.match(/<p class="quiz-question">([\s\S]*?)<\/p>/) || 
 const optsOf = h => [...((h.match(/<ul class="options">([\s\S]*?)<\/ul>/) || [])[1] || '').matchAll(/<li>([a-d])\) ([\s\S]*?)<\/li>/g)].map(m => m[2]);
 const corrOf = h => { const m = h.match(/<div class="answer"><p><strong>([a-d])\) /); return m ? m[1] : null; };
 const A = items(base), B = items(cur);
-const KEEP = ['233', '234'], NEWID = ['249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '259', '260', '261'];
+const KEEP = ['233', '234'], NEWID = ['249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '259', '260', '261', '262', '263', '264', '265', '266', '267', '268', '269'];
 const REWORDED = new Set(["-2509-01", "-2509-05", "002", "005", "007", "011", "014", "015", "016", "025", "026", "032", "043", "044", "046", "048", "051", "057", "058", "060", "061", "064", "066", "067", "068", "071", "073", "075", "078", "081", "082", "086", "087", "090", "091", "093", "099", "101", "102", "109", "111", "114", "115", "120", "121", "123", "124", "130", "132", "135", "138", "144", "145", "146", "173", "175", "179", "180", "182", "183", "184", "187", "188", "190", "191", "192", "193", "197", "199", "203", "205", "207", "210", "212", "213", "214", "217", "219", "224", "225", "232", "234", "238", "242", "243", "244", "247", "248", "249", "250"]); /* alternativas reescritas na revisão de viés: mesmo conceito e mesma resposta */
 const STEM_CHANGED = new Set(['135', '090', '181', '224', '249']); /* enunciado reformulado (8-A.1-B) */
 const nq = Object.keys(B).filter(k => k.startsWith('q-')).length;
-T(nq === 267 && Object.keys(B).length === 534, '267 perguntas e 267 espelhos: ' + nq);
+T(nq === 275 && Object.keys(B).length === 550, '275 perguntas e 275 espelhos: ' + nq);
 /* ids */
 for (const k of Object.keys(A)) T(k in B, 'id preservado ' + k);
 for (const n of NEWID) for (const p of ['q', 'bq']) T(p + '-neu' + n in B, 'nova ' + p + '-neu' + n);
