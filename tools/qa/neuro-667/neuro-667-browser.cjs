@@ -5,7 +5,7 @@
 'use strict';
 const L = require('../ensaio-layout/lib.cjs');
 const res = []; const ok = (w, modo, nome, c, det) => { res.push({ ok: !!c }); console.log((c ? 'PASSA ' : 'FALHA ') + modo + ' @' + w + ' ' + nome + (det !== undefined && !c ? ' → ' + JSON.stringify(det).slice(0, 300) : '')); };
-const BLOCOS = {neub20: 10, neub21: 15, neub22: 9, neub23: 7, neub24: 7, neub25: 8, neub26: 7, neub27: 17}; /* atualizado em 19/11: #683 e #687 acrescentaram perguntas aos blocos 20–27 */
+const BLOCOS = {neub20: 10, neub21: 17, neub22: 10, neub23: 7, neub24: 10, neub25: 8, neub26: 7, neub27: 17}; /* atualizado em 19/11: #683 e #687 acrescentaram perguntas aos blocos 20–27 */
 (async () => {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
   const srv = await L.servir({}); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();

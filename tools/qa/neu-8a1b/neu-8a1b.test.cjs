@@ -14,11 +14,11 @@ const stemOf = h => txt((h.match(/<p class="quiz-question">([\s\S]*?)<\/p>/) || 
 const optsOf = h => [...((h.match(/<ul class="options">([\s\S]*?)<\/ul>/) || [])[1] || '').matchAll(/<li>([a-d])\) ([\s\S]*?)<\/li>/g)].map(m => m[2]);
 const corrOf = h => { const m = h.match(/<div class="answer"><p><strong>([a-d])\) /); return m ? m[1] : null; };
 const A = items(base), B = items(cur);
-const KEEP = ['233', '234'], NEWID = ['249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '259', '260', '261', '262', '263', '264', '265', '266', '267', '268', '269'];
+const KEEP = ['233', '234'], NEWID = ['249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '259', '260', '261', '262', '263', '264', '265', '266', '267', '268', '269', '270', '271', '272', '273', '274', '275'];
 const REWORDED = new Set(["-2509-01", "-2509-05", "002", "005", "007", "011", "014", "015", "016", "025", "026", "032", "043", "044", "046", "048", "051", "057", "058", "060", "061", "064", "066", "067", "068", "071", "073", "075", "078", "081", "082", "086", "087", "090", "091", "093", "099", "101", "102", "109", "111", "114", "115", "120", "121", "123", "124", "130", "132", "135", "138", "144", "145", "146", "173", "175", "179", "180", "182", "183", "184", "187", "188", "190", "191", "192", "193", "197", "199", "203", "205", "207", "210", "212", "213", "214", "217", "219", "224", "225", "232", "234", "238", "242", "243", "244", "247", "248", "249", "250"]); /* alternativas reescritas na revisão de viés: mesmo conceito e mesma resposta */
 const STEM_CHANGED = new Set(['135', '090', '181', '224', '249']); /* enunciado reformulado (8-A.1-B) */
 const nq = Object.keys(B).filter(k => k.startsWith('q-')).length;
-T(nq === 275 && Object.keys(B).length === 550, '275 perguntas e 275 espelhos: ' + nq);
+T(nq === 281 && Object.keys(B).length === 562, '281 perguntas e 281 espelhos: ' + nq);
 /* ids */
 for (const k of Object.keys(A)) T(k in B, 'id preservado ' + k);
 for (const n of NEWID) for (const p of ['q', 'bq']) T(p + '-neu' + n in B, 'nova ' + p + '-neu' + n);
@@ -87,4 +87,20 @@ T(/buen pronóstico si se drena a tiempo<\/b> —el parénquima/.test(cur), 'ens
 T(/El propranolol es un betabloqueante no selectivo: se evita en pacientes con <b>asma<\/b>/.test(cur), 'ensina: propranolol y asma');
 T(!/con disfunción de la <b>médula espinal<\/b>/.test(B['q-neu-2509-03']), 'tijeras sem obrigatoriedade medular');
 T(/no publicó la clave|no publicó clave/.test(B['q-neu135']) && /selección según el tipo de crisis/.test(B['q-neu135']), 'q-neu135: clave não oficial declarada + slide');
+/* triagem do compilado: 186 linhas, um só código por linha, soma = 186 (corrige a soma 193) */
+{ const tri = fs.readFileSync(path.join(REPO, 'coordination/source-packs/neurologia-revisar-triagem-v1.md'), 'utf8');
+  const rows = [...tri.matchAll(/^\| (\d+) \| .*? \| \*\*(COB-P|COB|ACR|ENS|FNT|DESC)\*\* \|/gm)];
+  T(rows.length === 186, 'triagem: 186 linhas com código (' + rows.length + ')');
+  T(new Set(rows.map(r => r[1])).size === 186 && rows.every((r, i) => +r[1] === i + 1), 'triagem: linhas 1..186 sem repetir');
+  const cnt = {}; rows.forEach(r => cnt[r[2]] = (cnt[r[2]] || 0) + 1);
+  T(Object.values(cnt).reduce((a, b) => a + b, 0) === 186, 'triagem: soma das categorias = 186 ' + JSON.stringify(cnt)); }
+/* V/F: o cabeçalho VERDADERO/FALSO concorda com o argumento de checkTF em TODAS (bloco e banco) */
+for (const k of Object.keys(B)) { const h = B[k]; if (!/tf-buttons/.test(h)) continue; const a = (h.match(/checkTF\(this, (true|false)\)/) || [])[1]; const hd = (h.match(/<div class="answer"><p><strong>(VERDADERO|FALSO)/) || [])[1]; T((a === 'true') === (hd === 'VERDADERO'), 'V/F checkTF × cabeçalho ' + k); }
+/* perguntas novas apoiadas em slide ou no compilado levam a nota de origem */
+for (const n of ['262', '263', '264', '265', '266', '267', '268', '269', '270', '271', '272', '273', '274', '275']) for (const p of ['q', 'bq']) T(/Reconstruida a partir del compilado/.test(B[p + '-neu' + n]) && /Basada en preguntas de examen|Verdadero o falso · basada en examen/.test(B[p + '-neu' + n]) && !/Pregunta oficial/.test(B[p + '-neu' + n]), 'rótulo de examen e nota de reconstrução ' + p + '-neu' + n);
+for (const n of ['270', '271', '272', '273', '274', '275']) T(/se apoya en el slide de la cátedra/.test(B['q-neu' + n]), 'apoio em slide declarado q-neu' + n);
+for (const n of ['263', '265', '266', '267', '268']) T(/no figura en los slides actuales/.test(B['q-neu' + n]), 'tema fora dos slides declarado q-neu' + n);
+T(/pérdida parcial del contacto<\/b> durante 1 a 2 minutos/.test(B['q-neu115']) && /pérdida parcial del contacto<\/b> durante 1 a 2 minutos/.test(B['bq-neu115']), 'q-neu115 melhorada (consciência) no bloco e no banco');
+T(/marcha jacksoniana<\/b> empieza en una parte pequeña/.test(cur), 'ensina: marcha jacksoniana');
+T(/3 Hz<\/b> \(tres por segundo\)/.test(cur) && /síndrome de West<\/b>/.test(cur), 'ensina: 3 Hz e West');
 console.log('neu-8a1b (estático): ' + ok + '/' + (ok + bad) + (bad ? ' — ' + bad + ' FALHAS' : ' OK')); process.exit(bad ? 1 : 0);
