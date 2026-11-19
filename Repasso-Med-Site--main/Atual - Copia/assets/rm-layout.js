@@ -487,7 +487,7 @@
      (sem ordem e sem o rótulo «A)»/«1)»: a cópia do banco com alternativas reordenadas é a MESMA questão); flashcard = a frente. */
   function distintosDaMateria(bl, sel, cab, alts) {
     var vistos = {}, n = 0;
-    var nz = function (t) { return String(t || '').replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim(); };
+    var nz = function (t) { return String(t || '').replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); };
     bl.forEach(function (b) {
       Array.prototype.forEach.call(b.sec.querySelectorAll(sel), function (x) {
         var h = x.querySelector(cab), k = nz((h || x).textContent);

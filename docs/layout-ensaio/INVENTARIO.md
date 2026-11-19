@@ -45,7 +45,7 @@ Legenda: **Banco** = a matéria tem seção de Banco geral **reconhecida pelo no
 | Fisiopatologia I (`fisiopatologia`) | `fisiopatologia.html` | 14 | 14 | 332 | **211** | 0 | NÃO | — | 0/332 | 260 / **130** | 39 | 0 (0 iframe) | 0 |
 | Imagenología (`imagenologia`) | `imagenologia.html` | 12 | 12 | 87 | **87** | 0 | NÃO | — | 0/87 | 124 / **74** | 20 | 0 (0 iframe) | 0 |
 | Semiología I (`semiologia`) | `semiologia.html` | 11 | 11 | 220 | **143** / 145 | 0 | NÃO | — | 0/220 | 192 / **96** | 27 | 13 (22 iframe) | 6 |
-| Farmacología I (`farmacologia`) | `farmacologia.html` | 21 | 21 | 191 | **166** | 0 | NÃO | — | 0/191 | 412 / **216** | 52 | 17 (23 iframe) | 0 |
+| Farmacología I (`farmacologia`) | `farmacologia.html` | 21 | 21 | 191 | **166** | 0 | NÃO | — | 0/191 | 412 / **218** | 52 | 17 (23 iframe) | 0 |
 | Medicina Familiar (`medicina-familiar`) | `medicina-familiar.html` | 12 | 12 | 90 | **89** / 90 | 26 | SIM | ⚠ 25 sem par | 0/90 | 177 / **95** | 0 | 0 (0 iframe) | 0 |
 | Semiología II (`semiologia-ii`) | `semiologia-ii.html` | 14 | 14 | 240 | **120** | 120 | SIM | por enunciado | 0/240 | 366 / **184** | 34 | 0 (0 iframe) | 6 |
 | Farmacología II (`farmacologia-ii`) | `farmacologia-ii.html` | 17 | 16 | 428 | **214** | 0 | NÃO | — | 2/428 | 876 / **292** | 0 | 9 (9 iframe) | 0 |
@@ -62,7 +62,7 @@ Legenda: **Banco** = a matéria tem seção de Banco geral **reconhecida pelo no
 | Fisiopatologia II (`fisiopatologia-ii`) | `fisiopatologia-ii.html` | 17 | 16 | 638 | **319** | 319 | SIM | por enunciado | 638/638 | 1857 / **619** | 33 | 0 (0 iframe) | 0 |
 | Toxicología (`toxicologia`) | `toxicologia.html` | 19 | 19 | 698 | **349** | 349 | SIM | por enunciado | 698/698 | 1416 / **472** | 45 | 0 (0 iframe) | 0 |
 | Dermatología (`dermatologia`) | `dermatologia.html` | 15 | 15 | 120 | **120** | 0 | NÃO | — | 120/120 | 482 / **293** | 58 | 0 (0 iframe) | 0 |
-| Guaraní (`guarani`) | `guarani.html` | 16 | 15 | 418 | **207** / 209 | 209 | SIM | por enunciado | 0/418 | 596 / **286** | 38 | 0 (0 iframe) | 0 |
+| Guaraní (`guarani`) | `guarani.html` | 16 | 15 | 418 | **207** / 209 | 209 | SIM | por enunciado | 0/418 | 596 / **287** | 38 | 0 (0 iframe) | 0 |
 | Ortopedia y Traumatología (`ortopedia`) | `ortopedia.html` | 20 | 20 | 914 | **455** / 457 | 457 | SIM | por enunciado | 457/914 | 1296 / **429** | 47 | 0 (0 iframe) | 0 |
 | Oftalmología (`oftalmologia`) | `oftalmologia.html` | 12 | 12 | 278 | **139** | 139 | SIM | por id | 278/278 | 801 / **267** | 27 | 0 (0 iframe) | 0 |
 | Neurología (`neurologia`) | `neurologia.html` | 22 | 22 | 358 | **179** | 179 | SIM | por id | 358/358 | 670 / **335** | 34 | 2 (3 iframe) | 0 |
@@ -79,7 +79,7 @@ Critério: **SIM** = presente e medido no DOM; **NÃO** = ausente (contagem 0 no
 | Fisiopatologia I | SIM | NÃO | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=14; menu=14; q=332 DOM/211 distintas; fc=260 DOM/130 distintos (agregadora flashcards-fisio); fig=39; vid=0; audio=0 |
 | Imagenología | SIM | NÃO | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | NÃO | seções=12; menu=12; q=87 DOM/87 distintas; fc=124 DOM/74 distintos (agregadora flashcards-imagen); fig=20; vid=0; audio=0 |
 | Semiología I | SIM | NÃO | NÃO | SIM | SIM | SIM | SIM | **NÃO** (sem manifesto) | SIM | seções=11; menu=11; q=220 DOM/143 distintas; fc=192 DOM/96 distintos (agregadora flashcards-semio); fig=27; vid=13; audio=6 |
-| Farmacología I | SIM | NÃO | NÃO | SIM | SIM | SIM | NÃO | **NÃO** (sem manifesto) | NÃO | seções=21; menu=21; q=191 DOM/166 distintas; fc=412 DOM/216 distintos; fig=52; vid=17; audio=0 |
+| Farmacología I | SIM | NÃO | NÃO | SIM | SIM | SIM | NÃO | **NÃO** (sem manifesto) | NÃO | seções=21; menu=21; q=191 DOM/166 distintas; fc=412 DOM/218 distintos; fig=52; vid=17; audio=0 |
 | Medicina Familiar | SIM | SIM | NÃO | SIM | NÃO | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=12; menu=12; q=90 DOM/89 distintas; fc=177 DOM/95 distintos; fig=0; vid=0; audio=0 |
 | Semiología II | SIM | SIM | NÃO | SIM | SIM | NÃO | SIM | **NÃO** (sem manifesto) | SIM | seções=14; menu=14; q=240 DOM/120 distintas (agregadora s2-banco); fc=366 DOM/184 distintos (agregadora s2-flashcards); fig=34; vid=0; audio=6 |
 | Farmacología II | SIM | NÃO | PARCIAL | SIM | NÃO | SIM | NÃO | **NÃO** (sem manifesto) | SIM | seções=17; menu=16 (sem item: f2b00); q=428 DOM/214 distintas (agregadora f2b15); fc=876 DOM/292 distintos (agregadora f2b16); fig=0; vid=9; audio=0 |
@@ -96,7 +96,7 @@ Critério: **SIM** = presente e medido no DOM; **NÃO** = ausente (contagem 0 no
 | Fisiopatologia II | SIM | SIM | SIM | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=17; menu=16 (sem item: fp2portada); q=638 DOM/319 distintas (agregadora bancofp2); fc=1857 DOM/619 distintos (agregadora revisaofp2); fig=33; vid=0; audio=0 |
 | Toxicología | SIM | SIM | SIM | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=19; menu=19; q=698 DOM/349 distintas (agregadora bancotox); fc=1416 DOM/472 distintos (agregadora toxcierre); fig=45; vid=0; audio=0 |
 | Dermatología | SIM | NÃO | SIM | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=15; menu=15; q=120 DOM/120 distintas; fc=482 DOM/293 distintos (agregadora dermcierre); fig=58; vid=0; audio=0 |
-| Guaraní | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=16; menu=15 (sem item: gn00); q=418 DOM/207 distintas (agregadora bancognrl); fc=596 DOM/286 distintos (agregadora mazognrl); fig=38; vid=0; audio=0 |
+| Guaraní | SIM | SIM | NÃO | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=16; menu=15 (sem item: gn00); q=418 DOM/207 distintas (agregadora bancognrl); fc=596 DOM/287 distintos (agregadora mazognrl); fig=38; vid=0; audio=0 |
 | Ortopedia y Traumatología | SIM | SIM | PARCIAL | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=20; menu=20; q=914 DOM/455 distintas (agregadora bancoorto); fc=1296 DOM/429 distintos (agregadora bancofcorto); fig=47; vid=0; audio=0 |
 | Oftalmología | SIM | SIM | SIM | SIM | SIM | NÃO | NÃO | **NÃO** (sem manifesto) | SIM | seções=12; menu=12; q=278 DOM/139 distintas (agregadora bancooft); fc=801 DOM/267 distintos (agregadora oftcierre); fig=27; vid=0; audio=0 |
 | Neurología | SIM | SIM | SIM | SIM | SIM | SIM | NÃO | **NÃO** (sem manifesto) | SIM | seções=22; menu=22; q=358 DOM/179 distintas (agregadora banconeu); fc=670 DOM/335 distintos (agregadora revisaoneu); fig=34; vid=2; audio=0 |
@@ -117,7 +117,7 @@ Resumo de R5 (conformidade.json): 39 números declarados na portada com recurso 
 - **Fisiopatologia I** (`fisiopatologia`): flashcards: seção agregadora `flashcards-fisio` repete os dos blocos (DOM 260; distintos 130) · questões repetidas entre seções (DOM 332; distintas 211) · nenhuma questão tem `id`.
 - **Imagenología** (`imagenologia`): flashcards: seção agregadora `flashcards-imagen` repete os dos blocos (DOM 124; distintos 74) · nenhuma questão tem `id`.
 - **Semiología I** (`semiologia`): flashcards: seção agregadora `flashcards-semio` repete os dos blocos (DOM 192; distintos 96) · questões repetidas entre seções (DOM 220; distintas 143) · nenhuma questão tem `id` · 6 <audio> (ausculta).
-- **Farmacología I** (`farmacologia`): flashcards repetidos entre seções sem agregadora única (DOM 412; distintos 216) · questões repetidas entre seções (DOM 191; distintas 166) · nenhuma questão tem `id`.
+- **Farmacología I** (`farmacologia`): flashcards repetidos entre seções sem agregadora única (DOM 412; distintos 218) · questões repetidas entre seções (DOM 191; distintas 166) · nenhuma questão tem `id`.
 - **Medicina Familiar** (`medicina-familiar`): flashcards repetidos entre seções sem agregadora única (DOM 177; distintos 95) · questões repetidas entre seções (DOM 90; distintas 89) · nenhuma questão tem `id` · 25 questões do Banco sem par no corpo.
 - **Semiología II** (`semiologia-ii`): flashcards: seção agregadora `s2-flashcards` repete os dos blocos (DOM 366; distintos 184) · questões: seção `s2-banco` repete as dos blocos (DOM 240; distintas 120) · nenhuma questão tem `id` · usa marcação do piloto (`.s2-hero`/`.s2-quiz-card`) · 6 <audio> (ausculta).
 - **Farmacología II** (`farmacologia-ii`): seção(ões) sem item de índice: `f2b00` · flashcards: seção agregadora `f2b16` repete os dos blocos (DOM 876; distintos 292) · questões: seção `f2b15` repete as dos blocos (DOM 428; distintas 214) · 426/428 questões sem `id`.
@@ -134,7 +134,7 @@ Resumo de R5 (conformidade.json): 39 números declarados na portada com recurso 
 - **Fisiopatologia II** (`fisiopatologia-ii`): seção(ões) sem item de índice: `fp2portada` · flashcards: seção agregadora `revisaofp2` repete os dos blocos (DOM 1857; distintos 619) · questões: seção `bancofp2` repete as dos blocos (DOM 638; distintas 319).
 - **Toxicología** (`toxicologia`): flashcards: seção agregadora `toxcierre` repete os dos blocos (DOM 1416; distintos 472) · questões: seção `bancotox` repete as dos blocos (DOM 698; distintas 349).
 - **Dermatología** (`dermatologia`): flashcards: seção agregadora `dermcierre` repete os dos blocos (DOM 482; distintos 293).
-- **Guaraní** (`guarani`): seção(ões) sem item de índice: `gn00` · flashcards: seção agregadora `mazognrl` repete os dos blocos (DOM 596; distintos 286) · questões: seção `bancognrl` repete as dos blocos (DOM 418; distintas 207) · nenhuma questão tem `id`.
+- **Guaraní** (`guarani`): seção(ões) sem item de índice: `gn00` · flashcards: seção agregadora `mazognrl` repete os dos blocos (DOM 596; distintos 287) · questões: seção `bancognrl` repete as dos blocos (DOM 418; distintas 207) · nenhuma questão tem `id`.
 - **Ortopedia y Traumatología** (`ortopedia`): flashcards: seção agregadora `bancofcorto` repete os dos blocos (DOM 1296; distintos 429) · questões: seção `bancoorto` repete as dos blocos (DOM 914; distintas 455) · 457/914 questões sem `id`.
 - **Oftalmología** (`oftalmologia`): flashcards: seção agregadora `oftcierre` repete os dos blocos (DOM 801; distintos 267) · questões: seção `bancooft` repete as dos blocos (DOM 278; distintas 139).
 - **Neurología** (`neurologia`): flashcards: seção agregadora `revisaoneu` repete os dos blocos (DOM 670; distintos 335) · questões: seção `banconeu` repete as dos blocos (DOM 358; distintas 179).

@@ -88,7 +88,7 @@ const ok = (c, m) => { total++; if (!c) { falhas++; console.log('  ✗ ' + m); }
     const soBlocos = [...tab.querySelectorAll(':scope > section[id]')].filter(s => !/banco|flashcards/.test(s.id));
     const q = soBlocos.reduce((a, s) => a + s.querySelectorAll('.quiz-item').length, 0), fc = soBlocos.reduce((a, s) => a + s.querySelectorAll('.flashcard').length, 0);
     /* #457 (C5): a capa conta flashcards DISTINTOS da matéria inteira — inclui os 12 que só existem em s2-banco (antes ficavam de fora: 172) */
-    const nz = t => String(t || '').replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim();
+    const nz = t => String(t || '').replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
     const fcDist = new Set([...tab.querySelectorAll(':scope > section[id] .flashcard')].map(x => nz((x.querySelector('.fc-front') || x).textContent))).size;
     const metas = [...g('.rm-sis-meta')].map(m => m.textContent);
     const b4 = tab.querySelector('#s2-b04'), m4 = b4.querySelector('.rm-sis-meta').textContent;

@@ -107,7 +107,7 @@ async function cena(br, base, m, cfg, rotulo, esperaLayout, extra) {
         ok(dif.length === 0, `na volta: ${volta.grifos.length} grifos, ${volta.tracos.length} traços e ${volta.notas.length} nota(s) idênticos aos do início`, dif.slice(0, 3)); });
     }
     sec(t + 'G · vizinhas com a variável de Medicina Familiar ligada');
-    for (const v of ['dermatologia', 'neurologia']) {
+    for (const v of ['imagenologia', 'neurologia']) {
       const o = await cena(br, base, M(v), { env: Object.assign({}, LAY, { RM_LAYOUT_SLUGS: MF, RM_PEN_SLUGS: MF, RM_PILOT_PEN_UIDS: UID }), candidatas: null }, t + v, false);
       ok(o.pedidos.length === 0, v + ': nenhuma requisição ao servidor (fora das CANDIDATAS)', o.pedidos); }
   }
