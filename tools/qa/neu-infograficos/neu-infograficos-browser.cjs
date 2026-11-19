@@ -1,5 +1,5 @@
 /* Neurología · PR #682 · infográficos novos + grifos + perguntas + negrito, tudo junto no navegador (Chromium, layout atual, 1440 e 390 px).
-   Grifos SINTÉTICOS (nenhum dado de aluno): 1 por bloco em neub20–neub25 (onde já existem grifos reais), ancorados por texto + prefixo/sufixo + ocorrência, como o motor real.
+   Grifos SINTÉTICOS (nenhum dado de aluno): 1 por bloco em neub20–neub27 (onde já existem grifos reais de alunos), ancorados por texto + prefixo/sufixo + ocorrência, como o motor real.
    Prova: (1) cada grifo pinta EXATAMENTE o texto pedido (não deslocou); (2) as 13 figuras existem, carregam (inclusive a b25-02 corrigida), o contêiner de ampliação (.rmc-zoom, com rolagem interna no celular) cabe na tela e ficam NO FIM do bloco, depois dos flashcards;
    (3) responder perguntas (MCQ e V/F) nos mesmos blocos não altera nem apaga os grifos; (4) alternativas e enunciados V/F sem negrito/cor/itálico (negrito que revelava a resposta);
    (5) sem rolagem horizontal e sem erro de página.   Uso: NODE_PATH=$(npm root -g) node tools/qa/neu-infograficos/neu-infograficos-browser.cjs */
@@ -7,7 +7,7 @@
 const { chromium } = require('playwright');
 const L = require('../ensaio-layout/lib.cjs'); const D = require('../pre-voo/lib-dados.cjs');
 let ok = 0, bad = 0; const T = (c, m, x) => { if (c) { ok++; console.log('  ✓', m); } else { bad++; console.log('  ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 300) : ''); } };
-const BLOCOS = ['neub20', 'neub21', 'neub22', 'neub23', 'neub24', 'neub25'];
+const BLOCOS = ['neub20', 'neub21', 'neub22', 'neub23', 'neub24', 'neub25', 'neub26', 'neub27'];
 const FIGS = { neub20: 2, neub21: 2, neub22: 1, neub23: 1, neub24: 2, neub25: 2, neub26: 1, neub27: 2 };
 (async () => {
   const rec = L.reconciliar(); const m = rec.ativas.find(x => x.slug === 'neurologia');
@@ -25,7 +25,7 @@ const FIGS = { neub20: 2, neub21: 2, neub22: 1, neub23: 1, neub24: 2, neub25: 2,
       }
       return null;
     }), [BLOCOS, D.UID]);
-    T(rows.every(Boolean) && rows.length === 6, '@' + w + ' 6 grifos sintéticos montados (1 por bloco, texto único no bloco)', rows.map(x => !!x));
+    T(rows.every(Boolean) && rows.length === 8, '@' + w + ' 8 grifos sintéticos montados (1 por bloco, texto único no bloco)', rows.map(x => !!x));
     await rr.page.evaluate(R => { sessionStorage.setItem('ens.user_highlights', JSON.stringify(R)); window.__writes = []; }, rows);
     await rr.page.goto(rr.page.url(), { timeout: 120000 }); await rr.page.waitForFunction('window.__ready===true', { timeout: 120000 }); await rr.page.waitForTimeout(2500);
     const erros = []; rr.page.on('pageerror', e => erros.push(String(e))); await rr.page.waitForTimeout(3000);
@@ -61,12 +61,12 @@ const FIGS = { neub20: 2, neub21: 2, neub22: 1, neub23: 1, neub24: 2, neub25: 2,
       }
       await new Promise(r => setTimeout(r, 1200)); return { mcq, vf, certas };
     }, BLOCOS);
-    T(resp.mcq + resp.vf >= 20 && resp.certas === resp.mcq + resp.vf, '@' + w + ' perguntas respondidas nos 6 blocos (' + resp.mcq + ' MCQ + ' + resp.vf + ' V/F): todas respondem certo (' + resp.certas + ')', resp);
+    T(resp.mcq + resp.vf >= 20 && resp.certas === resp.mcq + resp.vf, '@' + w + ' perguntas respondidas nos 8 blocos (' + resp.mcq + ' MCQ + ' + resp.vf + ' V/F): todas respondem certo (' + resp.certas + ')', resp);
     const depois = await pintar();
     BLOCOS.forEach((id, i) => T(depois[id] === antes[id] && depois[id] === rows[i].exact_text, '@' + w + ' ' + id + ': o grifo continua igual depois de responder perguntas'));
     /* 4 · negrito: alternativas e enunciados V/F sem ênfase nos mesmos blocos */
     const neg = await rr.page.evaluate(ids => { let enf = 0, tot = 0; for (const id of ids) for (const el of document.getElementById(id).querySelectorAll('.quiz-item')) { tot++; if ([...el.querySelectorAll('ul.options > li, .interactive-options > li')].some(li => li.querySelector('b,strong,i,em,mark,u'))) enf++; const q = el.querySelector('.quiz-question'); if (el.querySelector('.tf-btn') && q && q.querySelector('b,strong,i,em')) enf++; } return { enf, tot }; }, BLOCOS);
-    T(neg.tot > 0 && neg.enf === 0, '@' + w + ' ' + neg.tot + ' perguntas dos blocos 20–25 sem negrito/ênfase que revele a resposta (' + neg.enf + ')', neg);
+    T(neg.tot > 0 && neg.enf === 0, '@' + w + ' ' + neg.tot + ' perguntas dos blocos 20–27 sem negrito/ênfase que revele a resposta (' + neg.enf + ')', neg);
     const sh = await rr.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth); T(sh <= 1, '@' + w + ' sem rolagem horizontal (' + sh + ')');
     T(erros.length === 0, '@' + w + ' sem erro de página' + (erros[0] ? ': ' + erros[0] : ''));
     await rr.page.context().close();
