@@ -82,6 +82,16 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Dermatología (Nova Era): ids `dermb01…dermb13` (a numeração é a do id = «Bloque NN» do conteúdo) + `dermcierre` (mazo general y ruleta = repaso). `dermportada` é a capa/abertura do conteúdo
+     (não é um bloco). O conteúdo não tem «UNIDAD X»: nenhuma unidade é criada. Sem ilustrações aprovadas ainda ⇒ cada bloco usa o logotipo (vig: null). Cada bloco ganha uma das 6 cores (cap). */
+  var DE_REPASO = { dermcierre: 'F' };
+  function clasificarDE(id) {
+    var m = /^dermb(\d{2})$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 13) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: null }; }
+    if (Object.prototype.hasOwnProperty.call(DE_REPASO, id)) return { tipo: 'repaso', n: DE_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* Embriología (Nova Era): ids `emb01…emb13`; a numeração é a do id (= «BLOQUE NN»). Sem Unidades no conteúdo (o marcador é «BLOQUE NN · <tema>», Parcial 2 a partir do 08):
      cada tema de estudo compartilha uma família de cor (cap). emb14 = banco geral, emb15 = flashcards gerais (repaso). */
   var EM_CAP = { 1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 3, 7: 4, 8: 5, 9: 5, 10: 5, 11: 6, 12: 2, 13: 2 };
@@ -113,6 +123,17 @@
   function clasificarFA(id) {
     if (Object.prototype.hasOwnProperty.call(FA_NUM, id)) { var n = FA_NUM[id]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: 'vb-' + pad(n) }; }
     if (Object.prototype.hasOwnProperty.call(FA_REPASO, id)) return { tipo: 'repaso', n: FA_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
+  /* Guaraní (Nova Era): ids `gnb01…gnb13` (numeração do id = «BLOQUE NN»); `gn00` é âncora vazia (hidden). O conteúdo não tem «UNIDAD» (o marcador traz «PARCIAL 1/2»):
+     nenhuma unidade é criada. Banco e mazo geral = repaso. */
+  var GN_REPASO = { bancognrl: 'B', mazognrl: 'F' };
+  var GN_VIG = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 7: 1, 8: 1, 9: 1, 10: 1, 12: 1, 13: 1 };   // blocos com viñeta limpa (sem texto); 06 e 11 usam o logotipo
+  function clasificarGN(id) {
+    var m = /^gnb(\d{2})$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 13) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: GN_VIG[n] ? 'vb-' + pad(n) : null }; }
+    if (Object.prototype.hasOwnProperty.call(GN_REPASO, id)) return { tipo: 'repaso', n: GN_REPASO[id], num: -1, cap: 'r', vig: null };
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
@@ -377,6 +398,24 @@
       clasificar: clasificarEM
 
     },
+    'guarani': {
+      vigDir: 'assets/img/guarani/vig/',                  // 11 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-GUARANI.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'La lengua del paciente',
+      miga: ['Guía de estudio', 'Guaraní'],
+      unidades: {},                                       // o conteúdo não tem unidades (marcador «PARCIAL 1/2»): nenhuma é criada
+      medallones: [
+        { vig: 'vb-02', t: 'SALUDOS',   cap: 2, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-01', t: 'CONSULTA',  cap: 1, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-13', t: 'ANIMALES',  cap: 1, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Preguntas por bloque y banco general',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarGN
+    },
     'anatomia-patologica-ii-practica': {
       vigDir: 'assets/img/anatoprat2/vig/',               // 18 vinhetas recortadas das láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP2P.md)
       logo: 'assets/repasso-med-logo.png',
@@ -443,6 +482,20 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFA
+    },
+    'dermatologia': {
+      vigDir: null,                                       // sem viñetas ilustradas: cada bloque usa o logo oficial (rm-sis-vig--logo)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Piel · Lesiones · Infecciones · Tumores',
+      miga: ['Guía de estudio', 'Dermatología'],
+      unidades: {},                                       // o conteúdo não tem «UNIDAD X»: nenhuma unidade é criada
+      medallones: [],                                     // sem ilustrações aprovadas ainda: a capa não leva medalhões
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarDE
     },
     'farmacologia-ii': {
       vigDir: 'assets/img/farmaco2/vig/',                 // 12 vinhetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-FARMACO2.md)
