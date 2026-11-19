@@ -1,4 +1,4 @@
-# Nova Era · estado por matéria (19/11/2026)
+# Nova Era · estado por matéria (atualizado em 19/11/2026, main `d9ef1072`)
 
 **Leia isto primeiro:** «código na main» **não** significa «aparecendo na conta do aluno». Hoje o código de uma matéria só *pergunta* ao servidor (`CANDIDATAS`); quem decide é a linha da matéria em `rm_materia_rollout` (`off` ⇒ ninguém; `preview` ⇒ só administrador, hoje 1 conta; `all` ⇒ aluno com acesso). Ver `IMPLANTACAO-POR-MATERIA.md`.
 
@@ -40,28 +40,26 @@ Legenda · **Código na main**: entra em `CANDIDATAS` + `TEMAS` (tema, classific
 | Ortopedia (`ortopedia`) | sim | #664 | nenhuma |
 | Oftalmología (`oftalmologia`) | sim | #664 | nenhuma |
 | Dermatología (`dermatologia`) | sim | #655 (mesclada em 19/11) | nenhuma |
-| **Guaraní (`guarani`)** | **não** | **#658 aberta** (pronta, depende só de ordem de José) | nenhuma |
+| Guaraní (`guarani`) | sim | #658 (mesclada em 19/11) | nenhuma |
 | Imagenología (`imagenologia`) | não | — **não preparada** | nenhuma |
 | Medicina Legal (`medicina-legal`) | não | — **não preparada** | nenhuma |
 | Neurología (`neurologia`) | não | — **não preparada** para a Nova Era; conteúdo em andamento por Claude 1 (#687) e infográficos na #682 | nenhuma |
-| Semiología (`semiologia`) | não | — **não preparada** | nenhuma |
+| **Semiología I (`semiologia`)** | **não** (candidata, tema, teste e roteiro prontos na PR) | **PR aberta: Nova Era Semiología I** (esta PR) | nenhuma |
 
 Observação: `bioestadistica.html` existe na pasta de matérias, mas **não está no catálogo** do `index.html` (0 ocorrências), nem em `CANDIDATAS`. Não entra na conta acima.
 
 ## Totais
 
-- **Código na main:** 22 de 27 (todas em `CANDIDATAS`; o piloto Semiología II é uma delas).
-- **PR aberta:** 1 (Guaraní, #658) + 1 extensão de conteúdo de matéria já preparada (AP II Práctica, #689).
-- **Não preparadas:** 4 (Imagenología, Medicina Legal, Neurología, Semiología).
+- **Código na main:** 23 de 27 (todas em `CANDIDATAS`; o piloto Semiología II é uma delas). Entrou nesta rodada: Dermatología (#655) e Guaraní (#658).
+- **PR aberta de Nova Era:** 1 — Semiología I (esta PR). Mais 1 extensão de conteúdo de matéria já preparada: AP II Práctica (#689, blocos 17–18).
+- **Não preparadas:** 3 — Imagenología (fora por decisão de José), Medicina Legal, Neurología (conteúdo em andamento por Claude 1; não tocar).
 - **Com ativação comprovada para aluno:** **0**. Com preview só para administrador: **1** (Medicina Familiar).
+- **Cuidado de leitura:** «código na main» e «PR aberta» significam só que o código está (ou estará) no site. Nenhuma dessas matérias aparece no layout novo para aluno: isso só acontece quando uma linha em `rm_materia_rollout` vai para `all`, por SQL de José.
 
 ## Como esta lista foi feita
 
 `CANDIDATAS` de `rm-pilot.js` e chaves de `TEMAS` em `rm-materia-sistema.js` da main `ac5ed3ac`; catálogo de `index.html`; log de merges do Git; `SELECT * FROM rm_materia_rollout`. **Limites:** não li as variáveis do Netlify; a origem das PRs de 7 matérias antigas não foi reconferida; «código pronto» aqui significa «testes verdes e porta aberta», não «aprovado no iPad».
 
-## Compatibilidade #658 × #689 (ensaio local, nada enviado à #689)
+## Compatibilidade #658 × #689 (resolvida)
 
-- Merge da #689 sobre a #658: **um conflito**, só num **comentário** de `rm-materia-sistema.js` (a #658 insere o classificador `clasificarGN` logo antes do comentário de `clasificarAP2P`, que a #689 reescreve). `inventario.json` junta sozinho (linhas de matérias diferentes).
-- **Receita:** manter o bloco de Guaraní inteiro e, depois dele, o comentário/classificador da #689 (blocos 01–18). Sem perda de nenhum lado.
-- No estado composto: `real-guarani` **118/118** · `real-ap2p` **109/109** · `integracao-ap2p` **119/119** · `temas-ap2p` **51/51** · `css-temas` **73/73**; sintaxe JS e `inventario.json` válidos.
-- A #689 **não toca** `rm-pilot.js`, `index.html` nem `rm-layout.js`; a #658 sobe `VER` para 2026111118 (tag do `index.html` igual). Conteúdo de AP II Práctica e Neurología: **não alterado** por esta PR.
+A #658 entrou na main. A #689 foi atualizada sobre a main (merge `0fe7960e`): o único conflito era um comentário em `rm-materia-sistema.js`, resolvido por união (bloco de Guaraní + classificador de AP II Práctica com blocos 01–18). Testes na #689 atualizada: `temas-ap2p` 51/51 · `real-ap2p` 109/109 · `integracao-ap2p` 119/119 · `real-guarani` 118/118 · `nao-ativacao` 39/39 · porta de AP II Práctica 7/7.
