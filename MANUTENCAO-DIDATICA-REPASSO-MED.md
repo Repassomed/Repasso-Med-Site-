@@ -1630,6 +1630,28 @@ regra de explicação suficiente de 8-A.2 não autoriza omitir o elo causal que
 o iniciante precisa compreender. Auditar questões originais completas, mas
 tratar eventuais problemas conforme a preservação e as exceções de 8-A.6.
 
+8-A.6-D Verificação de pistas visuais e funcionamento das questões
+
+Em toda tarefa que inserir, reformular ou corrigir questões, verificar as
+questões alteradas tanto no bloco quanto na cópia do banco geral, quando
+existir, antes de recomendar o merge:
+
+- Antes de responder, nenhuma alternativa ou enunciado de verdadeiro/falso
+  pode revelar a resposta por negrito, itálico, cor, ícone ou outra pista
+  visual. A explicação pode usar destaque depois da interação.
+- Em cada questão alterada, conferir que a resposta exibida, o gabarito,
+  as alternativas e a explicação concordam. Após reordenar alternativas,
+  conferir também as letras citadas na explicação.
+- Nas questões de verdadeiro/falso alteradas, testar os dois botões:
+  o veredito correto deve ser aceito, o incorreto rejeitado e a explicação
+  correspondente deve aparecer. Conferir bloco e banco, quando existir.
+- Ao auditar uma matéria por completo, incluir suas questões anteriores
+  nessas verificações. Registrar defeitos preexistentes e não declará-los
+  resolvidos sem correção e teste.
+- Registrar no Cartão de Merge a quantidade conferida, resultados,
+  falhas, limitações e a versão testada. Testes automatizados complementam
+  a conferência do conteúdo e não substituem a verificação científica.
+
 8-A.7 Distribuição das letras corretas
 
 É proibido criar padrão previsível de gabarito.
