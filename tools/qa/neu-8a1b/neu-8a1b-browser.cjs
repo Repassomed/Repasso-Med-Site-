@@ -39,11 +39,11 @@ let ok = 0, bad = 0; const T = (c, m) => { if (c) { ok++; console.log('  ✓', m
       }
       return out;
     });
-    T(res.itens === 580, '@' + w + ' 580 itens (290 no bloco + 290 no banco): ' + res.itens);
+    T(res.itens === 590, '@' + w + ' 590 itens (295 no bloco + 295 no banco): ' + res.itens);
     T(res.vis === 0, '@' + w + ' nenhuma resposta visível antes de responder (' + res.vis + ')');
     T(res.marc === 0, '@' + w + ' nenhuma marca de correta/errada antes de responder (' + res.marc + ')');
     T(res.enf === 0 && res.cor === 0, '@' + w + ' nenhuma ênfase/cor diferente nas alternativas nem no enunciado V/F (' + res.enf + '/' + res.cor + ')');
-    T(res.mcqOk === res.mcq && res.vfOk === res.vf && res.mcq === 384 && res.vf === 140, '@' + w + ' todas respondem: MCQ ' + res.mcqOk + '/' + res.mcq + ' · V/F ' + res.vfOk + '/' + res.vf);
+    T(res.mcqOk === res.mcq && res.vfOk === res.vf && res.mcq === 390 && res.vf === 142, '@' + w + ' todas respondem: MCQ ' + res.mcqOk + '/' + res.mcq + ' · V/F ' + res.vfOk + '/' + res.vf);
     if (res.falhas.length) console.log('   ', res.falhas.slice(0, 6).join(' | '));
     const sh = await r.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth); T(sh <= 1, '@' + w + ' sem rolagem horizontal (' + sh + ')');
     T(erros.length === 0, '@' + w + ' sem erro de página' + (erros[0] ? ': ' + erros[0] : ''));

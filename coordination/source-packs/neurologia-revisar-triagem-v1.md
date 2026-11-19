@@ -34,6 +34,9 @@ O compilado é um **conjunto de perguntas lembradas por alunos com respostas esc
 
 **Auditoria por amostragem (rodada 3, mantida):** 24 linhas «já cobertas» (semente 1911): 12 coincidiam e 12 não; revisei **todas** as COB. **Conflitos de critério para José/cátedra:** anosmia bilateral (três vezes «mucosa nasal» no compilado × traumatismo no glossário; nenhum vem de slide), as linhas FNT (apraxia ideatória, Kernig, FRAA bulbar, rafe inibidor).
 
+## Os 281 parágrafos restantes do compilado (rodada 5, 19/11/2026)
+Dos 467 parágrafos que o pipeline marcou, 186 estão na tabela abaixo; os outros 281 foram classificados por sobreposição de texto e leitura parcial (lista completa em `neurologia-rastreabilidade-provas-v1.md` §8 e §11): **6 ACR** (perguntas `q-neu285`, `286`, `287`, com slide), **81** grupo A (mesmo tema/enunciado de pergunta do site, COB provável), **119** grupo B e **75** grupo C (**a conferir**, sem comparação de raciocínio item a item). = 281. As pendências B/C seguem na fila #686.
+
 ## Fila e decisão por item
 
 | # | Fonte (par. do PDF · pergunta ⇒ resposta do compilado) | Código | Destino / id existente | Nota |

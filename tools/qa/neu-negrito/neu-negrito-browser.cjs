@@ -43,14 +43,14 @@ let ok = 0, bad = 0; const T = (c, m) => { if (c) { ok++; console.log('  ✓', m
     await r.page.waitForTimeout(1200); /* _revealAnswer abre a explicação 650 ms depois de responder */
     const dep = await r.page.evaluate(() => { const vis = el => { const an = el.querySelector('.answer'); return !!an && an.classList.contains('show') && getComputedStyle(an).display !== 'none' && an.offsetHeight > 0; }; const todos = [...document.querySelectorAll('.quiz-item')].filter(e => /^(q|bq)-neu/.test(e.id)); return { mcq: todos.filter(e => e.querySelector('li[data-option]') && vis(e)).length, vf: todos.filter(e => e.querySelector('.tf-btn') && vis(e)).length, mcqTot: todos.filter(e => e.querySelector('li[data-option]')).length }; });
     res.depoisMcq = dep.mcq; res.depoisVf = dep.vf;
-    T(res.itens === 580, '@' + w + ' 580 itens (290 no bloco + 290 no banco): ' + res.itens);
+    T(res.itens === 590, '@' + w + ' 590 itens (295 no bloco + 295 no banco): ' + res.itens);
     T(res.vis === 0, '@' + w + ' nenhuma resposta visível antes de responder (' + res.vis + ')');
     T(res.marc === 0, '@' + w + ' nenhuma marca de correta/errada antes de responder (' + res.marc + ')');
     T(res.enf === 0 && res.cor === 0, '@' + w + ' nenhuma ênfase/cor diferente nas alternativas nem no enunciado V/F (' + res.enf + '/' + res.cor + ')');
-    T(res.mcqOk === res.mcq && res.mcq === 384, '@' + w + ' todas as MCQ respondem: ' + res.mcqOk + '/' + res.mcq);
-    T(res.vf === 140 && res.vfOk === 140, '@' + w + ' todos os V/F respondem certo: ' + res.vfOk + '/' + res.vf + ' (os 10 antigos da main foram corrigidos na #687)');
-    T(res.depoisMcq === 384, '@' + w + ' depois de responder, a explicação das MCQ aparece (' + res.depoisMcq + '/384)');
-    T(res.depoisVf === 140, '@' + w + ' depois de responder, a explicação dos 140 V/F aparece (' + res.depoisVf + '/140)');
+    T(res.mcqOk === res.mcq && res.mcq === 390, '@' + w + ' todas as MCQ respondem: ' + res.mcqOk + '/' + res.mcq);
+    T(res.vf === 142 && res.vfOk === 142, '@' + w + ' todos os V/F respondem certo: ' + res.vfOk + '/' + res.vf + ' (os 10 antigos da main foram corrigidos na #687)');
+    T(res.depoisMcq === 390, '@' + w + ' depois de responder, a explicação das MCQ aparece (' + res.depoisMcq + '/390)');
+    T(res.depoisVf === 142, '@' + w + ' depois de responder, a explicação dos 142 V/F aparece (' + res.depoisVf + '/142)');
     if (res.falhas.length) console.log('   ', res.falhas.slice(0, 6).join(' | '));
     const sh = await r.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth); T(sh <= 1, '@' + w + ' sem rolagem horizontal (' + sh + ')');
     T(erros.length === 0, '@' + w + ' sem erro de página' + (erros[0] ? ': ' + erros[0] : ''));
