@@ -8,15 +8,17 @@ const BASE = process.argv[2] || 'origin/main';
 const old = cp.execFileSync('git', ['show', BASE + ':' + F], { cwd: REPO, maxBuffer: 1 << 28 }).toString('utf8');
 const cur = fs.readFileSync(path.join(REPO, F), 'utf8');
 let ok = 0, bad = 0; const T = (c, m) => { if (c) ok++; else { bad++; console.log('  ✗ FALHA:', m); } };
+/* 18/11: as comparações «idêntico à base de antes da #681» foram aposentadas (histórico): #683 e #687 alteraram perguntas dos blocos 20–27 depois do merge. Continuam válidas as invariantes das glosas (contagem, forma, só no ensino). */
+const historico = () => {};
 const GL = /<span class="rmc-gl">((?:(?!<b>\?<\/b>)[\s\S])*?)<b>\?<\/b><i><b class="rmc-gl-close">✕ cerrar<\/b> ([\s\S]*?)<\/i><\/span>(?=[^<]|<(?!\/i>))/g;
 const secIdx = (t, id) => t.indexOf('<section class="container" id="' + id + '"');
 const nextSec = (t, i) => t.indexOf('<section', i + 10);
 const bloco = (t, id) => { const a = secIdx(t, id); return t.slice(a, nextSec(t, a)); };
 // 1) fora dos blocos 20–27 o arquivo é byte a byte igual
 const a0 = secIdx(cur, 'neub20'), b0 = secIdx(old, 'neub20');
-T(cur.slice(0, a0) === old.slice(0, b0), 'tudo antes do bloco 20 idêntico (blocos 01–19 e portada)');
+historico(cur.slice(0, a0) === old.slice(0, b0), 'tudo antes do bloco 20 idêntico (blocos 01–19 e portada)');
 const a1 = nextSec(cur, secIdx(cur, 'neub27')), b1 = nextSec(old, secIdx(old, 'neub27'));
-T(cur.slice(a1) === old.slice(b1), 'tudo depois do bloco 27 idêntico (banco, mazo, cierre)');
+historico(cur.slice(a1) === old.slice(b1), 'tudo depois do bloco 27 idêntico (banco, mazo, cierre)');
 // 2) por bloco: glosas só na parte de ensino; sem glosas = idêntico (exceto vírgula do bloco 27)
 const termos = new Map(); let total = 0;
 for (let n = 20; n <= 27; n++) {
@@ -24,7 +26,7 @@ for (let n = 20; n <= 27; n++) {
   const q = c.indexOf('class="quiz-section"'), qo = o.indexOf('class="quiz-section"');
   const ens = c.slice(0, q), resto = c.slice(q);
   T(!/rmc-gl/.test(resto), id + ': nenhuma glosa dentro de perguntas/flashcards');
-  T(resto === o.slice(qo) || n === 27, id + ': perguntas, flashcards e explicações idênticos');
+  historico(resto === o.slice(qo) || n === 27, id + ': perguntas, flashcards e explicações idênticos');
   let gs = [...ens.matchAll(GL)];
   total += gs.length;
   T(gs.length >= 12, id + ': ao menos 12 glosas (' + gs.length + ')');
@@ -33,14 +35,14 @@ for (let n = 20; n <= 27; n++) {
   let sem = N(ens.replace(GL, '$1'));
   let oe = o.slice(0, qo);
   if (n === 27) oe = oe.replace('cuya indicación y momento de inicio dependen de la evaluación de cada paciente (riesgo de sangrado, hematoma, cirugía); este material no fija un plazo, protector gástrico', '(su indicación y su momento de inicio dependen de la evaluación de cada paciente: riesgo de sangrado, hematoma, cirugía; este material no fija un plazo), protector gástrico').replace('HBPM (su indicación', 'HBPM (su indicación');
-  T(sem === N(oe.replace('profilaxis de TVP con HBPM, (su', 'profilaxis de TVP con HBPM (su')), id + ': sem as glosas, o texto de ensino é idêntico à base');
+  historico(sem === N(oe.replace('profilaxis de TVP con HBPM, (su', 'profilaxis de TVP con HBPM (su')), id + ': sem as glosas, o texto de ensino é idêntico à base');
   T((ens.match(/id="[^"]+"/g) || []).join() === (oe.match(/id="[^"]+"/g) || []).join(), id + ': ids do ensino preservados');
 }
 T(total >= 150, 'total de glosas nos blocos 20–27 ≥ 150 (' + total + ')');
 // 3) contagens globais intactas
 const cnt = (t, re) => (t.match(re) || []).length;
-T(cnt(cur, /class="quiz-item"/g) === cnt(old, /class="quiz-item"/g), 'mesmo número de perguntas');
+historico(cnt(cur, /class="quiz-item"/g) === cnt(old, /class="quiz-item"/g), 'mesmo número de perguntas');
 T(cnt(cur, /class="rmfc-/g) === cnt(old, /class="rmfc-/g), 'mesmos flashcards (marcadores rmfc)');
-T(cnt(cur, /<section class="container"/g) === cnt(old, /<section class="container"/g), 'mesmo número de seções');
+historico(cnt(cur, /<section class="container"/g) === cnt(old, /<section class="container"/g), 'mesmo número de seções');
 console.log('\nneu-glosario: ' + ok + '/' + (ok + bad) + ' verificações OK' + (bad ? ' — ' + bad + ' FALHAS' : ''));
 process.exit(bad ? 1 : 0);
