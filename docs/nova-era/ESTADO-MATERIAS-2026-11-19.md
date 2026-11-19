@@ -1,4 +1,4 @@
-# Nova Era · estado por matéria (atualizado em 19/11/2026, main `d9ef1072`)
+# Nova Era · estado por matéria (atualizado em 19/11/2026, main `c9c5864e`)
 
 **Leia isto primeiro:** «código na main» **não** significa «aparecendo na conta do aluno». Hoje o código de uma matéria só *pergunta* ao servidor (`CANDIDATAS`); quem decide é a linha da matéria em `rm_materia_rollout` (`off` ⇒ ninguém; `preview` ⇒ só administrador, hoje 1 conta; `all` ⇒ aluno com acesso). Ver `IMPLANTACAO-POR-MATERIA.md`.
 
@@ -42,19 +42,19 @@ Legenda · **Código na main**: entra em `CANDIDATAS` + `TEMAS` (tema, classific
 | Dermatología (`dermatologia`) | sim | #655 (mesclada em 19/11) | nenhuma |
 | Guaraní (`guarani`) | sim | #658 (mesclada em 19/11) | nenhuma |
 | Imagenología (`imagenologia`) | não | — **não preparada** | nenhuma |
-| Medicina Legal (`medicina-legal`) | não | — **não preparada** | nenhuma |
+| **Medicina Legal (`medicina-legal`)** | **não** (candidata, tema, teste e roteiro prontos na PR) | **PR aberta: Nova Era Medicina Legal** | nenhuma |
 | Neurología (`neurologia`) | não | — **não preparada** para a Nova Era; conteúdo em andamento por Claude 1 (#687) e infográficos na #682 | nenhuma |
-| **Semiología I (`semiologia`)** | **não** (candidata, tema, teste e roteiro prontos na PR) | **PR aberta: Nova Era Semiología I** (esta PR) | nenhuma |
+| Semiología I (`semiologia`) | sim | #692 (mesclada em 19/11) | nenhuma |
 
 Observação: `bioestadistica.html` existe na pasta de matérias, mas **não está no catálogo** do `index.html` (0 ocorrências), nem em `CANDIDATAS`. Não entra na conta acima.
 
 ## Totais
 
-- **Código na main:** 23 de 27 (todas em `CANDIDATAS`; o piloto Semiología II é uma delas). Entrou nesta rodada: Dermatología (#655) e Guaraní (#658).
-- **PR aberta de Nova Era:** 1 — Semiología I (esta PR). Mais 1 extensão de conteúdo de matéria já preparada: AP II Práctica (#689, blocos 17–18).
-- **Não preparadas:** 3 — Imagenología (fora por decisão de José), Medicina Legal, Neurología (conteúdo em andamento por Claude 1; não tocar).
-- **Com ativação comprovada para aluno:** **0**. Com preview só para administrador: **1** (Medicina Familiar).
-- **Cuidado de leitura:** «código na main» e «PR aberta» significam só que o código está (ou estará) no site. Nenhuma dessas matérias aparece no layout novo para aluno: isso só acontece quando uma linha em `rm_materia_rollout` vai para `all`, por SQL de José.
+- **Código mesclado na main:** 24 de 27 (todas em `CANDIDATAS`; o piloto Semiología II é uma delas). Entraram nesta rodada: Dermatología (#655), Guaraní (#658) e Semiología I (#692).
+- **PR aberta de Nova Era:** 1 — Medicina Legal. Mais 1 extensão de conteúdo de matéria já preparada: AP II Práctica (#689, blocos 17–18).
+- **Ainda não preparadas:** 2 — Imagenología (fora por decisão de José) e Neurología (conteúdo em andamento por Claude 1; não tocar).
+- **Ativação confirmada para aluno:** **0**. Com preview só para administrador: **1** (Medicina Familiar).
+- **Cuidado de leitura:** «código mesclado» e «PR aberta» significam só que o código está (ou estará) no site. Nenhuma dessas matérias aparece no layout novo para aluno: isso só acontece quando uma linha em `rm_materia_rollout` vai para `all`, por SQL de José.
 
 ## Como esta lista foi feita
 

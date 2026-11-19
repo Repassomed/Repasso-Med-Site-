@@ -126,6 +126,17 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Medicina Legal (Nova Era): os ids NÃO seguem a numeração (`medlegb07` é o BLOQUE 05, `medlegdocu` o 03, `medlegninez` o 04…): o número do bloco vem do marcador «BLOQUE NN» do conteúdo (mapa abaixo), não do id.
+     `medlegb00` é âncora oculta; `bancomedleg` (banco general) e `bancofcmedleg` (mazo general) = repaso (B, F); `bibliomedleg` (bibliografía y nota sobre las imágenes) = repaso (C, para ter card no índice); `medlegb00` (âncora oculta) = outro. O conteúdo mistura «PARCIAL 1/2» fora de ordem: nenhuma unidade é criada.
+     Sem ilustrações aprovadas ainda ⇒ cada bloco usa o logotipo (vig: null). */
+  var ML_NUM = { medlegb01: 1, medlegb02: 2, medlegdocu: 3, medlegninez: 4, medlegb07: 5, medlegb08: 6, medlegb09: 7, medlegb03: 8, medlegb04: 9, medlegb10: 10, medlegb05: 11, medlegb06: 12, medlegb11: 13, medlegb12: 14, medlegb13: 15, medlegb14: 16, medlegb15: 17 };
+  var ML_REPASO = { bancomedleg: 'B', bancofcmedleg: 'F', bibliomedleg: 'C' };
+  function clasificarML(id) {
+    if (Object.prototype.hasOwnProperty.call(ML_NUM, id)) { var n = ML_NUM[id]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: null }; }
+    if (Object.prototype.hasOwnProperty.call(ML_REPASO, id)) return { tipo: 'repaso', n: ML_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* Semiología I (Nova Era): os ids NÃO seguem numeração (`introduccion-semio`, `signos-vitales`, …): a ordem dos 9 blocos é a do conteúdo (mapa abaixo). `prova-semio` (banco de preguntas) e
      `flashcards-semio` (flashcards generales) = repaso (B, F). O conteúdo mistura «UNIDAD I/IV/V» e «CLASE/BLOQUE» num marcador só: nenhuma unidade é criada. Sem ilustrações aprovadas ainda ⇒ cada bloco usa o logotipo (vig: null). */
   var SE_NUM = { 'introduccion-semio': 1, 'signos-vitales': 2, 'historia-clinica': 3, 'ectoscopia': 4, 'torax-resp': 5, 'torax-cv': 6, 'abdome': 7, 'manobras': 8, 'cabeza-cuello': 9 };
@@ -492,6 +503,20 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFA
+    },
+    'medicina-legal': {
+      vigDir: null,                                       // sem viñetas ilustradas: cada bloque usa o logo oficial (rm-sis-vig--logo)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Peritaje · Lesiones · Tanatología · Asfixias',
+      miga: ['Guía de estudio', 'Medicina Legal'],
+      unidades: {},                                       // o conteúdo não tem «UNIDAD X»: nenhuma unidade é criada
+      medallones: [],                                     // sem ilustrações aprovadas ainda: a capa não leva medalhões
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarML
     },
     'semiologia': {
       vigDir: null,                                       // sem viñetas ilustradas: cada bloque usa o logo oficial (rm-sis-vig--logo)
