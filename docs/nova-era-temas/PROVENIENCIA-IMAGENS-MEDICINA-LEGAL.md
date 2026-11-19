@@ -1,0 +1,3 @@
+# Medicina Legal · imagens da Nova Era
+
+Nenhuma vinheta nova foi criada: os 17 blocos (`medlegb01`, `medlegb02`, `medlegdocu`, `medlegninez`, `medlegb07`, `medlegb08`, `medlegb09`, `medlegb03`, `medlegb04`, `medlegb10`, `medlegb05`, `medlegb06`, `medlegb11`, `medlegb12`, `medlegb13`, `medlegb14`, `medlegb15`) usam o **logotipo oficial** (`assets/repasso-med-logo.png`) como miniatura, sem imagem quebrada, e a capa não leva medalhões. Nenhuma imagem do conteúdo foi tocada. **Atenção à ordem:** os ids não seguem a numeração (`medlegb07` é o BLOQUE 05); o número vem do marcador «BLOQUE NN» do próprio conteúdo. **Pendência de arte:** uma ilustração sem texto por bloco, a escolher por José.
