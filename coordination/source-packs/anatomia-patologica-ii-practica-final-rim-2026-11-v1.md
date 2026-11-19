@@ -8,7 +8,7 @@ Data: 19/11/2026 · Base: `main` `b5e1a4e6` (com a #662) · Rama `claude/ap2p-fi
 |---|---|
 | `15 - Nefroblastoma_261015_110332 (1).pdf` (id `1oD1MZ11EaV6CnFjY9FFBM1Unr8AM-2cX`, 8 págs., 5,1 MB) | **Lido inteiro**: texto + as 8 páginas renderizadas e as 25 imagens embutidas extraídas e vistas (apontamentos manuscritos, fotos macro, RM, micrografias anotadas, a lámina com rótulos, ficha, caso clínico, 3 MCQ com chave). |
 | `16 - Pielonefritis cronica_261015_104549 (1).pdf` (id `1f5B9pYH6uPKtdneKZkWXBOWR1uuG9PxI`, 17 MB) | **Texto lido inteiro** (apontamentos, rótulos das figuras, ficha, caso e MCQ). **As figuras NÃO puderam ser vistas**: o arquivo passa do limite de 10 MB de download da ferramenta. **Pendente.** |
-| `Pielonefritis Crónica .jpg` (pasta «Anatopatologia Praticas», id `1hW-IAh6MIxCrWW_JrgB0tyJvgrsSurRV`) | Foto de lámina (campo circular H&E) da cátedra; usada como vista 1 do bloco 18. |
+| `Pielonefritis Crónica .jpg` (pasta «Anatopatologia Praticas», id `1hW-IAh6MIxCrWW_JrgB0tyJvgrsSurRV`) | Foto de lámina (campo circular, aspecto de H&E). **Origem NÃO comprovada**: é um arquivo da pasta «Anatopatologia Praticas», **não** uma página nem uma figura do PDF 16, e não há como afirmar que seja a mesma lámina do PDF da professora nem que seja do laminario da cátedra. Usada como a **única** imagem do bloco 18. |
 | Literatura-base de patologia renal | Não há no Drive; o conteúdo vem só do material. |
 
 ## Comparação com a matéria atual
@@ -20,7 +20,7 @@ AP II Práctica tinha 16 blocos (Parcial 1: 01–07; Parcial 2: 08–16). **Nefr
 | Peça | Bloco 17 · Nefroblastoma | Bloco 18 · Pielonefritis crónica |
 |---|---|---|
 | Ensino | fluxo; «desde cero» (restos nefrogénicos → WT1…); 3 componentes (tabela); macro/clínica/complicações das notas; caso (reescrito) | fluxo; «desde cero»; 6 termos da ficha (tabela); cáliz; contraste com glomerulonefrite crónica |
-| Imagens | `lam-6d-p2-nefroblastoma-01.webp` (lámina limpa) · `…-02-anotada.webp` (mesma lámina com os 3 rótulos da diapositiva, **desenhados por nós**) · `p2-nefroblastoma-componentes.webp` (micro de apoio, «PDF de apoio») | `lam-6d-p2-pielonefritis-01.webp` (lámina da cátedra) |
+| Imagens | `lam-6d-p2-nefroblastoma-01.webp` (lámina limpa) · `…-02-anotada.webp` (mesma lámina com os 3 rótulos da diapositiva, **desenhados por nós**) · `p2-nefroblastoma-componentes.webp` (micro de apoio, «PDF de apoio») | `lam-6d-p2-pielonefritis-01.webp` (imagem de apoio de outro arquivo; origem não comprovada) |
 | Perguntas | 12: 2 lámina, 2 caso (reescrito do caso da diapositiva), 3 reescritas dos MCQ da diapositiva (trifásico, anaplasia, WT1), 3 conceituais, 2 V/F | 12: 2 lámina, 8 conceituais (inclui o contraste macroscópico com a glomerulonefrite), 2 V/F — **nenhum caso clínico**: o caso do PDF 16 é de glomerulonefrite |
 | Flashcards | 10 (3 com imagem) | 10 (1 com imagem) |
 | Banco | +12 (idênticas ao bloco) | +12 (idênticas) |
@@ -58,3 +58,32 @@ AP II Práctica: **0 grifos, 0 traços, 0 notas** (nenhuma linha em `user_highli
 - **Nefroblastoma reconferido contra o PDF 15:** epidemiologia, genes (WT1/WT2/CTNNB1), síndromes, macroscopia, clínica (renina), complicações, os 3 componentes, caso e os 3 MCQ + chave (trifásico = B, anaplasia = C, WT1 = B) conferem. **Retirado** da explicação da pergunta 3 «o neuroblastoma… suele cruzar la línea media» (não consta do material).
 - **Funcionamento:** `quiz.test.cjs` do navegador (Chromium) sobre o HTML novo: 488 itens, 416 MCQ clicados certo/errado, V/F e abertas, 924 flashcards em 39 mazos, **0 falhas de interação** (a única «falha» é «sem gêmeo»: o teste é do banco de Farmacología II e não conhece o id do banco de AP II; o espelho foi conferido à parte: 244 × 244, 0 divergências).
 - **Cartão de Merge corrigido:** o conteúdo novo **chega aos alunos depois do merge e do deploy**, no layout atual, para quem já tem acesso à matéria (AP II Práctica já está no catálogo); **não depende** da Nova Era nem da tabela `rm_materia_rollout`. A não ativação vale só para o layout/tema/caneta V2.
+
+
+## Conferência final de fontes e identificação das imagens (19/11, noite)
+
+### O que **não consegui ver** (limites explícitos)
+| Item | Situação |
+|---|---|
+| **Todas as figuras do PDF 16** «Pielonefritis cronica» (17 MB) | **Nunca vistas.** Ferramenta do Drive recusa > 10 MB; sem acesso a `drive.google.com`; nenhuma credencial ampla foi pedida; busca de 19/11: não há partes menores. Só o **texto** (inclusive rótulos de figura) foi lido. |
+| Se a imagem de pielonefrite do site é a mesma lámina do PDF 16 | **Não comprovado e não afirmado.** O site usa o JPG «Pielonefritis Crónica .jpg» (id `1hW-IAh6MIxCrWW_JrgB0tyJvgrsSurRV`, pasta «Anatopatologia Praticas», 170 KB, modificado em 10/06), outro arquivo. |
+| Autoria/origem desse JPG (laminario da cátedra? foto de aula?) | **Desconhecida.** O texto do site foi corrigido nesta rodada: sai «laminario de la cátedra» e «bajo aumento» da pielonefrite; entra «imagem de apoio de outro arquivo; não se comprovou que seja a lámina do PDF nem do laminario da cátedra» (bloco 18: cabeçalho da lámina, nota de fonte, legendas das 2 perguntas, os 2 espelhos no banco; cierre: 2 frases). |
+| Diagnóstico da imagem | Nome do arquivo + aspecto à vista (campo H&E com túbulos dilatados de material rosado, infiltrado denso de células pequenas, banda fibrosa com vaso de parede grossa): **compatível** com a ficha; **não** foi confirmado por professor. |
+
+### Afirmação por afirmação · bloco 18 (Pielonefritis crónica) × texto do PDF 16
+| Afirmação do bloco | Fonte | Estado |
+|---|---|---|
+| Inflamação intersticial → cicatrização do parênquima; cicatrizes visíveis; deformidade pielocalicial | PDF 16 (apontamentos) | CONFERE |
+| Formas: obstrutiva e associada a refluxo vesicoureteral; um ou ambos os rins; cicatrização heterogênea | PDF 16 | CONFERE |
+| Microscopia: fibrose intersticial, infiltrado linfocitário (ocasional neutrófilo), atrofia/dilatação tubular, cilindros hialinos, «tiroidización»; mucosa do cálice com infiltrado crónico e fibrose; arteriosclerose por HTA; glomeruloesclerose → perda de néfrons | PDF 16 (apontamentos + rótulos de figura) | CONFERE |
+| Ficha oficial (órgão, processo, descrição, diagnóstico), «linfocitos y plasmocitos», glomeruloesclerose parcial ou total, esclerose vascular (hialinose) | PDF 16 (ficha) | CONFERE |
+| Contraste com glomerulonefrite crónica (rins pequenos, simétricos, granulares; glomérulos hialinizados) | PDF 16 (**chave** das 3 MCQ, que descrevem GN crónica) | CONFERE; usado só no contraste |
+| «Bandas rosadas», «bolitas rosadas acelulares», definições de tecido normal | histologia geral | **Declarado no site** como não constante do material |
+| Descrição visual da imagem (túbulos, infiltrado, banda fibrosa, vaso) | observação da própria imagem | **Interpretação**, redigida com «podrían corresponder» |
+| Perguntas 1–12 e flashcards 1–10 | derivados da ficha, das notas e da chave | CONFEREM (nenhuma usa o caso/MCQ de GN crónica como pergunta de pielonefrite) |
+
+### Bloco 17 (Nefroblastoma) × texto do PDF 15 (+ 8 páginas e 25 imagens embutidas examinadas em rodada anterior)
+Epidemiologia (2–5 anos, 90 % unilateral, raro em adultos), restos nefrogénicos e blastema, genes (WT1, WT2, CTNNB1) e síndromes (WAGR, Denys-Drash, Beckwith-Wiedemann), macroscopia, padrão trifásico, clínica (massa indolor, HTA por renina, hematúria, febre), complicações, caso da menina de 3 anos e meio e as 3 MCQ com chave (trifásico = B, anaplasia = C, WT1 = B): **CONFEREM**. Comentários de distratores («células claras… do adulto», «anel de sinete… adenocarcinoma gástrico difuso», «neuroblastoma») são conhecimento geral, **não constam do material**; as opções erradas foram escritas por Repasso Med. A expressão «bajo aumento» na vista 1 é relativa à vista 3 («mayor aumento»); o aumento real **não** está confirmado.
+
+### Perguntas dos blocos 17 e 18 (24 = 20 MCQ + 4 V/F) · teste novo `ap2p-final-b17-b18.test.cjs`
+Sem pista visual (nenhuma alternativa com negrito, cor, marca ou estilo; enunciado V/F sem negrito); nos 4 V/F, **os dois botões** (VERDADERO e FALSO) passam o **mesmo** valor a `checkTF` e esse valor coincide com a resposta; 4 alternativas a–d e resposta que repete a alternativa certa; **as 24 existem idênticas no banco (244)**; letras certas sem corrida de 3. Estático **186/186**; navegador **8/8** (duas passadas: alternativa/botão certo e errado; as 24 explicações aparecem). O teste reprova defeitos injetados de propósito (negrito, botão com valor diferente, item do banco alterado).

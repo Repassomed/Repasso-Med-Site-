@@ -23,3 +23,6 @@
 | vb-17 | 17 | `ap2pb17` | `lam-6d-p2-nefroblastoma-01.webp` | centro, 90 % do menor lado (900×900) · bloco novo 19/11 |
 | vb-18 | 18 | `ap2pb18` | `lam-6d-p2-pielonefritis-01.webp` | centro, 90 % do menor lado (900×900) · bloco novo 19/11 |
 Seções de revisão (banco, mazo, cierre) usam o logotipo oficial; `ap2pportada` é âncora oculta e não é montada.
+
+## Imagem de pielonefrite (bloco 18) · identificação (19/11)
+`lam-6d-p2-pielonefritis-01.webp` vem do JPG «Pielonefritis Crónica .jpg» (pasta «Anatopatologia Praticas»), **outro arquivo, não do PDF 16**. Não foi comprovado que seja a mesma lámina do PDF da professora, nem que seja do laminario da cátedra, nem o aumento. No site ela aparece como «imagem de apoio»; a vinheta `vb-18` é um recorte dela.
