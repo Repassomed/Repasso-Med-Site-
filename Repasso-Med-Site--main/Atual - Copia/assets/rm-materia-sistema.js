@@ -126,6 +126,17 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Guaraní (Nova Era): ids `gnb01…gnb13` (numeração do id = «BLOQUE NN»); `gn00` é âncora vazia (hidden). O conteúdo não tem «UNIDAD» (o marcador traz «PARCIAL 1/2»):
+     nenhuma unidade é criada. Banco e mazo geral = repaso. */
+  var GN_REPASO = { bancognrl: 'B', mazognrl: 'F' };
+  var GN_VIG = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 7: 1, 8: 1, 9: 1, 10: 1, 12: 1, 13: 1 };   // blocos com viñeta limpa (sem texto); 06 e 11 usam o logotipo
+  function clasificarGN(id) {
+    var m = /^gnb(\d{2})$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 13) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: GN_VIG[n] ? 'vb-' + pad(n) : null }; }
+    if (Object.prototype.hasOwnProperty.call(GN_REPASO, id)) return { tipo: 'repaso', n: GN_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* Anatomía Patológica II Práctica (Nova Era): 16 blocos `ap2pb01–ap2pb16` na ordem do conteúdo («BLOQUE NN · PARCIAL 1/2 · TEMA», sem «UNIDAD X»: nenhuma unidade é criada).
      `ap2pbanco` (banco geral de láminas), `ap2pmazo` (mazo + ruleta) e `ap2pcierre` (tabela integradora, bibliografía e créditos) = repaso (B, F, C). Vinhetas: 16 recortes das láminas
      (fotos de microscópio) do próprio conteúdo. */
@@ -386,6 +397,24 @@
       },
       clasificar: clasificarEM
 
+    },
+    'guarani': {
+      vigDir: 'assets/img/guarani/vig/',                  // 11 viñetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-GUARANI.md)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'La lengua del paciente',
+      miga: ['Guía de estudio', 'Guaraní'],
+      unidades: {},                                       // o conteúdo não tem unidades (marcador «PARCIAL 1/2»): nenhuma é criada
+      medallones: [
+        { vig: 'vb-02', t: 'SALUDOS',   cap: 2, tam: 178, ml: 0,   mt: 0,   rot: -3, z: 3 },
+        { vig: 'vb-01', t: 'CONSULTA',  cap: 1, tam: 150, ml: -26, mt: 60,  rot: 2,  z: 2 },
+        { vig: 'vb-13', t: 'ANIMALES',  cap: 1, tam: 128, ml: -6,  mt: -40, rot: -2, z: 1 }
+      ],
+      recursos: {
+        fig:  'Infografías por bloque',
+        quiz: 'Preguntas por bloque y banco general',
+        fc:   'Repaso activo por bloque'
+      },
+      clasificar: clasificarGN
     },
     'anatomia-patologica-ii-practica': {
       vigDir: 'assets/img/anatoprat2/vig/',               // 16 vinhetas recortadas das láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP2P.md)
