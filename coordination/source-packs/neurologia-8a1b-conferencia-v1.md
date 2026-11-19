@@ -230,3 +230,25 @@ Script de auditoria comparando `main` × branch, id a id (bloco **e** banco refl
 - **As 6 perguntas só do compilado** (`q-neu263`, `265`, `266`, `267`, `268`, `283`): fonte textual exata e limite na tabela do pack de triagem. Não são apresentadas como confirmadas: cada explicação diz que falta confirmar com a literatura-base.
 - **Novas com apoio em slide:** `q-neu276`–`282` e `284`; teaching acrescentado: bloco 18 (rigidez de nuca ⇒ HSA) e bloco 19 (HTE sem massa).
 - **Sem mexer:** grifos, imagens, ids, `q-neu233/234`, a PR #682.
+
+## 15 · V/F que marcavam a resposta certa como errada (19/11/2026)
+
+**Defeito:** em 10 V/F da `main` (20 com o banco) o argumento de `checkTF(this, X)` estava ao contrário do cabeçalho da explicação; clicar no veredito certo marcava «wrong». Medido no navegador: na `main`, só 104 de 124 V/F respondiam certo (20 falhavam, em 1440 e 390, clicando em VERDADERO ou em FALSO).
+
+**Validação de cada um dos 10 contra o enunciado, a explicação e o slide da cátedra** (o cabeçalho já estava certo; o que estava errado era o argumento):
+| Id (bloco e banco) | Enunciado resumido | Veredito | Slide |
+|---|---|---|---|
+| `235` | insomnio agudo = ≥ 3 meses, ≥ 3 noites/semana | FALSO (é o crônico; agudo < 3 meses) | unidade III (sono): agudo < 3 meses; crônico ≥ 3 meses e ≥ 3 noites |
+| `237` | morte encefálica «não equivale» à morte, é estado prévio | FALSO | unidade IV: equivalência jurídica e médica com a morte |
+| `239` | EEG = agulhas finas nos músculos | FALSO (é o EMG) | unidade V: EEG × EMG |
+| `186` | HSA: aneurisma em ~85 % | VERDADERO | unidade VIII (ACV) |
+| `196` | 2 anos sem crises ⇒ retirada gradual, recorrência 30–40 % | VERDADERO | unidade VII (epilepsia): ≥ 2 anos livres; 30–40 % |
+| `201` | Parkinson: diagnóstico clínico, bradicinesia + temblor ou rigidez | VERDADERO | unidade VIII (Parkinson) |
+| `208` | MoCA mais sensível que MMSE para DCL e demências não-Alzheimer | VERDADERO | unidade IX |
+| `215` | EM: gravidez reduz surtos no 2.º e 3.º trimestres, aumenta no puerpério | VERDADERO | unidade X |
+| `222` | aura de migraña < 60 min e reversível | VERDADERO | unidade X (cefaleias) |
+| `228` | queda ≥ 2 pontos no Glasgow ⇒ repetir TAC e considerar neurocirurgia | VERDADERO (o slide dá «TAC seriada se deterioro clínico ou GCS cai ≥ 2»; «considerar neurocirurgia» é a leitura de hematoma em expansão, já na explicação) | unidade XIV–XV (TCE) |
+
+**Correção:** só o argumento de `checkTF` (nos dois botões de cada item, no bloco e no banco). Nenhum enunciado, veredito, explicação ou id foi alterado para isso.
+
+**Os demais V/F** (todos os 70 pares, 140 itens): teste estático (argumento × cabeçalho × explicação, dois botões iguais) e teste de navegador clicando em VERDADERO numa carga e em FALSO na outra, em 1440 e 390: o veredito certo recebe «correct», o clique errado recebe «wrong», o aviso diz CORRECTO/INCORRECTO conforme o clique e a explicação aparece. **0 defeitos além dos 10.**
