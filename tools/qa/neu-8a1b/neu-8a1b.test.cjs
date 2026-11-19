@@ -105,4 +105,6 @@ T(/pérdida parcial del contacto<\/b> durante 1 a 2 minutos/.test(B['q-neu115'])
 T(/Hipertensión endocraneana sin masa/.test(cur), 'ensina: HTE sem massa');
 T(/marcha jacksoniana<\/b> empieza en una parte pequeña/.test(cur), 'ensina: marcha jacksoniana');
 T(/3 Hz<\/b> \(tres por segundo\)/.test(cur) && /síndrome de West<\/b>/.test(cur), 'ensina: 3 Hz e West');
+/* q-neu090: a resposta certa é a alternativa «Progresa en estadios N1, N2 y N3…», seja qual for a letra (hoje c) */
+for (const p of ['q', 'bq']) { const h = B[p + '-neu090'], L = corrOf(h), o = optsOf(h)['abcd'.indexOf(L)]; T(L === 'c' && /^Progresa en estadios N1, N2 y N3/.test(txt(o)) && txt((h.match(/<div class="answer"><p><strong>[a-d]\) ([\s\S]*?)<\/strong>/) || [])[1]) === txt(o) && /<p>a\) describe el <b>REM<\/b>|a\) describe el REM/.test(txt(h)) || /a\) describe el/.test(txt(h)), 'q-neu090: resposta certa = c) "Progresa en estadios N1, N2 y N3…" e a explicação concorda ' + p); }
 console.log('neu-8a1b (estático): ' + ok + '/' + (ok + bad) + (bad ? ' — ' + bad + ' FALHAS' : ' OK')); process.exit(bad ? 1 : 0);
