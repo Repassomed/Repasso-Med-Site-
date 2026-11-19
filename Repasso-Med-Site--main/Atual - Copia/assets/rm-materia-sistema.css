@@ -1449,6 +1449,16 @@ html.rm-sis[data-rm-tema="farmacologia"] .rm-l2-tree-tools + .rm-sis-ulab--side 
 /* e nas telas de «modo» (Infografías · Preguntas · Flashcards · Videos), onde o 1.º grupo de blocos também ganharia «UNIDAD ·» */
 html.rm-sis[data-rm-tema="farmacologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
 
+/* ===== Semiología I (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="semiologia"]. ===== */
+html.rm-sis[data-rm-tema="semiologia"][data-rm-tema] {
+  --rm-surface: #DCEBE9; --rm-side: #EAF3F1; --rm-side-edge: #BBD6D2; --rm-side-card: #D6E7E4; --rm-side-rule: #C9E0DC;
+  --rm-accent: #2A7A74; --rm-accent-d: #1D5853; --rm-marker: #E9B949;
+}
+/* o conteúdo não tem unidades próprias: o rótulo de grupo único «UNIDAD ·» não é mostrado (índice, lateral e telas de modo); o grupo REPASO mantém o seu */
+html.rm-sis[data-rm-tema="semiologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="semiologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="semiologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+
 /* ===== Dermatología (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="dermatologia"]. ===== */
 html.rm-sis[data-rm-tema="dermatologia"][data-rm-tema] {
   --rm-surface: #F3E4DC; --rm-side: #FAF0EA; --rm-side-edge: #E3C6B8; --rm-side-card: #F0DDD3; --rm-side-rule: #EBD3C7;

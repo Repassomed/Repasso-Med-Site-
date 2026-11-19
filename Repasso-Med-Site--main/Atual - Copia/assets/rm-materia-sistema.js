@@ -126,6 +126,16 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Semiología I (Nova Era): os ids NÃO seguem numeração (`introduccion-semio`, `signos-vitales`, …): a ordem dos 9 blocos é a do conteúdo (mapa abaixo). `prova-semio` (banco de preguntas) e
+     `flashcards-semio` (flashcards generales) = repaso (B, F). O conteúdo mistura «UNIDAD I/IV/V» e «CLASE/BLOQUE» num marcador só: nenhuma unidade é criada. Sem ilustrações aprovadas ainda ⇒ cada bloco usa o logotipo (vig: null). */
+  var SE_NUM = { 'introduccion-semio': 1, 'signos-vitales': 2, 'historia-clinica': 3, 'ectoscopia': 4, 'torax-resp': 5, 'torax-cv': 6, 'abdome': 7, 'manobras': 8, 'cabeza-cuello': 9 };
+  var SE_REPASO = { 'prova-semio': 'B', 'flashcards-semio': 'F' };
+  function clasificarSE(id) {
+    if (Object.prototype.hasOwnProperty.call(SE_NUM, id)) { var n = SE_NUM[id]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: null }; }
+    if (Object.prototype.hasOwnProperty.call(SE_REPASO, id)) return { tipo: 'repaso', n: SE_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* Guaraní (Nova Era): ids `gnb01…gnb13` (numeração do id = «BLOQUE NN»); `gn00` é âncora vazia (hidden). O conteúdo não tem «UNIDAD» (o marcador traz «PARCIAL 1/2»):
      nenhuma unidade é criada. Banco e mazo geral = repaso. */
   var GN_REPASO = { bancognrl: 'B', mazognrl: 'F' };
@@ -482,6 +492,20 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarFA
+    },
+    'semiologia': {
+      vigDir: null,                                       // sem viñetas ilustradas: cada bloque usa o logo oficial (rm-sis-vig--logo)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Tórax · Abdome · Maniobras',
+      miga: ['Guía de estudio', 'Semiología I'],
+      unidades: {},                                       // marcador misto («UNIDAD»/«CLASE»/«BLOQUE»): nenhuma unidade é criada
+      medallones: [],                                     // sem ilustrações aprovadas ainda: a capa não leva medalhões
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarSE
     },
     'dermatologia': {
       vigDir: null,                                       // sem viñetas ilustradas: cada bloque usa o logo oficial (rm-sis-vig--logo)
