@@ -3722,6 +3722,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:687.",
       "task_id": "pr:687",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "e1e9784f337e0cf4a68a1b1c87995070f77d5876",
+      "component": "guard",
+      "error_id": "ERR-E9E8A44D0B",
+      "error_type": "hard-fail",
+      "fingerprint": "e9e8a44d0bda5c07fb2b",
+      "first_seen": "2026-11-19T18:36:29.879740+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "6c4ae682b01542f8aa900f20a6e88e0f",
+      "issue_sync_updated_at": "2026-11-19T18:36:29.879740+00:00",
+      "last_evidence_hash": "5418965122a15bb7f8bb",
+      "last_seen": "2026-11-19T18:36:29.879740+00:00",
+      "occurrence_count": 1,
+      "pr_number": 682,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "44589376853",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:682.",
+      "task_id": "infogr\u00e1ficos novos de Neurologia (Drive \u2192 7\u00ba semestre \u2192 Neurologia) ao fim dos blocos 20\u201327 como resumo visual; registro imagem por imagem.",
+      "worker_id": null
     }
   ]
 }
