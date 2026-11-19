@@ -14,7 +14,7 @@ const EMP = /<\/?(?:b|i|strong|em|u|mark|font)\b[^>]*>/i, STY = /style=|color|cl
 const optsZone = h => (h.match(/<ul class="options">([\s\S]*?)<\/ul>/) || [])[1];
 const vfStem = h => /tf-buttons/.test(h) ? (h.match(/<p class="quiz-question">((?:<span class="quiz-tag[^"]*">[^<]*<\/span>)+)([\s\S]*?)<\/p>/) || [])[2] : null;
 const answerOf = h => (h.match(/<div class="answer">[\s\S]*$/) || [''])[0];
-const strip = x => x.replace(/<\/?(?:b|i|strong|em|u|mark)>/g, '');
+const strip = x => x.replace(/<\/?(?:b|i|strong|em|u|mark)>/g, '').replace(/checkTF\(this, (?:true|false)\)/g, 'checkTF(this, X)');
 T(Object.keys(A).join() === Object.keys(B).join() && Object.keys(B).length === 508, 'mesmos 508 ids (254 no bloco + 254 no banco), mesma ordem: ' + Object.keys(B).length);
 let nOpt = 0, nVf = 0, nMcq = 0, nVfAll = 0;
 for (const k of Object.keys(B)) {
@@ -26,7 +26,8 @@ for (const k of Object.keys(B)) {
   /* a única diferença permitida: tirar b/i/strong/em/u/mark das alternativas e do enunciado V/F */
   const norm = h => oz != null || vs != null ? strip(h.replace(/<div class="answer">[\s\S]*$/, '')) : h.replace(/<div class="answer">[\s\S]*$/, '');
   T(norm(a) === norm(b), 'nada mais mudou fora da ênfase ' + k);
-  T((a.match(/checkTF\(this, (true|false)\)/g) || []).join() === (b.match(/checkTF\(this, (true|false)\)/g) || []).join(), 'checkTF inalterado ' + k);
+  /* o argumento de checkTF só pode mudar nos 10 V/F corrigidos (ver tools/qa/neu-vf) */
+  if (!/^(?:b?q)-neu(?:235|237|239|186|196|201|208|215|222|228)$/.test(k)) T((a.match(/checkTF\(this, (true|false)\)/g) || []).join() === (b.match(/checkTF\(this, (true|false)\)/g) || []).join(), 'checkTF inalterado ' + k);
 }
 T(nOpt === 114 && nVf === 120, 'alterados: ' + nOpt + ' MCQ (alternativas) e ' + nVf + ' V/F (enunciado), bloco + banco');
 /* o resto do arquivo é idêntico à main */

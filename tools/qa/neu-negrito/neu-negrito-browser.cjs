@@ -48,9 +48,7 @@ let ok = 0, bad = 0; const T = (c, m) => { if (c) { ok++; console.log('  ✓', m
     T(res.marc === 0, '@' + w + ' nenhuma marca de correta/errada antes de responder (' + res.marc + ')');
     T(res.enf === 0 && res.cor === 0, '@' + w + ' nenhuma ênfase/cor diferente nas alternativas nem no enunciado V/F (' + res.enf + '/' + res.cor + ')');
     T(res.mcqOk === res.mcq && res.mcq === 336, '@' + w + ' todas as MCQ respondem: ' + res.mcqOk + '/' + res.mcq);
-    /* V/F: 10 itens já vinham da main com o checkTF ao contrário (20 com o banco); a correção está na #687. Aqui só se exige que NADA piore. */
-    const CONHECIDOS = ['235', '237', '239', '186', '196', '201', '208', '215', '222', '228'].flatMap(n => ['q-neu' + n, 'bq-neu' + n]).sort().join();
-    T(res.vf === 124 && res.vfErrados.sort().join() === CONHECIDOS, '@' + w + ' V/F: 124 itens; os únicos que não respondem são os 20 conhecidos da main (checkTF ao contrário): ' + res.vfErrados.length);
+    T(res.vf === 124 && res.vfOk === 124, '@' + w + ' todos os V/F respondem certo: ' + res.vfOk + '/' + res.vf + ' (os 10 que vinham ao contrário foram corrigidos; ver tools/qa/neu-vf)');
     T(res.depoisMcq === 336, '@' + w + ' depois de responder, a explicação das MCQ aparece (' + res.depoisMcq + '/336)');
     T(res.depoisVf === 124, '@' + w + ' depois de responder, a explicação dos 124 V/F aparece (' + res.depoisVf + '/124)');
     if (res.falhas.length) console.log('   ', res.falhas.slice(0, 6).join(' | '));
