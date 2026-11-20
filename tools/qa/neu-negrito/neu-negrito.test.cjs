@@ -6,7 +6,8 @@ const fs = require('fs'), cp = require('child_process'), path = require('path');
 const REPO = path.resolve(__dirname, '../../..');
 const REL = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
 const cur = fs.readFileSync(path.join(REPO, REL), 'utf8');
-const base = cp.execSync('git show d9ef1072:"' + REL + '"', { cwd: REPO, maxBuffer: 1 << 28 }).toString();
+const { semCierre: SEM_CIERRE } = require('../neu-cierre/sem-cierre.cjs');   /* 20/11 · retirada do «Cierre» (ver tools/qa/neu-cierre): a base recebe a mesma troca, para esta checagem medir só o que lhe interessa */
+const base = SEM_CIERRE(cp.execSync('git show d9ef1072:"' + REL + '"', { cwd: REPO, maxBuffer: 1 << 28 }).toString());
 let ok = 0, bad = 0; const T = (c, m) => { if (c) ok++; else { bad++; console.log('  ✗ FALHA:', m); } };
 const items = h => { const o = {}; const re = /<div class="quiz-item" id="((?:q|bq)-neu[\d-]+)">/g; let m; while ((m = re.exec(h))) { const j = h.indexOf('</div></div>\n', m.index) + 13; o[m[1]] = h.slice(m.index, j); } return o; };
 const A = items(base), B = items(cur);

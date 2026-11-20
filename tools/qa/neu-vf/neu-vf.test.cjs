@@ -4,7 +4,11 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const REPO = path.resolve(__dirname, '../../..');
-const cur = fs.readFileSync(path.join(REPO, 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html'), 'utf8');
+const REL = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
+const cur = fs.readFileSync(path.join(REPO, REL), 'utf8');
+const cp = require('child_process');
+const { semCierre: SEM_CIERRE } = require('../neu-cierre/sem-cierre.cjs');   /* 20/11 · retirada do «Cierre» (ver tools/qa/neu-cierre): a base recebe a mesma troca, para esta checagem medir só o que lhe interessa */
+const base = SEM_CIERRE(cp.execSync('git show 104cc2f4:"' + REL + '"', { cwd: REPO, maxBuffer: 1 << 28 }).toString()); /* main logo após a #693 */
 let ok = 0, bad = 0; const T = (c, m) => { if (c) ok++; else { bad++; console.log('  ✗ FALHA:', m); } };
 const items = {}; { const re = /<div class="quiz-item" id="((?:q|bq)-neu[\d-]+)">/g; let m; while ((m = re.exec(cur))) { const j = cur.indexOf('</div></div>\n', m.index) + 13; items[m[1]] = cur.slice(m.index, j); } }
 const txt = x => x.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();

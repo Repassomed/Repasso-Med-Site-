@@ -5,7 +5,8 @@ const cp = require('child_process'), fs = require('fs'), path = require('path');
 const REPO = path.resolve(__dirname, '../../..');
 const F = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
 const BASE = process.argv[2] || 'origin/main';
-const old = cp.execFileSync('git', ['show', BASE + ':' + F], { cwd: REPO, maxBuffer: 1 << 28 }).toString('utf8');
+const { semCierre } = require('../neu-cierre/sem-cierre.cjs');   /* 20/11 · retirada do «Cierre» (ver tools/qa/neu-cierre): a base recebe a mesma troca */
+const old = semCierre(cp.execFileSync('git', ['show', BASE + ':' + F], { cwd: REPO, maxBuffer: 1 << 28 }).toString('utf8'));
 const cur = fs.readFileSync(path.join(REPO, F), 'utf8');
 let ok = 0, bad = 0; const T = (c, m) => { if (c) ok++; else { bad++; console.log('  ✗ FALHA:', m); } };
 /* 18/11: as comparações «idêntico à base de antes da #681» foram aposentadas (histórico): #683 e #687 alteraram perguntas dos blocos 20–27 depois do merge. Continuam válidas as invariantes das glosas (contagem, forma, só no ensino). */
