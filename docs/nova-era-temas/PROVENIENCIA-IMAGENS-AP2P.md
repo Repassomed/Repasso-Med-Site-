@@ -1,6 +1,6 @@
 # Anatomía Patológica II Práctica · proveniência das vinhetas (Nova Era)
 
-16 vinhetas 480×480 (webp, qualidade 82) em `assets/img/anatoprat2/vig/`, **recortadas das láminas (fotos de microscópio e macro) que já são o conteúdo** da matéria (`assets/img/anatoprat2/`). Nenhum original foi tocado; nenhuma imagem do conteúdo foi alterada ou retirada. Recorte quadrado centrado em 90 % do menor lado, reescalado a 480×480; a primeira lámina de cada bloco foi escolhida.
+18 vinhetas 480×480 (webp, qualidade 82) em `assets/img/anatoprat2/vig/`, **recortadas das láminas (fotos de microscópio e macro) que já são o conteúdo** da matéria (`assets/img/anatoprat2/`). Nenhum original foi tocado; nenhuma imagem do conteúdo foi alterada ou retirada. Recorte quadrado centrado em 90 % do menor lado, reescalado a 480×480; a primeira lámina de cada bloco foi escolhida.
 
 | Vinheta | Bloco | Id | Origem | Recorte |
 |---|---|---|---|---|
@@ -20,4 +20,11 @@
 | vb-14 | 14 | `ap2pb14` | `lam-6d-p2-colon-mucinoso-01.webp` | centro, 90 % do menor lado (1100×1100) |
 | vb-15 | 15 | `ap2pb15` | `lam-6d-p2-pancreatitis-01.webp` | centro, 90 % do menor lado (1100×1100) |
 | vb-16 | 16 | `ap2pb16` | `lam-6d-p2-adenoca-pancreas-01.webp` | centro, 90 % do menor lado (831×828) |
+| vb-17 | 17 | `ap2pb17` | `lam-6d-p2-nefroblastoma-01.webp` | centro, 90 % do menor lado (900×900) · bloco novo 19/11 |
+| vb-18 | 18 | `ap2pb18` | `lam-6d-p2-pielonefritis-01.webp` | centro, 90 % do menor lado (900×900) · bloco novo 19/11 |
 Seções de revisão (banco, mazo, cierre) usam o logotipo oficial; `ap2pportada` é âncora oculta e não é montada.
+
+## Imagem de pielonefrite (bloco 18) · identificação (19/11)
+`lam-6d-p2-pielonefritis-01.webp` vem do JPG «Pielonefritis Crónica .jpg» (pasta «Anatopatologia Praticas»), **outro arquivo, não do PDF 16**. Não foi comprovado que seja a mesma lámina do PDF da professora, nem que seja do laminario da cátedra, nem o aumento. No site ela aparece como «imagem de apoio»; a vinheta `vb-18` é um recorte dela.
+
+**Reconferência 20/11:** `lam-6d-p2-pielonefritis-01.webp` é um recorte do campo circular de uma foto de microscópio (ocular, smartphone) do JPG «Pielonefritis Crónica .jpg». Autoria, aula, laminário e aumento **não estão comprovados**; o PDF 16 não pôde ser aberto por inteiro (> 10 MB), logo a comparação com suas figuras **não foi feita**. Ver source pack, seção «Reconferência».
