@@ -87,3 +87,14 @@ Epidemiologia (2–5 anos, 90 % unilateral, raro em adultos), restos nefrogénic
 
 ### Perguntas dos blocos 17 e 18 (24 = 20 MCQ + 4 V/F) · teste novo `ap2p-final-b17-b18.test.cjs`
 Sem pista visual (nenhuma alternativa com negrito, cor, marca ou estilo; enunciado V/F sem negrito); nos 4 V/F, **os dois botões** (VERDADERO e FALSO) passam o **mesmo** valor a `checkTF` e esse valor coincide com a resposta; 4 alternativas a–d e resposta que repete a alternativa certa; **as 24 existem idênticas no banco (244)**; letras certas sem corrida de 3. Estático **186/186**; navegador **8/8** (duas passadas: alternativa/botão certo e errado; as 24 explicações aparecem). O teste reprova defeitos injetados de propósito (negrito, botão com valor diferente, item do banco alterado).
+
+## Reconferência de fontes e imagens (20/11) · origem da imagem de pielonefrite
+**Verificado agora (com o arquivo aberto):**
+- O Drive tem o JPG «Pielonefritis Crónica .jpg» (id `1hW-IAh6MIxCrWW_JrgB0tyJvgrsSurRV`, 170 KB, 1200×1600, criado no Drive em 04/08/2026, modificado em 10/06/2026, pasta «Anatopatologia Praticas», proprietário José Cavalcante). É uma **fotografia tirada pela ocular de um microscópio** (campo circular, bordas pretas, aspecto de smartphone), H&E.
+- A imagem do site `lam-6d-p2-pielonefritis-01.webp` (900×900, sha256 `a425a2bed600…`) é um **recorte do campo circular desse mesmo JPG**: coincidem a margem clara à esquerda, a banda fibrosa com vaso à direita e a distribuição dos túbulos. (Comparação visual lado a lado; não foi feita comparação de pixels.)
+- Portanto a imagem **vem do arquivo da pasta «Anatopatologia Praticas»**, não de uma página do PDF 16.
+
+**NÃO comprovado (e não afirmado no site):** quem fotografou; em que aula/laminário; se é a lámina da professora ou de outra fonte; o aumento objetivo; o diagnóstico foi confirmado por professor. O PDF 16 (17 MB) continua **sem figuras vistas** (a ferramenta do Drive recusa > 10 MB; não há partes menores; não pedi credencial ampla), então **não se pôde comparar a foto com as figuras do PDF**. A pasta não tem outro arquivo de pielonefrite/rim (busca por título: 0 resultados além deste JPG).
+**Decisão:** imagem preservada; o texto do site segue dizendo «imagem de apoio de outro arquivo; não se comprovou que seja a lámina do PDF nem do laminario da cátedra». **Para José:** dizer de onde veio a foto, ou enviar o PDF 16 em partes < 10 MB para a comparação.
+**Imagens do bloco 17:** `lam-6d-p2-nefroblastoma-01`, `-02-anotada` e `p2-nefroblastoma-componentes` vêm do **PDF 15**, que foi lido inteiro (as 25 imagens embutidas extraídas e vistas na rodada anterior); não revistas aqui.
+**Main:** incorporada em 20/11 (inclui #699); sem conflito.
