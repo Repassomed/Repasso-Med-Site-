@@ -3772,6 +3772,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:699.",
       "task_id": "retirar de Neurolog\u00eda o bloco \u00abCierre \u00b7 \u00bfd\u00f3nde est\u00e1 la lesi\u00f3n?\u00bb (se\u00e7\u00e3o `revisaoneu`) e o seu algoritmo do acesso do aluno, **preservando o mazo general de flashcards** que est\u00e1 dentro da mesma se\u00e7\u00e3o. Pedido direto de Jos\u00e9.",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "0ca266e84e53e0982c84a5b29cb03b41024adf6c",
+      "component": "guard",
+      "error_id": "ERR-072DEEB961",
+      "error_type": "hard-fail",
+      "fingerprint": "072deeb9610b6919d9ab",
+      "first_seen": "2026-11-20T19:26:28.851691+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "672edff88f634f449767d3b0385d15d5",
+      "issue_sync_updated_at": "2026-11-20T19:26:28.851691+00:00",
+      "last_evidence_hash": "4452b75b7ec61d5cfe12",
+      "last_seen": "2026-11-20T19:26:28.851691+00:00",
+      "occurrence_count": 1,
+      "pr_number": 682,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "44801966403",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:682.",
+      "task_id": "infogr\u00e1ficos novos de Neurologia (Drive \u2192 7\u00ba semestre \u2192 Neurologia) ao fim dos blocos 20\u201327 como resumo visual; confer\u00eancia de cada ponto contra os slides da c\u00e1tedra e **retirada da informa\u00e7\u00e3o n\u00e3o comprovada**.",
+      "worker_id": null
     }
   ]
 }
