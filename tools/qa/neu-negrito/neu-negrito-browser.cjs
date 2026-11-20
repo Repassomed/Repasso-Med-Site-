@@ -1,4 +1,4 @@
-/* Neurología · correção urgente do negrito (19/11): as 508 perguntas (bloco + banco), ANTES de responder (resposta oculta, sem marca, sem negrito/cor/itálico nas alternativas nem no enunciado V/F) e DEPOIS (a explicação aparece, com o destaque permitido). Navegador real, 1440 e 384. */
+/* Neurología · correção urgente do negrito (19/11): as 508 perguntas (bloco + banco), ANTES de responder (resposta oculta, sem marca, sem negrito/cor/itálico nas alternativas nem no enunciado V/F) e DEPOIS (a explicação aparece, com o destaque permitido). Navegador real, 1440 e 386. */
 'use strict';
 const { chromium } = require('playwright');
 const L = require('../ensaio-layout/lib.cjs');
@@ -6,7 +6,7 @@ let ok = 0, bad = 0; const T = (c, m) => { if (c) { ok++; console.log('  ✓', m
 (async () => {
   const rec = L.reconciliar(); const m = rec.ativas.find(x => x.slug === 'neurologia');
   const srv = await L.servir({ usadas: new Set(), pedidos: [] }); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
-  for (const w of [1440, 384]) {
+  for (const w of [1440, 386]) {
     const r = await L.abrir(br, base, m, { w, h: 900, modo: 'controle', corr: true });
     const erros = []; r.page.on('pageerror', e => erros.push(String(e))); await r.page.waitForTimeout(2500);
     const res = await r.page.evaluate(() => {
@@ -43,13 +43,13 @@ let ok = 0, bad = 0; const T = (c, m) => { if (c) { ok++; console.log('  ✓', m
     await r.page.waitForTimeout(1200); /* _revealAnswer abre a explicação 650 ms depois de responder */
     const dep = await r.page.evaluate(() => { const vis = el => { const an = el.querySelector('.answer'); return !!an && an.classList.contains('show') && getComputedStyle(an).display !== 'none' && an.offsetHeight > 0; }; const todos = [...document.querySelectorAll('.quiz-item')].filter(e => /^(q|bq)-neu/.test(e.id)); return { mcq: todos.filter(e => e.querySelector('li[data-option]') && vis(e)).length, vf: todos.filter(e => e.querySelector('.tf-btn') && vis(e)).length, mcqTot: todos.filter(e => e.querySelector('li[data-option]')).length }; });
     res.depoisMcq = dep.mcq; res.depoisVf = dep.vf;
-    T(res.itens === 578, '@' + w + ' 578 itens (289 no bloco + 289 no banco): ' + res.itens);
+    T(res.itens === 580, '@' + w + ' 580 itens (290 no bloco + 290 no banco): ' + res.itens);
     T(res.vis === 0, '@' + w + ' nenhuma resposta visível antes de responder (' + res.vis + ')');
     T(res.marc === 0, '@' + w + ' nenhuma marca de correta/errada antes de responder (' + res.marc + ')');
     T(res.enf === 0 && res.cor === 0, '@' + w + ' nenhuma ênfase/cor diferente nas alternativas nem no enunciado V/F (' + res.enf + '/' + res.cor + ')');
-    T(res.mcqOk === res.mcq && res.mcq === 384, '@' + w + ' todas as MCQ respondem: ' + res.mcqOk + '/' + res.mcq);
+    T(res.mcqOk === res.mcq && res.mcq === 386, '@' + w + ' todas as MCQ respondem: ' + res.mcqOk + '/' + res.mcq);
     T(res.vf === 136 && res.vfOk === 136, '@' + w + ' todos os V/F respondem certo: ' + res.vfOk + '/' + res.vf + ' (os 10 antigos da main foram corrigidos na #687)');
-    T(res.depoisMcq === 384, '@' + w + ' depois de responder, a explicação das MCQ aparece (' + res.depoisMcq + '/384)');
+    T(res.depoisMcq === 386, '@' + w + ' depois de responder, a explicação das MCQ aparece (' + res.depoisMcq + '/386)');
     T(res.depoisVf === 136, '@' + w + ' depois de responder, a explicação dos 136 V/F aparece (' + res.depoisVf + '/136)');
     if (res.falhas.length) console.log('   ', res.falhas.slice(0, 6).join(' | '));
     const sh = await r.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth); T(sh <= 1, '@' + w + ' sem rolagem horizontal (' + sh + ')');

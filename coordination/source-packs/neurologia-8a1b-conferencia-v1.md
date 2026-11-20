@@ -26,7 +26,7 @@ Lei aplicada: `MANUTENCAO-DIDATICA-REPASSO-MED.md` 8-A.1-B (e CLAUDE.md §5-A). 
 2. **«Complementares» que já absorviam item de prova** (Turma A/C, Manuscrito, docx) passaram a **«Basada en preguntas de examen»**: `q-neu090` (reformulada), `091` (rótulo + frase de integração), `135` (reformulada), `181` (reformulada), `224` (rótulo + pergunta completa). `093`, `183`, `231` **continuam complementares** (não absorvem nenhum item de prova: ver §4).
 3. **Itens de prova sem raciocínio equivalente → acrescentados** (`q-neu249`–`261`, todas «Basada en preguntas de examen», no bloco e no banco).
 4. **Resumo completado antes de cobrar** (8-A.2): NREM = reposo, tono parassimpático, FC/PA baixas (bloco 17); `moria` (bloco 11); «distonía paroxística» (bloco 19, tabela do diagnóstico diferencial, e resposta de `q-neu134`); epidural de bom prognóstico se drenado a tempo (resumo-chave do bloco 27).
-5. **Contagens declaradas (8-A.10)**: portada/banco 254 → **289** (MCQ 168 → 192; V/F 62 → 68; DEFINE 24 → 29: as 4 anteriores + `q-neu289`; inclui `q-neu285`–`289`; as 6 perguntas sem fonte foram retiradas em 20/11, §18); cabeçalhos e subtítulos dos blocos tocados; **8 cabeçalhos antigos estavam defasados** (blocos 01, 04, 05, 06, 10, 14, 15, 16 declaravam menos perguntas do que existem) e foram corrigidos.
+5. **Contagens declaradas (8-A.10)**: portada/banco 254 → **290** (MCQ 168 → 193; V/F 62 → 68; DEFINE 24 → 29: as 4 anteriores + `q-neu289`; inclui `q-neu285`–`289`; as 6 perguntas sem fonte foram retiradas em 20/11, §18); cabeçalhos e subtítulos dos blocos tocados; **8 cabeçalhos antigos estavam defasados** (blocos 01, 04, 05, 06, 10, 14, 15, 16 declaravam menos perguntas do que existem) e foram corrigidos.
 
 ## 3 · Imagens do .docx e as perguntas gerais (q-neu131)
 Imagens extraídas e vistas: `image3.png` (após o caso 21 → **item 22**), `image4.png` (no item 28), `image5.png` (item 29); `image1/2` são o brasão/cabeçalho.
@@ -278,3 +278,9 @@ Script de auditoria comparando `main` × branch, id a id (bloco **e** banco refl
 - **Contagem do site:** 289 (MCQ 192 · V/F 68 · DEFINE 29) × 2 = 578. Triagem dos 186: 61 COB + 26 COB-P + 28 ACR + 9 PEND-R + 40 ENS + 20 FNT + 2 DESC.
 - **281 parágrafos restantes**: comparados um a um; resultado em `neurologia-rastreabilidade-provas-v1.md` §8/§11 (205 COB, 32 COB-P, 23 ENS, 6 FNT, 2 PEND-R, 7 FRAG, 6 ACR).
 - Regra do projeto (CLAUDE.md 9-B, `main` de 20/11): conteúdo médico segue os slides atuais e a literatura-base permitida; por isso nada sem fonte entra.
+
+## 19 · Rodada 7 (20/11/2026): fontes de `q-neu254`/`261`, grifos, amostra e duplicatas
+- **`q-neu254`** confirmada no slide 7 (insomnio agudo: benzodiacepinas de corta duración, máx. 2 semanas); retirada a frase sobre acúmulo/quedas (sem fonte). **`q-neu261`** confirmada no slide de cefaleas (preventivos) e na página de Farmacología II (propranolol não seletivo, profilaxis de migraña, contraindicação asma). Detalhe em `neurologia-rastreabilidade-provas-v1.md` §13.
+- **Amostra de 13 itens** (§12): 1 classificação corrigida → **`q-neu290`** (músculo ciliar, bloco 04, slide de pares cranianos); nota de `q-neu286` agora declara o conflito compilado × slide (Cheyne-Stokes). Site: **290 perguntas** (MCQ 193 · V/F 68 · DEFINE 29) × 2 = 580.
+- **Grifos** com o resolvedor real do site: 24/24 iguais na `main` e na branch (§14).
+- **Duplicatas 233/234:** recomendação em §15; nada removido.

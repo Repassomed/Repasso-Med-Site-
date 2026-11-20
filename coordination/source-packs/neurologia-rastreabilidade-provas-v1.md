@@ -2,7 +2,7 @@
 
 Complementa `neurologia-8a1b-conferencia-v1.md` (registro por questão) e `neurologia-revisar-triagem-v1.md` (186 candidatos do compilado). Este arquivo responde a uma pergunta só: **de cada arquivo da pasta «Questões», o que foi aberto, quantas questões foram detectadas e o que aconteceu com cada uma — com números que fecham.**
 
-Estado do site: **289 perguntas** (MCQ 192 · V/F 68 · DEFINE 29), no bloco e no banco (578 itens). Antes da PR: 254. Novas desta PR: 35 ids entre `q-neu249` e `q-neu289` (ver §9). **Em 20/11 foram retiradas da entrega as 6 perguntas sem fonte** (`q-neu263`, `265`, `266`, `267`, `268`, `283`; §10).
+Estado do site: **290 perguntas** (MCQ 193 · V/F 68 · DEFINE 29), no bloco e no banco (580 itens). Antes da PR: 254. Novas desta PR: 36 ids entre `q-neu249` e `q-neu290` (ver §9). **Em 20/11 foram retiradas da entrega as 6 perguntas sem fonte** (`q-neu263`, `265`, `266`, `267`, `268`, `283`; §10).
 
 ## 0 · Códigos e regra de contagem
 | Código | Significado |
@@ -32,12 +32,12 @@ Estado do site: **289 perguntas** (MCQ 192 · V/F 68 · DEFINE 29), no bloco e n
 | `Notes_261006_214640.pdf` | texto completo (71 itens numerados) | 71 | 0 | 0 | 70 | 1 | 0 | 0 | **71** |
 | `Provas neuro Aline .pdf` | OCR parcial do Drive (PDF escaneado de 5,2 MB) | 10 | 0 | 0 | 4 | 0 | 1 | 2 REP + 3 FORA | **10** |
 | `provaneurorevisar_sem_repetidas.pdf` — 186 candidatos | texto extraído (1 464 parágrafos) | 186 | 28 linhas ACR (= 17 perguntas) | 0 | 61 | 26 | 69 (40 ENS + 20 FNT + 9 PEND-R) | 2 DESC | **186** |
-| `provaneurorevisar_sem_repetidas.pdf` — 281 parágrafos restantes | texto extraído; **comparados um a um com a pergunta mais próxima (20/11)** | 281 | 6 parágrafos ACR (= 3 perguntas: 285–287) | 0 | 205 | 32 | 23 ENS + 6 FNT + 2 PEND-R | 7 FRAG | **281** |
+| `provaneurorevisar_sem_repetidas.pdf` — 281 parágrafos restantes | texto extraído; **comparados um a um com a pergunta mais próxima (20/11)** | 281 | 8 parágrafos ACR (= 4 perguntas: 285–287 e 290) | 0 | 203 | 32 | 23 ENS + 6 FNT + 2 PEND-R | 7 FRAG | **281** |
 
 Observações que mantêm a tabela honesta:
 - A linha dos 186: 61 COB + 26 COB-P + 28 ACR (17 perguntas: `262`, `264`, `269`–`282`, `284`) + 69 PEND (40 ENS + 20 FNT + **9 PEND-R**, as que sustentavam as 6 perguntas retiradas) + 2 DESC = **186**.
-- A linha dos 281: 6 ACR + 205 COB + 32 COB-P + 23 ENS + 6 FNT + 2 PEND-R + 7 FRAG (fragmentos de alternativa ou enunciados cortados, ligados a um id) = **281** (§8).
-- **Soma das perguntas novas que ficaram no site:** 3+1+1+1+1+1 (docx, Turma A/C, manuscrito, D-2, P1 seção C) + 3 (Silva) + 3 (P1261) + 17 (compilado, 186) + 3 (compilado, 281) + `q-neu261` = **35 ids**.
+- A linha dos 281: 8 ACR + 203 COB + 32 COB-P + 23 ENS + 6 FNT + 2 PEND-R + 7 FRAG (fragmentos de alternativa ou enunciados cortados, ligados a um id) = **281** (§8).
+- **Soma das perguntas novas que ficaram no site:** 3+1+1+1+1+1 (docx, Turma A/C, manuscrito, D-2, P1 seção C) + 3 (Silva) + 3 (P1261) + 17 (compilado, 186) + 4 (compilado, 281) + `q-neu261` = **36 ids**.
 - «Examen pdf»: não é prova diferente — é a mesma do docx; 30 REP. `provasneuroP1261.pdf`: 20 itens repetem a P1 Silvia (REP); os outros 20 são a prova do ano (set A). `Aline`: 4 COB + 2 REP + 3 FORA + 1 PEND = 10.
 
 ## 2 · O que NÃO foi aberto ou não foi visto (avisos)
@@ -175,17 +175,17 @@ Contagem: 10 itens = 4 COB (item 2 + 3 V/F) + 2 REP + 3 FORA + 1 PEND = **10**.
 Dos 467 parágrafos que o pipeline marcou como candidatos, 186 foram fechados na triagem (`neurologia-revisar-triagem-v1.md`). Os **281 restantes foram agora comparados um a um**: cada parágrafo foi lido ao lado do enunciado da pergunta do site mais próxima (anexo §11, com o código e o motivo). Limite honesto: a comparação foi de **enunciado × enunciado e tema**, não releitura de todas as alternativas; os parágrafos incluem fragmentos e versões em português/castelhano.
 | Código | Significado | Parágrafos |
 |---|---|---|
-| **ACR** | levaram a perguntas novas com slide (`q-neu285` PL, `286` Cheyne-Stokes, `287` Argyll Robertson) | 6 |
-| **COB** | enunciado e raciocínio já cobertos por pergunta existente (id citado) | 205 |
+| **ACR** | levaram a perguntas novas com slide (`q-neu285` PL, `286` Cheyne-Stokes, `287` Argyll Robertson, `290` músculo ciliar) | 8 |
+| **COB** | enunciado e raciocínio já cobertos por pergunta existente (id citado) | 203 |
 | **COB-P** | tema citado no resumo, mas a pergunta do site pede outro raciocínio; não acrescentada (motivo na linha) | 32 |
 | **ENS** | tema que o resumo e os 16 slides não ensinam (siringomielia, meningioma, Barré, MAV, território da ACM…) | 23 |
 | **FNT** | depende de figura ou texto truncado/contraditório | 6 |
 | **PEND-R** | era a base de pergunta retirada por falta de fonte (HTE benigna, Sydenham) | 2 |
 | **FRAG** | fragmento de alternativa ou enunciado cortado, ligado ao id da pergunta mãe | 7 |
-Soma: 6 + 205 + 32 + 23 + 6 + 2 + 7 = **281**.
+Soma: 8 + 203 + 32 + 23 + 6 + 2 + 7 = **281**.
 
 ## 9 · Ids novos desta PR e origem
-`249` (docx 7) · `250` (D-2 19) · `251`/`252` (docx 22/29, imagens reconstruídas em palavras) · `253` (Turma C 3) · `254` (manuscrito 12) · `255` (Turma A 20) · `256` (Silva 13) · `257` (P1 seção C 16) · `258` (P1261-A 3) · `259` (P1261-A 19) · `260` (P1261-A 12) · `261` (compilado, pack §11) · `262`, `264`, `269`–`282`, `284` (compilado, com slide) · `285`–`287` (compilado, 281 restantes, com slide) · `288` (Silva 17) · `289` (Silva 9). **Ids reservados e não usados:** `263`, `265`, `266`, `267`, `268`, `283`. Total desde a `main`: 254 → 289.
+`249` (docx 7) · `250` (D-2 19) · `251`/`252` (docx 22/29, imagens reconstruídas em palavras) · `253` (Turma C 3) · `254` (manuscrito 12) · `255` (Turma A 20) · `256` (Silva 13) · `257` (P1 seção C 16) · `258` (P1261-A 3) · `259` (P1261-A 19) · `260` (P1261-A 12) · `261` (compilado, pack §11) · `262`, `264`, `269`–`282`, `284` (compilado, com slide) · `285`–`287` e `290` (compilado, 281 restantes, com slide) · `288` (Silva 17) · `289` (Silva 9). **Ids reservados e não usados:** `263`, `265`, `266`, `267`, `268`, `283`. Total desde a `main`: 254 → 290.
 
 ## 10 · As 6 perguntas sem fonte — RETIRADAS da entrega (20/11/2026)
 `q-neu263` (edema vasogênico na contusão), `265` (EEG 3 Hz da ausência), `266` (West × Lennox-Gastaut), `267` (corea de Sydenham), `268` (hiperventilação), `283` (HTE benigna). Nova busca nos 16 slides (palavras-chave 3 Hz, West, Lennox, Sydenham, vasogênico, hiperventilação, pseudotumor) e verificação de que **não existe literatura-base de Neurologia** no repositório nem no Drive: o slide de TEC só nomeia «edema vasogênico e citotóxico»; o de exames complementares só nomeia o pseudotumor cerebral e as punções repetidas; nenhum define as respostas pedidas. Como a única fonte é o compilado de alunos, **as perguntas e o ensino acrescentado só para elas foram retirados** (blocos 19, 22, 23 e 27 voltam ao texto da `main`, exceto a marcha jacksoniana, que o slide 1 sustenta). Nada foi apresentado como confirmado. **Pendente:** confirmação da cátedra ou envio da literatura-base para reincluí-las; os 9+2 parágrafos do compilado que as originaram ficam como PEND-R.
@@ -241,7 +241,7 @@ Soma: 6 + 205 + 32 + 23 + 6 + 2 + 7 = **281**.
 | 355 | COB-P | 240/182 | 0.75 | papiledema = síndrome de HTE; não há pergunta só dessa afirmação |
 | 363 | COB-P | 151 | 0.5 | anosmia ipsilateral; conflito de anosmia (triagem) |
 | 367 | COB | 014 | 0.58 | reflexo fotomotor |
-| 369 | COB | 150 | 0.5 | inervação intraocular × III par |
+| 369 | ACR | 290 | 0.5 | músculo ciliar: inervação parassimpática do III par (slide de pares cranianos); a q-neu150 pergunta o oblíquo superior (IV) — raciocínio diferente, pergunta nova |
 | 371 | COB | 015 | 0.77 | III par |
 | 372 | COB | 015 | 1.0 | III par |
 | 373 | COB | 139 | 0.5 | reflexos fotomotor/acomodação, via eferente e pré-tectal |
@@ -462,7 +462,7 @@ Soma: 6 + 205 + 32 + 23 + 6 + 2 + 7 = **281**.
 | 1399 | ENS | — | 0.5 | manobra de Barré (figura) não ensinada |
 | 1401 | COB | 012 | 0.55 | ataxia cerebelosa/vestibular |
 | 1403 | COB | 028 | 0.65 | desvio da língua |
-| 1405 | COB | 150 | 0.5 | inervação intraocular × III par |
+| 1405 | ACR | 290 | 0.5 | músculo ciliar: inervação parassimpática do III par (slide de pares cranianos); a q-neu150 pergunta o oblíquo superior (IV) — raciocínio diferente, pergunta nova |
 | 1407 | COB | 021 | 0.58 | paralisia facial (alimentos pela comissura) |
 | 1411 | COB | 015 | 0.69 | III par |
 | 1413 | COB | 006 | 0.36 | confusão/obnubilação |
@@ -474,3 +474,36 @@ Soma: 6 + 205 + 32 + 23 + 6 + 2 + 7 = **281**.
 | 1443 | COB | 084 | 0.4 | lesão do hipoglosso |
 | 1460 | COB | 068 | 0.53 | ataxia sensitiva; propriocepção ao cerebelo |
 | 1462 | COB | 287 | 0.75 | Argyll Robertson (q-neu287 acrescentada; q-neu213 é outro raciocínio) |
+
+## 12 · Conferência final por amostra (20/11/2026) — raciocínio, alternativas e gabarito, não só o tema
+Método: para cada item abaixo li o texto recebido (arquivo, página/parágrafo) ao lado da pergunta do site (enunciado, quatro alternativas, letra e explicação).
+| Classe | Recebido | Site | Resultado |
+|---|---|---|---|
+| COB | P1 Silvia 4 / P1261-B 4 / Notes 119 (Sunderland V, III, I, IV; axônio + endoneuro + perineuro) | `q-neu125` | mesmas quatro alternativas, gabarito IV = neurotmese parcial; **sem divergência** |
+| COB | P1 Silvia 5 / Notes 131 (Wallenberg × Dejerine, Foville, Millard-Gubler) | `q-neu118` | mesmas alternativas; gabarito Wallenberg; **sem divergência** |
+| COB | compilado par. 414 e 1403 (desvio da língua à esquerda; «hipogloso esquerdo») | `q-neu028` | gabarito igual (hipogloso esquerdo); **sem divergência** |
+| COB | P1 Silvia 6 / Notes 143 (neuralgia do glossofaríngeo; gabarito do Notes: «dor de curtíssima duração iniciada por estímulos na face») | `q-neu112` (c: segundos, desencadeada ao engolir, falar ou tossir) | mesmo raciocínio (dor paroxística curta com gatilho); a alternativa da prova diz «estímulos na face», o que é do trigêmeo; o site corrige o gatilho (ciência > forma literal). **Mantida; discrepância registrada** |
+| COB | compilado par. 1038 (fadiga que melhora com o exercício) | `q-neu081` | gabarito Eaton-Lambert coerente com o caso; **sem divergência** |
+| COB-P | par. 341 («por debaixo de 25 ml/100 g/min») | `q-neu241` (limiar do núcleo: < 10; penumbra < 20) | a prova usa um terceiro limiar não ensinado; **não** acrescentada (sem slide); registrado COB-P |
+| COB-P | par. 28 («hemorragia cerebral espontânea do hipertenso») | `q-neu269` (sítio mais frequente: putâmen) | a prova pede reconhecer a entidade, a 269 o sítio; **COB-P** correto |
+| COB-P | par. 363 (anosmia: «afeta o lado lesionado») | `q-neu151` (DEFINE do I par) | conflito de fonte sobre a causa da anosmia bilateral; **COB-P** correto |
+| **divergência corrigida** | par. 369 e 1405 («músculo ciliar inervado por: fibras parassimpáticas do III par») | era COB `q-neu150` (oblíquo superior ← IV par) | **raciocínio diferente**: `q-neu150` pergunta outro músculo. O slide de pares cranianos (III inerva esfíncter da pupila e músculo ciliar) e o resumo ensinam; **acrescentada `q-neu290`** (bloco 04) e os dois parágrafos passam de COB a ACR |
+| ACR | par. 169 (PL: «L3-L4, L4-L5, L5-S1») | `q-neu285` | gabarito igual (L3-L4 ou L4-L5; L5-S1 na explicação) |
+| ACR | par. 974/975 (Argyll Robertson: «não reage à luz, contrai com a convergência») | `q-neu287` | gabarito igual (d) |
+| ACR | par. 439/995 (Cheyne-Stokes) | `q-neu286` | **conflito:** o compilado responde «tronco a nível bulbar»; o slide da cátedra (unidade IV) diz «lesão diencefálica ou bilateral». Seguido o slide; **a nota da explicação agora declara o conflito** (antes dizia só «resposta cortada»). Pendência: a cátedra confirmar |
+| ACR | P1 Silvia 17 / Notes 233 / P1261-B 17 (aberta ao dor, verbal confusa, localiza; «10/15») | `q-neu288` | a prova marca (F): 2 + 4 + 5 = 11; V/F do site é FALSO; **igual** |
+Total conferido: 13 itens; 1 divergência de classificação corrigida (`q-neu290`), 1 divergência de nota corrigida (`q-neu286`), 1 discrepância de forma documentada (`q-neu112`), 0 de gabarito.
+
+## 13 · `q-neu254` e `q-neu261` — fontes exatas (20/11/2026)
+- **`q-neu254`** (V/F: «insomnio agudo se trata com benzodiazepínicos de longa duração» ⇒ FALSO). **Confirmada no slide 7 da cátedra** (insomnio, ficheiro de sueño y vigilia): «Insomnio agudo (< 3 meses). Tratamiento: higiene del sueño, benzodiacepinas de corta duración (máx. 2 semanas)»; «Insomnio crónico … TCC-I es el tratamiento de primera línea (evidencia nivel A)». Ajuste: retirei da explicação a frase «as de ação longa se acumulam, dão sedação diurna e aumentam o risco de quedas», que não está nos slides nem nas páginas de Farmacología; a nota de origem agora cita o slide.
+- **`q-neu261`** (migraña + asma ⇒ evitar propranolol). **Confirmada por duas fontes do projeto:** (1) slide de cefaleas da cátedra: «Preventivo: betabloqueantes, topiramato, amitriptilina»; (2) página de **Farmacología II** do site (`farmacologia-ii.html`, bloco f2b01, tabela de β-bloqueantes, que reproduz o material da cátedra A4 «Beta bloqueador» e A8 p. 9): «Propranolol — 1.ª generación, no selectivo (β₁ + β₂) … profilaxis de migraña … contraindicaciones: Asma» e o caso «hipertenso asmático → celiprolol; nunca propranolol». Limite: a flunarizina (distrator d) **não está no slide**; já constava do resumo do bloco 19 antes da PR e só é usada como distrator. Os livros-base citados na página de Farmacología (Katzung; Goodman & Gilman) não estão no projeto como texto.
+
+## 14 · Grifos — mecanismo real do site (20/11/2026, somente leitura)
+Resolvedor real `RMTools.resolverAncora` (`assets/rm-tools.js`, o mesmo que repinta os grifos ao abrir a matéria), executado numa página do site (servidor de ensaio, Supabase simulado, zero escrita) sobre o bloco da branch e sobre o bloco da `main`, para **24 grifos reais** (SELECT somente leitura: texto grifado, 40 caracteres de contexto e ocorrência; sem identificação de aluno) dos blocos 22 e 27 — os dois blocos cujo texto de ensino difere da `main` fora dos cabeçalhos de contagem: os 8 com ocorrência > 0 e os de maior risco de ambiguidade («Sin pérdida de conciencia», «Focal sin pérdida de conciencia», «Bueno», «hiperdensa»…). Resultado: **24/24 resolvidos no nível 1 (exato) nas duas versões, na mesma posição e com o mesmo contexto; 0 perdidos**. Limites: amostra de 24 dos 160 grifos desses dois blocos (713 no total em Neurologia); os demais blocos têm ensino idêntico ao da `main` (diferem só os cabeçalhos «N preguntas»); não foi usado o navegador de um aluno real nem escrita alguma.
+
+## 15 · Duplicatas `q-neu233` e `q-neu234` — recomendação (lei 8-A.1-B)
+| Par | Raciocínio | Alternativas | Explicação | Onde estão |
+|---|---|---|---|---|
+| `233` × `-2509-03` (marcha em tesoura) | idêntico | idênticas (reordenadas) | ambas completas; a 233 define o padrão; a `-2509-03` é mais enxuta | **as duas no bloco 03** (o aluno vê a mesma pergunta duas vezes) |
+| `234` × `-2509-05` (neuralgia do trigêmeo) | idêntico | idênticas | a 234 acrescenta causa (compressão vascular, desmielinização); a `-2509-05` acrescenta o diagnóstico diferencial | `-2509-05` no bloco 05, `234` no bloco 09 |
+**Recomendação:** canônicas = `q-neu-2509-03` e `q-neu-2509-05` (id e forma vêm das fotos reais da prova de 25/09); as duas explicações melhores seriam fundidas nelas e `233`/`234` aposentadas **depois** da decisão de José. **Não fiz isso nesta PR:** é remoção de questões já existentes (8-A.9), e seus ids foram citados em relatórios anteriores. Dados dos alunos: nenhuma tabela guarda resposta por pergunta (`user_highlights`, `user_ink_strokes`, `user_notes`, `user_study_progress`); os grifos do bloco 09 incidem sobre o texto de ensino, não sobre as perguntas; aposentar as duas não afeta marcas dos alunos. Se aposentar: manter os ids reservados, nunca reutilizá-los.
