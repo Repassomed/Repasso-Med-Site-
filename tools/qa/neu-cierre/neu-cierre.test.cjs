@@ -12,7 +12,9 @@ const REPO = path.join(__dirname, '..', '..', '..');
 const REL = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
 const ABS = !process.argv.includes('--relativo');   /* --relativo: para usar depois de outras PRs entrarem (perguntas/figuras novas): só compara com a base dada em --base, sem números absolutos */
 const BASE = (process.argv.includes('--base') ? process.argv[process.argv.indexOf('--base') + 1] : '10e9d4df');
-const cur = fs.readFileSync(path.join(REPO, REL), 'utf8');
+/* #682: os 13 infográficos (figuras `neuro-b2N-0N-…` no fim dos blocos 20–27) são acréscimo conhecido e alheio à retirada do Cierre; esta checagem só os ignora (número e posição: tools/qa/neu-infograficos e neu-glosario) */
+const FIG_682 = /  <figure class="rmc-fig"><div class="rmc-zoom"><img class="rmc-photo" src="\/assets\/img\/neuro\/neuro-b2\d-0\d-[^"]*"[\s\S]*?<\/figure>\n/g;
+const cur = fs.readFileSync(path.join(REPO, REL), 'utf8').replace(FIG_682, '');
 const old = cp.execSync('git show ' + BASE + ':"' + REL + '"', { cwd: REPO, maxBuffer: 1 << 28 }).toString();
 let ok = 0, bad = 0; const T = (c, m, x) => { if (c) ok++; else { bad++; console.log('  ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 260) : ''); } };
 const SEC = '<section class="container" id="revisaoneu"', H4 = '<h4>🎴 Mazo general · Neurología</h4>';
