@@ -276,6 +276,50 @@ A partir de 01/11/2026, a revisão obrigatória tem **duas partes**, nesta ordem
 
 **Não exigir parecer rotineiro de outro Claude.** Outro agente só revisa se José pedir expressamente; a responsabilidade pela auditoria independente permanece com o coordenador ChatGPT. José é o único que faz merge e publicação. Pedir teste manual ao José apenas quando for realmente crítico e depois de os testes do executor estarem concluídos; preferir uma conferência final do pacote completo, não pequenas liberações sucessivas.
 
+## 9-B. COORDENAÇÃO E CONTINUIDADE (DECISÃO DE JOSÉ)
+
+O coordenador assume a estratégia e identifica lacunas, dependências, riscos
+e oportunidades de avanço. Ao receber uma entrega, consulta o estado atual
+das PRs, o diff, o Guard da versão final, os testes, as fontes e o Cartão de
+Merge; faz sua auditoria independente conforme 9-A. Não afirma ter conferido
+fontes, site, banco, implantação ou testes que não conseguiu acessar.
+
+Prioriza o que traz resultado para os alunos e distribui tarefas completas,
+sem trabalho duplicado ou conflito entre agentes. Não mantém agentes ocupados
+artificialmente; não espera tarefas de detalhe sem relação com uma entrega
+urgente. Quando o risco permitir uma entrega independente e útil, recomenda
+o caminho e explica o que ainda fica pendente.
+
+Cada PR deve registrar tarefa, arquivos, fontes, versões, o que entrou ou foi
+corrigido, contagens e destino, testes executados, resultados e limitações,
+proteção de dados dos alunos, dependências e Cartão de Merge simples.
+Incentivar STATUS: TAREFA CONCLUÍDA ou EM ANDAMENTO, com o que falta; não
+inferir que um agente parou apenas por ausência de mensagem.
+
+Ao incorporar questões e anotações, aplicar as leis existentes. Inventariar
+cada fonte, conferir cada questão pelo raciocínio, comparar a versão existente,
+registrar decisão e destino; arquivo ilegível é pendente, não concluído.
+Conferir pistas visuais e interação de questões conforme 8-A.6-D.
+
+Informar José em português simples e em checklist: feito, em andamento e
+pendente. Identificar cada PR por número e dizer claramente: pode mesclar,
+aguardar ou corrigir; quando relevante, a ordem. Só José mescla e publica.
+Pedir teste a José somente quando for crítico e depois dos testes do executor.
+
+Manter um registro de continuidade no painel com data e fonte dos fatos,
+PRs e estado verificado, prioridades, atribuições sem sobreposição, decisões
+e pendências, incluindo materiais de prova, anotações, Nova Era e áudios.
+Atualizar o registro quando houver mudança, sem afirmar conclusões não
+verificadas. Diferenciar código mesclado, deploy publicado, prévia privada
+e liberação para alunos. Nova conversa deve ler este manual, o painel e o
+estado atual do GitHub antes de orientar; registros são evidência histórica,
+não prova de situação atual.
+
+Não remover imagens existentes sem o critério expressamente decidido por
+José; preservar grifos, notas, traços e IDs. Conteúdo médico deve seguir os
+slides atuais da cátedra e a literatura-base permitida por José. Não executar
+SQL de escrita nem ativar/publicar sem a autorização aplicável.
+
 ## 10. RELATÓRIO FINAL
 
 Ao terminar uma tarefa informar:
