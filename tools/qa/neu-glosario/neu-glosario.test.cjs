@@ -4,7 +4,7 @@
 const cp = require('child_process'), fs = require('fs'), path = require('path');
 const REPO = path.resolve(__dirname, '../../..');
 const F = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
-const BASE = process.argv[2] || 'origin/main';
+const BASE = process.argv[2] || 'origin/main';   // a base pode já ter glosas (pós-#681): o teste tira as glosas dos DOIS lados antes de comparar o ensino
 const { semCierre } = require('../neu-cierre/sem-cierre.cjs');   /* 20/11 · retirada do «Cierre» (ver tools/qa/neu-cierre): a base recebe a mesma troca */
 const old = semCierre(cp.execFileSync('git', ['show', BASE + ':' + F], { cwd: REPO, maxBuffer: 1 << 28 }).toString('utf8'));
 const cur = fs.readFileSync(path.join(REPO, F), 'utf8');
@@ -12,7 +12,17 @@ let ok = 0, bad = 0; const T = (c, m) => { if (c) ok++; else { bad++; console.lo
 const GL = /<span class="rmc-gl">((?:(?!<b>\?<\/b>)[\s\S])*?)<b>\?<\/b><i><b class="rmc-gl-close">✕ cerrar<\/b> ([\s\S]*?)<\/i><\/span>(?=[^<]|<(?!\/i>))/g;
 const secIdx = (t, id) => t.indexOf('<section class="container" id="' + id + '"');
 const nextSec = (t, i) => t.indexOf('<section', i + 10);
-const bloco = (t, id) => { const a = secIdx(t, id); return t.slice(a, nextSec(t, a)); };
+// PR #682: os 13 infográficos novos ficam no fim dos blocos 20–27 (resumo visual); não são ensino, pergunta nem flashcard
+const FIG = /  <figure class="rmc-fig"><div class="rmc-zoom"><img class="rmc-photo" src="\/assets\/img\/neuro\/neuro-b2\d-0\d-[^"]*"[\s\S]*?<\/figure>\n/g;
+const bloco = (t, id) => { const a = secIdx(t, id); return t.slice(a, nextSec(t, a)).replace(FIG, ''); };
+// as figuras toleradas são EXATAMENTE as 13 esperadas, cada uma no seu bloco, só no fim e só uma vez (nada mais é escondido pelo filtro)
+const FIGS_ESPERADAS = { 20: 2, 21: 2, 22: 1, 23: 1, 24: 2, 25: 2, 26: 1, 27: 2 };
+for (const [n, k] of Object.entries(FIGS_ESPERADAS)) {
+  const a = secIdx(cur, 'neub' + n), raw = cur.slice(a, nextSec(cur, a));
+  const fs_ = raw.match(FIG) || [];
+  T(fs_.length === k, 'neub' + n + ': ' + k + ' infográfico(s) novo(s) (' + fs_.length + ')');
+  T(raw.lastIndexOf('<figure class="rmc-fig">') > raw.lastIndexOf('<div class="flashcard">') && raw.trimEnd().endsWith('</section>'), 'neub' + n + ': figuras depois dos flashcards, no fim do bloco');
+}
 // 1) fora dos blocos 20–27 o arquivo é byte a byte igual
 const a0 = secIdx(cur, 'neub20'), b0 = secIdx(old, 'neub20');
 T(cur.slice(0, a0) === old.slice(0, b0), 'tudo antes do bloco 20 idêntico (blocos 01–19 e portada)');
@@ -34,7 +44,7 @@ for (let n = 20; n <= 27; n++) {
   let sem = N(ens.replace(GL, '$1'));
   let oe = o.slice(0, qo);
   if (n === 27) oe = oe.replace('cuya indicación y momento de inicio dependen de la evaluación de cada paciente (riesgo de sangrado, hematoma, cirugía); este material no fija un plazo, protector gástrico', '(su indicación y su momento de inicio dependen de la evaluación de cada paciente: riesgo de sangrado, hematoma, cirugía; este material no fija un plazo), protector gástrico').replace('HBPM (su indicación', 'HBPM (su indicación');
-  T(sem === N(oe.replace('profilaxis de TVP con HBPM, (su', 'profilaxis de TVP con HBPM (su')), id + ': sem as glosas, o texto de ensino é idêntico à base');
+  T(sem === N(oe.replace('profilaxis de TVP con HBPM, (su', 'profilaxis de TVP con HBPM (su').replace(GL, '$1')), id + ': sem as glosas (dos dois lados), o texto de ensino é idêntico à base');
   T((ens.match(/id="[^"]+"/g) || []).join() === (oe.match(/id="[^"]+"/g) || []).join(), id + ': ids do ensino preservados');
 }
 T(total >= 150, 'total de glosas nos blocos 20–27 ≥ 150 (' + total + ')');
