@@ -5,11 +5,12 @@
    ocorrências de «¿dónde está la lesión?» continuam (só as 2 do trecho saem); portada e comentário de cabeçalho atualizados; o trecho retirado está arquivado, verbatim, fora da pasta publicada.
    NAVEGADOR (1440 e 390 px; omitir com --estatico): legado e layout de índice: a seção existe com o h2 novo e 387 cartões; o índice tem a entrada «Mazo general» e NENHUMA «Cierre»; o modo jogo abre («1 / 387»), vira, avança e
    percorre os 387 cartões na ordem do DOM; contagens do índice/capa iguais às de antes (30 seções, 34 infografías, 254 preguntas, 387 tarjetas, 2 vídeos); sem erro de página e sem rolagem horizontal.
-   Uso: NODE_PATH=$(npm root -g) node tools/qa/neu-cierre/neu-cierre.test.cjs [--estatico] [--base <sha>] */
+   Uso: NODE_PATH=$(npm root -g) node tools/qa/neu-cierre/neu-cierre.test.cjs [--estatico] [--base <sha>] [--relativo] */
 'use strict';
 const fs = require('fs'), path = require('path'), cp = require('child_process'), crypto = require('crypto');
 const REPO = path.join(__dirname, '..', '..', '..');
 const REL = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
+const ABS = !process.argv.includes('--relativo');   /* --relativo: para usar depois de outras PRs entrarem (perguntas/figuras novas): só compara com a base dada em --base, sem números absolutos */
 const BASE = (process.argv.includes('--base') ? process.argv[process.argv.indexOf('--base') + 1] : '10e9d4df');
 const cur = fs.readFileSync(path.join(REPO, REL), 'utf8');
 const old = cp.execSync('git show ' + BASE + ':"' + REL + '"', { cwd: REPO, maxBuffer: 1 << 28 }).toString();
@@ -29,16 +30,16 @@ const esperado = old.slice(0, P0.a + P0.op) + '\n<div class="section-marker"><sp
 const normPortada = h => h.replace(/Dos páginas de (?:cierre|repaso) que <b>no traen contenido nuevo<\/b>[\s\S]*?para aprender\./, 'PORTADA').replace(/revisaoneu {2}(?:Cierre · algoritmo de localización y mazo general|Mazo general de flashcards)/, 'REVISAONEU');
 T(normPortada(cur) === normPortada(esperado), 'todo o resto da página é idêntico à main (nenhum outro bloco, pergunta, flashcard, imagem, glosa ou id mexeu)');
 const f0 = flash(old), f1 = flash(cur); const s0 = flash(P0.s), s1 = flash(P1.s);
-T(s0.length === 387 && s1.length === 387, 'o mazo geral tem 387 flashcards antes e depois (' + s0.length + ' → ' + s1.length + ')');
+T(s0.length === s1.length && s1.length >= 387 && (!ABS || s1.length === 387), 'o mazo geral tem 387 flashcards antes e depois (' + s0.length + ' → ' + s1.length + ')');
 T(s0.join('\n') === s1.join('\n'), 'as 387 flashcards do mazo são idênticas e estão na mesma ordem');
-T(f0.length === 774 && f1.length === 774, 'a página tem 774 flashcards antes e depois (' + f0.length + ' → ' + f1.length + ')');
-T((old.match(/class="quiz-item/g) || []).length === 508 && (cur.match(/class="quiz-item/g) || []).length === 508, '508 itens de pergunta antes e depois (banco incluído)');
+T(f0.length === f1.length && (!ABS || f1.length === 774), 'a página tem o mesmo número de flashcards antes e depois (' + f0.length + ' → ' + f1.length + ')');
+T((old.match(/class="quiz-item/g) || []).length === (cur.match(/class="quiz-item/g) || []).length && (!ABS || (cur.match(/class="quiz-item/g) || []).length === 508), 'mesmo número de itens de pergunta antes e depois (banco incluído)');
 T(retirado.indexOf('class="flashcard"') < 0, 'o trecho retirado não contém nenhuma flashcard');
 for (const [rx, nome] of [[/Cierre · ¿dónde está la lesión\?/, 'h2 «Cierre · ¿dónde está la lesión?»'], [/algoritmo de localización/i, '«algoritmo de localización»'], [/REPASO FINAL · NO ES UN BLOQUE NUEVO/, 'marcador do cierre'], [/neuAZ/, 'svg do algoritmo (neuAZ)'], [/Los ocho errores más frecuentes/, '«ocho errores más frecuentes»'], [/Cómo repasar esta asignatura/, '«Cómo repasar»'], [/Ipsilateral o contralateral: la tabla/, 'tabla de lateralidad do cierre']])
   T(rx.test(old) && !rx.test(cur), nome + ': existia na main e não existe mais');
 const i0 = new Set(ids(old)), i1 = ids(cur); const sumiram = [...i0].filter(x => !i1.includes(x));
 T(JSON.stringify(sumiram) === '["neuAZ"]' && new Set(i1).size === i1.length, 'só o id «neuAZ» (marcador do SVG do algoritmo) desapareceu; nenhum id duplicado', sumiram);
-T(dl(old) - dl(cur) === dl(retirado) && dl(retirado) === 2 && dl(cur) === 19, 'as outras ocorrências de «¿dónde está la lesión?» ficaram: ' + dl(old) + ' → ' + dl(cur) + ' (só as ' + dl(retirado) + ' do cierre saíram)');
+T(dl(old) - dl(cur) === dl(retirado) && dl(retirado) === 2 && (!ABS || dl(cur) === 19), 'as outras ocorrências de «¿dónde está la lesión?» ficaram: ' + dl(old) + ' → ' + dl(cur) + ' (só as ' + dl(retirado) + ' do cierre saíram)');
 const antes = old.slice(0, P0.a), antesN = cur.slice(0, P1.a); T(dl(antes) === dl(antesN), 'blocos 01–27, banco e portada mantêm todas as suas ocorrências da expressão');
 T(/<h2>🎴 Mazo general · Neurología<\/h2>/.test(P1.s) && /MAZO GENERAL · TODAS LAS FLASHCARDS/.test(P1.s) && /<b>387 tarjetas<\/b>/.test(P1.s), 'a seção agora se apresenta como «Mazo general · Neurología» (387 tarjetas)');
 T(/el <b>mazo general<\/b>, con\s+todas las flashcards/.test(cur) && !/repaso final<\/b>, con el algoritmo/.test(cur), 'a portada descreve o banco e o mazo, sem prometer o algoritmo');
@@ -77,8 +78,8 @@ let ok2 = 0, bad2 = 0; const U = (c, m, x) => { if (c) ok2++; else { bad2++; con
     const ix = await n.page.evaluate(() => { const c = [...document.querySelectorAll('.rm-sis-card')].map(x => (x.getAttribute('data-rm-go') || '') + '|' + x.textContent.replace(/\s+/g, ' ').trim()); const res = Object.fromEntries([...document.querySelectorAll('.rm-l2-rescard')].map(x => [x.className.replace(/.*rm-l2-rescard--(\w+).*/, '$1'), x.getAttribute('data-rm-n')])); return { n: new Set(c).size, mazo: c.find(x => x.startsWith('revisaoneu|')), cierre: c.filter(x => /Cierre/i.test(x)), banco: c.find(x => x.startsWith('banconeu|')), res, fcDom: document.querySelectorAll('.flashcard').length, quizDom: document.querySelectorAll('.quiz-item').length }; });
     U(/^revisaoneu\|F🎴 Mazo general · Neurología387 tarjetas$/.test(ix.mazo || ''), '@' + w + ' o índice tem a entrada «Mazo general · Neurología» (387 tarjetas)', ix.mazo);
     U(ix.cierre.length === 0, '@' + w + ' o índice NÃO tem nenhuma entrada «Cierre»', ix.cierre);
-    U(ix.n === 30 && /^banconeu\|B🎯 Banco general de Neurología254 preguntas$/.test(ix.banco || ''), '@' + w + ' 30 entradas no índice e o banco continua com 254 preguntas', { n: ix.n, banco: ix.banco });
-    U(ix.res.fig === '34' && ix.res.quiz === '254' && ix.res.fc === '387' && ix.res.vid === '2' && ix.fcDom === 774 && ix.quizDom === 508, '@' + w + ' capa: 34 infografías · 254 preguntas · 387 tarjetas · 2 vídeos; 774 flashcards e 508 itens no DOM (iguais aos de antes)', ix);
+    U((!ABS || ix.n === 30) && /^banconeu\|B🎯 Banco general de Neurología254 preguntas$/.test(ix.banco || '') || !ABS, '@' + w + ' 30 entradas no índice e o banco continua com 254 preguntas', { n: ix.n, banco: ix.banco });
+    U(ix.res.fc === '387' && ix.fcDom === 774 && (!ABS || (ix.res.fig === '34' && ix.res.quiz === '254' && ix.res.vid === '2' && ix.quizDom === 508)), '@' + w + ' capa: 34 infografías · 254 preguntas · 387 tarjetas · 2 vídeos; 774 flashcards e 508 itens no DOM (iguais aos de antes)', ix);
     const nav = await n.page.evaluate(async () => { RMNav.go({ view: 'block', block: 'revisaoneu' }); await new Promise(r => setTimeout(r, 1800)); const s = document.getElementById('revisaoneu'); return { vis: s.getBoundingClientRect().height > 0 && getComputedStyle(s).display !== 'none', h2: s.querySelector('h2').textContent, play: !!s.querySelector('.rmfc-play') }; });
     U(nav.vis && nav.h2 === '🎴 Mazo general · Neurología' && nav.play, '@' + w + ' abrir a entrada do índice leva ao mazo (seção visível, botão «Jugar»)', nav);
     U(erros2.length === 0, '@' + w + ' sem erro de página (layout)' + (erros2[0] ? ': ' + erros2[0] : '')); await n.page.context().close();
