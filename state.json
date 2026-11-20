@@ -3747,6 +3747,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:682.",
       "task_id": "infogr\u00e1ficos novos de Neurologia (Drive \u2192 7\u00ba semestre \u2192 Neurologia) ao fim dos blocos 20\u201327 como resumo visual; registro imagem por imagem.",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "07f67686fa2c6f298f0309df5aa3c5cd2eead878",
+      "component": "guard",
+      "error_id": "ERR-C3D23F1A45",
+      "error_type": "hard-fail",
+      "fingerprint": "c3d23f1a45822c608df8",
+      "first_seen": "2026-11-20T17:59:38.881335+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "eb6f6b0d95214129a9fd665a4e313441",
+      "issue_sync_updated_at": "2026-11-20T17:59:38.881335+00:00",
+      "last_evidence_hash": "e77c36964853754f9309",
+      "last_seen": "2026-11-20T17:59:38.881335+00:00",
+      "occurrence_count": 1,
+      "pr_number": 699,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "44788337174",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:699.",
+      "task_id": "retirar de Neurolog\u00eda o bloco \u00abCierre \u00b7 \u00bfd\u00f3nde est\u00e1 la lesi\u00f3n?\u00bb (se\u00e7\u00e3o `revisaoneu`) e o seu algoritmo do acesso do aluno, **preservando o mazo general de flashcards** que est\u00e1 dentro da mesma se\u00e7\u00e3o. Pedido direto de Jos\u00e9.",
+      "worker_id": null
     }
   ]
 }
