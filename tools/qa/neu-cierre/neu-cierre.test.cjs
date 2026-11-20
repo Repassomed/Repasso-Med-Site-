@@ -26,7 +26,7 @@ const hi0 = P0.s.indexOf(H4); const retirado = P0.s.slice(P0.op, hi0 + H4.length
 T(P0.a > 0 && P1.a > 0 && cur.split(SEC).length === 2, 'a seção revisaoneu existe uma só vez (antes e depois)');
 T(P1.s.slice(0, P1.op) === P0.s.slice(0, P0.op) && /data-rm-agrega/.test(P1.s.slice(0, P1.op)) && /data-rm-role="review"/.test(P1.s.slice(0, P1.op)), 'a tag da seção (id, data-rm-agrega, data-rm-role) ficou idêntica', P1.s.slice(0, P1.op));
 /* o HTML novo = o antigo com SÓ o trecho trocado (mais portada e comentário) */
-const esperado = old.slice(0, P0.a + P0.op) + '\n<div class="section-marker"><span class="section-marker-num">MAZO GENERAL · TODAS LAS FLASHCARDS</span></div>\n<h2>🎴 Mazo general · Neurología</h2>\n' + P0.s.slice(hi0 + H4.length) + old.slice(P0.b);
+const esperado = old.slice(0, P0.a + P0.op) + '\n<div class="section-marker"><span class="section-marker-num">MAZO GENERAL · TODAS LAS FLASHCARDS</span></div>\n<h2>🎴 Mazo general · Neurología</h2>\n<span id="neuAZ" hidden aria-hidden="true" data-rm-retirado="cierre-2026-11-20"></span>\n' + P0.s.slice(hi0 + H4.length) + old.slice(P0.b);
 const normPortada = h => h.replace(/Dos páginas de (?:cierre|repaso) que <b>no traen contenido nuevo<\/b>[\s\S]*?para aprender\./, 'PORTADA').replace(/revisaoneu {2}(?:Cierre · algoritmo de localización y mazo general|Mazo general de flashcards)/, 'REVISAONEU');
 T(normPortada(cur) === normPortada(esperado), 'todo o resto da página é idêntico à main (nenhum outro bloco, pergunta, flashcard, imagem, glosa ou id mexeu)');
 const f0 = flash(old), f1 = flash(cur); const s0 = flash(P0.s), s1 = flash(P1.s);
@@ -35,10 +35,13 @@ T(s0.join('\n') === s1.join('\n'), 'as 387 flashcards do mazo são idênticas e 
 T(f0.length === f1.length && (!ABS || f1.length === 774), 'a página tem o mesmo número de flashcards antes e depois (' + f0.length + ' → ' + f1.length + ')');
 T((old.match(/class="quiz-item/g) || []).length === (cur.match(/class="quiz-item/g) || []).length && (!ABS || (cur.match(/class="quiz-item/g) || []).length === 508), 'mesmo número de itens de pergunta antes e depois (banco incluído)');
 T(retirado.indexOf('class="flashcard"') < 0, 'o trecho retirado não contém nenhuma flashcard');
-for (const [rx, nome] of [[/Cierre · ¿dónde está la lesión\?/, 'h2 «Cierre · ¿dónde está la lesión?»'], [/algoritmo de localización/i, '«algoritmo de localización»'], [/REPASO FINAL · NO ES UN BLOQUE NUEVO/, 'marcador do cierre'], [/neuAZ/, 'svg do algoritmo (neuAZ)'], [/Los ocho errores más frecuentes/, '«ocho errores más frecuentes»'], [/Cómo repasar esta asignatura/, '«Cómo repasar»'], [/Ipsilateral o contralateral: la tabla/, 'tabla de lateralidad do cierre']])
+for (const [rx, nome] of [[/Cierre · ¿dónde está la lesión\?/, 'h2 «Cierre · ¿dónde está la lesión?»'], [/algoritmo de localización/i, '«algoritmo de localización»'], [/REPASO FINAL · NO ES UN BLOQUE NUEVO/, 'marcador do cierre'], [/Los ocho errores más frecuentes/, '«ocho errores más frecuentes»'], [/Cómo repasar esta asignatura/, '«Cómo repasar»'], [/Ipsilateral o contralateral: la tabla/, 'tabla de lateralidad do cierre']])
   T(rx.test(old) && !rx.test(cur), nome + ': existia na main e não existe mais');
 const i0 = new Set(ids(old)), i1 = ids(cur); const sumiram = [...i0].filter(x => !i1.includes(x));
-T(JSON.stringify(sumiram) === '["neuAZ"]' && new Set(i1).size === i1.length, 'só o id «neuAZ» (marcador do SVG do algoritmo) desapareceu; nenhum id duplicado', sumiram);
+T(sumiram.length === 0 && new Set(i1).size === i1.length, 'NENHUM id desapareceu (o Guard protege ids) e nenhum id ficou duplicado', sumiram);
+const ph = cur.match(/<span id="neuAZ"[^>]*><\/span>/g) || [];
+T(ph.length === 1 && /hidden/.test(ph[0]) && /aria-hidden="true"/.test(ph[0]) && cur.indexOf(ph[0]) > P1.a && cur.indexOf(ph[0]) < P1.b, 'o id «neuAZ» sobrevive só como marcador OCULTO e VAZIO dentro da seção revisaoneu (compatibilidade), sem exibir nada do cierre', ph);
+T(!/<svg[^>]*aria-label="Algoritmo de localización/i.test(cur) && !/marker-end="url\(#neuAZ\)"/.test(cur), 'nenhum SVG do algoritmo nem referência marker-end a neuAZ voltou');
 T(dl(old) - dl(cur) === dl(retirado) && dl(retirado) === 2 && (!ABS || dl(cur) === 19), 'as outras ocorrências de «¿dónde está la lesión?» ficaram: ' + dl(old) + ' → ' + dl(cur) + ' (só as ' + dl(retirado) + ' do cierre saíram)');
 const antes = old.slice(0, P0.a), antesN = cur.slice(0, P1.a); T(dl(antes) === dl(antesN), 'blocos 01–27, banco e portada mantêm todas as suas ocorrências da expressão');
 T(/<h2>🎴 Mazo general · Neurología<\/h2>/.test(P1.s) && /MAZO GENERAL · TODAS LAS FLASHCARDS/.test(P1.s) && /<b>387 tarjetas<\/b>/.test(P1.s), 'a seção agora se apresenta como «Mazo general · Neurología» (387 tarjetas)');
