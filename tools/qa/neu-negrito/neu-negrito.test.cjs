@@ -6,7 +6,12 @@ const fs = require('fs'), cp = require('child_process'), path = require('path');
 const REPO = path.resolve(__dirname, '../../..');
 const REL = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
 const cur = fs.readFileSync(path.join(REPO, REL), 'utf8');
-const base = cp.execSync('git show d9ef1072:"' + REL + '"', { cwd: REPO, maxBuffer: 1 << 28 }).toString();
+/* 20/11 · o bloco «Cierre · ¿dónde está la lesión?» foi RETIRADO a pedido de José (a seção revisaoneu ficou só com o mazo geral; guarda própria em tools/qa/neu-cierre): a base recebe a mesma troca, para esta checagem continuar medindo só o que lhe interessa. */
+const SEM_CIERRE = h => { const a = h.indexOf('<section class="container" id="revisaoneu"'); const op = a + h.slice(a).indexOf('>') + 1; const H4 = '<h4>🎴 Mazo general · Neurología</h4>'; const hi = h.indexOf(H4, a);
+  if (a < 0 || hi < 0) return h; return (h.slice(0, op) + '\n<div class="section-marker"><span class="section-marker-num">MAZO GENERAL · TODAS LAS FLASHCARDS</span></div>\n<h2>🎴 Mazo general · Neurología</h2>\n' + h.slice(hi + H4.length))
+    .replace(/Dos páginas de cierre que <b>no traen contenido nuevo<\/b>: el <b>banco general<\/b>, con\s+todas las preguntas juntas, y el <b>repaso final<\/b>, con el algoritmo de localización, las\s+tablas de lateralidad y el mazo completo\. Son para comprobar, no para aprender\./, 'Dos páginas de repaso que <b>no traen contenido nuevo</b>: el <b>banco general</b>, con\n        todas las preguntas juntas, y el <b>mazo general</b>, con todas las flashcards. Son para\n        comprobar, no para aprender.')
+    .replace('revisaoneu  Cierre · algoritmo de localización y mazo general', 'revisaoneu  Mazo general de flashcards'); };
+const base = SEM_CIERRE(cp.execSync('git show d9ef1072:"' + REL + '"', { cwd: REPO, maxBuffer: 1 << 28 }).toString());
 let ok = 0, bad = 0; const T = (c, m) => { if (c) ok++; else { bad++; console.log('  ✗ FALHA:', m); } };
 const items = h => { const o = {}; const re = /<div class="quiz-item" id="((?:q|bq)-neu[\d-]+)">/g; let m; while ((m = re.exec(h))) { const j = h.indexOf('</div></div>\n', m.index) + 13; o[m[1]] = h.slice(m.index, j); } return o; };
 const A = items(base), B = items(cur);
