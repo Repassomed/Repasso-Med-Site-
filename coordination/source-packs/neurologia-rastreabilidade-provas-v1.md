@@ -2,7 +2,7 @@
 
 Complementa `neurologia-8a1b-conferencia-v1.md` (registro por questão) e `neurologia-revisar-triagem-v1.md` (186 candidatos do compilado). Este arquivo responde a uma pergunta só: **de cada arquivo da pasta «Questões», o que foi aberto, quantas questões foram detectadas e o que aconteceu com cada uma — com números que fecham.**
 
-Estado do site: **295 perguntas** (MCQ 195 · V/F 71 · DEFINE 29), no bloco e no banco (590 itens). Antes da PR: 254. Novas desta PR: `q-neu249`–`q-neu289` (41 ids; ver §9).
+Estado do site: **289 perguntas** (MCQ 192 · V/F 68 · DEFINE 29), no bloco e no banco (578 itens). Antes da PR: 254. Novas desta PR: 35 ids entre `q-neu249` e `q-neu289` (ver §9). **Em 20/11 foram retiradas da entrega as 6 perguntas sem fonte** (`q-neu263`, `265`, `266`, `267`, `268`, `283`; §10).
 
 ## 0 · Códigos e regra de contagem
 | Código | Significado |
@@ -31,15 +31,14 @@ Estado do site: **295 perguntas** (MCQ 195 · V/F 71 · DEFINE 29), no bloco e n
 | `provasneuroP1261.pdf` | texto do Drive (2 provas de março/2026, 20 + 20 itens) | 40 | 3 | 0 | 17 | 0 | 0 | 20 REP | **40** |
 | `Notes_261006_214640.pdf` | texto completo (71 itens numerados) | 71 | 0 | 0 | 70 | 1 | 0 | 0 | **71** |
 | `Provas neuro Aline .pdf` | OCR parcial do Drive (PDF escaneado de 5,2 MB) | 10 | 0 | 0 | 4 | 0 | 1 | 2 REP + 3 FORA | **10** |
-| `provaneurorevisar_sem_repetidas.pdf` — 186 candidatos | texto extraído (1 464 parágrafos) | 186 | 37 linhas ACR (= 23 perguntas) | 0 | 61 | 26 | 60 (40 ENS + 20 FNT) | 2 DESC | **186** |
-| `provaneurorevisar_sem_repetidas.pdf` — 281 parágrafos restantes | texto extraído; revisão por sobreposição + leitura parcial (ver §8) | 281 | 3 ids (6 parágrafos ACR) | 0 | 81 (grupo A, provável) | 119 (grupo B, a conferir) | 75 (grupo C, a conferir) | — | **281** |
+| `provaneurorevisar_sem_repetidas.pdf` — 186 candidatos | texto extraído (1 464 parágrafos) | 186 | 28 linhas ACR (= 17 perguntas) | 0 | 61 | 26 | 69 (40 ENS + 20 FNT + 9 PEND-R) | 2 DESC | **186** |
+| `provaneurorevisar_sem_repetidas.pdf` — 281 parágrafos restantes | texto extraído; **comparados um a um com a pergunta mais próxima (20/11)** | 281 | 6 parágrafos ACR (= 3 perguntas: 285–287) | 0 | 205 | 32 | 23 ENS + 6 FNT + 2 PEND-R | 7 FRAG | **281** |
 
 Observações que mantêm a tabela honesta:
-- A linha dos 186: 37 linhas ACR geraram 23 perguntas novas (`q-neu262`–`284`); 61 COB + 26 COB-P + 37 ACR + 60 PEND (40 ENS + 20 FNT) + 2 DESC = **186**. A linha dos 281 usa os grupos A/B/C do §8 (coluna COB = A; COB-P = B; PEND = C, todos «a conferir» por não terem comparação item a item).
-- **Soma das perguntas novas:** 3+1+1+1+1+1+3+3+23+3 = 40, mais `q-neu261` (compilado, parágrafo fora dos 186, pack §11) = **41 ids** (`q-neu249`–`289`).
-- «Examen pdf»: não é prova diferente — é a mesma do docx; 30 REP.
-- `provasneuroP1261.pdf`: 20 itens são a mesma prova de `P1 - Dra Silvia` (REP); os outros 20 são a prova do ano (set A).
-- `Aline`: 4 COB + 2 REP (itens 5 e 6, repetem a P1 Silvia) + 3 FORA (trauma geral/urgência) + 1 PEND (GCS com «NT») = 10.
+- A linha dos 186: 61 COB + 26 COB-P + 28 ACR (17 perguntas: `262`, `264`, `269`–`282`, `284`) + 69 PEND (40 ENS + 20 FNT + **9 PEND-R**, as que sustentavam as 6 perguntas retiradas) + 2 DESC = **186**.
+- A linha dos 281: 6 ACR + 205 COB + 32 COB-P + 23 ENS + 6 FNT + 2 PEND-R + 7 FRAG (fragmentos de alternativa ou enunciados cortados, ligados a um id) = **281** (§8).
+- **Soma das perguntas novas que ficaram no site:** 3+1+1+1+1+1 (docx, Turma A/C, manuscrito, D-2, P1 seção C) + 3 (Silva) + 3 (P1261) + 17 (compilado, 186) + 3 (compilado, 281) + `q-neu261` = **35 ids**.
+- «Examen pdf»: não é prova diferente — é a mesma do docx; 30 REP. `provasneuroP1261.pdf`: 20 itens repetem a P1 Silvia (REP); os outros 20 são a prova do ano (set A). `Aline`: 4 COB + 2 REP + 3 FORA + 1 PEND = 10.
 
 ## 2 · O que NÃO foi aberto ou não foi visto (avisos)
 1. **Figuras dentro das fotos de 18/11** (a «imagem simulada» de RM do item 20 da Turma A): **não vistas**. A pergunta `q-neu255` descreve em palavras.
@@ -49,7 +48,7 @@ Observações que mantêm a tabela honesta:
 5. **3 fotos de 19/09** (`IMG_1262/1263`, `b9b7bb6f…`): anotações manuscritas; só OCR.
 6. **`Turma C 2`** e **`Turma C 6 (grave)`**, **`Manuscrito 15`**, **`D-2 10`**: enunciado ou resposta ilegível/parcial → PEND.
 7. **Contagem de arquivos:** o pack anterior dizia 37 arquivos na pasta; a listagem do Drive nesta rodada devolveu **35**. Não identifiquei quais 2 faltam (podem ser itens da lixeira ou subpastas); nenhuma prova conhecida ficou de fora.
-8. **Gabarito oficial: nenhuma prova da pasta traz clave oficial da cátedra.** Todas as respostas vêm de slide, do compilado ou de anotação de aluno; as perguntas «só do compilado» (§7) não estão confirmadas em slide nem em livro (não existe literatura-base de Neurologia).
+8. **Gabarito oficial: nenhuma prova da pasta traz clave oficial da cátedra.** Todas as respostas vêm de slide, do compilado ou de anotação de aluno; as perguntas «só do compilado» (`263`, `265`–`268`, `283`; §10) **foram retiradas** por não estarem confirmadas em slide nem em livro (não existe literatura-base de Neurologia).
 
 ## 3 · Itens por arquivo (docx, Turma A/C, manuscrito, D-2, P1 seção C)
 O registro por item (n.º do arquivo → id → decisão) está no pack `neurologia-8a1b-conferencia-v1.md` §5.1–§5.6. Resumo dos ids:
@@ -172,303 +171,306 @@ Contagem: 71 entradas = **70 COB + 1 COB-P**; 0 NOVA (os ids novos que a fonte o
 | V/F 1–3 (manuscrito) | decorticação (flexão anormal), X é misto, tetraplegia não é deficitária | COB `q-neu003`, `q-neu108`, `q-neu159` |
 Contagem: 10 itens = 4 COB (item 2 + 3 V/F) + 2 REP + 3 FORA + 1 PEND = **10**.
 
-## 8 · `provaneurorevisar_sem_repetidas.pdf` — os 281 parágrafos restantes
-Dos 467 parágrafos que o pipeline marcou como candidatos, 186 foram fechados um a um na triagem (`neurologia-revisar-triagem-v1.md`). Os **281 restantes** foram classificados por **sobreposição de texto com a pergunta mais próxima** e por leitura dos trechos; **não houve comparação item a item de raciocínio** (os parágrafos incluem fragmentos de alternativas e perguntas em duas ou três línguas). Por isso **não os declaro COB definitivos**:
-| Grupo | Critério | Parágrafos |
+## 8 · `provaneurorevisar_sem_repetidas.pdf` — os 281 parágrafos restantes (comparados em 20/11)
+Dos 467 parágrafos que o pipeline marcou como candidatos, 186 foram fechados na triagem (`neurologia-revisar-triagem-v1.md`). Os **281 restantes foram agora comparados um a um**: cada parágrafo foi lido ao lado do enunciado da pergunta do site mais próxima (anexo §11, com o código e o motivo). Limite honesto: a comparação foi de **enunciado × enunciado e tema**, não releitura de todas as alternativas; os parágrafos incluem fragmentos e versões em português/castelhano.
+| Código | Significado | Parágrafos |
 |---|---|---|
-| **ACR** | levaram a perguntas novas com slide: `q-neu285` (punção lombar — 169), `q-neu286` (Cheyne-Stokes — 439, 995), `q-neu287` (Argyll Robertson — 741, 974, 975) | 6 |
-| **A** | sobreposição ≥ 0,75 — mesmo enunciado/tema de pergunta do site; **COB provável**, confirmada por leitura do trecho | 81 |
-| **B** | 0,50–0,74 — mesmo tema do id citado; raciocínio **não** comparado item a item → **a conferir** | 119 |
-| **C** | < 0,50 — sem par claro; maioria é tema não ensinado (vascular, siringomielia, miopatias) ou fragmento → **a conferir / ENS** | 75 |
-Soma: 6 + 81 + 119 + 75 = **281**. Os grupos B e C são registrados como **pendência na fila #686** (conferência de raciocínio). A lista completa (parágrafo → id mais próximo → escore → grupo) está no anexo §10.
+| **ACR** | levaram a perguntas novas com slide (`q-neu285` PL, `286` Cheyne-Stokes, `287` Argyll Robertson) | 6 |
+| **COB** | enunciado e raciocínio já cobertos por pergunta existente (id citado) | 205 |
+| **COB-P** | tema citado no resumo, mas a pergunta do site pede outro raciocínio; não acrescentada (motivo na linha) | 32 |
+| **ENS** | tema que o resumo e os 16 slides não ensinam (siringomielia, meningioma, Barré, MAV, território da ACM…) | 23 |
+| **FNT** | depende de figura ou texto truncado/contraditório | 6 |
+| **PEND-R** | era a base de pergunta retirada por falta de fonte (HTE benigna, Sydenham) | 2 |
+| **FRAG** | fragmento de alternativa ou enunciado cortado, ligado ao id da pergunta mãe | 7 |
+Soma: 6 + 205 + 32 + 23 + 6 + 2 + 7 = **281**.
 
 ## 9 · Ids novos desta PR e origem
-`249` (docx 7) · `250` (D-2 19) · `251`/`252` (docx 22/29, imagens reconstruídas em palavras) · `253` (Turma C 3) · `254` (manuscrito 12) · `255` (Turma A 20) · `256` (Silva 13) · `257` (P1 seção C 16) · `258` (P1261-A 3) · `259` (P1261-A 19) · `260` (P1261-A 12) · `261` (compilado, pack §11) · `262`–`284` (compilado, 23) · `285`–`287` (compilado, 281 restantes) · `288` (Silva 17) · `289` (Silva 9). Total desde a `main`: ver contagem 254 → 295.
+`249` (docx 7) · `250` (D-2 19) · `251`/`252` (docx 22/29, imagens reconstruídas em palavras) · `253` (Turma C 3) · `254` (manuscrito 12) · `255` (Turma A 20) · `256` (Silva 13) · `257` (P1 seção C 16) · `258` (P1261-A 3) · `259` (P1261-A 19) · `260` (P1261-A 12) · `261` (compilado, pack §11) · `262`, `264`, `269`–`282`, `284` (compilado, com slide) · `285`–`287` (compilado, 281 restantes, com slide) · `288` (Silva 17) · `289` (Silva 9). **Ids reservados e não usados:** `263`, `265`, `266`, `267`, `268`, `283`. Total desde a `main`: 254 → 289.
 
-## 10 · Fila das 6 perguntas só do compilado (limitação)
-`q-neu263`, `265`, `266`, `267`, `268`, `283`: **sem confirmação em slide nem em livro** (não existe literatura-base de Neurologia no projeto). Mantidas com a nota de que a resposta é a do compilado; **gabarito não confirmado, nada inventado**; ficam pendentes de confirmação por José/cátedra.
+## 10 · As 6 perguntas sem fonte — RETIRADAS da entrega (20/11/2026)
+`q-neu263` (edema vasogênico na contusão), `265` (EEG 3 Hz da ausência), `266` (West × Lennox-Gastaut), `267` (corea de Sydenham), `268` (hiperventilação), `283` (HTE benigna). Nova busca nos 16 slides (palavras-chave 3 Hz, West, Lennox, Sydenham, vasogênico, hiperventilação, pseudotumor) e verificação de que **não existe literatura-base de Neurologia** no repositório nem no Drive: o slide de TEC só nomeia «edema vasogênico e citotóxico»; o de exames complementares só nomeia o pseudotumor cerebral e as punções repetidas; nenhum define as respostas pedidas. Como a única fonte é o compilado de alunos, **as perguntas e o ensino acrescentado só para elas foram retirados** (blocos 19, 22, 23 e 27 voltam ao texto da `main`, exceto a marcha jacksoniana, que o slide 1 sustenta). Nada foi apresentado como confirmado. **Pendente:** confirmação da cátedra ou envio da literatura-base para reincluí-las; os 9+2 parágrafos do compilado que as originaram ficam como PEND-R.
 
-## 11 · Anexo — 281 parágrafos (parágrafo · id mais próximo · escore · grupo)
-| Parágrafo | Id | Escore | Grupo | Início do texto |
+## 11 · Anexo — 281 parágrafos (parágrafo · código · id · escore de sobreposição · motivo)
+| Parágrafo | Código | Id | Escore | Motivo |
 |---|---|---|---|---|
-| 6 | 240 | 0.38 | C | Pcte mulher, menstruada com cefalea, vomito, papiledema, na TAC está n |
-| 21 | 066 | 0.36 | C | Pcte con Parálisis de la pierna de tipo flácido con Babinski e hiperre |
-| 22 | 173 | 0.43 | C | La arteria cerebral anterior, posterior de la emergencia de la arteria |
-| 28 | 253 | 0.5 | B | ¿Conocida como hemorragia cerebral espontánea, intraparenquimatosa del |
-| 30 | 253 | 0.4 | C | Las lesiones productoras de la hemorragia intraparenquimatosa del hipe |
-| 35 | 173 | 0.53 | B | En un paciente de 70 años de edad, hipertenso, fumador y en sobrepeso, |
-| 51 | 173 | 0.38 | C | Un paciente que tiene como secuela de un INFARTO ISQUÉMICO cerebral, i |
-| 53 | 173 | 0.54 | B | En el infarto cerebral isquémico no embolico del territorio superficia |
-| 58 | 133 | 1.0 | A | EL ÁREA DE WERNICKE HEMISFERIO DOMINANTE |
-| 69 | 249 | 0.67 | B | El vértigo es frecuente en los episodios de ATI de: |
-| 71 | 049 | 0.43 | C | Los infartos del territorio vertebro basilar pueden dar hemipléjica al |
-| 81 | 173 | 0.44 | C | Los infartos isquémicos circunscritos al territorio profundo de la art |
-| 83 | 173 | 0.5 | B | La arteria cerebral anterior irriga la parte inferior de la circunvolu |
-| 85 | 242 | 0.43 | C | La causa más frecuente de hemorragia intraparenquimatosa ocurre en hip |
-| 91 | 180 | 0.4 | C | Las malformaciones arteriovenosas de la circulación cerebral suelen pr |
-| 97 | 175 | 0.57 | B | La rigidez de nuca NO es frecuente encontrarla en pacientes con hemorr |
-| 139 | 238 | 0.67 | B | En las crisis epilépticas generalizadas: |
-| 141 | 115 | 0.5 | B | En las crisis epilépticas parciales simples NO hay pérdida de la conci |
-| 150 | 151 | 0.5 | B | ¿El ataque epiléptico en pacientes portadores de epilepsia del lóbulo  |
-| 159 | 238 | 0.5 | B | El EMG sirven para explorar la conducción a través de las vías central |
-| 163 | 182 | 0.6 | B | Cefalea, vomito, rigidez de nuca: ¿examen? |
-| 165 | 242 | 0.38 | C | ¿En cuáles circunstancias donde puede existir una hipertensión endocra |
-| 169 | 285 | 0.6 | ACR | Los espacios más seguros para hacer la punción lumbar son: |
-| 173 | 124 | 0.4 | C | De las siguientes condiciones en clínica neurológica ¿en cuál resultar |
-| 179 | 132 | 0.38 | C | Las siguientes características de una muestra de LCR: turbio, con 1500 |
-| 181 | 036 | 0.43 | C | En las meningoencefalitis bacterianas suele existir pleocitosis a pred |
-| 183 | 176 | 0.4 | C | En las meningoencefalitis bacterianas el LCR suele ser claro y transpa |
-| 191 | 131 | 0.5 | B | El EMG (electromiograma) es una investigación importante para el diagn |
-| 197 | 179 | 0.38 | C | De las siguientes investigaciones neurofisiológicas hay una que es imp |
-| 199 | 238 | 0.5 | B | Los potenciales evocados somato-sensoriales sirven para explorar la co |
-| 203 | 251 | 0.38 | C | Diga a que corresponde la imagen de la presente TAC, de un paciente qu |
-| 225 | 090 | 0.71 | B | El sueño REM se caracteriza por ondas de alta amplitud y de frecuencia |
-| 229 | 179 | 0.38 | C | Cuales investigaciones hay una que puede resultar de utilidad en el es |
-| 253 | 168 | 1.0 | A | EL SONAMBULISMO ES UN TRASTORNO DEL SUEÑO |
-| 256 | 105 | 1.0 | A | El coma se define como un estado de conciencia que: |
-| 257 | 001 | 1.0 | A | El paciente no responde a ningún estímulo, ni siquiera de dolor, no ti |
-| 258 | 002 | 0.65 | B | Cuando a un paciente en coma le realizamos una prueba calórica de irri |
-| 262 | 002 | 0.36 | C | Quando em um paciente em coma é realizado una prova calórica de irriga |
-| 274 | 236 | 0.4 | C | CITE AS POSSIVEIS CAUSAS DO ESTADO DE COMA: |
-| 332 | 004 | 1.0 | A | La rigidez de descerebración se caracteriza por postura de hiperextens |
-| 334 | 003 | 0.87 | A | Un paciente en coma con actitud de hiperextensión de miembros inferior |
-| 336 | 005 | 0.77 | A | Si en un paciente en estado comatoso encontramos que al levantarle los |
-| 340 | 103 | 0.6 | B | En cuál de las dos de las siguientes circunstancias se produce más ráp |
-| 341 | 241 | 0.5 | B | En disminuciones súbitas del flujo sanguíneo cerebral por debajo de 25 |
-| 342 | 005 | 0.43 | C | Paciente con EPOC severa, descompensada, que cae em coma, este estado  |
-| 355 | 240 | 0.75 | A | El papiledema es exponente de un Sx de hipertensión endocraneana. |
-| 363 | 121 | 0.5 | B | Lesión por anosmia, ocurre la pérdida de la sensibilidad al sentido de |
-| 367 | 014 | 0.58 | B | Cuando estamos explorando el reflejo fotomotor, normalmente debe produ |
-| 369 | 150 | 0.5 | B | El musculo ciliar del ojo esta inervado por: |
-| 371 | 015 | 0.77 | A | Un paciente que presenta ptosis palpebral del parpado superior derecho |
-| 372 | 015 | 1.0 | A | Las fibras extrínsecas e intrínsecas del III par derecho |
-| 373 | 139 | 0.5 | B | En el reflejo de acomodación y convergencia, en su vertiente eferente  |
-| 375 | 249 | 0.5 | B | ¿Los pares craneales III, IV e VI se pueden explorar de forma conjunta |
-| 377 | 015 | 0.4 | C | Una ptosis palpebral unilateral, con la consiguiente disminución de la |
-| 380 | 139 | 0.6 | B | Las fibras parasimpáticas del III par se examinan explorando los refle |
-| 382 | 139 | 0.53 | B | En el reflejo de acomodación y convergencia, ambos nervios oculomotore |
-| 386 | 022 | 0.93 | A | En las lesiones periféricas del nervio facial puede estar afectada la  |
-| 388 | 021 | 0.57 | B | La sensibilidad de una hemicara depende de fibras sensitivas del nervi |
-| 390 | 018 | 1.0 | A | La rama maxilar superior del trigémino inerva la córnea y la conjuntiv |
-| 398 | 139 | 0.67 | B | La vertiente eferente del reflejo fotomotor depiende del nervio III pa |
-| 400 | 110 | 0.5 | B | La vertiente aferente (sensitiva) del reflejo corneal depende de: |
-| 402 | 110 | 0.57 | B | La rama motora del reflejo corneal depende del nervio facial |
-| 404 | 119 | 0.4 | C | Cuál de las siguientes posibilidades se ajusta a la de un paciente con |
-| 408 | 030 | 1.0 | A | Una lesión del nervio X ocasiona parálisis de la hemilengua de ese lad |
-| 410 | 020 | 0.77 | A | Un paciente joven, completamente sano, desarrolla en unas pocas horas  |
-| 414 | 028 | 0.71 | B | Un paciente presenta al examen físico de los pares craneales una desvi |
-| 416 | 029 | 1.0 | A | La lesión de un nervio accesorio XI par da por resultado: |
-| 418 | 026 | 0.8 | A | La maniobre de Rinne con el diapasón se utiliza para explorar: |
-| 420 | 084 | 0.8 | A | Un paciente con lesión del nervio hipogloso derecho presentará: |
-| 422 | 021 | 0.65 | B | Un paciente consulta porque desde hace 2 días, cuando come los aliment |
-| 424 | 023 | 1.0 | A | El nervio facial tiene su origen real en: |
-| 425 | 023 | 1.0 | A | EN LA PARTE INFERIOR DE LA PROTUBERANCIA |
-| 426 | 019 | 1.0 | A | La abolición del reflejo corneal nos hace pensar en: |
-| 437 | 011 | 0.83 | A | La marcha en “Steppage” es característica de neuropatías periféricas m |
-| 439 | 286 | 0.6 | ACR | La respiración de Cheyne-Stokes suele presentarse en: |
-| 441 | 203 | 0.5 | B | Las respuestas anormales de “prensión” y “succión” se pueden producir  |
-| 443 | 058 | 1.0 | A | Los abscesos del lóbulo occipital suelen dar: |
-| 449 | 201 | 0.4 | C | El cuadro clínico de la enfermedad de Cushing es producido por: |
-| 455 | 249 | 0.4 | C | La forma clínica más frecuente de la polineuropatía diabética es: |
-| 457 | 247 | 0.5 | B | Sx de afectación Total motora y sensitiva: |
-| 459 | 068 | 0.5 | B | Las neuropatías periféricas sensitivas suelen dar un patrón de pérdida |
-| 461 | 046 | 0.8 | A | En el Sx de la motoneurona del asta anterior podemos encontrar: |
-| 463 | 250 | 0.5 | B | En el Sx de Brown-Sequard existe una parálisis: |
-| 465 | 063 | 0.81 | A | Un paciente recibe una herida de arma blanca en la espalda a nivel par |
-| 473 | 048 | 0.62 | B | Las lesiones del haz cortico-espinal en la cápsula interna producen un |
-| 475 | 050 | 0.67 | B | El Haz Cortico-Espinal se origina en la corteza de la circunvolución p |
-| 477 | 180 | 0.5 | B | Los meningiomas son los tumores cerebrales más frecuentes |
-| 479 | 042 | 0.75 | A | Las modalidades sensitivas de dolor y temperatura se conducen en la me |
-| 481 | 041 | 0.36 | C | Las lesiones transversas de la medula espinal torácica (dorsal) produc |
-| 488 | -2509-06 | 0.43 | C | El paciente flexiona ambas piernas cuando se le lleva a posición de se |
-| 491 | 075 | 0.76 | A | Un paciente aqueja un Sx sensitivo caracterizado por dolor que irradia |
-| 493 | 067 | 0.83 | A | La degeneración combinada subaguda de la médula espinal se caracteriza |
-| 495 | 246 | 0.5 | B | Las hemiplejias alternas ocurren por lesiones: |
-| 497 | 082 | 0.44 | C | El Sx de bloqueo de la conducción del impulso nervioso en la placa NM  |
-| 499 | 083 | 0.55 | B | Una paciente consulta porque cuando lleva varios minutos hablando se l |
-| 501 | 078 | 1.0 | A | En la miastenia gravis autoinmune se producen autoanticuerpos contra: |
-| 502 | 078 | 0.43 | C | Los receptores nicotínicos post-sinápticos de acetil- colina de la pla |
-| 504 | 082 | 0.4 | C | El pcte sufre de un disturbio de la transmisión del impulso nervioso |
-| 505 | 064 | 0.68 | B | Un paciente recibió hace un mes una herida de arma blanca por la espal |
-| 507 | 159 | 0.4 | C | En el Sx siringomiélico las manifestaciones de disfunción sensitiva de |
-| 510 | 172 | 0.5 | B | EN ALGÓN SEGMENTO DEL TRONCO CEREBRAL |
-| 511 | 111 | 0.5 | B | Las estructuras del SNC que constituyen el sistema motor, la médula es |
-| 513 | 040 | 0.35 | C | Las aferencias sensitivas propioceptivas Inconscientes, procedentes de |
-| 515 | 048 | 0.43 | C | La decusación del 80% de las fibras de los haces cortico-espinales se  |
-| 527 | 036 | 0.4 | C | A marcha em “STEPAGGE” é características de neuropatias periféricas? |
-| 535 | 005 | 0.38 | C | Se um paciente em como ao levantarmos as pálpebras apresenta desvio do |
-| 537 | 068 | 0.38 | C | As neuropatias periféricas sensitivas ocorrem em padrão de perda sensi |
-| 539 | 074 | 0.6 | B | Em una lesão do nervo radial podemos encontrar: |
-| 543 | 032 | 0.56 | B | Quando exploramos o reflexo profundo bicipital, estamos avaliando o es |
-| 567 | 067 | 0.67 | B | Diferencie Batiestesia de Palestesia: |
-| 602 | 046 | 0.8 | A | Explique a Sx de asta anterior (Motoneurona Inferior): |
-| 605 | 076 | 0.75 | A | COMO É A SINDROME DE DÉFICIT MOTOR MEDULAR? |
-| 613 | 184 | 0.43 | C | Escreva sobre as síndromes de déficit motor periférico lesão do SNP: |
-| 628 | 238 | 0.5 | B | ESCREVA SOBRE AS SINDROMES SENSITIVAS: |
-| 650 | 255 | 0.4 | C | Efeitos de lesões unilaterais do lóbulo frontal? |
-| 662 | 255 | 0.5 | B | QUAIS SÃO AS SINDROMES DO LÓBULO TEMPORAL? |
-| 663 | 151 | 0.5 | B | Efeito de lesão do lóbulo temporal unilateral dominante: |
-| 666 | 151 | 0.5 | B | Efeito de lesão do lóbulo temporal unilateral no dominante: |
-| 681 | 161 | 0.5 | B | Efeito de lesão unilateral em lóbulo parietal dominante: |
-| 686 | 161 | 0.5 | B | Efeito de lesão unilateral em lóbulo parietal D dominante: |
-| 693 | 161 | 0.4 | C | Efeito por lesão unilateral do lóbulo Occipital D ou E: |
-| 699 | 151 | 0.4 | C | Efeito por lesão bilateral em lóbulo Occiptal: |
-| 701 | 145 | 0.4 | C | QUEM É O RESPONSÁVEL PELO ESTADO DE ALERTA? |
-| 705 | 079 | 0.67 | B | En la forma clínica de Charcot de esclerosis lateral amiotrófica: |
-| 713 | 255 | 0.5 | B | La lesión medular que se muestra en la figura corresponde con el diagn |
-| 719 | 067 | 0.5 | B | La degeneración combinada subaguda (Sx Cordonal Posterior) de la medul |
-| 721 | 077 | 0.5 | B | Desconecta toda una hemimédula con el resto del sistema nervioso por e |
-| 723 | 052 | 0.5 | B | Un paciente que sufrió de una mielitis transversa a nivel T10 hace uno |
-| 724 | 052 | 0.44 | C | Una defecto motor parapléjico con hipertonía espática (muelle de navaj |
-| 737 | 016 | 0.47 | C | Una lesión de una corteza calcarina de localización muy medial, puede  |
-| 739 | 139 | 0.5 | B | La pérdida de este reflejo fotomotor directo y consensual suele ocurri |
-| 741 | 287 | 0.42 | ACR | En casos de neurosífilis, ocurre destrucción de las neuronas de la reg |
-| 744 | 236 | 0.57 | B | ¿Puede ser crucial para el diagnóstico de una lesión del SNC, definir  |
-| 747 | 105 | 0.42 | C | El paciente se encuentra plenamente alerta, con capacidad de respuesta |
-| 748 | 152 | 0.43 | C | un pleno dominio de sus actos, de si mismo y de percepción del medio q |
-| 749 | 236 | 0.43 | C | Cite algunas circunstancias que se puede evaluar el estado de concienc |
-| 756 | 006 | 0.46 | C | Un paciente que tiene una perturbación del estado de conciencia consis |
-| 758 | 001 | 0.43 | C | En un paciente que se encuentra con un estado de conciencia en el cual |
-| 760 | 001 | 0.77 | A | Un paciente con estado de conciencia em cual, sólo a los estímulos dol |
-| 767 | 253 | 0.4 | C | Dentro de las funciones intelectuales están los siguientes: |
-| 777 | 173 | 0.36 | C | El reconocimiento de palabras escuchadas y producción del lenguaje hab |
-| 779 | -2509-01 | 0.5 | B | La región del hemisferio izquierdo frontal, responsable por poner en m |
-| 780 | 007 | 0.44 | C | ¿Cómo se produce la compresión del lenguaje escuchado y como se ejecut |
-| 783 | 009 | 0.92 | A | Un paciente con lesión en la corteza del área de Wernicke del hemisfer |
-| 785 | 008 | 1.0 | A | El área de Wernicke se localiza en la corteza del lóbulo frontal del h |
-| 787 | 008 | 1.0 | A | El área de Broca se localiza en la corteza del lóbulo frontal del hemi |
-| 789 | 007 | 0.75 | A | ¿Cómo se denomina el tipo de trastorno que compromete la comprensión d |
-| 791 | 010 | 0.6 | B | ¿El comprometimiento del área de Wernicke por una lesión en el hemisfe |
-| 793 | 010 | 0.67 | B | La lesión en el área de Wernicke del hemisferio dominante cuando se mu |
-| 800 | 161 | 0.45 | C | Un paciente con una dislexia puede ver un texto escrito, pero no tiene |
-| 802 | 010 | 0.41 | C | Un paciente que presente una lesión restringida a la región parietal i |
-| 806 | 009 | 0.45 | C | La afasia de Broca se caracteriza porque el paciente no es capaz de co |
-| 808 | 056 | 0.58 | B | El área de Broca de la corteza frontal en el hemisferio cerebral domin |
-| 813 | 059 | 0.8 | A | Las cortezas premotoras y motora suplementaria pertenecen al: |
-| 817 | 059 | 0.57 | B | ¿Cuáles son los pasos fundamentales de las cortezas motoras (premotora |
-| 827 | 147 | 0.4 | C | Un paciente con apraxia motora tiene afectada la compresión o idea del |
-| 846 | 160 | 0.36 | C | La agnosia es el fallo en reconocer objetos, que le son familiares al  |
-| 851 | 054 | 0.5 | B | La presencia en un px de agnosia digital, acalculia, agrafia y confusi |
-| 853 | 054 | 0.67 | B | Los elementos clínicos suelen encontrarse en lesiones de la corteza pa |
-| 856 | 034 | 0.5 | B | Hace parte del examen físico neurológico los siguiente: |
-| 858 | 108 | 0.75 | A | El examen de las funciones motoras, comprende: |
-| 860 | 167 | 0.5 | B | Para explorar el tono muscular utilizamos: |
-| 862 | 036 | 1.0 | A | En las polineuropatías periféricas suele existir hiperreflexia e hiper |
-| 864 | 036 | 0.86 | A | En las polineuropatías periféricas suele encontrarse hiporreflexia mus |
-| 866 | 034 | 0.57 | B | La hipertonía muscular por una lesión crónica de las vías piramidales  |
-| 868 | 066 | 0.67 | B | La hipertonía espástica es característica de: |
-| 870 | 033 | 1.0 | A | La hipertonía en “muelle de navaja” es característica del Sx piramidal |
-| 872 | 034 | 0.88 | A | El clonus del tobillo y de la rótula suelen encontrarse al examen físi |
-| 874 | 034 | 0.44 | C | La presencia de clonus de rótulas y tobillos con hiperreflexia profund |
-| 876 | 069 | 0.75 | A | El signo de la rigidez “en rueda dentada” es típica de la hipertonía e |
-| 878 | 069 | 0.75 | A | En un px con una enfermedad de Parkinson se desarolla un tipo de trast |
-| 880 | 072 | 0.75 | A | En la enf. de Parkinson se encuentra al examen físico: |
-| 882 | 069 | 0.6 | B | El signo de la “rueda dentada” (signo de Negro) es característico de: |
-| 884 | 070 | 1.0 | A | En el Sx extrapiramidal de la enfermedad de Parkinson, la lesión funda |
-| 886 | 199 | 0.5 | B | En la enfermedad de Parkinson la lesión más importante del SNC radica  |
-| 890 | 033 | 0.6 | B | En la hipertonía piramidal encontramos fenómeno de la “rueda dentada”  |
-| 898 | 035 | 1.0 | A | El reflejo cutáneo plantar en extensión (signo de Babinski) es una señ |
-| 900 | 035 | 0.8 | A | El signo de Babinski es patognomónico de disfunción del haz piramidal |
-| 902 | 026 | 0.75 | A | La maniobra de Barré se utiliza para explorar: |
-| 904 | 073 | 0.57 | B | La maniobra de barré explora la coordinación dinámica en miembro infer |
-| 906 | 238 | 0.38 | C | La maniobra de Barré sirve para explorar un defecto motor en los miemb |
-| 908 | 154 | 0.5 | B | Un paciente con lesión de los cordones posteriores puede presentar ata |
-| 912 | 073 | 0.62 | B | Las maniobras para explorar la coordinación dinámica de las extremidad |
-| 914 | 073 | 0.88 | A | La maniobra de índice nariz explora la coordinación dinámica de miembr |
-| 919 | 016 | 0.71 | B | Un paciente presenta al examen físico del campo visual por el método d |
-| 921 | 016 | 0.73 | B | Si en el examen por confrontación del campo visual de un px encontramo |
-| 923 | 016 | 0.38 | C | Una paciente portadora de un adenoma hipofisario presenta galactorrea, |
-| 935 | 156 | 0.4 | C | El núcleo de Edinger Westphal es un núcleo motor somático del III par |
-| 946 | 024 | 1.0 | A | En las parálisis faciales periféricas encontramos afectación de la mus |
-| 954 | 038 | 1.0 | A | La modalidad de sensibilidad profunda que explora la percepción vibrat |
-| 956 | 068 | 0.56 | B | La información propioceptiva que recibe el cerebelo le llega por los c |
-| 958 | 062 | 0.5 | B | Las fibras del haz corticoespinal (piramidal) se decusan en un 80% a n |
-| 960 | 139 | 0.38 | C | Un paciente presenta examen físico neurológico ausencia del reflejo fo |
-| 962 | 011 | 0.65 | B | Un paciente consulta por presentar dificultad para la marcha, consiste |
-| 970 | 012 | 0.55 | B | Un paciente consulta por inestabilidad (Perdida del equilibrio) Cuando |
-| 972 | 011 | 0.42 | C | En las enfermedades motoras de los nervios periféricos (polineuropatía |
-| 974 | 287 | 0.75 | ACR | La pupila Argyll Robertson se caracteriza por: |
-| 975 | 287 | 0.57 | ACR | Las dos pupilas no responden a la luz, pero si contraen con la converg |
-| 976 | 025 | 1.0 | A | Las parálisis faciales centrales afectan solamente la musculatura faci |
-| 977 | 025 | 1.0 | A | La lesión está en las fibras del haz piramidal contralateral a la pará |
-| 978 | 048 | 0.88 | A | Las lesiones que ocasionan una interrupción de la vía corticoespinal a |
-| 979 | 048 | 0.8 | A | Una hemiplejia izquierda, total, directa y proporcional. |
-| 980 | 077 | 1.0 | A | Las lesiones del sistema nervioso periférico con afectación motriz sev |
-| 982 | 067 | 0.83 | A | En la degeneración combinada subaguda de la médula espinal existen |
-| 984 | 052 | 0.73 | B | Si examinamos a un paciente que sufrió una lesión medular transversa d |
-| 987 | 049 | 0.86 | A | El haz piramidal desciende a través del brazo anterior de la capsula i |
-| 989 | 071 | 1.0 | A | El síndrome motor extrapiramidal conocido como hemibalismo es caracter |
-| 991 | 070 | 1.0 | A | En la corea de Huntington se produce pérdida de neuronas del núcleo ca |
-| 993 | 036 | 0.57 | B | En las paraplejias flácidas existe hipertonía muscular y arreflexia pr |
-| 995 | 286 | 0.38 | ACR | Cuando encontramos en un paciente un ritmo respiratorio de Cheyne-Stok |
-| 999 | 166 | 0.75 | A | La miastenia gravis autoinmune se caracteriza por: |
-| 1001 | 046 | 1.0 | A | En la esclerosis lateral amiotrófica (ELA) encontramos: |
-| 1005 | 070 | 1.0 | A | La corea de Huntington se produce por: |
-| 1008 | 080 | 1.0 | A | La miastenia gravis es una enfermedad de la motoneurona. |
-| 1010 | 068 | 0.36 | C | La sensibilidad propioceptiva inconsciente, de miembros inferiores asc |
-| 1012 | 250 | 0.57 | B | En la siringomielia es característico una pérdida de la sensibilidad q |
-| 1016 | 065 | 0.9 | A | En el Sx de Brown-Sequard se produce una lesión de vías sensitivas por |
-| 1018 | 056 | 0.88 | A | Las áreas de corteza auditivas primarias se encuentran localizadas en  |
-| 1022 | 055 | 1.0 | A | El Sx de extinción sensitiva es propio de lesiones de lóbulo parietale |
-| 1024 | 050 | 0.5 | B | El has piramidal se origina en la corteza pré-frontal asociada del pol |
-| 1026 | 039 | 0.78 | A | La batiestesia es un tipo de sensibilidad profunda que examinamos por  |
-| 1030 | 074 | 1.0 | A | En una lesión del nervio radial podemos encontrar: |
-| 1032 | 068 | 0.57 | B | Un paciente presenta ataxia para la marcha, tiene signo de Romberg a l |
-| 1034 | 040 | 0.86 | A | Las modalidades de sensibilidad superficial termo- algésica procedente |
-| 1036 | 057 | 1.0 | A | Una cuadrantanopsia homónima superior derecha se debe a una lesión del |
-| 1038 | 081 | 0.52 | B | Un paciente consulta por fatiga muscular al ejercicio físico, presenta |
-| 1039 | 081 | 0.64 | B | el ejercicio, poco a poco se observa que mejora su fuerza muscular. ¿C |
-| 1041 | 046 | 1.0 | A | En la esclerosis lateral amiotrófica encontramos |
-| 1043 | 046 | 0.47 | C | Cuando existe una lesión localizada en la motoneurona inferior del ast |
-| 1045 | 043 | 0.67 | B | La estereognosis es la capacidad sensorial de: |
-| 1047 | 041 | 0.87 | A | Las modalidades sensitivas del sentido de posición de segmentos corpor |
-| 1049 | 053 | 0.55 | B | Un paciente al cual se le evacua un hematoma subdural del hemisferio d |
-| 1051 | 225 | 0.67 | B | La siguiente imagen de TAC, se corresponde con: |
-| 1053 | 225 | 0.75 | A | El hematoma SUBDURAL crónico del anciano: |
-| 1055 | 180 | 0.5 | B | Los hematomas EPIDURALES más frecuentes ocurren: |
-| 1056 | 160 | 0.4 | C | En la región temporal en la zona desplegable de marchant |
-| 1059 | 103 | 0.53 | B | Diga cuál de las siguientes condiciones productoras de coma puede caus |
-| 1061 | 037 | 0.93 | A | La presencia unilateral en un pct de atrofias musculares, arreflexia p |
-| 1063 | 067 | 0.5 | B | En la enfermedad denominada degeneración combinada subaguda de la médu |
-| 1065 | 066 | 0.52 | B | Un pct que recibe una herida de arma blanca por la espalda, a nivel de |
-| 1066 | 066 | 0.83 | A | Una monoplejia crural de ese lado en fase flácida con Babinski. |
-| 1069 | 082 | 1.0 | A | El Sx de Eaton-Lambert se caracteriza por un trastorno: |
-| 1070 | 082 | 0.86 | A | Un trastorno de conducción presinaptico del impulso nervioso en la pla |
-| 1071 | 044 | 0.71 | B | Las aferencias sensitivas somáticas procedentes de un hemicueroi arrib |
-| 1073 | 009 | 0.4 | C | Un envenenamiento con toxina Botulínica suele producir: |
-| 1081 | 166 | 0.5 | B | 2.- Marque o subraye la respuesta correcta de cada enunciado: |
-| 1099 | 080 | 0.61 | B | B.- Una paciente de 30 años consulta porque desde hace 2 meses present |
-| 1173 | 046 | 1.0 | A | La enfermedad SMA-1 es una enfermedad de las motoneuronas del asta ant |
-| 1177 | 070 | 0.43 | C | En la corea de Sydenham se produce pérdidas de neuronas de los núcleos |
-| 1182 | 072 | 1.0 | A | En la enfermedad de Parkinson encontramos al examen físico temblor de  |
-| 1183 | 166 | 0.5 | B | 2.- Marque o subraye la respuesta correcta de cada enunciado: |
-| 1188 | 080 | 0.59 | B | B.- Una paciente de 30 años consulta porque desde hace 2 meses present |
-| 1194 | 169 | 0.4 | C | C.- En pacientes en coma por lesiones localizadas en la protuberancia, |
-| 1211 | 064 | 0.44 | C | H.- El defecto sensitivo del síndrome de disociación siringomiélico de |
-| 1216 | 173 | 0.52 | B | J.-.- En un paciente de 70 años de edad, hipertenso, fumador y en sobr |
-| 1234 | 037 | 0.6 | B | O.- Diga cuál de las siguientes agrupaciones de signos se corresponde  |
-| 1243 | 147 | 0.5 | B | que ha producido este defecto motor? |
-| 1285 | 179 | 0.43 | C | la conducción (nos a través questionários de las vías está centrales o |
-| 1291 | 173 | 0.38 | C | \- Un paciente presenta como resultado de un evento cerebrovascular un |
-| 1314 | 173 | 0.64 | B | C) En un paciente de 70 años, hipertenso, fumador y con sobrepeso, se  |
-| 1315 | 181 | 0.37 | C | D) Un paciente de 50 años, con sobrepeso, cae súbitamente al suelo con |
-| 1318 | 080 | 0.62 | B | G) Una paciente de 30 años consulta porque desde hace 2 meses presenta |
-| 1339 | 020 | 0.68 | B | 1 Un paciente joven, completamente sano, desarolla en unas pocas horas |
-| 1341 | 173 | 0.57 | B | 2 En el mismo paciente de la pregunta anterior, la forma de instalació |
-| 1360 | 001 | 0.43 | C | 4 En un paciente que se encuentra con un estado de conciencia en el cu |
-| 1371 | 011 | 0.56 | B | 6 Un paciente consulta por presentar dificuldad para la marcha, consis |
-| 1399 | 026 | 0.5 | B | 1 La maniobra de Barré mostrada mas abajo se utiliza para explorar : |
-| 1401 | 012 | 0.55 | B | 2 Un paciente consulta por inestabilidad (Perdida del equilbrio) Cuand |
-| 1403 | 028 | 0.65 | B | 3 Um paciente presenta al examen físico de los pares craneales uma des |
-| 1405 | 150 | 0.5 | B | 4 El musculo ciliar del ojo esta inervado por: |
-| 1407 | 021 | 0.58 | B | 5 Un paciente consulta porque desde hace 2 dias, cuando come los alime |
-| 1411 | 015 | 0.69 | B | 7 Un paciente que presenta ptosis palpebral del parpado superior derec |
-| 1413 | 006 | 0.36 | C | 8 Un paciente que tiene una perturbación del estado de conciencia cons |
-| 1417 | 066 | 0.67 | B | 10 La hipertonia espástica es característica de: |
-| 1427 | 010 | 0.41 | C | 1 Un paciente que presente una lesión restingida a la región parietal  |
-| 1433 | 029 | 0.5 | B | 4 La lesion de un nervio acessório XI par da por resultado: |
-| 1439 | 069 | 0.62 | B | 7 En um paciente com una enfermedad de Parkinson se desarolla um tipo  |
-| 1441 | 026 | 0.6 | B | 8 La maniobre de Rinne com el diapasion se utiliza para explorar : |
-| 1443 | 161 | 0.4 | C | 9 Un paciente com lesion del nervio hipoglosso derecho presentará : |
-| 1460 | 068 | 0.53 | B | 1 ¿Un paciente Presenta ataxia para la marcha, tiene signo Romberg a l |
-| 1462 | 213 | 0.75 | A | 2 La pupila Argyll Robertson se caracteriza por: |
+| 6 | PEND | 283 (retirada) | 0.38 | cefaleia + vômito + papiledema + TC normal: pergunta retirada por falta de fonte |
+| 21 | COB-P | 066 | 0.36 | paraplegia flácida com Babinski e incontinência: não discriminada |
+| 22 | ENS | — | 0.43 | ACA/ACP/artéria de Heubner: não ensinado |
+| 28 | COB-P | 269 | 0.5 | a 269 pede o sítio mais frequente; aqui pede-se reconhecer o nome da entidade |
+| 30 | COB | 284 | 0.4 | lesões da HIC hipertensiva: Charcot-Bouchard |
+| 35 | COB | 173 | 0.53 | caso de hemiparesia faciobraquial por ACM |
+| 51 | COB-P | 007/009 | 0.38 | afasia de expressão (Broca); a pergunta do site é de compreensão |
+| 53 | ENS | — | 0.54 | território superficial da ACM esquerda (afasia de Broca): não ensinado |
+| 58 | COB | 008 | 1.0 | fragmento: área de Wernicke do hemisfério dominante |
+| 69 | ENS | — | 0.67 | vertigem no AIT vertebrobasilar: AIT só definido |
+| 71 | COB-P | 061 | 0.43 | hemiplegias alternas no território vertebrobasilar; o território não é ensinado |
+| 81 | ENS | — | 0.44 | território profundo da ACM: não ensinado |
+| 83 | COB-P | 173/273 | 0.5 | ACA: citada, sem pergunta sobre o giro frontal ascendente |
+| 85 | COB | 269/242 | 0.43 | HIC mais frequente em hipertensos |
+| 91 | ENS | — | 0.4 | MAV: não ensinadas |
+| 97 | COB-P | 182 | 0.57 | HSA com rigidez de nuca: afirmação negativa; a 182 pede conduta |
+| 139 | FRAG | 115 | 0.67 | enunciado incompleto «nas crises generalizadas:» |
+| 141 | COB | 115 | 0.5 | crise focal simples sem perda de consciência |
+| 150 | COB | 115/151 | 0.5 | cacosmia na epilepsia temporal |
+| 159 | COB | 238/239/179 | 0.5 | EMG/potenciais evocados: o que exploram |
+| 163 | COB | 182 | 0.6 | cefaleia + vômito + rigidez de nuca: imagem/PL |
+| 165 | COB | 232 | 0.38 | PL sem TC prévia em meningite/HSA/pseudotumor (decisão de puncionar) |
+| 169 | ACR | 285 | 0.6 | pergunta nova com slide |
+| 173 | COB | 124 | 0.4 | PL indispensável para confirmar diagnóstico |
+| 179 | COB | 132/176 | 0.38 | LCR bacteriano |
+| 181 | COB | 176 | 0.43 | LCR bacteriano: neutrófilos, turvo |
+| 183 | COB | 176 | 0.4 | LCR bacteriano: neutrófilos, turvo |
+| 191 | COB | 238/239/179 | 0.5 | EMG/potenciais evocados: o que exploram |
+| 197 | COB | 179 | 0.38 | potenciais evocados: vias centrais |
+| 199 | COB | 238/239/179 | 0.5 | EMG/potenciais evocados: o que exploram |
+| 203 | FNT | — | 0.38 | pergunta depende de imagem de TC |
+| 225 | COB | 088/090 | 0.71 | REM × NREM (ondas) |
+| 229 | COB | 239 | 0.38 | EEG/polissonografia nos transtornos do sono |
+| 253 | COB | 168 | 1.0 | sonambulismo = parassonia NREM |
+| 256 | COB | 105 | 1.0 | definição de coma |
+| 257 | COB | 001 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 258 | COB | 002 | 0.65 | prova calórica |
+| 262 | COB | 002 | 0.36 | prova calórica (versão em português) |
+| 274 | COB | 170 | 0.4 | causas de coma |
+| 332 | COB | 004 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 334 | COB | 003 | 0.87 | enunciado equivalente (conferido enunciado × enunciado) |
+| 336 | COB | 005 | 0.77 | enunciado equivalente (conferido enunciado × enunciado) |
+| 340 | COB | 103 | 0.6 | causas de coma |
+| 341 | COB-P | 241 | 0.5 | limiar de 25 ml/100 g/min: a 241 pede outro limiar |
+| 342 | ENS | — | 0.43 | coma por EPOC/hipercapnia: fisiopatologia não ensinada |
+| 355 | COB-P | 240/182 | 0.75 | papiledema = síndrome de HTE; não há pergunta só dessa afirmação |
+| 363 | COB-P | 151 | 0.5 | anosmia ipsilateral; conflito de anosmia (triagem) |
+| 367 | COB | 014 | 0.58 | reflexo fotomotor |
+| 369 | COB | 150 | 0.5 | inervação intraocular × III par |
+| 371 | COB | 015 | 0.77 | III par |
+| 372 | COB | 015 | 1.0 | III par |
+| 373 | COB | 139 | 0.5 | reflexos fotomotor/acomodação, via eferente e pré-tectal |
+| 375 | COB | 153 | 0.5 | III, IV e VI se exploram juntos |
+| 377 | COB | 015 | 0.4 | III par |
+| 380 | COB | 139 | 0.6 | reflexos fotomotor/acomodação, via eferente e pré-tectal |
+| 382 | COB | 139 | 0.53 | reflexos fotomotor/acomodação, via eferente e pré-tectal |
+| 386 | COB | 022 | 0.93 | enunciado equivalente (conferido enunciado × enunciado) |
+| 388 | COB | 021/110 | 0.57 | sensibilidade da hemiface = trigêmeo |
+| 390 | COB | 018 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 398 | COB | 139 | 0.67 | reflexos fotomotor/acomodação, via eferente e pré-tectal |
+| 400 | COB | 110 | 0.5 | reflexo corneal: via aferente V, eferente VII |
+| 402 | COB | 110 | 0.57 | reflexo corneal: via aferente V, eferente VII |
+| 404 | COB | 015 | 0.4 | III par |
+| 408 | COB | 030 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 410 | COB | 020 | 0.77 | paralisia facial periférica de início súbito |
+| 414 | COB | 028 | 0.71 | desvio da língua |
+| 416 | COB | 029 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 418 | COB | 026 | 0.8 | enunciado equivalente (conferido enunciado × enunciado) |
+| 420 | COB | 084 | 0.8 | lesão do hipogloso |
+| 422 | COB | 021 | 0.65 | paralisia facial (alimentos pela comissura) |
+| 424 | COB | 023 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 425 | COB | 023 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 426 | COB | 019 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 437 | COB | 011 | 0.83 | steppage em neuropatias motoras |
+| 439 | ACR | 286 | 0.6 | pergunta nova com slide |
+| 441 | COB | 255 | 0.5 | reflexos de preensão e sucção = liberação frontal |
+| 443 | COB | 058 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 449 | ENS | — | 0.4 | doença de Cushing: não ensinada |
+| 455 | ENS | — | 0.4 | polineuropatia diabética: não ensinada |
+| 457 | COB-P | 052 | 0.5 | síndrome de secção total; a 052 pede o quadro 24 h após lesão |
+| 459 | COB-P | 068 | 0.5 | neuropatias sensitivas: padrão em meia/luva sem pergunta direta |
+| 461 | COB | 046 | 0.8 | enunciado equivalente (conferido enunciado × enunciado) |
+| 463 | COB | 250/065 | 0.5 | Brown-Séquard |
+| 465 | COB | 063 | 0.81 | enunciado equivalente (conferido enunciado × enunciado) |
+| 473 | COB | 048 | 0.62 | cápsula interna |
+| 475 | COB | 050 | 0.67 | origem do feixe corticoespinhal |
+| 477 | ENS | — | 0.5 | meningioma como tumor mais frequente: não ensinado |
+| 479 | COB | 042 | 0.75 | enunciado equivalente (conferido enunciado × enunciado) |
+| 481 | COB | 052 | 0.36 | lesão medular torácica transversa |
+| 488 | FNT | — | 0.43 | sinal de flexão das pernas ao sentar: Brudzinski/Kernig em conflito na triagem |
+| 491 | COB | 075 | 0.76 | enunciado equivalente (conferido enunciado × enunciado) |
+| 493 | COB | 067 | 0.83 | enunciado equivalente (conferido enunciado × enunciado) |
+| 495 | COB | 061 | 0.5 | hemiplegias alternas |
+| 497 | COB-P | 082 | 0.44 | botulismo (bloqueio pré-sináptico): só citado por contraste |
+| 499 | COB | 083/080 | 0.55 | miastenia: caso clínico |
+| 501 | COB | 078 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 502 | COB | 078 | 0.43 | receptores nicotínicos na miastenia |
+| 504 | FRAG | 082 | 0.4 | fragmento de alternativa (transtorno de transmissão) |
+| 505 | COB | 064/066 | 0.68 | lesão medular por arma branca |
+| 507 | ENS | — | 0.4 | siringomielia não ensinada |
+| 510 | COB | 172 | 0.5 | causas estruturais de coma (tronco) |
+| 511 | FRAG | 059 | 0.5 | lista sem alternativas; sistema motor |
+| 513 | COB-P | 040/068 | 0.35 | vias espinocerebelares: citadas, sem pergunta própria |
+| 515 | COB-P | 048 | 0.43 | decussação de 80 % no bulbo: sem pergunta direta |
+| 527 | COB | 036 | 0.4 | steppage em neuropatias periféricas (português) |
+| 535 | COB | 005 | 0.38 | desvio ocular no coma (português) |
+| 537 | COB-P | 068 | 0.38 | neuropatias sensitivas: padrão sem pergunta direta |
+| 539 | COB | 074 | 0.6 | nervo radial |
+| 543 | COB | 032 | 0.56 | reflexo bicipital |
+| 567 | COB-P | 039/038 | 0.67 | batiestesia × palestesia: a pergunta pede diferenciar; as do site pedem cada uma |
+| 602 | COB | 046 | 0.8 | enunciado equivalente (conferido enunciado × enunciado) |
+| 605 | COB | 076 | 0.75 | enunciado equivalente (conferido enunciado × enunciado) |
+| 613 | COB-P | 159/046 | 0.43 | síndromes motoras periféricas (pergunta aberta) |
+| 628 | COB-P | 041/067 | 0.5 | «escreva sobre síndromes sensitivas»: questão aberta; cobertas por partes |
+| 650 | COB | 279 | 0.4 | lobo frontal (DEFINE) |
+| 662 | COB | 281 | 0.5 | lobo temporal (DEFINE) |
+| 663 | COB | 281 | 0.5 | lobo temporal (DEFINE) |
+| 666 | COB | 281 | 0.5 | lobo temporal (DEFINE) |
+| 681 | COB-P | 280 | 0.5 | lobo parietal dominante (DEFINE do hemisfério em geral) |
+| 686 | COB-P | 280 | 0.5 | lobo parietal dominante (DEFINE do hemisfério em geral) |
+| 693 | COB-P | 016/161 | 0.4 | lobo occipital unilateral: hemianopsia coberta; o resto não |
+| 699 | ENS | — | 0.4 | lesão occipital bilateral (cegueira cortical): não ensinada |
+| 701 | COB | 278 | 0.4 | SRAA, responsável pelo alerta |
+| 705 | COB | 079 | 0.67 | ELA forma de Charcot |
+| 713 | FNT | — | 0.5 | pergunta depende de figura medular que não está no texto |
+| 719 | COB | 067 | 0.5 | degeneração combinada subaguda |
+| 721 | COB | 065 | 0.5 | hemissecção medular (Brown-Séquard) |
+| 723 | COB | 052 | 0.5 | mielite/lesão transversa |
+| 724 | COB | 052 | 0.44 | síndrome medular completa |
+| 737 | COB | 016 | 0.47 | córtex calcarino medial: hemianopsia com preservação macular |
+| 739 | COB | 139 | 0.5 | reflexos fotomotor/acomodação, via eferente e pré-tectal |
+| 741 | ACR | 287 | 0.42 | pergunta nova com slide |
+| 744 | COB | 236/145 | 0.57 | importância do estado de consciência |
+| 747 | COB | 282/105 | 0.42 | níveis de consciência: alerta |
+| 748 | COB | 282/105 | 0.43 | níveis de consciência: alerta |
+| 749 | COB-P | 145 | 0.43 | avaliação do estado de consciência: questão aberta |
+| 756 | COB | 006 | 0.46 | confusão/obnubilação |
+| 758 | COB | 001/282 | 0.43 | estupor/coma pelo estímulo doloroso |
+| 760 | COB | 001/282 | 0.77 | estupor/coma pelo estímulo doloroso |
+| 767 | ENS | — | 0.4 | funções intelectuais: não ensinado como lista |
+| 777 | COB-P | 008 | 0.36 | dominância hemisférica esquerda > 90 %: citada |
+| 779 | COB | 007 | 0.5 | área de Broca, hemisfério esquerdo |
+| 780 | COB | 007 | 0.44 | compreensão e produção da linguagem |
+| 783 | COB | 009 | 0.92 | enunciado equivalente (conferido enunciado × enunciado) |
+| 785 | COB | 008 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 787 | COB | 008 | 1.0 | localização de Broca/Wernicke |
+| 789 | COB | 007 | 0.75 | enunciado equivalente (conferido enunciado × enunciado) |
+| 791 | COB | 010 | 0.6 | lesão extensa de Wernicke |
+| 793 | COB | 010 | 0.67 | lesão extensa de Wernicke |
+| 800 | ENS | — | 0.45 | dislexia/alexia: não ensinada |
+| 802 | ENS | — | 0.41 | lesão parietal inferior esquerda (alexia): não ensinada |
+| 806 | COB | 009 | 0.45 | Broca compreende (afirmação falsa) |
+| 808 | COB | 008 | 0.58 | Broca: produção, não compreensão (afirmação falsa) |
+| 813 | COB | 059 | 0.8 | enunciado equivalente (conferido enunciado × enunciado) |
+| 817 | COB-P | 059 | 0.57 | pergunta aberta sobre «passos» das áreas motoras; só a classificação foi cobrada |
+| 827 | FNT | — | 0.4 | apraxia motora × ideatória: conflito da triagem |
+| 846 | COB | 160 | 0.36 | agnosia |
+| 851 | COB | 054 | 0.5 | tétrade de Gerstmann |
+| 853 | COB | 054 | 0.67 | tétrade de Gerstmann |
+| 856 | FRAG | 034 | 0.5 | lista do exame físico neurológico |
+| 858 | COB-P | 108 | 0.75 | fragmento «funções motoras compreende»; lista não ensinada como tal |
+| 860 | COB-P | 033 | 0.5 | tono muscular: o resumo ensina os tipos, não uma pergunta de «como explorar» |
+| 862 | COB | 036 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 864 | COB | 036 | 0.86 | enunciado equivalente (conferido enunciado × enunciado) |
+| 866 | COB | 034 | 0.57 | hipertonia piramidal crônica |
+| 868 | COB | 066/033 | 0.67 | hipertonia espástica |
+| 870 | COB | 033 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 872 | COB | 034 | 0.88 | clonus (afirmação falsa: não é hipotonia) |
+| 874 | COB | 034 | 0.44 | clonus e lesões crônicas piramidais |
+| 876 | COB | 069 | 0.75 | enunciado equivalente (conferido enunciado × enunciado) |
+| 878 | COB | 069 | 0.75 | enunciado equivalente (conferido enunciado × enunciado) |
+| 880 | COB | 072 | 0.75 | enunciado equivalente (conferido enunciado × enunciado) |
+| 882 | COB | 069 | 0.6 | roda dentada |
+| 884 | COB | 070 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 886 | COB | 199 | 0.5 | substância negra no Parkinson |
+| 890 | COB | 033/069 | 0.6 | roda dentada × canivete |
+| 898 | COB | 035 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 900 | COB | 035 | 0.8 | enunciado equivalente (conferido enunciado × enunciado) |
+| 902 | ENS | — | 0.75 | manobra de Barré não está no resumo nem nos slides (as ocorrências de «Barré» são Guillain-Barré) |
+| 904 | ENS | — | 0.57 | manobra de Barré não ensinada |
+| 906 | ENS | — | 0.38 | manobra de Barré não ensinada |
+| 908 | COB | 068/121 | 0.5 | ataxia sensitiva e Romberg |
+| 912 | COB | 073 | 0.62 | índice-nariz |
+| 914 | COB | 073 | 0.88 | enunciado equivalente (conferido enunciado × enunciado) |
+| 919 | COB | 016 | 0.71 | hemianopsia bitemporal |
+| 921 | COB | 016 | 0.73 | hemianopsia bitemporal |
+| 923 | COB | 016 | 0.38 | adenoma hipofisário: hemianopsia bitemporal |
+| 935 | COB-P | 139 | 0.4 | núcleo de Edinger-Westphal: citado, não perguntado |
+| 946 | COB | 024 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 954 | COB | 038 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 956 | COB | 068 | 0.56 | ataxia sensitiva; propriocepção ao cerebelo |
+| 958 | COB-P | 062/048 | 0.5 | decussação 80 % (bulbo, não ponte): afirmação falsa sem pergunta própria |
+| 960 | COB | 139 | 0.38 | perda do fotomotor com acomodação conservada |
+| 962 | COB | 011 | 0.65 | marcha steppage |
+| 970 | COB | 012 | 0.55 | ataxia cerebelosa/vestibular |
+| 972 | COB-P | 036 | 0.42 | distribuição distal nas polineuropatias motoras |
+| 974 | ACR | 287 | 0.75 | pergunta nova com slide |
+| 975 | ACR | 287 | 0.57 | pergunta nova com slide |
+| 976 | COB | 025 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 977 | COB | 025 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 978 | COB | 048 | 0.88 | enunciado equivalente (conferido enunciado × enunciado) |
+| 979 | COB | 048 | 0.8 | enunciado equivalente (conferido enunciado × enunciado) |
+| 980 | COB | 077 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 982 | COB | 067 | 0.83 | enunciado equivalente (conferido enunciado × enunciado) |
+| 984 | COB | 052 | 0.73 | mielite/lesão transversa |
+| 987 | COB | 049 | 0.86 | enunciado equivalente (conferido enunciado × enunciado) |
+| 989 | COB | 071 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 991 | COB | 070 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 993 | COB | 036 | 0.57 | paraplegias flácidas |
+| 995 | ACR | 286 | 0.38 | pergunta nova com slide |
+| 999 | COB | 166 | 0.75 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1001 | COB | 046 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1005 | COB | 070 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1008 | COB | 080 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1010 | COB-P | 040 | 0.36 | espinocerebelares: citadas |
+| 1012 | ENS | — | 0.57 | siringomielia não ensinada |
+| 1016 | COB | 065 | 0.9 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1018 | COB | 056 | 0.88 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1022 | COB | 055 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1024 | COB | 050 | 0.5 | origem do feixe corticoespinhal |
+| 1026 | COB | 039 | 0.78 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1030 | COB | 074 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1032 | COB | 068 | 0.57 | ataxia sensitiva; propriocepção ao cerebelo |
+| 1034 | COB | 040 | 0.86 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1036 | COB | 057 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1038 | COB | 081 | 0.52 | miastenia/fadiga |
+| 1039 | COB | 081 | 0.64 | miastenia/fadiga |
+| 1041 | COB | 046 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1043 | COB | 046 | 0.47 | síndrome do neurônio motor inferior |
+| 1045 | COB | 043 | 0.67 | estereognosia |
+| 1047 | COB | 041 | 0.87 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1049 | COB | 053 | 0.55 | hematoma subdural operado |
+| 1051 | FNT | — | 0.67 | pergunta depende de imagem de TC |
+| 1053 | COB-P | 225 | 0.75 | hematoma subdural crônico: a pergunta do site pede o caso do idoso anticoagulado; a afirmação isolada não |
+| 1055 | COB | 224 | 0.5 | hematomas epidurais |
+| 1056 | FNT | — | 0.4 | texto truncado («zona desplegable de Marchant») |
+| 1059 | COB | 103 | 0.53 | causas de coma |
+| 1061 | COB | 037 | 0.93 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1063 | COB | 067 | 0.5 | degeneração combinada subaguda |
+| 1065 | COB | 064/066 | 0.52 | lesão medular por arma branca |
+| 1066 | COB | 066 | 0.83 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1069 | COB | 082 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1070 | COB | 082 | 0.86 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1071 | COB | 044 | 0.71 | aferências somáticas ao córtex |
+| 1073 | ENS | — | 0.4 | toxina botulínica: não ensinada |
+| 1081 | COB | 166 | 0.5 | miastenia: fisiopatologia |
+| 1099 | COB | 083/080 | 0.61 | miastenia: caso clínico |
+| 1173 | ENS | — | 1.0 | SMA-1/Werdnig-Hoffmann não ensinada (mesma lacuna da triagem 84) |
+| 1177 | PEND | 267 (retirada) | 0.43 | corea de Sydenham: pergunta retirada por falta de fonte |
+| 1182 | COB | 072 | 1.0 | enunciado equivalente (conferido enunciado × enunciado) |
+| 1183 | COB | 166 | 0.5 | miastenia: fisiopatologia |
+| 1188 | COB | 083/080 | 0.59 | miastenia: caso clínico |
+| 1194 | COB | 189 | 0.4 | coma por hemorragia pontina |
+| 1211 | ENS | — | 0.44 | dissociação siringomiélica: não ensinada |
+| 1216 | COB | 173 | 0.52 | caso de hemiparesia faciobraquial por ACM |
+| 1234 | COB | 037 | 0.6 | síndrome do corno anterior |
+| 1243 | FRAG | 147 | 0.5 | fragmento «que ha producido este defecto motor?» (apraxia da marcha) |
+| 1285 | FRAG | 179 | 0.43 | fragmento (condução central ou periférica) |
+| 1291 | COB-P | 173 | 0.38 | território da hemiparesia faciobraquial esquerda: o território não é discriminado |
+| 1314 | COB | 173 | 0.64 | caso de hemiparesia faciobraquial por ACM |
+| 1315 | COB | 181/269 | 0.37 | hemorragia em hipertenso com PA 220/130 |
+| 1318 | COB | 083/080 | 0.62 | miastenia: caso clínico |
+| 1339 | COB | 020 | 0.68 | paralisia facial periférica de início súbito |
+| 1341 | FRAG | 020 | 0.57 | segunda pergunta sobre o mesmo caso (instalação) |
+| 1360 | COB | 001/282 | 0.43 | estupor/coma pelo estímulo doloroso |
+| 1371 | COB | 011 | 0.56 | marcha steppage |
+| 1399 | ENS | — | 0.5 | manobra de Barré (figura) não ensinada |
+| 1401 | COB | 012 | 0.55 | ataxia cerebelosa/vestibular |
+| 1403 | COB | 028 | 0.65 | desvio da língua |
+| 1405 | COB | 150 | 0.5 | inervação intraocular × III par |
+| 1407 | COB | 021 | 0.58 | paralisia facial (alimentos pela comissura) |
+| 1411 | COB | 015 | 0.69 | III par |
+| 1413 | COB | 006 | 0.36 | confusão/obnubilação |
+| 1417 | COB | 066/033 | 0.67 | hipertonia espástica |
+| 1427 | ENS | — | 0.41 | lesão parietal inferior esquerda (alexia): não ensinada |
+| 1433 | COB | 029 | 0.5 | lesão do XI |
+| 1439 | COB | 069 | 0.62 | tono no Parkinson |
+| 1441 | COB | 026 | 0.6 | Rinne |
+| 1443 | COB | 084 | 0.4 | lesão do hipoglosso |
+| 1460 | COB | 068 | 0.53 | ataxia sensitiva; propriocepção ao cerebelo |
+| 1462 | COB | 287 | 0.75 | Argyll Robertson (q-neu287 acrescentada; q-neu213 é outro raciocínio) |

@@ -14,11 +14,12 @@ const stemOf = h => txt((h.match(/<p class="quiz-question">([\s\S]*?)<\/p>/) || 
 const optsOf = h => [...((h.match(/<ul class="options">([\s\S]*?)<\/ul>/) || [])[1] || '').matchAll(/<li>([a-d])\) ([\s\S]*?)<\/li>/g)].map(m => m[2]);
 const corrOf = h => { const m = h.match(/<div class="answer"><p><strong>([a-d])\) /); return m ? m[1] : null; };
 const A = items(base), B = items(cur);
-const KEEP = ['233', '234'], NEWID = ['249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '259', '260', '261', '262', '263', '264', '265', '266', '267', '268', '269', '270', '271', '272', '273', '274', '275', '276', '277', '278', '279', '280', '281', '282', '283', '284', '285', '286', '287', '288', '289'];
+const GONEIDS = ['263', '265', '266', '267', '268', '283'];
+const KEEP = ['233', '234'], NEWID = ['249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '259', '260', '261', '262', '264', '269', '270', '271', '272', '273', '274', '275', '276', '277', '278', '279', '280', '281', '282', '284', '285', '286', '287', '288', '289'];
 const REWORDED = new Set(["-2509-01", "-2509-05", "002", "005", "007", "011", "014", "015", "016", "025", "026", "032", "043", "044", "046", "048", "051", "057", "058", "060", "061", "064", "066", "067", "068", "071", "073", "075", "078", "081", "082", "086", "087", "090", "091", "093", "099", "101", "102", "109", "111", "114", "115", "120", "121", "123", "124", "130", "132", "135", "138", "144", "145", "146", "173", "175", "179", "180", "182", "183", "184", "187", "188", "190", "191", "192", "193", "197", "199", "203", "205", "207", "210", "212", "213", "214", "217", "219", "224", "225", "232", "234", "238", "242", "243", "244", "247", "248", "249", "250"]); /* alternativas reescritas na revisão de viés: mesmo conceito e mesma resposta */
 const STEM_CHANGED = new Set(['135', '090', '181', '224', '249']); /* enunciado reformulado (8-A.1-B) */
 const nq = Object.keys(B).filter(k => k.startsWith('q-')).length;
-T(nq === 295 && Object.keys(B).length === 590, '295 perguntas e 295 espelhos: ' + nq);
+T(nq === 289 && Object.keys(B).length === 578, '289 perguntas e 289 espelhos: ' + nq);
 /* ids */
 for (const k of Object.keys(A)) T(k in B, 'id preservado ' + k);
 for (const n of NEWID) for (const p of ['q', 'bq']) T(p + '-neu' + n in B, 'nova ' + p + '-neu' + n);
@@ -89,31 +90,32 @@ T(!/con disfunción de la <b>médula espinal<\/b>/.test(B['q-neu-2509-03']), 'ti
 T(/no publicó la clave|no publicó clave/.test(B['q-neu135']) && /selección según el tipo de crisis/.test(B['q-neu135']), 'q-neu135: clave não oficial declarada + slide');
 /* triagem do compilado: 186 linhas, um só código por linha, soma = 186 (corrige a soma 193) */
 { const tri = fs.readFileSync(path.join(REPO, 'coordination/source-packs/neurologia-revisar-triagem-v1.md'), 'utf8');
-  const rows = [...tri.matchAll(/^\| (\d+) \| .*? \| \*\*(COB-P|COB|ACR|ENS|FNT|DESC)\*\* \|/gm)];
+  const rows = [...tri.matchAll(/^\| (\d+) \| .*? \| \*\*(COB-P|COB|ACR|PEND-R|ENS|FNT|DESC)\*\* \|/gm)];
   T(rows.length === 186, 'triagem: 186 linhas com código (' + rows.length + ')');
   T(new Set(rows.map(r => r[1])).size === 186 && rows.every((r, i) => +r[1] === i + 1), 'triagem: linhas 1..186 sem repetir');
   const cnt = {}; rows.forEach(r => cnt[r[2]] = (cnt[r[2]] || 0) + 1);
-  T(Object.values(cnt).reduce((a, b) => a + b, 0) === 186, 'triagem: soma das categorias = 186 ' + JSON.stringify(cnt)); }
+  T(Object.values(cnt).reduce((a, b) => a + b, 0) === 186, 'triagem: soma das categorias = 186 ' + JSON.stringify(cnt));
+  T(cnt.ACR === 28 && cnt["PEND-R"] === 9 && cnt.COB === 61 && cnt["COB-P"] === 26 && cnt.ENS === 40 && cnt.FNT === 20 && cnt.DESC === 2, "triagem: 61+26+28+9+40+20+2"); }
 /* V/F: o cabeçalho VERDADERO/FALSO concorda com o argumento de checkTF em TODAS (bloco e banco) */
 for (const k of Object.keys(B)) { const h = B[k]; if (!/tf-buttons/.test(h)) continue; const a = (h.match(/checkTF\(this, (true|false)\)/) || [])[1]; const hd = (h.match(/<div class="answer"><p><strong>(VERDADERO|FALSO)/) || [])[1]; T((a === 'true') === (hd === 'VERDADERO'), 'V/F checkTF × cabeçalho ' + k); }
 /* perguntas novas apoiadas em slide ou no compilado levam a nota de origem */
-for (const n of ['262', '263', '264', '265', '266', '267', '268', '269', '270', '271', '272', '273', '274', '275', '276', '277', '278', '279', '280', '281', '282', '283', '284', '285', '286', '287', '288', '289']) for (const p of ['q', 'bq']) T(/Reconstruida a partir del compilado|Reconstruida a partir de preguntas del compilado/.test(B[p + '-neu' + n]) && /Basada en preguntas de examen|Verdadero o falso · basada en examen/.test(B[p + '-neu' + n]) && !/Pregunta oficial/.test(B[p + '-neu' + n]), 'rótulo de examen e nota de reconstrução ' + p + '-neu' + n);
+for (const n of ['262', '264', '269', '270', '271', '272', '273', '274', '275', '276', '277', '278', '279', '280', '281', '282', '284', '285', '286', '287', '288', '289']) for (const p of ['q', 'bq']) T(/Reconstruida a partir del compilado|Reconstruida a partir de preguntas del compilado/.test(B[p + '-neu' + n]) && /Basada en preguntas de examen|Verdadero o falso · basada en examen/.test(B[p + '-neu' + n]) && !/Pregunta oficial/.test(B[p + '-neu' + n]), 'rótulo de examen e nota de reconstrução ' + p + '-neu' + n);
 for (const n of ['270', '271', '272', '273', '274', '275']) T(/se apoya en el slide de la cátedra/.test(B['q-neu' + n]), 'apoio em slide declarado q-neu' + n);
 for (const n of ['276', '277', '278', '279', '280', '281', '282', '284', '285', '286', '287', '288', '289']) T(/slide de la cátedra/.test(B['q-neu' + n]), 'apoio em slide declarado q-neu' + n);
-for (const n of ['263', '265', '266', '267', '268']) T(/no figura en los slides actuales/.test(B['q-neu' + n]), 'tema fora dos slides declarado q-neu' + n);
+/* as 6 perguntas sem apoio em slide nem livro (263, 265–268, 283) foram RETIRADAS da entrega: não podem voltar sem fonte */
+for (const n of ['263', '265', '266', '267', '268', '283']) for (const p of ['q', 'bq']) T(!(p + '-neu' + n in B), 'retirada ' + p + '-neu' + n);
+T(!/Hipertensión endocraneana sin masa|La corea de Sydenham<\/b> aparece|Dos detalles del edema|síndrome de West<\/b>|3 Hz<\/b> \(tres por segundo\)/.test(cur), 'sem texto de ensino que só o compilado sustentava');
 T(/pérdida parcial del contacto<\/b> durante 1 a 2 minutos/.test(B['q-neu115']) && /pérdida parcial del contacto<\/b> durante 1 a 2 minutos/.test(B['bq-neu115']), 'q-neu115 melhorada (consciência) no bloco e no banco');
-T(/Hipertensión endocraneana sin masa/.test(cur), 'ensina: HTE sem massa');
-T(/marcha jacksoniana<\/b> empieza en una parte pequeña/.test(cur), 'ensina: marcha jacksoniana');
-T(/3 Hz<\/b> \(tres por segundo\)/.test(cur) && /síndrome de West<\/b>/.test(cur), 'ensina: 3 Hz e West');
+T(/marcha jacksoniana<\/b> empieza/.test(cur), 'ensina: marcha jacksoniana (slide 1)');
 /* q-neu090: a resposta certa é a alternativa «Progresa en estadios N1, N2 y N3…», seja qual for a letra (hoje c) */
 for (const p of ['q', 'bq']) { const h = B[p + '-neu090'], L = corrOf(h), o = optsOf(h)['abcd'.indexOf(L)]; T(L === 'c' && /^Progresa en estadios N1, N2 y N3/.test(txt(o)) && txt((h.match(/<div class="answer"><p><strong>[a-d]\) ([\s\S]*?)<\/strong>/) || [])[1]) === txt(o) && /<p>a\) describe el <b>REM<\/b>|a\) describe el REM/.test(txt(h)) || /a\) describe el/.test(txt(h)), 'q-neu090: resposta certa = c) "Progresa en estadios N1, N2 y N3…" e a explicação concorda ' + p); }
 /* revisão final: TODA pergunta acrescentada (249–284) declara a origem/reconstrução e que não há clave oficial; as 262/264/269/270–282/284 declaram o slide; q-neu233/234 seguem presentes */
-for (let n = 249; n <= 289; n++) for (const p of ['q', 'bq']) { const h = B[p + '-neu' + n]; T(!!h && /<p><i>[^<]*(?:clave|Clave|Reconstruida|reconstruid|recordación|Enunciado)/.test(h), 'nota de origem/reconstrução em ' + p + '-neu' + n); }
+for (let n = 249; n <= 289; n++) if (!GONEIDS.includes(String(n))) for (const p of ['q', 'bq']) { const h = B[p + '-neu' + n]; T(!!h && /<p><i>[^<]*(?:clave|Clave|Reconstruida|reconstruid|recordación|Enunciado)/.test(h), 'nota de origem/reconstrução em ' + p + '-neu' + n); }
 for (const n of ['262', '264', '269']) T(/se apoya en el slide de la cátedra/.test(B['q-neu' + n]) && /se apoya en el slide de la cátedra/.test(B['bq-neu' + n]), 'slide declarado q-neu' + n);
 for (const n of ['233', '234']) for (const p of ['q', 'bq']) T(!!B[p + '-neu' + n], 'duplicata preservada com o id ' + p + '-neu' + n);
 /* rastreabilidade: o documento por arquivo existe, declara 295/195/71 e traz os 281 parágrafos e os 71 itens do Notes */
 const RAST = fs.readFileSync(path.join(REPO, 'coordination/source-packs/neurologia-rastreabilidade-provas-v1.md'), 'utf8');
-T(/\*\*295 perguntas\*\*/.test(RAST) && /MCQ 195 · V\/F 71 · DEFINE 29/.test(RAST), 'rastreabilidade declara 295/195/71/29');
-T((RAST.match(/^\| \d+ \| [^|]+ \| [\d.]+ \| (?:A|B|C|ACR) \|/gm) || []).length === 281, 'rastreabilidade traz os 281 parágrafos');
-T(/Soma: 6 \+ 81 \+ 119 \+ 75 = \*\*281\*\*/.test(RAST) && /71 entradas = \*\*70 COB \+ 1 COB-P\*\*/.test(RAST), 'rastreabilidade: somas fecham (281 e 71)');
+T(/\*\*289 perguntas\*\*/.test(RAST) && /MCQ 192 · V\/F 68 · DEFINE 29/.test(RAST), 'rastreabilidade declara 289/192/68/29');
+T((RAST.match(/^\| \d+ \| (?:ACR|COB|COB-P|ENS|FNT|PEND|FRAG) \|/gm) || []).length === 281, 'rastreabilidade traz os 281 parágrafos');
+T(/Soma: 6 \+ 205 \+ 32 \+ 23 \+ 6 \+ 2 \+ 7 = \*\*281\*\*/.test(RAST) && /71 entradas = \*\*70 COB \+ 1 COB-P\*\*/.test(RAST), 'rastreabilidade: somas fecham (281 e 71)');
 console.log('neu-8a1b (estático): ' + ok + '/' + (ok + bad) + (bad ? ' — ' + bad + ' FALHAS' : ' OK')); process.exit(bad ? 1 : 0);
