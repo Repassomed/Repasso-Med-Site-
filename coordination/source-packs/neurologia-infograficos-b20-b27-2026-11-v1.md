@@ -204,3 +204,43 @@ Grifos: `neub02` 10 · `neub03` 29 · `neub09` 68 e agora também **`neub20` 49 
 **Reensaio main + #687 (`cbf32796`) + #682:** HTML funde sozinho (legendas novas incluídas); os mesmos 4 arquivos conflitam (inventário e 3 testes) e a mesma receita resolve. Estáticos: `neu-8a1b` 3755/3755 · `neu-glosario` 414/414 · `neu-vf` 581/581 · `neu-negrito` 1258/1258 · `neu-questoes-1811` 119/119. Navegador: `neu-infograficos` 52/52 (versão de 6 blocos; 60/60 com 8) · `neu-8a1b` 14/14 · `neu-glosario` 24/24 · `neu-vf` 12/12 · `neu-negrito` 20/20 · `neu-questoes` 12/12. Nenhum arquivo ou branch da #687 foi alterado.
 
 **Atualização das marcações (SELECT só leitura, 19/11 noite, só contagens):** os grifos reais agora estão em **todos** os blocos 20–27: `neub20` 49 · `neub21` 120 · `neub22` 92 · `neub23` 41 · `neub24` 122 · `neub25` 77 · `neub26` 37 · `neub27` 14 (**552**), além de `neub02` 10 · `neub03` 29 · `neub09` 68; traço: 1 (`neuportada`); notas: 0. O teste novo foi estendido para os **8 blocos** (grifo sintético em cada um; 29 perguntas respondidas) e passa **60/60** (1440 e 390 px).
+
+
+## Terceira conferência (20/11) · **substitui as tabelas e listas anteriores de «não confirmados»** · slides lidos também pelas IMAGENS embutidas
+**Novo método:** além do texto, baixei os slides (todos < 10 MB, sem credencial ampla) e olhei as **imagens embutidas** de cada página, onde estão tabelas que a extração de texto não vê. Isso **confirmou** vários pontos que eu tinha como «não verificáveis». **Literatura-base de Neurología continua inexistente no projeto/Drive**; só os slides da cátedra servem de fonte. **Regra desta rodada:** informação **confirmada em slide** fica; informação **sem apoio em nenhum slide** é **retirada ou trocada pela frase do slide**, **na própria imagem** (que é preservada: mesmo arquivo, mesma arte, só o trecho editado); **legenda não é confirmação**: as legendas agora só descrevem a figura, sem avisos do tipo «Ojo».
+
+### Pontos CONFIRMADOS pelos slides (nada mudou na imagem)
+| Ponto | Onde está no slide |
+|---|---|
+| **Trombólise IV 0–4,5 h, trombectomia 0–24 h, door-to-needle < 60 min** (b21-01) | `10..pdf`, página 11 «Ventana Terapéutica» (imagem: «0–4.5h Trombolisis IV rt-PA/Tenecteplasa», «0–24h Trombectomía mecánica», «Door-to-needle < 60 minutos») |
+| **McDonald 2017 e «revisión 2024»** (5.ª topografia = nervo óptico; KFLC; ≥ 2/5 topografias) (b25-02) | `14..pdf`, página 13 (tabela em imagem com as duas colunas, 2017 e revisão 2024) |
+| **Meta de PIC < 22 mmHg** e **corticoides CONTRAINDICADOS** (b27-02) | `16. TEC II.pdf`, página 8 «TCE Grave» (imagem: «Meta PIC < 22 mmHg», «Corticoides: CONTRAINDICADOS (CRASH-2)») |
+| HED > 30 mL / HSD > 10 mm / LM > 5 mm; fratura deprimida **aberta**: cirurgia (b27-02) | `16. TEC II.pdf`, página 9 (imagem «Evacuación de hematomas»/«Otros procedimientos») |
+| Faixas de Glasgow: leve 13–15, moderado 9–12, grave ≤ 8 (b27-01/02) | `15..pdf`, página 6 (tabela em imagem) |
+| Plasmaférese 5 sessões em 2 semanas; 4 formas da EM; ILAE 2017; NIHSS; faixas do LCR | `14..pdf`, `11..pdf`, `10..pdf`, `9..pdf` (texto) |
+
+### Pontos SEM APOIO nos slides → **corrigidos ou retirados na imagem**
+| Imagem | Trecho (antes) | Fonte consultada | Decisão aplicada |
+|---|---|---|---|
+| b20-01 | «**NO retrasar antibióticos**»; «hemocultivos y tratamiento urgente»; «**glucemia simultánea**»; glicose «según glucemia, habitualmente **≈ 60 % de plasma**»; clave «los estudios no deben retrasar el tratamiento» | `9..pdf` (texto e imagens: PL, tubos, LCR, glicorraquia 45–80 mg/dL; < 40 em infecção): **nada** sobre antibióticos, glicemia simultânea nem 60 % | **Retirado/trocado pelo que o slide diz:** «Meningitis, hemorragia subaracnoidea o pseudotumor: la muestra de LCR justifica puncionar sin imagen previa» (slide 9); passo 4 sem «glucemia simultánea»; glicose «45–80 mg/dL»; clave com a mesma frase do slide |
+| b21-01 | TOAST «**Indeterminada**: estudio no concluyente o varias causas» | `10..pdf`: «**Criptogénico**: causa no identificada pese a estudio completo» | **Trocado para o nome e a definição do slide** |
+| b22-01 | «**ILAE actualizó terminología en 2025**…»; risco de recorrência «≥ 60 % **en 10 años**» | `11..pdf`: «Clasificación ILAE 2017»; «riesgo recurrencia ≥ 60 %» | **Retirado:** a caixa agora diz «Esquema del slide de la cátedra: ILAE 2017.»; «≥ 60 %» sem «en 10 años» |
+| b23-01 | «vía directa **(D1)**… indirecta **(D2)**»; «agonistas dopaminérgicos **(p.ej., pramipexol)**»; «**sueño REM**»; «caídas **muy tempranas** hacen revisar diagnóstico» | `12..pdf` (texto e imagens): «vía directa/indirecta»; «agonistas dopaminérgicos»; «trastorno del sueño»; inestabilidad «suele aparecer en etapas avanzadas» | **Retirado/trocado pelo texto do slide** (sem D1/D2, sem pramipexol, «trastorno del sueño», «Suele aparecer en etapas avanzadas; caídas frecuentes») |
+| b25-02 | P100 «interpretar normas, **no patognomónica**» | `14..pdf`: «hallazgo patognomónico» (o slide exagera; a figura estava mais prudente) | **Qualificador retirado** (nem afirma nem nega): «P100 retrasada (> 100 ms) en la vía óptica», como o bloco |
+| b26-01 | «Sobreuso: cefalea **≥ 15 días/mes**… umbrales dependen del medicamento» | `14..pdf`: o «> 15 días/mes» é da cefalea tensional **crónica**; sobre sobreuso só «evitar uso excesivo de analgésicos (cefalea por abuso)» | **Trocado:** «Sobreuso: evitar el uso excesivo de analgésicos (cefalea por abuso).» |
+| b27-02 | «**Objetivo PPC 60–70 mmHg**»; «**no hiperventilación profiláctica** prolongada»; corticoides «metilprednisolona a altas dosis **aumenta mortalidad**»; «tratamiento de PIC **sostenida > 22**» | `16. TEC II.pdf` p. 8–9: só «Meta PIC < 22 mmHg», «Sensor de PIC si GCS ≤ 8 + TC anormal», «evitar maniobras que elevan la PIC (aspiración, Valsalva)», «Corticoides: CONTRAINDICADOS»; o rótulo «Control de PIC y **PPC**» não traz cifra de PPC | **Retiradas** as cifras de PPC e a hiperventilação (trocadas por «Sensor de PIC si GCS ≤ 8 + TC anormal» e «Evitar maniobras que elevan la PIC (Valsalva)»); «Meta de PIC < 22 mmHg»; caixa «CORTICOIDES: contraindicados en TEC grave.» (sem a frase da mortalidade) |
+| b27-01 | «Coma no se define solo como GCS ≤ 5» | os slides divergem: `15..` «Coma ≤ 5»; `8..` «≤ 8, sin apertura ocular» | **Mantido** (segue o `8..`); a divergência **entre slides** fica dita na legenda, como fato, não como confirmação |
+Hashes (sha256, 12 primeiros) das imagens editadas, antes → depois (originais intactos no Drive, pasta `1rz7S7U6B3trZBsmA9qsa6viNTVt64ykz`):
+| Imagem | Antes | Depois |
+|---|---|---|
+| `neuro-b20-01-puncion-lumbar-y-lcr` | `0d49c67f2986…` | `5a226a25e4cc…` |
+| `neuro-b21-01-ictus-isquemico` | `7b2de4cd9709…` | `ddcafe67b0c6…` |
+| `neuro-b22-01-epilepsia` | `0d47d5ead4e9…` | `43bc0583bdaf…` |
+| `neuro-b23-01-parkinson-y-disquinesias` | `f67095c774e5…` | `06c973fbb1d8…` |
+| `neuro-b25-02-esclerosis-multiple` | `f113bb6ccd05…` | `b0215eb7fb56…` |
+| `neuro-b26-01-cefaleas-primarias` | `f3563891afc0…` | `cee0aed96d63…` |
+| `neuro-b27-02-abordaje-y-complicaciones-tec` | `4d6f75f96d95…` | `ee6847a4aed9…` |
+
+### Extras menores **não alterados** (propostas para José/cátedra; verdadeiros na literatura geral, mas sem slide)
+b20-01: linha «Tuberculoso/fúngico» da tabela do LCR e «cono medular ≈ L1–L2» · b23-01: «Anticolinérgicos… limitados por efectos cognitivos» · b26-01: aura «5–60 min» (slide: «< 60 min») · b27-02: «ventilación» em «osmoterapia/ventilación/drenaje» e «PPC = PAM − PIC» (definição; o slide só traz o título «PPC»). Se José pedir, retiro/ajusto na mesma técnica.
+**Limites:** edição por sobreposição de texto (fonte do sistema, parecida mas não idêntica à da arte original); a b25-02 e a b27-01 ainda carregam o rótulo «primer episodio desmielinizante» e o «coma ≤ 5 × ≤ 8» **que são inconsistências dos próprios slides** (perguntar à cátedra); não vi os slides 1–7, 13 em imagem (os pontos acima não dependem deles).
