@@ -3847,6 +3847,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:704.",
       "task_id": "pr:704",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "b562cb719c0c75a8fd249de4ed82d240adad75d1",
+      "component": "guard",
+      "error_id": "ERR-E3B9FE967E",
+      "error_type": "hard-fail",
+      "fingerprint": "e3b9fe967e5665a324e1",
+      "first_seen": "2026-11-23T03:54:13.728366+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "fc74339fc4b347e5a95a3c9453ea49e3",
+      "issue_sync_updated_at": "2026-11-23T03:54:13.728366+00:00",
+      "last_evidence_hash": "8b99176552d30f816cca",
+      "last_seen": "2026-11-23T03:54:13.728366+00:00",
+      "occurrence_count": 1,
+      "pr_number": 706,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "45108546359",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:706.",
+      "task_id": "rodada de quest\u00f5es de Farmacolog\u00eda II a partir do levantamento da #702.",
+      "worker_id": null
     }
   ]
 }
