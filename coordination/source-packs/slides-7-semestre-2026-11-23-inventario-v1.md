@@ -24,10 +24,10 @@ Leitura: **lido** = texto aberto pelo conector nesta tarefa; **não aberto** = l
 | Anestesiologia | 2. EVALUACION PREANESTESIA.pdf | 2026-08-17 | 909 | `1mK80da1YzWjtSLJqNr9h076GNRP3Hmj1` | não aberto | já contemplado por título (blocos 01–15); conteúdo ainda a conferir |
 | Anestesiologia | 3. Manejo de la Via Aerea | 2026-08-31 | 3182 | `1oQdAY6cQKNpkP8KeoQu_gLdOZCxOtG0G` | não aberto | já contemplado por título (blocos 01–15); conteúdo ainda a conferir |
 | Anestesiologia | 4. Manejo de la Via Aerea.pdf | 2026-09-07 | 3182 | `1NdMRzb2Td39jcTMUD8xi_KDaKin4EvjI` | não aberto | já contemplado por título (blocos 01–15); conteúdo ainda a conferir |
-| Anestesiologia | 5. Complicaciones de la Anestesia.pdf | 2026-11-23 | 2482 | `101DuaU7-axSnYM2e60GEzcARJyAnPa2O` | lido | FALTA ACRESCENTAR (a página só tem os blocos 01–15, dos arquivos 1–4) |
-| Anestesiologia | 6. Manejo del dolor posoperatorio.pdf | 2026-11-23 | 1335 | `1TO7rELOALC-KL_pOtZmzB7CYi55w_tqV` | não aberto | FALTA ACRESCENTAR (a página só tem os blocos 01–15, dos arquivos 1–4) |
-| Anestesiologia | 7. Complicaciones durante la anestesia.pdf | 2026-11-23 | 1427 | `1bXF4WDLtygAAK2hfIuNRXNH0qbmCmAn-` | não aberto | FALTA ACRESCENTAR (a página só tem os blocos 01–15, dos arquivos 1–4) |
-| Anestesiologia | 8. Fármacos_P2.pdf | 2026-11-23 | 204 | `1YWFZEXMAVEn56q1KH_Ku5kye83HkbROt` | não aberto | FALTA ACRESCENTAR (a página só tem os blocos 01–15, dos arquivos 1–4) |
+| Anestesiologia | 5. Complicaciones de la Anestesia.pdf | 2026-11-23 | 2482 | `101DuaU7-axSnYM2e60GEzcARJyAnPa2O` | lido | **ATUALIZADO na PR #710** (blocos 16–20) |
+| Anestesiologia | 6. Manejo del dolor posoperatorio.pdf | 2026-11-23 | 1335 | `1TO7rELOALC-KL_pOtZmzB7CYi55w_tqV` | **lido** | **ATUALIZADO na PR #710** (blocos 16–20) |
+| Anestesiologia | 7. Complicaciones durante la anestesia.pdf | 2026-11-23 | 1427 | `1bXF4WDLtygAAK2hfIuNRXNH0qbmCmAn-` | **lido** | **ATUALIZADO na PR #710** (blocos 16–20) |
+| Anestesiologia | 8. Fármacos_P2.pdf | 2026-11-23 | 204 | `1YWFZEXMAVEn56q1KH_Ku5kye83HkbROt` | **lido** | **ATUALIZADO na PR #710** (blocos 16–20) |
 | Dermatologia | 01. Dermato Unidad I.pdf | 2026-08-11 | 10650 | `1BkDx8EhwVhHGYTaZ0eFC7CUv2CGH-O04` | não aberto | slide já na pasta (sem arquivo novo, como informado); já contemplado por título; revisão integral registrada em dermatologia-revisao-integral-2026-10-v1.md |
 | Dermatologia | 2. Zooparasitosis.pdf | 2026-09-08 | 2783 | `16WZK61f-WI4iIOuGXf0lx2IsZ-5ckcux` | não aberto | slide já na pasta (sem arquivo novo, como informado); já contemplado por título; revisão integral registrada em dermatologia-revisao-integral-2026-10-v1.md |
 | Dermatologia | 3. Piodermitis.pdf | 2026-09-08 | 2470 | `1ei-DFmyN3BzZDrs9dh_y9WNToV4nv3-L` | não aberto | slide já na pasta (sem arquivo novo, como informado); já contemplado por título; revisão integral registrada em dermatologia-revisao-integral-2026-10-v1.md |
@@ -63,13 +63,13 @@ Leitura: **lido** = texto aberto pelo conector nesta tarefa; **não aberto** = l
 | Neurologia | 8..pdf | 2026-09-19 | 773 | `1jNM6DVE0dWGSSM7CvfzkFYxaNIarmmkU` | não aberto | já contemplado: arquivos 9–16 (17/11) incorporados na #667 (blocos 20–27) e 1–8 nos blocos 01–18; conferência de conteúdo já registrada em neurologia-667-slides-p2-v1.md |
 | Neurologia | 9..pdf | 2026-11-17 | 1008 | `1Co5gyrQpJQYZV1r6vMFKQNXv2vgWSdw1` | não aberto | já contemplado: arquivos 9–16 (17/11) incorporados na #667 (blocos 20–27) e 1–8 nos blocos 01–18; conferência de conteúdo já registrada em neurologia-667-slides-p2-v1.md |
 | Oftalmologia | 1. ANATOMIA Y FISIOLOGIA.pdf | 2026-08-23 | 14896 | `1gkmfeY3YcGrt9jDNHOr5rhwiJOqX5lqV` | não aberto | já contemplado por título (blocos 01–09); conteúdo ainda a conferir |
-| Oftalmologia | 10 viciosderefracción.pdf | 2026-11-23 | 4125 | `1SE1YUQmib78B41dStC8JamMDEpYpmECw` | não aberto | FALTA ACRESCENTAR (a página só tem os blocos 01–09, dos arquivos 1–9) |
-| Oftalmologia | 11 TRAUMA OCULAR.pdf | 2026-11-23 | 3149 | `1oWAlZv7j_P05uxoJkTyIo_yhCOhjxKVn` | não aberto | FALTA ACRESCENTAR (a página só tem os blocos 01–09, dos arquivos 1–9) |
-| Oftalmologia | 11.1 Trauma en pediatria LS.pdf | 2026-11-23 | 1725 | `1fN9qwJGy0m2Q1FIvGeQ6xJluUdfofUXr` | não aberto | FALTA ACRESCENTAR (a página só tem os blocos 01–09, dos arquivos 1–9) |
-| Oftalmologia | 12 OFTALMOPEDIATRIA.pdf | 2026-11-23 | 3078 | `1edcXArguzNKY-QinHuRcPtAaSsWjfSyB` | não aberto | FALTA ACRESCENTAR (a página só tem os blocos 01–09, dos arquivos 1–9) |
-| Oftalmologia | 13. NEURO.pdf | 2026-11-23 | 4968 | `1YtojZacoeOD7-zhNhhR5sWHL31QNyIDM` | não aberto | FALTA ACRESCENTAR (a página só tem os blocos 01–09, dos arquivos 1–9) |
-| Oftalmologia | 14 FARMACOLOGIA OFTALMOLOGIA.pdf | 2026-11-23 | 3821 | `1Tn0F0yXsfEmEe8bI5-cqPQRx4I98s64l` | não aberto | FALTA ACRESCENTAR (a página só tem os blocos 01–09, dos arquivos 1–9) |
-| Oftalmologia | 15 TOXOPLASMOSIS.pdf | 2026-11-23 | 2128 | `1l_FF3ttzwmqv-dUqXukkxr1ijoF8Z0_9` | não aberto | FALTA ACRESCENTAR (a página só tem os blocos 01–09, dos arquivos 1–9) |
+| Oftalmologia | 10 viciosderefracción.pdf | 2026-11-23 | 4125 | `1SE1YUQmib78B41dStC8JamMDEpYpmECw` | **lido** | **ATUALIZADO na PR #711** (blocos 10–16) |
+| Oftalmologia | 11 TRAUMA OCULAR.pdf | 2026-11-23 | 3149 | `1oWAlZv7j_P05uxoJkTyIo_yhCOhjxKVn` | **lido** | **ATUALIZADO na PR #711** (blocos 10–16) |
+| Oftalmologia | 11.1 Trauma en pediatria LS.pdf | 2026-11-23 | 1725 | `1fN9qwJGy0m2Q1FIvGeQ6xJluUdfofUXr` | **lido** | **ATUALIZADO na PR #711** (blocos 10–16) |
+| Oftalmologia | 12 OFTALMOPEDIATRIA.pdf | 2026-11-23 | 3078 | `1edcXArguzNKY-QinHuRcPtAaSsWjfSyB` | **lido** | **ATUALIZADO na PR #711** (blocos 10–16) |
+| Oftalmologia | 13. NEURO.pdf | 2026-11-23 | 4968 | `1YtojZacoeOD7-zhNhhR5sWHL31QNyIDM` | **lido** | **ATUALIZADO na PR #711** (blocos 10–16) |
+| Oftalmologia | 14 FARMACOLOGIA OFTALMOLOGIA.pdf | 2026-11-23 | 3821 | `1Tn0F0yXsfEmEe8bI5-cqPQRx4I98s64l` | **lido** | **ATUALIZADO na PR #711** (blocos 10–16) |
+| Oftalmologia | 15 TOXOPLASMOSIS.pdf | 2026-11-23 | 2128 | `1l_FF3ttzwmqv-dUqXukkxr1ijoF8Z0_9` | **lido** | **ATUALIZADO na PR #711** (blocos 10–16) |
 | Oftalmologia | 2  SEMIOLOGIA - copia.pdf | 2026-08-17 | 2207 | `1KFKuVSjL-xNNAPYvGBYbnjLDLryWhMeJ` | não aberto | já contemplado por título (blocos 01–09); conteúdo ainda a conferir |
 | Oftalmologia | 3 PRUEBAS ESPECIALES.pdf | 2026-08-22 | 3790 | `1HRW-zNt0UuyDWlf6RZYb5zSAN9-f-KqW` | não aberto | já contemplado por título (blocos 01–09); conteúdo ainda a conferir |
 | Oftalmologia | 4. Ojo rojo y doloroso.pdf | 2026-09-07 | 7148 | `1WLpPlcNn3l2391H5v7trG_hbMI7Ju0XR` | não aberto | já contemplado por título (blocos 01–09); conteúdo ainda a conferir |
@@ -85,7 +85,7 @@ Leitura: **lido** = texto aberto pelo conector nesta tarefa; **não aberto** = l
 | Ortopedia | UNIDAD 11 - Lesión Raquimedular y Fracturas de columna.pdf | 2026-09-01 | 31421 | `1hDhxneLs_vdJZ4OkWN2OuY3QfJivf2gF` | não aberto | já contemplado por título (unidades 1–16 = blocos 01–17); sem arquivo novo desde 01/09; conteúdo a conferir |
 | Ortopedia | UNIDAD 12 - Fracturas de Radios distal y huesos de la mano.pdf | 2026-09-01 | 3056 | `11JO0KPpm713u-wROxqKk_cXgAIpBoEiO` | não aberto | já contemplado por título (unidades 1–16 = blocos 01–17); sem arquivo novo desde 01/09; conteúdo a conferir |
 | Ortopedia | UNIDAD 13 - Infecciones articulares.pdf | 2026-09-01 | 4402 | `1HFVmTMP7oyRtZ69JQpJx-8UGdd1bVgBz` | não aberto | já contemplado por título (unidades 1–16 = blocos 01–17); sem arquivo novo desde 01/09; conteúdo a conferir |
-| Ortopedia | UNIDAD 14 - TBC.pdf | 2026-09-01 | 994 | `1qRrSzOwsW7wQsovFh1io62ju0vvv4iHG` | não aberto | já contemplado por título (unidades 1–16 = blocos 01–17); sem arquivo novo desde 01/09; conteúdo a conferir |
+| Ortopedia | UNIDAD 14 - TBC.pdf | 2026-09-01 | 994 | `1qRrSzOwsW7wQsovFh1io62ju0vvv4iHG` | **lido** | já contemplado por título (unidades 1–16 = blocos 01–17); sem arquivo novo desde 01/09; **conteúdo conferido: 49 de 50 termos do slide estão no bloco 15; falta só «corset»** |
 | Ortopedia | UNIDAD 15 - Deformidades de la columna.pdf | 2026-09-01 | 3980 | `1WlfS00njTvfzJE5F163undl6qdALngEr` | não aberto | já contemplado por título (unidades 1–16 = blocos 01–17); sem arquivo novo desde 01/09; conteúdo a conferir |
 | Ortopedia | UNIDAD 16 - Lumbalgia.pdf | 2026-09-01 | 3952 | `1YEjvK7PxgNPAWWeAH8ylYLQUROHXJdGi` | não aberto | já contemplado por título (unidades 1–16 = blocos 01–17); sem arquivo novo desde 01/09; conteúdo a conferir |
 | Ortopedia | UNIDAD 4 - Inmovilizaciones.pptx.pdf | 2026-09-01 | 25086 | `1tWn1QodkLNZIBIEu6YoTdj4ZP1L05Twq` | não aberto | já contemplado por título (unidades 1–16 = blocos 01–17); sem arquivo novo desde 01/09; conteúdo a conferir |
