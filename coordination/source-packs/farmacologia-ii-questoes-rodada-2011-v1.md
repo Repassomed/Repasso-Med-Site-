@@ -186,3 +186,32 @@ Todos os PDFs grandes foram abertos pelas cópias `LEITURA_*` da própria pasta 
 4. β₂ «mais potentes» V/F, «tiotropio ou teofilina», Q21/Q24 do simulado, Q13/Q24 dos antianginosos (§5): continuam pendentes.
 5. Sucralfato e prostaglandinas/EGF: sem ensino.
 6. Letra miúda ilegível em 3 trechos das fotos do Belém (R2-A).
+
+## §R3 · RODADA 3 (23/11) — dihidropiridinas e afirmações absolutas nas questões novas
+
+**Pedido de José:** corrigir as questões novas que diziam que TODAS as dihidropiridinas (inclusive amlodipino) não se usam como antianginosos; diferenciar o que a cátedra apresenta dos riscos específicos das formulações de ação curta; revisar explicações para evitar absolutos e ambiguidades.
+
+**O que o slide da cátedra diz (`03 - antianginosos.pdf`):** os calcioantagonistas antianginosos são verapamilo e diltiazem; as dihidropiridinas (nifedipino, amlodipino) ficam no grupo «NO», com a lista de riscos (pode agravar a isquemia, taquicardia reflexa, hipotensão excessiva, roubo coronário, aumento de mortalidade no infarto recente e na angina instável). **O slide não distingue fármacos nem formulações.**
+
+**O que NÃO foi possível confirmar:** a nuance «sobretudo com o nifedipino de ação curta» vem do resumo do site (nota de literatura). A literatura-base de farmacologia **não está acessível** no Drive/projeto (Robbins de 440 MB não baixa; Katzung/Goodman não estão no Drive); as anotações de aluno (`Calcioantagonista.pdf`) não são fonte soberana. Portanto a nuance foi mantida **só como dado do resumo, rotulado como não confirmado**, e as questões já não afirmam que o amlodipino tem o mesmo risco que o nifedipino de ação curta nem que esteja contraindicado.
+
+**Alterações (bloco e banco, idênticas; 13 trocas × 2 cópias):**
+| Item | Mudança |
+|---|---|
+| N10 (f2b05, exame, DHP em IAM/angina instável) | Enunciado «Según el slide…»; explicação separa slide (grupo «NO» + riscos) de dado do resumo (ação curta, não confirmado); alternativas explicadas com «según el slide» |
+| N19 (f2b05, desenvolvimento) | Já não diz «no se usan»; diz que o slide apresenta verapamilo/diltiazem e deixa as DHP no grupo «NO»; remete à pergunta de alcance |
+| N19 (título do grupo 3) | «según la cátedra» |
+| N1(a),(d) corticoides | «los glucocorticoides favorecen…»; «el slide no menciona una acción sobre la renina» |
+| N8(a–c) aminofilina diurética | «el slide no describe…» em vez de afirmações categóricas |
+| N12(c,d) | «no se asocia a este cuadro»; «explica peor» em vez de «no explica» |
+| N12 | «es el escenario típico de la intoxicación» → «hay que vigilar la toxicidad» |
+| N7(c,d) | «no figura entre los efectos descritos en el material» |
+| N15 | «nunca» → «conforme la cátedra… no se usan solos» |
+| N16 | «no se da junto» → «conforme el resumen, conviene no darlo junto» |
+| N2(a) | «orienta a otro origen» |
+
+**Gabaritos:** nenhuma resposta correta mudou; contagens inalteradas (253 questões: 151 baseadas em exame · 102 complementarias; 17 novas = 12 exame + 5 complementarias). Nenhuma frase pré-existente do resumo foi alterada nesta rodada → grifos/notas/traços não afetados.
+
+**Testes (executor):** `farmaco2-rodada.test.cjs` estático 104/104 e navegador 24/24 (ambos botões V/F, resposta aparece); `quiz.test.cjs new` FALLAS 0, pares bloco/banco 253/253 sem divergência; `hl-real.cjs --gate` PORTÃO OK (23 grifos reais; 1 obsoleta já conhecida «EPOC», anterior a esta PR); testes nova-era conforme PR.
+
+**Limites:** sem literatura-base de farmacologia; conferência apenas contra slides da cátedra; nuance de formulação não confirmada; sem teste em iPad/Safari; sem conferência manual de pistas por cópia além do teste de comprimento (≤1,6× média).
