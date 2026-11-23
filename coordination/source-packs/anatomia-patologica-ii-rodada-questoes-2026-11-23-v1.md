@@ -445,7 +445,30 @@ Todas foram inseridas **no fim do bloco** e **no banco geral** (depois das basea
 | Banco × blocos | 224 = 224, divergência 0 |
 | Supabase | só `SELECT` em `user_highlights`, `user_ink_strokes`, `user_notes` (texto marcado/âncoras; sem `user_id`); 0 escritas |
 | Testes históricos `ap2-646` e `ap2-638` | **falham por desenho**: `ap2-646` afirma o estado da rodada #646/#666 (205 perguntas, seções byte a byte iguais à #640, b04 «inalterado»), então 13 verificações mudam com qualquer rodada nova (não alterei esses testes); `ap2-638` mantém o 1 defeito já registrado em 17/11 (linha de base antiga) |
-| Guard | ver comentário do Guard na PR |
+| Guard (remoto, 1.ª versão da PR) | passou com 1 aviso preexistente (tarefa de Neurologia no registro sem arquivos); banco 224 = 224, HTML equilibrado, sem rótulo proibido |
+| `porta-da-materia.sh anatomia-patologica-ii` | 1.ª rodada: **FECHADA** — 8 falhas no ensaio de layout (capa «Preguntas» e «páginas Preguntas», 4 larguras). Causa: o ensaio compara com `docs/layout-ensaio/inventario.json`, que ainda dizia 205 perguntas/410 no DOM. Atualizei só a entrada de AP II desse inventário (diff de 1 linha; 448 = 224 × 2 cópias). 2.ª rodada: **PORTA ABERTA — 7/7 etapas PASSA** (inventário, marcadores, âncoras estáveis, ida e volta, layout em 4 larguras, uso da caneta, inventário de risco); isto não liga nada (falta o roteiro físico e a ordem de José) |
+| `nao-ativacao.test.cjs --rapido` (6 matérias) | **18/18 OK** (nenhuma matéria nova recebe layout nem caneta; CANDIDATAS e ROLLOUT inalterados) |
+| `nao-ativacao.test.cjs` completo (27 matérias) | ver nota na descrição da PR (executado depois) |
+| Revisão de afirmações absolutas nas 19 explicações novas | feita; corrigidas 17 frases (§8.1) |
+
+### 8.1 · Explicações das 19 perguntas novas: frases absolutas corrigidas
+Fontes: slides Clase 1–6 (já citados). Preservada a resposta correta de todas.
+| Pergunta | Antes | Depois |
+|---|---|---|
+| hematêmese no cirrótico (distrator Mallory-Weiss) | «no se asocia a la cirrosis» | desgarro mucoso tras vómitos intensos, en general cura sola; puede verse en cualquier paciente que vomite con fuerza, pero en un cirrótico con hematemesis masiva lo más probable es que sangren las várices |
+| idem (úlcera duodenal) | «no explica la hematemesis masiva» | puede sangrar, pero en cirrótico con hemorragia masiva lo más probable son las várices |
+| idem (esofagite por refluxo) | «no da una hemorragia masiva» | puede complicarse con hemorragia (hematemesis, melena), pero el contexto apunta a las várices |
+| idem (ensino) | «presentes en casi todos los pacientes cirróticos» | «que según la cátedra se desarrollan en casi todos los pacientes cirróticos» |
+| idem (nota de erro frequente) | alcohol crónico → várices; agudo → MW | «en el contexto típico, …» |
+| afta (distrator sialoadenite) | «no ulcera la mucosa» | «y no una úlcera de la mucosa» |
+| VPH (3 distratores) | «no origina carcinomas» / «no una causa» / «no inicia carcinomas» | «no es la causa reconocida del carcinoma epidermoide» |
+| prognóstico do CCE esofágico | «sólo orienta…»; «el pronóstico lo marca la extensión» | «no es un dato de pronóstico por sí misma: orienta a qué ganglios drena»; «el dato de mal pronóstico que señala la cátedra es la metástasis ganglionar» |
+| clínica do Crohn | «son el cuadro de la colitis ulcerosa, no el de Crohn» | «son más típicos de la colitis ulcerosa» |
+| dieta e cólon | «es el patrón asociado al cáncer gástrico, no al colorrectal»; «es protectora… no lo aumenta»; «protegen» | «el patrón que la cátedra asocia al…»; «se asocia a menor riesgo…»; «tienen efecto protector» |
+| EUP duodeno | «múltiple y pequeña; la péptica es solitaria» | «con frecuencia múltiple y pequeña, sin cicatriz; la péptica… en más del 80% de los casos, solitaria» |
+| gastrite autoimune (2 lugares) | «respeta/preserva el antro» | «en general preserva el antro» (o slide diz «normalmente… ou só danos mínimos») |
+| neoplasias do H. pylori | «El linfoma MALT es el de H. pylori» | «se asocia sobre todo a H. pylori» |
+Os testes e a prova dos grifos foram repetidos depois da edição: 31/31 e 738 → 738 (0 perdidos, 0 movidos); bloco = banco.
 
 ## 9 · Limitações (o que não confirmei)
 - Livros-base (Robbins, Harsh Mohan) não foram abertos: as respostas foram conferidas com os slides da cátedra e com o ensino do site; onde o slide é omisso (ex.: risco do adenoma HNF1-α) está registrado como pendência.
