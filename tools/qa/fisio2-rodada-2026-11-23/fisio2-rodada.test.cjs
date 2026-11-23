@@ -41,14 +41,15 @@ console.log('\n▸ 1 · nada apagado e escopo');
   const img = t => [...t.matchAll(/<img[^>]*src="([^"]+)"/g)].map(m => m[1]).sort().join('|');
   ok(img(now) === img(main), 'imagens: mesmo conjunto de src');
   ok((now.match(/<svg[\s>]/g) || []).length === (main.match(/<svg[\s>]/g) || []).length, 'SVG: mesma quantidade (nenhuma figura removida)');
-  const todos = ids(now).filter(i => !/^fp2b\d\d$|^bancofp2$|^revisaofp2$|^fp2portada$/.test(i) || true);
-  const dif = todos.filter(id => sec(now, id) !== sec(main, id));
+  const dif = ids(now).filter(id => sec(now, id) !== sec(main, id));
   ok(dif.every(id => MUDAM.includes(id)), 'só mudaram seções sem grifos reais (05, 06, 15–19 e banco)', dif);
   ok(sec(now, 'fp2b01') === sec(main, 'fp2b01') && sec(now, 'fp2b12') === sec(main, 'fp2b12'), 'fp2b01 (15 grifos) e fp2b12 (1 grifo) byte a byte idênticos');
   const nz = s => s.replace(/<\/?b>/g, '');
   const alt = Object.keys(M).filter(k => I[k].raw !== M[k].raw).map(k => k.replace('-bk', '')); const uniq = [...new Set(alt)].sort();
   console.log('    perguntas com algum texto alterado (ids):', uniq.join(' '));
-  ok(uniq.length === 8 + 1 - 1 + 0 || true, 'lista das perguntas alteradas registrada');
+  const ESPERADAS = ['b06q13', 'b06q22', 'b16q09', 'b17q06', 'b17q10', 'b17q15', 'b18q04', 'b18q08', 'b19q04', 'b19q11'];
+  ok(JSON.stringify(uniq) === JSON.stringify(ESPERADAS), 'as perguntas antigas alteradas são exatamente as 10 previstas (2 sem negrito + 8 reequilibradas)', uniq);
+  ok(Object.keys(I).filter(k => !M[k]).sort().join() === 'b05q17,b05q17-bk,b05q18,b05q18-bk', 'as únicas perguntas novas são b05q17 e b05q18 (bloco + banco)');
 }
 
 console.log('\n▸ 2 · espelho bloco × banco e contagens');
@@ -74,10 +75,23 @@ console.log('\n▸ 3 · as 2 perguntas novas');
       const L = /^([a-d])\)/.exec(x.strong)[1]; ok(x.opts.length === 4 && x.opts.find(o => o[0] === L)[1] === x.strong.slice(3).replace(/\.$/, ''), `${id}: 4 alternativas; a letra e o texto da resposta coincidem com a explicação`);
       const ex = txt((/<div class="answer">([\s\S]*)<\/div>/.exec(x.raw) || [, ''])[1]); const ls = ['a', 'b', 'c', 'd'].filter(l => l !== L);
       ok(ls.every(l => new RegExp('(^|[ ,(])' + l + '\\)').test(ex)), `${id}: a explicação trata as alternativas erradas pela letra`);
-    } else ok(/FALSO\./.test(x.strong + '.') || /FALSO/.test(x.strong), `${id}: V/F com veredito FALSO explicado`);
+    } else ok(x.strong === 'FALSO.' && (x.raw.match(/checkTF\(this, false\)/g) || []).length === 2 && !/checkTF\(this, true\)/.test(x.raw), `${id}: V/F com veredito FALSO e os dois botões ligados a checkTF(this, false)`);
   }
   const ens = sec(now, 'fp2b05').split('<div class="quiz-section"')[0];
   ok(/Mapa de las glomerulopatías/.test(ens) && /Glomerulonefritis aguda postinfecciosa/.test(ens) && /inmunofluorescencia negativa/.test(ens) && /jorobas|Jorobas/.test(ens + sec(now, 'fp2b06')), 'RESUMO ENSINA → PERGUNTA COBRA: o mapa e o ensino do bloco cobrem os dois itens novos (negativa na IF, postinfecciosa, jorobas/C3)');
+  const mapaTxt = (() => { const e = sec(now, 'fp2b05'); const a = e.indexOf('0 · Mapa de las glomerulopatías'); const b = e.indexOf('1 · El glomérulo, capa por capa'); return e.slice(a, b); })();
+  const linhas = [...mapaTxt.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].map(m => m[1]).slice(1);
+  let grupo = ''; const porGrupo = {}; for (const l of linhas) { const g = /<td rowspan="\d+"><b>([^<]+)<\/b>/.exec(l); const v = /^<td><b>(Presentación variable)<\/b><\/td>/.exec(l); if (g) grupo = g[1]; else if (v) grupo = v[1]; const cel = [...l.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(m => txt(m[1])); const nome = cel[cel.length - 3]; (porGrupo[grupo] = porGrupo[grupo] || []).push(nome + ' | ' + cel[cel.length - 1]); }
+  const nef = porGrupo['Predomina el patrón nefrótico'] || [], nft = porGrupo['Predomina el patrón nefrítico'] || [], vr = porGrupo['Presentación variable'] || [];
+  ok(nef.some(x => /^Nefropatía diabética/.test(x)) && !nft.some(x => /diabética/.test(x)) && !vr.some(x => /diabética/.test(x)), 'mapa: a nefropatia diabética está no grupo nefrótico (causa secundária) e NÃO no nefrítico', porGrupo);
+  const dn = nef.find(x => /^Nefropatía diabética/.test(x)) || '';
+  ok(/causa secundaria/.test(dn) && /no todo paciente/.test(dn) && /albuminuria/.test(dn), 'mapa: a diabética vem como causa secundária, sem generalizar (não todo paciente; começa com albuminuria)', dn);
+  ok(nft.length === 3 && nef.length === 4 && vr.length === 1, 'mapa: 4 nefróticas, 3 nefríticas, 1 de apresentação variável', [nef.length, nft.length, vr.length]);
+  ok(/^Glomerulonefritis membranoproliferativa/.test(vr[0] || '') && /50 %/.test(vr[0]) && /25 %/.test(vr[0]) && /nefrótico/.test(vr[0]) && /nefrítico/.test(vr[0]) && /asintom/.test(vr[0]), 'mapa: membranoproliferativa em «apresentação variável» com o reparto nefrótico 50 % / nefrítico 25 % / assintomática 25 %', vr);
+  ok(!/no hay inflamaci|sin inflamaci|no se inflama/i.test(mapaTxt) && /predominante/.test(mapaTxt) && /no una frontera rígida/.test(mapaTxt) && /se superponen/.test(mapaTxt), 'mapa: sem a afirmação absoluta «no hay inflamación»; explica o padrão predominante e que há apresentações mistas');
+  const q17 = I.b05q17, q17b = I['b05q17-bk'];
+  ok(!/no hay inflamaci|sin inflamaci|no se inflama|pero no hay/i.test(q17.raw + q17b.raw) && /predominio nefrótico/.test(q17.q), 'b05q17 (bloco e banco): enunciado e explicação sem a absoluta; fala em predomínio nefrótico');
+  const intro = sec(now, 'fp2b05'); ok(!/se rompe pero no se inflama|, sin inflamación\./.test(intro.split('<div class="quiz-section"')[0]), 'resumo do bloco 08: removidas as frases absolutas «se rompe pero no se inflama» e «sin inflamación»');
   ok(!/Pregunta oficial|prueba real|preguntas reales|CAY[ÓO] EN EXAMEN/i.test(now), 'nenhum rótulo proibido na página');
   ok(!/\b(Dra?\.|Doctora?|Prof(?:\.|esor[ae]?))\s+[A-ZÁÉÍÓÚÑ]/.test(sec(now, 'fp2b05').slice(sec(now, 'fp2b05').indexOf('Mapa de las glomerulopatías'), sec(now, 'fp2b05').indexOf('1 · El glomérulo'))), 'sem nome de professor no mapa novo');
   const novoMap = sec(now, 'fp2b05').slice(sec(now, 'fp2b05').indexOf('Mapa de las glomerulopatías'), sec(now, 'fp2b05').indexOf('1 · El glomérulo'));
