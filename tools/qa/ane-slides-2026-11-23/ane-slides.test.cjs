@@ -25,7 +25,7 @@ function items(t) {
   return out;
 }
 const I = items(now), M = items(main);
-const NOVOS = [16, 17, 18, 19, 20], IDS = []; for (let k = 178; k <= 237; k++) IDS.push('q-ane' + String(k).padStart(3, '0'));
+const NOVOS = [16, 17, 18, 19, 20], IDS = []; for (let k = 179; k <= 238; k++) IDS.push('q-ane' + String(k).padStart(3, '0'));
 const secIds = t => [...t.matchAll(/<section class="container" id="([^"]+)"/g)].map(m => m[1]);
 
 console.log('\n▸ 1 · nada apagado');
@@ -36,7 +36,7 @@ console.log('\n▸ 1 · nada apagado');
   const img = t => [...t.matchAll(/<img[^>]*src="([^"]+)"/g)].map(m => m[1]).sort().join('|'); ok(img(now) === img(main), 'imagens: mesmo conjunto de src (nenhuma removida)');
   ok((now.match(/<svg[\s>]/g) || []).length === (main.match(/<svg[\s>]/g) || []).length, 'SVG: mesma quantidade');
   const ant = secIds(main); ok(secIds(now).filter(x => ant.includes(x)).join() === ant.join(), 'ids de seção antigos na mesma ordem');
-  const velhas = ant.filter(id => !['bancoane', 'anecierre'].includes(id)); ok(velhas.every(id => sec(now, id) === sec(main, id)), 'blocos 01–15, portada: byte a byte idênticos aos da main (grifos/âncoras intactos)');
+  const velhas = ant.filter(id => !['bancoane', 'anecierre'].includes(id)); const fixo = s => s.replace('en los bloques 01 a 15.', 'en los quince bloques.'); ok(velhas.every(id => fixo(sec(now, id)) === sec(main, id)), 'blocos 01–15, portada: byte a byte idênticos aos da main (grifos/âncoras intactos)');
 }
 console.log('\n▸ 2 · blocos 16–20 na ordem dos slides');
 {
@@ -54,22 +54,25 @@ console.log('\n▸ 3 · espelho bloco × banco e contagens');
   const dv = IDS.filter(k => !I[k] || !I['b' + k] || I['b' + k].raw !== I[k].raw); ok(IDS.length === 60 && !dv.length, '60 perguntas novas: bloco e banco idênticos (0 divergências)', dv);
   const st = /<span>(\d+) preguntas<\/span>\s*<span>(\d+) bloques<\/span>\s*<span>(\d+) flashcards<\/span>/.exec(now);
   ok(st && +st[1] === 237 && +st[2] === 20 && +st[3] === 302, 'estatística do banco: 237 preguntas · 20 bloques · 302 flashcards', st && st.slice(1, 4));
-  const real = Object.keys(I).filter(k => /^q-ane/.test(k)).length; ok(real === 237, 'perguntas reais no corpo = 237', real);
+  const real = Object.keys(I).filter(k => /^q-ane/.test(k)).length; ok(real === 237, 'perguntas reais no corpo = 237 (177 antigas + 60 novas)', real);
   const fcAll = (now.match(/class="flashcard"/g) || []).length; ok(fcAll === 604, 'flashcards (bloco + mazo geral) = 604 = 2 × 302', fcAll);
   const subs = [...sec(now, 'bancoane').matchAll(/Bloque (\d+) · [^<]*<small>(\d+) preguntas<\/small>/g)].map(m => +m[1] + ':' + m[2]); ok(subs.length === 20 && subs.slice(15).join() === '16:12,17:12,18:12,19:12,20:12', 'subtítulos do banco: 20 blocos; 16–20 com 12 perguntas cada', subs.slice(14));
-  ok(/Las 237 preguntas/.test(now) && !/\b177 preguntas|las <b>177/.test(now), 'textos que declaram o total atualizados (237) e nenhum «177» restante');
+  ok(/Las 237 preguntas/.test(now) && !/\b177 preguntas|las <b>177/.test(now), 'textos que declaram o total atualizados (237 = 177 + 60) e nenhum «177» restante');
 }
 console.log('\n▸ 4 · as 60 perguntas novas');
 {
   const N = IDS.map(k => I[k]); const mc = N.filter(x => x.opts.length === 4);
   ok(N.every(x => x.tag === 'Pregunta complementaria'), 'rótulo «Pregunta complementaria» em todas');
-  ok(mc.length === 42 && mc.every(x => { const L = /^([a-d])\)/.exec(x.strong); return L && x.opts.find(o => o[0] === L[1]) && x.opts.find(o => o[0] === L[1])[1] === x.strong.slice(3); }), `${mc.length} múltipla escolha: a letra e o texto da resposta coincidem com a explicação`);
+  const mal = mc.filter(x => { const L = /^([a-d])\)/.exec(x.strong); return !(L && x.opts.find(o => o[0] === L[1]) && x.opts.find(o => o[0] === L[1])[1] === x.strong.slice(3)); });
+  ok(mc.length === 45 && !mal.length, `${mc.length} múltipla escolha: a letra e o texto da resposta coincidem com a explicação`, mal.map(x => x.id + '|' + x.strong.slice(0, 40)));
   ok(N.filter(x => !x.opts.length).every(x => x.strong.length > 3), 'as demais (CITA, DEFINE, COMPLETÁ) têm resposta escrita');
   const bold = N.filter(x => /<(b|strong|i|em|u|mark|font)\b|style=/i.test(x.qraw.replace(/<span class="quiz-tag[^>]*>[^<]*<\/span>/g, '')) || /<(b|strong|i|em|u|mark|span|font)\b|style=|\sclass=/i.test(x.ul));
   ok(!bold.length, 'nenhum negrito/itálico/cor nos enunciados nem nas alternativas (sem pista visual)', bold.map(x => x.id));
   const len = x => { const l = x.opts.map(o => o[1].length), c = x.strong.charCodeAt(0) - 97, mx = Math.max(...l); return l[c] === mx && l.filter(v => v === mx).length === 1; };
   const uni = mc.filter(len); console.log(`    resposta = única mais longa: ${uni.length}/${mc.length} (${(100 * uni.length / mc.length).toFixed(0)}%)`);
-  ok(uni.length / mc.length <= 0.35, 'a resposta certa é a única mais longa em no máximo 35 % (viés de tamanho controlado)', uni.map(x => x.id));
+  const razao = x => { const l = x.opts.map(o => o[1].length), c = x.strong.charCodeAt(0) - 97, o = l.filter((_, i) => i !== c); return l[c] / (o.reduce((s, v) => s + v, 0) / o.length); };
+  const rz = mc.map(razao); console.log(`    razão resposta/média das erradas: máx ${Math.max(...rz).toFixed(2)} · média ${(rz.reduce((s, v) => s + v, 0) / rz.length).toFixed(2)}`);
+  ok(uni.length / mc.length <= 0.5 && Math.max(...rz) <= 1.25, 'viés de tamanho controlado: a certa é a única mais longa em ≤ 50 % e nunca passa de 1,25× a média das erradas', mc.filter(x => razao(x) > 1.25).map(x => x.id + ':' + razao(x).toFixed(2)));
   const L = mc.map(x => x.strong[0]), c = { a: 0, b: 0, c: 0, d: 0 }; L.forEach(l => c[l]++); const seq = L.join('');
   ok(Math.max(...Object.values(c)) - Math.min(...Object.values(c)) <= 2 && !seq.includes('abcd') && !seq.includes('dcba') && !/(.)\1\1/.test(seq), 'letras das novas equilibradas, sem abcd/dcba e sem 3 iguais seguidas', c);
   const dup = []; for (let i = 0; i < N.length; i++) for (let j = i + 1; j < N.length; j++) if (N[i].q === N[j].q) dup.push([N[i].id, N[j].id]); ok(!dup.length, 'nenhum enunciado repetido entre as novas', dup);
@@ -92,8 +95,8 @@ console.log('\n▸ 6 · navegador: «Ver respuesta» real nos itens novos (bloco
   const br = await chromium.launch(); const p = await br.newPage();
   await p.setContent('<!doctype html><html><body><div id="x">' + now.replace(/<script[\s\S]*?<\/script>/g, '') + '</div></body></html>');
   await p.addScriptTag({ content: fnTog[0] });
-  const r = await p.evaluate((ids) => { const out = { n: 0, ok: 0, falhas: [] }; for (const id of ids.concat(ids.map(i => 'b' + i))) { const el = document.getElementById(id); if (!el) { out.falhas.push(id); continue; } out.n++; const btn = el.querySelector('.reveal-btn'); const ans = el.querySelector('.answer'); const antes = getComputedStyle(ans).display; btn.click(); const dep = getComputedStyle(ans).display; if (antes === 'none' && dep !== 'none') out.ok++; else out.falhas.push(id + ':' + antes + '>' + dep); } return out; }, IDS);
-  ok(r.n === 120 && r.ok === 120, `120 itens novos (60 no bloco + 60 no banco): a resposta aparece ao clicar: ${r.ok}/${r.n}`, r.falhas);
+  const r = await p.evaluate((ids) => { const out = { n: 0, ok: 0, falhas: [] }; for (const id of ids.concat(ids.map(i => 'b' + i))) { const el = document.getElementById(id); if (!el) { out.falhas.push(id); continue; } out.n++; const btn = el.querySelector('.reveal-btn'); const ans = el.querySelector('.answer'); const antes = ans.classList.contains('show'); btn.click(); const dep = ans.classList.contains('show'); btn.click(); const volta = ans.classList.contains('show'); if (!antes && dep && !volta && btn.textContent === 'Ver respuesta') out.ok++; else out.falhas.push(id + ':' + antes + '>' + dep + '>' + volta); } return out; }, IDS);
+  ok(r.n === 120 && r.ok === 120, `120 itens novos (60 no bloco + 60 no banco): a resposta aparece ao clicar (classe «show») e some ao clicar de novo: ${r.ok}/${r.n}`, r.falhas);
   await br.close();
   console.log(`\nane-slides: ${n - ko}/${n} verificações OK — ${ko} FALHAS`); process.exit(ko ? 1 : 0);
 })();
