@@ -36,7 +36,7 @@ console.log('\n▸ 1 · nada apagado');
   const img = t => [...t.matchAll(/<img[^>]*src="([^"]+)"/g)].map(m => m[1]).sort().join('|'); ok(img(now) === img(main), 'imagens: mesmo conjunto de src (nenhuma removida)');
   ok((now.match(/<svg[\s>]/g) || []).length === (main.match(/<svg[\s>]/g) || []).length, 'SVG: mesma quantidade');
   const ant = secIds(main); ok(secIds(now).filter(x => ant.includes(x)).join() === ant.join(), 'ids de seção antigos na mesma ordem');
-  const velhas = ant.filter(id => !['bancoane', 'anecierre'].includes(id)); const fixo = s => s.replace('en los bloques 01 a 15.', 'en los quince bloques.'); ok(velhas.every(id => fixo(sec(now, id)) === sec(main, id)), 'blocos 01–15, portada: byte a byte idênticos aos da main (grifos/âncoras intactos)');
+  const velhas = ant.filter(id => !['bancoane', 'anecierre'].includes(id)); ok(velhas.every(id => sec(now, id) === sec(main, id)), 'blocos 01–15, portada: byte a byte idênticos aos da main (grifos/âncoras intactos)');
 }
 console.log('\n▸ 2 · blocos 16–20 na ordem dos slides');
 {
