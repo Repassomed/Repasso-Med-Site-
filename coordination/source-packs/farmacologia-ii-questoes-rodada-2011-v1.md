@@ -215,3 +215,16 @@ Todos os PDFs grandes foram abertos pelas cópias `LEITURA_*` da própria pasta 
 **Testes (executor):** `farmaco2-rodada.test.cjs` estático 104/104 e navegador 24/24 (ambos botões V/F, resposta aparece); `quiz.test.cjs new` FALLAS 0, pares bloco/banco 253/253 sem divergência; `hl-real.cjs --gate` PORTÃO OK (23 grifos reais; 1 obsoleta já conhecida «EPOC», anterior a esta PR); testes nova-era conforme PR.
 
 **Limites:** sem literatura-base de farmacologia; conferência apenas contra slides da cátedra; nuance de formulação não confirmada; sem teste em iPad/Safari; sem conferência manual de pistas por cópia além do teste de comprimento (≤1,6× média).
+
+## §R4 · RODADA 4 (23/11) — retirada da questão nova sobre dihidropiridinas (sobre `dc4a9343`)
+
+**Pedido de José:** as questões novas sobre dihidropiridinas ainda agrupavam nifedipino e amlodipino de forma que podia confundir. Se a diferença entre fármacos e formulações não pudesse ser confirmada na literatura-base disponível, retirar APENAS essas questões novas e registrá-las como pendentes.
+
+**Verificação:** a literatura-base de farmacologia continua inacessível (Drive/projeto: sem Katzung/Goodman/Robbins legível; anotações de aluno não são fonte). O slide `03 - antianginosos` só traz «NO» para nifedipino/amlodipino, sem distinguir fármaco nem formulação. A diferença **não foi confirmada** → critério de José aplicado.
+
+**Retirado (bloco f2b05 e banco f2b15, 2 cópias):**
+- **N10** «Basada en preguntas de examen» — afirmações sobre dihidropiridinas (nifedipino, amlodipino) na cardiopatia isquêmica (V/F de 5 afirmações da P1, reescrita como MCQ; resposta a) «pueden aumentar la mortalidad…»). **PENDENTE** até haver literatura-base que confirme a diferença entre fármacos/formulações. Origem preservada neste registro (R2-E, prova P1).
+
+**Ajustado (não retirado):** N19 («Cite las tres familias de fármacos antianginosos», examen·desarrollo) é sobre as três famílias, não sobre DHP. Foi removido só o parágrafo que agrupava nifedipino/amlodipino e remetia à N10; ficam as três famílias (nitratos, β-bloqueantes, calcioantagonistas não dihidropiridínicos: verapamilo e diltiazem) e a frase final sobre demanda/aporte de O₂. Se José preferir retirar a N19 também, é uma única exclusão.
+
+**Contagens (8-A.10):** 253 → **252** (150 baseadas em exame · 102 complementarias); 16 novas (11 exame + 5 complementarias). Cabeçalho do banco 252/150/102; separador do bloco 05: 13 basadas · 8 complementarias (antes 14·8). Inventário: 506 → 504 itens (252 bloco + 252 banco). Nada mais alterado (resumo, flashcards, imagens, grifos, notas, traços intactos; a frase pré-existente do resumo sobre DHP não foi tocada).

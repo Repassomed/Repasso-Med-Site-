@@ -17,7 +17,6 @@ const NOVAS = [   // [fragmento do enunciado, bloco, tipo]
   ['casos raros de una complicación sistémica', 'f2b08', 'mcq'],
   ['efecto diurético de la aminofilina', 'f2b08', 'mcq'],
   ['Dosis superiores a 10 mg/día de cortisol', 'f2b07', 'vf'],
-  ['sobre las dihidropiridinas (nifedipino, amlodipino) en la cardiopatía isquémica', 'f2b05', 'mcq'],
   ['Un hombre de 68 años, fumador, con EPOC', 'f2b08', 'mcq'],
   ['Cite tres efectos adversos de los anticolinérgicos inhalados', 'f2b08', 'open'],
   ['Cite tres β₂-agonistas de acción corta', 'f2b08', 'open'],
