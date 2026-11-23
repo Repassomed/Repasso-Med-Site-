@@ -1,5 +1,7 @@
 # Farmacología II · rodada de questões (20–23/11/2026) a partir do levantamento da #702
 
+> **ATUALIZAÇÃO DA RODADA 2 (23/11): ler primeiro.** Os números e as decisões da **§R2** (no fim deste arquivo) **substituem** os das §1–§6 (rodada 1, de 20/11): agora são **17 questões novas (236 → 253 no bloco e no banco)**; as questões N4 (β-bloqueantes), N8 (xantinas) e N9 (Cushing) foram **reescritas** conforme o slide da cátedra; todas as páginas dos PDFs grandes foram abertas (§R2-A). A §3-B (limites da rodada 1) está **superada**.
+
 Executor: Claude 2 · Base: `main` `68f212a9` · Branch `claude/farmaco2-questoes-2011`.
 Leis lidas antes de mexer: `CLAUDE.md` (5-A, G0), `MANUTENCAO-DIDATICA-REPASSO-MED.md` §8-A (8-A.1, 8-A.1-B, 8-A.2, 8-A.3, 8-A.4, 8-A.5, 8-A.6-D, 8-A.7, 8-A.10, 8-A.11), levantamento `levantamento-questoes-farmaco2-anapat2-*` (#702) e os packs anteriores da matéria (`farmacologia-ii-questoes-2026-11-v1`, `-637-`, `-reconstrucao-1911-`).
 Nenhuma matéria foi ativada; nenhum SQL de escrita; nenhuma PR de outro Claude foi tocada.
@@ -83,3 +85,104 @@ Legenda: EXISTE = já cobria o conceito e o raciocínio (ref. `bloco#n`, ordem d
 - Diff: só `farmacologia-ii.html` (7 itens × 2 cópias + 5 linhas de contagem), `docs/layout-ensaio/inventario.json` (uma linha) e este pack. Sem arquivo global, função, pagamento, login, Supabase ou migration.
 - Nada removido; nenhum texto antigo alterado além dos 5 contadores (separadores 05, 06, 08, 14 e cabeçalho do banco).
 - Limites: comparação por raciocínio e referência de ordem de página (`bloco#n`), com leitura das explicações nos casos duvidosos — **não** conferi a pista de cada uma das 486 cópias à mão; arquivos grandes parcialmente relidos (§3-B); sem literatura-base; iPad/Safari não testado.
+
+
+## §R2 · RODADA 2 (23/11) — páginas que faltavam, correções pedidas e novas questões
+
+### R2-A · Páginas abertas nesta rodada (o que foi aberto, como, e o que não deu para ler)
+Todos os PDFs grandes foram abertos pelas cópias `LEITURA_*` da própria pasta (nenhum download falhou). **Nenhuma página deixou de abrir.**
+| Arquivo | Páginas | Como foram lidas | Observação de legibilidade |
+|---|---|---|---|
+| `Provas Compilado farmaco.pdf` (56,8 MB, 27 págs.) | 1–4 | imagem (rodada 1) | legível (fotos da folha de prova com marcas à mão) |
+| | 5–9, 10–12, 14, 15–21, 24 | texto nativo (cópia de Belén; **«Gabarito P1 Farmacologia Fila 1»**, págs. 10–12; resumos de aluno 14–21 e 24) | legíveis; 15–21 e 24 são resumo de aluno **sem perguntas** |
+| | 13 | folha em branco | — |
+| | 22–23, 25–27 | imagem (cadernos manuscritos de antianginosos, antiarrítmicos e digoxina) | legíveis; **notas de aluno**, sem perguntas |
+| `Questoes P1 P2 Farmaco_251206_172249.pdf` (22,5 MB, 55 págs.) | 1–4, 7 | imagem (capturas de tela: «Gabarito P1 Turma B Fila 1», recordações P1/P2, lista «Lacuna/Cita») | legíveis |
+| | 5–6 | imagem (rodada 1) | legível |
+| | 8–28 | texto nativo (cópias de `farmaco p2`, `questoes farmaco`, Belén, e **5 provas «PROVA»** das págs. 21–28) | legíveis |
+| | 29–38 | texto nativo (**provas «PROVA» de cardio com 14–20 itens cada**) | legíveis |
+| | 39–41 | imagem (fotos de slides da cátedra marcados «EXAME», «V o F», «Completar com: Bismuto») | legíveis, resolução baixa em partes |
+| | 42–46 | texto nativo (78 perguntas curtas com resposta) | legíveis |
+| | 47–55 | texto nativo (4 casos de hipotireoidismo e capturas de slides) | legíveis |
+| `Provas Fármaco II - Belem completo .pdf` (38 págs.) | 1–21 | imagem (**fotos de provas reais P1 e P2 da Dra. Verónica Vega, com carimbos «APROBADO 10/06/26» e data 13/05/2026, e respostas marcadas pelo aluno**) | legíveis; **partes de letra miúda ilegíveis** (pág. 9 direita, pág. 10 esquerda, pág. 14 topo): os itens dessas áreas só foram lidos pelo que aparece em outra versão da mesma prova |
+| | 22–38 | texto nativo (já lido na rodada 1) | — |
+
+### R2-B · As duas correções pedidas
+1. **Cushing «100 mg/dia» (N9).** Redação exata do slide `05 - Antiinflamatorios esteroideos.pdf` (Drive `1VW6csyen…`, reaberto): «**Dosis superiores a 100 mg/día de cortisol o equivalentes en esteroide sintético durante más de 2 semanas provocarán signos de hipercorticalismo o síndrome de Cushing**»; e, na seção de reações adversas, «los esteroides naturales y sintéticos producen modificaciones estables en la hipófisis y en las suprarrenales **en proporción a la dosis administrada y a la duración de la administración**… si la duración es corta (no mayor de 7-10 días) la función adrenal se recupera de inmediato; si se prolonga **más de 2 semanas**, los cambios atróficos se estabilizan». A prova real (Belém completo, pág. 18, foto) traz o V/F «dosis superiores a **10** mg/día… Cushing» com resposta **F**, e o aluno anotou «≥ 100 mg/dia». **Literatura-base: o Robbins (440 MB) e outros livros não abrem pelo conector; não pude conferir a cifra em literatura.** Por isso a explicação agora diz que **é o número da cátedra** e que o mesmo slide fala em efeito proporcional à dose e à duração, **sem apresentar o número como limite universal**. O flashcard e o parágrafo já existentes no resumo (que dizem «conforme a cátedra» / «umbral») **não foram alterados**.
+2. **β-bloqueantes «bloqueio AV» (N4).** Redação exata do slide `03 - antianginosos.pdf` (Drive `1eEZs9BQ…`): «**Absolutas:** Hipotensión · Bradicardia · Bloqueo AV · IC descompensada. **Relativas:** Diabetes · EPOC · Vasculopatía periférica · Angina de reposo · Asma». O slide **não gradua** o bloqueio AV nem a bradicardia. Um caderno de aluno (Compilado pág. 22–23) escreve «BAV de 2º e 3º grau», mas **é nota de aluno, não fonte da cátedra**, e a literatura-base não abre: **o grau do bloqueio fica NÃO CONFIRMADO**. A pergunta foi reformulada para **não depender disso**: a resposta correta passou a ser a **insuficiência cardíaca descompensada** (palavra «descompensada» do slide), e a explicação diz que a cátedra não gradua os outros dois.
+3. **Demais afirmações novas** (N1, N2, N5, N7, N8, N10, N12–N20): cada frase foi conferida contra o **resumo do site** e o slide indicado na coluna «Ensino prévio» da §2/R2-C; N8 passou a dizer «aminofilina (uma xantina)» porque o contexto da prova real (item 11 sobre aminofilina, item 12 «este medicamento») **confirma** a inferência da rodada 1.
+
+### R2-C · Questões novas da rodada 2 (além das 7 da §2)
+| # | Questão | Rótulo | Fonte (página) | Bloco/banco | Ensino prévio no resumo |
+|---|---|---|---|---|---|
+| N10 | **Dihidropiridinas na cardiopatia isquêmica** (↑ mortalidade em IAM recente/angina instável; robo coronário) | examen | prova P1 «PROVA 2», item 6 (5 afirmações V/F), `Questoes P1P2` pág. 29–38 | `f2b05` basadas + banco 05 | `f2b05` §9 «Dihidropiridinas · Conforme la cátedra: NO…» |
+| N12 | **Aminofilina como causa de náuseas, vômitos, taquicardia e extrassístoles** | examen | Belém completo págs. 8 e 15 (item 11, duas versões da prova); enunciado reconstruído só no «corticoide inhalado», que era distrator no original | `f2b08` + banco 08 | `f2b08` xantinas: RAM por PDE4, PDE3 e A₁ |
+| N13 | **Cite 3 efeitos adversos dos anticolinérgicos** (sabor amargo, muco viscoso, rebote) | examen · desarrollo | Belém págs. 6/7 (item 3.1 «Cite») | `f2b08` + banco 08 | `f2b08`: «sequedad de boca, sabor amargo, tos, moco más viscoso… rebote» |
+| N14 | **Cite os 3 antitiroideos** (metimazol, PTU, carbimazol) | examen · completar | Belém pág. 13 («Cite 3.1») | `f2b11` + banco 11 | `f2b11` §7.2 e tabela de tionamidas |
+| N15 | **Cite 3 SABA e 3 LABA** | examen · desarrollo | Belém págs. 19–21 («Broncodilatadores β de ação curta/longa») | `f2b08` + banco 08 | `f2b08` tabela SABA/LABA |
+| N16 | **V/F: sucralfato reduz a absorção de outros fármacos (separar 2 h)** — **reconstruída** a partir de uma foto de slide marcada «V o F» (o enunciado original não aparece) | **Pregunta complementaria · V/F** (por ser reconstruída) | `Questoes P1P2` pág. 40 (foto do slide) | `f2b09` complementarias + banco 09 | `f2b09`: «reduce la absorción de otros fármacos… separar las tomas 2 horas» |
+| N17 | **Cite a classificação dos broncodilatadores** (β₂, anticolinérgicos, xantinas) | examen · desarrollo | Belém págs. 12 e 21 (duas provas) | `f2b08` + banco 08 | `f2b08` «Clasificación farmacológica» |
+| N18 | **Cite os mecanismos da teofilina** (PDE, adenosina, IL-10, apoptose) | examen · desarrollo | Belém pág. 12 («Cite… mecanismo de acción de las xantinas»); Questões pág. 7 | `f2b08` + banco 08 | `f2b08` teofilina: 4 mecanismos |
+| N19 | **Cite as 3 famílias de antianginosos** | examen · desarrollo | Questões págs. 3–4 (lista «Citar: … Fármacos antianginosos e “famílias”», recordações da P1) — **só o tema foi lembrado; enunciado reconstruído** | `f2b05` + banco 05 | `f2b05` «Mapa de los antianginosos: tres familias» |
+| N20 | **Cite 3 glicocorticoides de ação intermédia** | examen · desarrollo | Questões pág. 7 (lista «Cita: 3 glucocorticoides de ação intermédia») — tema lembrado; **enunciado reconstruído** | `f2b07` + banco 06 | `f2b07` classificação por duração e tabela de potências |
+**Rótulo.** Os itens com enunciado visível em foto de prova real levam «Basada en preguntas de examen». N19 e N20 vêm de **listas de temas lembrados por alunos** (sem enunciado): o rótulo de exame é permitido pela 8-A.4 (recordação), mas o enunciado é reconstrução e isso está dito aqui; se José preferir ser mais conservador, trocar para «Pregunta complementaria». N16 foi marcada como complementaria justamente porque o enunciado não existe.
+**Letras:** N10 a · N12 b (as outras desta rodada são abertas).
+
+### R2-D · Registro por arquivo e página (o que as páginas novas continham)
+- **Compilado págs. 5–9, 10–12 (texto)** = cópia de Belén (arquivo 9) e «Gabarito P1 Farmacologia Fila 1»: diurético de alça EXCETO (`f2b02#1`) · β-bloq EXCETO (`f2b01#10`) · AINE antiagregante (`f2b04#5`) · edema por calcioantagonista (`f2b03#5`) · carvedilol (`f2b01#3`) · α₂ pré-sináptico/metildopa (`f2b01#8`, `f2b03#4`) · antiarrítmicos classe IC/propafenona (`f2b14#1`, `#13`) · **inibição do SRAA** (`f2b03#11`) · prasugrel (`f2b04#3`) · anti-HTA 1.ª linha em raça negra e **«não responde a IECA/ARA-II → calcioantagonista»** (`f2b02#8`, mesma resposta: calcioantagonista) · HTA+HBP (`f2b01#11`) · Bezold-Jarisch (`f2b05#10`) · AAS V/F (`f2b04#4`) · nebivolol (`f2b01#12`) · celiprolol (`f2b01#4`) · cite efeitos dos nitratos (`f2b05#11`) · cite classificação dos β-bloq (`f2b01#14`) · cite anti-HTA na gravidez (`f2b03#15`). **Todos EXISTE.**
+- **Compilado págs. 14–21 e 24 (resumos de aluno)**: sem perguntas (0 linhas de questão). **Págs. 22–23 e 25–27 (cadernos)**: sem perguntas; contêm a nota de aluno sobre «BAV de 2º e 3º grau» (§R2-B.2).
+- **Questões págs. 1–2 («Gabarito P1 Turma B Fila 1»)**: mesmos 9 MCQ + completar + V/F + cite do Compilado págs. 10–12 → **EXISTE** (mesmas refs). **Págs. 3–4 e 7**: listas de temas (P1 Belén Turma B Fila 2; Turma D; recordações P2): ahorradores de K⁺ (`f2b02#10`), triada de Bezold (`f2b05#10`), labetalol na gravidez (`f2b03#15`), doxazosina (`f2b01#11`); P2: SABA na crise (`f2b08#3`), roflumilast (`f2b08#1`, `#11`), omalizumab (`f2b08#18`), IBP/omeprazol-clopidogrel (`f2b09#2`, `#7`), H. pylori (`f2b09#12`), misoprostol (`f2b09#1`), bismuto (`f2b09#15`), **cite LABA → N15**, anticolinérgicos (`f2b08#6`; **efeitos adversos → N13**), indicações dos glicocorticoides (`f2b07#8`), **hipertensão por prednisona** (N1, tema), **perda de músculo** (`f2b07#8` e flashcard «catabolismo proteico»: EXISTE parcial, sem pergunta própria), efeitos adversos do sucralfato (`f2b09#16`), **3 glicocorticoides de ação intermédia → N20**, conversor cortisol→cortisona (`f2b07#16`), **mecanismo das xantinas → N18**, IBP prolongado (`f2b09#13`), antagonista H₂ 70 % (`f2b09#6`), fosfolipase A₂ (`f2b06#2`), enzima do zileutón (`f2b08#22`), receptor CysLT₁ (`f2b08#22`).
+- **Questões págs. 21–28 e 29–38 («PROVA» de cardio, 6 versões de 14–20 itens)**: furosemida tipo/transportador (`f2b02#16`), α₁ prazosina (`f2b01#21`), β-bloq EXCETO (`f2b01#5`), ergotamina (`f2b01#7`), celiprolol EXCETO (`f2b01#4`), classe III (`f2b14#10`), sildenafilo+nitrato (`f2b05#4`), IECA tosse (`f2b03#1`, `#2`), sotalol (`f2b14#5`), abciximab (`f2b04#1`), classe IA (`f2b14#4`), nitratos incorreta (`f2b05#3`), Prinzmetal (`f2b05#5`), cubeta (`f2b14#9`), IECA contraindicados (`f2b03#3`), diazóxido (`f2b03#7`), alisquireno (`f2b03#8`), AINE tocolítico (`f2b06#1`), «ATIVIDADE» de 15 MCQ (doxazosina `f2b01#11`; canais L: **sem pergunta, tema trivial → não incluída**; verapamilo `f2b03#6`/`#20`; cirrose `f2b02#5`; DHP `f2b03#10`; vasodilatadores `f2b03#9`; hiperpotassemia `f2b02#6`; tosse `f2b03#2`; clonidina `f2b01#8`), caso clínico de angina (`f2b05#1`, `#2`), **DHP V/F de 5 afirmações → N10**. **Pendentes desse grupo:** ① «Sobre a **adrenalina** é correto…» (opção marcada como correta pelo arquivo afirma vasoconstrição das arteríolas **musculares e coronárias (α₁)**, o que **contradiz** o resumo de fisiologia: não inserida); ② «paciente **diabético**: antihipertensivo aconselhado» da «ATIVIDADE» (a resposta do arquivo não é comprovada; o resumo ensina IECA/ARA-II em diabéticos; **elegível como complementaria, não incluída por origem incerta**); ③ «classe **não recomendada** para tratamento inicial» (chave não comprovada).
+- **Questões págs. 39–41 (fotos de slides)**: antileucotrienos (esquema 5-LOX/CysLT₁) → `f2b08#22`; **teofilina e diafragma** → `f2b08#19`; **sucralfato: reduz a absorção de outros fármacos, 2 h → N16**; **bismuto «completar»** → `f2b09#15`; anti-H₂ «completar» (70 %) → `f2b09#6`; **fludrocortisona (reações adversas)** → `f2b07#7`; hueso → `f2b07#2`; MgSO₄ → `f2b08#10`. **Págs. 42–46 (78 perguntas curtas)**: tabela item a item em **R2-E**. **Págs. 47–55 (casos de hipotireoidismo)**: `f2b10#3`–`#11` (EXISTE).
+- **Belém completo págs. 1–3** (P1, 14 itens): mesmas refs do Compilado págs. 1–4; **diltiazem → N5**. **Pág. 4–5** (celiprolol V/F; cite β-bloq na ICC; cite classificação anti-HTA; explique β-bloq na ICC; **caso P2** de hipotireoidismo subclínico com anti-TPO) → `f2b01#4`, `#15`, `#16`, `f2b02#11`, `f2b10#3`, `#8`. **Págs. 6–7** (P2 turma D): completar transcortina (`f2b07#19`), sucralfato, bismuto, **LAMA** (`f2b08#24`), **cite efeitos adversos dos anticolinérgicos → N13**, esquema H. pylori (`f2b09#12`), anticolinérgicos na asma aguda (`f2b08#6`), asociações fármaco–mecanismo (`f2b08#17`), MgSO₄ (`f2b08#10`), levotiroxina em excesso (`f2b10`), Cushing (`f2b07#1`), omalizumab (`f2b08#18`). **Págs. 8–9** (antileucotrienos `f2b08#20`, hueso `f2b07#2`, xantinas mecanismo `f2b08#4`, IBP `f2b09#2`, **aminofilina → N12**, **diurético → N8**). **Págs. 10–11** (bismuto `f2b09#15`, zileutón/benefício, teofilina V/F `f2b08#4`, β₂ Gs `f2b08#9`, asma refratária MgSO₄ `f2b08#10`, roflumilast `f2b08#11`, antileucotrienos `f2b08#12`/`#22`, PTU V/F `f2b11#5`/`#8`, **caso de lupus com dexametasona: enzima PLA₂** `f2b06#2`, propranolol T₄→T₃ `f2b11#2`, misoprostol `f2b09#1`). **Págs. 12–13** (**cite classificação de broncodilatadores → N17**, **cite mecanismo das xantinas → N18**, levotiroxina `f2b10`, metimazol/peroxidase `f2b11#1`, roflumilast completar `f2b08#1`, antileucotrienos completar `f2b08#12`, IBP bombas novas `f2b09#2`, sucralfato `f2b09#14`, **cite antitiroideos → N14**, indicações dos corticoides `f2b07#8`). **Págs. 14–15** (versão de 13/05/2026: aminofilina **«a) Teofilina»**, diurético, IBP, hueso, xantinas). **Págs. 16–21** (provas de 26/05/2025 e outras: β-adrenérgicos produz `f2b08#9`, antileucotrienos `f2b08#22`, «modificaciones estables» `f2b07#4`, acarbose/biguanida/insulina basal/repaglinida/glibenclamida/DPP-4/taquicardia β/hormonas corticales EXCETO/insulina hipoglucemia (`f2b12#3`–`#8`, `f2b13#4`, `#5`, `f2b08#14`, `f2b07#12`), **V/F Cushing «10 mg» → N9**, critérios de insulinização `f2b13#6`, RAM crónicas dos esteroides `f2b07#9`, **cite LABA/SABA → N15**, classificação de broncodilatadores → N17).
+
+### R2-E · `Questoes P1 P2` págs. 42–46 (perguntas curtas com resposta): decisão por número do arquivo
+(Numeração do próprio arquivo: pág. 42 = itens 1–14 da lista de sucralfato/H₂/asma; págs. 43–46 = itens 15–78.)
+| Itens do arquivo | Tema | Decisão · ref. no site |
+|---|---|---|
+| 42·1, 42·2, 49, 65 | sucralfato: mecanismo, pH < 4, barreira, indicação | EXISTE `f2b09#14`, `#8` |
+| 42·3 | sucralfato: prostaglandinas e fator de crescimento epidérmico | **PEND** (o resumo ensina só barreira e meio ácido) |
+| 42·4, 66, 67, 68, 69, 21, 64 | H₂: mecanismo, representantes, 70 %, cimetidina/CYP, efeitos (confusão no idoso), IBP × H₂ | EXISTE `f2b09#6`, `#11` |
+| 42·5 | LABA no asma / LAMA na EPOC | EXISTE `f2b08#2`, `#6` (o resumo traz a frase do slide) |
+| 42·6, 61, 62, 22, 41, 8, 45 | antileucotrienos: fármacos, receptor, uso complementar, bronquio | EXISTE `f2b08#20`, `#22`, `#12` |
+| 42·7, 27 | esquema de erradicação de H. pylori | EXISTE `f2b09#12` |
+| 42·8, 60, 20, 39, 59, 30 | xantinas: efeitos adversos, PDE, diafragma, «incorreta» | EXISTE `f2b08#4`, `#19`, `#23`; efeitos adversos como identificação clínica → **N12** |
+| 42·9, 9 (pág. 42), 47, 56 | glicocorticoides e tecido adiposo | EXISTE `f2b07#5` |
+| 42·10 | LABA sozinho controla a inflamação? (incorreta) | EXISTE `f2b08#2` |
+| 42·11, 36 | MgSO₄ | EXISTE `f2b08#10` |
+| 42·12, 48, 70, 63, 28, 50 | IBP: efeitos a longo prazo, mecanismo, usos, lista | EXISTE `f2b09#13`, `#2`; lista de IBP: sem pergunta própria (tema de nomes, valor baixo; **DUP.SEM** parcial de `f2b09#7`) |
+| 42·13–14, 15, 16, 44 | fludrocortisona (V/F e efeito principal) | EXISTE `f2b07#6`, `#7` |
+| 17, 46, 71 | omalizumab | EXISTE `f2b08#18` |
+| 18, 4 (pág. 43) | bismuto | EXISTE `f2b09#15` |
+| 19, 39–40, 75, 78 | Addison / ausência ou interrupção do cortisol | EXISTE `f2b07#12` (relacionada) |
+| 23, 25, 38, 76 | osteoporose por corticoide | EXISTE `f2b07#2` |
+| 24, 29 | anticolinérgicos (ACh; menos eficazes que β₂ no asma) | EXISTE `f2b08#6`, `#8` |
+| 25 | roflumilast | EXISTE `f2b08#1`, `#11` |
+| 26 | «cite fármacos anticolinérgicos» | **N17** (classificação) e `f2b08#6` |
+| 31, 43 | misoprostol | EXISTE `f2b09#1` |
+| 33 | tiotropio **ou** teofilina | **PEND** (§5-2) |
+| 34 | transcortina | EXISTE `f2b07#19` |
+| 35, 51 | fosfolipase A₂ | EXISTE `f2b06#2` |
+| 37, 52, 53 | glicocorticoides, leucócitos e sistema imune | EXISTE `f2b07#3` |
+| 40 (pág. 44) | Cushing: alterações frequentes | EXISTE `f2b07#1` |
+| 42 (pág. 44) | pirose com clopidogrel: «omeprazol» | **Divergência**: o arquivo diz omeprazol (o aluno corrigiu para pantoprazol); o resumo/slide diz que **o omeprazol é o IBP que inibe o CYP2C19**; vale `f2b09#7`; não copiado |
+| 54, 55, 57, 58 | glicocorticoides: carboidratos, proteínas, pele, RAM | EXISTE `f2b07#8`, `#9` |
+| 72 | 11β-HSD | EXISTE `f2b07#16` |
+| 73, 74 | supressão do eixo e retirada brusca | EXISTE `f2b07#10`, `#12` |
+| 77 | omeprazol × clopidogrel (CYP2C19) | EXISTE `f2b09#7`, `f2b04#7` |
+
+### R2-F · Números finais e testes
+- **Total 236 → 253** (bloco = banco, 0 divergências). Examen **139 → 151** (+12), complementarias **97 → 102** (+5), somas dos separadores (cabeçalho antigo 136/96 não somava: defeito preexistente corrigido). Separadores alterados: 05 (14·8), 06 (13·9), 08 (18·14), 09 (6·11), 11 (8·5), 14 (15·6).
+- **Substituições/melhorias de questões antigas (8-A.1-B): 0** (nenhuma versão do material era demonstravelmente mais completa; os ajustes foram só nas minhas próprias questões novas N4, N8, N9). **Sem ids** na matéria; as complementarias do bloco 14 passam de 15–20 a 16–21 por causa de N5.
+- **Testes novos** `tools/qa/farmaco2-rodada-2011/farmaco2-rodada.test.cjs`: estático (cada nova 1× no bloco e 1× no banco, idênticas; sem negrito/itálico/cor nas alternativas nem nos enunciados; letra da resposta existe; alternativa correta não muito mais longa; **as 2 V/F novas têm os dois botões com o mesmo valor igual à resposta**; sem 3 letras iguais seguidas nas novas; contadores somam): **104/104**; navegador (os dois botões de cada V/F, bloco e banco: certo aceito, errado rejeitado, explicação aparece): **24/24**.
+- `quiz.test.cjs new` (navegador, matéria inteira): 506 itens (253 + 253), 876 flashcards, 29 mazos, **0 divergências, 0 falhas duras**.
+- **Grifos (SELECT somente leitura; só texto, prefixo, sufixo, ocorrência; arquivos fora do Git):** 532 grifos; **23 âncoras reais que coincidem com o texto novo, passadas pelo motor real do site: 22 sobrevivem sem remapeamento e 1 (`EPOC`, `f2b08`, ocorrência 16) já não resolvia na `main`** (obsoleta na matéria antiga, **não causada por esta PR**). Traços 1 (`f2b00`), notas 0.
+- `temas-farmaco2`, `real-farmaco2`, `integracao-farmaco2`, `nao-ativacao`, porta `farmacologia-ii`: ver o Cartão (resultados na descrição da PR).
+
+### R2-G · Pendências (sem inventar resposta)
+1. **Grau do bloqueio AV / gravidade da bradicardia como contraindicação absoluta dos β-bloq.:** o slide não gradua e a literatura-base não abre (Robbins 440 MB; outras sem acesso). Não afirmado.
+2. **Limiar «100 mg/dia» de Cushing:** só a cifra da cátedra; sem confirmação em livro.
+3. Adrenalina (item de «PROVA 2»): chave do arquivo contradiz o resumo → não inserida. Diabético (ATIVIDADE) e «classe não recomendada no início»: origem/chave não comprovadas.
+4. β₂ «mais potentes» V/F, «tiotropio ou teofilina», Q21/Q24 do simulado, Q13/Q24 dos antianginosos (§5): continuam pendentes.
+5. Sucralfato e prostaglandinas/EGF: sem ensino.
+6. Letra miúda ilegível em 3 trechos das fotos do Belém (R2-A).
