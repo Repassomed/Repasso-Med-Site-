@@ -299,11 +299,11 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
-  /* Anestesiología (Nova Era): aneb01…aneb15 = BLOQUE 01–15 (Unidad I = 01–11, Unidad II = 12–15, do marcador real); bancoane = banco general, anecierre = cierre/mazo (repaso); aneportada = âncora vazia. */
+  /* Anestesiología (Nova Era): aneb01…aneb20 = BLOQUE 01–20 (Unidad I = 01–11, Unidad II = 12–15, 16–17 e 19–20 = Unidad II, 18 = dolor posoperatorio; 16–20 sem viñeta/figura, do marcador real); bancoane = banco general, anecierre = cierre/mazo (repaso); aneportada = âncora vazia. */
   var AN_REPASO = { bancoane: 'B', anecierre: 'F' };
   function clasificarAN(id) {
     var m = /^aneb(\d\d)$/.exec(id);
-    if (m && +m[1] >= 1 && +m[1] <= 15) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: n <= 11 ? ((n - 1) % 6) + 1 : ((n - 12) % 3) + 4, vig: 'vb-' + pad(n) }; }
+    if (m && +m[1] >= 1 && +m[1] <= 20) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: n <= 11 ? ((n - 1) % 6) + 1 : ((n - 12) % 3) + 4, vig: n <= 15 ? 'vb-' + pad(n) : null }; }
     if (Object.prototype.hasOwnProperty.call(AN_REPASO, id)) return { tipo: 'repaso', n: AN_REPASO[id], num: -1, cap: 'r', vig: null };
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
