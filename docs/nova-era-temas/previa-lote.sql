@@ -7,11 +7,12 @@
 --   3. Anota na própria linha O QUE o lote mudou: «[previa-lote:layout,pen,visual]» (colunas promovidas), preservando a nota que já existia.
 --   4. A VOLTA (arquivo previa-lote-volta.sql) devolve a 'off' SOMENTE as colunas que o lote promoveu E que ainda estão em 'preview'. Coluna que José promoveu a 'all' depois, ou que já estava
 --      em preview/all antes, não é tocada. Volta e ida são idempotentes (rodar duas vezes não muda nada na segunda).
--- Lista de matérias: acrescente/retire slugs conforme as PRs já mescladas (matéria fora de CANDIDATAS no rm-pilot.js nunca monta nada).
+-- Lista de matérias (24/11/2026): as 23 candidatas com PORTA ABERTA (7/7) na main 3f6b3b2f, menos o piloto (semiologia-ii) e a matéria já em preview (medicina-familiar). Fonte: docs/nova-era-temas/LEVANTAMENTO-NOVA-ERA.md.
+--   Para acrescentar/retirar slugs, mude a lista nos DOIS blocos (0 e 1) e rode tools/qa/nova-era/previa-lote-acesso.test.cjs. Matéria fora de CANDIDATAS no rm-pilot.js nunca monta nada.
 -- =====================================================================
 
 -- 0) VER O QUE O LOTE FARIA (só leitura; rodar antes)
-with alvo(slug) as (values ('biologia'), ('embriologia'), ('anatomia-patologica-practica'), ('histologia-i'))
+with alvo(slug) as (values ('anatomia-i'), ('anatomia-patologica'), ('anatomia-patologica-ii'), ('anatomia-patologica-ii-practica'), ('anatomia-patologica-practica'), ('anestesiologia'), ('biologia'), ('dermatologia'), ('embriologia'), ('farmacologia'), ('farmacologia-ii'), ('fisiopatologia'), ('fisiopatologia-ii'), ('guarani'), ('histologia-i'), ('histologia-i-practica'), ('histologia-ii'), ('histologia-ii-practica'), ('medicina-legal'), ('oftalmologia'), ('ortopedia'), ('semiologia'), ('toxicologia'))
 select a.slug,
        coalesce(r.layout_stage, 'off') as layout_hoje, coalesce(r.pen_stage, 'off') as pen_hoje, coalesce(r.visual_stage, 'off') as visual_hoje,
        concat_ws(',', case when coalesce(r.layout_stage, 'off') = 'off' then 'layout' end,
@@ -21,7 +22,7 @@ from alvo a left join public.rm_materia_rollout r on r.slug = a.slug
 order by a.slug;
 
 -- 1) LIGAR (prévia só para o administrador; preserva tudo que já estiver em preview/all)
-with alvo(slug) as (values ('biologia'), ('embriologia'), ('anatomia-patologica-practica'), ('histologia-i'))
+with alvo(slug) as (values ('anatomia-i'), ('anatomia-patologica'), ('anatomia-patologica-ii'), ('anatomia-patologica-ii-practica'), ('anatomia-patologica-practica'), ('anestesiologia'), ('biologia'), ('dermatologia'), ('embriologia'), ('farmacologia'), ('farmacologia-ii'), ('fisiopatologia'), ('fisiopatologia-ii'), ('guarani'), ('histologia-i'), ('histologia-i-practica'), ('histologia-ii'), ('histologia-ii-practica'), ('medicina-legal'), ('oftalmologia'), ('ortopedia'), ('semiologia'), ('toxicologia'))
 insert into public.rm_materia_rollout as r (slug, layout_stage, pen_stage, visual_stage, nota, atualizado_em)
 select slug, 'preview', 'preview', 'preview', '[previa-lote:layout,pen,visual]', now() from alvo
 on conflict (slug) do update set

@@ -9,7 +9,7 @@
      · ativação    = REGISTRO HISTÓRICO fixo abaixo (última leitura SELECT registrada no painel) — este script NÃO consulta o banco.
    «Preparada» aqui significa: candidata + tema + porta ABERTA (as 7 etapas passam: âncoras, ida-e-volta de grifos/traços/notas, layout em 4 larguras, uso e caneta nos modos).
    A caneta física é liberada por matéria pelo MESMO servidor (coluna pen_stage); a etapa «4-uso-caneta-modos» da porta prova a caneta V2 na matéria real.
-   Uso: node tools/qa/nova-era/levantamento-nova-era.cjs --portas <pasta com <slug>.out> [--base <sha>] [--data AAAA-MM-DD] [--out <arquivo>]  */
+   Uso: node tools/qa/nova-era/levantamento-nova-era.cjs --portas <pasta com <slug>.out> [--base <sha>] [--data AAAA-MM-DD] [--out <arquivo>] [--json <arquivo>]  */
 'use strict';
 const fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '../../..');
@@ -37,6 +37,7 @@ const ATIVACAO = { 'medicina-familiar': 'preview (layout, caneta e tema) · só 
 const SEM_LINHA = 'sem linha (= desligada para todos)';
 /* matérias fora do lote por decisão/estado, com o motivo escrito */
 const FORA_DO_LOTE = { 'medicina-familiar': 'já em preview desde 02/11 (o lote nunca reduz nem mexe)', 'semiologia-ii': 'piloto: decidido por UID nas variáveis do Netlify, não pela tabela' };
+const NOTA = { 'medicina-familiar': 'porta genérica FECHADA: 5 conferências de «infografias» (capa/lateral/contagens) falham nas 4 larguras (20 falhas); a matéria é especial (já em preview desde 02/11, gate próprio `medfam-implantacao`/`medfam-caneta`) — não é defeito comprovado, mas a porta genérica não aprova', 'semiologia-ii': 'porta aberta; mas o piloto é liberado por UID nas variáveis do Netlify, não pela tabela' };
 const PR_ABERTA = { anestesiologia: '#710 (conteúdo: blocos 16–20) aberta — refazer a porta depois do merge dela' };
 const SEM_CAND = { neurologia: 'não está em CANDIDATAS (1.ª fechadura ausente); porta já aberta em 30/10, mas a matéria está em reconstrução (#687/#682)', imagenologia: 'fora da Nova Era por decisão de José (será refeita)', bioestadistica: 'fora da Nova Era por decisão de José (será refeita)' };
 
@@ -63,6 +64,7 @@ for (const s of slugs) {
   if (cand && !tema) faltas.push('tema incompleto (css/js)');
   if (cand && P.estado !== 'ABERTA') faltas.push('porta ' + P.estado + (P.falhas && P.falhas.length ? ' (' + P.falhas.join(', ') + ')' : ''));
   if (PR_ABERTA[s]) faltas.push(PR_ABERTA[s]);
+  if (NOTA[s]) faltas.push(NOTA[s]);
   const noLote = LOTE.has(s);
   if (preparada && !noLote && !FORA_DO_LOTE[s]) faltas.push('entrar na lista do lote (previa-lote.sql)');
   if (FORA_DO_LOTE[s]) faltas.push('fora do lote: ' + FORA_DO_LOTE[s]);
@@ -76,7 +78,7 @@ md += `**Gerado por** \`tools/qa/nova-era/levantamento-nova-era.cjs\` em ${DATA}
 md += `## Como ler\n- **Preparada (layout + caneta)** = está em CANDIDATAS do \`rm-pilot.js\`, tem tema (css + js) e a **porta** (\`porta-da-materia.sh\`, 7 etapas) está **ABERTA** nesta \`main\`: inventário em dia, marcadores, âncoras (1440 e 390), ida-e-volta de grifos/traços/notas, layout em 4 larguras e uso/caneta nos modos. Isto **não liga nada**: quem liga é a linha de \`rm_materia_rollout\` (SQL de José, depois do deploy).\n`;
 md += `- **Ativação** é o **último registro** do painel (SELECT somente leitura de **17/11/2026**: só \`medicina-familiar\` tinha linha, em \`preview\`). **Não foi reverificada hoje** (esta rodada não executa SQL). Para conferir na hora: bloco 0 de \`previa-lote.sql\` (só leitura).\n`;
 md += `- Linha ausente, valor estranho ou erro = **desligada para todos**, inclusive administrador. \`preview\` = só administrador (hoje a conta de José). \`all\` = alunos que já têm a matéria.\n\n`;
-md += `## Resumo\n- Candidatas: **${CAND.length}** · **preparadas (porta aberta)**: **${cont.prep}** · não preparadas/pendentes: **${cont.naoPrep}**.\n`;
+md += `## Resumo\n- Candidatas: **${CAND.length}** · **preparadas (porta aberta)**: **${cont.prep}** · não preparadas/pendentes: **${cont.naoPrep}** (inclui as ${Object.keys(SEM_CAND).length} matérias fora de CANDIDATAS: neurologia, imagenologia, bioestadistica). Dentro do lote de prévia: **${linhas.filter(r => r.noLote).length}** matérias.\n`;
 md += `- Ativas na conta de José (último registro): **medicina-familiar** (preview) e o piloto **semiologia-ii** (por UID). **Todas as demais: inativas** (sem linha).\n- Ativas para alunos: **nenhuma** (último registro).\n\n`;
 md += `## Tabela\n\n| matéria | candidata | tema | seções · perguntas · cartões | porta (7 etapas) | ativação (último registro) | no lote | testes dedicados |\n|---|---|---|---|---|---|---|---|\n`;
 for (const r of linhas) md += `| **${r.s}** | ${ok(r.cand)} | ${ok(r.tema)} | ${r.secoes} · ${r.q} · ${r.fc} | ${r.P.estado === 'ABERTA' ? '✅ ABERTA' : r.P.estado === 'não rodada' ? '— não rodada' : '❌ ' + r.P.estado} | ${r.ativ} | ${r.noLote ? '✅' : '—'} | ${r.testes.join(', ') || '—'} |\n`;
@@ -84,4 +86,6 @@ md += `\n## O que falta para a prévia privada (por matéria)\n`;
 for (const r of linhas) md += `- **${r.s}** — ${r.preparada ? 'preparada' : 'NÃO preparada'}: ${r.faltas.join('; ') || 'nada'}.\n`;
 md += `\n## Limites\n- «Preparada» é prova de **código + ensaio em navegador com Supabase simulado**, não de que José já viu a matéria no iPad: o roteiro físico de 3 min segue sendo dele.\n- O inventário de perguntas/cartões vem de \`docs/layout-ensaio/inventario.json\` (gerado pela ferramenta; conferido pela etapa 0 da porta).\n- Variáveis do Netlify (piloto) e a tabela real não são lidas aqui.\n`;
 fs.writeFileSync(OUT, md);
+const J = arg('json', '');
+if (J) fs.writeFileSync(J, JSON.stringify({ gerado_em: DATA, base: BASE, candidatas: CAND.length, preparadas: cont.prep, materias: linhas.map(r => ({ slug: r.s, candidata: r.cand, tema: r.tema, porta: r.P, perguntas: r.q, cartoes: r.fc, no_lote: r.noLote })) }, null, 1) + '\n');
 console.log('levantamento →', path.relative(ROOT, OUT), '· candidatas', CAND.length, '· preparadas', cont.prep, '· pendentes', cont.naoPrep);
