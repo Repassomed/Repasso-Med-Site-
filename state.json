@@ -3922,6 +3922,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:717.",
       "task_id": "Farmacolog\u00eda II \u2014 tr\u00eas quest\u00f5es de \u00abcompletar\u00bb (efeito adverso da teofilina, enzima cortisol \u2192 cortisona, diurese das xantinas): comparar antes de acrescentar e entregar em formato COMPLETAR",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "f13697f8476845b57627e8ffff1ae1167a06a9d5",
+      "component": "guard",
+      "error_id": "ERR-592A7E62CC",
+      "error_type": "hard-fail",
+      "fingerprint": "592a7e62cc85993fd482",
+      "first_seen": "2026-11-24T23:58:57.256500+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "8b2b4d31ab8b4c01a599de38f7db4192",
+      "issue_sync_updated_at": "2026-11-24T23:58:57.256500+00:00",
+      "last_evidence_hash": "0c84fb0dc143b6c1760f",
+      "last_seen": "2026-11-24T23:58:57.256500+00:00",
+      "occurrence_count": 1,
+      "pr_number": 715,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "45514271250",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:715.",
+      "task_id": "Neurolog\u00eda \u2014 conferir as fotos novas da prova (Drive \u203a 7 semestre \u203a Neurologia \u203a Quest\u00f5es) com o site e a #687 e acrescentar o que falta",
+      "worker_id": null
     }
   ]
 }
