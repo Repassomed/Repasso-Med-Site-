@@ -51,6 +51,11 @@ T(len(SP.findall(orig)) <= len(SP.findall(cur)), 'los glosarios originales sigue
 for m in SP.finditer(orig):
     T(m.group(0) in cur, 'glosario original intacto: ' + re.sub(r'<[^>]+>', '', m.group(1))[:30])
 
+# 2b · las secciones de fotos quedan FUERA del contenedor de preguntas
+for bid in ('ap2pb02','ap2pb03','ap2pb05','ap2pb07','ap2pb09','ap2pb10','ap2pb11','ap2pb13','ap2pb15','ap2pb16','ap2pb17','ap2pb18'):
+    a, b = C.seccion(cur, bid); s = cur[a:b]; i = s.index('<div class="quiz-section">'); j = s.index('Más vistas de la lámina')
+    T(j < i, f'{bid}: la sección de fotos va antes del contenedor de preguntas')
+
 # 3 · glosario: sin anidar, términos coherentes, fuera de preguntas/respuestas/tarjetas/títulos
 T(not any('<span class="rmc-gl">' in m.group(1) for m in re.finditer(r'<span class="rmc-gl">(.*?)</i></span>', cur, re.S)), 'ningún glosario anidado')
 T(cur.count('<span class="rmc-gl">') == cur.count('<b class="rmc-gl-close">'), 'cada glosario tiene su botón de cierre')

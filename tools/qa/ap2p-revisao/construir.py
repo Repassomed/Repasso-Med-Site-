@@ -22,7 +22,7 @@ def build(t, glosario=True):
     assert MARCA not in t, 'ya aplicado'
     # 1) fotos nuevas
     for bid in FE.B:
-        n = int(bid[-2:]); marca = f'<h3>❓ Preguntas · Bloque {n:02d}</h3>'
+        n = int(bid[-2:]); marca = f'<div class="quiz-section">\n<h3>❓ Preguntas · Bloque {n:02d}</h3>'   # la sección nueva va ANTES del contenedor de preguntas (dentro de él el modo «preguntas» la mostraría)
         a, b = seccion(t, bid); s = t[a:b]
         assert s.count(marca) == 1, (bid, s.count(marca))
         t = t[:a] + s.replace(marca, FE.seccion(bid) + '\n' + marca) + t[b:]
