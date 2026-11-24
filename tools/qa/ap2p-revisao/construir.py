@@ -42,6 +42,10 @@ def build(t, glosario=True):
     # 3) bloques nuevos, antes del banco general
     i = t.index('<section class="container" id="ap2pbanco"')
     t = t[:i] + ''.join(BN.todos()) + t[i:]
+    # 3b) CSS de la ficha oficial (palabras largas no ensanchan la tabla en el celular)
+    css_anc = '#tab-anatoprat2 .ap2p-tab tr:last-child td{border-bottom:0}'
+    assert t.count(css_anc) == 1
+    t = t.replace(css_anc, css_anc + '\n#tab-anatoprat2 .ap2p-ficha td{overflow-wrap:anywhere}\n#tab-anatoprat2 .ap2p-ficha td:first-child{width:7.6rem}\n#tab-anatoprat2 .ap2p-ficha ul{margin:.1rem 0;padding-left:1.1rem}')
     # 4) glosario
     total = 0
     if glosario:

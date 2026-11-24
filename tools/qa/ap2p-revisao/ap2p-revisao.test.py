@@ -88,6 +88,8 @@ for f in fotos:
         T(os.path.getsize(p) <= 200 * 1024, f'{f} ≤ 200 KB ({os.path.getsize(p)//1024} KB)')
 for n in (19, 20, 22):
     p = d_img + f'vig/vb-{n}.webp'; T(os.path.exists(p) and Image.open(p).size == (480, 480), f'vinheta vb-{n}.webp 480×480')
+T('.ap2p-ficha td{overflow-wrap:anywhere}' in cur, 'CSS de la ficha oficial presente')
+T(cur.count('class="ap2p-tab ap2p-ficha"') == 26 + 8 - 0 or cur.count('class="ap2p-tab ap2p-ficha"') >= 30, 'fichas oficiales con la clase ap2p-ficha', cur.count('class="ap2p-tab ap2p-ficha"'))
 atl = re.findall(r'<div class="rmatlas">.*?</div></div></div></div>', cur, re.S)
 T(len(atl) == 11, '11 atlas interactivos nuevos (8 en bloques existentes + 3 en bloques nuevos)', len(atl))
 for a in atl:
@@ -98,6 +100,7 @@ for a in atl:
     T(all(0 < float(p[0]) < 100 and 0 < float(p[1]) < 100 and p[0] == p[3] and p[1] == p[4] for p in pts), f'{os.path.basename(base_src)}: coordenadas dentro de la imagen y style = data-x/y')
     T(len({p[5] for p in pts}) == len(pts), f'{os.path.basename(base_src)}: nombres de punto distintos')
     T(all(len(p[6]) > 40 for p in pts), f'{os.path.basename(base_src)}: cada punto explica el hallazgo')
+    T(all('<' not in p[5] and '<' not in p[6] and '&lt;' not in p[5] + p[6] for p in pts), f'{os.path.basename(base_src)}: nombre y explicación en texto plano (el atlas usa textContent: nada de etiquetas visibles)')
     T(os.path.exists(d_img + os.path.basename(base_src)), f'{os.path.basename(base_src)}: imagen del atlas existe')
 alts = re.findall(r'<img src="/assets/img/anatoprat2/lam-fotos-[^"]+" alt="([^"]*)"', cur)
 T(alts and all(len(a) > 60 for a in alts), 'todas las fotos nuevas con alt descriptivo', [a for a in alts if len(a) <= 60][:2])

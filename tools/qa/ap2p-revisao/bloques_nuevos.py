@@ -10,9 +10,10 @@ def lam(l):
     o = [f'<div class="ap2p-lam" id="lam-{l["slug"]}">\n  <div class="ap2p-lam-h"><b>{l["organo"]} · {l["dx"]}</b><span>{l["proceso"]}</span></div>\n']
     if l.get('foto'):
         s, t, alt = l['foto']
-        o.append('  <div class="ap2p-views">\n' + view(s, t, alt) + '  </div>\n')
         if l.get('atlas'):
-            sa, ab, pts = l['atlas']; o.append(atlas(sa, ab, pts))
+            sa, ab, pts = l['atlas']; o.append(atlas(sa, ab, pts))   # la foto ya se ve en el atlas
+        else:
+            o.append('  <div class="ap2p-views">\n' + view(s, t, alt) + '  </div>\n')
     o.append('  <div class="ap2p-body">\n')
     desc = '<ul class="lam-find">' + ''.join(f'<li>{x}</li>' for x in l['desc']) + '</ul>'
     o.append(fichas_tabla([('Área', l['area']), ('Órgano', l['organo']), ('Proceso', l['proceso']), ('Descripción oficial', desc), ('Diagnóstico', f'<b>{l["dx"]}</b>'), ('Fuente', l['fuente'])]))

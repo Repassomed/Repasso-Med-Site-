@@ -159,9 +159,13 @@ def seccion(bid):
     d = B[bid]
     org, proc, desc, dx, pag = d['doc']
     out = ['\n<h3>📷 Más vistas de la lámina · fotos nuevas de la pasta «Láminas»</h3>\n', INTRO]
-    out.append(f'<div class="ap2p-lam" id="{d["id"]}">\n  <div class="ap2p-lam-h"><b>{d["titulo"]}</b><span>H&amp;E · foto de microscopio · pasta «Láminas»</span></div>\n  <div class="ap2p-views">\n')
-    for slug, t, alt in d['vistas']: out.append(view(slug, t, alt))
-    out.append('  </div>\n')
+    out.append(f'<div class="ap2p-lam" id="{d["id"]}">\n  <div class="ap2p-lam-h"><b>{d["titulo"]}</b><span>H&amp;E · foto de microscopio · pasta «Láminas»</span></div>\n')
+    con_atlas = d['atlas'][0] if d['atlas'] else None
+    vistas = [v for v in d['vistas'] if v[0] != con_atlas]   # la foto del atlas ya se ve en el atlas: no se repite
+    if vistas:
+        out.append('  <div class="ap2p-views">\n')
+        for slug, t, alt in vistas: out.append(view(slug, t, alt))
+        out.append('  </div>\n')
     if d['atlas']:
         s, ab, pts = d['atlas']; out.append(atlas(s, ab, pts))
     out.append(f'  <div class="ap2p-read"><b>👁️ Cómo leer estas vistas</b>\n{d["leer"]}\n  </div>\n')
