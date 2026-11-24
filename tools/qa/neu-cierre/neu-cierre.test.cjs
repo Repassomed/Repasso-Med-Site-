@@ -12,7 +12,9 @@ const REPO = path.join(__dirname, '..', '..', '..');
 const REL = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
 const ABS = !process.argv.includes('--relativo');   /* --relativo: para usar depois de outras PRs entrarem (perguntas/figuras novas): só compara com a base dada em --base, sem números absolutos */
 const BASE = (process.argv.includes('--base') ? process.argv[process.argv.indexOf('--base') + 1] : '10e9d4df');
-const cur = fs.readFileSync(path.join(REPO, REL), 'utf8');
+/* #682: os 13 infográficos (figuras `neuro-b2N-0N-…` no fim dos blocos 20–27) são acréscimo conhecido e alheio à retirada do Cierre; esta checagem só os ignora (número e posição: tools/qa/neu-infograficos e neu-glosario) */
+const FIG_682 = /  <figure class="rmc-fig"><div class="rmc-zoom"><img class="rmc-photo" src="\/assets\/img\/neuro\/neuro-b2\d-0\d-[^"]*"[\s\S]*?<\/figure>\n/g;
+const curRaw = fs.readFileSync(path.join(REPO, REL), 'utf8'); const N_FIG = (curRaw.match(FIG_682) || []).length; const cur = curRaw.replace(FIG_682, '');   /* N_FIG = figuras da #682 presentes (0 sem ela; 13 com ela): a capa soma 34 + N_FIG infográficos */
 const old = cp.execSync('git show ' + BASE + ':"' + REL + '"', { cwd: REPO, maxBuffer: 1 << 28 }).toString();
 let ok = 0, bad = 0; const T = (c, m, x) => { if (c) ok++; else { bad++; console.log('  ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 260) : ''); } };
 const SEC = '<section class="container" id="revisaoneu"', H4 = '<h4>🎴 Mazo general · Neurología</h4>';
@@ -82,7 +84,7 @@ let ok2 = 0, bad2 = 0; const U = (c, m, x) => { if (c) ok2++; else { bad2++; con
     U(/^revisaoneu\|F🎴 Mazo general · Neurología387 tarjetas$/.test(ix.mazo || ''), '@' + w + ' o índice tem a entrada «Mazo general · Neurología» (387 tarjetas)', ix.mazo);
     U(ix.cierre.length === 0, '@' + w + ' o índice NÃO tem nenhuma entrada «Cierre»', ix.cierre);
     U((!ABS || ix.n === 30) && /^banconeu\|B🎯 Banco general de Neurología254 preguntas$/.test(ix.banco || '') || !ABS, '@' + w + ' 30 entradas no índice e o banco continua com 254 preguntas', { n: ix.n, banco: ix.banco });
-    U(ix.res.fc === '387' && ix.fcDom === 774 && (!ABS || (ix.res.fig === '34' && ix.res.quiz === '254' && ix.res.vid === '2' && ix.quizDom === 508)), '@' + w + ' capa: 34 infografías · 254 preguntas · 387 tarjetas · 2 vídeos; 774 flashcards e 508 itens no DOM (iguais aos de antes)', ix);
+    U(ix.res.fc === '387' && ix.fcDom === 774 && (!ABS || (ix.res.fig === String(34 + N_FIG) && ix.res.quiz === '254' && ix.res.vid === '2' && ix.quizDom === 508)), '@' + w + ' capa: 34 infografías · 254 preguntas · 387 tarjetas · 2 vídeos; 774 flashcards e 508 itens no DOM (iguais aos de antes)', ix);
     const nav = await n.page.evaluate(async () => { RMNav.go({ view: 'block', block: 'revisaoneu' }); await new Promise(r => setTimeout(r, 1800)); const s = document.getElementById('revisaoneu'); return { vis: s.getBoundingClientRect().height > 0 && getComputedStyle(s).display !== 'none', h2: s.querySelector('h2').textContent, play: !!s.querySelector('.rmfc-play') }; });
     U(nav.vis && nav.h2 === '🎴 Mazo general · Neurología' && nav.play, '@' + w + ' abrir a entrada do índice leva ao mazo (seção visível, botão «Jugar»)', nav);
     U(erros2.length === 0, '@' + w + ' sem erro de página (layout)' + (erros2[0] ? ': ' + erros2[0] : '')); await n.page.context().close();
