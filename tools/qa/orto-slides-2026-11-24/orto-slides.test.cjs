@@ -9,7 +9,7 @@ const ids=h=>[...h.matchAll(/\sid="([^"]+)"/g)].map(m=>m[1]);
 const a=new Set(ids(old)),b=ids(now);
 t('ids preservados',[...a].every(x=>b.includes(x)));
 t('sem ids duplicados novos',new Set(b).size===b.length||new Set(ids(old)).size!==ids(old).length);
-t('questões q-orto = 240 (nenhuma criada/removida)',(now.match(/id="q-orto\d+"/g)||[]).length===(old.match(/id="q-orto\d+"/g)||[]).length);
+t('questões q-orto = 457 (nenhuma criada/removida)',(now.match(/id="q-orto\d+"/g)||[]).length===(old.match(/id="q-orto\d+"/g)||[]).length);
 t('flashcards intactos',(now.match(/class="[^"]*flashcard/g)||[]).length===(old.match(/class="[^"]*flashcard/g)||[]).length);
 t('imagens intactas',(now.match(/<img /g)||[]).length===(old.match(/<img /g)||[]).length);
 t('tem síndrome de insuficiencia torácica',/síndrome de insuficiencia torácica/.test(now));
