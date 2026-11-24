@@ -162,9 +162,10 @@
      `ap2pbanco` (banco geral de láminas), `ap2pmazo` (mazo + ruleta) e `ap2pcierre` (tabela integradora, bibliografía e créditos) = repaso (B, F, C). Vinhetas: 18 recortes das láminas
      (fotos de microscópio) do próprio conteúdo. */
   var AP2P_REPASO = { ap2pbanco: 'B', ap2pmazo: 'F', ap2pcierre: 'C' };
+  var AP2P_SEMVIG = { 21: 1, 23: 1 };   // blocos 21 (reprodutor feminino) e 23 (masculino): ainda sem foto identificada para a vinheta ⇒ logotipo (vig: null)
   function clasificarAP2P(id) {
     var m = /^ap2pb(\d\d)$/.exec(id);
-    if (m) { var n = +m[1]; if (n >= 1 && n <= 18) return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: 'vb-' + pad(n) }; }
+    if (m) { var n = +m[1]; if (n >= 1 && n <= 23) return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: AP2P_SEMVIG[n] ? null : 'vb-' + pad(n) }; }
     if (Object.prototype.hasOwnProperty.call(AP2P_REPASO, id)) return { tipo: 'repaso', n: AP2P_REPASO[id], num: -1, cap: 'r', vig: null };
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
