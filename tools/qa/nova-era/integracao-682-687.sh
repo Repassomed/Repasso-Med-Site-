@@ -24,7 +24,7 @@ def res(p, fn):
     s=open(p).read()
     if '<<<<<<<' in s: open(p,'w').write(fn(s))
 res('tools/qa/neu-questoes-1811/neu-questoes.test.cjs', lambda s: re.sub(r"<<<<<<< HEAD\n(.*?)=======\n.*?>>>>>>> [^\n]*\n", r"\1", s, flags=re.S))   # lado #687
-res('tools/qa/neu-glosario/neu-glosario.test.cjs', lambda s: re.sub(r"<<<<<<< HEAD\n.*?\n=======\n(.*?)\n>>>>>>> [^\n]*\n", r"\1\n", s, flags=re.S).replace("historico(sem === N(oe.replace('profilaxis de TVP con HBPM, (su', 'profilaxis de TVP con HBPM (su').replace(GL, '$1'))", "historico(sem === N(oe.replace('profilaxis de TVP con HBPM, (su', 'profilaxis de TVP con HBPM (su').replace(GL, '$1'))"))   # união (lado #682 já usa .replace(GL))
+res('tools/qa/neu-glosario/neu-glosario.test.cjs', lambda s: re.sub(r"<<<<<<< HEAD\n.*?\n=======\n(.*?)\n>>>>>>> [^\n]*\n", r"\1\n", s, flags=re.S).replace("  T(sem === N(oe.replace(", "  historico(sem === N(oe.replace("))   # união (lado #682 já usa .replace(GL))
 EOF
 git checkout -q --theirs docs/layout-ensaio/inventario.json 2>/dev/null
 if grep -l '<<<<<<<' tools/qa/neu-glosario/neu-glosario.test.cjs tools/qa/neu-questoes-1811/neu-questoes.test.cjs >/dev/null 2>&1; then echo "marcadores de conflito restantes — resolver à mão"; exit 3; fi
