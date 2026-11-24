@@ -3872,6 +3872,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:706.",
       "task_id": "rodada de quest\u00f5es de Farmacolog\u00eda II a partir do levantamento da #702.",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "04f5d7df360d65d7c4321d46ca2db22ed04bf420",
+      "component": "guard",
+      "error_id": "ERR-C8915D1241",
+      "error_type": "hard-fail",
+      "fingerprint": "c8915d12413c05282fa3",
+      "first_seen": "2026-11-24T04:15:05.228627+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "f74f1ee1220245e697fab09b537ff0e4",
+      "issue_sync_updated_at": "2026-11-24T04:15:05.228627+00:00",
+      "last_evidence_hash": "b9a9a9118743df3e7baa",
+      "last_seen": "2026-11-24T04:15:05.228627+00:00",
+      "occurrence_count": 1,
+      "pr_number": 713,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "45324933493",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:713.",
+      "task_id": "Ortopedia y Traumatolog\u00eda (7\u00ba sem.) \u2014 conferir slides atuais contra cada bloco, acrescentar o que faltar",
+      "worker_id": null
     }
   ]
 }
