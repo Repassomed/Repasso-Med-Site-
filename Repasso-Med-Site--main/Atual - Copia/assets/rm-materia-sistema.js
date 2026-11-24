@@ -318,11 +318,11 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
-  /* Oftalmología (Nova Era): ofb01…ofb09 = BLOQUE 01–09 (Unidades I–V do marcador real; ofb09 sem figura ⇒ logo); bancooft = banco general, oftcierre = mazo general + ruleta + bibliografía (repaso); ofportada = âncora vazia. */
+  /* Oftalmología (Nova Era): ofb01…ofb16 = BLOQUE 01–16 (Unidades I–V = 01–09, Unidades VI–IX = 10–16 do marcador real; ofb09 e ofb10–16 sem figura ⇒ logo); bancooft = banco general, oftcierre = mazo general + ruleta + bibliografía (repaso); ofportada = âncora vazia. */
   var OF_REPASO = { bancooft: 'B', oftcierre: 'F' };
   function clasificarOF(id) {
     var m = /^ofb(\d\d)$/.exec(id);
-    if (m && +m[1] >= 1 && +m[1] <= 9) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: n === 9 ? null : 'vb-' + pad(n) }; }
+    if (m && +m[1] >= 1 && +m[1] <= 16) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: n >= 9 ? null : 'vb-' + pad(n) }; }
     if (Object.prototype.hasOwnProperty.call(OF_REPASO, id)) return { tipo: 'repaso', n: OF_REPASO[id], num: -1, cap: 'r', vig: null };
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
