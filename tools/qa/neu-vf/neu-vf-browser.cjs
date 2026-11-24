@@ -27,7 +27,7 @@ let ok = 0, bad = 0; const T = (c, m) => { if (c) { ok++; console.log('  ✓', m
     await r.page.waitForTimeout(1200);
     const dep = await r.page.evaluate(() => [...document.querySelectorAll('.quiz-item')].filter(e => /^(q|bq)-neu/.test(e.id) && e.querySelector('.tf-btn')).filter(el => { const an = el.querySelector('.answer'); return an.classList.contains('show') && getComputedStyle(an).display !== 'none' && an.offsetHeight > 0; }).length);
     const tag = '@' + w + ' clique ' + (clique === 'V' ? 'VERDADERO' : 'FALSO');
-    T(res.n === 136 && res.ok === 136, tag + ': 136 V/F (bloco + banco), veredito certo marcado e clique errado marcado «wrong»: ' + res.ok + '/' + res.n);
+    T(res.n === 138 && res.ok === 138, tag + ': 138 V/F (bloco + banco), veredito certo marcado e clique errado marcado «wrong»: ' + res.ok + '/' + res.n);
     T(dep === res.n, tag + ': a explicação aparece em todos (' + dep + '/' + res.n + ')');
     if (res.falhas.length) console.log('   ', res.falhas.slice(0, 6).join(' | '));
     T(erros.length === 0, tag + ': sem erro de página' + (erros[0] ? ': ' + erros[0] : ''));

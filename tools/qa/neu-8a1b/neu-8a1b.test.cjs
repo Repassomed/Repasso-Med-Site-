@@ -15,11 +15,11 @@ const optsOf = h => [...((h.match(/<ul class="options">([\s\S]*?)<\/ul>/) || [])
 const corrOf = h => { const m = h.match(/<div class="answer"><p><strong>([a-d])\) /); return m ? m[1] : null; };
 const A = items(base), B = items(cur);
 const GONEIDS = ['263', '265', '266', '267', '268', '283'];
-const KEEP = ['233', '234'], NEWID = ['249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '259', '260', '261', '262', '264', '269', '270', '271', '272', '273', '274', '275', '276', '277', '278', '279', '280', '281', '282', '284', '285', '286', '287', '288', '289', '290'];
+const KEEP = ['233', '234'], NEWID = ['249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '259', '260', '261', '262', '264', '269', '270', '271', '272', '273', '274', '275', '276', '277', '278', '279', '280', '281', '282', '284', '285', '286', '287', '288', '289', '290', '291', '292', '293', '294', '295', '296'];
 const REWORDED = new Set(["-2509-01", "-2509-05", "002", "005", "007", "011", "014", "015", "016", "025", "026", "032", "043", "044", "046", "048", "051", "057", "058", "060", "061", "064", "066", "067", "068", "071", "073", "075", "078", "081", "082", "086", "087", "090", "091", "093", "099", "101", "102", "109", "111", "114", "115", "120", "121", "123", "124", "130", "132", "135", "138", "144", "145", "146", "173", "175", "179", "180", "182", "183", "184", "187", "188", "190", "191", "192", "193", "197", "199", "203", "205", "207", "210", "212", "213", "214", "217", "219", "224", "225", "232", "234", "238", "242", "243", "244", "247", "248", "249", "250"]); /* alternativas reescritas na revisão de viés: mesmo conceito e mesma resposta */
 const STEM_CHANGED = new Set(['135', '090', '181', '224', '249']); /* enunciado reformulado (8-A.1-B) */
 const nq = Object.keys(B).filter(k => k.startsWith('q-')).length;
-T(nq === 290 && Object.keys(B).length === 580, '290 perguntas e 290 espelhos: ' + nq);
+T(nq === 296 && Object.keys(B).length === 592, '296 perguntas e 296 espelhos (290 da #687 + 6 da prova de 18/11): ' + nq);
 /* ids */
 for (const k of Object.keys(A)) T(k in B, 'id preservado ' + k);
 for (const n of NEWID) for (const p of ['q', 'bq']) T(p + '-neu' + n in B, 'nova ' + p + '-neu' + n);
@@ -110,7 +110,7 @@ T(/marcha jacksoniana<\/b> empieza/.test(cur), 'ensina: marcha jacksoniana (slid
 /* q-neu090: a resposta certa é a alternativa «Progresa en estadios N1, N2 y N3…», seja qual for a letra (hoje c) */
 for (const p of ['q', 'bq']) { const h = B[p + '-neu090'], L = corrOf(h), o = optsOf(h)['abcd'.indexOf(L)]; T(L === 'c' && /^Progresa en estadios N1, N2 y N3/.test(txt(o)) && txt((h.match(/<div class="answer"><p><strong>[a-d]\) ([\s\S]*?)<\/strong>/) || [])[1]) === txt(o) && /<p>a\) describe el <b>REM<\/b>|a\) describe el REM/.test(txt(h)) || /a\) describe el/.test(txt(h)), 'q-neu090: resposta certa = c) "Progresa en estadios N1, N2 y N3…" e a explicação concorda ' + p); }
 /* revisão final: TODA pergunta acrescentada (249–284) declara a origem/reconstrução e que não há clave oficial; as 262/264/269/270–282/284 declaram o slide; q-neu233/234 seguem presentes */
-for (let n = 249; n <= 290; n++) if (!GONEIDS.includes(String(n))) for (const p of ['q', 'bq']) { const h = B[p + '-neu' + n]; T(!!h && /<p><i>[^<]*(?:clave|Clave|Reconstruida|reconstruid|recordación|Enunciado)/.test(h), 'nota de origem/reconstrução em ' + p + '-neu' + n); }
+for (let n = 249; n <= 296; n++) if (!GONEIDS.includes(String(n))) for (const p of ['q', 'bq']) { const h = B[p + '-neu' + n]; T(!!h && /<p><i>[^<]*(?:clave|Clave|Reconstruida|reconstruid|recordación|Enunciado)/.test(h), 'nota de origem/reconstrução em ' + p + '-neu' + n); }
 for (const n of ['262', '264', '269']) T(/se apoya en el slide de la cátedra/.test(B['q-neu' + n]) && /se apoya en el slide de la cátedra/.test(B['bq-neu' + n]), 'slide declarado q-neu' + n);
 for (const n of ['233', '234']) for (const p of ['q', 'bq']) T(!!B[p + '-neu' + n], 'duplicata preservada com o id ' + p + '-neu' + n);
 /* rastreabilidade: o documento por arquivo existe, declara 295/195/71 e traz os 281 parágrafos e os 71 itens do Notes */
