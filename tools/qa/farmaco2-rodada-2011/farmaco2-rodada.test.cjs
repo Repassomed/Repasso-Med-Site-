@@ -15,7 +15,7 @@ const NOVAS = [   // [fragmento do enunciado, bloco, tipo]
   ['figura entre las ABSOLUTAS', 'f2b05', 'mcq'],
   ['El diltiazem corresponde a un antiarrítmico de clase', 'f2b14', 'mcq'],
   ['casos raros de una complicación sistémica', 'f2b08', 'mcq'],
-  ['efecto diurético de la aminofilina', 'f2b08', 'mcq'],
+  ['acción diurética de la aminofilina', 'f2b08', 'completar'],
   ['dosis superiores a 100 mg/día de cortisol (o equivalentes en esteroides sintéticos) durante más de 2 semanas provocan', 'f2b07', 'vf'],
   ['Un hombre de 68 años, fumador, con EPOC', 'f2b08', 'mcq'],
   ['Cite tres efectos adversos de los anticolinérgicos inhalados', 'f2b08', 'open'],
