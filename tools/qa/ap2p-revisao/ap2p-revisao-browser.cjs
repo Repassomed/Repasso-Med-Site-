@@ -89,6 +89,9 @@ const SHOTS = process.env.RM_SHOTS || '';
     await p.evaluate(() => document.querySelectorAll('.rmc-gl')[5].click()); await p.waitForTimeout(60);
     await p.keyboard.press('Escape'); await p.waitForTimeout(60);
     T(await p.evaluate(() => !document.getElementById('rm-gl-note').classList.contains('on')), 'Esc cierra la nota');
+    // fichas oficiales: sin desborde horizontal propio (no hace falta deslizar para leer una ficha)
+    const desb = await p.evaluate(() => [...document.querySelectorAll('.ap2p-ficha .rmc-scroll')].filter(e => e.scrollWidth > e.clientWidth + 1).length);
+    T(desb === 0, 'ninguna ficha oficial necesita scroll horizontal propio (' + desb + ' con desborde)', desb);
     // sin scroll horizontal
     T(await p.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1), 'sin scroll horizontal de página');
     if (SHOTS) {
