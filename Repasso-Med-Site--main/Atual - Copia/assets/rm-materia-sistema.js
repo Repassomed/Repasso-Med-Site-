@@ -158,13 +158,13 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
-  /* Anatomía Patológica II Práctica (Nova Era): 16 blocos `ap2pb01–ap2pb16` na ordem do conteúdo («BLOQUE NN · PARCIAL 1/2 · TEMA», sem «UNIDAD X»: nenhuma unidade é criada).
-     `ap2pbanco` (banco geral de láminas), `ap2pmazo` (mazo + ruleta) e `ap2pcierre` (tabela integradora, bibliografía e créditos) = repaso (B, F, C). Vinhetas: 16 recortes das láminas
+  /* Anatomía Patológica II Práctica (Nova Era): 18 blocos `ap2pb01–ap2pb18` na ordem do conteúdo («BLOQUE NN · PARCIAL 1/2/FINAL · TEMA», sem «UNIDAD X»: nenhuma unidade é criada).
+     `ap2pbanco` (banco geral de láminas), `ap2pmazo` (mazo + ruleta) e `ap2pcierre` (tabela integradora, bibliografía e créditos) = repaso (B, F, C). Vinhetas: 18 recortes das láminas
      (fotos de microscópio) do próprio conteúdo. */
   var AP2P_REPASO = { ap2pbanco: 'B', ap2pmazo: 'F', ap2pcierre: 'C' };
   function clasificarAP2P(id) {
     var m = /^ap2pb(\d\d)$/.exec(id);
-    if (m) { var n = +m[1]; if (n >= 1 && n <= 16) return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: 'vb-' + pad(n) }; }
+    if (m) { var n = +m[1]; if (n >= 1 && n <= 18) return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: 'vb-' + pad(n) }; }
     if (Object.prototype.hasOwnProperty.call(AP2P_REPASO, id)) return { tipo: 'repaso', n: AP2P_REPASO[id], num: -1, cap: 'r', vig: null };
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
@@ -299,11 +299,11 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
-  /* Anestesiología (Nova Era): aneb01…aneb15 = BLOQUE 01–15 (Unidad I = 01–11, Unidad II = 12–15, do marcador real); bancoane = banco general, anecierre = cierre/mazo (repaso); aneportada = âncora vazia. */
+  /* Anestesiología (Nova Era): aneb01…aneb20 = BLOQUE 01–20 (Unidad I = 01–11, Unidad II = 12–15, 16–17 e 19–20 = Unidad II, 18 = dolor posoperatorio; 16–20 sem viñeta/figura, do marcador real); bancoane = banco general, anecierre = cierre/mazo (repaso); aneportada = âncora vazia. */
   var AN_REPASO = { bancoane: 'B', anecierre: 'F' };
   function clasificarAN(id) {
     var m = /^aneb(\d\d)$/.exec(id);
-    if (m && +m[1] >= 1 && +m[1] <= 15) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: n <= 11 ? ((n - 1) % 6) + 1 : ((n - 12) % 3) + 4, vig: 'vb-' + pad(n) }; }
+    if (m && +m[1] >= 1 && +m[1] <= 20) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: n <= 11 ? ((n - 1) % 6) + 1 : ((n - 12) % 3) + 4, vig: n <= 15 ? 'vb-' + pad(n) : null }; }
     if (Object.prototype.hasOwnProperty.call(AN_REPASO, id)) return { tipo: 'repaso', n: AN_REPASO[id], num: -1, cap: 'r', vig: null };
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
@@ -318,11 +318,11 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
-  /* Oftalmología (Nova Era): ofb01…ofb09 = BLOQUE 01–09 (Unidades I–V do marcador real; ofb09 sem figura ⇒ logo); bancooft = banco general, oftcierre = mazo general + ruleta + bibliografía (repaso); ofportada = âncora vazia. */
+  /* Oftalmología (Nova Era): ofb01…ofb16 = BLOQUE 01–16 (Unidades I–V = 01–09, Unidades VI–IX = 10–16 do marcador real; ofb09 e ofb10–16 sem figura ⇒ logo); bancooft = banco general, oftcierre = mazo general + ruleta + bibliografía (repaso); ofportada = âncora vazia. */
   var OF_REPASO = { bancooft: 'B', oftcierre: 'F' };
   function clasificarOF(id) {
     var m = /^ofb(\d\d)$/.exec(id);
-    if (m && +m[1] >= 1 && +m[1] <= 9) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: n === 9 ? null : 'vb-' + pad(n) }; }
+    if (m && +m[1] >= 1 && +m[1] <= 16) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: n >= 9 ? null : 'vb-' + pad(n) }; }
     if (Object.prototype.hasOwnProperty.call(OF_REPASO, id)) return { tipo: 'repaso', n: OF_REPASO[id], num: -1, cap: 'r', vig: null };
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
@@ -438,7 +438,7 @@
       clasificar: clasificarGN
     },
     'anatomia-patologica-ii-practica': {
-      vigDir: 'assets/img/anatoprat2/vig/',               // 16 vinhetas recortadas das láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP2P.md)
+      vigDir: 'assets/img/anatoprat2/vig/',               // 18 vinhetas recortadas das láminas do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-AP2P.md)
       logo: 'assets/repasso-med-logo.png',
       unidades: {},                                       // o conteúdo não tem «UNIDAD X» (traz PARCIAL 1/2 no marcador): nenhuma unidade é criada
       medallones: [
