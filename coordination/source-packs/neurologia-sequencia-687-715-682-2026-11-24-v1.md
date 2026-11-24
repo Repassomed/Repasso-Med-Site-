@@ -16,3 +16,8 @@ Merge de ensaio da `claude/neuro-prova-1124` (#715) com a #682 e, em separado, d
 ## Estado atual (verificado hoje)
 - `main` `c288d1a5` já contém #712 e #713; **#687 e #715 não**.
 - A #715 inclui a linha regenerada da Neurología no inventário (592 q); a #682 tem a sua; é o conflito acima.
+
+## Atualização (24/11, fechamento)
+- **#687 atualizada com a `main` (`c288d1a5`)** em `b8edf38c`: o **único conflito era `docs/layout-ensaio/inventario.json`**; `neurologia.html` ficou **idêntico ao da #687 anterior** (a `main` não mexeu nele desde a base `d72973ed`), logo questões, marcas, correções de V/F e a retirada do Cierre (#699) não mudaram. Resolução: arquivo da `main` + linha da Neurología **regenerada** pelo gerador (580 q). Testes depois do merge: `neu-8a1b` 3763/3763, `neu-negrito` 1258/1258, `neu-vf` 565/565, `neu-glosario` 398/398, `neu-questoes-1811` 119/119, `neuro-667` 294/294; navegador `neu-8a1b` 14/14 e `neu-vf` 12/12.
+- **#715** recebeu esse merge em `23931854` (conflito só no inventário; linha regenerada, **592 q**). As 6 perguntas novas intactas; testes: ver corpo da PR.
+- **#682** (`claude/neurologia-infograficos-b20-b27`, Claude 4) segue em `8446cdd6`, **não foi tocada**. Ensaio de merge dela com a #687 atual e com a #715 atual: **mesmos 3 conflitos** (`inventario.json`, `neu-glosario.test.cjs`, `neu-questoes-1811.test.cjs`); o HTML funde sozinho. Resolução proposta no §anterior; fica para depois da #687 e da #715 entrarem.
