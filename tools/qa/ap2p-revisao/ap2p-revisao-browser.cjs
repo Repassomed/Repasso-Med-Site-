@@ -67,7 +67,7 @@ const SHOTS = process.env.RM_SHOTS || '';
     for (const i of idxs) {
       total++;
       const r = await p.evaluate(async (i) => {
-        const el = document.querySelectorAll('.rmc-gl')[i]; el.scrollIntoView({ block: 'center' });
+        const el = document.querySelectorAll('.rmc-gl')[i]; el.scrollIntoView({ block: 'center', behavior: 'instant' }); await new Promise(r => requestAnimationFrame(() => setTimeout(r, 40)));
         const def = (el.querySelector(':scope > i') || {}).innerHTML || '';
         el.click(); await new Promise(r => setTimeout(r, 90));
         const n = document.getElementById('rm-gl-note'); const on = !!n && n.classList.contains('on');
