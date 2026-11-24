@@ -228,3 +228,17 @@ Todos os PDFs grandes foram abertos pelas cópias `LEITURA_*` da própria pasta 
 **Ajustado (não retirado):** N19 («Cite las tres familias de fármacos antianginosos», examen·desarrollo) é sobre as três famílias, não sobre DHP. Foi removido só o parágrafo que agrupava nifedipino/amlodipino e remetia à N10; ficam as três famílias (nitratos, β-bloqueantes, calcioantagonistas não dihidropiridínicos: verapamilo e diltiazem) e a frase final sobre demanda/aporte de O₂. Se José preferir retirar a N19 também, é uma única exclusão.
 
 **Contagens (8-A.10):** 253 → **252** (150 baseadas em exame · 102 complementarias); 16 novas (11 exame + 5 complementarias). Cabeçalho do banco 252/150/102; separador do bloco 05: 13 basadas · 8 complementarias (antes 14·8). Inventário: 506 → 504 itens (252 bloco + 252 banco). Nada mais alterado (resumo, flashcards, imagens, grifos, notas, traços intactos; a frase pré-existente do resumo sobre DHP não foi tocada).
+
+## §R5 · RODADA 5 (24/11) — V/F de Cushing («dosis superiores a 10 mg/día») reformulada
+
+**Problema apontado por José:** a frase da prova lembrada, «dosis superiores a 10 mg/día de cortisol… provocan signos de Cushing», inclui uma faixa ampla (>10 abrange 100); marcá-la FALSA só porque o slide cita 100 mg/dia pode confundir o aluno.
+
+**Decisão:** a redação «10 mg» não é reaproveitada como pergunta (a frase, lida literalmente, não é falsa para doses acima de 100). A questão foi **reformulada para cobrar o dado da cátedra, sem apresentá-lo como limite universal**, e **reclassificada** como «Pregunta complementaria · verdadero o falso» (a redação deixou de ser a da prova; 8-A.4: não chamar de «basada en examen» o que foi reescrito).
+- Novo enunciado: «Conforme el slide de la cátedra, dosis superiores a 100 mg/día de cortisol (o equivalentes en esteroides sintéticos) durante más de 2 semanas provocan signos de hipercorticalismo o síndrome de Cushing; es la referencia que usa la cátedra, no un umbral exacto válido para todos los pacientes.» **Gabarito: VERDADERO** (ambos botões passam `true`).
+- Explicação: cita o slide 05 («dosis superiores a 100 mg/día… más de 2 semanas»), diz que os efeitos são proporcionais à dose e à duração e que a cifra não é fronteira exata; regra da cátedra: >2 semanas → retirada gradual.
+- **Pendente:** a versão da prova («10 mg/día», resposta Falso) fica registrada como não aproveitada por ambiguidade; reaproveitar só se José/cátedra esclarecer a intenção. Flashcard «Umbral del Cushing iatrogénico» e o resumo preexistentes **não foram alterados** (nota: o rótulo «umbral» do flashcard segue a linguagem da cátedra; se José quiser suavizá-lo é outra tarefa, pois não é pergunta nova).
+- Movida do grupo «basadas» para o grupo «complementarias» do bloco 06 (`f2b07`) e do banco (fim do bloco 06).
+
+**Contagens (8-A.10):** total **252** (inalterado); **149 baseadas em exame · 103 complementarias** (antes 150·102); separador do bloco 06 do banco: 12 basadas · 10 complementarias (antes 13·9); 16 novas = **10 exame + 6 complementarias**.
+
+**Grifos:** consulta SELECT somente leitura (texto/prefixo/sufixo/ocorrência; sem identificadores): 4 âncoras do bloco 06 coincidem com o texto novo («Cu», «del», «el», «shing»); motor real: **PORTÃO OK, 4/4 sobrevivem sem remapeamento**. Nada escrito no Supabase.

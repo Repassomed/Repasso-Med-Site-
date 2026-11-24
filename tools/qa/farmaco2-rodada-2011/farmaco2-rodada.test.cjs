@@ -16,7 +16,7 @@ const NOVAS = [   // [fragmento do enunciado, bloco, tipo]
   ['El diltiazem corresponde a un antiarrítmico de clase', 'f2b14', 'mcq'],
   ['casos raros de una complicación sistémica', 'f2b08', 'mcq'],
   ['efecto diurético de la aminofilina', 'f2b08', 'mcq'],
-  ['Dosis superiores a 10 mg/día de cortisol', 'f2b07', 'vf'],
+  ['dosis superiores a 100 mg/día de cortisol (o equivalentes en esteroides sintéticos) durante más de 2 semanas provocan', 'f2b07', 'vf'],
   ['Un hombre de 68 años, fumador, con EPOC', 'f2b08', 'mcq'],
   ['Cite tres efectos adversos de los anticolinérgicos inhalados', 'f2b08', 'open'],
   ['Cite tres β₂-agonistas de acción corta', 'f2b08', 'open'],
@@ -72,7 +72,7 @@ if (process.argv.includes('--estatico') || bad) process.exit(bad ? 1 : 0);
   const m = L.reconciliar().ativas.find(x => x.slug === 'farmacologia-ii'); const srv = await L.servir({ usadas: new Set(), pedidos: [] });
   const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch(); let ok2 = 0, bad2 = 0;
   const U = (c, mm, x) => { if (c) ok2++; else { bad2++; console.log('  ✗ FALHA:', mm, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 240) : ''); } };
-  for (const [frag, certa] of [['Dosis superiores a 10 mg/día de cortisol', 'F'], ['El sucralfato puede reducir la absorción de otros fármacos', 'V']]) {
+  for (const [frag, certa] of [['dosis superiores a 100 mg/día de cortisol (o equivalentes en esteroides sintéticos) durante más de 2 semanas provocan', 'V'], ['El sucralfato puede reducir la absorción de otros fármacos', 'V']]) {
     for (const [lado, cont] of [['bloco', null], ['banco', 'f2b15']]) for (const quer of ['V', 'F']) {
       const r = await L.abrir(br, base, m, { w: 1440, h: 900, modo: 'controle', corr: true }); await r.page.waitForTimeout(2500);
       const res = await r.page.evaluate(async ([frag, quer, cont]) => {
