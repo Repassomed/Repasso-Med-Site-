@@ -1,0 +1,21 @@
+// Ortopedia · conferência de slides 24/11/2026: estático + nada removido.
+const fs=require('fs'),cp=require('child_process'),path=require('path');
+const F='Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/ortopedia.html';
+const base=process.argv.includes('--main')?process.argv[process.argv.indexOf('--main')+1]:'origin/main';
+const now=fs.readFileSync(F,'utf8');
+const old=cp.execSync(`git show ${base}:"${F}"`,{maxBuffer:1<<28}).toString();
+let ok=0,bad=0;const t=(n,c)=>{c?ok++:(bad++,console.log('FALHA:',n))};
+const ids=h=>[...h.matchAll(/\sid="([^"]+)"/g)].map(m=>m[1]);
+const a=new Set(ids(old)),b=ids(now);
+t('ids preservados',[...a].every(x=>b.includes(x)));
+t('sem ids duplicados novos',new Set(b).size===b.length||new Set(ids(old)).size!==ids(old).length);
+t('questões q-orto = 240 (nenhuma criada/removida)',(now.match(/id="q-orto\d+"/g)||[]).length===(old.match(/id="q-orto\d+"/g)||[]).length);
+t('flashcards intactos',(now.match(/class="[^"]*flashcard/g)||[]).length===(old.match(/class="[^"]*flashcard/g)||[]).length);
+t('imagens intactas',(now.match(/<img /g)||[]).length===(old.match(/<img /g)||[]).length);
+t('tem síndrome de insuficiencia torácica',/síndrome de insuficiencia torácica/.test(now));
+t('displasias com exemplos',/displasia espondiloepifisaria, enanismo distrófico, mucopolisacaridosis/.test(now));
+const strip=h=>h.replace(/\s+/g,' ');
+t('só adições (texto antigo preservado fora dos 2 pontos)',strip(old).replace(/<b>displasias óseas<\/b> /,'').length<=strip(now).length);
+const dv=(h,tag)=>(h.match(new RegExp('<'+tag+'[\\s>]','g'))||[]).length;
+['div','section','p','table','tr','td','span'].forEach(k=>t('balance '+k,dv(now,k)===(now.match(new RegExp('</'+k+'>','g'))||[]).length));
+console.log(`ort-slides: ${ok}/${ok+bad}`);process.exit(bad?1:0);
