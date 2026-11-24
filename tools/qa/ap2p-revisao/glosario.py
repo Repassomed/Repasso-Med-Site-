@@ -7,7 +7,7 @@ CLOSE = '<b class="rmc-gl-close">Tocá de nuevo para cerrar</b>'
 
 # patrón regex (sin distinguir mayúsculas) -> definición HTML. El orden no importa: se aplica «lo más largo primero».
 NUEVOS = {
- r'perlas? (?:de queratina|córneas)': '<b>Perla de queratina</b>: formación <b>concéntrica</b> de queratina, «en capas de cebolla», dentro de un nido tumoral. Muestra que el tumor aún intenta madurar como epitelio escamoso. No la confundas con una perla de colesterol ni con un cuerpo de psamoma.',
+ r'perlas? (?:de queratina|córneas)': '<b>Perla de queratina</b>: formación <b>concéntrica</b> de queratina, «en capas de cebolla», dentro de un nido tumoral. Muestra que el tumor aún intenta madurar como epitelio escamoso.',
  r'contenido mixoide|estroma mixoide|tejido mixoide|fondo mixoide|mixoide': '<b>Mixoide</b>: tejido <b>laxo, pálido y gelatinoso</b>, rico en una sustancia mucosa. Se ve claro, con células que parecen «flotar» en él.',
  r'linitis plástica': '<b>Linitis plástica</b>: engrosamiento y <b>rigidez de toda la pared del estómago</b>, que queda como un tubo de cuero. Es la imagen del adenocarcinoma gástrico <b>difuso</b>; no se trata de un tumor «bultoso».',
  r'intraepitelial(?:es)?': '<b>Intraepitelial</b>: <b>dentro</b> del epitelio, sin haber cruzado la membrana basal. Si las células malignas siguen ahí, es un cáncer <b>in situ</b>: todavía no invade.',
