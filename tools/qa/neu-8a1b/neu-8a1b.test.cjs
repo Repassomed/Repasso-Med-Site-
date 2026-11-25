@@ -120,4 +120,10 @@ T((RAST.match(/^\| \d+ \| (?:ACR|COB|COB-P|ENS|FNT|PEND|FRAG) \|/gm) || []).leng
 T(/Soma: 8 \+ 203 \+ 32 \+ 23 \+ 6 \+ 2 \+ 7 = \*\*281\*\*/.test(RAST) && /71 entradas = \*\*70 COB \+ 1 COB-P\*\*/.test(RAST), 'rastreabilidade: somas fecham (281 e 71)');
 /* 254 e 261: fonte exata declarada; 254 sem a afirmação sobre acúmulo/quedas (não está nos slides) */
 for (const p of ['q', 'bq']) { T(/benzodiacepinas de corta duración \(máx\. 2 semanas\)/.test(B[p + '-neu254']) && !/riesgo de caídas/.test(B[p + '-neu254']), 'q254 apoiada no slide 7 ' + p); T(/Farmacología II/.test(B[p + '-neu261']) && /slide de cefaleas/.test(B[p + '-neu261']), 'q261 apoiada em slide + Farmacología II ' + p); }
+/* auditoria 25/11: q-neu002 sem a fase rápida como resposta; q-neu181 distingue suspeita clínica de confirmação por TC */
+for (const p of ['q', 'bq']) {
+  const h2 = B[p + '-neu002'], h1 = B[p + '-neu181'];
+  T(/<strong>b\) Desviación tónica lenta de ambos ojos hacia el oído irrigado con agua fría\.<\/strong>/.test(h2) && !/sacudidas rápidas hacia el lado opuesto<\/li>/.test(h2) && /no describe esa fase/.test(h2), 'q002 resposta só com a fase lenta; fase rápida declarada sem fonte ' + p);
+  T(/qué estudio de imagen se pide de inmediato para confirmarla/.test(h1) && /<strong>d\) Sospecha de ACV hemorrágico/.test(h1) && /La clínica orienta, pero no confirma/.test(h1) && (h1.match(/<li>[a-d]\) Sospecha de /g) || []).length === 4 && !/definen un/.test(h1), 'q181 sospecha × confirmação por TC; 4 alternativas simétricas ' + p);
+}
 console.log('neu-8a1b (estático): ' + ok + '/' + (ok + bad) + (bad ? ' — ' + bad + ' FALHAS' : ' OK')); process.exit(bad ? 1 : 0);
