@@ -1,7 +1,7 @@
 // Neurología · 6 perguntas da prova de 18/11: nada removido; só adições; bloco = banco; sem negrito/pista.
 const fs=require('fs'),cp=require('child_process');
 const F='Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
-const base=process.argv[2]||'origin/claude/neuro-8a1b-1911';
+const base=process.argv[2]||'1dfb7442' /* #687 antes de a #715 ser incorporada */;
 const now=fs.readFileSync(F,'utf8'),old=cp.execSync(`git show ${base}:"${F}"`,{maxBuffer:1<<29}).toString();
 let ok=0,bad=0;const t=(n,c)=>{c?ok++:(bad++,console.log('FALHA:',n))};
 const IDS=[291,292,293,294,295,296,297];
