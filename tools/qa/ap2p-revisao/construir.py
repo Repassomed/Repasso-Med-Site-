@@ -7,7 +7,7 @@
 # Uso: python3 tools/qa/ap2p-revisao/construir.py   (desde la raíz del repositorio)
 import os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
-import fotos_existentes as FE, bloques_nuevos as BN, ampliacion_pancreas as AP, glosario as GL, enmirada as EM
+import fotos_existentes as FE, bloques_nuevos as BN, ampliacion_pancreas as AP, glosario as GL, enmirada as EM, reordenar as RO
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', '..'))
 F = os.path.join(ROOT, 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anatomia-patologica-ii-practica.html')
@@ -56,6 +56,7 @@ def build(t, glosario=True):
             a, b = seccion(t, m.group(1))
             s, n = GL.aplicar(t[a:b], mapa, {}); total += n
             t = t[:a] + s + t[b:]
+    t = RO.aplicar(t)   # orden de los slides (13 antes de 14), ids intactos
     t = t.replace('<section id="ap2pportada" hidden aria-hidden="true"></section>', '<section id="ap2pportada" hidden aria-hidden="true"></section>\n' + MARCA, 1)
     return t, total
 

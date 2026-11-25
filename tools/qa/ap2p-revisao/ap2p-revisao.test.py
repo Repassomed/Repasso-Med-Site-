@@ -2,7 +2,7 @@
 # AP II Práctica · revisión integral · pruebas ESTÁTICAS (sin red, sin escritura). Uso: python3 tools/qa/ap2p-revisao/ap2p-revisao.test.py [--base origin/main]
 import os, re, subprocess, sys, struct
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
-import construir as C, glosario as GL
+import construir as C, glosario as GL, reordenar as RO
 from PIL import Image
 
 base = sys.argv[sys.argv.index('--base') + 1] if '--base' in sys.argv else 'origin/main'
@@ -10,6 +10,8 @@ rel = os.path.relpath(C.F, C.ROOT)
 orig = subprocess.check_output(['git', '-C', C.ROOT, 'show', f'{base}:{rel}']).decode('utf-8')
 cur = open(C.F, encoding='utf-8').read()
 ok = bad = 0
+orig_ord = orig                       # original tal cual
+orig = RO.aplicar(orig)               # original con el orden de slides 13→14 (solo cambian posiciones y rótulos 15↔16): base de las comparaciones por sección
 def T(c, m, x=None):
     global ok, bad
     if c: ok += 1
@@ -18,9 +20,9 @@ SP = re.compile(r'<span class="rmc-gl">(.*?)<b>\?</b><i><b class="rmc-gl-close">
 strip = lambda h: SP.sub(lambda m: m.group(1), h)
 
 # 1 · el HTML actual es EXACTAMENTE «original + revisión» (idempotente y reproducible)
-ref, _ = C.build(orig)
+ref, _ = C.build(orig_ord)
 T(ref == cur, 'el archivo actual = original + construir.py (reproducible, sin edición manual fuera del script)', (len(ref), len(cur)))
-ref_sin, _ = C.build(orig, glosario=False)
+ref_sin, _ = C.build(orig_ord, glosario=False)
 T(strip(cur) == strip(ref_sin), 'quitando los glosarios, el texto es idéntico al de referencia sin glosario (ninguna palabra se perdió, se movió ni se partió)')
 T(cur.count(C.MARCA) == 1, 'marcador de la revisión presente 1×')
 
@@ -120,7 +122,7 @@ for n in range(19, 24):
     T('Qué falta de los próximos materiales' in s, f'{bid}: registra lo que falta de José')
     T(all(k in s for k in ('<b>Órgano</b>', '<b>Proceso</b>', '<b>Diagnóstico</b>', '<b>Descripción oficial</b>')), f'{bid}: cada lámina con órgano, proceso, descripción y diagnóstico')
 order = [m.group(1) for m in re.finditer(r'<section class="container" id="(ap2p[a-z0-9]+)"', cur)]
-T(order == [f'ap2pb{n:02d}' for n in range(1, 24)] + ['ap2pbanco', 'ap2pmazo', 'ap2pcierre'], 'orden de las secciones: bloques 01–23, banco, mazo, cierre', order[-6:])
+T(order == [f'ap2pb{n:02d}' for n in list(range(1, 15)) + [16, 15] + list(range(17, 24))] + ['ap2pbanco', 'ap2pmazo', 'ap2pcierre'], 'orden de las secciones: bloques 01–14, 16 (slide 13), 15 (slide 14), 17–23, banco, mazo, cierre', order[-6:])
 # fidelidad al documento: cada diagnóstico nuevo aparece como lo escribe el documento
 for dx in ('Bocio coloide multinodular', 'Tiroiditis de Hashimoto', 'Adenoma folicular de tiroides', 'Carcinoma papilar de tiroides', 'Carcinoma medular de tiroides', 'Endometriosis', 'Cervicitis crónica', 'Carcinoma escamoso de cuello uterino', 'Leiomioma', 'Leiomiosarcoma', 'Teratoma ovárico', 'Cistoadenoma mucinoso de ovario', 'Mastitis granulomatosa', 'Carcinoma ductal de mama in situ', 'Carcinoma ductal de mama invasivo', 'Condiloma acuminado', 'Carcinoma escamoso de piel', 'Melanoma', 'Lipoma', 'Hemangioma cavernoso', 'Liposarcoma', 'Atrofia testicular', 'Hiperplasia prostática benigna', 'Orquitis', 'Teratoma testicular', 'Seminoma', 'Adenocarcinoma de próstata'):
     T(f'<b>{dx}</b>' in cur, f'diagnóstico del documento presente: {dx}')
@@ -145,5 +147,15 @@ T('Fila india:' in cur and 'lobulillar' in cur, 'fila india: discrepancia con la
 for f in os.listdir(d_img):
     if f.startswith(('lam-final-', 'lam-p2-', 'lam-fotos-')) and f.endswith('.webp'):
         im = Image.open(d_img + f); T(im.size[0] > 100 and im.size[1] > 100 and os.path.getsize(d_img + f) < 700000, f'{f}: tamaño razonable', (im.size, os.path.getsize(d_img + f)))
+
+# 7 · orden de slides 13→14 con ids intactos
+labs = lambda h: re.findall(r'section-marker-num">— (BLOQUE \d\d) · PARCIAL 2 · (PÁNCREAS I+)', h)
+T(labs(cur) == [('BLOQUE 15', 'PÁNCREAS I'), ('BLOQUE 16', 'PÁNCREAS II')], 'marcadores visibles: Bloque 15 = Páncreas I, Bloque 16 = Páncreas II', labs(cur))
+a, b = C.seccion(cur, 'ap2pb16'); T('Adenocarcinoma de páncreas' in cur[a:a + 600] and 'BLOQUE 15' in cur[a:a + 300], 'ap2pb16 (adenocarcinoma, slide 13) se muestra como Bloque 15')
+a, b = C.seccion(cur, 'ap2pb15'); T('Pancreatitis crónica' in cur[a:a + 600] and 'BLOQUE 16' in cur[a:a + 300], 'ap2pb15 (pancreatitis, slide 14) se muestra como Bloque 16')
+qs = lambda h: sorted(strip(x) for x in re.findall(r'<div class="quiz-item">.*?</div>\s*</div>', h, re.S)); fs = lambda h: sorted(strip(x) for x in re.findall(r'<div class="flashcard">.*?</div></div>', h, re.S))
+T(qs(cur) == qs(orig) and len(qs(cur)) == 488, 'las 488 preguntas son las mismas del original (con rótulos 15↔16)', len(qs(cur)))
+T(fs(cur) == fs(orig) and len(fs(cur)) == 924, 'las 924 tarjetas son las mismas del original (con rótulos 15↔16)', len(fs(cur)))
+ht = lambda h: re.findall(r'<h4>(Bloque \d\d) ·', h); T(ht(cur)[:0] == [] and [x for x in ht(cur) if x in ('Bloque 15', 'Bloque 16')] == ['Bloque 15', 'Bloque 16'] * 2, 'banco y mazo en el orden nuevo (15 antes de 16)', [x for x in ht(cur) if x in ('Bloque 15', 'Bloque 16')])
 print(f'\nap2p-revisao (estático): {ok}/{ok + bad} OK' + (f' — {bad} FALHAS' if bad else ''))
 sys.exit(1 if bad else 0)
