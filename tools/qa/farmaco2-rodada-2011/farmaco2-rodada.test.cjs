@@ -15,7 +15,7 @@ const NOVAS = [   // [fragmento do enunciado, bloco, tipo]
   ['figura entre las ABSOLUTAS', 'f2b05', 'mcq'],
   ['El diltiazem corresponde a un antiarrítmico de clase', 'f2b14', 'mcq'],
   ['casos raros de una complicación sistémica', 'f2b08', 'mcq'],
-  ['efecto diurético de la aminofilina', 'f2b08', 'mcq'],
+  ['acción diurética de la aminofilina', 'f2b08', 'completar'],
   ['dosis superiores a 100 mg/día de cortisol (o equivalentes en esteroides sintéticos) durante más de 2 semanas provocan', 'f2b07', 'vf'],
   ['Un hombre de 68 años, fumador, con EPOC', 'f2b08', 'mcq'],
   ['Cite tres efectos adversos de los anticolinérgicos inhalados', 'f2b08', 'open'],
@@ -34,7 +34,7 @@ for (const [frag, bloco, tipo] of NOVAS) {
   const A = itemDe(sec(bloco), frag), B = itemDe(banco, frag);
   T(A.length === 1 && B.length === 1, '«' + frag.slice(0, 45) + '…» existe 1× no bloco ' + bloco + ' e 1× no banco', [A.length, B.length]);
   if (A.length !== 1 || B.length !== 1) continue;
-  const norm = x => x.replace(/\s+/g, ' ').trim();
+  const norm = x => x.replace(/ id="b?q-f2-[a-z0-9-]+"/g, '').replace(/\s+/g, ' ').trim();
   T(norm(A[0]) === norm(B[0]), '«' + frag.slice(0, 45) + '…» bloco e banco idênticos');
   const q = A[0].match(/<div class="quiz-question">([\s\S]*?)<\/div>/)[1];
   T(!/<(b|i|em|strong|u|mark)\b|style=|class="[^"]*(hl|dest)/i.test(q.replace(/<span class="quiz-tag[^>]*>[^<]*<\/span>/, '')), 'enunciado sem destaque visual', q.slice(0, 100));
