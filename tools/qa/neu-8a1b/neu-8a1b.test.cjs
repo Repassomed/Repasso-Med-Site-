@@ -123,7 +123,7 @@ for (const p of ['q', 'bq']) { T(/benzodiacepinas de corta duración \(máx\. 2 
 /* auditoria 25/11: q-neu002 sem a fase rápida como resposta; q-neu181 distingue suspeita clínica de confirmação por TC */
 for (const p of ['q', 'bq']) {
   const h2 = B[p + '-neu002'], h1 = B[p + '-neu181'];
-  T(/<strong>b\) Desviación tónica lenta de ambos ojos hacia el oído irrigado con agua fría\.<\/strong>/.test(h2) && !/sacudidas rápidas hacia el lado opuesto<\/li>/.test(h2) && /no describe esa fase/.test(h2), 'q002 resposta só com a fase lenta; fase rápida declarada sem fonte ' + p);
+  T(/<strong>b\) Desviación tónica lenta de ambos ojos hacia el oído irrigado con agua fría\.<\/strong>/.test(h2) && !/sacudidas rápidas hacia el lado opuesto<\/li>/.test(h2) && /no describe esa fase/.test(h2) && /no demuestra<\/b> que todo el tronco/.test(h2) && !/confirma que el tronco funciona/.test(h2) && !/lesión grave del tronco encefálico, no normalidad/.test(h2), 'q002 sem conclusão absoluta sobre o tronco; limites declarados ' + p);
   T(/qué estudio de imagen se pide de inmediato para confirmarla/.test(h1) && /<strong>d\) Sospecha de ACV hemorrágico/.test(h1) && /La clínica orienta, pero no confirma/.test(h1) && (h1.match(/<li>[a-d]\) Sospecha de /g) || []).length === 4 && !/definen un/.test(h1), 'q181 sospecha × confirmação por TC; 4 alternativas simétricas ' + p);
 }
 console.log('neu-8a1b (estático): ' + ok + '/' + (ok + bad) + (bad ? ' — ' + bad + ' FALHAS' : ' OK')); process.exit(bad ? 1 : 0);
