@@ -140,6 +140,7 @@ for frag in ('id="lam-mola-hidatiforme"', 'id="lam-celiaca"', 'id="lam-adenoma-t
 T(cur.count('Descripción en el laminario Final') >= 13, 'fichas con la descripción del laminario Final', cur.count('Descripción en el laminario Final'))
 for bid in [f'ap2pb{n:02d}' for n in list(range(1, 15)) + [17, 18]]:
     a, b = C.seccion(cur, bid); T('⚡ En una mirada' in cur[a:b] and cur[a:b].index('⚡ En una mirada') < cur[a:b].index('Desde cero'), f'{bid}: cuadro «En una mirada» antes de «Desde cero»')
+T(cur.count('Cómo reconocerla y con qué no confundirla') == 16, 'tabla «Cómo reconocerla» en los 16 bloques antiguos', cur.count('Cómo reconocerla y con qué no confundirla'))
 T('Fila india:' in cur and 'lobulillar' in cur, 'fila india: discrepancia con la bibliografía registrada como pendiente')
 for f in os.listdir(d_img):
     if f.startswith(('lam-final-', 'lam-p2-', 'lam-fotos-')) and f.endswith('.webp'):

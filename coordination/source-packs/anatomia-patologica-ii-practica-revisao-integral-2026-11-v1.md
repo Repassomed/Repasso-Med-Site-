@@ -151,3 +151,21 @@ Por tema: tireoide (bocio, Hashimoto, adenoma folicular, papilar: 2–4 vistas +
 **Marcações dos alunos.** Supabase só leitura: 0 grifos/notas/traços nesta matéria; todos os ids/âncoras existentes preservados (teste de integridade do texto compara com a versão original sem glossário); novas seções entram antes de `quiz-section`/`ap2pbanco`.
 
 **Cache.** `VER` em `rm-pilot.js`/`index.html` **não** foi alterado (arquivos críticos). Antes de ativar: subir `VER` (módulo `rm-materia-sistema.js` mudou) junto com a ativação, senão alunos com cache antigo veem `clasificarAP2P` sem os blocos 19–23.
+
+## 13 · Rodada 25/11 (2) — arquivos NÃO abertos (nomes exatos), síntese dos blocos antigos, ordem 15/16
+
+**Arquivos que não consegui abrir (Drive, pasta do semestre) e como José pode fornecer:**
+| Arquivo | Tamanho | O que foi lido | Forma mais simples |
+|---|---|---|---|
+| `laminário_261110_132914.pdf` (doc. A) | 50 776 482 B | só texto, págs. 1–5; imagens e págs. 6+ não | dividir em partes de ≤ 8 MB (ex. 5 págs. cada) **ou** exportar as páginas como JPG |
+| `laminário - 2_260728_225030.pdf` (doc. B) | 44 664 245 B | só texto, págs. 1–7; imagens não | idem |
+| `Anatopato II - Resumo Final.pdf` | 61 882 064 B | **nada** | dividir em partes ≤ 8 MB |
+| Slides teóricos 02, 04, 07, 08, 10, 11, 13, 16 (pasta «Slides atualizados») | 11–18 MB cada | só texto OCR dos que o conector devolveu | cada slide dividido em 2–3 PDFs ou imagens por slide |
+Como dividir (qualquer PDF): iLovePDF/Smallpdf «Dividir PDF» por intervalos, ou «Imprimir → PDF» por faixas de páginas; enviar para a mesma pasta do Drive.
+`Apunte Prova Final Anatopato II - Dra. Chamorro.pdf` (279 KB) abriu: são apuntes de aluno (fonte não autorizada como autoridade) e só cobrem boca/esôfago/estômago/fígado/pâncreas; **não** trazem tireoide, mama nem testículo; nada foi usado como fonte.
+
+**«Fila india» × literatura-base:** o único material disponível confirma só a associação na ficha (doc. B pág. 5 e Final pág. 11). A literatura-base (Robbins, 440 MB) **não abre**; os apuntes não cobrem mama. Não há como resolver a divergência aqui: fica **pendente**, sem corrigir nem ensinar como regra.
+
+**Síntese dos blocos antigos (01–14, 17, 18).** Feita dentro do que é seguro sem reescrever o ensino já revisado: cada bloco recebe agora duas tabelas no topo — «⚡ En una mirada» (4 renglones oficiais) e «🔎 Cómo reconocerla y con qué no confundirla» (copiadas tal cual do texto do próprio bloco). O corpo longo (concepto, causas, clínica, patogenia) **não foi reescrito**: exige os slides 02, 04, 07, 08, 10, 11, 13, 16 por inteiro (acima) e consulta de marcações antes de cada edição; ficam para a rodada com esses arquivos.
+
+**Ordem 15/16 — impedimento técnico real e solução.** (1) O id (`ap2pb15/16`) e o número visível («Bloque 15/16») estão em: marcador de seção, títulos «Preguntas · Bloque NN», tabelas do banco, títulos de mazos/decks, cruzamentos de texto e perguntas; (2) `rm-materia-sistema.js` deriva vinheta (`vb-NN`) e capítulo do **número** do id. Mover só a seção no DOM deixaria «Bloque 16» antes de «Bloque 15»; renumerar exige trocar ~30 rótulos e reordenar 3 porções do banco/mazo. **Solução proposta (rodada própria, ~1 PR pequena):** manter os ids; no DOM colocar `ap2pb16` antes de `ap2pb15`; trocar os rótulos visíveis 15↔16 (e «PÁNCREAS I/II») em todo o arquivo; reordenar as porções do banco/mazo; no `clasificarAP2P` mapear 15↔16 para a vinheta correta; rodar `temas-ap2p`, `real-ap2p`, `integracao-ap2p`. Não é risco para grifos (0 marcações; âncoras seguem pelo id), mas exige ordem de José por tocar o módulo Nova Era.
