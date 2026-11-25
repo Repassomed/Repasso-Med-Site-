@@ -13,7 +13,7 @@ B['ap2pb02'] = dict(
  vistas=[('parotida', 'Vista 4 · cápsula, glándula sana y tumor', 'Foto de microscopio en campo circular: arriba a la derecha, glándula salival normal muy violeta con acinos apretados y espacios de grasa; una banda rosada diagonal (cápsula) la separa del tejido tumoral pálido y laxo de abajo a la izquierda, con luces alargadas de conductos.')],
  atlas=('parotida', 'Foto de microscopio de glándula salival con tumor: glándula normal violeta arriba a la derecha, banda fibrosa rosada diagonal y tejido tumoral pálido abajo a la izquierda.', [
    (65, 25, 'Parótida normal, comprimida', 'Acinos serosos muy basófilos y espacios claros de grasa. Es la referencia sana, pegada a la cápsula: el tumor la empuja, no la invade.'),
-   (54, 40, 'Cápsula fibrosa', 'Banda rosada que separa la glándula sana del tumor. La ficha dice «cápsula fibrosa de espesor variable»: en algunos sectores es fina.'),
+   (58, 52, 'Cápsula fibrosa', 'Banda rosada que separa la glándula sana del tumor. La ficha dice «cápsula fibrosa de espesor variable»: en algunos sectores es fina.'),
    (29, 48, 'Estroma mixoide', 'Fondo pálido y laxo donde las células parecen «flotar»: es el componente mixoide del tumor.'),
    (45, 68, 'Luces ductales', 'Conductos del componente epitelial, vistos como luces alargadas y redondeadas dentro del estroma pálido.')]),
  leer='<p><b>Primero la banda rosada diagonal</b>: es la cápsula. A un lado, tejido muy violeta y apretado (<b>glándula sana</b>); al otro, tejido pálido y laxo (<b>tumor</b>). Dentro del tumor buscá el <b>fondo mixoide</b> y las <b>luces de los conductos</b>.</p>',
@@ -119,7 +119,7 @@ B['ap2pb15'] = dict(
  atlas=None,
  leer='<p>Mirá la <b>proporción</b>: mucho tejido rosado pálido (fibrosis) y pocos <b>lobulillos violetas</b> que quedan. Los bordes de la foto tienen artefacto óptico; no los tomes por tejido.</p>',
  buscar='<b>fibrosis</b> que reemplaza el parénquima y <b>lobulillos pequeños</b> que sobreviven alrededor de conductos.',
- nc='<b>Qué muestra y qué no:</b> solo la proporción fibrosis/parénquima; <b>no</b> se confirman la atrofia de acinos, el tamaño de los islotes, el infiltrado ni la dilatación ductal. Va sin puntos.',
+ nc='<b>Qué muestra y qué no:</b> solo la proporción fibrosis/parénquima; <b>no</b> se confirman la atrofia de acinos, el tamaño de los islotes, el infiltrado ni la dilatación ductal. Los puntos del atlas van sobre la foto del laminario Final.',
  frase='Pancreatitis crónica = <b>fibrosis extensa y pérdida de acinos</b>; sobreviven pocos lobulillos.')
 
 B['ap2pb16'] = dict(
@@ -127,7 +127,7 @@ B['ap2pb16'] = dict(
  doc=('Páncreas', 'Neoplasia maligna', 'proliferación neoplásica maligna <b>glandular</b>, <b>atipia marcada</b>, glándulas <b>irregulares</b>, <b>necrosis intraglandular</b> y <b>desmoplasia</b>', 'Adenocarcinoma de páncreas', 'documento «laminário - 2», pág. 4'),
  vistas=[('pancreas-adenoca', 'Vista · glándulas irregulares (contraste bajo)', 'Foto de microscopio en campo circular claro y de bajo contraste: glándulas de luces irregulares y bordes plegados dentro de un estroma pálido.')],
  atlas=None,
- leer='<p>El contraste es bajo: se alcanza a ver <b>glándulas de luz irregular</b> sobre un fondo pálido. No se señalan puntos porque <b>no se distingue</b> con seguridad el estroma desmoplásico ni la necrosis.</p>',
+ leer='<p>El contraste es bajo: se alcanza a ver <b>glándulas de luz irregular</b> sobre un fondo pálido. Los puntos del atlas van sobre la foto del laminario Final y solo marcan lo que se reconoce: <b>no se distingue</b> con seguridad el estroma desmoplásico ni la necrosis.</p>',
  buscar='<b>luces glandulares irregulares</b> y plegadas, en lugar de los tubos redondos de un páncreas normal.',
  nc='<b>Qué muestra y qué no:</b> solo la forma de las glándulas; <b>no</b> se juzgan atipia, necrosis intraglandular ni desmoplasia.',
  frase='Adenocarcinoma de páncreas = <b>glándulas irregulares rodeadas de estroma fibroso</b> (desmoplasia).')
@@ -155,6 +155,15 @@ B['ap2pb18'] = dict(
  nc='<b>Qué muestra y qué no:</b> se ven la tiroidización, el infiltrado y un vaso engrosado; en este campo <b>no</b> se identifican con seguridad los glomérulos esclerosados. Para el contraste con la glomerulonefritis crónica, el cuadro del Bloque 18 sigue valiendo.',
  frase='Pielonefritis crónica = <b>tiroidización + infiltrado linfocitario + vasos gruesos</b> sobre un riñón con fibrosis.')
 
+import final_pdf as FP
+for _bid, _x in FP.EXISTENTES.items():
+    _d = B[_bid]
+    _d['vistas'] = _d['vistas'] + _x['vistas']
+    if _x.get('atlas') and not _d['atlas']: _d['atlas'] = _x['atlas']
+    if _x.get('final'): _d['final'] = _x['final']
+B['ap2pb10']['extra'] = [FP.CELIACA]
+B['ap2pb13']['extra'] = [FP.ADENOMA_TUBULAR]
+
 def seccion(bid):
     d = B[bid]
     org, proc, desc, dx, pag = d['doc']
@@ -170,9 +179,12 @@ def seccion(bid):
         s, ab, pts = d['atlas']; out.append(atlas(s, ab, pts))
     out.append(f'  <div class="ap2p-read"><b>👁️ Cómo leer estas vistas</b>\n{d["leer"]}\n  </div>\n')
     out.append('  <div class="ap2p-body">\n')
-    out.append(fichas_tabla([('Área', d['area']), ('Órgano', org), ('Proceso', proc), ('Descripción oficial', desc[0].upper() + desc[1:] + '.'), ('Diagnóstico', f'<b>{dx}</b>'), ('Fuente', pag)]))
+    out.append(fichas_tabla([('Área', d['area']), ('Órgano', org), ('Proceso', proc), ('Descripción oficial', desc[0].upper() + desc[1:] + '.'), ('Diagnóstico', f'<b>{dx}</b>')] + ([('Descripción en el laminario Final', '<ul>' + ''.join(f'<li>{x}</li>' for x in d['final'][1]) + '</ul>')] if d.get('final') else []) + [('Fuente', pag + ('; ' + d['final'][0] if d.get('final') else ''))]))
     out.append(f'    <div class="ap2p-look"><b>👁️ Qué buscar:</b> {d["buscar"]}</div>\n')
     out.append(f'    <div class="ap2p-nc"><b>🔎</b> {d["nc"]}</div>\n')
     out.append(f'    <div class="ap2p-look"><b>⭐ Lo más característico:</b> {d["frase"]}</div>\n')
     out.append('  </div>\n</div>\n')
+    if d.get('extra'):
+        import bloques_nuevos as BN
+        out.extend(BN.lam(x) for x in d['extra'])
     return ''.join(out)

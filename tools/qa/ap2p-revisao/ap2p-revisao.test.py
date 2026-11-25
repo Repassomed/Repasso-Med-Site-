@@ -77,7 +77,8 @@ T(not incoh, 'cada término tiene UNA sola definición en toda la materia', inco
 largas = [k for k, v in defs.items() if any(len(re.sub(r'<[^>]+>', '', d)) > 330 for d in v)]
 T(not largas, 'definiciones cortas (≤ 330 caracteres)', largas[:5])
 # términos pedidos por José
-for need in ('perla de queratina', 'perlas de queratina', 'mixoide', 'linitis plástica', 'intraepitelial', 'granuloma', 'caseosa', 'granulomas no caseificantes'):
+for need in ('perlas de queratina',   # el patrón del glosario cubre singular y plural con UNA definición
+              'mixoide', 'linitis plástica', 'intraepitelial', 'granuloma', 'caseosa', 'granulomas no caseificantes'):
     T(any(need in k or k in need for k in defs) or need in ' '.join(defs), f'término pedido con glosario: «{need}»')
 T(len(defs) >= 40, 'al menos 40 términos distintos en el glosario (%d)' % len(defs))
 
@@ -96,7 +97,7 @@ for n in (19, 20, 22):
 T('.ap2p-ficha td{overflow-wrap:anywhere}' in cur, 'CSS de la ficha oficial presente')
 T(cur.count('class="ap2p-tab ap2p-ficha"') == 26 + 8 - 0 or cur.count('class="ap2p-tab ap2p-ficha"') >= 30, 'fichas oficiales con la clase ap2p-ficha', cur.count('class="ap2p-tab ap2p-ficha"'))
 atl = re.findall(r'<div class="rmatlas">.*?</div></div></div></div>', cur, re.S)
-T(len(atl) == 11, '11 atlas interactivos nuevos (8 en bloques existentes + 3 en bloques nuevos)', len(atl))
+T(len(atl) == 19, '19 atlas interactivos nuevos (existentes + bloques nuevos, con las fotos del laminario Final)', len(atl))
 for a in atl:
     base_src = re.search(r'class="rmatlas-base" src="([^"]+)"', a).group(1)
     pts = re.findall(r'<button class="rmatlas-pt" type="button" style="left:([\d.]+)%;top:([\d.]+)%" data-n="(\d+)" data-x="([\d.]+)" data-y="([\d.]+)" data-name="([^"]+)" data-expl="([^"]+)">(\d+)</button>', a)
@@ -129,5 +130,19 @@ for frag in ('ficha vacía', 'alta malignidad', 'predominio <b>linfoplasmocitari
 # páncreas: ya no dice que no hay diapositiva
 T('el material no incluye diapositivas, caso clínico ni preguntas de pancreatitis crónica' not in cur and 'solo la ficha</b> y dos imágenes' not in cur, 'bloques 15/16: sin la advertencia desactualizada de «solo ficha»')
 T(all(x in cur for x in ('PRSS1', 'KRAS', 'CDKN2A', 'SMAD4', 'PanIN')), 'bloques 15/16: genes y PanIN de las diapositivas 13/14')
+
+# 6 · laminario Final, fondo neutro, «En una mirada» y registros de fuente
+refs = set(re.findall(r'/assets/img/anatoprat2/(lam-(?:final|p2)-[a-z0-9-]+\.webp)', cur))
+T(len(refs) >= 40, f'{len(refs)} imágenes del laminario Final/P2 referenciadas en la materia', len(refs))
+T(all(os.path.exists(d_img + r) for r in refs), 'todas las imágenes Final/P2 referenciadas existen', [r for r in refs if not os.path.exists(d_img + r)][:3])
+for frag in ('id="lam-mola-hidatiforme"', 'id="lam-celiaca"', 'id="lam-adenoma-tubular"'):
+    T(frag in cur, f'lámina nueva presente: {frag}')
+T(cur.count('Descripción en el laminario Final') >= 13, 'fichas con la descripción del laminario Final', cur.count('Descripción en el laminario Final'))
+for bid in [f'ap2pb{n:02d}' for n in list(range(1, 15)) + [17, 18]]:
+    a, b = C.seccion(cur, bid); T('⚡ En una mirada' in cur[a:b] and cur[a:b].index('⚡ En una mirada') < cur[a:b].index('Desde cero'), f'{bid}: cuadro «En una mirada» antes de «Desde cero»')
+T('Fila india:' in cur and 'lobulillar' in cur, 'fila india: discrepancia con la bibliografía registrada como pendiente')
+for f in os.listdir(d_img):
+    if f.startswith(('lam-final-', 'lam-p2-', 'lam-fotos-')) and f.endswith('.webp'):
+        im = Image.open(d_img + f); T(im.size[0] > 100 and im.size[1] > 100 and os.path.getsize(d_img + f) < 700000, f'{f}: tamaño razonable', (im.size, os.path.getsize(d_img + f)))
 print(f'\nap2p-revisao (estático): {ok}/{ok + bad} OK' + (f' — {bad} FALHAS' if bad else ''))
 sys.exit(1 if bad else 0)

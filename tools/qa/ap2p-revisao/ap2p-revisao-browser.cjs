@@ -28,7 +28,7 @@ const SHOTS = process.env.RM_SHOTS || '';
     // 1 · carga e imágenes nuevas
     const sec = await p.evaluate(() => [...document.querySelectorAll('#materias-container section[id^="ap2pb"]')].map(s => s.id));
     T(sec.length >= 23, 'hay secciones ap2pb01…ap2pb23 en la página (' + sec.length + ')');
-    const imgs = await p.evaluate(() => [...document.querySelectorAll('img[src*="lam-fotos-"], .rmatlas-zoomimg')].filter(i => i.getAttribute('src')).map(i => ({ s: i.getAttribute('src').split('/').pop(), ok: i.complete && i.naturalWidth > 0 })));
+    const imgs = await p.evaluate(() => [...document.querySelectorAll('img[src*="lam-fotos-"], img[src*="lam-final-"], img[src*="lam-p2-"], .rmatlas-zoomimg')].filter(i => i.getAttribute('src')).map(i => ({ s: i.getAttribute('src').split('/').pop(), ok: i.complete && i.naturalWidth > 0 })));
     T(imgs.length >= 27 && imgs.every(i => i.ok), `${imgs.length} imágenes de las fotos nuevas, todas cargadas`, imgs.filter(i => !i.ok));
     T(errs.length === 0, 'sin errores de página', errs.slice(0, 3));
     T(ruins.length === 0, 'sin respuestas ≥ 400', ruins.slice(0, 3));
@@ -36,7 +36,7 @@ const SHOTS = process.env.RM_SHOTS || '';
 
     // 2 · atlas
     const atlas = await p.$$('.rmatlas');
-    T(atlas.length === 11, '11 atlas interactivos en la página', atlas.length);
+    T(atlas.length === 19, '19 atlas interactivos en la página', atlas.length);
     let nPts = 0, zoomOk = 0, solapes = 0;
     for (const a of atlas) {
       await a.scrollIntoViewIfNeeded();
@@ -54,7 +54,7 @@ const SHOTS = process.env.RM_SHOTS || '';
     T(solapes === 0, 'ningún par de puntos de un mismo atlas se superpone (< 26 px)', solapes);
 
     // 3 · ampliar vista
-    const v = await p.$('figure.ap2p-view img[src*="lam-fotos-"]'); await v.scrollIntoViewIfNeeded();
+    const v = await p.$('figure.ap2p-view img[src*="lam-fotos-"], img[src*="lam-final-"], img[src*="lam-p2-"]'); await v.scrollIntoViewIfNeeded();
     const fig = await v.evaluateHandle(el => el.closest('figure')); await fig.asElement().click();
     T(await fig.asElement().evaluate(el => el.classList.contains('ap2p-big')), 'tocar una vista la amplía');
     await fig.asElement().click(); T(!(await fig.asElement().evaluate(el => el.classList.contains('ap2p-big'))), 'tocar de nuevo la reduce');

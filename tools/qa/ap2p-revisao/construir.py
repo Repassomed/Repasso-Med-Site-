@@ -7,7 +7,7 @@
 # Uso: python3 tools/qa/ap2p-revisao/construir.py   (desde la raíz del repositorio)
 import os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
-import fotos_existentes as FE, bloques_nuevos as BN, ampliacion_pancreas as AP, glosario as GL
+import fotos_existentes as FE, bloques_nuevos as BN, ampliacion_pancreas as AP, glosario as GL, enmirada as EM
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', '..'))
 F = os.path.join(ROOT, 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anatomia-patologica-ii-practica.html')
@@ -46,6 +46,8 @@ def build(t, glosario=True):
     css_anc = '#tab-anatoprat2 .ap2p-tab tr:last-child td{border-bottom:0}'
     assert t.count(css_anc) == 1
     t = t.replace(css_anc, css_anc + '\n#tab-anatoprat2 .ap2p-ficha td{overflow-wrap:anywhere}\n#tab-anatoprat2 .ap2p-ficha td:first-child{width:7.6rem}\n#tab-anatoprat2 .ap2p-ficha ul{margin:.1rem 0;padding-left:1.1rem}\n#materias-container #tab-anatoprat2 .ap2p-ficha .rmc-scroll table{min-width:0}')
+    # 3c) cuadro «En una mirada» (bloques 01–14, 17, 18)
+    t, n_mirada = EM.aplicar(t)
     # 4) glosario
     total = 0
     if glosario:

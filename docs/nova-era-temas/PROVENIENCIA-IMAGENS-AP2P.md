@@ -36,3 +36,8 @@ Seções de revisão (banco, mazo, cierre) usam o logotipo oficial; `ap2pportada
 
 ## Fotos novas da pasta «Laminas» (24/11/2026) · identificação
 As 16 fotos `lam-fotos-*.webp` (`assets/img/anatoprat2/`) vêm da pasta «Laminas» do Drive («Site Repasso Med → Biblioteca → 6 semestre → Anatopatologia II Pratica»). Cada uma é uma **foto de celular de um campo circular de microscópio** (960×1280, fundo preto); foi recortada em quadrado em volta do círculo e reduzida (≤ 777 px). **A identificação é só o nome do arquivo**; não há escala, aumento, autoria nem data de aula. Quando a imagem não permite apontar estruturas com segurança (CHC, pancreatite, adenocarcinoma de páncreas, nefroblastoma, segunda foto de esôfago) fica como vista **sem pontos**. A foto «Adenocarcinoma de colon» não diz se é mucinoso: foi para o bloco 13 como vista geral. Matriz completa: `coordination/source-packs/anatomia-patologica-ii-practica-revisao-integral-2026-11-v1.md` §5.
+
+## Rodada 25/11/2026 · laminario «Final», P2 e slide 14
+- `lam-final-*.webp` (36): extraídas de `Anatopato II pratica - Final.pdf` (15 pág.); identificação = ficha da página (ver `tools/qa/ap2p-revisao/final_pdf.py`).
+- `lam-final-pancreatitis-s14-*.webp` (2): diapositiva 14 (pancreatite). `lam-p2-adenoma-tubular-*.webp` (3): `Anatopato II pratica - P2.pdf`, pág. 4.
+- Fundo: transparente só quando o contorno circular era limpo; senão original. Tecido intacto. As 16 `lam-fotos-*` foram reprocessadas igual (pasta «Láminas»).

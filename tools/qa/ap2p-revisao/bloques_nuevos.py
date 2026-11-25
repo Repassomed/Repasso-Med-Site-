@@ -8,20 +8,26 @@ AP1P = 'Esta lámina ya tiene ficha y atlas en <b>Anatomía Patológica I Práct
 def lam(l):
     """l = dict(slug, titulo, area, organo, proceso, desc[list], dx, clave, buscar, fuente, nota=None, foto=None, atlas=None, cruz=False)"""
     o = [f'<div class="ap2p-lam" id="lam-{l["slug"]}">\n  <div class="ap2p-lam-h"><b>{l["organo"]} · {l["dx"]}</b><span>{l["proceso"]}</span></div>\n']
-    if l.get('foto'):
-        s, t, alt = l['foto']
-        if l.get('atlas'):
-            sa, ab, pts = l['atlas']; o.append(atlas(sa, ab, pts))   # la foto ya se ve en el atlas
-        else:
-            o.append('  <div class="ap2p-views">\n' + view(s, t, alt) + '  </div>\n')
+    atl = [l['atlas']] if l.get('atlas') else []
+    if l.get('atlas2'): atl.append(l['atlas2'])
+    con_atlas = {x[0] for x in atl}
+    vs = ([l['foto']] if l.get('foto') else []) + list(l.get('vistas', []))
+    vs = [v for v in vs if v[0] not in con_atlas]      # la foto que ya está en un atlas no se repite como vista
+    if vs:
+        o.append('  <div class="ap2p-views">\n' + ''.join(view(sv, t, alt) for sv, t, alt in vs) + '  </div>\n')
+    for sa, ab, pts in atl: o.append(atlas(sa, ab, pts))
     o.append('  <div class="ap2p-body">\n')
     desc = '<ul class="lam-find">' + ''.join(f'<li>{x}</li>' for x in l['desc']) + '</ul>'
-    o.append(fichas_tabla([('Área', l['area']), ('Órgano', l['organo']), ('Proceso', l['proceso']), ('Descripción oficial', desc), ('Diagnóstico', f'<b>{l["dx"]}</b>'), ('Fuente', l['fuente'])]))
+    filas = [('Área', l['area']), ('Órgano', l['organo']), ('Proceso', l['proceso']), ('Descripción oficial', desc), ('Diagnóstico', f'<b>{l["dx"]}</b>')]
+    if l.get('ficha_final'):
+        pg, bl = l['ficha_final']; filas.append(('Descripción en el laminario Final', '<ul class="lam-find">' + ''.join(f'<li>{x}</li>' for x in bl) + '</ul>'))
+        l = dict(l, fuente=l['fuente'] + f'; laminario «Final», pág. {pg}')
+    o.append(fichas_tabla(filas + [('Fuente', l['fuente'])]))
     o.append(f'    <div class="ap2p-look"><b>👁️ Qué buscar:</b> {l["buscar"]}</div>\n')
     o.append(f'    <div class="ap2p-look"><b>⭐ Lo más característico:</b> {l["clave"]}</div>\n')
     if l.get('nota'): o.append(f'    <div class="ap2p-nc"><b>⚠️ Fuente:</b> {l["nota"]}</div>\n')
     if l.get('cruz'): o.append(f'    <div class="ap2p-nc"><b>🔗</b> {AP1P}</div>\n')
-    if not l.get('foto'): o.append('    <div class="ap2p-nc"><b>🖼️ Imagen:</b> todavía no hay foto identificada de esta lámina en el material recibido; se agregará cuando lleguen.</div>\n')
+    if not (l.get('foto') or l.get('vistas') or l.get('atlas')): o.append('    <div class="ap2p-nc"><b>🖼️ Imagen:</b> todavía no hay foto identificada de esta lámina en el material recibido; se agregará cuando lleguen.</div>\n')
     o.append('  </div>\n</div>\n')
     return ''.join(o)
 
@@ -114,7 +120,8 @@ L21 = [
  dict(slug='cdis', area='Sistema reproductor femenino · mama', organo='Mama', proceso='Neoplasia maligna (in situ)', dx='Carcinoma ductal de mama in situ',
       desc=['Proliferación neoplásica maligna <b>ductal in situ</b>', 'Patrón <b>sólido</b> y <b>cribiforme</b>'], clave='<b>dentro del conducto</b>: células malignas que lo llenan (patrón sólido) o dejan espacios redondos como agujeros (patrón cribiforme).', buscar='conductos ocupados por células atípicas, sin salir de su pared.', fuente='documento «laminário - 2», pág. 5'),
  dict(slug='ca-ductal-invasivo', area='Sistema reproductor femenino · mama', organo='Mama', proceso='Neoplasia maligna (invasiva)', dx='Carcinoma ductal de mama invasivo',
-      desc=['Células atípicas que <b>infiltran el estroma</b> en <b>fila india</b>', '<b>Desmoplasia</b>'], clave='células en <b>fila india</b> que <b>salen del conducto</b> e infiltran un estroma fibroso.', buscar='hileras de una sola célula de ancho dentro de un estroma denso.', fuente='documento «laminário - 2», pág. 5'),
+      desc=['Células atípicas que <b>infiltran el estroma</b> en <b>fila india</b>', '<b>Desmoplasia</b>'], clave='células en <b>fila india</b> que <b>salen del conducto</b> e infiltran un estroma fibroso.', buscar='hileras de una sola célula de ancho dentro de un estroma denso.', fuente='documento «laminário - 2», pág. 5',
+      nota='<b>Fila india:</b> el documento del semestre y el laminario Final (pág. 11) asocian esta descripción con el diagnóstico de carcinoma de mama invasivo; así está <b>registrado en la fuente</b>. Pero en la bibliografía habitual la «fila india» se asocia sobre todo al carcinoma <b>lobulillar</b> invasivo, no al ductal. <b>No se enseña como regla ni se corrige</b> hasta confirmarlo con la cátedra: queda pendiente de José.'),
 ]
 COMP21 = comparativo('⚖️ Útero, ovario y mama: pares que se parecen', ['Par', 'Benigno / reactivo', 'Maligno', 'Qué cambia'], [
     ['<b>Útero</b> (músculo liso)', 'Leiomioma: fusiformes en remolino, <b>sin atipias</b>', 'Leiomiosarcoma: <b>atipias, pleomorfismo, mitosis atípica</b>', 'Mismo tejido; cambia la <b>atipia</b>'],
@@ -180,6 +187,17 @@ COMP23 = comparativo('⚖️ Testículo y próstata', ['Órgano', 'Adaptación /
     ['<b>Próstata</b>', 'Hiperplasia benigna (glándulas dilatadas con doble capa, cuerpos amiláceos)', 'Adenocarcinoma (patrón irregular, células cúbicas con nucléolos)']])
 PEND23 = ('teoría de testículo y próstata (causas, marcadores, clínica, estadificación, tratamiento); <b>fotos</b> de las 6 láminas; la <b>aclaración</b> de las fichas de teratoma (benigno/«alta malignidad») y de orquitis (aguda/linfoplasmocitaria).')
 
+import final_pdf as FP
+for _L in (L19, L20, L21, L22, L23):
+    for _l in _L:
+        _sl = _l['slug']
+        if _sl in FP.FICHA: _l['ficha_final'] = FP.FICHA[_sl]
+        if _sl in FP.VISTAS: _l['vistas'] = FP.VISTAS[_sl]
+        if FP.ATLAS.get(_sl):
+            if _l.get('atlas'): _l['atlas2'] = FP.ATLAS[_sl]
+            else: _l['atlas'] = FP.ATLAS[_sl]
+# lámina nueva de placenta (solo del laminario Final): después de endometriosis
+_m = dict(FP.MOLA); _m['vistas'] = _m.pop('vistas'); L21.insert(1, _m)
 def todos():
     return [
      bloque(19, 'TIROIDES I', '🦋', 'Tiroides · enfermedades', 'Tres láminas de tiroides: <em>adaptación, inflamación y neoplasia benigna</em>.', ESTADO, COMP19, L19, PEND19),

@@ -2,10 +2,13 @@
 import html, re
 IMG = '/assets/img/anatoprat2/'
 def esc(s): return html.escape(s, quote=True)
+def src(slug):
+    """slug corto = foto del teléfono (lam-fotos-<slug>); stem completo 'lam-...' = laminario de la cátedra"""
+    return IMG + (slug if slug.startswith('lam-') else 'lam-fotos-' + slug) + '.webp'
 
 def view(slug, titulo, alt, extra=''):
     return ('    <figure class="ap2p-view" onclick="this.classList.toggle(\'ap2p-big\')">\n'
-            f'      <img src="{IMG}lam-fotos-{slug}.webp" alt="{esc(alt)}" loading="lazy" decoding="async">\n'
+            f'      <img src="{src(slug)}" alt="{esc(alt)}" loading="lazy" decoding="async">\n'
             f'      <figcaption><b>{titulo}</b>{extra}</figcaption>\n    </figure>\n')
 
 def plano(s):
@@ -20,7 +23,7 @@ def atlas(slug, alt_base, puntos, hint='👆 TOCÁ LOS NÚMEROS · detalles a ma
     nombres = '; '.join(plano(p[2]).lower() for p in puntos)
     alt = esc(f'{alt_base} Lleva puntos numerados que señalan: {nombres}.')
     return ('  <div class="rmatlas"><div class="rmatlas-h">🗺️ Atlas interactivo · <b>TOCÁ LOS NÚMEROS</b></div><div class="rmatlas-grid"><div class="rmatlas-overview">'
-            f'<img class="rmatlas-base" src="{IMG}lam-fotos-{slug}.webp" alt="{alt}" loading="lazy" decoding="async">{pts}'
+            f'<img class="rmatlas-base" src="{src(slug)}" alt="{alt}" loading="lazy" decoding="async">{pts}'
             f'<div class="rmatlas-hint">{hint}</div></div>'
             '<div class="rmatlas-detail"><div class="rmatlas-zoomstage"><img class="rmatlas-zoomimg" alt="" aria-hidden="true"><div class="rmatlas-zhint">Tocá un número para ampliar la región</div></div>'
             '<div class="rmatlas-legend"></div><div class="rmatlas-expl"></div></div></div></div>\n')
