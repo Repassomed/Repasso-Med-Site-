@@ -247,3 +247,36 @@ Para cada uma: alternativa correta antes → depois. Todas passaram pelo teste �
 - alternativas depois: Esperar 24 horas con aspirina sola y repetir la TAC antes de decidir otra medida | Valorar la trombólisis intravenosa (alteplasa o tenecteplasa) según los criterio | Indicar una craniectomía descompresiva inmediata por el riesgo de edema maligno  | Realizar una punción lumbar evacuadora para disminuir la presión y mejorar la pe
 
 **Observação `q-neu002`:** antes «desviación lenta tónica … hacia el lado del oído irrigado y, segundos después, movimientos sacádicos rápidos … hacia el oído no irrigado»; depois a mesma resposta em redação mais curta («tónica lenta … hacia el oído irrigado y luego sacudidas rápidas hacia el lado opuesto»). Os distratores também foram reescritos, sem mudar o que cada um afirma.
+## ATUALIZAÇÃO 25/11 (auditoria da coordenação) — `q-neu002` e `q-neu181` na versão final da #687
+
+As versões «DEPOIS» acima são as de `922c5d06`. Na auditoria foram corrigidas (commit `646963ce` da #687). Versão final:
+
+### q-neu002
+
+> Basada en preguntas de examenMCQ Cuando a un paciente en coma se le realiza una prueba calórica irrigando el conducto auditivo externo con agua fría, ¿cuál de las siguientes respuestas se considera normal?
+
+- a) Desviación rápida de ambos ojos hacia el oído no irrigado, sin fase lenta previa.
+- b) Desviación tónica lenta de ambos ojos hacia el oído irrigado con agua fría.
+- c) Ausencia total de movimiento ocular en ambos ojos, sin respuesta tónica ni sacádica.
+- d) Abducción del ojo del lado irrigado, sin movimiento del ojo contralateral.
+
+**Resposta:** b) Desviación tónica lenta de ambos ojos hacia el oído irrigado con agua fría.
+
+**Explicação (final):** El agua fría inhibe el laberinto irrigado y desequilibra el sistema vestibular: en el paciente en coma con el tronco encefálico íntegro, los ojos se desvían de forma lenta y sostenida hacia el oído frío. Esa desviación tónica es la respuesta vestibular pura, y su presencia confirma que el tronco funciona (el bloque 01 lo enseña: respuesta presente = tronco íntegro; ausencia bilateral = daño grave del tronco).Sobre la fase rápida: el movimiento rápido que devuelve los ojos (el nistagmo) depende de la corteza; en el paciente despierto aparece, y según la literatura general en el paciente en coma suele faltar. El slide de la cátedra sólo nombra la prueba y no describe esa fase, y no hay un texto de referencia disponible para confirmarla, por eso esta pregunta no la usa como respuesta.a) una desviación rápida sin fase lenta previa no es la respuesta vestibular del tronco: la que depende del tronco es la desviación lenta.c) la ausencia total de respuesta indica lesión grave del tronco encefálico, no normalidad.d) que un ojo abduzca y el otro no es la respuesta disociada de una lesión de las conexiones internucleares del tronco, tampoco normal.
+
+**Por quê:** Resposta certa agora só com a desviação tônica lenta; a fase rápida deixou de ser resposta (o slide só nomeia a prova; sem texto de referência disponível). Gabarito oficial desconhecido.
+
+### q-neu181
+
+> Basada en preguntas de examenMCQ Una mujer de 62 años, hipertensa de larga data con mala adhesión al tratamiento, tiene un pico de presión en su casa y presenta de forma súbita cefalea holocraneal intensa, seguida de vómitos en chorro, hemiplejía completa y proporcionada izquierda y desviación conjugada de la mirada hacia la derecha. En menos de una hora se deteriora su nivel de conciencia. ¿Cuál es la sospecha diagnóstica más probable y qué estudio de imagen se pide de inmediato para confirmarla?
+
+- a) Sospecha de ACV isquémico de la arteria cerebral media derecha; resonancia magnética con difusión como primer estudio.
+- b) Sospecha de hemorragia subaracnoidea por rotura de un aneurisma; punción lumbar como primer estudio.
+- c) Sospecha de migraña hemipléjica; electroencefalograma como primer estudio.
+- d) Sospecha de ACV hemorrágico intraparenquimatoso por crisis hipertensiva; TC de cráneo sin contraste.
+
+**Resposta:** d) Sospecha de ACV hemorrágico intraparenquimatoso por crisis hipertensiva; TC de cráneo sin contraste.
+
+**Explicação (final):** La hipertensión con mala adhesión, el inicio súbito con cefalea y vómitos, el déficit motor completo y el deterioro rápido de la conciencia hacen sospechar un ACV hemorrágico: es lo que el slide describe en el hipertenso (cefalea intensa y brusca, vómitos frecuentes, conciencia alterada, déficit que progresa en horas), por rotura de arterias perforantes dañadas por la hipertensión crónica. Los ojos miran hacia la lesión en una lesión hemisférica destructiva: hemiplejía izquierda y mirada a la derecha apuntan a un hemisferio derecho. La clínica orienta, pero no confirma: un ictus isquémico grande puede dar un déficit parecido. La confirmación la da la TC sin contraste, que muestra la sangre aguda como una zona hiperdensa y permite separar de entrada el hemorrágico del isquémico, por eso es el primer estudio.a) el isquémico puede dar un déficit parecido y no se descarta solo con la clínica, pero la cefalea súbita intensa con vómitos en chorro lo hace menos probable y, en la fase aguda, no se ve hiperdenso en la TC; además, la primera imagen es la TC sin contraste, no la resonancia.b) la HSA da cefalea en trueno con sangre en cisternas y surcos, sin hemiplejía completa como rasgo central; y aun si se sospechara, el primer estudio es la TC, no la punción lumbar.c) la migraña no produ
+
+**Por quê:** Pergunta e alternativas falam em **suspeita**; a explicação diz que a clínica orienta mas a TC confirma.
