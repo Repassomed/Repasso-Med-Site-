@@ -34,9 +34,8 @@ Classificação: **REPRODUZIDA** (enunciado e alternativas da prova, com ortogra
 | 18 | glicocorticoides, não corresponde | **JÁ COBERTA** | d) descolamento de retina · `q-oft184` (que traz esse distrator) | `q-oft184` (ofb15) |
 | 19 | inibidores da anidrase carbônica, incorreta | **REPRODUZIDA** | c) «sistêmicos mais úteis em situações crônicas» (o slide: **agudas**) · slide 14 | `q-oft209` · ofb15 |
 
-**Totais por foto:** foto 1 = 3 itens (2 adicionados · 1 já coberto) · foto 2 = 7 itens (4 reproduzidos, 1 adaptado [5], 1 adaptado [8], 0 já cobertos… ver tabela) · foto 3 = 9 itens.
+**Totais por foto:** foto 1 = 3 itens (adicionados 2 [1, 3] · já coberto 1 [2]) · foto 2 = 7 itens (adicionados 6 [4, 5, 7, 8, 9, 10; destes 5 e 8 adaptados] · pendente 1 [6]) · foto 3 = 9 itens (adicionados 6 [11, 13, 14, 15, 16, 19] · já cobertos 3 [12, 17, 18]).
 **Totais gerais (19 itens):** **14 adicionados** = **11 reproduzidos** (1, 3, 4, 7, 9, 10, 13, 14, 15, 16, 19) + **2 adaptados** (5, 8) + **1 parcialmente reconstruído** (11) · **4 já cobertos** (2, 12, 17, 18) · **1 pendente/parcial** (6).
-(Por foto — foto 1: itens 1, 3 adicionados; 2 coberto. Foto 2: 4, 5, 7, 8, 9, 10 adicionados; 6 pendente. Foto 3: 11, 13, 14, 15, 16, 19 adicionados; 12, 17, 18 cobertos.)
 
 ## 3 · Dúvidas e divergências registradas (nenhuma resolvida por invenção)
 1. **Sem gabarito** nas três fotos: respostas verificadas por slide/literatura, **não oficiais**; a página diz isso no cabeçalho do banco.
