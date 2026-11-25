@@ -3947,6 +3947,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:715.",
       "task_id": "Neurolog\u00eda \u2014 conferir as fotos novas da prova (Drive \u203a 7 semestre \u203a Neurologia \u203a Quest\u00f5es) com o site e a #687 e acrescentar o que falta",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "b807b0e555e58539613ad82adfb6dfff8e7de5e8",
+      "component": "guard",
+      "error_id": "ERR-7FFAD5CB0A",
+      "error_type": "hard-fail",
+      "fingerprint": "7ffad5cb0adcd3f93dd7",
+      "first_seen": "2026-11-25T18:32:22.137058+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "f6a6adac18a44b1ba8f16c13822c83cd",
+      "issue_sync_updated_at": "2026-11-25T18:32:22.137058+00:00",
+      "last_evidence_hash": "5a36fb85708a9f635ac9",
+      "last_seen": "2026-11-25T18:32:22.137058+00:00",
+      "occurrence_count": 1,
+      "pr_number": 719,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "45675941509",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:719.",
+      "task_id": "grande revis\u00e3o de Anatomopatolog\u00eda II Pr\u00e1ctica (laminarios Final/P2, documentos A/B por partes, 19 atlas, blocos 19\u201324, gloss\u00e1rio, tabelas-resumo nos blocos antigos, ordem dos slides 13\u219214, Nova Era).",
+      "worker_id": null
     }
   ]
 }
