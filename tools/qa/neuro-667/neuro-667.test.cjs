@@ -35,7 +35,7 @@ historico(portN.replace(/<div class="rmc-note"><p><b>Bloques 20 a 27[\s\S]*?<\/p
 let total = 0, mcq = 0, vf = 0, letras = {};
 for (const id of NEW) {
   const s = sec(now, id); const qs = [...s.matchAll(/<div class="quiz-item" id="(q-neu\d+)">([\s\S]*?)<\/div><\/div>/g)];
-  const num = id.slice(4); ok(qs.length >= 5 && qs.length <= 18, id + ': ' + qs.length + ' perguntas (5–18; cresceu com #683 e #687)');
+  const num = id.slice(4); ok(qs.length >= 5 && qs.length <= 19, id + ": " + qs.length + " perguntas (5–19; cresceu com #683, #687 e #715)");
   total += qs.length;
   for (const q of qs) {
     const b = q[2]; const bq = now.match(new RegExp('<div class="quiz-item" id="b' + q[1] + '">([\\s\\S]*?)<\\/div><\\/div>'));

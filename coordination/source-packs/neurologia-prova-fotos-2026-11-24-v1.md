@@ -20,7 +20,7 @@ Prova: UCP, Medicina, 7º semestre, Neurologia; carimbo 18/11/26; 20 itens (MCQ 
 | 2 | perfil normal do LCR | **ACRESCENTADA** | `q-neu291` (bloco 20); o resumo ensina (tabela + flashcard); só havia `q-neu176` (perfil bacteriano) |
 | 3 | utilidade atual da angiografia | JÁ EXISTE | `q-neu180` (complementar), mesma conclusão; mantida |
 | 4 | fluxo < 10 ml/100 g/min | JÁ EXISTE | `q-neu241` (#687, basada en examen) |
-| 5 | janela do rt-PA (0–4,5 h) | **PENDENTE** | o resumo **não** ensina o número e o slide «Ventana terapéutica» (10..pdf) é imagem sem texto; a marca da hoja não basta (regra 8-A.2) → precisa ver a imagem do slide |
+| 5 | janela do rt-PA (0–4,5 h) | **ACRESCENTADA (25/11)** | `q-neu297` (bloco 21). **Correção do meu registro anterior:** o resumo **já ensina** (tabela «3 bis · Ventana terapéutica»: «primeras horas (el slide indica hasta 4,5 h)») e agora a **imagem do slide** (`10..pdf`, página 11, renderizada e lida) confirma: «Trombolisis IV — rt-PA/Tenecteplasa · 0–4.5h»; trombectomia 0–24 h; door-to-needle < 60 min |
 | 6 | Charcot-Bouchard | JÁ EXISTE | `q-neu284` (#687) |
 | 7 | HSA: ruptura de aneurisma (85 %) | JÁ EXISTE | `q-neu186` e outras |
 | 8 | ILAE: 1 crise não provocada com risco ≥ 60 % | **ACRESCENTADA** | `q-neu292` (bloco 22); `q-neu195` pergunta quando tratar, não quando diagnosticar |
@@ -32,12 +32,12 @@ Prova: UCP, Medicina, 7º semestre, Neurologia; carimbo 18/11/26; 20 itens (MCQ 
 | 14 | PL traumática × HSA (3 tubos) | JÁ EXISTE | `q-neu177` |
 | 15 | utilidade atual do EEG | JÁ EXISTE (parcial) | `q-neu239` e blocos de epilepsia/sono; item não gerou pergunta nova (o resumo não ensina «deslocado pela neuroimagem») — registrado, sem pendência de fonte |
 | 16 | ACA: hemiparesia facio-braquial + afasia = falso (é ACM) | JÁ EXISTE | `q-neu273` testa a mesma distinção (ACA crural, abulia) |
-| 17 | NIHSS > 4 e < 25 → trombólise | **PENDENTE** | o resumo e o slide só trazem as faixas de gravidade; a regra de trombólise não está em texto de slide |
+| 17 | NIHSS > 4 e < 25 → trombólise | **PENDENTE (fonte confirmada, falta ensinar)** | a **imagem do slide** (`10..pdf`, página 10, lida) diz «Escala NIHSS … Recomienda trombolisis con puntaje >4 y <25». Mas o **resumo não ensina** essa regra (só as faixas de gravidade) e a lei 8-A.2 exige ensinar antes de perguntar. Acrescentar a frase ao texto de ensino do bloco 21 mexe num parágrafo com **grifos de alunos** (120 grifos em `neub21`, vários ancorados com contexto vizinho): precisa do teste do resolvedor real antes; **decisão de José** (não feito nesta PR) |
 | 18 | nimodipino 60 mg/4 h × 21 d | JÁ EXISTE | `q-neu190` + resumo (dose e duração ensinadas) |
 | 19 | crise provocada não define epilepsia | JÁ EXISTE | `q-neu191` |
 | 20 | farmacorresistência (≥ 2 fármacos) | **ACRESCENTADA** | `q-neu294` (V/F; slide 11..pdf) |
 
-**Total: 20 itens · 6 acrescentadas · 12 já existiam · 2 pendentes (5 e 17).**
+**Total: 20 itens · 7 acrescentadas (291–297) · 12 já existiam · 1 pendente (17, fonte confirmada, falta ensinar).**
 Gabaritos V/F da hoja são marcas manuscritas pouco legíveis: usei ciência + slide, não as marcas (nenhuma foi decisiva; as seis perguntas novas têm base direta em slide). Pergunta do item 3: enunciado cortado; não reconstruída (já coberta).
 
 ## Conferências
@@ -53,3 +53,9 @@ Gabaritos V/F da hoja são marcas manuscritas pouco legíveis: usei ciência + s
 4. **Demais:** `q-neu293` (slide 11: levetiracetam amplo espectro, irritabilidade/conduta; fenobarbital amplo espectro, sedação/dependência; valproato; fenitoína) · `q-neu294` (slide: fracasso de ≥ 2 fármacos adequados e tolerados; cirurgia em casos selecionados) · `q-neu295` (slide TEC: queda ≥ 2 pts no Glasgow, vómitos > 2 episódios, cefalea progressiva, anisocoria, déficit focal novo, Cushing, base do crânio — agora cada sinal separado) · `q-neu296` (slide TEC II: epidural > 30 mL [= cm³ da prova] ou > 15 mm ou LM > 5 mm; subdural agudo > 10 mm ou LM > 5 mm; efeito de massa; fratura deprimida > 1 tábua; ferida penetrante; hidrocefalia aguda → DVE). Unidades e origem conferidas contra os slides lidos; bloco e banco idênticos (teste). O selo «18/11/26» está visível na foto; o título «final» não é afirmado.
 5. **Inventário do layout** (`docs/layout-ensaio/inventario.json`) da Neurología estava velho (580 q): regenerado (592 q). Resolução: ver sequência de integração.
 **Limites:** não há literatura-base de Neurologia no Drive; períodos/dados fora do slide não foram acrescentados.
+
+## Fontes e imagens examinadas em 25/11 (abertas pelo conector do Drive)
+- **Examinado:** `10..pdf` (Enfermedades cerebrovasculares, 26 páginas): texto completo; páginas **10 (Escala NIHSS)** e **11 (Ventana Terapéutica)** são imagens, renderizadas (pdftoppm) e lidas visualmente. Antes disso eu tinha dito, errado, que o resumo não ensinava a janela de 4,5 h: ensina.
+- **Já lidos nesta sessão (texto):** `11..pdf` (epilepsia), `15..pdf` (TEC), `16. TEC II.pdf`.
+- **Não reabertos agora (permanecem como na #687):** figuras das fotos de 18/11, «imagem simulada» da Turma A 20, figura do item 28 do docx, 479 imagens do Notes, manuscritos do Aline, itens ilegíveis (Turma C 2 e 6, Manuscrito 15, D-2 10, GCS com «NT»), slide de sono `7..pdf` (só pelo pack da #687). **Nenhuma resposta foi inventada para eles.**
+- **Inacessível:** literatura-base de Neurologia (não está no Drive); gabarito oficial das provas.
