@@ -163,10 +163,10 @@
      (fotos de microscópio) do próprio conteúdo. */
   var AP2P_REPASO = { ap2pbanco: 'B', ap2pmazo: 'F', ap2pcierre: 'C' };
   var AP2P_VIS = { 15: 16, 16: 15 };   // ordem dos slides: pâncreas — adenocarcinoma (slide 13, id ap2pb16) antes de pancreatite (slide 14, id ap2pb15); ids intactos
-  var AP2P_SEMVIG = { 21: 1, 23: 1 };   // blocos 21 (reprodutor feminino) e 23 (masculino): ainda sem foto identificada para a vinheta ⇒ logotipo (vig: null)
+  var AP2P_SEMVIG = { 21: 1, 23: 1, 24: 1 };   // blocos 21 (reprodutor feminino) e 23 (masculino): ainda sem foto identificada para a vinheta ⇒ logotipo (vig: null)
   function clasificarAP2P(id) {
     var m = /^ap2pb(\d\d)$/.exec(id);
-    if (m) { var n = +m[1]; if (n >= 1 && n <= 23) { var v = AP2P_VIS[n] || n; /* número VISIBLE (slides 13→14: o id ap2pb16 = adenocarcinoma aparece como «Bloque 15»); a vinheta segue o id (o conteúdo) */ return { tipo: 'bloque', n: pad(v), num: v, cap: ((v - 1) % 6) + 1, vig: AP2P_SEMVIG[n] ? null : 'vb-' + pad(n) }; } }
+    if (m) { var n = +m[1]; if (n >= 1 && n <= 24) { var v = AP2P_VIS[n] || n; /* número VISIBLE (slides 13→14: o id ap2pb16 = adenocarcinoma aparece como «Bloque 15»); a vinheta segue o id (o conteúdo) */ return { tipo: 'bloque', n: pad(v), num: v, cap: ((v - 1) % 6) + 1, vig: AP2P_SEMVIG[n] ? null : 'vb-' + pad(n) }; } }
     if (Object.prototype.hasOwnProperty.call(AP2P_REPASO, id)) return { tipo: 'repaso', n: AP2P_REPASO[id], num: -1, cap: 'r', vig: null };
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }

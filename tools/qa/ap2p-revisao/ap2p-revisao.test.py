@@ -114,7 +114,7 @@ alts = re.findall(r'<img src="/assets/img/anatoprat2/lam-fotos-[^"]+" alt="([^"]
 T(alts and all(len(a) > 60 for a in alts), 'todas las fotos nuevas con alt descriptivo', [a for a in alts if len(a) <= 60][:2])
 
 # 5 · bloques 19–23
-for n in range(19, 24):
+for n in range(19, 25):
     bid = f'ap2pb{n:02d}'; a, b = C.seccion(cur, bid); s = cur[a:b]
     T(f'— BLOQUE {n:02d} · FINAL ·' in s, f'{bid}: marcador de sección')
     T(s.count('class="ap2p-lam"') >= 2, f'{bid}: ≥2 láminas ({s.count(chr(34)+"ap2p-lam"+chr(34))})' if False else f'{bid}: tiene láminas')
@@ -122,7 +122,7 @@ for n in range(19, 24):
     T('Qué falta de los próximos materiales' in s, f'{bid}: registra lo que falta de José')
     T(all(k in s for k in ('<b>Órgano</b>', '<b>Proceso</b>', '<b>Diagnóstico</b>', '<b>Descripción oficial</b>')), f'{bid}: cada lámina con órgano, proceso, descripción y diagnóstico')
 order = [m.group(1) for m in re.finditer(r'<section class="container" id="(ap2p[a-z0-9]+)"', cur)]
-T(order == [f'ap2pb{n:02d}' for n in list(range(1, 15)) + [16, 15] + list(range(17, 24))] + ['ap2pbanco', 'ap2pmazo', 'ap2pcierre'], 'orden de las secciones: bloques 01–14, 16 (slide 13), 15 (slide 14), 17–23, banco, mazo, cierre', order[-6:])
+T(order == [f'ap2pb{n:02d}' for n in list(range(1, 15)) + [16, 15] + list(range(17, 25))] + ['ap2pbanco', 'ap2pmazo', 'ap2pcierre'], 'orden de las secciones: bloques 01–14, 16 (slide 13), 15 (slide 14), 17–23, banco, mazo, cierre', order[-6:])
 # fidelidad al documento: cada diagnóstico nuevo aparece como lo escribe el documento
 for dx in ('Bocio coloide multinodular', 'Tiroiditis de Hashimoto', 'Adenoma folicular de tiroides', 'Carcinoma papilar de tiroides', 'Carcinoma medular de tiroides', 'Endometriosis', 'Cervicitis crónica', 'Carcinoma escamoso de cuello uterino', 'Leiomioma', 'Leiomiosarcoma', 'Teratoma ovárico', 'Cistoadenoma mucinoso de ovario', 'Mastitis granulomatosa', 'Carcinoma ductal de mama in situ', 'Carcinoma ductal de mama invasivo', 'Condiloma acuminado', 'Carcinoma escamoso de piel', 'Melanoma', 'Lipoma', 'Hemangioma cavernoso', 'Liposarcoma', 'Atrofia testicular', 'Hiperplasia prostática benigna', 'Orquitis', 'Teratoma testicular', 'Seminoma', 'Adenocarcinoma de próstata'):
     T(f'<b>{dx}</b>' in cur, f'diagnóstico del documento presente: {dx}')
@@ -134,8 +134,8 @@ T('el material no incluye diapositivas, caso clínico ni preguntas de pancreatit
 T(all(x in cur for x in ('PRSS1', 'KRAS', 'CDKN2A', 'SMAD4', 'PanIN')), 'bloques 15/16: genes y PanIN de las diapositivas 13/14')
 
 # 6 · laminario Final, fondo neutro, «En una mirada» y registros de fuente
-refs = set(re.findall(r'/assets/img/anatoprat2/(lam-(?:final|p2)-[a-z0-9-]+\.webp)', cur))
-T(len(refs) >= 40, f'{len(refs)} imágenes del laminario Final/P2 referenciadas en la materia', len(refs))
+refs = set(re.findall(r'/assets/img/anatoprat2/(lam-(?:final|p2|doc)-[a-z0-9-]+\.webp)', cur))
+T(len(refs) >= 120, f'{len(refs)} imágenes del laminario Final/P2 referenciadas en la materia', len(refs))
 T(all(os.path.exists(d_img + r) for r in refs), 'todas las imágenes Final/P2 referenciadas existen', [r for r in refs if not os.path.exists(d_img + r)][:3])
 for frag in ('id="lam-mola-hidatiforme"', 'id="lam-celiaca"', 'id="lam-adenoma-tubular"'):
     T(frag in cur, f'lámina nueva presente: {frag}')
@@ -145,7 +145,7 @@ for bid in [f'ap2pb{n:02d}' for n in list(range(1, 15)) + [17, 18]]:
 T(cur.count('Cómo reconocerla y con qué no confundirla') == 16, 'tabla «Cómo reconocerla» en los 16 bloques antiguos', cur.count('Cómo reconocerla y con qué no confundirla'))
 T('Fila india:' in cur and 'lobulillar' in cur, 'fila india: discrepancia con la bibliografía registrada como pendiente')
 for f in os.listdir(d_img):
-    if f.startswith(('lam-final-', 'lam-p2-', 'lam-fotos-')) and f.endswith('.webp'):
+    if f.startswith(('lam-final-', 'lam-p2-', 'lam-fotos-', 'lam-doc-')) and f.endswith('.webp'):
         im = Image.open(d_img + f); T(im.size[0] > 100 and im.size[1] > 100 and os.path.getsize(d_img + f) < 700000, f'{f}: tamaño razonable', (im.size, os.path.getsize(d_img + f)))
 
 # 7 · orden de slides 13→14 con ids intactos
@@ -157,5 +157,17 @@ qs = lambda h: sorted(strip(x) for x in re.findall(r'<div class="quiz-item">.*?<
 T(qs(cur) == qs(orig) and len(qs(cur)) == 488, 'las 488 preguntas son las mismas del original (con rótulos 15↔16)', len(qs(cur)))
 T(fs(cur) == fs(orig) and len(fs(cur)) == 924, 'las 924 tarjetas son las mismas del original (con rótulos 15↔16)', len(fs(cur)))
 ht = lambda h: re.findall(r'<h4>(Bloque \d\d) ·', h); T(ht(cur)[:0] == [] and [x for x in ht(cur) if x in ('Bloque 15', 'Bloque 16')] == ['Bloque 15', 'Bloque 16'] * 2, 'banco y mazo en el orden nuevo (15 antes de 16)', [x for x in ht(cur) if x in ('Bloque 15', 'Bloque 16')])
+
+# 8 · vistas de los documentos A y B y bloque 24
+import json as _j
+mp = _j.load(open(os.path.join(HERE, 'docmap.json'), encoding='utf-8'))
+T(len(mp) == 54 and sum(len(v['files']) for v in mp.values()) == 80, '54 diagnósticos y 80 fotos de los documentos A/B', (len(mp), sum(len(v['files']) for v in mp.values())))
+T(all(f'lam-doc-{k}-' in cur or f'id="lam-doc-{k}"' in cur for k in mp), 'cada diagnóstico de los documentos A/B tiene sus vistas en la materia', [k for k in mp if f'id="lam-doc-{k}"' not in cur][:5])
+T(all(f in cur for v in mp.values() for f in v['files']), 'las 80 fotos A/B están referenciadas', [f for v in mp.values() for f in v['files'] if f not in cur][:3])
+T(cur.count('Más vistas · documentos del semestre') >= 22, 'sección «Más vistas · documentos del semestre» en 22+ bloques', cur.count('Más vistas · documentos del semestre'))
+a, b = C.seccion(cur, 'ap2pb24'); s24 = cur[a:b]
+T(s24.count('class="ap2p-lam"') == 9 and 'quiz-item' not in s24, 'bloque 24: 9 láminas, sin preguntas inventadas')
+T('manuscrita' in s24 and 'error de la fuente' in s24, 'bloque 24: la ficha de tuberculosis registra el error de la fuente y la descripción manuscrita')
+T('epidermoide de células pequeñas' in s24 and 'pendiente' in s24, 'bloque 24: «epidermoide de células pequeñas» registrado como pendiente')
 print(f'\nap2p-revisao (estático): {ok}/{ok + bad} OK' + (f' — {bad} FALHAS' if bad else ''))
 sys.exit(1 if bad else 0)

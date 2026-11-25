@@ -7,7 +7,7 @@
 # Uso: python3 tools/qa/ap2p-revisao/construir.py   (desde la raíz del repositorio)
 import os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
-import fotos_existentes as FE, bloques_nuevos as BN, ampliacion_pancreas as AP, glosario as GL, enmirada as EM, reordenar as RO
+import fotos_existentes as FE, bloques_nuevos as BN, ampliacion_pancreas as AP, glosario as GL, enmirada as EM, reordenar as RO, docs_vistas as DV, bloque24 as B24
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', '..'))
 F = os.path.join(ROOT, 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anatomia-patologica-ii-practica.html')
@@ -41,11 +41,16 @@ def build(t, glosario=True):
     t = t.replace(bib, '<li><b>Documentos «laminário» del semestre y fotos de la pasta «Láminas» (nov. 2026).</b> Fichas oficiales (órgano, proceso, descripción y diagnóstico) de las láminas del semestre, y fotos de microscopio identificadas por el nombre del archivo.</li>\n' + bib)
     # 3) bloques nuevos, antes del banco general
     i = t.index('<section class="container" id="ap2pbanco"')
-    t = t[:i] + ''.join(BN.todos()) + t[i:]
+    t = t[:i] + ''.join(BN.todos()) + B24.todos() + t[i:]
     # 3b) CSS de la ficha oficial (palabras largas no ensanchan la tabla en el celular)
     css_anc = '#tab-anatoprat2 .ap2p-tab tr:last-child td{border-bottom:0}'
     assert t.count(css_anc) == 1
     t = t.replace(css_anc, css_anc + '\n#tab-anatoprat2 .ap2p-ficha td{overflow-wrap:anywhere}\n#tab-anatoprat2 .ap2p-ficha td:first-child{width:7.6rem}\n#tab-anatoprat2 .ap2p-ficha ul{margin:.1rem 0;padding-left:1.1rem}\n#materias-container #tab-anatoprat2 .ap2p-ficha .rmc-scroll table{min-width:0}')
+    for bid in DV.POR_BLOQUE:
+        a, b = seccion(t, bid); sec = t[a:b]; n = int(bid[-2:]); extra = DV.seccion(bid)
+        ancla = f'<div class="quiz-section">\n<h3>❓ Preguntas · Bloque {n:02d}</h3>' if n <= 18 else '<div class="rmc-note"><b>🧭 Qué falta de los próximos materiales:</b>'
+        assert sec.count(ancla) == 1, (bid, sec.count(ancla))
+        t = t[:a] + sec.replace(ancla, extra + '\n' + ancla) + t[b:]
     # 3c) cuadro «En una mirada» (bloques 01–14, 17, 18)
     t, n_mirada = EM.aplicar(t)
     # 4) glosario
