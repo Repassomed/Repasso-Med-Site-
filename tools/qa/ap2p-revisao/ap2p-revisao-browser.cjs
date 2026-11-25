@@ -36,7 +36,7 @@ const SHOTS = process.env.RM_SHOTS || '';
 
     // 2 · atlas
     const atlas = await p.$$('.rmatlas');
-    T(atlas.length === 19, '19 atlas interactivos en la página', atlas.length);
+    T(atlas.length === 21, '21 atlas interactivos en la página', atlas.length);
     let nPts = 0, zoomOk = 0, solapes = 0;
     for (const a of atlas) {
       await a.scrollIntoViewIfNeeded();

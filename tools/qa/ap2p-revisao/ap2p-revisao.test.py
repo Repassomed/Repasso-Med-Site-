@@ -99,7 +99,7 @@ for n in (19, 20, 22):
 T('.ap2p-ficha td{overflow-wrap:anywhere}' in cur, 'CSS de la ficha oficial presente')
 T(cur.count('class="ap2p-tab ap2p-ficha"') == 26 + 8 - 0 or cur.count('class="ap2p-tab ap2p-ficha"') >= 30, 'fichas oficiales con la clase ap2p-ficha', cur.count('class="ap2p-tab ap2p-ficha"'))
 atl = re.findall(r'<div class="rmatlas">.*?</div></div></div></div>', cur, re.S)
-T(len(atl) == 19, '19 atlas interactivos nuevos (existentes + bloques nuevos, con las fotos del laminario Final)', len(atl))
+T(len(atl) == 21, '21 atlas interactivos (existentes, laminario Final y slide 02)', len(atl))
 for a in atl:
     base_src = re.search(r'class="rmatlas-base" src="([^"]+)"', a).group(1)
     pts = re.findall(r'<button class="rmatlas-pt" type="button" style="left:([\d.]+)%;top:([\d.]+)%" data-n="(\d+)" data-x="([\d.]+)" data-y="([\d.]+)" data-name="([^"]+)" data-expl="([^"]+)">(\d+)</button>', a)
@@ -134,7 +134,7 @@ T('el material no incluye diapositivas, caso clínico ni preguntas de pancreatit
 T(all(x in cur for x in ('PRSS1', 'KRAS', 'CDKN2A', 'SMAD4', 'PanIN')), 'bloques 15/16: genes y PanIN de las diapositivas 13/14')
 
 # 6 · laminario Final, fondo neutro, «En una mirada» y registros de fuente
-refs = set(re.findall(r'/assets/img/anatoprat2/(lam-(?:final|p2|doc)-[a-z0-9-]+\.webp)', cur))
+refs = set(re.findall(r'/assets/img/anatoprat2/(lam-(?:final|p2|doc|s02)-[a-z0-9-]+\.webp)', cur))
 T(len(refs) >= 120, f'{len(refs)} imágenes del laminario Final/P2 referenciadas en la materia', len(refs))
 T(all(os.path.exists(d_img + r) for r in refs), 'todas las imágenes Final/P2 referenciadas existen', [r for r in refs if not os.path.exists(d_img + r)][:3])
 for frag in ('id="lam-mola-hidatiforme"', 'id="lam-celiaca"', 'id="lam-adenoma-tubular"'):
@@ -176,5 +176,9 @@ T('Nódulos y tumores del hígado' in s9 and s9.index('Nódulos y tumores del h�
 T(all(k in s9 for k in ('Hiperplasia nodular focal', 'Adenoma hepático', 'Klatskin', 'HNF1α', 'Hemangioma cavernoso')), 'bloque 09: contenido del apunte integrado')
 T('Divergencias y puntos sin confirmar' in s9 and 'hemoperitoneo' in s9 and 'sin confirmar' in s9, 'bloque 09: divergencias del apunte señaladas (peritonitis/hemoperitoneo, tamaño, porcentajes)')
 T('PROVA' not in cur and 'Prova' not in s9, 'no se expone la estrategia editorial («PROVA») al alumno')
+
+# 10 · atlas del slide 02
+a, b = C.seccion(cur, 'ap2pb02'); s2 = cur[a:b]
+T(s2.count('lam-s02-adenoma-pleomorfo-') >= 4 and 'solo</b> las estructuras que el propio slide rotula' in s2, 'bloque 02: atlas con estructuras rotuladas por el slide 02')
 print(f'\nap2p-revisao (estático): {ok}/{ok + bad} OK' + (f' — {bad} FALHAS' if bad else ''))
 sys.exit(1 if bad else 0)

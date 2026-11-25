@@ -34,6 +34,23 @@ POR_BLOQUE = {'ap2pb01': ['carcinoma-escamoso-de-lengua'], 'ap2pb02': ['adenoma-
  'ap2pb21': ['endometriosis', 'cervicitis-cronica', 'carcinoma-escamoso-de-cuello-uterino', 'leiomioma', 'teratoma-ovarico', 'cistoadenoma-mucinoso-de-ovario', 'mastitis-granulomatosa', 'carcinoma-ductal-de-mama-in-situ', 'carcinoma-ductal-de-mama-invasivo'],
  'ap2pb22': ['condiloma-acuminado', 'carcinoma-escamoso-de-piel', 'melanoma', 'lipoma', 'hemangioma-cavernoso'],
  'ap2pb23': ['atrofia-testicular', 'hiperplasia-prostatica-benigna', 'orquitis', 'teratoma-testicular', 'seminoma', 'adenocarcinoma-de-prostata']}
+# atlas a partir de imágenes de los SLIDES de la cátedra, con las estructuras rotuladas por el propio slide (solo esas)
+SLIDE_ATLAS = {'ap2pb02': [
+  dict(origen='slide 02 · pág. 3', stem='lam-s02-adenoma-pleomorfo-1', alt='Foto de microscopio de glándula parótida con adenoma pleomorfo: parénquima glandular violeta a la izquierda, banda fibrosa rosada en el medio y tumor pálido a la derecha.', pts=[
+    (17, 35, 'Parénquima de la parótida', 'Glándula sana, muy violeta, con acinos y huecos de grasa. Así la rotula el slide.'),
+    (42, 42, 'Cápsula fibrosa', 'Banda rosada que separa la glándula del tumor: es la cápsula, de espesor variable. Así la rotula el slide.'),
+    (75, 55, 'Adenoma', 'Tejido tumoral pálido y celular, del otro lado de la cápsula. Así lo rotula el slide.')]),
+  dict(origen='slide 02 · pág. 3', stem='lam-s02-adenoma-pleomorfo-2', alt='Foto de microscopio de adenoma pleomorfo de parótida: tejido tumoral pálido y laxo a la izquierda, cápsula fibrosa rosada en el medio y parénquima violeta a la derecha.', pts=[
+    (20, 35, 'Tejido mixoide laxo', 'Fondo pálido y laxo del tumor, con conductos y cordones epiteliales dentro. Así lo rotula el slide («tej. mixoide laxo + conductos, acinos, túbulos irregulares, hileras o incluso sábanas»).'),
+    (66, 45, 'Cápsula fibrosa', 'Banda rosada entre el tumor y la glándula normal.'),
+    (80, 40, 'Parénquima de la parótida', 'Glándula normal comprimida, violeta, a un lado de la cápsula.')])]}
+def atlas_slides(bid):
+    from lib_html import atlas
+    o = ''
+    for d in SLIDE_ATLAS.get(bid, []):
+        o += (f'<div class="ap2p-lam" id="lam-{d["stem"]}">\n  <div class="ap2p-lam-h"><b>Imagen anotada del slide</b><span>{d["origen"]}</span></div>\n' + atlas(d['stem'], d['alt'], d['pts']) +
+              '  <div class="ap2p-nc"><b>🔎</b> Imagen tomada de un slide de la cátedra; los puntos marcan <b>solo</b> las estructuras que el propio slide rotula. Sin escala ni aumento.</div>\n</div>\n')
+    return o
 def vistas(slug):
     """lista [(stem, título, alt)] de las fotos de un diagnóstico"""
     m = MAPA[slug]; doc, pg = m['doc'], m['pg']; t = TITULO[slug]; out = []
@@ -44,11 +61,13 @@ def vistas(slug):
 def seccion(bid):
     slugs = [s for s in POR_BLOQUE[bid] if s in MAPA]
     if not slugs: return ''
+    sl = atlas_slides(bid)
     baja = any((MAPA[s]['doc'], MAPA[s]['pg']) in BAJA for s in slugs)
     o = ['\n<h3>📎 Más vistas · documentos del semestre</h3>\n',
          '<p>Fotos de las fichas de los <b>documentos del semestre</b> (A: «laminário_261110»; B: «laminário - 2»). Cada foto se identifica por <b>la ficha de su página</b> (diagnóstico escrito junto a ella); '
          'no traen escala ni aumento. Tocá una vista para ampliarla.</p>\n']
     if baja: o.append('<div class="ap2p-nc"><b>🔎 Nitidez:</b> las páginas A 3–5 y B 1–2 llegaron <b>convertidas a imagen</b> para caber en el límite de tamaño: sirven para el aspecto general, <b>no</b> para juzgar detalles microscópicos finos.</div>\n')
+    o.append(sl)
     for s in slugs:
         m = MAPA[s]
         o.append(f'<div class="ap2p-lam" id="lam-doc-{s}">\n  <div class="ap2p-lam-h"><b>{TITULO[s]}</b><span>documento {m["doc"]} · pág. {m["pg"]}</span></div>\n  <div class="ap2p-views">\n')
