@@ -1,8 +1,8 @@
 {
  "gerado_em": "2026-11-24",
- "base": "3f6b3b2f",
+ "base": "c288d1a5",
  "candidatas": 25,
- "preparadas": 24,
+ "preparadas": 25,
  "materias": [
   {
    "slug": "semiologia-ii",
@@ -21,11 +21,8 @@
    "candidata": true,
    "tema": true,
    "porta": {
-    "estado": "FECHADA",
-    "passos": 6,
-    "falhas": [
-     "3-layout-4-larguras"
-    ]
+    "estado": "ABERTA",
+    "passos": 7
    },
    "perguntas": 90,
    "cartoes": 177,
@@ -171,8 +168,8 @@
     "estado": "ABERTA",
     "passos": 7
    },
-   "perguntas": 354,
-   "cartoes": 464,
+   "perguntas": 474,
+   "cartoes": 604,
    "no_lote": true
   },
   {
