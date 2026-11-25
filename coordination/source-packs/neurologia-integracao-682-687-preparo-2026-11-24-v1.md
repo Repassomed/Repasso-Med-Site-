@@ -1,0 +1,49 @@
+# Neurología · preparo da integração #682 (infográficos) × #687 (questões) · 24/11/2026
+
+> **ATUALIZAÇÃO 24/11 (rodada 2) — LER PRIMEIRO.** A integração abaixo é **só ensaio e NÃO está finalizada**: o Claude 1 anunciou uma **nova rodada de questões** para a #687 que **ainda não está no GitHub** (a #687 continua em `610104ed`, sem commits novos desde 20/11; nenhum outro Claude está ativo na máquina, `ListAgents` vazio). Uma integração feita agora **deixaria as questões novas de fora**. Por isso: (1) **não abri PR** da branch `claude/int-682-687-preparo` e **ela não deve ser usada para merge**; (2) o ensaio virou um **script repetível** (`tools/qa/nova-era/integracao-682-687.sh`) que parte da cabeça **atual** da #687; (3) **gate:** só vale integrar depois que o Claude 1 empurrar a nova rodada e avisar; rodar o script de novo, conferir os conflitos e os testes e só então decidir a ordem. A tabela de testes abaixo é da cabeça `610104ed`. **`neu-negrito` navegador: 20/20 com a máquina livre** (as falhas anteriores eram atraso de explicação com a máquina ocupada). Estático e navegador da integração (script, 24/11): neu-8a1b 3763 · 14; neu-glosario 414 · 24; neu-infograficos 60; neu-negrito 1258 · 20; neu-questoes 119 · 12; neu-vf 565 · 12; neuro-667 294 · 36; **neu-cierre 21/23 (as 2 falhas também ocorrem na #687 sozinha)**.
+
+**Executor:** Claude 2 · **Somente preparo.** Nenhum merge; **nenhuma das duas branches foi alterada** (`claude/neuro-8a1b-1911` do Claude 1 segue em `610104ed`; `claude/neurologia-infograficos-b20-b27` da #682 segue em `8446cdd6`); nenhuma PR de Neurologia tocada. A integração de ensaio está numa **branch própria**: `claude/int-682-687-preparo` (`d5203303`), **sem PR aberta** de propósito (ver §5).
+
+## 1 · Como foi feito
+`claude/int-682-687-preparo` = `#687` (`610104ed`) + merge da `#682` (`8446cdd6`) + merge da `main` atual (`3f6b3b2f`: já traz as PRs #706 e #711; a #710, de Anestesiología, segue aberta e fora). Histórico preservado: as duas branches e a `main` são ancestrais da integração (conferido com `git merge-base --is-ancestor`), então uma futura PR não duplica commits.
+
+## 2 · Conflitos (só 3 arquivos; o HTML da matéria funde sozinho)
+| arquivo | causa | resolução |
+|---|---|---|
+| `Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html` | — | **sem conflito**: as 13 figuras da #682 (fim dos blocos 20–27) e as perguntas/reformulações da #687 ficam em trechos diferentes |
+| `tools/qa/neu-questoes-1811/neu-questoes.test.cjs` | a #687 removeu a seção «ensino idêntico à base» (a #687 muda perguntas/ensino de propósito); a #682 tinha acrescentado nela o filtro `FIG` das figuras | **lado #687** (seção removida); a presença exata das 13 figuras continua provada por `neu-glosario.test.cjs` e `neu-infograficos-browser.cjs` |
+| `tools/qa/neu-glosario/neu-glosario.test.cjs` | a #687 trocou uma asserção por `historico(...)` (sem efeito); a #682 acrescentou `.replace(GL, '$1')` | **união**: `historico(sem === N(oe…​.replace(GL, '$1')), …)` |
+| `docs/layout-ensaio/inventario.json` | as duas mexem na linha de `neurologia` (e a `main` na de `oftalmologia`) | **regenerado pela ferramenta** (`inventario.cjs neurologia` + substituição da linha): neurologia 30 seções · 580 perguntas · 774 cartões; oftalmologia da `main` |
+
+## 3 · Testes na integração (todos sem rede externa, sem escrita no banco)
+| teste | resultado |
+|---|---|
+| `neu-8a1b` estático / navegador | 3763/3763 · 14/14 |
+| `neu-glosario` estático / navegador | 414/414 · 24/24 |
+| `neu-infograficos` navegador (13 figuras) | 60/60 |
+| `neu-negrito` estático | 1258/1258 |
+| `neu-questoes-1811` estático / navegador | 119/119 · 12/12 |
+| `neu-vf` estático / navegador | 565/565 · 12/12 |
+| `neuro-667` estático / navegador | 294/294 · 36/36 |
+| `neu-cierre` estático | **21/23** — as 2 asserções que falham comparam «o resto da página» e «nº de perguntas» **com a `main`**; **falham do mesmo jeito na #687 sozinha** (`610104ed`, conferido num checkout à parte), porque a #687 muda perguntas de propósito. Não é efeito da integração. **Ação para o dono da #687:** atualizar a referência desse teste para a `main` pós-merge da #687. |
+| `neu-negrito` navegador | *(superado: 20/20 com a máquina livre, ver a atualização no topo)* — antes: **16/20 e 18/20 em duas rodadas** — a falha é «depois de responder, a explicação das MCQ/V-F aparece (N/386)», com N variando de uma rodada para outra e **também com a #687 sozinha** (18/20): o teste conta explicações que aparecem após um atraso e o computador estava ocupado com outros testes. **Não resolvido**; precisa de nova rodada com a máquina livre (pendente, não afirmo que passa). |
+
+## 4 · Ordem recomendada (decisão é de José)
+1. **Mesclar a #687** (Claude 1) como está. 2. Só então **atualizar a #682** sobre a `main`: os mesmos 3 conflitos acima se repetem e a receita é a da tabela §2 (a #687 já terá removido a seção que a #682 estendeu, então a resolução será «lado da main» nos testes). 3. Rodar `neu-glosario`, `neu-infograficos`, `neu-negrito`, `neu-vf`, `neu-questoes` e regenerar a linha de `neurologia` no inventário. 4. Auditoria e merge da #682.
+Alternativa (se José preferir uma PR só): abrir PR a partir de `claude/int-682-687-preparo` **depois** de o Claude 1 concordar, porque ela contém o conteúdo da #687.
+
+## 5 · Por que sem PR agora
+Uma PR da branch de integração levaria **as duas PRs de uma vez** para a `main` (inclui o conteúdo do Claude 1). Isso é decisão de José e do Claude 1; esta rodada só provou que a união é limpa e que os testes passam.
+
+## 6 · Limites
+Não conferi o conteúdo médico de nenhuma das duas (é trabalho das PRs); só a convivência técnica. Browsers rodaram com a máquina ocupada (ver `neu-negrito`). Nada foi publicado.
+
+## Correção do script (25/11/2026) — falhas de teste não podem ser engolidas
+**Defeito:** o script chamava cada teste dentro de `echo "$f: $(timeout … node … | tail -2 | tr … | cut …)"`. O status de saída de um comando dentro de `$(…)` num pipe é o do **último** comando do pipe (`cut`), e o `echo` externo sempre sai 0: **um teste podia falhar e o script terminar com 0**, mostrando só o texto da falha (se alguém lesse). Demonstração: `echo "x: $(sh -c 'exit 1' | tail -2)"` devolve 0.
+**Correção (`integracao-682-687.sh`):** cada teste roda **fora de pipe e de echo** (`timeout … node arq > arquivo; rc=$?`). Conta como FALHA: código ≠ 0; ou saída contendo «N FALHA(S)», «FALHA:» ou «✗» mesmo com código 0; ou saída vazia; ou arquivo de teste **ausente** (antes era pulado em silêncio por `[ -f ] &&`). O script **pára no primeiro teste que falha** (código 1); `--continuar` roda todos e só então sai com 1; `--tolerar=<teste>` aceita **uma** falha conhecida e a imprime como «TOLERADA… NÃO é aprovação»; `--reusar` repete só os testes numa pasta já montada; `--injetar-falha` acrescenta um teste sintético que sempre falha (prova). Passos de montagem sem `&&` escondido (commits do ensaio agora devolvem 4 se falharem). Códigos: 0 tudo OK · 1 falha de teste · 2/3/4 montagem/conflito desconhecido.
+**Prova controlada (ambiente descartável, worktrees em /tmp; nenhuma branch real tocada):**
+1. `--injetar-falha` → `neu-injetado.test: FALHA (código 1)` → **RESULTADO: FALHOU, saída 1**.
+2. Defeito **real forçado**: num worktree descartável virei um `checkTF(this, true)` para `false` em `neurologia.html` → `neu-8a1b` e `neu-vf` **FALHA**, **saída 1**.
+3. Restaurado (`git checkout -- .`) e repetido → **saída 0**, com `neu-cierre` explicitamente TOLERADA.
+**Resultado real (cabeças: #687 `922c5d06` · #682 `8446cdd6` · main `1e1f697b`):** `neu-8a1b` 3763/3763 · `neu-glosario` 414/414 · `neu-negrito` 1258/1258 · `neu-questoes-1811` 119/119 · `neu-vf` 565/565 · `neuro-667` 294/294; **`neu-cierre` 21/23 FALHA CONHECIDA**: as mesmas 2 falhas ocorrem na #687 sozinha (o teste compara «todo o resto da página» com a `main` de antes da retirada do Cierre e conta 508 itens); por isso o script só passa com `--tolerar=neu-cierre/neu-cierre.test`, nunca por omissão. Navegador: ver o corpo da PR.
+**Gate atualizado:** a #687 já recebeu a nova rodada (`922c5d06`, com a `main`) e a #715 (6 questões, empilhada sobre a #687) existe; o ensaio acima foi **repetido sobre essas cabeças**. A #682 (Claude 4) **não foi alterada**.

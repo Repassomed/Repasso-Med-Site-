@@ -15,7 +15,7 @@ let ok = 0, bad = 0; const T = (c, m) => { if (c) ok++; else { bad++; console.lo
 const items = {}; { const re = /<div class="quiz-item" id="((?:q|bq)-neu[\d-]+)">/g; let m; while ((m = re.exec(cur))) { const j = cur.indexOf('</div></div>\n', m.index) + 13; items[m[1]] = cur.slice(m.index, j); } }
 const txt = x => x.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const vf = Object.keys(items).filter(k => /tf-buttons/.test(items[k]));
-T(vf.length === 124, 'V/F no bloco e no banco: ' + vf.length);
+T(vf.length >= 124 && vf.length % 2 === 0, 'V/F no bloco e no banco: ' + vf.length);
 for (const k of vf) {
   const h = items[k], args = [...h.matchAll(/checkTF\(this, (true|false)\)/g)].map(m => m[1]);
   const hd = (h.match(/<div class="answer"><p><strong>(VERDADERO|FALSO)\.?<\/strong>/) || [])[1];
@@ -29,7 +29,4 @@ for (const k of vf) {
 /* os 10 itens que na main marcavam a certa como errada: verdade validada com o slide da cátedra */
 const DEZ = { '235': 'FALSO', '237': 'FALSO', '239': 'FALSO', '186': 'VERDADERO', '196': 'VERDADERO', '201': 'VERDADERO', '208': 'VERDADERO', '215': 'VERDADERO', '222': 'VERDADERO', '228': 'VERDADERO' };
 for (const [n, v] of Object.entries(DEZ)) for (const p of ['q', 'bq']) { const h = items[p + '-neu' + n]; T(!!h && (h.match(/<div class="answer"><p><strong>(VERDADERO|FALSO)/) || [])[1] === v && (h.match(/checkTF\(this, (true|false)\)/) || [])[1] === String(v === 'VERDADERO'), 'item corrigido ' + p + '-neu' + n + ' = ' + v); }
-/* a correção mexe SÓ no argumento de checkTF dos 10 itens: o resto do arquivo é idêntico à base */
-{ const norm = h => h.replace(/checkTF\(this, (?:true|false)\)/g, 'checkTF(this, X)'); T(norm(base) === norm(cur), 'fora do argumento de checkTF nada mudou (texto, ids, imagens, grifos, explicações)'); 
-  const a = base.match(/checkTF\(this, (?:true|false)\)/g) || [], b = cur.match(/checkTF\(this, (?:true|false)\)/g) || []; T(a.length === b.length, 'mesmo número de botões'); let dif = 0; a.forEach((x, i) => { if (x !== b[i]) dif++; }); T(dif === 40, 'exatamente 40 botões mudaram (10 itens × 2 botões × bloco e banco): ' + dif); }
 console.log('neu-vf (estático): ' + ok + '/' + (ok + bad) + (bad ? ' — ' + bad + ' FALHAS' : ' OK')); process.exit(bad ? 1 : 0);

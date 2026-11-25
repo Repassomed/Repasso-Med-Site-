@@ -1,0 +1,341 @@
+{
+ "gerado_em": "2026-11-24",
+ "base": "c288d1a5",
+ "candidatas": 25,
+ "preparadas": 25,
+ "materias": [
+  {
+   "slug": "semiologia-ii",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 254,
+   "cartoes": 366,
+   "no_lote": false
+  },
+  {
+   "slug": "medicina-familiar",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 90,
+   "cartoes": 177,
+   "no_lote": false
+  },
+  {
+   "slug": "fisiopatologia",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 332,
+   "cartoes": 260,
+   "no_lote": true
+  },
+  {
+   "slug": "farmacologia",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 191,
+   "cartoes": 412,
+   "no_lote": true
+  },
+  {
+   "slug": "biologia",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 320,
+   "cartoes": 410,
+   "no_lote": true
+  },
+  {
+   "slug": "embriologia",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 214,
+   "cartoes": 298,
+   "no_lote": true
+  },
+  {
+   "slug": "anatomia-patologica-practica",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 76,
+   "cartoes": 341,
+   "no_lote": true
+  },
+  {
+   "slug": "histologia-i",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 300,
+   "cartoes": 396,
+   "no_lote": true
+  },
+  {
+   "slug": "histologia-i-practica",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 212,
+   "cartoes": 286,
+   "no_lote": true
+  },
+  {
+   "slug": "histologia-ii",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 452,
+   "cartoes": 906,
+   "no_lote": true
+  },
+  {
+   "slug": "histologia-ii-practica",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 578,
+   "cartoes": 1233,
+   "no_lote": true
+  },
+  {
+   "slug": "fisiopatologia-ii",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 810,
+   "cartoes": 2181,
+   "no_lote": true
+  },
+  {
+   "slug": "toxicologia",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 702,
+   "cartoes": 1416,
+   "no_lote": true
+  },
+  {
+   "slug": "anestesiologia",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 474,
+   "cartoes": 604,
+   "no_lote": true
+  },
+  {
+   "slug": "ortopedia",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 914,
+   "cartoes": 1296,
+   "no_lote": true
+  },
+  {
+   "slug": "oftalmologia",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 390,
+   "cartoes": 1011,
+   "no_lote": true
+  },
+  {
+   "slug": "anatomia-i",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 918,
+   "cartoes": 1646,
+   "no_lote": true
+  },
+  {
+   "slug": "anatomia-patologica",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 718,
+   "cartoes": 297,
+   "no_lote": true
+  },
+  {
+   "slug": "farmacologia-ii",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 504,
+   "cartoes": 876,
+   "no_lote": true
+  },
+  {
+   "slug": "anatomia-patologica-ii",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 448,
+   "cartoes": 531,
+   "no_lote": true
+  },
+  {
+   "slug": "anatomia-patologica-ii-practica",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 488,
+   "cartoes": 924,
+   "no_lote": true
+  },
+  {
+   "slug": "dermatologia",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 120,
+   "cartoes": 482,
+   "no_lote": true
+  },
+  {
+   "slug": "guarani",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 418,
+   "cartoes": 596,
+   "no_lote": true
+  },
+  {
+   "slug": "semiologia",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 220,
+   "cartoes": 192,
+   "no_lote": true
+  },
+  {
+   "slug": "medicina-legal",
+   "candidata": true,
+   "tema": true,
+   "porta": {
+    "estado": "ABERTA",
+    "passos": 7
+   },
+   "perguntas": 490,
+   "cartoes": 1176,
+   "no_lote": true
+  },
+  {
+   "slug": "neurologia",
+   "candidata": false,
+   "tema": false,
+   "porta": {
+    "estado": "não rodada"
+   },
+   "perguntas": 508,
+   "cartoes": 774,
+   "no_lote": false
+  },
+  {
+   "slug": "imagenologia",
+   "candidata": false,
+   "tema": false,
+   "porta": {
+    "estado": "não rodada"
+   },
+   "perguntas": 87,
+   "cartoes": 124,
+   "no_lote": false
+  },
+  {
+   "slug": "bioestadistica",
+   "candidata": false,
+   "tema": false,
+   "porta": {
+    "estado": "não rodada"
+   },
+   "perguntas": "—",
+   "cartoes": "—",
+   "no_lote": false
+  }
+ ]
+}
