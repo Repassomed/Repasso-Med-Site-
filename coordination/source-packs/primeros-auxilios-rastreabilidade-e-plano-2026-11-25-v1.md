@@ -1,3 +1,10 @@
+> **ATUALIZAÇÃO (25/11/2026, mais tarde no mesmo dia) — este pack está SUPERADO nos pontos abaixo:**
+> - O `2..pdf` **foi lido completo** (100 páginas): a descarga integral do Drive funcionou (o PDF tem só 1,6 MB). As imobilizações (antigo «B04») **já têm fonte**.
+> - A matéria Primeros Auxilios foi **construída em 15 blocos** (não 10); ver `primeros-auxilios-construccion-2026-11-25-v1.md` (PR #724).
+> - **Os 11 PDFs de Interculturalidad foram lidos** (não só 1/11); ver `interculturalidad-construccion-2026-11-25-v1.md` (PR #725).
+> - O registro anterior de «112/911» na Clase 6 **não pôde ser reconfirmado** no texto extraído.
+> O restante (divergência 141/132/911, TIG em imunodeficiência, pendências de Ortopedia e Neurología) segue válido.
+
 # Primeros Auxilios · rastreabilidade por slide e plano de construção — 25/11/2026
 
 **Escopo desta entrega:** registro slide a slide do que foi **efetivamente lido** (texto via conector do Drive) e plano de construção dos blocos, **sem criar a página** (criar a matéria toca menu, layout, `get-materia.js`, `index.html`, `rm-pilot.js` — áreas críticas — e depende de decisão de José). Fonte única: slides do 7º semestre (UCP), pasta `PrimerosAuxilios` do Drive. **Nenhuma fonte externa.** Citações dos próprios slides a doses/protocolos são **do slide**; os slides avisam que dependem do protocolo institucional/MSPBS.
