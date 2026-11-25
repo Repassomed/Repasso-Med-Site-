@@ -5,7 +5,7 @@
 'use strict';
 const L = require('../ensaio-layout/lib.cjs');
 const res = []; const ok = (w, modo, nome, c, det) => { res.push({ ok: !!c }); console.log((c ? 'PASSA ' : 'FALHA ') + modo + ' @' + w + ' ' + nome + (det !== undefined && !c ? ' → ' + JSON.stringify(det).slice(0, 300) : '')); };
-const BLOCOS = { neub20: 7, neub21: 10, neub22: 7, neub23: 6, neub24: 7, neub25: 7, neub26: 6, neub27: 9 };
+const BLOCOS = {neub20: 11, neub21: 19, neub22: 12, neub23: 6, neub24: 10, neub25: 8, neub26: 7, neub27: 17}; /* atualizado em 20/11 (retiradas 263, 265–268, 283): #683 e #687 acrescentaram perguntas aos blocos 20–27 */
 (async () => {
   const { chromium } = require(process.env.RM_PLAYWRIGHT || 'playwright');
   const srv = await L.servir({}); const base = 'http://127.0.0.1:' + srv.address().port; const br = await chromium.launch();
@@ -17,19 +17,19 @@ const BLOCOS = { neub20: 7, neub21: 10, neub22: 7, neub23: 6, neub24: 7, neub25:
     ok(W, modo, 'os 8 blocos novos existem com título', Object.values(D).every(x => x && x.h2), D);
     ok(W, modo, 'perguntas por bloco = ' + JSON.stringify(BLOCOS), Object.keys(BLOCOS).every(id => D[id] && D[id].q === BLOCOS[id]), Object.fromEntries(Object.keys(D).map(i => [i, D[i] && D[i].q])));
     ok(W, modo, 'cada bloco novo tem tabelas e ≥ 5 flashcards; nenhuma imagem quebrada', Object.values(D).every(x => x && x.tab >= 1 && x.fc >= 5 && x.imgs === 0), D);
-    const B = await p.evaluate(() => { const t = (document.getElementById('banconeu').textContent || '').replace(/\s+/g, ' '); return { stats: ['Las 238 preguntas', '27Bloques', '387Flashcards', '238Preguntas'].map(s => t.replace(/\s+/g, ' ').includes(s) || t.replace(/\s+/g, '').includes(s.replace(/\s+/g, ''))), bq: document.querySelectorAll('#banconeu .quiz-item').length }; });
-    ok(W, modo, 'banco declara 238 perguntas · 27 blocos · 387 flashcards e lista as ' + 238 + ' perguntas', B.stats.every(Boolean) && B.bq >= 232, B);
+    const B = await p.evaluate(() => { const t = (document.getElementById('banconeu').textContent || '').replace(/\s+/g, ' '); const N = (t.match(/Las (\d+) preguntas/) || [])[1]; return { stats: ['Las ' + N + ' preguntas', '27Bloques', '387Flashcards', N + 'Preguntas'].map(s => t.replace(/\s+/g, ' ').includes(s) || t.replace(/\s+/g, '').includes(s.replace(/\s+/g, ''))), bq: document.querySelectorAll('#banconeu .quiz-item').length }; });
+    ok(W, modo, 'banco declara o total atual de perguntas · 27 blocos · 387 flashcards e lista todas', B.stats.every(Boolean) && B.bq >= 232, B);
     /* interação (só no controle): cada MCQ revela a resposta; cada V/F corrige ao toque */
     if (modo === 'controle') {
       const I = await p.evaluate(async () => { const out = { mcq: 0, mcqOk: 0, vf: 0, vfOk: 0, ruins: [] };
         for (const id of ['neub20', 'neub21', 'neub22', 'neub23', 'neub24', 'neub25', 'neub26', 'neub27']) {
           for (const q of document.getElementById(id).querySelectorAll('.quiz-item')) {
             const ans = q.querySelector('.answer'); const tf = q.querySelectorAll('.tf-btn');
-            if (tf.length === 0) { out.mcq++; const forte = (ans.querySelector('strong') || {}).textContent || ''; const letra = (forte.match(/^([a-d])\)/) || [])[1];
+            if (tf.length === 0 && q.querySelector('li[data-option]')) { out.mcq++; const forte = (ans.querySelector('strong') || {}).textContent || ''; const letra = (forte.match(/^([a-d])\)/) || [])[1];
               const opt = q.querySelector('li[data-option="' + letra + '"]'); const txt = opt ? opt.textContent.replace(/^[a-dA-D]\)\s*/, '').trim() : '';
               if (!opt) { out.ruins.push(q.id); continue; } opt.click(); await new Promise(r => setTimeout(r, 200));
               if (q.classList.contains('answered') && opt.classList.contains('correct') && q.getAttribute('data-correct') === letra && forte.replace(/^[a-d]\)\s*/, '').trim() === txt) out.mcqOk++; else out.ruins.push(q.id); }
-            else { out.vf++; const veredito = (ans.querySelector('strong') || {}).textContent || ''; const certo = /^VERDADERO/.test(veredito) ? 'V' : 'F';
+            else if (tf.length) { out.vf++; const veredito = (ans.querySelector('strong') || {}).textContent || ''; const certo = /^VERDADERO/.test(veredito) ? 'V' : 'F';
               const bt = [...tf].find(b => b.getAttribute('data-tf') === certo); if (!bt) { out.ruins.push(q.id); continue; } bt.click(); await new Promise(r => setTimeout(r, 200));
               if (tf.length === 2 && q.classList.contains('answered') && /^(VERDADERO|FALSO)\./.test(veredito)) out.vfOk++; else out.ruins.push(q.id); } } } return out; });
       ok(W, modo, 'MCQ: tocar na alternativa certa marca «correct», a pergunta fica «answered», data-correct = letra da explicação e o texto da resposta = a alternativa (' + I.mcqOk + '/' + I.mcq + ')', I.mcq > 0 && I.mcqOk === I.mcq, I.ruins);

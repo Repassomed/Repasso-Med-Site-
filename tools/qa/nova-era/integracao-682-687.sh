@@ -4,6 +4,7 @@
 # (neu-questoes: lado #687; neu-glosario: união; inventário: regenerado) e roda os testes estáticos de Neurologia. Pára com mensagem se aparecer conflito DESCONHECIDO.
 # Use de novo sempre que o Claude 1 empurrar mais commits na #687 (a nova rodada de questões): a integração só vale para a cabeça que ela testou.
 # Uso: NODE_PATH=$(npm root -g) sh tools/qa/nova-era/integracao-682-687.sh <pasta-vazia-para-o-worktree> [--browser] [--continuar] [--tolerar=<teste>]... [--injetar-falha]
+# (fix #716-b) Os commits do ensaio usam --allow-empty: quando a main já está dentro da cabeça testada (ex.: PR empilhada que já mergeou a main) não há o que registrar e o script saía 4 sem motivo.
 # CÓDIGO DE SAÍDA (fix #716): 0 = integração montada E todos os testes passaram; 1 = pelo menos um teste FALHOU (ou não existe, ou estourou o tempo); 2/3/4 = erro de montagem/conflito desconhecido.
 #   Cada teste roda FORA de pipe e de echo (o status real é capturado), e conta como falha se: sair com código ≠ 0, OU imprimir «N FALHA(S)» / «FALHA:» / «✗», OU sair sem imprimir nada.
 #   Por padrão pára no PRIMEIRO teste que falha (código 1). --continuar roda todos e só depois sai com 1. --tolerar=<teste> aceita UMA falha CONHECIDA, sempre impressa como TOLERADA (nunca silenciosa).
@@ -51,7 +52,7 @@ L=open(P).read().split('\n'); i=[k for k,l in enumerate(L) if l.startswith('{"sl
 L[i]=row+(',' if L[i].endswith(',') else ''); open(P,'w').write('\n'.join(L)); json.loads(open(P).read())
 EOF2
 rm -f docs/layout-ensaio/inventario.parcial.json
-git add -A && git -c user.email=ensaio@local -c user.name=ensaio commit -q -m "ensaio: #682 sobre #687" || { echo "falha ao registrar o ensaio #682 sobre #687"; exit 4; }
+git add -A && git -c user.email=ensaio@local -c user.name=ensaio commit -q --allow-empty -m "ensaio: #682 sobre #687" || { echo "falha ao registrar o ensaio #682 sobre #687"; exit 4; }
 git merge --no-commit --no-ff origin/main >/dev/null 2>&1
 CONF2=$(git diff --name-only --diff-filter=U | sort | tr '\n' ' '); echo "conflitos com a main: ${CONF2:-nenhum}"
 for f in $CONF2; do [ "$f" = docs/layout-ensaio/inventario.json ] || { echo "CONFLITO DESCONHECIDO com a main em $f"; exit 3; }; done
@@ -70,7 +71,7 @@ if m:
     s=s[:m.start()]+'\n'.join(out)+'\n'+s[m.end():]
     open(p,'w').write(s)
 EOF
-git add -A && git -c user.email=ensaio@local -c user.name=ensaio commit -q -m "ensaio: main" || { echo "falha ao registrar o ensaio com a main"; exit 4; }
+git add -A && git -c user.email=ensaio@local -c user.name=ensaio commit -q --allow-empty -m "ensaio: main" || { echo "falha ao registrar o ensaio com a main"; exit 4; }
 fi
 # ---- execução dos testes: status real capturado (sem pipe, sem echo em volta do comando) ----
 FALHAS=0; TOLERADAS=0; EXECUTADOS=0; RESUMO=""; OUT="$(mktemp)"
