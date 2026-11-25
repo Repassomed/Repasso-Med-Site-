@@ -14,7 +14,8 @@ const INV = () => {
   const limpo = s => String(s || '').replace(/\s+/g, ' ').trim();
   const ui = e => !!e.closest('[data-rm-ui]');
   const slideInfo = e => { try { if (!e.classList.contains('material-slide') || (e.parentElement && e.parentElement.closest('.material-slide'))) return false; const a = e.closest('.tab-content'); if (!a || a.id !== 'tab-farmaco2' || !e.querySelector('img') || !e.querySelector('.material-slide-caption')) return false; const h = e.querySelector('.material-slide-header'); return !(h && /^\s*(diapositiva|imagen de la prueba|imagem da prova)/i.test(h.textContent || '')); } catch (x) { return false; } };   // só as abas da lista de rm-modes.js (ABAS_INFO_EM_SLIDE)
-  const figs = r => [...r.querySelectorAll('figure, .material-slide')].filter(f => f.tagName === 'FIGURE' ? !!(f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image')) : slideInfo(f));
+  const medInfo = f => (f.classList.contains('med-image') && !(f.parentElement && f.parentElement.closest('.med-image')) && (f.classList.contains('mf-info') || f.classList.contains('rm-info')) && !!f.querySelector('img') && !!f.querySelector('.med-image-caption') && !f.closest('.material-slide'));   // regra do rm-modes.js (#631): .med-image marcada mf-info/rm-info, com imagem e legenda
+  const figs = r => [...r.querySelectorAll('figure, .material-slide, .med-image')].filter(f => f.classList.contains('med-image') ? medInfo(f) : f.tagName === 'FIGURE' ? !!(f.querySelector('figcaption') && f.querySelector('img, .s2-photo[role="img"], img.rmc-photo') && !f.closest('.material-slide, .med-image')) : slideInfo(f));
   const secs = [...tab.querySelectorAll(':scope > section[id]')];
   const bankRe = /banco|bank|banc|compendio|compêndio/i;
   const porSec = secs.map(s => {

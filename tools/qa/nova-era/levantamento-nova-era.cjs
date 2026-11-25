@@ -37,7 +37,7 @@ const ATIVACAO = { 'medicina-familiar': 'preview (layout, caneta e tema) · só 
 const SEM_LINHA = 'sem linha (= desligada para todos)';
 /* matérias fora do lote por decisão/estado, com o motivo escrito */
 const FORA_DO_LOTE = { 'medicina-familiar': 'já em preview desde 02/11 (o lote nunca reduz nem mexe)', 'semiologia-ii': 'piloto: decidido por UID nas variáveis do Netlify, não pela tabela' };
-const NOTA = { 'medicina-familiar': 'porta genérica FECHADA: 5 conferências de «infografias» (capa/lateral/contagens) falham nas 4 larguras (20 falhas); a matéria é especial (já em preview desde 02/11, gate próprio `medfam-implantacao`/`medfam-caneta`) — não é defeito comprovado, mas a porta genérica não aprova', 'semiologia-ii': 'porta aberta; mas o piloto é liberado por UID nas variáveis do Netlify, não pela tabela' };
+const NOTA = { 'medicina-familiar': 'a porta genérica estava FECHADA (20 falhas = 5 conferências de «infografias» × 4 larguras) por defeito do ORÁCULO do ensaio/inventário, que não contava os 21 infográficos `.med-image.mf-info` da matéria (a regra do site, rm-modes.js #631, conta); oráculo corrigido e porta reaberta 7/7 em 24/11; já está em preview desde 02/11, por isso fica fora do lote', 'semiologia-ii': 'porta aberta; mas o piloto é liberado por UID nas variáveis do Netlify, não pela tabela' };
 const PR_ABERTA = { anestesiologia: '#710 (conteúdo: blocos 16–20) aberta — refazer a porta depois do merge dela' };
 const SEM_CAND = { neurologia: 'não está em CANDIDATAS (1.ª fechadura ausente); porta já aberta em 30/10, mas a matéria está em reconstrução (#687/#682)', imagenologia: 'fora da Nova Era por decisão de José (será refeita)', bioestadistica: 'fora da Nova Era por decisão de José (será refeita)' };
 
