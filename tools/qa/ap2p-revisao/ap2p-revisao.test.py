@@ -169,5 +169,12 @@ a, b = C.seccion(cur, 'ap2pb24'); s24 = cur[a:b]
 T(s24.count('class="ap2p-lam"') == 9 and 'quiz-item' not in s24, 'bloque 24: 9 láminas, sin preguntas inventadas')
 T('manuscrita' in s24 and 'error de la fuente' in s24, 'bloque 24: la ficha de tuberculosis registra el error de la fuente y la descripción manuscrita')
 T('epidermoide de células pequeñas' in s24 and 'pendiente' in s24, 'bloque 24: «epidermoide de células pequeñas» registrado como pendiente')
+
+# 9 · Resumen final de hígado integrado al bloque 09
+a, b = C.seccion(cur, 'ap2pb09'); s9 = cur[a:b]
+T('Nódulos y tumores del hígado' in s9 and s9.index('Nódulos y tumores del hígado') < s9.index('Más vistas de la lámina'), 'bloque 09: mapa de nódulos y tumores del hígado antes de las fotos')
+T(all(k in s9 for k in ('Hiperplasia nodular focal', 'Adenoma hepático', 'Klatskin', 'HNF1α', 'Hemangioma cavernoso')), 'bloque 09: contenido del apunte integrado')
+T('Divergencias y puntos sin confirmar' in s9 and 'hemoperitoneo' in s9 and 'sin confirmar' in s9, 'bloque 09: divergencias del apunte señaladas (peritonitis/hemoperitoneo, tamaño, porcentajes)')
+T('PROVA' not in cur and 'Prova' not in s9, 'no se expone la estrategia editorial («PROVA») al alumno')
 print(f'\nap2p-revisao (estático): {ok}/{ok + bad} OK' + (f' — {bad} FALHAS' if bad else ''))
 sys.exit(1 if bad else 0)

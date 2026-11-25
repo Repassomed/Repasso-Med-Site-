@@ -7,7 +7,7 @@
 # Uso: python3 tools/qa/ap2p-revisao/construir.py   (desde la raíz del repositorio)
 import os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
-import fotos_existentes as FE, bloques_nuevos as BN, ampliacion_pancreas as AP, glosario as GL, enmirada as EM, reordenar as RO, docs_vistas as DV, bloque24 as B24
+import fotos_existentes as FE, bloques_nuevos as BN, ampliacion_pancreas as AP, glosario as GL, enmirada as EM, reordenar as RO, docs_vistas as DV, bloque24 as B24, figado_resumen as FG
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', '..'))
 F = os.path.join(ROOT, 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anatomia-patologica-ii-practica.html')
@@ -26,6 +26,8 @@ def build(t, glosario=True):
         a, b = seccion(t, bid); s = t[a:b]
         assert s.count(marca) == 1, (bid, s.count(marca))
         t = t[:a] + s.replace(marca, FE.seccion(bid) + '\n' + marca) + t[b:]
+    a, b = seccion(t, 'ap2pb09'); s9 = t[a:b]; an = '\n<h3>📷 Más vistas de la lámina'
+    assert s9.count(an) == 1; t = t[:a] + s9.replace(an, FG.seccion() + an) + t[b:]   # apunte de hígado (Resumen final) dentro del bloque 09
     # 2) páncreas
     for bid, nuevo, old, new in (('ap2pb15', AP.B15, AP.TXT15_OLD, AP.TXT15_NEW), ('ap2pb16', AP.B16, AP.TXT16_OLD, AP.TXT16_NEW)):
         a, b = seccion(t, bid); s = t[a:b]
