@@ -298,3 +298,57 @@ Se a #687 mudar antes de entrar (novo head), repetir o ensaio isolado com o novo
 
 ## Integração final sobre a `main` (25/11/2026)
 A #687 (com a #715) entrou na `main` (`085e8844`). Esta branch recebeu a `main` por merge (`f4c8be6c`), sem rebase. Conflitos (3) resolvidos: `inventario.json` (linha da Neurología regenerada pelo gerador: 594 q, 774 fc, 47 figuras), `neu-glosario.test.cjs` (linha da `main` com o filtro de glosas) e `neu-questoes-1811.test.cjs` (versão da `main`); nenhum conflito no `neurologia.html`. **Prova de preservação:** o HTML integrado menos as 13 figuras é idêntico byte a byte à `main` (`tools/qa/neu-infograficos/preservacao-682.test.cjs`, 8/8). **`neu-cierre`:** estático 21/23 falha igual na `main` (compara com a `main` de `10e9d4df`) e **não é aprovação**; o navegador só roda se o estático passar, e rodado à parte dá 22/26 com os números absolutos antigos e 26/26 com `--relativo`. Detalhes no corpo da PR.
+
+## Revisão médica das 13 imagens e legendas (25/11/2026) — correção da punção lumbar (b20-01)
+**Motivo:** a legenda e a própria imagem `neuro-b20-01-puncion-lumbar-y-lcr` diziam que, em meningite, HSA ou pseudotumor, «a amostra de LCR justifica puncionar sem imagem prévia». Isso generaliza uma decisão que depende da situação clínica (e, para HSA e pseudotumor, inverte a conduta: imagem primeiro). Origem: o slide `9..pdf` (registrado acima); o erro entrou na arte e na legenda.
+
+### Correções feitas (arte e legenda)
+| Onde | Antes | Depois | Referência |
+|---|---|---|---|
+| **Imagem b20-01, quadro 2** («Antes: ¿es seguro?»), último item | «Meningitis, hemorragia subaracnoidea o pseudotumor: la muestra de LCR justifica puncionar sin imagen previa.» | «Meningitis: no se demora el tratamiento; imagen previa solo con criterios de riesgo. HSA: primero TC; PL si es negativa y persiste la sospecha.» (o pseudotumor já aparece no item anterior da arte: «excluir masa» antes da PL) | IDSA 2004; ESCMID 2016; AHA/ASA 2023; Mollan 2018 |
+| **Imagem b20-01, caixa «CLAVE»** | «En meningitis, la muestra de LCR justifica puncionar sin imagen previa.» | «Imagen previa: según la clínica; en meningitis, no se demora el tratamiento.» | idem |
+| **Imagem b20-01, tabela LCR** | proteínas «20–45 mg/dL según clase» (ambíguo: «clase» = aula) | «según laboratorio» | faixa depende do método/laboratório |
+| **Legenda b20-01** | última frase com a afirmação | «A imagem prévia a decide a situação clínica…»: meningite (só com critérios de risco: imunossupressão, convulsão recente, papiledema, déficit focal, consciência alterada; sem demorar o tratamento), HSA (TC primeiro; PL só se TC negativa e suspeita persistente), pseudotumor (descartar massa antes) | idem |
+| Legenda b21-02 | HSA «casi siempre aneurisma roto» | «en la mayoría de los casos por un aneurisma roto» | AHA/ASA 2023 (a maioria das HSA espontâneas é aneurismática; «quase sempre» exagera) |
+| Legenda b21-01 | (sem aviso) | NIHSS: as faixas seguem o slide; outras fontes agrupam 1–4, 5–15, 16–20, 21–42; o escore orienta, não decide sozinho | Brott 1989; NINDS |
+| Legenda b25-02 | (rótulo «progresiva con recaídas» sem contexto) | esclarece que é termo da classificação antiga; a atual (Lublin 2014) usa RR, SP, PP (ativa ou não) e «síndrome clínicamente aislado» | Lublin 2014 |
+| Legenda b26-01 | (sem aviso) | triptanos têm contraindicações (p. ex. cardiovasculares) e se escolhem por paciente | ICHD-3 / guias de enxaqueca |
+A imagem corrigida foi editada **na própria arte** (cobertura do fundo e novo texto, fonte sans-serif semelhante); o resto da figura não mudou (WebP 400 → 343 KB, mesmas dimensões 1024 × 1536).
+
+### Referências (registro)
+- Tunkel AR, et al. Practice Guidelines for the Management of Bacterial Meningitis (IDSA). *Clin Infect Dis* 2004;39:1267–84. (TC antes da PL só em pacientes de risco; terapia empírica não deve esperar a imagem. **Conferido por busca em 25/11**; a lista exata de critérios deve ser lida no artigo.)
+- van de Beek D, et al. ESCMID guideline: diagnosis and treatment of acute bacterial meningitis. *Clin Microbiol Infect* 2016;22(Suppl 3):S37–S62. (**citada de memória, não aberta nesta sessão**)
+- Hoh BL, et al. 2023 Guideline for the Management of Patients With Aneurysmal Subarachnoid Hemorrhage (AHA/ASA). *Stroke* 2023;54:e314–e370. (TC sem contraste primeiro; PL quando a TC é negativa/duvidosa e a suspeita persiste, com o tempo de início em conta. **Conferido por busca em 25/11**; a força da recomendação não foi lida.)
+- Mollan SP, et al. Idiopathic intracranial hypertension: consensus guidelines on management. *J Neurol Neurosurg Psychiatry* 2018;89:1088–1100. (neuroimagem urgente para excluir massa e trombose venosa antes de medir a pressão de abertura; **existência e tema conferidos por busca; o trecho exato da sequência imagem-PL não foi lido**)
+- Lublin FD, et al. Defining the clinical course of multiple sclerosis: the 2013 revisions. *Neurology* 2014;83:278–86. (**de memória**)
+- Brott T, et al. Measurements of acute cerebral infarction: a clinical examination scale. *Stroke* 1989;20:864–70. (**de memória**)
+**Limite declarado:** as outras 12 imagens foram conferidas contra os slides já registrados neste pack e contra o conhecimento clínico do revisor; **não houve nova busca de literatura para cada uma** e **não existe literatura-base de Neurologia no projeto**.
+
+### Resultado da conferência das outras 12 imagens (imagem + legenda)
+| Imagem | Resultado |
+|---|---|
+| b20-02 exames | sem erro; contexto adequado («TC inicial normal não exclui isquemia precoce», «não todo implante contraindica RM») |
+| b21-01 ictus isquêmico | sem erro clínico; **dúvida (NIHSS)**: as faixas 1 · 2–5 · 6–15 · 16–20 · > 20 são as do slide e do bloco; a literatura mais usada é 1–4 · 5–15 · 16–20 · 21–42. Não alterei a arte (contradiria o bloco e as perguntas); legenda esclarece |
+| b21-02 hemorragia | sem erro; legenda ajustada («la mayoría»). A arte diz corretamente «TC urgente; PL se TC negativa e suspeita persiste» (**contradizia a legenda antiga de b20-01**) |
+| b22-01 epilepsia | sem erro (ILAE 2014/2017, estado ≥ 5 min, resolução 10/5 anos «criterio docente») |
+| b23-01 Parkinson | sem erro (circuito direto/indireto, critérios de bradicinesia + rigidez/tremor, DBS, fármacos) |
+| b24-01 cognição | sem erro (cortes MMSE/MoCA «≈» e «docente», ajuste +1 do MoCA) |
+| b24-02 demências | sem erro (Lewy: «la tétrada no exige que estén todos»; HPN) |
+| b25-01 Guillain-Barré | sem erro (IgIV 0,4 g/kg × 5 d, PF 5 sessões, corticoides sem benefício) |
+| b25-02 esclerose múltipla | **dúvida (4.ª forma)**: «progresiva con recaídas» é termo antigo; o slide rotula «primer episodio desmielinizante». Sem decisão da cátedra, mantive a arte (segue o bloco) e acrescentei contexto na legenda. McDonald 2017/2024 conferido contra o slide |
+| b26-01 cefaleias | sem erro (ICHD-3); legenda ganhou o aviso dos triptanos |
+| b27-01 TEC | sem erro; **dúvida registrada** (já constava): slides divergem sobre «coma ≤ 5» × «≤ 8 sem abertura ocular»; a arte usa ≤ 8 com valoração de via aérea |
+| b27-02 TEC II | sem erro (PIC < 22 mmHg, corticoides contraindicados, HED > 30 mL, HSD > 10 mm / desvio > 5 mm); a arte não traz a meta de PPC (omissão, não erro) |
+
+### Dúvidas NÃO resolvidas (para José/cátedra)
+1. **NIHSS (b21-01):** rótulo/faixas do slide × literatura (acima).
+2. **EM, 4.ª forma (b25-02):** rótulo da cátedra.
+3. **Coma no TEC (b27-01):** divergência entre slides.
+4. **Nomes de docente nas imagens:** o rodapé das 13 imagens traz «Dra. Silvia Duarte». A página do aluno não deve expor perfil de docente (CLAUDE.md §2-A); não alterei as 13 imagens sem decisão de José (exigiria repintar o rodapé).
+5. **Texto de ensino do bloco 20 na `main` (fora do escopo desta PR):** o resumo e uma resposta ainda agrupam «meningitis, HSA y pseudotumor» como casos em que a amostra «puede justificar adelantar la punción», com ressalvas («no es automática»). Para HSA a conduta é TC primeiro. **Recomendo PR própria sobre a `main`** (altera texto com grifos de alunos; exige cuidado com âncoras).
+6. **Perguntas duplicadas na `main` (achado do teste `neu-cierre`):** `q-neu234` = `q-neu-2509-05` (neuralgia do trigêmeo, mesmo enunciado e alternativas) e quase-duplicata `q-neu148` / `q-neu289` (DEFINE «facies parkinsoniana»). A capa conta 296 distintas em vez de 297. **Não alterei** (8-A.9 proíbe apagar sem protocolo); pede decisão (lei 8-A.1-B).
+
+## `neu-cierre` — causa e correção (25/11/2026)
+**Causa:** o teste comparava a página **inteira** com a `main` de `10e9d4df` (antes da retirada do Cierre) e usava números absolutos (254 perguntas, 508 itens, 34 infografías). Depois entraram a #687/#715 (+43 perguntas × 2) e a #682 (13 figuras): a comparação falhava **também na própria `main`** (21/23 estático), e o navegador nem rodava (22/26 com os números antigos). Não era regressão desta PR.
+**Correção (`tools/qa/neu-cierre/neu-cierre.test.cjs`):** (a) a **seção `revisaoneu`** tem de ser **exatamente** a da base sem o Cierre; (b) nada da base se perde: títulos h2, seções, **ids**, flashcards (conjunto) e perguntas (`q-`/`bq-`); (c) bloco = banco; (d) as contagens de capa, índice e DOM passam a ser **derivadas da página atual** (inclusive a contagem de perguntas **distintas** que a capa usa, replicada em Node) e as figuras = 34 + as da #682; (e) o `--relativo` virou o padrão (flag aceita por compatibilidade). **Nenhuma verificação relevante foi apagada**: as que dependiam da página inteira foram trocadas por equivalentes mais específicas (seção exata + inclusão de ids/flashcards/perguntas/seções), e duas que estavam anuláveis em `--relativo` (banco e capa) agora são sempre exigidas.
+**Provas:** estático 27/27 e navegador 26/26 sobre a branch **e** sobre a `main` limpa (sem figuras); **mutação**: remover uma flashcard do mazo, reinserir o h2 do Cierre, renomear o id de uma pergunta e retirar uma pergunta do banco → o teste falha em cada caso (4/4 detectadas).
