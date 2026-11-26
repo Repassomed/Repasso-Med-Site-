@@ -18,7 +18,7 @@ const BASE = (process.argv.includes('--base') ? process.argv[process.argv.indexO
 /* #682: os 13 infográficos (figuras `neuro-b2N-0N-…` no fim dos blocos 20–27) são acréscimo conhecido e alheio à retirada do Cierre; esta checagem só os ignora (número e posição: tools/qa/neu-infograficos e neu-glosario) */
 const FIG_682 = /  <figure class="rmc-fig"><div class="rmc-zoom"><img class="rmc-photo" src="\/assets\/img\/neuro\/neuro-b2\d-0\d-[^"]*"[\s\S]*?<\/figure>\n/g;
 const curRaw = fs.readFileSync(path.join(REPO, REL), 'utf8'); const N_FIG = (curRaw.match(FIG_682) || []).length; const cur = curRaw.replace(FIG_682, '');   /* N_FIG = figuras da #682 presentes (0 sem ela; 13 com ela): a capa soma 34 + N_FIG infográficos */
-const old = cp.execSync('git show ' + BASE + ':"' + REL + '"', { cwd: REPO, maxBuffer: 1 << 28 }).toString();
+const old = require('../neu-infograficos/b20-correcoes.cjs')(cp.execSync('git show ' + BASE + ':"' + REL + '"', { cwd: REPO, maxBuffer: 1 << 28 }).toString());
 let ok = 0, bad = 0; const T = (c, m, x) => { if (c) ok++; else { bad++; console.log('  ✗ FALHA:', m, x !== undefined ? '→ ' + JSON.stringify(x).slice(0, 260) : ''); } };
 const figBase = 34;   /* infografías que a capa conta na base (a capa só conta figura com legenda e imagem; a #682 soma N_FIG) */
 const SEC = '<section class="container" id="revisaoneu"', H4 = '<h4>🎴 Mazo general · Neurología</h4>';

@@ -2,7 +2,7 @@
 const fs=require('fs'),cp=require('child_process');
 const F='Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
 const base=process.argv[2]||'origin/main';
-const now=fs.readFileSync(F,'utf8'),old=cp.execSync(`git show ${base}:"${F}"`,{maxBuffer:1<<29}).toString();
+const now=fs.readFileSync(F,'utf8'),old=require('./b20-correcoes.cjs')(cp.execSync(`git show ${base}:"${F}"`,{maxBuffer:1<<29}).toString());
 let ok=0,bad=0;const t=(n,c)=>{c?ok++:(bad++,console.log('FALHA:',n))};
 const FIG=/  <figure class="rmc-fig"><div class="rmc-zoom"><img class="rmc-photo" src="\/assets\/img\/neuro\/neuro-b2\d-0\d-[^"]*"[\s\S]*?<\/figure>\n/g;
 const figs=now.match(FIG)||[];t('13 infográficos presentes ('+figs.length+')',figs.length===13);

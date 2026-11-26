@@ -3,7 +3,7 @@ const fs=require('fs'),cp=require('child_process');
 const F='Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
 const base=process.argv[2]||'1dfb7442' /* #687 antes de a #715 ser incorporada */;
 const FIGS=/  <figure class="rmc-fig"><div class="rmc-zoom"><img class="rmc-photo" src="\/assets\/img\/neuro\/neuro-b2\d-0\d-[^"]*"[\s\S]*?<\/figure>\n/g; /* #682: os 13 infográficos não são pergunta nem ensino; verificados em neu-infograficos */
-const now=fs.readFileSync(F,'utf8').replace(FIGS,''),old=cp.execSync(`git show ${base}:"${F}"`,{maxBuffer:1<<29}).toString();
+const now=fs.readFileSync(F,'utf8').replace(FIGS,''),old=require('../neu-infograficos/b20-correcoes.cjs')(cp.execSync(`git show ${base}:"${F}"`,{maxBuffer:1<<29}).toString());
 let ok=0,bad=0;const t=(n,c)=>{c?ok++:(bad++,console.log('FALHA:',n))};
 const IDS=[291,292,293,294,295,296,297];
 let r=now;
