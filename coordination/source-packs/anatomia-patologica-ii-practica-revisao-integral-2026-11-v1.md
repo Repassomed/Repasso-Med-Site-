@@ -1,0 +1,247 @@
+# Anatomía Patológica II Práctica · grande revisão (24–25/11/2026) · matriz de fontes e decisões
+
+Executor: Claude 2 · Base: `main` `c288d1a5` · Branch `claude/ap2p-revisao-integral`.
+Página: `Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/anatomia-patologica-ii-practica.html` (blocos `ap2pb01–ap2pb23`, banco, mazo e cierre).
+Reprodutível: `python3 tools/qa/ap2p-revisao/construir.py` aplica TODA a revisão sobre o HTML original (o teste estático prova que o arquivo atual = original + script).
+**Nada foi ativado, publicado, mesclado nem escrito no banco.** Consultas ao Supabase: só `SELECT` de contagem (ver §9).
+
+## 1 · Pastas reais do Drive (confirmadas por busca e listagem)
+
+Caminho: Site Repasso Med → Biblioteca → 6.º semestre → **«Anatopatologia II Pratica»** (id `1mMedL4e45FtXaV_woIatSTrRzLZIYUP-`; **a pasta não leva acento nem «Prática»**).
+- **«Slides atualizados»** (id `1DZ-byFl-xBo4R20lyh5Akm4fRmkxK1u7`): PDFs `01–04`, `07–16` numerados e, **sem número**, `Gastrite cronica_260825…` e `Adenocarcinoma gastrico_260825…`, mais `ANP II - LAMINÁRIO P1…`, `Láminas Anatopato 6D - P1` e `- P2`.
+- **«Laminas»** (id `14VOr7lZbEGU6bUhfxuB9VfOhtelOezeG`): **16 fotos JPEG** (24/11) + os **dois documentos novos** (`laminário_261110_132914.pdf` = «A», `laminário - 2_260728_225030.pdf` = «B») + PDFs antigos (`Laminas Anatopato II - Practica P1`, `Anatopato II pratica - Final`, `- P2`, `Lâminas Anatopato P1.`).
+
+## 2 · O que foi aberto e o que NÃO foi (limites reais)
+
+| Fonte | Estado |
+|---|---|
+| Slides `01, 02, 03, 04, 07, 08, 13, 14` + `Gastrite crónica` + `Adenocarcinoma gástrico` | **Texto lido hoje** (`read_file_content`: OCR de slides com anotações manuscritas). |
+| Slides `09, 10, 11, 12` | **Não reabertos hoje.** Conteúdo conferido nas rodadas de 24/10 (cópia compactada que José subiu) e já refletido nos blocos 10–14; mantidos sem alteração. |
+| Slides `15` (Nefroblastoma) e `16` (Pielonefritis crónica) | **Identificação e ordem confirmadas pelos NOMES dos arquivos** (`15 - Nefroblastoma…`, `16 - Pielonefritis cronica…`) e pela leitura de 19/11 (pack `…final-rim`); não reabertos hoje. |
+| **Imagens dos PDFs de slides** | **NÃO abertas.** O conector só entrega arquivos < 10 MB e vários slides têm 11–18 MB (02, 04, 07, 08, 10, 11, 13, 16…); mesmo nos menores o conector devolve texto, não as páginas como imagem. Nenhuma imagem de slide foi usada nesta rodada. |
+| Documento **A** (`laminário_261110`, 50 MB) | **Texto lido das págs. 1–5** (a extração terminou no início da pág. 6; **págs. 6 em diante: sem texto extraível — NÃO lidas**). **Imagens: não abertas** (50 MB). |
+| Documento **B** (`laminário - 2`, 44 MB) | **Texto lido das págs. 1–7 completo.** **Imagens: não abertas.** |
+| **16 fotos JPEG** | **Todas baixadas, VISTAS uma a uma** e salvas (recorte quadrado do campo circular, webp). Identificação **só pelo nome do arquivo**. |
+| `Láminas Anatopato 6D - P1/P2`, `ANP II - LAMINÁRIO P1`, `Laminas … P1`, `… Final`, `… P2`, `Lâminas P1.` | **Não reabertos hoje** (já usados nas rodadas de 24/10 e 19/11; ver packs `…parcial2` e `…final-rim`). |
+| **Literatura-base de anatomia patológica** | **Não disponível no projeto/Drive em tamanho legível** (Robbins, 440 MB, não baixa). Nada foi confirmado em livro; **nenhuma fonte externa foi usada**. |
+
+## 3 · Ordem dos slides (pedido de José) e discrepância com o site
+
+Ordem pelos **arquivos**: 01 Ca epidermoide de língua · 02 Adenoma pleomorfo de parótida · 03 Adenocarcinoma esofágico · 04 Ca epidermoide de esôfago · (**05 e 06 sem número no arquivo:** `Gastrite crónica` e `Adenocarcinoma gástrico`, identificados por conteúdo e por serem os únicos slides do estômago) · 07 Cirrose · 08 CHC · 09 Duodenite crónica · 10 Crohn · 11 Apendicite aguda · 12 Adenocarcinoma de cólon · **13 Câncer de pâncreas · 14 Pancreatite crónica** · 15 Nefroblastoma · 16 Pielonefrite crónica.
+
+Site (`ap2pb01–18`, 18 blocos): gástrico e cólon aparecem **desdobrados em 2** (difuso/intestinal; mucinoso/não mucinoso) e, **nos blocos 15 e 16, a pancreatite crónica vem ANTES do adenocarcinoma de pâncreas — ordem INVERSA à dos slides (13 = câncer, 14 = pancreatite)**.
+**Decisão:** NÃO reordenar. Os ids `ap2pb15/16` carregam âncoras, vinhetas, o tema da Nova Era (`cap = ((n−1) mod 6)+1`) e marcações potenciais de alunos; trocar a ordem mexeria nos ids ou duplicaria o conteúdo. Registrado como **pendência de decisão de José** (se quiser a ordem dos slides, é uma tarefa própria com migração de âncoras).
+
+## 4 · Matriz por slide → bloco → o que entrou
+
+| Slide | Tema | Bloco do site | Texto lido hoje | Mudança nesta rodada |
+|---|---|---|---|---|
+| 01 | Ca epidermoide de língua | 01 | ✅ | Nenhuma de conteúdo; glossário em toda a matéria |
+| 02 | Adenoma pleomorfo | 02 | ✅ | **+1 foto com atlas (4 pontos)** + ficha oficial do doc B; glossário |
+| 03 | Adenocarcinoma esofágico | 03 | ✅ | **+2 fotos** (1 com atlas de 3 pontos; 1 sem pontos, baixa definição) + ficha; glossário |
+| 04 | Ca epidermoide de esôfago | 04 | ✅ | Glossário (sem foto nova) |
+| 05* | Gastrite crónica | 05 | ✅ | **+1 foto com atlas (3)** + ficha; glossário |
+| 06* | Adenocarcinoma gástrico (difuso e intestinal) | 06 e 07 | ✅ | Bloco 07: **+1 foto com atlas (3)** + ficha; glossário |
+| 07 | Cirrose hepática | 08 | ✅ | Glossário |
+| 08 | CHC | 09 | ✅ | **+1 foto (sem pontos)** + ficha; glossário |
+| 09 | Duodenite crónica | 10 | — (conferido em 24/10) | **+1 foto com atlas (3)** + ficha; glossário |
+| 10 | Crohn | 11 | — | **+1 foto com atlas (4)** + ficha; glossário |
+| 11 | Apendicite aguda | 12 | — | Glossário (sem foto nova) |
+| 12 | Adenocarcinoma de cólon | 13 e 14 | — | Bloco 13: **+1 foto com atlas (4)** + ficha (subtipo da foto NÃO especificado); glossário |
+| 13 | Câncer de páncreas | 16 | ✅ | **Conteúdo novo:** quadro «em uma olhada», genes (KRAS, p16/CDKN2A, SMAD4, TP53, BRCA2), PanIN, localização, fatores de risco, macro/micro; **+1 foto** (sem pontos); advertência «só ficha» corrigida |
+| 14 | Pancreatite crónica | 15 | ✅ | **Conteúdo novo:** causas, genes (PRSS1, SPINK1, CFTR, CPA1/CEL, IgG4), quadro achado→consequência, caso; **+1 foto** (sem pontos); advertência corrigida |
+| 15 | Nefroblastoma | 17 | por nome | **+1 foto** (sem pontos) + ficha |
+| 16 | Pielonefrite crónica | 18 | por nome | **+1 foto com atlas (3)** + ficha |
+
+## 5 · Fotos da pasta «Laminas» (16): arquivo → identificação → destino → situação
+
+Todas: foto de celular de campo circular de microscópio, sem escala nem aumento; **identificação = nome do arquivo**. Recorte quadrado em `assets/img/anatoprat2/lam-fotos-<slug>.webp` (≤ 777 px, ≤ 127 KB).
+
+| Arquivo | Dx (pelo nome) | Destino | Situação |
+|---|---|---|---|
+| tumor de wilms - nefroblastoma | Nefroblastoma | bloco 17 | **Utilizada** (vista, sem pontos: 3 componentes não delimitáveis) |
+| Tumor mixto de glandula salival (2) | Adenoma pleomorfo | bloco 02 | **Utilizada + atlas 4 pontos** (parótida normal, cápsula, estroma mixoide, luzes ductais) |
+| Adenocarcinoma de esofago 2 | Adenocarcinoma esofágico | bloco 03 | **Utilizada + atlas 3 pontos** |
+| Adenocarcinoma de esofago | Adenocarcinoma esofágico | bloco 03 | **Utilizada sem pontos** (baixa definição; não se atribuem estruturas) |
+| Gastrite cronica | Gastrite crónica | bloco 05 | **Utilizada + atlas 3 pontos** |
+| Carcinoma papilar de  tiroides | Ca papilar de tireoide | **bloco 20 (novo)** | **Utilizada + atlas 3 pontos**; núcleos NÃO se resolvem |
+| Hepatocarcinoma | CHC | bloco 09 | **Utilizada sem pontos** (baixo detalhe) |
+| Adenocarcinoma gastrico do tipo intestinal | Adenoca gástrico intestinal | bloco 07 | **Utilizada + atlas 3 pontos** |
+| Duodenitis cronica | Duodenite crónica | bloco 10 | **Utilizada + atlas 3 pontos** |
+| Enfermidad de cronh | Crohn | bloco 11 | **Utilizada + atlas 4 pontos** |
+| Pancreatitis Cronica | Pancreatite crónica | bloco 15 | **Utilizada sem pontos** (artefato óptico nas bordas) |
+| Adenocarcinoma de pancreas | Adenoca de páncreas | bloco 16 | **Utilizada sem pontos** (baixo contraste) |
+| Pielonefritis cronica | Pielonefrite crónica | bloco 18 | **Utilizada + atlas 3 pontos** |
+| Tiroides de Hashimoto | Tireoidite de Hashimoto | **bloco 19 (novo)** | **Utilizada + atlas 3 pontos** |
+| Codiloma acuminado | Condiloma acuminado | **bloco 22 (novo)** | **Utilizada + atlas 4 pontos** (grafia do arquivo anotada) |
+| Adenocarcinoma de colon | Adenoca de cólon | bloco 13 | **Utilizada + atlas 4 pontos**; **subtipo (mucinoso ou não) NÃO consta do nome**: usada como vista geral, sem ensinar mucina nem necrose |
+
+**Atlas interativos novos: 11, com 37 pontos.** Cada ponto foi colocado olhando a imagem (coordenadas em % do recorte quadrado) e a explicação diz o que aparece **e o que não se resolve** naquele aumento. Teste de navegador: os 37 abrem legenda, explicação e zoom; nenhum par de pontos se sobrepõe. Pontos que dependem de interpretação (p. ex. «hendidura» no Crohn) estão escritos como «compatível com».
+**Imagens existentes preservadas:** nenhuma removida (110 fontes de imagem antes → 126 agora; 338 → 365 tags `<img>`; as 27 novas são 16 fotos + 11 imagens de zoom do atlas).
+
+## 6 · Documentos A e B: página a página → destino
+
+| Doc/pág. | Láminas | Destino |
+|---|---|---|
+| A p.1 | Atrofia testicular · Hipertrofia cardíaca · HPB · Bocio coloide · Esôfago de Barrett | Atrofia e HPB → **bloco 23**; bocio → **bloco 19**; hipertrofia cardíaca e Barrett → **fora da sequência pedida** (AP I Práctica já os tem) |
+| A p.2 | IAM · Pulmão (TB) · Pancreatite aguda · Colesterolose · Pele (melanoma) | Melanoma → **bloco 22** (com ressalva de fonte); demais → fora da sequência |
+| A p.3 | Esteatose · Aterosclerose · Pneumonia em resolução · Apendicite aguda · Orquite | Orquite → **bloco 23**; apendicite → já no bloco 12; demais fora |
+| A p.4 | Cirrose · Pielonefrite crónica · Hashimoto · Gastrite · Duodenite | Cirrose, pielonefrite, gastrite, duodenite → fichas oficiais nos blocos 08*/18/05/10; Hashimoto → **bloco 19** |
+| A p.5 | Pancreatite crónica · Endometriose · Cervicite crónica · Mastite granulomatosa · Crohn | Pancreatite e Crohn → blocos 15/11; endometriose, cervicite, mastite → **bloco 21** |
+| A p.6 em diante | — | **NÃO lidas** (sem texto extraível) |
+| B p.1 | Lipoma · Leiomioma · Teratoma testicular · Teratoma ovárico · Hemangioma | Lipoma, hemangioma → **bloco 22**; leiomioma, teratoma ovárico → **bloco 21**; teratoma testicular → **bloco 23** |
+| B p.2 | Adenoma pleomorfo · Adenoma folicular · Condiloma · Adenoma tubular de cólon · Cistoadenoma mucinoso | Pleomorfo → bloco 02; adenoma folicular → **bloco 19**; condiloma → **bloco 22**; adenoma tubular → **fora da sequência** (sem bloco); cistoadenoma → **bloco 21** |
+| B p.3 | Ca escamoso de pele · de língua · de esôfago · Adenoca esofágico · Gástrico difuso | Pele → **bloco 22**; língua/esôfago/esofágico/gástrico → blocos 01/04/03/06 |
+| B p.4 | Gástrico intestinal · CHC · Adenoca de páncreas · Colon mucosecretante · Colon não mucosecretante | Blocos 07/09/16/14/13 |
+| B p.5 | Wilms · Ca papilar · Ca medular · CDIS · Ca ductal invasivo | Wilms → 17; papilar/medular → **bloco 20**; CDIS/invasivo → **bloco 21** |
+| B p.6 | Ca escamoso de cérvix · Adenoca de próstata · Leiomiossarcoma · **Liposarcoma (ficha EM BRANCO)** · Seminoma | Cérvix, leiomiossarcoma → **bloco 21**; próstata, seminoma → **bloco 23**; liposarcoma → **bloco 22 como PENDENTE** (sem descrição) |
+| B p.7 | Carcinoma epidermoide (sic) de células pequenas de pulmão | **Fora da sequência pedida** (pulmão): pendente de decisão de José |
+
+**Discrepâncias de fonte encontradas e registradas na página (não escondidas):** (a) doc A p.2, pulmão: a descrição da «tuberculose» fala de miocardiócitos (texto copiado de outra lámina) → não usada; (b) doc B p.1: teratoma testicular listado entre benignas mas descrito com «alta malignidade» → pendente (bloco 23); (c) doc A p.3: orquite rotulada «aguda» com predomínio linfoplasmocitário → pendente (bloco 23); (d) doc A p.2: melanoma sem descrição de atipia → pendente (bloco 22); (e) doc B p.1: hemangioma com «epitélio plano simples» → termo pendente; (f) doc B p.5: «plegamento da membrana celular» (carcinoma papilar) → pendente; (g) doc B p.6: liposarcoma vazio.
+
+## 7 · O que foi feito por etapa
+
+**Etapa 2–3 (conteúdo e organização).** Cada lámina nova segue: **Área → Órgão → Processo → Descrição oficial (adaptada em bullets com negrito nos achados) → Diagnóstico → «Qué buscar» → «Lo más característico» → vistas/atlas**, com **quadro comparativo** no início do bloco. Para os 12 blocos existentes que receberam foto, a ficha oficial do documento novo entrou na mesma ordem. **Sintetizado:** nos blocos 19–23 todo o conteúdo é a descrição oficial em bullets + comparativo (nada maior que o documento). **Não reescritos nesta rodada:** o texto de ensino dos blocos 01–14, 17 e 18 (já têm «Desde cero», ficha, lámina em detalhe, casos e perguntas); a re-síntese integral desses blocos fica como **continuação** (§10), para não alterar de uma vez ensino, perguntas e âncoras.
+**Blocos 15 e 16:** as advertências «só há a ficha» ficaram desatualizadas com os slides 14 e 13 e foram **corrigidas**; entram quadros «em uma olhada» e «o que a diapositiva atualizada agrega».
+**Etapa 6 (depois da 16).** Novos blocos: **19 Tireoide · doenças (3 láminas)** · **20 Tireoide · cânceres (2)** · **21 Reprodutor feminino (10: cérvix, trompa, útero, ovário, mama)** · **22 Pele e partes moles (6)** · **23 Reprodutor masculino (6)** = **27 láminas**. **Sem perguntas nem flashcards inventados** (faltam os slides teóricos); cada bloco termina com «Qué falta de los próximos materiales».
+**Etapa 5 (glossário).** **295 termos clicáveis** (19 que já existiam + 276 novos), **69 termos distintos**, definição curta e única por termo em toda a matéria; no máx. 2 aparições por termo e bloco, **fora** de perguntas, respostas, flashcards, títulos, legendas e atlas, sem aninhar. Incluídos os pedidos por José que aparecem no material: pérola de queratina, conteúdo/estroma mixoide, linitis plástica, intraepitelial, granuloma, granuloma não caseificante, necrose caseosa (só aparece «necrosis caseosa»), além de coilocitos, desmoplasia, metaplasia, displasia, tiroidização, psamoma, vidro esmerilado, centro germinativo, cribiforme, fila india, etc. «Coroa linfocitária» e «necrose caseificante» **não aparecem** no material, então não receberam marcação (há «halo/corona de linfocitos» e «necrosis caseosa»).
+
+## 8 · Nova Era (integração) — registrada e testada, nada ativado
+
+- `rm-materia-sistema.js`: `clasificarAP2P` aceita agora `ap2pb01–ap2pb23` (`cap = ((n−1) mod 6)+1`); blocos **21 e 23 sem vinheta** (`vig: null` → logotipo) porque não há foto identificada; vinhetas **`vb-19`, `vb-20`, `vb-22`** (480×480, recortes das fotos de Hashimoto, carcinoma papilar e condiloma).
+- `VER` do `rm-pilot.js` e a tag do `index.html` **NÃO foram alterados** (as PRs #710 e #711 também mexeram nesse arquivo sem bump); o bump coordenado fica para o momento da ativação. **Matéria continua só em `CANDIDATAS`; quem libera é `rm_materia_rollout`.**
+- `temas-ap2p.test.cjs` atualizado para 23 blocos (`esperado`, `nBlocos`, `semVig`).
+
+## 9 · Marcações dos alunos (Supabase SOMENTE LEITURA, 24/11)
+
+`SELECT count` em `user_highlights` (por `subject_slug` e por `block_id like 'ap2p%'`), `user_notes` e `user_ink_strokes` (por `subject_slug`): **0 linhas** em todas. Nada escrito. Como não há marcações, nenhuma âncora existente pode ser afetada; **mesmo assim** todo o conteúdo novo entrou no fim de cada bloco (antes das perguntas) e os blocos 01–18, banco e mazo foram verificados byte a byte (§11).
+
+## 10 · Pendências e plano de continuidade
+
+1. **Slides teóricos de tireoide, reprodutor feminino (incl. mama e ovário), pele e reprodutor masculino** (José vai enviar): cada bloco 19–23 tem a estrutura pronta e a lista «Qué falta». Plano: (a) comparar o slide com a ficha do bloco; (b) acrescentar «Desde cero», genes, clínica e tratamento curto **só do que o slide trouxer**; (c) criar perguntas e flashcards conforme a lei 8-A (o resumo ensina antes); (d) conferir os pontos do atlas quando chegarem fotos melhores.
+2. **Fotos**: faltam as imagens identificadas de 24 das 27 láminas novas (só Hashimoto, papilar e condiloma têm). Os blocos dizem isso na própria lámina.
+3. **Imagens dos slides 1–16**: não abertas (limite de 10 MB do conector); se José subir cópias compactadas, as vistas macroscópicas e microscópicas podem entrar.
+4. **Ordem 13/14 vs 15/16** (§3) e **lámina do pulmão, adenoma tubular, apendicite/cirrose duplicadas**: decisão de José.
+5. **Fichas com discrepância** (§6, a–g): confirmar com a cátedra.
+6. **Literatura-base** não acessível: genes e percentuais das diapositivas 13/14 vêm só das diapositivas; o percentual «50–70 %» (TP53/BRCA2) ficou **sem cifra** por ambiguidade.
+7. **Re-síntese dos blocos 01–14, 17, 18** (ensino mais curto, comparativos novos): próxima rodada, bloco a bloco, com consulta a marcações antes de cada edição.
+8. **Perguntas novas** para os 5 blocos novos e para os casos clínicos dos slides 13/14 (5 MCQ do slide 14): próxima rodada de questões.
+
+## 11 · Testes (resumo; resultados no Cartão de Merge da PR)
+
+`tools/qa/ap2p-revisao/ap2p-revisao.test.py` (estático): reprodutibilidade do HTML, texto idêntico sem os glossários, ids preservados, perguntas e flashcards dos blocos 01–18 idênticos, banco e mazo idênticos byte a byte, glossário (sem aninhar, uma definição por termo), fotos (quadradas, ≤ 200 KB), atlas (pontos numerados, coordenadas, textos em texto plano), blocos 19–23 (estrutura, diagnósticos como no documento, discrepâncias visíveis).
+`tools/qa/ap2p-revisao/ap2p-revisao-browser.cjs` (Chromium, 1440/820/390): imagens carregam, 37 pontos de atlas abrem legenda/explicação/zoom, ampliar vistas, **cada um dos 295 termos abre e fecha a nota dentro da tela**, sem erros nem escrita.
+Além disso: `temas-ap2p`, `real-ap2p`, `integracao-ap2p`, `ap2p-final-b17-b18`, `quiz.test.cjs`, porta `anatomia-patologica-ii-practica`, `nao-ativacao`, Guard.
+
+## 12 · Rodada «entrega completa» (25/11/2026) — acesso, imagens, editorial, registros
+
+**Acesso (a→c).** Os PDFs < 10 MB foram baixados e examinados localmente (texto por página + imagens extraídas): `Anatopato II pratica - Final.pdf` (15 pág., **39 fotos**, fichas oficiais), `…P2.pdf` (41 fotos; só o adenoma tubular, pág. 4, aproveitado), slide 14 (pancreatite), laminários P1/slides 01/03/09/12/15/gastrite. Descoberta: o laminario **Final** traz fichas + fotos oficiais de tireoide, ginecologia, mama, mola, celíaca, Crohn, pâncreas. Documentos A e B: só **texto** (truncado); suas imagens e as páginas além do texto **não foram vistas**. Arquivos ≥ 10 MB (conector recusa; drive.google.com bloqueado pelo proxy): **não abertos** — José precisa fornecer PDF dividido ou imagens soltas (ver pendências).
+
+**Imagens.** +36 vistas `lam-final-*`, +2 `lam-final-pancreatitis-s14-*`, +3 `lam-p2-adenoma-tubular-*`. Fundo neutro: o exterior preto do campo circular foi tornado transparente **somente** quando o contorno era um círculo limpo (máscara com verificação de IoU/preenchimento); nas demais fotos manteve-se o original. As 16 fotos do telefone foram reprocessadas igual; **nenhum pixel interno do tecido foi alterado**. Atlas: 11 → **19**; cada ponto conferido a olho sobre a imagem final (2 pontos reposicionados após o reprocessamento: cápsula da parótida e fundo microfolicular).
+Por tema: tireoide (bocio, Hashimoto, adenoma folicular, papilar: 2–4 vistas + atlas), ginecologia (endometriose, leiomioma, condiloma→vulva, ca. escamoso de colo, **mola hidatiforme nova**), mama (CDIS, infiltrante), digestivo (**celíaca nova** no bloco 10, Crohn íleo ×3, **adenoma tubular novo** no bloco 13, pancreatite ×5 + atlas, adenocarcinoma pâncreas ×2 + atlas).
+
+**Editorial.** Cuadro «⚡ En una mirada» (condensa os 4 renglones oficiais da «consigna resuelta») nos blocos 01–14, 17, 18 (15/16 já tinham); coluna «Descripción en el laminario Final» nas fichas; glossário reaplicado (279 novas ocorrências, definição única por termo).
+
+**Ordem dos blocos 15/16 (slides 13→14).** O site tem pancreatite (slide 14) antes de adenocarcinoma (slide 13). **Não reordenado**: o número do bloco aparece em títulos de perguntas, tabelas do banco, mazos e é lido pela Nova Era (vinheta `vb-NN`, capítulo). Trocar exigiria renumerar tudo e mover porções do banco; risco para marcações/consistência sem ganho didático. **Decisão pendente de José/coordenação.** Os cruzamentos «Se confunde con» já remetem um ao outro.
+
+**Pulmão e adenoma tubular.** Adenoma tubular: ficha P2 pág. 4 + doc. B pág. 2 → lâmina nova nos blocos 13/14 (colon). Pulmão: não há ficha/foto identificada no material aberto → **sem lugar atribuído, nada inventado**; pendente.
+
+**Fichas contraditórias / «fila india».** Doc. B e laminario Final (pág. 11) associam «fila india» ao carcinoma de mama invasivo (Final: «infiltrante»; B: «ductal invasivo»); a bibliografia habitual a associa ao **lobulillar**. Registrado como fonte, **não corrigido nem ensinado como regra**: pendente. Também: Final pág. 7 diz **vulva** para o condiloma (B diz «piel»); Final pág. 12 esclarece «fusão de ilhotas»; Final pág. 13 diz adenoca de páncreas «moderadamente diferenciado». Mantidos: melanoma sem atipia, orquitis aguda×linfoplasmocitária, teratoma benigno×«alta malignidade», liposarcoma vazio.
+
+**Marcações dos alunos.** Supabase só leitura: 0 grifos/notas/traços nesta matéria; todos os ids/âncoras existentes preservados (teste de integridade do texto compara com a versão original sem glossário); novas seções entram antes de `quiz-section`/`ap2pbanco`.
+
+**Cache.** `VER` em `rm-pilot.js`/`index.html` **não** foi alterado (arquivos críticos). Antes de ativar: subir `VER` (módulo `rm-materia-sistema.js` mudou) junto com a ativação, senão alunos com cache antigo veem `clasificarAP2P` sem os blocos 19–23.
+
+## 13 · Rodada 25/11 (2) — arquivos NÃO abertos (nomes exatos), síntese dos blocos antigos, ordem 15/16
+
+**Arquivos que não consegui abrir (Drive, pasta do semestre) e como José pode fornecer:**
+| Arquivo | Tamanho | O que foi lido | Forma mais simples |
+|---|---|---|---|
+| `laminário_261110_132914.pdf` (doc. A) | 50 776 482 B | só texto, págs. 1–5; imagens e págs. 6+ não | dividir em partes de ≤ 8 MB (ex. 5 págs. cada) **ou** exportar as páginas como JPG |
+| `laminário - 2_260728_225030.pdf` (doc. B) | 44 664 245 B | só texto, págs. 1–7; imagens não | idem |
+| `Anatopato II - Resumo Final.pdf` | 61 882 064 B | **nada** | dividir em partes ≤ 8 MB |
+| Slides teóricos 02, 04, 07, 08, 10, 11, 13, 16 (pasta «Slides atualizados») | 11–18 MB cada | só texto OCR dos que o conector devolveu | cada slide dividido em 2–3 PDFs ou imagens por slide |
+Como dividir (qualquer PDF): iLovePDF/Smallpdf «Dividir PDF» por intervalos, ou «Imprimir → PDF» por faixas de páginas; enviar para a mesma pasta do Drive.
+`Apunte Prova Final Anatopato II - Dra. Chamorro.pdf` (279 KB) abriu: são apuntes de aluno (fonte não autorizada como autoridade) e só cobrem boca/esôfago/estômago/fígado/pâncreas; **não** trazem tireoide, mama nem testículo; nada foi usado como fonte.
+
+**«Fila india» × literatura-base:** o único material disponível confirma só a associação na ficha (doc. B pág. 5 e Final pág. 11). A literatura-base (Robbins, 440 MB) **não abre**; os apuntes não cobrem mama. Não há como resolver a divergência aqui: fica **pendente**, sem corrigir nem ensinar como regra.
+
+**Síntese dos blocos antigos (01–14, 17, 18).** Feita dentro do que é seguro sem reescrever o ensino já revisado: cada bloco recebe agora duas tabelas no topo — «⚡ En una mirada» (4 renglones oficiais) e «🔎 Cómo reconocerla y con qué no confundirla» (copiadas tal cual do texto do próprio bloco). O corpo longo (concepto, causas, clínica, patogenia) **não foi reescrito**: exige os slides 02, 04, 07, 08, 10, 11, 13, 16 por inteiro (acima) e consulta de marcações antes de cada edição; ficam para a rodada com esses arquivos.
+
+**Ordem 15/16 — impedimento técnico real e solução.** (1) O id (`ap2pb15/16`) e o número visível («Bloque 15/16») estão em: marcador de seção, títulos «Preguntas · Bloque NN», tabelas do banco, títulos de mazos/decks, cruzamentos de texto e perguntas; (2) `rm-materia-sistema.js` deriva vinheta (`vb-NN`) e capítulo do **número** do id. Mover só a seção no DOM deixaria «Bloque 16» antes de «Bloque 15»; renumerar exige trocar ~30 rótulos e reordenar 3 porções do banco/mazo. **Solução proposta (rodada própria, ~1 PR pequena):** manter os ids; no DOM colocar `ap2pb16` antes de `ap2pb15`; trocar os rótulos visíveis 15↔16 (e «PÁNCREAS I/II») em todo o arquivo; reordenar as porções do banco/mazo; no `clasificarAP2P` mapear 15↔16 para a vinheta correta; rodar `temas-ap2p`, `real-ap2p`, `integracao-ap2p`. Não é risco para grifos (0 marcações; âncoras seguem pelo id), mas exige ordem de José por tocar o módulo Nova Era.
+
+## 14 · Rodada 25/11 (3) — ordem dos slides 13 → 14 implementada (ids intactos)
+`tools/qa/ap2p-revisao/reordenar.py` (idempotente, dentro de `construir.py`): (1) a seção `ap2pb16` (adenocarcinoma, slide 13) passa a vir ANTES de `ap2pb15` (pancreatite, slide 14) no DOM; (2) a linha e as porções do banco e do mazo seguem a mesma ordem; (3) rótulos visíveis «Bloque 15/16» e «PÁNCREAS I/II» trocados em todo o arquivo; (4) `rm-materia-sistema.js`: `AP2P_VIS` mostra na Nova Era o número visível (15↔16) e o capítulo correspondente; a **vinheta continua a do id** (conteúdo correto). **Ids, âncoras, imagens, 488 perguntas e 924 flashcards intactos** (teste compara conjuntos com o original). Marcações dos alunos: 0 (Supabase, só leitura); âncoras seguem por id, então continuariam válidas.
+Testes: estático 426/426; navegador 54/54; `temas-ap2p` 51/51 (oráculo ajustado: número visível 15↔16 e vinheta por id); real 109/109; integração 119/119; b17-b18 186+8; porta 7/7 (layout 4 larguras, caneta/modos); nao-ativacao 39/39; gate 48/48.
+**Lista curta de arquivos que continuam inacessíveis:** `laminário_261110_132914.pdf` (50 776 482 B) · `laminário - 2_260728_225030.pdf` (44 664 245 B) · `Anatopato II - Resumo Final.pdf` (61 882 064 B) · slides 02, 04, 07, 08, 10, 11, 13, 16 (11–18 MB). Divisão: partes ≤ 8 MB (Dividir PDF por intervalos de páginas) ou JPG por página. **Matéria NÃO está completa** até esses conteúdos serem conferidos.
+
+## 15 · Tentativa de download completo (25/11/2026, rodada 4)
+`download_file_content` (único equivalente disponível neste ambiente) foi tentado **sem exportMimeType** sobre `laminário_261110_132914.pdf` (id 15tzL3WM…) e `Anatopato II - Resumo Final.pdf` (id 1JiIt_k8…): ambos recusados — «over Google's 10 MB limit for downloads through this connector». Os slides (11–18 MB) têm o mesmo limite, já registrado nas rodadas anteriores; `drive.google.com` está bloqueado pelo proxy de saída e não se pede credencial ampla de Drive. **Parei de repetir.** Nada novo foi lido; nenhum conteúdo desses arquivos foi usado. Se a coordenação tem a cópia local, a forma mais simples é enviá-la para a pasta do Drive **dividida** em partes ≤ 8 MB (ou colocar os PDFs no repositório em `coordination/inbox/`, se José autorizar): `laminário_261110_132914.pdf`, `laminário - 2_260728_225030.pdf`, `Anatopato II - Resumo Final.pdf`, slides 02, 04, 07, 08, 10, 11, 13, 16.
+
+## 16 · Rodada 25/11 (5) — PARTES recebidas (pasta Drive `1N48MKtMBBKCrVfiXzPZ70wmkMX0PkgHj`, 44 PDFs) — o que foi aberto e usado
+**Acesso:** as 44 partes baixaram (`download_file_content`, todas < 10 MB) e abriram localmente (`pdftotext`, `pdfimages`, `pdftoppm`). Páginas renderizadas e examinadas: documento A págs. 1–6, documento B págs. 1–7 (**todas**); Resumo Final págs. 1–26 (**panorama em miniatura**, não transcrição); slides 02, 04, 07, 08, 10, 11, 13, 16 (109 páginas renderizadas; **texto OCR extraído** onde havia texto — slides 02 pág. 4–8, 04 pág. 1–7, 07 pág. 3–9, 08 pág. 4–11, 10 pág. 7–13, 13 pág. 6, 16 pág. 4–9 —; **as páginas manuscritas/escaneadas dos slides NÃO foram lidas uma a uma nesta rodada**).
+Partes «imagem» (convertidas): `laminario_A_pag_003/004/005`, `laminario_B_pag_001/002`, `resumo_final_pag_013/021`, `slide_13_pag_003`, `slide_16_pag_003` — nitidez menor; usadas só para o aspecto geral.
+**Documento A pág. 6:** página em branco (quadriculado); sem conteúdo.
+
+**Incorporado:** 54 diagnósticos / **80 fotos** das fichas dos documentos A e B (recorte do campo circular do PDF; tecido não retocado; arquivos `lam-doc-<diagnóstico>-N.webp`, total ≈ 2,4 MB): seção «📎 Más vistas · documentos del semestre» nos blocos 01–23 (cada foto identificada pela ficha da sua página; sem atlas novo: a baixa resolução impede localizar estruturas com segurança) e **bloco 24 «Otras láminas del semestre»** (9 láminas sem bloco na sequência: corazón ×2, **pulmón ×3 (tuberculosis, neumonía en resolución, ca. de células pequeñas)**, aterosclerosis, esteatosis, colesterolosis, pancreatitis aguda). Origem por foto: página do documento indicada em cada lámina na página; mapa completo em `tools/qa/ap2p-revisao/docmap.json`.
+**Resolvido:** a ficha «Tuberculosis» (doc. A pág. 2) traz impressa a descrição do miocardio (erro da fonte); sob ela há uma **descrição manuscrita** («granuloma caseoso compuesto por centro necrótico, células epitelioides, cél. gigantes de Langhans, halo de linfocitos y fibroblastos»), transcrita no bloco 24 e marcada como pendente de confirmação pela cátedra.
+**Resumo Final (26 pág.):** apuntes manuscritos sobre **patologia do fígado** (hiperplasia nodular focal/regenerativa, hemangioma cavernoso, adenoma hepático e subtipos, tumores malignos, carcinoma hepatocelular, colangiocarcinoma; marcações «PROVA»). **Não integrado** nesta rodada: conforme a Lei de Atualização Contínua exige transcrição fiel página a página, verificação científica e fusão com os blocos 08–09; fica **pendente** (próxima rodada). Nenhum conteúdo foi copiado.
+**Slides 02, 04, 07, 08, 10, 11, 13, 16:** baixados e abertos; a revisão profunda do corpo dos blocos antigos contra cada página manuscrita **não foi concluída** (ver acima). Registro honesto: estes blocos continuam com o ensino das rodadas anteriores (24/10, 19/11) + tabelas-resumo; **a matéria não está completa**.
+**Pulmão:** tuberculosis, neumonía en resolución e carcinoma de células pequeñas → bloco 24 (sem teoria de pulmão no material recebido). **Adenoma tubular:** blocos 13/14 (ficha B pág. 2 + foto).
+
+## 17 · Rodada 25/11 (6) — leitura visual dos slides, Resumo Final de fígado, o que foi e NÃO foi lido
+**Resumo Final (apuntes de fígado):** `resumo_final_pag_001…026` lidas **uma a uma a 130 dpi** (p1–2 capa/título; p3–26 conteúdo). Transcrição completa e fiel em `coordination/source-packs/anatomia-patologica-ii-practica-resumo-final-figado-transcricao-2026-11-25-v1.md`. Nenhum trecho ilegível; dúvidas de leitura registradas (p12 «>10 cm», p17 40 %/60 %, p20 «porta central», p23 «VCJ»→VCI). **Integrado** ao bloco 09 («🧩 Nódulos y tumores del hígado · el mapa completo»: 6 tabelas + notas): hiperplasia nodular focal/regenerativa, hemangioma cavernoso (+ calcificação distrófica × metastásica), adenoma hepático e 3 subtipos, complemento do CHC, colangiocarcinoma (Klatskin), metástase hepática, hepatoblastoma. Comparado com blocos 08–09 (que já cobriam CHC/AFP/aflatoxina/colangiocarcinoma de passagem), com o **slide 08** (ficha + caso clínico do CHC, coerentes) e com a bibliografia habitual. **Divergências sinalizadas na página:** (1) ruptura do adenoma «gera peritonite» no apunte × hemoperitônio habitual; (2) tamanho «>10 cm» do adenoma; (3) 40 %/60 % de mutações β-catenina/p53; (4) «VCJ»→VCI. As marcas «PROVA» do apunte **não** foram expostas ao aluno. Sem lâmina/foto dessas lesões nos documentos: nada inventado.
+**Slides lidos visualmente nesta rodada:** `slide_02_pag_001-003` (p1–3, **lidas**: adenoma pleomorfo; os números do slide — 60 %, ≤6 cm, recidiva 25 %/4 %, 2 %/10 % — **já estavam** no bloco 02) e `slide_02_pag_004-008` (texto OCR; p8 quase em branco); `slide_04_pag_001-007` (p1–7 **lidas**: ca. epidermoide de esôfago, caso clínico, microscopia anotada; consistentes com o bloco 04) e `slide_04_pag_008-010` (**em branco**, só moldura/marca d'água); `slide_07_pag_001-004` (**lidas**: cirrose — causas, patogenia, microscopia anotada, ficha, macro micro/macronodular; consistentes com o bloco 08).
+**Slides NÃO lidos visualmente nesta rodada (apenas baixados, renderizados e, onde havia texto embutido, OCR):** `slide_07_pag_005-009` (p7 e p9 quase em branco), `slide_08_pag_001-011` (texto OCR da ficha/caso do CHC conferido; p1–3 e demais não vistos), `slide_10_pag_001-013`, `slide_11_pag_001-004`, `slide_13_pag_001-006`, `slide_16_pag_001-009`. **Pendência por arquivo/página:** ler essas páginas e conferir o corpo dos blocos 09–18 contra elas.
+**Imagens dos slides:** do slide 02 pág. 3 foram extraídas 2 micrografias já rotuladas pelo próprio slide (parênquima da parótida, cápsula fibrosa, adenoma, tecido mixoide frouxo) → **2 atlas novos no bloco 02** (pontos só nas estruturas rotuladas pelo slide). Origem: `slide_02_pag_001-003.pdf`, pág. 3 (imagem incorporada; fundo escuro retirado só fora do círculo).
+
+## 18 · Rodada 26/11 — leitura visual dos slides restantes (em miniatura/2–4 páginas por imagem; texto fino pode ter escapado)
+Lidos nesta rodada (além dos da seção 17): `slide_07_pag_005-009` (caso clínico e microscopia da cirrose, perguntas/justificativas — **consistentes** com o bloco 08: bilirrubina 3,8, albumina 2,4, plaquetas 85.000, Masson, Mallory-Denk, célula estrelada/Disse), `slide_08_pag_001-004` + `005-010` (CHC: fatores de risco, macro, patrões trabecular/pseudoglandular/compacto, invasão vascular; ficha + caso clínico; **consistentes** com o bloco 09), `slide_10_pag_001-004` (Crohn: **4 itens que o bloco não destacava** → caixa «Lo que agrega el slide 10» no bloco 11: metaplasia seudopilórica e de Paneth, ausência de granuloma não descarta, Crohn metastásico, extraintestinais, ~20 % debut em FID), `slide_11_pag_001-004` (apendicite: classificação catarral/supurada/gangrenosa/perforada, infiltrado neutrofílico na muscular, ficha; **consistentes** com o bloco 12), `slide_13_pag_001-004` (adenocarcinoma de pâncreas; **resolvido:** o «50–70 %» está na linha de **TP53** e BRCA2 não tem cifra → bloco 16 atualizado), `slide_16_pag_001-004` (pielonefrite crônica: obstrutiva/refluxo, cicatrizes heterogêneas, tireoidização, glomeruloesclerose, esclerose vascular; **consistentes** com o bloco 18).
+**Ainda NÃO lidos visualmente:** `slide_10_pag_005-013` (p12–13 em branco; p5–11 não vistas), `slide_13_pag_005-006`, `slide_16_pag_005-009` (p5 e p9 quase em branco; p6–8 não vistas), `slide_11_*` já lido; `slide_07_pag_008` visto, `slide_07_pag_007/009` quase em branco.
+**Divergência registrada:** a mensagem do slide 07 («Tiempo de protrombina/INR 1,8») e demais valores do caso coincidem com o bloco 08; nenhuma divergência nova de ciência encontrada nas páginas lidas.
+
+## 19 · Rodada 26/11 (2) — páginas dos slides lidas nesta rodada e o que mudou por bloco
+**Lidas visualmente (miniatura/2–4 páginas por imagem):** `slide_08_pag_001-004` e `005-010` (CHC; p11 em branco) — consistentes com o bloco 09; `slide_10_pag_001-011` (Crohn: macroscopia, microscopia anotada, granulomas, fissura transmural, ficha, mnemônica ASCA(+)/ANCA(−), caso clínico, perguntas e justificativas; p12–13 em branco) → **bloco 11** recebe a caixa «Lo que agrega el slide 10» (metaplasias seudopilórica e de Paneth, ausência de granuloma não descarta, Crohn metastásico, extraintestinais, serologia, caso do slide); `slide_16_pag_001-008` (pielonefrite crônica + caso e perguntas de **glomerulonefrite crônica**; p9 quase em branco) → **bloco 18** recebe a caixa «Lo que agrega el slide 16» (contraste pielonefrite × glomerulonefrite crônica; o caso do slide é de GN crônica, a ficha é de pielonefrite: registrado); `slide_13_pag_001-004` → bloco 16: TP53 «≈50–70 %» (linha do TP53 na página original; BRCA2 sem cifra); `slide_11_pag_001-004` e `slide_07_pag_001-009` (p7 e p9 em branco) — consistentes com os blocos 12 e 08.
+**Ainda não lidos página a página:** `slide_13_pag_005-006` (p6 quase em branco), `slide_16_pag_009` (quase em branco). Ilegível: nenhum trecho.
+**Mudanças por bloco (esta rodada):** 02 (+2 atlas do slide 02), 09 (mapa de nódulos e tumores do fígado do Resumo Final), 11 (slide 10), 16 (TP53), 18 (slide 16), 24 (novo). Demais blocos: conferidos e sem mudança de conteúdo.
+**Fotos de baixa qualidade que continuam assim:** documentos A págs. 3–5 e B págs. 1–2 (partes «imagem»); os originais só existem dentro dos PDFs de 44–50 MB que o conector não baixa inteiros; sem melhoria possível sem os originais. Fotos A/B ficam sem atlas.
+**Divergências (fonte × confirmado):** «fila india» (B pág. 5, Final pág. 11 = fonte; bibliografia habitual diverge → pendente), tuberculose (descrição impressa do miocárdio × manuscrita → pendente), «epidermoide de células pequeñas» (nomenclatura do documento, não confirmada), teratoma testicular («benigno» × «alta malignidade»), orquite («aguda» × predomínio linfoplasmocitário), melanoma (processo «acumulação», sem atipia descrita): **todos mantidos como a fonte escreve e marcados pendentes de confirmação da cátedra**; nenhum apresentado como fato.
+**iPad/Safari e preview:** não testados (ambiente sem WebKit/iPad); testes de navegador em Chromium 1440/820/390; a matéria só vai a preview privado por ordem de José.
+
+## 20 · Rodada 26/11 (3) — PDFs `MELHOR_QUALIDADE_*` (250 dpi), páginas restantes e conflito com a main
+**PDFs abertos e comparados:** `MELHOR_QUALIDADE_A_p3_250dpi.pdf`, `…A_p4…`, `…A_p5…`, `…B_p1…`, `…B_p2…` (cada um 1 página, imagem única 2066×2921 px a 250 dpi; antes 1653×2337 a 200 dpi). A detecção de círculos reencontrou **exatamente** as mesmas fotos e a mesma ordem fichas→fotos (A3 8, A4 9, A5 10, B1 7, B2 6 = 40), e o texto OCR das fichas coincide com o já usado. **O que melhorou:** +25 % de pixels por lado (círculos de ~360 px → ~450 px), bordas e fundo mais limpos; **nenhum detalhe microscópico novo** (o conteúdo continua sendo o mesmo raster, apenas mais definido). Substituídos os 40 arquivos `lam-doc-*` (mesmos nomes/ids, ≤ 60 KB cada); **sem atlas novo** e sem estruturas marcadas (a resolução não permite localizar com segurança).
+**Fotos que continuam limitadas:** todas as de A págs. 3–5 e B págs. 1–2 (aspecto geral apenas).
+**Slides — páginas que faltavam:** `slide_13_pag_005` (duodenite como achado frequente em tumor de cabeça de pâncreas + macro «câncer em cabeça de pâncreas» — **já coberto** no bloco 16), `slide_13_pag_006` (ficha do adenocarcinoma de pâncreas, coerente) e `slide_16_pag_009` (resposta 3 do caso de glomerulonefrite crônica, coerente com o bloco 18). **Todas as páginas dos slides 02, 04, 07, 08, 10, 11, 13 e 16 foram agora lidas** (algumas em miniatura; nenhum trecho ilegível; páginas em branco: 04 p8–10, 07 p7 e p9, 08 p11, 10 p12–13).
+**Conflito com a main:** `docs/layout-ensaio/inventario.json` (a main atualizou outras linhas). Resolvido tomando a versão da main como base e **regenerando só a linha da AP II Práctica** (`inventario.cjs` + substituição); o resto do arquivo é o da main, byte a byte. Matéria Teórica e demais arquivos: não tocados (a PR só altera arquivos do ESCOPO).
+
+## 21 · Auditoria das 61 linhas médicas sinalizadas pelo Guard (Lei 6), avisos de escopo, efeito do merge/deploy e validação segura (26/11/2026)
+**Método:** reproduzi localmente a regra do Guard (`collect_medical_diff`: número com unidade, letra de resposta, afirmação terapêutica) sobre as linhas adicionadas ao HTML da matéria (`git diff origin/main..HEAD`, **61 linhas**; o pacote do Guard mostra só 60). Cada linha foi comparada em texto plano com a versão da `main`.
+**Resultado:** **45 das 61 já existiam na `main`** — são alternativas de resposta e trechos de casos dos blocos antigos que aparecem como «adicionados» só porque (a) os blocos 15/16 mudaram de posição (ordem dos slides 13→14, banco e mazo na nova ordem) ou (b) o glossário clicável envolveu uma palavra da linha. Conferido também por teste (`ap2p-revisao.test.py`): as 488 perguntas e os 924 flashcards são **os mesmos** do original (comparação por conjunto, sem glossário). **16 linhas são realmente novas** e estão auditadas abaixo.
+| # | Linha nova (resumo) | Fonte | Conferência / decisão |
+|---|---|---|---|
+| 3 | HNF: «mulheres de 30–50 anos (según el apunte)» | Resumo Final p4 | Bate com o apunte; atribuição já explícita. Mantida. |
+| 4 | CHC: «homens > 60 anos» | Resumo Final p16 | **Corrigido:** agora «dado do apunte». |
+| 5 | AFP elevada em ~50 % dos avançados | Resumo Final p20 | **Corrigido:** «cifra do apunte; a bibliografia dá faixa parecida, algo maior». |
+| 6 | Mutações β-catenina ~40 % / p53 ~60 % | Resumo Final p17 | Já marcada «cifras sem confirmar»; não usada como regra. |
+| 7 | Colangiocarcinoma: 50–60 % periilar (Klatskin), 20–30 % distal, ~10 % intra-hepático | Resumo Final p25 | Coincide com a bibliografia habitual. Mantida. |
+| 8 | Nota de divergências (peritonite × hemoperitônio) | Resumo Final p10 × bibliografia | Divergência declarada; sem cifra. Pendente da cátedra. |
+| 12–14 | Crohn: caso do slide (26 anos, fumadora, FID, fístula perianal); «~20 % debuta com dor em FID e febre»; extraintestinais | `slide_10_pag_001-004`, `005-011` | Lidos na página original; coerentes. A cifra de 20 % é **do slide** (dito na própria linha). |
+| 15 | «La cátedra lo divide en dos formas según la mucina» | texto já existente (bloco 14) | Só glossário. |
+| 16 | Pâncreas: KRAS > 90 %, p16/CDKN2A ≈ 95 %, SMAD4 ≈ 55 %, TP53 ≈ 50–70 %, BRCA2 sem cifra | `slide_13_pag_001` (lido na página original) | Coincide com a bibliografia habitual (KRAS > 90 %, CDKN2A ~95 %, SMAD4 ~55 %, TP53 50–75 %). |
+| 17 | «Doença de idosos: 80 % entre 60–80 anos»; fatores de risco | `slide_13_pag_001` | Conferido no slide. |
+| 18 | Localização: cabeça 60 %, corpo 15 %, cauda 5 %, difuso 20 % | `slide_13_pag_001` | Conferido no slide; soma 100 %. |
+| 19 | Nota «TP53 50–70 %; BRCA2 sem cifra» | `slide_13_pag_001` | Resolve a ambiguidade antiga. |
+| 30 | Caso da diapositiva 14 (52 anos, álcool > 15 anos, dor epigástrica com irradiação, esteatorreia) | slide 14 (leitura de 24/11) | Texto do slide; coerente. |
+| 41 | GN crônica do slide 16: creatinina 5,8 mg/dL, BUN 68, TFGe 11 mL/min, proteinúria 1,8 g/24 h «não nefrótica» | `slide_16_pag_001-002`, `004-009` | Conferido linha a linha na página original; é caso de **GN crônica** (contraste), declarado na própria caixa. |
+**Nenhuma dose, tratamento ou gabarito novo foi criado.** As 45 linhas de resposta continuam apontando para a mesma alternativa correta (comparação de conjunto + `gabaritos` do Guard: válidos, sem alternativa duplicada).
+**Avisos de escopo (2):** (1) *«a tarefa não existe em `coordination/tasks.json`»* — a PR não está registrada no arquivo de coordenação; efeito: o Guard não consegue checar reserva de arquivos por tarefa (o ESCOPO do corpo da PR **foi verificado**: «todos os 165 arquivos alterados estão dentro do escopo declarado»). Não editei `tasks.json` (arquivo compartilhado/crítico, risco de conflito com outros agentes): registrar é decisão da coordenação. (2) *«tarefa neurologia-p0-fechamento-2026 não declara arquivos»* — aviso **pré-existente do registro** (outra tarefa), sem relação com esta PR.
+**O Cartão do Coordinator na PR está desatualizado:** os comentários «REPROVADO … 1 arquivo fora do escopo» são de 25/11, sobre os HEADs `b807b0e5` e `b0b458b4`, antes de o ESCOPO listar a transcrição do Resumo Final; o Guard atual (HEAD `6b7e6ef1`, 26/11 17:29) **passou**.
+**Efeito real do merge + deploy (verificado no código e em leitura no Supabase):**
+- A matéria **já está no catálogo** e é servida por `get-materia` (`Cache-Control: private, no-store`) a quem tem a matéria liberada e dentro da validade (`my_active_subjects`). Não existe chave por conta para o *conteúdo* do HTML: **após o deploy, todos os alunos com acesso verão a versão nova no próximo carregamento** (hoje há 20 linhas de acesso a esta matéria em `user_subjects`, algumas podem estar vencidas). O HTML passa de 1,14 MB para 1,49 MB (gzip 247 KB → 311 KB).
+- **O que eles veriam:** 6 blocos novos (19–24), tabelas-resumo no topo dos blocos 01–18, dezenas de fotos identificadas e 21 atlas, mapa de nódulos e tumores do fígado (bloco 09), aportes dos slides 10 e 16 (blocos 11 e 18), TP53 no bloco 16, definições ao toque, pâncreas na ordem dos slides (bloco 15 = adenocarcinoma, 16 = pancreatite). **Não muda:** perguntas, flashcards, banco, ids.
+- **Ativação para outras contas (Nova Era/caneta/layout): nenhum risco encontrado.** (a) `rm_materia_rollout` **não tem linha** para `anatomia-patologica-ii-practica` (consulta SELECT) ⇒ `get-pilot-flags` nega layout/caneta/tema a todos; (b) `rm-pilot.js`, `index.html` e `VER` **não foram alterados**; (c) o único arquivo de site além do HTML é `rm-materia-sistema.js` (+3 linhas, 1 função específica da AP II Práctica, só executa se o servidor liberar o layout para essa matéria); (d) nenhuma imagem existente foi sobrescrita (160 arquivos **novos**, 0 substituídos) ⇒ sem problema de cache de imagem (`/assets/img/*` é `immutable`); (e) testes `nao-ativacao` 39/39 e `gate-por-materia` 48/48. **Cache:** o HTML não é cacheado; `rm-materia-sistema.js` cacheia 7 dias, mas só importa quando o layout estiver ligado — por isso o `VER` sobe **na ativação**.
+**Prévia (Deploy Preview) cancelada — investigação:** os checks do Netlify desta PR (`Pages changed`, `Header rules`, `Redirect rules`, todos `neutral`, 9 s: 16:59:58→17:00:07 de 26/11) e o comentário «Deploy Preview … canceled» têm o mesmo padrão das PRs #462, #465, #470 e #473 (ver `docs/caneta-456/PREVIEW-E-PUBLICACAO.md` §2). O repositório **não** define `ignore` no `netlify.toml` ⇒ o cancelamento vem da **configuração do site no painel do Netlify** (Deploy Previews desligado ou *Ignore builds*), não de erro desta PR. Do ambiente do Claude não é possível abrir o painel nem `*.netlify.app` (proxy 403): **causa exata não verificada**.
+**Como validar com segurança antes de publicar (sem ativar para outras contas):**
+1. **Offline, zero escrita, zero rede** (recomendado, já usado nos testes): `git checkout claude/ap2p-revisao-integral && NODE_PATH=$(npm root -g) RM_SHOTS=/pasta/capturas node tools/qa/ap2p-revisao/ap2p-revisao-browser.cjs` — abre a matéria real num servidor local com Supabase simulado, em 1440/820/390 px, clica **cada** ponto de atlas e **cada** termo do glossário e grava capturas; `python3 tools/qa/ap2p-revisao/ap2p-revisao.test.py` confere conteúdo e preservação (541 verificações). Rodar `sh tools/qa/pre-voo/porta-da-materia.sh anatomia-patologica-ii-practica` confere layout/caneta/âncoras sem ligar nada.
+2. **Preview real do Netlify (se José quiser):** Netlify ▸ `repassomed` ▸ Deploys ▸ ver o motivo do cancelamento; Site configuration ▸ Build & deploy ▸ Deploy Previews = «Any pull request…»; variáveis de ambiente com escopo *Deploy previews*; login com conta de teste. **Atenção:** o preview usa o **mesmo Supabase de produção** — não grifar/anotar/riscar com conta real (grifos gravam). Esta matéria tem 0 marcações hoje.
+3. **Plano de publicação com reversão:** só por ordem de José; depois do deploy, abrir a matéria com a própria conta e conferir blocos 09, 15/16, 24, um atlas e um termo de glossário (smoke test); **reversão em 1 clique:** Netlify ▸ Deploys ▸ deploy anterior ▸ *Publish deploy* (ou `git revert -m 1`). Como as marcações atuais são 0 e nenhum dado é migrado, a reversão não deixa resíduo.

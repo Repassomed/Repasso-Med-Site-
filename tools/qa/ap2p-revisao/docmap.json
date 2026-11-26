@@ -1,0 +1,406 @@
+{
+"atrofia-testicular": {
+"doc": "A",
+"pg": 1,
+"files": [
+"lam-doc-atrofia-testicular-1",
+"lam-doc-atrofia-testicular-2"
+]
+},
+"bocio-coloide-multinodular": {
+"doc": "A",
+"pg": 1,
+"files": [
+"lam-doc-bocio-coloide-multinodular-1"
+]
+},
+"esofago-de-barrett": {
+"doc": "A",
+"pg": 1,
+"files": [
+"lam-doc-esofago-de-barrett-1"
+]
+},
+"hiperplasia-prostatica-benigna": {
+"doc": "A",
+"pg": 1,
+"files": [
+"lam-doc-hiperplasia-prostatica-benigna-1",
+"lam-doc-hiperplasia-prostatica-benigna-2"
+]
+},
+"hipertrofia-cardiaca": {
+"doc": "A",
+"pg": 1,
+"files": [
+"lam-doc-hipertrofia-cardiaca-1",
+"lam-doc-hipertrofia-cardiaca-2"
+]
+},
+"colesterolosis": {
+"doc": "A",
+"pg": 2,
+"files": [
+"lam-doc-colesterolosis-1"
+]
+},
+"infarto-agudo-del-miocardio": {
+"doc": "A",
+"pg": 2,
+"files": [
+"lam-doc-infarto-agudo-del-miocardio-1",
+"lam-doc-infarto-agudo-del-miocardio-2"
+]
+},
+"melanoma": {
+"doc": "A",
+"pg": 2,
+"files": [
+"lam-doc-melanoma-1"
+]
+},
+"pancreatitis-aguda": {
+"doc": "A",
+"pg": 2,
+"files": [
+"lam-doc-pancreatitis-aguda-1",
+"lam-doc-pancreatitis-aguda-2"
+]
+},
+"tuberculosis": {
+"doc": "A",
+"pg": 2,
+"files": [
+"lam-doc-tuberculosis-1",
+"lam-doc-tuberculosis-2"
+]
+},
+"apendicitis-aguda": {
+"doc": "A",
+"pg": 3,
+"files": [
+"lam-doc-apendicitis-aguda-1",
+"lam-doc-apendicitis-aguda-2"
+]
+},
+"aterosclerosis": {
+"doc": "A",
+"pg": 3,
+"files": [
+"lam-doc-aterosclerosis-1"
+]
+},
+"esteatosis-hepatica": {
+"doc": "A",
+"pg": 3,
+"files": [
+"lam-doc-esteatosis-hepatica-1"
+]
+},
+"neumonia-en-fase-de-resolucion": {
+"doc": "A",
+"pg": 3,
+"files": [
+"lam-doc-neumonia-en-fase-de-resolucion-1",
+"lam-doc-neumonia-en-fase-de-resolucion-2"
+]
+},
+"orquitis": {
+"doc": "A",
+"pg": 3,
+"files": [
+"lam-doc-orquitis-1",
+"lam-doc-orquitis-2"
+]
+},
+"cirrosis-hepatica": {
+"doc": "A",
+"pg": 4,
+"files": [
+"lam-doc-cirrosis-hepatica-1"
+]
+},
+"duodenitis-cronica": {
+"doc": "A",
+"pg": 4,
+"files": [
+"lam-doc-duodenitis-cronica-1",
+"lam-doc-duodenitis-cronica-2"
+]
+},
+"gastritis-cronica": {
+"doc": "A",
+"pg": 4,
+"files": [
+"lam-doc-gastritis-cronica-1",
+"lam-doc-gastritis-cronica-2"
+]
+},
+"pielonefritis-cronica": {
+"doc": "A",
+"pg": 4,
+"files": [
+"lam-doc-pielonefritis-cronica-1",
+"lam-doc-pielonefritis-cronica-2"
+]
+},
+"tiroiditis-de-hashimoto": {
+"doc": "A",
+"pg": 4,
+"files": [
+"lam-doc-tiroiditis-de-hashimoto-1",
+"lam-doc-tiroiditis-de-hashimoto-2"
+]
+},
+"cervicitis-cronica": {
+"doc": "A",
+"pg": 5,
+"files": [
+"lam-doc-cervicitis-cronica-1",
+"lam-doc-cervicitis-cronica-2"
+]
+},
+"endometriosis": {
+"doc": "A",
+"pg": 5,
+"files": [
+"lam-doc-endometriosis-1",
+"lam-doc-endometriosis-2"
+]
+},
+"enfermedad-de-crohn": {
+"doc": "A",
+"pg": 5,
+"files": [
+"lam-doc-enfermedad-de-crohn-1",
+"lam-doc-enfermedad-de-crohn-2"
+]
+},
+"mastitis-granulomatosa": {
+"doc": "A",
+"pg": 5,
+"files": [
+"lam-doc-mastitis-granulomatosa-1",
+"lam-doc-mastitis-granulomatosa-2"
+]
+},
+"pancreatitis-cronica": {
+"doc": "A",
+"pg": 5,
+"files": [
+"lam-doc-pancreatitis-cronica-1",
+"lam-doc-pancreatitis-cronica-2"
+]
+},
+"hemangioma-cavernoso": {
+"doc": "B",
+"pg": 1,
+"files": [
+"lam-doc-hemangioma-cavernoso-1"
+]
+},
+"leiomioma": {
+"doc": "B",
+"pg": 1,
+"files": [
+"lam-doc-leiomioma-1"
+]
+},
+"lipoma": {
+"doc": "B",
+"pg": 1,
+"files": [
+"lam-doc-lipoma-1",
+"lam-doc-lipoma-2"
+]
+},
+"teratoma-ovarico": {
+"doc": "B",
+"pg": 1,
+"files": [
+"lam-doc-teratoma-ovarico-1",
+"lam-doc-teratoma-ovarico-2"
+]
+},
+"teratoma-testicular": {
+"doc": "B",
+"pg": 1,
+"files": [
+"lam-doc-teratoma-testicular-1"
+]
+},
+"adenoma-folicular-de-tiroides": {
+"doc": "B",
+"pg": 2,
+"files": [
+"lam-doc-adenoma-folicular-de-tiroides-1",
+"lam-doc-adenoma-folicular-de-tiroides-2"
+]
+},
+"adenoma-pleomorfo-de-parotida": {
+"doc": "B",
+"pg": 2,
+"files": [
+"lam-doc-adenoma-pleomorfo-de-parotida-1"
+]
+},
+"adenoma-tubular-de-colon": {
+"doc": "B",
+"pg": 2,
+"files": [
+"lam-doc-adenoma-tubular-de-colon-1"
+]
+},
+"cistoadenoma-mucinoso-de-ovario": {
+"doc": "B",
+"pg": 2,
+"files": [
+"lam-doc-cistoadenoma-mucinoso-de-ovario-1"
+]
+},
+"condiloma-acuminado": {
+"doc": "B",
+"pg": 2,
+"files": [
+"lam-doc-condiloma-acuminado-1"
+]
+},
+"adenocarcinoma-esofagico": {
+"doc": "B",
+"pg": 3,
+"files": [
+"lam-doc-adenocarcinoma-esofagico-1"
+]
+},
+"adenocarcinoma-gastrico-difuso": {
+"doc": "B",
+"pg": 3,
+"files": [
+"lam-doc-adenocarcinoma-gastrico-difuso-1",
+"lam-doc-adenocarcinoma-gastrico-difuso-2"
+]
+},
+"carcinoma-escamoso-de-esofago": {
+"doc": "B",
+"pg": 3,
+"files": [
+"lam-doc-carcinoma-escamoso-de-esofago-1",
+"lam-doc-carcinoma-escamoso-de-esofago-2"
+]
+},
+"carcinoma-escamoso-de-lengua": {
+"doc": "B",
+"pg": 3,
+"files": [
+"lam-doc-carcinoma-escamoso-de-lengua-1",
+"lam-doc-carcinoma-escamoso-de-lengua-2"
+]
+},
+"carcinoma-escamoso-de-piel": {
+"doc": "B",
+"pg": 3,
+"files": [
+"lam-doc-carcinoma-escamoso-de-piel-1"
+]
+},
+"adenocarcinoma-de-colon-mucosecretante": {
+"doc": "B",
+"pg": 4,
+"files": [
+"lam-doc-adenocarcinoma-de-colon-mucosecretante-1"
+]
+},
+"adenocarcinoma-de-colon-no-mucosecretante": {
+"doc": "B",
+"pg": 4,
+"files": [
+"lam-doc-adenocarcinoma-de-colon-no-mucosecretante-1"
+]
+},
+"adenocarcinoma-de-pancreas": {
+"doc": "B",
+"pg": 4,
+"files": [
+"lam-doc-adenocarcinoma-de-pancreas-1"
+]
+},
+"adenocarcinoma-gastrico-intestinal": {
+"doc": "B",
+"pg": 4,
+"files": [
+"lam-doc-adenocarcinoma-gastrico-intestinal-1"
+]
+},
+"carcinoma-hepatocelular": {
+"doc": "B",
+"pg": 4,
+"files": [
+"lam-doc-carcinoma-hepatocelular-1"
+]
+},
+"carcinoma-ductal-de-mama-in-situ": {
+"doc": "B",
+"pg": 5,
+"files": [
+"lam-doc-carcinoma-ductal-de-mama-in-situ-1",
+"lam-doc-carcinoma-ductal-de-mama-in-situ-2"
+]
+},
+"carcinoma-ductal-de-mama-invasivo": {
+"doc": "B",
+"pg": 5,
+"files": [
+"lam-doc-carcinoma-ductal-de-mama-invasivo-1"
+]
+},
+"carcinoma-medular-de-tiroides": {
+"doc": "B",
+"pg": 5,
+"files": [
+"lam-doc-carcinoma-medular-de-tiroides-1"
+]
+},
+"carcinoma-papilar-de-tiroides": {
+"doc": "B",
+"pg": 5,
+"files": [
+"lam-doc-carcinoma-papilar-de-tiroides-1"
+]
+},
+"tumor-de-wilms-nefroblastoma": {
+"doc": "B",
+"pg": 5,
+"files": [
+"lam-doc-tumor-de-wilms-nefroblastoma-1",
+"lam-doc-tumor-de-wilms-nefroblastoma-2"
+]
+},
+"adenocarcinoma-de-prostata": {
+"doc": "B",
+"pg": 6,
+"files": [
+"lam-doc-adenocarcinoma-de-prostata-1"
+]
+},
+"carcinoma-escamoso-de-cuello-uterino": {
+"doc": "B",
+"pg": 6,
+"files": [
+"lam-doc-carcinoma-escamoso-de-cuello-uterino-1"
+]
+},
+"seminoma": {
+"doc": "B",
+"pg": 6,
+"files": [
+"lam-doc-seminoma-1"
+]
+},
+"carcinoma-epidermoide-de-celulas-pequenas": {
+"doc": "B",
+"pg": 7,
+"files": [
+"lam-doc-carcinoma-epidermoide-de-celulas-pequenas-1"
+]
+}
+}
