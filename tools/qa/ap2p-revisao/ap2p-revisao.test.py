@@ -184,5 +184,7 @@ T(s2.count('lam-s02-adenoma-pleomorfo-') >= 4 and 'solo</b> las estructuras que 
 # 11 · slides 10 y 13 leídos en el original
 a, b = C.seccion(cur, 'ap2pb11'); T('Lo que agrega el slide 10' in strip(cur[a:b]) and 'metaplasia seudopilórica' in strip(cur[a:b]), 'bloque 11: aportes del slide 10 (metaplasias, Crohn metastásico, extraintestinales)')
 a, b = C.seccion(cur, 'ap2pb16'); T('suprimido en ≈50–70 %' in cur[a:b] and 'sin cifra en el slide' in cur[a:b], 'bloque 16: TP53 50–70 % asignado según la página original del slide 13; BRCA2 sin cifra')
+a, b = C.seccion(cur, 'ap2pb18'); T('Lo que agrega el slide 16' in strip(cur[a:b]) and 'grano de cuero' in strip(cur[a:b]), 'bloque 18: aporte del slide 16 (pielonefritis × glomerulonefritis crónica)')
+a, b = C.seccion(cur, 'ap2pb11'); T('ASCA (+)' in strip(cur[a:b]), 'bloque 11: serología ASCA/ANCA del slide 10')
 print(f'\nap2p-revisao (estático): {ok}/{ok + bad} OK' + (f' — {bad} FALHAS' if bad else ''))
 sys.exit(1 if bad else 0)

@@ -30,6 +30,8 @@ def build(t, glosario=True):
     assert s9.count(an) == 1; t = t[:a] + s9.replace(an, FG.seccion() + an) + t[b:]   # apunte de hígado (Resumen final) dentro del bloque 09
     a, b = seccion(t, 'ap2pb11'); s11 = t[a:b]; an = '\n<h3>📷 Más vistas de la lámina'
     assert s11.count(an) == 1; t = t[:a] + s11.replace(an, SE.b11() + an) + t[b:]   # slide 10 (Crohn)
+    a, b = seccion(t, 'ap2pb18'); s18 = t[a:b]; an = '\n<h3>📷 Más vistas de la lámina'
+    assert s18.count(an) == 1; t = t[:a] + s18.replace(an, SE.b18() + an) + t[b:]   # slide 16 (pielonefritis / GN crónica)
     # 2) páncreas
     for bid, nuevo, old, new in (('ap2pb15', AP.B15, AP.TXT15_OLD, AP.TXT15_NEW), ('ap2pb16', AP.B16, AP.TXT16_OLD, AP.TXT16_NEW)):
         a, b = seccion(t, bid); s = t[a:b]
