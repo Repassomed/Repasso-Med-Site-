@@ -180,5 +180,9 @@ T('PROVA' not in cur and 'Prova' not in s9, 'no se expone la estrategia editoria
 # 10 · atlas del slide 02
 a, b = C.seccion(cur, 'ap2pb02'); s2 = cur[a:b]
 T(s2.count('lam-s02-adenoma-pleomorfo-') >= 4 and 'solo</b> las estructuras que el propio slide rotula' in s2, 'bloque 02: atlas con estructuras rotuladas por el slide 02')
+
+# 11 · slides 10 y 13 leídos en el original
+a, b = C.seccion(cur, 'ap2pb11'); T('Lo que agrega el slide 10' in strip(cur[a:b]) and 'metaplasia seudopilórica' in strip(cur[a:b]), 'bloque 11: aportes del slide 10 (metaplasias, Crohn metastásico, extraintestinales)')
+a, b = C.seccion(cur, 'ap2pb16'); T('suprimido en ≈50–70 %' in cur[a:b] and 'sin cifra en el slide' in cur[a:b], 'bloque 16: TP53 50–70 % asignado según la página original del slide 13; BRCA2 sin cifra')
 print(f'\nap2p-revisao (estático): {ok}/{ok + bad} OK' + (f' — {bad} FALHAS' if bad else ''))
 sys.exit(1 if bad else 0)

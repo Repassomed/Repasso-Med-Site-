@@ -45,7 +45,7 @@ B16 = '''
 <tbody>
 <tr><td><b>Qué es</b></td><td>El <b>adenocarcinoma ductal infiltrante</b> del páncreas, conocido como «cáncer de páncreas»; consecuencia de mutaciones <b>hereditarias y adquiridas</b>.</td></tr>
 <tr><td><b>Cómo surge</b></td><td>La lesión precursora más frecuente es la <b>PanIN</b> (neoplasia intraepitelial de los conductos pequeños). Las células tienen <b>telómeros acortados</b>, lo que favorece nuevas mutaciones.</td></tr>
-<tr><td><b>Genes</b></td><td><b>KRAS</b> (oncogén, alterado en más del 90 %); supresores: <b>p16/CDKN2A</b> (inactivado en ≈95 %), <b>SMAD4</b> (≈55 %), <b>TP53</b> y <b>BRCA2</b>.</td></tr>
+<tr><td><b>Genes</b></td><td><b>KRAS</b> (oncogén, alterado en más del 90 %); supresores: <b>p16/CDKN2A</b> (inactivado en ≈95 %), <b>SMAD4</b> (≈55 %), <b>TP53</b> (suprimido en ≈50–70 %) y <b>BRCA2</b> (sin cifra en el slide).</td></tr>
 <tr><td><b>Quién y por qué</b></td><td>«Enfermedad de ancianos»: <b>80 %</b> entre los <b>60 y 80 años</b>. Factores de riesgo: <b>tabaquismo</b>, pancreatitis crónica de larga evolución, <b>diabetes mellitus</b>, mutación de <b>BRCA2</b>.</td></tr>
 <tr><td><b>Dónde</b></td><td><b>Cabeza 60 %</b> (síndrome coledociano) · cuerpo 15 % · cola 5 % · difuso 20 %.</td></tr>
 <tr><td><b>Qué se ve</b></td><td>Masas <b>duras, mal definidas, estrelladas</b>, gris-blanquecinas; <b>muy invasivo</b>, con <b>desmoplasia</b>; glándulas irregulares con luz distorsionada y <b>restos necróticos</b> adentro; células atípicas con <b>nucléolo prominente</b> y mitosis frecuentes.</td></tr>
@@ -58,7 +58,7 @@ B16 = '''
 <h3>📚 Qué agrega la diapositiva actualizada (01/10/2026)</h3>
 <p>La <b>diapositiva 13</b> completa lo que la ficha no decía: la <b>lesión precursora</b>, los <b>genes</b>, los <b>factores de riesgo</b>, la <b>localización</b> y el comportamiento. Una pista clínica de la propia diapositiva: como el tumor de la <b>cabeza</b> está pegado al duodeno, una <b>duodenitis</b> puede ser un hallazgo frecuente al lado de él (relación con el Bloque 10).</p>
 </div>
-<div class="ap2p-nc"><b>🔎 Dos precisiones sobre la fuente:</b> (1) el manuscrito escribe el porcentaje «<b>50–70 %</b>» junto a BRCA2 y TP53 y <b>no se puede asignar con seguridad</b> a uno de los dos: por eso en este bloque ninguno lleva cifra. (2) Metástasis: la diapositiva dice que son precoces en <b>estructuras retroperitoneales</b> y, a distancia, en <b>pulmones y huesos</b>.</div>
+<div class="ap2p-nc"><b>🔎 Dos precisiones sobre la fuente:</b> (1) el slide 13 (leído en la página original) escribe «<b>TP53: suprimido en 50–70 %</b>» en la propia línea de TP53; BRCA2 figura <b>sin cifra</b>. (2) Metástasis: la diapositiva dice que son precoces en <b>estructuras retroperitoneales</b> y, a distancia, en <b>pulmones y huesos</b>.</div>
 '''
 
 TXT15_OLD = '<p><b>Una advertencia sobre la fuente:</b> para este diagnóstico el laminario trae <b>solo la ficha</b> (órgano, proceso, descripción y diagnóstico); el material no incluye diapositivas, caso clínico ni preguntas de pancreatitis crónica. Por eso este bloque enseña a <b>leer la descripción</b> y deja afuera causas, clínica y complicaciones, que no figuran en el material.</p>'
