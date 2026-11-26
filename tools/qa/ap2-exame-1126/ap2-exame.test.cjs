@@ -14,7 +14,7 @@ const mainRaw = cp.execFileSync('git', ['show', arg('--main', 'origin/main') + '
 let n = 0, ko = 0; const ok = (c, m, d) => { n++; if (c) console.log('  ✓ ' + m); else { ko++; console.log('  ✗ FALHA: ' + m + (d !== undefined ? ' → ' + JSON.stringify(d).slice(0, 500) : '')); } };
 const txt = s => s.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
 const norm = s => txt(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-const ITEM = /<div class="quiz-item">\n[\s\S]*?\n<\/div>\n<\/div>\n/g;
+const ITEM = /<div class="quiz-item"[^>]*>\n[\s\S]*?\n<\/div>\n<\/div>\n/g;
 const Q106 = '¿Cuáles son los dos factores pronósticos más importantes del adenocarcinoma gástrico?';
 const strip = h => h.replace(/<!-- ap2-exame-1126:begin preguntas -->\n[\s\S]*?<!-- ap2-exame-1126:end -->\n/g, '').replace(/\n? *<!-- ap2-exame-1126:begin resumen -->[\s\S]*?<!-- ap2-exame-1126:end -->/g, '');
 const unc = h => h.replace(/<span>\d+ preguntas<\/span><span>\d+ basadas en preguntas de examen<\/span><span>\d+ variantes<\/span>/, '<span>STATS</span>').replace(/<small>\(\d+ preguntas\)<\/small>/g, '<small>(N)</small>');
