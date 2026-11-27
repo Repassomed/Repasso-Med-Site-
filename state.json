@@ -3972,6 +3972,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:719.",
       "task_id": "grande revis\u00e3o de Anatomopatolog\u00eda II Pr\u00e1ctica (laminarios Final/P2, documentos A/B por partes, 19 atlas, blocos 19\u201324, gloss\u00e1rio, tabelas-resumo nos blocos antigos, ordem dos slides 13\u219214, Nova Era).",
       "worker_id": null
+    },
+    {
+      "category": "guard",
+      "commit_sha": "34d2fc3d0a489748246909f0c0f5fbfd10a06393",
+      "component": "guard",
+      "error_id": "ERR-B62C812F2E",
+      "error_type": "hard-fail",
+      "fingerprint": "b62c812f2ea543b7e95d",
+      "first_seen": "2026-11-27T22:51:30.566331+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "dc3ad01a1bea465b9b987dd9d5ec2bee",
+      "issue_sync_updated_at": "2026-11-27T22:51:30.566331+00:00",
+      "last_evidence_hash": "ddecda2585f42dd7ff2c",
+      "last_seen": "2026-11-27T22:51:30.566331+00:00",
+      "occurrence_count": 1,
+      "pr_number": 733,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "46079031635",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Repasso Guard HARD FAIL em pr:733.",
+      "task_id": "Toxicolog\u00eda (7.\u00ba semestre) \u00b7 extraer las fotos y pruebas a\u00fan no le\u00eddas (19 im\u00e1genes), cruzar con el contenido y las preguntas existentes e incorporar lo que falte seg\u00fan 8-A.",
+      "worker_id": null
     }
   ]
 }
