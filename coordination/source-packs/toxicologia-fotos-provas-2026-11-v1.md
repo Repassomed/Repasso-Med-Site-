@@ -160,3 +160,22 @@ Cuando José consiga las fotos nítidas o la clave oficial, cada fila puede reab
 - `python3 -I tools/qa/toxicologia-fotos/estatico.test.py origin/main` → **62/62**: ids antiguos presentes; sólo `q-b08q07` cambia y sólo su explicación; enunciado/alternativas/clave intactos; cuerpo = banco; **27 y 25 declarados = reales** (introducción y subtítulo del banco) y todos los demás bloques; cabecera 353/318/35; 706 `quiz-item`; letras sin viés; rótulos.
 - Inventario regenerado: `toxb05` 27 · `toxb08` 25 · `bancotox` 353 · 706 ítems · 1416 flashcards.
 - Porta de la matéria, `nao-ativacao`, `gate-por-materia` y Guard: ver el cuerpo de la PR (resultado del head final). Límites: sin iPad/Safari.
+
+## 9. Levantamento das demais pendencias do 7.º semestre (27/11/2026, sem sobreposição com Claude 1)
+
+Base consultada: `main` `6860acb9`, PRs abertas listadas no GitHub (#682, #719, #726, #729, #730, #731, #732, #733) e `CONTINUIDADE-7-SEMESTRE-2026-11-27.md` / `CHECKLIST-7-SEMESTRE-2026-11-26.md` (branch da #730). Registros são evidência histórica, não prova do estado atual.
+
+**Divisão (conforme a continuidade de Claude 1):** conteúdo/questões de Ortopedia (#729), Oftalmología (#726), Neurología (#682→#731), Anestesiología (slides 1–4 e figuras) e Dermatología (bloco 06) são de **Claude 1**; layout, caneta, portas e QA em navegador são de **Claude 4**; **Toxicología é de Claude 4 (#733)**. Nesta rodada **nenhum arquivo dessas matérias de Claude 1 foi tocado** nem se abriu PR delas.
+
+### Toxicología (única matéria do semestre em que Claude 4 tem conteúdo)
+| Pendência | Estado | Próximo passo |
+|---|---|---|
+| 4 itens de fotos sem chave/ilegíveis (§5) + 2 retiradas da P2 | documentados com arquivo, página e o que os resolveria | José envia foto nítida/chave oficial; reabrir pela fila do §5 |
+| `Toxicologia P2_260523_043007.pdf` (22,9 MB, id `10TRHFyo7koOo4xlKLzSymE5636MmRkn-`) | **lido hoje só como texto** pelo conector (leitura de texto/OCR; as imagens e as anotações manuscritas **não foram vistas visualmente**). Contém provas teóricas (versões com 5–17 questões), casos de AINEs, casos de aranhas, a lista «Prova tóxico» e as **FILAS 1 e 2 com gabarito impresso** (texto parcialmente corrompido) | auditoria **item a item** contra o banco (8-A.1) em rodada própria; busca por palavras-chave mostra que **todos os temas já têm perguntas** (AINEs `q-b06q01–06`, loxoscelismo `q-b08q05`, catárticos bloco 03, emese bloco 02, piretroides `q-b05q09/19`, etc.), mas isso **não** prova duplicata por raciocínio. Usar o gabarito impresso como evidência auxiliar, conferindo com a página |
+| `Toxicologia P1.pdf` e `PROVAS TOXICOLOGIA - P1.pdf` | já usados nas rodadas anteriores (pack `toxicologia-issue102-v1.md`) | sem ação |
+| Nomes de toxinas da cátedra («lonofibrasas y lonomiasinas») | não verificados nas fontes consultadas (que citam Losac/Lopap) | confirmar com a cátedra |
+| Redação do enunciado de `q-b08q07` («mecanismo… anticoagulante») | mantida (forma real de cobro); a explicação esclarece efeito × mecanismo | decisão editorial de José |
+| Ativação (Nova Era) | porta 7/7 aberta; **nada ativado** | só José, depois do deploy e do roteiro |
+
+### Demais matérias (resumo do que **depende de José**, registrado por Claude 1; não verificado de novo aqui)
+Neurología: merge #682 → #731 · Ortopedia: slides impressos faltantes da U6 · Oftalmología: fotos/decisão (item 6, corte ROP) · Anestesiología: slides 1–4 e figuras · Dermatología: fonte legível do bloco 06 · AP II teórica: #732 aguarda auditoria.
