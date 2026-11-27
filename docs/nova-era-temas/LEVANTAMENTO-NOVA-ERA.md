@@ -1,6 +1,6 @@
 # Levantamento da Nova Era — todas as matérias
 
-**Gerado por** `tools/qa/nova-era/levantamento-nova-era.cjs` em 2026-11-24 sobre a `main` c288d1a5. **Somente leitura do repositório**: nada ativado, nenhum SQL, nenhuma variável do Netlify tocada.
+**Gerado por** `tools/qa/nova-era/levantamento-nova-era.cjs` em 2026-11-26 sobre a `main` 6860acb9. **Somente leitura do repositório**: nada ativado, nenhum SQL, nenhuma variável do Netlify tocada.
 
 ## Como ler
 - **Preparada (layout + caneta)** = está em CANDIDATAS do `rm-pilot.js`, tem tema (css + js) e a **porta** (`porta-da-materia.sh`, 7 etapas) está **ABERTA** nesta `main`: inventário em dia, marcadores, âncoras (1440 e 390), ida-e-volta de grifos/traços/notas, layout em 4 larguras e uso/caneta nos modos. Isto **não liga nada**: quem liga é a linha de `rm_materia_rollout` (SQL de José, depois do deploy).
@@ -34,14 +34,14 @@
 | **oftalmologia** | ✅ | ✅ | 19 · 390 · 1011 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | — |
 | **anatomia-i** | ✅ | ✅ | 37 · 918 · 1646 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | — |
 | **anatomia-patologica** | ✅ | ✅ | 15 · 718 · 297 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | — |
-| **farmacologia-ii** | ✅ | ✅ | 17 · 504 · 876 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | integracao-farmaco2, real-farmaco2, temas-farmaco2 |
-| **anatomia-patologica-ii** | ✅ | ✅ | 12 · 448 · 531 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | integracao-ap2, real-ap2, temas-ap2 |
+| **farmacologia-ii** | ✅ | ✅ | 17 · 506 · 876 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | integracao-farmaco2, real-farmaco2, temas-farmaco2 |
+| **anatomia-patologica-ii** | ✅ | ✅ | 12 · 468 · 531 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | integracao-ap2, real-ap2, temas-ap2 |
 | **anatomia-patologica-ii-practica** | ✅ | ✅ | 22 · 488 · 924 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | integracao-ap2p, real-ap2p, temas-ap2p |
 | **dermatologia** | ✅ | ✅ | 15 · 120 · 482 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | real-dermatologia |
 | **guarani** | ✅ | ✅ | 16 · 418 · 596 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | real-guarani |
 | **semiologia** | ✅ | ✅ | 11 · 220 · 192 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | real-semiologia |
 | **medicina-legal** | ✅ | ✅ | 21 · 490 · 1176 | ✅ ABERTA | sem linha (= desligada para todos) | ✅ | real-medicina-legal |
-| **neurologia** | ❌ | ❌ | 30 · 508 · 774 | — não rodada | — | — | — |
+| **neurologia** | ❌ | ❌ | 30 · 594 · 774 | — não rodada | — | — | — |
 | **imagenologia** | ❌ | ❌ | 12 · 87 · 124 | — não rodada | — | — | — |
 | **bioestadistica** | ❌ | ❌ | — · — · — | — não rodada | — | — | — |
 
