@@ -47,7 +47,7 @@ Se identificaron aproximadamente 100 ítems distintos entre las 19 imágenes (la
 |---|---|---|
 | **Nuevas — incluidas** | **2** | N1 y N2 (§3) |
 | Repetidas (duplicado exacto o semántico de una pregunta ya presente) | la gran mayoría | ver 2.1 |
-| Pendientes (sin respuesta única sostenible o enunciado ilegible) | 5 | ver §5 |
+| Pendientes (sin respuesta única sostenible o enunciado ilegible) | 4 (+ 2 retiradas en la ronda anterior) | ver §5 (la quinta, «letalidad excepto», resultó repetida de `q-b07q21`) |
 
 Ninguna pregunta existente fue reformulada ni sustituida (8-A.1-B: «unida a existente» = 0). Los 702 ítems antiguos están presentes **byte a byte idénticos**.
 
@@ -86,7 +86,11 @@ Los demás (rabdomiólisis → crótalo, LSD, marihuana crónica, anfetaminas, l
 Ambas entran al final del bloque y, con el id `-bk`, al final de la sección correspondiente del banco. Texto idéntico en cuerpo y espejo (verificado).
 
 - **N1:** la foto F01 trae la pregunta con la clave «efecto procoagulante y fibrinolítico, coagulopatía de consumo» marcada por el estudiante. La pregunta se redactó con distractores plausibles (déficit de vitamina K tipo warfarina, trombocitopenia inmune, hemólisis tipo loxoscelismo) y la clave coincide con el texto de la página.
-- **N2:** existe `q-b05q11` (secuencia inicial; incluye «benzodiacepinas si hay convulsiones» dentro de una opción larga). **Relacionada pero distinta** (8-A.1): una persona puede acertar `q-b05q11` por el orden de las medidas sin saber qué fármaco corta la convulsión; N2 evalúa justamente eso. Es el caso más cercano a duplicado; queda registrado para la auditoría.
+- **N2 — revisión de duplicidad (8-A.1 / 8-A.1-B, revisada en la #733).** Existe `q-b05q11` («Pregunta complementaria»: secuencia inicial indicada por la cátedra), cuya opción correcta termina en «…; benzodiacepinas si hay convulsiones». Se compararon: conocimiento necesario, razonamiento, conclusión, contexto y objetivo.
+  - `q-b05q11` evalúa el **orden de la conducta** (ABCDE, aspiración, baño, vías, descontaminación). Los tres distractores se descartan por errores de orden (lavado sin desvestir, esperar la colinesterasa, atropina antes de asegurar la vía aérea); **ninguno** plantea otro anticonvulsivante, de modo que se acierta sin saber qué fármaco corta la convulsión: la mención de benzodiacepinas es un elemento más de la opción larga.
+  - N2 evalúa **qué fármaco** se elige ante la convulsión, con distractores del mismo plano (fenitoína, atropina como único tratamiento, haloperidol).
+  - Prueba del 8-A.1: quien acierta `q-b05q11` por exclusión puede fallar N2 → **hay conocimiento adicional evaluado** → no es duplicado semántico. Prueba inversa: quien acierta N2 puede fallar `q-b05q11` por el orden → tampoco la sustituye. **Decisión: RELACIONADA PERO DISTINTA — se mantienen las dos**, sin reformular ni unir (8-A.1-B, «mantener las dos» con ganancia evaluativa real). Otras preguntas del banco con «convulsiones» y organofosforados: ninguna (`q-b05q14` es de organoclorados).
+  - Claridad de la explicación de N2: la afirmación «la fenitoína no es la elección» no está en la página (es distractor); se mantiene prudente («no es la elección en la convulsión por exceso de acetilcolina») y no se añade dosis ni protocolo.
 - Rótulo: «Basada en preguntas de examen» (la pregunta aparece en pruebas reales, aunque el enunciado y las alternativas están **redactados de nuevo**; nunca «oficial»).
 
 ## 4. Contagens y distribución (8-A.7, 8-A.10)
@@ -97,34 +101,62 @@ Ambas entran al final del bloque y, con el id `-bk`, al final de la sección cor
 | Preguntas en el banco (espejo) | 351 | **353** |
 | `quiz-item` totales | 702 | **706** |
 | Múltiple opción / V/F | 316 / 35 | **318 / 35** |
-| Bloque 05 / bloque 08 | 26 / 24 | **28 / 26** |
+| Bloque 05 / bloque 08 (cada pregunta contada una vez; el espejo del banco no se suma) | 26 / 24 | **27 / 25** |
 | «Basada en preguntas de examen» (cuerpo) | 90 | **92** |
 | Flashcards | 1416 | 1416 |
 | IDs antiguos | 702 | 702 presentes, idénticos |
 | Divergencias cuerpo × banco | 0 | 0 |
 
-Cuentas declaradas actualizadas: «Veintiocho preguntas» (bloque 05), «Veintiséis preguntas» (bloque 08), subtítulos del banco «(28 preguntas)» y «(26 preguntas)», cabecera del banco «353 preguntas · 318 de múltiple opción · 35 de verdadero o falso». Inventario del layout: 706 preguntas, 1416 flashcards.
+Cuentas declaradas actualizadas: «Veintisiete preguntas» (bloque 05), «Veinticinco preguntas» (bloque 08), subtítulos del banco «(27 preguntas)» y «(25 preguntas)», cabecera del banco «353 preguntas · 318 de múltiple opción · 35 de verdadero o falso». Inventario del layout: 706 ítems `quiz-item` (353 en bloques + 353 espejos), `toxb05` = 27, `toxb08` = 25, `bancotox` = 353, 1416 flashcards. **Corrección (revisión de la #733):** la primera versión declaraba 28 y 26 por un error de cuenta (+2 en vez de +1 por bloque); se corrigió a 27 y 25 en la introducción del bloque, en el subtítulo del banco y en el inventario.
 Letras correctas (cuerpo): a 80 · b 80 · c 79 · d 79 · V/F 35 (antes a 80 · b 79 · c 79 · d 78): la distribución sigue sin patrón previsible.
 
-## 5. Pendientes y materiales con límites (no se inventó respuesta)
+## 5. Las preguntas de las fotos que siguen ilegibles o sin clave confiable (no se inventó respuesta)
 
-1. **V/F «plomo en un puesto de gasolina»** (F07 Q14, marcada «V» por el estudiante): la página no sostiene la afirmación con la literatura permitida; sin respuesta única fiel → pendiente.
-2. **Q13 de la p. 4 de la P1 19/09 (W3): característica distintiva de carbamatos vs. organofosforados:** comienzo del enunciado **ilegible** (BORROSA) → no se reconstruye. La diferencia de fondo (reversibilidad) ya está enseñada y preguntada en `q-b05q26`.
-3. **V/F 16 de la P1 11/09 (X1): organofosforados y acetilcolinesterasa:** el enunciado está **truncado** en el borde derecho → pendiente.
-4. **V/F 15 «acetona con olor picante»** (X1): la página enseña aliento **dulzón**; el sentido de la V/F depende de la clave oficial, que no aparece → pendiente (ya cubierto en el tema por `q-b04q02`).
-5. **F06 Q4 «lo que define la letalidad… excepto»** (marca «?»): opciones parcialmente cubiertas; sin clave determinable → pendiente.
-6. **Retiradas previas que siguen retiradas:** Q13 «acetona excepto» y Q14 «grupos de riesgo del escorpión» (ver `toxicologia-prova-p2-2026-11-v1.md` §4).
+De las cinco que figuraban como pendientes, **cuatro siguen pendientes** (filas 1–4) y **una (fila 5) resultó repetida** de `q-b07q21` al revisarla contra el banco. A ellas se suman las dos retiradas de la ronda anterior (abajo): total sin resolver = **6**.
 
-## 6. Divergencias registradas (no corregidas en silencio)
+Ninguna entra al banco. Para cada una: archivo y página · qué se logra leer · por qué no se puede usar · qué la resolvería · cobertura que ya existe en la página.
 
-- **Taturana: «anticoagulante» vs. «procoagulante».** La prueba (F01 Q5) enseña **mecanismo procoagulante, fibrinolítico, coagulopatía de consumo**. El resumen del bloque 08 dice en el cuadro-resumen «veneno anticoagulante y fibrinolítico» y la V/F `q-b08q07` da por VERDADERO «anticoagulante y fibrinolítico», mientras que el texto de mecanismo del mismo bloque dice «hemotóxico y coagulante… activan el factor X y la protrombina». «Anticoagulante» describe el efecto clínico (sangra), pero no el mecanismo. **No se tocó el texto ni la V/F existentes** (8-A.9). La explicación de N1 aclara la diferencia; la unificación de la redacción del cuadro-resumen queda como **decisión editorial pendiente** (G0 y 8-A.1-B).
-- Las marcas del estudiante («P1», verdes, notas al margen) no se tomaron como clave oficial. Los casos abiertos (lirio del valle, morfina, superwarfarínicos, lavandina) quedaron cubiertos por preguntas existentes y no por la nota del estudiante.
-- La clave del estudiante en F02 Q16 (araña marrón) incluye indicaciones que no coinciden con la página (compresas); la página sigue el slide.
+| # | Planteo | Fuente (archivo → página) | Legibilidad | Por qué queda pendiente | Qué la resolvería | Cobertura existente |
+|---|---|---|---|---|---|---|
+| 1 | V/F «plomo en un puesto de gasolina» (V/F 14) | F07 `93fbfa49` → pág. 3 (22/05/2026) | CLARA | La marca «V» es **del estudiante**; la página no enseña que el trabajador de un puesto de gasolina se exponga al plomo (el bloque 09 trata los metales, no ese escenario) y no se usó literatura externa para sostenerlo | clave oficial de la prueba o diapositiva de la cátedra que lo afirme | el bloque 09 enseña la toxicidad del plomo en general; el escenario «puesto de gasolina» no aparece en la página ni hay pregunta equivalente |
+| 2 | «Característica distintiva de carbamatos frente a organofosforados» (Q13) | W3 `21/09 10.19.59` → pág. 4 de la P1 19/09 | **PARCIAL: comienzo del enunciado ilegible (borroso)** | no se sabe qué afirmación se pide ni si es «correcta» o «excepto»; reconstruirla sería inventar | foto nítida de la pág. 4 (o el PDF original) | la diferencia de fondo (reversibilidad, cuadro más leve y corto) está enseñada y preguntada en `q-b05q26` |
+| 3 | V/F 16 «organofosforados y acetilcolinesterasa» | X1 `20/09 16.02.07` → pág. 3 de la P1 11/09 | **PARCIAL: borde derecho cortado, enunciado truncado** | sólo se lee el comienzo; el sentido de V/F depende de la parte que falta | foto sin recorte | el mecanismo (inhibición de la acetilcolinesterasa) está enseñado y preguntado en el bloque 05 |
+| 4 | V/F 15 «acetona con olor picante» | X1 `20/09 16.02.07` → pág. 3 de la P1 11/09 | PARCIAL (borde cortado) | la página enseña aliento **dulzón**/afrutado; no se sabe si la prueba pide «verdadero» o «falso» ni si el enunciado completo difiere; sin clave en la foto | clave oficial o foto completa | `q-b04q02` (aliento dulce de la acetona) |
+| 5 | «Lo que define la letalidad… excepto» (Q4, marca «?») | F06 `44dbab04` → captura 24 de 46, versión B | PARCIAL | **Reclasificada al revisar: ya está cubierta.** El enunciado se lee en lo esencial y «colores llamativos» como respuesta coincide con `q-b07q21` («lo que define la gravedad de un accidente ofídico… EXCEPTO» → a. colores llamativos), ya en el banco y enseñado en el bloque 07 («el color nunca debería figurar entre los factores de gravedad»). Es **REPETIDA**, no pendiente | — | `q-b07q21` |
+
+Retiradas anteriores que **siguen retiradas** (pack `toxicologia-prova-p2-2026-11-v1.md` §4): «acetona excepto» y «grupos de riesgo del escorpión» (sin respuesta única sostenible).
+Cuando José consiga las fotos nítidas o la clave oficial, cada fila puede reabrirse con el mismo rastro archivo → página → decisión.
+
+## 6. Divergencia de la taturana (*Lonomia*) — resuelta en la #733
+
+**Problema.** Tres piezas decían cosas que parecían contradecirse: el cuadro-resumen y una tarjeta («veneno/Taturana: anticoagulante y fibrinolítico»), la V/F antigua `q-b08q07` («el *mecanismo de acción* es anticoagulante y fibrinolítico» → VERDADERO) y el texto de mecanismo (el veneno «activa el factor X y la protrombina», consume factores, hay fibrinólisis), más la pregunta nueva `q-b08q25` (mecanismo **procoagulante**).
+
+**Fuentes confiables consultadas (27/11/2026, resúmenes de búsqueda; no se abrió el texto completo de cada artículo):**
+- Chudzinski-Tavassi AM, Carrijo-Carvalho LC. *Biochemical and biological properties of Lonomia obliqua bristle extract.* J Venom Anim Toxins incl Trop Dis 2006 (SciELO): toxinas **procoagulantes** aisladas del extracto de las cerdas — **Losac** (activador del factor X) y **Lopap** (activador de la protrombina); la formación de trombina intravascular produce una forma particular de CID; **la fibrinólisis parece secundaria a la producción de fibrina** (no se halló actividad fibrinolítica directa en el extracto); cuadro de **coagulopatía de consumo con fibrinólisis secundaria**, con D-dímero alto; las plaquetas permanecen **normales** (diferencia respecto de la CID clásica).
+- Revisión PMC sobre trastornos hemostáticos por contacto con *L. obliqua* (PMC5436739) y la guía del Ministerio de Salud de Brasil (Guía de Vigilancia en Salud, accidente por *Lonomia*): síndrome hemorrágico por coagulopatía de consumo; suero antilonómico (SALon), dosis según gravedad.
+
+**Conclusión científica (distinguir mecanismo de efecto).**
+- **Mecanismo del veneno:** procoagulante (activa factor X y protrombina) → consumo de fibrinógeno y factores («tipo CID»); la fibrinólisis es reactiva/secundaria.
+- **Efecto observado:** la sangre queda **incoagulable** (TC prolongado o incoagulable, TP y TTPa alargados, fibrinógeno bajo, plaquetas normales o apenas disminuidas) y el paciente **sangra**: un efecto «anticoagulante» sólo en sentido clínico, no un anticoagulante directo como heparina o warfarina.
+
+**Qué se cambió (y qué no).**
+| Pieza | Cambio |
+|---|---|
+| Cuadro-resumen del bloque 08 | «veneno **de efecto** anticoagulante y fibrinolítico —la sangre queda incoagulable— por un **mecanismo procoagulante**: activa la cascada y la agota → sangrado…» |
+| Tarjeta «Error frecuente · Bloque 08» (3 copias: bloque, mazo y banco de tarjetas) | «Taturana: **efecto** anticoagulante y fibrinolítico (mecanismo procoagulante: consume la cascada)» |
+| `q-b08q07` (+ `-bk`) — **sólo la explicación** | se añade la lectura correcta («anticoagulante» = efecto; el mecanismo es procoagulante, no un anticoagulante directo) y «fibrinólisis reactiva, secundaria a la fibrina»; **enunciado, alternativas y clave (VERDADERO) intactos** porque son la forma real de cobro de la cátedra; reformulación de explicación registrada según 8-A.9 |
+| `q-b08q25` (+ `-bk`) | explicación afinada: fibrinólisis reactiva; plaquetas «normales o apenas disminuidas»; la trampa aclara que «anticoagulante y fibrinolítico» describe el efecto |
+| Texto de mecanismo y figura del bloque 08 | **sin cambios** (ya decían «hemotóxico y coagulante» y «el veneno no anticoagula directamente: agota la cascada activándola») |
+| Barra «Taturana: mecanismo anticoagulante y fibrinolítico» (frecuencia de examen) | sin cambios (reproduce el enunciado de examen) |
+
+**Límites.** Los nombres de toxinas que usa la cátedra («lonofibrasas y lonomiasinas») **no se verificaron** en las fuentes consultadas (que nombran Losac y Lopap); se dejaron como están y quedan para confirmación de la cátedra. La clave VERDADERO de `q-b08q07` sigue la prueba; si José/cátedra prefieren que el enunciado diga «efecto» en vez de «mecanismo», es una decisión editorial futura (no se reescribió una pregunta de examen sin fuente que lo ordene).
 
 ## 7. Marcaciones de los alumnos (Supabase, SOLO LECTURA, 27/11)
 
 `SELECT count` sobre grifos, notas y trazos de `toxicologia`: **0 / 0 / 0**. Nada escrito. Las dos preguntas nuevas entran al final de su bloque y no mueven ninguna ancla existente.
 
-## 8. Testes
+## 8. Testes (head de la #733 tras la corrección)
 
-Se detallan en el cuerpo de la PR (estático de preservación de ids/espejo/distribución, navegador en 1440 y 390 para las dos preguntas nuevas, porta de la matéria, no-activación, gate, Guard local). Límites: sin iPad/Safari.
+- `python3 -I tools/qa/toxicologia-fotos/estatico.test.py origin/main` → **62/62**: ids antiguos presentes; sólo `q-b08q07` cambia y sólo su explicación; enunciado/alternativas/clave intactos; cuerpo = banco; **27 y 25 declarados = reales** (introducción y subtítulo del banco) y todos los demás bloques; cabecera 353/318/35; 706 `quiz-item`; letras sin viés; rótulos.
+- Inventario regenerado: `toxb05` 27 · `toxb08` 25 · `bancotox` 353 · 706 ítems · 1416 flashcards.
+- Porta de la matéria, `nao-ativacao`, `gate-por-materia` y Guard: ver el cuerpo de la PR (resultado del head final). Límites: sin iPad/Safari.
