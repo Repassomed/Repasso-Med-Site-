@@ -1479,6 +1479,16 @@ html.rm-sis[data-rm-tema="dermatologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis
 html.rm-sis[data-rm-tema="dermatologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
 html.rm-sis[data-rm-tema="dermatologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
 
+/* ===== Neurología (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="neurologia"]. ===== */
+html.rm-sis[data-rm-tema="neurologia"][data-rm-tema] {
+  --rm-surface: #E4DDF0; --rm-side: #F0EBF7; --rm-side-edge: #C5B6DE; --rm-side-card: #DDD3EC; --rm-side-rule: #D1C4E5;
+  --rm-accent: #5E4398; --rm-accent-d: #43306E; --rm-marker: #E9B949;
+}
+/* a matéria não usa unidades no índice: o rótulo de grupo único «UNIDAD ·» não é mostrado (índice, lateral e telas de modo); o grupo REPASO mantém o seu */
+html.rm-sis[data-rm-tema="neurologia"] .rm-sis-idx-h + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+html.rm-sis[data-rm-tema="neurologia"] .rm-l2-tree-tools + .rm-sis-ulab--side { display: none; }
+html.rm-sis[data-rm-tema="neurologia"] .rm-nav-modeidx .rm-nav-mh + .rm-sis-idx-g > .rm-sis-ulab { display: none; }
+
 /* ===== Anatomía Patológica II Práctica (Nova Era) · identidade de cor + rótulos sem repetição. Bloco DEPOIS da base técnica; só vale com html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"]. ===== */
 html.rm-sis[data-rm-tema="anatomia-patologica-ii-practica"][data-rm-tema] {
   --rm-surface: #E6DDF0; --rm-side: #F2EEF8; --rm-side-edge: #CFC0E0; --rm-side-card: #E3D8EF; --rm-side-rule: #D9CCE8;

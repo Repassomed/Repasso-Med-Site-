@@ -92,6 +92,17 @@
     return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
   }
 
+  /* Neurología (Nova Era): ids `neub01…neub27` (a numeração é a do id = «BLOQUE NN» do conteúdo) + `banconeu` (banco general) e `revisaoneu` (mazo general) = repaso. `neuportada` (capa/abertura com conteúdo próprio, não é um bloco) entra como repaso «R» para ter card no índice, como a portada de Medicina Familiar.
+     O marcador traz «UNIDAD I…XV» mas com repetições e saltos (UNIDAD VIII aparece em dois blocos; 19 é «COMPLEMENTO»): nenhuma unidade é criada, os 27 blocos entram numa lista única.
+     Sem ilustrações aprovadas para vinhetas ainda (os 13 infográficos novos são figuras do próprio bloco, não recortes limpos) ⇒ cada bloco usa o logotipo (vig: null). Cada bloco ganha uma das 6 cores (cap). */
+  var NE_REPASO = { neuportada: 'R', banconeu: 'B', revisaoneu: 'F' };
+  function clasificarNE(id) {
+    var m = /^neub(\d{2})$/.exec(id);
+    if (m && +m[1] >= 1 && +m[1] <= 27) { var n = +m[1]; return { tipo: 'bloque', n: pad(n), num: n, cap: ((n - 1) % 6) + 1, vig: null }; }
+    if (Object.prototype.hasOwnProperty.call(NE_REPASO, id)) return { tipo: 'repaso', n: NE_REPASO[id], num: -1, cap: 'r', vig: null };
+    return { tipo: 'otro', n: '·', num: -1, cap: 'g', vig: null };
+  }
+
   /* Embriología (Nova Era): ids `emb01…emb13`; a numeração é a do id (= «BLOQUE NN»). Sem Unidades no conteúdo (o marcador é «BLOQUE NN · <tema>», Parcial 2 a partir do 08):
      cada tema de estudo compartilha uma família de cor (cap). emb14 = banco geral, emb15 = flashcards gerais (repaso). */
   var EM_CAP = { 1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 3, 7: 4, 8: 5, 9: 5, 10: 5, 11: 6, 12: 2, 13: 2 };
@@ -545,6 +556,20 @@
         fc:   'Repaso activo por bloques'
       },
       clasificar: clasificarDE
+    },
+    'neurologia': {
+      vigDir: null,                                       // sem viñetas ilustradas: cada bloque usa o logo oficial (rm-sis-vig--logo)
+      logo: 'assets/repasso-med-logo.png',
+      sub: 'Semiología · Síndromes · Enfermedades neurológicas',
+      miga: ['Guía de estudio', 'Neurología'],
+      unidades: {},                                       // o marcador «UNIDAD X» repete e salta números: nenhuma unidade é criada
+      medallones: [],                                     // sem ilustrações aprovadas ainda: a capa não leva medalhões
+      recursos: {
+        fig:  'Revisión visual por bloques',
+        quiz: 'Preguntas de práctica por bloques',
+        fc:   'Repaso activo por bloques'
+      },
+      clasificar: clasificarNE
     },
     'farmacologia-ii': {
       vigDir: 'assets/img/farmaco2/vig/',                 // 12 vinhetas recortadas de infografías do próprio conteúdo (docs/nova-era-temas/PROVENIENCIA-IMAGENS-FARMACO2.md)
