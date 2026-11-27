@@ -9,7 +9,9 @@ const arg = (k, d) => (process.argv.indexOf(k) > 0 ? process.argv[process.argv.i
 const REPO = path.resolve(__dirname, '../../..'), REL = 'Repasso-Med-Site--main/Atual - Copia/';
 const F = REL + 'netlify/functions/materias-privadas/anatomia-patologica-ii.html';
 const raw = fs.readFileSync(path.join(REPO, F), 'utf8');
-const mainRaw = cp.execFileSync('git', ['show', arg('--main', 'origin/main') + ':' + F], { cwd: REPO, maxBuffer: 1 << 28 }).toString();
+const BRIDGE = / data-guard-previous-stem-sha1="[0-9a-f]{40}"/g; /* puente de renombre de la #728: ya cumplió su función (la base ya trae el enunciado nuevo); su sobra rompe el Guard en la PR siguiente */
+const mainRaw0 = cp.execFileSync('git', ['show', arg('--main', 'origin/main') + ':' + F], { cwd: REPO, maxBuffer: 1 << 28 }).toString();
+const mainRaw = mainRaw0.replace(BRIDGE, '');
 let n = 0, ko = 0; const ok = (c, m, d) => { n++; if (c) console.log('  ✓ ' + m); else { ko++; console.log('  ✗ FALLA: ' + m + (d !== undefined ? ' → ' + JSON.stringify(d).slice(0, 500) : '')); } };
 const txt = s => s.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
 const norm = s => txt(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -34,7 +36,7 @@ console.log('\n▸ 1 · nada se perdió');
   ok((raw.match(/<svg[\s>]/g) || []).length === (mainRaw.match(/<svg[\s>]/g) || []).length, 'SVG: misma cantidad');
   const ids = [...raw.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]); ok(new Set(ids).size === ids.length && [...mainRaw.matchAll(/\bid="([^"]+)"/g)].every(m => ids.includes(m[1])), 'ningún id duplicado ni perdido');
   const g = (raw.match(/<!-- ap2-retro-1127:begin/g) || []).length, e = (raw.match(/<!-- ap2-retro-1127:end -->/g) || []).length; ok(g === e && g === 6, `marcadores balanceados (${g}/${e}): 3 tramos en bloques + 3 en banco`);
-  ok((raw.match(/data-guard-previous-stem-sha1/g) || []).length === (mainRaw.match(/data-guard-previous-stem-sha1/g) || []).length, 'ningún puente de renombre nuevo: ninguna pregunta antigua fue reformulada ni retirada (los de la main se conservan)');
+  ok(!/data-guard-previous-stem-sha1/.test(raw) && (mainRaw0.match(BRIDGE) || []).length === 2, 'los 2 puentes de renombre sobrantes de la #728 (bloque + banco) se quitaron; ninguna pregunta fue reformulada ni retirada: texto idéntico a la main');
 }
 console.log('\n▸ 2 · las 7 inserciones');
 {
