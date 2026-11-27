@@ -25,8 +25,12 @@ check("ids antigos presentes", all(k in n for k in o))
 def cab(x):
     return re.sub(r'<div class="answer">.*', '', x, flags=re.S) + re.search(r'<strong>.*?</strong>', x, re.S).group(0)
 mud = [k for k in o if o[k] != n[k]]
-check("só q-b08q07(+bk) muda de texto", set(mud) <= {"q-b08q07", "q-b08q07-bk"}, mud)
-check("enunciado/alternativas/chave antigos intactos", all(cab(o[k]) == cab(n[k]) for k in mud))
+check("só q-b08q07(+bk) muda de texto (ids antigos)", set(mud) <= {"q-b08q07", "q-b08q07-bk"}, mud)
+check("enunciado/alternativas/chave antigos intactos (exceto o enunciado de q-b08q07, ver abaixo)", all(cab(o[k]) == cab(n[k]) for k in mud if not k.startswith("q-b08q07")))
+for k in ("q-b08q07", "q-b08q07-bk"):
+    check(f"{k}: enunciado novo (efecto, não «mecanismo de acción»), gabarito VERDADERO, 2 botões = true",
+          "produce un cuadro anticoagulante y fibrinolítico" in n[k] and "mecanismo de acción" not in re.search(r'<p class="quiz-question">.*?</p>', n[k], re.S).group(0)
+          and "<strong>VERDADERO.</strong>" in n[k] and n[k].count("checkTF(this, true)") == 2 and "checkTF(this, false)" not in n[k])
 check("corpo = banco (texto idêntico)", all(n[k] == n[k + "-bk"].replace(k + "-bk", k) for k in corpo))
 check("1 espelho por pergunta", len(corpo) == len(banco) == len(set(corpo)))
 novos = sorted(set(n) - set(o)); check("novas = 2 + espelhos", novos == ["q-b05q27", "q-b05q27-bk", "q-b08q25", "q-b08q25-bk"], novos)
