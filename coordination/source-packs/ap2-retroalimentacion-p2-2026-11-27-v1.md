@@ -9,27 +9,41 @@ Método: cada pregunta fue cruzada con las 234 preguntas del banco (texto + alte
 | Con «Respuesta» explícita en el PDF | 80 |
 | Sin respuesta explícita en el PDF (casos de opción múltiple sin clave) | 39 |
 | Duplicata exacta (misma forma y mismo contenido ya en el banco) | 26 |
-| Duplicata semántica (el banco ya evalúa el mismo razonamiento) | 83 |
-| **Entran (relacionada pero distinta / nueva)** | **7** |
+| Duplicata semántica (el banco ya evalúa el mismo razonamiento) | 80 |
+| **Entran como pregunta nueva** (ítems del PDF; 9 preguntas) | **10** |
 | Anulada por la docente (sin clave) | 1 |
-| Pendiente: el resumen no enseña el hallazgo | 1 |
-| Sin clave y sin enseñanza propia (cubierta conceptualmente) | 1 |
+| Pendiente: la cátedra no enseña el hallazgo (F11) | 1 |
+| Sin clave confiable en el PDF (F15) | 1 |
+| **Preguntas existentes reclasificadas a «Basada en preguntas de examen»** | **5** |
+| Preguntas retiradas | 0 |
 
-## Por bloque (banco)
+## Tabla por bloque (preguntas del PDF que ya existían son ítems; novas, reclasificadas y retiradas son preguntas del banco)
 
-| Bloque | Ya existían (cubren ítems del PDF) | Entraron | Retiradas | Basadas en examen (final) |
-|---|---|---|---|---|
-| 01 | 0 | 0 | 0 | 35 |
-| 02 | 0 | 0 | 0 | 24 |
-| 03 | 4 | 1 | 0 | 23 |
-| 04 | 27 | 3 | 0 | 27 |
-| 05 | 31 | 0 | 0 | 23 |
-| 06 | 18 | 0 | 0 | 23 |
-| 07 | 29 | 3 | 0 | 20 |
-| 08 | 0 | 0 | 0 | 0 |
-| **Total** | **109** | **7** | **0** | **175** |
+| Bloque | Ítems del PDF ya cubiertos | Preguntas nuevas | Reclasificadas a «examen» | Retiradas | Ítems pendientes/anulados | Basadas en examen (final) |
+|---|---|---|---|---|---|---|
+| 01 | 0 | 0 | 0 | 0 | 0 | 35 |
+| 02 | 0 | 0 | 0 | 0 | 0 | 24 |
+| 03 | 4 | 1 | 0 | 0 | 0 | 23 |
+| 04 | 27 | 3 | 1 | 0 | 1 | 28 |
+| 05 | 31 | 0 | 0 | 0 | 0 | 23 |
+| 06 | 15 | 2 | 0 | 0 | 1 | 25 |
+| 07 | 29 | 3 | 4 | 0 | 1 | 24 |
+| 08 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **Total** | **106** | **9** | **5** | **0** | **3** | **182** |
 
-Notas: «Ya existían» cuenta cada pregunta del PDF en el bloque de su pregunta cubridora principal. Los ítems pendientes (anulada, sin enseñanza, sin clave) se cuentan en su bloque más próximo en la columna correspondiente de la matriz; no se incorporaron. «Basadas en examen» = rotulada «Basada en preguntas de examen» o «V/F · basada en examen» (bloque = banco).
+«Ítems ya cubiertos» = duplicata exacta + semántica, contados en el bloque de su pregunta cubridora principal. Los 3 pendientes/anulados: F11 (b07), D15 (b04), F15 (b06). Baja de la cifra declarada: banco 234 → 243 (bloque = banco); examen 168 → 182; variantes/complementarias 66 → 61.
+
+## Preguntas existentes reclasificadas a «Basada en preguntas de examen» (turma · número que las respalda)
+
+| Pregunta existente (bloque) | Respaldo en el PDF | Por qué es la misma respuesta/razonamiento |
+|---|---|---|
+| «Un tumor gástrico … islotes y trabéculas … cromogranina A» (b04) | H9 | mismo cuadro (sal y pimienta + cromogranina) y misma respuesta: célula neuroendocrina |
+| «Clave diagnóstica macroscópica de la HNF» (b07) | F14, I17 | ambas llevan a HNF por la cicatriz central estrellada |
+| «Marcador sérico más útil en el CHC» (b07) | G9 | misma respuesta: AFP (la docente aclaró que no es exclusiva; la pregunta ya dice que un valor normal no excluye) |
+| «¿Qué son los cuerpos de Mallory-Denk?» (b07) | C9, G16 | misma asociación: inclusiones eosinófilas amorfas de filamentos intermedios = Mallory-Denk |
+| «Citá dos de los cinco parámetros de Child-Pugh» (b07) | H3 (idéntica); C13 e I14 se resuelven con el mismo conocimiento | misma lista de 5 parámetros |
+
+No se reclasificó por tema: quedaron como complementarias, entre otras, la localización del Crohn (C1 sólo la usa a medias), las asociaciones etiológicas del CHC (D17, G9 y H16 se resuelven con otras preguntas ya de examen), «tres formas de lesión alcohólica» (H15 se resuelve con la de neutrófilos + Mallory-Denk) y «micronodular <3 mm» (E13/I15).
 
 ## Matriz pregunta → decisión → destino
 
@@ -51,7 +65,7 @@ Notas: «Ya existían» cuenta cada pregunta del PDF en el bloque de su pregunta
 | 12 | En la cirrosis hepática se observa depósito de la trama de reticulina con puente | no | DUP_SEMANTICA | 208 («¿Cuál es la célula principal responsable del dep…»), 190 («Tras una lesión hepática crónica, las células es…») |
 | 13 | Con respecto a la clasificación pronóstica de Child-Pugh para cirrosis hepática, | no | DUP_SEMANTICA | 203 («Citá dos de los cinco parámetros de la clasifica…»), 204 («Un paciente con cirrosis suma 11 puntos en la cl…») |
 | 14 | La colitis ulcerosa (CU) es una enfermedad idiopática caracterizada por episodio | no | DUP_SEMANTICA | 127 («¿Qué complicación es característica de la coliti…»), 150 («Citá la distribución y la extensión en la pared …»), 141 («Citá dos hallazgos macroscópicos de la colitis u…») |
-| 15 | Se realiza una resección de una masa exofítica polipoidea que se extiende del ci | no | DUP_SEMANTICA | 161 («Un hombre de 67 años realiza colonoscopia de tam…»), 167 («¿Cuál de las siguientes alteraciones está MÁS as…») |
+| 15 | Se realiza una resección de una masa exofítica polipoidea que se extiende del ci | no | ENTRA | ENTRA en b06: Completá: el adenocarcinoma que nace de un adenoma sésil serrado sigue la vía MSI por una alteración en los genes de ________ del ADN. — 160 sólo lo menciona en una alternativa incorrecta; 166 no vincula el sésil serrado con MSI. El resumen lo enseña (BRAF → CIMP → MSI) |
 | 16 | Una madre encuentra sangre en la ropa interior de su hijo de 4 años. La explorac | no | DUP_SEMANTICA | 152 («Una niña de 3 años es llevada a urgencias por re…») |
 | 17 | Hombre de 36 años presenta dolor cólico abdominal intermitente y diarrea de esca | no | DUP_SEMANTICA | 142 («Citá dos complicaciones frecuentes de la enferme…»), 127 («¿Qué complicación es característica de la coliti…») |
 
@@ -103,7 +117,7 @@ Notas: «Ya existían» cuenta cada pregunta del PDF en el bloque de su pregunta
 
 | # | Enunciado (inicio) | Clave en PDF | Decisión | Cubierta por (banco, pos. 1-based) / destino |
 |---|---|---|---|---|
-| 1 | Los adenomas de colon más grandes y sésiles, que contienen focos de invasión con | sí | DUP_SEMANTICA | 159 («Respecto a los adenomas colorrectales y su poten…») |
+| 1 | Los adenomas de colon más grandes y sésiles, que contienen focos de invasión con | sí | ENTRA | ENTRA en b06: Completá: los adenomas colónicos más grandes y sésiles, con focos de invasión, son de arquitectura ________ (>75%) [se origina de F1 y G5]. — 158 tiene como correcta el TAMAÑO; el velloso >75% sólo aparece en alternativas incorrectas. Se agregó un complemento de resumen marcado |
 | 2 | En la clasificación macroscópica del cáncer gástrico avanzado, las masas ulcerad | sí | ENTRA | ENTRA en b04: Completá: … masa ulcerada e infiltrante, de límites imprecisos, corresponde al tipo ________ (de Borrmann). — 97 no exige recordar el tipo III |
 | 3 | El tumor primario hepático que se presenta en mujeres con antecedentes de uso de | sí | DUP_SEMANTICA | 179 («Una mujer de 32 años con uso prolongado de antic…»), 189 («Según la clasificación molecular del adenoma hep…») |
 | 4 | Cite dos características macroscópicas de la colitis ulcerosa: | sí | DUP_SEMANTICA | 126 («Respecto a la distribución anatómica de la colit…»), 141 («Citá dos hallazgos macroscópicos de la colitis u…») |
@@ -129,7 +143,7 @@ Notas: «Ya existían» cuenta cada pregunta del PDF en el bloque de su pregunta
 | 2 | Cite dois critérios para o diagnóstico da síndrome de Peutz- Jeghers. | sí | DUP_EXACTA | 171 («Citá dos criterios diagnósticos del síndrome de …») |
 | 3 | Cite dois tipos de metaplasia epitelial observados em consequência da inflamação | sí | DUP_EXACTA | 145 («Citá dos tipos de metaplasia que pueden aparecer…») |
 | 4 | Na doença de Crohn, as lesões iniciais mais características, de aspecto alongado | sí | DUP_SEMANTICA | 129 («¿Qué secuencia describe correctamente la progres…») |
-| 5 | Os adenomas de cólon maiores e sésseis, que apresentam focos de invasão com maio | sí | DUP_SEMANTICA | 159 («Respecto a los adenomas colorrectales y su poten…») |
+| 5 | Os adenomas de cólon maiores e sésseis, que apresentam focos de invasão com maio | sí | ENTRA | ENTRA en b06: (misma pregunta que F1: adenoma velloso >75%). — ídem F1 |
 | 6 | As células altamente fibrogênicas e contráteis, estimuladas pelo fator de cresci | sí | DUP_SEMANTICA | 208 («¿Cuál es la célula principal responsable del dep…»), 216 («Completá: la citocina que impulsa la fibrogénesi…») |
 | 7 | Sobre os pólipos hiperplásicos, informe: (A) risco de transformação maligna e (B | sí | DUP_EXACTA | 172 («Citá el riesgo de malignidad y la localización m…») |
 | 8 | Descreva a característica microscópica distintiva dos pólipos hiperplásicos. | sí | DUP_EXACTA | 173 («¿Qué explica el aspecto serrado de los pólipos h…») |
@@ -187,12 +201,38 @@ Notas: «Ya existían» cuenta cada pregunta del PDF en el bloque de su pregunta
 | 16 | Homem de 52 anos com perda de peso e náuseas apresenta lesão irregular na mucosa | no | DUP_SEMANTICA | 121 («Completá: el linfoma MALT gástrico nace de la pr…»), 84 («Citá dos neoplasias asociadas a la gastritis cró…») |
 | 17 | Mulher de 41 anos, sorologias virais negativas, apresenta massa hepática de 9 cm | no | DUP_SEMANTICA | 180 («¿Qué hallazgo macroscópico es la clave diagnósti…») |
 
-## Retirada de complementares redundantes (pedido de José) — análisis y decisión
-Alcance: sólo AP II teórica, bloques con amplia cobertura por preguntas de examen (b01 a b07; b08 · tiroides no tiene ninguna basada en examen y se conserva entera).
-Criterio (8-A.1): una complementaria es redundante sólo si el alumno que acierta la pregunta de examen del mismo bloque **necesariamente** acierta la complementaria (mismo razonamiento, sin dato adicional) y ningún ítem de la retroalimentación depende de ella como cubridora.
+## Revisión de los 109 «ya cubiertos» (segunda pasada, 27/11)
+Se releyó, para cada ítem, la respuesta del PDF contra la respuesta correcta y el razonamiento de la pregunta existente (no sólo el tema). Resultado:
+- **Se confirman 106** como cubiertos (26 exactos + 80 semánticos). Cada pregunta de examen cubridora exige la misma respuesta o el mismo razonamiento.
+- **3 ítems pasan a «entra»** porque la cubridora sólo tocaba el tema: **C15** (adenocarcinoma sobre adenoma sésil serrado → genes de reparación/MSI: 160 sólo lo trae en una alternativa incorrecta y 166 no conecta con el serrado), **F1 y G5** (adenomas grandes y sésiles con focos de invasión → arquitectura vellosa >75%: 158 tiene como correcta el *tamaño*; se agregó un complemento de resumen marcado para que el resumen enseñe el vínculo antes de preguntar).
+- **I6** (lesiones linfoepiteliales para distinguir linfoma de condiciones reactivas) sí queda cubierta: la correcta de la pregunta 99 lo dice expresamente.
+- **D14** (anillo de servilleta → APC) se mantiene cubierta por 155/156/166, con una salvedad registrada: el resumen aclara que la localización orienta la clínica pero **no define por sí sola la vía molecular**; la clave APC se sostiene por ser la vía clásica más frecuente, no por la localización.
+- **C12/E5** (célula productora de colágeno): C12 ofrece «miofibroblastos» y «células estrelladas» a la vez; sin retroalimentación de la docente en la Turma C. Cubierta por 207 (estrellada → miofibroblasto); sin cambios.
+- **Reclasificación de rótulo (5 preguntas):** ver tabla arriba. Criterio: misma respuesta o mismo razonamiento que un ítem concreto del PDF; el tema solo no alcanza.
 
-Resultado: de las **43 complementarias de b01–b07** (36 «complementaria» + 7 «V/F»), comparé cada una con las preguntas de examen del mismo bloque (similitud de texto + lectura de enunciado, respuesta y explicación de los pares de mayor solapamiento).
-- **Ninguna cumple el criterio sin dejar de evaluar algo.** Pares revisados a mano: b07#23 ↔ examen b07#17 (micronodular/alcoholismo; la complementaria agrega el corte <3 mm y el contraste macronodular/viral, que cobra el ítem E13 del PDF), b07#19 ↔ #29 (composición de los cuerpos de Mallory-Denk; la usan C9 y G16), b07#22 ↔ #38 (Kupffer vs TGF-β), b07#0 ↔ #33 (hemangioma: «más frecuente»), b04#16 ↔ #15 (origen celular neuroendocrino vs Cajal; la usan C10 y H9), b05#9 ↔ #2 (Crohn vs CU), b02#6 ↔ #26, b02#5 ↔ #19, b02#18 ↔ #29.
-- Además, **varias complementarias son hoy la cubridora de ítems del PDF** (Child-Pugh b07#25/#26, AFP b07#5, HNF b07#2, Mallory-Denk b07#19, localización del Crohn b05#9): retirarlas haría perder cobertura de contenido comprobadamente cobrado.
-- **Barrera técnica:** el Guard (`questoes-removidas`) trata cualquier pregunta que desaparece como HARD_FAIL y no tiene vía de excepción (sólo el puente `data-guard-previous-stem-sha1` para reformulaciones con sustituta). No se debilitó el Guard.
-- **Decisión: 0 retiradas.** Candidata más débil (no retirada): b07#23. Si José quiere retirarla igual, hace falta decidir cómo autorizar la baja frente al Guard. Sugerencia alternativa (8-A.1-B, sin retirar): re-rotular como «Basada en preguntas de examen» las complementarias ahora respaldadas por un ítem del PDF (Child-Pugh «dos de cinco parámetros», Mallory-Denk, AFP, cicatriz central de la HNF).
+## F11 (hepatocitos en vidrio esmerilado por HBsAg) — fuentes consultadas
+- **Clase 7 de la cátedra (AP II, Eliana Chamorro; PDF «Clase 7 - Patologías hepáticas», Drive, leído completo):** la hepatitis B crónica aparece sólo como causa de cirrosis y de CHC; **no** describe hepatocitos en vidrio esmerilado ni la histología de la hepatitis crónica. El «vidrio esmerilado» de los slides es el núcleo del carcinoma papilar de tiroides.
+- **Fisiopatología II (otra cátedra)** trata los marcadores serológicos de la hepatitis B, no la histología.
+- **Robbins 9.ª ed. (Drive, 440 MB):** es la bibliografía que cita la cátedra (cap. 18, pág. 842–867) y es donde se confirmaría el hallazgo; el conector no permite leer ese tamaño y no se verificó la página.
+- **Decisión:** **pendiente documentada**. No se enseñó ni se preguntó: el resumen no puede enseñar algo que ni los slides ni una fuente leída respaldan. La parte de F11 que sí está enseñada (fibrosis en puentes + nódulos de regeneración = cirrosis post-hepatitis B) ya la cubre la pregunta 194. Para cerrar: José o un agente con acceso confirma el párrafo de Robbins (cap. 18, hepatitis B crónica) y, si confirma, se agrega un complemento de resumen + una pregunta Citá.
+
+## Ítems identificados que no entran
+- **D15** — anulada por la docente (Borrmann con anillo de sello): sin clave; no incorporada. Borrmann I, II y III ya entran por C8, H1 y F2.
+- **F15** — sin clave confiable en el PDF (lesión predisponente de una masa circunferencial en colon descendente): no se infirió; el concepto (vía APC/MSI) ya está evaluado.
+- **F11** — ver arriba.
+
+## Retirada de complementares redundantes (pedido de José) — análisis, riesgo y camino seguro
+Alcance: sólo AP II teórica, bloques con amplia cobertura de examen (b01–b07; b08 tiroides no tiene ninguna de examen).
+1. **Identificación.** Se compararon las complementarias/V/F de b01–b07 con las de examen del mismo bloque (similitud de texto + lectura de enunciado, respuesta y explicación). Una complementaria es *realmente redundante* sólo si quien acierta la de examen necesariamente acierta la complementaria, sin dato extra, y ningún ítem del PDF depende de ella como cubridora.
+2. **Resultado.** Ninguna cumple el criterio hoy. La más cercana es «micronodular / alcoholismo» (b07): la de examen sobre cirrosis alcohólica (b07#17) cubre la respuesta, pero la complementaria agrega el corte <3 mm y el contraste macronodular/vírico, que el ítem E13 del PDF trae como distractor; se conserva. Las demás tienen respuesta propia (p. ej. Kupffer vs TGF-β; hemangioma «más frecuente»; Crohn vs CU; Barrett no es carcinoma in situ). Además, 5 complementarias respaldadas por el PDF pasaron a «examen» (no se retiran): el efecto neto para el alumno es que lo que se cobra queda marcado, sin perder cobertura.
+3. **Riesgo de marcaciones (lectura de Supabase, sólo conteos, sin datos de alumnos):** `anatomia-patologica-ii` tiene 291 + 1 + 74 + 53 + 33 + 50 + 2 grifos en los bloques/intro y **268 en el banco** (236 de ellos de ≤15 caracteres; 198 con ocurrencia > 0), **0 notas**. Los grifos se anclan por `block_id` + texto + contexto (prefix/suffix/occurrence), no por pregunta: los ítems no tienen id. Por eso **cualquier alta o baja de una pregunta en el banco puede mover el contexto de grifos vecinos**. Ningún grifo real contiene el texto «Pregunta complementaria» (0 de 772), así que el cambio de rótulo no pierde grifos reales.
+4. **Prueba con el motor real (`RMTools.resolverAncora`, 3.700 grifos sintéticos tomados del texto real de los 9 contenedores, antes × después de esta PR):** 3.699 ancoran después; 1 perdido (un grifo sintético que abarca el rótulo viejo «Pregunta complementaria ¿Qué…» del banco, cuyo texto cambió por la reclasificación; en los datos reales hay 0 de esos); 8 con contexto desplazado (7 en el mismo lugar con contexto vecino nuevo; 1 colisión de una frase genérica de 13 letras con texto nuevo de la explicación de Borrmann II). Ninguno con nivel de anclaje peor.
+5. **Camino seguro propuesto para retirar (a decidir por José; no ejecutado):**
+   - (a) **Sustituir con puente, nunca borrar:** si una complementaria X queda superada por una versión fiel al examen Y, publicar Y en la misma sección con `data-guard-previous-stem-sha1` de X (el Guard lo acepta: la pregunta anterior no tiene id, la sección es la misma y la letra correcta se conserva o Y no es de opción múltiple). X deja de existir *porque Y la reemplaza* y queda registro en el pack. Hay que quitar el atributo en la PR siguiente (como se hizo con el de la #728 en esta PR).
+   - (b) **Baja pura:** el Guard (`questoes-removidas`) da HARD_FAIL y no tiene excepción; no se modificó. Sólo podría salir con decisión expresa de José de mesclar con ese fallo conocido, en PR aparte, un solo bloque por vez, con (i) prueba de grifos con el motor real antes × después, (ii) la baja idéntica en bloque y banco y (iii) contagem declarada actualizada.
+   - (c) En ambos casos: sin tocar flashcards, resumen ni imágenes; y revisar que ningún ítem del PDF dependa de la retirada (hoy dependen Child-Pugh, AFP, HNF, Mallory-Denk y localización del Crohn).
+6. **Decisión:** **0 retiradas.**
+
+## Orden presentado al alumno
+- El encabezado del banco decía «primero las de examen, después las variantes», pero el orden real sigue el de cada bloque (p. ej. b07 empieza con complementarias). Se corrigió **la frase** (no se reordenó nada, para no mover contexto de grifos): ahora dice que las preguntas siguen el orden del bloque y que las de examen llevan su rótulo. Las nuevas y las reclasificadas quedan donde el resumen las enseña (fin del bloque; mismo lugar en el banco). Si José prefiere reordenar el banco (examen primero), es un cambio aparte porque desplaza el contexto de los 268 grifos del banco.
+- Espejo bloque = banco: verificado byte a byte para las 9 nuevas; 5 reclasificadas con el mismo rótulo en ambas copias; contagens declaradas 243 / 182 / 61 y tramos del banco 38, 32, 26, 31, 28, 28, 43, 17 = reales.

@@ -16,9 +16,17 @@ let n = 0, ko = 0; const ok = (c, m, d) => { n++; if (c) console.log('  ✓ ' + 
 const txt = s => s.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
 const norm = s => txt(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const ITEM = /<div class="quiz-item"[^>]*>\n[\s\S]*?\n<\/div>\n<\/div>\n/g;
-const strip = h => h.replace(/<!-- ap2-retro-1127:begin preguntas -->\n[\s\S]*?<!-- ap2-retro-1127:end -->\n/g, '');
+const OLDT = '<span class="quiz-tag variante">Pregunta complementaria</span>', NEWT = '<span class="quiz-tag oficial">Basada en preguntas de examen</span>';
+/* 5 complementarias respaldadas por un ítem equivalente del PDF (turma+número en el pack): sólo cambia el rótulo, en bloque y banco */
+const RELAB = ['Un tumor gástrico está formado por islotes y trabéculas', '¿Qué hallazgo macroscópico es la clave diagnóstica de la hiperplasia nodular focal', '¿Cuál es el marcador sérico más útil en el carcinoma hepatocelular', '¿Qué son los cuerpos de Mallory-Denk', 'Citá dos de los cinco parámetros de la clasificación de Child-Pugh'];
+const relabel = h => RELAB.reduce((a, st) => a.split(OLDT + ' ' + st).join(NEWT + ' ' + st), h);
+const unrelabel = h => RELAB.reduce((a, st) => a.split(NEWT + ' ' + st).join(OLDT + ' ' + st), h);
+const strip = h => unrelabel(h.replace(/<!-- ap2-retro-1127:begin preguntas -->\n[\s\S]*?<!-- ap2-retro-1127:end -->\n/g, '').replace(/ *<!-- ap2-retro-1127:begin resumen -->[\s\S]*?<!-- ap2-retro-1127:end -->\n/g, ''));
 const unc = h => h.replace(/<span>\d+ preguntas<\/span><span>\d+ basadas en preguntas de examen<\/span><span>\d+ variantes<\/span>/, '<span>STATS</span>').replace(/<small>\(\d+ preguntas\)<\/small>/g, '<small>(N)</small>');
-const now = unc(strip(raw)), main = unc(mainRaw);
+/* el encabezado del banco prometía «primero las de examen»; el orden real sigue el de cada bloque: se corrige la frase (única edición de texto en una sección existente) */
+const FRASE_VIEJA = 'Dentro de cada bloque aparecen primero las preguntas <b>basadas en preguntas de examen</b> —reconstruidas a partir de materiales y recordaciones de la cátedra, no transcritas de una prueba—, con su respuesta comentada, y después las <b>variantes</b> escritas para reforzar el mismo concepto.';
+const FRASE_NUEVA = 'Dentro de cada bloque las preguntas siguen el orden del propio bloque. Las <b>basadas en preguntas de examen</b> —reconstruidas a partir de materiales y recordaciones de la cátedra, no transcritas de una prueba— llevan ese rótulo y su respuesta comentada; las <b>variantes</b> y las complementarias están escritas para reforzar el mismo concepto.';
+const now = unc(strip(raw).split(FRASE_NUEVA).join(FRASE_VIEJA)), main = unc(mainRaw);
 const secIds = t => [...t.matchAll(/<section class="container" id="([^"]+)"/g)].map(m => m[1]);
 const sec = (t, id) => { const i = t.indexOf('id="' + id + '"'); if (i < 0) return ''; const a = t.lastIndexOf('<section', i), b = t.indexOf('</section>', a); return t.slice(a, b); };
 const parse = p => ({ raw: p, tag: txt((/<span class="quiz-tag[^>]*>([\s\S]*?)<\/span>/.exec(p) || [, ''])[1]), tagCls: (/<span class="(quiz-tag[^"]*)"/.exec(p) || [, ''])[1], qraw: (/<p class="quiz-question">([\s\S]*?)<\/p>/.exec(p) || [, ''])[1], q: txt((/<p class="quiz-question">([\s\S]*?)<\/p>/.exec(p) || [, ''])[1].replace(/<span class="quiz-tag[^>]*>[\s\S]*?<\/span>/, '')), strong: txt((/<strong>([\s\S]*?)<\/strong>/.exec(p) || [, ''])[1]), reveal: /class="reveal-btn" onclick="toggleAnswer\(this\)"/.test(p), ans: /<div class="answer">/.test(p), opts: /<ul class="options">/.test(p) });
@@ -30,21 +38,23 @@ console.log('\n▸ 1 · nada se perdió');
   const dif = secIds(mainRaw).filter(id => sec(now, id) !== sec(main, id)); ok(!dif.length, 'cada sección idéntica a la main (byte a byte) tras quitar solo lo marcado y las cifras declaradas', dif);
   ok(secIds(raw).join() === secIds(mainRaw).join(), 'ids de sección iguales y en el mismo orden');
   const qs = h => [...h.matchAll(ITEM)].map(m => m[0]);
-  const old = qs(mainRaw), cur = new Set(qs(raw)); const lost = old.filter(x => !cur.has(x)); ok(old.length === 468 && !lost.length, `las ${old.length} copias de las 234 preguntas antiguas (bloque + banco) siguen idénticas, byte a byte`, lost.length);
+  const old = qs(relabel(mainRaw)), cur = new Set(qs(raw)); const lost = old.filter(x => !cur.has(x)); ok(old.length === 468 && !lost.length, `las ${old.length} copias de las 234 preguntas antiguas (bloque + banco) siguen idénticas, byte a byte (salvo el rótulo de las 5 respaldadas por el PDF)`, lost.length);
   const fr = t => [...t.matchAll(/<div class="flashcard">[\s\S]*?<\/div><\/div>/g)].map(m => m[0]); ok(fr(raw).length === fr(mainRaw).length && fr(mainRaw).every(x => fr(raw).includes(x)), `flashcards intactas (${fr(raw).length})`);
   const img = t => [...t.matchAll(/<img[^>]*src="([^"]+)"/g)].map(m => m[1]).sort().join('|'); ok(img(raw) === img(mainRaw), 'imágenes: mismo conjunto de src');
   ok((raw.match(/<svg[\s>]/g) || []).length === (mainRaw.match(/<svg[\s>]/g) || []).length, 'SVG: misma cantidad');
   const ids = [...raw.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]); ok(new Set(ids).size === ids.length && [...mainRaw.matchAll(/\bid="([^"]+)"/g)].every(m => ids.includes(m[1])), 'ningún id duplicado ni perdido');
-  const g = (raw.match(/<!-- ap2-retro-1127:begin/g) || []).length, e = (raw.match(/<!-- ap2-retro-1127:end -->/g) || []).length; ok(g === e && g === 6, `marcadores balanceados (${g}/${e}): 3 tramos en bloques + 3 en banco`);
+  const g = (raw.match(/<!-- ap2-retro-1127:begin/g) || []).length, e = (raw.match(/<!-- ap2-retro-1127:end -->/g) || []).length; ok(g === e && g === 9, `marcadores balanceados (${g}/${e}): 4 tramos de preguntas en bloques + 4 en banco + 1 complemento de resumen`);
+  ok(RELAB.every(st => raw.split(NEWT + ' ' + st).length === 3 && raw.split(OLDT + ' ' + st).length === 1), '5 preguntas reclasificadas: rótulo «Basada en preguntas de examen» en bloque y banco (2 copias cada una), ninguna quedó con el rótulo anterior');
   ok(!/data-guard-previous-stem-sha1/.test(raw) && (mainRaw0.match(BRIDGE) || []).length === 2, 'los 2 puentes de renombre sobrantes de la #728 (bloque + banco) se quitaron; ninguna pregunta fue reformulada ni retirada: texto idéntico a la main');
 }
-console.log('\n▸ 2 · las 7 inserciones');
+ok(raw.includes(FRASE_NUEVA) && mainRaw.includes(FRASE_VIEJA) && !raw.includes('aparecen primero las preguntas'), 'encabezado del banco: ya no promete un orden que no existe');
+console.log('\n▸ 2 · las 9 inserciones');
 {
   const B = blk.map(x => x.its), K = bnk.map(x => x.its);
-  ok(B.map(a => a.length).join() === '1,3,3' && K.map(a => a.length).join() === '1,3,3', 'tramos b03/b04/b07: 1, 3 y 3 (bloque y banco)', [B.map(a => a.length).join(), K.map(a => a.length).join()]);
+  ok(B.map(a => a.length).join() === '1,3,2,3' && K.map(a => a.length).join() === '1,3,2,3', 'tramos b03/b04/b06/b07: 1, 3, 2 y 3 (bloque y banco)', [B.map(a => a.length).join(), K.map(a => a.length).join()]);
   ok(B.flat().join('') === K.flat().join(''), 'bloque y banco idénticos, byte a byte (espejo, 0 divergencias)');
   const P = B.flat().map(parse);
-  ok(P.length === 7 && P.every(x => x.tag === 'Basada en preguntas de examen' && x.tagCls === 'quiz-tag oficial'), 'las 7 rotuladas «Basada en preguntas de examen»');
+  ok(P.length === 9 && P.every(x => x.tag === 'Basada en preguntas de examen' && x.tagCls === 'quiz-tag oficial'), 'las 9 rotuladas «Basada en preguntas de examen»');
   ok(!/Pregunta oficial|clave oficial|transcrip/i.test(P.map(x => x.raw).join(' ')), 'ninguna se presenta como «Pregunta oficial» ni como transcripción literal');
   ok(P.every(x => x.reveal && x.ans && x.strong && !x.opts), 'todas de forma «Citá/Completá» con «Ver respuesta» (toggleAnswer) y respuesta destacada');
   ok(!P.some(x => /<(b|strong|i|em|u|mark|font)\b|style=/i.test(x.qraw.replace(/<span class="quiz-tag[^>]*>[^<]*<\/span>/g, ''))), 'sin negrita ni resaltado en los enunciados (sin pistas visuales)');
@@ -55,24 +65,25 @@ console.log('\n▸ 2 · las 7 inserciones');
   ok(/inflamatorio/.test(t) && /esteatosis hepatica no alcoholica/.test(t) && /mayor riesgo de malignizacion/.test(t), 'subtipo inflamatorio ↔ esteatosis no alcohólica; β-catenina como mayor riesgo');
   ok(/fibroblastos de los espacios porta/.test(t) && /celulas estrelladas hepaticas/.test(t), 'cicatriz de la cirrosis: célula estrellada + fibroblastos portales');
   ok(/atrofia difusa/.test(t) && /metaplasia intestinal/.test(t), 'gastritis autoinmunitaria: atrofia difusa y metaplasia intestinal');
+  ok(/arquitectura vellosa/.test(t) && /mas del 75% de componente velloso/.test(t) && /reparacion/.test(t) && /sesil serrado/.test(t), 'adenoma velloso (>75%) y adenoma sésil serrado → genes de reparación (MSI)');
   ok(/tipo i de borrmann/.test(t) && /tipo ii de borrmann/.test(t) && /tipo iii/.test(t), 'Borrmann I, II y III (una pregunta cada tipo)');
 }
 console.log('\n▸ 3 · cifras declaradas = reales');
 {
-  const bk = sec(raw, 'bancoap2'), real = (raw.slice(0, bankAt).match(/class="quiz-item"/g) || []).length, realB = (bk.match(/class="quiz-item"/g) || []).length; ok(real === 241 && realB === 241, 'preguntas reales: 241 en los bloques y 241 en el banco (234 + 7; ninguna retirada)', [real, realB]);
+  const bk = sec(raw, 'bancoap2'), real = (raw.slice(0, bankAt).match(/class="quiz-item"/g) || []).length, realB = (bk.match(/class="quiz-item"/g) || []).length; ok(real === 243 && realB === 243, 'preguntas reales: 243 en los bloques y 243 en el banco (234 + 9; ninguna retirada)', [real, realB]);
   const ex = (bk.match(/<span class="quiz-tag oficial[^"]*">/g) || []).length, va = (bk.match(/<span class="quiz-tag variante[^"]*">/g) || []).length;
-  const st = /<span>(\d+) preguntas<\/span><span>(\d+) basadas en preguntas de examen<\/span><span>(\d+) variantes<\/span>/.exec(raw); ok(st && +st[1] === 241 && +st[2] === ex && +st[3] === va && ex === 175 && va === 66, `estadísticas declaradas = reales: ${st && st.slice(1).join(' · ')} (examen ${ex}, variantes ${va})`);
+  const st = /<span>(\d+) preguntas<\/span><span>(\d+) basadas en preguntas de examen<\/span><span>(\d+) variantes<\/span>/.exec(raw); ok(st && +st[1] === 243 && +st[2] === ex && +st[3] === va && ex === 182 && va === 61, `estadísticas declaradas = reales: ${st && st.slice(1).join(' · ')} (examen ${ex}, variantes ${va})`);
   const subs = [...bk.matchAll(/Bloque (\d+) · [^<]*<small>\((\d+) preguntas\)<\/small>/g)].map(m => +m[2]); const reales = bk.split('<h3 class="ap2-bank-sub">').slice(1, 9).map(s => (s.match(/class="quiz-item"/g) || []).length);
-  ok(subs.join() === reales.join() && subs.join() === '38,32,26,31,28,26,43,17', 'cada tramo del banco declara su número real', [subs.join(), reales.join()]);
+  ok(subs.join() === reales.join() && subs.join() === '38,32,26,31,28,28,43,17', 'cada tramo del banco declara su número real', [subs.join(), reales.join()]);
   const por = [1, 2, 3, 4, 5, 6, 7, 8].map(k => (sec(raw, 'ap2b0' + k).match(/class="quiz-item"/g) || []).length); ok(por.join() === subs.join(), 'bloque = banco por tramo', por.join());
-  const exb = [1, 2, 3, 4, 5, 6, 7, 8].map(k => (sec(raw, 'ap2b0' + k).match(/<span class="quiz-tag oficial/g) || []).length); ok(exb.join() === '35,24,23,27,23,23,20,0' && exb.reduce((a, b) => a + b, 0) === 175, `basadas en examen por bloque: ${exb.join(', ')} (suma ${exb.reduce((a, b) => a + b, 0)})`);
+  const exb = [1, 2, 3, 4, 5, 6, 7, 8].map(k => (sec(raw, 'ap2b0' + k).match(/<span class="quiz-tag oficial/g) || []).length); ok(exb.join() === '35,24,23,28,23,25,24,0' && exb.reduce((a, b) => a + b, 0) === 182, `basadas en examen por bloque: ${exb.join(', ')} (suma ${exb.reduce((a, b) => a + b, 0)})`);
 }
 console.log('\n▸ 4 · el resumen ya enseña lo que cada pregunta cobra (Lei 8-A.2: el resumen enseña → la pregunta cobra)');
 {
-  const COB = { ap2b03: ['atrofia', 'metaplasia intestinal', 'multifocal'], ap2b04: ['borrmann i ', 'borrmann ii ', 'borrmann iii', 'bordes sobresalientes', 'polipoide o fungoide', 'tumor ulcerado infiltrante'], ap2b07: ['anticonceptivos orales', 'esteroides anabolizantes', 'inflamatorio', 'esteatosis hepatica no alcoholica', 'miofibroblasto', 'fibroblastos de los espacios porta', 'hnf1', 'betacatenina'.replace('betacatenina', 'catenina')] };
+  const COB = { ap2b03: ['atrofia', 'metaplasia intestinal', 'multifocal'], ap2b04: ['borrmann i ', 'borrmann ii ', 'borrmann iii', 'bordes sobresalientes', 'polipoide o fungoide', 'tumor ulcerado infiltrante'], ap2b06: ['75% velloso', 'sesil', 'adenoma sesil serrado', 'genes mmr', 'braf'], ap2b07: ['anticonceptivos orales', 'esteroides anabolizantes', 'inflamatorio', 'esteatosis hepatica no alcoholica', 'miofibroblasto', 'fibroblastos de los espacios porta', 'hnf1', 'betacatenina'.replace('betacatenina', 'catenina')] };
   for (const [b, ts] of Object.entries(COB)) { const s = sec(raw, b); const T = norm(s.slice(0, s.indexOf('<div class="quiz-section"'))); const falta = ts.filter(t => !T.includes(t)); ok(!falta.length, `${b}: ${ts.length} términos clave presentes en la enseñanza (fuera de las preguntas)`, falta); }
 }
-console.log('\n▸ 5 · navegador: «Ver respuesta» real en las 14 copias');
+console.log('\n▸ 5 · navegador: «Ver respuesta» real en las 18 copias');
 (async () => {
   const { chromium } = require('playwright');
   const core = fs.readFileSync(path.join(REPO, REL + 'assets/app-core.js'), 'utf8');
@@ -82,7 +93,7 @@ console.log('\n▸ 5 · navegador: «Ver respuesta» real en las 14 copias');
   const br = await chromium.launch(), pg = await br.newPage(); await pg.setContent('<body></body>'); await pg.addScriptTag({ content: toggle + ';window.toggleAnswer=toggleAnswer;' });
   let good = 0; const bad = [];
   for (const it of items) { await pg.evaluate(h => { document.body.innerHTML = h; }, it); const r = await pg.evaluate(() => { const b = document.querySelector('.reveal-btn'), a = document.querySelector('.answer'); const before = getComputedStyle(a).display; b.click(); return a.classList.contains('show') || getComputedStyle(a).display !== before; }); if (r) good++; else bad.push(it.slice(0, 80)); }
-  ok(good === items.length && items.length === 14, `toggleAnswer abre la respuesta en ${good}/${items.length}`, bad);
+  ok(good === items.length && items.length === 18, `toggleAnswer abre la respuesta en ${good}/${items.length}`, bad);
   await br.close();
   console.log(`\nap2-retro-1127: ${n - ko}/${n}${ko ? ' — ' + ko + ' FALLAS' : ' OK'}`); process.exit(ko ? 1 : 0);
 })();
