@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "supabase_leitura": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=ltizbamvskcgigmqobfo&read_only=true&features=database"
+    }
+  }
+}
