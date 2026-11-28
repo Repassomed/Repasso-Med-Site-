@@ -11,15 +11,14 @@ Fuente: «Retroalimentação Anatopatologia P2.pdf» (Drive, 29 páginas, versi�
 | Ítems en el PDF | 119 | — |
 | Ya cubiertos — duplicata exacta | 23 | — |
 | Ya cubiertos — duplicata semántica | 54 | — |
-| **Entran (preguntas nuevas)** | 24 | **17** |
+| **Entran (preguntas nuevas)** | 25 | **18** |
 | **Sustituidas** (complementaria → versión fiel al PDF, mismo lugar, total sin cambios) | 6 | **4** |
 | **Reclasificadas** a «examen» (misma pregunta) | 4 | **2** |
 | Anulada por la docente | 1 | — |
 | Sin gabarito confiable (C12, E12, E13, E17, F15, F17) | 6 | — |
-| Pendiente por fuente (F11) | 1 | — |
 | Retiradas | — | **0** |
 
-Banco **234 → 251** (bloque = banco); basadas en examen **168 → 191** (= 17 nuevas + 4 sustituidas + 2 reclasificadas); variantes/complementarias 66 → 60. Los 119 ítems = 23 + 54 cubiertos + 24 + 6 + 4 + 1 anulada + 6 sin gabarito + 1 pendiente por fuente (F11).
+Banco **234 → 252** (bloque = banco); basadas en examen **168 → 192** (= 18 nuevas + 4 sustituidas + 2 reclasificadas); variantes/complementarias 66 → 60. Los 119 ítems = 23 + 54 cubiertos + 25 + 6 + 4 + 1 anulada + 6 sin gabarito.
 
 ## Tabla por bloque
 
@@ -31,11 +30,11 @@ Banco **234 → 251** (bloque = banco); basadas en examen **168 → 191** (= 17 
 | 04 | 22 | 5 | 0 | 1 | 0 | 2 | 30 |
 | 05 | 23 | 2 | 1 | 0 | 0 | 2 | 26 |
 | 06 | 14 | 3 | 0 | 0 | 0 | 1 | 26 |
-| 07 | 15 | 6 | 3 | 1 | 0 | 3 | 27 |
+| 07 | 15 | 7 | 3 | 1 | 0 | 2 | 28 |
 | 08 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| **Total** | **77** | **17** | **4** | **2** | **0** | **8** | **191** |
+| **Total** | **77** | **18** | **4** | **2** | **0** | **7** | **192** |
 
-«Ítems ya cubiertos» se cuentan en el bloque de su pregunta cubridora principal; los ítems sin gabarito, la anulada y F11 (pendiente por fuente) se cuentan en su bloque. No hay ítems en b01, b02 ni b08 (cavidad oral, esófago, tiroides).
+«Ítems ya cubiertos» se cuentan en el bloque de su pregunta cubridora principal; los ítems sin gabarito, y la anulada se cuentan en su bloque. No hay ítems en b01, b02 ni b08 (cavidad oral, esófago, tiroides).
 
 ## Preguntas sustituidas (4) — la complementaria desaparece porque la versión fiel al PDF la reemplaza
 
@@ -57,7 +56,7 @@ Conservado en cada sustitución: la afirmación enseñada (en la explicación), 
 
 Las otras tres que la primera versión de esta PR reclasificaba (HNF, Mallory-Denk, AFP) tenían la dirección o el camino de razonamiento invertido respecto de los ítems del PDF (de la entidad a la descripción, frente a del caso a la entidad): ahora son *sustituidas* por la versión del PDF.
 
-## Preguntas nuevas (17): qué cobra cada una y por qué no estaba cubierta
+## Preguntas nuevas (18): qué cobra cada una y por qué no estaba cubierta
 
 | Bloque | Pregunta | Ítems del PDF | Por qué no estaba cubierta |
 |---|---|---|---|
@@ -73,6 +72,7 @@ Las otras tres que la primera versión de esta PR reclasificaba (HNF, Mallory-De
 | b04 | Caso GIST: morfología celular + célula de origen en una sola pregunta | G10 | 111 pide sólo el origen y 117 sólo los patrones celulares: nunca juntos (misma regla que C1) |
 | b05 | Caso de Crohn: diagnóstico + característica microscópica (granulomas no caseificantes) + complicación | C17,F9,I11 | 124 llega al Crohn desde el caso; 141 y 146 piden complicaciones y hallazgos con el Crohn ya dado; ninguna exige las partes juntas |
 | b07 | Caso de esteatohepatitis alcohólica: de la histología al factor causal (alcohol) | H15 | 206 da la esteatohepatitis por supuesta y pide los hallazgos (dirección inversa) |
+| b07 | Hepatitis B crónica con cirrosis: puentes + nódulos y, como hallazgo posible, hepatocitos en vidrio esmerilado (HBsAg) [+ complemento de resumen] | F11 | ni la Clase 7 ni la Clase 3 de Fisiopatología II lo describen; fuente: Goodman 2013 (PMC6448601), leída; ver sección F11 |
 | b07 | Caso: cirrosis (alcohólica abstinente) → neoplasia esperable y su lesión precursora (displasia / nódulos displásicos) | E9,H10 | 211 es el recuerdo directo («nódulos precursores del CHC»); el caso exige inferir el CHC y que la cirrosis no es la lesión premaligna ni revierte al dejar de beber |
 | b07 | Células fibrogénicas y contráctiles estimuladas por TGF-β = miofibroblastos (no «estrelladas») | G6 | la docente no aceptó «células estrelladas»; 215 dice «síntesis de matriz por la célula estrellada» y 207 pide la célula estrellada: quien acierta ambas puede dar la respuesta rechazada |
 | b06 | Pólipo de mayor riesgo de malignidad = adenoma sésil serrado (MCQ) | D12 | 160 sólo lo trae en una alternativa incorrecta |
@@ -92,13 +92,14 @@ Las otras tres que la primera versión de esta PR reclasificaba (HNF, Mallory-De
 - **Inferida por la ciencia del resumen (el PDF no trae clave ni anotación): C12, C13, C14, C15, C16, C17, D12, D13, E12, E13, E16, E17, F12, F13, F14, F15, F16, F17, H12, H13, H14, H15, H16, H17, I12, I17** —  la cubridora responde lo mismo. Son los ítems cuya cobertura depende de esa inferencia; por eso figuran con «confirmar» en la matriz.
 - **Sin gabarito confiable (no incorporados ni contados como cubiertos):** C12, E12, E13, E17, F15, F17 (+ D15 anulada). **Estándar único:** en la Turma E la clave se deduce de las anotaciones sólo si queda UNA alternativa sin anotar (E14: b; E15: a); si quedan varias (E12, E13, E16, E17) se exige que la ciencia deje una sola defendible: E16 sí (d, adenoma ↔ anticonceptivos orales; clave inferida, confirmar) y E12, E13 y E17 no (dos candidatas).
 
-## F11 (hepatocitos en vidrio esmerilado por HBsAg) — fuentes y decisión: NO incorporada (pendiente por fuente)
+## F11 (hepatocitos en vidrio esmerilado por HBsAg) — fuente, alcance y decisión: INCORPORADA con alcance mínimo
 
-- **Cátedra, AP II (Eliana Chamorro) — «Clase 7 - Patologías hepáticas» (Drive, leída completa):** hepatitis B crónica sólo como causa de cirrosis y de CHC; no describe el vidrio esmerilado.
-- **Cátedra, Fisiopatología II (misma docente) — «Clase 3 - Patologías hepáticas» (Drive, leída completa):** serología de la hepatitis B; hepatitis crónica = «infiltración portal por células mononucleares», «hepatitis de interfase»; tampoco describe el vidrio esmerilado. Bibliografía de ambas: Robbins 9.ª ed. cap. 18, pág. 842; el archivo de Drive (440 MB) no es legible por el conector y la búsqueda de texto completo no devuelve resultados.
-- **Fuentes abiertas:** una búsqueda web devolvió resúmenes que coinciden en que los hepatocitos en vidrio esmerilado son un hallazgo de la hepatitis B crónica (citoplasma eosinófilo homogéneo por acumulación de HBsAg en el retículo endoplásmico) y que pueden deberse también a fármacos: PMC6520809, PMC1892360 (PubMed 14633616), Pathology Outlines «Hepatitis B virus (HBV)», PubMed 33836412. **Las páginas no se pudieron abrir** (intentos con PMC, Pathology Outlines y Wikipedia fallaron: dominios fuera de la lista de red permitida; el 28/11 se creó, con aprobación del usuario, un entorno personal «Repasso-Med-Site (leitura de literatura médica aberta)» con `pmc.ncbi.nlm.nih.gov` y `www.pathologyoutlines.com`, pero la herramienta de lectura web no heredó el cambio de red en esta sesión y no se contornó con otra vía), así que **no se tomó ninguna frase de una página leída** y no se registra ninguna cita textual.
-- **Turma F (sin retroalimentación de la docente):** la respuesta del PDF es «hepatocitos en vidrio esmerilado por acumulación de HBsAg, con fibrosis en puentes y nódulos de regeneración».
-- **Decisión:** el proyecto exige slides de la cátedra o literatura-base permitida; ninguna de las dos fuentes leídas sostiene el dato y las fuentes abiertas sólo se vieron en resúmenes de búsqueda. **No se enseñó ni se preguntó** (un primer borrador con complemento y pregunta se retiró antes de publicar). La parte cirrosis del ítem (puentes + nódulos) ya la cubre 194. **Para cerrar:** alguien con acceso a Robbins 9.ª (cap. 18, hepatitis B crónica) o con red a PMC6520809 / Pathology Outlines confirma el pasaje; con eso se agrega un complemento de resumen en b07 + una pregunta Citá, o José autoriza las fuentes abiertas.
+- **Cátedra:** ni la Clase 7 de AP II ni la Clase 3 de Fisiopatología II (Drive, leídas completas) describen el vidrio esmerilado: la hepatitis B crónica aparece como causa de cirrosis y de CHC, y su histología en Fisiopatología II es «infiltración portal por células mononucleares» y «hepatitis de interfase». El Robbins de la bibliografía (440 MB en Drive) no es legible por el conector.
+- **Fuente indicada por José y leída el 28/11:** Goodman ZD. «Hepatopathology of hepatitis B». *Clin Liver Dis (Hoboken)* 2013;2(1):49–51. doi:10.1002/cld.139. PMC6448601 (PMID 30992822; © 2013 American Association for the Study of Liver Diseases). La página se abrió completa (HTTP 200); sólo se registran estas frases literales: «A liver biopsy may reveal hepatocytes with ground-glass cytoplasm … indicating overproduction and storage of hepatitis B surface antigen» (sección «Immune Tolerant Phase»); pie de la Figura 1: «Note the ground-glass hepatocytes with uniformly eosinophilic cytoplasm, indicating hepatitis B surface antigen overproduction and storage».
+- **Lo que la fuente NO dice** (y por eso no se escribió en el sitio): no nombra el organelo (retículo endoplásmico); no afirma que sea exclusivo de la hepatitis B ni que falte en la aguda; no dice que pueda deberse a fármacos. Se retiraron esas cláusulas del borrador anterior.
+- **Segunda fuente indicada (AASLD, Pathology Pearls, «chronic viral hepatitis»):** la página **no se pudo abrir** (`getaddrinfo ENOTFOUND www.aasld.org`: dominio fuera de la lista de red permitida); **no se usó ni se cita su contenido**.
+- **Turma F (sin retroalimentación de la docente):** clave del PDF: «hepatocitos en vidrio esmerilado por acumulación de HBsAg, con fibrosis en puentes y nódulos de regeneración».
+- **Qué entró:** (1) un complemento de resumen marcado en b07, después de las causas de cirrosis: «pueden verse hepatocitos en vidrio esmerilado, con citoplasma uniformemente eosinófilo, que indican sobreproducción y almacenamiento de HBsAg; es un hallazgo posible: puede estar o no, y no hay que tomarlo como obligatorio ni como exclusivo»; (2) una pregunta, rotulada «Basada en preguntas de examen» (reconstrucción), cuya respuesta pone primero la cirrosis (puentes + nódulos, enseñados por la cátedra) y dice «pueden verse» el vidrio esmerilado. «No obligatorio / no exclusivo» es una advertencia al alumno, no un dato atribuido a la fuente. Si José prefiere atenerse sólo a slides y Robbins, ambos bloques están marcados y salen sin afectar nada más. Pendiente menor: confirmar el pasaje en Robbins 9.ª ed. cap. 18 cuando sea legible.
 
 ## Retirada de complementares redundantes — nueva revisión
 
@@ -116,9 +117,9 @@ Las otras tres que la primera versión de esta PR reclasificaba (HNF, Mallory-De
 
 ## Orden presentado al alumno
 
-- El encabezado del banco prometía «primero las de examen»; el orden real sigue el de cada bloque. Se corrigió **la frase** (no se reordenó: desplazaría el contexto de los 268 grifos del banco). Las nuevas quedan al final de su tramo, donde el resumen ya enseñó el punto; las sustituidas conservan el lugar de la complementaria. Bloque = banco: verificado byte a byte en las 17 nuevas y en las 4 sustituidas; contagens declaradas 251 / 191 / 60 y tramos 38, 32, 26, 33, 30, 29, 46, 17 = reales.
+- El encabezado del banco prometía «primero las de examen»; el orden real sigue el de cada bloque. Se corrigió **la frase** (no se reordenó: desplazaría el contexto de los 268 grifos del banco). Las nuevas quedan al final de su tramo, donde el resumen ya enseñó el punto; las sustituidas conservan el lugar de la complementaria. Bloque = banco: verificado byte a byte en las 18 nuevas y en las 4 sustituidas; contagens declaradas 252 / 192 / 60 y tramos 38, 32, 26, 33, 30, 29, 47, 17 = reales.
 
-## Conferencia de las 17 nuevas, 4 sustituidas y 2 reclasificadas contra el PDF y la cátedra (27–28/11)
+## Conferencia de las 18 nuevas, 4 sustituidas y 2 reclasificadas contra el PDF y la cátedra (27–28/11)
 
 Cátedra leída completa en Drive (texto): **Clase 3** (estómago, gastritis), **Clase 4** (estómago, tumores), **Clase 5** (EII), **Clase 6** (pólipos y adenocarcinoma colorrectal), **Clase 7** (hígado) de AP II (Eliana Chamorro) y **Clase 3 de Fisiopatología II** (hígado, misma docente). La clasificación de Borrmann está sólo como figura en la Clase 4 (lám. 16, sin texto de tipos): su detalle viene del resumen del sitio y de las claves del PDF.
 
@@ -139,6 +140,7 @@ Cátedra leída completa en Drive (texto): **Clase 3** (estómago, gastritis), *
 | 15 | Miofibroblastos | G6: miofibroblastos (no «células estrelladas») + nota de la docente | Clase 7: la célula estrellada «puede activarse y convertirse en miofibroblastos muy fibrogénicos» |
 | 16 | Pólipo de mayor riesgo | D12: adenoma sésil serrado | Clase 6: hiperplásicos «carecen de potencial maligno»; «adenomas serrados sésiles (potencial maligno)» |
 | 17 | Caso de esteatohepatitis alcohólica → alcohol | H15: consumo de alcohol | Clase 7: esteatohepatitis alcohólica (neutrófilos, Mallory-Denk); Fisiopatología II Clase 3: en la no alcohólica predominan las células mononucleares y los Mallory-Denk son menos llamativos |
+| 18 | Hepatitis B crónica con cirrosis: puentes + nódulos y vidrio esmerilado como hallazgo posible | F11 (Turma F, sin nota de la docente): «hepatocitos en vidrio esmerilado por acumulación de HBsAg, con fibrosis en puentes y nódulos de regeneración» | Clase 7: causas de cirrosis (hepatitis B crónica), «dos características morfológicas: tabiques fibrosos en puentes y nódulos»; vidrio esmerilado: **Goodman ZD, Clin Liver Dis 2013 (PMC6448601)**, ver sección F11 |
 | S1 | (sustituye 134) Crohn: región + lesión inicial | C1: íleon terminal; úlceras aftosas | Clase 5: «íleon terminal… lesiones iniciales: úlceras aftosas» |
 | S2 | (sustituye 179) caso → HNF | I17, F14: HNF | Clase 7: cicatriz estrellada central, arterias prominentes, reacción ductulillar |
 | S3 | (sustituye 196) caso → cuerpos de Mallory-Denk | G16, C9: Mallory-Denk | Clase 7: filamentos intermedios de queratina 8 y 18 + ubiquitina; característicos pero inespecíficos |
@@ -146,7 +148,7 @@ Cátedra leída completa en Drive (texto): **Clase 3** (estómago, gastritis), *
 | R1 | (reclasifica 112) neuroendocrino: sal y pimienta + cromogranina | H9: células neuroendocrinas | Clase 4 lám. 22–25: sistema endocrino difuso; cromatina moteada; cromogranina A |
 | R2 | (reclasifica 202) Child-Pugh: 2 de 5 parámetros | H3: bilirrubina, ascitis; I14: los cinco parámetros | Clase 7 y Fisiopatología II Clase 3 (clasificación pronóstica de la cirrosis) + comentario de la docente en I14 |
 
-**Bloque = banco.** Verificado por el test byte a byte para las 17 nuevas (14 de forma abierta, 2 de opción múltiple: D12 y H15) y las 4 sustituidas; las 2 reclasificadas llevan el rótulo en las dos copias. **Versión más completa:** C1 reúne las dos partes que 134/139/128 tenían por separado; G9 conserva las alternativas antiguas y «un valor normal no lo excluye»; en F1/G5 la cubridora (158) tenía como correcta el tamaño; H11/G11 y C17/F9/I11 unen en un caso lo que el PDF pregunta en cortes distintos sin duplicar las preguntas de recuerdo que se mantienen.
+**Bloque = banco.** Verificado por el test byte a byte para las 17 nuevas (16 de forma abierta, 2 de opción múltiple: D12 y H15) y las 4 sustituidas; las 2 reclasificadas llevan el rótulo en las dos copias. **Versión más completa:** C1 reúne las dos partes que 134/139/128 tenían por separado; G9 conserva las alternativas antiguas y «un valor normal no lo excluye»; en F1/G5 la cubridora (158) tenía como correcta el tamaño; H11/G11 y C17/F9/I11 unen en un caso lo que el PDF pregunta en cortes distintos sin duplicar las preguntas de recuerdo que se mantienen.
 
 ## Las 29 líneas médicas que el Guard marca (Lei 6) — revisadas una por una
 
@@ -162,6 +164,7 @@ El Guard lista 29 líneas añadidas (21 «número con unidad» + 8 «letra de re
 | AFP: «66 años, 4 kg, 11 cm» | G9 del PDF; la correcta c) conserva la letra |
 | Mallory-Denk: «38 años» + «a) Cuerpos de Mallory-Denk» | G16/C9 del PDF; letra a conservada |
 | E9: «40 años» | E9 del PDF |
+| F11: «54 años, albúmina 2,5 g/dl, tiempo de protrombina 28 s» | datos del caso F11 del PDF; sin conducta terapéutica |
 | H15 «d) Consumo de alcohol» | H15 del PDF; la respuesta coincide con su alternativa |
 
 Ninguna línea trae dosis, fármaco ni conducta terapéutica. Las cifras son datos del caso (PDF) o porcentajes de la diapositiva de la cátedra.
@@ -248,7 +251,7 @@ Ninguna línea trae dosis, fármaco ni conducta terapéutica. Las cifras son dat
 | 8 | Cite dos neoplasias asociadas: Respuesta: a) Adenocarcinoma gástrico. b) Tumor | explícita en el PDF | COBERTA_SEMANTICA | 110 («Citá dos tumores asociados a la gastritis au…») |
 | 9 | Hombre de 36 años presenta dolor cólico abdominal intermitente y diarrea de es | explícita en el PDF | ENTRA | Caso de Crohn: diagnóstico + característica microscópica (granulomas no caseificantes) + complicación — 124 llega al Crohn desde el caso; 141 y 146 piden complicaciones y hallazgos con el Crohn ya dado; ninguna exige las partes juntas |
 | 10 | Hombre de 19 años. Una prueba genética familiar detecta una enfermedad heredit | explícita en el PDF | COBERTA_SEMANTICA | 155 («Un paciente de 35 años, hijo de un padre con…») |
-| 11 | Mujer de 54 años con infección crónica por hepatitis B, malestar progresivo, h | explícita en el PDF | PENDENTE_FONTE | no incorporada: el vidrio esmerilado por HBsAg no figura en los slides; la confirmación en literatura abierta se apoya en resúmenes de búsqueda (las páginas no se pudieron abrir: dominios fuera de la lista de red permitida); ver sección F11 |
+| 11 | Mujer de 54 años con infección crónica por hepatitis B, malestar progresivo, h | explícita en el PDF | ENTRA | Hepatitis B crónica con cirrosis: puentes + nódulos y, como hallazgo posible, hepatocitos en vidrio esmerilado (HBsAg) [+ complemento de resumen] — ni la Clase 7 ni la Clase 3 de Fisiopatología II lo describen; fuente: Goodman 2013 (PMC6448601), leída; ver sección F11 |
 | 12 | Considerando la clasificación de Lauren para el cáncer gástrico, ¿cuál de las  | inferida por la ciencia del resumen (el PDF no trae clave) — confirmar | COBERTA_SEMANTICA | 120 («Citá dos características morfológicas típica…») |
 | 13 | ¿Cuál de los siguientes pólipos intestinales presenta como característica morf | inferida por la ciencia del resumen (el PDF no trae clave) — confirmar | COBERTA_SEMANTICA | 176 («Citá los hallazgos microscópicos característ…»), 153 («Un adolescente de 14 años consulta por manch…») |
 | 14 | La condición que se presenta como una masa hepática benigna, generalmente asin | inferida por la ciencia del resumen (el PDF no trae clave) — confirmar | SUBSTITUIDA | SUSTITUYE a la complementaria 179: «Clave diagnóstica macroscópica de la HNF» → caso: masa con cicatriz estrellada + arterias prominentes + proliferación ductular → HNF |
