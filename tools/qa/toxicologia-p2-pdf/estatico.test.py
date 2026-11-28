@@ -37,6 +37,9 @@ sec08 = new_txt[new_txt.index('id="toxb08"'):new_txt.index('</section>', new_txt
 check("resumen y flashcards: referencia oficial (moderado 5 · grave 10; leve sin suero) y escala de la cátedra, rotuladas por separado",
       new_txt.count("Referencia oficial vigente") == 4 and new_txt.count("Escala de la cátedra (slide)") == 4 and "Leve 5 · moderada 10 · grave 20 ampollas</b>, IV lenta" not in new_txt)
 check("la lámina del bloque 08 ya no promete una tabla de dosis que la imagen no tiene", "tabla de dosis del pie" not in new_txt and "dosis del suero antilonómico por gravedad" not in new_txt)
+check("la matéria ya no afirma «recuperación completa con suero en 24 h» ni «mortalidad 15–20 %» para la lonomiasis (resumen, tarjetas, q-b08q14 y banco)",
+      "la recuperación es completa; sin tratamiento" not in new_txt and "recuperación rápida y completa" not in new_txt and "la mortalidad alcanza el 15–20 %" not in new_txt and "mortalidad de 15–20 %" not in new_txt and "Sin tratamiento: mortalidad 15–20 %" not in new_txt
+      and new_txt.count("más eficaz cuanto antes") == 5 and "cuanto antes se administra el suero, más eficaz es" in new_txt)
 check("q-b08q27: el suero se indica según la gravedad, no por sospecha", "el suero se indica según la gravedad" in n["q-b08q27"] and "basta para pensar en el suero" not in n["q-b08q27"])
 corpo = [k for k in n if not k.endswith("-bk")]
 check("cuerpo = banco", all(n[k] == n[k + "-bk"].replace(k + "-bk", k) for k in corpo))
