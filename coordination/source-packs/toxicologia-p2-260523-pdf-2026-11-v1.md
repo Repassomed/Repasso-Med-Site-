@@ -332,7 +332,20 @@ Las 23 son **12 textos únicos**: los de preguntas se repiten en el bloque y en 
 
 **Otras dosis del contenido alterado:** ninguna (el único valor posológico nuevo o modificado es el del SALon). Las dosis de **loxoscelismo** (moderado 5 · severo 10 ampollas de SAA/SALox: Clase 8, número impreso 17, **verificado** en el texto del archivo), del **foneutrismo** («1 a 2 frascos», Clase 8, número impreso 8) y la de **latrodectismo** («1 vial IV lento en 100 mL», número impreso 5) **no se tocaron**; no se contrastaron con la literatura en esta sesión.
 
-## 12. Límites
+## 13. Pendencias de Toxicología que ya se pueden resolver con material del profesor (próximo paso; no se amplía esta PR)
+
+Evidencia: `Clase 8 Otros tipos de accidentes.pptx` (texto extraído por Drive; numeración impresa, ver §11.1). Ninguna se incorporó a esta PR para no reabrir la auditoría del commit actual.
+
+| Pendiente (§6) | Qué enseña la Clase 8 | Falta para entrar (8-A) |
+|---|---|---|
+| 3 · **Caranguejeira**, «conducta más completa» (clave d: lavado local + antihistamínicos + esteroides + epinefrina si necesario; págs. 20, 28) | «Casos leves: no es necesario el tratamiento… En casos más graves, el tratamiento incluye analgésicos, epinefrina, antihistamínicos y corticosteroides. No existe un tratamiento específico» | acrecentar al resumen del bloque 08 una frase con ese manejo (hoy sólo «casi no duele; pelos urticantes») y la pregunta («Basada»); contrastar con la literatura (la epinefrina sólo tiene sentido ante anafilaxia) |
+| 4 · **Viuda negra**, medida incorrecta = suero anti-Phoneutria (págs. 17, 26) | analgesia (paracetamol/dipirona; opioides si dolor intenso), relajantes/benzodiacepinas, bloqueo local, control autonómico y **suero anti-Latrodectus** en moderado/grave (nº impresos 4–5); el suero anti-Phoneutria es de la araña bananera (nº impreso 8) | acrecentar al resumen el manejo del latrodectismo y la pregunta («Basada»); dosis «1 vial IV lento en 100 mL» sólo como contenido de la cátedra |
+| 1 y 2 · inhalado, excepto intubación/traqueostomía o broncodilatadores (págs. 36, 38, 44, 46, 49) | **no se encontró** un slide de Toxicología que lo enseñe (búsqueda en Drive) | slide de la cátedra; las dos claves impresas (D y D) se contradicen |
+| 5, 6, 7, 8 | sin respuesta única / truncadas / nota del estudiante / retiradas | foto completa o clave oficial |
+
+Las demás matérias del 7.º semestre (Ortopedia, Oftalmología, Neurología, Anestesiología, Dermatología) quedan con Claude 1; nada de ellas se tocó.
+
+## 14. Límites
 
 - Todas las numeraciones «slide N» de la **Clase 8** son las **impresas en el texto extraído** (el PPTX de 31,8 MB no se pudo descargar ni renderizar); los números de la **Clase 5.1** (slide 35) y de **`07 FINAL`** (págs. 15, 24, 25) sí son ordinales verificados en el archivo.
 
