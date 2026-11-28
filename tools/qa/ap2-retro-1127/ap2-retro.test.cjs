@@ -93,7 +93,7 @@ console.log('\n▸ 3 · las 17 inserciones nuevas');
   ok(/fibroblastos de los espacios porta/.test(t) && /celulas estrelladas hepaticas/.test(t), 'cicatriz de la cirrosis: célula estrellada + fibroblastos portales');
   ok(/atrofia difusa/.test(t) && /metaplasia intestinal/.test(t), 'gastritis autoinmunitaria: atrofia difusa y metaplasia intestinal');
   ok(/tipo i de borrmann/.test(t) && /tipo ii de borrmann/.test(t) && /tipo iii/.test(t), 'Borrmann I, II y III (una pregunta cada tipo)');
-  ok(/mas del 75% de componente velloso/.test(t) && /genes de reparacion|genes de ________ del adn|reparacion/.test(t) && /sesil serrado/.test(t), 'adenoma velloso (>75%) y adenoma sésil serrado → genes de reparación (MSI)');
+  ok(/75% o mas de componente velloso/.test(t) && /genes de reparacion|genes de ________ del adn|reparacion/.test(t) && /sesil serrado/.test(t), 'adenoma velloso (>75%) y adenoma sésil serrado → genes de reparación (MSI)');
   ok(/linfoma malt gastrico/.test(t) && /linfocito b de la zona marginal/.test(t) && /helicobacter pylori|h\. pylori/.test(t), 'caso MALT: diagnóstico + célula de origen + factor de riesgo en una sola pregunta (D9/E11/I16)');
   ok(/colitis ulcerosa/.test(t) && /megacolon toxico/.test(t) && /colangitis esclerosante primaria/.test(t), 'caso de colitis ulcerosa: diagnóstico + complicación intestinal grave + manifestación hepatobiliar (H11/G11)');
   ok(/celulas fusiformes|fusiformes/.test(t) && /celula intersticial de cajal/.test(t) && /granulomas no caseificantes/.test(t) && /enfermedad de crohn/.test(t), 'caso GIST: morfología + origen juntos (G10); caso Crohn: diagnóstico + granulomas + complicación (C17/F9/I11)');

@@ -96,7 +96,7 @@ Las otras tres que la primera versión de esta PR reclasificaba (HNF, Mallory-De
 
 - **Cátedra, AP II (Eliana Chamorro) — «Clase 7 - Patologías hepáticas» (Drive, leída completa):** hepatitis B crónica sólo como causa de cirrosis y de CHC; no describe el vidrio esmerilado.
 - **Cátedra, Fisiopatología II (misma docente) — «Clase 3 - Patologías hepáticas» (Drive, leída completa):** serología de la hepatitis B; hepatitis crónica = «infiltración portal por células mononucleares», «hepatitis de interfase»; tampoco describe el vidrio esmerilado. Bibliografía de ambas: Robbins 9.ª ed. cap. 18, pág. 842; el archivo de Drive (440 MB) no es legible por el conector y la búsqueda de texto completo no devuelve resultados.
-- **Fuentes abiertas:** una búsqueda web devolvió resúmenes que coinciden en que los hepatocitos en vidrio esmerilado son un hallazgo de la hepatitis B crónica (citoplasma eosinófilo homogéneo por acumulación de HBsAg en el retículo endoplásmico) y que pueden deberse también a fármacos: PMC6520809, PMC1892360 (PubMed 14633616), Pathology Outlines «Hepatitis B virus (HBV)», PubMed 33836412. **Las páginas no se pudieron abrir** (intentos con PMC, Pathology Outlines y Wikipedia fallaron: dominios fuera de la lista de red permitida), así que **no se tomó ninguna frase de una página leída** y no se registra ninguna cita textual.
+- **Fuentes abiertas:** una búsqueda web devolvió resúmenes que coinciden en que los hepatocitos en vidrio esmerilado son un hallazgo de la hepatitis B crónica (citoplasma eosinófilo homogéneo por acumulación de HBsAg en el retículo endoplásmico) y que pueden deberse también a fármacos: PMC6520809, PMC1892360 (PubMed 14633616), Pathology Outlines «Hepatitis B virus (HBV)», PubMed 33836412. **Las páginas no se pudieron abrir** (intentos con PMC, Pathology Outlines y Wikipedia fallaron: dominios fuera de la lista de red permitida; el 28/11 se creó, con aprobación del usuario, un entorno personal «Repasso-Med-Site (leitura de literatura médica aberta)» con `pmc.ncbi.nlm.nih.gov` y `www.pathologyoutlines.com`, pero la herramienta de lectura web no heredó el cambio de red en esta sesión y no se contornó con otra vía), así que **no se tomó ninguna frase de una página leída** y no se registra ninguna cita textual.
 - **Turma F (sin retroalimentación de la docente):** la respuesta del PDF es «hepatocitos en vidrio esmerilado por acumulación de HBsAg, con fibrosis en puentes y nódulos de regeneración».
 - **Decisión:** el proyecto exige slides de la cátedra o literatura-base permitida; ninguna de las dos fuentes leídas sostiene el dato y las fuentes abiertas sólo se vieron en resúmenes de búsqueda. **No se enseñó ni se preguntó** (un primer borrador con complemento y pregunta se retiró antes de publicar). La parte cirrosis del ítem (puentes + nódulos) ya la cubre 194. **Para cerrar:** alguien con acceso a Robbins 9.ª (cap. 18, hepatitis B crónica) o con red a PMC6520809 / Pathology Outlines confirma el pasaje; con eso se agrega un complemento de resumen en b07 + una pregunta Citá, o José autoriza las fuentes abiertas.
 
@@ -117,6 +117,54 @@ Las otras tres que la primera versión de esta PR reclasificaba (HNF, Mallory-De
 ## Orden presentado al alumno
 
 - El encabezado del banco prometía «primero las de examen»; el orden real sigue el de cada bloque. Se corrigió **la frase** (no se reordenó: desplazaría el contexto de los 268 grifos del banco). Las nuevas quedan al final de su tramo, donde el resumen ya enseñó el punto; las sustituidas conservan el lugar de la complementaria. Bloque = banco: verificado byte a byte en las 17 nuevas y en las 4 sustituidas; contagens declaradas 251 / 191 / 60 y tramos 38, 32, 26, 33, 30, 29, 46, 17 = reales.
+
+## Conferencia de las 17 nuevas, 4 sustituidas y 2 reclasificadas contra el PDF y la cátedra (27–28/11)
+
+Cátedra leída completa en Drive (texto): **Clase 3** (estómago, gastritis), **Clase 4** (estómago, tumores), **Clase 5** (EII), **Clase 6** (pólipos y adenocarcinoma colorrectal), **Clase 7** (hígado) de AP II (Eliana Chamorro) y **Clase 3 de Fisiopatología II** (hígado, misma docente). La clasificación de Borrmann está sólo como figura en la Clase 4 (lám. 16, sin texto de tipos): su detalle viene del resumen del sitio y de las claves del PDF.
+
+| # | Pregunta | Ítem(s) del PDF y clave | Cátedra |
+|---|---|---|---|
+| 1 | Factores de riesgo del adenoma hepático | C2: anticonceptivos orales; esteroides anabólicos | Clase 7: «anticonceptivos orales y esteroides anabolizantes se asocian a su desarrollo» |
+| 2–4 | Borrmann I / II / III | C8: masa polipoide o exofítica, bien delimitada, hacia la luz · H1: masas ulceradas, bien delimitadas, bordes sobreelevados · F2: masas ulceradas infiltrantes = tipo III | Clase 4 lám. 16 (figura) + resumen b04 (tabla de tipos) |
+| 5 | Atrofia difusa + metaplasia intestinal (gastritis autoinmunitaria) | E2: atrofia difusa; metaplasia intestinal | Clase 3 lám. 21–22 y 25 («daño difuso de la mucosa oxíntica… puede aparecer metaplasia intestinal»; complicaciones: atrofia y metaplasia) |
+| 6 | Células del depósito de cicatriz | F5: células estrelladas; fibroblastos portales | Clase 7: «célula estrellada… otros tipos de células, como los fibroblastos portales, también contribuyen» |
+| 7 | Subtipo de adenoma ↔ esteatosis no alcohólica | G12: adenoma inflamatorio (menor riesgo) | Clase 7: «inflamatorios: … asociados a esteatosis hepática no alcohólica. Bajo riesgo» |
+| 8 | Adenoma sésil serrado → genes de reparación (MSI) | C15: mutación en gen de reparación del ADN | Clase 6: vía de inestabilidad de microsatélites en adenomas sésiles serrados; «deficiencia de reparación de errores de emparejamiento» |
+| 9 | Adenoma grande y sésil con focos de invasión = velloso | F1 / G5: «75% o más»; vellosa | Clase 6 lám. 24: «Vellosos: más grandes y sésiles… contienen focos de invasión con mayor frecuencia… ≥75%» (la diapositiva dice ≥75%; el resumen decía «más del 75%»: la pregunta y el complemento usan «75% o más») |
+| 10 | Caso MALT: diagnóstico + origen + factor de riesgo | D9: linfocito B de la zona marginal · E11: H. pylori · I16: MALT | Clase 4 lám. 19–20 |
+| 11 | Caso colitis ulcerosa: diagnóstico + megacolon tóxico + CEP | H11: megacolon tóxico · G11: pericolangitis o CEP | Clase 5 (CU: afecta recto y sigue continua; megacolon tóxico; CEP y pericolangitis, más frecuentes en CU) |
+| 12 | Caso GIST: morfología + origen | G10: fusiformes o epitelioides; célula de Cajal | Clase 4 lám. 27–29 |
+| 13 | Caso Crohn: diagnóstico + granulomas + complicación | C17 (estenosis) · F9 (granulomas no caseificantes) · I11 (Crohn; fístulas, fisuras, estenosis) | Clase 5 (Crohn: granulomas no caseosos 40–60 %, ausencia no descarta; estenosis fibrosantes; fístulas; fisura anal) |
+| 14 | Caso: cirrosis → precursor (displasia) | E9, H10: displasia | Clase 7: lesiones precursoras (nódulos displásicos de alto grado); «la cirrosis NO ES LESIÓN PREMALIGNA»; regresión «esencialmente irreversible» (Fisiopatología II, Clase 3) |
+| 15 | Miofibroblastos | G6: miofibroblastos (no «células estrelladas») + nota de la docente | Clase 7: la célula estrellada «puede activarse y convertirse en miofibroblastos muy fibrogénicos» |
+| 16 | Pólipo de mayor riesgo | D12: adenoma sésil serrado | Clase 6: hiperplásicos «carecen de potencial maligno»; «adenomas serrados sésiles (potencial maligno)» |
+| 17 | Caso de esteatohepatitis alcohólica → alcohol | H15: consumo de alcohol | Clase 7: esteatohepatitis alcohólica (neutrófilos, Mallory-Denk); Fisiopatología II Clase 3: en la no alcohólica predominan las células mononucleares y los Mallory-Denk son menos llamativos |
+| S1 | (sustituye 134) Crohn: región + lesión inicial | C1: íleon terminal; úlceras aftosas | Clase 5: «íleon terminal… lesiones iniciales: úlceras aftosas» |
+| S2 | (sustituye 179) caso → HNF | I17, F14: HNF | Clase 7: cicatriz estrellada central, arterias prominentes, reacción ductulillar |
+| S3 | (sustituye 196) caso → cuerpos de Mallory-Denk | G16, C9: Mallory-Denk | Clase 7: filamentos intermedios de queratina 8 y 18 + ubiquitina; característicos pero inespecíficos |
+| S4 | (sustituye 182) caso → AFP (con interpretación) | G9: AFP; la docente aclaró que no es exclusiva | Clase 7: «la AFP… se encuentra hasta en el 50 % de los CHC avanzados» (un valor normal no excluye) |
+| R1 | (reclasifica 112) neuroendocrino: sal y pimienta + cromogranina | H9: células neuroendocrinas | Clase 4 lám. 22–25: sistema endocrino difuso; cromatina moteada; cromogranina A |
+| R2 | (reclasifica 202) Child-Pugh: 2 de 5 parámetros | H3: bilirrubina, ascitis; I14: los cinco parámetros | Clase 7 y Fisiopatología II Clase 3 (clasificación pronóstica de la cirrosis) + comentario de la docente en I14 |
+
+**Bloque = banco.** Verificado por el test byte a byte para las 17 nuevas (14 de forma abierta, 2 de opción múltiple: D12 y H15) y las 4 sustituidas; las 2 reclasificadas llevan el rótulo en las dos copias. **Versión más completa:** C1 reúne las dos partes que 134/139/128 tenían por separado; G9 conserva las alternativas antiguas y «un valor normal no lo excluye»; en F1/G5 la cubridora (158) tenía como correcta el tamaño; H11/G11 y C17/F9/I11 unen en un caso lo que el PDF pregunta en cortes distintos sin duplicar las preguntas de recuerdo que se mantienen.
+
+## Las 29 líneas médicas que el Guard marca (Lei 6) — revisadas una por una
+
+El Guard lista 29 líneas añadidas (21 «número con unidad» + 8 «letra de respuesta»); son **15 únicas**, repetidas en bloque y banco (idénticas, verificado por el test). Resultado de la revisión:
+
+| Línea marcada | Verificación |
+|---|---|
+| MALT: «52 años, 4 kg, 6 meses, área de 6 cm» | datos del caso D9/E11/I16 del PDF; sin cifras terapéuticas |
+| GIST: «55 años»; CU: «30 años»; Crohn: «36 años» | edades de G10, H11 y C17/I11 del PDF |
+| Velloso: «75% o más» (complemento, respuesta y trampa) | Clase 6 lám. 24: vellosos ≥75%; tubulares al menos 75% tubular; F1 «75% o más». **Corregido** en esta revisión: antes decía «más del 75%» |
+| D12 «a) Adenoma sésil serrado» | letra = alternativa; Clase 6: potencial maligno |
+| HNF: «41 años, 9 cm» + «d) Hiperplasia nodular focal» | I17 del PDF; letra d conservada (puente del Guard) |
+| AFP: «66 años, 4 kg, 11 cm» | G9 del PDF; la correcta c) conserva la letra |
+| Mallory-Denk: «38 años» + «a) Cuerpos de Mallory-Denk» | G16/C9 del PDF; letra a conservada |
+| E9: «40 años» | E9 del PDF |
+| H15 «d) Consumo de alcohol» | H15 del PDF; la respuesta coincide con su alternativa |
+
+Ninguna línea trae dosis, fármaco ni conducta terapéutica. Las cifras son datos del caso (PDF) o porcentajes de la diapositiva de la cátedra.
 
 ## Matriz ítem → decisión → destino
 
