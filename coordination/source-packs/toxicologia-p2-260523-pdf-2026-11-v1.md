@@ -266,9 +266,37 @@ Leyenda: EXISTÍA = ya cubierto (se indica la pregunta cubridora, de contenido y
 
 ## 8. Contagens finales (8-A.10)
 
-**355 preguntas** (cuerpo) = **355** (banco) · 710 ítems · MC 320 + V/F 35 · **«Basada» 96 / «Pregunta complementaria» 259** (cuerpo) · bloque 05 = 27, **bloque 08 = 27** · flashcards 1416 · letras a 80 / b 80 / c 80 / d 80 · los 706 ids de la #733 siguen presentes sin cambio de enunciado, alternativas, clave ni explicación (sólo el rótulo en 3 preguntas) · marcaciones de alumnos: 0/0/0 en `toxicologia` (ver la #733).
+**355 preguntas** (cuerpo) = **355** (banco) · 710 ítems · MC 320 + V/F 35 · **«Basada» 96 / «Pregunta complementaria» 259** (cuerpo) · bloque 05 = 27, **bloque 08 = 27** · flashcards 1416 · letras a 80 / b 80 / c 80 / d 80 · los 706 ids de la #733 siguen presentes; cambios: el rótulo en 3 preguntas y, en `q-b08q14`, el enunciado («según la escala de la cátedra») y la explicación (alternativas y clave intactas) · marcaciones de alumnos: 0/0/0 en `toxicologia` (ver la #733).
 
-## 9. Límites
+## 9. Dosis del suero antilonómico (SALon) y revisión de las afirmaciones terapéuticas nuevas (revisión de la #735)
+
+**Problema.** La explicación de `q-b08q26` daba «5 / 10 / 20 ampollas para leve / moderado / grave» como conducta. Esa escala venía del resumen, de las tarjetas y de `q-b08q14` («La escala de la cátedra es…»).
+
+**Fuentes pedidas y límite real de acceso.** Se intentó abrir las dos fuentes indicadas (página del Ministerio de Salud sobre acidentes por lagartas y bula profesional del Butantan): **no se pudo** (el proxy de la sesión devuelve 403 y el lector web falla por DNS). Se usaron **resúmenes de búsqueda web** que citan esas mismas fuentes; **no es lectura literal** de los documentos. Lo que esos resúmenes dicen: el Ministerio clasifica los casos en **moderado** (tiempo de coagulación alterado; sangrado ausente o sólo en piel/mucosas) y **grave** (coagulación alterada y sangrado en vísceras) y limita el suero a esos dos; el Butantan indica **5 ampollas en el moderado y 10 en el grave**; el cuadro **leve** (sólo local, sin alteración de la coagulación) **no lleva suero** y se observa con control de laboratorio 24 h. **Pendiente de confirmación textual** (abrir la bula 2024 del Butantan y la página del MS).
+
+**Dónde estaba la divergencia y qué se hizo** (todas las copias, bloque y banco):
+| Pieza | Antes | Ahora |
+|---|---|---|
+| Resumen, «Paso 02 · Suero SALon» | «Leve 5 · moderada 10 · grave 20, IV lenta en 100 mL de SF» como conducta | **Referencia oficial vigente** (moderado 5 · grave 10; leve sin suero, observación y control de coagulación 24 h) **y**, por separado, **escala de la cátedra (slide)** leve 5 · moderada 10 · grave 20, IV lenta en 100 mL de SF |
+| Tarjeta «Lonomia: suero SALon» (3 copias: bloque y mazo) | ídem | ídem (oficial + cátedra, rotuladas) |
+| `q-b08q14` (+ banco) | «¿cuál es la dosis…?», clave 20 | enunciado «**Según la escala de la cátedra (slide)**…», clave y alternativas **intactas** (b = 20); la explicación dice que **no es la conducta oficial vigente** y da la oficial (5 moderado · 10 grave; leve sin suero); id y rótulo iguales. Reformulación mínima registrada (8-A.9): sin el «según la cátedra» había dos respuestas defendibles (c = 10 es la cifra oficial del grave) |
+| `q-b08q26` (+ banco) | 5/10/20 como conducta | indicación según gravedad; cifras oficiales y escala de la cátedra **por separado**; sin dilución/velocidad como recomendación |
+| Lámina `bloco-08-03-lonomia-coagulopatia.webp` | el pie de figura y el *alt* decían que traía «la tabla de dosis» | **la imagen no tiene ninguna tabla de dosis** (se abrió y se leyó): se corrigieron el pie de figura y el *alt*; la imagen no se tocó |
+
+**Contenido de la cátedra, registrado como tal:** la escala 5/10/20 (con la clasificación «sangrado cutáneo / mucoso o digestivo leve / hemorragia interna, TP no coagulable»), la dilución en 100 mL de SF y la infusión «IV lenta» figuran en el slide (según el resumen previo del sitio) y **no** se presentan como conducta vigente. Tampoco se verificaron en las fuentes oficiales la dilución ni la velocidad de infusión (los resúmenes de búsqueda no las confirman para la versión actual).
+
+**Otras divergencias detectadas (no corregidas):** la lámina dice que el veneno «consume factores **y plaquetas**», mientras el resumen enseña plaquetas normales o apenas disminuidas (coincide con la bibliografía consultada en la #733); la mortalidad «15–20 % sin tratamiento» es contenido de la cátedra sin fuente oficial verificada aquí. Quedan para decisión de José.
+
+### Revisión de las demás afirmaciones terapéuticas nuevas (#733 y #735)
+| Pregunta | Afirmación | Resultado |
+|---|---|---|
+| `q-b05q27` (#733) | benzodiacepinas = anticonvulsivante de elección en la convulsión por organofosforados; fenitoína no es la elección; haloperidol baja el umbral | coincide con el paso 06 del resumen (cátedra) y con la práctica habitual; la afirmación sobre fenitoína/haloperidol **no está en el resumen** (son distractores) y no se verificó con fuente externa en esta sesión |
+| `q-b08q25` y `q-b08q07` (#733) | mecanismo procoagulante, consumo tipo CID, fibrinólisis reactiva, plaquetas normales o apenas disminuidas | coincide con los resúmenes de búsqueda de Chudzinski-Tavassi 2006 y PMC5436739 (no leídos íntegros) |
+| `q-b08q26` (#735) | SALon: tratamiento específico, IV, lo antes posible; dosis por gravedad | **corregida** (arriba) |
+| `q-b08q27` (#735) | dolor local leve + sangrado espontáneo = lonomiasis; suero según gravedad | se **quitó** «el diagnóstico clínico basta para pensar en el suero» (el suero se indica en moderado/grave, con coagulación alterada); queda: el cuadro orienta, se confirma con el tiempo de coagulación |
+| Relabels `q-b01q05`, `q-b03q07`, `q-b05q19` | sin contenido nuevo | sólo rótulo |
+
+## 10. Límites
 
 - Sin iPad/Safari. Sin literatura-base nueva ni fuentes externas en esta PR (las nuevas preguntas se apoyan en el resumen).
 - Las marcas del estudiante no se usan como clave; la clave impresa sólo existe para FILA 1 y FILA 2.

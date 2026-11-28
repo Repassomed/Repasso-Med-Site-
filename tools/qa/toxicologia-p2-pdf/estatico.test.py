@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Toxicología · cruce del PDF P2_260523, lectura visual de las 53 páginas (PR sobre la #733): verificación estática, solo lectura.
+"""Toxicología · cruce del PDF P2_260523, lectura visual de las 53 páginas y revisión de las dosis del SALon (PR sobre la #733): verificación estática, solo lectura.
 Uso: python3 -I tools/qa/toxicologia-p2-pdf/estatico.test.py [ref-base=origin/claude/toxicologia-provas-fotos]
 Confere: los 706 ids de la #733 siguen presentes; cambios = (a) rótulo de q-b01q05, q-b05q19 y q-b03q07 (cuerpo y banco), con alternativas/clave/explicación
 idénticas; (b) 2 preguntas nuevas q-b08q26 y q-b08q27 (+ espejos); cuerpo = banco; «Basada» 96 / «complementaria» 259 / 355 preguntas; V/F 35; bloque 08 = 27."""
@@ -21,9 +21,23 @@ o, n = items(old), items(new_txt)
 NUEVOS = {"q-b08q26", "q-b08q26-bk", "q-b08q27", "q-b08q27-bk"}
 check("los 706 ids anteriores siguen presentes y solo se añaden los 4 nuevos", set(o) <= set(n) and set(n) - set(o) == NUEVOS and len(n) == 710, sorted(set(n) - set(o)))
 mud = sorted(k for k in o if o[k] != n[k])
-check("solo cambian 6 ítems antiguos (3 preguntas × cuerpo/banco)", mud == ["q-b01q05", "q-b01q05-bk", "q-b03q07", "q-b03q07-bk", "q-b05q19", "q-b05q19-bk"], mud)
+RELAB = ["q-b01q05", "q-b01q05-bk", "q-b03q07", "q-b03q07-bk", "q-b05q19", "q-b05q19-bk"]
+check("solo cambian 8 ítems antiguos: 3 rótulos (×2) + q-b08q14 (×2, dosis del SALon)", mud == sorted(RELAB + ["q-b08q14", "q-b08q14-bk"]), mud)
 OLD = '<span class="quiz-tag variante">Pregunta complementaria</span>'; NEW = '<span class="quiz-tag oficial">Basada en preguntas de examen</span>'
-check("el único cambio de los antiguos es el rótulo", all(o[k].replace(OLD, NEW) == n[k] for k in mud))
+check("en los 6 de rótulo el único cambio es el rótulo", all(o[k].replace(OLD, NEW) == n[k] for k in RELAB))
+for k in ("q-b08q14", "q-b08q14-bk"):
+    st = lambda x: re.search(r'<p class="quiz-question">.*?</p>', x, re.S).group(0)
+    check(f"{k}: el enunciado dice «escala de la cátedra», alternativas y clave (b) intactas, explicación aclara que no es la conducta oficial",
+          "escala de la cátedra" in st(n[k]) and "<strong>b) 20 ampollas.</strong>" in n[k]
+          and re.search(r'<ul class="options">.*?</ul>', o[k], re.S).group(0) == re.search(r'<ul class="options">.*?</ul>', n[k], re.S).group(0)
+          and "No es la conducta oficial vigente" in n[k] and "5 ampollas en el cuadro moderado y 10 en el grave" in n[k])
+for k in ("q-b08q26", "q-b08q26-bk"):
+    check(f"{k}: sin la escala 5/10/20 como conducta; cita la referencia oficial y la cátedra por separado", "20 ampollas" not in n[k] and "5 ampollas en el moderado, 10 en el grave" in n[k] and "escala de la cátedra" in n[k])
+sec08 = new_txt[new_txt.index('id="toxb08"'):new_txt.index('</section>', new_txt.index('id="toxb08"'))]
+check("resumen y flashcards: referencia oficial (moderado 5 · grave 10; leve sin suero) y escala de la cátedra, rotuladas por separado",
+      new_txt.count("Referencia oficial vigente") == 4 and new_txt.count("Escala de la cátedra (slide)") == 4 and "Leve 5 · moderada 10 · grave 20 ampollas</b>, IV lenta" not in new_txt)
+check("la lámina del bloque 08 ya no promete una tabla de dosis que la imagen no tiene", "tabla de dosis del pie" not in new_txt and "dosis del suero antilonómico por gravedad" not in new_txt)
+check("q-b08q27: el suero se indica según la gravedad, no por sospecha", "el suero se indica según la gravedad" in n["q-b08q27"] and "basta para pensar en el suero" not in n["q-b08q27"])
 corpo = [k for k in n if not k.endswith("-bk")]
 check("cuerpo = banco", all(n[k] == n[k + "-bk"].replace(k + "-bk", k) for k in corpo))
 bas = [k for k in corpo if 'quiz-tag oficial' in n[k][:400]]; com = [k for k in corpo if 'quiz-tag variante' in n[k][:400]]
