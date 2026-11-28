@@ -22,7 +22,7 @@ NUEVOS = {"q-b08q26", "q-b08q26-bk", "q-b08q27", "q-b08q27-bk"}
 check("los 706 ids anteriores siguen presentes y solo se añaden los 4 nuevos", set(o) <= set(n) and set(n) - set(o) == NUEVOS and len(n) == 710, sorted(set(n) - set(o)))
 mud = sorted(k for k in o if o[k] != n[k])
 RELAB = ["q-b01q05", "q-b01q05-bk", "q-b03q07", "q-b03q07-bk", "q-b05q19", "q-b05q19-bk"]
-check("solo cambian 8 ítems antiguos: 3 rótulos (×2) + q-b08q14 (×2, dosis del SALon)", mud == sorted(RELAB + ["q-b08q14", "q-b08q14-bk"]), mud)
+check("solo cambian 10 ítems de la #733: 3 rótulos (×2) + q-b08q14 (×2, dosis del SALon) + q-b05q27 (×2, explicación sin afirmaciones sin fuente)", mud == sorted(RELAB + ["q-b08q14", "q-b08q14-bk", "q-b05q27", "q-b05q27-bk"]), mud)
 OLD = '<span class="quiz-tag variante">Pregunta complementaria</span>'; NEW = '<span class="quiz-tag oficial">Basada en preguntas de examen</span>'
 check("en los 6 de rótulo el único cambio es el rótulo", all(o[k].replace(OLD, NEW) == n[k] for k in RELAB))
 for k in ("q-b08q14", "q-b08q14-bk"):
@@ -35,11 +35,13 @@ for k in ("q-b08q26", "q-b08q26-bk"):
     check(f"{k}: sin la escala 5/10/20 como conducta; cita la referencia oficial y la cátedra por separado", "20 ampollas" not in n[k] and "5 ampollas en el moderado, 10 en el grave" in n[k] and "escala de la cátedra" in n[k])
 sec08 = new_txt[new_txt.index('id="toxb08"'):new_txt.index('</section>', new_txt.index('id="toxb08"'))]
 check("resumen y flashcards: referencia oficial (moderado 5 · grave 10; leve sin suero) y escala de la cátedra, rotuladas por separado",
-      new_txt.count("Referencia oficial vigente") == 4 and new_txt.count("Escala de la cátedra (slide)") == 4 and "Leve 5 · moderada 10 · grave 20 ampollas</b>, IV lenta" not in new_txt)
+      new_txt.count("Referencia oficial vigente") == 4 and new_txt.count("Escala de la cátedra (Clase 8, slide 44)") == 4 and "Leve 5 · moderada 10 · grave 20 ampollas</b>, IV lenta" not in new_txt)
 check("la lámina del bloque 08 ya no promete una tabla de dosis que la imagen no tiene", "tabla de dosis del pie" not in new_txt and "dosis del suero antilonómico por gravedad" not in new_txt)
 check("la matéria ya no afirma «recuperación completa con suero en 24 h» ni «mortalidad 15–20 %» para la lonomiasis (resumen, tarjetas, q-b08q14 y banco)",
       "la recuperación es completa; sin tratamiento" not in new_txt and "recuperación rápida y completa" not in new_txt and "la mortalidad alcanza el 15–20 %" not in new_txt and "mortalidad de 15–20 %" not in new_txt and "Sin tratamiento: mortalidad 15–20 %" not in new_txt
       and new_txt.count("más eficaz cuanto antes") == 5 and "cuanto antes se administra el suero, más eficaz es" in new_txt)
+check("q-b05q27: sin afirmaciones sobre fenitoína/haloperidol que no tienen fuente; cita el slide 35 de la Clase 5.1", "Clase 5.1, slide 35" in n["q-b05q27"] and "baja el umbral" not in n["q-b05q27"] and "no es la elección en la convulsión por exceso" not in n["q-b05q27"])
+check("q-b08q27: la araña marrón no se describe sin sangrado en la forma visceral", "no hay hematomas espontáneos ni sangrado de encías" not in n["q-b08q27"] and "en la forma visceral, hemólisis" in n["q-b08q27"])
 check("q-b08q27: el suero se indica según la gravedad, no por sospecha", "el suero se indica según la gravedad" in n["q-b08q27"] and "basta para pensar en el suero" not in n["q-b08q27"])
 corpo = [k for k in n if not k.endswith("-bk")]
 check("cuerpo = banco", all(n[k] == n[k + "-bk"].replace(k + "-bk", k) for k in corpo))
