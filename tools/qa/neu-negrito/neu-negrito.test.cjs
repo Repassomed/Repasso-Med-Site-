@@ -5,7 +5,9 @@
 const fs = require('fs'), cp = require('child_process'), path = require('path');
 const REPO = path.resolve(__dirname, '../../..');
 const REL = 'Repasso-Med-Site--main/Atual - Copia/netlify/functions/materias-privadas/neurologia.html';
-const cur = fs.readFileSync(path.join(REPO, REL), 'utf8');
+/* #682: os 13 infográficos de resumo (figuras `neuro-b2N-0N-…` no fim dos blocos 20–27) são acréscimo conhecido; esta checagem só os ignora (o número exato e a posição são verificados em neu-glosario.test.cjs). */
+const FIG_682 = /  <figure class="rmc-fig"><div class="rmc-zoom"><img class="rmc-photo" src="\/assets\/img\/neuro\/neuro-b2\d-0\d-[^"]*"[\s\S]*?<\/figure>\n/g;
+const cur = fs.readFileSync(path.join(REPO, REL), 'utf8').replace(FIG_682, '');
 const { semCierre: SEM_CIERRE } = require('../neu-cierre/sem-cierre.cjs');   /* 20/11 · retirada do «Cierre» (ver tools/qa/neu-cierre): a base recebe a mesma troca, para esta checagem medir só o que lhe interessa */
 const base = SEM_CIERRE(cp.execSync('git show d9ef1072:"' + REL + '"', { cwd: REPO, maxBuffer: 1 << 28 }).toString());
 let ok = 0, bad = 0; const T = (c, m) => { if (c) ok++; else { bad++; console.log('  ✗ FALHA:', m); } };
