@@ -3997,6 +3997,31 @@
       "summary": "Repasso Guard HARD FAIL em pr:733.",
       "task_id": "Toxicolog\u00eda (7.\u00ba semestre) \u00b7 extraer las fotos y pruebas a\u00fan no le\u00eddas (19 im\u00e1genes), cruzar con el contenido y las preguntas existentes e incorporar lo que falte seg\u00fan 8-A.",
       "worker_id": null
+    },
+    {
+      "category": "content",
+      "commit_sha": null,
+      "component": "coordinator-audit",
+      "error_id": "ERR-92F37E30B2",
+      "error_type": "semantic-needs-fix",
+      "fingerprint": "92f37e30b2ebdb38e329",
+      "first_seen": "2026-11-28T05:31:54.402669+00:00",
+      "issue_number": null,
+      "issue_sync_status": "PENDING",
+      "issue_sync_token": "9c93a1ff24ea4acc9e6fbf1de33c6f96",
+      "issue_sync_updated_at": "2026-11-28T05:31:54.402669+00:00",
+      "last_evidence_hash": "e7e62b111f09d1b36e85",
+      "last_seen": "2026-11-28T05:31:54.402669+00:00",
+      "occurrence_count": 1,
+      "pr_number": 735,
+      "resolution": null,
+      "root_cause": null,
+      "run_id": "46112478203",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "Auditoria independente marcou pr:735 como NEEDS-FIX.",
+      "task_id": "pr:735",
+      "worker_id": null
     }
   ]
 }
